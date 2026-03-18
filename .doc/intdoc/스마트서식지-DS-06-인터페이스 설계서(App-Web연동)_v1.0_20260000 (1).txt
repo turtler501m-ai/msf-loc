@@ -1,0 +1,56 @@
+
+# 호출(was -> app)
+디바이스 ID 요청
+[IOS]      window.webkit.messageHandlers.getDevideId.postMessage();
+[ANDROID]  window.ktmmobile.getDevideId();
+return : { deviceId : "xxxx"}
+
+로그인 result
+[IOS]      window.webkit.messageHandlers.onLoginResult.postMessage(json);
+[ANDROID]  window.ktmmobile.onLoginResult(json);
+json : { deviceId : "xxxx"}
+
+바이오 로그인 팝업 요청
+[IOS]      window.webkit.messageHandlers.bioLogin.postMessage();
+[ANDROID]  window.ktmmobile.bioLogin();
+
+바이오 로그인 결과 result
+[IOS]      bioLoginResult(json)
+[ANDROID]  bioLoginResult(json)
+json : { rsltCd : "X", rsltMsg : "xxxx", token : "zzzzz" , tokenType : "BIO" }
+bioLoginResult('{rsltCd:"00000",rsltMsg:"",token:"2c4a42d191e5d8982d7d4fdedb96039ba5c111ffbb73b4b03bffa72ea5b6e8535faa77d1dfcad982b6c42325c248daf167d3f0fd384671964374d65a13aa8364"}')
+
+바이오 로그인 설정 팝업 요청
+[IOS]      window.webkit.messageHandlers.bioSetting.postMessage();
+[ANDROID]  window.ktmmobile.bioSetting();
+
+바이오 로그인 설정 결과 result
+[IOS]      bioSettingResult(json)
+[ANDROID]  bioSettingResult(json)
+json : { rsltCd : "X", rsltMsg : "xxxx" }
+
+로그아웃
+[IOS]      window.webkit.messageHandlers.logOutApp.postMessage();
+[ANDROID]  window.ktmmobile.logOutApp();
+
+
+
+# 호출(app -> was)
+* app version 체크 및 uuid 전달 (as-is:/app/getVersionJson.do)
+/m/set/appVersionInfoAjax.do
+input : uuid, os, version
+output :
+{
+    "CODE": "0000",
+    "ERRORDESC": "",
+    "VALUE": {
+        "RESULT_CD": "0000",
+        "RESULT_DATA": {
+            "MUST_UP": "N",
+            "VERSION": "1.2.6",
+            "DN_URL": "https://play.google.com/store/apps/details?id=kt.co.ktmmobile"
+        },
+        "RESULT_DESC": ""
+    }
+}
+
