@@ -7,7 +7,7 @@ description: 스마트서식지(mform) 프로젝트 개발 가이드 — Vue 3 +
 
 작성 기준: 현재 소스 분석(2026.03.17) — mform-web(Vue 3) + mform-api(Spring Boot 2.7)
 
-개발 완료/미완성 현황은 `dev-status.md`, SOC 코드 레퍼런스는 `soc-reference.md` 참조.
+개발 완료/미완성 현황은 `dev-status.md`, SOC 코드 레퍼런스는 `soc-reference.md`, **테이블 접두어·DB 출처는 `db-table-guide.md`** 참조.
 
 ---
 

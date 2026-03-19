@@ -9,21 +9,22 @@ import java.util.Map;
 
 /**
  * 단말보험 Mapper.
- * ASIS AppformMapper.selectInsrProdList() / insertInsrApplyMst() 와 동일 역할.
+ * 테이블: MSF_CUST_REQUEST_INSR (가입신청보험정보)
+ * DB링크: MSP_INTM_INSR_MST@DL_MSP (단말보험 상품 마스터)
  */
 @Mapper
 public interface SvcChgInsrMapper {
 
     /**
      * 단말보험 상품 목록 조회.
-     * ASIS: AppformMapper.selectInsrProdList(IntmInsrRelDTO)
-     * reqBuyType 기준 필터링.
+     * ASIS: AppformMapper.selectInsrProdList()
+     * @param params reqBuyType (UU=최초, MM=재구매)
      */
-    List<InsrProductDto> selectInsrProdList(Map<String, Object> params);
+    List<InsrProductDto> selectInsrProdList(Map<String, String> params);
 
     /**
-     * 단말보험 가입 신청 이력 저장.
-     * ASIS: AppformMapper.insertInsrApplyMst(AppformReqDto)
+     * 단말보험 가입 정보 저장.
+     * ASIS: AppformMapper.insertInsrApplyMst()
      */
-    int insertInsrApplyMst(InsrApplyReqDto dto);
+    int insertCustRequestInsr(InsrApplyReqDto dto);
 }

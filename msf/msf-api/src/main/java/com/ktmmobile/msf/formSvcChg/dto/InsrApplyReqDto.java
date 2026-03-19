@@ -4,21 +4,37 @@ import com.ktmmobile.msf.formComm.dto.SvcChgInfoDto;
 
 /**
  * 단말보험 가입 요청 DTO.
- * ASIS AppformController.selectInsrProdList() / 부가서비스 신청(X21) 요청 파라미터.
+ * DB 저장 대상: MSF_CUST_REQUEST_INSR (가입신청보험정보).
+ * ncn/ctn/custId/soc 는 M플랫폼(Y24, X21) 호출에 사용.
  */
 public class InsrApplyReqDto extends SvcChgInfoDto {
 
-    /** 보험 상품 코드 */
+    /** 신청키 (MSF_REQUEST.REQUEST_KEY) */
+    private Long requestKey;
+
+    /** 보험코드 */
+    private String insrCd;
+
+    /** 단말보험상품코드 */
     private String insrProdCd;
 
-    /** 보험 SOC 코드 */
+    /** 보험 SOC 코드 (M플랫폼 Y24/X21 호출용) */
     private String soc;
 
-    /** 구매 유형 (단말 구분: 자급제 등) */
-    private String reqBuyType;
+    /** 단말보험동의여부 (Y/N) */
+    private String clauseInsuranceYn;
 
-    /** 단말 IMEI */
-    private String imei;
+    /** 단말보험가입동의여부 (Y/N) */
+    private String clauseInsrProdYn;
+
+    /** 단말보험인증정보 */
+    private String insrAuthInfo;
+
+    public Long getRequestKey() { return requestKey; }
+    public void setRequestKey(Long requestKey) { this.requestKey = requestKey; }
+
+    public String getInsrCd() { return insrCd; }
+    public void setInsrCd(String insrCd) { this.insrCd = insrCd; }
 
     public String getInsrProdCd() { return insrProdCd; }
     public void setInsrProdCd(String insrProdCd) { this.insrProdCd = insrProdCd; }
@@ -26,9 +42,12 @@ public class InsrApplyReqDto extends SvcChgInfoDto {
     public String getSoc() { return soc; }
     public void setSoc(String soc) { this.soc = soc; }
 
-    public String getReqBuyType() { return reqBuyType; }
-    public void setReqBuyType(String reqBuyType) { this.reqBuyType = reqBuyType; }
+    public String getClauseInsuranceYn() { return clauseInsuranceYn; }
+    public void setClauseInsuranceYn(String clauseInsuranceYn) { this.clauseInsuranceYn = clauseInsuranceYn; }
 
-    public String getImei() { return imei; }
-    public void setImei(String imei) { this.imei = imei; }
+    public String getClauseInsrProdYn() { return clauseInsrProdYn; }
+    public void setClauseInsrProdYn(String clauseInsrProdYn) { this.clauseInsrProdYn = clauseInsrProdYn; }
+
+    public String getInsrAuthInfo() { return insrAuthInfo; }
+    public void setInsrAuthInfo(String insrAuthInfo) { this.insrAuthInfo = insrAuthInfo; }
 }

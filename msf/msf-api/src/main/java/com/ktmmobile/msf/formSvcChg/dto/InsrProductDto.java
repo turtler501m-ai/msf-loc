@@ -1,37 +1,29 @@
 package com.ktmmobile.msf.formSvcChg.dto;
 
 /**
- * 단말보험 상품 정보 DTO.
- * ASIS IntmInsrRelDTO 와 동일 구조 (단말보험 목록 조회 결과).
+ * 단말보험 상품 DTO.
+ * ASIS IntmInsrRelDTO 와 동일 역할.
+ * 조회 출처: MSP_INTM_INSR_MST@DL_MSP (M플랫폼 DB링크)
  */
 public class InsrProductDto {
 
-    /** 보험 상품 코드 */
+    /** 단말보험상품코드 */
     private String insrProdCd;
 
-    /** 보험 상품명 */
+    /** 단말보험상품명 (MSF_CD_DTL.DTL_CD_NM) */
     private String insrProdNm;
 
-    /** 보험 SOC 코드 (부가서비스 코드) */
-    private String soc;
+    /** 보상한도금액 */
+    private Long cmpnLmtAmt;
 
-    /** 월 보험료 */
-    private String monthlyFee;
+    /** 보험가입횟수 */
+    private Integer insrEnggCnt;
 
-    /** 가입 유형 (01: 단독, 02: 결합) */
-    private String joinType;
+    /** 보험유형코드 */
+    private String insrTypeCd;
 
-    /** 구매 유형 (자급제/통신사) */
-    private String reqBuyType;
-
-    /** 약관 내용 URL */
-    private String clauseUrl;
-
-    /** 사용 여부 */
-    private String useYn;
-
-    /** 정렬 순서 */
-    private Integer sortSeq;
+    /** 대표상품ID */
+    private String rprsPrdtId;
 
     public String getInsrProdCd() { return insrProdCd; }
     public void setInsrProdCd(String insrProdCd) { this.insrProdCd = insrProdCd; }
@@ -39,24 +31,15 @@ public class InsrProductDto {
     public String getInsrProdNm() { return insrProdNm; }
     public void setInsrProdNm(String insrProdNm) { this.insrProdNm = insrProdNm; }
 
-    public String getSoc() { return soc; }
-    public void setSoc(String soc) { this.soc = soc; }
+    public Long getCmpnLmtAmt() { return cmpnLmtAmt; }
+    public void setCmpnLmtAmt(Long cmpnLmtAmt) { this.cmpnLmtAmt = cmpnLmtAmt; }
 
-    public String getMonthlyFee() { return monthlyFee; }
-    public void setMonthlyFee(String monthlyFee) { this.monthlyFee = monthlyFee; }
+    public Integer getInsrEnggCnt() { return insrEnggCnt; }
+    public void setInsrEnggCnt(Integer insrEnggCnt) { this.insrEnggCnt = insrEnggCnt; }
 
-    public String getJoinType() { return joinType; }
-    public void setJoinType(String joinType) { this.joinType = joinType; }
+    public String getInsrTypeCd() { return insrTypeCd; }
+    public void setInsrTypeCd(String insrTypeCd) { this.insrTypeCd = insrTypeCd; }
 
-    public String getReqBuyType() { return reqBuyType; }
-    public void setReqBuyType(String reqBuyType) { this.reqBuyType = reqBuyType; }
-
-    public String getClauseUrl() { return clauseUrl; }
-    public void setClauseUrl(String clauseUrl) { this.clauseUrl = clauseUrl; }
-
-    public String getUseYn() { return useYn; }
-    public void setUseYn(String useYn) { this.useYn = useYn; }
-
-    public Integer getSortSeq() { return sortSeq; }
-    public void setSortSeq(Integer sortSeq) { this.sortSeq = sortSeq; }
+    public String getRprsPrdtId() { return rprsPrdtId; }
+    public void setRprsPrdtId(String rprsPrdtId) { this.rprsPrdtId = rprsPrdtId; }
 }

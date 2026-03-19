@@ -1,5 +1,7 @@
 package com.ktmmobile.msf.formSvcCncl.service;
 
+import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarRealtimePayInfoVO;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoDto;
 import com.ktmmobile.msf.formSvcCncl.dto.SvcCnclApplyDto;
 import com.ktmmobile.msf.formSvcCncl.dto.SvcCnclApplyVO;
@@ -8,12 +10,12 @@ import com.ktmmobile.msf.formSvcCncl.mapper.SvcCnclInsertDto;
 import com.ktmmobile.msf.formSvcCncl.mapper.SvcCnclMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
  * 서비스해지 신청서 서비스 구현.
  * 설계서 S104010101~S104040101 기준.
- * X18(잔여요금) 연동 예정. 현재 빈 응답 반환.
  */
 @Service
 public class SvcCnclSvcImpl implements SvcCnclSvc {
@@ -22,12 +24,15 @@ public class SvcCnclSvcImpl implements SvcCnclSvc {
 
     private final SvcCnclMapper svcCnclMapper;
 
+    @Autowired
+    private MplatFormSvc mplatFormSvc;
+
     public SvcCnclSvcImpl(SvcCnclMapper svcCnclMapper) {
         this.svcCnclMapper = svcCnclMapper;
     }
 
     /**
-     * 해지 가능 여부. MC0 연동 전까지 항상 true 반환.
+     * 해지 가능 여부. 현재 항상 true (해지 사전체크 별도 API 없음).
      */
     @Override
     public boolean eligible(SvcChgInfoDto req) {
@@ -35,17 +40,37 @@ public class SvcCnclSvcImpl implements SvcCnclSvc {
     }
 
     /**
-     * 잔여요금/위약금 조회.
-     * X18 연동 전까지 빈 응답 반환 (프론트는 null 처리).
-     * ASIS: MplatFormService.getRemainCharge(ncn, ctn) → X22/X18 호출.
+     * 잔여요금/위약금 조회 (X18 실시간 요금조회).
+     * ASIS: MplatFormService.farRealtimePayInfo(X18) → 당월요금계(sumAmt) → remainCharge 매핑.
+     * 위약금/분납잔액은 별도 API 연동 필요 (현재 null 반환).
      */
     @Override
     public SvcCnclRemainChargeResVO getRemainCharge(SvcChgInfoDto req) {
         if (req == null || isBlank(req.getCtn())) {
             return SvcCnclRemainChargeResVO.empty();
         }
-        // X18 연동 예정 - 현재 빈 응답
-        return SvcCnclRemainChargeResVO.empty();
+        try {
+            MpFarRealtimePayInfoVO vo = mplatFormSvc.farRealtimePayInfo(
+                req.getNcn(), req.getCtn(), req.getCustId());
+
+            if (!vo.isSuccess()) {
+                logger.warn("X18 실시간요금조회 실패: {}", vo.getSvcMsg());
+                return SvcCnclRemainChargeResVO.empty();
+            }
+
+            SvcCnclRemainChargeResVO result = SvcCnclRemainChargeResVO.empty();
+            if (vo.getSumAmt() != null && !vo.getSumAmt().isEmpty()) {
+                // "55,000 원" 형태에서 숫자만 추출
+                String amtStr = vo.getSumAmt().replaceAll("[^0-9]", "");
+                if (!amtStr.isEmpty()) {
+                    result.setRemainCharge(Long.parseLong(amtStr));
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            logger.error("X18 실시간요금조회 오류: {}", e.getMessage());
+            return SvcCnclRemainChargeResVO.empty();
+        }
     }
 
     /**

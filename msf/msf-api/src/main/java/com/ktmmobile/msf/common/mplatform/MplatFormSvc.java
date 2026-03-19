@@ -16,6 +16,8 @@ import com.ktmmobile.msf.common.mplatform.vo.MpSuspenChgVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenCnlChgInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenCnlPosInfoInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenPosHisVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarRealtimePayInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpNameChgPreChkVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimChangeVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimCheckVO;
 import com.ktmmobile.msf.common.mplatform.vo.SvcChgValdChkVO;
@@ -74,6 +76,10 @@ public class MplatFormSvc {
     public static final String APP_EVENT_CD_UC0 = "UC0";
     /** Y24 상품변경 사전체크 (단말보험 가입가능여부 포함) */
     public static final String APP_EVENT_CD_Y24 = "Y24";
+    /** MC0 명의변경 사전체크 */
+    public static final String APP_EVENT_CD_MC0 = "MC0";
+    /** X18 실시간 요금조회 */
+    public static final String APP_EVENT_CD_X18 = "X18";
     /** NU1 희망번호 조회 */
     public static final String APP_EVENT_CD_NU1 = "NU1";
     /** NU2 희망번호 예약/취소 */
@@ -462,6 +468,42 @@ public class MplatFormSvc {
         HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X71);
         if ("LOCAL".equals(serverLocation)) {
             vo.setResponseXml("<return><commHeader><responseType>N</responseType></commHeader><outDto></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * MC0 명의변경 사전체크. ASIS MplatFormService MC0 처리와 동일.
+     * 명의변경 신청 전 진행 가능 여부 확인 (정지/미납/90일 미만 가입 등).
+     * 응답: osstOrdNo, rsltCd(0000=성공), rsltMsg
+     */
+    public MpNameChgPreChkVO nameChgPreChk(String ncn, String ctn, String custId) {
+        MpNameChgPreChkVO vo = new MpNameChgPreChkVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_MC0);
+        param.put("mcnStatRsnCd", "RCMCMCN");  // 명의변경-실사용자를 위한 명변으로 고정 (ASIS 동일)
+        param.put("usimSuccYn", "Y");           // USIM 승계 고정
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>mc0mock001</globalNo></commHeader><outDto><osstOrdNo>MC0-TEST-001</osstOrdNo><rsltCd>0000</rsltCd><rsltMsg>명의변경 가능</rsltMsg></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X18 실시간 요금조회. ASIS MplatFormService.farRealtimePayInfo() 와 동일.
+     * 당월 실시간 요금 정보(당월요금계, 항목별 금액) 조회.
+     * 응답: searchDay, searchTime, sumAmt(당월요금계), items
+     */
+    public MpFarRealtimePayInfoVO farRealtimePayInfo(String ncn, String ctn, String custId) {
+        MpFarRealtimePayInfoVO vo = new MpFarRealtimePayInfoVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X18);
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x18mock001</globalNo></commHeader><outDto><searchDay>20260319</searchDay><searchTime>20260301 ~ 20260319</searchTime><amntDto><gubun>월정액</gubun><payMent>55,000 원</payMent></amntDto><amntDto><gubun>당월요금계</gubun><payMent>55,000 원</payMent></amntDto></outDto></return>");
             vo.toResponseParse();
         } else {
             mplatFormServerAdapter.callService(param, vo, 30000);
