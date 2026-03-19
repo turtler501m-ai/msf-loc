@@ -1,0 +1,20 @@
+@use '@/assets/styles/abstracts' as *;
+
+/* Root */
+
+:root {
+  @include generate-cssVars($tokens);
+
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+
+  --layout-max-width: #{rem(1232px)}; // 레이아웃 최대 넓이
+  --layout-header-height: #{rem(56px)};
+  --layout-padding-x: 16px;
+  --layout-padding-y: 80px;
+  --layout-gutter-x: 8px;
+  --layout-gutter-x2: 16px;
+  --layout-gutter-y: 24px; // 레이아웃 세로축 기본 간격
+}

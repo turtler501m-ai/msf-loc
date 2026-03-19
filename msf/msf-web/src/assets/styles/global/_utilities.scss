@@ -1,0 +1,272 @@
+@use '@/assets/styles/abstracts' as *;
+
+// a11y
+.ut-blind {
+  position: absolute !important;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+}
+
+// font color
+.ut-color-primary {
+  color: var(--color-foreground) !important;
+}
+.ut-color-point {
+  color: var(--color-accent-base) !important;
+}
+.ut-color-alert {
+  color: var(--color-accent-alert) !important;
+}
+.ut-color-gray {
+  color: var(--color-gray-600) !important;
+}
+.ut-color-gray1 {
+  color: var(--color-gray-900) !important;
+}
+.ut-color-gray2 {
+  color: var(--color-gray-700) !important;
+}
+.ut-color-gray3 {
+  color: var(--color-gray-500) !important;
+}
+.ut-color-gray4 {
+  color: var(--color-gray-450) !important;
+}
+.ut-color-white {
+  color: var(--color-background) !important;
+}
+.ut-color-black {
+  color: var(--color-foreground) !important;
+}
+
+// font weight
+.ut-weight-regular {
+  font-weight: var(--font-weight-regular) !important;
+}
+.ut-weight-medium {
+  font-weight: var(--font-weight-medium) !important;
+}
+.ut-weight-semibold {
+  font-weight: var(--font-weight-semibold) !important;
+}
+.ut-weight-bold {
+  font-weight: var(--font-weight-bold) !important;
+}
+
+// alignment
+.ut-text-left {
+  text-align: left !important;
+}
+.ut-text-center {
+  text-align: center !important;
+}
+.ut-text-right {
+  text-align: right !important;
+}
+.ut-align-start {
+  justify-content: flex-start !important;
+}
+.ut-align-center {
+  justify-content: center !important;
+}
+.ut-align-end {
+  justify-content: flex-end !important;
+}
+.ut-align-vertical {
+  flex-direction: column !important;
+}
+.ut-align-self-start {
+  align-self: flex-start !important;
+}
+.ut-align-self-center {
+  align-self: center !important;
+}
+.ut-align-fitted > * {
+  flex: 1 1 0 !important;
+}
+
+// spacer
+.ut-mt-base {
+  margin-top: var(--spacing-x6) !important;
+}
+.ut-mt-x1 {
+  margin-top: var(--spacing-x1) !important;
+}
+.ut-mt-xxs {
+  margin-top: var(--spacing-x2) !important;
+}
+.ut-mt-xs {
+  margin-top: var(--spacing-x4) !important;
+}
+.ut-mt-s {
+  margin-top: var(--spacing-x8) !important;
+}
+.ut-mt-m {
+  margin-top: var(--spacing-x12) !important;
+}
+.ut-mt-l {
+  margin-top: var(--spacing-x16) !important;
+}
+.ut-mt-xl {
+  margin-top: var(--spacing-x20) !important;
+}
+.ut-mt-xxl {
+  margin-top: var(--spacing-x30) !important;
+}
+.ut-mt-x0 {
+  margin-top: 0 !important;
+}
+.ut-mb-x0 {
+  margin-bottom: 0 !important;
+}
+.ut-mb-x6 {
+  margin-bottom: var(--spacing-x6) !important;
+}
+.ut-mb-s {
+  margin-bottom: var(--spacing-x8) !important;
+}
+.ut-ml-xs {
+  margin-left: var(--spacing-x2) !important;
+}
+.ut-ml-s {
+  margin-left: var(--spacing-x4) !important;
+}
+.ut-ml-m {
+  margin-left: var(--spacing-x6) !important;
+}
+.ut-ml-l {
+  margin-left: var(--spacing-x16) !important;
+}
+.ut-ml-auto {
+  margin-left: auto;
+}
+.ut-mr-xxs {
+  margin-right: var(--spacing-x2) !important;
+}
+.ut-mr-auto {
+  margin-right: auto;
+}
+
+// width size
+.ut-w-auto {
+  width: auto !important;
+}
+.ut-w-full {
+  width: 100% !important;
+}
+.ut-w-half {
+  width: 50% !important;
+}
+.ut-grow {
+  flex-shrink: 1 !important;
+  flex-grow: 1 !important;
+}
+.ut-shrink {
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+}
+
+// 말줄임
+.ut-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+// symbol(입력요소 사이의 기호 표시)
+.ut-symbol {
+  @include flex(flex, center, center);
+  width: rem(16px);
+  text-align: center;
+}
+
+// modal 영역 ios 관성스크롤 제거
+[class*='overlay'] {
+  overscroll-behavior: none;
+}
+
+// 타이포 클래스
+.ut-text-heading1 {
+  font-size: var(--font-size-32);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-heading2 {
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-heading3 {
+  font-size: var(--font-size-22);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-title1 {
+  font-size: var(--font-size-20);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-title2 {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-body1 {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-body2 {
+  font-size: var(--font-size-15);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-body3 {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-caption {
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+}
+.ut-text-point {
+}
+
+// 링크 텍스트
+.link-txt {
+  text-decoration: underline;
+}
+
+// 레이블 영역 스타일
+.label-txt {
+  display: inline-block;
+  font-size: inherit;
+  font-weight: inherit;
+  color: var(--color-foreground);
+  &[for] {
+    cursor: pointer; // label일 때만 포인터 커서
+  }
+  &.required {
+    position: relative;
+    &::before {
+      content: '*';
+      position: absolute;
+      right: rem(-8px);
+      top: 0;
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-accent1-base);
+    }
+  }
+}
+
+/* 버튼 레이아웃 : 버튼들을 일정간격으로 묶을때 사용하는 클래스 */
+.btn-wrap {
+  @include flex($v: center, $h: flex-end) {
+    gap: var(--spacing-x1);
+  }
+  &.align-left {
+    justify-content: flex-start;
+  }
+  &.align-center {
+    justify-content: center;
+  }
+  &.align-right {
+    justify-content: flex-end;
+  }
+}

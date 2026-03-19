@@ -4,28 +4,32 @@
 mcp/
 msp/
 
-# 중복 디렉토리
-msf-api/msf-api/
+# ===========================
+# Backend (msf/msf-api)
+# ===========================
+msf/msf-api/target/
+msf/msf-api/.mvn/wrapper/maven-wrapper.jar
+msf/msf-api/*.log
 
 # ===========================
-# Backend (msf-api)
+# Frontend (msf/msf-web)
 # ===========================
-msf-api/target/
-msf-api/.mvn/wrapper/maven-wrapper.jar
-msf-api/*.log
+msf/msf-web/node_modules/
+msf/msf-web/dist/
+msf/msf-web/.vite/
+msf/msf-web/*.local
 
 # ===========================
-# Frontend (msf-web)
+# 임시 / 병합 작업 폴더
 # ===========================
-msf-web/node_modules/
-msf-web/dist/
-msf-web/.vite/
-msf-web/*.local
+.merge/
+msf/.merge/
 
 # ===========================
 # IDE / Editor
 # ===========================
 .idea/
+msf/.idea/
 *.iml
 *.iws
 *.ipr

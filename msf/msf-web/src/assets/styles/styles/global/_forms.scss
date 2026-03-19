@@ -1,0 +1,68 @@
+@use '@/assets/styles/abstracts' as *;
+
+/** input field 기본 스타일 (input-root 클래스로 한번 감싼후 input 사용) **/
+.input-root {
+  &:focus-within {
+    border-color: var(--color-primary);
+    border-width: rem(1px);
+  }
+  position: relative;
+  @include flex(flex, flex-start, center) {
+    gap: var(--spacing-x2);
+  }
+  width: 100%;
+  min-width: rem(130px);
+  height: rem(32px);
+  padding: 0 var(--spacing-x2);
+  font-size: var(--font-size-14);
+  line-height: var(--line-height-20);
+  border: var(--border-width-base) solid var(--color-gray-400);
+  border-radius: var(--border-radius-base);
+  background-color: var(--color-background);
+  cursor: text;
+  .input-inner,
+  input:not([type]),
+  input[type=''],
+  input[type='text'],
+  input[type='password'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='url'],
+  input[type='search'],
+  input[type='number'] {
+    flex: 1;
+    width: 1%;
+    height: 100%;
+    outline: 0;
+    font-weight: var(--font-weight-medium);
+    &:focus {
+      touch-action: pan-x;
+    }
+  }
+
+  // size
+  &.is-small .input-inner {
+    font-size: var(--font-size-14);
+  }
+  &.is-medium .input-inner {
+  }
+  &.is-large .input-inner {
+    font-size: var(--font-size-18);
+  }
+
+  // state
+  &.is-disabled {
+    background-color: var(--color-bg-disabled);
+    color: var(--color-text-disabled);
+    cursor: not-allowed;
+  }
+  &.is-readonly {
+    background-color: var(--color-bg-disabled);
+    border-color: var(--color-gray-400);
+    color: var(--color-gray-900);
+  }
+  &.is-error {
+    border-color: var(--color-red-500);
+    border-width: var(--border-width-base);
+  }
+}

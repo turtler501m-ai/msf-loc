@@ -1,0 +1,69 @@
+# ==========================================================================
+# .claudeignore — Claude Code 컨텍스트 최적화 (비용 절감)
+# gitignore 문법과 동일. workspace 루트 기준.
+# ==========================================================================
+
+# ==========================================================================
+# [1] 빌드 산출물 / 패키지 의존성 (전역)
+# ==========================================================================
+**/node_modules/
+**/target/
+**/dist/
+**/.svn/
+**/.vscode/
+**/.settings/
+**/.classpath
+**/.project
+
+# ==========================================================================
+# [2] 레거시 ASIS — 참조 불필요 서버 모듈 (전체 무시)
+# mcp-portal-was(Java+Mapper) 만 ASIS 참조용으로 유지
+# ==========================================================================
+mcp/mcp-portal-web/     # mcp-portal-was와 JS 중복, 별도 참조 불필요
+mcp/mcp-api/            # M포탈 내부 API (TOBE 개발 무관)
+mcp/msc-batch/          # 배치 서버 (TOBE 개발 무관)
+mcp/msc-prx/            # 프록시 서버 (TOBE 개발 무관)
+
+# ==========================================================================
+# [3] MSP 레거시 (M플랫폼 연계처리)
+# M플랫폼 연동 규격은 .doc/intdoc/*.md 로 정리됨
+# ==========================================================================
+msp/
+
+# ==========================================================================
+# [4] MCP-portal-was 정적 리소스 (이미지·폰트·에디터 등)
+# Java/Mapper/JS 소스만 참조; 바이너리 리소스는 불필요
+# ==========================================================================
+mcp/mcp-portal-was/src/main/webapp/resources/animation/
+mcp/mcp-portal-was/src/main/webapp/resources/app/
+mcp/mcp-portal-was/src/main/webapp/resources/company/
+mcp/mcp-portal-was/src/main/webapp/resources/css/
+mcp/mcp-portal-was/src/main/webapp/resources/direct/
+mcp/mcp-portal-was/src/main/webapp/resources/editor/
+mcp/mcp-portal-was/src/main/webapp/resources/error/
+mcp/mcp-portal-was/src/main/webapp/resources/fonts/
+mcp/mcp-portal-was/src/main/webapp/resources/images/
+mcp/mcp-portal-was/src/main/webapp/resources/wire/
+mcp/mcp-portal-was/src/main/webapp/WEB-INF/   # JSP 뷰(792개) — Java 소스로 충분
+mcp/mcp-portal-was/devops/
+mcp/mcp-portal-was/lib/
+
+# ==========================================================================
+# [5] 임시·머지 폴더
+# ==========================================================================
+.merge/
+msf/.merge/
+
+# ==========================================================================
+# [6] 문서 바이너리 (텍스트 읽기 불가 — .md 변환본 사용)
+# ==========================================================================
+**/*.zip
+**/*.jar
+**/*.class
+**/*.swf
+
+# ==========================================================================
+# [7] 문서 백업 폴더
+# ==========================================================================
+.doc/uidoc/backup/
+msf/.doc/backup/
