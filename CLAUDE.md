@@ -77,6 +77,15 @@ npm run format   # prettier
 
 의존성: `formComm → common.mplatform` / 업무 패키지 → `formComm.dto/service` / 업무 패키지 간 직접 참조 금지
 
+### HTTP 메서드 규칙
+
+백엔드 API는 **GET / POST 두 가지만 사용**한다. PUT / PATCH / DELETE 사용 금지.
+
+| 메서드 | 용도 |
+|--------|------|
+| `GET`  | 단순 조회 (파라미터가 없거나 path variable만 사용) |
+| `POST` | 조회·저장·변경·삭제 등 나머지 모든 처리 |
+
 ### 네이밍 규칙
 
 - Controller: `XXXController`(내부용) / `XXXRestController`(연동용)
@@ -189,10 +198,34 @@ cd msf/msf-api && mvn -DskipTests package
 java -jar target/mform-api-0.1.0-SNAPSHOT.jar
 ```
 
-### 4. 코드 변경 후 문서 업데이트
+### 4. ASIS → TOBE DB 테이블명 변환 규칙
+
+ASIS Mapper SQL 포팅 시 테이블 출처에 따라 처리 방법이 다르다.
+
+| ASIS 테이블 | 접두사 | TOBE 처리 |
+|------------|--------|----------|
+| M포탈 DB   | `MCP_*`, `NMCP_*` | `MSF_*` 로 접두사 교체 (MSF DB 동일 구조) |
+| M플랫폼 DB | `MSP_*` | `MSP_*@DL_MSP` DB링크 그대로 사용 |
+
+예시: `NMCP_CUST_REQUEST_MST` → `MSF_CUST_REQUEST_MST` / `MCP_REQUEST` → `MSF_REQUEST` / `MSP_INTM_INSR_MST` → `MSP_INTM_INSR_MST@DL_MSP`
+
+전체 테이블 매핑 목록: `.doc/intdoc/테이블매핑_20260319.md` 참조
+
+### 5. 개발 완료 시 문서 현행화 — **필수, 코드 작업과 동일 세션에서 처리**
+
+코드 구현이 끝나면 **반드시** 아래 문서를 해당 세션에서 즉시 업데이트한다.
+사용자가 별도로 요청하지 않아도 자동으로 수행한다.
 
 | 변경 내용 | 업데이트 문서 |
 |-----------|--------------|
-| 새 Controller/Service/Mapper 구현 | `15.개발기능목록_ASIS_TOBE_기능분석명세서.md` |
-| 새 도메인 패키지 또는 API 경로 변경 | `18.요구사항ID별_ASIS_TOBE_개발진행명세.md` |
-| 미구현 → 구현 완료 상태 변경 | 18번 문서 해당 절 업데이트 |
+| 새 Controller/Service/Mapper 구현 | `15.개발기능목록_ASIS_TOBE_기능분석명세서.md` (TOBE 컬럼) |
+| 기존 API 경로·메서드명 변경 | `15.개발기능목록_ASIS_TOBE_기능분석명세서.md` (해당 행 수정) |
+| 새 도메인 패키지 또는 신규 API 추가 | `18.요구사항ID별_ASIS_TOBE_개발진행명세.md` |
+| 미구현 → 구현 완료 상태 변경 | `18.요구사항ID별_ASIS_TOBE_개발진행명세.md` 해당 절 |
+| 분석 내용 변경 (ASIS 재분석 등) | `.doc/` 내 해당 분석 문서 (22번 등) |
+
+업데이트 항목 체크리스트:
+- [ ] 15번: TOBE_Controller / TOBE_Service / TOBE_Mapper / TOBE_연동 컬럼
+- [ ] 15번: 헤더 반영 날짜 (`ㅇ TOBE msf-api 기준 반영 : YYYYMMDD`)
+- [ ] 18번: 구현 상태 ("구현 완료" / "일부 구현됨" / "미구현") 변경
+- [ ] 관련 분석 문서(.doc/): ASIS 분석 결과가 바뀐 경우 해당 문서 수정
