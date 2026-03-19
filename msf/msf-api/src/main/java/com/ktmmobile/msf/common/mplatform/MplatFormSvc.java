@@ -7,13 +7,17 @@ import com.ktmmobile.msf.common.mplatform.vo.MpMoscRegSvcCanChgInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpRegSvcChgVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpMoscCombDtlResVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpMoscSubMstCombChgRes;
+import com.ktmmobile.msf.common.mplatform.vo.MpNumberChangeVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpPcsLostCnlChgVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpPcsLostInfoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpPerMyktfInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpPhoneNoListVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenChgVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenCnlChgInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenCnlPosInfoInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenPosHisVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpUsimChangeVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpUsimCheckVO;
 import com.ktmmobile.msf.common.mplatform.vo.SvcChgValdChkVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +66,18 @@ public class MplatFormSvc {
     public static final String APP_EVENT_CD_X21 = "X21";
     /** X38 부가서비스 해지 */
     public static final String APP_EVENT_CD_X38 = "X38";
+    /** X32 번호변경 */
+    public static final String APP_EVENT_CD_X32 = "X32";
+    /** X85 USIM 유효성 체크 */
+    public static final String APP_EVENT_CD_X85 = "X85";
+    /** UC0 USIM 변경 */
+    public static final String APP_EVENT_CD_UC0 = "UC0";
+    /** Y24 상품변경 사전체크 (단말보험 가입가능여부 포함) */
+    public static final String APP_EVENT_CD_Y24 = "Y24";
+    /** NU1 희망번호 조회 */
+    public static final String APP_EVENT_CD_NU1 = "NU1";
+    /** NU2 희망번호 예약/취소 */
+    public static final String APP_EVENT_CD_NU2 = "NU2";
 
     @Autowired
     private MplatFormServerAdapter mplatFormServerAdapter;
@@ -316,6 +332,126 @@ public class MplatFormSvc {
             return true;
         }
         return mplatFormServerAdapter.callService(param, vo, 30000) && vo.isSuccess();
+    }
+
+    /**
+     * NU1 희망번호 조회. ASIS AppformSvcImpl.getPhoneNoList() 와 동일.
+     * wantNo: 희망하는 번호 패턴(끝 4자리 등)
+     */
+    public MpPhoneNoListVO requestPhoneNoList(String ncn, String ctn, String custId, String wantNo) {
+        MpPhoneNoListVO vo = new MpPhoneNoListVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_NU1);
+        param.put("wantNo", wantNo != null ? wantNo : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>nu1mock001</globalNo></commHeader><outDto><outDto><tlphNo>01012341234</tlphNo></outDto><outDto><tlphNo>01056785678</tlphNo></outDto></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * NU2 희망번호 예약. ASIS sendOsstService(NU2) 와 동일.
+     * tlphNo: 예약할 전화번호
+     */
+    public SvcChgValdChkVO reservePhoneNo(String ncn, String ctn, String custId, String tlphNo) {
+        SvcChgValdChkVO vo = new SvcChgValdChkVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_NU2);
+        param.put("tlphNo", tlphNo != null ? tlphNo : "");
+        param.put("workDivCd", "A");  // A: 예약
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>nu2mock001</globalNo></commHeader></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * NU2 희망번호 예약 취소. ASIS sendOsstService(NU2, WORK_CODE_RES_CANCEL) 와 동일.
+     */
+    public SvcChgValdChkVO cancelReservedPhoneNo(String ncn, String ctn, String custId, String tlphNo) {
+        SvcChgValdChkVO vo = new SvcChgValdChkVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_NU2);
+        param.put("tlphNo", tlphNo != null ? tlphNo : "");
+        param.put("workDivCd", "C");  // C: 취소
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>nu2cncl001</globalNo></commHeader></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X32 번호변경 처리. ASIS MplatFormService.numChgeChg() 와 동일.
+     * newTlphNo: 변경할 새 번호
+     */
+    public MpNumberChangeVO numChgeChg(String ncn, String ctn, String custId, String newTlphNo) {
+        MpNumberChangeVO vo = new MpNumberChangeVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X32);
+        param.put("newTlphNo", newTlphNo != null ? newTlphNo : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x32mock001</globalNo></commHeader><outDto><newTlphNo>" + newTlphNo + "</newTlphNo></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X85 USIM 유효성 체크. ASIS MplatFormService.moscIntmMgmtSO() 와 동일.
+     * usimNo: USIM 번호(ICCID)
+     */
+    public MpUsimCheckVO moscIntmMgmtSO(String ncn, String ctn, String custId, String usimNo) {
+        MpUsimCheckVO vo = new MpUsimCheckVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X85);
+        param.put("usimNo", usimNo != null ? usimNo : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x85mock001</globalNo></commHeader><outDto><usimNo>" + usimNo + "</usimNo><usimSts>01</usimSts><usimStsCd>정상</usimStsCd></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * UC0 USIM 변경 처리. ASIS usimChangeUC0() 와 동일.
+     * newUsimNo: 새 USIM 번호(ICCID)
+     */
+    public MpUsimChangeVO usimChangeUC0(String ncn, String ctn, String custId, String newUsimNo) {
+        MpUsimChangeVO vo = new MpUsimChangeVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_UC0);
+        param.put("newUsimNo", newUsimNo != null ? newUsimNo : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>uc0mock001</globalNo></commHeader></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * Y24 상품변경 사전체크. 단말보험 가입가능여부 확인에 사용.
+     * soc: 보험 SOC 코드
+     */
+    public SvcChgValdChkVO chkMoscCombSvcInfo(String ncn, String ctn, String custId, String soc) {
+        SvcChgValdChkVO vo = new SvcChgValdChkVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_Y24);
+        param.put("soc", soc != null ? soc : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType></commHeader></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
     }
 
     /**
