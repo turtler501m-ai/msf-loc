@@ -25,4 +25,4 @@
 ## 관련 문서 경로
 - `.doc/15.개발기능목록_ASIS_TOBE_기능분석명세서.md`
 - `.doc/18.요구사항ID별_ASIS_TOBE_개발진행명세.md`
-- `msf-api/src/main/java/com/ktmmobile/msf/MsfApplication.java`
+- `msf/msf-api/src/main/java/com/ktmmobile/msf/MsfApplication.java`
