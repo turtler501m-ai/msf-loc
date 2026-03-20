@@ -4,79 +4,335 @@
 
 <mapper namespace="com.ktmmobile.msf.formOwnChg.mapper.OwnChgMapper">
 
-    <!--
-        명의변경 접수번호 시퀀스 발급.
-        PostgreSQL: nextval. Oracle(운영): NMCP_NFL_CHG_TRNS_SEQ.nextval
-    -->
+    <!-- ════════════════════════════════════════════
+         기존: CsTransfer 양도/양수인 (NMCP_NFL_CHG_TRNS/TRNSFE)
+         NOTE: 향후 MSF_REQUEST_NAME_TRNS로 전환 예정
+         ════════════════════════════════════════════ -->
+
     <select id="nextTrnsApyNo" resultType="java.lang.Long">
-        SELECT nextval('nmcp_nfl_chg_trns_seq')
+        SELECT nextval('SQ_NFL_CHG_TRNS_SEQ')
     </select>
 
-    <!--
-        양도인 저장 (NMCP_NFL_CHG_TRNS).
-        ASIS CsTransferMapper grantorRegSave 참조.
-    -->
     <insert id="insertGrantor" parameterType="com.ktmmobile.msf.formOwnChg.dto.OwnChgTrnsInsertDto">
-        INSERT INTO NMCP_NFL_CHG_TRNS (
-            TRNS_APY_NO,
+        INSERT INTO MSF_REQUEST_NAME_TRNS (
+            TRNS_SEQ, TRNS_NM, TRNS_MOBILE_NO, TRNS_PHONE_NO,
+            TRNS_PWD, TRNS_MYSLF_CONF_METH_CD, TRNS_STTUS_CD,
+            TRNS_TRNSFE_NM, TRNS_TRNSFE_MOBILE_NO,
+            TRNS_CSTMR_TYPE_CD, MINOR_AGENT_AGRM_YN, MINOR_AGENT_SELF_INQRY_AGRM_YN,
+            CRET_ID, CRET_DT
+        ) VALUES (
+            #{trnsApyNo}, #{trnsNm}, #{trnsMobileNo}, #{trnsPhoneNo},
+            #{trnsPass}, #{trnsMyslfConfMeth}, #{trnsStatusVal},
+            #{trnsTrnsfeNm}, #{trnsTrnsfeMobileNo},
+            'P', 'N', 'N',
+            #{cretId}, NOW()
+        )
+    </insert>
+
+    <insert id="insertTransferee" parameterType="com.ktmmobile.msf.formOwnChg.dto.OwnChgTrnsfeInsertDto">
+        <!-- 양수인 정보는 MSF_REQUEST_NAME_CHG 통합 테이블에 저장 (간이 저장용) -->
+        INSERT INTO MSF_REQUEST_NAME_CHG (
+            CRET_ID, CRET_DT,
+            MANAGER_CD, AGENT_CD, OPER_TYPE_CD, CSTMR_TYPE_CD,
+            IDENTITY_CERT_TYPE_CD, FATH_TRG_YN, SELF_INQRY_AGRM_YN,
+            REQ_INFO_CHG_YN, USIM_SUCC_YN, REC_YN, APP_FORM_YN, APP_FORM_XML_YN,
+            CSTMR_NM, CSTMR_NATIVE_RRN,
+            MINOR_AGENT_AGRM_YN, MINOR_AGENT_SELF_INQRY_AGRM_YN,
+            REQ_PAY_OTHER_YN, CLAUSE_CNTR_DEL_YN, CLAUSE_PRI_COLLECT_YN,
+            CLAUSE_PRI_OFFER_YN, CLAUSE_ESS_COLLECT_YN, CLAUSE_CONFIDENCE_YN,
+            CLAUSE_PRI_AD_YN, CLAUSE_JEHU_YN, CLAUSE_FINANCE_YN,
+            PERSONAL_INFO_COLLECT_AGREE_YN, OTHERS_TRNS_AGREE_YN,
+            OTHERS_TRNS_KT_AGREE_YN, OTHERS_AD_RECEIVE_AGREE_YN, CLAUSE_FATH_YN
+        ) VALUES (
+            #{cretId}, NOW(),
+            'MFORM', 'MFORM', 'NC', 'P',
+            '1', 'N', 'N',
+            'N', 'N', 'N', 'N', 'N',
+            #{trnsfeNm}, #{trnsfeResno},
+            'N', 'N',
+            'N', 'N', 'N',
+            'N', 'N', 'N',
+            'N', 'N', 'N',
+            'N', 'N',
+            'N', 'N', 'N'
+        )
+    </insert>
+
+    <update id="updateGrantorStatus">
+        UPDATE MSF_REQUEST_NAME_TRNS
+        SET TRNS_STTUS_CD = #{trnsStatusVal},
+            AMD_DT = NOW()
+        WHERE NFL_CHG_TRNS_SEQ = #{trnsApyNo}
+    </update>
+
+    <!-- ════════════════════════════════════════════
+         신규: 명의변경 신청서 전체 저장 (apply 흐름)
+         MSF_CUST_REQUEST_MST + MSF_REQUEST_NAME_CHG
+         ════════════════════════════════════════════ -->
+
+    <!-- 신청서 시퀀스 발급 (MSF_CUST_REQUEST_MST.REQUEST_KEY) -->
+    <select id="nextCustReqSeq" resultType="java.lang.Long">
+        SELECT nextval('SQ_REQUEST_KEY')
+    </select>
+
+    <!-- 예약번호 발급 (ASIS appformDao.generateResNo 대응) -->
+    <select id="generateResNo" resultType="java.lang.String">
+        SELECT 'MCN' || TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(nextval('SQ_MCN_RES_NO')::TEXT, 6, '0')
+    </select>
+
+    <!-- 양도인 마스터 저장 (MSF_CUST_REQUEST_MST) -->
+    <insert id="insertCustReqMst" parameterType="com.ktmmobile.msf.formOwnChg.dto.OwnChgCustReqInsertDto">
+        INSERT INTO MSF_CUST_REQUEST_MST (
+            REQUEST_KEY,
+            REQ_TYPE_CD,
+            USER_ID,
+            CSTMR_NM,
+            MOBILE_NO,
+            CSTMR_NATIVE_RRN,
+            CONTRACT_NUM,
+            CSTMR_TYPE_CD,
+            ONLINE_AUTH_TYPE_CD,
+            ONLINE_AUTH_INFO,
+            ETC_MOBILE_NO,
+            CRET_ID,
+            CRET_DT
+        ) VALUES (
+            #{custReqSeq},
+            #{reqType},
+            #{userid},
+            #{grCstmrName},
+            #{mobileNo},
+            #{grCstmrNativeRrn},
+            #{contractNum},
+            #{grCstmrType, jdbcType=VARCHAR},
+            #{grOnlineAuthType, jdbcType=VARCHAR},
+            #{grOnlineAuthInfo, jdbcType=VARCHAR},
+            #{etcMobile, jdbcType=VARCHAR},
+            #{userid},
+            NOW()
+        )
+    </insert>
+
+    <!-- 양수인 상세 저장 (MSF_REQUEST_NAME_CHG) — ASIS NMCP_CUST_REQUEST_NAME_CHG + AGENT 통합 -->
+    <insert id="insertCustReqNameChg" parameterType="com.ktmmobile.msf.formOwnChg.dto.OwnChgCustReqInsertDto">
+        INSERT INTO MSF_REQUEST_NAME_CHG (
+            REQUEST_KEY,
+            CRET_ID,
+            CRET_DT,
+            MANAGER_CD,
+            AGENT_CD,
+            OPER_TYPE_CD,
+            CSTMR_TYPE_CD,
+            MCN_RES_NO,
+            IDENTITY_CERT_TYPE_CD,
+            FATH_TRG_YN,
+            ONLINE_AUTH_TYPE_CD,
+            AUTH_INFO,
+            SELF_CERT_TYPE_CD,
+            SELF_INQRY_AGRM_YN,
+            SELF_ISSU_EXPR_DATE,
+            SELF_ISSU_NO,
+            REQ_INFO_CHG_YN,
+            CSTMR_NM,
+            CSTMR_NATIVE_RRN,
+            CSTMR_FOREIGNER_NATION,
+            AGNT_TEL_NO,
+            MINOR_AGENT_NM,
+            MINOR_AGENT_RRN,
+            MINOR_AGENT_REL_TYPE_CD,
+            MINOR_AGENT_AGRM_YN,
+            MINOR_AGENT_SELF_INQRY_AGRM_YN,
+            CSTMR_ZIPCD,
+            CSTMR_ADR,
+            CSTMR_ADR_DTL,
+            CSTMR_RECEIVE_TEL_FN_NO,
+            CSTMR_RECEIVE_TEL_MN_NO,
+            CSTMR_RECEIVE_TEL_RN_NO,
+            CSTMR_EMAIL_ADR,
+            SOC,
+            SOC_NM,
+            JEHU_PROD_TYPE_CD,
+            USIM_SUCC_YN,
+            ICC_ID,
+            CSTMR_BILL_SEND_TYPE_CD,
+            REQ_PAY_TYPE_CD,
+            REQ_BANK_CD,
+            REQ_ACCOUNT_NO,
+            REQ_CARD_COMPANY_CD,
+            REQ_CARD_NO,
+            REQ_CARD_YY,
+            REQ_CARD_MM,
+            REQ_PAY_OTHER_YN,
+            CLAUSE_CNTR_DEL_YN,
+            CLAUSE_PRI_COLLECT_YN,
+            CLAUSE_PRI_OFFER_YN,
+            CLAUSE_ESS_COLLECT_YN,
+            CLAUSE_CONFIDENCE_YN,
+            CLAUSE_PRI_AD_YN,
+            CLAUSE_JEHU_YN,
+            CLAUSE_FINANCE_YN,
+            PERSONAL_INFO_COLLECT_AGREE_YN,
+            OTHERS_TRNS_AGREE_YN,
+            OTHERS_TRNS_KT_AGREE_YN,
+            OTHERS_AD_RECEIVE_AGREE_YN,
+            CLAUSE_FATH_YN,
+            MCN_STAT_RSN_CD,
+            PROC_CD,
+            MCN_STATE_CD,
+            REC_YN,
+            APP_FORM_YN,
+            APP_FORM_XML_YN
+        ) VALUES (
+            #{custReqSeq},
+            #{userid},
+            NOW(),
+            'MFORM',
+            #{agencyCode},
+            'NC',
+            #{cstmrType, jdbcType=VARCHAR},
+            #{mcnResNo, jdbcType=VARCHAR},
+            COALESCE(#{selfCertType, jdbcType=VARCHAR}, '1'),
+            'N',
+            #{onlineAuthType, jdbcType=VARCHAR},
+            #{onlineAuthInfo, jdbcType=VARCHAR},
+            #{selfCertType, jdbcType=VARCHAR},
+            COALESCE(#{selfInqryAgrmYn, jdbcType=VARCHAR}, 'N'),
+            #{selfIssuExprDt, jdbcType=VARCHAR},
+            #{selfIssuNum, jdbcType=VARCHAR},
+            COALESCE(#{reqInfoChgYn, jdbcType=VARCHAR}, 'N'),
+            #{cstmrName},
+            #{cstmrNativeRrn, jdbcType=VARCHAR},
+            #{cstmrForeignerNation, jdbcType=VARCHAR},
+            #{agntTelNo, jdbcType=VARCHAR},
+            #{minorAgentName, jdbcType=VARCHAR},
+            #{minorAgentRrn, jdbcType=VARCHAR},
+            #{minorAgentRelation, jdbcType=VARCHAR},
+            COALESCE(#{minorAgentAgrmYn, jdbcType=VARCHAR}, 'N'),
+            'N',
+            #{cstmrPost, jdbcType=VARCHAR},
+            #{cstmrAddr, jdbcType=VARCHAR},
+            #{cstmrAddrDtl, jdbcType=VARCHAR},
+            #{cstmrReceiveTelFn, jdbcType=VARCHAR},
+            #{cstmrReceiveTelMn, jdbcType=VARCHAR},
+            #{cstmrReceiveTelRn, jdbcType=VARCHAR},
+            #{cstmrMail, jdbcType=VARCHAR},
+            #{soc, jdbcType=VARCHAR},
+            #{socNm, jdbcType=VARCHAR},
+            #{jehuProdType, jdbcType=VARCHAR},
+            COALESCE(#{usimSuccYn, jdbcType=VARCHAR}, 'N'),
+            #{iccId, jdbcType=VARCHAR},
+            #{cstmrBillSendCode, jdbcType=VARCHAR},
+            #{reqPayType, jdbcType=VARCHAR},
+            #{reqBank, jdbcType=VARCHAR},
+            #{reqAccountNumber, jdbcType=VARCHAR},
+            #{reqCardCompany, jdbcType=VARCHAR},
+            #{reqCardNo, jdbcType=VARCHAR},
+            #{reqCardYy, jdbcType=VARCHAR},
+            #{reqCardMm, jdbcType=VARCHAR},
+            'N',
+            COALESCE(#{clauseCntrDelFlag, jdbcType=VARCHAR}, 'N'),
+            COALESCE(#{clausePriCollectFlag, jdbcType=VARCHAR}, 'N'),
+            COALESCE(#{clausePriOfferFlag, jdbcType=VARCHAR}, 'N'),
+            COALESCE(#{clauseEssCollectFlag, jdbcType=VARCHAR}, 'N'),
+            COALESCE(#{clauseConfidenceFlag, jdbcType=VARCHAR}, 'N'),
+            COALESCE(#{clausePriAdFlag, jdbcType=VARCHAR}, 'N'),
+            COALESCE(#{clauseJehuFlag, jdbcType=VARCHAR}, 'N'),
+            'N',
+            COALESCE(#{personalInfoCollectAgree, jdbcType=VARCHAR}, 'N'),
+            COALESCE(#{othersTrnsAgree, jdbcType=VARCHAR}, 'N'),
+            COALESCE(#{othersTrnsKtAgree, jdbcType=VARCHAR}, 'N'),
+            COALESCE(#{othersAdReceiveAgree, jdbcType=VARCHAR}, 'N'),
+            'N',
+            #{mcnStatRsnCd, jdbcType=VARCHAR},
+            #{procCd},
+            '00',
+            'N',
+            'N',
+            'N'
+        )
+    </insert>
+
+    <!-- 미성년자 법정대리인: MSF_REQUEST_NAME_CHG에 이미 MINOR_AGENT 컬럼 포함.
+         양도인측 법정대리인은 MSF_REQUEST_NAME_TRNS에 저장. -->
+    <insert id="insertCustReqNameChgAgent" parameterType="com.ktmmobile.msf.formOwnChg.dto.OwnChgCustReqInsertDto">
+        <!-- 양도인 법정대리인 → MSF_REQUEST_NAME_TRNS INSERT (양도인측 미성년자) -->
+        INSERT INTO MSF_REQUEST_NAME_TRNS (
+            TRNS_SEQ,
+            TRNS_CSTMR_TYPE_CD,
             TRNS_NM,
             TRNS_MOBILE_NO,
             TRNS_PHONE_NO,
-            TRNS_PASS,
-            TRNS_MYSLF_CONF_METH,
-            TRNS_STATUS_VAL,
+            TRNS_PWD,
+            TRNS_MYSLF_CONF_METH_CD,
             TRNS_TRNSFE_NM,
             TRNS_TRNSFE_MOBILE_NO,
+            TRNS_STTUS_CD,
+            MINOR_AGENT_NM,
+            MINOR_AGENT_RRN,
+            MINOR_AGENT_REL_TYPE_CD,
+            MINOR_AGENT_AGRM_YN,
+            MINOR_AGENT_SELF_INQRY_AGRM_YN,
             CRET_ID,
-            CRET_DTM
+            CRET_DT
         ) VALUES (
-            #{trnsApyNo},
-            #{trnsNm},
-            #{trnsMobileNo},
-            #{trnsPhoneNo},
-            #{trnsPass},
-            #{trnsMyslfConfMeth},
-            #{trnsStatusVal},
-            #{trnsTrnsfeNm},
-            #{trnsTrnsfeMobileNo},
-            #{cretId},
+            #{custReqSeq},
+            #{grCstmrType},
+            #{grCstmrName},
+            #{mobileNo},
+            #{mobileNo},
+            '-',
+            '1',
+            #{cstmrName},
+            COALESCE(#{cstmrReceiveTelFn, jdbcType=VARCHAR}, '') || COALESCE(#{cstmrReceiveTelMn, jdbcType=VARCHAR}, '') || COALESCE(#{cstmrReceiveTelRn, jdbcType=VARCHAR}, ''),
+            '2',
+            #{grMinorAgentName, jdbcType=VARCHAR},
+            #{grMinorAgentRrn, jdbcType=VARCHAR},
+            #{grMinorAgentRelation, jdbcType=VARCHAR},
+            COALESCE(#{grMinorAgentAgrmYn, jdbcType=VARCHAR}, 'N'),
+            'N',
+            #{userid},
             NOW()
         )
     </insert>
+    <!-- NOTE: 양수인 미성년자 법정대리인은 insertCustReqNameChg의 MINOR_AGENT_* 컬럼에 저장 -->
 
-    <!--
-        양수인 저장 (NMCP_NFL_CHG_TRNSFE).
-        ASIS CsTransferMapper assigneeRegSave 참조.
-    -->
-    <insert id="insertTransferee" parameterType="com.ktmmobile.msf.formOwnChg.dto.OwnChgTrnsfeInsertDto">
-        INSERT INTO NMCP_NFL_CHG_TRNSFE (
-            TRNSFE_APY_NO,
-            TRNSFE_NM,
-            TRNSFE_MOBILE_NO,
-            TRNSFE_RESNO,
-            TRNSFE_MYSLF_CONF_METH,
-            CRET_ID,
-            CRET_DTM
-        ) VALUES (
-            #{trnsfeApyNo},
-            #{trnsfeNm},
-            #{trnsfeMobileNo},
-            #{trnsfeResno},
-            #{trnsfeMyslfConfMeth},
-            #{cretId},
-            NOW()
-        )
-    </insert>
-
-    <!--
-        양도인 상태값 변경 (ASIS statusEdit).
-        양수인 저장 후 TRNS_STATUS_VAL='2'(신청완료)로 업데이트.
-    -->
-    <update id="updateGrantorStatus">
-        UPDATE NMCP_NFL_CHG_TRNS
-        SET TRNS_STATUS_VAL = #{trnsStatusVal},
-            UPDT_DTM = NOW()
-        WHERE TRNS_APY_NO = #{trnsApyNo}
+    <!-- 양도인 마스터 인증정보 초기화 (미성년자 양도인 → 법정대리인 인증으로 대체) -->
+    <update id="updateCustReqMstAuth" parameterType="com.ktmmobile.msf.formOwnChg.dto.OwnChgCustReqInsertDto">
+        UPDATE MSF_CUST_REQUEST_MST
+        SET ONLINE_AUTH_TYPE_CD = '',
+            ONLINE_AUTH_INFO = ''
+        WHERE REQUEST_KEY = #{custReqSeq}
     </update>
+
+    <!-- 양수인 상세 인증정보 초기화 (미성년자 양수인 → 법정대리인 인증으로 대체) -->
+    <update id="updateCustReqNameChgAuth" parameterType="com.ktmmobile.msf.formOwnChg.dto.OwnChgCustReqInsertDto">
+        UPDATE MSF_REQUEST_NAME_CHG
+        SET ONLINE_AUTH_TYPE_CD = '',
+            AUTH_INFO = '',
+            SELF_CERT_TYPE_CD = '',
+            SELF_ISSU_EXPR_DATE = '',
+            SELF_ISSU_NO = '',
+            SELF_CSTMR_CI_INFO = ''
+        WHERE REQUEST_KEY = #{custReqSeq}
+    </update>
+
+    <!-- ════════════════════════════════════════════
+         grantorReqChk: 양도인 회선 정보 조회
+         ASIS MypageMapper.selectCntrListNmChg 대응
+         ════════════════════════════════════════════ -->
+
+    <select id="selectCntrListNmChg" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+            A.SVC_CNTR_NO,
+            A.TEL_NO,
+            A.SVC_STATUS,
+            A.CUST_ID,
+            A.ACT_DATE,
+            A.SOC,
+            B.SALE_SBSD_NM AS SOC_NM
+        FROM MSP_CNTR_INFO@DL_MSP A
+        LEFT JOIN MSP_SALE_SUBSD_MST@DL_MSP B ON A.SOC = B.SALE_SBSD_CD
+        WHERE A.SVC_CNTR_NO = #{contractNum}
+    </select>
 
 </mapper>
