@@ -1,5 +1,12 @@
 package com.ktmmobile.msf.formOwnChg.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoDto;
 import com.ktmmobile.msf.formOwnChg.dto.OwnChgApplyDto;
 import com.ktmmobile.msf.formOwnChg.dto.OwnChgApplyVO;
@@ -11,14 +18,6 @@ import com.ktmmobile.msf.formOwnChg.service.OwnChgAddSvc;
 import com.ktmmobile.msf.formOwnChg.service.OwnChgApplySvc;
 import com.ktmmobile.msf.formOwnChg.service.OwnChgInfoSvc;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionCurrentResVO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 명의변경 신청서 REST 컨트롤러.
@@ -84,5 +83,41 @@ public class OwnChgController {
     @PostMapping("/apply")
     public OwnChgApplyVO apply(@RequestBody OwnChgApplyDto req) {
         return ownChgApplySvc.apply(req);
+    }
+
+    /**
+     * 납부방법 가용 코드 목록 조회.
+     * POST /api/v1/ident/pay-method
+     */
+    @PostMapping("/pay-method")
+    public Map<String, Object> getPayMethodList() {
+        return ownChgInfoSvc.getPayMethodList();
+    }
+
+    /**
+     * 계좌번호 유효성 체크 (형식 검증. IF_0006 연동 예정).
+     * POST /api/v1/ident/account-check
+     */
+    @PostMapping("/account-check")
+    public Map<String, Object> checkAccountNo(@RequestBody Map<String, String> req) {
+        return ownChgInfoSvc.checkAccountNo(req.get("bankCd"), req.get("accountNo"));
+    }
+
+    /**
+     * 카드번호 유효성 체크 (형식 검증. IF_0007 연동 예정).
+     * POST /api/v1/ident/card-check
+     */
+    @PostMapping("/card-check")
+    public Map<String, Object> checkCardNo(@RequestBody Map<String, String> req) {
+        return ownChgInfoSvc.checkCardNo(req.get("cardNo"), req.get("cardYy"), req.get("cardMm"));
+    }
+
+    /**
+     * 청구계정ID 유효성 체크 (형식/길이 검증).
+     * POST /api/v1/ident/billing-account-check
+     */
+    @PostMapping("/billing-account-check")
+    public Map<String, Object> checkBillingAccountId(@RequestBody Map<String, String> req) {
+        return ownChgInfoSvc.checkBillingAccountId(req.get("billingAccountId"));
     }
 }

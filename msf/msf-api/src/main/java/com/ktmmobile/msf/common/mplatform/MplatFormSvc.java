@@ -17,6 +17,8 @@ import com.ktmmobile.msf.common.mplatform.vo.MpSuspenCnlChgInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenCnlPosInfoInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenPosHisVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpFarRealtimePayInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceChgVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceResvInfoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpNameChgPreChkVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimChangeVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimCheckVO;
@@ -80,6 +82,18 @@ public class MplatFormSvc {
     public static final String APP_EVENT_CD_MC0 = "MC0";
     /** X18 실시간 요금조회 */
     public static final String APP_EVENT_CD_X18 = "X18";
+    /** X19 요금상품 즉시변경 */
+    public static final String APP_EVENT_CD_X19 = "X19";
+    /** X84 요금상품 예약일 즉시변경 */
+    public static final String APP_EVENT_CD_X84 = "X84";
+    /** X88 요금상품 예약변경(익월1일 적용) */
+    public static final String APP_EVENT_CD_X88 = "X88";
+    /** X89 현재 요금상품 예약변경 조회 */
+    public static final String APP_EVENT_CD_X89 = "X89";
+    /** X90 요금상품 예약변경 취소 */
+    public static final String APP_EVENT_CD_X90 = "X90";
+    /** MP0 명의변경 처리 */
+    public static final String APP_EVENT_CD_MP0 = "MP0";
     /** NU1 희망번호 조회 */
     public static final String APP_EVENT_CD_NU1 = "NU1";
     /** NU2 희망번호 예약/취소 */
@@ -504,6 +518,106 @@ public class MplatFormSvc {
         HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X18);
         if ("LOCAL".equals(serverLocation)) {
             vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x18mock001</globalNo></commHeader><outDto><searchDay>20260319</searchDay><searchTime>20260301 ~ 20260319</searchTime><amntDto><gubun>월정액</gubun><payMent>55,000 원</payMent></amntDto><amntDto><gubun>당월요금계</gubun><payMent>55,000 원</payMent></amntDto></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X19 요금상품 즉시변경. ASIS FarPricePlanServiceImpl.moscFarPriceChg(X19).
+     * @param soc 변경할 요금제 SOC 코드
+     */
+    public MpFarPriceChgVO farPriceChg(String ncn, String ctn, String custId, String soc) {
+        MpFarPriceChgVO vo = new MpFarPriceChgVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X19);
+        param.put("soc", soc != null ? soc : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x19mock001</globalNo></commHeader><outDto><rsltMsg>처리되었습니다</rsltMsg></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X84 요금상품 예약일 즉시변경 (예약된 요금제를 당일 즉시 변경).
+     * ASIS FarPricePlanServiceImpl.farPricePlanChgNeTrace(X84).
+     */
+    public MpFarPriceChgVO farPriceImmedChg(String ncn, String ctn, String custId, String soc) {
+        MpFarPriceChgVO vo = new MpFarPriceChgVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X84);
+        param.put("soc", soc != null ? soc : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x84mock001</globalNo></commHeader><outDto><rsltMsg>처리되었습니다</rsltMsg></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X88 요금상품 예약변경 (익월1일 적용). ASIS doFarPricePlanRsrvChg(X88).
+     * @param soc 예약 변경할 요금제 SOC 코드
+     */
+    public MpFarPriceChgVO farPriceResvChg(String ncn, String ctn, String custId, String soc) {
+        MpFarPriceChgVO vo = new MpFarPriceChgVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X88);
+        param.put("soc", soc != null ? soc : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x88mock001</globalNo></commHeader><outDto><rsltMsg>예약되었습니다</rsltMsg></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X89 현재 요금상품 예약변경 조회. ASIS doFarPricePlanRsrvSearch(X89).
+     */
+    public MpFarPriceResvInfoVO farPriceResvInfo(String ncn, String ctn, String custId) {
+        MpFarPriceResvInfoVO vo = new MpFarPriceResvInfoVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X89);
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x89mock001</globalNo></commHeader><outDto><resvSoc></resvSoc><resvSocNm></resvSocNm><resvApplyDt></resvApplyDt></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X90 요금상품 예약변경 취소. ASIS doFarPricePlanRsrvCancel(X90).
+     */
+    public MpFarPriceChgVO farPriceResvCancel(String ncn, String ctn, String custId) {
+        MpFarPriceChgVO vo = new MpFarPriceChgVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X90);
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x90mock001</globalNo></commHeader><outDto><rsltMsg>예약이 취소되었습니다</rsltMsg></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * MP0 명의변경 처리. ASIS OsstMcnMgmtSO.osstMcnChg(MP0).
+     * DB 저장(apply) 완료 후 호출. mcnResNo=예약번호, mcnStatRsnCd=처리사유코드.
+     */
+    public SvcChgValdChkVO nameChgExec(String ncn, String ctn, String custId,
+                                       String mcnResNo, String mcnStatRsnCd) {
+        SvcChgValdChkVO vo = new SvcChgValdChkVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_MP0);
+        param.put("mcnResNo", mcnResNo != null ? mcnResNo : "");
+        param.put("mcnStatRsnCd", mcnStatRsnCd != null ? mcnStatRsnCd : "RCMCMCN");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>mp0mock001</globalNo></commHeader></return>");
             vo.toResponseParse();
         } else {
             mplatFormServerAdapter.callService(param, vo, 30000);

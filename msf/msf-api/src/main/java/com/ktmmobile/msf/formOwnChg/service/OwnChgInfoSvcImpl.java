@@ -1,24 +1,23 @@
 package com.ktmmobile.msf.formOwnChg.service;
 
-import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
-import com.ktmmobile.msf.common.mplatform.vo.MpNameChgPreChkVO;
-import com.ktmmobile.msf.formOwnChg.dto.OwnChgCheckTelNoReqDto;
-import com.ktmmobile.msf.formOwnChg.dto.OwnChgCheckTelNoVO;
-import com.ktmmobile.msf.formOwnChg.dto.OwnChgGrantorReqChkReqDto;
-import com.ktmmobile.msf.formOwnChg.dto.OwnChgGrantorReqChkVO;
-import com.ktmmobile.msf.formOwnChg.mapper.OwnChgMapper;
-import com.ktmmobile.msf.formComm.dto.SvcChgInfoDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
+import com.ktmmobile.msf.common.mplatform.vo.MpNameChgPreChkVO;
+import com.ktmmobile.msf.formComm.dto.SvcChgInfoDto;
+import com.ktmmobile.msf.formOwnChg.dto.OwnChgCheckTelNoReqDto;
+import com.ktmmobile.msf.formOwnChg.dto.OwnChgCheckTelNoVO;
+import com.ktmmobile.msf.formOwnChg.dto.OwnChgGrantorReqChkReqDto;
+import com.ktmmobile.msf.formOwnChg.dto.OwnChgGrantorReqChkVO;
+import com.ktmmobile.msf.formOwnChg.mapper.OwnChgMapper;
 
 /**
  * 명의변경 신청서 - 가능 여부·연락처 검증 서비스 구현.
@@ -151,8 +150,91 @@ public class OwnChgInfoSvcImpl implements OwnChgInfoSvc {
         return OwnChgCheckTelNoVO.success();
     }
 
+    /** 납부방법 가용 코드 목록 반환. */
+    @Override
+    public Map<String, Object> getPayMethodList() {
+        Map<String, Object> result = new HashMap<>();
+        // 계좌이체(11), 신용카드(21), 지로(31)
+        List<Map<String, String>> methods = new java.util.ArrayList<>();
+        String[][] defs = {{"11", "계좌이체"}, {"21", "신용카드"}, {"31", "지로"}};
+        for (String[] d : defs) {
+            Map<String, String> m = new HashMap<>();
+            m.put("code", d[0]);
+            m.put("name", d[1]);
+            methods.add(m);
+        }
+        result.put("success", true);
+        result.put("payMethods", methods);
+        return result;
+    }
+
+    /** 계좌번호 유효성 체크 (형식 검증. IF_0006 연동 예정). */
+    @Override
+    public Map<String, Object> checkAccountNo(String bankCd, String accountNo) {
+        Map<String, Object> result = new HashMap<>();
+        if (isBlank(bankCd)) {
+            result.put("success", false);
+            result.put("message", "은행 코드를 선택해 주세요.");
+            return result;
+        }
+        String normalized = accountNo == null ? "" : accountNo.replaceAll("[^0-9]", "");
+        if (normalized.length() < 7 || normalized.length() > 16) {
+            result.put("success", false);
+            result.put("message", "계좌번호는 7~16자리 숫자로 입력해 주세요.");
+            return result;
+        }
+        result.put("success", true);
+        result.put("message", "유효한 계좌번호입니다.");
+        return result;
+    }
+
+    /** 카드번호 유효성 체크 (형식 검증. IF_0007 연동 예정). */
+    @Override
+    public Map<String, Object> checkCardNo(String cardNo, String cardYy, String cardMm) {
+        Map<String, Object> result = new HashMap<>();
+        String normalized = cardNo == null ? "" : cardNo.replaceAll("[^0-9]", "");
+        if (normalized.length() != 16) {
+            result.put("success", false);
+            result.put("message", "카드번호는 16자리 숫자로 입력해 주세요.");
+            return result;
+        }
+        if (isBlank(cardYy) || cardYy.length() != 2) {
+            result.put("success", false);
+            result.put("message", "카드 유효기간(년도 2자리)을 입력해 주세요.");
+            return result;
+        }
+        if (isBlank(cardMm) || cardMm.length() != 2) {
+            result.put("success", false);
+            result.put("message", "카드 유효기간(월 2자리)을 입력해 주세요.");
+            return result;
+        }
+        result.put("success", true);
+        result.put("message", "유효한 카드번호입니다.");
+        return result;
+    }
+
+    /** 청구계정ID 유효성 체크 (형식/길이 검증). */
+    @Override
+    public Map<String, Object> checkBillingAccountId(String billingAccountId) {
+        Map<String, Object> result = new HashMap<>();
+        if (isBlank(billingAccountId)) {
+            result.put("success", false);
+            result.put("message", "청구계정 ID를 입력해 주세요.");
+            return result;
+        }
+        String normalized = billingAccountId.trim();
+        if (normalized.length() < 6 || normalized.length() > 20) {
+            result.put("success", false);
+            result.put("message", "청구계정 ID는 6~20자리로 입력해 주세요.");
+            return result;
+        }
+        result.put("success", true);
+        result.put("message", "유효한 청구계정 ID입니다.");
+        return result;
+    }
+
     private static String normalizePhone(String phone) {
-        if (phone == null) return "";
+        if (phone == null) return null;
         return phone.replaceAll("[^0-9]", "");
     }
 

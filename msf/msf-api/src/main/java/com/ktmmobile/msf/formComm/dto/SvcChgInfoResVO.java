@@ -4,7 +4,7 @@ package com.ktmmobile.msf.formComm.dto;
  * 가입자정보조회 응답 VO. Y04 + X01 결과 조합.
  * 프론트엔드 Pinia store(service_change_form) 에 저장되는 필드 기준.
  */
-public class JoinInfoResVO {
+public class SvcChgInfoResVO {
 
     private boolean success;
     private String message;
@@ -32,8 +32,8 @@ public class JoinInfoResVO {
     /** 최초개통일 (X01) */
     private String initActivationDate;
 
-    public static JoinInfoResVO fail(String message) {
-        JoinInfoResVO vo = new JoinInfoResVO();
+    public static SvcChgInfoResVO fail(String message) {
+        SvcChgInfoResVO vo = new SvcChgInfoResVO();
         vo.success = false;
         vo.message = message;
         return vo;

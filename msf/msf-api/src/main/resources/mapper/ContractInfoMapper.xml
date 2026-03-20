@@ -21,4 +21,19 @@
         LIMIT 1
     </select>
 
+
+    <!--
+        계약번호(ncn)로 청구계정ID(BAN) 조회.
+        ASIS: MypageMapper.xml selectBanSel 동일 구조.
+        운영 M전산(Oracle): LIMIT 1 → AND ROWNUM = 1 교체 필요.
+    -->
+    <select id="selectBanByContractNum"
+            parameterType="string"
+            resultType="string">
+        SELECT BAN
+        FROM MSP_JUO_SUB_INFO
+        WHERE CONTRACT_NUM = #{contractNum}
+        LIMIT 1
+    </select>
+
 </mapper>

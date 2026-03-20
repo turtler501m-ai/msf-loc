@@ -1,7 +1,6 @@
 package com.ktmmobile.msf.formSvcChg.controller;
 
 import com.ktmmobile.msf.formSvcChg.dto.UsimChangeReqDto;
-import com.ktmmobile.msf.formSvcChg.dto.UsimCheckReqDto;
 import com.ktmmobile.msf.formSvcChg.service.SvcChgUsimSvc;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,11 +12,11 @@ import java.util.Map;
 
 /**
  * USIM 변경 Controller.
- * ASIS AppformController moscIntmMgmtAjax(X85) / usimChangeUC0(UC0) 와 동일 역할.
+ * ASIS AppformController usimChangeUC0(UC0) 와 동일 역할.
+ * X85 USIM 유효성 체크는 공통 엔드포인트 POST /api/v1/comm/usim-check 로 이전.
  *
  * 처리 흐름:
- * 1. POST /check  → X85 USIM 유효성 확인
- * 2. POST /change → X85 사전확인 → UC0 USIM 변경
+ * POST /change → X85 사전확인 → UC0 USIM 변경
  */
 @RestController
 @RequestMapping("/api/v1/service-change/usim")
@@ -27,19 +26,6 @@ public class SvcChgUsimController {
 
     public SvcChgUsimController(SvcChgUsimSvc usimSvc) {
         this.usimSvc = usimSvc;
-    }
-
-    /**
-     * X85 USIM 유효성 체크.
-     * ASIS: /msp/moscIntmMgmtAjax.do
-     * 요청: { ncn, ctn, custId, usimNo }
-     * 응답: { success, resultCode, usimNo, usimSts, usimStsCd, usimType }
-     */
-    @PostMapping("/check")
-    public ResponseEntity<Map<String, Object>> checkUsim(
-            @RequestBody(required = false) UsimCheckReqDto req) {
-        Map<String, Object> result = usimSvc.checkUsim(req);
-        return ResponseEntity.ok(result);
     }
 
     /**

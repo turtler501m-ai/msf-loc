@@ -4,7 +4,6 @@ import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimChangeVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimCheckVO;
 import com.ktmmobile.msf.formSvcChg.dto.UsimChangeReqDto;
-import com.ktmmobile.msf.formSvcChg.dto.UsimCheckReqDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,8 @@ import java.util.Map;
 
 /**
  * USIM 변경 서비스 구현.
- * ASIS AppformController moscIntmMgmtAjax(X85) / usimChangeUC0() 와 동일 흐름.
+ * ASIS AppformController usimChangeUC0() 와 동일 흐름.
+ * X85 USIM 유효성 체크는 SvcChgInfoSvcImpl.checkUsim() 으로 이전.
  */
 @Service
 public class SvcChgUsimSvcImpl implements SvcChgUsimSvc {
@@ -24,47 +24,6 @@ public class SvcChgUsimSvcImpl implements SvcChgUsimSvc {
 
     @Autowired
     private MplatFormSvc mplatFormSvc;
-
-    /**
-     * X85 USIM 유효성 체크.
-     * ASIS: AppformController /msp/moscIntmMgmtAjax.do → MplatFormService.moscIntmMgmtSO(X85)
-     * usimNo(ICCID) 입력 → 유효한 USIM 번호인지 확인.
-     */
-    @Override
-    public Map<String, Object> checkUsim(UsimCheckReqDto req) {
-        Map<String, Object> result = new HashMap<>();
-
-        if (req == null || isBlank(req.getNcn()) || isBlank(req.getCtn()) || isBlank(req.getUsimNo())) {
-            result.put("success", false);
-            result.put("message", "필수 파라미터가 누락되었습니다. (ncn, ctn, usimNo)");
-            return result;
-        }
-
-        try {
-            MpUsimCheckVO vo = mplatFormSvc.moscIntmMgmtSO(
-                req.getNcn(), req.getCtn(), req.getCustId(), req.getUsimNo());
-
-            if (vo.isSuccess()) {
-                result.put("success", true);
-                result.put("resultCode", vo.getResultCode());
-                result.put("globalNo", vo.getGlobalNo());
-                result.put("usimNo", vo.getUsimNo());
-                result.put("usimSts", vo.getUsimSts());
-                result.put("usimStsCd", vo.getUsimStsCd());
-                result.put("usimType", vo.getUsimType());
-                result.put("message", "");
-            } else {
-                result.put("success", false);
-                result.put("resultCode", vo.getResultCode());
-                result.put("message", vo.getSvcMsg());
-            }
-        } catch (Exception e) {
-            logger.error("X85 USIM 유효성 체크 오류: {}", e.getMessage());
-            result.put("success", false);
-            result.put("message", "USIM 유효성 확인 중 오류가 발생했습니다.");
-        }
-        return result;
-    }
 
     /**
      * UC0 USIM 변경 처리.

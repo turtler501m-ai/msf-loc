@@ -38,3 +38,28 @@ export async function checkIdentTelNo(params) {
 export async function submitIdentApply(payload) {
   return msfPost('/v1/ident/apply', payload)
 }
+
+// X85 USIM 번호 유효성 체크 (공통 엔드포인트)
+export async function checkIdentUsim(params) {
+  return msfPost('/v1/comm/usim-check', params)
+}
+
+// 납부방법 가용 코드 목록 조회
+export async function getIdentPayMethodList() {
+  return msfPost('/v1/ident/pay-method', {})
+}
+
+// 계좌번호 유효성 체크 (형식 검증, IF_0016 연동 예정)
+export async function checkIdentAccountNo(params) {
+  return msfPost('/v1/ident/account-check', params)
+}
+
+// 카드번호 유효성 체크 (형식 검증, IF_0017 연동 예정)
+export async function checkIdentCardNo(params) {
+  return msfPost('/v1/ident/card-check', params)
+}
+
+// 청구계정ID 유효성 체크 (형식/길이 검증)
+export async function checkIdentBillingAccountId(params) {
+  return msfPost('/v1/ident/billing-account-check', params)
+}

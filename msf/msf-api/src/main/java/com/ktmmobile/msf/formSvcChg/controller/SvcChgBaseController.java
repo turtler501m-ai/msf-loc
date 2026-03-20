@@ -1,20 +1,20 @@
 package com.ktmmobile.msf.formSvcChg.controller;
 
-import com.ktmmobile.msf.formComm.dto.ConcurrentCheckReqDto;
-import com.ktmmobile.msf.formComm.dto.ConcurrentCheckResVO;
-import com.ktmmobile.msf.formSvcChg.dto.SvcChgBaseCheckReqDto;
-import com.ktmmobile.msf.formSvcChg.dto.SvcChgBaseCheckResVO;
-import com.ktmmobile.msf.formSvcChg.dto.SvcChgBaseTargetResVO;
-import com.ktmmobile.msf.formSvcChg.service.SvcChgBaseSvc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ktmmobile.msf.formComm.dto.ConcurrentCheckReqDto;
+import com.ktmmobile.msf.formComm.dto.ConcurrentCheckResVO;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgBaseCheckReqDto;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgBaseCheckResVO;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgBaseTargetResVO;
+import com.ktmmobile.msf.formSvcChg.service.SvcChgBaseSvc;
 
 /**
- * 서비스변경 기본 REST 컨트롤러.
+ * 서비스변경 기본 컨트롤러.
  * 업무 목록 조회, 서비스체크, 동시처리 불가 체크 엔드포인트 제공.
  */
 @RestController

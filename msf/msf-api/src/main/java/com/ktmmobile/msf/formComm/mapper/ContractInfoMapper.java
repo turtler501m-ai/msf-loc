@@ -16,4 +16,10 @@ public interface ContractInfoMapper {
      * MSP_JUO_SUB_INFO 테이블 (M전산 DB).
      */
     ContractInfoDto selectContractInfo(@Param("name") String name, @Param("ctn") String ctn);
+
+    /**
+     * 계약번호(ncn)로 청구계정ID(BAN) 조회.
+     * ASIS: MypageMapper.xml selectBanSel (SELECT BAN FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM).
+     */
+    String selectBanByContractNum(@Param("contractNum") String contractNum);
 }

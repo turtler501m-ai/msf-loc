@@ -1,11 +1,14 @@
 package com.ktmmobile.msf.formOwnChg.service;
 
+import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
+import com.ktmmobile.msf.common.mplatform.vo.SvcChgValdChkVO;
 import com.ktmmobile.msf.formOwnChg.dto.OwnChgApplyDto;
 import com.ktmmobile.msf.formOwnChg.dto.OwnChgApplyVO;
 import com.ktmmobile.msf.formOwnChg.dto.OwnChgCustReqInsertDto;
 import com.ktmmobile.msf.formOwnChg.mapper.OwnChgMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,9 @@ public class OwnChgApplySvcImpl implements OwnChgApplySvc {
     private static final String MINOR_TYPE = "NM";
 
     private final OwnChgMapper ownChgMapper;
+
+    @Autowired
+    private MplatFormSvc mplatFormSvc;
 
     public OwnChgApplySvcImpl(OwnChgMapper ownChgMapper) {
         this.ownChgMapper = ownChgMapper;
@@ -105,6 +111,19 @@ public class OwnChgApplySvcImpl implements OwnChgApplySvc {
                 if (assigneeMinor) {
                     ownChgMapper.updateCustReqNameChgAuth(dto);
                 }
+            }
+
+            // ── 7. MP0 명의변경 처리 연동 ──
+            try {
+                SvcChgValdChkVO mp0Vo = mplatFormSvc.nameChgExec(
+                    dto.getContractNum(), dto.getMobileNo(), null,
+                    dto.getMcnResNo(), dto.getMcnStatRsnCd());
+                if (!mp0Vo.isSuccess()) {
+                    logger.warn("MP0 명의변경 처리 실패 (DB저장은 완료): resultCode={}, msg={}",
+                        mp0Vo.getResultCode(), mp0Vo.getSvcMsg());
+                }
+            } catch (Exception e) {
+                logger.warn("MP0 명의변경 처리 오류 (DB저장은 완료): {}", e.getMessage());
             }
 
             String applicationNo = "NC-" + custReqSeq;

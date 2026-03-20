@@ -1,8 +1,11 @@
 package com.ktmmobile.msf.formComm.controller;
 
-import com.ktmmobile.msf.formComm.dto.JoinInfoReqDto;
-import com.ktmmobile.msf.formComm.dto.JoinInfoResVO;
-import com.ktmmobile.msf.formComm.service.JoinInfoSvc;
+import com.ktmmobile.msf.formComm.dto.AccountCheckReqDto;
+import com.ktmmobile.msf.formComm.dto.CardCheckReqDto;
+import com.ktmmobile.msf.formComm.dto.SvcChgInfoReqDto;
+import com.ktmmobile.msf.formComm.dto.SvcChgInfoResVO;
+import com.ktmmobile.msf.formComm.service.SvcChgInfoSvc;
+import com.ktmmobile.msf.formSvcChg.dto.UsimCheckReqDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * 서비스변경 공통 REST 컨트롤러. 가입자정보조회 엔드포인트 제공.
@@ -20,14 +24,14 @@ import javax.servlet.http.HttpServletRequest;
 public class SvcChgRestController {
 
     @Autowired
-    private JoinInfoSvc joinInfoSvc;
+    private SvcChgInfoSvc joinInfoSvc;
 
     /**
      * 가입자정보조회 (서비스변경).
      * POST /api/v1/join-info
      */
     @PostMapping("/join-info")
-    public JoinInfoResVO joinInfo(@RequestBody JoinInfoReqDto req, HttpServletRequest httpRequest) {
+    public SvcChgInfoResVO joinInfo(@RequestBody SvcChgInfoReqDto req, HttpServletRequest httpRequest) {
         return joinInfoSvc.joinInfo(req, httpRequest);
     }
 
@@ -36,7 +40,7 @@ public class SvcChgRestController {
      * POST /api/v1/ident/join-info
      */
     @PostMapping("/ident/join-info")
-    public JoinInfoResVO identJoinInfo(@RequestBody JoinInfoReqDto req, HttpServletRequest httpRequest) {
+    public SvcChgInfoResVO identJoinInfo(@RequestBody SvcChgInfoReqDto req, HttpServletRequest httpRequest) {
         return joinInfoSvc.joinInfo(req, httpRequest);
     }
 
@@ -45,7 +49,7 @@ public class SvcChgRestController {
      * POST /api/v1/cancel/join-info
      */
     @PostMapping("/cancel/join-info")
-    public JoinInfoResVO cancelJoinInfo(@RequestBody JoinInfoReqDto req, HttpServletRequest httpRequest) {
+    public SvcChgInfoResVO cancelJoinInfo(@RequestBody SvcChgInfoReqDto req, HttpServletRequest httpRequest) {
         return joinInfoSvc.joinInfo(req, httpRequest);
     }
 
@@ -54,7 +58,51 @@ public class SvcChgRestController {
      * POST /api/v1/addition/join-info
      */
     @PostMapping("/addition/join-info")
-    public JoinInfoResVO additionJoinInfo(@RequestBody JoinInfoReqDto req, HttpServletRequest httpRequest) {
+    public SvcChgInfoResVO additionJoinInfo(@RequestBody SvcChgInfoReqDto req, HttpServletRequest httpRequest) {
         return joinInfoSvc.joinInfo(req, httpRequest);
+    }
+
+    /**
+     * X85 USIM 번호 유효성 체크 (공통).
+     * 서비스변경(USIM 변경) · 명의변경 공용.
+     * POST /api/v1/comm/usim-check
+     */
+    @PostMapping("/comm/usim-check")
+    public Map<String, Object> commUsimCheck(@RequestBody UsimCheckReqDto req) {
+        return joinInfoSvc.checkUsim(req);
+    }
+
+    /**
+     * IF_0006 NICE 계좌인증 — 계좌번호 유효성 체크 (공통).
+     * ASIS NiceCertifyController.checkNiceAccount() 동일 연동.
+     * nice.ext.url 미설정 시 Mock 성공 반환.
+     * POST /api/v1/comm/account-check
+     */
+    @PostMapping("/comm/account-check")
+    public Map<String, Object> commAccountCheck(@RequestBody AccountCheckReqDto req) {
+        return joinInfoSvc.checkAccount(req);
+    }
+
+    /**
+     * IF_0007 카드번호 유효성 체크 (공통).
+     * ASIS myNameChg.js checkCardNumber() Luhn Algorithm + 유효기간 검증을 서버 사이드로 이전.
+     * 외부 API 연동 없음 — 서버 사이드 형식 검증.
+     * POST /api/v1/comm/card-check
+     */
+    @PostMapping("/comm/card-check")
+    public Map<String, Object> commCardCheck(@RequestBody CardCheckReqDto req) {
+        return joinInfoSvc.checkCard(req);
+    }
+
+    /**
+     * 청구계정ID(BAN) 조회.
+     * ASIS MypageServiceImpl.selectBanSel() 동일 구조.
+     * 계약번호(ncn) → MSP_JUO_SUB_INFO.BAN 조회.
+     * POST /api/v1/comm/billing-account
+     * 요청: { "ncn": "계약번호" }
+     */
+    @PostMapping("/comm/billing-account")
+    public Map<String, Object> commBillingAccount(@RequestBody Map<String, String> req) {
+        return joinInfoSvc.lookupBillingAccount(req.get("ncn"));
     }
 }

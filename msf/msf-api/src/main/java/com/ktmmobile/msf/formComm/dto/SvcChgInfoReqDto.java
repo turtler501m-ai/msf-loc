@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * 가입자정보조회 요청 DTO. ChangeTypeCust.vue → POST /api/v1/join-info.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class JoinInfoReqDto {
+public class SvcChgInfoReqDto {
 
     /** 고객명 */
     private String name;
