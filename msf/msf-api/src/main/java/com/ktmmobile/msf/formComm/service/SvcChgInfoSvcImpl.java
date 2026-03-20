@@ -1,6 +1,7 @@
 package com.ktmmobile.msf.formComm.service;
 
 import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
+import com.ktmmobile.msf.common.mplatform.vo.MpCrdtCardAthnVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpPerMyktfInfoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimCheckVO;
 import com.ktmmobile.msf.formComm.dto.AccountCheckReqDto;
@@ -252,12 +253,12 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
 
     /**
      * IF_0007 카드번호 유효성 체크.
-     * ASIS myNameChg.js checkCardNumber() Luhn Algorithm + 유효기간 검증을 서버 사이드로 이전.
-     *
      * 검증 순서:
      * 1. 카드번호 16자리 숫자 여부
-     * 2. Luhn Algorithm (가중합 % 10 == 0)
+     * 2. Luhn Algorithm (ASIS myNameChg.js checkCardNumber() 동일 로직)
      * 3. 유효기간 (cardYy, cardMm) — 현재 월 이후인지 확인
+     * 4. birthDate + custNm 모두 있으면 X91 M플랫폼 실인증 수행
+     *    (ASIS AppformController.crdtCardAthnInfo() 동일 흐름)
      */
     @Override
     public Map<String, Object> checkCard(CardCheckReqDto req) {
@@ -312,6 +313,43 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
             } catch (NumberFormatException e) {
                 result.put("success", false);
                 result.put("message", "유효기간 형식이 올바르지 않습니다.");
+                return result;
+            }
+        }
+
+        // 4. X91 M플랫폼 카드 실인증 (birthDate + custNm 있을 때만)
+        if (!isBlank(req.getBirthDate()) && !isBlank(req.getCustNm())) {
+            try {
+                String termDay = (isBlank(req.getCardYy()) ? "" : req.getCardYy())
+                               + (isBlank(req.getCardMm()) ? "" : req.getCardMm()); // YYMM
+                MpCrdtCardAthnVO vo = mplatFormSvc.moscCrdtCardAthnInfo(
+                    digits, termDay, req.getBirthDate(), req.getCustNm());
+
+                if (!vo.isSuccess()) {
+                    result.put("success", false);
+                    result.put("message", "카드 인증 중 오류가 발생했습니다.");
+                    return result;
+                }
+                if (!"Y".equals(vo.getTrtResult())) {
+                    String trtMsg = vo.getTrtMsg();
+                    if (trtMsg != null && trtMsg.contains("주민번호")) {
+                        result.put("success", false);
+                        result.put("message", "최초 요금 납부등록은 가입자 본인 명의의 카드로만 가능합니다.");
+                    } else {
+                        result.put("success", false);
+                        result.put("message", isBlank(trtMsg)
+                            ? "신용카드 유효성 확인에 실패하였습니다. 카드 정보를 확인해 주세요."
+                            : trtMsg);
+                    }
+                    return result;
+                }
+                result.put("cardKindCd", vo.getCrdtCardKindCd());
+                result.put("cardNm",     vo.getCrdtCardNm());
+                result.put("globalNo",   vo.getGlobalNo());
+            } catch (Exception e) {
+                logger.error("X91 카드인증 오류: {}", e.getMessage());
+                result.put("success", false);
+                result.put("message", "카드 인증 중 오류가 발생했습니다.");
                 return result;
             }
         }

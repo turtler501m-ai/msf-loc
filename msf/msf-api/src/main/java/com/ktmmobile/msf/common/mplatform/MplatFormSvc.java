@@ -20,6 +20,7 @@ import com.ktmmobile.msf.common.mplatform.vo.MpFarRealtimePayInfoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceChgVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceResvInfoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpNameChgPreChkVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpCrdtCardAthnVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimChangeVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimCheckVO;
 import com.ktmmobile.msf.common.mplatform.vo.SvcChgValdChkVO;
@@ -98,6 +99,8 @@ public class MplatFormSvc {
     public static final String APP_EVENT_CD_NU1 = "NU1";
     /** NU2 희망번호 예약/취소 */
     public static final String APP_EVENT_CD_NU2 = "NU2";
+    /** X91 신용카드 인증조회 */
+    public static final String APP_EVENT_CD_X91 = "X91";
 
     @Autowired
     private MplatFormServerAdapter mplatFormServerAdapter;
@@ -518,6 +521,34 @@ public class MplatFormSvc {
         HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X18);
         if ("LOCAL".equals(serverLocation)) {
             vo.setResponseXml("<return><commHeader><responseType>N</responseType><globalNo>x18mock001</globalNo></commHeader><outDto><searchDay>20260319</searchDay><searchTime>20260301 ~ 20260319</searchTime><amntDto><gubun>월정액</gubun><payMent>55,000 원</payMent></amntDto><amntDto><gubun>당월요금계</gubun><payMent>55,000 원</payMent></amntDto></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X91 신용카드 인증조회. ASIS MplatFormService.moscCrdtCardAthnInfo() 와 동일.
+     * 파라미터: crdtCardNo(카드번호), crdtCardTermDay(YYMM 유효기간), brthDate(YYYYMMDD 생년월일), custNm(카드명의인)
+     * 응답: trtResult(Y=성공/N=실패), trtMsg, crdtCardKindCd, crdtCardNm
+     * LOCAL 모드: trtResult=Y Mock 응답 반환.
+     */
+    public MpCrdtCardAthnVO moscCrdtCardAthnInfo(
+            String crdtCardNo, String crdtCardTermDay, String brthDate, String custNm) {
+        MpCrdtCardAthnVO vo = new MpCrdtCardAthnVO();
+        HashMap<String, String> param = new HashMap<>();
+        param.put("appEventCd",       APP_EVENT_CD_X91);
+        param.put("crdtCardNo",       crdtCardNo   != null ? crdtCardNo   : "");
+        param.put("crdtCardTermDay",   crdtCardTermDay != null ? crdtCardTermDay : "");
+        param.put("brthDate",         brthDate     != null ? brthDate     : "");
+        param.put("custNm",           custNm       != null ? custNm       : "");
+
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType>"
+                + "<globalNo>x91mock001</globalNo></commHeader>"
+                + "<outDto><trtResult>Y</trtResult><trtMsg>정상완료</trtMsg>"
+                + "<crdtCardKindCd>GM</crdtCardKindCd><crdtCardNm>GM</crdtCardNm></outDto></return>");
             vo.toResponseParse();
         } else {
             mplatFormServerAdapter.callService(param, vo, 30000);

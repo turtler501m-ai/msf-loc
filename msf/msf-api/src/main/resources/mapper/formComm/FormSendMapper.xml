@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ktmmobile.msf.formComm.mapper.FormSendMapper">
+
+    <!--
+        명의변경 서식지 기본정보 조회.
+        ASIS: CustRequestMapper.getReqNmChgData
+        FROM: MSF_CUST_REQUEST_MST(A) + MSF_REQUEST_NAME_CHG(B) + MSF_REQUEST_NAME_TRNS(C)
+    -->
+    <select id="getReqNmChgData" parameterType="java.lang.Long" resultType="java.util.Map">
+        SELECT /*FormSendMapper.getReqNmChgData*/
+            A.REQUEST_KEY        AS CUST_REQ_SEQ
+            , A.REQ_TYPE_CD      AS REQ_TYPE
+            , A.USER_ID          AS USERID
+            , A.CSTMR_NM         AS GR_CSTMR_NAME
+            , A.MOBILE_NO        AS GR_MOBILE_NO
+            , A.CSTMR_NATIVE_RRN AS GR_CSTMR_NATIVE_RRN
+            , A.CONTRACT_NUM
+            , A.CSTMR_TYPE_CD    AS CSTMR_TYPE
+            , A.ONLINE_AUTH_INFO AS GR_RES_NO
+            , B.SCAN_ID
+            , B.CSTMR_NM         AS CSTMR_NAME
+            , B.CSTMR_TYPE_CD    AS AS_CSTMR_TYPE
+            , CASE WHEN B.CSTMR_TYPE_CD = 'FN' THEN B.CSTMR_NATIVE_RRN ELSE '' END AS CSTMR_FOREIGNER_RRN
+            , CASE WHEN B.CSTMR_TYPE_CD = 'FN' THEN '' ELSE B.CSTMR_NATIVE_RRN END AS CSTMR_NATIVE_RRN
+            , B.CSTMR_NATIVE_RRN AS CSTMR_NATIVE_RRN_ORG
+            , B.AUTH_INFO        AS RES_NO
+            , B.CSTMR_FOREIGNER_NATION
+            , B.REQ_INFO_CHG_YN
+            , B.SOC              AS RATE_NAME
+            , B.CSTMR_ZIPCD      AS CSTMR_POST
+            , COALESCE(B.CSTMR_ADR, '') || '  ' || COALESCE(B.CSTMR_ADR_DTL, '') AS CSTMR_ADDR
+            , B.CSTMR_EMAIL_ADR  AS CSTMR_MAIL
+            , B.REQ_PAY_TYPE_CD  AS REQ_PAY_TYPE
+            , B.REQ_BANK_CD      AS REQ_BANK
+            , B.REQ_ACNT_NO      AS REQ_ACCOUNT_NUMBER
+            , B.REQ_CARD_CO_CD   AS REQ_CARD_COMPANY
+            , B.REQ_CARD_NO
+            , B.REQ_CARD_YY
+            , B.REQ_CARD_MM
+            , B.SELF_CERT_TYPE_CD  AS SELF_CERT_TYPE
+            , B.SELF_ISSU_EXPR_DATE AS SELF_ISSU_EXPR_DT
+            , B.SELF_ISSU_NO     AS SELF_ISSU_NUM
+            , CONCAT(B.CSTMR_RECEIVE_TEL_FN_NO, '-', B.CSTMR_RECEIVE_TEL_MN_NO, '-', B.CSTMR_RECEIVE_TEL_RN_NO) AS CSTMR_RECEIVE_TEL_FN
+            , 'ICN3'             AS OPER_TYPE
+            , TO_CHAR(NOW(), 'YYYY') AS REQ_IN_DAY_YYYY
+            , TO_CHAR(NOW(), 'MM')   AS REQ_IN_DAY_MM
+            , TO_CHAR(NOW(), 'DD')   AS REQ_IN_DAY_DD
+            , 'V'                AS GR_REFUND_AGREE_FLAG
+            , B.MINOR_AGENT_NM   AS MINOR_AGENT_NAME
+            , B.MINOR_AGENT_RRN
+            , B.MINOR_AGENT_REL_TYPE_CD AS MINOR_AGENT_RELATION
+            , COALESCE(B.CLAUSE_FATH_YN, 'N') AS CLAUSE_FATH_FLAG
+            , COALESCE(B.CLAUSE_PRI_AD_YN, 'N') AS CLAUSE_PRI_AD_FLAG
+            , COALESCE(B.CLAUSE_JEHU_YN, 'N') AS CLAUSE_JEHU_FLAG
+            , COALESCE(B.CLAUSE_FINANCE_YN, 'N') AS CLAUSE_FINANCE_FLAG
+            , COALESCE(B.PERSONAL_INFO_COLLECT_AGREE_YN, 'N') AS PERSONAL_INFO_COLLECT_AGREE
+            , COALESCE(B.OTHERS_TRNS_AGREE_YN, 'N') AS OTHERS_TRNS_AGREE
+            , COALESCE(B.OTHERS_TRNS_KT_AGREE_YN, 'N') AS OTHERS_TRNS_KT_AGREE
+            , COALESCE(B.OTHERS_AD_RECEIVE_AGREE_YN, 'N') AS OTHERS_AD_RECEIVE_AGREE
+            , 'N' AS CLAUSE_5G_COVERAGE_FLAG
+            , 'N' AS CLAUSE_PARTNER_OFFER_FLAG
+            , C.TRNS_NM          AS CNTPNT_SHOP_ID
+        FROM
+            MSF_CUST_REQUEST_MST A
+            LEFT JOIN MSF_REQUEST_NAME_CHG B ON A.REQUEST_KEY = B.REQUEST_KEY
+            LEFT JOIN MSF_REQUEST_NAME_TRNS C ON A.REQUEST_KEY = C.TRNS_SEQ
+        WHERE A.REQUEST_KEY = #{custReqSeq}
+    </select>
+
+    <!--
+        해지상담 서식지 기본정보 조회.
+        ASIS: CustRequestMapper.getCancelConsultData
+        FROM: MSF_CUST_REQUEST_MST(A) — 해지는 별도 MSF_REQUEST_CANCEL 미사용 시 NMCP_NFL_CNCL_APY 참조
+        NOTE: 현재 MSF 해지 저장 테이블: NMCP_NFL_CNCL_APY. scan_id 컬럼 존재 시 업데이트 가능.
+    -->
+    <select id="getCancelConsultData" parameterType="java.lang.Long" resultType="java.util.Map">
+        SELECT /*FormSendMapper.getCancelConsultData*/
+            'CC'                  AS REQ_TYPE
+            , A.CUST_NM           AS CSTMR_NAME
+            , A.MOBILE_NO
+            , 'V'                 AS BENEFIT_AGREE_FLAG
+            , TO_CHAR(A.CRET_DTM, 'YYYY') AS REQ_IN_DAY_YYYY
+            , TO_CHAR(A.CRET_DTM, 'MM')   AS REQ_IN_DAY_MM
+            , TO_CHAR(A.CRET_DTM, 'DD')   AS REQ_IN_DAY_DD
+            , A.CNCL_APY_NO       AS CUST_REQ_SEQ
+        FROM NMCP_NFL_CNCL_APY A
+        WHERE A.CNCL_APY_NO = #{custReqSeq}
+    </select>
+
+    <!--
+        서식지 그룹별 좌표 정보 조회.
+        ASIS: CustRequestMapper.getAppFormPointList(groupCode)
+        FROM: MSF_APP_FORM_INFO(A) + MSF_APP_FORM_MST(B)
+        NOTE: MSF_APP_GROUP_MST → MSF_APP_FORM_MST → MSF_APP_FORM_INFO
+    -->
+    <select id="getAppFormPointList" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT /*FormSendMapper.getAppFormPointList*/
+            A.PAGE_CD               AS PAGE_CODE
+            , A.COLUMN_NAME
+            , A.METAROW
+            , A.METALINE
+            , COALESCE(A.CODEDATA_YN, 'N') AS CODEDATA_YN
+            , COALESCE(A.CODEDATA, '')     AS CODEDATA
+            , COALESCE(A.DELETECOLUMN_YN, '') AS DELETECOLUMNYN
+        FROM MSF_APP_FORM_INFO A
+        JOIN MSF_APP_FORM_MST B ON A.PAGE_CD = B.PAGE_CD AND B.USE_YN = 'Y'
+        JOIN MSF_APP_GROUP_INFO G ON G.PAGE_CD = A.PAGE_CD AND G.GROUP_CD = #{groupCode}
+        ORDER BY A.PAGE_CD, A.APP_KEY
+    </select>
+
+    <!--
+        명의변경 SCAN_ID 업데이트.
+        ASIS: CustRequestMapper.updateReqNmChgScanId
+    -->
+    <update id="updateNameChgScanId">
+        UPDATE MSF_REQUEST_NAME_CHG
+        SET SCAN_ID = #{scanId}
+        WHERE REQUEST_KEY = #{custReqSeq}
+    </update>
+
+    <!--
+        해지 SCAN_ID 업데이트.
+        ASIS: CustRequestMapper.updateCancelReqScanId
+    -->
+    <update id="updateCancelScanId">
+        UPDATE NMCP_NFL_CNCL_APY
+        SET SCAN_ID = #{scanId}
+        WHERE CNCL_APY_NO = #{custReqSeq}
+    </update>
+
+</mapper>
