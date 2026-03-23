@@ -41,11 +41,12 @@ import {
   ref,
   shallowRef,
 } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { getStepComponent } from '@/libs/utils/comp.utils'
 import { useMsfStepStore } from '@/stores/msf_step'
 
 const route = useRoute()
+const router = useRouter()
 const stepStore = useMsfStepStore()
 
 const domain = ref(route.params?.domain)
@@ -162,8 +163,7 @@ const onClickCompelteBtn = async () => {
     return false
   }
 
-  alert('신청서 등록이 완료되었습니다.')
-  // 최종 신청 완료화면으로 이동
+  router.push({ path: `/mobile/complete/${route.params?.domain}` })
 }
 
 onBeforeMount(async () => {

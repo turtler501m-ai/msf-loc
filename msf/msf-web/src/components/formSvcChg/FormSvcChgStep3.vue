@@ -86,14 +86,12 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useServiceChangeFormStore } from '@/stores/service_change_form'
 import { ServiceChangeOptions } from '@/constants/serviceChange'
 
 defineProps({ isActive: Boolean })
 const emit = defineEmits(['complete'])
 
-const router = useRouter()
 const formStore = useServiceChangeFormStore()
 
 const signAgreed = ref(false)
@@ -133,7 +131,6 @@ const save = async () => {
     })
     formStore.setLastCompletedName(formStore.customerForm?.name || '')
     formStore.reset()
-    await router.push({ name: 'service-complete', params: { domain: 'change' } })
     return true
   } catch (e) {
     alert('신청서 등록이 실패하였습니다. 다시 시도해 주세요.')
