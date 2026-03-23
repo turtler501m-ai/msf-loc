@@ -1,6 +1,8 @@
 # 서비스변경 신청서 UI 설계서
 
-> 문서번호: 스마트서식지-DS-02 | 버전: v1.0 | 작성일: 2026.03.10 | 작성자: 하현숙
+> 문서번호: 스마트서식지-DS-02 | 버전: v1.0 | 최종수정: 2026.03.22 | 작성자: 하현숙
+>
+> **원본 파일**: `uidoc/MMSP-DS-02-UI 설계서_12-서식지 App-서비스변경 신청서_v1.0_20260322.pptx`
 
 ---
 
@@ -23,8 +25,9 @@
 | 2026.02.27 | 0.7 | 내부 동료검토 | 김남용 |
 | 2026.02.27 | 0.8 | QA검토 | 민천홍 |
 | 2026.02.27 | 0.9 | PM검토 | 민천홍 |
-| 2026.03.03 | 1.0 | 고객검토 | 민경원/강성룡 |
+| 2026.03.03 | 1.0 | 고객검토 | 민경원/김진우 |
 | 2026.03.10 | 1.0 | 화면설계서 리뷰시 수정사항 반영 | 하현숙 |
+| 2026.03.22 | 1.0 | 화면설계서 설명 보완 | 하현숙 |
 
 ---
 
@@ -465,7 +468,7 @@
 - 활성화: 예약번호 4자리 입력 시
 - 클릭 시 유효성 체크:
   - 희망번호가 숫자 4자리인지 여부
-  - 조회가능 횟수 50회 미만인지 여부 (초과 시 횟수 초과 안내 메시지, 팝업 미표시)
+  - 조회가능 횟수 초과 여부: **최대 20회** (초과 시 횟수 초과 안내 메시지, 팝업 미표시) ※ 일 최대 50회 중 신청서당 조회 가능 횟수 20회
 - 클릭 시: 번호조회 팝업 표시 *(신규/변경 신청서와 동일)*
 
 **B2 버튼 ([선택취소])**
@@ -901,3 +904,80 @@
 | [작성 완료] (A1) | 화면 내 모든 항목 완료 + 서명 완료 시 | — |
 | [발송] (B2) | 휴대폰번호 입력 시 | — |
 
+---
+
+## 6. 개발 적용 가이드
+
+### 6.1 화면 ID → Vue 컴포넌트 경로 매핑
+
+| 화면 ID | 화면명 | Vue 컴포넌트 경로 |
+|---------|--------|------------------|
+| S102010101 | 서비스변경 메인 | `src/components/change/MainStep.vue` |
+| S102020101 | 고객정보 입력 | `src/components/change/CustomerStep.vue` |
+| S102030101 | 변경서비스 선택 | `src/components/change/ServiceStep.vue` |
+| S102030102 | 번호변경 조회 팝업 | `src/components/change/popup/NumberChangePopup.vue` |
+| S102030103 | 요금제 조회 팝업 | `src/components/change/popup/PlanSearchPopup.vue` |
+| S102030104 | 부가서비스 조회 팝업 | `src/components/change/popup/AddSvcPopup.vue` |
+| S102030105 | 약정할인 선택 팝업 | `src/components/change/popup/CommitDiscountPopup.vue` |
+| S102040101 | 동의 | `src/components/change/AgreementStep.vue` |
+| S102040103 | 신청정보 확인 | `src/components/change/ConfirmStep.vue` |
+| S102050101 | 신청 완료 | `src/components/change/CompleteStep.vue` |
+
+라우팅: `/mobile/change/:service` → `service` 파라미터로 동적 로드
+
+### 6.2 화면별 백엔드 API 엔드포인트 매핑
+
+| 화면 | 액션 | HTTP | 엔드포인트 |
+|------|------|------|-----------|
+| S102010101 | 가입자정보조회 | POST | `/api/v1/service-change/join-info` |
+| S102030101 | 동시처리체크 | POST | `/api/v1/service-change/concurrent-check` |
+| S102030102 | 번호변경 가능번호 조회 (X26/X28/X30/X63/X65) | POST | `/api/v1/service-change/number-change/*` |
+| S102030103 | 요금제 조회 (X18/X20) | POST | `/api/v1/service-change/plan-list` |
+| S102030104 | 부가서비스 조회 (X20) | POST | `/api/v1/service-change/add-svc-list` |
+| S102040101 | 동의서 내용 조회 | GET | `/api/v1/service-change/agreement` |
+| S102040103 | 신청정보 저장 | POST | `/api/v1/service-change/save` |
+| S102040103 | 서식지 SCAN 전송 | POST | `/api/v1/comm/form-send` |
+| — | M플랫폼 처리 (X19/X21/X38 등) | POST | (save 내부에서 일괄 호출) |
+
+### 6.3 동시 변경 불가 업무 체크 로직
+
+아래 3개 업무 중 1개를 선택하면 나머지 2개는 **비활성화(disabled)** 처리한다.
+
+| 업무 | 항목 키 | 비고 |
+|------|---------|------|
+| 번호변경 | `numberChange` | B1 영역 |
+| 분실복구·일시정지해제 | `lostRecover` | B3 영역 |
+| 요금제 변경 | `planChange` | B5 영역 |
+
+프론트엔드 규칙:
+- 3개 중 하나라도 `true`이면 나머지 두 항목의 checkbox·영역을 `disabled`로 설정
+- 취소(체크 해제) 시 나머지 영역 활성화 복원
+
+백엔드 동시처리체크: `POST /api/v1/service-change/concurrent-check` — 이미 처리 중인 신청건 존재 여부 조회
+
+### 6.4 고객유형별 분기 정리
+
+| 고객유형 | 조건 | 방문고객 설정 | 인증방법 | 법정대리인 영역 |
+|---------|------|------------|---------|--------------|
+| 내국인 성인 | 내국인 + 만19세이상 | 고객 본인 | PASS/신분증 | 숨김 |
+| 내국인 미성년 (NM) | 내국인 + 만19세미만 | 법정대리인 | PASS/신분증 | **표시** (관계·주민번호·연락처·인증) |
+| 외국인 성인 (FN) | 외국인 | 고객 본인 | 외국인등록증 | 숨김 |
+| 외국인 미성년 | 외국인 + 만19세미만 | 법정대리인 | 외국인등록증 | **표시** |
+| 법인 | 사업자등록증 보유 | 대표자/위임자 | 사업자등록증 | 숨김 (위임장 별도) |
+| 공공기관 | 공공기관 코드 | 담당자 | 공문서 | 숨김 |
+
+키 필드: `custType` (NM/FN/CO/PU/…), `birthDt`(생년월일), `age`(만나이 계산)
+
+### 6.5 신청서 리포트 처리 대상
+
+| 처리 항목 | reqType | SCAN 그룹코드 | DB 저장 테이블 |
+|----------|---------|-------------|--------------|
+| 번호변경 | NC | E001 | `MSF_REQUEST_NAME_CHG` |
+| 명의변경 | NC | E001 | `MSF_REQUEST_NAME_CHG` |
+| 해지상담 | CC | G001 | `NMCP_NFL_CNCL_APY` |
+| 일시정지 | IS | C001 | (미구현) |
+| 분실 | CL | D001 | (미구현) |
+
+SCAN 서버 미설정(`scan.url` 비어있음) 시: Mock scanId 반환 (`MOCK_{reqType}_{custReqSeq}`)
+
+서식지 좌표 DB 테이블: `MSF_APP_FORM_INFO`, `MSF_APP_FORM_MST`, `MSF_APP_GROUP_INFO` (초기 데이터 세팅 필요)
