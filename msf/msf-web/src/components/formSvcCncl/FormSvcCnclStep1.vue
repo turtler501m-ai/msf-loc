@@ -258,8 +258,8 @@ onMounted(() => {
       ...form.value,
       ...saved,
       agencyCode: form.value.agencyCode || saved.agencyCode || formStore.agencyCode || '',
-      minorAgent: { ...form.value.minorAgent, ...(saved.minorAgent || {}) },
-      agentInfo: { ...form.value.agentInfo, ...(saved.agentInfo || {}) },
+      minorAgent: { ...form.value.minorAgent, ...saved.minorAgent },
+      agentInfo: { ...form.value.agentInfo, ...saved.agentInfo },
     }
   }
   emit('complete', isComplete.value)

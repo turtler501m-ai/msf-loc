@@ -13,10 +13,10 @@ import java.util.Map;
 /**
  * USIM 변경 Controller.
  * ASIS AppformController usimChangeUC0(UC0) 와 동일 역할.
- * X85 USIM 유효성 체크는 공통 엔드포인트 POST /api/v1/comm/usim-check 로 이전.
+ * X85 USIM 유효성 체크는 공통 엔드포인트 POST /api/v1/comm/usim-check 사용.
  *
  * 처리 흐름:
- * POST /change → X85 사전확인 → UC0 USIM 변경
+ * POST /change → X85 사전확인(changeUsim 내부) → UC0 USIM 변경
  */
 @RestController
 @RequestMapping("/api/v1/service-change/usim")
@@ -30,7 +30,7 @@ public class SvcChgUsimController {
 
     /**
      * UC0 USIM 변경 처리 (X85 사전확인 포함).
-     * ASIS: AppformSvcImpl.usimChangeUC0()
+     * POST /api/v1/service-change/usim/change
      * 요청: { ncn, ctn, custId, newUsimNo, currentUsimNo }
      * 응답: { success, resultCode, globalNo, message }
      */

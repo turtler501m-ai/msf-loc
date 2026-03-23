@@ -429,9 +429,9 @@ onMounted(() => {
     form.value = {
       ...form.value,
       ...saved,
-      minorAgent: { ...form.value.minorAgent, ...(saved.minorAgent || {}) },
-      agentInfo: { ...form.value.agentInfo, ...(saved.agentInfo || {}) },
-      transferee: { ...defaultTransferee(), ...(saved.transferee || {}) },
+      minorAgent: { ...form.value.minorAgent, ...saved.minorAgent },
+      agentInfo: { ...form.value.agentInfo, ...saved.agentInfo },
+      transferee: { ...defaultTransferee(), ...saved.transferee },
     }
   }
   if (form.value.visitType === '' && isCorporate.value) form.value.visitType = 'self'

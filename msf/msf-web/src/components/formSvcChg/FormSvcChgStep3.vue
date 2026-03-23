@@ -9,7 +9,7 @@
         <button
           type="button"
           class="text-sm px-3 py-1.5 rounded border border-teal-600 text-teal-600 hover:bg-teal-50"
-          @click="confirmModalOpen = true"
+          @click="() => { console.log('[Step3] 신청서 확인 모달 열기'); confirmModalOpen = true }"
         >
           신청서 확인
         </button>
@@ -76,7 +76,7 @@
           </dl>
           <div class="flex gap-2 justify-end">
             <button type="button" class="px-4 py-2 rounded border border-gray-300" @click="confirmModalOpen = false">수정</button>
-            <button type="button" class="px-4 py-2 rounded bg-teal-600 text-white" @click="confirmModalOpen = false">확인</button>
+            <button type="button" class="px-4 py-2 rounded bg-teal-600 text-white" @click="() => { console.log('[Step3] 신청서 확인 완료'); confirmModalOpen = false }">확인</button>
           </div>
         </div>
       </div>
@@ -88,6 +88,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useServiceChangeFormStore } from '@/stores/service_change_form'
 import { ServiceChangeOptions } from '@/constants/serviceChange'
+import { applyServiceChange } from '@/api/serviceChange'
 
 defineProps({ isActive: Boolean })
 const emit = defineEmits(['complete'])
@@ -96,6 +97,7 @@ const formStore = useServiceChangeFormStore()
 
 const signAgreed = ref(false)
 const confirmModalOpen = ref(false)
+const saving = ref(false)
 
 const selectedLabels = computed(() => {
   const ids = formStore.selectedOptions || []
@@ -118,23 +120,59 @@ watch(isComplete, (v) => emit('complete', v))
 onMounted(() => emit('complete', isComplete.value))
 
 const save = async () => {
+  const opts = formStore.selectedOptions || []
+  const cf = formStore.customerForm || {}
+  const pf = formStore.productForm || {}
+  const ctn = (cf.phone || '').replace(/\D/g, '')
+
+  console.log('[Step3] 신청서 저장 시도:', { signAgreed: signAgreed.value, selectedOptions: opts, ctn })
+
   if (!signAgreed.value) {
     alert('서명을 완료해 주세요.')
     return false
   }
+  if (saving.value) return false
+  saving.value = true
+
   try {
-    // TODO: 신청서 등록 API, 리포트 이미징, M플랫폼 전송
-    console.log('서비스변경 신청서 저장:', {
-      selectedOptions: formStore.selectedOptions,
-      customerForm: formStore.customerForm,
-      productForm: formStore.productForm,
-    })
-    formStore.setLastCompletedName(formStore.customerForm?.name || '')
+    const params = {
+      ncn: cf.ncn || '',
+      ctn,
+      custId: cf.custId || '',
+      name: cf.name || '',
+      selectedOptions: opts,
+      wirelessBlock: pf.wirelessBlock || null,
+      infoLimit: pf.infoLimit || null,
+      ratePlanSoc: pf.recommendedRatePlan || pf.ratePlanSearchResult || null,
+      rateChangeSchedule: pf.rateChangeSchedule || null,
+      usimChange: pf.usimChange || null,
+      usimSimType: pf.usimSimType || null,
+      numChange: pf.numChange || null,
+      additions: pf.additions || [],
+      custType: cf.custType || 'NA',
+      memo: pf.memo || '',
+    }
+    console.log('[Step3] /apply 요청 파라미터:', params)
+
+    const res = await applyServiceChange(params)
+    console.log('[Step3] /apply 응답:', res)
+
+    if (!res?.success) {
+      alert(res?.message || '서비스변경 신청이 실패하였습니다.')
+      return false
+    }
+
+    console.log('[Step3] 신청서 저장 완료: applicationNo=', res.applicationNo)
+    formStore.setLastApplicationNo(res.applicationNo || '')
+    formStore.setLastCompletedName(cf.name || '')
     formStore.reset()
     return true
   } catch (e) {
-    alert('신청서 등록이 실패하였습니다. 다시 시도해 주세요.')
+    console.error('[Step3] 신청서 저장 오류:', e)
+    alert(e?.message || '신청서 등록이 실패하였습니다. 다시 시도해 주세요.')
     return false
+  } finally {
+    saving.value = false
   }
 }
 

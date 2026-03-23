@@ -3,6 +3,7 @@ package com.ktmmobile.msf.formSvcChg.service;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoDto;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionCancelReqDto;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionCurrentResVO;
+import com.ktmmobile.msf.formSvcChg.dto.AdditionPreCheckReqDto;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionRegReqDto;
 
 import java.util.Map;
@@ -14,6 +15,9 @@ public interface SvcChgRegSvc {
 
     /** X20 현재 가입 부가서비스 조회 */
     AdditionCurrentResVO selectAdditionCurrent(SvcChgInfoDto req);
+
+    /** Y24 부가서비스 변경 사전체크 (무선데이터차단, 정보료상한 [확인] 버튼) */
+    Map<String, Object> preCheckAddition(AdditionPreCheckReqDto req);
 
     /** X21 부가서비스 신청 */
     Map<String, Object> additionReg(AdditionRegReqDto req);

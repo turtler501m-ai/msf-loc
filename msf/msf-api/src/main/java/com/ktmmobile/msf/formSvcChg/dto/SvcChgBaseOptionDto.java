@@ -7,7 +7,7 @@ public class SvcChgBaseOptionDto {
 
     private String dtlCd;
     private String dtlCdNm;
-    private String concurrentBlockYn;
+    private String concurrentAvailYn;
     private String imagingYn;
     private int sortSeq;
 
@@ -17,8 +17,8 @@ public class SvcChgBaseOptionDto {
     public String getDtlCdNm() { return dtlCdNm; }
     public void setDtlCdNm(String dtlCdNm) { this.dtlCdNm = dtlCdNm; }
 
-    public String getConcurrentBlockYn() { return concurrentBlockYn; }
-    public void setConcurrentBlockYn(String concurrentBlockYn) { this.concurrentBlockYn = concurrentBlockYn; }
+    public String getConcurrentAvailYn() { return concurrentAvailYn; }
+    public void setConcurrentAvailYn(String concurrentAvailYn) { this.concurrentAvailYn = concurrentAvailYn; }
 
     public String getImagingYn() { return imagingYn; }
     public void setImagingYn(String imagingYn) { this.imagingYn = imagingYn; }

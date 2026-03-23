@@ -3,6 +3,7 @@ package com.ktmmobile.msf.formSvcChg.controller;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoDto;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionCancelReqDto;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionCurrentResVO;
+import com.ktmmobile.msf.formSvcChg.dto.AdditionPreCheckReqDto;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionRegReqDto;
 import com.ktmmobile.msf.formSvcChg.service.SvcChgRegSvc;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,15 @@ public class SvcChgRegController {
     @PostMapping("/current")
     public AdditionCurrentResVO additionCurrent(@RequestBody SvcChgInfoDto req) {
         return svcChgRegSvc.selectAdditionCurrent(req);
+    }
+
+    /**
+     * 부가서비스 변경 사전체크 (Y24 — 무선데이터차단, 정보료상한 [확인] 버튼).
+     * POST /api/v1/addition/pre-check
+     */
+    @PostMapping("/pre-check")
+    public Map<String, Object> preCheckAddition(@RequestBody AdditionPreCheckReqDto req) {
+        return svcChgRegSvc.preCheckAddition(req);
     }
 
     /**

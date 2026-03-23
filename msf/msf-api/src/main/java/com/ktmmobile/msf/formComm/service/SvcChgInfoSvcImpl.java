@@ -70,13 +70,15 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
         if (req == null || isBlank(req.getName()) || isBlank(req.getCtn())) {
             return SvcChgInfoResVO.fail("고객명과 전화번호를 입력해 주세요.");
         }
+        logger.debug("[X01] 휴대폰 인증 Start: name={}, ctn={}", req.getName(), req.getCtn());
 
         // 1. M전산 DB: 고객명+전화번호 → ncn, custId
         ContractInfoDto contractInfo = null;
         try {
             contractInfo = contractInfoMapper.selectContractInfo(req.getName(), req.getCtn());
+            logger.debug("[X01] M전산 계약정보 조회 완료: ncn={}", contractInfo != null ? contractInfo.getNcn() : "null");
         } catch (Exception e) {
-            logger.warn("M전산 계약정보 조회 실패: {}", e.getMessage());
+            logger.warn("[X01] M전산 계약정보 조회 실패: {}", e.getMessage());
             if (!mockWhenNoDb) {
                 return SvcChgInfoResVO.fail("계약정보 조회에 실패했습니다.");
             }
@@ -92,7 +94,7 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
             // 로컬 개발용 Mock (DB 없는 경우)
             ncn = "100000001";
             custId = "MOCK001";
-            logger.warn("M전산 계약정보 Mock 적용: ncn={}", ncn);
+            logger.warn("[X01] M전산 계약정보 Mock 적용: ncn={}", ncn);
         } else {
             return SvcChgInfoResVO.fail("고객 정보를 찾을 수 없습니다. 고객명과 전화번호를 확인해 주세요.");
         }
@@ -100,12 +102,16 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
         String clientIp = httpRequest.getRemoteAddr();
 
         // 2. Y04: 계약정보 유효성 체크 (휴대폰 인증)
+        logger.debug("[Y04] 계약유효성 체크 Start: ncn={}, ctn={}", ncn, req.getCtn());
         boolean valdOk = mplatFormSvc.contractValdChk(clientIp, null, ncn, req.getCtn(), custId);
         if (!valdOk) {
+            logger.warn("[Y04] 계약유효성 체크 실패: ncn={}", ncn);
             return SvcChgInfoResVO.fail("휴대폰 인증에 실패했습니다.");
         }
+        logger.debug("[Y04] 계약유효성 체크 완료: ncn={}", ncn);
 
         // 3. X01: 가입정보 조회
+        logger.debug("[X01] 가입정보 조회 Start: ncn={}", ncn);
         MpPerMyktfInfoVO x01 = mplatFormSvc.perMyktfInfo(ncn, req.getCtn(), custId);
 
         SvcChgInfoResVO res = new SvcChgInfoResVO();
@@ -120,6 +126,7 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
             res.setHomeTel(x01.getHomeTel());
             res.setInitActivationDate(x01.getInitActivationDate());
         }
+        logger.debug("[X01] 휴대폰 인증 완료: ncn={}, custId={}", ncn, custId);
         return res;
     }
 
@@ -136,12 +143,14 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
             result.put("message", "필수 파라미터가 누락되었습니다. (ncn, ctn, usimNo)");
             return result;
         }
+        logger.debug("[X85] USIM 유효성 체크 Start: ncn={}, ctn={}, usimNo={}", req.getNcn(), req.getCtn(), req.getUsimNo());
 
         try {
             MpUsimCheckVO vo = mplatFormSvc.moscIntmMgmtSO(
                 req.getNcn(), req.getCtn(), req.getCustId(), req.getUsimNo());
 
             if (vo.isSuccess()) {
+                logger.debug("[X85] USIM 유효성 체크 완료: usimSts={}, globalNo={}", vo.getUsimSts(), vo.getGlobalNo());
                 result.put("success", true);
                 result.put("resultCode", vo.getResultCode());
                 result.put("globalNo", vo.getGlobalNo());
@@ -151,12 +160,13 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
                 result.put("usimType", vo.getUsimType());
                 result.put("message", "");
             } else {
+                logger.warn("[X85] USIM 유효성 체크 실패: resultCode={}, msg={}", vo.getResultCode(), vo.getSvcMsg());
                 result.put("success", false);
                 result.put("resultCode", vo.getResultCode());
                 result.put("message", vo.getSvcMsg());
             }
         } catch (Exception e) {
-            logger.error("X85 USIM 유효성 체크 오류: {}", e.getMessage());
+            logger.error("[X85] USIM 유효성 체크 오류: {}", e.getMessage());
             result.put("success", false);
             result.put("message", "USIM 유효성 확인 중 오류가 발생했습니다.");
         }
@@ -219,7 +229,7 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
-            logger.info("*** IF_0006 NICE 계좌인증 Start: bankCode={}", req.getBankCode());
+            logger.debug("*** IF_0006 NICE 계좌인증 Start: bankCode={}", req.getBankCode());
             String responseStr = restTemplate.postForObject(niceExtUrl + "/rlnmCheck.do", request, String.class);
 
             if (!StringUtils.hasText(responseStr)) {
@@ -319,6 +329,7 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
 
         // 4. X91 M플랫폼 카드 실인증 (birthDate + custNm 있을 때만)
         if (!isBlank(req.getBirthDate()) && !isBlank(req.getCustNm())) {
+            logger.debug("[X91] 카드 실인증 Start: custNm={}", req.getCustNm());
             try {
                 String termDay = (isBlank(req.getCardYy()) ? "" : req.getCardYy())
                                + (isBlank(req.getCardMm()) ? "" : req.getCardMm()); // YYMM
@@ -330,6 +341,7 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
                     result.put("message", "카드 인증 중 오류가 발생했습니다.");
                     return result;
                 }
+                logger.debug("[X91] 카드 실인증 완료: trtResult={}, globalNo={}", vo.getTrtResult(), vo.getGlobalNo());
                 if (!"Y".equals(vo.getTrtResult())) {
                     String trtMsg = vo.getTrtMsg();
                     if (trtMsg != null && trtMsg.contains("주민번호")) {

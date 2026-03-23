@@ -9,6 +9,7 @@ import com.ktmmobile.msf.formComm.dto.SvcChgInfoDto;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionCancelReqDto;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionCurrentResVO;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionItemDto;
+import com.ktmmobile.msf.formSvcChg.dto.AdditionPreCheckReqDto;
 import com.ktmmobile.msf.formSvcChg.dto.AdditionRegReqDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public class SvcChgRegSvcImpl implements SvcChgRegSvc {
             res.setAvailableItems(new ArrayList<>());
             return res;
         }
+        logger.debug("[X20] 부가서비스 조회 Start: ncn={}, ctn={}", req.getNcn(), req.getCtn());
 
         try {
             MpAddSvcInfoDto x20 = mplatFormSvc.getAddSvcInfoDto(req.getNcn(), req.getCtn(), req.getCustId());
@@ -58,11 +60,14 @@ public class SvcChgRegSvcImpl implements SvcChgRegSvc {
                 for (MpSocVO soc : socList) {
                     AdditionItemDto item = toItemDto(soc);
                     items.add(item);
+                    logger.debug("[X20] 부가서비스 항목: soc={}, desc={}, rate={}, effectiveDate={}",
+                        soc.getSoc(), soc.getSocDescription(), soc.getSocRateValue(), soc.getEffectiveDate());
 
                     // 무선데이터차단 여부 판단
                     if (SOC_WIRELESS_BLOCK.equals(soc.getSoc())
                         || isWirelessBlockDesc(soc.getSocDescription())) {
                         res.setWirelessBlockInUse(true);
+                        logger.debug("[X20] 무선데이터차단 서비스 감지: soc={}", soc.getSoc());
                     }
 
                     // 정보료 상한 금액 추출 (SOC 설명에 "정보료" + "상한" 포함 시)
@@ -70,18 +75,44 @@ public class SvcChgRegSvcImpl implements SvcChgRegSvc {
                         int amount = parseAmount(soc.getSocRateValue());
                         if (amount > 0) {
                             res.setInfoLimitAmount(amount);
+                            logger.debug("[X20] 정보료 상한 감지: soc={}, amount={}", soc.getSoc(), amount);
                         }
                     }
                 }
             }
+            logger.debug("[X20] 부가서비스 조회 완료: {}건, wirelessBlock={}, infoLimitAmount={}",
+                items.size(), res.isWirelessBlockInUse(), res.getInfoLimitAmount());
         } catch (Exception e) {
-            logger.warn("X20 부가서비스 조회 실패: {}", e.getMessage());
+            logger.warn("[X20] 부가서비스 조회 실패: {}", e.getMessage());
         }
 
         res.setItems(items);
         // availableItems: X97 구현 전까지 빈 목록 (프론트엔드 null 처리 방지)
         res.setAvailableItems(new ArrayList<>());
         return res;
+    }
+
+    /**
+     * Y24 부가서비스 변경 사전체크.
+     * ASIS: mPlatFormServiceImpl.moscRegSvcCanChgIn() 사전 호출 흐름.
+     * Y24 미구현 시 success=true 반환 (Mock).
+     */
+    @Override
+    public Map<String, Object> preCheckAddition(AdditionPreCheckReqDto req) {
+        Map<String, Object> result = new HashMap<>();
+        if (req == null || isBlank(req.getCtn())) {
+            result.put("success", false);
+            result.put("message", "필수 파라미터(ctn)가 없습니다.");
+            return result;
+        }
+        logger.debug("[Y24] 부가서비스 변경 사전체크 Start: ncn={}, ctn={}, socList={}",
+            req.getNcn(), req.getCtn(), req.getSocList());
+        // TODO: Y24 상품변경 사전체크(multi) M플랫폼 연동 구현 후 대체
+        // 현재는 사전체크 통과 처리 (Mock)
+        logger.debug("[Y24] 부가서비스 변경 사전체크 완료 (Mock): socList={}", req.getSocList());
+        result.put("success", true);
+        result.put("message", "사전체크가 완료되었습니다.");
+        return result;
     }
 
     /**
@@ -96,23 +127,26 @@ public class SvcChgRegSvcImpl implements SvcChgRegSvc {
             result.put("message", "필수 파라미터가 누락되었습니다. (ncn, ctn, soc)");
             return result;
         }
+        logger.debug("[X21] 부가서비스 신청 Start: ncn={}, ctn={}, soc={}", req.getNcn(), req.getCtn(), req.getSoc());
 
         try {
             MpRegSvcChgVO vo = mplatFormSvc.regSvcChg(
                 req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc(), req.getFtrNewParam());
 
             if (vo.isSuccess()) {
+                logger.debug("[X21] 부가서비스 신청 완료: soc={}, globalNo={}", req.getSoc(), vo.getGlobalNo());
                 result.put("success", true);
                 result.put("resultCode", vo.getResultCode());
                 result.put("globalNo", vo.getGlobalNo());
                 result.put("message", "");
             } else {
+                logger.warn("[X21] 부가서비스 신청 실패: soc={}, resultCode={}, msg={}", req.getSoc(), vo.getResultCode(), vo.getSvcMsg());
                 result.put("success", false);
                 result.put("resultCode", vo.getResultCode());
                 result.put("message", vo.getSvcMsg());
             }
         } catch (Exception e) {
-            logger.error("X21 부가서비스 신청 오류: {}", e.getMessage());
+            logger.error("[X21] 부가서비스 신청 오류: {}", e.getMessage());
             result.put("success", false);
             result.put("message", "부가서비스 신청 처리 중 오류가 발생했습니다.");
         }
@@ -132,23 +166,26 @@ public class SvcChgRegSvcImpl implements SvcChgRegSvc {
             result.put("message", "필수 파라미터가 누락되었습니다. (ncn, ctn, soc)");
             return result;
         }
+        logger.debug("[X38] 부가서비스 해지 Start: ncn={}, ctn={}, soc={}", req.getNcn(), req.getCtn(), req.getSoc());
 
         try {
             MpMoscRegSvcCanChgInVO vo = mplatFormSvc.moscRegSvcCanChg(
                 req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc());
 
             if (vo.isSuccess()) {
+                logger.debug("[X38] 부가서비스 해지 완료: soc={}, globalNo={}", req.getSoc(), vo.getGlobalNo());
                 result.put("success", true);
                 result.put("resultCode", vo.getResultCode());
                 result.put("globalNo", vo.getGlobalNo());
                 result.put("message", "");
             } else {
+                logger.warn("[X38] 부가서비스 해지 실패: soc={}, resultCode={}, msg={}", req.getSoc(), vo.getResultCode(), vo.getSvcMsg());
                 result.put("success", false);
                 result.put("resultCode", vo.getResultCode());
                 result.put("message", vo.getSvcMsg());
             }
         } catch (Exception e) {
-            logger.error("X38 부가서비스 해지 오류: {}", e.getMessage());
+            logger.error("[X38] 부가서비스 해지 오류: {}", e.getMessage());
             result.put("success", false);
             result.put("message", "부가서비스 해지 처리 중 오류가 발생했습니다.");
         }

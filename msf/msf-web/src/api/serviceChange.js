@@ -170,3 +170,51 @@ export async function checkPause(params) {
 export async function applyPause(params) {
   return msfPost('/v1/service-change/pause/apply', params)
 }
+
+// ----- USIM 변경 (X85 유효성 체크, UC0 변경) -----
+
+/**
+ * USIM 번호 유효성 체크 (X85) — 공통 엔드포인트 사용
+ * @param {{ ncn: string, ctn: string, custId: string, usimNo: string }} params
+ */
+export async function checkUsim(params) {
+  return msfPost('/v1/comm/usim-check', params)
+}
+
+// ----- 무선데이터차단 / 정보료상한 사전체크 (Y24) -----
+
+/**
+ * 부가서비스 변경 사전체크 (Y24 — 무선데이터차단, 정보료상한, 부가서비스 공용)
+ * @param {{ ncn: string, ctn: string, custId: string, socList: string[] }} params
+ */
+export async function preCheckAddition(params) {
+  return msfPost('/v1/addition/pre-check', params)
+}
+
+// ----- 서비스변경 통합 신청 (apply) -----
+
+/**
+ * 서비스변경 통합 신청 처리.
+ * 선택된 모든 항목 M플랫폼 처리 후 MSF_REQUEST_SVC_CHG 신청서 DB INSERT.
+ * @param {{
+ *   ncn: string, ctn: string, custId: string, name: string,
+ *   selectedOptions: string[],
+ *   wirelessBlock?: string,
+ *   infoLimit?: string,
+ *   ratePlanSoc?: string,
+ *   rateChangeSchedule?: string,
+ *   usimChange?: string,
+ *   usimSimType?: string,
+ *   numChange?: string,
+ *   pausePassword?: string,
+ *   additions?: Array<{soc: string, action: string, socDescription?: string, ftrNewParam?: string}>,
+ *   custType?: string,
+ *   memo?: string,
+ *   managerCd?: string,
+ *   agentCd?: string
+ * }} params
+ * @returns {{ success: boolean, requestKey: number, applicationNo: string, message: string }}
+ */
+export async function applyServiceChange(params) {
+  return msfPost('/v1/service-change/apply', params)
+}

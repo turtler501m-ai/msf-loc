@@ -14,7 +14,7 @@
             resultType="com.ktmmobile.msf.formComm.dto.ContractInfoDto">
         SELECT
             CONTRACT_NUM AS ncn,
-            CUST_ID      AS custId
+            CUSTOMER_ID  AS custId
         FROM MSP_JUO_SUB_INFO
         WHERE SUBSCRIBER_NO  = #{ctn}
           AND SUB_LINK_NAME  = #{name}
@@ -30,7 +30,7 @@
     <select id="selectBanByContractNum"
             parameterType="string"
             resultType="string">
-        SELECT BAN
+        SELECT CUSTOMER_ID
         FROM MSP_JUO_SUB_INFO
         WHERE CONTRACT_NUM = #{contractNum}
         LIMIT 1

@@ -585,6 +585,7 @@ function onPostcodeSelect({ post, address }) {
 
 async function doPhoneAuth() {
   if (form.value.phoneAuthCompleted) return
+  console.log('[Step1] 휴대폰 인증 시작:', { name: form.value.name, phone: form.value.phone })
   authLoading.value = true
   try {
     const data = await getJoinInfo({
@@ -594,6 +595,7 @@ async function doPhoneAuth() {
       custId: formStore.customerForm?.custId || '',
     })
     if (data && data.success !== false) {
+      console.log('[Step1] 휴대폰 인증 성공:', { ncn: data.ncn, custId: data.custId })
       form.value.phoneAuthCompleted = true
       if (data.addr) form.value.address = data.addr
       if (data.email) {
@@ -610,7 +612,7 @@ async function doPhoneAuth() {
       alert(data?.message || '고객 정보와 휴대폰번호가 일치하지 않습니다. 휴대폰번호를 다시 확인해 주세요.')
     }
   } catch (err) {
-    console.warn('X01 API 오류:', err)
+    console.error('[Step1] 휴대폰 인증 실패:', err)
     alert(err?.message || '고객 정보와 휴대폰번호가 일치하지 않습니다. 휴대폰번호를 다시 확인해 주세요.')
   } finally {
     authLoading.value = false
@@ -618,6 +620,7 @@ async function doPhoneAuth() {
 }
 
 const save = async () => {
+  console.log('[Step1] 저장 시도:', { selectedIds: selectedIds.value, phoneAuthCompleted: form.value.phoneAuthCompleted })
   if (!selectedIds.value.length) return { valid: false, message: '최소 1개 이상의 변경 항목을 선택해 주세요.' }
   if (hasInvalidCombination.value) return { valid: false, message: invalidCombinationMsg.value }
   if (!serviceCheckCompleted.value) return { valid: false, message: '서비스 체크를 완료해 주세요.' }

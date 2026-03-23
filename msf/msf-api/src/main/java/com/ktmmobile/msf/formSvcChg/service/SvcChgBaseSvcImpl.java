@@ -45,8 +45,9 @@ public class SvcChgBaseSvcImpl implements SvcChgBaseSvc {
                 List<SvcChgBaseOptionDto> options = svcChgBaseMapper.selectSvcChgOptions(cat.getGroupCd());
                 cat.setOptions(options);
             }
+            logger.debug("[Base] 서비스변경 카테고리 조회 완료: {}개 카테고리", categories.size());
         } catch (Exception e) {
-            logger.warn("서비스변경 업무 코드 DB 조회 실패, Mock 데이터 반환: {}", e.getMessage());
+            logger.warn("[Base] 서비스변경 업무 코드 DB 조회 실패, Mock 데이터 반환: {}", e.getMessage());
             categories = getMockCategories();
         }
 
@@ -75,7 +76,7 @@ public class SvcChgBaseSvcImpl implements SvcChgBaseSvc {
                     Map<String, Object> optRef = new LinkedHashMap<>();
                     optRef.put("id", opt.getDtlCd());
                     optRef.put("label", opt.getDtlCdNm());
-                    optRef.put("concurrentBlockYn", opt.getConcurrentBlockYn());
+                    optRef.put("concurrentAvailYn", opt.getConcurrentAvailYn());
                     optRef.put("imagingYn", opt.getImagingYn());
                     opts.add(optRef);
                 }
@@ -95,7 +96,7 @@ public class SvcChgBaseSvcImpl implements SvcChgBaseSvc {
         for (SvcChgBaseCategoryDto cat : categories) {
             if (cat.getOptions() != null) {
                 for (SvcChgBaseOptionDto opt : cat.getOptions()) {
-                    if ("Y".equals(opt.getConcurrentBlockYn())) {
+                    if ("N".equals(opt.getConcurrentAvailYn())) {
                         concurrentIds.add(opt.getDtlCd());
                     }
                 }
@@ -133,37 +134,25 @@ public class SvcChgBaseSvcImpl implements SvcChgBaseSvc {
         return ConcurrentCheckResVO.ok();
     }
 
-    /** DB 없는 로컬 개발용 Mock 데이터. ID는 프론트엔드 ChangeProd.vue hasOption() 값과 일치 */
+    /** DB 없는 로컬 개발용 Mock 데이터. SVC_TGT_CD 공통코드 구조와 동일하게 유지. */
     private List<SvcChgBaseCategoryDto> getMockCategories() {
         List<SvcChgBaseCategoryDto> list = new ArrayList<>();
-
-        // ─ 기본 서비스 ─
-        SvcChgBaseCategoryDto basic = makeCategory("BASIC", "기본 서비스", "BASIC", 1, Arrays.asList(
-            makeOption("WIRELESS_BLOCK", "무선데이터차단 서비스", "N", "Y", 1),
-            makeOption("INFO_LIMIT",     "정보료 상한금액 설정/변경", "N", "Y", 2),
-            makeOption("ADDITION",       "부가서비스 신청/변경",     "N", "Y", 3)
-        ));
-        // ─ 요금제/부가서비스 ─
-        SvcChgBaseCategoryDto rate = makeCategory("RATE", "요금제/부가서비스", "RATE", 2, Arrays.asList(
-            makeOption("RATE_CHANGE", "요금제 변경",   "Y", "Y", 1),
-            makeOption("INSURANCE",   "단말보험 가입", "N", "Y", 2)
-        ));
-        // ─ 결합서비스 ─
-        SvcChgBaseCategoryDto combine = makeCategory("COMBINE", "결합서비스", "COMBINE", 3, Arrays.asList(
-            makeOption("ANY_SOLO",     "아무나 SOLO 결합",         "N", "Y", 1),
-            makeOption("DATA_SHARING", "데이터쉐어링 가입/해지",   "N", "Y", 2)
-        ));
-        // ─ 일시/분실정지 ─
-        SvcChgBaseCategoryDto pause = makeCategory("PAUSE_GRP", "일시/분실정지", "PAUSE", 4, Arrays.asList(
-            makeOption("LOST_RESTORE", "분실복구/일시정지해제 신청", "Y", "Y", 1)
-        ));
-        // ─ 가입정보 변경 ─
-        SvcChgBaseCategoryDto info = makeCategory("INFO_CHG", "가입정보 변경", "INFO", 5, Arrays.asList(
-            makeOption("USIM_CHANGE", "USIM 변경", "N", "Y", 1),
-            makeOption("NUM_CHANGE",  "번호변경",  "Y", "Y", 2)
-        ));
-
-        list.addAll(Arrays.asList(basic, rate, combine, pause, info));
+        SvcChgBaseCategoryDto cat = makeCategory("SVC_TGT_CD", "서비스변경 대상 업무코드", "00", 0,
+            Arrays.asList(
+                // concurrentAvailYn: Y=동시변경가능, N=동시변경불가
+                // imagingYn: Y=별도신청서 이미지처리
+                makeOption("WIRELESS_BLOCK", "무선데이터차단 서비스",        "Y", "Y",  1),
+                makeOption("INFO_LIMIT",     "정보료 상한금액 설정/변경",    "Y", "Y",  2),
+                makeOption("ADDITION",       "부가서비스 신청/변경",         "Y", "Y",  3),
+                makeOption("RATE_CHANGE",    "요금제 변경",                  "N", "Y",  4),
+                makeOption("INSURANCE",      "단말보험 가입",                "Y", "Y",  5),
+                makeOption("ANY_SOLO",       "아무나 SOLO 결합",             "Y", "Y",  6),
+                makeOption("DATA_SHARING",   "데이터쉐어링 가입/해지",       "Y", "Y",  7),
+                makeOption("LOST_RESTORE",   "분실복구/일시정지해제 신청",   "N", "Y",  8),
+                makeOption("USIM_CHANGE",    "USIM 변경",                    "Y", "Y",  9),
+                makeOption("NUM_CHANGE",     "번호변경",                     "N", "Y", 10)
+            ));
+        list.add(cat);
         return list;
     }
 
@@ -178,12 +167,12 @@ public class SvcChgBaseSvcImpl implements SvcChgBaseSvc {
         return cat;
     }
 
-    private SvcChgBaseOptionDto makeOption(String dtlCd, String dtlCdNm, String concurrentBlockYn,
+    private SvcChgBaseOptionDto makeOption(String dtlCd, String dtlCdNm, String concurrentAvailYn,
                                            String imagingYn, int sortSeq) {
         SvcChgBaseOptionDto opt = new SvcChgBaseOptionDto();
         opt.setDtlCd(dtlCd);
         opt.setDtlCdNm(dtlCdNm);
-        opt.setConcurrentBlockYn(concurrentBlockYn);
+        opt.setConcurrentAvailYn(concurrentAvailYn);
         opt.setImagingYn(imagingYn);
         opt.setSortSeq(sortSeq);
         return opt;

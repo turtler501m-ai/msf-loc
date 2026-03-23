@@ -133,12 +133,16 @@ public class MplatFormSvc {
     public MpAddSvcInfoDto getAddSvcInfoDto(String ncn, String ctn, String custId) {
         MpAddSvcInfoDto vo = new MpAddSvcInfoDto();
         HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X20);
+        logger.debug("[MplatForm][X20] 부가서비스 조회 호출: ncn={}, ctn={}, mode={}", ncn, ctn, serverLocation);
 
         if ("LOCAL".equals(serverLocation)) {
             getVo(20, vo);
         } else {
             mplatFormServerAdapter.callService(param, vo);
         }
+        int count = (vo.getList() != null) ? vo.getList().size() : 0;
+        logger.debug("[MplatForm][X20] 부가서비스 조회 응답: success={}, items={}건, globalNo={}",
+            vo.isSuccess(), count, vo.getGlobalNo());
         return vo;
     }
 
