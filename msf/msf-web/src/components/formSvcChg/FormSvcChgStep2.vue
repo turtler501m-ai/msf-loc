@@ -206,22 +206,10 @@
               </button>
             </div>
           </div>
-          <!-- 즉시변경 선택 시 실시간 사용요금 안내 -->
-          <div v-if="productForm.rateChangeSchedule === 'immediate' && rateImmediateMsg" class="product-form-row">
+          <!-- 즉시변경 선택 시 확인 완료 안내 -->
+          <div v-if="productForm.rateChangeSchedule === 'immediate' && rateConfirmed" class="product-form-row">
             <span class="product-row-label"></span>
-            <div class="product-row-input text-sm text-amber-700 bg-amber-50 p-3 rounded space-y-1">
-              <p class="font-medium">{{ rateImmediateMsg }}</p>
-              <div v-if="rateRemainItems.length" class="mt-2 divide-y divide-amber-200">
-                <div
-                  v-for="(item, idx) in rateRemainItems"
-                  :key="idx"
-                  class="flex justify-between py-1"
-                >
-                  <span>{{ item.gubun }}</span>
-                  <span class="font-medium">{{ item.payment }}</span>
-                </div>
-              </div>
-            </div>
+            <p class="product-row-input text-sm text-amber-700 bg-amber-50 p-2 rounded">{{ rateImmediateMsg }}</p>
           </div>
           <p v-if="rateCheckError" class="text-sm text-red-600">{{ rateCheckError }}</p>
         </div>
@@ -615,6 +603,30 @@
       @confirm="onRoamingConfirm"
     />
     <McpNumberSearchPop v-model:open="numberSearchOpen" @confirm="onNumberSearchConfirm" />
+
+    <!-- X18 실시간 사용요금 팝업 -->
+    <Dialog v-model:open="remainChargePopOpen" :modal="true">
+      <DialogContent class="max-w-sm" :show-close-button="false">
+        <DialogHeader>
+          <DialogTitle>현재 사용 요금 안내</DialogTitle>
+          <DialogDescription v-if="rateRemainSearchTime">{{ rateRemainSearchTime }} 사용 요금입니다.</DialogDescription>
+        </DialogHeader>
+        <div class="divide-y divide-gray-100 text-sm">
+          <div
+            v-for="(item, idx) in rateRemainItems"
+            :key="idx"
+            class="flex justify-between py-2"
+            :class="{ 'font-semibold text-amber-700': item.gubun === '당월요금계' }"
+          >
+            <span>{{ item.gubun }}</span>
+            <span>{{ item.payment }}</span>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button @click="onRemainChargeConfirm">확인</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
@@ -643,6 +655,13 @@ import McpTmBlockPop from '@/components/formComm/MsfTmBlockPop.vue'
 import McpNumberTheftBlockPop from '@/components/formComm/MsfNumberTheftBlockPop.vue'
 import McpRoamingAllDayPop from '@/components/formComm/MsfRoamingAllDayPop.vue'
 import McpNumberSearchPop from '@/components/commons/McpNumberSearchPop.vue'
+import Dialog from '@/components/ui/dialog/Dialog.vue'
+import DialogContent from '@/components/ui/dialog/DialogContent.vue'
+import DialogHeader from '@/components/ui/dialog/DialogHeader.vue'
+import DialogTitle from '@/components/ui/dialog/DialogTitle.vue'
+import DialogDescription from '@/components/ui/dialog/DialogDescription.vue'
+import DialogFooter from '@/components/ui/dialog/DialogFooter.vue'
+import Button from '@/components/ui/button/Button.vue'
 
 defineProps({ isActive: Boolean })
 const emit = defineEmits(['complete'])
@@ -798,6 +817,7 @@ const rateCheckError = ref('')
 const rateImmediateMsg = ref('')
 const rateRemainItems = ref([])
 const rateRemainSearchTime = ref('')
+const remainChargePopOpen = ref(false)
 
 const canConfirmRate = computed(() => {
   const soc = productForm.value.recommendedRatePlan || productForm.value.ratePlanSearchResult
@@ -807,30 +827,37 @@ const canConfirmRate = computed(() => {
 async function onRateConfirm() {
   rateCheckLoading.value = true
   rateCheckError.value = ''
-  rateImmediateMsg.value = ''
   rateRemainItems.value = []
   rateRemainSearchTime.value = ''
   try {
     const cf = formStore.customerForm || {}
     const schedule = productForm.value.rateChangeSchedule
     if (schedule === 'immediate') {
-      // X18 실시간 사용요금 조회
+      // X18 실시간 사용요금 조회 후 팝업 표시
       const res = await getFarPriceRemainCharge({ ncn: cf.ncn, ctn: cf.phone, custId: cf.custId })
       if (res && res.success) {
         rateRemainSearchTime.value = res.searchTime || ''
         rateRemainItems.value = res.items || []
-        rateImmediateMsg.value = res.searchTime ? `${res.searchTime} 사용 요금 입니다.` : '사용 요금 조회 완료'
+        remainChargePopOpen.value = true  // 팝업 오픈 — 확인 버튼 클릭 시 rateConfirmed 처리
       } else {
         rateCheckError.value = (res && res.message) || '실시간 사용요금 조회에 실패했습니다.'
-        return
       }
+    } else {
+      rateConfirmed.value = true
     }
-    rateConfirmed.value = true
   } catch (e) {
     rateCheckError.value = e?.message || '요금제 변경이 불가합니다.'
   } finally {
     rateCheckLoading.value = false
   }
+}
+
+function onRemainChargeConfirm() {
+  remainChargePopOpen.value = false
+  rateImmediateMsg.value = rateRemainSearchTime.value
+    ? `${rateRemainSearchTime.value} 사용 요금 기준으로 변경됩니다.`
+    : '사용 요금 확인 완료'
+  rateConfirmed.value = true
 }
 
 // ── 번호변경 ───────────────────────────────────────────────
