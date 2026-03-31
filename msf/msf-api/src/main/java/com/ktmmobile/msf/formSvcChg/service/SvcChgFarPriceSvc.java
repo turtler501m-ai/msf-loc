@@ -62,4 +62,10 @@ public interface SvcChgFarPriceSvc {
 
     /** 가입해야 할 프로모션 부가서비스 목록 (VW_CHRG_PRMT_DTL). */
     List<McpRegServiceDto> getromotionDcList(String toSocCode);
+
+    /**
+     * X18 실시간 사용요금 조회 — 즉시변경 확인 팝업용.
+     * 응답: { success, searchTime, sumAmt, items:[{gubun, payment}] }
+     */
+    Map<String, Object> getRemainCharge(SvcChgInfoDto req);
 }

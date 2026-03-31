@@ -81,4 +81,14 @@ public class SvcChgFarPriceController {
     public Map<String, Object> getRegServicePop(@RequestBody SvcChgFarPriceReqDto req) {
         return farPriceSvc.getRegServicePop(req);
     }
+
+    /**
+     * X18 실시간 사용요금 조회 — 즉시변경 확인 팝업용.
+     * 응답: { success, searchTime, sumAmt, items:[{gubun, payment}] }
+     * POST /api/v1/service-change/far-price/remain-charge
+     */
+    @PostMapping("/remain-charge")
+    public Map<String, Object> getRemainCharge(@RequestBody SvcChgInfoDto req) {
+        return farPriceSvc.getRemainCharge(req);
+    }
 }

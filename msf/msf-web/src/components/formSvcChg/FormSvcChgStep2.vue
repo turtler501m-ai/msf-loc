@@ -209,7 +209,19 @@
           <!-- 즉시변경 선택 시 실시간 사용요금 안내 -->
           <div v-if="productForm.rateChangeSchedule === 'immediate' && rateImmediateMsg" class="product-form-row">
             <span class="product-row-label"></span>
-            <p class="product-row-input text-sm text-amber-700 bg-amber-50 p-2 rounded">{{ rateImmediateMsg }}</p>
+            <div class="product-row-input text-sm text-amber-700 bg-amber-50 p-3 rounded space-y-1">
+              <p class="font-medium">{{ rateImmediateMsg }}</p>
+              <div v-if="rateRemainItems.length" class="mt-2 divide-y divide-amber-200">
+                <div
+                  v-for="(item, idx) in rateRemainItems"
+                  :key="idx"
+                  class="flex justify-between py-1"
+                >
+                  <span>{{ item.gubun }}</span>
+                  <span class="font-medium">{{ item.payment }}</span>
+                </div>
+              </div>
+            </div>
           </div>
           <p v-if="rateCheckError" class="text-sm text-red-600">{{ rateCheckError }}</p>
         </div>
@@ -615,6 +627,7 @@ import {
   cancelAddition,
   regSvcChgAjax,
   getFarPriceList,
+  getFarPriceRemainCharge,
   checkCombineSelf,
   regCombineSelf,
   getDataSharingList,
@@ -783,6 +796,8 @@ const rateConfirmed = ref(false)
 const rateCheckLoading = ref(false)
 const rateCheckError = ref('')
 const rateImmediateMsg = ref('')
+const rateRemainItems = ref([])
+const rateRemainSearchTime = ref('')
 
 const canConfirmRate = computed(() => {
   const soc = productForm.value.recommendedRatePlan || productForm.value.ratePlanSearchResult
@@ -790,20 +805,25 @@ const canConfirmRate = computed(() => {
 })
 
 async function onRateConfirm() {
-  console.log('[Step2] 요금제 변경 확인:', { soc: productForm.value.recommendedRatePlan || productForm.value.ratePlanSearchResult, schedule: productForm.value.rateChangeSchedule })
   rateCheckLoading.value = true
   rateCheckError.value = ''
   rateImmediateMsg.value = ''
+  rateRemainItems.value = []
+  rateRemainSearchTime.value = ''
   try {
     const cf = formStore.customerForm || {}
     const schedule = productForm.value.rateChangeSchedule
     if (schedule === 'immediate') {
-      // X18 실시간 사용요금 조회 — 현재는 백엔드 연동 예정, UI 표시만
-      const today = new Date()
-      const yyyy = today.getFullYear()
-      const mm = String(today.getMonth() + 1).padStart(2, '0')
-      const dd = String(today.getDate()).padStart(2, '0')
-      rateImmediateMsg.value = `${yyyy}-${mm}-01 ~ ${yyyy}-${mm}-${dd} 사용 요금 입니다. (${yyyy}-${mm}-${String(parseInt(dd) + 1).padStart(2, '0')} 부터는 변경 후 요금제 기준으로 사용요금이 부과 예정)`
+      // X18 실시간 사용요금 조회
+      const res = await getFarPriceRemainCharge({ ncn: cf.ncn, ctn: cf.phone, custId: cf.custId })
+      if (res && res.success) {
+        rateRemainSearchTime.value = res.searchTime || ''
+        rateRemainItems.value = res.items || []
+        rateImmediateMsg.value = res.searchTime ? `${res.searchTime} 사용 요금 입니다.` : '사용 요금 조회 완료'
+      } else {
+        rateCheckError.value = (res && res.message) || '실시간 사용요금 조회에 실패했습니다.'
+        return
+      }
     }
     rateConfirmed.value = true
   } catch (e) {

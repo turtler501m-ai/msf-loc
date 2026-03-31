@@ -4,6 +4,7 @@ import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
 import com.ktmmobile.msf.common.mplatform.vo.MpAddSvcInfoDto;
 import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceChgVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceResvInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarRealtimePayInfoVO;
 import com.ktmmobile.msf.formComm.dto.McpFarPriceDto;
 import com.ktmmobile.msf.formComm.dto.McpServiceAlterTraceDto;
 import com.ktmmobile.msf.formComm.dto.MspJuoAddInfoDto;
@@ -435,6 +436,28 @@ public class SvcChgFarPriceSvcImpl implements SvcChgFarPriceSvc {
     @Override
     public List<McpRegServiceDto> getromotionDcList(String toSocCode) {
         return formMypageSvc.getromotionDcList(toSocCode);
+    }
+
+    @Override
+    public Map<String, Object> getRemainCharge(SvcChgInfoDto req) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            MpFarRealtimePayInfoVO vo = mplatFormSvc.farRealtimePayInfo(req.getNcn(), req.getCtn(), req.getCustId());
+            if (!vo.isSuccess()) {
+                result.put("success", false);
+                result.put("message", "실시간 사용요금 조회에 실패했습니다.");
+                return result;
+            }
+            result.put("success", true);
+            result.put("searchTime", vo.getSearchTime());
+            result.put("sumAmt", vo.getSumAmt());
+            result.put("items", vo.getItems());
+        } catch (Exception e) {
+            logger.warn("[SvcChgFarPriceSvc] getRemainCharge 오류: {}", e.getMessage());
+            result.put("success", false);
+            result.put("message", "실시간 사용요금 조회 중 오류가 발생했습니다.");
+        }
+        return result;
     }
 
     /* =====================================================================

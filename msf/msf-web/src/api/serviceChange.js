@@ -101,6 +101,15 @@ export async function cancelFarPriceReservation(params) {
   return msfPost('/v1/service-change/far-price/reservation/cancel', params || {})
 }
 
+/**
+ * X18 실시간 사용요금 조회 — 즉시변경 확인 팝업용
+ * @param {{ ncn: string, ctn: string, custId?: string }} params
+ * @returns {Promise<{ success: boolean, searchTime: string, sumAmt: string, items: Array<{gubun, payment}> }>}
+ */
+export async function getFarPriceRemainCharge(params) {
+  return msfPost('/v1/service-change/far-price/remain-charge', params)
+}
+
 // ----- 아무나 SOLO 결합 (분석 44·45) -----
 
 /**
