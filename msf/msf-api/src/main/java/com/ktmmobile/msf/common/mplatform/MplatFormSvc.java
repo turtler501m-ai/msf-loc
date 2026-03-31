@@ -2,6 +2,10 @@ package com.ktmmobile.msf.common.mplatform;
 
 import com.ktmmobile.msf.common.mplatform.vo.CommonXmlVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpAddSvcInfoDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpAddSvcInfoParamDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpOsstIpinCiVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpOsstPhoneNoVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpOsstSimpleVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpDataSharingResVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpMoscRegSvcCanChgInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpRegSvcChgVO;
@@ -18,6 +22,8 @@ import com.ktmmobile.msf.common.mplatform.vo.MpSuspenCnlPosInfoInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpSuspenPosHisVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpFarRealtimePayInfoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceChgVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpMoscSpnsrItgInfoInVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpMoscSdsInfoVo;
 import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceResvInfoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpNameChgPreChkVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpCrdtCardAthnVO;
@@ -67,8 +73,12 @@ public class MplatFormSvc {
     public static final String APP_EVENT_CD_X70 = "X70";
     /** X71 데이터쉐어링 결합 중인 대상 조회 */
     public static final String APP_EVENT_CD_X71 = "X71";
-    /** X21 부가서비스 신청 */
+    /** X21 부가서비스 신청 (레거시) */
     public static final String APP_EVENT_CD_X21 = "X21";
+    /** Y25 부가서비스 신청 (X21 대체 — E1 명시) */
+    public static final String APP_EVENT_CD_Y25 = "Y25";
+    /** X97 부가서비스 목록 조회 (X20 대체 — E1 명시) */
+    public static final String APP_EVENT_CD_X97 = "X97";
     /** X38 부가서비스 해지 */
     public static final String APP_EVENT_CD_X38 = "X38";
     /** X32 번호변경 */
@@ -83,6 +93,10 @@ public class MplatFormSvc {
     public static final String APP_EVENT_CD_MC0 = "MC0";
     /** X18 실시간 요금조회 */
     public static final String APP_EVENT_CD_X18 = "X18";
+    /** X54 스폰서 조회 */
+    public static final String APP_EVENT_CD_X54 = "X54";
+    /** X62 심플할인 정보조회 */
+    public static final String APP_EVENT_CD_X62 = "X62";
     /** X19 요금상품 즉시변경 */
     public static final String APP_EVENT_CD_X19 = "X19";
     /** X84 요금상품 예약일 즉시변경 */
@@ -101,9 +115,28 @@ public class MplatFormSvc {
     public static final String APP_EVENT_CD_NU2 = "NU2";
     /** X91 신용카드 인증조회 */
     public static final String APP_EVENT_CD_X91 = "X91";
+    /** PC0 OSST 사전체크 및 고객생성 */
+    public static final String EVENT_CODE_PC0 = "PC0";
+    /** PC2 OSST 사전체크 결과 (진행상태코드) */
+    public static final String EVENT_CODE_PC2 = "PC2";
+    /** ST1 OSST 진행상태 조회 */
+    public static final String EVENT_CODE_ST1 = "ST1";
+    /** NU1 OSST 희망번호 조회 */
+    public static final String EVENT_CODE_NU1 = "NU1";
+    /** NU2 OSST 번호 예약/취소 */
+    public static final String EVENT_CODE_NU2 = "NU2";
+    /** OP0 OSST 개통 및 수납 */
+    public static final String EVENT_CODE_OP0 = "OP0";
+    /** Y39 아이핀 CI 조회 (M플랫폼) */
+    public static final String APP_EVENT_CD_Y39 = "Y39";
+    /** OSST 성공 결과코드 */
+    public static final String OSST_SUCCESS = "0000";
 
     @Autowired
     private MplatFormServerAdapter mplatFormServerAdapter;
+
+    @Autowired
+    private OsstServerAdapter osstServerAdapter;
 
     /** 기존 MCP 와 동일: LOCAL 이면 Mock, 아니면 실제 M플랫폼 호출 */
     @Value("${SERVER_NAME:}")
@@ -143,6 +176,43 @@ public class MplatFormSvc {
         int count = (vo.getList() != null) ? vo.getList().size() : 0;
         logger.debug("[MplatForm][X20] 부가서비스 조회 응답: success={}, items={}건, globalNo={}",
             vo.isSuccess(), count, vo.getGlobalNo());
+        return vo;
+    }
+
+    /**
+     * X97 부가서비스 목록 조회. ASIS getAddSvcInfoParamDto() 와 동일.
+     * X20 대체 — E1 명시. 응답 XML 구조: outDto/svcList (X20의 outDto/outDto 와 다름).
+     */
+    public MpAddSvcInfoParamDto getAddSvcInfoParamDto(String ncn, String ctn, String custId) {
+        MpAddSvcInfoParamDto vo = new MpAddSvcInfoParamDto();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X97);
+        logger.debug("[MplatForm][X97] 부가서비스 조회 호출: ncn={}, ctn={}, mode={}", ncn, ctn, serverLocation);
+
+        if ("LOCAL".equals(serverLocation)) {
+            getVo(97, vo);
+        } else {
+            mplatFormServerAdapter.callService(param, vo);
+        }
+        int count = (vo.getList() != null) ? vo.getList().size() : 0;
+        logger.debug("[MplatForm][X97] 부가서비스 조회 응답: success={}, items={}건", vo.isSuccess(), count);
+        return vo;
+    }
+
+    /**
+     * Y25 부가서비스 신청. X21 대체 — E1 명시.
+     * actCode: "I"(가입), "D"(해지). 기본값 "I".
+     */
+    public MpRegSvcChgVO regSvcChgY25(String ncn, String ctn, String custId, String soc, String ftrNewParam) {
+        MpRegSvcChgVO vo = new MpRegSvcChgVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_Y25);
+        param.put("soc", soc != null ? soc : "");
+        param.put("ftrNewParam", ftrNewParam != null ? ftrNewParam : "");
+        param.put("actCode", "I");
+        if ("LOCAL".equals(serverLocation)) {
+            getVo(25, vo);
+        } else {
+            mplatFormServerAdapter.callService(param, vo);
+        }
         return vo;
     }
 
@@ -204,6 +274,10 @@ public class MplatFormSvc {
             responseXml = "<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X20</appEventCd><appSendDateTime>20220331105448</appSendDateTime><appRecvDateTime>20220331105446</appRecvDateTime><appLgDateTime>20220331105446</appLgDateTime><appNstepUserId>91225330</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9122533020220331105042626</globalNo><encYn></encYn><responseType>N</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><outDto><effectiveDate>20211110144758</effectiveDate><prodHstSeq>300000783571478</prodHstSeq><soc>PL19AS353</soc><socDescription>M 요금할인 5000(VAT포함)</socDescription><socRateValue>-4,546 WON</socRateValue></outDto><outDto><effectiveDate>20191031174605</effectiveDate><prodHstSeq>300000444731236</prodHstSeq><soc>MPAYBLOCK</soc><socDescription>휴대폰결제 이용거부</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20191031174605</effectiveDate><prodHstSeq>300000444731240</prodHstSeq><soc>NOSPAM3</soc><socDescription>정보제공사업자번호차단</socDescription><socRateValue>Free</socRateValue></outDto></outDto></return>";
         } else if (param == 21) {
             responseXml = "<return><bizHeader><appEventCd>X21</appEventCd></bizHeader><commHeader><globalNo>9122533020220311145132712</globalNo><responseType>N</responseType><responseCode></responseCode><responseBasic></responseBasic></commHeader></return>";
+        } else if (param == 25) {
+            responseXml = "<return><bizHeader><appEventCd>Y25</appEventCd></bizHeader><commHeader><globalNo>9122533020240101120000001</globalNo><responseType>N</responseType><responseCode></responseCode><responseBasic></responseBasic></commHeader></return>";
+        } else if (param == 97) {
+            responseXml = "<return><bizHeader><appEventCd>X97</appEventCd></bizHeader><commHeader><globalNo>9122533020230710170748566</globalNo><responseType>N</responseType><responseCode></responseCode><responseBasic></responseBasic></commHeader><outDto><svcList><effectiveDate>20221221112445</effectiveDate><prodHstSeq>300000967342586</prodHstSeq><soc>SPMFILTER</soc><socDescription>스팸차단서비스</socDescription><socRateValue>Free</socRateValue></svcList><svcList><effectiveDate>20191031174605</effectiveDate><prodHstSeq>300000444731236</prodHstSeq><soc>MPAYBLOCK</soc><socDescription>휴대폰결제 이용거부</socDescription><socRateValue>Free</socRateValue></svcList><svcList><effectiveDate>20221221112445</effectiveDate><prodHstSeq>300000967342580</prodHstSeq><soc>CLIPF</soc><socDescription>발신번호표시무료</socDescription><socRateValue>Free</socRateValue></svcList></outDto></return>";
         } else if (param == 38) {
             responseXml = "<return><bizHeader><appEventCd>X38</appEventCd></bizHeader><commHeader><globalNo>9106072820160112153243531</globalNo><responseType>N</responseType><responseCode></responseCode><responseBasic></responseBasic></commHeader></return>";
         } else {
@@ -533,6 +607,41 @@ public class MplatFormSvc {
     }
 
     /**
+     * X54 스폰서 조회. ASIS MplatFormService.kosMoscSpnsrItgInfo() 와 동일.
+     * 해지 시 예상 위약금(trmnForecBprmsAmt) 조회.
+     * saleEngtOptnCd=KD → outKDDto.trmnForecBprmsAmt
+     * saleEngtOptnCd=PM → outPMDto.rtrnAmtAndChageDcAmt
+     */
+    public MpMoscSpnsrItgInfoInVO kosMoscSpnsrItgInfo(String ncn, String ctn, String custId) {
+        MpMoscSpnsrItgInfoInVO vo = new MpMoscSpnsrItgInfoInVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X54);
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><bizHeader><appEventCd>X54</appEventCd></bizHeader><commHeader><globalNo>x54mock001</globalNo><responseType>N</responseType><responseCode></responseCode></commHeader><outDto><outBasInfoDto><engtAplyStDate>20230115</engtAplyStDate><engtExpirPamDate>20250114</engtExpirPamDate><engtUseDayNum>430</engtUseDayNum><saleEngtNm>알뜰폰스폰서2[베이직코스]</saleEngtNm><saleEngtOptnCd>KD</saleEngtOptnCd><saleEngtTypeDivCd>KM1</saleEngtTypeDivCd></outBasInfoDto><outKDDto><apdSuprtAmt>8000</apdSuprtAmt><engtRmndDate>280</engtRmndDate><firstSuprtAmt>143000</firstSuprtAmt><ktSuprtPenltAmt>85800</ktSuprtPenltAmt><punoSuprtAmt>143000</punoSuprtAmt><realDcAmt>57200</realDcAmt><rtrnAmtAndChageDcAmt>0</rtrnAmtAndChageDcAmt><storSuprtPenltAmt>4800</storSuprtPenltAmt><tgtKtSuprtPenltAmt>143000</tgtKtSuprtPenltAmt><trmnForecBprmsAmt>90600</trmnForecBprmsAmt></outKDDto></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X62 심플할인 정보조회. ASIS MplatFormService.moscSdsInfo() 와 동일.
+     * 심플할인 위약금(ppPenlt) 조회.
+     * chageDcAplyYn=N 이면 심플할인 미적용 → ppPenlt=0.
+     */
+    public MpMoscSdsInfoVo moscSdsInfo(String ncn, String ctn, String custId) {
+        MpMoscSdsInfoVo vo = new MpMoscSdsInfoVo();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X62);
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><bizHeader><appEventCd>X62</appEventCd></bizHeader><commHeader><globalNo>x62mock001</globalNo><responseType>N</responseType><responseCode></responseCode></commHeader><outDto><chageDcAplyYn>Y</chageDcAplyYn><dcSuprtAmt>1000</dcSuprtAmt><engtAplyStDate>20230515</engtAplyStDate><engtExpirPamDate>20250514</engtExpirPamDate><engtPerdMonsNum>24</engtPerdMonsNum><ppPenlt>4611</ppPenlt></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
      * X91 신용카드 인증조회. ASIS MplatFormService.moscCrdtCardAthnInfo() 와 동일.
      * 파라미터: crdtCardNo(카드번호), crdtCardTermDay(YYMM 유효기간), brthDate(YYYYMMDD 생년월일), custNm(카드명의인)
      * 응답: trtResult(Y=성공/N=실패), trtMsg, crdtCardKindCd, crdtCardNm
@@ -688,5 +797,113 @@ public class MplatFormSvc {
         boolean ok = mplatFormServerAdapter.callService(param, vo);
         if (!ok) return false;
         return vo.isSuccess();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // OSST 연동 메서드 (데이터쉐어링 신규개통 전용)
+    // ASIS AppformSvcImpl.sendOsstService / sendOsstSt1Service / getPhoneNoList 와 동일.
+    // ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * PC0 사전체크 / NU2 번호예약 / OP0 개통수납 (단순 성공/실패 응답).
+     * ASIS AppformSvcImpl.sendOsstService(Map, String eventCd) 와 동일.
+     *
+     * @param osstParam resNo, prntsContractNo, custNo (+ 단계별 추가 파라미터)
+     * @param eventCd   EVENT_CODE_PC0 / EVENT_CODE_NU2 / EVENT_CODE_OP0
+     */
+    public MpOsstSimpleVO sendOsstService(java.util.Map<String, String> osstParam, String eventCd) {
+        MpOsstSimpleVO vo = new MpOsstSimpleVO();
+        HashMap<String, String> param = new HashMap<>();
+        param.put("appEventCd", eventCd);
+        if (osstParam != null) {
+            osstParam.forEach(param::put);
+        }
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml(
+                "<return><commHeader><responseType>N</responseType></commHeader>" +
+                "<outDto><prgrStatCd>" + eventCd + "</prgrStatCd><rsltCd>0000</rsltCd>" +
+                "<osstOrdNo>99999999999999</osstOrdNo></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            osstServerAdapter.callService(param, vo);
+        }
+        return vo;
+    }
+
+    /**
+     * ST1 OSST 진행상태 조회 (PC2 완료 여부 확인).
+     * ASIS AppformSvcImpl.sendOsstSt1Service(Map, String eventCd) 와 동일.
+     * prgrStatCd = "PC2" 이면 사전체크 완료.
+     *
+     * @param osstParam resNo, (prntsContractNo, custNo 선택)
+     */
+    public MpOsstSimpleVO sendOsstSt1Service(java.util.Map<String, String> osstParam) {
+        MpOsstSimpleVO vo = new MpOsstSimpleVO();
+        HashMap<String, String> param = new HashMap<>();
+        param.put("appEventCd", EVENT_CODE_ST1);
+        if (osstParam != null) {
+            osstParam.forEach(param::put);
+        }
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml(
+                "<return><commHeader><responseType>N</responseType></commHeader>" +
+                "<outDto><prgrStatCd>PC2</prgrStatCd><rsltCd>0000</rsltCd></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            osstServerAdapter.callService(param, vo);
+        }
+        return vo;
+    }
+
+    /**
+     * NU1 희망번호 조회.
+     * ASIS AppformSvcImpl.getPhoneNoList(Map, String eventCd) 와 동일.
+     *
+     * @param osstParam resNo, reqWantNumber (끝번호 4자리 또는 중간번호 4자리)
+     */
+    public MpOsstPhoneNoVO getPhoneNoList(java.util.Map<String, String> osstParam) {
+        MpOsstPhoneNoVO vo = new MpOsstPhoneNoVO();
+        HashMap<String, String> param = new HashMap<>();
+        param.put("appEventCd", EVENT_CODE_NU1);
+        if (osstParam != null) {
+            osstParam.forEach(param::put);
+        }
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml(
+                "<return><commHeader><responseType>N</responseType></commHeader>" +
+                "<outDto><outDto>" +
+                "<tlphNo>01099998888</tlphNo>" +
+                "<tlphNoStatCd>01</tlphNoStatCd>" +
+                "<encdTlphNo>MOCK_ENCD</encdTlphNo>" +
+                "<tlphNoOwnCmncCmpnCd>KTM</tlphNoOwnCmncCmpnCd>" +
+                "</outDto></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            osstServerAdapter.callService(param, vo);
+        }
+        return vo;
+    }
+
+    /**
+     * Y39 아이핀 CI 조회 (M플랫폼).
+     * ASIS MplatFormService.MoscSvcContService(osstOrdNo) 와 동일.
+     * PC2 완료 후 호출하여 개통 고객의 CI 를 확인.
+     *
+     * @param osstOrdNo OSST 오더번호 (MSF_REQUEST_OSST.OSST_ORD_NO)
+     */
+    public MpOsstIpinCiVO moscSvcContService(String osstOrdNo) {
+        MpOsstIpinCiVO vo = new MpOsstIpinCiVO();
+        HashMap<String, String> param = new HashMap<>();
+        param.put("appEventCd", APP_EVENT_CD_Y39);
+        param.put("osstOrdNo", osstOrdNo != null ? osstOrdNo : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml(
+                "<return><commHeader><responseType>N</responseType></commHeader>" +
+                "<outDto><ipinCi>MOCK_CI_VALUE_FOR_LOCAL</ipinCi></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo);
+        }
+        return vo;
     }
 }

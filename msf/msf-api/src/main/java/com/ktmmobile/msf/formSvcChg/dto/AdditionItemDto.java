@@ -11,6 +11,10 @@ public class AdditionItemDto {
     private String effectiveDate;
     private String prodHstSeq;
     private String paramSbst;
+    /** 해지 안내 문구 (getMspRateMst canCmnt). ASIS myAddSvcListAjax enrichment. */
+    private String canCmnt;
+    /** 온라인 해지 가능 여부 Y/N (getMspRateMst onlineCanYn). ASIS myAddSvcListAjax enrichment. */
+    private String onlineCanYn;
 
     public String getSoc() { return soc; }
     public void setSoc(String soc) { this.soc = soc; }
@@ -29,4 +33,10 @@ public class AdditionItemDto {
 
     public String getParamSbst() { return paramSbst; }
     public void setParamSbst(String paramSbst) { this.paramSbst = paramSbst; }
+
+    public String getCanCmnt() { return canCmnt; }
+    public void setCanCmnt(String canCmnt) { this.canCmnt = canCmnt; }
+
+    public String getOnlineCanYn() { return onlineCanYn; }
+    public void setOnlineCanYn(String onlineCanYn) { this.onlineCanYn = onlineCanYn; }
 }

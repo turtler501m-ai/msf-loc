@@ -28,6 +28,7 @@ export const useServiceChangeFormStore = defineStore('serviceChangeForm', {
       addressDtl: '',
       ncn: '', // join-info 응답 (계약정보 유효성 Y04용)
       custId: '', // join-info 응답 (M전산 고객번호)
+      activationDate: '', // join-info 응답 (최초개통일, initActivationDate)
       minorAgent: {},
       agentInfo: {},
     },
@@ -104,6 +105,7 @@ export const useServiceChangeFormStore = defineStore('serviceChangeForm', {
         addressDtl: '',
         ncn: '',
         custId: '',
+        activationDate: '',
         minorAgent: {},
         agentInfo: {},
       }

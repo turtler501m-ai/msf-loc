@@ -73,21 +73,33 @@
     <!--
         해지상담 서식지 기본정보 조회.
         ASIS: CustRequestMapper.getCancelConsultData
-        FROM: MSF_CUST_REQUEST_MST(A) — 해지는 별도 MSF_REQUEST_CANCEL 미사용 시 NMCP_NFL_CNCL_APY 참조
-        NOTE: 현재 MSF 해지 저장 테이블: NMCP_NFL_CNCL_APY. scan_id 컬럼 존재 시 업데이트 가능.
+        FROM: MSF_REQUEST_CANCEL (TOBE 해지 저장 테이블)
+        COLUMN_NAME 키는 MSF_APP_FORM_INFO(G001 그룹) 서식지 좌표와 매핑됨.
     -->
     <select id="getCancelConsultData" parameterType="java.lang.Long" resultType="java.util.Map">
         SELECT /*FormSendMapper.getCancelConsultData*/
-            'CC'                  AS REQ_TYPE
-            , A.CUST_NM           AS CSTMR_NAME
-            , A.MOBILE_NO
-            , 'V'                 AS BENEFIT_AGREE_FLAG
-            , TO_CHAR(A.CRET_DTM, 'YYYY') AS REQ_IN_DAY_YYYY
-            , TO_CHAR(A.CRET_DTM, 'MM')   AS REQ_IN_DAY_MM
-            , TO_CHAR(A.CRET_DTM, 'DD')   AS REQ_IN_DAY_DD
-            , A.CNCL_APY_NO       AS CUST_REQ_SEQ
-        FROM NMCP_NFL_CNCL_APY A
-        WHERE A.CNCL_APY_NO = #{custReqSeq}
+            'CC'                                   AS REQ_TYPE
+            , R.REQUEST_KEY                        AS CUST_REQ_SEQ
+            , R.CSTMR_NM                           AS CSTMR_NAME
+            , R.CANCEL_MOBILE_NO                   AS MOBILE_NO
+            , R.CONTRACT_NUM
+            , R.AGENT_CD                           AS CNTPNT_SHOP_ID
+            , R.PAY_AMT
+            , R.PNLT_AMT
+            , R.LAST_SUM_AMT
+            , R.INSTAMT_MNTH_AMT
+            , R.CANCEL_USE_COMPANY_CD
+            , R.CSTMR_TYPE_CD                      AS CSTMR_TYPE
+            , R.MEMO
+            , R.SCAN_ID
+            , COALESCE(R.BENEFIT_AGREE_YN, 'N')    AS BENEFIT_AGREE_FLAG
+            , COALESCE(R.CLAUSE_CNTR_DEL_YN, 'N')  AS CLAUSE_CNTR_DEL_FLAG
+            , COALESCE(R.ETC_AGREE_YN, 'N')        AS ETC_AGREE_FLAG
+            , TO_CHAR(R.REG_DT, 'YYYY')            AS REQ_IN_DAY_YYYY
+            , TO_CHAR(R.REG_DT, 'MM')              AS REQ_IN_DAY_MM
+            , TO_CHAR(R.REG_DT, 'DD')              AS REQ_IN_DAY_DD
+        FROM MSF_REQUEST_CANCEL R
+        WHERE R.REQUEST_KEY = #{custReqSeq}
     </select>
 
     <!--
@@ -122,13 +134,16 @@
     </update>
 
     <!--
-        해지 SCAN_ID 업데이트.
+        해지 SCAN_ID + 서식지 완료 플래그 업데이트.
         ASIS: CustRequestMapper.updateCancelReqScanId
+        TOBE: MSF_REQUEST_CANCEL (APP_FORM_YN / APP_FORM_XML_YN 동시 갱신)
     -->
     <update id="updateCancelScanId">
-        UPDATE NMCP_NFL_CNCL_APY
-        SET SCAN_ID = #{scanId}
-        WHERE CNCL_APY_NO = #{custReqSeq}
+        UPDATE MSF_REQUEST_CANCEL
+        SET SCAN_ID         = #{scanId},
+            APP_FORM_YN     = 'Y',
+            APP_FORM_XML_YN = 'Y'
+        WHERE REQUEST_KEY = #{custReqSeq}
     </update>
 
 </mapper>

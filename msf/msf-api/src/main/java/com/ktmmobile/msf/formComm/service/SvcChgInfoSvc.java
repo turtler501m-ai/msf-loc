@@ -1,7 +1,6 @@
 package com.ktmmobile.msf.formComm.service;
 
 import com.ktmmobile.msf.formComm.dto.AccountCheckReqDto;
-import com.ktmmobile.msf.formComm.dto.CardCheckReqDto;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoReqDto;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoResVO;
 import com.ktmmobile.msf.formSvcChg.dto.UsimCheckReqDto;
@@ -10,7 +9,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
- * 가입자정보조회 및 공통 유효성 체크 서비스 인터페이스.
+ * 공통 인터페이스 연계 서비스 인터페이스.
+ * M플랫폼(Y04/X01/X85)/NICE(IF_0006)/MSP DB링크 등 외부 인터페이스 연동만 담당.
+ * 인터페이스 연계 없는 공통 기능(카드번호 검증 등)은 FormCommSvc 참조.
  */
 public interface SvcChgInfoSvc {
 
@@ -33,16 +34,9 @@ public interface SvcChgInfoSvc {
     Map<String, Object> checkAccount(AccountCheckReqDto req);
 
     /**
-     * IF_0007 카드번호 유효성 체크 (공통).
-     * ASIS myNameChg.js checkCardNumber() Luhn Algorithm + 유효기간 검증을 서버 사이드로 이전.
-     * 외부 API 연동 없음 — 서버 사이드 형식 검증.
-     */
-    Map<String, Object> checkCard(CardCheckReqDto req);
-
-    /**
      * 청구계정ID(BAN) 조회.
      * ASIS MypageServiceImpl.selectBanSel() 동일 구조.
-     * 계약번호(ncn)로 MSP_JUO_SUB_INFO.BAN 조회.
+     * 계약번호(ncn)로 MSP_JUO_SUB_INFO.BAN 조회 (M플랫폼 DB링크).
      */
     Map<String, Object> lookupBillingAccount(String contractNum);
 }

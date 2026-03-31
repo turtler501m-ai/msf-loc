@@ -61,4 +61,24 @@ public class SvcChgFarPriceController {
     public Map<String, Object> cancelFarPriceReservation(@RequestBody SvcChgInfoDto req) {
         return farPriceSvc.cancelFarPriceReservation(req);
     }
+
+    /**
+     * 5006-07 possibleStateCheck — 요금제 변경 화면 진입 사전체크.
+     * 현재 요금제, 약정정보, 적용일, 이용중 부가서비스, 중복변경 여부 한번에 조회.
+     * POST /api/v1/service-change/far-price/possible-check
+     */
+    @PostMapping("/possible-check")
+    public Map<String, Object> possibleStateCheck(@RequestBody SvcChgInfoDto req) {
+        return farPriceSvc.possibleStateCheck(req);
+    }
+
+    /**
+     * 5006-08 doRegServicePop — 변경 요금제 상세 팝업.
+     * 변경할 요금제(soc) 기준 프로모션 부가서비스 및 해지 대상 부가서비스 조회.
+     * POST /api/v1/service-change/far-price/reg-service-pop
+     */
+    @PostMapping("/reg-service-pop")
+    public Map<String, Object> getRegServicePop(@RequestBody SvcChgFarPriceReqDto req) {
+        return farPriceSvc.getRegServicePop(req);
+    }
 }

@@ -4,6 +4,13 @@
  */
 
 import { msfPost } from './msf'
+import { getAgencies as commGetAgencies } from './common'
+
+/**
+ * 대리점 목록 조회 — 업무공통 (GET /v1/comm/agencies) 위임.
+ * @returns {Promise<{ success: boolean, agencies: Array<{value, label}> }>}
+ */
+export { commGetAgencies as getAgencies }
 
 // X01 가입정보조회 (휴대폰 번호 인증)
 export async function getJoinInfo(params) {

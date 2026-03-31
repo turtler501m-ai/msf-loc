@@ -6,7 +6,10 @@
       "Bash(find C:/MSF-LOC/workspace/mcp -maxdepth 3 -name README* -o -name STRUCTURE*)",
       "Bash(wc:*)",
       "Bash(find C:/MSF-LOC/workspace/msf-api/src/main/java/com/ktmmobile/msf/formComm -name *.java)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Bash(grep -n \"^## \\\\|^### 주요내용\\\\|^### 처리순서\\\\|^### \\\\`\" C:/MSF-LOC/workspace/.doc/asis/Z05.DS-08-ITO소스분析_전체.md)",
+      "Bash(grep -n \"^## \\\\|^### 주요내용\\\\|^### 처리순서\\\\|^### \\\\`\" \"C:/MSF-LOC/workspace/.doc/asis/Z05.DS-08-ITO소스분석_전체.md\")",
+      "Bash(node:*)"
     ]
   }
 }

@@ -4,6 +4,8 @@
 
 > 전체 구조 상세: `.doc/11.MSF_프로젝트_전체구조.md`
 
+클로드 시작할때  --dangerously-skip-permissions  옵션으로 처리함
+
 ---
 
 ## 프로젝트 개요
@@ -45,6 +47,7 @@ java -jar target/mform-api-0.1.0-SNAPSHOT.jar
 
 DB: `localhost:5432/msf` (user: postgres / pw: postgres 또는 `DB_PASSWORD` 환경변수)
 테스트 계정: 홍길동 / 01012345678
+테이블은 기존 테이블 생성된것 으로 개발해야하고 테이블 레이아웃 수정시 반드시 확인절차를 거칠것  
 
 ### Frontend
 
@@ -106,10 +109,20 @@ npm run format   # prettier
 |------|------|
 | Y04 | 휴대폰 인증 (contractValdChk) |
 | X01 | 가입정보조회 (perMyktfInfo) |
+| X18 | 잔여요금·위약금 조회 (서비스해지) |
+| X19 | 요금상품 변경 |
 | X20 | 가입중 부가서비스 조회 |
 | X21/X38 | 부가서비스 신청/해지 |
-| X19 | 요금상품 변경 |
-| X88/X89/X90 | 요금상품 예약/예약취소 |
+| X26/X28/X30/X33/X35 | 분실복구·일시정지해제 |
+| X32 | 번호변경 |
+| X69/X70/X71 | 데이터쉐어링 조회/신청/해지 |
+| X84 | 요금제 사전체크 |
+| X85/UC0 | USIM 변경 |
+| X87/Y44 | 아무나 SOLO 결합 |
+| X88/X89/X90 | 요금상품 예약/예약조회/예약취소 |
+| MC0 | 명의변경 사전체크 |
+| MP0 | 명의변경 후처리 |
+| NU1/NU2 | 변경 가능 번호 조회/번호 변경 신청 |
 
 `application.properties`에서 `SERVER_NAME=LOCAL` 시 Mock 응답 반환.
 
@@ -119,10 +132,15 @@ npm run format   # prettier
 
 ### 라우팅
 
-- `/mobile/:domain/:service` → `components/{domain}/{service}.vue` 동적 로드
-- `/mobile/complete/:domain` → 완료 화면
+- `/mobile/:domain/:service` → `components/{컴포넌트폴더}/{service}.vue` 동적 로드
+- `/mobile/complete/:domain` → 완료 화면 (`ServiceCompleteView.vue`)
 
-도메인: `addition`(부가서비스변경), `cancel`(서비스해지), `change`(서비스변경), `ident`(명의변경)
+| URL 도메인 | 컴포넌트 폴더 | 설명 |
+|------------|--------------|------|
+| `change` | `formSvcChg/` | 서비스변경 (FormSvcChgStep1~3.vue) |
+| `cancel` | `formSvcCncl/` | 서비스해지 (FormSvcCnclStep1~3.vue) |
+| `ident` | `formOwnChg/` | 명의변경 (FormOwnChgStep1~3.vue) |
+| `addition` | `formSvcChg/` | 부가서비스변경 |
 
 ### 상태관리 (`src/stores/`)
 
@@ -149,11 +167,16 @@ JavaScript (TypeScript 미사용) / Vue 3.5 / Vue Router 5 / Pinia 3 / Vite 7 / 
 ## 개발 노트
 
 - **모든 문서는 `.doc/` 폴더에서 관리** (소스코드 외 문서는 `.doc/` 외부에 생성 금지)
-  - 분석/계획 `.md` 문서 → `.doc/`
-  - 내부 인터페이스 설계서, 테이블정의서 등 → `.doc/intdoc/`
-  - SQL 스크립트 (DDL 등) → `.doc/intdoc/script/`
+  - 개발 진행·기능 명세 `.md` 문서 → `.doc/` (루트: 15, 18, 30, 40번 등)
+  - ASIS 참조 분석 문서 → `.doc/asis/` (14, 21, 22번 등)
+  - 내부 인터페이스 설계서, 테이블정의서 등 → `.doc/reference/`
+  - SQL 스크립트 (DDL 등) → `.doc/reference/script/`
+  - UI 설계서 → `.doc/uidoc/`
+  - 구 문서 아카이브 → `.doc/old/`
 - M포탈 소스와 동일하게 개발; 연동 API 스펙(요청/응답 형식) 동일하게 구현
 - 기능 목록 및 연동 스펙은 `.doc/` 내 문서 참조
+- **상세 개발 가이드**: `.claude/skills/ktm-smartform/SKILL.md` (기술스택·패턴·주의사항)
+- **구현 현황**: `.claude/skills/ktm-smartform/dev-status.md`
 - **컨텍스트 최적화**: `.claudeignore`로 레거시 정적 리소스·빌드 산출물 제외됨
 
 ---
@@ -209,9 +232,9 @@ ASIS Mapper SQL 포팅 시 테이블 출처에 따라 처리 방법이 다르다
 
 예시: `NMCP_CUST_REQUEST_MST` → `MSF_CUST_REQUEST_MST` / `MCP_REQUEST` → `MSF_REQUEST` / `MSP_INTM_INSR_MST` → `MSP_INTM_INSR_MST@DL_MSP`
 
-전체 테이블 매핑 목록: `.doc/intdoc/테이블매핑_20260319.md` 참조
+전체 테이블 매핑 목록: `.doc/reference/테이블매핑_20260319.md` 참조
 
-### 5. 개발 완료 시 문서 현행화 — **필수, 코드 작업과 동일 세션에서 처리**
+<!-- ### 5. 개발 완료 시 문서 현행화 — 비활성화 (수동 요청 시에만 수행)
 
 코드 구현이 끝나면 **반드시** 아래 문서를 해당 세션에서 즉시 업데이트한다.
 사용자가 별도로 요청하지 않아도 자동으로 수행한다.
@@ -229,3 +252,4 @@ ASIS Mapper SQL 포팅 시 테이블 출처에 따라 처리 방법이 다르다
 - [ ] 15번: 헤더 반영 날짜 (`ㅇ TOBE msf-api 기준 반영 : YYYYMMDD`)
 - [ ] 18번: 구현 상태 ("구현 완료" / "일부 구현됨" / "미구현") 변경
 - [ ] 관련 분석 문서(.doc/): ASIS 분석 결과가 바뀐 경우 해당 문서 수정
+-->

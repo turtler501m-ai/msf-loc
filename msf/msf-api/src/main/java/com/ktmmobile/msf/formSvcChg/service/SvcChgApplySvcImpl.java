@@ -64,17 +64,17 @@ public class SvcChgApplySvcImpl implements SvcChgApplySvc {
             String desired = req.getWirelessBlock();
             logger.debug("[Apply] WIRELESS_BLOCK 처리 Start: desired={}", desired);
             if ("block".equals(desired)) {
-                Map<String, Object> r = regSvc.additionReg(buildRegDto(req, SOC_WIRELESS_BLOCK, null));
-                if (Boolean.FALSE.equals(r.get("success"))) {
-                    logger.warn("[Apply] WIRELESS_BLOCK X21 실패: {}", r.get("message"));
+                Map<String, Object> r = regSvc.regSvcChgAjax(buildRegDto(req, SOC_WIRELESS_BLOCK, null));
+                if (!"00".equals(r.get("resultCode"))) {
+                    logger.warn("[Apply] WIRELESS_BLOCK Y25 실패: {}", r.get("message"));
                     res.setSuccess(false);
                     res.setMessage("무선데이터차단 신청 실패: " + r.get("message"));
                     return res;
                 }
-                logger.debug("[Apply] WIRELESS_BLOCK X21 완료: globalNo={}", r.get("globalNo"));
+                logger.debug("[Apply] WIRELESS_BLOCK Y25 완료");
             } else if ("use".equals(desired)) {
-                Map<String, Object> r = regSvc.additionCancel(buildCancelDto(req, SOC_WIRELESS_BLOCK));
-                if (Boolean.FALSE.equals(r.get("success"))) {
+                Map<String, Object> r = regSvc.moscRegSvcCanChgAjax(buildCancelDto(req, SOC_WIRELESS_BLOCK));
+                if (!"S".equals(r.get("RESULT_CODE"))) {
                     logger.warn("[Apply] WIRELESS_BLOCK X38 실패: {}", r.get("message"));
                     res.setSuccess(false);
                     res.setMessage("무선데이터차단 해지 실패: " + r.get("message"));
@@ -135,13 +135,13 @@ public class SvcChgApplySvcImpl implements SvcChgApplySvc {
             for (SvcChgApplyReqDto.AdditionApplyItem item : req.getAdditions()) {
                 if (isBlank(item.getSoc())) continue;
                 if ("cancel".equals(item.getAction())) {
-                    Map<String, Object> r = regSvc.additionCancel(buildCancelDto(req, item.getSoc()));
-                    logger.debug("[Apply] ADDITION X38: soc={}, success={}, globalNo={}",
-                        item.getSoc(), r.get("success"), r.get("globalNo"));
+                    Map<String, Object> r = regSvc.moscRegSvcCanChgAjax(buildCancelDto(req, item.getSoc()));
+                    logger.debug("[Apply] ADDITION X38: soc={}, RESULT_CODE={}, globalNo={}",
+                        item.getSoc(), r.get("RESULT_CODE"), r.get("globalNo"));
                 } else {
-                    Map<String, Object> r = regSvc.additionReg(buildRegDto(req, item.getSoc(), item.getFtrNewParam()));
-                    logger.debug("[Apply] ADDITION X21: soc={}, success={}, globalNo={}",
-                        item.getSoc(), r.get("success"), r.get("globalNo"));
+                    Map<String, Object> r = regSvc.regSvcChgAjax(buildRegDto(req, item.getSoc(), item.getFtrNewParam()));
+                    logger.debug("[Apply] ADDITION Y25: soc={}, resultCode={}",
+                        item.getSoc(), r.get("resultCode"));
                 }
             }
         }

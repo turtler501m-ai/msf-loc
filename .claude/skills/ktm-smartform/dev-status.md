@@ -1,88 +1,58 @@
-# 개발 완료 / 미완성 현황 (2026.03.17 기준)
+# 개발 완료 / 미완성 현황 (2026-03-25 기준)
 
-## 개발 완료 기능
+## 구현 완료 — 백엔드
 
-| 기능 | 프론트 | 백엔드 | 비고 |
-|------|--------|--------|------|
-| 휴대폰 인증 (Y04+X01) | ✅ ChangeTypeCust.vue | ✅ JoinInfoSvcImpl | M전산 DB 필요 |
-| 서비스 유형 선택 | ✅ ChangeTypeCust.vue | ✅ SvcChgBaseController | - |
-| 부가서비스 조회/신청/해지 (X20/X21/X38) | ✅ ChangeProd.vue | ✅ SvcChgRegController | REQ_010202 완료 |
-| 추가/삭제 팝업 | ✅ McpAdditionEditPop.vue | - | X20 실데이터 연동 |
-| 요금제 변경 (X19/X88/X89/X90) | ✅ ChangeProd.vue | ✅ FarPriceController | - |
-| 분실복구/일시정지해제 (X26/X28/X30/X35) | ✅ ChangeProd.vue | ✅ SvcChgPauseController | - |
-| 데이터쉐어링 (X69/X71/X70) | ✅ ChangeProd.vue | ✅ SvcChgDataSharingController | - |
-| 아무나 SOLO 결합 (X87/Y44) | ✅ ChangeProd.vue | ✅ SvcChgCombineController | - |
-| 특수 부가 팝업 (불법TM/번호도용/로밍) | ✅ Mcp*Pop.vue | - | 프론트 완료 |
-| 번호 검색 팝업 | ✅ McpNumberSearchPop.vue | ❌ Mock 상태 | X32 백엔드 미구현 |
-| 동의 화면 구조 | ✅ ChangeAgree.vue | ❌ apply API 미구현 | - |
-| 명의변경 고객/상품/동의 | ✅ Ident*.vue | △ OwnChgController 뼈대 | MC0/MP0 미연동 |
-| 서비스해지 고객/동의 | ✅ Cancel*.vue | △ CancelController 뼈대 | 사전체크 미구현 |
+| REQ | 기능 | 핵심 클래스 | API 경로 |
+|-----|------|------------|---------|
+| REQ_010201 | 서비스변경 메인·고객·동시처리 | SvcChgBaseController, SvcChgRestController | `/api/v1/change/join-info`, `/api/v1/service-change/concurrent-check` |
+| REQ_010202 | 무선데이터차단 (X20/X21/X38) | SvcChgRegController / SvcChgRegSvcImpl | `/api/v1/addition/current`, `/api/v1/addition/apply`, `/api/v1/addition/cancel` |
+| REQ_010203 | 정보료 상한 (X20 기반) | SvcChgRegSvcImpl | - |
+| REQ_010204 | 부가서비스 신청/변경 (X20/X21/X38) | SvcChgRegController / SvcChgRegSvcImpl | - |
+| REQ_010205 | 요금제 변경 (X19/X84/X88/X89/X90) | FarPriceController / FarPriceSvcImpl | `/api/v1/service-change/far-price/*` |
+| REQ_010206 | 번호변경 (NU1/NU2/X32) | SvcChgNumberController / SvcChgNumberSvcImpl | `/api/v1/service-change/num-change/*` |
+| REQ_010207 | 분실복구/일시정지해제 (X26/X28/X30/X33/X35) | SvcChgPauseController / SvcChgPauseSvcImpl | `/api/v1/service-change/pause/*` |
+| REQ_010208 | 단말보험 가입 (X21 + DB저장) | SvcChgInsrController / SvcChgInsrSvcImpl | `/api/v1/service-change/insr/*` |
+| REQ_010210 | USIM 변경 (X85/UC0) | SvcChgUsimController / SvcChgUsimSvcImpl | `/api/v1/service-change/usim/*` |
+| REQ_010211 | 데이터쉐어링 (X69/X70/X71) | SvcChgDataSharingController / SvcChgDataSharingSvcImpl | `/api/v1/service-change/data-sharing/*` |
+| REQ_010212 | 아무나 SOLO 결합 (X87/Y44) | SvcChgCombineController / SvcChgCombineSvcImpl | `/api/v1/service-change/combine/*` |
+| REQ_010213 | 서비스변경 통합 신청·DB저장 | SvcChgApplyController / SvcChgApplySvcImpl / SvcChgApplyMapper | `POST /api/v1/service-change/apply` |
+| REQ_010301 | 명의변경 신청 (MC0 연동 완료) | OwnChgController | `/api/v1/ident/eligible`, `/api/v1/ident/apply` |
+| REQ_010302 | 명의변경 DB저장 + MP0 | OwnChgApplySvcImpl | 3테이블 저장 + MP0 연동 완료 |
+| REQ_010401 | 서비스해지 신청 (X18/eligible/apply) | SvcCnclController / SvcCnclSvcImpl / SvcCnclMapper | `/api/v1/cancel/eligible`, `/api/v1/cancel/remain-charge`, `/api/v1/cancel/apply` |
 
 ---
 
-## 즉시 개발 필요 항목 (우선순위 순)
+## 구현 완료 — 프론트엔드
 
-### 🔴 우선순위 1 — 서비스변경 완성
+| 대상 | 파일 | 비고 |
+|------|------|------|
+| 서비스변경 Step1~3 | FormSvcChgStep1~3.vue | 고객정보·상품선택·동의서명 3단계 |
+| 명의변경 Step1~3 | FormOwnChgStep1~3.vue | 양도인·양수인·USIM·동의서명 3단계 |
+| 서비스해지 Step1~3 | FormSvcCnclStep1~3.vue | 고객정보·잔여요금·동의서명 3단계 + UI설계서 GAP개선(약관동의·법인·대리인성별·개통일자·Step3 등록confirm) |
+| API 클라이언트 | serviceChange.js, ident.js, cancel.js, msf.js | 전 도메인 완료 |
+| Pinia 스토어 | service_change_form.js, ident_form.js, cancel_form.js, msf_step.js, msf_menu.js, msf_comp_loading.js | 전 도메인 완료 |
+| 팝업 컴포넌트 | McpNumberSearchPop.vue, McpAdditionEditPop.vue, McpTmBlockPop.vue 등 8개 | 번호검색·부가서비스편집·로밍 팝업 |
 
-**① 신청서 저장 API (apply)**
-- 파일: `mform-api formSvcChg/` 신규
-- `POST /api/v1/service-change/apply`
-- 처리: `MSF_SVC_CHG_REQUEST` 테이블 저장 + 선택 서비스별 M플랫폼 API 순차 호출
-- ASIS 참조: `AppformController.saveAppformDb()` → `AppformSvcImpl.saveAppform()`
+---
 
-**② ChangeAgree.vue `doSubmit()` 구현**
-- 파일: `mform-web/src/components/change/ChangeAgree.vue` (현재 `console.log`만 있음)
-- apply API 호출
-- 성공 → `router.push('service-complete')`
-- 실패 → 에러 메시지
+## 미구현 / 잔여 항목
 
-**③ 번호변경 백엔드 (X32)**
-- 파일: `mform-api formSvcChg/controller/SvcChgNumChangeController.java` (신규)
-- `POST /api/v1/service-change/num-change/search`
-- `POST /api/v1/service-change/num-change/apply`
-- ASIS 참조: `AppformController.searchNumberAjax()`, `setNumberAjax()`
-- `MplatFormSvc.numChgeList(X32)`, `numChgeChg(X32)`
+| REQ | 기능 | 비고 |
+|-----|------|------|
+| REQ_010903/906 | 신청서 조회·미리보기·이력 | 도메인별 View/Report Controller 미생성 |
+| - | eFormSign 전자서명 연동 | ChangeAgree.vue, IdentAgree.vue, CancelAgree.vue |
+| - | K-NOTE 이미징 전송 | - |
+| - | 카카오/SMS 알림 발송 (IF_0030/IF_0031) | - |
+| - | 우편번호 API (McpPostcodePop.vue) | Daum API 등 |
+| - | 신규가입 (FormSvcChg→신규) | UI설계서 11번 (v1.0_20260322) |
 
-### 🟡 우선순위 2 — 명의변경 실연동
+---
 
-**④ MC0/MP0 M플랫폼 연동**
-- 파일: `mform-api formOwnChg/service/OwnChgInfoSvcImpl.java`
-- `eligible()` → MC0 명의변경 사전체크 실연동
-- ASIS 참조: `MyNameChgServiceImpl.myNameChgRequest()`
-- `MplatFormSvc`에 MC0/MP0 메서드 추가
+## 주요 DB 테이블 (저장 대상)
 
-**⑤ 명의변경 신청서 저장 (DB)**
-- 파일: `OwnChgApplySvcImpl.java` + `OwnChgMapper.xml`
-- `NMCP_CUST_REQUEST_MST`, `NMCP_CUST_REQUEST_NAME_CHG` 테이블 INSERT
-- 현재 뼈대만 존재
-
-**⑥ 신용정보·납부방법 검증**
-- 신규 Controller 필요:
-  - IF_0033 신용정보 조회
-  - IF_0016 계좌번호 유효성
-  - IF_0017 신용카드 유효성
-
-### 🟠 우선순위 3 — 서비스해지 실연동
-
-**⑦ 잔여요금/위약금/분납금 조회**
-- 파일: `CancelAmtInfoController.java` (신규)
-- `POST /api/v1/cancel/remain-charge` (뼈대 있음)
-- `POST /api/v1/cancel/penalty-charge` (신규)
-- `POST /api/v1/cancel/installment` (신규)
-
-**⑧ 서비스해지 사전체크 + 최종 신청**
-- 파일: `CancelApplySvcImpl.java`
-- `cancelEligible()` 실로직 구현
-- `apply()` DB 저장 + M플랫폼 전송
-
-### 🟢 우선순위 4 — 부가 기능
-
-| # | 항목 | 비고 |
-|---|------|------|
-| ⑨ | 대리점 목록 조회 API | `GET /api/v1/service-change/base/branches`, MSF_STORE_INFO 조회 |
-| ⑩ | 단말보험 (SvcChgInsrController) | - |
-| ⑪ | USIM 변경 (SvcChgUsimController — X85/UC0) | - |
-| ⑫ | 우편번호 API 연동 (McpPostcodePop.vue — Daum API 등) | - |
-| ⑬ | eFormSign 서명 연동 (ChangeAgree.vue, IdentAgree.vue, CancelAgree.vue) | - |
-| ⑭ | K-NOTE 이미징 전송 | - |
-| ⑮ | 카카오/SMS 알림 발송 (IF_0030/IF_0031) | - |
+| 도메인 | 테이블 | 비고 |
+|--------|--------|------|
+| 서비스변경 | MSF_REQUEST_SVC_CHG, MSF_REQUEST_SVC_CHG_DTL | PROC_CD='RQ' |
+| 명의변경 | MSF_CUST_REQUEST_MST (명의변경 타입), MSF_NFL_CHG_TRNS, MSF_NFL_CHG_TRNSFE | |
+| 서비스해지 | MSF_REQUEST_CANCEL | |
+| 단말보험 | MSF_CUST_REQUEST_MST, MSF_CUST_REQUEST_INSR | |

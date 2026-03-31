@@ -22,4 +22,5 @@ public interface ContractInfoMapper {
      * ASIS: MypageMapper.xml selectBanSel (SELECT BAN FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM).
      */
     String selectBanByContractNum(@Param("contractNum") String contractNum);
+
 }

@@ -5,42 +5,67 @@
 
     <!-- S104020101 해지 신청: 사용여부 -->
     <section class="p-4 border border-gray-200 rounded-lg">
-      <h4 class="font-medium mb-3">사용여부 <span class="text-red-500">*</span></h4>
-      <div class="flex flex-wrap gap-3">
-        <label v-for="u in useTypeOptions" :key="u.value" class="flex items-center gap-2 cursor-pointer">
-          <input v-model="form.useType" type="radio" :value="u.value" name="cancelUseType" class="rounded-full" />
-          <span>{{ u.label }}</span>
-        </label>
+      <div class="cncl-form-row">
+        <span class="cncl-label">사용여부 <span class="text-red-500">*</span></span>
+        <div class="cncl-input flex flex-wrap gap-2">
+          <label
+            v-for="u in useTypeOptions"
+            :key="u.value"
+            class="cncl-radio-box"
+            :class="{ 'cncl-radio-box--selected': form.useType === u.value }"
+          >
+            <input v-model="form.useType" type="radio" :value="u.value" name="cancelUseType" class="rounded-full shrink-0" />
+            <span class="text-sm whitespace-nowrap">{{ u.label }}</span>
+          </label>
+        </div>
       </div>
     </section>
 
-    <!-- S104020101 해지 정산 (X18 실시간요금조회) -->
+    <!-- S104020101 해지 정산 (X18 실시간요금조회 → 직접 입력 가능) -->
     <section class="p-4 border border-amber-100 rounded-lg bg-amber-50">
       <h4 class="font-medium mb-3">해지 정산</h4>
-      <dl class="grid gap-2 text-sm">
-        <div class="flex justify-between">
-          <dt class="text-gray-600">사용요금 (원)</dt>
-          <dd>{{ form.remainCharge != null ? form.remainCharge.toLocaleString() + '원' : '-' }}</dd>
+      <div class="cncl-form-rows">
+        <div class="cncl-form-row">
+          <label class="cncl-label">사용요금 <span class="text-red-500">*</span></label>
+          <div class="cncl-input flex items-center gap-1">
+            <input v-model.number="form.remainCharge" type="number" min="0" placeholder="금액을 입력하세요" class="cncl-field flex-1 text-right" />
+            <span class="text-gray-600 shrink-0">원</span>
+          </div>
         </div>
-        <div class="flex justify-between">
-          <dt class="text-gray-600">위약금 (원)</dt>
-          <dd>{{ form.penalty != null ? form.penalty.toLocaleString() + '원' : '-' }}</dd>
+        <div class="cncl-form-row">
+          <label class="cncl-label">위약금 <span class="text-red-500">*</span></label>
+          <div class="cncl-input flex items-center gap-1">
+            <input v-model.number="form.penalty" type="number" min="0" placeholder="금액을 입력하세요" class="cncl-field flex-1 text-right" />
+            <span class="text-gray-600 shrink-0">원</span>
+          </div>
         </div>
-        <div class="flex justify-between font-medium">
-          <dt class="text-gray-700">최종 정산요금 (원)</dt>
-          <dd>{{ finalSettle != null ? finalSettle.toLocaleString() + '원' : '-' }}</dd>
+        <div class="cncl-form-row">
+          <label class="cncl-label">최종 정산요금 <span class="text-red-500">*</span></label>
+          <div class="cncl-input flex items-center gap-1">
+            <input v-model.number="form.lastSumAmt" type="number" min="0" placeholder="금액을 입력하세요" class="cncl-field flex-1 text-right" />
+            <span class="text-gray-600 shrink-0">원</span>
+          </div>
         </div>
-        <div class="flex justify-between">
-          <dt class="text-gray-600">잔여분할상환기간/금액</dt>
-          <dd>{{ form.installmentRemain != null ? form.installmentRemain.toLocaleString() + '원' : '-' }}</dd>
+        <div class="cncl-form-row">
+          <label class="cncl-label">잔여분할상환</label>
+          <div class="cncl-input flex items-center gap-1">
+            <input v-model.number="form.installmentPeriod" type="number" min="0" placeholder="기간" class="cncl-field w-20 text-right" />
+            <span class="text-gray-600 shrink-0">개월</span>
+            <input v-model.number="form.installmentRemain" type="number" min="0" placeholder="금액" class="cncl-field flex-1 text-right" />
+            <span class="text-gray-600 shrink-0">원</span>
+          </div>
         </div>
-      </dl>
+      </div>
       <p class="text-xs text-gray-500 mt-3">※ 해지 시까지 사용한 사용료, 위약금, 잔여 단말기 대금 등의 자세한 사용 요금은 다음달 청구서에서 확인 가능합니다.</p>
     </section>
 
     <section class="p-4 border border-gray-200 rounded-lg">
-      <h4 class="font-medium mb-3">메모</h4>
-      <textarea v-model="form.memo" placeholder="메모 입력" rows="3" class="w-full rounded border border-gray-300 px-3 py-2" />
+      <div class="cncl-form-row items-start">
+        <span class="cncl-label pt-2">메모</span>
+        <div class="cncl-input">
+          <textarea v-model="form.memo" placeholder="메모 입력" rows="3" class="cncl-field w-full" />
+        </div>
+      </div>
     </section>
   </div>
 </template>
@@ -71,16 +96,10 @@ const form = ref({
   useType: '',
   remainCharge: null,
   penalty: null,
+  lastSumAmt: null,
+  installmentPeriod: null,
   installmentRemain: null,
   memo: '',
-})
-
-const finalSettle = computed(() => {
-  const r = form.value.remainCharge
-  const p = form.value.penalty
-  const i = form.value.installmentRemain
-  if (r == null && p == null) return null
-  return num(r) + num(p) + num(i)
 })
 
 watch(form, (v) => {
@@ -100,6 +119,9 @@ onMounted(async () => {
         form.value.remainCharge = data.remainCharge ?? form.value.remainCharge
         form.value.penalty = data.penalty ?? form.value.penalty
         form.value.installmentRemain = data.installmentRemain ?? form.value.installmentRemain
+        // 최종 정산요금 자동 계산 세팅 (사용자가 이후 수정 가능)
+        const r = num(form.value.remainCharge), p = num(form.value.penalty), i = num(form.value.installmentRemain)
+        if (r + p + i > 0) form.value.lastSumAmt = r + p + i
       }
     } catch (e) {
       console.warn('잔여 요금 조회 실패:', e)
@@ -122,5 +144,28 @@ defineExpose({ save })
 
 .page-step-panel {
   @apply w-full p-4 border rounded-md;
+}
+.cncl-form-rows {
+  @apply space-y-3;
+}
+.cncl-form-row {
+  @apply flex items-center gap-4;
+}
+.cncl-label {
+  width: 140px;
+  min-width: 140px;
+  @apply shrink-0 text-sm font-medium text-gray-700;
+}
+.cncl-input {
+  @apply flex-1 min-w-0;
+}
+.cncl-field {
+  @apply rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500;
+}
+.cncl-radio-box {
+  @apply flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 cursor-pointer text-sm;
+}
+.cncl-radio-box--selected {
+  @apply border-teal-500 bg-teal-50 text-teal-700 font-medium;
 }
 </style>

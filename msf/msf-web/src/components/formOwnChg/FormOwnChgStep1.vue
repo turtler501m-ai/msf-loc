@@ -255,6 +255,12 @@
           </select>
         </div>
       </div>
+      <div class="ident-form-row">
+        <span class="ident-label">개통일자</span>
+        <div class="ident-input">
+          <input v-model="form.activationDate" type="text" placeholder="조회 후 자동 입력" class="ident-field w-full max-w-md bg-gray-50" readonly />
+        </div>
+      </div>
 
       <h4 class="ident-subtitle">약관 동의</h4>
       <div class="ident-form-row">
@@ -273,7 +279,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useIdentFormStore } from '@/stores/ident_form'
-import { getJoinInfo } from '@/api/ident'
+import { getJoinInfo, getAgencies } from '@/api/ident'
 import McpPostcodePop from '@/components/commons/McpPostcodePop.vue'
 
 defineProps({ isActive: Boolean })
@@ -283,11 +289,7 @@ const formStore = useIdentFormStore()
 const postcodeOpen = ref(false)
 const transfereePostcodeOpen = ref(false)
 const agencyCode = ref('')
-const agencyOptions = [
-  { value: 'AG001', label: '대리점 A' },
-  { value: 'AG002', label: '대리점 B' },
-  { value: 'AG003', label: '대리점 C' },
-]
+const agencyOptions = ref([])
 
 function onPostcodeSelect({ post, address }) {
   form.value.post = post
@@ -349,6 +351,7 @@ const form = ref({
   post: '',
   address: '',
   addressDtl: '',
+  activationDate: '',
   minorAgent: { name: '', relation: '', phone: '', agree: false },
   agentInfo: { custName: '', birthDate: '', phone: '', relation: '' },
   transferee: defaultTransferee(),
@@ -408,6 +411,7 @@ async function doPhoneAuth() {
       if (data.homeTel) form.value.phone = (data.homeTel + '').replace(/-/g, '')
       if (data.ncn) form.value.ncn = data.ncn
       if (data.custId) form.value.custId = data.custId
+      if (data.initActivationDate) form.value.activationDate = data.initActivationDate
       formStore.setCustomerForm(form.value)
       alert('휴대폰번호 인증이 완료되었습니다.')
     } else {
@@ -422,7 +426,7 @@ async function doPhoneAuth() {
 watch(agencyCode, (v) => formStore.setAgencyCode(v))
 watch(form, (v) => formStore.setCustomerForm(v), { deep: true })
 watch(isComplete, (v) => emit('complete', v))
-onMounted(() => {
+onMounted(async () => {
   agencyCode.value = formStore.agencyCode || ''
   const saved = formStore.customerForm
   if (saved && Object.keys(saved).length) {
@@ -435,6 +439,12 @@ onMounted(() => {
     }
   }
   if (form.value.visitType === '' && isCorporate.value) form.value.visitType = 'self'
+  try {
+    const res = await getAgencies()
+    if (res && res.agencies) agencyOptions.value = res.agencies
+  } catch (e) {
+    console.warn('[Step1] 대리점 목록 조회 실패:', e)
+  }
   emit('complete', isComplete.value)
 })
 

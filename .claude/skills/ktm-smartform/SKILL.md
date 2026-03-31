@@ -5,7 +5,7 @@ description: 스마트서식지(mform) 프로젝트 개발 가이드 — Vue 3 +
 
 # 스마트서식지(mform) 프로젝트 개발 스킬 가이드
 
-작성 기준: 현재 소스 분석(2026.03.17) — mform-web(Vue 3) + mform-api(Spring Boot 2.7)
+작성 기준: 현재 소스 분석(2026.03.25) — mform-web(Vue 3) + mform-api(Spring Boot 2.7)
 
 개발 완료/미완성 현황은 `dev-status.md`, SOC 코드 레퍼런스는 `soc-reference.md`, **테이블 접두어·DB 출처는 `db-table-guide.md`** 참조.
 
@@ -338,18 +338,22 @@ mplatform.user-id=[사용자ID]
 
 | 목적 | 파일 경로 |
 |------|-----------|
-| M플랫폼 전체 연동 | `msf/msf-api/.../common/mplatform/MplatFormSvc.java` |
-| 휴대폰 인증 로직 | `msf/msf-api/.../formComm/service/JoinInfoSvcImpl.java` |
-| 서비스변경 고객 화면 | `msf/msf-web/src/components/change/ChangeTypeCust.vue` |
-| 서비스변경 상품 화면 | `msf/msf-web/src/components/change/ChangeProd.vue` |
-| 서비스변경 동의 화면 | `msf/msf-web/src/components/change/ChangeAgree.vue` |
-| ASIS 부가서비스 처리 | `mcp-portal-was/.../mypage/controller/RegSvcController.java` |
-| ASIS 신청서 저장 | `mcp-portal-was/.../appform/service/AppformSvcImpl.java` |
-| ASIS 명의변경 | `mcp-portal-was/.../mypage/controller/MyNameChgController.java` |
-| ASIS M플랫폼 전체 | `mcp-portal-was/.../common/mplatform/MplatFormService.java` |
-| 개발 가이드 문서 | `ktm/doc/10.서식지프로젝트.md` |
-| ASIS-TOBE 명세 | `ktm/doc/15.개발기능목록_ASIS_TOBE_기능분석명세서.md` |
-| 기능별 담당 목록 | `ktm/doc/30.개발기능목록_담당.md` |
+| M플랫폼 전체 연동 | `msf/msf-api/src/main/java/com/ktmmobile/msf/common/mplatform/MplatFormSvc.java` |
+| 휴대폰 인증 로직 | `msf/msf-api/src/main/java/com/ktmmobile/msf/formComm/service/JoinInfoSvcImpl.java` |
+| 서비스변경 Step1 화면 | `msf/msf-web/src/components/formSvcChg/FormSvcChgStep1.vue` |
+| 서비스변경 Step2 화면 | `msf/msf-web/src/components/formSvcChg/FormSvcChgStep2.vue` |
+| 서비스해지 Step1~3 화면 | `msf/msf-web/src/components/formSvcCncl/FormSvcCncl*.vue` |
+| 명의변경 Step1~3 화면 | `msf/msf-web/src/components/formOwnChg/FormOwnChg*.vue` |
+| ASIS 부가서비스 처리 | `mcp/mcp-portal-was/.../mypage/controller/RegSvcController.java` |
+| ASIS 신청서 저장 | `mcp/mcp-portal-was/.../appform/service/AppformSvcImpl.java` |
+| ASIS 명의변경 | `mcp/mcp-portal-was/.../mypage/controller/MyNameChgController.java` |
+| ASIS M플랫폼 전체 | `mcp/mcp-portal-was/.../common/mplatform/MplatFormService.java` |
+| 개발 가이드 문서 | `.doc/10.서식지프로젝트.md` |
+| ASIS-TOBE 기능 명세 | `.doc/15.개발기능목록_ASIS_TOBE_기능분석명세서.md` |
+| 요구사항별 개발 진행 | `.doc/18.요구사항ID별_ASIS_TOBE_개발진행명세.md` |
+| ASIS 참조 분석 문서 | `.doc/asis/` (14, 21, 22번 문서) |
+| 인터페이스 설계서 | `.doc/reference/MMSP-DS-06-인터페이스_설계서_20260325.md` |
+| 테이블 정의서 | `.doc/reference/스마트서식지-DS-05-테이블 정의서_V1.0_20260318.md` |
 
 ---
 

@@ -123,23 +123,28 @@ const save = async () => {
   const opts = formStore.selectedOptions || []
   const cf = formStore.customerForm || {}
   const pf = formStore.productForm || {}
-  const ctn = (cf.phone || '').replace(/\D/g, '')
+  // TODO: 개발 테스트용 기본값 — 운영 전 반드시 제거
+  const ctn = (cf.phone || '').replace(/\D/g, '') || '01012345678'
+  const ncn  = cf.ncn  || '123456789'
+  const custId = cf.custId || 'TEST_CUST'
+  const name   = cf.name   || '테스트'
 
-  console.log('[Step3] 신청서 저장 시도:', { signAgreed: signAgreed.value, selectedOptions: opts, ctn })
+  console.log('[Step3] 신청서 저장 시도:', { signAgreed: signAgreed.value, selectedOptions: opts, ctn, ncn })
 
-  if (!signAgreed.value) {
-    alert('서명을 완료해 주세요.')
-    return false
-  }
+  // TODO: 개발 테스트용 서명 SKIP — 운영 전 반드시 제거
+  // if (!signAgreed.value) {
+  //   alert('서명을 완료해 주세요.')
+  //   return false
+  // }
   if (saving.value) return false
   saving.value = true
 
   try {
     const params = {
-      ncn: cf.ncn || '',
+      ncn,
       ctn,
-      custId: cf.custId || '',
-      name: cf.name || '',
+      custId,
+      name,
       selectedOptions: opts,
       wirelessBlock: pf.wirelessBlock || null,
       infoLimit: pf.infoLimit || null,

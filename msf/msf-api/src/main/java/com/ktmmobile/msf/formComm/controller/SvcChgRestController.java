@@ -1,7 +1,6 @@
 package com.ktmmobile.msf.formComm.controller;
 
 import com.ktmmobile.msf.formComm.dto.AccountCheckReqDto;
-import com.ktmmobile.msf.formComm.dto.CardCheckReqDto;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoReqDto;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoResVO;
 import com.ktmmobile.msf.formComm.service.SvcChgInfoSvc;
@@ -16,8 +15,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
- * 서비스변경 공통 REST 컨트롤러. 가입자정보조회 엔드포인트 제공.
- * /api/v1/join-info, /api/v1/{domain}/join-info 모두 처리 (내부 로직 동일).
+ * 공통 인터페이스 연계 REST 컨트롤러.
+ * M플랫폼(Y04/X01/X85)/NICE(IF_0006)/MSP DB링크 등 외부 인터페이스 연동 엔드포인트만 모음.
+ * 인터페이스 연계 없는 공통 기능(대리점 조회·카드번호 검증 등)은 FormCommController 참조.
  */
 @RestController
 @RequestMapping("/api/v1")
@@ -84,20 +84,9 @@ public class SvcChgRestController {
     }
 
     /**
-     * IF_0007 카드번호 유효성 체크 (공통).
-     * ASIS myNameChg.js checkCardNumber() Luhn Algorithm + 유효기간 검증을 서버 사이드로 이전.
-     * 외부 API 연동 없음 — 서버 사이드 형식 검증.
-     * POST /api/v1/comm/card-check
-     */
-    @PostMapping("/comm/card-check")
-    public Map<String, Object> commCardCheck(@RequestBody CardCheckReqDto req) {
-        return joinInfoSvc.checkCard(req);
-    }
-
-    /**
      * 청구계정ID(BAN) 조회.
      * ASIS MypageServiceImpl.selectBanSel() 동일 구조.
-     * 계약번호(ncn) → MSP_JUO_SUB_INFO.BAN 조회.
+     * 계약번호(ncn) → MSP_JUO_SUB_INFO.BAN 조회 (M플랫폼 DB링크).
      * POST /api/v1/comm/billing-account
      * 요청: { "ncn": "계약번호" }
      */

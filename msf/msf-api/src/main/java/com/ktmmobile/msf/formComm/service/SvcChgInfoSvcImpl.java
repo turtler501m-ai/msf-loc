@@ -1,11 +1,9 @@
 package com.ktmmobile.msf.formComm.service;
 
 import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
-import com.ktmmobile.msf.common.mplatform.vo.MpCrdtCardAthnVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpPerMyktfInfoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimCheckVO;
 import com.ktmmobile.msf.formComm.dto.AccountCheckReqDto;
-import com.ktmmobile.msf.formComm.dto.CardCheckReqDto;
 import com.ktmmobile.msf.formComm.dto.ContractInfoDto;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoReqDto;
 import com.ktmmobile.msf.formComm.dto.SvcChgInfoResVO;
@@ -32,9 +30,10 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * 가입자정보조회 및 공통 유효성 체크 서비스 구현.
+ * 공통 인터페이스 연계 서비스 구현.
  * ASIS 흐름: M전산(계약정보) → Y04(인증) → X01(가입정보) 동일.
  * IF_0006 계좌인증: ASIS NiceCertifySvcImpl.checkNiceAccount() 동일 구조.
+ * 인터페이스 연계 없는 공통 기능(카드번호 검증 등)은 FormCommSvcImpl 참조.
  */
 @Service
 public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
@@ -258,116 +257,6 @@ public class SvcChgInfoSvcImpl implements SvcChgInfoSvc {
             result.put("success", false);
             result.put("message", "계좌 유효성 확인 중 오류가 발생했습니다.");
         }
-        return result;
-    }
-
-    /**
-     * IF_0007 카드번호 유효성 체크.
-     * 검증 순서:
-     * 1. 카드번호 16자리 숫자 여부
-     * 2. Luhn Algorithm (ASIS myNameChg.js checkCardNumber() 동일 로직)
-     * 3. 유효기간 (cardYy, cardMm) — 현재 월 이후인지 확인
-     * 4. birthDate + custNm 모두 있으면 X91 M플랫폼 실인증 수행
-     *    (ASIS AppformController.crdtCardAthnInfo() 동일 흐름)
-     */
-    @Override
-    public Map<String, Object> checkCard(CardCheckReqDto req) {
-        Map<String, Object> result = new HashMap<>();
-
-        if (req == null || isBlank(req.getCardNo())) {
-            result.put("success", false);
-            result.put("message", "카드번호를 입력해 주세요.");
-            return result;
-        }
-
-        String digits = req.getCardNo().replaceAll("[^0-9]", "");
-
-        // 1. 16자리 검증
-        if (digits.length() != 16) {
-            result.put("success", false);
-            result.put("message", "카드번호는 16자리 숫자여야 합니다.");
-            return result;
-        }
-
-        // 2. Luhn Algorithm (ASIS checkCardNumber() 동일 로직)
-        int sum = 0;
-        boolean alt = false;
-        for (int i = digits.length() - 1; i >= 0; i--) {
-            int n = digits.charAt(i) - '0';
-            if (alt) {
-                n *= 2;
-                if (n > 9) n -= 9;
-            }
-            sum += n;
-            alt = !alt;
-        }
-        if (sum % 10 != 0) {
-            result.put("success", false);
-            result.put("message", "유효하지 않은 카드번호입니다.");
-            return result;
-        }
-
-        // 3. 유효기간 검증 (cardYy, cardMm)
-        if (!isBlank(req.getCardYy()) && !isBlank(req.getCardMm())) {
-            try {
-                int yy = Integer.parseInt(req.getCardYy());
-                int mm = Integer.parseInt(req.getCardMm());
-                java.time.LocalDate now = java.time.LocalDate.now();
-                int curYy = now.getYear() % 100;
-                int curMm = now.getMonthValue();
-                if (yy < curYy || (yy == curYy && mm < curMm)) {
-                    result.put("success", false);
-                    result.put("message", "카드 유효기간이 만료되었습니다.");
-                    return result;
-                }
-            } catch (NumberFormatException e) {
-                result.put("success", false);
-                result.put("message", "유효기간 형식이 올바르지 않습니다.");
-                return result;
-            }
-        }
-
-        // 4. X91 M플랫폼 카드 실인증 (birthDate + custNm 있을 때만)
-        if (!isBlank(req.getBirthDate()) && !isBlank(req.getCustNm())) {
-            logger.debug("[X91] 카드 실인증 Start: custNm={}", req.getCustNm());
-            try {
-                String termDay = (isBlank(req.getCardYy()) ? "" : req.getCardYy())
-                               + (isBlank(req.getCardMm()) ? "" : req.getCardMm()); // YYMM
-                MpCrdtCardAthnVO vo = mplatFormSvc.moscCrdtCardAthnInfo(
-                    digits, termDay, req.getBirthDate(), req.getCustNm());
-
-                if (!vo.isSuccess()) {
-                    result.put("success", false);
-                    result.put("message", "카드 인증 중 오류가 발생했습니다.");
-                    return result;
-                }
-                logger.debug("[X91] 카드 실인증 완료: trtResult={}, globalNo={}", vo.getTrtResult(), vo.getGlobalNo());
-                if (!"Y".equals(vo.getTrtResult())) {
-                    String trtMsg = vo.getTrtMsg();
-                    if (trtMsg != null && trtMsg.contains("주민번호")) {
-                        result.put("success", false);
-                        result.put("message", "최초 요금 납부등록은 가입자 본인 명의의 카드로만 가능합니다.");
-                    } else {
-                        result.put("success", false);
-                        result.put("message", isBlank(trtMsg)
-                            ? "신용카드 유효성 확인에 실패하였습니다. 카드 정보를 확인해 주세요."
-                            : trtMsg);
-                    }
-                    return result;
-                }
-                result.put("cardKindCd", vo.getCrdtCardKindCd());
-                result.put("cardNm",     vo.getCrdtCardNm());
-                result.put("globalNo",   vo.getGlobalNo());
-            } catch (Exception e) {
-                logger.error("X91 카드인증 오류: {}", e.getMessage());
-                result.put("success", false);
-                result.put("message", "카드 인증 중 오류가 발생했습니다.");
-                return result;
-            }
-        }
-
-        result.put("success", true);
-        result.put("message", "");
         return result;
     }
 

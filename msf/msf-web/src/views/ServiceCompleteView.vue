@@ -8,61 +8,54 @@
         접수번호: <span class="text-teal-600">{{ applicationNo }}</span>
       </p>
 
-      <!-- 서비스변경/명의변경/서비스해지 신청완료: 신청서 열람·톡/SMS/다운로드 안내 발송 -->
+      <!-- 서비스변경/명의변경/서비스해지 신청완료: 신청서 열람·발송·앱안내발송 -->
       <template v-if="hasSendUI">
         <div class="text-left space-y-4 mb-6 p-4 bg-gray-50 rounded-lg">
+          <p class="text-sm text-gray-600">고객님께 신청서를 발송해 주세요.</p>
+
+          <!-- B1 열람 -->
           <div>
-            <button
-              type="button"
-              class="text-teal-600 underline font-medium"
-              @click="openPreview"
-            >
+            <button type="button" class="text-teal-600 underline font-medium" @click="openPreview">
               신청서 열람
             </button>
             <span class="text-sm text-gray-500 ml-1">(팝업 연동 예정)</span>
           </div>
-          <div class="space-y-2 text-sm">
+
+          <!-- B2 신청서 발송 (포시에스 신청서 교부 API) -->
+          <div class="space-y-1 text-sm">
             <div class="flex flex-wrap items-center gap-2">
-              <label class="font-medium">톡 발송</label>
               <input
                 v-model="sendPhone"
                 type="tel"
-                placeholder="휴대폰번호('-' 없이)"
-                class="flex-1 min-w-[120px] rounded border px-2 py-1"
+                placeholder="휴대폰번호 '-' 없이 입력"
+                class="flex-1 min-w-[160px] rounded border px-2 py-1.5"
               />
-              <button type="button" class="px-3 py-1 rounded bg-gray-200" @click="sendTalk">
+              <button type="button" class="px-4 py-1.5 rounded bg-teal-600 text-white text-sm" @click="sendForm">
                 발송
               </button>
             </div>
+            <p class="text-xs text-gray-500">
+              ※ 개통한 전화번호와 가입자 연락처 휴대폰번호로 동시에 발송됩니다.<br />
+              ※ 고객님께서 신청서 출력을 원하실 경우 관리자 사이트에서 출력하여 제공해 주시기 바랍니다.
+            </p>
+          </div>
+
+          <!-- B3 kt M모바일 앱 안내 발송 -->
+          <div class="pt-3 border-t border-gray-200 space-y-2 text-sm">
+            <p class="text-gray-700">kt M모바일에서 제공하는 서비스를 이용할 수 있도록 고객에게 안내 발송해 주세요.<br />
+              신규가입에서 부가서비스의 신청/변경, 실시간 사용량 조회까지 다양한 서비스를 이용하실 수 있습니다.</p>
             <div class="flex flex-wrap items-center gap-2">
-              <label class="font-medium">SMS 발송</label>
               <input
-                v-model="smsPhone"
+                v-model="appGuidePhone"
                 type="tel"
-                placeholder="휴대폰번호"
-                class="flex-1 min-w-[120px] rounded border px-2 py-1"
+                placeholder="휴대폰번호 '-' 없이 입력"
+                class="flex-1 min-w-[160px] rounded border px-2 py-1.5"
               />
-              <button type="button" class="px-3 py-1 rounded bg-gray-200" @click="sendSms">
-                발송
-              </button>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <label class="font-medium">다운로드 안내 발송</label>
-              <input
-                v-model="downloadPhone"
-                type="tel"
-                placeholder="휴대폰번호"
-                class="flex-1 min-w-[120px] rounded border px-2 py-1"
-              />
-              <button type="button" class="px-3 py-1 rounded bg-gray-200" @click="sendDownloadGuide">
+              <button type="button" class="px-4 py-1.5 rounded bg-gray-200 text-sm" @click="sendAppGuide">
                 발송
               </button>
             </div>
           </div>
-          <p v-if="domain === 'ident' || domain === 'cancel' || domain === 'change'" class="text-xs text-gray-500 mt-3">
-            ※ 전화번호를 잘못 입력시 타 가입자에게 발송될 수 있으므로 주의 하시기 바랍니다.<br />
-            ※ 고객님께서 신청서 출력을 원하실 경우 관리자 사이트에서 출력하여 제공해 주시기 바랍니다.
-          </p>
         </div>
       </template>
 
@@ -90,9 +83,8 @@ const serviceChangeStore = useServiceChangeFormStore()
 const identStore = useIdentFormStore()
 const cancelStore = useCancelFormStore()
 
-const sendPhone = ref('')
-const smsPhone = ref('')
-const downloadPhone = ref('')
+const sendPhone = ref(domain === 'cancel' ? (cancelStore.lastContactPhone || '') : '')
+const appGuidePhone = ref('')
 
 // 고객명 마스킹 (홍길*)
 function maskName(name) {
@@ -156,28 +148,20 @@ function openPreview() {
   alert('신청서 열람 팝업은 이미징 연동 후 제공됩니다.')
 }
 
-function sendTalk() {
+function sendForm() {
   if (!sendPhone.value.trim()) {
     alert('휴대폰번호를 입력해 주세요.')
     return
   }
-  alert('톡 발송(IF_0030 연동 예정): ' + sendPhone.value.replace(/-/g, ''))
+  alert('신청서 발송(포시에스 신청서 교부 API 연동 예정): ' + sendPhone.value.replace(/-/g, ''))
 }
 
-function sendSms() {
-  if (!smsPhone.value.trim()) {
+function sendAppGuide() {
+  if (!appGuidePhone.value.trim()) {
     alert('휴대폰번호를 입력해 주세요.')
     return
   }
-  alert('SMS 발송(IF_0031 연동 예정): ' + smsPhone.value.replace(/-/g, ''))
-}
-
-function sendDownloadGuide() {
-  if (!downloadPhone.value.trim()) {
-    alert('휴대폰번호를 입력해 주세요.')
-    return
-  }
-  alert('다운로드 안내 발송(kt M모바일 앱 이용 안내): ' + downloadPhone.value.replace(/-/g, ''))
+  alert('kt M모바일 앱 안내 발송(M모바일 SMS 발송 모듈 연동 예정): ' + appGuidePhone.value.replace(/-/g, ''))
 }
 
 function onGoHome() {
@@ -189,6 +173,7 @@ function onGoHome() {
   if (domain === 'cancel') {
     cancelStore.clearLastCompletedName()
     cancelStore.clearLastApplicationNo()
+    cancelStore.clearLastContactPhone()
   }
 }
 </script>

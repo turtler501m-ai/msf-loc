@@ -17,6 +17,13 @@ public class SvcChgInfoDto {
     private String ctn;
     /** 고객ID */
     private String custId;
+    /**
+     * 부가서비스 조회 구분. ASIS RegSvcController addDivCd 와 동일.
+     * G=일반 부가서비스만, R=로밍 부가서비스만, 빈값=전체.
+     */
+    private String addDivCd;
+    /** 최근 개통일자 (lstComActvDate). ASIS myAddSvcListAjax onlineCanDay 기준일 계산에 사용. */
+    private String lstComActvDate;
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -29,4 +36,10 @@ public class SvcChgInfoDto {
 
     public String getCustId() { return custId; }
     public void setCustId(String custId) { this.custId = custId; }
+
+    public String getAddDivCd() { return addDivCd; }
+    public void setAddDivCd(String addDivCd) { this.addDivCd = addDivCd; }
+
+    public String getLstComActvDate() { return lstComActvDate; }
+    public void setLstComActvDate(String lstComActvDate) { this.lstComActvDate = lstComActvDate; }
 }

@@ -368,7 +368,14 @@
           <div class="form-row-input">
             <select v-model="formStore.branchCode" class="form-input form-input--select max-w-xs">
               <option value="">대리점을 선택하세요</option>
+              <option v-for="a in agencyOptions" :key="a.value" :value="a.value">{{ a.label }}</option>
             </select>
+          </div>
+        </div>
+        <div class="form-row mt-2">
+          <span class="form-row-label">개통일자</span>
+          <div class="form-row-input">
+            <input v-model="form.activationDate" type="text" placeholder="조회 후 자동 입력" class="form-input bg-gray-50" readonly />
           </div>
         </div>
       </div>
@@ -379,7 +386,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useServiceChangeFormStore } from '@/stores/service_change_form'
-import { getJoinInfo, getChangeTargets } from '@/api/serviceChange'
+import { getJoinInfo, getChangeTargets, getAgencies } from '@/api/serviceChange'
 import { CORE_CHANGE, ServiceChangeOptions } from '@/constants/serviceChange'
 import McpPostcodePop from '@/components/commons/McpPostcodePop.vue'
 
@@ -392,6 +399,7 @@ const authLoading = ref(false)
 const selectedIds = ref([])
 const categoryList = ref([])
 const coreChangeCodes = ref([...CORE_CHANGE])
+const agencyOptions = ref([])
 
 const custTypes = [
   { value: 'NA', label: '내국인' },
@@ -419,6 +427,7 @@ const defaultForm = () => ({
   addressDtl: '',
   ncn: '',
   custId: '',
+  activationDate: '',
   minorAgent: { name: '', relation: '', phone: '', agree: false },
   agentInfo: { custName: '', birthDate: '', phone: '', relation: '' },
 })
@@ -572,6 +581,12 @@ onMounted(async () => {
     form.value = { ...defaultForm(), ...formStore.customerForm }
   }
   if (form.value.visitType === '' && isCorporate.value) form.value.visitType = 'self'
+  try {
+    const res = await getAgencies()
+    if (res && res.agencies) agencyOptions.value = res.agencies
+  } catch (e) {
+    console.warn('[Step1] 대리점 목록 조회 실패:', e)
+  }
   emit('complete', isComplete.value)
 })
 
@@ -606,6 +621,7 @@ async function doPhoneAuth() {
       if (data.homeTel) form.value.phone = (data.homeTel + '').replace(/-/g, '').replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
       if (data.ncn) form.value.ncn = data.ncn
       if (data.custId) form.value.custId = data.custId
+      if (data.initActivationDate) form.value.activationDate = data.initActivationDate
       formStore.setCustomerForm(form.value)
       alert('휴대폰번호 인증이 완료되었습니다.')
     } else {

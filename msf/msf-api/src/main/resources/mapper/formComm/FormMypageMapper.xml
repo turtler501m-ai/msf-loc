@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.formComm.mapper.FormMypageMapper">
+
+    <!--
+        현재 계약의 요금제 정보 조회.
+        ASIS: MypageMapper.selectFarPricePlan (mcp-api).
+        MSP_RATE_MST@DL_MSP + MSP_JUO_FEATURE_INFO@DL_MSP.
+    -->
+    <select id="selectFarPricePlan" parameterType="String"
+            resultType="com.ktmmobile.msf.formComm.dto.McpFarPriceDto">
+        /* FormMypageMapper.selectFarPricePlan 현재 요금제 정보 조회 */
+        SELECT A.RATE_CD        AS prvRateCd
+             , A.RATE_NM        AS prvRateNm
+             , A.BASE_AMT       AS prvBaseAmt
+             , A.RMK            AS prvRmk
+             , B.APP_START_DD   AS appStartDd
+             , NVL(A.BASE_AMT, 0) + (NVL(A.BASE_AMT, 0) * 0.1) AS baseVatAmt
+          FROM MSP_RATE_MST@DL_MSP A
+             , (SELECT *
+                  FROM MSP_JUO_FEATURE_INFO@DL_MSP
+                 WHERE CONTRACT_NUM = #{ncn}
+                   AND APP_END_DATE = '99991231000000'
+                   AND EXPIRATION_DATE = '99991231000000'
+                   AND SERVICE_TYPE = 'P'
+               ) B
+         WHERE A.RATE_CD = B.SOC
+           AND A.SERVICE_TYPE = 'P'
+           AND ROWNUM = 1
+    </select>
+
+    <!--
+        현재 요금제 기준 변경 가능 요금제 목록 조회.
+        ASIS: MypageMapper.selectFarPricePlanList (VW_GROUP_BY_RATE_INFO@DL_MSP).
+    -->
+    <select id="selectFarPricePlanList" parameterType="String"
+            resultType="com.ktmmobile.msf.formComm.dto.McpFarPriceDto">
+        /* FormMypageMapper.selectFarPricePlanList 변경 가능 요금제 목록 */
+        SELECT PRV_RATE_GRP_CD      AS prvRateGrpCd
+             , PRV_RATE_GRP_NM      AS prvRateGrpNm
+             , PRV_RATE_GRP_TYPE_CD AS prvRateGrpTypeCd
+             , PRV_RATE_GRP_TYPE_NM AS prvRateGrpTypeNm
+             , PRV_RATE_CD          AS prvRateCd
+             , PRV_RATE_NM          AS prvRateNm
+             , PRV_PTRN_RATE_YN     AS prvPtrnRateYn
+             , PRV_PAY_CL_CD        AS prvPayClCd
+             , PRV_DATA_TYPE        AS prvDataType
+             , PRV_RATE_TYPE        AS prvRateType
+             , PRV_RMK              AS prvRmk
+             , PRV_BASE_AMT         AS prvBaseAmt
+             , PRV_APPL_STRT_DT     AS prvApplStrtDt
+             , PRV_APPL_END_DT      AS prvApplEndDt
+             , NXT_RATE_GRP_CD      AS nxtRateGrpCd
+             , NXT_RATE_GRP_NM      AS nxtRateGrpNm
+             , NXT_RATE_GRP_TYPE_CD AS nxtRateGrpTypeCd
+             , NXT_RATE_GRP_TYPE_NM AS nxtRateGrpTypeNm
+             , NXT_RATE_CD          AS nxtRateCd
+             , NXT_RATE_NM          AS nxtRateNm
+             , NXT_PTRN_RATE_YN     AS nxtPtrnRateYn
+             , NXT_PAY_CL_CD        AS nxtPayClCd
+             , NXT_DATA_TYPE        AS nxtDataType
+             , NXT_RATE_TYPE        AS nxtRateType
+             , NXT_RMK              AS nxtRmk
+             , NXT_BASE_AMT         AS nxtBaseAmt
+             , NXT_APPL_STRT_DT     AS nxtApplStrtDt
+             , NXT_APPL_END_DT      AS nxtApplEndDt
+             , NVL(NXT_BASE_AMT, 0) + (NVL(NXT_BASE_AMT, 0) * 0.1) AS baseVatAmt
+          FROM VW_GROUP_BY_RATE_INFO@DL_MSP
+         WHERE PRV_RATE_CD = #{rateCd}
+           AND NXT_APPL_END_DT = '99991231'
+         ORDER BY NXT_BASE_AMT DESC
+    </select>
+
+    <!--
+        변경 가능 요금제 수.
+        ASIS: MypageMapper.countFarPricePlanList.
+    -->
+    <select id="countFarPricePlanList" parameterType="String" resultType="int">
+        /* FormMypageMapper.countFarPricePlanList */
+        SELECT COUNT(*)
+          FROM VW_GROUP_BY_RATE_INFO@DL_MSP
+         WHERE PRV_RATE_CD = #{rateCd}
+           AND NXT_APPL_END_DT = '99991231'
+    </select>
+
+    <!--
+        요금제 변경 적용일(YYYYMM) 조회.
+        ASIS: MypageMapper.selectFarPriceAddInfo (MSP_JUO_FEATURE_INFO@DL_MSP).
+    -->
+    <select id="selectFarPriceAddInfo" resultType="String">
+        /* FormMypageMapper.selectFarPriceAddInfo 요금제 적용일 조회 */
+        SELECT APP_START_DD
+          FROM (
+               SELECT SUBSTR(APP_START_DD, 0, 6) AS APP_START_DD
+                    , ROW_NUMBER() OVER (
+                          ORDER BY DECODE(SOC, #{soc},
+                                         SUBSTR(APP_START_DD, 0, 6) + 1,
+                                         SUBSTR(APP_START_DD, 0, 6)) DESC
+                      ) AS RNUM
+                 FROM MSP_JUO_FEATURE_INFO@DL_MSP
+                WHERE SERVICE_TYPE = 'P'
+                  AND CONTRACT_NUM = #{cntrNo}
+                  AND APP_END_DATE = '99991231000000'
+               )
+         WHERE RNUM = 1
+    </select>
+
+    <!--
+        약정 정보 조회.
+        ASIS: MypageMapper.getEnggInfo (VW_CNTR_ENGG_SELF@DL_MSP).
+    -->
+    <select id="getEnggInfo" parameterType="String"
+            resultType="com.ktmmobile.msf.formComm.dto.MspJuoAddInfoDto">
+        /* FormMypageMapper.getEnggInfo 약정 정보 */
+        SELECT CONTRACT_NUM AS contractNum
+             , SUBSCRIBER_NO AS subscriberNo
+             , APP_END_DATE AS appEndDate
+             , CASE
+                   WHEN APP_END_DATE  <![CDATA[<]]> TO_CHAR(SYSDATE, 'YYYYMMDD') THEN 'N'
+                   WHEN APP_END_DATE  >= TO_CHAR(SYSDATE, 'YYYYMMDD') THEN 'Y'
+                   WHEN APP_END_DATE IS NULL THEN 'N'
+               END AS enggYn
+          FROM (
+               SELECT CONTRACT_NUM
+                    , SUBSCRIBER_NO
+                    , ENGG_END_DT AS APP_END_DATE
+                 FROM VW_CNTR_ENGG_SELF@DL_MSP
+                WHERE CONTRACT_NUM = #{contractNum}
+               )
+    </select>
+
+    <!--
+        요금제 변경 시 해지해야 할 부가서비스 목록.
+        ASIS: MypageMapper.getCloseSubList (MSP_JUO_FEATURE_INFO + CMN_GRP_CD_MST).
+        결과: socCode, socNm 필드 매핑 (McpRegServiceDto.rateCd, rateNm 재활용).
+    -->
+    <select id="getCloseSubList" parameterType="String"
+            resultType="com.ktmmobile.msf.formSvcChg.dto.McpRegServiceDto">
+        /* FormMypageMapper.getCloseSubList 해지해야 할 부가서비스 목록 */
+        SELECT CMN.CD_DSC AS rateNm
+             , FEA.SOC    AS rateCd
+          FROM MSP_JUO_FEATURE_INFO@DL_MSP FEA
+             , CMN_GRP_CD_MST@DL_MSP CMN
+             , MSP_JUO_SUB_INFO@DL_MSP SUB
+         WHERE FEA.CONTRACT_NUM = SUB.CONTRACT_NUM
+           AND FEA.SOC = CMN.CD_VAL
+           AND CMN.GRP_ID = 'RCP9030'
+           AND CMN.USG_YN = 'Y'
+           AND EXPIRATION_DATE >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+           AND SUB.CONTRACT_NUM = #{contractNum}
+           AND SUB.SUB_STATUS = 'A'
+         ORDER BY FEA.SOC
+    </select>
+
+    <!--
+        변경할 요금제에 가입해야 할 프로모션 부가서비스 목록.
+        ASIS: MypageMapper.getromotionDcList (VW_CHRG_PRMT_DTL@DL_MSP + MSF_ADDITION).
+        (ASIS: MCP_ADDITION → MSF_ADDITION)
+    -->
+    <select id="getromotionDcList" parameterType="String"
+            resultType="com.ktmmobile.msf.formSvcChg.dto.McpRegServiceDto">
+        /* FormMypageMapper.getromotionDcList 가입해야 할 프로모션 부가서비스 */
+        SELECT DISTINCT
+               B.SOC           AS rateCd
+             , ADDITION_NAME   AS rateNm
+             , RANTAL          AS baseAmt
+             , A.PRMT_ID       AS alFlag
+          FROM VW_CHRG_PRMT_DTL@DL_MSP A
+             , MSF_ADDITION B
+         WHERE A.ADDITION_KEY = B.ADDITION_KEY
+           AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A.STRT_DT AND A.END_DT
+           AND A.ORGN_ID = '1100011741'
+           AND A.REQ_BUY_TYPE IN ('UU', 'AL')
+           AND A.ENGG_CNT_0 = 'Y'
+           AND A.MNP_YN = 'Y'
+           AND A.RATE_CD = #{rateCd}
+           AND A.ON_OFF_TYPE = '0'
+           AND A.USG_YN = 'Y'
+    </select>
+
+    <!--
+        서비스 변경 이력 저장.
+        ASIS: MypageMapper.insertServiceAlterTrace (MCP_SERVICE_ALTER_TRACE → MSF_SERVICE_ALTER_TRACE).
+    -->
+    <insert id="insertServiceAlterTrace"
+            parameterType="com.ktmmobile.msf.formComm.dto.McpServiceAlterTraceDto">
+        /* FormMypageMapper.insertServiceAlterTrace 서비스 변경 이력 저장 */
+        INSERT INTO MSF_SERVICE_ALTER_TRACE (
+            NCN
+          , CONTRACT_NUM
+          , SEQ
+          , GLOBAL_NO
+          , SUBSCRIBER_NO
+          , EVENT_CODE
+          , PRCS_MDL_IND
+          , TRTM_RSLT_SMST
+          , PRCS_SBST
+          , RSLT_CD
+          , A_SOC_CODE
+          , T_SOC_CODE
+          , A_SOC_AMNT
+          , T_SOC_AMNT
+          , PARAMETER
+          , ACCESS_IP
+          , ACCESS_URL
+          , USER_ID
+          , SYS_DT
+          , SYS_RDATE
+        ) VALUES (
+            #{ncn}
+          , #{contractNum}
+          , (SELECT COALESCE(MAX(SEQ), 0) + 1
+               FROM MSF_SERVICE_ALTER_TRACE
+              WHERE NCN = #{ncn}
+                AND SYS_DT = TO_CHAR(NOW(), 'YYYYMMDD'))
+          , #{globalNo}
+          , #{subscriberNo}
+          , #{eventCode}
+          , #{prcsMdlInd}
+          , #{trtmRsltSmst}
+          , #{prcsSbst}
+          , #{rsltCd}
+          , #{aSocCode}
+          , #{tSocCode}
+          , #{aSocAmnt}
+          , #{tSocAmnt}
+          , #{parameter}
+          , #{accessIp}
+          , #{accessUrl}
+          , #{userId}
+          , TO_CHAR(NOW(), 'YYYYMMDD')
+          , NOW()
+        )
+    </insert>
+
+    <!--
+        최근 60분 내 요금제 변경 성공 이력 수 조회.
+        ASIS: MypageMapper.checkAllreadPlanchgCount (MCP_SERVICE_ALTER_TRACE → MSF_SERVICE_ALTER_TRACE).
+    -->
+    <select id="checkAllreadPlanchgCount"
+            parameterType="com.ktmmobile.msf.formComm.dto.McpServiceAlterTraceDto"
+            resultType="int">
+        /* FormMypageMapper.checkAllreadPlanchgCount 60분 내 요금제 변경 이력 */
+        SELECT COUNT(1)
+          FROM MSF_SERVICE_ALTER_TRACE
+         WHERE NCN = #{ncn}
+           AND T_SOC_CODE = #{tSocCode}
+           AND SYS_RDATE > NOW() - INTERVAL '1 HOUR'
+           AND EVENT_CODE = 'FIN'
+           AND TRTM_RSLT_SMST = 'SUCCESS'
+           AND SYS_DT = TO_CHAR(NOW(), 'YYYYMMDD')
+    </select>
+
+    <!--
+        요금제 변경 후 평생할인 부가서비스 INSERT.
+        ASIS: MypageMapper.insertDisApd (MSP_DIS_APD@DL_MSP).
+        tSocCode → RATE_CD, contractNum 사용.
+    -->
+    <insert id="insertDisApd"
+            parameterType="com.ktmmobile.msf.formComm.dto.McpServiceAlterTraceDto">
+        /* FormMypageMapper.insertDisApd 평생할인 부가서비스 INSERT */
+        INSERT INTO MSP_DIS_APD@DL_MSP (
+            APD_SEQ
+          , REGST_DT
+          , PROC_YN
+          , CONTRACT_NUM
+          <if test="prcsMdlInd != null and prcsMdlInd != ''">
+          , PRMT_ID
+          </if>
+          , CHNL_CD
+          , EVNT_CD
+          , ENGG_MNTH_CNT
+          , OPEN_AGNT_CD
+          , PRMT_AGNT_CD
+          , RATE_CD
+          , ON_OFF_TYPE
+          , OPER_TYPE
+          , REQ_BUY_TYPE
+          , REGST_ID
+          , REGST_DTTM
+        )
+        SELECT 'AD' || TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_DIS_AD.NEXTVAL@DL_MSP, '000000'))
+             , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+             , 'N'
+             , CONTRACT_NUM
+          <if test="prcsMdlInd != null and prcsMdlInd != ''">
+             , #{prcsMdlInd}
+          </if>
+             , '01'
+             , 'SCH'
+             , '00'
+             , OPEN_AGNT_CD
+             , '1100011741'
+             , #{tSocCode}
+             , '0'
+             , 'MNP3'
+             , 'UU'
+             , 'MSF'
+             , SYSDATE
+          FROM MSP_JUO_SUB_INFO@DL_MSP
+         WHERE CONTRACT_NUM = #{contractNum}
+    </insert>
+
+    <!--
+        요금제 변경 온라인 프로모션 ID 조회 (평생할인).
+        ASIS: MypageMapper.getChrgPrmtIdSocChg (VW_CHRG_PRMT_DTL@DL_MSP).
+    -->
+    <select id="getChrgPrmtIdSocChg" parameterType="String" resultType="String">
+        /* FormMypageMapper.getChrgPrmtIdSocChg 평생할인 프로모션 ID 조회 */
+        SELECT DISTINCT(PRMT_ID)
+          FROM VW_CHRG_PRMT_DTL@DL_MSP
+         WHERE TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN STRT_DT AND END_DT
+           AND ORGN_ID = '1100011741'
+           AND REQ_BUY_TYPE IN ('UU', 'AL')
+           AND ENGG_CNT_0 = 'Y'
+           AND MNP_YN = 'Y'
+           AND ON_OFF_TYPE = '0'
+           AND USG_YN = 'Y'
+           AND RATE_CD = #{rateCd}
+           AND ROWNUM = 1
+    </select>
+
+    <!--
+        요금제 변경 실패 이력 MERGE.
+        ASIS: MypageMapper.insertSocfailProcMst (MSP_SOCFAIL_PROC_MST@DL_MSP).
+    -->
+    <update id="insertSocfailProcMst"
+            parameterType="com.ktmmobile.msf.formComm.dto.McpServiceAlterTraceDto">
+        /* FormMypageMapper.insertSocfailProcMst 요금제 변경 실패 이력 */
+        MERGE INTO MSP_SOCFAIL_PROC_MST@DL_MSP
+        USING DUAL
+        ON (CONTRACT_NUM = #{contractNum} AND PRCS_MDL_IND = #{prcsMdlInd})
+        WHEN MATCHED THEN
+            UPDATE SET SYS_RDATE = SYSDATE
+        WHEN NOT MATCHED THEN
+            INSERT (
+                CONTRACT_NUM
+              , PRCS_MDL_IND
+              , A_SOC_CODE
+              , T_SOC_CODE
+              , A_SOC_AMNT
+              , T_SOC_AMNT
+              , SUCC_YN
+              , CHG_TYPE
+              , SYS_RDATE
+              , PROC_MEMO
+              , PROC_YN
+              , PROC_ID
+            ) VALUES (
+                #{contractNum}
+              , #{prcsMdlInd}
+              , #{aSocCode}
+              , #{tSocCode}
+              , #{aSocAmnt}
+              , #{tSocAmnt}
+              , #{succYn}
+              , #{chgType}
+              , SYSDATE
+              , #{procMemo}
+              , #{procYn}
+              , #{procId}
+            )
+    </update>
+
+    <!--
+        비회원 계약 현행화 정보 조회.
+        ASIS: MypageMapper.selectCntrListNoLogin (MSP_JUO_SUB_INFO@DL_MSP + MSP_JUO_CUS_INFO@DL_MSP).
+    -->
+    <select id="selectCntrListNoLogin"
+            parameterType="com.ktmmobile.msf.formComm.dto.McpSubInfoDto"
+            resultType="com.ktmmobile.msf.formComm.dto.McpSubInfoDto">
+        /* FormMypageMapper.selectCntrListNoLogin 비회원 계약 현행화 정보 */
+        SELECT A.SVC_CNTR_NO     AS svcCntrNo
+             , A.CONTRACT_NUM    AS contractNum
+             , A.CUSTOMER_ID     AS custId
+             , A.MODEL_NAME      AS modelName
+             , A.MODEL_ID        AS modelId
+             , A.SUBSCRIBER_NO   AS cntrMobileNo
+             , A.SUB_STATUS      AS subStatus
+             , A.DOBYYYYMMDD     AS dobyyyymmdd
+             , A.SUB_LINK_NAME   AS userName
+             , A.USER_SSN        AS unUserSSn
+             , A.LST_COM_ACTV_DATE AS lstComActvDate
+             , B.CUSTOMER_ID     AS customerId
+             , B.CUSTOMER_TYPE   AS customerType
+             , A.PPPO            AS pppo
+          FROM MSP_JUO_SUB_INFO@DL_MSP A
+             , MSP_JUO_CUS_INFO@DL_MSP B
+         WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
+        <if test="svcCntrNo != null and svcCntrNo != ''">
+           AND A.SVC_CNTR_NO = #{svcCntrNo}
+        </if>
+        <if test="cntrMobileNo != null and cntrMobileNo != ''">
+           AND A.SUBSCRIBER_NO = TRIM(#{cntrMobileNo})
+        </if>
+        <if test="userName != null and userName != ''">
+           AND UPPER(REPLACE(A.SUB_LINK_NAME, ' ', '')) = UPPER(REPLACE(#{userName}, ' ', ''))
+        </if>
+           AND A.SUB_STATUS <![CDATA[<>]]> 'C'
+    </select>
+
+    <!--
+        요금제 QoS 데이터/음성 정보 조회.
+        ASIS: MypageMapper.selectRateMst (NMCP_RATE_MST → MSF_RATE_MST).
+    -->
+    <select id="selectRateMst" parameterType="String" resultType="java.util.HashMap">
+        /* FormMypageMapper.selectRateMst QoS 정보 조회 */
+        SELECT QOS_DATA_CNT_DESC AS qosDataCntDesc
+             , CALL_CNT          AS callCnt
+          FROM MSF_RATE_MST
+         WHERE TO_CHAR(NOW(), 'YYYYMMDDHH24MISS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+           AND RATE_CD = #{rateCd}
+         LIMIT 1
+    </select>
+
+</mapper>

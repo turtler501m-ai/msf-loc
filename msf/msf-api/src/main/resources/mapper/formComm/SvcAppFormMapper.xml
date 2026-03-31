@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ktmmobile.msf.formComm.mapper.SvcAppFormMapper">
+
+    <!--
+        대리점/판매점 목록 조회.
+        테이블: MSF_AGENT_SHOP_INFO (MSF 신규)
+        USE_YN = 'Y' 인 활성 대리점을 대리점명 기준 정렬.
+    -->
+    <select id="selectAgencyList" resultType="com.ktmmobile.msf.formComm.dto.AgencyShopResVO">
+        SELECT
+            AGENT_SHOP_CD AS value,
+            AGENT_SHOP_NM AS label
+        FROM MSF_AGENT_SHOP_INFO
+        WHERE USE_YN = 'Y'
+        ORDER BY AGENT_SHOP_NM
+    </select>
+
+
+    <!--
+        N7002 — 접점코드(ORGN_ID)로 대리점 코드·정보 조회.
+        ASIS: AppformMapper.xml selectAgentCode (ORG_ORGN_INFO_MST@DL_MSP).
+    -->
+    <select id="selectAgentCode"
+            parameterType="java.lang.String"
+            resultType="java.util.Map">
+        SELECT
+            KT_ORG_ID
+            , ORGN_NM
+            , ROADN_ADR_ZIPCD
+            , ROADN_ADR_BAS_SBST
+            , ROADN_ADR_DTL_SBST
+        FROM ORG_ORGN_INFO_MST@DL_MSP
+        WHERE 1=1
+            AND ORGN_ID = #{cntpntShopId}
+            AND ROWNUM = 1
+    </select>
+
+
+    <!--
+        서식지 위치정보 전체 조회.
+        ASIS: AppFormMapper.xml getAppFormPointList (MCP_APPLICATION_FORM_INFO).
+        TOBE: MSF_APPLICATION_FORM_INFO (MCP_* → MSF_*).
+    -->
+    <select id="getAppFormPointList" resultType="java.util.Map">
+        SELECT
+            COLUMN_NAME
+            , METAROW
+            , METALINE
+            , APP_KEY
+            , CODEDATA
+            , CODEDATA_YN
+            , PAGEINDEX
+            , DELETECOLUMNYN
+        FROM MSF_APPLICATION_FORM_INFO
+        ORDER BY PAGEINDEX, APP_KEY
+    </select>
+
+
+    <!--
+        그룹코드별 서식지 위치정보 조회.
+        ASIS: AppFormMapper.xml getAppFormGroupPointList
+              (NMCP_APP_GROUP_MST A, NMCP_APP_GROUP_INFO B, NMCP_APP_FORM_INFO C).
+        TOBE: MSF_APP_GROUP_MST, MSF_APP_GROUP_INFO, MSF_APP_FORM_INFO (D2 매핑).
+    -->
+    <select id="getAppFormGroupPointList"
+            parameterType="java.lang.String"
+            resultType="java.util.Map">
+        SELECT
+            A.GROUP_CODE
+            , B.PAGE_SEQ
+            , C.PAGE_CODE
+            , C.COLUMN_NAME
+            , C.METAROW
+            , C.METALINE
+            , C.CODEDATA
+            , C.CODEDATA_YN
+            , C.DELETECOLUMNYN
+            , C.APP_KEY
+        FROM
+            MSF_APP_GROUP_MST  A
+            , MSF_APP_GROUP_INFO B
+            , MSF_APP_FORM_INFO  C
+        WHERE
+            A.STATUS     = 'A'
+            AND A.GROUP_CODE = #{groupCode}
+            AND A.GROUP_CODE = B.GROUP_CODE
+            AND B.STATUS     = 'A'
+            AND B.PAGE_CODE  = C.PAGE_CODE
+        ORDER BY B.PAGE_SEQ, C.APP_KEY
+    </select>
+
+
+    <!--
+        페이지코드별 서식지 좌표값 조회 (스캔이미지 페이지별).
+        ASIS: AppFormMapper.xml getAppFormPageList (NMCP_APP_FORM_INFO).
+        TOBE: MSF_APP_FORM_INFO (D2 매핑: NMCP_APP_FORM_INFO → MSF_APP_FORM_INFO).
+    -->
+    <select id="getAppFormPageList"
+            parameterType="java.lang.String"
+            resultType="java.util.Map">
+        SELECT
+            PAGE_CODE
+            , COLUMN_NAME
+            , METAROW
+            , METALINE
+            , CODEDATA
+            , CODEDATA_YN
+            , DELETECOLUMNYN
+            , APP_KEY
+        FROM MSF_APP_FORM_INFO
+        WHERE PAGE_CODE = #{pageCode}
+        ORDER BY APP_KEY
+    </select>
+
+
+    <!--
+        신청서 가입자 기본정보 조회 (고객명, 예약번호, 대리점코드, 접점매장ID).
+        ASIS: AppFormMapper.xml getRequestJoinUserData (MCP_REQUEST MQ, MCP_REQUEST_CSTMR MRC).
+        TOBE: MSF_REQUEST, MSF_REQUEST_CSTMR.
+        컬럼 매핑(D3): CSTMR_NAME→CSTMR_NM, AGENT_CODE→AGENT_CD, CNTPNT_SHOP_ID→CNTPNT_SHOP_CD.
+    -->
+    <select id="getRequestJoinUserData"
+            parameterType="java.lang.Long"
+            resultType="java.util.Map">
+        SELECT
+            MRC.CSTMR_NM
+            , MQ.RES_NO
+            , MQ.AGENT_CD
+            , MQ.CNTPNT_SHOP_CD
+        FROM
+            MSF_REQUEST       MQ
+            , MSF_REQUEST_CSTMR MRC
+        WHERE
+            MQ.REQUEST_KEY  = #{requestKey}
+            AND MQ.REQUEST_KEY  = MRC.REQUEST_KEY
+    </select>
+
+
+    <!--
+        법정대리인 정보 저장.
+        ASIS: AppFormMapper.xml insertMcpRequestAgent (MCP_REQUEST_AGENT).
+        TOBE: MSF_REQUEST_AGENT.
+        컬럼 매핑(DDL): MINOR_AGENT_NAME→MINOR_AGENT_NM, TEL_FN→TEL_FN_NO 등.
+    -->
+    <insert id="insertMcpRequestAgent" parameterType="java.util.Map">
+        INSERT INTO MSF_REQUEST_AGENT (
+              REQUEST_KEY
+            , MINOR_AGENT_NM
+            , MINOR_AGENT_RRN
+            , MINOR_AGENT_TEL_FN_NO
+            , MINOR_AGENT_TEL_MN_NO
+            , MINOR_AGENT_TEL_RN_NO
+            , MINOR_AGENT_REL_TYPE_CD
+            , JRDCL_AGENT_NM
+            , JRDCL_AGENT_RRN
+            , JRDCL_AGENT_TEL_FN_NO
+            , JRDCL_AGENT_TEL_MN_NO
+            , JRDCL_AGENT_TEL_RN_NO
+            , ENTRUST_REQ_NM
+            , ENTRUST_RES_NM
+            , ENTRUST_REQ_REL_TYPE_CD
+            , ENTRUST_RES_RRN
+            , ENTRUST_RES_TEL_FN_NO
+            , ENTRUST_RES_TEL_MN_NO
+            , ENTRUST_RES_TEL_RN_NO
+            , CRET_DT
+            , MINOR_AGENT_SELF_INQRY_AGRM_YN
+            , MINOR_AGENT_SELF_CERT_TYPE_CD
+            , MINOR_AGENT_SELF_ISSU_EXPR_DATE
+            , MINOR_AGENT_SELF_ISSU_NO
+            , MINOR_AGENT_AGRM_YN
+        ) VALUES (
+              #{requestKey}
+            , #{minorAgentName}
+            , #{minorAgentRrn}
+            , #{minorAgentTelFn}
+            , #{minorAgentTelMn}
+            , #{minorAgentTelRn}
+            , #{minorAgentRelation}
+            , #{jrdclAgentName}
+            , #{jrdclAgentRrn}
+            , #{jrdclAgentTelFn}
+            , #{jrdclAgentTelMn}
+            , #{jrdclAgentTelRn}
+            , #{entrustReqNm}
+            , #{entrustResNm}
+            , #{entrustReqRelation}
+            , #{entrustResRrn}
+            , #{entrustResTelFn}
+            , #{entrustResTelMn}
+            , #{entrustResTelRn}
+            , NOW()
+            , #{minorSelfInqryAgrmYn}
+            , #{minorSelfCertType}
+            , #{minorSelfIssuExprDt}
+            , #{minorSelfIssuNum}
+            , #{minorAgentAgrmYn}
+        )
+    </insert>
+
+
+    <!--
+        신청 진행상태 등록.
+        ASIS: AppFormMapper.xml insertMcpRequestState (MCP_REQUEST_STATE, SQ_RCP_REQUEST_STATE_01.NEXTVAL).
+        TOBE: MSF_REQUEST_STATE, nextval('SQ_REQUEST_STATE_SEQ').
+    -->
+    <insert id="insertMcpRequestState" parameterType="java.util.Map">
+        INSERT INTO MSF_REQUEST_STATE (
+              REQUEST_STATE_KEY
+            , REQUEST_STATE_CODE
+            , DLVRY_NO
+            , OPEN_NO
+            , MEMO
+            , SYS_RDATE
+            , RIP
+            , RID
+            , VIEW_FLAG
+            , RES_NO
+            , REQUEST_KEY
+            , TB_CD
+        ) VALUES (
+              nextval('SQ_REQUEST_STATE_SEQ')
+            , #{requestStateCode}
+            , #{dlvryNo}
+            , #{openNo}
+            , #{memo}
+            , NOW()
+            , #{rip}
+            , #{rid}
+            , #{viewFlag}
+            , #{resNo}
+            , #{requestKey}
+            , #{tbCd}
+        )
+    </insert>
+
+
+    <!--
+        신청 진행상태 수정.
+        ASIS: AppFormMapper.xml updateMcpRequestState (MCP_REQUEST_STATE).
+        TOBE: MSF_REQUEST_STATE.
+    -->
+    <update id="updateMcpRequestState" parameterType="java.util.Map">
+        UPDATE MSF_REQUEST_STATE
+        SET RVISN_DTTM = NOW()
+        <if test="requestStateCode != null and requestStateCode != ''">
+            , REQUEST_STATE_CODE = #{requestStateCode}
+        </if>
+        <if test="viewFlag != null and viewFlag != ''">
+            , VIEW_FLAG = #{viewFlag}
+        </if>
+        WHERE REQUEST_KEY = #{requestKey}
+    </update>
+
+
+    <!--
+        추천 정보 저장 (INSERT SELECT).
+        ASIS: AppFormMapper.xml insertMcpRequestCommend (MCP_REQUEST_COMMEND ← MCP_COMMEND_ID_MNG).
+        TOBE: MSF_REQUEST_COMMEND ← MSF_COMMEND_ID_MNG.
+    -->
+    <insert id="insertMcpRequestCommend" parameterType="java.util.Map">
+        INSERT INTO MSF_REQUEST_COMMEND (
+              REQUEST_KEY
+            , RES_NO
+            , COMMEND_ID
+            , APPLY_YN
+            , LINK_TYPE_CD
+            , OPEN_MTHD_CD
+            , COMMEND_SOC_CODE_01
+            , COMMEND_SOC_CODE_02
+            , COMMEND_SOC_CODE_03
+            , SYS_RDATE
+            , RVISN_DTTM
+        )
+        SELECT
+              #{requestKey}
+            , #{resNo}
+            , COMMEND_ID
+            , 'N'
+            , COALESCE(LINK_TYPE_CD, '01')
+            , OPEN_MTHD_CD
+            , COMMEND_SOC_CODE_01
+            , COMMEND_SOC_CODE_02
+            , COMMEND_SOC_CODE_03
+            , NOW()
+            , NOW()
+        FROM MSF_COMMEND_ID_MNG
+        WHERE COMMEND_ID = #{commendId}
+    </insert>
+
+
+    <!--
+        납부 정보 저장.
+        ASIS: AppFormMapper.xml insertMcpRequestPayment (MCP_REQUEST_PAYMENT).
+        TOBE: MSF_REQUEST_PAYMENT (D2 매핑).
+    -->
+    <insert id="insertMcpRequestPayment" parameterType="java.util.Map">
+        INSERT INTO MSF_REQUEST_PAYMENT (
+              REQUEST_KEY
+            , REQ_AC02_AMOUNT
+            , SYS_RDATE
+            , REQ_AC_TYPE
+            , REQ_AC01_BALANCE
+            , REQ_AC02_DAY
+            , REQ_AC01_AMOUNT
+        ) VALUES (
+              #{requestKey}
+            , #{reqAc02Amount}
+            , NOW()
+            , #{reqAcType}
+            , #{reqAc01Balance}
+            , #{reqAc02Day}
+            , #{reqAc01Amount}
+        )
+    </insert>
+
+
+    <!--
+        청구 요청 정보 저장 (계좌/카드/무선 납부정보).
+        ASIS: AppFormMapper.xml insertMcpRequestReq (MCP_REQUEST_REQ).
+        TOBE: MSF_REQUEST_BILL_REQ (D2 매핑: MCP_REQUEST_REQ → MSF_REQUEST_BILL_REQ).
+        컬럼 매핑(DDL): REQ_BANK→REQ_BANK_CD, REQ_ACCOUNT_NAME→REQ_ACCOUNT_NM,
+          REQ_ACCOUNT_NUMBER→REQ_ACCOUNT_NO, REQ_ACCOUNT_RELATION→REQ_ACCOUNT_REL_TYPE_CD,
+          REQ_CARD_NAME→REQ_CARD_NM, REQ_CARD_COMPANY→REQ_CARD_COMPANY_CD,
+          REQ_WIRE_TYPE→REQ_WIRE_TYPE_CD, REQ_PAY_OTHER_FLAG→OTHERS_PAYMENT_YN,
+          REQ_PAY_OTHER_TEL_*→OTHERS_PAYMENT_TEL_*_NO.
+    -->
+    <insert id="insertMcpRequestReq" parameterType="java.util.Map">
+        INSERT INTO MSF_REQUEST_BILL_REQ (
+              REQUEST_KEY
+            , REQ_BANK_CD
+            , REQ_ACCOUNT_NM
+            , REQ_ACCOUNT_RRN
+            , REQ_ACCOUNT_REL_TYPE_CD
+            , REQ_ACCOUNT_NO
+            , REQ_CARD_NM
+            , REQ_CARD_RRN
+            , REQ_CARD_COMPANY_CD
+            , REQ_CARD_NO
+            , REQ_CARD_YY
+            , REQ_CARD_MM
+            , REQ_WIRE_TYPE_CD
+            , CRET_DT
+            , OTHERS_PAYMENT_YN
+            , OTHERS_PAYMENT_TEL_FN_NO
+            , OTHERS_PAYMENT_TEL_MN_NO
+            , OTHERS_PAYMENT_TEL_RN_NO
+            , PRNTS_BILL_NO
+        ) VALUES (
+              #{requestKey}
+            , #{reqBank}
+            , #{reqAccountName}
+            , #{reqAccountRrn}
+            , #{reqAccountRelation}
+            , #{reqAccountNumber}
+            , #{reqCardName}
+            , #{reqCardRrn}
+            , #{reqCardCompany}
+            , #{reqCardNo}
+            , #{reqCardYy}
+            , #{reqCardMm}
+            , #{reqWireType}
+            , NOW()
+            , #{reqPayOtherFlag}
+            , #{reqPayOtherTelFn}
+            , #{reqPayOtherTelMn}
+            , #{reqPayOtherTelRn}
+            , #{prntsBillNo}
+        )
+    </insert>
+
+
+    <!--
+        N7003 — 계약번호(ncn)로 개통일자 조회.
+        ASIS: MSP_JUO_SUB_INFO@DL_MSP.LST_COM_ACTV_DATE (ITO분석 N7003).
+        Oracle: AND ROWNUM = 1
+    -->
+    <select id="selectActivationDate"
+            parameterType="string"
+            resultType="string">
+        SELECT LST_COM_ACTV_DATE
+        FROM MSP_JUO_SUB_INFO@DL_MSP
+        WHERE CONTRACT_NUM = #{contractNum}
+        AND ROWNUM = 1
+    </select>
+
+
+</mapper>

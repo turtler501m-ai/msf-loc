@@ -42,6 +42,8 @@ export const useCancelFormStore = defineStore('cancelForm', {
     lastCompletedCustomerName: '',
     /** 신청완료 화면 표시용 접수번호 (cancel/apply 응답) */
     lastApplicationNo: '',
+    /** 신청완료 화면 B2 발송번호 자동 세팅용 (해지 후 연락처) */
+    lastContactPhone: '',
   }),
   getters: {
     isPhoneAuthCompleted: (state) => state.customerForm.phoneAuthCompleted,
@@ -70,6 +72,12 @@ export const useCancelFormStore = defineStore('cancelForm', {
     },
     clearLastApplicationNo() {
       this.lastApplicationNo = ''
+    },
+    setLastContactPhone(phone) {
+      this.lastContactPhone = phone || ''
+    },
+    clearLastContactPhone() {
+      this.lastContactPhone = ''
     },
     reset() {
       this.agencyCode = ''

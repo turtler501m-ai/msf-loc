@@ -60,7 +60,7 @@ spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
 | `msp_juo_sub_info` | 가입자 정보 (인증용) | 그대로 참조 (`ContractInfoMapper`) |
 
 > ASIS 참조 필드: `RVISN_ID → AMD_ID`, `_FLAG → _YN`, `_NAME → _NM`, `_CODE → _CD`, `_TYPE → _TYPE_CD`
-> (상세 매핑: `.doc/intdoc/MCP_REQUEST_MSF_REQUEST_컬럼매핑.md`)
+> (상세 매핑: `.doc/reference/MCP_REQUEST_MSF_REQUEST_컬럼매핑.md`)
 
 ---
 
@@ -117,8 +117,8 @@ public Map<String, Object> getInsuranceProducts(String reqBuyType) {
 신규 테이블 관련 코드 작성 시 확인 사항:
 
 - [ ] **접두어 확인**: `MSF_`(신규) / `NMCP_`(M전산) / `MSP_@DL_MSP`(M플랫폼 DB링크)
-- [ ] **DDL 위치**: `MSF_` 테이블 → `.doc/intdoc/script/msf_create_tables.sql` 반영
+- [ ] **DDL 위치**: `MSF_` 테이블 → `.doc/reference/script/msf_create_tables.sql` 반영
 - [ ] **@MapperScan 등록**: 신규 `@Mapper` 패키지 → `MsfApplication.java`에 추가
 - [ ] **DB링크 Mock 처리**: `@DL_MSP` 사용 시 `SERVER_NAME=LOCAL` 분기 필수
 - [ ] **날짜 함수**: PostgreSQL `NOW()` ↔ Oracle `SYSDATE` 운영 시 확인
-- [ ] **매핑 문서 참조**: ASIS↔TOBE 컬럼 네이밍 변경 → `.doc/intdoc/MCP_REQUEST_MSF_REQUEST_컬럼매핑.md`
+- [ ] **매핑 문서 참조**: ASIS↔TOBE 컬럼 네이밍 변경 → `.doc/reference/MCP_REQUEST_MSF_REQUEST_컬럼매핑.md`

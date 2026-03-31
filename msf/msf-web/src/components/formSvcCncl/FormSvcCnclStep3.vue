@@ -16,14 +16,16 @@
     <section class="p-4 border border-gray-200 rounded-lg">
       <h4 class="font-medium mb-3">신청서 확인 <span class="text-red-500">*</span></h4>
       <p class="text-sm text-gray-600 mb-3">신청서 확인을 눌러서, 신청서 작성 내용을 확인하신 후 가입자(대리인) 서명을 등록해 주세요.</p>
-      <button
-        type="button"
-        class="px-4 py-2 rounded border border-teal-600 text-teal-700 text-sm font-medium hover:bg-teal-50"
-        @click="openFormConfirm"
-      >
-        신청서 확인
-      </button>
-      <span v-if="formConfirmed" class="ml-3 text-sm text-teal-600 font-medium">✓ 확인 완료</span>
+      <div class="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          class="cncl-btn-outline"
+          @click="openFormConfirm"
+        >
+          신청서 확인
+        </button>
+        <span v-if="formConfirmed" class="text-sm text-teal-600 font-medium">✓ 확인 완료</span>
+      </div>
     </section>
 
     <!-- S104030103 신청서 확인 팝업 -->
@@ -47,14 +49,14 @@
         <div class="px-6 py-4 border-t flex justify-end gap-3">
           <button
             type="button"
-            class="px-5 py-2 rounded border border-gray-300 text-sm"
+            class="px-5 py-2 rounded-lg border border-gray-300 text-sm"
             @click="onFormConfirmEdit"
           >
             수정
           </button>
           <button
             type="button"
-            class="px-5 py-2 rounded bg-teal-600 text-white text-sm font-medium"
+            class="cncl-btn-primary"
             @click="onFormConfirmOk"
           >
             확인
@@ -103,6 +105,7 @@ onMounted(() => emit('complete', isComplete.value))
 const save = async () => {
   if (!benefitAgreed.value) { alert('혜택 소멸사항 동의에 체크해 주세요.'); return false }
   if (!formConfirmed.value) { alert('[신청서 확인] 버튼을 클릭하여 신청서를 확인해 주세요.'); return false }
+  if (!confirm('신청서를 등록하시겠습니까?')) { return false }
 
   try {
     const c = formStore.customerForm
@@ -134,6 +137,7 @@ const save = async () => {
     if (res && res.success && res.applicationNo) {
       formStore.setLastApplicationNo(res.applicationNo)
       formStore.setLastCompletedName(c?.name || '')
+      formStore.setLastContactPhone(c?.contactPhone || '')
       formStore.reset()
       return true
     } else {
@@ -154,5 +158,11 @@ defineExpose({ save })
 
 .page-step-panel {
   @apply w-full p-4 border rounded-md;
+}
+.cncl-btn-outline {
+  @apply px-4 py-2 rounded-lg border border-teal-600 text-teal-600 text-sm font-medium hover:bg-teal-50;
+}
+.cncl-btn-primary {
+  @apply px-4 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium;
 }
 </style>
