@@ -460,9 +460,20 @@
                 <span v-else class="confirm-done-text">✓ 인증 완료</span>
               </div>
             </div>
-            <div v-if="dataSharingCheckResult !== null && !dataSharingAuthed" class="mt-2">
-              <span v-if="dataSharingCheckResult.canJoin" class="text-sm text-green-700">가입 가능합니다.</span>
-              <span v-else class="text-sm text-amber-600">{{ dataSharingCheckResult.RESULT_MSG || '가입이 불가합니다.' }}</span>
+            <div v-if="dataSharingCheckResult !== null" class="mt-2">
+              <template v-if="dataSharingCheckResult.canJoin && !dataSharingJoinDone">
+                <span class="text-sm text-green-700">가입 가능합니다.</span>
+                <button
+                  type="button"
+                  class="product-btn-action ml-3"
+                  :disabled="dataSharingJoinLoading"
+                  @click="doDataSharingJoin"
+                >
+                  {{ dataSharingJoinLoading ? '처리 중...' : '가입하기' }}
+                </button>
+              </template>
+              <span v-else-if="dataSharingJoinDone" class="text-sm text-green-700 font-medium">✓ 가입 완료</span>
+              <span v-else class="text-sm text-amber-600">{{ dataSharingCheckResult.message || '가입이 불가합니다.' }}</span>
             </div>
             <div class="product-form-row mt-3">
               <span class="product-row-label">USIM 번호 <span class="text-red-500">*</span></span>
@@ -644,6 +655,7 @@ import {
   regCombineSelf,
   getDataSharingList,
   checkDataSharing,
+  joinDataSharing,
   cancelDataSharing,
   checkPause,
   applyPause,
@@ -969,8 +981,10 @@ const dataSharingUsim = ref('')
 const dataSharingList = ref([])
 const dataSharingListLoading = ref(false)
 const dataSharingListLoaded = ref(false)
-const dataSharingCheckResult = ref(null)
+const dataSharingCheckResult = ref(null)  // { canJoin, items, message }
 const dataSharingCheckLoading = ref(false)
+const dataSharingJoinLoading = ref(false)
+const dataSharingJoinDone = ref(false)
 const dataSharingCancelLoading = ref(null)
 const dataSharingAuthed = ref(false)
 
@@ -984,12 +998,17 @@ function onDataSharingModeChange(mode) {
   dataSharingPhone.value = ''
   dataSharingUsim.value = ''
   dataSharingAuthed.value = false
+  dataSharingJoinDone.value = false
   dataSharingCheckResult.value = null
   if (mode === 'CANCEL' && canCheckDataSharing.value && !dataSharingListLoaded.value) {
     loadDataSharingList()
   }
 }
 
+/**
+ * X71 데이터쉐어링 결합 중인 대상 조회.
+ * ASIS MyShareDataSvcImpl.mosharingList() 대응.
+ */
 async function loadDataSharingList() {
   const cf = formStore.customerForm || {}
   if (!cf.ncn || !cf.phone || !cf.custId) return
@@ -997,7 +1016,8 @@ async function loadDataSharingList() {
   dataSharingListLoaded.value = true
   try {
     const res = await getDataSharingList({ ncn: cf.ncn, ctn: cf.phone, custId: cf.custId })
-    dataSharingList.value = (res && res.RESULT_CODE === 'SUCCESS' && Array.isArray(res.sharingList)) ? res.sharingList : []
+    // 백엔드 응답: { success, items: [{rsltInd, svcNo, efctStDt, rsltMsg}] }
+    dataSharingList.value = (res && res.success && Array.isArray(res.items)) ? res.items : []
   } catch (_) {
     dataSharingList.value = []
   } finally {
@@ -1005,32 +1025,68 @@ async function loadDataSharingList() {
   }
 }
 
+/**
+ * X69 데이터쉐어링 사전체크.
+ * ASIS MyShareDataSvcImpl.moscDataSharingChk(crprCtn=opmdSvcNo) 대응.
+ * rsltInd='Y' 항목이 있으면 canJoin=true.
+ */
 async function doDataSharingCheck() {
   const cf = formStore.customerForm || {}
   if (!cf.ncn || !cf.phone || !cf.custId) return
-  // 가입 모드: 상대방 휴대폰번호 필수
   const targetCtn = dataSharingPhone.value?.replace(/\D/g, '') || ''
-  if (dataSharingMode.value === 'JOIN' && !targetCtn) return
+  if (!targetCtn) return
   dataSharingCheckLoading.value = true
   dataSharingCheckResult.value = null
+  dataSharingAuthed.value = false
+  dataSharingJoinDone.value = false
   try {
     const res = await checkDataSharing({
       ncn: cf.ncn,
-      ctn: cf.phone,           // 대표 회선 CTN
+      ctn: cf.phone,
       custId: cf.custId,
-      opmdSvcNo: targetCtn,    // 가입 대상 회선 CTN (P6 수정)
+      opmdSvcNo: targetCtn,   // crprCtn — 가입 대상 번호
     })
-    dataSharingCheckResult.value = res || null
+    // 백엔드 응답: { success, canJoin, items, message }
+    dataSharingCheckResult.value = res || { canJoin: false }
     if (res && res.canJoin) {
       dataSharingAuthed.value = true
     }
   } catch (e) {
-    dataSharingCheckResult.value = { RESULT_CODE: 'E', RESULT_MSG: e?.message || '확인에 실패했습니다.', canJoin: false }
+    dataSharingCheckResult.value = { canJoin: false, message: e?.message || '확인에 실패했습니다.' }
   } finally {
     dataSharingCheckLoading.value = false
   }
 }
 
+/**
+ * X70 데이터쉐어링 가입.
+ * ASIS MyShareDataSvcImpl.moscDataSharingSave(opmdWorkDivCd='A') 대응.
+ * X69 사전체크 성공 후 사용자 확인 → X70 가입 처리.
+ */
+async function doDataSharingJoin() {
+  const cf = formStore.customerForm || {}
+  const targetCtn = dataSharingPhone.value?.replace(/\D/g, '') || ''
+  if (!cf.ncn || !cf.phone || !cf.custId || !targetCtn) return
+  if (!confirm(`데이터쉐어링 가입 처리를 진행하시겠습니까?\n대상 번호: ${targetCtn}`)) return
+  dataSharingJoinLoading.value = true
+  try {
+    const res = await joinDataSharing({ ncn: cf.ncn, ctn: cf.phone, custId: cf.custId, opmdSvcNo: targetCtn })
+    if (res && res.success) {
+      dataSharingJoinDone.value = true
+    } else {
+      alert(res?.message || '가입에 실패했습니다.')
+    }
+  } catch (e) {
+    alert(e?.message || '가입에 실패했습니다.')
+  } finally {
+    dataSharingJoinLoading.value = false
+  }
+}
+
+/**
+ * X70 데이터쉐어링 해지.
+ * ASIS MyShareDataSvcImpl.moscDataSharingSave(opmdWorkDivCd='C') 대응.
+ */
 async function onDataSharingCancel(item) {
   const cf = formStore.customerForm || {}
   if (!cf.ncn || !cf.phone || !cf.custId || !item?.svcNo) return
@@ -1038,10 +1094,11 @@ async function onDataSharingCancel(item) {
   dataSharingCancelLoading.value = item.svcNo
   try {
     const res = await cancelDataSharing({ ncn: cf.ncn, ctn: cf.phone, custId: cf.custId, opmdSvcNo: item.svcNo })
-    if (res && res.RESULT_CODE === 'SUCCESS') {
-      await loadDataSharingList()
+    // 백엔드 응답: { success, message }
+    if (res && res.success) {
+      dataSharingList.value = dataSharingList.value.filter(i => i.svcNo !== item.svcNo)
     } else {
-      alert(res?.RESULT_MSG || '해지에 실패했습니다.')
+      alert(res?.message || '해지에 실패했습니다.')
     }
   } catch (e) {
     alert(e?.message || '해지에 실패했습니다.')
@@ -1313,7 +1370,7 @@ const isComplete = computed(() => {
   if (hasOption('NUM_CHANGE') && !productForm.value.numChange) return false
   if (hasOption('LOST_RESTORE') && !pauseConfirmed.value) return false
   if (hasOption('USIM_CHANGE') && (!productForm.value.usimChange || !usimChecked.value)) return false
-  if (hasOption('DATA_SHARING') && dataSharingMode.value === 'JOIN' && !dataSharingAuthed.value) return false
+  if (hasOption('DATA_SHARING') && dataSharingMode.value === 'JOIN' && !dataSharingJoinDone.value) return false
   return true
 })
 

@@ -59,10 +59,15 @@ public class SvcChgShareDataSvcImpl implements SvcChgShareDataSvc {
             return result;
         }
         try {
+            // ASIS: moscDataSharingChk(custId, ncn, ctn, crprCtn) — crprCtn = 가입 대상 번호(opmdSvcNo)
             MpDataSharingResVO vo = mplatFormSvc.moscDataSharingChk(
-                req.getCustId(), req.getNcn(), req.getCtn());
+                req.getCustId(), req.getNcn(), req.getCtn(), req.getOpmdSvcNo());
             result.put("success", vo.isSuccess());
             result.put("items", vo.getItems());
+            // rsltInd='Y' 항목이 1건 이상이면 가입 가능
+            boolean canJoin = vo.isSuccess() && vo.getItems() != null &&
+                vo.getItems().stream().anyMatch(i -> "Y".equals(i.getRsltInd()));
+            result.put("canJoin", canJoin);
             if (!vo.isSuccess()) {
                 result.put("message", vo.getSvcMsg());
             }

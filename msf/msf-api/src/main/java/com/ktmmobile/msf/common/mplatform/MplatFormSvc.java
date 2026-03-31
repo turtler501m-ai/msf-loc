@@ -403,10 +403,14 @@ public class MplatFormSvc {
 
     /**
      * X69 데이터쉐어링 사전체크 및 가입 가능 대상 조회.
+     * ASIS MplatFormService.moscDataSharingChk(custId, ncn, ctn, crprCtn) 와 동일.
+     *
+     * @param crprCtn 가입 대상 전화번호 (쉐어링 자회선 번호). 셀프개통 사전체크 시 빈 문자열.
      */
-    public MpDataSharingResVO moscDataSharingChk(String custId, String ncn, String ctn) {
+    public MpDataSharingResVO moscDataSharingChk(String custId, String ncn, String ctn, String crprCtn) {
         MpDataSharingResVO vo = new MpDataSharingResVO();
         HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X69);
+        param.put("crprCtn", crprCtn != null ? crprCtn : "");
         if ("LOCAL".equals(serverLocation)) {
             vo.setResponseXml("<return><commHeader><responseType>N</responseType></commHeader><outDto><outDataSharingDto><rsltInd>Y</rsltInd><svcNo>01000000000</svcNo><efctStDt/><rsltMsg/></outDataSharingDto></outDto></return>");
             vo.toResponseParse();
