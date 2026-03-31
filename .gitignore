@@ -24,6 +24,13 @@ msf/msf-web/*.local
 # ===========================
 .merge/
 msf/.merge/
+.doc/.backup/node_modules/
+
+# ===========================
+# 빌드/스크립트 임시 파일
+# ===========================
+node_modules/
+bash.exe.stackdump
 
 # ===========================
 # IDE / Editor
