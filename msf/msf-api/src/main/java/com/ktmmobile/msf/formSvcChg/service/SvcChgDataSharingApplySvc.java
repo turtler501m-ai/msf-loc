@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.formSvcChg.service;
 
-import com.ktmmobile.msf.formSvcChg.dto.DataSharingApplyReqDto;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingApplyReqDto;
 
 import java.util.Map;
 
@@ -9,7 +9,7 @@ import java.util.Map;
  * ASIS AppformController.saveDataSharingSimple(4001-03) / saveDataSharingStep1~3(4001-08~11)
  * 역할을 단계별 REST API 로 분리.
  */
-public interface DataSharingApplySvc {
+public interface SvcChgDataSharingApplySvc {
 
     /**
      * [Step0] 신청서 저장.
@@ -17,7 +17,7 @@ public interface DataSharingApplySvc {
      * - MSF_REQUEST INSERT + MSF_REQUEST_OSST INSERT
      * - 응답: { success, requestKey, resNo }
      */
-    Map<String, Object> apply(DataSharingApplyReqDto req);
+    Map<String, Object> apply(SvcChgDataSharingApplyReqDto req);
 
     /**
      * [Step1] PC0 사전체크 및 고객생성 (OSST).
@@ -26,7 +26,7 @@ public interface DataSharingApplySvc {
      * - MSF_REQUEST_OSST UPDATE (prgrStatCd=PC0, osstOrdNo)
      * - 응답: { success, resNo, requestKey }
      */
-    Map<String, Object> step1(DataSharingApplyReqDto req);
+    Map<String, Object> step1(SvcChgDataSharingApplyReqDto req);
 
     /**
      * [Step2] PC2 폴링 + Y39 CI 조회.
@@ -36,7 +36,7 @@ public interface DataSharingApplySvc {
      * - MSF_REQUEST_OSST UPDATE (prgrStatCd=PC2)
      * - 응답: { success, prgrStatCd, rsltCd, ipinCi }
      */
-    Map<String, Object> step2(DataSharingApplyReqDto req);
+    Map<String, Object> step2(SvcChgDataSharingApplyReqDto req);
 
     /**
      * [Step3] NU1 번호조회 + NU2 번호예약.
@@ -46,7 +46,7 @@ public interface DataSharingApplySvc {
      * - MSF_REQUEST_OSST UPDATE (tlphNo, prgrStatCd=NU2)
      * - 응답: { success, tlphNo }
      */
-    Map<String, Object> step3(DataSharingApplyReqDto req);
+    Map<String, Object> step3(SvcChgDataSharingApplyReqDto req);
 
     /**
      * [Step4] OP0 개통 및 수납.
@@ -56,5 +56,5 @@ public interface DataSharingApplySvc {
      * - MSF_REQUEST_OSST UPDATE (prgrStatCd=OP0)
      * - 응답: { success }
      */
-    Map<String, Object> step4(DataSharingApplyReqDto req);
+    Map<String, Object> step4(SvcChgDataSharingApplyReqDto req);
 }

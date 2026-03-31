@@ -2,7 +2,8 @@ package com.ktmmobile.msf.formSvcChg.service;
 
 import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
 import com.ktmmobile.msf.common.mplatform.vo.MpDataSharingResVO;
-import com.ktmmobile.msf.formSvcChg.dto.DataSharingReqDto;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingReqDto;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ public class SvcChgDataSharingSvcImpl implements SvcChgDataSharingSvc {
 
     /** X71 데이터쉐어링 결합 중인 대상 조회. */
     @Override
-    public Map<String, Object> list(DataSharingReqDto req) {
+    public Map<String, Object> list(SvcChgDataSharingReqDto req) {
         Map<String, Object> result = new HashMap<>();
         if (req == null || isBlank(req.getCtn())) {
             result.put("success", false);
@@ -50,7 +51,7 @@ public class SvcChgDataSharingSvcImpl implements SvcChgDataSharingSvc {
 
     /** X69 데이터쉐어링 사전체크. */
     @Override
-    public Map<String, Object> check(DataSharingReqDto req) {
+    public Map<String, Object> check(SvcChgDataSharingReqDto req) {
         Map<String, Object> result = new HashMap<>();
         if (req == null || isBlank(req.getCtn())) {
             result.put("success", false);
@@ -75,17 +76,17 @@ public class SvcChgDataSharingSvcImpl implements SvcChgDataSharingSvc {
 
     /** X70 데이터쉐어링 가입 (A). */
     @Override
-    public Map<String, Object> join(DataSharingReqDto req) {
+    public Map<String, Object> join(SvcChgDataSharingReqDto req) {
         return dataSharingSave(req, "A");
     }
 
     /** X70 데이터쉐어링 해지 (C). */
     @Override
-    public Map<String, Object> cancel(DataSharingReqDto req) {
+    public Map<String, Object> cancel(SvcChgDataSharingReqDto req) {
         return dataSharingSave(req, "C");
     }
 
-    private Map<String, Object> dataSharingSave(DataSharingReqDto req, String workDiv) {
+    private Map<String, Object> dataSharingSave(SvcChgDataSharingReqDto req, String workDiv) {
         Map<String, Object> result = new HashMap<>();
         if (req == null || isBlank(req.getCtn())) {
             result.put("success", false);

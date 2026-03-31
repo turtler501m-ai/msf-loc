@@ -4,9 +4,9 @@ import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
 import com.ktmmobile.msf.common.mplatform.vo.MpOsstIpinCiVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpOsstPhoneNoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpOsstSimpleVO;
-import com.ktmmobile.msf.formSvcChg.dto.DataSharingApplyReqDto;
-import com.ktmmobile.msf.formSvcChg.dto.DataSharingOsstDto;
-import com.ktmmobile.msf.formSvcChg.mapper.DataSharingApplyMapper;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingApplyReqDto;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingOsstDto;
+import com.ktmmobile.msf.formSvcChg.mapper.SvcChgDataSharingApplyMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,22 +23,22 @@ import java.util.Map;
  * TOBE: 세션 없음(stateless) — requestKey/resNo 클라이언트가 매 요청에 전달.
  */
 @Service
-public class DataSharingApplySvcImpl implements DataSharingApplySvc {
+public class SvcChgDataSharingApplySvcImpl implements SvcChgDataSharingApplySvc {
 
-    private static final Logger logger = LoggerFactory.getLogger(DataSharingApplySvcImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(SvcChgDataSharingApplySvcImpl.class);
 
     @Autowired
     private MplatFormSvc mplatFormSvc;
 
     @Autowired
-    private DataSharingApplyMapper applyMapper;
+    private SvcChgDataSharingApplyMapper applyMapper;
 
     // ─────────────────────────────────────────────────────────────────────
     // [Step0] 신청서 저장
     // ASIS: saveDataSharingSimple + fnSetDataOfdataSharing + saveAppform
     // ─────────────────────────────────────────────────────────────────────
     @Override
-    public Map<String, Object> apply(DataSharingApplyReqDto req) {
+    public Map<String, Object> apply(SvcChgDataSharingApplyReqDto req) {
         Map<String, Object> result = new HashMap<>();
 
         // 1. 입력값 검증
@@ -65,7 +65,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             String resNo = String.format("%014d", requestKey);
 
             // 3. MSF_REQUEST_OSST INSERT (초기 레코드)
-            DataSharingOsstDto osstDto = new DataSharingOsstDto();
+            SvcChgDataSharingOsstDto osstDto = new SvcChgDataSharingOsstDto();
             osstDto.setRequestKey(requestKey);
             osstDto.setMvnoOrdNo(resNo);
             osstDto.setSvcCntrNo(req.getNcn());   // SVC_CNTR_NO NOT NULL — 모회선 NCN
@@ -76,10 +76,10 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             result.put("success",    true);
             result.put("requestKey", requestKey);
             result.put("resNo",      resNo);
-            logger.info("[DataSharingApply][Step0] 신청서 저장 완료: requestKey={}, resNo={}", requestKey, resNo);
+            logger.info("[SvcChgDataSharingApply][Step0] 신청서 저장 완료: requestKey={}, resNo={}", requestKey, resNo);
 
         } catch (Exception e) {
-            logger.error("[DataSharingApply][Step0] 오류: {}", e.getMessage(), e);
+            logger.error("[SvcChgDataSharingApply][Step0] 오류: {}", e.getMessage(), e);
             result.put("success", false);
             result.put("message", "신청서 저장 중 오류가 발생했습니다.");
         }
@@ -91,7 +91,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
     // ASIS: saveDataSharingStep1
     // ─────────────────────────────────────────────────────────────────────
     @Override
-    public Map<String, Object> step1(DataSharingApplyReqDto req) {
+    public Map<String, Object> step1(SvcChgDataSharingApplyReqDto req) {
         Map<String, Object> result = new HashMap<>();
 
         if (req.getRequestKey() == null || isBlank(req.getResNo())) {
@@ -112,7 +112,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             String custId           = nvl(req.getCustId(), "");
 
             // OSST에서 이미 PC2 성공 기록이 있으면 스킵 (방어로직)
-            DataSharingOsstDto osstRow = applyMapper.getMsfRequestOsst(req.getRequestKey());
+            SvcChgDataSharingOsstDto osstRow = applyMapper.getMsfRequestOsst(req.getRequestKey());
             if (osstRow != null && MplatFormSvc.EVENT_CODE_PC2.equals(osstRow.getPrgrStatCd())) {
                 result.put("success",    true);
                 result.put("requestKey", req.getRequestKey());
@@ -133,7 +133,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
 
             if (vo.isSuccess()) {
                 // MSF_REQUEST_OSST UPDATE
-                DataSharingOsstDto upd = new DataSharingOsstDto();
+                SvcChgDataSharingOsstDto upd = new SvcChgDataSharingOsstDto();
                 upd.setRequestKey(req.getRequestKey());
                 upd.setPrgrStatCd(MplatFormSvc.EVENT_CODE_PC0);
                 upd.setOsstOrdNo(vo.getOsstOrdNo());
@@ -143,17 +143,17 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
                 result.put("success",    true);
                 result.put("requestKey", req.getRequestKey());
                 result.put("resNo",      req.getResNo());
-                logger.info("[DataSharingApply][Step1] PC0 성공: requestKey={}", req.getRequestKey());
+                logger.info("[SvcChgDataSharingApply][Step1] PC0 성공: requestKey={}", req.getRequestKey());
             } else {
                 result.put("success",   false);
                 result.put("RESULT_CODE", "1001");
                 result.put("EVENT_CODE",  MplatFormSvc.EVENT_CODE_PC0);
                 result.put("ERROR_MSG",   vo.getResultCode());
                 result.put("message",     vo.getSvcMsg());
-                logger.warn("[DataSharingApply][Step1] PC0 실패: {}", vo.getSvcMsg());
+                logger.warn("[SvcChgDataSharingApply][Step1] PC0 실패: {}", vo.getSvcMsg());
             }
         } catch (Exception e) {
-            logger.error("[DataSharingApply][Step1] 오류: {}", e.getMessage(), e);
+            logger.error("[SvcChgDataSharingApply][Step1] 오류: {}", e.getMessage(), e);
             result.put("success", false);
             result.put("message", "PC0 사전체크 중 오류가 발생했습니다.");
         }
@@ -165,7 +165,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
     // ASIS: conPreCheck + chkRealPc2Result + MoscSvcContService(Y39)
     // ─────────────────────────────────────────────────────────────────────
     @Override
-    public Map<String, Object> step2(DataSharingApplyReqDto req) {
+    public Map<String, Object> step2(SvcChgDataSharingApplyReqDto req) {
         Map<String, Object> result = new HashMap<>();
 
         if (req.getRequestKey() == null || isBlank(req.getResNo())) {
@@ -185,7 +185,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             String prntsContractNum = nvlStr(reqRow.get("prntsContractNum"));
             String custId           = nvl(req.getCustId(), "");
 
-            DataSharingOsstDto osstRow = applyMapper.getMsfRequestOsst(req.getRequestKey());
+            SvcChgDataSharingOsstDto osstRow = applyMapper.getMsfRequestOsst(req.getRequestKey());
 
             // --- chkRealPc2Result 로직 (ST1 폴링, 최대 2회, 5초 대기) ---
             Map<String, String> st1Param = new HashMap<>();
@@ -219,8 +219,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
                     pc2Done = true;
                     break;
                 }
-                // prgrStatCd 가 PC2 가 아니면 재시도
-                logger.info("[DataSharingApply][Step2] ST1 재시도 {}/2, prgrStatCd={}", i + 1, st1Vo.getPrgrStatCd());
+                logger.info("[SvcChgDataSharingApply][Step2] ST1 재시도 {}/2, prgrStatCd={}", i + 1, st1Vo.getPrgrStatCd());
             }
 
             if (!pc2Done) {
@@ -242,7 +241,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             }
 
             // MSF_REQUEST_OSST UPDATE — PC2 완료
-            DataSharingOsstDto upd = new DataSharingOsstDto();
+            SvcChgDataSharingOsstDto upd = new SvcChgDataSharingOsstDto();
             upd.setRequestKey(req.getRequestKey());
             upd.setPrgrStatCd(MplatFormSvc.EVENT_CODE_PC2);
             upd.setRsltCd(MplatFormSvc.OSST_SUCCESS);
@@ -252,10 +251,10 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             result.put("prgrStatCd",  MplatFormSvc.EVENT_CODE_PC2);
             result.put("rsltCd",      MplatFormSvc.OSST_SUCCESS);
             result.put("ipinCi",      y39Vo.getIpinCi());
-            logger.info("[DataSharingApply][Step2] PC2+Y39 완료: requestKey={}", req.getRequestKey());
+            logger.info("[SvcChgDataSharingApply][Step2] PC2+Y39 완료: requestKey={}", req.getRequestKey());
 
         } catch (Exception e) {
-            logger.error("[DataSharingApply][Step2] 오류: {}", e.getMessage(), e);
+            logger.error("[SvcChgDataSharingApply][Step2] 오류: {}", e.getMessage(), e);
             result.put("success", false);
             result.put("message", "PC2 폴링 중 오류가 발생했습니다.");
         }
@@ -267,7 +266,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
     // ASIS: saveDataSharingStep2 + fnSearchNumber
     // ─────────────────────────────────────────────────────────────────────
     @Override
-    public Map<String, Object> step3(DataSharingApplyReqDto req) {
+    public Map<String, Object> step3(SvcChgDataSharingApplyReqDto req) {
         Map<String, Object> result = new HashMap<>();
 
         if (req.getRequestKey() == null || isBlank(req.getResNo())) {
@@ -277,14 +276,13 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
         }
 
         try {
-            // 신청서 조회
             Map<String, Object> reqRow = applyMapper.getMsfRequest(req.getRequestKey());
             if (reqRow == null) {
                 result.put("success", false);
                 result.put("message", "신청서를 찾을 수 없습니다.");
                 return result;
             }
-            DataSharingOsstDto osstRow = applyMapper.getMsfRequestOsst(req.getRequestKey());
+            SvcChgDataSharingOsstDto osstRow = applyMapper.getMsfRequestOsst(req.getRequestKey());
             if (osstRow == null) {
                 result.put("success", false);
                 result.put("message", "OSST 레코드를 찾을 수 없습니다.");
@@ -297,23 +295,19 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             String agentCode        = nvlStr(reqRow.get("agentCode"));
 
             // NU1: 번호조회 (끝번호 → 중간번호 → Random 순서로 fallback)
-            // ASIS: fnSearchNumber 로직 그대로
             MpOsstPhoneNoVO.PhoneNoItem selected = null;
 
             if (ctn.length() >= 4) {
-                // 1) 끝번호 4자리
                 selected = searchPhoneNo(req.getResNo(), prntsContractNum, custId,
                     ctn.substring(ctn.length() - 4));
             }
 
             if (selected == null && ctn.length() >= 8) {
-                // 2) 중간번호 4자리
                 selected = searchPhoneNo(req.getResNo(), prntsContractNum, custId,
                     ctn.substring(ctn.length() - 8, ctn.length() - 4));
             }
 
             if (selected == null) {
-                // 3) Random 4자리
                 String rand = randomFourDigits();
                 selected = searchPhoneNo(req.getResNo(), prntsContractNum, custId, rand);
             }
@@ -327,14 +321,14 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             }
 
             // MSF_REQUEST_OSST에 번호 정보 임시 저장
-            DataSharingOsstDto nuReg = new DataSharingOsstDto();
+            SvcChgDataSharingOsstDto nuReg = new SvcChgDataSharingOsstDto();
             nuReg.setRequestKey(req.getRequestKey());
             nuReg.setTlphNo(selected.getTlphNo());
             nuReg.setTlphNoStatCd(selected.getTlphNoStatCd());
             nuReg.setEncdTlphNo(selected.getEncdTlphNo());
             nuReg.setTlphNoOwnCmpnCd(selected.getTlphNoOwnCmpnCd());
             nuReg.setAsgnAgncId(agentCode);
-            nuReg.setOpenSvcIndCd("03");  // 03 고정 (3G)
+            nuReg.setOpenSvcIndCd("03");
             applyMapper.updateMsfRequestOsst(nuReg);
 
             // NU2: 번호 예약 (3초 대기)
@@ -350,8 +344,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             MpOsstSimpleVO nu2Vo = mplatFormSvc.sendOsstService(nu2Param, MplatFormSvc.EVENT_CODE_NU2);
 
             if (nu2Vo.isSuccess()) {
-                // prgrStatCd=NU2 업데이트
-                DataSharingOsstDto nu2Upd = new DataSharingOsstDto();
+                SvcChgDataSharingOsstDto nu2Upd = new SvcChgDataSharingOsstDto();
                 nu2Upd.setRequestKey(req.getRequestKey());
                 nu2Upd.setPrgrStatCd(MplatFormSvc.EVENT_CODE_NU2);
                 nu2Upd.setRsltCd(nu2Vo.getRsltCd());
@@ -359,18 +352,18 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
 
                 result.put("success", true);
                 result.put("tlphNo",  selected.getTlphNo());
-                logger.info("[DataSharingApply][Step3] NU2 번호예약 완료: tlphNo={}", selected.getTlphNo());
+                logger.info("[SvcChgDataSharingApply][Step3] NU2 번호예약 완료: tlphNo={}", selected.getTlphNo());
             } else {
                 result.put("success",     false);
                 result.put("RESULT_CODE", "4001");
                 result.put("EVENT_CODE",  MplatFormSvc.EVENT_CODE_NU2);
                 result.put("ERROR_MSG",   nu2Vo.getResultCode());
                 result.put("message",     nu2Vo.getSvcMsg());
-                logger.warn("[DataSharingApply][Step3] NU2 실패: {}", nu2Vo.getSvcMsg());
+                logger.warn("[SvcChgDataSharingApply][Step3] NU2 실패: {}", nu2Vo.getSvcMsg());
             }
 
         } catch (Exception e) {
-            logger.error("[DataSharingApply][Step3] 오류: {}", e.getMessage(), e);
+            logger.error("[SvcChgDataSharingApply][Step3] 오류: {}", e.getMessage(), e);
             result.put("success", false);
             result.put("message", "번호조회/예약 중 오류가 발생했습니다.");
         }
@@ -382,7 +375,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
     // ASIS: saveDataSharingStep3
     // ─────────────────────────────────────────────────────────────────────
     @Override
-    public Map<String, Object> step4(DataSharingApplyReqDto req) {
+    public Map<String, Object> step4(SvcChgDataSharingApplyReqDto req) {
         Map<String, Object> result = new HashMap<>();
 
         if (req.getRequestKey() == null || isBlank(req.getResNo())) {
@@ -398,7 +391,7 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
                 result.put("message", "신청서를 찾을 수 없습니다.");
                 return result;
             }
-            DataSharingOsstDto osstRow = applyMapper.getMsfRequestOsst(req.getRequestKey());
+            SvcChgDataSharingOsstDto osstRow = applyMapper.getMsfRequestOsst(req.getRequestKey());
             if (osstRow == null) {
                 result.put("success", false);
                 result.put("message", "OSST 레코드를 찾을 수 없습니다.");
@@ -409,7 +402,6 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             String custId           = nvl(req.getCustId(), "");
             String billAcntNo       = nvl(req.getBillAcntNo(), "");
 
-            // 3초 대기 후 OP0 호출
             sleepSafe(3000);
 
             Map<String, String> op0Param = new HashMap<>();
@@ -421,15 +413,13 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
             MpOsstSimpleVO op0Vo = mplatFormSvc.sendOsstService(op0Param, MplatFormSvc.EVENT_CODE_OP0);
 
             if (op0Vo.isSuccess()) {
-                // MSF_REQUEST UPDATE — 개통번호 저장, 처리완료 상태
                 Map<String, Object> reqUpd = new HashMap<>();
                 reqUpd.put("requestKey", req.getRequestKey());
                 reqUpd.put("openNo",     osstRow.getTlphNo());
-                reqUpd.put("proCd",      "CP");  // 처리완료
+                reqUpd.put("proCd",      "CP");
                 applyMapper.updateMsfRequest(reqUpd);
 
-                // MSF_REQUEST_OSST UPDATE — OP0 완료
-                DataSharingOsstDto op0Upd = new DataSharingOsstDto();
+                SvcChgDataSharingOsstDto op0Upd = new SvcChgDataSharingOsstDto();
                 op0Upd.setRequestKey(req.getRequestKey());
                 op0Upd.setPrgrStatCd(MplatFormSvc.EVENT_CODE_OP0);
                 op0Upd.setRsltCd(MplatFormSvc.OSST_SUCCESS);
@@ -437,18 +427,18 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
 
                 result.put("success", true);
                 result.put("openNo",  osstRow.getTlphNo());
-                logger.info("[DataSharingApply][Step4] OP0 개통 완료: openNo={}", osstRow.getTlphNo());
+                logger.info("[SvcChgDataSharingApply][Step4] OP0 개통 완료: openNo={}", osstRow.getTlphNo());
             } else {
                 result.put("success",     false);
                 result.put("RESULT_CODE", "5001");
                 result.put("EVENT_CODE",  MplatFormSvc.EVENT_CODE_OP0);
                 result.put("ERROR_MSG",   op0Vo.getResultCode());
                 result.put("message",     op0Vo.getSvcMsg());
-                logger.warn("[DataSharingApply][Step4] OP0 실패: {}", op0Vo.getSvcMsg());
+                logger.warn("[SvcChgDataSharingApply][Step4] OP0 실패: {}", op0Vo.getSvcMsg());
             }
 
         } catch (Exception e) {
-            logger.error("[DataSharingApply][Step4] 오류: {}", e.getMessage(), e);
+            logger.error("[SvcChgDataSharingApply][Step4] 오류: {}", e.getMessage(), e);
             result.put("success", false);
             result.put("message", "개통 처리 중 오류가 발생했습니다.");
         }
@@ -459,10 +449,6 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
     // 내부 유틸리티
     // ─────────────────────────────────────────────────────────────────────
 
-    /**
-     * NU1 번호조회 — ASIS fnSearchNumber 내부 로직.
-     * reqWantNumber(끝번호 or 중간번호 or Random 4자리) 로 조회.
-     */
     private MpOsstPhoneNoVO.PhoneNoItem searchPhoneNo(
             String resNo, String prntsContractNo, String custId, String reqWantNumber) {
         Map<String, String> nu1Param = new HashMap<>();
@@ -479,7 +465,6 @@ public class DataSharingApplySvcImpl implements DataSharingApplySvc {
         return null;
     }
 
-    /** Random 4자리 숫자 문자열 생성 */
     private String randomFourDigits() {
         try {
             SecureRandom random = SecureRandom.getInstance("SHA1PRNG");

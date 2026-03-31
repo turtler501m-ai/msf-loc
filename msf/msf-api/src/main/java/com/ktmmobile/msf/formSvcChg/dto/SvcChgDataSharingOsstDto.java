@@ -4,7 +4,7 @@ package com.ktmmobile.msf.formSvcChg.dto;
  * MSF_REQUEST_OSST 테이블 DTO.
  * ASIS McpRequestOsstDto 와 동일 구조. TOBE 컬럼명 기준.
  */
-public class DataSharingOsstDto {
+public class SvcChgDataSharingOsstDto {
 
     private Long   requestKey;       // REQUEST_KEY (PK)
     private String mvnoOrdNo;        // MVNO_ORD_NO

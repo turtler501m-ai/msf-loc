@@ -1,8 +1,8 @@
 package com.ktmmobile.msf.formSvcChg.controller;
 
-import com.ktmmobile.msf.formSvcChg.dto.DataSharingApplyReqDto;
-import com.ktmmobile.msf.formSvcChg.dto.DataSharingReqDto;
-import com.ktmmobile.msf.formSvcChg.service.DataSharingApplySvc;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingApplyReqDto;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingReqDto;
+import com.ktmmobile.msf.formSvcChg.service.SvcChgDataSharingApplySvc;
 import com.ktmmobile.msf.formSvcChg.service.SvcChgDataSharingSvc;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,10 +22,10 @@ import java.util.Map;
 public class SvcChgDataSharingController {
 
     private final SvcChgDataSharingSvc dataSharingSvc;
-    private final DataSharingApplySvc  applyDataSharingSvc;
+    private final SvcChgDataSharingApplySvc  applyDataSharingSvc;
 
     public SvcChgDataSharingController(SvcChgDataSharingSvc dataSharingSvc,
-                                       DataSharingApplySvc applyDataSharingSvc) {
+                                       SvcChgDataSharingApplySvc applyDataSharingSvc) {
         this.dataSharingSvc      = dataSharingSvc;
         this.applyDataSharingSvc = applyDataSharingSvc;
     }
@@ -35,7 +35,7 @@ public class SvcChgDataSharingController {
      * POST /api/v1/service-change/data-sharing/list
      */
     @PostMapping("/list")
-    public Map<String, Object> list(@RequestBody DataSharingReqDto req) {
+    public Map<String, Object> list(@RequestBody SvcChgDataSharingReqDto req) {
         return dataSharingSvc.list(req);
     }
 
@@ -44,7 +44,7 @@ public class SvcChgDataSharingController {
      * POST /api/v1/service-change/data-sharing/check
      */
     @PostMapping("/check")
-    public Map<String, Object> check(@RequestBody DataSharingReqDto req) {
+    public Map<String, Object> check(@RequestBody SvcChgDataSharingReqDto req) {
         return dataSharingSvc.check(req);
     }
 
@@ -53,7 +53,7 @@ public class SvcChgDataSharingController {
      * POST /api/v1/service-change/data-sharing/join
      */
     @PostMapping("/join")
-    public Map<String, Object> join(@RequestBody DataSharingReqDto req) {
+    public Map<String, Object> join(@RequestBody SvcChgDataSharingReqDto req) {
         return dataSharingSvc.join(req);
     }
 
@@ -62,7 +62,7 @@ public class SvcChgDataSharingController {
      * POST /api/v1/service-change/data-sharing/cancel
      */
     @PostMapping("/cancel")
-    public Map<String, Object> cancel(@RequestBody DataSharingReqDto req) {
+    public Map<String, Object> cancel(@RequestBody SvcChgDataSharingReqDto req) {
         return dataSharingSvc.cancel(req);
     }
 
@@ -74,7 +74,7 @@ public class SvcChgDataSharingController {
      * POST /api/v1/service-change/data-sharing/apply
      */
     @PostMapping("/apply")
-    public Map<String, Object> apply(@RequestBody DataSharingApplyReqDto req) {
+    public Map<String, Object> apply(@RequestBody SvcChgDataSharingApplyReqDto req) {
         return applyDataSharingSvc.apply(req);
     }
 
@@ -84,7 +84,7 @@ public class SvcChgDataSharingController {
      * POST /api/v1/service-change/data-sharing/apply/step1
      */
     @PostMapping("/apply/step1")
-    public Map<String, Object> step1(@RequestBody DataSharingApplyReqDto req) {
+    public Map<String, Object> step1(@RequestBody SvcChgDataSharingApplyReqDto req) {
         return applyDataSharingSvc.step1(req);
     }
 
@@ -94,7 +94,7 @@ public class SvcChgDataSharingController {
      * POST /api/v1/service-change/data-sharing/apply/step2
      */
     @PostMapping("/apply/step2")
-    public Map<String, Object> step2(@RequestBody DataSharingApplyReqDto req) {
+    public Map<String, Object> step2(@RequestBody SvcChgDataSharingApplyReqDto req) {
         return applyDataSharingSvc.step2(req);
     }
 
@@ -104,7 +104,7 @@ public class SvcChgDataSharingController {
      * POST /api/v1/service-change/data-sharing/apply/step3
      */
     @PostMapping("/apply/step3")
-    public Map<String, Object> step3(@RequestBody DataSharingApplyReqDto req) {
+    public Map<String, Object> step3(@RequestBody SvcChgDataSharingApplyReqDto req) {
         return applyDataSharingSvc.step3(req);
     }
 
@@ -114,7 +114,7 @@ public class SvcChgDataSharingController {
      * POST /api/v1/service-change/data-sharing/apply/step4
      */
     @PostMapping("/apply/step4")
-    public Map<String, Object> step4(@RequestBody DataSharingApplyReqDto req) {
+    public Map<String, Object> step4(@RequestBody SvcChgDataSharingApplyReqDto req) {
         return applyDataSharingSvc.step4(req);
     }
 }

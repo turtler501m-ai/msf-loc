@@ -6,7 +6,7 @@ import com.ktmmobile.msf.formComm.dto.SvcChgInfoDto;
  * 데이터쉐어링 요청 DTO (X69/X70/X71 공용).
  * join/cancel 시 opmdSvcNo 필수.
  */
-public class DataSharingReqDto extends SvcChgInfoDto {
+public class SvcChgDataSharingReqDto extends SvcChgInfoDto {
 
     /** 데이터쉐어링 서비스번호 (X70 가입/해지 시 필수). */
     private String opmdSvcNo;
