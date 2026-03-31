@@ -1,6 +1,7 @@
 package com.ktmmobile.msf.formOwnChg.mapper;
 
 import com.ktmmobile.msf.formOwnChg.dto.OwnChgCustReqInsertDto;
+import com.ktmmobile.msf.formOwnChg.dto.OwnChgSyncItemDto;
 import com.ktmmobile.msf.formOwnChg.dto.OwnChgTrnsInsertDto;
 import com.ktmmobile.msf.formOwnChg.dto.OwnChgTrnsfeInsertDto;
 import org.apache.ibatis.annotations.Mapper;
@@ -58,4 +59,20 @@ public interface OwnChgMapper {
 
     /** 명의변경 회선 조회 (ASIS MypageMapper.selectCntrListNmChg 대응) */
     List<Map<String, String>> selectCntrListNmChg(HashMap<String, String> map);
+
+    // ──── 배치 전용 ────
+
+    /**
+     * [배치] PROC_CD='RC'(접수) 상태인 명의변경 신청 목록 조회.
+     * 100건 단위 페이지 처리용 offset/limit 파라미터 지원.
+     */
+    List<OwnChgSyncItemDto> selectPendingOwnChgList(@Param("offset") int offset,
+                                                    @Param("limit") int limit);
+
+    /**
+     * [배치] 명의변경 완료(CP) 동기화 -- REQUEST_KEY 기준 PROC_CD 업데이트.
+     * 이미 CP인 건은 업데이트하지 않음 (이중 처리 방지).
+     */
+    int updateOwnChgProcCd(@Param("requestKey") Long requestKey,
+                           @Param("procCd") String procCd);
 }
