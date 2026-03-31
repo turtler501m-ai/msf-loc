@@ -98,6 +98,7 @@ const emit = defineEmits(['confirm', 'open-option'])
 const DEFAULT_AVAILABLE = [
   { id: 'tm_block', soc: 'NOSPAM4', name: '불법TM수신차단', fee: '무료', checked: false, hasOption: true },
   { id: 'num_theft', soc: 'STLPVTPHN', name: '번호도용 차단 서비스', fee: '무료', checked: false, hasOption: true },
+  { id: 'roaming', soc: 'PL2078760', name: '(신)로밍 하루종일 ON', fee: '일당 과금', checked: false, hasOption: true },
 ]
 
 const currentAdditions = ref([])

@@ -15,18 +15,21 @@
             v-model="agreed"
             type="checkbox"
             class="mt-1 rounded border-gray-300"
+            :disabled="saving"
           />
           <span class="text-sm">타 기관 정보 제공에 동의합니다. (필수)</span>
         </label>
-        <p v-if="!agreed && triedConfirm" class="text-sm text-red-600">
-          동의를 선택해 주세요.
-        </p>
+        <p v-if="!agreed && triedConfirm" class="text-sm text-red-600">동의를 선택해 주세요.</p>
+        <p v-if="saveError" class="text-sm text-red-600">{{ saveError }}</p>
+        <p v-if="saveSuccess" class="text-sm text-green-600">번호도용 차단 서비스가 신청되었습니다.</p>
       </div>
       <DialogFooter class="mt-4 gap-2 sm:gap-0">
         <DialogClose as-child>
-          <Button variant="outline">취소</Button>
+          <Button variant="outline" :disabled="saving">취소</Button>
         </DialogClose>
-        <Button @click="confirm">확인</Button>
+        <Button :disabled="saving" @click="confirm">
+          {{ saving ? '처리 중...' : '확인' }}
+        </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
@@ -48,18 +51,31 @@ const emit = defineEmits(['confirm'])
 
 const agreed = ref(false)
 const triedConfirm = ref(false)
+const saving = ref(false)
+const saveError = ref('')
+const saveSuccess = ref(false)
 
 function confirm() {
   triedConfirm.value = true
   if (!agreed.value) return
-  emit('confirm', { agreed: true })
-  isOpen.value = false
+  // ftrNewParam: KISA 동의여부 Y
+  emit('confirm', { agreed: true, ftrNewParam: 'Y' })
 }
 
+function setSaving(v) { saving.value = v }
+function setSaveError(msg) { saveError.value = msg || '' }
+function setSaveSuccess(v) { saveSuccess.value = !!v }
+function closePopup() { isOpen.value = false }
+
+defineExpose({ setSaving, setSaveError, setSaveSuccess, closePopup })
+
 watch(isOpen, (v) => {
-  if (!v) {
+  if (v) {
     agreed.value = false
     triedConfirm.value = false
+    saveError.value = ''
+    saveSuccess.value = false
+    saving.value = false
   }
 })
 </script>

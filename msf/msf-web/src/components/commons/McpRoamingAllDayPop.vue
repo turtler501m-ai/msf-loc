@@ -34,12 +34,16 @@
         </div>
         <p class="text-xs text-gray-500">시작일: 현재~2개월, 종료일: 현재~6개월</p>
         <p v-if="rangeError" class="text-sm text-red-600">{{ rangeError }}</p>
+        <p v-if="saveError" class="text-sm text-red-600">{{ saveError }}</p>
+        <p v-if="saveSuccess" class="text-sm text-green-600">로밍 하루종일 ON이 신청되었습니다.</p>
       </div>
       <DialogFooter class="mt-4 gap-2 sm:gap-0">
         <DialogClose as-child>
-          <Button variant="outline">취소</Button>
+          <Button variant="outline" :disabled="saving">취소</Button>
         </DialogClose>
-        <Button @click="confirm">확인</Button>
+        <Button :disabled="saving" @click="confirm">
+          {{ saving ? '처리 중...' : '확인' }}
+        </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
@@ -58,6 +62,10 @@ import Button from '@/components/ui/button/Button.vue'
 
 const isOpen = defineModel('open', { type: Boolean, default: false })
 const emit = defineEmits(['confirm'])
+
+const saving = ref(false)
+const saveError = ref('')
+const saveSuccess = ref(false)
 
 const hourOptions = Array.from({ length: 24 }, (_, i) => i)
 
@@ -95,16 +103,31 @@ function validateRange() {
   return true
 }
 
+/** yyyyMMddHH 형식으로 변환 (ASIS getRoamParam dateType=3 기준) */
+function toFtrDt(date, hour) {
+  return date.replace(/-/g, '') + String(hour).padStart(2, '0')
+}
+
 function confirm() {
   if (!validateRange()) return
+  const strtDt = toFtrDt(startDate.value, startHour.value)
+  const endDt = toFtrDt(endDate.value, endHour.value)
+  // ftrNewParam 형식: yyyyMMddHH:yyyyMMddHH (ASIS getRoamParam dateType=3)
   emit('confirm', {
     startDate: startDate.value,
     startHour: startHour.value,
     endDate: endDate.value,
     endHour: endHour.value,
+    ftrNewParam: `${strtDt}:${endDt}`,
   })
-  isOpen.value = false
 }
+
+function setSaving(v) { saving.value = v }
+function setSaveError(msg) { saveError.value = msg || '' }
+function setSaveSuccess(v) { saveSuccess.value = !!v }
+function closePopup() { isOpen.value = false }
+
+defineExpose({ setSaving, setSaveError, setSaveSuccess, closePopup })
 
 watch(isOpen, (v) => {
   if (v) {
@@ -113,6 +136,9 @@ watch(isOpen, (v) => {
     startHour.value = 0
     endHour.value = 23
     rangeError.value = ''
+    saveError.value = ''
+    saveSuccess.value = false
+    saving.value = false
   }
 })
 </script>

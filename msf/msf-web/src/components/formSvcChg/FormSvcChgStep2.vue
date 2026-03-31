@@ -592,8 +592,16 @@
       :initial-list="tmBlockInitialList"
       @confirm="onTmBlockConfirm"
     />
-    <McpNumberTheftBlockPop v-model:open="numberTheftBlockPopOpen" @confirm="onNumberTheftConfirm" />
-    <McpRoamingAllDayPop v-model:open="roamingPopOpen" @confirm="onRoamingConfirm" />
+    <McpNumberTheftBlockPop
+      ref="numberTheftBlockPopRef"
+      v-model:open="numberTheftBlockPopOpen"
+      @confirm="onNumberTheftConfirm"
+    />
+    <McpRoamingAllDayPop
+      ref="roamingPopRef"
+      v-model:open="roamingPopOpen"
+      @confirm="onRoamingConfirm"
+    />
     <McpNumberSearchPop v-model:open="numberSearchOpen" @confirm="onNumberSearchConfirm" />
   </div>
 </template>
@@ -692,7 +700,7 @@ const additionEditCurrentItems = computed(() =>
     fee: it.socRateValue || '',
     checked: true,
     noCancel: false,
-    hasOption: it.soc === 'NOSPAM4' || it.soc === 'STLPVTPHN',
+    hasOption: it.soc === 'NOSPAM4' || it.soc === 'STLPVTPHN' || it.soc === 'PL2078760',
     paramSbst: it.paramSbst,
   }))
 )
@@ -764,7 +772,9 @@ const tmBlockPopOpen = ref(false)
 const tmBlockPopRef = ref(null)
 const tmBlockInitialList = ref([])
 const numberTheftBlockPopOpen = ref(false)
+const numberTheftBlockPopRef = ref(null)
 const roamingPopOpen = ref(false)
+const roamingPopRef = ref(null)
 const additionConfirmed = ref(false)
 const additionChanged = ref(false)
 
@@ -1101,11 +1111,67 @@ async function onTmBlockConfirm(payload) {
     pop?.setSaving(false)
   }
 }
-function onNumberTheftConfirm() {
+async function onNumberTheftConfirm(payload) {
   productForm.value.numberTheftAgreed = true
+
+  const cust = formStore.customerForm || {}
+  const ctn = (cust.phone || '').replace(/\D/g, '')
+  if (!ctn) return
+
+  const pop = numberTheftBlockPopRef.value
+  pop?.setSaving(true)
+  pop?.setSaveError('')
+  pop?.setSaveSuccess(false)
+  try {
+    const res = await regSvcChgAjax({
+      ncn: cust.ncn || '',
+      ctn,
+      custId: cust.custId || '',
+      soc: 'STLPVTPHN',
+      ftrNewParam: payload?.ftrNewParam || 'Y',
+    })
+    if (res?.resultCode === '00' || res?.success !== false) {
+      pop?.setSaveSuccess(true)
+      setTimeout(() => pop?.closePopup(), 1200)
+    } else {
+      pop?.setSaveError(res?.message || '번호도용 차단 신청에 실패했습니다.')
+    }
+  } catch (e) {
+    pop?.setSaveError(e?.message || '번호도용 차단 신청 중 오류가 발생했습니다.')
+  } finally {
+    pop?.setSaving(false)
+  }
 }
-function onRoamingConfirm(payload) {
+async function onRoamingConfirm(payload) {
   if (payload) productForm.value.roamingPeriod = payload
+
+  const cust = formStore.customerForm || {}
+  const ctn = (cust.phone || '').replace(/\D/g, '')
+  if (!ctn || !payload?.ftrNewParam) return
+
+  const pop = roamingPopRef.value
+  pop?.setSaving(true)
+  pop?.setSaveError('')
+  pop?.setSaveSuccess(false)
+  try {
+    const res = await regSvcChgAjax({
+      ncn: cust.ncn || '',
+      ctn,
+      custId: cust.custId || '',
+      soc: 'PL2078760',
+      ftrNewParam: payload.ftrNewParam,
+    })
+    if (res?.resultCode === '00' || res?.success !== false) {
+      pop?.setSaveSuccess(true)
+      setTimeout(() => pop?.closePopup(), 1200)
+    } else {
+      pop?.setSaveError(res?.message || '로밍 하루종일 ON 신청에 실패했습니다.')
+    }
+  } catch (e) {
+    pop?.setSaveError(e?.message || '로밍 하루종일 ON 신청 중 오류가 발생했습니다.')
+  } finally {
+    pop?.setSaving(false)
+  }
 }
 function onNumberSearchConfirm(payload) {
   if (payload?.number) productForm.value.numChange = payload.number
