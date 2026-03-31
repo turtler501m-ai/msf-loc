@@ -13,12 +13,13 @@
             placeholder="010-1234-5678 또는 자리별 부분 입력"
             maxlength="20"
             class="flex-1 rounded border border-gray-300 px-3 py-2 text-sm"
+            :disabled="saving"
             @keydown.enter.prevent="addNumber"
           />
           <button
             type="button"
             class="px-4 py-2 rounded bg-teal-600 text-white text-sm whitespace-nowrap disabled:opacity-50"
-            :disabled="blockList.length >= 50"
+            :disabled="blockList.length >= 50 || saving"
             @click="addNumber"
           >
             번호추가
@@ -36,6 +37,7 @@
             <button
               type="button"
               class="text-red-600 hover:underline"
+              :disabled="saving"
               @click="removeNumber(idx)"
             >
               삭제
@@ -45,12 +47,16 @@
             등록된 번호가 없습니다.
           </li>
         </ul>
+        <p v-if="saveError" class="text-sm text-red-600">{{ saveError }}</p>
+        <p v-if="saveSuccess" class="text-sm text-green-600">차단 번호가 저장되었습니다.</p>
       </div>
       <DialogFooter class="mt-4 gap-2 sm:gap-0">
         <DialogClose as-child>
-          <Button variant="outline">취소</Button>
+          <Button variant="outline" :disabled="saving">취소</Button>
         </DialogClose>
-        <Button @click="confirm">확인</Button>
+        <Button :disabled="saving" @click="confirm">
+          {{ saving ? '저장 중...' : '확인' }}
+        </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
@@ -67,12 +73,20 @@ import DialogFooter from '@/components/ui/dialog/DialogFooter.vue'
 import DialogClose from '@/components/ui/dialog/DialogClose.vue'
 import Button from '@/components/ui/button/Button.vue'
 
+const props = defineProps({
+  /** X20 조회 결과의 NOSPAM4 paramSbst(공백 구분) 또는 기존 배열 */
+  initialList: { type: Array, default: () => [] },
+})
+
 const isOpen = defineModel('open', { type: Boolean, default: false })
 const emit = defineEmits(['confirm'])
 
 const newNumber = ref('')
 const blockList = ref([])
 const listError = ref('')
+const saving = ref(false)
+const saveError = ref('')
+const saveSuccess = ref(false)
 
 function validateNumber(num) {
   const t = num.replace(/\s/g, '').trim()
@@ -107,11 +121,25 @@ function removeNumber(idx) {
 
 function confirm() {
   emit('confirm', { blockList: [...blockList.value] })
-  isOpen.value = false
 }
 
+/** saving 상태는 부모가 제어 — 부모에서 setSaving(true/false) 가능하도록 expose */
+function setSaving(v) { saving.value = v }
+function setSaveError(msg) { saveError.value = msg || '' }
+function setSaveSuccess(v) { saveSuccess.value = !!v }
+function closePopup() { isOpen.value = false }
+
+defineExpose({ setSaving, setSaveError, setSaveSuccess, closePopup })
+
 watch(isOpen, (v) => {
-  if (!v) {
+  if (v) {
+    blockList.value = [...(props.initialList || [])]
+    newNumber.value = ''
+    listError.value = ''
+    saveError.value = ''
+    saveSuccess.value = false
+    saving.value = false
+  } else {
     newNumber.value = ''
     blockList.value = []
     listError.value = ''

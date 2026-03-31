@@ -582,10 +582,16 @@
 
     <McpAdditionEditPop
       v-model:open="additionEditOpen"
+      :current-items="additionEditCurrentItems"
       @confirm="onAdditionEditConfirm"
       @open-option="onAdditionOpenOption"
     />
-    <McpTmBlockPop v-model:open="tmBlockPopOpen" @confirm="onTmBlockConfirm" />
+    <McpTmBlockPop
+      ref="tmBlockPopRef"
+      v-model:open="tmBlockPopOpen"
+      :initial-list="tmBlockInitialList"
+      @confirm="onTmBlockConfirm"
+    />
     <McpNumberTheftBlockPop v-model:open="numberTheftBlockPopOpen" @confirm="onNumberTheftConfirm" />
     <McpRoamingAllDayPop v-model:open="roamingPopOpen" @confirm="onRoamingConfirm" />
     <McpNumberSearchPop v-model:open="numberSearchOpen" @confirm="onNumberSearchConfirm" />
@@ -599,6 +605,7 @@ import {
   getCurrentAddition,
   regAddition,
   cancelAddition,
+  regSvcChgAjax,
   getFarPriceList,
   checkCombineSelf,
   regCombineSelf,
@@ -676,6 +683,20 @@ const freeAdditionItems = computed(() => {
   })
 })
 
+// X20 결과를 McpAdditionEditPop의 currentItems 형식으로 변환
+const additionEditCurrentItems = computed(() =>
+  (currentAdditionItems.value || []).map((it) => ({
+    id: it.soc || it.prodHstSeq,
+    soc: it.soc,
+    name: it.socDescription || it.soc,
+    fee: it.socRateValue || '',
+    checked: true,
+    noCancel: false,
+    hasOption: it.soc === 'NOSPAM4' || it.soc === 'STLPVTPHN',
+    paramSbst: it.paramSbst,
+  }))
+)
+
 // ── 무선데이터차단 상태 ────────────────────────────────────
 const wirelessBlockConfirmed = ref(false)
 const wirelessCheckLoading = ref(false)
@@ -740,6 +761,8 @@ const infoLimitConfirmed = ref(false)
 // ── 부가서비스 상태 ────────────────────────────────────────
 const additionEditOpen = ref(false)
 const tmBlockPopOpen = ref(false)
+const tmBlockPopRef = ref(null)
+const tmBlockInitialList = ref([])
 const numberTheftBlockPopOpen = ref(false)
 const roamingPopOpen = ref(false)
 const additionConfirmed = ref(false)
@@ -1031,12 +1054,52 @@ async function onAnySoloReg() {
 function onAdditionOpenOption({ item }) {
   additionEditOpen.value = false
   const id = item?.id || ''
-  if (id === 'tm_block') tmBlockPopOpen.value = true
-  else if (id === 'num_theft') numberTheftBlockPopOpen.value = true
-  else if (id === 'roaming') roamingPopOpen.value = true
+  if (id === 'tm_block') {
+    // NOSPAM4 현재 차단 번호 로드 (X20 paramSbst: 공백 구분 문자열)
+    const nospamItem = (currentAdditionItems.value || []).find((it) => it.soc === 'NOSPAM4')
+    const paramSbst = nospamItem?.paramSbst || ''
+    tmBlockInitialList.value = paramSbst
+      ? paramSbst.split(/\s+/).filter(Boolean)
+      : []
+    tmBlockPopOpen.value = true
+  } else if (id === 'num_theft') {
+    numberTheftBlockPopOpen.value = true
+  } else if (id === 'roaming') {
+    roamingPopOpen.value = true
+  }
 }
-function onTmBlockConfirm(payload) {
-  if (payload?.blockList?.length) productForm.value.tmBlockList = payload.blockList
+async function onTmBlockConfirm(payload) {
+  const blockList = payload?.blockList || []
+  productForm.value.tmBlockList = blockList
+
+  const cust = formStore.customerForm || {}
+  const ctn = (cust.phone || '').replace(/\D/g, '')
+  if (!ctn) return
+
+  const pop = tmBlockPopRef.value
+  pop?.setSaving(true)
+  pop?.setSaveError('')
+  pop?.setSaveSuccess(false)
+  try {
+    const ftrNewParam = blockList.join(' ')
+    const res = await regSvcChgAjax({
+      ncn: cust.ncn || '',
+      ctn,
+      custId: cust.custId || '',
+      soc: 'NOSPAM4',
+      ftrNewParam,
+    })
+    if (res?.resultCode === '00' || res?.success !== false) {
+      pop?.setSaveSuccess(true)
+      setTimeout(() => pop?.closePopup(), 1200)
+    } else {
+      pop?.setSaveError(res?.message || '차단 번호 저장에 실패했습니다.')
+    }
+  } catch (e) {
+    pop?.setSaveError(e?.message || '차단 번호 저장 중 오류가 발생했습니다.')
+  } finally {
+    pop?.setSaving(false)
+  }
 }
 function onNumberTheftConfirm() {
   productForm.value.numberTheftAgreed = true

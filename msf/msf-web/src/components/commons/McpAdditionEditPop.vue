@@ -79,18 +79,29 @@ import DialogFooter from '@/components/ui/dialog/DialogFooter.vue'
 import DialogClose from '@/components/ui/dialog/DialogClose.vue'
 import Button from '@/components/ui/button/Button.vue'
 
+const props = defineProps({
+  /**
+   * X20 조회 결과: 현재 가입 중인 부가서비스 목록.
+   * 형식: [{ id, name, fee, checked, noCancel, hasOption, soc }]
+   */
+  currentItems: { type: Array, default: null },
+  /**
+   * 가입 가능한 부가서비스 목록.
+   * null이면 기본 목록(불법TM·번호도용·로밍) 표시.
+   */
+  availableItems: { type: Array, default: null },
+})
+
 const isOpen = defineModel('open', { type: Boolean, default: false })
 const emit = defineEmits(['confirm', 'open-option'])
 
-// TODO: X20 조회 결과로 채움. 현재 목업
-const currentAdditions = ref([
-  { id: 'mock1', name: '부가 A (가입중)', fee: '1,000원/월', checked: true, noCancel: false },
-])
-const availableAdditions = ref([
-  { id: 'tm_block', name: '불법TM수신차단', fee: '무료', checked: false, hasOption: true },
-  { id: 'num_theft', name: '번호도용 차단 서비스', fee: '무료', checked: false, hasOption: true },
-  { id: 'roaming', name: '(신)로밍 하루종일 ON', fee: '일당 과금', checked: false, hasOption: true },
-])
+const DEFAULT_AVAILABLE = [
+  { id: 'tm_block', soc: 'NOSPAM4', name: '불법TM수신차단', fee: '무료', checked: false, hasOption: true },
+  { id: 'num_theft', soc: 'STLPVTPHN', name: '번호도용 차단 서비스', fee: '무료', checked: false, hasOption: true },
+]
+
+const currentAdditions = ref([])
+const availableAdditions = ref([])
 
 function openOption(item) {
   emit('open-option', { item })
@@ -105,7 +116,13 @@ function confirm() {
 
 watch(isOpen, (v) => {
   if (v) {
-    // TODO: 열릴 때 getCurrentAddition() 호출해 목록 갱신
+    // props로 전달된 실제 X20 데이터 사용, 없으면 기본값
+    currentAdditions.value = props.currentItems
+      ? props.currentItems.map((it) => ({ ...it, checked: it.checked !== false }))
+      : []
+    availableAdditions.value = props.availableItems
+      ? props.availableItems.map((it) => ({ ...it, checked: false }))
+      : DEFAULT_AVAILABLE.map((it) => ({ ...it, checked: false }))
   }
 })
 </script>

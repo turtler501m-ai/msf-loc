@@ -198,6 +198,28 @@ export async function preCheckAddition(params) {
   return msfPost('/v1/addition/pre-check', params)
 }
 
+// ----- 부가서비스 신청 팝업 분기 / 직접 신청 (5007-04/06) -----
+
+/**
+ * 5007-04/07/08/09 addSvcViewPop — 부가서비스 신청 팝업 분기 정보 조회.
+ * SOC에 따라 popType(TM/STEAL/GENERAL 등)과 부가 정보(요금·명칭) 반환.
+ * @param {{ ncn: string, ctn: string, custId?: string, soc: string }} params
+ * @returns {{ popType: string, rateAdsvcCd: string, baseVatAmt: string, rateAdsvcNm: string }}
+ */
+export async function getAddSvcViewPop(params) {
+  return msfPost('/v1/addition/add-svc-view-pop', params)
+}
+
+/**
+ * 5007-06 regSvcChgAjax — 부가서비스 직접 신청 (Y25).
+ * 불법TM차단(NOSPAM4) 등 상품파람정보가 있는 부가서비스 신청 시 사용.
+ * @param {{ ncn: string, ctn: string, custId?: string, soc: string, ftrNewParam?: string }} params
+ * @returns {{ resultCode: string, message: string }}
+ */
+export async function regSvcChgAjax(params) {
+  return msfPost('/v1/addition/reg-svc-chg', params)
+}
+
 // ----- 서비스변경 통합 신청 (apply) -----
 
 /**
