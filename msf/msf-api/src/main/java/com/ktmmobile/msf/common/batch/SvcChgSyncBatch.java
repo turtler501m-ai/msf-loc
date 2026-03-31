@@ -36,9 +36,9 @@ import java.util.List;
  * 설계 참조: Z10.서비스해지처리_연동설계_v1.0 4.4절
  */
 @Component
-public class ProcSyncBatch {
+public class SvcChgSyncBatch {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProcSyncBatch.class);
+    private static final Logger logger = LoggerFactory.getLogger(SvcChgSyncBatch.class);
 
     /** 해지 완료 계약상태 코드 (X01 응답 acntStat) */
     private static final String ACNT_STAT_CANCEL = "C";
@@ -56,9 +56,9 @@ public class ProcSyncBatch {
     @Value("${SERVER_NAME:}")
     private String serverName;
 
-    public ProcSyncBatch(SvcCnclMapper svcCnclMapper,
-                         OwnChgMapper ownChgMapper,
-                         MplatFormSvc mplatFormSvc) {
+    public SvcChgSyncBatch(SvcCnclMapper svcCnclMapper,
+                           OwnChgMapper ownChgMapper,
+                           MplatFormSvc mplatFormSvc) {
         this.svcCnclMapper = svcCnclMapper;
         this.ownChgMapper = ownChgMapper;
         this.mplatFormSvc = mplatFormSvc;
@@ -71,14 +71,14 @@ public class ProcSyncBatch {
     @Scheduled(cron = "0 0 */6 * * *")
     public void syncProcResult() {
         if ("LOCAL".equals(serverName)) {
-            logger.debug("[ProcSyncBatch] LOCAL 모드 -- 배치 스킵");
+            logger.debug("[SvcChgSyncBatch] LOCAL 모드 -- 배치 스킵");
             return;
         }
 
-        logger.info("[ProcSyncBatch] 시작");
+        logger.info("[SvcChgSyncBatch] 시작");
         syncCancelResult();
         syncOwnChgResult();
-        logger.info("[ProcSyncBatch] 완료");
+        logger.info("[SvcChgSyncBatch] 완료");
     }
 
     /**
@@ -86,7 +86,7 @@ public class ProcSyncBatch {
      * ACNT_STAT='C' 인 경우만 PROC_CD='CP' 업데이트.
      */
     private void syncCancelResult() {
-        logger.info("[ProcSyncBatch] 서비스해지 동기화 시작");
+        logger.info("[SvcChgSyncBatch] 서비스해지 동기화 시작");
         int totalProcessed = 0;
         int totalCompleted = 0;
         int totalSkipped = 0;
@@ -107,17 +107,17 @@ public class ProcSyncBatch {
                         int updated = svcCnclMapper.updateSyncProcCd(item.getRequestKey(), PROC_CP);
                         if (updated > 0) {
                             totalCompleted++;
-                            logger.info("[ProcSyncBatch][해지] 완료: requestKey={}, ctn={}",
+                            logger.info("[SvcChgSyncBatch][해지] 완료: requestKey={}, ctn={}",
                                 item.getRequestKey(), maskCtn(item.getCancelMobileNo()));
                         }
                     } else {
                         totalSkipped++;
-                        logger.debug("[ProcSyncBatch][해지] 스킵: requestKey={}, acntStat={}",
+                        logger.debug("[SvcChgSyncBatch][해지] 스킵: requestKey={}, acntStat={}",
                             item.getRequestKey(), acntStat);
                     }
                 } catch (Exception e) {
                     totalError++;
-                    logger.warn("[ProcSyncBatch][해지] 오류 -- requestKey={}, ncn={}, msg={}",
+                    logger.warn("[SvcChgSyncBatch][해지] 오류 -- requestKey={}, ncn={}, msg={}",
                         item.getRequestKey(), item.getContractNum(), e.getMessage());
                 }
             }
@@ -125,7 +125,7 @@ public class ProcSyncBatch {
 
         } while (page.size() == PAGE_SIZE);
 
-        logger.info("[ProcSyncBatch] 서비스해지 동기화 완료 -- 처리={}, 동기화={}, 스킵={}, 오류={}",
+        logger.info("[SvcChgSyncBatch] 서비스해지 동기화 완료 -- 처리={}, 동기화={}, 스킵={}, 오류={}",
             totalProcessed, totalCompleted, totalSkipped, totalError);
     }
 
@@ -134,7 +134,7 @@ public class ProcSyncBatch {
      * MP0 성공 시 PROC_CD='CP' 업데이트.
      */
     private void syncOwnChgResult() {
-        logger.info("[ProcSyncBatch] 명의변경 동기화 시작");
+        logger.info("[SvcChgSyncBatch] 명의변경 동기화 시작");
         int totalProcessed = 0;
         int totalCompleted = 0;
         int totalSkipped = 0;
@@ -152,12 +152,12 @@ public class ProcSyncBatch {
                 try {
                     if (item.getContractNum() == null || item.getContractNum().isEmpty()) {
                         totalSkipped++;
-                        logger.warn("[ProcSyncBatch][명의변경] contractNum 없음 -- requestKey={}", item.getRequestKey());
+                        logger.warn("[SvcChgSyncBatch][명의변경] contractNum 없음 -- requestKey={}", item.getRequestKey());
                         continue;
                     }
                     if (item.getMcnResNo() == null || item.getMcnResNo().isEmpty()) {
                         totalSkipped++;
-                        logger.warn("[ProcSyncBatch][명의변경] mcnResNo 없음 -- requestKey={}", item.getRequestKey());
+                        logger.warn("[SvcChgSyncBatch][명의변경] mcnResNo 없음 -- requestKey={}", item.getRequestKey());
                         continue;
                     }
 
@@ -173,17 +173,17 @@ public class ProcSyncBatch {
                         int updated = ownChgMapper.updateOwnChgProcCd(item.getRequestKey(), PROC_CP);
                         if (updated > 0) {
                             totalCompleted++;
-                            logger.info("[ProcSyncBatch][명의변경] 완료: requestKey={}, mcnResNo={}, ctn={}",
+                            logger.info("[SvcChgSyncBatch][명의변경] 완료: requestKey={}, mcnResNo={}, ctn={}",
                                 item.getRequestKey(), item.getMcnResNo(), maskCtn(item.getMobileNo()));
                         }
                     } else {
                         totalSkipped++;
-                        logger.debug("[ProcSyncBatch][명의변경] 스킵 (MP0 미완료): requestKey={}, resultCode={}",
+                        logger.debug("[SvcChgSyncBatch][명의변경] 스킵 (MP0 미완료): requestKey={}, resultCode={}",
                             item.getRequestKey(), mp0Vo.getResultCode());
                     }
                 } catch (Exception e) {
                     totalError++;
-                    logger.warn("[ProcSyncBatch][명의변경] 오류 -- requestKey={}, ncn={}, msg={}",
+                    logger.warn("[SvcChgSyncBatch][명의변경] 오류 -- requestKey={}, ncn={}, msg={}",
                         item.getRequestKey(), item.getContractNum(), e.getMessage());
                 }
             }
@@ -191,7 +191,7 @@ public class ProcSyncBatch {
 
         } while (page.size() == PAGE_SIZE);
 
-        logger.info("[ProcSyncBatch] 명의변경 동기화 완료 -- 처리={}, 동기화={}, 스킵={}, 오류={}",
+        logger.info("[SvcChgSyncBatch] 명의변경 동기화 완료 -- 처리={}, 동기화={}, 스킵={}, 오류={}",
             totalProcessed, totalCompleted, totalSkipped, totalError);
     }
 
@@ -203,12 +203,12 @@ public class ProcSyncBatch {
         String ncn = item.getContractNum();
         String ctn = item.getCancelMobileNo();
         if (ncn == null || ncn.isEmpty()) {
-            logger.warn("[ProcSyncBatch][해지] contractNum 없음 -- requestKey={}", item.getRequestKey());
+            logger.warn("[SvcChgSyncBatch][해지] contractNum 없음 -- requestKey={}", item.getRequestKey());
             return null;
         }
         MpPerMyktfInfoVO vo = mplatFormSvc.perMyktfInfo(ncn, ctn, null);
         if (!vo.isSuccess()) {
-            logger.warn("[ProcSyncBatch][해지] X01 실패 -- requestKey={}, globalNo={}",
+            logger.warn("[SvcChgSyncBatch][해지] X01 실패 -- requestKey={}, globalNo={}",
                 item.getRequestKey(), vo.getGlobalNo());
             return null;
         }
