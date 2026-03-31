@@ -2,7 +2,7 @@ package com.ktmmobile.msf.formSvcChg.service;
 
 import com.ktmmobile.msf.common.mplatform.MplatFormSvc;
 import com.ktmmobile.msf.common.mplatform.vo.MpDataSharingResVO;
-import com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingReqDto;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgShareDataReqDto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,16 +17,16 @@ import java.util.Map;
  * ASIS MyShareDataSvcImpl.mosharingList(X71), moscDataSharingChk(X69), moscDataSharingSave(X70) 와 동일.
  */
 @Service
-public class SvcChgDataSharingSvcImpl implements SvcChgDataSharingSvc {
+public class SvcChgShareDataSvcImpl implements SvcChgShareDataSvc {
 
-    private static final Logger logger = LoggerFactory.getLogger(SvcChgDataSharingSvcImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(SvcChgShareDataSvcImpl.class);
 
     @Autowired
     private MplatFormSvc mplatFormSvc;
 
     /** X71 데이터쉐어링 결합 중인 대상 조회. */
     @Override
-    public Map<String, Object> list(SvcChgDataSharingReqDto req) {
+    public Map<String, Object> list(SvcChgShareDataReqDto req) {
         Map<String, Object> result = new HashMap<>();
         if (req == null || isBlank(req.getCtn())) {
             result.put("success", false);
@@ -51,7 +51,7 @@ public class SvcChgDataSharingSvcImpl implements SvcChgDataSharingSvc {
 
     /** X69 데이터쉐어링 사전체크. */
     @Override
-    public Map<String, Object> check(SvcChgDataSharingReqDto req) {
+    public Map<String, Object> check(SvcChgShareDataReqDto req) {
         Map<String, Object> result = new HashMap<>();
         if (req == null || isBlank(req.getCtn())) {
             result.put("success", false);
@@ -76,17 +76,17 @@ public class SvcChgDataSharingSvcImpl implements SvcChgDataSharingSvc {
 
     /** X70 데이터쉐어링 가입 (A). */
     @Override
-    public Map<String, Object> join(SvcChgDataSharingReqDto req) {
+    public Map<String, Object> join(SvcChgShareDataReqDto req) {
         return dataSharingSave(req, "A");
     }
 
     /** X70 데이터쉐어링 해지 (C). */
     @Override
-    public Map<String, Object> cancel(SvcChgDataSharingReqDto req) {
+    public Map<String, Object> cancel(SvcChgShareDataReqDto req) {
         return dataSharingSave(req, "C");
     }
 
-    private Map<String, Object> dataSharingSave(SvcChgDataSharingReqDto req, String workDiv) {
+    private Map<String, Object> dataSharingSave(SvcChgShareDataReqDto req, String workDiv) {
         Map<String, Object> result = new HashMap<>();
         if (req == null || isBlank(req.getCtn())) {
             result.put("success", false);

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.ktmmobile.msf.formSvcChg.mapper.SvcChgDataSharingApplyMapper">
+<mapper namespace="com.ktmmobile.msf.formSvcChg.mapper.SvcChgShareDataApplyMapper">
 
     <!--
         데이터쉐어링 신규개통 신청서 저장.
@@ -69,7 +69,7 @@
         MSF_REQUEST_OSST PK = REQUEST_KEY (단일 레코드 per 신청서).
     -->
     <insert id="insertMsfRequestOsst"
-            parameterType="com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingOsstDto">
+            parameterType="com.ktmmobile.msf.formSvcChg.dto.SvcChgShareDataOsstDto">
         INSERT INTO MSF_REQUEST_OSST (
             REQUEST_KEY,
             MVNO_ORD_NO,
@@ -91,7 +91,7 @@
         NULL 이 아닌 필드만 SET.
     -->
     <update id="updateMsfRequestOsst"
-            parameterType="com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingOsstDto">
+            parameterType="com.ktmmobile.msf.formSvcChg.dto.SvcChgShareDataOsstDto">
         UPDATE MSF_REQUEST_OSST
         SET AMD_DT = NOW()
         <if test="prgrStatCd != null">, PRGR_STAT_CD    = #{prgrStatCd}</if>
@@ -114,7 +114,7 @@
     -->
     <select id="getMsfRequestOsst"
             parameterType="long"
-            resultType="com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingOsstDto">
+            resultType="com.ktmmobile.msf.formSvcChg.dto.SvcChgShareDataOsstDto">
         SELECT
             REQUEST_KEY        AS requestKey,
             MVNO_ORD_NO        AS mvnoOrdNo,

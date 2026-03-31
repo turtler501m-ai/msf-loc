@@ -5,7 +5,7 @@ package com.ktmmobile.msf.formSvcChg.dto;
  * ASIS AppformReqDto 중 데이터쉐어링에 필요한 필드만 포함.
  * 세션 없음(stateless) — requestKey/resNo 를 클라이언트가 매 요청에 전달.
  */
-public class SvcChgDataSharingApplyReqDto {
+public class SvcChgShareDataApplyReqDto {
 
     // ─── 공통 식별 ───────────────────────────────────────────────
     /** 모회선 계약번호 (NCN, 9자리). ASIS contractNum 동일. */

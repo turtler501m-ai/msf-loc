@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.formSvcChg.mapper;
 
-import com.ktmmobile.msf.formSvcChg.dto.SvcChgDataSharingOsstDto;
+import com.ktmmobile.msf.formSvcChg.dto.SvcChgShareDataOsstDto;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.Map;
@@ -10,7 +10,7 @@ import java.util.Map;
  * ASIS AppformMapper 의 데이터쉐어링 관련 SQL 을 TOBE 테이블(MSF_*) 기준으로 이식.
  */
 @Mapper
-public interface SvcChgDataSharingApplyMapper {
+public interface SvcChgShareDataApplyMapper {
 
     /**
      * MSF_REQUEST INSERT — 데이터쉐어링 신규개통 신청서 저장.
@@ -22,17 +22,17 @@ public interface SvcChgDataSharingApplyMapper {
     /**
      * MSF_REQUEST_OSST INSERT — OSST 연동 초기 레코드 생성.
      */
-    void insertMsfRequestOsst(SvcChgDataSharingOsstDto dto);
+    void insertMsfRequestOsst(SvcChgShareDataOsstDto dto);
 
     /**
      * MSF_REQUEST_OSST UPDATE — 단계별 진행상태·결과 업데이트.
      */
-    void updateMsfRequestOsst(SvcChgDataSharingOsstDto dto);
+    void updateMsfRequestOsst(SvcChgShareDataOsstDto dto);
 
     /**
      * MSF_REQUEST_OSST SELECT — requestKey 로 OSST 정보 조회.
      */
-    SvcChgDataSharingOsstDto getMsfRequestOsst(Long requestKey);
+    SvcChgShareDataOsstDto getMsfRequestOsst(Long requestKey);
 
     /**
      * MSF_REQUEST SELECT — requestKey 로 신청서 조회.
