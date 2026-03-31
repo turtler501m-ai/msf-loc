@@ -626,9 +626,9 @@ import {
   preCheckAddition,
 } from '@/api/serviceChange'
 import McpAdditionEditPop from '@/components/commons/McpAdditionEditPop.vue'
-import McpTmBlockPop from '@/components/commons/McpTmBlockPop.vue'
-import McpNumberTheftBlockPop from '@/components/commons/McpNumberTheftBlockPop.vue'
-import McpRoamingAllDayPop from '@/components/commons/McpRoamingAllDayPop.vue'
+import McpTmBlockPop from '@/components/formComm/MsfTmBlockPop.vue'
+import McpNumberTheftBlockPop from '@/components/formComm/MsfNumberTheftBlockPop.vue'
+import McpRoamingAllDayPop from '@/components/formComm/MsfRoamingAllDayPop.vue'
 import McpNumberSearchPop from '@/components/commons/McpNumberSearchPop.vue'
 
 defineProps({ isActive: Boolean })
