@@ -136,4 +136,33 @@
            AND PROC_CD != 'CP'
     </update>
 
+    <!--
+        [배치] PROC_CD='RC'(접수) 상태 해지 신청 목록 조회.
+        100건 단위 페이지 처리. REQUEST_KEY 오름차순 정렬.
+    -->
+    <select id="selectPendingCancelList"
+            resultType="com.ktmmobile.msf.formSvcCncl.dto.SvcCnclSyncItemDto">
+        SELECT
+            REQUEST_KEY         AS requestKey,
+            CANCEL_MOBILE_NO    AS cancelMobileNo,
+            CONTRACT_NUM        AS contractNum,
+            PROC_CD             AS procCd,
+            RES_NO              AS mcpCustReqSeq
+        FROM MSF_REQUEST_CANCEL
+        WHERE PROC_CD = 'RC'
+        ORDER BY REQUEST_KEY ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!--
+        [배치] REQUEST_KEY 기준 PROC_CD 동기화 업데이트.
+        이미 CP인 건은 이중 업데이트 방지.
+    -->
+    <update id="updateSyncProcCd">
+        UPDATE MSF_REQUEST_CANCEL
+           SET PROC_CD = #{procCd}
+         WHERE REQUEST_KEY = #{requestKey}
+           AND PROC_CD     = 'RC'
+    </update>
+
 </mapper>
