@@ -8,29 +8,32 @@ import java.util.List;
 
 /**
  * X69/X71 데이터쉐어링 응답 VO.
+ * ASIS MoscDataSharingResDto 와 동일 구조.
+ * outDto > outDataSharingDto 목록 파싱.
  */
 public class MpDataSharingResVO extends CommonXmlVO {
 
-    private List<DataSharingItem> items;
+    private List<Item> items;
 
     @Override
     protected void parse() {
         items = new ArrayList<>();
         if (body == null) return;
-        List<Element> list = XmlParseUtil.getChildElementList(body, "outDataSharingDto");
-        for (Element item : list) {
-            DataSharingItem dto = new DataSharingItem();
-            dto.setRsltInd(XmlParseUtil.getChildValue(item, "rsltInd"));
-            dto.setSvcNo(XmlParseUtil.getChildValue(item, "svcNo"));
-            dto.setEfctStDt(XmlParseUtil.getChildValue(item, "efctStDt"));
-            dto.setRsltMsg(XmlParseUtil.getChildValue(item, "rsltMsg"));
-            items.add(dto);
+        List<Element> dtos = XmlParseUtil.getChildElementList(body, "outDataSharingDto");
+        for (Element el : dtos) {
+            Item item = new Item();
+            item.setRsltInd(XmlParseUtil.getChildValue(el, "rsltInd"));
+            item.setSvcNo(XmlParseUtil.getChildValue(el, "svcNo"));
+            item.setEfctStDt(XmlParseUtil.getChildValue(el, "efctStDt"));
+            item.setRsltMsg(XmlParseUtil.getChildValue(el, "rsltMsg"));
+            items.add(item);
         }
     }
 
-    public List<DataSharingItem> getItems() { return items; }
+    public List<Item> getItems() { return items; }
+    public void setItems(List<Item> items) { this.items = items; }
 
-    public static class DataSharingItem {
+    public static class Item {
         private String rsltInd;
         private String svcNo;
         private String efctStDt;

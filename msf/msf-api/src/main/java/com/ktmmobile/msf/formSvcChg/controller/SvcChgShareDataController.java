@@ -1,120 +1,67 @@
 package com.ktmmobile.msf.formSvcChg.controller;
 
-import com.ktmmobile.msf.formSvcChg.dto.SvcChgShareDataApplyReqDto;
 import com.ktmmobile.msf.formSvcChg.dto.SvcChgShareDataReqDto;
-import com.ktmmobile.msf.formSvcChg.service.SvcChgShareDataApplySvc;
 import com.ktmmobile.msf.formSvcChg.service.SvcChgShareDataSvc;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 /**
  * 데이터쉐어링 Controller.
- * ASIS AppformController.saveDataSharingSimple / MyShareDataController 역할.
- * - A. 기존 회선 쉐어링: list/check/join/cancel (X69/X70/X71)
- * - B. 신규 개통: apply/step1/step2/step3/step4 (PC0/ST1/NU1/NU2/OP0)
+ * ASIS MyShareDataController 역할 — X69/X70/X71 + 화면 데이터 조합.
+ * - dataSharingStep2   : Step2 화면 데이터 (X71 목록 + 개통가능시간)
+ * - isSimpleApplyObj   : 셀프개통 가능 시간 조회
+ * - dorReqSharingView  : 개통요청 뷰 데이터 조회
+ * - doinsertOpenRequestAjax : X69 사전체크 + X70 가입 처리
  */
 @RestController
 @RequestMapping("/api/v1/service-change/data-sharing")
 public class SvcChgShareDataController {
 
     private final SvcChgShareDataSvc dataSharingSvc;
-    private final SvcChgShareDataApplySvc  applyDataSharingSvc;
 
-    public SvcChgShareDataController(SvcChgShareDataSvc dataSharingSvc,
-                                       SvcChgShareDataApplySvc applyDataSharingSvc) {
-        this.dataSharingSvc      = dataSharingSvc;
-        this.applyDataSharingSvc = applyDataSharingSvc;
+    public SvcChgShareDataController(SvcChgShareDataSvc dataSharingSvc) {
+        this.dataSharingSvc = dataSharingSvc;
     }
 
     /**
-     * X71 데이터쉐어링 결합 중인 대상 조회.
-     * POST /api/v1/service-change/data-sharing/list
+     * Step2 화면 데이터 조합 (X71 결합목록 + 개통가능시간).
+     * ASIS MyShareDataController.dataSharingStep2() 와 동일.
+     * POST /api/v1/service-change/data-sharing/step2-info
      */
-    @PostMapping("/list")
-    public Map<String, Object> list(@RequestBody SvcChgShareDataReqDto req) {
-        return dataSharingSvc.list(req);
+    @PostMapping("/step2-info")
+    public Map<String, Object> dataSharingStep2(@RequestBody SvcChgShareDataReqDto req) {
+        return dataSharingSvc.dataSharingStep2(req);
     }
 
     /**
-     * X69 데이터쉐어링 사전체크 (가입 가능 여부).
-     * POST /api/v1/service-change/data-sharing/check
+     * 셀프개통 가능 시간 조회 (NAC: 08:00~21:50).
+     * ASIS AppformSvcImpl.isSimpleApplyObj() 와 동일.
+     * GET /api/v1/service-change/data-sharing/is-simple-apply-obj
      */
-    @PostMapping("/check")
-    public Map<String, Object> check(@RequestBody SvcChgShareDataReqDto req) {
-        return dataSharingSvc.check(req);
+    @GetMapping("/is-simple-apply-obj")
+    public Map<String, Object> isSimpleApplyObj() {
+        return dataSharingSvc.isSimpleApplyObj();
     }
 
     /**
-     * X70 데이터쉐어링 가입 (opmdWorkDivCd=A).
-     * POST /api/v1/service-change/data-sharing/join
+     * 개통요청 뷰 데이터 조회.
+     * ASIS MyShareDataController.dorReqSharingView() 와 동일.
+     * POST /api/v1/service-change/data-sharing/req-sharing-view
      */
-    @PostMapping("/join")
-    public Map<String, Object> join(@RequestBody SvcChgShareDataReqDto req) {
-        return dataSharingSvc.join(req);
+    @PostMapping("/req-sharing-view")
+    public Map<String, Object> dorReqSharingView(
+            @RequestParam(value = "contractNum") String contractNum) {
+        return dataSharingSvc.dorReqSharingView(contractNum);
     }
 
     /**
-     * X70 데이터쉐어링 해지 (opmdWorkDivCd=C).
-     * POST /api/v1/service-change/data-sharing/cancel
+     * 데이터쉐어링 개통 신청 (X69 사전체크 + X70 가입).
+     * ASIS MyShareDataController.doinsertOpenRequestAjax() 와 동일.
+     * POST /api/v1/service-change/data-sharing/insert-open-request
      */
-    @PostMapping("/cancel")
-    public Map<String, Object> cancel(@RequestBody SvcChgShareDataReqDto req) {
-        return dataSharingSvc.cancel(req);
-    }
-
-    // ─── B. 신규 개통 단계별 API ──────────────────────────────────────────
-
-    /**
-     * [Step0] 신청서 저장.
-     * ASIS: saveDataSharingSimpleAjax / saveDataSharingAjax → fnSetDataOfdataSharing → saveAppform
-     * POST /api/v1/service-change/data-sharing/apply
-     */
-    @PostMapping("/apply")
-    public Map<String, Object> apply(@RequestBody SvcChgShareDataApplyReqDto req) {
-        return applyDataSharingSvc.apply(req);
-    }
-
-    /**
-     * [Step1] PC0 사전체크 및 고객생성 (OSST).
-     * ASIS: saveDataSharingStep1Ajax
-     * POST /api/v1/service-change/data-sharing/apply/step1
-     */
-    @PostMapping("/apply/step1")
-    public Map<String, Object> step1(@RequestBody SvcChgShareDataApplyReqDto req) {
-        return applyDataSharingSvc.step1(req);
-    }
-
-    /**
-     * [Step2] PC2 폴링 + Y39 CI 조회.
-     * ASIS: conPreCheckAjax (ST1 폴링 + Y39)
-     * POST /api/v1/service-change/data-sharing/apply/step2
-     */
-    @PostMapping("/apply/step2")
-    public Map<String, Object> step2(@RequestBody SvcChgShareDataApplyReqDto req) {
-        return applyDataSharingSvc.step2(req);
-    }
-
-    /**
-     * [Step3] NU1 번호조회 + NU2 번호예약.
-     * ASIS: saveDataSharingStep2Ajax
-     * POST /api/v1/service-change/data-sharing/apply/step3
-     */
-    @PostMapping("/apply/step3")
-    public Map<String, Object> step3(@RequestBody SvcChgShareDataApplyReqDto req) {
-        return applyDataSharingSvc.step3(req);
-    }
-
-    /**
-     * [Step4] OP0 개통 및 수납.
-     * ASIS: saveDataSharingStep3Ajax
-     * POST /api/v1/service-change/data-sharing/apply/step4
-     */
-    @PostMapping("/apply/step4")
-    public Map<String, Object> step4(@RequestBody SvcChgShareDataApplyReqDto req) {
-        return applyDataSharingSvc.step4(req);
+    @PostMapping("/insert-open-request")
+    public Map<String, Object> doinsertOpenRequestAjax(@RequestBody SvcChgShareDataReqDto req) {
+        return dataSharingSvc.doinsertOpenRequestAjax(req);
     }
 }

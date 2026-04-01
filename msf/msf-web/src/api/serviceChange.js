@@ -137,39 +137,6 @@ export async function regCombineSelf(params) {
   return msfPost('/v1/service-change/combine/reg', params)
 }
 
-// ----- 데이터쉐어링 (분석 43: X69 사전체크, X71 목록, X70 가입/해지) -----
-
-/**
- * 데이터쉐어링 사전체크 (X69). 가입 가능 여부·대상 목록.
- * @param {{ ncn: string, ctn: string, custId: string }} params
- */
-export async function checkDataSharing(params) {
-  return msfPost('/v1/service-change/data-sharing/check', params)
-}
-
-/**
- * 데이터쉐어링 결합 중인 회선 목록 (X71).
- * @param {{ ncn: string, ctn: string, custId: string }} params
- */
-export async function getDataSharingList(params) {
-  return msfPost('/v1/service-change/data-sharing/list', params)
-}
-
-/**
- * 데이터쉐어링 가입(결합) (X70 A).
- * @param {{ ncn: string, ctn: string, custId: string, opmdSvcNo: string }} params
- */
-export async function joinDataSharing(params) {
-  return msfPost('/v1/service-change/data-sharing/join', params)
-}
-
-/**
- * 데이터쉐어링 해지 (X70 C).
- * @param {{ ncn: string, ctn: string, custId: string, opmdSvcNo: string }} params
- */
-export async function cancelDataSharing(params) {
-  return msfPost('/v1/service-change/data-sharing/cancel', params)
-}
 
 /**
  * 분실복구/일시정지해제 조회 (X26, X28, X33 요약).
@@ -185,6 +152,66 @@ export async function checkPause(params) {
  */
 export async function applyPause(params) {
   return msfPost('/v1/service-change/pause/apply', params)
+}
+
+// ----- 데이터쉐어링 신규 개통 (saveDataSharingSimple → Step0~4) -----
+
+/**
+ * 신청서 저장 (OSST 미포함). ASIS: AppformController.saveDataSharing()
+ * @param {{ ncn: string, ctn: string, custId: string, reqUsimSn: string }} params
+ */
+export async function saveDataSharingApply(params) {
+  return msfPost('/v1/service-change/data-sharing/apply/save', params)
+}
+
+/**
+ * PC0 사전체크 및 고객생성. ASIS: AppformController.saveDataSharingStep1()
+ * @param {{ requestKey: number, resNo: string, ncn: string, custId: string }} params
+ */
+export async function saveDataSharingStep1(params) {
+  return msfPost('/v1/service-change/data-sharing/apply/step1', params)
+}
+
+/**
+ * ST1 폴링(PC2) + Y39 CI 조회. ASIS: AppformController.conPreCheck()
+ * @param {{ requestKey: number, resNo: string, custId: string, prgrStatCd?: string }} params
+ */
+export async function conPreCheck(params) {
+  return msfPost('/v1/service-change/data-sharing/apply/con-pre-check', params)
+}
+
+/**
+ * NU1 번호조회 + NU2 번호예약. ASIS: AppformController.saveDataSharingStep2()
+ * @param {{ requestKey: number, resNo: string, ctn: string, custId: string }} params
+ */
+export async function saveDataSharingStep2(params) {
+  return msfPost('/v1/service-change/data-sharing/apply/step2', params)
+}
+
+/**
+ * OP0 개통 및 수납. ASIS: AppformController.saveDataSharingStep3()
+ * @param {{ requestKey: number, resNo: string, custId: string, billAcntNo?: string }} params
+ */
+export async function saveDataSharingStep3(params) {
+  return msfPost('/v1/service-change/data-sharing/apply/step3', params)
+}
+
+/**
+ * 데이터쉐어링 Step2 화면 데이터 (X71 결합목록 + 개통가능시간).
+ * ASIS: MyShareDataController.dataSharingStep2()
+ * @param {{ ncn: string, ctn: string, custId: string }} params
+ */
+export async function getDataSharingStep2Info(params) {
+  return msfPost('/v1/service-change/data-sharing/step2-info', params)
+}
+
+/**
+ * 데이터쉐어링 개통 신청 (X69 사전체크 + X70 가입).
+ * ASIS: MyShareDataController.doinsertOpenRequestAjax()
+ * @param {{ ncn: string, ctn: string, custId: string, opmdSvcNo: string, selfShareYn: string }} params
+ */
+export async function insertOpenRequest(params) {
+  return msfPost('/v1/service-change/data-sharing/insert-open-request', params)
 }
 
 // ----- USIM 변경 (X85 유효성 체크, UC0 변경) -----

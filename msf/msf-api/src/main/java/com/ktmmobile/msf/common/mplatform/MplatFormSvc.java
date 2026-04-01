@@ -6,7 +6,6 @@ import com.ktmmobile.msf.common.mplatform.vo.MpAddSvcInfoParamDto;
 import com.ktmmobile.msf.common.mplatform.vo.MpOsstIpinCiVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpOsstPhoneNoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpOsstSimpleVO;
-import com.ktmmobile.msf.common.mplatform.vo.MpDataSharingResVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpMoscRegSvcCanChgInVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpRegSvcChgVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpMoscCombDtlResVO;
@@ -27,6 +26,7 @@ import com.ktmmobile.msf.common.mplatform.vo.MpMoscSdsInfoVo;
 import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceResvInfoVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpNameChgPreChkVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpCrdtCardAthnVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpDataSharingResVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimChangeVO;
 import com.ktmmobile.msf.common.mplatform.vo.MpUsimCheckVO;
 import com.ktmmobile.msf.common.mplatform.vo.SvcChgValdChkVO;
@@ -401,43 +401,6 @@ public class MplatFormSvc {
         return vo;
     }
 
-    /**
-     * X69 데이터쉐어링 사전체크 및 가입 가능 대상 조회.
-     * ASIS MplatFormService.moscDataSharingChk(custId, ncn, ctn, crprCtn) 와 동일.
-     *
-     * @param crprCtn 가입 대상 전화번호 (쉐어링 자회선 번호). 셀프개통 사전체크 시 빈 문자열.
-     */
-    public MpDataSharingResVO moscDataSharingChk(String custId, String ncn, String ctn, String crprCtn) {
-        MpDataSharingResVO vo = new MpDataSharingResVO();
-        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X69);
-        param.put("crprCtn", crprCtn != null ? crprCtn : "");
-        if ("LOCAL".equals(serverLocation)) {
-            vo.setResponseXml("<return><commHeader><responseType>N</responseType></commHeader><outDto><outDataSharingDto><rsltInd>Y</rsltInd><svcNo>01000000000</svcNo><efctStDt/><rsltMsg/></outDataSharingDto></outDto></return>");
-            vo.toResponseParse();
-        } else {
-            mplatFormServerAdapter.callService(param, vo, 30000);
-        }
-        return vo;
-    }
-
-    /**
-     * X70 데이터쉐어링 가입(결합) 또는 해지.
-     *
-     * @param opmdSvcNo     데이터쉐어링 대상 전화번호 (가입 시 개통된 번호, 해지 시 해지할 번호)
-     * @param opmdWorkDivCd A: 결합(가입), C: 해지
-     */
-    public boolean moscDataSharingSave(String custId, String ncn, String ctn, String opmdSvcNo, String opmdWorkDivCd) {
-        SvcChgValdChkVO vo = new SvcChgValdChkVO();
-        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X70);
-        param.put("opmdSvcNo", opmdSvcNo != null ? opmdSvcNo : "");
-        param.put("opmdWorkDivCd", "A".equals(opmdWorkDivCd) || "C".equals(opmdWorkDivCd) ? opmdWorkDivCd : "A");
-        if ("LOCAL".equals(serverLocation)) {
-            vo.setResponseXml("<return><commHeader><responseType>N</responseType></commHeader></return>");
-            vo.toResponseParse();
-            return true;
-        }
-        return mplatFormServerAdapter.callService(param, vo, 30000) && vo.isSuccess();
-    }
 
     /**
      * NU1 희망번호 조회. ASIS AppformSvcImpl.getPhoneNoList() 와 동일.
@@ -557,6 +520,45 @@ public class MplatFormSvc {
             mplatFormServerAdapter.callService(param, vo, 30000);
         }
         return vo;
+    }
+
+
+    /**
+     * X69 데이터쉐어링 사전체크 및 가입 가능 대상 조회.
+     * ASIS MplatFormService.moscDataSharingChk(custId, ncn, ctn, crprCtn) 와 동일.
+     *
+     * @param crprCtn 가입 대상 전화번호 (쉐어링 자회선 번호). 빈 문자열 허용.
+     */
+    public MpDataSharingResVO moscDataSharingChk(String custId, String ncn, String ctn, String crprCtn) {
+        MpDataSharingResVO vo = new MpDataSharingResVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X69);
+        param.put("crprCtn", crprCtn != null ? crprCtn : "");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType></commHeader><outDto><outDataSharingDto><rsltInd>Y</rsltInd><svcNo>01000000000</svcNo><efctStDt/><rsltMsg/></outDataSharingDto></outDto></return>");
+            vo.toResponseParse();
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
+        return vo;
+    }
+
+    /**
+     * X70 데이터쉐어링 가입(결합) 또는 해지.
+     *
+     * @param opmdSvcNo     데이터쉐어링 대상 전화번호
+     * @param opmdWorkDivCd A: 결합(가입), C: 해지
+     */
+    public boolean moscDataSharingSave(String custId, String ncn, String ctn, String opmdSvcNo, String opmdWorkDivCd) {
+        SvcChgValdChkVO vo = new SvcChgValdChkVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, APP_EVENT_CD_X70);
+        param.put("opmdSvcNo", opmdSvcNo != null ? opmdSvcNo : "");
+        param.put("opmdWorkDivCd", "A".equals(opmdWorkDivCd) || "C".equals(opmdWorkDivCd) ? opmdWorkDivCd : "A");
+        if ("LOCAL".equals(serverLocation)) {
+            vo.setResponseXml("<return><commHeader><responseType>N</responseType></commHeader></return>");
+            vo.toResponseParse();
+            return true;
+        }
+        return mplatFormServerAdapter.callService(param, vo, 30000) && vo.isSuccess();
     }
 
     /**

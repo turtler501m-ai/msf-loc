@@ -408,10 +408,10 @@
 
         <!-- ⑩ 데이터쉐어링 -->
         <section v-if="hasOption('DATA_SHARING')" class="product-card md:col-span-2">
-          <h4 class="product-section-title">데이터쉐어링 가입/해지</h4>
-          <!-- 가입/해지 선택 -->
+          <h4 class="product-section-title">데이터쉐어링 가입/해지/신규개통</h4>
+          <!-- 가입/해지/신규개통 선택 -->
           <div class="product-form-row">
-            <span class="product-row-label">이용 여부 <span class="text-red-500">*</span></span>
+            <span class="product-row-label">구분 <span class="text-red-500">*</span></span>
             <div class="product-row-input flex gap-2">
               <button
                 type="button"
@@ -419,7 +419,7 @@
                 :class="{ 'product-btn-choice--selected': dataSharingMode === 'JOIN' }"
                 @click="onDataSharingModeChange('JOIN')"
               >
-                데이터쉐어링 가입
+                가입
               </button>
               <button
                 type="button"
@@ -427,7 +427,15 @@
                 :class="{ 'product-btn-choice--selected': dataSharingMode === 'CANCEL' }"
                 @click="onDataSharingModeChange('CANCEL')"
               >
-                데이터쉐어링 해지
+                해지
+              </button>
+              <button
+                type="button"
+                class="product-btn-choice"
+                :class="{ 'product-btn-choice--selected': dataSharingMode === 'NEW_OPEN' }"
+                @click="onDataSharingModeChange('NEW_OPEN')"
+              >
+                신규 개통
               </button>
             </div>
           </div>
@@ -485,9 +493,6 @@
                 class="product-row-input w-52 rounded border border-gray-300 px-3 py-2 text-sm"
               />
             </div>
-            <p class="text-xs text-gray-500 mt-2">
-              데이터쉐어링 가입은 대표 회선당 1개 회선만 가능하며, 신규 가입(셀프개통)은 별도 메뉴에서 진행해 주세요.
-            </p>
           </template>
 
           <!-- 해지 모드 -->
@@ -527,6 +532,53 @@
             </div>
             <p v-else-if="dataSharingListLoaded" class="text-sm text-gray-500 mt-3">결합 중인 데이터쉐어링 회선이 없습니다.</p>
             <p v-else class="text-sm text-gray-500 mt-3">고객 정보(휴대폰 인증) 완료 후 확인할 수 있습니다.</p>
+          </template>
+
+          <!-- 신규 개통 모드 (saveDataSharingSimple → Step0~4) -->
+          <template v-else-if="dataSharingMode === 'NEW_OPEN'">
+            <div class="product-form-row mt-3">
+              <span class="product-row-label">USIM 번호 <span class="text-red-500">*</span></span>
+              <input
+                v-model="newOpenUsim"
+                type="text"
+                maxlength="19"
+                placeholder="신규 개통 USIM번호 19자리"
+                class="product-row-input w-52 rounded border border-gray-300 px-3 py-2 text-sm"
+                :disabled="newOpenLoading || newOpenDone"
+              />
+            </div>
+
+            <!-- 진행 단계 표시 -->
+            <div v-if="newOpenStep > 0" class="mt-3 space-y-1 text-sm pl-1">
+              <div v-for="(label, idx) in newOpenStepLabels" :key="idx"
+                :class="['flex items-center gap-2',
+                  newOpenStep > idx + 1 || newOpenStepDone[idx + 1] ? 'text-teal-700' :
+                  newOpenStep === idx + 1 ? 'text-blue-600 font-medium' : 'text-gray-400']">
+                <span>{{ newOpenStepDone[idx + 1] ? '✓' : newOpenStep === idx + 1 ? '⏳' : '○' }}</span>
+                <span>{{ label }}</span>
+              </div>
+            </div>
+
+            <!-- 오류 -->
+            <p v-if="newOpenError" class="text-sm text-red-600 mt-2">{{ newOpenError }}</p>
+
+            <!-- 완료 -->
+            <div v-if="newOpenDone" class="mt-3 p-3 bg-teal-50 border border-teal-200 rounded text-sm text-teal-800">
+              <p class="font-semibold">✓ 신규 개통 완료</p>
+              <p v-if="newOpenNo" class="mt-1">개통 번호: <strong>{{ newOpenNo }}</strong></p>
+            </div>
+
+            <!-- 개통 신청 버튼 -->
+            <div v-if="!newOpenDone" class="mt-3">
+              <button
+                type="button"
+                class="product-btn-action"
+                :disabled="!newOpenUsim || newOpenLoading || !canCheckDataSharing"
+                @click="doDataSharingNewOpen"
+              >
+                {{ newOpenLoading ? '개통 처리 중...' : '개통 신청' }}
+              </button>
+            </div>
           </template>
         </section>
 
@@ -657,6 +709,11 @@ import {
   checkDataSharing,
   joinDataSharing,
   cancelDataSharing,
+  saveDataSharingApply,
+  saveDataSharingStep1,
+  conPreCheck,
+  saveDataSharingStep2,
+  saveDataSharingStep3,
   checkPause,
   applyPause,
   checkUsim,
@@ -988,6 +1045,16 @@ const dataSharingJoinDone = ref(false)
 const dataSharingCancelLoading = ref(null)
 const dataSharingAuthed = ref(false)
 
+// 신규 개통 상태 (saveDataSharingSimple → Step0~4)
+const newOpenUsim = ref('')
+const newOpenLoading = ref(false)
+const newOpenStep = ref(0)       // 0=미시작, 1~5=진행 중(단계별)
+const newOpenStepDone = ref({})  // { 1:true, 2:true, ... }
+const newOpenDone = ref(false)
+const newOpenNo = ref('')
+const newOpenError = ref('')
+const newOpenStepLabels = ['신청서 저장', '사전체크 (PC0)', '사전체크 완료 확인 (PC2)', '번호 조회/예약 (NU1/NU2)', '개통 처리 (OP0)']
+
 const canCheckDataSharing = computed(() => {
   const cf = formStore.customerForm || {}
   return !!(cf.ncn && cf.phone && cf.custId && cf.phoneAuthCompleted)
@@ -1000,6 +1067,14 @@ function onDataSharingModeChange(mode) {
   dataSharingAuthed.value = false
   dataSharingJoinDone.value = false
   dataSharingCheckResult.value = null
+  // 신규 개통 초기화
+  newOpenUsim.value = ''
+  newOpenLoading.value = false
+  newOpenStep.value = 0
+  newOpenStepDone.value = {}
+  newOpenDone.value = false
+  newOpenNo.value = ''
+  newOpenError.value = ''
   if (mode === 'CANCEL' && canCheckDataSharing.value && !dataSharingListLoaded.value) {
     loadDataSharingList()
   }
@@ -1110,6 +1185,80 @@ async function onDataSharingCancel(item) {
 function formatEfctStDt(efctStDt) {
   if (!efctStDt || efctStDt.length < 8) return efctStDt || '-'
   return `${efctStDt.slice(0, 4)}-${efctStDt.slice(4, 6)}-${efctStDt.slice(6, 8)}`
+}
+
+/**
+ * 데이터쉐어링 신규 개통 처리 (Step0~4 순차 실행).
+ * ASIS: saveDataSharingSimple → saveDataSharingStep1 → conPreCheck → saveDataSharingStep2 → saveDataSharingStep3
+ */
+async function doDataSharingNewOpen() {
+  const cf = formStore.customerForm || {}
+  if (!cf.ncn || !cf.phone || !cf.custId) return
+  if (!newOpenUsim.value) return
+
+  newOpenLoading.value = true
+  newOpenError.value = ''
+  newOpenStep.value = 0
+  newOpenStepDone.value = {}
+  newOpenDone.value = false
+  newOpenNo.value = ''
+
+  try {
+    // Step0: 신청서 저장. ASIS: AppformController.saveDataSharing()
+    // 응답: RESULT_CODE:'S', REQUEST_KET(requestKey), RES_NO
+    newOpenStep.value = 1
+    const r0 = await saveDataSharingApply({
+      ncn: cf.ncn, ctn: cf.phone, custId: cf.custId,
+      reqUsimSn: newOpenUsim.value
+    })
+    if (r0?.RESULT_CODE !== 'S') { newOpenError.value = r0?.RESULT_MSG || '신청서 저장에 실패했습니다.'; return }
+    newOpenStepDone.value = { ...newOpenStepDone.value, 1: true }
+    const requestKey = r0.REQUEST_KET
+    const resNo = r0.RES_NO
+
+    // Step1: PC0 사전체크. ASIS: AppformController.saveDataSharingStep1()
+    // 응답: RESULT_CODE:'S', REQUEST_KET, RES_NO
+    newOpenStep.value = 2
+    const r1 = await saveDataSharingStep1({
+      requestKey, resNo, ncn: cf.ncn, ctn: cf.phone, custId: cf.custId
+    })
+    if (r1?.RESULT_CODE !== 'S') { newOpenError.value = r1?.RESULT_MSG || r1?.ERROR_MSG || '사전체크에 실패했습니다.'; return }
+    newOpenStepDone.value = { ...newOpenStepDone.value, 2: true }
+
+    // Step2: ST1 폴링(PC2) + Y39 CI 조회. ASIS: AppformController.conPreCheck()
+    // 응답: RESULT_CODE:'S', RESULT_MSG:'확인완료'
+    newOpenStep.value = 3
+    const r2 = await conPreCheck({
+      requestKey, resNo, ncn: cf.ncn, custId: cf.custId, prgrStatCd: 'PC2'
+    })
+    if (r2?.RESULT_CODE !== 'S') { newOpenError.value = r2?.RESULT_MSG || r2?.ERROR_MSG || '사전체크 완료 확인에 실패했습니다.'; return }
+    newOpenStepDone.value = { ...newOpenStepDone.value, 3: true }
+
+    // Step3: NU1 번호조회 + NU2 번호예약. ASIS: AppformController.saveDataSharingStep2()
+    // 응답: RESULT_CODE:'S', TLPH_NO
+    newOpenStep.value = 4
+    const r3 = await saveDataSharingStep2({
+      requestKey, resNo, ncn: cf.ncn, ctn: cf.phone, custId: cf.custId
+    })
+    if (r3?.RESULT_CODE !== 'S') { newOpenError.value = r3?.ERROR_MSG || '번호 조회/예약에 실패했습니다.'; return }
+    newOpenStepDone.value = { ...newOpenStepDone.value, 4: true }
+
+    // Step4: OP0 개통 및 수납. ASIS: AppformController.saveDataSharingStep3()
+    // 응답: RESULT_CODE:'S', TLPH_NO
+    newOpenStep.value = 5
+    const r4 = await saveDataSharingStep3({
+      requestKey, resNo, ncn: cf.ncn, custId: cf.custId
+    })
+    if (r4?.RESULT_CODE !== 'S') { newOpenError.value = r4?.ERROR_MSG || r4?.REQUEST_MSG || '개통 처리에 실패했습니다.'; return }
+    newOpenStepDone.value = { ...newOpenStepDone.value, 5: true }
+
+    newOpenDone.value = true
+    newOpenNo.value = r4.TLPH_NO || ''
+  } catch (e) {
+    newOpenError.value = e?.message || '개통 처리 중 오류가 발생했습니다.'
+  } finally {
+    newOpenLoading.value = false
+  }
 }
 
 watch(canCheckDataSharing, (v) => {
@@ -1371,6 +1520,7 @@ const isComplete = computed(() => {
   if (hasOption('LOST_RESTORE') && !pauseConfirmed.value) return false
   if (hasOption('USIM_CHANGE') && (!productForm.value.usimChange || !usimChecked.value)) return false
   if (hasOption('DATA_SHARING') && dataSharingMode.value === 'JOIN' && !dataSharingJoinDone.value) return false
+  if (hasOption('DATA_SHARING') && dataSharingMode.value === 'NEW_OPEN' && !newOpenDone.value) return false
   return true
 })
 
@@ -1426,6 +1576,10 @@ const save = async () => {
   }
   if (hasOption('DATA_SHARING') && dataSharingMode.value === 'JOIN' && !dataSharingAuthed.value) {
     alert('데이터쉐어링: 휴대폰번호 인증을 완료해 주세요.')
+    return false
+  }
+  if (hasOption('DATA_SHARING') && dataSharingMode.value === 'NEW_OPEN' && !newOpenDone.value) {
+    alert('데이터쉐어링: 신규 개통을 완료해 주세요.')
     return false
   }
   formStore.setProductForm(productForm.value)
