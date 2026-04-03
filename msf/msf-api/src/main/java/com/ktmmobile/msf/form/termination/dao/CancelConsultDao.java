@@ -1,8 +1,8 @@
-package com.ktmmobile.msf.form.servicechange.dao;
+package com.ktmmobile.msf.form.termination.dao;
 
 import java.util.List;
 
-import com.ktmmobile.msf.form.servicechange.dto.CancelConsultDto;
+import com.ktmmobile.msf.form.termination.dto.CancelConsultDto;
 
 public interface CancelConsultDao {
 

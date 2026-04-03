@@ -1,26 +1,15 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import com.ktds.crypto.exception.CryptoException;
-import com.ktmmobile.msf.form.newchange.dao.AppformDao;
-import com.ktmmobile.msf.system.common.constants.Constants;
-import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.*;
-import com.ktmmobile.msf.form.servicechange.dao.CustRequestDao;
-import com.ktmmobile.msf.form.servicechange.dto.CancelConsultDto;
-import com.ktmmobile.msf.form.servicechange.dto.CustRequestDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyNameChgReqDto;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.ACE_256_DECRYPT_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SCAN_SERVER_SEND_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SCAN_XML_SAVE_EXCEPTION;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -30,15 +19,30 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import com.ktds.crypto.exception.CryptoException;
+import com.ktmmobile.msf.form.newchange.dao.AppformDao;
+import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
+import com.ktmmobile.msf.form.servicechange.dao.CustRequestDao;
+import com.ktmmobile.msf.form.servicechange.dto.CustRequestDto;
+import com.ktmmobile.msf.form.termination.dto.CancelConsultDto;
+import com.ktmmobile.msf.system.common.constants.Constants;
+import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.system.common.dto.UserSessionDto;
+import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.system.common.service.IpStatisticService;
+import com.ktmmobile.msf.system.common.util.EncryptUtil;
+import com.ktmmobile.msf.system.common.util.MultipartUtility;
+import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.system.common.util.SessionUtils;
+import com.ktmmobile.msf.system.common.util.StringUtil;
 
 @Service
 public class CustRequestScanServiceImpl implements CustRequestScanService {

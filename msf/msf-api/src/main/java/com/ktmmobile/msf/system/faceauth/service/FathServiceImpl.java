@@ -4,17 +4,17 @@
 //////////import com.ktmmobile.mcp.appform.dto.AppformReqDto;
 //////////import com.ktmmobile.mcp.appform.dto.OsstFathReqDto;
 //////////import com.ktmmobile.mcp.cert.service.CertService;
-//////////import com.ktmmobile.mcp.common.constants.Constants;
-//////////import com.ktmmobile.mcp.common.dto.UserSessionDto;
-//////////import com.ktmmobile.mcp.common.dto.db.MspSmsTemplateMstDto;
-//////////import com.ktmmobile.mcp.common.exception.McpCommonJsonException;
-//////////import com.ktmmobile.mcp.common.exception.msg.ExceptionMsgConstant;
-//////////import com.ktmmobile.mcp.common.service.FCommonSvc;
-//////////import com.ktmmobile.mcp.common.service.SmsSvc;
-//////////import com.ktmmobile.mcp.common.util.DateTimeUtil;
-//////////import com.ktmmobile.mcp.common.util.EncryptUtil;
-//////////import com.ktmmobile.mcp.common.util.NmcpServiceUtils;
-//////////import com.ktmmobile.mcp.common.util.SessionUtils;
+//////////import com.ktmmobile.msf.system.common.constants.Constants;
+//////////import com.ktmmobile.msf.system.common.dto.UserSessionDto;
+//////////import com.ktmmobile.msf.system.common.dto.db.MspSmsTemplateMstDto;
+//////////import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
+//////////import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
+//////////import com.ktmmobile.msf.system.common.service.FCommonSvc;
+//////////import com.ktmmobile.msf.system.common.service.SmsSvc;
+//////////import com.ktmmobile.msf.system.common.util.DateTimeUtil;
+//////////import com.ktmmobile.msf.system.common.util.EncryptUtil;
+//////////import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
+//////////import com.ktmmobile.msf.system.common.util.SessionUtils;
 //////////import com.ktmmobile.mcp.fath.dao.FathDao;
 //////////import com.ktmmobile.mcp.fath.dto.FathDto;
 //////////import com.ktmmobile.mcp.fath.dto.FathFormInfo;
@@ -28,9 +28,9 @@
 //////////import java.util.*;
 //////////import java.util.regex.Pattern;
 //////////
-//////////import static com.ktmmobile.mcp.common.constants.Constants.AJAX_SUCCESS;
-//////////import static com.ktmmobile.mcp.common.exception.msg.ExceptionMsgConstant.*;
-//////////import static com.ktmmobile.mcp.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+//////////import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
+//////////import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
+//////////import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
 //////////
 //////////@Service
 //////////public class FathServiceImpl implements FathService {

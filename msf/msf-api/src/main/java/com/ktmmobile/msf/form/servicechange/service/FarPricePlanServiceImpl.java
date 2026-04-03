@@ -1,5 +1,36 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
+import static com.ktmmobile.msf.rate.RateAdsvcGdncUtil.getRateAdsvcGdncPath;
+import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.system.common.constants.Constants.GROUP_CODE_EXCEPTION_LIST_SOC_CODE;
+import static com.ktmmobile.msf.system.common.constants.Constants.KAKAO_SENDER_KEY;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
+import java.io.File;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.xml.bind.JAXBException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import com.ktmmobile.msf.form.servicechange.RateAdsvcGdncService;
+import com.ktmmobile.msf.form.servicechange.dto.FarPricePlanResDto;
+import com.ktmmobile.msf.form.servicechange.dto.MapWrapper;
+import com.ktmmobile.msf.form.servicechange.dto.McpFarPriceDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpServiceAlterTraceDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
+import com.ktmmobile.msf.form.servicechange.dto.RateAdsvcCtgBasDTO;
 import com.ktmmobile.msf.system.common.constants.Constants;
 import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.system.common.dto.db.MspSmsTemplateMstDto;
@@ -24,32 +55,6 @@ import com.ktmmobile.msf.system.common.util.DateTimeUtil;
 import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.system.common.util.StringUtil;
 import com.ktmmobile.msf.system.common.util.XmlBindUtil;
-import com.ktmmobile.msf.form.servicechange.dto.*;
-import com.ktmmobile.msf.rate.dto.*;
-import com.ktmmobile.msf.rate.service.RateAdsvcGdncService;
-import jakarta.xml.bind.JAXBException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.sql.Timestamp;
-import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.ktmmobile.msf.system.common.constants.Constants.*;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
-import static com.ktmmobile.msf.rate.RateAdsvcGdncUtil.getRateAdsvcGdncPath;
 
 @Service
 public class FarPricePlanServiceImpl implements FarPricePlanService{
@@ -77,7 +82,7 @@ public class FarPricePlanServiceImpl implements FarPricePlanService{
     private MplatFormService mPlatFormService;
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private FCommonSvc fCommonSvc;

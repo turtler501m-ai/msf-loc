@@ -1,9 +1,9 @@
 /**
  *
  */
-package com.ktmmobile.msf.form.servicechange.dao;
+package com.ktmmobile.msf.form.ownerchange.dao;
 
-import com.ktmmobile.msf.form.servicechange.dto.MyNameChgReqDto;
+import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
 
 /**
  * @author ANT_FX700_02

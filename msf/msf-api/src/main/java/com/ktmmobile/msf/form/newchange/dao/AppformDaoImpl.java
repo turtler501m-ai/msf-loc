@@ -4,8 +4,6 @@ package com.ktmmobile.msf.form.newchange.dao;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.ktmmobile.msf.form.newchange.dto.*;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +11,14 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-
+import com.ktmmobile.msf.form.common.dto.UsimBasDto;
+import com.ktmmobile.msf.form.newchange.dto.AcenDto;
+import com.ktmmobile.msf.form.newchange.dto.AppformReqDto;
+import com.ktmmobile.msf.form.newchange.dto.IntmInsrRelDTO;
+import com.ktmmobile.msf.form.newchange.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.form.newchange.dto.McpRequestPayInfoDto;
+import com.ktmmobile.msf.form.newchange.dto.McpUploadPhoneInfoDto;
+import com.ktmmobile.msf.form.newchange.dto.OsstUc0ReqDto;
 import com.ktmmobile.msf.system.common.dto.db.McpRequestAdditionDto;
 import com.ktmmobile.msf.system.common.dto.db.McpRequestCstmrDto;
 import com.ktmmobile.msf.system.common.dto.db.McpRequestDlvryDto;
@@ -23,8 +28,6 @@ import com.ktmmobile.msf.system.common.dto.db.McpRequestOsstDto;
 import com.ktmmobile.msf.system.common.dto.db.McpRequestSaleinfoDto;
 import com.ktmmobile.msf.system.common.dto.db.McpRequestSelfDlvryDto;
 import com.ktmmobile.msf.system.common.dto.db.NmcpAppFormMstDto;
-import com.ktmmobile.msf.system.common.legacy.etc.dto.GiftPromotionDtl;
-import com.ktmmobile.msf.usim.dto.UsimBasDto;
 
 @Repository
 public class AppformDaoImpl implements AppformDao {
@@ -640,22 +643,22 @@ public class AppformDaoImpl implements AppformDao {
        return sqlSessionTemplate.selectOne("AppformMapper.getUsimBasInfo", usimBasObj) ;
    }
 
-   @Override
-   public boolean insertGiftReqTxn(GiftPromotionDtl giftPromotionDtl) {
-       return 0 < sqlSessionTemplate.insert("AppformMapper.insertGiftReqTxn",giftPromotionDtl);
-   }
-
-
-   @Override
-   public int checkGiftReqCount(GiftPromotionDtl giftPromotionDtl) {
-       Object resultObj = sqlSessionTemplate.selectOne("AppformMapper.checkGiftReqCount",giftPromotionDtl);
-       if(resultObj instanceof Number){
-           Number number = (Number) resultObj;
-           return number.intValue();
-       }else{
-           throw new IllegalArgumentException(String.format("Wrong  resultClass type(%s) with queryId:%s, resultClass must be subclass of java.lang.Number", resultObj.getClass().getName(), "AppFormMapper.checkGiftReqCount"));
-       }
-   }
+//   @Override
+//   public boolean insertGiftReqTxn(GiftPromotionDtl giftPromotionDtl) {
+//       return 0 < sqlSessionTemplate.insert("AppformMapper.insertGiftReqTxn",giftPromotionDtl);
+//   }
+//
+//
+//   @Override
+//   public int checkGiftReqCount(GiftPromotionDtl giftPromotionDtl) {
+//       Object resultObj = sqlSessionTemplate.selectOne("AppformMapper.checkGiftReqCount",giftPromotionDtl);
+//       if(resultObj instanceof Number){
+//           Number number = (Number) resultObj;
+//           return number.intValue();
+//       }else{
+//           throw new IllegalArgumentException(String.format("Wrong  resultClass type(%s) with queryId:%s, resultClass must be subclass of java.lang.Number", resultObj.getClass().getName(), "AppFormMapper.checkGiftReqCount"));
+//       }
+//   }
 
    @Override
    public boolean insertNmcpRequestApd(McpRequestDto appformReq) {

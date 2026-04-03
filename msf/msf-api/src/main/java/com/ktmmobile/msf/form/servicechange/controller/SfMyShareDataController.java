@@ -24,6 +24,17 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import com.ktmmobile.msf.form.newchange.service.AppformSvc;
+import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyShareDataReqDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyShareDataResDto;
+import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
+import com.ktmmobile.msf.form.servicechange.service.MyinfoService;
+import com.ktmmobile.msf.form.servicechange.service.NicePinService;
+import com.ktmmobile.msf.form.servicechange.service.SfMyShareDataSvc;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
 import com.ktmmobile.msf.system.cert.service.CertService;
 import com.ktmmobile.msf.system.common.constants.Constants;
 import com.ktmmobile.msf.system.common.dto.AuthSmsDto;
@@ -44,17 +55,6 @@ import com.ktmmobile.msf.system.common.util.ObjectUtils;
 import com.ktmmobile.msf.system.common.util.SessionUtils;
 import com.ktmmobile.msf.system.common.util.StringMakerUtil;
 import com.ktmmobile.msf.system.common.util.StringUtil;
-import com.ktmmobile.msf.form.newchange.service.AppformSvc;
-import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
-import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyShareDataReqDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyShareDataResDto;
-import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MyinfoService;
-import com.ktmmobile.msf.form.servicechange.service.NicePinService;
-import com.ktmmobile.msf.form.servicechange.service.SfMyShareDataSvc;
-import com.ktmmobile.msf.form.servicechange.service.SfMypageService;
 
 @Controller
 public class SfMyShareDataController {
@@ -65,7 +65,7 @@ public class SfMyShareDataController {
     MyinfoService myinfoService;
 
     @Autowired
-    SfMypageService mypageService;
+    SfMypageSvc mypageService;
 
     @Autowired
     SfMyShareDataSvc myShareDataSvc;
@@ -837,7 +837,7 @@ public class SfMyShareDataController {
         SessionUtils.saveAppformDto(null);
         SessionUtils.saveNiceRes(null);
         //안면인증 세션 초기화
-        SessionUtils.initializeFathSession();
+//PNB_확인        SessionUtils.initializeFathSession();
 
         // ============ STEP START ============
         // nicePin연동
@@ -1100,7 +1100,7 @@ public class SfMyShareDataController {
         Map<String,String> vldReslt= null;
 
         //안면인증 세션 초기화
-        SessionUtils.initializeFathSession();
+//PNB_확인        SessionUtils.initializeFathSession();
         
         //비회원
         if(authSmsDto != null) {

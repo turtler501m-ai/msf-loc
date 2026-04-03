@@ -16,7 +16,7 @@ import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public class PauseController {
     private static Logger logger = LoggerFactory.getLogger(PauseController.class);
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private MplatFormService mPlatFormService;

@@ -1,8 +1,8 @@
-package com.ktmmobile.msf.form.servicechange.service;
+package com.ktmmobile.msf.form.termination.service;
 
 import java.util.List;
 
-import com.ktmmobile.msf.form.servicechange.dto.CancelConsultDto;
+import com.ktmmobile.msf.form.termination.dto.CancelConsultDto;
 
 public interface CancelConsultSvc {
 

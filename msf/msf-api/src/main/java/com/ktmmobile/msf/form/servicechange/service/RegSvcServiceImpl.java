@@ -3,7 +3,6 @@ package com.ktmmobile.msf.form.servicechange.service;
 
 import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
-
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -15,16 +14,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
-import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.client.RestTemplate;
+import com.ktmmobile.msf.form.servicechange.dao.RegSvcDao;
+import com.ktmmobile.msf.form.servicechange.dto.McpRegServiceDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.system.common.constants.Constants;
 import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
@@ -38,19 +37,8 @@ import com.ktmmobile.msf.system.common.mplatform.vo.MpSocVO;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspRateMstDto;
 import com.ktmmobile.msf.system.common.service.FCommonSvc;
 import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-import com.ktmmobile.msf.system.common.util.MaskingUtil;
+import com.ktmmobile.msf.system.common.util.StringMakerUtil;
 import com.ktmmobile.msf.system.common.util.StringUtil;
-import com.ktmmobile.msf.form.servicechange.dao.RegSvcDao;
-import com.ktmmobile.msf.form.servicechange.dto.McpRegServiceDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.rate.dto.ListXmlWrapper;
-import com.ktmmobile.msf.rate.dto.MapWrapper;
-import com.ktmmobile.msf.rate.dto.RateAdsvcCtgBasDTO;
-import com.ktmmobile.msf.rate.dto.RateAdsvcGdncBasXML;
-import com.ktmmobile.msf.rate.dto.RateAdsvcGdncProdRelXML;
-import com.ktmmobile.msf.rate.dto.RateAdsvcGdncProdXML;
-import com.ktmmobile.msf.rate.service.RateAdsvcGdncService;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 public class RegSvcServiceImpl implements RegSvcService{
@@ -63,8 +51,8 @@ public class RegSvcServiceImpl implements RegSvcService{
     @Autowired
     private FCommonSvc fCommonSvc;
 
-    @Autowired
-    private RateAdsvcGdncService rateAdsvcGdncService;
+//    @Autowired
+//    private RateAdsvcGdncService rateAdsvcGdncService;
 
     @Autowired
     private RegSvcDao regSvcDao;
@@ -112,7 +100,7 @@ public class RegSvcServiceImpl implements RegSvcService{
 
         return useSocList;
     }
-
+   
     /**
      * 이용중인 부가서비스 조회 상세설명
      * @author bsj
@@ -121,28 +109,28 @@ public class RegSvcServiceImpl implements RegSvcService{
      * @return
      */
 
-    @Override
-    public RateAdsvcGdncBasXML selectAddSvcDtl(RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO) {
-
-        List<RateAdsvcGdncProdRelXML> rtnXmlList = rateAdsvcGdncService.getRateAdsvcGdncProdRelXml();
-
-        RateAdsvcGdncBasXML rateAdsvcGdncBasXML = new RateAdsvcGdncBasXML();
-        RateAdsvcCtgBasDTO dto = new RateAdsvcCtgBasDTO();
-
-        if(rtnXmlList != null && rtnXmlList.size() > 0) {
-            for(RateAdsvcGdncProdRelXML rtnList : rtnXmlList) {
-
-                if(rtnList.getRateAdsvcCd().equals(rateAdsvcCtgBasDTO.getRateAdsvcCd())) {
-                    int rateAdsvcGdncSeq = rtnList.getRateAdsvcGdncSeq();
-                    dto.setRateAdsvcGdncSeq(rateAdsvcGdncSeq);
-                    break;
-                }
-            }
-            rateAdsvcGdncBasXML = rateAdsvcGdncService.getRateAdsvcGdncBasXml(dto);
-        }
-
-        return rateAdsvcGdncBasXML;
-    }
+//    @Override
+//    public RateAdsvcGdncBasXML selectAddSvcDtl(RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO) {
+//
+//        List<RateAdsvcGdncProdRelXML> rtnXmlList = rateAdsvcGdncService.getRateAdsvcGdncProdRelXml();
+//
+//        RateAdsvcGdncBasXML rateAdsvcGdncBasXML = new RateAdsvcGdncBasXML();
+//        RateAdsvcCtgBasDTO dto = new RateAdsvcCtgBasDTO();
+//
+//        if(rtnXmlList != null && rtnXmlList.size() > 0) {
+//            for(RateAdsvcGdncProdRelXML rtnList : rtnXmlList) {
+//
+//                if(rtnList.getRateAdsvcCd().equals(rateAdsvcCtgBasDTO.getRateAdsvcCd())) {
+//                    int rateAdsvcGdncSeq = rtnList.getRateAdsvcGdncSeq();
+//                    dto.setRateAdsvcGdncSeq(rateAdsvcGdncSeq);
+//                    break;
+//                }
+//            }
+//            rateAdsvcGdncBasXML = rateAdsvcGdncService.getRateAdsvcGdncBasXml(dto);
+//        }
+//
+//        return rateAdsvcGdncBasXML;
+//    }
 
     /**
      * 부가서비스 신청
@@ -418,69 +406,69 @@ public class RegSvcServiceImpl implements RegSvcService{
         return false;
     }
 
-     /**
-      * 로밍 부가서비스 조회
-      * @author 김동혁
-      * @Date : 2023.06.21
-      * @param
-      * @return List<RateAdsvcCtgBasDTO>
-      */
-     public List<RateAdsvcCtgBasDTO> getRoamList(){
-            List<RateAdsvcCtgBasDTO> rtnList = new ArrayList<RateAdsvcCtgBasDTO>();
-            MapWrapper mapWrapper = rateAdsvcGdncService.getMapWrapper(); //
-
-            Map<String, ListXmlWrapper> prodMapXml = mapWrapper.getItem();
-            ListXmlWrapper prodListXml = prodMapXml.get("proList");
-            List<RateAdsvcGdncProdXML> prodList = prodListXml.getItem();
-
-            for(RateAdsvcGdncProdXML item : prodList) {
-                String addDivCd = item.getAddDivCd();
-
-                try {
-                    if(!"R".equals(addDivCd)) {
-                        continue;
-                    }
-
-                    RateAdsvcCtgBasDTO rateAdsvcCtgBas = new RateAdsvcCtgBasDTO();
-
-                    rateAdsvcCtgBas.setRateAdsvcCtgCd(item.getRateAdsvcCtgCd());
-                    rateAdsvcCtgBas.setRateAdsvcGdncSeq(item.getRateAdsvcGdncSeq());
-                    rateAdsvcCtgBas.setSortOdrg(item.getSortOdrg());
-                    rateAdsvcCtgBas.setUseYn(item.getUseYn());
-                    rateAdsvcCtgBas.setRateAdsvcImgNm(item.getRateAdsvcImgNm());
-                    rateAdsvcCtgBas.setRateAdsvcCtgImgNm(item.getRateAdsvcCtgImgNm());
-                    rateAdsvcCtgBas.setPstngStartDate(item.getPstngStartDate());
-                    rateAdsvcCtgBas.setPstngEndDate(item.getPstngEndDate());
-                    rateAdsvcCtgBas.setRateAdsvcCtgNm(item.getRateAdsvcCtgNm());
-                    rateAdsvcCtgBas.setRateAdsvcCtgBasDesc(item.getRateAdsvcCtgBasDesc());
-                    rateAdsvcCtgBas.setRateAdsvcCtgDtlDesc(item.getRateAdsvcCtgDtlDesc());
-                    rateAdsvcCtgBas.setDepthKey(item.getDepthKey());
-                    rateAdsvcCtgBas.setUpRateAdsvcCtgCd(item.getUpRateAdsvcCtgCd());
-                    rateAdsvcCtgBas.setRateAdsvcNm(item.getRateAdsvcNm());
-                    rateAdsvcCtgBas.setMmBasAmtDesc(item.getMmBasAmtDesc());
-                    rateAdsvcCtgBas.setMmBasAmtVatDesc(item.getMmBasAmtVatDesc());
-                    rateAdsvcCtgBas.setPromotionAmtDesc(item.getPromotionAmtDesc());
-                    rateAdsvcCtgBas.setPromotionAmtVatDesc(item.getPromotionAmtVatDesc());
-                    rateAdsvcCtgBas.setRelCnt(item.getRelCnt());
-                    rateAdsvcCtgBas.setAddDivCd(item.getAddDivCd());
-                    rateAdsvcCtgBas.setSelfYn(item.getSelfYn());
-                    rateAdsvcCtgBas.setFreeYn(item.getFreeYn());
-                    rateAdsvcCtgBas.setDateType(item.getDateType());
-                    rateAdsvcCtgBas.setUsePrd(item.getUsePrd());
-                    rateAdsvcCtgBas.setLineType(item.getLineType());
-                    rateAdsvcCtgBas.setLineCnt(item.getLineCnt());
-
-                    RateAdsvcGdncProdRelXML prodRel = rateAdsvcGdncService.getRateAdsvcGdncProdRel(rateAdsvcCtgBas);
-                    rateAdsvcCtgBas.setRateAdsvcCd(prodRel.getRateAdsvcCd());
-
-                    rtnList.add(rateAdsvcCtgBas);
-                } catch (Exception e) {
-                    logger.error("Exception e : {}", e.getMessage());
-                }
-            }
-
-            return rtnList;
-     }
+//     /**
+//      * 로밍 부가서비스 조회
+//      * @author 김동혁
+//      * @Date : 2023.06.21
+//      * @param
+//      * @return List<RateAdsvcCtgBasDTO>
+//      */
+//     public List<RateAdsvcCtgBasDTO> getRoamList(){
+//            List<RateAdsvcCtgBasDTO> rtnList = new ArrayList<RateAdsvcCtgBasDTO>();
+//            MapWrapper mapWrapper = rateAdsvcGdncService.getMapWrapper(); //
+//
+//            Map<String, ListXmlWrapper> prodMapXml = mapWrapper.getItem();
+//            ListXmlWrapper prodListXml = prodMapXml.get("proList");
+//            List<RateAdsvcGdncProdXML> prodList = prodListXml.getItem();
+//
+//            for(RateAdsvcGdncProdXML item : prodList) {
+//                String addDivCd = item.getAddDivCd();
+//
+//                try {
+//                    if(!"R".equals(addDivCd)) {
+//                        continue;
+//                    }
+//
+//                    RateAdsvcCtgBasDTO rateAdsvcCtgBas = new RateAdsvcCtgBasDTO();
+//
+//                    rateAdsvcCtgBas.setRateAdsvcCtgCd(item.getRateAdsvcCtgCd());
+//                    rateAdsvcCtgBas.setRateAdsvcGdncSeq(item.getRateAdsvcGdncSeq());
+//                    rateAdsvcCtgBas.setSortOdrg(item.getSortOdrg());
+//                    rateAdsvcCtgBas.setUseYn(item.getUseYn());
+//                    rateAdsvcCtgBas.setRateAdsvcImgNm(item.getRateAdsvcImgNm());
+//                    rateAdsvcCtgBas.setRateAdsvcCtgImgNm(item.getRateAdsvcCtgImgNm());
+//                    rateAdsvcCtgBas.setPstngStartDate(item.getPstngStartDate());
+//                    rateAdsvcCtgBas.setPstngEndDate(item.getPstngEndDate());
+//                    rateAdsvcCtgBas.setRateAdsvcCtgNm(item.getRateAdsvcCtgNm());
+//                    rateAdsvcCtgBas.setRateAdsvcCtgBasDesc(item.getRateAdsvcCtgBasDesc());
+//                    rateAdsvcCtgBas.setRateAdsvcCtgDtlDesc(item.getRateAdsvcCtgDtlDesc());
+//                    rateAdsvcCtgBas.setDepthKey(item.getDepthKey());
+//                    rateAdsvcCtgBas.setUpRateAdsvcCtgCd(item.getUpRateAdsvcCtgCd());
+//                    rateAdsvcCtgBas.setRateAdsvcNm(item.getRateAdsvcNm());
+//                    rateAdsvcCtgBas.setMmBasAmtDesc(item.getMmBasAmtDesc());
+//                    rateAdsvcCtgBas.setMmBasAmtVatDesc(item.getMmBasAmtVatDesc());
+//                    rateAdsvcCtgBas.setPromotionAmtDesc(item.getPromotionAmtDesc());
+//                    rateAdsvcCtgBas.setPromotionAmtVatDesc(item.getPromotionAmtVatDesc());
+//                    rateAdsvcCtgBas.setRelCnt(item.getRelCnt());
+//                    rateAdsvcCtgBas.setAddDivCd(item.getAddDivCd());
+//                    rateAdsvcCtgBas.setSelfYn(item.getSelfYn());
+//                    rateAdsvcCtgBas.setFreeYn(item.getFreeYn());
+//                    rateAdsvcCtgBas.setDateType(item.getDateType());
+//                    rateAdsvcCtgBas.setUsePrd(item.getUsePrd());
+//                    rateAdsvcCtgBas.setLineType(item.getLineType());
+//                    rateAdsvcCtgBas.setLineCnt(item.getLineCnt());
+//
+//                    RateAdsvcGdncProdRelXML prodRel = rateAdsvcGdncService.getRateAdsvcGdncProdRel(rateAdsvcCtgBas);
+//                    rateAdsvcCtgBas.setRateAdsvcCd(prodRel.getRateAdsvcCd());
+//
+//                    rtnList.add(rateAdsvcCtgBas);
+//                } catch (Exception e) {
+//                    logger.error("Exception e : {}", e.getMessage());
+//                }
+//            }
+//
+//            return rtnList;
+//     }
 
      /**
       * 이용중인 상품 변경가능여부 판단

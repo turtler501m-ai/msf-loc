@@ -21,7 +21,7 @@ import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.form.servicechange.service.CustRequestScanService;
 import com.ktmmobile.msf.form.servicechange.service.CustRequestService;
 import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
 import com.ktmmobile.msf.form.servicechange.service.RegSvcService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class CustRequestController {
     private String apiInterfaceServer;
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private CustRequestScanService custRequestScanService;

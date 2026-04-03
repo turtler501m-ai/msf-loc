@@ -1,12 +1,11 @@
 /**
  *
  */
-package com.ktmmobile.msf.form.servicechange.service;
+package com.ktmmobile.msf.form.ownerchange.service;
 
 import java.util.List;
-
+import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyNameChgReqDto;
 
 /**
  * @author ANT_FX700_02

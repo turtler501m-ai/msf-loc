@@ -20,29 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import com.ktds.crypto.exception.CryptoException;
-import com.ktmmobile.msf.system.common.constants.Constants;
-import com.ktmmobile.msf.system.common.dto.MoscCombReqDto;
-import com.ktmmobile.msf.system.common.dto.NiceLogDto;
-import com.ktmmobile.msf.system.common.dto.NiceResDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestAgrmDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombInfoResDTO;
-import com.ktmmobile.msf.system.common.mplatform.dto.MoscMvnoComInfo;
-import com.ktmmobile.msf.system.common.mspservice.dao.MspDao;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
-import com.ktmmobile.msf.system.common.util.StringUtil;
 import com.ktmmobile.msf.form.servicechange.dao.CustRequestDao;
 import com.ktmmobile.msf.form.servicechange.dao.MypageDao;
 import com.ktmmobile.msf.form.servicechange.dto.BillWayChgDto;
@@ -59,6 +40,27 @@ import com.ktmmobile.msf.form.servicechange.dto.MspJuoAddInfoDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.form.servicechange.dto.NmcpProdImgDtlDto;
 import com.ktmmobile.msf.form.servicechange.dto.SuspenChgTmlDto;
+import com.ktmmobile.msf.system.common.constants.Constants;
+import com.ktmmobile.msf.system.common.dto.MoscCombReqDto;
+import com.ktmmobile.msf.system.common.dto.NiceLogDto;
+import com.ktmmobile.msf.system.common.dto.NiceResDto;
+import com.ktmmobile.msf.system.common.dto.UserSessionDto;
+import com.ktmmobile.msf.system.common.dto.db.McpMrktHistDto;
+import com.ktmmobile.msf.system.common.dto.db.McpRequestAgrmDto;
+import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.system.common.exception.McpCommonException;
+import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
+import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombInfoResDTO;
+import com.ktmmobile.msf.system.common.mplatform.dto.MoscMvnoComInfo;
+import com.ktmmobile.msf.system.common.mspservice.dao.MspDao;
+import com.ktmmobile.msf.system.common.service.IpStatisticService;
+import com.ktmmobile.msf.system.common.util.DateTimeUtil;
+import com.ktmmobile.msf.system.common.util.EncryptUtil;
+import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.system.common.util.SessionUtils;
+import com.ktmmobile.msf.system.common.util.StringMakerUtil;
+import com.ktmmobile.msf.system.common.util.StringUtil;
+import com.ktds.crypto.exception.CryptoException;
 
 @Service
 public class SfMypageSvcImpl implements SfMypageSvc {
@@ -604,12 +606,11 @@ public class SfMypageSvcImpl implements SfMypageSvc {
         return mypageDao.checkAllreadPlanchgCount(serviceAlterTrace);
     }
 
-//PNB_미사용    
-//    @Override
-//    public List<McpMrktHistDto> selectExistingConsent(String userId) {
-//        List<McpMrktHistDto> mrktList = mypageDao.selectExistingConsent(userId);
-//        return CollectionUtils.isNotEmpty(mrktList) ? mrktList : null;
-//    }
+    @Override
+    public List<McpMrktHistDto> selectExistingConsent(String userId) {
+        List<McpMrktHistDto> mrktList = mypageDao.selectExistingConsent(userId);
+        return !CollectionUtils.isEmpty(mrktList) ? mrktList : null;
+    }
 
     @Override
     public int insertDisApd(McpUserCntrMngDto apdDto) {

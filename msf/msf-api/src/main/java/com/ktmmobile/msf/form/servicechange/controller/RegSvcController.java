@@ -1,5 +1,37 @@
 package com.ktmmobile.msf.form.servicechange.controller;
 
+import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
+import java.net.SocketTimeoutException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpRegServiceDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
+import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
+import com.ktmmobile.msf.form.servicechange.service.RegSvcService;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
 import com.ktmmobile.msf.system.cert.service.CertService;
 import com.ktmmobile.msf.system.common.constants.Constants;
 import com.ktmmobile.msf.system.common.dto.JsonReturnDto;
@@ -15,43 +47,6 @@ import com.ktmmobile.msf.system.common.util.DateTimeUtil;
 import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.system.common.util.SessionUtils;
 import com.ktmmobile.msf.system.common.util.StringUtil;
-import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
-import com.ktmmobile.msf.form.servicechange.dto.McpRegServiceDto;
-import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MyBenefitService;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
-import com.ktmmobile.msf.form.servicechange.service.RegSvcService;
-import com.ktmmobile.msf.system.common.legacy.point.dto.CustPointDto;
-import com.ktmmobile.msf.system.common.legacy.point.dto.CustPointTxnDto;
-import com.ktmmobile.msf.point.service.PointService;
-import com.ktmmobile.msf.rate.dto.RateAdsvcCtgBasDTO;
-import com.ktmmobile.msf.rate.dto.RateAdsvcGdncBasXML;
-import com.ktmmobile.msf.rate.dto.RateAdsvcGdncDtlXML;
-import com.ktmmobile.msf.rate.dto.RateAdsvcGdncProdRelXML;
-import com.ktmmobile.msf.rate.service.RateAdsvcGdncService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import javax.servlet.http.HttpServletRequest;
-import java.net.SocketTimeoutException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.ktmmobile.msf.system.common.constants.Constants.*;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
 
 @Controller
 public class RegSvcController {
@@ -59,19 +54,19 @@ public class RegSvcController {
     private static final Logger logger = LoggerFactory.getLogger(RegSvcController.class);
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private RegSvcService regSvcService;
 
-    @Autowired
-    private MyBenefitService myBenefitService;
+//    @Autowired
+//    private MyBenefitService myBenefitService;
+//
+//    @Autowired
+//    private PointService pointService;
 
-    @Autowired
-    private PointService pointService;
-
-    @Autowired
-    RateAdsvcGdncService rateAdsvcGdncService;
+//    @Autowired
+//    RateAdsvcGdncService rateAdsvcGdncService;
 
     @Autowired
     CertService certService;
@@ -290,19 +285,19 @@ public class RegSvcController {
      * @return
      */
 
-    @RequestMapping(value = { "/mypage/getContRateAdditionAjax.do", "/m/mypage/getContRateAdditionAjax.do" })
-    @ResponseBody
-    public HashMap<String, Object> getContRateAdditionAjax(HttpServletRequest request, Model model,
-            @ModelAttribute("searchVO") MyPageSearchDto searchVO,
-            @RequestParam(value = "rateAdsvcCd", required = true) String rateAdsvcCd) {
-
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-        RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO = new RateAdsvcCtgBasDTO();
-        rateAdsvcCtgBasDTO.setRateAdsvcCd(rateAdsvcCd);
-        RateAdsvcGdncBasXML dto = regSvcService.selectAddSvcDtl(rateAdsvcCtgBasDTO);
-        rtnMap.put("rateDtl", dto);
-        return rtnMap;
-    }
+//    @RequestMapping(value = { "/mypage/getContRateAdditionAjax.do", "/m/mypage/getContRateAdditionAjax.do" })
+//    @ResponseBody
+//    public HashMap<String, Object> getContRateAdditionAjax(HttpServletRequest request, Model model,
+//            @ModelAttribute("searchVO") MyPageSearchDto searchVO,
+//            @RequestParam(value = "rateAdsvcCd", required = true) String rateAdsvcCd) {
+//
+//        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+//        RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO = new RateAdsvcCtgBasDTO();
+//        rateAdsvcCtgBasDTO.setRateAdsvcCd(rateAdsvcCd);
+//        RateAdsvcGdncBasXML dto = regSvcService.selectAddSvcDtl(rateAdsvcCtgBasDTO);
+//        rtnMap.put("rateDtl", dto);
+//        return rtnMap;
+//    }
 
     /**
      * 부가서비스 해지 신청
@@ -406,17 +401,17 @@ public class RegSvcController {
         String etDt = DateTimeUtil.addMonths(DateTimeUtil.getShortDateString(),6,"yyyyMMdd");
         String nowData = DateTimeUtil.getDateString().replaceAll("-", "");
 
-        CustPointDto custPoint = new CustPointDto();
+//        CustPointDto custPoint = new CustPointDto();
 
-        // 포인트조회
-        if (Constants.REG_SVC_CD_4.equals(rateAdsvcCd)) {
-            custPoint = myBenefitService.selectCustPoint(searchVO.getNcn());
-        }
+//        // 포인트조회
+//        if (Constants.REG_SVC_CD_4.equals(rateAdsvcCd)) {
+//            custPoint = myBenefitService.selectCustPoint(searchVO.getNcn());
+//        }
 
         model.addAttribute("stDt", stDt);
         model.addAttribute("etDt", etDt);
         model.addAttribute("nowData", nowData);
-        model.addAttribute("custPoint", custPoint);
+//        model.addAttribute("custPoint", custPoint);
         model.addAttribute("flag", flag);
         model.addAttribute("rateAdsvcCd", rateAdsvcCd);
         model.addAttribute("rateAdsvcNm", rateAdsvcNm);
@@ -519,26 +514,26 @@ public class RegSvcController {
                 message = "";
 
                 if (Constants.REG_SVC_CD_4.equals(soc)) {
-                    if(couoponPrice != null && !"".equals(couoponPrice)) {
-                        CustPointDto custPoint = myBenefitService.selectCustPoint(searchVO.getNcn());
-                        if(custPoint != null) {
-                            CustPointTxnDto custPointTxnDto = new CustPointTxnDto();
-                            int strCouoponPrice = Integer.parseInt(couoponPrice);
-                            custPointTxnDto.setSvcCntrNo(searchVO.getNcn()); //cntrNo
-                            custPointTxnDto.setPoint(strCouoponPrice); // 사용포인트
-                            custPointTxnDto.setPointTrtCd(POINT_TRT_USE); // 사용사유코드
-                            custPointTxnDto.setPointTxnDtlRsnDesc("부가서비스 포인트 사용(요금할인)");		// 사용 설명
-                            custPointTxnDto.setPointTxnRsnCd(POINT_RSN_CD_U62); // 사용사유
-                            custPointTxnDto.setRemainPoint(custPoint.getTotRemainPoint() - strCouoponPrice); // 잔액
-                            custPointTxnDto.setPointDivCd("MP"); // 포인트종류
-                            custPointTxnDto.setCretId(userSession.getUserId());
-                            custPointTxnDto.setCretIp(ip);
-                            custPointTxnDto.setPointCustSeq(custPoint.getPointCustSeq());
-                            pointService.editPoint(custPointTxnDto);
-                            resultCode = "00";
-                            message = "";
-                        }
-                    }
+//                    if(couoponPrice != null && !"".equals(couoponPrice)) {
+//                        CustPointDto custPoint = myBenefitService.selectCustPoint(searchVO.getNcn());
+//                        if(custPoint != null) {
+//                            CustPointTxnDto custPointTxnDto = new CustPointTxnDto();
+//                            int strCouoponPrice = Integer.parseInt(couoponPrice);
+//                            custPointTxnDto.setSvcCntrNo(searchVO.getNcn()); //cntrNo
+//                            custPointTxnDto.setPoint(strCouoponPrice); // 사용포인트
+//                            custPointTxnDto.setPointTrtCd(POINT_TRT_USE); // 사용사유코드
+//                            custPointTxnDto.setPointTxnDtlRsnDesc("부가서비스 포인트 사용(요금할인)");		// 사용 설명
+//                            custPointTxnDto.setPointTxnRsnCd(POINT_RSN_CD_U62); // 사용사유
+//                            custPointTxnDto.setRemainPoint(custPoint.getTotRemainPoint() - strCouoponPrice); // 잔액
+//                            custPointTxnDto.setPointDivCd("MP"); // 포인트종류
+//                            custPointTxnDto.setCretId(userSession.getUserId());
+//                            custPointTxnDto.setCretIp(ip);
+//                            custPointTxnDto.setPointCustSeq(custPoint.getPointCustSeq());
+//                            pointService.editPoint(custPointTxnDto);
+//                            resultCode = "00";
+//                            message = "";
+//                        }
+//                    }
 
                 }
 
@@ -558,24 +553,24 @@ public class RegSvcController {
 
     }
 
-
-    @RequestMapping(value = "/xmlInfo/getRateAdsvcDtlAjax.do")
-    @ResponseBody
-    public Map<String, Object> getRateAdsvcGdncDtlXml(@RequestParam(value = "rateAdsvcCd", required = true) String rateAdsvcCd)  {
-        Map<String, Object> rtnMap = new HashMap<String, Object>();
-        List<RateAdsvcGdncDtlXML> rtnXmlList = null;
-
-        try {
-            rtnXmlList = rateAdsvcGdncService.getRateAdsvcGdncDtlXml(rateAdsvcCd);
-        } catch(DataAccessException e) {
-            return null;
-        } catch(Exception e) {
-            return null;
-        }
-
-        rtnMap.put("DATA_OBJ", rtnXmlList);
-        return rtnMap;
-    }
+//PNB_확인
+//    @RequestMapping(value = "/xmlInfo/getRateAdsvcDtlAjax.do")
+//    @ResponseBody
+//    public Map<String, Object> getRateAdsvcGdncDtlXml(@RequestParam(value = "rateAdsvcCd", required = true) String rateAdsvcCd)  {
+//        Map<String, Object> rtnMap = new HashMap<String, Object>();
+//        List<RateAdsvcGdncDtlXML> rtnXmlList = null;
+//
+//        try {
+//            rtnXmlList = rateAdsvcGdncService.getRateAdsvcGdncDtlXml(rateAdsvcCd);
+//        } catch(DataAccessException e) {
+//            return null;
+//        } catch(Exception e) {
+//            return null;
+//        }
+//
+//        rtnMap.put("DATA_OBJ", rtnXmlList);
+//        return rtnMap;
+//    }
 
 
     private String getErrCd(String msg) {
@@ -608,288 +603,290 @@ public class RegSvcController {
         return mbox;
     }
 
-    /**
-     *  마이페이지 해외로밍 페이지
-     * @Date : 2023.06.15
-     * @param request
-     * @param model
-     * @param searchVO
-     * @return
-     */
-
-    @RequestMapping(value = { "/mypage/roamingView.do", "/m/mypage/roamingView.do" })
-    public String roamingView(HttpServletRequest request, ModelMap model,@ModelAttribute("searchVO") MyPageSearchDto searchVO) {
-
-        String returnUrl = "/portal/mypage/roamingView";
-
-        if("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            returnUrl = "/mobile/mypage/roamingView";
-        }
-
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        logger.error("userSession.getUserId()"+userSession.getUserId());
-//		if(null == userSession || StringUtils.isEmpty(userSession.getUserId())) {
-//			return "redirect:/loginForm.do";
-//		}
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
-        }
-
-        //미성년자 체크
-        int userAge= 0;
-        boolean underAge = false;
-        if(userSession.getBirthday() != null){
-            userAge= NmcpServiceUtils.getBirthDateToAmericanAge(userSession.getBirthday(), new SimpleDateFormat("yyyyMMdd", Locale.KOREA).format(new Date()));
-            if(userAge < 19) {
-                underAge = true;
-            }
-        }
-
-        // 마스킹해제
-        if(SessionUtils.getMaskingSession() > 0 ) {
-            model.addAttribute("maskingSession", "Y");
-            MaskingDto maskingDto = new MaskingDto();
-
-            long maskingRelSeq = SessionUtils.getMaskingSession();
-            maskingDto.setMaskingReleaseSeq(maskingRelSeq);
-            maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
-            maskingDto.setAccessUrl(request.getRequestURI());
-            maskingDto.setUserId(userSession.getUserId());
-            maskingDto.setCretId(userSession.getUserId());
-            maskingDto.setAmdId(userSession.getUserId());
-            maskingSvc.insertMaskingReleaseHist(maskingDto);
-        }
-
-        model.addAttribute("underAge", underAge);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("searchVO", searchVO);
-        return returnUrl;
-
-    }
-
-    /**
-     * 이용중인 로밍서비스 목록 조회
-     * @author 김동혁
-     * @Date : 2023.06.20
-     * @param request
-     * @param model
-     * @param searchVO
-     * @return
-     */
-
-    @RequestMapping(value = { "/mypage/myRoamJoinListAjax.do", "/m/mypage/myRoamJoinListAjax.do" })
-    @ResponseBody
-    public Map<String, Object> myRoamJoinListAjax(HttpServletRequest request, Model model,
-            @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
-        String addDivCd = StringUtil.NVL(searchVO.getAddDivCd(), "");
-
-        Map<String, Object> rtnMap = new HashMap<String, Object>();
-        String returnUrl2 = "/mypage/updateForm.do";
-
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            returnUrl2 = "/m/mypage/updateForm.do";
-        }
-
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION, returnUrl2);
-        }
-
-        // x97
-        // 이용중인 부가서비스
-        MpAddSvcInfoParamDto res = regSvcService.selectmyAddSvcList(searchVO.getNcn(), searchVO.getCtn(),
-                searchVO.getCustId(),cntrList.get(0).getLstComActvDate());
-
-        List<MpSocVO> outList = res.getList();
-        List<RateAdsvcCtgBasDTO> prodInfoList = new ArrayList<RateAdsvcCtgBasDTO>();
-
-        //"G" 일반 부가서비스만 조회
-        //"R" 로밍 부가서비스만 조회
-        if(outList != null && !outList.isEmpty()) {
-            regSvcService.getMpSocListByDiv(outList, addDivCd);
-
-            //outList에 있는 상품코드로 상품정보 가져오기
-            for(MpSocVO mpSoc : outList) {
-                RateAdsvcGdncProdRelXML rateAdsvcGdncProdRelXML = new RateAdsvcGdncProdRelXML();
-                RateAdsvcCtgBasDTO rateAdsvcCtgBasSeqDTO = new RateAdsvcCtgBasDTO();
-                RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO = new RateAdsvcCtgBasDTO();
-
-                rateAdsvcGdncProdRelXML = rateAdsvcGdncService.getRateAdsvcProdRelBySoc(mpSoc.getSoc());
-                rateAdsvcCtgBasSeqDTO.setRateAdsvcGdncSeq(rateAdsvcGdncProdRelXML.getRateAdsvcGdncSeq());
-                rateAdsvcCtgBasDTO = rateAdsvcGdncService.getProdBySeq(rateAdsvcCtgBasSeqDTO);
-                prodInfoList.add(rateAdsvcCtgBasDTO);
-
-                //해지가 가능하고 상품시작일자가 아직 도래하지 않은 로밍 상품은 신청내용 변경 가능
-                mpSoc.setUpdateFlag(regSvcService.getUpdateYn(mpSoc));
-
-                //dateType 1(시작일만 입력)이면 종료일을 (시작일+이용가능기간-1)일로 set
-                if("1".equals(rateAdsvcCtgBasDTO.getDateType())) {
-                    mpSoc.setEndDttm(regSvcService.getEndDttmUsePrd(mpSoc, rateAdsvcCtgBasDTO.getUsePrd()));
-                }
-
-                //대표상품 서브계약번호로 서브회선 가져오는 기능 추가
-                if("M".equals(rateAdsvcCtgBasDTO.getLineType())) {
-                    List<String> subNcnList = mpSoc.getShareSubContidList();
-                    List<String> subCtnList = null;
-
-                    if(subNcnList != null){
-                        subCtnList = subNcnList.stream().map(item -> {
-                            String subCtn = regSvcService.getCtnByNcn(item, true);
-                            return StringUtil.NVL(subCtn, "-");
-                        }).collect(Collectors.toList());
-                    }
-
-                    mpSoc.setShareSubCtnList(subCtnList);
-                }
-
-                //서브상품 대표계약번호로 대표회선 get
-                if("S".equals(rateAdsvcCtgBasDTO.getLineType())) {
-                    String mainCtn = regSvcService.getCtnByNcn(mpSoc.getShareMainContid(), true);
-                    mpSoc.setShareMainCtn(StringUtil.NVL(mainCtn, "-"));
-                }
-            }
-        }
-
-        rtnMap.put("prodInfoList", prodInfoList);
-        rtnMap.put("outList", outList);
-        rtnMap.put("contractNum", searchVO.getContractNum());
-        return rtnMap;
-    }
-
-    /**
-     * 로밍 부가서비스 신청 목록 조회 AJAX
-     * @author 김동혁
-     * @Date : 2023.06.20
-     * @param request
-     * @param model
-     * @param searchVO
-     * @return rtnMap
-     */
-
-    @RequestMapping(value = { "/mypage/regRoamListAjax.do", "/m/mypage/regRoamListAjax.do" })
-    @ResponseBody
-    public HashMap<String, Object> regRoamListAjax(HttpServletRequest request, Model model,
-            @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-
-        String url = "/mypage/updateForm.do";
-
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            url = "/m/mypage/updateForm.do";
-        }
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-             throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION,url);
-        }
-
-        try {
-            List<RateAdsvcCtgBasDTO> dupList = regSvcService.getRoamList();
-            List<RateAdsvcCtgBasDTO> list = rateAdsvcGdncService.deduplicateProdList(dupList); // 중복 상품 제거
-
-            rtnMap.put("list", list);
-        } catch (SelfServiceException e) {
-            throw new McpCommonException(e.getMessage());
-        }
-
-        rtnMap.put("ctn", searchVO.getCtn());
-        rtnMap.put("contractNum", searchVO.getContractNum());
-
-        return rtnMap;
-    }
-
-    /**
-     * 해외로밍 해지 신청
-     * @Date : 2023.06.15
-     * @param request
-     * @param model
-     * @param searchVO
-     * @param rateAdsvcCd
-     * @return
-     * @throws SocketTimeoutException
-     */
-
-    @RequestMapping(value = { "/mypage/roamingCanChgAjax.do", "/m/mypage/roamingCanChgAjax.do" })
-    @ResponseBody
-    public Map<String, Object> roamingCanChgAjax(HttpServletRequest request, Model model,
-                                                    @ModelAttribute("searchVO") MyPageSearchDto searchVO,
-                                                    @RequestParam(value = "rateAdsvcCd", required = true) String rateAdsvcCd,
-                                                    @RequestParam(value = "prodHstSeq", required = false) String prodHstSeq) throws SocketTimeoutException {
-
-        Map<String, Object> rtnMap = new HashMap<String, Object>();
-
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            rtnMap.put("RESULT_CODE", "E");
-            rtnMap.put("message", F_BIND_EXCEPTION);
-            return rtnMap;
-        }
-
-        // 부가서비스 해지 서비스 호출 X38
-        if("".equals(prodHstSeq) || prodHstSeq == null) {
-            rtnMap = regSvcService.moscRegSvcCanChg(searchVO, rateAdsvcCd);
-        } else {
-            rtnMap = regSvcService.moscRegSvcCanChgSeq(searchVO, rateAdsvcCd, prodHstSeq);
-        }
-        return rtnMap;
-    }
-
-
-
-    /**
-     * 마이페이지 해외로밍 신청 화면 POP VIEW
-     * @Date : 2023.06.21
-     * @param request
-     * @param model
-     * @param searchVO
-     * @param rateAdsvcCtgBasDTO
-     * @return
-     * @throws ParseException
-     */
-
-    @RequestMapping(value = { "/mypage/roamingViewPop.do", "/m/mypage/roamingViewPop.do" })
-    public String roamingViewPop(HttpServletRequest request, Model model,
-                                @ModelAttribute("searchVO") MyPageSearchDto searchVO, RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO
-                                , String flag, String prodHstSeq) throws ParseException {
-
-        String returnUrl = "";
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            returnUrl = "/mobile/mypage/roamingViewPop";
-        } else {
-            returnUrl = "/portal/mypage/roamingViewPop";
-        }
-
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
-        }
-
-
-        //팝업에 띄울 해외로밍 상품 정보 조회
-        RateAdsvcCtgBasDTO joinPop = rateAdsvcGdncService.getProdBySeq(rateAdsvcCtgBasDTO);
-        RateAdsvcGdncProdRelXML prodRel = rateAdsvcGdncService.getRateAdsvcGdncProdRel(rateAdsvcCtgBasDTO);
-
-        model.addAttribute("contractNum", searchVO.getContractNum());
-        model.addAttribute("joinPop", joinPop);
-        model.addAttribute("prodRel", prodRel);
-        model.addAttribute("flag", flag);
-        model.addAttribute("prodHstSeq", prodHstSeq);
-        return returnUrl;
-    }
+//    /**
+//     *  마이페이지 해외로밍 페이지
+//     * @Date : 2023.06.15
+//     * @param request
+//     * @param model
+//     * @param searchVO
+//     * @return
+//     */
+//
+//    @RequestMapping(value = { "/mypage/roamingView.do", "/m/mypage/roamingView.do" })
+//    public String roamingView(HttpServletRequest request, ModelMap model,@ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+//
+//        String returnUrl = "/portal/mypage/roamingView";
+//
+//        if("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
+//            returnUrl = "/mobile/mypage/roamingView";
+//        }
+//
+//        UserSessionDto userSession = SessionUtils.getUserCookieBean();
+//        logger.error("userSession.getUserId()"+userSession.getUserId());
+////		if(null == userSession || StringUtils.isEmpty(userSession.getUserId())) {
+////			return "redirect:/loginForm.do";
+////		}
+//        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+//        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+//        if(!chk){
+//            ResponseSuccessDto responseSuccessDto = getMessageBox();
+//            model.addAttribute("responseSuccessDto", responseSuccessDto);
+//            return "/common/successRedirect";
+//        }
+//
+//        //미성년자 체크
+//        int userAge= 0;
+//        boolean underAge = false;
+//        if(userSession.getBirthday() != null){
+//            userAge= NmcpServiceUtils.getBirthDateToAmericanAge(userSession.getBirthday(), new SimpleDateFormat("yyyyMMdd", Locale.KOREA).format(new Date()));
+//            if(userAge < 19) {
+//                underAge = true;
+//            }
+//        }
+//
+//        // 마스킹해제
+//        if(SessionUtils.getMaskingSession() > 0 ) {
+//            model.addAttribute("maskingSession", "Y");
+//            MaskingDto maskingDto = new MaskingDto();
+//
+//            long maskingRelSeq = SessionUtils.getMaskingSession();
+//            maskingDto.setMaskingReleaseSeq(maskingRelSeq);
+//            maskingDto.setUnmaskingInfo("휴대폰번호");
+//            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+//            maskingDto.setAccessUrl(request.getRequestURI());
+//            maskingDto.setUserId(userSession.getUserId());
+//            maskingDto.setCretId(userSession.getUserId());
+//            maskingDto.setAmdId(userSession.getUserId());
+//            maskingSvc.insertMaskingReleaseHist(maskingDto);
+//        }
+//
+//        model.addAttribute("underAge", underAge);
+//        model.addAttribute("cntrList", cntrList);
+//        model.addAttribute("searchVO", searchVO);
+//        return returnUrl;
+//
+//    }
+//
+//    /**
+//     * 이용중인 로밍서비스 목록 조회
+//     * @author 김동혁
+//     * @Date : 2023.06.20
+//     * @param request
+//     * @param model
+//     * @param searchVO
+//     * @return
+//     */
+//
+//    @RequestMapping(value = { "/mypage/myRoamJoinListAjax.do", "/m/mypage/myRoamJoinListAjax.do" })
+//    @ResponseBody
+//    public Map<String, Object> myRoamJoinListAjax(HttpServletRequest request, Model model,
+//            @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+//        String addDivCd = StringUtil.NVL(searchVO.getAddDivCd(), "");
+//
+//        Map<String, Object> rtnMap = new HashMap<String, Object>();
+//        String returnUrl2 = "/mypage/updateForm.do";
+//
+//        if ("Y".equals(NmcpServiceUtils.isMobile())) {
+//            returnUrl2 = "/m/mypage/updateForm.do";
+//        }
+//
+//        UserSessionDto userSession = SessionUtils.getUserCookieBean();
+//        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+//        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+//        if(!chk){
+//            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION, returnUrl2);
+//        }
+//
+//        // x97
+//        // 이용중인 부가서비스
+//        MpAddSvcInfoParamDto res = regSvcService.selectmyAddSvcList(searchVO.getNcn(), searchVO.getCtn(),
+//                searchVO.getCustId(),cntrList.get(0).getLstComActvDate());
+//
+//        List<MpSocVO> outList = res.getList();
+//        List<RateAdsvcCtgBasDTO> prodInfoList = new ArrayList<RateAdsvcCtgBasDTO>();
+//
+//        //"G" 일반 부가서비스만 조회
+//        //"R" 로밍 부가서비스만 조회
+//        if(outList != null && !outList.isEmpty()) {
+//            regSvcService.getMpSocListByDiv(outList, addDivCd);
+//
+//            //outList에 있는 상품코드로 상품정보 가져오기
+//            for(MpSocVO mpSoc : outList) {
+//                RateAdsvcGdncProdRelXML rateAdsvcGdncProdRelXML = new RateAdsvcGdncProdRelXML();
+//                RateAdsvcCtgBasDTO rateAdsvcCtgBasSeqDTO = new RateAdsvcCtgBasDTO();
+//                RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO = new RateAdsvcCtgBasDTO();
+//
+//                rateAdsvcGdncProdRelXML = rateAdsvcGdncService.getRateAdsvcProdRelBySoc(mpSoc.getSoc());
+//                rateAdsvcCtgBasSeqDTO.setRateAdsvcGdncSeq(rateAdsvcGdncProdRelXML.getRateAdsvcGdncSeq());
+//                rateAdsvcCtgBasDTO = rateAdsvcGdncService.getProdBySeq(rateAdsvcCtgBasSeqDTO);
+//                prodInfoList.add(rateAdsvcCtgBasDTO);
+//
+//                //해지가 가능하고 상품시작일자가 아직 도래하지 않은 로밍 상품은 신청내용 변경 가능
+//                mpSoc.setUpdateFlag(regSvcService.getUpdateYn(mpSoc));
+//
+//                //dateType 1(시작일만 입력)이면 종료일을 (시작일+이용가능기간-1)일로 set
+//                if("1".equals(rateAdsvcCtgBasDTO.getDateType())) {
+//                    mpSoc.setEndDttm(regSvcService.getEndDttmUsePrd(mpSoc, rateAdsvcCtgBasDTO.getUsePrd()));
+//                }
+//
+//                //대표상품 서브계약번호로 서브회선 가져오는 기능 추가
+//                if("M".equals(rateAdsvcCtgBasDTO.getLineType())) {
+//                    List<String> subNcnList = mpSoc.getShareSubContidList();
+//                    List<String> subCtnList = null;
+//
+//                    if(subNcnList != null){
+//                        subCtnList = subNcnList.stream().map(item -> {
+//                            String subCtn = regSvcService.getCtnByNcn(item, true);
+//                            return StringUtil.NVL(subCtn, "-");
+//                        }).collect(Collectors.toList());
+//                    }
+//
+//                    mpSoc.setShareSubCtnList(subCtnList);
+//                }
+//
+//                //서브상품 대표계약번호로 대표회선 get
+//                if("S".equals(rateAdsvcCtgBasDTO.getLineType())) {
+//                    String mainCtn = regSvcService.getCtnByNcn(mpSoc.getShareMainContid(), true);
+//                    mpSoc.setShareMainCtn(StringUtil.NVL(mainCtn, "-"));
+//                }
+//            }
+//        }
+//
+//        rtnMap.put("prodInfoList", prodInfoList);
+//        rtnMap.put("outList", outList);
+//        rtnMap.put("contractNum", searchVO.getContractNum());
+//        return rtnMap;
+//    }
+//
+//    /**
+//     * 로밍 부가서비스 신청 목록 조회 AJAX
+//     * @author 김동혁
+//     * @Date : 2023.06.20
+//     * @param request
+//     * @param model
+//     * @param searchVO
+//     * @return rtnMap
+//     */
+//
+//    @RequestMapping(value = { "/mypage/regRoamListAjax.do", "/m/mypage/regRoamListAjax.do" })
+//    @ResponseBody
+//    public HashMap<String, Object> regRoamListAjax(HttpServletRequest request, Model model,
+//            @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+//        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+//
+//        String url = "/mypage/updateForm.do";
+//
+//        if ("Y".equals(NmcpServiceUtils.isMobile())) {
+//            url = "/m/mypage/updateForm.do";
+//        }
+//        UserSessionDto userSession = SessionUtils.getUserCookieBean();
+//
+//        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+//        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+//        if(!chk){
+//             throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION,url);
+//        }
+//
+//        try {
+//            List<RateAdsvcCtgBasDTO> dupList = regSvcService.getRoamList();
+//            List<RateAdsvcCtgBasDTO> list = rateAdsvcGdncService.deduplicateProdList(dupList); // 중복 상품 제거
+//
+//            rtnMap.put("list", list);
+//        } catch (SelfServiceException e) {
+//            throw new McpCommonException(e.getMessage());
+//        }
+//
+//        rtnMap.put("ctn", searchVO.getCtn());
+//        rtnMap.put("contractNum", searchVO.getContractNum());
+//
+//        return rtnMap;
+//    }
+//
+//    /**
+//     * 해외로밍 해지 신청
+//     * @Date : 2023.06.15
+//     * @param request
+//     * @param model
+//     * @param searchVO
+//     * @param rateAdsvcCd
+//     * @return
+//     * @throws SocketTimeoutException
+//     */
+//
+//    @RequestMapping(value = { "/mypage/roamingCanChgAjax.do", "/m/mypage/roamingCanChgAjax.do" })
+//    @ResponseBody
+//    public Map<String, Object> roamingCanChgAjax(HttpServletRequest request, Model model,
+//                                                    @ModelAttribute("searchVO") MyPageSearchDto searchVO,
+//                                                    @RequestParam(value = "rateAdsvcCd", required = true) String rateAdsvcCd,
+//                                                    @RequestParam(value = "prodHstSeq", required = false) String prodHstSeq) throws SocketTimeoutException {
+//
+//        Map<String, Object> rtnMap = new HashMap<String, Object>();
+//
+//        UserSessionDto userSession = SessionUtils.getUserCookieBean();
+//        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+//        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+//        if(!chk){
+//            rtnMap.put("RESULT_CODE", "E");
+//            rtnMap.put("message", F_BIND_EXCEPTION);
+//            return rtnMap;
+//        }
+//
+//        // 부가서비스 해지 서비스 호출 X38
+//        if("".equals(prodHstSeq) || prodHstSeq == null) {
+//            rtnMap = regSvcService.moscRegSvcCanChg(searchVO, rateAdsvcCd);
+//        } else {
+//            rtnMap = regSvcService.moscRegSvcCanChgSeq(searchVO, rateAdsvcCd, prodHstSeq);
+//        }
+//        return rtnMap;
+//    }
+//
+//
+//
+//    /**
+//     * 마이페이지 해외로밍 신청 화면 POP VIEW
+//     * @Date : 2023.06.21
+//     * @param request
+//     * @param model
+//     * @param searchVO
+//     * @param rateAdsvcCtgBasDTO
+//     * @return
+//     * @throws ParseException
+//     */
+//
+//    @RequestMapping(value = { "/mypage/roamingViewPop.do", "/m/mypage/roamingViewPop.do" })
+//    public String roamingViewPop(HttpServletRequest request, Model model,
+//                                @ModelAttribute("searchVO") MyPageSearchDto searchVO, RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO
+//                                , String flag, String prodHstSeq) throws ParseException {
+//
+//        String returnUrl = "";
+//        UserSessionDto userSession = SessionUtils.getUserCookieBean();
+//        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+//
+//        if ("Y".equals(NmcpServiceUtils.isMobile())) {
+//            returnUrl = "/mobile/mypage/roamingViewPop";
+//        } else {
+//            returnUrl = "/portal/mypage/roamingViewPop";
+//        }
+//
+//        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+//        if(!chk){
+//            ResponseSuccessDto responseSuccessDto = getMessageBox();
+//            model.addAttribute("responseSuccessDto", responseSuccessDto);
+//            return "/common/successRedirect";
+//        }
+//
+//
+//        //팝업에 띄울 해외로밍 상품 정보 조회
+//        RateAdsvcCtgBasDTO joinPop = rateAdsvcGdncService.getProdBySeq(rateAdsvcCtgBasDTO);
+//        RateAdsvcGdncProdRelXML prodRel = rateAdsvcGdncService.getRateAdsvcGdncProdRel(rateAdsvcCtgBasDTO);
+//
+//        model.addAttribute("contractNum", searchVO.getContractNum());
+//        model.addAttribute("joinPop", joinPop);
+//        model.addAttribute("prodRel", prodRel);
+//        model.addAttribute("flag", flag);
+//        model.addAttribute("prodHstSeq", prodHstSeq);
+//        return returnUrl;
+//    }
+//    
+//    
 }

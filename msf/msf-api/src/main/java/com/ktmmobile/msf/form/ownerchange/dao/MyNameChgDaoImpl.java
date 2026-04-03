@@ -1,12 +1,12 @@
 /**
  *
  */
-package com.ktmmobile.msf.form.servicechange.dao;
+package com.ktmmobile.msf.form.ownerchange.dao;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import com.ktmmobile.msf.form.servicechange.dto.MyNameChgReqDto;
+import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
 
 /**
  * @author ANT_FX700_02

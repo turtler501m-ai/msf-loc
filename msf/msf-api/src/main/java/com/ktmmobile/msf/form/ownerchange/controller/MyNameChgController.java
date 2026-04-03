@@ -1,32 +1,16 @@
 package com.ktmmobile.msf.form.servicechange.controller;
 
-import com.ktds.crypto.exception.CryptoException;
-import com.ktmmobile.msf.system.cert.dto.CertDto;
-import com.ktmmobile.msf.system.cert.service.CertService;
-import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.service.FCommonSvc;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
-import com.ktmmobile.msf.system.faceauth.dto.FathSessionDto;
-import com.ktmmobile.msf.system.faceauth.service.FathService;
-import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
-import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyNameChgReqDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.form.servicechange.service.CustRequestScanService;
-import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MyNameChgService;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
+import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.system.common.constants.Constants.CSTMR_TYPE_NM;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_INFO_NULL_EXCEPTION;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,16 +21,31 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestClientException;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.system.common.constants.Constants.CSTMR_TYPE_NM;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
+import com.ktds.crypto.exception.CryptoException;
+import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
+import com.ktmmobile.msf.form.ownerchange.service.MyNameChgService;
+import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
+import com.ktmmobile.msf.form.servicechange.service.CustRequestScanService;
+import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.system.cert.dto.CertDto;
+import com.ktmmobile.msf.system.cert.service.CertService;
+import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
+import com.ktmmobile.msf.system.common.dto.UserSessionDto;
+import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.system.common.exception.McpCommonException;
+import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.system.common.exception.SelfServiceException;
+import com.ktmmobile.msf.system.common.service.FCommonSvc;
+import com.ktmmobile.msf.system.common.service.IpStatisticService;
+import com.ktmmobile.msf.system.common.util.EncryptUtil;
+import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.system.common.util.SessionUtils;
+import com.ktmmobile.msf.system.common.util.StringMakerUtil;
+import com.ktmmobile.msf.system.faceauth.service.FathService;
 
 @Controller
 public class MyNameChgController {
@@ -55,7 +54,7 @@ public class MyNameChgController {
 
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private MyNameChgService myNameChgService;

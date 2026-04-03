@@ -3,11 +3,9 @@
  */
 package com.ktmmobile.msf.form.servicechange.dao;
 
-import com.ktmmobile.msf.system.common.mplatform.vo.CodeVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.UserVO;
-import com.ktmmobile.msf.system.common.legacy.join.dto.JoinDto;
-import com.ktmmobile.msf.form.servicechange.dto.AgreeDto;
-import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +14,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.ktmmobile.msf.form.servicechange.dto.AgreeDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.system.common.mplatform.vo.CodeVO;
+import com.ktmmobile.msf.system.common.mplatform.vo.UserVO;
 
 /**
  * @author ANT_FX700_02
@@ -203,11 +201,11 @@ public class MypageUserDaoImpl implements MypageUserDao{
         return list;
     }
 
-    @Override
-    public void deleteUserSns(JoinDto joinDto) {
-        sqlSessionTemplate.delete("MypageMapper.deleteUserSns", joinDto);
-
-    }
+//    @Override
+//    public void deleteUserSns(JoinDto joinDto) {
+//        sqlSessionTemplate.delete("MypageMapper.deleteUserSns", joinDto);
+//
+//    }
 
     @Override
     public List<String> checkDatHst(UserVO userVO1) {

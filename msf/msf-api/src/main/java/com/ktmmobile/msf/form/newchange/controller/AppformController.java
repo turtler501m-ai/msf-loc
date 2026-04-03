@@ -36,7 +36,7 @@ import com.ktmmobile.msf.system.faceauth.service.FathService;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.servicechange.service.MyBenefitService;
 import com.ktmmobile.msf.form.servicechange.service.MyinfoService;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
 import com.ktmmobile.msf.form.servicechange.service.MypageUserService;
 import com.ktmmobile.msf.form.common.constant.PhoneConstant;
 import com.ktmmobile.msf.system.common.dto.OrderEnum;
@@ -156,7 +156,7 @@ public class AppformController {
     private GiftSvc giftSvc;
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private MyBenefitService myBenefitService;

@@ -1,38 +1,20 @@
 package com.ktmmobile.msf.form.servicechange.controller;
 
-import com.ktmmobile.msf.form.newchange.dto.FormDtlDTO;
-import com.ktmmobile.msf.form.newchange.service.FormDtlSvc;
-import com.ktmmobile.msf.system.cert.dto.CertDto;
-import com.ktmmobile.msf.system.cert.service.CertService;
-import com.ktmmobile.msf.system.common.constants.Constants;
-import com.ktmmobile.msf.system.common.dto.*;
-import com.ktmmobile.msf.system.common.dto.db.MspSmsTemplateMstDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.exception.McpErropPageException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
-import com.ktmmobile.msf.system.common.mplatform.dto.*;
-import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombChkRes.MoscCombPreChkListOut;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpSocVO;
-import com.ktmmobile.msf.system.common.service.FCommonSvc;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.service.SmsSvc;
-import com.ktmmobile.msf.system.common.util.*;
-import com.ktmmobile.msf.form.servicechange.dto.McpReqCombineDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyCombinationResDto;
-import com.ktmmobile.msf.form.servicechange.service.MyCombinationSvc;
-import com.ktmmobile.msf.system.common.legacy.mstory.dto.MstoryDto;
-import com.ktmmobile.msf.system.common.legacy.mstory.service.MstorySvc;
-import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
-import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
-import org.apache.commons.lang.StringEscapeUtils;
+import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
+import java.net.SocketTimeoutException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,16 +26,50 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import javax.servlet.http.HttpServletRequest;
-import java.net.SocketTimeoutException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
-import static com.ktmmobile.msf.system.common.constants.Constants.*;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
+import com.ktmmobile.msf.form.newchange.service.FormDtlSvc;
+import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpReqCombineDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyCombinationResDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
+import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
+import com.ktmmobile.msf.form.servicechange.service.MyCombinationSvc;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.system.cert.dto.CertDto;
+import com.ktmmobile.msf.system.cert.service.CertService;
+import com.ktmmobile.msf.system.common.constants.Constants;
+import com.ktmmobile.msf.system.common.dto.AuthSmsDto;
+import com.ktmmobile.msf.system.common.dto.MoscCombChkReqDto;
+import com.ktmmobile.msf.system.common.dto.MoscCombReqDto;
+import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
+import com.ktmmobile.msf.system.common.dto.UserSessionDto;
+import com.ktmmobile.msf.system.common.dto.db.MspSmsTemplateMstDto;
+import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.system.common.exception.McpCommonException;
+import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.system.common.exception.McpErropPageException;
+import com.ktmmobile.msf.system.common.exception.SelfServiceException;
+import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
+import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombChkRes;
+import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombChkRes.MoscCombPreChkListOut;
+import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombDtlListOutDTO;
+import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombDtlResDTO;
+import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombInfoResDTO;
+import com.ktmmobile.msf.system.common.mplatform.dto.MoscMvnoComInfo;
+import com.ktmmobile.msf.system.common.mplatform.dto.MoscSubMstCombChgRes;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoDto;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpSocVO;
+import com.ktmmobile.msf.system.common.service.FCommonSvc;
+import com.ktmmobile.msf.system.common.service.IpStatisticService;
+import com.ktmmobile.msf.system.common.service.SmsSvc;
+import com.ktmmobile.msf.system.common.util.DateTimeUtil;
+import com.ktmmobile.msf.system.common.util.EncryptUtil;
+import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.system.common.util.ObjectUtils;
+import com.ktmmobile.msf.system.common.util.SessionUtils;
+import com.ktmmobile.msf.system.common.util.StringMakerUtil;
+import com.ktmmobile.msf.system.common.util.StringUtil;
 
 @Controller
 public class CombineController {
@@ -64,7 +80,7 @@ public class CombineController {
     private String serverName;
 
     @Autowired
-    MypageService mypageService;
+    SfMypageSvc mypageService;
 
     @Autowired
     private FCommonSvc fCommonSvc;
@@ -95,8 +111,8 @@ public class CombineController {
     @Autowired
     private MplatFormService mPlatFormService;
 
-    @Autowired
-    MstorySvc mstorySvc;
+//    @Autowired
+//    MstorySvc mstorySvc;
 
     /**
      * 추가혜택 > 무무선 결합 소개 <인증전>
@@ -260,243 +276,243 @@ public class CombineController {
     }
 
 
-    /**
-     * 추가혜택 > 무무선 결합 소개 <인증전>
-     *
-     * @param request
-     * @param model
-     * @return
-     * @author papier
-     * @Date : 2022.11.11
-     */
-    @RequestMapping(value = {"/content/combineKt.do", "/m/content/combineKt.do"})
-    public String combineKt(HttpServletRequest request, Model model
-            , @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
-        // 결합회선리스트 값 초기화
-        request.getSession().removeAttribute(SessionUtils.COMBINE_LIST);
+//    /**
+//     * 추가혜택 > 무무선 결합 소개 <인증전>
+//     *
+//     * @param request
+//     * @param model
+//     * @return
+//     * @author papier
+//     * @Date : 2022.11.11
+//     */
+//    @RequestMapping(value = {"/content/combineKt.do", "/m/content/combineKt.do"})
+//    public String combineKt(HttpServletRequest request, Model model
+//            , @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+//        // 결합회선리스트 값 초기화
+//        request.getSession().removeAttribute(SessionUtils.COMBINE_LIST);
+//
+//        /* return "redirect:/main.do"; */
+//
+////        model.addAttribute("popType", "combine");
+//        model.addAttribute("menuType", "combine");
+//
+//        UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
+//
+//        if (userSessionDto != null) {
+//            String userId = userSessionDto.getUserId();
+//            List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
+//            cntrList = mypageService.selectCntrList(userId);
+//
+//            if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
+//
+//                ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
+//                String url = "/mypage/updateForm.do";
+//                if ("Y".equals(NmcpServiceUtils.isMobile())) {
+//                    url = "/m/mypage/updateForm.do";
+//                }
+//
+//                responseSuccessDto.setRedirectUrl(url);
+//                responseSuccessDto.setSuccessMsg(NOT_FULL_MEMBER_EXCEPTION);
+//                model.addAttribute("responseSuccessDto", responseSuccessDto);
+//                return "/common/successRedirect";
+//            }
+//            model.addAttribute("cntrList", cntrList); // 현재 서비스계약번호
+//            model.addAttribute("searchVO", searchVO);
+//
+//            // 마스킹해제
+//            if(SessionUtils.getMaskingSession() > 0 ) {
+//                model.addAttribute("maskingSession", "Y");
+//                UserSessionDto userSession = SessionUtils.getUserCookieBean();
+//                MaskingDto maskingDto = new MaskingDto();
+//
+//                long maskingRelSeq = SessionUtils.getMaskingSession();
+//                maskingDto.setMaskingReleaseSeq(maskingRelSeq);
+//                maskingDto.setUnmaskingInfo("휴대폰번호");
+//                maskingDto.setAccessIp(ipstatisticService.getClientIp());
+//                maskingDto.setAccessUrl(request.getRequestURI());
+//                maskingDto.setUserId(userSession.getUserId());
+//                maskingDto.setCretId(userSession.getUserId());
+//                maskingDto.setAmdId(userSession.getUserId());
+//                maskingSvc.insertMaskingReleaseHist(maskingDto);
+//            }
+//        }
+//
+//        //아무나 가족결합 동영상
+//        MstoryDto mstoryDto = new MstoryDto();
+//        mstoryDto.setSnsCtgCd("SNS003");
+//        mstoryDto.setSnsCntpntCd("COMBPLUS");
+//        List<MstoryDto> list = mstorySvc.getSnsList(mstoryDto);
+//        MstoryDto combineVideo = null;
+//        if (list.size() > 0) {
+//            combineVideo = list.get(0);
+//        }
+//        model.addAttribute("combineVideo", combineVideo);
+//
+//        //session 초기화
+//        AuthSmsDto authSmsDto = new AuthSmsDto();
+//        authSmsDto.setMenu("combine");
+//        SessionUtils.setAuthSmsSession(authSmsDto);
+//
+//        AuthSmsDto childAutSms = new AuthSmsDto();
+//        childAutSms.setMenu("combineChild");
+//
+//        //관리자 정보 session 저장 session 초기화
+//        SessionUtils.setAuthSmsSession(childAutSms);
+//
+//        if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
+//            return "/mobile/content/combineKt";
+//        } else {
+//            return "/portal/content/combineKt";
+//        }
+//    }
 
-        /* return "redirect:/main.do"; */
-
-//        model.addAttribute("popType", "combine");
-        model.addAttribute("menuType", "combine");
-
-        UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
-
-        if (userSessionDto != null) {
-            String userId = userSessionDto.getUserId();
-            List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
-            cntrList = mypageService.selectCntrList(userId);
-
-            if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
-
-                ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
-                String url = "/mypage/updateForm.do";
-                if ("Y".equals(NmcpServiceUtils.isMobile())) {
-                    url = "/m/mypage/updateForm.do";
-                }
-
-                responseSuccessDto.setRedirectUrl(url);
-                responseSuccessDto.setSuccessMsg(NOT_FULL_MEMBER_EXCEPTION);
-                model.addAttribute("responseSuccessDto", responseSuccessDto);
-                return "/common/successRedirect";
-            }
-            model.addAttribute("cntrList", cntrList); // 현재 서비스계약번호
-            model.addAttribute("searchVO", searchVO);
-
-            // 마스킹해제
-            if(SessionUtils.getMaskingSession() > 0 ) {
-                model.addAttribute("maskingSession", "Y");
-                UserSessionDto userSession = SessionUtils.getUserCookieBean();
-                MaskingDto maskingDto = new MaskingDto();
-
-                long maskingRelSeq = SessionUtils.getMaskingSession();
-                maskingDto.setMaskingReleaseSeq(maskingRelSeq);
-                maskingDto.setUnmaskingInfo("휴대폰번호");
-                maskingDto.setAccessIp(ipstatisticService.getClientIp());
-                maskingDto.setAccessUrl(request.getRequestURI());
-                maskingDto.setUserId(userSession.getUserId());
-                maskingDto.setCretId(userSession.getUserId());
-                maskingDto.setAmdId(userSession.getUserId());
-                maskingSvc.insertMaskingReleaseHist(maskingDto);
-            }
-        }
-
-        //아무나 가족결합 동영상
-        MstoryDto mstoryDto = new MstoryDto();
-        mstoryDto.setSnsCtgCd("SNS003");
-        mstoryDto.setSnsCntpntCd("COMBPLUS");
-        List<MstoryDto> list = mstorySvc.getSnsList(mstoryDto);
-        MstoryDto combineVideo = null;
-        if (list.size() > 0) {
-            combineVideo = list.get(0);
-        }
-        model.addAttribute("combineVideo", combineVideo);
-
-        //session 초기화
-        AuthSmsDto authSmsDto = new AuthSmsDto();
-        authSmsDto.setMenu("combine");
-        SessionUtils.setAuthSmsSession(authSmsDto);
-
-        AuthSmsDto childAutSms = new AuthSmsDto();
-        childAutSms.setMenu("combineChild");
-
-        //관리자 정보 session 저장 session 초기화
-        SessionUtils.setAuthSmsSession(childAutSms);
-
-        if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            return "/mobile/content/combineKt";
-        } else {
-            return "/portal/content/combineKt";
-        }
-    }
-
-
-    /**
-     * @param :
-     * @return :
-     * @Description : 시간연장처리
-     * @Author : power
-     * @Create Date : 2022. 11. 14
-     */
-    @RequestMapping(value = "/content/getRateInfoAjax.do")
-    @ResponseBody
-    public Map<String, Object> getRateInfo(MyPageSearchDto searchVO
-            , @RequestParam(required = false, defaultValue = "combine") String menuPara
-    ) {
-
-        UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-
-        if (userSessionDto != null) {
-            // STEP검증 처음부터 시작
-            certService.delStepInfo(1);
-
-            String userId = userSessionDto.getUserId();
-            List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
-            cntrList = mypageService.selectCntrList(userId);
-
-            if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
-                throw new McpCommonJsonException("0001", ExceptionMsgConstant.NO_SESSION_EXCEPTION);
-            }
-
-            // NCN 변조 방지
-            if(StringUtils.isBlank(searchVO.getContractNum())){
-                throw new McpCommonJsonException("9999", ExceptionMsgConstant.INVALID_REFERER_EXCEPTION);
-            }
-
-            //로그인한 사용자 이용중인 요금제조회
-            McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
-
-            //로그인 사용자 , 비로그인 사용자 호환을 위해.. 설정
-            AuthSmsDto authSmsDto = new AuthSmsDto();
-            authSmsDto.setPhoneNum(searchVO.getCtn());
-            authSmsDto.setCtn(searchVO.getCtn());
-            authSmsDto.setMenu(menuPara);
-            authSmsDto.setRateCd(mcpUserCntrMngDto.getSoc());
-            authSmsDto.setRateNm(mcpUserCntrMngDto.getRateNm());
-            authSmsDto.setSvcCntrNo(searchVO.getNcn());
-            authSmsDto.setContractNum(searchVO.getContractNum());
-            authSmsDto.setCustId(searchVO.getCustId());
-            authSmsDto.setSubLinkName(mcpUserCntrMngDto.getSubLinkName());
-            authSmsDto.setUnSSn(searchVO.getUserType());  //주민 번호 설정
-            authSmsDto.setMessage(searchVO.getSubStatus());  //회선 현재상태 A 사용중 , S 정지 , C 해지
-            SessionUtils.setAuthSmsSession(authSmsDto);
-
-            logger.info("[WOO][WOO][WOO] strMenu==>"+ menuPara);
-
-            if ("combineSelf".equals(menuPara)) {
-                //마스터 결합.. 검증을 위한 ... 값 설정
-                // 결합대상 구분값, 인증종류, 이름, 핸드폰번호, 계약번호
-                String[] certKey = {"urlType", "name", "mobileNo", "contractNum"};
-                String[] certValue = {"combineSelf", mcpUserCntrMngDto.getSubLinkName() , searchVO.getCtn(), searchVO.getNcn()};
-
-                certService.vdlCertInfo("C", certKey, certValue);
-            }
+//
+//    /**
+//     * @param :
+//     * @return :
+//     * @Description : 시간연장처리
+//     * @Author : power
+//     * @Create Date : 2022. 11. 14
+//     */
+//    @RequestMapping(value = "/content/getRateInfoAjax.do")
+//    @ResponseBody
+//    public Map<String, Object> getRateInfo(MyPageSearchDto searchVO
+//            , @RequestParam(required = false, defaultValue = "combine") String menuPara
+//    ) {
+//
+//        UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
+//        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+//
+//        if (userSessionDto != null) {
+//            // STEP검증 처음부터 시작
+//            certService.delStepInfo(1);
+//
+//            String userId = userSessionDto.getUserId();
+//            List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
+//            cntrList = mypageService.selectCntrList(userId);
+//
+//            if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
+//                throw new McpCommonJsonException("0001", ExceptionMsgConstant.NO_SESSION_EXCEPTION);
+//            }
+//
+//            // NCN 변조 방지
+//            if(StringUtils.isBlank(searchVO.getContractNum())){
+//                throw new McpCommonJsonException("9999", ExceptionMsgConstant.INVALID_REFERER_EXCEPTION);
+//            }
+//
+//            //로그인한 사용자 이용중인 요금제조회
+//            McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+//
+//            //로그인 사용자 , 비로그인 사용자 호환을 위해.. 설정
+//            AuthSmsDto authSmsDto = new AuthSmsDto();
+//            authSmsDto.setPhoneNum(searchVO.getCtn());
+//            authSmsDto.setCtn(searchVO.getCtn());
+//            authSmsDto.setMenu(menuPara);
+//            authSmsDto.setRateCd(mcpUserCntrMngDto.getSoc());
+//            authSmsDto.setRateNm(mcpUserCntrMngDto.getRateNm());
+//            authSmsDto.setSvcCntrNo(searchVO.getNcn());
+//            authSmsDto.setContractNum(searchVO.getContractNum());
+//            authSmsDto.setCustId(searchVO.getCustId());
+//            authSmsDto.setSubLinkName(mcpUserCntrMngDto.getSubLinkName());
+//            authSmsDto.setUnSSn(searchVO.getUserType());  //주민 번호 설정
+//            authSmsDto.setMessage(searchVO.getSubStatus());  //회선 현재상태 A 사용중 , S 정지 , C 해지
+//            SessionUtils.setAuthSmsSession(authSmsDto);
+//
+//            logger.info("[WOO][WOO][WOO] strMenu==>"+ menuPara);
+//
+//            if ("combineSelf".equals(menuPara)) {
+//                //마스터 결합.. 검증을 위한 ... 값 설정
+//                // 결합대상 구분값, 인증종류, 이름, 핸드폰번호, 계약번호
+//                String[] certKey = {"urlType", "name", "mobileNo", "contractNum"};
+//                String[] certValue = {"combineSelf", mcpUserCntrMngDto.getSubLinkName() , searchVO.getCtn(), searchVO.getNcn()};
+//
+//                certService.vdlCertInfo("C", certKey, certValue);
+//            }
+//
+//
+//            //함께 쓰기 모회선 , 자회선 구분
+//            //1. 공통코드 사용가능한 요금제 모회선 자회선 구분
+//            String retvGubunCd = ""; // G(주기회선조회) / R(받기회선조회)
+//
+//            String shareChildNm = StringUtil.NVL(NmcpServiceUtils.getCodeNm(SHARE_RATE_CHILD_LIST,mcpUserCntrMngDto.getSoc()),"");
+//            String shareParentNm = StringUtil.NVL(NmcpServiceUtils.getCodeNm(SHARE_RATE_PARENT_LIST,mcpUserCntrMngDto.getSoc()),"");
+//
+//            if( !"".equals(shareChildNm) &&  !"".equals(shareParentNm) ){
+//                retvGubunCd = "";
+//            } else if( !"".equals(shareChildNm) ){
+//                retvGubunCd = "R";
+//            } else if( !"".equals(shareParentNm) ){
+//                retvGubunCd = "G";
+//            }
+//
+//            rtnMap.put("RETV_GUBNU_CD", retvGubunCd); //함께 쓰기 모회선 , 자회선 구문...
+//            // 마스킹해제
+//            if(SessionUtils.getMaskingSession() > 0 ) {
+//                String[] nums = StringUtil.getMobileNum(authSmsDto.getPhoneNum());
+//                String telNo = nums[0]+"-"+nums[1]+"-"+nums[2];
+//                rtnMap.put("RESULT_PHONE_NUM",telNo);
+//                rtnMap.put("RESULT_NM", mcpUserCntrMngDto.getSubLinkName());
+//            }else {
+//                rtnMap.put("RESULT_PHONE_NUM", StringMakerUtil.getPhoneNum(authSmsDto.getPhoneNum()));
+//                rtnMap.put("RESULT_NM", StringMakerUtil.getName(mcpUserCntrMngDto.getSubLinkName()));
+//            }
+//            rtnMap.put("RESULT_RATE_NM", authSmsDto.getRateNm());
+//
+//        } else {
+//            throw new McpCommonJsonException("0001", ExceptionMsgConstant.NO_SESSION_EXCEPTION);
+//        }
+//
+//        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+//        return rtnMap;
+//    }
 
 
-            //함께 쓰기 모회선 , 자회선 구분
-            //1. 공통코드 사용가능한 요금제 모회선 자회선 구분
-            String retvGubunCd = ""; // G(주기회선조회) / R(받기회선조회)
-
-            String shareChildNm = StringUtil.NVL(NmcpServiceUtils.getCodeNm(SHARE_RATE_CHILD_LIST,mcpUserCntrMngDto.getSoc()),"");
-            String shareParentNm = StringUtil.NVL(NmcpServiceUtils.getCodeNm(SHARE_RATE_PARENT_LIST,mcpUserCntrMngDto.getSoc()),"");
-
-            if( !"".equals(shareChildNm) &&  !"".equals(shareParentNm) ){
-                retvGubunCd = "";
-            } else if( !"".equals(shareChildNm) ){
-                retvGubunCd = "R";
-            } else if( !"".equals(shareParentNm) ){
-                retvGubunCd = "G";
-            }
-
-            rtnMap.put("RETV_GUBNU_CD", retvGubunCd); //함께 쓰기 모회선 , 자회선 구문...
-            // 마스킹해제
-            if(SessionUtils.getMaskingSession() > 0 ) {
-                String[] nums = StringUtil.getMobileNum(authSmsDto.getPhoneNum());
-                String telNo = nums[0]+"-"+nums[1]+"-"+nums[2];
-                rtnMap.put("RESULT_PHONE_NUM",telNo);
-                rtnMap.put("RESULT_NM", mcpUserCntrMngDto.getSubLinkName());
-            }else {
-                rtnMap.put("RESULT_PHONE_NUM", StringMakerUtil.getPhoneNum(authSmsDto.getPhoneNum()));
-                rtnMap.put("RESULT_NM", StringMakerUtil.getName(mcpUserCntrMngDto.getSubLinkName()));
-            }
-            rtnMap.put("RESULT_RATE_NM", authSmsDto.getRateNm());
-
-        } else {
-            throw new McpCommonJsonException("0001", ExceptionMsgConstant.NO_SESSION_EXCEPTION);
-        }
-
-        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-        return rtnMap;
-    }
-
-
-    /**
-     * @param :
-     * @return :
-     * @Description : 인증한 전화 번호 추출
-     * @Author : power
-     * @Create Date : 2022. 11. 11
-     */
-    @RequestMapping(value = "/content/getNoLoginRateInfoAjax.do")
-    @ResponseBody
-    public Map<String, Object> certPhoneInfo(AuthSmsDto authSmsDto) {
-
-        AuthSmsDto rtnDto = SessionUtils.getAuthSmsBean(authSmsDto);
-
-        if (rtnDto == null) {
-            throw new McpCommonJsonException("0001", ExceptionMsgConstant.NO_FAIL_SESSION_EXCEPTION);
-        }
-
-        // 현재 요금제 조회
-        // 서비스계약번호
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(rtnDto.getSvcCntrNo());
-
-        if (mcpUserCntrMngDto == null || StringUtils.isBlank(mcpUserCntrMngDto.getSoc())) {
-            throw new McpCommonJsonException("0002", "요금제 정보 조회 실패");
-        }
-
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-        rtnDto.setRateCd(mcpUserCntrMngDto.getSoc());
-        rtnDto.setRateNm(mcpUserCntrMngDto.getRateNm());
-        rtnDto.setUnSSn(mcpUserCntrMngDto.getUnUserSSn());  //주민 번호 설정
-        //요금제 정보 저장후 다시 session 저정
-        rtnDto.setMenu(authSmsDto.getMenu());
-        //rtnDto.setCustId(mcpUserCntrMngDto.getCustId());
-
-        SessionUtils.setAuthSmsSession(rtnDto);
-
-        AuthSmsDto rtnDto2 = new AuthSmsDto();
-        rtnDto2.setSvcCntrNo(rtnDto.getSvcCntrNo());
-        rtnDto2.setRateCd(mcpUserCntrMngDto.getSoc());
-        rtnDto2.setRateNm(mcpUserCntrMngDto.getRateNm());
-        rtnDto2.setCtn(StringMakerUtil.getPhoneNum(rtnDto.getCtn()));
-        rtnDto2.setSubLinkName(StringMakerUtil.getName(rtnDto.getSubLinkName()));
-
-        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-        rtnMap.put("DATA_OBJ", rtnDto2);
-        return rtnMap;
-    }
+//    /**
+//     * @param :
+//     * @return :
+//     * @Description : 인증한 전화 번호 추출
+//     * @Author : power
+//     * @Create Date : 2022. 11. 11
+//     */
+//    @RequestMapping(value = "/content/getNoLoginRateInfoAjax.do")
+//    @ResponseBody
+//    public Map<String, Object> certPhoneInfo(AuthSmsDto authSmsDto) {
+//
+//        AuthSmsDto rtnDto = SessionUtils.getAuthSmsBean(authSmsDto);
+//
+//        if (rtnDto == null) {
+//            throw new McpCommonJsonException("0001", ExceptionMsgConstant.NO_FAIL_SESSION_EXCEPTION);
+//        }
+//
+//        // 현재 요금제 조회
+//        // 서비스계약번호
+//        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(rtnDto.getSvcCntrNo());
+//
+//        if (mcpUserCntrMngDto == null || StringUtils.isBlank(mcpUserCntrMngDto.getSoc())) {
+//            throw new McpCommonJsonException("0002", "요금제 정보 조회 실패");
+//        }
+//
+//        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+//        rtnDto.setRateCd(mcpUserCntrMngDto.getSoc());
+//        rtnDto.setRateNm(mcpUserCntrMngDto.getRateNm());
+//        rtnDto.setUnSSn(mcpUserCntrMngDto.getUnUserSSn());  //주민 번호 설정
+//        //요금제 정보 저장후 다시 session 저정
+//        rtnDto.setMenu(authSmsDto.getMenu());
+//        //rtnDto.setCustId(mcpUserCntrMngDto.getCustId());
+//
+//        SessionUtils.setAuthSmsSession(rtnDto);
+//
+//        AuthSmsDto rtnDto2 = new AuthSmsDto();
+//        rtnDto2.setSvcCntrNo(rtnDto.getSvcCntrNo());
+//        rtnDto2.setRateCd(mcpUserCntrMngDto.getSoc());
+//        rtnDto2.setRateNm(mcpUserCntrMngDto.getRateNm());
+//        rtnDto2.setCtn(StringMakerUtil.getPhoneNum(rtnDto.getCtn()));
+//        rtnDto2.setSubLinkName(StringMakerUtil.getName(rtnDto.getSubLinkName()));
+//
+//        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+//        rtnMap.put("DATA_OBJ", rtnDto2);
+//        return rtnMap;
+//    }
 
     /**
      * @param :

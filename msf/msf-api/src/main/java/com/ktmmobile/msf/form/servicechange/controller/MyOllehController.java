@@ -23,7 +23,7 @@ import com.ktmmobile.msf.system.common.service.IpStatisticService;
 import com.ktmmobile.msf.system.common.util.*;
 import com.ktmmobile.msf.form.servicechange.dto.*;
 import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
 import com.ktmmobile.msf.form.servicechange.service.MypageUserService;
 import com.ktmmobile.msf.usim.service.UsimService;
 import org.apache.commons.lang.StringUtils;
@@ -80,7 +80,7 @@ public class MyOllehController {
     private MypageUserService mypageUserService;
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private FCommonSvc fCommonSvc;

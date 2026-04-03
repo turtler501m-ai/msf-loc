@@ -1,8 +1,6 @@
 package com.ktmmobile.msf.system.common.controller;
 
 import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NICE_CERT_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
@@ -30,13 +28,11 @@ import com.ktmmobile.msf.form.newchange.dto.FormDtlDTO;
 import com.ktmmobile.msf.form.newchange.service.FormDtlSvc;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
-import com.ktmmobile.msf.system.common.dto.NiceResDto;
 import com.ktmmobile.msf.system.common.dto.NowDlvryReqDto;
 import com.ktmmobile.msf.system.common.dto.PopupDto;
 import com.ktmmobile.msf.system.common.dto.SiteMenuDto;
 import com.ktmmobile.msf.system.common.dto.UserSessionDto;
 import com.ktmmobile.msf.system.common.dto.db.BannAccessTxnDto;
-import com.ktmmobile.msf.system.common.dto.db.MspCommDatPrvTxnDto;
 import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
 import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.McpErropPageException;
@@ -277,60 +273,60 @@ public class FCommonController {
     }
 
 
-    /**
-     * <pre>
-     * 설명     : 통신자료제공내역신청 등록
-     * @param appformReqDto
-     * @return
-     * @return: Map<String,Object>
-     * </pre>
-     */
-    @RequestMapping(value ="/comm/insertmspCommDatPrvAjax.do")
-    @ResponseBody
-    public Map<String, Object> insertmspCommDatPrvTxn(MspCommDatPrvTxnDto mspCommDatPrvTxnDto){
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-
-        UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
-        if (userSessionDto ==null) {
-            throw new McpCommonJsonException("0001" ,NO_FRONT_SESSION_EXCEPTION);
-        }
-
-        //TODO 1.본인인증한 DI ,pin 검증
-        NiceResDto sessNiceRes =  SessionUtils.getNiceResCookieBean() ;
-        if (sessNiceRes == null
-                || !userSessionDto.getPin().equals(sessNiceRes.getDupInfo()) ) {
-            throw new McpCommonJsonException("0002" ,NICE_CERT_EXCEPTION);
-        }
-
-
-        if (!StringUtils.isBlank(mspCommDatPrvTxnDto.getTgtSvcNo())) {
-            //전화번호 리스트
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
-
-            if (cntrList != null && cntrList.size() > 0) {
-                for (McpUserCntrMngDto mcpUserCntrMngDto : cntrList) {
-                    if (mspCommDatPrvTxnDto.getTgtSvcNo().equals(mcpUserCntrMngDto.getContractNum())) {
-                        mspCommDatPrvTxnDto.setTgtSvcNo(mcpUserCntrMngDto.getCntrMobileNo());
-                    }
-                }
-            }
-
-        }
-        mspCommDatPrvTxnDto.setApyId(userSessionDto.getUserId());
-        mspCommDatPrvTxnDto.setApyNm(userSessionDto.getName());
-        mspCommDatPrvTxnDto.setMyslfAthnCi(sessNiceRes.getConnInfo());
-
-
-        if (fCommonSvc.insertmspCommDatPrvTxn(mspCommDatPrvTxnDto)) {
-            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-            SessionUtils.saveNiceRes(null);
-        } else {
-            rtnMap.put("RESULT_CODE", "-1");
-        }
-
-
-        return rtnMap;
-    }
+//    /**
+//     * <pre>
+//     * 설명     : 통신자료제공내역신청 등록
+//     * @param appformReqDto
+//     * @return
+//     * @return: Map<String,Object>
+//     * </pre>
+//     */
+//    @RequestMapping(value ="/comm/insertmspCommDatPrvAjax.do")
+//    @ResponseBody
+//    public Map<String, Object> insertmspCommDatPrvTxn(MspCommDatPrvTxnDto mspCommDatPrvTxnDto){
+//        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+//
+//        UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
+//        if (userSessionDto ==null) {
+//            throw new McpCommonJsonException("0001" ,NO_FRONT_SESSION_EXCEPTION);
+//        }
+//
+//        //TODO 1.본인인증한 DI ,pin 검증
+//        NiceResDto sessNiceRes =  SessionUtils.getNiceResCookieBean() ;
+//        if (sessNiceRes == null
+//                || !userSessionDto.getPin().equals(sessNiceRes.getDupInfo()) ) {
+//            throw new McpCommonJsonException("0002" ,NICE_CERT_EXCEPTION);
+//        }
+//
+//
+//        if (!StringUtils.isBlank(mspCommDatPrvTxnDto.getTgtSvcNo())) {
+//            //전화번호 리스트
+//            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+//
+//            if (cntrList != null && cntrList.size() > 0) {
+//                for (McpUserCntrMngDto mcpUserCntrMngDto : cntrList) {
+//                    if (mspCommDatPrvTxnDto.getTgtSvcNo().equals(mcpUserCntrMngDto.getContractNum())) {
+//                        mspCommDatPrvTxnDto.setTgtSvcNo(mcpUserCntrMngDto.getCntrMobileNo());
+//                    }
+//                }
+//            }
+//
+//        }
+//        mspCommDatPrvTxnDto.setApyId(userSessionDto.getUserId());
+//        mspCommDatPrvTxnDto.setApyNm(userSessionDto.getName());
+//        mspCommDatPrvTxnDto.setMyslfAthnCi(sessNiceRes.getConnInfo());
+//
+//
+//        if (fCommonSvc.insertmspCommDatPrvTxn(mspCommDatPrvTxnDto)) {
+//            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+//            SessionUtils.saveNiceRes(null);
+//        } else {
+//            rtnMap.put("RESULT_CODE", "-1");
+//        }
+//
+//
+//        return rtnMap;
+//    }
 
 
     /**

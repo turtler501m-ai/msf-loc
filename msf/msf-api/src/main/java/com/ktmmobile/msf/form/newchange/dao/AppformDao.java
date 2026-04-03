@@ -1,13 +1,25 @@
 package com.ktmmobile.msf.form.newchange.dao;
 
-import com.ktmmobile.msf.form.newchange.dto.*;
-import com.ktmmobile.msf.system.common.dto.db.*;
-import com.ktmmobile.msf.system.common.legacy.etc.dto.GiftPromotionDtl;
-import com.ktmmobile.msf.usim.dto.UsimBasDto;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.ktmmobile.msf.form.common.dto.UsimBasDto;
+import com.ktmmobile.msf.form.newchange.dto.AcenDto;
+import com.ktmmobile.msf.form.newchange.dto.AppformReqDto;
+import com.ktmmobile.msf.form.newchange.dto.IntmInsrRelDTO;
+import com.ktmmobile.msf.form.newchange.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.form.newchange.dto.McpRequestPayInfoDto;
+import com.ktmmobile.msf.form.newchange.dto.McpUploadPhoneInfoDto;
+import com.ktmmobile.msf.form.newchange.dto.OsstUc0ReqDto;
+import com.ktmmobile.msf.system.common.dto.db.McpRequestAdditionDto;
+import com.ktmmobile.msf.system.common.dto.db.McpRequestCstmrDto;
+import com.ktmmobile.msf.system.common.dto.db.McpRequestDlvryDto;
+import com.ktmmobile.msf.system.common.dto.db.McpRequestDto;
+import com.ktmmobile.msf.system.common.dto.db.McpRequestMoveDto;
+import com.ktmmobile.msf.system.common.dto.db.McpRequestOsstDto;
+import com.ktmmobile.msf.system.common.dto.db.McpRequestSaleinfoDto;
+import com.ktmmobile.msf.system.common.dto.db.McpRequestSelfDlvryDto;
+import com.ktmmobile.msf.system.common.dto.db.NmcpAppFormMstDto;
 
 /**
  * <pre>
@@ -940,25 +952,25 @@ public interface AppformDao {
      */
     public UsimBasDto getUsimBasInfo(UsimBasDto usimBasObj);
 
-    /**
-     * <pre>
-     * 설명     : 사은품 신청정보 (NMCP_GIFT_REQ_TXN) INSERT
-     * @param GiftPromotionDtl
-     * @return
-     * @return: boolean
-     * </pre>
-     */
-    public boolean insertGiftReqTxn(GiftPromotionDtl giftPromotionDtl);
-
-    /**
-     * <pre>
-     * 설명     : 사은품 신청정보 (NMCP_GIFT_REQ_TXN) 중복 방지을 위해 count
-     * @param GiftPromotionDtl
-     * @return
-     * @return: boolean
-     * </pre>
-     */
-    public int checkGiftReqCount(GiftPromotionDtl giftPromotionDtl) ;
+//    /**
+//     * <pre>
+//     * 설명     : 사은품 신청정보 (NMCP_GIFT_REQ_TXN) INSERT
+//     * @param GiftPromotionDtl
+//     * @return
+//     * @return: boolean
+//     * </pre>
+//     */
+//    public boolean insertGiftReqTxn(GiftPromotionDtl giftPromotionDtl);
+//
+//    /**
+//     * <pre>
+//     * 설명     : 사은품 신청정보 (NMCP_GIFT_REQ_TXN) 중복 방지을 위해 count
+//     * @param GiftPromotionDtl
+//     * @return
+//     * @return: boolean
+//     * </pre>
+//     */
+//    public int checkGiftReqCount(GiftPromotionDtl giftPromotionDtl) ;
 
 
     public boolean insertNmcpRequestApd(McpRequestDto appformReq);

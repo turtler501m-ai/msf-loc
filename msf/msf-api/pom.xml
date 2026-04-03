@@ -86,6 +86,20 @@
             <artifactId>ehcache</artifactId>
             <version>2.10.9.2</version>
         </dependency>
+        <!-- JAXB (Java 11+에서 제거됨, javax.xml.bind 사용) -->
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+        <!-- ktds crypto (CryptoException) -->
+        <dependency>
+            <groupId>com.ktds</groupId>
+            <artifactId>crypto</artifactId>
+            <version>1.0.8-RELEASE</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/com/ktds/crypto/1.0.8-RELEASE/crypto-1.0.8-RELEASE.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>
@@ -106,13 +120,6 @@
                              _bak / _legacy 디렉토리 (ASIS 보관용, 컴파일 제외)
                              ===================================================== -->
                         <exclude>com/ktmmobile/msf/system/common/controller/**</exclude>
-                        <exclude>com/ktmmobile/msf/common/mplatform_bak/**</exclude>
-                        <exclude>com/ktmmobile/msf/common/mplatform_legacy/**</exclude>
-                        <exclude>com/ktmmobile/msf/common/service_bak/**</exclude>
-                        <exclude>com/ktmmobile/msf/SmtPage/**</exclude>
-                        <exclude>com/ktmmobile/msf/SmtPage_bak/**</exclude>
-                        <exclude>com/ktmmobile/msf/fath_bak/**</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/service_bak/**</exclude>
 
                         <!-- =====================================================
                              미이관 패키지 전체 제외 (단계적 이관 예정)
@@ -153,12 +160,29 @@
                         <exclude>com/ktmmobile/msf/form/comm/**</exclude>
                         <exclude>com/ktmmobile/msf/form/newChg/**</exclude>
                         <exclude>com/ktmmobile/msf/form/ownChg/**</exclude>
-                        <!-- servicechange: ASIS svcChg 복사본 (TOBE 이관 전) -->
-                        <exclude>com/ktmmobile/msf/form/servicechange/**</exclude>
 
                         <!-- =====================================================
                              form/svcChg 부분 이관 — TOBE 완성 전 ASIS 파일 제외
                              ===================================================== -->
+                        <!-- servicechange: 미이관 패키지 의존 파일 개별 제외 -->
+                        <exclude>com/ktmmobile/msf/form/servicechange/controller/FarPricePlanController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/controller/SfMyShareDataController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/controller/NicePinController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/controller/MyOllehController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/controller/MyinfoController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/controller/RegSvcController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/dto/RateAdsvcCtgBasDTO.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/dto/MapWrapper.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/service/FarPricePlanService.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/service/FarPricePlanServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/service/MypageUserService.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/service/MypageUserServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/service/NicePinServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/service/PayInfoService.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/service/PayInfoServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/service/PaywayService.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/servicechange/service/PaywayServiceImpl.java</exclude>
+
                         <!-- ASIS 레거시 컨트롤러 (SmtForm, ASIS MyShareData) -->
                         <exclude>com/ktmmobile/msf/form/common/controller/SmtFormController.java</exclude>
                         <exclude>com/ktmmobile/msf/form/svcChg/controller/SmtShareDataController.java</exclude>

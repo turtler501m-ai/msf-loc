@@ -41,7 +41,7 @@ import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
 import org.springframework.web.client.RestClientException;
 
 @Controller
@@ -51,7 +51,7 @@ public class UsimSelfChgController {
 
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private MplatFormService mPlatFormService;

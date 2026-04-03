@@ -1,18 +1,14 @@
-package com.ktmmobile.msf.form.servicechange.controller;
+package com.ktmmobile.msf.form.termination.controller;
 
 import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +18,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import com.ktmmobile.msf.system.cert.service.CertService;
+import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
+import com.ktmmobile.msf.form.servicechange.service.CustRequestScanService;
+import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.form.termination.dto.CancelConsultDto;
+import com.ktmmobile.msf.form.termination.service.CancelConsultSvc;
 import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.system.common.dto.NiceResDto;
 import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
@@ -35,21 +37,13 @@ import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.system.common.util.SessionUtils;
 import com.ktmmobile.msf.system.common.util.StringMakerUtil;
 import com.ktmmobile.msf.system.common.util.StringUtil;
-import com.ktmmobile.msf.form.servicechange.dto.CancelConsultDto;
-import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
-import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.form.servicechange.service.CancelConsultSvc;
-import com.ktmmobile.msf.form.servicechange.service.CustRequestScanService;
-import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
 
 @Controller
 public class CancelConsultController {
     private static Logger logger = LoggerFactory.getLogger(CancelConsultController.class);
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private MaskingSvc maskingSvc;
@@ -60,8 +54,8 @@ public class CancelConsultController {
     @Autowired
     private CustRequestScanService custRequestScanService;
 
-    @Autowired
-    private CertService certService;
+//    @Autowired
+//    private CertService certService;
 
     @Autowired
     private IpStatisticService ipstatisticService;
@@ -262,15 +256,16 @@ public class CancelConsultController {
             String[] certValue= new String[]{"saveCancelConsultForm", "Y", "0", cancelConsultDto.getOnlineAuthType()
                               , cancelConsultDto.getReqSeq(), cancelConsultDto.getResSeq(), niceResDto.getDupInfo()};
 
-            if(certService.getStepCnt() < certStep){
-                throw new McpCommonJsonException("STEP01", STEP_CNT_EXCEPTION);
-            }
+//PNB_확인필요            
+//            if(certService.getStepCnt() < certStep){
+//                throw new McpCommonJsonException("STEP01", STEP_CNT_EXCEPTION);
+//            }
+//
+//            Map<String,String> vldReslt= certService.vdlCertInfo("D", certKey, certValue);
 
-            Map<String,String> vldReslt= certService.vdlCertInfo("D", certKey, certValue);
-
-            if(!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
-                throw new McpCommonJsonException("STEP02", vldReslt.get("RESULT_DESC"));
-            }
+//            if(!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
+//                throw new McpCommonJsonException("STEP02", vldReslt.get("RESULT_DESC"));
+//            }
 
             cancelConsultDto.setOnlineAuthInfo("ReqNo:" + cancelConsultDto.getReqSeq() + ", ResNo:" + cancelConsultDto.getResSeq());
             cancelConsultDto.setCancelMobileNo(ctn);

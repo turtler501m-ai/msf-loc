@@ -1,9 +1,8 @@
-package com.ktmmobile.msf.form.servicechange.dto;
-
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
-import org.apache.commons.lang.StringUtils;
+package com.ktmmobile.msf.form.ownerchange.dto;
 
 import java.io.Serializable;
+import org.apache.commons.lang.StringUtils;
+import com.ktmmobile.msf.system.common.util.EncryptUtil;
 
 public class MyNameChgReqDto implements Serializable  {
 

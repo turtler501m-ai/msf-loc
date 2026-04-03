@@ -3,9 +3,9 @@ package com.ktmmobile.msf.form.servicechange.dao;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
 import com.ktmmobile.msf.form.servicechange.dto.CustRequestDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyNameChgReqDto;
-import com.ktmmobile.msf.form.servicechange.dto.CancelConsultDto;
+import com.ktmmobile.msf.form.termination.dto.CancelConsultDto;
 /**
  * <pre>
  * 프로젝트 :

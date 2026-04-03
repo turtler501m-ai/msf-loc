@@ -3,15 +3,11 @@ package com.ktmmobile.msf.form.servicechange.service;
 import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
-
-import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoDto;
+import com.ktmmobile.msf.form.servicechange.dto.McpRegServiceDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoParamDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpRegSvcChgVO;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpSocVO;
-import com.ktmmobile.msf.form.servicechange.dto.McpRegServiceDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.rate.dto.RateAdsvcCtgBasDTO;
-import com.ktmmobile.msf.rate.dto.RateAdsvcGdncBasXML;
 
 public interface RegSvcService {
 
@@ -35,7 +31,7 @@ public interface RegSvcService {
       * @return
       */
 
-     public RateAdsvcGdncBasXML selectAddSvcDtl(RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO);
+//     public RateAdsvcGdncBasXML selectAddSvcDtl(RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO);
 
      /**
       *  부가서비스 신청
@@ -114,7 +110,7 @@ public interface RegSvcService {
       * @param
       * @return List<RateAdsvcCtgBasDTO>
       */
-     public List<RateAdsvcCtgBasDTO> getRoamList();
+//     public List<RateAdsvcCtgBasDTO> getRoamList();
 
      /**
       * 이용중인 상품 변경가능여부 판단

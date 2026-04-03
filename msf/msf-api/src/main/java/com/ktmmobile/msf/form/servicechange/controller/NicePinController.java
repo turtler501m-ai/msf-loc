@@ -1,16 +1,11 @@
 package com.ktmmobile.msf.form.servicechange.controller;
 
-import com.ktds.crypto.exception.CryptoException;
-import com.ktmmobile.msf.form.newchange.dto.JuoSubInfoDto;
-import com.ktmmobile.msf.system.cert.service.CertService;
-import com.ktmmobile.msf.system.common.constants.Constants;
-import com.ktmmobile.msf.system.common.dto.NiceLogDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
-import com.ktmmobile.msf.form.servicechange.service.MypageUserService;
-import com.ktmmobile.msf.form.servicechange.service.NicePinService;
+import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+import java.util.HashMap;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,13 +15,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
+import com.ktds.crypto.exception.CryptoException;
+import com.ktmmobile.msf.form.newchange.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.form.servicechange.service.MypageUserService;
+import com.ktmmobile.msf.form.servicechange.service.NicePinService;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.system.cert.service.CertService;
+import com.ktmmobile.msf.system.common.constants.Constants;
+import com.ktmmobile.msf.system.common.dto.NiceLogDto;
+import com.ktmmobile.msf.system.common.util.EncryptUtil;
+import com.ktmmobile.msf.system.common.util.SessionUtils;
 
 @Controller
 public class NicePinController {
@@ -46,7 +44,7 @@ public class NicePinController {
     CertService certService;
 
     @Autowired
-    MypageService mypageService;
+    SfMypageSvc mypageService;
 
     /**
      * 설명 : 고객 ci 조회 prx 연동

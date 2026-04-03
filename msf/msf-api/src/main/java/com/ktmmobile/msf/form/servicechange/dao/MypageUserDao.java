@@ -6,12 +6,10 @@ package com.ktmmobile.msf.form.servicechange.dao;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.ktmmobile.msf.system.common.mplatform.vo.CodeVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.UserVO;
-import com.ktmmobile.msf.system.common.legacy.join.dto.JoinDto;
 import com.ktmmobile.msf.form.servicechange.dto.AgreeDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.system.common.mplatform.vo.CodeVO;
+import com.ktmmobile.msf.system.common.mplatform.vo.UserVO;
 
 
 /**
@@ -96,7 +94,7 @@ public interface MypageUserDao {
 
     List<String> selectUserList(String userId);
 
-    void deleteUserSns(JoinDto joinDto);
+//    void deleteUserSns(JoinDto joinDto);
 
     List<String> checkDatHst(UserVO userVO1);
 

@@ -1,17 +1,14 @@
 package com.ktmmobile.msf.form.servicechange.controller;
 
 
+import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.DB_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
-
-import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,23 +16,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.ObjectUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
 import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.servicechange.dto.MspJuoAddInfoDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyNameChgReqDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.form.servicechange.service.CustRequestScanService;
 import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
-
-import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
+import com.ktmmobile.msf.system.common.dto.UserSessionDto;
+import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.system.common.service.IpStatisticService;
+import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.system.common.util.SessionUtils;
 
 @Controller
 public class MypageController {
@@ -44,7 +46,7 @@ public class MypageController {
 
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private MaskingSvc maskingSvc;

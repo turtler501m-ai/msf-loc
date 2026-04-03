@@ -1,7 +1,7 @@
 /**
  *
  */
-package com.ktmmobile.msf.form.servicechange.service;
+package com.ktmmobile.msf.form.ownerchange.service;
 
 import java.util.*;
 
@@ -36,10 +36,10 @@ import com.ktmmobile.msf.system.common.mspservice.dao.MspDao;
 import com.ktmmobile.msf.system.common.service.IpStatisticService;
 import com.ktmmobile.msf.system.common.util.SessionUtils;
 import com.ktmmobile.msf.form.servicechange.dao.CustRequestDao;
-import com.ktmmobile.msf.form.servicechange.dao.MyNameChgDao;
+import com.ktmmobile.msf.form.ownerchange.dao.MyNameChgDao;
 import com.ktmmobile.msf.form.servicechange.dao.MypageDao;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyNameChgReqDto;
+import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
 
 import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
 

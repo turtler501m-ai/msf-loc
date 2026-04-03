@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.form.servicechange.dto;
+package com.ktmmobile.msf.form.termination.dto;
 
 import java.io.Serializable;
 import java.util.Date;

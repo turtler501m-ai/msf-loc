@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.form.servicechange.dao;
+package com.ktmmobile.msf.form.termination.dao;
 import java.util.List;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
-import com.ktmmobile.msf.form.servicechange.dto.CancelConsultDto;
+import com.ktmmobile.msf.form.termination.dto.CancelConsultDto;
 
 @Repository
 public class CancelConsultDaoImpl implements CancelConsultDao {

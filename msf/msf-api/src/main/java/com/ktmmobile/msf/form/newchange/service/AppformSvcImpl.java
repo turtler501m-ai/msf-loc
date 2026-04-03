@@ -35,7 +35,7 @@ import com.ktmmobile.msf.system.faceauth.dto.FathSessionDto;
 import com.ktmmobile.msf.system.faceauth.service.FathService;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.servicechange.service.MyBenefitService;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
 import com.ktmmobile.msf.system.common.legacy.point.dto.CustPointDto;
 import com.ktmmobile.msf.system.common.legacy.point.dto.CustPointTxnDto;
 import com.ktmmobile.msf.point.service.PointService;
@@ -101,7 +101,7 @@ public class AppformSvcImpl implements AppformSvc {
     private CertService certService;
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private FCommonSvc fCommonSvc;

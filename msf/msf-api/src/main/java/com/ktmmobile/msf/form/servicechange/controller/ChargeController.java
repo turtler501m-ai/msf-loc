@@ -1,5 +1,8 @@
 package com.ktmmobile.msf.form.servicechange.controller;
 
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.TIME_OVERLAP_EXCEPTION;
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -8,11 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletRequest;
-
-import com.ktmmobile.msf.system.common.dto.AuthSmsDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,42 +23,34 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
-
-import com.ktmmobile.msf.system.common.dto.JsonReturnDto;
-import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpBilPrintInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarChangewayInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonBillingInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonDetailInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPaymentInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarRealtimePayInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpMonthPayMentDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscBilEmailInfoInVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpPerMyktfInfoVO;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPaymentInfoVO.ItemPay;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarRealtimePayInfoVO.RealFareVO;
-import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.ObjectUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
-import com.ktmmobile.msf.system.common.util.StringUtil;
 import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.form.servicechange.service.ChargeService;
 import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
 import com.ktmmobile.msf.form.servicechange.service.RealTimePayService;
-import com.ktmmobile.msf.form.servicechange.view.ChargeExcleView;
-import com.ktmmobile.msf.form.servicechange.view.ChargeMonthListExcelView;
-
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.system.common.dto.AuthSmsDto;
+import com.ktmmobile.msf.system.common.dto.JsonReturnDto;
+import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
+import com.ktmmobile.msf.system.common.dto.UserSessionDto;
+import com.ktmmobile.msf.system.common.exception.McpCommonException;
+import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.system.common.exception.SelfServiceException;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonBillingInfoDto;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonDetailInfoDto;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPaymentInfoVO;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPaymentInfoVO.ItemPay;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpFarRealtimePayInfoVO;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpFarRealtimePayInfoVO.RealFareVO;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpMonthPayMentDto;
+import com.ktmmobile.msf.system.common.service.IpStatisticService;
+import com.ktmmobile.msf.system.common.util.DateTimeUtil;
+import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.system.common.util.SessionUtils;
+import com.ktmmobile.msf.system.common.util.StringMakerUtil;
+import com.ktmmobile.msf.system.common.util.StringUtil;
 
 
 @Controller
@@ -68,7 +59,7 @@ public class ChargeController {
     private static final Logger logger = LoggerFactory.getLogger(ChargeController.class);
 
     @Autowired
-    private MypageService mypageService ;
+    private SfMypageSvc mypageService ;
 
     @Autowired
     private ChargeService chargeService;
@@ -504,10 +495,13 @@ public class ChargeController {
         model.addAttribute("userName", StringMakerUtil.getName(strUserName));
         model.addAttribute("userCtn", StringMakerUtil.getPhoneNum(searchVO.getCtn()));
 
-
-        ModelAndView mav =  new ModelAndView(new ChargeMonthListExcelView());
-        mav.addAllObjects(model);
-        return mav;
+// PNB_확인
+//        ModelAndView mav =  new ModelAndView(new ChargeMonthListExcelView());
+//        mav.addAllObjects(model);
+//        return mav;
+      ModelAndView mav =  new ModelAndView();
+      mav.addAllObjects(model);
+      return mav;        
     }
 
     /**
@@ -826,7 +820,7 @@ public class ChargeController {
         authSmsDto.setMenu("chargePrint");
         authSmsDto.setCheck(true);
 
-        SessionUtils.checkAuthSmsSession(authSmsDto);
+//PNB_확인        SessionUtils.checkAuthSmsSession(authSmsDto);
 
         if(!authSmsDto.isResult()) {
             throw new McpCommonJsonException("01",authSmsDto.getMessage());
@@ -834,7 +828,7 @@ public class ChargeController {
 
         //SMS 인증정보 초기화
         //실행할때 마다 SMS 인증 처리
-        SessionUtils.setAuthSmsSetNullSession(authSmsDto);
+//PNB_확인        SessionUtils.setAuthSmsSetNullSession(authSmsDto);
 
 
         MpFarPaymentInfoVO mpFarPaymentInfoVO = null;
@@ -943,8 +937,12 @@ public class ChargeController {
         model.addAttribute("userName", StringMakerUtil.getName(strUserName));
         model.addAttribute("userCtn", StringMakerUtil.getPhoneNum(searchVO.getCtn()));
 
+//PNB_확인        
+//        ModelAndView mav =  new ModelAndView(new ChargeExcleView());
+//        mav.addAllObjects(model);
+//        return mav;        
 
-        ModelAndView mav =  new ModelAndView(new ChargeExcleView());
+        ModelAndView mav =  new ModelAndView();
         mav.addAllObjects(model);
         return mav;
     }

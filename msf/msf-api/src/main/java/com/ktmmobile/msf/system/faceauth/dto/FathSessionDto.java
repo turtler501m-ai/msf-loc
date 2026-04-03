@@ -1,4 +1,4 @@
-package com.ktmmobile.mcp.fath.dto;
+package com.ktmmobile.msf.system.faceauth.dto;
 
 import java.io.Serializable;
 import java.util.Date;

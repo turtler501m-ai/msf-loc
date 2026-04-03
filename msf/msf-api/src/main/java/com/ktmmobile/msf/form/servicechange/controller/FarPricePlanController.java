@@ -30,7 +30,7 @@ import com.ktmmobile.msf.system.common.util.StringUtil;
 import com.ktmmobile.msf.form.servicechange.dto.*;
 import com.ktmmobile.msf.form.servicechange.service.FarPricePlanService;
 import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageService;
+import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
 import com.ktmmobile.msf.rate.dto.MapWrapper;
 import com.ktmmobile.msf.rate.dto.RateAdsvcBnfitGdncDtlDTO;
 import com.ktmmobile.msf.rate.dto.RateAdsvcBnfitGdncDtlXML;
@@ -82,7 +82,7 @@ public class FarPricePlanController {
     private MspService mspService;
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     FarPricePlanService farPricePlanService;

@@ -18,7 +18,7 @@ import java.util.Map;
 
 import com.ktmmobile.msf.form.newchange.dto.JuoSubInfoDto;
 import com.ktmmobile.msf.form.common.util.*;
-import jakarta.xml.bind.JAXBException;
+import javax.xml.bind.JAXBException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

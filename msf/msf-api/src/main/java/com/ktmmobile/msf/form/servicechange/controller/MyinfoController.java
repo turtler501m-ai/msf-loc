@@ -44,7 +44,7 @@ public class MyinfoController {
     private static Logger logger = LoggerFactory.getLogger(MyinfoController.class);
 
     @Autowired
-    private MypageService mypageService;
+    private SfMypageSvc mypageService;
 
     @Autowired
     private MyinfoService myinfoService;
