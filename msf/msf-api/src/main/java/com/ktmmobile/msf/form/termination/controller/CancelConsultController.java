@@ -21,9 +21,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.form.servicechange.service.CustRequestScanService;
-import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.form.servicechange.service.MsfCustRequestScanService;
+import com.ktmmobile.msf.form.servicechange.service.MsfMaskingSvc;
+import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.form.termination.dto.CancelConsultDto;
 import com.ktmmobile.msf.form.termination.service.CancelConsultSvc;
 import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
@@ -43,16 +43,16 @@ public class CancelConsultController {
     private static Logger logger = LoggerFactory.getLogger(CancelConsultController.class);
 
     @Autowired
-    private SfMypageSvc mypageService;
+    private MsfMypageSvc mypageService;
 
     @Autowired
-    private MaskingSvc maskingSvc;
+    private MsfMaskingSvc maskingSvc;
 
     @Autowired
     private CancelConsultSvc cancelConsultSvc;
 
     @Autowired
-    private CustRequestScanService custRequestScanService;
+    private MsfCustRequestScanService custRequestScanService;
 
 //    @Autowired
 //    private CertService certService;

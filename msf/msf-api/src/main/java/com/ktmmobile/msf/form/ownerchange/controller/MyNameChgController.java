@@ -27,9 +27,9 @@ import com.ktmmobile.msf.form.ownerchange.service.MyNameChgService;
 import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.form.servicechange.service.CustRequestScanService;
-import com.ktmmobile.msf.form.servicechange.service.MaskingSvc;
-import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.form.servicechange.service.MsfCustRequestScanService;
+import com.ktmmobile.msf.form.servicechange.service.MsfMaskingSvc;
+import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.system.cert.dto.CertDto;
 import com.ktmmobile.msf.system.cert.service.CertService;
 import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
@@ -54,13 +54,13 @@ public class MyNameChgController {
 
 
     @Autowired
-    private SfMypageSvc mypageService;
+    private MsfMypageSvc mypageService;
 
     @Autowired
     private MyNameChgService myNameChgService;
 
     @Autowired
-    private CustRequestScanService custRequestScanService;
+    private MsfCustRequestScanService custRequestScanService;
 
     @Autowired
     private IpStatisticService ipstatisticService;
@@ -69,7 +69,7 @@ public class MyNameChgController {
     private CertService certService;
 
     @Autowired
-    private MaskingSvc maskingSvc;
+    private MsfMaskingSvc maskingSvc;
 
     @Autowired
     private FCommonSvc fCommonSvc;

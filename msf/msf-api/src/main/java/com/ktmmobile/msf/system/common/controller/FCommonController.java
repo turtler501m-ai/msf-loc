@@ -27,7 +27,7 @@ import org.springframework.web.servlet.ModelAndView;
 import com.ktmmobile.msf.form.newchange.dto.FormDtlDTO;
 import com.ktmmobile.msf.form.newchange.service.FormDtlSvc;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.system.common.dto.NowDlvryReqDto;
 import com.ktmmobile.msf.system.common.dto.PopupDto;
 import com.ktmmobile.msf.system.common.dto.SiteMenuDto;
@@ -71,7 +71,7 @@ public class FCommonController {
     private String jusoKey;
 
     @Autowired
-    private SfMypageSvc mypageService;
+    private MsfMypageSvc mypageService;
 
     @Autowired
     FormDtlSvc formDtlSvc;

@@ -12,8 +12,8 @@ import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
 import com.ktmmobile.msf.system.common.service.IpStatisticService;
 import com.ktmmobile.msf.system.common.service.NiceLogSvc;
 import com.ktmmobile.msf.system.common.util.*;
-import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
-import com.ktmmobile.msf.form.servicechange.service.MypageUserService;
+import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
+import com.ktmmobile.msf.form.servicechange.service.MsfMypageUserService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public class EsimController {
     private IpStatisticService ipstatisticService;
 
     @Autowired
-    private MypageUserService mypageUserService;
+    private MsfMypageUserService mypageUserService;
 
     @Autowired
     NiceLogSvc nicelog ;
@@ -62,7 +62,7 @@ public class EsimController {
     CertService certService;
 
     @Autowired
-    SfMypageSvc mypageService;
+    MsfMypageSvc mypageService;
 
     /**
      * 설명 : eSim 다이렉트 구매 화면

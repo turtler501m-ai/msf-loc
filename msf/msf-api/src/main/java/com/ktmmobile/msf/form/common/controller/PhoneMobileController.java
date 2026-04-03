@@ -64,7 +64,7 @@ import com.ktmmobile.msf.form.common.util.PageInfoBean;
 import com.ktmmobile.msf.form.common.util.ParseHtmlTagUtil;
 import com.ktmmobile.msf.form.common.util.SessionUtils;
 import com.ktmmobile.msf.form.common.util.StringUtil;
-import com.ktmmobile.msf.form.servicechange.service.FarPricePlanService;
+import com.ktmmobile.msf.form.servicechange.service.MsfFarPricePlanService;
 import com.ktmmobile.msf.form.common.constant.PhoneConstant;
 import com.ktmmobile.msf.form.common.dto.CommonSearchDto;
 import com.ktmmobile.msf.form.common.dto.OrderEnum;
@@ -102,7 +102,7 @@ public class PhoneMobileController {
     UsimService usimService;
 
     @Autowired
-    FarPricePlanService farPricePlanService;
+    MsfFarPricePlanService farPricePlanService;
 
     /** 조직 코드 */
     @Value("${sale.orgnId}")

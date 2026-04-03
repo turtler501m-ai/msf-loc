@@ -74,14 +74,14 @@ public class MyNameChgServiceImpl implements MyNameChgService{
     CustRequestDao custRequestDao;
 
     @Autowired
-    FarPricePlanService farPricePlanService;
+    MsfFarPricePlanService farPricePlanService;
     /*
     @Autowired
     FormImageMakeSvc formImageMakeSvc;
     */
 
     @Autowired
-    private MyinfoService myinfoService;
+    private MsfMyinfoService myinfoService;
 
     @Autowired
     private FCommonSvc fCommonSvc;

@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ktmmobile.msf.system.common.util.ObjectUtils;
-import com.ktmmobile.msf.form.servicechange.service.MypageUserService;
+import com.ktmmobile.msf.form.servicechange.service.MsfMypageUserService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public class CertServiceImpl implements CertService {
     private IpStatisticService ipstatisticService;
 
     @Autowired
-    private MypageUserService mypageUserService;
+    private MsfMypageUserService mypageUserService;
 
 
     /**

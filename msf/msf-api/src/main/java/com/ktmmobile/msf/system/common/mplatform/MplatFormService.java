@@ -21,7 +21,7 @@ import com.ktmmobile.msf.form.newchange.dto.EsimDto;
 import com.ktmmobile.msf.form.newchange.dto.JuoSubInfoDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpServiceAlterTraceDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.form.servicechange.service.SfMypageSvc;
+import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.system.common.dto.MoscCombChkReqDto;
 import com.ktmmobile.msf.system.common.dto.MoscCombReqDto;
 import com.ktmmobile.msf.system.common.dto.MoscPymnReqDto;
@@ -125,7 +125,7 @@ public class MplatFormService {
     private FCommonSvc fCommonSvc;
 
     @Autowired
-    private SfMypageSvc mypageService;
+    private MsfMypageSvc mypageService;
 
     @Autowired
     private MplatFormServerAdapter mplatFormServerAdapter;
