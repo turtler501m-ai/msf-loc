@@ -46,7 +46,7 @@ public class MsfUsimSelfChgController {
 
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private MplatFormService mPlatFormService;
@@ -88,8 +88,8 @@ public class MsfUsimSelfChgController {
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -150,7 +150,7 @@ public class MsfUsimSelfChgController {
 
         McpUserCntrMngDto mcpUserCntrMngDto = new McpUserCntrMngDto();
         mcpUserCntrMngDto.setSvcCntrNo(osstUc0ReqDto.getSvcContId());
-        mcpUserCntrMngDto = mypageService.selectCntrListNoLogin(mcpUserCntrMngDto);
+        mcpUserCntrMngDto = msfMypageSvc.selectCntrListNoLogin(mcpUserCntrMngDto);
 
         if(mcpUserCntrMngDto == null){
             rtnMap.put("RESULT_CODE", "AUTH02");

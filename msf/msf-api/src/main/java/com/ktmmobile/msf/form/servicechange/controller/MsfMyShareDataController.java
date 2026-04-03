@@ -65,7 +65,7 @@ public class MsfMyShareDataController {
     MsfMyinfoService myinfoService;
 
     @Autowired
-    MsfMypageSvc mypageService;
+    MsfMypageSvc msfMypageSvc;
 
     @Autowired
     MsfMyShareDataSvc myShareDataSvc;
@@ -195,7 +195,7 @@ public class MsfMyShareDataController {
                 userCntrMngDto.setSvcCntrNo(searchVO.getNcn());
             }
 
-            McpUserCntrMngDto cntrList =  mypageService.selectCntrListNoLogin(userCntrMngDto);
+            McpUserCntrMngDto cntrList =  msfMypageSvc.selectCntrListNoLogin(userCntrMngDto);
 
             if(cntrList == null) {
                 throw new McpCommonException(F_BIND_EXCEPTION);
@@ -236,7 +236,7 @@ public class MsfMyShareDataController {
             List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
 
             // 본인이 가지고 있는 회선정보
-            cntrList = mypageService.selectCntrList(userId);
+            cntrList = msfMypageSvc.selectCntrList(userId);
 
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
                 ResponseSuccessDto responseSuccessDto = getMessageBox();
@@ -258,11 +258,11 @@ public class MsfMyShareDataController {
 
         // 현재 요금제 조회
         // 서비스계약번호
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
         MoscDataSharingResDto moscDataSharingResDto  = new MoscDataSharingResDto();
 
         //고객구분여부
-        String customerType = mypageService.selectCustomerType(searchVO.getCustId());
+        String customerType = msfMypageSvc.selectCustomerType(searchVO.getCustId());
 
         if("G".equals(customerType) || "B".equals(customerType)) {
             customerType = "Y";
@@ -472,7 +472,7 @@ public class MsfMyShareDataController {
                 userCntrMngDto.setSvcCntrNo(searchVO.getNcn());
             }
 
-            McpUserCntrMngDto cntrList =  mypageService.selectCntrListNoLogin(userCntrMngDto);
+            McpUserCntrMngDto cntrList =  msfMypageSvc.selectCntrListNoLogin(userCntrMngDto);
             if(cntrList == null) {
                 throw new McpCommonException("[001]"+F_BIND_EXCEPTION);
             }
@@ -529,7 +529,7 @@ public class MsfMyShareDataController {
             List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
 
             // 본인이 가지고 있는 회선정보
-            cntrList = mypageService.selectCntrList(userId);
+            cntrList = msfMypageSvc.selectCntrList(userId);
 
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
                 ResponseSuccessDto responseSuccessDto = getMessageBox();
@@ -589,11 +589,11 @@ public class MsfMyShareDataController {
 
         // 현재 요금제 조회
         // 서비스계약번호
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
         MoscDataSharingResDto moscDataSharingResDto  = new MoscDataSharingResDto();
 
         //고객구분여부
-        String customerType = mypageService.selectCustomerType(searchVO.getCustId());
+        String customerType = msfMypageSvc.selectCustomerType(searchVO.getCustId());
 
         if("G".equals(customerType) || "B".equals(customerType)) {
             customerType = "Y";
@@ -756,7 +756,7 @@ public class MsfMyShareDataController {
         if(authSmsDto != null) {
             McpUserCntrMngDto userCntrMngDto = new McpUserCntrMngDto();
             userCntrMngDto.setSvcCntrNo(contractNum);
-            McpUserCntrMngDto cntrList =  mypageService.selectCntrListNoLogin(userCntrMngDto);
+            McpUserCntrMngDto cntrList =  msfMypageSvc.selectCntrListNoLogin(userCntrMngDto);
 
             if(cntrList  == null) {
                 throw new McpCommonException(F_BIND_EXCEPTION);
@@ -792,7 +792,7 @@ public class MsfMyShareDataController {
 
             searchVO.setNcn(contractNum);
 
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
 
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
                 ResponseSuccessDto responseSuccessDto = getMessageBox();
@@ -903,7 +903,7 @@ public class MsfMyShareDataController {
         if(nonMemberSess != null) {
             McpUserCntrMngDto userCntrMngDto = new McpUserCntrMngDto();
             userCntrMngDto.setSvcCntrNo(myShareDataReqDto.getNcn());
-            McpUserCntrMngDto cntrList =  mypageService.selectCntrListNoLogin(userCntrMngDto);
+            McpUserCntrMngDto cntrList =  msfMypageSvc.selectCntrListNoLogin(userCntrMngDto);
 
             if(cntrList == null) {
                 throw new McpCommonException(F_BIND_EXCEPTION);
@@ -914,7 +914,7 @@ public class MsfMyShareDataController {
             myShareDataReqDto.setCtn(cntrList.getCntrMobileNo());
             myShareDataReqDto.setOpmdSvcNo(myShareDataReqDto.getOpmdSvcNo());
         } else {
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
             if (cntrList != null && cntrList.size() > 0) {
                 for (McpUserCntrMngDto mcpUserCntrMngDto : cntrList) {
                     if (myShareDataReqDto.getNcn().equals(mcpUserCntrMngDto.getContractNum())) {
@@ -929,14 +929,14 @@ public class MsfMyShareDataController {
             }
         }
 
-        McpUserCntrMngDto result = mypageService.selectSocDesc(myShareDataReqDto.getNcn());
+        McpUserCntrMngDto result = msfMypageSvc.selectSocDesc(myShareDataReqDto.getNcn());
 
         if(result !=null) {
             socNm = result.getRateNm();
         }
 
         if(!StringUtil.isBlank(opmdSvcNoContractNum)) {
-            McpUserCntrMngDto opmdSvcNoDto = mypageService.selectSocDesc(opmdSvcNoContractNum); //가입하는 데이터쉐어링 요금제
+            McpUserCntrMngDto opmdSvcNoDto = msfMypageSvc.selectSocDesc(opmdSvcNoContractNum); //가입하는 데이터쉐어링 요금제
             if(opmdSvcNoDto !=null) {
                 opmdSvcSocNm =opmdSvcNoDto.getRateNm();
             }
@@ -987,7 +987,7 @@ public class MsfMyShareDataController {
             McpUserCntrMngDto userCntrMngDto = new McpUserCntrMngDto();
             userCntrMngDto.setSvcCntrNo(contractNum);
 
-            McpUserCntrMngDto cntrList =  mypageService.selectCntrListNoLogin(userCntrMngDto);
+            McpUserCntrMngDto cntrList =  msfMypageSvc.selectCntrListNoLogin(userCntrMngDto);
             if(cntrList == null) {
                 throw new McpCommonException(F_BIND_EXCEPTION);
             }
@@ -1009,7 +1009,7 @@ public class MsfMyShareDataController {
             List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
 
             // 본인이 가지고 있는 회선정보
-            cntrList = mypageService.selectCntrList(userId);
+            cntrList = msfMypageSvc.selectCntrList(userId);
 
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
                 throw new McpCommonJsonException("0098" ,NOT_FULL_MEMBER_EXCEPTION);
@@ -1106,7 +1106,7 @@ public class MsfMyShareDataController {
         if(authSmsDto != null) {
             McpUserCntrMngDto userCntrMngDto = new McpUserCntrMngDto();
             userCntrMngDto.setSvcCntrNo(contractNum);
-            McpUserCntrMngDto cntrList =  mypageService.selectCntrListNoLogin(userCntrMngDto);
+            McpUserCntrMngDto cntrList =  msfMypageSvc.selectCntrListNoLogin(userCntrMngDto);
 
             if(cntrList  == null) {
                 throw new McpCommonException(F_BIND_EXCEPTION);
@@ -1142,7 +1142,7 @@ public class MsfMyShareDataController {
 
             searchVO.setNcn(contractNum);
 
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
 
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
                 ResponseSuccessDto responseSuccessDto = getMessageBox();
@@ -1224,7 +1224,7 @@ public class MsfMyShareDataController {
         if(nonMemberSess != null) {
             McpUserCntrMngDto userCntrMngDto = new McpUserCntrMngDto();
             userCntrMngDto.setSvcCntrNo(myShareDataReqDto.getNcn());
-            McpUserCntrMngDto cntrList =  mypageService.selectCntrListNoLogin(userCntrMngDto);
+            McpUserCntrMngDto cntrList =  msfMypageSvc.selectCntrListNoLogin(userCntrMngDto);
 
             if(cntrList == null) {
                 throw new McpCommonException(F_BIND_EXCEPTION);
@@ -1237,7 +1237,7 @@ public class MsfMyShareDataController {
 
         }else {
 
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
             if (cntrList != null && cntrList.size() > 0) {
                 for (McpUserCntrMngDto mcpUserCntrMngDto : cntrList) {
                     if (myShareDataReqDto.getNcn().equals(mcpUserCntrMngDto.getContractNum())) {
@@ -1336,7 +1336,7 @@ public class MsfMyShareDataController {
         if(nonMemberSess != null) {
             McpUserCntrMngDto userCntrMngDto = new McpUserCntrMngDto();
             userCntrMngDto.setSvcCntrNo(myShareDataReqDto.getNcn());
-            McpUserCntrMngDto cntrList =  mypageService.selectCntrListNoLogin(userCntrMngDto);
+            McpUserCntrMngDto cntrList =  msfMypageSvc.selectCntrListNoLogin(userCntrMngDto);
 
             if(cntrList == null) {
                 throw new McpCommonException(F_BIND_EXCEPTION);
@@ -1350,7 +1350,7 @@ public class MsfMyShareDataController {
 
         }else {
 
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
 
             if (cntrList != null && cntrList.size() > 0) {
                 for (McpUserCntrMngDto mcpUserCntrMngDto : cntrList) {
@@ -1366,14 +1366,14 @@ public class MsfMyShareDataController {
             }
         }
 
-        McpUserCntrMngDto result = mypageService.selectSocDesc(myShareDataReqDto.getNcn());
+        McpUserCntrMngDto result = msfMypageSvc.selectSocDesc(myShareDataReqDto.getNcn());
 
         if(result !=null) {
             socNm = result.getRateNm();
         }
 
         if(!StringUtil.isBlank(opmdSvcNoContractNum)) {
-            McpUserCntrMngDto opmdSvcNoDto = mypageService.selectSocDesc(opmdSvcNoContractNum); //가입하는 데이터쉐어링 요금제
+            McpUserCntrMngDto opmdSvcNoDto = msfMypageSvc.selectSocDesc(opmdSvcNoContractNum); //가입하는 데이터쉐어링 요금제
             if(opmdSvcNoDto !=null) {
                 opmdSvcSocNm =opmdSvcNoDto.getRateNm();
             }

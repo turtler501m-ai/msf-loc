@@ -117,7 +117,7 @@ public class MsfMyOllehController {
     private MsfMypageUserService mypageUserService;
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private FCommonSvc fCommonSvc;
@@ -178,8 +178,8 @@ public class MsfMyOllehController {
 
         UserSessionDto userSession = (UserSessionDto)request.getSession().getAttribute(SessionUtils.USER_SESSION);
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -204,7 +204,7 @@ public class MsfMyOllehController {
             MpMoscBilEmailInfoInVO moscBilEmailInfo = mPlatFormService.kosMoscBillInfo(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId());
 
             //현재 요금제 조회
-            McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+            McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
             if(mcpUserCntrMngDto == null) {
                 ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
                 responseSuccessDto.setSuccessMsg("해당 사용자의 요금제 데이터가 없습니다.");
@@ -222,10 +222,10 @@ public class MsfMyOllehController {
             }
 
             //모델 ID 에 대한 이미지 경로 가지고 온다.
-            NmcpProdImgDtlDto nmcpProdImgDtlDto = mypageService.selectHpImgPath(mcpUserCntrMngDto.getModelId());
+            NmcpProdImgDtlDto nmcpProdImgDtlDto = msfMypageSvc.selectHpImgPath(mcpUserCntrMngDto.getModelId());
 
             //단말 할부개월, 단말 할부원금 가지고 온다.
-           /* HashMap<String, BigDecimal> modelSaleInfo = (HashMap<String, BigDecimal>)mypageService.selectModelSaleInfo(searchVO.getContractNum());
+           /* HashMap<String, BigDecimal> modelSaleInfo = (HashMap<String, BigDecimal>)msfMypageSvc.selectModelSaleInfo(searchVO.getContractNum());
             if(modelSaleInfo != null && modelSaleInfo.get("MODEL_MONTHLY").intValue() > 0) {
                 int tmp = modelSaleInfo.get("MODEL_INSTALLMENT").intValue() / modelSaleInfo.get("MODEL_MONTHLY").intValue();
                 modelSaleInfo.put("MONTH_PAY", new BigDecimal(tmp));
@@ -277,7 +277,7 @@ public class MsfMyOllehController {
             /*카운터 조회*/
             //---- API 호출 S ----//
             RestTemplate restTemplate = new RestTemplate();
-            int total = restTemplate.postForObject(apiInterfaceServer + "/api/mypage/jehuListCount", searchVO.getContractNum(), int.class); // mypageService.selectJehuListCnt
+            int total = restTemplate.postForObject(apiInterfaceServer + "/api/mypage/jehuListCount", searchVO.getContractNum(), int.class); // msfMypageSvc.selectJehuListCnt
             //---- API 호출 E ----//
             pageInfoBean.setTotalCount(total);
 
@@ -295,7 +295,7 @@ public class MsfMyOllehController {
                     params.put("contractNum", searchVO.getContractNum());
                     params.put("skipResult", skipResult);
                     params.put("maxResult", maxResult);
-                    JehuDto[] resultList = restTemplate.postForObject(apiInterfaceServer + "/api/mypage/jehuList", params, JehuDto[].class); // mypageService.selectJehuList
+                    JehuDto[] resultList = restTemplate.postForObject(apiInterfaceServer + "/api/mypage/jehuList", params, JehuDto[].class); // msfMypageSvc.selectJehuList
                     jehuList = Arrays.asList(resultList);
                     //---- API 호출 E ----//
                 }
@@ -359,7 +359,7 @@ public class MsfMyOllehController {
                     //할부원금 조회 MSP_JUO_ADD_INFO@DL_MSP
                     //---- API 호출 S ----//
                     RestTemplate restTemplate = new RestTemplate();
-                    mspJuoAddInfoDto = restTemplate.postForObject(apiInterfaceServer + "/api/mypage/mspAddInfo", searchVO.getNcn(), MspJuoAddInfoDto.class); // mypageService.selectMspAddInfo
+                    mspJuoAddInfoDto = restTemplate.postForObject(apiInterfaceServer + "/api/mypage/mspAddInfo", searchVO.getNcn(), MspJuoAddInfoDto.class); // msfMypageSvc.selectMspAddInfo
                     //---- API 호출 E ----//
                 }
                 //스폰서 조회
@@ -397,8 +397,8 @@ public class MsfMyOllehController {
             @ModelAttribute("searchVO") MyPageSearchDto searchVO)  {
         UserSessionDto userSession = (UserSessionDto)request.getSession().getAttribute(SessionUtils.USER_SESSION);
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -411,7 +411,7 @@ public class MsfMyOllehController {
             MpPerMyktfInfoVO perMyktfInfo = mPlatFormService.perMyktfInfo(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId());
 
             //현재 요금제 조회
-            McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+            McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
             if(mcpUserCntrMngDto == null) {
                 ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
                 responseSuccessDto.setSuccessMsg("해당 사용자의 요금제 데이터가 없습니다.");
@@ -423,7 +423,7 @@ public class MsfMyOllehController {
             //단말기정보
             //---- API 호출 S ----//
             RestTemplate restTemplate = new RestTemplate();
-            MspJuoAddInfoDto mspJuoAddInfoDto = restTemplate.postForObject(apiInterfaceServer + "/api/mypage/mspAddInfo", searchVO.getNcn(), MspJuoAddInfoDto.class); // mypageService.selectMspAddInfo
+            MspJuoAddInfoDto mspJuoAddInfoDto = restTemplate.postForObject(apiInterfaceServer + "/api/mypage/mspAddInfo", searchVO.getNcn(), MspJuoAddInfoDto.class); // msfMypageSvc.selectMspAddInfo
             //---- API 호출 E ----//
 
             //이용중인 부가서비스 조회
@@ -502,8 +502,8 @@ public class MsfMyOllehController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -590,8 +590,8 @@ public class MsfMyOllehController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -630,19 +630,19 @@ public class MsfMyOllehController {
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("cd", "NUMCH");//번호 목록조회 서비스코드
         map.put("ncn", ncn);//NCN
-        McpRetvRststnDto mcpRetvRststnDto = mypageService.retvRstrtn(map);//번호 목록조회 여부 select
+        McpRetvRststnDto mcpRetvRststnDto = msfMypageSvc.retvRstrtn(map);//번호 목록조회 여부 select
 
         SimpleDateFormat formatter = new SimpleDateFormat ("yyyyMMdd", Locale.KOREA );
         Date currentTime = new Date ( );
         String dTime = formatter.format (currentTime);//현재날짜 yyyymmdd
 
         if(mcpRetvRststnDto==null){//번호목록 조회결과 null인경우 insert
-            mypageService.retvRstrtnInsert(map);
+            msfMypageSvc.retvRstrtnInsert(map);
         }else if(!mcpRetvRststnDto.getConnDate().equals(dTime)){//번호목록 조회결과 현재날짜가 접속날짜와 같지 않다면 현재날짜로 update 접속제한횟수초기화(50)
-            mypageService.retvRstrtnUpSysDate(map);
+            msfMypageSvc.retvRstrtnUpSysDate(map);
         }
 
-        mcpRetvRststnDto = mypageService.retvRstrtn(map);//번호 목록조회 여부 select
+        mcpRetvRststnDto = msfMypageSvc.retvRstrtn(map);//번호 목록조회 여부 select
         searchCnt = mcpRetvRststnDto.getTmscnt();
 
         model.addAttribute("searchCnt", searchCnt);
@@ -665,8 +665,8 @@ public class MsfMyOllehController {
 //        UserSessionDto userSession = SessionUtils.getUserCookieBean();
 //        if(userSession==null || StringUtils.isEmpty(userSession.getUserId())||resvHkCtn==null||StringUtils.isEmpty(resvHkCtn)) return "redirect:/loginForm.do";
 //
-//        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-//        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+//        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+//        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
 //        if(!chk){
 //            ResponseSuccessDto responseSuccessDto = getMessageBox();
 //            model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -715,8 +715,8 @@ public class MsfMyOllehController {
             @ModelAttribute("searchVO") MyPageSearchDto searchVO)  {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             return "false";
         }
@@ -741,8 +741,8 @@ public class MsfMyOllehController {
             @RequestParam(value="adrSecondaryLn") String adrSecondaryLn)  {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             return "false";
         }
@@ -764,8 +764,8 @@ public class MsfMyOllehController {
             @RequestParam(value="email") String email)  {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             return "false";
         }
@@ -805,8 +805,8 @@ public class MsfMyOllehController {
             returnCode = "21";
             message = "로그인해 주세요.";
         } else {
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-            boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+            boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
             if(!chk){
                 returnCode = "11";
                 message = "정회원 인증 후 이용하실 수 있습니다.";
@@ -861,8 +861,8 @@ public class MsfMyOllehController {
             returnCode = "21";
             message = "로그인해 주세요.";
         } else {
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-            boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+            boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
             if(!chk){
                 returnCode = "11";
                 message = "정회원 인증 후 이용하실 수 있습니다.";
@@ -923,8 +923,8 @@ public class MsfMyOllehController {
             return resultMap;
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             resultMap.put("returnCode","11");
             resultMap.put("message","정회원 인증 후 이용하실 수 있습니다.");
@@ -951,7 +951,7 @@ public class MsfMyOllehController {
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("cd", "NUMCH");//번호 목록조회 서비스코드
         map.put("ncn", ncn);//NCN
-        McpRetvRststnDto mcpRetvRststnDto = mypageService.retvRstrtn(map);//번호 목록조회 여부 select
+        McpRetvRststnDto mcpRetvRststnDto = msfMypageSvc.retvRstrtn(map);//번호 목록조회 여부 select
 
         SimpleDateFormat formatter = new SimpleDateFormat ("yyyyMMdd", Locale.KOREA );
         Date currentTime = new Date();
@@ -975,13 +975,13 @@ public class MsfMyOllehController {
             }
 
             if(mcpRetvRststnDto==null){//번호목록 조회결과 null인경우 insert
-                mypageService.retvRstrtnInsert(map);
+                msfMypageSvc.retvRstrtnInsert(map);
             }else if(mcpRetvRststnDto.getConnDate().equals(dTime)){//번호목록 조회결과 현재날짜가 접속날짜와 같다면 접속제한횟수 -1 update
-                mypageService.retvRstrtnUpCnt(map);
-                mcpRetvRststnDto = mypageService.retvRstrtn(map);//번호 목록조회 여부 select
+                msfMypageSvc.retvRstrtnUpCnt(map);
+                mcpRetvRststnDto = msfMypageSvc.retvRstrtn(map);//번호 목록조회 여부 select
                 searchCnt = mcpRetvRststnDto.getTmscnt();
             }else if(!mcpRetvRststnDto.getConnDate().equals(dTime)){//번호목록 조회결과 현재날짜가 접속날짜와 같지 않다면 현재날짜로 update 접속제한횟수초기화(50)
-                this.mypageService.retvRstrtnUpSysDate(map);
+                this.msfMypageSvc.retvRstrtnUpSysDate(map);
             }
 
             returnCode = "00";
@@ -1040,8 +1040,8 @@ public class MsfMyOllehController {
             return resultMap;
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             resultMap.put("returnCode",returnCode);
             resultMap.put("message","정회원 인증 후 이용하실 수 있습니다.");
@@ -1120,8 +1120,8 @@ public class MsfMyOllehController {
             returnCode = "21";
             message = "로그인해 주세요.";
         } else {
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-            boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+            boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
             if(!chk){
                 returnCode = "11";
                 message = "정회원 인증 후 이용하실 수 있습니다.";
@@ -1175,8 +1175,8 @@ public class MsfMyOllehController {
             returnCode = "21";
             message = "로그인해 주세요.";
         } else {
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-            boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+            boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
             if(!chk){
                 returnCode = "11";
                 message = "정회원 인증 후 이용하실 수 있습니다.";
@@ -1228,8 +1228,8 @@ public class MsfMyOllehController {
             returnCode = "21";
             message = "로그인해 주세요.";
         } else {
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-            boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+            boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
             if(!chk){
                 returnCode = "11";
                 message = "정회원 인증 후 이용하실 수 있습니다.";
@@ -1287,8 +1287,8 @@ public class MsfMyOllehController {
             returnCode = "21";
             message = "로그인해 주세요.";
         } else {
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-            boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+            boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
             if(!chk){
                 returnCode = "11";
                 message = "정회원 인증 후 이용하실 수 있습니다.";
@@ -1459,7 +1459,7 @@ public class MsfMyOllehController {
         }
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
 
         //정회원
         if(cntrList.size() <= 0){
@@ -1520,8 +1520,8 @@ public class MsfMyOllehController {
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -1529,7 +1529,7 @@ public class MsfMyOllehController {
         }
 
        //현재 요금제 조회
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
 
 
         model.addAttribute("phoneNum", searchVO.getCtn());
@@ -1603,8 +1603,8 @@ public class MsfMyOllehController {
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -1612,7 +1612,7 @@ public class MsfMyOllehController {
         }
 
        //현재 요금제 조회
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
 
         try {
             //X62. 심플할인 정보조회(X62)
@@ -1669,8 +1669,8 @@ public class MsfMyOllehController {
             throw new McpCommonJsonException("0099" ,NO_FRONT_SESSION_EXCEPTION);
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(myPageSearchDto, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(myPageSearchDto, cntrList, userSession);
         if(!chk){
            throw new McpCommonJsonException("0098" ,NOT_FULL_MEMBER_EXCEPTION);
         }
@@ -1736,8 +1736,8 @@ public class MsfMyOllehController {
             throw new McpCommonJsonException("0099" ,NO_FRONT_SESSION_EXCEPTION);
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(myPageSearchDto, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(myPageSearchDto, cntrList, userSession);
         if(!chk){
            throw new McpCommonJsonException("0098" ,NOT_FULL_MEMBER_EXCEPTION);
         }
@@ -1787,7 +1787,7 @@ public class MsfMyOllehController {
            mcpRequestAgrm.setGlobalNo(commonXmlVO.getGlobalNo());
 
            mcpRequestAgrm.setOrderType("01");
-           if(mypageService.insertMcpRequestArm(mcpRequestAgrm)) {
+           if(msfMypageSvc.insertMcpRequestArm(mcpRequestAgrm)) {
                rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
                rtnMap.put("RESULT_MSG", commonXmlVO.getResultCode());
            } else {
@@ -1826,8 +1826,8 @@ public class MsfMyOllehController {
             throw new McpCommonJsonException("0099" ,NO_FRONT_SESSION_EXCEPTION);
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(myPageSearchDto, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(myPageSearchDto, cntrList, userSession);
         if(!chk){
            throw new McpCommonJsonException("0098" ,NOT_FULL_MEMBER_EXCEPTION);
         }
@@ -1845,7 +1845,7 @@ public class MsfMyOllehController {
         }
 
        //현재 요금제 조회
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(myPageSearchDto.getContractNum());
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(myPageSearchDto.getContractNum());
         if(mcpUserCntrMngDto == null) {
             rtnMap.put("RESULT_CODE", "0002");
             rtnMap.put("RESULT_MSG", "해당 사용자의 요금제 데이터가 없습니다.");
@@ -1920,8 +1920,8 @@ public class MsfMyOllehController {
        UserSessionDto userSession = SessionUtils.getUserCookieBean();
        if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
 
-       List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-       boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+       List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+       boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
        if(!chk){
            ResponseSuccessDto responseSuccessDto = getMessageBox();
            model.addAttribute("responseSuccessDto", responseSuccessDto);

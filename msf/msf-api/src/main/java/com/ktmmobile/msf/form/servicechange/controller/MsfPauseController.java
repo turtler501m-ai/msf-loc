@@ -60,7 +60,7 @@ public class MsfPauseController {
     private static Logger logger = LoggerFactory.getLogger(MsfPauseController.class);
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private MplatFormService mPlatFormService;
@@ -102,8 +102,8 @@ public class MsfPauseController {
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -197,7 +197,7 @@ public class MsfPauseController {
             throw new McpCommonJsonException("0001" ,F_BIND_EXCEPTION);
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         //정회원
         if(cntrList.size() <= 0){
             throw new McpCommonJsonException("0098" ,NOT_FULL_MEMBER_EXCEPTION);
@@ -287,7 +287,7 @@ public class MsfPauseController {
         }
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
 
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) {
             ResponseSuccessDto responseSuccessDto = getMessageBox();
@@ -379,7 +379,7 @@ public class MsfPauseController {
 
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         //정회원
         if(cntrList.size() <= 0){
             returnCode = "02";
@@ -501,8 +501,8 @@ public class MsfPauseController {
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/m/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -577,9 +577,9 @@ public class MsfPauseController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 354
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -693,7 +693,7 @@ public class MsfPauseController {
             return rtnMap;
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         //정회원
         if(cntrList.size() <= 0){
             returnCode = "02";
@@ -805,7 +805,7 @@ public class MsfPauseController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/m/loginForm.do";
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         //정회원
         if(cntrList.size() <= 0){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
@@ -890,9 +890,9 @@ public class MsfPauseController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 351
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -952,7 +952,7 @@ public class MsfPauseController {
             return rtnMap;
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         //정회원
         if(cntrList.size() <= 0){
             returnCode = "02";
@@ -1076,7 +1076,7 @@ public class MsfPauseController {
             return rtnMap;
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         //정회원
         if(cntrList.size() <= 0){
             returnCode = "02";
@@ -1147,9 +1147,9 @@ public class MsfPauseController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 348
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -1241,7 +1241,7 @@ public class MsfPauseController {
             return rtnMap;
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         //정회원
         if(cntrList.size() <= 0){
             returnCode = "02";

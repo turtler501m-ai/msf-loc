@@ -156,7 +156,7 @@ public class AppformController {
     private GiftSvc giftSvc;
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private MyBenefitService myBenefitService;
@@ -901,7 +901,7 @@ public class AppformController {
         if (userSession != null) {
             userDivision = userSession.getUserDivision();
             if (Constants.DIVISION_CODE_LEGALLY_MEMBER.equals(userDivision)) {
-                List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+                List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
                 model.addAttribute("cntrList", cntrList);
             }
 
@@ -1500,7 +1500,7 @@ public class AppformController {
                 temSsn = sesionJuoSub.getCustomerSsn();
             }
             // 2025-02-03 외국인시 체크 로직 수정
-            rtnChkAuthMap = mypageService.checkAuthUser(appformReqDto.getCstmrName(), temSsn);
+            rtnChkAuthMap = msfMypageSvc.checkAuthUser(appformReqDto.getCstmrName(), temSsn);
 
 
             if (!"0000".equals(rtnChkAuthMap.get("returnCode"))) {
@@ -2214,7 +2214,7 @@ public class AppformController {
                 //서비스 번호 검증
                 String usePointSvcCntrNo = appformReqDto.getUsePointSvcCntrNo();
                 Boolean isOwn = false;
-                List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+                List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
                 for (McpUserCntrMngDto userCntrMng : cntrList) {
                     if (userCntrMng.getSvcCntrNo().equals(usePointSvcCntrNo)) {
                         isOwn = true;
@@ -4675,14 +4675,14 @@ public class AppformController {
         McpUserCntrMngDto resultOut = new McpUserCntrMngDto();
 
         if (userSession != null) {
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         } else {
             McpUserCntrMngDto out = SessionUtils.getNonmemberSharingInfo();
             if (out == null) {
                 throw new McpCommonJsonException("0003", ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION);
             }
 
-            resultOut = mypageService.selectCntrListNoLogin(out);
+            resultOut = msfMypageSvc.selectCntrListNoLogin(out);
         }
 
         //서비스 번호 ContractNum 검증
@@ -4722,7 +4722,7 @@ public class AppformController {
 
 
         //청구계정번호
-        String billAcntNo = mypageService.selectBanSel(appformReqDto.getContractNum());
+        String billAcntNo = msfMypageSvc.selectBanSel(appformReqDto.getContractNum());
 
 
         //1. 신청서 테이블에 저장
@@ -5593,13 +5593,13 @@ public class AppformController {
         McpUserCntrMngDto resultOut = new McpUserCntrMngDto();
 
         if (userSession != null) {
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         } else {
             McpUserCntrMngDto out = SessionUtils.getNonmemberSharingInfo();
             if (out == null) {
                 throw new McpCommonJsonException("0003", ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION);
             }
-            resultOut = mypageService.selectCntrListNoLogin(out);
+            resultOut = msfMypageSvc.selectCntrListNoLogin(out);
         }
 
         //서비스 번호 ContractNum 검증
@@ -5814,13 +5814,13 @@ public class AppformController {
         McpUserCntrMngDto resultOut = new McpUserCntrMngDto();
 
         if (userSession != null) {
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         } else {
             McpUserCntrMngDto out = SessionUtils.getNonmemberSharingInfo();
             if (out == null) {
                 throw new McpCommonJsonException("0003", ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION);
             }
-            resultOut = mypageService.selectCntrListNoLogin(out);
+            resultOut = msfMypageSvc.selectCntrListNoLogin(out);
         }
 
         //서비스 번호 ContractNum 검증
@@ -5853,7 +5853,7 @@ public class AppformController {
         }
 
         //청구계정번호
-        String billAcntNo = mypageService.selectBanSel(appformReqDto.getContractNum());
+        String billAcntNo = msfMypageSvc.selectBanSel(appformReqDto.getContractNum());
 
         //6. 개통및수납(OP0)
         MSimpleOsstXmlVO simpleOsstXmlVO = new MSimpleOsstXmlVO();
@@ -6130,7 +6130,7 @@ public class AppformController {
                 return rtnMap;
             }
             // 2024-12-17 인가된 사용자 체크
-            Map<String, String> rtnChkAuthMap = mypageService.checkAuthUser(juoSubInfoDto.getCustomerLinkName(), customerSsn);
+            Map<String, String> rtnChkAuthMap = msfMypageSvc.checkAuthUser(juoSubInfoDto.getCustomerLinkName(), customerSsn);
             if (!"0000".equals(rtnChkAuthMap.get("returnCode"))) {
                 rtnMap.put("RESULT_CODE", rtnChkAuthMap.get("returnCode"));
                 rtnMap.put("RESULT_MSG", rtnChkAuthMap.get("returnMsg"));
@@ -8887,13 +8887,13 @@ public class AppformController {
         McpUserCntrMngDto resultOut = new McpUserCntrMngDto();
 
         if (userSession != null) {
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         } else {
             McpUserCntrMngDto out = SessionUtils.getNonmemberSharingInfo();
             if (out == null) {
                 throw new McpCommonJsonException("0003", ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION);
             }
-            resultOut = mypageService.selectCntrListNoLogin(out);
+            resultOut = msfMypageSvc.selectCntrListNoLogin(out);
         }
 
         //서비스 번호 ContractNum 검증
@@ -9050,7 +9050,7 @@ public class AppformController {
             appformReqResult.setPrntsContractNo(certContractNum);//모회선 계약번호
             appformReqResult.setPrntsCtn(cntrMobileNo); //모회선 전화번호
             //청구계정번호  PRNTS_BILL_NO
-            String billAcntNo = mypageService.selectBanSel(certContractNum);
+            String billAcntNo = msfMypageSvc.selectBanSel(certContractNum);
             appformReqResult.setPrntsBillNo(billAcntNo); //청구계정번호
 
             //약관동의

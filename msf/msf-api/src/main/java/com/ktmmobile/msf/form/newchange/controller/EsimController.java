@@ -62,7 +62,7 @@ public class EsimController {
     CertService certService;
 
     @Autowired
-    MsfMypageSvc mypageService;
+    MsfMypageSvc msfMypageSvc;
 
     /**
      * 설명 : eSim 다이렉트 구매 화면
@@ -420,7 +420,7 @@ public class EsimController {
         }
 
         // 2024-12-17 인가된 사용자 체크
-        Map<String, String> rtnChkAuthMap = mypageService.checkAuthUser(esimDto.getCstmrName(), esimDto.getCstmrNativeRrn01());
+        Map<String, String> rtnChkAuthMap = msfMypageSvc.checkAuthUser(esimDto.getCstmrName(), esimDto.getCstmrNativeRrn01());
         if (!"0000".equals(rtnChkAuthMap.get("returnCode"))) {
             rtnMap.put("RESULT_CODE", rtnChkAuthMap.get("returnCode"));
             rtnMap.put("RESULT_MSG", rtnChkAuthMap.get("returnMsg"));

@@ -101,7 +101,7 @@ public class AppformSvcImpl implements AppformSvc {
     private CertService certService;
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private FCommonSvc fCommonSvc;
@@ -2853,12 +2853,12 @@ public class AppformSvcImpl implements AppformSvc {
         McpUserCntrMngDto resultOut = null;
 
         if (userSession != null && !StringUtil.isEmpty(userSession.getUserId())) {
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         } else {
             McpUserCntrMngDto out = SessionUtils.getNonmemberSharingInfo();
             if (out == null) return null;
 
-            resultOut = mypageService.selectCntrListNoLogin(out);
+            resultOut = msfMypageSvc.selectCntrListNoLogin(out);
         }
 
         String prntsContractNo = null;  // 모회선 계약번호

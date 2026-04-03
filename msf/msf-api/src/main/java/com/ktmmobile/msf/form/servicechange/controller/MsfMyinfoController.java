@@ -86,7 +86,7 @@ public class MsfMyinfoController {
     private static Logger logger = LoggerFactory.getLogger(MsfMyinfoController.class);
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private MsfMyinfoService myinfoService;
@@ -153,8 +153,8 @@ public class MsfMyinfoController {
         }
 
         // 3. 정회원 체크
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
 
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
@@ -177,7 +177,7 @@ public class MsfMyinfoController {
         String rateAdsvcSmsDesc = "- 건";   // sms
 
         try {
-            mcpFarPriceDto = mypageService.selectFarPricePlan(contractNum);
+            mcpFarPriceDto = msfMypageSvc.selectFarPricePlan(contractNum);
             if(mcpFarPriceDto != null) {
                 prvRateGrpNm = mcpFarPriceDto.getPrvRateGrpNm();
 
@@ -266,7 +266,7 @@ public class MsfMyinfoController {
         }
 
         // 8.제휴상품 리마인드 SMS 수신 상태 조회 및 변경 (Y42) 밀리의 서재 or CU 요금제만 해당
-        McpUserCntrMngDto selectSocDesc = mypageService.selectSocDesc(contractNum);
+        McpUserCntrMngDto selectSocDesc = msfMypageSvc.selectSocDesc(contractNum);
         String remindBlckYn = "";
         if(selectSocDesc !=null) {
             if ("Y".equals(selectSocDesc.getRemindYn())) {
@@ -316,7 +316,7 @@ public class MsfMyinfoController {
 
         // 2. MP 연동 파라미터 조회
         McpUserCntrMngDto mcpUserCntrMngDto = null;
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         if(cntrList != null && !cntrList.isEmpty()) {
             mcpUserCntrMngDto = cntrList.stream().filter(item -> ncn.equals(item.getSvcCntrNo())).findFirst().orElse(null);
         }
@@ -409,7 +409,7 @@ public class MsfMyinfoController {
 
         // 2. MP 연동 파라미터 조회
         McpUserCntrMngDto mcpUserCntrMngDto = null;
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         if(cntrList != null && !cntrList.isEmpty()) {
             mcpUserCntrMngDto = cntrList.stream().filter(item -> ncn.equals(item.getSvcCntrNo())).findFirst().orElse(null);
         }
@@ -453,7 +453,7 @@ public class MsfMyinfoController {
 
         // 2. MP 연동 파라미터 조회
         McpUserCntrMngDto mcpUserCntrMngDto = null;
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         if(cntrList != null && !cntrList.isEmpty()) {
             mcpUserCntrMngDto = cntrList.stream().filter(item -> ncn.equals(item.getSvcCntrNo())).findFirst().orElse(null);
         }
@@ -495,7 +495,7 @@ public class MsfMyinfoController {
 
         // 2. MP 연동 파라미터 조회
         McpUserCntrMngDto mcpUserCntrMngDto = null;
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         if(cntrList != null && !cntrList.isEmpty()) {
             mcpUserCntrMngDto = cntrList.stream().filter(item -> ncn.equals(item.getSvcCntrNo())).findFirst().orElse(null);
         }
@@ -544,7 +544,7 @@ public class MsfMyinfoController {
 
         // 2. ncn 변조여부 확인
         McpUserCntrMngDto mcpUserCntrMngDto = null;
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         if(cntrList != null && !cntrList.isEmpty()) {
             mcpUserCntrMngDto = cntrList.stream().filter(item -> ncn.equals(item.getSvcCntrNo())).findFirst().orElse(null);
         }
@@ -585,8 +585,8 @@ public class MsfMyinfoController {
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -649,7 +649,7 @@ public class MsfMyinfoController {
             throw new McpCommonJsonException("E", "[혜택 제공을 위한 제3자 제공 및 광고 수신 동의]를 위해<br>[고객 혜택 제공을 위한 정보수집 이용 동의 및 혜택 광고의 수신 위탁 동의]가 필요합니다.");
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         //정회원
         if(cntrList.isEmpty()){
             throw new McpCommonJsonException("E", F_BIND_EXCEPTION);
@@ -713,10 +713,10 @@ public class MsfMyinfoController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 334
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
 
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -794,7 +794,7 @@ public class MsfMyinfoController {
         }
 
 
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
         String dobyyyymmdd = "";
         String userSSn = "";
         if(mcpUserCntrMngDto == null) {
@@ -827,9 +827,9 @@ public class MsfMyinfoController {
         // 마스킹 원복 2022.10.31
         paramMap.put("modelSr", mcpUserCntrMngDto.getUnIntmSrlNo());
         paramMap.put("userId", userSession != null ? userSession.getUserId() : ""); // 취약성 335
-        mypageService.insertCertHist(paramMap);
+        msfMypageSvc.insertCertHist(paramMap);
 
-        HashMap<String, Object> returnMap = (HashMap<String, Object>)mypageService.selectCertHist(userSession.getUserId());
+        HashMap<String, Object> returnMap = (HashMap<String, Object>)msfMypageSvc.selectCertHist(userSession.getUserId());
         String seqSr = "";
         if(returnMap !=null) {
             seqSr = (String)returnMap.get("SEQSR");
@@ -868,9 +868,9 @@ public class MsfMyinfoController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if ( userSession != null) { // 취약성 340
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             resultCode = "E";
             message = "비정상적인 접근입니다.";
@@ -886,7 +886,7 @@ public class MsfMyinfoController {
         searchVO.setUserName(userSession.getName());
 
 
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
         String dobyyyymmdd = "";
         String userSSn = "";
         if(mcpUserCntrMngDto == null) {
@@ -922,9 +922,9 @@ public class MsfMyinfoController {
             paramMap.put("modelNm", mcpUserCntrMngDto.getModelName());
             paramMap.put("modelSr", mcpUserCntrMngDto.getIntmSrlNo());
             paramMap.put("userId", userSession.getUserId());
-            mypageService.insertCertHist(paramMap);
+            msfMypageSvc.insertCertHist(paramMap);
 
-            HashMap<String, Object> returnMap = (HashMap<String, Object>)mypageService.selectCertHist(userSession.getUserId());
+            HashMap<String, Object> returnMap = (HashMap<String, Object>)msfMypageSvc.selectCertHist(userSession.getUserId());
 
             if(returnMap !=null) {
                 seqSr = (String)returnMap.get("SEQSR");
@@ -960,8 +960,8 @@ public class MsfMyinfoController {
     public String requestViewPrint(HttpServletRequest request, Model model, @ModelAttribute("searchVO") MyPageSearchDto searchVO)  {
 
         UserSessionDto userSession = (UserSessionDto)request.getSession().getAttribute(SessionUtils.USER_SESSION);
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -973,7 +973,7 @@ public class MsfMyinfoController {
         String ctn = searchVO.getCtn();
 
         //현재 요금제 조회
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
         if(mcpUserCntrMngDto == null) {
             ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
             responseSuccessDto.setSuccessMsg("해당 사용자의 요금제 데이터가 없습니다.");
@@ -1156,8 +1156,8 @@ public class MsfMyinfoController {
         Map<String, Object> resultMap = new HashMap<>();
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
 
         if(!chk){
             resultMap.put("resultCode","E");
@@ -1183,7 +1183,7 @@ public class MsfMyinfoController {
         serviceAlterTraceSub.setTrtmRsltSmst("리마인드 SMS 수신상태 조회");
 
         // 8.제휴상품 리마인드 SMS 수신 상태 조회 및 변경 (Y42) 밀리의 서재 or CU 요금제만 해당
-        McpUserCntrMngDto selectSocDesc = mypageService.selectSocDesc(contractNum);
+        McpUserCntrMngDto selectSocDesc = msfMypageSvc.selectSocDesc(contractNum);
         if(selectSocDesc !=null) {
             if ("Y".equals(selectSocDesc.getRemindYn())) {
 
@@ -1222,7 +1222,7 @@ public class MsfMyinfoController {
                             resultMap.put("message", mpRemindSmsVO.getResultMsg());
                             serviceAlterTraceSub.setTrtmRsltSmst("리마인드 SMS 수신상태 조회 실패 : 응답코드 99");
                         }
-                        mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                        msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
                     }
 
                 } catch(SelfServiceException e) {
@@ -1253,8 +1253,8 @@ public class MsfMyinfoController {
         Map<String, Object> resultMap = new HashMap<>();
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
 
         if(!chk){
             resultMap.put("resultCode","E");
@@ -1279,7 +1279,7 @@ public class MsfMyinfoController {
 
 
         // 8.제휴상품 리마인드 SMS 수신 상태 조회 및 변경 (Y42) 밀리의 서재 or CU 요금제만 해당
-        McpUserCntrMngDto selectSocDesc = mypageService.selectSocDesc(contractNum);
+        McpUserCntrMngDto selectSocDesc = msfMypageSvc.selectSocDesc(contractNum);
 
         if(selectSocDesc !=null) {
             if ("Y".equals(selectSocDesc.getRemindYn())) {
@@ -1328,7 +1328,7 @@ public class MsfMyinfoController {
                             resultMap.put("message", mpRemindSmsVO.getResultMsg());
                             serviceAlterTraceSub.setTrtmRsltSmst("리마인드 SMS 수신상태 변경 실패 응답코드 : 99");
                         }
-                        mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                        msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
                     }
 
                 } catch(SelfServiceException e) {
@@ -1367,8 +1367,8 @@ public class MsfMyinfoController {
             return errorUrl;
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSessionDto);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSessionDto);
         if (!chk) {
             model.addAttribute("ErrorTitle", "가상계좌 조회");
             model.addAttribute("ErrorMsg", NOT_FULL_MEMBER_EXCEPTION);

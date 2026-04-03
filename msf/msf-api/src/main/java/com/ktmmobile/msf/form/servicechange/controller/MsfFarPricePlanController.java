@@ -98,7 +98,7 @@ public class MsfFarPricePlanController {
     private MspService mspService;
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     MsfFarPricePlanService farPricePlanService;
@@ -144,10 +144,10 @@ public class MsfFarPricePlanController {
         UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSessionDto != null) { // 취약성 318
-            cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
         }
 
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSessionDto);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSessionDto);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -155,7 +155,7 @@ public class MsfFarPricePlanController {
         }
 
         // 요금제 정보
-        McpFarPriceDto mcpFarPriceDto = mypageService.selectFarPricePlan(searchVO.getContractNum());
+        McpFarPriceDto mcpFarPriceDto = msfMypageSvc.selectFarPricePlan(searchVO.getContractNum());
         if (mcpFarPriceDto == null) {
             throw new McpCommonException(NOT_FOUND_DATA_EXCEPTION);
         }
@@ -223,7 +223,7 @@ public class MsfFarPricePlanController {
         UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSessionDto != null) { // 취약성 315
-            cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
         }
 
         String url = "/mypage/updateForm.do";
@@ -231,13 +231,13 @@ public class MsfFarPricePlanController {
             url = "/m/mypage/updateForm.do";
         }
 
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSessionDto);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSessionDto);
         if(!chk){
             throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION, url);
         }
 
         // 요금제 정보
-        McpFarPriceDto mcpFarPriceDto = mypageService.selectFarPricePlan(searchVO.getContractNum());
+        McpFarPriceDto mcpFarPriceDto = msfMypageSvc.selectFarPricePlan(searchVO.getContractNum());
         if (mcpFarPriceDto == null) {
             throw new McpCommonException(NOT_FOUND_DATA_EXCEPTION);
         }
@@ -259,7 +259,7 @@ public class MsfFarPricePlanController {
         }
 
         // int total = 0;
-        int total = mypageService.countFarPricePlanList(mcpFarPriceDto.getPrvRateCd());
+        int total = msfMypageSvc.countFarPricePlanList(mcpFarPriceDto.getPrvRateCd());
 
         rtnMap.put("total", total);
         rtnMap.put("prvRateGrpNm", prvRateGrpNm);
@@ -478,7 +478,7 @@ public class MsfFarPricePlanController {
             throw new McpCommonJsonException("9999", INVALID_PARAMATER_EXCEPTION);
         }
 
-        List<McpFarPriceDto> mcpFarPriceDtoList = mypageService.selectFarPricePlanList(mcpFarPriceDto.getPrvRateCd());
+        List<McpFarPriceDto> mcpFarPriceDtoList = msfMypageSvc.selectFarPricePlanList(mcpFarPriceDto.getPrvRateCd());
 
         rtnMap.put("RESULT_CODE", "S");
         rtnMap.put("DATA_OBJ_LIST", mcpFarPriceDtoList);
@@ -530,11 +530,11 @@ public class MsfFarPricePlanController {
         UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSessionDto != null) { // 취약성 320
-            cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
         }
         searchVO.setNcn(contractNum);
 
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSessionDto);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSessionDto);
         if(!chk){
             throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
@@ -642,7 +642,7 @@ public class MsfFarPricePlanController {
                 String nowPriceSocCode = "";  //현재 요금제
 
                 // 검증 추가
-                List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userid);
+                List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userid);
 
                 if (cntrList != null && cntrList.size() > 0) {
                     for (McpUserCntrMngDto mcpUserCntrMngDto : cntrList) {
@@ -671,7 +671,7 @@ public class MsfFarPricePlanController {
                     rsltCd = "99999";
                     parameter =  "19. 요금 상품 변경 실패" ;
 
-                    McpFarPriceDto mcpFarPriceDto = mypageService.selectFarPricePlan(contractNum);
+                    McpFarPriceDto mcpFarPriceDto = msfMypageSvc.selectFarPricePlan(contractNum);
                     if (mcpFarPriceDto != null) {
                         nowPriceSocCode = mcpFarPriceDto.getPrvRateCd();
                     }
@@ -688,12 +688,12 @@ public class MsfFarPricePlanController {
                     fCommonSvc.updateNmcpRateResChgBas(ipStatisticItem);
 
                     //202312 wooki - MSP_DIS_APD(평생할인 부가서비스 기적용 대상) insert START
-                    String prmtId = mypageService.getChrgPrmtIdSocChg(toPriceSocCode); //프로모션아이디 가져오기
+                    String prmtId = msfMypageSvc.getChrgPrmtIdSocChg(toPriceSocCode); //프로모션아이디 가져오기
                     McpUserCntrMngDto apdDto = new McpUserCntrMngDto();
                     apdDto.setPrmtId(prmtId); //위에서 조회한 prmtId set - prmtId는 있을수도 있고 없을수도 있음
                     apdDto.setSocCode(toPriceSocCode);
                     apdDto.setContractNum(contractNum);
-                    mypageService.insertDisApd(apdDto); //MSP_DIS_APD insert
+                    msfMypageSvc.insertDisApd(apdDto); //MSP_DIS_APD insert
                     //MSP_DIS_APD insert END
 
                     //2. 부가서비스 처리
@@ -728,12 +728,12 @@ public class MsfFarPricePlanController {
                     serviceAlterTrace.setaSocAmnt(ipStatisticItem.getBefChgRateAmnt());
                     serviceAlterTrace.settSocAmnt(rtnRateInfo.getPayMnthChargeAmt());
                     serviceAlterTrace.setParameter(parameter);
-                    mypageService.insertServiceAlterTrace(serviceAlterTrace);
+                    msfMypageSvc.insertServiceAlterTrace(serviceAlterTrace);
 
 
                     serviceAlterTrace.setChgType("R");  //-- (즉시 : I , 예약 : R)
                     serviceAlterTrace.setSuccYn("N");
-                    mypageService.insertSocfailProcMst(serviceAlterTrace);
+                    msfMypageSvc.insertSocfailProcMst(serviceAlterTrace);
 
                     fCnt++;
 
@@ -773,8 +773,8 @@ public class MsfFarPricePlanController {
             throw new McpCommonJsonException("9999", NO_SESSION_EXCEPTION);
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             throw new McpCommonJsonException("9998", NOT_FULL_MEMBER_EXCEPTION);
         }
@@ -788,7 +788,7 @@ public class MsfFarPricePlanController {
         }
 
         // 2-1현재 요금제 조회
-        McpFarPriceDto mcpFarPriceDto = mypageService.selectFarPricePlan(searchVO.getContractNum());
+        McpFarPriceDto mcpFarPriceDto = msfMypageSvc.selectFarPricePlan(searchVO.getContractNum());
         String nowPriceSocCode = mcpFarPriceDto.getPrvRateCd();
 
         //월 1회 초과 체크
@@ -797,7 +797,7 @@ public class MsfFarPricePlanController {
         map.put("cntrNo", searchVO.getContractNum());
 
         //현재 요금제에 대한 상품 현행화 정보에서(MSP_JUO_FEATURE_INFO) 변경일 패치
-        String getMonth = mypageService.selectFarPriceAddInfo(map);
+        String getMonth = msfMypageSvc.selectFarPriceAddInfo(map);
 
         // 현재 날짜 YYYYMM
         Date nowDay = new Date();
@@ -887,10 +887,10 @@ public class MsfFarPricePlanController {
         searchVO.setNcn(contractNum);
         List<McpUserCntrMngDto> cntrList = null;
         if ( userSession != null) { // 취약성 789
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
 
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
@@ -1051,8 +1051,8 @@ public class MsfFarPricePlanController {
             throw new McpCommonJsonException("9999", NO_SESSION_EXCEPTION);
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             throw new McpCommonJsonException("9998", NOT_FULL_MEMBER_EXCEPTION);
         }
@@ -1067,7 +1067,7 @@ public class MsfFarPricePlanController {
         /*
          * 2. 약정여부 : 단말/유심고객 중 무약정고객 진행. 약정고객(스폰서&simple)가입고객 변경 불가 팝업
          */
-        MspJuoAddInfoDto enggInfo = mypageService.getEnggInfo(searchVO.getContractNum());
+        MspJuoAddInfoDto enggInfo = msfMypageSvc.getEnggInfo(searchVO.getContractNum());
 
         if (enggInfo != null) {
             if ("Y".equals(enggInfo.getEnggYn())) {
@@ -1156,7 +1156,7 @@ public class MsfFarPricePlanController {
 
         if (requestInfo != null) {
             if (REQ_BUY_TYPE_USIM.equals(requestInfo.getReqBuyType())) {
-                MspJuoAddInfoDto channelInfo = mypageService.getChannelInfo(searchVO.getContractNum());
+                MspJuoAddInfoDto channelInfo = msfMypageSvc.getChannelInfo(searchVO.getContractNum());
                 /*
                  * 01 온라인 02 제휴
                  */
@@ -1198,13 +1198,13 @@ public class MsfFarPricePlanController {
 
             // 7. 요금제 변경이력 관리 (월 1회초과)
             // 7-1. 현재 요금제 조회
-            McpFarPriceDto mcpFarPriceDto = mypageService.selectFarPricePlan(searchVO.getContractNum());
+            McpFarPriceDto mcpFarPriceDto = msfMypageSvc.selectFarPricePlan(searchVO.getContractNum());
             Map<String, String> map = new HashMap<String, String>();
             map.put("soc", mcpFarPriceDto.getPrvRateCd());
             map.put("cntrNo", searchVO.getContractNum());
 
             // 7-2. 현재 요금제에 대한 상품 현행화 정보에서(MSP_JUO_FEATURE_INFO) 변경일 패치
-            String getMonth = mypageService.selectFarPriceAddInfo(map);
+            String getMonth = msfMypageSvc.selectFarPriceAddInfo(map);
 
             // 현재 날짜 YYYYMM
             Date nowDay = new Date();
@@ -1278,8 +1278,8 @@ public class MsfFarPricePlanController {
             throw new McpCommonJsonException("0001", INVALID_REFERER_EXCEPTION);
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             throw new McpCommonJsonException("0002", INVALID_REFERER_EXCEPTION);
         }
@@ -1300,7 +1300,7 @@ public class MsfFarPricePlanController {
         }
 
         // 2.keyIn 회선정보 확인
-        McpUserCntrMngDto rtnCntrMng = mypageService.selectCntrListNoLogin(cntrMng);
+        McpUserCntrMngDto rtnCntrMng = msfMypageSvc.selectCntrListNoLogin(cntrMng);
         if (rtnCntrMng == null) {
             resultCode = "03";
             rtnMap.put("resultCode", resultCode);

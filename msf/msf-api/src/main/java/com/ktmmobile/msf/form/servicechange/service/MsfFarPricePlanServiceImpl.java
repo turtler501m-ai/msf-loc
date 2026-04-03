@@ -82,7 +82,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
     private MplatFormService mPlatFormService;
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private FCommonSvc fCommonSvc;
@@ -453,7 +453,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
         List<RateAdsvcGdncProdRelXML> rateAdsvcGdncProdRelList = XmlBindUtil.bindListFromXml(RateAdsvcGdncProdRelXML.class, file1);
 
         // m전산 요금제 목록
-        List<McpFarPriceDto> farPricePlanList = mypageService.selectFarPricePlanList(rateCd);
+        List<McpFarPriceDto> farPricePlanList = msfMypageSvc.selectFarPricePlanList(rateCd);
         List<RateAdsvcCtgBasDTO> prodXmlList = rateAdsvcGdncService.getProdXmlList(rateAdsvcCtgBasDTO);
 
         if(!prodXmlList.isEmpty()) {
@@ -555,7 +555,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
        String prcsMdlInd = "GC" + DateTimeUtil.getFormatString("yyMMddHHmmss");
 
        List<McpUserCntrMngDto> closeSubList = null ;
-       closeSubList = mypageService.getCloseSubList(searchVO.getContractNum());
+       closeSubList = msfMypageSvc.getCloseSubList(searchVO.getContractNum());
 
        McpServiceAlterTraceDto serviceAlterTrace = new McpServiceAlterTraceDto();
        serviceAlterTrace.setNcn(searchVO.getNcn());
@@ -572,7 +572,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
          *  방어 로직
          *  최근 60분 내 요금제 변경 성공 이력 확인
         */
-        if (0 < mypageService.checkAllreadPlanchgCount(serviceAlterTrace) ) {
+        if (0 < msfMypageSvc.checkAllreadPlanchgCount(serviceAlterTrace) ) {
             rtnMap.put("RESULT_MSG", "요금제 변경이 되어 있습니다. <br/>잠시 후에 요금제 확인 하시기 바랍니다.[001]");
             return rtnMap;
         }
@@ -614,7 +614,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                            serviceAlterTraceSub.setGlobalNo(regSvcCanChgNe.getGlobalNo());
                            serviceAlterTraceSub.setRsltCd(regSvcCanChgNe.getResultCode());
                            serviceAlterTraceSub.setPrcsSbst(regSvcCanChgNe.getSvcMsg());
-                           mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                           msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
                            regSvcCanChgNe = mPlatFormService.moscRegSvcCanChgNeTrace(searchVO, closeSubInfo.getSocCode()  );
                        }
                    }
@@ -638,17 +638,17 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                        serviceAlterTraceSub.setGlobalNo(regSvcCanChgNe.getGlobalNo());
                        serviceAlterTraceSub.setRsltCd(regSvcCanChgNe.getResultCode());
                        serviceAlterTraceSub.setPrcsSbst(regSvcCanChgNe.getSvcMsg());
-                       mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                       msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
 
                        //결과 이력 저장
                        serviceAlterTrace.setEventCode("FIN");
                        serviceAlterTrace.setTrtmRsltSmst("FAIL");
                        serviceAlterTrace.setParameter("부가서비스 해지 실패");
-                       mypageService.insertServiceAlterTrace(serviceAlterTrace);
+                       msfMypageSvc.insertServiceAlterTrace(serviceAlterTrace);
 
                        //M 전산 이력 저장
                        serviceAlterTrace.setSuccYn("N");
-                       mypageService.insertSocfailProcMst(serviceAlterTrace);
+                       msfMypageSvc.insertSocfailProcMst(serviceAlterTrace);
 
                        return rtnMap;
                    } else {
@@ -661,7 +661,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                        serviceAlterTraceSub.setGlobalNo(regSvcCanChgNe.getGlobalNo());
                        serviceAlterTraceSub.setRsltCd("0000");
                        serviceAlterTraceSub.setPrcsSbst(regSvcCanChgNe.getSvcMsg());
-                       mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                       msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
                    }
                    break;
                }
@@ -683,7 +683,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                serviceAlterTraceSub.setGlobalNo(regSvcChgSelf.getGlobalNo());
                serviceAlterTraceSub.setRsltCd(regSvcChgSelf.getResultCode());
                serviceAlterTraceSub.setPrcsSbst(regSvcChgSelf.getSvcMsg());
-               mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+               msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
 
                regSvcChgSelf = mPlatFormService.farPricePlanChgNeTrace( searchVO, toSocCode );
            }
@@ -700,15 +700,15 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
            serviceAlterTraceSub.setGlobalNo(regSvcChgSelf.getGlobalNo());
            serviceAlterTraceSub.setRsltCd("0000");
            serviceAlterTraceSub.setPrcsSbst(regSvcChgSelf.getSvcMsg());
-           mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+           msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
 
            //202312 wooki - MSP_DIS_APD(평생할인 부가서비스 기적용 대상) insert START
-           String prmtId = mypageService.getChrgPrmtIdSocChg(toSocCode); //프로모션아이디 가져오기
+           String prmtId = msfMypageSvc.getChrgPrmtIdSocChg(toSocCode); //프로모션아이디 가져오기
            McpUserCntrMngDto apdDto = new McpUserCntrMngDto();
            apdDto.setPrmtId(prmtId); //위에서 조회한 prmtId set - prmtId는 있을수도 있고 없을수도 있음
            apdDto.setSocCode(toSocCode);
            apdDto.setContractNum(searchVO.getContractNum());
-           mypageService.insertDisApd(apdDto); //MSP_DIS_APD insert
+           msfMypageSvc.insertDisApd(apdDto); //MSP_DIS_APD insert
            //MSP_DIS_APD insert END
 
        } else {
@@ -729,13 +729,13 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
            serviceAlterTraceSub.setGlobalNo(regSvcChgSelf.getGlobalNo());
            serviceAlterTraceSub.setRsltCd(regSvcChgSelf.getResultCode());
            serviceAlterTraceSub.setPrcsSbst(regSvcChgSelf.getSvcMsg());
-           mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+           msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
 
            //결과 이력 저장
            serviceAlterTrace.setEventCode("FIN");
            serviceAlterTrace.setTrtmRsltSmst("FAIL");
            serviceAlterTrace.setParameter("19. 요금 상품 변경 실패");
-           mypageService.insertServiceAlterTrace(serviceAlterTrace);
+           msfMypageSvc.insertServiceAlterTrace(serviceAlterTrace);
 
 
            //M 전산 이력 저장
@@ -753,14 +753,14 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                rtnMap.put("RESULT_MSG", "요금제 변경이 되어 있습니다. <br/>잠시 후에 요금제 확인 하시기 바랍니다.[002]");
            }
 
-           mypageService.insertSocfailProcMst(serviceAlterTrace);
+           msfMypageSvc.insertSocfailProcMst(serviceAlterTrace);
 
            return rtnMap;
        }
 
        //3.부가 서비스 가입 처리
        //3-1. 부가 서비스 가입 처리 해야 할 리스트 조회
-       List<McpUserCntrMngDto> serviceInfoList = mypageService.getromotionDcList(toSocCode);
+       List<McpUserCntrMngDto> serviceInfoList = msfMypageSvc.getromotionDcList(toSocCode);
        int successCnt = 0 ;
        int failCnt = 0 ;
 
@@ -785,7 +785,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                    serviceAlterTraceSub.setGlobalNo(regSvcInsert.getGlobalNo());
                    serviceAlterTraceSub.setRsltCd(regSvcInsert.getResultCode());
                    serviceAlterTraceSub.setPrcsSbst(regSvcInsert.getSvcMsg());
-                   mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                   msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
 
                    regSvcInsert = mPlatFormService.regSvcChgNeTrace(searchVO, serviceInfo.getSocCode(), "");
                }
@@ -807,25 +807,25 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
            } else {
                failCnt++;
            }
-           mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+           msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
        }
 
        if (successCnt == serviceInfoList.size()) {
            serviceAlterTrace.setEventCode("FIN");
            serviceAlterTrace.setTrtmRsltSmst("SUCCESS");
            serviceAlterTrace.setParameter("SCNT["+successCnt + "]FCNT["+failCnt+"]");
-           mypageService.insertServiceAlterTrace(serviceAlterTrace);
+           msfMypageSvc.insertServiceAlterTrace(serviceAlterTrace);
            serviceAlterTrace.setSuccYn("Y");
-           mypageService.insertSocfailProcMst(serviceAlterTrace);
+           msfMypageSvc.insertSocfailProcMst(serviceAlterTrace);
        } else {
            serviceAlterTrace.setEventCode("FIN");
            serviceAlterTrace.setTrtmRsltSmst("FAIL");
            serviceAlterTrace.setParameter("SCNT["+successCnt + "]FCNT["+failCnt+"]");
-           mypageService.insertServiceAlterTrace(serviceAlterTrace);
+           msfMypageSvc.insertServiceAlterTrace(serviceAlterTrace);
 
            //실패 이력 테이블 저장
            serviceAlterTrace.setSuccYn("N");
-           mypageService.insertSocfailProcMst(serviceAlterTrace);
+           msfMypageSvc.insertSocfailProcMst(serviceAlterTrace);
        }
 
        return rtnMap;
@@ -880,7 +880,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
 
         List<RateAdsvcGdncProdRelXML> rateAdsvcGdncProdRelList = XmlBindUtil.bindListFromXml(RateAdsvcGdncProdRelXML.class, file1);
         //m전산 요금조회
-        List<McpFarPriceDto> mcpFarPriceDtoList = mypageService.selectFarPricePlanList(rateCd);
+        List<McpFarPriceDto> mcpFarPriceDtoList = msfMypageSvc.selectFarPricePlanList(rateCd);
 
         List<RateAdsvcCtgBasDTO> rtnList1 = new ArrayList<RateAdsvcCtgBasDTO>();
 
@@ -1037,7 +1037,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
         String prcsMdlInd = "BA_" + ipStatistic.getRateResChgSeq();
 
         List<McpUserCntrMngDto> closeSubList = null ;
-        closeSubList = mypageService.getCloseSubList(ipStatistic.getSvcCntrNo());
+        closeSubList = msfMypageSvc.getCloseSubList(ipStatistic.getSvcCntrNo());
 
         McpServiceAlterTraceDto serviceAlterTrace = new McpServiceAlterTraceDto();
         serviceAlterTrace.setNcn(ipStatistic.getSvcCntrNo());
@@ -1085,7 +1085,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                             serviceAlterTraceSub.setGlobalNo(regSvcCanChgNe.getGlobalNo());
                             serviceAlterTraceSub.setRsltCd(regSvcCanChgNe.getResultCode());
                             serviceAlterTraceSub.setPrcsSbst(regSvcCanChgNe.getSvcMsg());
-                            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
                             regSvcCanChgNe = mPlatFormService.moscRegSvcCanChgNeTrace(searchVO, closeSubInfo.getSocCode()  );
                         }
                     }
@@ -1102,17 +1102,17 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                         serviceAlterTraceSub.setGlobalNo(regSvcCanChgNe.getGlobalNo());
                         serviceAlterTraceSub.setRsltCd(regSvcCanChgNe.getResultCode());
                         serviceAlterTraceSub.setPrcsSbst(regSvcCanChgNe.getSvcMsg());
-                        mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                        msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
 
                         //결과 이력 저장
                         serviceAlterTrace.setEventCode("FIN");
                         serviceAlterTrace.setTrtmRsltSmst("FAIL");
                         serviceAlterTrace.setParameter("부가서비스 해지 실패");
-                        mypageService.insertServiceAlterTrace(serviceAlterTrace);
+                        msfMypageSvc.insertServiceAlterTrace(serviceAlterTrace);
 
                         serviceAlterTrace.setChgType("R");  //-- (즉시 : I , 예약 : R)
                         serviceAlterTrace.setSuccYn("N");
-                        mypageService.insertSocfailProcMst(serviceAlterTrace);
+                        msfMypageSvc.insertSocfailProcMst(serviceAlterTrace);
 
 
                         return rtnMap;
@@ -1126,7 +1126,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                         serviceAlterTraceSub.setGlobalNo(regSvcCanChgNe.getGlobalNo());
                         serviceAlterTraceSub.setRsltCd("20000");
                         serviceAlterTraceSub.setPrcsSbst(regSvcCanChgNe.getSvcMsg());
-                        mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                        msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
                     }
                     break;
                 }
@@ -1138,7 +1138,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
         //3-1. 부가 서비스 가입 처리 해야 할 리스트 조회(할인 금액)
         //3.부가 서비스 가입 처리
         //3-1. 부가 서비스 가입 처리 해야 할 리스트 조회
-        List<McpUserCntrMngDto> serviceInfoList = mypageService.getromotionDcList(ipStatistic.getResChgRateCd());
+        List<McpUserCntrMngDto> serviceInfoList = msfMypageSvc.getromotionDcList(ipStatistic.getResChgRateCd());
         int successCnt = 0 ;
         int failCnt = 0 ;
 
@@ -1163,7 +1163,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                     serviceAlterTraceSub.setGlobalNo(regSvcInsert.getGlobalNo());
                     serviceAlterTraceSub.setRsltCd(regSvcInsert.getResultCode());
                     serviceAlterTraceSub.setPrcsSbst(regSvcInsert.getSvcMsg());
-                    mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+                    msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
                     regSvcInsert = mPlatFormService.regSvcChgNeTrace(searchVO, serviceInfo.getSocCode(), "");
                 }
             }
@@ -1185,32 +1185,32 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
                 failCnt++;
             }
 
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
         }
 
         if (successCnt == serviceInfoList.size()) {
             serviceAlterTrace.setEventCode("FIN");
             serviceAlterTrace.setTrtmRsltSmst("SUCCESS");
             serviceAlterTrace.setParameter("SCNT["+successCnt + "]FCNT["+failCnt+"]");
-            mypageService.insertServiceAlterTrace(serviceAlterTrace);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTrace);
             rtnMap.put("RESULT_CODE", "00000");
             rtnMap.put("RESULT_MSG", "성공");
 
             serviceAlterTrace.setChgType("R");  //-- (즉시 : I , 예약 : R)
             serviceAlterTrace.setSuccYn("Y");
-            mypageService.insertSocfailProcMst(serviceAlterTrace);
+            msfMypageSvc.insertSocfailProcMst(serviceAlterTrace);
 
         } else {
             serviceAlterTrace.setEventCode("FIN");
             serviceAlterTrace.setTrtmRsltSmst("FAIL");
             serviceAlterTrace.setParameter("SCNT["+successCnt + "]FCNT["+failCnt+"]");
-            mypageService.insertServiceAlterTrace(serviceAlterTrace);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTrace);
             rtnMap.put("RESULT_CODE", "30000");
             rtnMap.put("RESULT_MSG", "부가서비스 가입 실패");
 
             serviceAlterTrace.setChgType("R");  //-- (즉시 : I , 예약 : R)
             serviceAlterTrace.setSuccYn("N");
-            mypageService.insertSocfailProcMst(serviceAlterTrace);
+            msfMypageSvc.insertSocfailProcMst(serviceAlterTrace);
         }
 
         return rtnMap;

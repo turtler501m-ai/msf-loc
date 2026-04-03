@@ -43,7 +43,7 @@ public class CancelConsultController {
     private static Logger logger = LoggerFactory.getLogger(CancelConsultController.class);
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private MsfMaskingSvc maskingSvc;
@@ -88,9 +88,9 @@ public class CancelConsultController {
             return "redirect:/loginForm.do";
         }
 
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
 
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -185,7 +185,7 @@ public class CancelConsultController {
             }
 
             //계약번호 검즘
-            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
             boolean isCheck = false;
 
             if(cntrList.size() <= 0){

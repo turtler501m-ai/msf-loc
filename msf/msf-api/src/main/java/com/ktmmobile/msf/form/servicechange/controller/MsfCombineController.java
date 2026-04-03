@@ -80,7 +80,7 @@ public class MsfCombineController {
     private String serverName;
 
     @Autowired
-    MsfMypageSvc mypageService;
+    MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private FCommonSvc fCommonSvc;
@@ -139,7 +139,7 @@ public class MsfCombineController {
         if (userSessionDto != null) {
             String userId = userSessionDto.getUserId();
             List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
-            cntrList = mypageService.selectCntrList(userId);
+            cntrList = msfMypageSvc.selectCntrList(userId);
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
                 ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
                 String url = "/mypage/updateForm.do";
@@ -301,7 +301,7 @@ public class MsfCombineController {
 //        if (userSessionDto != null) {
 //            String userId = userSessionDto.getUserId();
 //            List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
-//            cntrList = mypageService.selectCntrList(userId);
+//            cntrList = msfMypageSvc.selectCntrList(userId);
 //
 //            if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
 //
@@ -389,7 +389,7 @@ public class MsfCombineController {
 //
 //            String userId = userSessionDto.getUserId();
 //            List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
-//            cntrList = mypageService.selectCntrList(userId);
+//            cntrList = msfMypageSvc.selectCntrList(userId);
 //
 //            if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
 //                throw new McpCommonJsonException("0001", ExceptionMsgConstant.NO_SESSION_EXCEPTION);
@@ -401,7 +401,7 @@ public class MsfCombineController {
 //            }
 //
 //            //로그인한 사용자 이용중인 요금제조회
-//            McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(searchVO.getContractNum());
+//            McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
 //
 //            //로그인 사용자 , 비로그인 사용자 호환을 위해.. 설정
 //            AuthSmsDto authSmsDto = new AuthSmsDto();
@@ -486,7 +486,7 @@ public class MsfCombineController {
 //
 //        // 현재 요금제 조회
 //        // 서비스계약번호
-//        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(rtnDto.getSvcCntrNo());
+//        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(rtnDto.getSvcCntrNo());
 //
 //        if (mcpUserCntrMngDto == null || StringUtils.isBlank(mcpUserCntrMngDto.getSoc())) {
 //            throw new McpCommonJsonException("0002", "요금제 정보 조회 실패");
@@ -604,7 +604,7 @@ public class MsfCombineController {
 
         //1 . Kt M모바일 고객만 결합이 가능합니다.
         ////청소년
-        McpUserCntrMngDto cntrObj = mypageService.selectCntrListNoLogin(userCntrMngDto);
+        McpUserCntrMngDto cntrObj = msfMypageSvc.selectCntrListNoLogin(userCntrMngDto);
         if (cntrObj == null) {
             //Kt M모바일 고객만 결합이 가능합니다.
             rtnMap.put("RESULT_CODE", "00001");
@@ -643,7 +643,7 @@ public class MsfCombineController {
         //M전산 해당 요금제에 대한 결합 가능 여부 확인
 
         // 결합대상 요금제 정보
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(cntrObj.getContractNum());
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(cntrObj.getContractNum());
 
         //해당 상품은 결합이 불가합니다.
         String tempRateCd = "";
@@ -1899,7 +1899,7 @@ public class MsfCombineController {
         if (userSessionDto != null) {
             String userId = userSessionDto.getUserId();
             List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
-            cntrList = mypageService.selectCntrList(userId);
+            cntrList = msfMypageSvc.selectCntrList(userId);
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
                 ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
                 String url = "/mypage/updateForm.do";

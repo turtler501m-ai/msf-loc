@@ -54,7 +54,7 @@ public class MyNameChgController {
 
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private MyNameChgService myNameChgService;
@@ -105,7 +105,7 @@ public class MyNameChgController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
         List<McpUserCntrMngDto> cntrList = myNameChgService.selectCntrListNmChg(userSession.getUserId(), null);
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);

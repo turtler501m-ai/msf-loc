@@ -46,7 +46,7 @@ public class MsfMypageController {
 
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private MsfMaskingSvc maskingSvc;
@@ -68,7 +68,7 @@ public class MsfMypageController {
         List<McpUserCntrMngDto> cntrList = null;
         try {
             // Database 에서 조회함.
-            cntrList = mypageService.selectCntrList(userId);
+            cntrList = msfMypageSvc.selectCntrList(userId);
         } catch(DataAccessException e){
             throw new McpCommonJsonException(DB_EXCEPTION);
         }  catch(Exception e) {
@@ -90,7 +90,7 @@ public class MsfMypageController {
 //		UserSessionDto userSession = SessionUtils.getUserCookieBean();
 //		HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 //
-//		List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+//		List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
 //
 //		rtnMap.put("cntrList", cntrList);
 //		rtnMap.put("RESULT_CODE", "S");
@@ -111,7 +111,7 @@ public class MsfMypageController {
 
         try {
             // Database 에서 조회함.
-            socDesc = mypageService.selectSocDesc(svcCntrNo);
+            socDesc = msfMypageSvc.selectSocDesc(svcCntrNo);
         } catch(DataAccessException e){
             throw new McpCommonJsonException(DB_EXCEPTION);
         } catch(Exception e) {
@@ -140,7 +140,7 @@ public class MsfMypageController {
 
         // 본인 서비스 계약번호 체크
         boolean checkFlag = true;
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         if (cntrList != null && cntrList.size() > 0) {
             for (McpUserCntrMngDto mcpUserCntrMngDto : cntrList) {
                 if (contractNum.equals(mcpUserCntrMngDto.getContractNum())) {
@@ -157,7 +157,7 @@ public class MsfMypageController {
         }
 
         // 서비스번호 요금제조회
-        McpUserCntrMngDto mcpUserCntrMngDto = mypageService.selectSocDesc(contractNum);
+        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(contractNum);
 
         rtnMap.put("mcpUserCntrMngDto", mcpUserCntrMngDto);
         rtnMap.put("RESULT_CODE", "S");
@@ -178,7 +178,7 @@ public class MsfMypageController {
 
         try {
             // Database 에서 조회함.
-            mspAddInfo = mypageService.selectMspAddInfo(svcCntrNo);
+            mspAddInfo = msfMypageSvc.selectMspAddInfo(svcCntrNo);
             return mspAddInfo;
         } catch(DataAccessException e){
             throw new McpCommonJsonException(DB_EXCEPTION);
@@ -221,10 +221,10 @@ public class MsfMypageController {
 
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 289
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
 
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
             String url = "/mypage/updateForm.do";
@@ -287,7 +287,7 @@ public class MsfMypageController {
     public Map<String,String> checkAuthUser(@RequestParam(value= "name") String name,
                                             @RequestParam(value= "paramR1") String paramR1,
                                             @RequestParam(value= "paramR2") String paramR2) {
-        return mypageService.checkAuthUser(name, paramR1 + paramR2);
+        return msfMypageSvc.checkAuthUser(name, paramR1 + paramR2);
     }
 
     /**
@@ -303,7 +303,7 @@ public class MsfMypageController {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
          //1. 서식지 여부 확인
-        String  mcpRequest = mypageService.getChangeOfNameData(Long.parseLong(myNameChgReqDto.getCustReqSeq()),myNameChgReqDto.getReqType());
+        String  mcpRequest = msfMypageSvc.getChangeOfNameData(Long.parseLong(myNameChgReqDto.getCustReqSeq()),myNameChgReqDto.getReqType());
 
         if("FAIL".equals(mcpRequest)) {
             rtnMap.put("RESULT_MSG", "신청서 정보가 없습니다. ");

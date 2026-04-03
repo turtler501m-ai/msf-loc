@@ -71,7 +71,7 @@ public class FCommonController {
     private String jusoKey;
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     FormDtlSvc formDtlSvc;
@@ -301,7 +301,7 @@ public class FCommonController {
 //
 //        if (!StringUtils.isBlank(mspCommDatPrvTxnDto.getTgtSvcNo())) {
 //            //전화번호 리스트
-//            List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSessionDto.getUserId());
+//            List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
 //
 //            if (cntrList != null && cntrList.size() > 0) {
 //                for (McpUserCntrMngDto mcpUserCntrMngDto : cntrList) {
@@ -373,7 +373,7 @@ public class FCommonController {
 
                 if(Optional.ofNullable(userSession).isPresent() && Optional.ofNullable(userSession.getUserId()).isPresent()){
 
-                    List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+                    List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
 
                     rtnObj.setCntrList(cntrList);
                 }
@@ -428,7 +428,7 @@ public class FCommonController {
 
                 if(Optional.ofNullable(userSession).isPresent() && Optional.ofNullable(userSession.getUserId()).isPresent()){
 
-                    List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+                    List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
 
                     rtnObj.setCntrList(cntrList);
                 }

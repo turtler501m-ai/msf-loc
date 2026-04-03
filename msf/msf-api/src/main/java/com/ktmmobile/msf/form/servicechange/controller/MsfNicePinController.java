@@ -44,7 +44,7 @@ public class MsfNicePinController {
     CertService certService;
 
     @Autowired
-    MsfMypageSvc mypageService;
+    MsfMypageSvc msfMypageSvc;
 
     /**
      * 설명 : 고객 ci 조회 prx 연동
@@ -75,9 +75,9 @@ public class MsfNicePinController {
         Map<String, String> rtnChkAuthMap = new HashMap<>();
         if (StringUtils.isBlank(lContractNum)) { // esimWatch 는 패스
             if ("1".equals(niceLogDto.getNcType())) { // 미성년자
-                rtnChkAuthMap = mypageService.checkAuthUser(niceLogDto.getnName(), niceLogDto.getnBirthDate());
+                rtnChkAuthMap = msfMypageSvc.checkAuthUser(niceLogDto.getnName(), niceLogDto.getnBirthDate());
             } else { // 그외
-                rtnChkAuthMap = mypageService.checkAuthUser(niceLogDto.getName(), niceLogDto.getParamR1() + niceLogDto.getParamR2());
+                rtnChkAuthMap = msfMypageSvc.checkAuthUser(niceLogDto.getName(), niceLogDto.getParamR1() + niceLogDto.getParamR2());
             }
             if (!"0000".equals(rtnChkAuthMap.get("returnCode"))) {
                 return rtnChkAuthMap;

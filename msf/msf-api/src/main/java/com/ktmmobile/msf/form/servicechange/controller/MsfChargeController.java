@@ -59,7 +59,7 @@ public class MsfChargeController {
     private static final Logger logger = LoggerFactory.getLogger(MsfChargeController.class);
 
     @Autowired
-    private MsfMypageSvc mypageService ;
+    private MsfMypageSvc msfMypageSvc ;
 
     @Autowired
     private MsfChargeService chargeService;
@@ -112,9 +112,9 @@ public class MsfChargeController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if ( userSession != null ) { // 취약성 306
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -251,9 +251,9 @@ public class MsfChargeController {
 
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 309
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -394,7 +394,7 @@ public class MsfChargeController {
         String ctn = "";
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         if(cntrList !=null && !cntrList.isEmpty()) {
             for(McpUserCntrMngDto dto : cntrList) {
                 String svcCntrNo = StringUtil.NVL(dto.getSvcCntrNo(),"");
@@ -470,9 +470,9 @@ public class MsfChargeController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 297
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             return null;
         }
@@ -541,9 +541,9 @@ public class MsfChargeController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 297
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -556,7 +556,7 @@ public class MsfChargeController {
         String contractNum = searchVO.getContractNum();
         //요금제조회
         String rateNm = "";
-        McpUserCntrMngDto socMngDto = mypageService.selectSocDesc(contractNum); //요금제
+        McpUserCntrMngDto socMngDto = msfMypageSvc.selectSocDesc(contractNum); //요금제
         if(socMngDto !=null) {
             rateNm = StringUtil.NVL(socMngDto.getRateNm(),"-");
         }
@@ -680,9 +680,9 @@ public class MsfChargeController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 303
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
@@ -721,12 +721,12 @@ public class MsfChargeController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 293
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
         String returnUrl = "/portal/mypage/chargeViewPrint";
 
 
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -803,9 +803,9 @@ public class MsfChargeController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 301
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
@@ -885,13 +885,13 @@ public class MsfChargeController {
     public ModelAndView chargeView01ExcelDownload(HttpServletRequest request, ModelMap model,
             @ModelAttribute("searchVO") MyPageSearchDto searchVO)  {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        //List<McpUserCntrMngDto> cntrList = mypageService.selectCntrList(userSession.getUserId());
+        //List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         List<McpUserCntrMngDto> cntrList = null;
         if (userSession != null) { // 취약성 297
-            cntrList = mypageService.selectCntrList(userSession.getUserId());
+            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
 
-        boolean chk = mypageService.checkUserType(searchVO, cntrList, userSession);
+        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
             return null;
         }
