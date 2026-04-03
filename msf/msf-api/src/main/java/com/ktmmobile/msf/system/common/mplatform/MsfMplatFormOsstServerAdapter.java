@@ -24,8 +24,8 @@ import com.ktmmobile.msf.system.common.mplatform.vo.CommonXmlVO;
 import com.ktmmobile.msf.system.common.util.HttpClientUtil;
 
 @Service
-public class MplatFormOsstServerAdapter {
-    private static final Logger logger = LoggerFactory.getLogger(MplatFormOsstServerAdapter.class);
+public class MsfMplatFormOsstServerAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(MsfMplatFormOsstServerAdapter.class);
 
     @Value("${osst.simple.open.url}")
     private String osstSimpleOpenUrl;

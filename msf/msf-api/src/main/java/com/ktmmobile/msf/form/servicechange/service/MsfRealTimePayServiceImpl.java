@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import com.ktmmobile.msf.system.common.dto.MoscPymnReqDto;
 import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPaymentInfoVO;
 import com.ktmmobile.msf.system.common.mplatform.vo.PaymentInfoVO;
 
@@ -26,7 +26,7 @@ public class MsfRealTimePayServiceImpl implements MsfRealTimePayService{
 
 
     @Autowired
-    MplatFormService mplatFormService;
+    MsfMplatFormService mplatFormService;
 
     /**
      * x92 당월요금+미납요금 조회(X92)

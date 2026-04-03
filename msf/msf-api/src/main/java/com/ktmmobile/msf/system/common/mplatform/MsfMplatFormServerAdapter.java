@@ -31,9 +31,9 @@ import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.system.common.util.StringUtil;
 
 @Service
-public class MplatFormServerAdapter {
+public class MsfMplatFormServerAdapter {
 
-    private static final Logger logger = LoggerFactory.getLogger(MplatFormServerAdapter.class);
+    private static final Logger logger = LoggerFactory.getLogger(MsfMplatFormServerAdapter.class);
 
     @Value("${juice.url}")
     private String propertiesService;

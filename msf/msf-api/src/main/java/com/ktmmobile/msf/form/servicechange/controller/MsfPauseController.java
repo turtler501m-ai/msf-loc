@@ -40,7 +40,7 @@ import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
 import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpBkInfoDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpPcsLostInfoVO;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpSuspenCnlChgInVO;
@@ -63,7 +63,7 @@ public class MsfPauseController {
     private MsfMypageSvc msfMypageSvc;
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     @Autowired
     private CertService certService;

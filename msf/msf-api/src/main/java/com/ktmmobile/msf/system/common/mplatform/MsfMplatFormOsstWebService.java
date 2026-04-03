@@ -1,30 +1,26 @@
 package com.ktmmobile.msf.system.common.mplatform;
 
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpPerMyktfInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.RetvUsimChgAcceptPsblVO;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.system.common.util.StringUtil;
+import static com.ktmmobile.msf.system.common.constants.Constants.EVENT_CODE_REPLACE_USIM_PRE_CHK;
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.net.SocketTimeoutException;
-import java.util.HashMap;
-
-import static com.ktmmobile.msf.system.common.constants.Constants.EVENT_CODE_REPLACE_USIM_PRE_CHK;
+import com.ktmmobile.msf.system.common.dto.UserSessionDto;
+import com.ktmmobile.msf.system.common.exception.SelfServiceException;
+import com.ktmmobile.msf.system.common.mplatform.vo.RetvUsimChgAcceptPsblVO;
+import com.ktmmobile.msf.system.common.util.SessionUtils;
+import com.ktmmobile.msf.system.common.util.StringUtil;
 
 @Service
-public class MplatFormOsstWebService {
+public class MsfMplatFormOsstWebService {
 
 	@Autowired
-	private MplatFormOsstWebServerAdapter mplatFormOsstWebServerAdapter;
+	private MsfMplatFormOsstWebServerAdapter mplatFormOsstWebServerAdapter;
 
 
-	private static final Logger logger = LoggerFactory.getLogger(MplatFormOsstWebService.class);
+	private static final Logger logger = LoggerFactory.getLogger(MsfMplatFormOsstWebService.class);
 
 	/** T01.유심무상교체 접수 가능 여부조회 */
 	public RetvUsimChgAcceptPsblVO retvUsimChgAcceptPsbl(String ncn, String ctn, String custId) throws SelfServiceException, SocketTimeoutException {

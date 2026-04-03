@@ -15,8 +15,8 @@ import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
 import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormOsstServerAdapter;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormOsstServerAdapter;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.NowDlvryResDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.*;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSalePlcyMstDto;
@@ -89,7 +89,7 @@ public class AppformSvcImpl implements AppformSvc {
 
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     @Autowired
     private IpStatisticService ipstatisticService;
@@ -113,7 +113,7 @@ public class AppformSvcImpl implements AppformSvc {
     private String serverName;
 
     @Autowired
-    private MplatFormOsstServerAdapter mplatFormOsstServerAdapter;
+    private MsfMplatFormOsstServerAdapter mplatFormOsstServerAdapter;
 
     @Override
     public FormDtlDTO getFormDesc(FormDtlDTO formDtlDTO) {

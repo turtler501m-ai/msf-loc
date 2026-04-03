@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscDataSharingResDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyShareDataReqDto;
 
@@ -18,7 +18,7 @@ public class MsfMyShareDataSvcImpl implements MsfMyShareDataSvc {
 	private static final Logger logger = LoggerFactory.getLogger(MsfMyShareDataSvcImpl.class);
 
 	@Autowired
-	private MplatFormService mplatFormService;
+	private MsfMplatFormService mplatFormService;
 
 	/**
 	 * x69 데이터 쉐어링 사전체크

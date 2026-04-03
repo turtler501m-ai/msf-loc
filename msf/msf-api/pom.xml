@@ -124,14 +124,6 @@
                         <!-- =====================================================
                              미이관 패키지 전체 제외 (단계적 이관 예정)
                              ===================================================== -->
-                        <!-- 인증(NICE/JKTF crypto 의존) -->
-                        <exclude>com/ktmmobile/msf/cert/**</exclude>
-                        <!-- fath 기능 -->
-                        <exclude>com/ktmmobile/msf/fath/**</exclude>
-                        <!-- login 패키지 -->
-                        <exclude>com/ktmmobile/msf/login/**</exclude>
-                        <!-- main(게시판/CS) 패키지 -->
-                        <exclude>com/ktmmobile/msf/main/**</exclude>
                         <!-- 공통 Controller 전체 (Session 의존 등) -->
                         <exclude>com/ktmmobile/msf/common/controller/**</exclude>
                         <!-- 공통 캐시(EhCache 구현체) -->

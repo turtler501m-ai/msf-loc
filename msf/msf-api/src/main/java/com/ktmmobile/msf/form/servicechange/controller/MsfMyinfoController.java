@@ -62,7 +62,7 @@ import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
 import com.ktmmobile.msf.system.common.dto.UserSessionDto;
 import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.MpVirtualAccountNoDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpCustInfoAgreeVO;
@@ -119,7 +119,7 @@ public class MsfMyinfoController {
     IpStatisticService ipstatisticService;
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     /** 가입정보 첫화면 */
     @RequestMapping(value= {"/m/mypage/myinfoView.do","/mypage/myinfoView.do"})

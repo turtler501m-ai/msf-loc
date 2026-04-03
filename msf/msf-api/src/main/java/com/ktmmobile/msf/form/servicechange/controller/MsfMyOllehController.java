@@ -60,7 +60,7 @@ import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
 import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpBilEmailChgVO;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpBilPrintInfoVO;
@@ -123,7 +123,7 @@ public class MsfMyOllehController {
     private FCommonSvc fCommonSvc;
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     @Autowired
     private AppformSvc appform;

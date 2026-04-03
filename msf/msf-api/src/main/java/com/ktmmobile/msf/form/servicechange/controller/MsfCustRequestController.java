@@ -42,7 +42,6 @@ import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
 import com.ktmmobile.msf.system.common.dto.UserSessionDto;
 import com.ktmmobile.msf.system.common.dto.db.MspSmsTemplateMstDto;
 import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpRegSvcChgVO;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.system.common.service.FCommonSvc;
 import com.ktmmobile.msf.system.common.service.IpStatisticService;
@@ -688,14 +687,14 @@ public class MsfCustRequestController {
             try {
 
                 //안심보험 부가서비스 가입 처리
-                MpRegSvcChgVO res = regSvcService.regSvcChg(custRequestDto.getNcn(), custRequestDto.getMobileNo(), custRequestDto.getCustId(), custRequestDto.getInsrProdCd(), "");
+//PNB_확인                MpRegSvcChgVO res = regSvcService.regSvcChg(custRequestDto.getNcn(), custRequestDto.getMobileNo(), custRequestDto.getCustId(), custRequestDto.getInsrProdCd(), "");
 
-                if(res == null || !res.isSuccess()) {
-                    //logger.info("[안심보험가입신청 부가서비스가입오류]globalNo:" + res.getGlobalNo() + ",custReqSeq:" + custRequestDto.getCustReqSeq());
-                    rtnMap.put("RESULT_MSG", "신청이 완료되지 않았습니다. 고객센터에 문의해 주세요.");
-                    rtnMap.put("RESULT_CODE", "FAIL4");
-                    return rtnMap;
-                }
+//                if(res == null || !res.isSuccess()) {
+//                    //logger.info("[안심보험가입신청 부가서비스가입오류]globalNo:" + res.getGlobalNo() + ",custReqSeq:" + custRequestDto.getCustReqSeq());
+//                    rtnMap.put("RESULT_MSG", "신청이 완료되지 않았습니다. 고객센터에 문의해 주세요.");
+//                    rtnMap.put("RESULT_CODE", "FAIL4");
+//                    return rtnMap;
+//                }
 
                 //SCAN 서버에 서식지 데이터 생성 및 전송
                 custRequestScanService.prodSendScan(custRequestDto.getCustReqSeq(), custRequestDto.getCretId(), "IS");

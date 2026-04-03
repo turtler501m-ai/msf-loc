@@ -57,7 +57,7 @@ import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
 import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscFarPriceChgDto;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscFarPriceChgDto.M_messageDto;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscFarPriceResDto;
@@ -107,13 +107,13 @@ public class MsfFarPricePlanController {
     RateAdsvcGdncService rateAdsvcGdncService;
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     @Autowired
     private FCommonSvc fCommonSvc;
 
     @Autowired
-    private MplatFormService mplatFormService;
+    private MsfMplatFormService mplatFormService;
 
     @Value("${api.interface.server}")
     private String apiInterfaceServer;

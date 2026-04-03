@@ -20,7 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import com.ktmmobile.msf.system.common.dao.SmsDao;
 import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
 import com.ktmmobile.msf.system.common.exception.McpErropPageException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.system.common.util.StringUtil;
 
@@ -29,7 +29,7 @@ import com.ktmmobile.msf.system.common.util.StringUtil;
 public class SmsSvcImpl implements SmsSvc{
 
     @Autowired
-    private MplatFormService mplatFormService;
+    private MsfMplatFormService mplatFormService;
 
     @Value("${api.interface.server}")
     private String apiInterfaceServer;

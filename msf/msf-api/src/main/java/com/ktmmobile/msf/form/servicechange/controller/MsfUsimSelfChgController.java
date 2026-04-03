@@ -32,7 +32,7 @@ import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
 import com.ktmmobile.msf.system.common.dto.UserSessionDto;
 import com.ktmmobile.msf.system.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.vo.MSimpleOsstXmlUc0VO;
 import com.ktmmobile.msf.system.common.service.IpStatisticService;
 import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
@@ -49,7 +49,7 @@ public class MsfUsimSelfChgController {
     private MsfMypageSvc msfMypageSvc;
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     @Autowired
     private AppformSvc appformSvc;

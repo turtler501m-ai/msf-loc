@@ -39,7 +39,7 @@ import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
 import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscFarPriceChgDto;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscFarPriceResDto;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscWireUseTimeInfoRes;
@@ -79,7 +79,7 @@ public class MsfFarPricePlanServiceImpl implements MsfFarPricePlanService{
     private RateAdsvcGdncService rateAdsvcGdncService;
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     @Autowired
     private MsfMypageSvc msfMypageSvc;

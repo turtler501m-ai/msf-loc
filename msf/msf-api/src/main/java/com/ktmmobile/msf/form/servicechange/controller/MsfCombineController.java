@@ -50,7 +50,7 @@ import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.McpErropPageException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
 import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombChkRes;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombChkRes.MoscCombPreChkListOut;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombDtlListOutDTO;
@@ -90,7 +90,7 @@ public class MsfCombineController {
     MsfMyCombinationSvc myCombinationSvc;
 
     @Autowired
-    private MplatFormService mplatFormService;
+    private MsfMplatFormService mplatFormService;
 
     @Autowired
     private FormDtlSvc formDtlSvc;
@@ -109,7 +109,7 @@ public class MsfCombineController {
     private IpStatisticService ipstatisticService;
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
 //    @Autowired
 //    MstorySvc mstorySvc;

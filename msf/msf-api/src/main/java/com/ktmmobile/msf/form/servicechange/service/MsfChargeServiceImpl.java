@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonBillingInfoDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonDetailInfoDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
@@ -35,7 +35,7 @@ public class MsfChargeServiceImpl implements MsfChargeService {
 	private static Logger logger = LoggerFactory.getLogger(MsfChargeServiceImpl.class);
 
 	@Autowired
-	private MplatFormService mPlatFormService;
+	private MsfMplatFormService mPlatFormService;
 
 	/**
 	 * x15 요금조회

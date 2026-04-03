@@ -117,9 +117,9 @@ import com.ktmmobile.msf.system.common.util.StringUtil;
 
 
 @Service
-public class MplatFormService {
+public class MsfMplatFormService {
 
-    private static final Logger logger = LoggerFactory.getLogger(MplatFormService.class);
+    private static final Logger logger = LoggerFactory.getLogger(MsfMplatFormService.class);
 
     @Autowired
     private FCommonSvc fCommonSvc;
@@ -128,7 +128,7 @@ public class MplatFormService {
     private MsfMypageSvc msfMypageSvc;
 
     @Autowired
-    private MplatFormServerAdapter mplatFormServerAdapter;
+    private MsfMplatFormServerAdapter mplatFormServerAdapter;
 
     @Value("${SERVER_NAME}")
     private String serverLocation;
@@ -4381,7 +4381,7 @@ public class MplatFormService {
                 responseXml.append("</return>");
                 break;
             default:
-                logger.debug("Default MplatFormService.java");
+                logger.debug("Default MsfMplatFormService.java");
         }
 
         responseXml.append("</ns2:moscPerInfoResponse></soap:Body></soap:Envelope>");
@@ -4727,7 +4727,7 @@ public class MplatFormService {
                 responseXml.append("</return>");
                 break;
             default:
-                logger.debug("Default MplatFormService.java");
+                logger.debug("Default MsfMplatFormService.java");
         }
 
         responseXml.append("</ns2:moscPerInfoResponse></soap:Body></soap:Envelope>");

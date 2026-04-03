@@ -20,7 +20,7 @@ package com.ktmmobile.msf.form.servicechange.service;
  *   5. ASIS 공개 인터페이스 유틸 메서드 → private 내부 메서드로 이동
  *
  * [의존 서비스]
- *   MplatFormService — M플랫폼 X97/X38/Y25 호출
+ *   MsfMplatFormService — M플랫폼 X97/X38/Y25 호출
  *   FCommonSvc       — MSP_RATE_MST@DL_MSP 조회 (온라인 해지 가능 여부)
  *   RegSvcDao        — 로밍 코드 목록 조회 (getRoamCdList)
  *   MsfMypageSvc     — DB 부가서비스 관리 목록 조회 (selectRegService)
@@ -50,7 +50,7 @@ import com.ktmmobile.msf.form.servicechange.dto.McpRegServiceDto;
 import com.ktmmobile.msf.system.common.constants.Constants;
 import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoParamDto;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscRegSvcCanChgInVO;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpSocVO;
@@ -65,7 +65,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
 
     /** M플랫폼 연동 서비스 (X97/X38/Y25 호출) */
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     /** 공통 서비스 — MSP_RATE_MST@DL_MSP 조회 (온라인 해지 가능 여부, 해지 안내 문구) */
     @Autowired

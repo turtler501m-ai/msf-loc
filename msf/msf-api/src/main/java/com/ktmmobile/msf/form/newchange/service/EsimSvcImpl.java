@@ -13,7 +13,7 @@ import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
 import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.vo.MoscBfacChkOmdIntmVO;
 import com.ktmmobile.msf.system.common.mplatform.vo.MoscRetvIntmMdlSpecInfoVO;
 import com.ktmmobile.msf.system.common.mplatform.vo.MoscRetvIntmMdlSpecInfoVO.SpecSbstDto;
@@ -45,7 +45,7 @@ public class EsimSvcImpl implements EsimSvc {
     private static final Logger logger = LoggerFactory.getLogger(EsimSvcImpl.class);
 
     @Autowired
-    private MplatFormService mplatFormService;
+    private MsfMplatFormService mplatFormService;
 
     @Autowired
     private EsimDao esimDao;

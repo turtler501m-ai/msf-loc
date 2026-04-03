@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.form.servicechange.dao.CustRequestDao;
 import com.ktmmobile.msf.form.servicechange.dto.CustRequestDto;
@@ -30,7 +30,7 @@ public class MsfCustRequestServiceImpl implements MsfCustRequestService {
     private CustRequestDao custRequestDao;
     
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
     
 	@Override
 	public long getCustRequestSeq() {

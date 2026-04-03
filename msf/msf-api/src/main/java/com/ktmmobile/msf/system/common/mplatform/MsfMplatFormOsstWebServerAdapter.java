@@ -1,13 +1,13 @@
 package com.ktmmobile.msf.system.common.mplatform;
 
-import com.ktmmobile.msf.system.common.dao.MplatFormOsstDao;
-import com.ktmmobile.msf.system.common.exception.McpMplatFormException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.vo.CommonXmlVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpErrVO;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.HttpClientUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
+import static com.ktmmobile.msf.system.common.constants.Constants.EVENT_CODE_REPLACE_USIM_PRE_CHK;
+import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.MPLATFORM_RESPONEXML_EMPTY_EXCEPTION;
+import java.io.UnsupportedEncodingException;
+import java.net.SocketTimeoutException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.httpclient.NameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,21 +16,19 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
-import java.net.SocketTimeoutException;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Set;
-
-import static com.ktmmobile.msf.system.common.constants.Constants.*;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.MPLATFORM_RESPONEXML_EMPTY_EXCEPTION;
+import com.ktmmobile.msf.system.common.dao.MplatFormOsstDao;
+import com.ktmmobile.msf.system.common.exception.McpMplatFormException;
+import com.ktmmobile.msf.system.common.exception.SelfServiceException;
+import com.ktmmobile.msf.system.common.mplatform.vo.CommonXmlVO;
+import com.ktmmobile.msf.system.common.mplatform.vo.MpErrVO;
+import com.ktmmobile.msf.system.common.service.IpStatisticService;
+import com.ktmmobile.msf.system.common.util.HttpClientUtil;
+import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
 
 @Service
-public class MplatFormOsstWebServerAdapter {
+public class MsfMplatFormOsstWebServerAdapter {
 
-	private static final Logger logger = LoggerFactory.getLogger(MplatFormOsstWebServerAdapter.class);
+	private static final Logger logger = LoggerFactory.getLogger(MsfMplatFormOsstWebServerAdapter.class);
 
 	@Value("${osst.url}")
 	private String osstUrl;

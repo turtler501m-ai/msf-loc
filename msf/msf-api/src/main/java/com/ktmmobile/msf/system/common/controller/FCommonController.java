@@ -36,7 +36,7 @@ import com.ktmmobile.msf.system.common.dto.db.BannAccessTxnDto;
 import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
 import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.McpErropPageException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.NowDlvryResDto;
 import com.ktmmobile.msf.system.common.service.FCommonSvc;
 import com.ktmmobile.msf.system.common.service.IpStatisticService;
@@ -77,7 +77,7 @@ public class FCommonController {
     FormDtlSvc formDtlSvc;
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
 //    @Autowired
 //    private BannerStatService bannerStatService;

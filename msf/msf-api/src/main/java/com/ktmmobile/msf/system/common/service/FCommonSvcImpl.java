@@ -10,7 +10,7 @@
 //import com.ktmmobile.msf.system.common.exception.McpCommonException;
 //import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 //import com.ktmmobile.msf.system.common.exception.McpErropPageException;
-//import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+//import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 //import com.ktmmobile.msf.system.common.mplatform.dto.CdInfoDto;
 //import com.ktmmobile.msf.system.common.mplatform.dto.CommCdInfoRes;
 //import com.ktmmobile.msf.system.common.mspservice.MspService;
@@ -63,7 +63,7 @@
 //
 //
 //    @Autowired
-//    private MplatFormService mplatFormService;
+//    private MsfMplatFormService mplatFormService;
 //
 //    @Autowired
 //    MspService mspService;

@@ -31,7 +31,7 @@ import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
 import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombChkRes;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombChkResDto;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscCombChkResDto.MoscCombPreChkListOutDTO;
@@ -51,7 +51,7 @@ public class MsfMyCombinationSvclmpl implements MsfMyCombinationSvc {
     private static final Logger logger = LoggerFactory.getLogger(MsfMyCombinationSvclmpl.class);
 
     @Autowired
-    private MplatFormService mplatFormService;
+    private MsfMplatFormService mplatFormService;
 
     @Autowired
     private MyCombinationDao myCombinationDao;

@@ -13,7 +13,7 @@ import com.ktmmobile.msf.system.common.dto.*;
 import com.ktmmobile.msf.system.common.dto.db.*;
 import com.ktmmobile.msf.system.common.exception.*;
 import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscCrdtCardAthnInDto;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscInqrUsimUsePsblOutDTO;
 import com.ktmmobile.msf.system.common.mplatform.vo.*;
@@ -147,7 +147,7 @@ public class AppformController {
     private ScanSvc scanSvc;
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     @Autowired
     private SmartroService smartroService;

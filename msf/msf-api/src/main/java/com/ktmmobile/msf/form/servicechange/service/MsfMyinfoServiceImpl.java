@@ -2,7 +2,7 @@ package com.ktmmobile.msf.form.servicechange.service;
 
 import com.ktmmobile.msf.system.common.constants.Constants;
 import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
+import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.CoupInfoDto;
 import com.ktmmobile.msf.system.common.mplatform.dto.InqrCoupInfoRes;
 import com.ktmmobile.msf.system.common.mplatform.vo.*;
@@ -30,7 +30,7 @@ public class MsfMyinfoServiceImpl implements MsfMyinfoService {
 
 
     @Autowired
-    private MplatFormService mPlatFormService;
+    private MsfMplatFormService mPlatFormService;
 
     @Value("${api.interface.server}")
     private String apiInterfaceServer;
