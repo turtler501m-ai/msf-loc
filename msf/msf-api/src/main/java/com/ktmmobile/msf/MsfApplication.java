@@ -3,15 +3,16 @@ package com.ktmmobile.msf;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
-/**
- * 서식지App Back (스마트서식지) 메인.
- * 패키지 규칙: com.ktmmobile.msf
- */
 @SpringBootApplication
-@EnableScheduling
-@MapperScan({"com.ktmmobile.msf.formComm.mapper", "com.ktmmobile.msf.formSvcChg.mapper", "com.ktmmobile.msf.formOwnChg.mapper", "com.ktmmobile.msf.formSvcCncl.mapper"})
+@MapperScan({
+    "com.ktmmobile.msf.system.common.mapper",
+    "com.ktmmobile.msf.form.common.mapper",
+    "com.ktmmobile.msf.form.newchange.mapper",
+    "com.ktmmobile.msf.form.servicechange.mapper",
+    "com.ktmmobile.msf.form.ownerchange.mapper",
+    "com.ktmmobile.msf.form.termination.mapper"
+})
 public class MsfApplication {
 
     public static void main(String[] args) {

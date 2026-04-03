@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.api.telcounsel.mapper.TelCounselMapper">
+
+    <insert id="callMspProcedureinsertTelCounsel" statementType="CALLABLE" parameterType="com.ktmmobile.mcp.telcounsel.dto.TelCounselDto">
+        <selectKey keyProperty="counselSeq" resultType="Integer" order="BEFORE">
+            SELECT SQ_TEL_COUNSEL_BAS_SEQ.NEXTVAL FROM DUAL
+        </selectKey>												<!-- writeid-->										<!--userid--><!--sms yn  -->
+        {CALL P_MSP_VOC_LINK_REG@dl_msp(#{counselSeq},#{counselCtg},'전화상담','',#{counselNm},#{mobileNo},#{fullTextForMsp},'userid','smsyn')}
+    </insert>
+
+</mapper>

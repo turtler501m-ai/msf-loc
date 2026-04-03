@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EsimMapper">
+
+    <insert id="insertMcpUploadPhoneInfoDto" parameterType="com.ktmmobile.mcp.appform.dto.McpUploadPhoneInfoDto" useGeneratedKeys="true">
+        INSERT INTO MCP_UPLOAD_PHONE_INFO
+        (
+            UPLOAD_PHONE_SRL_NO
+            ,REQ_MODEL_NAME
+            ,MODEL_ID
+            ,REQ_PHONE_SN
+            ,EID
+            ,IMEI1
+            ,IMEI2
+            ,UPLOAD_PHONE_IMG
+            ,ACCESS_IP
+            ,USER_ID
+            ,SYS_DT
+            ,SYS_RDATE
+            ,RST_CD
+            ,EVNT_CD
+            ,RSLT_CD
+            ,RSLT_YN
+            ,RSLT_MSG
+            , PRNTS_CONTRACT_NO
+        )
+        VALUES
+        (
+            SQ_UPLOAD_PHONE_SEQ.NEXTVAL
+            ,#{reqModelName}
+            ,#{modelId}
+            ,#{reqPhoneSn}
+            ,#{eid}
+            ,#{imei1}
+            ,#{imei2}
+            ,#{uploadPhoneImg}
+            ,#{accessIp}
+            ,#{userId}
+            ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+            ,SYSDATE
+            ,'R'
+            ,#{evntCd}
+            ,#{rsltCd}
+            ,#{rsltYn}
+            ,#{rsltMsg}
+            ,#{prntsContractNo}
+        )
+        <selectKey keyProperty="uploadPhoneSrlNo" resultType="Integer" order="AFTER" >
+                SELECT SQ_UPLOAD_PHONE_SEQ.CURRVAL FROM DUAL
+        </selectKey>
+    </insert>
+
+    <update id="updateMcpUploadPhoneInfoDto" parameterType="com.ktmmobile.mcp.appform.dto.McpUploadPhoneInfoDto" >
+        UPDATE /*EsimMapper.updateMcpUploadPhoneInfoDto   */
+            MCP_UPLOAD_PHONE_INFO
+        SET
+            REQ_MODEL_NAME = #{reqModelName}
+            ,MODEL_ID = #{modelId}
+            ,REQ_PHONE_SN = #{reqPhoneSn}
+            ,MOVE_TLCM_IND_CD = #{moveTlcmIndCd}
+            ,MOVE_CMNC_GNRT_IND_CD = #{moveCmncGnrtIndCd}
+            ,RST_CD = #{rstCd}
+        WHERE
+            UPLOAD_PHONE_SRL_NO = #{uploadPhoneSrlNo}
+    </update>
+
+
+
+    <insert id="insertMcpEsimOmdTrace" parameterType="com.ktmmobile.mcp.appform.dto.McpEsimOmdTraceDto">
+        INSERT INTO MCP_ESIM_OMD_TRACE (  /*EsimMapper.insertMcpEsimOmdTrace   */
+           UPLOAD_PHONE_SRL_NO,
+           SEQ,
+           SUBSCRIBER_NO,
+           GLOBAL_NO,
+           EVENT_CODE,
+           EID,
+           TRTM_RSLT_SMST,
+           PRCS_SBST,
+           RSLT_CD,
+           ACCESS_IP,
+           ACCESS_URL,
+           SYS_DT,
+           SYS_RDATE
+         ) VALUES (
+           #{uploadPhoneSrlNo},
+           (SELECT NVL(MAX(SEQ), 0) + 1 AS seq  FROM MCP_ESIM_OMD_TRACE WHERE UPLOAD_PHONE_SRL_NO=#{uploadPhoneSrlNo}),
+           #{subscriberNo},
+           #{globalNo},
+           #{eventCode},
+           #{eid},
+           #{trtmRsltSmst},
+           #{prcsSbst},
+           #{rsltCd},
+           #{accessIp},
+           #{accessUrl},
+           TO_CHAR(SYSDATE, 'YYYYMMDD'),
+           SYSDATE
+         )
+    </insert>
+
+    <update id="updateServiceRst" parameterType="com.ktmmobile.mcp.appform.dto.McpUploadPhoneInfoDto" >
+        UPDATE /*EsimMapper.updateServiceRst   */
+            MCP_UPLOAD_PHONE_INFO
+        SET
+            EVNT_CD  = #{evntCd}
+            , RSLT_CD  = #{rsltCd}
+            , RSLT_YN  = #{rsltYn}
+            , RSLT_MSG  = #{rsltMsg}
+        WHERE
+            UPLOAD_PHONE_SRL_NO = #{uploadPhoneSrlNo}
+    </update>
+
+    <select id="doubleChk" resultType="com.ktmmobile.mcp.appform.dto.McpUploadPhoneInfoDto" parameterType="java.lang.Integer">
+
+        SELECT
+            RST_CD
+        FROM MCP_UPLOAD_PHONE_INFO
+        WHERE 1=1
+        AND UPLOAD_PHONE_SRL_NO = #{uploadPhoneSrlNo}
+
+    </select>
+
+    <insert id="insertAbuseImeiHist" parameterType="com.ktmmobile.mcp.appform.dto.AbuseImeiHistDto">
+        INSERT INTO NMCP_ABUSE_IMEI_HIST (
+            HIST_SEQ
+            , IMEI
+            , ACCESS_IP
+            , USER_ID
+            , SYS_DT
+            , SYS_RDATE
+        ) VALUES (
+            SQ_ABUSE_IMEI_HIST.NEXTVAL
+            , #{imei}
+            , #{accessIp}
+            , #{userId}
+            , TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , SYSDATE
+        )
+    </insert>
+
+</mapper>
+

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RwdMapper">
+
+    <!-- 자급제 보상 서비스 실패 로그 기록 -->
+    <insert id="insertFailRwd" parameterType="com.ktmmobile.mcp.mypage.dto.RwdFailHistDto">
+        INSERT INTO NMCP_RWD_FAIL_HIST (
+        HIST_SEQ,
+        <if test="requestKey != 0">
+            REQUEST_KEY,
+        </if>
+        RES_NO,
+        CONTRACT_NUM,
+        SYS_DATE,
+        USER_ID,
+        FAIL_RSN,
+        ACCESS_URL,
+        ACCESS_IP
+        ) VALUES (
+        SQ_RWD_FAIL_HIST.NEXTVAL,
+        <if test="requestKey != 0">
+            #{requestKey},
+        </if>
+        #{resNo},
+        #{contractNum},
+        SYSDATE,
+        #{userId},
+        #{failRsn},
+        #{accessUrl},
+        #{accessIp}
+        )
+    </insert>
+
+    <!-- EMV_SCAN_MST 테이블의 work_id, doc_title update -->
+    <update id="updateEmvScanMstRwd" parameterType="java.lang.String">
+        UPDATE
+            EMV_SCAN_MST
+        SET
+            WORK_ID = 'S0012',
+            DOC_TITLE = CUST_NM || '_자급제보상서비스신청'
+        WHERE 1 = 1
+        AND SCAN_ID = #{scanId}
+    </update>
+
+    <!-- EMV_SCAN_FILE 테이블의 doc_id update -->
+    <update id="updateEmvScanFileRwd" parameterType="java.lang.String">
+        UPDATE
+            EMV_SCAN_FILE
+        SET
+            DOC_ID = 'E0022'
+        WHERE 1 = 1
+        AND SCAN_ID = #{scanId}
+    </update>
+
+    <!-- EMV_SCAN_FILE에서 fil_num max 구하기 -->
+    <select id="getMaxFileNum" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT NVL(MAX(FILE_NUMBER), -1) AS FILE_NUM
+        FROM EMV_SCAN_FILE
+        WHERE SCAN_ID = #{orgScanId}
+    </select>
+
+    <!-- 자급제 보상 서비스 신규 생성된 파일 리스트 조회 -->
+    <select id="getEmvScanFileList" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.mypage.dto.RwdOrderDto">
+        SELECT FILE_ID AS SCAN_FILE_ID, SCAN_ID
+        FROM EMV_SCAN_FILE
+        WHERE SCAN_ID = #{scanId}
+        ORDER BY FILE_NUMBER
+    </select>
+
+    <!-- EMV_SCAN_FILE 테이블에 insert 해서 서식지 합본처리 -->
+    <update id="insertEmvScanFile" parameterType="com.ktmmobile.mcp.mypage.dto.RwdOrderDto">
+        INSERT INTO EMV_SCAN_FILE
+        (FILE_ID, SCAN_ID, FILE_NUMBER, FILE_SIZE, FILE_EXT, DOC_ID, MAIN_DOC_CD, USE_YN, ORIGIN_DIR, RGST_DT, RGST_PRSN_ID )
+        SELECT
+            FILE_ID,
+            #{orgScanId} AS SCAN_ID,
+            #{maxFileNum} AS FILE_NUMBER,
+            FILE_SIZE,
+            FILE_EXT,
+            DOC_ID,
+            MAIN_DOC_CD,
+            'Y',
+            ORIGIN_DIR,
+            RGST_DT,
+            #{regstId}
+        FROM EMV_SCAN_FILE
+        WHERE SCAN_ID = #{scanId}
+        AND FILE_ID = #{scanFileId}
+    </update>
+
+
+</mapper>

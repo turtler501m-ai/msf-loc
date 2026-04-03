@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.coupon.mapper.CouponMapper">
+
+    <select id="selectCouponPlanList"  resultType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto">
+        /*EventCodeMapper.selectCouponPlanList*/
+        SELECT
+            REL.RATE_CD,
+            MST.RATE_NM
+        FROM NMCP_COUPN_PLAN_REL REL,
+             MSP_RATE_MST@DL_MSP MST
+        WHERE REL.RATE_CD = MST.RATE_CD
+          AND REL.COUPN_CTG_CD = #{coupnCtgCd}
+          AND REL.DEL_YN = 'N'
+    </select>
+
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.mcash.mapper.McashMapper">
+
+    <!-- M캐시 신규가입 시 회원 정보 조회 -->
+    <select id="getUserInfoBySvcCntrNo" parameterType="String" resultType="com.ktmmobile.mcp.mcash.dto.McashUserDto" >
+        /* McashMapper.getUserInfoBySvcCntrNo */
+        SELECT CNTR.USERID
+             , SUB.CUSTOMER_ID
+             , SUB.CONTRACT_NUM
+             , SUB.SVC_CNTR_NO
+        FROM MSP_JUO_SUB_INFO@DL_MSP SUB
+           , MCP_USER_CNTR_MNG CNTR
+        WHERE SUB.SVC_CNTR_NO = #{svcCntrNo}
+          AND SUB.SUB_STATUS <![CDATA[<>]]> 'C'
+          AND SUB.CONTRACT_NUM = CNTR.SVC_CNTR_NO
+    </select>
+
+    <!-- M캐시 가입/변경 가능 목록 조회 -->
+    <select id="getMcashAvailableCntrList" parameterType="String" resultType="com.ktmmobile.mcp.mcash.dto.McashUserDto">
+        SELECT /* McashMapper.getMcashAvailableCntrList */
+            CNTR.USERID
+            , SUB.SUBSCRIBER_NO AS MOBILE_NO
+            , SUB.SVC_CNTR_NO
+            , ( SELECT RATE_NM
+                  FROM MSP_RATE_MST@DL_MSP
+                 WHERE RATE_CD = FEA.SOC ) AS RATE_NM
+            , CASE
+                WHEN SUBSTR( CRYPTO_AES256.DEC_AES@DL_MSP(NVL(CUS.CUSTOMER_SSN, ' ')), 7, 1 ) IN ('1', '2', '5', '6')
+                    THEN '19' || SUBSTR( CRYPTO_AES256.DEC_AES@DL_MSP(NVL(CUS.CUSTOMER_SSN, ' ')), 0, 6 )
+                WHEN SUBSTR( CRYPTO_AES256.DEC_AES@DL_MSP(NVL(CUS.CUSTOMER_SSN, ' ')), 7, 1 ) IN ('3', '4', '7', '8')
+                    THEN '20' || SUBSTR( CRYPTO_AES256.DEC_AES@DL_MSP(NVL(CUS.CUSTOMER_SSN, ' ')), 0, 6 )
+              END AS BIRTH_DT
+            , DECODE( ( SELECT 1
+                          FROM NMCP_CD_DTL
+                         WHERE CD_GROUP_ID = 'McashDenyRate'
+                           AND USE_YN = 'Y'
+                           AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+                           AND DTL_CD = FEA.SOC ), 1, 'Y', 'N') AS DENY_RATE_YN
+        FROM MCP_USER_CNTR_MNG CNTR
+             , MSP_JUO_SUB_INFO@DL_MSP SUB
+             , MSP_JUO_CUS_INFO@DL_MSP CUS
+             , NMCP_MCASH_USER MCASH
+             , MSP_JUO_FEATURE_INFO@DL_MSP FEA
+        WHERE UPPER(CNTR.USERID) = UPPER(#{userid})
+          AND CNTR.SVC_CNTR_NO = SUB.CONTRACT_NUM
+          AND SUB.SUB_STATUS <![CDATA[<>]]> 'C'
+          AND SUB.CUSTOMER_ID = CUS.CUSTOMER_ID
+          AND CUS.CUSTOMER_TYPE = 'I'
+          AND CUS.CUST_IDNT_NO_IND_CD IN ('01','05')
+          AND SUB.CONTRACT_NUM = FEA.CONTRACT_NUM
+          AND FEA.APP_END_DATE = '99991231000000'
+          AND FEA.SERVICE_TYPE = 'P'
+          AND CNTR.USERID = MCASH.USERID (+)
+          AND CNTR.SVC_CNTR_NO = MCASH.CONTRACT_NUM (+)
+          AND ( MCASH.STATUS IS NULL OR MCASH.STATUS = 'C' )
+        ORDER BY CNTR.REP_NO ASC
+    </select>
+
+    <!-- M캐시 가입정보 조회 -->
+    <select id="getMcashJoinInfo" parameterType="String" resultType="com.ktmmobile.mcp.mcash.dto.McashUserDto">
+        SELECT /* McashMapper.getMcashJoinInfo */
+              A.USERID
+              , A.CONTRACT_NUM
+              , A.SVC_CNTR_NO
+              , TO_CHAR(TO_DATE(SUBSTR(STRT_DTTM, 1, 8), 'YYYYMMDD'), 'YYYY.MM.DD') AS STRT_DTTM
+              , B.SUBSCRIBER_NO AS MOBILE_NO
+              , ( SELECT RATE_NM
+                    FROM MSP_RATE_MST@DL_MSP
+                   WHERE RATE_CD = C.SOC ) AS RATE_NM
+         FROM NMCP_MCASH_USER A
+              , MSP_JUO_SUB_INFO@DL_MSP B
+              , MSP_JUO_FEATURE_INFO@DL_MSP C
+        WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+          AND A.CONTRACT_NUM = C.CONTRACT_NUM
+          AND A.STATUS = 'A'
+          AND B.SUB_STATUS <![CDATA[<>]]> 'C'
+          AND C.SERVICE_TYPE = 'P'
+          AND C.APP_END_DATE = '99991231000000'
+          AND UPPER(A.USERID) = UPPER(#{userid})
+    </select>
+</mapper>

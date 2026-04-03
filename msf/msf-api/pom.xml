@@ -46,6 +46,46 @@
             <scope>runtime</scope>
         </dependency>
         -->
+        <!-- JDOM 1.x: M플랫폼 XML 파싱 (MoscDataSharingResDto 등 mplatform VO) -->
+        <dependency>
+            <groupId>org.jdom</groupId>
+            <artifactId>jdom</artifactId>
+            <version>1.1.3</version>
+        </dependency>
+        <!-- Apache Commons Lang -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+        </dependency>
+        <!-- Apache Commons HttpClient 3.x (MplatFormServerAdapter NameValuePair) -->
+        <dependency>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+            <version>3.1</version>
+        </dependency>
+        <!-- Apache Commons Collections -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.4</version>
+        </dependency>
+        <!-- Google Gson (NiceCertifyController, LoginSvcImpl 등) -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+        <!-- Ehcache (DbCacheHandler) -->
+        <dependency>
+            <groupId>net.sf.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+            <version>2.10.9.2</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -55,6 +95,155 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>com.ktmmobile.msf.MsfApplication</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <!-- =====================================================
+                             _bak / _legacy 디렉토리 (ASIS 보관용, 컴파일 제외)
+                             ===================================================== -->
+                        <exclude>com/ktmmobile/msf/system/common/controller/**</exclude>
+                        <exclude>com/ktmmobile/msf/common/mplatform_bak/**</exclude>
+                        <exclude>com/ktmmobile/msf/common/mplatform_legacy/**</exclude>
+                        <exclude>com/ktmmobile/msf/common/service_bak/**</exclude>
+                        <exclude>com/ktmmobile/msf/SmtPage/**</exclude>
+                        <exclude>com/ktmmobile/msf/SmtPage_bak/**</exclude>
+                        <exclude>com/ktmmobile/msf/fath_bak/**</exclude>
+                        <exclude>com/ktmmobile/msf/form/common/service_bak/**</exclude>
+
+                        <!-- =====================================================
+                             미이관 패키지 전체 제외 (단계적 이관 예정)
+                             ===================================================== -->
+                        <!-- 인증(NICE/JKTF crypto 의존) -->
+                        <exclude>com/ktmmobile/msf/cert/**</exclude>
+                        <!-- fath 기능 -->
+                        <exclude>com/ktmmobile/msf/fath/**</exclude>
+                        <!-- login 패키지 -->
+                        <exclude>com/ktmmobile/msf/login/**</exclude>
+                        <!-- main(게시판/CS) 패키지 -->
+                        <exclude>com/ktmmobile/msf/main/**</exclude>
+                        <!-- 공통 Controller 전체 (Session 의존 등) -->
+                        <exclude>com/ktmmobile/msf/common/controller/**</exclude>
+                        <!-- 공통 캐시(EhCache 구현체) -->
+                        <exclude>com/ktmmobile/msf/common/cache/**</exclude>
+                        <!-- 공통 코드 DAO (MyBatis 미등록) -->
+                        <exclude>com/ktmmobile/msf/common/commCode/**</exclude>
+                        <!-- M전산 OSST 어댑터 (별도 DB 연동 미완성) -->
+                        <exclude>com/ktmmobile/msf/common/mplatform/MplatFormOsstServerAdapter.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mplatform/MplatFormOsstWebServerAdapter.java</exclude>
+                        <!-- MSP 서비스 구현체 (ktds.crypto 의존) -->
+                        <exclude>com/ktmmobile/msf/common/mspservice/MspServiceImpl.java</exclude>
+                        <!-- 공통 서비스 미이관 -->
+                        <exclude>com/ktmmobile/msf/common/service/EncryptService.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/service/FCommonSvcImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/service/LoginSvc.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/service/LoginSvcImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/service/NiceCertifySvcImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/service/NiceLogSvcImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/service/SmsSvcImpl.java</exclude>
+                        <!-- Legacy mstory 구현체 -->
+                        <exclude>com/ktmmobile/msf/common/legacy/mstory/service/MstorySvcImpl.java</exclude>
+                        <!-- DTO 미이관 -->
+                        <exclude>com/ktmmobile/msf/common/dto/NiceLogDto.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/dto/db/McpRequestSelfDlvryDto.java</exclude>
+                        <!-- 업무 패키지 전체 미이관 -->
+                        <exclude>com/ktmmobile/msf/form/comm/**</exclude>
+                        <exclude>com/ktmmobile/msf/form/newChg/**</exclude>
+                        <exclude>com/ktmmobile/msf/form/ownChg/**</exclude>
+                        <!-- servicechange: ASIS svcChg 복사본 (TOBE 이관 전) -->
+                        <exclude>com/ktmmobile/msf/form/servicechange/**</exclude>
+
+                        <!-- =====================================================
+                             form/svcChg 부분 이관 — TOBE 완성 전 ASIS 파일 제외
+                             ===================================================== -->
+                        <!-- ASIS 레거시 컨트롤러 (SmtForm, ASIS MyShareData) -->
+                        <exclude>com/ktmmobile/msf/form/common/controller/SmtFormController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/SmtShareDataController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/MyShareDataController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/ChargeController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/CombineController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/CustRequestController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/FarPricePlanController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/MyinfoController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/MyOllehController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/MypageController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/NicePinController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/RegSvcController.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/controller/UsimSelfChgController.java</exclude>
+                        <!-- DAO 전체 미이관 -->
+                        <exclude>com/ktmmobile/msf/form/svcChg/dao/**</exclude>
+                        <!-- ASIS 레거시 DTO (ktds.crypto 의존) -->
+                        <exclude>com/ktmmobile/msf/form/svcChg/dto/McpUserCntrMngDto.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/dto/McpFarPriceDto.java</exclude>
+                        <!-- ASIS 레거시 서비스 미이관 -->
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/CustRequestScanServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/FarPricePlanService.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/FarPricePlanServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/MyCombinationSvc.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/MyCombinationSvclmpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/MypageServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/MypageUserServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/NicePinServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/PayInfoServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/PaywayService.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/PaywayServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/RealTimePayServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/RegSvcService.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/RegSvcServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/SmtPageService.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/SmtPageServiceImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/SmtInfoServiceImpl.java</exclude>
+                        <!-- 미이관 common 서비스/DAO/DTO 개별 파일 -->
+                        <exclude>com/ktmmobile/msf/common/service/BarcodeSvcImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/dto/XmlWrapper.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/dto/BannerDto.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/dto/db/NmcpBoardBasDto.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mspservice/MspService.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mspservice/dao/MspDao.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mspservice/dao/MspDaoImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mspservice/dto/MspNoticSupportMstDto.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mspservice/dto/MspSaleSubsdMstDto.java</exclude>
+                        <!-- 미이관 form/svcChg DAO/Service 개별 파일 -->
+                        <exclude>com/ktmmobile/msf/form/svcChg/dao/CustRequestDao.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/dao/CustRequestDaoImpl.java</exclude>
+                        <exclude>com/ktmmobile/msf/form/svcChg/service/PayInfoService.java</exclude>
+                        <!-- 미이관 ASIS 형태 form 패키지 -->
+                        <exclude>com/ktmmobile/msf/form/common/**</exclude>
+                        <exclude>com/ktmmobile/msf/form/newchange/**</exclude>
+                        <exclude>com/ktmmobile/msf/form/ownerchange/**</exclude>
+                        <exclude>com/ktmmobile/msf/form/termination/**</exclude>
+                        <exclude>com/ktmmobile/msf/form/cancellation/**</exclude>
+                        <!-- 공통 유틸 — ASIS 미이관 전체 제외 -->
+                        <exclude>com/ktmmobile/msf/common/util/**</exclude>
+                        <!-- 공통 mplatform 오류 파일 -->
+                        <exclude>com/ktmmobile/msf/common/mplatform/MplatFormServerAdapter.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mplatform/dto/CommCdInfoRes.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mplatform/vo/MpFarMonBillingInfoVO.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mplatform/vo/MpPerMyktfInfoVO.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/mplatform/vo/MpSocVO.java</exclude>
+                        <!-- 공통 유틸 — 외부 라이브러리 의존 파일 (다음 단계 이관 예정) -->
+                        <exclude>com/ktmmobile/msf/common/util/Aes256.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/AppEncryptUtils.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/AudioCaptCha.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/CaptCha.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/CaptchaFileUtil.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/CommonHttpClient.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/FileUploadUtil.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/FileUtil.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/MultipartUtility.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/PageInfoBean.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/PagingUtil.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/ParseHtmlTagUtil.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/SetKorVoiceProducer.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/SetTextProducer.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/StringParser.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/VoiceProducerForEng.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/VoiceProducerForKor.java</exclude>
+                        <exclude>com/ktmmobile/msf/common/util/XmlBindUtil.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

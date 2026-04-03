@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CompanyMapper">
+
+    <!-- 윤리 위반 제보 등록 -->
+    <insert id="insertNmcpViolationReport" parameterType="com.ktmmobile.mcp.company.dto.ReportDto">
+        <selectKey keyProperty="reportSeq" resultType="Integer" order="BEFORE">
+                SELECT SQ_VIOLATION_REPORT_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+         INSERT INTO NMCP_VIOLATION_REPORT
+         (
+             REPORT_SEQ,
+            REPORT_CERT_NUMBER,
+            REPORT_NAME,
+            REPORT_MOBILE_NO,
+            REPORT_EMAIL,
+            REPORT_TITLE,
+            REPORT_CONTENT,
+            REPORT_FILE_NAME,
+            REPORT_ORG_FILE_NAME,
+            REPORT_RESULT_NOTIC,
+            REPORT_STATUS,
+            REPORT_REG_DT
+         )
+         VALUES
+         (
+             #{reportSeq, jdbcType=NUMERIC},
+             #{reportCertNumber},
+             #{reportName},
+             #{reportMobileNo},
+             #{reportEmail},
+             #{reportTitle},
+             #{reportContent},
+             #{reportFileName},
+             #{reportOrgFileName},
+             #{reportResultNotic},
+             'A',
+             SYSDATE
+         )
+    </insert>
+
+    <!-- 윤리 위반 제보 조회 -->
+    <select id="selectNmcpViolationReport" parameterType="com.ktmmobile.mcp.company.dto.ReportDto" resultType="com.ktmmobile.mcp.company.dto.ReportDto">
+        SELECT
+            REPORT_NAME,
+            REPORT_REG_DT,
+            REPORT_TITLE,
+            REPORT_STATUS,
+            REPORT_RCV_CPLT_DT,
+            REPORT_ANSWER_DT,
+            REPORT_ANSWER
+        FROM
+            NMCP_VIOLATION_REPORT
+        WHERE
+            REPORT_CERT_NUMBER = #{reportCertNumber}
+            AND  REPORT_NAME = #{reportName}
+    </select>
+
+    <!-- 관리자 윤리 위반 제보 상세 보기 -->
+    <select id="selectNmcpViolationReportView" parameterType="com.ktmmobile.mcp.company.dto.ReportDto" resultType="com.ktmmobile.mcp.company.dto.ReportDto">
+        SELECT
+             REPORT_SEQ
+           , REPORT_CERT_NUMBER
+           , REPORT_NAME
+           , REPORT_MOBILE_NO
+           , REPORT_EMAIL
+           , REPORT_TITLE
+           , REPORT_CONTENT
+           , REPORT_FILE_NAME
+           , REPORT_ORG_FILE_NAME
+           , REPORT_RESULT_NOTIC
+           , REPORT_STATUS
+           , REPORT_REG_DT
+           , REPORT_ANSWER_DT
+           , REPORT_ADMIN_ID
+           , REPORT_RCV_CPLT_DT
+           , REPORT_ANSWER
+        FROM
+            NMCP_VIOLATION_REPORT
+        WHERE
+            REPORT_SEQ = #{reportSeq}
+    </select>
+
+    <!-- 관리자 윤리 위반 제보 업데이트 -->
+    <update id="updateNmcpViolationReport" parameterType="com.ktmmobile.mcp.company.dto.ReportDto">
+        UPDATE
+            NMCP_VIOLATION_REPORT
+        SET
+            REPORT_STATUS = #{reportStatus}
+            ,REPORT_ANSWER = #{reportAnswer}
+            <if test='reportStatus != null and reportStatus == "B"'>
+                ,REPORT_RCV_CPLT_DT = SYSDATE
+            </if>
+            <if test='reportStatus != null and reportStatus == "C"'>
+                ,REPORT_ADMIN_ID = #{reportAdminId}
+                ,REPORT_ANSWER_DT = SYSDATE
+            </if>
+        WHERE
+            REPORT_SEQ = #{reportSeq}
+    </update>
+
+    <!-- 관리자 윤리 위반 제보 리스트 -->
+    <select id="listNmcpViolationReport" parameterType="com.ktmmobile.mcp.company.dto.ReportDto" resultType="com.ktmmobile.mcp.company.dto.ReportDto">
+        SELECT
+             REPORT_SEQ
+           , REPORT_CERT_NUMBER
+           , REPORT_NAME
+           , REPORT_MOBILE_NO
+           , REPORT_EMAIL
+           , REPORT_TITLE
+           , REPORT_CONTENT
+           , REPORT_FILE_NAME
+           , REPORT_ORG_FILE_NAME
+           , REPORT_RESULT_NOTIC
+           , REPORT_STATUS
+           , REPORT_REG_DT
+           , REPORT_ANSWER_DT
+           , REPORT_ADMIN_ID
+           , REPORT_RCV_CPLT_DT
+           , REPORT_ANSWER
+           , ROW_NUMBER() OVER (ORDER BY REPORT_REG_DT ASC) AS RNUM
+        FROM
+            NMCP_VIOLATION_REPORT A
+        WHERE
+            1=1
+            <if test='reportStatus != null and reportStatus != ""'>
+                   AND REPORT_STATUS = #{reportStatus}
+            </if>
+            <if test='searchText != null and searchText != ""'>
+                <if test='searchType == "T"'>
+                    AND REPORT_TITLE LIKE '%'||#{searchText}||'%'
+                </if>
+                <if test='searchType == "N"'>
+                    AND REPORT_NAME = #{searchText}
+                </if>
+            </if>
+        ORDER BY REPORT_REG_DT DESC
+    </select>
+
+    <!-- 관리자 윤리 위반 제보 카운트 -->
+    <select id="listNmcpViolationReportCount" parameterType="com.ktmmobile.mcp.company.dto.ReportDto" resultType="java.lang.Integer">
+        SELECT
+            COUNT(*)
+        FROM
+            NMCP_VIOLATION_REPORT
+        WHERE
+            1=1
+            <if test='reportStatus != null and reportStatus != ""'>
+                   AND REPORT_STATUS = #{reportStatus}
+            </if>
+            <if test='searchText != null and searchText != ""'>
+                <if test='searchType == "T"'>
+                    AND REPORT_TITLE LIKE '%'||#{searchText}||'%'
+                </if>
+                <if test='searchType == "N"'>
+                    AND REPORT_NAME = #{searchText}
+                </if>
+            </if>
+    </select>
+
+    <select id="getTotalCount" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+                    COUNT(BOARD_SEQ)
+        FROM   NMCP_BOARD_BAS
+        WHERE 1=1
+        AND BOARD_CTG_SEQ = 93
+        AND VIEW_YN = 'Y'
+        AND NOTI_YN = 'N'
+        AND BOARD_SEQ NOT IN (
+                    SELECT BOARD_SEQ FROM (
+                          SELECT
+                              BOARD_SEQ
+                          FROM    NMCP_BOARD_BAS
+                          WHERE  BOARD_CTG_SEQ =  93
+                          AND       NOTI_YN = 'Y'
+                          AND       VIEW_YN = 'Y'
+                          ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+                    ) A
+            )
+    </select>
+
+    <select id="getNTotalCount" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+                    COUNT(BOARD_SEQ)
+        FROM   NMCP_BOARD_BAS
+        WHERE 1=1
+        AND BOARD_CTG_SEQ = 93
+        AND VIEW_YN = 'Y'
+        AND NOTI_YN = 'Y'
+
+    </select>
+
+
+
+    <select id="selectBoardList" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+            BOARD_NUM,
+            BOARD_SEQ,
+            BOARD_CTG_SEQ,
+            BOARD_HIT_CNT,
+            BOARD_SUBJECT,
+            BOARD_WRITER_NM,
+            VIEW_YN,
+            NOTI_YN,
+            BOARD_WRITE_DT,
+            BOARD_ATT_YN
+        FROM (
+            SELECT     ROW_NUMBER() OVER(ORDER BY BOARD_WRITE_DT, BOARD_SEQ) AS BOARD_NUM,
+                       BOARD_SEQ,
+                       BOARD_CTG_SEQ,
+                       BOARD_HIT_CNT,
+                       BOARD_SUBJECT,
+                       BOARD_WRITER_NM,
+                       VIEW_YN,
+                       NOTI_YN,
+                       TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                       BOARD_ATT_YN
+           FROM
+                       NMCP_BOARD_BAS
+           WHERE 1=1
+            AND BOARD_CTG_SEQ = 93
+            AND VIEW_YN = 'Y'
+            AND NOTI_YN = 'N'
+            AND BOARD_SEQ NOT IN (
+                        SELECT BOARD_SEQ FROM (
+                              SELECT
+                                  BOARD_SEQ
+                              FROM    NMCP_BOARD_BAS
+                              WHERE  BOARD_CTG_SEQ =  93
+                              AND       NOTI_YN = 'Y'
+                              AND       VIEW_YN = 'Y'
+                              ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+                        ) A
+                )
+
+        )
+       ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+    </select>
+
+
+    <select id="selectNoticeList" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+           BOARD_SEQ,
+           BOARD_CTG_SEQ,
+           BOARD_SUBJECT,
+           BOARD_WRITER_NM,
+           VIEW_YN,
+           NOTI_YN,
+           BOARD_WRITE_DT,
+           BOARD_ATT_YN
+        FROM (
+              SELECT
+                         BOARD_SEQ,
+                       BOARD_CTG_SEQ,
+                       BOARD_SUBJECT,
+                       BOARD_WRITER_NM,
+                       VIEW_YN,
+                       NOTI_YN,
+                       TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                       BOARD_ATT_YN
+              FROM    NMCP_BOARD_BAS
+              WHERE  BOARD_CTG_SEQ =  93
+              AND       NOTI_YN = 'Y'
+              AND       VIEW_YN = 'Y'
+              ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+        ) A
+    </select>
+
+    <select id="viewNoticeBoard" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="java.lang.Integer">
+        SELECT
+            BOARD_SEQ,
+            BOARD_CTG_SEQ,
+            BOARD_SUBJECT,
+            BOARD_WRITER_NM,
+            NOTI_YN,
+            TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+            BOARD_ATT_YN,
+            BOARD_HIT_CNT,
+            BOARD_CONTENTS
+        FROM
+            NMCP_BOARD_BAS
+        WHERE
+            BOARD_CTG_SEQ =  93
+            AND BOARD_SEQ = #{boardSeq}
+    </select>
+
+    <select id="selectNotiIndex" resultType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+            BOARD_SEQ
+            , BOARD_CTG_SEQ
+            , BOARD_SUBJECT
+            , BOARD_WRITER_NM
+            , NOTI_YN
+            , VIEW_YN
+            , BOARD_WRITE_DT
+            , BOARD_ATT_YN
+            , CRET_DT
+            , NEXT_SEQ
+            , NEXT_SUBJECT
+            , NEXT_DT
+            , PRE_SEQ
+            , PRE_SUBJECT
+            , PRE_DT
+        FROM
+            (
+                SELECT
+                        BOARD_SEQ,
+                        BOARD_CTG_SEQ,
+                        BOARD_SUBJECT,
+                        BOARD_WRITER_NM,
+                        NOTI_YN,
+                        VIEW_YN,
+                        TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                        BOARD_ATT_YN,
+                        CRET_DT,
+                        lead(BOARD_SEQ,1) over (order by BOARD_WRITE_DT, BOARD_SEQ) NEXT_SEQ,
+                        lead(BOARD_SUBJECT,1,'다음글이 없습니다.') over (order by BOARD_WRITE_DT, BOARD_SEQ) NEXT_SUBJECT,
+                        lead(CRET_DT,1,'') over (order by BOARD_WRITE_DT, BOARD_SEQ) NEXT_DT,
+                        lag(BOARD_SEQ,1) over (order by BOARD_WRITE_DT, BOARD_SEQ) PRE_SEQ,
+                        lag(BOARD_SUBJECT,1,'이전글이 없습니다.') over (order by BOARD_WRITE_DT, BOARD_SEQ) PRE_SUBJECT,
+                        lag(CRET_DT,1,'') over (order by BOARD_WRITE_DT, BOARD_SEQ) PRE_DT
+                  FROM  NMCP_BOARD_BAS
+                WHERE   BOARD_CTG_SEQ =  93
+                <if test='searchNm != null and searchNm != ""'>
+                           AND  (UPPER(fnHTMLtoTEXT(BOARD_SUBJECT)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                           OR UPPER(fnHTMLtoTEXT(BOARD_CONTENTS)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+                </if>
+                AND NOTI_YN = 'N'
+                AND VIEW_YN = 'Y'
+            )
+            WHERE BOARD_SEQ = #{boardSeq}
+    </select>
+
+
+
+
+</mapper>

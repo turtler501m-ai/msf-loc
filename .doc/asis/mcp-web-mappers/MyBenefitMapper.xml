@@ -1,0 +1,711 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MyBenefitMapper">
+
+    <select id="getPointSumeryList" resultType="com.ktmmobile.mcp.point.dto.CustPointTxnDto" parameterType="String">
+        SELECT
+            (SELECT TO_CHAR(ADD_MONTHS(SYSDATE,0),'YYYY') FROM DUAL) AS YYYY
+            ,(SELECT TO_CHAR(ADD_MONTHS(SYSDATE,0),'MM') FROM DUAL) AS MM
+            ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('S')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,0),'YYYYMM')
+                ),0) AS S_POINT
+                ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('U')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,0),'YYYYMM')
+                ),0) AS U_POINT
+        FROM DUAL
+        UNION ALL
+        SELECT
+            (SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-1),'YYYY') FROM DUAL) AS YYYY
+            ,(SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-1),'MM') FROM DUAL) AS MM
+            ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('S')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-1),'YYYYMM')
+                ),0) AS S_POINT
+                ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('U')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-1),'YYYYMM')
+                ),0) AS U_POINT
+        FROM DUAL
+        UNION ALL
+        SELECT
+            (SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-2),'YYYY') FROM DUAL) AS YYYY
+            ,(SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-2),'MM') FROM DUAL) AS MM
+            ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('S')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-2),'YYYYMM')
+                ),0) AS S_POINT
+                ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('U')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-2),'YYYYMM')
+                ),0) AS U_POINT
+        FROM DUAL
+        UNION ALL
+        SELECT
+            (SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-3),'YYYY') FROM DUAL) AS YYYY
+            ,(SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-3),'MM') FROM DUAL) AS MM
+            ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('S')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-3),'YYYYMM')
+                ),0) AS S_POINT
+                ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('U')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-3),'YYYYMM')
+                ),0) AS U_POINT
+        FROM DUAL
+        UNION ALL
+        SELECT
+            (SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-4),'YYYY') FROM DUAL) AS YYYY
+            ,(SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-4),'MM') FROM DUAL) AS MM
+            ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('S')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-4),'YYYYMM')
+                ),0) AS S_POINT
+                ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('U')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-4),'YYYYMM')
+                ),0) AS U_POINT
+        FROM DUAL
+        UNION ALL
+        SELECT
+            (SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-5),'YYYY') FROM DUAL) AS YYYY
+            ,(SELECT TO_CHAR(ADD_MONTHS(SYSDATE,-5),'MM') FROM DUAL) AS MM
+            ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('S')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-5),'YYYYMM')
+                ),0) AS S_POINT
+                ,NVL((
+                SELECT
+                    SUM(NCPT.POINT) AS POINT
+                FROM
+                    NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+                    ,NMCP_CUST_POINT_TXN NCPT
+                WHERE
+                    NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+                    AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+                    AND NCPT.POINT_TRT_CD IN ('U')
+                    AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYYMM') = TO_CHAR(ADD_MONTHS(SYSDATE,-5),'YYYYMM')
+                ),0) AS U_POINT
+        FROM DUAL
+        ORDER BY YYYY,MM
+
+    </select>
+
+    <select id="selectCustPoint" resultType="com.ktmmobile.mcp.point.dto.CustPointDto" parameterType="String">
+        SELECT
+            POINT_CUST_SEQ
+            ,TOT_ACU_POINT
+            ,TOT_USE_POINT
+            ,TOT_REMAIN_POINT
+            ,TOT_EXTINCTION_POINT
+        FROM
+            NMCP_CUST_POINT_GIVE_BASE_BAS
+        WHERE
+            SVC_CNTR_NO = #{cntrNo}
+
+    </select>
+
+    <select id="getSelectPointDetailList" resultType="com.ktmmobile.mcp.point.dto.CustPointTxnDto" >
+        SELECT
+            NCPT.POINT_TXN_SEQ
+            ,NCPT.POINT_TRT_CD
+            ,NCPT.POINT
+            ,NCPT.POINT_TXN_DTL_RSN_DESC
+            ,TO_CHAR(NCPT.POINT_TRT_DT,'YYYY.MM.DD hh24:mi:ss') as POINT_TRT_DT
+        FROM
+            NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+            ,NMCP_CUST_POINT_TXN NCPT
+        WHERE
+            NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+            AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+            AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYY') = #{pointYyyy}
+            <if test="pointMm != 'ALL'">
+            AND TO_CHAR(NCPT.POINT_TRT_DT,'MM') = #{pointMm}
+            </if>
+            <if test="pointTrtCd != 'ALL' and pointTrtCd != null and pointTrtCd != '' ">
+                AND POINT_TRT_CD = #{pointTrtCd}
+            </if>
+        ORDER BY POINT_TRT_DT DESC
+    </select>
+    <select id="getSelectPointDetailListCnt" resultType="int" >
+        SELECT
+            count(*)
+        FROM
+            NMCP_CUST_POINT_GIVE_BASE_BAS NCPGBB
+            ,NMCP_CUST_POINT_TXN NCPT
+        WHERE
+            NCPGBB.POINT_CUST_SEQ = NCPT.POINT_CUST_SEQ
+            AND NCPGBB.SVC_CNTR_NO = #{cntrNo}
+            AND TO_CHAR(NCPT.POINT_TRT_DT,'YYYY') = #{pointYyyy}
+            <if test="pointMm != 'ALL'">
+            AND TO_CHAR(NCPT.POINT_TRT_DT,'MM') = #{pointMm}
+            </if>
+            <if test="pointTrtCd != 'ALL' and pointTrtCd != null and pointTrtCd != '' ">
+                AND POINT_TRT_CD = #{pointTrtCd}
+            </if>
+    </select>
+
+    <select id="selectCouponCategoryList" resultType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto">
+         SELECT
+             COUPN_CTG_CD
+            ,COUPN_CTG_NM
+            ,COUPN_DIV_CD
+            ,(SELECT NCD.DTL_CD_NM FROM NMCP_CD_DTL NCD WHERE NCD.DTL_CD = NCCB.COUPN_DIV_CD AND NCD.CD_GROUP_ID='BE0005') AS COUPN_DIV_NM
+            ,COUPN_CTG_BAS_DESC
+            ,COUPN_OUTSIDE_VENDR_NM
+            ,COUPN_QNTY
+            ,SORT_ODRG
+            ,USE_YN
+            ,TO_CHAR(TO_DATE(PSTNG_START_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS PSTNG_START_DATE
+            ,TO_CHAR(TO_DATE(PSTNG_END_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS PSTNG_END_DATE
+            ,EXCH_POINT
+            ,COUPN_AMT
+         FROM
+             NMCP_COUPN_CTG_BAS NCCB
+         WHERE
+             1 = 1
+             AND POINT_EXCH_POSBL_YN = 'Y'
+            AND USE_YN = 'Y'
+            AND PSTNG_START_DATE <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+            AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+        ORDER BY SORT_ODRG ASC, CRET_DT DESC
+     </select>
+
+    <select id="selectCouponCategory"  parameterType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto" resultType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto">
+         SELECT
+             COUPN_CTG_CD
+            ,COUPN_CTG_NM
+            ,COUPN_DIV_CD
+            ,(SELECT NCD.DTL_CD_NM FROM NMCP_CD_DTL NCD WHERE NCD.DTL_CD = NCCB.COUPN_DIV_CD AND NCD.CD_GROUP_ID='BE0005') AS COUPN_DIV_NM
+            ,COUPN_CTG_BAS_DESC
+            ,COUPN_OUTSIDE_VENDR_NM
+            ,COUPN_QNTY
+            ,SORT_ODRG
+            ,USE_YN
+            ,TO_CHAR(TO_DATE(PSTNG_START_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS PSTNG_START_DATE
+            ,TO_CHAR(TO_DATE(PSTNG_END_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS PSTNG_END_DATE
+            ,EXCH_POINT
+            ,COUPN_AMT
+            ,POINT_EXCH_POSBL_YN
+            ,SMS_SND_POSBL_YN
+            ,(SELECT COUNT(*) FROM NMCP_COUPN_OUTSIDE_BAS WHERE COUPN_CTG_CD = #{coupnCtgCd} AND SVC_CNTR_NO IS NULL) AS COUPN_QNTY_CNT
+         FROM
+             NMCP_COUPN_CTG_BAS NCCB
+         WHERE
+             1 = 1
+             AND COUPN_CTG_CD = #{coupnCtgCd}
+             AND POINT_EXCH_POSBL_YN = 'Y'
+            AND USE_YN = 'Y'
+            AND PSTNG_START_DATE <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+            AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+     </select>
+
+     <select id="countByselectCouponCategoryList" resultType="int">
+         SELECT
+             count(*)
+         FROM
+             NMCP_COUPN_CTG_BAS NCCB
+         WHERE
+             1 = 1
+             AND POINT_EXCH_POSBL_YN = 'Y'
+            AND USE_YN = 'Y'
+            AND PSTNG_START_DATE <![CDATA[<=]]> TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+            AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+     </select>
+
+    <insert id="insertCustPointAcuTxnDtl">
+    INSERT INTO
+    NMCP_CUST_POINT_ACU_TXN_DTL
+    (
+        POINT_TXN_SEQ
+        ,REMAIN_POINT
+        ,CRET_IP
+        ,CRET_DT
+        ,CRET_ID
+    )
+    VALUES
+    (
+        #{pointTxnSeq}
+        ,#{point}
+        ,#{cretIp}
+        ,SYSDATE
+        ,#{cretId}
+    )
+    </insert>
+
+    <select id="getUseCoupInfoList" resultType="com.ktmmobile.mcp.common.mplatform.dto.CoupInfoDto" parameterType="com.ktmmobile.mcp.common.mplatform.dto.CoupInfoDto">
+         SELECT
+            NVL(REAL_COUPN_NO,COUPN_NO) AS COUPN_NO
+            ,(SELECT COUPN_CTG_NM FROM NMCP_COUPN_CTG_BAS BAS WHERE COU.COUPN_CTG_CD = BAS.COUPN_CTG_CD) AS COUPN_CTG_NM
+            , COUPN_AMT
+            , TO_CHAR(TO_DATE(PSTNG_START_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_START_DATE
+            , TO_CHAR(TO_DATE(PSTNG_END_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_END_DATE
+            , SVC_CNTR_NO
+        FROM  NMCP_COUPN_OUTSIDE_BAS COU
+        WHERE 1=1
+        AND SVC_CNTR_NO = #{svcCntrNo}
+        AND USE_YN = 'Y'
+        AND SMS_SND_YN = 'N'
+        AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+     </select>
+
+     <select id="getUsedCoupInfoList" resultType="com.ktmmobile.mcp.common.mplatform.dto.CoupInfoDto" parameterType="com.ktmmobile.mcp.common.mplatform.dto.CoupInfoDto">
+         SELECT /*MyBenefitMapper.getUsedCoupInfoList*/
+            NVL(REAL_COUPN_NO,COUPN_NO) AS COUPN_NO
+            ,(SELECT COUPN_CTG_NM FROM NMCP_COUPN_CTG_BAS BAS WHERE COU.COUPN_CTG_CD = BAS.COUPN_CTG_CD) AS COUPN_CTG_NM
+            , COUPN_AMT
+            , TO_CHAR(TO_DATE(PSTNG_START_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_START_DATE
+            , TO_CHAR(TO_DATE(PSTNG_END_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_END_DATE
+            , SVC_CNTR_NO
+        FROM  NMCP_COUPN_OUTSIDE_BAS COU
+        WHERE 1=1
+            AND SVC_CNTR_NO = #{svcCntrNo}
+            AND USE_YN = 'Y'
+            AND SMS_SND_SUCCESS_YN = 'Y'
+            AND SMS_SND_YN = 'Y'
+            AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+        UNION
+        SELECT
+            NVL(REAL_COUPN_NO,COUPN_NO) AS COUPN_NO
+            ,(SELECT COUPN_CTG_NM FROM NMCP_COUPN_CTG_BAS BAS WHERE COU.COUPN_CTG_CD = BAS.COUPN_CTG_CD) AS COUPN_CTG_NM
+            , COUPN_AMT
+            , TO_CHAR(TO_DATE(PSTNG_START_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_START_DATE
+            , TO_CHAR(TO_DATE(PSTNG_END_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_END_DATE
+            , SVC_CNTR_NO
+        FROM  NMCP_COUPN_OUTSIDE_BAS COU
+        WHERE 1=1
+            AND SVC_CNTR_NO = #{svcCntrNo}
+            AND USE_YN = 'Y'
+            AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') NOT BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+     </select>
+
+
+    <select id="getCouponOutside" parameterType="com.ktmmobile.mcp.coupon.dto.CouponOutsideDto" resultType="com.ktmmobile.mcp.coupon.dto.CouponOutsideDto">
+        SELECT COUPN_NO
+               , COUPN_CTG_CD
+               , COUPN_AMT
+               , REAL_COUPN_NO
+               , USE_YN
+               , PSTNG_START_DATE
+               , PSTNG_END_DATE
+               , COUPN_GIVE_DATE
+               , USER_ID
+               , SVC_CNTR_NO
+               , SMS_RCV_NO
+               , SMS_SND_YN
+               , SMS_SND_DT
+               , SMS_SND_SUCCESS_YN
+          FROM NMCP_COUPN_OUTSIDE_BAS
+        WHERE COUPN_CTG_CD = #{coupnCtgCd}
+          AND SVC_CNTR_NO IS NULL
+          AND SMS_SND_YN = 'N'
+          AND USE_YN = 'Y'
+          AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+          AND ROWNUM = 1
+    </select>
+
+    <update id="updateCouponOutside" parameterType="com.ktmmobile.mcp.coupon.dto.CouponOutsideDto">
+        UPDATE NMCP_COUPN_OUTSIDE_BAS
+           SET
+            USER_ID = #{userId}
+            ,SVC_CNTR_NO = #{svcCntrNo}
+            ,SMS_RCV_NO = #{smsRcvNo}
+            ,SMS_SND_YN = #{smsSndYn}
+
+            <if test='smsSndYn == "Y" '>
+                ,SMS_SND_DT = SYSDATE
+            </if>
+
+            ,SMS_SND_SUCCESS_YN = #{smsSndSuccessYn}
+            ,COUPN_GIVE_DATE = #{coupnGiveDate}
+            ,AMD_IP = #{cretIp}
+            ,AMD_DT = SYSDATE
+            ,AMD_ID	 = #{cretId}
+        WHERE COUPN_CTG_CD = #{coupnCtgCd}
+          AND COUPN_NO = #{coupnNo}
+          AND USE_YN = 'Y'
+          AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+          AND ROWNUM = 1
+    </update>
+
+    <!-- 2023.03.15 wooki 추가 start -->
+    <!-- My쿠폰 메인화면 M쿠폰 조회 -->
+    <select id="getMbershipInfoList" resultType="com.ktmmobile.mcp.common.mplatform.dto.CoupInfoDto" parameterType="com.ktmmobile.mcp.common.mplatform.dto.CoupInfoDto">
+         SELECT /*MyBenefitMapper.getMbershipInfoList*/
+            B.COUPN_NO,
+            A.COUPN_CTG_CD,
+            A.COUPN_CTG_NM,
+            A.SMS_SND_POSBL_YN,
+            TO_CHAR(TO_DATE(B.PSTNG_START_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_START_DATE,
+            TO_CHAR(TO_DATE(B.PSTNG_END_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_END_DATE,
+            SVC_CNTR_NO
+        FROM NMCP_COUPN_CTG_BAS A, NMCP_COUPN_MBERSHIP_BAS B
+        WHERE 1 = 1
+            AND A.COUPN_CTG_CD = B.COUPN_CTG_CD
+            AND B.SVC_CNTR_NO = #{svcCntrNo}
+            AND B.USE_YN = 'Y'
+            AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN B.PSTNG_START_DATE AND B.PSTNG_END_DATE
+        ORDER BY B.PSTNG_START_DATE, B.PSTNG_END_DATE
+     </select>
+
+     <!-- My쿠폰 M쿠폰 상세조회 -->
+    <select id="getMbershipDtl" resultType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto" parameterType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto">
+         SELECT  /*MyBenefitMapper.getMbershipDtl*/
+            B.COUPN_NO,
+            A.COUPN_CTG_NM,
+            A.SMS_SND_POSBL_YN,
+            GET_CODE_NM('BE0021', A.TP_CHRG) TP_CHRG,
+            B.SMS_RCV_NO,
+            TO_CHAR(TO_DATE(B.PSTNG_START_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_START_DATE,
+            TO_CHAR(TO_DATE(B.PSTNG_END_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS PSTNG_END_DATE,
+            A.AV_PRD,
+            TO_CHAR(TO_DATE(B.COUPN_GIVE_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS COUPN_GIVE_DATE,
+            A.USE_PLC,
+            A.THUMB_IMG_PC,
+            A.THUMB_IMG_MO,
+            A.LINK_PC,
+            A.LINK_MO
+        FROM NMCP_COUPN_CTG_BAS A, NMCP_COUPN_MBERSHIP_BAS B
+        WHERE 1 = 1
+            AND A.COUPN_CTG_CD = B.COUPN_CTG_CD
+            AND A.COUPN_CTG_CD = #{coupnCtgCd}
+            AND B.COUPN_NO = #{coupnNo}
+     </select>
+
+     <!-- M쿠폰 메인화면 리스트 가져오기  -->
+     <select id="getMbershipList" resultType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto" parameterType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto">
+         SELECT  /*MyBenefitMapper.getMbershipList*/
+            A.COUPN_CTG_CD,
+            A.COUPN_CTG_NM,
+            A.COUPN_CTG_BAS_DESC,
+            A.COUPN_OUTSIDE_VENDR_NM,
+            A.THUMB_IMG_PC,
+            A.THUMB_IMG_MO,
+            A.IMG_DESC,
+            (SELECT COUNT(*) FROM NMCP_COUPN_MBERSHIP_BAS WHERE COUPN_CTG_CD = A.COUPN_CTG_CD AND USE_YN = 'Y' AND COUPN_GIVE_DATE IS NULL) LEFT_QNTY,
+            A.COUPON_CATEGORY,
+            A.BENEFIT_DESC,
+            A.BENEFIT_DESC_DTL,
+            A.USAGE_WAY,
+            A.USAGE_DESC,
+            A.CONTACT,
+            A.COUPON_LABEL
+            <if test="userId != '' and userId != null and userDivision == '01'">
+                ,CASE
+                    WHEN
+                        (SELECT COUNT(*)
+                           FROM NMCP_COUPN_MBERSHIP_BAS
+                          WHERE COUPN_CTG_CD = A.COUPN_CTG_CD
+                            AND USER_ID = #{userId}
+                            AND TO_CHAR(SYSDATE, 'YYYYMM') - SUBSTR(COUPN_GIVE_DATE, 1, 6) <![CDATA[<]]> (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'BE0023' AND DTL_CD = A.DN_STAN)
+                        ) >=
+                        (SELECT COUNT(*)
+                           FROM MCP_USER_CNTR_MNG
+                          WHERE USERID =  #{userId})
+                    THEN 'N'
+                    ELSE 'Y'
+                END AS DOWN_POSSIBLE_YN
+            </if>
+        FROM NMCP_COUPN_CTG_BAS A
+        WHERE 1 = 1
+            AND COUPN_DIV_CD = 'MB'
+            AND USE_YN = 'Y'
+            AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+             <if test="rateCd != '' and rateCd != null and userDivision == '01'">
+             AND (
+                    A.COUPN_CTG_CD NOT IN (SELECT DISTINCT COUPN_CTG_CD FROM NMCP_COUPN_PLAN_REL WHERE DEL_YN ='N')
+                 OR A.COUPN_CTG_CD IN (SELECT DISTINCT COUPN_CTG_CD FROM NMCP_COUPN_PLAN_REL WHERE RATE_CD = #{rateCd}  AND DEL_YN ='N')
+                )
+           </if>
+        ORDER BY SORT_YN DESC, CASE WHEN SORT_YN = 'Y' THEN SORT_ODRG END ASC,
+                PSTNG_START_DATE, PSTNG_END_DATE, COUPN_CTG_CD DESC
+    </select>
+
+    <select id="countMbershipList" resultType="Integer">
+        SELECT COUNT(1)
+        FROM NMCP_COUPN_CTG_BAS
+        WHERE COUPN_DIV_CD = 'MB'
+          AND USE_YN = 'Y'
+          AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+    </select>
+
+    <select id="countMbershipLoginList" resultType="Integer" parameterType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto">
+        SELECT COUNT(1)
+        FROM NMCP_COUPN_CTG_BAS A
+        WHERE 1 = 1
+        AND COUPN_DIV_CD = 'MB'
+        AND USE_YN = 'Y'
+        AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+        <if test="rateCd != '' and rateCd != null and userDivision == '01'">
+            AND (
+            A.COUPN_CTG_CD NOT IN (SELECT DISTINCT COUPN_CTG_CD FROM NMCP_COUPN_PLAN_REL WHERE DEL_YN ='N')
+            OR A.COUPN_CTG_CD IN (SELECT DISTINCT COUPN_CTG_CD FROM NMCP_COUPN_PLAN_REL WHERE RATE_CD = #{rateCd}  AND DEL_YN ='N')
+            )
+        </if>
+    </select>
+
+    <!-- M쿠폰 메인화면 리스트의 상세 가져오기  -->
+     <select id="getMbershipDetail" resultType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto" parameterType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto">
+         SELECT  /*MyBenefitMapper.getMbershipDetail*/
+            COUPN_CTG_CD,
+            COUPN_CTG_NM,
+            COUPN_CTG_BAS_DESC,
+            COUPN_OUTSIDE_VENDR_NM,
+            SMS_SND_POSBL_YN,
+            DN_STAN,
+            AV_PRD,
+            USE_PLC,
+            TO_CHAR(TO_DATE(USE_START_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS USE_START_DATE,
+            TO_CHAR(TO_DATE(USE_END_DATE,'YYYYMMDDHH24MISS'),'YYYY.MM.DD') AS USE_END_DATE,
+            THUMB_IMG_PC,
+            THUMB_IMG_MO,
+            IMG_DESC,
+            IMG_CONTENT_PC,
+            IMG_CONTENT_MO,
+            LINK_PC,
+            LINK_MO,
+            BENEFIT_DESC,
+            BENEFIT_DESC_DTL,
+            USAGE_WAY,
+            USAGE_DESC,
+            CONTACT
+        FROM NMCP_COUPN_CTG_BAS
+        WHERE 1 = 1
+            AND COUPN_CTG_CD = #{coupnCtgCd}
+    </select>
+
+    <select id="getCouponDupInfo" resultType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto" parameterType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto">
+        SELECT	/*MyBenefitMapper.getCouponDupInfo*/
+            COUPN_CTG_CD,
+            DN_STAN,
+            COUPN_NO,
+            COUPN_GIVE_DATE
+        FROM
+        (
+            SELECT
+                A.COUPN_CTG_CD,
+                (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'BE0023' AND DTL_CD = A.DN_STAN) AS DN_STAN,
+                B.COUPN_NO,
+                B.COUPN_GIVE_DATE
+            FROM NMCP_COUPN_CTG_BAS A, NMCP_COUPN_MBERSHIP_BAS B
+            WHERE 1 = 1
+                AND A.COUPN_CTG_CD = B.COUPN_CTG_CD
+                AND A.COUPN_CTG_CD = #{coupnCtgCd}
+                AND B.USER_ID = #{userId}
+                AND B.SMS_RCV_NO = #{smsRcvNo}
+            ORDER BY B.COUPN_GIVE_DATE DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <!-- NMCP_COUPN_MBERSHIP_BAS update  -->
+    <update id="updateCouponMbership" parameterType="com.ktmmobile.mcp.coupon.dto.CouponOutsideDto">
+        UPDATE NMCP_COUPN_MBERSHIP_BAS SET  /*MyBenefitMapper.updateCouponMbership*/
+            USER_ID = #{userId}
+            ,SVC_CNTR_NO = #{svcCntrNo}
+            ,SMS_RCV_NO = #{smsRcvNo}
+            ,SMS_SND_YN = #{smsSndYn}
+            ,SMS_SND_DT = SYSDATE
+            ,SMS_SND_SUCCESS_YN = #{smsSndSuccessYn}
+            ,AMD_IP = #{amdIp}
+            ,AMD_DT = SYSDATE
+            ,AMD_ID	 = #{amdId}
+            ,COUPN_GIVE_DATE = TO_CHAR(SYSDATE,'yyyymmddhh24miss')
+        WHERE 1 = 1
+            AND COUPN_CTG_CD = #{coupnCtgCd}
+            AND COUPN_NO = (SELECT MIN(COUPN_NO) FROM NMCP_COUPN_MBERSHIP_BAS
+                WHERE 1 = 1
+                    AND COUPN_CTG_CD = #{coupnCtgCd}
+                    AND USE_YN = 'Y'
+                    AND COUPN_GIVE_DATE IS NULL)
+    </update>
+
+    <!-- SMS전송을 위해 정보 불러오기 -->
+    <select id="getCouponInfoForSms" resultType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto" parameterType="com.ktmmobile.mcp.coupon.dto.CouponOutsideDto">
+        SELECT  /*MyBenefitMapper.getCouponInfoForSms*/
+            A.COUPN_CTG_CD,
+            A.COUPN_CTG_NM,
+            A.SMS_SND_POSBL_YN,
+            B.COUPN_NO,
+            A.LINK_MO,
+            B.PSTNG_END_DATE,
+            B.SMS_RCV_NO
+        FROM NMCP_COUPN_CTG_BAS A, NMCP_COUPN_MBERSHIP_BAS B
+        WHERE 1 = 1
+            AND A.COUPN_CTG_CD = #{coupnCtgCd}
+            AND A.COUPN_CTG_CD = B.COUPN_CTG_CD
+            AND B.USER_ID = #{userId}
+            AND B.SMS_RCV_NO = #{smsRcvNo}
+            AND B.AMD_ID = #{userId}
+            AND SUBSTR(B.COUPN_GIVE_DATE, 1, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+    </select>
+
+    <!-- NMCP_COUPN_MBERSHIP_BAS에 SMS_SND_YN, SMS_SND_SUCCESS_YN N으로 udpate  -->
+    <update id="updateMbershipSmsFail" parameterType="com.ktmmobile.mcp.coupon.dto.CouponOutsideDto">
+        UPDATE NMCP_COUPN_MBERSHIP_BAS SET  /*MyBenefitMapper.updateMbershipSmsFail*/
+            SMS_SND_YN = 'N',
+            SMS_SND_SUCCESS_YN = 'N'
+        WHERE 1 = 1
+            AND COUPN_CTG_CD = #{coupnCtgCd}
+            AND COUPN_NO = #{coupnNo}
+            AND USER_ID = #{userId}
+    </update>
+
+    <!-- M쿠폰 쿠폰 잔여수량 조회 -->
+    <select id="getCouponLeftQnty" resultType="java.lang.Integer" parameterType="java.lang.String">
+    SELECT  /*MyBenefitMapper.getCouponLeftQnty*/
+        COUNT(*) LEFT_QNTY
+    FROM NMCP_COUPN_MBERSHIP_BAS
+    WHERE 1 = 1
+        AND COUPN_CTG_CD = #{coupnCtgCd}
+        AND USE_YN = 'Y'
+        AND COUPN_GIVE_DATE IS NULL
+    </select>
+     <!-- 2023.03.15 wooki 추가 end -->
+
+    <!--쿠폰 다운로드 실패이력저장-->
+    <insert id="insertCoupnFailHist" parameterType="com.ktmmobile.mcp.coupon.dto.CouponOutsideDto">
+        <selectKey keyProperty="coupnHstSeq" resultType="String" order="BEFORE">
+            SELECT COUPN_HST_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_COUPN_MBERSHIP_FAIL (
+        COUPN_HST_SEQ
+        ,COUPN_NO
+        ,COUPN_CTG_CD
+        ,RSLT_CD
+        ,CONTRACT_NUM
+        ,CRET_IP
+        ,CRET_DT
+        ,CRET_ID
+        )
+        VALUES(
+        #{coupnHstSeq}
+        ,#{coupnNo}
+        ,#{coupnCtgCd}
+        ,#{rsltCd}
+        ,#{contractNum}
+        ,#{cretIp}
+        ,SYSDATE
+        ,#{cretId}
+        )
+    </insert>
+
+ <!-- M쿠폰 페이지 조회 수 -->
+    <select id="getCouponMenuAccessCnt" resultType="java.lang.Integer">
+        /* MyBenefitMapper.getCouponMenuAccessCnt */
+        SELECT SUM(MENU_SEQ_CNT)
+          FROM MV_MCP_ACCESS_TRACE
+         WHERE MENU_SEQ IN ( SELECT MENU_SEQ
+                               FROM NMCP_USER_MENU_BAS
+                              WHERE URL_ADR IN ('/coupon/couponMain.do', '/m/coupon/couponMain.do') )
+    </select>
+
+    <select id="getBenefitCouponDetail" resultType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto" parameterType="com.ktmmobile.mcp.coupon.dto.CouponCategoryDto">
+        SELECT  /*MyBenefitMapper.getBenefitCouponDetail*/
+            COUPN_CTG_CD,
+            COUPN_CTG_NM,
+            COUPN_OUTSIDE_VENDR_NM,
+            THUMB_IMG_PC,
+            THUMB_IMG_MO,
+            IMG_DESC,
+            BENEFIT_DESC,
+            BENEFIT_DESC_DTL,
+            USAGE_WAY,
+            USAGE_DESC,
+            CONTACT
+        FROM NMCP_COUPN_CTG_BAS
+        WHERE COUPN_CTG_CD = #{coupnCtgCd}
+    </select>
+
+</mapper>
+

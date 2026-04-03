@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.etc.mapper.RateGiftPrmtMapper">
+
+  <select id="selectRateGiftPrmtCount" parameterType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtDto" resultType="java.lang.Integer">
+    /*RateGiftPrmtMapper.selectRateGiftPrmtCount*/
+    SELECT COUNT(A.SEQ)
+    FROM NMCP_RATE_GIFT_PRMT A
+        ,MSP_GIFT_PRMT@DL_MSP B
+    WHERE A.PRMT_ID = B.PRMT_ID
+      AND A.DEL_YN = 'N'
+    <if test='srchPrmtType != null and srchPrmtType != ""'>
+      AND B.PRMT_TYPE = #{srchPrmtType}
+    </if>
+    <if test='srchName != null and srchName != "" and srchGbn == "01"'>
+      AND A.PRMT_ID = #{srchName}
+    </if>
+    <if test='srchName != null and srchName != "" and srchGbn == "02"'>
+      AND UPPER(B.PRMT_NM) LIKE '%' || UPPER(#{srchName}) || '%'
+    </if>
+  </select>
+
+  <select id="selectRateGiftPrmtList" parameterType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtDto" resultType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtDto">
+    /*RateGiftPrmtMapper.selectRateGiftPrmtList*/
+    SELECT
+       A.SEQ
+      ,A.PRMT_ID
+      ,B.PRMT_NM
+      ,B.PRMT_TYPE
+      ,FN_GET_CODENM@DL_MSP('ORG1010', B.PRMT_TYPE) AS PRMT_TYPE_NM
+      ,A.INDC_ODRG
+      ,A.STAT_VAL
+      ,A.PSTNG_START_DATE
+      ,A.PSTNG_END_DATE
+      ,A.PSTNG_START_DATE_SEC
+      ,A.PSTNG_END_DATE_SEC
+    FROM NMCP_RATE_GIFT_PRMT A
+        ,MSP_GIFT_PRMT@DL_MSP B
+    WHERE A.PRMT_ID = B.PRMT_ID
+      AND A.DEL_YN = 'N'
+    <if test='srchPrmtType != null and srchPrmtType != ""'>
+      AND B.PRMT_TYPE = #{srchPrmtType}
+    </if>
+    <if test='srchName != null and srchName != "" and srchGbn == "01"'>
+      AND A.PRMT_ID = #{srchName}
+    </if>
+    <if test='srchName != null and srchName != "" and srchGbn == "02"'>
+      AND UPPER(B.PRMT_NM) LIKE '%' || UPPER(#{srchName}) || '%'
+    </if>
+    ORDER BY A.STAT_VAL DESC, DECODE(A.INDC_ODRG, 0, 99999, A.INDC_ODRG), A.CRET_DTTM DESC
+  </select>
+
+  <select id="selectGiftPrmtCount" parameterType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtDtlDto" resultType="java.lang.Integer">
+    /*RateGiftPrmtMapper.selectGiftPrmtCount*/
+    SELECT COUNT(PRMT_ID)
+    FROM MSP_GIFT_PRMT@DL_MSP
+    WHERE STRT_DT BETWEEN #{srchStrtDt} AND #{srchEndDt}
+    <if test='srchOrgnId != null and srchOrgnId != ""'>
+      AND ORGN_ID = #{srchOrgnId}
+    </if>
+    <if test='srchPrmtType != null and srchPrmtType != ""'>
+      AND PRMT_TYPE = #{srchPrmtType}
+    </if>
+    <if test='srchName != null and srchName != "" and srchGbn == "01"'>
+      AND PRMT_ID = #{srchName}
+    </if>
+    <if test='srchName != null and srchName != "" and srchGbn == "02"'>
+      AND UPPER(PRMT_NM) LIKE '%' || UPPER(#{srchName}) || '%'
+    </if>
+    <if test='srchUseYn != null and srchUseYn != ""'>
+      AND USG_YN = #{srchUseYn}
+    </if>
+    <if test='srchShowYn != null and srchShowYn != ""'>
+      AND SHOW_YN = #{srchShowYn}
+    </if>
+  </select>
+
+  <select id="selectGiftPrmtList" parameterType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtDtlDto" resultType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtDtlDto">
+    /*RateGiftPrmtMapper.selectGiftPrmtList*/
+    SELECT
+       PRMT_ID
+      ,PRMT_NM
+      ,STRT_DT
+      ,TO_CHAR(TO_DATE(STRT_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS STRT_DT_FMT
+      ,END_DT
+      ,TO_CHAR(TO_DATE(END_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS END_DT_FMT
+      ,ORGN_ID
+      ,FN_GET_CODENM@DL_MSP('CMN0268', ORGN_ID) AS ORGN_ID_NM
+      ,ORGN_TYPE
+      ,FN_GET_CODENM@DL_MSP('CMN0055', ORGN_TYPE) AS ORGN_TYPE_NM
+      ,PRMT_TYPE
+      ,FN_GET_CODENM@DL_MSP('ORG1010', PRMT_TYPE) AS PRMT_TYPE_NM
+      ,PRMT_TEXT
+      ,USG_YN
+      ,SHOW_YN
+      ,WIRELESS_YN
+    FROM MSP_GIFT_PRMT@DL_MSP
+    WHERE STRT_DT BETWEEN #{srchStrtDt} AND #{srchEndDt}
+    <if test='srchOrgnId != null and srchOrgnId != ""'>
+      AND ORGN_ID = #{srchOrgnId}
+    </if>
+    <if test='srchPrmtType != null and srchPrmtType != ""'>
+      AND PRMT_TYPE = #{srchPrmtType}
+    </if>
+    <if test='srchName != null and srchName != "" and srchGbn == "01"'>
+      AND PRMT_ID = #{srchName}
+    </if>
+    <if test='srchName != null and srchName != "" and srchGbn == "02"'>
+      AND UPPER(PRMT_NM) LIKE '%' || UPPER(#{srchName}) || '%'
+    </if>
+    <if test='srchUseYn != null and srchUseYn != ""'>
+      AND USG_YN = #{srchUseYn}
+    </if>
+    <if test='srchShowYn != null and srchShowYn != ""'>
+      AND SHOW_YN = #{srchShowYn}
+    </if>
+    ORDER BY STRT_DT DESC, REGST_DTTM DESC
+  </select>
+
+  <select id="selectGiftPrmtMstInfo" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtDtlDto">
+    /*RateGiftPrmtMapper.selectGiftPrmtMstInfo*/
+    SELECT
+       PRMT_ID
+      ,PRMT_NM
+      ,STRT_DT
+      ,TO_CHAR(TO_DATE(STRT_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS STRT_DT_FMT
+      ,END_DT
+      ,TO_CHAR(TO_DATE(END_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS END_DT_FMT
+      ,ORGN_ID
+      ,FN_GET_CODENM@DL_MSP('CMN0268', ORGN_ID) AS ORGN_ID_NM
+      ,ORGN_TYPE
+      ,FN_GET_CODENM@DL_MSP('CMN0055', ORGN_TYPE) AS ORGN_TYPE_NM
+      ,PRMT_TYPE
+      ,FN_GET_CODENM@DL_MSP('ORG1010', PRMT_TYPE) AS PRMT_TYPE_NM
+      ,PRMT_TEXT
+      ,USG_YN
+      ,SHOW_YN
+      ,WIRELESS_YN
+    FROM MSP_GIFT_PRMT@DL_MSP
+    WHERE PRMT_ID = #{prmtId}
+  </select>
+
+  <select id="selectGiftPrmtOrgnList" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtSubDto">
+    /*RateGiftPrmtMapper.selectGiftPrmtOrgnList*/
+    SELECT
+       A.ORGN_ID AS CODE
+      ,B.ORGN_NM AS NAME
+    FROM MSP_GIFT_PRMT_ORG@DL_MSP A
+        ,ORG_ORGN_INFO_MST@DL_MSP B
+    WHERE A.ORGN_ID = B.ORGN_ID
+      AND A.PRMT_ID = #{prmtId}
+    ORDER BY B.ORGN_NM
+  </select>
+
+  <select id="selectGiftPrmtRateList" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtSubDto">
+    /*RateGiftPrmtMapper.selectGiftPrmtRateList*/
+    SELECT
+       A.RATE_CD AS CODE
+      ,B.RATE_NM AS NAME
+    FROM MSP_GIFT_PRMT_SOC@DL_MSP A
+        ,MSP_RATE_MST@DL_MSP B
+    WHERE A.RATE_CD = B.RATE_CD
+      AND A.PRMT_ID = #{prmtId}
+    ORDER BY B.DATA_TYPE DESC, B.RATE_NM
+  </select>
+
+  <select id="selectGiftPrmtOnoffList" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtSubDto">
+    /*RateGiftPrmtMapper.selectGiftPrmtOnoffList*/
+    SELECT
+       A.ON_OFF_TYPE AS CODE
+      ,B.CD_DSC AS NAME
+    FROM MSP_GIFT_PRMT_ONOFF@DL_MSP A
+        ,CMN_GRP_CD_MST@DL_MSP B
+    WHERE A.ON_OFF_TYPE = B.CD_VAL
+      AND B.GRP_ID = 'RCP0007'
+      AND A.PRMT_ID = #{prmtId}
+    ORDER BY B.CD_VAL
+  </select>
+
+  <select id="selectGiftPrmtModelList" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtSubDto">
+    /*RateGiftPrmtMapper.selectGiftPrmtModelList*/
+    SELECT
+       A.MODEL_ID AS CODE
+      ,B.PRDT_CODE || ' ' || B.PRDT_NM AS NAME
+    FROM MSP_GIFT_PRMT_MODEL@DL_MSP A
+        ,CMN_INTM_MDL@DL_MSP B
+    WHERE A.MODEL_ID = B.PRDT_ID
+      AND A.PRMT_ID = #{prmtId}
+    ORDER BY B.PRDT_CODE
+  </select>
+
+  <select id="selectGiftPrmtPrdtList" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtSubDto">
+    /*RateGiftPrmtMapper.selectGiftPrmtPrdtList*/
+    SELECT
+       A.PRDT_ID AS CODE
+      ,B.PRDT_NM AS NAME
+      ,B.USE_YN
+      ,B.WEB_URL AS IMG_URL
+    FROM MSP_GIFT_PRMT_PRDT@DL_MSP A
+        ,MSP_GIFT_PRDT@DL_MSP B
+    WHERE A.PRDT_ID = B.PRDT_ID
+      AND A.PRMT_ID = #{prmtId}
+    ORDER BY B.USE_YN DESC, A.SORT, B.PRDT_NM
+  </select>
+
+  <select id="selectRateGiftPrmtXmlList" resultType="com.ktmmobile.mcp.etc.dto.RateGiftPrmtDto">
+    /*RateGiftPrmtMapper.selectRateGiftPrmtXmlList*/
+    SELECT
+       A.SEQ
+      ,A.PRMT_ID
+      ,TO_CHAR(TO_DATE(A.PSTNG_START_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS PSTNG_START_DATE
+      ,TO_CHAR(TO_DATE(A.PSTNG_END_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS PSTNG_END_DATE
+      ,A.GIFT_TEXT
+      ,A.MAIN_PRDT_ID
+      ,(SELECT PRDT_NM FROM MSP_GIFT_PRDT@DL_MSP WHERE PRDT_ID = A.MAIN_PRDT_ID) AS MAIN_PRDT_NM
+      ,(SELECT WEB_URL FROM MSP_GIFT_PRDT@DL_MSP WHERE PRDT_ID = A.MAIN_PRDT_ID) AS MAIN_PRDT_IMG_URL
+      ,A.GIFT_PRICE
+      ,TO_CHAR(TO_DATE(A.PSTNG_START_DATE_SEC, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS PSTNG_START_DATE_SEC
+      ,TO_CHAR(TO_DATE(A.PSTNG_END_DATE_SEC, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS PSTNG_END_DATE_SEC
+      ,A.GIFT_TEXT_SEC
+      ,A.MAIN_PRDT_ID_SEC
+      ,(SELECT PRDT_NM FROM MSP_GIFT_PRDT@DL_MSP WHERE PRDT_ID = A.MAIN_PRDT_ID_SEC) AS MAIN_PRDT_NM_SEC
+      ,(SELECT WEB_URL FROM MSP_GIFT_PRDT@DL_MSP WHERE PRDT_ID = A.MAIN_PRDT_ID_SEC) AS MAIN_PRDT_IMG_URL_SEC
+      ,A.GIFT_PRICE_SEC
+      ,A.POPUP_URL
+      ,A.POPUP_URL_MO
+      ,(SELECT WIRELESS_YN FROM MSP_GIFT_PRMT@DL_MSP WHERE PRMT_ID = A.PRMT_ID) AS WIRELESS_YN
+      ,A.LIST_VIEW_YN
+      ,A.LIST_VIEW_YN_SEC
+    FROM NMCP_RATE_GIFT_PRMT A
+    WHERE A.STAT_VAL = 'Y'
+      AND A.DEL_YN = 'N'
+    ORDER BY DECODE(A.INDC_ODRG, 0, 99999, A.INDC_ODRG), A.CRET_DTTM DESC
+  </select>
+
+  <select id="selectRateAdsvcGdncProdRelXmlList" resultType="com.ktmmobile.mcp.etc.dto.RateAdsvcGdncProdRelDto">
+    /*RateGiftPrmtMapper.selectRateAdsvcGdncProdRelXmlList*/
+    WITH GIFT_PRMT AS (
+      SELECT
+         C.RATE_CD
+        ,LISTAGG(A.SEQ, '|') WITHIN GROUP (ORDER BY A.SEQ) AS GIFT_PRMT_SEQS
+      FROM NMCP_RATE_GIFT_PRMT A
+          ,MSP_GIFT_PRMT_ORG@DL_MSP B
+          ,MSP_GIFT_PRMT_SOC@DL_MSP C
+          ,MSP_GIFT_PRMT@DL_MSP D
+      WHERE A.PRMT_ID = B.PRMT_ID
+        AND A.PRMT_ID = C.PRMT_ID
+        AND A.PRMT_ID = D.PRMT_ID
+        AND B.ORGN_ID = '1100011741'
+        AND D.REQ_BUY_TYPE = 'UU'
+        AND A.STAT_VAL = 'Y'
+        AND A.DEL_YN = 'N'
+      GROUP BY C.RATE_CD
+    ),
+    EVENT_PRMT AS (
+        SELECT
+            LISTAGG(A.EVNT_CD, '|') WITHIN GROUP (ORDER BY A.EVNT_CD) AS EVNT_CD,
+            LISTAGG(A.ECP_SEQ, '|') WITHIN GROUP (ORDER BY A.ECP_SEQ) AS ECP_SEQ ,
+            B.RATE_CD
+        FROM NMCP_EVENT_CODE_MST A, NMCP_EVENT_CODE_RATE_REL B
+        WHERE A.ECP_SEQ = B.ECP_SEQ
+            AND A.USE_YN = 'Y'
+            AND A.DEL_YN = 'N'
+            AND B.DEL_YN = 'N'
+        GROUP BY B.RATE_CD
+    )
+    SELECT
+       B.RATE_ADSVC_PROD_REL_SEQ
+      ,B.RATE_ADSVC_GDNC_SEQ
+      ,B.RATE_ADSVC_CD
+      ,B.RATE_ADSVC_NM
+      ,B.USE_YN
+      ,TO_CHAR(TO_DATE(A.PSTNG_START_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS PSTNG_START_DATE
+      ,TO_CHAR(TO_DATE(A.PSTNG_END_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS PSTNG_END_DATE
+      ,C.GIFT_PRMT_SEQS
+      ,D.EVNT_CD
+      ,D.ECP_SEQ
+    FROM NMCP_RATE_ADSVC_GDNC_BAS A
+        , NMCP_RATE_ADSVC_GDNC_PROD_REL B
+        , GIFT_PRMT C
+        , EVENT_PRMT D
+    WHERE A.RATE_ADSVC_GDNC_SEQ = B.RATE_ADSVC_GDNC_SEQ(+)
+      AND B.RATE_ADSVC_CD = C.RATE_CD(+)
+      AND B.RATE_ADSVC_CD = D.RATE_CD(+)
+      AND A.USE_YN = 'Y'
+      AND B.USE_YN = 'Y'
+    ORDER BY B.RATE_ADSVC_GDNC_SEQ, B.RATE_ADSVC_PROD_REL_SEQ
+  </select>
+
+  <select id="selectRateGiftPrmtTotalPrice" parameterType="java.lang.String" resultType="java.lang.Integer">
+    SELECT
+        SUM(
+            CASE
+                WHEN TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+                     BETWEEN A.PSTNG_START_DATE AND A.PSTNG_END_DATE
+                THEN A.GIFT_PRICE
+                ELSE 0
+            END
+        )
+        +
+        SUM(
+            CASE
+                WHEN A.PSTNG_START_DATE_SEC IS NOT NULL
+                     AND A.PSTNG_END_DATE_SEC IS NOT NULL
+                     AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+                         BETWEEN A.PSTNG_START_DATE_SEC AND A.PSTNG_END_DATE_SEC
+                THEN A.GIFT_PRICE_SEC
+                ELSE 0
+            END
+        ) AS TOTAL_PRICE
+    FROM
+        NMCP_RATE_GIFT_PRMT A
+        INNER JOIN MSP_GIFT_PRMT_SOC@DL_MSP C ON A.PRMT_ID = C.PRMT_ID
+        INNER JOIN MSP_GIFT_PRMT_ORG@DL_MSP B ON A.PRMT_ID = B.PRMT_ID
+        INNER JOIN MSP_GIFT_PRMT@DL_MSP D ON A.PRMT_ID = D.PRMT_ID
+    WHERE 1=1
+        AND C.RATE_CD = #{rateAdsvcCd}
+        AND A.STAT_VAL = 'Y'
+        AND A.DEL_YN = 'N'
+        AND B.ORGN_ID = '1100011741'
+        AND D.REQ_BUY_TYPE = 'UU'
+  </select>
+
+</mapper>

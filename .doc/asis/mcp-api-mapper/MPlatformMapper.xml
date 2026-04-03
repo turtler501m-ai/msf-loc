@@ -1,0 +1,1116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.mplatform.mapper.MPlatformMapper">
+
+    <select id="getNstepConnectTimeout" resultType="int">
+        SELECT CGCM.CD_VAL
+          FROM CMN_GRP_MST@DL_MSP CGM
+               , CMN_GRP_CD_MST@DL_MSP CGCM
+         WHERE CGM.GRP_ID = CGCM.GRP_ID
+           AND CGM.USG_YN = 'Y'
+           AND CGCM.USG_YN = 'Y'
+           AND CGM.GRP_ID = 'CMN0202'
+    </select>
+
+    <select id="getRequestInfo" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformReqVO" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getRequestInfo */
+        SELECT  A.AGENT_CODE AS asgnAgncId
+                , REPLACE(A.OPER_TYPE, '3', '') AS orderTypeCd
+                , (CASE WHEN #{appEventCd} IN ('PC0', 'OP0')		THEN DECODE(A.OPER_TYPE, 'NAC3', 'OsstSvcPrcService', 'MNP3', 'OsstNpSvcPrcService', '')
+                        WHEN #{appEventCd} IN ('NU1', 'NU2')		THEN 'OsstSvcNoService'
+                        WHEN #{appEventCd} IN ('CP0', 'EP0', 'MP0') THEN 'OsstCanSvcPrcService'
+                        WHEN #{appEventCd} IN ('NP1', 'NP2')		THEN 'OsstNpSvcPrcService'
+                        WHEN #{appEventCd} IN ('FPC0', 'FOP0')		THEN 'OsstFrmpapSvcPrcSOService'
+                        WHEN #{appEventCd} IN ('FS5')				THEN 'OsstOnlineFrmpapService'
+                        ELSE 'OsstSvcPrcService' END) AS serviceName
+                , (CASE WHEN #{appEventCd} = 'PC0' THEN DECODE(A.OPER_TYPE, 'NAC3', 'osst:osstPrePrc', 'MNP3', 'osst:osstNpPrePrc', '')
+                        WHEN #{appEventCd} = 'NU1' THEN 'osst:inqrOsstSvcNoInfo'
+                        WHEN #{appEventCd} = 'NU2' THEN 'osst:resvOsstTlphNo'
+                        WHEN #{appEventCd} = 'OP0' THEN DECODE(A.OPER_TYPE, 'NAC3', 'osst:osstOpenPrc', 'MNP3', 'osst:osstNpOpenPrc', '')
+                        WHEN #{appEventCd} = 'ST1' THEN 'osst:osstPrcSch'
+                        WHEN #{appEventCd} = 'CP0' THEN 'osst:osstCanPps2Prc'
+                        WHEN #{appEventCd} = 'EP0' THEN 'osst:osstCanPrc'
+                        WHEN #{appEventCd} = 'MP0' THEN 'osst:osstCanM2mPrc'
+                        WHEN #{appEventCd} = 'NP1' THEN 'osst:osstNpBfacAgree'
+                        WHEN #{appEventCd} = 'NP2' THEN 'osst:osstNpPayAsert'
+                        WHEN #{appEventCd} = 'FPC0' THEN DECODE(A.OPER_TYPE, 'NAC3', 'osst:osstFrmpapPrePrc', 'MNP3', 'osst:osstFrmpapNpPrePrc', '')
+                        WHEN #{appEventCd} = 'FOP0' THEN DECODE(A.OPER_TYPE, 'NAC3', 'osst:osstFrmpapOpenPrc', 'MNP3', 'osst:osstFrmpapNpOpenPrc', '')
+                        WHEN #{appEventCd} = 'FS5' THEN 'osst:osstOnlineFrmpapReg'
+                        ELSE '' END) AS operationName
+                , (CASE WHEN #{appEventCd} IN ('PC0', 'FPC0') THEN 'OsstPrePrcInVO'
+                        WHEN #{appEventCd} = 'NU1' THEN 'InqrOsstSvcNoInfoInVO'
+                        WHEN #{appEventCd} = 'NU2' THEN 'ResvOsstTlphNoInVO'
+                        WHEN #{appEventCd} IN ('OP0', 'FOP0') THEN 'OsstOpenPrcInVO'
+                        WHEN #{appEventCd} = 'ST1' THEN 'OsstPrcSchInVO'
+                        WHEN #{appEventCd} = 'CP0' THEN 'OsstCanPps2PrcInVO'
+                        WHEN #{appEventCd} = 'EP0' THEN 'OsstCanPrcInVO'
+                        WHEN #{appEventCd} = 'MP0' THEN 'OsstCanPrcInVO'
+                        WHEN #{appEventCd} = 'NP1' THEN 'OsstNpPrePrcInVO'
+                        WHEN #{appEventCd} = 'NP2' THEN 'OsstNpPayAsertInVO'
+                        WHEN #{appEventCd} = 'FS5' THEN 'OsstOnlineFrmpapRegInVO'
+                        ELSE '' END) AS voName
+                , #{resNo} AS resNo
+                , LPAD(#{resNo}, 14, '0') AS mvnoOrdNo
+                , #{appEventCd} AS appEventCd
+                , #{gubun} AS gubun
+                , #{tlphNo} AS wantTlphNo
+                , (CASE WHEN EXISTS (SELECT 1 FROM NMCP_ACEN_REQ WHERE REQUEST_KEY = A.REQUEST_KEY) THEN NULL
+                        ELSE (SELECT KOS_ID FROM CMN_USR_MST@DL_MSP WHERE USR_ID = A.RVISN_ID) END) AS nstepUserId
+                , A.FATH_TRANSAC_ID AS fathTransacId
+        FROM    MCP_REQUEST A
+        WHERE   A.RES_NO = #{resNo}
+    </select>
+
+    <!-- 사전체크 -->
+    <select id="getXmlMessagePC0" parameterType="String" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessagePC0 */
+        SELECT  LPAD(A.RES_NO, 14, '0') AS mvnoOrdNo       /* MVNO 오더번호 */
+                , 'KIS' AS slsCmpnCd        /* 판매회사코드 */
+                , GCM2.ETC2 AS custTypeCd    /* 고객유형코드 */
+                , GCM1.ETC1 AS custIdntNoIndCd                                      /* 고객식별번호구분코드 */
+                , CRYPTO_AES256.DEC_AES@DL_MSP(DECODE(A.CSTMR_TYPE, 'FN', TRIM(B.CSTMR_FOREIGNER_RRN), TRIM(B.CSTMR_NATIVE_RRN))) AS custIdntNo     /* 고객식별번호 */
+                , CRYPTO_AES256.DEC_AES@DL_MSP(TRIM(B.CSTMR_JURIDICAL_RRN)) AS crprNo      /* 법인번호 */
+                , UPPER(B.CSTMR_NAME) AS custNm                                     /* 고객명 */
+                , DECODE(RATE.PAY_CL_CD, 'PO', 'R', 'PP', 'I', 'R') AS cntrUseCd    /* 계약용도코드 */
+                , (CASE WHEN NVL(C.MODEL_MONTHLY, '0') = '0' THEN 'N' ELSE 'Y' END) AS instYn /* 할부여부 */
+                , NVL(C.RECYCLE_YN, 'N') AS scnhndPhonInstYn                        /* 중고폰할부여부 */
+                , B.SELF_INQRY_AGRM_YN AS myslAgreYn                                /* 본인동의여부 */
+                , GCM1.ETC2 AS nativeRlnamAthnEvdnPprCd
+                , NVL(B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN, B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN) AS athnRqstcustCntplcNo   /* 인증요청고객연락처번호 */
+                , B.SELF_ISSU_EXPR_DT AS rsdcrtIssuDate /* 주민등록증발급일자 */
+                , (CASE WHEN GCM1.ETC2 = 'DRIVE' THEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(B.SELF_ISSU_NUM), 3) ELSE '' END) AS lcnsNo
+                , (CASE WHEN GCM1.ETC2 = 'DRIVE' THEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(B.SELF_ISSU_NUM), 0, 2) ELSE '' END) AS lcnsRgnCd
+                , (CASE WHEN GCM1.ETC2 = 'MERIT' THEN CRYPTO_AES256.DEC_AES@DL_MSP(B.SELF_ISSU_NUM) ELSE '' END) AS mrtrPrsnNo
+                , (CASE WHEN A.CSTMR_TYPE = 'FN' THEN B.CSTMR_FOREIGNER_NATION ELSE '' END) AS nationalityCd    /* 외국인국적코드 */
+                , (CASE WHEN A.CSTMR_TYPE = 'FN' THEN B.CSTMR_FOREIGNER_BIRTH ELSE '' END) AS fornBrthDate      /* 외국인생일일자 */
+                , 'Y' AS crdtInfoAgreYn                                                             /* 신용정보동의여부 */
+                , 'Y' AS indvInfoInerPrcuseAgreYn                                                   /* 개인정보활용동의여부 */
+                , DECODE(A.CLAUSE_JEHU_FLAG, 'Y', 'Y', 'N') AS cnsgInfoAdvrRcvAgreYn                /* 위탁정보광고수신동의 */
+                , DECODE(A.PERSONAL_INFO_COLLECT_AGREE, 'Y', 'Y', 'N') AS othcmpInfoAdvrRcvAgreYn   /* 타사정보광고수신동의 */
+                , DECODE(A.CLAUSE_PRI_AD_FLAG, 'Y', 'Y', 'N') AS othcmpInfoAdvrCnsgAgreYn           /* 타사정보광고위탁동의 */
+                , DECODE(A.OTHERS_TRNS_AGREE, 'Y', 'Y', 'N') AS fnncDealAgreeYn                     /* 금융거래시 KT 고객 추가 금융 혜택을 위한 정보 제공 동의 */
+                , DECODE(A.OTHERS_TRNS_KT_AGREE, 'Y', 'Y', 'N') AS grpAgntBindSvcSbscAgreYn         /* 그룹사결합서비스가입동의 */
+                , DECODE(A.OTHERS_AD_RECEIVE_AGREE, 'Y', 'Y', 'N') AS cardInsrPrdcAgreYn            /* 카드보험상품동의 */
+                , 'N' AS olngDscnHynmtrAgreYn                                                       /* 주유할인여부 */
+                , 'N' AS wlfrDscnAplyAgreYn                                                         /* 복지할인신청동의 */
+                , 'N' AS spamPrvdAgreYn                                                             /* 스팸제공동의 */
+                , NVL(A.PHONE_PAYMENT, 'N') AS prttlpStlmUseAgreYn                      /* 이동전화결제이용동의 */
+                , DECODE(A.PHONE_PAYMENT, 'Y', 'Y', 'N') AS prttlpStlmPwdUseAgreYn      /* 이동전화결제비밀번호동의 */
+                , B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN AS wrlnTlphNo      /* 유선전화번호 */
+                , B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_FN AS tlphNo /* 전화번호 */
+                , (CASE WHEN A.CSTMR_TYPE = 'JP' THEN '' ELSE '' END ) AS upjnCd        /* 업종코드 */
+                , (CASE WHEN A.CSTMR_TYPE = 'JP' THEN '' ELSE '' END ) AS bcuSbst       /* 업태코드 */
+                , TRIM(B.CSTMR_POST) AS zipNo           /* 우편번호 */
+                , B.CSTMR_ADDR  AS fndtCntplcSbst     /* 기본주소 */
+                , B.CSTMR_ADDR_DTL  AS mntCntplcSbst  /* 상세주소 */
+                , B.CSTMR_MAIL AS emlAdrsNm             /* 이메일 */
+                , 'N' AS custInfoChngYn /* 고객정보변경여부 */
+                , (CASE WHEN NVL(CIM.PRDT_TYPE_CD, '02') IN ('01', '02') THEN 'N' ELSE 'Y' END) AS m2mHndsetYn /* M2M단말여부 */
+                , REPLACE(A.OPER_TYPE, '3', '') AS orderTypeCd                          /* 오더유형코드 */
+                , DECODE(A.OPER_TYPE, 'MNP3', D.MOVE_MOBILE_FN || D.MOVE_MOBILE_MN || D.MOVE_MOBILE_RN, '') AS npTlphNo  /* 번호이동전화번호 */
+                , DECODE(A.CSTMR_TYPE, 'PP', 'Y', 'N') AS indvBizrYn                    /* 개인사업자여부 */
+                , (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID ='NSC' AND DTL_CD = D.MOVE_COMPANY) AS bchngNpCommCmpnCd       /* 번호이동전사업자코드 */
+                , D.MOVE_AUTH_TYPE AS athnItemCd            /* 인증항목코드 */
+                , D.MOVE_AUTH_NUMBER AS athnSbst            /* 인증항목값 */
+                , D.MOVE_REFUND_AGREE_FLAG AS ytrpaySoffAgreYn  /* 해지미환급금상계동의여부 */
+                , 'N' AS npRstrtnContYn                     /* 번호이동제한예외여부 */
+                , B.SELF_CSTMR_CI AS ipinCi  /*본인인증 후 취득한 CI 값*/
+                , (SELECT ETC5 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2001' AND CD_VAL = A.ONLINE_AUTH_TYPE) AS onlineAthnDivCd /* 본인인증 수단 */
+                , A.FATH_TRANSAC_ID
+                , A.CPNT_ID
+        FROM    MCP_REQUEST A
+                , MCP_REQUEST_CSTMR B
+                , MCP_REQUEST_SALEINFO C
+                , MCP_REQUEST_MOVE D
+                , MSP_RATE_MST@DL_MSP RATE
+                , CMN_GRP_CD_MST@DL_MSP GCM1
+                , CMN_GRP_CD_MST@DL_MSP GCM2
+                , CMN_INTM_MDL@DL_MSP CIM
+                , ORG_ORGN_INFO_MST@DL_MSP OIM
+        WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+        AND     A.REQUEST_KEY = C.REQUEST_KEY
+        AND     A.REQUEST_KEY = D.REQUEST_KEY
+        AND     C.SOC_CODE = RATE.RATE_CD
+        AND     B.SELF_CERT_TYPE = GCM1.CD_VAL
+        AND     GCM1.GRP_ID = 'RCP2006'
+        AND     A.CSTMR_TYPE = GCM2.CD_VAL
+        AND     GCM2.GRP_ID = 'RCP9007'
+        AND     C.MODEL_ID = CIM.RPRS_PRDT_ID(+)
+        AND     CIM.RPRS_YN(+) = 'Y'
+        AND     A.CNTPNT_SHOP_ID = OIM.ORGN_ID
+        AND     A.PSTATE = '00'
+        AND     A.RES_NO = #{resNo}
+    </select>
+
+    <!-- 번호조회 -->
+    <select id="getXmlMessageNU1" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageNU1 */
+        SELECT  OSST.OSST_ORD_NO AS osstOrdNo   /* OSST 오더번호 */
+                , A.AGENT_CODE AS asgnAgncId    /* 할당대리점ID */
+                , 'Y' AS asgnAgncYn             /* 할당번호조회여부 */
+                , 'KOR' AS cntryCd              /* 국각코드 */
+                , OSST.CUST_ID AS custNo        /* 고객번호 */
+                , '1' AS inqrBase               /* 조회페이지 */
+                , '10' AS inqrCascnt            /* 조회카운트 */
+                , '03' AS nowSvcIndCd           /* 3G */
+                , '2' AS searchGubun            /* 조회구분(1:예약번호, 2:희망번호, 3:Aging) */
+                , 'GEN' AS tlphNoChrcCd         /* 전화번호특성코드 */
+                , '01' AS tlphNoIndCd           /* 전화번호구분코드 */
+                , '010____' || NVL(#{wantTlphNo}, A.REQ_WANT_NUMBER) AS tlphNoPtrn                  /* 번호조회패턴 */
+                , DECODE(A.SERVICE_TYPE, 'PP', 'I', 'R') AS tlphNoUseCd         /* 번호사용용도코드(R:일반, I:선불) */
+                , DECODE(A.SERVICE_TYPE, 'PP', 'FUK', '') AS tlphNoUseMntCd     /* 선불인경우 */
+        FROM    MCP_REQUEST A
+                , MCP_REQUEST_OSST OSST
+        WHERE   LPAD(A.RES_NO, 14, '0') = OSST.MVNO_ORD_NO
+        AND     OSST.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = OSST.MVNO_ORD_NO AND PRGR_STAT_CD = 'PC2' AND RSLT_CD = '0000')
+        AND     A.PSTATE = '00'
+        AND     A.RES_NO = #{resNo}
+    </select>
+
+    <!-- 번호예약 -->
+    <select id="getXmlMessageNU2" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageNU2 */
+        SELECT  B.OSST_ORD_NO AS osstOrdNo                      /* OSST오더번호 */
+                , NVL(#{gubun}, 'RSV') AS gubun                 /* 업무구분코드(RSV:예약, RRS:취소) */
+                , C.TLPH_NO AS tlphNo                           /* 전화번호 */
+                , B.CUST_ID AS custNo                           /* 고객번호 */
+                , NVL(#{gubun}, 'RSV') AS tlphNoStatChngRsnCd   /* 전화번호상태변경사유코드 */
+                , DECODE(NVL(#{gubun}, 'RSV'), 'RSV', 'AR', 'AA') AS tlphNoStatCd   /* 전화번호상태코드(AR:예약, AA:취소) */
+                , GCM1.ETC2 AS custTypeCd                       /* 고객유형코드 */
+                , '03' AS nowSvcIndCd                           /* 서비스구분코드 */
+                , DECODE(A.OPER_TYPE, 'MNP3', 'I', '') AS mnpIndCd  /* 번호이동구분코드 */
+                , C.ENCD_TLPH_NO AS encdTlphNo                  /* 암호화전화번호 */
+                , A.AGENT_CODE AS asgnAgncId                    /* 할당대리점ID */
+        FROM    MCP_REQUEST A
+                , MCP_REQUEST_OSST B /* 고객정보 */
+                , MCP_REQUEST_OSST C /* 번호예약 */
+                , CMN_GRP_CD_MST@DL_MSP GCM1   /* 고객유형조회 */
+        WHERE   LPAD(A.RES_NO, 14, '0') = B.MVNO_ORD_NO
+        AND     B.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = B.MVNO_ORD_NO AND PRGR_STAT_CD = 'PC2' AND RSLT_CD = '0000')
+        AND     B.MVNO_ORD_NO = C.MVNO_ORD_NO
+        AND     C.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = C.MVNO_ORD_NO AND PRGR_STAT_CD = 'NU2' AND RSLT_CD = '0000')
+        AND     A.CSTMR_TYPE = GCM1.CD_VAL
+        AND     GCM1.GRP_ID = 'RCP9007'
+        AND     A.PSTATE = '00'
+        AND     A.RES_NO = #{resNo}
+    </select>
+
+    <!-- 개통처리 -->
+    <select id="getXmlMessageOP0" parameterType="String" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageOP0 */
+        SELECT  OSST.OSST_ORD_NO AS osstOrdNo
+                , OSST.CUST_ID AS custNo
+                , B.CSTMR_BILL_SEND_CODE AS rqsshtPprfrmCd                  /* 청구서수신방법 */
+                , (CASE WHEN A.OPER_TYPE = 'NAC3' AND B.CSTMR_BILL_SEND_CODE = 'MB' THEN (SELECT  TLPH_NO
+                                                                                          FROM    MCP_REQUEST_OSST X
+                                                                                          WHERE   MVNO_ORD_NO = OSST.MVNO_ORD_NO
+                                                                                          AND     SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = X.MVNO_ORD_NO AND PRGR_STAT_CD = 'NU2' AND RSLT_CD = '0000') )
+                        WHEN A.OPER_TYPE = 'MNP3' AND B.CSTMR_BILL_SEND_CODE = 'MB' THEN E.MOVE_MOBILE_FN || E.MOVE_MOBILE_MN || E.MOVE_MOBILE_RN
+                        ELSE '' END) AS rqsshtTlphNo  /* 청구수신번호 */
+                , 'Y' AS rqsshtTlphNoHideYn /* 청구서전화번호숨김여부 */
+                , B.CSTMR_MAIL AS rqsshtEmlAdrsNm                           /* 청구이메일주소 */
+                , TRIM(B.CSTMR_POST) AS billZipNo                           /* 청구우편번호 */
+                , B.CSTMR_ADDR  AS billFndtCntplcSbst                        /* 청구기본주소 */
+                , B.CSTMR_ADDR_DTL  AS billMntCntplcSbst                     /* 청구상세주소 */
+                , A.REQ_PAY_TYPE AS blpymMthdCd                             /* 납부방법코드 */
+                , DECODE(A.REQ_PAY_TYPE, 'C', '99', '21') AS duedatDateIndCd                            /* 납기일자구분코드 */
+                , DECODE(A.REQ_PAY_TYPE, 'C', C.REQ_CARD_YY || C.REQ_CARD_MM, '') AS crdtCardExprDate   /* 신용카드만기일자 */
+                , DECODE(A.REQ_PAY_TYPE, 'C', (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'CRD' AND DTL_CD = C.REQ_CARD_COMPANY), '') AS crdtCardKindCd
+                , DECODE(A.REQ_PAY_TYPE, 'D', (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'BNK' AND DTL_CD = C.REQ_BANK), '') AS bankCd     /* 은행코드 */
+                , (CASE WHEN A.REQ_PAY_TYPE = 'C' THEN CRYPTO_AES256.DEC_AES@DL_MSP(C.REQ_CARD_NO)
+                        WHEN A.REQ_PAY_TYPE = 'D' THEN CRYPTO_AES256.DEC_AES@DL_MSP(C.REQ_ACCOUNT_NUMBER)
+                        ELSE '' END ) AS blpymMthdIdntNo                    /* 납부방법식별번호 */
+                , (CASE WHEN C.REQ_PAY_OTHER_FLAG = 'Y' AND A.REQ_PAY_TYPE = 'C' THEN UPPER(C.REQ_CARD_NAME)
+                        WHEN C.REQ_PAY_OTHER_FLAG = 'Y' AND A.REQ_PAY_TYPE = 'D' THEN UPPER(C.REQ_ACCOUNT_NAME)
+                        ELSE '' END) AS blpymCustNm                         /* 납부고객명, 타인납부시 처리 */
+                , (CASE WHEN C.REQ_PAY_OTHER_FLAG = 'Y' AND A.REQ_PAY_TYPE = 'C' THEN CRYPTO_AES256.DEC_AES@DL_MSP(C.REQ_CARD_RRN)
+                        WHEN C.REQ_PAY_OTHER_FLAG = 'Y' AND A.REQ_PAY_TYPE = 'D' THEN CRYPTO_AES256.DEC_AES@DL_MSP(C.REQ_ACCOUNT_RRN)
+                        ELSE '' END) AS blpymCustIdntNo                     /* 납부고객식별번호, 타인납부시 처리 */
+                , (SELECT ETC1 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2044' AND CD_VAL = 'BLPYHIDE') AS blpymMthdIdntNoHideYn    /* 납부방법식별번호숨김 */
+                , (CASE WHEN A.ON_OFF_TYPE IN ('0', '3') THEN '03'
+                        ELSE '01' END) AS agreIndCd                         /* 동의자료코드 */
+                , (CASE WHEN A.ONLINE_AUTH_TYPE = 'S' THEN '01'
+                        WHEN A.ONLINE_AUTH_TYPE = 'C' THEN '03'
+                        WHEN A.ONLINE_AUTH_TYPE = 'X' THEN '04'
+                        ELSE '03' END) AS myslAthnTypeCd                      /* 본인인증타입코드 */
+                , (CASE WHEN A.CSTMR_TYPE = 'JP' THEN UPPER(B.CSTMR_NAME) ELSE '' END) AS realUseCustNm    /* 실사용고객명 */
+                , A.AGENT_CODE AS mngmAgncId                                /* 관리점ID */
+                , A.CNTPNT_SHOP_ID AS cntpntCd                              /* 접점코드 */
+                , A.SHOP_USM_ID AS slsPrsnId                                /* 판매자ID */
+                , A.REQ_USIM_SN AS iccId                                    /* ICC ID */
+                , D.MODEL_ID AS intmMdlId                                   /* 기기모델ID */
+                , A.REQ_PHONE_SN AS intmSrlNo                               /* 기기일련번호 */
+                , (CASE WHEN A.PROD_TYPE = '02' OR A.REQ_BUY_TYPE = 'UU' THEN 'Y' ELSE 'N' END) AS usimOpenYn   /* 유심개통여부 */
+                , NVL(A.SPC_CODE, ( SELECT  KTA.SLS_NO
+                                    FROM    MSP_KT_PLCY_MST@DL_MSP KTA
+                                            , MSP_KT_PLCY_DISCOUNT@DL_MSP KTB
+                                            , MSP_KT_PLCY_OPER@DL_MSP KTC
+                                            , MSP_KT_PLCY_INST@DL_MSP KTD
+                                            , MSP_KT_PLCY_ENGG@DL_MSP KTE
+                                    WHERE   KTA.PLCY_ID = KTB.PLCY_ID
+                                    AND     KTA.PLCY_ID = KTC.PLCY_ID
+                                    AND     KTA.PLCY_ID = KTD.PLCY_ID
+                                    AND     KTA.PLCY_ID = KTE.PLCY_ID
+                                    AND     KTA.USE_YN = 'Y'
+                                    AND     KTA.PPPO = A.SERVICE_TYPE
+                                    AND     KTA.PLCY_TYPE = DECODE(A.REQ_BUY_TYPE, 'MM', '01', DECODE(A.USIM_KINDS_CD,'09','03','02'))
+                                    AND     KTB.DC_TYPE = NVL(D.SPRT_TP, 'NN')
+                                    AND     KTC.OPER_TYPE = A.OPER_TYPE
+                                    AND     KTD.INST_CNT = NVL(D.MODEL_MONTHLY, '0')
+                                    AND     KTE.ENGG_CNT = NVL(D.ENGG_MNTH_CNT, '0')
+                                    AND     ROWNUM = 1)) AS spclSlsNo       /* 특별판매번호 PLCY_TYPE = 01:단말기, 02:USIM, 03:ESIM(신규)   */
+                , (CASE WHEN A.CSTMR_TYPE = 'JP' THEN '06' ELSE '' END) AS agntRltnCd               /* 대리인관계코드(법인) */
+                , (CASE WHEN A.CSTMR_TYPE = 'JP' THEN '06' ELSE '' END) AS agntBrthDate             /* 대리인생일일자(법인) */
+                , (CASE WHEN A.CSTMR_TYPE = 'JP' THEN UPPER(B.CSTMR_NAME) ELSE '' END) AS agntCustNm       /* 대리인고객명(법인) */
+                , (CASE WHEN A.CSTMR_TYPE = 'JP' THEN B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN ELSE '' END) AS homeTlphNo       /* 대리인연락처(법인) */
+                , D.SPRT_TP AS spnsDscnTypeCd               /* 스폰서할인유형코드 */
+                , NVL(D.MODEL_DISCOUNT3, '0') AS agncSupotAmnt        /* 대리점지원금액 */
+                , NVL(D.ENGG_MNTH_CNT, '0') AS enggMnthCnt            /* 약정개월수 */
+                , D.MODEL_INSTALLMENT AS hndsetInstAmnt     /* 단말할부금 */
+                , '0' AS hndsetPrpyAmnt                     /* 단말선납금 */
+                , NVL(D.MODEL_MONTHLY, '0') AS instMnthCnt            /* 분납개월수 */
+                , DECODE(D.USIM_PAY_MTHD_CD, '1', 'N', '2', 'R', '3', 'B') AS usimPymnMthdCd        /* USIM수납방법 */
+                , DECODE(D.JOIN_PAY_MTHD_CD, '1', 'P', '2', 'R', '3', 'I') AS sbscstPymnMthdCd      /* 가입비수납방법 */
+                , DECODE(D.JOIN_PAY_MTHD_CD, '1', '37', '') AS sbscstImpsExmpRsnCd                  /* 가입비면제사유코드 */
+                , (SELECT ETC1 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2044' AND CD_VAL = 'BONDFEE') AS bondPrsrFeePymnMthdCd              /* 채권보전료수납방법 */
+                , (CASE WHEN A.OPER_TYPE = 'NAC3' THEN ( SELECT TLPH_NO
+                                                         FROM   MCP_REQUEST_OSST X
+                                                         WHERE  X.MVNO_ORD_NO = OSST.MVNO_ORD_NO
+                                                         AND    X.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = X.MVNO_ORD_NO AND PRGR_STAT_CD = 'NU2' AND RSLT_CD = '0000'))
+                        ELSE E.MOVE_MOBILE_FN || E.MOVE_MOBILE_MN || E.MOVE_MOBILE_RN
+                   END) AS tlphNo    /* 전화번호 */
+                , B.CSTMR_MAIL AS sbscPrtlstRcvEmlAdrsNm    /* 가입내역서수신메일주소 */
+                , (SELECT ETC1 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2044' AND CD_VAL = 'NPFEE') AS npFeePayMethCd                     /* 번호이동수수료 수납방법코드 */
+                , DECODE(E.MOVE_THISMONTH_PAY_TYPE, 'NM', 'Y', 'SP', 'N', '') AS npBillMethCd                                           /* 타사미청구금액청구방법코드 */
+                , DECODE(OSST.NP_HNDST_INST_AMT, 0, '1', DECODE(E.MOVE_ALLOTMENT_STAT, 'AD', '3', 'AD2', '2', 'FP', '1', '')) AS npHndsetInstaDuratDivCd    /* 번호이동단말기분납지속구분코드*/
+                , (SELECT ETC1 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2044' AND CD_VAL = 'NPRMNY') AS npRmnyMethCd                      /* 번호이동수납방법코드 */
+                , '0' AS npTotRmnyAmt       /* 번호이동총수납금액 */
+                , '0' AS npCashRmnyAmt      /* 번호이동현금수납액 */
+                , '0' AS npCcardRmnyAmt     /* 번호이동카드수납액 */
+                , (CASE WHEN A.OPER_TYPE = 'MNP3' AND E.MOVE_ALLOTMENT_STAT = 'AD' THEN E.MOVE_MOBILE_FN || E.MOVE_MOBILE_MN || E.MOVE_MOBILE_RN
+                        ELSE '' END) AS npHndsetInstaLmsTlphNo    /* 번호이동단말기분납문자명세서전화번호 */
+                , A.USIM_KINDS_CD AS usimKindsCd  -- 유심종류 09 eSIM
+                , A.ESIM_PHONE_ID AS esimPhoneId   -- ESIM_PHONE_ID
+                , A.EID as esimUiccId             ---esimUiccId
+                , B.PRNTS_CTN as prntsCtn         -- eSIM watch 모회선 전화번호
+        FROM    MCP_REQUEST A
+                , MCP_REQUEST_CSTMR B
+                , MCP_REQUEST_REQ C
+                , MCP_REQUEST_SALEINFO D
+                , MCP_REQUEST_MOVE E
+                , MCP_REQUEST_OSST OSST
+        WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+        AND     A.REQUEST_KEY = C.REQUEST_KEY
+        AND     A.REQUEST_KEY = D.REQUEST_KEY
+        AND     A.REQUEST_KEY = E.REQUEST_KEY
+        AND     LPAD(A.RES_NO, 14, '0') = OSST.MVNO_ORD_NO
+        AND     OSST.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{resNo}, 14, '0') AND PRGR_STAT_CD = 'PC2' AND RSLT_CD = '0000')
+        AND     A.PSTATE = '00'
+        AND     A.RES_NO = #{resNo}
+        AND     ROWNUM = 1
+    </select>
+
+    <!-- 요금제조회 -->
+    <select id="getXmlMessageOP0Prod_20190102" parameterType="String" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageOP0Prod */
+        <![CDATA[
+        SELECT  B.SOC_CODE        AS prdcCd
+                , 'P'             AS prdcTypeCd
+                , A.REQUEST_KEY   AS requestKey
+                , 0               AS additionKey
+        FROM    MCP_REQUEST A
+                , MCP_REQUEST_SALEINFO B
+        WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+        AND     A.RES_NO = #{resNo}
+        UNION ALL
+        SELECT  C.SOC             AS prdcCd
+                , 'R'             AS prdcTypeCd
+                , A.REQUEST_KEY   AS requestKey
+                , MIN(B.ADDITION_KEY) AS additionKey
+        FROM    MCP_REQUEST A
+                , MCP_REQUEST_ADDITION B
+                , MCP_ADDITION C
+        WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+        AND     B.ADDITION_KEY = C.ADDITION_KEY
+        AND     C.ACT_FLAG = 'Y'
+        AND     C.OSST_YN = 'Y'
+        AND     C.CHARGE_FLAG <> 'F'
+        AND     NVL(B.PROC_YN, 'N') <> 'Y'
+        AND     A.RES_NO = #{resNo}
+        GROUP BY C.SOC, A.REQUEST_KEY
+        ]]>
+    </select>
+
+    <!-- 2019-01-02, 중복부가서비스 허용에 따른 SQL 변경 -->
+    <select id="getXmlMessageOP0Prod" parameterType="String" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageOP0Prod */
+        <![CDATA[
+        SELECT  B.SOC_CODE        AS prdcCd
+                , 'P'             AS prdcTypeCd
+                , A.REQUEST_KEY   AS requestKey
+                , 0               AS additionKey
+        FROM    MCP_REQUEST A
+                , MCP_REQUEST_SALEINFO B
+        WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+        AND     A.RES_NO = #{resNo}
+        UNION ALL
+        SELECT  C.SOC             AS prdcCd
+                , 'R'             AS prdcTypeCd
+                , A.REQUEST_KEY   AS requestKey
+                , B.ADDITION_KEY  AS additionKey
+        FROM    MCP_REQUEST A
+                , MCP_REQUEST_ADDITION B
+                , MCP_ADDITION C
+        WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+        AND     B.ADDITION_KEY = C.ADDITION_KEY
+        AND     C.ACT_FLAG = 'Y'
+        AND     C.OSST_YN = 'Y'
+        AND     C.CHARGE_FLAG <> 'F'
+        AND     NVL(B.PROC_YN, 'N') <> 'Y'
+        AND     A.RES_NO = #{resNo}
+        UNION ALL
+        SELECT  A.INSR_PROD_CD    AS prdcCd
+                , 'R'             AS prdcTypeCd
+                , A.REQUEST_KEY   AS requestKey
+                , 0               AS additionKey
+        FROM    MCP_REQUEST A
+                , MSP_INTM_INSR_MST@DL_MSP B
+        WHERE   A.INSR_PROD_CD = B.INSR_PROD_CD
+        AND     B.USG_YN = 'Y'
+        AND     A.RES_NO = #{resNo}
+        ]]>
+    </select>
+
+    <!-- 상태조회 -->
+    <select id="getXmlMessageST1" parameterType="String" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageST1 */
+        SELECT  OSST_ORD_NO AS osstOrdNo
+        FROM    MCP_REQUEST_OSST A
+        WHERE   MVNO_ORD_NO = #{mvnoOrdNo}
+        AND     SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = A.MVNO_ORD_NO AND PRGR_STAT_CD = 'PC2' AND RSLT_CD = '0000')
+        AND     ROWNUM = 1
+    </select>
+
+    <!-- 번호이동사전승인 -->
+    <select id="getXmlMessageNP1" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformReqVO" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageNP1 */
+        SELECT  #{npTlphNo} AS npTlphNo
+                , #{moveCompany} AS bchngNpCommCmpnCd
+                , 'KIS' AS slsCmpnCd
+                , (SELECT ETC2 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP9007' AND CD_VAL = #{cstmrType}) AS custTypeCd
+                , DECODE(#{cstmrType}, 'PP', 'Y', 'N') AS indvBizrYn
+                , (SELECT ETC1 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2006' AND CD_VAL = #{selfCertType}) AS custIdntNoIndCd
+                , #{custIdntNo} AS custIdntNo
+                , #{crprNo} AS crprNo
+                , #{cstmrName} AS custNm
+                , #{appEventCd} AS appEventCd
+                , (SELECT KT_ORG_ID FROM ORG_ORGN_INFO_MST@DL_MSP
+                 WHERE ORGN_ID = #{cntpntShopId}) AS asgnAgncId
+                , 'OsstNpSvcPrcService' AS serviceName
+                , 'osst:osstNpBfacAgree' AS operationName
+                , 'OsstNpPrePrcInVO' AS voName
+        FROM    DUAL
+    </select>
+
+    <!-- 번호이동납부주장 -->
+    <select id="getXmlMessageNP2" parameterType="String" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageNP2 */
+        SELECT  OSST.OSST_ORD_NO AS osstOrdNo
+                , 'KIS' AS slsCmpnCd                /* 판매회사코드 */
+                , B.MOVE_MOBILE_FN || B.MOVE_MOBILE_MN || B.MOVE_MOBILE_RN AS npTlphNo  /* 번호이동전화번호 */
+                , NVL(B.OSST_PAY_DAY, TO_CHAR(SYSDATE, 'YYYYMMDD')) AS payAsertDt   /* 납부주장일자 */
+                , NVL(OSST.NP_UNPAY_AMT, 0) AS payAsertAmt         /* 납부주장금액 */
+                , B.OSST_PAY_TYPE AS payMethCd                     /* 납부방법 */
+        FROM    MCP_REQUEST A
+                , MCP_REQUEST_MOVE B
+                , MCP_REQUEST_OSST OSST
+        WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+        AND     LPAD(A.RES_NO, 14, 0) = OSST.MVNO_ORD_NO
+        AND     OSST.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = OSST.MVNO_ORD_NO AND PRGR_STAT_CD = 'PC2' AND RSLT_CD = '2413')
+        AND     A.RES_NO = #{resNo}
+    </select>
+
+
+    <!-- 사전동의 결과조회 -->
+    <select id="getXmlMessageNP3" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformReqVO" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageNP3 */
+        SELECT  #{npTlphNo} AS npTlphNo
+             , #{moveCompany} AS bchngNpCommCmpnCd
+             , #{appEventCd} AS appEventCd
+             , (SELECT KT_ORG_ID FROM ORG_ORGN_INFO_MST@DL_MSP
+                WHERE ORGN_ID = #{cntpntShopId}) AS asgnAgncId
+             , 'OsstNpSvcPrcService' AS serviceName
+             , 'osst:osstNpBfacAgreeRpyRetv' AS operationName
+             , 'OsstNpBfacAgreRpyRetvInVO' AS voName
+        FROM    DUAL
+    </select>
+
+
+    <!-- 온라인 서식지 등록 -->
+    <select id="getXmlMessageFS5" parameterType="String" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformNstepVO">
+        /* mPlatformMapper.getXmlMessageFS5 */
+        SELECT  NVL( ( SELECT NEW_KT_ORG_ID
+                         FROM ORG_ORGN_INFO_MST@DL_MSP
+                        WHERE ORGN_ID =  NVL( MQT.SHOP_CD, MQT.CNTPNT_SHOP_ID) )
+                     , NVL( MQT.SHOP_CD, MQT.CNTPNT_SHOP_ID ) )         AS CNTPNT_SHOP_ID
+                , MQT.SPC_CODE										    AS SPCL_SLS_NO
+                , MQT.RES_NO										    AS SRL_NO
+                , 'KIS'												    AS SLS_CMPN_CD
+                , ( CASE WHEN MQT.CSTMR_TYPE IN ('NA', 'NM', 'PP')
+                              THEN CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRCR.CSTMR_NATIVE_RRN) )
+                         WHEN MQT.CSTMR_TYPE = 'JP'
+                              THEN CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRCR.CSTMR_JURIDICAL_RRN) )
+                         WHEN MQT.CSTMR_TYPE = 'FN'
+                              THEN NVL( TRIM(MRCR.CSTMR_FOREIGNER_DOD), CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRCR.CSTMR_FOREIGNER_RRN) ) )
+                         ELSE CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRCR.CSTMR_NATIVE_RRN) )
+                    END )					AS CUST_IDNT_NO
+                , DECODE( MQT.OPER_TYPE
+                            , 'MNP3', DECODE( MQME.MOVE_REFUND_AGREE_FLAG
+                                                , 'Y', 'Y'
+                                                , 'N' )
+                            , '')                                       AS TRMN_YET_RPYM_AMT_YN
+                , ( CASE WHEN MQT.CSTMR_TYPE IN ('NA', 'NM', 'PP')
+                              THEN '01'
+                         WHEN MQT.CSTMR_TYPE = 'JP'
+                              THEN '03'
+                         WHEN MQT.CSTMR_TYPE = 'FN'
+                              THEN NVL2( MRCR.CSTMR_FOREIGNER_DOD, '06', '05' )
+                         ELSE MQT.CSTMR_TYPE
+                    END )											    AS CUST_IDNT_NO_IND_CD
+                , MRSP.SOC_CODE										    AS PRDC_CD
+                , DECODE( NVL( MQT.PROD_TYPE, '01')
+                            , '02', ( SELECT RPRS_PRDT_ID
+                                        FROM CMN_INTM_MDL@DL_MSP
+                                       WHERE PRDT_CODE = MQT.REQ_USIM_NAME)
+                            , MRSP.MODEL_ID )						    AS HNDSET_MDL_ID
+                , DECODE( MQT.OPER_TYPE
+                            , 'HDN3', 'HCN3'
+                            , MQT.OPER_TYPE )						    AS IND_TYPE_CD
+                , MRCR.CSTMR_NAME									    AS CUST_NM
+                , DECODE( MQT.CSTMR_TYPE
+                            , 'FN', 'F'
+                            , 'N1' )								    AS CUST_DTL_TYPE_CD
+                , DECODE( MQT.CSTMR_TYPE
+                            , 'JP', CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRCR.CSTMR_JURIDICAL_RRN) )
+                            , '' )									    AS CRPR_NO
+                , DECODE( MQT.CSTMR_TYPE
+                            , 'JP', 'B'
+                            , 'I' )									    AS CUST_TYPE_CD
+                , '00'												    AS WLFR_CD
+                , NVL( MRCR.CSTMR_TEL_FN
+                        || MRCR.CSTMR_TEL_MN
+                        || MRCR.CSTMR_TEL_RN, '' )					    AS WRLN_TLPH_NO
+                , NVL( MRCR.CSTMR_MOBILE_FN
+                        || MRCR.CSTMR_MOBILE_MN
+                        || MRCR.CSTMR_MOBILE_RN, '' )				    AS TLPH_NO
+                , ( CASE WHEN MRCR.CSTMR_BILL_SEND_CODE = 'CB'
+                           OR MRCR.CSTMR_MAIL_RECEIVE_FLAG = 'Y'
+                              THEN MRCR.CSTMR_MAIL
+                         ELSE ''
+                    END )											    AS EML_ADRS_NM
+                , DECODE( MRCR.CSTMR_BILL_SEND_CODE
+                            , 'CB', 'Y'
+                            , 'N' )									    AS EML_BILL_AGRE_YN
+                , MRCR.CSTMR_ADDR									    AS BILL_ADRS_DONG_NM
+                , MRCR.CSTMR_ADDR_DTL								    AS BILL_ADRS_NM
+                , MRCR.CSTMR_POST									    AS BILL_ADRS_ZIP_NO
+                , ( CASE WHEN MQT.REQ_PAY_TYPE IN ('C', 'D')
+                              THEN NVL( MQT.REQ_PAY_TYPE, '' )
+                         WHEN MQT.REQ_PAY_TYPE IN ('AA', 'VA')
+                              THEN ''
+                         ELSE 'R'
+                    END )											    AS BLPYM_MTHD_CD
+                , NVL( MRRQ.REQ_CARD_COMPANY
+                        , ( SELECT CD_DSC
+                              FROM CMN_GRP_CD_MST@DL_MSP
+                             WHERE GRP_ID = 'RCP9009'
+                               AND CD_VAL = MRRQ.REQ_BANK ) )		    AS BLPYM_BANK_NM
+                , DECODE( MQT.CSTMR_TYPE
+                            , 'JP', CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRCR.CSTMR_JURIDICAL_RRN) )
+                            , DECODE( MQT.REQ_PAY_TYPE
+                                       , 'C', SUBSTR( CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRRQ.REQ_CARD_RRN) ), 1, 6 )
+                                       , 'D', SUBSTR( CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRRQ.REQ_ACCOUNT_RRN) ), 1, 6 )
+                                       , ( CASE WHEN TRIM(MRRQ.REQ_CARD_NO) IS NOT NULL
+                                                 AND MRRQ.REQ_CARD_NAME IS NOT NULL
+                                                     THEN SUBSTR( CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRRQ.REQ_CARD_RRN) ), 1, 6 )
+                                                WHEN TRIM(MRRQ.REQ_ACCOUNT_NUMBER) IS NOT NULL
+                                                 AND MRRQ.REQ_ACCOUNT_NAME IS NOT NULL
+                                                     THEN SUBSTR( CRYPTO_AES256.DEC_AES@DL_MSP( TRIM(MRRQ.REQ_ACCOUNT_RRN) ), 1, 6 )
+                                                ELSE ''
+                                           END ) ) )				    AS BLPYM_CUST_INHB_RGST_NO
+                , DECODE( MQT.REQ_PAY_TYPE
+                , 'C', MRRQ.REQ_CARD_NAME
+                , 'D', MRRQ.REQ_ACCOUNT_NAME
+                , ( CASE WHEN TRIM(MRRQ.REQ_CARD_NO) IS NOT NULL
+                          AND MRRQ.REQ_CARD_NAME IS NOT NULL
+                              THEN MRRQ.REQ_CARD_NAME
+                         WHEN TRIM(MRRQ.REQ_ACCOUNT_NUMBER) IS NOT NULL
+                          AND MRRQ.REQ_ACCOUNT_NAME IS NOT NULL
+                              THEN MRRQ.REQ_ACCOUNT_NAME
+                         ELSE ''
+                    END ) )								                AS BLPYM_CUST_NM
+                , CRYPTO_AES256.DEC_AES@DL_MSP( DECODE( MQT.REQ_PAY_TYPE
+                                                        , 'C', TRIM(MRRQ.REQ_CARD_NO)
+                                                        , ( CASE WHEN TRIM(MRRQ.REQ_CARD_NO) IS NOT NULL
+                                                                  AND MRRQ.REQ_CARD_NAME IS NOT NULL
+                                                                      THEN TRIM(MRRQ.REQ_CARD_NO)
+                                                                 ELSE ''
+                                                            END ) ) )	 AS CRDT_CARD_NO
+                , DECODE( MQT.REQ_PAY_TYPE
+                            , 'C', MRRQ.REQ_CARD_YY || MRRQ.REQ_CARD_MM
+                            , ( CASE WHEN TRIM(MRRQ.REQ_CARD_NO) IS NOT NULL
+                                      AND MRRQ.REQ_CARD_NAME IS NOT NULL
+                                          THEN MRRQ.REQ_CARD_YY || MRRQ.REQ_CARD_MM
+                                     ELSE ''
+                                END ) )								    AS EFCT_YM
+                , CRYPTO_AES256.DEC_AES@DL_MSP( DECODE( MQT.REQ_PAY_TYPE
+                            , 'D', TRIM(MRRQ.REQ_ACCOUNT_NUMBER)
+                            , ( CASE WHEN TRIM(MRRQ.REQ_CARD_NO) IS NOT NULL
+                                      AND MRRQ.REQ_CARD_NAME IS NOT NULL
+                                          THEN TRIM(MRRQ.REQ_ACCOUNT_NUMBER)
+                                     ELSE ''
+                                END ) ) )							    AS BLPYM_BNKACN_NO
+                , MRSP.JOIN_PRICE_TYPE								    AS SBSCST_TYPE_CD
+                , MRSP.USIM_PRICE_TYPE								    AS USIM_BILL_TYPE_CD
+                , MQT.REQ_WANT_NUMBER								    AS CUST_FVRT_1_TLPH_NO
+                , MQT.REQ_WANT_NUMBER2								    AS CUST_FVRT_2_TLPH_NO
+                , DECODE( MQT.OPER_TYPE
+                            , 'MNP3', MQME.MOVE_COMPANY
+                            , '' )									    AS NOW_SBSC_TLCM_CD
+                , DECODE( MQT.OPER_TYPE
+                            , 'MNP3' , NVL( MQME.MOVE_MOBILE_FN
+                                            || MQME.MOVE_MOBILE_MN
+                                            || MQME.MOVE_MOBILE_RN, '' )
+                            , '' ) 									    AS NOW_CUST_TLPH_NO
+                , DECODE( NVL( MQT.PROD_TYPE, '01' )
+                            , '02', ''
+                            , MQT.REQ_PHONE_SN )					    AS MSN
+                , MQT.REQ_USIM_SN									    AS ICC_ID
+                , MQT.AGENT_CODE									    AS AGNC_ID
+                , 'N'												    AS APLSHT_CNCL_YN
+                , TO_CHAR(MQT.REQ_IN_DAY, 'YYYYMMDD')				    AS APLSHT_RGST_DATE
+                , MQT.CLAUSE_PRI_COLLECT_FLAG						    AS INDV_INFO_INER_PRCUSE_AGRE_YN
+                , NVL( MRAT.MINOR_AGENT_NAME, '' )					    AS AGNT_NM
+                , CRYPTO_AES256.DEC_AES@DL_MSP( NVL2( MRAT.MINOR_AGENT_NAME
+                        , TRIM(MRAT.MINOR_AGENT_RRN)
+                        , '' ) )									    AS AGNT_INHB_RGST_NO
+                , NVL2( MRAT.MINOR_AGENT_NAME
+                        , TRIM(MRAT.MINOR_AGENT_RELATION)
+                        , '' )										    AS AGNT_WRKJOB_IND_CD
+                , DECODE( SUBSTR( MRAT.MINOR_AGENT_TEL_FN, 1, 2 )
+                            , '01', NVL( MRAT.MINOR_AGENT_TEL_FN
+                                        || MRAT.MINOR_AGENT_TEL_MN
+                                        || MRAT.MINOR_AGENT_TEL_RN, '' )
+                            , '' )									    AS AGNT_PRTTLP_NO
+                , DECODE( SUBSTR( MRAT.MINOR_AGENT_TEL_FN, 1, 2 )
+                            , '01', ''
+                            , NVL( MRAT.MINOR_AGENT_TEL_FN
+                                    || MRAT.MINOR_AGENT_TEL_MN
+                                    || MRAT.MINOR_AGENT_TEL_RN, '' ) )	AS AGNT_HOUS_TLPH_NO
+                , CRYPTO_AES256.DEC_AES@DL_MSP( DECODE( MQT.CSTMR_TYPE
+                            , 'JP', TRIM(MRCR.CSTMR_NATIVE_RRN)
+                            , '' ) )								    AS REAL_USER_INHB_RGST_NO
+                , DECODE( MQT.CSTMR_TYPE
+                            , 'JP', MRCR.CSTMR_NAME
+                            , '' )									    AS REAL_USER_NM
+                , MQT.ONLINE_AUTH_INFO								    AS MEMO_SBST
+                , DECODE( MQT.CSTMR_TYPE
+                            , 'JP', TRIM(MRCR.CSTMR_JURIDICAL_NUMBER)
+                            , 'PP', TRIM(MRCR.CSTMR_PRIVATE_NUMBER)
+                            , '' )									    AS BIZR_RGST_NO
+                , MRCR.CSTMR_BILL_SEND_CODE							    AS RQSSHT_DSPT_TYPE_CD
+                , DECODE( MQT.SERVICE_TYPE
+                            , 'PP', 'I'
+                            , 'R' )									    AS USIM_PYMN_MTHD_CD
+                            , ( CASE WHEN REQ_BUY_TYPE = 'UU'
+                                       OR MQT.PROD_TYPE = '02'
+                                          THEN 'Y'
+                                     ELSE 'N'
+                                END )								    AS USIM_UNIQ_OPEN_YN
+                , 'R'												    AS BOND_PRSR_FEE_CD
+                , MRSP.MODEL_DISCOUNT1								    AS HNDSET_DSCN_1_AMNT
+                , NVL( MRSP.MODEL_MONTHLY, '' )						    AS INST_MNTH_CNT
+                , NVL( MRSP.ENGG_MNTH_CNT, '' )						    AS ENGG_MNTH_CNT
+                , DECODE( MQT.USIM_KINDS_CD
+                            , '09', 'E'
+                            , '' )									    AS USIM_TYPE_DIV_CD
+                , ( CASE WHEN MQT.OPER_TYPE IN ('HCN3', 'HDN3')
+                              THEN ( SELECT SVC_CNTR_NO
+                                       FROM MSP_JUO_SUB_INFO@DL_MSP
+                                      WHERE SUB_STATUS <![CDATA[ <> ]]> 'C'
+                                        AND SUBSCRIBER_NO = NVL(MRCR.CSTMR_TEL_FN
+                                                                    || MRCR.CSTMR_TEL_MN
+                                                                    || MRCR.CSTMR_TEL_RN
+                                                                , MRCR.CSTMR_MOBILE_FN
+                                                                    || MRCR.CSTMR_MOBILE_MN
+                                                                    || MRCR.CSTMR_MOBILE_RN) )
+                         ELSE ''
+                    END )								                AS SVC_CNTR_NO
+                , MRCR.SELF_CSTMR_CI								    AS IPIN_CI
+                , NVL2( MRCR.SELF_CSTMR_CI
+                        , 'Y'
+                        , 'N' )										    AS MY_SELF_ATHN_YN
+                , NVL2( MRCR.SELF_CSTMR_CI
+                        , ( SELECT ETC5
+                              FROM CMN_GRP_CD_MST@DL_MSP
+                             WHERE GRP_ID = 'RCP2001'
+                               AND USG_YN = 'Y'
+                               AND CD_VAL = MQT.ONLINE_AUTH_TYPE )
+                        , '' )										    AS ONLINE_ATHN_DIV_CD
+                , 'Y'                                                       AS CRDT_INFO_AGRE_YN
+                , DECODE(MQT.CLAUSE_JEHU_FLAG, 'Y', 'Y', 'N')               AS CSGN_INFO_ADVM_RCV_AGREE_YN
+                , DECODE(MQT.PERSONAL_INFO_COLLECT_AGREE, 'Y', 'Y', 'N')    AS OTCOM_INFO_ADVM_RCV_AGREE_YN
+                , DECODE(MQT.CLAUSE_PRI_AD_FLAG, 'Y', 'Y', 'N')             AS OTCOM_INFO_ADVM_CSGN_AGREE_YN
+                , DECODE(MQT.OTHERS_TRNS_AGREE, 'Y', 'Y', 'N')              AS FNNC_DEAL_AGREE_YN
+                , DECODE(MQT.OTHERS_TRNS_KT_AGREE, 'Y', 'Y', 'N')           AS GPCOM_COMSVC_SBSC_AGREE_YN
+                , DECODE(MQT.OTHERS_AD_RECEIVE_AGREE, 'Y', 'Y', 'N')        AS CARD_INSUR_PROD_AGREE_YN
+                , MQT.FATH_TRANSAC_ID
+                , (CASE WHEN NVL(CIM.PRDT_TYPE_CD, '02') IN ('01', '02') THEN 'N' ELSE 'Y' END) AS M2M_HNDSET_YN /* M2M단말여부 */
+        FROM  MCP_REQUEST				MQT
+                , MCP_REQUEST_AGENT		MRAT
+                , MCP_REQUEST_CHANGE	MRCE
+                , MCP_REQUEST_MOVE		MQME
+                , MCP_REQUEST_PAYMENT	MRPT
+                , MCP_REQUEST_REQ		MRRQ
+                , MCP_REQUEST_SALEINFO	MRSP
+                , MCP_REQUEST_DLVRY		MRDY
+                , MCP_REQUEST_CSTMR		MRCR
+                , CMN_INTM_MDL@DL_MSP   CIM
+         WHERE  MQT.RES_NO = #{resNo}
+           AND  MQT.REQUEST_KEY = MRAT.REQUEST_KEY
+           AND  MQT.REQUEST_KEY = MRCE.REQUEST_KEY
+           AND  MQT.REQUEST_KEY = MQME.REQUEST_KEY
+           AND  MQT.REQUEST_KEY = MRPT.REQUEST_KEY
+           AND  MQT.REQUEST_KEY = MRRQ.REQUEST_KEY
+           AND  MQT.REQUEST_KEY = MRSP.REQUEST_KEY
+           AND  MQT.REQUEST_KEY = MRDY.REQUEST_KEY
+           AND  MQT.REQUEST_KEY = MRCR.REQUEST_KEY
+           AND  MRSP.MODEL_ID = CIM.RPRS_PRDT_ID(+)
+           AND  CIM.RPRS_YN(+) = 'Y'
+    </select>
+
+    <!-- 연동결과 -->
+    <insert id="insertRequestOsst" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformReqVO">
+        /* mPlatformMapper.insertRequestOsst */
+        INSERT INTO MCP_REQUEST_OSST (
+            MVNO_ORD_NO
+            , SEQ
+            , OSST_ORD_NO
+            , PRGR_STAT_CD
+            , RSLT_CD
+            , RSLT_MSG
+            , RSLT_DT
+            , NSTEP_GLOBAL_ID
+            , PRDC_CHK_NOTI_MSG
+            , IF_TYPE
+            , REGST_DTTM
+        ) VALUES (
+            LPAD(#{resNo, jdbcType=VARCHAR}, 14, '0')
+            , NVL((SELECT MAX(SEQ) + 1 FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{resNo, jdbcType=VARCHAR}, 14, '0')), 1)
+            , #{osstOrdNo, jdbcType=VARCHAR}
+            , #{appEventCd, jdbcType=VARCHAR}
+            , #{rsltCd, jdbcType=VARCHAR}
+            , #{rsltMsg, jdbcType=VARCHAR}
+            , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+            , #{nstepGlobalId, jdbcType=VARCHAR}
+            , #{prdcChkNotiMsg, jdbcType=VARCHAR}
+            , 'WEB'
+            , SYSDATE
+        )
+    </insert>
+
+    <!-- 부가서비스가입진행 -->
+    <update id="updateRequestAddition" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.updateRequestAddition */
+        UPDATE  MCP_REQUEST_ADDITION
+        SET     PROC_YN = 'P'
+        WHERE   REQUEST_KEY = #{requestKey}
+        AND     ADDITION_KEY = #{additionKey}
+    </update>
+
+    <!-- 셀프케어로그생성 -->
+    <insert id="insertSelfCareLog" parameterType="java.util.Map">
+        /* mPlatformMapper.insertSelfCareLog */
+        INSERT INTO MCP_MPLATFORM_LOG (
+            MDL_IND
+            , EVENT_CODE
+            , CONTRACT_NUM
+            , ACCESS_URL
+            , ACCESS_IP
+            , USER_ID
+            , EXPNSN_STR_VAL1
+            , SYS_DT
+            , SYS_RDATE
+            , YY
+            , MM
+            , DD
+        ) VALUES (
+            NVL(#{mdlInd, jdbcType=VARCHAR}, 'IVR')
+            , #{appEventCd, jdbcType=VARCHAR}
+            , #{ncn, jdbcType=VARCHAR}
+            , #{url, jdbcType=VARCHAR}
+            , #{ip, jdbcType=VARCHAR}
+            , #{userid, jdbcType=VARCHAR}
+            , #{expnsnStrVal1, jdbcType=VARCHAR}
+            , TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , SYSDATE
+            , TO_CHAR(SYSDATE, 'YYYY')
+            , TO_CHAR(SYSDATE, 'MM')
+            , TO_CHAR(SYSDATE, 'DD')
+        )
+    </insert>
+
+    <select id="getXmlMessageUC0" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformReqVO" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageUC0 */
+        SELECT    A.MVNO_ORD_NO as mvnoOrdNo
+                , A.CUST_NO as custNo
+                , A.TLPH_NO as tlphNo
+                , A.SVC_CONT_ID as svcContId
+                , A.ODER_TYPE_CD as oderTypeCd
+                , A.USIM_PYMN_MTHD_CD as usimPymnMthdCd
+                , A.ICC_ID as iccId
+                , A.CNTPNT_CD as cntpntCd
+                , A.SLS_PRSN_ID as slsPrsnId
+                , A.USIM_CHG_RSN_CD as usimChgRsnCd
+                , 'osst:usimChgPrc' as operationName
+                , 'OsstUsimChgInVO' as voName
+                , 'UC0' AS appEventCd
+                , B.DEALER_CODE AS asgnAgncId
+                , 'OsstUsimChgPrcService' AS serviceName
+        FROM    MCP_SELF_USIM_CHG A, MSP_JUO_SUB_INFO@DL_MSP B
+        WHERE   A.SVC_CONT_ID = B.CONTRACT_NUM(+)
+          AND   A.MVNO_ORD_NO = #{mvnoOrdNo}
+    </select>
+
+    <select id="selectCheckMpCallCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT /* mPlatformMapper.selectCheckMpCallCount 당일 MP호출 수 */
+            count(*)
+        FROM MCP_MPLATFORM_LOG
+        WHERE 1=1
+          AND EVENT_CODE = #{eventCd, jdbcType=VARCHAR}
+          AND USER_ID = #{userId, jdbcType=VARCHAR}
+          AND SYS_DT = TO_CHAR(sysdate , 'YYYYMMDD')
+          AND ACCESS_URL IS NOT NULL
+    </select>
+
+    <select id="getMplatformCryptionYn" parameterType="String" resultType="String">
+        /* mPlatformMapper.getMplatformCryptionYn mp암복호화 여부 */
+		SELECT USE_YN
+		  FROM NMCP_CD_DTL
+		 WHERE CD_GROUP_ID = 'MpCryptionYn'
+		   AND DTL_CD = #{eventCd, jdbcType=VARCHAR}
+    </select>
+
+    <insert id="insertOsstErrLog" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformErrVO" >
+        /* mPlatformMapper.insertOsstErrLog OSST exception 이력 저장 */
+        <selectKey keyProperty="seq" resultType="Long" order="BEFORE">
+            SELECT TO_NUMBER(TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_OSST_ERR_LOG_SEQ.NEXTVAL, '000000'))) FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_OSST_ERR_LOG (
+           SEQ
+          ,RES_NO
+          ,PRGR_STAT_CD
+          ,PRNTS_CONTRACT_NO
+          ,CUSTOMER_ID
+          ,ERR_TYPE
+          ,ERR_MSG
+          ,REGST_DT
+          ,REGST_DTTM
+        ) VALUES (
+           #{seq}
+          ,#{resNo}
+          ,#{prgrStatCd}
+          ,#{prntsContractNo}
+          ,#{customerId}
+          ,#{errType}
+          ,#{errMsg}
+          ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+          ,SYSDATE
+        )
+    </insert>
+
+    <!-- 명의변경 사전체크 - 양수자가 미성년자가 아닐 때-->
+    <select id="getXmlMessageMC0" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformReqVO" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageMC0 */
+        SELECT
+            'osst:osstMcnPrechk' as operationName
+            , 'OsstMcnPrechkInVO' as voName
+            , 'OsstMcnChgPrcService' AS serviceName
+            , 'MC0' AS appEventCd
+            , (SELECT KT_ORG_ID FROM ORG_ORGN_INFO_MST@DL_MSP WHERE ORGN_ID = '1100011741' AND ROWNUM = 1) AS asgnAgncId
+            /*양도인정보*/
+            , LPAD(A.MCN_RES_NO, 14, '0') AS mvnoOrdNo  /* MVNO 오더번호 */
+            , 'KIS' AS slsCmpnCd                        /* 판매회사코드 */
+            , A.CSTMR_TYPE AS cstmrType                 /* 고객타입(NA,FN,NA,JP) */
+            , SUB.CUSTOMER_ID AS custNo                 /* 고객번호 */
+            , SUB.SVC_CNTR_NO AS svcContId              /* 계약번호 */
+            , B.MOBILE_NO AS tlphNo                     /* 전화번호 */
+            , A.MCN_STAT_RSN_CD AS mcnStatRsnCd         /* 명변 사유코드 */
+            , A.USIM_SUCC_YN AS usimSuccYn              /* USIM 승계여부 */
+            , A.ICC_ID AS iccId                         /* USIM 일련번호 */
+            /*양수인고객정보*/
+            , (SELECT ETC2 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP9007' AND CD_VAL = A.CSTMR_TYPE) AS custTypeCd  /* 고객유형코드 */
+            , GCM1.ETC1 AS custIdntNoIndCd              /* 고객식별번호구분코드 */
+            , CRYPTO_AES256.DEC_AES@DL_MSP(TRIM(A.CSTMR_NATIVE_RRN)) AS custIdntNo     /* 고객식별번호 */
+            , UPPER(A.CSTMR_NAME) AS custNm             /* 고객명 */
+            , 'Y' AS myslAgreYn                         /* 본인동의여부 */
+            , GCM1.ETC2 AS nativeRlnamAthnEvdnPprCd     /* 실명인증증빙서류코드 */
+            , NVL(A.CSTMR_RECEIVE_TEL_FN || A.CSTMR_RECEIVE_TEL_MN || A.CSTMR_RECEIVE_TEL_RN, '') AS athnRqstcustCntplcNo   /* 인증요청고객연락처번호 */
+            , A.SELF_ISSU_EXPR_DT AS rsdcrtIssuDate     /* 주민등록증발급일자 */
+            , (CASE WHEN GCM1.ETC2 = 'DRIVE' THEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.SELF_ISSU_NUM), 3) ELSE '' END) AS lcnsNo           /* 면허번호 */
+            , (CASE WHEN GCM1.ETC2 = 'DRIVE' THEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.SELF_ISSU_NUM), 0, 2) ELSE '' END) AS lcnsRgnCd     /* 면허지역코드 */
+            , (CASE WHEN GCM1.ETC2 = 'MERIT' THEN CRYPTO_AES256.DEC_AES@DL_MSP(A.SELF_ISSU_NUM) ELSE '' END) AS mrtrPrsnNo                  /* 유공자번호 */
+            , (CASE WHEN A.CSTMR_TYPE = 'FN' THEN A.CSTMR_FOREIGNER_NATION ELSE '' END) AS nationalityCd      /* 외국인국적코드 */
+            , (CASE WHEN A.CSTMR_TYPE = 'FN' THEN
+                 CASE
+                     WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('5', '6') THEN
+                         '19' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+                     WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('7', '8') THEN
+                         '20' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+                 END
+            END) AS fornBrthDate                        /* 외국인생일일자 */
+            , 'Y' AS crdtInfoAgreYn                     /* 신용정보동의여부 */
+            , 'Y' AS indvInfoInerPrcuseAgreYn           /* 개인정보활용동의여부 */
+            , DECODE(A.CLAUSE_JEHU_FLAG, 'Y', 'Y', 'N') AS cnsgInfoAdvrRcvAgreYn                /* 위탁정보광고수신동의 */
+            , DECODE(A.PERSONAL_INFO_COLLECT_AGREE, 'Y', 'Y', 'N') AS othcmpInfoAdvrRcvAgreYn   /* 타사정보광고수신동의 */
+            , DECODE(A.CLAUSE_PRI_AD_FLAG, 'Y', 'Y', 'N') AS othcmpInfoAdvrCnsgAgreYn           /* 타사정보광고위탁동의 */
+            , DECODE(A.OTHERS_TRNS_KT_AGREE, 'Y', 'Y', 'N') AS grpAgntBindSvcSbscAgreYn         /* 그룹사결합서비스가입동의 */
+            , DECODE(A.OTHERS_AD_RECEIVE_AGREE, 'Y', 'Y', 'N') AS cardInsrPrdcAgreYn            /* 카드보험상품동의 */
+            , 'N' AS olngDscnHynmtrAgreYn               /* 주유할인여부 */
+            , 'N' AS wlfrDscnAplyAgreYn                 /* 복지할인신청동의 */
+            , 'N' AS spamPrvdAgreYn                     /* 스팸제공동의 */
+            , 'N' AS prttlpStlmUseAgreYn                /* 이동전화결제이용동의 */
+            , 'N' AS prttlpStlmPwdUseAgreYn             /* 이동전화결제비밀번호동의 */
+            , B.ETC_MOBILE AS wrlnTlphNo                /* 유선전화번호 */
+            , (CASE
+                   WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('1', '2', '5', '6') THEN
+                       '19' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+                   WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('3', '4', '7', '8') THEN
+                       '20' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+            END) AS brthDate                            /* 생일일자 */
+            , A.REQ_INFO_CHG_YN AS custInfoChngYn       /* 고객정보변경여부 */
+            , 'Y' AS myslfAthnYn                        /* 본인인증여부 */
+            , A.SELF_CSTMR_CI as ipinCi                 /* 본인인증CI */
+            , (SELECT ETC5 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2001' AND CD_VAL = A.ONLINE_AUTH_TYPE) AS onlineAthnDivCd  /* 본인인증 수단 */
+            , DECODE(A.OTHERS_TRNS_AGREE, 'Y', 'Y', 'N') AS fnncDealAgreeYn     /* 금융거래시 KT 고객 추가 금융 혜택을 위한 정보 제공 동의 */
+            , A.FATH_TRANSAC_ID AS fathTransacId        /* 안면인증 트랜잭션 아이디 */
+            , '1100011741' AS cpntId                    /* 접점아이디 */
+            /*양수인청구계정정보*/
+            , A.CSTMR_BILL_SEND_CODE AS rqsshtPprfrmCd  /* 청구서양식코드 */
+            , DECODE(A.CSTMR_BILL_SEND_CODE, 'MB', B.MOBILE_NO, '') AS rqsshtTlphNo         /* 청구서발송전화번호 */
+            , DECODE(A.CSTMR_BILL_SEND_CODE, 'CB', A.CSTMR_MAIL, '') AS rqsshtEmlAdrsNm     /* 청구서이메일주소명 */
+            , A.CSTMR_POST AS billZipNo                 /* 청구우편번호 */
+            , A.CSTMR_ADDR AS billFndtCntplcSbst        /* 청구기본연락처내용 - 주소 */
+            , A.CSTMR_ADDR_DTL AS billMntCntplcSbst     /* 청구기본연락처내용 - 상세 */
+            , A.REQ_PAY_TYPE AS blpymMthdCd             /* 납부방법코드 C: 신용카드, D: 계좌자동이체, R: 지로 */
+            , DECODE(A.REQ_PAY_TYPE, 'C', '99', '21') AS duedatDateIndCd                            /* 납기일자구분코드 */
+            , DECODE(A.REQ_PAY_TYPE, 'C', A.REQ_CARD_YY || A.REQ_CARD_MM, '') AS crdtCardExprDate   /* 신용카드만기일자 */
+            , DECODE(A.REQ_PAY_TYPE, 'C', (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'CRD' AND DTL_CD = A.REQ_CARD_COMPANY), '') AS crdtCardKindCd    /* 신용카드종류코드 */
+            , DECODE(A.REQ_PAY_TYPE, 'D', (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'BNK' AND DTL_CD = A.REQ_BANK), '') AS bankCd     /* 은행코드 */
+            , (CASE
+                WHEN A.REQ_PAY_TYPE = 'C' THEN CRYPTO_AES256.DEC_AES@DL_MSP(A.REQ_CARD_NO)
+                WHEN A.REQ_PAY_TYPE = 'D' THEN CRYPTO_AES256.DEC_AES@DL_MSP(A.REQ_ACCOUNT_NUMBER)
+                ELSE ''
+            END) AS blpymMthdIdntNo                     /* 납부방법식별번호 */
+            , UPPER(A.CSTMR_NAME) AS blpymCustNm        /* 납부고객명 */
+            , (CASE
+                   WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('1', '2', '5', '6') THEN
+                       '19' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+                   WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('3', '4', '7', '8') THEN
+                       '20' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+            END) AS blpymCustIdntNo                     /* 납부고객식별번호 */
+            , '03' AS agreIndCd                         /* 동의자료코드 */
+            , (CASE WHEN A.ONLINE_AUTH_TYPE = 'S' THEN '01'
+                 WHEN A.ONLINE_AUTH_TYPE = 'C' THEN '03'
+                 WHEN A.ONLINE_AUTH_TYPE = 'X' THEN '04'
+                 ELSE '03'
+            END) AS myslAthnTypeCd                      /* 본인인증타입코드 */
+            /*상품정보*/
+            , A.SOC AS prdcCd                           /* 상품코드 */
+            , 'P' AS prdcTypeCd                         /* 상품타입코드 */
+        FROM NMCP_CUST_REQUEST_NAME_CHG A
+            , NMCP_CUST_REQUEST_MST B
+            , CMN_GRP_CD_MST@DL_MSP GCM1
+            , MSP_JUO_SUB_INFO@DL_MSP SUB
+        WHERE A.CUST_REQ_SEQ = B.CUST_REQ_SEQ
+            AND A.SELF_CERT_TYPE = GCM1.CD_VAL
+            AND GCM1.GRP_ID = 'RCP2006'
+            AND A.MCN_RES_NO = #{mcnResNo}
+            AND B.CONTRACT_NUM = SUB.CONTRACT_NUM
+    </select>
+
+    <!-- 명의변경 사전체크 - 양수자가 미성년자-->
+    <select id="getXmlMessageMC0Nm" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformReqVO" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageMC0Nm */
+        SELECT
+            'osst:osstMcnPrechk' as operationName
+            , 'OsstMcnPrechkInVO' as voName
+            , 'OsstMcnChgPrcService' AS serviceName
+            , 'MC0' AS appEventCd
+            , (SELECT KT_ORG_ID FROM ORG_ORGN_INFO_MST@DL_MSP WHERE ORGN_ID = '1100011741' AND ROWNUM = 1) AS asgnAgncId
+            /*작업기준정보*/
+            , LPAD(A.MCN_RES_NO, 14, '0') AS mvnoOrdNo  /* MVNO 오더번호 */
+            , 'KIS' AS slsCmpnCd                        /* 판매회사코드 */
+            , A.CSTMR_TYPE AS cstmrType                 /* 고객타입(NA,FN,NA,JP) */
+            , SUB.CUSTOMER_ID AS custNo                 /* 고객번호 */
+            , SUB.SVC_CNTR_NO AS svcContId              /* 계약번호 */
+            , B.MOBILE_NO AS tlphNo                     /* 전화번호 */
+            , A.MCN_STAT_RSN_CD AS mcnStatRsnCd         /* 명변 사유코드 */
+            , A.USIM_SUCC_YN AS usimSuccYn              /* USIM 승계여부 */
+            , A.ICC_ID AS iccId                         /* USIM 일련번호 */
+            /*양수인 고객정보*/
+            , 'I' AS custTypeCd                         /* 양수인 고객유형코드 */
+            , '01' AS custIdntNoIndCd                   /* 고객식별번호구분코드 */
+            , CRYPTO_AES256.DEC_AES@DL_MSP(TRIM(A.CSTMR_NATIVE_RRN)) AS custIdntNo     /* 고객식별번호 */
+            , UPPER(A.CSTMR_NAME) AS custNm             /* 고객명 */
+            , A.SELF_INQRY_AGRM_YN AS myslAgreYn        /* 본인동의여부 */
+            , 'COURT' AS nativeRlnamAthnEvdnPprCd       /* 실명인증증빙서류코드 - 미성년자는 COURT 고정*/
+            , NVL(A.CSTMR_RECEIVE_TEL_FN || A.CSTMR_RECEIVE_TEL_MN || A.CSTMR_RECEIVE_TEL_RN, '') AS athnRqstcustCntplcNo   /* 인증요청고객연락처번호 */
+            , '' AS rsdcrtIssuDate     /* 주민등록증발급일자 */
+            , '' AS lcnsNo             /* 면허번호 */
+            , '' AS lcnsRgnCd          /* 면허지역코드 */
+            , '' AS mrtrPrsnNo         /* 유공자번호 */
+            , (CASE WHEN A.CSTMR_TYPE = 'FN' THEN A.CSTMR_FOREIGNER_NATION ELSE '' END) AS nationalityCd      /* 외국인국적코드 */
+            , (CASE WHEN A.CSTMR_TYPE = 'FN' THEN
+                 CASE
+                     WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('5', '6') THEN
+                         '19' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+                     WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('7', '8') THEN
+                         '20' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+                     END
+            END) AS fornBrthDate                        /* 외국인생일일자 */
+            , 'Y' AS crdtInfoAgreYn                     /* 신용정보동의여부 */
+            , 'Y' AS indvInfoInerPrcuseAgreYn           /* 개인정보활용동의여부 */
+            , DECODE(A.CLAUSE_JEHU_FLAG, 'Y', 'Y', 'N') AS cnsgInfoAdvrRcvAgreYn                /* 위탁정보광고수신동의 */
+            , DECODE(A.PERSONAL_INFO_COLLECT_AGREE, 'Y', 'Y', 'N') AS othcmpInfoAdvrRcvAgreYn   /* 타사정보광고수신동의 */
+            , DECODE(A.CLAUSE_PRI_AD_FLAG, 'Y', 'Y', 'N') AS othcmpInfoAdvrCnsgAgreYn           /* 타사정보광고위탁동의 */
+            , DECODE(A.OTHERS_TRNS_KT_AGREE, 'Y', 'Y', 'N') AS grpAgntBindSvcSbscAgreYn         /* 그룹사결합서비스가입동의 */
+            , DECODE(A.OTHERS_AD_RECEIVE_AGREE, 'Y', 'Y', 'N') AS cardInsrPrdcAgreYn            /* 카드보험상품동의 */
+            , 'N' AS olngDscnHynmtrAgreYn               /* 주유할인여부 */
+            , 'N' AS wlfrDscnAplyAgreYn                 /* 복지할인신청동의 */
+            , 'N' AS spamPrvdAgreYn                     /* 스팸제공동의 */
+            , 'N' AS prttlpStlmUseAgreYn                /* 이동전화결제이용동의 */
+            , 'N' AS prttlpStlmPwdUseAgreYn             /* 이동전화결제비밀번호동의 */
+            , B.ETC_MOBILE AS wrlnTlphNo                /* 유선전화번호 */
+            , (CASE
+                   WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('1', '2', '5', '6') THEN
+                       '19' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+                   WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 7, 1) IN ('3', '4', '7', '8') THEN
+                       '20' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.CSTMR_NATIVE_RRN), 1, 6)
+            END) AS brthDate                            /* 생일일자 */
+            , A.REQ_INFO_CHG_YN AS custInfoChngYn       /* 고객정보변경여부 */
+            /*미성년자일 때 법정대리인정보*/
+            , C.NEE_AGENT_NAME as agntCustNm            /* 법정대리인 성명 */
+            , (CASE
+                WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 7, 1) IN ('1', '2', '3', '4') THEN '1'
+                WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 7, 1) IN ('5', '6', '7', '8') THEN '4'
+                ELSE ''
+            END) AS agntCustIdfyNoType                  /* 법정대리인 식별번호 종류 1 (주민번호) , 4(외국인등록번호) */
+            , CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN) as agntIdfyNoVal      /* 법정대리인 고객식별번호 */
+            , (CASE WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 7, 1) IN ('1', '3', '5', '7') THEN '1'
+                WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 7, 1) IN ('2', '4', '6', '8') THEN '2'
+            END) agntPersonSexDiv                       /* 법정대리인 성별 1(남자), 2(여자) */
+            , 'Y' as agntAgreYn                         /* 법정대리인 정보조회 동의여부 */
+            , 'M' AS agntTelAthn                        /* 법정대리인 연락처 종류 M(모바일) , I(자택)*/
+            , C.NEE_AGENT_TEL_NO AS agntTelNo           /* 대리인연락처 */
+            , C.NEE_AGENT_TYPE_CD AS agntTypeCd         /* 법정대리인 유형 01(부), 02(모), 03(후견인), 04(연대보증인) */
+            , C.NEE_AGENT_SELF_ISSU_EXPR_DT AS agntRsdcrtIssuDate /* 법정대리인 식별번호 발급일자 */
+            , '03' AS agntRltnCd                        /* 대리인관계코드 03: 법정대리인(미성년일 경우), 04: 위탁대리인, 06: 일회성대리인 */
+            , (CASE
+                WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 7, 1) IN ('1', '2', '5', '6') THEN
+                    '19' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 1, 6)
+                WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 7, 1) IN ('3', '4', '7', '8') THEN
+                    '20' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 1, 6)
+                ELSE ''
+            END) AS agntBrthDate                        /* 대리인생일일자 */
+            , (SELECT ETC2 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2006' AND CD_VAL = C.NEE_AGENT_SELF_CERT_TYPE) as agntRlnamAthnEvdnPprCd      /* 법정대리인실명인증증빙서류코드 */
+            , (CASE WHEN C.NEE_AGENT_SELF_CERT_TYPE = '02' THEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_SELF_ISSU_NUM), 0, 2) ELSE '' END) AS agntLicnsRgnCd     /* 법정대리인 면허지역코드 */
+            , (CASE WHEN C.NEE_AGENT_SELF_CERT_TYPE = '02' THEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_SELF_ISSU_NUM), 3) ELSE '' END) AS agntLicnsNo           /* 법정대리인 면허번호 */
+            , (CASE WHEN C.NEE_AGENT_SELF_CERT_TYPE = '06' THEN C.NEE_AGENT_FOREIGNER_NATION ELSE '' END) AS agntNationalityCd             /* 법정대리인 국적코드 */
+            , 'Y' AS myslfAthnYn                        /* 본인인증여부 */
+            , C.NEE_AGENT_SELF_CSTMR_CI as ipinCi       /* 본인인증CI */
+            , (SELECT ETC5 FROM CMN_GRP_CD_MST@DL_MSP WHERE GRP_ID = 'RCP2001' AND CD_VAL = C.NEE_AGENT_ONLINE_AUTH_TYPE) AS onlineAthnDivCd    /* 본인인증 수단 */
+            , DECODE(A.OTHERS_TRNS_AGREE, 'Y', 'Y', 'N') AS fnncDealAgreeYn     /* 금융거래시 KT 고객 추가 금융 혜택을 위한 정보 제공 동의 */
+            , A.FATH_TRANSAC_ID AS fathTransacId        /* 안면인증 트랜잭션 아이디 */
+            , '1100011741' AS cpntId                    /* 접점아이디 */
+            /*미성년자일 때 청구계정정보*/
+            , A.CSTMR_BILL_SEND_CODE AS rqsshtPprfrmCd  /* 청구서양식코드 */
+            , DECODE(A.CSTMR_BILL_SEND_CODE, 'MB', B.MOBILE_NO, '') AS rqsshtTlphNo         /* 청구서발송전화번호 */
+            , DECODE(A.CSTMR_BILL_SEND_CODE, 'CB', A.CSTMR_MAIL, '') AS rqsshtEmlAdrsNm     /* 청구서이메일주소명 */
+            , A.CSTMR_POST AS billZipNo                 /* 청구우편번호 */
+            , A.CSTMR_ADDR AS billFndtCntplcSbst        /* 청구기본연락처내용 - 주소 */
+            , A.CSTMR_ADDR_DTL AS billMntCntplcSbst     /* 청구상세연락처내용 - 상세주소*/
+            , A.REQ_PAY_TYPE AS blpymMthdCd             /* 납부방법코드 C: 신용카드, D: 계좌자동이체, R: 지로 */
+            , DECODE(A.REQ_PAY_TYPE, 'C', '99', '21') AS duedatDateIndCd                            /* 납기일자구분코드 */
+            , DECODE(A.REQ_PAY_TYPE, 'C', A.REQ_CARD_YY || A.REQ_CARD_MM, '') AS crdtCardExprDate   /* 신용카드만기일자 */
+            , DECODE(A.REQ_PAY_TYPE, 'C', (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'CRD' AND DTL_CD = A.REQ_CARD_COMPANY), '') AS crdtCardKindCd    /* 신용카드종류코드 */
+            , DECODE(A.REQ_PAY_TYPE, 'D', (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'BNK' AND DTL_CD = A.REQ_BANK), '') AS bankCd                    /* 은행코드 */
+            , (CASE
+                WHEN A.REQ_PAY_TYPE = 'C' THEN CRYPTO_AES256.DEC_AES@DL_MSP(A.REQ_CARD_NO)
+                WHEN A.REQ_PAY_TYPE = 'D' THEN CRYPTO_AES256.DEC_AES@DL_MSP(A.REQ_ACCOUNT_NUMBER)
+                ELSE ''
+            END) AS blpymMthdIdntNo      /* 납부방법식별번호 */
+            , C.NEE_AGENT_NAME as blpymCustNm    /* 납부고객명 */
+            , (CASE
+                   WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 7, 1) IN ('1', '2', '5', '6') THEN
+                       '19' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 1, 6)
+                   WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 7, 1) IN ('3', '4', '7', '8') THEN
+                       '20' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(C.NEE_AGENT_RRN), 1, 6)
+                   ELSE ''
+            END) AS blpymCustIdntNo      /* 납부고객식별번호 */
+            , '03' AS agreIndCd          /* 동의자료코드 */
+            , (CASE
+                WHEN C.NEE_AGENT_ONLINE_AUTH_TYPE = 'S' THEN '01'
+                WHEN C.NEE_AGENT_ONLINE_AUTH_TYPE = 'C' THEN '03'
+                WHEN C.NEE_AGENT_ONLINE_AUTH_TYPE = 'X' THEN '04'
+                ELSE '03'
+            END) AS myslAthnTypeCd      /* 본인인증타입코드 */
+            /*상품정보*/
+            , A.SOC AS prdcCd           /* 상품코드 */
+            , 'P' AS prdcTypeCd         /* 상품타입코드 */
+        FROM NMCP_CUST_REQUEST_NAME_CHG A
+            , NMCP_CUST_REQUEST_MST B
+            , NMCP_CUST_REQ_NAME_CHG_AGENT C
+            , MSP_JUO_SUB_INFO@DL_MSP SUB
+        WHERE A.CUST_REQ_SEQ = B.CUST_REQ_SEQ
+            AND A.CUST_REQ_SEQ = C.CUST_REQ_SEQ
+            AND B.CONTRACT_NUM = SUB.CONTRACT_NUM
+            AND A.MCN_RES_NO = #{mcnResNo}
+    </select>
+
+    <!-- 명의변경 -->
+    <select id="getXmlMessageMcnMP0" parameterType="com.ktmmobile.mcp.mplatform.dto.MPlatformReqVO" resultType="com.ktmmobile.mcp.mplatform.dto.MPlatformResVO">
+        /* mPlatformMapper.getXmlMessageMcnMP0 */
+        SELECT
+            'osst:osstMcnChg' as operationName
+             , 'OsstMcnChgInVO' as voName
+             , 'OsstMcnChgPrcService' AS serviceName
+             , 'MP0' AS appEventCd
+             , (SELECT KT_ORG_ID FROM ORG_ORGN_INFO_MST@DL_MSP WHERE ORGN_ID = '1100011741' AND ROWNUM = 1) AS asgnAgncId         /* 대리점코드 */
+             , '1100011741' AS cntpntCd              /* 접점코드 */
+             , OSST.OSST_ORD_NO AS osstOrdNo        /* OSST 오더 번호 */
+             , SUB.CUSTOMER_ID AS custNo            /* 양도인고객번호 */
+             , SUB.SUBSCRIBER_NO AS tlphNo          /* 양도인 전화번호 */
+             , SUB.SVC_CNTR_NO AS svcContId         /* 서비스계약번호(양도인 계약번호) */
+             , A.RCV_CUST_NO AS rcvCustNo           /* 양수인고객번호 */
+             , A.RCV_BILL_ACNT_NO AS rcvBillAcntNo  /* 양수인청구계정번호 */
+             , A.MCN_STAT_RSN_CD AS mcnStatRsnCd    /* 명변 사유코드 */
+             , A.ICC_ID AS iccId                    /* USIM 일련번호 */
+             , 'N' AS usimPymnMthdCd                /* USIM 수납방법 코드 */
+             , 'Y' AS docConfirmYn                  /* 증빙서류 확인 여부 */
+             , 'Y' AS followupYn                    /* 사후점검 이행 여부 */
+             , 'KIS' AS slsCmpnCd                   /* 판매회사코드 */
+             , B.ETC_MOBILE AS cntplcNo             /* 연락처번호 - 양도인미납을위한연락처 */
+        FROM NMCP_CUST_REQUEST_NAME_CHG A
+           , NMCP_CUST_REQUEST_MST B
+           , MCP_REQUEST_OSST OSST
+           , MSP_JUO_SUB_INFO@DL_MSP SUB
+        WHERE A.CUST_REQ_SEQ = B.CUST_REQ_SEQ
+          AND B.CONTRACT_NUM = SUB.CONTRACT_NUM
+          AND LPAD(A.MCN_RES_NO, 14, '0') = OSST.MVNO_ORD_NO
+          AND OSST.SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{mcnResNo}, 14, '0') AND PRGR_STAT_CD = 'MC2' AND RSLT_CD = '0000')
+          AND A.MCN_RES_NO = #{mcnResNo}
+          AND ROWNUM = 1
+    </select>
+
+</mapper>

@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ReviewMapper">
+
+    <!-- 사용 후기 리스트용  collection 단품정보를 포함하고있다. -->
+    <resultMap id="selectReviewListCollection" type="com.ktmmobile.mcp.review.dto.ReviewDto">
+        <result property="reviewSeq" column="REVIEW_SEQ" />
+        <collection property="reviewImgList"
+                    ofType="com.ktmmobile.mcp.review.dto.ReviewImgDto"
+                    column="{reviewSeq=REVIEW_SEQ}"
+                    select="selectReviewImgList">
+        </collection>
+    </resultMap>
+
+    <resultMap id="selectBestReviewListCollection" type="com.ktmmobile.mcp.review.dto.ReviewDto">
+        <result property="reviewSeq" column="REVIEW_SEQ" />
+        <collection property="reviewImgList"
+                    ofType="com.ktmmobile.mcp.review.dto.ReviewImgDto"
+                    column="{reviewSeq=REVIEW_SEQ}"
+                    select="selectReviewImgList" >
+        </collection>
+    </resultMap>
+
+    <select id="selectReviewTotalCnt" parameterType="com.ktmmobile.mcp.review.dto.ReviewDto" resultType="int">
+        SELECT /*ReviewMapper.selectMcashReviewTotalCnt 사용후기 리스트용 COUNT  */
+        COUNT(1) AS CNT
+        FROM NMCP_REVIEW_MST
+        WHERE 1=1
+        <if test="useYn != null and useYn != ''">
+            AND USE_YN = #{useYn}
+        </if>
+        <if test="reviewType != null and reviewType != ''">
+            AND REVIEW_TYPE = #{reviewType}
+        </if>
+        <if test="reviewTypeDtl != null and reviewTypeDtl != ''">
+            AND REVIEW_TYPE_DTL = #{reviewTypeDtl}
+        </if>
+        <if test="notiYn != null and notiYn != ''">
+            AND NOTI_YN = #{notiYn}
+        </if>
+        <if test="contractNumList != null and contractNumList.size != 0">
+            AND CONTRACT_NUM IN
+            <foreach item="item" collection="contractNumList" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="contractNum != null and contractNum != ''">
+            AND CONTRACT_NUM = #{contractNum}
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewBest'">
+            AND BEST_YN = 'Y'
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewSns'">
+            AND SNS_INFO IS NOT NULL
+        </if>
+    </select>
+
+    <select id="selectReviewListByNoti" parameterType="com.ktmmobile.mcp.review.dto.ReviewDto" resultMap="selectReviewListCollection">
+        SELECT /*ReviewMapper.selectReviewListByNoti 사용후기 공지 리스트  */
+        r.REVIEW_SEQ
+        , r.REVIEW_TYPE
+        , r.REVIEW_TYPE_DTL
+        , r.CONTRACT_NUM
+        , r.NOTI_YN
+        , r.BEST_YN
+        , r.USE_YN
+        , r.PRIZE_RNK
+        , r.REVIEW_CONTENT
+        , r.SNS_INFO
+        , r.REGST_NM
+        , r.REGST_DTTM
+        , ADD_MONTHS(SYSDATE, -3) AS baseDate
+        FROM (
+        SELECT
+        REVIEW_SEQ
+        , REVIEW_TYPE
+        , REVIEW_TYPE_DTL
+        , CONTRACT_NUM
+        , NOTI_YN
+        , BEST_YN
+        , USE_YN
+        , PRIZE_RNK
+        , REVIEW_CONTENT
+        , SNS_INFO
+        , REGST_NM
+        , REGST_DTTM
+        FROM NMCP_REVIEW_MST) r
+        WHERE NOTI_YN = 'Y'
+        AND USE_YN = 'Y'
+        <if test="reviewType != null and reviewType != ''">
+            AND REVIEW_TYPE = #{reviewType}
+        </if>
+        <if test="reviewTypeDtl != null and reviewTypeDtl != ''">
+            AND REVIEW_TYPE_DTL = #{reviewTypeDtl}
+        </if>
+        <if test="contractNumList != null and contractNumList.size != 0">
+            AND CONTRACT_NUM IN
+            <foreach item="item" collection="contractNumList" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewBest'">
+            AND BEST_YN = 'Y'
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewSns'">
+            AND SNS_INFO IS NOT NULL
+        </if>
+
+        UNION ALL
+
+        SELECT /*ReviewMapper.selectReviewListByNoti 사용후기 공지 리스트  */
+        rv.REVIEW_SEQ
+        , rv.REVIEW_TYPE
+        , rv.REVIEW_TYPE_DTL
+        , rv.CONTRACT_NUM
+        , rv.NOTI_YN
+        , rv.BEST_YN
+        , rv.USE_YN
+        , rv.PRIZE_RNK
+        , rv.REVIEW_CONTENT
+        , rv.SNS_INFO
+        , rv.REGST_NM
+        , rv.REGST_DTTM
+        , ADD_MONTHS(SYSDATE, -3) AS baseDate
+        FROM (
+        SELECT
+        REVIEW_SEQ
+        , REVIEW_TYPE
+        , REVIEW_TYPE_DTL
+        , CONTRACT_NUM
+        , NOTI_YN
+        , BEST_YN
+        , USE_YN
+        , PRIZE_RNK
+        , REVIEW_CONTENT
+        , SNS_INFO
+        , REGST_NM
+        , REGST_DTTM
+        FROM NMCP_REVIEW_MST
+        ORDER BY REGST_DTTM DESC) rv
+        WHERE NOTI_YN != 'Y'
+        <if test="useYn != null and useYn != ''">
+            AND USE_YN = #{useYn}
+        </if>
+        <if test="reviewType != null and reviewType != ''">
+            AND REVIEW_TYPE = #{reviewType}
+        </if>
+        <if test="reviewTypeDtl != null and reviewTypeDtl != ''">
+            AND REVIEW_TYPE_DTL = #{reviewTypeDtl}
+        </if>
+        <if test="contractNumList != null and contractNumList.size != 0">
+            AND CONTRACT_NUM IN
+            <foreach item="item" collection="contractNumList" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewBest'">
+            AND BEST_YN = 'Y'
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewSns'">
+            AND SNS_INFO IS NOT NULL
+        </if>
+    </select>
+
+    <select id="selectReviewImgList" parameterType="com.ktmmobile.mcp.review.dto.ReviewDto" resultType="com.ktmmobile.mcp.review.dto.ReviewImgDto">
+        SELECT /*ReviewMapper.selectReviewImgList 사용후기 리스트 이미지 */
+        REVIEW_SEQ
+        , IMG_SEQ
+        , FILE_PATH_NM
+        , FILE_TYPE
+        , FILE_CAPA
+        , FILE_ALT
+        FROM NMCP_REVIEW_IMG
+        WHERE REVIEW_SEQ = #{reviewSeq}
+        <if test="imgSeq != null and imgSeq gt -1 ">
+            AND IMG_SEQ = #{imgSeq}
+        </if>
+        ORDER BY IMG_SEQ
+    </select>
+
+    <select id="selectBestReviewList" parameterType="com.ktmmobile.mcp.review.dto.ReviewDto" resultMap="selectBestReviewListCollection">
+        SELECT /*ReviewMapper.selectBestReviewList 우수 사용후기 리스트  */
+            REVIEW_SEQ
+            , REVIEW_TYPE
+            , REVIEW_TYPE_DTL
+            , CONTRACT_NUM
+            , NOTI_YN
+            , BEST_YN
+            , USE_YN
+            , PRIZE_RNK
+            , REVIEW_CONTENT
+            , SNS_INFO
+            , REGST_NM
+            , REGST_DTTM
+            , ADD_MONTHS(SYSDATE, -3) AS baseDate
+        FROM NMCP_REVIEW_MST
+        WHERE PRIZE_RNK IS NOT NULL
+          AND NOTI_YN = 'Y'
+          AND REVIEW_TYPE = #{reviewType}
+        ORDER BY PRIZE_RNK
+    </select>
+
+    <delete id="deleteReview" parameterType="int">
+        DELETE FROM NMCP_REVIEW_MST /*ReviewMapper.deleteReview 사용후기 삭제 */
+        WHERE REVIEW_SEQ = #{reviewSeq}
+    </delete>
+
+    <delete id="deleteAllReviewImg" parameterType="int">
+        DELETE FROM NMCP_REVIEW_IMG
+        WHERE REVIEW_SEQ = #{reviewSeq}
+    </delete>
+
+    <select id="selectReviewByReviewSeq" parameterType="int" resultType="com.ktmmobile.mcp.review.dto.ReviewDto">
+        SELECT /*ReviewMapper.selectReviewByReviewSeq 사용후기 조회 */
+            REVIEW_SEQ
+             , REVIEW_TYPE
+             , REVIEW_TYPE_DTL
+             , CONTRACT_NUM
+             , NOTI_YN
+             , BEST_YN
+             , USE_YN
+             , PRIZE_RNK
+             , REVIEW_CONTENT
+             , SNS_INFO
+             , REGST_NM
+             , REGST_DTTM
+        FROM NMCP_REVIEW_MST
+        WHERE REVIEW_SEQ = #{reviewSeq}
+    </select>
+
+    <insert id="insertReview" parameterType="com.ktmmobile.mcp.review.dto.ReviewDto">
+        <selectKey keyProperty="reviewSeq" resultType="int" order="BEFORE">
+            SELECT SQ_REVIEW_MST.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_REVIEW_MST (
+            REVIEW_SEQ
+            , REVIEW_TYPE
+            , REVIEW_TYPE_DTL
+            , CONTRACT_NUM
+            , USERID
+            , NOTI_YN
+            , BEST_YN
+            , USE_YN
+            , PRIZE_RNK
+            , REVIEW_CONTENT
+            , SNS_INFO
+            , RIP
+            , REGST_NM
+            , REGST_ID
+            , REGST_DTTM
+        ) VALUES (
+            #{reviewSeq}
+            , #{reviewType}
+            , #{reviewTypeDtl}
+            , #{contractNum}
+            , #{userId}
+            , #{notiYn}
+            , #{bestYn}
+            , #{useYn}
+            , #{prizeRnk}
+            , #{reviewContent}
+            , #{snsInfo}
+            , #{rIp}
+            , #{regstNm}
+            , #{regstId}
+            , SYSDATE
+         )
+    </insert>
+
+    <insert id="insertReviewImg" parameterType="com.ktmmobile.mcp.review.dto.ReviewImgDto">
+        INSERT INTO NMCP_REVIEW_IMG (
+            REVIEW_SEQ
+            , IMG_SEQ
+            , FILE_PATH_NM
+            , FILE_TYPE
+            , FILE_CAPA
+            , FILE_ALT
+            , REGST_ID
+            , REGST_DTTM
+        ) VALUES (
+            #{reviewSeq}
+            , #{imgSeq}
+            , #{filePathNm}
+            , #{fileType}
+            , #{fileCapa}
+            , #{fileAlt}
+            , #{regstId}
+            , SYSDATE
+        )
+
+    </insert>
+</mapper>

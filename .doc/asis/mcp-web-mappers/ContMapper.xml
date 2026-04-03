@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ContMapper">
+
+
+    <select id="selectContRateListCNT" resultType="int" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+        SELECT COUNT(*)
+        FROM NMCP_CONT_RATE_ADDITION
+        WHERE 1=1
+        AND CONT_KIND = #{contKind}
+        <if test='cdGroupId1 != ""  and cdGroupId1 != null and cdGroupId1 != "00"' >
+            AND CD_GROUP_ID1 = #{cdGroupId1}
+        </if>
+        <if test='cdGroupId2 != "" and cdGroupId2 != null and cdGroupId2 != "00"'>
+            AND CD_GROUP_ID2 = #{cdGroupId2}
+        </if>
+        <if test='useYn != "" and useYn != null'>
+            AND USE_YN = #{useYn}
+        </if>
+        <if test="searchText !='' and  searchText != null">
+            <if test="searchGubun == 'title'">
+                AND UPPER(CONT_TITLE) LIKE '%'|| UPPER(#{searchText}) ||'%'
+            </if>
+            <if test="searchGubun == 'content'">
+                AND UPPER(FNHTMLTOTEXT(CONT_CONTENT)) LIKE '%'|| UPPER(#{searchText}) ||'%'
+            </if>
+        </if>
+    </select>
+
+    <!-- 프론트 부가서비스 페이징 총 카운트 -->
+    <select id="getAddTotalCount" resultType="int" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+        SELECT
+                    COUNT(*)
+        FROM   NMCP_CONT_RATE_ADDITION
+        WHERE   1=1
+        AND CONT_KIND = #{contKind}
+            AND USE_YN = 'Y'
+        <if test='cdGroupId1 != ""  and cdGroupId1 != null and cdGroupId1 != "00"' >
+            AND CD_GROUP_ID1 = #{cdGroupId1}
+        </if>
+        <if test='cdGroupId2 != "" and cdGroupId2 != null and cdGroupId2 != "0" and cdGroupId2 != "00"'>
+            AND CD_GROUP_ID2 = #{cdGroupId2}
+        </if>
+        <if test='useYn != "" and useYn != null'>
+            AND USE_YN = #{useYn}
+        </if>
+    </select>
+
+     <!-- 프론트 부가서비스 페이징 리스트  -->
+    <select id="selectAddList" resultType="com.ktmmobile.mcp.cont.dto.ContDTO" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+            SELECT
+                    CONT_SEQ,
+                    CONT_KIND,
+                    CD_GROUP_ID1,
+                    CD_GROUP_ID2,
+                    USE_YN,
+                    CONT_TITLE,
+                    CONT_TEXT,
+                    CONT_CONTENT,
+                    PAY,
+                    PAYVAT,
+                    PAY_YN,
+                    CRET_ID,
+                    CRET_DT,
+                    AMD_ID,
+                    AMD_DT,
+                    CONT_IMG
+            FROM NMCP_CONT_RATE_ADDITION
+            WHERE 1=1
+            AND CONT_KIND = #{contKind}
+            AND USE_YN = 'Y'
+            <if test='cdGroupId1 != ""  and cdGroupId1 != null and cdGroupId1 != "00"' >
+                AND CD_GROUP_ID1 = #{cdGroupId1}
+            </if>
+            <if test='cdGroupId2 != "" and cdGroupId2 != null and cdGroupId2 != "0" and cdGroupId2 != "00"'>
+                AND CD_GROUP_ID2 = #{cdGroupId2}
+            </if>
+            <if test='useYn != "" and useYn != null'>
+                AND USE_YN = #{useYn}
+            </if>
+            ORDER BY CONT_SEQ DESC
+    </select>
+
+    <select id="selectContRateList" resultType="com.ktmmobile.mcp.cont.dto.ContDTO" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+        SELECT
+            RNUM,
+            CONT_SEQ,
+            CONT_KIND,
+            CD_GROUP_ID1,
+            CD_GROUP_ID2,
+            USE_YN,
+            CONT_TITLE,
+            CONT_TEXT,
+            CONT_CONTENT,
+            PAY,
+            PAYVAT,
+            PAY_YN,
+            CRET_ID,
+            CRET_DT,
+            AMD_ID,
+            AMD_DT
+        FROM
+        (
+            SELECT
+                ROW_NUMBER() OVER (ORDER BY TO_NUMBER(CONT_SEQ) DESC) AS RNUM,
+                CONT_SEQ,
+                CONT_KIND,
+                CD_GROUP_ID1,
+                CD_GROUP_ID2,
+                USE_YN,
+                CONT_TITLE,
+                CONT_TEXT,
+                CONT_CONTENT,
+                PAY,
+                PAYVAT,
+                PAY_YN,
+                CRET_ID,
+                CRET_DT,
+                AMD_ID,
+                AMD_DT
+            FROM NMCP_CONT_RATE_ADDITION
+            WHERE 1=1
+            AND CONT_KIND = #{contKind}
+            <if test='cdGroupId1 != ""  and cdGroupId1 != null and cdGroupId1 != "00"' >
+                AND CD_GROUP_ID1 = #{cdGroupId1}
+            </if>
+            <if test='cdGroupId2 != "" and cdGroupId2 != null and cdGroupId2 != "00"'>
+                AND CD_GROUP_ID2 = #{cdGroupId2}
+            </if>
+            <if test='useYn != "" and useYn != null'>
+                AND USE_YN = #{useYn}
+            </if>
+            <if test="searchText !='' and  searchText != null">
+                <if test="searchGubun == 'title'">
+                    AND UPPER(CONT_TITLE) LIKE '%'|| UPPER(#{searchText}) ||'%'
+                </if>
+                <if test="searchGubun == 'content'">
+                    AND UPPER(FNHTMLTOTEXT(CONT_CONTENT)) LIKE '%'|| UPPER(#{searchText}) ||'%'
+                </if>
+            </if>
+        )
+        WHERE RNUM <![CDATA[>]]> (#{pagingStartNo}-1) * #{pagingSize} AND RNUM <![CDATA[<=]]> #{pagingEndNo} * #{pagingStartNo}
+    </select>
+
+    <insert id="insertCont" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+        <selectKey keyProperty="contSeq" resultType="String" order="BEFORE">
+                SELECT NVL((MAX(TO_NUMBER(CONT_SEQ))+1),1)AS CONT_SEQ  FROM NMCP_CONT_RATE_ADDITION
+        </selectKey>
+        INSERT INTO NMCP_CONT_RATE_ADDITION (
+           CONT_KIND, CD_GROUP_ID1, CD_GROUP_ID2,
+           USE_YN, CONT_TITLE, CONT_TEXT,
+           CONT_CONTENT, PAY, PAYVAT,
+           PAY_YN, CRET_ID, CRET_DT,
+           CONT_SEQ, SOC_CODE, CONT_IMG,
+           CONT_MOBILE_CONTENT
+           )
+        VALUES
+        (
+          #{contKind} ,
+          #{cdGroupId1} ,
+          #{cdGroupId2} ,
+          #{useYn} ,
+          #{contTitle} ,
+          #{contText} ,
+          #{contContent} ,
+          #{pay} ,
+          #{payvat} ,
+          #{payYn} ,
+          #{cretId} ,
+          SYSDATE ,
+          #{contSeq},
+          #{socCode},
+          #{contImg},
+          #{contMobileContent}
+        )
+    </insert>
+
+    <select id="selectView" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO" resultType="com.ktmmobile.mcp.cont.dto.ContDTO">
+        SELECT /*ContMapper.selectView  */
+            CONT_KIND
+            , CD_GROUP_ID1
+            , CD_GROUP_ID2
+            , USE_YN
+            , CONT_TITLE
+            , CONT_TEXT
+            , CONT_CONTENT
+            , PAY
+            , PAYVAT
+            , PAY_YN
+            , CRET_ID
+            , CRET_DT
+            , AMD_ID
+            , AMD_DT
+            , CONT_SEQ
+            , SOC_CODE
+            , CONT_IMG
+            , CONT_MOBILE_CONTENT
+        FROM NMCP_CONT_RATE_ADDITION
+        WHERE 1=1
+            <choose>
+                <when test="socCode !=null and socCode != ''" >
+                     AND SOC_CODE = #{socCode}
+                </when>
+                <otherwise>
+                     AND CONT_SEQ = #{contSeq}
+                </otherwise>
+            </choose>
+    </select>
+
+    <update id="updateCont" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+        UPDATE NMCP_CONT_RATE_ADDITION
+        SET CD_GROUP_ID1 = #{cdGroupId1},
+               CD_GROUP_ID2 = #{cdGroupId2},
+               USE_YN       = #{useYn},
+               CONT_TITLE   = #{contTitle},
+               CONT_TEXT    = #{contText},
+               CONT_CONTENT = #{contContent},
+               PAY          = #{pay},
+               PAYVAT       = #{payvat},
+               PAY_YN       = #{payYn},
+               AMD_ID       = #{amdId},
+               AMD_DT       = SYSDATE,
+               SOC_CODE		= UPPER(#{socCode}),
+               <if test='contImg != ""  and contImg != null'>
+               CONT_IMG		= #{contImg},
+               </if>
+               CONT_MOBILE_CONTENT = #{contMobileContent}
+        WHERE  CONT_SEQ     = #{contSeq}
+    </update>
+
+    <delete id="deleteCont" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+        DELETE FROM NMCP_CONT_RATE_ADDITION WHERE  CONT_SEQ = #{contSeq}
+    </delete>
+
+     <!-- 모바일 부가서비스 페이징 총 카운트 -->
+    <select id="getTotalCount" resultType="int" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+        SELECT  COUNT(CONT_SEQ)
+        FROM    NMCP_CONT_RATE_ADDITION
+        WHERE   1=1
+            AND USE_YN = 'Y'
+        <if test='contKind != ""  and contKind != null'>
+            AND	CONT_KIND = #{contKind}
+        </if>
+        <if test='cdGroupId1 != ""  and cdGroupId1 != null and cdGroupId1 != "00"' >
+            AND CD_GROUP_ID1 = #{cdGroupId1}
+        </if>
+        <if test='cdGroupId2 != "" and cdGroupId2 != null and cdGroupId2 != "00"'>
+            AND CD_GROUP_ID2 = #{cdGroupId2}
+        </if>
+        <if test="searchText !='' and  searchText != null">
+            <if test="searchGubun == 'title'">
+                AND UPPER(CONT_TITLE) LIKE '%'|| UPPER(#{searchText}) ||'%'
+            </if>
+            <if test="searchGubun == 'content'">
+                AND UPPER(FNHTMLTOTEXT(CONT_CONTENT)) LIKE '%'|| UPPER(#{searchText}) ||'%'
+            </if>
+        </if>
+    </select>
+
+    <!-- 모바일 부가서비스 리스트 가져오기 -->
+    <select id="getList" resultType="com.ktmmobile.mcp.cont.dto.ContDTO" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+        SELECT  RNUM
+                , RNUM_ORDER
+                , CONT_SEQ
+                , CD_GROUP_ID1
+                , CD_GROUP_ID2
+                , USE_YN
+                , CONT_TITLE
+                , CONT_TEXT
+                , CONT_MOBILE_CONTENT
+                , PAY
+                , PAYVAT
+                , PAY_YN
+                , CRET_ID
+                , CRET_DT
+                , AMD_ID
+                , AMD_DT
+                , CONT_IMG
+        FROM    (
+                    SELECT  ROW_NUMBER () OVER (ORDER BY CONT_SEQ DESC) AS RNUM_ORDER
+                            ,ROW_NUMBER () OVER (ORDER BY CONT_SEQ ASC) AS RNUM
+                            , CONT_SEQ
+                            , CD_GROUP_ID1
+                            , CD_GROUP_ID2
+                            , USE_YN
+                            , CONT_TITLE
+                            , CONT_TEXT
+                            , CONT_MOBILE_CONTENT
+                            , PAY
+                            , PAYVAT
+                            , PAY_YN
+                            , CRET_ID
+                            , CRET_DT
+                            , AMD_ID
+                            , AMD_DT
+                            , CONT_IMG
+                    FROM 	NMCP_CONT_RATE_ADDITION
+                    WHERE 	1=1
+                    AND USE_YN = 'Y'
+                    <if test='contKind != ""  and contKind != null'>
+                        AND	CONT_KIND = #{contKind}
+                    </if>
+                    <if test='cdGroupId1 != ""  and cdGroupId1 != null and cdGroupId1 != "00"' >
+                        AND CD_GROUP_ID1 = #{cdGroupId1}
+                    </if>
+                    <if test='cdGroupId2 != "" and cdGroupId2 != null and cdGroupId2 != "00"'>
+                        AND CD_GROUP_ID2 = #{cdGroupId2}
+                    </if>
+                    <if test='useYn != "" and useYn != null'>
+                        AND USE_YN = #{useYn}
+                    </if>
+                    <if test="searchText !='' and  searchText != null">
+                        <if test="searchGubun == 'title'">
+                            AND UPPER(CONT_TITLE) LIKE '%'|| UPPER(#{searchText}) ||'%'
+                        </if>
+                        <if test="searchGubun == 'content'">
+                            AND UPPER(FNHTMLTOTEXT(CONT_CONTENT)) LIKE '%'|| UPPER(#{searchText}) ||'%'
+                        </if>
+                    </if>
+                )
+        ORDER BY RNUM DESC
+    </select>
+
+    <!-- 00345 국제전화 요금조회 국가불러오기 -->
+    <select id="selectNationRateList" resultType="com.ktmmobile.mcp.cont.dto.NationRateDto">
+        SELECT NATION_RATE_KEY, NATION_NAME_EN, NATION_NAME_KR, RATE_SECOND, RATE_MINUTE, NATION_CODE, SDATE
+        FROM MCP_NATION_RATE
+        ORDER BY NATION_NAME_KR
+    </select>
+
+    <!-- 00345 국제전화 요금조회 Ajax -->
+    <select id="nationRateAjax" parameterType="com.ktmmobile.mcp.cont.dto.NationRateDto" resultType="com.ktmmobile.mcp.cont.dto.NationRateDto">
+        SELECT NATION_RATE_KEY, NATION_NAME_EN, NATION_NAME_KR, RATE_SECOND, RATE_MINUTE, NATION_CODE, SDATE
+        FROM MCP_NATION_RATE
+        <where>
+            <if test='schVal != "" and schVal != null'>
+                AND  NATION_NAME_KR  = #{schVal}
+            </if>
+            <if test='selVal != "" and selVal != null'>
+                AND NATION_RATE_KEY = #{selVal}
+            </if>
+        </where>
+    </select>
+
+     <!-- 유선 상품 등록(한눈에 보기) -->
+     <insert id="insertWireProductCont" parameterType="com.ktmmobile.mcp.cont.dto.WireProductDTO">
+        INSERT INTO NMCP_WIRE_PROD_CONT (
+               WIRE_PROD_CD,
+            WIRE_PROD_TITLE,
+            WIRE_PROD_PC_SBST,
+            WIRE_PROD_MOBILE_SBST,
+            WIRE_PROD_REG_ID,
+            WIRE_PROD_REG_DT
+        )
+        VALUES
+        (
+            #{wireProdCd},
+            #{wireProdTitle},
+            #{wireProdPcSbst},
+            #{wireProdMobileSbst},
+            #{wireProdRegId},
+            SYSDATE
+        )
+    </insert>
+
+     <!-- 유선 상품 수정(한눈에 보기) -->
+     <update id="updateWireProductCont" parameterType="com.ktmmobile.mcp.cont.dto.WireProductDTO">
+        UPDATE
+            NMCP_WIRE_PROD_CONT
+        SET
+            WIRE_PROD_TITLE = #{wireProdTitle},
+            WIRE_PROD_PC_SBST = #{wireProdPcSbst},
+            WIRE_PROD_MOBILE_SBST = #{wireProdMobileSbst},
+            WIRE_PROD_REG_ID = #{wireProdRegId},
+            WIRE_PROD_REG_DT = SYSDATE
+        WHERE
+            WIRE_PROD_CD = #{wireProdCd}
+    </update>
+
+    <!-- 유선 상품 상세보기(한눈에 보기) -->
+    <select id="selectWireProductCont" parameterType="String" resultType="com.ktmmobile.mcp.cont.dto.WireProductDTO">
+        SELECT
+            WIRE_PROD_CD,
+            WIRE_PROD_TITLE,
+            WIRE_PROD_PC_SBST,
+            WIRE_PROD_MOBILE_SBST,
+            WIRE_PROD_REG_ID,
+            WIRE_PROD_REG_DT
+        FROM
+            NMCP_WIRE_PROD_CONT
+        WHERE
+            WIRE_PROD_CD = #{wireProdCd}
+    </select>
+
+    <!-- 유선 상품 (한눈에 보기) 리스트 -->
+    <select id="selectWireProductContList" resultType="com.ktmmobile.mcp.cont.dto.WireProductDTO">
+        SELECT
+            WIRE_PROD_CD,
+            WIRE_PROD_TITLE,
+            WIRE_PROD_REG_ID,
+            WIRE_PROD_REG_DT
+        FROM
+            NMCP_WIRE_PROD_CONT
+        ORDER BY WIRE_PROD_REG_DT DESC
+    </select>
+
+    <!-- 유선 상품 (한눈에 보기) 삭제 -->
+    <delete id="deleteWireProductCont" parameterType="String">
+        DELETE
+            NMCP_WIRE_PROD_CONT
+        WHERE
+            WIRE_PROD_CD = #{wireProdCd}
+    </delete>
+
+    <!-- 유선 상품 상세 등록 -->
+    <insert id="insertWireProdDtl" parameterType="com.ktmmobile.mcp.cont.dto.WireProductDTO">
+         <selectKey keyProperty="wireProdDtlSeq" resultType="String" order="BEFORE">
+                SELECT NVL((MAX(TO_NUMBER(WIRE_PROD_DTL_SEQ))+1),1)AS WIRE_PROD_DTL_SEQ  FROM NMCP_WIRE_PROD_DTL
+        </selectKey>
+        INSERT INTO NMCP_WIRE_PROD_DTL (
+               WIRE_PROD_DTL_SEQ,
+               WIRE_PROD_CD,
+               WIRE_PROD_CORP,
+               WIRE_PROD_NAME,
+            WIRE_PROD_STICKER,
+            WIRE_PROD_AMT,
+            WIRE_PROD_AMT_DESC,
+            WIRE_PROD_AMT_TEXT,
+            WIRE_PROD_AMT_TYPE,
+            WIRE_PROD_SHOW_YN,
+            WIRE_PROD_RECOM_YN,
+            WIRE_PROD_IMG,
+            WIRE_PROD_IMG_DESC,
+            WIRE_PROD_TEXT,
+            WIRE_PROD_PC_SBST,
+            WIRE_PROD_MOBILE_SBST,
+            WIRE_PROD_REG_ID,
+            WIRE_PROD_REG_DT,
+            WIRE_PROD_CHANNEL,
+            WIRE_PROD_SPEED,
+            WIRE_PROD_FREEBIES
+        )
+        VALUES
+        (
+            #{wireProdDtlSeq},
+            #{wireProdCd},
+            #{wireProdCorp},
+            #{wireProdName},
+            #{wireProdSticker},
+            #{wireProdAmt},
+            #{wireProdAmtDesc},
+            #{wireProdAmtText},
+            #{wireProdAmtType},
+            #{wireProdShowYn},
+            #{wireProdRecomYn},
+            #{wireProdImg},
+            #{wireProdImgDesc},
+            #{wireProdText},
+            #{wireProdPcSbst},
+            #{wireProdMobileSbst},
+            #{wireProdRegId},
+            SYSDATE,
+            #{wireProdChannel},
+            #{wireProdSpeed},
+            #{wireProdFreebies}
+        )
+    </insert>
+
+    <!-- 유선 상품 상세 수정 -->
+    <update id="updateWireProductDtl" parameterType="com.ktmmobile.mcp.cont.dto.WireProductDTO">
+        UPDATE
+            NMCP_WIRE_PROD_DTL
+        SET
+            WIRE_PROD_CD = #{wireProdCd},
+               WIRE_PROD_CORP = #{wireProdCorp},
+               WIRE_PROD_NAME = #{wireProdName},
+            WIRE_PROD_STICKER = #{wireProdSticker},
+            WIRE_PROD_AMT = #{wireProdAmt},
+            WIRE_PROD_AMT_DESC = #{wireProdAmtDesc},
+            WIRE_PROD_AMT_TEXT = #{wireProdAmtText},
+            WIRE_PROD_AMT_TYPE = #{wireProdAmtType},
+            WIRE_PROD_SHOW_YN = #{wireProdShowYn},
+            WIRE_PROD_RECOM_YN = #{wireProdRecomYn},
+            <if test='wireProdImg != "" and wireProdImg != null'>
+                WIRE_PROD_IMG = #{wireProdImg},
+            </if>
+            WIRE_PROD_IMG_DESC = #{wireProdImgDesc},
+            WIRE_PROD_TEXT = #{wireProdText},
+            WIRE_PROD_PC_SBST = #{wireProdPcSbst},
+            WIRE_PROD_MOBILE_SBST = #{wireProdMobileSbst},
+            WIRE_PROD_REG_ID = #{wireProdRegId},
+            WIRE_PROD_REG_DT = SYSDATE,
+            WIRE_PROD_CHANNEL= #{wireProdChannel},
+            WIRE_PROD_SPEED = #{wireProdSpeed},
+            WIRE_PROD_FREEBIES = #{wireProdFreebies}
+        WHERE
+            WIRE_PROD_DTL_SEQ = #{wireProdDtlSeq}
+    </update>
+
+    <!-- 유선 상품 상세 조회 -->
+    <select id="selectWireProductDtl" parameterType="String" resultType="com.ktmmobile.mcp.cont.dto.WireProductDTO">
+        SELECT
+            WIRE_PROD_DTL_SEQ,
+            WIRE_PROD_CD,
+            WIRE_PROD_CORP,
+            WIRE_PROD_NAME,
+            WIRE_PROD_STICKER,
+            WIRE_PROD_AMT,
+            WIRE_PROD_AMT_DESC,
+            WIRE_PROD_AMT_TEXT,
+            WIRE_PROD_AMT_TYPE,
+            WIRE_PROD_SHOW_YN,
+            WIRE_PROD_RECOM_YN,
+            WIRE_PROD_IMG,
+            WIRE_PROD_IMG_DESC,
+            WIRE_PROD_TEXT,
+            WIRE_PROD_PC_SBST,
+            WIRE_PROD_MOBILE_SBST,
+            WIRE_PROD_REG_ID,
+            WIRE_PROD_REG_DT,
+            WIRE_PROD_CHANNEL,
+            WIRE_PROD_SPEED,
+            WIRE_PROD_FREEBIES
+        FROM
+            NMCP_WIRE_PROD_DTL
+        WHERE
+            WIRE_PROD_DTL_SEQ = #{wireProdDtlSeq}
+    </select>
+
+    <!-- 유선 상품 상세 삭제 -->
+    <delete id="deleteWireProductDtl" parameterType="String">
+        DELETE
+            NMCP_WIRE_PROD_DTL
+        WHERE
+            WIRE_PROD_DTL_SEQ = #{wireProdDtlSeq}
+    </delete>
+
+    <!-- 유선 상품 상세 리스트 -->
+    <select id="selectWireProductDtlList" resultType="com.ktmmobile.mcp.cont.dto.WireProductDTO" parameterType="com.ktmmobile.mcp.cont.dto.WireProductDTO">
+        SELECT
+            A.WIRE_PROD_DTL_SEQ,
+            A.WIRE_PROD_CD,
+            A.WIRE_PROD_NAME,
+            A.WIRE_PROD_SHOW_YN,
+            A.WIRE_PROD_REG_ID,
+            A.WIRE_PROD_REG_DT
+        FROM
+            NMCP_WIRE_PROD_DTL A,
+            NMCP_CD_DTL B
+        WHERE
+            1=1
+            AND B.CD_GROUP_ID = 'WIREPRODCORP'
+            AND B.DTL_CD = A.WIRE_PROD_CORP
+            AND B.USE_YN = 'Y'
+        <if test='wireProdCd != "" and wireProdCd != null'>
+            AND 	A.WIRE_PROD_CD = #{wireProdCd}
+        </if>
+        <if test='wireProdName != "" and wireProdName != null'>
+            AND UPPER(A.WIRE_PROD_NAME) LIKE '%'|| UPPER(#{wireProdName}) ||'%'
+        </if>
+        ORDER BY A.WIRE_PROD_REG_DT DESC
+    </select>
+
+    <!-- 유선 상품 상세 리스트 갯수 -->
+    <select id="selectWireProductDtlCnt" resultType="int" parameterType="com.ktmmobile.mcp.cont.dto.WireProductDTO">
+        SELECT
+            COUNT(*)
+        FROM
+            NMCP_WIRE_PROD_DTL A,
+            NMCP_CD_DTL B
+        WHERE
+            1=1
+            AND B.CD_GROUP_ID = 'WIREPRODCORP'
+            AND B.DTL_CD = A.WIRE_PROD_CORP
+            AND B.USE_YN = 'Y'
+        <if test='wireProdCd != "" and wireProdCd != null'>
+            AND 	A.WIRE_PROD_CD = #{wireProdCd}
+        </if>
+        <if test='wireProdName != "" and wireProdName != null'>
+            AND UPPER(A.WIRE_PROD_NAME) LIKE '%'|| UPPER(#{wireProdName}) ||'%'
+        </if>
+        ORDER BY A.WIRE_PROD_REG_DT DESC
+    </select>
+
+
+    <select id="countWireCounselList" resultType="int" parameterType="com.ktmmobile.mcp.cont.dto.WireCounselReqDto">
+        SELECT /*ContMapper.countWireCounselList 유선상담관리 리스트 갯수  */
+            COUNT(T1.COUNSEL_SEQ)
+        FROM
+            NMCP_WIRE_COUNSEL T1, NMCP_WIRE_PROD_DTL T2
+        WHERE 1=1
+            AND T1.WIRE_PROD_DTL_SEQ = T2.WIRE_PROD_DTL_SEQ(+)
+            <choose>
+                <when test='selFlagDt == "2"' >
+                     AND T1.DONE_DT BETWEEN TO_DATE(#{startDate},'YYYY.MM.DD HH24') AND TO_DATE(#{endDate},'YYYY.MM.DD HH24')+1
+                </when>
+                <otherwise>
+                     AND T1.COUNSEL_REG_DT BETWEEN TO_DATE(#{startDate},'YYYY.MM.DD HH24') AND TO_DATE(#{endDate},'YYYY.MM.DD HH24')+1
+                </otherwise>
+            </choose>
+            <if test=' wireProdCorp != null and wireProdCorp != "" '>
+                AND WIRE_PROD_CORP = #{wireProdCorp}
+            </if>
+            <if test=' wireProdCd != null and wireProdCd != "" '>
+                AND WIRE_PROD_CD = #{wireProdCd}
+            </if>
+            <if test=' counselStatus != null and counselStatus != "" '>
+                AND COUNSEL_STATUS = #{counselStatus}
+            </if>
+            <choose>
+                <when test='searchType == "1"' >
+                     AND UPPER()COUNSEL_NM) LIKE '%'|| UPPER(#{searchTxt}) ||'%'
+                </when>
+                <when test='searchType == "2"' >
+                     AND COUNSEL_CTN LIKE '%'|| #{searchTxt} ||'%'
+                </when>
+            </choose>
+    </select>
+
+    <select id="getWireCounselList" resultType="com.ktmmobile.mcp.cont.dto.WireCounselReqDto" parameterType="com.ktmmobile.mcp.cont.dto.WireCounselReqDto">
+        SELECT /*ContMapper.getWireCounselList 유선상담관리 리스트   */
+            COUNSEL_SEQ
+            , T1.WIRE_PROD_DTL_SEQ
+            , COUNSEL_NM
+            , COUNSEL_CTN
+            , COUNSEL_MEMO
+            , COUNSEL_REG_DT
+            , COUNSEL_STATUS
+            , RVISN_DT
+            , DONE_DT
+            , PRO_STATUS
+            , WIRE_PROD_CD   --구분코드  중분류..
+            , WIRE_PROD_CORP -- 사업자.
+            , WIRE_PROD_NAME  -- 소분류 제품명
+        FROM
+            NMCP_WIRE_COUNSEL T1, NMCP_WIRE_PROD_DTL T2
+        WHERE 1=1
+            AND T1.WIRE_PROD_DTL_SEQ = T2.WIRE_PROD_DTL_SEQ(+)
+            <choose>
+                <when test='selFlagDt == "2"' >
+                     AND T1.DONE_DT BETWEEN TO_DATE(#{startDate},'YYYY.MM.DD HH24') AND TO_DATE(#{endDate},'YYYY.MM.DD HH24')+1
+                </when>
+                <otherwise>
+                     AND T1.COUNSEL_REG_DT BETWEEN TO_DATE(#{startDate},'YYYY.MM.DD HH24') AND TO_DATE(#{endDate},'YYYY.MM.DD HH24')+1
+                </otherwise>
+            </choose>
+            <if test=' wireProdCorp != null and wireProdCorp != "" '>
+                AND WIRE_PROD_CORP = #{wireProdCorp}
+            </if>
+            <if test=' wireProdCd != null and wireProdCd != "" '>
+                AND WIRE_PROD_CD = #{wireProdCd}
+            </if>
+            <if test=' counselStatus != null and counselStatus != "" '>
+                AND COUNSEL_STATUS = #{counselStatus}
+            </if>
+            <choose>
+                <when test='searchType == "1"' >
+                     AND COUNSEL_NM LIKE '%'|| UPPER(#{searchTxt}) ||'%'
+                </when>
+                <when test='searchType == "2"' >
+                     AND COUNSEL_CTN LIKE '%'|| UPPER(#{searchTxt}) ||'%'
+                </when>
+            </choose>
+        ORDER BY COUNSEL_REG_DT DESC
+    </select>
+
+
+    <select id="getWireCounsel" resultType="com.ktmmobile.mcp.cont.dto.WireCounselReqDto" parameterType="com.ktmmobile.mcp.cont.dto.WireCounselReqDto">
+        SELECT /*ContMapper.getWireCounselList 유선상담관리 리스트   */
+            COUNSEL_SEQ
+            , T1.WIRE_PROD_DTL_SEQ
+            , COUNSEL_NM
+            , COUNSEL_CTN
+            , COUNSEL_MEMO
+            , COUNSEL_REG_DT
+            , COUNSEL_STATUS
+            , RVISN_DT
+            , DONE_DT
+            , PRO_STATUS
+            , WIRE_PROD_CD   --구분코드  중분류..
+            , WIRE_PROD_CORP -- 사업자.
+            , WIRE_PROD_NAME  -- 소분류 제품명
+        FROM
+            NMCP_WIRE_COUNSEL T1, NMCP_WIRE_PROD_DTL T2
+        WHERE 1=1
+            AND T1.WIRE_PROD_DTL_SEQ = T2.WIRE_PROD_DTL_SEQ(+)
+            AND T1.COUNSEL_SEQ = #{counselSeq}
+    </select>
+
+    <update id="updateCounsel" parameterType="com.ktmmobile.mcp.cont.dto.WireCounselReqDto">
+        UPDATE NMCP_WIRE_COUNSEL
+        SET RVISN_DT = SYSDATE
+            , COUNSEL_STATUS = #{counselStatus} --신청상태(I:진행중, C:고객취소, D:관리자삭제, S:신청완료
+            , PRO_STATUS = #{proStatus} --진행상태
+            <choose>
+                 <when test='counselStatus == "S" or counselStatus == "C" or counselStatus == "D"' >
+                      , DONE_DT = SYSDATE  --완료일시
+                 </when>
+                 <otherwise>
+                      , DONE_DT = NULL
+                 </otherwise>
+             </choose>
+        WHERE COUNSEL_SEQ = #{counselSeq}
+    </update>
+
+    <delete id="deleteCounsel" parameterType="com.ktmmobile.mcp.cont.dto.WireCounselReqDto">
+        DELETE FROM NMCP_WIRE_COUNSEL WHERE  COUNSEL_SEQ = #{counselSeq}
+    </delete>
+
+
+    <insert id="insertCounselHistory" parameterType="com.ktmmobile.mcp.cont.dto.WireCounselHistoryReqDto">
+        <selectKey keyProperty="historyIdx" resultType="int" order="BEFORE" >
+                SELECT NVL((MAX(HISTORY_IDX)+1),1) AS historyIdx
+                FROM NMCP_WIRE_COUNSEL_HISTORY
+                WHERE COUNSEL_SEQ = #{counselSeq}
+        </selectKey>
+        INSERT INTO NMCP_WIRE_COUNSEL_HISTORY (
+              COUNSEL_SEQ              --상담번호
+            , HISTORY_IDX              --상담일련번호
+            , ADMIN_ID                 --등록자아이디
+            , ADMIN_NM                 --등록자명
+            , COUNSEL_MEMO             --상담 내용
+            , REG_DT                   --등록일
+        ) VALUES (
+              #{counselSeq}
+            , #{historyIdx}
+            , #{adminId}
+            , #{adminNm}
+            , #{counselMemo}
+             , SYSDATE
+        )
+    </insert>
+
+    <select id="getCounselHistoryList" resultType="com.ktmmobile.mcp.cont.dto.WireCounselHistoryReqDto" parameterType="com.ktmmobile.mcp.cont.dto.WireCounselHistoryReqDto">
+        SELECT /*ContMapper.getCounselHistory 유선상담관리 리스트   */
+            COUNSEL_SEQ              --상담번호
+            , HISTORY_IDX              --상담일련번호
+            , ADMIN_ID                 --등록자아이디
+            , COUNSEL_MEMO             --상담 내용
+            , REG_DT                   --등록일
+        FROM
+            NMCP_WIRE_COUNSEL_HISTORY
+        WHERE 1=1
+            AND COUNSEL_SEQ = #{counselSeq}
+        ORDER BY REG_DT DESC
+    </select>
+
+
+
+</mapper>

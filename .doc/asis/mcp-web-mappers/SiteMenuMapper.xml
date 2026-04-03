@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SiteMenuMapper">
+
+    <select id="getMenuAllList" resultType="com.ktmmobile.mcp.common.dto.SiteMenuDto">
+	<![CDATA[
+		SELECT	/* SiteMenuMapper.getMenuAllList */
+			MENU_SEQ
+			, MENU_CODE
+			, MENU_NM
+			, GROUP_KEY
+			, PRNTS_KEY
+			, ( SELECT COUNT(PRNTS_KEY) FROM NMCP_USER_MENU_BAS
+				WHERE 1=1
+				AND A.MENU_CODE = PRNTS_KEY AND USE_YN = 'Y' AND ACES_ALWD_YN = 'Y') AS NEXT_DEPTH_CNT
+			, DEPTH_KEY
+			, URL_ADR
+			, REP_URL_SEQ
+			, STAT_VAL
+			, ACES_ALWD_YN
+			, MENU_OUTPUT_CD
+			, CNTPNT_CD
+			, PLATFORM_CD
+			, MENU_LINK_CD
+			, MENU_STRESS_YN
+			, MOBILE_MENU_USE_YN
+			, APP_MENU_USE_YN
+			, PSTNG_START_DATE
+			, PSTNG_END_DATE
+			, CHATBOT_TIP_SBST
+			, CRET_ID
+			, AMD_ID
+			, TO_CHAR(CRET_DT,'YYYY.MM.DD') AS CRET_DT
+			, TO_CHAR(AMD_DT,'YYYY.MM.DD') AS AMD_DT
+			, SORT_KEY
+			, MENU_HIER_TYPE_CD
+			, LIST_IMG
+			, IMG_DESC
+			, LINK_URL_ADR
+			, MENU_DESC
+			, ATT_YN
+			, FILE_PATH_NM
+			, FILE_TYPE
+			, FILE_CAPA
+			, LIST_IMG2
+			, IMG_DESC2
+			, LINK_URL_ADR2
+			, ATT_YN2
+		FROM NMCP_USER_MENU_BAS A
+		WHERE 1=1
+		AND USE_YN = 'Y'
+		AND ACES_ALWD_YN = 'Y'
+		ORDER BY DEPTH_KEY, SORT_KEY
+	]]>
+    </select>
+
+    <select id="getMenuUrlAllList" resultType="com.ktmmobile.mcp.common.dto.WorkNotiDto">
+		SELECT  /* SiteMenuMapper.getMenuUrlAllList */
+			A.URL_SEQ
+			, URL_NM
+			, URL
+			, META_DESC
+			, META_KYWRD
+			, CNTPNT_CD
+			, PLATFORM_CD
+			, URL_DIV_CD
+			, LOGIN_MUST_YN
+			, STAT_LDUP_YN
+			, AI_RECO_SHOW_YN
+			, FLOATING_SHOW_YN
+			, FLOATING_TIP_SBST
+			, CHATBOT_TIP_SBST
+			, SYS_WORK_NOTI_REG_YN
+			, SYS_WORK_NOTI_REG_DT
+			, B.URL_ATRIB_VAL_CD
+			, B.USE_YN AS ATRIB_USE_YN
+		FROM NMCP_MENU_URL_BAS A
+		LEFT OUTER JOIN NMCP_MENU_URL_ATRIB_DTL B
+		ON A.URL_SEQ = B.URL_SEQ
+		WHERE A.USE_YN = 'Y'
+		ORDER BY A.URL_SEQ ASC
+    </select>
+
+    <select id="getMenuAuthList" resultType="com.ktmmobile.mcp.common.dto.SiteMenuDto">
+	<![CDATA[
+		SELECT	/* SiteMenuMapper.getMenuAuthList */
+			 A.MENU_SEQ
+			, A.MENU_CODE
+			, A.MENU_NM
+			, A.GROUP_KEY
+			, A.PRNTS_KEY
+			, A.DEPTH_KEY
+			, A.URL_ADR
+			, A.REP_URL_SEQ
+			, A.STAT_VAL
+			, A.ACES_ALWD_YN
+			, A.MENU_OUTPUT_CD
+			, A.CNTPNT_CD
+			, A.PLATFORM_CD
+			, A.MENU_LINK_CD
+			, A.MENU_STRESS_YN
+			, A.MOBILE_MENU_USE_YN
+			, A.APP_MENU_USE_YN
+			, A.PSTNG_START_DATE
+			, A.PSTNG_END_DATE
+			, A.CHATBOT_TIP_SBST
+			, A.CRET_ID
+			, A.AMD_ID
+			, TO_CHAR(A.CRET_DT,'YYYY.MM.DD') AS CRET_DT
+			, TO_CHAR(A.AMD_DT,'YYYY.MM.DD') AS AMD_DT
+			, A.SORT_KEY
+			, A.MENU_HIER_TYPE_CD
+			, A.LIST_IMG
+			, A.IMG_DESC
+			, A.LINK_URL_ADR
+			, A.MENU_DESC
+			, A.ATT_YN
+			, A.FILE_PATH_NM
+			, A.FILE_TYPE
+			, A.FILE_CAPA
+			, A.LIST_IMG2
+			, A.IMG_DESC2
+			, A.LINK_URL_ADR2
+			, A.ATT_YN2
+			, B.AUT_GRADE_CD
+		FROM NMCP_USER_MENU_BAS A
+		LEFT OUTER JOIN NMCP_MENU_AUT_REL B
+		ON A.MENU_SEQ = B.MENU_SEQ
+		WHERE 1=1
+		AND A.USE_YN = 'Y'
+		AND B.USE_YN = 'Y'
+		AND A.STAT_VAL = 'Y'
+		AND A.ACES_ALWD_YN = 'Y'
+		ORDER BY DEPTH_KEY, SORT_KEY
+	]]>
+    </select>
+
+    <select id="getAcesAlwdList" resultType="com.ktmmobile.mcp.common.dto.AcesAlwdDto">
+		SELECT  /* SiteMenuMapper.getAcesAlwdList */
+			ACES_ALWD_IP ,
+			NM ,
+			MOBILE_NO
+		FROM NMCP_IP_ACES_ALWD
+		WHERE 1=1
+		AND USE_YN = 'Y'
+    </select>
+
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="JehuSuggMapper">
+
+    <!-- 제휴제안 등록 -->
+    <insert id="insertJehuSuggAjax" parameterType="com.ktmmobile.mcp.jehuSugg.dto.JehuSuggDto">
+        <selectKey keyProperty="jehuSeq" resultType="Integer" order="BEFORE">
+                SELECT SQ_JEHU_SUGGESTION_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+         INSERT INTO NMCP_JEHU_SUGGESTION
+         (
+             JEHU_SEQ,
+            JEHU_TITLE,
+            JEHU_COMPANY_NM,
+            JEHU_REG_NM,
+            JEHU_REG_DT,
+            JEHU_ANSWER_STAT,
+            JEHU_MOBILE_NO,
+            JEHU_EMAIL,
+            JEHU_CONTENT,
+            JEHU_PRI_AGREE_YN,
+            JEHU_CATEGORY
+         )
+         VALUES
+         (
+             #{jehuSeq, jdbcType=NUMERIC},
+             #{jehuTitle},
+             #{jehuCompanyNm},
+             #{jehuRegNm},
+             SYSDATE,
+             'A',
+             #{jehuMobileNo},
+             #{jehuEmail},
+             #{jehuContent},
+             #{jehuPriAgreeYn},
+             #{jehuCategory}
+         )
+    </insert>
+
+</mapper>

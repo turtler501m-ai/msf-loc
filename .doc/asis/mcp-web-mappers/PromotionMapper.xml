@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PromotionMapper">
+
+    <!-- 게시판 글 수 받아오기 -->
+    <select id="getDoubleCheckCtn" resultType="Integer" parameterType="com.ktmmobile.mcp.event.dto.PromotionDto">
+        SELECT
+            COUNT(1) AS CTN
+        FROM
+            MCP_EVENT_PROMOTION
+        WHERE 1=1
+        AND PHONE = #{phone}
+        AND EVENT_CODE = #{code}
+    </select>
+
+    <insert id="promotionReg" parameterType="com.ktmmobile.mcp.event.dto.PromotionDto">
+        <selectKey keyProperty="eventPromotionId" resultType="Integer" order="BEFORE">
+            SELECT MCP_EVENT_PROMOTION_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO MCP_EVENT_PROMOTION (
+            EVENT_PROMOTION_ID
+            ,EVENT_CODE
+            ,NAME
+            ,PHONE
+            ,AGREE
+            ,BIRTH_DATE
+            ,CI
+            ,DI
+            ,USE_TEL_CODE
+            ,USE_PAY_AMT
+            ,SYS_RDT
+            ,SYS_RDATE
+            ,SEL1
+            ,SEL2
+            ,SEL3
+        ) VALUES (
+            #{eventPromotionId}
+            ,#{code}
+            ,#{name}
+            ,#{phone}
+            ,#{agree}
+            ,#{birthDate}
+            ,#{ci}
+            ,#{di}
+            ,#{useTelCode}
+            ,#{usePayAmt}
+            ,TO_CHAR(SYSDATE,'YYYYMMDD')
+            ,SYSDATE
+            ,#{sel1}
+            ,#{sel2}
+            ,#{sel3}
+        )
+    </insert>
+
+
+
+
+</mapper>

@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FormDtlMapper">
+
+
+    <select id="FormDtlListCNT" resultType="Integer" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO">
+        WITH NMCP_FORM AS (
+        SELECT
+            *
+        FROM NMCP_FORM_DTL
+        WHERE 1=1
+        AND CD_GROUP_ID1 IN ('FORMREQUIRED','FORMSELECT','FORMINFO')
+        )
+        SELECT
+            COUNT(*)
+           FROM NMCP_FORM
+        WHERE 1=1
+        <if test='selectCdGroupId1 != "" and selectCdGroupId1 != null'>
+            AND CD_GROUP_ID1 = #{selectCdGroupId1}
+        </if>
+        <if test='selectCdGroupId2 != "" and selectCdGroupId2 != null'>
+            AND CD_GROUP_ID2 = #{selectCdGroupId2}
+        </if>
+
+    </select>
+
+    <select id="FormDtlList" resultType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO">
+        WITH NMCP_FORM AS (
+            SELECT
+                *
+            FROM NMCP_FORM_DTL
+            WHERE 1=1
+            AND CD_GROUP_ID1 IN ('FORMREQUIRED','FORMSELECT','FORMINFO')
+        )
+        SELECT
+            ROW_NUMBER() OVER(ORDER BY CD_GROUP_ID2 ,DOC_VER) AS R_NUM
+            , CD_GROUP_ID1
+            , CD_GROUP_ID2
+            , DOC_VER
+            , DOC_CONTENT
+            , USE_YN
+            , CRET_ID
+            , CRET_DT
+            , AMD_ID
+            , AMD_DT
+            , (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = CD_GROUP_ID1 AND DTL_CD = CD_GROUP_ID2) AS DTL_CD_NM
+        FROM
+            NMCP_FORM
+        WHERE 1=1
+        <if test='selectCdGroupId1 != "" and selectCdGroupId1 != null'>
+            AND CD_GROUP_ID1 = #{selectCdGroupId1}
+        </if>
+           <if test='selectCdGroupId2 != "" and selectCdGroupId2 != null'>
+            AND CD_GROUP_ID2 = #{selectCdGroupId2}
+        </if>
+        ORDER BY CD_GROUP_ID2 ,DOC_VER
+
+    </select>
+
+
+    <insert id="FormDtlinsert" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO">
+        INSERT INTO NMCP_FORM_DTL (
+           CD_GROUP_ID1,
+           CD_GROUP_ID2,
+           DOC_VER,
+           DOC_CONTENT,
+           USE_YN,
+           CRET_ID,
+           CRET_DT)
+        VALUES (
+         #{cdGroupId1},
+         #{cdGroupId2},
+         #{docVer},
+         #{docContent},
+         #{useYn},
+         #{cretId},
+         SYSDATE
+         )
+    </insert>
+
+    <select id="FormDtlView" resultType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO">
+        SELECT
+            CD_GROUP_ID1
+            , CD_GROUP_ID2
+            , DOC_VER
+            , USE_YN
+            , CRET_ID
+            , CRET_DT
+            , AMD_ID
+            , AMD_DT
+            , CRET_DATE
+            , DTL_CD_NM
+            , EVENT_START_DT
+            , EVENT_END_DT
+            , DOC_CONTENT
+        FROM (
+            SELECT
+                CD_GROUP_ID1
+                , CD_GROUP_ID2
+                , DOC_VER
+                , USE_YN
+                , CRET_ID
+                , CRET_DT
+                , AMD_ID
+                , AMD_DT
+                , TO_CHAR(CRET_DT,'YYYY.MM.DD') AS CRET_DATE
+                , (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = CD_GROUP_ID1 AND DTL_CD = CD_GROUP_ID2 AND ROWNUM = 1 ) AS DTL_CD_NM
+                , CASE
+                    WHEN CURRENT_TIMESTAMP BETWEEN
+                         TO_TIMESTAMP(TO_CHAR(EVENT_START_DT, 'YYYYMMDD') || NVL(START_HOUR, '00'), 'YYYYMMDDHH24')
+                         AND TO_TIMESTAMP(TO_CHAR(EVENT_END_DT, 'YYYYMMDD') || NVL(END_HOUR, '23'), 'YYYYMMDDHH24')
+                    THEN TO_CHAR(EVENT_START_DT, 'YYYY.MM.DD')
+                    ELSE TO_CHAR(EVENT_START_DT_SEC, 'YYYY.MM.DD')
+                END AS EVENT_START_DT
+                , CASE
+                    WHEN CURRENT_TIMESTAMP BETWEEN
+                         TO_TIMESTAMP(TO_CHAR(EVENT_START_DT, 'YYYYMMDD') || NVL(START_HOUR, '00'), 'YYYYMMDDHH24')
+                         AND TO_TIMESTAMP(TO_CHAR(EVENT_END_DT, 'YYYYMMDD') || NVL(END_HOUR, '23'), 'YYYYMMDDHH24')
+                    THEN TO_CHAR(EVENT_END_DT, 'YYYY.MM.DD')
+                    ELSE TO_CHAR(EVENT_END_DT_SEC, 'YYYY.MM.DD')
+                END AS EVENT_END_DT
+                ,CASE
+                    WHEN CURRENT_TIMESTAMP BETWEEN
+                         TO_TIMESTAMP(TO_CHAR(EVENT_START_DT, 'YYYYMMDD') || NVL(START_HOUR, '00'), 'YYYYMMDDHH24')
+                         AND TO_TIMESTAMP(TO_CHAR(EVENT_END_DT, 'YYYYMMDD') || NVL(END_HOUR, '23'), 'YYYYMMDDHH24')
+                    THEN DOC_CONTENT
+                    ELSE DOC_CONTENT_SEC
+                END AS DOC_CONTENT
+            FROM NMCP_FORM_DTL
+            WHERE CD_GROUP_ID1 = #{cdGroupId1}
+            AND CD_GROUP_ID2 = #{cdGroupId2}
+            <if test="docVer !=null and docVer != ''">
+                AND DOC_VER = #{docVer}
+            </if>
+            <if test="docType !=null and docType != ''">
+                AND DOC_TYPE = #{docType}
+            </if>
+            <if test="expnsnStrVal !=null and expnsnStrVal != ''">
+                AND EXPNSN_STR_VAL = #{expnsnStrVal}
+            </if>
+            ORDER BY DOC_VER DESC
+        ) WHERE  ROWNUM =1
+    </select>
+
+    <select id="FormDtlViewByDate" resultType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO">
+        SELECT
+            CD_GROUP_ID1
+            , CD_GROUP_ID2
+            , DOC_VER
+            , USE_YN
+            , CRET_ID
+            , CRET_DT
+            , AMD_ID
+            , AMD_DT
+            , CRET_DATE
+            , DTL_CD_NM
+            , EVENT_START_DT
+            , EVENT_END_DT
+            , DOC_CONTENT
+        FROM (
+            SELECT
+                CD_GROUP_ID1
+                , CD_GROUP_ID2
+                , DOC_VER
+                , USE_YN
+                , CRET_ID
+                , CRET_DT
+                , AMD_ID
+                , AMD_DT
+                , TO_CHAR(CRET_DT,'YYYY.MM.DD') AS CRET_DATE
+                , (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = CD_GROUP_ID1 AND DTL_CD = CD_GROUP_ID2 AND ROWNUM = 1 ) AS DTL_CD_NM
+                , CASE
+                    WHEN #{adminEventDate} BETWEEN
+                         TO_TIMESTAMP(TO_CHAR(EVENT_START_DT, 'YYYYMMDD') || NVL(START_HOUR, '00'), 'YYYYMMDDHH24')
+                         AND TO_TIMESTAMP(TO_CHAR(EVENT_END_DT, 'YYYYMMDD') || NVL(END_HOUR, '23'), 'YYYYMMDDHH24')
+                    THEN TO_CHAR(EVENT_START_DT, 'YYYY.MM.DD')
+                    ELSE TO_CHAR(EVENT_START_DT_SEC, 'YYYY.MM.DD')
+                END AS EVENT_START_DT
+                , CASE
+                    WHEN #{adminEventDate} BETWEEN
+                         TO_TIMESTAMP(TO_CHAR(EVENT_START_DT, 'YYYYMMDD') || NVL(START_HOUR, '00'), 'YYYYMMDDHH24')
+                         AND TO_TIMESTAMP(TO_CHAR(EVENT_END_DT, 'YYYYMMDD') || NVL(END_HOUR, '23'), 'YYYYMMDDHH24')
+                    THEN TO_CHAR(EVENT_END_DT, 'YYYY.MM.DD')
+                    ELSE TO_CHAR(EVENT_END_DT_SEC, 'YYYY.MM.DD')
+                END AS EVENT_END_DT
+                ,CASE
+                    WHEN #{adminEventDate} BETWEEN
+                         TO_TIMESTAMP(TO_CHAR(EVENT_START_DT, 'YYYYMMDD') || NVL(START_HOUR, '00'), 'YYYYMMDDHH24')
+                         AND TO_TIMESTAMP(TO_CHAR(EVENT_END_DT, 'YYYYMMDD') || NVL(END_HOUR, '23'), 'YYYYMMDDHH24')
+                    THEN DOC_CONTENT
+                    ELSE DOC_CONTENT_SEC
+                END AS DOC_CONTENT
+            FROM NMCP_FORM_DTL
+            WHERE CD_GROUP_ID1 = #{cdGroupId1}
+            AND CD_GROUP_ID2 = #{cdGroupId2}
+            <if test="docVer !=null and docVer != ''">
+                AND DOC_VER = #{docVer}
+            </if>
+            <if test="docType !=null and docType != ''">
+                AND DOC_TYPE = #{docType}
+            </if>
+            <if test="expnsnStrVal !=null and expnsnStrVal != ''">
+                AND EXPNSN_STR_VAL = #{expnsnStrVal}
+            </if>
+            ORDER BY DOC_VER DESC
+        ) WHERE  ROWNUM =1
+    </select>
+
+    <update id="FormDtlUpdate" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO">
+        UPDATE NMCP_FORM_DTL
+        SET
+            DOC_VER = #{docVer},
+            DOC_CONTENT = #{docContent},
+            USE_YN = #{useYn},
+            AMD_ID = #{amdId},
+            AMD_DT = SYSDATE
+        WHERE 1=1
+        AND CD_GROUP_ID1 = #{cdGroupId1}
+        AND CD_GROUP_ID2 = #{cdGroupId2}
+        AND DOC_VER = #{docVer}
+    </update>
+
+    <select id="FormDtlGetVersionAjax" parameterType="java.util.HashMap" resultType="java.lang.String">
+        SELECT
+            NVL(MAX(DOC_VER)+1,1) AS DOC_VER
+        FROM NMCP_FORM_DTL
+        WHERE  CD_GROUP_ID1 = #{cdGroupId1}
+        AND    CD_GROUP_ID2 = #{cdGroupId2}
+    </select>
+
+    <select id="getFormDtlList" resultType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" >
+        <!--
+            Description: 사용 가능한 모든 약관 정보를 가지고 온다.
+        -->
+        SELECT
+            CD_GROUP_ID1
+            , CD_GROUP_ID2
+            , DOC_VER
+            , DOC_CONTENT
+            , USE_YN
+            , CRET_ID
+            , CRET_DT
+            , AMD_ID
+            , AMD_DT
+        FROM
+            NMCP_FORM_DTL
+        WHERE
+            USE_YN = 'Y'
+        ORDER BY
+            CD_GROUP_ID2
+            ,DOC_VER
+    </select>
+
+
+    <select id="getFormList" resultType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO">
+         SELECT /*FormDtlMapper.getFormList 약관 정보  */
+            T1.CD_GROUP_ID1
+            , T1.CD_GROUP_ID2
+            , T1.DOC_VER
+            , T1.DOC_CONTENT
+            , T1.USE_YN
+            , T1.CRET_ID
+            , T1.CRET_DT
+            , T1.AMD_ID
+            , T1.AMD_DT
+            , T2.DTL_CD_NM AS FORM_NM
+        FROM
+            NMCP_FORM_DTL T1
+            ,NMCP_CD_DTL T2
+        WHERE
+            T1.USE_YN = 'Y'
+            AND T1.CD_GROUP_ID1 =T2.CD_GROUP_ID
+            AND T1.CD_GROUP_ID2 =T2.DTL_CD
+            <if test="cdGroupId1 !=null and cdGroupId1 != ''">
+                AND T1.CD_GROUP_ID1 = #{cdGroupId1}
+            </if>
+            <if test="cdGroupId2 !=null and cdGroupId2 != ''">
+                AND T1.CD_GROUP_ID2 = #{cdGroupId2}
+            </if>
+            AND T1.DOC_TYPE = '01'
+        ORDER BY
+            T1.CD_GROUP_ID2
+            , T1.DOC_VER
+    </select>
+
+    <select id="etcNoticeListCnt" resultType="Integer" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO">
+        WITH NMCP_FORM_ETC AS (
+        SELECT
+            *
+        FROM NMCP_FORM_DTL
+        WHERE 1=1
+        AND CD_GROUP_ID1 IN ('FormNotice','FormEtcCla')
+        )
+        SELECT
+            COUNT(*)
+           FROM NMCP_FORM_ETC
+        WHERE 1=1
+        <if test='selectCdGroupId1 != "" and selectCdGroupId1 != null'>
+            AND CD_GROUP_ID1 = #{selectCdGroupId1}
+        </if>
+        <if test='selectCdGroupId2 != "" and selectCdGroupId2 != null'>
+            AND CD_GROUP_ID2 = #{selectCdGroupId2}
+        </if>
+    </select>
+
+    <select id="etcNoticeList" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" resultType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" >
+
+        WITH NMCP_FORM_ETC AS (
+            SELECT
+                *
+            FROM NMCP_FORM_DTL
+            WHERE 1=1
+            AND CD_GROUP_ID1 IN ('FormNotice','FormEtcCla')
+        )
+        SELECT
+            ROW_NUMBER() OVER(ORDER BY CD_GROUP_ID2 ,DOC_VER) AS R_NUM
+            , CD_GROUP_ID1
+            , CD_GROUP_ID2
+            , DOC_VER
+            , DOC_CONTENT
+            , USE_YN
+            , CRET_ID
+            , CRET_DT
+            , AMD_ID
+            , AMD_DT
+            , (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = CD_GROUP_ID1 AND DTL_CD = CD_GROUP_ID2) AS DTL_CD_NM
+        FROM
+            NMCP_FORM_ETC
+        WHERE 1=1
+        <if test='selectCdGroupId1 != "" and selectCdGroupId1 != null'>
+            AND CD_GROUP_ID1 = #{selectCdGroupId1}
+        </if>
+           <if test='selectCdGroupId2 != "" and selectCdGroupId2 != null'>
+            AND CD_GROUP_ID2 = #{selectCdGroupId2}
+        </if>
+        ORDER BY CD_GROUP_ID2 ,DOC_VER
+    </select>
+
+    <select id="getCdGroupIdList" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" resultType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" >
+
+        SELECT
+               CD_GROUP_ID
+               ,DTL_CD
+               ,DTL_CD_NM
+        FROM NMCP_CD_DTL
+        WHERE 1=1
+        AND USE_YN = 'Y'
+        AND CD_GROUP_ID IN ('FORMREQUIRED','FORMSELECT','FORMINFO')
+        <if test='selectCdGroupId1 != "" and selectCdGroupId1 != null'>
+            AND CD_GROUP_ID = #{selectCdGroupId1}
+        </if>
+          ORDER BY CD_GROUP_ID,INDC_ODRG
+
+    </select>
+
+    <select id="getEtcCdGroupIdList" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" resultType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" >
+
+        SELECT
+           CD_GROUP_ID
+           ,DTL_CD
+           ,DTL_CD_NM
+        FROM NMCP_CD_DTL
+        WHERE 1=1
+        AND USE_YN = 'Y'
+        AND CD_GROUP_ID IN ('FormNotice','FormEtcCla')
+        <if test='selectCdGroupId1 != "" and selectCdGroupId1 != null'>
+            AND CD_GROUP_ID = #{selectCdGroupId1}
+        </if>
+          ORDER BY CD_GROUP_ID,INDC_ODRG
+
+    </select>
+
+
+
+
+
+
+</mapper>

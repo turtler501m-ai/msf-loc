@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RetentionMapper">
+
+    <select id="selectRetentionUserId"  parameterType="com.ktmmobile.mcp.retention.dto.RetentionDto"  resultType="java.lang.String">
+        SELECT
+            MAX(USERID) KEEP(DENSE_RANK LAST ORDER BY SYS_RDATE) USERID
+        FROM MCP_USER
+        WHERE NAME = #{customerNm}
+        AND MOBILE_NO = #{mobileNo}
+    </select>
+
+
+     <insert id="insertRetentionUserId"  parameterType="com.ktmmobile.mcp.retention.dto.RetentionDto" >
+        INSERT INTO NMCP_APY_NOTI_TXN (
+            USER_ID
+          , CSTMR_CI                 --본인인증한  CI 정보
+          , MOBILE_CARRIER_CD        --현재이용중인통신사(MB0015)
+          , MOBILE_COMPANY_CD        --현재이용중인 휴대폰 브랜드(MB0016)
+          , MOBILE_MODEL_NM          --사용중인 휴대폰 기종
+          , AUTH_INFO                --인증정보
+          , NOTI_DIV_CD
+          , NOTI_APY_DATE
+          , NOTI_TRT_STTUS_CD
+          , NOTI_SND_DT
+          , NOTI_WAY_CD
+          , NOTI_CD
+          , CRET_IP
+          , CRET_DT
+          , CRET_ID
+          , AMD_IP
+          , AMD_DT
+          , AMD_ID
+          , NM
+          , MOBILE_NO
+        ) VALUES (
+            #{userId}
+          , #{cstmrCi}
+          , #{mobileCarrierCd}
+          , #{mobileCompanyCd}
+          , #{mobileModelNm}
+          , #{authInfo}
+          , 'NOTI001'
+          , #{expiryDate}||'000000'
+          , 'A'
+          , NULL
+          , ''
+          , ''
+          , #{cretIp}
+          , SYSDATE
+          , #{userId}
+          , #{amdIp}
+          , SYSDATE
+          , ''
+          , #{customerNm}
+          , #{mobileNo}
+       )
+    </insert>
+
+
+    <select id="selectApyNotiTxtList"  parameterType="com.ktmmobile.mcp.retention.dto.RetentionDto"  resultType="com.ktmmobile.mcp.retention.dto.RetentionDto">
+        SELECT
+            NOTI_APY_DATE AS EXPIRY_DATE
+        FROM NMCP_APY_NOTI_TXN
+        WHERE MOBILE_NO = #{mobileNo}
+        ORDER BY CRET_DT DESC
+    </select>
+
+
+
+    <update id="updateRetentionNotice" parameterType="com.ktmmobile.mcp.retention.dto.RetentionDto">
+
+        update
+            NMCP_APY_NOTI_TXN
+        set
+              TXN.USER_ID =#{userId},
+              TXN.NOTI_DIV_CD,
+              TXN.NOTI_APY_DATE,
+              TXN.NOTI_TRT_STTUS_CD,
+              TXN.NOTI_SND_DT,
+              TXN.NOTI_WAY_CD,
+              TXN.NOTI_CD,
+              TXN.CRET_IP,
+              TXN.CRET_DT,
+              TXN.CRET_ID,
+              TXN.AMD_IP,
+              TXN.AMD_DT,
+              TXN.AMD_ID
+         where
+              TXN.USER_ID = #{userId}
+              AND TXN.NOTI_DIV_CD ='NOTI001'
+
+    </update>
+
+
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FileBoardMapper">
+
+	<!--  파일 다운로드용 -->
+	<select id="selectFileDownload"  resultType="com.ktmmobile.mcp.board.dto.FileDownloadDto" parameterType="int">
+	SELECT	 ATT_SEQ 			AS fileSeq
+			, FILE_PATH_NM		AS filePath
+			, FILE_TYPE			AS fileNm
+			, FILE_CAPA			AS fileSize
+	FROM	NMCP_BOARD_ATT_DTL
+	WHERE ATT_SEQ = #{attSeq}
+	</select>
+
+	<!-- 파일 다운로드 ATT_SEQ, BOARD_SEQ값 가져오기 -->
+	<select id="selectFileInfo" parameterType="int" resultType="com.ktmmobile.mcp.board.dto.FileBoardDTO">
+		SELECT ATT_SEQ,
+			   BOARD_SEQ
+		FROM (SELECT
+				  ROW_NUMBER() OVER(ORDER BY CRET_DT DESC) AS RNK,
+					  ATT_SEQ,
+				  BOARD_SEQ
+			  FROM NMCP_BOARD_ATT_DTL
+			  WHERE BOARD_SEQ=#{boardSeq}
+			 )
+		WHERE RNK= 1
+	</select>
+
+</mapper>

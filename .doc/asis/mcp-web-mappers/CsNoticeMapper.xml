@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CsNoticeMapper">
+
+    <!-- 공지사항 페이징 카운트 -->
+    <select id="getTotalCount" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+                    COUNT(BOARD_SEQ)
+        FROM   NMCP_BOARD_BAS
+        WHERE 1=1
+        AND BOARD_CTG_SEQ = 51
+        AND VIEW_YN = 'Y'
+        AND NOTI_YN = 'N'
+        AND BOARD_SEQ NOT IN (
+                    SELECT BOARD_SEQ FROM (
+                          SELECT
+                              BOARD_SEQ
+                          FROM    NMCP_BOARD_BAS
+                          WHERE  BOARD_CTG_SEQ =  51
+                          AND       NOTI_YN = 'Y'
+                          AND       VIEW_YN = 'Y'
+                          ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+                    ) A WHERE ROWNUM <![CDATA[<=]]> 5
+            )
+        <if test='searchNm != null and searchNm != ""'>
+               AND	(	UPPER(fnHTMLtoTEXT(BOARD_SUBJECT)) LIKE '%' || UPPER('!%') || '%' || '%' ESCAPE '!'
+                    OR UPPER(fnHTMLtoTEXT(BOARD_CONTENTS)) LIKE '%' || UPPER('!%') || '%' || '%' ESCAPE '!')
+        </if>
+        <if test='sbstCtg != null and sbstCtg != ""'>
+            	AND SBST_CTG = #{sbstCtg}
+        </if>
+    </select>
+
+    <!-- 게시판 리스트 -->
+    <select id="selectBoardList" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+            BOARD_NUM,
+            BOARD_SEQ,
+            BOARD_CTG_SEQ,
+            BOARD_HIT_CNT,
+            BOARD_SUBJECT,
+            BOARD_WRITER_NM,
+            VIEW_YN,
+            NOTI_YN,
+            BOARD_WRITE_DT,
+            BOARD_ATT_YN
+        FROM (
+            SELECT	   ROW_NUMBER() OVER(ORDER BY BOARD_WRITE_DT, BOARD_SEQ) AS BOARD_NUM,
+                       BOARD_SEQ,
+                       BOARD_CTG_SEQ,
+                       BOARD_HIT_CNT,
+                       BOARD_SUBJECT,
+                       BOARD_WRITER_NM,
+                       VIEW_YN,
+                       NOTI_YN,
+                       TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                       BOARD_ATT_YN
+           FROM
+                       NMCP_BOARD_BAS
+           WHERE 1=1
+            AND BOARD_CTG_SEQ = 51
+            AND VIEW_YN = 'Y'
+            AND NOTI_YN = 'N'
+            AND BOARD_SEQ NOT IN (
+                        SELECT BOARD_SEQ FROM (
+                              SELECT
+                                  BOARD_SEQ
+                              FROM    NMCP_BOARD_BAS
+                              WHERE  BOARD_CTG_SEQ =  51
+                              AND       NOTI_YN = 'Y'
+                              AND       VIEW_YN = 'Y'
+                              ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+                        ) A WHERE ROWNUM <![CDATA[<=]]> 5
+                )
+            <if test='searchNm != null and searchNm != ""'>
+                   AND	(UPPER(fnHTMLtoTEXT(BOARD_SUBJECT)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                   OR UPPER(fnHTMLtoTEXT(BOARD_CONTENTS)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+            </if>
+            <if test='sbstCtg != null and sbstCtg != ""'>
+            	AND SBST_CTG = #{sbstCtg}
+            </if>
+        )
+       ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+    </select>
+
+    <!-- 공지사항 폼 리스트 -->
+    <select id="selectNoticeBoard" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+           BOARD_SEQ,
+           BOARD_CTG_SEQ,
+           BOARD_SUBJECT,
+           BOARD_WRITER_NM,
+           VIEW_YN,
+           NOTI_YN,
+           BOARD_WRITE_DT,
+           BOARD_ATT_YN
+        FROM (
+              SELECT
+                         BOARD_SEQ,
+                       BOARD_CTG_SEQ,
+                       BOARD_SUBJECT,
+                       BOARD_WRITER_NM,
+                       VIEW_YN,
+                       NOTI_YN,
+                       TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                       BOARD_ATT_YN
+              FROM    NMCP_BOARD_BAS
+              WHERE  BOARD_CTG_SEQ =  51
+              AND       NOTI_YN = 'Y'
+              AND       VIEW_YN = 'Y'
+              ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+        ) A WHERE ROWNUM <![CDATA[<=]]> 5
+    </select>
+
+    <!-- 조회수 증가 -->
+    <update id="updateHit" parameterType="java.lang.Integer">
+        UPDATE
+                    NMCP_BOARD_BAS
+        SET 		BOARD_HIT_CNT = NVL(BOARD_HIT_CNT,0) + 1
+        WHERE
+                    BOARD_SEQ = #{boardSeq}
+    </update>
+
+    <!-- 공지사항 상세 -->
+    <select id="viewNoticeBoard" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="java.lang.Integer">
+        SELECT
+                   BOARD_SEQ,
+                   BOARD_CTG_SEQ,
+                   BOARD_SUBJECT,
+                   BOARD_WRITER_NM,
+                   NOTI_YN,
+                   TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                   BOARD_ATT_YN,
+                   BOARD_HIT_CNT,
+                   BOARD_CONTENTS
+       FROM
+                   NMCP_BOARD_BAS
+       WHERE
+                   BOARD_CTG_SEQ =  51
+                   AND BOARD_SEQ = #{boardSeq}
+    </select>
+
+    <!-- 공지사항 이전글과 다음글 가져오기 -->
+    <select id="selectNotiIndex" resultType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+            BOARD_SEQ
+            , BOARD_CTG_SEQ
+            , BOARD_SUBJECT
+            , BOARD_WRITER_NM
+            , NOTI_YN
+            , VIEW_YN
+            , BOARD_WRITE_DT
+            , BOARD_ATT_YN
+            , CRET_DT
+            , NEXT_SEQ
+            , NEXT_SUBJECT
+            , NEXT_DT
+            , PRE_SEQ
+            , PRE_SUBJECT
+            , PRE_DT
+        FROM
+            (
+                SELECT
+                        BOARD_SEQ,
+                        BOARD_CTG_SEQ,
+                        BOARD_SUBJECT,
+                        BOARD_WRITER_NM,
+                        NOTI_YN,
+                        VIEW_YN,
+                        TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                        BOARD_ATT_YN,
+                        CRET_DT,
+                        lead(BOARD_SEQ,1) over (order by BOARD_WRITE_DT, BOARD_SEQ) NEXT_SEQ,
+                        lead(BOARD_SUBJECT,1,'다음글이 없습니다.') over (order by BOARD_WRITE_DT, BOARD_SEQ) NEXT_SUBJECT,
+                        lead(CRET_DT,1,'') over (order by BOARD_WRITE_DT, BOARD_SEQ) NEXT_DT,
+                        lag(BOARD_SEQ,1) over (order by BOARD_WRITE_DT, BOARD_SEQ) PRE_SEQ,
+                        lag(BOARD_SUBJECT,1,'이전글이 없습니다.') over (order by BOARD_WRITE_DT, BOARD_SEQ) PRE_SUBJECT,
+                        lag(CRET_DT,1,'') over (order by BOARD_WRITE_DT, BOARD_SEQ) PRE_DT
+                  FROM	NMCP_BOARD_BAS
+                WHERE	BOARD_CTG_SEQ =  51
+                <if test='searchNm != null and searchNm != ""'>
+                           AND	(UPPER(fnHTMLtoTEXT(BOARD_SUBJECT)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                           OR UPPER(fnHTMLtoTEXT(BOARD_CONTENTS)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+                </if>
+                AND NOTI_YN = 'N'
+                AND VIEW_YN = 'Y'
+            )
+            WHERE BOARD_SEQ = #{boardSeq}
+    </select>
+
+</mapper>

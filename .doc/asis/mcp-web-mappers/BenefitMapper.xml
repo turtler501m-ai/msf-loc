@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BenefitMapper">
+
+    <select id="getBenefitTabViewCountList" resultType="com.ktmmobile.mcp.benefit.dto.BenefitTabViewDto">
+        SELECT TAB_NAME
+             , VIEW_COUNT
+        FROM NMCP_BENEFIT_TAB_VIEW
+    </select>
+
+    <update id="increaseTabViewCount" parameterType="String">
+        MERGE INTO NMCP_BENEFIT_TAB_VIEW A
+        USING ( SELECT #{tabName} AS TAB_NAME FROM DUAL ) B
+            ON ( A.TAB_NAME = B.TAB_NAME )
+        WHEN MATCHED THEN
+            UPDATE SET A.VIEW_COUNT = A.VIEW_COUNT + 1
+        WHEN NOT MATCHED THEN
+            INSERT ( TAB_NAME, VIEW_COUNT )
+            VALUES ( B.TAB_NAME, 1 )
+    </update>
+</mapper>

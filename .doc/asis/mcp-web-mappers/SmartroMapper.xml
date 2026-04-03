@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SmartroMapper">
+
+ 	<insert id="insertSmartroOrder" parameterType="com.ktmmobile.mcp.common.dto.SmartroDto" >
+        INSERT
+            INTO NMCP_DAOUPAY_INFO (
+              PAYMETHOD
+			,CPID
+			,DAOUTRX
+			,ORDERNO
+			,AMOUNT
+			,SETTDATE
+			,AUTHNO
+			,EMAIL
+			,CARDCODE
+			,CARDNAME
+			,USERID
+			,USERNAME
+			,PRODUCTCODE
+			,PRODUCTNAME
+			,CARDNO
+			,RESERVEDINDEX1
+			,RESERVEDINDEX2
+			,RESERVEDSTRING
+			,CRET_DT
+			,MENU
+        ) VALUES (
+            #{paymethod}
+			,#{cpid}
+			,#{daoutrx}
+			,#{orderno}
+			,#{amount}
+			,#{settdate}
+			,#{authno}
+			,#{email}
+			,#{cardcode}
+			,#{cardname}
+			,#{userid}
+			,#{username}
+			,#{productcode}
+			,#{productname}
+			,''
+			,#{reservedindex1}
+			,#{reservedindex2}
+			,#{reservedstring}
+			,SYSDATE
+			,#{menu}
+        )
+    </insert>
+
+    <select id="getSmartroDataList" resultType="com.ktmmobile.mcp.common.dto.SmartroDto" parameterType="java.lang.String">
+		SELECT
+			PAYMETHOD
+			,CPID
+			,DAOUTRX
+			,ORDERNO
+			,AMOUNT
+			,SETTDATE
+			,AUTHNO
+			,EMAIL
+			,CARDCODE
+			,CARDNAME
+			,USERID
+			,USERNAME
+			,PRODUCTCODE
+			,PRODUCTNAME
+			,CARDNO
+			,RESERVEDINDEX1
+			,RESERVEDINDEX2
+			,RESERVEDSTRING
+			,CRET_DT
+			,MENU
+		 FROM NMCP_DAOUPAY_INFO WHERE ORDERNO = #{orderno}
+    </select>
+
+</mapper>

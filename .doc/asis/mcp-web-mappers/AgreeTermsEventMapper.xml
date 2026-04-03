@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AgreeTermsEventMapper">
+
+    <!-- 이벤트 약관동의 등록 -->
+    <insert id="agreeJoinInsert" parameterType="com.ktmmobile.mcp.event.dto.AgreeTermsEventDto">
+    INSERT INTO MCP_AGREE_TERMS_EVENT
+    (
+        AGREE_TERMS_EVENT_SEQ     -- 이벤트 약관동의 일련번호 시퀀스
+         , CI                     -- CI
+         , DI                     -- DI
+         , USER_ID                -- 유저ID
+         , EVENT_CODE             -- 이벤트코드
+         , EVENT_KEY              -- 이벤트별 키값
+         , CRET_DD                -- 동의일자
+         , CRET_ID                -- 생성자ID
+         , AMD_ID                 -- 수정자ID
+         , CRET_DT                -- 동의일시
+         , AMD_DT                 -- 수정일시
+         , RIP                    -- 등록아이피
+         , AGREE_ARTICLE1         --동의항목1 여부 (Y/N)
+         , AGREE_ARTICLE2         --동의항목2 여부 (Y/N)
+         , AGREE_ARTICLE3         --동의항목3 여부 (Y/N)
+         , AGREE_ARTICLE4         --동의항목4 여부 (Y/N)
+         , AGREE_ARTICLE5         --동의항목5 여부 (Y/N)
+         , AGREE_ARTICLE6         --동의항목6 여부 (Y/N)
+    ) VALUES (
+
+        AGREE_TERMS_EVENT_SEQ.NEXTVAL
+         , #{ci}
+         , #{di}
+         , #{userId}
+         , #{eventCode}
+         , #{eventKey}
+         , TO_CHAR(SYSDATE, 'YYYYMMDD')
+         , #{cretId}
+         , #{amdId}
+         , SYSDATE
+         , SYSDATE
+         , #{rip}
+         , #{agreeArticle1}
+         , #{agreeArticle2}
+         , #{agreeArticle3}
+         , #{agreeArticle4}
+         , #{agreeArticle5}
+         , #{agreeArticle6}
+    )
+
+    </insert>
+
+</mapper>

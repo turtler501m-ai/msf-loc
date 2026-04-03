@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.sellusim.mapper.SellUsimMapper">
+
+    <select id="selectCheckUsimRegCount" parameterType="com.ktmmobile.mcp.sellusim.dto.SellUsimDto" resultType="int">
+        SELECT /*SellUsimMapper.checkUsimRegCnt   */
+            COUNT(*)
+        FROM
+            MSP_JUO_SUB_INFO@DL_MSP
+        WHERE SUBSCRIBER_NO = #{mobileFn}||#{mobileMn}||#{mobileRn}
+        AND SUBSTR(ICC_ID ,-3) = #{usimNo}
+        AND SUB_STATUS <![CDATA[<>]]> 'C'
+    </select>	
+	
+</mapper>

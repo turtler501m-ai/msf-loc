@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.document.receive.mapper.DocumentReceiveMapper">
+    <resultMap id="DocRcvDetailMap" type="com.ktmmobile.mcp.document.receive.dto.DocRcvDetailDto">
+        <id property="docRcvId" column="DOC_RCV_ID"/>
+        <result property="resNo" column="RES_NO"/>
+        <result property="targetSeq" column="TARGET_SEQ"/>
+        <result property="requestDay" column="REQUEST_DAY"/>
+        <result property="requestDt" column="REQUEST_DT"/>
+        <result property="workTmplId" column="WORK_TMPL_ID"/>
+        <result property="smsTemplateId" column="SMS_TEMPLATE_ID"/>
+        <result property="mobileNo" column="MOBILE_NO"/>
+        <result property="scanId" column="SCAN_ID"/>
+        <result property="workId" column="WORK_ID"/>
+        <result property="workNm" column="WORK_NM"/>
+        <result property="workTmplNm" column="WORK_TMPL_NM"/>
+        <association property="docRcvStatusDto" javaType="com.ktmmobile.mcp.document.receive.dto.DocRcvStatusDto">
+            <result property="docRcvId" column="DOC_RCV_ID"/>
+            <result property="rcvYn" column="RCV_YN"/>
+            <result property="rcvYnNm" column="RCV_YN_NM"/>
+            <result property="rcvDt" column="RCV_DT"/>
+            <result property="procStatus" column="PROC_STATUS"/>
+            <result property="procStatusNm" column="PROC_STATUS_NM"/>
+            <result property="procDt" column="PROC_DT"/>
+        </association>
+        <association property="docRcvUrlDto" javaType="com.ktmmobile.mcp.document.receive.dto.DocRcvUrlDto">
+            <result property="docRcvId" column="DOC_RCV_ID"/>
+            <result property="rcvUrlId" column="RCV_URL_ID"/>
+            <result property="url" column="URL"/>
+            <result property="status" column="URL_STATUS"/>
+            <result property="urlStatusNm" column="URL_STATUS_NM"/>
+            <result property="issueDt" column="URL_ISSUE_DT"/>
+            <result property="expireDt" column="URL_EXPIRE_DT"/>
+        </association>
+        <association property="docRcvUrlOtpDto" javaType="com.ktmmobile.mcp.document.receive.dto.DocRcvUrlOtpDto">
+            <result property="rcvUrlId" column="RCV_URL_ID"/>
+            <result property="seq" column="SEQ"/>
+            <result property="otp" column="OTP"/>
+            <result property="status" column="OTP_STATUS"/>
+            <result property="issueDt" column="OTP_ISSUE_DT"/>
+            <result property="failCnt" column="FAIL_CNT"/>
+            <result property="lastAuthDt" column="LAST_AUTH_DT"/>
+        </association>
+        <collection property="itemList" ofType="com.ktmmobile.mcp.document.receive.dto.DocRcvItemDto" column="{docRcvId=DOC_RCV_ID}" select="getDocRcvItemList"/>
+    </resultMap>
+
+    <select id="getDocRcvDetail" parameterType="String" resultMap="DocRcvDetailMap">
+        /* DocumentReceiveMapper.getDocRcvDetail */
+        WITH DOC_RCV_STATUS AS (
+            SELECT DOC_RCV_ID
+                 , RCV_YN
+                 , RCV_DT
+                 , PROC_STATUS
+                 , PROC_DT
+            FROM NMCP_DOC_RCV_STATUS STT
+            WHERE DOC_SEQ = ( SELECT MAX(DOC_SEQ)
+                              FROM NMCP_DOC_RCV_STATUS
+                              WHERE DOC_RCV_ID = STT.DOC_RCV_ID )
+        ), DOC_RCV_URL AS (
+            SELECT RCV_URL_ID
+                 , DOC_RCV_ID
+                 , URL
+                 , STATUS
+                 , ISSUE_DT
+                 , EXPIRE_DT
+            FROM ( SELECT RCV_URL_ID
+                        , DOC_RCV_ID
+                        , URL
+                        , STATUS
+                        , ISSUE_DT
+                        , EXPIRE_DT
+                        , ROW_NUMBER() OVER(PARTITION BY DOC_RCV_ID ORDER BY ISSUE_DT DESC) AS RN
+                   FROM NMCP_DOC_RCV_URL )
+            WHERE RN = 1
+        ), DOC_RCV_URL_OTP AS (
+            SELECT RCV_URL_ID
+                 , SEQ
+                 , OTP
+                 , STATUS
+                 , ISSUE_DT
+                 , FAIL_CNT
+                 , LAST_AUTH_DT
+            FROM NMCP_DOC_RCV_URL_OTP OTP
+            WHERE SEQ = ( SELECT MAX(SEQ)
+                          FROM NMCP_DOC_RCV_URL_OTP
+                          WHERE RCV_URL_ID = OTP.RCV_URL_ID )
+        )
+        SELECT RCV.DOC_RCV_ID
+             , RCV.RES_NO
+             , RCV.TARGET_SEQ
+             , RCV.REQUEST_DAY
+             , TO_CHAR(RCV.REQUEST_DT, 'YYYYMMDDHH24MISS') AS REQUEST_DT
+             , RCV.WORK_TMPL_ID
+             , RCV.SMS_TEMPLATE_ID
+             , RCV.MOBILE_NO
+             , RCV.SCAN_ID
+             , TMPL.WORK_ID
+             , ( SELECT WORK_NM FROM EMV_SCAN_WORK WHERE WORK_ID = TMPL.WORK_ID) AS WORK_NM
+             , TMPL.WORK_TMPL_NM
+             , STT.RCV_YN
+             , TO_CHAR(STT.RCV_DT, 'YYYYMMDDHH24MISS') AS RCV_DT
+             , STT.PROC_STATUS
+             , TO_CHAR(STT.PROC_DT, 'YYYYMMDDHH24MISS') AS PROC_DT
+             , URL.RCV_URL_ID
+             , URL.URL
+             , URL.STATUS AS URL_STATUS
+             , TO_CHAR(URL.ISSUE_DT, 'YYYYMMDDHH24MISS') AS URL_ISSUE_DT
+             , TO_CHAR(URL.EXPIRE_DT, 'YYYYMMDDHH24MISS') AS URL_EXPIRE_DT
+             , OTP.SEQ
+             , OTP.OTP
+             , OTP.STATUS AS OTP_STATUS
+             , TO_CHAR(OTP.ISSUE_DT, 'YYYYMMDDHH24MISS') AS OTP_ISSUE_DT
+             , OTP.FAIL_CNT
+             , TO_CHAR(OTP.LAST_AUTH_DT, 'YYYYMMDDHH24MISS') AS LAST_AUTH_DT
+        FROM NMCP_DOC_RCV RCV
+           , NMCP_WORK_TMPL TMPL
+           , DOC_RCV_STATUS STT
+           , DOC_RCV_URL URL
+           , DOC_RCV_URL_OTP OTP
+        WHERE RCV.DOC_RCV_ID = #{docRcvId}
+          AND RCV.WORK_TMPL_ID = TMPL.WORK_TMPL_ID
+          AND RCV.DOC_RCV_ID = STT.DOC_RCV_ID
+          AND RCV.DOC_RCV_ID = URL.DOC_RCV_ID
+          AND URL.RCV_URL_ID = OTP.RCV_URL_ID
+    </select>
+
+    <select id="getDocRcvItemList" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvDetailDto" resultType="com.ktmmobile.mcp.document.receive.dto.DocRcvItemDto">
+        /* DocumentReceiveMapper.getDocRcvItemList */
+        SELECT DRI.ITEM_SEQ
+             , DRI.DOC_RCV_ID
+             , DRI.ITEM_ID
+             , DRI.STATUS
+             , TO_CHAR(DRI.RCV_DT, 'YYYYMMDDHH24MISS') AS FILE_RCV_DT
+             , ITEM.ITEM_NM AS ITEM_NM
+             , ITEM.REQUEST_YN AS REQUEST_YN
+        FROM NMCP_DOC_RCV_ITEM DRI
+           , NMCP_WORK_ITEM ITEM
+        WHERE DRI.DOC_RCV_ID = #{docRcvId}
+          AND DRI.ITEM_ID = ITEM.ITEM_ID
+        ORDER BY (CASE WHEN REQUEST_YN = 'Y' THEN 1 ELSE 2 END), ITEM.ITEM_NM
+    </select>
+
+    <update id="insertDocRcvStatusCompleteUpload" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvRequestDto">
+        /* DocumentReceiveMapper.insertDocRcvStatusCompleteUpload */
+        INSERT INTO NMCP_DOC_RCV_STATUS (
+            DOC_RCV_ID
+            , DOC_SEQ
+            , RCV_YN
+            , RCV_DT
+            , PROC_STATUS
+            , PROC_DT
+            , CRET_ID
+            , CRET_DT
+        )
+        SELECT STT.DOC_RCV_ID
+               , NVL(STT.DOC_SEQ, 0) + 1
+               , 'Y'
+               , SYSDATE
+               , 'M'
+               , SYSDATE
+               , #{serviceId}
+               , SYSDATE
+          FROM NMCP_DOC_RCV_STATUS STT
+         WHERE STT.DOC_RCV_ID = #{docRcvId}
+           AND STT.DOC_SEQ = ( SELECT MAX(DOC_SEQ)
+                             FROM NMCP_DOC_RCV_STATUS
+                            WHERE DOC_RCV_ID = STT.DOC_RCV_ID )
+    </update>
+
+    <update id="updateItemListCompleteUpload" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvRequestDto">
+        /* DocumentReceiveMapper.updateItemListCompleteUpload */
+        UPDATE NMCP_DOC_RCV_ITEM
+           SET STATUS = 'Y'
+               , RCV_DT = SYSDATE
+               , AMD_ID = #{serviceId}
+               , AMD_DT = SYSDATE
+         WHERE DOC_RCV_ID = #{docRcvId}
+           AND STATUS = 'P'
+           AND ITEM_SEQ IN
+        <foreach collection="items" item="item" separator="," open="(" close=")">
+            #{item.itemSeq}
+        </foreach>
+    </update>
+
+    <update id="updateItemListPendingToNotReceive" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvRequestDto">
+        /* DocumentReceiveMapper.updateItemListPendingToNotReceive */
+        UPDATE NMCP_DOC_RCV_ITEM
+           SET STATUS = 'N'
+               , AMD_ID = #{serviceId}
+               , AMD_DT = SYSDATE
+        WHERE DOC_RCV_ID = #{docRcvId}
+          AND STATUS = 'P'
+    </update>
+
+    <select id="getForScan" parameterType="String" resultType="com.ktmmobile.mcp.document.receive.dto.ForScanResponseDto">
+        SELECT WT.WORK_ID
+               , COALESCE(SUB.SUB_LINK_NAME, RC.CSTMR_NAME) AS CUST_NM
+               , RCV.SCAN_ID
+          FROM NMCP_DOC_RCV RCV
+               , NMCP_WORK_TMPL WT
+               , MCP_REQUEST R
+               , MCP_REQUEST_CSTMR RC
+               , MSP_REQUEST@DL_MSP MR
+               , MSP_JUO_SUB_INFO@DL_MSP SUB
+         WHERE RCV.DOC_RCV_ID = #{docRcvId}
+           AND RCV.WORK_TMPL_ID = WT.WORK_TMPL_ID
+           AND RCV.RES_NO = R.RES_NO (+)
+           AND R.REQUEST_KEY = RC.REQUEST_KEY (+)
+           AND RCV.RES_NO = MR.RES_NO (+)
+           AND MR.CONTRACT_NUM = SUB.CONTRACT_NUM (+)
+    </select>
+
+    <update id="updateDocRcvScanId" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvRequestDto">
+        UPDATE NMCP_DOC_RCV
+           SET SCAN_ID = #{scanId}
+               , AMD_ID = #{serviceId}
+               , AMD_DT = SYSDATE
+         WHERE DOC_RCV_ID = #{docRcvId}
+    </update>
+
+    <update id="insertDocRcvStatusMaskingSuccess" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvRequestDto">
+        INSERT INTO NMCP_DOC_RCV_STATUS (
+            DOC_RCV_ID
+            , DOC_SEQ
+            , RCV_YN
+            , RCV_DT
+            , PROC_STATUS
+            , PROC_DT
+            , CRET_ID
+            , CRET_DT
+        )
+        SELECT STT.DOC_RCV_ID
+             , NVL(STT.DOC_SEQ, 0) + 1
+             , STT.RCV_YN
+             , SYSDATE
+             , 'P'
+             , SYSDATE
+             , #{serviceId}
+             , SYSDATE
+        FROM NMCP_DOC_RCV_STATUS STT
+        WHERE STT.DOC_RCV_ID = #{docRcvId}
+          AND STT.DOC_SEQ = ( SELECT MAX(DOC_SEQ)
+                              FROM NMCP_DOC_RCV_STATUS
+                              WHERE DOC_RCV_ID = STT.DOC_RCV_ID )
+    </update>
+
+    <update id="insertDocRcvStatusMaskingFail" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvRequestDto">
+        INSERT INTO NMCP_DOC_RCV_STATUS (
+            DOC_RCV_ID
+            , DOC_SEQ
+            , RCV_YN
+            , RCV_DT
+            , PROC_STATUS
+            , PROC_DT
+            , CRET_ID
+            , CRET_DT
+        )
+        SELECT STT.DOC_RCV_ID
+             , NVL(STT.DOC_SEQ, 0) + 1
+             , STT.RCV_YN
+             , SYSDATE
+             , 'F'
+             , SYSDATE
+             , #{serviceId}
+             , SYSDATE
+        FROM NMCP_DOC_RCV_STATUS STT
+        WHERE STT.DOC_RCV_ID = #{docRcvId}
+          AND STT.DOC_SEQ = ( SELECT MAX(DOC_SEQ)
+                              FROM NMCP_DOC_RCV_STATUS
+                              WHERE DOC_RCV_ID = STT.DOC_RCV_ID )
+    </update>
+
+    <select id="countDocRcvItemPending" parameterType="Long" resultType="Integer">
+        SELECT COUNT(ITEM_SEQ)
+        FROM NMCP_DOC_RCV_ITEM
+        WHERE ITEM_SEQ = #{itemSeq}
+        AND STATUS = 'P'
+    </select>
+
+    <update id="updateItemUploadComplete" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvItemDto">
+        UPDATE NMCP_DOC_RCV_ITEM
+        SET STATUS = 'Y'
+          , RCV_DT = SYSDATE
+          , AMD_ID = #{serviceId}
+          , AMD_DT = SYSDATE
+        WHERE DOC_RCV_ID = #{docRcvId}
+          AND STATUS = 'P'
+          AND ITEM_SEQ = #{itemSeq}
+    </update>
+
+    <update id="insertItemUploadComplete" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvItemDto">
+        <selectKey keyProperty="itemSeq" resultType="Long" order="BEFORE">
+            SELECT SQ_DOC_RCV_ITEM.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_DOC_RCV_ITEM (
+            ITEM_SEQ
+            , DOC_RCV_ID
+            , ITEM_ID
+            , STATUS
+            , RCV_DT
+            , CRET_ID
+            , CRET_DT
+        ) VALUES (
+            #{itemSeq}
+            , #{docRcvId}
+            , #{itemId}
+            , 'Y'
+            , SYSDATE
+            , #{serviceId}
+            , SYSDATE
+        )
+    </update>
+
+    <update id="updateItemUploadFail" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvItemDto">
+        UPDATE NMCP_DOC_RCV_ITEM
+        SET STATUS = 'E'
+          , RCV_DT = SYSDATE
+          , AMD_ID = #{serviceId}
+          , AMD_DT = SYSDATE
+        WHERE DOC_RCV_ID = #{docRcvId}
+          AND STATUS = 'P'
+          AND ITEM_SEQ = #{itemSeq}
+    </update>
+
+    <update id="insertItemUploadFail" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvItemDto">
+        <selectKey keyProperty="itemSeq" resultType="Long" order="BEFORE">
+            SELECT SQ_DOC_RCV_ITEM.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_DOC_RCV_ITEM (
+            ITEM_SEQ
+            , DOC_RCV_ID
+            , ITEM_ID
+            , STATUS
+            , RCV_DT
+            , CRET_ID
+            , CRET_DT
+        ) VALUES (
+            #{itemSeq}
+            , #{docRcvId}
+            , #{itemId}
+            , 'E'
+            , SYSDATE
+            , #{serviceId}
+            , SYSDATE
+        )
+    </update>
+
+    <update id="insertDocRcvItemFileList" parameterType="com.ktmmobile.mcp.document.receive.dto.DocRcvItemDto">
+        INSERT ALL
+        <foreach collection="files" item="file" separator=" ">
+            INTO NMCP_DOC_RCV_ITEM_FILE (ITEM_SEQ, FILE_ID, MERGE_YN, CRET_ID, CRET_DT, EXT, RESULT_CODE, RESULT_MESSAGE)
+            VALUES (#{itemSeq}, #{file.fileId}, 'N', #{serviceId}, SYSDATE, #{file.ext}, #{file.resultCode}, #{file.resultMessage})
+        </foreach>
+        SELECT * FROM DUAL
+    </update>
+
+</mapper>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CancelConsultMapper">
+    <select id="countCancelConsult" parameterType="com.ktmmobile.mcp.mypage.dto.CancelConsultDto" resultType="int">
+        SELECT COUNT(*)
+        FROM MCP_CANCEL_REQUEST
+        WHERE 1=1
+        AND (PROC_CD IS NULL OR PROC_CD != 'BK')
+        <choose>
+            <when test="contractNum == 'manual'">
+                <if test="cancelMobileNo != null and cancelMobileNo != ''">
+                    AND CANCEL_MOBILE_NO = #{cancelMobileNo}
+                </if>
+            </when>
+            <otherwise>
+                <if test="contractNum != null and contractNum != ''">
+                    AND CONTRACT_NUM = #{contractNum}
+                </if>
+            </otherwise>
+        </choose>
+    </select>
+
+    <insert id="insertNmcpCustReqMst" parameterType="com.ktmmobile.mcp.mypage.dto.CancelConsultDto">
+        <selectKey keyProperty="custReqSeq" resultType="java.lang.String" order="BEFORE">
+            SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || LPAD(NMCP_CUST_REQUEST_SEQ.NEXTVAL, 5, '0') FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_CUST_REQUEST_MST (
+            CUST_REQ_SEQ
+            , REQ_TYPE
+            , USERID
+            , CSTMR_NAME
+            , MOBILE_NO
+            , CSTMR_NATIVE_RRN
+            , CONTRACT_NUM
+            , CSTMR_TYPE
+            , ONLINE_AUTH_TYPE
+            , ONLINE_AUTH_INFO
+            , CRET_ID
+            , SYS_RDATE
+        ) VALUES (
+            #{custReqSeq}
+            , 'CC'
+            , #{regstId}
+            , #{cstmrName}
+            , #{cancelMobileNo}
+            , #{cstmrNativeRrn}
+            , #{contractNum}
+            , #{cstmrType}
+            , #{onlineAuthType}
+            , #{onlineAuthInfo}
+            , #{regstId}
+            , SYSDATE
+        )
+    </insert>
+
+    <insert id="insertCancelConsult" parameterType="com.ktmmobile.mcp.mypage.dto.CancelConsultDto">
+        INSERT INTO MCP_CANCEL_REQUEST (
+            CUST_REQ_SEQ
+            , CSTMR_NAME
+            , CONTRACT_NUM
+            , ONLINE_AUTH_TYPE
+            , ONLINE_AUTH_INFO
+            , BENEFIT_AGREE_FLAG
+            , CLAUSE_CNTR_DEL_FLAG
+            , ETC_AGREE_FLAG
+            , RECEIVE_MOBILE_NO
+            , CANCEL_MOBILE_NO
+            , SURVEY1_CD
+            , SURVEY1_TEXT
+            , SURVEY2_CD
+            , SURVEY2_TEXT
+            , SURVEY_SCORE
+            , SURVEY_SUGGESTION
+            , SYS_RDATE_DD
+            , RIP
+            , REGST_ID
+            , REGST_DTTM
+            , PROC_CD
+        ) VALUES (
+            #{custReqSeq}
+            , #{cstmrName}
+            , #{contractNum}
+            , #{onlineAuthType}
+            , #{onlineAuthInfo}
+            , 'Y'
+            , 'Y'
+            , 'Y'
+            , #{receiveMobileNo}
+            , #{cancelMobileNo}
+            , #{survey1Cd}
+            , #{survey1Text}
+            , #{survey2Cd}
+            , #{survey2Text}
+            , #{surveyScore}
+            , #{surveySuggestion}
+            , TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , #{rip}
+            , #{regstId}
+            , SYSDATE
+            , 'RC'
+        )
+    </insert>
+
+    <select id="selectCancelConsultList" parameterType="com.ktmmobile.mcp.mypage.dto.CancelConsultDto" resultType="com.ktmmobile.mcp.mypage.dto.CancelConsultDto">
+        SELECT
+            CSTMR_NAME,
+            CANCEL_MOBILE_NO,
+            REGST_DTTM,
+            PROC_CD
+        FROM MCP_CANCEL_REQUEST
+        WHERE REGST_ID = #{regstId}
+    </select>
+
+</mapper>

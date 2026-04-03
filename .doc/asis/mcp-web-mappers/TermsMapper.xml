@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="TermsMapper">
+	 <select id="getTermsDtl" parameterType="com.ktmmobile.mcp.appform.dto.FormDtlDTO" resultType="com.ktmmobile.mcp.appform.dto.FormDtlDTO">
+    	select 
+    		NFD.CD_GROUP_ID1
+    		,NFD.CD_GROUP_ID2
+    		,NFD.DOC_CONTENT
+    		,NCD.DTL_CD_NM AS FORM_NM
+		FROM 
+			NMCP_FORM_DTL NFD
+			, NMCP_CD_DTL NCD
+			, (
+			    SELECT 
+			        CD_GROUP_ID1, 
+			        CD_GROUP_ID2, 
+			        MAX(DOC_VER) AS DOC_VER 
+			    FROM NMCP_FORM_DTL 
+			    WHERE 
+			        CD_GROUP_ID1 = #{cdGroupId1} 
+			        AND CD_GROUP_ID2 = #{cdGroupId2}
+			        AND USE_YN = 'Y'
+			    GROUP BY CD_GROUP_ID1,CD_GROUP_ID2
+			) NFDM
+		WHERE 
+			NFD.CD_GROUP_ID1 = NFDM.CD_GROUP_ID1
+			AND NFD.CD_GROUP_ID2 = NCD.DTL_CD
+			AND NFD.CD_GROUP_ID2 = NFDM.CD_GROUP_ID2
+			AND NFD.DOC_VER = NFDM.DOC_VER
+			AND NFD.CD_GROUP_ID1 = #{cdGroupId1}
+			AND NFD.CD_GROUP_ID2 = #{cdGroupId2}
+			AND NFD.USE_YN = 'Y'
+    </select>
+
+</mapper>

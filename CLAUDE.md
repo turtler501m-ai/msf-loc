@@ -175,6 +175,8 @@ JavaScript (TypeScript 미사용) / Vue 3.5 / Vue Router 5 / Pinia 3 / Vite 7 / 
 - M포탈 소스와 동일하게 개발; 연동 API 스펙(요청/응답 형식) 동일하게 구현
 - 기능 목록 및 연동 스펙은 `.doc/` 내 문서 참조
 - **상세 개발 가이드**: `.claude/skills/ktm-smartform/SKILL.md` (기술스택·패턴·주의사항)
+- **ASIS→TOBE 변환 규칙**: `.claude/skills/asis-tobe-convert/SKILL.md` (패키지 매핑·Sf 네이밍·변환 절차)
+- **TOBE 개발 규칙**: `.claude/skills/smart_dev_change/SKILL.md` (확정 패키지구조·임포트규칙·세션 누적 요구사항)
 - **구현 현황**: `.claude/skills/ktm-smartform/dev-status.md`
 - **컨텍스트 최적화**: `.claudeignore`로 레거시 정적 리소스·빌드 산출물 제외됨
 

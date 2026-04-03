@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Store_Query">
+
+    <select id="getStoreComCdList" resultType="com.ktmmobile.mcp.common.dto.ComCdDto">
+
+        SELECT
+           CD_GROUP_ID, DTL_CD, DTL_CD_NM, DTL_CD_DESC, INDC_ODRG, USE_YN,
+           EXPNSN_STR_VAL1, EXPNSN_STR_VAL2, EXPNSN_STR_VAL3, CRET_ID, AMD_ID, CRET_DT, AMD_DT
+        FROM NMCP_CD_DTL
+        WHERE USE_YN = 'Y' AND CD_GROUP_ID IN ('TRTW', 'HANDP','STEX')
+        ORDER BY CD_GROUP_ID, INDC_ODRG
+    </select>
+
+    <select id="selectStoreList" parameterType="com.ktmmobile.mcp.direct.dto.StoreDto" resultType="com.ktmmobile.mcp.direct.dto.StoreDto">
+        SELECT ROW_NUMBER() OVER(ORDER BY STOR_SEQ) AS BOARD_NUM, STOR_SEQ, STOR_CD, STOR_NM, STOR_DIV, TEL_NO, STICKER_EXP, TRT_WRKJOB, HANDL_PROD, ZIPCD, STOR_ROADN_ADR,
+            STOR_ARNO_ADR, DTL_ADR, LATIT_VAL, LNGIT_VAL, MARK_IMG, STOR_ITR, SHOW_YN, CRET_ID, AMD_ID, CRET_DT, AMD_DT, NFC_ABLE_VAL, NFC_DISABLE_VAL, STOR_SORT
+        FROM NMCP_STOR_ADM_BAS
+        WHERE 1=1
+            <if test="schStorDiv !=null and schStorDiv != '' and schStorDiv != 0 ">
+                AND STOR_DIV = #{schStorDiv}
+            </if>
+            <if test="schContDiv == 1 and searchStr !=null and searchStr !='' "> AND LOWER(STOR_NM) LIKE '%'||LOWER(#{searchStr})||'%' </if>
+            <if test="schContDiv == 2 and searchStr !=null and searchStr !='' "> AND LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER(#{searchStr})||'%' </if>
+        ORDER BY STOR_SORT DESC ,STOR_NM ASC
+    </select>
+
+    <select id="storeView" parameterType="Integer" resultType="com.ktmmobile.mcp.direct.dto.StoreDto">
+        SELECT STOR_SEQ, STOR_CD, STOR_NM, STOR_DIV, TEL_NO, STICKER_EXP, TRT_WRKJOB, HANDL_PROD, ZIPCD, STOR_ROADN_ADR,
+                   STOR_ARNO_ADR, DTL_ADR, LATIT_VAL, LNGIT_VAL, MARK_IMG, STOR_ITR, SHOW_YN, CRET_ID, AMD_ID,
+                   CRET_DT, AMD_DT, NFC_ABLE_VAL, NFC_DISABLE_VAL, STOR_SORT
+        FROM NMCP_STOR_ADM_BAS
+        WHERE STOR_SEQ = #{storSeq}
+    </select>
+
+    <!-- 여기부터 프론트 -->
+    <select id="countStoreList" parameterType="com.ktmmobile.mcp.direct.dto.StoreDto" resultType="int">
+        SELECT COUNT(STOR_SEQ) FROM NMCP_STOR_ADM_BAS
+        WHERE SHOW_YN = 'Y'
+        <if test="storDiv !=null and storDiv != ''  and storDiv != '0'">
+            AND STOR_DIV = #{storDiv}
+        </if>
+        <if test='schDivStr !=null and schDivStr !="" and schDivStr != "전국" '>
+            <choose>
+        		<when test="schDivStr == '경남'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상남도')||'%')
+        		</when>
+        		<when test="schDivStr == '경북'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상북도')||'%')
+        		</when>
+        		<when test="schDivStr == '전남'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라남도')||'%')
+        		</when>
+        		<when test="schDivStr == '전북'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라북도')||'%')
+        		</when>
+        		<when test="schDivStr == '충남'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청남도')||'%')
+        		</when>
+        		<when test="schDivStr == '충북'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청북도')||'%')
+        		</when>
+        		<otherwise>
+        			AND LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER(#{schDivStr})||'%'
+        		</otherwise>
+        	</choose>
+        </if>
+        <if test='subAddr !=null and subAddr !="" and subAddr != "0" and subAddr !="null"'>
+            AND LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER(#{subAddr})||'%'
+        </if>
+        <if test="searchStr !=null and searchStr != '' ">
+        	<choose>
+	        	<when test=" searchStr.contains('경남') or searchStr.contains('경상남도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상남도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('경북') or searchStr.contains('경상북도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상북도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('전남') or searchStr.contains('전라남도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라남도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('전북') or searchStr.contains('전라북도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라북도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('충남') or searchStr.contains('충청남도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청남도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('충북') or searchStr.contains('충청북도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청북도')||'%')
+	    		</when>
+	    		<otherwise>
+	    		    AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER(#{searchStr})||'%')
+	    		</otherwise>
+    		</choose>
+        </if>
+		<if test=" prodId !=null and prodId != '' ">
+            AND  STOR_CD IN (SELECT NPSIT.STOR_CD  FROM NMCP_PROD_STOR_INVENTORY_TXN NPSIT
+            WHERE 1 = 1
+            AND NPSIT.PROD_ID  = #{prodId}
+            AND NPSIT.USE_YN = 'Y'
+            AND SYSDATE BETWEEN TO_DATE(PSTNG_START_DATE,'YYYYMMDDHH24MISS') AND TO_DATE(PSTNG_END_DATE,'YYYYMMDDHH24MISS')
+            )
+        </if>
+    </select>
+
+    <select id="storeListSelect" parameterType="com.ktmmobile.mcp.direct.dto.StoreDto" resultType="com.ktmmobile.mcp.direct.dto.StoreDto">
+        SELECT
+        	NSAB.STOR_SEQ,
+        	NSAB.STOR_CD,
+        	NSAB.STOR_NM,
+        	NSAB.STOR_DIV,
+        	NSAB.TEL_NO,
+        	NSAB.STICKER_EXP,
+        	NSAB.TRT_WRKJOB,
+        	NSAB.HANDL_PROD,
+        	NSAB.ZIPCD,
+        	NSAB.STOR_ROADN_ADR,
+            NSAB.STOR_ARNO_ADR,
+            NSAB.DTL_ADR,
+            NSAB.LATIT_VAL,
+            NSAB.LNGIT_VAL,
+            NSAB.MARK_IMG,
+            NSAB.STOR_ITR,
+            NSAB.SHOW_YN,
+            NSAB.CRET_ID,
+            NSAB.AMD_ID,
+            NSAB.CRET_DT,
+            NSAB.AMD_DT,
+            NVL(NSAB.NFC_DISABLE_VAL,0) AS NFC_DISABLE_VAL,
+            NVL(NSAB.NFC_ABLE_VAL,0) AS NFC_ABLE_VAL,
+            (ACOS(SIN(#{latitVal}*3.141592653589793/180.0)*SIN(NSAB.LATIT_VAL*3.141592653589793/180.0) + COS(#{latitVal}*3.141592653589793/180.0)*COS(NSAB.LATIT_VAL*3.141592653589793/180.0)*COS((#{lngitVal}-NSAB.LNGIT_VAL)*3.141592653589793/180) )*180/3.141592653589793)*60*1.1515*1609.344 DIST
+            <if test=" prodId !=null and prodId != '' ">
+            ,(SELECT COUNT(*) FROM NMCP_PROD_STOR_INVENTORY_TXN NPSIT
+            WHERE NPSIT.STOR_CD = NSAB.STOR_CD
+            AND NPSIT.PROD_ID  = #{prodId}
+            AND NPSIT.USE_YN = 'Y'
+            AND SYSDATE BETWEEN TO_DATE(PSTNG_START_DATE,'YYYYMMDDHH24MISS') AND TO_DATE(PSTNG_END_DATE,'YYYYMMDDHH24MISS')
+            ) AS INV_CNT
+            </if>
+        FROM
+        	NMCP_STOR_ADM_BAS NSAB
+        WHERE
+        	NSAB.SHOW_YN = 'Y'
+        <if test="storDiv !=null and storDiv != ''  and storDiv != '0'">
+            AND STOR_DIV = #{storDiv}
+        </if>
+        <if test='schDivStr !=null and schDivStr !="" and schDivStr != "전국" '>
+        	<choose>
+        		<when test="schDivStr == '경남'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상남도')||'%')
+        		</when>
+        		<when test="schDivStr == '경북'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상북도')||'%')
+        		</when>
+        		<when test="schDivStr == '전남'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라남도')||'%')
+        		</when>
+        		<when test="schDivStr == '전북'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라북도')||'%')
+        		</when>
+        		<when test="schDivStr == '충남'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청남도')||'%')
+        		</when>
+        		<when test="schDivStr == '충북'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청북도')||'%')
+        		</when>
+        		<otherwise>
+        			AND LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER(#{schDivStr})||'%'
+        		</otherwise>
+        	</choose>
+        </if>
+        <if test='subAddr !=null and subAddr !="" and subAddr != "0" and subAddr !="null"'>
+            AND LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER(#{subAddr})||'%'
+        </if>
+        <if test="searchStr !=null and searchStr != '' ">
+	        <choose>
+	        	<when test=" searchStr.contains('경남') or searchStr.contains('경상남도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상남도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('경북') or searchStr.contains('경상북도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상북도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('전남') or searchStr.contains('전라남도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라남도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('전북') or searchStr.contains('전라북도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라북도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('충남') or searchStr.contains('충청남도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청남도')||'%')
+	    		</when>
+	    		<when test=" searchStr.contains('충북') or searchStr.contains('충청북도') ">
+	    			AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청북도')||'%')
+	    		</when>
+	    		<otherwise>
+	    		    AND (LOWER(STOR_NM) LIKE '%'||LOWER(TRIM(#{searchStr}))||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER(#{searchStr})||'%')
+	    		</otherwise>
+    		</choose>
+        </if>
+        <if test=" prodId !=null and prodId != '' ">
+            AND  EXISTS (SELECT NPSIT.PROD_ID  FROM NMCP_PROD_STOR_INVENTORY_TXN NPSIT
+            WHERE NPSIT.STOR_CD = NSAB.STOR_CD
+            AND NPSIT.PROD_ID  = #{prodId}
+            AND NPSIT.USE_YN = 'Y'
+            AND SYSDATE BETWEEN TO_DATE(PSTNG_START_DATE,'YYYYMMDDHH24MISS') AND TO_DATE(PSTNG_END_DATE,'YYYYMMDDHH24MISS')
+            )
+        </if>
+        <if test="orderType == 'NOMAL'">
+        	ORDER BY NSAB.STOR_SORT DESC ,NSAB.STOR_NM ASC
+        </if>
+        <if test="orderType == 'AREA'">
+        	ORDER BY
+        	DIST ASC
+        	,STOR_NM ASC
+        </if>
+
+    </select>
+
+    <select id="storeDetail" parameterType="int" resultType="com.ktmmobile.mcp.direct.dto.StoreDto">
+        SELECT STOR_SEQ, STOR_CD, STOR_NM, STOR_DIV, TEL_NO, STICKER_EXP, TRT_WRKJOB,
+                   HANDL_PROD, ZIPCD, STOR_ROADN_ADR, STOR_ARNO_ADR, DTL_ADR, LATIT_VAL,
+                   LNGIT_VAL, MARK_IMG, STOR_ITR, SHOW_YN, CRET_ID, AMD_ID, CRET_DT, AMD_DT, NFC_ABLE_VAL, NFC_DISABLE_VAL
+        FROM NMCP_STOR_ADM_BAS
+        <where>
+            STOR_SEQ = #{storSeq}
+        </where>
+    </select>
+
+    <delete id="storeDelete" parameterType="com.ktmmobile.mcp.direct.dto.StoreDto">
+        DELETE FROM NMCP_STOR_ADM_BAS
+        WHERE STOR_SEQ = #{storSeq}
+    </delete>
+
+    <select id="selectSubAddr" parameterType="com.ktmmobile.mcp.direct.dto.StoreDto" resultType="com.ktmmobile.mcp.direct.dto.StoreDto">
+    SELECT
+    	SUBSTR(SUBSTR(STOR_ROADN_ADR,INSTR(STOR_ROADN_ADR,' ')+1,30),0,  INSTR(SUBSTR(STOR_ROADN_ADR,INSTR(STOR_ROADN_ADR,' ')+1,30),' ') ) AS SUB_ADDR
+    FROM
+    	NMCP_STOR_ADM_BAS
+	WHERE
+		SHOW_YN='Y'
+		 <if test='storDiv !=null and storDiv != ""  and storDiv != "0" '>
+            AND STOR_DIV = #{storDiv}
+        </if>
+		<if test='schDivStr !=null and schDivStr !="" and schDivStr != "전국" '>
+            <choose>
+        		<when test="schDivStr == '경남'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상남도')||'%')
+        		</when>
+        		<when test="schDivStr == '경북'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('경상북도')||'%')
+        		</when>
+        		<when test="schDivStr == '전남'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라남도')||'%')
+        		</when>
+        		<when test="schDivStr == '전북'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('전라북도')||'%')
+        		</when>
+        		<when test="schDivStr == '충남'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충남')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청남도')||'%')
+        		</when>
+        		<when test="schDivStr == '충북'">
+        			AND (LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충북')||'%' OR LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER('충청북도')||'%')
+        		</when>
+        		<otherwise>
+        			AND LOWER(STOR_ROADN_ADR) LIKE '%'||LOWER(#{schDivStr})||'%'
+        		</otherwise>
+        	</choose>
+        </if>
+        AND SUBSTR(SUBSTR(STOR_ROADN_ADR,INSTR(STOR_ROADN_ADR,' ')+1,30),0,  INSTR(SUBSTR(STOR_ROADN_ADR,INSTR(STOR_ROADN_ADR,' ')+1,30),' ') ) IS NOT NULL
+	GROUP BY
+		SUBSTR(SUBSTR(STOR_ROADN_ADR,INSTR(STOR_ROADN_ADR,' ')+1,30),0,  INSTR(SUBSTR(STOR_ROADN_ADR,INSTR(STOR_ROADN_ADR,' ')+1,30),' ') )
+	</select>
+
+</mapper>

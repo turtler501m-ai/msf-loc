@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SnsMapper">
+
+    <!-- SNS 아이디 체크 -->
+    <select id="selectSnsIdCheck" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.common.dto.SnsLoginDto" >
+        SELECT
+            SNS_LOGIN_SEQ
+             , USER_ID
+             , SNS_CD
+             , SNS_ID
+             , LOGIN_DT
+             , LOGIN_CNT
+             , LOGIN_FAIL_CNT
+             , CRET_DT
+             , AMD_DT
+        FROM NMCP_SNS_LOGIN_TXN
+        WHERE SNS_ID = #{snsId}
+          AND USE_YN = 'Y'
+    </select>
+
+    <!-- USER ID로 멤버 찾기 -->
+    <select id="selectSnsMcpUser" resultType="com.ktmmobile.mcp.common.dto.UserSessionDto" parameterType="java.lang.String">
+        SELECT
+            USERID
+             , PASSWORD
+             , NAME
+             , AUTH_CODE
+             , PIN
+             , EMAIL
+             , POST
+             , ADDRESS
+             , ADDRESS_DTL
+             , MOBILE_NO
+             , CONTACT_NO
+             , BIRTHDAY
+             , GENDER
+             , SYS_RDATE
+             , SYS_UDATE
+             , SYS_LDATE
+             , LOGIN_COUNT
+             , STATUS
+             , CUST_NUM
+             , AUTH_KEY
+             , USER_DIVISION
+             , EMAIL_CODE
+             , ADDRESS_BJD
+             , REVOCATION_DATE
+             , PWD_CHG_DT
+             , MONTHS_BETWEEN(SYSDATE , PWD_CHG_DT) AS MON_CNT
+             , NVL(TRUNC(SYSDATE) - TRUNC(pwd_chg_delay_dt), -1) AS DAY_CNT
+             , LOGIN_FAIL_COUNT
+             , CUSTOMER_ID
+        FROM MCP_USER
+        WHERE USERID = #{userId}
+    </select>
+
+    <update id="updateSnsLoginInfo" parameterType="java.util.HashMap">
+        UPDATE NMCP_SNS_LOGIN_TXN
+        SET
+        AMD_DT = SYSDATE
+        <if test="loginResult == 0">
+            , LOGIN_DT = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+            , LOGIN_CNT = NVL(LOGIN_CNT, 0) + 1
+        </if>
+        <if test="loginResult == -1">
+            , LOGIN_FAIL_CNT = NVL(LOGIN_FAIL_CNT, 0) + 1
+        </if>
+        WHERE USER_ID = #{userId}
+        AND SNS_ID = #{snsId}
+        AND USE_YN = 'Y'
+    </update>
+
+</mapper>

@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.sms.mapper.SmsMapper">
+
+    <select id="selectMspApplyCount" parameterType="com.ktmmobile.mcp.sms.dto.ApiMapDto" resultType="java.lang.Integer">
+        <!--  -->
+        SELECT COUNT(*)
+        FROM
+             MSP_REQUEST@DL_MSP A
+            ,MSP_REQUEST_CSTMR@DL_MSP B
+            ,MSP_REQUEST_STATE@DL_MSP C
+        WHERE
+            B.CSTMR_NAME = #{cstmrName}
+            AND B.CSTMR_MOBILE_FN = #{cstmrMobileFn}
+            AND B.CSTMR_MOBILE_MN = #{cstmrMobileMn}
+            AND B.CSTMR_MOBILE_RN = #{cstmrMobileRn}
+            AND A.REQUEST_KEY = B.REQUEST_KEY
+            AND B.REQUEST_KEY = C.REQUEST_KEY
+    </select>
+
+    <insert id="insertSms" parameterType="com.ktmmobile.mcp.sms.dto.ApiMapDto">
+        <!--  -->
+        <selectKey  keyProperty="SMS_SEQ" resultType="string" order="BEFORE">
+                SELECT SMS_SEQ.NEXTVAL@DL_MSP FROM DUAL
+        </selectKey >
+        INSERT INTO MSG_QUEUE@DL_MSP (
+            MSEQ,
+            <if test='I_SUBJECT != null and I_SUBJECT != ""'>
+                  SUBJECT ,
+            </if>
+            MSG_TYPE,
+            DSTADDR,
+            CALLBACK,
+            STAT,
+            TEXT,
+            EXPIRETIME,
+            REQUEST_TIME,
+            OPT_ID
+            <if test='IS_FILE == "Y"'>
+            ,FILECNT,
+            FILECNT_CHECKUP,
+            FILELOC1,
+            FILESIZE1
+            </if>
+        ) VALUES (
+            #{SMS_SEQ, jdbcType=NUMERIC},
+            <if test='I_SUBJECT != null and I_SUBJECT != ""'>
+                  #{I_SUBJECT},
+            </if>
+            #{I_MSG_TYPE},
+            #{I_CTN},
+            #{I_CALLBACK},
+            0,
+            #{I_MSG},
+            7200,
+            SYSDATE,
+            'MCP'
+            <if test='IS_FILE == "Y"'>
+            ,#{I_FILECNT},
+            #{I_FILECNT_CHECKUP},
+            #{I_FILELOC1},
+            #{I_FILESIZE1}
+            </if>
+        )
+    </insert>
+
+    <insert id="insertKakaoNoti" parameterType="com.ktmmobile.mcp.sms.dto.ApiMapDto">
+        <!--  -->
+        <selectKey  keyProperty="SMS_SEQ" resultType="string" order="BEFORE">
+                SELECT SMS_SEQ.NEXTVAL@DL_MSP FROM DUAL
+        </selectKey >
+        INSERT INTO MSG_QUEUE@DL_MSP (
+            MSEQ,
+            <if test="I_SUBJECT != null and I_SUBJECT != ''">
+                  SUBJECT ,
+            </if>
+            MSG_TYPE,
+            DSTADDR,
+            CALLBACK,
+            TEXT,
+            EXPIRETIME,
+            REQUEST_TIME,
+            OPT_ID,
+            TEXT2,
+            K_TEMPLATE_CODE,
+            K_NEXT_TYPE,
+            SENDER_KEY
+        ) VALUES (
+            #{SMS_SEQ, jdbcType=NUMERIC},
+            <if test="I_SUBJECT != null and I_SUBJECT != ''">
+                  #{I_SUBJECT},
+            </if>
+            #{I_MSG_TYPE},
+            #{I_CTN},
+            #{I_CALLBACK},
+            #{I_MSG},
+            7200,
+            SYSDATE,
+            'MCP',
+            #{I_MSG},
+            #{I_TEMPLATE_CD},
+            #{I_NEXT_TYPE},
+            #{I_SENDER_KEY}
+        )
+    </insert>
+
+
+    <select id="selectQstackCount" parameterType="com.ktmmobile.mcp.common.dto.AuthSmsDto" resultType="java.lang.Integer">
+        SELECT
+            COUNT(*)
+        FROM MSG_RESULT@DL_MSP
+        WHERE DSTADDR = #{phoneNum}
+          and INSERT_TIME <![CDATA[>]]> sysdate - #{limitMin}/60/24
+    </select>
+
+    <insert id="insertNewSms" parameterType="com.ktmmobile.mcp.sms.dto.ApiMapDto">
+
+        <selectKey keyProperty="SMS_SEQ" resultType="string" order="BEFORE">
+            <choose>
+                <when test='IS_REAL == "Y"'>
+                    SELECT AM2X_SUBMIT_SEQ.NEXTVAL@DL_MSP_SMS FROM DUAL
+                </when>
+                <otherwise>
+                    SELECT AM2X_SUBMIT_SEQ.NEXTVAL@DL_MSP FROM DUAL
+                </otherwise>
+            </choose>
+        </selectKey>
+
+        INSERT INTO
+        <choose>
+            <when test='IS_REAL == "Y"'>
+                AM2X_SUBMIT@DL_MSP_SMS
+            </when>
+            <otherwise>
+                AM2X_SUBMIT@DL_MSP
+            </otherwise>
+        </choose> (
+            MSG_ID,
+            <if test='I_SUBJECT != null and I_SUBJECT != ""'>
+                  SUBJECT ,
+            </if>
+            MSG_TYPE,
+            SCHEDULE_TIME,
+            SUBMIT_TIME,
+            MESSAGE,
+            CALLBACK_NUM,
+            RCPT_DATA,
+            K_ADFLAG,
+            RESERVED01,
+            RESERVED02,
+            RESERVED03
+        ) VALUES (
+            #{SMS_SEQ, jdbcType=NUMERIC},
+            <if test='I_SUBJECT != null and I_SUBJECT != ""'>
+                  #{I_SUBJECT},
+            </if>
+            #{I_MSG_TYPE},
+            NVL(#{SCHEDULE_TIME}, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')),
+            TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+            #{I_MSG},
+            #{I_CALLBACK},
+            #{I_CTN},
+            'N',
+            'MCP',
+            #{RESERVED02},
+            #{RESERVED03}
+        )
+    </insert>
+
+    <select id="selectQstackNewCount" parameterType="com.ktmmobile.mcp.common.dto.AuthSmsDto" resultType="java.lang.Integer">
+        SELECT
+            COUNT(*)
+        FROM (
+            SELECT RCPT_DATA, SCHEDULE_TIME
+            <choose>
+                <when test='isReal == "Y"'>
+                    FROM AM2X_SUBMIT_LOG@DL_MSP_SMS
+                </when>
+                <otherwise>
+                    FROM AM2X_SUBMIT_LOG@DL_MSP
+                </otherwise>
+            </choose>
+            WHERE RCPT_DATA = #{phoneNum}
+            AND MSG_TYPE = 1
+            AND TO_DATE(SCHEDULE_TIME, 'YYYYMMDDHH24MISS') <![CDATA[>]]> SYSDATE - #{limitMin}/60/24
+
+            UNION ALL
+
+            SELECT RCPT_DATA, SCHEDULE_TIME
+            <choose>
+                <when test='isReal == "Y"'>
+                    FROM AM2X_SUBMIT@DL_MSP_SMS
+                </when>
+                <otherwise>
+                    FROM AM2X_SUBMIT@DL_MSP
+                </otherwise>
+            </choose>
+            WHERE RCPT_DATA = #{phoneNum}
+            AND MSG_TYPE = 1
+            AND TO_DATE(SCHEDULE_TIME, 'YYYYMMDDHH24MISS') <![CDATA[>]]> SYSDATE - #{limitMin}/60/24
+        )
+    </select>
+
+    <insert id="insertNewKakaoNoti" parameterType="com.ktmmobile.mcp.sms.dto.ApiMapDto">
+        <selectKey keyProperty="SMS_SEQ" resultType="string" order="BEFORE">
+            <choose>
+                <when test='IS_REAL == "Y"'>
+                    SELECT AM2X_SUBMIT_SEQ.NEXTVAL@DL_MSP_SMS FROM DUAL
+                </when>
+                <otherwise>
+                    SELECT AM2X_SUBMIT_SEQ.NEXTVAL@DL_MSP FROM DUAL
+                </otherwise>
+            </choose>
+        </selectKey>
+
+        INSERT INTO
+        <choose>
+            <when test='IS_REAL == "Y"'>
+                AM2X_SUBMIT@DL_MSP_SMS
+            </when>
+            <otherwise>
+                AM2X_SUBMIT@DL_MSP
+            </otherwise>
+        </choose> (
+            MSG_ID,
+            <if test='I_SUBJECT != null and I_SUBJECT != ""'>
+                  SUBJECT ,
+            </if>
+            MSG_TYPE,
+            SCHEDULE_TIME,
+            SUBMIT_TIME,
+            MESSAGE,
+            CALLBACK_NUM,
+            RCPT_DATA,
+            RESERVED01,
+            RESERVED02,
+            RESERVED03,
+            K_TMPLCODE,
+            MSG_TYPE_SECOND,
+            K_SENDERKEY,
+            K_MESSAGE,
+            FAIL_SEND
+        ) VALUES (
+            #{SMS_SEQ, jdbcType=NUMERIC},
+            <if test='I_SUBJECT != null and I_SUBJECT != ""'>
+                  #{I_SUBJECT},
+            </if>
+            #{I_MSG_TYPE},
+            TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+            TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+            #{I_MSG},
+            #{I_CALLBACK},
+            #{I_CTN},
+            'MCP',
+            #{RESERVED02},
+            #{RESERVED03},
+            #{I_TEMPLATE_CD},
+            #{I_NEXT_TYPE},
+            #{I_SENDER_KEY},
+            #{I_MSG},
+            'Y'
+        )
+    </insert>
+
+</mapper>
