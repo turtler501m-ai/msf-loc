@@ -50,7 +50,34 @@ MsfXxxSvcImpl.java          ← 서비스 구현체 (@Service)
 - ASIS `@Controller` → TOBE `@RestController` 로 교체
 - ASIS 메서드에 `Model`, `HttpSession`, `@RequestMapping` → TOBE `@PostMapping` / `@GetMapping` + `@RequestBody` 로 교체
 
-### 2-2. HTTP 메서드 규칙
+### 2-2. ASIS↔TOBE 함수명 일치 원칙 (수정내역 추적 용이)
+
+ASIS와 TOBE의 함수명을 최대한 동일하게 유지하여 diff 비교 및 변환 이력 추적이 쉽도록 한다.
+
+| 레이어 | 규칙 | 예시 |
+|--------|------|------|
+| **Service (인터페이스·Impl)** | ASIS 함수명 그대로 유지. 파라미터·반환값 시그니처만 TOBE 타입으로 교체. | `selectmyAddSvcList` → `selectMyAddSvcList` (대소문자 정규화만) |
+| **Controller** | ASIS 함수명에서 `Ajax` 접미사만 제거. URL은 REST 경로로 변경. | `myAddSvcListAjax` → `myAddSvcList` |
+
+```java
+// ASIS Service
+MpAddSvcInfoParamDto selectmyAddSvcList(String ncn, String ctn, String custId);
+
+// TOBE Service — 함수명 유지, 시그니처만 교체
+AdditionMyListResVO selectMyAddSvcList(AdditionReqDto req);
+
+// ASIS Controller
+@RequestMapping("/mypage/myAddSvcListAjax.do")
+public Map<String,Object> myAddSvcListAjax(HttpServletRequest request, ...)
+
+// TOBE Controller — "Ajax" 제거, URL을 REST로 변경
+@PostMapping("/api/v1/addition/my-list")
+public ResponseEntity<AdditionMyListResVO> myAddSvcList(@RequestBody AdditionReqDto req)
+```
+
+**주의**: TOBE 메서드에 새 이름을 붙이지 않는다. `cancelAddSvc`, `regAddSvc` 같은 신규 명칭보다 ASIS 원본인 `moscRegSvcCanChg`, `regSvcChg` 를 그대로 사용한다.
+
+### 2-3. HTTP 메서드 규칙
 
 | 용도 | 메서드 |
 |------|--------|

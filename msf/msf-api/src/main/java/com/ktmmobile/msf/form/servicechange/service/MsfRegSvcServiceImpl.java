@@ -110,7 +110,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
      *           → TOBE에서는 lstComActvDate 없이 기본 onlineCanYn만 적용 (단순화)
      */
     @Override
-    public AdditionMyListResVO getMyAddSvcList(AdditionReqDto req) {
+    public AdditionMyListResVO selectMyAddSvcList(AdditionReqDto req) {
         MpAddSvcInfoParamDto vo = new MpAddSvcInfoParamDto();
         try {
             // [1] X97 — 가입중인 부가서비스 전체 조회
@@ -167,7 +167,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
      *           X20은 기본 SOC 목록만 반환, X97은 상세 이력 포함 반환
      */
     @Override
-    public AdditionAvailableResVO getAvailableAddSvcList(AdditionReqDto req) {
+    public AdditionAvailableResVO selectAddSvcInfoDto(AdditionReqDto req) {
         // [1] X97 — 현재 가입중인 SOC 목록 추출 (useYn 매핑용)
         List<String> useSocList = new ArrayList<>();
         try {
@@ -235,7 +235,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
      *           Map<String,Object> 반환 → TOBE에서 AdditionApplyResVO로 교체
      */
     @Override
-    public AdditionApplyResVO cancelAddSvc(AdditionApplyReqDto req) {
+    public AdditionApplyResVO moscRegSvcCanChg(AdditionApplyReqDto req) {
         try {
             // [1] MSP_RATE_MST@DL_MSP — 온라인 해지 가능 여부 사전 검증
             MspRateMstDto mspRateMstDto = fCommonSvc.getMspRateMst(req.getSoc());
@@ -297,11 +297,11 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
      * ASIS 참조: regSvcChg() — X21 사용, 인증 STEP 검증, 포인트 처리 포함
      */
     @Override
-    public AdditionApplyResVO regAddSvc(AdditionApplyReqDto req) {
+    public AdditionApplyResVO regSvcChg(AdditionApplyReqDto req) {
         try {
             // [1] 선해지 (flag="Y": 동일 SOC 해지 후 재가입 — 로밍 변경 등)
             if ("Y".equals(req.getFlag())) {
-                AdditionApplyResVO cancelRes = cancelAddSvc(req);
+                AdditionApplyResVO cancelRes = moscRegSvcCanChg(req);
                 if (!cancelRes.isSuccess()) {
                     // 선해지 실패 시 신청 중단
                     return cancelRes;
@@ -415,7 +415,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
     // [ASIS] 기존 메서드 — TOBE 전환 완료로 주석 처리 (삭제 금지)
     // =====================================================
 
-    // [ASIS] X20 사용 → getAvailableAddSvcList()로 대체
+    // [ASIS] X20 사용 → selectAddSvcInfoDto()로 대체
     // X20: 이용중인 부가서비스 SOC 목록만 반환 (단순)
     // X97: SOC + 이력 + 상세정보 포함 반환 (확장)
     // @Override
@@ -424,7 +424,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
     //     ... (X20 호출)
     // }
 
-    // [ASIS] X21 사용 → regAddSvc()로 대체
+    // [ASIS] X21 사용 → regSvcChg()로 대체
     // X21: 단건 부가서비스 신청
     // Y25: 상품변경처리(multi) — 복수 SOC 처리 지원
     // @Override
@@ -433,7 +433,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
     //     res = mPlatFormService.regSvcChg(ncn, ctn, custId, soc, ftrNewParam); // X21
     // }
 
-    // [ASIS] X97 사용, MyPageSearchDto(세션) 의존 → getMyAddSvcList()로 대체
+    // [ASIS] X97 사용, MyPageSearchDto(세션) 의존 → selectMyAddSvcList()로 대체
     // lstComActvDate(최초 공통 활성 일자) 기반 onlineCanDay 블로킹 처리 포함
     // TOBE에서는 단순화 (lstComActvDate 미사용)
     // @Override
@@ -441,7 +441,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
     // @Override
     // public MpAddSvcInfoParamDto selectmyAddSvcList(String ncn, String ctn, String custId, String lstComActvDate) { ... }
 
-    // [ASIS] Map 반환, MyPageSearchDto(세션) 의존 → cancelAddSvc()로 대체
+    // [ASIS] Map 반환, MyPageSearchDto(세션) 의존 → moscRegSvcCanChg()로 대체
     // Map<String,Object>에 "RESULT_CODE"("S"/"E"), "message" 키로 결과 반환
     // TOBE에서 AdditionApplyResVO(success, message)로 교체
     // @Override

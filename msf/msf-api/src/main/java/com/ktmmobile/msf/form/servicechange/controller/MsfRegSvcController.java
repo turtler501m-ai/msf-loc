@@ -73,7 +73,7 @@ public class MsfRegSvcController {
      */
     @PostMapping("/my-list")
     public ResponseEntity<AdditionMyListResVO> myAddSvcList(@RequestBody AdditionReqDto req) {
-        return ResponseEntity.ok(regSvcService.getMyAddSvcList(req));
+        return ResponseEntity.ok(regSvcService.selectMyAddSvcList(req));
     }
 
     /**
@@ -90,8 +90,8 @@ public class MsfRegSvcController {
      * @return 가입가능 부가서비스 목록 (list/listA/listC)
      */
     @PostMapping("/available-list")
-    public ResponseEntity<AdditionAvailableResVO> availableAddSvcList(@RequestBody AdditionReqDto req) {
-        return ResponseEntity.ok(regSvcService.getAvailableAddSvcList(req));
+    public ResponseEntity<AdditionAvailableResVO> addSvcList(@RequestBody AdditionReqDto req) {
+        return ResponseEntity.ok(regSvcService.selectAddSvcInfoDto(req));
     }
 
     /**
@@ -108,9 +108,9 @@ public class MsfRegSvcController {
      * @return 해지 결과 (success/message)
      */
     @PostMapping("/cancel")
-    public ResponseEntity<AdditionApplyResVO> cancelAddSvc(@RequestBody AdditionApplyReqDto req)
+    public ResponseEntity<AdditionApplyResVO> moscRegSvcCanChg(@RequestBody AdditionApplyReqDto req)
             throws SocketTimeoutException {
-        return ResponseEntity.ok(regSvcService.cancelAddSvc(req));
+        return ResponseEntity.ok(regSvcService.moscRegSvcCanChg(req));
     }
 
     /**
@@ -126,9 +126,9 @@ public class MsfRegSvcController {
      * @return 신청 결과 (success/message)
      */
     @PostMapping("/reg")
-    public ResponseEntity<AdditionApplyResVO> regAddSvc(@RequestBody AdditionApplyReqDto req)
+    public ResponseEntity<AdditionApplyResVO> regSvcChg(@RequestBody AdditionApplyReqDto req)
             throws SocketTimeoutException {
-        return ResponseEntity.ok(regSvcService.regAddSvc(req));
+        return ResponseEntity.ok(regSvcService.regSvcChg(req));
     }
 
     // =====================================================
@@ -140,7 +140,7 @@ public class MsfRegSvcController {
     // public String regServiceView(HttpServletRequest request, ModelMap model,
     //         @ModelAttribute("searchVO") MyPageSearchDto searchVO) { ... }
 
-    // [ASIS] 이용중 부가서비스 목록 — myAddSvcList()로 대체
+    // [ASIS] 이용중 부가서비스 목록 — myAddSvcList() (ASIS: myAddSvcListAjax — "Ajax" 제거)로 대체
     // @RequestMapping(value = { "/mypage/myAddSvcListAjax.do", "/m/mypage/myAddSvcListAjax.do" })
     // @ResponseBody
     // public Map<String, Object> myAddSvcListAjax(HttpServletRequest request, Model model,
