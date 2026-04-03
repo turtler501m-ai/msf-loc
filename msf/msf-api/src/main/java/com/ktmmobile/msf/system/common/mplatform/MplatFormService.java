@@ -611,15 +611,25 @@ public class MplatFormService {
     }
 
     /**
-     * Y25 - 상품변경처리(multi), X21 대체
+     * Y25 - 상품변경처리(multi)
      *
-     * @param ncn       사용자 서비스 계약번호 9자리 [-]제외
-     * @param ctn       사용자 전화번호 11자리
-     * @param custId    고객번호
-     * @param soc       SOC 코드
-     * @param ftrNewParam 부가정보
-     * @return MpRegSvcChgVO
-     * @throws SocketTimeoutException
+     * [TOBE 추가 2026-04-03] ASIS X21(부가서비스신청) 대체 코드.
+     *
+     * X21과의 차이:
+     *   X21 — 단건 부가서비스 신청 (단순 SOC 1개 처리)
+     *   Y25 — 상품변경처리(multi): 복수 SOC 처리 지원, 선/후처리 조합 가능
+     *          IF 설계서 기준 TOBE 표준 코드 (X21 대체 확정)
+     *
+     * LOCAL 환경: getVo(25, vo) 목업 응답 반환 (실제 M플랫폼 호출 없음)
+     * 운영 환경: mplatFormServerAdapter.callService() → 30초 타임아웃
+     *
+     * @param ncn         서비스 계약번호 9자리 [-]제외
+     * @param ctn         전화번호 11자리 (10자리면 앞에 0 추가)
+     * @param custId      고객번호
+     * @param soc         SOC 코드 (신청할 부가서비스)
+     * @param ftrNewParam 부가정보 (추가 옵션이 있는 경우, 없으면 공백)
+     * @return MpRegSvcChgVO (success/resultCode/message)
+     * @throws SocketTimeoutException 30초 타임아웃 초과 시
      */
     public MpRegSvcChgVO regSvcChgY25(String ncn, String ctn, String custId,
                                       String soc, String ftrNewParam) throws SocketTimeoutException {
@@ -628,7 +638,7 @@ public class MplatFormService {
         param.put("soc", StringUtil.NVL(soc, ""));
         param.put("ftrNewParam", StringUtil.NVL(ftrNewParam, ""));
         if ("LOCAL".equals(serverLocation)) {
-            getVo(25, vo);
+            getVo(25, vo); // LOCAL 목업 — case 25 응답 사용
         } else {
             mplatFormServerAdapter.callService(param, vo, 30000);
         }
