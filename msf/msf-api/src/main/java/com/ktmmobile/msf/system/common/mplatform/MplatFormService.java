@@ -125,7 +125,7 @@ public class MplatFormService {
     private FCommonSvc fCommonSvc;
 
     @Autowired
-    private MsfMypageSvc mypageService;
+    private MsfMypageSvc msfMypageSvc;
 
     @Autowired
     private MplatFormServerAdapter mplatFormServerAdapter;
@@ -607,6 +607,31 @@ public class MplatFormService {
             mplatFormServerAdapter.callService(param, vo, 30000);
         }
 
+        return vo;
+    }
+
+    /**
+     * Y25 - 상품변경처리(multi), X21 대체
+     *
+     * @param ncn       사용자 서비스 계약번호 9자리 [-]제외
+     * @param ctn       사용자 전화번호 11자리
+     * @param custId    고객번호
+     * @param soc       SOC 코드
+     * @param ftrNewParam 부가정보
+     * @return MpRegSvcChgVO
+     * @throws SocketTimeoutException
+     */
+    public MpRegSvcChgVO regSvcChgY25(String ncn, String ctn, String custId,
+                                      String soc, String ftrNewParam) throws SocketTimeoutException {
+        MpRegSvcChgVO vo = new MpRegSvcChgVO();
+        HashMap<String, String> param = getParamMap(ncn, ctn, custId, "Y25");
+        param.put("soc", StringUtil.NVL(soc, ""));
+        param.put("ftrNewParam", StringUtil.NVL(ftrNewParam, ""));
+        if ("LOCAL".equals(serverLocation)) {
+            getVo(25, vo);
+        } else {
+            mplatFormServerAdapter.callService(param, vo, 30000);
+        }
         return vo;
     }
 
@@ -1662,12 +1687,12 @@ public class MplatFormService {
         } catch(SocketTimeoutException e) {
             serviceAlterTraceSub.setSuccYn("N");
             serviceAlterTraceSub.setPrcsSbst(e.getMessage());
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
             throw new McpMplatFormException(e.getMessage());
         } catch (Exception e){
             serviceAlterTraceSub.setSuccYn("N");
             serviceAlterTraceSub.setPrcsSbst(e.getMessage());
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
             throw new McpMplatFormException(e.getMessage());
         }
 
@@ -1740,7 +1765,7 @@ public class MplatFormService {
             } else {
                 serviceAlterTraceSub.setPrcsSbst(resltMsgBuffer.toString());
             }
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
         } catch (DataAccessException e ){
             logger.error("DataAccessException=>" + e.getMessage());
         } catch (Exception e ){
@@ -1864,12 +1889,12 @@ public class MplatFormService {
         } catch(SocketTimeoutException e) {
             serviceAlterTraceSub.setSuccYn("N");
             serviceAlterTraceSub.setPrcsSbst(e.getMessage());
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
             throw new McpMplatFormException(e.getMessage());
         } catch (Exception e){
             serviceAlterTraceSub.setSuccYn("N");
             serviceAlterTraceSub.setPrcsSbst(e.getMessage());
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
             throw new McpMplatFormException(e.getMessage());
         }
 
@@ -1938,7 +1963,7 @@ public class MplatFormService {
             } else {
                 serviceAlterTraceSub.setPrcsSbst(resltMsgBuffer.toString());
             }
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
         } catch (DataAccessException e ){
             logger.error("DataAccessException=>" + e.getMessage());
         } catch (Exception e ){
@@ -2066,12 +2091,12 @@ public class MplatFormService {
         } catch (SocketTimeoutException e) {
             serviceAlterTraceSub.setSuccYn("N");
             serviceAlterTraceSub.setPrcsSbst(e.getMessage());
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
             throw e;
         } catch (Exception e){
             serviceAlterTraceSub.setSuccYn("N");
             serviceAlterTraceSub.setPrcsSbst(e.getMessage());
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
             throw new McpMplatFormException(e.getMessage());
         }
 
@@ -2142,7 +2167,7 @@ public class MplatFormService {
             } else {
                 serviceAlterTraceSub.setPrcsSbst(resltMsgBuffer.toString());
             }
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
 
         } catch (DataAccessException e ){
             logger.error("DataAccessException=>" + e.getMessage());
@@ -2258,12 +2283,12 @@ public class MplatFormService {
         } catch (SocketTimeoutException e) {
             serviceAlterTraceSub.setSuccYn("N");
             serviceAlterTraceSub.setPrcsSbst(e.getMessage());
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
             throw e;
         } catch (Exception e){
             serviceAlterTraceSub.setSuccYn("N");
             serviceAlterTraceSub.setPrcsSbst(e.getMessage());
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
             throw new McpMplatFormException(e.getMessage());
         }
 
@@ -2293,7 +2318,7 @@ public class MplatFormService {
             } else {
                 serviceAlterTraceSub.setPrcsSbst(resltMsgBuffer.toString());
             }
-            mypageService.insertServiceAlterTrace(serviceAlterTraceSub);
+            msfMypageSvc.insertServiceAlterTrace(serviceAlterTraceSub);
 
         } catch (DataAccessException e ){
             logger.error("DataAccessException=>" + e.getMessage());
