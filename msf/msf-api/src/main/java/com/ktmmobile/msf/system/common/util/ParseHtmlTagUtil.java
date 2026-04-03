@@ -3,7 +3,6 @@ package com.ktmmobile.msf.system.common.util;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
 import java.util.regex.Pattern;
-
 import org.apache.commons.lang.StringEscapeUtils;
 
 public class ParseHtmlTagUtil {

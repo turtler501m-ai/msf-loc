@@ -1,27 +1,27 @@
-package com.ktmmobile.msf.common.dao;
+package com.ktmmobile.msf.form.common.dao;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import com.ktmmobile.msf.common.dto.PhoneSntyBasDto;
+import com.ktmmobile.msf.form.common.dto.PhoneSntyBasDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 //
 //import com.ktmmobile.msf.form.comm.dto.OrderDto;
-//import com.ktmmobile.msf.common.dto.AnnouncementDto;
-//import com.ktmmobile.msf.common.dto.CommonSearchDto;
-//import com.ktmmobile.msf.common.dto.NmcpEventBoardBasDto;
-//import com.ktmmobile.msf.common.dto.PhoneMspDto;
-//import com.ktmmobile.msf.common.dto.PhoneProdAttrDto;
-//import com.ktmmobile.msf.common.dto.PhoneProdBasDto;
-//import com.ktmmobile.msf.common.dto.PhoneProdImgDetailDto;
-//import com.ktmmobile.msf.common.dto.PhoneSntyBasDto;
+//import com.ktmmobile.msf.form.common.dto.AnnouncementDto;
+//import com.ktmmobile.msf.form.common.dto.CommonSearchDto;
+//import com.ktmmobile.msf.form.common.dto.NmcpEventBoardBasDto;
+//import com.ktmmobile.msf.form.common.dto.PhoneMspDto;
+//import com.ktmmobile.msf.form.common.dto.PhoneProdAttrDto;
+//import com.ktmmobile.msf.form.common.dto.PhoneProdBasDto;
+//import com.ktmmobile.msf.form.common.dto.PhoneProdImgDetailDto;
+//import com.ktmmobile.msf.form.common.dto.PhoneSntyBasDto;
 
-import com.ktmmobile.msf.common.dto.CommonSearchDto;
-import com.ktmmobile.msf.common.dto.PhoneMspDto;
-import com.ktmmobile.msf.common.dto.PhoneProdBasDto;
+import com.ktmmobile.msf.form.common.dto.CommonSearchDto;
+import com.ktmmobile.msf.form.common.dto.PhoneMspDto;
+import com.ktmmobile.msf.form.common.dto.PhoneProdBasDto;
 
 
 /**

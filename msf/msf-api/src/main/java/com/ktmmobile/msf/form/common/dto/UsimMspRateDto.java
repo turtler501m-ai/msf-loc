@@ -2,7 +2,7 @@ package com.ktmmobile.msf.usim.dto;
 
 import java.io.Serializable;
 
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.form.common.util.NmcpServiceUtils;
 
 public class UsimMspRateDto implements Serializable{
 

@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.common.dto;
+package com.ktmmobile.msf.form.common.dto;
 
 import java.io.Serializable;
 import java.sql.Date;
@@ -14,8 +14,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleSubsdMstDto;
-import com.ktmmobile.msf.system.common.xss.RequestWrapper;
+import com.ktmmobile.msf.form.common.mspservice.dto.MspSaleSubsdMstDto;
+import com.ktmmobile.msf.form.common.xss.RequestWrapper;
 
 
 /**

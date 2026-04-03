@@ -1,10 +1,7 @@
 package com.ktmmobile.msf.form.servicechange.dto;
 
 import java.io.Serializable;
-import com.ktds.crypto.exception.CryptoException;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
 import com.ktmmobile.msf.system.common.util.MaskingUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.system.common.util.StringUtil;
 
 public class McpUserCntrMngDto implements Serializable {
@@ -359,11 +356,12 @@ public class McpUserCntrMngDto implements Serializable {
         this.contractNum = contractNum;
     }
     public String getUserSSn() {
-        try {
-            return NmcpServiceUtils.getSsnDate(EncryptUtil.ace256Dec(userSSn));
-        } catch (CryptoException e) {
+//PNB_확인      
+//        try {
+//            return NmcpServiceUtils.getSsnDate(EncryptUtil.ace256Dec(userSSn));
+//        } catch (CryptoException e) {
             return "" ;
-        }
+//        }
     }
     public void setUserSSn(String userSSn) {
         this.userSSn = userSSn;
@@ -446,20 +444,22 @@ public class McpUserCntrMngDto implements Serializable {
         return unUserSSn;
     }
     public void setUnUserSSn(String unUserSSn) {
-        if (StringUtil.isBlank(unUserSSn)) {
-            this.unUserSSn = "";
-        } else {
-            if (StringUtil.isNumeric(unUserSSn)) {
-                this.unUserSSn = EncryptUtil.ace256Enc(unUserSSn);
-            } else {
-                try {
-                    this.unUserSSn =  EncryptUtil.ace256Dec(unUserSSn);
-                } catch (CryptoException e) {
-                    this.unUserSSn = unUserSSn;
-                }
-            }
 
-        }
+//PNB_확인      
+//        if (StringUtil.isBlank(unUserSSn)) {
+//            this.unUserSSn = "";
+//        } else {
+//            if (StringUtil.isNumeric(unUserSSn)) {
+//                this.unUserSSn = EncryptUtil.ace256Enc(unUserSSn);
+//            } else {
+//                try {
+//                    this.unUserSSn =  EncryptUtil.ace256Dec(unUserSSn);
+//                } catch (CryptoException e) {
+//                    this.unUserSSn = unUserSSn;
+//                }
+//            }
+//
+//        }
     }
     public String getCustomerType() {
         return customerType;

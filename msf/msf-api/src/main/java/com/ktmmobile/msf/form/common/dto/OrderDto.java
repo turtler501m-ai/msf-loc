@@ -6,7 +6,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleSubsdMstDto;
+import com.ktmmobile.msf.form.common.mspservice.dto.MspSaleSubsdMstDto;
 
 public class OrderDto implements Serializable {
 

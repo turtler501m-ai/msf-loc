@@ -42,7 +42,6 @@ import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.system.common.exception.McpErropPageException;
 import com.ktmmobile.msf.system.common.mplatform.MplatFormService;
 import com.ktmmobile.msf.system.common.mplatform.dto.NowDlvryResDto;
-import com.ktmmobile.msf.system.common.service.BannerStatService;
 import com.ktmmobile.msf.system.common.service.FCommonSvc;
 import com.ktmmobile.msf.system.common.service.IpStatisticService;
 import com.ktmmobile.msf.system.common.util.CommonHttpClient;
@@ -84,8 +83,8 @@ public class FCommonController {
     @Autowired
     private MplatFormService mPlatFormService;
 
-    @Autowired
-    private BannerStatService bannerStatService;
+//    @Autowired
+//    private BannerStatService bannerStatService;
 
     @Autowired
     private IpStatisticService ipStatisticService;
@@ -649,7 +648,7 @@ public class FCommonController {
             bannAccessTxnDto.setReqTrtCd("CLK");
 
             if(bannAccessTxnDto.getMenuSeq() != 999999) {
-                bannerStatService.insertBannAccessTxn(bannAccessTxnDto);
+//                bannerStatService.insertBannAccessTxn(bannAccessTxnDto);
             }
         }
         return 1;

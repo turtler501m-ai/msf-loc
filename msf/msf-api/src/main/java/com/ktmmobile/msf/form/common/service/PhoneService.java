@@ -1,11 +1,11 @@
-package com.ktmmobile.msf.common.service;
+package com.ktmmobile.msf.form.common.service;
 
 import java.util.List;
 import java.util.Map;
 
-import com.ktmmobile.msf.common.dto.CommonSearchDto;
-import com.ktmmobile.msf.common.dto.PhoneProdBasDto;
-import com.ktmmobile.msf.common.dto.PhoneSntyBasDto;
+import com.ktmmobile.msf.form.common.dto.CommonSearchDto;
+import com.ktmmobile.msf.form.common.dto.PhoneProdBasDto;
+import com.ktmmobile.msf.form.common.dto.PhoneSntyBasDto;
 
 public interface PhoneService {
 

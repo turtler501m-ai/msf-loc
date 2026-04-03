@@ -1,24 +1,17 @@
 package com.ktmmobile.msf.system.common.util;
 
-import java.lang.reflect.Field;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import com.ktds.crypto.exception.CryptoException;
+import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.form.servicechange.dto.MyShareDataReqDto;
 import com.ktmmobile.msf.system.common.dto.AuthSmsDto;
 import com.ktmmobile.msf.system.common.dto.NiceResDto;
 import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
@@ -26,13 +19,7 @@ import com.ktmmobile.msf.system.common.dto.RoleMenuDto;
 import com.ktmmobile.msf.system.common.dto.SiteMenuDto;
 import com.ktmmobile.msf.system.common.dto.UserSessionDto;
 import com.ktmmobile.msf.system.common.dto.WorkNotiDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestOsstDto;
 import com.ktmmobile.msf.system.common.mplatform.dto.MoscMvnoComInfo;
-import com.ktmmobile.msf.system.faceauth.dto.FathSessionDto;
-import com.ktmmobile.msf.form.newchange.dto.AppformReqDto;
-import com.ktmmobile.msf.form.newchange.dto.JuoSubInfoDto;
-import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.form.servicechange.dto.MyShareDataReqDto;
 
 public class SessionUtils {
 
@@ -120,40 +107,41 @@ public class SessionUtils {
     public static final String FATH_FS8_GLOBAL_ID = "FATH_FS8_GLOBAL_ID"; // FS8 글로벌ID
     public static final String FATH_FS9_GLOBAL_ID = "FATH_FS9_GLOBAL_ID"; // FS9 글로벌ID
     public static final String FATH_SESSION = "FATH_SESSION"; // 안면인증 세션
-    /**
-     * <pre>
-     * 설명     : 동일한 5초 이네에 동일한 요청 여부를 확인 한다.
-     * @param
-     * @return: void
-     * </pre>
-     */
-    public static boolean overlapRequestCheck(ResponseSuccessDto responseSuccessDto) {
-        return overlapRequestCheck(responseSuccessDto,5);
-    }
+    
+//    /**
+//     * <pre>
+//     * 설명     : 동일한 5초 이네에 동일한 요청 여부를 확인 한다.
+//     * @param
+//     * @return: void
+//     * </pre>
+//     */
+//    public static boolean overlapRequestCheck(ResponseSuccessDto responseSuccessDto) {
+//        return overlapRequestCheck(responseSuccessDto,5);
+//    }
 
-    /**
-     * <pre>
-     * 설명     : 동일한 2초 이네에 동일한 파일 다운로드 요청
-     * @param
-     * @return: void
-     * </pre>
-     */
-    public static boolean overlapRequestCheck(ResponseSuccessDto responseSuccessDto,int secondTime) {
-        ResponseSuccessDto baseDto = getRequestTime();
-        if (baseDto != null && baseDto.getRedirectUrl().equals(responseSuccessDto.getRedirectUrl())) {
-            Date nowDate = new Date();
-            Date requestTime = baseDto.getRequestTime();
-            long diff = nowDate.getTime() - requestTime.getTime();
-
-            if (diff < secondTime * 1000) {
-                return true;
-            }
-        }
-
-        responseSuccessDto.setRequestTime(new Date());
-        saveRequestTime(responseSuccessDto) ;
-        return false;
-    }
+//    /**
+//     * <pre>
+//     * 설명     : 동일한 2초 이네에 동일한 파일 다운로드 요청
+//     * @param
+//     * @return: void
+//     * </pre>
+//     */
+//    public static boolean overlapRequestCheck(ResponseSuccessDto responseSuccessDto,int secondTime) {
+//        ResponseSuccessDto baseDto = getRequestTime();
+//        if (baseDto != null && baseDto.getRedirectUrl().equals(responseSuccessDto.getRedirectUrl())) {
+//            Date nowDate = new Date();
+//            Date requestTime = baseDto.getRequestTime();
+//            long diff = nowDate.getTime() - requestTime.getTime();
+//
+//            if (diff < secondTime * 1000) {
+//                return true;
+//            }
+//        }
+//
+//        responseSuccessDto.setRequestTime(new Date());
+//        saveRequestTime(responseSuccessDto) ;
+//        return false;
+//    }
 
 
     /**
@@ -192,19 +180,19 @@ public class SessionUtils {
 
 
 
-    /**
-     * <pre>
-     * 설명     : Inicis 결제 금액 저장
-     * @param iniPrice
-     * @return: void
-     * </pre>
-     */
-    public static void saveIniPriceCooke(String iniPrice) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setAttribute(INI_PRICE_COOKIE, EncryptUtil.ace256Enc(iniPrice));
-    }
+//    /**
+//     * <pre>
+//     * 설명     : Inicis 결제 금액 저장
+//     * @param iniPrice
+//     * @return: void
+//     * </pre>
+//     */
+//    public static void saveIniPriceCooke(String iniPrice) {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setAttribute(INI_PRICE_COOKIE, EncryptUtil.ace256Enc(iniPrice));
+//    }
 
     /**
      * <pre>
@@ -280,976 +268,976 @@ public class SessionUtils {
 
 
 
-    /**
-     * <pre>
-     * 설명     : 사용자 정보 session 생성
-     * @param nonMemReqBean
-     * </pre>
-     */
-    public static void saveUserSession(UserSessionDto userSessionDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
-
-        session.setAttribute(USER_SESSION, userSessionDto);
-        session.setAttribute("passWord", "");	//비밀번호는 세션에 담지않는다.
-
-        try {
-            sessionToCookie();
-        } catch (Exception e) {
-            logger.debug("###ERROR### : ");
-        }
-    }
-
-    /**
-     * <pre>
-     * 설명     : 서직지 정보 session return
-     * @return
-     * </pre>
-     */
-    public static AppformReqDto getAppformSession() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        Object appformReqDto = session.getAttribute(APP_FORM_SESSION);
-
-        if (appformReqDto == null) {
-            return null;
-        }
-
-        return (AppformReqDto)appformReqDto;
-    }
-
-
-    /**
-     * <pre>
-     * 설명     : 서직지 정보 session 생성
-     * @param nonMemReqBean
-     * </pre>
-     */
-    public static void saveAppformDto(AppformReqDto appformReqDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
-
-        session.setAttribute(APP_FORM_SESSION, appformReqDto);
-        try {
-            sessionToCookie();
-        } catch (Exception e) {
-            logger.debug("###ERROR### : ");
-        }
-    }
-
-    /**
-     * <pre>
-     * 설명     : 개통정보
-     * @return
-     * </pre>
-     */
-    public static McpRequestOsstDto getOsstDtoSession() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        Object mcpRequestOsstDto = session.getAttribute(OSST_DTO_SESSION);
-
-        if (mcpRequestOsstDto == null) {
-            return null;
-        }
-
-        return (McpRequestOsstDto)mcpRequestOsstDto;
-    }
-
-
-    /**
-     * <pre>
-     * 설명     : 개통정보 session 생성
-     * @param nonMemReqBean
-     * </pre>
-     */
-    public static void saveOsstDto(McpRequestOsstDto mcpRequestOsstDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
-
-        session.setAttribute(OSST_DTO_SESSION, mcpRequestOsstDto);
-        try {
-            sessionToCookie();
-        } catch (Exception e) {
-            logger.debug("###ERROR### : ");
-        }
-    }
-
-
-    /**
-     * <pre>
-     * 설명     : Cnt Session
-     * @return
-     * </pre>
-     */
-    public static int getCntSession() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object sesObject = session.getAttribute(CNT_SESSION);
-
-        if (sesObject == null) {
-            return 0;
-        }
-
-        return (Integer)sesObject;
-    }
-
-
-    /**
-     * <pre>
-     * 설명     : 개통정보 Cnt Session
-     * @param int
-     * </pre>
-     */
-    public static void saveCntSession(int cntSession) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
-
-        session.setAttribute(CNT_SESSION, cntSession);
-        try {
-            sessionToCookie();
-        } catch (Exception e) {
-            logger.debug("###ERROR### : ");
-        }
-    }
-
-
-    /**
-     * <pre>
-     * 설명     : 비회원로그인 정보 session 생성
-     * @param nonMemReqBean
-     * </pre>
-     */
-    public static void saveOrderSession(UserSessionDto userSessionDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        session.setAttribute(ORDER_SESSION, userSessionDto);
-
-        try {
-            sessionToCookie();
-        } catch (Exception e) {
-            logger.debug("###ERROR### : ");
-        }
-    }
-
-
-    /**
-     * <pre>
-     * 설명     : 사용자 정보 session return
-     * @return
-     * </pre>
-     */
-    public static UserSessionDto getOrderSession() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        Object userSessionDto = session.getAttribute(ORDER_SESSION);
-
-        if (userSessionDto == null) {
-            return null;
-        }
-
-        return (UserSessionDto)userSessionDto;
-    }
-
-
-    /**
-     * 프론트 로그인 세션이 있는지 확인
-     * @param request
-     * @return 로그인 세션이 존재하면 true
-     */
-    public static boolean hasLoginUserSessionBean() {
-
-        UserSessionDto userSessionDto = getUserCookieBean();
-
-        if (userSessionDto == null) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * <pre>
-     * 설명     : NICE 인증 정보 저장
-     * @param niceResDto
-     * @return: void
-     * </pre>
-     */
-    public static void saveNiceRes(NiceResDto niceResDto) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setAttribute(NICE_AUT_COOKIE, niceResDto);
-    }
-
-
-
-    /**
-     * <pre>
-     * 설명     :   NICE 인증  session return
-     * @return
-     * </pre>
-     */
-    public static NiceResDto getNiceResCookieBean() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object niceResDto = session.getAttribute(NICE_AUT_COOKIE);
-
-        if (niceResDto == null) {
-            return null;
-        }
-
-        return (NiceResDto)niceResDto;
-    }
-
-    /**
-     * <pre>
-     * 설명    : 본인인증 요청 값 임시 저장 세션 (카카오인증: 이름,생년월일, 전화번호 / PASS인증: 이름, 전화번호)
-     * @param niceResDto
-     * @return: void
-     * </pre>
-     */
-    public static void saveNiceReqTmp(NiceResDto niceResDto) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setAttribute(NICE_AUT_REQEUST_TMP, niceResDto);
-    }
-
-
-    /**
-     * <pre>
-     * 설명     :   본인인증 요청 값 session return
-     * @return
-     * </pre>
-     */
-    public static NiceResDto getNiceReqTmpCookieBean() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object niceResDto = session.getAttribute(NICE_AUT_REQEUST_TMP);
-
-        if (niceResDto == null) {
-            return null;
-        }
-
-        return (NiceResDto)niceResDto;
-    }
-
-    /**
-     * <pre>
-     * 설명     : NICE 대리인 인증 정보 저장
-     * @param niceResDto
-     * @return: void
-     * </pre>
-     */
-    public static void saveNiceAgentRes(NiceResDto niceResDto) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setAttribute(NICE_AGENT_AUT_COOKIE, niceResDto);
-    }
-
-
-
-    /**
-     * <pre>
-     * 설명     :   NICE 대리인 인증  session return
-     * @return
-     * </pre>
-     */
-    public static NiceResDto getNiceAgentResCookieBean() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object niceResDto = session.getAttribute(NICE_AGENT_AUT_COOKIE);
-
-        if (niceResDto == null) {
-            return null;
-        }
-
-        return (NiceResDto)niceResDto;
-    }
-
-    /**
-     * <pre>
-     * 설명     : 분실파손 휴대폰 인증  정보 저장
-     * @param niceResDto
-     * @return: void
-     * </pre>
-     */
-    public static void saveNiceInsrRes(NiceResDto niceResDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        session.setAttribute(NICE_AUT_INSR_COOKIE, niceResDto);
-    }
-
-
-
-    /**
-     * <pre>
-     * 설명     :   분실파손 휴대폰 인증 인증  session return
-     * @return
-     * </pre>
-     */
-    public static NiceResDto getNiceInsrResCookieBean() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object niceResDto = session.getAttribute(NICE_AUT_INSR_COOKIE);
-
-        if (niceResDto == null) {
-            return null;
-        }
-
-        return (NiceResDto)niceResDto;
-    }
-
-
-    /**
-     * <pre>
-     * 설명     : 약정 만료 알림 인증
-     * @param niceResDto
-     * @return: void
-     * </pre>
-     */
-    public static void saveNiceOpenRes(NiceResDto niceResDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        session.setAttribute(NICE_AUT_OPEN_COOKIE, niceResDto);
-    }
-
-
-
-    /**
-     * <pre>
-     * 설명     :   약정 만료 알림 인증   session return
-     * @return
-     * </pre>
-     */
-    public static NiceResDto getNiceOpenResCookieBean() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object niceResDto = session.getAttribute(NICE_AUT_OPEN_COOKIE);
-
-        if (niceResDto == null) {
-            return null;
-        }
-
-        return (NiceResDto)niceResDto;
-    }
-
-
-    /**
-     * 2023.02.28 hsy
-     * 자급제 보상 서비스 휴대폰 인증 정보 저장
-     * @param niceResDto
-     * @return: void
-     */
-    public static void saveNiceRwdRes(NiceResDto niceResDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        session.setAttribute(NICE_AUT_RWD_COOKIE, niceResDto);
-    }
-
-
-
-    /**
-     * 2023.02.28 hsy
-     * 자급제 보상 서비스 휴대폰 인증 정보 session return
-     * @return: NiceResDto
-     */
-    public static NiceResDto getNiceRwdResCookieBean() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object niceResDto = session.getAttribute(NICE_AUT_RWD_COOKIE);
-
-        if (niceResDto == null) {
-            return null;
-        }
-
-        return (NiceResDto)niceResDto;
-    }
-
-
-
-    public static void saveNiceBasRes(NiceResDto niceResDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        session.setAttribute(NICE_AUT_BASE_COOKIE, niceResDto);
-    }
-
-
-
-
-    public static NiceResDto getNiceBasResCookieBean() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object niceResDto = session.getAttribute(NICE_AUT_BASE_COOKIE);
-
-        if (niceResDto == null) {
-            return null;
-        }
-
-        return (NiceResDto)niceResDto;
-    }
-
-    /**
-     * NICE 인증 여부
-     * @param request
-     * @return 로그인 세션이 존재하면 true
-     */
-    public static boolean hasNiceRes() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object niceResDto = session.getAttribute(NICE_AUT_COOKIE);
-
-        if (niceResDto != null) {
-            return true;
-        } else {
-            return false;
-        }
-
-
-    }
-    
-    /**
-     * <pre>
-     * 설명     : 기기변경 고객인증
-     * @param niceResDto
-     * @return: void
-     * </pre>
-     */
-    public static void saveChangeAut(JuoSubInfoDto juoSubInfoDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
-        session.setAttribute(CHANGE_AUT_COOKIE, juoSubInfoDto);
-    }
-
-
-    /**
-     * <pre>
-     * 설명     :   기기변경 고객인증  session return
-     * @return
-     * </pre>
-     */
-    public static JuoSubInfoDto getChangeAutCookieBean() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object juoSubInfoDto = session.getAttribute(CHANGE_AUT_COOKIE);
-        if (juoSubInfoDto == null) {
-            return null;
-        }
-
-        return (JuoSubInfoDto)juoSubInfoDto;
-    }
-
-    /**
-     * <pre>
-     * 설명     : 인증 SMS 정보 session 생성
-     * @param authSmsDto
-     * </pre>
-     */
-    public static void setAuthSmsSession(AuthSmsDto authSmsDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        StringBuffer atr = new StringBuffer(COMM_AUTH_SMS_INFO);
-        atr.append("_").append(authSmsDto.getMenu());
-        session.setAttribute(atr.toString(), authSmsDto);
-    }
-
-
-    /**
-     * <pre>
-     * 설명     : 인증 SMS 정보 session null 초기화
-     * @param authSmsDto
-     * </pre>
-     */
-    public static void setAuthSmsSetNullSession(AuthSmsDto authSmsDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        StringBuffer atr = new StringBuffer(COMM_AUTH_SMS_INFO);
-        atr.append("_").append(authSmsDto.getMenu());
-        session.setAttribute(atr.toString(), null);
-    }
-
-
-
-
-
-
-    /**
-     * <pre>
-     * 설명     : 인증 SMS 정보 session 리턴
-     * @param authSmsDto
-     * </pre>
-     */
-    public static void checkAuthSmsSession(AuthSmsDto authSmsDto) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        StringBuffer atr = new StringBuffer(COMM_AUTH_SMS_INFO);
-        atr.append("_").append(authSmsDto.getMenu());
-        logger.debug("GET SMS SESSION : "+atr.toString());
-        logger.debug("GET SMS PHONE : "+authSmsDto.getPhoneNum());
-
-        AuthSmsDto sessionAuthSmsDto = (AuthSmsDto)session.getAttribute(atr.toString());
-        logger.debug(atr.toString());
-        if(sessionAuthSmsDto == null) {
-            authSmsDto.setMessage("인증번호가 없습니다. 인증번호를 다시 받아 주세요.");
-            authSmsDto.setResult(false);
-            return;
-        } else {
-            if(!sessionAuthSmsDto.getPhoneNum().equals(authSmsDto.getPhoneNum())) {
-                authSmsDto.setMessage("휴대폰 번호가 다릅니다. 인증번호를 다시 받아 주세요.");
-                authSmsDto.setResult(false);
-                return;
-            } else {
-                if(sessionAuthSmsDto.getMenu().equals(authSmsDto.getMenu())) {
-
-                    if(authSmsDto.isCheck()) {
-                        if(sessionAuthSmsDto.isResult()) {
-                            String startDay = sessionAuthSmsDto.getStartDate();
-                            String today = DateTimeUtil.getFormatString("yyyyMMddHHmmss");
-                            int btw = 0;
-                            try {
-                                btw = DateTimeUtil.minsBetween(startDay, today, "yyyyMMddHHmmss");
-                            } catch (ParseException e) {
-                                authSmsDto.setMessage("서비스가 지연되고 있습니다. 다시 시도해 주세요.");
-                                authSmsDto.setResult(false);
-                                return;
-                            }
-                            if(btw < 30) {
-                                authSmsDto.setMessage("정상인증");
-                                authSmsDto.setResult(true);
-                                if(authSmsDto.isDelete()) {
-                                    session.removeAttribute(atr.toString());
-                                }
-                                return;
-                            } else {
-                                authSmsDto.setMessage("인증 후 30분이 경과 되었습니다. 다시 인증 해 주세요.");
-                                authSmsDto.setResult(false);
-                                return;
-                            }
-                        } else {
-                            authSmsDto.setMessage("인증정보가 없습니다. 다시 확인해 주세요.");
-                            authSmsDto.setResult(false);
-                            return;
-                        }
-                    } else {
-                        String startDay = sessionAuthSmsDto.getStartDate();
-                        String today = DateTimeUtil.getFormatString("yyyyMMddHHmmss");
-                        int btw = 0;
-                        try {
-                            btw = DateTimeUtil.minsBetween(startDay, today, "yyyyMMddHHmmss");
-                        } catch (ParseException e) {
-                            authSmsDto.setMessage("서비스가 지연되고 있습니다. 다시 시도해 주세요.");
-                            authSmsDto.setResult(false);
-                            return;
-                        }
-
-                        if(btw < 3) {
-                            if(sessionAuthSmsDto.getAuthNum().equals(authSmsDto.getAuthNum())) {
-                                authSmsDto.setMessage("인증완료");
-                                authSmsDto.setResult(true);
-                                sessionAuthSmsDto.setResult(true);
-                                //session.removeAttribute(COMM_AUTH_SMS_INFO);
-                                return;
-                            } else {
-                                authSmsDto.setMessage("인증번호가 맞지않습니다.");
-                                authSmsDto.setResult(false);
-                                return;
-                            }
-                        } else {
-                            authSmsDto.setMessage("인증번호의 유효기간이 지났습니다.");
-                            authSmsDto.setResult(false);
-                            return;
-                        }
-                    }
-                } else {
-                    authSmsDto.setMessage("인증번호가 없습니다. 인증번호를 다시 받아 주세요.");
-                    authSmsDto.setResult(false);
-                    return;
-                }
-            }
-        }
-
-    }
-
-
-
-    /**
-     * <pre>
-     * 설명     : 휴대폰 회선관리 리스트를 session 저장
-     * @param nonMemReqBean
-     * </pre>
-     */
-    public static void saveCntrList(List<McpUserCntrMngDto> cntrList) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        session.setAttribute(REQUEST_CNTR_LIST_COOKIE, cntrList);
-    }
-
-
-    /**
-     * <pre>
-     * 설명     :   휴대폰 회선관리 리스트를 session n return
-     * @return
-     * </pre>
-     */
-    public static List<McpUserCntrMngDto> getCntrList() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        @SuppressWarnings("unchecked")
-        List<McpUserCntrMngDto> listObj = (List<McpUserCntrMngDto>)session.getAttribute(REQUEST_CNTR_LIST_COOKIE);
-
-        if (listObj == null) {
-            return null;
-        }
-
-        return listObj;
-    }
-
-
-    /**
-     * 모든 세션 정보 삭제
-     * @param request
-     */
-    public static void invalidateSession() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-
-        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getResponse();
-
-        HttpSession session = request.getSession();
-        logger.debug("======== session id1:{}", session.getId());
-        session.invalidate();
-        logger.info("======== LOGOUT session id2:{}", session.getId());
-
-        // 전체 쿠키 삭제하기
-        Cookie[] cookies = request.getCookies() ;
-        if(cookies != null){
-            for(int i=0; i < cookies.length; i++){
-                if(cookies[i].getName().indexOf("ktm_") > -1) {
-
-                    // 쿠키 이름에서 CRLF 문자 제거
-                    String safeCookieName = cookies[i].getName().replace("\r\n", "");
-                    // 만료된 쿠키 생성
-                    Cookie cookie = new Cookie(safeCookieName, "");
-                    // 쿠키의 유효시간을 0으로 설정하여 만료시킨다.
-                    cookie.setMaxAge(0);
-                    cookie.setSecure(true); // 응답 헤더에 추가
-                    response.addCookie(cookie);
-
-                    //cookies[i].setMaxAge(0) ;
-                    //cookies[i].setSecure(true);
-
-                    // 응답 헤더에 추가한다
-                    //response.addCookie(cookies[i]) ;
-                }
-            }
-        }
-        logger.debug("======== session id3:{}", session.getId());
-    }
-
-
-    /**
-     * <pre>
-     * 설명     :   SMS session return
-     * @return
-     * </pre>
-     */
-    public static AuthSmsDto getAuthSmsBean(AuthSmsDto authSmsDto) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        StringBuffer atr = new StringBuffer(COMM_AUTH_SMS_INFO);
-        atr.append("_").append(authSmsDto.getMenu());
-        Object returnDto = session.getAttribute(atr.toString());
-
-        if (returnDto == null) {
-            return null;
-        }
-
-        return (AuthSmsDto)returnDto;
-    }
-
-    public static boolean authSmsBeanCheck(AuthSmsDto authSmsDto) {
-        AuthSmsDto sessionAuthSmsDto = SessionUtils.getAuthSmsBean(authSmsDto);
-
-        if (sessionAuthSmsDto == null) {
-            return false;
-        }
-
-        if(null != sessionAuthSmsDto.getSendTime() && !"".equals(sessionAuthSmsDto.getSendTime())){
-            Long resultTime = Long.parseLong(new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA).format(new Date()))-Long.parseLong(sessionAuthSmsDto.getSendTime());
-            if(resultTime>(sessionAuthSmsDto.getDuration()*60)){
-                return false;
-            }
-        } else {
-            return false;
-        }
-
-        if (sessionAuthSmsDto.getSmsNo().equals(authSmsDto.getSmsNo())
-                && sessionAuthSmsDto.getPhoneNum().equals(authSmsDto.getPhoneNum())) {
-            return true;
-        } else {
-            return false;
-        }
-
-    }
-
-//PNB_미사용    
 //    /**
 //     * <pre>
-//     * 설명     : 프리퀀시 정책 정보
+//     * 설명     : 사용자 정보 session 생성
+//     * @param nonMemReqBean
+//     * </pre>
+//     */
+//    public static void saveUserSession(UserSessionDto userSessionDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
+//
+//        session.setAttribute(USER_SESSION, userSessionDto);
+//        session.setAttribute("passWord", "");	//비밀번호는 세션에 담지않는다.
+//
+//        try {
+//            sessionToCookie();
+//        } catch (Exception e) {
+//            logger.debug("###ERROR### : ");
+//        }
+//    }
+//
+//    /**
+//     * <pre>
+//     * 설명     : 서직지 정보 session return
+//     * @return
+//     * </pre>
+//     */
+//    public static AppformReqDto getAppformSession() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        Object appformReqDto = session.getAttribute(APP_FORM_SESSION);
+//
+//        if (appformReqDto == null) {
+//            return null;
+//        }
+//
+//        return (AppformReqDto)appformReqDto;
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : 서직지 정보 session 생성
+//     * @param nonMemReqBean
+//     * </pre>
+//     */
+//    public static void saveAppformDto(AppformReqDto appformReqDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
+//
+//        session.setAttribute(APP_FORM_SESSION, appformReqDto);
+//        try {
+//            sessionToCookie();
+//        } catch (Exception e) {
+//            logger.debug("###ERROR### : ");
+//        }
+//    }
+//
+//    /**
+//     * <pre>
+//     * 설명     : 개통정보
+//     * @return
+//     * </pre>
+//     */
+//    public static McpRequestOsstDto getOsstDtoSession() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        Object mcpRequestOsstDto = session.getAttribute(OSST_DTO_SESSION);
+//
+//        if (mcpRequestOsstDto == null) {
+//            return null;
+//        }
+//
+//        return (McpRequestOsstDto)mcpRequestOsstDto;
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : 개통정보 session 생성
+//     * @param nonMemReqBean
+//     * </pre>
+//     */
+//    public static void saveOsstDto(McpRequestOsstDto mcpRequestOsstDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
+//
+//        session.setAttribute(OSST_DTO_SESSION, mcpRequestOsstDto);
+//        try {
+//            sessionToCookie();
+//        } catch (Exception e) {
+//            logger.debug("###ERROR### : ");
+//        }
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : Cnt Session
+//     * @return
+//     * </pre>
+//     */
+//    public static int getCntSession() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        Object sesObject = session.getAttribute(CNT_SESSION);
+//
+//        if (sesObject == null) {
+//            return 0;
+//        }
+//
+//        return (Integer)sesObject;
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : 개통정보 Cnt Session
+//     * @param int
+//     * </pre>
+//     */
+//    public static void saveCntSession(int cntSession) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
+//
+//        session.setAttribute(CNT_SESSION, cntSession);
+//        try {
+//            sessionToCookie();
+//        } catch (Exception e) {
+//            logger.debug("###ERROR### : ");
+//        }
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : 비회원로그인 정보 session 생성
+//     * @param nonMemReqBean
+//     * </pre>
+//     */
+//    public static void saveOrderSession(UserSessionDto userSessionDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        session.setAttribute(ORDER_SESSION, userSessionDto);
+//
+//        try {
+//            sessionToCookie();
+//        } catch (Exception e) {
+//            logger.debug("###ERROR### : ");
+//        }
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : 사용자 정보 session return
+//     * @return
+//     * </pre>
+//     */
+//    public static UserSessionDto getOrderSession() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        Object userSessionDto = session.getAttribute(ORDER_SESSION);
+//
+//        if (userSessionDto == null) {
+//            return null;
+//        }
+//
+//        return (UserSessionDto)userSessionDto;
+//    }
+//
+//
+//    /**
+//     * 프론트 로그인 세션이 있는지 확인
+//     * @param request
+//     * @return 로그인 세션이 존재하면 true
+//     */
+//    public static boolean hasLoginUserSessionBean() {
+//
+//        UserSessionDto userSessionDto = getUserCookieBean();
+//
+//        if (userSessionDto == null) {
+//            return false;
+//        }
+//        return true;
+//    }
+//
+//    /**
+//     * <pre>
+//     * 설명     : NICE 인증 정보 저장
+//     * @param niceResDto
 //     * @return: void
 //     * </pre>
 //     */
-//    public static void saveFqcBas(FqcBasDto fqcBasDto) {
+//    public static void saveNiceRes(NiceResDto niceResDto) {
 //        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
 //                .currentRequestAttributes()).getRequest();
 //        HttpSession session = request.getSession();
-//        session.setAttribute("FQC_BAS_COOKIE", fqcBasDto);
+//        session.setAttribute(NICE_AUT_COOKIE, niceResDto);
 //    }
 //
 //
 //
 //    /**
 //     * <pre>
-//     * 설명     :   프리퀀시 정책   session return
+//     * 설명     :   NICE 인증  session return
 //     * @return
 //     * </pre>
 //     */
-//    public static FqcBasDto getFqcBasCookieBean() {
+//    public static NiceResDto getNiceResCookieBean() {
 //        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
 //                .currentRequestAttributes()).getRequest();
 //        HttpSession session = request.getSession();
-//        Object itemObj = session.getAttribute("FQC_BAS_COOKIE");
+//        Object niceResDto = session.getAttribute(NICE_AUT_COOKIE);
 //
-//        if (itemObj == null) {
+//        if (niceResDto == null) {
 //            return null;
 //        }
 //
-//        return (FqcBasDto)itemObj;
+//        return (NiceResDto)niceResDto;
 //    }
-
-
-
-    /**
-     * <pre>
-     * 설명     :   세션값을 암호화 해서 쿠키에 저장한다.
-     * @param HttpServletRequest request
-     * @param HttpServletResponse response
-     * </pre>
-     */
-    public static void sessionToCookie() {
-        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getResponse();
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-
-
-        UserSessionDto userSession = getUserCookieBean();
-        if(userSession != null && request.getHeader("User-Agent").indexOf("M-Mobile-App") != -1) {
-            boolean chkId = false;
-            boolean chkNm = false;
-            boolean chkDiv = false;
-            Field[] fields = userSession.getClass().getDeclaredFields();
-            for(Field f : fields) {
-                f.setAccessible(true);
-                try {
-                    if(f.get(userSession) != null) {
-                        String tmpString = EncryptUtil.ace256Enc(f.get(userSession).toString());
-
-                        if (tmpString != null && !"".equals(tmpString) ) {
-                            Cookie cookie = new Cookie("ktm_"+f.getName(), tmpString);
-                            cookie.setSecure(true);
-                            response.addCookie(cookie);                // 쿠키저장
-                            if("userId".equals(f.getName())) chkId = true;
-                            if("name".equals(f.getName())) chkNm = true;
-                            if("userDivision".equals(f.getName())) chkDiv = true;
-                        }
-
-
-                    }
-                } catch (IllegalArgumentException e) {
-                    logger.error(e.getMessage());
-                } catch (IllegalAccessException e) {
-                    logger.error(e.getMessage());
-                }
-            }
-
-            // 회원 아이디, 이름, 정회원 여부 필드가 있으면 쿠키 저장한다.
-            if(chkId && chkNm && chkDiv) {
-                Cookie cookie = new Cookie("ktm_encKey", "00001");
-                cookie.setSecure(true);
-                //cookie.setMaxAge(60*60*24*365);            // 쿠키 유지 기간(이부분이 없으면 브라우저 종료시 사라짐)
-                cookie.setPath("/");                               // 모든 경로에서 접근 가능하도록
-                //cookie.setDomain(".ktmmobile.com");//이부분을 적용하면 서브 도메인간 공유 가능
-                response.addCookie(cookie);                // 쿠키저장
-            }
-        }
-
-//       if(!"LOCAL".equals(NmcpServiceUtils.getPropertiesVal("SERVER_NAME"))){
-//    	   Cookie[] cookieArray = request.getCookies();
-//    	   if (cookieArray != null) {
-//    		   for (Cookie cookie : cookieArray) {
-//    			   if ("JSESSIONID".equals(cookie.getName())) {
-//    				   response.setHeader(org.springframework.http.HttpHeaders.SET_COOKIE, "JSESSIONID="+cookie.getValue()+";path=/;SameSite=None;Secure;HttpOnly;");
-//    			   }
-//    		   }
-//    	   }
-//       }
-
-    }
-
-
-    /**
-     * <pre>
-     * 설명     :   쿠키값을 복호화 해서 세션에 저장한다.
-     * @param HttpServletRequest request
-     * </pre>
-     */
-    public static void cookieToSession()  {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-
-        if(!SessionUtils.hasLoginUserSessionBean()) {
-            boolean checkCookie = false;
-
-            Cookie[] cookies = request.getCookies();
-            for (Cookie cookie : cookies) {
-                if("ktm_encKey".equals(cookie.getName())) {
-                    if(cookie.getValue() != null && !"".equals(cookie.getValue())) {
-                        checkCookie = true;
-                        break;
-                    }
-                }
-            }
-
-            //ktm_encKey 값이 있으면 쿠키를 세션으로 만드는 작업을 시작한다.
-            if(checkCookie) {
-                UserSessionDto userSession = new UserSessionDto();
-                Field[] fields = userSession.getClass().getDeclaredFields();
-
-                try {
-                    for (Cookie cookie : cookies) {
-                        String tmpName = "";
-                        if(cookie.getName().indexOf("ktm_") > -1) tmpName = cookie.getName().replaceAll("ktm_", "");
-                        for(Field f : fields) {
-                            if(tmpName.equals(f.getName())) {
-                                if(cookie.getValue() != null && !"".equals(cookie.getValue()) ) {
-                                    String decryptStr = EncryptUtil.ace256Dec(cookie.getValue());
-                                    f.setAccessible(true);
-                                    if(f.getType() == int.class) {
-                                        if(decryptStr != null && !"".equals(decryptStr)) {
-                                            f.set(userSession, Integer.parseInt(decryptStr));
-                                        }
-                                    } else {
-                                        f.set(userSession, decryptStr);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                } catch (CryptoException e) {
-                    logger.error(e.getMessage());
-                }  catch (IllegalArgumentException e) {
-                    logger.error(e.getMessage());
-                } catch (IllegalAccessException e) {
-                    logger.error(e.getMessage());
-                }
-
-
-
-                // 회원 아이디, 이름, 정회원 여부 필드가 있으면 세션 저장한다.
-                if(userSession.getUserId() != null && userSession.getUserDivision() != null && userSession.getName() != null) {
-                    saveUserSession(userSession);
-                }
-            }
-        }
-    }
-
-//PNB_미시용    
+//
 //    /**
 //     * <pre>
-//     * 설명     :   captcha  session return
+//     * 설명    : 본인인증 요청 값 임시 저장 세션 (카카오인증: 이름,생년월일, 전화번호 / PASS인증: 이름, 전화번호)
+//     * @param niceResDto
+//     * @return: void
+//     * </pre>
+//     */
+//    public static void saveNiceReqTmp(NiceResDto niceResDto) {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setAttribute(NICE_AUT_REQEUST_TMP, niceResDto);
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     :   본인인증 요청 값 session return
 //     * @return
 //     * </pre>
 //     */
-//    public static Captcha getCaptcha() {
+//    public static NiceResDto getNiceReqTmpCookieBean() {
 //        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
 //                .currentRequestAttributes()).getRequest();
 //        HttpSession session = request.getSession();
-//        Object captcha = session.getAttribute(Captcha.NAME);
-//        if (captcha == null) {
+//        Object niceResDto = session.getAttribute(NICE_AUT_REQEUST_TMP);
+//
+//        if (niceResDto == null) {
 //            return null;
 //        }
 //
-//        return (Captcha)captcha;
+//        return (NiceResDto)niceResDto;
 //    }
 //
-//    public static void setCaptcha(Captcha captcha) {
+//    /**
+//     * <pre>
+//     * 설명     : NICE 대리인 인증 정보 저장
+//     * @param niceResDto
+//     * @return: void
+//     * </pre>
+//     */
+//    public static void saveNiceAgentRes(NiceResDto niceResDto) {
 //        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
 //                .currentRequestAttributes()).getRequest();
 //        HttpSession session = request.getSession();
-//        session.setAttribute(Captcha.NAME, captcha);
+//        session.setAttribute(NICE_AGENT_AUT_COOKIE, niceResDto);
 //    }
+//
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     :   NICE 대리인 인증  session return
+//     * @return
+//     * </pre>
+//     */
+//    public static NiceResDto getNiceAgentResCookieBean() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        Object niceResDto = session.getAttribute(NICE_AGENT_AUT_COOKIE);
+//
+//        if (niceResDto == null) {
+//            return null;
+//        }
+//
+//        return (NiceResDto)niceResDto;
+//    }
+//
+//    /**
+//     * <pre>
+//     * 설명     : 분실파손 휴대폰 인증  정보 저장
+//     * @param niceResDto
+//     * @return: void
+//     * </pre>
+//     */
+//    public static void saveNiceInsrRes(NiceResDto niceResDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        session.setAttribute(NICE_AUT_INSR_COOKIE, niceResDto);
+//    }
+//
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     :   분실파손 휴대폰 인증 인증  session return
+//     * @return
+//     * </pre>
+//     */
+//    public static NiceResDto getNiceInsrResCookieBean() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        Object niceResDto = session.getAttribute(NICE_AUT_INSR_COOKIE);
+//
+//        if (niceResDto == null) {
+//            return null;
+//        }
+//
+//        return (NiceResDto)niceResDto;
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : 약정 만료 알림 인증
+//     * @param niceResDto
+//     * @return: void
+//     * </pre>
+//     */
+//    public static void saveNiceOpenRes(NiceResDto niceResDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        session.setAttribute(NICE_AUT_OPEN_COOKIE, niceResDto);
+//    }
+//
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     :   약정 만료 알림 인증   session return
+//     * @return
+//     * </pre>
+//     */
+//    public static NiceResDto getNiceOpenResCookieBean() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        Object niceResDto = session.getAttribute(NICE_AUT_OPEN_COOKIE);
+//
+//        if (niceResDto == null) {
+//            return null;
+//        }
+//
+//        return (NiceResDto)niceResDto;
+//    }
+//
+//
+//    /**
+//     * 2023.02.28 hsy
+//     * 자급제 보상 서비스 휴대폰 인증 정보 저장
+//     * @param niceResDto
+//     * @return: void
+//     */
+//    public static void saveNiceRwdRes(NiceResDto niceResDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        session.setAttribute(NICE_AUT_RWD_COOKIE, niceResDto);
+//    }
+//
+//
+//
+//    /**
+//     * 2023.02.28 hsy
+//     * 자급제 보상 서비스 휴대폰 인증 정보 session return
+//     * @return: NiceResDto
+//     */
+//    public static NiceResDto getNiceRwdResCookieBean() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        Object niceResDto = session.getAttribute(NICE_AUT_RWD_COOKIE);
+//
+//        if (niceResDto == null) {
+//            return null;
+//        }
+//
+//        return (NiceResDto)niceResDto;
+//    }
+//
+//
+//
+//    public static void saveNiceBasRes(NiceResDto niceResDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        session.setAttribute(NICE_AUT_BASE_COOKIE, niceResDto);
+//    }
+//
+//
+//
+//
+//    public static NiceResDto getNiceBasResCookieBean() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        Object niceResDto = session.getAttribute(NICE_AUT_BASE_COOKIE);
+//
+//        if (niceResDto == null) {
+//            return null;
+//        }
+//
+//        return (NiceResDto)niceResDto;
+//    }
+//
+//    /**
+//     * NICE 인증 여부
+//     * @param request
+//     * @return 로그인 세션이 존재하면 true
+//     */
+//    public static boolean hasNiceRes() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        Object niceResDto = session.getAttribute(NICE_AUT_COOKIE);
+//
+//        if (niceResDto != null) {
+//            return true;
+//        } else {
+//            return false;
+//        }
+//
+//
+//    }
+//    
+//    /**
+//     * <pre>
+//     * 설명     : 기기변경 고객인증
+//     * @param niceResDto
+//     * @return: void
+//     * </pre>
+//     */
+//    public static void saveChangeAut(JuoSubInfoDto juoSubInfoDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
+//        session.setAttribute(CHANGE_AUT_COOKIE, juoSubInfoDto);
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     :   기기변경 고객인증  session return
+//     * @return
+//     * </pre>
+//     */
+//    public static JuoSubInfoDto getChangeAutCookieBean() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        Object juoSubInfoDto = session.getAttribute(CHANGE_AUT_COOKIE);
+//        if (juoSubInfoDto == null) {
+//            return null;
+//        }
+//
+//        return (JuoSubInfoDto)juoSubInfoDto;
+//    }
+//
+//    /**
+//     * <pre>
+//     * 설명     : 인증 SMS 정보 session 생성
+//     * @param authSmsDto
+//     * </pre>
+//     */
+//    public static void setAuthSmsSession(AuthSmsDto authSmsDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        StringBuffer atr = new StringBuffer(COMM_AUTH_SMS_INFO);
+//        atr.append("_").append(authSmsDto.getMenu());
+//        session.setAttribute(atr.toString(), authSmsDto);
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : 인증 SMS 정보 session null 초기화
+//     * @param authSmsDto
+//     * </pre>
+//     */
+//    public static void setAuthSmsSetNullSession(AuthSmsDto authSmsDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        StringBuffer atr = new StringBuffer(COMM_AUTH_SMS_INFO);
+//        atr.append("_").append(authSmsDto.getMenu());
+//        session.setAttribute(atr.toString(), null);
+//    }
+//
+//
+//
+//
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : 인증 SMS 정보 session 리턴
+//     * @param authSmsDto
+//     * </pre>
+//     */
+//    public static void checkAuthSmsSession(AuthSmsDto authSmsDto) {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        StringBuffer atr = new StringBuffer(COMM_AUTH_SMS_INFO);
+//        atr.append("_").append(authSmsDto.getMenu());
+//        logger.debug("GET SMS SESSION : "+atr.toString());
+//        logger.debug("GET SMS PHONE : "+authSmsDto.getPhoneNum());
+//
+//        AuthSmsDto sessionAuthSmsDto = (AuthSmsDto)session.getAttribute(atr.toString());
+//        logger.debug(atr.toString());
+//        if(sessionAuthSmsDto == null) {
+//            authSmsDto.setMessage("인증번호가 없습니다. 인증번호를 다시 받아 주세요.");
+//            authSmsDto.setResult(false);
+//            return;
+//        } else {
+//            if(!sessionAuthSmsDto.getPhoneNum().equals(authSmsDto.getPhoneNum())) {
+//                authSmsDto.setMessage("휴대폰 번호가 다릅니다. 인증번호를 다시 받아 주세요.");
+//                authSmsDto.setResult(false);
+//                return;
+//            } else {
+//                if(sessionAuthSmsDto.getMenu().equals(authSmsDto.getMenu())) {
+//
+//                    if(authSmsDto.isCheck()) {
+//                        if(sessionAuthSmsDto.isResult()) {
+//                            String startDay = sessionAuthSmsDto.getStartDate();
+//                            String today = DateTimeUtil.getFormatString("yyyyMMddHHmmss");
+//                            int btw = 0;
+//                            try {
+//                                btw = DateTimeUtil.minsBetween(startDay, today, "yyyyMMddHHmmss");
+//                            } catch (ParseException e) {
+//                                authSmsDto.setMessage("서비스가 지연되고 있습니다. 다시 시도해 주세요.");
+//                                authSmsDto.setResult(false);
+//                                return;
+//                            }
+//                            if(btw < 30) {
+//                                authSmsDto.setMessage("정상인증");
+//                                authSmsDto.setResult(true);
+//                                if(authSmsDto.isDelete()) {
+//                                    session.removeAttribute(atr.toString());
+//                                }
+//                                return;
+//                            } else {
+//                                authSmsDto.setMessage("인증 후 30분이 경과 되었습니다. 다시 인증 해 주세요.");
+//                                authSmsDto.setResult(false);
+//                                return;
+//                            }
+//                        } else {
+//                            authSmsDto.setMessage("인증정보가 없습니다. 다시 확인해 주세요.");
+//                            authSmsDto.setResult(false);
+//                            return;
+//                        }
+//                    } else {
+//                        String startDay = sessionAuthSmsDto.getStartDate();
+//                        String today = DateTimeUtil.getFormatString("yyyyMMddHHmmss");
+//                        int btw = 0;
+//                        try {
+//                            btw = DateTimeUtil.minsBetween(startDay, today, "yyyyMMddHHmmss");
+//                        } catch (ParseException e) {
+//                            authSmsDto.setMessage("서비스가 지연되고 있습니다. 다시 시도해 주세요.");
+//                            authSmsDto.setResult(false);
+//                            return;
+//                        }
+//
+//                        if(btw < 3) {
+//                            if(sessionAuthSmsDto.getAuthNum().equals(authSmsDto.getAuthNum())) {
+//                                authSmsDto.setMessage("인증완료");
+//                                authSmsDto.setResult(true);
+//                                sessionAuthSmsDto.setResult(true);
+//                                //session.removeAttribute(COMM_AUTH_SMS_INFO);
+//                                return;
+//                            } else {
+//                                authSmsDto.setMessage("인증번호가 맞지않습니다.");
+//                                authSmsDto.setResult(false);
+//                                return;
+//                            }
+//                        } else {
+//                            authSmsDto.setMessage("인증번호의 유효기간이 지났습니다.");
+//                            authSmsDto.setResult(false);
+//                            return;
+//                        }
+//                    }
+//                } else {
+//                    authSmsDto.setMessage("인증번호가 없습니다. 인증번호를 다시 받아 주세요.");
+//                    authSmsDto.setResult(false);
+//                    return;
+//                }
+//            }
+//        }
+//
+//    }
+//
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     : 휴대폰 회선관리 리스트를 session 저장
+//     * @param nonMemReqBean
+//     * </pre>
+//     */
+//    public static void saveCntrList(List<McpUserCntrMngDto> cntrList) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        session.setAttribute(REQUEST_CNTR_LIST_COOKIE, cntrList);
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     :   휴대폰 회선관리 리스트를 session n return
+//     * @return
+//     * </pre>
+//     */
+//    public static List<McpUserCntrMngDto> getCntrList() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        @SuppressWarnings("unchecked")
+//        List<McpUserCntrMngDto> listObj = (List<McpUserCntrMngDto>)session.getAttribute(REQUEST_CNTR_LIST_COOKIE);
+//
+//        if (listObj == null) {
+//            return null;
+//        }
+//
+//        return listObj;
+//    }
+//
+//
+//    /**
+//     * 모든 세션 정보 삭제
+//     * @param request
+//     */
+//    public static void invalidateSession() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//
+//        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getResponse();
+//
+//        HttpSession session = request.getSession();
+//        logger.debug("======== session id1:{}", session.getId());
+//        session.invalidate();
+//        logger.info("======== LOGOUT session id2:{}", session.getId());
+//
+//        // 전체 쿠키 삭제하기
+//        Cookie[] cookies = request.getCookies() ;
+//        if(cookies != null){
+//            for(int i=0; i < cookies.length; i++){
+//                if(cookies[i].getName().indexOf("ktm_") > -1) {
+//
+//                    // 쿠키 이름에서 CRLF 문자 제거
+//                    String safeCookieName = cookies[i].getName().replace("\r\n", "");
+//                    // 만료된 쿠키 생성
+//                    Cookie cookie = new Cookie(safeCookieName, "");
+//                    // 쿠키의 유효시간을 0으로 설정하여 만료시킨다.
+//                    cookie.setMaxAge(0);
+//                    cookie.setSecure(true); // 응답 헤더에 추가
+//                    response.addCookie(cookie);
+//
+//                    //cookies[i].setMaxAge(0) ;
+//                    //cookies[i].setSecure(true);
+//
+//                    // 응답 헤더에 추가한다
+//                    //response.addCookie(cookies[i]) ;
+//                }
+//            }
+//        }
+//        logger.debug("======== session id3:{}", session.getId());
+//    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     :   SMS session return
+//     * @return
+//     * </pre>
+//     */
+//    public static AuthSmsDto getAuthSmsBean(AuthSmsDto authSmsDto) {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        StringBuffer atr = new StringBuffer(COMM_AUTH_SMS_INFO);
+//        atr.append("_").append(authSmsDto.getMenu());
+//        Object returnDto = session.getAttribute(atr.toString());
+//
+//        if (returnDto == null) {
+//            return null;
+//        }
+//
+//        return (AuthSmsDto)returnDto;
+//    }
+//
+//    public static boolean authSmsBeanCheck(AuthSmsDto authSmsDto) {
+//        AuthSmsDto sessionAuthSmsDto = SessionUtils.getAuthSmsBean(authSmsDto);
+//
+//        if (sessionAuthSmsDto == null) {
+//            return false;
+//        }
+//
+//        if(null != sessionAuthSmsDto.getSendTime() && !"".equals(sessionAuthSmsDto.getSendTime())){
+//            Long resultTime = Long.parseLong(new SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA).format(new Date()))-Long.parseLong(sessionAuthSmsDto.getSendTime());
+//            if(resultTime>(sessionAuthSmsDto.getDuration()*60)){
+//                return false;
+//            }
+//        } else {
+//            return false;
+//        }
+//
+//        if (sessionAuthSmsDto.getSmsNo().equals(authSmsDto.getSmsNo())
+//                && sessionAuthSmsDto.getPhoneNum().equals(authSmsDto.getPhoneNum())) {
+//            return true;
+//        } else {
+//            return false;
+//        }
+//
+//    }
+//
+////PNB_미사용    
+////    /**
+////     * <pre>
+////     * 설명     : 프리퀀시 정책 정보
+////     * @return: void
+////     * </pre>
+////     */
+////    public static void saveFqcBas(FqcBasDto fqcBasDto) {
+////        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+////                .currentRequestAttributes()).getRequest();
+////        HttpSession session = request.getSession();
+////        session.setAttribute("FQC_BAS_COOKIE", fqcBasDto);
+////    }
+////
+////
+////
+////    /**
+////     * <pre>
+////     * 설명     :   프리퀀시 정책   session return
+////     * @return
+////     * </pre>
+////     */
+////    public static FqcBasDto getFqcBasCookieBean() {
+////        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+////                .currentRequestAttributes()).getRequest();
+////        HttpSession session = request.getSession();
+////        Object itemObj = session.getAttribute("FQC_BAS_COOKIE");
+////
+////        if (itemObj == null) {
+////            return null;
+////        }
+////
+////        return (FqcBasDto)itemObj;
+////    }
+//
+//
+//
+//    /**
+//     * <pre>
+//     * 설명     :   세션값을 암호화 해서 쿠키에 저장한다.
+//     * @param HttpServletRequest request
+//     * @param HttpServletResponse response
+//     * </pre>
+//     */
+//    public static void sessionToCookie() {
+//        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getResponse();
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//
+//
+//        UserSessionDto userSession = getUserCookieBean();
+//        if(userSession != null && request.getHeader("User-Agent").indexOf("M-Mobile-App") != -1) {
+//            boolean chkId = false;
+//            boolean chkNm = false;
+//            boolean chkDiv = false;
+//            Field[] fields = userSession.getClass().getDeclaredFields();
+//            for(Field f : fields) {
+//                f.setAccessible(true);
+//                try {
+//                    if(f.get(userSession) != null) {
+//                        String tmpString = EncryptUtil.ace256Enc(f.get(userSession).toString());
+//
+//                        if (tmpString != null && !"".equals(tmpString) ) {
+//                            Cookie cookie = new Cookie("ktm_"+f.getName(), tmpString);
+//                            cookie.setSecure(true);
+//                            response.addCookie(cookie);                // 쿠키저장
+//                            if("userId".equals(f.getName())) chkId = true;
+//                            if("name".equals(f.getName())) chkNm = true;
+//                            if("userDivision".equals(f.getName())) chkDiv = true;
+//                        }
+//
+//
+//                    }
+//                } catch (IllegalArgumentException e) {
+//                    logger.error(e.getMessage());
+//                } catch (IllegalAccessException e) {
+//                    logger.error(e.getMessage());
+//                }
+//            }
+//
+//            // 회원 아이디, 이름, 정회원 여부 필드가 있으면 쿠키 저장한다.
+//            if(chkId && chkNm && chkDiv) {
+//                Cookie cookie = new Cookie("ktm_encKey", "00001");
+//                cookie.setSecure(true);
+//                //cookie.setMaxAge(60*60*24*365);            // 쿠키 유지 기간(이부분이 없으면 브라우저 종료시 사라짐)
+//                cookie.setPath("/");                               // 모든 경로에서 접근 가능하도록
+//                //cookie.setDomain(".ktmmobile.com");//이부분을 적용하면 서브 도메인간 공유 가능
+//                response.addCookie(cookie);                // 쿠키저장
+//            }
+//        }
+//
+////       if(!"LOCAL".equals(NmcpServiceUtils.getPropertiesVal("SERVER_NAME"))){
+////    	   Cookie[] cookieArray = request.getCookies();
+////    	   if (cookieArray != null) {
+////    		   for (Cookie cookie : cookieArray) {
+////    			   if ("JSESSIONID".equals(cookie.getName())) {
+////    				   response.setHeader(org.springframework.http.HttpHeaders.SET_COOKIE, "JSESSIONID="+cookie.getValue()+";path=/;SameSite=None;Secure;HttpOnly;");
+////    			   }
+////    		   }
+////    	   }
+////       }
+//
+//    }
+//
+//
+////    /**
+////     * <pre>
+////     * 설명     :   쿠키값을 복호화 해서 세션에 저장한다.
+////     * @param HttpServletRequest request
+////     * </pre>
+////     */
+////    public static void cookieToSession()  {
+////        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+////                .currentRequestAttributes()).getRequest();
+////
+////        if(!SessionUtils.hasLoginUserSessionBean()) {
+////            boolean checkCookie = false;
+////
+////            Cookie[] cookies = request.getCookies();
+////            for (Cookie cookie : cookies) {
+////                if("ktm_encKey".equals(cookie.getName())) {
+////                    if(cookie.getValue() != null && !"".equals(cookie.getValue())) {
+////                        checkCookie = true;
+////                        break;
+////                    }
+////                }
+////            }
+////
+////            //ktm_encKey 값이 있으면 쿠키를 세션으로 만드는 작업을 시작한다.
+////            if(checkCookie) {
+////                UserSessionDto userSession = new UserSessionDto();
+////                Field[] fields = userSession.getClass().getDeclaredFields();
+////
+////                try {
+////                    for (Cookie cookie : cookies) {
+////                        String tmpName = "";
+////                        if(cookie.getName().indexOf("ktm_") > -1) tmpName = cookie.getName().replaceAll("ktm_", "");
+////                        for(Field f : fields) {
+////                            if(tmpName.equals(f.getName())) {
+////                                if(cookie.getValue() != null && !"".equals(cookie.getValue()) ) {
+////                                    String decryptStr = EncryptUtil.ace256Dec(cookie.getValue());
+////                                    f.setAccessible(true);
+////                                    if(f.getType() == int.class) {
+////                                        if(decryptStr != null && !"".equals(decryptStr)) {
+////                                            f.set(userSession, Integer.parseInt(decryptStr));
+////                                        }
+////                                    } else {
+////                                        f.set(userSession, decryptStr);
+////                                    }
+////                                    break;
+////                                }
+////                            }
+////                        }
+////                    }
+////                } catch (CryptoException e) {
+////                    logger.error(e.getMessage());
+////                }  catch (IllegalArgumentException e) {
+////                    logger.error(e.getMessage());
+////                } catch (IllegalAccessException e) {
+////                    logger.error(e.getMessage());
+////                }
+////
+////
+////
+////                // 회원 아이디, 이름, 정회원 여부 필드가 있으면 세션 저장한다.
+////                if(userSession.getUserId() != null && userSession.getUserDivision() != null && userSession.getName() != null) {
+////                    saveUserSession(userSession);
+////                }
+////            }
+////        }
+////    }
+//
+////PNB_미시용    
+////    /**
+////     * <pre>
+////     * 설명     :   captcha  session return
+////     * @return
+////     * </pre>
+////     */
+////    public static Captcha getCaptcha() {
+////        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+////                .currentRequestAttributes()).getRequest();
+////        HttpSession session = request.getSession();
+////        Object captcha = session.getAttribute(Captcha.NAME);
+////        if (captcha == null) {
+////            return null;
+////        }
+////
+////        return (Captcha)captcha;
+////    }
+////
+////    public static void setCaptcha(Captcha captcha) {
+////        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+////                .currentRequestAttributes()).getRequest();
+////        HttpSession session = request.getSession();
+////        session.setAttribute(Captcha.NAME, captcha);
+////    }
 
     /**
      * <pre>
@@ -1471,86 +1459,86 @@ public class SessionUtils {
         return workNotiDto;
     }
 
-    /**
-     * <pre>
-     * 설명     : 휴면 사용자 정보 session 생성
-     * @param dormancyMember
-     * </pre>
-     */
-    public static void saveDormancySession(UserSessionDto userSessionDto) {
+//    /**
+//     * <pre>
+//     * 설명     : 휴면 사용자 정보 session 생성
+//     * @param dormancyMember
+//     * </pre>
+//     */
+//    public static void saveDormancySession(UserSessionDto userSessionDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
+//
+//        session.setAttribute(DORMANCY_SESSION, userSessionDto);
+//        session.setAttribute("passWord", "");	//비밀번호는 세션에 담지않는다.
+//        try {
+//            sessionToDormancyCookie();
+//        } catch (IllegalArgumentException e) {
+//            logger.error(e.getMessage());
+//        } catch (Exception e) {
+//            logger.debug("###ERROR### : ");
+//        }
+//    }
 
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
-
-        session.setAttribute(DORMANCY_SESSION, userSessionDto);
-        session.setAttribute("passWord", "");	//비밀번호는 세션에 담지않는다.
-        try {
-            sessionToDormancyCookie();
-        } catch (IllegalArgumentException e) {
-            logger.error(e.getMessage());
-        } catch (Exception e) {
-            logger.debug("###ERROR### : ");
-        }
-    }
-
-    /**
-     * <pre>
-     * 설명     :   세션값을 암호화 해서 쿠키에 저장한다.
-     * @param HttpServletRequest request
-     * @param HttpServletResponse response
-     * </pre>
-     */
-    public static void sessionToDormancyCookie() {
-        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getResponse();
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-
-
-        UserSessionDto userSession = getUserDormancyCookieBean();
-        if(userSession != null && request.getHeader("User-Agent").indexOf("M-Mobile-App") != -1) {
-            boolean chkId = false;
-            boolean chkNm = false;
-            boolean chkDiv = false;
-            Field[] fields = userSession.getClass().getDeclaredFields();
-            for(Field f : fields) {
-                f.setAccessible(true);
-                try {
-                    if(f.get(userSession) != null) {
-                        String tmpString = EncryptUtil.ace256Enc(f.get(userSession).toString());
-
-                        if (tmpString != null && !"".equals(tmpString) ) {
-                            Cookie cookie = new Cookie("ktm_"+f.getName(), tmpString);
-                            cookie.setSecure(true);
-                            response.addCookie(cookie);                // 쿠키저장
-                            if("userId".equals(f.getName())) chkId = true;
-                            if("name".equals(f.getName())) chkNm = true;
-                            if("userDivision".equals(f.getName())) chkDiv = true;
-                        }
-
-
-                    }
-                } catch (IllegalArgumentException e) {
-                    logger.error(e.getMessage());
-                } catch (IllegalAccessException e) {
-                    logger.error(e.getMessage());
-                }
-            }
-
-            // 회원 아이디, 이름, 정회원 여부 필드가 있으면 쿠키 저장한다.
-            if(chkId && chkNm && chkDiv) {
-                Cookie cookie = new Cookie("ktm_encKey", "00001");
-                cookie.setSecure(true);
-                //cookie.setMaxAge(60*60*24*365);            // 쿠키 유지 기간(이부분이 없으면 브라우저 종료시 사라짐)
-                cookie.setPath("/");                               // 모든 경로에서 접근 가능하도록
-                //cookie.setDomain(".ktmmobile.com");//이부분을 적용하면 서브 도메인간 공유 가능
-                response.addCookie(cookie);                // 쿠키저장
-            }
-        }
-    }
+//    /**
+//     * <pre>
+//     * 설명     :   세션값을 암호화 해서 쿠키에 저장한다.
+//     * @param HttpServletRequest request
+//     * @param HttpServletResponse response
+//     * </pre>
+//     */
+//    public static void sessionToDormancyCookie() {
+//        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getResponse();
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//
+//
+//        UserSessionDto userSession = getUserDormancyCookieBean();
+//        if(userSession != null && request.getHeader("User-Agent").indexOf("M-Mobile-App") != -1) {
+//            boolean chkId = false;
+//            boolean chkNm = false;
+//            boolean chkDiv = false;
+//            Field[] fields = userSession.getClass().getDeclaredFields();
+//            for(Field f : fields) {
+//                f.setAccessible(true);
+//                try {
+//                    if(f.get(userSession) != null) {
+//                        String tmpString = EncryptUtil.ace256Enc(f.get(userSession).toString());
+//
+//                        if (tmpString != null && !"".equals(tmpString) ) {
+//                            Cookie cookie = new Cookie("ktm_"+f.getName(), tmpString);
+//                            cookie.setSecure(true);
+//                            response.addCookie(cookie);                // 쿠키저장
+//                            if("userId".equals(f.getName())) chkId = true;
+//                            if("name".equals(f.getName())) chkNm = true;
+//                            if("userDivision".equals(f.getName())) chkDiv = true;
+//                        }
+//
+//
+//                    }
+//                } catch (IllegalArgumentException e) {
+//                    logger.error(e.getMessage());
+//                } catch (IllegalAccessException e) {
+//                    logger.error(e.getMessage());
+//                }
+//            }
+//
+//            // 회원 아이디, 이름, 정회원 여부 필드가 있으면 쿠키 저장한다.
+//            if(chkId && chkNm && chkDiv) {
+//                Cookie cookie = new Cookie("ktm_encKey", "00001");
+//                cookie.setSecure(true);
+//                //cookie.setMaxAge(60*60*24*365);            // 쿠키 유지 기간(이부분이 없으면 브라우저 종료시 사라짐)
+//                cookie.setPath("/");                               // 모든 경로에서 접근 가능하도록
+//                //cookie.setDomain(".ktmmobile.com");//이부분을 적용하면 서브 도메인간 공유 가능
+//                response.addCookie(cookie);                // 쿠키저장
+//            }
+//        }
+//    }
 
     /**
      * <pre>
@@ -1646,148 +1634,148 @@ public class SessionUtils {
         return (UserSessionDto)userSessionDto;
     }
 
-    public static void saveDummySession(UserSessionDto userSessionDto) {
+//    public static void saveDummySession(UserSessionDto userSessionDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
+//
+//        session.setAttribute(DUMMY_SESSION, userSessionDto);
+//        session.setAttribute("passWord", "");	//비밀번호는 세션에 담지않는다.
+//        try {
+//            sessionToDummyCookie();
+//        } catch (IllegalArgumentException e) {
+//            logger.error(e.getMessage());
+//        } catch (Exception e) {
+//            logger.error("###ERROR### : ");
+//        }
+//    }
 
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setMaxInactiveInterval(60*60);  //60분 세션 설정...
-
-        session.setAttribute(DUMMY_SESSION, userSessionDto);
-        session.setAttribute("passWord", "");	//비밀번호는 세션에 담지않는다.
-        try {
-            sessionToDummyCookie();
-        } catch (IllegalArgumentException e) {
-            logger.error(e.getMessage());
-        } catch (Exception e) {
-            logger.error("###ERROR### : ");
-        }
-    }
-
-    /**
-     * <pre>
-     * 설명     :   세션값을 암호화 해서 쿠키에 저장한다.
-     * @param HttpServletRequest request
-     * @param HttpServletResponse response
-     * </pre>
-     */
-    public static void sessionToDummyCookie() {
-        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getResponse();
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-
-
-        UserSessionDto userSession = getUserDummyCookieBean();
-        if(userSession != null && request.getHeader("User-Agent").indexOf("M-Mobile-App") != -1) {
-            boolean chkId = false;
-            boolean chkNm = false;
-            boolean chkDiv = false;
-            Field[] fields = userSession.getClass().getDeclaredFields();
-            for(Field f : fields) {
-                f.setAccessible(true);
-                try {
-                    if(f.get(userSession) != null) {
-                        String tmpString = EncryptUtil.ace256Enc(f.get(userSession).toString());
-
-                        if (tmpString != null && !"".equals(tmpString) ) {
-                            Cookie cookie = new Cookie("ktm_"+f.getName(), tmpString);
-                            cookie.setSecure(true);
-                            response.addCookie(cookie);                // 쿠키저장
-                            if("userId".equals(f.getName())) chkId = true;
-                            if("name".equals(f.getName())) chkNm = true;
-                            if("userDivision".equals(f.getName())) chkDiv = true;
-                        }
-
-
-                    }
-                } catch (IllegalArgumentException e) {
-                    logger.error(e.getMessage());
-                } catch (IllegalAccessException e) {
-                    logger.error(e.getMessage());
-                }
-            }
-
-            // 회원 아이디, 이름, 정회원 여부 필드가 있으면 쿠키 저장한다.
-            if(chkId && chkNm && chkDiv) {
-                Cookie cookie = new Cookie("ktm_encKey", "00001");
-                cookie.setSecure(true);
-                //cookie.setMaxAge(60*60*24*365);            // 쿠키 유지 기간(이부분이 없으면 브라우저 종료시 사라짐)
-                cookie.setPath("/");                               // 모든 경로에서 접근 가능하도록
-                //cookie.setDomain(".ktmmobile.com");//이부분을 적용하면 서브 도메인간 공유 가능
-                response.addCookie(cookie);                // 쿠키저장
-            }
-        }
-    }
-
-    public static void setGnbMenuCode(String menuCode) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        SiteMenuDto siteMenuDto = (SiteMenuDto)session.getAttribute(CURR_MENU_SESSION);
-
-        if (!"".equals(StringUtil.NVL(menuCode, ""))) {
-            if (siteMenuDto != null) {
-                siteMenuDto.setMenuCode(menuCode);
-            } else {
-                logger.debug("setGnbMenuCode - siteMenuDto is null");
-            }
-        }
-        session.setAttribute(CURR_MENU_SESSION, siteMenuDto);
-    }
-
-    public static String getGnbMenuCode() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        SiteMenuDto siteMenuDto = (SiteMenuDto)session.getAttribute(CURR_MENU_SESSION);
-
-        String menuCode = "";
-        if (siteMenuDto != null) {
-            menuCode = StringUtil.NVL(siteMenuDto.getMenuCode(),"").replaceAll("PCMENU", "").replaceAll("MOMENU", "");
-            if(menuCode.length() < 4) {
-                menuCode = "";
-            }
-        }
-        return menuCode;
-    }
-
-
-    public static void setCurrPhoneNcn(String phoneNcn) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        session.setAttribute(CURR_PHONE_NCN, phoneNcn);
-    }
-
-    public static String getCurrPhoneNcn() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        String phoneNcn = (String)session.getAttribute(CURR_PHONE_NCN);
-
-        return StringUtil.NVL(phoneNcn, "");
-    }
-
-    /**
-     * 유입 제휴 코드 세션 저장
-     * @param inFlow
-     */
-    public static void saveCoalitionInflow(String inFlow) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setAttribute(COALITION_INFLOW_CODE, inFlow);
-
-    }
-
-    /**
-     * 유입 제휴 코드
-     * @return
-     */
-    public static String getCoalitionInflow() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        String inFlowCd = (String)session.getAttribute(COALITION_INFLOW_CODE);
-        return StringUtils.isNotEmpty(inFlowCd) ? inFlowCd : null;
-    }
+//    /**
+//     * <pre>
+//     * 설명     :   세션값을 암호화 해서 쿠키에 저장한다.
+//     * @param HttpServletRequest request
+//     * @param HttpServletResponse response
+//     * </pre>
+//     */
+//    public static void sessionToDummyCookie() {
+//        HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getResponse();
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//
+//
+//        UserSessionDto userSession = getUserDummyCookieBean();
+//        if(userSession != null && request.getHeader("User-Agent").indexOf("M-Mobile-App") != -1) {
+//            boolean chkId = false;
+//            boolean chkNm = false;
+//            boolean chkDiv = false;
+//            Field[] fields = userSession.getClass().getDeclaredFields();
+//            for(Field f : fields) {
+//                f.setAccessible(true);
+//                try {
+//                    if(f.get(userSession) != null) {
+//                        String tmpString = EncryptUtil.ace256Enc(f.get(userSession).toString());
+//
+//                        if (tmpString != null && !"".equals(tmpString) ) {
+//                            Cookie cookie = new Cookie("ktm_"+f.getName(), tmpString);
+//                            cookie.setSecure(true);
+//                            response.addCookie(cookie);                // 쿠키저장
+//                            if("userId".equals(f.getName())) chkId = true;
+//                            if("name".equals(f.getName())) chkNm = true;
+//                            if("userDivision".equals(f.getName())) chkDiv = true;
+//                        }
+//
+//
+//                    }
+//                } catch (IllegalArgumentException e) {
+//                    logger.error(e.getMessage());
+//                } catch (IllegalAccessException e) {
+//                    logger.error(e.getMessage());
+//                }
+//            }
+//
+//            // 회원 아이디, 이름, 정회원 여부 필드가 있으면 쿠키 저장한다.
+//            if(chkId && chkNm && chkDiv) {
+//                Cookie cookie = new Cookie("ktm_encKey", "00001");
+//                cookie.setSecure(true);
+//                //cookie.setMaxAge(60*60*24*365);            // 쿠키 유지 기간(이부분이 없으면 브라우저 종료시 사라짐)
+//                cookie.setPath("/");                               // 모든 경로에서 접근 가능하도록
+//                //cookie.setDomain(".ktmmobile.com");//이부분을 적용하면 서브 도메인간 공유 가능
+//                response.addCookie(cookie);                // 쿠키저장
+//            }
+//        }
+//    }
+//
+//    public static void setGnbMenuCode(String menuCode) {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        SiteMenuDto siteMenuDto = (SiteMenuDto)session.getAttribute(CURR_MENU_SESSION);
+//
+//        if (!"".equals(StringUtil.NVL(menuCode, ""))) {
+//            if (siteMenuDto != null) {
+//                siteMenuDto.setMenuCode(menuCode);
+//            } else {
+//                logger.debug("setGnbMenuCode - siteMenuDto is null");
+//            }
+//        }
+//        session.setAttribute(CURR_MENU_SESSION, siteMenuDto);
+//    }
+//
+//    public static String getGnbMenuCode() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        SiteMenuDto siteMenuDto = (SiteMenuDto)session.getAttribute(CURR_MENU_SESSION);
+//
+//        String menuCode = "";
+//        if (siteMenuDto != null) {
+//            menuCode = StringUtil.NVL(siteMenuDto.getMenuCode(),"").replaceAll("PCMENU", "").replaceAll("MOMENU", "");
+//            if(menuCode.length() < 4) {
+//                menuCode = "";
+//            }
+//        }
+//        return menuCode;
+//    }
+//
+//
+//    public static void setCurrPhoneNcn(String phoneNcn) {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        session.setAttribute(CURR_PHONE_NCN, phoneNcn);
+//    }
+//
+//    public static String getCurrPhoneNcn() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        String phoneNcn = (String)session.getAttribute(CURR_PHONE_NCN);
+//
+//        return StringUtil.NVL(phoneNcn, "");
+//    }
+//
+//    /**
+//     * 유입 제휴 코드 세션 저장
+//     * @param inFlow
+//     */
+//    public static void saveCoalitionInflow(String inFlow) {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        session.setAttribute(COALITION_INFLOW_CODE, inFlow);
+//
+//    }
+//
+//    /**
+//     * 유입 제휴 코드
+//     * @return
+//     */
+//    public static String getCoalitionInflow() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        String inFlowCd = (String)session.getAttribute(COALITION_INFLOW_CODE);
+//        return StringUtils.isNotEmpty(inFlowCd) ? inFlowCd : null;
+//    }
 
 
     /**
@@ -1952,16 +1940,16 @@ public class SessionUtils {
 
     }
 
-    /**
-     * 친구초대 ID
-     * @return
-     */
-    public static String getFriendInvitation() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        String recommend = (String)session.getAttribute(RECOMMEND);
-        return StringUtils.isNotEmpty(recommend) ? recommend : null;
-    }
+//    /**
+//     * 친구초대 ID
+//     * @return
+//     */
+//    public static String getFriendInvitation() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        String recommend = (String)session.getAttribute(RECOMMEND);
+//        return StringUtils.isNotEmpty(recommend) ? recommend : null;
+//    }
 
 
 
@@ -2072,17 +2060,17 @@ public class SessionUtils {
         session.setAttribute(USER_PROMOTION, userProReq);
 
     }
-
-    /**
-     * 회원가입 프로모션
-     * @return
-     */
-    public static String getUserPromotionRes() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        String userProReq = (String)session.getAttribute(USER_PROMOTION);
-        return StringUtils.isNotEmpty(userProReq) ? userProReq : null;
-    }
+//
+//    /**
+//     * 회원가입 프로모션
+//     * @return
+//     */
+//    public static String getUserPromotionRes() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        String userProReq = (String)session.getAttribute(USER_PROMOTION);
+//        return StringUtils.isNotEmpty(userProReq) ? userProReq : null;
+//    }
 
     /**
      * 해피콜 선택여부 세션 저장
@@ -2314,62 +2302,62 @@ public class SessionUtils {
         return (returnDto == null) ? null : (AuthSmsDto) returnDto;
     }
 
-    /**
-     * <pre>
-     * 설명 : 개인화 URL 인증 확인
-     * @param authSmsDto
-     * @return AuthSmsDto
-     * </pre>
-     */
-    public static void checkPersonalAuthSmsSession(AuthSmsDto authSmsDto) {
-
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-          .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-
-        StringBuffer atr = new StringBuffer(PERSONAL_AUTH_SMS_INFO);
-        atr.append("_").append(authSmsDto.getMenu());
-        Object returnDto = session.getAttribute(atr.toString());
-
-        if(returnDto == null){
-          authSmsDto.setResult(false);
-          authSmsDto.setMessage("인증번호가 없습니다. 인증번호를 다시 받아 주세요.");
-          return;
-        }
-
-        // 인증 유효시간 확인
-        AuthSmsDto sessionAuthSmsDto = (AuthSmsDto) returnDto;
-        String startDay = sessionAuthSmsDto.getStartDate();
-        String today = DateTimeUtil.getFormatString("yyyyMMddHHmmss");
-        int btw = 0;
-
-        try{
-            btw = DateTimeUtil.minsBetween(startDay, today, "yyyyMMddHHmmss");
-        }catch(ParseException e){
-            authSmsDto.setResult(false);
-            authSmsDto.setMessage("서비스가 지연되고 있습니다. 다시 시도해 주세요.");
-            return;
-        }
-
-        // 인증 유효시간 초과
-        if(btw >= 3) {
-            authSmsDto.setResult(false);
-            authSmsDto.setMessage("인증번호의 유효기간이 지났습니다.");
-            return;
-        }
-
-        // 인증번호 확인
-        if(!sessionAuthSmsDto.getAuthNum().equals(authSmsDto.getAuthNum())){
-            authSmsDto.setResult(false);
-            authSmsDto.setMessage("인증번호가 맞지않습니다.");
-            return;
-        }
-
-        // 인증 성공
-        authSmsDto.setResult(true);
-        authSmsDto.setMessage("인증완료");
-        sessionAuthSmsDto.setResult(true);
-    }
+//    /**
+//     * <pre>
+//     * 설명 : 개인화 URL 인증 확인
+//     * @param authSmsDto
+//     * @return AuthSmsDto
+//     * </pre>
+//     */
+//    public static void checkPersonalAuthSmsSession(AuthSmsDto authSmsDto) {
+//
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//          .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//
+//        StringBuffer atr = new StringBuffer(PERSONAL_AUTH_SMS_INFO);
+//        atr.append("_").append(authSmsDto.getMenu());
+//        Object returnDto = session.getAttribute(atr.toString());
+//
+//        if(returnDto == null){
+//          authSmsDto.setResult(false);
+//          authSmsDto.setMessage("인증번호가 없습니다. 인증번호를 다시 받아 주세요.");
+//          return;
+//        }
+//
+//        // 인증 유효시간 확인
+//        AuthSmsDto sessionAuthSmsDto = (AuthSmsDto) returnDto;
+//        String startDay = sessionAuthSmsDto.getStartDate();
+//        String today = DateTimeUtil.getFormatString("yyyyMMddHHmmss");
+//        int btw = 0;
+//
+//        try{
+//            btw = DateTimeUtil.minsBetween(startDay, today, "yyyyMMddHHmmss");
+//        }catch(ParseException e){
+//            authSmsDto.setResult(false);
+//            authSmsDto.setMessage("서비스가 지연되고 있습니다. 다시 시도해 주세요.");
+//            return;
+//        }
+//
+//        // 인증 유효시간 초과
+//        if(btw >= 3) {
+//            authSmsDto.setResult(false);
+//            authSmsDto.setMessage("인증번호의 유효기간이 지났습니다.");
+//            return;
+//        }
+//
+//        // 인증번호 확인
+//        if(!sessionAuthSmsDto.getAuthNum().equals(authSmsDto.getAuthNum())){
+//            authSmsDto.setResult(false);
+//            authSmsDto.setMessage("인증번호가 맞지않습니다.");
+//            return;
+//        }
+//
+//        // 인증 성공
+//        authSmsDto.setResult(true);
+//        authSmsDto.setMessage("인증완료");
+//        sessionAuthSmsDto.setResult(true);
+//    }
 
     /**
      * <pre>
@@ -2404,181 +2392,181 @@ public class SessionUtils {
       return (personalUrl == null) ? "" : (String) personalUrl;
     }
 
-//PNB_미사용    
-//    public static void setDocumentReceive(DocRcvSessionDto docRcvSessionDto) {
-//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+////PNB_미사용    
+////    public static void setDocumentReceive(DocRcvSessionDto docRcvSessionDto) {
+////        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+////        HttpSession session = request.getSession();
+////        Map<String, DocRcvSessionDto> sessionDtoMap = (Map<String, DocRcvSessionDto>) session.getAttribute(DOCUMENT_RECEIVE);
+////        if (sessionDtoMap == null) {
+////            sessionDtoMap = new HashMap<>();
+////        }
+////        sessionDtoMap.put(docRcvSessionDto.getDocRcvId(), docRcvSessionDto);
+////        session.setAttribute(DOCUMENT_RECEIVE, sessionDtoMap);
+////    }
+////
+////    public static DocRcvSessionDto getDocumentReceive(String docRcvId) {
+////        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+////        HttpSession session = request.getSession();
+////        Map<String, DocRcvSessionDto> sessionDtoMap = (Map<String, DocRcvSessionDto>) session.getAttribute(DOCUMENT_RECEIVE);
+////        if (sessionDtoMap == null) {
+////            return null;
+////        }
+////        return sessionDtoMap.get(docRcvId);
+////    }
+////
+////    public static void invalidateDocumentReceive(String docRcvId) {
+////        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+////        HttpSession session = request.getSession();
+////        Map<String, DocRcvSessionDto> sessionDtoMap = (Map<String, DocRcvSessionDto>) session.getAttribute(DOCUMENT_RECEIVE);
+////        if (sessionDtoMap != null) {
+////            sessionDtoMap.remove(docRcvId);
+////        }
+////    }
+//
+//
+//    /**
+//     * <pre>
+//     * 설명    : 셀프개통+신규가입인 경우 휴대폰인증 세션 저장
+//     * @param niceResDto
+//     * @return: void
+//     * </pre>
+//     */
+//    public static void saveNiceMobileSession(NiceResDto niceResDto) {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
 //        HttpSession session = request.getSession();
-//        Map<String, DocRcvSessionDto> sessionDtoMap = (Map<String, DocRcvSessionDto>) session.getAttribute(DOCUMENT_RECEIVE);
-//        if (sessionDtoMap == null) {
-//            sessionDtoMap = new HashMap<>();
-//        }
-//        sessionDtoMap.put(docRcvSessionDto.getDocRcvId(), docRcvSessionDto);
-//        session.setAttribute(DOCUMENT_RECEIVE, sessionDtoMap);
+//        session.setAttribute(NICE_AUT_MOBILE_SESSION, niceResDto);
 //    }
 //
-//    public static DocRcvSessionDto getDocumentReceive(String docRcvId) {
-//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//
+//    /**
+//     * <pre>
+//     * 설명     :   셀프개통+신규가입 개통완료시 휴대폰인증 세션 return
+//     * @return
+//     * </pre>
+//     */
+//    public static NiceResDto getNiceMobileSession() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
 //        HttpSession session = request.getSession();
-//        Map<String, DocRcvSessionDto> sessionDtoMap = (Map<String, DocRcvSessionDto>) session.getAttribute(DOCUMENT_RECEIVE);
-//        if (sessionDtoMap == null) {
+//        Object niceResDto = session.getAttribute(NICE_AUT_MOBILE_SESSION);
+//
+//        if (niceResDto == null) {
 //            return null;
 //        }
-//        return sessionDtoMap.get(docRcvId);
+//
+//        return (NiceResDto)niceResDto;
 //    }
 //
-//    public static void invalidateDocumentReceive(String docRcvId) {
+//    /**
+//     * 안면인증 트랜잭션 ID 세션 저장
+//     * @param String
+//     */
+//    public static void saveFathTransacId(String fathTransacId) {
+//        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
+//        fathSessionDto.setTransacId(fathTransacId);
+//        SessionUtils.saveFathSession(fathSessionDto);
+//    }
+//
+//    /**
+//     * 안면인증 수행일자 세션 저장
+//     * @param String
+//     */
+//    public static void saveFathCmpltNtfyDt(String fathCmpltNtfyDt) {
+//        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
+//        fathSessionDto.setCmpltNtfyDt(fathCmpltNtfyDt);
+//        SessionUtils.saveFathSession(fathSessionDto);
+//    }
+//
+//    public static void increaseFathTryCount() {
+//        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
+//        int tryCount = fathSessionDto.getTryCount();
+//        fathSessionDto.setTryCount(++tryCount);
+//        SessionUtils.saveFathSession(fathSessionDto);
+//    }
+//    
+//    /**
+//     * <pre>
+//     * 설명     : 안면인증 CPNT ID 세션 저장
+//     * @param int
+//     * </pre>
+//     */
+//    public static void saveFathCpntId(String cpntId) {
+//        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
+//        fathSessionDto.setCpntId(cpntId);
+//        SessionUtils.saveFathSession(fathSessionDto);
+//    }
+//
+//    public static FathSessionDto getFathSession() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+//                .currentRequestAttributes()).getRequest();
+//        HttpSession session = request.getSession();
+//        Object fathSessionDto = session.getAttribute(FATH_SESSION);
+//        if (fathSessionDto == null) {
+//            fathSessionDto = SessionUtils.initializeFathSession();
+//        }
+//
+//        return (FathSessionDto) fathSessionDto;
+//    }
+//
+//    public static void saveFathSession(FathSessionDto fathSessionDto) {
 //        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 //        HttpSession session = request.getSession();
-//        Map<String, DocRcvSessionDto> sessionDtoMap = (Map<String, DocRcvSessionDto>) session.getAttribute(DOCUMENT_RECEIVE);
-//        if (sessionDtoMap != null) {
-//            sessionDtoMap.remove(docRcvId);
+//        session.setAttribute(FATH_SESSION, fathSessionDto);
+//    }
+//
+//    public static FathSessionDto initializeFathSession() {
+//        FathSessionDto fathSessionDto = new FathSessionDto();
+//        SessionUtils.saveFathSession(fathSessionDto);
+//        return fathSessionDto;
+//    }
+//
+//    /**
+//     * <pre>
+//     * 설명     : 안면인증 임시 예약번호 세션 저장
+//     * </pre>
+//     */
+//    public static void saveFathTempResNo(String tempResNo) {
+//        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
+//        fathSessionDto.setTempResNo(tempResNo);
+//        SessionUtils.saveFathSession(fathSessionDto);
+//    }
+//    
+//    /**
+//     * <pre>
+//     * 설명     : 안면인증 안정화기간 여부 세션 저장
+//     * </pre>
+//     */
+//    public static void saveStbznPerdYn(String stbznPerdYn) {
+//        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
+//        fathSessionDto.setStbznPerdYn(stbznPerdYn);
+//        SessionUtils.saveFathSession(fathSessionDto);
+//    }
+//    
+//    /**
+//     * <pre>
+//     * 설명     : 안면인증 결과확인 버튼 누른시점 세션 저장
+//     * </pre>
+//     */
+//    public static void saveFathResltFirstReqAt() {
+//        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
+//        if(fathSessionDto.getFathResltFirstReqAt() == null) {
+//            fathSessionDto.setFathResltFirstReqAt(new Date());
+//            SessionUtils.saveFathSession(fathSessionDto);
 //        }
 //    }
-
-
-    /**
-     * <pre>
-     * 설명    : 셀프개통+신규가입인 경우 휴대폰인증 세션 저장
-     * @param niceResDto
-     * @return: void
-     * </pre>
-     */
-    public static void saveNiceMobileSession(NiceResDto niceResDto) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setAttribute(NICE_AUT_MOBILE_SESSION, niceResDto);
-    }
-
-
-    /**
-     * <pre>
-     * 설명     :   셀프개통+신규가입 개통완료시 휴대폰인증 세션 return
-     * @return
-     * </pre>
-     */
-    public static NiceResDto getNiceMobileSession() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object niceResDto = session.getAttribute(NICE_AUT_MOBILE_SESSION);
-
-        if (niceResDto == null) {
-            return null;
-        }
-
-        return (NiceResDto)niceResDto;
-    }
-
-    /**
-     * 안면인증 트랜잭션 ID 세션 저장
-     * @param String
-     */
-    public static void saveFathTransacId(String fathTransacId) {
-        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
-        fathSessionDto.setTransacId(fathTransacId);
-        SessionUtils.saveFathSession(fathSessionDto);
-    }
-
-    /**
-     * 안면인증 수행일자 세션 저장
-     * @param String
-     */
-    public static void saveFathCmpltNtfyDt(String fathCmpltNtfyDt) {
-        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
-        fathSessionDto.setCmpltNtfyDt(fathCmpltNtfyDt);
-        SessionUtils.saveFathSession(fathSessionDto);
-    }
-
-    public static void increaseFathTryCount() {
-        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
-        int tryCount = fathSessionDto.getTryCount();
-        fathSessionDto.setTryCount(++tryCount);
-        SessionUtils.saveFathSession(fathSessionDto);
-    }
-    
-    /**
-     * <pre>
-     * 설명     : 안면인증 CPNT ID 세션 저장
-     * @param int
-     * </pre>
-     */
-    public static void saveFathCpntId(String cpntId) {
-        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
-        fathSessionDto.setCpntId(cpntId);
-        SessionUtils.saveFathSession(fathSessionDto);
-    }
-
-    public static FathSessionDto getFathSession() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                .currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        Object fathSessionDto = session.getAttribute(FATH_SESSION);
-        if (fathSessionDto == null) {
-            fathSessionDto = SessionUtils.initializeFathSession();
-        }
-
-        return (FathSessionDto) fathSessionDto;
-    }
-
-    public static void saveFathSession(FathSessionDto fathSessionDto) {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        session.setAttribute(FATH_SESSION, fathSessionDto);
-    }
-
-    public static FathSessionDto initializeFathSession() {
-        FathSessionDto fathSessionDto = new FathSessionDto();
-        SessionUtils.saveFathSession(fathSessionDto);
-        return fathSessionDto;
-    }
-
-    /**
-     * <pre>
-     * 설명     : 안면인증 임시 예약번호 세션 저장
-     * </pre>
-     */
-    public static void saveFathTempResNo(String tempResNo) {
-        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
-        fathSessionDto.setTempResNo(tempResNo);
-        SessionUtils.saveFathSession(fathSessionDto);
-    }
-    
-    /**
-     * <pre>
-     * 설명     : 안면인증 안정화기간 여부 세션 저장
-     * </pre>
-     */
-    public static void saveStbznPerdYn(String stbznPerdYn) {
-        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
-        fathSessionDto.setStbznPerdYn(stbznPerdYn);
-        SessionUtils.saveFathSession(fathSessionDto);
-    }
-    
-    /**
-     * <pre>
-     * 설명     : 안면인증 결과확인 버튼 누른시점 세션 저장
-     * </pre>
-     */
-    public static void saveFathResltFirstReqAt() {
-        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
-        if(fathSessionDto.getFathResltFirstReqAt() == null) {
-            fathSessionDto.setFathResltFirstReqAt(new Date());
-            SessionUtils.saveFathSession(fathSessionDto);
-        }
-    }
-    /**
-     * <pre>
-     * 설명     : (FS9) 안면인증 결과확인 완료
-     * </pre>
-     */
-    public static void saveIsFs9() {
-        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
-        if(fathSessionDto.getIsFs9() == null) {
-            fathSessionDto.setIsFs9("Y");
-            SessionUtils.saveFathSession(fathSessionDto);
-        }
-    }
+//    /**
+//     * <pre>
+//     * 설명     : (FS9) 안면인증 결과확인 완료
+//     * </pre>
+//     */
+//    public static void saveIsFs9() {
+//        FathSessionDto fathSessionDto = SessionUtils.getFathSession();
+//        if(fathSessionDto.getIsFs9() == null) {
+//            fathSessionDto.setIsFs9("Y");
+//            SessionUtils.saveFathSession(fathSessionDto);
+//        }
+//    }
     
 }
 

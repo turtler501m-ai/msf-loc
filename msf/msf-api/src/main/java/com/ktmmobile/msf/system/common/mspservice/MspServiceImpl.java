@@ -1,7 +1,6 @@
 package com.ktmmobile.msf.system.common.mspservice;
 
 import static com.ktmmobile.msf.form.common.constant.PhoneConstant.PHONE_FOR_MSP;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.ACE_256_DECRYPT_EXCEPTION;
 import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_SALE_PLCY_CD_EXCEPTION;
 import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_SALE_PRDT;
 import java.math.BigDecimal;
@@ -18,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import com.ktds.crypto.exception.CryptoException;
 import com.ktmmobile.msf.form.common.constant.PhoneConstant;
 import com.ktmmobile.msf.form.common.dto.PhoneMspDto;
 import com.ktmmobile.msf.system.common.exception.McpCommonException;
@@ -33,7 +31,6 @@ import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleDto;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSalePlcyMstDto;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSalePrdtMstDto;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleSubsdMstDto;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
 import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.system.common.util.ObjectUtils;
 
@@ -396,11 +393,12 @@ public class MspServiceImpl implements MspService {
     public boolean checkKid(String contractNum) {
         String customerSsn = mspDao.getCustomerSsn(contractNum) ;
 
-        try {
-            customerSsn = EncryptUtil.ace256Dec(customerSsn);
-        } catch (CryptoException e) {
-            throw new McpCommonException(ACE_256_DECRYPT_EXCEPTION);
-        }
+// PNB_확인필요        
+//        try {
+//            customerSsn = EncryptUtil.ace256Dec(customerSsn);
+//        } catch (CryptoException e) {
+//            throw new McpCommonException(ACE_256_DECRYPT_EXCEPTION);
+//        }
 
         // 개발계 DB 데이터 없을 경우
         if ("LOCAL".equals(serverName) || "DEV".equals(serverName) || "STG".equals(serverName) ) {

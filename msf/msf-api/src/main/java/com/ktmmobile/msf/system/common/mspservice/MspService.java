@@ -1,7 +1,7 @@
 package com.ktmmobile.msf.system.common.mspservice;
 
 import java.util.List;
-
+import com.ktmmobile.msf.form.common.dto.PhoneMspDto;
 import com.ktmmobile.msf.system.common.exception.McpCommonException;
 import com.ktmmobile.msf.system.common.mspservice.dto.CmnGrpCdMst;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspNoticSupportMstDto;
@@ -11,7 +11,6 @@ import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleAgrmMst;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleDto;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSalePlcyMstDto;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleSubsdMstDto;
-import com.ktmmobile.msf.common.dto.PhoneMspDto;
 
 
 /**

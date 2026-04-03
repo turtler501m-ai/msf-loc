@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.ktmmobile.msf.system.common.dto.db.McpRequestSelfDlvryDto;
+import com.ktmmobile.msf.form.common.dto.db.McpRequestSelfDlvryDto;
 import com.ktmmobile.msf.form.comm.dao.OrderDao;
 import com.ktmmobile.msf.form.comm.dto.OrderDto;
 

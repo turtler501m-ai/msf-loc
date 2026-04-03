@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.system.faceauth.dto;
+package com.ktmmobile.mcp.fath.dto;
 
 public class FathFormInfo {
     private String fathTelNo;

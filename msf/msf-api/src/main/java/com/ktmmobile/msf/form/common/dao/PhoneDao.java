@@ -1,12 +1,12 @@
-package com.ktmmobile.msf.common.dao;
+package com.ktmmobile.msf.form.common.dao;
 
 import java.util.List;
 import java.util.Map;
 
-import com.ktmmobile.msf.common.dto.CommonSearchDto;
-import com.ktmmobile.msf.common.dto.PhoneMspDto;
-import com.ktmmobile.msf.common.dto.PhoneProdBasDto;
-import com.ktmmobile.msf.common.dto.PhoneSntyBasDto;
+import com.ktmmobile.msf.form.common.dto.CommonSearchDto;
+import com.ktmmobile.msf.form.common.dto.PhoneMspDto;
+import com.ktmmobile.msf.form.common.dto.PhoneProdBasDto;
+import com.ktmmobile.msf.form.common.dto.PhoneSntyBasDto;
 
 /*
  * naming rule

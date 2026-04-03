@@ -1,11 +1,11 @@
 package com.ktmmobile.msf.usim.service;
 
-import static com.ktmmobile.msf.system.common.constants.Constants.DTL_CD_OBJ_BASE;
-import static com.ktmmobile.msf.system.common.constants.Constants.DTL_CD_USIM_NFC;
-import static com.ktmmobile.msf.system.common.constants.Constants.GROUP_CODE_DIRECT_USIM_PRICE;
-import static com.ktmmobile.msf.system.common.constants.Constants.GROUP_CODE_MARKET_JOIN_USIM_INFO;
-import static com.ktmmobile.msf.system.common.constants.Constants.GROUP_CODE_USIM_PRICE_INFO;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.BIDING_EXCEPTION;
+import static com.ktmmobile.msf.form.common.constants.Constants.DTL_CD_OBJ_BASE;
+import static com.ktmmobile.msf.form.common.constants.Constants.DTL_CD_USIM_NFC;
+import static com.ktmmobile.msf.form.common.constants.Constants.GROUP_CODE_DIRECT_USIM_PRICE;
+import static com.ktmmobile.msf.form.common.constants.Constants.GROUP_CODE_MARKET_JOIN_USIM_INFO;
+import static com.ktmmobile.msf.form.common.constants.Constants.GROUP_CODE_USIM_PRICE_INFO;
+import static com.ktmmobile.msf.form.common.exception.msg.ExceptionMsgConstant.BIDING_EXCEPTION;
 import static com.ktmmobile.msf.form.common.constant.PhoneConstant.*;
 import static com.ktmmobile.msf.rate.RateAdsvcGdncUtil.getRateAdsvcGdncPath;
 
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ktmmobile.msf.form.newchange.dto.JuoSubInfoDto;
-import com.ktmmobile.msf.system.common.util.*;
+import com.ktmmobile.msf.form.common.util.*;
 import jakarta.xml.bind.JAXBException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -29,16 +29,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import com.ktmmobile.msf.form.newchange.dto.FormDtlDTO;
-import com.ktmmobile.msf.system.common.dto.AuthSmsDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestSelfDlvryDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspPlcyOperTypeDto;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspRateMstDto;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleAgrmMst;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspSalePlcyMstDto;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleSubsdMstDto;
+import com.ktmmobile.msf.form.common.dto.AuthSmsDto;
+import com.ktmmobile.msf.form.common.dto.db.McpRequestSelfDlvryDto;
+import com.ktmmobile.msf.form.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.form.common.exception.McpCommonException;
+import com.ktmmobile.msf.form.common.exception.msg.ExceptionMsgConstant;
+import com.ktmmobile.msf.form.common.mspservice.dto.MspPlcyOperTypeDto;
+import com.ktmmobile.msf.form.common.mspservice.dto.MspRateMstDto;
+import com.ktmmobile.msf.form.common.mspservice.dto.MspSaleAgrmMst;
+import com.ktmmobile.msf.form.common.mspservice.dto.MspSalePlcyMstDto;
+import com.ktmmobile.msf.form.common.mspservice.dto.MspSaleSubsdMstDto;
 import com.ktmmobile.msf.rate.dto.RateAdsvcBnfitGdncDtlXML;
 import com.ktmmobile.msf.rate.dto.RateAdsvcGdncBasXML;
 import com.ktmmobile.msf.rate.dto.RateAdsvcGdncProdRelXML;

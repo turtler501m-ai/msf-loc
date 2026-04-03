@@ -1,8 +1,8 @@
-package com.ktmmobile.msf.common.dto.stragety;
+package com.ktmmobile.msf.form.common.dto.stragety;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleSubsdMstDto;
+import com.ktmmobile.msf.form.common.mspservice.dto.MspSaleSubsdMstDto;
 
 
 /**

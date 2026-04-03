@@ -4,12 +4,8 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.jdom.Element;
-
 import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-import com.ktmmobile.msf.system.common.util.JKTFCryptoUtil;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
 import com.ktmmobile.msf.system.common.util.StringUtil;
 import com.ktmmobile.msf.system.common.util.XmlParse;
 

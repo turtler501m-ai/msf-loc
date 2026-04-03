@@ -1,8 +1,7 @@
 package com.ktmmobile.msf.system.common.mspservice.dto;
 
 import java.io.Serializable;
-
-import com.ktmmobile.msf.common.dto.CommonSearchDto;
+import com.ktmmobile.msf.form.common.dto.CommonSearchDto;
 
 /**
  * @Class Name : MspNoticSupportMstDto

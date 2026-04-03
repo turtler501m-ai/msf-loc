@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.common.dto;
+package com.ktmmobile.msf.form.common.dto;
 
 import java.io.Serializable;
 import java.sql.Date;

@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestTemplate;
 
-import com.ktmmobile.msf.system.common.dto.db.McpRequestSelfDlvryDto;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspNoticSupportMstDto;
+import com.ktmmobile.msf.form.common.dto.db.McpRequestSelfDlvryDto;
+import com.ktmmobile.msf.form.common.mspservice.dto.MspNoticSupportMstDto;
 import com.ktmmobile.msf.form.comm.dto.OrderDto;
 
 @Repository

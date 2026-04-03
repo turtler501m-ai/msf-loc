@@ -2,7 +2,7 @@ package com.ktmmobile.msf.form.comm.dao;
 
 import java.util.List;
 
-import com.ktmmobile.msf.system.common.dto.db.McpRequestSelfDlvryDto;
+import com.ktmmobile.msf.form.common.dto.db.McpRequestSelfDlvryDto;
 import com.ktmmobile.msf.form.comm.dto.OrderDto;
 
 public interface OrderDao {

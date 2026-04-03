@@ -1,7 +1,7 @@
 package com.ktmmobile.msf.system.common.mspservice.dao;
 
 import java.util.List;
-
+import com.ktmmobile.msf.form.common.dto.PhoneMspDto;
 import com.ktmmobile.msf.system.common.mspservice.dto.CmnGrpCdMst;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspNoticSupportMstDto;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspRateMstDto;
@@ -9,7 +9,6 @@ import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleAgrmMst;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSalePlcyMstDto;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSalePrdtMstDto;
 import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleSubsdMstDto;
-import com.ktmmobile.msf.common.dto.PhoneMspDto;
 
 
 /**
