@@ -1,11 +1,13 @@
-package com.ktmmobile.msf.usim.dto;
+package com.ktmmobile.msf.form.common.dto;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
-
+import com.ktmmobile.msf.form.common.dto.UsimMspPlcyDto;
+import com.ktmmobile.msf.form.common.dto.UsimMspOperTypeDto;
+import com.ktmmobile.msf.form.common.dto.UsimMspRateDto;
 
 /**
  * @Class Name : PhoneProdBasDto
@@ -124,17 +126,7 @@ public class UsimBasDto implements Serializable{
     private String[] arrRateNm;
     private String[] arrSalePlcyCd;
 
-    private String reqBuyType;
 
-
-
-    public String getReqBuyType() {
-        return reqBuyType;
-    }
-
-    public void setReqBuyType(String reqBuyType) {
-        this.reqBuyType = reqBuyType;
-    }
 
     public String[] getArrSalePlcyCd() {
         return arrSalePlcyCd;
@@ -420,8 +412,6 @@ public class UsimBasDto implements Serializable{
     public void setPrdtIndCd(String prdtIndCd) {
         this.prdtIndCd = prdtIndCd;
     }
-
-
 
 
 }

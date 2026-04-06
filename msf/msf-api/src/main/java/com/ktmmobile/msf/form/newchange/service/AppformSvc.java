@@ -2,14 +2,14 @@ package com.ktmmobile.msf.form.newchange.service
 ;
 
 import com.ktmmobile.msf.form.newchange.dto.*;
-import com.ktmmobile.msf.system.common.dto.db.*;
-import com.ktmmobile.msf.system.common.exception.McpMplatFormException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.vo.*;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspSalePlcyMstDto;
-import com.ktmmobile.msf.system.common.legacy.etc.dto.GiftPromotionBas;
-import com.ktmmobile.msf.system.common.legacy.point.dto.CustPointDto;
-import com.ktmmobile.msf.usim.dto.UsimBasDto;
+import com.ktmmobile.msf.common.dto.db.*;
+import com.ktmmobile.msf.common.exception.McpMplatFormException;
+import com.ktmmobile.msf.common.exception.SelfServiceException;
+import com.ktmmobile.msf.common.mplatform.vo.*;
+import com.ktmmobile.msf.common.mspservice.dto.MspSalePlcyMstDto;
+import com.ktmmobile.msf.common.legacy.etc.dto.GiftPromotionBas;
+import com.ktmmobile.msf.common.legacy.point.dto.CustPointDto;
+import com.ktmmobile.msf.form.common.dto.UsimBasDto;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketTimeoutException;

@@ -92,14 +92,14 @@
             <artifactId>jaxb-api</artifactId>
             <version>2.3.1</version>
         </dependency>
-        <!-- ktds crypto (CryptoException) -->
+        <!-- ktds crypto (CryptoException) 
         <dependency>
             <groupId>com.ktds</groupId>
             <artifactId>crypto</artifactId>
             <version>1.0.8-RELEASE</version>
             <scope>system</scope>
             <systemPath>${project.basedir}/lib/com/ktds/crypto/1.0.8-RELEASE/crypto-1.0.8-RELEASE.jar</systemPath>
-        </dependency>
+        </dependency> -->
     </dependencies>
 
     <build>
@@ -114,83 +114,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <!-- =====================================================
-                             _bak / _legacy 디렉토리 (ASIS 보관용, 컴파일 제외)
-                             ===================================================== -->
-                        <exclude>com/ktmmobile/msf/system/common/controller/**</exclude>
-
-                        <!-- =====================================================
-                             미이관 패키지 전체 제외 (단계적 이관 예정)
-                             ===================================================== -->
-                        <!-- 공통 Controller 전체 (Session 의존 등) -->
-                        <exclude>com/ktmmobile/msf/common/controller/**</exclude>
-                        <!-- 공통 캐시(EhCache 구현체) -->
-                        <exclude>com/ktmmobile/msf/common/cache/**</exclude>
-                        <!-- 공통 코드 DAO (MyBatis 미등록) -->
-                        <exclude>com/ktmmobile/msf/common/commCode/**</exclude>
-                        <!-- M전산 OSST 어댑터 (별도 DB 연동 미완성) -->
-                        <exclude>com/ktmmobile/msf/common/mplatform/MplatFormOsstServerAdapter.java</exclude>
-                        <exclude>com/ktmmobile/msf/common/mplatform/MplatFormOsstWebServerAdapter.java</exclude>
-                        <!-- MSP 서비스 구현체 (ktds.crypto 의존) -->
-                        <exclude>com/ktmmobile/msf/common/mspservice/MspServiceImpl.java</exclude>
-                        <!-- 공통 서비스 미이관 -->
-                        <exclude>com/ktmmobile/msf/common/service/EncryptService.java</exclude>
-                        <exclude>com/ktmmobile/msf/common/service/FCommonSvcImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/common/service/LoginSvc.java</exclude>
-                        <exclude>com/ktmmobile/msf/common/service/LoginSvcImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/common/service/NiceCertifySvcImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/common/service/NiceLogSvcImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/common/service/SmsSvcImpl.java</exclude>
-                        <!-- Legacy mstory 구현체 -->
-                        <exclude>com/ktmmobile/msf/common/legacy/mstory/service/MstorySvcImpl.java</exclude>
-                        <!-- DTO 미이관 -->
-                        <exclude>com/ktmmobile/msf/common/dto/NiceLogDto.java</exclude>
-                        <exclude>com/ktmmobile/msf/common/dto/db/McpRequestSelfDlvryDto.java</exclude>
-                        <!-- 업무 패키지 미이관 — form/newchange 전체 -->
-                        <exclude>com/ktmmobile/msf/form/newchange/**</exclude>
-                        <!-- form/common 미이관 파일 (Order/Usim 미완성) -->
-                        <exclude>com/ktmmobile/msf/form/common/dao/OrderDao.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dto/OrderDto.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dto/OrderEnum.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dto/PhoneProdBasDto.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dto/UsimMspRateDto.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dto/stragety/ListOrderNeEnum.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/service/OderServiceImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/service/OrderService.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/service/UsimService.java</exclude>
-                        <!-- form/servicechange 미이관 -->
-                        <exclude>com/ktmmobile/msf/form/servicechange/service/MsfMypageUserService.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/service/MsfFarPricePlanService.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/service/MsfNicePinServiceImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/service/MsfPayInfoService.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/service/MsfPayInfoServiceImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/dto/MapWrapper.java</exclude>
-                        <!-- form/common 미이관 추가 -->
-                        <exclude>com/ktmmobile/msf/form/common/controller/PhoneMobileController.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dao/OrderDaoImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dao/UsimDao.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dao/UsimDaoImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dto/UsimBasDto.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/controller/OrderController.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/controller/UsimController.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dto/stragety/ListOrderEnum.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/dto/stragety/OrderEnum.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/ownerchange/controller/MyNameChgController.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/service/MsfFarPricePlanServiceImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/controller/MsfFarPricePlanController.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/controller/MsfMyinfoController.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/service/MsfMypageUserServiceImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/service/MsfPaywayService.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/service/MsfPaywayServiceImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/common/service/UsimServiceImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/ownerchange/service/MyNameChgServiceImpl.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/controller/MsfCustRequestController.java</exclude>
-                        <exclude>com/ktmmobile/msf/form/servicechange/controller/MsfMyOllehController.java</exclude>
-
-                    </excludes>
-                </configuration>
             </plugin>
         </plugins>
     </build>

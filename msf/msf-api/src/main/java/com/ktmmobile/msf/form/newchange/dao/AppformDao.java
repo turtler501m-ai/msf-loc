@@ -11,15 +11,15 @@ import com.ktmmobile.msf.form.newchange.dto.JuoSubInfoDto;
 import com.ktmmobile.msf.form.newchange.dto.McpRequestPayInfoDto;
 import com.ktmmobile.msf.form.newchange.dto.McpUploadPhoneInfoDto;
 import com.ktmmobile.msf.form.newchange.dto.OsstUc0ReqDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestAdditionDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestCstmrDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestDlvryDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestMoveDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestOsstDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestSaleinfoDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestSelfDlvryDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpAppFormMstDto;
+import com.ktmmobile.msf.common.dto.db.McpRequestAdditionDto;
+import com.ktmmobile.msf.common.dto.db.McpRequestCstmrDto;
+import com.ktmmobile.msf.common.dto.db.McpRequestDlvryDto;
+import com.ktmmobile.msf.common.dto.db.McpRequestDto;
+import com.ktmmobile.msf.common.dto.db.McpRequestMoveDto;
+import com.ktmmobile.msf.common.dto.db.McpRequestOsstDto;
+import com.ktmmobile.msf.common.dto.db.McpRequestSaleinfoDto;
+import com.ktmmobile.msf.common.dto.db.McpRequestSelfDlvryDto;
+import com.ktmmobile.msf.common.dto.db.NmcpAppFormMstDto;
 
 /**
  * <pre>
