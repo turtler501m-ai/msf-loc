@@ -12,38 +12,34 @@ trigger: msf-api / msf-web 코드 작성·수정 시 자동 참조. "tobe 개발
 
 ## 1. 패키지 구조 (확정)
 
-### 1.1 실제 패키지 ↔ 폴더 대응
+### 1.1 실제 패키지 ↔ 폴더 대응 (최종 확정 — 2026-04-01)
 
 | 실제 파일 경로 | 실제 패키지 |
 |--------------|-----------|
-| `com/ktmmobile/form/MsfApplication.java` | `com.ktmmobile.form` |
-| `com/ktmmobile/form/common/**` | `com.ktmmobile.form.common` |
-| `com/ktmmobile/form/svcChg/**` | `com.ktmmobile.form.svcChg` |
-| `com/ktmmobile/form/ownChg/**` | `com.ktmmobile.form.ownChg` |
-| `com/ktmmobile/form/svcCncl/**` | `com.ktmmobile.form.svcCncl` |
-| `com/ktmmobile/common/mplatform/**` | `com.ktmmobile.common.mplatform` |
-| `com/ktmmobile/common/mplatform/vo/**` | `com.ktmmobile.common.mplatform.vo` |
-| `com/ktmmobile/common/util/**` | `com.ktmmobile.common.util` |
-| `com/ktmmobile/common/batch/**` | `com.ktmmobile.common.batch` |
+| `com/ktmmobile/msf/MsfApplication.java` | `com.ktmmobile.msf` |
+| `com/ktmmobile/msf/form/common/**` | `com.ktmmobile.msf.form.common` |
+| `com/ktmmobile/msf/form/newchange/**` | `com.ktmmobile.msf.form.newchange` |
+| `com/ktmmobile/msf/form/servicechange/**` | `com.ktmmobile.msf.form.servicechange` |
+| `com/ktmmobile/msf/form/ownerchange/**` | `com.ktmmobile.msf.form.ownerchange` |
+| `com/ktmmobile/msf/form/termination/**` | `com.ktmmobile.msf.form.termination` |
+| `com/ktmmobile/msf/system/common/mplatform/**` | `com.ktmmobile.msf.system.common.mplatform` |
+| `com/ktmmobile/msf/system/common/util/**` | `com.ktmmobile.msf.system.common.util` |
+| `com/ktmmobile/msf/system/cert/**` | `com.ktmmobile.msf.system.cert` |
+| `com/ktmmobile/msf/system/faceauth/**` | `com.ktmmobile.msf.system.faceauth` |
 
 ### 1.2 구버전 패키지명 (사용 금지 — 이미 일괄 수정됨)
 
-아래 패키지명은 과거 레거시 구조. 새 파일 작성 또는 import 시 절대 사용하지 않는다.
+아래 패키지명은 과거 레거시/중간 구조. 새 파일 작성 또는 import 시 절대 사용하지 않는다.
 
 | 금지 (구버전) | 대체 (현행) |
 |-------------|-----------|
-| `com.ktmmobile.msf` | `com.ktmmobile.form` |
-| `com.ktmmobile.msf.common.mplatform.*` | `com.ktmmobile.common.mplatform.*` |
-| `com.ktmmobile.msf.common.util.*` | `com.ktmmobile.common.util.*` |
-| `com.ktmmobile.msf.formComm.*` | `com.ktmmobile.form.common.*` |
-| `com.ktmmobile.msf.formOwnChg.*` | `com.ktmmobile.form.ownChg.*` |
-| `com.ktmmobile.msf.formSvcChg.*` | `com.ktmmobile.form.svcChg.*` |
-| `com.ktmmobile.msf.formSvcCncl.*` | `com.ktmmobile.form.svcCncl.*` |
-| `com.ktmmobile.mcp.content.controller` | `com.ktmmobile.form.svcChg.controller` |
-| `com.ktmmobile.mcp.content.dto` | `com.ktmmobile.form.svcChg.dto` |
-| `com.ktmmobile.mcp.content.service` | `com.ktmmobile.form.svcChg.service` |
-| `com.ktmmobile.mcp.common.constants.*` | `com.ktmmobile.common.constants.*` |
-| `com.ktmmobile.mcp.cmmn.constants.*` | `com.ktmmobile.common.constants.*` |
+| `com.ktmmobile.form.*` (중간 단계) | `com.ktmmobile.msf.form.*` |
+| `com.ktmmobile.common.*` (중간 단계) | `com.ktmmobile.msf.system.common.*` |
+| `com.ktmmobile.mcp.content.controller` | `com.ktmmobile.msf.form.servicechange.controller` |
+| `com.ktmmobile.mcp.content.dto` | `com.ktmmobile.msf.form.servicechange.dto` |
+| `com.ktmmobile.mcp.content.service` | `com.ktmmobile.msf.form.servicechange.service` |
+| `com.ktmmobile.mcp.common.constants.*` | `com.ktmmobile.msf.system.common.constants.*` |
+| `com.ktmmobile.mcp.cmmn.constants.*` | `com.ktmmobile.msf.system.common.constants.*` |
 
 > `SmtFormController.java`의 `com.ktmmobile.mcp.*` 임포트(appform/cert/common 등)는 ASIS MCP 레거시 참조 — 별도 처리 대상.
 
@@ -56,7 +52,7 @@ trigger: msf-api / msf-web 코드 작성·수정 시 자동 참조. "tobe 개발
 ### 2.1 formComm (공통)
 
 ```
-com.ktmmobile.form.common
+com.ktmmobile.msf.form.common
   controller/  FormCommController, FormCommRestController, SmartFormController,
                SvcChgRestController  [SmtFormController — 미완성, MCP 레거시]
   dto/         SvcChgInfoDto (공통 요청 바디), AgencyShopResVO, ConcurrentCheck*,
@@ -71,7 +67,7 @@ com.ktmmobile.form.common
 ### 2.2 svcChg (서비스변경)
 
 ```
-com.ktmmobile.form.svcChg
+com.ktmmobile.msf.form.servicechange
   controller/  Apply, Base, Combine, FarPrice, Insr, Number, Pause, Reg,
                ShareData, SmtShareData, Usim (11개)
   dto/         24종 (SvcChgApplyReqDto, SvcChgBaseCheckReqDto, UsimChangeReqDto 등)
@@ -84,7 +80,7 @@ com.ktmmobile.form.svcChg
 ### 2.3 ownChg (명의변경)
 
 ```
-com.ktmmobile.form.ownChg
+com.ktmmobile.msf.form.ownerchange
   controller/  OwnChgController
   dto/         OwnChgApplyDto/VO, OwnChgCheckTelNoReqDto/VO,
                OwnChgCustReqInsertDto, OwnChgGrantorReqChkReqDto/VO,
@@ -96,7 +92,7 @@ com.ktmmobile.form.ownChg
 ### 2.4 svcCncl (서비스해지)
 
 ```
-com.ktmmobile.form.svcCncl
+com.ktmmobile.msf.form.termination
   controller/  SvcCnclController
   dto/         McpCancelRegisterReqDto/ResVO, SvcCnclApplyDto/VO,
                SvcCnclConsultReqDto, SvcCnclDetailResVO, SvcCnclProcReqDto,
@@ -108,15 +104,16 @@ com.ktmmobile.form.svcCncl
 ### 2.5 common (M플랫폼 어댑터)
 
 ```
-com.ktmmobile.common.mplatform
-  MplatFormSvc.java         — M플랫폼 연동 메서드 전체 (Y04/X01/X18~X90 등)
-  MplatFormServerAdapter    — HTTP 송수신
-  OsstServerAdapter         — OSST 연동
-  vo/                       — MpXxx* VO 34종
-com.ktmmobile.common.util
+com.ktmmobile.msf.system.common.mplatform
+  MsfMplatFormService.java       — M플랫폼 연동 메서드 전체 (Y04/X01/X18~X90 등)
+  MsfMplatFormServerAdapter      — HTTP 송수신
+  MsfMplatFormOsstServerAdapter  — OSST 연동
+  vo/                            — MpXxx* VO 34종
+  dto/                           — MoscXxx* DTO
+com.ktmmobile.msf.system.common.util
   XmlParseUtil.java
-com.ktmmobile.common.batch
-  SvcChgSyncBatch.java
+com.ktmmobile.msf.system.common.mspservice
+  — M플랫폼 비동기 서비스 처리
 ```
 
 ---

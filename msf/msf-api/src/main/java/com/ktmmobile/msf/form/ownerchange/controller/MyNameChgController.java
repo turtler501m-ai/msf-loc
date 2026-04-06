@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.form.servicechange.controller;
+package com.ktmmobile.msf.form.ownerchange.controller;
 
 import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
 import static com.ktmmobile.msf.system.common.constants.Constants.CSTMR_TYPE_NM;

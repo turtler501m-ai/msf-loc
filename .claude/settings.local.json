@@ -5,15 +5,8 @@
       "Bash(find C:/MSF-LOC/workspace -maxdepth 2 \\\\\\(-name README* -o -name *.md -o -name CLAUDE.md -o -name .cursorrules -o -name .github \\\\\\))",
       "Bash(find C:/MSF-LOC/workspace/mcp -maxdepth 3 -name README* -o -name STRUCTURE*)",
       "Bash(wc:*)",
-      "Bash(find C:/MSF-LOC/workspace/msf-api/src/main/java/com/ktmmobile/msf/formComm -name *.java)",
       "Skill(update-config)",
-      "Bash(grep -n \"^## \\\\|^### 주요내용\\\\|^### 처리순서\\\\|^### \\\\`\" C:/MSF-LOC/workspace/.doc/asis/Z05.DS-08-ITO소스분析_전체.md)",
-      "Bash(grep -n \"^## \\\\|^### 주요내용\\\\|^### 처리순서\\\\|^### \\\\`\" \"C:/MSF-LOC/workspace/.doc/asis/Z05.DS-08-ITO소스분석_전체.md\")",
-      "Bash(node:*)",
-      "Bash(xargs -0 sed -i -e 's/com\\\\.ktmmobile\\\\.mcp\\\\.content\\\\.controller/com.ktmmobile.form.controller/g' -e 's/com\\\\.ktmmobile\\\\.mcp\\\\.content\\\\.dto/com.ktmmobile.form.dto/g' -e 's/com\\\\.ktmmobile\\\\.mcp\\\\.content\\\\.service/com.ktmmobile.form.service/g' -e 's/com\\\\.ktmmobile\\\\.mcp\\\\.content/com.ktmmobile.form/g')",
-      "Bash(xargs -0 sed -i -e 's/com\\\\.ktmmobile\\\\.form\\\\.controller/com.ktmmobile.form.svcChg.controller/g' -e 's/com\\\\.ktmmobile\\\\.form\\\\.dto/com.ktmmobile.form.svcChg.dto/g' -e 's/com\\\\.ktmmobile\\\\.form\\\\.service/com.ktmmobile.form.svcChg.service/g')",
-      "Bash(xargs -0 sed -i -e 's/com\\\\.ktmmobile\\\\.mcp\\\\.common\\\\.constants\\\\.Constants/com.ktmmobile.form.common.constants.Constants/g' -e 's/com\\\\.ktmmobile\\\\.mcp\\\\.common\\\\.constants/com.ktmmobile.form.common.constants/g')",
-      "Bash(xargs -0 sed -i 's/com\\\\.ktmmobile\\\\.form\\\\.common\\\\.constants/com.ktmmobile.common.constants/g')"
+      "Bash(node:*)"
     ]
   }
 }

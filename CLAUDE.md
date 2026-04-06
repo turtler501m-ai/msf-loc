@@ -1,11 +1,9 @@
 # CLAUDE.md
 
-이 파일은 Claude Code가 이 저장소에서 작업할 때 참조하는 프로젝트 가이드입니다.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 > 전체 구조 상세: `.doc/11.MSF_프로젝트_전체구조.md`
 > 실행 시 옵션: `--dangerously-skip-permissions`
-
----
 
 ## 프로젝트 개요
 
@@ -26,7 +24,44 @@ msf-web (port 9480)  →[/api proxy]→  msf-api (port 8081, /api/v1)
     → M플랫폼 HTTP → KT(KOS)
 ```
 
----
+## 중요 참조문서로 설계 개발시에 반드시 참조할것
+
+.doc/
+├── 11.MSF_프로젝트_전체구조.md
+├── 12.MSF_백엔드_패키지구조_변경계획.md
+
+├── asis/                                                   # ASIS 분석 문서
+│   ├── Z01.MCP_폴더구조_분석.md
+│   ├── Z11.DS-08-ITO소스분析_서비스변경.md
+
+├── reference/                                              # 연동 설계 문서
+│   ├── D1.스마트서식지-DS-05-테이블정의서_V1.0_20260318.md
+│   ├── D2.테이블매핑_20260319.md
+│   ├── D3.MCP_REQUEST_MSF_REQUEST_컬럼매핑.md
+│   ├── E1.스마트서식지-DS-08-ITO소스분析_v1_0_20260324.md
+│   └── G1.스마트서식지-DS-08-ITO소스분析.md
+├── uidoc/                                                  # UI 설계 문서
+│   ├── MMSP-DS-02-명의변경_신청서_UI설계서.md
+│   ├── MMSP-DS-02-서비스변경_신청서_UI설계서.md
+│   ├── MMSP-DS-02-서비스해지_신청서_UI설계서.md
+│   └── MMSP-DS-02-서비스해지_신청서_UI설계서_20260324.md
+├── .backup/                                                # PDF/PPTX 원본 파일 및 스크립트 백업
+└── old/                                                    # 구버전 분석 문서 아카이브 (60개+)
+
+
+## TOBE 개발시 반드시 참고
+
+- 접두사 `Msf`  콘드롤,서비스명 변경 (현재 완료)
+- ASIS 로직 처리 원칙 섹션 추가:
+  - TOBE 무관 로직은 **삭제 금지**, 반드시 주석 처리
+  - 주석 형식: `// [ASIS] {기능 설명} — {제외 이유}`
+
+
+
+
+
+
+
 
 ## 실행 명령어
 
@@ -67,17 +102,24 @@ npm run format   # prettier
 
 ### 도메인 패키지
 
-| 패키지 | 역할 | API 경로 |
+| 패키지 | 역할 | 주요 경로 |
 |--------|------|---------|
-| `formComm` | 공통: 가입자정보조회, 동시처리체크 | `/api/v1/{domain}/join-info` |
-| `formSvcChg` | 서비스변경 (부가서비스·요금상품) | `/api/v1/addition/*`, `/api/v1/service-change/*` |
-| `formOwnChg` | 명의변경 | `/api/v1/ident/*` |
-| `formSvcCncl` | 서비스해지 | `/api/v1/cancel/*` |
-| `common.mplatform` | M플랫폼 HTTP 연동 어댑터 | - |
+| `form.common` | 공통: 주문/폰/USIM 조회, 레거시 컨트롤러 | `/order/*`, `/m/product/*`, `/usim/*` |
+| `form.newchange` | 신규가입·변경 신청서 처리 (AppformController 등) | `/appForm/*`, `/appform/*` |
+| `form.ownerchange` | 명의변경 | `/mypage/myNameChg*` |
+| `form.servicechange` | 서비스변경: 마이페이지·부가서비스·요금제·결합·데이터쉐어링 등 | `/api/v1/addition/*`, `/mypage/*` |
+| `form.termination` | 서비스해지 상담 | `/mypage/cancelConsult*` |
+| `system.common` | 시스템 공통: 코드/캐시/예외/상수/M플랫폼 어댑터/유틸 (`mplatform/`, `mspservice/`, `commCode/`, `cache/`, `constants/`, `exception/`, `util/`) | - |
+| `system.cert` | 본인인증 | `/cert/*` |
+| `system.faceauth` | 안면인증 | `/fath/*` |
 
-각 도메인: `controller / dto / service / mapper` 레이어 구성.
+각 도메인: `controller / dao / dto / service` 레이어 구성. 일부 도메인은 `mapper/`(MyBatis XML 전용) · `constant/` 추가 존재.
 
-의존성: `formComm → common.mplatform` / 업무 패키지 → `formComm.dto/service` / 업무 패키지 간 직접 참조 금지
+MyBatis 패턴: `XxxDaoImpl.java`에서 `SqlSession` 주입 방식 사용. `@Mapper` 인터페이스 방식은 미사용 — `@MapperScan`은 신규 Mapper 인터페이스 생성 시 대비용.
+
+MyBatis XML 위치: `src/main/resources/mapper/formComm/`, `formOwnChg/`, `formSvcChg/`, `formSvcCncl/` (도메인 약칭 폴더명 사용).
+
+의존성: `form.* → system.common.mplatform` / `form.ownerchange, form.termination → form.servicechange.dto/service` / 업무 패키지 간 직접 참조 금지
 
 ### HTTP 메서드 규칙
 
@@ -90,19 +132,13 @@ npm run format   # prettier
 
 ### 네이밍 규칙
 
-- Controller: `XXXController`(내부용) / `XXXRestController`(연동용)
-- Service: `XXXSvc.java` / `XXXSvcImpl.java`
-- DTO: `XXXReqDto`(요청) / `XXXResVO`(응답)
-- Mapper 메서드: `insert/save/update/delete/select/selectList` + 서비스명칭
+- Controller: `XXXController`(내부용) / `MsfXXXController`(서비스변경 영역)
+- Service: `XxxSvc.java` / `XxxSvcImpl.java` 또는 `XxxService.java` / `XxxServiceImpl.java`
+- DAO: `XxxDao.java` / `XxxDaoImpl.java`
+- DTO: `XXXReqDto`(요청) / `XXXResVO` 또는 `XXXDto`(응답)
+- Mapper XML: `insert/save/update/delete/select/selectList` + 서비스명칭
 
-### 주요 API 흐름
-
-**가입자정보조회**: `POST /api/v1/{domain}/join-info`
-→ `JoinInfoSvc.joinInfo()` → M전산(ContractInfoMapper) → Y04(인증) → X01(가입정보) → `JoinInfoResVO`
-
-**공통 요청 바디**: `SvcChgInfoDto` (name, ncn, ctn, custId)
-
-### M플랫폼 연동 코드 (MplatFormSvc)
+### M플랫폼 연동 코드 (MsfMplatFormService)
 
 | 코드 | 기능 |
 |------|------|
@@ -133,13 +169,6 @@ npm run format   # prettier
 
 - `/mobile/:domain/:service` → `components/{컴포넌트폴더}/{service}.vue` 동적 로드
 - `/mobile/complete/:domain` → 완료 화면 (`ServiceCompleteView.vue`)
-
-| URL 도메인 | 컴포넌트 폴더 | 설명 |
-|------------|--------------|------|
-| `change` | `formSvcChg/` | 서비스변경 (FormSvcChgStep1~3.vue) |
-| `cancel` | `formSvcCncl/` | 서비스해지 (FormSvcCnclStep1~3.vue) |
-| `ident` | `formOwnChg/` | 명의변경 (FormOwnChgStep1~3.vue) |
-| `addition` | `formSvcChg/` | 부가서비스변경 |
 
 ### 상태관리 (`src/stores/`)
 
@@ -184,17 +213,19 @@ JavaScript (TypeScript 미사용) / Vue 3.5 / Vue Router 5 / Pinia 3 / Vite 7 / 
 
 ## 개발 규칙 (반드시 체크)
 
-### 1. 신규 @Mapper 패키지 생성 시 — @MapperScan 등록 필수
+### 1. 신규 @Mapper 인터페이스 생성 시 — @MapperScan 등록 필수
 
-새 도메인 `@Mapper` 생성 시 **반드시** `MsfApplication.java`의 `@MapperScan`에 추가.
+현재 프로젝트는 `XxxDaoImpl`에서 `SqlSession` 주입 방식을 사용하며 `@Mapper` 인터페이스는 없다.
+신규로 `@Mapper` 인터페이스를 만들 경우 **반드시** `MsfApplication.java`의 `@MapperScan`에 패키지 추가.
 누락 시 `NoSuchBeanDefinitionException`으로 서버 기동 실패.
 
 ```java
 @MapperScan({
-    "com.ktmmobile.msf.formComm.mapper",
-    "com.ktmmobile.msf.formSvcChg.mapper",
-    "com.ktmmobile.msf.formOwnChg.mapper",
-    "com.ktmmobile.msf.formSvcCncl.mapper"
+    "com.ktmmobile.msf.form.common.mapper",
+    "com.ktmmobile.msf.form.newchange.mapper",
+    "com.ktmmobile.msf.form.servicechange.mapper",
+    "com.ktmmobile.msf.form.ownerchange.mapper",
+    "com.ktmmobile.msf.form.termination.mapper"
     // ← 신규 도메인 mapper 패키지 추가
 })
 ```
