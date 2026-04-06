@@ -22,8 +22,8 @@ trigger: msf-api / msf-web 코드 작성·수정 시 자동 참조. "tobe 개발
 | `com/ktmmobile/msf/form/servicechange/**` | `com.ktmmobile.msf.form.servicechange` |
 | `com/ktmmobile/msf/form/ownerchange/**` | `com.ktmmobile.msf.form.ownerchange` |
 | `com/ktmmobile/msf/form/termination/**` | `com.ktmmobile.msf.form.termination` |
-| `com/ktmmobile/msf/system/common/mplatform/**` | `com.ktmmobile.msf.system.common.mplatform` |
-| `com/ktmmobile/msf/system/common/util/**` | `com.ktmmobile.msf.system.common.util` |
+| `com/ktmmobile/msf/common/mplatform/**` | `com.ktmmobile.msf.common.mplatform` |
+| `com/ktmmobile/msf/common/util/**` | `com.ktmmobile.msf.common.util` |
 | `com/ktmmobile/msf/system/cert/**` | `com.ktmmobile.msf.system.cert` |
 | `com/ktmmobile/msf/system/faceauth/**` | `com.ktmmobile.msf.system.faceauth` |
 
@@ -34,12 +34,12 @@ trigger: msf-api / msf-web 코드 작성·수정 시 자동 참조. "tobe 개발
 | 금지 (구버전) | 대체 (현행) |
 |-------------|-----------|
 | `com.ktmmobile.form.*` (중간 단계) | `com.ktmmobile.msf.form.*` |
-| `com.ktmmobile.common.*` (중간 단계) | `com.ktmmobile.msf.system.common.*` |
+| `com.ktmmobile.common.*` (중간 단계) | `com.ktmmobile.msf.common.*` |
 | `com.ktmmobile.mcp.content.controller` | `com.ktmmobile.msf.form.servicechange.controller` |
 | `com.ktmmobile.mcp.content.dto` | `com.ktmmobile.msf.form.servicechange.dto` |
 | `com.ktmmobile.mcp.content.service` | `com.ktmmobile.msf.form.servicechange.service` |
-| `com.ktmmobile.mcp.common.constants.*` | `com.ktmmobile.msf.system.common.constants.*` |
-| `com.ktmmobile.mcp.cmmn.constants.*` | `com.ktmmobile.msf.system.common.constants.*` |
+| `com.ktmmobile.mcp.common.constants.*` | `com.ktmmobile.msf.common.constants.*` |
+| `com.ktmmobile.mcp.cmmn.constants.*` | `com.ktmmobile.msf.common.constants.*` |
 
 > `SmtFormController.java`의 `com.ktmmobile.mcp.*` 임포트(appform/cert/common 등)는 ASIS MCP 레거시 참조 — 별도 처리 대상.
 
@@ -104,15 +104,15 @@ com.ktmmobile.msf.form.termination
 ### 2.5 common (M플랫폼 어댑터)
 
 ```
-com.ktmmobile.msf.system.common.mplatform
+com.ktmmobile.msf.common.mplatform
   MsfMplatFormService.java       — M플랫폼 연동 메서드 전체 (Y04/X01/X18~X90 등)
   MsfMplatFormServerAdapter      — HTTP 송수신
   MsfMplatFormOsstServerAdapter  — OSST 연동
   vo/                            — MpXxx* VO 34종
   dto/                           — MoscXxx* DTO
-com.ktmmobile.msf.system.common.util
+com.ktmmobile.msf.common.util
   XmlParseUtil.java
-com.ktmmobile.msf.system.common.mspservice
+com.ktmmobile.msf.common.mspservice
   — M플랫폼 비동기 서비스 처리
 ```
 
@@ -162,8 +162,8 @@ msf-web/src/
 
 ### 신규 Java 파일 작성 시
 
-- [ ] `package` 선언 — 실제 폴더 경로 기준 (`com.ktmmobile.form.*` / `com.ktmmobile.common.*`)
-- [ ] `import` — 구버전 `com.ktmmobile.msf.*` 사용 금지
+- [ ] `package` 선언 — 실제 폴더 경로 기준 (`com.ktmmobile.msf.form.*` / `com.ktmmobile.msf.common.*`)
+- [ ] `import` — 구버전 `com.ktmmobile.form.*` / `com.ktmmobile.common.*` / `com.ktmmobile.mcp.*` 사용 금지
 - [ ] 신규 `@Mapper` 인터페이스 → `MsfApplication.java`의 `@MapperScan`에 패키지 추가
 - [ ] MyBatis XML namespace — 실제 패키지명과 일치
 

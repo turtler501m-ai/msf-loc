@@ -3,6 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 > 전체 구조 상세: `.doc/11.MSF_프로젝트_전체구조.md`
+> 구현 현황 상세: `.doc/51.MSF_개발진행사항_현행화.md`
 > 실행 시 옵션: `--dangerously-skip-permissions`
 
 ## 프로젝트 개요
@@ -51,7 +52,7 @@ msf-web (port 9480)  →[/api proxy]→  msf-api (port 8081, /api/v1)
 
 ## TOBE 개발시 반드시 참고
 
-- 접두사 `Msf`  콘드롤,서비스명 변경 (현재 완료)
+- 접두사 `Msf` 컨트롤러·서비스명 변경 (현재 완료)
 - ASIS 로직 처리 원칙 섹션 추가:
   - TOBE 무관 로직은 **삭제 금지**, 반드시 주석 처리
   - 주석 형식: `// [ASIS] {기능 설명} — {제외 이유}`
@@ -109,7 +110,7 @@ npm run format   # prettier
 | `form.ownerchange` | 명의변경 | `/mypage/myNameChg*` |
 | `form.servicechange` | 서비스변경: 마이페이지·부가서비스·요금제·결합·데이터쉐어링 등 | `/api/v1/addition/*`, `/mypage/*` |
 | `form.termination` | 서비스해지 상담 | `/mypage/cancelConsult*` |
-| `system.common` | 시스템 공통: 코드/캐시/예외/상수/M플랫폼 어댑터/유틸 (`mplatform/`, `mspservice/`, `commCode/`, `cache/`, `constants/`, `exception/`, `util/`) | - |
+| `common` | 시스템 공통: 코드/캐시/예외/상수/M플랫폼 어댑터/유틸 (`mplatform/`, `mspservice/`, `commCode/`, `cache/`, `constants/`, `exception/`, `util/`) | - |
 | `system.cert` | 본인인증 | `/cert/*` |
 | `system.faceauth` | 안면인증 | `/fath/*` |
 
@@ -119,7 +120,7 @@ MyBatis 패턴: `XxxDaoImpl.java`에서 `SqlSession` 주입 방식 사용. `@Map
 
 MyBatis XML 위치: `src/main/resources/mapper/formComm/`, `formOwnChg/`, `formSvcChg/`, `formSvcCncl/` (도메인 약칭 폴더명 사용).
 
-의존성: `form.* → system.common.mplatform` / `form.ownerchange, form.termination → form.servicechange.dto/service` / 업무 패키지 간 직접 참조 금지
+의존성: `form.* → common.mplatform` / `form.ownerchange, form.termination → form.servicechange.dto/service` / 업무 패키지 간 직접 참조 금지
 
 ### HTTP 메서드 규칙
 
