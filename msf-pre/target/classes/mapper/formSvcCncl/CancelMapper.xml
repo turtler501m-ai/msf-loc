@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ktmmobile.msf.formSvcCncl.mapper.CancelMapper">
+
+    <!--
+        해지 접수번호 시퀀스 발급.
+        PostgreSQL: nextval. Oracle(운영): NMCP_NFL_CNCL_APY_SEQ.nextval
+    -->
+    <select id="nextCancelApyNo" resultType="java.lang.Long">
+        SELECT nextval('nmcp_nfl_cncl_apy_seq')
+    </select>
+
+    <!--
+        해지 신청서 저장 (NMCP_NFL_CNCL_APY).
+        ASIS M포탈 해지 저장 처리와 동일 테이블 구조.
+    -->
+    <insert id="insertCancel" parameterType="com.ktmmobile.msf.formSvcCncl.mapper.CancelInsertDto">
+        INSERT INTO NMCP_NFL_CNCL_APY (
+            CNCL_APY_NO,
+            CUST_NM,
+            MOBILE_NO,
+            CUST_TYPE,
+            USE_TYPE,
+            REMAIN_CHARGE,
+            PENALTY,
+            INSTALLMENT_REMAIN,
+            CANCEL_REASON,
+            MEMO,
+            AGNC_CD,
+            CRET_ID,
+            CRET_DTM
+        ) VALUES (
+            #{cancelApyNo},
+            #{custNm},
+            #{mobileNo},
+            #{custType},
+            #{useType},
+            #{remainCharge},
+            #{penalty},
+            #{installmentRemain},
+            #{cancelReason},
+            #{memo},
+            #{agncCd},
+            #{cretId},
+            NOW()
+        )
+    </insert>
+
+</mapper>
