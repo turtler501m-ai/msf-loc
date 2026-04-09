@@ -2,10 +2,10 @@ package com.ktmmobile.msf.form.servicechange.service;
 
 import java.text.ParseException;
 
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonBillingInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonDetailInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarRealtimePayInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarMonBillingInfoDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarMonDetailInfoDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarRealtimePayInfoVO;
 
 /**
  * 요금조회

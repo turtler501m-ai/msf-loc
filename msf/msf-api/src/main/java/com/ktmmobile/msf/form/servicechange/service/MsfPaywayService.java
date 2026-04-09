@@ -4,12 +4,12 @@
 //import java.util.List;
 //import java.util.Map;
 //
-//import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-//import com.ktmmobile.msf.system.common.mplatform.dto.MpVirtualAccountNoDto;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpBilPrintInfoVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpFarChangewayInfoVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscBilEmailInfoInVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpPerMyktfInfoVO;
+//import com.ktmmobile.msf.common.exception.SelfServiceException;
+//import com.ktmmobile.msf.common.mplatform.dto.MpVirtualAccountNoDto;
+//import com.ktmmobile.msf.common.mplatform.vo.MpBilPrintInfoVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpFarChangewayInfoVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpMoscBilEmailInfoInVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpPerMyktfInfoVO;
 //import com.ktmmobile.msf.payinfo.dto.PaywayDto;
 //
 //public interface MsfPaywayService {

@@ -2,7 +2,7 @@ package com.ktmmobile.msf.form.newchange.service;
 
 import java.util.List;
 import com.ktmmobile.msf.form.newchange.dto.FormDtlDTO;
-import com.ktmmobile.msf.system.common.commCode.dto.CommCodeInstDTO;
+import com.ktmmobile.msf.common.commCode.dto.CommCodeInstDTO;
 
 public interface FormDtlSvc {
 

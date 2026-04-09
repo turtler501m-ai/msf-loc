@@ -1,7 +1,7 @@
 package com.ktmmobile.msf.form.servicechange.dto;
 
-import com.ktmmobile.msf.system.common.util.MaskingUtil;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
+import com.ktmmobile.msf.common.util.MaskingUtil;
+import com.ktmmobile.msf.common.util.StringMakerUtil;
 
 import java.io.Serializable;
 

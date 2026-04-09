@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import com.ktmmobile.msf.system.common.dto.NiceLogDto;
+import com.ktmmobile.msf.common.dto.NiceLogDto;
 
 import java.util.Map;
 

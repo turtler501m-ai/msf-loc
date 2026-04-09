@@ -1,11 +1,11 @@
 package com.ktmmobile.msf.form.ownerchange.controller;
 
-import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.system.common.constants.Constants.CSTMR_TYPE_NM;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_INFO_NULL_EXCEPTION;
+import static com.ktmmobile.msf.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.common.constants.Constants.CSTMR_TYPE_NM;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.STEP_INFO_NULL_EXCEPTION;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -32,20 +32,20 @@ import com.ktmmobile.msf.form.servicechange.service.MsfMaskingSvc;
 import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.system.cert.dto.CertDto;
 import com.ktmmobile.msf.system.cert.service.CertService;
-import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.service.FCommonSvc;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
-import com.ktmmobile.msf.system.faceauth.service.FathService;
+import com.ktmmobile.msf.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.common.dto.ResponseSuccessDto;
+import com.ktmmobile.msf.common.dto.UserSessionDto;
+import com.ktmmobile.msf.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.common.exception.McpCommonException;
+import com.ktmmobile.msf.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.common.exception.SelfServiceException;
+import com.ktmmobile.msf.common.service.FCommonSvc;
+import com.ktmmobile.msf.common.service.IpStatisticService;
+import com.ktmmobile.msf.common.util.EncryptUtil;
+import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.common.util.SessionUtils;
+import com.ktmmobile.msf.common.util.StringMakerUtil;
+//import com.ktmmobile.msf.system.faceauth.service.FathService;
 
 @Controller
 public class MyNameChgController {
@@ -74,8 +74,8 @@ public class MyNameChgController {
     @Autowired
     private FCommonSvc fCommonSvc;
     
-    @Autowired
-    private FathService fathService;
+//    @Autowired
+//    private FathService fathService;
 
     /**
      * 설명 : 명의변경 화면
@@ -84,7 +84,7 @@ public class MyNameChgController {
     public String myNameChg(ModelMap model , HttpServletRequest request
             , @ModelAttribute("searchVO") MyPageSearchDto searchVO){
         //안면인증 세션 초기화
-        SessionUtils.initializeFathSession();
+//        SessionUtils.initializeFathSession();
 
         String jspPageName = "/portal/mypage/myNameChg";
         String thisPageName ="/mypage/myNameChg.do";

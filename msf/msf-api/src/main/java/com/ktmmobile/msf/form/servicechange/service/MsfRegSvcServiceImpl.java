@@ -27,10 +27,10 @@ package com.ktmmobile.msf.form.servicechange.service;
  * =====================================================
  */
 
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_RATE;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NO_ONLINE_CAN_CHANGE_ADD;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_RATE;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.NO_ONLINE_CAN_CHANGE_ADD;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -47,16 +47,16 @@ import com.ktmmobile.msf.form.servicechange.dto.AdditionAvailableResVO;
 import com.ktmmobile.msf.form.servicechange.dto.AdditionMyListResVO;
 import com.ktmmobile.msf.form.servicechange.dto.AdditionReqDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpRegServiceDto;
-import com.ktmmobile.msf.system.common.constants.Constants;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoParamDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscRegSvcCanChgInVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpSocVO;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspRateMstDto;
-import com.ktmmobile.msf.system.common.service.FCommonSvc;
-import com.ktmmobile.msf.system.common.util.StringUtil;
+import com.ktmmobile.msf.common.constants.Constants;
+import com.ktmmobile.msf.common.exception.McpCommonException;
+import com.ktmmobile.msf.common.exception.SelfServiceException;
+import com.ktmmobile.msf.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.common.mplatform.vo.MpAddSvcInfoParamDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpMoscRegSvcCanChgInVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpSocVO;
+import com.ktmmobile.msf.common.mspservice.dto.MspRateMstDto;
+import com.ktmmobile.msf.common.service.FCommonSvc;
+import com.ktmmobile.msf.common.util.StringUtil;
 
 @Service
 public class MsfRegSvcServiceImpl implements MsfRegSvcService {

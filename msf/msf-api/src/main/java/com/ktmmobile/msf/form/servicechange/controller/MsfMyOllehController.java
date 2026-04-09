@@ -1,14 +1,14 @@
 //package com.ktmmobile.msf.form.servicechange.controller;
 //
-//import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.INVALID_REFERER_EXCEPTION;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NUMBER_CHANGE_TIME_EXCEPTION;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
+//import static com.ktmmobile.msf.common.constants.Constants.AJAX_SUCCESS;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.INVALID_REFERER_EXCEPTION;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.NUMBER_CHANGE_TIME_EXCEPTION;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
 //import java.math.BigDecimal;
 //import java.math.RoundingMode;
 //import java.net.SocketTimeoutException;
@@ -36,7 +36,7 @@
 //import org.springframework.web.bind.annotation.RequestParam;
 //import org.springframework.web.bind.annotation.ResponseBody;
 //import org.springframework.web.client.RestTemplate;
-//import com.ktmmobile.msf.form.common.service.UsimService;
+//import com.ktmmobile.msf.common.service.UsimService;
 //import com.ktmmobile.msf.form.newchange.service.AppformSvc;
 //import com.ktmmobile.msf.form.servicechange.dto.JehuDto;
 //import com.ktmmobile.msf.form.servicechange.dto.MaskingDto;
@@ -51,41 +51,41 @@
 //import com.ktmmobile.msf.login.dto.PushSendDto;
 //import com.ktmmobile.msf.login.service.AppPushSvc;
 //import com.ktmmobile.msf.system.cert.service.CertService;
-//import com.ktmmobile.msf.system.common.dto.AuthSmsDto;
-//import com.ktmmobile.msf.system.common.dto.JsonReturnDto;
-//import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
-//import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-//import com.ktmmobile.msf.system.common.dto.db.McpRequestAgrmDto;
-//import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-//import com.ktmmobile.msf.system.common.exception.McpCommonException;
-//import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-//import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-//import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoDto;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpBilEmailChgVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpBilPrintInfoVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpCommonXmlVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpFarChangewayInfoVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonBillingInfoDto;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonDetailInfoDto;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpMonthPayMentDto;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscBilEmailInfoInVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscSdsInfoVo;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscSdsSvcPreChkVo;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscSpnsrItgInfoInVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpNumChgeListVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpPerMyktfInfoVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpSuspenPosInfoVO;
-//import com.ktmmobile.msf.system.common.mspservice.MspService;
-//import com.ktmmobile.msf.system.common.mspservice.dto.MspRateMstDto;
-//import com.ktmmobile.msf.system.common.mspservice.dto.MspSaleSubsdMstDto;
-//import com.ktmmobile.msf.system.common.service.FCommonSvc;
-//import com.ktmmobile.msf.system.common.service.IpStatisticService;
-//import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-//import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-//import com.ktmmobile.msf.system.common.util.SessionUtils;
-//import com.ktmmobile.msf.system.common.util.StringMakerUtil;
-//import com.ktmmobile.msf.system.common.util.StringUtil;
+//import com.ktmmobile.msf.common.dto.AuthSmsDto;
+//import com.ktmmobile.msf.common.dto.JsonReturnDto;
+//import com.ktmmobile.msf.common.dto.ResponseSuccessDto;
+//import com.ktmmobile.msf.common.dto.UserSessionDto;
+//import com.ktmmobile.msf.common.dto.db.McpRequestAgrmDto;
+//import com.ktmmobile.msf.common.dto.db.NmcpCdDtlDto;
+//import com.ktmmobile.msf.common.exception.McpCommonException;
+//import com.ktmmobile.msf.common.exception.McpCommonJsonException;
+//import com.ktmmobile.msf.common.exception.SelfServiceException;
+//import com.ktmmobile.msf.common.mplatform.MsfMplatFormService;
+//import com.ktmmobile.msf.common.mplatform.vo.MpAddSvcInfoDto;
+//import com.ktmmobile.msf.common.mplatform.vo.MpBilEmailChgVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpBilPrintInfoVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpCommonXmlVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpFarChangewayInfoVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpFarMonBillingInfoDto;
+//import com.ktmmobile.msf.common.mplatform.vo.MpFarMonDetailInfoDto;
+//import com.ktmmobile.msf.common.mplatform.vo.MpMonthPayMentDto;
+//import com.ktmmobile.msf.common.mplatform.vo.MpMoscBilEmailInfoInVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpMoscSdsInfoVo;
+//import com.ktmmobile.msf.common.mplatform.vo.MpMoscSdsSvcPreChkVo;
+//import com.ktmmobile.msf.common.mplatform.vo.MpMoscSpnsrItgInfoInVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpNumChgeListVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpPerMyktfInfoVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpSuspenPosInfoVO;
+//import com.ktmmobile.msf.common.mspservice.MspService;
+//import com.ktmmobile.msf.common.mspservice.dto.MspRateMstDto;
+//import com.ktmmobile.msf.common.mspservice.dto.MspSaleSubsdMstDto;
+//import com.ktmmobile.msf.common.service.FCommonSvc;
+//import com.ktmmobile.msf.common.service.IpStatisticService;
+//import com.ktmmobile.msf.common.util.DateTimeUtil;
+//import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+//import com.ktmmobile.msf.common.util.SessionUtils;
+//import com.ktmmobile.msf.common.util.StringMakerUtil;
+//import com.ktmmobile.msf.common.util.StringUtil;
 ///**
 // * @project : default
 // * @file : ArticleController.java
@@ -1941,7 +1941,7 @@
 //       }
 //       // ============ STEP END ============
 //
-//       List<NmcpCdDtlDto> presentList = NmcpServiceUtils.getCodeList(com.ktmmobile.msf.system.common.constants.Constants.GROUP_CODE_PRESENT_CODE);
+//       List<NmcpCdDtlDto> presentList = NmcpServiceUtils.getCodeList(com.ktmmobile.msf.common.constants.Constants.GROUP_CODE_PRESENT_CODE);
 //       model.addAttribute("presentList", presentList);
 //       return returnUrl;
 //   }

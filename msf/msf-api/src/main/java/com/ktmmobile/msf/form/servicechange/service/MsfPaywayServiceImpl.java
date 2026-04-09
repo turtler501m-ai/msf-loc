@@ -1,10 +1,10 @@
 //package com.ktmmobile.msf.form.servicechange.service;
 //
-//import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-//import static com.ktmmobile.msf.system.common.constants.Constants.PAY_INFO_CREATEYN_FAIL;
-//import static com.ktmmobile.msf.system.common.constants.Constants.PAY_INFO_CREATEYN_REQ;
-//import static com.ktmmobile.msf.system.common.constants.Constants.PAY_INFO_CREATEYN_TIMEOUT;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
+//import static com.ktmmobile.msf.common.constants.Constants.AJAX_SUCCESS;
+//import static com.ktmmobile.msf.common.constants.Constants.PAY_INFO_CREATEYN_FAIL;
+//import static com.ktmmobile.msf.common.constants.Constants.PAY_INFO_CREATEYN_REQ;
+//import static com.ktmmobile.msf.common.constants.Constants.PAY_INFO_CREATEYN_TIMEOUT;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
 //
 //import java.net.SocketTimeoutException;
 //import java.text.ParseException;
@@ -16,26 +16,26 @@
 //import java.util.Map;
 //import java.util.stream.Collectors;
 //
-//import com.ktmmobile.msf.system.common.mplatform.dto.MpVirtualAccountNoDto;
-//import com.ktmmobile.msf.system.common.util.ObjectUtils;
+//import com.ktmmobile.msf.common.mplatform.dto.MpVirtualAccountNoDto;
+//import com.ktmmobile.msf.common.util.ObjectUtils;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.dao.DataAccessException;
 //import org.springframework.stereotype.Service;
 //
-//import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-//import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-//import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
-//import com.ktmmobile.msf.system.common.mplatform.dto.MoscSimplePaySmsRes;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpBilPrintInfoVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpFarChangewayInfoVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscBilEmailInfoInVO;
-//import com.ktmmobile.msf.system.common.mplatform.vo.MpPerMyktfInfoVO;
-//import com.ktmmobile.msf.system.common.service.IpStatisticService;
-//import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-//import com.ktmmobile.msf.system.common.util.SessionUtils;
-//import com.ktmmobile.msf.system.common.util.StringUtil;
+//import com.ktmmobile.msf.common.dto.McpIpStatisticDto;
+//import com.ktmmobile.msf.common.exception.SelfServiceException;
+//import com.ktmmobile.msf.common.mplatform.MsfMplatFormService;
+//import com.ktmmobile.msf.common.mplatform.dto.MoscSimplePaySmsRes;
+//import com.ktmmobile.msf.common.mplatform.vo.MpBilPrintInfoVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpFarChangewayInfoVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpMoscBilEmailInfoInVO;
+//import com.ktmmobile.msf.common.mplatform.vo.MpPerMyktfInfoVO;
+//import com.ktmmobile.msf.common.service.IpStatisticService;
+//import com.ktmmobile.msf.common.util.DateTimeUtil;
+//import com.ktmmobile.msf.common.util.SessionUtils;
+//import com.ktmmobile.msf.common.util.StringUtil;
 //import com.ktmmobile.msf.payinfo.dto.PayInfoDto;
 //import com.ktmmobile.msf.payinfo.dto.PaywayDto;
 //@Service

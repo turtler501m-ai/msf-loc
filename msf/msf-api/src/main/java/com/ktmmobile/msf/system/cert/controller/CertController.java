@@ -16,11 +16,11 @@ import com.ktmmobile.msf.system.cert.service.CertService;
 public class CertController {
 
     private static final Logger logger = LoggerFactory.getLogger(CertController.class);
-    
+
     @Autowired
     private CertService certSvc;
 
-    
+
     /**
      * @설명 : 본인인증 정보 검증(인증한 정보와 사용자가 입력한 정보 일치 여부 확인)
      * @Author : wooki
@@ -33,9 +33,9 @@ public class CertController {
     public Map<String,Object> getCertInfo(CertDto certDto) {
 
         Map<String,Object> rtnMap = new HashMap<String, Object>();
-        
+
         rtnMap = certSvc.getCertInfo(certDto);
-        
+
         return rtnMap;
-    }  
+    }
 }

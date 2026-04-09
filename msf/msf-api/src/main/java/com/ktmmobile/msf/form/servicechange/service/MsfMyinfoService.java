@@ -3,12 +3,12 @@ package com.ktmmobile.msf.form.servicechange.service;
 import java.util.List;
 import java.util.Map;
 
-import com.ktmmobile.msf.system.common.mplatform.dto.CoupInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpAddSvcInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarChangewayInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarRealtimePayInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscBilEmailInfoInVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpPerMyktfInfoVO;
+import com.ktmmobile.msf.common.mplatform.dto.CoupInfoDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpAddSvcInfoDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarChangewayInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarRealtimePayInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpMoscBilEmailInfoInVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpPerMyktfInfoVO;
 
 public interface MsfMyinfoService {
 

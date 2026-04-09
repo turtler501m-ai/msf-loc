@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.form.servicechange.dto;
 
-import com.ktmmobile.msf.system.common.mplatform.vo.MpSocVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpSocVO;
 import java.util.List;
 
 /**

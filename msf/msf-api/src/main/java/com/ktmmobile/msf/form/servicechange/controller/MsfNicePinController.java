@@ -1,8 +1,8 @@
 //package com.ktmmobile.msf.form.servicechange.controller;
 //
-//import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+//import static com.ktmmobile.msf.common.constants.Constants.AJAX_SUCCESS;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
 //import java.util.HashMap;
 //import java.util.Map;
 //import javax.servlet.http.HttpServletRequest;
@@ -21,10 +21,10 @@
 //import com.ktmmobile.msf.form.servicechange.service.MsfMypageUserService;
 //import com.ktmmobile.msf.form.servicechange.service.MsfNicePinService;
 //import com.ktmmobile.msf.system.cert.service.CertService;
-//import com.ktmmobile.msf.system.common.constants.Constants;
-//import com.ktmmobile.msf.system.common.dto.NiceLogDto;
-//import com.ktmmobile.msf.system.common.util.EncryptUtil;
-//import com.ktmmobile.msf.system.common.util.SessionUtils;
+//import com.ktmmobile.msf.common.constants.Constants;
+//import com.ktmmobile.msf.common.dto.NiceLogDto;
+//import com.ktmmobile.msf.common.util.EncryptUtil;
+//import com.ktmmobile.msf.common.util.SessionUtils;
 //
 //@Controller
 //public class MsfNicePinController {

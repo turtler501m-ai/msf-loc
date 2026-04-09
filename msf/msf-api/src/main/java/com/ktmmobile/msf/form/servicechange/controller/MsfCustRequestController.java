@@ -1,8 +1,8 @@
 package com.ktmmobile.msf.form.servicechange.controller;
 
-import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NICE_CERT_EXCEPTION_INSR;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
+import static com.ktmmobile.msf.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.NICE_CERT_EXCEPTION_INSR;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -36,21 +36,21 @@ import com.ktmmobile.msf.form.servicechange.service.MsfMaskingSvc;
 import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.form.servicechange.service.MsfRegSvcService;
 import com.ktmmobile.msf.system.cert.service.CertService;
-import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.system.common.dto.NiceResDto;
-import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.dto.db.MspSmsTemplateMstDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpUsimPukVO;
-import com.ktmmobile.msf.system.common.service.FCommonSvc;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.service.SmsSvc;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
-import com.ktmmobile.msf.system.common.util.StringUtil;
+import com.ktmmobile.msf.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.common.dto.NiceResDto;
+import com.ktmmobile.msf.common.dto.ResponseSuccessDto;
+import com.ktmmobile.msf.common.dto.UserSessionDto;
+import com.ktmmobile.msf.common.dto.db.MspSmsTemplateMstDto;
+import com.ktmmobile.msf.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.common.mplatform.vo.MpUsimPukVO;
+import com.ktmmobile.msf.common.service.FCommonSvc;
+import com.ktmmobile.msf.common.service.IpStatisticService;
+import com.ktmmobile.msf.common.service.SmsSvc;
+import com.ktmmobile.msf.common.util.EncryptUtil;
+import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.common.util.SessionUtils;
+import com.ktmmobile.msf.common.util.StringMakerUtil;
+import com.ktmmobile.msf.common.util.StringUtil;
 
 @Controller
 public class MsfCustRequestController {

@@ -2,13 +2,13 @@ package com.ktmmobile.msf.form.newchange.service;
 
 import com.ktds.crypto.exception.CryptoException;
 import com.ktmmobile.msf.form.newchange.dao.AppformDao;
-import com.ktmmobile.msf.system.common.constants.Constants;
-import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.*;
+import com.ktmmobile.msf.common.constants.Constants;
+import com.ktmmobile.msf.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.common.dto.UserSessionDto;
+import com.ktmmobile.msf.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.common.service.IpStatisticService;
+import com.ktmmobile.msf.common.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.*;
 
 @Service
 public class ScanSvcImpl implements ScanSvc {

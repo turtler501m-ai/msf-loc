@@ -1,10 +1,10 @@
 package com.ktmmobile.msf.form.servicechange.controller;
 
-import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.system.common.constants.Constants.EVENT_CODE_USIM_SELF_CHG;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NICE_CERT_EXCEPTION_INSR;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
+import static com.ktmmobile.msf.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.common.constants.Constants.EVENT_CODE_USIM_SELF_CHG;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.NICE_CERT_EXCEPTION_INSR;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.List;
@@ -27,17 +27,17 @@ import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.form.servicechange.service.MsfMaskingSvc;
 import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.system.cert.service.CertService;
-import com.ktmmobile.msf.system.common.dto.NiceResDto;
-import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.exception.McpMplatFormException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.system.common.mplatform.vo.MSimpleOsstXmlUc0VO;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
+import com.ktmmobile.msf.common.dto.NiceResDto;
+import com.ktmmobile.msf.common.dto.ResponseSuccessDto;
+import com.ktmmobile.msf.common.dto.UserSessionDto;
+import com.ktmmobile.msf.common.exception.McpMplatFormException;
+import com.ktmmobile.msf.common.exception.SelfServiceException;
+import com.ktmmobile.msf.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.common.mplatform.vo.MSimpleOsstXmlUc0VO;
+import com.ktmmobile.msf.common.service.IpStatisticService;
+import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.common.util.SessionUtils;
+import com.ktmmobile.msf.common.util.StringMakerUtil;
 
 @Controller
 public class MsfUsimSelfChgController {

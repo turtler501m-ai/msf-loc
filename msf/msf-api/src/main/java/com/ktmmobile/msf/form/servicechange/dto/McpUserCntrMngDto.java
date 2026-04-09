@@ -1,8 +1,8 @@
 package com.ktmmobile.msf.form.servicechange.dto;
 
 import java.io.Serializable;
-import com.ktmmobile.msf.system.common.util.MaskingUtil;
-import com.ktmmobile.msf.system.common.util.StringUtil;
+import com.ktmmobile.msf.common.util.MaskingUtil;
+import com.ktmmobile.msf.common.util.StringUtil;
 
 public class McpUserCntrMngDto implements Serializable {
 

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FathMapper">
+
+  <!--발급된 셀프안면인증 URL 조회-->
+    <!--<select id="getFathSelfUrl" parameterType="String" resultType="com.ktmmobile.mcp.fath.dto.FathDto">
+        /*FathMapper.getFathSelfUrl*/
+        SELECT  URL.RES_NO
+                ,URL.OPER_TYPE
+                ,TO_CHAR(URL.EXPIR_DT, 'YYYYMMDDHH24MISS') AS EXPIR_DT
+        FROM    NMCP_FATH_SELF_URL URL
+        WHERE   URL.UUID = #{uuid}
+    </select>-->
+
+  <!--안면인증 결과 PUSH 조회-->
+    <!--<select id="selectFathResltPush" parameterType="String" resultType="com.ktmmobile.mcp.fath.dto.FathDto">
+        SELECT  FATH_TRANSAC_ID,  
+                SLS_CMPC_CD,           
+                RETV_CD_VAL,          
+                CUST_NM,              
+                CUST_IDFY_NO,         
+                ISS_DATE_VAL,         
+                DRIVE_LICNS_NO,       
+                MBL_IDCARD_QR_IMG,   
+                IDCARD_CONF_WAY,      
+                DIST_RSRTN_YN,        
+                FATH_PROGR_STEP_CD,
+                FATH_CMPLT_NTFY_DT,
+                FATH_URL_RQT_DT,          
+                FATH_RESLT_CD,        
+                FATH_RESLT_SBST,
+                FATH_RQTR_ID
+        FROM    NMCP_FATH_RESLT_PUSH
+        WHERE	FATH_TRANSAC_ID = #{fathTransacId}
+        AND     SEQ = (SELECT MAX(SEQ) FROM NMCP_FATH_RESLT_PUSH WHERE  FATH_TRANSAC_ID = #{fathTransacId}) 
+    </select>-->
+
+    <!--안면인증 트랜잭션 ID 업데이트-->
+    <!--<update id="updateFathTransacId" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        /* FathMapper.updateFathTransacId */
+        UPDATE  MCP_REQUEST
+        SET     FATH_TRANSAC_ID = #{fathTransacId},
+                CPNT_ID = #{cpntId},
+                FATH_CMPLT_NTFY_DT = '',
+                RVISN_ID  		= 'SELF',
+                RVISN_DTTM      = SYSDATE
+        WHERE 	RES_NO          = #{resNo}
+    </update>-->
+    
+    <!--안면인증 인증일자 업데이트-->
+    <!--<update id="updateFathCmpltNtfyDt" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        /* FathMapper.updateFathCmpltNtfyDt */
+        UPDATE  MCP_REQUEST
+        SET     FATH_CMPLT_NTFY_DT  = #{fathCmpltNtfyDt},
+                RVISN_ID  		    = 'SELF',
+                RVISN_DTTM          = SYSDATE
+        WHERE 	RES_NO              = #{resNo}
+    </update>-->
+    
+    <!--안면인증 신청서 조회-->
+    <!--<select id="getFathAppForm"   parameterType="String" resultType="com.ktmmobile.mcp.fath.dto.FathFormInfo">
+        SELECT  T1.CSTMR_TYPE
+                ,CASE WHEN T1.CSTMR_TYPE = 'NM' THEN T3.MINOR_SELF_CERT_TYPE  /* 미성년자*/
+                     ELSE T2.SELF_CERT_TYPE
+                END AS SELF_CERT_TYPE
+                ,T1.CNTPNT_SHOP_ID
+                ,CASE WHEN T1.CSTMR_TYPE = 'NM' THEN T3.MINOR_AGENT_NAME  /* 미성년자*/
+                      ELSE T2.CSTMR_NAME
+                END AS CSTMR_NAME
+                ,CASE WHEN T1.CSTMR_TYPE = 'NM' THEN T3.MINOR_AGENT_RRN  /* 미성년자*/
+                      WHEN T1.CSTMR_TYPE = 'NA' THEN T2.CSTMR_NATIVE_RRN /* 내국인*/
+                      ELSE T2.CSTMR_FOREIGNER_RRN                        /* 외국인*/
+                END AS CSTMR_RRN
+                ,FATH_MOBILE_FN || FATH_MOBILE_MN || FATH_MOBILE_RN AS FATH_TEL_NO
+        FROM    MCP_REQUEST T1
+               ,MCP_REQUEST_CSTMR T2
+               ,MCP_REQUEST_AGENT T3
+        WHERE   T1.REQUEST_KEY = T2.REQUEST_KEY
+          AND   T1.REQUEST_KEY = T3.REQUEST_KEY(+)
+          AND   T1.RES_NO =  #{resNo}
+    </select>-->
+    <!--안면인증 명의변경 신청서 조회-->
+    <!--<select id="getNameChgInfo"   parameterType="String" resultType="com.ktmmobile.mcp.fath.dto.FathFormInfo">
+        SELECT  CHG.CSTMR_TYPE
+                ,CASE WHEN CHG.CSTMR_TYPE = 'NM' THEN AGT.NEE_AGENT_SELF_CERT_TYPE  /* 미성년자*/
+                     ELSE CHG.SELF_CERT_TYPE
+                END AS SELF_CERT_TYPE
+                ,'1100011741' AS CNTPNT_SHOP_ID
+                ,CASE WHEN CHG.CSTMR_TYPE = 'NM' THEN AGT.NEE_AGENT_NAME  /* 미성년자*/
+                      ELSE CHG.CSTMR_NAME
+                 END AS CSTMR_NAME
+                ,CASE WHEN CHG.CSTMR_TYPE = 'NM' THEN AGT.NEE_AGENT_RRN  /* 미성년자*/
+                      ELSE CHG.CSTMR_NATIVE_RRN
+                 END AS CSTMR_RRN
+                ,NVL(CHG.FATH_TEL_NO, CHG.CSTMR_RECEIVE_TEL_FN || CHG.CSTMR_RECEIVE_TEL_MN || CHG.CSTMR_RECEIVE_TEL_RN) AS FATH_TEL_NO
+        FROM    NMCP_CUST_REQUEST_NAME_CHG CHG
+                ,NMCP_CUST_REQ_NAME_CHG_AGENT AGT
+        WHERE   CHG.CUST_REQ_SEQ = AGT.CUST_REQ_SEQ(+)
+        AND     MCN_RES_NO = #{resNo}
+    </select>-->
+
+    <!--고객신분증정보 변경-->
+    <!--<update id="updateSelfCertInfo" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        /* FathMapper.updateSelfCertInfo */
+        UPDATE  MCP_REQUEST_CSTMR
+        SET     SELF_CERT_TYPE      = #{selfCertType},
+                SELF_ISSU_EXPR_DT   = #{selfIssuExprDt},
+                SELF_ISSU_NUM       = #{selfIssuNum},
+                RVISN_ID  		    = 'SELF',
+                RVISN_DTTM          = SYSDATE
+        WHERE 	REQUEST_KEY         = (SELECT REQUEST_KEY FROM MCP_REQUEST WHERE RES_NO = #{resNo})
+    </update>-->
+    
+    <!--고객신분증정보 변경(법정대리인)-->
+    <!--<update id="updateSelfCertInfoMinor" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        /* FathMapper.updateSelfCertInfoMinor */
+        UPDATE  MCP_REQUEST_AGENT
+        SET     MINOR_SELF_CERT_TYPE      = #{selfCertType},
+                MINOR_SELF_ISSU_EXPR_DT   = #{selfIssuExprDt},
+                MINOR_SELF_ISSU_NUM       = #{selfIssuNum},
+                RVISN_ID  		    = 'SELF',
+                RVISN_DTTM          = SYSDATE
+        WHERE 	REQUEST_KEY         = (SELECT REQUEST_KEY FROM MCP_REQUEST WHERE RES_NO = #{resNo})
+    </update>-->
+
+    <!--명의변경 정보 업데이트-->
+    <!--<update id="updateNameChgFathTransacId" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        /* FathMapper.updateNameChgFathTransacId */
+        UPDATE NMCP_CUST_REQUEST_NAME_CHG SET
+            FATH_TRANSAC_ID = #{fathTransacId},
+            CLAUSE_FATH_FLAG = 'Y',
+            MCN_STATE_CODE = '02',
+            RVISN_ID = 'SELF',
+            RVISN_DTTM = SYSDATE
+        WHERE MCN_RES_NO = #{resNo}
+    </update>-->
+
+    <!--<update id="updateNameChgComplete" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        /* FathMapper.updateNameChgComplete */
+        UPDATE NMCP_CUST_REQUEST_NAME_CHG SET
+            FATH_CMPLT_NTFY_DT = #{fathCmpltNtfyDt},
+            MCN_STATE_CODE = '03',
+            RVISN_ID = 'SELF',
+            RVISN_DTTM = SYSDATE
+        WHERE MCN_RES_NO = #{resNo}
+    </update>-->
+
+    <!--<update id="updateNameChgSelfCertInfoMinor" parameterType="com.ktmmobile.mcp.mypage.dto.MyNameChgReqDto">
+        /* FathMapper.updateNameChgSelfCertInfoMinor */
+        UPDATE  NMCP_CUST_REQ_NAME_CHG_AGENT
+        SET     NEE_AGENT_SELF_CERT_TYPE      = #{selfCertType},
+                NEE_AGENT_SELF_ISSU_EXPR_DT   = #{selfIssuExprDt},
+                NEE_AGENT_SELF_ISSU_NUM       = #{selfIssuNum},
+                RVISN_ID                      = 'SELF',
+                RVISN_DTTM                    = SYSDATE
+        WHERE   CUST_REQ_SEQ                  = (SELECT CUST_REQ_SEQ FROM NMCP_CUST_REQUEST_NAME_CHG WHERE MCN_RES_NO = #{mcnResNo})
+    </update>-->
+    
+    <!--<update id="updateNameChgSelfCertInfo" parameterType="com.ktmmobile.mcp.mypage.dto.MyNameChgReqDto">
+        /* FathMapper.updateNameChgSelfCertInfo */
+        UPDATE  NMCP_CUST_REQUEST_NAME_CHG
+        SET     SELF_CERT_TYPE      = #{selfCertType},
+                SELF_ISSU_EXPR_DT   = #{selfIssuExprDt},
+                SELF_ISSU_NUM       = #{selfIssuNum},
+                RVISN_ID            = 'SELF',
+                RVISN_DTTM          = SYSDATE
+        WHERE   MCN_RES_NO          = #{mcnResNo}
+    </update>-->
+
+    <!--임시예약번호 생성-->
+    <!--<select id="generateTempResNo" resultType="String">
+        SELECT
+            TO_CHAR(SYSDATE,'YYYYMMDD') || LPAD(SQ_TEMP_RES_NO.NEXTVAL, 6, '0')
+        FROM DUAL
+    </select>-->
+
+    <!--안면인증 예약번호 업데이트-->
+    <!--<update id="updateFathMcpRequestOsst" parameterType="com.ktmmobile.mcp.fath.dto.FathDto">
+        UPDATE  MCP_REQUEST_OSST
+        SET     MVNO_ORD_NO = LPAD(#{resNo}, 14, '0')
+        WHERE   MVNO_ORD_NO = #{tempResNo}
+    </update>-->
+
+    <!--<update id="updateNameChgFathSkip" parameterType="String">
+        /* FathMapper.updateNameChgFathSkip */
+        UPDATE NMCP_CUST_REQUEST_NAME_CHG SET
+            MCN_STATE_CODE = '08',
+            RVISN_ID = 'SELF',
+            RVISN_DTTM = SYSDATE
+        WHERE MCN_RES_NO = #{resNo}
+    </update>-->
+    
+</mapper>

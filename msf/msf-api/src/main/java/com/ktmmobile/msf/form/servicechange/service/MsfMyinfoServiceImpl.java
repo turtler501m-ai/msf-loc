@@ -1,14 +1,14 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import com.ktmmobile.msf.system.common.constants.Constants;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.system.common.mplatform.dto.CoupInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.dto.InqrCoupInfoRes;
-import com.ktmmobile.msf.system.common.mplatform.vo.*;
-import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.StringUtil;
+import com.ktmmobile.msf.common.constants.Constants;
+import com.ktmmobile.msf.common.exception.SelfServiceException;
+import com.ktmmobile.msf.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.common.mplatform.dto.CoupInfoDto;
+import com.ktmmobile.msf.common.mplatform.dto.InqrCoupInfoRes;
+import com.ktmmobile.msf.common.mplatform.vo.*;
+import com.ktmmobile.msf.common.util.DateTimeUtil;
+import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.common.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

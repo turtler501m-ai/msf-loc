@@ -1,10 +1,10 @@
 package com.ktmmobile.msf.form.servicechange.controller;
 
 
-import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.DB_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
+import static com.ktmmobile.msf.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.DB_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,14 +30,14 @@ import com.ktmmobile.msf.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.form.servicechange.service.MsfCustRequestScanService;
 import com.ktmmobile.msf.form.servicechange.service.MsfMaskingSvc;
 import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
-import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
+import com.ktmmobile.msf.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.common.dto.ResponseSuccessDto;
+import com.ktmmobile.msf.common.dto.UserSessionDto;
+import com.ktmmobile.msf.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.common.service.IpStatisticService;
+import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.common.util.SessionUtils;
 
 @Controller
 public class MsfMypageController {

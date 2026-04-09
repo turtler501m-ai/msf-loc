@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import com.ktmmobile.msf.system.common.mplatform.dto.MoscDataSharingResDto;
+import com.ktmmobile.msf.common.mplatform.dto.MoscDataSharingResDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyShareDataReqDto;
 
 public interface MsfMyShareDataSvc {

@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpUsimPukVO;
+import com.ktmmobile.msf.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.form.servicechange.dao.CustRequestDao;
 import com.ktmmobile.msf.form.servicechange.dto.CustRequestDto;
 

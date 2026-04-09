@@ -1,15 +1,15 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
 import java.net.SocketTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.system.common.mplatform.dto.MoscDataSharingResDto;
+import com.ktmmobile.msf.common.exception.McpCommonException;
+import com.ktmmobile.msf.common.exception.SelfServiceException;
+import com.ktmmobile.msf.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.common.mplatform.dto.MoscDataSharingResDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyShareDataReqDto;
 
 @Service

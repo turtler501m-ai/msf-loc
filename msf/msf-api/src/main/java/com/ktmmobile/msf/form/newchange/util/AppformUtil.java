@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.form.newchange.util;
 
-import static com.ktmmobile.msf.system.common.constants.Constants.*;
+import static com.ktmmobile.msf.common.constants.Constants.*;
 
 public class AppformUtil {
 

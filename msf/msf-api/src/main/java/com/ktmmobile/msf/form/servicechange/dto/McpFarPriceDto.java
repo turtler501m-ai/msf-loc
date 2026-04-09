@@ -4,7 +4,7 @@ import java.text.ParseException;
 import java.io.Serializable;
 import java.util.Date;
 
-import com.ktmmobile.msf.system.common.util.DateTimeUtil;
+import com.ktmmobile.msf.common.util.DateTimeUtil;
 
 public class McpFarPriceDto implements Serializable {
 

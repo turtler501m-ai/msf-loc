@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.usim.dto;
+package com.ktmmobile.msf.form.common.dto;
 
 import java.io.Serializable;
 

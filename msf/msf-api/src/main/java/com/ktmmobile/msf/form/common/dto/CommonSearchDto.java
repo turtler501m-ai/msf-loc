@@ -2,7 +2,7 @@ package com.ktmmobile.msf.form.common.dto;
 
 import java.io.Serializable;
 import java.util.List;
-import com.ktmmobile.msf.system.common.mspservice.dto.MspSalePlcyMstDto;
+import com.ktmmobile.msf.common.mspservice.dto.MspSalePlcyMstDto;
 
 /**
  * @Class Name : CommonSearchDto
@@ -63,9 +63,6 @@ public class CommonSearchDto implements Serializable {
     /** 상품 분류 (일반 :01, 0원 상품 :02)*/
     private String prodType;
 
-    /** 기획전 구분 코드 */
-    private String ctgCd ;
-
     private int apiParam1 = 0;
     private int apiParam2 = 0;
 
@@ -74,7 +71,10 @@ public class CommonSearchDto implements Serializable {
 
     private String prodId;
 
-    /** 정책 리스트(상품리스트에서 정책정보가 존재하는 상품만 끓어오기위한 정책정보 리스트) */
+    /** 기획전 구분 코드 */
+    private String ctgCd ;
+
+	/** 정책 리스트(상품리스트에서 정책정보가 존재하는 상품만 끓어오기위한 정책정보 리스트) */
     private List<MspSalePlcyMstDto> listMspSaleDto;
 
     public String getProdId() {
@@ -244,7 +244,6 @@ public class CommonSearchDto implements Serializable {
 	public void setSesplsYn(String sesplsYn) {
 		this.sesplsYn = sesplsYn;
 	}
-
 
     public String getCtgCd() {
         return ctgCd;

@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.form.termination.controller;
 
-import static com.ktmmobile.msf.system.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.common.constants.Constants.AJAX_SUCCESS;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,17 +26,17 @@ import com.ktmmobile.msf.form.servicechange.service.MsfMaskingSvc;
 import com.ktmmobile.msf.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.form.termination.dto.CancelConsultDto;
 import com.ktmmobile.msf.form.termination.service.CancelConsultSvc;
-import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.system.common.dto.NiceResDto;
-import com.ktmmobile.msf.system.common.dto.ResponseSuccessDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
-import com.ktmmobile.msf.system.common.util.StringUtil;
+import com.ktmmobile.msf.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.common.dto.NiceResDto;
+import com.ktmmobile.msf.common.dto.ResponseSuccessDto;
+import com.ktmmobile.msf.common.dto.UserSessionDto;
+import com.ktmmobile.msf.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.common.service.IpStatisticService;
+import com.ktmmobile.msf.common.util.EncryptUtil;
+import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.common.util.SessionUtils;
+import com.ktmmobile.msf.common.util.StringMakerUtil;
+import com.ktmmobile.msf.common.util.StringUtil;
 
 @Controller
 public class CancelConsultController {

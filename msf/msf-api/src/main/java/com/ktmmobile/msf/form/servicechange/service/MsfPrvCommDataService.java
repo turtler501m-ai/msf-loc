@@ -3,7 +3,7 @@ package com.ktmmobile.msf.form.servicechange.service;
 
 import java.util.List;
 
-import com.ktmmobile.msf.system.common.dto.db.MspCommDatPrvTxnDto;
+import com.ktmmobile.msf.common.dto.db.MspCommDatPrvTxnDto;
 
 public interface MsfPrvCommDataService {
     /**

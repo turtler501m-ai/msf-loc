@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import com.ktmmobile.msf.form.servicechange.dto.AgreeDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.CodeVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.UserVO;
+import com.ktmmobile.msf.common.mplatform.vo.CodeVO;
+import com.ktmmobile.msf.common.mplatform.vo.UserVO;
 
 
 /**

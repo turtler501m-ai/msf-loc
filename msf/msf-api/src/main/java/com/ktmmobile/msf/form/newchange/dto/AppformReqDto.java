@@ -1,25 +1,25 @@
 package com.ktmmobile.msf.form.newchange.dto;
 
-import com.ktds.crypto.exception.CryptoException;
-import com.ktmmobile.msf.system.common.constants.Constants;
-import com.ktmmobile.msf.system.common.dto.NiceLogDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.StringUtil;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import static com.ktmmobile.msf.common.constants.Constants.CSTMR_TYPE_NAME_MAP;
+import static com.ktmmobile.msf.common.constants.Constants.OPER_TYPE_NAME_MAP;
+import static com.ktmmobile.msf.common.constants.Constants.SERVICE_TYPE_LATER_PAY;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.regex.Pattern;
-
-import static com.ktmmobile.msf.system.common.constants.Constants.*;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.ktds.crypto.exception.CryptoException;
+import com.ktmmobile.msf.common.constants.Constants;
+//import com.ktmmobile.msf.common.dto.NiceLogDto;
+import com.ktmmobile.msf.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.common.util.DateTimeUtil;
+import com.ktmmobile.msf.common.util.EncryptUtil;
+import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.common.util.StringUtil;
 
 public class AppformReqDto implements Serializable {
     @Deprecated
@@ -793,7 +793,7 @@ public class AppformReqDto implements Serializable {
     private String reqSeq;
     private String resSeq;
 
-    private NiceLogDto niceLogDto;  // 010셀프개통대상 해피콜 처리
+//    private NiceLogDto niceLogDto;  // 010셀프개통대상 해피콜 처리
 
     private String clausePartnerOfferFlag;  // 제휴사 제공 동의
     private String jehuProdType;            // 요금제 제휴처
@@ -3140,13 +3140,13 @@ public class AppformReqDto implements Serializable {
         this.resSeq = resSeq;
     }
 
-    public NiceLogDto getNiceLogDto() {
-        return niceLogDto;
-    }
-
-    public void setNiceLogDto(NiceLogDto niceLogDto) {
-        this.niceLogDto = niceLogDto;
-    }
+//    public NiceLogDto getNiceLogDto() {
+//        return niceLogDto;
+//    }
+//
+//    public void setNiceLogDto(NiceLogDto niceLogDto) {
+//        this.niceLogDto = niceLogDto;
+//    }
 
     public String getMinorAgentAgrmYn() {
         return minorAgentAgrmYn;

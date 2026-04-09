@@ -1,19 +1,15 @@
-package com.ktmmobile.msf.form.comm.dto;
+package com.ktmmobile.msf.form.common.dto;
 
 import java.io.Serializable;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.ktmmobile.msf.form.common.mspservice.dto.MspSaleSubsdMstDto;
 
 public class OrderDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final Logger logger = LoggerFactory.getLogger(OrderDto.class);
-
-    MspSaleSubsdMstDto mspSaleSubsdMstDto;
 
     String searchStart;
     String searchEnd;
@@ -82,6 +78,14 @@ public class OrderDto implements Serializable {
 
     String selfProdNm;
 
+    /** 요금제코드 */
+    private String socCode;
+
+    /** 정책코드 */
+    private String modelSalePolicyCode ;
+    /** 채널점아이디_판매점코드 */
+    private String cntpntShopId;
+
     private int apiParam1 = 0;
     private int apiParam2 = 0;
 
@@ -95,25 +99,12 @@ public class OrderDto implements Serializable {
 
     private String onOffType;
 
-    private String state;
-    private int stateCount = 0;
-
     private String phoneCtgLabel;
-
-    private String stateLabel;
 
     /** 폰 판매가능 여부*/
     private String phoneSaleYn;
 
     private String percelUrl;
-
-    /** 요금제코드 */
-    private String socCode;
-
-    /** 정책코드 */
-    private String modelSalePolicyCode ;
-    /** 채널점아이디_판매점코드 */
-    private String cntpntShopId;
 
     private String tempType;
 
@@ -135,6 +126,7 @@ public class OrderDto implements Serializable {
     /** 유심종류(RCP2035) 06 */
     private String usimKindsCd;
 
+
     public String getTempType() {
         return tempType;
     }
@@ -147,19 +139,11 @@ public class OrderDto implements Serializable {
     public void setPercelUrl(String percelUrl) {
         this.percelUrl = percelUrl;
     }
-
     public String getPhoneSaleYn() {
         return phoneSaleYn;
     }
     public void setPhoneSaleYn(String phoneSaleYn) {
         this.phoneSaleYn = phoneSaleYn;
-    }
-
-    public String getStateLabel() {
-        return stateLabel;
-    }
-    public void setStateLabel(String stateLabel) {
-        this.stateLabel = stateLabel;
     }
     public String getPhoneCtgLabel() {
         return phoneCtgLabel;
@@ -167,32 +151,19 @@ public class OrderDto implements Serializable {
     public void setPhoneCtgLabel(String phoneCtgLabel) {
         this.phoneCtgLabel = phoneCtgLabel;
     }
-
-    public String getState() {
-        return state;
-    }
-    public void setState(String state) {
-        this.state = state;
-    }
-    public int getStateCount() {
-        return stateCount;
-    }
-    public void setStateCount(int stateCount) {
-        this.stateCount = stateCount;
-    }
     public String getOnOffType() {
         return onOffType;
     }
     public void setOnOffType(String onOffType) {
         this.onOffType = onOffType;
     }
+
     public String getSelfYn() {
         return selfYn;
     }
     public void setSelfYn(String selfYn) {
         this.selfYn = selfYn;
     }
-
     public String getAtribValNmOne() {
         return atribValNmOne;
     }
@@ -205,7 +176,6 @@ public class OrderDto implements Serializable {
     public void setAtribValNmTwo(String atribValNmTwo) {
         this.atribValNmTwo = atribValNmTwo;
     }
-
     public String getSearchStart() {
         return searchStart;
     }
@@ -315,20 +285,9 @@ public class OrderDto implements Serializable {
     public void setModelDiscount2(String modelDiscount2) {
         this.modelDiscount2 = modelDiscount2;
     }
-
     public String getModelDiscount3() {
         return modelDiscount3;
     }
-    public int getModelDiscount3Int() {
-        int result = 0;
-        try{
-            result = Integer.parseInt(modelDiscount3);
-        }catch (Exception e) {
-            logger.debug("must be subclass of java.lang.Number ");
-        }
-        return result;
-    }
-
     public void setModelDiscount3(String modelDiscount3) {
         this.modelDiscount3 = modelDiscount3;
     }
@@ -380,6 +339,7 @@ public class OrderDto implements Serializable {
         }
         */
         return requestStateCode;
+
     }
     public void setRequestStateCode(String requestStateCode) {
         this.requestStateCode = requestStateCode;
@@ -682,25 +642,17 @@ public class OrderDto implements Serializable {
     public void setApiParam2(int apiParam2) {
         this.apiParam2 = apiParam2;
     }
-
     public String getTmpStep() {
         return tmpStep;
     }
     public void setTmpStep(String tmpStep) {
         this.tmpStep = tmpStep;
     }
-
     public String getSelfProdNm() {
         return selfProdNm;
     }
     public void setSelfProdNm(String selfProdNm) {
         this.selfProdNm = selfProdNm;
-    }
-    public MspSaleSubsdMstDto getMspSaleSubsdMstDto() {
-        return mspSaleSubsdMstDto;
-    }
-    public void setMspSaleSubsdMstDto(MspSaleSubsdMstDto mspSaleSubsdMstDto) {
-        this.mspSaleSubsdMstDto = mspSaleSubsdMstDto;
     }
 
     public int getHndsetSalePrice() {
@@ -727,6 +679,8 @@ public class OrderDto implements Serializable {
     public void setUsimKindsCd(String usimKindsCd) {
         this.usimKindsCd = usimKindsCd;
     }
+
+
 
 
 }

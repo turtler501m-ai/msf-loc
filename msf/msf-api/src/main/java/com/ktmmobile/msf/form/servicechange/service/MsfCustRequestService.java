@@ -2,7 +2,7 @@ package com.ktmmobile.msf.form.servicechange.service;
 
 import java.util.Map;
 
-import com.ktmmobile.msf.system.common.mplatform.vo.MpUsimPukVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.form.servicechange.dto.CustRequestDto;
 
 /**

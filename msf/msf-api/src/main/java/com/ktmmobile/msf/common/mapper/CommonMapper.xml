@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CommonMapper">
+
+    <!--<delete id="deleteRateResChgAccessTrace"   parameterType="String">
+        DELETE FROM  NMCP_RATE_RES_CHG_BAS WHERE RATE_RES_CHG_SEQ =#{rateResChgSeq}
+    </delete>-->
+
+    <!--<select id="selectRateResChgAccessTrace"   parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto"   resultType="String">
+        SELECT RATE_RES_CHG_SEQ
+        FROM (
+                 SELECT RATE_RES_CHG_SEQ
+                 FROM NMCP_RATE_RES_CHG_BAS
+                 WHERE SVC_CNTR_NO =#{svcCntrNo}
+                   AND MOBILE_NO =#{mobileNo}
+                   AND BATCH_RSLT_CD IS NULL
+                 ORDER BY RES_CHG_APY_DATE DESC
+             )
+        WHERE ROWNUM =1
+    </select>-->
+
+    <!--<update id="insertRateResChgAccessTrace"   parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto">
+        INSERT INTO NMCP_RATE_RES_CHG_BAS(
+                                           RATE_RES_CHG_SEQ
+                                         , SVC_CNTR_NO
+                                         , MOBILE_NO
+                                         , USER_ID
+                                         , EVENT_CODE
+                                         , RES_CHG_RATE_CD
+                                         , BEF_CHG_RATE_CD
+                                         , BEF_CHG_RATE_AMNT
+                                         , PARAM
+                                         , RES_CHG_DATE
+                                         , RES_CHG_APY_DATE
+                                         , TRT_MDL_DIV
+                                         , GLOBAL_NO
+                                         , BATCH_RSLT_CD
+                                         , CRET_IP
+                                         , CRET_DT
+        )VALUES(
+                 (SELECT NVL(MAX(RATE_RES_CHG_SEQ), 0) + 1 AS RATE_RES_CHG_SEQ  FROM NMCP_RATE_RES_CHG_BAS)
+               ,#{svcCntrNo}
+               ,#{mobileNo}
+               ,#{userid}
+               ,#{eventCode}
+               ,#{resChgRateCd}
+               ,#{befChgRateCd}
+               ,#{befChgRateAmnt}
+               ,#{param}
+               ,#{resChgDate}
+               ,#{resChgApyDate}
+               ,#{trtMdlDiv}
+               ,#{globalNo}
+               ,#{batchRsltCd}
+               ,#{cretIp}
+               ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+               )
+    </update>-->
+
+    <!--<select id="getRateResChgList"  parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto"  resultType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto">
+        SELECT /*CommonMapper.getRateResChgList   */
+        RATE_RES_CHG_SEQ
+        , SVC_CNTR_NO
+        , MOBILE_NO
+        , USER_ID
+        , EVENT_CODE
+        , RES_CHG_RATE_CD
+        , BEF_CHG_RATE_CD
+        , BEF_CHG_RATE_AMNT
+        ,PARAM
+        ,RES_CHG_DATE
+        ,RES_CHG_APY_DATE
+        ,TRT_MDL_DIV
+        ,GLOBAL_NO
+        ,BATCH_RSLT_CD
+        ,CRET_IP
+        ,CRET_DT
+        FROM
+        NMCP_RATE_RES_CHG_BAS
+        WHERE 1=1
+        <if test="resChgApyDate != null and resChgApyDate != ''">
+            AND RES_CHG_APY_DATE = #{resChgApyDate}
+        </if>
+        <if test="rateResChgSeq != null and rateResChgSeq != ''">
+            AND RATE_RES_CHG_SEQ = #{rateResChgSeq}
+        </if>
+        <choose>
+            <when test="batchRsltCd !=null and batchRsltCd != ''" >
+                AND BATCH_RSLT_CD = #{batchRsltCd}
+            </when>
+            <otherwise>
+                AND NVL(BATCH_RSLT_CD,'-1') = '-1'
+            </otherwise>
+        </choose>
+        ORDER BY  RATE_RES_CHG_SEQ
+    </select>-->
+
+    <!--<update id="updateNmcpRateResChgBas" parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto" >
+        UPDATE /*CommonMapper.updateNmcpRateResChgBas   */
+        NMCP_RATE_RES_CHG_BAS
+        SET
+        EVENT_CODE = EVENT_CODE
+        <if test="batchRsltCd !=null and batchRsltCd != ''" >
+            ,BATCH_RSLT_CD = #{batchRsltCd}
+        </if>
+        WHERE
+        RATE_RES_CHG_SEQ = #{rateResChgSeq}
+    </update>-->
+
+    <!--<insert id="insertIpStat" parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto">
+        INSERT INTO MCP_ACCESS_TRACE (
+            PARAMETER,
+            ACCESS_IP,
+            SYS_DT,
+            SYS_RDATE,
+            ACCESS_URL,
+            USER_ID,
+            PRCS_MDL_IND,
+            PRCS_SBST,
+            TRTM_RSLT_SMST,
+            LOGIN_DIV_CD,
+            LOGIN_SEQ,
+            PLATFORM_CD,
+            MENU_SEQ,
+            URL_SEQ,
+            YY ,
+            MM ,
+            DD
+        ) VALUES (
+                     #{parameter},
+                     #{accessIp},
+                     TO_CHAR(SYSDATE, 'YYYYMMDD'),
+                     SYSDATE,
+                     #{accessUrl},
+                     SUBSTRB(#{userid},0,20),
+                     #{prcsMdlInd},
+                     #{prcsSbst},
+                     #{trtmRsltSmst},
+                     #{loginDivCd},
+                     #{loginSeq},
+                     #{platformCd},
+                     #{menuSeq},
+                     #{urlSeq},
+                     TO_CHAR(SYSDATE, 'YYYY'),
+                     TO_CHAR(SYSDATE, 'MM'),
+                     TO_CHAR(SYSDATE, 'DD')
+                 )
+    </insert>-->
+
+
+    <!--<insert id="insertIpStatAdmin" parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto">
+        INSERT INTO MCP_ADMIN_ACCESS_TRACE (
+            PARAMETER,
+            ACCESS_IP,
+            SYS_DT,
+            SYS_RDATE,
+            ACCESS_URL,
+            USER_ID,
+            PRCS_MDL_IND,
+            PRCS_SBST,
+            TRTM_RSLT_SMST
+        ) VALUES (
+                     #{parameter},
+                     #{accessIp},
+                     TO_CHAR(SYSDATE, 'YYYYMMDD'),
+                     SYSDATE,
+                     #{accessUrl},
+                     SUBSTRB(#{userid},0,20),
+                     #{prcsMdlInd},
+                     SUBSTRB(#{prcsSbst},0,1000),
+                     #{trtmRsltSmst}
+                 )
+    </insert>-->
+
+    <!--<select id="getAdminAccessTrace"  parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto"  resultType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto">
+        SELECT /* CommonMapper.getAdminAccessTrace */
+        PARAMETER
+        , ACCESS_IP
+        , SYS_DT
+        , SYS_RDATE
+        , ACCESS_URL
+        , USER_ID
+        , PRCS_MDL_IND
+        , PRCS_SBST
+        , TRTM_RSLT_SMST
+        FROM MCP_ADMIN_ACCESS_TRACE
+        WHERE
+        PRCS_MDL_IND = #{prcsMdlInd}
+        AND  SYS_DT = #{sysDt}
+        <if test="trtmRsltSmst != null and trtmRsltSmst != ''">
+            AND TRTM_RSLT_SMST = #{trtmRsltSmst}
+        </if>
+    </select>-->
+
+    <!--<select id="getPopupAllList"  resultType="com.ktmmobile.mcp.common.dto.PopupDto">
+    <![CDATA[
+        SELECT /* CommonMapper.getPopupAllList */
+            A.POPUP_SEQ
+             , A.POPUP_SUBJECT
+             , A.WIDTH_SIZE
+             , A.HEIGHT_SIZE
+             , A.XCRD
+             , A.YCRD
+             , A.POPUP_OPEN_STAT
+             , TO_CHAR(A.PSTNG_START_DATE, 'YYYYMMDDHH24MISS') AS PSTNG_START_DATE
+             , TO_CHAR(A.PSTNG_END_DATE, 'YYYYMMDDHH24MISS') AS PSTNG_END_DATE
+             , A.PLATFORM_CD
+             , A.OUTPUT_MENU
+             , A.POPUP_OUTPUT_CD
+             , A.INDC_ODRG
+             , B.POPUP_SHOW_URL AS POPUP_SHOW_URL
+             , A.POPUP_URL
+             , A.CONTENT_TYPE
+             , A.USAGE_TYPE
+             , A.ONE_TIME_POPUP_GRP
+             , C.DEVICE
+             , C.POPUP_SBST
+             , C.FILE_PATH_NM
+        FROM
+            NMCP_POPUP_BAS A
+           , NMCP_POPUP_URL B
+           , ( SELECT COALESCE(PE.POPUP_SEQ, PI.POPUP_SEQ) AS POPUP_SEQ
+                      , COALESCE(PE.DEVICE, PI.DEVICE) AS DEVICE
+                      , PE.POPUP_SBST
+                      , PI.FILE_PATH_NM
+                 FROM NMCP_POPUP_EDITOR PE
+                 FULL OUTER JOIN NMCP_POPUP_IMAGE PI
+                   ON PE.POPUP_SEQ = PI.POPUP_SEQ AND PE.DEVICE = PI.DEVICE ) C
+        WHERE 1 = 1
+          AND A.POPUP_SEQ = B.POPUP_SEQ(+)
+          AND A.POPUP_SEQ = C.POPUP_SEQ(+)
+          AND A.STAT_VAL = 'Y'
+        ORDER BY A.OUTPUT_MENU, A.INDC_ODRG
+        ]]>
+    </select>-->
+
+    <!--<select id="getPopupList"  parameterType="com.ktmmobile.mcp.common.dto.PopupDto"  resultType="com.ktmmobile.mcp.common.dto.PopupDto">
+        SELECT /* CommonMapper.getPopupList */
+            A.POPUP_SEQ, A.POPUP_SUBJECT, A.WIDTH_SIZE, A.HEIGHT_SIZE, XCRD, YCRD, POPUP_URL, POPUP_OPEN_STAT
+        FROM
+            NMCP_POPUP_BAS A
+           , (SELECT MENU_CODE, URL_ADR, GROUP_KEY FROM NMCP_USER_MENU_BAS WHERE MENU_CODE = #{menuCode}) B
+        WHERE
+            STAT_VAL = 'Y'
+          AND A.OUTPUT_MENU LIKE '%'||B.GROUP_KEY||'%'
+          AND B.URL_ADR = (SELECT URL_ADR FROM NMCP_USER_MENU_BAS WHERE MENU_CODE = B.GROUP_KEY)
+          AND B.URL_ADR = #{currentUrl}
+          AND (
+            (A.DIV_RSTRTN_TYPE='Y' AND SYSDATE BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE)
+                OR
+            (A.DIV_RSTRTN_TYPE='N')
+            )
+    </select>-->
+
+    <!--<select id="getPopupDetail"  parameterType="com.ktmmobile.mcp.common.dto.PopupDto"  resultType="com.ktmmobile.mcp.common.dto.PopupDto">
+        SELECT /* CommonMapper.getPopupDetail */
+            A.POPUP_SEQ
+             , A.POPUP_SUBJECT
+             , A.WIDTH_SIZE
+             , A.HEIGHT_SIZE
+             , A.XCRD
+             , A.YCRD
+             , A.POPUP_URL
+             , A.POPUP_OPEN_STAT
+             , B.POPUP_SBST
+             , A.SCROLL_YN
+             , A.CONTENT_TYPE
+             , A.USAGE_TYPE
+        FROM
+            NMCP_POPUP_BAS A
+            , NMCP_POPUP_EDITOR B
+        WHERE
+            A.POPUP_SEQ = #{popupSeq}
+          AND A.STAT_VAL = 'Y'
+          AND A.POPUP_SEQ = B.POPUP_SEQ (+)
+          AND B.DEVICE = #{device}
+    </select>-->
+
+    <!--<select id="getPopupMainList" resultType="com.ktmmobile.mcp.common.dto.PopupDto">
+        SELECT /* CommonMapper.getPopupMainList */
+        POPUP_SEQ, POPUP_SUBJECT, WIDTH_SIZE, HEIGHT_SIZE, XCRD, YCRD, POPUP_URL, POPUP_OPEN_STAT
+        FROM (SELECT POPUP_SEQ, POPUP_SUBJECT, WIDTH_SIZE, HEIGHT_SIZE, XCRD, YCRD, POPUP_URL, POPUP_OPEN_STAT
+        , ROW_NUMBER() OVER (ORDER BY CRET_DT DESC, POPUP_SEQ DESC) AS RN
+        FROM NMCP_POPUP_BAS
+        WHERE STAT_VAL = 'Y'
+        AND ((DIV_RSTRTN_TYPE='Y' AND SYSDATE BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE)
+        OR
+        (DIV_RSTRTN_TYPE='N')
+        )
+        AND UPPER(OUTPUT_MENU) LIKE UPPER('%'||#{menuCode}||'%')
+        )
+        <if test="_parameter == 'SMMainWeb'.toString()">
+            WHERE RN = 1
+        </if>
+    </select>-->
+
+    <!--<insert id="insertLoginHistory" parameterType="com.ktmmobile.mcp.common.dto.LoginHistoryDto">
+        INSERT INTO NMCP_LOGIN_HISTORY (
+            USERID,
+            INTYPE,
+            NAME,
+            PHONE,
+            REGDATE
+        ) VALUES (
+                     #{userid},
+                     #{intype},
+                     #{name},
+                     #{phone},
+                     SYSDATE
+                 )
+    </insert>-->
+
+    <!--<select id="checkCrawlingCount" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto">
+        SELECT /*CommonMapper.checkCrawlingCount */
+            COUNT(1)
+        FROM MCP_ACCESS_TRACE
+        WHERE  1=1
+          AND SYS_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+          AND ACCESS_IP = #{accessIp}
+          AND ACCESS_URL =#{accessUrl}
+    </select>-->
+
+
+
+
+    <!--<insert id="insertUserEventTrace" parameterType="com.ktmmobile.mcp.common.dto.UserEventTraceDto">
+        <!--<selectKey keyProperty="uetSeq" resultType="Integer" order="BEFORE">
+            SELECT SQ_EVENT_TRACE_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO MCP_USER_EVENT_TRACE (
+               UET_SEQ                  --수행 일련번호
+             , PRCS_MDL_MAIN            --처리 모듈 대구분
+             , PRCS_MDL_MID             --처리 모듈 중구분
+             , PRCS_MDL_SUB             --처리 모듈 소소구분
+             , TRTM_RSLT_SMST           --처리 결과 내용
+             , PRCS_SBST                --처리 내용
+             , SYS_RDATE_DD             --등록일 YYYYMMDD
+             , RIP                      --등록아이피
+             , REGST_ID                 --등록자 ID
+             , REGST_DTTM               --등록일시
+             , RVISN_ID                 --수정자 ID
+             , RVISN_DTTM               --수정일시
+        ) VALUES (
+               #{uetSeq}
+             , #{prcsMdlMain}
+             , #{prcsMdlMid}
+             , #{prcsMdlSub}
+             , #{trtmRsltSmst}
+             , #{prcsSbst}
+             , TO_CHAR(SYSDATE, 'YYYYMMDD')
+             , #{rip}
+             , #{regstId}
+             , SYSDATE
+             , #{rvisnId}
+             , SYSDATE
+         )
+    </insert>-->
+
+
+    <!--<update id="updateUserEventTrace" parameterType="com.ktmmobile.mcp.common.dto.UserEventTraceDto" >
+        UPDATE MCP_USER_EVENT_TRACE SET
+            RVISN_DTTM = SYSDATE                   --수정일시
+            , RVISN_ID = #{rvisnId}                --수정자 ID
+            <if test="prcsMdlSub !=null and prcsMdlSub != ''" >
+                , PRCS_MDL_SUB = #{prcsMdlSub}     --처리 모듈 소소구분
+            </if>
+            <if test="dtlDesc !=null and dtlDesc != ''" >
+                , DTL_DESC = #{dtlDesc}             --설명
+            </if>
+        WHERE
+            UET_SEQ = #{uetSeq}
+            <if test="prcsMdlMain !=null and prcsMdlMain != ''" >
+                AND PRCS_MDL_MAIN = #{prcsMdlMain}
+            </if>
+            <if test="prcsMdlMid !=null and prcsMdlMid != ''" >
+                AND PRCS_MDL_MID = #{prcsMdlMid}
+            </if>
+    </update>-->
+
+    <!--<select id="getUserEventTraceList" resultType="com.ktmmobile.mcp.common.dto.UserEventTraceDto" parameterType="com.ktmmobile.mcp.common.dto.UserEventTraceDto"  >
+        SELECT
+            UET_SEQ
+            , PRCS_MDL_MAIN
+            , PRCS_MDL_MID
+            , PRCS_MDL_SUB
+            , TRTM_RSLT_SMST
+            , PRCS_SBST
+            , SYS_RDATE_DD
+            , RIP
+            , REGST_DTTM
+        FROM MCP_USER_EVENT_TRACE
+        WHERE 1=1
+            AND PRCS_MDL_SUB NOT IN ('INIT','MemoChat')   -- 초기화 , 본인 창 공유 제외
+        <if test="regstId !=null and regstId != ''" >
+            AND REGST_ID = #{regstId}
+        </if>
+        <if test="prcsMdlMain !=null and prcsMdlMain != ''" >
+            AND PRCS_MDL_MAIN = #{prcsMdlMain}
+        </if>
+        <if test="prcsMdlMid !=null and prcsMdlMid != ''" >
+            AND PRCS_MDL_MID = #{prcsMdlMid}
+        </if>
+        <if test="trtmRsltSmst !=null and trtmRsltSmst != ''" >
+            AND TRTM_RSLT_SMST = #{trtmRsltSmst}
+        </if>
+        <if test="strRegstDttm !=null and strRegstDttm != ''" >
+            AND REGST_DTTM > TO_DATE(#{strRegstDttm}, 'YYYYMMDDHH24MISS')
+        </if>
+        ORDER BY REGST_DTTM DESC
+    </select>-->
+
+    <!--<select id="getPopupEditor" resultType="com.ktmmobile.mcp.common.dto.PopupEditorDto" parameterType="com.ktmmobile.mcp.common.dto.PopupEditorDto">
+        SELECT
+            POPUP_SEQ
+            , DEVICE
+            , POPUP_SBST
+          FROM NMCP_POPUP_EDITOR
+         WHERE POPUP_SEQ = #{popupSeq}
+           AND DEVICE = #{device}
+    </select>-->
+
+    <!--<update id="updatePageViewCount" parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto">
+        MERGE INTO MCP_PAGE_VIEWS a
+        USING (SELECT #{url} AS URL, #{platformCd} AS PLATFORM_CD FROM DUAL) b
+        ON (a.URL = b.URL AND a.PLATFORM_CD = b.PLATFORM_CD)
+        WHEN MATCHED THEN
+            UPDATE SET a.VIEW_COUNT = a.VIEW_COUNT + 1
+        WHEN NOT MATCHED THEN
+            INSERT (URL, VIEW_COUNT, PLATFORM_CD)
+            VALUES (#{url}, 1, #{platformCd})
+    </update>-->
+
+    <!--<select id="selectPageViewsCount" resultType="java.lang.Integer">
+      SELECT
+        SUM(VIEW_COUNT) AS TOTAL_VIEW_COUNT
+      FROM MCP_PAGE_VIEWS
+      WHERE url IN (
+          #{url},
+          CASE
+            WHEN #{url} LIKE '/m/%' THEN SUBSTR(#{url}, 3)
+            ELSE CONCAT('/m', #{url})
+          END
+       )
+    </select>-->
+
+    <!--<select id="getLastedRateAdsvcGdncVersion" resultType="String">
+        SELECT VERSION
+        FROM NMCP_RATE_ADSVC_GDNC_VERSION
+        WHERE SEQ = ( SELECT MAX(SEQ)
+                      FROM NMCP_RATE_ADSVC_GDNC_VERSION
+                      WHERE STATUS = 'SUCCESS' )
+    </select>-->
+
+</mapper>

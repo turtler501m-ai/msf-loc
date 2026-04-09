@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @MapperScan({
     "com.ktmmobile.msf.system.common.mapper",
-    "com.ktmmobile.msf.form.common.mapper",
+    "com.ktmmobile.msf.common.mapper",
     "com.ktmmobile.msf.form.newchange.mapper",
     "com.ktmmobile.msf.form.servicechange.mapper",
     "com.ktmmobile.msf.form.ownerchange.mapper",

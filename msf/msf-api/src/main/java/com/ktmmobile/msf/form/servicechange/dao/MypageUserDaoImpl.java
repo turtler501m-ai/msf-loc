@@ -16,8 +16,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.ktmmobile.msf.form.servicechange.dto.AgreeDto;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.CodeVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.UserVO;
+import com.ktmmobile.msf.common.mplatform.vo.CodeVO;
+import com.ktmmobile.msf.common.mplatform.vo.UserVO;
 
 /**
  * @author ANT_FX700_02

@@ -1,23 +1,23 @@
 package com.ktmmobile.msf.form.servicechange.service;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 
 import java.net.SocketTimeoutException;
 
 
-import com.ktmmobile.msf.system.common.util.ObjectUtils;
+import com.ktmmobile.msf.common.util.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ktmmobile.msf.system.common.dto.MoscPymnReqDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPaymentInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.PaymentInfoVO;
+import com.ktmmobile.msf.common.dto.MoscPymnReqDto;
+import com.ktmmobile.msf.common.exception.McpCommonException;
+import com.ktmmobile.msf.common.exception.SelfServiceException;
+import com.ktmmobile.msf.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarPaymentInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.PaymentInfoVO;
 
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
 
 @Service
 public class MsfRealTimePayServiceImpl implements MsfRealTimePayService{

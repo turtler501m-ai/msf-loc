@@ -7,19 +7,19 @@ import java.util.*;
 
 import com.ktmmobile.msf.form.newchange.dao.AppformDao;
 import com.ktmmobile.msf.form.newchange.service.AppformSvc;
-import com.ktmmobile.msf.system.common.dto.NiceLogDto;
-import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarChangewayInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpMoscBilEmailInfoInVO;
-import com.ktmmobile.msf.system.common.service.FCommonSvc;
-import com.ktmmobile.msf.system.common.service.NiceLogSvc;
-import com.ktmmobile.msf.system.common.util.StringUtil;
+import com.ktmmobile.msf.common.dto.NiceLogDto;
+import com.ktmmobile.msf.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.common.exception.McpCommonException;
+import com.ktmmobile.msf.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarChangewayInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpMoscBilEmailInfoInVO;
+import com.ktmmobile.msf.common.service.FCommonSvc;
+import com.ktmmobile.msf.common.service.NiceLogSvc;
+import com.ktmmobile.msf.common.util.StringUtil;
 import com.ktmmobile.msf.system.faceauth.dto.FathDto;
 import com.ktmmobile.msf.system.faceauth.dto.FathSessionDto;
-import com.ktmmobile.msf.system.faceauth.service.FathService;
+//import com.ktmmobile.msf.system.faceauth.service.FathService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,18 +30,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.mplatform.dto.MoscWireUseTimeInfoRes;
-import com.ktmmobile.msf.system.common.mspservice.dao.MspDao;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
+import com.ktmmobile.msf.common.dto.UserSessionDto;
+//import com.ktmmobile.msf.common.mplatform.dto.MoscWireUseTimeInfoRes;
+import com.ktmmobile.msf.common.mspservice.dao.MspDao;
+import com.ktmmobile.msf.common.service.IpStatisticService;
+import com.ktmmobile.msf.common.util.SessionUtils;
 import com.ktmmobile.msf.form.servicechange.dao.CustRequestDao;
+import com.ktmmobile.msf.form.servicechange.service.MsfMyinfoService;
+
 import com.ktmmobile.msf.form.ownerchange.dao.MyNameChgDao;
 import com.ktmmobile.msf.form.servicechange.dao.MypageDao;
 import com.ktmmobile.msf.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
 
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.*;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.*;
 
 /**
  * @author ANT_FX700_02
@@ -73,8 +75,8 @@ public class MyNameChgServiceImpl implements MyNameChgService{
     @Autowired
     CustRequestDao custRequestDao;
 
-    @Autowired
-    MsfFarPricePlanService farPricePlanService;
+//    @Autowired
+//    MsfFarPricePlanService farPricePlanService;
     /*
     @Autowired
     FormImageMakeSvc formImageMakeSvc;
@@ -92,8 +94,8 @@ public class MyNameChgServiceImpl implements MyNameChgService{
     @Autowired
     private AppformSvc appformSvc;
 
-    @Autowired
-    private FathService fathService;
+//    @Autowired
+//    private FathService fathService;
     
     @Autowired
     private AppformDao appformDao;
@@ -159,12 +161,12 @@ public class MyNameChgServiceImpl implements MyNameChgService{
         //안면인증
         String fathTrgYn = myNameChgReqDto.getFathTrgYn();
         if("Y".equals(fathTrgYn)){
-            FathSessionDto fathSessionDto = fathService.validateFathSession();
-            myNameChgReqDto.setFathTransacId(fathSessionDto.getTransacId());
-            myNameChgReqDto.setFathCmpltNtfyDt(fathSessionDto.getCmpltNtfyDt());
-            myNameChgReqDto.setFathTelNo(myNameChgReqDto.getCstmrReceiveTelFn()+myNameChgReqDto.getCstmrReceiveTelMn()+myNameChgReqDto.getCstmrReceiveTelRn());
-            //안면인증 관련 OSST 연동이력 MVNO_ORD_NO 컬럼데이터 '임시예약번호'를 -> '실제예약번호'로 업데이트
-            fathService.updateFathMcpRequestOsst(myNameChgReqDto.getMcnResNo());
+//            FathSessionDto fathSessionDto = fathService.validateFathSession();
+//            myNameChgReqDto.setFathTransacId(fathSessionDto.getTransacId());
+//            myNameChgReqDto.setFathCmpltNtfyDt(fathSessionDto.getCmpltNtfyDt());
+//            myNameChgReqDto.setFathTelNo(myNameChgReqDto.getCstmrReceiveTelFn()+myNameChgReqDto.getCstmrReceiveTelMn()+myNameChgReqDto.getCstmrReceiveTelRn());
+//            //안면인증 관련 OSST 연동이력 MVNO_ORD_NO 컬럼데이터 '임시예약번호'를 -> '실제예약번호'로 업데이트
+//            fathService.updateFathMcpRequestOsst(myNameChgReqDto.getMcnResNo());
         }
 
         myNameChgDao.insertNmcpCustReqMst(myNameChgReqDto);
@@ -235,21 +237,21 @@ public class MyNameChgServiceImpl implements MyNameChgService{
             if("LOCAL".equals(serverName) || "DEV".equals(serverName) || "STG".equals(serverName)) {
                 return result;
             } else {
-                MoscWireUseTimeInfoRes moscWireUseTimeInfoRes = farPricePlanService.moscWireUseTimeInfo(list.get(0).getSvcCntrNo(),
-                                                                                            list.get(0).getCntrMobileNo(), list.get(0).getCustId());
+//                MoscWireUseTimeInfoRes moscWireUseTimeInfoRes = farPricePlanService.moscWireUseTimeInfo(list.get(0).getSvcCntrNo(),
+//                                                                                            list.get(0).getCntrMobileNo(), list.get(0).getCustId());
 
-                if (moscWireUseTimeInfoRes.getRealUseDayNum() != null) {
-                    String realUseDay = moscWireUseTimeInfoRes.getRealUseDayNum();
-                    int realUseDayInt = Integer.parseInt(realUseDay, 10);
-
-                    if (realUseDayInt < 90) {
-                        result = "LESSNINETY";
-                        return result;
-                    }
-                } else {
-                    result = "ERROR";
-                    return result;
-                }
+//                if (moscWireUseTimeInfoRes.getRealUseDayNum() != null) {
+//                    String realUseDay = moscWireUseTimeInfoRes.getRealUseDayNum();
+//                    int realUseDayInt = Integer.parseInt(realUseDay, 10);
+//
+//                    if (realUseDayInt < 90) {
+//                        result = "LESSNINETY";
+//                        return result;
+//                    }
+//                } else {
+//                    result = "ERROR";
+//                    return result;
+//                }
             }
         } else {
             result = "FAIL";

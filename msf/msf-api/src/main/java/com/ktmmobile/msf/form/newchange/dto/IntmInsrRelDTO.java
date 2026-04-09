@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.form.newchange.dto;
 
-import static com.ktmmobile.msf.system.common.constants.Constants.REQ_BUY_TYPE_PHONE;
+import static com.ktmmobile.msf.common.constants.Constants.REQ_BUY_TYPE_PHONE;
 
 import java.io.Serializable;
 

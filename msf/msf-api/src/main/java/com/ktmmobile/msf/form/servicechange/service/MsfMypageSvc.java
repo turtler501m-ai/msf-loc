@@ -1,8 +1,8 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.dto.db.McpMrktHistDto;
-import com.ktmmobile.msf.system.common.dto.db.McpRequestAgrmDto;
+import com.ktmmobile.msf.common.dto.UserSessionDto;
+import com.ktmmobile.msf.common.dto.db.McpMrktHistDto;
+import com.ktmmobile.msf.common.dto.db.McpRequestAgrmDto;
 import com.ktmmobile.msf.form.servicechange.dto.*;
 
 import java.math.BigDecimal;

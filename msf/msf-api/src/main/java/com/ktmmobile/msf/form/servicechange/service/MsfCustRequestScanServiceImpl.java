@@ -1,8 +1,8 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.ACE_256_DECRYPT_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SCAN_SERVER_SEND_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SCAN_XML_SAVE_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.ACE_256_DECRYPT_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.SCAN_SERVER_SEND_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.SCAN_XML_SAVE_EXCEPTION;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -33,16 +33,16 @@ import com.ktmmobile.msf.form.ownerchange.dto.MyNameChgReqDto;
 import com.ktmmobile.msf.form.servicechange.dao.CustRequestDao;
 import com.ktmmobile.msf.form.servicechange.dto.CustRequestDto;
 import com.ktmmobile.msf.form.termination.dto.CancelConsultDto;
-import com.ktmmobile.msf.system.common.constants.Constants;
-import com.ktmmobile.msf.system.common.dto.McpIpStatisticDto;
-import com.ktmmobile.msf.system.common.dto.UserSessionDto;
-import com.ktmmobile.msf.system.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.system.common.service.IpStatisticService;
-import com.ktmmobile.msf.system.common.util.EncryptUtil;
-import com.ktmmobile.msf.system.common.util.MultipartUtility;
-import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.system.common.util.SessionUtils;
-import com.ktmmobile.msf.system.common.util.StringUtil;
+import com.ktmmobile.msf.common.constants.Constants;
+import com.ktmmobile.msf.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.common.dto.UserSessionDto;
+import com.ktmmobile.msf.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.common.service.IpStatisticService;
+import com.ktmmobile.msf.common.util.EncryptUtil;
+import com.ktmmobile.msf.common.util.MultipartUtility;
+import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.common.util.SessionUtils;
+import com.ktmmobile.msf.common.util.StringUtil;
 
 @Service
 public class MsfCustRequestScanServiceImpl implements MsfCustRequestScanService {

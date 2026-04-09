@@ -1,8 +1,8 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import com.ktmmobile.msf.system.common.dto.MoscPymnReqDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPaymentInfoVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.PaymentInfoVO;
+import com.ktmmobile.msf.common.dto.MoscPymnReqDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarPaymentInfoVO;
+import com.ktmmobile.msf.common.mplatform.vo.PaymentInfoVO;
 
 import java.net.SocketTimeoutException;
 

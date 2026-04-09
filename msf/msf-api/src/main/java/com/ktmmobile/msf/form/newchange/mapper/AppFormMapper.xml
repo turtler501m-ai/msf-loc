@@ -1,0 +1,4708 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppformMapper">
+
+    <!--<update id="updateMcpRequest" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestDto" >
+        UPDATE /*AppformMapper.updateMcpRequest   */
+        MCP_REQUEST
+        SET
+        RVISN_DTTM = SYSDATE
+        ,SYS_RDATE = SYSDATE  -- 개통요청 시점으로 등록 시간 변경
+        <if test="reqModelName != null and reqModelName != ''">
+            , REQ_MODEL_NAME = #{reqModelName}
+        </if>
+        <if test="reqUsimSn != null and reqUsimSn != ''">
+            , REQ_USIM_SN = #{reqUsimSn}
+        </if>
+        <if test="reqPayType != null and reqPayType != ''">
+            , REQ_PAY_TYPE = #{reqPayType}
+        </if>
+        <if test="reqAddition != null and reqAddition != ''">
+            , REQ_ADDITION = #{reqAddition}
+        </if>
+        <if test="reqWantNumber != null and reqWantNumber != ''">
+            , REQ_WANT_NUMBER = #{reqWantNumber}
+        </if>
+        <if test="reqWantNumber2 != null and reqWantNumber2 != ''">
+            , REQ_WANT_NUMBER2 = #{reqWantNumber2}
+        </if>
+        <if test="reqWantNumber3 != null and reqWantNumber3 != ''">
+            , REQ_WANT_NUMBER3 = #{reqWantNumber3}
+        </if>
+        <if test="insrProdCd != null and insrProdCd != ''">
+            , INSR_PROD_CD = #{insrProdCd}
+        </if>
+        <if test="clauseInsrProdFlag != null and clauseInsrProdFlag != ''">
+            , CLAUSE_INSR_PROD_FLAG = #{clauseInsrProdFlag}
+        </if>
+        <if test="insrAuthInfo != null and insrAuthInfo != ''">
+            , INSR_AUTH_INFO = #{insrAuthInfo}
+        </if>
+        <if test="rwdProdCd != null and rwdProdCd != ''">
+            , RWD_PROD_CD = #{rwdProdCd}
+        </if>
+        <if test="clauseRwdFlag != null and clauseRwdFlag != ''">
+            , CLAUSE_RWD_FLAG = #{clauseRwdFlag}
+        </if>
+        <if test="rwdAuthInfo != null and rwdAuthInfo != ''">
+            , RWD_AUTH_INFO = #{rwdAuthInfo}
+        </if>
+        <if test="scanId != null and scanId != ''">
+            , SCAN_ID = #{scanId}
+        </if>
+        <if test="combineSoloType != null and combineSoloType != ''">
+            , COMBINE_SOLO_TYPE = #{combineSoloType}
+        </if>
+        <if test="combineSoloFlag != null and combineSoloFlag != ''">
+            , COMBINE_SOLO_FLAG = #{combineSoloFlag}
+        </if>
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<update id="updateMcpRequestCallBack" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        UPDATE /*AppformMapper.updateMcpRequestCallBack   */
+        MCP_REQUEST
+        SET
+        RVISN_DTTM = SYSDATE
+        <if test="pstate != null and pstate != ''">
+            , PSTATE = #{pstate}
+        </if>
+        <if test="requestStateCode != null and requestStateCode != ''">
+            , REQUEST_STATE_CODE = #{requestStateCode}
+        </if>
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<update id="updateMcpRequestCstmr" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestCstmrDto" >
+        UPDATE /*AppformMapper.updateMcpRequestCstmr   */
+        MCP_REQUEST_CSTMR
+        SET
+        RVISN_DTTM = SYSDATE
+        <if test="cstmrMail != null and cstmrMail != ''">
+            , CSTMR_MAIL = #{cstmrMail}                                      --고객정보_메일
+        </if>
+        <if test="cstmrMailReceiveFlag != null and cstmrMailReceiveFlag != ''">
+            , CSTMR_MAIL_RECEIVE_FLAG = #{cstmrMailReceiveFlag}              --고객정보_메일수신_여부
+        </if>
+        <if test="cstmrPost != null and cstmrPost != ''">
+            , CSTMR_POST = #{cstmrPost}                                      --고객정보_우편번호
+        </if>
+        <if test="cstmrAddr != null and cstmrAddr != ''">
+            , CSTMR_ADDR = #{cstmrAddr}                                      --고객정보_주소
+        </if>
+        <if test="cstmrAddrDtl != null and cstmrAddrDtl != ''">
+            , CSTMR_ADDR_DTL = #{cstmrAddrDtl}                               --고객정보_상세주소
+        </if>
+        <if test="cstmrBillSendCode != null and cstmrBillSendCode != ''">
+            , CSTMR_BILL_SEND_CODE = #{cstmrBillSendCode}                    --고객정보_명세서종류
+        </if>
+        <if test="recommendFlagCd != null and recommendFlagCd != ''">
+            , RECOMMEND_FLAG_CD = #{recommendFlagCd}                         --추천인 구분 코드 F001 01:추천 직원번호 02:제휴사 추천코드
+        </if>
+        <if test="recommendInfo != null and recommendInfo != ''">
+            , RECOMMEND_INFO = #{recommendInfo}                              --추천인정보
+        </if>
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<update id="updateMcpRequestMove" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestMoveDto" >
+        UPDATE /*AppformMapper.updateMcpRequestMove   */
+        MCP_REQUEST_MOVE
+        SET
+        RVISN_DTTM = SYSDATE
+        <if test="reqGuideFlag != null and reqGuideFlag != ''">
+            , REQ_GUIDE_FLAG = #{reqGuideFlag}
+        </if>
+        <if test="reqGuideFn != null and reqGuideFn != ''">
+            , REQ_GUIDE_FN = #{reqGuideFn}
+        </if>
+        <if test="reqGuideRn != null and reqGuideRn != ''">
+            , REQ_GUIDE_RN = #{reqGuideRn}
+        </if>
+        <if test="reqGuideMn != null and reqGuideMn != ''">
+            , REQ_GUIDE_MN = #{reqGuideMn}
+        </if>
+        <if test="osstPayDay != null and osstPayDay != ''">
+            , OSST_PAY_DAY = #{osstPayDay}
+        </if>
+        <if test="osstPayType != null and osstPayType != ''">
+            , OSST_PAY_TYPE = #{osstPayType}
+        </if>
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<update id="updateMcpRequestSaleinfo" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSaleinfoDto" >
+        UPDATE /*AppformMapper.updateMcpRequestSaleinfo   */
+        MCP_REQUEST_SALEINFO
+        SET
+        RVISN_DTTM = SYSDATE
+        <if test="usimPrice != null and usimPrice > -1">
+            ,USIM_PRICE = #{usimPrice}
+        </if>
+        <if test="usimPayMthdCd != null and usimPayMthdCd != ''">
+            ,USIM_PAY_MTHD_CD = #{usimPayMthdCd}
+        </if>
+        <if test="settlApvNo != null and settlApvNo != ''">
+            ,SETTL_APV_NO = #{settlApvNo}
+        </if>
+        <if test="settlTraNo != null and settlTraNo != ''">
+            ,SETTL_TRA_NO =  #{settlTraNo}
+        </if>
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<select id="getMcpAdditionList"  parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestAdditionDto"  resultType="com.ktmmobile.mcp.common.dto.db.McpRequestAdditionDto">
+        SELECT
+        A.ADDITION_KEY
+        , A.ADDITION_NAME
+        , A.CHARGE_FLAG
+        , NVL(A.RANTAL, 0)  AS RANTAL
+        , RATE_ADSVC_GDNC_SEQ AS RATE_ADSVC_PROD_REL_SEQ
+        FROM
+        MCP_ADDITION A
+        , MCP_CODE  B
+        , NMCP_RATE_ADSVC_GDNC_PROD_REL T3
+        WHERE
+        B.CODE_SYS = 'ADS' --코드그룹
+        AND A.SOC =  T3.RATE_ADSVC_CD(+)
+        AND B.USE_YN = 'Y'
+        AND B.CODE = A.CHARGE_FLAG
+        AND A.CHARGE_FLAG  =  #{chargeFlag}
+        AND A.ACT_FLAG = 'Y'
+        AND A.ADDITION_KEY <![CDATA[<> ]]>10 -- 010번호연결서비스
+        <if test="osstYn != null and osstYn != ''">
+            AND A.OSST_YN= #{osstYn}
+        </if>
+        ORDER BY  B.ORD , A.ADDITION_KEY
+    </select>-->
+
+    <!--<insert id="insertGiftReqTxn" parameterType="com.ktmmobile.mcp.etc.dto.GiftPromotionDtl" >
+        INSERT INTO NMCP_GIFT_REQ_TXN(
+                                       GIFT_REQ_KEY
+                                     , REQ_KEY
+                                     , PROM_CD
+                                     , GIFT_CD
+                                     , PROM_DIV_CD
+                                     , GIFT_REQ_STTUS_CD
+                                     , GIFT_REQ_STTUS_DT
+                                     , CRET_IP
+                                     , CRET_DT
+                                     , CRET_ID
+                                     , AMD_IP
+                                     , AMD_DT
+                                     , AMD_ID
+        ) VALUES (
+                     SQ_GIFT_REQ_KEY.NEXTVAL
+                 , #{requestKey}
+                 , #{prmtId}
+                 , #{prdtId}
+                 , #{prmtType}
+                 , 'REQ'
+                 , SYSDATE
+                 , #{rip}
+                 , SYSDATE
+                 , #{cretId}
+                 , #{rip}
+                 , SYSDATE
+                 , #{cretId}
+                 )
+    </insert>-->
+
+    <!--<select id="checkGiftReqCount" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto"  resultType="java.lang.Integer">
+        SELECT /*AppformMapper.checkGiftReqCount */
+            COUNT(1)
+        FROM
+            NMCP_GIFT_REQ_TXN
+        WHERE REQ_KEY = #{requestKey}
+          AND PROM_CD = #{prmtId}
+          AND GIFT_CD = #{prdtId}
+    </select>-->
+
+
+
+    <!--<insert id="insertMcpRequestOsst" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestOsstDto" >
+        INSERT INTO MCP_REQUEST_OSST (
+               MVNO_ORD_NO              --MVNO오더번호(RES_NO)
+             , SEQ                      --일련번호
+             , OSST_ORD_NO              --OSST오더번호
+             , PRGR_STAT_CD             --진행상태코드
+             , RSLT_CD
+             , TLPH_NO_STAT_CD          --전화번호상태코드(NU1)
+             , ASGN_AGNC_ID             --할당대리점ID(NU1)
+             , TLPH_NO_OWN_CMPN_CD      --번호소유통신사업자코드(NU1)
+             , OPEN_SVC_IND_CD          --개통서비스구분코드(NU1)
+             , ENCD_TLPH_NO             --암호화전화번호(NU1)
+             , TLPH_NO                  --전화번호
+             , IF_TYPE                  --연동유형
+             , NSTEP_GLOBAL_ID
+             , REGST_DTTM               --등록일시
+             , RSLT_DT
+        ) VALUES (
+            LPAD(#{mvnoOrdNo}, 14, '0')
+            , NVL((SELECT MAX(SEQ+1) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')), 1)
+            , #{osstOrdNo}
+            , #{prgrStatCd}
+            , #{rsltCd}
+            , #{tlphNoStatCd}
+            , #{asgnAgncId}
+            , #{tlphNoOwnCmpnCd}
+            , #{openSvcIndCd}
+            , #{encdTlphNo}
+            , #{tlphNo}
+            , NVL(#{ifType}, 'WEB')
+            , #{nstepGlobalId}
+            , SYSDATE
+            , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+        )
+    </insert>-->
+
+    <!--<update id="updateMcpRequestOsstOrdNo" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestOsstDto" >
+        UPDATE /*AppformMapper.updateMcpRequestOsst   */ MCP_REQUEST_OSST
+        SET
+            MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0'),
+            SEQ = (SELECT NVL(MAX(SEQ), 0) + 1 FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0'))
+        WHERE
+            NSTEP_GLOBAL_ID = #{nstepGlobalId}
+            AND PRGR_STAT_CD = #{prgrStatCd}
+            AND REGST_DTTM > SYSDATE-(1/12)  --2시간
+            AND MVNO_ORD_NO IS NULL
+    </update>-->
+
+    <!--<select id="getRequestOsst" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestOsstDto" resultType="com.ktmmobile.mcp.common.dto.db.McpRequestOsstDto">
+        SELECT /*AppformMapper.getRequestOsst   */
+            MVNO_ORD_NO
+             ,SEQ
+             ,OSST_ORD_NO
+             ,PRGR_STAT_CD
+             ,CUST_ID
+             ,SVC_CNTR_NO
+             ,RSLT_CD
+             ,RSLT_MSG
+             ,RSLT_DT
+             ,NSTEP_GLOBAL_ID
+             ,PRDC_CHK_NOTI_MSG
+             ,NP_BCNTR_TYPE_CD
+             ,NP_FEE
+             ,NP_NCHRG_AMT
+             ,NP_PNLT_AMT
+             ,NP_UNPAY_AMT
+             ,NP_HNDST_INST_AMT
+             ,NP_PREPAY_AMT
+             ,NP_BASE_CHRG_AMT
+             ,NP_NTNL_CHRG_AMT
+             ,NP_INTL_CHRG_AMT
+             ,NP_ADD_CHRG_AMT
+             ,NP_ETC_CHRG_AMT
+             ,NP_VAT
+             ,NP_RMN_STRT_DT
+             ,NP_RMN_END_DT
+             ,TLPH_NO_STAT_CD
+             ,ASGN_AGNC_ID
+             ,TLPH_NO_OWN_CMPN_CD
+             ,OPEN_SVC_IND_CD
+             ,ENCD_TLPH_NO
+             ,TLPH_NO
+             ,IF_TYPE
+             ,REGST_DTTM
+        FROM (
+                 SELECT
+                     MVNO_ORD_NO
+                      ,SEQ
+                      ,OSST_ORD_NO
+                      ,PRGR_STAT_CD
+                      ,CUST_ID
+                      ,SVC_CNTR_NO
+                      ,RSLT_CD
+                      ,RSLT_MSG
+                      ,RSLT_DT
+                      ,NSTEP_GLOBAL_ID
+                      ,PRDC_CHK_NOTI_MSG
+                      ,NP_BCNTR_TYPE_CD
+                      ,NP_FEE
+                      ,NP_NCHRG_AMT
+                      ,NP_PNLT_AMT
+                      ,NP_UNPAY_AMT
+                      ,NP_HNDST_INST_AMT
+                      ,NP_PREPAY_AMT
+                      ,NP_BASE_CHRG_AMT
+                      ,NP_NTNL_CHRG_AMT
+                      ,NP_INTL_CHRG_AMT
+                      ,NP_ADD_CHRG_AMT
+                      ,NP_ETC_CHRG_AMT
+                      ,NP_VAT
+                      ,NP_RMN_STRT_DT
+                      ,NP_RMN_END_DT
+                      ,TLPH_NO_STAT_CD
+                      ,ASGN_AGNC_ID
+                      ,TLPH_NO_OWN_CMPN_CD
+                      ,OPEN_SVC_IND_CD
+                      ,ENCD_TLPH_NO
+                      ,TLPH_NO
+                      ,IF_TYPE
+                      ,REGST_DTTM
+                 FROM MCP_REQUEST_OSST T1
+                 WHERE 1=1
+                   AND T1.MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')
+                   AND T1.PRGR_STAT_CD = #{prgrStatCd}
+                 ORDER BY SEQ DESC
+             ) WHERE ROWNUM=1
+    </select>-->
+
+
+    <!--<select id="requestOsstCount" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestOsstDto" resultType="java.lang.Integer">
+        SELECT /*AppformMapper.requestOsstCount  */
+        COUNT(1)
+        FROM MCP_REQUEST_OSST T1
+        WHERE 1=1
+        AND T1.MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')
+        AND T1.PRGR_STAT_CD = #{prgrStatCd}
+        <if test="rsltCd != null and rsltCd != ''">
+            AND T1.RSLT_CD  = #{rsltCd}
+        </if>
+    </select>-->
+
+    <!--<select id="generateRequestKey" resultType="java.lang.Long">
+        SELECT
+            SQ_RCP_REQUEST_KEY_01.NEXTVAL
+        FROM DUAL
+    </select>-->
+
+    <!--<select id="generateResNo" resultType="java.lang.String">
+        SELECT
+            SQ_RCP_RES_NO_01.NEXTVAL
+        FROM DUAL
+    </select>-->
+
+    <!--<insert id="insertMcpRequest" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestDto" >
+        INSERT /*AppformMapper.insertMcpRequest 서식지 정보 저장  */
+        INTO MCP_REQUEST (
+                           REQUEST_KEY              --가입신청_키
+                         , MANAGER_CODE             --매니저_코드
+                         , AGENT_CODE               --대리점_코드
+                         , SERVICE_TYPE             --서비스구분
+                         , OPER_TYPE                --업무구분
+                         , CSTMR_TYPE               --고객구분
+                         , RES_CODE                 --예약등록_코드
+                         , RES_MSG                  --예약등록_메세지
+                         , RES_NO                   --예약등록_예약번호
+                         , CLAUSE_PRI_COLLECT_FLAG  --약관_개인정보_수집_동의
+                         , CLAUSE_PRI_OFFER_FLAG    --약관_개인정보_제공_동의
+                         , CLAUSE_ESS_COLLECT_FLAG  --약관_고유식별정보_수집이용제공_동의
+                         , CLAUSE_PRI_TRUST_FLAG    --약관_개인정보_위탁_동의
+                         , CLAUSE_PRI_AD_FLAG       --개인정보 처리 위탁 및 고객 혜택 제공을 위한 광고 수신 동의
+                         , CLAUSE_CONFIDENCE_FLAG   --약관_신용정보_이용_동의
+                         , CLAUSE_JEHU_FLAG         --제휴_서비스동의
+                         , ONLINE_AUTH_TYPE         --온라인_인증방식
+                         , ONLINE_AUTH_INFO         --온라인_인증정보
+                         , PSTATE                   --신청서_상태
+                         , REQUEST_STATE_CODE       --가입진행_코드
+                         , OPEN_NO                  --개통번호
+                         , FILE01                   --파일01
+                         , FILE01_MASK              --파일01_마스크
+                         , FAXYN                    --팩스사용여부
+                         , FAXNUM                   --팩스번호
+                         , SCAN_ID                  --스캐너아이디
+                         , ON_OFF_TYPE              --온라인오프라인구분
+                         , RIP                      --등록아이피
+                         , OPEN_REQ_DATE            --
+                         , SYS_RDATE                --등록일시
+                         , REQ_WANT_NUMBER
+                         , REQ_WANT_NUMBER2
+                         , REQ_WANT_NUMBER3
+                         , REQ_BUY_TYPE
+                         , REQ_MODEL_NAME
+                         , REQ_MODEL_COLOR
+                         , REQ_PHONE_SN
+                         , REQ_USIM_SN
+                         , REQ_PAY_TYPE
+                         , REQ_ADDITION
+                         , SHOP_CD
+                         , APP_FORM_YN
+                         , REQ_IN_DAY               --가입신청일
+                         , CONTRACT_NUM
+                         , ETC_SPECIAL              --기타/특약사항
+                         , REQ_USIM_NAME            --USIM 모델명
+                         , PHONE_PAYMENT            --휴대폰결제 이용여부
+                         , REQ_ADDITION_PRICE       --부가서비스금액
+                         , CNTPNT_SHOP_ID           --채널점아이디_판매점코드
+                         , OPEN_MARKET_REFERER
+                         , NW_BLCK_AGRM_YN          --네트워크차단동의여부
+                         , APP_BLCK_AGRM_YN         --어플리케이션차단동의여부
+                         , APP_CD                   --APP구분코드
+                         , PROD_ID                  --상품아이디
+                         , BANNER_CD                --배너코드
+                         , CRET_ID                  --생성자아이디(로그인아이디)
+                         , SNTY_COLOR_CD            --색상코드
+                         , SNTY_CAPAC_CD            --단품용량코드
+                         , PROD_TYPE                -- 상품 분류 (일반 :01, 0원 상품 :02)
+                         , CLAUSE_RENTAL_SERVICE    --중고렌탈 프로그램 서비스 이용에 대한 동의서
+                         , CLAUSE_RENTAL_MODEL_CP   --단말배상금 안내사항
+                         , CLAUSE_RENTAL_MODEL_CP_PR --단말배상금(부분파손) 안내사항
+                         , CLAUSE_MPPS35_FLAG        --선불 M PPS 요금제_동의
+                         , CLAUSE_FINANCE_FLAG       --개인(신용)정보 처리 및 보험가입 동의서
+                         , PROMOTION_CD              --프로모션코드
+                         , INSR_CD                   --보험코드
+                         , CLAUSE_INSURANCE_FLAG     -- 단체보험동의
+                         , APP_FORM_XML_YN           -- 스캔 서버 연동 여부
+                         , PROD_NM                   --상품명(NMCP_PROD_BAS.PROD_NM)
+                         , INSR_PROD_CD              --단말보험코드
+                         , CLAUSE_INSR_PROD_FLAG     --단말보험가입동의
+                         , INSR_AUTH_INFO            --단말보험인증정보
+                         , RWD_PROD_CD               --자급제 보상 서비스 코드
+                         , CLAUSE_RWD_FLAG           --자급제 보상 서비스 동의
+                         , RWD_AUTH_INFO             --자급제 보상 서비스 인증 정보
+                         , CLAUSE_5G_COVERAGE_FLAG   -- 5g 커버리지 확인 및 가입 동의
+                         , KTM_REFERER               -- 최초유입경 인자값
+                         , USIM_KINDS_CD             -- 유심종류(RCP2035)
+                         , EID                       -- eSIM EID
+                         , IMEI1                     -- eSIM IMEI1
+                         , IMEI2                     -- eSIM IMEI2
+                         , UPLOAD_PHONE_SRL_NO       -- eSIM OCR 등록 FK
+                         , ESIM_PHONE_ID             -- eSIM phone id
+                         , PRNTS_CONTRACT_NO         -- 모회선 계약번호
+                         , PERSONAL_INFO_COLLECT_AGREE -- 고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의
+                         , OTHERS_TRNS_AGREE -- 혜택 제공을 위한 제3자 제공 동의 : M모바일
+                         , DIS_PRMT_ID
+                         , CLAUSE_PARTNER_OFFER_FLAG
+                         , JEHU_PROD_TYPE
+                         , OPEN_MARKET_ID
+                         , JEHU_PARTNER_TYPE
+                         , OTHERS_TRNS_KT_AGREE         --혜택 제공을 위한 제3자 제공 동의 : KT
+                         , OTHERS_AD_RECEIVE_AGREE      --제3자 제공관련 광고 수신 동의
+                         , EVNT_CD_PRMT
+                         , FATH_TRG_YN                  --안면인증 대상여부
+                         , CLAUSE_FATH_FLAG             --안면인증 동의여부
+                         , FATH_TRANSAC_ID              --안면인증 트랜잭션ID
+                         , FATH_CMPLT_NTFY_DT           --안면인증 완료일시
+                         , CPNT_ID
+                         , KT_COUNSEL_AGREE             --인터넷가입 상담을 위한 개인정보 제3자 제공동의
+                         , COMBINE_SOLO_TYPE            --아무나SOLO 결합여부
+                         , COMBINE_SOLO_FLAG            --아무나SOLO 결합동의
+                         , INDV_LOCA_PRV_AGREE          --개인위치정보 제 3자 제공 동의
+        ) VALUES (
+                     #{requestKey}
+                 , #{managerCode}
+                 , #{agentCode}
+                 , #{serviceType}
+                 , #{operType}
+                 , #{cstmrType}
+                 , #{resCode}
+                 , #{resMsg}
+                 , #{resNo}
+                 , #{clausePriCollectFlag}
+                 , #{clausePriOfferFlag}
+                 , #{clauseEssCollectFlag}
+                 , #{clausePriTrustFlag}
+                 , #{clausePriAdFlag}
+                 , #{clauseConfidenceFlag}
+                 , #{clauseJehuFlag}
+                 , #{onlineAuthType}
+                 , #{onlineAuthInfo}
+                 , #{pstate}
+                 , #{requestStateCode}
+                 , #{openNo}
+                 , #{file01}
+                 , #{file01Mask}
+                 , #{faxyn}
+                 , #{faxnum}
+                 , #{scanId}
+                 , #{onOffType}
+                 , #{rip}
+                 , #{openReqDate}
+                 , SYSDATE
+                 , #{reqWantNumber}
+                 , #{reqWantNumber2}
+                 , #{reqWantNumber3}
+                 , #{reqBuyType}
+                 , #{reqModelName}
+                 , #{reqModelColor}
+                 , #{reqPhoneSn}
+                 , #{reqUsimSn}
+                 , #{reqPayType}
+                 , #{reqAddition}
+                 , #{shopCd}
+                 , #{appFormYn}
+                 , SYSDATE
+                 , #{contractNum}
+                 , #{etcSpecial}
+                 , #{reqUsimName}
+                 , #{phonePayment}
+                 , #{reqAdditionPrice}
+                 , #{cntpntShopId}
+                 , #{openMarketReferer}
+                 , #{nwBlckAgrmYn}
+                 , #{appBlckAgrmYn}
+                 , #{appCd}
+                 , #{prodId}
+                 , #{bannerCd}
+                 , #{cretId}
+                 , #{sntyColorCd}
+                 , #{sntyCapacCd}
+                 , #{prodType}
+                 , #{clauseRentalService}
+                 , #{clauseRentalModelCp}
+                 , #{clauseRentalModelCpPr}
+                 , #{clauseMpps35Flag}
+                 , #{clauseFinanceFlag}
+                 , #{promotionCd}
+                 , #{insrCd}
+                 , #{clauseInsuranceFlag}
+                 , 'N'
+                 , #{prodNm}
+                 , #{insrProdCd}
+                 , #{clauseInsrProdFlag}
+                 , #{insrAuthInfo}
+                 , #{rwdProdCd}
+                 , #{clauseRwdFlag}
+                 , #{rwdAuthInfo}
+                 , #{clause5gCoverageFlag}
+                 , #{ktmReferer}
+                 , #{usimKindsCd}
+                 , #{eid}
+                 , #{imei1}
+                 , #{imei2}
+                 , #{uploadPhoneSrlNo}
+                 , #{esimPhoneId}
+                 , #{prntsContractNo}
+                 , #{personalInfoCollectAgree}
+                 , #{othersTrnsAgree}
+                 , #{prmtId}
+                 , #{clausePartnerOfferFlag}
+                 , #{jehuProdType}
+                 , #{openMarketId}
+                 , #{jehuPartnerType}
+                 , #{othersTrnsKtAgree}
+                 , #{othersAdReceiveAgree}
+                 , #{evntCdPrmt}
+                 , #{fathTrgYn}
+                 , #{clauseFathFlag}
+                 , #{fathTransacId}
+                 , #{fathCmpltNtfyDt}
+                 , #{cpntId}
+                 , #{ktCounselAgree}
+                 , #{combineSoloType}
+                 , #{combineSoloFlag}
+                 , #{indvLocaPrvAgree}
+                 )
+    </insert>-->
+
+    <!--<insert id="insertNmcpRequestApd" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestDto" >
+        INSERT /*AppformMapper.insertNmcpRequestApd 자급제 서식지 정보 저장  */
+        INTO NMCP_REQUEST_APD (
+                                REQUEST_KEY              --가입신청_키
+                              , MANAGER_CODE             --매니저_코드
+                              , AGENT_CODE               --대리점_코드
+                              , SERVICE_TYPE             --서비스구분
+                              , OPER_TYPE                --업무구분
+                              , CSTMR_TYPE               --고객구분
+                              , RES_CODE                 --예약등록_코드
+                              , RES_MSG                  --예약등록_메세지
+                              , RES_NO                   --예약등록_예약번호
+                              , CLAUSE_PRI_COLLECT_FLAG  --약관_개인정보_수집_동의
+                              , CLAUSE_PRI_OFFER_FLAG    --약관_개인정보_제공_동의
+                              , CLAUSE_ESS_COLLECT_FLAG  --약관_고유식별정보_수집이용제공_동의
+                              , CLAUSE_PRI_TRUST_FLAG    --약관_개인정보_위탁_동의
+                              , CLAUSE_PRI_AD_FLAG       --약관_개인정보_광고전송_동의
+                              , CLAUSE_CONFIDENCE_FLAG   --약관_신용정보_이용_동의
+                              , CLAUSE_JEHU_FLAG         --제휴_서비스동의
+                              , ONLINE_AUTH_TYPE         --온라인_인증방식
+                              , ONLINE_AUTH_INFO         --온라인_인증정보
+                              , PSTATE                   --신청서_상태
+                              , REQUEST_STATE_CODE       --가입진행_코드
+                              , OPEN_NO                  --개통번호
+                              , FILE01                   --파일01
+                              , FILE01_MASK              --파일01_마스크
+                              , FAXYN                    --팩스사용여부
+                              , FAXNUM                   --팩스번호
+                              , SCAN_ID                  --스캐너아이디
+                              , ON_OFF_TYPE              --온라인오프라인구분
+                              , RIP                      --등록아이피
+                              , OPEN_REQ_DATE            --
+                              , SYS_RDATE                --등록일시
+                              , REQ_WANT_NUMBER
+                              , REQ_WANT_NUMBER2
+                              , REQ_WANT_NUMBER3
+                              , REQ_BUY_TYPE
+                              , REQ_MODEL_NAME
+                              , REQ_MODEL_COLOR
+                              , REQ_PHONE_SN
+                              , REQ_USIM_SN
+                              , REQ_PAY_TYPE
+                              , REQ_ADDITION
+                              , SHOP_CD
+                              , APP_FORM_YN
+                              , REQ_IN_DAY               --가입신청일
+                              , CONTRACT_NUM
+                              , ETC_SPECIAL              --기타/특약사항
+                              , REQ_USIM_NAME            --USIM 모델명
+                              , PHONE_PAYMENT            --휴대폰결제 이용여부
+                              , REQ_ADDITION_PRICE       --부가서비스금액
+                              , CNTPNT_SHOP_ID           --채널점아이디_판매점코드
+                              , OPEN_MARKET_REFERER
+                              , NW_BLCK_AGRM_YN          --네트워크차단동의여부
+                              , APP_BLCK_AGRM_YN         --어플리케이션차단동의여부
+                              , APP_CD                   --APP구분코드
+                              , PROD_ID                  --상품아이디
+                              , BANNER_CD                --배너코드
+                              , CRET_ID                  --생성자아이디(로그인아이디)
+                              , SNTY_COLOR_CD            --색상코드
+                              , SNTY_CAPAC_CD            --단품용량코드
+                              , PROD_TYPE                -- 상품 분류 (일반 :01, 0원 상품 :02)
+                              , CLAUSE_RENTAL_SERVICE    --중고렌탈 프로그램 서비스 이용에 대한 동의서
+                              , CLAUSE_RENTAL_MODEL_CP   --단말배상금 안내사항
+                              , CLAUSE_RENTAL_MODEL_CP_PR --단말배상금(부분파손) 안내사항
+                              , CLAUSE_MPPS35_FLAG        --선불 M PPS 요금제_동의
+                              , CLAUSE_FINANCE_FLAG        --개인(신용)정보 처리 및 보험가입 동의서
+                              , PROMOTION_CD               --프로모션코드
+                              , INSR_CD                    --보험코드
+                              , CLAUSE_INSURANCE_FLAG      -- 단체보험동의
+                              , APP_FORM_XML_YN            -- 스캔 서버 연동 여부
+                              , PROD_NM                    --상품명(NMCP_PROD_BAS.PROD_NM)
+                              , INSR_PROD_CD               --단말보험코드
+                              , CLAUSE_INSR_PROD_FLAG      --단말보험가입동의
+                              , INSR_AUTH_INFO             --단말보험인증정보
+                              , CLAUSE_5G_COVERAGE_FLAG    -- 5g 커버리지 확인 및 가입 동의
+                              , KTM_REFERER                -- 최초유입경 인자값
+                              , USIM_KINDS_CD              -- 유심종류(RCP2035)
+        ) VALUES (
+                     #{requestKey}
+                 , #{managerCode}
+                 , #{agentCode}
+                 , #{serviceType}
+                 , #{operType}
+                 , #{cstmrType}
+                 , #{resCode}
+                 , #{resMsg}
+                 , #{resNo}
+                 , #{clausePriCollectFlag}
+                 , #{clausePriOfferFlag}
+                 , #{clauseEssCollectFlag}
+                 , #{clausePriTrustFlag}
+                 , #{clausePriAdFlag}
+                 , #{clauseConfidenceFlag}
+                 , #{clauseJehuFlag}
+                 , #{onlineAuthType}
+                 , #{onlineAuthInfo}
+                 , #{pstate}
+                 , #{requestStateCode}
+                 , #{openNo}
+                 , #{file01}
+                 , #{file01Mask}
+                 , #{faxyn}
+                 , #{faxnum}
+                 , #{scanId}
+                 , #{onOffType}
+                 , #{rip}
+                 , #{openReqDate}
+                 , SYSDATE
+                 , #{reqWantNumber}
+                 , #{reqWantNumber2}
+                 , #{reqWantNumber3}
+                 , #{reqBuyType}
+                 , #{reqModelName}
+                 , #{reqModelColor}
+                 , #{reqPhoneSn}
+                 , #{reqUsimSn}
+                 , #{reqPayType}
+                 , #{reqAddition}
+                 , #{shopCd}
+                 , #{appFormYn}
+                 , SYSDATE
+                 , #{contractNum}
+                 , #{etcSpecial}
+                 , #{reqUsimName}
+                 , #{phonePayment}
+                 , #{reqAdditionPrice}
+                 , #{cntpntShopId}
+                 , #{openMarketReferer}
+                 , #{nwBlckAgrmYn}
+                 , #{appBlckAgrmYn}
+                 , #{appCd}
+                 , #{prodId}
+                 , #{bannerCd}
+                 , #{cretId}
+                 , #{sntyColorCd}
+                 , #{sntyCapacCd}
+                 , #{prodType}
+                 , #{clauseRentalService}
+                 , #{clauseRentalModelCp}
+                 , #{clauseRentalModelCpPr}
+                 , #{clauseMpps35Flag}
+                 , #{clauseFinanceFlag}
+                 , #{promotionCd}
+                 , #{insrCd}
+                 , #{clauseInsuranceFlag}
+                 , 'N'
+                 , #{prodNm}
+                 , #{insrProdCd}
+                 , #{clauseInsrProdFlag}
+                 , #{insrAuthInfo}
+                 , #{clause5gCoverageFlag}
+                 , #{ktmReferer}
+                 , #{usimKindsCd}
+                 )
+    </insert>-->
+
+    <!--<update id="updateNmcpRequestApd" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        UPDATE /*AppformMapper.updateNmcpRequestApd   */
+        NMCP_REQUEST_APD
+        SET
+        RVISN_DTTM = SYSDATE
+        <if test="pstate != null and pstate != ''">
+            , PSTATE = #{pstate}
+        </if>
+        <if test="requestStateCode != null and requestStateCode != ''">
+            , REQUEST_STATE_CODE = #{requestStateCode}
+        </if>
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<insert id="insertMcpRequestCstmr" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_CSTMR (
+                                        REQUEST_KEY              --가입신청_키
+                                      , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
+                                      , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
+                                      , CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
+                                      , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
+                                      , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
+                                      , CSTMR_PRIVATE_CNAME      --고객정보_개인사업자_상호명
+                                      , CSTMR_PRIVATE_NUMBER     --고객정보_개인사업자_사업자등록번호
+                                      , CSTMR_JURIDICAL_CNAME    --고객정보_법인사업자_법인명
+                                      , CSTMR_JURIDICAL_RRN      --고객정보_법인사업자_법인번호
+                                      , CSTMR_JURIDICAL_NUMBER   --고객정보_법인사업자_사업자등록번호
+                                      , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
+                                      , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
+                                      , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
+                                      , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
+                                      , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
+                                      , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
+                                      , CSTMR_POST               --고객정보_우편번호
+                                      , CSTMR_ADDR               --고객정보_주소
+                                      , CSTMR_ADDR_DTL           --고객정보_상세주소
+                                      , CSTMR_ADDR_BJD           --고객정보_법정동주소
+                                      , CSTMR_BILL_SEND_CODE     --고객정보_명세서종류
+                                      , CSTMR_MAIL               --고객정보_메일
+                                      , CSTMR_MAIL_RECEIVE_FLAG  --고객정보_메일수신_여부
+                                      , CSTMR_VISIT_TYPE         --고객정보_방문고객정보
+                                      , CSTMR_RECEIVE_TEL_FN     --고객정보_연락받을번호_앞자
+                                      , CSTMR_RECEIVE_TEL_NM     --고객정보_연락받을번호_중간자리
+                                      , CSTMR_RECEIVE_TEL_RN     --고객정보_연락받을번호_끝자리
+                                      , OTHERS_PAYMENT_AG        --고객정보_타인납부동의
+                                      , OTHERS_PAYMENT_NM        --고객정보_타인납부_고객명
+                                      , OTHERS_PAYMENT_RRN       --고객정보_타인납부_주민번호
+                                      , OTHERS_PAYMENT_RELATION  --고객정보_타인납부_명의자와의관계
+                                      , OTHERS_PAYMENT_RNM       --고객정보_타인납부_신청인
+                                      , SYS_RDATE                --등록일시
+                                      , CSTMR_NAME               --고객정보_고객명
+                                      , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
+                                      , SELF_INQRY_AGRM_YN       --본인인증조회동의
+                                      , SELF_CERT_TYPE           --본인인증유형
+                                      , SELF_ISSU_EXPR_DT        --발급/만료일자
+                                      , SELF_ISSU_NUM            --발급번호
+                                      , CSTMR_JEJU_ID            --제주항공ID
+                                      , SELF_CSTMR_CI            --본인인증한  CI 정보
+                                      , RECOMMEND_FLAG_CD        --추천인 구분 코드
+                                      , RECOMMEND_INFO           --추천인정보
+                                      , PRNTS_CTN                -- 모회선 전화번호
+                                      , FATH_MOBILE_FN           --안면인증정보_휴대폰번호_앞자리
+                                      , FATH_MOBILE_MN           --안면인증정보_휴대폰번호_중간자리
+                                      , FATH_MOBILE_RN           --안면인증정보_휴대폰번호_뒷자리
+        ) VALUES (
+                     #{requestKey}
+                 , #{cstmrForeignerNation}
+                 , #{cstmrForeignerPn}
+                 , #{cstmrForeignerRrn}
+                 , #{cstmrForeignerSdate}
+                 , #{cstmrForeignerEdate}
+                 , #{cstmrPrivateCname}
+                 , #{cstmrPrivateNumber}
+                 , #{cstmrJuridicalCname}
+                 , #{cstmrJuridicalRrn}
+                 , #{cstmrJuridicalNumber}
+                 , #{cstmrTelFn}
+                 , #{cstmrTelMn}
+                 , #{cstmrTelRn}
+                 , #{cstmrMobileFn}
+                 , #{cstmrMobileMn}
+                 , #{cstmrMobileRn}
+                 , #{cstmrPost}
+                 , #{cstmrAddr}
+                 , #{cstmrAddrDtl}
+                 , #{cstmrAddrBjd}
+                 , #{cstmrBillSendCode}
+                 , #{cstmrMail}
+                 , #{cstmrMailReceiveFlag}
+                 , #{cstmrVisitType}
+                 , #{cstmrReceiveTelFn}
+                 , #{cstmrReceiveTelNm}
+                 , #{cstmrReceiveTelRn}
+                 , #{othersPaymentAg}
+                 , #{othersPaymentNm}
+                 , #{othersPaymentRrn}
+                 , #{othersPaymentRelation}
+                 , #{othersPaymentRnm}
+                 , SYSDATE
+                 , #{cstmrName}
+                 , #{cstmrNativeRrn}
+                 , #{selfInqryAgrmYn}
+                 , #{selfCertType}
+                 , #{selfIssuExprDt}
+                 , #{selfIssuNum}
+                 , #{cstmrJejuId}
+                 , #{selfCstmrCi}
+                 , #{recommendFlagCd}
+                 , #{recommendInfo}
+                 , #{prntsCtn}
+                 , #{fathMobileFn}
+                 , #{fathMobileMn}
+                 , #{fathMobileRn}
+                 )
+    </insert>-->
+
+    <!--<insert id="insertMcpRequestAgent" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_AGENT (
+            REQUEST_KEY              --가입신청_키
+          , MINOR_AGENT_NAME         --미성년자_법정대리인_성명
+          , MINOR_AGENT_RRN          --미성년자_법정대리인_주민등록번호
+          , MINOR_AGENT_TEL_FN       --미성년자_법정대리인_연락처_앞자리
+          , MINOR_AGENT_TEL_MN       --미성년자_법정대리인_연락처_중간자리
+          , MINOR_AGENT_TEL_RN       --미성년자_법정대리인_끝자리
+          , MINOR_AGENT_RELATION     --미성년자_법정대리인_관계
+          , JRDCL_AGENT_NAME         --법인_대리인_성명
+          , JRDCL_AGENT_RRN          --법인_대리인_주민등록번호
+          , JRDCL_AGENT_TEL_FN       --법인_대리인_연락처_앞자리
+          , JRDCL_AGENT_TEL_MN       --법인_대리인_연락처_중간자리
+          , JRDCL_AGENT_TEL_RN       --법인_대리인_연락처_끝자리
+          , ENTRUST_REQ_NM           --법정대리인_위임하는분
+          , ENTRUST_RES_NM           --법정대리인_위임받는분
+          , ENTRUST_REQ_RELATION     --법정대리인_위임관계
+          , ENTRUST_RES_RRN          --법정대리인_위임_주민등록번호
+          , ENTRUST_RES_TEL_FN       --법정대리인_위임_전화번호_앞자리
+          , ENTRUST_RES_TEL_MN       --법정대리인_위임_전화번호_중간자리
+          , ENTRUST_RES_TEL_RN       --법정대리인_위임_전화번호_뒷자리
+          , SYS_RDATE                --등록일시
+          , MINOR_SELF_INQRY_AGRM_YN --본인인증조회동의
+          , MINOR_SELF_CERT_TYPE     --본인인증유형
+          , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
+          , MINOR_SELF_ISSU_NUM      --발급번호
+          , MINOR_AGENT_AGRM_YN       --법정 대리인 안내사항 및 동의
+        ) VALUES (
+                     #{requestKey}
+                 , #{minorAgentName}
+                 , #{minorAgentRrn}
+                 , #{minorAgentTelFn}
+                 , #{minorAgentTelMn}
+                 , #{minorAgentTelRn}
+                 , #{minorAgentRelation}
+                 , #{jrdclAgentName}
+                 , #{jrdclAgentRrn}
+                 , #{jrdclAgentTelFn}
+                 , #{jrdclAgentTelMn}
+                 , #{jrdclAgentTelRn}
+                 , #{entrustReqNm}
+                 , #{entrustResNm}
+                 , #{entrustReqRelation}
+                 , #{entrustResRrn}
+                 , #{entrustResTelFn}
+                 , #{entrustResTelMn}
+                 , #{entrustResTelRn}
+                 , SYSDATE
+                 , #{minorSelfInqryAgrmYn}
+                 , #{minorSelfCertType}
+                 , #{minorSelfIssuExprDt}
+                 , #{minorSelfIssuNum}
+                 , #{minorAgentAgrmYn}
+                 )
+    </insert>-->
+
+    <!--<insert id="insertMcpRequestMove" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_MOVE (
+                                       REQUEST_KEY              --가입신청_키
+                                     , MOVE_COMPANY             --번호이동정보_변경전통신사
+                                     , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
+                                     , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
+                                     , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
+                                     , MOVE_AUTH_TYPE           --번호이동정보_인증유형
+                                     , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
+                                     , MOVE_THISMONTH_PAY_TYPE  --번호이동정보_이달사용요금납부방법
+                                     , MOVE_ALLOTMENT_STAT      --번호이동정보_휴대폰_할부금상태
+                                     , MOVE_REFUND_AGREE_FLAG   --번호이동정보_미환급액요금상계동의_여부
+                                     , SYS_RDATE                --등록일시
+                                     , REQ_GUIDE_FLAG
+                                     , REQ_GUIDE_FN
+                                     , REQ_GUIDE_RN
+                                     , REQ_GUIDE_MN
+        ) VALUES (
+                     #{requestKey}
+                 , #{moveCompany}
+                 , #{moveMobileFn}
+                 , #{moveMobileMn}
+                 , #{moveMobileRn}
+                 , #{moveAuthType}
+                 , #{moveAuthNumber}
+                 , #{moveThismonthPayType}
+                 , #{moveAllotmentStat}
+                 , #{moveRefundAgreeFlag}
+                 , SYSDATE
+                 , #{reqGuideFlag}
+                 , #{reqGuideFn}
+                 , #{reqGuideRn}
+                 , #{reqGuideMn}
+                 )
+    </insert>-->
+
+    <!--<insert id="insertMcpRequestPayment" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_PAYMENT (
+                                          REQUEST_KEY
+                                        , REQ_AC02_AMOUNT
+                                        , SYS_RDATE
+                                        , REQ_AC_TYPE
+                                        , REQ_AC01_BALANCE
+                                        , REQ_AC02_DAY
+                                        , REQ_AC01_AMOUNT
+        ) VALUES (
+                     #{requestKey}
+                 , #{reqAc02Amount}
+                 , SYSDATE
+                 , #{reqAcType}
+                 , #{reqAc01Balance}
+                 , #{reqAc02Day}
+                 , #{reqAc01Amount}
+                 )
+    </insert>-->
+
+    <!--<insert id="insertMcpRequestSaleinfo" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO /*AppformMapper.insertMcpRequestSaleinfo 서식지 정보 저장  */
+            MCP_REQUEST_SALEINFO (
+                                   SPRT_TP                  --지원금유형 (단말할인:KD , 요금할인:PM)
+                                 , MAX_DISCOUNT3            --추가지원금(MAX)
+                                 , DC_AMT                   --할인금액
+                                 , ADD_DC_AMT               --추가할인금액
+                                 , MODEL_ID                 -- 휴대폰 : 대표 모델ID  유심 :
+                                 , REQUEST_KEY              --가입신청_키
+                                 , MODEL_MONTHLY            --단말할부개월수
+                                 , MODEL_INSTALLMENT        --단말할부원금
+                                 , MODEL_SALE_POLICY_CODE   --판매 정책
+                                 , MODEL_PRICE_VAT          --단말출고가_부가세
+                                 , RECYCLE_YN               --중고여부
+                                 , MODEL_DISCOUNT1          --제조사장려금
+                                 , MODEL_DISCOUNT2          --공시지원금
+                                 , ENGG_MNTH_CNT            --약정개월수
+                                 , SOC_CODE                 --요금제코드
+                                 , USIM_PRICE_TYPE          --유심납부유형(B: 정기, I:즉납)
+                                 , JOIN_PRICE_TYPE          --가입비납부유형(B:정기, I:즉납)
+                                 , JOIN_PRICE               --
+                                 , USIM_PRICE               --유심판매가
+                                 , MODEL_PRICE              --단말출고가
+                                 , ADDTION_SERVICE          --부가서비스
+                                 , ADDTION_SERVICE_SUM      --부가서비스합계
+                                 , MODEL_DISCOUNT3          --대리점보조금
+                                 , USIM_PAY_MTHD_CD         --USIM비 납부방법(0 : 면제, 1:일시납, 2: 분납(3개월)
+                                 , JOIN_PAY_MTHD_CD         --가입비 납부방법(1: 면제 , 2: 일시납, 3 :3개월분납)
+                                 , REAL_MDL_INSTAMT         --실제단말할부원금(VAT포함)
+                                 , SETTL_WAY_CD             --결제수단코드  01 신용카드 , 02 실시간계좌이체
+                                 , SETTL_AMT                --결제금액
+                                 , OWN_PERSONAL_CODE        --개인 통관 고유 부호-외산 휴대폰
+                                 , RENTAL_BASE_AMT          --렌탈 기본료 금액
+                                 , RENTAL_BASE_DC_AMT       --렌탈 기본료 할인 금액
+                                 , RENTAL_MODEL_CP_AMT      --단말기 배상 금액
+                                 , SESPLS_YN
+                                 , HNDSET_SALE_PRICE
+                                 , USE_POINT
+                                 , USE_POINT_SVC_CNTR_NO
+                                 , CARD_DC_CD
+                                 , CARD_DC_AMT
+                                 , CARD_DC_DIV_CD             -- 카드 할인 유형
+                                 , CARD_TOT_DC_AMT
+                                 , SESPLS_PROD_ID
+        ) VALUES (
+                     #{sprtTp}
+                 , #{maxDiscount3}
+                 , #{dcAmt}
+                 , #{addDcAmt}
+                 , #{modelId}
+                 , #{requestKey}
+                 , #{modelMonthly}
+                 , trunc(#{modelInstallment})
+                 , #{modelSalePolicyCode}
+                 , trunc(#{modelPriceVat})
+                 , #{recycleYn}
+                 , #{modelDiscount1}
+                 , #{modelDiscount2}
+                 , #{enggMnthCnt}
+                 , #{socCode}
+                 , #{usimPriceType}
+                 , #{joinPriceType}
+                 , #{joinPrice}
+                 , #{usimPrice}
+                 , trunc(#{modelPrice})
+                 , #{addtionService}
+                 , #{addtionServiceSum}
+                 , #{modelDiscount3}
+                 , #{usimPayMthdCd}
+                 , #{joinPayMthdCd}
+                 , trunc(#{realMdlInstamt})
+                 , #{settlWayCd}
+                 , #{settlAmt}
+                 , #{ownPersonalCode}
+                 , #{rentalBaseAmt}
+                 , #{rentalBaseDcAmt}
+                 , #{rentalModelCpAmt}
+                 , #{sesplsYn}
+                 , #{hndsetSalePrice}
+                 , #{usePoint}
+                 , #{usePointSvcCntrNo}
+                 , #{cardDcCd}
+                 , #{cardDcAmt}
+                 , #{cardDcDivCd}
+                 , #{cardTotDcAmt}
+                 , #{sesplsProdId}
+                 )
+    </insert>-->
+
+    <!--<insert id="insertNmcpRequestApdSaleinfo" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO /*AppformMapper.insertNmcpRequestApdSaleinfo 서식지 정보 저장  */
+            NMCP_REQUEST_APD_SALEINFO (
+                                        SPRT_TP                  --지원금유형 (단말할인:KD , 요금할인:PM)
+                                      , MAX_DISCOUNT3            --추가지원금(MAX)
+                                      , DC_AMT                   --할인금액
+                                      , ADD_DC_AMT               --추가할인금액
+                                      , MODEL_ID                 -- 휴대폰 : 대표 모델ID  유심 :
+                                      , REQUEST_KEY              --가입신청_키
+                                      , MODEL_MONTHLY            --단말할부개월수
+                                      , MODEL_INSTALLMENT        --단말할부원금
+                                      , MODEL_SALE_POLICY_CODE   --판매 정책
+                                      , MODEL_PRICE_VAT          --단말출고가_부가세
+                                      , RECYCLE_YN               --중고여부
+                                      , MODEL_DISCOUNT1          --제조사장려금
+                                      , MODEL_DISCOUNT2          --공시지원금
+                                      , ENGG_MNTH_CNT            --약정개월수
+                                      , SOC_CODE                 --요금제코드
+                                      , USIM_PRICE_TYPE          --유심납부유형(B: 정기, I:즉납)
+                                      , JOIN_PRICE_TYPE          --가입비납부유형(B:정기, I:즉납)
+                                      , JOIN_PRICE               --
+                                      , USIM_PRICE               --유심판매가
+                                      , MODEL_PRICE              --단말출고가
+                                      , ADDTION_SERVICE          --부가서비스
+                                      , ADDTION_SERVICE_SUM      --부가서비스합계
+                                      , MODEL_DISCOUNT3          --대리점보조금
+                                      , USIM_PAY_MTHD_CD         --USIM비 납부방법(0 : 면제, 1:일시납, 2: 분납(3개월)
+                                      , JOIN_PAY_MTHD_CD         --가입비 납부방법(1: 면제 , 2: 일시납, 3 :3개월분납)
+                                      , REAL_MDL_INSTAMT         --실제단말할부원금(VAT포함)
+                                      , SETTL_WAY_CD             --결제수단코드  01 신용카드 , 02 실시간계좌이체
+                                      , SETTL_AMT                --결제금액
+                                      , OWN_PERSONAL_CODE        --개인 통관 고유 부호-외산 휴대폰
+                                      , RENTAL_BASE_AMT          --렌탈 기본료 금액
+                                      , RENTAL_BASE_DC_AMT       --렌탈 기본료 할인 금액
+                                      , RENTAL_MODEL_CP_AMT      --단말기 배상 금액
+                                      , SESPLS_YN
+                                      , HNDSET_SALE_PRICE
+                                      , USE_POINT
+                                      , USE_POINT_SVC_CNTR_NO
+                                      , CARD_DC_CD
+                                      , CARD_DC_AMT
+                                      , CARD_DC_DIV_CD             -- 카드 할인 유형
+                                      , CARD_TOT_DC_AMT
+                                      , SESPLS_PROD_ID
+        ) VALUES (
+                     #{sprtTp}
+                 , #{maxDiscount3}
+                 , #{dcAmt}
+                 , #{addDcAmt}
+                 , #{modelId}
+                 , #{requestKey}
+                 , #{modelMonthly}
+                 , trunc(#{modelInstallment})
+                 , #{modelSalePolicyCode}
+                 , trunc(#{modelPriceVat})
+                 , #{recycleYn}
+                 , #{modelDiscount1}
+                 , #{modelDiscount2}
+                 , #{enggMnthCnt}
+                 , #{socCode}
+                 , #{usimPriceType}
+                 , #{joinPriceType}
+                 , #{joinPrice}
+                 , #{usimPrice}
+                 , trunc(#{modelPrice})
+                 , #{addtionService}
+                 , #{addtionServiceSum}
+                 , #{modelDiscount3}
+                 , #{usimPayMthdCd}
+                 , #{joinPayMthdCd}
+                 , trunc(#{realMdlInstamt})
+                 , #{settlWayCd}
+                 , #{settlAmt}
+                 , #{ownPersonalCode}
+                 , #{rentalBaseAmt}
+                 , #{rentalBaseDcAmt}
+                 , #{rentalModelCpAmt}
+                 , #{sesplsYn}
+                 , #{hndsetSalePrice}
+                 , #{usePoint}
+                 , #{usePointSvcCntrNo}
+                 , #{cardDcCd}
+                 , #{cardDcAmt}
+                 , #{cardDcDivCd}
+                 , #{cardTotDcAmt}
+                 , #{sesplsProdId}
+                 )
+    </insert>-->
+
+
+    <!--<select id="getNmcpRequestApdSaleinfo" parameterType="java.lang.Long" resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        SELECT /*AppformMapper.getNmcpRequestApdSaleinfo   */
+            T1.REQUEST_KEY
+             , T1.SESPLS_YN
+             , T1.HNDSET_SALE_PRICE
+             , T1.USE_POINT
+             , T1.USE_POINT_SVC_CNTR_NO
+             , T1.CARD_DC_CD
+             , T1.CARD_DC_AMT
+             , T1.CARD_DC_DIV_CD
+             , T2.PROD_NM
+        FROM NMCP_REQUEST_APD_SALEINFO T1 , NMCP_REQUEST_APD T2
+        WHERE
+            T1.REQUEST_KEY = T2.REQUEST_KEY
+          AND T1.REQUEST_KEY = #{requestKey}
+    </select>-->
+
+
+    <!--<insert id="insertMcpRequestChange" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_CHANGE (
+                                         NAME_CHANGE_NM           --명의변경_고객명
+                                       , NAME_CHANGE_TEL_FN       --명의변경_전화번호_앞자리
+                                       , NAME_CHANGE_TEL_MN       --명의변경_전화번호_중간자리
+                                       , NAME_CHANGE_TEL_RN       --명의변경_전화번호_끝자리
+                                       , NAME_CHANGE_RRN          --명의변경_주민등록번호
+                                       , NAME_CHANGE_PINSTALLMENT --완납=P,승계=C
+                                       , REQUEST_KEY              --가입신청_키
+                                       , SYS_RDATE                --등록일시
+        ) VALUES (
+                     ''
+                 , ''
+                 , ''
+                 , ''
+                 , ''
+                 , ''
+                 , #{requestKey}
+                 , SYSDATE
+                 )
+    </insert>-->
+
+    <!--<insert id="insertMcpRequestDlvry" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_DLVRY (
+                                        REQUEST_KEY              --가입신청_키
+                                      , DLVRY_NAME               --배송정보_이름
+                                      , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+                                      , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+                                      , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+                                      , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
+                                      , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
+                                      , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
+                                      , DLVRY_POST               --배송정보_우편번호
+                                      , DLVRY_ADDR               --배송정보_주소
+                                      , DLVRY_ADDR_DTL           --배송정보_상세주소
+                                      , DLVRY_ADDR_BJD           --배송정보_법정동주소
+                                      , DLVRY_MEMO               --배송정보_요청사항
+                                      , SYS_RDATE                --등록일시
+                                      , TB_CD                    --
+                                      , DLVRY_TYPE               --배송유형 [01 택배,  02 바로배송],
+                                      , SELF_DLVRY_IDX           --바로 배송 요청 table [일련번호 ]
+        ) VALUES (
+                     #{requestKey}
+                 , #{dlvryName}
+                 , #{dlvryTelFn}
+                 , #{dlvryTelMn}
+                 , #{dlvryTelRn}
+                 , #{dlvryMobileFn}
+                 , #{dlvryMobileMn}
+                 , #{dlvryMobileRn}
+                 , #{dlvryPost}
+                 , #{dlvryAddr}
+                 , #{dlvryAddrDtl}
+                 , #{dlvryAddrBjd}
+                 , #{dlvryMemo}
+                 , SYSDATE
+                 , #{tbCd}
+                 , #{dlvryType}
+                 , #{selfDlvryIdx}
+                 )
+    </insert>-->
+
+
+    <!--<insert id="insertNmcpRequestApdDlvry" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO NMCP_REQUEST_APD_DLVRY (
+                                             REQUEST_KEY              --가입신청_키
+                                           , DLVRY_NAME               --배송정보_이름
+                                           , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+                                           , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+                                           , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+                                           , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
+                                           , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
+                                           , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
+                                           , DLVRY_POST               --배송정보_우편번호
+                                           , DLVRY_ADDR               --배송정보_주소
+                                           , DLVRY_ADDR_DTL           --배송정보_상세주소
+                                           , DLVRY_ADDR_BJD           --배송정보_법정동주소
+                                           , DLVRY_MEMO               --배송정보_요청사항
+                                           , SYS_RDATE                --등록일시
+                                           , TB_CD                    --
+                                           , DLVRY_TYPE               --배송유형 [01 택배,  02 바로배송],
+                                           , SELF_DLVRY_IDX           --바로 배송 요청 table [일련번호 ]
+        ) VALUES (
+                     #{requestKey}
+                 , #{dlvryName}
+                 , #{dlvryTelFn}
+                 , #{dlvryTelMn}
+                 , #{dlvryTelRn}
+                 , #{dlvryMobileFn}
+                 , #{dlvryMobileMn}
+                 , #{dlvryMobileRn}
+                 , #{dlvryPost}
+                 , #{dlvryAddr}
+                 , #{dlvryAddrDtl}
+                 , #{dlvryAddrBjd}
+                 , #{dlvryMemo}
+                 , SYSDATE
+                 , #{tbCd}
+                 , #{dlvryType}
+                 , #{selfDlvryIdx}
+                 )
+    </insert>-->
+
+
+    <!--<insert id="insertMcpRequestReq" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_REQ (
+                                      REQUEST_KEY              --가입신청_키
+                                    , REQ_BANK                 --신청정보_계좌이체_은행
+                                    , REQ_ACCOUNT_NAME         --신청정보_계좌이체_예금주
+                                    , REQ_ACCOUNT_RRN          --신청정보_계좌이체_예금주_주민번호
+                                    , REQ_ACCOUNT_RELATION     --신청정보_계좌이체_예금주와관계
+                                    , REQ_ACCOUNT_NUMBER       --신청정보_계좌이체_계좌번호
+                                    , REQ_CARD_NAME            --신청정보_신용카드_명의자
+                                    , REQ_CARD_RRN             --신청정보_신용카드_명의자_주민번호
+                                    , REQ_CARD_COMPANY         --신청정보_신용카드_카드사
+                                    , REQ_CARD_NO              --신청정보_신용카드_번호
+                                    , REQ_CARD_YY              --신청정보_신용카드_유효년
+                                    , REQ_CARD_MM              --신청정보_신용카드_유효월
+                                    , REQ_WIRE_TYPE            --신청정보_무선데이터_이용_타입
+                                    , SYS_RDATE                --등록일시
+                                    , REQ_PAY_OTHER_FLAG       --신청정보_타인납부_여부
+                                    , REQ_PAY_OTHER_TEL_FN     --신청정보_타인납부_전화번호_앞자리
+                                    , REQ_PAY_OTHER_TEL_MN     --신청정보_타인납부_전화번호_중간자리
+                                    , REQ_PAY_OTHER_TEL_RN     --신청정보_타인납부_전화번호_끝자리
+                                    , PRNTS_BILL_NO            -- 모회선 청구번호
+        ) VALUES (
+                     #{requestKey}
+                 , #{reqBank}
+                 , #{reqAccountName}
+                 , #{reqAccountRrn}
+                 , #{reqAccountRelation}
+                 , #{reqAccountNumber}
+                 , #{reqCardName}
+                 , #{reqCardRrn}
+                 , #{reqCardCompany}
+                 , #{reqCardNo}
+                 , #{reqCardYy}
+                 , #{reqCardMm}
+                 , #{reqWireType}
+                 , SYSDATE
+                 , #{reqPayOtherFlag}
+                 , #{reqPayOtherTelFn}
+                 , #{reqPayOtherTelMn}
+                 , #{reqPayOtherTelRn}
+                 , #{prntsBillNo}
+                 )
+    </insert>-->
+
+    <!--<insert id="insertMcpRequestDvcChg" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO /*AppformMapper.insertMcpRequestDvcChg 가입신청_기변사유 저장  */
+            MCP_REQUEST_DVC_CHG (
+                                  REQUEST_KEY            --가입신청키
+                                , DVC_CHG_TYPE         --기변유형(10: 단말, 20:USIM)
+                                , DVC_CHG_RSN_CD       --기변사유코드(10:일반, 20:불량)
+                                , DVC_CHG_RSN_DTL_CD   --기변상세사유코드
+                                , REGST_DTTM           --등록일시
+        ) VALUES (
+                     #{requestKey}
+                 , '10'
+                 , '10'
+                 , '03'
+                 , SYSDATE
+                 )
+    </insert>-->
+
+    <!--<update id="insertMcpRequestAddition" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_ADDITION (
+        REQUEST_KEY
+        , ADDITION_KEY
+        , ADDITION_NAME
+        , RANTAL
+        )
+        SELECT
+        #{requestKey}
+        , ADDITION_KEY
+        , ADDITION_NAME
+        , NVL(RANTAL,0)
+        FROM MCP_ADDITION
+        WHERE
+        ADDITION_KEY IN
+        <foreach item="item" collection="additionKeyList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!--<insert id="insertMcpRequestState" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_STATE (
+                                        REQUEST_STATE_KEY        --가입진행_키
+                                      , REQUEST_STATE_CODE       --가입진행_코드
+                                      , DLVRY_NO                 --송장번호
+                                      , OPEN_NO                  --개통번호
+                                      , MEMO                     --메모
+                                      , SYS_RDATE                --등록일시
+                                      , RIP                      --등록자아이피
+                                      , RID                      --등록자아이디
+                                      , VIEW_FLAG                --화면표시_여부
+                                      , RES_NO                   --예약번호
+                                      , REQUEST_KEY              --가입신청_키
+                                      , TB_CD
+        ) VALUES (
+                     SQ_RCP_REQUEST_STATE_01.NEXTVAL
+                 , #{requestStateCode}
+                 , #{dlvryNo}
+                 , #{openNo}
+                 , #{memo}
+                 , SYSDATE
+                 , #{rip}
+                 , #{rid}
+                 , #{viewFlag}
+                 , #{resNo}
+                 , #{requestKey}
+                 , #{tbCd}
+                 )
+    </insert>-->
+
+    <!--<insert id="insertNmcpRequestApdState" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO NMCP_REQUEST_APD_STATE (
+                                             REQUEST_STATE_KEY        --가입진행_키
+                                           , REQUEST_STATE_CODE       --가입진행_코드
+                                           , DLVRY_NO                 --송장번호
+                                           , OPEN_NO                  --개통번호
+                                           , MEMO                     --메모
+                                           , SYS_RDATE                --등록일시
+                                           , RIP                      --등록자아이피
+                                           , RID                      --등록자아이디
+                                           , VIEW_FLAG                --화면표시_여부
+                                           , RES_NO                   --예약번호
+                                           , REQUEST_KEY              --가입신청_키
+                                           , TB_CD
+        ) VALUES (
+                     SQ_RCP_REQUEST_STATE_01.NEXTVAL
+                 , #{requestStateCode}
+                 , #{dlvryNo}
+                 , #{openNo}
+                 , #{memo}
+                 , SYSDATE
+                 , #{rip}
+                 , #{rid}
+                 , #{viewFlag}
+                 , #{resNo}
+                 , #{requestKey}
+                 , #{tbCd}
+                 )
+    </insert>-->
+
+    <!--<update id="updateNmcpRequestApdState" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        UPDATE /*AppformMapper.updateNmcpRequestApdState   */
+        NMCP_REQUEST_APD_STATE
+        SET
+        RVISN_DTTM = SYSDATE
+        <if test="requestStateCode != null and requestStateCode != ''">
+            , REQUEST_STATE_CODE = #{requestStateCode}
+        </if>
+        <if test="viewFlag != null and viewFlag != ''">
+            , VIEW_FLAG = #{viewFlag}
+        </if>
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<update id="updateMcpRequestState" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        UPDATE /*AppformMapper.updateMcpRequestState   */
+        MCP_REQUEST_STATE
+        SET
+        RVISN_DTTM = SYSDATE
+        <if test="requestStateCode != null and requestStateCode != ''">
+            , REQUEST_STATE_CODE = #{requestStateCode}
+        </if>
+        <if test="viewFlag != null and viewFlag != ''">
+            , VIEW_FLAG = #{viewFlag}
+        </if>
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+
+    <!--<update id="insertMcpRequestCommend" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_COMMEND (
+              REQUEST_KEY
+            , RES_NO
+            , COMMEND_ID
+            , APPLY_YN
+            , LINK_TYPE_CD
+            , OPEN_MTHD_CD
+            , COMMEND_SOC_CODE_01
+            , COMMEND_SOC_CODE_02
+            , COMMEND_SOC_CODE_03
+            , SYS_RDATE
+            , RVISN_DTTM
+        )
+        SELECT
+            #{requestKey}
+             , #{resNo}
+             , COMMEND_ID
+             , 'N'
+             , NVL(LINK_TYPE_CD,'01')
+             , OPEN_MTHD_CD
+             , COMMEND_SOC_CODE_01
+             , COMMEND_SOC_CODE_02
+             , COMMEND_SOC_CODE_03
+             , SYSDATE
+             , SYSDATE
+        FROM
+            MCP_COMMEND_ID_MNG
+        WHERE COMMEND_ID = #{commendId}
+    </update>-->
+
+    <!--<update id="updateRecommedFlag" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        UPDATE  MCP_REQUEST_CSTMR
+        SET RECOMMEND_FLAG_CD = ( SELECT NVL(LINK_TYPE_CD,'01') FROM   MCP_COMMEND_ID_MNG  WHERE COMMEND_ID = #{commendId} AND ROWNUM =1 )
+        WHERE
+            REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<select id="getMcpRequest"  parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestDto"  resultType="com.ktmmobile.mcp.common.dto.db.McpRequestDto">
+        SELECT /*AppformMapper.getMcpRequest */
+        GET_CODE_NM('BSN',OPER_TYPE) AS OPER_TYPE_NM
+        ,GET_CODE_NM('CUS',CSTMR_TYPE) AS CSTMR_TYPE_NM
+        ,REQUEST_KEY
+        ,MANAGER_CODE
+        ,AGENT_CODE
+        ,SERVICE_TYPE
+        ,OPER_TYPE
+        ,CSTMR_TYPE
+        ,RES_CODE
+        ,RES_MSG
+        ,RES_NO
+        ,CLAUSE_PRI_COLLECT_FLAG
+        ,CLAUSE_PRI_OFFER_FLAG
+        ,CLAUSE_ESS_COLLECT_FLAG
+        ,CLAUSE_PRI_TRUST_FLAG
+        ,CLAUSE_PRI_AD_FLAG
+        ,CLAUSE_CONFIDENCE_FLAG
+        ,ONLINE_AUTH_TYPE
+        ,ONLINE_AUTH_INFO
+        ,PSTATE
+        ,REQUEST_STATE_CODE
+        ,OPEN_NO
+        ,FILE01
+        ,FILE01_MASK
+        ,FAXYN
+        ,FAXNUM
+        ,SCAN_ID
+        ,ON_OFF_TYPE
+        ,RIP
+        ,OPEN_REQ_DATE
+        ,SYS_RDATE
+        ,REQ_WANT_NUMBER
+        ,REQ_WANT_NUMBER2
+        ,REQ_WANT_NUMBER3
+        ,REQ_BUY_TYPE
+        ,REQ_MODEL_NAME
+        ,REQ_MODEL_COLOR
+        ,REQ_PHONE_SN
+        ,REQ_USIM_SN
+        ,REQ_PAY_TYPE
+        ,REQ_ADDITION
+        ,SHOP_CD
+        ,APP_FORM_YN
+        ,REQ_IN_DAY
+        ,CONTRACT_NUM
+        ,ETC_SPECIAL
+        ,REQ_USIM_NAME
+        ,PHONE_PAYMENT
+        ,REQ_ADDITION_PRICE
+        ,APP_FORM_XML_YN
+        ,SPC_CODE
+        ,CNTPNT_SHOP_ID
+        ,SHOP_USM_ID
+        ,MEMO
+        ,REC_YN
+        ,OPEN_MARKET_REFERER
+        ,SO_CD
+        ,NW_BLCK_AGRM_YN
+        ,APP_BLCK_AGRM_YN
+        ,APP_CD
+        ,SO_TRNS_AGRM_YN
+        ,CLAUSE_JEHU_FLAG
+        ,SHOP_NM
+        ,PROD_ID
+        ,CRET_ID
+        ,BANNER_CD
+        ,SNTY_COLOR_CD
+        ,SNTY_CAPAC_CD
+        ,PROD_TYPE
+        ,CLAUSE_RENTAL_MODEL_CP
+        ,CLAUSE_RENTAL_MODEL_CP_PR
+        ,CLAUSE_RENTAL_SERVICE
+        ,CLAUSE_MPPS35_FLAG
+        ,CLAUSE_FINANCE_FLAG
+        ,RVISN_ID
+        ,RVISN_DTTM
+        ,PROMOTION_CD
+        ,REAL_SHOP_NM
+        ,USIM_KINDS_CD
+        ,INSR_CD
+        ,CLAUSE_INSURANCE_FLAG
+        FROM (
+        SELECT
+        T1.REQUEST_KEY
+        ,T1.MANAGER_CODE
+        ,T1.AGENT_CODE
+        ,T1.SERVICE_TYPE
+        ,T1.OPER_TYPE
+        ,T1.CSTMR_TYPE
+        ,T1.RES_CODE
+        ,T1.RES_MSG
+        ,T1.RES_NO
+        ,T1.CLAUSE_PRI_COLLECT_FLAG
+        ,T1.CLAUSE_PRI_OFFER_FLAG
+        ,T1.CLAUSE_ESS_COLLECT_FLAG
+        ,T1.CLAUSE_PRI_TRUST_FLAG
+        ,T1.CLAUSE_PRI_AD_FLAG
+        ,T1.CLAUSE_CONFIDENCE_FLAG
+        ,T1.ONLINE_AUTH_TYPE
+        ,T1.ONLINE_AUTH_INFO
+        ,T1.PSTATE
+        ,T1.REQUEST_STATE_CODE
+        ,T1.OPEN_NO
+        ,T1.FILE01
+        ,T1.FILE01_MASK
+        ,T1.FAXYN
+        ,T1.FAXNUM
+        ,T1.SCAN_ID
+        ,T1.ON_OFF_TYPE
+        ,T1.RIP
+        ,T1.OPEN_REQ_DATE
+        ,T1.SYS_RDATE
+        ,T1.REQ_WANT_NUMBER
+        ,T1.REQ_WANT_NUMBER2
+        ,T1.REQ_WANT_NUMBER3
+        ,T1.REQ_BUY_TYPE
+        ,T1.REQ_MODEL_NAME
+        ,T1.REQ_MODEL_COLOR
+        ,T1.REQ_PHONE_SN
+        ,T1.REQ_USIM_SN
+        ,T1.REQ_PAY_TYPE
+        ,T1.REQ_ADDITION
+        ,T1.SHOP_CD
+        ,T1.APP_FORM_YN
+        ,T1.REQ_IN_DAY
+        ,T1.CONTRACT_NUM
+        ,T1.ETC_SPECIAL
+        ,T1.REQ_USIM_NAME
+        ,T1.PHONE_PAYMENT
+        ,T1.REQ_ADDITION_PRICE
+        ,T1.APP_FORM_XML_YN
+        ,T1.SPC_CODE
+        ,T1.CNTPNT_SHOP_ID
+        ,T1.SHOP_USM_ID
+        ,T1.MEMO
+        ,T1.REC_YN
+        ,T1.OPEN_MARKET_REFERER
+        ,T1.SO_CD
+        ,T1.NW_BLCK_AGRM_YN
+        ,T1.APP_BLCK_AGRM_YN
+        ,T1.APP_CD
+        ,T1.SO_TRNS_AGRM_YN
+        ,T1.CLAUSE_JEHU_FLAG
+        ,T1.SHOP_NM
+        ,T1.PROD_ID
+        ,T1.CRET_ID
+        ,T1.BANNER_CD
+        ,T1.SNTY_COLOR_CD
+        ,T1.SNTY_CAPAC_CD
+        ,T1.PROD_TYPE
+        ,T1.CLAUSE_RENTAL_MODEL_CP
+        ,T1.CLAUSE_RENTAL_MODEL_CP_PR
+        ,T1.CLAUSE_RENTAL_SERVICE
+        ,T1.CLAUSE_MPPS35_FLAG
+        ,T1.CLAUSE_FINANCE_FLAG
+        ,T1.RVISN_ID
+        ,T1.RVISN_DTTM
+        ,T1.PROMOTION_CD
+        ,T1.REAL_SHOP_NM
+        ,T1.USIM_KINDS_CD
+        ,T1.INSR_CD
+        ,T1.CLAUSE_INSURANCE_FLAG
+        FROM MCP_REQUEST T1
+        WHERE 1=1
+        <choose>
+            <when test="requestKey != null and requestKey > 0">
+                AND REQUEST_KEY = #{requestKey}
+            </when>
+            <when test="contractNum != null and contractNum != ''" >
+                AND CONTRACT_NUM = #{contractNum}
+            </when>
+            <otherwise>
+                AND    1 = 0
+            </otherwise>
+        </choose>
+        ORDER BY T1.REQUEST_STATE_CODE DESC ,T1.SYS_RDATE
+        ) WHERE  ROWNUM =1
+    </select>-->
+    <!--
+        계약번호 REQUEST_STATE_CODE 21(개통완료) 항상 있다.. 제일 상위에 (개발계에서 없음)
+        ORDER BY T1.REQUEST_STATE_CODE DESC ,T1.SYS_RDATE
+        AND REQUEST_STATE_CODE = '21'
+    -->
+
+
+    <!--<select id="getCopyMcpRequest"  parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto"  resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        SELECT /*AppformMapper.getCopyMcpRequest */
+        REQ_PAY_TYPE
+        , CLAUSE_PRI_COLLECT_FLAG
+        , CLAUSE_PRI_OFFER_FLAG
+        , CLAUSE_ESS_COLLECT_FLAG
+        , CLAUSE_PRI_TRUST_FLAG
+        , CLAUSE_PRI_AD_FLAG
+        , CLAUSE_CONFIDENCE_FLAG
+        , NW_BLCK_AGRM_YN
+        , APP_BLCK_AGRM_YN
+        , SO_TRNS_AGRM_YN
+        , CLAUSE_RENTAL_MODEL_CP
+        , CLAUSE_RENTAL_MODEL_CP_PR
+        , CLAUSE_RENTAL_SERVICE
+        , CLAUSE_FINANCE_FLAG
+        , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
+        , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
+        , CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
+        , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
+        , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
+        , CSTMR_PRIVATE_CNAME      --고객정보_개인사업자_상호명
+        , CSTMR_PRIVATE_NUMBER     --고객정보_개인사업자_사업자등록번호
+        , CSTMR_JURIDICAL_CNAME    --고객정보_법인사업자_법인명
+        , CSTMR_JURIDICAL_RRN      --고객정보_법인사업자_법인번호
+        , CSTMR_JURIDICAL_NUMBER   --고객정보_법인사업자_사업자등록번호
+        , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
+        , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
+        , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
+        , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
+        , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
+        , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
+        , CSTMR_POST               --고객정보_우편번호
+        , CSTMR_ADDR               --고객정보_주소
+        , CSTMR_ADDR_DTL           --고객정보_상세주소
+        , CSTMR_ADDR_BJD           --고객정보_법정동주소
+        , CSTMR_BILL_SEND_CODE     --고객정보_명세서종류
+        , CSTMR_MAIL               --고객정보_메일
+        , CSTMR_MAIL_RECEIVE_FLAG  --고객정보_메일수신_여부
+        , CSTMR_VISIT_TYPE         --고객정보_방문고객정보
+        , CSTMR_RECEIVE_TEL_FN     --고객정보_연락받을번호_앞자
+        , CSTMR_RECEIVE_TEL_NM     --고객정보_연락받을번호_중간자리
+        , CSTMR_RECEIVE_TEL_RN     --고객정보_연락받을번호_끝자리
+        , OTHERS_PAYMENT_AG        --고객정보_타인납부동의
+        , OTHERS_PAYMENT_NM        --고객정보_타인납부_고객명
+        , OTHERS_PAYMENT_RRN       --고객정보_타인납부_주민번호
+        , OTHERS_PAYMENT_RELATION  --고객정보_타인납부_명의자와의관계
+        , OTHERS_PAYMENT_RNM       --고객정보_타인납부_신청인
+        , CSTMR_NAME               --고객정보_고객명
+        , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
+        , SELF_INQRY_AGRM_YN       --본인인증조회동의
+        , SELF_CERT_TYPE           --본인인증유형
+        , SELF_ISSU_EXPR_DT        --발급/만료일자
+        , SELF_ISSU_NUM            --발급번호
+        , REQ_BANK                 --신청정보_계좌이체_은행
+        , REQ_ACCOUNT_NAME         --신청정보_계좌이체_예금주
+        , REQ_ACCOUNT_RRN          --신청정보_계좌이체_예금주_주민번호
+        , REQ_ACCOUNT_RELATION     --신청정보_계좌이체_예금주와관계
+        , REQ_ACCOUNT_NUMBER       --신청정보_계좌이체_계좌번호
+        , REQ_CARD_NAME            --신청정보_신용카드_명의자
+        , REQ_CARD_RRN             --신청정보_신용카드_명의자_주민번호
+        , REQ_CARD_COMPANY         --신청정보_신용카드_카드사
+        , REQ_CARD_NO              --신청정보_신용카드_번호
+        , REQ_CARD_YY              --신청정보_신용카드_유효년
+        , REQ_CARD_MM              --신청정보_신용카드_유효월
+        , REQ_WIRE_TYPE            --신청정보_무선데이터_이용_타입
+        , MODEL_ID                 -- 휴대폰 : 대표 모델ID  유심 :
+        , MODEL_SALE_POLICY_CODE   --판매 정책
+        , MINOR_SELF_CERT_TYPE     --본인인증유형
+        , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
+        , MINOR_SELF_ISSU_NUM      --발급번호
+        , FATH_MOBILE_FN          --안면인증정보_휴대폰번호_앞자리
+        , FATH_MOBILE_FN          --안면인증정보_휴대폰번호_중간자리
+        , FATH_MOBILE_FN          --안면인증정보_휴대폰번호_끝자리
+        FROM (
+        SELECT
+        REQ_PAY_TYPE
+        ,T1.CLAUSE_PRI_COLLECT_FLAG
+        , T1.CLAUSE_PRI_OFFER_FLAG
+        , T1.CLAUSE_ESS_COLLECT_FLAG
+        , T1.CLAUSE_PRI_TRUST_FLAG
+        , T1.CLAUSE_PRI_AD_FLAG
+        , T1.CLAUSE_CONFIDENCE_FLAG
+        , T1.NW_BLCK_AGRM_YN
+        , T1.APP_BLCK_AGRM_YN
+        , T1.SO_TRNS_AGRM_YN
+        , T1.CLAUSE_RENTAL_MODEL_CP
+        , T1.CLAUSE_RENTAL_MODEL_CP_PR
+        , T1.CLAUSE_RENTAL_SERVICE
+        , T1.CLAUSE_FINANCE_FLAG
+        , T2.CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
+        , T2.CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
+        , T2.CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
+        , T2.CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
+        , T2.CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
+        , T2.CSTMR_PRIVATE_CNAME      --고객정보_개인사업자_상호명
+        , T2.CSTMR_PRIVATE_NUMBER     --고객정보_개인사업자_사업자등록번호
+        , T2.CSTMR_JURIDICAL_CNAME    --고객정보_법인사업자_법인명
+        , T2.CSTMR_JURIDICAL_RRN      --고객정보_법인사업자_법인번호
+        , T2.CSTMR_JURIDICAL_NUMBER   --고객정보_법인사업자_사업자등록번호
+        , T2.CSTMR_TEL_FN             --고객정보_전화번호_앞자리
+        , T2.CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
+        , T2.CSTMR_TEL_RN             --고객정보_전화번호_끝자리
+        , T2.CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
+        , T2.CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
+        , T2.CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
+        , T2.FATH_MOBILE_FN           --안면인증정보_휴대폰번호_앞자리
+        , T2.FATH_MOBILE_MN           --안면인증정보_휴대폰번호_중간자리
+        , T2.FATH_MOBILE_RN           --안면인증정보_휴대폰번호_끝자리
+        , T2.CSTMR_POST               --고객정보_우편번호
+        , T2.CSTMR_ADDR               --고객정보_주소
+        , T2.CSTMR_ADDR_DTL           --고객정보_상세주소
+        , T2.CSTMR_ADDR_BJD           --고객정보_법정동주소
+        , T2.CSTMR_BILL_SEND_CODE     --고객정보_명세서종류
+        , T2.CSTMR_MAIL               --고객정보_메일
+        , T2.CSTMR_MAIL_RECEIVE_FLAG  --고객정보_메일수신_여부
+        , T2.CSTMR_VISIT_TYPE         --고객정보_방문고객정보
+        , T2.CSTMR_RECEIVE_TEL_FN     --고객정보_연락받을번호_앞자
+        , T2.CSTMR_RECEIVE_TEL_NM     --고객정보_연락받을번호_중간자리
+        , T2.CSTMR_RECEIVE_TEL_RN     --고객정보_연락받을번호_끝자리
+        , T2.OTHERS_PAYMENT_AG        --고객정보_타인납부동의
+        , T2.OTHERS_PAYMENT_NM        --고객정보_타인납부_고객명
+        , T2.OTHERS_PAYMENT_RRN       --고객정보_타인납부_주민번호
+        , T2.OTHERS_PAYMENT_RELATION  --고객정보_타인납부_명의자와의관계
+        , T2.OTHERS_PAYMENT_RNM       --고객정보_타인납부_신청인
+        , T2.CSTMR_NAME               --고객정보_고객명
+        , T2.CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
+        , T2.SELF_INQRY_AGRM_YN       --본인인증조회동의
+        , T2.SELF_CERT_TYPE           --본인인증유형
+        , T2.SELF_ISSU_EXPR_DT        --발급/만료일자
+        , T2.SELF_ISSU_NUM            --발급번호
+        , T3.REQ_BANK                 --신청정보_계좌이체_은행
+        , T3.REQ_ACCOUNT_NAME         --신청정보_계좌이체_예금주
+        , T3.REQ_ACCOUNT_RRN          --신청정보_계좌이체_예금주_주민번호
+        , T3.REQ_ACCOUNT_RELATION     --신청정보_계좌이체_예금주와관계
+        , T3.REQ_ACCOUNT_NUMBER       --신청정보_계좌이체_계좌번호
+        , T3.REQ_CARD_NAME            --신청정보_신용카드_명의자
+        , T3.REQ_CARD_RRN             --신청정보_신용카드_명의자_주민번호
+        , T3.REQ_CARD_COMPANY         --신청정보_신용카드_카드사
+        , T3.REQ_CARD_NO              --신청정보_신용카드_번호
+        , T3.REQ_CARD_YY              --신청정보_신용카드_유효년
+        , T3.REQ_CARD_MM              --신청정보_신용카드_유효월
+        , T3.REQ_WIRE_TYPE            --신청정보_무선데이터_이용_타입
+        , T4.MODEL_ID                 -- 휴대폰 : 대표 모델ID  유심 :
+        , T4.MODEL_SALE_POLICY_CODE   --판매 정책
+        , T4.USIM_PAY_MTHD_CD         --USIM비 납부방법(0 : 면제, 1:일시납, 2: 분납(3개월)
+        , T5.MINOR_SELF_CERT_TYPE     --본인인증유형
+        , T5.MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
+        , T5.MINOR_SELF_ISSU_NUM      --발급번호
+        FROM
+        MCP_REQUEST T1
+        , MCP_REQUEST_CSTMR T2
+        , MCP_REQUEST_REQ T3
+        , MCP_REQUEST_SALEINFO T4
+        , MCP_REQUEST_AGENT T5
+        WHERE 1=1
+        AND T1.REQUEST_KEY = T2.REQUEST_KEY
+        AND T1.REQUEST_KEY = T3.REQUEST_KEY
+        AND T1.REQUEST_KEY = T4.REQUEST_KEY
+        AND T1.REQUEST_KEY = T5.REQUEST_KEY(+)
+        AND OPER_TYPE NOT IN ('HDN3','HCN3')
+        <choose>
+            <when test="contractNum != null and contractNum != ''" >
+                AND CONTRACT_NUM = #{contractNum}
+            </when>
+            <otherwise>
+                AND    1 = 0
+            </otherwise>
+        </choose>
+        ORDER BY T1.REQUEST_STATE_CODE DESC ,T1.SYS_RDATE
+        ) WHERE  ROWNUM =1
+    </select>-->
+
+    <!--<update id="updateAppFormXmlYn" parameterType="java.lang.Long" >
+        <!--
+            Description: 스캔 서버 연동 여부
+        -->
+        UPDATE
+        MCP_REQUEST
+        SET
+        APP_FORM_XML_YN = 'Y'
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<update id="updateAppForPstate" parameterType="java.lang.Long" >
+        UPDATE /*AppformMapper.updateAppForPstate   */
+            MCP_REQUEST
+        SET
+            PSTATE = '00'
+        WHERE
+            REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<select id="getAppFormPointList" resultType="map">
+        <!--
+            Description: 서식지 위치정보
+        -->
+        SELECT
+        COLUMN_NAME
+        , METAROW
+        , METALINE
+        , APP_KEY
+        , CODEDATA
+        , CODEDATA_YN
+        , PAGEINDEX
+        , DELETECOLUMNYN
+        FROM
+        MCP_APPLICATION_FORM_INFO
+        ORDER BY PAGEINDEX, APP_KEY
+    </select>-->
+
+    <!--<select id="getAppFormGroupPointList" parameterType="java.lang.String" resultType="map">
+        <!--
+            Description: 서식지 위치정보
+        -->
+        SELECT
+        A.GROUP_CODE,
+        B.PAGE_SEQ,
+        C.PAGE_CODE,
+        C.COLUMN_NAME,
+        C.METAROW,
+        C.METALINE,
+        C.CODEDATA,
+        C.CODEDATA_YN,
+        C.DELETECOLUMNYN,
+        C.APP_KEY
+        FROM
+        NMCP_APP_GROUP_MST A,
+        NMCP_APP_GROUP_INFO B,
+        NMCP_APP_FORM_INFO C
+        WHERE
+        A.STATUS = 'A'
+        AND A.GROUP_CODE = #{groupCode}
+        AND A.GROUP_CODE = B.GROUP_CODE
+        AND B.STATUS = 'A'
+        AND B.PAGE_CODE = C.PAGE_CODE
+        ORDER BY B.PAGE_SEQ, C.APP_KEY
+    </select>-->
+
+    <!--<select id="getAppFormPageList" parameterType="java.lang.String" resultType="map">
+        SELECT /*Appform_Query.getAppFormPageList 스캔이미지 페이지 별 좌표값 조회 처리   */
+            PAGE_CODE,
+            COLUMN_NAME,
+            METAROW,
+            METALINE,
+            CODEDATA,
+            CODEDATA_YN,
+            DELETECOLUMNYN,
+            APP_KEY
+        FROM
+            NMCP_APP_FORM_INFO
+        WHERE
+            PAGE_CODE = #{pageCode}
+        ORDER BY APP_KEY
+    </select>-->
+
+    <!--<select id="getRequestJoinUserData" parameterType="java.lang.Long"  resultType="map">
+        SELECT
+            MRC.CSTMR_NAME
+             , MQ.RES_NO
+             , MQ.AGENT_CODE
+             , MQ.CNTPNT_SHOP_ID
+        FROM
+            MCP_REQUEST MQ
+           , MCP_REQUEST_CSTMR MRC
+        WHERE
+            MQ.REQUEST_KEY = #{requestKey}
+          AND   MQ.REQUEST_KEY = MRC.REQUEST_KEY
+    </select>-->
+
+    <!--<select id="getRequestSelfDlvrKey" resultType="java.lang.Long">
+        SELECT
+            SQ_REQUEST_SELF_DLVR_KEY.NEXTVAL
+        FROM DUAL
+    </select>-->
+
+    <!--<update id="insertMcpRequestSelfDlvryHist" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
+
+        MERGE INTO  MCP_REQUEST_SELF_DLVRY_HIST
+            USING   DUAL
+            ON      (SELF_DLVRY_IDX = #{selfDlvryIdx})
+            WHEN MATCHED THEN
+                UPDATE SET
+                    USIM_PROD_ID = #{usimProdId}
+                    , USIM_PROD_DTL_ID = #{usimProdDtlId}
+                    , CSTMR_NAME = #{cstmrName}
+                    , ONLINE_AUTH_TYPE = #{onlineAuthType}
+                    , ONLINE_AUTH_INFO = #{onlineAuthInfo}
+                    , ONLINE_AUTH_DI = #{onlineAuthDi}
+                    , DLVRY_NAME = #{dlvryName}
+                    , DLVRY_TEL_FN = #{dlvryTelFn}
+                    , DLVRY_TEL_MN = #{dlvryTelMn}
+                    , DLVRY_TEL_RN = #{dlvryTelRn}
+                    , DLVRY_POST = #{dlvryPost}
+                    , DLVRY_ADDR = #{dlvryAddr}
+                    , DLVRY_ADDR_DTL = #{dlvryAddrDtl}
+                    , DLVRY_MEMO = #{dlvryMemo}
+                    , SELF_MEMO = #{selfMemo}
+                    , REQ_USIM_SN = #{reqUsimSn}
+                    , DLVRY_STATE_CODE = #{dlvryStateCode}
+                    , SELF_STATE_CODE = #{selfStateCode}
+                    , DLVRY_NO = #{dlvryNo}
+                    , TB_CD = #{tbCd}
+                    , CONTRACT_NUM = #{contractNum}
+                    , CRET_ID = #{cretId}
+                    , RVISN_ID = #{rvisnId}
+                    , RVISN_DTTM = SYSDATE
+                    , SYS_RDATE = SYSDATE
+                    , REQ_BUY_QNTY = #{reqBuyQnty}
+                    , USIM_UCOST = #{usimUcost}
+                    , USIM_PRICE = #{usimPrice}
+                    , DLVRY_TYPE = '01'
+                    , MINOR_AGENT_NAME = #{minorAgentName}
+                    , MINOR_ONLINE_AUTH_INFO = #{minorOnlineAuthInfo}
+                    , MINOR_AGENT_AGRM_YN = #{minorAgentAgrmYn}
+            WHEN NOT MATCHED THEN
+                INSERT (
+                        SELF_DLVRY_IDX           --일련번호 PK
+                    , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
+                    , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
+                    , CSTMR_NAME               --고객명
+                    , ONLINE_AUTH_TYPE         --인증방식
+                    , ONLINE_AUTH_INFO         --인증정보
+                    , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
+                    , DLVRY_NAME               --배송정보_이름
+                    , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+                    , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+                    , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+                    , DLVRY_POST               --배송정보_우편번호
+                    , DLVRY_ADDR               --배송정보_주소
+                    , DLVRY_ADDR_DTL           --배송정보_상세주소
+                    , DLVRY_MEMO               --고객 요청 사항
+                    , SELF_MEMO                --유심배송 메모
+                    , REQ_USIM_SN              --유심번호
+                    , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
+                    , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
+                    , DLVRY_NO                 --송장번호
+                    , TB_CD                    --택배사 코드    공통코드[ PERCEL]
+                    , CONTRACT_NUM             --계약번호
+                    , CRET_ID                  --생성자아이디(로그인아이디)
+                    , RVISN_ID                 --수정자ID
+                    , RVISN_DTTM               --수정 일시
+                    , SYS_RDATE                --등록일시
+                    , REQ_BUY_QNTY             --요청구매수량
+                    , USIM_UCOST               --유심단가
+                    , USIM_PRICE               --유심가격
+                    , DLVRY_TYPE               --배송타입
+                    , MINOR_AGENT_NAME
+                    , MINOR_ONLINE_AUTH_INFO
+                    , MINOR_AGENT_AGRM_YN
+                    ) VALUES (
+                                 #{selfDlvryIdx}
+                             , #{usimProdId}
+                             , #{usimProdDtlId}
+                             , #{cstmrName}
+                             , #{onlineAuthType}
+                             , #{onlineAuthInfo}
+                             , #{onlineAuthDi}
+                             , #{dlvryName}
+                             , #{dlvryTelFn}
+                             , #{dlvryTelMn}
+                             , #{dlvryTelRn}
+                             , #{dlvryPost}
+                             , #{dlvryAddr}
+                             , #{dlvryAddrDtl}
+                             , #{dlvryMemo}
+                             , #{selfMemo}
+                             , #{reqUsimSn}
+                             , #{dlvryStateCode}
+                             , #{selfStateCode}
+                             , #{dlvryNo}
+                             , #{tbCd}
+                             , #{contractNum}
+                             , #{cretId}
+                             , #{rvisnId}
+                             , SYSDATE
+                             , SYSDATE
+                             , #{reqBuyQnty}
+                             , #{usimUcost}
+                             , #{usimPrice}
+                             , '01'
+                             , #{minorAgentName}
+                             , #{minorOnlineAuthInfo}
+                             , #{minorAgentAgrmYn}
+                             )
+    </update>-->
+
+    <!--<select id="getMcpRequestSelfDlvry"  parameterType="java.lang.Long"  resultType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto">
+        SELECT
+        SELF_DLVRY_IDX
+        , USIM_PROD_ID
+        , USIM_PROD_DTL_ID
+        , CSTMR_NAME
+        , CSTMR_NATIVE_RRN
+        , ONLINE_AUTH_TYPE
+        , ONLINE_AUTH_INFO
+        , ONLINE_AUTH_DI
+        , DLVRY_NAME
+        , DLVRY_TEL_FN
+        , DLVRY_TEL_MN
+        , DLVRY_TEL_RN
+        , DLVRY_POST
+        , DLVRY_ADDR
+        , DLVRY_ADDR_DTL
+        , DLVRY_MEMO
+        , SELF_MEMO
+        , REQ_USIM_SN
+        , DLVRY_STATE_CODE
+        , SELF_STATE_CODE
+        , DLVRY_NO
+        , TB_CD
+        , CONTRACT_NUM
+        , CRET_ID
+        , RVISN_ID
+        , RVISN_DTTM
+        , SYS_RDATE
+        , REQ_BUY_QNTY
+        , USIM_UCOST
+        , USIM_PRICE
+        , DLVRY_TYPE
+        FROM MCP_REQUEST_SELF_DLVRY
+        WHERE 1=1
+        <if test="selfDlvryIdx != null and selfDlvryIdx > 0 ">
+            AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+        </if>
+        <if test="onlineAuthDi !=null and onlineAuthDi != ''" >
+            AND ONLINE_AUTH_DI = #{onlineAuthDi}
+        </if>
+        <if test=" !(onlineAuthDi !=null and onlineAuthDi != '') " >
+            AND CSTMR_NAME = #{cstmrName} AND DLVRY_TEL_FN || DLVRY_TEL_MN || DLVRY_TEL_RN = #{dlvryTelFn}||#{dlvryTelMn}||#{dlvryTelRn}
+        </if>
+        <if test="sysRdateS !=null and sysRdateS != '' and sysRdateE !=null and sysRdateE != ''" >
+            AND SYS_RDATE BETWEEN  TO_DATE(#{sysRdateS}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{sysRdateE}||'235959', 'YYYYMMDDHH24MISS')
+        </if>
+        ORDER BY SELF_DLVRY_IDX DESC
+    </select>-->
+
+    <!--<select id="getMcpSelfDlvryDataHist"  parameterType="java.lang.Long"  resultType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto">
+        SELECT
+            SELF_DLVRY_IDX
+             , USIM_PROD_ID
+             , USIM_PROD_DTL_ID
+             , CSTMR_NAME
+             , CSTMR_NATIVE_RRN
+             , ONLINE_AUTH_TYPE
+             , ONLINE_AUTH_INFO
+             , ONLINE_AUTH_DI
+             , DLVRY_NAME
+             , DLVRY_TEL_FN
+             , DLVRY_TEL_MN
+             , DLVRY_TEL_RN
+             , DLVRY_POST
+             , DLVRY_ADDR
+             , DLVRY_ADDR_DTL
+             , DLVRY_MEMO
+             , SELF_MEMO
+             , REQ_USIM_SN
+             , DLVRY_STATE_CODE
+             , SELF_STATE_CODE
+             , DLVRY_NO
+             , TB_CD
+             , CONTRACT_NUM
+             , CRET_ID
+             , RVISN_ID
+             , RVISN_DTTM
+             , SYS_RDATE
+             , REQ_BUY_QNTY
+             , USIM_UCOST
+             , USIM_PRICE
+             , DLVRY_TYPE
+        FROM MCP_REQUEST_SELF_DLVRY_HIST
+        WHERE 1=1
+          AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </select>-->
+
+
+
+    <!--<select id="getMcpSelfDlvryData"  parameterType="java.lang.Long"  resultType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto">
+        SELECT
+            SELF_DLVRY_IDX
+             , USIM_PROD_ID
+             , USIM_PROD_DTL_ID
+             , CSTMR_NAME
+             , CSTMR_NATIVE_RRN
+             , ONLINE_AUTH_TYPE
+             , ONLINE_AUTH_INFO
+             , ONLINE_AUTH_DI
+             , DLVRY_NAME
+             , DLVRY_TEL_FN
+             , DLVRY_TEL_MN
+             , DLVRY_TEL_RN
+             , DLVRY_POST
+             , DLVRY_ADDR
+             , DLVRY_ADDR_DTL
+             , DLVRY_MEMO
+             , SELF_MEMO
+             , REQ_USIM_SN
+             , DLVRY_STATE_CODE
+             , SELF_STATE_CODE
+             , DLVRY_NO
+             , TB_CD
+             , CONTRACT_NUM
+             , CRET_ID
+             , RVISN_ID
+             , RVISN_DTTM
+             , SYS_RDATE
+             , VIEW_YN
+             , REQ_BUY_QNTY
+             , USIM_UCOST
+             , USIM_PRICE
+             , DLVRY_TYPE
+        FROM MCP_REQUEST_SELF_DLVRY
+        WHERE 1=1
+          AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </select>-->
+
+    <!--<update id="insertMcpRequestSelfDlvry" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
+        INSERT INTO MCP_REQUEST_SELF_DLVRY (
+                                             SELF_DLVRY_IDX           --일련번호 PK
+                                           , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
+                                           , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
+                                           , CSTMR_NAME               --고객명
+                                           , ONLINE_AUTH_TYPE         --인증방식
+                                           , ONLINE_AUTH_INFO         --인증정보
+                                           , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
+                                           , DLVRY_NAME               --배송정보_이름
+                                           , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+                                           , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+                                           , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+                                           , DLVRY_POST               --배송정보_우편번호
+                                           , DLVRY_ADDR               --배송정보_주소
+                                           , DLVRY_ADDR_DTL           --배송정보_상세주소
+                                           , DLVRY_MEMO               --고객 요청 사항
+                                           , SELF_MEMO                --유심배송 메모
+                                           , REQ_USIM_SN              --유심번호
+                                           , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
+                                           , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
+                                           , DLVRY_NO                 --송장번호
+                                           , TB_CD                    --택배사 코드    공통코드[ PERCEL]
+                                           , CONTRACT_NUM             --계약번호
+                                           , CRET_ID                  --생성자아이디(로그인아이디)
+                                           , RVISN_ID                 --수정자ID
+                                           , RVISN_DTTM               --수정 일시
+                                           , SYS_RDATE                --등록일시
+                                           , REQ_BUY_QNTY             --요청구매수량
+                                           , USIM_UCOST               --유심단가
+                                           , USIM_PRICE               --유심가격
+                                           , DLVRY_TYPE               --배송타입
+                                           , REQ_TYPE                 --요청유형 (01 일반(유심구매) 02 신청서요청)
+                                           , MINOR_AGENT_NAME         --미성년자_법정대리인_성명
+                                           , MINOR_ONLINE_AUTH_INFO   --미성년자_법정대리인_인증정보
+                                           , MINOR_AGENT_AGRM_YN      --미성년자_법정대리인_동의여부
+        )
+        SELECT
+            SELF_DLVRY_IDX           --일련번호 PK
+             , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
+             , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
+             , CSTMR_NAME               --고객명
+             , ONLINE_AUTH_TYPE         --인증방식
+             , ONLINE_AUTH_INFO         --인증정보
+             , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
+             , DLVRY_NAME               --배송정보_이름
+             , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+             , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+             , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+             , DLVRY_POST               --배송정보_우편번호
+             , DLVRY_ADDR               --배송정보_주소
+             , DLVRY_ADDR_DTL           --배송정보_상세주소
+             , DLVRY_MEMO               --고객 요청 사항
+             , SELF_MEMO                --유심배송 메모
+             , REQ_USIM_SN              --유심번호
+             , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
+             , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
+             , DLVRY_NO                 --송장번호
+             , TB_CD                    --택배사 코드    공통코드[ PERCEL]
+             , CONTRACT_NUM             --계약번호
+             , CRET_ID                  --생성자아이디(로그인아이디)
+             , RVISN_ID                 --수정자ID
+             , RVISN_DTTM               --수정 일시
+             , SYS_RDATE                --등록일시
+             , REQ_BUY_QNTY             --요청구매수량
+             , USIM_UCOST               --유심단가
+             , USIM_PRICE               --유심가격
+             , DLVRY_TYPE               --배송타입
+             , '01'
+             , MINOR_AGENT_NAME         --미성년자_법정대리인_성명
+             , MINOR_ONLINE_AUTH_INFO   --미성년자_법정대리인_인증정보
+             , MINOR_AGENT_AGRM_YN      --미성년자_법정대리인_동의여부
+        FROM        MCP_REQUEST_SELF_DLVRY_HIST
+        WHERE   SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </update>-->
+
+
+    <!--<update id="insertRequestSelfDlvry" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
+        INSERT INTO MCP_REQUEST_SELF_DLVRY (
+                                             SELF_DLVRY_IDX           --일련번호 PK
+                                           , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
+                                           , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
+                                           , CSTMR_NAME               --고객명
+                                           , ONLINE_AUTH_TYPE         --인증방식
+                                           , ONLINE_AUTH_INFO         --인증정보
+                                           , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
+                                           , DLVRY_NAME               --배송정보_이름
+                                           , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+                                           , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+                                           , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+                                           , DLVRY_POST               --배송정보_우편번호
+                                           , DLVRY_ADDR               --배송정보_주소
+                                           , DLVRY_ADDR_DTL           --배송정보_상세주소
+                                           , DLVRY_MEMO               --고객 요청 사항
+                                           , SELF_MEMO                --유심배송 메모
+                                           , REQ_USIM_SN              --유심번호
+                                           , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
+                                           , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
+                                           , DLVRY_NO                 --송장번호
+                                           , TB_CD                    --택배사 코드    공통코드[ PERCEL]
+                                           , CONTRACT_NUM             --계약번호
+                                           , CRET_ID                  --생성자아이디(로그인아이디)
+                                           , RVISN_ID                 --수정자ID
+                                           , RVISN_DTTM               --수정 일시
+                                           , SYS_RDATE                --등록일시
+                                           , REQ_BUY_QNTY             --요청구매수량
+                                           , USIM_UCOST               --유심단가
+                                           , USIM_PRICE               --유심가격
+                                           , DLVRY_TYPE               --배송유형(01:택배, 02:바로배송, 03:당일배송)
+                                           , REQ_TYPE                 --요청유형 (01 일반(유심구매) 02 신청서요청)
+                                           , REQUEST_KEY              --신청서 키값(일련번호)
+                                           , MINOR_AGENT_NAME         --미성년자_법정대리인_성명
+                                           , MINOR_ONLINE_AUTH_INFO   --미성년자_법정대리인_인증정보
+                                           , MINOR_AGENT_AGRM_YN      --미성년자_법정대리인_동의여부
+        ) VALUES (
+                     #{selfDlvryIdx}
+                 , #{usimProdId}
+                 , #{usimProdDtlId}
+                 , #{cstmrName}
+                 , #{onlineAuthType}
+                 , #{onlineAuthInfo}
+                 , #{onlineAuthDi}
+                 , #{dlvryName}
+                 , #{dlvryTelFn}
+                 , #{dlvryTelMn}
+                 , #{dlvryTelRn}
+                 , #{dlvryPost}
+                 , #{dlvryAddr}
+                 , #{dlvryAddrDtl}
+                 , #{dlvryMemo}
+                 , #{selfMemo}
+                 , #{reqUsimSn}
+                 , #{dlvryStateCode}
+                 , #{selfStateCode}
+                 , #{dlvryNo}
+                 , #{tbCd}
+                 , #{contractNum}
+                 , #{cretId}
+                 , #{rvisnId}
+                 , SYSDATE
+                 , SYSDATE
+                 , #{reqBuyQnty}
+                 , #{usimUcost}
+                 , #{usimPrice}
+                 , #{dlvryType}
+                 , #{reqType}
+                 , #{requestKey}
+                 ,#{minorAgentName}
+                 ,#{minorOnlineAuthInfo}
+                 ,#{minorAgentAgrmYn}
+                 )
+    </update>-->
+
+
+    <!--<delete id="deleteMcpRequestSelfDlvry" parameterType="java.lang.Long">
+        DELETE MCP_REQUEST_SELF_DLVRY
+        WHERE SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </delete>-->
+
+    <!--<delete id="deleteMcpRequestReq" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        DELETE MCP_REQUEST_REQ
+        WHERE REQUEST_KEY = #{requestKey}
+    </delete>-->
+
+    <!--<delete id="deleteMcpRequestAddition" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        DELETE MCP_REQUEST_ADDITION
+        WHERE REQUEST_KEY = #{requestKey}
+    </delete>-->
+
+    <!--<delete id="deleteMcpRequestAgent" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        DELETE MCP_REQUEST_AGENT
+        WHERE REQUEST_KEY = #{requestKey}
+    </delete>-->
+
+    <!--<delete id="deleteRequestPayment" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        DELETE MCP_REQUEST_PAYMENT
+        WHERE REQUEST_KEY = #{requestKey}
+    </delete>-->
+
+    <!--<delete id="deleteMcpRequestChange" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        DELETE MCP_REQUEST_CHANGE
+        WHERE REQUEST_KEY = #{requestKey}
+    </delete>-->
+
+    <!--<delete id="deleteMcpRequestDlvry" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        DELETE MCP_REQUEST_DLVRY
+        WHERE REQUEST_KEY = #{requestKey}
+    </delete>-->
+
+    <!--<delete id="deleteMcpRequestSaleinfo" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        DELETE MCP_REQUEST_SALEINFO
+        WHERE REQUEST_KEY = #{requestKey}
+    </delete>-->
+
+    <!--<delete id="deleteMcpRequestCommend" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        DELETE MCP_REQUEST_COMMEND
+        WHERE REQUEST_KEY = #{requestKey}
+    </delete>-->
+
+    <!--<select id="checkLimitFormCount" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto"  resultType="java.lang.Integer">
+        SELECT /*AppformMapper.checkLimitFormCount 최근 20분 내 샐프개통 신청(요청) 이력이 있을 경우 제한 */
+            COUNT(1)
+        FROM
+            MCP_REQUEST T1
+           , MCP_REQUEST_CSTMR  T2
+        WHERE T1.REQUEST_KEY = T2.REQUEST_KEY
+          AND T1.OPER_TYPE = 'NAC3'                 -- 신규 서직지   AND CONTRACT_NUM IS NOT NULL              -- 개통한 신청서
+          AND T1.ON_OFF_TYPE  IN ('5','7','9')      -- 셀프개통 5 온라인(셀프개통)    7 모바일(셀프개통) 9 오프라인(셀프개통)
+          AND T1.SYS_RDATE > (SYSDATE-1/24/3)       -- 20분
+          AND T2.SELF_CSTMR_CI = #{selfCstmrCi}
+          <if test="cstmrName != null and cstmrName != ''">
+            AND T2.CSTMR_NAME = #{cstmrName}
+          </if>
+    </select>-->
+
+    <!--<select id="getMcpNowDlvryData"  parameterType="java.lang.Long"  resultType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto">
+        SELECT
+            SELF_DLVRY_IDX
+             , KT_ORD_ID
+             , BIZ_ORG_CD
+             , DELIVERY_ORDER_ID
+             , USIM_PROD_ID
+             , USIM_PROD_DTL_ID
+             , CSTMR_NAME
+             , CSTMR_NATIVE_RRN
+             , ONLINE_AUTH_TYPE
+             , ONLINE_AUTH_INFO
+             , ONLINE_AUTH_DI
+             , DLVRY_NAME
+             , DLVRY_TEL_FN
+             , DLVRY_TEL_MN
+             , DLVRY_TEL_RN
+             , DLVRY_POST
+             , DLVRY_ADDR
+             , DLVRY_ADDR_DTL
+             , DLVRY_MEMO
+             , SELF_MEMO
+             , REQ_USIM_SN
+             , DLVRY_STATE_CODE
+             , SELF_STATE_CODE
+             , DLVRY_NO
+             , TB_CD
+             , CONTRACT_NUM
+             , SVC_RSLT_CD
+             , SVC_RSLT_MSG
+             , PAY_CD
+             , CRET_ID
+             , RVISN_ID
+             , RVISN_DTTM
+             , SYS_RDATE
+             , ACCEPT_TIME
+             , VIEW_YN
+             , REQUEST_KEY
+             , REQ_BUY_QNTY
+             , USIM_UCOST
+        FROM MCP_REQUEST_NOW_DLVRY
+        WHERE 1=1
+          AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </select>-->
+
+    <!--<update id="insertMcpRequestNowDlvryHist" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
+        MERGE INTO  MCP_REQUEST_NOW_DLVRY_HIST
+            USING   DUAL
+            ON      (SELF_DLVRY_IDX = #{selfDlvryIdx})
+            WHEN MATCHED THEN
+                UPDATE SET
+                    KT_ORD_ID = #{ktOrdId}
+                    , BIZ_ORG_CD = #{bizOrgCd}
+                    , DELIVERY_ORDER_ID = #{deliveryOrderId}
+                    , USIM_AMT = #{usimAmt}
+                    , USIM_PROD_ID = #{usimProdId}
+                    , USIM_PROD_DTL_ID = #{usimProdDtlId}
+                    , CSTMR_NAME = #{cstmrName}
+                    , ONLINE_AUTH_TYPE = #{onlineAuthType}
+                    , ONLINE_AUTH_INFO = #{onlineAuthInfo}
+                    , ONLINE_AUTH_DI = #{onlineAuthDi}
+                    , DLVRY_NAME = #{dlvryName}
+                    , DLVRY_TEL_FN = #{dlvryTelFn}
+                    , DLVRY_TEL_MN = #{dlvryTelMn}
+                    , DLVRY_TEL_RN = #{dlvryTelRn}
+                    , DLVRY_POST = #{dlvryPost}
+                    , DLVRY_ADDR = #{dlvryAddr}
+                    , DLVRY_ADDR_DTL = #{dlvryAddrDtl}
+                    , DLVRY_MEMO = #{dlvryMemo}
+                    , SELF_MEMO = #{selfMemo}
+                    , REQ_USIM_SN = #{reqUsimSn}
+                    , DLVRY_STATE_CODE = #{dlvryStateCode}
+                    , SELF_STATE_CODE = #{selfStateCode}
+                    , DLVRY_NO = #{dlvryNo}
+                    , TB_CD = #{tbCd}
+                    , CONTRACT_NUM = #{contractNum}
+                    , SVC_RSLT_CD = #{svcRsltCd}
+                    , SVC_RSLT_MSG = #{svcRsltMsg}
+                    , PAY_CD =  #{payCd}
+                    , CRET_ID = #{cretId}
+                    , RVISN_ID = #{rvisnId}
+                    , RVISN_DTTM = SYSDATE
+                    , SYS_RDATE = SYSDATE
+                    , ACCEPT_TIME = #{acceptTime}
+                    , DLVRY_JIBUN_ADDR = #{dlvryJibunAddr}
+                    , DLVRY_JIBUN_ADDR_DTL = #{dlvryJibunAddrDtl}
+                    , ENTY = #{entY}
+                    , ENTX = #{entX}
+                    , HOMEPW = #{homePw}
+                    , REQ_BUY_QNTY = #{reqBuyQnty}
+                    , USIM_UCOST = #{usimUcost}
+                    , MINOR_AGENT_NAME = #{minorAgentName}
+                    , MINOR_ONLINE_AUTH_INFO = #{minorOnlineAuthInfo}
+                    , MINOR_AGENT_AGRM_YN = #{minorAgentAgrmYn}
+            WHEN NOT MATCHED THEN
+                INSERT (
+                        SELF_DLVRY_IDX           --일련번호 PK
+                    , KT_ORD_ID
+                    , BIZ_ORG_CD
+                    , DELIVERY_ORDER_ID
+                    , USIM_AMT
+                    , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
+                    , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
+                    , CSTMR_NAME               --고객명
+                    , ONLINE_AUTH_TYPE         --인증방식
+                    , ONLINE_AUTH_INFO         --인증정보
+                    , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
+                    , DLVRY_NAME               --배송정보_이름
+                    , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+                    , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+                    , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+                    , DLVRY_POST               --배송정보_우편번호
+                    , DLVRY_ADDR               --배송정보_주소
+                    , DLVRY_ADDR_DTL           --배송정보_상세주소
+                    , DLVRY_MEMO               --고객 요청 사항
+                    , SELF_MEMO                --유심배송 메모
+                    , REQ_USIM_SN              --유심번호
+                    , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
+                    , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
+                    , DLVRY_NO                 --송장번호
+                    , TB_CD                    --택배사 코드    공통코드[ PERCEL]
+                    , CONTRACT_NUM             --계약번호
+                    , SVC_RSLT_CD
+                    , SVC_RSLT_MSG
+                    , PAY_CD
+                    , CRET_ID                  --생성자아이디(로그인아이디)
+                    , RVISN_ID                 --수정자ID
+                    , RVISN_DTTM               --수정 일시
+                    , SYS_RDATE                --등록일시
+                    , ACCEPT_TIME
+                    , DLVRY_JIBUN_ADDR
+                    , DLVRY_JIBUN_ADDR_DTL
+                    , ENTY
+                    , ENTX
+                    , HOMEPW
+                    , REQ_TYPE
+                    , REQ_BUY_QNTY
+                    , USIM_UCOST
+                    , MINOR_AGENT_NAME
+                    , MINOR_ONLINE_AUTH_INFO
+                    , MINOR_AGENT_AGRM_YN
+                    ) VALUES (
+                                 #{selfDlvryIdx}
+                             , #{ktOrdId}
+                             , #{bizOrgCd}
+                             , #{deliveryOrderId}
+                             , #{usimAmt}
+                             , #{usimProdId}
+                             , #{usimProdDtlId}
+                             , #{cstmrName}
+                             , #{onlineAuthType}
+                             , #{onlineAuthInfo}
+                             , #{onlineAuthDi}
+                             , #{dlvryName}
+                             , #{dlvryTelFn}
+                             , #{dlvryTelMn}
+                             , #{dlvryTelRn}
+                             , #{dlvryPost}
+                             , #{dlvryAddr}
+                             , #{dlvryAddrDtl}
+                             , #{dlvryMemo}
+                             , #{selfMemo}
+                             , #{reqUsimSn}
+                             , #{dlvryStateCode}
+                             , #{selfStateCode}
+                             , #{dlvryNo}
+                             , #{tbCd}
+                             , #{contractNum}
+                             , #{svcRsltCd}
+                             , #{svcRsltMsg}
+                             , #{payCd}
+                             , #{cretId}
+                             , #{rvisnId}
+                             , SYSDATE
+                             , SYSDATE
+                             , #{acceptTime}
+                             , #{dlvryJibunAddr}
+                             , #{dlvryJibunAddrDtl}
+                             , #{entY}
+                             , #{entX}
+                             , #{homePw}
+                             , #{reqType}
+                             , #{reqBuyQnty}
+                             , #{usimUcost}
+                             , #{minorAgentName}
+                             , #{minorOnlineAuthInfo}
+                             , #{minorAgentAgrmYn}
+                             )
+    </update>-->
+
+    <!--<update id="updateMcpRequestNowDlvryHist" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
+        UPDATE MCP_REQUEST_NOW_DLVRY_HIST
+        SET RVISN_DTTM = SYSDATE
+        <if test="requestKey != null and requestKey > 0">
+            , REQUEST_KEY = #{requestKey}
+        </if>
+        WHERE
+        SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </update>-->
+
+    <!--<delete id="deleteMcpRequestNowDlvry" parameterType="java.lang.Long">
+        DELETE MCP_REQUEST_NOW_DLVRY
+        WHERE SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </delete>-->
+
+    <!--<update id="insertMcpRequestNowDlvry" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
+        INSERT INTO MCP_REQUEST_NOW_DLVRY (
+                                            SELF_DLVRY_IDX           --일련번호 PK
+                                          , KT_ORD_ID
+                                          , BIZ_ORG_CD
+                                          , DELIVERY_ORDER_ID
+                                          , USIM_AMT
+                                          , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
+                                          , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
+                                          , CSTMR_NAME               --고객명
+                                          , ONLINE_AUTH_TYPE         --인증방식
+                                          , ONLINE_AUTH_INFO         --인증정보
+                                          , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
+                                          , DLVRY_NAME               --배송정보_이름
+                                          , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+                                          , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+                                          , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+                                          , DLVRY_POST               --배송정보_우편번호
+                                          , DLVRY_ADDR               --배송정보_주소
+                                          , DLVRY_ADDR_DTL           --배송정보_상세주소
+                                          , DLVRY_MEMO               --고객 요청 사항
+                                          , SELF_MEMO                --유심배송 메모
+                                          , REQ_USIM_SN              --유심번호
+                                          , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
+                                          , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
+                                          , DLVRY_NO                 --송장번호
+                                          , TB_CD                    --택배사 코드    공통코드[ PERCEL]
+                                          , CONTRACT_NUM             --계약번호
+                                          , SVC_RSLT_CD
+                                          , SVC_RSLT_MSG
+                                          , PAY_CD
+                                          , CRET_ID                  --생성자아이디(로그인아이디)
+                                          , RVISN_ID                 --수정자ID
+                                          , RVISN_DTTM               --수정 일시
+                                          , SYS_RDATE                --등록일시
+                                          , ACCEPT_TIME
+                                          , DLVRY_JIBUN_ADDR
+                                          , DLVRY_JIBUN_ADDR_DTL
+                                          , ENTY
+                                          , ENTX
+                                          , HOMEPW
+                                          , REQ_TYPE
+                                          , REQUEST_KEY
+                                          , REQ_BUY_QNTY
+                                          , USIM_UCOST
+                                          , MINOR_AGENT_NAME
+                                          , MINOR_ONLINE_AUTH_INFO
+                                          , MINOR_AGENT_AGRM_YN
+        )
+        SELECT
+               A.SELF_DLVRY_IDX           --일련번호 PK
+             , #{ktOrdId}
+             , #{bizOrgCd}
+             , #{deliveryOrderId}
+             , A.USIM_AMT
+             , A.USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
+             , A.USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
+             , A.CSTMR_NAME               --고객명
+             , A.ONLINE_AUTH_TYPE         --인증방식
+             , A.ONLINE_AUTH_INFO         --인증정보
+             , A.ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
+             , A.DLVRY_NAME               --배송정보_이름
+             , A.DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+             , A.DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+             , A.DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+             , A.DLVRY_POST               --배송정보_우편번호
+             , A.DLVRY_ADDR               --배송정보_주소
+             , A.DLVRY_ADDR_DTL           --배송정보_상세주소
+             , A.DLVRY_MEMO               --고객 요청 사항
+             , A.SELF_MEMO                --유심배송 메모
+             , A.REQ_USIM_SN              --유심번호
+             , #{dlvryStateCode}          --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
+             , A.SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
+             , A.DLVRY_NO                 --송장번호
+             , A.TB_CD                    --택배사 코드    공통코드[ PERCEL]
+             , A.CONTRACT_NUM             --계약번호
+             , #{svcRsltCd}
+             , #{svcRsltMsg}
+             , '01'
+             , A.CRET_ID                  --생성자아이디(로그인아이디)
+             , A.RVISN_ID                 --수정자ID
+             , A.RVISN_DTTM               --수정 일시
+             , A.SYS_RDATE                --등록일시
+             , A.ACCEPT_TIME
+             , A.DLVRY_JIBUN_ADDR
+             , A.DLVRY_JIBUN_ADDR_DTL
+             , A.ENTY
+             , A.ENTX
+             , A.HOMEPW
+             , A.REQ_TYPE
+             , A.REQUEST_KEY
+             , A.REQ_BUY_QNTY
+             , A.USIM_UCOST
+             , DECODE(B.CSTMR_TYPE, 'NM', C.MINOR_AGENT_NAME, A.MINOR_AGENT_NAME)
+             , DECODE(B.CSTMR_TYPE, 'NM', B.ONLINE_AUTH_INFO, A.MINOR_ONLINE_AUTH_INFO)
+             , DECODE(B.CSTMR_TYPE, 'NM', C.MINOR_AGENT_AGRM_YN, A.MINOR_AGENT_AGRM_YN)
+        FROM  MCP_REQUEST_NOW_DLVRY_HIST A
+            , MCP_REQUEST B
+            , MCP_REQUEST_AGENT C
+        WHERE A.REQUEST_KEY = B.REQUEST_KEY(+)
+          AND A.REQUEST_KEY = C.REQUEST_KEY(+)
+          AND A.SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </update>-->
+
+    <!--<select id="getMcpNowDlvryDataHist"  parameterType="java.lang.Long"  resultType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto">
+        SELECT
+            SELF_DLVRY_IDX
+             , KT_ORD_ID
+             , BIZ_ORG_CD
+             , DELIVERY_ORDER_ID
+             , USIM_AMT
+             , USIM_PROD_ID
+             , USIM_PROD_DTL_ID
+             , CSTMR_NAME
+             , CSTMR_NATIVE_RRN
+             , ONLINE_AUTH_TYPE
+             , ONLINE_AUTH_INFO
+             , ONLINE_AUTH_DI
+             , DLVRY_NAME
+             , DLVRY_TEL_FN
+             , DLVRY_TEL_MN
+             , DLVRY_TEL_RN
+             , DLVRY_POST
+             , DLVRY_ADDR
+             , DLVRY_ADDR_DTL
+             , DLVRY_MEMO
+             , SELF_MEMO
+             , REQ_USIM_SN
+             , DLVRY_STATE_CODE
+             , SELF_STATE_CODE
+             , DLVRY_NO
+             , TB_CD
+             , CONTRACT_NUM
+             , SVC_RSLT_CD
+             , SVC_RSLT_MSG
+             , PAY_CD
+             , CRET_ID
+             , RVISN_ID
+             , RVISN_DTTM
+             , SYS_RDATE
+             , ACCEPT_TIME
+             , DLVRY_JIBUN_ADDR
+             , DLVRY_JIBUN_ADDR_DTL
+             , ENTY
+             , ENTX
+             , HOMEPW
+             , REQUEST_KEY
+             , REQ_BUY_QNTY
+             , USIM_UCOST
+        FROM MCP_REQUEST_NOW_DLVRY_HIST
+        WHERE 1=1
+          AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </select>-->
+
+    <!--<update id="updateNowDlvry" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
+        UPDATE /*AppformMapper.updateNowDlvry   */
+            MCP_REQUEST_NOW_DLVRY
+        SET
+           KT_ORD_ID = #{ktOrdId}
+          ,DELIVERY_ORDER_ID = #{deliveryOrderId}
+          ,SVC_RSLT_CD = #{svcRsltCd}
+          ,SVC_RSLT_MSG = #{svcRsltMsg}
+          ,BIZ_ORG_CD = #{bizOrgCd}
+          ,RVISN_DTTM = SYSDATE
+        WHERE
+            SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </update>-->
+
+    <!--<update id="updatePayCdNowDlvry" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
+        UPDATE /*AppformMapper.updatePayCdNowDlvry   */
+            MCP_REQUEST_NOW_DLVRY
+        SET
+            PAT_CD = '01'
+        WHERE
+            SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </update>-->
+
+    <!--<update id="updateSelfViewYn" parameterType="java.lang.Long" >
+        UPDATE /*AppformMapper.updateSelfViewYn   */
+            MCP_REQUEST_SELF_DLVRY
+        SET
+            VIEW_YN = 'Y'
+        WHERE
+            SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </update>-->
+
+    <!--<update id="updateNowViewYn" parameterType="java.lang.Long" >
+        UPDATE /*AppformMapper.updateSelfViewYn   */
+            MCP_REQUEST_NOW_DLVRY
+        SET
+            VIEW_YN = 'Y'
+        WHERE
+            SELF_DLVRY_IDX = #{selfDlvryIdx}
+    </update>-->
+
+    <!--<select id="getFormDlveyList"  parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto"  resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        SELECT /*AppformMapper.getFormDlveyList 바로배송 요청 신청서 정보   */
+            T1.REQUEST_KEY
+             ,RES_NO
+             ,T3.DLVRY_TYPE
+        FROM
+            MCP_REQUEST T1
+           , MCP_REQUEST_CSTMR  T2
+           , MCP_REQUEST_DLVRY T3
+        WHERE
+            T1.REQUEST_KEY = T2.REQUEST_KEY
+          AND T1.REQUEST_KEY = T3.REQUEST_KEY
+          AND SELF_CSTMR_CI = #{selfCstmrCi}
+          AND T3.DLVRY_TYPE IN ('02', '04')
+          AND T1.SYS_RDATE <![CDATA[>]]> TO_DATE(TO_CHAR(SYSDATE-10,'YYYYMMDD'),'YYYYMMDD')
+          AND REQ_USIM_SN IS NULL
+          AND CONTRACT_NUM IS NULL
+          AND PSTATE = '00'
+        <if test="cntpntShopId != null and cntpntShopId != ''">
+            AND T1.CNTPNT_SHOP_ID = #{cntpntShopId}
+        </if>
+        ORDER BY T1.REQUEST_KEY DESC
+    </select>-->
+
+    <!--<update id="updateFormDlveyUsim" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        UPDATE /*AppformMapper.updateFormDlveyUsim   */
+        MCP_REQUEST
+        SET
+        RVISN_DTTM = SYSDATE
+        <if test="reqUsimSn != null and reqUsimSn != ''">
+            , REQ_USIM_SN = #{reqUsimSn}
+            <choose>
+                <when test="dlvryType == '04'"> -- 04:유심미보유건(제휴유심보유)
+                    , REQUEST_STATE_CODE = '00'
+                    , REQ_IN_DAY = SYSDATE --신청서 날짜 유심등록 시점으로 UPDATE
+                </when>
+                <otherwise>
+                    , REQUEST_STATE_CODE  = '13'
+                </otherwise>
+            </choose>
+        </if>
+        WHERE
+        REQUEST_KEY = (
+        SELECT T1.REQUEST_KEY
+        FROM
+        MCP_REQUEST T1
+        , MCP_REQUEST_CSTMR  T2
+        WHERE
+        T1.REQUEST_KEY = T2.REQUEST_KEY
+        AND T1.REQUEST_KEY = #{requestKey}
+        AND SELF_CSTMR_CI = #{selfCstmrCi}
+        AND REQ_USIM_SN IS NULL
+        AND CONTRACT_NUM IS NULL
+        )
+    </update>-->
+
+
+    <!--<select id="getTempRequestKey" resultType="Long">
+        SELECT SQ_REQUEST_TEMP_KEY_SEQ.NEXTVAL FROM DUAL
+    </select>-->
+
+    <!--<insert id="insertAppFormTempSave" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        /*AppFormMapper.insertAppFormTempSave */
+        INSERT INTO NMCP_REQUEST_TEMP
+        (
+            REQUEST_KEY
+        , MANAGER_CODE
+        , AGENT_CODE
+        , SERVICE_TYPE
+        , OPER_TYPE
+        , CSTMR_TYPE
+        , RES_CODE
+        , RES_MSG
+        , RES_NO
+        , CLAUSE_PRI_COLLECT_FLAG
+        , CLAUSE_PRI_OFFER_FLAG
+        , CLAUSE_ESS_COLLECT_FLAG
+        , CLAUSE_PRI_TRUST_FLAG
+        , CLAUSE_PRI_AD_FLAG
+        , CLAUSE_CONFIDENCE_FLAG
+        , ONLINE_AUTH_TYPE
+        , ONLINE_AUTH_INFO
+        , PSTATE
+        , REQUEST_STATE_CODE
+        , OPEN_NO
+        , FILE01
+        , FILE01_MASK
+        , FAXYN
+        , FAXNUM
+        , SCAN_ID
+        , ON_OFF_TYPE
+        , RIP
+        , OPEN_REQ_DATE
+        , SYS_RDATE
+        , REQ_WANT_NUMBER
+        , REQ_WANT_NUMBER2
+        , REQ_WANT_NUMBER3
+        , REQ_BUY_TYPE
+        , REQ_MODEL_NAME
+        , REQ_MODEL_COLOR
+        , REQ_PHONE_SN
+        , REQ_USIM_SN
+        , REQ_PAY_TYPE
+        , REQ_ADDITION
+        , SHOP_CD
+        , APP_FORM_YN
+        , REQ_IN_DAY
+        , CONTRACT_NUM
+        , ETC_SPECIAL
+        , REQ_USIM_NAME
+        , PHONE_PAYMENT
+        , REQ_ADDITION_PRICE
+        , APP_FORM_XML_YN
+        , SPC_CODE
+        , CNTPNT_SHOP_ID
+        , SHOP_USM_ID
+        , MEMO
+        , REC_YN
+        , OPEN_MARKET_REFERER
+        , SO_CD
+        , NW_BLCK_AGRM_YN
+        , APP_BLCK_AGRM_YN
+        , APP_CD
+        , SO_TRNS_AGRM_YN
+        , CLAUSE_JEHU_FLAG
+        , SHOP_NM
+        , PROD_ID
+        , CRET_ID
+        , BANNER_CD
+        , SNTY_COLOR_CD
+        , SNTY_CAPAC_CD
+        , PROD_TYPE
+        , CLAUSE_RENTAL_MODEL_CP
+        , CLAUSE_RENTAL_MODEL_CP_PR
+        , CLAUSE_RENTAL_SERVICE
+        , CLAUSE_MPPS35_FLAG
+        , CLAUSE_FINANCE_FLAG
+        , RVISN_ID
+        , RVISN_DTTM
+        , PROMOTION_CD
+        , REAL_SHOP_NM
+        , USIM_KINDS_CD
+        , INSR_CD
+        , CLAUSE_INSURANCE_FLAG
+        , PROD_NM
+        , INSR_PROD_CD
+        , CLAUSE_INSR_PROD_FLAG
+        , INSR_AUTH_INFO
+        , RWD_PROD_CD
+        , CLAUSE_RWD_FLAG
+        , RWD_AUTH_INFO
+        , USER_ID
+        , NM
+        , PIN
+        , MOBILE_NO
+        , PRE_URL_TYPE
+        , PRDT_SCTN_CD
+        , INDC_ODRG
+        , TMP_STEP
+        , UPLOAD_PHONE_SRL_NO
+        , OPEN_MARKET_ID
+        , EVNT_CD_PRMT
+        , KT_COUNSEL_AGREE
+        )
+        VALUES
+            (
+                #{requestKey}
+            , #{managerCode}
+            , #{agentCode}
+            , #{serviceType}
+            , #{operType}
+            , #{cstmrType}
+            , #{resCode}
+            , #{resMsg}
+            , #{resNo}
+            , #{clausePriCollectFlag}
+            , #{clausePriOfferFlag}
+            , #{clauseEssCollectFlag}
+            , #{clausePriTrustFlag}
+            , #{clausePriAdFlag}
+            , #{clauseConfidenceFlag}
+            , #{onlineAuthType}
+            , #{onlineAuthInfo}
+            , #{pstate}
+            , #{requestStateCode}
+            , #{openNo}
+            , #{file01}
+            , #{file01Mask}
+            , #{faxyn}
+            , #{faxnum}
+            , #{scanId}
+            , #{onOffType}
+            , #{rip}
+            , #{openReqDate}
+            , SYSDATE
+            , #{reqWantNumber}
+            , #{reqWantNumber2}
+            , #{reqWantNumber3}
+            , #{reqBuyType}
+            , #{reqModelName}
+            , #{reqModelColor}
+            , #{reqPhoneSn}
+            , #{reqUsimSn}
+            , #{reqPayType}
+            , #{reqAddition}
+            , #{shopCd}
+            , #{appFormYn}
+            , #{reqInDay}
+            , #{contractNum}
+            , #{etcSpecial}
+            , #{reqUsimName}
+            , #{phonePayment}
+            , #{reqAdditionPrice}
+            , #{appFormXmlYn}
+            , #{spcCode}
+            , #{cntpntShopId}
+            , #{shopUsmId}
+            , #{memo}
+            , #{recYn}
+            , #{openMarketReferer}
+            , #{soCd}
+            , #{nwBlckAgrmYn}
+            , #{appBlckAgrmYn}
+            , #{appCd}
+            , #{soTrnsAgrmYn}
+            , #{clauseJehuFlag}
+            , #{shopNm}
+            , #{prodId}
+            , #{cretId}
+            , #{bannerCd}
+            , #{sntyColorCd}
+            , #{sntyCapacCd}
+            , #{prodType}
+            , #{clauseRentalModelCp}
+            , #{clauseRentalModelCpPr}
+            , #{clauseRentalService}
+            , #{clauseMpps35Flag}
+            , #{clauseFinanceFlag}
+            , #{rvisnId}
+            , #{rvisnDttm}
+            , #{promotionCd}
+            , #{realShopNm}
+            , #{usimKindsCd}
+            , #{insrCd}
+            , #{clauseInsuranceFlag}
+            , #{prodNm}
+            , #{insrProdCd}
+            , #{clauseInsrProdFlag}
+            , #{insrAuthInfo}
+            , #{rwdProdCd}
+            , #{clauseRwdFlag}
+            , #{rwdAuthInfo}
+            , #{userId}
+            , #{nm}
+            , #{pin}
+            , #{mobileNo}
+            , #{preUrlType}
+            , #{prdtSctnCd}
+            , #{indcOdrg}
+            , #{tmpStep}
+            , #{uploadPhoneSrlNo}
+            , #{openMarketId}
+            , #{evntCdPrmt}
+            , #{ktCounselAgree}
+            )
+    </insert>-->
+
+    <!--<insert id="insertSaleinfoTempSave" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        /*AppFormMapper.insertSaleinfoTempSave */
+        INSERT INTO NMCP_REQUEST_SALEINFO_TEMP
+        (
+            MODEL_ID
+        , REQUEST_KEY
+        , MODEL_MONTHLY
+        , MODEL_INSTALLMENT
+        , MODEL_SALE_POLICY_CODE
+        , MODEL_PRICE_VAT
+        , RECYCLE_YN
+        , MODEL_DISCOUNT1
+        , MODEL_DISCOUNT2
+        , ENGG_MNTH_CNT
+        , SOC_CODE
+        , USIM_PRICE_TYPE
+        , JOIN_PRICE_TYPE
+        , JOIN_PRICE
+        , USIM_PRICE
+        , MODEL_PRICE
+        , ADDTION_SERVICE
+        , ADDTION_SERVICE_SUM
+        , MODEL_DISCOUNT3
+        , USIM_PAY_MTHD_CD
+        , JOIN_PAY_MTHD_CD
+        , REAL_MDL_INSTAMT
+        , SPRT_TP
+        , MAX_DISCOUNT3
+        , DC_AMT
+        , ADD_DC_AMT
+        , SETTL_WAY_CD
+        , SETTL_AMT
+        , SETTL_APV_NO
+        , SETTL_TRA_NO
+        , OWN_PERSONAL_CODE
+        , RENTAL_BASE_AMT
+        , RENTAL_BASE_DC_AMT
+        , RENTAL_MODEL_CP_AMT
+        , RVISN_ID
+        , RVISN_DTTM
+        , SESPLS_YN
+        , HNDSET_SALE_PRICE
+        , USE_POINT
+        , USE_POINT_SVC_CNTR_NO
+        , CARD_DC_CD
+        , CARD_DC_AMT
+        , SESPLS_PROD_ID
+        )
+        VALUES
+            (
+                #{modelId}
+            , #{requestKey}
+            , #{modelMonthly}
+            , #{modelInstallment}
+            , #{modelSalePolicyCode}
+            , #{modelPriceVat}
+            , #{recycleYn}
+            , #{modelDiscount1}
+            , #{modelDiscount2}
+            , #{enggMnthCnt}
+            , #{socCode}
+            , #{usimPriceType}
+            , #{joinPriceType}
+            , #{joinPrice}
+            , #{usimPrice}
+            , #{modelPrice}
+            , #{addtionService}
+            , #{addtionServiceSum}
+            , #{modelDiscount3}
+            , #{usimPayMthdCd}
+            , #{joinPayMthdCd}
+            , #{realMdlInstamt}
+            , #{sprtTp}
+            , #{maxDiscount3}
+            , #{dcAmt}
+            , #{addDcAmt}
+            , #{settlWayCd}
+            , #{settlAmt}
+            , #{settlApvNo}
+            , #{settlTraNo}
+            , #{ownPersonalCode}
+            , #{rentalBaseAmt}
+            , #{rentalBaseDcAmt}
+            , #{rentalModelCpAmt}
+            , #{rvisnId}
+            , #{rvisnDttm}
+            , #{sesplsYn}
+            , #{hndsetSalePrice}
+            , #{usePoint}
+            , #{usePointSvcCntrNo}
+            , #{cardDcCd}
+            , #{cardDcAmt}
+            , #{sesplsProdId}
+            )
+    </insert>-->
+
+    <!--<insert id="insertAppFormApdTempSave" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        /*AppFormMapper.insertAppFormApdTempSave */
+        INSERT INTO NMCP_REQUEST_APD_TEMP
+        (
+            REQUEST_KEY
+        , MANAGER_CODE
+        , AGENT_CODE
+        , SERVICE_TYPE
+        , OPER_TYPE
+        , CSTMR_TYPE
+        , RES_CODE
+        , RES_MSG
+        , RES_NO
+        , CLAUSE_PRI_COLLECT_FLAG
+        , CLAUSE_PRI_OFFER_FLAG
+        , CLAUSE_ESS_COLLECT_FLAG
+        , CLAUSE_PRI_TRUST_FLAG
+        , CLAUSE_PRI_AD_FLAG
+        , CLAUSE_CONFIDENCE_FLAG
+        , ONLINE_AUTH_TYPE
+        , ONLINE_AUTH_INFO
+        , PSTATE
+        , REQUEST_STATE_CODE
+        , OPEN_NO
+        , FILE01
+        , FILE01_MASK
+        , FAXYN
+        , FAXNUM
+        , SCAN_ID
+        , ON_OFF_TYPE
+        , RIP
+        , OPEN_REQ_DATE
+        , SYS_RDATE
+        , REQ_WANT_NUMBER
+        , REQ_WANT_NUMBER2
+        , REQ_WANT_NUMBER3
+        , REQ_BUY_TYPE
+        , REQ_MODEL_NAME
+        , REQ_MODEL_COLOR
+        , REQ_PHONE_SN
+        , REQ_USIM_SN
+        , REQ_PAY_TYPE
+        , REQ_ADDITION
+        , SHOP_CD
+        , APP_FORM_YN
+        , REQ_IN_DAY
+        , CONTRACT_NUM
+        , ETC_SPECIAL
+        , REQ_USIM_NAME
+        , PHONE_PAYMENT
+        , REQ_ADDITION_PRICE
+        , APP_FORM_XML_YN
+        , SPC_CODE
+        , CNTPNT_SHOP_ID
+        , SHOP_USM_ID
+        , MEMO
+        , REC_YN
+        , OPEN_MARKET_REFERER
+        , SO_CD
+        , NW_BLCK_AGRM_YN
+        , APP_BLCK_AGRM_YN
+        , APP_CD
+        , SO_TRNS_AGRM_YN
+        , CLAUSE_JEHU_FLAG
+        , SHOP_NM
+        , PROD_ID
+        , CRET_ID
+        , BANNER_CD
+        , SNTY_COLOR_CD
+        , SNTY_CAPAC_CD
+        , PROD_TYPE
+        , CLAUSE_RENTAL_MODEL_CP
+        , CLAUSE_RENTAL_MODEL_CP_PR
+        , CLAUSE_RENTAL_SERVICE
+        , CLAUSE_MPPS35_FLAG
+        , CLAUSE_FINANCE_FLAG
+        , RVISN_ID
+        , RVISN_DTTM
+        , PROMOTION_CD
+        , REAL_SHOP_NM
+        , USIM_KINDS_CD
+        , INSR_CD
+        , CLAUSE_INSURANCE_FLAG
+        , PROD_NM
+        , INSR_PROD_CD
+        , CLAUSE_INSR_PROD_FLAG
+        , INSR_AUTH_INFO
+        , USER_ID
+        , NM
+        , PIN
+        , MOBILE_NO
+        , CLAUSE_5G_COVERAGE_FLAG
+        , KTM_REFERER
+        , PRE_URL_TYPE
+        , PRDT_SCTN_CD
+        , INDC_ODRG
+        , TMP_STEP
+        )
+        VALUES
+            (
+                #{requestKey}
+            , #{managerCode}
+            , #{agentCode}
+            , #{serviceType}
+            , #{operType}
+            , #{cstmrType}
+            , #{resCode}
+            , #{resMsg}
+            , #{resNo}
+            , #{clausePriCollectFlag}
+            , #{clausePriOfferFlag}
+            , #{clauseEssCollectFlag}
+            , #{clausePriTrustFlag}
+            , #{clausePriAdFlag}
+            , #{clauseConfidenceFlag}
+            , #{onlineAuthType}
+            , #{onlineAuthInfo}
+            , #{pstate}
+            , #{requestStateCode}
+            , #{openNo}
+            , #{file01}
+            , #{file01Mask}
+            , #{faxyn}
+            , #{faxnum}
+            , #{scanId}
+            , #{onOffType}
+            , #{rip}
+            , #{openReqDate}
+            , SYSDATE
+            , #{reqWantNumber}
+            , #{reqWantNumber2}
+            , #{reqWantNumber3}
+            , #{reqBuyType}
+            , #{reqModelName}
+            , #{reqModelColor}
+            , #{reqPhoneSn}
+            , #{reqUsimSn}
+            , #{reqPayType}
+            , #{reqAddition}
+            , #{shopCd}
+            , #{appFormYn}
+            , #{reqInDay}
+            , #{contractNum}
+            , #{etcSpecial}
+            , #{reqUsimName}
+            , #{phonePayment}
+            , #{reqAdditionPrice}
+            , #{appFormXmlYn}
+            , #{spcCode}
+            , #{cntpntShopId}
+            , #{shopUsmId}
+            , #{memo}
+            , #{recYn}
+            , #{openMarketReferer}
+            , #{soCd}
+            , #{nwBlckAgrmYn}
+            , #{appBlckAgrmYn}
+            , #{appCd}
+            , #{soTrnsAgrmYn}
+            , #{clauseJehuFlag}
+            , #{shopNm}
+            , #{prodId}
+            , #{cretId}
+            , #{bannerCd}
+            , #{sntyColorCd}
+            , #{sntyCapacCd}
+            , #{prodType}
+            , #{clauseRentalModelCp}
+            , #{clauseRentalModelCpPr}
+            , #{clauseRentalService}
+            , #{clauseMpps35Flag}
+            , #{clauseFinanceFlag}
+            , #{rvisnId}
+            , #{rvisnDttm}
+            , #{promotionCd}
+            , #{realShopNm}
+            , #{usimKindsCd}
+            , #{insrCd}
+            , #{clauseInsuranceFlag}
+            , #{prodNm}
+            , #{insrProdCd}
+            , #{clauseInsrProdFlag}
+            , #{insrAuthInfo}
+            , #{userId}
+            , #{nm}
+            , #{pin}
+            , #{mobileNo}
+            , #{clause5gCoverageFlag}
+            , #{ktmReferer}
+            , #{preUrlType}
+            , #{prdtSctnCd}
+            , #{indcOdrg}
+            , #{tmpStep}
+            )
+    </insert>-->
+
+    <!--<insert id="insertSaleinfoApdTempSave" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO NMCP_REQUEST_APD_SALEINFO_TEMP
+        (
+            REQUEST_KEY
+        , MODEL_ID
+        , MODEL_MONTHLY
+        , MODEL_INSTALLMENT
+        , MODEL_SALE_POLICY_CODE
+        , MODEL_PRICE_VAT
+        , RECYCLE_YN
+        , MODEL_DISCOUNT1
+        , MODEL_DISCOUNT2
+        , ENGG_MNTH_CNT
+        , SOC_CODE
+        , USIM_PRICE_TYPE
+        , JOIN_PRICE_TYPE
+        , JOIN_PRICE
+        , USIM_PRICE
+        , MODEL_PRICE
+        , ADDTION_SERVICE
+        , ADDTION_SERVICE_SUM
+        , MODEL_DISCOUNT3
+        , USIM_PAY_MTHD_CD
+        , JOIN_PAY_MTHD_CD
+        , REAL_MDL_INSTAMT
+        , SPRT_TP
+        , MAX_DISCOUNT3
+        , DC_AMT
+        , ADD_DC_AMT
+        , SETTL_WAY_CD
+        , SETTL_AMT
+        , SETTL_APV_NO
+        , SETTL_TRA_NO
+        , OWN_PERSONAL_CODE
+        , RENTAL_BASE_AMT
+        , RENTAL_BASE_DC_AMT
+        , RENTAL_MODEL_CP_AMT
+        , RVISN_ID
+        , RVISN_DTTM
+        , SESPLS_PROD_ID
+        )
+        VALUES
+            (
+                #{requestKey}
+            , #{modelId}
+            , #{modelMonthly}
+            , #{modelInstallment}
+            , #{modelSalePolicyCode}
+            , #{modelPriceVat}
+            , #{recycleYn}
+            , #{modelDiscount1}
+            , #{modelDiscount2}
+            , #{enggMnthCnt}
+            , #{socCode}
+            , #{usimPriceType}
+            , #{joinPriceType}
+            , #{joinPrice}
+            , #{usimPrice}
+            , #{modelPrice}
+            , #{addtionService}
+            , #{addtionServiceSum}
+            , #{modelDiscount3}
+            , #{usimPayMthdCd}
+            , #{joinPayMthdCd}
+            , #{realMdlInstamt}
+            , #{sprtTp}
+            , #{maxDiscount3}
+            , #{dcAmt}
+            , #{addDcAmt}
+            , #{settlWayCd}
+            , #{settlAmt}
+            , #{settlApvNo}
+            , #{settlTraNo}
+            , #{ownPersonalCode}
+            , #{rentalBaseAmt}
+            , #{rentalBaseDcAmt}
+            , #{rentalModelCpAmt}
+            , #{rvisnId}
+            , #{rvisnDttm}
+            , #{sesplsProdId}
+            )
+    </insert>-->
+
+    <!--<select id="getAppFormTempById"   parameterType="java.lang.String" resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        SELECT
+            *
+        FROM
+            (
+                SELECT
+                    T1.REQUEST_KEY
+                     , CSTMR_TYPE
+                     , REQ_USIM_SN
+                     , CLAUSE_MPPS35_FLAG
+                     , SOC_CODE                      --요금제코드
+                     , PRDT_SCTN_CD                --제품구분코드(LTE, 3G, 5G)
+                     , OPER_TYPE                   --업무구분
+                     , REQ_BUY_TYPE                --구매유형
+                     , MODEL_ID
+                     , MODEL_SALE_POLICY_CODE
+                     , ON_OFF_TYPE
+                     , CSTMR_NAME               --고객정보_고객명
+                     , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
+                     , CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
+                     , CSTMR_POST               --고객정보_우편번호
+                     , CSTMR_ADDR               --고객정보_주소
+                     , CSTMR_ADDR_DTL           --고객정보_상세주소
+                     , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
+                     , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
+                     , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
+                     , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
+                     , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
+                     , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
+                     , CSTMR_MAIL               --고객정보_메일
+                     , SELF_CSTMR_CI
+                     , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
+                     , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
+                     , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
+                     , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
+                     , SELF_CERT_TYPE           --본인인증유형
+                     , SELF_ISSU_EXPR_DT        --발급/만료일자
+                     , SELF_ISSU_NUM            --발급번호
+                     , MINOR_AGENT_NAME
+                     , MINOR_AGENT_RRN
+                     , MINOR_AGENT_TEL_FN
+                     , MINOR_AGENT_TEL_MN
+                     , MINOR_AGENT_TEL_RN
+                     , MINOR_AGENT_RELATION
+                     , MINOR_SELF_CERT_TYPE     --본인인증유형
+                     , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
+                     , MINOR_SELF_ISSU_NUM      --발급번호
+                     , CSTMR_JEJU_ID            -- 운전면호 구분driverSelfIssuNum1
+                     , DLVRY_NAME               --배송정보_이름
+                     , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+                     , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+                     , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+                     , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
+                     , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
+                     , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
+                     , DLVRY_POST               --배송정보_우편번호
+                     , DLVRY_ADDR               --배송정보_주소
+                     , DLVRY_ADDR_DTL           --배송정보_상세주소
+                     , DLVRY_MEMO               --배송정보_요청사항
+                     , REQ_WANT_NUMBER
+                     , REQ_WANT_NUMBER2
+                     , REQ_WANT_NUMBER3
+                     , MOVE_COMPANY             --번호이동정보_변경전통신사
+                     , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
+                     , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
+                     , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
+                     , MOVE_AUTH_TYPE           --번호이동정보_인증유형
+                     , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
+                     , RECOMMEND_FLAG_CD
+                     , RECOMMEND_INFO
+                     , INSR_PROD_CD
+                     , RWD_PROD_CD
+                     , REQ_PAY_TYPE
+                     , CSTMR_BILL_SEND_CODE
+                     , REQ_BANK
+                     , REQ_ACCOUNT_NUMBER
+                     , REQ_CARD_COMPANY
+                     , REQ_CARD_NO
+                     , REQ_CARD_YY
+                     , REQ_CARD_MM
+                     , T1.UPLOAD_PHONE_SRL_NO
+                     , T1.USIM_KINDS_CD              -- 유심종류(RCP2035)
+                     , T2.SETTL_WAY_CD               -- 결제수단코드
+                     , ROW_NUMBER() OVER (ORDER BY T1.SYS_RDATE DESC) RNUM
+                FROM
+                    NMCP_REQUEST_TEMP T1
+                   , NMCP_REQUEST_SALEINFO_TEMP T2
+                   , NMCP_REQUEST_CSTMR_TEMP T3
+                   , NMCP_REQUEST_AGENT_TEMP T4
+                   , NMCP_REQUEST_DLVRY_TEMP T5
+                   , NMCP_REQUEST_MOVE_TEMP T6
+                   , NMCP_REQUEST_REQ_TEMP T7
+                WHERE
+                    T1.REQUEST_KEY = T2.REQUEST_KEY
+                  AND T1.REQUEST_KEY = T3.REQUEST_KEY(+)
+                  AND T1.REQUEST_KEY = T4.REQUEST_KEY(+)
+                  AND T1.REQUEST_KEY = T5.REQUEST_KEY(+)
+                  AND T1.REQUEST_KEY = T6.REQUEST_KEY(+)
+                  AND T1.REQUEST_KEY = T7.REQUEST_KEY(+)
+                  AND T1.CRET_ID =  #{cretId}
+            )
+        WHERE RNUM = 1
+    </select>-->
+
+    <!--<select id="getAppFormTemp"   parameterType="java.lang.Long" resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        SELECT
+            T1.REQUEST_KEY
+             , T1.CRET_ID
+             , CSTMR_TYPE
+             , T1.REQ_USIM_SN
+             , CNTPNT_SHOP_ID              --채널점아이디_판매점코드
+             , CLAUSE_MPPS35_FLAG
+             , SOC_CODE                      --요금제코드
+             , PRDT_SCTN_CD                --제품구분코드(LTE, 3G, 5G)
+             , OPER_TYPE                   --업무구분
+             , REQ_BUY_TYPE                --구매유형
+             , T2.MODEL_ID
+             , MODEL_SALE_POLICY_CODE
+             , ON_OFF_TYPE
+             , CSTMR_NAME               --고객정보_고객명
+             , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
+             , CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
+             , CSTMR_POST               --고객정보_우편번호
+             , CSTMR_ADDR               --고객정보_주소
+             , CSTMR_ADDR_DTL           --고객정보_상세주소
+             , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
+             , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
+             , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
+             , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
+             , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
+             , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
+             , CSTMR_MAIL               --고객정보_메일
+             , SELF_CSTMR_CI
+             , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
+             , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
+             , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
+             , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
+             , SELF_CERT_TYPE           --본인인증유형
+             , SELF_ISSU_EXPR_DT        --발급/만료일자
+             , SELF_ISSU_NUM            --발급번호
+             , MINOR_AGENT_NAME
+             , MINOR_AGENT_RRN
+             , MINOR_AGENT_TEL_FN
+             , MINOR_AGENT_TEL_MN
+             , MINOR_AGENT_TEL_RN
+             , MINOR_AGENT_RELATION
+             , MINOR_SELF_CERT_TYPE     --본인인증유형
+             , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
+             , MINOR_SELF_ISSU_NUM      --발급번호
+             , CSTMR_JEJU_ID            -- 운전면호 구분driverSelfIssuNum1
+             , DLVRY_NAME               --배송정보_이름
+             , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+             , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+             , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+             , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
+             , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
+             , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
+             , DLVRY_POST               --배송정보_우편번호
+             , DLVRY_ADDR               --배송정보_주소
+             , DLVRY_ADDR_DTL           --배송정보_상세주소
+             , DLVRY_MEMO               --배송정보_요청사항
+             , REQ_WANT_NUMBER
+             , REQ_WANT_NUMBER2
+             , REQ_WANT_NUMBER3
+             , MOVE_COMPANY             --번호이동정보_변경전통신사
+             , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
+             , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
+             , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
+             , MOVE_AUTH_TYPE           --번호이동정보_인증유형
+             , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
+             , RECOMMEND_FLAG_CD
+             , RECOMMEND_INFO
+             , INSR_PROD_CD
+             , RWD_PROD_CD              -- 자급제 보상 서비스 코드
+             , REQ_PAY_TYPE
+             , CSTMR_BILL_SEND_CODE
+             , REQ_BANK
+             , REQ_ACCOUNT_NUMBER
+             , REQ_CARD_COMPANY
+             , REQ_CARD_NO
+             , REQ_CARD_YY
+             , REQ_CARD_MM
+             , ENGG_MNTH_CNT
+             , PROD_ID
+             , MODEL_MONTHLY
+             , SESPLS_YN          -- 자급제 여부
+             , SESPLS_PROD_ID
+             , T1.UPLOAD_PHONE_SRL_NO
+             , T1.USIM_KINDS_CD              -- 유심종류(RCP2035)
+             , EID
+             , IMEI1
+             , IMEI2
+             , T8.PRNTS_CONTRACT_NO
+             , T2.SETTL_WAY_CD
+             , T1.OPEN_MARKET_ID
+             , T1.EVNT_CD_PRMT
+             , T1.REQ_MODEL_NAME
+             , T2.SPRT_TP
+             , T1.KT_COUNSEL_AGREE
+        FROM
+            NMCP_REQUEST_TEMP T1
+           , NMCP_REQUEST_SALEINFO_TEMP T2
+           , NMCP_REQUEST_CSTMR_TEMP T3
+           , NMCP_REQUEST_AGENT_TEMP T4
+           , NMCP_REQUEST_DLVRY_TEMP T5
+           , NMCP_REQUEST_MOVE_TEMP T6
+           , NMCP_REQUEST_REQ_TEMP T7
+           , MCP_UPLOAD_PHONE_INFO T8
+        WHERE
+            T1.REQUEST_KEY = T2.REQUEST_KEY
+          AND T1.REQUEST_KEY = T3.REQUEST_KEY(+)
+          AND T1.REQUEST_KEY = T4.REQUEST_KEY(+)
+          AND T1.REQUEST_KEY = T5.REQUEST_KEY(+)
+          AND T1.REQUEST_KEY = T6.REQUEST_KEY(+)
+          AND T1.REQUEST_KEY = T7.REQUEST_KEY(+)
+          AND T1.UPLOAD_PHONE_SRL_NO = T8.UPLOAD_PHONE_SRL_NO(+)
+          AND T1.REQUEST_KEY =  #{requestKey}
+    </select>-->
+
+    <!--<update id="updateRequestTemp" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        UPDATE NMCP_REQUEST_TEMP
+        SET RVISN_DTTM = SYSDATE
+        <if test="cstmrType != null and cstmrType != ''">
+            , CSTMR_TYPE = #{cstmrType}
+        </if>
+        <if test="rip != null and rip != ''">
+            , RIP = #{rip}
+        </if>
+        <if test="reqUsimSn != null and reqUsimSn != ''">
+            , REQ_USIM_SN = #{reqUsimSn}
+        </if>
+        <if test="clauseMpps35Flag != null and clauseMpps35Flag != ''">
+            , CLAUSE_MPPS35_FLAG = #{clauseMpps35Flag}
+        </if>
+        <if test="reqWantNumber != null and reqWantNumber != ''">
+            , REQ_WANT_NUMBER = #{reqWantNumber}
+        </if>
+        <if test="reqWantNumber2 != null and reqWantNumber2 != ''">
+            , REQ_WANT_NUMBER2 = #{reqWantNumber2}
+        </if>
+        <if test="reqWantNumber3 != null and reqWantNumber3 != ''">
+            , REQ_WANT_NUMBER3 = #{reqWantNumber3}
+        </if>
+        <if test="insrProdCd != null and insrProdCd != ''">
+            , INSR_PROD_CD = #{insrProdCd}
+        </if>
+        <if test="rwdProdCd != null and rwdProdCd != ''">
+            , RWD_PROD_CD = #{rwdProdCd}
+        </if>
+        <if test="reqPayType != null and reqPayType != ''">
+            , REQ_PAY_TYPE = #{reqPayType}
+        </if>
+        <if test="tmpStep != null and tmpStep != ''">
+            , TMP_STEP = #{tmpStep}
+        </if>
+        WHERE
+        REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<update id="updateRequestCstmrTemp" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        MERGE INTO  NMCP_REQUEST_CSTMR_TEMP
+        USING   DUAL
+        ON      (REQUEST_KEY = #{requestKey})
+        WHEN MATCHED THEN
+        UPDATE SET
+        RVISN_DTTM = SYSDATE
+        <if test="cstmrName != null and cstmrName != ''">
+            , CSTMR_NAME = #{cstmrName}
+        </if>
+        <if test="cstmrNativeRrn != null and cstmrNativeRrn != ''">
+            , CSTMR_NATIVE_RRN = #{cstmrNativeRrn}
+        </if>
+        <if test="cstmrForeignerRrn != null and cstmrForeignerRrn != ''">
+            , CSTMR_FOREIGNER_RRN = #{cstmrForeignerRrn}
+        </if>
+        <if test="selfCstmrCi != null and selfCstmrCi != ''">
+            , SELF_CSTMR_CI = #{selfCstmrCi}
+        </if>
+        <if test="cstmrTelFn != null and cstmrTelFn != ''">
+            , CSTMR_TEL_FN = #{cstmrTelFn}
+        </if>
+        <if test="cstmrTelMn != null and cstmrTelMn != ''">
+            , CSTMR_TEL_MN = #{cstmrTelMn}
+        </if>
+        <if test="cstmrTelRn != null and cstmrTelRn != ''">
+            , CSTMR_TEL_RN = #{cstmrTelRn}
+        </if>
+        <if test="cstmrMobileFn != null and cstmrMobileFn != ''">
+            , CSTMR_MOBILE_FN = #{cstmrMobileFn}
+        </if>
+        <if test="cstmrMobileMn != null and cstmrMobileMn != ''">
+            , CSTMR_MOBILE_MN = #{cstmrMobileMn}
+        </if>
+        <if test="cstmrMobileRn != null and cstmrMobileRn != ''">
+            , CSTMR_MOBILE_RN = #{cstmrMobileRn}
+        </if>
+        <if test="cstmrPost != null and cstmrPost != ''">
+            , CSTMR_POST = #{cstmrPost}
+        </if>
+        <if test="cstmrAddr != null and cstmrAddr != ''">
+            , CSTMR_ADDR = #{cstmrAddr}
+        </if>
+        <if test="cstmrAddrDtl != null and cstmrAddrDtl != ''">
+            , CSTMR_ADDR_DTL = #{cstmrAddrDtl}
+        </if>
+        <if test="cstmrMail != null and cstmrMail != ''">
+            , CSTMR_MAIL = #{cstmrMail}
+        </if>
+        <if test="cstmrForeignerNation != null and cstmrForeignerNation != ''">
+            , CSTMR_FOREIGNER_NATION = #{cstmrForeignerNation}
+        </if>
+        <if test="cstmrForeignerPn != null and cstmrForeignerPn != ''">
+            , CSTMR_FOREIGNER_PN = #{cstmrForeignerPn}
+        </if>
+        <if test="cstmrForeignerSdate != null and cstmrForeignerSdate != ''">
+            , CSTMR_FOREIGNER_SDATE = #{cstmrForeignerSdate}
+        </if>
+        <if test="cstmrForeignerEdate != null and cstmrForeignerEdate != ''">
+            , CSTMR_FOREIGNER_EDATE = #{cstmrForeignerEdate}
+        </if>
+        <if test="selfCertType != null and selfCertType != ''">
+            , SELF_CERT_TYPE = #{selfCertType}
+        </if>
+        <if test="selfIssuExprDt != null and selfIssuExprDt != ''">
+            , SELF_ISSU_EXPR_DT = #{selfIssuExprDt}
+        </if>
+        <if test="selfIssuNum != null and selfIssuNum != ''">
+            , SELF_ISSU_NUM = #{selfIssuNum}
+        </if>
+        <if test="cstmrJejuId != null and cstmrJejuId != ''">
+            , CSTMR_JEJU_ID = #{cstmrJejuId}
+        </if>
+        <if test="recommendFlagCd != null and recommendFlagCd != ''">
+            , RECOMMEND_FLAG_CD = #{recommendFlagCd}                         --추천인 구분 코드 F001 01:추천 직원번호 02:제휴사 추천코드
+        </if>
+        <if test="recommendInfo != null and recommendInfo != ''">
+            , RECOMMEND_INFO = #{recommendInfo}                              --추천인정보
+        </if>
+        <if test="cstmrBillSendCode != null and cstmrBillSendCode != ''">
+            , CSTMR_BILL_SEND_CODE = #{cstmrBillSendCode}                    --고객정보_명세서종류
+        </if>
+        WHEN NOT MATCHED THEN
+        INSERT (
+        REQUEST_KEY
+        , CSTMR_NAME
+        , CSTMR_NATIVE_RRN
+        , CSTMR_FOREIGNER_RRN
+        , SELF_CSTMR_CI
+        , CSTMR_TEL_FN
+        , CSTMR_TEL_MN
+        , CSTMR_TEL_RN
+        , CSTMR_MOBILE_FN
+        , CSTMR_MOBILE_MN
+        , CSTMR_MOBILE_RN
+        , CSTMR_POST
+        , CSTMR_ADDR
+        , CSTMR_ADDR_DTL
+        , CSTMR_MAIL
+        , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
+        , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
+        , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
+        , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
+        , SELF_CERT_TYPE           --본인인증유형
+        , SELF_ISSU_EXPR_DT        --발급/만료일자
+        , SELF_ISSU_NUM            --발급번호
+        , CSTMR_JEJU_ID            -- 운전면허 지역
+        , RECOMMEND_FLAG_CD
+        , RECOMMEND_INFO
+        , CSTMR_BILL_SEND_CODE
+        , SYS_RDATE
+        , RVISN_DTTM
+        ) VALUES (
+        #{requestKey}
+        , #{cstmrName}
+        , #{cstmrNativeRrn}
+        , #{cstmrForeignerRrn}
+        , #{selfCstmrCi}
+        , #{cstmrTelFn}
+        , #{cstmrTelMn}
+        , #{cstmrTelRn}
+        , #{cstmrMobileFn}
+        , #{cstmrMobileMn}
+        , #{cstmrMobileRn}
+        , #{cstmrPost}
+        , #{cstmrAddr}
+        , #{cstmrAddrDtl}
+        , #{cstmrMail}
+        , #{cstmrForeignerNation}
+        , #{cstmrForeignerPn}
+        , #{cstmrForeignerSdate}
+        , #{cstmrForeignerEdate}
+        , #{selfCertType}
+        , #{selfIssuExprDt}
+        , #{selfIssuNum}
+        , #{cstmrJejuId}
+        , #{recommendFlagCd}
+        , #{recommendInfo}
+        , #{cstmrBillSendCode}
+        , SYSDATE
+        , SYSDATE
+        )
+    </update>-->
+
+    <!--<update id="updateRequestAgentTemp" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        MERGE INTO  NMCP_REQUEST_AGENT_TEMP
+        USING   DUAL
+        ON      (REQUEST_KEY = #{requestKey})
+        WHEN MATCHED THEN
+        UPDATE SET
+        RVISN_DTTM = SYSDATE
+        <if test="minorAgentName != null and minorAgentName != ''">
+            , MINOR_AGENT_NAME = #{minorAgentName}
+        </if>
+        <if test="minorAgentRrn != null and minorAgentRrn != ''">
+            , MINOR_AGENT_RRN = #{minorAgentRrn}
+        </if>
+        <if test="minorAgentTelFn != null and minorAgentTelFn != ''">
+            , MINOR_AGENT_TEL_FN = #{minorAgentTelFn}
+        </if>
+        <if test="minorAgentTelMn != null and minorAgentTelMn != ''">
+            , MINOR_AGENT_TEL_MN = #{minorAgentTelMn}
+        </if>
+        <if test="minorAgentTelRn != null and minorAgentTelRn != ''">
+            , MINOR_AGENT_TEL_RN = #{minorAgentTelRn}
+        </if>
+        <if test="minorAgentRelation != null and minorAgentRelation != ''">
+            , MINOR_AGENT_RELATION = #{minorAgentRelation}
+        </if>
+        <if test="minorSelfCertType != null and minorSelfCertType != ''">
+            , MINOR_SELF_CERT_TYPE = #{minorSelfCertType}
+        </if>
+        <if test="minorSelfIssuExprDt != null and minorSelfIssuExprDt != ''">
+            , MINOR_SELF_ISSU_EXPR_DT = #{minorSelfIssuExprDt}
+        </if>
+        <if test="minorSelfIssuNum != null and minorSelfIssuNum != ''">
+            , MINOR_SELF_ISSU_NUM = #{minorSelfIssuNum}
+        </if>
+        WHEN NOT MATCHED THEN
+        INSERT (
+        REQUEST_KEY
+        , MINOR_AGENT_NAME
+        , MINOR_AGENT_RRN
+        , MINOR_AGENT_TEL_FN
+        , MINOR_AGENT_TEL_MN
+        , MINOR_AGENT_TEL_RN
+        , MINOR_AGENT_RELATION
+        , MINOR_SELF_CERT_TYPE     --본인인증유형
+        , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
+        , MINOR_SELF_ISSU_NUM      --발급번호
+        , RVISN_DTTM
+        , SYS_RDATE
+        ) VALUES (
+        #{requestKey}
+        , #{minorAgentName}
+        , #{minorAgentRrn}
+        , #{minorAgentTelFn}
+        , #{minorAgentTelMn}
+        , #{minorAgentTelRn}
+        , #{minorAgentRelation}
+        , #{minorSelfCertType}
+        , #{minorSelfIssuExprDt}
+        , #{minorSelfIssuNum}
+        , SYSDATE
+        , SYSDATE
+        )
+    </update>-->
+
+    <!--<update id="updateRequestDlvryTemp" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        MERGE INTO  NMCP_REQUEST_DLVRY_TEMP
+        USING   DUAL
+        ON      (REQUEST_KEY = #{requestKey})
+        WHEN MATCHED THEN
+        UPDATE SET
+        RVISN_DTTM = SYSDATE
+        <if test="dlvryName != null and dlvryName != ''">
+            , DLVRY_NAME = #{dlvryName}
+        </if>
+        <if test="dlvryTelFn != null and dlvryTelFn != ''">
+            , DLVRY_TEL_FN = #{dlvryTelFn}
+        </if>
+        <if test="dlvryTelMn != null and dlvryTelMn != ''">
+            , DLVRY_TEL_MN = #{dlvryTelMn}
+        </if>
+        <if test="dlvryTelRn != null and dlvryTelRn != ''">
+            , DLVRY_TEL_RN = #{dlvryTelRn}
+        </if>
+        <if test="dlvryMobileFn != null and dlvryMobileFn != ''">
+            , DLVRY_MOBILE_FN = #{dlvryMobileFn}
+        </if>
+        <if test="dlvryMobileMn != null and dlvryMobileMn != ''">
+            , DLVRY_MOBILE_MN = #{dlvryMobileMn}
+        </if>
+        <if test="dlvryMobileRn != null and dlvryMobileRn != ''">
+            , DLVRY_MOBILE_RN = #{dlvryMobileRn}
+        </if>
+        <if test="dlvryPost != null and dlvryPost != ''">
+            , DLVRY_POST = #{dlvryPost}
+        </if>
+        <if test="dlvryAddr != null and dlvryAddr != ''">
+            , DLVRY_ADDR = #{dlvryAddr}
+        </if>
+        <if test="dlvryAddrDtl != null and dlvryAddrDtl != ''">
+            , DLVRY_ADDR_DTL = #{dlvryAddrDtl}
+        </if>
+        <if test="dlvryMemo != null and dlvryMemo != ''">
+            , DLVRY_MEMO = #{dlvryMemo}
+        </if>
+        <if test="dlvryType != null and dlvryType != ''">
+            , DLVRY_TYPE = #{dlvryType}
+        </if>
+        WHEN NOT MATCHED THEN
+        INSERT  (
+        REQUEST_KEY              --가입신청_키
+        , DLVRY_NAME               --배송정보_이름
+        , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+        , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+        , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+        , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
+        , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
+        , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
+        , DLVRY_POST               --배송정보_우편번호
+        , DLVRY_ADDR               --배송정보_주소
+        , DLVRY_ADDR_DTL           --배송정보_상세주소
+        , DLVRY_MEMO               --배송정보_요청사항
+        , DLVRY_TYPE               --배송유형 [01 택배,  02 바로배송]
+        , SYS_RDATE                --등록일시
+        , RVISN_DTTM
+        ) VALUES (
+        #{requestKey}
+        , #{dlvryName}
+        , #{dlvryTelFn}
+        , #{dlvryTelMn}
+        , #{dlvryTelRn}
+        , #{dlvryMobileFn}
+        , #{dlvryMobileMn}
+        , #{dlvryMobileRn}
+        , #{dlvryPost}
+        , #{dlvryAddr}
+        , #{dlvryAddrDtl}
+        , #{dlvryMemo}
+        , #{dlvryType}
+        , SYSDATE
+        , SYSDATE
+        )
+    </update>-->
+
+
+    <!--<update id="updateRequestMoveTemp" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        MERGE INTO  NMCP_REQUEST_MOVE_TEMP
+            USING   DUAL
+            ON      (REQUEST_KEY = #{requestKey})
+            WHEN MATCHED THEN
+                UPDATE SET
+                    RVISN_DTTM = SYSDATE
+                    , MOVE_COMPANY = #{moveCompany}
+                    , MOVE_MOBILE_FN = #{moveMobileFn}
+                    , MOVE_MOBILE_MN = #{moveMobileMn}
+                    , MOVE_MOBILE_RN = #{moveMobileRn}
+                    , MOVE_AUTH_TYPE = #{moveAuthType}
+                    , MOVE_AUTH_NUMBER = #{moveAuthNumber}
+            WHEN NOT MATCHED THEN
+                INSERT  (
+                         REQUEST_KEY              --가입신청_키
+                    , MOVE_COMPANY             --번호이동정보_변경전통신사
+                    , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
+                    , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
+                    , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
+                    , MOVE_AUTH_TYPE           --번호이동정보_인증유형
+                    , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
+                    , SYS_RDATE                --등록일시
+                    , RVISN_DTTM
+                    ) VALUES (
+                                 #{requestKey}
+                             , #{moveCompany}
+                             , #{moveMobileFn}
+                             , #{moveMobileMn}
+                             , #{moveMobileRn}
+                             , #{moveAuthType}
+                             , #{moveAuthNumber}
+                             , SYSDATE
+                             , SYSDATE
+                             )
+    </update>-->
+
+    <!--<update id="updateRequestReqTemp" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        MERGE INTO  NMCP_REQUEST_REQ_TEMP
+        USING   DUAL
+        ON      (REQUEST_KEY = #{requestKey})
+        WHEN MATCHED THEN
+        UPDATE SET
+        RVISN_DTTM = SYSDATE
+        <if test="reqBank != null and reqBank != ''">
+            , REQ_BANK = #{reqBank}
+        </if>
+        <if test="reqAccountNumber != null and reqAccountNumber != ''">
+            , REQ_ACCOUNT_NUMBER = #{reqAccountNumber}
+        </if>
+        <if test="reqCardCompany != null and reqCardCompany != ''">
+            , REQ_CARD_COMPANY = #{reqCardCompany}
+        </if>
+        <if test="reqCardNo != null and reqCardNo != ''">
+            , REQ_CARD_NO = #{reqCardNo}
+        </if>
+        <if test="reqCardYy != null and reqCardYy != ''">
+            , REQ_CARD_YY = #{reqCardYy}
+        </if>
+        <if test="reqCardMm != null and reqCardMm != ''">
+            , REQ_CARD_MM = #{reqCardMm}
+        </if>
+        WHEN NOT MATCHED THEN
+        INSERT  (
+        REQUEST_KEY
+        , REQ_BANK
+        , REQ_ACCOUNT_NUMBER
+        , REQ_CARD_COMPANY
+        , REQ_CARD_NO
+        , REQ_CARD_YY
+        , REQ_CARD_MM
+        , RVISN_DTTM
+        , SYS_RDATE
+        ) VALUES (
+        #{requestKey}
+        , #{reqBank}
+        , #{reqAccountNumber}
+        , #{reqCardCompany}
+        , #{reqCardNo}
+        , #{reqCardYy}
+        , #{reqCardMm}
+        , SYSDATE
+        , SYSDATE
+        )
+    </update>-->
+
+    <!--<update id="insertMcpRequestAdditionTemp" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO NMCP_REQUEST_ADDITION_TEMP (
+        REQUEST_KEY
+        , ADDITION_KEY
+        , ADDITION_NAME
+        , RANTAL
+        )
+        SELECT
+        #{requestKey}
+        , ADDITION_KEY
+        , ADDITION_NAME
+        , NVL(RANTAL,0)
+        FROM MCP_ADDITION
+        WHERE
+        ADDITION_KEY IN
+        <foreach item="item" collection="additionKeyList" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>-->
+
+    <!--<delete id="deleteMcpRequestAdditionTemp" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        DELETE NMCP_REQUEST_ADDITION_TEMP
+        WHERE REQUEST_KEY = #{requestKey}
+    </delete>-->
+
+    <!--<select id="getAdditionTempList"  parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto"  resultType="String">
+        SELECT
+            ADDITION_KEY
+        FROM
+            NMCP_REQUEST_ADDITION_TEMP
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>-->
+
+    <!--<select id="getUsimBasInfo" parameterType="com.ktmmobile.mcp.usim.dto.UsimBasDto" resultType="com.ktmmobile.mcp.usim.dto.UsimBasDto">
+        SELECT  /* AppformMapper.getUsimBasInfo 조건에 맞는 단건 유심상품 정보 조회 */
+        PRDT_ID
+        , PRDT_NM
+        FROM
+        NMCP_USIM_BAS
+        WHERE VIEW_YN = 'Y'
+        <if test="prdtId != null and prdtId != ''">
+            AND PRDT_ID = #{prdtId}
+        </if>
+        <if test="salePlcyCd != null and salePlcyCd != ''">
+            AND PRDT_ID = #{salePlcyCd}
+        </if>
+        AND ROWNUM =1
+    </select>-->
+
+
+    <!--<select id="getAppForm"   parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        SELECT
+            T1.REQUEST_KEY
+             , CSTMR_TYPE
+             , REQ_USIM_SN
+             , CLAUSE_MPPS35_FLAG
+             , SOC_CODE                      --요금제코드
+             , OPER_TYPE                   --업무구분
+             , REQ_BUY_TYPE                --구매유형
+             , MODEL_ID
+             , MODEL_SALE_POLICY_CODE
+             , ON_OFF_TYPE
+             , CSTMR_NAME               --고객정보_고객명
+             , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
+             , CSTMR_POST               --고객정보_우편번호
+             , CSTMR_ADDR               --고객정보_주소
+             , CSTMR_ADDR_DTL           --고객정보_상세주소
+             , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
+             , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
+             , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
+             , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
+             , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
+             , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
+             , CSTMR_MAIL               --고객정보_메일
+             , SELF_CSTMR_CI
+             , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
+             , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
+             , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
+             , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
+             , SELF_CERT_TYPE           --본인인증유형
+             , SELF_ISSU_EXPR_DT        --발급/만료일자
+             , SELF_ISSU_NUM            --발급번호
+             , MINOR_AGENT_NAME
+             , MINOR_AGENT_RRN
+             , MINOR_AGENT_TEL_FN
+             , MINOR_AGENT_TEL_MN
+             , MINOR_AGENT_TEL_RN
+             , MINOR_AGENT_RELATION
+             , MINOR_SELF_CERT_TYPE     --본인인증유형
+             , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
+             , MINOR_SELF_ISSU_NUM      --발급번호
+             , CSTMR_JEJU_ID            -- 운전면호 구분driverSelfIssuNum1
+             , DLVRY_NAME               --배송정보_이름
+             , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
+             , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
+             , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
+             , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
+             , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
+             , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
+             , DLVRY_POST               --배송정보_우편번호
+             , DLVRY_ADDR               --배송정보_주소
+             , DLVRY_ADDR_DTL           --배송정보_상세주소
+             , DLVRY_MEMO               --배송정보_요청사항
+             , REQ_WANT_NUMBER
+             , REQ_WANT_NUMBER2
+             , REQ_WANT_NUMBER3
+             , MOVE_COMPANY             --번호이동정보_변경전통신사
+             , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
+             , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
+             , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
+             , MOVE_AUTH_TYPE           --번호이동정보_인증유형
+             , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
+             , RECOMMEND_FLAG_CD
+             , RECOMMEND_INFO
+             , INSR_PROD_CD
+             , T1.RES_NO
+             , T1.RWD_PROD_CD
+             , T1.CLAUSE_RWD_FLAG
+             , T1.RWD_AUTH_INFO
+             , REQ_PAY_TYPE
+             , CSTMR_BILL_SEND_CODE
+             , REQ_BANK
+             , REQ_ACCOUNT_NUMBER
+             , REQ_CARD_COMPANY
+             , REQ_CARD_NO
+             , REQ_CARD_YY
+             , REQ_CARD_MM
+             , SESPLS_YN
+             , CNTPNT_SHOP_ID
+             , USIM_KINDS_CD             -- 유심종류(RCP2035)
+             , PRNTS_CONTRACT_NO         -- 모회선 계약번호
+             , SETTL_AMT                 -- 결제금액
+             , MODEL_SALE_POLICY_CODE
+        FROM
+            MCP_REQUEST T1
+           , MCP_REQUEST_SALEINFO T2
+           , MCP_REQUEST_CSTMR T3
+           , MCP_REQUEST_AGENT T4
+           , MCP_REQUEST_DLVRY T5
+           , MCP_REQUEST_MOVE T6
+           , MCP_REQUEST_REQ T7
+        WHERE
+            T1.REQUEST_KEY = T2.REQUEST_KEY
+          AND T1.REQUEST_KEY = T3.REQUEST_KEY(+)
+          AND T1.REQUEST_KEY = T4.REQUEST_KEY(+)
+          AND T1.REQUEST_KEY = T5.REQUEST_KEY(+)
+          AND T1.REQUEST_KEY = T6.REQUEST_KEY(+)
+          AND T1.REQUEST_KEY = T7.REQUEST_KEY(+)
+          AND T1.REQUEST_KEY =  #{requestKey}
+    </select>-->
+
+    <!--<select id="isOwnerCount" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        <!--
+            Description: 주문정보 사용자 검증
+                    cretId  !=null : 로그인 회원 인증
+                    otherwise : 비회원 인증 처리
+      -->
+        SELECT
+        COUNT(*)
+        FROM
+        MCP_REQUEST T1
+        , MCP_REQUEST_CSTMR T2
+        , MCP_REQUEST_DLVRY T3
+        WHERE
+        T1.REQUEST_KEY = T2.REQUEST_KEY
+        AND T1.REQUEST_KEY = T3.REQUEST_KEY
+        AND T1.REQUEST_KEY = #{requestKey}
+        <choose>
+            <when test="cretId !=null and cretId != ''" >
+                AND CRET_ID = #{cretId}
+            </when>
+            <otherwise>
+                AND (
+                (T2.CSTMR_NAME = #{cstmrName} AND T2.CSTMR_MOBILE_FN || T2.CSTMR_MOBILE_MN || T2.CSTMR_MOBILE_RN = #{cstmrMobileFn}||#{cstmrMobileMn}||#{cstmrMobileRn} )
+                OR ( T3.DLVRY_NAME =  #{cstmrName} AND T3.DLVRY_MOBILE_FN || T3.DLVRY_MOBILE_MN || T3.DLVRY_MOBILE_RN = #{cstmrMobileFn}||#{cstmrMobileMn}||#{cstmrMobileRn} )
+                )
+            </otherwise>
+        </choose>
+    </select>-->
+
+    <!--<insert id="insertNmcpUsimBuyTxn" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO NMCP_USIM_BUY_TXN
+        (
+            USIM_BUY_SEQ
+        , MYSLF_DLVR_SEQ
+        , USIM_BUY_DIV_CD
+        , CRET_IP
+        , CRET_DT
+        , CRET_ID
+        )
+        VALUES
+            (
+                SQ_USIM_BUY_SEQ.NEXTVAL
+            , #{selfDlvryIdx}
+            , #{usimBuyDivCd}
+            , #{rip}
+            , SYSDATE
+            , 'SYSTEM'
+            )
+    </insert>-->
+
+    <!--     AppformMapper."insertMcpSelfUsimChg" 유심셀프변경 등록  -->
+    <!--<insert id="insertMcpSelfUsimChg" parameterType="com.ktmmobile.mcp.appform.dto.OsstUc0ReqDto">
+        <!--<selectKey keyProperty="mvnoOrdNo" resultType="java.lang.String" order="BEFORE">
+            SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || LPAD(SQ_MCP_SELF_USIM_CHG_KEY.NEXTVAL, 6, '0') FROM DUAL
+        </selectKey>
+        INSERT INTO MCP_SELF_USIM_CHG (
+        MVNO_ORD_NO
+        , CUST_NO
+        , TLPH_NO
+        , SVC_CONT_ID
+        , ODER_TYPE_CD
+        , USIM_PYMN_MTHD_CD
+        , ICC_ID
+        , CNTPNT_CD
+        , SLS_PRSN_ID
+        , USIM_CHG_RSN_CD
+        , PRGR_STAT_CD
+        , TRGT_ATRIB_SBST
+        , TRGT_FALU_MSG
+        , TRGT_INSUR_MSG
+        , RSLT_CD
+        , RSLT_MSG
+        , CRET_ID
+        , AMD_ID
+        , CRET_DT
+        , AMD_DT
+        ) VALUES (
+        #{mvnoOrdNo}
+        , #{custNo}
+        , #{tlphNo}
+        , #{svcContId}
+        , #{oderTypeCd}
+        , #{usimPymnMthdCd}
+        , #{iccId}
+        , #{cntpntCd}
+        , #{slsPrsnId}
+        , #{usimChgRsnCd}
+        , 'UC0'
+        , ''
+        , ''
+        , ''
+        , ''
+        , ''
+        , NVL(#{divCd}, 'SYSTEM')
+        , 'SYSTEM'
+        , SYSDATE
+        , SYSDATE
+        )
+    </insert>-->
+
+
+    <!--<select id="checkUploadPhoneInfoCount" parameterType="java.lang.Long"   resultType="java.lang.Integer">
+        SELECT
+            COUNT(1)
+        FROM MCP_UPLOAD_PHONE_INFO
+        WHERE UPLOAD_PHONE_SRL_NO = #{uploadPhoneSrlNo}
+    </select>-->
+
+    <!--<select id="getUploadPhoneInfo"  parameterType="java.lang.Long"  resultType="com.ktmmobile.mcp.appform.dto.McpUploadPhoneInfoDto">
+        SELECT /*AppformMapper.getUploadPhoneInfo   */
+            UPLOAD_PHONE_SRL_NO
+             , EID
+             , IMEI1
+             , IMEI2
+             , MODEL_ID
+             , REQ_PHONE_SN
+             , RST_CD
+             , MOVE_CMNC_GNRT_IND_CD
+             , MOVE_TLCM_IND_CD
+             , PRNTS_CONTRACT_NO
+        FROM
+            MCP_UPLOAD_PHONE_INFO
+        WHERE
+            UPLOAD_PHONE_SRL_NO = #{uploadPhoneSrlNo}
+    </select>-->
+
+
+    <!--<insert id="insertMcpRequestKtInter" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_KT_INTER (
+               RES_NO                   --예약번호
+             , KT_INTER_SVC_NO          --kt 인터넷 ID
+             , RVISN_ID                 --수정자ID
+             , RVISN_DTTM               --수정 일시
+             , CRET_ID                  --생성자 아이디
+             , SYS_RDATE                --등록일시
+        ) VALUES (
+             #{resNo}
+             , #{ktInterSvcNo}
+             , #{rvisnId}
+             , SYSDATE
+             , #{cretId}
+             , SYSDATE
+         )
+    </insert>-->
+
+    <!--<insert id="insertAcenReqTrg" parameterType="com.ktmmobile.mcp.appform.dto.AcenDto">
+        /*AppFormMapper.insertAcenReqTrg*/
+        INSERT INTO NMCP_ACEN_REQ (
+             REQUEST_KEY
+            ,RES_NO
+            ,EVNT_GRP_CD
+            ,EVNT_TYPE
+            ,REQ_STATUS
+            ,END_STATUS
+            ,REGST_ID
+            ,REGST_DT
+            ,REGST_DTTM
+        ) VALUES(
+             #{requestKey}
+            ,#{resNo}
+            ,#{evntGrpCd}
+            ,#{evntType}
+            ,'N'
+            ,'N'
+            ,#{regstId}
+            ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+            ,SYSDATE
+        )
+    </insert>-->
+
+    <!--<insert id="insertMcpRequestPayInfo" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        INSERT INTO MCP_REQUEST_PAY_INFO (
+               REQUEST_KEY              --가입신청_키
+             , PAY_RST_CD               --결제상태 00 결제진행중(초기값), 01 정상(결제완료) , 02 결제취소(요청), 03 결제취소 완료 , 04 처리중(???)
+             , CRET_IP                  --등록아이피
+             , CRET_DT                  --등록일시
+             , CRET_DD                  --등록일자
+             , CRET_ID                  --등록 사용자 아이디
+             , AMD_IP                   --수정자 아이피
+             , AMD_DT                   --수정일자
+             , AMD_ID                   --수정자 아이디
+        ) VALUES (
+               #{requestKey}
+             , '00'
+             , #{rip}
+             , SYSDATE
+             , TO_CHAR(SYSDATE, 'YYYYMMDD')
+             , #{cretId}
+             , #{rip}
+             , SYSDATE
+             , #{cretId}
+         )
+    </insert>-->
+
+    <!--<update id="updateMcpRequestPayInfo" parameterType="com.ktmmobile.mcp.appform.dto.McpRequestPayInfoDto" >
+        UPDATE /*AppformMapper.updateMcpRequestPayInfo   */
+            MCP_REQUEST_PAY_INFO
+        SET
+            AMD_DT = SYSDATE
+            , AMD_IP = #{amdIp}
+            , AMD_ID = #{amdId}
+            <if test="payTrx != null and payTrx != ''">
+                , PAY_TRX = #{payTrx}
+            </if>
+            <if test="payRstCd != null and payRstCd != ''">
+                , PAY_RST_CD = #{payRstCd}
+            </if>
+        WHERE
+            REQUEST_KEY = #{requestKey}
+    </update>-->
+
+    <!--<select id="getNacSelfCount" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+      /*AppformMapper.getNacSelfCount*/
+      SELECT COUNT(REQUEST_KEY)
+      FROM MCP_REQUEST
+      WHERE REQ_IN_DAY <![CDATA[>=]]> trunc(SYSDATE-#{limitDay})
+       AND CNTPNT_SHOP_ID = '1100011741'
+       AND PSTATE = '00'
+       AND RIP = #{rip}
+       AND OPER_TYPE= 'NAC3'
+       AND NVL(USIM_KINDS_CD, '00') != '09'
+       AND ON_OFF_TYPE IN ('5', '7')
+       AND CONTRACT_NUM IS NOT NULL
+    </select>-->
+
+    <!--<select id="getResNoByMoveMobileNum" parameterType="java.util.HashMap" resultType="java.lang.String">
+      /*AppformMapper.getResNoByMoveMobileNum*/
+      SELECT A.RES_NO
+      FROM MCP_REQUEST A
+          ,MCP_REQUEST_MOVE B
+      WHERE A.REQUEST_KEY = B.REQUEST_KEY
+        AND A.REQ_IN_DAY <![CDATA[>=]]> trunc(SYSDATE - #{limitDay})
+        AND A.OPER_TYPE = 'MNP3'
+        AND A.ON_OFF_TYPE IN ('5', '7')
+        AND B.MOVE_MOBILE_FN || B.MOVE_MOBILE_MN || B.MOVE_MOBILE_RN = #{moveMobileNo}
+    </select>-->
+
+    <!--<select id="getPreCheckTryCnt" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+      /*AppformMapper.getPreCheckTryCnt*/
+      SELECT COUNT(MVNO_ORD_NO)
+      FROM MCP_REQUEST_OSST
+      WHERE PRGR_STAT_CD = #{prgrStatCd}
+      AND REGST_DTTM <![CDATA[>=]]> trunc(SYSDATE - #{limitDay})
+      AND MVNO_ORD_NO IN
+      <foreach item="item" collection="resNoList" open="(" separator="," close=")">
+        LPAD(#{item}, 14, '0')
+      </foreach>
+    </select>-->
+
+
+    <!--<select id="chkDupByReqUsimSn" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+        /*AppformMapper.chkDupByReqUsimSn*/
+        SELECT COUNT(*)
+        FROM MCP_REQUEST
+        WHERE REQ_IN_DAY > SYSDATE - #{baseDt}
+          AND ON_OFF_TYPE IN ('0','3')
+          AND OPER_TYPE = #{operType}
+          AND PSTATE = #{pstate}
+          AND SERVICE_TYPE = #{serviceType}
+          AND REQUEST_STATE_CODE != #{requestStateCode}
+          AND REQ_USIM_SN = #{reqUsimSn}
+    </select>-->
+
+    <!--<select id="chkDupByMovePhoneNum" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+        /*AppformMapper.chkDupByMovePhoneNum*/
+        SELECT COUNT(*)
+        FROM MCP_REQUEST A
+           , MCP_REQUEST_MOVE B
+        WHERE A.REQUEST_KEY = B.REQUEST_KEY
+          AND A.REQ_IN_DAY > SYSDATE - #{baseDt}
+          AND A.ON_OFF_TYPE IN ('0','3')
+          AND A.OPER_TYPE = #{operType}
+          AND A.PSTATE = #{pstate}
+          AND A.SERVICE_TYPE = #{serviceType}
+          AND A.REQUEST_STATE_CODE != #{requestStateCode}
+          AND B.MOVE_MOBILE_FN || B.MOVE_MOBILE_MN || B.MOVE_MOBILE_RN = #{movePhoneNum}
+    </select>-->
+
+    <!-- 신청서 상세 존재 체크 -->
+    <!--<select id="chkMcpReqDtl" parameterType="java.lang.Long" resultType="int">
+        SELECT COUNT(*)
+        FROM MCP_REQUEST_DTL
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>-->
+
+    <!-- 신청서 상세 정보 조회 -->
+    <!--<select id="getMcpReqDtl" parameterType="java.lang.Long" resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        /*AppformMapper.getMcpReqDtl*/
+        SELECT REQ.REQUEST_KEY
+               , CSTMR_NAME
+               , DECODE(TRIM(CST.CSTMR_MOBILE_FN) || TRIM(CST.CSTMR_MOBILE_MN) || TRIM(CST.CSTMR_MOBILE_RN), '', TRIM(CST.CSTMR_TEL_FN), TRIM(CST.CSTMR_MOBILE_FN)) AS CSTMR_MOBILE_FN
+               , DECODE(TRIM(CST.CSTMR_MOBILE_FN) || TRIM(CST.CSTMR_MOBILE_MN) || TRIM(CST.CSTMR_MOBILE_RN), '', TRIM(CST.CSTMR_TEL_MN), TRIM(CST.CSTMR_MOBILE_MN)) AS CSTMR_MOBILE_MN
+               , DECODE(TRIM(CST.CSTMR_MOBILE_FN) || TRIM(CST.CSTMR_MOBILE_MN) || TRIM(CST.CSTMR_MOBILE_RN), '', TRIM(CST.CSTMR_TEL_RN), TRIM(CST.CSTMR_MOBILE_RN)) AS CSTMR_MOBILE_RN
+               , DECODE(REQ.CSTMR_TYPE, 'FN', TRIM(CST.CSTMR_FOREIGNER_RRN), TRIM(CST.CSTMR_NATIVE_RRN)) AS CSTMR_NATIVE_RRN
+               , SAL.SOC_CODE
+               , MOV.MOVE_COMPANY
+               , TRIM(MOV.MOVE_MOBILE_FN) AS MOVE_MOBILE_FN
+               , TRIM(MOV.MOVE_MOBILE_MN) AS MOVE_MOBILE_MN
+               , TRIM(MOV.MOVE_MOBILE_RN) AS MOVE_MOBILE_RN
+               , SAL.MODEL_ID
+               , SAL.SPRT_TP
+               , CST.CSTMR_ADDR
+               , CST.CSTMR_ADDR_DTL
+               , TRIM(CST.CSTMR_TEL_FN) AS CSTMR_TEL_FN
+               , TRIM(CST.CSTMR_TEL_MN) AS CSTMR_TEL_MN
+               , TRIM(CST.CSTMR_TEL_RN) AS CSTMR_TEL_RN
+               , DLV.DLVRY_TYPE
+               , DLV.DLVRY_ADDR
+               , DLV.DLVRY_ADDR_DTL
+               , DLV.DLVRY_POST
+               , TRIM(DLV.DLVRY_MOBILE_FN) AS DLVRY_MOBILE_FN
+               , TRIM(DLV.DLVRY_MOBILE_MN) AS DLVRY_MOBILE_MN
+               , TRIM(DLV.DLVRY_MOBILE_RN) AS DLVRY_MOBILE_RN
+               , DLV.DLVRY_MEMO
+               , CST.RECOMMEND_FLAG_CD
+               , CST.RECOMMEND_INFO
+        FROM   MCP_REQUEST REQ
+               , MCP_REQUEST_CSTMR CST
+               , MCP_REQUEST_SALEINFO SAL
+               , MCP_REQUEST_MOVE MOV
+               , MCP_REQUEST_DLVRY DLV
+        WHERE  1 = 1
+          AND  REQ.REQUEST_KEY = CST.REQUEST_KEY
+          AND  REQ.REQUEST_KEY = SAL.REQUEST_KEY
+          AND  REQ.REQUEST_KEY = MOV.REQUEST_KEY
+          AND  REQ.REQUEST_KEY = DLV.REQUEST_KEY
+          AND  REQ.REQUEST_KEY = #{requestKey}
+    </select>-->
+
+    <!-- 신청서 상세정보 현행화 -->
+    <!--<update id="updateMcpReqDtl" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        /*AppformMapper.updateMcpReqDtl   */
+        UPDATE MCP_REQUEST_DTL
+           SET CSTMR_NAME           = #{cstmrName}
+               , CSTMR_MOBILE       = #{cstmrMobileFn} || #{cstmrMobileMn} || #{cstmrMobileRn}
+               , BIRTH_DT           = SUBSTR(REPLACE(#{desCstmrNativeRrn}, '-', ''), 0, 6)
+               , CSTMR_GENDER_STR   = SUBSTR(REPLACE(#{desCstmrNativeRrn}, '-', ''), 7, 1)
+               , SOC_CODE           = #{socCode}
+               , MOVE_COMPANY       = #{moveCompany}
+               , MOVE_MOBILE        = #{moveMobileFn} || #{moveMobileMn} || #{moveMobileRn}
+               , MODEL_ID           = #{modelId}
+               , SPRT_TP            = #{sprtTp}
+               , CSTMR_ADDR         = #{cstmrAddr}
+               , CSTMR_ADDR_DTL     = #{cstmrAddrDtl}
+               , CSTMR_TEL          = #{cstmrTelFn} || #{cstmrTelMn} || #{cstmrTelRn}
+               , DLVRY_TYPE         = #{dlvryType}
+               , DLVRY_ADDR         = #{dlvryAddr}
+               , DLVRY_ADDR_DTL     = #{dlvryAddrDtl}
+               , DLVRY_POST         = #{dlvryPost}
+               , DLVRY_MOBILE       = #{dlvryMobileFn} || #{dlvryMobileMn} || #{dlvryMobileRn}
+               , DLVRY_MEMO         = #{dlvryMemo}
+               , RECOMMEND_FLAG_CD  = #{recommendFlagCd}
+               , RECOMMEND_INFO     = #{recommendInfo}
+               , RVISN_DTTM		    = SYSDATE
+         WHERE REQUEST_KEY 			= #{requestKey}
+    </update>-->
+
+    <!-- 신청서 상세 정보 등록 -->
+    <!--<insert id="insertMcpReqDtl" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
+        /*AppformMapper.insertMcpReqDtl   */
+        INSERT INTO MCP_REQUEST_DTL (
+                REQUEST_KEY
+                , CSTMR_NAME
+                , CSTMR_MOBILE
+                , BIRTH_DT
+                , CSTMR_GENDER_STR
+                , SOC_CODE
+                , MOVE_COMPANY
+                , MOVE_MOBILE
+                , MODEL_ID
+                , SPRT_TP
+                , CSTMR_ADDR
+                , CSTMR_ADDR_DTL
+                , CSTMR_TEL
+                , DLVRY_TYPE
+                , DLVRY_ADDR
+                , DLVRY_ADDR_DTL
+                , DLVRY_POST
+                , DLVRY_MOBILE
+                , DLVRY_MEMO
+                , RECOMMEND_FLAG_CD
+                , RECOMMEND_INFO
+        ) VALUES (
+                #{requestKey}
+                , #{cstmrName}
+                , #{cstmrMobileFn} || #{cstmrMobileMn} || #{cstmrMobileRn}
+                , SUBSTR(REPLACE(#{desCstmrNativeRrn}, '-', ''), 0, 6)
+                , SUBSTR(REPLACE(#{desCstmrNativeRrn}, '-', ''), 7, 1)
+                , #{socCode}
+                , #{moveCompany}
+                , #{moveMobileFn} || #{moveMobileMn} || #{moveMobileRn}
+                , #{modelId}
+                , #{sprtTp}
+                , #{cstmrAddr}
+                , #{cstmrAddrDtl}
+                , #{cstmrTelFn} || #{cstmrTelMn} || #{cstmrTelRn}
+                , #{dlvryType}
+                , #{dlvryAddr}
+                , #{dlvryAddrDtl}
+                , #{dlvryPost}
+                , #{dlvryMobileFn} || #{dlvryMobileMn} || #{dlvryMobileRn}
+                , #{dlvryMemo}
+                , #{recommendFlagCd}
+                , #{recommendInfo}
+        )
+    </insert>-->
+    <!--<select id="getJehuUsimlessByResNo" parameterType="String" resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        SELECT REQ.CNTPNT_SHOP_ID
+             , SAL.SOC_CODE
+             , REQ.RES_NO
+             , REQ_USIM_SN
+        FROM   MCP_REQUEST REQ
+           , MCP_REQUEST_SALEINFO SAL
+           , MCP_REQUEST_DLVRY DLV
+        WHERE  1 = 1
+          AND  REQ.REQUEST_KEY = SAL.REQUEST_KEY
+          AND  REQ.REQUEST_KEY = DLV.REQUEST_KEY
+          AND  DLV.DLVRY_TYPE = '04'    -- 04:유심미보유건(제휴유심보유)
+          AND  EXISTS (SELECT 1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = REQ.CNTPNT_SHOP_ID)
+          AND  REQ.RES_NO = #{resNo}
+    </select>-->
+
+    <!--<select id="selectUsimChgResult" parameterType="String" resultType="String">
+      SELECT RSLT_CD
+      FROM MCP_SELF_USIM_CHG
+      WHERE PRGR_STAT_CD = 'UC2'
+        AND MVNO_ORD_NO = #{mvnoOrdNo}
+        AND ROWNUM = 1
+    </select>-->
+
+    <!--<update id="updateMcpSelfUsimChgUC0" parameterType="com.ktmmobile.mcp.appform.dto.OsstUc0ReqDto">
+      UPDATE MCP_SELF_USIM_CHG
+      SET OSST_ORD_NO = #{osstOrdNo}
+         ,AMD_DT = SYSDATE
+      WHERE MVNO_ORD_NO = #{mvnoOrdNo}
+        AND SVC_CONT_ID = #{svcContId}
+			  AND CUST_NO = #{custNo}
+			  AND TLPH_NO = #{tlphNo}
+			  AND PRGR_STAT_CD = 'UC0'
+    </update>-->
+
+    <!--<insert id="insertKtCounsel" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
+        <!--<selectKey keyProperty="newCcrSeq" resultType="String" order="BEFORE">
+            SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_KT_COUNSEL_REQ.NEXTVAL, '00000')) FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_KT_COUNSEL_REQ (
+            CCR_SEQ,
+            REQUEST_KEY,
+            RES_NO,
+            SEQ,
+            REQUEST_DT,
+            PSTATE,
+            REQUEST_STATE_CODE,
+            PROC_CD,
+            REGST_ID,
+            REGST_DTTM
+        )
+        SELECT
+            #{newCcrSeq},
+            REQUEST_KEY,
+            RES_NO,
+            (SELECT NVL(MAX(SEQ) + 1, 1) FROM NMCP_KT_COUNSEL_REQ WHERE REQUEST_KEY = A.REQUEST_KEY) AS SEQ,
+            TO_CHAR(REQ_IN_DAY, 'YYYYMMDD') REQUEST_DT,
+            PSTATE,
+            REQUEST_STATE_CODE,
+            'N' AS PROC_CD,
+            #{cretId} AS REGST_ID,
+            SYSDATE
+        FROM MCP_REQUEST A
+        WHERE REQUEST_KEY = #{requestKey}
+    </insert>-->
+
+</mapper>

@@ -1,11 +1,11 @@
 ///////////package com.ktmmobile.mcp.fath.controller;
 ///////////
-///////////import com.ktmmobile.msf.system.common.dto.AuthSmsDto;
-///////////import com.ktmmobile.msf.system.common.exception.McpCommonException;
-///////////import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-///////////import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-///////////import com.ktmmobile.msf.system.common.util.SessionUtils;
-///////////import com.ktmmobile.msf.system.common.util.StringUtil;
+///////////import com.ktmmobile.mcp.common.dto.AuthSmsDto;
+///////////import com.ktmmobile.mcp.common.exception.McpCommonException;
+///////////import com.ktmmobile.mcp.common.util.DateTimeUtil;
+///////////import com.ktmmobile.mcp.common.util.NmcpServiceUtils;
+///////////import com.ktmmobile.mcp.common.util.SessionUtils;
+///////////import com.ktmmobile.mcp.common.util.StringUtil;
 ///////////import com.ktmmobile.mcp.fath.dto.FathDto;
 ///////////import com.ktmmobile.mcp.fath.dto.FathFormInfo;
 ///////////import com.ktmmobile.mcp.fath.service.FathService;
@@ -21,7 +21,7 @@
 ///////////
 ///////////import javax.servlet.http.HttpServletRequest;
 ///////////
-///////////import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+///////////import static com.ktmmobile.mcp.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
 ///////////
 ///////////@Controller
 ///////////public class FathController {

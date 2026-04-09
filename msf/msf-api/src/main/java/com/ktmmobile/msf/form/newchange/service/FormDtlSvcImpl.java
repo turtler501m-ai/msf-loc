@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ktmmobile.msf.form.newchange.dao.FormDtlDao;
 import com.ktmmobile.msf.form.newchange.dto.FormDtlDTO;
-import com.ktmmobile.msf.system.common.commCode.dao.CommCodeDAO;
-import com.ktmmobile.msf.system.common.commCode.dto.CommCodeInstDTO;
+import com.ktmmobile.msf.common.commCode.dao.CommCodeDAO;
+import com.ktmmobile.msf.common.commCode.dto.CommCodeInstDTO;
 
 @Service
 public class FormDtlSvcImpl implements FormDtlSvc {

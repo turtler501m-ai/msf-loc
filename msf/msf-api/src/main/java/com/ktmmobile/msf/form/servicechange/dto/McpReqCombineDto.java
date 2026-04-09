@@ -1,7 +1,7 @@
 package com.ktmmobile.msf.form.servicechange.dto;
 
 import java.util.Date;
-import com.ktmmobile.msf.system.common.util.StringMakerUtil;
+import com.ktmmobile.msf.common.util.StringMakerUtil;
 
 public class McpReqCombineDto {
 

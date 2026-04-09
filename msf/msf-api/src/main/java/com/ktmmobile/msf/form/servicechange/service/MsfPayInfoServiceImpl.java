@@ -1,6 +1,6 @@
 //package com.ktmmobile.msf.form.servicechange.service;
 //
-//import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+//import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 //
 //import java.awt.Color;
 //import java.awt.Font;
@@ -28,13 +28,13 @@
 //import org.springframework.stereotype.Service;
 //
 //import com.ktds.crypto.exception.CryptoException;
-//import com.ktmmobile.msf.system.common.constants.Constants;
-//import com.ktmmobile.msf.system.common.dto.db.NmcpCdDtlDto;
-//import com.ktmmobile.msf.system.common.exception.McpCommonException;
-//import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-//import com.ktmmobile.msf.system.common.util.EncryptUtil;
-//import com.ktmmobile.msf.system.common.util.NmcpServiceUtils;
-//import com.ktmmobile.msf.system.common.util.StringUtil;
+//import com.ktmmobile.msf.common.constants.Constants;
+//import com.ktmmobile.msf.common.dto.db.NmcpCdDtlDto;
+//import com.ktmmobile.msf.common.exception.McpCommonException;
+//import com.ktmmobile.msf.common.util.DateTimeUtil;
+//import com.ktmmobile.msf.common.util.EncryptUtil;
+//import com.ktmmobile.msf.common.util.NmcpServiceUtils;
+//import com.ktmmobile.msf.common.util.StringUtil;
 //import com.ktmmobile.msf.payinfo.dao.PayInfoDao;
 //import com.ktmmobile.msf.payinfo.dto.EvidenceDto;
 //import com.ktmmobile.msf.payinfo.dto.PayInfoDto;

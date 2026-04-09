@@ -1,7 +1,7 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
-import static com.ktmmobile.msf.system.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
 
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
@@ -14,15 +14,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ktmmobile.msf.system.common.exception.McpCommonException;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonBillingInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarMonDetailInfoDto;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
-import com.ktmmobile.msf.system.common.mplatform.vo.MpFarRealtimePayInfoVO;
-import com.ktmmobile.msf.system.common.util.DateTimeUtil;
-import com.ktmmobile.msf.system.common.util.StringUtil;
+import com.ktmmobile.msf.common.exception.McpCommonException;
+import com.ktmmobile.msf.common.exception.SelfServiceException;
+import com.ktmmobile.msf.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarMonBillingInfoDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarMonDetailInfoDto;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
+import com.ktmmobile.msf.common.mplatform.vo.MpFarRealtimePayInfoVO;
+import com.ktmmobile.msf.common.util.DateTimeUtil;
+import com.ktmmobile.msf.common.util.StringUtil;
 
 /**
  * 요금조회+실시간요금조회

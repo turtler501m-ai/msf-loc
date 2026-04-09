@@ -1,10 +1,10 @@
 package com.ktmmobile.msf.form.servicechange.service;
 
-import com.ktmmobile.msf.system.common.dto.AuthSmsDto;
-import com.ktmmobile.msf.system.common.dto.MoscCombChkReqDto;
-import com.ktmmobile.msf.system.common.dto.MoscCombReqDto;
-import com.ktmmobile.msf.system.common.exception.SelfServiceException;
-import com.ktmmobile.msf.system.common.mplatform.dto.*;
+import com.ktmmobile.msf.common.dto.AuthSmsDto;
+import com.ktmmobile.msf.common.dto.MoscCombChkReqDto;
+import com.ktmmobile.msf.common.dto.MoscCombReqDto;
+import com.ktmmobile.msf.common.exception.SelfServiceException;
+import com.ktmmobile.msf.common.mplatform.dto.*;
 import com.ktmmobile.msf.form.servicechange.dto.McpReqCombineDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyCombinationReqDto;
 import com.ktmmobile.msf.form.servicechange.dto.MyCombinationResDto;
