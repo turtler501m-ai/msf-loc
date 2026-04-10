@@ -15,32 +15,72 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |------|------|
 | `mcp/` | 기존 M포탈 (레거시, ASIS 참조용) |
 | `msp/` | M플랫폼 연계처리 (레거시, 참조용) |
-| `msf/msf-api/` | 신규 백엔드 (Java 11, Spring Boot 2.7, MyBatis, PostgreSQL) |
-| `msf/msf-web/` | 신규 프론트엔드 (Vue 3, Vite, Tailwind CSS 4) |
+| `msf-be-form-api/` | **현행 TOBE 백엔드** (Java 11, Spring Boot 4.0, Gradle 멀티모듈, MyBatis, PostgreSQL) |
+| `msf-form-web/` | **현행 TOBE 프론트엔드** (Vue 3, Vite, SCSS, port 7080, API → localhost:8080) |
+| `msf/msf-api/` | 구 백엔드 프로토타입 (Spring Boot 2.7, Maven, 참조용) |
+| `msf/msf-web/` | 구 프론트엔드 프로토타입 (Vue 3, Vite, Tailwind CSS 4, 참조용) |
+| `msf-pre/` | msf-api 초기 프로토타입 (구 패키지 구조: formComm/formSvcChg/formOwnChg/formSvcCncl, 참조용) |
 
-연동 아키텍처:
-```
-msf-web (port 9480)  →[/api proxy]→  msf-api (port 8081, /api/v1)
-    → M전산 DB (PostgreSQL/Oracle)
-    → M플랫폼 HTTP → KT(KOS)
-```
+
+기존 파일에 추가해야해  그리고 신규로 파일생성시 꼭 확인요청 하도록 해줘
+ASIS 로직을 그냥 삭제하지 말고 주석처리해
+ASIS는 아래 문서 주요 참조로 개발해야해
+ - Z01.MCP_폴더구조_분석.md
+ - Z11.DS-08-ITO소스분析_서비스변경.md
+
+
+
+
+기본 액션 경로 (URL 마지막에 액션을 의미하는 경로)
+상세 조회: /list
+목록 조회: /get
+등록: /register
+수정: /modify
+삭제: /remove
+
+├── controller        # 컨트롤러 클래스
+├── dto               # DTO
+├── repository        # 리포지토리 인터페이스
+│   ├── msp           #   ├── M포털 Oracle 데이터소스 (XxxMapper)
+│   └── smartform     #   └── 스마트서식지 PostgreSQL 데이터소스 (XxxMapper)
+└── service           # 서비스 클래스
+
+ASIS 참조시 
+
 
 ## 중요 참조문서로 설계 개발시에 반드시 참조할것
+
 
 .doc/
 ├── 11.MSF_프로젝트_전체구조.md
 ├── 12.MSF_백엔드_패키지구조_변경계획.md
+├── 32.데이터쉐어링_TOBE_처리순서_참고.md
+├── 33.부가서비스신청해지_TOBE_처리순서_참고.md
+├── 41.부가서비스_TOBE_변환계획_참고.md
+├── 51.MSF_개발진행사항_현행화.md
+├── 52_Service_Change_Interface_Analysis.md
 
 ├── asis/                                                   # ASIS 분석 문서
 │   ├── Z01.MCP_폴더구조_분석.md
-│   ├── Z11.DS-08-ITO소스분析_서비스변경.md
+│   ├── Z02.AppformController_mcp-api_vs_mcp-portal-was_분석.md
+│   ├── Z03.reqInsr_안심보험가입_ASIS_전체분析.md
+│   ├── Z04.데이터쉐어링_ASIS_전체분析.md
+│   ├── Z05.DS-08-ITO소스분析_전체.md
+│   ├── Z10.스마트서식지-DS-09-서비스해지처리_연동설계_v1.0_20260325.md
+│   └── Z11.DS-08-ITO소스분析_서비스변경.md
 
 ├── reference/                                              # 연동 설계 문서
+│   ├── A1.표준용어사전_20211130_v0.9.md
+│   ├── B1.MMSP-DS-04-코드_정의서_전체_20260323.md
+│   ├── C1.MMSP-DS-06-인터페이스_설계서_20260325.md          # 외부 연동 인터페이스
+│   ├── C2.스마트서식지-DS-06-인터페이스_설계서_내부API_v1_0.md # 내부 API 설계서
+│   ├── C3.연동규격서_MVNO-OSST-API_v4_48.md                # 데이터쉐어링 OSST 연동
 │   ├── D1.스마트서식지-DS-05-테이블정의서_V1.0_20260318.md
 │   ├── D2.테이블매핑_20260319.md
 │   ├── D3.MCP_REQUEST_MSF_REQUEST_컬럼매핑.md
 │   ├── E1.스마트서식지-DS-08-ITO소스분析_v1_0_20260324.md
-│   └── G1.스마트서식지-DS-08-ITO소스분析.md
+│   ├── G1.스마트서식지-DS-08-ITO소스분析.md
+│   └── script/                                             # DDL 스크립트
 ├── uidoc/                                                  # UI 설계 문서
 │   ├── MMSP-DS-02-명의변경_신청서_UI설계서.md
 │   ├── MMSP-DS-02-서비스변경_신청서_UI설계서.md
@@ -69,77 +109,67 @@ msf-web (port 9480)  →[/api proxy]→  msf-api (port 8081, /api/v1)
 ### Backend
 
 ```bash
-cd msf/msf-api
+cd msf-be-form-api
 
 # 빌드
-mvn -DskipTests package
+./gradlew build -x test
 
-# 실행
-mvn spring-boot:run
+# 실행 (port 8080)
+./gradlew :app-boot:bootRun
 # 또는
-java -jar target/mform-api-0.1.0-SNAPSHOT.jar
+java -jar app-boot/build/libs/app-boot-1.0.0.jar
 ```
 
-DB: `localhost:5432/msf` (user: postgres / pw: postgres 또는 `DB_PASSWORD` 환경변수)
-테스트 계정: 홍길동 / 01012345678
-테이블은 기존 테이블 생성된것 으로 개발해야하고 테이블 레이아웃 수정시 반드시 확인절차를 거칠것  
+DB: `localhost:5432/msf` (user: postgres / pw: postgres 또는 `application-private.yaml`에서 설정)
+테이블은 기존 테이블 생성된 것으로 개발. 테이블 레이아웃 수정 시 반드시 확인절차를 거칠 것.
 
 ### Frontend
 
 ```bash
-cd msf/msf-web
+cd msf-form-web
 npm install
-npm run dev      # port 9480, /api → localhost:8081
+npm run dev      # port 7080, VITE_MSF_API_URL → localhost:8080
 npm run build
-npm run lint     # oxlint + eslint
+npm run lint     # oxlint + eslint (--fix)
 npm run format   # prettier
 ```
 
 ---
 
-## 백엔드 아키텍처 (msf-api)
+## 백엔드 아키텍처 (msf-be-form-api — 현행 개발 대상)
 
-루트 패키지: `com.ktmmobile.msf`
+### Gradle 멀티모듈 구조
 
-### 도메인 패키지
+```
+msf-be-form-api/
+├── app-boot/           # Spring Boot 진입점 (FormApiApplication.java, port 8080)
+├── commons/
+│   ├── common/         # 공통 라이브러리 (com.ktmmobile.msf.commons.common)
+│   └── auditing/       # 감사 로그
+├── domains/
+│   └── form/           # 핵심 업무 도메인 (com.ktmmobile.msf.domains.form)
+└── external/
+    ├── mybatis/        # MyBatis 설정
+    └── websecurity/    # 웹 보안
+```
 
-| 패키지 | 역할 | 주요 경로 |
-|--------|------|---------|
-| `form.common` | 공통: 주문/폰/USIM 조회, 레거시 컨트롤러 | `/order/*`, `/m/product/*`, `/usim/*` |
-| `form.newchange` | 신규가입·변경 신청서 처리 (AppformController 등) | `/appForm/*`, `/appform/*` |
-| `form.ownerchange` | 명의변경 | `/mypage/myNameChg*` |
-| `form.servicechange` | 서비스변경: 마이페이지·부가서비스·요금제·결합·데이터쉐어링 등 | `/api/v1/addition/*`, `/mypage/*` |
-| `form.termination` | 서비스해지 상담 | `/mypage/cancelConsult*` |
-| `common` | 시스템 공통: 코드/캐시/예외/상수/M플랫폼 어댑터/유틸 (`mplatform/`, `mspservice/`, `commCode/`, `cache/`, `constants/`, `exception/`, `util/`) | - |
-| `system.cert` | 본인인증 | `/cert/*` |
-| `system.faceauth` | 안면인증 | `/fath/*` |
+### 도메인 패키지 (`com.ktmmobile.msf.domains.form`)
 
-각 도메인: `controller / dao / dto / service` 레이어 구성. 일부 도메인은 `mapper/`(MyBatis XML 전용) · `constant/` 추가 존재.
-
-MyBatis 패턴: `XxxDaoImpl.java`에서 `SqlSession` 주입 방식 사용. `@Mapper` 인터페이스 방식은 미사용 — `@MapperScan`은 신규 Mapper 인터페이스 생성 시 대비용.
-
-MyBatis XML 위치: `src/main/resources/mapper/formComm/`, `formOwnChg/`, `formSvcChg/`, `formSvcCncl/` (도메인 약칭 폴더명 사용).
-
-의존성: `form.* → common.mplatform` / `form.ownerchange, form.termination → form.servicechange.dto/service` / 업무 패키지 간 직접 참조 금지
-
-### HTTP 메서드 규칙
-
-백엔드 API는 **GET / POST 두 가지만 사용**한다. PUT / PATCH / DELETE 사용 금지.
-
-| 메서드 | 용도 |
+| 패키지 | 역할 |
 |--------|------|
-| `GET`  | 단순 조회 (파라미터가 없거나 path variable만 사용) |
-| `POST` | 조회·저장·변경·삭제 등 나머지 모든 처리 |
+| `common/` | M플랫폼 어댑터, MSP서비스, 공통코드, 캐시, 예외, 유틸, 레거시 DTO |
+| `form/common/` | 폼 공통 컨트롤러·서비스·DAO |
+| `form/newchange/` | 신규가입·변경 신청서 |
+| `form/ownerchange/` | 명의변경 |
+| `form/servicechange/` | 서비스변경 (부가서비스·요금제·결합·데이터쉐어링) |
+| `form/termination/` | 서비스해지 |
+| `form/appform_d/` | 헥사고날 아키텍처 패턴 (adapter/application/domain) |
 
-### 네이밍 규칙
+각 업무 도메인 레이어: `controller / dao / dto / service / mapper`
 
-- Controller: `XXXController`(내부용) / `MsfXXXController`(서비스변경 영역)
-- Service: `XxxSvc.java` / `XxxSvcImpl.java` 또는 `XxxService.java` / `XxxServiceImpl.java`
-- DAO: `XxxDao.java` / `XxxDaoImpl.java`
-- DTO: `XXXReqDto`(요청) / `XXXResVO` 또는 `XXXDto`(응답)
-- Mapper XML: `insert/save/update/delete/select/selectList` + 서비스명칭
+MyBatis: `XxxDaoImpl.java`에서 `SqlSession` 주입 방식 사용.
 
-### M플랫폼 연동 코드 (MsfMplatFormService)
+### M플랫폼 연동 코드
 
 | 코드 | 기능 |
 |------|------|
@@ -160,36 +190,55 @@ MyBatis XML 위치: `src/main/resources/mapper/formComm/`, `formOwnChg/`, `formS
 | MP0 | 명의변경 후처리 |
 | NU1/NU2 | 변경 가능 번호 조회/번호 변경 신청 |
 
-`application.properties`에서 `SERVER_NAME=LOCAL` 시 Mock 응답 반환.
+### HTTP 메서드 규칙
+
+백엔드 API는 **GET / POST 두 가지만 사용**한다. PUT / PATCH / DELETE 사용 금지.
+
+| 메서드 | 용도 |
+|--------|------|
+| `GET`  | 단순 조회 (파라미터가 없거나 path variable만 사용) |
+| `POST` | 조회·저장·변경·삭제 등 나머지 모든 처리 |
 
 ---
 
-## 프론트엔드 아키텍처 (msf-web)
+## 프론트엔드 아키텍처 (msf-form-web — 현행 개발 대상)
 
-### 라우팅
+### 실행 명령어
 
-- `/mobile/:domain/:service` → `components/{컴포넌트폴더}/{service}.vue` 동적 로드
-- `/mobile/complete/:domain` → 완료 화면 (`ServiceCompleteView.vue`)
+```bash
+cd msf-form-web
+npm install
+npm run dev        # port 7080, LOC 모드 (VITE_MSF_API_URL=http://localhost:8080)
+npm run dev:loc    # 동일
+npm run build
+npm run lint       # oxlint + eslint (--fix)
+npm run format     # prettier
+```
+
+### 컴포넌트 구조 (`src/components/`)
+
+| 폴더 | 역할 |
+|------|------|
+| `form/common/` | 공통 컴포넌트 |
+| `form/newchange/` | 신규가입·변경 신청서 |
+| `form/ownerchange/` | 명의변경 신청서 |
+| `form/servicechange/` | 서비스변경 |
+| `form/termination/` | 서비스해지 |
+| `extra/` | 영수증·간편신청·임시저장·모바일앱 등 부가 화면 |
+| `layouts/` | 레이아웃 컴포넌트 |
 
 ### 상태관리 (`src/stores/`)
 
 | 스토어 | 역할 |
 |--------|------|
-| `msf_comp_loading` | 전역 로딩 오버레이 |
 | `msf_menu` | 메뉴/네비게이션 |
 | `msf_step` | 스텝 진행 관리 |
-| `service_change_form` | 서비스변경 폼 데이터 |
-| `ident_form` | 명의변경 폼 데이터 |
-| `cancel_form` | 서비스해지 폼 데이터 |
-
-### API 클라이언트 (`src/api/`)
-
-- `msf.js` : 기본 fetch 래퍼 (msfPost, msfGet)
-- `serviceChange.js` / `ident.js` / `cancel.js`
+| `msf_newchange` | 신규가입·변경 폼 데이터 |
+| `msf_user` | 사용자 세션 |
 
 ### 기술 스택
 
-JavaScript (TypeScript 미사용) / Vue 3.5 / Vue Router 5 / Pinia 3 / Vite 7 / Tailwind CSS 4 / reka-ui / axios / ag-grid-vue3
+JavaScript (TypeScript 미사용) / Vue 3 / Vue Router / Pinia / Vite / SCSS / unplugin-vue-components (자동 임포트)
 
 ---
 
