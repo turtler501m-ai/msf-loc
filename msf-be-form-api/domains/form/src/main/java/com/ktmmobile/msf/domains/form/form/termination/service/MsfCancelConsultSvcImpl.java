@@ -2,10 +2,12 @@ package com.ktmmobile.msf.domains.form.form.termination.service;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.domains.form.form.termination.dao.CancelConsultDao;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeResVO;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.TerminationSettlementDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +19,19 @@ import java.util.List;
 
 
 @Service
-public class MsfMsfCancelConsultSvcImpl implements MsfCancelConsultSvc {
+public class MsfCancelConsultSvcImpl implements MsfCancelConsultSvc {
 
-    private static final Logger logger = LoggerFactory.getLogger(MsfMsfCancelConsultSvcImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(MsfCancelConsultSvcImpl.class);
 
     @Autowired
     private CancelConsultDao cancelConsultDao;
 
     @Autowired
     private MsfMplatFormService msfMplatFormService;
+
+    /** requestView 위약금 블록(X54·X16·mspAddInfo) 호출을 위한 마이올레 서비스 */
+    @Autowired
+    private MsfMypageSvc msfMypageSvc;
 
     @Override
     public int countCancelConsult(CancelConsultDto cancelConsultDto) {
@@ -81,6 +87,19 @@ public class MsfMsfCancelConsultSvcImpl implements MsfCancelConsultSvc {
                 }
             }
             resVO.setItems(items);
+
+            // --- 마이올레 서비스(requestView 위약금 블록) 호출 ---
+            // X54(스폰서/위약금), X16(잔여할부금), mspAddInfo(할부원금) 조회
+            try {
+                TerminationSettlementDto settlement =
+                    msfMypageSvc.getTerminationSettlement(reqDto.getNcn(), reqDto.getCtn(), reqDto.getCustId());
+                resVO.setSettlement(settlement);
+                logger.info("[getRemainCharge] 위약금 정산 조회 완료: ncn={}, prePayment={}, trmnForecBprmsAmt={}",
+                    reqDto.getNcn(), settlement.isPrePayment(), settlement.getTrmnForecBprmsAmt());
+            } catch (Exception e) {
+                logger.warn("[getRemainCharge] 위약금 정산 조회 오류 (X18 결과는 유지): ncn={}, {}",
+                    reqDto.getNcn(), e.getMessage());
+            }
         } catch (com.ktmmobile.msf.domains.form.common.exception.SelfServiceException e) {
             logger.info("X18 ERROR: ncn={}, ctn={}", reqDto.getNcn(), reqDto.getCtn(), e);
             resVO.setSuccess(false);

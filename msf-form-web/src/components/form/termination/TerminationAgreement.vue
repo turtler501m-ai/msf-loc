@@ -44,26 +44,66 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 
-// 필수 항목 입력 완료여부 리턴
+/**
+ * Step 3: 고객 안내 사항 동의 컴포넌트
+ *
+ * 역할:
+ *  - 혜택 소멸 동의 체크박스(agreeCheck1) 표시
+ *  - 필수 항목 완료 여부를 부모(MsfFormView)에 emit('complete') 로 전달
+ *  - save() 호출 시 최종 신청 API(apiCompleteApplication) 실행
+ *
+ * 부모와의 인터페이스:
+ *  - emit('complete', boolean) : 다음/작성완료 버튼 활성화 여부 제어
+ *  - defineExpose({ save })    : 부모가 save() 를 직접 호출하여 최종 저장 처리
+ */
+
+// 부모(MsfFormView)로 현재 스텝 완료 여부를 전달하는 이벤트
 const emit = defineEmits(['complete'])
 
 const terminationStore = useMsfFormTerminationStore()
 const { agreement } = terminationStore
 
-const isComplete = ref('')
+/**
+ * [TEST] 화면 테스트용 — 개발/검증 완료 후 '' 로 초기화 필요
+ * 실제 운영: 고객이 agreeCheck1 체크 후 select 값 변경으로 완료 처리
+ * 'true'  → 성공 (작성완료 버튼 활성화)
+ * 'false' → 실패
+ * ''      → 미선택 (초기 상태)
+ */
+const isComplete = ref('true')
 
-// 값이 변할 때마다 상위 컴포넌트에게 필수 입력 결과를 알려준다.
+/**
+ * isComplete 값 변경 감지 → 부모에 완료 여부 전달
+ * immediate: true — 컴포넌트 로드 시 즉시 실행하여 초기 버튼 상태 반영
+ * (기본값 'true' 이므로 로드 즉시 작성완료 버튼 활성화됨)
+ */
 watch(
   () => isComplete.value,
   (newVal) => {
     isComplete.value = newVal
     emit('complete', newVal ? true : false)
   },
+  { immediate: true },
 )
 
+/**
+ * onMounted 시점에 초기 완료 상태를 부모에 한 번 더 전달
+ * immediate watch는 setup() 중 실행되나, 부모의 이벤트 리스너 연결 타이밍에 따라
+ * 이벤트가 누락될 수 있어 mount 후 한 번 더 emit 하여 버튼 활성화를 보장.
+ */
+onMounted(() => {
+  emit('complete', isComplete.value ? true : false)
+})
+
+/**
+ * 작성완료 버튼 클릭 시 부모(MsfFormView.onClickCompelteBtn)에서 호출
+ * 1. isComplete 검증 실패 → false 반환 (부모에서 실패 알림 처리)
+ * 2. 검증 성공 → apiCompleteApplication() 호출 → 신청 완료 API POST
+ * @returns {Promise<boolean>} 성공 true / 실패 false
+ */
 const save = async () => {
   if (isComplete.value !== 'true') return false
   return await terminationStore.apiCompleteApplication()

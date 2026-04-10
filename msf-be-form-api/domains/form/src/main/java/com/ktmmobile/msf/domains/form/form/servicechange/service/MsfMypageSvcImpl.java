@@ -50,8 +50,13 @@ import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestAgrmDto;
 import com.ktmmobile.msf.domains.form.common.dto.db.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant;
+import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscCombInfoResDTO;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscMvnoComInfo;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonBillingInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonDetailInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscSpnsrItgInfoInVO;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMonthPayMentDto;
 import com.ktmmobile.msf.domains.form.common.mspservice.dao.MspDao;
 import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
@@ -60,6 +65,7 @@ import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.TerminationSettlementDto;
 import com.ktds.crypto.exception.CryptoException;
 
 @Service
@@ -87,6 +93,12 @@ public class MsfMypageSvcImpl implements MsfMypageSvc {
 
     @Autowired
     MsfMyCombinationSvc myCombinationSvc;
+
+    @Autowired
+    MsfMypageUserService mypageUserService;
+
+    @Autowired
+    MsfMplatFormService mPlatFormService;
 
     /*
     @Autowired
@@ -742,5 +754,100 @@ public class MsfMypageSvcImpl implements MsfMypageSvc {
             requestData = custRequestDao.getCancelConsultData(custReqSeq);
         }
         return requestData == null ? "FAIL" : "SUCCESS";
+    }
+
+    /**
+     * requestView 위약금 블록(Try 블록 2)과 동일한 로직.
+     * ① 선불 요금제 여부 확인 → 선불이면 조기 반환
+     * ② X54(스폰서/위약금) 조회
+     * ③ saleEngtNm 이 존재하는 경우에만 X16(잔여 할부금) + mspAddInfo(할부원금) 조회
+     *
+     * @param ncn    서비스 계약번호
+     * @param ctn    휴대폰번호
+     * @param custId 고객번호
+     * @return TerminationSettlementDto
+     */
+    @Override
+    public TerminationSettlementDto getTerminationSettlement(String ncn, String ctn, String custId) {
+        TerminationSettlementDto settlement = new TerminationSettlementDto();
+        try {
+            // ① 선불 요금제 여부
+            boolean prePayment = mypageUserService.selectPrePayment(ncn);
+            settlement.setPrePayment(prePayment);
+            if (prePayment) {
+                // 선불 요금제이면 위약금 조회 불필요
+                return settlement;
+            }
+
+            // ② X54 스폰서/위약금 조회
+            MpMoscSpnsrItgInfoInVO moscSpnsrItgInfo = mPlatFormService.kosMoscSpnsrItgInfo(ncn, ctn, custId);
+
+            // null-safe 처리 (requestView 동일 패턴)
+            if (StringUtil.isEmpty(moscSpnsrItgInfo.getChageDcAmt()))              moscSpnsrItgInfo.setChageDcAmt("0");
+            if (StringUtil.isEmpty(moscSpnsrItgInfo.getTrmnForecBprmsAmt()))       moscSpnsrItgInfo.setTrmnForecBprmsAmt("0");
+            if (StringUtil.isEmpty(moscSpnsrItgInfo.getRtrnAmtAndChageDcAmt()))    moscSpnsrItgInfo.setRtrnAmtAndChageDcAmt("0");
+            if (StringUtil.isEmpty(moscSpnsrItgInfo.getChageDcAmtSuprtRtrnAmt())) moscSpnsrItgInfo.setChageDcAmtSuprtRtrnAmt("0");
+
+            // X54 결과 → DTO 매핑
+            settlement.setSaleEngtNm(moscSpnsrItgInfo.getSaleEngtNm());
+            settlement.setSaleEngtOptnCd(moscSpnsrItgInfo.getSaleEngtOptnCd());
+            settlement.setTrmnForecBprmsAmt(moscSpnsrItgInfo.getTrmnForecBprmsAmt());
+            settlement.setChageDcAmt(moscSpnsrItgInfo.getChageDcAmt());
+            settlement.setRtrnAmtAndChageDcAmt(moscSpnsrItgInfo.getRtrnAmtAndChageDcAmt());
+            settlement.setChageDcAmtSuprtRtrnAmt(moscSpnsrItgInfo.getChageDcAmtSuprtRtrnAmt());
+            settlement.setKtSuprtPenltAmt(moscSpnsrItgInfo.getKtSuprtPenltAmt());
+            settlement.setStorSuprtPenltAmt(moscSpnsrItgInfo.getStorSuprtPenltAmt());
+            settlement.setEngtAplyStDate(moscSpnsrItgInfo.getEngtAplyStDate());
+            settlement.setEngtExpirPamDate(moscSpnsrItgInfo.getEngtExpirPamDate());
+            settlement.setEngtRmndDate(moscSpnsrItgInfo.getEngtRmndDate());
+
+            // ③ saleEngtNm 이 있는 경우에만 잔여 할부금 / 할부원금 조회 (requestView 동일 조건)
+            if (StringUtil.isNotBlank(moscSpnsrItgInfo.getSaleEngtNm())) {
+
+                // X16 잔여 할부금 조회 — 최신 청구월 기준으로 조회하기 위해 X15(월이용요금) 먼저 호출
+                try {
+                    MpFarMonBillingInfoDto billInfo = mPlatFormService.farMonBillingInfoDto(
+                        ncn, ctn, custId, DateTimeUtil.getFormatString("yyyyMM"));
+
+                    if (billInfo != null && billInfo.getMonthList() != null && !billInfo.getMonthList().isEmpty()) {
+                        MpMonthPayMentDto monthPay = billInfo.getMonthList().get(0); // 최신 청구월
+                        MpFarMonDetailInfoDto farMonDetailInfoDto = mPlatFormService.farMonDetailInfoDto(
+                            ncn, ctn, custId,
+                            monthPay.getBillSeqNo(),
+                            monthPay.getBillDueDateList(),
+                            monthPay.getBillMonth(),
+                            monthPay.getBillStartDate(),
+                            monthPay.getBillEndDate());
+
+                        if (StringUtil.isEmpty(farMonDetailInfoDto.getInstallmentAmt())) {
+                            farMonDetailInfoDto.setInstallmentAmt("0");
+                        }
+                        settlement.setInstallmentAmt(farMonDetailInfoDto.getInstallmentAmt());
+                        settlement.setTotalNoOfInstall(farMonDetailInfoDto.getTotalNoOfInstall());
+                        settlement.setInstallmentYN(farMonDetailInfoDto.getInstallmentYN());
+                    }
+                } catch (Exception e) {
+                    logger.warn("[getTerminationSettlement] X16 잔여 할부금 조회 오류: ncn={}, {}", ncn, e.getMessage());
+                }
+
+                // 할부원금 조회 — MsfMypageSvc.selectMspAddInfo() 재사용
+                try {
+                    MspJuoAddInfoDto mspJuoAddInfoDto = this.selectMspAddInfo(ncn);
+                    if (mspJuoAddInfoDto != null) {
+                        settlement.setInstOrginAmnt(mspJuoAddInfoDto.getInstOrginAmnt());
+                        settlement.setInstMnthCnt(mspJuoAddInfoDto.getInstMnthCnt());
+                        settlement.setRemainPay(mspJuoAddInfoDto.getRemainPay());
+                        settlement.setRemainMonth(mspJuoAddInfoDto.getRemainMonth());
+                        settlement.setModelName(mspJuoAddInfoDto.getModelName());
+                    }
+                } catch (Exception e) {
+                    logger.warn("[getTerminationSettlement] mspAddInfo 조회 오류: ncn={}, {}", ncn, e.getMessage());
+                }
+            }
+
+        } catch (Exception e) {
+            logger.error("[getTerminationSettlement] 위약금 정산 조회 오류: ncn={}, ctn={}, {}", ncn, ctn, e.getMessage());
+        }
+        return settlement;
     }
 }

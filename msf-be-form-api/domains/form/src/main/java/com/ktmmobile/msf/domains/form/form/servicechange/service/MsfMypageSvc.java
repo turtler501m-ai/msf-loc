@@ -4,6 +4,7 @@ import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
 import com.ktmmobile.msf.domains.form.common.dto.db.McpMrktHistDto;
 import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestAgrmDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.*;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.TerminationSettlementDto;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -184,4 +185,16 @@ public interface MsfMypageSvc {
 
     /** QoS 제공 여부 확인 */
     Map<String, String> selectRateMst(String rateCd);
+
+    /**
+     * requestView 위약금 블록(Try 블록 2)과 동일한 로직.
+     * X54(스폰서/위약금), X16(잔여 할부금), mspAddInfo(할부원금)를 순서대로 조회하여
+     * TerminationSettlementDto 로 반환한다.
+     *
+     * @param ncn    서비스 계약번호
+     * @param ctn    휴대폰번호
+     * @param custId 고객번호
+     * @return TerminationSettlementDto (선불 요금제이면 prePayment=true 만 셋팅)
+     */
+    TerminationSettlementDto getTerminationSettlement(String ncn, String ctn, String custId);
 }

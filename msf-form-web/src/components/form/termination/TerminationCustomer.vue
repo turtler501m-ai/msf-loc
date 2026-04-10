@@ -363,25 +363,58 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 
-// 필수 항목 입력 완료여부 리턴
+/**
+ * Step 1: 고객 정보 입력 컴포넌트
+ *
+ * 역할:
+ *  - 고객 유형, 신분증, 가입자 정보, 해지 후 연락처 등 입력
+ *  - 필수 항목 완료 여부를 부모(MsfFormView)에 emit('complete') 로 전달
+ *  - save() 호출 시 X18 잔여요금 조회 후 true 반환
+ *
+ * 부모와의 인터페이스:
+ *  - emit('complete', boolean) : 다음 버튼 활성화 여부 제어
+ *  - defineExpose({ data, save }) : 임시저장 복원(data), 저장 처리(save)
+ */
+
+// 부모(MsfFormView)로 현재 스텝 완료 여부를 전달하는 이벤트
 const emit = defineEmits(['complete'])
 
 const terminationStore = useMsfFormTerminationStore()
 const { customer } = terminationStore
 
-const isComplete = ref('')
+/**
+ * [TEST] 화면 테스트용 — 개발/검증 완료 후 '' 로 초기화 필요
+ * 'true'  → 성공 (다음 버튼 활성화)
+ * 'false' → 실패
+ * ''      → 미선택 (초기 상태)
+ */
+const isComplete = ref('true')
 
-// 값이 변할 때마다 상위 컴포넌트에게 필수 입력 결과를 알려준다.
+/**
+ * isComplete 값 변경 감지 → 부모에 완료 여부 전달
+ * immediate: true — 컴포넌트 로드 시 즉시 실행하여 초기 버튼 상태 반영
+ * (기본값 'true' 이므로 로드 즉시 다음 버튼 활성화됨)
+ */
 watch(
   () => isComplete.value,
   (newVal) => {
     isComplete.value = newVal
     emit('complete', newVal ? true : false)
   },
+  { immediate: true },
 )
+
+/**
+ * onMounted 시점에 초기 완료 상태를 부모에 한 번 더 전달
+ * immediate watch는 setup() 중 실행되나, 부모의 이벤트 리스너 연결 타이밍에 따라
+ * 이벤트가 누락될 수 있어 mount 후 한 번 더 emit 하여 버튼 활성화를 보장.
+ */
+onMounted(() => {
+  emit('complete', isComplete.value ? true : false)
+})
 
 const data = async (code /* 임시저장 코드 */) => {
   // 임시저장 정보 조회
@@ -395,9 +428,12 @@ const data = async (code /* 임시저장 코드 */) => {
 }
 
 const save = async () => {
+  console.log('[Step1] save() 호출 - isComplete:', isComplete.value)
   if (isComplete.value !== 'true') return false
   // 다음 단계 진입 전 X18 잔여요금 조회
+  console.log('[Step1] X18 조회 시작', { ncn: customer.ncn })
   await terminationStore.apiGetRemainCharge()
+  console.log('[Step1] X18 조회 완료 → Step2 이동')
   return true
 }
 

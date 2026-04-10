@@ -25,9 +25,9 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     bizNo2: '',           // 사업자등록번호2
     bizNo3: '',           // 사업자등록번호3
     repreName: '',        // 대표자명
-    cancelPhone1: '',     // 해지 휴대폰번호 앞
-    cancelPhone2: '',     // 해지 휴대폰번호 중
-    cancelPhone3: '',     // 해지 휴대폰번호 뒤
+    cancelPhone1: '010',  // [TEST] 해지 휴대폰번호 앞 (운영 시 X01 조회값으로 대체)
+    cancelPhone2: '1234', // [TEST] 해지 휴대폰번호 중
+    cancelPhone3: '5678', // [TEST] 해지 휴대폰번호 뒤
     /* 법정대리인 정보 (미성년자) */
     repName: '',          // 법정대리인 이름
     repBirthDate: '',     // 법정대리인 생년월일
@@ -54,8 +54,8 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     openingDate: '',      // 개통일자
     agencyName: '',       // 대리점
     /* 연동 키 값 */
-    ncn: '',              // 계약번호 (X18 조회용)
-    custId: '',           // 고객ID (X18 조회용)
+    ncn: 'TEST_NCN_001',  // [TEST] 계약번호 (운영 시 X01 조회값으로 대체)
+    custId: 'TEST_CUST_001', // [TEST] 고객ID (운영 시 X01 조회값으로 대체)
   })
 
   // Step 2: Product (해지 정산)
@@ -90,12 +90,12 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
 
   // # X18 잔여요금·위약금 실시간 조회
   const apiGetRemainCharge = async () => {
+    const ncn = customer.value.ncn
+    console.log('[X18] 잔여요금 조회 요청', { ncn })
     try {
-      const { data } = await api.post('/api/v1/cancel/remain-charge', {
-        ncn: customer.value.ncn,
-        ctn: customer.value.cancelPhone1 + customer.value.cancelPhone2 + customer.value.cancelPhone3,
-        custId: customer.value.custId,
-      })
+      // ctn·custId는 백엔드에서 세션 계약 목록으로 조회 — ncn만 전송
+      const { data } = await api.post('/api/v1/cancel/remain-charge', { ncn })
+      console.log('[X18] 잔여요금 조회 응답', data)
       if (data?.success) {
         product.value.usageFee = data.sumAmt || ''
         product.value.remainChargeItems = data.items || []
@@ -105,10 +105,17 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
         if (penaltyItem) {
           product.value.penaltyFee = penaltyItem.payment || ''
         }
+        console.log('[X18] product 세팅 완료', {
+          usageFee: product.value.usageFee,
+          penaltyFee: product.value.penaltyFee,
+          items: product.value.remainChargeItems,
+        })
+      } else {
+        console.warn('[X18] 조회 실패 - success=false', data?.message)
       }
       return data
     } catch (e) {
-      console.error('X18 잔여요금 조회 실패', e)
+      console.error('[X18] 잔여요금 조회 실패 (네트워크/서버 오류)', e)
       product.value.remainChargeLoaded = false
       return null
     }
