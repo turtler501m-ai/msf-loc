@@ -1,0 +1,17 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="12" r="11.5" fill="#EDEDED" stroke="#B0B2B7" stroke-dasharray="2 3"/>
+<mask id="mask0_522_10908" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+<circle cx="12" cy="12" r="11.5" fill="#EDEDED" stroke="#B0B2B7" stroke-dasharray="2 3"/>
+</mask>
+<g mask="url(#mask0_522_10908)">
+<path d="M12 14.5C13.7539 14.5 15.6317 15.4972 17.0889 17.0137C18.4964 18.4785 19.4331 20.35 19.4941 22.0938C18.2807 23.4902 15.4534 25.5134 12.002 25.5C9.73171 25.4912 7.14214 24.6011 4.50586 21.9805C4.57489 20.2465 5.50878 18.4077 6.9082 16.9717C8.36367 15.4782 10.2426 14.5 12 14.5Z" fill="white" stroke="#B0B2B7" stroke-linecap="round"/>
+</g>
+<mask id="mask1_522_10908" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="4" y="14" width="16" height="10">
+<path d="M12 14.5C13.7854 14.5 15.6733 15.3441 17.1221 16.6006C18.5095 17.8039 19.4083 19.31 19.4912 20.6885C18.2693 21.8413 15.4547 23.5111 12.002 23.5C9.7146 23.4926 7.12774 22.7465 4.50879 20.5898C4.60093 19.2213 5.49703 17.7438 6.875 16.5654C8.32257 15.3276 10.2116 14.5 12 14.5Z" fill="white" stroke="#B0B2B7" stroke-linecap="round"/>
+</mask>
+<g mask="url(#mask1_522_10908)">
+<circle cx="12" cy="12" r="11.5" fill="white" stroke="#B0B2B7" stroke-dasharray="2 3"/>
+</g>
+<path d="M20 20C20 17.1578 15.866 14 12 14C8.13401 14 4 17.0937 4 19.9359" stroke="#B0B2B7" stroke-linecap="round"/>
+<circle cx="12.002" cy="10" r="4.5" fill="white" stroke="#B0B2B7"/>
+</svg>

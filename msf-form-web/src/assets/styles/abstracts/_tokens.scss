@@ -1,0 +1,290 @@
+@use 'sass:string';
+@use 'sass:list';
+@use 'sass:meta';
+
+// ===================================
+//               Tokens
+// ===================================
+// 토큰 KT가이드 컬러 참조 (https://uxdesign.kt.com/054231ea3/v/59875/p/30fed2-color/b/833986)
+$tokens: (
+  color: (
+    // black: #000000,
+    black: #131415,
+    white: #ffffff,
+    foreground: #191a1b,
+    background: #ffffff,
+    primary: (
+      base: #191a1b,
+      hover: #313235,
+      press: #3d3f43,
+    ),
+    secondary: (
+      base: #e9eaee,
+      hover: #d5d8dd,
+      press: #c7cad1,
+    ),
+    tertiary: (
+      base: #ffffff,
+      hover: #f3f4f6,
+      press: #e9eaee,
+    ),
+    accent1: (
+      base: #e0282f,
+      hover: #bb1b21,
+      press: #8a1418,
+    ),
+    accent2: (
+      base: #00a39b,
+      hover: #007f7f,
+      press: #005e66,
+    ),
+    accent: (
+      base: #e0282f,
+      alert: #e0282f,
+      caret: #7a7e86,
+      1: #05b15b,
+    ),
+    subtle: (
+      base: #7a7e86,
+      hover: #6f737b,
+      press: #55585d,
+    ),
+    gray: (
+      900: #191a1b,
+      850: #1e1f20,
+      800: #232425,
+      750: #313235,
+      700: #3d3f43,
+      650: #4a4c50,
+      600: #55585d,
+      550: #61646b,
+      500: #6f737b,
+      450: #7a7e86,
+      400: #8b8f97,
+      350: #9fa4ad,
+      300: #adb1b9,
+      250: #b9bdc5,
+      200: #c7cad1,
+      150: #d5d8dd,
+      100: #e9eaee,
+      75: #eeeff2,
+      50: #f3f4f6,
+      25: #f8f9fa,
+    ),
+    red: (
+      100: #fce9e9,
+      150: #fadbdc,
+      200: #f2a6a9,
+      300: #ec797d,
+      400: #e54d53,
+      500: #e0282f,
+      600: #bb1b21,
+      700: #8a1418,
+      800: #3e090b,
+    ),
+    teal: (
+      100: #e1f5f5,
+      150: #cdeeee,
+      200: #a9e5e1,
+      300: #4cc8c3,
+      400: #00a39b,
+      500: #007f7f,
+      600: #005e66,
+      700: #00484e,
+      800: #002629,
+    ),
+    blue: (
+      100: #d9f2ff,
+      150: #c2ebff,
+      200: #80d4ff,
+      300: #50b6fe,
+      400: #148aff,
+      500: #005ccc,
+      600: #0049a3,
+      700: #003676,
+      800: #001e42,
+    ),
+    green: (
+      100: #e5f5e1,
+      150: #d0edc9,
+      200: #8dd47d,
+      300: #3ab21f,
+      400: #1c9900,
+      500: #167a00,
+      600: #136600,
+      700: #0c4200,
+      800: #072900,
+    ),
+    yellow: (
+      100: #fff3e5,
+      150: #ffe8d1,
+      200: #ffb870,
+      300: #fe9d38,
+      400: #e57300,
+      500: #b85c00,
+      600: #8f4800,
+      700: #663300,
+      800: #3d1f00,
+    ),
+    olive: (
+      100: #ebf5d8,
+      150: #e2f0c6,
+      200: #b3d96d,
+      300: #82b620,
+      400: #639900,
+      500: #538000,
+      600: #426600,
+      700: #2e4700,
+      800: #1e2e00,
+    ),
+    purple: (
+      100: #efebff,
+      150: #e7e0ff,
+      200: #c7b8ff,
+      300: #af99ff,
+      400: #8666ff,
+      500: #6941ff,
+      600: #4c00e5,
+      700: #3900ad,
+      800: #1e005c,
+    ),
+    text: (
+      disabled: #adb1b9,
+    ),
+    bg: (
+      white: #ffffff,
+      gray: #f3f4f6,
+      disabled: #f3f4f6,
+      1: #f7f7f7,
+      2: #f2f2f2,
+      3: #f3f8f7,
+    ),
+    line: (
+      disabled: #d5d8dd,
+    ),
+    alpha: (
+      w30: rgba(255, 255, 255, 0.3),
+      w60: rgba(255, 255, 255, 0.6),
+      w80: rgba(255, 255, 255, 0.8),
+      b30: rgba(0, 0, 0, 0.3),
+      b50: rgba(0, 0, 0, 0.5),
+      b60: rgba(0, 0, 0, 0.6),
+      b70: rgba(0, 0, 0, 0.7),
+      dim: rgba(0, 0, 0, 0.6),
+    ),
+  ),
+  spacing: (
+    x1: 4px,
+    x2: 8px,
+    x3: 12px,
+    x4: 16px,
+    x5: 20px,
+    x6: 24px,
+    x8: 32px,
+    x9: 36px,
+    x10: 40px,
+    x12: 48px,
+    x14: 56px,
+    x16: 64px,
+    x18: 72px,
+    x20: 80px,
+    x24: 96px,
+    indent: 4px,
+  ),
+  font-family: (
+    base: '"Pretendard", sans-serif',
+    heading: inherit,
+    mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    // KT Flow서체 사용시 폰트파일 다운받아서 적용
+    ktFlow: 'sans-serif',
+  ),
+  font-size: (
+    10: 0.625rem,
+    11: 0.688rem,
+    12: 0.75rem,
+    13: 0.813rem,
+    14: 0.875rem,
+    15: 0.938rem,
+    16: 1rem,
+    18: 1.125rem,
+    20: 1.25rem,
+    22: 1.375rem,
+    24: 1.5rem,
+    28: 1.75rem,
+    32: 2rem,
+  ),
+  font-weight: (
+    regular: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700,
+  ),
+  line-height: (
+    base: 1.48,
+    reading: 1.6,
+    heading: 1.2,
+    fit: 1,
+    16: 1rem,
+    18: 1.125rem,
+    20: 1.3rem,
+    22: 1.375rem,
+    24: 1.5rem,
+    26: 1.625rem,
+    28: 1.75rem,
+    30: 1.875rem,
+    34: 2.125rem,
+    38: 2.375rem,
+  ),
+  letter-spacing: (
+    // base: -0.25px,
+    base: -0.05em,
+    // -5%(design)를 em으로 변환한 값
+  ),
+  border-width: (
+    base: 1px,
+    bold: 8px,
+  ),
+  border-radius: (
+    l: 16px,
+    m: 12px,
+    base: 8px,
+    s: 6px,
+    xs: 4px,
+    xxs: 2px,
+    max: 999px,
+  ),
+  transition: (
+    base: 0.2s ease-out,
+    fast: 0.1s ease-out,
+    slow: 0.3s ease-out,
+  ),
+);
+
+// 토큰 구조를 CSS 변수로 변환하는 함수
+@function get-cssVar-name($keys) {
+  $name: '--';
+
+  @each $key in $keys {
+    // 구식 if() 함수 대신 명시적인 @if 문을 사용
+    @if $name == '--' {
+      $name: $name + $key;
+    } @else {
+      $name: $name + '-' + $key;
+    }
+  }
+
+  @return $name;
+}
+
+// SCSS 맵을 CSS 변수로 변환하는 믹스인
+@mixin generate-cssVars($map: $tokens, $keys: ()) {
+  @each $key, $value in $map {
+    $current-keys: list.append($keys, $key);
+
+    @if meta.type-of($value) == 'map' {
+      @include generate-cssVars($value, $current-keys);
+    } @else {
+      #{get-cssVar-name($current-keys)}: #{$value};
+    }
+  }
+}

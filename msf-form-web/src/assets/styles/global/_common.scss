@@ -1,0 +1,358 @@
+@use '@/assets/styles/abstracts' as *;
+// 개통 진행 결과 스타일
+.step-result {
+  width: 100%;
+  @include boxing();
+  margin-block: rem(16px) rem(40px);
+  &:first-child {
+    margin-top: 0;
+  }
+  .result-title {
+    font-size: var(--font-size-18);
+    font-weight: var(--font-weight-bold);
+    @include flex() {
+      gap: rem(2px);
+    }
+  }
+  .result-list {
+    margin-top: rem(24px);
+    @include flex($d: inline-flex, $w: wrap) {
+      gap: rem(16px) rem(80px);
+    }
+    & > li {
+      width: rem(152px);
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-regular);
+      color: var(--color-foreground);
+      @include flex($h: space-between) {
+        gap: rem(16px);
+      }
+      display: inline-flex;
+    }
+  }
+}
+
+// 동의화면-동의목록
+.agree-list {
+  @include flex($d: column) {
+    gap: rem(16px);
+  }
+  & > li {
+    @include flex($d: column) {
+      gap: rem(8px);
+    }
+    .agree-tit {
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-accent-base);
+    }
+    .checkbox-root {
+      margin-block: rem(14px);
+    }
+  }
+}
+
+// 동의화면-안내문구
+.inner-info-wrap {
+  @include flex($d: column, $h: center) {
+    gap: rem(16px);
+  }
+  text-align: center;
+  .info-img {
+    width: rem(64px);
+    height: rem(64px);
+    margin: 0 auto;
+  }
+  .info-msg {
+    @include flex($d: column) {
+      gap: rem(8px);
+    }
+    .info-tit {
+      font-weight: var(--font-weight-bold);
+      font-size: var(--font-size-24);
+      line-height: var(--line-height-heading);
+    }
+    .info-tit-desc {
+      font-weight: var(--font-weight-regular);
+      font-size: var(--font-size-16);
+    }
+  }
+}
+
+// 신청완료 페이지 스타일
+.completed-page {
+  .completed-msg {
+    text-align: center;
+    margin-block: rem(24px);
+    .user-name {
+      font-size: var(--font-size-22);
+      font-weight: var(--font-weight-bold);
+      margin-top: rem(4px);
+    }
+    .info-txt {
+      margin-top: rem(12px);
+      @include flex($d: column) {
+        gap: rem(4px);
+      }
+      strong {
+        font-size: var(--font-size-24);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-heading);
+      }
+      .desc {
+        font-size: var(--font-size-16);
+        font-weight: var(--font-weight-regular);
+      }
+    }
+  }
+  .box-layout {
+    @include flex($w: wrap) {
+      gap: rem(8px);
+    }
+    .box-item {
+      flex-grow: 1;
+      flex-shrink: 1;
+      flex-basis: calc(50% - rem(4px));
+    }
+    & > * {
+      @include flex($d: column, $v: center) {
+        gap: rem(16px);
+      }
+    }
+    img {
+      width: rem(64px);
+      height: rem(64px);
+    }
+  }
+  .kt-box-wrap {
+    margin-top: rem(24px) !important;
+    .box-tit {
+      font-size: var(--font-size-16);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-primary-base);
+    }
+    .section-wrap {
+      width: 100%;
+      margin-top: rem(8px);
+      @include flex($w: wrap, $h: space-between) {
+        column-gap: rem(40px);
+        row-gap: rem(16px);
+      }
+      .sec {
+        @include mobile() {
+          width: 100%;
+          flex: 1;
+        }
+        &.left {
+          flex-basis: rem(500px);
+        }
+        &.right {
+          flex-shrink: 0;
+          flex-grow: 0;
+          .input-root {
+            min-width: rem(300px);
+          }
+          // 좁은 기기기에서 100%
+          @include mobile() {
+            flex: 1;
+          }
+        }
+      }
+    }
+    .ktmmobile-info {
+      @include flex($v: flex-start) {
+        gap: rem(16px);
+      }
+      @include mobile() {
+        align-items: center;
+      }
+      .desc {
+        font-size: var(--font-size-14);
+        line-height: var(--line-height-heading);
+        color: var(--color-gray-600);
+      }
+    }
+  }
+}
+
+// 약관동의 agreementGroup, agreementItem 의 필수표시 선택/필수 스타일값
+.required-mark,
+.optional-mark {
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+.required-mark {
+  color: var(--color-accent-base);
+  font-weight: var(--font-weight-bold);
+}
+.accent-mark {
+  color: var(--color-accent-base);
+  font-weight: var(--font-weight-bold);
+}
+
+// 노데이터 스타일
+.nodata-wrap {
+  width: 100%;
+  height: rem(180px);
+  text-align: center;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray-600);
+  @include flex($d: column, $h: center) {
+    gap: rem(8px);
+  }
+  &::before {
+    content: '';
+    @include flex($display: inline-flex, $h: center);
+    width: rem(64px);
+    height: rem(64px);
+    background-image: url('@/assets/images/noDataIcon.svg');
+    background-position: center center;
+    margin: 0 auto;
+  }
+}
+
+// 합계박스 스타일
+.total-box {
+  width: 100%;
+  dl {
+    @include flex($v: center, $h: space-between) {
+      gap: rem(4px);
+    }
+    dt {
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-gray-600);
+    }
+    dd {
+      @include flex($display: inline-flex, $v: baseline) {
+        gap: rem(4px);
+      }
+      font-weight: var(--font-weight-bold);
+      color: var(--color-gray-900);
+      em {
+        font-size: var(--font-size-32);
+        font-weight: var(--font-weight-bold);
+      }
+    }
+  }
+  & + .total-btns {
+    margin-top: rem(16px) !important;
+    padding-top: rem(16px);
+    border-top: var(--border-width-base) solid var(--color-gray-100);
+  }
+}
+
+// 로그인, 단말인증 스타일
+.login-wrap {
+  // --login-wrap-max-width: #{rem(1024px)};
+  --login-wrap-max-width: 100%;
+  --form-label-weight: var(--font-weight-bold);
+  --form-group-min-height: auto;
+
+  max-width: var(--login-wrap-max-width);
+  margin: 0 auto;
+  height: 100vh;
+  height: 100dvh;
+  padding: rem(40px) rem(24px);
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+
+  // formgroup안에 들어가는 label태그 스타일
+  .login-label {
+    font-size: var(--font-size-14);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-gray-900);
+  }
+
+  .label-area {
+    color: red;
+  }
+  .login-inner {
+    width: 100%;
+    display: table-cell;
+    vertical-align: top;
+  }
+  .login-box {
+    width: 100%;
+    margin: 0 auto;
+    .login-title {
+      @include flex($d: column) {
+        gap: rem(8px);
+      }
+      margin-bottom: rem(40px);
+      .logo {
+        width: rem(104px);
+        height: rem(18px);
+      }
+      .title {
+        font-size: rem(52px);
+        font-weight: var(--font-weight-bold);
+        line-height: var(--line-height-fit);
+        letter-spacing: -0.05em;
+      }
+    }
+    .login-form {
+      @include flex($d: column) {
+        gap: rem(40px);
+      }
+      .count-time {
+        margin-top: rem(8px);
+        font-weight: var(--font-weight-medium);
+        em {
+          color: var(--color-accent-base);
+        }
+      }
+    }
+    .login-btn,
+    .confirm-btn {
+      height: rem(56px);
+      width: 100%;
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-medium);
+      border-radius: rem(8px);
+    }
+    .confirm-btn {
+      margin-top: rem(74px);
+    }
+  }
+}
+// 사용상태
+.login-state-wrap {
+  @include flex($v: center) {
+    gap: rem(40px);
+  }
+  // 사용 상태
+  .use-state {
+    .state-tit {
+      color: var(--color-gray-600);
+      @include separator;
+      padding-right: rem(16px);
+      margin-right: rem(16px);
+    }
+    // 승인/미승인 상태
+    .state-info {
+      color: var(--color-accent2-base);
+      font-weight: var(--font-weight-bold);
+      @include flex($display: inline-flex) {
+        gap: rem(4px);
+      }
+      &.failed {
+        color: var(--color-accent1-base);
+      }
+    }
+    @include flex($v: center) {
+    }
+  }
+}
+.copy-right {
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray-450);
+  position: absolute;
+  bottom: rem(40px);
+  left: 50%;
+  transform: translateX(-50%);
+}

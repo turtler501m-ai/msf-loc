@@ -1,0 +1,554 @@
+@use 'sass:math';
+@use '@/assets/styles/abstracts' as *;
+
+// a11y
+.ut-blind {
+  position: absolute !important;
+  clip: rect(0 0 0 0);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+}
+
+// font color
+.ut-color-primary {
+  color: var(--color-foreground) !important;
+}
+// 빨강
+.ut-color-point {
+  color: var(--color-accent-base) !important;
+}
+// 민트
+.ut-color-accent {
+  color: var(--color-accent2-base) !important;
+}
+.ut-color-alert {
+  color: var(--color-accent-alert) !important;
+}
+.ut-color-gray {
+  color: var(--color-gray-600) !important;
+}
+.ut-color-gray1 {
+  color: var(--color-gray-900) !important;
+}
+.ut-color-gray2 {
+  color: var(--color-gray-700) !important;
+}
+.ut-color-gray3 {
+  color: var(--color-gray-500) !important;
+}
+.ut-color-gray4 {
+  color: var(--color-gray-450) !important;
+}
+.ut-color-white {
+  color: var(--color-background) !important;
+}
+.ut-color-black {
+  color: var(--color-foreground) !important;
+}
+
+// font weight
+.ut-weight-regular {
+  font-weight: var(--font-weight-regular) !important;
+}
+.ut-weight-medium {
+  font-weight: var(--font-weight-medium) !important;
+}
+.ut-weight-semibold {
+  font-weight: var(--font-weight-semibold) !important;
+}
+.ut-weight-bold {
+  font-weight: var(--font-weight-bold) !important;
+}
+
+// alignment
+.ut-text-left {
+  text-align: left !important;
+}
+.ut-text-center {
+  text-align: center !important;
+}
+.ut-text-right {
+  text-align: right !important;
+}
+.ut-align-start {
+  justify-content: flex-start !important;
+}
+.ut-align-center {
+  justify-content: center !important;
+}
+.ut-align-end {
+  justify-content: flex-end !important;
+}
+.ut-align-vertical {
+  flex-direction: column !important;
+}
+.ut-align-self-start {
+  align-self: flex-start !important;
+}
+.ut-align-self-center {
+  align-self: center !important;
+}
+.ut-align-fitted > * {
+  flex: 1 1 0 !important;
+}
+
+// spacer
+.ut-mt-base {
+  margin-top: var(--spacing-x6) !important;
+}
+.ut-mt-x1 {
+  margin-top: var(--spacing-x1) !important;
+}
+.ut-mt-xxs {
+  margin-top: var(--spacing-x2) !important;
+}
+.ut-mt-xs {
+  margin-top: var(--spacing-x4) !important;
+}
+.ut-mt-s {
+  margin-top: var(--spacing-x8) !important;
+}
+.ut-mt-m {
+  margin-top: var(--spacing-x12) !important;
+}
+.ut-mt-l {
+  margin-top: var(--spacing-x16) !important;
+}
+.ut-mt-xl {
+  margin-top: var(--spacing-x20) !important;
+}
+.ut-mt-xxl {
+  margin-top: var(--spacing-x30) !important;
+}
+.ut-mt-x0 {
+  margin-top: 0 !important;
+}
+.ut-mb-x0 {
+  margin-bottom: 0 !important;
+}
+.ut-mb-x6 {
+  margin-bottom: var(--spacing-x6) !important;
+}
+.ut-mb-s {
+  margin-bottom: var(--spacing-x8) !important;
+}
+.ut-ml-xs {
+  margin-left: var(--spacing-x2) !important;
+}
+.ut-ml-s {
+  margin-left: var(--spacing-x4) !important;
+}
+.ut-ml-m {
+  margin-left: var(--spacing-x6) !important;
+}
+.ut-ml-l {
+  margin-left: var(--spacing-x16) !important;
+}
+.ut-ml-auto {
+  margin-left: auto;
+}
+.ut-mr-xxs {
+  margin-right: var(--spacing-x2) !important;
+}
+.ut-mr-auto {
+  margin-right: auto;
+}
+
+// width size
+.ut-w-auto {
+  width: auto !important;
+}
+.ut-w-full {
+  width: 100% !important;
+}
+.ut-w-half {
+  width: 50% !important;
+}
+.ut-grow {
+  flex-shrink: 1 !important;
+  flex-grow: 1 !important;
+}
+.ut-shrink {
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
+}
+
+// 말줄임
+.ut-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+// symbol(입력요소 사이의 기호 표시)
+.ut-symbol {
+  @include flex(flex, center, center);
+  width: rem(16px);
+  text-align: center;
+}
+
+// modal 영역 ios 관성스크롤 제거
+[class*='overlay'] {
+  overscroll-behavior: none;
+}
+
+// 타이포 클래스
+.ut-text-heading1 {
+  font-size: var(--font-size-32);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-heading2 {
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-heading3 {
+  font-size: var(--font-size-22);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-title1 {
+  font-size: var(--font-size-20);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-title2 {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-title3 {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-bold);
+}
+.ut-text-body1 {
+  font-size: var(--font-size-16);
+}
+.ut-text-body2 {
+  font-size: var(--font-size-15);
+}
+.ut-text-body3 {
+  font-size: var(--font-size-14);
+}
+.ut-text-caption {
+  font-size: var(--font-size-12);
+}
+// 타이틀 하단 설명문구
+.ut-text-desc {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray-600);
+}
+// 주의 (당구장 붙은 텍스트 안내 단일문구)
+.ut-text-caution {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-heading);
+  color: var(--color-gray-600);
+  position: relative;
+  padding-left: 0.9em;
+  &:before {
+    content: '※';
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    color: inherit;
+  }
+}
+// 횟수 카운트 스타일
+.ut-text-count {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-gray-900);
+  & > em {
+    color: var(--color-accent-base);
+  }
+  @include separator;
+  padding-right: rem(16px);
+  margin-right: rem(16px);
+}
+
+// 남은시간 스타일(휴대폰 인증부분)
+.remain-time {
+  margin-right: rem(16px);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray-900);
+  & > em {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-accent-base);
+  }
+}
+// 포인트 색상 + 볼드처리 텍스트
+.ut-text-accent {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent-base);
+}
+// 텍스트 중앙 라인 처리
+.ut-text-strike {
+  text-decoration-line: line-through;
+}
+
+// 링크 텍스트
+.link-txt {
+  text-decoration: underline;
+}
+
+// 중간에 넣는 분리 텍스트영역
+.unit-sep {
+  display: inline-block;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-gray-600);
+}
+
+// 레이블 영역 스타일
+.label-txt {
+  display: inline-block;
+  font-size: inherit;
+  font-weight: inherit;
+  color: var(--color-foreground);
+  &[for] {
+    cursor: pointer; // label일 때만 포인터 커서
+  }
+  &.required {
+    position: relative;
+    &::before {
+      content: '*';
+      position: absolute;
+      right: rem(-8px);
+      top: 0;
+      font-size: var(--font-size-14);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-accent1-base);
+    }
+  }
+}
+
+// ==================== 유틸리티 클래스 생성 ==================== //
+// 1. Width & Height Setting
+$size-range: 800;
+$size-step: 1;
+
+// px고정 클래스 생성
+@for $i from 1 through math.div($size-range, $size-step) {
+  $v: $i * $size-step;
+
+  .ut-w-#{$v} {
+    width: #{$v}px !important;
+  }
+  .ut-h-#{$v} {
+    height: #{$v}px !important;
+  }
+}
+// 퍼센트 클래스 생성
+@for $i from 1 through math.div(100, $size-step) {
+  $v: $i * $size-step;
+
+  .ut-w#{$v}p {
+    width: ($v * 1%) !important; // 숫자에 1%를 곱해 퍼센트 단위를 생성
+  }
+  .ut-h#{$v}p {
+    height: ($v * 1%) !important;
+  }
+}
+
+// 2. Margin & Padding Setting
+$space-range: 100; // 마진/패딩 범위를 따로 조절 가능
+$space-step: 1;
+
+@for $i from 0 through math.div($space-range, $space-step) {
+  $v: $i * $space-step;
+
+  // Margin
+  .ut-m-#{$v} {
+    margin: #{$v}px !important;
+  }
+  .ut-mt-#{$v} {
+    margin-top: #{$v}px !important;
+  }
+  .ut-mr-#{$v} {
+    margin-right: #{$v}px !important;
+  }
+  .ut-mb-#{$v} {
+    margin-bottom: #{$v}px !important;
+  }
+  .ut-ml-#{$v} {
+    margin-left: #{$v}px !important;
+  }
+
+  // Padding
+  .ut-p-#{$v} {
+    padding: #{$v}px !important;
+  }
+  .ut-pt-#{$v} {
+    padding-top: #{$v}px !important;
+  }
+  .ut-pr-#{$v} {
+    padding-right: #{$v}px !important;
+  }
+  .ut-pb-#{$v} {
+    padding-bottom: #{$v}px !important;
+  }
+  .ut-pl-#{$v} {
+    padding-left: #{$v}px !important;
+  }
+}
+
+// 3. Flex Layout 유틸리티
+// Display
+.ut-d-flex {
+  display: flex !important;
+  align-items: center;
+}
+.ut-d-inline-flex {
+  display: inline-flex !important;
+}
+// Flex Direction
+.ut-flex-row {
+  flex-direction: row !important;
+}
+.ut-flex-row-reverse {
+  flex-direction: row-reverse !important;
+}
+.ut-flex-col {
+  flex-direction: column !important;
+}
+.ut-flex-col-reverse {
+  flex-direction: column-reverse !important;
+}
+// Flex Wrap
+.ut-flex-nowrap {
+  flex-wrap: nowrap !important;
+}
+.ut-flex-wrap {
+  flex-wrap: wrap !important;
+}
+.ut-flex-wrap-reverse {
+  flex-wrap: wrap-reverse !important;
+}
+// Justify Content (Main Axis)
+.ut-jc-start {
+  justify-content: flex-start !important;
+}
+.ut-jc-end {
+  justify-content: flex-end !important;
+}
+.ut-jc-center {
+  justify-content: center !important;
+}
+.ut-jc-between {
+  justify-content: space-between !important;
+}
+.ut-jc-around {
+  justify-content: space-around !important;
+}
+.ut-jc-evenly {
+  justify-content: space-evenly !important;
+}
+// Align Items (Cross Axis)
+.ut-ai-start {
+  align-items: flex-start !important;
+}
+.ut-ai-end {
+  align-items: flex-items !important;
+} // 오타주의: flex-end
+.ut-ai-center {
+  align-items: center !important;
+}
+.ut-ai-baseline {
+  align-items: baseline !important;
+}
+.ut-ai-stretch {
+  align-items: stretch !important;
+}
+// Flex Grow / Shrink / Basis
+.ut-flex-grow-0 {
+  flex-grow: 0 !important;
+}
+.ut-flex-grow-1 {
+  flex-grow: 1 !important;
+}
+.ut-flex-shrink-0 {
+  flex-shrink: 0 !important;
+}
+.ut-flex-shrink-1 {
+  flex-shrink: 1 !important;
+}
+.ut-flex-1 {
+  flex: 1 1 0% !important;
+} // 균등 배분 시 자주 사용
+
+// ========== 4. Gap Setting (5px step, up to 100px) ========== //
+$gap-range: 100;
+$gap-step: 5;
+
+@for $i from 0 through math.div($gap-range, $gap-step) {
+  $v: $i * $gap-step;
+  .ut-gap-#{$v} {
+    gap: #{$v}px !important;
+  }
+  .ut-gap-x-#{$v} {
+    column-gap: #{$v}px !important;
+  }
+  .ut-gap-y-#{$v} {
+    row-gap: #{$v}px !important;
+  }
+}
+
+// ========== 5. Grid Layout 유틸리티 ========== //
+.ut-d-grid {
+  display: grid !important;
+}
+// Column 정의 (자주 쓰는 1~12컬럼)
+@for $i from 1 through 12 {
+  .ut-grid-cols-#{$i} {
+    grid-template-columns: repeat(#{$i}, minmax(0, 1fr)) !important;
+  }
+}
+// Column Span (아이템이 차지하는 칸 수)
+@for $i from 1 through 12 {
+  .ut-col-span-#{$i} {
+    grid-column: span #{$i} / span #{$i} !important;
+  }
+}
+// Justify / Align (Grid에서는 Place-items 사용)
+.ut-pi-center {
+  place-items: center !important;
+}
+.ut-pi-start {
+  place-items: start !important;
+}
+.ut-pi-end {
+  place-items: end !important;
+}
+.ut-as-start {
+  align-self: start !important;
+}
+.ut-as-end {
+  align-self: end !important;
+}
+.ut-as-center {
+  align-self: center !important;
+}
+.ut-as-stretch {
+  align-self: stretch !important;
+}
+// Gap은 이미 위에서 Flex와 공용으로 만들었으므로
+// .ut-gap-5, .ut-gap-10 클래스를 그대로 사용
+
+hr.ut-line {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: rem(1px);
+  background-color: var(--color-gray-100);
+  margin-block: rem(8px);
+  border-width: 0;
+}
+
+//체크박스 상하단 간격있는경우
+.checkbox-wrap {
+  margin-top: rem(8px);
+  padding-block: rem(14px);
+}

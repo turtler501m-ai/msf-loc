@@ -1,0 +1,229 @@
+@use '@/assets/styles/abstracts' as *;
+
+/** input field 기본 스타일 (input-root 클래스로 한번 감싼후 input 사용) **/
+.input-root {
+  &:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: inset 0 0 0 1px var(--color-foreground);
+  }
+  position: relative;
+  @include flex(flex, flex-start, center) {
+    gap: var(--spacing-x2);
+  }
+  width: 100%;
+  min-width: rem(140px);
+  height: rem(52px);
+  padding: 0 var(--spacing-x4);
+  font-size: var(--font-size-16);
+  line-height: var(--line-height-20);
+  font-weight: var(--font-weight-medium);
+  border: var(--border-width-base) solid var(--color-gray-400);
+  border-radius: var(--border-radius-base);
+  background-color: var(--color-background);
+  cursor: text;
+  .input-inner,
+  input:not([type]),
+  input[type=''],
+  input[type='text'],
+  input[type='password'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='url'],
+  input[type='search'],
+  input[type='number'] {
+    flex: 1;
+    width: 1%;
+    height: 100%;
+    outline: 0;
+    font-weight: var(--font-weight-medium);
+    &:focus {
+      touch-action: pan-x;
+    }
+  }
+
+  // size
+  &.is-small .input-inner {
+    font-size: var(--font-size-16);
+  }
+  &.is-medium .input-inner {
+  }
+  &.is-large .input-inner {
+    font-size: var(--font-size-16);
+  }
+
+  // state
+  &.is-disabled {
+    background-color: var(--color-bg-disabled);
+    color: var(--color-text-disabled);
+    border-color: var(--color-gray-150);
+    cursor: not-allowed;
+  }
+  &.is-readonly {
+    background-color: var(--color-bg-disabled);
+    border-color: var(--color-gray-400);
+    color: var(--color-gray-900);
+  }
+  &.is-error {
+    border-color: var(--color-accent-alert);
+    box-shadow: inset 0 0 0 1px var(--color-accent-alert);
+  }
+}
+
+// Vue datepicker 디자인 커스텀
+.dp__theme_light {
+  --dp-primary-color: var(--color-primary-base) !important;
+  --dp-font-size: var(--font-size-16);
+  --dp-menu-padding: #{rem(16px)};
+  --dp-font-family: var(--font-family-base);
+  --dp-cell-padding: #{rem(6px)};
+  --dp-cell-size: #{rem(44px)};
+}
+.dp--menu-wrapper {
+  .dp__menu {
+    border-radius: var(--border-radius-l);
+    // min-height: rem(436px);
+    height: fit-content;
+    @include flex($d: column);
+  }
+  .dp__action_row {
+    padding-bottom: var(--spacing-x4);
+    padding-inline: var(--spacing-x4);
+  }
+  .dp__calendar_header {
+    font-size: var(--font-size-16);
+    font-weight: var(--font-weight-regular);
+    color: var(--color-gray-500);
+  }
+  .dp__month_year_wrap {
+    font-size: var(--font-size-20);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: rem(8px);
+    height: rem(44px);
+    .dp__month_year_wrap {
+      margin-bottom: 0;
+    }
+    .dp__btn {
+      width: rem(44px);
+      flex-shrink: 0;
+      flex-grow: 0;
+      border-radius: var(--border-radius-base);
+      .dp__inner_nav {
+        width: 100%;
+        height: 100%;
+        border-radius: var(--border-radius-base);
+      }
+    }
+    .dp__month_year_select,
+    .dp__month_year_select {
+      flex: 1;
+      height: 100%;
+    }
+    .dp__month_year_select {
+      margin-right: rem(8px);
+    }
+  }
+  .dp__cell_inner {
+    border-radius: var(--border-radius-max);
+    font-weight: var(--font-weight-medium);
+  }
+  .dp__today {
+    border-color: var(--color-gray-450);
+    background-color: var(--color-gray-450);
+    color: var(--color-white);
+  }
+  .dp__calendar_row {
+    margin: 0;
+    margin-block: rem(4px);
+  }
+  .dp__cell_offset {
+    color: var(--color-gray-350);
+  }
+  // 연도
+  .dp__overlay_row {
+    font-size: var(--font-size-16);
+    font-weight: var(--font-weight-regular);
+  }
+  .dp__overlay_cell,
+  .dp__overlay_cell_active {
+    border-radius: var(--border-radius-max);
+  }
+  .dp--overlay-absolute {
+    border-radius: 16px;
+    padding: rem(16px);
+  }
+  .dp__overlay_col {
+    padding: rem(8px) rem(4px);
+    flex: 1;
+    text-align: center;
+  }
+  .dp__calendar_header_separator {
+    display: none;
+  }
+  .dp__overlay_cell,
+  .dp__overlay_cell_active {
+    @include flex($display: inline-flex, $h: center, $v: center);
+    width: rem(48px);
+    height: rem(48px);
+  }
+  // 년도 달력에서 셀디자인
+  [data-dp-element='overlay-year'] + .dp__overlay .dp__overlay_cell,
+  [data-dp-element='overlay-year'] + .dp__overlay .dp__overlay_cell_active {
+    width: 100%;
+    height: rem(36px);
+  }
+  // 월 달력에서 셀디자인
+  .dp__overlay_container {
+    // height: rem(336px);
+    height: 100%;
+  }
+  // 하단 버튼영역
+  .dp__action_buttons {
+    width: 100%;
+    flex: 1;
+    @include flex() {
+      gap: rem(8px);
+    }
+    .dp__action_button {
+      flex: 1;
+      height: rem(52px);
+      border-radius: var(--border-radius-base);
+      @include flex($display: inline-flex, $h: center, $v: center) {
+        gap: rem(8px);
+      }
+      font-size: var(--font-size-18);
+      font-weight: var(--font-weight-bold);
+      margin: 0;
+      // 취소버튼
+      &.dp__action_cancel {
+        color: var(--color-foreground);
+        border-color: var(--color-secondary-base);
+        background-color: var(--color-secondary-base);
+        &:hover {
+          border-color: var(--color-secondary-base);
+          background-color: var(--color-secondary-base);
+        }
+        &:active {
+          background-color: var(--color-secondary-press);
+          border-color: var(--color-secondary-press);
+        }
+      }
+      // 확인버튼
+      &.dp__action_select {
+        color: var(--color-background);
+        border-color: var(--color-primary-base);
+        background-color: var(--color-primary-base);
+        &:hover {
+          background-color: var(--color-primary-base);
+        }
+        &:active {
+          background-color: var(--color-primary-press);
+        }
+      }
+    }
+  }
+  // 일단 숨길것들 (현재선택날짜, 달력모양의 뒤로가기 아이콘)
+  .dp__selection_preview,
+  .dp__btn.dp__button.dp__overlay_action {
+    display: none;
+  }
+}

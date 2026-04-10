@@ -1,0 +1,248 @@
+$point-color: var(--color-black);
+$background-color: #f6f8fa;
+$border-color: #d1d9e0;
+$shadow-color: rgba(0, 0, 0, 0.1);
+
+.notice {
+  padding: 1rem 1.5rem;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background-color: red;
+}
+
+.guideWrapper {
+  font-size: 0.875rem;
+  background-color: #fff;
+}
+
+.guideInner {
+  width: 100%;
+  max-width: 2560px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.guideHeader {
+  border-bottom: 1px solid $border-color;
+  background-color: $background-color;
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem 0;
+
+  @include desktop {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 0;
+  & > span {
+    display: inline-block;
+  }
+}
+
+.stats {
+  display: flex;
+  gap: 0.25rem 1rem;
+  flex-wrap: wrap;
+}
+
+.statItem {
+  white-space: nowrap;
+  color: #333;
+}
+
+.statWaiting {
+  color: #666;
+}
+.statProgress {
+  color: #2563eb;
+}
+.statCompleted {
+  color: #16a34a;
+}
+.statRemoved {
+  color: #ca8a04;
+}
+
+.guideNav {
+  position: sticky;
+  top: 0;
+  background-color: $background-color;
+  box-shadow: inset 0 -1px 0 $border-color;
+  overflow-x: auto;
+  z-index: 1;
+}
+
+.navTabs {
+  display: flex;
+  gap: 0.25rem;
+  height: 3.25rem;
+}
+
+.navTab {
+  padding: 0.5rem 1rem;
+  color: #666;
+  font-size: 1rem;
+  white-space: nowrap;
+  position: relative;
+  transition: color 0.2s;
+
+  &:hover {
+    color: $point-color;
+  }
+
+  &.active {
+    color: $point-color;
+    font-weight: 600;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: $point-color;
+    }
+  }
+}
+
+.guideContainer {
+  overflow-x: auto;
+}
+
+.guideContent {
+  padding: 1.5rem 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 0.5rem 0.5rem;
+    border: 1px solid $border-color;
+    text-align: left;
+  }
+
+  th {
+    background-color: $background-color;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  td {
+    white-space: nowrap;
+  }
+
+  tr:hover {
+    background-color: $background-color;
+  }
+}
+.colNum {
+  width: rem(48px);
+}
+.colId {
+  width: rem(110px);
+}
+.colState {
+  width: rem(80px);
+}
+.colDate {
+  width: rem(110px);
+}
+.colMemo {
+  font-size: 12px;
+  white-space: unset !important;
+}
+
+.path {
+  color: #2563eb;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.rowRemoved {
+  // text-decoration: line-through;
+  color: #9ca3af;
+  background-color: #f9fafb;
+
+  td a {
+    color: #9ca3af;
+  }
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.statusCompleted {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.statusProgress {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.statusWaiting {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.statusRemoved {
+  background-color: #fef9c3;
+  color: #854d0e;
+  // background-color: rgb(248, 249, 250);
+  // color: rgb(156, 163, 175);
+}
+
+.completionRate {
+  margin-bottom: 10px;
+  color: #2563eb;
+  font-weight: 500;
+}
+
+.guideNotice {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px 0 $shadow-color;
+  p {
+    margin: 0.25rem 0;
+  }
+  ul {
+    list-style: disc;
+    padding-left: 20px;
+  }
+}
+
+@include mobile {
+  .colFile {
+    display: none;
+  }
+}
