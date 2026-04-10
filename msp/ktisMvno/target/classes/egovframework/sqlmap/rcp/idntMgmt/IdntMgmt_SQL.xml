@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace= "com.ktis.msp.rcp.idntMgmt.mapper.IdntMgmtMapper">
+	<sql id="invstReqList">
+		SELECT  A.SEQ_NUM
+		        , A.CUSTOMER_ID
+		        , A.CONTRACT_NUM
+		        , A.SUBSCRIBER_NO
+		        , A.CSTMR_NM
+		        , A.CUSTOMER_TYPE
+		        , FN_GET_CODENM('RCP0022', A.CUSTOMER_TYPE) AS CUSTOMER_TYPE_NM
+		        , A.USER_SSN
+		        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS_NM
+		        , DECODE(A.PPPO, 'PO', '후불', '선불') AS PPPO
+		        , A.OPEN_DT
+		        , A.TMNT_DT
+		        , A.CSTMR_ADDR
+		        , A.INVST_VAL
+		        , A.INVST_TYPE
+		        , FN_GET_CODENM('CMN0107', A.INVST_TYPE) AS INVST_TYPE_NM
+		        , A.INVST_NM
+		        , A.REQ_TYPE
+		        , FN_GET_CODENM('CMN0108', A.REQ_TYPE) AS REQ_TYPE_NM
+		        , FN_GET_USRNM(A.PROCR_ID) AS PROCR_NM
+		        , A.PROC_DT
+		        , FN_GET_CODENM('RCP9020', A.INVST_LOC) AS INVST_LOC
+		        , REQ_ODTY
+		        , REQ_USER
+		        , APP_ODTY_NM
+		        , APP_USER
+		        , REQ_RSN
+		        , REQ_DTTM
+		        , EMAIL
+		FROM    MSP_INVST_REQ_MST A
+		WHERE   A.PROC_DT BETWEEN #{procDateS} AND #{procDateE} 
+		<if test="searchGb != null and searchGb != ''">
+			<choose>
+				<when test="searchGb == '00'">
+					AND A.SUBSCRIBER_NO = #{searchVal}
+				</when>
+				<when test="searchGb != '00' and searchGb != '08'">
+					AND A.USER_SSN LIKE#{searchVal} || '%'
+				</when>
+				<when test="searchGb == '08'">
+					AND A.CONTRACT_NUM = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		<if test="invstVal != null and invstVal != ''">
+			AND A.INVST_NM LIKE #{invstVal} || '%'
+		</if>
+		<if test="invstType != null and invstType != ''">
+			AND A.INVST_TYPE = #{invstType}
+			AND A.INVST_NM = #{invstVal}
+		</if>
+		<if test="reqType != null and reqType != ''">
+			AND A.REQ_TYPE = #{reqType}
+		</if>
+		<if test="reqDoc != null and reqDoc != ''">
+			AND A.INVST_VAL LIKE #{reqDoc} || '%'
+		</if>		
+		ORDER BY A.SEQ_NUM DESC, A.PROC_DT DESC
+	</sql>
+	
+	<!-- 조회 -->
+	<select id="getInvstReqList" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* idntMgmtMapper.getInvstReqList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="invstReqList" />
+			
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 엑셀다운로드 -->
+	<select id="getInvstReqListEx" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* idntMgmtMapper.getInvstReqListEx */
+		
+		<include refid="invstReqList" />
+			
+	</select>
+	
+	<!-- 엑셀다운로드(포함된 수사기관명,문서번호) 조회  -->
+	<select id="getInvstNmValListEx" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* idntMgmtMapper.getInvstNmValListEx */
+		
+		SELECT
+		    invst_nm
+		  , invst_val
+		FROM    MSP_INVST_REQ_MST A
+		WHERE   A.PROC_DT BETWEEN #{procDateS} AND #{procDateE} 
+		<if test="searchGb != null and searchGb != ''">
+			<choose>
+				<when test="searchGb == '00'">
+					AND A.SUBSCRIBER_NO = #{searchVal}
+				</when>
+				<when test="searchGb != '00' and searchGb != '08'">
+					AND A.USER_SSN LIKE#{searchVal} || '%'
+				</when>
+				<when test="searchGb == '08'">
+					AND A.CONTRACT_NUM = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		<if test="invstVal != null and invstVal != ''">
+			AND A.INVST_NM LIKE #{invstVal} || '%'
+		</if>
+		<if test="invstType != null and invstType != ''">
+			AND A.INVST_TYPE = #{invstType}
+			AND A.INVST_NM = #{invstVal}
+		</if>
+		<if test="reqType != null and reqType != ''">
+			AND A.REQ_TYPE = #{reqType}
+		</if>
+		<if test="reqDoc != null and reqDoc != ''">
+			AND A.INVST_VAL LIKE #{reqDoc} || '%'
+		</if>
+		<choose>
+			<when test="seqNumList.size != 0">
+				AND SEQ_NUM IN
+				<foreach collection="seqNumList" item="item" index="index" separator="," open="(" close=")">
+					#{item}
+				</foreach>
+			</when>
+		</choose>		
+		    
+		GROUP BY
+		    invst_nm
+		  , invst_val
+		  			
+	</select>
+	
+	<!-- 가입자확인 엑셀저장(선택된 정보만 조회) -->
+	<select id="getInvstReqListSelectedEx" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* idntMgmtMapper.getInvstReqListSelectedEx */
+		
+		SELECT  A.SEQ_NUM
+		        , A.CUSTOMER_ID
+		        , A.CONTRACT_NUM
+		        , A.SUBSCRIBER_NO
+		        , A.CSTMR_NM
+		        , A.CUSTOMER_TYPE
+		        , FN_GET_CODENM('RCP0022', A.CUSTOMER_TYPE) AS CUSTOMER_TYPE_NM
+		        , A.USER_SSN
+		        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS_NM
+		        , DECODE(A.PPPO, 'PO', '후불', '선불') AS PPPO
+		        , A.OPEN_DT
+		        , A.TMNT_DT
+		        , A.CSTMR_ADDR
+		        , A.INVST_VAL
+		        , A.INVST_TYPE
+		        , FN_GET_CODENM('CMN0107', A.INVST_TYPE) AS INVST_TYPE_NM
+		        , A.INVST_NM
+		        , A.REQ_TYPE
+		        , FN_GET_CODENM('CMN0108', A.REQ_TYPE) AS REQ_TYPE_NM
+		        , FN_GET_USRNM(A.PROCR_ID) AS PROCR_NM
+		        , A.PROC_DT
+		        , FN_GET_CODENM('RCP9020', A.INVST_LOC) AS INVST_LOC
+		        , REQ_ODTY
+		        , REQ_USER
+		        , APP_ODTY_NM
+		        , APP_USER
+		        , REQ_RSN
+		        , REQ_DTTM
+		        , EMAIL
+		FROM    MSP_INVST_REQ_MST A
+		WHERE   A.PROC_DT BETWEEN #{procDateS} AND #{procDateE} 
+		<if test="invstVal != null and invstVal != ''">
+			AND A.INVST_NM = #{invstVal} 
+		</if>
+		<if test="reqDoc != null and reqDoc != ''">
+			AND A.INVST_VAL = #{reqDoc} 
+		</if>		
+		<choose>
+			<when test="seqNumList.size != 0">
+				AND SEQ_NUM IN
+				<foreach collection="seqNumList" item="item" index="index" separator="," open="(" close=")">
+					#{item}
+				</foreach>
+			</when>
+		</choose>		
+		    
+		ORDER BY A.SEQ_NUM DESC, A.PROC_DT DESC
+			
+	</select>
+	
+	
+	<!-- 가입자확인(전화번호조회) -->
+	<select id="getCusInfoByTelnum" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* idntMgmtMapper.getCusInfoByTelnum */
+		<![CDATA[
+		SELECT  A.CONTRACT_NUM
+		        , A.SUBSCRIBER_NO
+		        , A.SUBSCRIBER_NO AS SUBSCRIBER_NO_MSK
+		        , '00' AS SEARCH_GB
+		        , C.CUSTOMER_TYPE
+		        , FN_GET_CODENM('MSP0009', C.CUSTOMER_TYPE) AS CUSTOMER_TYPE_NM
+		        , ( CASE WHEN C.CUSTOMER_TYPE = 'I' THEN C.CUSTOMER_SSN ELSE C.TAX_ID END ) AS USER_SSN
+		        , ( CASE WHEN C.CUSTOMER_TYPE = 'I' THEN C.CUSTOMER_SSN ELSE C.TAX_ID END ) AS USER_SSN_MSK
+		        , ( CASE WHEN RNUM < CNT THEN 'C' ELSE B.SUB_STATUS END ) AS SUB_STATUS
+		        , FN_GET_CODENM ('MSP0003', ( CASE WHEN RNUM >= CNT THEN B.SUB_STATUS ELSE 'C' END )) AS SUB_STATUS_NM
+		        , C.CUSTOMER_LINK_NAME AS CSTMR_NM
+		        , C.CUSTOMER_LINK_NAME AS CSTMR_NM_MSK
+		        , B.PPPO
+		        , DECODE(B.PPPO, 'PO', '후불', '선불') AS PPPO_NM
+		        , D.BAN_ADR_PRIMARY_LN || ' ' || D.BAN_ADR_SECONDARY_LN AS CSTMR_ADDR
+		        , D.BAN_ADR_PRIMARY_LN || ' ' || D.BAN_ADR_SECONDARY_LN AS CSTMR_ADDR_MSK
+		        , ( CASE WHEN RNUM = 1 OR (A.OPEN_DT = B.LST_COM_ACTV_DATE AND A.CONTRACT_NUM = B.SVC_CNTR_NO) THEN B.LST_COM_ACTV_DATE 
+		                 ELSE A.EVNT_DT
+		            END ) AS OPEN_DT
+		        , ( CASE WHEN B.SUB_STATUS = 'C' THEN SUBSTR(B.SUB_STATUS_DATE, 1, 8)
+		                 WHEN RNUM = A.CNT THEN DECODE(B.SUB_STATUS, 'C', SUBSTR(B.SUB_STATUS_DATE, 1, 8), '')
+		                 ELSE LEAD(EVNT_DT) OVER(ORDER BY RNUM)
+		            END ) AS TMNT_DT
+		        , A.CUSTOMER_ID
+		        , B.TRNS_YN
+		]]>
+		        <if test='excelYn == "Y"'>
+		        , #{reqType} AS REQ_TYPE
+		        , #{invstType} AS INVST_TYPE
+		        , #{invstNm} AS INVST_NM
+		        , #{invstLoc} AS INVST_LOC
+		        , #{invstVal} AS INVST_VAL
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0108' AND CD_VAL = #{reqType}) AS REQ_TYPE_NM
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0107' AND CD_VAL = #{invstType}) AS INVST_TYPE_NM
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9020' AND CD_VAL = #{invstLoc}) AS INVST_LOC_NM
+		        , #{reqOdty} AS REQ_ODTY
+		        , #{reqUser} AS REQ_USER
+		        , #{appOdty} AS APP_ODTY
+		        <if test="appOdty != null and appOdty != ''">
+				<choose>
+						<when test="appOdty == '00'">
+							, #{appOdtyNm} AS APP_ODTY_NM
+						</when>
+						<when test="appOdty != '00' and invstType == 10" >
+						,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+							WHERE GRP_ID = 'CMN0112'
+							     AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+						</when>
+						<when test="appOdty != '00' and invstType == 20" >
+						,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+							WHERE GRP_ID = 'CMN0111'
+							     AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+						</when>
+					</choose>
+				</if>
+		        , #{appUser} AS APP_USER
+		        , #{reqRsn} AS REQ_RSN
+		        , #{reqDttm} AS REQ_DTTM
+		        </if>
+		FROM
+		    (   SELECT  ROWNUM AS RNUM
+		                , A.*
+		        FROM (
+		            SELECT  A.CONTRACT_NUM
+		                    , B.CUSTOMER_ID
+		                    , A.SUBSCRIBER_NO
+		                    , B.LST_COM_ACTV_DATE AS OPEN_DT
+		                    , MAX(SUBSTR(A.EVNT_CHANGE_DATE, 1, 8)) AS EVNT_DT
+		                    , COUNT(1) OVER() AS CNT
+		            FROM    MSP_JUO_SUB_INFO_HIST A
+		                    , MSP_JUO_SUB_INFO B
+		            WHERE   A.SUBSCRIBER_NO = #{searchVal}
+		            AND     ( A.EVNT_CD IN ( 'NAC', 'CAN' )     /* 번호변경후 해지적용 */
+		                        OR ( A.EVNT_CD = 'MCN' AND A.SUB_STATUS_LAST_ACTV_CD = 'MCN' )  /* 명변 */
+		                        OR ( A.EVNT_CD = 'CCN' AND A.SUB_STATUS_LAST_ACTV_CD = 'CCN' )  /* 번변 */
+		                        OR ( A.EVNT_CD IN ( 'UPD', 'UPS' ) AND A.SUB_STATUS_LAST_ACTV_CD = 'NAC' ) )    /* UPD 개통 */
+		            AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		            GROUP BY A.CONTRACT_NUM, B.CUSTOMER_ID, A.SUBSCRIBER_NO, B.LST_COM_ACTV_DATE
+		            ORDER BY EVNT_DT
+		        ) A
+		    ) A
+		    , MSP_JUO_SUB_INFO B
+		    , MSP_JUO_CUS_INFO C
+			, MSP_JUO_BAN_INFO D
+		WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     A.CUSTOMER_ID = C.CUSTOMER_ID
+		AND		B.BAN = D.BAN
+		ORDER BY A.RNUM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 가입자확인(식별번호조회) -->
+	<select id="getCusInfoByIdntNo" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* idntMgmtMapper.getCusInfoByIdntNo */
+		SELECT  A.CONTRACT_NUM
+		        , A.SUBSCRIBER_NO
+		        , A.SUBSCRIBER_NO AS SUBSCRIBER_NO_MSK
+		        , #{searchGb} AS SEARCH_GB
+		        , B.CUSTOMER_TYPE
+		        , FN_GET_CODENM('MSP0009', B.CUSTOMER_TYPE) AS CUSTOMER_TYPE_NM
+		        , DECODE(#{searchGb}, '02', B.TAX_ID, '03', B.DRIVR_LICNS_NO, B.CUSTOMER_SSN) AS USER_SSN
+		        , DECODE(#{searchGb}, '02', B.TAX_ID, '03', B.DRIVR_LICNS_NO, B.CUSTOMER_SSN) AS USER_SSN_MSK
+		        , A.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS_NM
+		        , A.SUB_LINK_NAME AS CSTMR_NM
+		        , A.SUB_LINK_NAME AS CSTMR_NM_MSK
+		        , A.PPPO
+		        , DECODE(A.PPPO, 'PO', '후불', '선불') AS PPPO_NM
+		        , A.LST_COM_ACTV_DATE AS OPEN_DT
+		        , DECODE(A.SUB_STATUS, 'C' , SUBSTR(A.SUB_STATUS_DATE, 1 , 8), '') AS TMNT_DT
+		        , DECODE(C.BAN_ADR_PRIMARY_LN, NULL, '', C.BAN_ADR_PRIMARY_LN || ' ' || C.BAN_ADR_SECONDARY_LN) AS CSTMR_ADDR
+		        , DECODE(C.BAN_ADR_PRIMARY_LN, NULL, '', C.BAN_ADR_PRIMARY_LN || ' ' || C.BAN_ADR_SECONDARY_LN) AS CSTMR_ADDR_MSK
+		        , B.CUSTOMER_ID
+		        , A.TRNS_YN
+		        <if test='excelYn == "Y"'>
+		        , #{reqType} AS REQ_TYPE
+		        , #{invstType} AS INVST_TYPE
+		        , #{invstNm} AS INVST_NM
+		        , #{invstLoc} AS INVST_LOC
+		        , #{invstVal} AS INVST_VAL
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0108' AND CD_VAL = #{reqType}) AS REQ_TYPE_NM
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0107' AND CD_VAL = #{invstType}) AS INVST_TYPE_NM
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9020' AND CD_VAL = #{invstLoc}) AS INVST_LOC_NM
+		        , #{reqOdty} AS REQ_ODTY
+		        , #{reqUser} AS REQ_USER
+		        , #{appOdty} AS APP_ODTY
+		          <if test="appOdty != null and appOdty != ''">
+				<choose>
+						<when test="appOdty == '00'">
+							, #{appOdtyNm} AS APP_ODTY_NM
+						</when>
+						<when test="appOdty != '00' and invstType == 10" >
+						,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+							WHERE GRP_ID = 'CMN0112'
+							     AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+						</when>
+						<when test="appOdty != '00' and invstType == 20" >
+						,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+							WHERE GRP_ID = 'CMN0111'
+							     AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+						</when>
+					</choose>
+				</if>
+		        , #{appUser} AS APP_USER
+		        , #{reqRsn} AS REQ_RSN
+		        , #{reqDttm} AS REQ_DTTM
+		        </if>
+		FROM MSP_JUO_SUB_INFO A, 
+		    (   
+		        SELECT  CUSTOMER_ID
+		                , DRIVR_LICNS_NO
+		                , TAX_ID
+		                , CUSTOMER_SSN
+		                , CUSTOMER_TYPE
+		        FROM    MSP_JUO_CUS_INFO
+		        WHERE  CUST_IDNT_NO_IND_CD NOT IN ( '02', '03' )
+		        AND     CUST_IDNT_NO_IND_CD = #{searchGb}
+		        AND     CUSTOMER_SSN = #{searchVal}
+		    ) B,
+		    MSP_JUO_BAN_INFO C
+		WHERE   A.CUSTOMER_ID = B.CUSTOMER_ID
+		AND		A.BAN = C.BAN
+		ORDER BY A.CONTRACT_NUM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 가입자확인(사업자번호) -->
+	<select id="getCusInfoByTaxNo" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* idntMgmtMapper.getCusInfoByTaxNo */
+		SELECT  A.CONTRACT_NUM
+		        , A.SUBSCRIBER_NO
+		        , A.SUBSCRIBER_NO AS SUBSCRIBER_NO_MSK
+		        , #{searchGb} AS SEARCH_GB
+		        , B.CUSTOMER_TYPE
+		        , FN_GET_CODENM('MSP0009', B.CUSTOMER_TYPE) AS CUSTOMER_TYPE_NM
+		        , DECODE(#{searchGb}, '02', B.TAX_ID, '03', B.DRIVR_LICNS_NO, B.CUSTOMER_SSN) AS USER_SSN
+		        , DECODE(#{searchGb}, '02', B.TAX_ID, '03', B.DRIVR_LICNS_NO, B.CUSTOMER_SSN) AS USER_SSN_MSK
+		        , A.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS_NM
+		        , A.SUB_LINK_NAME AS CSTMR_NM
+		        , A.SUB_LINK_NAME AS CSTMR_NM_MSK
+		        , A.PPPO
+		        , DECODE(A.PPPO, 'PO', '후불', '선불') AS PPPO_NM
+		        , A.LST_COM_ACTV_DATE AS OPEN_DT
+		        , DECODE(A.SUB_STATUS, 'C' , SUBSTR(A.SUB_STATUS_DATE, 1 , 8), '') AS TMNT_DT
+		        , DECODE(C.BAN_ADR_PRIMARY_LN, NULL, '', C.BAN_ADR_PRIMARY_LN || ' ' || C.BAN_ADR_SECONDARY_LN) AS CSTMR_ADDR
+		        , DECODE(C.BAN_ADR_PRIMARY_LN, NULL, '', C.BAN_ADR_PRIMARY_LN || ' ' || C.BAN_ADR_SECONDARY_LN) AS CSTMR_ADDR_MSK
+		        , B.CUSTOMER_ID
+		        , A.TRNS_YN
+		        <if test='excelYn == "Y"'>
+		        , #{reqType} AS REQ_TYPE
+		        , #{invstType} AS INVST_TYPE
+		        , #{invstNm} AS INVST_NM
+		        , #{invstLoc} AS INVST_LOC
+		        , #{invstVal} AS INVST_VAL
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0108' AND CD_VAL = #{reqType}) AS REQ_TYPE_NM
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0107' AND CD_VAL = #{invstType}) AS INVST_TYPE_NM
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9020' AND CD_VAL = #{invstLoc}) AS INVST_LOC_NM
+		        , #{reqOdty} AS REQ_ODTY
+		        , #{reqUser} AS REQ_USER
+		        , #{appOdty} AS APP_ODTY
+		          <if test="appOdty != null and appOdty != ''">
+				<choose>
+						<when test="appOdty == '00'">
+							, #{appOdtyNm} AS APP_ODTY_NM
+						</when>
+						<when test="appOdty != '00' and invstType == 10" >
+						,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+							WHERE GRP_ID = 'CMN0112'
+							     AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+						</when>
+						<when test="appOdty != '00' and invstType == 20" >
+						,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+							WHERE GRP_ID = 'CMN0111'
+							     AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+						</when>
+					</choose>
+				</if>
+		        , #{appUser} AS APP_USER
+		        , #{reqRsn} AS REQ_RSN
+		        , #{reqDttm} AS REQ_DTTM
+		        </if>
+		FROM MSP_JUO_SUB_INFO A, 
+		    (  
+		        SELECT  CUSTOMER_ID
+		                , DRIVR_LICNS_NO
+		                , TAX_ID
+		                , CUSTOMER_SSN
+		                , CUSTOMER_TYPE
+		        FROM    MSP_JUO_CUS_INFO
+		        WHERE  CUST_IDNT_NO_IND_CD = #{searchGb}
+		        AND     TAX_ID =  #{searchVal}
+		    ) B,
+		    MSP_JUO_BAN_INFO C
+		WHERE   A.CUSTOMER_ID = B.CUSTOMER_ID
+		AND		A.BAN = C.BAN
+		ORDER BY A.CONTRACT_NUM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+		
+	<!-- 가입자확인(법인번호) -->
+	<select id="getCusInfoByDriNo" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* idntMgmtMapper.getCusInfoByDriNo */
+		SELECT  A.CONTRACT_NUM
+		        , A.SUBSCRIBER_NO
+		        , A.SUBSCRIBER_NO AS SUBSCRIBER_NO_MSK
+		        , #{searchGb} AS SEARCH_GB
+		        , B.CUSTOMER_TYPE
+		        , FN_GET_CODENM('MSP0009', B.CUSTOMER_TYPE) AS CUSTOMER_TYPE_NM
+		        , DECODE(#{searchGb}, '02', B.TAX_ID, '03', B.DRIVR_LICNS_NO, B.CUSTOMER_SSN) AS USER_SSN
+		        , DECODE(#{searchGb}, '02', B.TAX_ID, '03', B.DRIVR_LICNS_NO, B.CUSTOMER_SSN) AS USER_SSN_MSK
+		        , A.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS_NM
+		        , A.SUB_LINK_NAME AS CSTMR_NM
+		        , A.SUB_LINK_NAME AS CSTMR_NM_MSK
+		        , A.PPPO
+		        , DECODE(A.PPPO, 'PO', '후불', '선불') AS PPPO_NM
+		        , A.LST_COM_ACTV_DATE AS OPEN_DT
+		        , DECODE(A.SUB_STATUS, 'C' , SUBSTR(A.SUB_STATUS_DATE, 1 , 8), '') AS TMNT_DT
+		        , DECODE(C.BAN_ADR_PRIMARY_LN, NULL, '', C.BAN_ADR_PRIMARY_LN || ' ' || C.BAN_ADR_SECONDARY_LN) AS CSTMR_ADDR
+		        , DECODE(C.BAN_ADR_PRIMARY_LN, NULL, '', C.BAN_ADR_PRIMARY_LN || ' ' || C.BAN_ADR_SECONDARY_LN) AS CSTMR_ADDR_MSK
+		        , B.CUSTOMER_ID
+		        , A.TRNS_YN
+		        <if test='excelYn == "Y"'>
+		        , #{reqType} AS REQ_TYPE
+		        , #{invstType} AS INVST_TYPE
+		        , #{invstNm} AS INVST_NM
+		        , #{invstLoc} AS INVST_LOC
+		        , #{invstVal} AS INVST_VAL
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0108' AND CD_VAL = #{reqType}) AS REQ_TYPE_NM
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0107' AND CD_VAL = #{invstType}) AS INVST_TYPE_NM
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9020' AND CD_VAL = #{invstLoc}) AS INVST_LOC_NM
+		        , #{reqOdty} AS REQ_ODTY
+		        , #{reqUser} AS REQ_USER
+		        , #{appOdty} AS APP_ODTY
+		          <if test="appOdty != null and appOdty != ''">
+				<choose>
+						<when test="appOdty == '00'">
+							, #{appOdtyNm} AS APP_ODTY_NM
+						</when>
+						<when test="appOdty != '00' and invstType == 10" >
+						,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+							WHERE GRP_ID = 'CMN0112'
+							     AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+						</when>
+						<when test="appOdty != '00' and invstType == 20" >
+						,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+							WHERE GRP_ID = 'CMN0111'
+							     AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+						</when>
+					</choose>
+				</if>
+		        , #{appUser} AS APP_USER
+		        , #{reqRsn} AS REQ_RSN
+		        , #{reqDttm} AS REQ_DTTM
+		        </if>
+		FROM MSP_JUO_SUB_INFO A, 
+		    (   /* 법인번호  조회 */
+		        SELECT  CUSTOMER_ID
+		                , DRIVR_LICNS_NO
+		                , TAX_ID
+		                , CUSTOMER_SSN
+		                , CUSTOMER_TYPE
+		        FROM MSP_JUO_CUS_INFO
+		       WHERE CUSTOMER_TYPE = 'B'
+		          AND DRIVR_LICNS_NO = #{searchVal}
+		      ) B,
+		    MSP_JUO_BAN_INFO C
+		WHERE	A.CUSTOMER_ID = B.CUSTOMER_ID
+		AND		A.BAN = C.BAN
+		ORDER BY A.CONTRACT_NUM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 가입자확인(계약번호 조회) -->
+	<select id="getCusInfoByContractNum" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	<include refid="com.ktis.msp.cmn.include.paging-start" />
+	/* idntMgmtMapper.getCusInfoByContractNum */
+	<![CDATA[
+		SELECT  A.CONTRACT_NUM
+		        , A.SUBSCRIBER_NO
+		        , A.SUBSCRIBER_NO AS SUBSCRIBER_NO_MSK
+		        , #{searchGb} AS SEARCH_GB
+		        , C.CUSTOMER_TYPE
+		        , FN_GET_CODENM('MSP0009', C.CUSTOMER_TYPE) AS CUSTOMER_TYPE_NM
+		        , ( CASE WHEN C.CUSTOMER_TYPE = 'I' THEN C.CUSTOMER_SSN ELSE C.TAX_ID END ) AS USER_SSN
+		        , ( CASE WHEN C.CUSTOMER_TYPE = 'I' THEN C.CUSTOMER_SSN ELSE C.TAX_ID END ) AS USER_SSN_MSK
+		        , ( CASE WHEN RNUM < CNT THEN 'C' ELSE B.SUB_STATUS END ) AS SUB_STATUS
+		        , FN_GET_CODENM ('MSP0003', ( CASE WHEN RNUM >= CNT THEN B.SUB_STATUS ELSE 'C' END )) AS SUB_STATUS_NM
+		        , C.CUSTOMER_LINK_NAME AS CSTMR_NM
+		        , C.CUSTOMER_LINK_NAME AS CSTMR_NM_MSK
+		        , B.PPPO
+		        , DECODE(B.PPPO, 'PO', '후불', '선불') AS PPPO_NM
+		        , D.BAN_ADR_PRIMARY_LN || ' ' || D.BAN_ADR_SECONDARY_LN AS CSTMR_ADDR
+		        , D.BAN_ADR_PRIMARY_LN || ' ' || D.BAN_ADR_SECONDARY_LN AS CSTMR_ADDR_MSK
+		        , ( CASE WHEN RNUM = 1 OR (A.OPEN_DT = B.LST_COM_ACTV_DATE AND A.CONTRACT_NUM = B.SVC_CNTR_NO) THEN B.LST_COM_ACTV_DATE
+		                 ELSE A.EVNT_DT
+		            END ) AS OPEN_DT
+		        , ( CASE WHEN B.SUB_STATUS = 'C' THEN SUBSTR(B.SUB_STATUS_DATE, 1, 8)
+		                 WHEN RNUM = A.CNT THEN DECODE(B.SUB_STATUS, 'C', SUBSTR(B.SUB_STATUS_DATE, 1, 8), '')
+		                 ELSE LEAD(EVNT_DT) OVER(ORDER BY RNUM)
+		            END ) AS TMNT_DT
+		        , A.CUSTOMER_ID
+		        , B.TRNS_YN
+		]]>
+				<if test='excelYn == "Y"'>
+				, #{reqType} AS REQ_TYPE
+				, #{invstType} AS INVST_TYPE
+				, #{invstNm} AS INVST_NM
+				, #{invstLoc} AS INVST_LOC
+				, #{invstVal} AS INVST_VAL
+				, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0108' AND CD_VAL = #{reqType}) AS REQ_TYPE_NM
+				, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0107' AND CD_VAL = #{invstType}) AS INVST_TYPE_NM
+				, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9020' AND CD_VAL = #{invstLoc}) AS INVST_LOC_NM
+				, #{reqOdty} AS REQ_ODTY
+				, #{reqUser} AS REQ_USER
+				, #{appOdty} AS APP_ODTY
+					<if test="appOdty != null and appOdty != ''">
+						<choose>
+							<when test="appOdty == '00'">
+								, #{appOdtyNm} AS APP_ODTY_NM
+							</when>
+							<when test="appOdty != '00' and invstType == 10" >
+								,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+								WHERE GRP_ID = 'CMN0112'
+								AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+							</when>
+							<when test="appOdty != '00' and invstType == 20" >
+								,(SELECT CD_DSC FROM CMN_GRP_CD_MST
+								WHERE GRP_ID = 'CMN0111'
+								AND CD_VAL = #{appOdty} ) as  APP_ODTY_NM
+							</when>
+						</choose>
+					</if>
+				, #{appUser} AS APP_USER
+				, #{reqRsn} AS REQ_RSN
+				, #{reqDttm} AS REQ_DTTM
+				</if>
+		FROM
+			(   SELECT  ROWNUM AS RNUM
+						, A.*
+				FROM (
+					SELECT  A.CONTRACT_NUM
+							, B.CUSTOMER_ID
+							, A.SUBSCRIBER_NO
+							, B.LST_COM_ACTV_DATE AS OPEN_DT
+							, MAX(SUBSTR(A.EVNT_CHANGE_DATE, 1, 8)) AS EVNT_DT
+							, COUNT(1) OVER() AS CNT
+					FROM    MSP_JUO_SUB_INFO_HIST A
+							, MSP_JUO_SUB_INFO B
+					WHERE   A.CONTRACT_NUM = #{searchVal}
+					AND     ( A.EVNT_CD IN ( 'NAC', 'CAN' )     /* 번호변경후 해지적용 */
+								OR ( A.EVNT_CD = 'MCN' AND A.SUB_STATUS_LAST_ACTV_CD = 'MCN' )  /* 명변 */
+								OR ( A.EVNT_CD = 'CCN' AND A.SUB_STATUS_LAST_ACTV_CD = 'CCN' )  /* 번변 */
+								OR ( A.EVNT_CD IN ( 'UPD', 'UPS' ) AND A.SUB_STATUS_LAST_ACTV_CD = 'NAC' ) )    /* UPD 개통 */
+					AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+					GROUP BY A.CONTRACT_NUM, B.CUSTOMER_ID, A.SUBSCRIBER_NO, B.LST_COM_ACTV_DATE
+					ORDER BY EVNT_DT
+				) A
+			) A
+			, MSP_JUO_SUB_INFO B
+			, MSP_JUO_CUS_INFO C
+			, MSP_JUO_BAN_INFO D
+		WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     A.CUSTOMER_ID = C.CUSTOMER_ID
+		AND		B.BAN = D.BAN
+		ORDER BY A.RNUM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+			
+	<!-- 가입자확인 일련번호 채번 -->
+	<select id="getSeqNum" resultType="String">
+		/* idntMgmtMapper.getSeqNum */
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM') || LPAD(SQ_INVST_REQ.NEXTVAL, 6, '0') AS seqNum
+		FROM    DUAL
+	</select>
+
+	<!-- 고객유형 -->
+	<select id="getCusType" resultType="String" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO">
+		/* idntMgmtMapper.getCusType */
+		SELECT  NVL(B.CUSTOMER_TYPE, 'I')
+		 FROM MSP_JUO_SUB_INFO A, MSP_JUO_CUS_INFO B
+		WHERE A.CONTRACT_NUM = #{contractNum}
+		   AND A.CUSTOMER_ID = B.CUSTOMER_ID
+	</select>
+
+	<!-- 저장전 중복체크 -->
+	<select id="getBeforeSaveCheck" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="int">
+		/* idntMgmtMapper.getBeforeSaveCheck */
+		SELECT
+		    COUNT(*) CNT
+		FROM
+		    MSP_INVST_REQ_MST
+		WHERE 1=1
+		    AND INVST_TYPE = #{invstType} 
+		    AND INVST_NM = #{invstNm} 
+		    AND INVST_VAL = #{invstVal}   
+		
+	</select>
+					
+	<insert id="savInvstReq" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO">
+		/*idntMgmtMapper.savInvstReq */
+		<selectKey keyProperty="seqNum" order="BEFORE" resultType="String">
+			SELECT  TO_CHAR(SYSDATE, 'YYYYMM') || LPAD(SQ_INVST_REQ.NEXTVAL, 6, '0') AS seqNum 
+			FROM    DUAL
+		</selectKey>
+			INSERT INTO MSP_INVST_REQ_MST (
+			   SEQ_NUM
+			   , SEARCH_TYPE
+			   , CONTRACT_NUM
+			   , CUSTOMER_ID
+			   , SUBSCRIBER_NO
+			   , CSTMR_NM
+			   , CUSTOMER_TYPE
+			   , USER_SSN
+			   , SUB_STATUS
+			   , PPPO
+			   , OPEN_DT
+			   , TMNT_DT
+			   , CSTMR_ADDR
+			   , INVST_VAL
+			   , INVST_TYPE
+			   , INVST_NM
+			   , REQ_TYPE
+			   , PROCR_ID
+			   , PROC_DT
+			   , REGST_DTTM
+			   , INVST_LOC
+			   , REQ_ODTY
+			   , REQ_USER
+			   , APP_ODTY
+			   , APP_ODTY_NM
+			   , APP_USER
+			   , REQ_RSN
+			   , REQ_DTTM
+			   , EMAIL
+			) VALUES (
+			    #{seqNum, jdbcType=VARCHAR}
+			    , DECODE(#{searchGb, jdbcType=VARCHAR}, '00', '10', '08', '10', '20')
+			    , #{contractNum, jdbcType=VARCHAR}
+			    , #{customerId, jdbcType=VARCHAR}
+			    , #{subscriberNo, jdbcType=VARCHAR}
+			    , #{cstmrNm, jdbcType=VARCHAR}
+			    , #{searchGb, jdbcType=VARCHAR}
+			    , #{userSsn, jdbcType=VARCHAR}
+			    , #{subStatus, jdbcType=VARCHAR}
+			    , #{pppo, jdbcType=VARCHAR}
+			    , #{openDt, jdbcType=VARCHAR}
+			    , #{tmntDt, jdbcType=VARCHAR}
+			    , #{cstmrAddr, jdbcType=VARCHAR}
+			    , #{invstVal, jdbcType=VARCHAR}
+			    , #{invstType, jdbcType=VARCHAR}
+			    , #{invstNm, jdbcType=VARCHAR}
+			    , #{reqType, jdbcType=VARCHAR}
+			    , #{sessionUserId, jdbcType=VARCHAR}
+			    , TO_CHAR(SYSDATE, 'YYYYMMDD')
+			    , SYSDATE
+			    , #{invstLoc, jdbcType=VARCHAR}
+			    , #{reqOdty, jdbcType=VARCHAR}
+			    , #{reqUser, jdbcType=VARCHAR}
+			    , #{appOdty, jdbcType=VARCHAR}
+			    , #{appOdtyNm, jdbcType=VARCHAR}
+			    , #{appUser, jdbcType=VARCHAR}
+			    , #{reqRsn, jdbcType=VARCHAR}
+			    , #{reqDttm}
+			    , #{email}
+			)
+	</insert>
+	
+	<!-- 고객유형 -->
+	<select id="getInvstCusInfoValidation" resultType="String" parameterType="com.ktis.msp.cmn.cdmgmt.vo.CmnCdMgmtVo">
+		/* idntMgmtMapper.getInvstCusInfoValidation */
+		SELECT '1'
+		FROM  CMN_GRP_CD_MST
+		WHERE 1 = 1
+		  AND GRP_ID = #{grpId}
+		  AND USG_YN = 'Y'
+		  AND CD_VAL = #{cdVal}
+	</select>
+	
+		<!-- 고객유형 -->
+	<select id="getAppOdtyNm" resultType="String" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO">
+		/* idntMgmtMapper.getAppOdtyNm */
+		SELECT CD_DSC FROM CMN_GRP_CD_MST
+		WHERE GRP_ID = #{searchVal}
+		     AND CD_VAL = #{appOdty}
+	</select>
+	
+		<!-- 번호이동 상세 이력 -->
+	<select id="getInvstCusInfoDtl" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* idntMgmtMapper.getInvstCusInfoDtl */
+		SELECT CONTRACT_NUM,
+		       SUBSCRIBER_NO AS SUBSCRIBER_NO_MSK,
+		       (select CD_DSC from cmn_grp_cd_mst where grp_id = 'MSP0005' and CD_VAL = EVNT_CD) as EVNT_NM,
+		       TO_CHAR(TO_DATE(EVNT_CHANGE_DATE, 'YYYYMMDDHH24MISS' ), 'YYYYMMDDHH24MISS') AS EVNT_CHANGE_DATE
+		FROM   MSP_JUO_SUB_INFO_HIST
+		WHERE  CONTRACT_NUM = #{contractNum}
+		AND    SUBSCRIBER_NO IS NOT NULL
+		ORDER BY EVNT_CHANGE_DATE DESC
+	</select>
+	
+	<delete id="deleteMspInvstReqMst" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO">
+		/* idntMgmtMapper.deleteMspInvstReqMst */
+		DELETE  MSP_INVST_REQ_MST
+		WHERE SEQ_NUM = #{seqNum, jdbcType=VARCHAR}
+	</delete>
+		
+	<insert id="savMspInvstReqHist" parameterType="com.ktis.msp.rcp.idntMgmt.vo.IdntMgmtVO">
+		/*idntMgmtMapper.savMspInvstReqHist */
+		INSERT INTO MSP_INVST_REQ_HIST (
+		    SEQ_NUM
+		    , SEARCH_TYPE
+		    , CONTRACT_NUM
+		    , SUBSCRIBER_NO
+		    , CSTMR_NM
+		    , CUSTOMER_TYPE
+		    , USER_SSN
+		    , SUB_STATUS
+		    , PPPO
+		    , OPEN_DT
+		    , TMNT_DT
+		    , CSTMR_ADDR
+		    , INVST_VAL
+		    , INVST_TYPE
+		    , INVST_NM
+		    , REQ_TYPE
+		    , PROCR_ID
+		    , PROC_DT
+		    , REGST_DTTM
+		    , CUSTOMER_ID
+		    , INVST_LOC
+		    , REQ_ODTY
+		    , REQ_USER
+		    , APP_ODTY
+		    , APP_ODTY_NM
+		    , APP_USER
+		    , REQ_RSN
+		    , REQ_DTTM
+		    , EMAIL
+		    , DEL_USER
+		    , DEL_DTTM
+		)
+		SELECT
+		    SEQ_NUM
+		  , SEARCH_TYPE
+		  , CONTRACT_NUM
+		  , SUBSCRIBER_NO
+		  , CSTMR_NM
+		  , CUSTOMER_TYPE
+		  , USER_SSN
+		  , SUB_STATUS
+		  , PPPO
+		  , OPEN_DT
+		  , TMNT_DT
+		  , CSTMR_ADDR
+		  , INVST_VAL
+		  , INVST_TYPE
+		  , INVST_NM
+		  , REQ_TYPE
+		  , PROCR_ID
+		  , PROC_DT
+		  , REGST_DTTM
+		  , CUSTOMER_ID
+		  , INVST_LOC
+		  , REQ_ODTY
+		  , REQ_USER
+		  , APP_ODTY
+		  , APP_ODTY_NM
+		  , APP_USER
+		  , REQ_RSN
+		  , REQ_DTTM
+		  , EMAIL
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		FROM
+		    MSP_INVST_REQ_MST
+		WHERE SEQ_NUM = #{seqNum, jdbcType=VARCHAR}
+
+	</insert>
+	
+
+</mapper>

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.hdofccustmgmt.mapper.PpsHdofcCommonMapper">
+
+	<!-- sleep를 통해 kt_in_res의 카운터를 구한다 -->
+	<select id="getPpsKtInResCnt"   parameterType="HashMap" resultType="integer"> 
+		SELECT COUNT(*) FROM PPS_KT_IN_RES WHERE SEQ = #{seq}
+	</select>	
+	
+	<!-- kt_in_res테이블에서 결과값을 받아온다. -->
+	<select id="getPpsKtInResInfo"  parameterType="HashMap"  resultType="com.ktis.msp.pps.hdofccustmgmt.vo.PpsKtInResVo"> 
+		SELECT  	GUBUN gubun,
+					AMOUNT amount,
+				   	KT_MODE ktMode,
+					O_RES_CODE oResCode,       
+				  	F_GET_KT_CODE_NM('PPS_KT_IN_RES', 'RES_CODE', O_RES_CODE ) oResCodeNm,
+				   	O_AMOUNT oAmount, 
+					O_OLD_REMAINS oOldRemains,
+					O_REMAINS oRemains,
+					F_PPS_NUMBER_FORMAT(O_REMAINS) oRemainsStr,
+					O_DATA_REQ oDataReq,
+					O_DATA_VA_ID oDataVaId,
+					O_DATA_AMOUNT oDataAmount,
+					O_DATA_OLD_QUOTA oDataOldQuota,
+					O_DATA_QUOTA oDataQuota,
+					O_DATA_VA_REMAINS oDataVaRemains,
+					O_TES_CHARGE_MAX oTesChargeMax,
+					O_TES_BASER oTesBaser,
+					O_TES_CHGR oTesChgr,
+					O_TES_MAGICR oTesMasicr,
+					O_TES_FSMSR oTesFsmsr,
+					O_TES_VIDEOR oTesVideor,
+					O_TES_IPVASR oTesIpvasr,
+					O_TES_IPMAXR oTesIpmaxr,
+					O_TES_SMSM oTesSmsm,
+					O_TES_DATAPLUSV oTesDataplusv,
+					O_REFILL_TIME oRefillTime,
+					O_REFILL_TIME_EXPIRE oRefillTimeExpire,
+					O_REFILL_TIME_INNET oRefillTimeInnet,
+					O_REFILL_TIME_INNET_EXPIRE oRefillTimeInnetExpire,
+					O_REFILL_MSG oRefillMsg,
+					O_REFILL_MSG_EXPIRE oRefillMsgExpire,
+					O_FREE_DATA oFreeData,
+					O_FREE_DATA_EXPIRE oFreeDataExpire,
+					O_FREE_INTL oFreeIntl,
+					O_FREE_INTL_EXPIRE oFreeIntlExpire,
+					O_RECHAR_DAY oRecharDay,
+					O_PASSWD oPasswd
+		     FROM PPS_KT_IN_RES
+		     WHERE SEQ = #{seq}
+	</select>
+	
+	<!-- kt에서 결과를 받은 후 row 삭제 -->
+	<delete id="deletePpsKtInRes" timeout="20"  parameterType="java.util.Map"> 
+		DELETE FROM PPS_KT_IN_RES WHERE SEQ = #{seq}
+	</delete>
+	
+		<!-- KT 통신을 위한 seq 생성 -->
+	<select id="getPpsKtSeq" resultType="String"> 
+		SELECT S_KT_IN_REQ.NEXTVAL FROM DUAL
+	</select>
+	
+	<!-- 대리점명 조회해서 대리점콤보박스 옵션목록 가져오기    -->
+	<select id="getSelectPpsAgentInfoDataList"  parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	<choose>
+		<when test="selectType == 'search'">
+			SELECT 
+				  ORGN_ID AS value
+				,ORGN_NM AS text
+			FROM ORG_ORGN_INFO_MST 
+			WHERE ORGN_LVL_CD ='10'
+			AND TYPE_CD='20'
+			AND TYPE_DTL_CD1='SU'
+			AND TYPE_DTL_CD2 ='SU1'
+			AND ORGN_STAT_CD IN ('1', '4')
+			<if test="searchAgentNm != null and searchAgentNm != ''">
+			AND ORGN_NM LIKE '%' || #{searchAgentNm} || '%'
+			</if>
+			ORDER BY ORGN_ID, ORGN_NM
+		</when>
+	 	<when test="selectType == 'popPin'">
+			SELECT 
+				  ORGN_ID AS value
+				,'('|| ORGN_ID  ||') ' || ORGN_NM AS text
+			FROM ORG_ORGN_INFO_MST 
+			WHERE ORGN_LVL_CD ='10'
+			AND TYPE_CD='20'
+			AND TYPE_DTL_CD1='SU'
+			AND TYPE_DTL_CD2 ='SU1'
+			AND ORGN_STAT_CD IN ('1', '4')
+			<if test="searchAgentStr != null and searchAgentStr != ''">
+			AND ORGN_NM LIKE '%' || #{searchAgentStr} || '%'
+			</if>
+			ORDER BY ORGN_ID, ORGN_NM
+	 	</when>
+	 	<when test="selectType == 'dealer'">
+			SELECT 
+				  ORGN_ID AS value
+				,'('|| ORGN_ID  ||') ' || ORGN_NM AS text
+			FROM ORG_ORGN_INFO_MST
+			WHERE ORGN_LVL_CD ='10'
+			AND TYPE_CD='20' 
+			AND TYPE_DTL_CD1='SU'
+			AND TYPE_DTL_CD2 ='SU2'
+			AND ORGN_STAT_CD IN ('1', '4')
+			<if test="searchAgentStr != null and searchAgentStr != ''">
+			AND ORGN_NM LIKE '%' || #{searchAgentStr} || '%'
+			</if>
+			ORDER BY ORGN_ID, ORGN_NM
+	 	</when>
+	 	<when test="selectType == 'allAgent'">
+			SELECT 
+				  ORGN_ID AS value
+				,'('|| ORGN_ID  ||') ' || ORGN_NM AS text
+			FROM ORG_ORGN_INFO_MST 
+			WHERE ORGN_LVL_CD ='10'
+			AND TYPE_CD='20'
+			AND TYPE_DTL_CD1='SU'
+			AND ORGN_STAT_CD IN ('1', '4')
+			<if test="searchAgentStr != null and searchAgentStr != ''">
+			AND ORGN_NM LIKE '%' || #{searchAgentStr} || '%'
+			</if>
+			ORDER BY ORGN_ID, ORGN_NM
+	 	</when>
+	 	
+	 	<when test="selectType == 'agentSale'">
+			SELECT 
+				  ORGN_ID AS value
+				,'('|| ORGN_ID  ||') ' || ORGN_NM AS text
+			FROM ORG_ORGN_INFO_MST 
+			WHERE ORGN_LVL_CD = '20'
+				  AND TYPE_CD = '30'
+				  AND ORGN_STAT_CD IN ('1', '4')
+			<if test="searchAgentSaleStr != null and searchAgentSaleStr != ''">
+			AND ORGN_NM LIKE '%' || #{searchAgentSaleStr} || '%'
+			</if>
+			<if test="agentId != null and agentId != ''">
+			AND HGHR_ORGN_CD = #{agentId}
+			</if>
+			ORDER BY ORGN_ID, ORGN_NM
+	 	</when>
+	 	
+	 </choose>
+	</select>	
+		
+	<!-- CMS은행 리스트    -->
+	<select id="getCmsBankList"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT CD value, 
+			   CD_NM text
+		FROM PPS_KT_COMMON_CD
+		WHERE TABLE_NM = 'PPS_RCG_REAL_CMS'
+			  AND COL = 'BANK_CODE'
+	</select>
+	
+	<!-- 판매점 select리스트    -->
+	<select id="ppsAgentSaleSelect" parameterType="java.util.Map"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT ORGN_ID value,
+				ORGN_NM text
+		FROM ORG_ORGN_INFO_MST 
+		WHERE ORGN_LVL_CD = '20'
+			AND ORGN_STAT_CD IN ('1', '4')
+			AND ORGN_NM LIKE ('%' || #{searchAgentSaleNm} || '%')
+	</select>
+    <!-- - 공통코드 가져오기  -->
+	<select id="getppsKtCommonCdList"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT CD value, 
+			   CD_NM text
+		FROM PPS_KT_COMMON_CD
+		WHERE TABLE_NM = #{searchTableNm}
+			  AND COL = #{searchCol}
+	</select>
+	
+	
+	<!-- selectBox 목록가져오기  -->
+	<select id="getPpsCodeComboList"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT A.CD_VAL AS value,
+      		 A.CD_TXT AS text
+		FROM PPS_CODE_COMBO A
+		WHERE A.LOV_CD = #{searchLovCd}
+		AND A.USE_YN='Y'  
+		ORDER BY SEQ, LOV_CD, DIS_IDX
+	
+	</select>	 
+	
+	<!-- 잔액갱신 -->
+
+	<select id="getPpsKtInResCntProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_KT_IN_RES_CNT(
+				    #{seq, jdbcType=VARCHAR}, #{cntDate, jdbcType=VARCHAR}
+				   ,#{oCnt, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 설명가져오기  -->
+	<select id="getPpsCodeDescInfoList"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT NVL(F_GET_DESC_INFO(#{eventCd}, #{val1}, #{val2}, #{val3}, #{val4}, #{val5}), '') DESC_INFO
+		FROM DUAL
+	</select>	
+		 
+</mapper>
+
+				

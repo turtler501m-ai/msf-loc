@@ -1,0 +1,197 @@
+#!/usr/bin/env groovy
+
+@Library('utils@trunk/utils') _   // Global Shared Library 로드
+//마이그후에 폴더 구조 변경 필요
+
+pipeline {
+  agent any
+  options {
+    ansiColor('css')   // Jenkins 콘솔 출력에서 ANSI 컬러 활성화
+  }
+
+  // -------------------------------
+  // Global 환경 변수 선언
+  // 모든 stage에서 공통으로 접근 가능
+  // -------------------------------
+  environment {
+    MVN_HOME = tool 'maven-3.8.9'           // Maven 설치 경로
+    JDK_HOME = tool 'jdk11'                 // JDK 설치 경로
+    JENKINS_PROPERTIES = 'devops/jenkins/jenkins-new.properties' // Jenkins 전용 프로퍼티 파일
+  }
+
+  stages {
+
+    // -------------------------------
+    // 1. 환경 체크 및 JOB 정보 파싱
+    // - JOB_NAME에서 MCP 접두사 제거
+    // - jobName을 '-' 기준으로 나눔
+    // - platformNm, targetEnv 전역 변수 등록
+    // - Groovy와 Shell에서 모두 확인 가능하도록 echo 출력
+    // -------------------------------
+    stage('Environment Check') {
+      steps {
+        script {
+          // MCP 접두사 제거 [MCP/mcp-portal-was-dev] 또는 MCP/mcp-widget-was-dev
+          def jobName = env.JOB_NAME.tokenize('/').last()        // "mcp-portal-was-dev"
+          def varField = jobName.split('-')                      // ["mcp", "portal", "was", "dev"]
+
+          // 전역 env 변수 등록
+          env.platformNm = "${varField[0]}-${varField[1]}"       // 예: mcp-admin
+          env.targetEnv  = varField.last()                       // 예: dev
+          env.validVar   = varField[1]                           // 예: portal or widget
+
+          // -------------------------------
+          // 환경 정보 출력
+          // Groovy 변수 및 시스템 환경 변수 확인
+          // -------------------------------
+          echo """
+================= Jenkins Environment Check =================
+JOB_NAME    : ${env.JOB_NAME}
+jobName     : ${jobName}
+JDK_HOME    : ${env.JDK_HOME}
+MVN_HOME    : ${env.MVN_HOME}
+targetEnv   : ${env.targetEnv}
+platformNm  : ${env.platformNm}
+validVar    : ${env.validVar}
+
+================= System Environment Variables ===============
+${sh(script: 'printenv | sort | grep -E "JOB_NAME|BUILD_NUMBER|WORKSPACE|JAVA_HOME|PATH|platformNm|targetEnv" || true', returnStdout: true).trim()}
+==============================================================
+"""
+        }
+      }
+    }
+
+    // -------------------------------
+    // 2. Maven Build & Unit Test 실행
+    // - Jenkins Properties 파일 읽기
+    // - Unit Test 수행 여부 확인
+    // - Maven 환경 변수 설정 후 빌드 수행
+    // - Unix / Windows 환경 분기 처리
+    // - Unit Test와 SonarQube 분석 수행
+    // - 실패 시 workspace 정리 및 빌드 실패 처리
+    // -------------------------------
+    stage('Maven Build & Unit Test') {
+      steps {
+        script {
+          // Jenkins Properties 파일 읽기
+          def props = readProperties file: "${env.WORKSPACE}/${env.JENKINS_PROPERTIES}"
+
+          // 유닛 테스트 수행 여부 파라미터
+          def unitTestEnable = params.unitTestEnable ?: false
+          echo "unitTestEnable = ${unitTestEnable}"
+
+          // Maven POM, settings 경로 설정
+          def mvnPom = "${env.WORKSPACE}/${props.mvnPomFile}"
+          def mvnSettings = "${env.WORKSPACE}/${props.devopsPath}/${props.mvnSetFile}"
+          def mvnSecSettings = "${env.WORKSPACE}/${props.devopsPath}/${props.mvnSecSetFile}"
+
+          def holdData = "${props.holdData}"
+          def validPlatform = "${props.validPlatform}"
+
+          try {
+            // Maven 실행용 환경 변수 설정
+            withEnv([
+              "MAVEN_HOME=${env.MVN_HOME}",
+              "JAVA_HOME=${env.JDK_HOME}",
+              "PATH=${env.JDK_HOME}/bin:${env.PATH}"
+            ]) {
+
+              if (env.validVar == props.validPlatform) {
+                sh """
+                sed -i "s|${props.holdData}|${props.validPlatform}|g" ${mvnPom}
+                """
+              }
+
+              if (isUnix()) {
+                // -------------------------------
+                // Unix 환경에서 Maven clean & package 수행
+                // - 메모리 옵션 지정
+                // - 테스트 제외(-DskipTests)
+                // -------------------------------
+                sh """
+                  export MAVEN_OPTS="-Xms1G -Xmx2G -Xss10m"
+                  ${MAVEN_HOME}/bin/mvn -f ${mvnPom} clean package \
+                    -P ${env.targetEnv} -DskipTests \
+                    --settings ${mvnSettings} -Dsettings.security="${mvnSecSettings}"
+                """
+
+                // -------------------------------
+                // Unit Test 수행 시 SonarQube 분석
+                // - allowEmptyResults: 테스트 결과가 없어도 실패하지 않음
+                // -------------------------------
+                if (unitTestEnable) {
+                  withSonarQubeEnv('sonarqube-devops'){
+                    sh """
+                      ${MAVEN_HOME}/bin/mvn -f ${mvnPom} sonar:sonar \
+                        --settings ${mvnSettings} -Dsettings.security="${mvnSecSettings}"
+                    """
+                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+                  }
+                }
+              } else {
+                // Windows 환경
+                bat(/"%MAVEN_HOME%\bin\mvn" clean package -X -P %targetEnv% -DskipTests --settings "%mvnSettings%"/)
+              }
+            }
+          } catch(e) {
+            // -------------------------------
+            // 빌드 실패 처리
+            // - workspace 정리
+            // - 빌드 실패 설정
+            // - 에러 메시지 출력
+            // -------------------------------
+            echo "Build 실패 → workspace 정리: ${env.JOB_NAME}"
+            sh 'ls -A1 | xargs rm -rf'
+            currentBuild.result = "FAILED"
+            echo e.toString()
+          }
+        }
+      }
+    }
+
+    // -------------------------------
+    // 3. Source Deploy
+    // - 빌드 성공 시에만 실행
+    // - 배포용 script 파일 복사 및 원격 실행
+    // -------------------------------
+    stage('Source Deploy') {
+      when {
+        expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+      }
+      steps {
+        script {
+          // Properties 다시 읽기
+          def props = readProperties file: "${env.WORKSPACE}/${env.JENKINS_PROPERTIES}"
+
+          def scriptFile = "${env.WORKSPACE}/${props.devopsPath}/${props.instanceShell}"
+          def targetDir = "${props.releaseDir}/${env.targetEnv}/${env.platformNm}"
+
+          // -------------------------------
+          // PATH 환경 변수만 stage-specific 적용
+          // - props 파일 경로 출력
+          // - 배포용 파일 복사
+          // - 원격 배포 실행
+          // -------------------------------
+          withEnv(["PATH=${env.PATH}"]) {
+            sh """
+                set -e   # 에러시 즉시 종료
+                if [ -f "${targetDir}" ]; then
+                    echo "[WARN] Target path is a file. Removing it: ${targetDir}"
+                    rm -f "${targetDir}"
+                fi
+                mkdir -p "${targetDir}"
+                cp "${scriptFile}" "${targetDir}/"
+            """
+
+            def propsFile = "${env.WORKSPACE}/${props.devopsPath}/${env.platformNm}/${env.targetEnv}/${props.utilPropsFile}"
+            echo "propsFile   : ${propsFile}"
+            sshRemote(propsFile)
+          }  
+        }
+      
+      }
+    }
+
+  } // end stages
+}

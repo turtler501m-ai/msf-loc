@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- portal oracle -->
+<mapper namespace="EventMapper">
+
+    <select id="eventPlanProdSelect2" parameterType="int" resultType="com.ktmmobile.mcp.event.dto.PlanProductDto">
+        SELECT max(PROD_NM)
+          FROM NMCP_PROD_BAS
+         WHERE PROD_ID = #{prodId}
+    </select>
+    
+    <select id="eventPlanProdSelect3" parameterType="int" resultType="com.ktmmobile.mcp.event.dto.PlanProductDto">
+        SELECT max(ATRIB_VAL_NM_1)
+          FROM NMCP_SNTY_PROD_BAS
+         WHERE PROD_ID = #{prodId}
+    </select>
+    
+    <select id="eventPlanProdSelect4" parameterType="int" resultType="com.ktmmobile.mcp.event.dto.PlanProductDto">
+        SELECT max(ATRIB_VAL_NM_2)
+          FROM NMCP_SNTY_PROD_BAS
+         WHERE PROD_ID = #{prodId}
+    </select>
+    
+    <select id="eventPlanProdSelect5" parameterType="Map" resultType="com.ktmmobile.mcp.event.dto.PlanProductDto">
+        SELECT IMG_PATH 
+          FROM NMCP_PROD_IMG_DTL 
+         WHERE PROD_ID = #{plnProdId}
+           AND SNTY_COLOR_CD = #{plnValCd1}
+           AND IMG_TYPE_CD = '01'
+    </select>
+    
+
+    <!-- 설문 조사 참여 여부 -->
+    <select id="selectNmcpSurvey" parameterType="String" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            NMCP_SURVEY
+        WHERE
+            RES_NO = #{resNo}
+    </select>
+
+    <!-- 설문 조사 저장 -->
+    <insert id="insertNmcpSurvey" parameterType="com.ktmmobile.mcp.event.dto.NmcpSurveyDto">
+        INSERT INTO NMCP_SURVEY (
+            RES_NO
+            ,SURVEY_CD
+            ,SURVEY_ANS
+            ,SURVEY_ETC
+            ,SYS_RDATE
+        ) VALUES (
+            #{resNo}
+            ,#{surveyCd}
+            ,#{surveyAns}
+            ,#{surveyEtc}
+            ,SYSDATE
+        )
+    </insert>
+
+    <select id="selectFrndId" parameterType="com.ktmmobile.mcp.event.dto.FrndRecommendDto" resultType="com.ktmmobile.mcp.event.dto.FrndRecommendDto">
+        SELECT
+            COMMEND_ID
+             ,CONTRACT_NUM
+             ,NVL(LINK_TYPE_CD,'01') AS linkTypeCd
+             ,OPEN_MTHD_CD
+             ,COMMEND_SOC_CODE_01
+             ,COMMEND_SOC_CODE_02
+             ,COMMEND_SOC_CODE_03
+             ,SYS_RDATE
+        FROM
+            MCP_COMMEND_ID_MNG
+        WHERE 1 = 1
+        <if test="contractNum != null and contractNum != ''">
+            AND CONTRACT_NUM = #{contractNum}
+        </if>
+        <if test="commendId != null and commendId != ''">
+            AND COMMEND_ID = #{commendId}
+        </if>
+    </select>
+
+
+    <update id="updateCommendInfo" parameterType="com.ktmmobile.mcp.event.dto.FrndRecommendDto" >
+        UPDATE MCP_COMMEND_ID_MNG SET
+            RVISN_DTTM = SYSDATE                                      --수정일시
+            , LINK_TYPE_CD = #{linkTypeCd}                             --링크유형코드 01 기본 추천  02 올인원
+            , OPEN_MTHD_CD = #{openMthdCd}                            --개통방법코드 01 바로배송유심  02 편의점 유심 03 오픈마켓 유심 04 eSIM 셀프
+            , COMMEND_SOC_CODE_01 = #{commendSocCode01}               --추천요금제 코드1
+            , COMMEND_SOC_CODE_02 = #{commendSocCode02}               --추천요금제 코드2
+            , COMMEND_SOC_CODE_03 = #{commendSocCode03}               --추천요금제 코드3
+        WHERE
+            CONTRACT_NUM  = #{contractNum}                             --계약번호(NCN)
+            AND COMMEND_ID = #{commendId}                             --추천 아이디
+    </update>
+
+
+    <insert id="insertFrndHist" parameterType="com.ktmmobile.mcp.event.dto.FrndRecommendDto">
+        INSERT INTO MCP_COMMEND_ID_MNG_HIST (
+              COMMEND_ID               --추천 아이디
+            , INDEX_NO                 --
+            , LINK_TYPE_CD             --링크유형코드 01 기본 추천  99 올인원
+            , OPEN_MTHD_CD             --개통방법코드 01 바로배송유심  02 편의점 유심 03 오픈마켓 유심 04 eSIM 셀프
+            , COMMEND_SOC_CODE_01      --추천요금제 코드1
+            , COMMEND_SOC_CODE_02      --추천요금제 코드2
+            , COMMEND_SOC_CODE_03      --추천요금제 코드3
+            , PSTNG_START_DATE         --게시시작일자
+            , PSTNG_END_DATE           --게시종료일자
+            , CRET_IP                  --생성IP
+            , CRET_DT                  --생성일시
+            , CRET_ID                  --생성자ID
+        ) VALUES (
+            #{commendId}
+            , NVL((SELECT MAX(INDEX_NO+1) FROM MCP_COMMEND_ID_MNG_HIST WHERE COMMEND_ID = #{commendId}),1)
+            , #{linkTypeCd}
+            , #{openMthdCd}
+            , #{commendSocCode01}
+            , #{commendSocCode02}
+            , #{commendSocCode03}
+            , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+            , '99991231235959'
+            , #{cretIp}
+            , SYSDATE
+            , #{cretId}
+        )
+    </insert>
+
+    <update id="updateFrndHist" parameterType="com.ktmmobile.mcp.event.dto.FrndRecommendDto" >
+        UPDATE MCP_COMMEND_ID_MNG_HIST SET
+            PSTNG_END_DATE = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+        WHERE
+            COMMEND_ID  = #{commendId}
+          AND PSTNG_END_DATE = '99991231235959'
+    </update>
+
+    <insert id="insertFrndId" parameterType="com.ktmmobile.mcp.event.dto.FrndRecommendDto">
+        INSERT INTO MCP_COMMEND_ID_MNG (
+           COMMEND_ID               --추천 아이디
+           , CONTRACT_NUM           --계약번호(NCN)
+           , LINK_TYPE_CD           --링크유형코드 01 기본 추천  02 올인원
+           ,  OPEN_MTHD_CD          --개통방법코드 01 바로배송유심  02 편의점 유심 03 오픈마켓 유심 04 eSIM 셀프
+           , COMMEND_SOC_CODE_01    --추천요금제 코드1
+           , COMMEND_SOC_CODE_02    --추천요금제 코드2
+           , COMMEND_SOC_CODE_03    --추천요금제 코드3
+           , RVISN_DTTM             --수정일시
+           , SYS_RDATE
+        ) VALUES (
+             #{commendId}
+            , #{contractNum}
+            , #{linkTypeCd}
+            , #{openMthdCd}
+            , #{commendSocCode01}
+            , #{commendSocCode02}
+            , #{commendSocCode03}
+            , SYSDATE
+            , SYSDATE
+        )
+    </insert>
+
+    <select id="duplicateChk" parameterType="String" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            MCP_COMMEND_ID_MNG
+        WHERE
+            COMMEND_ID  = #{commendId}
+    </select>
+
+
+</mapper>

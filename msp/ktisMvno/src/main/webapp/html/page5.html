@@ -1,0 +1,284 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<title>iframe sample</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<!-- Library -->
+<link rel="stylesheet" type="text/css" href="../lib/dhtmlx/codebase/dhtmlx.css"/>
+<link rel="stylesheet" type="text/css" href="../css/mvno.css"/>
+<script src="../lib/jquery/jquery-1.9.1.js"></script>
+<script src="../lib/dhtmlx/codebase/dhtmlx.js"></script>
+<script src="../js/mvno.js"></script>
+<!-- //Library  -->
+
+</head>
+
+<body>
+
+	<!-- header -->
+	<div class="page-header">
+		<h1>후불가입신청관리</h1>
+		<a href="#" class="favor">즐겨찾기 추가</a>
+		<ul>
+			<li>HOME</li>
+			<li>조직관리</li>
+			<li>단말기관리</li>
+		</ul>
+	</div>
+	<!-- //header -->
+
+	<!-- 화면 배치 -->
+	<div class="row">
+		<div class="c1">고객정보<br/><a href="#">[도움말]</a><br/><a href="#">[문자발송]</a><br/><a href="#">[상담등록]</a></div>
+		<div id="FORM0" class="section-box c9"></div>
+	</div>
+	<div class="row">
+		<div class="c1">배송정보</div>
+		<div id="FORM1" class="section-box c9"></div>
+	</div>
+
+	<div class="row">
+		<div class="c1">요금납부정보</div>
+		<div id="FORM2" class="section-box c9"></div>
+	</div>
+
+	<div class="row">
+		<div class="c1">가입 신청정보</div>
+		<div id="FORM3" class="section-box c9"></div>
+	</div>
+
+	<div class="row">
+		<div class="c1">번호이동정보</div>
+		<div id="FORM4" class="section-box c9"></div>
+	</div>
+
+	<div class="row">
+		<div class="c1">법정대리인</div>
+		<div id="FORM5" class="section-box c9"></div>
+	</div>
+
+	<div class="row">
+		<div class="c1">약관 동의정보</div>
+		<div id="FORM6" class="section-box c9"></div>
+	</div>
+
+	<div id="FORM7" class="section-pagescope"></div><!-- 하단 페이지 버튼 class="section-pagescope" 삽입 -->
+
+	<style type="text/css">
+	/* 임시 CSS */
+	.section .section-header+.section-body, .section .section-footer{padding:0;}
+	.section{margin:0;margin-top:-1px;}
+	.section-box .section-body{padding-top:8px !important;padding-bottom:10px !important;}
+	</style>
+
+	<!-- Script -->
+	<script type="text/javascript">
+		var DHX = {
+			FORM0 : {
+				// title: "고객정보",
+				 items : [
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:100, blockOffset:0}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]},
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]},
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+				]
+			 },
+             FORM1 : {
+				 //title: "배송정보",
+				 items : [
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:80, blockOffset:0}
+					,{type:"block", list:[
+						{type:"input", width:60, label:"받으시는 분"}
+						,{type:"newcolumn"}
+						,{type:"checkbox", width:100, label:"가입 고객정보 동일", position:"label-right", labelWidth:120}
+						,{type:"newcolumn"}
+						,{type:"select", width:50, label:"전화번호", offsetLeft:10, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"newcolumn"}
+						,{type:"input", width:40, label:""}
+						,{type:"newcolumn"}
+						,{type:"input", width:40, label:""}
+						,{type:"newcolumn"}
+						,{type:"select", width:50, label:"휴대폰", offsetLeft:10, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"newcolumn"}
+						,{type:"input", width:40, label:""}
+						,{type:"newcolumn"}
+						,{type:"input", width:40, label:""}
+					]},
+					,{type:"block", list:[
+						{type:"input", width:200, label:"받는사람 주소"}
+						,{type:"newcolumn"}
+						,{type:"input", width:100, label:""}
+						,{type:"newcolumn"}
+						,{type:"button", value: "주소찾기"}
+						,{type:"newcolumn"}
+						,{type:"input", width:100, label:"요청사항", offsetLeft:40}
+					]}
+				]
+			 },
+
+			 FORM2 : {
+				 //title: "요금납부정보",
+				 items : [
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:100, blockOffset:0}
+					,{type:"block", list:[
+						{type:"select", width:100, label:"요금납부방법", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"newcolumn"}
+						,{type:"select", width:100, label:"은행명 및 계좌번호", labelWidth:120, offsetLeft:40, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"newcolumn"}
+						,{type:"input", width:150, label:""}
+					]},
+					,{type:"block", list:[
+						{type:"input", width:60, label:"예금주 성명"}
+						,{type:"newcolumn"}
+						,{type:"checkbox", width:100, label:"타인납부", position:"label-right", labelWidth:120}
+						,{type:"newcolumn"}
+						,{type:"input", width:120, labelWidth:120, label:"예금주 주민등록번호"}
+					]}
+					,{type:"block", list:[
+						{type:"select", width:100, label:"요금납부방법", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"newcolumn"}
+						,{type:"select", width:100, label:"신용카드번호", labelWidth:90, offsetLeft:40, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"newcolumn"}
+						,{type:"input", width:40, label:""}
+						,{type:"newcolumn"}
+						,{type:"input", width:40, label:""}
+						,{type:"newcolumn"}
+						,{type:"input", width:40, label:""}
+						,{type:"newcolumn"}
+						,{type:"input", width:40, label:""}
+						,{type:"newcolumn"}
+						,{type:"select", width:50,labelWidth:50, label:"유효기간", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"newcolumn"}
+						,{type:"select", width:50, label:"", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+					]},
+					,{type:"block", list:[
+						{type:"input", width:60, label:"예금주 성명"}
+						,{type:"newcolumn"}
+						,{type:"checkbox", width:100, label:"타인납부", position:"label-right", labelWidth:120}
+						,{type:"newcolumn"}
+						,{type:"input", width:120, labelWidth:120, label:"예금주 주민등록번호"}
+					]}
+				]
+			 },
+
+			 FORM3 : {
+				 //title: "가입 신청정보",
+				 items : [
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:100, blockOffset:0}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]},
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+				]
+			 },
+
+			 FORM4 : {
+				 //title: "번호이동정보",
+				 items : [
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:100, blockOffset:0}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]},
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+				]
+			 },
+
+			 FORM5 : {
+				 //title: "법정대리인",
+				 items : [
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:100, blockOffset:0}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+				]
+			 },
+
+			 FORM6 : {
+				 //title: "약관 동의정보",
+				 items : [
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:100, blockOffset:0}
+					,{type:"block", list:[
+						{type:"input", width:200, label:"임시"}
+					]}
+				]
+			 },
+
+			 FORM7 : {
+					buttons : {
+						right : {
+							btnDelete : { label : "삭제" },
+							btnSave : { label : "확인" },
+							btnCancel : { label : "취소" }
+						}
+					}
+			 },
+
+		};
+
+        var PAGE = {
+			onOpen : function() {
+				mvno.ui.createForm("FORM0");
+				mvno.ui.createForm("FORM1");
+				mvno.ui.createForm("FORM2");
+				mvno.ui.createForm("FORM3");
+				mvno.ui.createForm("FORM4");
+				mvno.ui.createForm("FORM5");
+				mvno.ui.createForm("FORM6");
+				mvno.ui.createForm("FORM7");
+			}
+		}
+	</script>
+
+
+
+
+
+
+	<!-- Script -->
+	<script type="text/javascript">
+/*
+		dhtmlx.message({ text:"Test Message", expire:-1});
+		dhtmlx.message({ text:"Test Error Message", expire:-1, type:"error"});
+		dhtmlx.confirm({ 
+			title:"Title Here", text:"Test confirm",
+			callback:function(){
+				dhtmlx.alert("Test alert", function(){
+					dhtmlx.confirm({ type:"confirm-error", title:"Title Here", text:"Test confirm" });
+				});	
+			}
+		});
+*/
+	</script>
+
+	<script src="../js/mvno_footer.js"></script>
+
+</body>
+</html>

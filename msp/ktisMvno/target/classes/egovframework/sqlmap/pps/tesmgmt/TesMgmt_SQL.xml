@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.tesmgmt.mapper.PpsTesMgmtMapper">
+
+
+
+<!--청소년요금제 충전/조회내역 목록조회 -->
+    <select id="getTesMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+			SELECT	/*+ INDEX_DESC(A PPS_RCG_TES_IDX1) */ 
+				  TES_SEQ,
+				  REQ_TYPE,
+				  DECODE(REQ_TYPE, 'BS_TES_CHARGE', 'TES충전알', 'BS_TES_QUERY', 'TES조회', '') REQ_TYPE_NM,
+				  CONTRACT_NUM,
+				  RECHARGE_AGENT,
+				  RECHARGE,
+				  RET_CODE,
+				  RET_MSG,
+				  RCG_SEQ,
+				  O_AMOUNT,
+				  O_TES_CHARGE_MAX,
+				  O_TES_BASER,
+				  O_TES_CHGR,
+				  O_TES_MAGICR,
+				  O_TES_FSMSR,
+				  O_TES_VIDEOR,
+				  O_TES_IPVASR,
+				  O_TES_IPMAXR,
+				  O_TES_SMSM,
+				  O_TES_DATAPLUSV,
+				  RECHARGE_IP,
+				  REQ_DATE,
+				  ADMIN_ID,
+				  F_GET_ADMIN_NM(ADMIN_ID) ADMIN_NM
+	 		FROM PPS_RCG_TES A
+		    WHERE REQ_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+			 <if test="startDt != null and startDt != ''">
+					AND REQ_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			 </if>
+			 <if test="endDt != null and endDt != ''">
+					AND REQ_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			 </if>
+			 
+			 <if test="searchReqType != null and searchReqType != ''">
+					AND REQ_TYPE = #{searchReqType}
+			 </if>
+			 
+			 <if test="searchRechargeAgent != null and searchRechargeAgent != ''">
+					AND RECHARGE_AGENT = #{searchRechargeAgent}
+			 </if>
+			 
+			 <if test="searchSuccFlag != null and searchSuccFlag != ''">
+			 	<if test="searchSuccFlag == 'Y'">
+					AND RET_CODE = '0000'
+			 	</if>
+			 	<if test="searchSuccFlag == 'N'">
+					AND RET_CODE &lt;> '0000'
+			 	</if>
+			 </if>
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+	<!-- 청소년요금제 충전/조회 -->
+	<select id="getPpsRcgTesProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_RCG_TES(
+					    #{opCode, jdbcType=VARCHAR}
+					    , #{reqType, jdbcType=VARCHAR}
+					    , #{contractNum, jdbcType=VARCHAR}
+					    , #{recharge, jdbcType=VARCHAR}
+					    , #{agentId, jdbcType=VARCHAR}
+					    , #{adminId, jdbcType=VARCHAR}
+					    , #{iIp, jdbcType=VARCHAR}
+					   , #{seq, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					   , #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					  )
+		     }
+	</select>   
+
+</mapper>

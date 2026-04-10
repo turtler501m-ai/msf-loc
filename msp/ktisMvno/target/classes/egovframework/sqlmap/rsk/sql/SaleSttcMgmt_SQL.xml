@@ -1,0 +1,870 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rsk.statMgmt.mapper.SaleSttcMgmtMapper">
+
+	<!-- 채널별영업실적 -->
+	<select id="getChnlSaleSttcList" parameterType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtVO"
+			resultType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtChnlVO">
+		/* saltSttcMapper.getChnlSaleSttcList */
+		SELECT  DECODE( X.MDL_YN, NULL, '', 
+						DECODE(X.CHNL_TP, NULL, '', 
+							DECODE(X.PPPO, 'PO', '후불', 'PP', '선불', '')))				AS pppo
+				, DECODE( X.CHNL_TP, NULL, '', 
+						DECODE(X.PPPO, 'PO', 
+							DECODE(X.MDL_YN, 'Y', '단말결합', 'N', '유심단독'), 'PP', 
+								DECODE(X.MDL_YN, 'Y', '일반유심', 'N', '단기유심'), ''))	AS prodNm
+				, DECODE( X.PPPO, 'PO', 
+						DECODE(X.CHNL_TP, NULL, 
+							DECODE(X.MDL_YN, NULL, '후불합계', '소계')
+								, FN_GET_CODENM('CMN0055', X.CHNL_TP)), 'PP', 
+										DECODE(X.MDL_YN, NULL, '선불합계', ''), '합계')	AS chnlTpNm
+				, X.KEEP_CNT															AS keepCnt
+				, X.MM_OPEN_CNT															AS mmOpenCnt
+				, X.MM_CAN_CNT															AS mmCanCnt
+				, X.MM_OPEN_CNT - X.MM_CAN_CNT											AS mmNewCnt
+				, X.MM_TMNT_CNT															AS mmTmntCnt
+				, X.MM_TMNT_RCL_CNT														AS mmTmntRclCnt
+				, X.MM_OPEN_CNT - X.MM_CAN_CNT - X.MM_TMNT_CNT + X.MM_TMNT_RCL_CNT		AS mmNetCnt
+				, X.OPEN_CNT															AS openCnt
+				, X.CAN_CNT																AS canCnt
+				, X.OPEN_CNT - X.CAN_CNT												AS newCnt
+				, X.TMNT_CNT															AS tmntCnt
+				, X.TMNT_RCL_CNT														AS tmntRclCnt
+				, X.OPEN_CNT - X.CAN_CNT - X.TMNT_CNT + X.TMNT_RCL_CNT					AS netCnt
+		FROM (
+			SELECT  A.PPPO
+					, A.MDL_YN
+					, A.CHNL_TP
+					, SUM(NVL(A.KEEP_CNT, 0)) AS KEEP_CNT
+					, SUM(NVL(A.MM_OPEN_CNT, 0)) AS MM_OPEN_CNT
+					, SUM(NVL(A.MM_CAN_CNT, 0)) AS MM_CAN_CNT
+					, SUM(NVL(A.MM_TMNT_CNT, 0)) AS MM_TMNT_CNT
+					, SUM(NVL(A.MM_TMNT_RCL_CNT, 0)) AS MM_TMNT_RCL_CNT
+					, SUM(NVL(A.OPEN_CNT, 0)) AS OPEN_CNT
+					, SUM(NVL(A.CAN_CNT, 0)) AS CAN_CNT
+					, SUM(NVL(A.TMNT_CNT, 0)) AS TMNT_CNT
+					, SUM(NVL(A.TMNT_RCL_CNT, 0)) AS TMNT_RCL_CNT
+					, CASE
+						WHEN A.PPPO = 'PO' THEN
+							CASE
+								WHEN A.MDL_YN = 'Y' THEN DECODE(A.CHNL_TP, NULL, 2, 1)
+								WHEN A.MDL_YN = 'N' THEN DECODE(A.CHNL_TP, NULL, 4, 3)
+								ELSE 5
+							END
+						WHEN A.PPPO = 'PP' THEN
+							CASE
+								WHEN A.MDL_YN = 'Y' THEN 6
+								WHEN A.MDL_YN = 'N' THEN 7
+								ELSE 8
+							END
+						ELSE 9
+					END AS SORT 
+			FROM (
+				SELECT  AA.PPPO
+						, AA.MDL_YN
+						, AA.CHNL_TP
+						, AA.KEEP_CNT
+						, NVL(BB.MM_OPEN_CNT, 0) AS MM_OPEN_CNT
+						, NVL(BB.MM_CAN_CNT, 0) AS MM_CAN_CNT
+						, NVL(BB.MM_TMNT_CNT, 0) AS MM_TMNT_CNT
+						, NVL(BB.MM_TMNT_RCL_CNT, 0) AS MM_TMNT_RCL_CNT
+						, NVL(CC.OPEN_CNT, 0) AS OPEN_CNT
+						, NVL(CC.CAN_CNT, 0) AS CAN_CNT
+						, NVL(CC.TMNT_CNT, 0) AS TMNT_CNT
+						, NVL(CC.TMNT_RCL_CNT, 0) AS TMNT_RCL_CNT
+				FROM  ( SELECT  A.PPPO
+								, A.MDL_YN
+								, SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP
+								, SUM(NVL(A.KEEP_CNT, 0)) AS KEEP_CNT
+						FROM    MSP_CHNL_SALE_RSLT_STTC A
+						WHERE   A.WORK_CD = 'B'
+						AND     A.PPPO = 'PO'
+						AND     A.WORK_DT = #{stdrDt}
+						AND     A.WORK_TM = #{stdrTm}
+						GROUP BY A.PPPO, A.MDL_YN, SUBSTR(A.CHNL_TP, 1, 3)
+					) AA
+					, ( SELECT  A.MDL_YN
+								, SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP
+								, SUM(NVL(A.OPEN_CNT, 0)) AS MM_OPEN_CNT
+								, SUM(NVL(A.CAN_CNT, 0)) AS MM_CAN_CNT
+								, SUM(NVL(A.TMNT_CNT, 0)) AS MM_TMNT_CNT
+								, SUM(NVL(A.TMNT_RCL_CNT, 0)) AS MM_TMNT_RCL_CNT
+						FROM (
+								SELECT  A.MDL_YN 
+										, A.CHNL_TP
+										, A.OPEN_CNT
+										, A.CAN_CNT
+										, A.TMNT_CNT
+										, A.TMNT_RCL_CNT
+								FROM    MSP_CHNL_SALE_RSLT_STTC A
+								WHERE   A.WORK_CD = 'A'
+								AND     A.PPPO = 'PO'
+								AND     A.WORK_DT <![CDATA[ >= ]]> SUBSTR(#{stdrDt}, 1, 6)||'01'
+								AND     A.WORK_DT <![CDATA[ < ]]> #{stdrDt}
+								AND     A.WORK_TM = '2400'
+								UNION ALL
+								SELECT  A.MDL_YN 
+										, A.CHNL_TP
+										, A.OPEN_CNT
+										, A.CAN_CNT
+										, A.TMNT_CNT
+										, A.TMNT_RCL_CNT
+								FROM    MSP_CHNL_SALE_RSLT_STTC A
+								WHERE   A.WORK_CD = 'A'
+								AND     A.PPPO = 'PO'
+								AND     A.WORK_DT = #{stdrDt}
+								AND     A.WORK_TM = #{stdrTm}
+							) A
+						GROUP BY A.MDL_YN, SUBSTR(A.CHNL_TP, 1, 3)
+					) BB
+					, ( SELECT  A.MDL_YN
+								, SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP
+								, SUM(NVL(A.OPEN_CNT, 0)) AS OPEN_CNT
+								, SUM(NVL(A.CAN_CNT, 0)) AS CAN_CNT
+								, SUM(NVL(A.TMNT_CNT, 0)) AS TMNT_CNT
+								, SUM(NVL(A.TMNT_RCL_CNT, 0)) AS TMNT_RCL_CNT
+						FROM    MSP_CHNL_SALE_RSLT_STTC A
+						WHERE   A.WORK_CD = 'A'
+						AND     A.PPPO = 'PO'
+						AND     A.WORK_DT = #{stdrDt}
+						AND     A.WORK_TM = #{stdrTm}
+						GROUP BY A.MDL_YN, SUBSTR(A.CHNL_TP, 1, 3)
+					) CC
+				WHERE   1 = 1
+				AND     AA.MDL_YN = BB.MDL_YN(+)
+				AND     AA.CHNL_TP = BB.CHNL_TP(+)
+				AND     AA.MDL_YN = CC.MDL_YN(+)
+				AND     AA.CHNL_TP = CC.CHNL_TP(+)
+				UNION ALL
+				SELECT  AA.PPPO
+						, AA.MDL_YN
+						, AA.CHNL_TP
+						, NVL(AA.KEEP_CNT, 0) AS KEEP_CNT
+						, NVL(BB.MM_OPEN_CNT, 0) AS MM_OPEN_CNT
+						, NVL(BB.MM_CAN_CNT, 0) AS MM_CAN_CNT
+						, NVL(BB.MM_TMNT_CNT, 0) AS MM_TMNT_CNT
+						, NVL(BB.MM_TMNT_RCL_CNT, 0) AS MM_TMNT_RCL_CNT
+						, NVL(CC.OPEN_CNT, 0) AS OPEN_CNT
+						, NVL(CC.CAN_CNT, 0) AS CAN_CNT
+						, NVL(CC.TMNT_CNT, 0) AS TMNT_CNT
+						, NVL(CC.TMNT_RCL_CNT, 0) AS TMNT_RCL_CNT
+				FROM  ( SELECT  A.PPPO
+								, A.MDL_YN
+								, SUBSTR(A.CHNL_TP, 1 , 3) AS CHNL_TP
+								, SUM(NVL(A.KEEP_CNT, 0)) AS KEEP_CNT
+						FROM    MSP_CHNL_SALE_RSLT_STTC A
+						WHERE   A.WORK_CD = 'B'
+						AND     A.PPPO = 'PP'
+						AND     A.WORK_DT = #{stdrDt}
+						AND     A.WORK_TM = #{stdrTm}
+						GROUP BY A.PPPO, A.MDL_YN, SUBSTR(A.CHNL_TP, 1, 3)
+					) AA
+					, ( SELECT  A.MDL_YN
+								, SUBSTR(A.CHNL_TP, 1 , 3) AS CHNL_TP
+								, SUM(NVL(A.OPEN_CNT, 0)) AS MM_OPEN_CNT
+								, SUM(NVL(A.CAN_CNT, 0)) AS MM_CAN_CNT
+								, SUM(NVL(A.TMNT_CNT, 0)) AS MM_TMNT_CNT
+								, SUM(NVL(A.TMNT_RCL_CNT, 0)) AS MM_TMNT_RCL_CNT
+						FROM (
+								SELECT  A.MDL_YN 
+										, A.CHNL_TP
+										, A.OPEN_CNT
+										, A.CAN_CNT
+										, A.TMNT_CNT
+										, A.TMNT_RCL_CNT
+								FROM    MSP_CHNL_SALE_RSLT_STTC A
+								WHERE   A.WORK_CD = 'A'
+								AND     A.PPPO = 'PP'
+								AND     A.WORK_DT <![CDATA[ >= ]]> SUBSTR(#{stdrDt}, 1, 6)||'01'
+								AND     A.WORK_DT <![CDATA[ < ]]> #{stdrDt}
+								AND     A.WORK_TM = '2400'
+								UNION ALL
+								SELECT  A.MDL_YN 
+										, A.CHNL_TP
+										, A.OPEN_CNT
+										, A.CAN_CNT
+										, A.TMNT_CNT
+										, A.TMNT_RCL_CNT
+								FROM    MSP_CHNL_SALE_RSLT_STTC A
+								WHERE   A.WORK_CD = 'A'
+								AND     A.PPPO = 'PP'
+								AND     A.WORK_DT = #{stdrDt}
+								AND     A.WORK_TM = #{stdrTm}
+							) A
+						GROUP BY A.MDL_YN, SUBSTR(A.CHNL_TP, 1, 3)
+					) BB
+					, ( SELECT  A.MDL_YN
+								, SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP
+								, SUM(NVL(A.OPEN_CNT, 0)) AS OPEN_CNT
+								, SUM(NVL(A.CAN_CNT, 0)) AS CAN_CNT
+								, SUM(NVL(A.TMNT_CNT, 0)) AS TMNT_CNT
+								, SUM(NVL(A.TMNT_RCL_CNT, 0)) AS TMNT_RCL_CNT
+						FROM    MSP_CHNL_SALE_RSLT_STTC A
+						WHERE   A.WORK_CD = 'A'
+						AND     A.PPPO = 'PP'
+						AND     A.WORK_DT = #{stdrDt}
+						AND     A.WORK_TM = #{stdrTm}
+						GROUP BY A.MDL_YN, SUBSTR(A.CHNL_TP, 1, 3)
+					) CC
+				WHERE   1 = 1
+				AND     AA.MDL_YN = BB.MDL_YN(+)
+				AND     AA.CHNL_TP = BB.CHNL_TP(+)
+				AND     AA.MDL_YN = CC.MDL_YN(+)
+				AND     AA.CHNL_TP = CC.CHNL_TP(+)
+			) A
+			GROUP BY ROLLUP(A.PPPO, A.MDL_YN, A.CHNL_TP)
+		) X
+		WHERE 1 = 1
+		AND NOT EXISTS ( SELECT 1 FROM DUAL WHERE PPPO = 'PP' AND MDL_YN IS NOT NULL AND CHNL_TP IS NULL )
+		ORDER BY X.SORT, X.CHNL_TP
+	</select>
+	
+	<!-- 요금제별영업(최초) -->
+	<select id="getFstRateSaleSttcList" parameterType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtVO"
+			resultType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtRateVO">
+		/* saltSttcMapper.getFstRateSaleSttcList */
+	    SELECT DECODE(A.DATA_TYPE,
+	                  NULL,
+	                  '',
+	                  DECODE(A.RATE_CD, NULL, '', A.PAY_CL_CD)) AS payClCd,
+	           DECODE(A.RATE_CD,
+	                  NULL,
+	                  DECODE(A.DATA_TYPE,
+	                         NULL,
+	                         DECODE(A.PAY_CL_CD,
+	                                'PO',
+	                                '후불합계',
+	                                'PP',
+	                                '선불합계',
+	                                '합계'),
+	                         '소계'),
+	                  A.DATA_TYPE) AS dataType,
+	           A.RATE_CD AS rateCd,
+	           DECODE(A.RATE_CD, NULL, '', FN_GET_RATENM(A.RATE_CD)) AS rateNm,
+	           DECODE(A.DATA_TYPE,
+	                  NULL,
+	                  '',
+	                  DECODE(A.RATE_CD,
+	                         NULL,
+	                         '',
+	                         FN_GET_CODENM('CMN0032', A.PAY_CL_CD))) AS pppo,
+	           SUM(NVL(A.KEEP_CNT, 0)) AS keepCnt,
+	           SUM(NVL(B.MM_OPEN_CNT, 0)) AS mmOpenCnt,
+	           SUM(NVL(B.MM_CAN_CNT, 0)) AS mmCanCnt,
+	           SUM(NVL(B.MM_OPEN_CNT, 0) - NVL(B.MM_CAN_CNT, 0)) AS mmNewCnt,
+	           SUM(NVL(B.MM_TMNT_CNT, 0)) AS mmTmntCnt,
+	           SUM(NVL(B.MM_OPEN_CNT, 0) - NVL(B.MM_CAN_CNT, 0) -
+	               NVL(B.MM_TMNT_CNT, 0)) AS mmNetCnt,
+	           SUM(NVL(C.OPEN_CNT, 0)) AS openCnt,
+	           SUM(NVL(C.CAN_CNT, 0)) AS canCnt,
+	           SUM(NVL(C.OPEN_CNT, 0) - NVL(C.CAN_CNT, 0)) AS newCnt,
+	           SUM(NVL(C.TMNT_CNT, 0)) AS tmntCnt,
+	           SUM(NVL(C.OPEN_CNT, 0) - NVL(C.CAN_CNT, 0) - NVL(C.TMNT_CNT, 0)) AS netCnt
+	      FROM (SELECT A.RATE_CD,
+	                   B.RATE_NM,
+	                   B.DATA_TYPE,
+	                   B.PAY_CL_CD,
+	                   A.KEEP_CNT
+	              FROM MSP_RATE_SALE_RSLT_STTC A, MSP_RATE_MST B
+	             WHERE A.WORK_DT = #{stdrDt}
+	               AND A.WORK_TM = #{stdrTm}
+	               AND A.WORK_CD = 'B'
+	               AND A.RATE_CD = B.RATE_CD
+	               AND B.APPL_END_DT =
+	                   (SELECT MAX(APPL_END_DT)
+	                      FROM MSP_RATE_MST
+	                     WHERE RATE_CD = B.RATE_CD)) A,
+	           (SELECT A.RATE_CD,
+	                   SUM(A.OPEN_CNT) AS MM_OPEN_CNT,
+	                   SUM(A.CAN_CNT) AS MM_CAN_CNT,
+	                   SUM(A.TMNT_CNT) AS MM_TMNT_CNT
+	              FROM (SELECT A.RATE_CD, A.OPEN_CNT, A.CAN_CNT, A.TMNT_CNT
+	                      FROM MSP_RATE_SALE_RSLT_STTC A
+	                     WHERE A.WORK_CD = 'A'
+	                       AND A.WORK_DT <![CDATA[ >= ]]> SUBSTR(#{stdrDt}, 1, 6) || '01'
+	                       AND A.WORK_DT <![CDATA[ < ]]> #{stdrDt}
+	                       AND A.WORK_TM = '2400'
+	                    UNION ALL
+	                    SELECT A.RATE_CD, A.OPEN_CNT, A.CAN_CNT, A.TMNT_CNT
+	                      FROM MSP_RATE_SALE_RSLT_STTC A
+	                     WHERE A.WORK_CD = 'A'
+	                       AND A.WORK_DT = #{stdrDt}
+	                       AND A.WORK_TM = #{stdrTm}) A
+	             GROUP BY A.RATE_CD) B,
+	           (SELECT A.RATE_CD, A.OPEN_CNT, A.CAN_CNT, A.TMNT_CNT
+	              FROM MSP_RATE_SALE_RSLT_STTC A
+	             WHERE A.WORK_DT = #{stdrDt}
+	               AND A.WORK_TM = #{stdrTm}
+	               AND A.WORK_CD = 'A') C
+	     WHERE A.RATE_CD = B.RATE_CD(+)
+	       AND A.RATE_CD = C.RATE_CD(+)
+	     GROUP BY ROLLUP(A.PAY_CL_CD, A.DATA_TYPE, A.RATE_CD)
+	</select>
+	
+	<!-- 요금제별영업(현재) -->
+	<select id="getLstRateSaleSttcList" parameterType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtVO"
+			resultType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtRateVO">
+		/* saltSttcMapper.getLstRateSaleSttcList */
+	    SELECT DECODE(A.DATA_TYPE,
+	                  NULL,
+	                  '',
+	                  DECODE(A.RATE_CD, NULL, '', A.PAY_CL_CD)) AS payClCd,
+	           DECODE(A.RATE_CD,
+	                  NULL,
+	                  DECODE(A.DATA_TYPE,
+	                         NULL,
+	                         DECODE(A.PAY_CL_CD,
+	                                'PO',
+	                                '후불합계',
+	                                'PP',
+	                                '선불합계',
+	                                '합계'),
+	                         '소계'),
+	                  A.DATA_TYPE) AS dataType,
+	           A.RATE_CD AS rateCd,
+	           DECODE(A.RATE_CD, NULL, '', FN_GET_RATENM(A.RATE_CD)) AS rateNm,
+	           DECODE(A.DATA_TYPE,
+	                  NULL,
+	                  '',
+	                  DECODE(A.RATE_CD,
+	                         NULL,
+	                         '',
+	                         FN_GET_CODENM('CMN0032', A.PAY_CL_CD))) AS pppo,
+	           SUM(NVL(A.KEEP_CNT, 0)) AS keepCnt,
+	           SUM(NVL(B.MM_OPEN_CNT, 0)) AS mmOpenCnt,
+	           SUM(NVL(B.MM_CAN_CNT, 0)) AS mmCanCnt,
+	           SUM(NVL(B.MM_OPEN_CNT, 0) - NVL(B.MM_CAN_CNT, 0)) AS mmNewCnt,
+	           SUM(NVL(B.MM_TMNT_CNT, 0)) AS mmTmntCnt,
+	           SUM(NVL(B.MM_OPEN_CNT, 0) - NVL(B.MM_CAN_CNT, 0) -
+	               NVL(B.MM_TMNT_CNT, 0)) AS mmNetCnt,
+	           SUM(NVL(C.OPEN_CNT, 0)) AS openCnt,
+	           SUM(NVL(C.CAN_CNT, 0)) AS canCnt,
+	           SUM(NVL(C.OPEN_CNT, 0) - NVL(C.CAN_CNT, 0)) AS newCnt,
+	           SUM(NVL(C.TMNT_CNT, 0)) AS tmntCnt,
+	           SUM(NVL(C.OPEN_CNT, 0) - NVL(C.CAN_CNT, 0) - NVL(C.TMNT_CNT, 0)) AS netCnt
+	      FROM (SELECT A.RATE_CD,
+	                   B.RATE_NM,
+	                   B.DATA_TYPE,
+	                   B.PAY_CL_CD,
+	                   A.KEEP_CNT
+	              FROM MSP_RATE_SALE_RSLT_STTC A, MSP_RATE_MST B
+	             WHERE A.WORK_DT = #{stdrDt}
+	               AND A.WORK_TM = #{stdrTm}
+	               AND A.WORK_CD = 'D'
+	               AND A.RATE_CD = B.RATE_CD
+	               AND B.APPL_END_DT =
+	                   (SELECT MAX(APPL_END_DT)
+	                      FROM MSP_RATE_MST
+	                     WHERE RATE_CD = B.RATE_CD)) A,
+	           (SELECT A.RATE_CD,
+	                   SUM(A.OPEN_CNT) AS MM_OPEN_CNT,
+	                   SUM(A.CAN_CNT) AS MM_CAN_CNT,
+	                   SUM(A.TMNT_CNT) AS MM_TMNT_CNT
+	              FROM (SELECT A.RATE_CD, A.OPEN_CNT, A.CAN_CNT, A.TMNT_CNT
+	                      FROM MSP_RATE_SALE_RSLT_STTC A
+	                     WHERE A.WORK_CD = 'C'
+	                       AND A.WORK_DT <![CDATA[ >= ]]> SUBSTR(#{stdrDt}, 1, 6) || '01'
+	                       AND A.WORK_DT <![CDATA[ < ]]> #{stdrDt}
+	                       AND A.WORK_TM = '2400'
+	                    UNION ALL
+	                    SELECT A.RATE_CD, A.OPEN_CNT, A.CAN_CNT, A.TMNT_CNT
+	                      FROM MSP_RATE_SALE_RSLT_STTC A
+	                     WHERE A.WORK_CD = 'C'
+	                       AND A.WORK_DT = #{stdrDt}
+	                       AND A.WORK_TM = #{stdrTm}) A
+	             GROUP BY A.RATE_CD) B,
+	           (SELECT A.RATE_CD, A.OPEN_CNT, A.CAN_CNT, A.TMNT_CNT
+	              FROM MSP_RATE_SALE_RSLT_STTC A
+	             WHERE A.WORK_DT = #{stdrDt}
+	               AND A.WORK_TM = #{stdrTm}
+	               AND A.WORK_CD = 'C') C
+	     WHERE A.RATE_CD = B.RATE_CD(+)
+	       AND A.RATE_CD = C.RATE_CD(+)
+	     GROUP BY ROLLUP(A.PAY_CL_CD, A.DATA_TYPE, A.RATE_CD)
+	</select>
+	
+	<!-- 대리점별후불영업실적 -->
+	<select id="getAgncySaleSttcList" parameterType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtVO"
+			resultType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtAgncyVO">
+		/* saltSttcMapper.getAgncySaleSttcList */
+		SELECT A.agncyCd ,
+       A.agncyNm ,
+       DECODE(A.buyType, '소계' , '', '합계' , '', A.buyType) as buyType,
+       A.dataType ,
+       A.keepCnt ,
+       A.mmOpenCnt ,
+       A.mmCanCnt ,
+       A.mmNewCnt ,
+       A.mmTmntCnt ,
+       A.mmNetCnt ,
+       A.openCnt ,
+       A.canCnt ,
+       A.newCnt ,
+       A.tmntCnt ,
+       A.netCnt
+FROM   (SELECT A.AGNCY_CD AS agncyCd ,
+               DECODE(A.BUY_TYPE, NULL, DECODE(A.AGNCY_CD, NULL, ''), FN_GET_ORGNM(A.AGNCY_CD)) AS agncyNm ,
+               DECODE(A.BUY_TYPE, NULL, DECODE(A.AGNCY_CD, NULL, '합계', '소계'), DECODE(A.BUY_TYPE, 'MM', '단말결합', 'UU', '유심단독', A.BUY_TYPE)) AS buyType ,
+               DECODE(A.DATA_TYPE, NULL, DECODE(A.AGNCY_CD, NULL, '합계', '소계'), A.DATA_TYPE) AS dataType ,
+               SUM(A.KEEP_CNT) AS keepCnt ,
+               SUM(NVL(B.MM_OPEN_CNT, 0)) AS mmOpenCnt ,
+               SUM(NVL(B.MM_CAN_CNT, 0)) AS mmCanCnt ,
+               SUM(NVL(B.MM_OPEN_CNT, 0) - NVL(B.MM_CAN_CNT, 0)) AS mmNewCnt ,
+               SUM(NVL(B.MM_TMNT_CNT, 0)) AS mmTmntCnt ,
+               SUM(NVL(B.MM_OPEN_CNT, 0) - NVL(B.MM_CAN_CNT, 0) - NVL(B.MM_TMNT_CNT, 0)) AS mmNetCnt ,
+               SUM(NVL(C.OPEN_CNT, 0)) AS openCnt ,
+               SUM(NVL(C.CAN_CNT, 0)) AS canCnt ,
+               SUM(NVL(C.OPEN_CNT, 0) - NVL(C.CAN_CNT, 0)) AS newCnt ,
+               SUM(NVL(C.TMNT_CNT, 0)) AS tmntCnt ,
+               SUM(NVL(C.OPEN_CNT, 0) - NVL(C.CAN_CNT, 0) - NVL(C.TMNT_CNT, 0)) AS netCnt
+        FROM   (SELECT AGNCY_CD ,
+                       BUY_TYPE ,
+                       DATA_TYPE ,
+                       KEEP_CNT
+                FROM   MSP_AGNCY_SALE_RSLT_STTC
+                WHERE  WORK_DT = #{stdrDt}
+                AND    WORK_TM = #{stdrTm}
+                AND    WORK_CD = 'B' ) A ,
+               (SELECT AGNCY_CD ,
+                       BUY_TYPE ,
+                       DATA_TYPE ,
+                       SUM(OPEN_CNT) AS MM_OPEN_CNT ,
+                       SUM(CAN_CNT) AS MM_CAN_CNT ,
+                       SUM(TMNT_CNT) AS MM_TMNT_CNT
+                FROM   (SELECT A.AGNCY_CD ,
+                               A.BUY_TYPE ,
+                               A.DATA_TYPE ,
+                               A.OPEN_CNT ,
+                               A.CAN_CNT ,
+                               A.TMNT_CNT
+                        FROM   MSP_AGNCY_SALE_RSLT_STTC A
+                        WHERE  A.WORK_CD = 'A'
+                        AND    A.WORK_DT >= SUBSTR(#{stdrDt}, 1, 6)||'01'
+                        AND    A.WORK_DT <![CDATA[<]]>#{stdrDt}
+                        AND    A.WORK_TM = '2400'
+                        UNION ALL
+SELECT A.AGNCY_CD ,
+                               A.BUY_TYPE ,
+                               A.DATA_TYPE ,
+                               A.OPEN_CNT ,
+                               A.CAN_CNT ,
+                               A.TMNT_CNT
+                        FROM   MSP_AGNCY_SALE_RSLT_STTC A
+                        WHERE  A.WORK_CD = 'A'
+                        AND    A.WORK_DT = #{stdrDt}
+                        AND    A.WORK_TM = #{stdrTm} ) A
+                GROUP BY AGNCY_CD, BUY_TYPE, DATA_TYPE ) B ,
+               (SELECT AGNCY_CD ,
+                       BUY_TYPE ,
+                       DATA_TYPE ,
+                       SUM(OPEN_CNT) AS OPEN_CNT ,
+                       SUM(CAN_CNT) AS CAN_CNT ,
+                       SUM(TMNT_CNT) AS TMNT_CNT
+                FROM   MSP_AGNCY_SALE_RSLT_STTC
+                WHERE  WORK_DT =#{stdrDt}
+                AND    WORK_TM = #{stdrTm}
+                AND    WORK_CD = 'A'
+                GROUP BY AGNCY_CD, BUY_TYPE, DATA_TYPE ) C
+        WHERE  A.AGNCY_CD = B.AGNCY_CD(+)
+        AND    A.BUY_TYPE = B.BUY_TYPE(+)
+        AND    A.DATA_TYPE = B.DATA_TYPE(+)
+        AND    A.AGNCY_CD = C.AGNCY_CD(+)
+        AND    A.BUY_TYPE = C.BUY_TYPE(+)
+        AND    A.DATA_TYPE = C.DATA_TYPE(+)
+        GROUP BY ROLLUP(A.AGNCY_CD, A.BUY_TYPE, A.DATA_TYPE)) A
+	</select>
+	
+	<!-- 부가서비스가입자조회 -->
+	<sql id="getAddProdInfo">
+		SELECT  A.CONTRACT_NUM                  AS contractNum
+		        , A.RATE_CD                     AS addProd
+		        , FN_GET_RATENM(A.RATE_CD)      AS addProdNm
+		        , A.STRT_DT                     AS strtDt
+		        , A.END_DT                      AS endDt
+		        , A.STAT_CD                     AS statCd
+		        , DECODE(A.STAT_CD, 'C', '해지', '사용') AS statNm
+		        , B.LST_COM_ACTV_DATE           AS openDt
+		        , C.FST_RATE_CD                 AS fstRateCD
+		        , FN_GET_RATENM(C.FST_RATE_CD)  AS fstRateNm
+		        , C.LST_RATE_CD                 AS lstRateCd
+		        , FN_GET_RATENM(C.LST_RATE_CD)  AS lstRateNm
+		        , SUBSTR(C.INST_INFO, 1, 2)     AS dcType
+		        , FN_GET_CODENM('CMN0058', SUBSTR(C.INST_INFO, 1, 2))   AS dcTypeNm
+		        , C.SALE_PLCY_CD                AS salePlcyCd
+		        , C.SALE_PLCY_NM                AS salePlcyNm
+		        , TRIM(SUBSTR(C.FST_MODEL_INFO, 1, 20))     AS fstModelId
+		        , TRIM(SUBSTR(C.FST_MODEL_INFO, 21, 30))    AS fstModelNm
+		        , B.OPEN_AGNT_CD                AS openAgntCd
+		        , FN_GET_ORGNM(B.OPEN_AGNT_CD)  AS openAgntNm
+		FROM    MSP_ADD_PROD_STTC A
+		        , MSP_JUO_SUB_INFO B
+		        , MSP_REQUEST_DTL C
+		        , MSP_RATE_MST D
+		WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.CONTRACT_NUM = C.CONTRACT_NUM
+		AND     A.RATE_CD = D.RATE_CD
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND A.STRT_DT BETWEEN #{strtDt} AND #{endDt}
+		</if>
+		<if test="searchGbn != null and searchGbn != ''">
+			<if test='searchGbn == "10"'>
+				AND A.RATE_CD = #{searchName}
+			</if>
+			<if test='searchGbn == "20"'>
+				AND D.RATE_NM LIKE '%' || #{searchName} || '%'
+			</if>
+		</if>
+		ORDER BY A.CONTRACT_NUM, A.RATE_CD
+	</sql>
+	
+	<!-- 부가서비스가입자조회 -->
+	<select id="getAddProdList" parameterType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtAddVO" resultType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtAddVO">
+		/* SaleSttcMgmtMapper.getAddProdList */
+		
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getAddProdInfo" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 부가서비스가입자조회 엑셀다운  -->
+	<select id="getAddProdListExcel" parameterType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtAddVO" resultType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtAddVO">
+		/* SaleSttcMgmtMapper.getAddProdListExcel */
+		
+		<include refid="getAddProdInfo" />
+		
+	</select>
+	
+	<!-- 부가서비스가입자 상세 조회  -->
+	<select id="getAddProdHistList" parameterType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtAddVO" resultType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtAddVO">
+		/* SaleSttcMgmtMapper.getAddProdHistList */
+		SELECT  A.RATE_CD               AS addProd
+		        , B.RATE_NM             AS addprodNm
+		        , B.BASE_AMT            AS baseAmt
+		        , A.STRT_DT             AS strtDt
+		        , A.END_DT              AS endDt
+		FROM    MSP_ADD_PROD_STTC A
+		        , MSP_RATE_MST B
+		WHERE   A.RATE_CD = B.RATE_CD
+		<if test="contractNum != null and contractNum != ''">
+			AND A.CONTRACT_NUM = #{contractNum}
+		</if>
+		ORDER BY A.RATE_CD, A.STRT_DT DESC
+	</select>
+	
+	<!-- 부가상품가입실적조회 -->
+	<select id="getAddProdSttcList" parameterType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtVO" resultType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtRateVO">
+		/* saltSttcMapper.getAddProdSttcList */
+		<![CDATA[
+		SELECT  A.RATE_CD                                       AS rateCd
+		        , D.RATE_NM                                     AS rateNm
+		        , D.BASE_AMT                                    AS baseAmt
+		        , A.KEEP_CNT                                    AS keepCnt
+		        , NVL(B.MM_OPEN_CNT, 0)                         AS mmOpenCnt
+		        , NVL(B.MM_TMNT_CNT, 0)                         AS mmTmntCnt
+		        , NVL(B.MM_OPEN_CNT, 0) - NVL(B.MM_TMNT_CNT, 0) AS mmNetCnt
+		        , NVL(C.OPEN_CNT, 0)                            AS openCnt
+		        , NVL(C.TMNT_CNT, 0)                            AS tmntCnt
+		        , NVL(C.OPEN_CNT, 0) - NVL(C.TMNT_CNT, 0)       AS netCnt
+		FROM
+		(   SELECT  A.RATE_CD
+		            , A.KEEP_CNT
+		    FROM    MSP_RATE_SALE_RSLT_STTC A
+		    WHERE   A.WORK_DT = #{stdrDt}
+		    AND     A.WORK_TM = #{stdrTm}
+		    AND     A.WORK_CD = 'F'
+		) A
+		, ( SELECT  A.RATE_CD
+		            , SUM(A.OPEN_CNT) AS MM_OPEN_CNT
+		            , SUM(A.TMNT_CNT) AS MM_TMNT_CNT
+		    FROM (
+		            SELECT  A.RATE_CD 
+		                    , A.OPEN_CNT
+		                    , A.TMNT_CNT
+		            FROM    MSP_RATE_SALE_RSLT_STTC A
+		            WHERE   A.WORK_CD = 'E'
+		            AND     A.WORK_DT >= SUBSTR(#{stdrDt}, 1, 6)||'01'
+		            AND     A.WORK_DT < #{stdrDt}
+		            AND     A.WORK_TM = '2400'
+		            UNION ALL
+		            SELECT  A.RATE_CD 
+		                    , A.OPEN_CNT
+		                    , A.TMNT_CNT
+		            FROM    MSP_RATE_SALE_RSLT_STTC A
+		            WHERE   A.WORK_CD = 'E'
+		            AND     A.WORK_DT = #{stdrDt}
+		            AND     A.WORK_TM = #{stdrTm}
+		    ) A
+		    GROUP BY A.RATE_CD
+		) B
+		, ( SELECT  A.RATE_CD
+		            , A.OPEN_CNT
+		            , A.CAN_CNT
+		            , A.TMNT_CNT
+		    FROM    MSP_RATE_SALE_RSLT_STTC A
+		    WHERE   A.WORK_DT = #{stdrDt}
+		    AND     A.WORK_TM = #{stdrTm}
+		    AND     A.WORK_CD = 'E'
+		) C
+		, MSP_RATE_MST D
+		WHERE   A.RATE_CD = B.RATE_CD(+)
+		AND     A.RATE_CD = C.RATE_CD(+)
+		AND     A.RATE_CD = D.RATE_CD
+		ORDER BY A.RATE_CD
+		]]>
+	</select>
+	
+	<!-- 채널별영업실적(데이터유형 추가) -->
+	<select id="getChnlDataSttcList" parameterType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtVO"
+			resultType="com.ktis.msp.rsk.statMgmt.vo.SaleSttcMgmtChnlVO">
+		/* saltSttcMapper.getChnlDataSttcList */
+	    SELECT CASE
+	             WHEN X.PPPO = 'PO' AND X.CHNL_TP IS NOT NULL AND
+	                  X.MDL_YN IS NOT NULL AND X.DATA_TYPE IS NOT NULL THEN
+	              '후불'
+	             WHEN X.PPPO = 'PO' AND X.MDL_YN IS NULL AND X.CHNL_TP IS NULL AND
+	                  X.DATA_TYPE IS NULL THEN
+	              '후불합계'
+	             WHEN X.PPPO = 'PP' AND X.CHNL_TP IS NOT NULL AND
+	                  X.MDL_YN IS NOT NULL AND X.DATA_TYPE IS NOT NULL THEN
+	              '선불'
+	             WHEN X.PPPO = 'PP' AND X.MDL_YN IS NULL AND X.CHNL_TP IS NULL AND
+	                  X.DATA_TYPE IS NULL THEN
+	              '선불합계'
+	             WHEN X.PPPO IS NULL AND X.MDL_YN IS NULL AND X.CHNL_TP IS NULL AND
+	                  X.DATA_TYPE IS NULL THEN
+	              '선후불합계'
+	             ELSE
+	              ''
+	           END AS pppo,
+	           CASE
+	             WHEN X.PPPO = 'PO' AND X.MDL_YN = 'Y' AND
+	                  X.DATA_TYPE IS NOT NULL THEN
+	              '단말결합'
+	             WHEN X.PPPO = 'PO' AND X.MDL_YN = 'Y' AND X.CHNL_TP IS NULL AND
+	                  X.DATA_TYPE IS NULL THEN
+	              '단말결합합계'
+	             WHEN X.PPPO = 'PO' AND X.MDL_YN = 'N' AND
+	                  X.DATA_TYPE IS NOT NULL THEN
+	              '유심단독'
+	             WHEN X.PPPO = 'PO' AND X.MDL_YN = 'N' AND X.CHNL_TP IS NULL AND
+	                  X.DATA_TYPE IS NULL THEN
+	              '유심단독합계'
+	             WHEN X.PPPO = 'PP' AND X.MDL_YN = 'Y' AND
+	                  X.DATA_TYPE IS NOT NULL THEN
+	              '일반유심'
+	             WHEN X.PPPO = 'PP' AND X.MDL_YN = 'Y' AND X.DATA_TYPE IS NULL THEN
+	              '일반유심합계'
+	             WHEN X.PPPO = 'PP' AND X.MDL_YN = 'N' AND
+	                  X.DATA_TYPE IS NOT NULL THEN
+	              '단기유심'
+	             WHEN X.PPPO = 'PP' AND X.MDL_YN = 'N' AND X.DATA_TYPE IS NULL THEN
+	              '단기유심합계'
+	             ELSE
+	              ''
+	           END AS prodNm,
+	           CASE
+	             WHEN X.CHNL_TP IS NOT NULL AND X.DATA_TYPE IS NOT NULL THEN
+	              FN_GET_CODENM('CMN0055', X.CHNL_TP)
+	             ELSE
+	              ''
+	           END AS chnlTpNm,
+	           CASE
+	             WHEN X.PPPO = 'PO' AND X.MDL_YN IS NOT NULL AND
+	                  X.CHNL_TP IS NOT NULL AND X.DATA_TYPE IS NULL THEN
+	              '소계'
+	             ELSE
+	              X.DATA_TYPE
+	           END AS dataType,
+	           X.KEEP_CNT AS keepCnt,
+	           X.MM_OPEN_CNT AS mmOpenCnt,
+	           X.MM_CAN_CNT AS mmCanCnt,
+	           X.MM_OPEN_CNT - X.MM_CAN_CNT AS mmNewCnt,
+	           X.MM_TMNT_CNT AS mmTmntCnt,
+	           X.MM_TMNT_RCL_CNT AS mmTmntRclCnt,
+	           X.MM_OPEN_CNT - X.MM_CAN_CNT - X.MM_TMNT_CNT + X.MM_TMNT_RCL_CNT AS mmNetCnt,
+	           X.OPEN_CNT AS openCnt,
+	           X.CAN_CNT AS canCnt,
+	           X.OPEN_CNT - X.CAN_CNT AS newCnt,
+	           X.TMNT_CNT AS tmntCnt,
+	           X.TMNT_RCL_CNT AS tmntRclCnt,
+	           X.OPEN_CNT - X.CAN_CNT - X.TMNT_CNT + X.TMNT_RCL_CNT AS netCnt
+	      FROM (SELECT A.PPPO,
+	                   A.MDL_YN,
+	                   A.CHNL_TP,
+	                   A.DATA_TYPE,
+	                   SUM(NVL(A.KEEP_CNT, 0)) AS KEEP_CNT,
+	                   SUM(NVL(A.MM_OPEN_CNT, 0)) AS MM_OPEN_CNT,
+	                   SUM(NVL(A.MM_CAN_CNT, 0)) AS MM_CAN_CNT,
+	                   SUM(NVL(A.MM_TMNT_CNT, 0)) AS MM_TMNT_CNT,
+	                   SUM(NVL(A.MM_TMNT_RCL_CNT, 0)) AS MM_TMNT_RCL_CNT,
+	                   SUM(NVL(A.OPEN_CNT, 0)) AS OPEN_CNT,
+	                   SUM(NVL(A.CAN_CNT, 0)) AS CAN_CNT,
+	                   SUM(NVL(A.TMNT_CNT, 0)) AS TMNT_CNT,
+	                   SUM(NVL(A.TMNT_RCL_CNT, 0)) AS TMNT_RCL_CNT,
+	                   CASE
+	                     WHEN A.PPPO = 'PO' THEN
+	                      CASE
+	                        WHEN A.MDL_YN = 'Y' THEN
+	                         DECODE(A.CHNL_TP, NULL, 2, 1)
+	                        WHEN A.MDL_YN = 'N' THEN
+	                         DECODE(A.CHNL_TP, NULL, 4, 3)
+	                        ELSE
+	                         5
+	                      END
+	                     WHEN A.PPPO = 'PP' THEN
+	                      CASE
+	                        WHEN A.MDL_YN = 'Y' THEN
+	                         6
+	                        WHEN A.MDL_YN = 'N' THEN
+	                         7
+	                        ELSE
+	                         8
+	                      END
+	                     ELSE
+	                      9
+	                   END AS SORT
+	              FROM (SELECT AA.PPPO,
+	                           AA.MDL_YN,
+	                           AA.CHNL_TP,
+	                           AA.DATA_TYPE,
+	                           AA.KEEP_CNT,
+	                           NVL(BB.MM_OPEN_CNT, 0) AS MM_OPEN_CNT,
+	                           NVL(BB.MM_CAN_CNT, 0) AS MM_CAN_CNT,
+	                           NVL(BB.MM_TMNT_CNT, 0) AS MM_TMNT_CNT,
+	                           NVL(BB.MM_TMNT_RCL_CNT, 0) AS MM_TMNT_RCL_CNT,
+	                           NVL(CC.OPEN_CNT, 0) AS OPEN_CNT,
+	                           NVL(CC.CAN_CNT, 0) AS CAN_CNT,
+	                           NVL(CC.TMNT_CNT, 0) AS TMNT_CNT,
+	                           NVL(CC.TMNT_RCL_CNT, 0) AS TMNT_RCL_CNT
+	                      FROM (SELECT A.PPPO,
+	                                   A.MDL_YN,
+	                                   SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP,
+	                                   A.DATA_TYPE,
+	                                   SUM(NVL(A.KEEP_CNT, 0)) AS KEEP_CNT
+	                              FROM MSP_CHNL_SALE_STTC A
+	                             WHERE A.WORK_CD = 'B'
+	                               AND A.PPPO = 'PO'
+	                               AND A.WORK_DT = #{stdrDt}
+	                               AND A.WORK_TM = #{stdrTm}
+	                             GROUP BY A.PPPO,
+	                                      A.MDL_YN,
+	                                      SUBSTR(A.CHNL_TP, 1, 3),
+	                                      A.DATA_TYPE) AA,
+	                           (SELECT A.MDL_YN,
+	                                   SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP,
+	                                   A.DATA_TYPE,
+	                                   SUM(NVL(A.OPEN_CNT, 0)) AS MM_OPEN_CNT,
+	                                   SUM(NVL(A.CAN_CNT, 0)) AS MM_CAN_CNT,
+	                                   SUM(NVL(A.TMNT_CNT, 0)) AS MM_TMNT_CNT,
+	                                   SUM(NVL(A.TMNT_RCL_CNT, 0)) AS MM_TMNT_RCL_CNT
+	                              FROM MSP_CHNL_SALE_STTC A
+	                             WHERE A.WORK_CD = 'A'
+	                               AND A.PPPO = 'PO'
+	                               AND A.WORK_DT BETWEEN
+	                                   SUBSTR(#{stdrDt}, 1, 6) || '01' AND
+	                                   #{stdrDt}
+	                               AND A.WORK_TM = #{stdrTm}
+	                             GROUP BY A.MDL_YN,
+	                                      SUBSTR(A.CHNL_TP, 1, 3),
+	                                      A.DATA_TYPE) BB,
+	                           (SELECT A.MDL_YN,
+	                                   SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP,
+	                                   A.DATA_TYPE,
+	                                   SUM(NVL(A.OPEN_CNT, 0)) AS OPEN_CNT,
+	                                   SUM(NVL(A.CAN_CNT, 0)) AS CAN_CNT,
+	                                   SUM(NVL(A.TMNT_CNT, 0)) AS TMNT_CNT,
+	                                   SUM(NVL(A.TMNT_RCL_CNT, 0)) AS TMNT_RCL_CNT
+	                              FROM MSP_CHNL_SALE_STTC A
+	                             WHERE A.WORK_CD = 'A'
+	                               AND A.PPPO = 'PO'
+	                               AND A.WORK_DT = #{stdrDt}
+	                               AND A.WORK_TM = #{stdrTm}
+	                             GROUP BY A.MDL_YN,
+	                                      SUBSTR(A.CHNL_TP, 1, 3),
+	                                      A.DATA_TYPE) CC
+	                     WHERE 1 = 1
+	                       AND AA.MDL_YN = BB.MDL_YN(+)
+	                       AND AA.CHNL_TP = BB.CHNL_TP(+)
+	                       AND AA.DATA_TYPE = BB.DATA_TYPE(+)
+	                       AND AA.MDL_YN = CC.MDL_YN(+)
+	                       AND AA.CHNL_TP = CC.CHNL_TP(+)
+	                       AND AA.DATA_TYPE = CC.DATA_TYPE(+)
+	                    UNION ALL
+	                    SELECT AA.PPPO,
+	                           AA.MDL_YN,
+	                           AA.CHNL_TP,
+	                           AA.DATA_TYPE,
+	                           NVL(AA.KEEP_CNT, 0) AS KEEP_CNT,
+	                           NVL(BB.MM_OPEN_CNT, 0) AS MM_OPEN_CNT,
+	                           NVL(BB.MM_CAN_CNT, 0) AS MM_CAN_CNT,
+	                           NVL(BB.MM_TMNT_CNT, 0) AS MM_TMNT_CNT,
+	                           NVL(BB.MM_TMNT_RCL_CNT, 0) AS MM_TMNT_RCL_CNT,
+	                           NVL(CC.OPEN_CNT, 0) AS OPEN_CNT,
+	                           NVL(CC.CAN_CNT, 0) AS CAN_CNT,
+	                           NVL(CC.TMNT_CNT, 0) AS TMNT_CNT,
+	                           NVL(CC.TMNT_RCL_CNT, 0) AS TMNT_RCL_CNT
+	                      FROM (SELECT A.PPPO,
+	                                   A.MDL_YN,
+	                                   A.DATA_TYPE,
+	                                   SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP,
+	                                   SUM(NVL(A.KEEP_CNT, 0)) AS KEEP_CNT
+	                              FROM MSP_CHNL_SALE_STTC A
+	                             WHERE A.WORK_CD = 'B'
+	                               AND A.PPPO = 'PP'
+	                               AND A.WORK_DT = #{stdrDt}
+	                               AND A.WORK_TM = #{stdrTm}
+	                             GROUP BY A.PPPO,
+	                                      A.MDL_YN,
+	                                      SUBSTR(A.CHNL_TP, 1, 3),
+	                                      A.DATA_TYPE) AA,
+	                           (SELECT A.MDL_YN,
+	                                   SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP,
+	                                   A.DATA_TYPE,
+	                                   SUM(NVL(A.OPEN_CNT, 0)) AS MM_OPEN_CNT,
+	                                   SUM(NVL(A.CAN_CNT, 0)) AS MM_CAN_CNT,
+	                                   SUM(NVL(A.TMNT_CNT, 0)) AS MM_TMNT_CNT,
+	                                   SUM(NVL(A.TMNT_RCL_CNT, 0)) AS MM_TMNT_RCL_CNT
+	                              FROM MSP_CHNL_SALE_STTC A
+	                             WHERE A.WORK_CD = 'A'
+	                               AND A.PPPO = 'PP'
+	                               AND A.WORK_DT BETWEEN
+	                                   SUBSTR(#{stdrDt}, 1, 6) || '01' AND
+	                                   #{stdrDt}
+	                               AND A.WORK_TM = #{stdrTm}
+	                             GROUP BY A.MDL_YN,
+	                                      SUBSTR(A.CHNL_TP, 1, 3),
+	                                      A.DATA_TYPE) BB,
+	                           (SELECT A.MDL_YN,
+	                                   SUBSTR(A.CHNL_TP, 1, 3) AS CHNL_TP,
+	                                   A.DATA_TYPE,
+	                                   SUM(NVL(A.OPEN_CNT, 0)) AS OPEN_CNT,
+	                                   SUM(NVL(A.CAN_CNT, 0)) AS CAN_CNT,
+	                                   SUM(NVL(A.TMNT_CNT, 0)) AS TMNT_CNT,
+	                                   SUM(NVL(A.TMNT_RCL_CNT, 0)) AS TMNT_RCL_CNT
+	                              FROM MSP_CHNL_SALE_STTC A
+	                             WHERE A.WORK_CD = 'A'
+	                               AND A.PPPO = 'PP'
+	                               AND A.WORK_DT = #{stdrDt}
+	                               AND A.WORK_TM = #{stdrTm}
+	                             GROUP BY A.MDL_YN,
+	                                      SUBSTR(A.CHNL_TP, 1, 3),
+	                                      A.DATA_TYPE) CC
+	                     WHERE 1 = 1
+	                       AND AA.MDL_YN = BB.MDL_YN(+)
+	                       AND AA.CHNL_TP = BB.CHNL_TP(+)
+	                       AND AA.DATA_TYPE = BB.DATA_TYPE(+)
+	                       AND AA.MDL_YN = CC.MDL_YN(+)
+	                       AND AA.CHNL_TP = CC.CHNL_TP(+)
+	                       AND AA.DATA_TYPE = CC.DATA_TYPE(+)) A
+	             GROUP BY ROLLUP(A.PPPO, A.MDL_YN, A.CHNL_TP, A.DATA_TYPE)) X
+	     WHERE 1 = 1
+	       AND NOT EXISTS (SELECT 1
+	              FROM DUAL
+	             WHERE PPPO = 'PP'
+	               AND MDL_YN IS NOT NULL
+	               AND CHNL_TP IS NULL)
+	     ORDER BY X.SORT, X.CHNL_TP, X.DATA_TYPE
+	</select>
+</mapper>

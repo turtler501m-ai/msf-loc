@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- - DispatcherServlet application context for Application's web tier. -->
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+                http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+                http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd">
+
+	<context:component-scan base-package="com.ktis.mcpif">
+		<context:include-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Service" />
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Repository" />
+	</context:component-scan>
+
+	<aop:aspectj-autoproxy />
+
+	<bean
+		class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter">
+	     <property name="messageConverters">
+	          <list>
+	             <bean class = "org.springframework.http.converter.StringHttpMessageConverter">
+	                <property name = "supportedMediaTypes">
+	                   <list>
+	                      <value>text/plain;charset=utf-8</value>
+						   <value>application/json</value>
+	                   </list>
+	                </property>
+	             </bean>
+	          </list>
+	      </property>
+		<property name="synchronizeOnSession" value="true" />
+		<!--
+		<property name="webBindingInitializer">
+			<bean class="com.ktis.mcp.common.web.EgovBindingInitializer" />
+		</property>
+		<property name="customArgumentResolvers">
+			<list>
+				<bean class="com.ktis.mcp.common.web.WebArgumentResolver" />
+			</list>
+		</property>
+		 -->
+	</bean>
+	<bean
+		class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping" />
+
+
+	<bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<!--<property name="defaultErrorView" value="common/error" />
+
+		<property name="exceptionMappings">
+			<props>
+				<prop key="com.ktis.mcp.common.exception.NullCartException">redirect:/error.do?error=nullCart</prop>
+				<prop key="com.ktis.mcp.common.exception.NullSessionException">redirect:/error.do?error=nullSession</prop>
+				<prop key="com.ktis.mcp.common.exception.PermissionDeniedException">redirect:/error.do?error=permissionDenied</prop>
+				<prop key="com.ktis.mcp.common.exception.NotExistPageException">redirect:/error.do?error=notExistPage</prop>
+				<prop key="com.ktis.mcp.common.exception.PaymentErrorException">redirect:/error.do?error=paymentError</prop>
+				<prop key="com.ktis.mcp.common.exception.NotAllowFarmException">redirect:/error.do?error=notAllowFarm</prop>
+				<prop key="com.ktis.mcp.common.exception.CreateBillErrorException">redirect:/error.do?error=createBillError</prop>
+				<prop key="com.ktis.mcp.common.exception.BadUrlException">redirect:/error.do?error=badUrlError</prop>
+				<prop key="com.ktis.mcp.common.exception.CommingSoonException">redirect:/index.html</prop>
+			</props>
+		</property>-->
+	</bean>
+	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver"
+		p:order="0"/>
+
+	<bean class="org.springframework.web.servlet.view.UrlBasedViewResolver"
+		p:order="1" p:viewClass="org.springframework.web.servlet.view.JstlView"
+		p:prefix="/WEB-INF/jsp/" p:suffix=".jsp"/>
+
+	<!-- download excel view
+	<bean id="excelView" class="com.ktis.mcp.common.excel.ExcelView" />
+	-->
+
+	<!-- For Pagination Tag
+	<bean id="imageRenderer" class="com.ktis.mcp.common.web.ImagePaginationRenderer" />
+	<bean id="defaultRenderer" class="com.ktis.mcp.common.web.DefaultPaginationRenderer" />
+
+	<bean id="paginationManager"
+		class="egovframework.rte.ptl.mvc.tags.ui.pagination.DefaultPaginationManager">
+		<property name="rendererType">
+			<map>
+				<entry key="image" value-ref="imageRenderer" />
+				<entry key="default" value-ref="defaultRenderer" />
+			</map>
+		</property>
+	</bean>
+	-->
+	<!-- /For Pagination Tag -->
+	<!-- <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="inicis" value="/WEB-INF/config/properties/inicis.properties"/>
+    </bean> -->
+
+
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="600000000" /><!-- 600MB -->
+	</bean>
+</beans>

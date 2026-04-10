@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EventOrderMapper">
+
+	<select id="getEventOrderBySeq" resultType="com.ktmmobile.mcp.event.dto.EventOrderDto" parameterType="Integer">
+		SELECT
+			MST_SEQ
+			, STATUS
+			, PROC_YN
+			, PROC_TYPE
+		FROM mcpeventmng.NMCP_EVENT_ORDER
+		WHERE MST_SEQ = #{mstSeq}
+	</select>
+
+	<select id="getEventOrderDtlListBySeq" resultType="com.ktmmobile.mcp.event.dto.EventOrderDtlDto" parameterType="Integer">
+		SELECT
+			MST_SEQ
+			, EVENT_ORDER
+			, NTCART_SEQ
+		FROM mcpeventmng.NMCP_EVENT_ORDER_DTL
+		WHERE MST_SEQ = #{mstSeq}
+	</select>
+
+	<update id="updateEventBoardOdrgList" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			UPDATE
+				mcpeventmng.NMCP_EVENT_BOARD_BAS
+			SET
+				EVENT_ORDER = #{item.eventOrder}
+				, AMD_ID = 'BATCH'
+				, AMD_DT = CURRENT_TIMESTAMP
+			WHERE NTCART_SEQ = #{item.ntcartSeq}
+		</foreach>
+	</update>
+
+	<update id="updateEventOrderComplete" parameterType="Integer">
+		UPDATE mcpeventmng.NMCP_EVENT_ORDER
+		SET STATUS = '0'
+		  , PROC_YN = 'Y'
+		  , AMD_ID = 'BATCH'
+		  , AMD_DTTM = CURRENT_TIMESTAMP
+		WHERE MST_SEQ = #{mstSeq}
+	</update>
+
+</mapper>

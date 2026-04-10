@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 27.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="레이어_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+	 y="0px" viewBox="0 0 24 24" style="enable-background:new 0 0 24 24;" xml:space="preserve">
+<style type="text/css">
+	.st0{filter:url(#Adobe_OpacityMaskFilter);}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	
+		.st2{mask:url(#b_00000080208592241720431380000006856511932497921696_);fill-rule:evenodd;clip-rule:evenodd;fill:#CCCCCC;stroke:#CCCCCC;}
+	.st3{filter:url(#Adobe_OpacityMaskFilter_00000008846759980180228660000004500972238728626335_);}
+	
+		.st4{mask:url(#b_00000124859613964885986610000000305649497719002521_);fill:none;stroke:#FFFFFF;stroke-linecap:round;stroke-linejoin:round;}
+</style>
+<g>
+	<defs>
+		<filter id="Adobe_OpacityMaskFilter" filterUnits="userSpaceOnUse" x="5.5" y="6.5" width="13" height="11">
+			<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+		</filter>
+	</defs>
+	
+		<mask maskUnits="userSpaceOnUse" x="5.5" y="6.5" width="13" height="11" id="b_00000080208592241720431380000006856511932497921696_">
+		<g class="st0">
+			<path id="a_00000113319144937197989040000000389628231714267835_" class="st1" d="M0,0h24v24H0V0z"/>
+		</g>
+	</mask>
+	<path class="st2" d="M7.5,7h9C17.3,7,18,7.7,18,8.5v7c0,0.8-0.7,1.5-1.5,1.5h-9C6.7,17,6,16.3,6,15.5v-7C6,7.7,6.7,7,7.5,7z"/>
+	<defs>
+		
+			<filter id="Adobe_OpacityMaskFilter_00000026126954958935977910000018377028689684941745_" filterUnits="userSpaceOnUse" x="7.5" y="9" width="9" height="3.1">
+			<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+		</filter>
+	</defs>
+	
+		<mask maskUnits="userSpaceOnUse" x="7.5" y="9" width="9" height="3.1" id="b_00000124859613964885986610000000305649497719002521_">
+		<g style="filter:url(#Adobe_OpacityMaskFilter_00000026126954958935977910000018377028689684941745_);">
+			<path id="a_00000041261197076992499480000004797854671768381369_" class="st1" d="M0,0h24v24H0V0z"/>
+		</g>
+	</mask>
+	<path class="st4" d="M8,9.5l4,2.1l4-2.1"/>
+</g>
+</svg>

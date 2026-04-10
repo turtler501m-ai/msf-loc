@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MyCombinationMapper">
+
+    <!-- 결합테이블 등록 -->
+    <insert id="insertMcpReqCombine" parameterType="com.ktmmobile.mcp.content.dto.McpReqCombineDto">
+        <selectKey keyProperty="reqSeq" resultType="String" order="BEFORE">
+            SELECT MCP_REQ_COMBINE_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+         INSERT INTO MCP_REQ_COMBINE
+         (
+             REQ_SEQ
+            ,COMB_TYPE_CD
+            ,M_CTN
+            ,M_CUST_NM
+            ,M_CUST_BIRTH
+            ,M_SEX_CD
+            ,M_SVC_CNTR_NO
+            ,M_RATE_CD
+            ,M_RATE_NM
+            ,M_RATE_ADSVC_CD
+            ,M_RATE_ADSVC_NM
+            ,COMB_SVC_NO
+            ,COMB_SVC_CNTR_NO
+            ,COMB_CUST_NM
+            ,COMB_BIRTH
+            ,COMB_SEX_CD
+            ,COMB_SOC_CD
+            ,COMB_SOC_NM
+            ,COMB_RATE_ADSVC_CD
+            ,COMB_RATE_ADSVC_NM
+            ,COMB_TGT_TYPE_CD
+            ,RSLT_CD
+            ,RSLT_MEMO
+            ,SYS_DT
+            ,REG_DT
+         )
+         VALUES
+         (
+             #{reqSeq}
+            ,#{combTypeCd}
+            ,#{mCtn}
+            ,#{mCustNm}
+            ,#{mCustBirth}
+            ,#{mSexCd}
+            ,#{mSvcCntrNo}
+            ,#{mRateCd}
+            ,#{mRateNm}
+            ,#{mRateAdsvcCd}
+            ,#{mRateAdsvcNm}
+            ,#{combSvcNo}
+            ,#{combSvcCntrNo}
+            ,#{combCustNm}
+            ,#{combBirth}
+            ,#{combSexCd}
+            ,#{combSocCd}
+            ,#{combSocNm}
+            ,#{combRateAdsvcCd}
+            ,#{combRateAdsvcNm}
+            ,#{combTgtTypeCd}
+            ,#{rsltCd}
+            ,#{rsltMemo}
+            ,TO_CHAR(SYSDATE,'YYYYMMDD')
+            ,SYSDATE
+         )
+    </insert>
+
+    <select id="selectMcpReqCombine" resultType="com.ktmmobile.mcp.content.dto.McpReqCombineDto" parameterType="com.ktmmobile.mcp.content.dto.McpReqCombineDto">
+        SELECT
+            REQ_SEQ
+            ,COMB_TYPE_CD
+            ,M_CTN
+            ,M_CUST_NM
+            ,M_CUST_BIRTH
+            ,M_SEX_CD
+            ,M_SVC_CNTR_NO
+            ,M_RATE_CD
+            ,M_RATE_NM
+            ,M_RATE_ADSVC_CD
+            ,M_RATE_ADSVC_NM
+            ,COMB_SVC_NO
+            ,COMB_SVC_CNTR_NO
+            ,COMB_CUST_NM
+            ,COMB_BIRTH
+            ,COMB_SEX_CD
+            ,COMB_SOC_CD
+            ,COMB_SOC_NM
+            ,COMB_RATE_ADSVC_CD
+            ,COMB_RATE_ADSVC_NM
+            ,COMB_TGT_TYPE_CD
+            ,RSLT_CD
+            ,RSLT_MEMO
+            ,SYS_DT
+            ,REG_DT
+        FROM MCP_REQ_COMBINE
+        WHERE 1=1
+        AND M_SVC_CNTR_NO = #{mSvcCntrNo}
+        <choose>
+            <when test="reqSeq != null and reqSeq != ''" >
+                AND REQ_SEQ = #{reqSeq}
+            </when>
+            <otherwise>
+                <choose>
+                    <when test="rsltCd != null and rsltCd != ''" >
+                        AND RSLT_CD = #{rsltCd}
+                    </when>
+                    <otherwise>
+                        AND RSLT_CD IN ('R','B')   --//확인필요  승인여부, R:승인대기, N:미제출, S:승인완료, B:승인반려, C:신청취소,, H:임의보류   승인대기와 승인반려 두 상황이 노출됨
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+    </select>
+
+
+
+
+
+</mapper>

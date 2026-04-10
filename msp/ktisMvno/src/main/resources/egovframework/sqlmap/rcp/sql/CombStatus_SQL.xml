@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.statsMgmt.mapper.CombStatusMapper">
+
+
+	<select id="selectCombStatusList" parameterType="com.ktis.msp.rcp.statsMgmt.vo.CombStatusVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*CombStatusMapper.selectCombStatusList*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="combStatusList" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<sql id="combStatusList">
+		SELECT MST.CONTRACT_NUM
+			 , SUB.SUB_LINK_NAME
+			 , SUB.SUBSCRIBER_NO
+		     , REQUEST.LST_RATE_CD AS P_RATE_CD
+		     , REQUEST.LST_RATE_NM AS P_RATE_NM
+			 , (SELECT M.R_RATE_CD
+				FROM MSP_COMB_RATE_MAPP M
+				WHERE M.P_RATE_CD = REQUEST.LST_RATE_CD
+				AND SUB.COMB_EFCT_ST_DT BETWEEN M.APP_START_DT AND NVL(M.APP_END_DT, '99991231')
+				AND EXISTS(
+					SELECT 1
+					FROM MSP_JUO_FEATURE_INFO F
+					WHERE F.CONTRACT_NUM = MST.CONTRACT_NUM
+					AND F.SOC = M.R_RATE_CD
+					AND F.SERVICE_TYPE = 'R'
+					AND F.EXPIRATION_DATE <![CDATA[ >= ]]> TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+				)
+				AND ROWNUM =1 ) AS R_RATE_CD
+			 , (SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD =
+					(SELECT M.R_RATE_CD
+					 FROM MSP_COMB_RATE_MAPP M
+					 WHERE M.P_RATE_CD = REQUEST.LST_RATE_CD
+					 AND SUB.COMB_EFCT_ST_DT BETWEEN M.APP_START_DT AND NVL(M.APP_END_DT, '99991231')
+					 AND EXISTS(
+							SELECT 1
+							FROM MSP_JUO_FEATURE_INFO F
+							WHERE F.CONTRACT_NUM = MST.CONTRACT_NUM
+							AND F.SOC = M.R_RATE_CD
+							AND F.SERVICE_TYPE = 'R'
+					     	AND F.EXPIRATION_DATE <![CDATA[ >= ]]> TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+					)
+					AND ROWNUM =1 )) AS R_RATE_NM
+			 , SUB.LST_COM_ACTV_DATE
+			 , SUB.SUB_STATUS
+			 , FN_GET_CODENM('RCP0037', SUB.SUB_STATUS) AS SUB_STATUS_NM
+			 , SUB.COMB_TYPE_CD
+			 , FN_GET_CODENM('CMN0082', SUB.COMB_TYPE_CD) AS COMB_TYPE_NM
+			 , SUBSTR(SUB.COMB_EFCT_ST_DT, 1, 8) AS COMB_EFCT_ST_DT
+			 , SUBSTR(SUB.COMB_EFCT_FNS_DT, 1, 8) AS COMB_EFCT_FNS_DT
+			 , SUB.COMB_SVC_CONT_STTUS_CD
+			 , FN_GET_CODENM('CMN0080', SUB.COMB_SVC_CONT_STTUS_CD) AS COMB_SVC_CONT_STTUS_NM
+			 , FN_GET_ORGNM(SUB.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+			, CASE WHEN SUB.COMB_TYPE_CD = '14' THEN '(MVNO 결합) 모바일' ELSE DTL.COMB_PROD_NM END AS COMB_PROD_NM
+			, DTL.SVC_CONT_DIV_NM
+			, (SELECT RATE_CD FROM MSP_RATE_MST WHERE RATE_NM = DTL.PROD_NM) AS PROD_CD
+			, DTL.PROD_NM
+			, DTL.SVC_NO
+			, SUBSTR(DTL.COMB_ENGT_ST_DT, 1, 8) AS COMB_ENGT_ST_DT
+			, SUBSTR(DTL.COMB_ENGT_EXPIR_DT, 1, 8) AS COMB_ENGT_EXPIR_DT
+			, DTL.COMB_ENGT_PERD_MONS_NUM AS COMB_ENGT_PERD_MONS_NUM
+			, FN_GET_CODENM('CMN0085', MST.API_TARGET) AS API_TARGET
+			, MST.PRCS_SBST
+		FROM MSP_COMB_MST MST
+			,MSP_COMB_DTL DTL
+			,MSP_JUO_SUB_INFO SUB
+			,MSP_REQUEST_DTL REQUEST
+		WHERE 1 = 1
+		  AND MST.CONTRACT_NUM = DTL.CONTRACT_NUM(+)
+		  AND MST.CONTRACT_NUM = SUB.CONTRACT_NUM
+		  AND MST.CONTRACT_NUM = REQUEST.CONTRACT_NUM
+		<if test="srchStrtDt != null and srchStrtDt != '' and srchEndDt != null and srchEndDt != ''">
+			AND SUBSTR(SUB.COMB_EFCT_ST_DT, 1, 8) BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>
+		<if test='searchGbn != null and searchGbn != ""'>
+			<if test="searchGbn == '01'">
+				AND MST.CONTRACT_NUM = #{searchName}
+			</if>
+			<if test="searchGbn == '02'">
+				AND UPPER(SUB.SUB_LINK_NAME) LIKE UPPER(#{searchName}) || '%'
+			</if>
+			<if test="searchGbn == '03'">
+				AND SUB.SUBSCRIBER_NO = #{searchName}
+			</if>
+			<if test="searchGbn == '04'">
+				AND DTL.SVC_CONT_DIV_NM = #{searchName} /*KT구분*/
+			</if>
+			<if test="searchGbn == '05'">
+				AND DTL.PROD_NM LIKE '%' || #{searchName} || '%'	  /*상품명*/
+			</if>
+		</if>
+		<if test='openAgntCd != null and openAgntCd != ""'>
+			AND SUB.OPEN_AGNT_CD = #{openAgntCd}
+		</if>
+		<if test='subStatus != null and subStatus != ""'>
+			AND SUB.SUB_STATUS = #{subStatus}
+		</if>
+		<if test='combSvcContSttusCd != null and combSvcContSttusCd != ""'>
+			AND SUB.COMB_SVC_CONT_STTUS_CD = #{combSvcContSttusCd}
+		</if>
+		<if test='apiTarget != null and apiTarget != ""'>
+			AND MST.API_TARGET = #{apiTarget}
+		</if>
+		ORDER BY SUB.COMB_EFCT_ST_DT DESC, MST.CONTRACT_NUM DESC
+	</sql>
+</mapper>

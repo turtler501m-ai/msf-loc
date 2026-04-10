@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.gift.prdtgmt.mapper.PrdtMngMapper">
+
+
+	<!-- gift 제품 관리 -->
+	<select id="prdtMngList" parameterType="com.ktis.msp.gift.prdtgmt.vo.PrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PrdtMngMapper.prdtMngList */
+		SELECT
+			    PRDT_ID
+			  , MAKER
+			  , PRDT_NM
+			  , PRDT_DESC
+			  , OUT_UNIT_PRIC
+			  , USE_YN
+			  , IMG_FILE
+			  , WEB_URL
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+		FROM    MSP_GIFT_PRDT A
+		WHERE 1=1
+		 <if test="prdtId != null and prdtId != ''">
+		   AND  A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="maker != null and maker != ''">
+		   AND  A.MAKER = #{maker, jdbcType=VARCHAR}
+		 </if>
+		 <if test="prdtNm != null and prdtNm != ''">
+		   AND  A.PRDT_NM LIKE '%' || #{prdtNm, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="useYn != null and useYn != ''">
+		   AND  A.USE_YN = #{useYn, jdbcType=VARCHAR}
+		 </if>
+		ORDER BY A.PRDT_ID, A.MAKER, A.PRDT_NM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+
+	<select id="prdtMngHist" parameterType="com.ktis.msp.gift.prdtgmt.vo.PrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* UsimPrdtMngMapper.usimPrdtMngHist */
+		SELECT
+			    PRDT_ID
+			  , MAKER
+			  , PRDT_NM
+			  , PRDT_DESC
+			  , OUT_UNIT_PRIC
+			  , OUT_UNIT_PRIC * 1.1 OUT_UNIT_PRIC_VAT
+			  , USE_YN
+			  , IMG_FILE
+			  , WEB_URL
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+			  , TO_CHAR(RVISN_DTTM,'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM 
+		FROM    MSP_GIFT_PRDT_HIST A
+		WHERE 1=1
+		 <if test="prdtId != null and prdtId != ''">
+		   AND  A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+		 </if>
+		ORDER BY A.SEQ DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />		
+	</select>		
+
+
+	<insert id="prdtInsert" parameterType="com.ktis.msp.gift.prdtgmt.vo.PrdtMngVO">
+		<selectKey keyProperty="prdtId" order="BEFORE" resultType="com.ktis.msp.gift.prdtgmt.vo.PrdtMngVO">
+			SELECT TRIM(TO_CHAR(SQ_MSP_GIFT_PRDT_01.NEXTVAL,'000000000')) AS prdtId
+			FROM   DUAL
+		</selectKey>
+		/* PrdtMngMapper.prdtInsert */
+		INSERT INTO MSP_GIFT_PRDT
+		(
+		      PRDT_ID
+		    , MAKER
+		    , PRDT_NM
+		    , PRDT_DESC
+		    , OUT_UNIT_PRIC
+		    , USE_YN
+		    , IMG_FILE
+		    , WEB_URL
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		VALUES
+		(
+			#{prdtId, jdbcType=VARCHAR}
+		  , #{maker, jdbcType=VARCHAR}
+		  , #{prdtNm, jdbcType=VARCHAR}
+		  , #{prdtDesc, jdbcType=VARCHAR}
+		  , #{outUnitPric, jdbcType=VARCHAR}
+		  , #{useYn, jdbcType=VARCHAR}
+		  , #{imgFile, jdbcType=VARCHAR}
+		  , #{webUrl, jdbcType=VARCHAR}
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		)
+	</insert>
+	
+	<update id="prdtUpdate" parameterType="com.ktis.msp.gift.prdtgmt.vo.PrdtMngVO">
+		/* PrdtMngMapper.prdtUpdate */
+		UPDATE  MSP_GIFT_PRDT
+		   SET  MAKER = #{maker, jdbcType=VARCHAR}
+		      , PRDT_NM = #{prdtNm, jdbcType=VARCHAR}
+		      , PRDT_DESC = #{prdtDesc, jdbcType=VARCHAR}
+		      , OUT_UNIT_PRIC = #{outUnitPric, jdbcType=VARCHAR}
+		      , USE_YN = #{useYn, jdbcType=VARCHAR}
+		      , IMG_FILE = #{imgFile, jdbcType=VARCHAR}
+		      , WEB_URL = #{webUrl, jdbcType=VARCHAR}
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+		 WHERE  PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+	</update>	
+		
+	<insert id="prdtHistInsert" parameterType="com.ktis.msp.gift.prdtgmt.vo.PrdtMngVO">
+		/* PrdtMngMapper.prdtHistInsert */
+		INSERT INTO MSP_GIFT_PRDT_HIST
+		(
+			SEQ
+		    , PRDT_ID
+		    , MAKER
+		    , PRDT_NM
+		    , PRDT_DESC
+		    , OUT_UNIT_PRIC
+		    , USE_YN
+		    , IMG_FILE
+		    , WEB_URL
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT  SQ_MSP_GIFT_PRDT_HIST_01.nextVal
+			    , PRDT_ID
+			    , MAKER
+			    , PRDT_NM
+			    , PRDT_DESC
+			    , OUT_UNIT_PRIC
+			    , USE_YN
+			    , IMG_FILE
+			    , WEB_URL
+			    , #{sessionUserId, jdbcType=VARCHAR}
+			    , SYSDATE
+			    , #{sessionUserId, jdbcType=VARCHAR}
+			    , SYSDATE
+			    
+		  FROM  MSP_GIFT_PRDT A
+		 WHERE  PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+		 
+	</insert>
+
+	<select id="prdtMngListEx" parameterType="com.ktis.msp.gift.prdtgmt.vo.PrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PrdtMngMapper.prdtMngListEx */
+		SELECT
+			    PRDT_ID
+			  , MAKER
+			  , PRDT_NM
+			  , PRDT_DESC
+			  , OUT_UNIT_PRIC
+			  , USE_YN
+			  , IMG_FILE
+			  , WEB_URL
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+		FROM    MSP_GIFT_PRDT A
+		WHERE 1=1
+		 <if test="prdtId != null and prdtId != ''">
+		   AND  A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="maker != null and maker != ''">
+		   AND  A.MAKER = #{maker, jdbcType=VARCHAR}
+		 </if>
+		 <if test="prdtNm != null and prdtNm != ''">
+		   AND  A.PRDT_NM LIKE '%' || #{prdtNm, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="useYn != null and useYn != ''">
+		   AND  A.USE_YN = #{useYn, jdbcType=VARCHAR}
+		 </if>
+		ORDER BY A.PRDT_ID, A.MAKER, A.PRDT_NM
+	</select>	
+
+	<select id="getImageFile" parameterType="com.ktis.msp.gift.prdtgmt.vo.PrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT	/* PrdtMngMapper.getImageFile */
+		          ATT_ROUT      /* 파일경로 */
+		        , FILE_NM       /* 파일명 */
+		        , FILE_ID       /* 파일ID */
+		  FROM    ORG_FILE_MGMT_MST OFMM
+		 WHERE  OFMM.ATT_SCTN = 'GIT'
+		 <if test="prdtId != null and prdtId != ''">
+		   AND	OFMM.ORGN_ID = #{prdtId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="fileId1 != null and fileId1 != ''">
+		   AND	OFMM.FILE_ID = #{fileId1, jdbcType=VARCHAR}
+		 </if>
+	     ORDER 	BY OFMM.REG_DTTM
+	</select>
+	
+
+
+
+
+
+
+
+					
+			
+</mapper>

@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TelCounselMapper">
+    <sql id="nmcp_tel_counsel_bas_columns">
+        TCB.COUNSEL_SEQ,
+        TCB.COUNSEL_SEQ AS counselSeq,
+        TCB.COUNSEL_CTG,
+        TCB.COUNSEL_NM,
+        TCB.MOBILE_NO,
+        TCB.CRET_ID,
+        TCB.AMD_ID,
+        TCB.CRET_DT,
+        TCB.AMD_DT,
+        TCB.REGION_CD,
+        TCB.AGE_CD,
+        TCB.GENDER_CD,
+        TCB.LAST_COUNSEL_DTL_SEQ
+    </sql>
+    <sql id="nmcp_tel_counsel_dtl_columns">
+        TCD.COUNSEL_DTL_SEQ,
+        TCD.COUNSEL_SEQ,
+        TCD.REPLY_CONTENT,
+        TCD.REPLY_STAT_CD,
+        TCD.DEL_YN,
+        TCD.CRET_ID,
+        TCD.AMD_ID,
+        TCD.CRET_DT,
+        TCD.AMD_DT
+    </sql>
+
+    <insert id="insertTelCounsel" parameterType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDto">
+        <selectKey keyProperty="counselSeq" resultType="Integer" order="BEFORE">
+            SELECT SQ_TEL_COUNSEL_BAS_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        /** TelCounsel_Query.insertTelCounselBas 전화상담정보를 저장처리 */
+        insert into
+            NMCP_TEL_COUNSEL_BAS TCB
+            (
+            TCB.COUNSEL_SEQ,
+            TCB.COUNSEL_CTG,
+            TCB.COUNSEL_NM,
+            TCB.MOBILE_NO,
+            TCB.CRET_ID,
+            TCB.AMD_ID,
+            TCB.CRET_DT,
+            TCB.AMD_DT,
+            TCB.REGION_CD,
+            TCB.AGE_CD,
+            TCB.GENDER_CD
+            )
+        values
+            (
+            #{counselSeq},
+            #{counselCtg},
+            #{counselNm},
+            #{mobileNo},
+            #{cretId},
+            null,
+            sysdate,
+            null,
+            #{regionCd},
+            #{ageCd},
+            #{genderCd}
+            )
+    </insert>
+
+    <resultMap id="mapSelectTelCounsel" type="com.ktmmobile.mcp.telCounsel.dto.TelCounselDto">
+        <collection property="telCounselDtlDtoList"
+                    ofType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDtlDto"
+                    column="{counselSeq = COUNSEL_SEQ}"
+                    select="selectTelCounselDtlList" >
+        </collection>
+    </resultMap>
+    <select id="selectTelCounselDtlList" resultType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDtlDto">
+        /** TelCounsel_Query.selectTelCounselDtlList 전화상담 기본정보상세 리스트 조회 */
+        select
+            <include refid="nmcp_tel_counsel_dtl_columns" />,
+            (select admin_nm from nmcp_admin_member_bas b where b.admin_id = tcd.cret_id) as cretNm
+        from
+            NMCP_TEL_COUNSEL_DTL TCD
+        where
+            COUNSEL_SEQ = #{counselSeq}
+        and
+            DEL_YN = 'N'
+        order by
+            CRET_DT desc
+    </select>
+    <select id="selectTelCounsel" parameterType="Integer" resultMap="mapSelectTelCounsel">
+        /** TelCounsel_Query.selectTelCounsel 전화상담 기본정보 1건 조회 (상세 내역 포함 ) */
+        select
+            <include refid="nmcp_tel_counsel_bas_columns" />
+        from
+            NMCP_TEL_COUNSEL_BAS TCB
+        where
+            COUNSEL_SEQ = #{counselSeq}
+    </select>
+
+
+
+    <resultMap id="withLastDtl" type="com.ktmmobile.mcp.telCounsel.dto.TelCounselDto">
+         <result property="counselSeq" column="COUNSEL_SEQ"></result>
+         <result property="counselCtg" column="COUNSEL_CTG"></result>
+         <result property="counselNm" column="COUNSEL_NM"></result>
+         <result property="mobileNo" column="MOBILE_NO"></result>
+         <result property="cretId" column="CRET_ID"></result>
+         <result property="cretDt" column="CRET_DT"></result>
+         <result property="amdId" column="AMD_ID"></result>
+         <result property="amdDt" column="AMD_DT"></result>
+         <result property="regionCd" column="REGION_CD"></result>
+         <result property="ageCd" column="AGE_CD"></result>
+         <result property="genderCd" column="GENDER_CD"></result>
+         <result property="lastCounselDtlSeq" column="LAST_COUNSEL_DTL_SEQ"></result>
+        <association property="telCounselDtlDto" javaType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDtlDto">
+            <result property="counselDtlSeq" column="D_COUNSEL_DTL_SEQ"></result>
+            <result property="counselSeq" column="D_COUNSEL_SEQ"></result>
+            <result property="replyContent" column="D_REPLY_CONTENT"></result>
+            <result property="replyStatCd" column="D_REPLY_STAT_CD"></result>
+            <result property="delYn" column="D_DEL_YN"></result>
+            <result property="cretId" column="D_CRET_ID"></result>
+            <result property="amdId" column="D_AMT_ID"></result>
+            <result property="cretDt" column="D_CRET_DT"></result>
+            <result property="amdDt" column="D_AMD_DT"></result>
+         </association>
+    </resultMap>
+
+    <select id="selectTelCounselList" parameterType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDto" resultMap="withLastDtl">
+        /** TelCounsel_Query.selectTelCounselList 전화상담 기본정보 리스트 조회 */
+        select
+            <include refid="nmcp_tel_counsel_bas_columns" />,
+            TCD.COUNSEL_DTL_SEQ AS D_COUNSEL_DTL_SEQ,
+            TCD.COUNSEL_SEQ AS D_COUNSEL_SEQ,
+            TCD.REPLY_CONTENT AS D_REPLY_CONTENT,
+            TCD.REPLY_STAT_CD AS D_REPLY_STAT_CD,
+            TCD.DEL_YN AS D_DEL_YN,
+            TCD.CRET_ID AS D_CRET_ID,
+            TCD.AMD_ID AS D_AMT_ID,
+            TCD.CRET_DT AS D_CRET_DT,
+            TCD.AMD_DT AS D_AMD_DT
+        from
+            NMCP_TEL_COUNSEL_BAS TCB
+        left outer join
+            NMCP_TEL_COUNSEL_DTL TCD on TCB.LAST_COUNSEL_DTL_SEQ = TCD.COUNSEL_DTL_SEQ
+        where
+            1=1
+        <if test="counselCtg != null and counselCtg != ''">
+            and TCB.COUNSEL_CTG = #{counselCtg}
+        </if>
+        <if test="regionCd != null and regionCd != ''">
+            and	TCB.REGION_CD = #{regionCd}
+        </if>
+        <if test="ageCd != null and ageCd != ''">
+            and TCB.AGE_CD = #{ageCd}
+        </if>
+        <if test="genderCd != null and genderCd != ''">
+            and TCB.GENDER_CD = #{genderCd}
+        </if>
+        <if test="replyStatCd != null and replyStatCd != ''">
+            and TCD.REPLY_STAT_CD = #{replyStatCd}
+        </if>
+        <if test="searchValue != null and searchValue != ''">
+        <choose>
+            <when test="searchCategory == '01'">
+                and TCB.COUNSEL_NM LIKE '%'||#{searchValue}||'%'
+            </when>
+            <when test="searchCategory == '02'">
+                and TCB.MOBILE_NO LIKE '%'||#{searchValue}||'%'
+            </when>
+        </choose>
+        </if>
+        <if test="searchDtReq != null and searchDtReq != ''">
+            and TO_CHAR(TCB.CRET_DT,'yyyy.mm.dd') = #{searchDtReq}
+        </if>
+        <if test="searchDtAnswer != null and searchDtAnswer != ''">
+            and TO_CHAR(TCD.CRET_DT,'yyyy.mm.dd') = #{searchDtAnswer}
+        </if>
+        order by
+            CRET_DT desc
+    </select>
+
+    <select id="selectTelCounselListCount" parameterType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDto" resultType="java.lang.Integer">
+        /** TelCounsel_Query.selectTelCounselListCount 전화상담 기본정보 리스트 COUNT 조회 */
+        select
+            COUNT(1)
+        from
+            NMCP_TEL_COUNSEL_BAS TCB
+        left outer join
+            NMCP_TEL_COUNSEL_DTL TCD on TCB.LAST_COUNSEL_DTL_SEQ = TCD.COUNSEL_DTL_SEQ
+        where
+            1=1
+        <if test="counselCtg != null and counselCtg != ''">
+            and TCB.COUNSEL_CTG = #{counselCtg}
+        </if>
+        <if test="regionCd != null and regionCd != ''">
+            and	TCB.REGION_CD = #{regionCd}
+        </if>
+        <if test="ageCd != null and ageCd != ''">
+            and TCB.AGE_CD = #{ageCd}
+        </if>
+        <if test="genderCd != null and genderCd != ''">
+            and TCB.GENDER_CD = #{genderCd}
+        </if>
+        <if test="replyStatCd != null and replyStatCd != ''">
+            and TCD.REPLY_STAT_CD = #{replyStatCd}
+        </if>
+        <if test="searchValue != null and searchValue != ''">
+        <choose>
+            <when test="searchCategory == '01'">
+                and TCB.COUNSEL_NM LIKE '%'||#{searchValue}||'%'
+            </when>
+            <when test="searchCategory == '02'">
+                and TCB.MOBILE_NO LIKE '%'||#{searchValue}||'%'
+            </when>
+        </choose>
+        </if>
+            <if test="searchDtReq != null and searchDtReq != ''">
+            and TO_CHAR(TCB.CRET_DT,'yyyy.mm.dd') = #{searchDtReq}
+        </if>
+        <if test="searchDtAnswer != null and searchDtAnswer != ''">
+            and TO_CHAR(TCD.CRET_DT,'yyyy.mm.dd') = #{searchDtAnswer}
+        </if>
+    </select>
+
+    <update id="updateTelCounselDtl" parameterType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDtlDto">
+        /** TelCounsel_Query.updateTelCounselDtl 전화상담정보 상세 수정  */
+        update
+            NMCP_TEL_COUNSEL_DTL TCD
+        set
+            TCD.AMD_DT = sysdate,
+            <if test="replyContent != null and replyContent != ''">
+            TCD.REPLY_CONTENT = #{replyContent},
+            </if>
+            <if test="replyStatCd != null and replyStatCd != ''">
+            TCD.REPLY_STAT_CD = #{replyStatCd},
+            </if>
+            <if test="delYn != null and delYn != ''">
+            TCD.DEL_YN = #{delYn},
+            </if>
+            TCD.AMD_ID = #{amdId}
+        where
+            TCD.COUNSEL_DTL_SEQ = #{counselDtlSeq}
+    </update>
+
+    <delete id="deleteTelCounselDtlBySeq" parameterType="java.lang.Integer">
+        delete
+            NMCP_TEL_COUNSEL_DTL
+        where
+            COUNSEL_SEQ = #{counselSeq}
+    </delete>
+
+    <delete id="deleteTelCounselBasBySeq" parameterType="java.lang.Integer">
+        delete
+            NMCP_TEL_COUNSEL_BAS
+        where
+            COUNSEL_SEQ = #{counselSeq}
+    </delete>
+
+    <insert id="insertTelCounselDtl" parameterType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDtlDto">
+        <selectKey keyProperty="counselDtlSeq" resultType="Integer" order="BEFORE">
+            SELECT SQ_TEL_COUNSEL_BAS_DTL_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        insert into
+            NMCP_TEL_COUNSEL_DTL TCD
+            (
+                <include refid="nmcp_tel_counsel_dtl_columns" />
+            )
+        values
+            (
+                #{counselDtlSeq},
+                #{counselSeq},
+                #{replyContent},
+                #{replyStatCd},
+                'N',
+                #{cretId},
+                null,
+                sysdate,
+                null
+            )
+    </insert>
+
+    <update id="updateLastCounselDtlSeq" parameterType="java.lang.Integer">
+    update
+        NMCP_TEL_COUNSEL_BAS
+    set
+        LAST_COUNSEL_DTL_SEQ = (select
+                                    COUNSEL_DTL_SEQ
+                                from (
+                                    select
+                                        COUNSEL_DTL_SEQ
+                                        from
+                                            NMCP_TEL_COUNSEL_DTL
+                                        where
+                                            COUNSEL_SEQ = #{counselSeq}
+                                        and
+                                            DEL_YN = 'N'
+                                    order by CRET_DT desc
+                                                        )
+                                    where ROWNUM = 1)
+                                where COUNSEL_SEQ = #{counselSeq}
+    </update>
+
+
+	<!-- 전화상담 신청정보 저장 -->
+    <insert id="insertCtiTelCounsel" parameterType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDto">
+        <selectKey keyProperty="counselSeq" resultType="Integer" order="BEFORE">
+            SELECT SQ_TEL_COUNSEL_BAS_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        /** TelCounsel_Query.insertCtiTelCounsel */
+        INSERT INTO
+            NMCP_TEL_COUNSEL_BAS
+       (
+				COUNSEL_SEQ
+				, COUNSEL_CTG
+				, COUNSEL_NM
+				, MOBILE_NO
+				, CRET_DT
+				, AMD_DT
+				, REGION_CD
+				, AGE_CD
+				, GENDER_CD
+				, LAST_COUNSEL_DTL_SEQ
+				, RATE_NM
+				, OPER_TYPE
+				, REQ_USIM_SN
+				, MOVE_MOBILE_NO
+				, JURIDICAL_NUMBER
+				, AGENT_NM
+            )
+            VALUES
+            (
+	            #{counselSeq},
+	            #{counselCtg},
+	            #{counselNm},
+	            #{mobileNo},
+	            SYSDATE,
+	            SYSDATE,
+	            '',
+	            '',
+	            '',
+	            '',
+	            '',
+	            '',
+	            '',
+	            '',
+	            #{juridicalNumber},
+	            #{agentNm}
+	            )
+    </insert>
+
+	<!-- 전화상담 30일이내 신청정보 확인 -->
+    <select id="selectCtiTelCounselCnt" parameterType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDto" resultType="java.lang.Integer">
+        /** TelCounsel_Query.selectCtiTelCounselCnt */
+		SELECT COUNT(1)
+		  FROM NMCP_TEL_COUNSEL_BAS
+		 WHERE 1=1
+		   AND MOBILE_NO = #{mobileNo}
+		   AND TO_CHAR(CRET_DT,'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE-30,'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD')
+    </select>
+
+	<!-- 직영온라인 30일 이내 신청정보 확인 -->
+    <select id="selectCtiReqCnt" parameterType="com.ktmmobile.mcp.telCounsel.dto.TelCounselDto" resultType="java.lang.Integer">
+        /** TelCounsel_Query.selectCtiReqCnt */
+		SELECT COUNT(1)
+		  FROM MCP_REQUEST A
+			   , MCP_REQUEST_CSTMR B
+		 WHERE 1=1
+		   AND A.REQUEST_KEY = B.REQUEST_KEY
+		   AND B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN = #{mobileNo}
+		   AND A.ON_OFF_TYPE IN ('0', '3')      -- 직영
+		   AND A.CNTPNT_SHOP_ID = '1100011741'  -- 직영온라인
+		   AND TO_CHAR(A.REQ_IN_DAY,'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE-30,'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD')
+    </select>
+</mapper>

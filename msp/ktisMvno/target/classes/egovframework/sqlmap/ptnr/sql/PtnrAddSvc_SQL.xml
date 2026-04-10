@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.ptnr.ptnrmgmt.mapper.PtnrAddSvcMapper">
+
+
+
+
+	<!-- 제휴부가서비스관리 -->
+	<select id="ptnrAddSvcList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrAddSvcMapper.ptnrAddSvcList */
+		SELECT  RAT.RATE_CD
+			  , RAT.RATE_NM
+			  , PADD.PARTNER_ID AS PTNR_ID
+			  , (SELECT CD_DSC 
+			  	   FROM CMN_GRP_CD_MST 
+			  	  WHERE GRP_ID = 'CMN0243'
+			  	    AND USG_YN = 'Y' 
+			  	    AND CD_VAL = PADD.PARTNER_ID) AS PTNR_NM
+			  , ARAT.RATE_CD AS ADD_SVC_CD
+			  , ARAT.RATE_NM AS ADD_SVC_NM
+			  , PADD.DC_CD
+		      , FN_GET_CODENM('MSP00016', PADD.DC_CD) AS DC_CD_NM
+			  , ARAT.BASE_AMT 
+			  , PADD.POINT_VAL
+			  , (SELECT CD_DSC 
+			  	   FROM CMN_GRP_CD_MST 
+			  	  WHERE GRP_ID = 'CMN0242'
+			  	    AND USG_YN = 'Y' 
+			  	    AND CD_VAL = PADD.USE_YN) AS USE_YN
+			  , TO_CHAR(TO_DATE(PADD.STRT_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS STRT_DATE
+			  , TO_CHAR(TO_DATE(PADD.END_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS END_DATE
+			  , FN_GET_USRNM(PADD.RVISN_ID) AS USR_NM
+		  FROM  MSP_RATE_MST RAT
+			  , MSP_RATE_MST ARAT
+			  , MSP_PARTNER_ADD_SVC_MST PADD
+		 WHERE  RAT.PAY_CL_CD = 'PO'
+		   AND  RAT.SERVICE_TYPE = 'P'
+		   AND  ARAT.SERVICE_TYPE = 'R'
+		   AND  PADD.RATE_CD = RAT.RATE_CD
+		   AND  PADD.ADD_SVC_CD = ARAT.RATE_CD
+		   
+		 <if test="ptnrId != null and ptnrId != ''">
+		   AND  PADD.PARTNER_ID = #{ptnrId, jdbcType=VARCHAR}
+		 </if>
+		 
+		 <if test="rateNm != null and rateNm != ''">
+		   AND  RAT.RATE_NM LIKE '%'||#{rateNm, jdbcType=VARCHAR}||'%'
+		 </if>
+		 <if test="addSvcNm != null and addSvcNm != ''">
+		   AND  ARAT.RATE_NM LIKE '%'||#{addSvcNm, jdbcType=VARCHAR}||'%'
+		 </if>
+		 <if test="useYn != null and useYn != ''">
+		   AND  PADD.USE_YN = #{useYn, jdbcType=VARCHAR}
+		 </if>  
+		 ORDER  BY
+				RAT.RATE_NM DESC, ARAT.RATE_NM DESC, PADD.STRT_DATE DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+
+	<select id="ptnrAddSvcHist" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrAddSvcMapper.ptnrAddSvcHist */
+		SELECT  RAT.RATE_CD
+			  , RAT.RATE_NM
+			  , PADD.PARTNER_ID AS PTNR_ID
+			  , (SELECT CD_DSC 
+			  	   FROM CMN_GRP_CD_MST 
+			  	  WHERE GRP_ID = 'CMN0243'
+			  	    AND USG_YN = 'Y' 
+			  	    AND CD_VAL = PADD.PARTNER_ID) AS PTNR_NM
+			  , ARAT.RATE_CD AS ADD_SVC_CD
+			  , ARAT.RATE_NM AS ADD_SVC_NM
+			  , PADD.DC_CD
+		      , FN_GET_CODENM('MSP00016', PADD.DC_CD) AS DC_CD_NM
+			  , ARAT.BASE_AMT 
+			  , PADD.POINT_VAL
+			  , (SELECT CD_DSC 
+			  	   FROM CMN_GRP_CD_MST 
+			  	  WHERE GRP_ID = 'CMN0242'
+			  	    AND USG_YN = 'Y' 
+			  	    AND CD_VAL = PADD.USE_YN) AS USE_YN
+			  , TO_CHAR(TO_DATE(PADD.STRT_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS STRT_DATE
+			  , TO_CHAR(TO_DATE(PADD.END_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS END_DATE
+			  , FN_GET_USRNM(PADD.RVISN_ID) AS USR_NM
+		  FROM  MSP_RATE_MST RAT
+			  , MSP_RATE_MST ARAT
+			  , MSP_PARTNER_ADD_SVC_HIST PADD
+		 WHERE  RAT.PAY_CL_CD = 'PO'
+		   AND  RAT.SERVICE_TYPE = 'P'
+		   AND  ARAT.SERVICE_TYPE = 'R'
+		   AND  PADD.RATE_CD = RAT.RATE_CD
+		   AND  PADD.ADD_SVC_CD = ARAT.RATE_CD
+		   
+		   AND  PADD.ADD_SVC_CD = #{addSvcCd, jdbcType=VARCHAR}
+		 ORDER  BY
+				PADD.SEQ_NUM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />		
+	</select>		
+
+	<select id="ptnrRateAddSvcComboList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT  ARAT.RATE_CD  AS VALUE
+		       ,ARAT.RATE_NM AS TEXT
+		  FROM  MSP_RATE_MST             RAT
+		       ,MSP_RATE_MST             ARAT
+		       ,MSP_PROD_REL_MST         REL
+		 WHERE  RAT.PAY_CL_CD = 'PO'
+		   AND  RAT.SERVICE_TYPE = 'P'
+		   AND  ARAT.SERVICE_TYPE = 'R'
+		   AND  REL.RATE_CD = RAT.RATE_CD
+		   AND  REL.ADD_SVC_CD = ARAT.RATE_CD       
+		   AND  RAT.RATE_CD = #{rateCd, jdbcType=VARCHAR}
+		ORDER BY ARAT.RATE_NM ASC
+	</select>		
+		
+	<insert id="ptnrAddSvcInsert" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO">
+		/* PtnrAddSvcMapper.ptnrAddSvcInsert */
+		INSERT INTO MSP_PARTNER_ADD_SVC_MST
+		(
+			PARTNER_ID
+		  , RATE_CD
+		  , ADD_SVC_CD
+		  , DC_CD
+		  , POINT_VAL
+		  , USE_YN
+		  , STRT_DATE
+		  , END_DATE
+		  , REGST_ID
+		  , REGST_DTTM
+		  , RVISN_ID
+		  , RVISN_DTTM
+		)
+		VALUES
+		(
+			#{ptnrId, jdbcType=VARCHAR}
+		  , #{rateCd, jdbcType=VARCHAR}
+		  , #{addSvcCd, jdbcType=VARCHAR}
+		  , #{dcCd, jdbcType=VARCHAR}
+		  , #{pointVal, jdbcType=VARCHAR}
+		  , #{useYn, jdbcType=VARCHAR}
+		  , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		  , '99991231235959'
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		)
+	</insert>
+	
+	<update id="ptnrAddSvcUpdate" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO">
+		/* PtnrAddSvcMapper.ptnrAddSvcUpdate */
+		UPDATE  MSP_PARTNER_ADD_SVC_MST
+		   SET  STRT_DATE = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+		      , DC_CD = #{dcCd, jdbcType=VARCHAR}
+		      , POINT_VAL = #{pointVal, jdbcType=VARCHAR}
+		      , USE_YN = #{useYn, jdbcType=VARCHAR}
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+		 WHERE  PARTNER_ID = #{ptnrId, jdbcType=VARCHAR}
+		   AND  RATE_CD = #{rateCd, jdbcType=VARCHAR}
+		   AND  ADD_SVC_CD = #{addSvcCd, jdbcType=VARCHAR}
+	</update>	
+		
+	<insert id="ptnrAddSvcHistInsert" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO">
+		/* PtnrAddSvcMapper.ptnrAddSvcHistInsert */
+		INSERT INTO MSP_PARTNER_ADD_SVC_HIST
+		(
+			SEQ_NUM
+		  , PARTNER_ID
+		  , RATE_CD
+		  , ADD_SVC_CD
+		  , DC_CD
+		  , POINT_VAL
+		  , USE_YN
+		  , STRT_DATE
+		  , END_DATE
+		  , REGST_ID
+		  , REGST_DTTM
+		  , RVISN_ID
+		  , RVISN_DTTM
+		)
+		SELECT  SQ_MSP_PARTNER_ADD_SVC_HIST_01.nextVal
+			  , PARTNER_ID
+		      , RATE_CD
+			  , ADD_SVC_CD
+			  , DC_CD
+			  , POINT_VAL
+			  , USE_YN
+			  , STRT_DATE
+			  , TO_CHAR(SYSDATE - 1/24/60/60, 'YYYYMMDDHH24MISS')
+			  , REGST_ID
+			  , REGST_DTTM
+			  , RVISN_ID
+			  , RVISN_DTTM
+		  FROM  MSP_PARTNER_ADD_SVC_MST
+		 WHERE  PARTNER_ID = #{ptnrId, jdbcType=VARCHAR}
+		   AND  RATE_CD = #{rateCd, jdbcType=VARCHAR}
+		   AND  ADD_SVC_CD = #{addSvcCd, jdbcType=VARCHAR}
+	</insert>
+
+
+	<select id="getRateComboList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrAddSvcMapper.getRateComboList */
+		SELECT  A.RATE_CD AS VALUE
+		        , A.RATE_NM || ' ( ' || B.CD_DSC || ' )' AS TEXT
+		FROM    MSP_RATE_MST A
+		       ,CMN_GRP_CD_MST B
+		       ,MSP_PARTNER_RATE_MST C 
+   	    WHERE   C.PARTNER_ID    = #{ptnrId, jdbcType=VARCHAR}
+   	    AND     C.RATE_CD       = A.RATE_CD
+		AND     A.PAY_CL_CD     = 'PO'
+		AND     A.SERVICE_TYPE  = 'P'
+		AND     A.APPL_END_DT   = '99991231'
+		AND     A.RATE_TYPE     = B.CD_VAL
+		AND     B.GRP_ID        = 'CMN0047'
+		ORDER BY 1
+	</select>
+			
+
+	<select id="ptnrAddSvcInfo" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrAddSvcMapper.ptnrAddSvcInfo */
+		SELECT  RAT.RATE_CD
+			  , RAT.APPL_END_DT
+			  , RAT.APPL_STRT_DT
+			  , RAT.RATE_NM
+			  , RAT.RATE_TYPE
+			  , (SELECT CD_DSC 
+			  	   FROM CMN_GRP_CD_MST 
+			  	  WHERE GRP_ID = 'CMN0047'
+			  	    AND USG_YN = 'Y' 
+			  	    AND CD_VAL = RAT.RATE_TYPE) AS RATE_TYPE_NM
+			  , RAT.DATA_TYPE
+			  , RAT.BASE_AMT 
+		  FROM  MSP_RATE_MST RAT
+		 WHERE  RAT.SERVICE_TYPE = 'R'
+		   AND  RAT.APPL_END_DT   = '99991231'
+		   AND  RAT.RATE_CD = #{addSvcCd, jdbcType=VARCHAR}
+		 ORDER  BY
+				RAT.RATE_NM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />		
+	</select>					
+			
+	<select id="ptnrAddSvcListEx" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrAddSvcMapper.ptnrAddSvcListEx */
+		SELECT  RAT.RATE_CD
+			  , RAT.RATE_NM
+			  , PADD.PARTNER_ID AS PTNR_ID
+			  , (SELECT CD_DSC 
+			  	   FROM CMN_GRP_CD_MST 
+			  	  WHERE GRP_ID = 'CMN0243'
+			  	    AND USG_YN = 'Y' 
+			  	    AND CD_VAL = PADD.PARTNER_ID) AS PTNR_NM
+			  , ARAT.RATE_CD AS ADD_SVC_CD
+			  , ARAT.RATE_NM AS ADD_SVC_NM
+		      , FN_GET_CODENM('MSP00016', PADD.DC_CD) AS DC_CD_NM
+			  , ARAT.BASE_AMT 
+			  , PADD.POINT_VAL			  
+			  , (SELECT CD_DSC 
+			  	   FROM CMN_GRP_CD_MST 
+			  	  WHERE GRP_ID = 'CMN0242'
+			  	    AND USG_YN = 'Y' 
+			  	    AND CD_VAL = PADD.USE_YN) AS USE_YN
+			  , TO_CHAR(TO_DATE(PADD.STRT_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS STRT_DATE
+			  , TO_CHAR(TO_DATE(PADD.END_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS END_DATE
+			  , FN_GET_USRNM(PADD.RVISN_ID) AS USR_NM
+		  FROM  MSP_RATE_MST RAT
+			  , MSP_RATE_MST ARAT
+			  , MSP_PARTNER_ADD_SVC_MST PADD
+		 WHERE  RAT.PAY_CL_CD = 'PO'
+		   AND  RAT.SERVICE_TYPE = 'P'
+		   AND  ARAT.SERVICE_TYPE = 'R'
+		   AND  PADD.RATE_CD = RAT.RATE_CD
+		   AND  PADD.ADD_SVC_CD = ARAT.RATE_CD
+		   
+		 <if test="ptnrId != null and ptnrId != ''">
+		   AND  PADD.PARTNER_ID = #{ptnrId, jdbcType=VARCHAR}
+		 </if>
+		 
+		 <if test="rateNm != null and rateNm != ''">
+		   AND  RAT.RATE_NM LIKE '%'||#{rateNm, jdbcType=VARCHAR}||'%'
+		 </if>
+		 <if test="addSvcNm != null and addSvcNm != ''">
+		   AND  ARAT.RATE_NM LIKE '%'||#{addSvcNm, jdbcType=VARCHAR}||'%'
+		 </if>
+		 <if test="useYn != null and useYn != ''">
+		   AND  PADD.USE_YN = #{useYn, jdbcType=VARCHAR}
+		 </if>  
+		 ORDER  BY
+				RAT.RATE_NM DESC, ARAT.RATE_NM DESC, PADD.STRT_DATE DESC
+	</select>	
+</mapper>

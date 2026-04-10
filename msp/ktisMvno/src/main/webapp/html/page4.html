@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<title>iframe sample</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<!-- Library -->
+<link rel="stylesheet" type="text/css" href="../lib/dhtmlx/codebase/dhtmlx.css"/>
+<link rel="stylesheet" type="text/css" href="../css/mvno.css"/>
+<script src="../lib/jquery/jquery-1.9.1.js"></script>
+<script src="../lib/dhtmlx/codebase/dhtmlx.js"></script>
+<script src="../js/mvno.js"></script>
+<!-- //Library  -->
+
+</head>
+
+<body>
+
+	<!-- header -->
+	<div class="page-header">
+		<h1>단말기관리</h1>
+		<a href="#" class="favor">즐겨찾기 추가</a>
+		<ul>
+			<li>HOME</li>
+			<li>조직관리</li>
+			<li>단말기관리</li>
+		</ul>
+	</div>
+	<!-- //header -->
+
+	<!-- 화면 배치 -->
+	<div id="FORM1" class="section-search"></div><!-- 상단 검색폼 class="search" 삽입 -->
+	<div id="TABBAR1"></div>
+
+	<!-- Script -->
+	<script type="text/javascript">
+
+		var DHX = {
+             FORM1 : {
+				 items :  [
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:55, blockOffset:0}
+
+					//조직ID
+					,{type:"block", list:[
+							{type:"input", label:"조직ID", width:100}
+							,{type:"newcolumn"}
+							,{type:"button", value:"검색"}
+							,{type:"newcolumn"}
+							,{type:"input", width:100}
+					]},
+
+					//결산년월
+					,{type:"newcolumn", offset:30}
+					,{type:"calendar", label:"결산년월", width:100}
+
+					//매출분류
+					,{type:"newcolumn", offset:30}
+					,{type:"select", width:100, label:"매출분류", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+
+					//조회 버튼
+					,{type:"newcolumn", offset:30}
+					,{type:"button", value:"조회", className:"btn-search1"}/* btn-search(열갯수1~4) */
+					],
+
+			},
+
+            TABBAR1: {
+                css: { height: "640px" },
+                tabs: [
+                    { id: "a1", text: "기본정보" }, 
+                    { id: "a2", text: "조직이력" }, 
+                    { id: "a3", text: "담보정보" }, 
+                    { id: "a4", text: "팩스정보" }
+                ]
+            }      
+		};
+
+        var PAGE = {
+			onOpen : function() {
+				mvno.ui.createForm("FORM1");
+				mvno.ui.createTabbar("TABBAR1");
+
+                PAGE.TABBAR1.tabs("a1").attachURL("page4-1.html");
+                PAGE.TABBAR1.tabs("a2").attachURL("page4-2.html");
+                PAGE.TABBAR1.tabs("a3").attachURL("page4-3.html");
+                PAGE.TABBAR1.tabs("a4").attachURL("page4-4.html");    
+
+			}
+		}
+
+
+	</script>
+
+	<script src="../js/mvno_footer.js"></script>
+
+</body>
+</html>

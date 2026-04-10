@@ -1,0 +1,56 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+	
+var _FORMITEMS_ = {
+
+	//조직 등록
+    form2 : [
+			{type: 'settings', position: 'label-left', labelAlign:"left", labelWidth: '120'},
+			
+			{type: "block", list: [
+				{type: 'input', name: 'adjAAmnt', label: '할인금액',  width: 100, offsetLeft: 10,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]},
+				{type: "newcolumn"},
+				{type: 'input', name: 'adjAVat', label: '부가세',  labelWidth: '60', width: 100, offsetLeft: 30,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]}
+			]},
+
+			{type: "block", list: [
+				{type: 'input', name: 'adjBAmnt' , label: '클레임', width: 100, offsetLeft: 10,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]},
+				{type: "newcolumn"},
+				{type: 'input', name: 'adjBVat', label: '부가세', labelWidth: '60', width: 100, offsetLeft: 30,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]}
+			]},
+						
+			{type: "block", list: [
+				{type: 'input', name: 'adjCAmnt', label: '위약금(공시지원금1)',  width: 100, offsetLeft: 10,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]},
+				{type: "newcolumn"},
+				{type: 'input', name: 'adjCVat', label: '부가세',  labelWidth: '60', width: 100, offsetLeft: 30,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]}
+			]},
+			
+			{type: "block", list: [
+				{type: 'input', name: 'adjDAmnt', label: '위약금(공시지원금2)', width: 100, offsetLeft: 10,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]},
+				{type: "newcolumn"},
+				{type: 'input', name: 'adjDVat', label: '부가세',  labelWidth: '60', width: 100, offsetLeft: 30,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]}
+			]},
+			{type: "block", list: [
+				{type: 'input', name: 'adjEAmnt', label: '위약금(추가지원금1)',  width: 100, offsetLeft: 10,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]},
+				{type: "newcolumn"},
+				{type: 'input', name: 'adjEVat', label: '부가세', labelWidth: '60', width: 100, offsetLeft: 30,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]}
+			]},
+			{type: "block", list: [
+				{type: 'input', name: 'adjFAmnt', label: '위약금(추가지원금2)',  width: 100, offsetLeft: 10,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]},
+				{type: "newcolumn"},
+				{type: 'input', name: 'adjFVat', label: '부가세',  labelWidth: '60', width: 100, offsetLeft: 30,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]}
+			]},
+			{type: "block", list: [
+				{type: 'input', name: 'adjGAmnt', label: '절사',  width: 100, offsetLeft: 10,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]},
+				{type: "newcolumn"},
+				{type: 'input', name: 'adjGVat', label: '부가세',  labelWidth: '60', width: 100, offsetLeft: 30,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]}
+			]},
+			{type: "block", list: [
+				{type: 'input', name: 'adjHAmnt', label: '기타',  width: 100, offsetLeft: 10,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]},
+				{type: "newcolumn"},
+				{type: 'input', name: 'adjHVat', label: '부가세',  labelWidth: '60', width: 100, offsetLeft: 30,  value: '', readonly:true , maxLength:10, validate: 'ValidAplhaNumeric', userdata:{align:"right"}, numberFormat:["0,000"]}
+			]},
+			{type: "block", list: [
+				{type: 'input', name: 'total', label: '총 합계',  width: 100, offsetLeft: 10,  value: '' , readonly:true, userdata:{align:"right"}, numberFormat:["0,000"]},
+			]}
+    ]
+};

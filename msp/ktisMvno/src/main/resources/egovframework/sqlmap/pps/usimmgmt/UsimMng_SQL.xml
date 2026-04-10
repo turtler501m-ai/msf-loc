@@ -1,0 +1,958 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.usimmgmt.mapper.PpsUsimMgmtMapper">
+
+
+	<!--유심관리 목록조회 -->
+    <select id="getUsimInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+	         SELECT /*+ INDEX_DESC(A PPS_USIM_INFO_IDX1) */
+			    TELCO_CD,
+			    USIM_MODEL,
+			    SN,
+			    USIM_SN,
+			    STATUS,
+			    F_GET_KT_CODE_NM('PPS_USIM_INFO', 'STATUS', STATUS)  STATUS_NM,
+			    CR_SEQ,
+			    CR_PRICE,
+			    TO_CHAR(CR_DATE, 'YYYY-MM-DD') CR_DATE,
+			    FN_GET_USRNM(CR_ADMIN) AS CR_ADMIN_NM,
+			    CR_ADMIN,
+			    OUT_FLAG,
+			    OUT_SEQ,
+			    TO_CHAR(OUT_DATE, 'YYYY-MM-DD') OUT_DATE,
+			    F_GET_AGENT_NM(OUT_AGENT) OUT_AGENT_NM, 
+			    OUT_AGENT,
+			    FN_GET_USRNM(OUT_ADMIN) AS OUT_ADMIN_NM,
+			    OUT_ADMIN,
+			    OPEN_FLAG,
+			    TO_CHAR(OPEN_DATE, 'YYYY-MM-DD') OPEN_DATE,
+			    CONTRACT_NUM,
+			    BACK_FLAG,
+			    BACK_SEQ,
+			    TO_CHAR(BACK_DATE, 'YYYY-MM-DD') BACK_DATE,
+			    FN_GET_USRNM(BACK_ADMIN) AS BACK_ADMIN_NM,
+			    BACK_ADMIN,
+			    REMARK
+			FROM PPS_USIM_INFO A
+			WHERE CR_DATE > TO_DATE('20150101', 'YYYYMMDD')
+			
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'CR_SEQ'">
+							AND CR_SEQ = #{searchNm}
+						</when>
+						<when test="searchType == 'OUT_SEQ'">
+							AND OUT_SEQ = #{searchNm}
+						</when>
+						<when test="searchType == 'BACK_SEQ'">
+							AND BACK_SEQ = #{searchNm}
+						</when>
+						<when test="searchType == 'CONTRACT_NUM'">
+							AND CONTRACT_NUM = #{searchNm}
+						</when>
+					</choose>
+				</if>
+			
+			
+				<if test="startDtCreate != null and startDtCreate != ''">
+					AND CR_DATE >= TO_DATE(#{startDtCreate}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtCreate != null and endDtCreate != ''">
+					AND CR_DATE &lt; TO_DATE(#{endDtCreate}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="startDtOut != null and startDtOut != ''">
+					AND OUT_DATE >= TO_DATE(#{startDtOut}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtOut != null and endDtOut != ''">
+					AND OUT_DATE &lt; TO_DATE(#{endDtOut}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="startDtBack != null and startDtBack != ''">
+					AND BACK_DATE >= TO_DATE(#{startDtBack}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtBack != null and endDtBack != ''">
+					AND BACK_DATE &lt; TO_DATE(#{endDtBack}, 'YYYY-MM-DD')+1
+				</if>	
+				
+				<if test="searchStatus != null and searchStatus != ''">
+						AND STATUS = #{searchStatus}
+				</if>
+				<if test="searchAgentNm != null and searchAgentNm != ''">
+						AND OUT_AGENT = #{searchAgentNm}
+				</if>
+			
+				<if test="searchUsimSnHeader != null and searchUsimSnHeader != ''">
+						AND USIM_MODEL= #{searchUsimSnHeader}
+					<if test="searchUsimSnStart != null and searchUsimSnStart != ''">
+						AND SN >= LPAD(#{searchUsimSnStart}, 7, '0')
+					</if>
+					<if test="searchUsimSnEnd != null and searchUsimSnEnd != ''">
+						AND SN &lt;= LPAD(#{searchUsimSnEnd}, 7, '0')
+					</if>
+				</if>
+		 <include refid="com.ktis.msp.cmn.include.paging-end2" />
+
+    </select>
+    
+	<!--유심관리 목록조회엑셀출력 -->
+    <select id="getUsimInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+    
+	         SELECT /*+ INDEX_DESC(A PPS_USIM_INFO_IDX1) */
+			    TELCO_CD,
+			    USIM_MODEL,
+			    SN,
+			    USIM_SN,
+			    STATUS,
+			    F_GET_KT_CODE_NM('PPS_USIM_INFO', 'STATUS', STATUS)  STATUS_NM,
+			    CR_SEQ,
+			    CR_PRICE,
+			    TO_CHAR(CR_DATE, 'YYYY-MM-DD') CR_DATE,
+			    FN_GET_USRNM(CR_ADMIN) AS CR_ADMIN_NM,
+			    CR_ADMIN,
+			    OUT_FLAG,
+			    OUT_SEQ,
+			    TO_CHAR(OUT_DATE, 'YYYY-MM-DD') OUT_DATE,
+			    F_GET_AGENT_NM(OUT_AGENT) OUT_AGENT_NM, 
+			    OUT_AGENT,
+			    FN_GET_USRNM(OUT_ADMIN) AS OUT_ADMIN_NM,
+			    OUT_ADMIN,
+			    OPEN_FLAG,
+			    TO_CHAR(OPEN_DATE, 'YYYY-MM-DD') OPEN_DATE,
+			    CONTRACT_NUM,
+			    BACK_FLAG,
+			    BACK_SEQ,
+			    TO_CHAR(BACK_DATE, 'YYYY-MM-DD') BACK_DATE,
+			    FN_GET_USRNM(BACK_ADMIN) AS BACK_ADMIN_NM,
+			    BACK_ADMIN,
+			    REMARK
+			FROM PPS_USIM_INFO A
+		 WHERE CR_DATE > TO_DATE('20150101', 'YYYYMMDD')
+			
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'CR_SEQ'">
+							AND CR_SEQ = #{searchNm}
+						</when>
+						<when test="searchType == 'OUT_SEQ'">
+							AND OUT_SEQ = #{searchNm}
+						</when>
+						<when test="searchType == 'BACK_SEQ'">
+							AND BACK_SEQ = #{searchNm}
+						</when>
+						<when test="searchType == 'CONTRACT_NUM'">
+							AND CONTRACT_NUM = #{searchNm}
+						</when>
+					</choose>
+				</if>
+			
+			
+				<if test="startDtCreate != null and startDtCreate != ''">
+					AND CR_DATE >= TO_DATE(#{startDtCreate}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtCreate != null and endDtCreate != ''">
+					AND CR_DATE &lt; TO_DATE(#{endDtCreate}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="startDtOut != null and startDtOut != ''">
+					AND OUT_DATE >= TO_DATE(#{startDtOut}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtOut != null and endDtOut != ''">
+					AND OUT_DATE &lt; TO_DATE(#{endDtOut}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="startDtBack != null and startDtBack != ''">
+					AND BACK_DATE >= TO_DATE(#{startDtBack}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtBack != null and endDtBack != ''">
+					AND BACK_DATE &lt; TO_DATE(#{endDtBack}, 'YYYY-MM-DD')+1
+				</if>	
+				
+				<if test="searchStatus != null and searchStatus != ''">
+						AND STATUS = #{searchStatus}
+				</if>
+				<if test="searchAgentNm != null and searchAgentNm != ''">
+						AND OUT_AGENT = #{searchAgentNm}
+				</if>
+			
+				<if test="searchUsimSnHeader != null and searchUsimSnHeader != ''">
+						AND USIM_MODEL LIKE #{searchUsimSnHeader}
+					<if test="searchUsimSnStart != null and searchUsimSnStart != ''">
+						AND SN >= LPAD(#{searchUsimSnStart}, 7, '0')
+					</if>
+					<if test="searchUsimSnEnd != null and searchUsimSnEnd != ''">
+						AND SN &lt;= LPAD(#{searchUsimSnEnd}, 7, '0')
+					</if>
+				</if>
+    </select>
+
+   	<!--유심관리 입고 목록조회 -->
+    <select id="getUsimCreateMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+         
+          SELECT		/*+ INDEX_DESC(A PPS_USIM_CREATE_IDX1) */
+                CR_SEQ,		
+				USIM_MODEL,		
+				START_SN,			
+				END_SN,
+				FN_GET_USRNM(CR_ADMIN) AS CR_ADMIN_NM,
+				CR_ADMIN,
+				TO_CHAR(CR_DATE, 'YYYY-MM-DD HH24:MI:SS') CR_DATE,
+				CR_PRICE,
+				USIM_CNT,
+				CANCEL_FLAG,
+				TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE,
+				FN_GET_USRNM(CANCEL_ADMIN) AS CANCEL_ADMIN_NM,
+				CANCEL_ADMIN,
+				REMARK
+			FROM PPS_USIM_CREATE A
+		 WHERE CR_DATE > TO_DATE('2015-01-01','YYYY-MM-DD')
+		 
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'CR_SEQ'">
+							AND CR_SEQ = #{searchNm}
+						</when>
+					</choose>
+				</if>
+
+ 				<if test="startDt != null and startDt != ''">
+					AND CR_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND CR_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				
+				<choose>
+					<when test="searchCancelFlag != null and searchCancelFlag != ''">
+						<choose>
+							<when test='searchCancelFlag == "Y"'>
+								AND CANCEL_FLAG = 'Y'
+							</when>
+							<when test='searchCancelFlag == "N"'>
+								AND (CANCEL_FLAG = 'N' OR CANCEL_FLAG IS NULL)
+							</when>
+						</choose>
+					</when>
+				</choose>
+				
+				<if test="searchUsimSnHeader != null and searchUsimSnHeader != ''">
+						AND USIM_MODEL = #{searchUsimSnHeader}
+						
+					<if test="searchUsimSnStart != null and searchUsimSnStart != ''">	
+					<choose>
+						<when test="searchUsimSnEnd == null or searchUsimSnEnd == ''">
+							AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')
+						</when>
+						<otherwise>
+						   AND( (START_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0') AND LPAD(#{searchUsimSnEnd}, 7, '0')) OR (END_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0')  AND  LPAD(#{searchUsimSnEnd}, 7, '0')) 
+			  			   OR ( START_SN &lt;=  LPAD(#{searchUsimSnEnd}, 7, '0') AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')))
+						</otherwise>
+					</choose>
+					</if>
+					
+					<if test="searchUsimSnEnd != null and searchUsimSnEnd != ''">	
+						<if test="searchUsimSnStart == null or searchUsimSnStart == ''">
+						
+							AND START_SN &lt;= LPAD(#{searchUsimSnEnd}, 7, '0')
+						</if>
+					</if>
+				</if>
+				
+				<if test="outListFlag != null and outListFlag != ''">
+					AND USIM_CNT = (SELECT COUNT(A.USIM_CNT) FROM PPS_USIM_INFO B WHERE B.CR_SEQ = A.CR_SEQ AND B.STATUS='CR')
+				</if>
+
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+
+
+	<!--유심관리 입고 목록조회 엑셀출력 -->
+    <select id="getUsimCreateMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+
+          SELECT		/*+ INDEX_DESC(A PPS_USIM_CREATE_IDX1) */
+                CR_SEQ,		
+				USIM_MODEL,		
+				START_SN,			
+				END_SN,
+				FN_GET_USRNM(CR_ADMIN) AS CR_ADMIN_NM,
+				CR_ADMIN,
+				TO_CHAR(CR_DATE, 'YYYY-MM-DD HH24:MI:SS') CR_DATE,
+				CR_PRICE,
+				USIM_CNT,
+				CANCEL_FLAG,
+				TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE,
+				FN_GET_USRNM(CANCEL_ADMIN) AS CANCEL_ADMIN_NM,
+				CANCEL_ADMIN,
+				REMARK
+			FROM PPS_USIM_CREATE A
+		 WHERE CR_DATE > TO_DATE('2015-01-01','YYYY-MM-DD')
+
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'CR_SEQ'">
+							AND CR_SEQ = #{searchNm}
+						</when>
+					</choose>
+				</if>
+		 
+		 
+ 				<if test="startDt != null and startDt != ''">
+					AND CR_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND CR_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				
+				<choose>
+					<when test="searchCancelFlag != null and searchCancelFlag != ''">
+						<choose>
+							<when test='searchCancelFlag == "Y"'>
+								AND CANCEL_FLAG = 'Y'
+							</when>
+							<when test='searchCancelFlag == "N"'>
+								AND (CANCEL_FLAG = 'N' OR CANCEL_FLAG IS NULL)
+							</when>
+						</choose>
+					</when>
+				</choose>
+				
+				<if test="searchUsimSnHeader != null and searchUsimSnHeader != ''">
+						AND USIM_MODEL = #{searchUsimSnHeader}
+						
+					<if test="searchUsimSnStart != null and searchUsimSnStart != ''">	
+					<choose>
+						<when test="searchUsimSnEnd == null or searchUsimSnEnd == ''">
+							AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')
+						</when>
+						<otherwise>
+						   AND( (START_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0') AND LPAD(#{searchUsimSnEnd}, 7, '0')) OR (END_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0')  AND  LPAD(#{searchUsimSnEnd}, 7, '0')) 
+			  			   OR ( START_SN &lt;=  LPAD(#{searchUsimSnEnd}, 7, '0') AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')))
+						</otherwise>
+					</choose>
+					</if>
+					
+					<if test="searchUsimSnEnd != null and searchUsimSnEnd != ''">	
+						<if test="searchUsimSnStart == null or searchUsimSnStart == ''">
+						
+							AND START_SN &lt;= LPAD(#{searchUsimSnEnd}, 7, '0')
+						</if>
+					</if>
+				</if>
+				
+				<if test="outListFlag != null and outListFlag != ''">
+					AND USIM_CNT = (SELECT COUNT(A.USIM_CNT) FROM PPS_USIM_INFO B WHERE B.CR_SEQ = A.CR_SEQ AND B.STATUS='CR')
+				</if>
+
+    </select>
+    
+    
+    <!--유심관리 출고 목록조회 -->
+    <select id="getUsimOutMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+         
+          SELECT		/*+ INDEX_DESC(A PPS_USIM_OUT_IDX1) */
+                OUT_SEQ,		
+				USIM_MODEL,		
+				START_SN,			
+				END_SN,
+				FN_GET_USRNM(OUT_ADMIN) AS OUT_ADMIN_NM,
+				OUT_ADMIN,
+				TO_CHAR(OUT_DATE, 'YYYY-MM-DD HH24:MI:SS') OUT_DATE,
+				F_GET_AGENT_NM(OUT_AGENT) OUT_AGENT_NM, 
+			    OUT_AGENT,
+				USIM_CNT,
+				OUT_PRICE,
+				CANCEL_FLAG,
+				TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE,
+				FN_GET_USRNM(CANCEL_ADMIN) AS CANCEL_ADMIN_NM,
+				CANCEL_ADMIN,
+				REMARK
+			FROM PPS_USIM_OUT A
+		 WHERE OUT_DATE > TO_DATE('2015-01-01','YYYY-MM-DD')
+		 
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'OUT_SEQ'">
+							AND OUT_SEQ = #{searchNm}
+						</when>
+					</choose>
+				</if>
+		 		<if test="searchAgentNm != null and searchAgentNm != ''">
+						AND OUT_AGENT = #{searchAgentNm}
+				</if>
+		 
+ 				<if test="startDt != null and startDt != ''">
+					AND OUT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND OUT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+
+				<choose>
+					<when test="searchCancelFlag != null and searchCancelFlag != ''">
+						<choose>
+							<when test='searchCancelFlag == "Y"'>
+								AND CANCEL_FLAG = 'Y'
+							</when>
+							<when test='searchCancelFlag == "N"'>
+								AND (CANCEL_FLAG = 'N' OR CANCEL_FLAG IS NULL)
+							</when>
+						</choose>
+					</when>
+				</choose>
+				
+				<if test="searchUsimSnHeader != null and searchUsimSnHeader != ''">
+						AND USIM_MODEL = #{searchUsimSnHeader}
+						
+					<if test="searchUsimSnStart != null and searchUsimSnStart != ''">	
+					<choose>
+						<when test="searchUsimSnEnd == null or searchUsimSnEnd == ''">
+							AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')
+						</when>
+						<otherwise>
+						   AND( (START_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0') AND LPAD(#{searchUsimSnEnd}, 7, '0')) OR (END_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0')  AND  LPAD(#{searchUsimSnEnd}, 7, '0')) 
+			  			   OR ( START_SN &lt;=  LPAD(#{searchUsimSnEnd}, 7, '0') AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')))
+						</otherwise>
+					</choose>
+					</if>
+					
+					<if test="searchUsimSnEnd != null and searchUsimSnEnd != ''">	
+						<if test="searchUsimSnStart == null or searchUsimSnStart == ''">
+						
+							AND START_SN &lt;= LPAD(#{searchUsimSnEnd}, 7, '0')
+						</if>
+					</if>
+				</if>
+				
+				<if test="backListFlag != null and backListFlag != ''">
+					AND USIM_CNT = (SELECT COUNT(A.USIM_CNT) FROM PPS_USIM_INFO B WHERE B.OUT_SEQ = A.OUT_SEQ AND B.STATUS='OT')
+				</if>
+
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+
+
+	<!--유심관리 출고 목록조회 엑셀출력 -->
+    <select id="getUsimOutMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+
+  	SELECT		/*+ INDEX_DESC(A PPS_USIM_OUT_IDX1) */
+                OUT_SEQ,		
+				USIM_MODEL,		
+				START_SN,			
+				END_SN,
+				FN_GET_USRNM(OUT_ADMIN) AS OUT_ADMIN_NM,
+				OUT_ADMIN,
+				TO_CHAR(OUT_DATE, 'YYYY-MM-DD HH24:MI:SS') OUT_DATE,
+				F_GET_AGENT_NM(OUT_AGENT) OUT_AGENT_NM, 
+			    OUT_AGENT,
+				USIM_CNT,
+				OUT_PRICE,
+				CANCEL_FLAG,
+				TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE,
+				FN_GET_USRNM(CANCEL_ADMIN) AS CANCEL_ADMIN_NM,
+				CANCEL_ADMIN,
+				REMARK
+			FROM PPS_USIM_OUT A
+		 WHERE OUT_DATE > TO_DATE('2015-01-01','YYYY-MM-DD')
+		 
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'OUT_SEQ'">
+							AND OUT_SEQ = #{searchNm}
+						</when>
+					</choose>
+				</if>
+		 		 <if test="searchAgentNm != null and searchAgentNm != ''">
+						AND OUT_AGENT = #{searchAgentNm}
+				</if>
+		 
+ 				<if test="startDt != null and startDt != ''">
+					AND OUT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND OUT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+		
+				<choose>
+					<when test="searchCancelFlag != null and searchCancelFlag != ''">
+						<choose>
+							<when test='searchCancelFlag == "Y"'>
+								AND CANCEL_FLAG = 'Y'
+							</when>
+							<when test='searchCancelFlag == "N"'>
+								AND (CANCEL_FLAG = 'N' OR CANCEL_FLAG IS NULL)
+							</when>
+						</choose>
+					</when>
+				</choose>
+				
+				<if test="searchUsimSnHeader != null and searchUsimSnHeader != ''">
+						AND USIM_MODEL = #{searchUsimSnHeader}
+						
+					<if test="searchUsimSnStart != null and searchUsimSnStart != ''">	
+					<choose>
+						<when test="searchUsimSnEnd == null or searchUsimSnEnd == ''">
+							AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')
+						</when>
+						<otherwise>
+						   AND( (START_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0') AND LPAD(#{searchUsimSnEnd}, 7, '0')) OR (END_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0')  AND  LPAD(#{searchUsimSnEnd}, 7, '0')) 
+			  			   OR ( START_SN &lt;=  LPAD(#{searchUsimSnEnd}, 7, '0') AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')))
+						</otherwise>
+					</choose>
+					</if>
+					
+					<if test="searchUsimSnEnd != null and searchUsimSnEnd != ''">	
+						<if test="searchUsimSnStart == null or searchUsimSnStart == ''">
+						
+							AND START_SN &lt;= LPAD(#{searchUsimSnEnd}, 7, '0')
+						</if>
+					</if>
+				</if>
+				
+				<if test="backListFlag != null and backListFlag != ''">
+					AND USIM_CNT = (SELECT COUNT(A.USIM_CNT) FROM PPS_USIM_INFO B WHERE B.OUT_SEQ = A.OUT_SEQ AND B.STATUS='OT')
+				</if>
+
+    </select>
+    
+    
+    <!--유심관리 반품 목록조회 -->
+    <select id="getUsimBackMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+          SELECT		/*+ INDEX_DESC(A PPS_USIM_BACK_IDX1) */
+                BACK_SEQ,		
+				USIM_MODEL,		
+				START_SN,			
+				END_SN,
+				BACK_ADMIN,
+				FN_GET_USRNM(BACK_ADMIN) AS BACK_ADMIN_NM,
+				TO_CHAR(BACK_DATE, 'YYYY-MM-DD HH24:MI:SS') BACK_DATE,
+				BACK_AGENT,
+				F_GET_AGENT_NM(BACK_AGENT) BACK_AGENT_NM,
+				USIM_CNT,
+				CANCEL_FLAG,
+				TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE,
+				CANCEL_ADMIN,
+				FN_GET_USRNM(CANCEL_ADMIN) AS CANCEL_ADMIN_NM,
+				REMARK
+			FROM PPS_USIM_BACK A
+		 WHERE BACK_DATE > TO_DATE('2015-01-01','YYYY-MM-DD')
+		 
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'BACK_SEQ'">
+							AND BACK_SEQ = #{searchNm}
+						</when>
+					</choose>
+				</if>
+		 		<if test="searchAgentNm != null and searchAgentNm != ''">
+						AND BACK_AGENT = #{searchAgentNm}
+				</if>
+		 
+ 				<if test="startDt != null and startDt != ''">
+					AND BACK_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND BACK_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				
+				<if test="searchUsimSnHeader != null and searchUsimSnHeader != ''">
+						AND USIM_MODEL = #{searchUsimSnHeader}
+						
+					<if test="searchUsimSnStart != null and searchUsimSnStart != ''">	
+					<choose>
+						<when test="searchUsimSnEnd == null or searchUsimSnEnd == ''">
+							AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')
+						</when>
+						<otherwise>
+						   AND( (START_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0') AND LPAD(#{searchUsimSnEnd}, 7, '0')) OR (END_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0')  AND  LPAD(#{searchUsimSnEnd}, 7, '0')) 
+			  			   OR ( START_SN &lt;=  LPAD(#{searchUsimSnEnd}, 7, '0') AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')))
+						</otherwise>
+					</choose>
+					</if>
+					
+					<if test="searchUsimSnEnd != null and searchUsimSnEnd != ''">	
+						<if test="searchUsimSnStart == null or searchUsimSnStart == ''">
+						
+							AND START_SN &lt;= LPAD(#{searchUsimSnEnd}, 7, '0')
+						</if>
+					</if>
+				</if>
+
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+
+
+	<!--유심관리 반품 목록조회 엑셀출력 -->
+    <select id="getUsimBackMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+
+          SELECT		/*+ INDEX_DESC(A PPS_USIM_BACK_IDX1) */
+                BACK_SEQ,		
+				USIM_MODEL,		
+				START_SN,			
+				END_SN,
+				BACK_ADMIN,
+				FN_GET_USRNM(BACK_ADMIN) AS BACK_ADMIN_NM,
+				TO_CHAR(BACK_DATE, 'YYYY-MM-DD HH24:MI:SS') BACK_DATE,
+				BACK_AGENT,
+				F_GET_AGENT_NM(BACK_AGENT) BACK_AGENT_NM,
+				USIM_CNT,
+				CANCEL_FLAG,
+				TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE,
+				CANCEL_ADMIN,
+				FN_GET_USRNM(CANCEL_ADMIN) AS CANCEL_ADMIN_NM,
+				REMARK
+			FROM PPS_USIM_BACK A
+		 WHERE BACK_DATE > TO_DATE('2015-01-01','YYYY-MM-DD')
+
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'BACK_SEQ'">
+							AND BACK_SEQ = #{searchNm}
+						</when>
+					</choose>
+				</if>
+		 		 <if test="searchAgentNm != null and searchAgentNm != ''">
+						AND BACK_AGENT = #{searchAgentNm}
+				</if>
+		 
+ 				<if test="startDt != null and startDt != ''">
+					AND BACK_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND BACK_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				
+				<if test="searchUsimSnHeader != null and searchUsimSnHeader != ''">
+						AND USIM_MODEL = #{searchUsimSnHeader}
+						
+					<if test="searchUsimSnStart != null and searchUsimSnStart != ''">	
+					<choose>
+						<when test="searchUsimSnEnd == null or searchUsimSnEnd == ''">
+							AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')
+						</when>
+						<otherwise>
+						   AND( (START_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0') AND LPAD(#{searchUsimSnEnd}, 7, '0')) OR (END_SN  BETWEEN LPAD(#{searchUsimSnStart}, 7, '0')  AND  LPAD(#{searchUsimSnEnd}, 7, '0')) 
+			  			   OR ( START_SN &lt;=  LPAD(#{searchUsimSnEnd}, 7, '0') AND END_SN >= LPAD(#{searchUsimSnStart}, 7, '0')))
+						</otherwise>
+					</choose>
+					</if>
+					
+					<if test="searchUsimSnEnd != null and searchUsimSnEnd != ''">	
+						<if test="searchUsimSnStart == null or searchUsimSnStart == ''">
+						
+							AND START_SN &lt;= LPAD(#{searchUsimSnEnd}, 7, '0')
+						</if>
+					</if>
+				</if>
+
+    </select>
+    
+    
+    <!--유심 정보 상세  -->
+	  <select id="getPpsUsimInfoData" parameterType="hashmap" resultType="com.ktis.msp.pps.usimmgmt.vo.PpsUsimVo">
+	         SELECT
+			    TELCO_CD as telcoCd,
+			    USIM_MODEL as usimModel,
+			    SN as sn,
+			    USIM_SN as usimSn,
+			    STATUS as status,
+			    F_GET_KT_CODE_NM('PPS_USIM_INFO', 'STATUS', STATUS)  as statusNm,
+			    CR_SEQ as crSeq,
+			    CR_PRICE as crPrice,
+			    TO_CHAR(CR_DATE, 'YYYY-MM-DD')  as crDate,
+			    FN_GET_USRNM(CR_ADMIN) AS crAdmin,
+			    OUT_FLAG as outFlag,
+			    OUT_SEQ as outSeq,
+			    TO_CHAR(OUT_DATE, 'YYYY-MM-DD') as outDate,
+			    F_GET_AGENT_NM(OUT_AGENT) outAgent,
+			    FN_GET_USRNM(OUT_ADMIN) AS outAdmin,
+			    OPEN_FLAG as openFlag,
+			    TO_CHAR(OPEN_DATE, 'YYYY-MM-DD') as openDate,
+			    CONTRACT_NUM as contractNum,
+			    BACK_FLAG as backFlag,
+			    BACK_SEQ as backSeq,
+			    TO_CHAR(BACK_DATE, 'YYYY-MM-DD') as backDate,
+			    FN_GET_USRNM(BACK_ADMIN) AS backAdmin,
+			    REMARK as remark
+			FROM PPS_USIM_INFO
+	 	 	WHERE SN=#{sn} AND USIM_MODEL=#{usimModel}
+	 </select>
+    
+    
+    <!-- 유심 번호 selectBox 목록가져오기  -->
+	<select id="getSelectPpsUsimModeDataList"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        SELECT USIM_MODEL AS value,
+               USIM_MODEL AS text
+        FROM PPS_CODE_USIM_MODEL
+        WHERE 1=1
+        ORDER BY USIM_MODEL
+	</select>
+	
+	<!-- 유심 입고  -->
+	<select id="ppsUsimCreateProc"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_USIM_CREATE(
+						#{opCode, jdbcType=VARCHAR} 
+						,#{seq, jdbcType=VARCHAR} 
+						,#{iccId, jdbcType=CLOB} 
+						,#{crPrice, jdbcType=VARCHAR} 
+						,#{usimCnt, jdbcType=VARCHAR} 
+						,#{remark, jdbcType=VARCHAR} 
+						,#{adminId, jdbcType=VARCHAR} 
+						,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR} 
+						,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+						)
+	     }
+	</select>
+	
+	<!-- 유심 출고  -->
+	<select id="ppsUsimOutProc"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_USIM_OUT(
+						 #{opCode, jdbcType=VARCHAR} 
+						,#{seq, jdbcType=VARCHAR} 
+						,#{iccId, jdbcType=CLOB} 
+						,#{usimModel, jdbcType=VARCHAR} 
+						,#{startSn, jdbcType=VARCHAR} 
+						,#{endSn, jdbcType=VARCHAR} 
+						,#{outPrice, jdbcType=VARCHAR} 
+						,#{usimCnt, jdbcType=VARCHAR} 
+						,#{remark, jdbcType=VARCHAR} 
+						,#{agentId, jdbcType=VARCHAR} 
+						,#{adminId, jdbcType=VARCHAR} 
+						,#{oCnt, mode=OUT, javaType=string, jdbcType=VARCHAR} 
+						,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR} 
+						,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  		)
+	     }
+	</select>
+	
+	<!-- 유심 반품  -->
+	<select id="ppsUsimBackProc"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_USIM_BACK(
+						#{opCode, jdbcType=VARCHAR} 
+						,#{seq, jdbcType=VARCHAR} 
+						,#{iccId, jdbcType=CLOB} 
+						,#{usimModel, jdbcType=VARCHAR} 
+						,#{startSn, jdbcType=VARCHAR} 
+						,#{endSn, jdbcType=VARCHAR} 
+						,#{usimCnt, jdbcType=VARCHAR} 
+						,#{remark, jdbcType=VARCHAR} 
+						,#{agentId, jdbcType=VARCHAR} 
+						,#{adminId, jdbcType=VARCHAR} 
+						,#{oCnt, mode=OUT, javaType=string, jdbcType=VARCHAR} 
+						,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR} 
+						,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+						)
+	     }
+	</select>
+	
+	
+	
+	<!--유심 모델 관리 목록조회 -->
+    <select id="getUsimModelInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+	         SELECT /*+ INDEX_DESC(A PPS_CODE_USIM_MODEL_IDX1) */
+	            USIM_MODEL,
+				USIM_MODEL_NAME,
+				REMARK,
+				RECORD_ADMIN,
+				FN_GET_USRNM(RECORD_ADMIN) AS RECORD_ADMIN_NM,
+				TO_CHAR(RECORD_DATE, 'YYYY-MM-DD HH24:MI:SS') RECORD_DATE
+			FROM PPS_CODE_USIM_MODEL A
+			WHERE RECORD_DATE > TO_DATE('20150101', 'YYYYMMDD')
+			
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'USIM_MODEL'">
+							AND USIM_MODEL = #{searchNm}
+						</when>
+						<when test="searchType == 'USIM_MODEL_NAME'">
+							AND USIM_MODEL_NAME = #{searchNm}
+						</when>
+					</choose>
+				</if>
+ 				<if test="startDt != null and startDt != ''">
+					AND RECORD_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND RECORD_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+		 <include refid="com.ktis.msp.cmn.include.paging-end2" />
+
+    </select>
+    
+	<!--유심모델관리 목록조회엑셀출력 -->
+    <select id="getUsimModelInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+    
+	         SELECT /*+ INDEX_DESC(A PPS_CODE_USIM_MODEL_IDX1) */
+	            USIM_MODEL,
+				USIM_MODEL_NAME,
+				REMARK,
+				RECORD_ADMIN,
+				FN_GET_USRNM(RECORD_ADMIN) AS RECORD_ADMIN_NM,
+				TO_CHAR(RECORD_DATE, 'YYYY-MM-DD HH24:MI:SS') RECORD_DATE
+			FROM PPS_CODE_USIM_MODEL A
+			WHERE RECORD_DATE > TO_DATE('20150101', 'YYYYMMDD')
+			
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'USIM_MODEL'">
+							AND USIM_MODEL = #{searchNm}
+						</when>
+						<when test="searchType == 'USIM_MODEL_NAME'">
+							AND USIM_MODEL_NAME = #{searchNm}
+						</when>
+					</choose>
+				</if>
+ 				<if test="startDt != null and startDt != ''">
+					AND RECORD_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND RECORD_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+    </select>
+    
+    <!-- 유심모델 등록/삭제  -->
+	<select id="ppsUsimModelInputProc"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_USIM_MODEL(
+						#{opCode, jdbcType=VARCHAR} 
+						,#{usimModel, jdbcType=VARCHAR} 
+						,#{usimModelName, jdbcType=VARCHAR} 
+						,#{remark, jdbcType=VARCHAR} 
+						,#{adminId, jdbcType=VARCHAR} 
+						,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR} 
+						,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+						)
+	     }
+	</select>
+	
+	<!--유심 정보 상세 Proc 호출용  -->
+	  <select id="getPpsUsimInfoForProcData" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	         <include refid="com.ktis.msp.cmn.include.paging-start" />
+	         SELECT /*+ INDEX_DESC(A PPS_USIM_INFO_IDX1) */
+			    TELCO_CD,
+			    USIM_MODEL,
+			    SN,
+			    USIM_SN,
+			    USIM_MODEL||SN USIM_FULL_SN,
+			    STATUS,
+			    F_GET_KT_CODE_NM('PPS_USIM_INFO', 'STATUS', STATUS)  STATUS_NM,
+			    CR_SEQ,
+			    CR_PRICE,
+			    TO_CHAR(CR_DATE, 'YYYY-MM-DD') CR_DATE,
+			    FN_GET_USRNM(CR_ADMIN) AS CR_ADMIN_NM,
+			    CR_ADMIN,
+			    OUT_FLAG,
+			    OUT_SEQ,
+			    TO_CHAR(OUT_DATE, 'YYYY-MM-DD') OUT_DATE,
+			    F_GET_AGENT_NM(OUT_AGENT) OUT_AGENT_NM, 
+			    OUT_AGENT,
+			    FN_GET_USRNM(OUT_ADMIN) AS OUT_ADMIN_NM,
+			    OUT_ADMIN,
+			    OPEN_FLAG,
+			    TO_CHAR(OPEN_DATE, 'YYYY-MM-DD') OPEN_DATE,
+			    CONTRACT_NUM,
+			    BACK_FLAG,
+			    BACK_SEQ,
+			    TO_CHAR(BACK_DATE, 'YYYY-MM-DD') BACK_DATE,
+			    FN_GET_USRNM(BACK_ADMIN) AS BACK_ADMIN_NM,
+			    BACK_ADMIN,
+			    REMARK
+			FROM PPS_USIM_INFO A
+			WHERE CR_DATE > TO_DATE('20150101', 'YYYYMMDD')
+			
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'REMARK'">
+							AND REMARK LIKE '%' || #{searchNm} || '%'
+						</when>
+					</choose>
+				</if>
+			
+			
+				<if test="startDtCreate != null and startDtCreate != ''">
+					AND CR_DATE >= TO_DATE(#{startDtCreate}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtCreate != null and endDtCreate != ''">
+					AND CR_DATE &lt; TO_DATE(#{endDtCreate}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="startDtOut != null and startDtOut != ''">
+					AND OUT_DATE >= TO_DATE(#{startDtOut}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtOut != null and endDtOut != ''">
+					AND OUT_DATE &lt; TO_DATE(#{endDtOut}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="startDtBack != null and startDtBack != ''">
+					AND BACK_DATE >= TO_DATE(#{startDtBack}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtBack != null and endDtBack != ''">
+					AND BACK_DATE &lt; TO_DATE(#{endDtBack}, 'YYYY-MM-DD')+1
+				</if>
+				<choose>
+					<when test="tblCode != null and tblCode != ''">
+					<choose>
+							<when test='tblCode == "CR"'>
+								AND STATUS = 'CR'
+							</when>
+							<when test='tblCode == "OT"'>
+								AND STATUS = 'OT' 
+							</when>
+						</choose>
+					</when>
+					
+				</choose>	
+				<if test="searchAgentNm != null and searchAgentNm != ''">
+						AND OUT_AGENT = #{searchAgentNm}
+				</if>
+			
+				<if test="searchUsimSnHeader != null and searchUsimSnHeader != ''">
+						AND USIM_MODEL LIKE #{searchUsimSnHeader}
+					<if test="searchUsimSnStart != null and searchUsimSnStart != ''">
+						AND SN >= LPAD(#{searchUsimSnStart}, 7, '0')
+					</if>
+					<if test="searchUsimSnEnd != null and searchUsimSnEnd != ''">
+						AND SN &lt;= LPAD(#{searchUsimSnEnd}, 7, '0')
+					</if>
+				</if>
+				
+				
+	 	 	
+			<include refid="com.ktis.msp.cmn.include.paging-end2" />
+	 </select>
+	
+	
+	
+</mapper>

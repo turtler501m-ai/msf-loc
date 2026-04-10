@@ -1,0 +1,580 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.m2m.usimdlvgmt.mapper.UsimDlvMngMapper">
+
+
+	<!-- M2M USIM 배송 관리 -->
+	<select id="usimDlvMngList" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* UsimDlvMngMapper.usimDlvMngList */
+		SELECT
+			    A.ORD_ID
+			  , TO_CHAR(TO_DATE(A.ORD_DATE,'YYYYMMDD'),'YYYY-MM-DD') AS ORD_DATE
+			  , A.ORGN_ID
+			  , F_GET_AGENT_NM(A.ORGN_ID) AS ORGN_NM
+			  , A.AREA_NM
+			  , (SELECT AREA_NM AS TEXT
+				 FROM   MSP_M2M_ADDR AD
+				 WHERE  AD.SEQ = A.AREA_NM
+				) AREA_NM_TEXT
+			  , A.MNG_NM
+			  , A.MNG_NM AS MASK_MNG_NM
+			  , A.TEL_FN1
+			  , A.TEL_MN1
+			  , A.TEL_RN1
+			  , A.TEL_FN2
+			  , A.TEL_MN2
+			  , A.TEL_RN2
+			  , DECODE(A.TEL_FN1, NULL, '', A.TEL_FN1 || '-' || A.TEL_MN1 || '-' || A.TEL_RN1) MNG_PHN
+			  , DECODE(A.TEL_FN2, NULL, '', A.TEL_FN2 || '-' || A.TEL_MN2 || '-' || A.TEL_RN2) MNG_MBLPHN
+			  , A.ORD_STATUS
+			  , FN_GET_CODENM('M2M0001',A.ORD_STATUS) AS ORD_STATUS_NM
+			  , A.ORD_INFO
+			  , A.TB_CD
+			  , FN_GET_CODENM('RCP0025',A.TB_CD) AS TB_CD_NM
+			  , A.INV_NO
+			  , A.TAKE_DATE
+			  , A.WILL_TAKE_DATE
+			  , A.SEND_DATE
+			  , A.POST
+			  , A.ADDR
+			  , A.ADDR_BJD
+			  , A.ADDR_DTL
+			  , A.ADDR_DTL AS MASK_ADDR_DTL
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+			  , BB.RPRS_PRDT_ID
+			  , BB.PRDT_CODE
+			  , BB.PRDT_NM || CASE WHEN C.MDL_CNT = 1 THEN ''
+			                       ELSE '(외)'
+			                  END AS PRDT_NM
+			  , CASE WHEN C.MDL_CNT = 1 THEN TO_CHAR(BB.OUT_UNIT_PRIC,'999,999,999')
+			         ELSE ''
+			    END AS OUT_UNIT_PRIC
+			  , (SELECT SUM(ORD_CNT)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS ORD_CNT
+			  , (SELECT SUM(AAA.ORD_CNT * BBB.OUT_UNIT_PRIC)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			           ,MSP_M2M_MDL BBB
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.RPRS_PRDT_ID = BBB.RPRS_PRDT_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS PRIC
+			  , (SELECT SUM(AAA.ORD_CNT * BBB.OUT_UNIT_PRIC * 1.1)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			           ,MSP_M2M_MDL BBB
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.RPRS_PRDT_ID = BBB.RPRS_PRDT_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS PRIC_VAT
+			  , A.DLV_METHOD
+			  , A.DLV_TEL_NO
+		FROM
+			    MSP_M2M_ORD_MST A
+			   ,MSP_M2M_ORD_MDL AA
+               ,(SELECT CC.ORD_ID
+                       ,MIN(CC.SEQ) SEQ
+                       ,COUNT(*) MDL_CNT
+                 FROM  MSP_M2M_ORD_MDL CC
+                 WHERE CC.DEL_YN = 'N'
+                 GROUP BY CC.ORD_ID
+                ) C
+			   ,MSP_M2M_MDL BB
+		WHERE AA.ORD_ID =  A.ORD_ID
+		AND   AA.RPRS_PRDT_ID = BB.RPRS_PRDT_ID
+        AND   AA.SEQ = C.SEQ
+        AND   AA.ORD_ID = C.ORD_ID
+        AND   A.ORD_STATUS IN ('3','4')/* 배송확인 배송중 만 조회  */
+		 <if test="ordDate != null and ordDate != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_DATE LIKE #{ordDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="ordId != null and ordId != ''">
+		   AND  A.ORD_ID = #{ordId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="orgnId != null and orgnId != '' and  ''.equals(ordId) ">
+		   AND  A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="ordStatus != null and ordStatus != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_STATUS = #{ordStatus, jdbcType=VARCHAR}
+		 </if>
+		 <if test="takeDate != null and takeDate != '' and  ''.equals(ordId) ">
+		   AND  A.TAKE_DATE LIKE #{takeDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="willTakeDate != null and willTakeDate != '' and  ''.equals(ordId) ">
+		   AND  A.WILL_TAKE_DATE LIKE #{willTakeDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="sendDate != null and sendDate != '' and  ''.equals(ordId) ">
+		   AND  A.SEND_DATE LIKE #{sendDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="areaNm != null and areaNm != '' and  ''.equals(ordId) ">
+		   AND  A.AREA_NM LIKE #{areaNm, jdbcType=VARCHAR} || '%'
+		 </if>
+		 
+		 <if test="rprsPrdtId != null and rprsPrdtId != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_ID IN (SELECT ORD_ID 
+		                     FROM   MSP_M2M_ORD_MDL AAA
+		                     WHERE  AAA.RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+		                     AND    NVL(AAA.DEL_YN,'N') = 'N'
+		                     )
+		 </if>
+		 ORDER  BY
+				1
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+	
+	<select id="usimOrdId" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO" resultType="String">
+		/* UsimDlvMngMapper.usimOrdId */
+		SELECT SQ_MSP_M2M_ORD_MST_01.NEXTVAL AS ordId
+		FROM   DUAL
+	</select>		
+
+	<insert id="usimDlvMstInsert" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO">
+		/* UsimDlvMngMapper.usimDlvMstInsert */
+		INSERT INTO MSP_M2M_ORD_MST
+		(
+		    ORD_ID
+		  , ORD_DATE
+		  , ORGN_ID
+		  , AREA_NM
+		  , MNG_NM
+		  , TEL_FN1
+		  , TEL_MN1
+		  , TEL_RN1
+		  , TEL_FN2
+		  , TEL_MN2
+		  , TEL_RN2
+		  , ORD_STATUS
+		  , ORD_INFO
+		  
+		  , TB_CD
+		  , INV_NO
+		  , TAKE_DATE
+		  , WILL_TAKE_DATE
+		  , SEND_DATE
+		  
+		  
+		  , POST
+		  , ADDR
+		  , ADDR_BJD
+		  , ADDR_DTL
+		  , REGST_ID
+		  , REGST_DTTM
+		  , RVISN_ID
+		  , RVISN_DTTM
+		)
+		VALUES
+		(
+			
+		    #{ordId, jdbcType=VARCHAR}
+		  , #{ordDate, jdbcType=VARCHAR}
+		  , #{orgnId, jdbcType=VARCHAR}
+		  , #{areaNm, jdbcType=VARCHAR}
+		  , #{mngNm, jdbcType=VARCHAR}
+		  
+		  , #{telFn1, jdbcType=VARCHAR}
+		  , #{telMn1, jdbcType=VARCHAR}
+		  , #{telRn1, jdbcType=VARCHAR}
+		  , #{telFn2, jdbcType=VARCHAR}
+		  , #{telMn2, jdbcType=VARCHAR}
+		  , #{telRn2, jdbcType=VARCHAR}
+		  
+		  , #{ordStatus, jdbcType=VARCHAR}
+		  , #{ordInfo, jdbcType=VARCHAR}
+
+		  , #{tbCd, jdbcType=VARCHAR}
+		  , #{invNo, jdbcType=VARCHAR}
+		  , #{takeDate, jdbcType=VARCHAR}
+		  , #{willTakeDate, jdbcType=VARCHAR}
+		  , #{sendDate, jdbcType=VARCHAR}
+
+		  , #{post, jdbcType=VARCHAR}
+		  , #{addr, jdbcType=VARCHAR}
+		  , #{addrBjd, jdbcType=VARCHAR}
+		  , #{addrDtl, jdbcType=VARCHAR}
+		  
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  
+		)
+	</insert>
+	
+	<update id="usimDlvMstUpdate" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO">
+		/* UsimDlvMngMapper.usimDlvMstUpdate */
+		UPDATE  MSP_M2M_ORD_MST
+		   SET  ORD_DATE = #{ordDate, jdbcType=VARCHAR}
+		      , ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		      , AREA_NM = #{areaNm, jdbcType=VARCHAR}
+		      , MNG_NM = #{mngNm, jdbcType=VARCHAR}
+			  
+			  , TEL_FN1 = #{telFn1, jdbcType=VARCHAR}
+			  , TEL_MN1 = #{telMn1, jdbcType=VARCHAR}
+			  , TEL_RN1 = #{telRn1, jdbcType=VARCHAR}
+			  , TEL_FN2 = #{telFn2, jdbcType=VARCHAR}
+			  , TEL_MN2 = #{telMn2, jdbcType=VARCHAR}
+			  , TEL_RN2 = #{telRn2, jdbcType=VARCHAR}
+			  
+		      , ORD_STATUS = #{ordStatus, jdbcType=VARCHAR}
+		      , ORD_INFO = #{ordInfo, jdbcType=VARCHAR}
+
+
+		      , DLV_METHOD = #{dlvMethod, jdbcType=VARCHAR}
+		      , DLV_TEL_NO = #{dlvTelNo, jdbcType=VARCHAR}
+		      
+		      , TB_CD = #{tbCd, jdbcType=VARCHAR}
+		      , INV_NO = #{invNo, jdbcType=VARCHAR}
+		      , TAKE_DATE = #{takeDate, jdbcType=VARCHAR}
+		      , WILL_TAKE_DATE = #{willTakeDate, jdbcType=VARCHAR}
+		      , SEND_DATE = #{sendDate, jdbcType=VARCHAR}
+
+		      , POST = #{post, jdbcType=VARCHAR}
+		      , ADDR = #{addr, jdbcType=VARCHAR}
+		      , ADDR_BJD = #{addrBjd, jdbcType=VARCHAR}
+		      , ADDR_DTL = #{addrDtl, jdbcType=VARCHAR}
+		      
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+		 WHERE  ORD_ID = #{ordId, jdbcType=VARCHAR}
+	</update>	
+	
+	<update id="usimDlvMstUpdateMsk" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO">
+		/* UsimDlvMngMapper.usimDlvMstUpdateMsk */
+		UPDATE  MSP_M2M_ORD_MST
+		   SET  ORD_DATE = #{ordDate, jdbcType=VARCHAR}
+		      , ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		      , AREA_NM = #{areaNm, jdbcType=VARCHAR}			  
+		      , ORD_STATUS = #{ordStatus, jdbcType=VARCHAR}
+		      , ORD_INFO = #{ordInfo, jdbcType=VARCHAR}
+		      , DLV_METHOD = #{dlvMethod, jdbcType=VARCHAR}		      
+		      , TB_CD = #{tbCd, jdbcType=VARCHAR}
+		      , INV_NO = #{invNo, jdbcType=VARCHAR}
+		      , TAKE_DATE = #{takeDate, jdbcType=VARCHAR}
+		      , WILL_TAKE_DATE = #{willTakeDate, jdbcType=VARCHAR}
+		      , SEND_DATE = #{sendDate, jdbcType=VARCHAR}
+		      , POST = #{post, jdbcType=VARCHAR}
+		      , ADDR_BJD = #{addrBjd, jdbcType=VARCHAR}		      
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+		 WHERE  ORD_ID = #{ordId, jdbcType=VARCHAR}
+	</update>	
+
+	<select id="usimOrdMdlList" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimDlvMngMapper.usimOrdMdlList */
+		SELECT 
+		    A.ORD_ID
+		  , A.SEQ
+		  , A.RPRS_PRDT_ID
+		  , B.PRDT_CODE
+		  , B.PRDT_NM
+		  , A.ORD_CNT
+		  , B.OUT_UNIT_PRIC
+		  , A.ORD_CNT * B.OUT_UNIT_PRIC AS AMT
+		  , A.ORD_CNT * B.OUT_UNIT_PRIC * 1.1 AS AMT_VAT
+		  , A.DEL_YN
+
+		FROM   MSP_M2M_ORD_MDL A
+		      ,MSP_M2M_MDL B
+		WHERE  A.ORD_ID = #{ordId, jdbcType=VARCHAR}
+		AND    A.DEL_YN = 'N'
+		AND    A.RPRS_PRDT_ID = B.RPRS_PRDT_ID
+		ORDER BY A.SEQ
+	</select>		
+			
+	<insert id="usimOrdMdlInsert" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO">
+		/* UsimDlvMngMapper.usimOrdMdlInsert */
+		INSERT INTO MSP_M2M_ORD_MDL
+		(
+		    ORD_ID
+		  , SEQ
+		  , RPRS_PRDT_ID
+		  , ORD_CNT
+
+		  , REGST_ID
+		  , REGST_DTTM
+		  , RVISN_ID
+		  , RVISN_DTTM
+		)
+		VALUES
+		(
+		    #{ordId, jdbcType=VARCHAR}
+		  , (SELECT COUNT(*)+1
+		     FROM   MSP_M2M_ORD_MDL
+		     WHERE  ORD_ID = #{ordId, jdbcType=VARCHAR}
+		     )
+		  , #{rprsPrdtId, jdbcType=VARCHAR}
+		  , #{ordCnt, jdbcType=VARCHAR}
+		  
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  
+		)
+	</insert>
+	
+	<update id="usimOrdMdlUpdate" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO">
+		/* UsimDlvMngMapper.usimOrdMdlUpdate */
+		UPDATE  MSP_M2M_ORD_MDL
+		   SET  DEL_YN = #{delYn, jdbcType=VARCHAR}
+		      
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+		 WHERE  ORD_ID = #{ordId, jdbcType=VARCHAR}
+		 AND    SEQ =  #{seq, jdbcType=VARCHAR}
+	</update>	
+	
+	<select id="usimDlvMngListEx" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimDlvMngMapper.usimDlvMngListEx */
+		SELECT
+			    A.ORD_ID
+			  , A.ORD_DATE
+			  , A.ORGN_ID
+			  , F_GET_AGENT_NM(A.ORGN_ID) AS ORGN_NM
+			  , A.AREA_NM
+			  , (SELECT AREA_NM AS TEXT
+				 FROM   MSP_M2M_ADDR AD
+				 WHERE  AD.SEQ = A.AREA_NM
+				) AREA_NM_TEXT
+			  , A.MNG_NM
+			  , A.MNG_NM AS MASK_MNG_NM
+			  , A.TEL_FN1
+			  , A.TEL_MN1
+			  , A.TEL_RN1
+			  , A.TEL_FN2
+			  , A.TEL_MN2
+			  , A.TEL_RN2
+			  , DECODE(A.TEL_FN1, NULL, '', A.TEL_FN1 || '-' || A.TEL_MN1 || '-' || A.TEL_RN1) MNG_PHN
+			  , DECODE(A.TEL_FN2, NULL, '', A.TEL_FN2 || '-' || A.TEL_MN2 || '-' || A.TEL_RN2) MNG_MBLPHN
+			  , A.ORD_STATUS
+			  , FN_GET_CODENM('M2M0001',A.ORD_STATUS) AS ORD_STATUS_NM
+			  , A.ORD_INFO
+			  , A.TB_CD
+			  , FN_GET_CODENM('RCP0025',A.TB_CD) AS TB_CD_NM
+			  , A.INV_NO
+			  , A.TAKE_DATE
+			  , A.WILL_TAKE_DATE
+			  , A.SEND_DATE
+			  , A.POST
+			  , A.ADDR
+			  , A.ADDR_BJD
+			  , A.ADDR_DTL
+			  , A.ADDR_DTL AS MASK_ADDR_DTL
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+			  , BB.RPRS_PRDT_ID
+			  , BB.PRDT_CODE
+			  , BB.PRDT_NM || CASE WHEN C.MDL_CNT = 1 THEN ''
+			                       ELSE '(외)'
+			                  END AS PRDT_NM
+			  , CASE WHEN C.MDL_CNT = 1 THEN TO_CHAR(BB.OUT_UNIT_PRIC,'999,999,999')
+			         ELSE ''
+			    END AS OUT_UNIT_PRIC
+			  , (SELECT SUM(ORD_CNT)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS ORD_CNT
+			  , (SELECT SUM(AAA.ORD_CNT * BBB.OUT_UNIT_PRIC)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			           ,MSP_M2M_MDL BBB
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.RPRS_PRDT_ID = BBB.RPRS_PRDT_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS PRIC
+			  
+		FROM
+			    MSP_M2M_ORD_MST A
+			   ,MSP_M2M_ORD_MDL AA
+               ,(SELECT CC.ORD_ID
+                       ,MIN(CC.SEQ) SEQ
+                       ,COUNT(*) MDL_CNT
+                 FROM  MSP_M2M_ORD_MDL CC
+                 WHERE CC.DEL_YN = 'N'
+                 GROUP BY CC.ORD_ID
+                ) C
+			   ,MSP_M2M_MDL BB
+		WHERE AA.ORD_ID =  A.ORD_ID
+		AND   AA.RPRS_PRDT_ID = BB.RPRS_PRDT_ID
+        AND   AA.SEQ = C.SEQ
+        AND   AA.ORD_ID = C.ORD_ID
+        AND   A.ORD_STATUS IN ('3','4')/* 배송확인 배송중 만 조회  */
+
+		 <if test="ordDate != null and ordDate != ''  and  ''.equals(ordId) ">
+		   AND  A.ORD_DATE LIKE #{ordDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="ordId != null and ordId != ''">
+		   AND  A.ORD_ID = #{ordId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="orgnId != null and orgnId != '' and  ''.equals(ordId) ">
+		   AND  A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="ordStatus != null and ordStatus != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_STATUS = #{ordStatus, jdbcType=VARCHAR}
+		 </if>
+		 <if test="takeDate != null and takeDate != '' and  ''.equals(ordId) ">
+		   AND  A.TAKE_DATE LIKE #{takeDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="willTakeDate != null and willTakeDate != '' and  ''.equals(ordId) ">
+		   AND  A.WILL_TAKE_DATE LIKE #{willTakeDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="sendDate != null and sendDate != '' and  ''.equals(ordId) ">
+		   AND  A.SEND_DATE LIKE #{sendDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="areaNm != null and areaNm != '' and  ''.equals(ordId) ">
+		   AND  A.AREA_NM LIKE #{areaNm, jdbcType=VARCHAR} || '%'
+		 </if>
+
+		 <if test="rprsPrdtId != null and rprsPrdtId != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_ID IN (SELECT ORD_ID 
+		                     FROM   MSP_M2M_ORD_MDL AAA
+		                     WHERE  AAA.RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+		                     AND    NVL(AAA.DEL_YN,'N') = 'N'
+		                     )
+		 </if>
+		 ORDER  BY
+				1
+	</select>
+
+	<select id="getOrgIdComboListold" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimDlvMngMapper.getOrgIdComboList */
+        SELECT  DISTINCT 
+                ORG_ID AS VALUE
+              , ORG_NM AS TEXT
+        FROM MDS_AGNT_INFO BB
+        WHERE BB.CONT_MCTG_CRCLT_CH_CD = 'E0200' /* 계약채널(중) - 특수*/
+        AND   BB.CONT_CRCLT_CH_CD = 'E0211' /* 계약채널(소) - 특판(B2B)*/
+		ORDER BY 1
+	</select>
+
+	<select id="getOrgIdComboList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimDlvMngMapper.getOrgIdComboList */
+        SELECT DISTINCT
+            B.ORGN_ID AS VALUE
+          , C.ORGN_NM AS TEXT
+        FROM
+            CMN_USG_GRP_ASGN_MST  a
+          , CMN_USR_MST           b
+          , ORG_ORGN_INFO_MST     C
+        WHERE   a.USR_ID = b.USR_ID (+)
+            AND B.ORGN_ID = C.ORGN_ID (+)
+            AND B.USG_YN <![CDATA[<>]]> 'N'
+            AND a.GRP_ID = 'G-PSCM2M'
+        ORDER BY
+            C.ORGN_NM
+	</select>
+
+	<select id="getMdlIdComboList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimDlvMngMapper.getMdlIdComboList */
+        SELECT  DISTINCT 
+                RPRS_PRDT_ID AS VALUE
+              , PRDT_NM AS TEXT
+        FROM MSP_M2M_MDL BB
+        WHERE NVL(USE_YN,'Y') = 'Y'
+		ORDER BY TEXT
+	</select>
+
+	<select id="getAreaNmComboList" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimDlvMngMapper.getAreaNmComboList */
+		SELECT
+		    SEQ AS VALUE
+		  , AREA_NM AS TEXT
+		FROM
+		    MSP_M2M_ADDR
+		WHERE USE_YN = 'Y'
+		<if test="orgnId != null and orgnId != '' ">
+			AND   ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 </if>
+		AND   NVL(DEL_YN,'N') = 'N'
+		ORDER BY AREA_NM
+		    
+	</select>
+		
+	<select id="getM2mAddr" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimDlvMngMapper.getM2mAddr */
+		SELECT
+		    SEQ
+		  , ORGN_ID
+		  , AREA_NM
+		  , MNG_NM
+		  , TEL_FN1
+		  , TEL_MN1
+		  , TEL_RN1
+		  , TEL_FN2
+		  , TEL_MN2
+		  , TEL_RN2
+		  , USE_YN
+		  , POST
+		  , ADDR
+		  , ADDR_BJD
+		  , ADDR_DTL
+		FROM
+		    MSP_M2M_ADDR
+		WHERE SEQ = #{seq, jdbcType=VARCHAR}    
+	</select>
+		
+	<select id="getM2mMdl" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimDlvMngMapper.getM2mMdl */
+		SELECT
+		    RPRS_PRDT_ID
+		  , PRDT_CODE
+		  , PRDT_NM
+		  , OUT_UNIT_PRIC
+		  , USE_YN
+		  , UNIT_PRIC_APPL_DTTM
+		  , UNIT_PRIC_EXPR_DTTM
+		  , IMG_FILE
+		  , ORG_IMG_FILE
+		FROM
+		    MSP_M2M_MDL
+		WHERE RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}    
+	</select>
+
+    <!-- 배송방식 공통코드Combo -->
+	<select id="getDlvMethodCombo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	
+		SELECT /* CmnCdMgmtMapper.getCommCombo */
+			  GCM.CD_VAL AS value	/* 코드 값 */
+			, GCM.CD_DSC AS text	/* 코드 내용 */
+		FROM  CMN_GRP_MST CGM
+			, CMN_GRP_CD_MST GCM
+		WHERE 1 = 1
+		  AND CGM.GRP_ID = GCM.GRP_ID
+		  AND CGM.GRP_ID = 'LGS0002'
+		  AND GCM.USG_YN = 'Y'
+		  AND GCM.CD_VAL IN ('DLV01','DLV02')
+		ORDER BY
+			GCM.CD_VAL ASC
+		
+	</select>
+	
+    <!--주문등록자에게 문자전송	 -->
+	<select id="getM2mMngHTel" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimOrdMngMapper.getM2mMngHTel */
+		SELECT B.MBLPHN_NUM
+		FROM MSP_M2M_ORD_MST A
+		     ,CMN_USR_MST B
+		WHERE A.ORD_ID = #{ordId, jdbcType=VARCHAR}
+		AND   A.REGST_ID = B.USR_ID
+	</select>
+		
+    <!-- 택배사명조회 -->
+	<select id="getTbNm" parameterType="com.ktis.msp.m2m.usimdlvgmt.vo.UsimDlvMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	
+		SELECT /* CmnCdMgmtMapper.getTbNm */
+			  GCM.CD_VAL AS value	/* 코드 값 */
+			, GCM.CD_DSC AS text	/* 코드 내용 */
+		FROM  CMN_GRP_MST CGM
+			, CMN_GRP_CD_MST GCM
+		WHERE 1 = 1
+		  AND CGM.GRP_ID = GCM.GRP_ID
+		  AND CGM.GRP_ID = 'RCP0025'
+		  AND GCM.CD_VAL = #{tbCd, jdbcType=VARCHAR}
+		  AND GCM.USG_YN = 'Y'
+		ORDER BY
+			GCM.CD_VAL ASC
+		
+	</select>	
+    				
+</mapper>

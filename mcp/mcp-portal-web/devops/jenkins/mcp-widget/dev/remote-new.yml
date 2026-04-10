@@ -1,0 +1,32 @@
+config:
+  credentials_id: MCP-WEBWidget-DEV
+#  retry_with_prompt: true
+#  retry_and_return: true
+#  retry_count: 3
+
+remote_groups:
+  r_group_1:
+    - name: apache
+      host: MCP-WEBWidget-DEV
+
+command_groups:
+  c_group_1:
+    - puts:
+        - from: '/home/jenkins/data/release/dev/mcp-widget/mcp-widget.tar'
+          into: '/apache/apache24/dist/'
+          override: true
+    - commands:
+        - 'ls -lrt /apache/apache24/dist/mcp-widget.tar'
+        - 'rm -rf /apache/apache24/www/mcp-widget/*'
+        - 'tar -xzf /apache/apache24/dist/mcp-widget.tar -C /apache/apache24/www/mcp-widget/'
+        - 'ls -lrt /apache/apache24/www/mcp-widget/src/'
+        - 'mkdir -p /apache/apache24/www/mcp-widget/src/resources/msp/upload'
+        - 'ln -s /mportal/default/resources/upload/gift /apache/apache24/www/mcp-widget/src/resources/msp/upload/gift'
+        - 'find /apache/apache24/www/mcp-widget/src -type l | xargs ls -lrt'
+
+steps:
+  deploy:
+    - remote_groups:
+        - r_group_1
+      command_groups:
+        - c_group_1

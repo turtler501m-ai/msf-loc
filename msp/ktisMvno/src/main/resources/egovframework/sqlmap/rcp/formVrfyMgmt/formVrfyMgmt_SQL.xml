@@ -1,0 +1,1005 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.formVrfyMgmt.mapper.FormVrfyMgmtMapper">
+	
+	<sql id="getFormVrfy">
+		SELECT	  REQ.RES_NO AS resNo															/*예약번호        */
+		        , SUB.SCAN_ID AS scanId															/*스캔ID          */
+		        , REQ.REQUEST_KEY AS requestKey
+		        , REQ.PROD_TYPE_NM AS prodTypeNm												/*상품구분        */   
+		        , SUB.CONTRACT_NUM AS contractNum												/*계약번호        */
+		        , SUB.SUB_LINK_NAME AS cstmrName												/*고객명          */
+		        , SUB.USER_SSN AS ssn															/*주민번호        */
+		        , SUB.SUBSCRIBER_NO AS subscriberNo												/*휴대폰번호      */
+		        , REQ.FST_RATE_NM AS fstRateNm													/*최초요금제	  */
+		        , CASE 
+		            WHEN SUBSTR(REQ.SIM_INFO, 36, 1) IN ('A', 'R') THEN (  
+		               SELECT CD_DSC 
+		                 FROM CMN_GRP_CD_MST 
+		                WHERE GRP_ID = 'CMN0058' 
+		                  AND CD_VAL = SUBSTR(REQ.SIM_INFO, 1, 2)) 
+		            ELSE (
+		                SELECT CD_DSC 
+		                  FROM CMN_GRP_CD_MST 
+		                 WHERE GRP_ID = 'CMN0058' 
+		                   AND CD_VAL = SUBSTR(REQ.INST_INFO, 1, 2)) 
+		          END AS sprtTpNm																/*할인유형        */
+		        , REQ.SALE_PLCY_NM AS salePlcyNm												/*판매정책        */
+		        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 26, 3)) AS enggMnthCnt						/*약정개월수      */
+		        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 23, 3)) AS instMnthCnt						/*할부개월수      */
+		        , NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 21 , 30)), REQ.REQ_USIM_NAME) AS fstModelNm	/*최초개통단말    */
+       		    , TRIM(SUBSTR(REQ.FST_MODEL_INFO, 51 , 30)) AS fstModelSrlNum					/*최초단말일련번호*/
+		        , FN_GET_CODENM('MSP0003', SUB.SUB_STATUS)AS subStatusNm						/*상태            */
+		        , CASE
+		            WHEN SUB.SUB_STATUS = 'C' THEN
+		                CASE
+		                    WHEN 0 = TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '당일개통취소'
+		                    WHEN 15 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '14일이내해지'
+		                    WHEN 90 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '90일이내해지'
+		                    ELSE '일반해지'
+		                END
+		            ELSE ''  
+		          END AS canRsn														            /*해지사유        */
+		        , REQ.ON_OFF_TYPE AS onOffType													/* 모집경로 */
+		        , FN_GET_CODENM('RCP0007', REQ.ON_OFF_TYPE) AS onOffTypeNm
+		        , REQ.OPEN_MARKET_REFERER AS openMarketReferer									/*유입경로        */
+		        , REQ.RECOMMEND_FLAG_NM AS recommendFlagNm										/*추천인구분      */ 
+		        , REQ.RECOMMEND_INFO AS recommendInfo											/*추천인정보      */
+		        , REQ.REC_YN AS recYn															/*녹취여부        */
+		        , (SELECT ORGN_NM 
+		             FROM ORG_ORGN_INFO_MST 
+		            WHERE ORGN_ID = SUB.OPEN_AGNT_CD AND ROWNUM = 1) || '/' || SUB.OPEN_AGNT_CD AS agentNm		/*대리점          */ 
+		        , REQ.SHOP_NM AS shopNm		                                                    /*판매점          */ 
+		        , DECODE(REQ.SHOP_USM_ID, NULL, '-' ,  REQ.SHOP_USM_ID) AS shopUsrId			/*판매자Id        */ 
+		        , DECODE(REQ.SHOP_USM_ID, NULL, '-' , 
+		                    (SELECT A.USR_NM 
+		                       FROM CMN_USR_MST A 
+		                      WHERE A.USR_ID = REQ.SHOP_USM_ID)) AS shopUsrNm					/*판매자명        */ 
+		        , REQ.REQ_PAY_TYPE AS reqPayType												/*요금납부방법    */ 
+		        , REQ.REQUEST_STATE_CODE AS requestStateCode									/*개통진행상태    */ 
+		        , REQ.CSTMR_TYPE AS cstmrType													/*고객구분코드    */ 
+		        , SUB.SUB_LINK_NAME AS custNmVoc												/*고객명VOC용     */ 
+		        , SUB.SUBSCRIBER_NO AS ctnVoc													/*휴대폰번호VOC용 */ 
+		        , SUBSTR(REQ.DVC_CHG_INFO, 1, 8) AS dvcChgDt									/* 기변일자 */
+		        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 9, 10)) AS dvcModelId							/* 기변모델ID */
+		        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 19, 30)) AS dvcModelNm							/* 기변모델명 */
+		        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 49, 20)) AS dvcIntmSrlNo						/* 기변일련번호 */
+		        , (SELECT ORGN_NM 
+		             FROM ORG_ORGN_INFO_MST 
+		            WHERE ORGN_ID = TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10)) AND ROWNUM = 1) AS dvcAgntNm 		/* 기변대리점 */
+		        , FN_GET_CODENM('CMN0049', SUBSTR(REQ.DVC_CHG_INFO, 79, 4)) AS dvcOperTypeNm 	/* 기변유형명 */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 83, 10)) AS dvcHndstAmnt					/* 기변단말출고가 */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 93, 10)) AS dvcInstOrginAmnt				/* 기변단말할부원금 */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 103, 3)) AS dvcInstMnthCnt					/* 기변단말할부개월수 */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 106, 3)) AS dvcEnggMnthCnt					/* 기변약정개월수 */
+		        , SUBSTR(REQ.DVC_CHG_INFO, 109) AS dvcSalePlcyNm								/* 기변판매정책 */
+		        , SUB.TRNS_YN AS trnsYn                                                         /* 이관여부 */
+		        , (SELECT PROMOTION_NM
+		           FROM   MSP_PROMOTION_MST
+		           WHERE  PROMOTION_CD = REQ.PROMOTION_CD) AS promotionNm						/* 프로모션명 */
+		        , FRM.VRFY_STAT_CD AS vrfyStatCd
+		        , FN_GET_CODENM('RCP0079', FRM.VRFY_STAT_CD) AS vrfyStatNm
+		        , CASE WHEN FRM.VRFY_STAT_CD IN ('SNOK', 'SOK') THEN 'FNOK' ELSE FRM.VRFY_STAT_CD END AS fstRsltCd
+                , FN_GET_CODENM('RCP0079', CASE WHEN FRM.VRFY_STAT_CD IN ('SNOK', 'SOK') THEN 'FNOK' ELSE FRM.VRFY_STAT_CD END) AS fstRsltNm
+                , CASE WHEN FRM.VRFY_STAT_CD IN ('SNOK', 'SOK') THEN FRM.VRFY_STAT_CD ELSE NULL END AS sndRsltCd
+                , FN_GET_CODENM('RCP0079', CASE WHEN FRM.VRFY_STAT_CD IN ('SNOK', 'SOK') THEN FRM.VRFY_STAT_CD ELSE NULL END) AS sndRsltNm
+                , FRM.FST_REMARK AS fstRemark
+		        , FRM.SND_REMARK AS sndRemark
+		        , REQ.OPER_TYPE_NM AS operTypeNm
+		        , NVL(DECODE(REQ.DVC_CHG_INFO, NULL, TO_NUMBER(SUBSTR(REQ.INST_INFO, 13, 10)), TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 93, 10))), 0) AS modelInstallment
+                , FRM.FST_USR_ID AS fstUsrId
+                , FN_GET_USRNM(FRM.FST_USR_ID) AS fstUsrNm
+                , TO_CHAR(FRM.FST_VRFY_DTTM, 'YYYY/MM/DD HH24:MI:SS') AS fstVrfyDttm
+                , FRM.SND_USR_ID AS sndUsrId
+                , FN_GET_USRNM(FRM.SND_USR_ID) AS sndUsrNm
+                , TO_CHAR(FRM.SND_VRFY_DTTM, 'YYYY/MM/DD HH24:MI:SS') AS sndVrfyDttm
+		        , DECODE((SELECT AGR_YN 
+		                    FROM MSP_MRKT_AGR_MGMT
+		                   WHERE CONTRACT_NUM = SUB.CONTRACT_NUM
+		                     AND END_DTTM = '99991231235959'
+		                 ), 'Y', '동의', '미동의') AS reqClausePriAdFlagNm
+		        , NVL2(INSR.INSR_NM2, 'Y', 'N') AS insrYn2
+		        , INSR.INSR_NM2 AS insrNm2
+		        , TO_NUMBER(SUBSTR(REQ.SIM_INFO, 3, 3)) AS simEnggMnthCnt						/* 심플약정기간 */
+		        , FRM.RVISN_ID AS rvisnId
+		        , FN_GET_USRNM(FRM.RVISN_ID) AS rvisnNm
+		        , TO_CHAR(FRM.RVISN_DTTM, 'YYYY/MM/DD HH24:MI:SS') AS rvisnDttm
+		        , DECODE(FRM.CLAUSE_PRI_AD_FLAG, 'Y', '동의', 'N', '미동의', 'X', '확인불가') AS clausePriAdFlagNm
+		        , DECODE(FRM.INSR_FORM_FLAG, 'Y', '등록', 'N', '미등록') AS insrFormFlagNm
+		        , DECODE(FRM.INSR_CFMT_FLAG, 'Y', '적격', 'N', '부적격', 'X', '무관') AS insrCfmtFlagNm
+		FROM	  MSP_JUO_SUB_INFO SUB
+				, MSP_REQUEST_DTL REQ
+				, MSP_FORM_VRFY_INFO FRM
+				, (
+					SELECT	  TRIM(SYS_CONNECT_BY_PATH(DECODE(ETC2, 'Y', INSR_NM), ' ')) AS INSR_NM2
+							, CONTRACT_NUM
+					FROM (
+						SELECT	  A.CONTRACT_NUM
+                          			, A.INSR_CD
+                          			, B.CD_DSC AS INSR_NM
+                          			, B.ETC2
+                          			, ROW_NUMBER() OVER(PARTITION BY A.CONTRACT_NUM ORDER BY A.CONTRACT_NUM, A.INSR_CD) AS NUM
+                          			, COUNT(*) OVER(PARTITION BY A.CONTRACT_NUM) AS CNT
+                          			, NVL((
+                          				SELECT	MAX(CLAUSE_INSURANCE_FLAG)
+                                			FROM	MSP_CHG_RCPT_MST
+                               			WHERE	CONTRACT_NUM = A.CONTRACT_NUM
+                                 			AND		INSR_CD = A.INSR_CD
+                                 			AND		TSK_TP = 'INS'
+                                 			AND		SEQ_NUM = (
+                                 								SELECT	MAX(SEQ_NUM)
+                                        						FROM 	MSP_CHG_RCPT_MST
+                                       						WHERE	CONTRACT_NUM = A.CONTRACT_NUM
+                                         						AND		INSR_CD = A.INSR_CD
+                                         						AND 	TSK_TP = 'INS')), D.CLAUSE_INSURANCE_FLAG) AS CLAUSE_INSURANCE_FLAG
+                       	FROM	  MSP_INSR_MEMBER_MST A
+                            	, CMN_GRP_CD_MST B
+                            	, MSP_JUO_SUB_INFO C
+                            	, MSP_REQUEST D /* 개통시 신청 */
+                      	WHERE	A.STAT_CD = 'A'
+                        AND 	B.GRP_ID = 'CMN0246'
+                        AND 	A.INSR_CD = B.CD_VAL
+                        AND 	A.CONTRACT_NUM = C.CONTRACT_NUM
+                        AND 	A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+                        AND	 	A.INSR_CD = D.INSR_CD(+)
+                      	ORDER BY A.CONTRACT_NUM, A.INSR_CD, B.ETC2)
+            		WHERE LEVEL = CNT
+              		START WITH NUM = 1
+             		CONNECT BY PRIOR CONTRACT_NUM = CONTRACT_NUM AND PRIOR NUM = NUM - 1
+         		) INSR
+		WHERE 	SUB.PPPO = 'PO'
+      	AND 	SUB.CONTRACT_NUM = REQ.CONTRACT_NUM
+      	AND 	SUB.CONTRACT_NUM = FRM.CONTRACT_NUM
+      	AND 	SUB.CONTRACT_NUM = INSR.CONTRACT_NUM(+)
+      	AND 	SUB.OPEN_AGNT_CD NOT IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP0078' AND USG_YN = 'Y')
+      	AND		((FRM.FST_USR_ID = #{vrfyUsrId} OR FRM.SND_USR_ID = #{vrfyUsrId}) OR
+      			(EXISTS (SELECT CD_VAL
+                           FROM CMN_GRP_CD_MST
+                          WHERE GRP_ID = 'RCP0081'
+                            AND USG_YN = 'Y'
+                            AND CD_VAL = #{vrfyUsrId})))
+   		<if test="lstComActvDateF != null and lstComActvDateF != '' and lstComActvDateT != null and lstComActvDateT != '' and operType != 'C07'">
+			AND SUB.LST_COM_ACTV_DATE BETWEEN #{lstComActvDateF} AND #{lstComActvDateT}
+		</if>
+		<if test="searchCd != null and searchCd != ''">
+			<choose>
+				<when test='searchCd == "10"'>
+					AND SUB.CONTRACT_NUM = #{searchVal}	
+				</when>
+				<when test='searchCd == "20"'>
+					AND SUB.SUB_LINK_NAME LIKE #{searchVal} || '%'	
+				</when>
+				<when test='searchCd == "30"'>
+					AND SUB.SUBSCRIBER_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		<if test="vrfyStatCd != null and vrfyStatCd != ''">
+			AND FRM.VRFY_STAT_CD = #{vrfyStatCd}
+		</if>
+		<if test="fstModelNm != null and fstModelNm != ''">
+			AND NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 21 , 30)), REQ.REQ_USIM_NAME) LIKE '%' || #{fstModelNm} || '%'
+		</if>
+		<if test="instMnthCnt != null and instMnthCnt != ''">
+			AND TO_NUMBER(SUBSTR(REQ.INST_INFO, 23, 3)) = #{instMnthCnt}
+		</if>
+		<if test="sprtTp != null and sprtTp != ''">
+			<if test="sprtTp == 'SM'">
+				AND SUBSTR(REQ.SIM_INFO, 1, 2) = #{sprtTp}
+			</if>
+			<if test="sprtTp != 'SM'">
+				AND SUBSTR(REQ.INST_INFO, 1, 2) = #{sprtTp}
+			</if>
+		</if>
+		<if test="agntId != null and agntId != ''">
+			AND (SUB.OPEN_AGNT_CD = #{agntId}  OR TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10)) = #{agntId}) 
+		</if>
+		<if test="onOffType != null and onOffType != ''">
+			AND REQ.ON_OFF_TYPE = #{onOffType}
+		</if>
+		<if test="operType != null and operType != ''">
+			<choose>
+				<when test='operType == "NAC"' >
+					AND REQ.OPER_TYPE IN ('NAC3','MNP3')
+				</when>
+                <when test='operType == "C07"' >
+                	AND EXISTS
+                		(   SELECT 1 FROM MSP_DVC_CHG_AGNT_HST X, MSP_REQUEST Y
+                			WHERE  X.REQUEST_KEY = Y.REQUEST_KEY
+                			AND    X.CONTRACT_NUM = SUB.CONTRACT_NUM
+                			AND    TO_DATE(SUBSTR(APPL_END_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(APPL_STRT_DTTM, 1, 8), 'YYYYMMDD') > 14
+                			AND    Y.OPER_TYPE IN ('HCN3','HDN3')
+                			<if test="lstComActvDateF != null and lstComActvDateF != '' and lstComActvDateT != null and lstComActvDateT != '' ">
+                				AND    SUBSTR(X.APPL_STRT_DTTM, 1, 8) BETWEEN #{lstComActvDateF} AND #{lstComActvDateT}
+                			</if>
+                		)
+                </when>
+			</choose>
+		</if>
+		ORDER BY SUB.LST_COM_ACTV_DATE DESC
+	</sql>
+
+	<sql id="getFormVrfyAgnt">
+		SELECT	  REQ.RES_NO AS resNo															/*예약번호        */
+		        , SUB.SCAN_ID AS scanId															/*스캔ID          */
+		        , REQ.REQUEST_KEY AS requestKey
+		        , REQ.PROD_TYPE_NM AS prodTypeNm												/*상품구분        */   
+		        , SUB.CONTRACT_NUM AS contractNum												/*계약번호        */
+		        , SUB.SUB_LINK_NAME AS cstmrName												/*고객명          */
+		        , SUB.USER_SSN AS ssn															/*주민번호        */
+		        , SUB.SUBSCRIBER_NO AS subscriberNo												/*휴대폰번호      */
+		        , REQ.FST_RATE_NM AS fstRateNm													/*최초요금제	  */
+		        , CASE 
+		            WHEN SUBSTR(REQ.SIM_INFO, 36, 1) IN ('A', 'R') THEN (  
+		               SELECT CD_DSC 
+		                 FROM CMN_GRP_CD_MST 
+		                WHERE GRP_ID = 'CMN0058' 
+		                  AND CD_VAL = SUBSTR(REQ.SIM_INFO, 1, 2)) 
+		            ELSE (
+		                SELECT CD_DSC 
+		                  FROM CMN_GRP_CD_MST 
+		                 WHERE GRP_ID = 'CMN0058' 
+		                   AND CD_VAL = SUBSTR(REQ.INST_INFO, 1, 2)) 
+		          END AS sprtTpNm																/*할인유형        */
+		        , REQ.SALE_PLCY_NM AS salePlcyNm												/*판매정책        */
+		        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 26, 3)) AS enggMnthCnt						/*약정개월수      */
+		        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 23, 3)) AS instMnthCnt						/*할부개월수      */
+		        , NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 21 , 30)), REQ.REQ_USIM_NAME) AS fstModelNm	/*최초개통단말    */
+				, TRIM(SUBSTR(REQ.FST_MODEL_INFO, 51 , 30)) AS fstModelSrlNum					/*최초단말일련번호*/
+		        , FN_GET_CODENM('MSP0003', SUB.SUB_STATUS)AS subStatusNm						/*상태            */
+	            , CASE WHEN SUB.SUB_STATUS = 'C' THEN
+	                CASE
+	                	WHEN 0 = TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '당일개통취소'
+		                WHEN 15 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '14일이내해지'
+		                WHEN 90 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '90일이내해지'
+		                ELSE '일반해지'
+	                END
+	              ELSE ''  END AS canRsn														/*해지사유        */
+		        , REQ.ON_OFF_TYPE AS onOffType													/* 모집경로 */
+		        , FN_GET_CODENM('RCP0007', REQ.ON_OFF_TYPE) AS onOffTypeNm
+		        , REQ.OPEN_MARKET_REFERER AS openMarketReferer									/*유입경로        */
+		        , REQ.RECOMMEND_FLAG_NM AS recommendFlagNm										/*추천인구분      */ 
+		        , REQ.RECOMMEND_INFO AS recommendInfo											/*추천인정보      */
+		        , REQ.REC_YN AS recYn															/*녹취여부        */
+		        , (SELECT ORGN_NM 
+		        	 FROM ORG_ORGN_INFO_MST 
+		        	WHERE ORGN_ID = SUB.OPEN_AGNT_CD AND ROWNUM = 1) || '/' || SUB.OPEN_AGNT_CD AS agentNm		/*대리점          */ 
+		        , REQ.SHOP_NM AS shopNm															/*판매점          */ 
+		        , DECODE(REQ.SHOP_USM_ID, NULL, '-' , REQ.SHOP_USM_ID) AS shopUsrId				/*판매자ID        */ 
+		        , DECODE(REQ.SHOP_USM_ID, NULL, '-' , 
+		        			(SELECT A.USR_NM 
+		        			   FROM CMN_USR_MST A 
+		        			  WHERE A.USR_ID = REQ.SHOP_USM_ID)) AS shopUsrNm					/*판매자명        */ 
+		        , REQ.REQ_PAY_TYPE AS reqPayType												/*요금납부방법    */ 
+		        , REQ.REQUEST_STATE_CODE AS requestStateCode									/*개통진행상태    */ 
+		        , REQ.CSTMR_TYPE AS cstmrType													/*고객구분코드    */ 
+		        , SUB.SUB_LINK_NAME AS custNmVoc												/*고객명VOC용     */ 
+		        , SUB.SUBSCRIBER_NO AS ctnVoc													/*휴대폰번호VOC용 */ 
+		        , SUBSTR(REQ.DVC_CHG_INFO, 1, 8) AS dvcChgDt									/* 기변일자 */
+		        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 9, 10)) AS dvcModelId							/* 기변모델ID */
+		        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 19, 30)) AS dvcModelNm							/* 기변모델명 */
+		        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 49, 20)) AS dvcIntmSrlNo						/* 기변일련번호 */
+		        , (SELECT ORGN_NM 
+		        	 FROM ORG_ORGN_INFO_MST 
+		        	WHERE ORGN_ID = TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10)) AND ROWNUM = 1) AS dvcAgntNm 		/* 기변대리점 */
+		        , (SELECT CD_DSC 
+		        	 FROM CMN_GRP_CD_MST 
+		        	WHERE GRP_ID = 'CMN0049' 
+		        	  AND CD_VAL = SUBSTR(REQ.DVC_CHG_INFO, 79, 4)) AS dvcOperTypeNm 			/* 기변유형명 */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 83, 10)) AS dvcHndstAmnt					/* 기변단말출고가 */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 93, 10)) AS dvcInstOrginAmnt				/* 기변단말할부원금 */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 103, 3)) AS dvcInstMnthCnt					/* 기변단말할부개월수 */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 106, 3)) AS dvcEnggMnthCnt					/* 기변약정개월수 */
+		        , SUBSTR(REQ.DVC_CHG_INFO, 109) AS dvcSalePlcyNm								/* 기변판매정책 */
+		        , SUB.TRNS_YN AS trnsYn                                                         /* 이관여부 */
+		        , (SELECT PROMOTION_NM
+		           FROM   MSP_PROMOTION_MST
+		           WHERE  PROMOTION_CD = REQ.PROMOTION_CD) AS promotionNm						/* 프로모션명 */
+		        , FRM.VRFY_STAT_CD AS vrfyStatCd
+		        , FN_GET_CODENM('RCP0079', FRM.VRFY_STAT_CD) AS vrfyStatNm
+				, REQ.OPER_TYPE_NM AS operTypeNm
+				, NVL(DECODE(REQ.DVC_CHG_INFO, NULL, TO_NUMBER(SUBSTR(REQ.INST_INFO, 13, 10)), TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 93, 10))), 0) AS modelInstallment
+				, DECODE((SELECT AGR_YN 
+				            FROM MSP_MRKT_AGR_MGMT
+				           WHERE CONTRACT_NUM = SUB.CONTRACT_NUM
+				             AND END_DTTM = '99991231235959'
+				         ), 'Y', '동의', '미동의') AS reqClausePriAdFlagNm
+				, NVL2(INSR.INSR_NM2, 'Y', 'N') AS insrYn2
+				, INSR.INSR_NM2 AS insrNm2
+				, TO_NUMBER(SUBSTR(REQ.SIM_INFO, 3, 3)) AS simEnggMnthCnt						/* 심플약정기간 */
+		FROM	  MSP_JUO_SUB_INFO SUB
+		        , MSP_REQUEST_DTL REQ
+		        , MSP_FORM_VRFY_INFO FRM
+		        , (
+		        	SELECT TRIM(SYS_CONNECT_BY_PATH(DECODE(ETC2, 'Y', INSR_NM), ' ')) AS INSR_NM2,
+	                       CONTRACT_NUM
+	                  FROM (SELECT	A.CONTRACT_NUM,
+	                               	A.INSR_CD,
+	                               	B.CD_DSC AS INSR_NM,
+	                               	B.ETC2,
+	                               	ROW_NUMBER() OVER(PARTITION BY A.CONTRACT_NUM ORDER BY A.CONTRACT_NUM, A.INSR_CD) AS NUM,
+	                               	COUNT(*) OVER(PARTITION BY A.CONTRACT_NUM) AS CNT,
+	                               	NVL((SELECT MAX(CLAUSE_INSURANCE_FLAG)
+	                                      FROM MSP_CHG_RCPT_MST
+	                                     WHERE CONTRACT_NUM = A.CONTRACT_NUM
+	                                       AND INSR_CD = A.INSR_CD
+	                                       AND TSK_TP = 'INS'
+	                                       AND SEQ_NUM =
+	                                       		(SELECT MAX(SEQ_NUM)
+	                                               FROM MSP_CHG_RCPT_MST
+	                                              WHERE CONTRACT_NUM = A.CONTRACT_NUM
+	                                                AND INSR_CD = A.INSR_CD
+	                                                AND TSK_TP = 'INS')),
+										D.CLAUSE_INSURANCE_FLAG) AS CLAUSE_INSURANCE_FLAG
+	                          FROM	MSP_INSR_MEMBER_MST A,
+	                                CMN_GRP_CD_MST      B,
+	                                MSP_JUO_SUB_INFO    C,
+	                                MSP_REQUEST         D /* 개통시 신청 */
+	                         WHERE	A.STAT_CD = 'A'
+	                           AND	B.GRP_ID = 'CMN0246'
+	                           AND 	A.INSR_CD = B.CD_VAL
+	                           AND 	A.CONTRACT_NUM = C.CONTRACT_NUM
+	                           AND 	A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+	                           AND 	A.INSR_CD = D.INSR_CD(+)
+	                         ORDER 	BY A.CONTRACT_NUM, A.INSR_CD, B.ETC2)
+	                 WHERE	LEVEL = CNT
+	                 		START WITH NUM = 1
+	               			CONNECT	BY PRIOR CONTRACT_NUM = CONTRACT_NUM AND PRIOR NUM = NUM - 1
+		          ) INSR
+		WHERE	SUB.PPPO = 'PO'
+		AND		SUB.CONTRACT_NUM = REQ.CONTRACT_NUM
+		AND 	SUB.CONTRACT_NUM = FRM.CONTRACT_NUM
+		AND 	SUB.CONTRACT_NUM = INSR.CONTRACT_NUM(+)
+		AND 	SUB.OPEN_AGNT_CD NOT IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP0078' AND USG_YN = 'Y')
+		<if test="lstComActvDateF != null and lstComActvDateF != '' and lstComActvDateT != null and lstComActvDateT != '' and searchVal == '' and operType != 'HCN3' and operType != 'HDN3'">
+			AND SUB.LST_COM_ACTV_DATE BETWEEN #{lstComActvDateF} AND #{lstComActvDateT}
+		</if>
+		<if test="searchCd != null and searchCd != ''">
+			<if test='searchCd == "10"'>
+				AND SUB.CONTRACT_NUM = #{searchVal}
+			</if>
+			<if test='searchCd == "20"'>
+				AND SUB.SUB_LINK_NAME LIKE #{searchVal} || '%'
+			</if>
+			<if test='searchCd == "30"'>
+				AND SUB.SUBSCRIBER_NO = #{searchVal}
+			</if>
+		</if>
+		<if test="vrfyStatCd != null and vrfyStatCd != ''">
+			AND FRM.VRFY_STAT_CD = #{vrfyStatCd}
+		</if>
+		<if test="fstModelNm != null and fstModelNm != ''">
+			AND NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 21 , 30)), REQ.REQ_USIM_NAME) LIKE '%' || #{fstModelNm} || '%'
+		</if>
+		<if test="instMnthCnt != null and instMnthCnt != ''">
+			AND TO_NUMBER(SUBSTR(REQ.INST_INFO, 23, 3)) = #{instMnthCnt}
+		</if>
+		<if test="sprtTp != null and sprtTp != ''">
+			<if test="sprtTp == 'SM'">
+				AND SUBSTR(REQ.SIM_INFO, 1, 2) = #{sprtTp}
+			</if>
+			<if test="sprtTp != 'SM'">
+				AND SUBSTR(REQ.INST_INFO, 1, 2) = #{sprtTp}
+			</if>
+		</if>
+		<if test="agntId != null and agntId != ''">
+			AND (SUB.OPEN_AGNT_CD = #{agntId}  OR TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10)) = #{agntId}) 
+		</if>
+		<if test="onOffType != null and onOffType != ''">
+			AND REQ.ON_OFF_TYPE = #{onOffType}
+		</if>
+		<if test="operType != null and operType != ''">
+		    <choose>
+		        <when test='operType == "NAC"' >
+		            AND REQ.OPER_TYPE IN ('NAC3','MNP3')
+		        </when>
+		        <when test='operType == "C07"' >
+		            AND EXISTS
+		                (   SELECT 1 FROM MSP_DVC_CHG_AGNT_HST X, MSP_REQUEST Y
+		                    WHERE  X.REQUEST_KEY = Y.REQUEST_KEY
+		                    AND    X.CONTRACT_NUM = SUB.CONTRACT_NUM
+		                    AND    TO_DATE(SUBSTR(APPL_END_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(APPL_STRT_DTTM, 1, 8), 'YYYYMMDD') > 14
+		                    AND    Y.OPER_TYPE IN ('HCN3','HDN3')
+		                    <if test="lstComActvDateF != null and lstComActvDateF != '' and lstComActvDateT != null and lstComActvDateT != '' ">
+		                        AND    SUBSTR(X.APPL_STRT_DTTM, 1, 8) BETWEEN #{lstComActvDateF} AND #{lstComActvDateT}
+		                    </if>
+		                )
+		        </when>
+		    </choose>
+		</if>
+		ORDER	BY SUB.LST_COM_ACTV_DATE DESC
+	</sql>
+	
+	<select id="getFormVrfyList"  parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO" resultType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.getFormVrfyList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="getFormVrfy" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getFormVrfyAgntList"  parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO" resultType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.getFormVrfyAgntList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="getFormVrfyAgnt" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getFormVrfyListByExcel"  parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO" resultType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.getFormVrfyListByExcel */
+		<include refid="getFormVrfy" />
+	</select>
+	
+	<select id="getFormVrfyAgntListByExcel"  parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO" resultType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.getFormVrfyAgntListByExcel */
+		<include refid="getFormVrfyAgnt" />
+	</select>
+	
+	<select id="getFormVrfyInfo" parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO" resultType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		SELECT	  SUB.CONTRACT_NUM AS contractNum												/*계약번호        */
+		        , (SELECT ORGN_NM 
+		             FROM ORG_ORGN_INFO_MST 
+		            WHERE ORGN_ID = SUB.OPEN_AGNT_CD AND ROWNUM = 1) || '/' || SUB.OPEN_AGNT_CD AS agentNm		/*대리점          */ 
+		        , SUB.SUB_LINK_NAME AS cstmrName												/*고객명          */
+		        , SUB.USER_SSN AS ssn															/*주민번호        */
+		        , REQ.CSTMR_TYPE AS cstmrType													/*고객구분코드    */ 
+		        , REQ.FST_RATE_NM AS fstRateNm													/*최초요금제	  */
+		        , REQ.LST_RATE_NM AS lstRateNm                                                  /*현재요금제      */
+		        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 23, 3)) AS instMnthCnt						/*할부개월수      */
+		        , CASE 
+		            WHEN SUBSTR(REQ.SIM_INFO, 36, 1) IN ('A', 'R') THEN (  
+		               SELECT CD_DSC 
+		                 FROM CMN_GRP_CD_MST 
+		                WHERE GRP_ID = 'CMN0058' 
+		                  AND CD_VAL = SUBSTR(REQ.SIM_INFO, 1, 2)) 
+		            ELSE (
+		                SELECT CD_DSC 
+		                  FROM CMN_GRP_CD_MST 
+		                 WHERE GRP_ID = 'CMN0058' 
+		                   AND CD_VAL = SUBSTR(REQ.INST_INFO, 1, 2)) 
+		          END AS sprtTpNm																/*할인유형        */
+		        , REQ.OPER_TYPE_NM AS operTypeNm                                                /*개통유형        */
+		        , NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 21 , 30)), REQ.REQ_USIM_NAME) AS fstModelNm	/*최초개통단말    */
+		        , NVL(TO_NUMBER(SUBSTR(REQ.INST_INFO, 13, 10)), 0) AS modelInstallment          /*할부원금        */
+		        , REQ.SHOP_NM AS shopNm		                                                    /*판매점          */
+		        , FN_GET_CODENM('MSP0003', SUB.SUB_STATUS)AS subStatusNm						/*상태            */
+		        , CASE
+		            WHEN SUB.SUB_STATUS = 'C' THEN
+		                CASE
+		                    WHEN 0 = TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '당일개통취소'
+		                    WHEN 15 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '14일이내해지'
+		                    WHEN 90 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '90일이내해지'
+		                    ELSE '일반해지'
+		                END
+		            ELSE ''  
+		          END AS canRsn														            /*해지사유        */
+		        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 26, 3)) AS enggMnthCnt						/*약정개월수      */  
+		        , TO_NUMBER(SUBSTR(REQ.SIM_INFO, 3, 3)) AS simEnggMnthCnt						/*심플약정기간    */
+		        , SUB.SUBSCRIBER_NO AS subscriberNo												/*휴대폰번호      */
+		        , DECODE((SELECT AGR_YN 
+		                    FROM MSP_MRKT_AGR_MGMT
+		                   WHERE CONTRACT_NUM = SUB.CONTRACT_NUM
+		                     AND END_DTTM = '99991231235959'
+		                 ), 'Y', '동의', '미동의') AS reqClausePriAdFlagNm                      /*정보광고수신위탁동의     */
+		        , NVL2(INSR.INSR_NM2, 'Y', 'N') AS insrYn2                                      /*선택형단체보험가입여부   */
+		        , INSR.INSR_NM2 AS insrNm2                                                      /*선택형단체보험명         */
+		        , FRM.CLAUSE_PRI_AD_FLAG AS clausePriAdFlag                                     /*광고수신동의여부         */
+		        , FRM.INSR_FORM_FLAG AS insrFormFlag                                            /*상해보험서식지등록여부   */
+		        , FRM.INSR_CFMT_FLAG AS insrCfmtFlag                                            /*상해보험적격여부         */
+		        , CASE WHEN FRM.VRFY_STAT_CD IN ('SNOK', 'SOK') THEN 'FNOK' 
+		               ELSE FRM.VRFY_STAT_CD 
+		          END AS fstRsltCd                                                              /*1차검증결과     */
+		        , FRM.FST_REMARK AS fstRemark                                                   /*1차검증비고     */
+		        , CASE WHEN FRM.VRFY_STAT_CD IN ('SNOK', 'SOK') THEN FRM.VRFY_STAT_CD 
+		               ELSE NULL 
+		          END AS sndRsltCd                                                              /*2차검증결과     */
+		        , FRM.SND_REMARK AS sndRemark                                                   /*2차검증비고     */
+		        , FRM.FST_ACT_CD as fstActCd                                                    /*1차조치결과     */
+		        , FRM.FST_ACT_REMARK as fstActRemark                                            /*1차조치비고     */
+		        , FRM.SND_ACT_CD as sndActCd                                                    /*2차조치결과     */
+		        , FRM.SND_ACT_REMARK as sndActRemark                                            /*2차조치비고     */
+		        , DECODE(REQ.DVC_CHG_INFO, NULL, 'N', 'Y') AS dvcChgYn                          /*기변여부        */
+		        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 19, 30)) AS dvcModelNm							/*기변모델명      */
+		        , (SELECT ORGN_NM 
+		             FROM ORG_ORGN_INFO_MST 
+		            WHERE ORGN_ID = TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10)) AND ROWNUM = 1) AS dvcAgntNm 		/*기변대리점      */
+		        , FN_GET_CODENM('CMN0049', SUBSTR(REQ.DVC_CHG_INFO, 79, 4)) AS dvcOperTypeNm 	/*기변유형명(개통유형)   */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 103, 3)) AS dvcInstMnthCnt					/*기변단말할부개월수     */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 106, 3)) AS dvcEnggMnthCnt					/*기변약정개월수  */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 93, 10)) AS dvcInstOrginAmnt				/*기변단말할부원금*/
+		        , FRM.VRFY_STAT_CD AS vrfyStatCd
+		        , FRM.FST_USR_ID AS fstUsrId
+		        , FRM.SND_USR_ID AS sndUsrId
+	            , NVL((SELECT 'Y' FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP0081' AND USG_YN = 'Y' AND CD_VAL = #{vrfyUsrId}),'N') AS adminYn
+		        , CASE WHEN FRM.FST_VRFY_DTTM IS NOT NULL AND SYSDATE > TRUNC(FRM.FST_VRFY_DTTM+1)+9/24 THEN 'N' ELSE 'Y' END AS fstModifyYn
+		        , CASE WHEN FRM.SND_VRFY_DTTM IS NOT NULL AND SYSDATE > TRUNC(FRM.SND_VRFY_DTTM+1)+9/24 THEN 'N' ELSE 'Y' END AS sndModifyYn
+		FROM	  MSP_JUO_SUB_INFO SUB
+		        , MSP_REQUEST_DTL REQ
+		        , MSP_FORM_VRFY_INFO FRM
+		        , (
+		            SELECT	  TRIM(SYS_CONNECT_BY_PATH(DECODE(ETC2, 'Y', INSR_NM), ' ')) AS INSR_NM2
+		                    , CONTRACT_NUM
+		            FROM (
+		                SELECT	  A.CONTRACT_NUM
+		                            , A.INSR_CD
+		                            , B.CD_DSC AS INSR_NM
+		                            , B.ETC2
+		                            , ROW_NUMBER() OVER(PARTITION BY A.CONTRACT_NUM ORDER BY A.CONTRACT_NUM, A.INSR_CD) AS NUM
+		                            , COUNT(*) OVER(PARTITION BY A.CONTRACT_NUM) AS CNT
+		                            , NVL((
+		                                SELECT	MAX(CLAUSE_INSURANCE_FLAG)
+		                                    FROM	MSP_CHG_RCPT_MST
+		                                WHERE	CONTRACT_NUM = A.CONTRACT_NUM
+		                                    AND		INSR_CD = A.INSR_CD
+		                                    AND		TSK_TP = 'INS'
+		                                    AND		SEQ_NUM = (
+		                                                        SELECT	MAX(SEQ_NUM)
+		                                                        FROM 	MSP_CHG_RCPT_MST
+		                                                    WHERE	CONTRACT_NUM = A.CONTRACT_NUM
+		                                                        AND		INSR_CD = A.INSR_CD
+		                                                        AND 	TSK_TP = 'INS')), D.CLAUSE_INSURANCE_FLAG) AS CLAUSE_INSURANCE_FLAG
+		                FROM	  MSP_INSR_MEMBER_MST A
+		                        , CMN_GRP_CD_MST B
+		                        , MSP_JUO_SUB_INFO C
+		                        , MSP_REQUEST D /* 개통시 신청 */
+		                WHERE	A.STAT_CD = 'A'
+		                AND 	B.GRP_ID = 'CMN0246'
+		                AND 	A.INSR_CD = B.CD_VAL
+		                AND 	A.CONTRACT_NUM = C.CONTRACT_NUM
+		                AND 	A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+		                AND	 	A.INSR_CD = D.INSR_CD(+)
+		                ORDER BY A.CONTRACT_NUM, A.INSR_CD, B.ETC2)
+		            WHERE LEVEL = CNT
+		            START WITH NUM = 1
+		            CONNECT BY PRIOR CONTRACT_NUM = CONTRACT_NUM AND PRIOR NUM = NUM - 1
+		        ) INSR
+		WHERE 	SUB.PPPO = 'PO'
+		AND 	SUB.CONTRACT_NUM = REQ.CONTRACT_NUM
+		AND 	SUB.CONTRACT_NUM = FRM.CONTRACT_NUM
+		AND 	SUB.CONTRACT_NUM = INSR.CONTRACT_NUM(+)
+		AND     SUB.CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<select id="getFormVrfyAgntInfo" parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO" resultType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		SELECT	  SUB.CONTRACT_NUM AS contractNum												/*계약번호        */
+		        , (SELECT ORGN_NM 
+		             FROM ORG_ORGN_INFO_MST 
+		            WHERE ORGN_ID = SUB.OPEN_AGNT_CD AND ROWNUM = 1) || '/' || SUB.OPEN_AGNT_CD AS agentNm		/*대리점          */ 
+		        , SUB.SUB_LINK_NAME AS cstmrName												/*고객명          */
+		        , SUB.USER_SSN AS ssn															/*주민번호        */
+		        , REQ.CSTMR_TYPE AS cstmrType													/*고객구분코드    */ 
+		        , REQ.FST_RATE_NM AS fstRateNm													/*최초요금제	  */
+		        , REQ.LST_RATE_NM AS lstRateNm                                                  /*현재요금제      */
+		        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 23, 3)) AS instMnthCnt						/*할부개월수      */
+		        , CASE 
+		            WHEN SUBSTR(REQ.SIM_INFO, 36, 1) IN ('A', 'R') THEN (  
+		               SELECT CD_DSC 
+		                 FROM CMN_GRP_CD_MST 
+		                WHERE GRP_ID = 'CMN0058' 
+		                  AND CD_VAL = SUBSTR(REQ.SIM_INFO, 1, 2)) 
+		            ELSE (
+		                SELECT CD_DSC 
+		                  FROM CMN_GRP_CD_MST 
+		                 WHERE GRP_ID = 'CMN0058' 
+		                   AND CD_VAL = SUBSTR(REQ.INST_INFO, 1, 2)) 
+		          END AS sprtTpNm																/*할인유형        */
+		        , REQ.OPER_TYPE_NM AS operTypeNm                                                /*개통유형        */
+		        , NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 21 , 30)), REQ.REQ_USIM_NAME) AS fstModelNm	/*최초개통단말    */
+		        , NVL(TO_NUMBER(SUBSTR(REQ.INST_INFO, 13, 10)), 0) AS modelInstallment          /*할부원금        */
+		        , REQ.SHOP_NM AS shopNm		                                                    /*판매점          */
+		        , FN_GET_CODENM('MSP0003', SUB.SUB_STATUS)AS subStatusNm						/*상태            */
+		        , CASE
+		            WHEN SUB.SUB_STATUS = 'C' THEN
+		                CASE
+		                    WHEN 0 = TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '당일개통취소'
+		                    WHEN 15 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '14일이내해지'
+		                    WHEN 90 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '90일이내해지'
+		                    ELSE '일반해지'
+		                END
+		            ELSE ''  
+		          END AS canRsn														            /*해지사유        */
+		        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 26, 3)) AS enggMnthCnt						/*약정개월수      */  
+		        , TO_NUMBER(SUBSTR(REQ.SIM_INFO, 3, 3)) AS simEnggMnthCnt						/*심플약정기간    */
+		        , SUB.SUBSCRIBER_NO AS subscriberNo												/*휴대폰번호      */
+		        , DECODE((SELECT AGR_YN 
+		                    FROM MSP_MRKT_AGR_MGMT
+		                   WHERE CONTRACT_NUM = SUB.CONTRACT_NUM
+		                     AND END_DTTM = '99991231235959'
+		                 ), 'Y', '동의', '미동의') AS reqClausePriAdFlagNm                      /*정보광고수신위탁동의     */
+		        , NVL2(INSR.INSR_NM2, 'Y', 'N') AS insrYn2                                      /*선택형단체보험가입여부   */
+		        , INSR.INSR_NM2 AS insrNm2                                                      /*선택형단체보험명         */
+		        , FRM.CLAUSE_PRI_AD_FLAG AS clausePriAdFlag                                     /*광고수신동의여부         */
+		        , FRM.INSR_FORM_FLAG AS insrFormFlag                                            /*상해보험서식지등록여부   */
+		        , FRM.INSR_CFMT_FLAG AS insrCfmtFlag                                            /*상해보험적격여부         */
+		        , CASE WHEN FRM.VRFY_STAT_CD IN ('SNOK', 'SOK') THEN 'FNOK' 
+		               ELSE FRM.VRFY_STAT_CD 
+		          END AS fstRsltCd                                                              /*1차검증결과     */
+		        , FRM.FST_REMARK AS fstRemark                                                   /*1차검증비고     */
+		        , CASE WHEN FRM.VRFY_STAT_CD IN ('SNOK', 'SOK') THEN FRM.VRFY_STAT_CD 
+		               ELSE NULL 
+		          END AS sndRsltCd                                                              /*2차검증결과     */
+		        , FRM.SND_REMARK AS sndRemark                                                   /*2차검증비고     */
+		        , FRM.FST_ACT_CD as fstActCd                                                    /*1차조치결과     */
+		        , FRM.FST_ACT_REMARK as fstActRemark                                            /*1차조치비고     */
+		        , FRM.SND_ACT_CD as sndActCd                                                    /*2차조치결과     */
+		        , FRM.SND_ACT_REMARK as sndActRemark                                            /*2차조치비고     */
+		        , DECODE(REQ.DVC_CHG_INFO, NULL, 'N', 'Y') AS dvcChgYn                          /*기변여부        */
+		        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 19, 30)) AS dvcModelNm							/*기변모델명      */
+		        , (SELECT ORGN_NM 
+		             FROM ORG_ORGN_INFO_MST 
+		            WHERE ORGN_ID = TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10)) AND ROWNUM = 1) AS dvcAgntNm 		/*기변대리점      */
+		        , FN_GET_CODENM('CMN0049', SUBSTR(REQ.DVC_CHG_INFO, 79, 4)) AS dvcOperTypeNm 	/*기변유형명(개통유형)   */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 103, 3)) AS dvcInstMnthCnt					/*기변단말할부개월수     */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 106, 3)) AS dvcEnggMnthCnt					/*기변약정개월수  */
+		        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 93, 10)) AS dvcInstOrginAmnt				/*기변단말할부원금*/
+		        , FRM.VRFY_STAT_CD AS vrfyStatCd
+		FROM	  MSP_JUO_SUB_INFO SUB
+		        , MSP_REQUEST_DTL REQ
+		        , MSP_FORM_VRFY_INFO FRM
+		        , (
+		            SELECT	  TRIM(SYS_CONNECT_BY_PATH(DECODE(ETC2, 'Y', INSR_NM), ' ')) AS INSR_NM2
+		                    , CONTRACT_NUM
+		            FROM (
+		                SELECT	  A.CONTRACT_NUM
+		                            , A.INSR_CD
+		                            , B.CD_DSC AS INSR_NM
+		                            , B.ETC2
+		                            , ROW_NUMBER() OVER(PARTITION BY A.CONTRACT_NUM ORDER BY A.CONTRACT_NUM, A.INSR_CD) AS NUM
+		                            , COUNT(*) OVER(PARTITION BY A.CONTRACT_NUM) AS CNT
+		                            , NVL((
+		                                SELECT	MAX(CLAUSE_INSURANCE_FLAG)
+		                                    FROM	MSP_CHG_RCPT_MST
+		                                WHERE	CONTRACT_NUM = A.CONTRACT_NUM
+		                                    AND		INSR_CD = A.INSR_CD
+		                                    AND		TSK_TP = 'INS'
+		                                    AND		SEQ_NUM = (
+		                                                        SELECT	MAX(SEQ_NUM)
+		                                                        FROM 	MSP_CHG_RCPT_MST
+		                                                    WHERE	CONTRACT_NUM = A.CONTRACT_NUM
+		                                                        AND		INSR_CD = A.INSR_CD
+		                                                        AND 	TSK_TP = 'INS')), D.CLAUSE_INSURANCE_FLAG) AS CLAUSE_INSURANCE_FLAG
+		                FROM	  MSP_INSR_MEMBER_MST A
+		                        , CMN_GRP_CD_MST B
+		                        , MSP_JUO_SUB_INFO C
+		                        , MSP_REQUEST D /* 개통시 신청 */
+		                WHERE	A.STAT_CD = 'A'
+		                AND 	B.GRP_ID = 'CMN0246'
+		                AND 	A.INSR_CD = B.CD_VAL
+		                AND 	A.CONTRACT_NUM = C.CONTRACT_NUM
+		                AND 	A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+		                AND	 	A.INSR_CD = D.INSR_CD(+)
+		                ORDER BY A.CONTRACT_NUM, A.INSR_CD, B.ETC2)
+		            WHERE LEVEL = CNT
+		            START WITH NUM = 1
+		            CONNECT BY PRIOR CONTRACT_NUM = CONTRACT_NUM AND PRIOR NUM = NUM - 1
+		        ) INSR
+		WHERE 	SUB.PPPO = 'PO'
+		AND 	SUB.CONTRACT_NUM = REQ.CONTRACT_NUM
+		AND 	SUB.CONTRACT_NUM = FRM.CONTRACT_NUM
+		AND 	SUB.CONTRACT_NUM = INSR.CONTRACT_NUM(+)
+		AND     SUB.CONTRACT_NUM = #{contractNum}
+	</select>
+			
+	<select id="getFormVrfyRstList"  parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO" resultType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.getFormVrfyRstList */
+		SELECT	CONTRACT_NUM
+		FROM	MSP_FORM_VRFY_INFO
+		WHERE	CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<select id="getFormVrfyRstAsinYn"  parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO" resultType="String">
+		/* FormVrfyMgmtMapper.getFormVrfyRstAsinYn */
+		SELECT	DECODE(COUNT(CONTRACT_NUM), 0, 'N', 'Y')
+		FROM	MSP_FORM_VRFY_INFO
+		WHERE	CONTRACT_NUM = #{contractNum}
+		AND     (NVL(SND_USR_ID,FST_USR_ID) = #{sessionUserId}
+       			 OR 
+       			 EXISTS (SELECT 1 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP0081' AND USG_YN = 'Y' AND CD_VAL = #{sessionUserId}))
+	</select>
+	
+	<update id="updFormVrfyInfo" parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.updFormVrfyInfo */
+		UPDATE	MSP_FORM_VRFY_INFO
+		SET		VRFY_STAT_CD = #{vrfyStatCd}
+				, FST_REMARK = #{fstRemark}
+				, SND_REMARK = #{sndRemark}
+				, CLAUSE_PRI_AD_FLAG = #{clausePriAdFlag}
+				, INSR_FORM_FLAG = #{insrFormFlag}
+				, INSR_CFMT_FLAG = #{insrCfmtFlag}
+				, FST_VRFY_DTTM = DECODE(SND_USR_ID, NULL, SYSDATE, FST_VRFY_DTTM)
+				, SND_VRFY_DTTM = DECODE(SND_USR_ID, NULL, SND_VRFY_DTTM, SYSDATE)
+				, RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+		WHERE	CONTRACT_NUM = #{contractNum}
+	</update>
+	
+	<select id="getFormVrfyUsrList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* FormVrfyMgmtMapper."getFormVrfyUsrList" */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT
+			b.USR_ID
+			, b.USR_ID AS USR_ID_MSK
+			, c.ORGN_NM
+			, b.USR_NM
+		FROM
+			CMN_USR_MST b
+			, ORG_ORGN_INFO_MST c
+		WHERE 1 = 1
+		AND b.ORGN_ID = c.ORGN_ID(+)
+		AND b.USG_YN <![CDATA[ <> ]]> 'N'
+		AND b.USR_ID IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP0080' AND USG_YN = 'Y')
+		<if test="orgnNm != null and orgnNm != ''">
+		AND c.ORGN_NM LIKE '%' || #{orgnNm} || '%'
+		</if>
+		<if test="usrId != null and usrId != ''">
+		AND b.USR_ID LIKE '%' || #{usrId} || '%'
+		</if>
+		<if test="usrNm != null and usrNm != ''">
+		AND b.USR_NM LIKE '%' || #{usrNm} || '%'
+		</if>
+		ORDER BY c.ORGN_NM, b.USR_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getFormVrfyAsinList"  parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO" resultType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* FormVrfyMgmtMapper.getFormVrfyAsinList */
+		SELECT 
+		          PROD_TYPE_NM			AS prodTypeNm
+		        , CONTRACT_NUM			AS contractNum
+		        , SUB_LINK_NAME 		AS cstmrName
+		        , USER_SSN				AS ssn
+		        , SUBSCRIBER_NO			AS subscriberNo
+		        , FST_RATE_NM			AS fstRateNm
+		        , SPRT_TP_NM			AS sprtTpNm
+		        , SALE_PLCY_NM			AS salePlcyNm
+		        , ENGG_MNTH_CNT			AS enggMnthCnt
+		        , INST_MNTH_CNT			AS instMnthCnt
+		        , FST_MODEL_NM			AS fstModelNm
+		        , FST_MODEL_SRL_NUM		AS fstModelSrlNum
+		        , SUB_STATUS_NM			AS subStatusNm
+		        , CAN_RSN				AS canRsn
+		        , ON_OFF_TYPE_NM		AS onOffTypeNm
+		        , OPEN_MARKET_REFERER	AS openMarketReferer
+		        , RECOMMEND_FLAG_NM		AS recommendFlagNm
+		        , RECOMMEND_INFO		AS recommendInfo
+		        , REC_YN				AS recYn
+		        , AGENT_NM				AS agentNm
+		        , SHOP_NM				AS shopNm
+		        , SHOP_USR_ID			AS shopUsrId
+		        , SHOP_USR_NM			AS shopUsrNm
+		        , DVC_CHG_DT			AS dvcChgDt
+		        , DVC_MODEL_NM			AS dvcModelNm
+		        , DVC_AGNT_NM			AS dvcAgntNm
+		        , DVC_OPER_TYPE_NM		AS dvcOperTypeNm
+		        , PROMOTION_NM			AS promotionNm
+		        , OPER_TYPE_NM			AS operTypeNm
+		        , MODEL_INSTALLMENT		AS modelInstallment
+		        , FN_GET_USRNM(FST_USR_ID) AS fstUsrNm
+		        , FN_GET_USRNM(SND_USR_ID) AS sndUsrNm
+		        , VRFY_USR_ID			AS vrfyUsrId
+		FROM    (
+		            SELECT    
+		                      REQ.PROD_TYPE_NM              												/*상품구분        */   
+		                    , SUB.CONTRACT_NUM              												/*계약번호        */
+		                    , SUB.SUB_LINK_NAME         													/*고객명          */
+		                    , SUB.USER_SSN 																	/*주민번호        */
+		                    , SUB.SUBSCRIBER_NO 															/*휴대폰번호      */
+		                    , REQ.FST_RATE_NM 																/*최초요금제      */
+		                    , CASE 
+		                        WHEN SUBSTR(REQ.SIM_INFO, 36, 1) IN ('A', 'R') THEN 
+		                            (SELECT CD_DSC 
+		                              FROM CMN_GRP_CD_MST 
+		                             WHERE GRP_ID = 'CMN0058' 
+		                               AND CD_VAL = SUBSTR(REQ.SIM_INFO, 1, 2)) 
+		                        ELSE 
+		                            (SELECT CD_DSC 
+		                               FROM CMN_GRP_CD_MST 
+		                              WHERE GRP_ID = 'CMN0058' 
+		                                AND CD_VAL = SUBSTR(REQ.INST_INFO, 1, 2)) 
+		                      END AS SPRT_TP_NM 															/*할인유형        */
+		                    , REQ.SALE_PLCY_NM              												/*판매정책        */
+		                    , TO_NUMBER(SUBSTR(REQ.INST_INFO, 26, 3)) AS ENGG_MNTH_CNT                      /*약정개월수      */
+		                    , TO_NUMBER(SUBSTR(REQ.INST_INFO, 23, 3)) AS INST_MNTH_CNT                      /*할부개월수      */
+		                    , NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 21 , 30)), REQ.REQ_USIM_NAME) AS FST_MODEL_NM	/*최초개통단말    */										/*단말모델명      */
+		                    , TRIM(SUBSTR(REQ.FST_MODEL_INFO, 51 , 30)) AS FST_MODEL_SRL_NUM				/*최초단말일련번호*/
+		                    , FN_GET_CODENM('MSP0003', SUB.SUB_STATUS)AS SUB_STATUS_NM						/*상태            */
+		                    , CASE
+		                        WHEN SUB.SUB_STATUS = 'C' THEN
+		                            CASE
+		                                WHEN 0 = TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '당일개통취소'
+		                                WHEN 15 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '14일이내해지'
+		                                WHEN 90 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '90일이내해지'
+		                                ELSE '일반해지'
+		                            END
+		                        ELSE ''  
+		                      END AS CAN_RSN        														/*해지사유        */
+		                    , FN_GET_CODENM('RCP0007', REQ.ON_OFF_TYPE) AS ON_OFF_TYPE_NM
+		                    , REQ.OPEN_MARKET_REFERER                   									/*유입경로        */
+		                    , REQ.RECOMMEND_FLAG_NM                 										/*추천인구분      */ 
+		                    , REQ.RECOMMEND_INFO                											/*추천인정보      */
+		                    , REQ.REC_YN        															/*녹취여부        */
+		                    , (SELECT ORGN_NM 
+		                         FROM ORG_ORGN_INFO_MST 
+		                        WHERE ORGN_ID = SUB.OPEN_AGNT_CD AND ROWNUM = 1) || '/' || SUB.OPEN_AGNT_CD AS AGENT_NM    /*대리점          */ 
+		                    , REQ.SHOP_NM                                                               	/*판매점          */ 
+                            , DECODE(REQ.SHOP_USM_ID, NULL, '-' , REQ.SHOP_USM_ID) AS SHOP_USR_ID 			/*판매자ID */
+		                    , DECODE(REQ.SHOP_USM_ID, NULL, '-' , 
+		                                (SELECT A.USR_NM 
+		                                   FROM CMN_USR_MST A 
+		                                  WHERE A.USR_ID = REQ.SHOP_USM_ID)) AS SHOP_USR_NM					/*판매자명        */ 
+		                    , SUBSTR(REQ.DVC_CHG_INFO, 1, 8) AS DVC_CHG_DT									/* 기변일자 */
+		                    , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 19, 30)) AS DVC_MODEL_NM						/* 기변모델명 */
+		                    , (SELECT ORGN_NM 
+		                         FROM ORG_ORGN_INFO_MST 
+		                        WHERE ORGN_ID = TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10)) AND ROWNUM = 1) AS DVC_AGNT_NM 		/* 기변대리점 */
+		                    , FN_GET_CODENM('CMN0049', SUBSTR(REQ.DVC_CHG_INFO, 79, 4)) AS DVC_OPER_TYPE_NM	/* 기변유형명 */
+		                    , (SELECT PROMOTION_NM
+		                       FROM   MSP_PROMOTION_MST
+		                       WHERE  PROMOTION_CD = REQ.PROMOTION_CD) AS PROMOTION_NM						/* 프로모션명 */
+		                    , REQ.OPER_TYPE_NM
+		                    , NVL(TO_NUMBER(SUBSTR(REQ.INST_INFO, 13, 10)), 0) AS MODEL_INSTALLMENT
+		                    , FRM.VRFY_STAT_CD
+		                    , FRM.FST_USR_ID
+		                    , FRM.SND_USR_ID
+		                    <choose>
+						        <when test='vrfyCd == "1"' >
+						            , FRM.FST_USR_ID AS VRFY_USR_ID
+						        </when>
+						        <when test='vrfyCd == "2"' >
+						            , FRM.SND_USR_ID AS VRFY_USR_ID
+						        </when>
+						    </choose>
+		            FROM	  MSP_JUO_SUB_INFO SUB
+		                    , MSP_REQUEST_DTL REQ
+		                    , MSP_FORM_VRFY_INFO FRM
+		            WHERE	SUB.PPPO = 'PO'
+		            AND 	SUB.CONTRACT_NUM = REQ.CONTRACT_NUM
+		            AND 	SUB.CONTRACT_NUM = FRM.CONTRACT_NUM(+)
+		            AND 	(SUB.SUB_STATUS != 'C' OR (SUB.SUB_STATUS = 'C' AND (TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') > 14)))
+		            AND SUB.OPEN_AGNT_CD NOT IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP0078' AND USG_YN = 'Y')
+		            <if test="lstComActvDateF != null and lstComActvDateF != '' and lstComActvDateT != null and lstComActvDateT != '' and operType != 'C07'">
+		                AND SUB.LST_COM_ACTV_DATE BETWEEN #{lstComActvDateF} AND #{lstComActvDateT}
+		            </if>
+		            <if test="agntId != null and agntId != ''">
+		                AND (SUB.OPEN_AGNT_CD = #{agntId}  OR TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10)) = #{agntId}) 
+		            </if>
+		            <if test="onOffType != null and onOffType != ''">
+		                AND REQ.ON_OFF_TYPE = #{onOffType}
+		            </if>
+		            <if test="operType != null and operType != ''">
+                        <choose>
+                            <when test='operType == "NAC"' >
+                                AND REQ.OPER_TYPE IN ('NAC3','MNP3')
+                            </when>
+                            <when test='operType == "C07"' >
+                                AND EXISTS 
+                                        (   SELECT 1 FROM MSP_DVC_CHG_AGNT_HST X, MSP_REQUEST Y 
+                                            WHERE  X.REQUEST_KEY = Y.REQUEST_KEY
+                                            AND    X.CONTRACT_NUM = SUB.CONTRACT_NUM
+                                            AND    TO_DATE(SUBSTR(APPL_END_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(APPL_STRT_DTTM, 1, 8), 'YYYYMMDD') > 14
+                                            AND    Y.OPER_TYPE IN ('HCN3','HDN3')
+                                            <if test="lstComActvDateF != null and lstComActvDateF != '' and lstComActvDateT != null and lstComActvDateT != '' ">
+                                                AND    SUBSTR(X.APPL_STRT_DTTM, 1, 8) BETWEEN #{lstComActvDateF} AND #{lstComActvDateT}
+                                            </if>
+                                        )
+                            </when>
+                        </choose>
+                    </if>
+		            <if test="contractNum != null and contractNum != ''">
+		                AND SUB.CONTRACT_NUM = #{contractNum}
+		            </if>
+		            ORDER BY SUB.LST_COM_ACTV_DATE DESC
+		        )
+		WHERE	1=1
+	    <choose>
+	        <when test='vrfyCd == "1"' >
+	            AND	(VRFY_STAT_CD IS NULL OR VRFY_STAT_CD = 'NONE')
+	        </when>
+	        <when test='vrfyCd == "2"' >
+	            AND	VRFY_STAT_CD = 'FNOK'
+	        </when>
+	    </choose>
+		<if test="vrfyUsrId != null and vrfyUsrId != ''">
+			<choose>
+		        <when test='vrfyCd == "1"' >
+		            AND (FST_USR_ID IS NULL OR FST_USR_ID = #{vrfyUsrId})
+		        </when>
+		        <when test='vrfyCd == "2"' >
+		            AND (SND_USR_ID IS NULL OR SND_USR_ID = #{vrfyUsrId})
+		        </when>
+		    </choose>
+		</if>
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<update id="updFormVrfyAgntInfo" parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.updFormVrfyAgntInfo */
+		UPDATE	MSP_FORM_VRFY_INFO
+		SET		FST_ACT_CD = #{fstActCd}
+				, FST_ACT_REMARK = #{fstActRemark}
+				, SND_ACT_CD = #{sndActCd}
+				, SND_ACT_REMARK = #{sndActRemark}
+		WHERE	CONTRACT_NUM = #{contractNum}
+	</update>
+	
+	<insert id="regFormVrfyAsinInfo" parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.regFormVrfyAsinInfo */
+		INSERT
+		INTO	MSP_FORM_VRFY_INFO (
+				CONTRACT_NUM
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+				, FST_USR_ID
+		)
+		VALUES (
+				#{contractNum}
+				, #{sessionUserId}
+				, SYSDATE
+				, #{sessionUserId}
+				, SYSDATE
+				, #{vrfyUsrId}
+		)
+	</insert>
+
+	<update id="updFormVrfyAsinInfoY" parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.updFormVrfyInfoY */
+		UPDATE MSP_FORM_VRFY_INFO
+		<if test="vrfyCd != null and vrfyCd != ''">
+		    <choose>
+		        <when test='vrfyCd == "1"' >
+		            SET		FST_USR_ID = #{vrfyUsrId}
+		        </when>
+		        <when test='vrfyCd == "2"' >
+		            SET		SND_USR_ID = #{vrfyUsrId}
+		        </when>
+		    </choose>
+		</if>       
+		        , RVISN_ID = #{sessionUserId}
+		        , RVISN_DTTM = SYSDATE
+		WHERE	CONTRACT_NUM = #{contractNum}
+		<if test="vrfyCd != null and vrfyCd != ''">
+		    <choose>
+		        <when test='vrfyCd == "1"' >
+		            AND		VRFY_STAT_CD = 'NONE' 
+					AND     FST_USR_ID IS NULL
+		        </when>
+		        <when test='vrfyCd == "2"' >
+		            AND		VRFY_STAT_CD = 'FNOK'
+					AND     SND_USR_ID IS NULL
+		        </when>
+		    </choose>
+		</if> 
+	</update>
+	
+	<update id="updFormVrfyAsinInfoN" parameterType="com.ktis.msp.rcp.formVrfyMgmt.vo.FormVrfyMgmtVO">
+		/* FormVrfyMgmtMapper.updFormVrfyInfoN */
+		UPDATE MSP_FORM_VRFY_INFO
+		<if test="vrfyCd != null and vrfyCd != ''">
+		    <choose>
+		        <when test='vrfyCd == "1"' >
+		            SET		FST_USR_ID = NULL
+		        </when>
+		        <when test='vrfyCd == "2"' >
+		            SET		SND_USR_ID = NULL
+		        </when>
+		    </choose>
+		</if>       
+		        , RVISN_ID = #{sessionUserId}
+		        , RVISN_DTTM = SYSDATE
+		WHERE	CONTRACT_NUM = #{contractNum}
+		<if test="vrfyCd != null and vrfyCd != ''">
+		    <choose>
+		        <when test='vrfyCd == "1"' >
+		            AND		VRFY_STAT_CD = 'NONE'
+					AND     FST_USR_ID = #{vrfyUsrId}
+		        </when>
+		        <when test='vrfyCd == "2"' >
+		            AND		VRFY_STAT_CD = 'FNOK'
+					AND     SND_USR_ID = #{vrfyUsrId}
+		        </when>
+		    </choose>
+		</if> 
+	</update>
+</mapper>

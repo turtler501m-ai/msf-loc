@@ -1,0 +1,638 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rntl.rntlMgmt.mapper.RntlMgmtMapper">
+
+	<sql id="getPurchStand">
+		SELECT
+			A.ORGN_ID									AS orgnId
+			,FN_GET_ORGNM(A.ORGN_ID)					AS agncyNm
+			,A.STRT_YM									AS strtYm
+			,A.END_YM									AS endYm
+			,A.PRDT_ID									AS prdtId
+			,B.PRDT_CODE								AS prdtCode
+			,A.DEPLRICT_COST							AS deplrictCost
+			,A.BUY_AMNT									AS buyAmnt
+			,A.RENTAL_COST								AS rentalCost
+			,A.VIRFY_COST								AS virfyCost
+			,A.GRNT_AMNT								AS grntAmnt
+			,FN_GET_USRNM(A.REG_ID)						AS regId
+			,TO_CHAR(A.REG_DTTM, 'YYYYMMDDHH24MISS')	AS regDttm
+			,FN_GET_USRNM(A.RVISN_ID)					AS rvisnId
+			,TO_CHAR(A.RVISN_DTTM, 'YYYYMMDDHH24MISS')	AS rvisnDttm
+		FROM
+			MSP_RNTL_BASE_INFO	A
+			,CMN_INTM_MDL		B
+		WHERE #{baseDt, jdbcType=VARCHAR} BETWEEN A.STRT_YM AND A.END_YM
+		AND   A.PRDT_ID = B.PRDT_ID
+		AND   B.RPRS_YN = 'Y'
+		<if test="orgnId != null and orgnId != ''">
+		AND   A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+		AND   A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+		</if>
+		ORDER BY A.ORGN_ID, B.PRDT_CODE, A.STRT_YM
+	</sql>
+	
+	<select id="getPurchStandList" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO">
+		/* RntlMgmtMapper.getPurchStandList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getPurchStand" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getPurchStandListExcel" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO">
+		/* RntlMgmtMapper.getPurchStandListExcel */
+		
+		<include refid="getPurchStand" />
+		
+	</select>
+	
+	<select id="getPurchStandDtlList" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO">
+		/* RntlMgmtMapper.getPurchStandDtlList */
+		SELECT
+			A.ORGN_ID									AS orgnId
+			,FN_GET_ORGNM(A.ORGN_ID)					AS agncyNm
+			,A.STRT_YM									AS strtYm
+			,A.END_YM									AS endYm
+			,A.PRDT_ID									AS prdtId
+			,B.PRDT_CODE								AS prdtCode
+			,A.DEPLRICT_COST							AS deplrictCost
+			,A.BUY_AMNT									AS buyAmnt
+			,A.RENTAL_COST								AS rentalCost
+			,A.VIRFY_COST								AS virfyCost
+			,A.GRNT_AMNT								AS grntAmnt
+			,FN_GET_USRNM(A.REG_ID	)					AS regId
+			,TO_CHAR(A.REG_DTTM, 'YYYYMMDDHH24MISS')	AS regDttm
+			,FN_GET_USRNM(A.RVISN_ID)					AS rvisnId
+			,TO_CHAR(A.RVISN_DTTM, 'YYYYMMDDHH24MISS')	AS rvisnDttm
+		FROM
+			MSP_RNTL_BASE_INFO	A
+			,CMN_INTM_MDL		B
+		WHERE A.STRT_YM <![CDATA[ <= ]]> #{baseDt, jdbcType=VARCHAR}
+		AND   A.PRDT_ID = B.PRDT_ID
+		AND   B.RPRS_YN = 'Y'
+		<if test="orgnId != null and orgnId != ''">
+		AND   A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+		AND   A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+		</if>
+		ORDER BY A.ORGN_ID, A.PRDT_ID, A.STRT_YM DESC
+	</select>
+	
+	<select id="getMspRntlBaseInfo" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO">
+		/* RntlMgmtMapper.getMspRntlBaseInfo */
+		SELECT
+			A.ORGN_ID									AS orgnId
+			,A.STRT_YM									AS strtYm
+			,A.END_YM									AS endYm
+			,A.PRDT_ID									AS prdtId
+			,A.DEPLRICT_COST							AS deplrictCost
+			,A.BUY_AMNT									AS buyAmnt
+			,A.RENTAL_COST								AS rentalCost
+			,A.VIRFY_COST								AS virfyCost
+			,A.GRNT_AMNT								AS grntAmnt
+		FROM
+			MSP_RNTL_BASE_INFO	A
+		WHERE #{baseDt, jdbcType=VARCHAR} BETWEEN A.STRT_YM AND A.END_YM
+		AND   A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+		AND   A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="regPurchStandByInfo" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO">
+		INSERT /* RntlMgmtMapper.savPurchStandByInfo */
+			INTO MSP_RNTL_BASE_INFO
+			(
+				ORGN_ID
+				,PRDT_ID
+				,END_YM
+				,STRT_YM
+				,DEPLRICT_COST
+				,BUY_AMNT
+				,RENTAL_COST
+				,VIRFY_COST
+				,GRNT_AMNT
+				,REG_ID
+				,REG_DTTM
+			)
+			VALUES
+			(
+				#{orgnId, jdbcType=VARCHAR}
+				,#{prdtId, jdbcType=VARCHAR}
+				,#{endYm, jdbcType=VARCHAR}
+				,#{strtYm, jdbcType=VARCHAR}
+				,#{deplrictCost, jdbcType=VARCHAR}
+				,#{buyAmnt, jdbcType=VARCHAR}
+				,#{rentalCost, jdbcType=VARCHAR}
+				,#{virfyCost, jdbcType=VARCHAR}
+				,#{grntAmnt, jdbcType=VARCHAR}
+				,#{regId, jdbcType=VARCHAR}
+				,SYSDATE
+			)
+	</insert>
+	
+	<update id="updPurchStandByInfo" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchStandVO">
+		UPDATE MSP_RNTL_BASE_INFO A
+		SET
+			END_YM			= #{endYm, jdbcType=VARCHAR}
+			,DEPLRICT_COST	= NVL(#{deplrictCost, jdbcType=VARCHAR}, DEPLRICT_COST)
+			,BUY_AMNT		= NVL(#{buyAmnt, jdbcType=VARCHAR}, BUY_AMNT)
+			,RENTAL_COST	= NVL(#{rentalCost, jdbcType=VARCHAR}, RENTAL_COST)
+			,VIRFY_COST		= NVL(#{virfyCost, jdbcType=VARCHAR}, VIRFY_COST)
+			,GRNT_AMNT		= NVL(#{grntAmnt, jdbcType=VARCHAR}, GRNT_AMNT)
+			,RVISN_ID		= #{rvisnId, jdbcType=VARCHAR}
+			,RVISN_DTTM		= SYSDATE
+		WHERE A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		AND   A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+		AND   A.STRT_YM = #{strtYm, jdbcType=VARCHAR}
+	</update>
+	
+	<sql id="getSaleOpen">
+		SELECT 
+			AGNCY_ID				AS agncyId
+			, AGNCY_NM				AS agncyNm
+			, RES_NO				AS resNo
+			, CONTRACT_NUM			AS contractNum
+			, CUST_NM				AS custNm
+			, PRDT_ID				AS prdtId
+			, INTM_MDL_CD			AS intmMdlCd
+			, INTM_MDL_NM			AS intmMdlNm
+			, INTM_MDL_SRL			AS intmMdlSrl
+			, OPEN_DT				AS openDt
+			, RTRN_DT				AS rtrnDt
+			, SUB_STATUS			AS subStatus	-- 계약상태
+			, DECODE(RNTL_STAT,'BUY','매입','SALE','매각','TRGT','매각대상','PRVD','정산')
+									AS rntlStat		--렌탈상태
+			, BUY_AMNT				AS buyAmnt		-- 매입단가
+			, RENTAL_COST			AS rentalCost	-- 렌탈비용
+			, PRVD_TOT_DAY - PRVD_MON_DAY
+									AS prvdTotDay	-- 정산일수(누적)
+			, PRVD_SUM_AMNT - BACK_SUM_AMNT
+									AS prvdTotAmnt	-- 정산금액(누적)
+			, PRVD_MON_DAY			AS prvdMonDay	-- 정산일수(당월)
+			, CASE WHEN FULL_DAY = PRVD_MON_DAY THEN RENTAL_COST ELSE ROUND(PRVD_MON_DAY * ROUND(RENTAL_COST/FULL_DAY),-1) END
+									AS prvdMonAmnt	-- 정산금액(당월)
+			, CASE WHEN RNTL_STAT = 'SALE' THEN 0
+				ELSE GREATEST(GRNT_AMNT, BUY_AMNT - PRVD_SUM_AMNT + BACK_SUM_AMNT
+				- CASE WHEN FULL_DAY = PRVD_MON_DAY THEN RENTAL_COST ELSE ROUND(PRVD_MON_DAY * ROUND(RENTAL_COST/FULL_DAY),-1) END)
+				END 				AS remainAmnt	-- 잔존가액
+			, RNTL_RTRN_STAT		AS rntlRtrnStat
+		FROM 
+			( SELECT DISTINCT
+					H.ORGN_ID AS AGNCY_ID
+					, H.ORGN_NM AS AGNCY_NM
+					, A.RES_NO
+					, A.CONTRACT_NUM
+					, D.SUB_LINK_NAME AS CUST_NM
+					, C.PRDT_ID
+					, C.PRDT_CODE AS INTM_MDL_CD
+					, C.PRDT_NM AS INTM_MDL_NM
+					, A.REQ_PHONE_SN AS INTM_MDL_SRL
+					, SUBSTR(D.LST_COM_ACTV_DATE,0,8) AS OPEN_DT
+					, CASE WHEN NVL(G.RTRN_YM,'199901') <![CDATA[ <= ]]> TO_CHAR(SYSDATE,'YYYYMM') THEN G.RTRN_DT ELSE NULL END AS RTRN_DT -- 반납일자
+					, I.CD_DSC AS SUB_STATUS
+					, TO_DATE(NVL(G.RTRN_DT,TO_CHAR(SYSDATE,'YYYYMMDD')),'YYYYMMDD') - TO_DATE(D.LST_COM_ACTV_DATE,'YYYYMMDD') + 1 AS PRVD_TOT_DAY
+					, CASE 
+						WHEN G.RTRN_DT IS NULL THEN TO_DATE(TO_CHAR(SYSDATE,'YYYYMMDD'),'YYYYMMDD') + 1
+						WHEN SUBSTR(G.RTRN_DT,0,6) = TO_CHAR(SYSDATE,'YYYYMM') THEN TO_DATE(G.RTRN_DT,'YYYYMMDD') + 1
+						WHEN SUBSTR(G.RTRN_DT,0,6) <![CDATA[ > ]]> TO_CHAR(SYSDATE,'YYYYMM') THEN TO_DATE(TO_CHAR(SYSDATE,'YYYYMMDD'),'YYYYMMDD') + 1
+						ELSE TO_DATE('19991231','YYYYMMDD')
+						END - CASE WHEN SUBSTR(D.LST_COM_ACTV_DATE,0,6) = TO_CHAR(SYSDATE,'YYYYMM') THEN TO_DATE(SUBSTR(D.LST_COM_ACTV_DATE,0,8),'YYYYMMDD')
+							WHEN SUBSTR(D.LST_COM_ACTV_DATE,0,6) <![CDATA[ < ]]> TO_CHAR(SYSDATE,'YYYYMM')
+							THEN CASE WHEN SUBSTR(G.RTRN_DT,0,6) <![CDATA[ < ]]> TO_CHAR(SYSDATE,'YYYYMM') THEN TO_DATE('19991231','YYYYMMDD')
+								ELSE TO_DATE(TO_CHAR(SYSDATE,'YYYYMM')||'01','YYYYMMDD')
+								END
+							ELSE TO_DATE('19991231','YYYYMMDD')
+							END AS PRVD_MON_DAY
+					, E.RENTAL_COST -- 감가상각
+					, E.BUY_AMNT --매입가
+					, E.GRNT_AMNT -- 최저보장가
+					, TO_NUMBER(TO_CHAR(LAST_DAY(SYSDATE),'DD')) AS FULL_DAY
+					, CASE 
+						WHEN G.RTRN_YM IS NOT NULL AND G.RTRN_YM <![CDATA[ < ]]> TO_CHAR(SYSDATE,'YYYYMM') THEN 'SALE'
+						WHEN G.RTRN_YM IS NOT NULL AND G.RTRN_YM = TO_CHAR(SYSDATE,'YYYYMM') THEN 'TRGT'
+						WHEN SUBSTR(D.LST_COM_ACTV_DATE,0,6) = TO_CHAR(SYSDATE,'YYYYMM') THEN 'BUY'
+						ELSE 'PRVD'
+						END AS RNTL_STAT
+					, SUM(NVL(F.PRVD_AMNT,0)) OVER (PARTITION BY F.CONTRACT_NUM) AS PRVD_SUM_AMNT
+					, SUM(NVL(F.BACK_AMNT,0)) OVER (PARTITION BY F.CONTRACT_NUM) AS BACK_SUM_AMNT
+					, NVL(G.RTRN_PROC_YN,'Y') AS RNTL_RTRN_STAT
+				FROM  MSP_REQUEST A
+					, MSP_REQUEST_SALEINFO B
+					, CMN_INTM_MDL C
+					, MSP_JUO_SUB_INFO D
+					, MSP_RNTL_BASE_INFO E -- 렌탈 매입 기준 관리
+					, MSP_RNTL_AMNT_INFO F -- 렌탈 월 누적 금액 관리
+					, MSP_RNTL_RTRN_INFO G -- 렌탈반납일자관리
+					, ORG_ORGN_INFO_MST H
+					, CMN_GRP_CD_MST I
+				WHERE  A.REQUEST_STATE_CODE = '21'
+				AND  A.PSTATE = '00'
+				AND  A.PROD_TYPE = '02'
+				AND  A.REQUEST_KEY = B.REQUEST_KEY
+				AND  B.MODEL_ID = C.PRDT_ID
+				AND  C.RPRS_YN = 'Y'
+				AND  A.CONTRACT_NUM = D.CONTRACT_NUM
+				AND  A.PROD_TYPE = D.PROD_TYPE
+				AND  D.PPPO = 'PO'
+				AND  A.CNTPNT_SHOP_ID = E.ORGN_ID
+				AND  C.RPRS_PRDT_ID = E.PRDT_ID
+				AND  SUBSTR(D.LST_COM_ACTV_DATE,0,6) BETWEEN E.STRT_YM AND E.END_YM
+				AND  A.CNTPNT_SHOP_ID = H.ORGN_ID
+				AND  D.SUB_STATUS = I.CD_VAL
+				AND  I.GRP_ID = 'RCP0037'
+				AND  A.CONTRACT_NUM = F.CONTRACT_NUM(+)
+				AND  A.CNTPNT_SHOP_ID = F.ORGN_ID(+)
+				AND  A.CONTRACT_NUM = G.CONTRACT_NUM(+)
+				AND  A.CNTPNT_SHOP_ID = G.ORGN_ID(+)
+				<if test='searchStartDt != null and searchStartDt != "" and searchEndDt != null and searchEndDt != "" '>
+				AND  SUBSTR(D.LST_COM_ACTV_DATE,0,8) BETWEEN #{searchStartDt, jdbcType=VARCHAR} AND #{searchEndDt, jdbcType=VARCHAR} --개통일자
+				</if>
+				<if test="orgnId != null and orgnId != ''">
+				AND  A.CNTPNT_SHOP_ID = #{orgnId, jdbcType=VARCHAR}
+				</if>
+				<if test="subStatus != null and subStatus != ''">
+				AND  D.SUB_STATUS = #{subStatus, jdbcType=VARCHAR}
+				</if>
+				<if test="searchName != null and searchName != '' and searchGbn != null and searchGbn != ''">
+					<choose>
+						<when test='searchGbn == "1"'>
+						AND  D.SUB_LINK_NAME LIKE '%'||#{searchName, jdbcType=VARCHAR}||'%'
+						</when>
+						<when test='searchGbn == "2"'>
+						AND (A.CONTRACT_NUM = #{searchName, jdbcType=VARCHAR}
+     						OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchName, jdbcType=VARCHAR}))
+						</when>
+						<when test='searchGbn == "3"'>
+						AND  A.RES_NO = #{searchName, jdbcType=VARCHAR}
+						</when>
+					</choose>
+				</if>
+			)
+		WHERE  1 = 1
+		<if test="rntlStatus != null and rntlStatus != ''">
+		AND    RNTL_STAT = #{rntlStatus, jdbcType=VARCHAR} --/매입BUY/매각SALE/매각대상TRGT/정산PRVD
+		</if>
+		ORDER BY OPEN_DT DESC, RTRN_DT DESC NULLS LAST
+	</sql>
+	
+	<select id="getSaleOpenList" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtBySaleOpenMgmtVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtBySaleOpenMgmtVO">
+		/* RntlMgmtMapper.getSaleOpenList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getSaleOpen" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getSaleOpenListExcel" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtBySaleOpenMgmtVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtBySaleOpenMgmtVO">
+		/* RntlMgmtMapper.getSaleOpenListExcel */
+		
+		<include refid="getSaleOpen" />
+		
+	</select>
+	
+	<select id="getMspRntlRtrnInfo" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtBySaleOpenMgmtVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtBySaleOpenMgmtVO">
+		/* RntlMgmtMapper.getMspRntlBaseInfo */
+		SELECT
+			A.ORGN_ID			AS orgnId
+			,A.CONTRACT_NUM		AS contractNum
+			,A.PRDT_ID			AS prdtId
+			,A.RTRN_YM			AS rtrnYm
+			,A.RTRN_DT			AS rtrnDt
+			,A.RTRN_PROC_ID		AS rtrnProcId
+			,A.RTRN_PROC_YN		AS rtrnProcYn
+		FROM
+			MSP_RNTL_RTRN_INFO	A
+		WHERE A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		AND   A.CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+		AND   A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="regReturnDt" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtBySaleOpenMgmtVO">
+		INSERT /* RntlMgmtMapper.savPurchStandByInfo */
+			INTO MSP_RNTL_RTRN_INFO
+			(
+				ORGN_ID
+				,CONTRACT_NUM
+				,PRDT_ID
+				,RTRN_YM
+				,RTRN_DT
+				,RTRN_PROC_ID
+				,RTRN_PROC_YN
+				,REG_ID
+				,REG_DTTM
+			)
+			VALUES
+			(
+				#{orgnId, jdbcType=VARCHAR}
+				,#{contractNum, jdbcType=VARCHAR}
+				,#{prdtId, jdbcType=VARCHAR}
+				,TO_CHAR(SYSDATE,'YYYYMM')
+				,#{rtrnDt, jdbcType=VARCHAR}
+				,#{rtrnProcId, jdbcType=VARCHAR}
+				,#{rtrnProcYn, jdbcType=VARCHAR}
+				,#{rtrnProcId, jdbcType=VARCHAR}
+				,SYSDATE
+			)
+	</insert>
+	
+	<update id="updReturnDt" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtBySaleOpenMgmtVO">
+		UPDATE MSP_RNTL_RTRN_INFO A
+		SET
+			RTRN_YM			= TO_CHAR(SYSDATE,'YYYYMM')
+			,RTRN_DT		= #{rtrnDt, jdbcType=VARCHAR}
+			,RTRN_PROC_ID	= #{rtrnProcId, jdbcType=VARCHAR}
+			,RTRN_PROC_YN	= #{rtrnProcYn, jdbcType=VARCHAR}
+			,RVISN_ID		= #{rtrnProcId, jdbcType=VARCHAR}
+			,RVISN_DTTM		= SYSDATE
+		WHERE A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		AND   A.CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+		AND   A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+	</update>
+	
+	<delete id="delReturnDt" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtBySaleOpenMgmtVO">
+		DELETE MSP_RNTL_RTRN_INFO A
+		WHERE A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		AND   A.CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+		AND   A.PRDT_ID = #{prdtId, jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="getPurchList" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchSaleListVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchSaleListVO">
+		/* RntlMgmtMapper.getPurchList */
+		SELECT
+			MAX(PRVD_YM)							AS prvdYm
+			, CASE WHEN AGNCY_ID IS NOT NULL THEN MAX(AGNCY_NM) ELSE '합계' END
+													AS agncyNm
+			, CASE WHEN INTM_MDL_CD IS NULL THEN DECODE(AGNCY_ID,NULL,'','소계') ELSE INTM_MDL_CD END
+													AS intmMdlCd
+			, CASE WHEN INTM_MDL_CD IS NULL THEN NULL ELSE MAX(INTM_MDL_NM) END
+													AS intmMdlNm
+			, NVL2(INTM_MDL_CD, MAX(BUY_AMNT), '')	AS buyAmnt
+			, SUM(BUY_CNT)							AS buyCnt
+			, SUM(BUY_AMNT)							AS buySumAmnt
+			, SUM(DEPLRICT_COST)					AS deplrictCost
+			, SUM(BUY_AMNT) + SUM(DEPLRICT_COST)	AS buyPayAmnt
+		FROM ( SELECT /*+ INDEX(B MSP_RNTL_BASE_INFO_PK) */
+					A.PRVD_YM
+					, A.ORGN_ID AS AGNCY_ID
+					, E.ORGN_NM AS AGNCY_NM
+					, A.CONTRACT_NUM
+					, D.PRDT_CODE AS INTM_MDL_CD
+					, D.PRDT_NM AS INTM_MDL_NM
+					, B.BUY_AMNT
+					, 1 AS BUY_CNT
+					, B.DEPLRICT_COST
+				FROM  MSP_RNTL_AMNT_INFO A
+					, MSP_RNTL_BASE_INFO B
+					, MSP_JUO_SUB_INFO C
+					, CMN_INTM_MDL D
+					, ORG_ORGN_INFO_MST E
+				WHERE  A.ORGN_ID = B.ORGN_ID
+				AND  A.PRDT_ID = B.PRDT_ID
+				AND  A.CONTRACT_NUM = C.CONTRACT_NUM
+				AND  SUBSTR(C.LST_COM_ACTV_DATE,0,6) BETWEEN B.STRT_YM AND B.END_YM
+				AND  B.PRDT_ID = D.PRDT_ID
+				AND  D.RPRS_YN = 'Y'
+				AND  A.ORGN_ID = E.ORGN_ID
+				AND  C.LST_COM_ACTV_DATE LIKE TO_CHAR(ADD_MONTHS(TO_DATE(#{baseDt, jdbcType=VARCHAR},'YYYYMM'),-1),'YYYYMM')||'%'
+				AND  A.PRVD_YM = #{baseDt, jdbcType=VARCHAR}
+				<if test="orgnId != null and orgnId != ''">
+				AND   A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+				</if>
+			)
+		GROUP BY ROLLUP (AGNCY_ID, INTM_MDL_CD)
+		ORDER BY AGNCY_ID, INTM_MDL_CD, buyAmnt DESC
+	</select>
+	
+	<select id="getSaleList" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchSaleListVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByPurchSaleListVO">
+		/* RntlMgmtMapper.getSaleList */
+		SELECT 
+			MAX(PRVD_YM) 							AS prvdYm
+			, CASE WHEN AGNCY_ID IS NOT NULL THEN MAX(AGNCY_NM) ELSE '합계' END
+													AS agncyNm
+			, CASE WHEN INTM_MDL_CD IS NULL THEN DECODE(AGNCY_ID,NULL,'','소계') ELSE INTM_MDL_CD END
+													AS intmMdlCd
+			, CASE WHEN INTM_MDL_CD IS NULL THEN NULL ELSE MAX(INTM_MDL_NM) END
+													AS intmMdlNm
+			, NVL2(INTM_MDL_CD, MAX(BUY_AMNT),'')	AS buyAmnt			-- 매입단가
+			, SUM(SALE_CNT)							AS saleCnt			-- 매각수량
+			, SUM(SALE_AMNT) + SUM(VIRFY_COST)		AS saleAmnt			-- 매각금액
+			, SUM(VIRFY_COST)						AS virfyCost		-- 검수비용
+			, SUM(SALE_AMNT)						AS salePayAmnt		-- 실매각금액
+			, SUM(PRVD_AMNT)						AS prvdAmnt			-- 정산금액
+		FROM ( SELECT /*+ INDEX(A MSP_RNTL_AMNT_INFO_PK) INDEX(B MSP_RNTL_BASE_INFO_PK) */
+					A.PRVD_YM
+					, A.ORGN_ID AS AGNCY_ID
+					, F.ORGN_NM AS AGNCY_NM
+					, A.CONTRACT_NUM
+					, D.PRDT_CODE AS INTM_MDL_CD
+					, D.PRDT_NM AS INTM_MDL_NM
+					, B.BUY_AMNT
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901')
+						THEN 1 ELSE 0 END AS SALE_CNT
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901')
+						THEN B.VIRFY_COST ELSE 0 END AS VIRFY_COST
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901')
+						THEN A.SALE_AMNT ELSE 0 END AS SALE_AMNT
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901')
+						THEN 0 ELSE A.PRVD_AMNT END AS PRVD_AMNT
+				FROM  MSP_RNTL_AMNT_INFO A
+					, MSP_RNTL_BASE_INFO B
+					, MSP_JUO_SUB_INFO C
+					, CMN_INTM_MDL D
+					, MSP_RNTL_RTRN_INFO E
+					, ORG_ORGN_INFO_MST F
+				WHERE  A.ORGN_ID = B.ORGN_ID
+				AND  A.PRDT_ID = B.PRDT_ID
+				AND  A.CONTRACT_NUM = C.CONTRACT_NUM
+				AND  SUBSTR(C.LST_COM_ACTV_DATE,0,6) BETWEEN B.STRT_YM AND B.END_YM
+				AND  A.ORGN_ID = E.ORGN_ID(+)
+				AND  A.CONTRACT_NUM = E.CONTRACT_NUM(+)
+				AND  B.PRDT_ID = D.PRDT_ID
+				AND  D.RPRS_YN = 'Y'
+				AND  A.ORGN_ID = F.ORGN_ID
+				AND  A.PRVD_YM = #{baseDt, jdbcType=VARCHAR}
+				<if test="orgnId != null and orgnId != ''">
+				AND   A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+				</if>
+			)
+		GROUP BY ROLLUP (AGNCY_ID, INTM_MDL_CD, BUY_AMNT)
+		HAVING GROUPING_ID(AGNCY_ID, INTM_MDL_CD, BUY_AMNT) IN (0,3,7)
+		ORDER BY AGNCY_ID, INTM_MDL_CD, BUY_AMNT DESC
+	</select>
+	
+	<sql id="getMnthCalc">
+		SELECT
+			PRVD_YM				AS prvdYm
+			, AGNCY_ID			AS agncyId
+			, AGNCY_NM			AS agncyNm
+			, CONTRACT_NUM		AS contractNum
+			, OPEN_DT			AS openDt
+			, RTRN_DT			AS rtrnDt
+			, INTM_MDL_ID		AS intmMdlId
+			, INTM_MDL_CD		AS intmMdlCd
+			, INTM_MDL_NM		AS intmMdlNm
+			, DECODE(RNTL_STAT,'BUY','매입','SALE','매각','TRGT','매각대상','PRVD','정산')
+								AS rntlStat		-- 렌탈상태
+			, BUY_AMNT			AS buyAmnt		-- 매입단가
+			, RENTAL_COST		AS rentalCost	-- 렌탈비용
+			, PRVD_TOT_DAY		AS prvdTotDay	-- 정산일수(누적)
+			, PRVD_TOT_AMNT		AS prvdTotAmnt	-- 정산금액(누적)
+			, PRVD_MON_DAY		AS prvdMonDay	-- 정산일수(당월)
+			, PRVD_MON_AMNT		AS prvdMonAmnt	-- 정산금액(당월)
+			, BACK_USG_DAY		AS backUsgDay	-- 환수일수
+			, BACK_AMNT			AS backAmnt		-- 환수금액
+			, VIRFY_COST		AS virfyCost	-- 검수비용
+			, SALE_AMNT			AS saleAmnt		-- 매각금액
+			, REMAIN_AMNT		AS remainAmnt	-- 잔존가액
+			, GRNT_AMNT			AS grntAmnt		-- 매입보장가
+		FROM ( SELECT /*+ INDEX(A MSP_RNTL_AMNT_INFO_PK) INDEX(B MSP_RNTL_BASE_INFO_PK) INDEX(D MSP_RNTL_AMNT_INFO_PK) */
+					DISTINCT
+					A.PRVD_YM
+					, A.ORGN_ID AS AGNCY_ID
+					, G.ORGN_NM AS AGNCY_NM
+					, A.CONTRACT_NUM
+					, SUBSTR(C.LST_COM_ACTV_DATE,0,8) AS OPEN_DT
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901') THEN E.RTRN_DT ELSE '' END AS RTRN_DT
+					, A.PRDT_ID AS INTM_MDL_ID
+					, F.PRDT_CODE AS INTM_MDL_CD
+					, F.PRDT_NM AS INTM_MDL_NM
+					, B.BUY_AMNT
+					, B.RENTAL_COST
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = SUBSTR(C.LST_COM_ACTV_DATE,0,6) THEN B.DEPLRICT_COST ELSE 0 END AS DEPLRICT_COST
+					, SUM(D.USG_DAY) OVER (PARTITION BY D.CONTRACT_NUM) - A.USG_DAY AS PRVD_TOT_DAY
+					, SUM(D.PRVD_AMNT) OVER (PARTITION BY D.CONTRACT_NUM) - A.PRVD_AMNT AS PRVD_TOT_AMNT
+					, A.USG_DAY AS PRVD_MON_DAY
+					, A.PRVD_AMNT AS PRVD_MON_AMNT
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901')
+						THEN SUM(D.BACK_USG_DAY) OVER (PARTITION BY D.CONTRACT_NUM)
+						ELSE 0 END AS BACK_USG_DAY
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901')
+						THEN SUM(D.BACK_AMNT) OVER (PARTITION BY D.CONTRACT_NUM)
+						ELSE 0 END AS BACK_AMNT
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901') THEN B.VIRFY_COST ELSE 0 END AS VIRFY_COST
+					, A.SALE_AMNT
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901') THEN 0
+						ELSE GREATEST(B.GRNT_AMNT, A.REMAIN_AMNT) END AS REMAIN_AMNT -- 당월잔존가액
+					, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(E.RTRN_YM,'199901') THEN 0 ELSE B.GRNT_AMNT END AS GRNT_AMNT
+					, CASE WHEN E.RTRN_YM IS NOT NULL AND E.RTRN_YM <![CDATA[ < ]]> TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') THEN 'SALE'
+						WHEN E.RTRN_YM IS NOT NULL AND E.RTRN_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') THEN 'TRGT'
+						WHEN SUBSTR(C.LST_COM_ACTV_DATE,0,6) = TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') THEN 'BUY'
+						ELSE 'PRVD'
+						END AS RNTL_STAT
+				FROM  MSP_RNTL_AMNT_INFO A
+					, MSP_RNTL_BASE_INFO B
+					, MSP_JUO_SUB_INFO C
+					, MSP_RNTL_AMNT_INFO D
+					, MSP_RNTL_RTRN_INFO E
+					, CMN_INTM_MDL F
+					, ORG_ORGN_INFO_MST G
+				WHERE  A.ORGN_ID = B.ORGN_ID
+				AND  A.PRDT_ID = B.PRDT_ID
+				AND  A.CONTRACT_NUM = C.CONTRACT_NUM
+				AND  SUBSTR(C.LST_COM_ACTV_DATE,0,6) BETWEEN B.STRT_YM AND B.END_YM
+				AND  A.ORGN_ID = D.ORGN_ID
+				AND  A.CONTRACT_NUM = D.CONTRACT_NUM
+				AND  A.PRVD_YM >= D.PRVD_YM
+				AND  A.ORGN_ID = E.ORGN_ID(+)
+				AND  A.CONTRACT_NUM = E.CONTRACT_NUM(+)
+				AND  B.PRDT_ID = F.PRDT_ID
+				AND  F.RPRS_YN = 'Y'
+				AND  A.ORGN_ID = G.ORGN_ID
+				<if test="baseDt != null and baseDt != ''">
+				AND  A.PRVD_YM = #{baseDt, jdbcType=VARCHAR}
+				</if>
+				<if test="orgnId != null and orgnId != ''">
+				AND  A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+				</if>
+				<if test="searchName != null and searchName != '' and searchGbn != null and searchGbn != ''">
+					<choose>
+						<when test='searchGbn == "1"'>
+						AND  F.PRDT_CODE LIKE '%'||#{searchName, jdbcType=VARCHAR}||'%'
+						</when>
+						<when test='searchGbn == "2"'>					
+						AND (A.CONTRACT_NUM = #{searchName, jdbcType=VARCHAR}
+     						OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchName, jdbcType=VARCHAR}))
+						</when>
+					</choose>
+				</if>
+			)
+		WHERE  1 = 1
+		<if test="rntlStatus != null and rntlStatus != ''">
+		AND    RNTL_STAT = #{rntlStatus, jdbcType=VARCHAR} -- 전체시주석/매입BUY/매각SALE/매각대상TRGT/정산PRVD
+		</if>
+		ORDER BY OPEN_DT DESC, INTM_MDL_CD, PRVD_YM DESC
+	</sql>
+	
+	<select id="getMnthCalcList" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByMnthCalcListVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByMnthCalcListVO">
+		/* RntlMgmtMapper.getMnthCalcList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getMnthCalc" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getMnthCalcListExcel" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByMnthCalcListVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByMnthCalcListVO">
+		/* RntlMgmtMapper.getMnthCalcListExcel */
+		
+		<include refid="getMnthCalc" />
+		
+	</select>
+	
+	<select id="getMnthCalcDtlList" parameterType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByMnthCalcListVO" resultType="com.ktis.msp.rntl.rntlMgmt.vo.RntlMgmtByMnthCalcListVO">
+		/* RntlMgmtMapper.getMnthCalcDtlList */
+		SELECT /*+ INDEX(A MSP_RNTL_AMNT_INFO_PK) */
+			A.CONTRACT_NUM	AS contractNum
+			, B.PRDT_ID		AS intmMdlId
+			, E.PRDT_CODE	AS intmMdlCd
+			, E.PRDT_NM		AS intmMdlNm
+			, A.PRVD_YM		AS prvdYm
+			, LAG(GREATEST(B.GRNT_AMNT, A.REMAIN_AMNT),1,B.BUY_AMNT) OVER (ORDER BY A.PRVD_YM)
+							AS prvRemainAmnt -- 전월잔존가액
+			, A.USG_DAY		AS usgDay
+			, A.PRVD_AMNT	AS prvdAmnt
+			, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(D.RTRN_YM,'199901')
+				THEN SUM(A.BACK_USG_DAY) OVER (PARTITION BY A.ORGN_ID, A.CONTRACT_NUM)
+				ELSE 0 END
+							AS backUsgDay
+			, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(D.RTRN_YM,'199901')
+				THEN SUM(A.BACK_AMNT) OVER (PARTITION BY A.ORGN_ID, A.CONTRACT_NUM)
+				ELSE 0 END
+							AS backAmnt
+			, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(D.RTRN_YM,'199901')
+				THEN B.VIRFY_COST ELSE 0 END
+							AS virfyCost
+			, A.SALE_AMNT	AS saleAmnt
+			, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(D.RTRN_YM,'199901')
+				THEN 0
+				ELSE GREATEST(B.GRNT_AMNT, A.REMAIN_AMNT) END
+							AS remainAmnt -- 당월잔존가액
+			, CASE WHEN TO_CHAR(ADD_MONTHS(TO_DATE(A.PRVD_YM,'YYYYMM'),-1),'YYYYMM') = NVL(D.RTRN_YM,'199901')
+				THEN 0 ELSE B.GRNT_AMNT END
+							AS grntAmnt
+		FROM  MSP_RNTL_AMNT_INFO A
+			, MSP_RNTL_BASE_INFO B
+			, MSP_JUO_SUB_INFO C
+			, MSP_RNTL_RTRN_INFO D
+			, CMN_INTM_MDL E
+		WHERE  A.ORGN_ID = B.ORGN_ID
+		AND  A.PRDT_ID = B.PRDT_ID
+		AND  A.CONTRACT_NUM = C.CONTRACT_NUM
+		AND  SUBSTR(C.LST_COM_ACTV_DATE,0,6) BETWEEN B.STRT_YM AND B.END_YM
+		AND  A.ORGN_ID = D.ORGN_ID(+)
+		AND  A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+		AND  B.PRDT_ID = E.PRDT_ID
+		AND  E.RPRS_YN = 'Y'
+		<if test="orgnId != null and orgnId != ''">
+		AND  A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		</if>
+		AND  A.CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+		AND  A.PRVD_YM <![CDATA[ <= ]]> #{prvdYm, jdbcType=VARCHAR}
+		ORDER BY A.PRVD_YM DESC
+	</select>
+</mapper>

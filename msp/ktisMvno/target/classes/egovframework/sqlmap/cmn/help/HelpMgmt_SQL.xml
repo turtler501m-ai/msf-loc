@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.help.mapper.HelpMgmtMapper">
+
+	<sql id="getHelpMgmt">
+		SELECT
+			B.MENU_ID					AS menuId
+			,B.MENU_NM					AS menuNm
+			,A.FILE_ID					AS fileId
+			,A.ORGN_ID					AS orgnId
+			,A.ATT_SCTN					AS attSctn
+			,A.ATT_DTTM					AS attDttm
+			,A.FILE_NM					AS fileNm
+			,A.ATT_DSC					AS attDsc
+			,A.ATT_ROUT					AS attRout
+			,FN_GET_USRNM(A.REGST_ID)	AS regstId
+			,TO_CHAR(A.REG_DTTM, 'YYYYMMDDHH24MISS')		AS regDttm
+			,FN_GET_USRNM(A.RVISN_ID)	AS rvisnId
+			,TO_CHAR(A.RVISN_DTTM, 'YYYYMMDDHH24MISS')	AS rvisnDttm
+			,A.FILE_SEQ					AS fileSeq
+		FROM 
+			ORG_FILE_MGMT_MST A
+			,(
+				SELECT
+					MENU_ID 
+					,LTRIM(SYS_CONNECT_BY_PATH(MENU_NM,' > '),' > ') AS MENU_NM
+				FROM 
+					CMN_MENU_MST B
+				WHERE 1=1
+				AND   USG_YN = 'Y'
+				START WITH  '1' =  B.MENU_LVL
+				CONNECT BY B.HGHR_MENU_ID = PRIOR B.MENU_ID
+				ORDER SIBLINGS BY 1 + B.ALGN_SEQ
+			) B
+		WHERE A.ATT_SCTN = 'HLP'
+		AND   A.ORGN_ID = B.MENU_ID
+		<if test="menuId != null and menuId != ''">
+			AND ORGN_ID = #{menuId, jdbcType=VARCHAR}
+		</if>
+		ORDER BY orgn_id, file_seq
+	</sql>
+	
+	<select id="getHelpMgmtList" parameterType="com.ktis.msp.cmn.help.vo.HelpMgmtVO" resultType="com.ktis.msp.cmn.help.vo.HelpMgmtVO">
+		/* HelpMapper.getHelpMgmtList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getHelpMgmt" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<insert id="insertFile" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		INSERT /* OrgCommonMapper.insertFile */
+			INTO ORG_FILE_MGMT_MST
+			(
+				REGST_ID
+				, REG_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+				, ATT_DTTM
+				, FILE_NM
+				, ATT_DSC
+				, ATT_ROUT
+				, ATT_SCTN
+				, ORGN_ID
+				, FILE_ID
+				, FILE_SEQ
+			)
+			VALUES
+			(
+				#{regstId, jdbcType=VARCHAR}
+				, sysdate
+				, #{rvisnId, jdbcType=VARCHAR}
+				, SYSDATE
+				, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+				, #{fileNm, jdbcType=VARCHAR}
+				, #{attDsc, jdbcType=VARCHAR}
+				, #{attRout, jdbcType=VARCHAR}
+				, #{attSctn, jdbcType=VARCHAR}
+				, #{orgnId, jdbcType=VARCHAR}
+				, #{fileId, jdbcType=VARCHAR}
+				, #{fileSeq, jdbcType=VARCHAR}
+			)
+	</insert>
+	
+	<!-- 동의서파일이력조회상세 - 파일명 찾아오기 -->
+    <select id="getHelpFileNm" parameterType= "String" resultType="String">
+		SELECT	/* OrgCommonMapper.getHelpFileNm */
+		        ATT_ROUT || FILE_NM AS FILE_NM
+		  FROM 	ORG_FILE_MGMT_MST
+		 WHERE 	ATT_SCTN = 'HLP'
+		   AND 	FILE_ID = #{fileId}
+    </select>
+</mapper>

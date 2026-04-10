@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="WireProdMapper">
+
+	<!-- 유선 상품 목록 조회 -->
+	<select id="selectWireProdDtlList" resultType="com.ktmmobile.mcp.wire.dto.NmcpWireProdDtlDto" parameterType="com.ktmmobile.mcp.wire.dto.NmcpWireProdDtlDto">
+		SELECT
+			A.WIRE_PROD_DTL_SEQ,
+			A.WIRE_PROD_CD,
+			A.WIRE_PROD_CORP,
+			A.WIRE_PROD_NAME,
+			A.WIRE_PROD_STICKER,
+			A.WIRE_PROD_AMT,
+			A.WIRE_PROD_AMT_DESC,
+			A.WIRE_PROD_AMT_TEXT,
+			A.WIRE_PROD_AMT_TYPE,
+			A.WIRE_PROD_RECOM_YN,
+			A.WIRE_PROD_IMG,
+			A.WIRE_PROD_IMG_DESC,
+			A.WIRE_PROD_TEXT,
+			A.WIRE_PROD_CHANNEL,
+			A.WIRE_PROD_SPEED,
+			A.WIRE_PROD_FREEBIES
+		FROM
+			NMCP_WIRE_PROD_DTL A,
+			NMCP_CD_DTL B
+		WHERE
+			1=1
+			AND B.CD_GROUP_ID = 'WIREPRODCORP'
+			AND B.DTL_CD = A.WIRE_PROD_CORP
+        	AND B.USE_YN = 'Y'
+			AND A.WIRE_PROD_SHOW_YN = 'Y'
+			 <choose>
+                <when test="wireProdCd == 'ITTV01'">
+                     AND A.WIRE_PROD_CD IN ('TV01','IT01')
+                </when>
+                <otherwise>
+                      <if test="wireProdCd != null and wireProdCd !=''">
+						AND A.WIRE_PROD_CD = #{wireProdCd}
+					</if>
+                </otherwise>
+            </choose>
+			<if test="wireProdCorp != null and wireProdCorp !=''">
+				AND A.WIRE_PROD_CORP = #{wireProdCorp}
+			</if>
+			<if test="wireProdCorp == null and  wireProdCd == null">
+				AND A.WIRE_PROD_CD <![CDATA[<>]]> 'AD01'
+			</if>
+			ORDER BY DECODE(A.WIRE_PROD_CD, 'CB01',1 ,'IT01',2 ,'TV01',3), A.WIRE_PROD_RECOM_YN, A.WIRE_PROD_REG_DT DESC
+	</select>
+
+	<!-- 한눈에 보기 조회 -->
+	<select id="selectWireProdCont" resultType="com.ktmmobile.mcp.wire.dto.NmcpWireProdDtlDto" parameterType="String">
+		SELECT
+			WIRE_PROD_TITLE,
+			WIRE_PROD_PC_SBST
+		FROM
+			NMCP_WIRE_PROD_CONT
+		WHERE
+			WIRE_PROD_CD = #{wireProdCd}
+	</select>
+
+	<!-- PC 유선상품  상세보기-->
+	<select id="selectWireProdDtl" resultType="com.ktmmobile.mcp.wire.dto.NmcpWireProdDtlDto" parameterType="com.ktmmobile.mcp.wire.dto.NmcpWireProdDtlDto">
+		SELECT
+			WIRE_PROD_DTL_SEQ,
+			WIRE_PROD_CD,
+			WIRE_PROD_CORP,
+			WIRE_PROD_NAME,
+			WIRE_PROD_PC_SBST
+		FROM
+			NMCP_WIRE_PROD_DTL
+		WHERE
+			1=1
+			AND WIRE_PROD_SHOW_YN = 'Y'
+			AND WIRE_PROD_CD = #{wireProdCd}
+			AND WIRE_PROD_DTL_SEQ = #{wireProdDtlSeq}
+	</select>
+
+	<insert id="insertNmcpWireCounsel" parameterType="com.ktmmobile.mcp.wire.dto.NmcpWireCounselDto">
+		<selectKey keyProperty="counselSeq" resultType="String" order="BEFORE">
+        	SELECT NVL((MAX(TO_NUMBER(COUNSEL_SEQ))+1),1)AS COUNSEL_SEQ  FROM NMCP_WIRE_COUNSEL
+        </selectKey>
+		INSERT INTO NMCP_WIRE_COUNSEL (
+			COUNSEL_SEQ
+			,WIRE_PROD_DTL_SEQ
+			,COUNSEL_NM
+			,COUNSEL_CTN
+			,COUNSEL_MEMO
+			,COUNSEL_REG_DT
+			,COUNSEL_STATUS
+			,PRO_STATUS
+		) VALUES (
+			#{counselSeq},
+			#{wireProdDtlSeq},
+			#{counselNm},
+			#{counselCtn},
+			#{counselMemo},
+			SYSDATE,
+			'I',
+			'1'
+		)
+	</insert>
+
+</mapper>

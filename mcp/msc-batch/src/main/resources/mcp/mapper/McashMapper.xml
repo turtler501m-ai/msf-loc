@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="McashMapper">
+
+
+    <!-- MCASH 해지연동 공통코드 기준일자-->
+    <select id="getBaseDate" resultType="int">
+        SELECT EXPNSN_STR_VAL1 FROM
+            NMCP_CD_DTL
+        WHERE CD_GROUP_ID = 'McashCanBaseDate'
+          AND DTL_CD = 'baseDate'
+          AND USE_YN = 'Y'
+    </select>
+
+    <!-- MCASH 해지 전체 대상 리스트 ('N' -> 'T') 미대상처리 -->
+    <update id="updateAllMcashCanTrg" parameterType="int" >
+        UPDATE NMCP_MCASH_CAN_TRG
+        SET PROC_YN = 'T'
+          ,RVISN_ID = 'BATCH'
+          ,RVISN_DTTM = SYSDATE
+        WHERE PROC_YN = 'N'
+          AND EVNT_TRTM_DT > TO_CHAR(SYSDATE - #{baseDate}, 'YYYYMMDDHH24MISS')
+    </update>
+
+    <!-- MCASH 미연동 대상(USER 테이블에 동일한 계약번호로 존재하지 않는) 리스트 미대상처리 (X)  -->
+    <update id="updateMcashNotCanTrg" >
+        UPDATE NMCP_MCASH_CAN_TRG
+        SET PROC_YN = 'X'
+          ,RVISN_ID = 'BATCH'
+          ,RVISN_DTTM = SYSDATE
+        WHERE (CONTRACT_NUM NOT IN (SELECT B.CONTRACT_NUM
+                                    FROM NMCP_MCASH_USER A
+                                        ,NMCP_MCASH_CAN_TRG B
+                                    WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+                                      AND A.STATUS = 'S')
+              OR CAN_TRG_SEQ IN (SELECT CAN_TRG_SEQ FROM (
+                                           SELECT ROW_NUMBER() OVER(PARTITION BY CONTRACT_NUM ORDER BY EVNT_TRTM_DT DESC) AS RNK,
+                                               CAN_TRG_SEQ,
+                                               CONTRACT_NUM
+                                           FROM NMCP_MCASH_CAN_TRG )
+                                  WHERE RNK != 1 )
+              )
+          AND PROC_YN ='T'
+    </update>
+
+    <!-- MCASH USER 테이블 정보로 해지테이블 업데이트-->
+    <update id="updateMcashCanTrgInfo" >
+        UPDATE NMCP_MCASH_CAN_TRG A
+        SET (A.USERID
+             ,A.CUSTOMER_ID
+             ,A.SVC_CNTR_NO
+             ,A.RVISN_ID
+             ,A.RVISN_DTTM) = ( SELECT
+                                       B.USERID
+                                       ,B.CUSTOMER_ID
+                                       ,B.SVC_CNTR_NO
+                                       ,'BATCH'
+                                       ,SYSDATE
+                                  FROM NMCP_MCASH_USER B
+                                 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+                                   AND B.STATUS = 'S')
+        WHERE A.PROC_YN = 'T'
+    </update>
+
+    <!-- MCASH 해지 연동 대상 조회-->
+    <select id="getMcashCanTrg" resultType="com.ktmmobile.mcp.mcash.dto.McashDto">
+        SELECT
+            CAN_TRG_SEQ
+             ,USERID
+             ,CUSTOMER_ID
+             ,CONTRACT_NUM
+             ,SVC_CNTR_NO
+             ,EVNT_CD
+             ,EVNT_DT
+        FROM
+            NMCP_MCASH_CAN_TRG
+        WHERE PROC_YN = 'T'
+    </select>
+
+    <!-- MCASH 해지 연동 UPDATE -->
+    <update id="updateMcashCanTrg" parameterType="java.util.HashMap">
+        UPDATE NMCP_MCASH_CAN_TRG
+        SET RVISN_DTTM = SYSDATE
+            ,RVISN_ID = 'BATCH'
+            ,PROC_YN = #{procYn}
+            ,PROC_DTTM = SYSDATE
+        <if test="rsltCd != null and rsltCd != ''">
+            ,RSLT_CD = #{rsltCd}
+        </if>
+        <if test="rsltMsg != null and rsltMsg != ''">
+            ,RSLT_MSG = #{rsltMsg}
+        </if>
+        <if test="mcashSeq != null and mcashSeq != ''">
+            ,MCASH_SEQ = #{mcashSeq}
+        </if>
+        WHERE CAN_TRG_SEQ = #{canTrgSeq}
+    </update>
+
+
+
+    <!-- MCASH 회원정보 UPDATE  -->
+    <update id="updateMcashUserInfo" parameterType="java.util.HashMap">
+        UPDATE NMCP_MCASH_USER
+        SET RVISN_DTTM = SYSDATE
+            ,RVISN_ID = 'BATCH'
+            ,END_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            ,STATUS = #{status}
+            ,EVNT_TYPE = #{envtType}
+            ,EVNT_TYPE_DTL = #{envtTypeDtl}
+        WHERE USERID = #{userid}
+    </update>
+
+    <!-- MCASH 회원정보이력 INSERT  -->
+    <insert id="insertMcashUserHist" parameterType="java.util.HashMap">
+        INSERT INTO NMCP_MCASH_USER_HIST (
+                                           HIST_SEQ
+                                         , USERID
+                                         , STATUS
+                                         , CUSTOMER_ID
+                                         , CONTRACT_NUM
+                                         , SVC_CNTR_NO
+                                         , STRT_DTTM
+                                         , END_DTTM
+                                         , EVNT_TYPE
+                                         , EVNT_TYPE_DTL
+                                         , EVNT_DT
+                                         , REGST_ID
+                                         , REGST_DTTM
+                                         , RVISN_ID
+                                         , RVISN_DTTM
+        )
+        SELECT
+            SQ_MCASH_USER_HIST.NEXTVAL
+             , USERID
+             , STATUS
+             , CUSTOMER_ID
+             , CONTRACT_NUM
+             , SVC_CNTR_NO
+             , STRT_DTTM
+             , END_DTTM
+             , EVNT_TYPE
+             , EVNT_TYPE_DTL
+             , EVNT_DT
+             , REGST_ID
+             , REGST_DTTM
+             , RVISN_ID
+             , RVISN_DTTM
+        FROM (  SELECT USERID
+                     , STATUS
+                     , CUSTOMER_ID
+                     , CONTRACT_NUM
+                     , SVC_CNTR_NO
+                     , STRT_DTTM
+                     , END_DTTM
+                     , EVNT_TYPE
+                     , EVNT_TYPE_DTL
+                     , EVNT_DT
+                     , REGST_ID
+                     , REGST_DTTM
+                     , RVISN_ID
+                     , RVISN_DTTM
+                FROM NMCP_MCASH_USER
+                WHERE USERID = #{userid}
+                ORDER BY RVISN_ID DESC )
+        WHERE ROWNUM = 1
+    </insert>
+    <!-- MCASH 해지연동 공통코드 재처리 기준일자-->
+    <select id="getRetryDate" resultType="int">
+        SELECT EXPNSN_STR_VAL1 FROM
+            NMCP_CD_DTL
+        WHERE CD_GROUP_ID = 'McashCanBaseDate'
+          AND DTL_CD = 'retryDate'
+          AND USE_YN = 'Y'
+    </select>
+
+
+    <!-- MCASH 해지 전체 대상중 에러발생 ('E' -> 'T')  리스트 미대상 재처리  -->
+    <update id="updateAllMcashCanRetryTrg" parameterType="int" >
+        UPDATE NMCP_MCASH_CAN_TRG
+        SET PROC_YN = 'T'
+          ,RVISN_ID = 'BATCH'
+          ,RVISN_DTTM = SYSDATE
+        WHERE PROC_YN = 'E'
+          AND PROC_DTTM > SYSDATE - #{retryDate}
+    </update>
+</mapper>
+

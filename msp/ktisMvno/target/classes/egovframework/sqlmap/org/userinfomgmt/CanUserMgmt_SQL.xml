@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.userinfomgmt.mapper.CanUserMgmtMapper">
+	
+	<!-- 해지고객관리자 조회 -->
+	<select id="selectCanUserList" parameterType="com.ktis.msp.org.userinfomgmt.vo.CanUserReqVO" resultType="com.ktis.msp.org.userinfomgmt.vo.CanUserResVO">
+		<include refid="com.ktis.msp.cmn.include.paging-start-vo" />
+		/* CanUserMgmtMapper.selectCanUserList */
+		SELECT USR_ID AS usrId
+			  ,USR_ID AS usrIdMsk
+		      ,USR_NM AS usrNm
+		      ,USG_STRT_DT AS usgStrtDt
+		      ,USG_END_DT AS usgEndDt
+		      ,REASON
+		      ,TO_CHAR(REGST_DTTM, 'YYYYMMDD') AS regDt
+		FROM   CMN_USR_MST@DL_CAN
+		WHERE  <![CDATA[ (USG_STRT_DT >= #{searchEndDate} OR USG_END_DT >= #{searchStartDate}) ]]>
+		<if test="searchCode != null and searchCode != '' and searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCode == "ID"'>
+					AND USR_ID = UPPER(#{searchVal})
+				</when>
+				<when test='searchCode == "NAME"'>
+					AND USR_NM LIKE '%' || UPPER(#{searchVal}) || '%'
+				</when>
+			</choose>
+		</if>
+		ORDER BY USG_END_DT DESC, USR_NM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 해지고객관리자 등록 -->
+	<insert id="insertCanUser" parameterType="com.ktis.msp.org.userinfomgmt.vo.CanUserResVO">
+		/* CanUserMgmtMapper.insertCanUser */
+		INSERT INTO CMN_USR_MST@DL_CAN (
+			 USR_ID
+			,ATTC_SCTN_CD
+			,USR_NM
+			,PASS
+			,TEL_NUM
+			,MBLPHN_NUM
+			,LAST_LOGIN_DT
+			,PASS_ERR_NUM
+			,PRES_BIZ
+			,EMAIL
+			,POS
+			,ODTY
+			,ADDR
+			,DTL_ADDR
+			,ZIPCD
+			,FAX
+			,PASS_ATMT_NUM
+			,DEL_YN
+			,REGST_ID
+			,REGST_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+			,DEPT
+			,IP_INFO
+			,MAC_ADDR
+			,USG_YN
+			,USG_STRT_DT
+			,USG_END_DT
+			,PASS_LAST_RVISN_DT
+			,MNGR_RULE
+			,MSK_AUTH_YN
+			,ORGN_ID
+			,OTP
+			,REASON
+			,ORGN_NM
+		)
+		SELECT A.USR_ID
+		      ,A.ATTC_SCTN_CD
+		      ,A.USR_NM
+		      ,A.PASS
+		      ,A.TEL_NUM
+		      ,A.MBLPHN_NUM
+		      ,NULL /* LAST_LOGIN_DT */
+		      ,0 /* PASS_ERR_NUM */
+		      ,A.PRES_BIZ
+		      ,A.EMAIL
+		      ,A.POS
+		      ,A.ODTY
+		      ,A.ADDR
+		      ,A.DTL_ADDR
+		      ,A.ZIPCD
+		      ,A.FAX
+		      ,0 /* PASS_ATMT_NUM */
+		      ,A.DEL_YN
+		      ,#{sessionUserId} /* REGST_ID */
+		      ,SYSDATE /* REGST_DTTM */
+		      ,#{sessionUserId} /* RVISN_ID */
+		      ,SYSDATE /* RVISN_DTTM */
+		      ,A.DEPT
+		      ,A.IP_INFO
+		      ,A.MAC_ADDR
+		      ,A.USG_YN
+		      ,#{usgStrtDt} /* USG_STRT_DT */
+		      ,#{usgEndDt} /* USG_END_DT */
+		      ,A.PASS_LAST_RVISN_DT
+		      ,A.MNGR_RULE
+		      ,A.MSK_AUTH_YN
+		      ,A.ORGN_ID
+		      ,NULL /* OTP */
+		      ,#{reason} /* REASON */
+		      ,(SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = A.ORGN_ID AND ROWNUM = 1) /* ORGN_NM */
+		FROM   CMN_USR_MST A
+		WHERE  A.USR_ID = UPPER(#{usrId})
+	</insert>
+	
+	<!-- 해지고객관리자 수정 -->
+	<update id="updateCanUser" parameterType="com.ktis.msp.org.userinfomgmt.vo.CanUserResVO">
+		/* CanUserMgmtMapper.updateCanUser */
+		UPDATE CMN_USR_MST@DL_CAN
+		SET    USG_STRT_DT = #{usgStrtDt}
+			  ,USG_END_DT = #{usgEndDt}
+			  ,REASON = #{reason}
+			  ,RVISN_ID = #{sessionUserId}
+			  ,RVISN_DTTM = SYSDATE
+		WHERE  USR_ID = UPPER(#{usrId})
+	</update>
+	
+	<!-- 해지고객관리자 이력등록 -->
+	<insert id="insertCanUserHst" parameterType="com.ktis.msp.org.userinfomgmt.vo.CanUserResVO">
+		<selectKey keyProperty="seqNum" order="BEFORE" resultType="com.ktis.msp.org.userinfomgmt.vo.CanUserResVO">
+			SELECT NVL(MAX(TO_NUMBER(SEQ_NUM)),0) + 1 AS seqNum
+			FROM   CMN_USR_HST@DL_CAN
+			WHERE  USR_ID = #{usrId}
+		</selectKey>
+		/* CanUserMgmtMapper.insertCanUserHst */
+		INSERT INTO CMN_USR_HST@DL_CAN (
+				 USR_ID
+				,SEQ_NUM
+				,ATTC_SCTN_CD
+				,USR_NM
+				,PASS
+				,TEL_NUM
+				,MBLPHN_NUM
+				,LAST_LOGIN_DT
+				,PASS_ERR_NUM
+				,PRES_BIZ
+				,EMAIL
+				,POS
+				,ODTY
+				,ADDR
+				,DTL_ADDR
+				,ZIPCD
+				,FAX
+				,PASS_ATMT_NUM
+				,DEL_YN
+				,REGST_ID
+				,REGST_DTTM
+				,RVISN_ID
+				,RVISN_DTTM
+				,DEPT
+				,IP_INFO
+				,MAC_ADDR
+				,USG_YN
+				,USG_STRT_DT
+				,USG_END_DT
+				,PASS_LAST_RVISN_DT
+				,MNGR_RULE
+				,MSK_AUTH_YN
+				,ORGN_ID
+				,REASON
+				,ORGN_NM
+		)
+		SELECT USR_ID
+			  ,#{seqNum}
+			  ,ATTC_SCTN_CD
+			  ,USR_NM
+			  ,PASS
+			  ,TEL_NUM
+			  ,MBLPHN_NUM
+			  ,LAST_LOGIN_DT
+			  ,PASS_ERR_NUM
+			  ,PRES_BIZ
+			  ,EMAIL
+			  ,POS
+			  ,ODTY
+			  ,ADDR
+			  ,DTL_ADDR
+			  ,ZIPCD
+			  ,FAX
+			  ,PASS_ATMT_NUM
+			  ,DEL_YN
+			  ,REGST_ID
+			  ,REGST_DTTM
+			  ,RVISN_ID
+			  ,RVISN_DTTM
+			  ,DEPT
+			  ,IP_INFO
+			  ,MAC_ADDR
+			  ,USG_YN
+			  ,USG_STRT_DT
+			  ,USG_END_DT
+			  ,PASS_LAST_RVISN_DT
+			  ,MNGR_RULE
+			  ,MSK_AUTH_YN
+			  ,ORGN_ID
+			  ,REASON
+			  ,ORGN_NM
+		FROM   CMN_USR_MST@DL_CAN
+		WHERE  USR_ID = #{usrId}
+	</insert>
+	
+	<!-- 해지고객관리자 확인 -->
+	<select id="checkCanUser" parameterType="com.ktis.msp.org.userinfomgmt.vo.CanUserResVO" resultType="int">
+		/* CanUserMgmtMapper.checkCanUser */
+		SELECT COUNT(*)
+		FROM   CMN_USR_MST@DL_CAN
+		WHERE  USR_ID = #{usrId}
+	</select>
+	
+	<!-- 사용자정보수정시 해지고객관리자 수정. -->
+	<update id="updateCanUserInfoMgmt" parameterType="com.ktis.msp.org.userinfomgmt.vo.UserInfoMgmtVo">
+		/* CanUserMgmtMapper.updateCanUserInfoMgmt */ 
+		UPDATE CMN_USR_MST@DL_CAN
+		SET    RVISN_DTTM = SYSDATE
+			<if test = "usrNm != null and usrNm != '' ">, USR_NM = #{usrNm, jdbcType=VARCHAR} </if>
+			<if test = "attcSctnCd != null and attcSctnCd != ''  ">, ATTC_SCTN_CD = #{attcSctnCd, jdbcType=VARCHAR} </if>
+			<if test = "pass != null and pass != ''  ">, PASS = #{pass, jdbcType=VARCHAR} </if>
+			<if test = "telNum != null and telNum != ''  ">, TEL_NUM = #{telNum, jdbcType=VARCHAR} </if>
+			<if test = "mblphnNum != null and mblphnNum != ''  ">, MBLPHN_NUM = #{mblphnNum, jdbcType=VARCHAR} </if>
+			<if test = "presBiz != null and presBiz != ''  ">, PRES_BIZ = #{presBiz, jdbcType=VARCHAR} </if>
+			<if test = "email != null and email != ''  ">, EMAIL = #{email, jdbcType=VARCHAR} </if>
+			<if test = "pos != null and pos != ''  ">, POS = #{pos, jdbcType=VARCHAR} </if>
+			<if test = "odty != null and odty != ''  ">, ODTY = #{odty, jdbcType=VARCHAR} </if>
+			<if test = "addr != null and addr != ''  ">, ADDR = #{addr, jdbcType=VARCHAR} </if>
+			<if test = "dtlAddr != null and dtlAddr != ''  ">, DTL_ADDR = #{dtlAddr, jdbcType=VARCHAR} </if>
+			<if test = "zipcd != null and zipcd != ''  ">, ZIPCD = #{zipcd, jdbcType=VARCHAR} </if>
+			<if test = "fax != null and fax != ''  ">, FAX = #{fax, jdbcType=VARCHAR} </if>
+			<if test = "rvisnId != null and rvisnId != ''  ">, RVISN_ID = #{rvisnId, jdbcType=VARCHAR} </if>
+			<if test = "dept != null and dept != ''  ">, DEPT = #{dept, jdbcType=VARCHAR} </if>
+			<if test = "ipInfo != null and ipInfo != ''  ">, IP_INFO = #{ipInfo, jdbcType=VARCHAR} </if>
+			<if test = "macAddr != null and macAddr != ''  ">, MAC_ADDR = #{macAddr, jdbcType=VARCHAR} </if>
+			<if test = "usgYn != null and usgYn != ''  ">, USG_YN = #{usgYn, jdbcType=VARCHAR} </if>
+			<if test = "passLastRvisnDt != null and passLastRvisnDt != ''  ">, PASS_LAST_RVISN_DT = #{passLastRvisnDt, jdbcType=VARCHAR} </if>
+			<if test = "mngrRule != null and mngrRule != ''  ">, MNGR_RULE = #{mngrRule, jdbcType=VARCHAR} </if>
+			<if test = "mskAuthYn != null and mskAuthYn != ''  ">, MSK_AUTH_YN = #{mskAuthYn, jdbcType=VARCHAR} </if>
+			<if test = "orgnId != null and orgnId != ''  ">, ORGN_ID = #{orgnId, jdbcType=VARCHAR} </if>
+		WHERE USR_ID = #{usrId}
+	</update>
+	
+	<!-- 사용자등록시 본사사용자그룹에 매핑시킴(G_HQ) -->
+	<insert  id="usrGrpAsgnInsert"  parameterType="com.ktis.msp.org.userinfomgmt.vo.CanUserResVO">
+		/* CanUserMgmtMapper.usrGrpAsgnInsert */ 
+		INSERT INTO CMN_USG_GRP_ASGN_MST@DL_CAN
+		(
+			USR_ID
+		  , GRP_ID
+		  , REGST_ID
+		  , REGST_DTTM
+		  , RVISN_ID
+		  , RVISN_DTTM
+		)
+		VALUES
+		( 
+			#{usrId}
+		  , #{grpId}
+		  , #{sessionUserId}
+		  , SYSDATE
+		  , #{sessionUserId}
+		  , SYSDATE
+		)
+	</insert>
+	
+	<!-- 사용자 그룹 이력 -->
+	<insert  id="usrGrpAsgnHstInsert"  parameterType="com.ktis.msp.org.userinfomgmt.vo.CanUserResVO">
+		/* CanUserMgmtMapper.usrGrpAsgnHstInsert */ 
+		INSERT INTO CMN_USG_GRP_ASGN_HST@DL_CAN
+		(
+			USR_ID
+		  , GRP_ID
+		  , REGST_ID
+		  , REGST_DTTM
+		  , SEQ_NUM
+		  , OPER_TPYE
+		)
+		VALUES
+		( 
+			#{usrId}
+		  , #{grpId}
+		  , #{sessionUserId}
+		  , SYSDATE
+		  , (SELECT NVL(MAX(TO_NUMBER(SEQ_NUM)) + 1, 1) FROM CMN_USG_GRP_ASGN_HST WHERE USR_ID = #{usrId})
+		  , #{operType}
+		)
+	</insert>
+	
+	<!-- 사용자패스워드 정보수정시 해지고객관리자 수정. -->
+	<update id="updatePassInfo"  parameterType="java.util.HashMap">
+	    /* ====== cmn.login.updatePassInfo =========*/
+	    UPDATE	CMN_USR_MST@DL_CAN
+	       SET	PASS = #{pass}
+	       		, PASS_ERR_NUM = 0
+	       		, PASS_LAST_RVISN_DT = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+	     WHERE	USR_ID = UPPER(#{usrId})
+    </update>
+	
+</mapper>

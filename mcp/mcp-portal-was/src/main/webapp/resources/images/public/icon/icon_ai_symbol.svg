@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_레이어_2" data-name="레이어 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 729.95">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#_무제_그라디언트_486);
+      }
+
+      .cls-2 {
+        fill: url(#_무제_그라디언트_490);
+      }
+
+      .cls-3 {
+        fill: url(#_무제_그라디언트_78);
+      }
+    </style>
+    <linearGradient id="_무제_그라디언트_78" data-name="무제 그라디언트 78" x1="400" y1="135.76" x2="400" y2="594.19" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff7bab"/>
+      <stop offset=".11" stop-color="#ff7bab" stop-opacity=".8"/>
+      <stop offset=".24" stop-color="#ff7bab" stop-opacity=".59"/>
+      <stop offset=".37" stop-color="#ff7bab" stop-opacity=".41"/>
+      <stop offset=".5" stop-color="#ff7bab" stop-opacity=".26"/>
+      <stop offset=".63" stop-color="#ff7bab" stop-opacity=".15"/>
+      <stop offset=".75" stop-color="#ff7bab" stop-opacity=".07"/>
+      <stop offset=".88" stop-color="#ff7bab" stop-opacity=".02"/>
+      <stop offset="1" stop-color="#ff7bab" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="_무제_그라디언트_486" data-name="무제 그라디언트 486" x1="3256.81" y1="5084.88" x2="3256.81" y2="5543.31" gradientTransform="translate(5714.09 -2891.84) rotate(90)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#aa50ff"/>
+      <stop offset=".11" stop-color="#b35eff" stop-opacity=".8"/>
+      <stop offset=".24" stop-color="#bc6cff" stop-opacity=".59"/>
+      <stop offset=".37" stop-color="#c479ff" stop-opacity=".41"/>
+      <stop offset=".5" stop-color="#cb83ff" stop-opacity=".26"/>
+      <stop offset=".63" stop-color="#d08bff" stop-opacity=".15"/>
+      <stop offset=".75" stop-color="#d491ff" stop-opacity=".07"/>
+      <stop offset=".88" stop-color="#d694ff" stop-opacity=".02"/>
+      <stop offset="1" stop-color="#d796ff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="_무제_그라디언트_490" data-name="무제 그라디언트 490" x1="8971.28" y1="5085.37" x2="8971.28" y2="5543.79" gradientTransform="translate(9371.28 5679.55) rotate(-180)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00a5ff"/>
+      <stop offset=".11" stop-color="#11acff" stop-opacity=".8"/>
+      <stop offset=".24" stop-color="#23b3ff" stop-opacity=".59"/>
+      <stop offset=".37" stop-color="#32b9ff" stop-opacity=".41"/>
+      <stop offset=".5" stop-color="#3ebeff" stop-opacity=".26"/>
+      <stop offset=".63" stop-color="#48c2ff" stop-opacity=".15"/>
+      <stop offset=".75" stop-color="#4fc5ff" stop-opacity=".07"/>
+      <stop offset=".88" stop-color="#53c7ff" stop-opacity=".02"/>
+      <stop offset="1" stop-color="#55c8ff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <g id="_레이어_1-2" data-name="레이어 1">
+    <g>
+      <ellipse class="cls-3" cx="400" cy="364.98" rx="400" ry="229.21"/>
+      <ellipse class="cls-1" cx="400" cy="364.98" rx="229.21" ry="400" transform="translate(-128.9 248.9) rotate(-30)"/>
+      <ellipse class="cls-2" cx="400" cy="364.98" rx="400" ry="229.21" transform="translate(-116.08 528.9) rotate(-60)"/>
+    </g>
+  </g>
+</svg>

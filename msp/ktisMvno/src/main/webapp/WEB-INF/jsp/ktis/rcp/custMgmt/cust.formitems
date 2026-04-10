@@ -1,0 +1,591 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+	
+var _FORMITEMS_ = {
+
+	form2 : [
+		{type: 'settings', position: 'label-left', labelAlign:"left", labelWidth: '120'},
+		{type: "block", list: [
+			{type: 'input', name: 'contractNum', label: '가입계약번호',  width: 120, offsetLeft: 40,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'svcCntrNo', label: '서비스계약번호',  width: 120, offsetLeft:60, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'subscriberNo', label: '휴대폰번호',  width: 120, offsetLeft: 60,  value: '' , readonly:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'openDt', label: '개통일자',  width: 120, offsetLeft:40,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'tmntDt', label: '해지일자',  width: 120, offsetLeft:60, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'canRsn', label: '해지사유',  width: 120, offsetLeft:60,  value: '' , readonly:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'subStatusNm', label: '계약상태',  width: 120, offsetLeft:40, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'lstDataType', label: '고객구분',  width: 120, offsetLeft:60,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'lstRateNm', label: '요금제',  width: 120, offsetLeft:60,  value: '' , readonly:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'lstModelNm', label: '단말모델',  width: 120, offsetLeft:40,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'lstModelSrlNum', label: '단말일련번호',  width: 120, offsetLeft: 60,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'iccId', label: 'USIM일련번호',  width: 120, offsetLeft:60, value: '' , readonly:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'enggMnthCnt', label: '약정개월수',  width: 120, offsetLeft:40, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'instMnthCnt', label: '할부개월수',  width: 120, offsetLeft:60, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'instOrginAmnt', label: '할부원금',  width: 120, offsetLeft:60, value: '' , readonly:true, userdata: { align: "right" }, numberFormat:'0,000,000,000'}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'joinPayMthdNm', label: '가입비납부방법',  width: 120, offsetLeft: 40,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'usimPayMthdNm', label: 'USIM납부방법',  width: 120, offsetLeft:60, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'usimPrice', label: 'USIM판매가',  width: 120, offsetLeft:60, value: '' , readonly:true, userdata: { align: "right" }, numberFormat:'0,000,000,000'}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'unpdIndNm', label: '미납상태',  width: 120, offsetLeft: 40,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'ban', label: '청구계정ID',  width: 120, offsetLeft:60, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'customerId', label: '고객ID',  width: 120, offsetLeft:60,  value: '' , readonly:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'cstmrName', label: '고객명',  width: 120, offsetLeft: 40,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'realUseCustNm', label: '실사용고객',  width: 120, offsetLeft:60, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'customerAdr', label: '고객주소',  width: 120, offsetLeft: 60, value: '' , readonly:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'agentNm', label: '개통대리점',  width: 120, offsetLeft:40, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'shopNm', label: '판매점',  width: 120, offsetLeft:60,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'sprtTpNm', label: '할인유형',  width: 120, offsetLeft:60, value: '' , readonly:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'simId', label: '심플할인ID',  width: 120, offsetLeft:40, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'simStartDt', label: '약정시작일',  width: 120, offsetLeft:60, value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'simEndDt', label: '약정종료일',  width: 120, offsetLeft:60,  value: '' , readonly:true}
+		]},
+		{type: 'hidden', name: 'requestKey'}
+	],
+
+	//문자내역
+	/*
+	form98 :  [
+		{type: 'settings', position: 'label-left', labelAlign:"left", labelWidth: '80'},
+		{type: "block", list: [
+			{type:"input", width:180, label:"발신번호",name:"callbackFn", offsetLeft:20}
+			
+		//	{type:"select", width:70, label:"발신번호",name:"callbackFn",  connector:"/rcp/rcpMgmt/getRcpCommon.json?grpId=TEL"}
+		//	,{type:"newcolumn"}
+		//	,{type:"input", width:50, name:"callbackMn", label:""}
+		//	,{type:"newcolumn"}
+		//	,{type:"input", width:50, name:"callbackRn",label:""}
+			
+		]},
+		{type: "block", list: [
+			{type:"select", width:70, label:"착신번호",name:"dstaddrFn", offsetLeft:20,  connector:"/rcp/rcpMgmt/getRcpCommon.json?grpId=HPN"}
+			,{type:"newcolumn"}
+			,{type:"input", width:50, name:"dstaddrMn", label:""}
+			,{type:"newcolumn"}
+			,{type:"input", width:50, name:"dstaddrRn",label:""}	
+		]},
+		{type: "block", list: [
+			 {type: "input", label: "전송내용",name:"text", rows:3,width:300, offsetLeft:20}
+		]},
+		{type: "block", list: [
+			 {type: "hidden", name:"contractNum"}
+		]}
+						
+				],
+	*/
+	//상담내역 등록
+	/*
+	form97 :  [
+		{type: 'settings', position: 'label-left', labelAlign:"left", labelWidth: '100'},
+		{type: "block", list: [
+			{type:"select", width:160,  label:"요청구분",name:"reqGbn",userdata:{lov:"RCP0022"}, offsetLeft:20}		
+		]},
+		{type: "block", list: [
+			{type:"select", width:160,  label:"가입자관계",name:"cstmrRel",userdata:{lov:"RCP0021"}, offsetLeft:20}		
+		]},
+		{type: "block", list: [
+			{type:"select", width:160,  label:"처리구분",name:"progGbn", userdata:{lov:"RCP0023"}, offsetLeft:20}		
+		]},
+		{type: "block", list: [
+				{type:"select", width:160,  label:"처리상태",name:"progStt", userdata:{lov:"RCP0024"}, offsetLeft:20}		
+		]},
+		{type: "block", list: [
+			 {type: "input", label: "요청내용",name:"reqCntt", rows:8,width:300, maxLength:3000, offsetLeft:20}
+		]},
+		{type: "block", list: [
+			 {type: "input", label: "처리내용",name:"progCntt", rows:8,width:300, maxLength:3000, offsetLeft:20}
+			 ,{type: "hidden",name:"contractNum" }
+			 ,{type: "hidden",name:"usrId" }
+			 ,{type: "hidden",name:"inputMod" }
+		]}
+	],
+	*/
+	//파일업로드				
+	form25 : [
+		{type:"settings", position:"label-left", labelAlign:"left", labelWidth:80},
+		{type: "block", list: [
+			{type: 'input', name: 'orgnId', label: '조직 ID',  width: 100, value: '' ,readonly:true, offsetLeft:20, disabled:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'orgnNm', label: '조직 명',  width: 150, value: '',readonly:true, offsetLeft:20, disabled:true}]},
+			{type: 'fieldset', label: '조직 관련 파일 첨부',  inputWidth:500, offsetLeft:10, list:[
+			{type: "block", list: [
+				{type: 'input', name: 'fileName1', label: '파일 명',  width: 230, value: '', disabled:true, offsetLeft:20},
+				{type: 'hidden', name: 'fileId1', label: '파일ID'},
+				{type: "newcolumn"},			
+				{type:"button", name: 'fileDown1', value:"다운로드"},
+				{type: "newcolumn"},			
+				{type:"button", name: 'fileDel1', value:"삭제"},
+			]},
+			{type: "block", list: [
+				{type: 'input', name: 'fileName2', label: '파일 명',  width: 230, value: '', disabled:true, offsetLeft:20},
+				{type: 'hidden', name: 'fileId2', label: '파일ID'},
+				{type: "newcolumn"},			
+				{type:"button", name: 'fileDown2', value:"다운로드"},	
+				{type: "newcolumn"},			
+				{type:"button", name: 'fileDel2', value:"삭제"},		
+			]},
+			{type: "block", list: [
+				{type: 'input', name: 'fileName3', label: '파일 명',  width: 230, value: '', disabled:true, offsetLeft:20},
+				{type: 'hidden', name: 'fileId3', label: '파일ID'},
+				{type: "newcolumn"},			
+				{type:"button", name: 'fileDown3', value:"다운로드"},	
+				{type: "newcolumn"},			
+				{type:"button", name: 'fileDel3', value:"삭제"},		
+			]},
+			{type: "block", list: [
+				{type: "upload", label:"파일업로드" ,name: "file_upload1",width: 384 ,inputWidth: 330 ,url: "/org/common/fileUpLoad.do" ,autoStart: false, offsetLeft:20, userdata: { limitCount : 3, limitsize: 1000, delUrl:"/org/common/deleteFile2.json"} }
+			]}
+		]}
+	],
+	
+	// 법정대리인정보
+	form4 : [
+		{type:"settings", position:"label-left", labelAlign:"left", labelWidth:80},
+		{type: "block", list: [
+			{type: 'input', name: 'minorAgentName', label: '법정대리인명', width: 120, offsetLeft:50, readonly:true},
+			{type: "newcolumn"},
+			{type: 'checkbox', name: 'appBlckAgrmYn', label: 'APP설치동의', width: 120, offsetLeft:200, value:"Y", disabled:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'agentTelNum', label: '연락처', width: 120, offsetLeft:50, readonly:true},
+			{type: "newcolumn"},
+			{type: 'checkbox', name: 'appInstYn', label: 'APP설치확인', width: 120, offsetLeft:200, value:"Y"},
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'agentRelNm', label: '관계',  width:120, offsetLeft:50, readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'instCnfmNm', label: '확인자',  width: 120, offsetLeft:200, readonly:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'instCnfmDt', label: '확인일자',  width: 120, offsetLeft:454, readonly:true},
+		]}
+		
+	],
+	// 신청정보
+	form99 : [
+		{type : "block", name : "BODY", list : [
+			{type : "settings",position : "label-left",labelAlign : "right",labelWidth : 100,blockOffset : 0},
+			{type : "fieldset",label : "고객정보",inputWidth : 910, list : [
+				{type : "settings"},
+				{type : "block", list : [
+					{type : "select",width : 100,label : "고객구분",name : "cstmrType",labelAlign : "right",userdata : {lov : "RCP0001"}},
+					{type : "newcolumn"},
+					{type : "select",width : 100,label : "서비스구분",name : "serviceType",labelAlign : "right",offsetLeft : 55,userdata : {lov : "RCP0002"}},
+					{type : "newcolumn"},
+					{type : "select", width : 200, label : "요금제", name : "socCode", labelAlign : "right", offsetLeft : 55 }
+				]},
+				{type : "block", list : [
+					{type : "select",width : 100,label : "업무구분",name : "operType",labelAlign : "right",userdata : {lov : "RCP0003"} },
+					{type : "newcolumn"},
+					{type : "input",label : "고객명",name : "cstmrName",labelAlign : "right",width : 100,offsetLeft : 55},
+					{type : "newcolumn"},
+					{type : "input",width : 80,label : "주민번호",name : "cstmrNativeRrn1",labelAlign : "right",offsetLeft : 55},
+					{type : "newcolumn"},
+					{type : "input",width : 80,label : "-",name : "cstmrNativeRrn2",labelAlign : "center",labelWidth : 15, offsetLeft:5}
+				]},
+				{type : "block",name : "FN", list : [
+					{type : "input",width : 100,label : "여권번호",name : "cstmrForeignerPn"},
+					{type : "newcolumn"},
+					{type : "calendar",width : 100,label : "체류기간",name : "cstmrForeignerSdate",offsetLeft : 55},
+					{type : "newcolumn"},
+					{type : "calendar",label : "~",name : "cstmrForeignerEdate",labelAlign : "center",labelWidth : 10,offsetLeft : 5,width : 100}
+				]},
+				{type : "block",name : "JP", list : [
+					{type : "input",label : "법인명",name : "cstmrJuridicalCname",width : 101},
+					{type : "newcolumn"},
+					{type : "input",width : 60,label : "법인번호",name : "cstmrJuridicalRrn1",labelAlign : "right",offsetLeft : 55},
+					{type : "newcolumn"},
+					{type : "input",width : 80,label : "-",name : "cstmrJuridicalRrn2",labelAlign : "center",labelWidth : 5},
+					{type : "newcolumn"},
+					{type : "input",width : 40,label : "사업자등록번호",name : "cstmrJuridicalNumber1",labelAlign : "right",offsetLeft : 5},
+					{type : "newcolumn"},
+					{type : "input",width : 30,label : "-",name : "cstmrJuridicalNumber2",labelAlign : "center",labelWidth : 5},
+					{type : "newcolumn"},
+					{type : "input",width : 40,label : "-",name : "cstmrJuridicalNumber3",labelAlign : "center",labelWidth : 5}
+				]},
+				{type : "block",name : "PP", list : [
+					{type : "input",width : 100,label : "상호명",name : "cstmrPrivateCname",labelAlign : "right"},
+					{type : "newcolumn"},
+					{type : "input",width : 40,label : "사업자등록번호",name : "cstmrPrivateNumber1",labelAlign : "right",offsetLeft : 55},
+					{type : "newcolumn"},
+					{type : "input",width : 30,label : "-",name : "cstmrPrivateNumber2",labelAlign : "center",labelWidth : 5},
+					{type : "newcolumn"},
+					{type : "input",width : 40,label : "-",name : "cstmrPrivateNumber3",labelAlign : "center",labelWidth : 5}
+				]},
+				{type : "block", list : [
+					{type : "input",label : "메일",name : "cstmrMail1",width : 101},
+					{type : "newcolumn"},
+					{type : "input",label : "@",name : "cstmrMail2",labelAlign : "center",labelWidth : 10,offsetLeft : 5,width : 135},
+					{type : "newcolumn"},
+					{type : "select",width : 100,name : "cstmrMail3",userdata:{lov:"RCP0042"}},
+					{type : "newcolumn"},
+					{type : "label",lfabelWidth : 10,position : "label-left", list : [
+						{type : "settings",position : "label-left",labelWidth : 40},
+						{type : "radio",name : "cstmrMailReceiveFlag",value : "Y",label : "수신"},
+						{type : "newcolumn"},
+						{type : "radio",name : "cstmrMailReceiveFlag",value : "N",label : "미수신"}
+					]}
+				]},
+				{type : "block", list : [
+					{type : "input",label : "주소",name : "cstmrAddr",width : 255},
+					{type : "newcolumn"},
+					{type : "input",label : "우편번호",name : "cstmrPost",width : 75}
+				]},
+				{type : "block", list : [
+					{type : "input",label : "상세주소",name : "cstmrAddrDtl",width : 357},
+					{type : "newcolumn"},
+					{type : "button",value : "주소찾기",name : "btnCstmrPostFind"}
+				]},
+				{type : "block", list : [
+					{type : "select",label : "명세서수신유형",name : "cstmrBillSendCode",width : 100,userdata : {lov : "RCP0004"}},
+					{type : "newcolumn"},
+					{type : "select",width : 50,label : "전화번호",name : "cstmrTelFn",offsetLeft : 55,userdata:{lov:"RCP0034"}},
+					{type : "newcolumn"},
+					{type : "input",width : 50,name : "cstmrTelMn",label : ""},
+					{type : "newcolumn"},
+					{type : "input",width : 50,name : "cstmrTelRn",label : ""},
+					{type : "newcolumn"},
+					{type : "select",width : 50,label : "휴대폰",name : "cstmrMobileFn",labelAlign : "right",labelWidth : 99,userdata:{lov:"RCP0035"}},
+					{type : "newcolumn"},
+					{type : "input",width : 50,name : "cstmrMobileMn",label : ""},
+					{type : "newcolumn"},
+					{type : "input",width : 50,name : "cstmrMobileRn",label : ""}
+				]},
+				{type : "block", list : [
+					{type : "input",label : "신청일자",name : "reqInDay",width : 101,readonly : true},
+					{type : "newcolumn"},
+					{type : "select",label : "본인인증방식",name : "onlineAuthType",offsetLeft : 55,value : "",width : 141, userdata:{lov:"RCP0036"}},
+					{type : "newcolumn"},
+					{type : "input",label : "본인인증정보",name : "onlineAuthInfo",offsetLeft : 15,value : "",width : 160,readonly : true}
+				]},
+				{type : "block", list : [
+					{type : "select",label : "신청취소",name : "pstate",width : 101,userdata : {lov : "RCP0005"}},
+					{type : "newcolumn"},
+					{type : "select",label : "개통진행상태",name : "requestStateCode",width : 90,offsetLeft : 55,userdata : {lov : "RCP0006"}},
+					{type : "newcolumn"},
+					{type : "select",label : "택배사/송장번호",name : "tbCd",offsetLeft : 65,userdata : {lov : "RCP0025"}},
+					{type : "newcolumn"},
+					{type : "input",label : "",name : "dlvryNo",labelwidth : 0,offsetLeft : 0,value : "",width : 100,labelwidth : 20}
+				]},
+				{type : "block", list : [
+					{type : "select",label : "모집경로",name : "onOffType",width : 90,userdata : {lov : "RCP0007"}},
+					{type : "newcolumn"},
+					{type : "input",label : "예약번호",name : "resNo",width : 90,offsetLeft : 65},
+					{type : "newcolumn"},
+					{type : "input",label : "매니저 코드",name : "managerCode",width : 90,offsetLeft : 65}
+				]},
+				{type : "block", list : [
+					{type : "button",value : "서식지 보기",name : "btnPaper",offsetLeft : 20},
+					{type : "newcolumn"},
+					{type : "button",value : "스캔하기",name : "btnScnStart",offsetLeft : 20},
+					{type : "newcolumn"},
+					{type : "button",value : "스캔검색",name : "btnScnSarch",offsetLeft : 20},
+					{type : "newcolumn"},
+					{type : "button",value : "URL검색",name : "btnFaxSarch",offsetLeft : 20}
+				]},
+				{type : "block", list : [
+					{type : "label", readonly : true}
+				]}
+			]},
+			{type : "fieldset",label : "배송정보",inputWidth : 910, list : [
+				{type : "settings"},
+				{type : "block", list : [
+					{type : "input",width : 60,name : "dlvryName",label : "받으시는 분"},
+					{type : "newcolumn"},
+					{type : "checkbox",width : 40,label : "고객상동",name : "cloneBase",position : "label-right",labelAlign : "left",labelWidth : 60,checked : false},
+					{type : "newcolumn"},
+					{type : "select",width : 50,label : "전화번호",name : "dlvryTelFn",offsetLeft : 10,userdata:{lov:"RCP0034"}},
+					{type : "newcolumn"},
+					{type : "input",width : 50,label : "",name : "dlvryTelMn"},
+					{type : "newcolumn"},
+					{type : "input",width : 50,label : "",name : "dlvryTelRn"},
+					{type : "newcolumn"},
+					{type : "select",width : 50,label : "휴대폰",name : "dlvryMobileFn",labelAlign : "right",labelWidth : 98,userdata:{lov:"RCP0035"}},
+					{type : "newcolumn"},
+					{type : "input",width : 50,label : "",name : "dlvryMobileMn"},
+					{type : "newcolumn"},
+					{type : "input",width : 50,label : "",name : "dlvryMobileRn"}
+				]},
+				{type : "block", list : [
+					{type : "input",label : "주소",name : "dlvryAddr",width : 255},
+					{type : "newcolumn"},
+					{type : "input",label : "우편번호",name : "dlvryPost",width : 75}
+				]},
+				{type : "block", list : [
+					{type : "input",label : "상세주소",name : "dlvryAddrDtl",width : 357},
+					{type : "newcolumn"},
+					{type : "button",value : "주소찾기",name : "btnDlvryPostFind"}
+				]},
+				{type : "block", list : [
+					{type : "input",width : 590,label : "요청사항",name : "dlvryMemo"}
+				]},
+				{type : "block", list : [
+					{type : "label",readonly : true}
+				]}
+			]},
+			{type : "fieldset",label : "요금납부정보",inputWidth : 910, list : [
+				{type : "settings"},
+				{type : "block", list : [
+					{type : "select",width : 110,label : "요금납부방법",name : "reqPayType",userdata : {lov : "RCP0008"}},
+					{type : "newcolumn"},
+					{type : "block",name : "BANK", list : [
+						{type : "select",width : 103,label : "은행명 및 계좌번호",name : "reqBank",labelWidth : 120,offsetLeft : 45,userdata:{lov:"RCP0037"}},
+						{type : "newcolumn"},
+						{type : "input",width : 150,label : "",name : "reqAccountNumber"}
+					]},
+					{type : "block",name : "CARD", list : [
+						{type : "select",width : 103,label : "카드사 및 카드번호",name : "reqCardCompany",labelWidth : 120,offsetLeft : 45,userdata:{lov:"RCP0038"}},
+						{type : "newcolumn"},
+						{type : "input",width : 35,label : "",name : "reqCardNo1",labelAlign : "center",labelWidth : 5},
+						{type : "newcolumn"},
+						{type : "input",width : 35,label : "-",name : "reqCardNo2",labelAlign : "center",labelWidth : 5},
+						{type : "newcolumn"},
+						{type : "input",width : 35,label : "-",name : "reqCardNo3",labelAlign : "center",labelWidth : 5},
+						{type : "newcolumn"},
+						{type : "input",width : 35,label : "-",name : "reqCardNo4",labelAlign : "center",labelWidth : 5},
+						{type : "newcolumn"},
+						{type : "input",width : 30,label : "/ 월",name : "reqCardMm",offsetLeft : 5,labelAlign : "center",labelWidth : 25},
+						{type : "newcolumn"},
+						{type : "input",width : 40,label : "년",name : "reqCardYy",labelAlign : "center",labelWidth : 15}
+					]}
+				]},
+				{type : "block", list : [
+					{type : "block",name : "BANK", list : [
+						{type : "input",width : 60,label : "예금주 성명",name : "reqAccountName"},
+						{type : "newcolumn"},
+						{type : "checkbox",width : 60,name : "othersPaymentAg",label : "타인납부",position : "label-right",labelAlign : "left",labelWidth : 50,checked : false},
+						{type : "newcolumn"},
+						{type : "input",width : 60,label : "예금주 주민번호",name : "reqAccountRrn1",labelAlign : "right",offsetLeft : 40},
+						{type : "newcolumn"},
+						{type : "input",width : 80,label : "-",name : "reqAccountRrn2",labelAlign : "center",labelWidth : 5}
+					]},
+					{type : "block",name : "CARD", list : [
+						{type : "input",width : 60,label : "명의자 성명",name : "reqCardName"},
+						{type : "newcolumn"},
+						{type : "checkbox",width : 60,label : "타인납부",name : "othersPaymentAgClone",position : "label-right",labelAlign : "left",labelWidth : 50,checked : false},
+						{type : "newcolumn"},
+						{type : "input",width : 60,label : "명의자 주민번호",name : "reqCardRrn1",labelAlign : "right",offsetLeft : 40},
+						{type : "newcolumn"},
+						{type : "input",width : 80,label : "-",name : "reqCardRrn2",labelAlign : "center",labelWidth : 5}
+					]},
+					{type : "block",name : "AUTO", list : [
+						{type : "select",width : 90,name : "reqAcType",label : "충전방법",userdata : {lov : "RCP0018"}},
+						{type : "newcolumn"},
+						{type : "input",width : 90,label : "충전잔액",name : "reqAc01Balance",labelAlign : "right",labelWidth : 60},
+						{type : "newcolumn"},
+						{type : "select",width : 90,label : "충전일",name : "reqAc02Day",userdata : {lov : "RCP0019"},labelWidth : 60},
+						{type : "newcolumn"},
+						{type : "input",width : 90,label : "충전금액",name : "reqAcAmount",labelAlign : "right",labelWidth : 60}
+					]}
+				]},
+				{type : "block", list : [
+					{type : "label",readonly : true}
+				]}
+			]},
+			{type : "block",name : "REQ", list : [
+				{type : "fieldset",label : "가입신청정보",inputWidth : 910, list : [
+					{type : "settings"},
+					{type : "block", list : [
+						{type : "select",width : 100,label : "구매유형",name : "reqBuyType",userdata : {lov : "RCP0009"}},
+						{type : "newcolumn"},
+						{type : "input",label : "휴대폰모델/색상",name : "reqModelName",labelAlign : "right",width : 80,offsetLeft : 60},
+						{type : "newcolumn"},
+						{type : "input",label : "",name : "reqModelColor",labelAlign : "right",labelwidth : 0,width : 60,offsetLeft : 0},
+						{type : "newcolumn"},
+						{type : "input",width : 50,label : "가입희망번호",name : "reqWantNumber",labelwidth : 40,offsetLeft : 0,labelAlign : "right"},
+						{type : "newcolumn"},
+						{type : "input",width : 50,label : "",name : "reqWantNumber2"},
+						{type : "newcolumn"},
+						{type : "input",width : 50,label : "",name : "reqWantNumber3"}
+					]},
+					{type : "block", list : [
+						{type : "checkbox",width : 10,label : "번호연결서비스",name : "reqGuideFlag",position : "label-left",labelAlign : "right",checked : false},
+						{type : "newcolumn"},
+						{type : "select",width : 50,label : "",name : "reqGuideFn",labelAlign : "right",labelWidth : 98,userdata:{lov:"RCP0035"}},
+						{type : "newcolumn"},
+						{type : "input",width : 50,label : "",name : "reqGuideMn"},
+						{type : "newcolumn"},
+						{type : "input",width : 50,label : "",name : "reqGuideRn"},
+						{type : "newcolumn"},
+						{type : "label",label : "번호연결서비스",offsetLeft : 50,labelWidth : 100,labelAlign : "right",position : "label-left"},
+						{type : "newcolumn"},
+						{type : "checkbox",width : 10,label : "이용",name : "reqWireType1",labelWidth : 30,position : "label-left",labelAlign : "right",checked : false},
+						{type : "newcolumn"},
+						{type : "checkbox",width : 10,label : "차단",name : "reqWireType2",position : "label-left",labelWidth : 30,labelAlign : "right",checked : false},
+						{type : "newcolumn"},
+						{type : "checkbox",width : 10,label : "데이터로밍차단",name : "reqWireType3",position : "label-left",labelWidth : 90,labelAlign : "right",checked : false}
+					]},
+					{type : "block", list : [
+						{type : "hidden",label : "부가서비스",name : "additionKey",width : 590,readonly : true},
+						{type : "input",label : "부가서비스명",name : "additionName",width : 590,readonly : true},
+						{type : "newcolumn"},
+						{type : "button",value : "부가서비스",name : "btnRateFind"}
+					]},
+					{type : "block", list : [
+						{type : "input",label : "단말정보",name : "trmnlInfo",width : 590}
+					]}
+				]},
+				{type : "block", list : [
+					{type : "label",readonly : true}
+				]}
+			]},
+			{type : "fieldset",label : "번호이동정보",inputWidth : 910, list : [
+				{type : "settings"},
+				{type : "block", list : [
+					{type : "select",width : 50,label : "이동번호",name : "moveMobileFn",labelAlign : "right",labelWidth : 99,userdata:{lov:"RCP0035"}},
+					{type : "newcolumn"},
+					{type : "input",width : 50,label : "",name : "moveMobileMn"},
+					{type : "newcolumn"},
+					{type : "input",width : 50,label : "",name : "moveMobileRn"},
+					{type : "newcolumn"},
+					{type : "select",width : 145,label : "변경전 통신사",name : "moveCompany",labelAlign : "right",offsetLeft : 7,userdata:{lov:"RCP0039"}},
+					{type : "newcolumn"},
+					{type : "select",width : 130,label : "이달 사용요금",name : "moveThismonthPayType",labelAlign : "right",offsetLeft : 0,userdata : {lov : "RCP0010"}}
+				]},
+				{type : "block", list : [
+					{type : "select",width : 100,label : "휴대폰 할부금",name : "moveAllotmentStat",labelAlign : "right",labelWidth : 99,userdata : {lov : "RCP0011"}},
+					{type : "newcolumn"},
+					{type : "label",label : "미환급액 요금상계", labelWidth : 100,position : "label-right", offsetLeft : 65, list : [
+						{type : "settings",offsetLeft : 15,position : "label-left",labelWidth : 35},
+						{type : "radio",name : "moveRefundAgreeFlag",value : "Y",label : "동의"},
+						{type : "newcolumn"},
+						{type : "radio",name : "moveRefundAgreeFlag",value : "N",label : "미동의"}
+					]}
+				]},
+				{type : "block", list : [
+					{type : "select",width : 150,labelWidth : 100,label : "인증유형",name : "moveAuthType",labelAlign : "right",userdata : {lov : "RCP0012"}},
+					{type : "newcolumn"},
+					{type : "input",width : 200,name : "moveAuthNumber",label : ""}
+				]},
+				{type : "block", list : [
+					{type : "label",readonly : true}
+				]}
+			]},
+			{type : "fieldset",label : "법정대리인",name : "NM",inputWidth : 910, list : [
+				{type : "settings"},
+				{type : "block", list : [
+					{type : "input",width : 60,label : "대리인성명",name : "minorAgentName"},
+					{type : "newcolumn"},
+					{type : "select",width : 90,label : "관계",name : "minorAgentRelation",labelAlign : "right",labelWidth : 30,userdata:{lov:"RCP0040"}},
+					{type : "newcolumn"},
+					{type : "input",width : 70,label : "대리인 주민번호",name : "minorAgentRrn1",labelAlign : "right",offsetLeft : 10},
+					{type : "newcolumn"},
+					{type : "input",width : 80,label : "-",name : "minorAgentRrn2",labelAlign : "center",labelWidth : 5},
+					{type : "newcolumn"},
+					{type : "select",width : 60,label : "연락처",name : "minorAgentTelFn",labelAlign : "right",labelWidth : 45,userdata:{lov:"RCP0041"}},
+					{type : "newcolumn"},
+					{type : "input",width : 50,label : "",name : "minorAgentTelMn"},
+					{type : "newcolumn"},
+					{type : "input",width : 50,label : "",name : "minorAgentTelRn"}
+				]},
+				{type : "block", list : [
+					{type : "label",readonly : true}
+				]}
+			]},
+			{type : "fieldset",label : "약관동의정보",name : "TERMS",inputWidth : 910, list : [
+				{type : "settings"},
+				{type : "block", list : [
+					{type : "checkbox",offsetLeft : 0,width : 90,labelWidth : 200,label : "개인정보 수집동의",name : "clausePriCollectFlag",checked : false},
+					{type : "newcolumn"},
+					{type : "checkbox",width : 50,labelWidth : 200,label : "개인정보 제공동의",name : "clausePriOfferFlag",checked : false},
+					{type : "newcolumn"},
+					{type : "checkbox",width : 50,labelWidth : 200,label : "고유식별정보 수집이용제공동의",name : "clauseEssCollectFlag",checked : false}
+				]},
+				{type : "block", list : [
+					{type : "checkbox",offsetLeft : 0,width : 90,labelWidth : 200,label : "개인정보 위탁동의",name : "clausePriTrustFlag",checked : false},
+					{type : "newcolumn"},
+					{type : "checkbox",width : 50,labelWidth : 200,label : "개인정보 광고전송동의",name : "clausePriAdFlag",checked : false},
+					{type : "newcolumn"},
+					{type : "checkbox",width : 50,labelWidth : 200,label : "신용정보동의",name : "clauseConfidenceFlag",checked : false}
+				]},
+				{type : "block", list : [
+					{type : "checkbox",offsetLeft : 0,width : 90,labelWidth : 200,label : "네트워크 차단동의",name : "nwBlckAgrmYn", checked : false},
+					{type : "newcolumn"},
+					{type : "checkbox",width : 50,labelWidth : 200,label : "유해정보차단APP 설치동의",name : "appBlckAgrmYn", checked : false},
+					{type : "newcolumn"},
+					{type : "input", width : 150,labelWidth : 200,label : "유해정보차단APP", name : "appNm"}
+				]}
+			]},
+			{type : "fieldset",label : "렌탈서비스",name : "RENTAL",inputWidth : 910, list : [
+				{type : "settings"},
+				{type : "block", list : [
+					{type : "checkbox", offsetLeft : 0, width : 90, labelWidth : 200, label : "렌탈서비스 이용 동의", name : "clauseRentalService", checked : false},
+					{type : "newcolumn"},
+					{type : "checkbox", width : 50, labelWidth : 200, label : "단말배상금 안내사항 동의", name : "clauseRentalModelCp", checked : false},
+					{type : "newcolumn"},
+					{type : "checkbox", width : 50, labelWidth : 200, label : "단말배상금(부분파손) 안내사항 동의", name : "clauseRentalModelCpPr", checked : false}
+				]},
+				{type : "block", list : [
+					{type : "input", offsetLeft : 0, width : 100, label : "렌탈기본료", name : "rentalBaseAmt", numberFormat:"0,000,000,000", validate:"ValidInteger", reaonly:true},
+					{type : "newcolumn"},
+					{type : "input", width : 100, label : "렌탈료할인", name : "rentalBaseDcAmt", numberFormat:"0,000,000,000", validate:"ValidInteger", reaonly:true, offsetLeft:50},
+					{type : "newcolumn"},
+					{type : "input", width : 100, label : "단말금액", name : "rentalModelCpAmt", numberFormat:"0,000,000,000", validate:"ValidInteger", reaonly:true, offsetLeft:50}
+				]}
+			]},
+			{type : "fieldset",label : "개통정보",inputWidth : 910, list : [
+				{type : "settings"},
+				{type : "block", list : [
+					{type : "input",label : "유심번호",name : "reqUsimSn",width : 255},
+					{type : "newcolumn"},
+					{type : "input",label : "단말기일련번호",name : "reqPhoneSn",width : 255}
+				]},
+				{type : "block", list : [
+					{type : "input",label : "특별판매코드",name : "spcCode", maxLength:5 ,width : 255},
+					{type:"newcolumn"},
+					{type:"input",  label:"메모",name:"requestMemo",width:255, maxLength:200}
+				]},
+				{type : "block", list : [
+					{type : "input",label : "판매정책",name : "plcyCd", width : 95},
+					{type :"newcolumn"},
+					{type : "input",label : "",name : "plcyNm", width : 155},
+					{type :"newcolumn"},
+					{type : "input",label : "할인유형",name : "blDcType",width : 255}
+				]},
+				{type : "block", list : [
+					{type : "hidden", width : 60,label : "",name : "agentCode"},
+					{type : "hidden", width : 60,label : "",name : "requestKey"},
+					{type : "hidden", width : 60,label : "",name : "resNo"},
+					{type : "hidden", width : 60,label : "",name : "scanId"}
+				]},
+				{type : "block", list : [
+					{type : "label",readonly : true}
+				]}
+			]}
+		]}
+	]
+};

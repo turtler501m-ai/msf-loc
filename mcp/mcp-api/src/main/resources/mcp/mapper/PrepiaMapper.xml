@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.prepia.mapper.PrepiaMapper">
+
+    <resultMap id="mspRateList" type="com.ktmmobile.mcp.msp.dto.MspSaleSubsdMstDto" >
+        <result property="rateCd" column="RATE_CD"></result>
+        <result property="operType" column="OPER_TYPE"></result>
+        <result property="onOffType" column="ON_OFF_TYPE"></result>
+        <result property="orgnId" column="ORGN_ID"></result>
+        <result property="payClCd" column="PAY_CL_CD"></result>
+        <result property="dataType" column="DATA_TYPE"></result>
+        <result property="dcAmt" column="DC_AMT"></result>
+        <result property="baseAmt" column="BASE_AMT"></result>
+        <result property="agrmTrm" column="AGRM_TRM"></result>
+        <result property="freeCallCnt" column="FREE_CALL_CNT"></result>
+        <result property="nwInCallCnt" column="NW_IN_CALL_CNT"></result>
+        <result property="nwOutCallCnt" column="NW_OUT_CALL_CNT"></result>
+        <result property="freeSmsCnt" column="FREE_SMS_CNT"></result>
+        <result property="freeDataCnt" column="FREE_DATA_CNT"></result>
+        <association property="promotionDcAmt"  javaType="int" column="rateCd=RATE_CD,orgnId=ORGN_ID,operType=OPER_TYPE,agrmTrm=AGRM_TRM,onOffType=ON_OFF_TYPE}" select="getromotionDcAmt" />
+    </resultMap>
+
+    <select id="getromotionDcAmt" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.msp.dto.MspSaleSubsdMstDto">
+        SELECT NVL(SUM(RANTAL), 0) FROM (
+            SELECT
+                 CEIL(-RANTAL * 1.1) AS RANTAL
+            FROM
+                 VW_CHRG_PRMT_DTL@DL_MSP A
+                 , MCP_ADDITION B
+            WHERE 1=1
+                 AND A.ADDITION_KEY = B.ADDITION_KEY
+                 AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A.STRT_DT AND A.END_DT
+                 AND A.ORGN_ID = #{orgnId} --접점코드
+                 AND A.REQ_BUY_TYPE IN('UU','AL')
+                 <choose>
+                     <when test="agrmTrm == 0" >
+                          AND     A.ENGG_CNT_0 = 'Y'
+                     </when>
+                     <when test="agrmTrm == 12" >
+                          AND     A.ENGG_CNT_12 = 'Y'
+                     </when>
+                     <when test="agrmTrm == 18" >
+                          AND     A.ENGG_CNT_18 = 'Y'
+                     </when>
+                     <when test="agrmTrm == 24" >
+                          AND     A.ENGG_CNT_24 = 'Y'
+                     </when>
+                     <when test="agrmTrm == 30" >
+                          AND     A.ENGG_CNT_30 = 'Y'
+                     </when>
+                     <when test="agrmTrm == 36" >
+                          AND     A.ENGG_CNT_36 = 'Y'
+                     </when>
+                     <otherwise>
+                          AND    1 = 0
+                     </otherwise>
+                 </choose>
+                 <choose>
+                     <when test="operType == 'MNP3'" >
+                          AND     A.MNP_YN = 'Y'
+                     </when>
+                     <when test="operType == 'NAC3'" >
+                          AND     A.NAC_YN = 'Y'
+                     </when>
+                     <otherwise>
+                          AND    1 = 0
+                     </otherwise>
+                 </choose>
+                 AND     A.RATE_CD = #{rateCd} --요금제코드
+                 AND     A.ON_OFF_TYPE = #{onOffType} --온라인오프라인구분
+                 AND     A.USG_YN = 'Y'
+            )
+    </select>
+
+    <select id="selectRatePrepia" resultType="com.ktmmobile.mcp.msp.dto.MspSaleSubsdMstDto">
+        SELECT
+            RATE.RATE_CD
+            , RATE.RATE_NM
+            , RATE.PAY_CL_CD
+            , RATE.DATA_TYPE
+            ,'' AS RATEDESC
+            ,'' AS KTRATENAME
+            ,'' AS KTRATECODE
+            ,'' AS AGREEMENT
+            , NVL(DC_AMT, 0) AS DC_AMT
+            , BASE_AMT
+            , (BASE_AMT*0.1) VAT
+             NVL(SPEC.AGRM_TRM, 0) AGRM_TRM
+        FROM    MSP_RATE_MST@DL_MSP RATE
+                  ,MSP_RATE_SPEC@DL_MSP SPEC
+        WHERE   1=1
+        /*
+        AND     RATE_TYPE = '02'
+        AND     PAY_CL_CD = 'PO'
+        */
+        AND     RATE.APPL_END_DT = '99991231'
+        AND     RATE.DATA_TYPE = 'LTE'
+        AND     RATE.RATE_CD = SPEC.RATE_CD(+)
+        AND     SPEC.AGRM_TRM(+) = '0'
+        AND     SPEC.APPL_END_DTTM = '99991231235959'
+        AND     ONLINE_TYPE_CD IN ('P','A')
+        ORDER BY  DATA_TYPE , RATE_NM
+    </select>
+
+    <select id="getRateList" parameterType="java.util.Map"  resultMap="mspRateList">
+        SELECT
+            RATE.RATE_CD
+            , RATE.RATE_NM
+            , RATE.PAY_CL_CD
+            , RATE.DATA_TYPE
+            , RATE.FREE_CALL_CNT
+            , RATE.NW_IN_CALL_CNT
+            , RATE.NW_OUT_CALL_CNT
+            , RATE.FREE_SMS_CNT
+            , RATE.FREE_DATA_CNT
+            , '' AS RATEDESC
+            , '' AS KTRATENAME
+            , '' AS KTRATECODE
+            , '' AS AGREEMENT
+            , NVL(DC_AMT, 0) AS DC_AMT
+            , BASE_AMT
+            , (BASE_AMT*0.1) VAT
+            , NVL(SPEC.AGRM_TRM, 0) AGRM_TRM
+            , CD.EXPNSN_STR_VAL1
+            , CD.EXPNSN_STR_VAL2
+            , CD.EXPNSN_STR_VAL3
+            , #{orgnId} AS  ORGN_ID
+            , #{onOffType} AS ON_OFF_TYPE
+            , #{operType} AS OPER_TYPE
+        FROM
+             MSP_RATE_MST@DL_MSP RATE
+            , MSP_RATE_SPEC@DL_MSP SPEC
+            , NMCP_CD_DTL CD
+        WHERE 	1=1
+            AND	RATE.APPL_END_DT = '99991231'
+            AND RATE.DATA_TYPE = #{prdtSctnCd}   --'LTE' 5G적용
+            AND RATE.RATE_CD = SPEC.RATE_CD(+)
+            AND SPEC.AGRM_TRM(+) = '0'
+            AND SPEC.APPL_END_DTTM = '99991231235959'
+            AND CD.USE_YN = 'Y'
+            AND CD.CD_GROUP_ID =#{code}
+            AND RATE.RATE_CD =CD.DTL_CD
+        ORDER BY CD.INDC_ODRG
+    </select>
+
+</mapper>

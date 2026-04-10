@@ -1,0 +1,659 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="LoginMapper">
+
+    <!-- 비회원 로그인시 개인정보취급방침 출력 -->
+    <select id="personalPolicySelect" resultType="com.ktmmobile.mcp.common.dto.PersonalPolicyDto">
+        SELECT STPLT_SEQ, STPLT_CTG_CD, STPLT_TITLE, SHOW_YN, personalinfoEditor, CRET_ID, AMD_ID, CRET_DT, AMD_DT, STPLT_HIT FROM (
+                                                                                                                                       SELECT
+                                                                                                                                           STPLT_SEQ, STPLT_CTG_CD, STPLT_TITLE, SHOW_YN, STPLT_SBST as personalinfoEditor, CRET_ID, AMD_ID, CRET_DT, AMD_DT, STPLT_HIT
+                                                                                                                                       FROM NMCP_STPLT_BAS
+                                                                                                                                       WHERE SHOW_YN = 'Y' AND STPLT_CTG_CD = '06'
+                                                                                                                                         AND SITE_CODE = 'SM'
+                                                                                                                                       ORDER BY CRET_DT DESC
+                                                                                                                                   ) WHERE ROWNUM = 1
+    </select>
+
+    <select id="checkLoginAttack" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="int">
+        SELECT
+            COUNT(1)
+        FROM MCP_ACCESS_TRACE
+        WHERE 1=1
+          AND SYS_DT =   TO_CHAR(SYSDATE, 'YYYYMMDD')
+          AND PRCS_MDL_IND = 'LOGIN_EXECUTE'
+            <![CDATA[
+          AND TRTM_RSLT_SMST <> 'SUCCEED'
+            ]]>
+            AND USER_ID = #{userId}
+          AND SYS_RDATE > (SYSDATE -  (#{loginFailCount}/24/60/60))
+    </select>
+
+    <select id="getUserInfo" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        SELECT /*LoginMapper.getUserInfo  */
+            USERID
+             , PASSWORD
+             , NAME
+             , AUTH_CODE
+             , PIN
+             , EMAIL
+             , POST
+             , ADDRESS
+             , ADDRESS_DTL
+             , MOBILE_NO
+             , CONTACT_NO
+             , BIRTHDAY
+             , GENDER
+             , SYS_RDATE
+             , SYS_UDATE
+             , SYS_LDATE
+             , LOGIN_COUNT
+             , STATUS
+             , CUST_NUM
+             , AUTH_KEY
+             , USER_DIVISION
+             , EMAIL_CODE
+             , ADDRESS_BJD
+             , REVOCATION_DATE
+             , PWD_CHG_DT
+             , MONTHS_BETWEEN(SYSDATE , PWD_CHG_DT) AS MON_CNT
+             , NVL(TRUNC(SYSDATE) - TRUNC(pwd_chg_delay_dt), -1) AS DAY_CNT
+             , LOGIN_FAIL_COUNT
+             , CUSTOMER_ID
+             , SYS_CDATE
+             , PERSONAL_INFO_COLLECT_AGREE
+             , OTHERS_TRNS_AGREE
+             , CLAUSE_PRI_AD_FLAG
+             , EMAIL_RCV_YN
+             , SMS_RCV_YN
+        FROM MCP_USER
+        WHERE 1=1
+          AND USERID = #{userId}
+          AND STATUS = '1'
+    </select>
+
+    <select id="getDormancyInfo" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        SELECT /*LoginMapper.getDormancyInfo  */
+            USER_ID as USERID
+             , LOGIN_PWD as PASSWORD
+             , NM as NAME
+             , AUT_CODE as AUTH_CODE
+             , PIN
+             , EMAIL
+             , ZIPCD as POST
+             , ADDRESS
+             , ADDRESS_DTL
+             , MOBILE_NO
+             , CTN as CONTACT_NO
+             , BIRTHDAY
+             , GENDER
+             , CRET_DT as SYS_RDATE
+             , AMD_DT as SYS_UDATE
+             , LOGIN_DT as SYS_LDATE
+             , LOGIN_CNT as LOGIN_COUNT
+             , USER_STTUS as STATUS
+             , CUST_NO as CUST_NUM
+             , AUTH_KEY
+             , USER_DIV as USER_DIVISION
+             , EMAIL_CODE
+             , ADDRESS_BJD
+             , REVOCATION_DATE
+             , PWD_CHG_LAST_DT as PWD_CHG_DT
+             , LOGIN_FAIL_CNT as LOGIN_FAIL_COUNT
+             , CUSTOMER_ID
+        FROM NMCP_USER_HST
+        WHERE 1=1
+          AND USER_ID = #{userId}
+          AND USER_STTUS = '4'
+          AND HST_CHG_DT IS NULL
+          AND ROWNUM = 1
+        ORDER BY HST_CRET_DT DESC
+
+    </select>
+
+    <update id="updateUserSet" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        UPDATE MCP_USER SET
+            LOGIN_FAIL_COUNT = #{loginFailCount}
+        WHERE USERID = #{userId}
+    </update>
+
+    <update id="addBirthGenderAjax" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        UPDATE MCP_USER SET
+                            BIRTHDAY = #{birthday},
+                            GENDER = #{gender}
+        WHERE USERID = #{userId}
+    </update>
+
+    <select id="loginProcess" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        SELECT /*LoginMapper.loginProcess  */
+            USERID, PASSWORD, NAME,
+            AUTH_CODE, PIN, EMAIL,
+            POST, ADDRESS, ADDRESS_DTL,
+            MOBILE_NO, CONTACT_NO, BIRTHDAY,
+            GENDER, SYS_RDATE, SYS_UDATE,
+            SYS_LDATE, LOGIN_COUNT, STATUS,
+            CUST_NUM, AUTH_KEY, USER_DIVISION,
+            EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE,
+            PWD_CHG_DT, MONTHS_BETWEEN(SYSDATE , PWD_CHG_DT) AS MON_CNT,
+            NVL(TRUNC(SYSDATE) - TRUNC(pwd_chg_delay_dt), -1) AS DAY_CNT,
+            CUSTOMER_ID
+        FROM MCP_USER
+        where USERID = #{userId} and PASSWORD = #{passWord}
+          AND STATUS = '1'
+
+    </select>
+
+    <select id="dormancyLoginProcess" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        SELECT /*LoginMapper.dormancyLoginProcess  */
+        USER_ID as USERID
+        , LOGIN_PWD as PASSWORD
+        , NM as NAME
+        , AUT_CODE as AUTH_CODE
+        , PIN
+        , EMAIL
+        , ZIPCD as POST
+        , ADDRESS
+        , ADDRESS_DTL
+        , MOBILE_NO
+        , CTN as CONTACT_NO
+        , BIRTHDAY
+        , GENDER
+        , CRET_DT as SYS_RDATE
+        , AMD_DT as SYS_UDATE
+        , LOGIN_DT as SYS_LDATE
+        , LOGIN_CNT as LOGIN_COUNT
+        , USER_STTUS as STATUS
+        , CUST_NO as CUST_NUM
+        , AUTH_KEY
+        , USER_DIV as USER_DIVISION
+        , EMAIL_CODE
+        , ADDRESS_BJD
+        , REVOCATION_DATE
+        , PWD_CHG_LAST_DT as PWD_CHG_DT
+        , MONTHS_BETWEEN(SYSDATE , PWD_CHG_LAST_DT) AS MON_CNT
+        , CUSTOMER_ID
+        FROM NMCP_USER_HST
+        WHERE USER_ID = #{userId}
+        <if test="passWord != null and passWord != ''">
+            AND LOGIN_PWD = #{passWord}
+        </if>
+        AND USER_STTUS = '4'
+        AND HST_CHG_DT IS NULL
+    </select>
+
+    <update id="updateHit" parameterType="String">
+        UPDATE MCP_USER SET LOGIN_COUNT = LOGIN_COUNT +1 , SYS_LDATE = TO_CHAR(SYSDATE,'YYYY-MM-DD')
+        WHERE USERID = #{userId}
+    </update>
+
+    <select id="getLoginAutoLogin" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="com.ktmmobile.mcp.common.dto.db.NmcpAutoLoginTxnDto">
+        SELECT
+        AUTO_LOGIN_SEQ
+        ,PLATFORM_CD
+        ,USER_ID
+        ,LOGIN_DIV_CD
+        ,TOKEN
+        ,TOKEN_REG_DT
+        ,TOKEN_VALID_PERIOD
+        ,ROWNUM RNUM
+        FROM
+        (
+        SELECT
+        AUTO_LOGIN_SEQ
+        ,PLATFORM_CD
+        ,USER_ID
+        ,LOGIN_DIV_CD
+        ,TOKEN
+        ,TOKEN_REG_DT
+        ,TOKEN_VALID_PERIOD
+        ,ROWNUM RNUM
+        FROM NMCP_AUTO_LOGIN_TXN
+        WHERE 1=1
+        <if test='token != null and token != ""'>
+            AND TOKEN = #{token}
+        </if>
+        <if test='userId != null and userId != ""'>
+            AND USER_ID = #{userId}
+        </if>
+        ORDER BY AUTO_LOGIN_SEQ DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <insert id="insertAutoLoginTxn" parameterType="com.ktmmobile.mcp.common.dto.db.NmcpAutoLoginTxnDto">
+        <selectKey keyProperty="autoLoginSeq" resultType="int" order="BEFORE">
+            SELECT NVL(MAX(AUTO_LOGIN_SEQ), 0) + 1 FROM NMCP_AUTO_LOGIN_TXN
+        </selectKey>
+        INSERT INTO NMCP_AUTO_LOGIN_TXN(
+        AUTO_LOGIN_SEQ
+        , PLATFORM_CD
+        , USER_ID
+        , LOGIN_DIV_CD
+        , TOKEN
+        , TOKEN_REG_DT
+        , TOKEN_VALID_PERIOD
+        , CRET_DT
+        , AMD_DT
+        ) VALUES (
+        #{autoLoginSeq}
+        , #{platformCd}
+        , #{userId}
+        , #{loginDivCd}
+        , #{token}
+        , SYSDATE
+        , #{tokenValidPeriod}
+        , SYSDATE
+        , SYSDATE
+        )
+    </insert>
+
+    <update id="updateAutoLoginTxn" parameterType="com.ktmmobile.mcp.common.dto.db.NmcpAutoLoginTxnDto">
+        UPDATE NMCP_AUTO_LOGIN_TXN
+        SET TOKEN = #{token},
+            PLATFORM_CD = #{platformCd},
+            LOGIN_DIV_CD = #{loginDivCd},
+            TOKEN_VALID_PERIOD = #{tokenValidPeriod},
+            TOKEN_REG_DT = SYSDATE,
+            AMD_DT = SYSDATE
+        WHERE USER_ID = #{userId}
+    </update>
+
+    <select id="checkNiceCertAjax" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        SELECT
+        USERID, PASSWORD, NAME, AUTH_CODE, PIN, EMAIL, POST, ADDRESS, ADDRESS_DTL, MOBILE_NO, CONTACT_NO, BIRTHDAY,
+        GENDER, SYS_RDATE, SYS_UDATE, SYS_LDATE, LOGIN_COUNT, STATUS, CUST_NUM, AUTH_KEY, USER_DIVISION, EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+        FROM (
+        SELECT USERID, PASSWORD, NAME, AUTH_CODE, PIN, EMAIL, POST, ADDRESS, ADDRESS_DTL, MOBILE_NO, CONTACT_NO, BIRTHDAY,
+        GENDER, SYS_RDATE, SYS_UDATE, SYS_LDATE, LOGIN_COUNT, STATUS, CUST_NUM, AUTH_KEY, USER_DIVISION, EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+        FROM MCP_USER
+        WHERE pin = #{pin}
+        <if test="name != null and name != ''">
+            AND UPPER(NAME) = UPPER(TRIM(#{name}))
+        </if>
+        ORDER BY SYS_RDATE DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <select id="checkNiceCertDormantAjax" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        SELECT
+        USERID, PASSWORD, NAME, AUTH_CODE, PIN, EMAIL, POST, ADDRESS, ADDRESS_DTL, MOBILE_NO, CONTACT_NO, BIRTHDAY,
+        GENDER, SYS_RDATE, SYS_UDATE, SYS_LDATE, LOGIN_COUNT, STATUS, CUST_NUM, AUTH_KEY, USER_DIVISION, EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+        FROM (
+        SELECT USER_ID USERID, LOGIN_PWD PASSWORD, NM NAME, AUT_CODE AUTH_CODE, PIN, EMAIL, ZIPCD POST, ADDRESS, ADDRESS_DTL, MOBILE_NO, CTN CONTACT_NO, BIRTHDAY,
+        GENDER, CRET_DT SYS_RDATE, AMD_DT SYS_UDATE, LOGIN_DT SYS_LDATE, LOGIN_CNT LOGIN_COUNT, USER_STTUS STATUS, CUST_NO CUST_NUM, AUTH_KEY, USER_DIV USER_DIVISION, EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+        FROM NMCP_USER_HST
+        WHERE pin = #{pin}
+        <if test="name != null and name != ''">
+            AND UPPER(NM) = UPPER(TRIM(#{name}))
+        </if>
+        AND USER_STTUS = '4'
+        AND HST_CHG_DT IS NULL
+        ORDER BY SYS_RDATE DESC
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <select id="checkIdNameAjax" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        SELECT
+            USERID, PASSWORD, NAME, AUTH_CODE, PIN, EMAIL, POST, ADDRESS, ADDRESS_DTL, MOBILE_NO, CONTACT_NO, BIRTHDAY,
+            GENDER, SYS_RDATE, SYS_UDATE, SYS_LDATE, LOGIN_COUNT, STATUS, CUST_NUM, AUTH_KEY, USER_DIVISION, EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+        FROM (
+                 SELECT USERID, PASSWORD, NAME, AUTH_CODE, PIN, EMAIL, POST, ADDRESS, ADDRESS_DTL, MOBILE_NO, CONTACT_NO, BIRTHDAY,
+                        GENDER, SYS_RDATE, SYS_UDATE, SYS_LDATE, LOGIN_COUNT, STATUS, CUST_NUM, AUTH_KEY, USER_DIVISION, EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+                 FROM MCP_USER
+                 WHERE
+                     UPPER(USERID) = UPPER(TRIM(#{userId}))
+                   AND UPPER(NAME) = UPPER(TRIM(#{name}))
+
+                 ORDER BY SYS_RDATE DESC
+             )
+        WHERE ROWNUM = 1
+    </select>
+
+    <select id="checkIdNameDormantAjax" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        SELECT
+            USERID, PASSWORD, NAME, AUTH_CODE, PIN, EMAIL, POST, ADDRESS, ADDRESS_DTL, MOBILE_NO, CONTACT_NO, BIRTHDAY,
+            GENDER, SYS_RDATE, SYS_UDATE, SYS_LDATE, LOGIN_COUNT, STATUS, CUST_NUM, AUTH_KEY, USER_DIVISION, EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+        FROM (
+                 SELECT USER_ID USERID, LOGIN_PWD PASSWORD, NM NAME, AUT_CODE AUTH_CODE, PIN, EMAIL, ZIPCD POST, ADDRESS, ADDRESS_DTL, MOBILE_NO, CTN CONTACT_NO, BIRTHDAY,
+                        GENDER, CRET_DT SYS_RDATE, AMD_DT SYS_UDATE, LOGIN_DT SYS_LDATE, LOGIN_CNT LOGIN_COUNT, USER_STTUS STATUS, CUST_NO CUST_NUM, AUTH_KEY, USER_DIV USER_DIVISION, EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+                 FROM NMCP_USER_HST
+                 WHERE USER_STTUS = '4'
+                   AND HST_CHG_DT IS NULL
+                   AND UPPER(USER_ID) = UPPER(TRIM(#{userId}))
+                   AND UPPER(NM) = UPPER(TRIM(#{name}))
+                 ORDER BY SYS_RDATE DESC
+             )
+        WHERE ROWNUM = 1
+    </select>
+
+    <update id="updateNewPassword" parameterType="java.util.HashMap">
+        UPDATE
+            MCP_USER
+        SET
+            PASSWORD = #{password}
+          ,LOGIN_FAIL_COUNT = 0
+          ,PWD_CHG_DT = SYSDATE
+        WHERE
+            UPPER(USERID) = UPPER(#{userid})
+    </update>
+
+    <update id="updateNewPasswordDormant" parameterType="java.util.HashMap">
+        UPDATE
+            NMCP_USER_HST
+        SET
+            LOGIN_PWD = #{password}
+          ,LOGIN_FAIL_CNT = 0
+          ,PWD_CHG_LAST_DT = SYSDATE
+        WHERE
+            UPPER(USER_ID) = UPPER(#{userid})
+    </update>
+
+    <update id="insertDormantToMcpUser" parameterType="com.ktmmobile.mcp.common.dto.NiceResDto">
+        INSERT INTO MCP_USER
+        (
+            USERID
+        , PASSWORD
+        , NAME
+        , AUTH_CODE
+        , PIN
+        , EMAIL
+        , POST
+        , ADDRESS
+        , ADDRESS_DTL
+        , MOBILE_NO
+        , CONTACT_NO
+        , BIRTHDAY
+        , GENDER
+        , SYS_RDATE
+        , SYS_UDATE
+        , SYS_LDATE
+        , LOGIN_COUNT
+        , STATUS
+        , CUST_NUM
+        , AUTH_KEY
+        , USER_DIVISION
+        , EMAIL_CODE
+        , ADDRESS_BJD
+        , REVOCATION_DATE
+        , PWD_CHG_DT
+        , EMAIL_RCV_YN
+        , SMS_RCV_YN
+        , LOGIN_FAIL_COUNT
+        , CLAUSE_PRI_AD_FLAG
+        , PWD_CHG_DELAY_DT
+        , CUSTOMER_ID
+        , AUTH_TEL_CODE
+        )
+        SELECT
+            USER_ID
+             , LOGIN_PWD
+             , NM
+             , AUT_CODE
+             , PIN
+             , EMAIL
+             , ZIPCD
+             , ADDRESS
+             , ADDRESS_DTL
+             , MOBILE_NO
+             , CTN
+             , BIRTHDAY
+             , GENDER
+             , CRET_DT
+             , AMD_DT
+             , to_char(SYSDATE,'yyyy-mm-dd')
+             , '0'
+             , '1'
+             , CUST_NO
+             , AUTH_KEY
+             , USER_DIV
+             , EMAIL_CODE
+             , ADDRESS_BJD
+             , REVOCATION_DATE
+             , PWD_CHG_LAST_DT
+             , EMAIL_RCV_YN
+             , SMS_RCV_YN
+             , '0'
+             , CLAUSE_PERSONAL_AD_YN
+             , PWD_CHG_DELAY_DT
+             , CUSTOMER_ID
+             , #{sMobileCo}
+        FROM NMCP_USER_HST
+        WHERE PIN = #{dupInfo}
+          AND USER_STTUS = '4'
+          AND HST_CHG_DT IS NULL
+    </update>
+
+    <update id="insertDormantToMcpUserSub" parameterType="java.lang.String">
+        INSERT INTO MCP_USER /*LoginMapper.insertDormantToMcpUserSub*/
+        (
+            USERID
+        , PASSWORD
+        , NAME
+        , AUTH_CODE
+        , PIN
+        , EMAIL
+        , POST
+        , ADDRESS
+        , ADDRESS_DTL
+        , MOBILE_NO
+        , CONTACT_NO
+        , BIRTHDAY
+        , GENDER
+        , SYS_RDATE
+        , SYS_UDATE
+        , SYS_LDATE
+        , LOGIN_COUNT
+        , STATUS
+        , CUST_NUM
+        , AUTH_KEY
+        , USER_DIVISION
+        , EMAIL_CODE
+        , ADDRESS_BJD
+        , REVOCATION_DATE
+        , PWD_CHG_DT
+        , EMAIL_RCV_YN
+        , SMS_RCV_YN
+        , LOGIN_FAIL_COUNT
+        , CLAUSE_PRI_AD_FLAG
+        , PWD_CHG_DELAY_DT
+        , CUSTOMER_ID
+        )
+        SELECT
+            USER_ID
+             , LOGIN_PWD
+             , NM
+             , AUT_CODE
+             , PIN
+             , EMAIL
+             , ZIPCD
+             , ADDRESS
+             , ADDRESS_DTL
+             , MOBILE_NO
+             , CTN
+             , BIRTHDAY
+             , GENDER
+             , CRET_DT
+             , AMD_DT
+             , to_char(SYSDATE,'yyyy-mm-dd')
+             , '0'
+             , '1'
+             , CUST_NO
+             , AUTH_KEY
+             , USER_DIV
+             , EMAIL_CODE
+             , ADDRESS_BJD
+             , REVOCATION_DATE
+             , PWD_CHG_LAST_DT
+             , EMAIL_RCV_YN
+             , SMS_RCV_YN
+             , '0'
+             , CLAUSE_PERSONAL_AD_YN
+             , PWD_CHG_DELAY_DT
+             , CUSTOMER_ID
+        FROM NMCP_USER_HST
+        WHERE USER_ID = #{userId}
+          AND USER_STTUS = '4'
+          AND HST_CHG_DT IS NULL
+    </update>
+
+    <update id="deleteDormantToMcpUser" parameterType="java.lang.String">
+        DELETE NMCP_USER_HST WHERE USER_ID = #{userId}
+    </update>
+
+    <update id="updateDormantUserChg" parameterType="java.lang.String">
+        UPDATE NMCP_USER_HST
+        SET
+            HST_CHG_DT = SYSDATE
+          , USER_STTUS = '1'
+        WHERE PIN = #{pin}
+          AND USER_STTUS = '4'
+          AND HST_CHG_DT IS NULL
+    </update>
+
+    <select id="getMcpUserDarkwebList" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.common.dto.McpUserDarkwebDto">
+        SELECT /*Login_Query.getMcpUserDarkwebList  */
+            USER_ID
+             , REG_DATE
+             , CHG_DATE
+             , PW_UPDATE_YN
+             , REG_DT
+             , CHG_DT
+        FROM MCP_USER_DARKWEB
+        WHERE 1=1
+          AND USER_ID = #{userId}
+          AND PW_UPDATE_YN = 'N'
+    </select>
+
+    <update id="updateMcpUserDarkweb" parameterType="java.lang.String">
+
+        UPDATE MCP_USER_DARKWEB SET
+            PW_UPDATE_YN = 'Y'
+                                  , CHG_DATE = SYSDATE
+                                  , CHG_DT = TO_CHAR(SYSDATE,'YYYYMMDD')
+        WHERE 1=1
+          AND USER_ID = #{userId}
+          AND PW_UPDATE_YN = 'N'
+
+    </update>
+
+    <update id="updatePwChgInfoNoShow" parameterType="java.lang.String">
+        UPDATE MCP_USER SET
+            PWD_CHG_DELAY_DT = SYSDATE
+        WHERE 1=1
+          AND USERID = #{userId}
+    </update>
+
+
+    <select id="findPinToIdCnt" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto"  resultType="java.lang.Integer">
+        SELECT
+            COUNT(*) CNT
+        FROM MCP_USER
+        WHERE 1=1
+          AND USERID =
+              (
+                  SELECT
+                      USER_ID
+                  FROM NMCP_USER_HST
+                  WHERE 1=1
+                    AND	PIN = #{pin}
+                    AND USER_STTUS = '4'
+                    AND HST_CHG_DT IS NULL
+                    AND TO_CHAR(HST_CRET_DT, 'YYYYMMDD') <![CDATA[<=]]> '20220420'
+              )
+    </select>
+
+    <update id="resetDormancy" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        UPDATE NMCP_USER_HST
+        SET PIN = NULL
+          , LOGIN_PWD = NULL
+          , HST_CHG_DT = SYSDATE
+          , USER_STTUS = '3'
+          , USER_ID = CASE
+                          WHEN LENGTH(USER_ID) > 12
+                              THEN SUBSTR(USER_ID||TO_CHAR(SYSDATE, 'YYYYMMDD'), 1, 20)
+                          ELSE USER_ID||TO_CHAR(SYSDATE, 'YYYYMMDD')
+            END
+        WHERE 1=1
+          AND PIN = #{pin}
+          AND USER_STTUS = '4'
+          AND HST_CHG_DT IS NULL
+          AND TO_CHAR(HST_CRET_DT, 'YYYYMMDD') <![CDATA[<=]]> '20220420'
+    </update>
+
+    <!-- 접속 제한 IP 찾기 -->
+    <select id="limitTime" resultType="java.lang.Integer">
+        SELECT EXPNSN_STR_VAL1
+        FROM NMCP_CD_DTL
+        WHERE CD_GROUP_ID = 'LIMITTIME'
+          AND USE_YN = 'Y'
+          AND ROWNUM = 1
+    </select>
+
+    <!-- 접속 제한 IP 찾기 -->
+    <select id="limitCnt" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto"  resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM NMCP_IP_LIMIT
+        WHERE SYSDATE <![CDATA[<]]> SYS_RDATE + (#{limitTime}/24/60/60)
+        AND ACCESS_IP = #{accessIp}
+        <choose>
+            <when test='limitType != null and limitType != ""'>
+                AND LIMIT_TYPE = #{limitType}
+            </when>
+            <otherwise>
+                AND NVL(LIMIT_TYPE,'NULL') != 'RECAPTCHA'
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 접속 제한 IP 등록 -->
+    <insert id="insertIpLimit" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto">
+        INSERT INTO NMCP_IP_LIMIT
+        (
+        LIMIT_SEQ
+        , ACCESS_IP
+        , USER_ID
+        , SYS_RDATE
+        <if test='limitType != null and limitType != ""'>
+            , LIMIT_TYPE
+        </if>
+        ) VALUES
+        (
+        TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') || TRIM(TO_CHAR(NMCP_IP_LIMIT_SEQ.NEXTVAL, '000000'))
+        , #{accessIp}
+        , #{userId}
+        , SYSDATE
+        <if test='limitType != null and limitType != ""'>
+            , #{limitType}
+        </if>
+        )
+    </insert>
+
+    <!-- 정회원 정보 가져 오기 -->
+    <select id="selCntrCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT count(1) FROM MCP_USER_CNTR_MNG WHERE USERID = #{userId}
+    </select>
+
+    <!--  준회원 변경 처리 -->
+    <update id="updCntr"  parameterType="java.lang.String">
+        UPDATE MCP_USER SET USER_DIVISION = '00' , CUSTOMER_ID = NULL WHERE USERID = #{userId}
+    </update>
+
+    <!-- 특정시간동안 특정횟수 recaptcha 이력 카운트 -->
+    <select id="getRecaptchaTraceCnt" parameterType="java.util.HashMap" resultType="int">
+        SELECT COUNT(1)
+        FROM MCP_ACCESS_TRACE
+        WHERE 1=1
+          AND SYS_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+          AND PRCS_MDL_IND = 'LOGIN_EXECUTE'
+          AND TRTM_RSLT_SMST = #{trtmRsltSmst}
+          AND ACCESS_IP = #{accessIp}
+          AND SYS_RDATE <![CDATA[>]]> (SYSDATE - (#{limitTime}/24/60/60))
+    </select>
+
+    <!-- 아이디로 DI 조회 -->
+    <select id="getDupInfoByUserId" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT PIN FROM MCP_USER WHERE USERID = #{userId}
+    </select>
+</mapper>

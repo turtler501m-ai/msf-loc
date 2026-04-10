@@ -1,0 +1,35 @@
+config:
+  credentials_id: MCP-WEB-STG
+#  retry_with_prompt: true
+#  retry_and_return: true
+#  retry_count: 3
+
+remote_groups:
+  r_group_1:
+    - name: apache
+      host: MCP-WEB1-STG
+    - name: apache
+      host: MCP-WEB2-STG
+
+command_groups:
+  c_group_1:
+    - puts:
+        - from: '/data/release/stg/mcp-portal/mcp-portal.tar'
+          into: '/apache/apache24/dist/'
+          override: true
+    - commands:
+        - 'ls -lrt /apache/apache24/dist/mcp-portal.tar'
+        - 'rm -rf /apache/apache24/www/mcp-portal/*'
+        - 'tar -xzf /apache/apache24/dist/mcp-portal.tar -C /apache/apache24/www/mcp-portal/'
+        - 'ls -lrt /apache/apache24/www/mcp-portal/src/'
+        - 'ln -s /nas/uploadfiles/stg /apache/apache24/www/mcp-portal/src/resources/upload'
+        - 'mkdir -p /apache/apache24/www/mcp-portal/src/resources/msp/upload'
+        - 'ln -s /mportal/default/resources/upload/gift /apache/apache24/www/mcp-portal/src/resources/msp/upload/gift'
+        - 'find /apache/apache24/www/mcp-portal/src -type l | xargs ls -lrt'
+
+steps:
+  deploy:
+    - remote_groups:
+        - r_group_1
+      command_groups:
+        - c_group_1

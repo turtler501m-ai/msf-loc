@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.m2m.usimprdtgmt.mapper.UsimOrgnPrdtRelMapper">
+
+
+	<!-- M2M USIM G-PSCM2M그룹의 사용자 조직 조회 -->
+	<select id="usimOrgnList" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* UsimOrgnPrdtRelMapper.usimOrgnList */
+        SELECT DISTINCT
+            B.ORGN_ID 
+          , C.ORGN_NM 
+        FROM
+            CMN_USG_GRP_ASGN_MST  A
+          , CMN_USR_MST           B
+          , ORG_ORGN_INFO_MST     C
+        WHERE   A.USR_ID = B.USR_ID (+)
+            AND B.ORGN_ID = C.ORGN_ID (+)
+            AND B.USG_YN <![CDATA[<>]]>  'N'
+            AND A.GRP_ID = 'G-PSCM2M'
+        ORDER BY
+            C.ORGN_NM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+
+	<select id="usimPrdtRelList" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* UsimOrgnPrdtRelMapper.usimPrdtRelList */
+		SELECT
+			    A.RPRS_PRDT_ID
+			  , A.PRDT_CODE
+			  , A.PRDT_NM
+			  , A.PRDT_DESC
+			  , A.OUT_UNIT_PRIC
+			  , A.OUT_UNIT_PRIC * 1.1 OUT_UNIT_PRIC_VAT
+			  , A.USE_YN
+			  , A.UNIT_PRIC_APPL_DTTM
+			  , A.UNIT_PRIC_EXPR_DTTM
+			  , A.IMG_FILE
+			  , A.ORG_IMG_FILE
+			  , FN_GET_USRNM(B.RVISN_ID) AS USR_NM
+			  , TO_CHAR(B.RVISN_DTTM,'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+			  , B.ORGN_ID 
+		FROM    MSP_M2M_MDL A
+		       ,MSP_M2M_ORGN_PRDT_REL B
+		WHERE A.RPRS_PRDT_ID = B.RPRS_PRDT_ID
+  	    AND   B.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		ORDER BY A.RPRS_PRDT_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />		
+	</select>		
+
+
+	<insert id="usimPrdtRelInsert" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO">
+		/* UsimOrgnPrdtRelMapper.usimPrdtRelInsert */
+		INSERT INTO MSP_M2M_ORGN_PRDT_REL
+		(
+		    ORGN_ID
+		    , RPRS_PRDT_ID
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		VALUES
+		(
+		    #{orgnId, jdbcType=VARCHAR}
+		  ,	#{rprsPrdtId, jdbcType=VARCHAR}
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		)
+	</insert>
+	
+	<update id="usimPrdtRelDelete" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO">
+		/* UsimOrgnPrdtRelMapper.usimPrdtRelDelete */
+		DELETE  MSP_M2M_ORGN_PRDT_REL
+		 WHERE  RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+		   AND  ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	</update>	
+			
+</mapper>

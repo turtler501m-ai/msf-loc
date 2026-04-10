@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DormantMapper">
+
+	<select id="selectDormantList" resultType="com.ktmmobile.mcp.dormant.dto.DormantDto">
+		SELECT
+			USERID
+			, NAME
+			, MOBILE_NO
+			, TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'YYYY') YEAR_TEXT
+			, TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'MM') MONTH_TEXT
+			, TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'DD') DATE_TEXT
+		FROM MCP_USER
+		WHERE USER_DIVISION = '00'
+		AND SYS_LDATE = TO_CHAR(ADD_MONTHS(SYSDATE, -11), 'YYYY-MM-DD')
+	</select>
+
+	<delete id="deleteAssociateMember">
+		DELETE FROM MCP_USER
+		WHERE USER_DIVISION = '00'
+		AND NVL(SYS_LDATE, TO_CHAR(SYS_RDATE, 'YYYY-MM-DD')) <![CDATA[<]]> TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY-MM-DD')
+	</delete>
+
+	<update id="updateAssociateMember">
+		UPDATE MCP_USER SET
+             PASSWORD = ''
+            ,NAME = '탈퇴회원'
+            ,AUTH_CODE = 'USER_ROLE'
+            ,CUST_NUM = ''
+            ,AUTH_KEY = ''
+            ,PIN = ''
+            ,USER_DIVISION = ''
+            ,EMAIL = ''
+            ,EMAIL_CODE = ''
+            ,POST = ''
+            ,ADDRESS = ''
+            ,ADDRESS_DTL = ''
+            ,ADDRESS_BJD = ''
+            ,MOBILE_NO = ''
+            ,CONTACT_NO  = ''
+            ,BIRTHDAY = ''
+            ,GENDER = ''
+            ,LOGIN_COUNT = '0'
+            ,STATUS = '3'
+            ,REVOCATION_DATE = SYSDATE
+        WHERE USER_DIVISION = '00'
+        AND NVL(SYS_LDATE, TO_CHAR(SYS_RDATE, 'YYYY-MM-DD')) <![CDATA[<]]> TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY-MM-DD')
+        AND STATUS != '3'
+	</update>
+
+	<select id="selectDormantRegularList" resultType="com.ktmmobile.mcp.dormant.dto.DormantDto">
+		SELECT
+			USERID
+			, NAME
+			, MOBILE_NO
+			, TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'YYYY') YEAR_TEXT
+			, TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'MM') MONTH_TEXT
+			, TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'DD') DATE_TEXT
+		FROM MCP_USER
+		WHERE USER_DIVISION = '01'
+		AND NVL(SYS_LDATE, TO_CHAR(SYS_RDATE, 'YYYY-MM-DD')) <![CDATA[<]]> TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY-MM-DD')
+	</select>
+
+	<insert id="insertDormantRegularMember" parameterType="String">
+		INSERT INTO NMCP_USER_HST
+		(
+			HST_CRET_DT
+			, HST_CHG_DT
+			, USER_ID
+			, LOGIN_PWD
+			, NM
+			, AUT_CODE
+			, PIN
+			, EMAIL
+			, ZIPCD
+			, ADDRESS
+			, ADDRESS_DTL
+			, MOBILE_NO
+			, CTN
+			, BIRTHDAY
+			, GENDER
+			, CRET_DT
+			, AMD_DT
+			, LOGIN_DT
+			, LOGIN_CNT
+			, USER_STTUS
+			, CUST_NO
+			, AUTH_KEY
+			, USER_DIV
+			, EMAIL_CODE
+			, ADDRESS_BJD
+			, REVOCATION_DATE
+			, PWD_CHG_LAST_DT
+			, EMAIL_RCV_YN
+			, SMS_RCV_YN
+			, LOGIN_FAIL_CNT
+			, PWD_CHG_DELAY_DT
+			, CLAUSE_PERSONAL_AD_YN
+			, CUSTOMER_ID
+		)
+		SELECT
+		    SYSDATE
+		    , NULL
+		    , USERID
+		    , PASSWORD
+		    , NAME
+		    , AUTH_CODE
+		    , PIN
+		    , EMAIL
+		    , POST
+		    , ADDRESS
+		    , ADDRESS_DTL
+		    , MOBILE_NO
+		    , CONTACT_NO
+		    , BIRTHDAY
+		    , GENDER
+		    , SYS_RDATE
+		    , SYS_UDATE
+		    , SYS_LDATE
+		    , LOGIN_COUNT
+		    , '4'
+		    , CUST_NUM
+		    , AUTH_KEY
+		    , USER_DIVISION
+		    , EMAIL_CODE
+		    , ADDRESS_BJD
+		    , REVOCATION_DATE
+		    , PWD_CHG_DT
+		    , EMAIL_RCV_YN
+		    , SMS_RCV_YN
+		    , LOGIN_FAIL_COUNT
+		    , PWD_CHG_DELAY_DT
+		    , CLAUSE_PRI_AD_FLAG
+		    , CUSTOMER_ID
+		FROM MCP_USER
+		WHERE USERID = #{userid}
+	</insert>
+
+
+	<delete id="deleteDormantRegularMember" parameterType="java.lang.String">
+		DELETE FROM MCP_USER
+		WHERE USERID = #{userid}
+	</delete>
+</mapper>

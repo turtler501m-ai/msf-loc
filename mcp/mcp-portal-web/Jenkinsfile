@@ -1,0 +1,94 @@
+#!/usr/bin/env groovy
+import java.io.File
+import java.lang.String
+import groovy.util.AntBuilder
+import groovy.lang.GroovyObject
+import java.lang.Object
+
+library identifier: 'utils@',
+    retriever: modernSCM([
+      $class: 'SubversionSCMSource',
+      //credentialsId: 'jenkins',
+      //remoteBase: 'http://10.20.28.19:3690/svn/utils/trunk/utils/'
+      credentialsId: 'bd22fc4b-1fd9-42fe-94ff-22863002d3e4',
+      remoteBase: 'https://scm.ktmmobile.com/repo/mcp/utils/trunk/utils/'
+])
+
+pipeline {
+    agent any
+    options {
+        ansiColor('css')
+    }
+
+    // global env variables
+    environment {
+        antHome = tool 'apache-ant-1.10.12'
+        jdkHome = tool 'jdk-11.0.2'
+        targetEnv = "${env.JOB_NAME}".split('-').last()
+        varField = "${env.JOB_NAME}".split('-')
+        platformNm = "${varField[0]}-${varField[1]}"
+    }
+
+    stages {
+
+        stage('Ant build') {
+            steps {
+
+                script {
+                    loadEnviromentVariables("devops/jenkins/jenkins.properties")
+
+                    def targetDir = "${props.releaseDir}/${env.targetEnv}/${env.platformNm}"
+                    def fileNm = "${env.platformNm}.${props.tarFile}"
+
+            try {
+                        // Run the ant build
+                        withEnv(["ANT_HOME=$antHome", "ENV=$targetEnv", "JAVA_HOME=$jdkHome", "PATH=${jdkHome}/bin:${antHome}/bin:${env.PATH}"]) {
+                            if (isUnix()) {
+                def dest = new File(targetDir)
+                                if (!dest.exists()){
+                                    dest.mkdirs();
+                                }
+                                compress.tar("${env.WORKSPACE}", fileNm, targetDir);
+                log.info "compressed file >> ${targetDir}/${fileNm}"
+                            }
+                        }
+
+                    } catch(e) {
+                        log.info "clean up workspace >> ${env.JOB_NAME}"
+                        sh 'ls -A1|xargs rm -rf' /* clean up our workspace */
+                        currentBuild.result = "FAILED"
+                        log.error e.toString()
+                    }
+
+                }
+            }
+        }
+
+        stage('Source Deploy') {
+            when {
+              expression {
+                currentBuild.result == null || currentBuild.result == 'SUCCESS'
+              }
+            }
+            steps {
+                script {
+                    withEnv(["ENV=$targetEnv", "PATH=${env.PATH}"]) {
+                        switch("$ENV") {
+//                            case 'prd':
+//                                log.info 'build only production environment.'
+//                                break
+                            default:
+                                log.info "${env.WORKSPACE}/${props.devopsPath}/${env.platformNm}/${ENV}/${props.utilPropsFile}"
+                                sshRemote("${env.WORKSPACE}/${props.devopsPath}/${env.platformNm}/${ENV}/${props.utilPropsFile}");
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+def loadEnviromentVariables(path) {
+    props = readProperties file: path
+}

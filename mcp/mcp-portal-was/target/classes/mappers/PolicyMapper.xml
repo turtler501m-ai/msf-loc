@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PolicyMapper">
+
+	<!-- 개인정보 총 글 수 받아오기-->
+    <select id="getPriTotalCount" resultType="Integer" parameterType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto">
+        SELECT
+            COUNT(STPLT_SEQ)
+          FROM  NMCP_STPLT_BAS
+          WHERE 1=1
+          AND STPLT_CTG_CD = '06'
+          AND SHOW_YN = 'Y'
+          AND SITE_CODE = #{siteCode}
+
+    </select>
+
+    <!--개인정보 취급방침 리스트 가져오기 -->
+    <select id="privacyBoardList" resultType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto" parameterType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto">
+        SELECT
+        	ROW_NUMBER() OVER (ORDER BY STPLT_SEQ ASC) AS ROW_NUM
+            , STPLT_SEQ
+            , STPLT_TITLE
+            , STPLT_CTG_CD
+            , GET_CODE_NM('TERMS',STPLT_CTG_CD) AS STPLT_CTG_NM
+            , TO_CHAR(CRET_DT, 'YYYY.MM.DD') AS CRET_DT
+          FROM  NMCP_STPLT_BAS
+          WHERE 1=1
+          AND STPLT_CTG_CD = '06'
+          AND SHOW_YN = 'Y'
+          AND SITE_CODE = #{siteCode}
+          ORDER BY STPLT_SEQ DESC
+    </select>
+
+    <!--개인정보 취급방침 상세 가져오기 -->
+    <select id="viewPrivacyBoard" resultType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto" parameterType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto">
+        SELECT
+             STPLT_SEQ,STPLT_CTG_CD,STPLT_CTG_NM,STPLT_TITLE,SHOW_YN,STPLT_SBST,CRET_ID,AMD_ID,CRET_DT,AMD_DT,STPLT_HIT,NEXT_SEQ,NEXT_TITLE,NEXT_CRET_DT,PRE_SEQ,PRE_TITLE,PRE_CRET_DT
+        FROM (
+            SELECT
+                STPLT_SEQ,
+                STPLT_CTG_CD,
+                (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'TERMS' AND DTL_CD = STPLT_CTG_CD) AS STPLT_CTG_NM,
+                STPLT_TITLE,
+                SHOW_YN,
+                STPLT_SBST,
+                CRET_ID,
+                AMD_ID,
+                TO_CHAR(CRET_DT, 'YYYY.MM.DD') AS CRET_DT,
+                TO_CHAR(AMD_DT, 'YYYY.MM.DD') AS AMD_DT,
+                STPLT_HIT,
+                LEAD(STPLT_SEQ,1) over (order by STPLT_SEQ)	NEXT_SEQ,
+                LEAD(STPLT_TITLE,1,'다음글이 없습니다.') OVER (ORDER BY STPLT_SEQ) NEXT_TITLE,
+                TO_CHAR(LEAD(CRET_DT,1) OVER (ORDER BY STPLT_SEQ), 'YYYY.MM.DD') NEXT_CRET_DT,
+                LAG(STPLT_SEQ,1) over (order by STPLT_SEQ) PRE_SEQ,
+                LAG(STPLT_TITLE,1,'이전글이 없습니다.') OVER (ORDER BY STPLT_SEQ) PRE_TITLE,
+                TO_CHAR(LAG(CRET_DT,1) OVER (ORDER BY STPLT_SEQ), 'YYYY.MM.DD') PRE_CRET_DT
+            FROM
+                  NMCP_STPLT_BAS
+                  WHERE 1=1
+                  AND STPLT_CTG_CD = '06'
+                  AND SITE_CODE = #{siteCode}
+                  AND SHOW_YN = 'Y'
+        ) WHERE
+            <choose>
+                <when test="stpltSeq != null and stpltSeq != 0" >
+                    STPLT_SEQ = #{stpltSeq}
+                </when>
+                <otherwise>
+                    STPLT_SEQ = (SELECT MAX(STPLT_SEQ) FROM NMCP_STPLT_BAS WHERE STPLT_CTG_CD = '06' AND SHOW_YN = 'Y' AND SITE_CODE = #{siteCode})
+                </otherwise>
+            </choose>
+    </select>
+
+    <!-- 이용약관 총 글 수 받아오기-->
+    <select id="getTotalCount" resultType="Integer" parameterType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto">
+        SELECT
+                 COUNT(A.STPLT_SEQ)
+          FROM
+                    NMCP_STPLT_BAS A,
+                  NMCP_STPLT_DTL B
+          WHERE  A.STPLT_SEQ = B.STPLT_BAS_SEQ
+               AND  A.STPLT_CTG_CD NOT IN('06','05')
+               AND SHOW_YN = 'Y'
+        <if test="stpltCtgCd != null and stpltCtgCd != '' and stpltCtgCd != '00'">
+             AND A.STPLT_CTG_CD = #{stpltCtgCd}
+        </if>
+    </select>
+
+    <!-- 이용약관 글 리스트 가져오기 -->
+    <select id="policyBoardList" resultType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto" parameterType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto">
+     SELECT
+                  ROW_NUMBER() OVER (ORDER BY STPLT_SEQ ASC) AS ROW_NUM,
+                  A.STPLT_SEQ,
+                  A.STPLT_CTG_CD,
+                  (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'TERMS' AND DTL_CD = STPLT_CTG_CD) AS STPLT_CTG_NM,
+                  A.STPLT_TITLE,
+                  A.SHOW_YN,
+                  A.CRET_ID,
+                  A.AMD_ID,
+                  TO_CHAR(A.CRET_DT, 'YYYY.MM.DD') AS CRET_DT,
+                  TO_CHAR(A.AMD_DT, 'YYYY.MM.DD') AS AMD_DT,
+                  A.STPLT_HIT,
+                  B.STPLT_BAS_SEQ,
+                  B.FILE_NM,
+                  B.REAL_FILE_NM,
+                  B.FILE_TYPE,
+                  B.FILE_PATH_NM,
+                  B.ATT_SEQ
+          FROM
+                    NMCP_STPLT_BAS A,
+                  NMCP_STPLT_DTL B
+          WHERE  A.STPLT_SEQ = B.STPLT_BAS_SEQ
+               AND  A.STPLT_CTG_CD NOT IN('06','05')
+               AND SHOW_YN = 'Y'
+        <if test="stpltCtgCd != null and stpltCtgCd != '' and stpltCtgCd != '00'">
+             AND A.STPLT_CTG_CD = #{stpltCtgCd}
+        </if>
+          ORDER BY A.STPLT_SEQ DESC
+    </select>
+
+    <!-- 이용약관 상세 가져오기 -->
+    <select id="viewKtPolicy" resultType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto" parameterType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto">
+        SELECT
+          STPLT_SEQ
+          , STPLT_CTG_CD
+          , STPLT_CTG_NM
+          , STPLT_TITLE
+          , SHOW_YN
+          , STPLT_SBST
+          , CRET_ID
+          , AMD_ID
+          , CRET_DT
+          , AMD_DT
+          , STPLT_HIT
+          , NEXT_SEQ
+          , NEXT_TITLE
+          , NEXT_CRET_DT
+          , PRE_SEQ
+          , PRE_TITLE
+          , PRE_CRET_DT
+          , STPLT_BAS_SEQ
+          , FILE_NM
+          , REAL_FILE_NM
+          , FILE_TYPE
+          , FILE_PATH_NM
+          , ATT_SEQ
+        FROM (
+            SELECT
+                A.STPLT_SEQ,
+                A.STPLT_CTG_CD,
+                (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'TERMS' AND DTL_CD = STPLT_CTG_CD) AS STPLT_CTG_NM,
+                A.STPLT_TITLE,
+                A.SHOW_YN,
+                A.STPLT_SBST,
+                A.CRET_ID,
+                A.AMD_ID,
+                TO_CHAR(A.CRET_DT, 'YYYY.MM.DD') AS CRET_DT,
+                TO_CHAR(A.AMD_DT, 'YYYY.MM.DD') AS AMD_DT,
+                A.STPLT_HIT,
+                LEAD(A.STPLT_SEQ,1) over (order by A.STPLT_SEQ)	NEXT_SEQ,
+                LEAD(A.STPLT_TITLE,1,'다음글이 없습니다.') OVER (ORDER BY A.STPLT_SEQ) NEXT_TITLE,
+                TO_CHAR(LEAD(A.CRET_DT,1) OVER (ORDER BY A.STPLT_SEQ), 'YYYY.MM.DD') NEXT_CRET_DT,
+                LAG(A.STPLT_SEQ,1) over (order by A.STPLT_SEQ) PRE_SEQ,
+                LAG(A.STPLT_TITLE,1,'이전글이 없습니다.') OVER (ORDER BY A.STPLT_SEQ) PRE_TITLE,
+                TO_CHAR(LAG(A.CRET_DT,1) OVER (ORDER BY A.STPLT_SEQ), 'YYYY.MM.DD') PRE_CRET_DT,
+                B.STPLT_BAS_SEQ,
+                B.FILE_NM,
+                B.REAL_FILE_NM,
+                B.FILE_TYPE,
+                B.FILE_PATH_NM,
+                B.ATT_SEQ
+            FROM
+                  NMCP_STPLT_BAS A,
+                NMCP_STPLT_DTL B
+                  WHERE 1=1
+                  AND A.STPLT_SEQ = B.STPLT_BAS_SEQ
+                  AND A.STPLT_CTG_CD NOT IN('06','05')
+                  <if test="stpltCtgCd != null and stpltCtgCd != '' and stpltCtgCd != '00'">
+                     AND A.STPLT_CTG_CD = #{stpltCtgCd}
+                </if>
+                  AND A.SHOW_YN = 'Y'
+        ) WHERE STPLT_SEQ = #{stpltSeq}
+    </select>
+
+    <!-- 이용약관 주요설명서 가져오기 -->
+    <select id="getPolicyGuide" resultType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto" parameterType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto">
+        SELECT
+                  STPLT_SEQ,
+                  STPLT_CTG_CD,
+                  STPLT_TITLE,
+                  SHOW_YN,
+                  STPLT_SBST,
+                  CRET_ID,
+                  AMD_ID,
+                  TO_CHAR(CRET_DT, 'YYYY.MM.DD') AS CRET_DT,
+                  TO_CHAR(AMD_DT, 'YYYY.MM.DD') AS AMD_DT,
+                  STPLT_HIT
+          FROM
+                    NMCP_STPLT_BAS
+          WHERE 1=1
+          AND STPLT_CTG_CD = '08'
+          AND SHOW_YN = 'Y'
+          ORDER BY STPLT_SEQ DESC
+    </select>
+
+    <!-- 청소년 보호 정책 가져오기 -->
+    <select id="youngBoardList" resultType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto" parameterType="com.ktmmobile.mcp.ktPolicy.dto.PolicyDto">
+        SELECT
+                  STPLT_SEQ,
+                  STPLT_CTG_CD,
+                  (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'TERMS' AND DTL_CD = STPLT_CTG_CD) AS STPLT_CTG_NM,
+                  STPLT_TITLE,
+                  SHOW_YN,
+                  STPLT_SBST,
+                  CRET_ID,
+                  AMD_ID,
+                  TO_CHAR(CRET_DT, 'YYYY.MM.DD') AS CRET_DT,
+                  TO_CHAR(AMD_DT, 'YYYY.MM.DD') AS AMD_DT,
+                  STPLT_HIT
+          FROM
+                    NMCP_STPLT_BAS
+          WHERE 1=1
+          AND STPLT_CTG_CD = '05'
+          AND SHOW_YN = 'Y'
+          ORDER BY STPLT_SEQ DESC
+    </select>
+
+	<!-- 개인정보 취급방침 히트수 증가 -->
+	<update id="hitCntPlus" parameterType="com.ktmmobile.mcp.common.dto.PersonalPolicyDto">
+		UPDATE	NMCP_STPLT_BAS
+		SET
+				STPLT_HIT = NVL(STPLT_HIT, 0) + 1
+		WHERE	STPLT_SEQ = #{stpltSeq}
+		<if test='sessionId != null and sessionId != ""'>
+		AND 	CRET_ID != #{sessionId}
+		</if>
+	</update>
+
+</mapper>

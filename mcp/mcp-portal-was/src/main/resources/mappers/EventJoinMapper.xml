@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="EventJoinMapper">
+
+    <!-- 이벤트 참여 등록 -->
+    <insert id="insertMcpEventJoin" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto">
+    INSERT INTO MCP_REVIEW_PROMOTION
+    (
+        REVIEW_PROMOTION_SEQ     --이벤트 참여 프로모션 일련번호 SQ_REVIEW_PROMOTION_SEQ SEQUENCE
+         , PROMOTION_CODE           --프로모션 코드 공통코드 EventJoinInfo 01, 02 ....
+         , USER_DIVISION            --회원구분 01 : 정회원 02:준회원 99:비회원
+         , CONTRACT_NUM             --계약번호
+         , USER_ID                  --회원아이디_등록 아이디
+         , USE_TEL_CODE             --이용중 통신사 정보 공통코드 NSC  SKT : SKT ,  LGT : LG U+  ,  KTF : KT ,   ETC : 타알뜰폰(공통코드 없음)
+         , REVIEW_CONTENT           --리뷰 내용
+         , SYS_RDT                  --등록일
+         , SYS_RDATE                --등록일시
+         , RIP                      --등록자아이피
+         , RVISN_ID                 --수정자ID
+         , RVISN_DTTM               --수정일시
+         , UIP                      --수정자아이피
+         , NAME                     --인증 성명
+         , MOBILE_NO                --인증 휴대폰번호
+         , DUP_INFO                 -- DUP_INFO
+         , REQ_SEQ                  -- 일련번호 기본키
+         , RES_SEQ                  -- 요청 일련번호
+         , CONN_INFO                -- CI
+         , BIRTH_DATE               -- 생년월일
+    ) VALUES (
+
+        SQ_REVIEW_PROMOTION_SEQ.NEXTVAL
+         , #{promotionCode}
+         , #{userDivision}
+         , #{contractNum}
+         , #{userId}
+         , #{useTelCode}
+         , #{reviewContent}
+         , TO_CHAR(SYSDATE, 'YYYYMMDD')
+         , SYSDATE
+         , #{rip}
+         , #{rvisnId}
+         , SYSDATE
+         , #{uip}
+         , #{name}
+         , #{mobileNo}
+         , #{dupInfo}
+         , #{reqSeq}
+         , #{resSeq}
+         , #{connInfo}
+         , #{birthDate}
+    )
+
+    </insert>
+
+    <!-- 이벤트 목록 조회 -->
+    <select id="selectEventJoinList" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto" resultType="com.ktmmobile.mcp.event.dto.EventJoinDto">
+        SELECT
+           A.REVIEW_PROMOTION_SEQ
+         , A.PROMOTION_CODE
+         , A.USER_DIVISION
+         , A.CONTRACT_NUM
+         , A.USER_ID
+         , A.USE_TEL_CODE
+         , A.REVIEW_CONTENT
+         , A.SHOW_YN
+         , A.PRIZE_YN
+         , A.INDC_ODRG
+         , A.SYS_RDT
+         , A.SYS_RDATE
+         , A.RIP
+         , A.RVISN_ID
+         , A.RVISN_DTTM
+         , A.UIP
+         , A.NAME
+         , A.MOBILE_NO
+         , A.DUP_INFO
+         , A.REQ_SEQ
+         , A.RES_SEQ
+         , B.DTL_CD_NM
+         , B.UP_GRP_CD
+         , A.CONN_INFO
+         , A.BIRTH_DATE
+        FROM
+            MCP_REVIEW_PROMOTION A
+            INNER JOIN NMCP_CD_DTL B ON A.PROMOTION_CODE = B.DTL_CD
+
+        WHERE 1=1
+            <if test="promotionCode != null and promotionCode != ''">
+                AND A.PROMOTION_CODE = #{promotionCode}
+            </if>
+            <if test="dupInfo != null and dupInfo != ''">
+                AND A.DUP_INFO = #{dupInfo}
+            </if>
+            <if test="mobileNo != null and mobileNo != ''">
+                 AND A.MOBILE_NO = #{mobileNo}
+            </if>
+
+        AND B.CD_GROUP_ID = 'EventJoinInfo'
+        AND B.USE_YN = 'Y'
+        AND A.SHOW_YN = 'Y'
+        AND A.USE_YN = 'Y'
+        ORDER BY A.PRIZE_YN DESC, A.INDC_ODRG, A.REVIEW_PROMOTION_SEQ DESC
+
+    </select>
+
+   <!-- 이벤트 갯수 조회 -->
+   <select id="selectEventJoinTotalCnt" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto" resultType="int">
+        SELECT
+            COUNT(1) AS CNT
+        FROM
+            MCP_REVIEW_PROMOTION A
+            INNER JOIN NMCP_CD_DTL B ON A.PROMOTION_CODE = B.DTL_CD
+        WHERE 1=1
+            <if test="promotionCode != null and promotionCode != ''">
+                AND PROMOTION_CODE = #{promotionCode}
+            </if>
+            <if test="dupInfo != null and dupInfo != ''">
+                 AND DUP_INFO = #{dupInfo}
+            </if>
+            <if test="mobileNo != null and mobileNo != ''">
+                 AND MOBILE_NO = #{mobileNo}
+            </if>
+        AND B.CD_GROUP_ID ='EventJoinInfo'
+        AND B.USE_YN = 'Y'
+        AND A.SHOW_YN = 'Y'
+        <if test="useYn != null and useYn != ''">
+                 AND A.USE_YN = 'Y'
+        </if>
+    </select>
+
+    <!-- 참여 이벤트 삭제 -->
+    <delete id="deleteMcpEventJoin" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto">
+        DELETE FROM MCP_REVIEW_PROMOTION
+        WHERE 1=1
+        AND REVIEW_PROMOTION_SEQ = #{reviewPromotionSeq}
+        <if test="dupInfo != null and dupInfo != ''">
+        AND DUP_INFO = #{dupInfo}
+        </if>
+    </delete>
+
+    <!-- 정회원 조회 -->
+    <select id="selectRegUserChk" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto" resultType="com.ktmmobile.mcp.event.dto.EventJoinDto">
+       SELECT
+           A.USERID
+         , A.CNTR_MOBILE_NO
+         , B.NAME
+       FROM
+           MCP_USER_CNTR_MNG A
+           INNER JOIN MCP_USER B ON A.USERID = B.USERID
+       WHERE 1=1
+          AND A.CNTR_MOBILE_NO= TRIM(#{mobileNo})
+          AND UPPER(REPLACE(B.NAME,' ','')) = UPPER(REPLACE(#{name},' ',''))
+    </select>
+
+        <!-- 준회원 조회 -->
+    <select id="selectUserChk" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto" resultType="com.ktmmobile.mcp.event.dto.EventJoinDto">
+       SELECT
+           USERID
+         , MOBILE_NO
+         , NAME
+       FROM
+           MCP_USER
+       WHERE 1=1
+          AND MOBILE_NO= TRIM(#{mobileNo})
+          AND UPPER(REPLACE(NAME,' ','')) = UPPER(REPLACE(#{name},' ',''))
+    </select>
+
+    <!-- 댓글 이벤트  공유 목록 조회 -->
+   <select id="eventShareList" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto" resultType="com.ktmmobile.mcp.event.dto.EventJoinDto">
+        SELECT
+            PROMOTION_CODE
+          , SHARE_CNT
+          , DUP_INFO
+        FROM
+            MCP_SHARE_PROMOTION
+        WHERE 1=1
+        <if test="promotionCode != null and promotionCode != ''">
+            AND PROMOTION_CODE = #{promotionCode}
+        </if>
+        <if test="dupInfo != null and dupInfo != ''">
+           AND DUP_INFO = #{dupInfo}
+        </if>
+    </select>
+
+    <!-- 댓글 이벤트 공유 갯수 조회 -->
+   <select id="eventShareTotalCnt" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto" resultType="int">
+        SELECT
+            SUM(SHARE_CNT) AS SHARE_CNT
+        FROM
+            MCP_SHARE_PROMOTION
+        WHERE 1=1
+        <if test="promotionCode != null and promotionCode != ''">
+            AND PROMOTION_CODE = #{promotionCode}
+            GROUP BY PROMOTION_CODE
+        </if>
+
+    </select>
+
+     <!-- 댓글 이벤트 공유 테이블 등록 -->
+    <insert id="insertEventShare" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto">
+    INSERT INTO MCP_SHARE_PROMOTION
+    (
+         PROMOTION_CODE           -- 프로모션 코드 공통코드 EventJoinInfo 01, 02 ....
+    ) VALUES (
+
+        #{promotionCode}
+    )
+
+    </insert>
+
+     <!-- 댓글 이벤트 공유 등록 -->
+    <insert id="insertShareAdd" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto">
+    INSERT INTO MCP_SHARE_PROMOTION
+    (
+         PROMOTION_CODE           -- 프로모션 코드 공통코드 EventJoinInfo 01, 02 ....
+        ,DUP_INFO
+        ,SHARE_CNT
+    ) VALUES (
+
+        #{promotionCode}
+        ,#{dupInfo}
+        ,1
+    )
+
+    </insert>
+
+    <!-- 댓글 이벤트 공유 업데이트 -->
+   <update id="updateEventShare" parameterType="com.ktmmobile.mcp.event.dto.EventJoinDto">
+        UPDATE MCP_SHARE_PROMOTION SET
+            SHARE_CNT = SHARE_CNT + 1
+        WHERE 1=1
+        AND PROMOTION_CODE = #{promotionCode}
+        <choose>
+            <when test="dupInfo != null and dupInfo != ''">
+               AND DUP_INFO = #{dupInfo}
+            </when>
+            <otherwise>
+               AND DUP_INFO IS NULL
+            </otherwise>
+        </choose>
+    </update>
+
+    <resultMap id="getEventBenefitForCollection" type="com.ktmmobile.mcp.event.dto.EventBenefitBasDto">
+        <result property="eventBenefitSeq" column="EVENT_BENEFIT_SEQ"/>  <!--이벤트 혜택 관리 기본 일련번호 -->
+        <result property="eventBenefitNm" column="EVENT_BENEFIT_NM"/>  <!--이벤트 혜택 관리 기본 제목-->
+        <result property="pstngStartDate" column="PSTNG_START_DATE"/>  <!--게시기간 시작 A-->
+        <result property="pstngEndDate" column="PSTNG_END_DATE"/>  <!--게시기간 끝 A-->
+        <collection property="benefitDtlList"
+                    ofType="com.ktmmobile.mcp.event.dto.EventBenefitDtlDto"
+                    column="{eventBenefitSeq=EVENT_BENEFIT_SEQ, benefitModType=BENEFIT_MOD_TYPE}"
+                    select="listEventBenefitDtl" >
+        </collection>
+    </resultMap>
+
+    <select id="getEventBenefit" resultMap="getEventBenefitForCollection"   parameterType="com.ktmmobile.mcp.event.dto.EventBenefitRelationDto">
+        SELECT  EVENT_BENEFIT_SEQ
+             ,BENEFIT_MOD_TYPE
+             , TO_CHAR(TO_DATE(PSTNG_START_DATE, 'YYYYMMDDHH24MISS'), 'MM.DD') AS PSTNG_START_DATE
+             , TO_CHAR(TO_DATE(PSTNG_END_DATE, 'YYYYMMDDHH24MISS'), 'MM.DD') AS PSTNG_END_DATE
+        FROM (
+                 SELECT
+                     T1.EVENT_BENEFIT_SEQ
+                      , 'A' AS BENEFIT_MOD_TYPE
+                      , PSTNG_START_DATE
+                      , PSTNG_END_DATE
+                 FROM MCP_EVENT_BENEFIT_BAS T1 , MCP_EVENT_BENEFIT_RELATION T2
+                 WHERE 1=1
+                   AND T1.EVENT_BENEFIT_SEQ = T2.EVENT_BENEFIT_SEQ
+                   AND T2.NTCART_SEQ = #{ntcartSeq}
+                   AND TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH') || '000000' BETWEEN PSTNG_START_DATE   AND PSTNG_END_DATE
+                   AND USE_YN = 'Y'
+                 UNION
+                 SELECT
+                     T1.EVENT_BENEFIT_SEQ
+                      , 'B' AS BENEFIT_MOD_TYPE
+                      , PSTNG_START_SEC_DATE AS PSTNG_START_DATE
+                      , PSTNG_END_SEC_DATE  AS PSTNG_END_DATE
+                 FROM MCP_EVENT_BENEFIT_BAS T1 , MCP_EVENT_BENEFIT_RELATION T2
+                 WHERE 1=1
+                    AND  T1.EVENT_BENEFIT_SEQ = T2.EVENT_BENEFIT_SEQ
+                    AND T2.NTCART_SEQ = #{ntcartSeq}
+                    AND TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH') || '000000' BETWEEN PSTNG_START_SEC_DATE   AND PSTNG_END_SEC_DATE
+                    AND USE_YN = 'Y'
+                 ORDER BY EVENT_BENEFIT_SEQ DESC
+             ) WHERE ROWNUM =1
+    </select>
+
+    <select id="listEventBenefitDtl" resultType="com.ktmmobile.mcp.event.dto.EventBenefitDtlDto" parameterType="com.ktmmobile.mcp.event.dto.EventBenefitDtlDto">
+        SELECT
+            EVENT_BENEFIT_SEQ
+             , DTL_SEQ
+             , BENEFIT_MOD_TYPE
+             , BENEFIT_DTL_IMG_NM
+             , BENEFIT_DTL_NM
+             , BENEFIT_DTL_DESC
+             , SORT_KEY
+             , CRET_IP
+             , CRET_DT
+             , CRET_ID
+             , AMD_IP
+             , AMD_DT
+             , AMD_ID
+        FROM MCP_EVENT_BENEFIT_DTL
+        WHERE 1=1
+          AND  EVENT_BENEFIT_SEQ  = #{eventBenefitSeq}
+          AND  BENEFIT_MOD_TYPE  = #{benefitModType}
+        ORDER BY SORT_KEY
+    </select>
+</mapper>

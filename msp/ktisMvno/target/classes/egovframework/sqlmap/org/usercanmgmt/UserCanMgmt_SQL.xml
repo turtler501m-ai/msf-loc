@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.usercanmgmt.mapper.UserCanMgmtMapper">
+
+	<select id="selectUserCanMgmtList" parameterType="com.ktis.msp.org.usercanmgmt.vo.UserCanMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  /* UserCanMgmtMapper.selectUserCanMgmtList */
+		        A.USERID, 
+		        A.NAME,
+		        A.MOBILE_NO, 
+		        A.FIRST_LOGIN_DT, 
+		        A.LAST_LOGIN_DT,
+		        A.EMAIL, 
+		        A.ZIPCD, 
+		        A.ADDRESS, 
+		        A.ADDRESS_DTL, 
+		        DECODE(A.RESULT_YN, 'Y', '전송', '미전송') AS RESULT_YN,
+		        A.REGST_ID, 
+		        TO_CHAR(A.REGST_DTTM, 'YYYY-MM') AS REGST_DTTM,
+		        NVL((SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = A.RVISN_ID), 'SYSTEM') AS RVISN_NM, 
+		        TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD') AS RVISN_DTTM,	
+		        (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0236' AND CD_VAL = A.SEND_RSN_CD) AS SEND_RSN,
+		        DECODE(A.SEND_YN, 'Y', '처리', '미처리') AS SEND_YN
+		  FROM CMN_WEBUSER_CAN_MST A
+	   WHERE 1=1
+        <if test="userid != null and userid != ''">		
+		 AND UPPER(A.USERID) = UPPER(#{userid})
+        </if>
+        <if test="name != null and name != ''">		
+		 AND A.NAME like #{name} || '%'
+        </if>
+        <if test="sendYn != null and sendYn != ''">		
+		 AND A.SEND_YN = #{sendYn}
+        </if>	
+        <if test="sendRsn != null and sendRsn != ''">
+		 AND A.SEND_RSN_CD = #{sendRsn} || ' '
+        </if>	
+        <if test="searchStartDt != null and searchStartDt != ''">              
+         AND TO_CHAR(A.REGST_DTTM, 'YYYYMM') = TO_CHAR(TO_DATE(#{searchStartDt, jdbcType=VARCHAR},'YYYYMM' ), 'YYYYMM')
+        </if>
+        ORDER BY A.LAST_LOGIN_DT
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<select id="selectUserCanMgmtListEx" parameterType="com.ktis.msp.org.usercanmgmt.vo.UserCanMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT  /* UserCanMgmtMapper.selectUserCanMgmtListEx */
+		        NVL(A.USERID, ' ') AS USERID, 
+		        NVL(A.NAME, ' ') AS NAME,
+		        NVL(A.MOBILE_NO, ' ') AS  MOBILE_NO,
+		        NVL(TO_CHAR(TO_DATE(A.FIRST_LOGIN_DT, 'YYYY-MM-DD'), 'YYYY-MM-DD'), ' ') AS FIRST_LOGIN_DT, 
+		        NVL(TO_CHAR(TO_DATE(A.LAST_LOGIN_DT, 'YYYY-MM-DD'), 'YYYY-MM-DD'), ' ') AS  LAST_LOGIN_DT,
+		        NVL(A.EMAIL, ' ') AS  EMAIL,
+		        NVL(A.ZIPCD, ' ') AS ZIPCD,
+		        NVL(A.ADDRESS, ' ') AS  ADDRESS,
+		        NVL(A.ADDRESS_DTL, ' ') AS  ADDRESS_DTL,
+		        NVL(DECODE(A.RESULT_YN, 'Y', '전송', '미전송'), ' ') AS RESULT_YN, 
+		        NVL(A.REGST_ID, ' ') AS  REGST_ID,
+		        NVL(TO_CHAR(A.REGST_DTTM, 'YYYY-MM'), ' ') AS  REGST_DTTM,
+		        NVL((SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = A.RVISN_ID), 'SYSTEM') AS RVISN_NM, 
+		        NVL(TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD'), ' ') AS RVISN_DTTM,
+		        NVL((SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0236' AND CD_VAL = A.SEND_RSN_CD), ' ') AS SEND_RSN,
+		        NVL(DECODE(A.SEND_YN, 'Y', '처리', '미처리'), ' ') AS SEND_YN
+		  FROM CMN_WEBUSER_CAN_MST A
+	   WHERE 1=1
+        <if test="userid != null and userid != ''">		
+		 AND UPPER(A.USERID) = UPPER(#{userid})
+        </if>
+        <if test="name != null and name != ''">		
+		 AND A.NAME like #{name} || '%'
+        </if>
+        <if test="sendYn != null and sendYn != ''">		
+		 AND A.SEND_YN = #{sendYn}
+        </if>	
+        <if test="sendRsn != null and sendRsn != ''">
+		 AND A.SEND_RSN_CD = #{sendRsn} || ' '
+        </if>	
+        <if test="searchStartDt != null and searchStartDt != ''">
+         AND TO_CHAR(A.REGST_DTTM, 'YYYYMM') = TO_CHAR(TO_DATE(#{searchStartDt, jdbcType=VARCHAR},'YYYYMM' ), 'YYYYMM')
+        </if>
+        ORDER BY A.LAST_LOGIN_DT
+	</select>	
+	
+	<!-- 처리결과수정 -->
+	<update id="updateResultYN" parameterType="com.ktis.msp.org.usercanmgmt.vo.UserCanMgmtListVo">
+		UPDATE /* UserCanMgmtMapper.updateResultYN */
+			   CMN_WEBUSER_CAN_MST
+		   SET  RESULT_YN = #{resultYn}, RVISN_ID = #{rvisnId, jdbcType=VARCHAR}, RVISN_DTTM = SYSDATE
+		 WHERE userid = #{userid}	
+	</update>
+	
+	<!-- 해지자 저장 -->
+	<delete id="userInfoInsService" parameterType="String">
+		/* UserCanMgmtMapper.userInfoInsService */
+		INSERT INTO MCP_USER@DL_CAN
+		      (USERID, PASSWORD, NAME,
+		       AUTH_CODE, PIN, EMAIL,
+		       POST, ADDRESS, ADDRESS_DTL,
+		       MOBILE_NO, CONTACT_NO, BIRTHDAY,
+		       GENDER, SYS_RDATE, SYS_UDATE,
+		       SYS_LDATE, LOGIN_COUNT, STATUS,
+		       CUST_NUM, AUTH_KEY, USER_DIVISION,
+		       EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE)
+		SELECT USERID, PASSWORD, NAME,
+		       AUTH_CODE, PIN, EMAIL,
+		       POST, ADDRESS, ADDRESS_DTL,
+		       MOBILE_NO, CONTACT_NO, BIRTHDAY,
+		       GENDER, SYS_RDATE, SYS_UDATE,
+		       SYS_LDATE, LOGIN_COUNT, STATUS,
+		       CUST_NUM, AUTH_KEY, USER_DIVISION,
+		       EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+		  FROM MCP_USER@DL_MCP A
+		 WHERE A.STATUS = '1'
+		   AND A.AUTH_CODE = 'USER_ROLE'
+		   AND A.USER_DIVISION = '00'
+		   <![CDATA[AND TO_DATE(A.SYS_LDATE, 'YYYY-MM-DD') < TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -12),'YYYYMMDD'), 'YYYY-MM-DD')]]> 
+	</delete>
+	
+	<!-- 해지자 삭제 -->
+	<delete id="userInfoDelService" parameterType="String">
+		DELETE /* UserCanMgmtMapper.userInfoDelService */
+		  FROM MCP_USER@DL_MCP A
+		 WHERE A.STATUS = '1'
+		   AND A.AUTH_CODE = 'USER_ROLE'
+		   AND A.USER_DIVISION = '00'
+		   <![CDATA[AND TO_DATE(A.SYS_LDATE, 'YYYY-MM-DD') < TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -12),'YYYYMMDD'), 'YYYY-MM-DD')]]> 
+	</delete>
+	
+	<!-- 해지자 삭제 -->
+	<delete id="userInfoUpdService" parameterType="String">
+		UPDATE /* UserCanMgmtMapper.userInfoUpdService */
+		       CMN_WEBUSER_CAN_MST
+		   SET   NAME = '삭제'
+		       , MOBILE_NO = ''
+		       , FIRST_LOGIN_DT = ''
+		       , LAST_LOGIN_DT = ''
+		       , EMAIL = ''
+		       , ZIPCD = ''
+		       , ADDRESS = ''
+		       , ADDRESS_DTL = ''
+		       , RVISN_ID = 'SYSTEM'
+		       , RVISN_DTTM = SYSDATE
+		 WHERE USERID IN (
+							SELECT USERID
+                              FROM MCP_USER@DL_MCP A
+							 WHERE A.STATUS = '1'
+							   AND A.AUTH_CODE = 'USER_ROLE'
+							   AND A.USER_DIVISION = '00'
+							   <![CDATA[AND TO_DATE(A.SYS_LDATE, 'YYYY-MM-DD') < TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -12),'YYYYMMDD'), 'YYYY-MM-DD'))]]> 
+	</delete>
+</mapper>

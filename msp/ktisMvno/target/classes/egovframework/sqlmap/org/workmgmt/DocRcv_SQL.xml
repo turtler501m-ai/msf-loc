@@ -1,0 +1,674 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace= "com.ktis.msp.org.workmgmt.mapper.DocRcvMapper">
+
+    <resultMap id="DocRcvDetailMap" type="com.ktis.msp.org.workmgmt.vo.DocRcvDetailVO">
+        <id property="docRcvId" column="DOC_RCV_ID"/>
+        <result property="resNo" column="RES_NO"/>
+        <result property="targetSeq" column="TARGET_SEQ"/>
+        <result property="requestDay" column="REQUEST_DAY"/>
+        <result property="requestDt" column="REQUEST_DT"/>
+        <result property="workTmplId" column="WORK_TMPL_ID"/>
+        <result property="smsTemplateId" column="SMS_TEMPLATE_ID"/>
+        <result property="cstmrName" column="CSTMR_NAME"/>
+        <result property="mobileNo" column="MOBILE_NO"/>
+        <result property="scanId" column="SCAN_ID"/>
+        <result property="workId" column="WORK_ID"/>
+        <result property="workNm" column="WORK_NM"/>
+        <result property="workTmplNm" column="WORK_TMPL_NM"/>
+        <association property="docRcvStatusVO" javaType="com.ktis.msp.org.workmgmt.vo.DocRcvStatusVO">
+            <result property="docRcvId" column="DOC_RCV_ID"/>
+            <result property="rcvYn" column="RCV_YN"/>
+            <result property="rcvYnNm" column="RCV_YN_NM"/>
+            <result property="rcvDt" column="RCV_DT"/>
+            <result property="procStatus" column="PROC_STATUS"/>
+            <result property="procStatusNm" column="PROC_STATUS_NM"/>
+            <result property="procDt" column="PROC_DT"/>
+        </association>
+        <association property="docRcvUrlVO" javaType="com.ktis.msp.org.workmgmt.vo.DocRcvUrlVO">
+            <result property="docRcvId" column="DOC_RCV_ID"/>
+            <result property="rcvUrlId" column="RCV_URL_ID"/>
+            <result property="url" column="URL"/>
+            <result property="status" column="URL_STATUS"/>
+            <result property="urlStatusNm" column="URL_STATUS_NM"/>
+            <result property="issueDt" column="URL_ISSUE_DT"/>
+            <result property="expireDt" column="URL_EXPIRE_DT"/>
+        </association>
+        <association property="docRcvUrlOtpVO" javaType="com.ktis.msp.org.workmgmt.vo.DocRcvUrlOtpVO">
+            <result property="rcvUrlId" column="RCV_URL_ID"/>
+            <result property="seq" column="SEQ"/>
+            <result property="otp" column="OTP"/>
+            <result property="status" column="OTP_STATUS"/>
+            <result property="issueDt" column="OTP_ISSUE_DT"/>
+            <result property="failCnt" column="FAIL_CNT"/>
+            <result property="lastAuthDt" column="LAST_AUTH_DT"/>
+        </association>
+        <collection property="itemList" ofType="com.ktis.msp.org.workmgmt.vo.DocRcvItemVO" column="{docRcvId=DOC_RCV_ID}" select="getDocRcvItemList"/>
+    </resultMap>
+
+    <select id="getRequestMobileNoByResNo" parameterType="String" resultType="String">
+        /* DocRcvMapper.getRequestMobileNoByResNo */
+        SELECT NVL(MRC.CSTMR_MOBILE_FN || MRC.CSTMR_MOBILE_MN || MRC.CSTMR_MOBILE_RN, MRC.CSTMR_TEL_FN || MRC.CSTMR_TEL_MN || MRC.CSTMR_TEL_RN) AS MOBILE_NO
+        FROM MCP_REQUEST@DL_MCP MR
+           , MCP_REQUEST_CSTMR@DL_MCP MRC
+        WHERE MR.RES_NO = #{resNo}
+          AND MR.REQUEST_KEY = MRC.REQUEST_KEY
+    </select>
+
+    <select id="getContractMobileNoByResNo" parameterType="String" resultType="String">
+        /* DocRcvMapper.getContractMobileNoByResNo */
+        SELECT SUB.SUBSCRIBER_NO AS MOBILE_NO
+        FROM MSP_REQUEST MR
+           , MSP_JUO_SUB_INFO SUB
+        WHERE MR.RES_NO = #{resNo}
+          AND MR.CONTRACT_NUM = SUB.CONTRACT_NUM
+    </select>
+
+    <insert id="insertDocRcv" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvVO">
+        /* DocRcvMapper.insertDocRcv */
+        <selectKey keyProperty="docRcvId" resultType="String" order="BEFORE">
+            SELECT LPAD(#{resNo}, 12, '0') || LPAD(NVL(MAX(TARGET_SEQ), 0) + 1, 4, '0') AS DOC_RCV_ID
+              FROM NMCP_DOC_RCV@DL_MCP
+             WHERE RES_NO = #{resNo}
+        </selectKey>
+        INSERT INTO NMCP_DOC_RCV@DL_MCP (
+            DOC_RCV_ID
+            , RES_NO
+            , TARGET_SEQ
+            , REQUEST_DAY
+            , REQUEST_DT
+            , WORK_TMPL_ID
+            , SMS_TEMPLATE_ID
+            , MOBILE_NO
+            , CRET_ID
+            , CRET_DT
+        ) VALUES (
+            #{docRcvId}
+            , #{resNo}
+            , ( SELECT NVL(MAX(TARGET_SEQ), 0) + 1 AS TARGET_SEQ FROM NMCP_DOC_RCV@DL_MCP WHERE RES_NO = #{resNo} )
+            , TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , SYSDATE
+            , #{workTmplId}
+            , #{smsTemplateId}
+            , #{mobileNo}
+            , #{userId}
+            , SYSDATE
+        )
+    </insert>
+
+    <insert id="insertDocRcvStatusInitial" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvStatusVO">
+        /* DocRcvMapper.insertDocRcvStatusInitial */
+        INSERT INTO NMCP_DOC_RCV_STATUS@DL_MCP (
+            DOC_RCV_ID
+            , DOC_SEQ
+            , RCV_YN
+            , PROC_STATUS
+            , PROC_DT
+            , CRET_ID
+            , CRET_DT
+        ) VALUES (
+            #{docRcvId}
+            , 1
+            , 'N'
+            , 'N'
+            , SYSDATE
+            , #{userId}
+            , SYSDATE
+        )
+    </insert>
+
+    <update id="insertDocRcvItem" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvItemVO">
+        /* DocRcvMapper.insertDocRcvItem */
+        INSERT INTO NMCP_DOC_RCV_ITEM@DL_MCP (
+            ITEM_SEQ
+            , DOC_RCV_ID
+            , ITEM_ID
+            , STATUS
+            , CRET_ID
+            , CRET_DT
+        )
+        SELECT SQ_DOC_RCV_ITEM.NEXTVAL@DL_MCP
+               , RCV.DOC_RCV_ID
+               , ITEM.ITEM_ID
+               , 'P'
+               , #{userId}
+               , SYSDATE
+          FROM NMCP_DOC_RCV@DL_MCP RCV
+               , NMCP_WORK_TMPL_ITEM@DL_MCP ITEM
+         WHERE RCV.DOC_RCV_ID = #{docRcvId}
+           AND RCV.WORK_TMPL_ID = ITEM.WORK_TMPL_ID
+    </update>
+
+    <insert id="insertDocRcvUrl" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvUrlVO">
+        /* DocRcvMapper.insertDocRcvUrl */
+        INSERT INTO NMCP_DOC_RCV_URL@DL_MCP (
+            RCV_URL_ID
+            , DOC_RCV_ID
+            , URL
+            , STATUS
+            , ISSUE_DT
+            , EXPIRE_DT
+            , CRET_ID
+            , CRET_DT
+        ) VALUES (
+            #{rcvUrlId}
+            , #{docRcvId}
+            , #{url}
+            , 'A'
+            , SYSDATE
+            , TO_DATE(#{expireDt}, 'YYYYMMDD') + 1
+            , #{userId}
+            , SYSDATE
+        )
+    </insert>
+
+    <insert id="insertDocRcvUrlOtp" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvUrlOtpVO">
+        /* DocRcvMapper.insertDocRcvUrlOtp */
+        <selectKey keyProperty="seq" resultType="Integer" order="BEFORE">
+            SELECT NVL(MAX(SEQ), 0) + 1 FROM NMCP_DOC_RCV_URL_OTP@DL_MCP WHERE RCV_URL_ID = #{rcvUrlId}
+        </selectKey>
+        INSERT INTO NMCP_DOC_RCV_URL_OTP@DL_MCP (
+            RCV_URL_ID
+            , SEQ
+            , OTP
+            , STATUS
+            , ISSUE_DT
+            , FAIL_CNT
+            , CRET_ID
+            , CRET_DT
+        ) VALUES (
+            #{rcvUrlId}
+            , #{seq}
+            , #{otp}
+            , 'A'
+            , SYSDATE
+            , 0
+            , #{userId}
+            , SYSDATE
+        )
+    </insert>
+
+    <select id="getDocRcvDetail" parameterType="String" resultMap="DocRcvDetailMap">
+        /* DocRcvMapper.getDocRcvDetail */
+        WITH DOC_RCV_STATUS AS (
+            SELECT DOC_RCV_ID
+                 , RCV_YN
+                 , RCV_DT
+                 , PROC_STATUS
+                 , PROC_DT
+            FROM NMCP_DOC_RCV_STATUS@DL_MCP STT
+            WHERE DOC_SEQ = ( SELECT MAX(DOC_SEQ)
+                              FROM NMCP_DOC_RCV_STATUS@DL_MCP
+                              WHERE DOC_RCV_ID = STT.DOC_RCV_ID )
+        ), DOC_RCV_URL AS (
+            SELECT RCV_URL_ID
+                 , DOC_RCV_ID
+                 , URL
+                 , STATUS
+                 , ISSUE_DT
+                 , EXPIRE_DT
+            FROM ( SELECT RCV_URL_ID
+                        , DOC_RCV_ID
+                        , URL
+                        , STATUS
+                        , ISSUE_DT
+                        , EXPIRE_DT
+                        , ROW_NUMBER() OVER(PARTITION BY DOC_RCV_ID ORDER BY ISSUE_DT DESC) AS RN
+                   FROM NMCP_DOC_RCV_URL@DL_MCP )
+            WHERE RN = 1
+        ), DOC_RCV_URL_OTP AS (
+            SELECT RCV_URL_ID
+                 , SEQ
+                 , OTP
+                 , STATUS
+                 , ISSUE_DT
+                 , FAIL_CNT
+                 , LAST_AUTH_DT
+            FROM NMCP_DOC_RCV_URL_OTP@DL_MCP OTP
+            WHERE SEQ = ( SELECT MAX(SEQ)
+                            FROM NMCP_DOC_RCV_URL_OTP@DL_MCP
+                           WHERE RCV_URL_ID = OTP.RCV_URL_ID )
+        )
+        SELECT RCV.DOC_RCV_ID
+               , RCV.RES_NO
+               , RCV.TARGET_SEQ
+               , RCV.REQUEST_DAY
+               , TO_CHAR(RCV.REQUEST_DT, 'YYYYMMDDHH24MISS') AS REQUEST_DT
+               , RCV.WORK_TMPL_ID
+               , RCV.SMS_TEMPLATE_ID
+               , COALESCE(SUB.SUB_LINK_NAME, MCRC.CSTMR_NAME) AS CSTMR_NAME
+               , RCV.MOBILE_NO
+               , RCV.SCAN_ID
+               , TMPL.WORK_ID
+               , ( SELECT WORK_NM FROM EMV_SCAN_WORK@DL_MCP WHERE WORK_ID = TMPL.WORK_ID) AS WORK_NM
+               , TMPL.WORK_TMPL_NM
+               , STT.RCV_YN
+               , DECODE(STT.RCV_YN, 'Y', '접수', '미접수') AS RCV_YN_NM
+               , TO_CHAR(STT.RCV_DT, 'YYYYMMDDHH24MISS') AS RCV_DT
+               , STT.PROC_STATUS
+               , FN_GET_CODENM('ORG0081', STT.PROC_STATUS) AS PROC_STATUS_NM
+               , TO_CHAR(STT.PROC_DT, 'YYYYMMDDHH24MISS') AS PROC_DT
+               , URL.RCV_URL_ID
+               , URL.URL
+               , URL.STATUS AS URL_STATUS
+               , FN_GET_CODENM('ORG0082', URL.STATUS) AS URL_STATUS_NM
+               , TO_CHAR(URL.ISSUE_DT, 'YYYYMMDDHH24MISS') AS URL_ISSUE_DT
+               , TO_CHAR(URL.EXPIRE_DT, 'YYYYMMDDHH24MISS') AS URL_EXPIRE_DT
+               , OTP.SEQ
+               , OTP.OTP
+               , OTP.STATUS AS OTP_STATUS
+               , TO_CHAR(OTP.ISSUE_DT, 'YYYYMMDDHH24MISS') AS OTP_ISSUE_DT
+               , OTP.FAIL_CNT
+               , TO_CHAR(OTP.LAST_AUTH_DT, 'YYYYMMDDHH24MISS') AS LAST_AUTH_DT
+        FROM NMCP_DOC_RCV@DL_MCP RCV
+               , NMCP_WORK_TMPL@DL_MCP TMPL
+               , DOC_RCV_STATUS STT
+               , DOC_RCV_URL URL
+               , DOC_RCV_URL_OTP OTP
+               , MSP_REQUEST MR
+               , MSP_JUO_SUB_INFO SUB
+               , MCP_REQUEST@DL_MCP MCR
+               , MCP_REQUEST_CSTMR@DL_MCP MCRC
+         WHERE RCV.DOC_RCV_ID = #{docRcvId}
+           AND RCV.WORK_TMPL_ID = TMPL.WORK_TMPL_ID
+           AND RCV.DOC_RCV_ID = STT.DOC_RCV_ID
+           AND RCV.DOC_RCV_ID = URL.DOC_RCV_ID
+           AND URL.RCV_URL_ID = OTP.RCV_URL_ID
+           AND RCV.RES_NO = MCR.RES_NO (+)
+           AND MCR.REQUEST_KEY = MCRC.REQUEST_KEY (+)
+           AND RCV.RES_NO = MR.RES_NO (+)
+           AND MR.CONTRACT_NUM = SUB.CONTRACT_NUM (+)
+    </select>
+
+    <select id="getDocRcvItemList" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvDetailVO" resultType="com.ktis.msp.org.workmgmt.vo.DocRcvItemVO">
+        /* DocRcvMapper.getDocRcvItemList */
+        SELECT DRI.ITEM_SEQ AS itemSeq
+             , DRI.DOC_RCV_ID AS docRcvId
+             , DRI.ITEM_ID AS itemId
+             , DRI.STATUS AS status
+             , FN_GET_CODENM('ORG0084', DRI.STATUS) AS fileStatusNm
+             , TO_CHAR(DRI.RCV_DT, 'YYYYMMDDHH24MISS') AS fileRcvDt
+             , ITEM.ITEM_NM AS itemNm
+             , ITEM.REQUEST_YN AS requestYn
+             , CASE WHEN DRI.STATUS = 'E'
+                 THEN ( SELECT COUNT(1)
+                        FROM NMCP_DOC_RCV_ITEM_FILE@DL_MCP
+                        WHERE ITEM_SEQ = DRI.ITEM_SEQ
+                          AND RESULT_CODE != '0000' )
+                 ELSE ( SELECT COUNT(1)
+                        FROM EMV_SCAN_FILE@DL_MCP ESF
+                           , NMCP_DOC_RCV_ITEM_FILE@DL_MCP FI
+                        WHERE ESF.SCAN_ID = DR.SCAN_ID
+                          AND ESF.FILE_ID = FI.FILE_ID
+                          AND FI.ITEM_SEQ = DRI.ITEM_SEQ
+                          AND FI.RESULT_CODE = '0000' )
+                 END AS fileCnt
+          FROM NMCP_DOC_RCV@DL_MCP DR
+             , NMCP_DOC_RCV_ITEM@DL_MCP DRI
+             , NMCP_WORK_ITEM@DL_MCP ITEM
+         WHERE DR.DOC_RCV_ID = #{docRcvId}
+           AND DR.DOC_RCV_ID = DRI.DOC_RCV_ID
+           AND DRI.ITEM_ID = ITEM.ITEM_ID
+        ORDER BY (CASE WHEN REQUEST_YN = 'Y' THEN 1 ELSE 2 END), ITEM.ITEM_NM
+    </select>
+
+    <sql id="docRcvList">
+        WITH DOC_RCV_STATUS AS (
+            SELECT DOC_RCV_ID
+                   , RCV_YN
+                   , RCV_DT
+                   , PROC_STATUS
+                   , PROC_DT
+              FROM NMCP_DOC_RCV_STATUS@DL_MCP STT
+             WHERE DOC_SEQ = ( SELECT MAX(DOC_SEQ)
+                                 FROM NMCP_DOC_RCV_STATUS@DL_MCP
+                                WHERE DOC_RCV_ID = STT.DOC_RCV_ID )
+        ), DOC_RCV_URL AS (
+            SELECT RCV_URL_ID
+                   , DOC_RCV_ID
+                   , URL
+                   , STATUS
+                   , ISSUE_DT
+                   , EXPIRE_DT
+              FROM ( SELECT RCV_URL_ID
+                            , DOC_RCV_ID
+                            , URL
+                            , STATUS
+                            , ISSUE_DT
+                            , EXPIRE_DT
+                            , ROW_NUMBER() OVER(PARTITION BY DOC_RCV_ID ORDER BY ISSUE_DT DESC) AS RN
+                       FROM NMCP_DOC_RCV_URL@DL_MCP )
+             WHERE RN = 1
+        )
+        SELECT RCV.DOC_RCV_ID
+               , RCV.RES_NO
+               , RCV.TARGET_SEQ
+               , TO_CHAR(RCV.REQUEST_DT, 'YYYY-MM-DD') AS REQUEST_DAY
+               , TO_CHAR(RCV.REQUEST_DT, 'YYYYMMDDHH24MISS') AS REQUEST_DT
+               , RCV.WORK_TMPL_ID
+               , RCV.SMS_TEMPLATE_ID
+               , COALESCE(SUB.SUB_LINK_NAME, MCRC.CSTMR_NAME) AS CSTMR_NAME
+               , RCV.MOBILE_NO
+               , RCV.SCAN_ID
+               , TMPL.WORK_ID
+               , ( SELECT WORK_NM FROM EMV_SCAN_WORK@DL_MCP WHERE WORK_ID = TMPL.WORK_ID ) AS WORK_NM
+               , TMPL.WORK_TMPL_NM
+               , STT.RCV_YN
+               , DECODE(STT.RCV_YN, 'Y', '접수', '미접수') AS RCV_YN_NM
+               , TO_CHAR(STT.RCV_DT, 'YYYY-MM-DD') AS RCV_DT
+               , STT.PROC_STATUS
+               , FN_GET_CODENM('ORG0081', STT.PROC_STATUS) AS PROC_STATUS_NM
+               , TO_CHAR(STT.PROC_DT, 'YYYY-MM-DD') AS PROC_DT
+               , URL.RCV_URL_ID
+               , URL.URL
+               , URL.STATUS AS URL_STATUS
+               , FN_GET_CODENM('ORG0082', URL.STATUS) AS URL_STATUS_NM
+               , TO_CHAR(URL.ISSUE_DT, 'YYYYMMDDHH24MISS') AS URL_ISSUE_DT
+               , TO_CHAR(URL.EXPIRE_DT, 'YYYYMMDDHH24MISS') AS URL_EXPIRE_DT
+               , USR.USR_NM AS CRET_NM
+          FROM NMCP_DOC_RCV@DL_MCP RCV
+               , NMCP_WORK_TMPL@DL_MCP TMPL
+               , DOC_RCV_STATUS STT
+               , DOC_RCV_URL URL
+               , MSP_REQUEST MR
+               , MSP_JUO_SUB_INFO SUB
+               , MCP_REQUEST@DL_MCP MCR
+               , MCP_REQUEST_CSTMR@DL_MCP MCRC
+               , CMN_USR_MST USR
+         WHERE RCV.WORK_TMPL_ID = TMPL.WORK_TMPL_ID
+           AND RCV.DOC_RCV_ID = STT.DOC_RCV_ID
+           AND RCV.DOC_RCV_ID = URL.DOC_RCV_ID
+           AND RCV.RES_NO = MCR.RES_NO (+)
+           AND MCR.REQUEST_KEY = MCRC.REQUEST_KEY (+)
+           AND RCV.RES_NO = MR.RES_NO (+)
+           AND MR.CONTRACT_NUM = SUB.CONTRACT_NUM (+)
+           AND RCV.CRET_ID = USR.USR_ID (+)
+        <if test="searchStartDate != null and searchStartDate != '' and searchEndDate != null and searchEndDate != ''">
+            AND RCV.REQUEST_DT BETWEEN TO_DATE(#{searchStartDate}, 'YYYYMMDD') AND TO_DATE(#{searchEndDate}, 'YYYYMMDD') + 1
+        </if>
+        <if test="workTmplNm != null and workTmplNm != ''">
+            AND TMPL.WORK_TMPL_NM LIKE '%' || #{workTmplNm} || '%'
+        </if>
+        <if test="rcvYn != null and rcvYn != ''">
+            AND STT.RCV_YN = #{rcvYn}
+        </if>
+        <if test="workId != null and workId != ''">
+            AND TMPL.WORK_ID = #{workId}
+        </if>
+        <if test="urlStatus != null and urlStatus != ''">
+            AND URL.STATUS = #{urlStatus}
+        </if>
+        <if test="procStatus != null and procStatus != ''">
+            AND STT.PROC_STATUS = #{procStatus}
+        </if>
+        <if test="searchType != null and searchType != ''">
+            <choose>
+                <when test="searchType == 'contractNum'">
+                    AND SUB.CONTRACT_NUM = #{searchVal}
+                </when>
+                <when test="searchType == 'resNo'">
+                    AND RCV.RES_NO = #{searchVal}
+                </when>
+                <when test="searchType == 'mobileNo'">
+                    AND RCV.MOBILE_NO = #{searchVal}
+                </when>
+                <when test="searchType == 'cstmrName'">
+                    AND ( SUB.SUB_LINK_NAME = #{searchVal} OR MCRC.CSTMR_NAME = #{searchVal} )
+                </when>
+                <when test="searchType == 'cretNm'">
+                    AND USR.USR_NM = #{searchVal}
+                </when>
+            </choose>
+        </if>
+        ORDER BY REQUEST_DT DESC
+    </sql>
+
+    <select id="getDocRcvList" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvRequestVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* DocRcvMapper.getDocRcvList */
+        <include refid="com.ktis.msp.cmn.include.paging-start" />
+        <include refid="docRcvList" />
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+
+    <select id="getDocRcvListByExcel" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvRequestVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* DocRcvMapper.getDocRcvListByExcel */
+        <include refid="docRcvList" />
+    </select>
+
+    <update id="verifyDocRcvItems" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvVO">
+        /* DocRcvMapper.verifyDocRcvItems */
+        UPDATE NMCP_DOC_RCV_ITEM@DL_MCP
+           SET STATUS = 'C'
+               , AMD_ID = #{userId}
+               , AMD_DT = SYSDATE
+         WHERE DOC_RCV_ID = #{docRcvId}
+           AND ITEM_SEQ IN
+        <foreach collection="itemSeqList" item="itemSeq" separator="," open="(" close=")">
+            #{itemSeq}
+        </foreach>
+    </update>
+
+    <update id="updateDocRcvItemsPendingToNotReceived" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvVO">
+        /* DocRcvMapper.updateDocRcvItemsPendingToNotReceived */
+        UPDATE NMCP_DOC_RCV_ITEM@DL_MCP
+           SET STATUS = 'N'
+               , AMD_ID = #{userId}
+               , AMD_DT = SYSDATE
+         WHERE DOC_RCV_ID = #{docRcvId}
+           AND STATUS = 'P'
+    </update>
+
+    <update id="updateDocRcvItemsPending" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvVO">
+        /* DocRcvMapper.updateDocRcvItemsPending */
+        UPDATE NMCP_DOC_RCV_ITEM@DL_MCP
+           SET STATUS = 'P'
+               , RCV_DT = NULL
+               , AMD_ID = #{userId}
+               , AMD_DT = SYSDATE
+         WHERE DOC_RCV_ID = #{docRcvId}
+           AND ITEM_SEQ IN
+        <foreach collection="itemSeqList" item="itemSeq" separator="," open="(" close=")">
+            #{itemSeq}
+        </foreach>
+    </update>
+
+    <select id="getDocRcvUrlLastIssued" parameterType="String" resultType="com.ktis.msp.org.workmgmt.vo.DocRcvUrlVO">
+        /* DocRcvMapper.getDocRcvUrlLastIssued */
+        SELECT RCV_URL_ID AS rcvUrlId
+             , DOC_RCV_ID AS docRcvId
+             , URL
+             , STATUS
+             , FN_GET_CODENM('ORG0082', STATUS) AS urlStatusNm
+             , ISSUE_DT AS issueDt
+             , EXPIRE_DT AS expireDt
+        FROM ( SELECT RCV_URL_ID
+                    , DOC_RCV_ID
+                    , URL
+                    , STATUS
+                    , ISSUE_DT
+                    , EXPIRE_DT
+                    , ROW_NUMBER() OVER(PARTITION BY DOC_RCV_ID ORDER BY ISSUE_DT DESC) AS RN
+               FROM NMCP_DOC_RCV_URL@DL_MCP )
+        WHERE RN = 1
+          AND DOC_RCV_ID = #{docRcvId}
+    </select>
+
+    <update id="updateDocRcvUrlExpire" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvUrlVO">
+        /* DocRcvMapper.updateDocRcvUrlExpire */
+        UPDATE NMCP_DOC_RCV_URL@DL_MCP
+           SET EXPIRE_DT = SYSDATE
+               , STATUS = 'E'
+               , AMD_ID = #{userId}
+               , AMD_DT = SYSDATE
+         WHERE RCV_URL_ID = #{rcvUrlId}
+    </update>
+
+    <update id="insertDocRcvStatusRetry" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvStatusVO">
+        /* DocRcvMapper.insertDocRcvStatusRetry */
+        INSERT INTO NMCP_DOC_RCV_STATUS@DL_MCP (
+            DOC_RCV_ID
+            , DOC_SEQ
+            , RCV_YN
+            , RCV_DT
+            , PROC_STATUS
+            , PROC_DT
+            , CRET_ID
+            , CRET_DT
+        )
+        SELECT STT.DOC_RCV_ID
+               , STT.DOC_SEQ + 1
+               , STT.RCV_YN
+               , STT.RCV_DT
+               , 'R'
+               , SYSDATE
+               , #{userId}
+               , SYSDATE
+          FROM NMCP_DOC_RCV_STATUS@DL_MCP STT
+         WHERE DOC_RCV_ID = #{docRcvId}
+           AND DOC_SEQ = ( SELECT MAX(DOC_SEQ)
+                             FROM NMCP_DOC_RCV_STATUS@DL_MCP
+                            WHERE DOC_RCV_ID = STT.DOC_RCV_ID )
+    </update>
+
+    <select id="getDocRcvUrlOtp" parameterType="String" resultType="com.ktis.msp.org.workmgmt.vo.DocRcvUrlOtpVO">
+        /* DocRcvMapper.getDocRcvUrlOtp */
+        SELECT RCV_URL_ID AS rcvUrlId
+             , SEQ
+             , OTP
+             , STATUS
+             , ISSUE_DT AS issueDt
+             , FAIL_CNT AS failCnt
+             , LAST_AUTH_DT AS lastAuthDt
+        FROM NMCP_DOC_RCV_URL_OTP@DL_MCP OTP
+        WHERE RCV_URL_ID = #{rcvUrlId}
+          AND SEQ = ( SELECT MAX(SEQ)
+                      FROM NMCP_DOC_RCV_URL_OTP@DL_MCP
+                      WHERE RCV_URL_ID = OTP.RCV_URL_ID )
+    </select>
+
+    <insert id="insertDocRcvStatusProc" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvStatusVO">
+        /* DocRcvMapper.insertDocRcvStatusProc */
+        INSERT INTO NMCP_DOC_RCV_STATUS@DL_MCP (
+            DOC_RCV_ID
+            , DOC_SEQ
+            , RCV_YN
+            , RCV_DT
+            , PROC_STATUS
+            , PROC_DT
+            , CRET_ID
+            , CRET_DT
+        )
+        SELECT STT.DOC_RCV_ID
+               , NVL(STT.DOC_SEQ, 0) + 1
+               , RCV_YN
+               , RCV_DT
+               , #{procStatus}
+               , SYSDATE
+               , #{userId}
+               , SYSDATE
+          FROM NMCP_DOC_RCV_STATUS@DL_MCP STT
+         WHERE STT.DOC_RCV_ID = #{docRcvId}
+           AND STT.DOC_SEQ = ( SELECT MAX(DOC_SEQ)
+                             FROM NMCP_DOC_RCV_STATUS@DL_MCP
+                            WHERE DOC_RCV_ID = STT.DOC_RCV_ID )
+    </insert>
+
+    <select id="getItemFileCompletedList" parameterType="String" resultType="com.ktis.msp.org.workmgmt.vo.DocRcvItemFileVO">
+        /* DocRcvMapper.getItemFileCompletedList */
+        SELECT F.ITEM_SEQ AS itemSeq
+               , F.FILE_ID AS fileId
+          FROM NMCP_DOC_RCV@DL_MCP RCV
+               , NMCP_DOC_RCV_ITEM@DL_MCP I
+               , NMCP_DOC_RCV_ITEM_FILE@DL_MCP F
+               , EMV_SCAN_FILE@DL_MCP ESF
+         WHERE RCV.DOC_RCV_ID = #{docRcvId}
+           AND RCV.DOC_RCV_ID = I.DOC_RCV_ID
+           AND I.ITEM_SEQ = F.ITEM_SEQ
+           AND I.STATUS = 'C'
+           AND RCV.SCAN_ID = ESF.SCAN_ID
+           AND F.FILE_ID = ESF.FILE_ID
+    </select>
+
+    <select id="getItemFileListByItemSeqs" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvVO" resultType="com.ktis.msp.org.workmgmt.vo.DocRcvItemFileVO">
+        /* DocRcvMapper.getItemFileListByItemSeqs */
+        SELECT ITEM_SEQ AS itemSeq
+             , FILE_ID AS fileId
+             , MERGE_YN AS mergeYn
+          FROM NMCP_DOC_RCV_ITEM_FILE@DL_MCP
+         WHERE ITEM_SEQ IN
+        <foreach collection="itemSeqList" item="itemSeq" separator="," open="(" close=")">
+            #{itemSeq}
+        </foreach>
+    </select>
+
+    <select id="getMspScanIdByResNo" parameterType="String" resultType="String">
+        /* DocRcvMapper.getMspScanIdByResNo */
+        SELECT SUB.SCAN_ID AS scanId
+          FROM MSP_REQUEST MR
+               , MSP_JUO_SUB_INFO SUB
+         WHERE MR.RES_NO = #{resNo}
+           AND MR.CONTRACT_NUM = SUB.CONTRACT_NUM
+    </select>
+
+    <select id="getMcpScanIdByResNo" parameterType="String" resultType="String">
+        /* DocRcvMapper.getMcpScanIdByResNo */
+        SELECT SCAN_ID AS scanId
+          FROM MCP_REQUEST@DL_MCP
+         WHERE RES_NO = #{resNo}
+    </select>
+
+    <update id="updateItemFileMerged" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvItemFileVO">
+        UPDATE NMCP_DOC_RCV_ITEM_FILE@DL_MCP
+           SET MERGE_YN = 'Y'
+               , AMD_ID = #{userId}
+               , AMD_DT = SYSDATE
+         WHERE ITEM_SEQ = #{itemSeq}
+           AND FILE_ID = #{fileId}
+    </update>
+
+    <select id="getDuplicatedPendingItemList" parameterType="String" resultType="com.ktis.msp.org.workmgmt.vo.DocRcvItemVO">
+        SELECT ITEM_ID
+             , ITEM_SEQ AS itemSeqFrom
+             , MIN(ITEM_SEQ) OVER (PARTITION BY ITEM_ID) AS itemSeqTo
+        FROM NMCP_DOC_RCV_ITEM@DL_MCP
+        WHERE DOC_RCV_ID = #{docRcvId}
+          AND STATUS = 'P'
+          AND ITEM_ID IN ( SELECT ITEM_ID
+                           FROM NMCP_DOC_RCV_ITEM@DL_MCP
+                           WHERE DOC_RCV_ID = #{docRcvId}
+                             AND STATUS = 'P'
+                           GROUP BY ITEM_ID
+                           HAVING COUNT(ITEM_ID) > 1 )
+        ORDER BY ITEM_ID, ITEM_SEQ
+    </select>
+
+    <update id="appendDocRcvItemFileList" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvItemVO">
+        UPDATE NMCP_DOC_RCV_ITEM_FILE@DL_MCP
+        SET ITEM_SEQ = #{itemSeqTo}
+          , AMD_ID = #{userId}
+          , AMD_DT = SYSDATE
+        WHERE ITEM_SEQ = #{itemSeqFrom}
+    </update>
+
+    <delete id="deleteDocRcvItem" parameterType="Long">
+        DELETE FROM NMCP_DOC_RCV_ITEM@DL_MCP
+        WHERE ITEM_SEQ = #{itemSeq}
+    </delete>
+
+    <select id="getDocRcvItemFileListByItemId" parameterType="com.ktis.msp.org.workmgmt.vo.DocRcvRequestVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* DocRcvMapper.getDocRcvItemFileListByItemId */
+        SELECT FI.ITEM_SEQ
+             , FI.FILE_ID
+             , TO_CHAR(FI.CRET_DT, 'YYYYMMDDHH24MISS') AS CRET_DT
+             , FI.EXT
+             , FI.RESULT_CODE
+             , FI.RESULT_MESSAGE
+        FROM NMCP_DOC_RCV_ITEM@DL_MCP IT
+           , NMCP_DOC_RCV_ITEM_FILE@DL_MCP FI
+        WHERE IT.DOC_RCV_ID = #{docRcvId}
+        AND IT.ITEM_ID = #{itemId}
+        AND IT.ITEM_SEQ = FI.ITEM_SEQ
+    </select>
+
+</mapper>

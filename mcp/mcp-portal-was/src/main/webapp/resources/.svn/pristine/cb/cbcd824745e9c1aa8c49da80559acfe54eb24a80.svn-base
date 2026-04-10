@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+     <head>
+        <meta http-equiv="content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+        <script type="text/javascript" src="/resources/js/jquery-1.11.1.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="/resources/css/mobile/style.css">
+        <link rel="stylesheet" type="text/css" href="/resources/css/mobile/common.css">
+        <script type="text/javascript" src="/resources/js/common/dataFormConfig.js"></script>
+        <script type="text/javascript" src="/resources/js/jqueryCommon.js"></script>
+        <script type="text/javascript" src="/resources/js/jquery.number.min.js"></script>
+        <script type="text/javascript" src="/resources/js/iscroll.js"></script>
+        <script type="text/javascript" src="/resources/js/common.js"></script>
+        <script type="text/javascript" src="/resources/js/swipe.js"></script>
+        <script type="text/javascript" src="/resources/js/jquery.placeholder.js"></script>
+        <script type="text/javascript" src="/resources/js/mobile/common.js"></script>
+		<link rel="stylesheet" type="text/css" href="/resources/css/mobile/appCommon.css">
+  <style>
+		.button_template button {margin-bottom:10px}
+	</style>
+
+    <script>
+        $(document).ready(function () {
+        	
+        	//팝업 사용법
+        	fn_mobile_layerOpen('newversionUpdate');
+        	        
+            
+        });
+        
+        
+        
+    </script>
+
+	</head>
+<body>
+	<div id="layerContent">
+		<div class="layer" id="newversionUpdate">
+			<div class="content_title">
+				새 버젼 업데이트 알림
+<!-- 				<a title="새 버젼 업데이트 알림"  href=""><img src="/resources/images/front/layer_cancel.png" class="btn_cancel" alt="close layer" /></a> -->
+			</div>
+
+			<div class="content_main newversion">
+				<div class="message">
+				Ver.1.0.0 App 사용자 분들은<br> 
+새로운 버전으로 업데이트 하셔야 <br>정상적인 
+사용이 가능 합니다. <br/><br/>
+Play 스토어에서 App 다운로드 하세요<br/>
+https://play.google.com/store/apps/details?id=kt.co.ktmmobile
+				</div>
+			</div>
+		</div>		
+	</div>
+</body>
+</html>

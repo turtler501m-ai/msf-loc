@@ -1,0 +1,3 @@
+<svg width="48" height="48" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><path d="M0 0h48v48H0z"/><rect fill="#F5F5F5" transform="rotate(-180 24 24)" x="4.286" y="10.286" width="39.429" height="27.429" rx="4"/><text font-family="GmarketSansBold, Gmarket Sans" font-size="6.4" font-weight="bold" letter-spacing=".64" fill="#BFBFBF">
+                            <tspan x="26.053" y="26">NO</tspan>
+                        </text><g transform="translate(10.286 18)"><rect fill="#DDD" width="12" height="12" rx="6"/><path stroke="#FFF" stroke-width=".762" d="m4.095 4.095 3.81 3.81m-3.81 0 3.81-3.81"/></g></g></svg>

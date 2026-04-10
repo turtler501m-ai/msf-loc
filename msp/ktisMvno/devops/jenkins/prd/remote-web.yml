@@ -1,0 +1,67 @@
+# remote.yml
+# yaml-language-server: $schema=../../../devops/jenkins/schemas/deploy.schema.yml
+# 💡 Jenkins 프로덕션(운영) 배포 스크립트 정의 파일
+# - 원격 서버 접속 정보(remote_groups)
+# - 배포 명령(command_groups)
+# - 실행 단계(steps) 구성
+
+config:
+  parallel_deploy: false  # 병렬 배포 여부 
+
+remote_groups:
+  web_servers:
+    - user: apache
+      host: prd-msp-portal-web-01 #10.21.28.8
+      credentials:
+        id: MSP-WEB-PRD-WITH-PASS  #MSP-WEB-PRD  # Jenkins 에 등록된 credentials
+        type: userpass  # credential type: userpass or sshKey       
+    - user: apache
+      host: prd-msp-portal-web-02 #10.21.28.9
+      credentials:
+        id: MSP-WEB-PRD-WITH-PASS #MSP-WEB-PRD  # Jenkins 에 등록된 credentials
+        type: userpass  # credential type: userpass or sshKey        
+
+command_groups:
+  copy_web_files:
+    - puts:
+      - from: '#{MSP_WORKSPACE}/src/main/webapp/css'
+        into: '#{APACHE_DOCS}'
+        override: true
+        recursive: true
+      - from: '#{MSP_WORKSPACE}/src/main/webapp/js'
+        into: '#{APACHE_DOCS}'
+        override: true
+        recursive: true
+      - from: '#{MSP_WORKSPACE}/src/main/webapp/lib'
+        into: '#{APACHE_DOCS}'
+        override: true
+        recursive: true
+      - from: '#{MSP_WORKSPACE}/src/main/webapp/images'
+        into: '#{APACHE_DOCS}'
+        override: true
+        recursive: true
+      - from: '#{MSP_WORKSPACE}/src/main/webapp/scan'
+        into: '#{APACHE_DOCS}'
+        override: true
+        recursive: true
+      - from: '#{MSP_WORKSPACE}/src/main/webapp/ubi4'
+        into: '#{APACHE_DOCS}'
+        override: true
+        recursive: true
+
+  ls_web_files:
+    - commands:
+        - 'ls -lrt #{APACHE_DOCS}'
+
+steps:
+  # 🧩 단계별 실행 정의
+  deploy_web:
+    - remote_groups: 
+        hosts: [web_servers]
+        contexts:
+          - MSP_WORKSPACE: "/home/jenkins/.jenkins/workspace/MSP/msp-portal-web-prd"
+            APACHE_DOCS: "/apache/apache/htdocs/msp"        
+      command_groups:
+        - copy_web_files
+        - ls_web_files
+

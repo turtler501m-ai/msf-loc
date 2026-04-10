@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<!-- Appenders -->
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.out" />
+		<layout class="org.apache.log4j.PatternLayout">
+			 <param name="ConversionPattern" value="[%d{yyyy-MM-dd HH:mm:ss}] %-5p: %c - %m%n" />
+		</layout>
+	</appender>
+	
+	<!-- Application Loggers -->
+	<logger name="com.ktmmobile.mcp">
+		<level value="debug" />
+	</logger>
+	
+	<!-- 3rdparty Loggers -->
+	<logger name="org.springframework.core">
+		<level value="info" />
+	</logger>
+	
+	<logger name="org.springframework.beans">
+		<level value="info" />
+	</logger>
+	
+	<logger name="org.springframework.context">
+		<level value="info" />
+	</logger>
+
+	<logger name="org.springframework.web">
+		<level value="info" />
+	</logger>
+	
+	<logger name="jdbc.resultsettable" additivity="false">
+	  <level value="info" />
+	  <appender-ref ref="console" />
+	</logger>
+	
+	<logger name="jdbc.sqlonly" additivity="false"> 
+	  <level value="info" />
+	  <appender-ref ref="console" />
+	</logger>
+	
+	<logger name="jdbc.audit" additivity="false"> <!-- 변수바인딩 이전 SQL 출력 -->
+	  <level value="error" />
+	  <appender-ref ref="console" />
+	 </logger> 
+	
+	 <logger name="jdbc.resultset" additivity="false" ><!-- resultset 을 포함한 모든 jdbc log 출력 -->
+	  <level value="error" />
+	  <appender-ref ref="console" />
+	 </logger>
+	
+	 <logger name="jdbc.connection" additivity="false" ><!-- resultset 을 포함한 모든 jdbc log 출력 -->
+	  <level value="error" />
+	  <appender-ref ref="console" />
+	 </logger>
+	 
+	 <logger name="jdbc.sqltiming" additivity="false"><!-- sql 문과 sql 실행시간 출력 -->
+	  <level value="error" />
+	  <appender-ref ref="console" />
+	 </logger>
+	            
+	<!-- Root Logger -->
+	<root>
+		<priority value="info" />
+		<appender-ref ref="console" />
+	</root>
+	
+</log4j:configuration>

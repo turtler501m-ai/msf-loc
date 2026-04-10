@@ -1,0 +1,640 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.ordermgmt.mapper.PpsHdofcOrderMgmtMapper">
+    
+     <!--재고관리 목록조회 -->
+    <select id="getOrderGoodsList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         	 SELECT /*+ INDEX_DESC(A PPS_ORDER_GOODS_IDX1)*/
+         	 		TYPE, 
+         	 		F_GET_KT_CODE_NM('PPS_ORDER_CODE', 'TYPE', TYPE) TYPE_NM,
+			        CD, 
+			        CD_NM,
+			        OP1, 
+			        F_GET_ORDER_CD_NM(TYPE, 'OP1', OP1) OP1_NM,
+			        OP2, 
+			        F_GET_ORDER_CD_NM(TYPE, 'OP2', OP2) OP2_NM,
+			        OP3, 
+			        F_GET_ORDER_CD_NM(TYPE, 'OP3', OP3) OP3_NM,
+			        SALE_AMT, 
+			        TOT_CNT, 
+			        IN_CNT, 
+			        OUT_CNT, 
+			        CLOSE_CNT, 
+			        SHOW_FLAG, 
+			        F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			        TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT, 
+			        REMARK
+			 FROM PPS_ORDER_GOODS A
+			 WHERE TYPE IS NOT NULL
+			 		AND REG_DT > TO_DATE('20170701', 'YYYYMMDD')
+			 <if test='searchSValue != null and searchSValue != ""'>
+				 <choose>
+					 <when test='searchItem == "CD"'>
+						 AND CD LIKE '%' || #{searchSValue} || '%'
+					 </when>
+					 <when test='searchItem == "CD_NM"'>
+						 AND CD_NM LIKE '%' || #{searchSValue} || '%'
+					 </when>
+				 </choose>
+			 </if>
+			<if test='searchType != null and searchType != ""'>
+				AND TYPE = #{searchType}
+			</if>
+			
+			<!-- 팝업에서사용 -->
+			<if test='searchPopCd != null and searchPopCd != ""'>
+				AND CD = #{searchPopCd}
+			</if>
+			
+			<if test='searchTotCntFlag != null and searchTotCntFlag != ""'>
+				<choose>
+					<when test='searchTotCntFlag == "Y"'>
+						AND TOT_CNT > 0
+					</when>
+					<otherwise>
+						AND TOT_CNT = 0
+					</otherwise>
+				</choose>
+			</if>
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--재고관리 엑셀출력 -->
+    <select id="getOrderGoodsListExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+         
+			 SELECT /*+ INDEX_DESC(A PPS_ORDER_GOODS_IDX1)*/
+			 		TYPE, 
+         	 		NVL(F_GET_KT_CODE_NM('PPS_ORDER_CODE', 'TYPE', TYPE), '-') TYPE_NM,
+			        NVL(CD, '-') CD, 
+			        NVL(CD_NM, '-') CD_NM,
+			        NVL(OP1, '-') OP1, 
+			        NVL(F_GET_ORDER_CD_NM(TYPE, 'OP1', OP1), '-') OP1_NM,
+			        NVL(OP2, '-') OP2, 
+			        NVL(F_GET_ORDER_CD_NM(TYPE, 'OP2', OP2), '-') OP2_NM,
+			        NVL(OP3, '-') OP3, 
+			        NVL(F_GET_ORDER_CD_NM(TYPE, 'OP3', OP3), '-') OP3_NM,
+			        NVL(SALE_AMT, 0) SALE_AMT, 
+			        NVL(TOT_CNT, 0) TOT_CNT, 
+			        NVL(IN_CNT, 0) IN_CNT, 
+			        NVL(OUT_CNT, 0) OUT_CNT, 
+			        NVL(CLOSE_CNT, 0) CLOSE_CNT, 
+			        NVL(SHOW_FLAG, '-') SHOW_FLAG, 
+			        NVL(F_GET_ADMIN_NM(REG_ADMIN), '-') REG_ADMIN_NM,
+			        NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'), '-') REG_DT, 
+			        NVL(REMARK, '-') REMARK
+			 FROM PPS_ORDER_GOODS
+			 WHERE TYPE IS NOT NULL
+			 		AND REG_DT > TO_DATE('20170701', 'YYYYMMDD')
+
+			<if test='searchSValue != null and searchSValue != ""'>
+				<choose>
+					<when test='searchItem == "CD"'>
+						AND CD LIKE '%' || #{searchSValue} || '%'
+					</when>
+					<when test='searchItem == "CD_NM"'>
+						AND CD_NM LIKE '%' || #{searchSValue} || '%'
+					</when>
+				</choose>
+			</if>
+			 
+			<if test='searchType != null and searchType != ""'>
+				AND TYPE = #{searchType}
+			</if> 
+			
+			<if test='searchTotCntFlag != null and searchTotCntFlag != ""'>
+				<choose>
+					<when test='searchTotCntFlag == "Y"'>
+						AND TOT_CNT > 0
+					</when>
+					<otherwise>
+						AND TOT_CNT = 0
+					</otherwise>
+				</choose>
+			</if>
+    </select>
+    
+    <!--재고관리 타입 select용 -->
+    <select id="getOrderGoodsType" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         	 SELECT TYPE AS value,
+      		   		DECODE(#{cdFlag}, 'Y', TYPE, F_GET_KT_CODE_NM('PPS_ORDER_CODE', 'TYPE', TYPE)) AS text
+			 FROM PPS_ORDER_GOODS
+			 WHERE TYPE IS NOT NULL
+			
+			<if test='searchShowFlag != null and searchShowFlag != ""'>
+				AND  SHOW_FLAG = #{searchShowFlag}
+			</if>  	
+			
+			<if test='searchType != null and searchType != ""'>
+				AND TYPE = #{searchType}
+			</if>
+			
+			GROUP BY TYPE 
+			
+    </select>
+    
+    <!--재고관리 코드 select용 -->
+    <select id="getOrderGoodsCd" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         	 SELECT CD AS value,
+      		   		DECODE(#{cdFlag}, 'Y', CD, CD_NM) AS text
+			 FROM PPS_ORDER_GOODS
+			 WHERE TYPE IS NOT NULL
+			 	   AND TYPE = #{searchType}
+			
+			<if test='searchShowFlag != null and searchShowFlag != ""'>
+				AND  SHOW_FLAG = #{searchShowFlag}
+			</if>  	
+
+			ORDER BY CD ASC
+			
+    </select>
+    
+    <!-- 상품코드 목록가져오기  -->
+	<select id="getPpsOrderCodeList"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<!-- 
+			cdFlag : 코드명을 코드값으로 가져와야 할 경우 
+			showFlag : 노출여부에 따라 보여져야 할 경우
+		-->
+		SELECT OP_CD AS value,
+      		   DECODE(#{cdFlag}, 'Y', OP_CD, OP_CD_NM) AS text
+		FROM PPS_ORDER_CODE
+		WHERE TYPE = #{type}
+		AND CODE_GUBUN = #{codeGubun}
+		
+		<if test='cd != null and cd != ""'>
+			AND OP_CD = #{cd}
+		</if> 
+		<if test='showFlag != null and showFlag != ""'>
+			AND SHOW_FLAG = #{showFlag}
+		</if> 
+	
+	</select>
+	
+	<!-- 재고,입출력관리 등록/수정/삭제  -->
+	<select id="ppsOrderGoodsProc"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_ORDER_GOODS(
+					#{opCode, jdbcType=VARCHAR}
+				    , #{seq, jdbcType=VARCHAR}
+				    , #{type, jdbcType=VARCHAR}
+				    , #{codeGubun, jdbcType=VARCHAR}
+				    , #{inoutGubun, jdbcType=VARCHAR}
+				    , #{cd, jdbcType=VARCHAR}
+				    , #{cdNm, jdbcType=VARCHAR}
+				    , #{op1, jdbcType=VARCHAR}
+				    , #{op2, jdbcType=VARCHAR}
+				    , #{op3, jdbcType=VARCHAR}
+				    , #{saleAmt, jdbcType=VARCHAR}
+				    , #{showFlag, jdbcType=VARCHAR}
+				    , #{orderNo, jdbcType=VARCHAR}
+				    , #{cnt, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+				    , #{retSeq, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!--입출고관리 목록조회 -->
+    <select id="getOrderInoutList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         	 SELECT /*+ INDEX_DESC(A PPS_ORDER_INOUT_IDX1) ORDERED USE_NL(A B) */
+			        SEQ, 
+			        INOUT_GUBUN, 
+			        F_GET_KT_CODE_NM('PPS_ORDER_INOUT', 'INOUT_GUBUN', INOUT_GUBUN) INOUT_GUBUN_NM,
+			        A.TYPE, 
+			        F_GET_KT_CODE_NM('PPS_ORDER_CODE', 'TYPE', A.TYPE) TYPE_NM,
+			        A.CD, 
+			        F_GET_ORDER_CD_NM(A.TYPE, 'CD', A.CD) CD_NM,
+			        A.OP1, 
+			        F_GET_ORDER_CD_NM(A.TYPE, 'OP1', A.OP1) OP1_NM,
+			        A.OP2, 
+			        F_GET_ORDER_CD_NM(A.TYPE, 'OP2', A.OP2) OP2_NM,
+			        A.OP3, 
+			        F_GET_ORDER_CD_NM(A.TYPE, 'OP3', A.OP3) OP3_NM,
+			        SALE_AMT, 
+			        INOUT_CNT, 
+			        REMAINS_CNT, 
+			        A.ORDER_NO,
+			        F_GET_KT_CODE_NM('PPS_ORDER_INFO', 'STATUS', B.STATUS) STATUS_NM,
+			        A.REMARK,  
+			        F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			        TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') REG_DT, 
+			        CANCEL_FLAG, 
+			        F_GET_ADMIN_NM(CANCEL_ADMIN) CANCEL_ADMIN_NM,
+			        TO_CHAR(CANCEL_DT, 'YYYY-MM-DD') CANCEL_DT,
+			        CANCEL_RSN
+			 FROM PPS_ORDER_INOUT A,
+			 	  PPS_ORDER_INFO B
+			 WHERE A.ORDER_NO = B.ORDER_NO(+)
+			 		AND REG_DT > TO_DATE('20170101', 'YYYYMMDD')
+			 
+			 <if test="startDt != null and startDt != ''">
+				AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			 <if test="endDt != null and endDt != ''">
+				AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			 </if>
+			 
+			 <if test='searchSValue != null and searchSValue != ""'>
+			 	<choose>
+					<when test='searchItem == "CD_NM"'>
+						AND A.CD IN (SELECT OP_CD FROM PPS_ORDER_CODE WHERE CODE_GUBUN = 'CD' AND OP_CD_NM LIKE '%' || #{searchSValue} || '%')
+					</when>
+					<when test='searchItem == "ORDER_NO"'>
+						AND A.ORDER_NO = #{searchSValue}
+					</when>
+					<when test='searchItem == "CD"'>
+						AND A.CD LIKE '%' || #{searchSValue} || '%'
+					</when>
+				</choose>
+			 </if>
+			<if test='searchInoutGubun != null and searchInoutGubun != ""'>
+				AND INOUT_GUBUN = #{searchInoutGubun}
+			</if>
+			<if test='searchType != null and searchType != ""'>
+				AND A.TYPE = #{searchType}
+			</if>
+			<if test='searchCancelFlag != null and searchCancelFlag != ""'>
+				AND CANCEL_FLAG = #{searchCancelFlag}
+			</if> 	 	 	 	 	 	
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--입출고관리관리 엑셀출력 -->
+    <select id="getOrderInoutListExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+         
+			 SELECT /*+ INDEX_DESC(A PPS_ORDER_INOUT_IDX1) ORDERED USE_NL(A B) */
+			        NVL(SEQ, 0) SEQ, 
+			        NVL(INOUT_GUBUN, '-') INOUT_GUBUN, 
+			        NVL(F_GET_KT_CODE_NM('PPS_ORDER_INOUT', 'INOUT_GUBUN', INOUT_GUBUN), '-') INOUT_GUBUN_NM,
+			        NVL(A.TYPE, '-') TYPE, 
+			        NVL(F_GET_KT_CODE_NM('PPS_ORDER_CODE', 'TYPE', A.TYPE), '-') TYPE_NM,
+			        NVL(A.CD, '-') CD, 
+			        NVL(F_GET_ORDER_CD_NM(A.TYPE, 'CD', A.CD), '-') CD_NM,
+			        NVL(A.OP1, '-') OP1, 
+			        NVL(F_GET_ORDER_CD_NM(A.TYPE, 'OP1', A.OP1), '-') OP1_NM,
+			        NVL(A.OP2, '-') OP2, 
+			        NVL(F_GET_ORDER_CD_NM(A.TYPE, 'OP2', A.OP2), '-') OP2_NM,
+			        NVL(A.OP3, '-') OP3, 
+			        NVL(F_GET_ORDER_CD_NM(A.TYPE, 'OP3', A.OP3), '-') OP3_NM,
+			        NVL(SALE_AMT, 0) SALE_AMT, 
+			        NVL(INOUT_CNT, 0) INOUT_CNT, 
+			        NVL(REMAINS_CNT, 0) REMAINS_CNT, 
+			        NVL(A.ORDER_NO, '-') ORDER_NO, 
+			        NVL(F_GET_KT_CODE_NM('PPS_ORDER_INFO', 'STATUS', B.STATUS), '-') STATUS_NM,
+			        NVL(A.REMARK, '-') REMARK, 
+			        NVL(REG_ADMIN, '-') REG_ADMIN, 
+			        NVL(F_GET_ADMIN_NM(REG_ADMIN), '-') REG_ADMIN_NM,
+			        NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS'), '-') REG_DT, 
+			        NVL(CANCEL_FLAG, '-') CANCEL_FLAG, 
+			        NVL(CANCEL_ADMIN, '-') CANCEL_ADMIN, 
+			        NVL(F_GET_ADMIN_NM(CANCEL_ADMIN), '-') CANCEL_ADMIN_NM,
+			        NVL(TO_CHAR(CANCEL_DT, 'YYYY-MM-DD'), '-') CANCEL_DT,
+			        NVL(CANCEL_RSN, '-') CANCEL_RSN
+			 FROM PPS_ORDER_INOUT A,
+			 	  PPS_ORDER_INFO B
+			 WHERE A.ORDER_NO = B.ORDER_NO(+)
+			 		AND REG_DT > TO_DATE('20170101', 'YYYYMMDD')
+			 
+			 <if test="startDt != null and startDt != ''">
+				AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			 <if test="endDt != null and endDt != ''">
+				AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			 </if>
+			 
+			 <if test='searchSValue != null and searchSValue != ""'>
+			 	<choose>
+					<when test='searchItem == "CD_NM"'>
+						AND A.CD IN (SELECT OP_CD FROM PPS_ORDER_CODE WHERE CODE_GUBUN = 'CD' AND OP_CD_NM LIKE '%' || #{searchSValue} || '%')
+					</when>
+					<when test='searchItem == "ORDER_NO"'>
+						AND A.ORDER_NO = #{searchSValue}
+					</when>
+					<when test='searchItem == "CD"'>
+						AND A.CD LIKE '%' || #{searchSValue} || '%'
+					</when>
+				</choose>
+			 </if>
+			<if test='searchInoutGubun != null and searchInoutGubun != ""'>
+				AND INOUT_GUBUN = #{searchInoutGubun}
+			</if>
+			<if test='searchType != null and searchType != ""'>
+				AND A.TYPE = #{searchType}
+			</if>
+			<if test='searchCancelFlag != null and searchCancelFlag != ""'>
+				AND CANCEL_FLAG = #{searchCancelFlag}
+			</if> 
+    </select>
+    
+    <!--주문관리 목록조회 -->
+    <select id="getOrderInfoList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         	 SELECT /*+ INDEX_DESC(A PPS_ORDER_INFO_IDX1)*/
+			        ORDER_NO, 
+			        STATUS, 
+			        F_GET_KT_CODE_NM('PPS_ORDER_INFO', 'STATUS', STATUS) STATUS_NM,
+			        TYPE, 
+			        F_GET_KT_CODE_NM('PPS_ORDER_CODE', 'TYPE', TYPE) TYPE_NM,
+			        CD, 
+			        F_GET_ORDER_CD_NM(TYPE, 'CD', CD) CD_NM,
+			        OP1, 
+			        F_GET_ORDER_CD_NM(TYPE, 'OP1', OP1) OP1_NM,
+			        OP2, 
+			        F_GET_ORDER_CD_NM(TYPE, 'OP2', OP2) OP2_NM,
+			        OP3, 
+			        F_GET_ORDER_CD_NM(TYPE, 'OP3', OP3) OP3_NM,
+			        REQ_SALE_AMT, 
+			        REQ_ORDER_CNT, 
+			        REQ_REMARK, 
+			        AGENT_ID, 
+			        F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+			        F_GET_ADMIN_NM(ORDER_ADMIN) ORDER_ADMIN_NM,
+			        TO_CHAR(ORDER_DT, 'YYYY-MM-DD HH24:MI:SS') ORDER_DT, 
+			        DLV_METHOD, 
+			        F_GET_KT_CODE_NM('PPS_ORDER_INFO', 'DLV_METHOD', DLV_METHOD) DLV_METHOD_NM,
+			        TO_CHAR(DLV_REQ_DT, 'YYYY-MM-DD') DLV_REQ_DT, 
+			        DLV_ADDR, 
+			        DLV_NAME, 
+			        DLV_PHONE, 
+			        DLV_NO, 
+			        SEND_CNT, 
+			        SEND_AMT, 
+			        SEND_TOT_AMT, 
+			        DECODE(SEND_FILE, '', 'N', 'Y') SEND_FILE_FLAG,
+			        SEND_ORG_FILE,
+			        F_GET_ADMIN_NM(SEND_ADMIN) SEND_ADMIN_NM,
+			        TO_CHAR(SEND_DT, 'YYYY-MM-DD') SEND_DT, 
+			        PAY_METHOD, 
+			        F_GET_KT_CODE_NM('PPS_ORDER_INFO', 'PAY_METHOD', PAY_METHOD) PAY_METHOD_NM,
+			        PAY_FLAG, 
+			        PAY_SEQ, 
+			        F_GET_ADMIN_NM(PAY_ADMIN) PAY_ADMIN_NM,
+			        TO_CHAR(PAY_DT, 'YYYY-MM-DD') PAY_DT, 
+			        F_GET_ADMIN_NM(END_ADMIN) END_ADMIN_NM,
+			        TO_CHAR(END_DT, 'YYYY-MM-DD') END_DT, 
+			        REMARK
+			FROM PPS_ORDER_INFO A
+			WHERE ORDER_DT > TO_DATE('20170101', 'YYYYMMDD')
+			
+			<if test="startDt != null and startDt != ''">
+				AND ORDER_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND ORDER_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			 
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID = #{searchAgentId}
+			</if>
+			
+			<if test="searchStatus != null and searchStatus != ''">
+				<choose>
+					<when test='searchStatus == "ORDER"'>
+						AND STATUS IN ('01', '05', '10')
+					</when>
+					<when test='searchStatus == "OUT"'>
+						AND STATUS IN ('10', '15', '19', '20')
+					</when>
+					<when test='searchStatus == "END"'>
+						AND STATUS IN ('20', '30')
+					</when>
+					<otherwise>
+						AND STATUS = #{searchStatus}
+					</otherwise>
+				</choose>
+			</if>
+			
+			<if test='searchType != null and searchType != ""'>
+				AND TYPE = #{searchType}
+			</if>
+			
+			<if test='searchDlvMethod != null and searchDlvMethod != ""'>
+				AND DLV_METHOD = #{searchDlvMethod}
+			</if>
+			
+			<if test='searchPayMethod != null and searchPayMethod != ""'>
+				AND PAY_METHOD = #{searchPayMethod}
+			</if>
+			
+			<if test='searchPayFlag != null and searchPayFlag != ""'>
+				AND PAY_FLAG = #{searchPayFlag}
+			</if>
+			 
+			 <if test='searchSValue != null and searchSValue != ""'>
+			 	<choose>
+					<when test='searchItem == "CD_NM"'>
+						AND CD IN (SELECT OP_CD FROM PPS_ORDER_CODE WHERE CODE_GUBUN = 'CD' AND OP_CD_NM LIKE '%' || #{searchSValue} || '%')
+					</when>
+					<when test='searchItem == "CD"'>
+						AND CD LIKE '%' || #{searchSValue} || '%'
+					</when>
+					<when test='searchItem == "DLV_NAME"'>
+						AND DLV_NAME LIKE '%' || #{searchSValue} || '%'
+					</when>
+					<when test='searchItem == "DLV_NO"'>
+						AND DLV_NO LIKE '%' || #{searchSValue} || '%'
+					</when>
+					<when test='searchItem == "DLV_PHONE"'>
+						AND DLV_PHONE LIKE '%' || #{searchSValue} || '%'
+					</when>
+					<when test='searchItem == "ORDER_NO"'>
+						AND ORDER_NO LIKE '%' || #{searchSValue} || '%'
+					</when>
+				</choose>
+			</if>
+			 
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--주문관리 엑셀출력 -->
+    <select id="getOrderInfoListExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+         
+			 SELECT /*+ INDEX_DESC(A PPS_ORDER_INFO_IDX1)*/
+			        NVL(ORDER_NO, '-') ORDER_NO, 
+			        NVL(STATUS, '-') STATUS, 
+			        NVL(F_GET_KT_CODE_NM('PPS_ORDER_INFO', 'STATUS', STATUS), '-') STATUS_NM,
+			        NVL(TYPE, '-') TYPE, 
+			        NVL(F_GET_KT_CODE_NM('PPS_ORDER_CODE', 'TYPE', TYPE), '-') TYPE_NM,
+			        NVL(CD, '-') CD, 
+			        NVL(F_GET_ORDER_CD_NM(TYPE, 'CD', CD), '-') CD_NM,
+			        NVL(OP1, '-') OP1, 
+			        NVL(F_GET_ORDER_CD_NM(TYPE, 'OP1', OP1), '-') OP1_NM,
+			        NVL(OP2, '-') OP2, 
+			        NVL(F_GET_ORDER_CD_NM(TYPE, 'OP2', OP2), '-') OP2_NM,
+			        NVL(OP3, '-') OP3, 
+			        NVL(F_GET_ORDER_CD_NM(TYPE, 'OP3', OP3), '-') OP3_NM,
+			        NVL(REQ_SALE_AMT, 0) REQ_SALE_AMT, 
+			        NVL(REQ_ORDER_CNT, 0) REQ_ORDER_CNT, 
+			        NVL(REQ_REMARK, '-') REQ_REMARK, 
+			        NVL(AGENT_ID, '-') AGENT_ID, 
+			        NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM,
+			        NVL(F_GET_ADMIN_NM(ORDER_ADMIN), '-') ORDER_ADMIN_NM,
+			        NVL(TO_CHAR(ORDER_DT, 'YYYY-MM-DD HH24:MI:SS'), '-') ORDER_DT, 
+			        NVL(DLV_METHOD, '-') DLV_METHOD, 
+			        NVL(F_GET_KT_CODE_NM('PPS_ORDER_INFO', 'DLV_METHOD', DLV_METHOD), '-') DLV_METHOD_NM,
+			        NVL(TO_CHAR(DLV_REQ_DT, 'YYYY-MM-DD'), '-') DLV_REQ_DT, 
+			        NVL(DLV_ADDR, '-') DLV_ADDR, 
+			        NVL(DLV_NAME, '-') DLV_NAME, 
+			        NVL(DLV_PHONE, '-') DLV_PHONE, 
+			        NVL(DLV_NO, '-') DLV_NO, 
+			        NVL(SEND_CNT, 0) SEND_CNT, 
+			        NVL(SEND_AMT, 0) SEND_AMT, 
+			        NVL(SEND_TOT_AMT, 0) SEND_TOT_AMT, 
+			        NVL(DECODE(SEND_FILE, '', 'N', 'Y'), '-') SEND_FILE_FLAG,
+			        NVL(F_GET_ADMIN_NM(SEND_ADMIN), '-') SEND_ADMIN_NM,
+			        NVL(TO_CHAR(SEND_DT, 'YYYY-MM-DD'), '-') SEND_DT, 
+			        NVL(PAY_METHOD, '-') PAY_METHOD, 
+			        NVL(F_GET_KT_CODE_NM('PPS_ORDER_INFO', 'PAY_METHOD', PAY_METHOD), '-') PAY_METHOD_NM,
+			        NVL(PAY_FLAG, '-') PAY_FLAG, 
+			        NVL(PAY_SEQ, 0) PAY_SEQ, 
+			        NVL(F_GET_ADMIN_NM(PAY_ADMIN), '-') PAY_ADMIN_NM,
+			        NVL(TO_CHAR(PAY_DT, 'YYYY-MM-DD'), '-') PAY_DT, 
+			        NVL(F_GET_ADMIN_NM(END_ADMIN), '-') END_ADMIN_NM,
+			        NVL(TO_CHAR(END_DT, 'YYYY-MM-DD'), '-') END_DT, 
+			        NVL(REMARK, '-') REMARK
+			FROM PPS_ORDER_INFO A
+			WHERE ORDER_DT > TO_DATE('20170101', 'YYYYMMDD')
+			
+			<if test="startDt != null and startDt != ''">
+				AND ORDER_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND ORDER_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			 
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID = #{searchAgentId}
+			</if>
+			
+			<if test="searchStatus != null and searchStatus != ''">
+				<choose>
+					<when test='searchStatus == "ORDER"'>
+						AND STATUS IN ('01', '05', '10')
+					</when>
+					<when test='searchStatus == "OUT"'>
+						AND STATUS IN ('10', '15', '19', '20')
+					</when>
+					<when test='searchStatus == "END"'>
+						AND STATUS IN ('20', '30')
+					</when>
+					<otherwise>
+						AND STATUS = #{searchStatus}
+					</otherwise>
+				</choose>
+			</if>
+			
+			<if test='searchType != null and searchType != ""'>
+				AND TYPE = #{searchType}
+			</if>
+			
+			<if test='searchDlvMethod != null and searchDlvMethod != ""'>
+				AND DLV_METHOD = #{searchDlvMethod}
+			</if>
+			
+			<if test='searchPayMethod != null and searchPayMethod != ""'>
+				AND PAY_METHOD = #{searchPayMethod}
+			</if>
+			
+			<if test='searchPayFlag != null and searchPayFlag != ""'>
+				AND PAY_FLAG = #{searchPayFlag}
+			</if>
+			 
+			 <if test='searchSValue != null and searchSValue != ""'>
+				 <choose>
+					 <when test='searchItem == "CD_NM"'>
+						 AND CD IN (SELECT OP_CD FROM PPS_ORDER_CODE WHERE CODE_GUBUN = 'CD' AND OP_CD_NM LIKE '%' || #{searchSValue} || '%')
+					 </when>
+					 <when test='searchItem == "CD"'>
+						 AND CD LIKE '%' || #{searchSValue} || '%'
+					 </when>
+					 <when test='searchItem == "DLV_NAME"'>
+						 AND DLV_NAME LIKE '%' || #{searchSValue} || '%'
+					 </when>
+					 <when test='searchItem == "DLV_NO"'>
+						 AND DLV_NO LIKE '%' || #{searchSValue} || '%'
+					 </when>
+					 <when test='searchItem == "DLV_PHONE"'>
+						 AND DLV_PHONE LIKE '%' || #{searchSValue} || '%'
+					 </when>
+					 <when test='searchItem == "ORDER_NO"'>
+						 AND ORDER_NO LIKE '%' || #{searchSValue} || '%'
+					 </when>
+				 </choose>
+			</if>
+    </select>
+    
+    <!-- 주문관리, 출고관리 등록/수정/삭제  -->
+	<select id="ppsOrderInfoProc"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_ORDER_INFO(
+					#{opCode, jdbcType=VARCHAR}
+				    , #{orderNo, jdbcType=VARCHAR}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{type, jdbcType=VARCHAR}
+				    , #{cd, jdbcType=VARCHAR}
+				    , #{op1, jdbcType=VARCHAR}
+				    , #{op2, jdbcType=VARCHAR}
+				    , #{op3, jdbcType=VARCHAR}
+				    , #{reqOrderCnt, jdbcType=VARCHAR}
+				    , #{dlvMethod, jdbcType=VARCHAR}
+				    , #{dlvReqDt, jdbcType=VARCHAR}
+				    , #{dlvAddr, jdbcType=VARCHAR}
+				    , #{dlvName, jdbcType=VARCHAR}
+				    , #{dlvPhone, jdbcType=VARCHAR}
+				    , #{reqRemark, jdbcType=VARCHAR}
+				    , #{sendCnt, jdbcType=VARCHAR}
+				    , #{sendAmt, jdbcType=VARCHAR}
+				    , #{payMethod, jdbcType=VARCHAR}
+				    , #{payFlag, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+				    , #{dlvNo, jdbcType=VARCHAR}
+				    , #{sendFile, jdbcType=VARCHAR}
+				    , #{sendOrgFile, jdbcType=VARCHAR}
+				    , #{outAddFlag, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!--대리점정보 조회 -->
+    <select id="getOrderAgentInfo" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         SELECT RPRSEN_NM,
+		       TELNUM,
+		       TRIM('(' || ZIPCD || ') ' || ADDR1 || ADDR2) AGENT_ADDR
+		 FROM ORG_ORGN_INFO_MST
+		 WHERE ORGN_ID = #{agentId}
+	    
+    </select>
+    
+    <!-- Send_file을 리턴 -->
+	<select id="getOrderSendFile"   parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap"> 
+		SELECT SEND_FILE,
+			   SEND_ORG_FILE
+		FROM PPS_ORDER_INFO
+		WHERE ORDER_NO = #{orderNo}
+		<choose>
+			<when test='agentId != "BONSA"'>
+				AND AGENT_ID = #{agentId}
+			</when>
+		</choose>    
+	</select>
+	
+	<!-- 리플레쉬 목록가져오기  -->
+	<select id="getPpsOrderRefreshList"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT SEND_ORG_FILE,
+				REMARK,
+				REQ_REMARK
+		FROM PPS_ORDER_INFO
+		WHERE ORDER_NO = #{orderNo}
+	</select>
+	
+	
+    
+</mapper>

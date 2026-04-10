@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.m2m.usimrephistgmt.mapper.UsimRepHistMapper">
+
+
+
+	<!-- M2M USIM 보고서 출력 이력 조회 -->
+	<select id="usimRepHistList" parameterType="com.ktis.msp.m2m.usimrephistgmt.vo.UsimRepHistVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* UsimRepHistMapper.usimRepHistList */
+		SELECT
+			    A.ORD_ID
+			  , A.ORD_DATE
+			  , A.ORGN_ID
+			  , F_GET_AGENT_NM(A.ORGN_ID) AS ORGN_NM
+			  , A.AREA_NM
+			  , (SELECT AREA_NM AS TEXT
+				 FROM   MSP_M2M_ADDR AD
+				 WHERE  AD.SEQ = A.AREA_NM
+				) AREA_NM_TEXT
+			  , A.MNG_NM
+			  , A.MNG_NM AS MASK_MNG_NM /* 받는분이름 */
+			  , A.TEL_FN1
+			  , A.TEL_MN1
+			  , A.TEL_RN1
+			  , A.TEL_FN2
+			  , A.TEL_MN2
+			  , A.TEL_RN2
+			  , DECODE(A.TEL_FN1, NULL, '', A.TEL_FN1 || '-' || A.TEL_MN1 || '-' || A.TEL_RN1) MNG_PHN
+			  , DECODE(A.TEL_FN2, NULL, '', A.TEL_FN2 || '-' || A.TEL_MN2 || '-' || A.TEL_RN2) MNG_MBLPHN
+			  , A.ORD_STATUS
+			  , FN_GET_CODENM('M2M0001',A.ORD_STATUS) AS ORD_STATUS_NM
+			  , A.ORD_INFO
+			  , A.TB_CD
+			  , FN_GET_CODENM('RCP0025',A.TB_CD) AS TB_CD_NM
+			  , A.INV_NO
+			  , A.TAKE_DATE
+			  , A.SEND_DATE
+			  , A.POST
+			  , A.ADDR
+			  , A.ADDR_BJD
+			  , A.ADDR_DTL
+			  , A.ADDR_DTL AS MASK_ADDR_DTL
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+			  , BB.RPRS_PRDT_ID
+			  , BB.PRDT_CODE
+			  , BB.PRDT_NM || CASE WHEN C.MDL_CNT = 1 THEN ''
+			                       ELSE '(외)'
+			                  END AS PRDT_NM
+			  , BB.OUT_UNIT_PRIC
+			  , (SELECT SUM(ORD_CNT)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS ORD_CNT
+			  , (SELECT SUM(AAA.ORD_CNT * BBB.OUT_UNIT_PRIC)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			           ,MSP_M2M_MDL BBB
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.RPRS_PRDT_ID = BBB.RPRS_PRDT_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS PRIC
+			  , (SELECT SUM(AAA.ORD_CNT * BBB.OUT_UNIT_PRIC * 1.1)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			           ,MSP_M2M_MDL BBB
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.RPRS_PRDT_ID = BBB.RPRS_PRDT_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS PRIC_VAT
+              , FN_GET_CODENM('M2M0002', D.REPORT_CD)         AS REPORT_CD_NM
+			  , TO_CHAR(D.REGST_DTTM,'YYYY-MM-DD HH24:MI:SS')   AS REPORT_DATETIME
+			  , FN_GET_USRNM(D.RVISN_ID) AS REPORT_USR_NM
+		FROM
+			    MSP_M2M_ORD_MST A
+			   ,MSP_M2M_ORD_MDL AA
+               ,(SELECT CC.ORD_ID
+                       ,MIN(CC.SEQ) SEQ
+                       ,COUNT(*) MDL_CNT
+                 FROM  MSP_M2M_ORD_MDL CC
+                 WHERE CC.DEL_YN = 'N'
+                 GROUP BY CC.ORD_ID
+                ) C
+			   ,MSP_M2M_MDL BB
+			   ,MSP_M2M_REPORT_HIST D
+		WHERE AA.ORD_ID =  A.ORD_ID
+		AND   AA.RPRS_PRDT_ID = BB.RPRS_PRDT_ID
+        AND   AA.SEQ = C.SEQ
+        AND   AA.ORD_ID = C.ORD_ID
+        AND   D.ORD_ID = A.ORD_ID
+        
+		 <if test="ordDate != null and ordDate != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_DATE LIKE #{ordDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="ordId != null and ordId != ''">
+		   AND  A.ORD_ID = #{ordId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="orgnId != null and orgnId != '' and  ''.equals(ordId) ">
+		   AND  A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="ordStatus != null and ordStatus != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_STATUS = #{ordStatus, jdbcType=VARCHAR}
+		 </if>
+		 <if test="takeDate != null and takeDate != '' and  ''.equals(ordId) ">
+		   AND  A.TAKE_DATE LIKE #{takeDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="areaNm != null and areaNm != '' and  ''.equals(ordId) ">
+		   AND  A.AREA_NM LIKE #{areaNm, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="reportCd != null and reportCd != ''">
+		   AND  D.REPORT_CD = #{reportCd, jdbcType=VARCHAR}
+		 </if>
+		 
+		 <if test="rprsPrdtId != null and rprsPrdtId != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_ID IN (SELECT ORD_ID 
+		                     FROM   MSP_M2M_ORD_MDL AAA
+		                     WHERE  AAA.RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+		                     AND    NVL(AAA.DEL_YN,'N') = 'N'
+		                     )
+		 </if>
+		 ORDER  BY
+				1,REPORT_CD_NM,REPORT_DATETIME
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+
+	<insert id="usimRepHistInsert" parameterType="com.ktis.msp.m2m.usimrephistgmt.vo.UsimRepHistVO">
+		/* UsimRepHistMapper.usimRepHistInsert */
+		INSERT INTO MSP_M2M_REPORT_HIST
+		(
+		    SEQ_NUM
+		    , ORD_ID
+		    , REPORT_CD
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		VALUES
+		(
+			SQ_MSP_M2M_REPORT_HIST_01.NEXTVAL
+		  , #{ordId, jdbcType=VARCHAR}
+		  , #{reportCd, jdbcType=VARCHAR}
+		  
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  
+		)
+	</insert>
+	
+	<select id="usimRepHistListEx" parameterType="com.ktis.msp.m2m.usimrephistgmt.vo.UsimRepHistVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimRepHistMapper.usimRepHistListEx */
+		SELECT
+			    A.ORD_ID
+			  , A.ORD_DATE
+			  , A.ORGN_ID
+			  , F_GET_AGENT_NM(A.ORGN_ID) AS ORGN_NM
+			  , A.AREA_NM
+			  , (SELECT AREA_NM AS TEXT
+				 FROM   MSP_M2M_ADDR AD
+				 WHERE  AD.SEQ = A.AREA_NM
+				) AREA_NM_TEXT
+			  , A.MNG_NM
+			  , A.MNG_NM AS MASK_MNG_NM /* 받는분이름 */
+			  , A.TEL_FN1
+			  , A.TEL_MN1
+			  , A.TEL_RN1
+			  , A.TEL_FN2
+			  , A.TEL_MN2
+			  , A.TEL_RN2
+			  , DECODE(A.TEL_FN1, NULL, '', A.TEL_FN1 || '-' || A.TEL_MN1 || '-' || A.TEL_RN1) MNG_PHN
+			  , DECODE(A.TEL_FN2, NULL, '', A.TEL_FN2 || '-' || A.TEL_MN2 || '-' || A.TEL_RN2) MNG_MBLPHN
+			  , A.ORD_STATUS
+			  , FN_GET_CODENM('M2M0001',A.ORD_STATUS) AS ORD_STATUS_NM
+			  , A.ORD_INFO
+			  , A.TB_CD
+			  , FN_GET_CODENM('RCP0025',A.TB_CD) AS TB_CD_NM
+			  , A.INV_NO
+			  , A.TAKE_DATE
+			  , A.SEND_DATE
+			  , A.POST
+			  , A.ADDR
+			  , A.ADDR_BJD
+			  , A.ADDR_DTL
+			  , A.ADDR_DTL AS MASK_ADDR_DTL
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+			  , BB.RPRS_PRDT_ID
+			  , BB.PRDT_CODE
+			  , BB.PRDT_NM || CASE WHEN C.MDL_CNT = 1 THEN ''
+			                       ELSE '(외)'
+			                  END AS PRDT_NM
+			  , BB.OUT_UNIT_PRIC
+			  , (SELECT SUM(ORD_CNT)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS ORD_CNT
+			  , (SELECT SUM(AAA.ORD_CNT * BBB.OUT_UNIT_PRIC)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			           ,MSP_M2M_MDL BBB
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.RPRS_PRDT_ID = BBB.RPRS_PRDT_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS PRIC
+			  , (SELECT SUM(AAA.ORD_CNT * BBB.OUT_UNIT_PRIC * 1.1)
+			     FROM   MSP_M2M_ORD_MDL AAA
+			           ,MSP_M2M_MDL BBB
+			     WHERE  AAA.ORD_ID =  A.ORD_ID
+			     AND    AAA.RPRS_PRDT_ID = BBB.RPRS_PRDT_ID
+			     AND    AAA.DEL_YN = 'N'
+			     ) AS PRIC_VAT
+              , FN_GET_CODENM('M2M0002', D.REPORT_CD)         AS REPORT_CD_NM
+			  , TO_CHAR(D.REGST_DTTM,'YYYY-MM-DD HH24:MI:SS')   AS REPORT_DATETIME
+			  , FN_GET_USRNM(D.RVISN_ID) AS REPORT_USR_NM
+			  
+		FROM
+			    MSP_M2M_ORD_MST A
+			   ,MSP_M2M_ORD_MDL AA
+               ,(SELECT CC.ORD_ID
+                       ,MIN(CC.SEQ) SEQ
+                       ,COUNT(*) MDL_CNT
+                 FROM  MSP_M2M_ORD_MDL CC
+                 WHERE CC.DEL_YN = 'N'
+                 GROUP BY CC.ORD_ID
+                ) C
+			   ,MSP_M2M_MDL BB
+			   ,MSP_M2M_REPORT_HIST D
+		WHERE AA.ORD_ID =  A.ORD_ID
+		AND   AA.RPRS_PRDT_ID = BB.RPRS_PRDT_ID
+        AND   AA.SEQ = C.SEQ
+        AND   AA.ORD_ID = C.ORD_ID
+        AND   D.ORD_ID = A.ORD_ID
+        
+		 <if test="ordDate != null and ordDate != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_DATE LIKE #{ordDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="ordId != null and ordId != ''">
+		   AND  A.ORD_ID = #{ordId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="orgnId != null and orgnId != '' and  ''.equals(ordId) ">
+		   AND  A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="ordStatus != null and ordStatus != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_STATUS = #{ordStatus, jdbcType=VARCHAR}
+		 </if>
+		 <if test="takeDate != null and takeDate != '' and  ''.equals(ordId) ">
+		   AND  A.TAKE_DATE LIKE #{takeDate, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="areaNm != null and areaNm != '' and  ''.equals(ordId) ">
+		   AND  A.AREA_NM LIKE #{areaNm, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="reportCd != null and reportCd != ''">
+		   AND  D.REPORT_CD = #{reportCd, jdbcType=VARCHAR}
+		 </if>
+		 
+		 <if test="rprsPrdtId != null and rprsPrdtId != '' and  ''.equals(ordId) ">
+		   AND  A.ORD_ID IN (SELECT ORD_ID 
+		                     FROM   MSP_M2M_ORD_MDL AAA
+		                     WHERE  AAA.RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+		                     AND    NVL(AAA.DEL_YN,'N') = 'N'
+		                     )
+		 </if>
+		 ORDER  BY
+				1
+	</select>
+
+	<select id="getOrgIdComboListOLD" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimRepHistMapper.getOrgIdComboList */
+        SELECT  DISTINCT 
+                ORG_ID AS VALUE
+              , ORG_NM AS TEXT
+        FROM MDS_AGNT_INFO BB
+        WHERE BB.CONT_MCTG_CRCLT_CH_CD = 'E0200' /* 계약채널(중) - 특수*/
+        AND   BB.CONT_CRCLT_CH_CD = 'E0211' /* 계약채널(소) - 특판(B2B)*/
+		ORDER BY 1
+	</select>
+
+	<select id="getOrgIdComboList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimRepHistMapper.getOrgIdComboList */
+        SELECT DISTINCT
+            B.ORGN_ID AS VALUE
+          , C.ORGN_NM AS TEXT
+        FROM
+            CMN_USG_GRP_ASGN_MST  a
+          , CMN_USR_MST           b
+          , ORG_ORGN_INFO_MST     C
+        WHERE   a.USR_ID = b.USR_ID (+)
+            AND B.ORGN_ID = C.ORGN_ID (+)
+            AND B.USG_YN <![CDATA[<>]]> 'N'
+            AND a.GRP_ID = 'G-PSCM2M'
+        ORDER BY
+            C.ORGN_NM
+	</select>
+
+	<select id="getMdlIdComboList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimOrdMngMapper.getMdlIdComboList */
+        SELECT  DISTINCT 
+                RPRS_PRDT_ID AS VALUE
+              , PRDT_NM AS TEXT
+              /*, PRDT_CODE||'-'||PRDT_NM AS TEXT*/
+        FROM MSP_M2M_MDL BB
+        WHERE NVL(USE_YN,'Y') = 'Y'
+		ORDER BY TEXT
+	</select>
+
+	<select id="getAreaNmComboList" parameterType="com.ktis.msp.m2m.usimrephistgmt.vo.UsimRepHistVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimOrdMngMapper.getAreaNmComboList */
+		SELECT
+		    SEQ AS VALUE
+		  , AREA_NM AS TEXT
+		FROM
+		    MSP_M2M_ADDR
+		WHERE USE_YN = 'Y'
+		<if test="orgnId != null and orgnId != '' ">
+			AND   ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 </if>
+	    AND  NVL(DEL_YN,'N') = 'N'
+		ORDER BY AREA_NM
+		    
+	</select>
+						
+</mapper>

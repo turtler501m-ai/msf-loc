@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.ptnr.ptnrmgmt.mapper.PtnrPrmtMapper">
+
+
+
+
+	<!-- 제휴프로모션관리 -->
+	<select id="ptnrPrmtList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrPrmtMapper.ptnrPrmtList */
+		SELECT  PRMT.PARTNER_ID AS PTNR_ID
+			  , FN_GET_CODENM('CMN0243',PRMT.PARTNER_ID) AS PTNR_NM
+			  , PRMT.PRMT_ID
+			  , PRMT.PRMT_NM
+			  , RAT.RATE_CD
+			  , RAT.RATE_NM
+			  
+			  , PRMT.POINT_VAL
+			  
+			  , TO_CHAR(TO_DATE(PRMT.STRT_DATE,'YYYYMMDD'),'YYYY-MM-DD') AS STRT_DATE
+			  , TO_CHAR(TO_DATE(PRMT.END_DATE,'YYYYMMDD'),'YYYY-MM-DD') AS END_DATE
+			  , PRMT.PRVD_CYCL
+			  
+			  , FN_GET_USRNM(PRMT.RVISN_ID) AS USR_NM
+			  
+			  , PRMT.ORGN_ID
+			  , F_GET_AGENT_NM(PRMT.ORGN_ID) AS ORGN_NM
+			  , PRMT.USIM_ORGN_ID
+			  , F_GET_AGENT_NM(PRMT.USIM_ORGN_ID) AS USIM_ORGN_NM
+			  , PRMT.ON_OFF_TYPE
+			  , FN_GET_CODENM('RCP0007',PRMT.ON_OFF_TYPE) AS ON_OFF_TYPE_NM
+			  
+		  FROM  MSP_PARTNER_PRMT_MST PRMT
+			  , MSP_RATE_MST RAT
+		 WHERE  RAT.PAY_CL_CD = 'PO'
+		   AND  RAT.SERVICE_TYPE = 'P'
+		   AND  PRMT.RATE_CD = RAT.RATE_CD
+		   AND  #{stdrDt, jdbcType=VARCHAR} BETWEEN PRMT.STRT_DATE
+		                                    AND     PRMT.END_DATE
+		                                    
+		 <if test="ptnrId != null and ptnrId != ''">
+		   AND  PRMT.PARTNER_ID = #{ptnrId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="prmtNm != null and prmtNm != ''">
+		   AND  PRMT.PRMT_NM LIKE '%'||#{prmtNm, jdbcType=VARCHAR}||'%'
+		 </if>
+		 
+		 <if test="rateNm != null and rateNm != ''">
+		   AND  RAT.RATE_NM LIKE '%'||#{rateNm, jdbcType=VARCHAR}||'%'
+		 </if>
+		 
+		 ORDER  BY
+				PTNR_NM, RAT.RATE_NM, PRMT.STRT_DATE DESC, END_DATE DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+
+	<insert id="ptnrPrmtInsert" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO">
+		/* PtnrPrmtMapper.ptnrPrmtInsert */
+		INSERT INTO MSP_PARTNER_PRMT_MST
+		(
+			PARTNER_ID
+		  , PRMT_ID
+		  , PRMT_NM
+		  , RATE_CD
+		  , POINT_VAL
+		  , STRT_DATE
+		  , END_DATE
+		  , PRVD_CYCL
+		  , REGST_ID
+		  , REGST_DTTM
+		  , RVISN_ID
+		  , RVISN_DTTM
+		  , ORGN_ID
+		  , USIM_ORGN_ID
+		  , ON_OFF_TYPE
+		)
+		VALUES
+		(
+			#{ptnrId, jdbcType=VARCHAR}
+		  , 'P' || SQ_MSP_PARTNER_PRMT_MST_01.NEXTVAL
+		  , #{prmtNm, jdbcType=VARCHAR}
+		  , #{rateCd, jdbcType=VARCHAR}
+		  , #{pointVal, jdbcType=VARCHAR}
+		  , #{strtDate, jdbcType=VARCHAR}
+		  , #{endDate, jdbcType=VARCHAR}
+		  , #{prvdCycl, jdbcType=VARCHAR}
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{orgnId, jdbcType=VARCHAR}
+		  , #{usimOrgnId, jdbcType=VARCHAR}
+		  , #{onOffType, jdbcType=VARCHAR}
+		  
+		)
+	</insert>
+	
+	<update id="ptnrPrmtUpdate" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO">
+		/* PtnrPrmtMapper.ptnrPrmtUpdate */
+		UPDATE  MSP_PARTNER_PRMT_MST
+		   SET  PARTNER_ID = #{ptnrId, jdbcType=VARCHAR}
+		      , PRMT_NM = #{prmtNm, jdbcType=VARCHAR}
+		      , RATE_CD = #{rateCd, jdbcType=VARCHAR}
+		      , POINT_VAL = #{pointVal, jdbcType=VARCHAR}
+		      , STRT_DATE = #{strtDate, jdbcType=VARCHAR}
+		      , END_DATE = #{endDate, jdbcType=VARCHAR}
+		      , PRVD_CYCL = #{prvdCycl, jdbcType=VARCHAR}
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+		      , ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		      , USIM_ORGN_ID = #{usimOrgnId, jdbcType=VARCHAR}
+		      , ON_OFF_TYPE = #{onOffType, jdbcType=VARCHAR}
+		 WHERE  PRMT_ID = #{prmtId, jdbcType=VARCHAR}
+	</update>	
+			
+	<select id="ptnrPrmtListEx" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrPrmtMapper.ptnrPrmtListEx */
+		SELECT  PRMT.PARTNER_ID  AS PTNR_ID
+			  , FN_GET_CODENM('CMN0243',PRMT.PARTNER_ID) AS PTNR_NM
+			  , PRMT.PRMT_ID
+			  , PRMT.PRMT_NM
+			  , RAT.RATE_CD
+			  , RAT.RATE_NM
+			  
+			  , PRMT.POINT_VAL
+			  
+			  , TO_CHAR(TO_DATE(PRMT.STRT_DATE,'YYYYMMDD'),'YYYY-MM-DD') AS STRT_DATE
+			  , TO_CHAR(TO_DATE(PRMT.END_DATE,'YYYYMMDD'),'YYYY-MM-DD') AS END_DATE
+			  , PRMT.PRVD_CYCL || '개월' AS PRVD_CYCL
+			  
+			  , FN_GET_USRNM(PRMT.RVISN_ID) AS USR_NM
+			  
+			  , PRMT.ORGN_ID
+			  , F_GET_AGENT_NM(PRMT.ORGN_ID) AS ORGN_NM
+			  , PRMT.USIM_ORGN_ID
+			  , F_GET_AGENT_NM(PRMT.USIM_ORGN_ID) AS USIM_ORGN_NM
+			  , PRMT.ON_OFF_TYPE
+			  , FN_GET_CODENM('RCP0007',PRMT.ON_OFF_TYPE) AS ON_OFF_TYPE_NM
+
+		  FROM  MSP_PARTNER_PRMT_MST PRMT
+			  , MSP_RATE_MST RAT
+		 WHERE  RAT.PAY_CL_CD = 'PO'
+		   AND  RAT.SERVICE_TYPE = 'P'
+		   AND  PRMT.RATE_CD = RAT.RATE_CD
+		   AND  #{stdrDt, jdbcType=VARCHAR} BETWEEN PRMT.STRT_DATE
+		                                    AND     PRMT.END_DATE
+		                                    
+		 <if test="ptnrId != null and ptnrId != ''">
+		   AND  PRMT.PARTNER_ID = #{ptnrId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="prmtNm != null and prmtNm != ''">
+		   AND  PRMT.PRMT_NM LIKE '%'||#{prmtNm, jdbcType=VARCHAR}||'%'
+		 </if>
+		 
+		 <if test="rateNm != null and rateNm != ''">
+		   AND  RAT.RATE_NM LIKE '%'||#{rateNm, jdbcType=VARCHAR}||'%'
+		 </if>
+		 
+		 ORDER  BY
+				PTNR_NM, RAT.RATE_NM, PRMT.STRT_DATE DESC, END_DATE DESC
+	</select>	
+</mapper>

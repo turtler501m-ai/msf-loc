@@ -1,0 +1,58 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+	
+var _FORMITEMS_ = {
+
+	form2 : [
+		{type: 'settings', position: 'label-left', labelAlign:"left", labelWidth: '120'},
+		{type: "block", list: [
+			{type: 'input', name: 'usimNo', label: 'USIM 일련번호', labelWidth : 100, width: 202, offsetLeft: 20,  value: '' , readonly:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'frgnrNameMsk', label: '외국인 고객명', labelWidth : 100, width: 110, offsetLeft: 30, value: '' , readonly:true},
+			{type: 'hidden', name: 'frgnrName'},
+			{type: "newcolumn"},
+			{type: 'input', name: 'mobileNoMsk', label: '휴대폰번호', labelWidth : 100, width: 110, offsetLeft: 20,  value: '' , readonly:true},
+			{type: 'hidden', name: 'mobileNo'}
+		]},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'mailMsk', label: '이메일', labelWidth : 100, width: 202, offsetLeft: 20, value: '' , readonly:true},
+			{type: 'hidden', name: 'mail'},
+			{type: "newcolumn"},
+			{type : "select", labelWidth : 100, width : 110,offsetLeft : 30, label : "진행상태",name : "sstate",userdata : {lov : "PPS0058"}},
+			{type: "newcolumn"},
+			{type: 'input', name: 'agentId', label: '대리점명', labelWidth : 100, width: 110, offsetLeft:20,  value: '' , readonly:true},
+			{type: "newcolumn"},
+	        {type: "button", name: 'btnOrgFind2', value:"찾기"}
+	        
+		]},
+		{type: "block", list: [
+			{type : "calendar", labelWidth : 100, width : 90,label : "체류기간",dateFormat : "%Y-%m-%d",serverDateFormat : "%Y%m%d",name : "vdateStart", offsetLeft:20, readonly:true},
+			{type: "newcolumn"},
+			{type : "calendar",label : "~",name : "vdateEnd",labelAlign : "center",dateFormat : "%Y-%m-%d",serverDateFormat : "%Y%m%d",labelWidth : 10,offsetLeft : 5,width : 90, readonly:true},
+			{type: "newcolumn"},
+			{type : "select", labelWidth : 100, width : 110, offsetLeft : 30, label: '자동충전금액', name: 'rcgAutoAmt', userdata : {lov : "PPS0089"}},
+			{type: "newcolumn"},  
+			{type: "input", name: 'rcgAutoAmt2', labelWidth : 0, width: 117, value: '' , validate:"ValidNumeric", numberFormat:"0,000,000,000"},
+			{type : "hidden", name : "sellUsimKey", readonly:true},
+			{type : "hidden", name : "fileMask", readonly:true},
+			{type : "hidden", name : "etcFileMask", readonly:true},
+			{type : "hidden", name : "pageIndex", readonly:true},
+			{type : "hidden", name : "pageSize", readonly:true},
+			{type : "hidden", name : "pathStr", readonly:true},
+			{type : "hidden", name : "etcPathStr", readonly:true},
+	        {type : "hidden", name : "usrId", readonly:true},
+	        {type : "hidden", name : "fileEncFlag", readonly:true},
+	        {type : "hidden", name : "contractNum", readonly:true},
+	        {type : "hidden", name : "contractNum", readonly:true},
+	        {type : "hidden", name : "endDt", readonly:true},
+	        {type : "hidden", name : "endUsrId", readonly:true},
+	        {type : "hidden", name : "rcgSeq", readonly:true}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'inputRemark', label: '업무메모입력', labelWidth : 100, width: 685, offsetLeft: 20, value: ''}
+		]},
+		{type: "block", list: [
+			{type: 'input', name: 'remark', label: '업무메모', labelWidth : 100, width: 685, offsetLeft: 20, rows: 2, value: '', readonly:true}
+		]}
+	]
+};

@@ -1,0 +1,857 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace= "com.ktis.msp.org.prmtmgmt.mapper.DisPrmtMgmtMapper">
+	
+	<!-- 평생할인 정책 목록 조회 -->
+	<select id="getDisPrmtList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.getDisPrmtList*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT   DIS.PRMT_ID					  		  	   AS prmtId
+				,DIS.PRMT_NM						 	  	   AS prmtNm
+				,DIS.STRT_DTTM							  	   AS strtDttm
+				,DIS.END_DTTM						      	   AS endDttm
+                ,DIS.CHNL_TP                  			  	   AS chnlTp
+                ,FN_GET_CODENM('CMN0090', DIS.CHNL_TP)    	   AS chnlNm
+                ,DIS.EVNT_CD                  			  	   AS evntCd
+                ,FN_GET_CODENM('CMN0091', DIS.EVNT_CD)    	   AS evntNm
+                ,DIS.SLS_TP                   				   AS slsTp
+                ,FN_GET_CODENM('CMN0093', DIS.SLS_TP)	  	   AS slsNm
+                ,DIS.INTM_YN                   			  	   AS intmYn
+                ,DIS.MODEL_ID                 			   	   AS modelId
+                ,DIS.MODEL_NM                 			  	   AS modelNm
+                ,DIS.ENGG_SRL                			  	   AS enggSrl
+				,DIS.USG_YN							      	   AS usgYn
+				,DIS.REGST_ID				  			 	   AS regstId
+				,FN_GET_USRNM(DIS.REGST_ID)				 	   AS regstNm
+				,TO_CHAR(DIS.REGST_DTTM, 'YYYYMMDDHH24MISS')	   AS regstDttm
+				,DIS.RVISN_ID				  			 	   AS rvisnId
+				,FN_GET_USRNM(DIS.RVISN_ID)				 	   AS rvisnNm
+				,TO_CHAR(DIS.RVISN_DTTM, 'YYYYMMDDHH24MISS')	   AS rvisnDttm
+		FROM    MSP_DIS_MST DIS
+		WHERE   #{searchBaseDate} BETWEEN SUBSTR(DIS.STRT_DTTM, 1, 8) AND SUBSTR(DIS.END_DTTM, 1, 8)
+		<if test="searchPrmtNm != null and searchPrmtNm != ''">
+			AND UPPER(DIS.PRMT_NM) LIKE '%' || UPPER( #{searchPrmtNm} ) || '%'
+		</if>
+		<if test='searchChnlTp != null and searchChnlTp != ""'>
+			AND DIS.CHNL_TP = #{searchChnlTp}
+		</if>
+        <if test='searchEvntCd != null and searchEvntCd != ""'>
+			AND DIS.EVNT_CD = #{searchEvntCd}
+		</if>
+        <if test='searchSlsTp != null and searchSlsTp != ""'>
+			AND DIS.SLS_TP = #{searchSlsTp}
+		</if>
+		<if test="orgnVal != null and orgnVal != ''">
+			AND     EXISTS (SELECT 1 FROM MSP_DIS_ORG B WHERE DIS.PRMT_ID = B.PRMT_ID 
+			<if test="orgnData == 'orgnNm'">
+				AND FN_GET_ORGNM(B.ORGN_ID) LIKE '%' || #{orgnVal} || '%'
+			</if>
+			<if test="orgnData == 'orgnId'">
+				AND B.ORGN_ID = #{orgnVal}
+			</if>
+			)
+		</if>
+		<if test="pRateVal != null and pRateVal != ''">
+			AND     EXISTS (SELECT 1 FROM MSP_DIS_SOC C WHERE DIS.PRMT_ID = C.PRMT_ID 
+			<if test="pRateData == 'pRateNm'">
+				AND FN_GET_RATENM(C.RATE_CD) LIKE '%' || #{pRateVal} || '%'
+			</if>
+			<if test="pRateData == 'pRateCd'">
+				AND C.RATE_CD = #{pRateVal}
+			</if>
+			)
+		</if>
+		<if test="rRateVal != null and rRateVal != ''">
+			AND     EXISTS (SELECT 1 FROM MSP_DIS_ADD D WHERE DIS.PRMT_ID = D.PRMT_ID 
+			<if test="rRateData == 'rRateNm'">
+				AND FN_GET_RATENM(D.SOC) LIKE '%' || #{rRateVal} || '%'
+			</if>
+			<if test="rRateData == 'rRateCd'">
+				AND D.SOC = #{rRateVal}
+			</if>
+			)
+		</if>
+			AND DIS.USG_YN = 'Y'
+		ORDER BY DIS.PRMT_ID DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 평생할인 등록 가능한 조직 목록 조회 -->
+	<select id="getDisPrmtOrgnList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO">
+		/*DisPrmtMgmtMapper.getDisPrmtOrgnList*/
+		SELECT   A.ORGN_ID											AS orgnId
+				,A.ORGN_NM											AS orgnNm
+				,B.CD_DSC											AS typeNm
+				,FN_GET_CODENM('CMN0005', A.ORGN_STAT_CD)           AS statNm
+		FROM     ORG_ORGN_INFO_MST A
+				,CMN_GRP_CD_MST B
+		WHERE   A.TYPE_DTL_CD3  = B.CD_VAL
+			AND A.TYPE_CD       = '20'										
+			AND     B.GRP_ID        = 'ORG0043'
+			AND     B.USG_YN        = 'Y'
+		<if test="orgnNm != null and orgnNm != ''">
+               AND A.ORGN_NM LIKE '%'||#{orgnNm}||'%'
+        </if>
+		ORDER BY orgnNm
+	</select>
+	
+	<!-- 평생할인 등록 가능한 요금제 목록 조회 -->
+	<select id="getDisPrmtSocList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO">
+		/*DisPrmtMgmtMapper.getDisPrmtSocList*/	
+		SELECT   A.RATE_CD											AS rateCd
+				,A.RATE_NM											AS rateNm
+				,A.BASE_AMT											AS baseAmt
+		FROM     MSP_RATE_MST A
+		WHERE   A.APPL_END_DT = '99991231'
+			AND A.SERVICE_TYPE = 'P'
+			AND A.PAY_CL_CD = 'PO'
+		<if test="rateNm != null and rateNm != ''">
+               AND A.RATE_NM  LIKE '%'||#{rateNm}||'%'
+        </if>
+		ORDER BY rateNm 
+	</select>
+	
+	
+	
+	<!-- 평생할인 등록 가능한 부가서비스 목록 조회 -->
+	<select id="getDisPrmtAddList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO">
+		/*DisPrmtMgmtMapper.getDisPrmtAddList*/
+		SELECT   A.CD_VAL											AS soc
+				,A.CD_DSC											AS addNm
+				,B.BASE_AMT											AS disAmt
+		FROM    CMN_GRP_CD_MST A
+				,MSP_RATE_MST B
+		WHERE   A.GRP_ID = 'RCP2042'
+			AND A.CD_VAL = B.RATE_CD
+			AND B.APPL_END_DT = '99991231'
+		<if test="addNm != null and addNm != ''">
+               AND A.CD_DSC  LIKE '%'||#{addNm}||'%'
+        </if>
+		ORDER BY addNm 
+	</select>
+	
+	<!-- 평생할인 정책 상세 조회 -->
+	<select id="getDisPrmtDtlInfo" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDtlInfo*/
+		SELECT   DIS.PRMT_ID				  		   		    AS prmtId
+				,DIS.PRMT_NM									AS prmtNm
+				,DIS.STRT_DTTM									AS strtDttm
+			    ,SUBSTR(DIS.STRT_DTTM, 1, 8)					AS strtDt
+		        ,SUBSTR(DIS.STRT_DTTM, 9, 6)					AS strtTm
+				,DIS.END_DTTM									AS endDttm
+		        ,SUBSTR(DIS.END_DTTM, 1, 8)						AS endDt
+		        ,SUBSTR(DIS.END_DTTM, 9, 6)						AS endTm
+                ,DIS.CHNL_TP                 				    AS chnlTp
+                ,FN_GET_CODENM('CMN0090', DIS.CHNL_TP)     		AS chnlNm
+                ,DIS.EVNT_CD                  				    AS evntCd
+                ,FN_GET_CODENM('CMN0091', DIS.EVNT_CD)    		AS evntNm
+                ,DIS.SLS_TP                   					AS slsTp
+                ,FN_GET_CODENM('CMN0093', DIS.SLS_TP)     		AS slsNm
+                ,DIS.INTM_YN                   					AS intmYn
+                ,DIS.MODEL_ID                  					AS modelId
+                ,DIS.MODEL_NM                  					AS modelNm
+                ,DIS.ENGG_SRL                  					AS enggSrl
+				,DIS.USG_YN										AS usgYn
+				,DIS.REGST_DTTM									AS regstDttm
+				,DIS.RVISN_DTTM									AS rvisnDttm
+		FROM    MSP_DIS_MST DIS
+		WHERE   DIS.PRMT_ID = #{prmtId}
+	</select>
+	
+	<!-- 평생할인 수정시 조직 목록 조회 (수정, 대리점 추가할때 중복검사)-->
+	<select id="getDisPrmtDtlOrgnList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDtlOrgnList*/
+		SELECT	 A.ORGN_ID AS orgnId
+				,B.ORGN_NM AS orgnNm
+		FROM 	MSP_DIS_ORG A
+				,ORG_ORGN_INFO_MST B
+		WHERE 	A.ORGN_ID = B.ORGN_ID
+			AND A.PRMT_ID = #{prmtId}
+		ORDER BY orgnNm
+	</select>
+	
+	<!-- 평생할인 수정시 요금제 목록 조회 -->
+	<select id="getDisPrmtDtlSocList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDtlSocList*/
+		SELECT   A.RATE_CD											AS rateCd
+				,B.RATE_NM											AS rateNm
+				,B.BASE_AMT											AS baseAmt
+		FROM     MSP_DIS_SOC A
+				,MSP_RATE_MST B
+		WHERE   A.RATE_CD = B.RATE_CD
+			AND A.PRMT_ID =  #{prmtId}
+		ORDER BY rateNm 
+	</select>
+	
+	<!-- 평생할인 수정시 부가서비스 목록 조회 -->
+	<select id="getDisPrmtDtlAddList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDtlAddList*/
+		SELECT  DISTINCT
+				 A.SOC												AS soc
+				,C.CD_DSC											AS addNm
+				,B.BASE_AMT											AS disAmt
+		FROM 	MSP_DIS_ADD A
+				,MSP_RATE_MST B
+				,CMN_GRP_CD_MST C
+		WHERE 	A.SOC = B.RATE_CD
+			AND B.RATE_CD = C.CD_VAL
+			AND C.GRP_ID = 'RCP2042'
+			AND A.PRMT_ID = #{prmtId}
+		ORDER BY addNm
+
+	</select>
+	
+	<!-- 평생할인 중복 체크 -->
+	<select id="getDisPrmtDupByInfo" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDupByInfo*/
+		SELECT  DISTINCT			
+				A.PRMT_ID											AS prmtId
+				,B.ORGN_ID											AS orgnId
+				,C.RATE_CD											AS rateCd
+		FROM    MSP_DIS_MST A
+				,MSP_DIS_ORG B
+				,MSP_DIS_SOC C
+		WHERE   A.USG_YN = 'Y'
+			AND A.PRMT_ID = B.PRMT_ID
+			AND A.PRMT_ID = C.PRMT_ID
+			AND #{strtDttm} <![CDATA[<=]]> A.END_DTTM
+		<choose>
+			<when test='typeCd == "U"'>
+				AND #{endDttmMod} <![CDATA[>=]]> A.STRT_DTTM
+			</when>
+			<otherwise>
+				AND #{endDttm} <![CDATA[>=]]> A.STRT_DTTM
+			</otherwise>
+		</choose>
+			AND A.EVNT_CD = #{evntCd}
+			AND A.SLS_TP = #{slsTp}
+			AND A.INTM_YN = #{intmYn}
+		<if test='intmYn == "Y"'>
+			AND A.MODEL_ID = #{modelId}
+		</if>
+			AND ((A.ENGG_SRL = '001218243036') 
+		<if test='enggCnt0 == "00"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt0} || '%'
+		</if>
+		<if test='enggCnt12 == "12"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt12} || '%'
+		</if>
+		<if test='enggCnt18 == "18"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt18} || '%'
+		</if>
+		<if test='enggCnt24 == "24"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt24} || '%'
+		</if>
+		<if test='enggCnt30 == "30"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt30} || '%'
+		</if>
+		<if test='enggCnt36 == "36"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt36} || '%'
+		</if>
+				)
+		<if test='prmtId != null and prmtId != ""'>
+			AND B.ORGN_ID IN (SELECT ORG.ORGN_ID FROM MSP_DIS_ORG ORG WHERE ORG.PRMT_ID = #{prmtId})
+			AND C.RATE_CD IN (SELECT SOC.RATE_CD FROM MSP_DIS_SOC SOC WHERE SOC.PRMT_ID = #{prmtId})
+			AND A.PRMT_ID NOT IN (#{prmtId})
+		</if>
+		ORDER BY B.ORGN_ID, C.RATE_CD
+	</select>	
+	
+	<!-- 평생할인 마스터 추가 -->
+	<insert id="insertDisPrmtMst" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		<selectKey keyProperty="prmtId" order="BEFORE" resultType="String">
+			SELECT 'F' || TO_CHAR(SYSDATE,'YYYYMMDD') || TRIM(TO_CHAR(SQ_DIS_MST.NEXTVAL, '0000000')) AS prmtId
+			FROM   DUAL
+		</selectKey>
+			/*DisPrmtMgmtMapper.insertDisPrmtMst*/
+			INSERT INTO MSP_DIS_MST (
+				 PRMT_ID
+				,PRMT_NM
+				,STRT_DTTM
+				,END_DTTM
+				,CHNL_TP
+				,EVNT_CD
+				,SLS_TP
+				,INTM_YN
+				,MODEL_ID
+				,MODEL_NM
+				,ENGG_SRL
+				,USG_YN
+				,REGST_ID
+				,REGST_DTTM
+			) VALUES (
+				 #{prmtId}
+				,#{prmtNm}
+				,#{strtDttm}
+				,#{endDttm}
+				,#{chnlTp}
+				,#{evntCd}
+				,#{slsTp}
+				,#{intmYn}
+				,#{modelId}
+				,(SELECT PRDT_NM
+                  FROM CMN_INTM_MDL
+                  WHERE RPRS_PRDT_ID = #{modelId}
+                  AND RPRS_YN = 'Y')
+				,#{enggSrl}
+				,NVL(#{usgYn}, 'Y')
+				,#{sessionUserId}
+				,SYSDATE
+			)
+	</insert>
+	
+	<!-- 평생할인 조직 추가 -->
+	<insert id="insertDisPrmtOrg" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.insertDisPrmtOrg*/
+		INSERT INTO MSP_DIS_ORG (
+			 PRMT_ID
+			,ORGN_ID
+			,REGST_ID
+			,REGST_DTTM
+		)VALUES(
+			 #{prmtId}
+			,#{orgnId}
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 평생할인 요금제 추가 -->
+	<insert id="insertDisPrmtSoc" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.insertDisPrmtSoc*/
+		INSERT INTO MSP_DIS_SOC (
+			 PRMT_ID
+			,RATE_CD
+			,REGST_ID
+			,REGST_DTTM
+		)VALUES(
+			 #{prmtId}
+			,#{rateCd}
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 평생할인 부가서비스 추가 -->
+	<insert id="insertDisPrmtAdd" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.insertDisPrmtAdd*/
+		INSERT INTO MSP_DIS_ADD (
+			 PRMT_ID
+			,SOC
+			,REGST_ID
+			,REGST_DTTM
+		)VALUES(
+			 #{prmtId}
+			,#{soc}
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	
+	<!-- 평생할인 프로모션 사용여부 변경 -->
+	<update id="updDisPrmtByInfo" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.updDisPrmtByInfo*/
+		UPDATE  MSP_DIS_MST				
+		SET     RVISN_ID = #{sessionUserId}
+				,RVISN_DTTM = SYSDATE
+					<choose>
+						<when test='typeCd == "U"'>
+							,END_DTTM = #{endDttmMod}
+						</when>
+						<otherwise>
+							,USG_YN = 'N'
+						</otherwise>
+					</choose>
+		WHERE  PRMT_ID = #{prmtId}
+	</update>
+	
+	<!-- 평생할인 상세정보 목록 조회 -->
+	<select id="getDisPrmtDtlList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDtlList*/
+		SELECT  prmtId		
+				,prmtNm
+				,orgnId
+				,orgnNm
+				,rateCd   
+				,rateNm	
+				,soc		
+				,addNm	
+				,disAmt  
+		FROM
+		    (
+		    <include refid="disPrmtDtlList" />
+		    ) V
+		WHERE	ROWNUM <![CDATA[<=]]> '100'
+		
+	</select>
+	
+	<!-- 평생할인 상세정보 목록 엑셀다운로드  -->
+	<select id="getDisPrmtDtlListExcel" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDtlListExcel*/
+			    <include refid="disPrmtDtlList" />
+	</select>
+	
+	<!-- 평생할인 상세정보 목록 -->
+	<sql id="disPrmtDtlList" >
+		SELECT  DISTINCT A.PRMT_ID									AS prmtId		
+				,A.PRMT_NM											AS prmtNm
+				,A.ORGN_ID											AS orgnId
+				,B.ORGN_NM											AS orgnNm
+				,A.RATE_CD											AS rateCd   <!-- 요금제코드  -->
+				,C.RATE_NM											AS rateNm	<!-- 요금제명 -->
+				,A.SOC												AS soc		<!-- 부가서비스코드 -->
+				,D.RATE_NM											AS addNm	<!-- 부가서비스명 -->
+				,D.BASE_AMT											AS disAmt   <!-- 기본료(할인금액) -->
+		FROM    VW_DIS_PRMT_DTL A
+				,ORG_ORGN_INFO_MST B
+				,MSP_RATE_MST C
+				,MSP_RATE_MST D
+		WHERE   A.PRMT_ID = #{prmtId}
+			AND A.ORGN_ID = B.ORGN_ID
+			AND A.RATE_CD = C.RATE_CD
+			AND C.APPL_END_DT = '99991231'
+			AND A.SOC = D.RATE_CD
+			AND D.APPL_END_DT = '99991231'
+			AND A.USG_YN = 'Y'
+		ORDER BY B.ORGN_NM, C.RATE_NM, D.RATE_NM
+	</sql>
+	
+
+	<!-- ********************** 엑셀 업로드 시작 ********************** -->
+	<!-- Chk테이블에 데이터 있는지 확인-->
+	<select id="getDisMstChk" resultType="int">
+		/*DisPrmtMgmtMapper.getDisMstChk*/
+		SELECT 
+				COUNT(PRMT_ID) AS cnt
+		FROM 	MSP_DIS_MST_CHK
+	</select>
+	
+	<!-- 평생할인 엑셀 업로드 중복 체크 -->
+	<select id="getDisPrmtDupByInfoExl" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDupByInfoExl*/
+		SELECT  DISTINCT			
+				A.PRMT_ID											AS prmtId
+				,B.ORGN_ID											AS orgnId
+				,C.RATE_CD											AS rateCd
+				,'1'                                                AS typeCd
+				,''                                                 AS regNum
+		FROM    MSP_DIS_MST A
+				,MSP_DIS_ORG B
+				,MSP_DIS_SOC C
+		WHERE   A.USG_YN = 'Y'
+			AND A.PRMT_ID = B.PRMT_ID
+			AND A.PRMT_ID = C.PRMT_ID
+			AND #{strtDttm} <![CDATA[<=]]> A.END_DTTM
+			AND #{endDttm} <![CDATA[>=]]> A.STRT_DTTM
+			AND A.EVNT_CD = #{evntCd}
+			AND A.SLS_TP = #{slsTp}
+			AND A.INTM_YN = #{intmYn}
+		<if test='intmYn == "Y"'>
+			AND A.MODEL_ID = #{modelId}
+		</if>
+			AND ((A.ENGG_SRL = '001218243036')
+		<if test='enggCnt0 == "00"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt0} || '%'
+		</if>
+		<if test='enggCnt12 == "12"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt12} || '%'
+		</if>
+		<if test='enggCnt18 == "18"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt18} || '%'
+		</if>
+		<if test='enggCnt24 == "24"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt24} || '%'
+		</if>
+		<if test='enggCnt30 == "30"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt30} || '%'
+		</if>
+		<if test='enggCnt36 == "36"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt36} || '%'
+		</if>
+				)
+		UNION
+		SELECT  DISTINCT
+				A.PRMT_ID		AS prmtId
+				,B.ORGN_ID		AS orgnId
+				,C.RATE_CD		AS rateCd
+				,'2'			AS typeCd
+				,A.REG_NUM		AS regNum
+		FROM    MSP_DIS_MST_CHK A
+				,MSP_DIS_ORG_CHK B
+				,MSP_DIS_SOC_CHK C
+		WHERE   A.USG_YN = 'Y'
+			AND A.PRMT_ID = B.PRMT_ID
+			AND A.PRMT_ID = C.PRMT_ID
+			AND #{strtDttm} <![CDATA[<=]]> A.END_DTTM
+			AND #{endDttm} <![CDATA[>=]]> A.STRT_DTTM
+			AND A.EVNT_CD = #{evntCd}
+			AND A.SLS_TP = #{slsTp}
+			AND A.INTM_YN = #{intmYn}
+		<if test='intmYn == "Y"'>
+			AND A.MODEL_ID = #{modelId}
+		</if>
+		AND     ((A.ENGG_SRL = '001218243036')
+				<if test='enggCnt0 == "00"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt0} || '%'
+		</if>
+		<if test='enggCnt12 == "12"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt12} || '%'
+		</if>
+		<if test='enggCnt18 == "18"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt18} || '%'
+		</if>
+		<if test='enggCnt24 == "24"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt24} || '%'
+		</if>
+		<if test='enggCnt30 == "30"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt30} || '%'
+		</if>
+		<if test='enggCnt36 == "36"'>
+			OR A.ENGG_SRL LIKE '%' || #{enggCnt36} || '%'
+		</if>
+				)
+	</select>	
+
+	<!-- **********************Chk 테이블로 INSERT ********************** -->
+	<!-- 엑셀데이터 평생할인 마스터 Chk테이블에 추가 -->
+	<insert id="insertDisPrmtMstChk" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.insertDisPrmtMstChk*/
+		<selectKey keyProperty="prmtId" order="BEFORE" resultType="String">
+			SELECT 	'F' || TO_CHAR(SYSDATE,'YYYYMMDD') || TRIM(TO_CHAR(SQ_DIS_MST.NEXTVAL, '0000000')) AS prmtId
+			FROM  	 DUAL
+		</selectKey>
+			INSERT INTO MSP_DIS_MST_CHK (
+					 PRMT_ID
+					,PRMT_NM
+					,STRT_DTTM
+					,END_DTTM
+					,CHNL_TP
+					,EVNT_CD
+					,SLS_TP
+					,INTM_YN
+					,MODEL_ID
+					,MODEL_NM
+					,ENGG_SRL
+					,USG_YN
+					,REGST_ID
+					,REGST_DTTM
+					,REG_NUM
+			)
+			VALUES (
+					 #{prmtId}
+					,#{prmtNm}
+					,#{strtDttm}
+					,#{endDttm}
+					,#{chnlTp}
+					,#{evntCd}
+					,#{slsTp}
+					,#{intmYn}
+					,#{modelId}
+					,(SELECT PRDT_NM
+                      FROM CMN_INTM_MDL
+                      WHERE RPRS_PRDT_ID = #{modelId}
+                      	AND RPRS_YN = 'Y')
+					,#{enggSrl}
+					,NVL(#{usgYn}, 'Y')
+					,#{sessionUserId}
+					,SYSDATE
+					,#{regNum}
+			)
+	</insert>
+	
+	<!-- 평생할인 엑셀 조직 추가 -->
+	<insert id="insertDisPrmtOrgChk" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.insertDisPrmtOrgChk*/
+		INSERT INTO MSP_DIS_ORG_CHK (
+				 PRMT_ID
+				,ORGN_ID
+				,REGST_ID
+				,REGST_DTTM
+		)
+		VALUES(
+				 #{prmtId}
+				,#{orgnId}
+				,#{sessionUserId}
+				,SYSDATE
+		)
+	</insert>
+	
+	<!-- 평생할인 엑셀 요금제 추가 -->
+	<insert id="insertDisPrmtSocChk" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.insertDisPrmtSocChk*/
+		INSERT INTO MSP_DIS_SOC_CHK (
+				 PRMT_ID
+				,RATE_CD
+				,REGST_ID
+				,REGST_DTTM
+		)
+		VALUES(
+				 #{prmtId}
+				,#{rateCd}
+				,#{sessionUserId}
+				,SYSDATE
+		)
+	</insert>
+	
+	<!-- 평생할인 엑셀 부가서비스 추가 -->
+	<insert id="insertDisPrmtAddChk" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.insertDisPrmtAddChk*/
+		INSERT INTO MSP_DIS_ADD_CHK (
+				 PRMT_ID
+				,SOC
+				,REGST_ID
+				,REGST_DTTM
+		)
+		VALUES(
+				 #{prmtId}
+				,#{soc}
+				,#{sessionUserId}
+				,SYSDATE
+		)
+	</insert>
+
+	<!-- 엑셀데이터 평생할인 마스터 Chk테이블에 추가 -->
+	<insert id="insertDisPrmtMstExl">
+		/*DisPrmtMgmtMapper.insertDisPrmtMstExl*/
+		INSERT INTO MSP_DIS_MST ( 	
+			  PRMT_ID
+			 ,PRMT_NM
+			 ,STRT_DTTM
+			 ,END_DTTM
+			 ,CHNL_TP
+			 ,EVNT_CD
+			 ,SLS_TP
+			 ,INTM_YN
+			 ,MODEL_ID
+			 ,MODEL_NM
+			 ,ENGG_SRL
+			 ,USG_YN
+			 ,REGST_ID
+			 ,REGST_DTTM
+		)
+		SELECT 
+			  PRMT_ID
+			 ,PRMT_NM
+			 ,STRT_DTTM
+			 ,END_DTTM
+			 ,CHNL_TP
+			 ,EVNT_CD
+			 ,SLS_TP
+			 ,INTM_YN
+			 ,MODEL_ID
+			 ,MODEL_NM
+			 ,ENGG_SRL
+			 ,USG_YN
+			 ,REGST_ID
+			 ,SYSDATE
+		 FROM MSP_DIS_MST_CHK
+	</insert>
+	
+	<!-- 엑셀데이터 평생할인 조직 Chk테이블에 추가 -->
+	<insert id="insertDisPrmtOrgExl">
+		/*PromotionMapper.insertDisPrmtOrgExl*/
+		INSERT INTO MSP_DIS_ORG ( 	
+				  PRMT_ID
+				 ,ORGN_ID
+				 ,REGST_ID
+				 ,REGST_DTTM
+		)
+		SELECT 
+				  PRMT_ID
+				 ,ORGN_ID
+				 ,REGST_ID
+				 ,SYSDATE
+		FROM	 MSP_DIS_ORG_CHK
+	</insert>
+	
+	<!-- 엑셀데이터 평생할인 요금제 Chk테이블에 추가 -->
+	<insert id="insertDisPrmtSocExl">
+		/*PromotionMapper.insertDisPrmtSocExl*/
+		INSERT INTO MSP_DIS_SOC (	
+			 	  PRMT_ID
+				 ,RATE_CD
+				 ,REGST_ID
+				 ,REGST_DTTM
+		)
+		SELECT 
+				  PRMT_ID
+				 ,RATE_CD
+				 ,REGST_ID
+				 ,SYSDATE
+		FROM 	 MSP_DIS_SOC_CHK
+	</insert>
+	
+	<!-- 엑셀데이터 채널별요금할인 부가서비스 Chk테이블에 추가 -->
+	<insert id="insertDisPrmtAddExl">
+		/*PromotionMapper.insertDisPrmtAddExl*/
+		INSERT INTO MSP_DIS_ADD (	
+				  PRMT_ID
+				 ,SOC
+				 ,REGST_ID
+				 ,REGST_DTTM
+		)
+		SELECT 
+				  PRMT_ID
+				 ,SOC
+				 ,REGST_ID
+				 ,SYSDATE
+		FROM 	 MSP_DIS_ADD_CHK
+	</insert>
+	
+	<!-- ********************** Chk 테이블 DELETE **********************-->
+	<!-- 평생할인 마스터 Chk테이블 DELETE -->
+	<delete id="deleteDisPrmtMstChk">
+		/*PromotionMapper.deleteDisPrmtMstChk*/
+		DELETE 
+	  	FROM 	MSP_DIS_MST_CHK
+	</delete>
+	
+	<!-- 채널별요금할인 조직 Chk테이블 DELETE -->
+	<delete id="deleteDisPrmtOrgChk">
+		/*PromotionMapper.deleteDisPrmtOrgChk*/
+		DELETE 
+	  	FROM	MSP_DIS_ORG_CHK
+	</delete>
+	
+	<!-- 채널별요금할인 요금제 Chk테이블 DELETE -->
+	<delete id="deleteDisPrmtSocChk">
+		/*PromotionMapper.deleteDisPrmtSocChk*/
+		DELETE 
+		FROM 	MSP_DIS_SOC_CHK
+	</delete>
+	
+	<!-- 채널별요금할인 부가서비스 Chk테이블 DELETE -->
+	<delete id="deleteDisPrmtAddChk">
+		/*PromotionMapper.deleteDisPrmtAddChk*/
+		DELETE 
+		FROM 	MSP_DIS_ADD_CHK
+	</delete>
+	
+	<!-- 평생할인 복사시 등록가능한 조직 목록 조회 -->
+	<select id="getDisPrmtDtlOrgnCopyList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDtlOrgnCopyList*/
+		SELECT	 A.ORGN_ID  										AS orgnId
+				 ,B.ORGN_NM											AS orgnNm
+				 ,C.CD_DSC											AS typeNm
+				 ,FN_GET_CODENM('CMN0005',B.ORGN_STAT_CD)           AS statNm
+		FROM MSP_DIS_ORG A
+			 , ORG_ORGN_INFO_MST B
+			 , CMN_GRP_CD_MST C
+		WHERE A.ORGN_ID= B.ORGN_ID
+			AND A.PRMT_ID= #{prmtId}
+			AND B.TYPE_DTL_CD3  = C.CD_VAL
+			AND B.TYPE_CD       = '20'
+			AND C.GRP_ID        = 'ORG0043'
+			AND C.USG_YN        = 'Y'
+	</select>
+	
+	<!-- 평생할인 복사시 등록가능한 요금제 목록 조회 -->
+	<select id="getDisPrmtDtlSocCopyList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO">
+		/*DisPrmtMgmtMapper.getDisPrmtDtlSocCopyList*/
+		SELECT   A.RATE_CD											AS rateCd
+				,B.RATE_NM											AS rateNm
+				,B.BASE_AMT											AS baseAmt
+		FROM	MSP_DIS_SOC A    
+				,MSP_RATE_MST B
+		WHERE   A.RATE_CD = B.RATE_CD
+			AND B.APPL_END_DT = '99991231'
+			AND B.SERVICE_TYPE = 'P'
+			AND B.PAY_CL_CD = 'PO'
+			AND A.PRMT_ID =  #{prmtId}
+		ORDER BY rateNm 
+	</select>
+	
+	<!-- 평생할인 부가서비스 목록 조회 -->
+	<select id="getDisPrmtDtlAddCopyList" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtSubVO">
+		/*DisPrmtMgmtMapper.getDisPrmtAddCopyList*/
+		SELECT  DISTINCT
+				 A.SOC												AS soc
+				,B.CD_DSC											AS addNm
+				,C.BASE_AMT											AS disAmt
+		FROM     MSP_DIS_ADD A
+				,CMN_GRP_CD_MST B		
+				,MSP_RATE_MST C
+		WHERE   A.SOC = B.CD_VAL
+			AND	B.CD_VAL = C.RATE_CD
+			AND B.GRP_ID = 'RCP2042'
+			AND C.APPL_END_DT = '99991231'
+			AND A.PRMT_ID = #{prmtId}
+		ORDER BY addNm 
+	</select>
+
+	<!-- 평생할인 정책 목록 콤보 조회 -->
+	<select id="getDisPrmtListCombo" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*DisPrmtMgmtMapper.getDisPrmtListCombo*/
+		SELECT DISTINCT
+			   PRMT_NM,
+		       PRMT_ID,
+		       TO_CHAR((SELECT SUM(A.BASE_AMT)
+				        FROM   MSP_RATE_MST A,
+				               MSP_DIS_ADD B
+				        WHERE  A.RATE_CD = B.SOC
+				        AND    B.PRMT_ID = VW_DIS_PRMT_DTL.PRMT_ID)) AS DIS_CNT
+		FROM   VW_DIS_PRMT_DTL
+		WHERE  1 = 1
+		AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN STRT_DTTM AND END_DTTM
+		AND USG_YN = 'Y'
+		<choose>
+			<when test="operType == 'NAC3' or operType == 'MNP3'">
+				AND EVNT_CD = 'NAC'
+			</when>
+			<when test="operType == 'HDN3'">
+				AND EVNT_CD = 'C07'
+			</when>
+			<otherwise>
+				AND 1=0
+			</otherwise>
+		</choose>
+				AND SLS_TP = (SELECT ETC1
+							       FROM   CMN_GRP_CD_MST
+							       WHERE  GRP_ID = 'CMN0092'
+							       AND    CD_VAL = #{slsTp})
+		<choose>
+			<when test="reqBuyType == 'UU' or modelId == null or modelId =='' ">
+				AND INTM_YN = 'N'
+			</when>
+			<otherwise>
+				AND INTM_YN = 'Y'
+				AND MODEL_ID = #{modelId}
+			</otherwise>
+		</choose>
+		AND ENGG_SRL LIKE '%' || #{enggSrl} || '%'
+		AND ORGN_ID = #{orgnId}
+		AND RATE_CD = #{rateCd}
+	</select>
+	
+	<select id="getDisChoChrgPrmtListExcelDown" parameterType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO" resultType="com.ktis.msp.org.prmtmgmt.vo.DisPrmtMgmtVO">
+		/*DisPrmtMgmtMapper.getDisChoChrgPrmtListExcelDown*/
+		SELECT  DENSE_RANK() OVER (ORDER BY A.PRMT_ID) AS rnum
+		        , A.PRMT_NM AS prmtNm 
+		        , TO_CHAR(SYSDATE+1, 'YYYYMMDD')			AS strtDt
+		        , '000000'					AS strtTm
+		        , '20991231'					AS endDt
+		        , '235959'					AS endTm
+		        , A.CHNL_TP					AS chnlTp
+		        , A.EVNT_CD					AS evntCd
+		        , A.SLS_TP					AS slsTp
+		        , A.INTM_YN					AS intmYn
+		        , A.MODEL_ID				AS modelId
+		        , A.ENGG_SRL				AS enggSrl
+		        , '조직코드'                AS orgnId
+		        , B.RATE_CD                 AS rateCd
+		        , C.SOC                     AS soc
+		FROM    
+		        MSP_DIS_MST A
+		        , MSP_DIS_SOC B
+		        , MSP_DIS_ADD C
+		WHERE   1=1
+		AND     A.PRMT_ID IN 
+		<foreach collection="prmtIdList" item="item" index="index" separator="," open="(" close=")">
+			#{item}
+		</foreach>
+		AND     A.PRMT_ID = B.PRMT_ID
+		AND     A.PRMT_ID = C.PRMT_ID
+	</select>
+</mapper>

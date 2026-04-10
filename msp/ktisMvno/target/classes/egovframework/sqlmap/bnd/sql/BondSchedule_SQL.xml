@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.bnd.bondmgmt.mapper.BondScheduleMapper">
+	
+	<!-- 단말할부정보입력대상 가져오기(전월개통에 대한건) -->
+	<select id="getMspBondEqistInsertList" resultType="hashMap">
+		/* bondScheduleMapper.getMspBondEqistInsertList */
+		SELECT  A.CONTRACT_NUM
+		        , 'Y' AS MST_YN
+		        , A.LST_COM_ACTV_DATE AS OPEN_DT
+		        , DECODE(A.SUB_STATUS, 'C', SUBSTR(A.SUB_STATUS_DATE, 1, 8), '') AS TMNT_DT
+		        , DECODE(TO_NUMBER(NVL(B.INST_MNTH_CNT, 0)), 0, 'N', 'Y') AS INST_YN
+		        , TO_NUMBER(NVL(B.INST_MNTH_CNT, 0)) AS INST_MNTH_CNT
+		        , NVL(B.INST_ORGIN_AMNT, 0) AS INST_AMT
+		        , CASE
+				        WHEN    UPPER(GRNT_INSR_MNGM_NO) = 'NONE' THEN TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD'), 1)), 'YYYYMMDD')
+				        ELSE    TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(SUBSTR(B.GRNT_INSR_MNGM_NO,0,8), 'YYYYMMDD'), 1)), 'YYYYMMDD') 
+				    END AS INST_PAY_STRT_DT
+				, CASE
+				        WHEN    UPPER(GRNT_INSR_MNGM_NO) = 'NONE' THEN TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD'), TO_NUMBER(NVL(B.INST_MNTH_CNT, 1)))), 'YYYYMMDD')
+				        ELSE    TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(SUBSTR(B.GRNT_INSR_MNGM_NO,0,8), 'YYYYMMDD'), TO_NUMBER(NVL(B.INST_MNTH_CNT, 1)))), 'YYYYMMDD')
+				    END AS INST_PAY_END_DT
+		        , B.DVC_OFW_AMNT * 1.1 AS HNDST_AMT
+		        , ( SELECT MODEL_DISCOUNT2 FROM MSP_REQUEST X, MSP_REQUEST_SALEINFO Y WHERE X.REQUEST_KEY = Y.REQUEST_KEY AND X.CONTRACT_NUM = A.CONTRACT_NUM ) AS SUBSD_AMT
+				, ( SELECT MODEL_DISCOUNT3 FROM MSP_REQUEST X, MSP_REQUEST_SALEINFO Y WHERE X.REQUEST_KEY = Y.REQUEST_KEY AND X.CONTRACT_NUM = A.CONTRACT_NUM ) AS AGNCY_SUBSD_AMT
+		        , UPPER(B.GRNT_INSR_MNGM_NO) AS GRNT_INSR_MNGM_NO
+		        , B.SVC_CNTR_NO
+		        , C.PRDT_ID
+                , C.PRDT_SRL_NUM
+		FROM    
+				MSP_JUO_SUB_INFO A
+		        , MSP_JUO_ADD_INFO B
+		        , ( SELECT DISTINCT A.CONTRACT_NUM, A.MODEL_ID AS PRDT_ID, B.PRDT_SRL_NUM 
+                    FROM    MSP_JUO_MODEL_INFO A 
+                            , LGS_PRDT_SRL_MST  B 
+                    WHERE   A.CONTRACT_NUM  = B.SVC_CT_NUM
+                    AND     A.MODEL_ID = B.RPRS_PRDT_ID 
+                    AND     A.INTM_SRL_NO = B.PRDT_SRL_NUM  
+                    AND     A.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND MODEL_ID = A.MODEL_ID )
+                    UNION ALL
+                    SELECT DISTINCT A.CONTRACT_NUM, A.MODEL_ID AS PRDT_ID, B.PRDT_SRL_NUM 
+                    FROM    MSP_JUO_MODEL_INFO A 
+                            , LGS_OTCP_SRL_MST  B 
+                    WHERE   A.CONTRACT_NUM = B.SVC_CT_NUM
+                    AND     A.MODEL_ID = B.RPRS_PRDT_ID 
+                    AND     A.INTM_SRL_NO = B.PRDT_SRL_NUM  
+                    AND     A.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND MODEL_ID = A.MODEL_ID )
+                    ) C 
+		WHERE   1 = 1
+				AND 	A.CONTRACT_NUM  = B.CONTRACT_NUM
+				AND     A.SVC_CNTR_NO   = B.SVC_CNTR_NO
+				AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+				AND     B.APP_END_DATE  LIKE '99991231%'
+				AND     B.ENGG_MNTH_CNT IS NOT NULL
+				AND 	SUBSTR(A.LST_COM_ACTV_DATE, 0, 6) = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM')
+				AND     ( CASE WHEN A.SUB_STATUS = 'C' AND (TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD')) <![CDATA[ < ]]> 15 THEN 'N'
+				               ELSE 'Y' 
+				        END ) = 'Y'
+	</select>
+	
+	<!-- 유심개통후 중간에 단말기를 추가 구맨한 경우 -->
+	<select id="getMspBondEqistInsertList2" resultType="hashMap">
+		/* bondScheduleMapper.getMspBondEqistInsertList2 */
+		SELECT  A.CONTRACT_NUM
+		        , 'Y' AS MST_YN
+		        , A.LST_COM_ACTV_DATE AS OPEN_DT
+		        , DECODE(A.SUB_STATUS, 'C', SUBSTR(A.SUB_STATUS_DATE, 1, 8), '') AS TMNT_DT
+		        , DECODE(TO_NUMBER(NVL(B.INST_MNTH_CNT, 0)), 0, 'N', 'Y') AS INST_YN
+		        , TO_NUMBER(NVL(B.INST_MNTH_CNT, 0)) AS INST_MNTH_CNT
+		        , NVL(B.INST_ORGIN_AMNT, 0) AS INST_AMT
+		        , CASE
+				        WHEN    UPPER(GRNT_INSR_MNGM_NO) = 'NONE' THEN TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD'), 1)), 'YYYYMMDD')
+				        ELSE    TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(SUBSTR(B.GRNT_INSR_MNGM_NO,0,8), 'YYYYMMDD'), 1)), 'YYYYMMDD') 
+				    END AS INST_PAY_STRT_DT
+				, CASE
+				        WHEN    UPPER(GRNT_INSR_MNGM_NO) = 'NONE' THEN TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD'), TO_NUMBER(NVL(B.INST_MNTH_CNT, 1)))), 'YYYYMMDD')
+				        ELSE    TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(SUBSTR(B.GRNT_INSR_MNGM_NO,0,8), 'YYYYMMDD'), TO_NUMBER(NVL(B.INST_MNTH_CNT, 1)))), 'YYYYMMDD')
+				    END AS INST_PAY_END_DT
+		        , B.DVC_OFW_AMNT * 1.1 AS HNDST_AMT
+		        , ( SELECT MODEL_DISCOUNT2 FROM MSP_REQUEST X, MSP_REQUEST_SALEINFO Y WHERE X.REQUEST_KEY = Y.REQUEST_KEY AND X.CONTRACT_NUM = A.CONTRACT_NUM ) AS SUBSD_AMT
+				, ( SELECT MODEL_DISCOUNT3 FROM MSP_REQUEST X, MSP_REQUEST_SALEINFO Y WHERE X.REQUEST_KEY = Y.REQUEST_KEY AND X.CONTRACT_NUM = A.CONTRACT_NUM ) AS AGNCY_SUBSD_AMT
+		        , UPPER(B.GRNT_INSR_MNGM_NO) AS GRNT_INSR_MNGM_NO
+		        , B.SVC_CNTR_NO
+		        , C.PRDT_ID
+                , C.PRDT_SRL_NUM
+		FROM    
+				MSP_JUO_SUB_INFO A
+		        , MSP_JUO_ADD_INFO B
+		        , ( SELECT DISTINCT A.CONTRACT_NUM, A.MODEL_ID AS PRDT_ID, B.PRDT_SRL_NUM 
+                    FROM    MSP_JUO_MODEL_INFO A 
+                            , LGS_PRDT_SRL_MST  B 
+                    WHERE   A.CONTRACT_NUM  = B.SVC_CT_NUM
+                    AND     A.MODEL_ID = B.RPRS_PRDT_ID 
+                    AND     A.INTM_SRL_NO = B.PRDT_SRL_NUM  
+                    AND     A.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND MODEL_ID = A.MODEL_ID )
+                    UNION ALL
+                    SELECT DISTINCT A.CONTRACT_NUM, A.MODEL_ID AS PRDT_ID, B.PRDT_SRL_NUM 
+                    FROM    MSP_JUO_MODEL_INFO A 
+                            , LGS_OTCP_SRL_MST  B 
+                    WHERE   A.CONTRACT_NUM = B.SVC_CT_NUM
+                    AND     A.MODEL_ID = B.RPRS_PRDT_ID 
+                    AND     A.INTM_SRL_NO = B.PRDT_SRL_NUM  
+                    AND     A.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND MODEL_ID = A.MODEL_ID )
+                    ) C
+                , MSP_BOND_MST D 
+		WHERE   1 = 1
+				AND A.CONTRACT_NUM  = B.CONTRACT_NUM
+				AND UPPER(B.GRNT_INSR_MNGM_NO) <![CDATA[<>]]> 'NONE'
+				AND A.CONTRACT_NUM = C.CONTRACT_NUM
+				AND SUBSTR(B.GRNT_INSR_MNGM_NO, 1, 6) = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM')
+				AND D.GRNT_INSR_MNGM_NO <![CDATA[<>]]> B.GRNT_INSR_MNGM_NO
+				AND B.CONTRACT_NUM = D.CONTRACT_NUM
+	</select>
+	
+	<!-- 유심/가입비 할부정보입력대상 가져오기 -->
+	<select id="getMspBondUsimInsertList" resultType="hashMap">
+		/* bondScheduleMapper.getMspBondUsimInsertList */
+		SELECT  
+		        A.CONTRACT_NUM    
+			    , NVL(A.SVC_CNTR_NO, A.CONTRACT_NUM) AS SVC_CNTR_NO    
+			    , A.LST_COM_ACTV_DATE AS OPEN_DT    
+			    , DECODE(A.SUB_STATUS, 'C', SUBSTR(A.SUB_STATUS_DATE, 1, 8), '') AS TMNT_DT  
+			    , NVL(C.JOIN_PRICE, 0) AS JOIN_PRICE 
+			    , C.JOIN_PAY_MTHD_CD    
+			    , NVL(C.USIM_PRICE, 0) AS USIM_PRICE
+			    , C.USIM_PAY_MTHD_CD
+		FROM    
+		       	MSP_JUO_SUB_INFO A
+			    , MSP_REQUEST B    
+			    , MSP_REQUEST_SALEINFO C 
+		WHERE   1 =1
+				AND 	A.CONTRACT_NUM = B.CONTRACT_NUM
+                AND     B.REQUEST_KEY = C.REQUEST_KEY    
+				AND 	SUBSTR(A.LST_COM_ACTV_DATE, 0, 6) = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM')
+				AND     ( CASE WHEN A.SUB_STATUS = 'C' AND (TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD')) <![CDATA[<]]> 15 THEN 'N'
+				               ELSE 'Y' 
+				        END ) = 'Y'
+	</select>
+	
+	<!-- 할부정보일련번호 가져오기 -->
+	<select id="getMspBondMstSeqNum" parameterType="Map" resultType="HashMap">
+		/* bondScheduleMapper.getMspBondMstSeqNum */
+		SELECT  
+				BOND_SEQ_NUM
+		FROM    
+		        MSP_BOND_MST
+		WHERE   
+				1 = 1
+				AND 	CONTRACT_NUM = #{contractNum}
+				AND		CHRG_ITEM_CD = #{chrgItemCd}
+				AND		MST_YN = 'Y'
+				
+	</select>
+	
+	<!-- 할부정보 업데이트 -->
+	<update id="updateMspBondMst" parameterType="Map">
+   		/** bondScheduleMapper.updateMspBondMst */
+   		UPDATE MSP_BOND_MST
+		SET 
+			  MST_YN = 'N'
+			  
+		WHERE 	1 = 1
+				AND 	BOND_SEQ_NUM = #{bondSeqNum}
+   	</update>
+   	
+	<!-- 할부정보 등록 -->
+	<insert id="insertMspBondMstSelectSeq" parameterType="Map">
+		/* bondScheduleMapper.insertMspBondMstSelectSeq */
+		
+		INSERT INTO MSP_BOND_MST (
+			BOND_SEQ_NUM
+			, CONTRACT_NUM
+			, MST_YN
+			, CHRG_ITEM_CD
+			, OPEN_DT
+			, TMNT_DT
+			, INST_YN
+			, INST_MNTH_CNT
+			, INST_AMT
+			, PAY_STRT_DT
+			, PAY_END_DT
+			, PRDT_ID
+            , PRDT_SRL_NUM
+			, HNDST_AMT
+			, SUBSD_AMT
+			, AGNCY_SUBSD_AMT
+			, GRNT_INSR_MNGM_NO
+			, SVC_CNTR_NO
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			SQ_MSP_BOND_01.NEXTVAL
+			, #{contractNum}
+			, 'Y'
+			, #{chrgItemCd}
+			, #{openDt}
+			, #{tmntDt}
+			, #{instYn}
+			, #{instMnthCnt}
+			, #{instAmt}
+			, #{payStrtDt}
+			, #{payEndDt}
+			, #{prdtId}
+            , #{prdtSrlNum}
+			, #{hndstAmt}
+			, #{subsdAmt}
+			, #{agncySubsdAmt}
+			, #{grntInsrMngmNo}
+			, #{svcCntrNo}
+			, 'SYSTEM'
+			, SYSDATE
+			, 'SYSTEM'
+			, SYSDATE
+		)
+		
+		<selectKey keyProperty="BOND_SEQ_NUM" resultType='Int' order="AFTER">
+			SELECT SQ_MSP_BOND_01.CURRVAL FROM DUAL
+		</selectKey>
+				
+	</insert>
+
+	<!-- 할부정보상세 등록 -->
+	<insert id="insertMspBondDtl" parameterType="Map">
+		/* bondScheduleMapper.insertMspBondDtl */
+		
+		INSERT INTO MSP_BOND_DTL (
+			BOND_SEQ_NUM
+			, CONTRACT_NUM
+			, INST_MNTH_NUM
+			, BILL_YM
+			, BILL_AMT
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			#{bondSeqNum}
+			, #{contractNum}
+			, #{instMnthNum}
+			, TO_CHAR(ADD_MONTHS(#{payStrtDt}, #{payNum}-1),'YYYYMM')
+			, #{billAmt}
+			, 'SYSTEM'
+			, SYSDATE
+			, 'SYSTEM'
+			, SYSDATE
+		)
+				
+	</insert>
+
+	<!-- 할부정보삭제대상 가져오기 -->
+	<select id="getBondDeleteList" resultType="hashMap">
+		/* bondScheduleMapper.getBondDeleteList */
+		SELECT  
+				CONTRACT_NUM
+		FROM
+				MSP_JUO_SUB_INFO
+		WHERE   1 = 1
+				AND     SUB_STATUS = 'C'
+				AND     (SUBSTR(SUB_STATUS_DATE, 1, 8) - LST_COM_ACTV_DATE) <![CDATA[<]]> 15
+	</select>
+	
+	
+	<!-- 할부정보 삭제 -->
+	<delete id="deleteMspBondMst" parameterType="String">
+    	/* bondScheduleMapper.deleteMspBondMst */
+    	DELETE FROM MSP_BOND_MST WHERE CONTRACT_NUM = #{contractNum}
+    </delete>
+
+	<!-- 할부정보상세 삭제 -->
+	<delete id="deleteMspBondDtl" parameterType="String">
+    	/* bondScheduleMapper.deleteMspBondDtl */
+    	DELETE FROM MSP_BOND_DTL WHERE CONTRACT_NUM = #{contractNum}
+    </delete>
+    
+    
+    <!-- 개통월별채권정보 등록 -->
+	<insert id="insertSelectMspBondStaticMst">
+		/* bondScheduleMapper.insertSelectMspBondStaticMst */
+		
+		INSERT INTO MSP_BOND_STATIC_MST 
+			(
+				OPEN_YN
+				, BOND_AMT
+				, RCV_AMT
+				, INST_OPEN_CNT
+			)
+			SELECT 
+					SUBSTR(B.GRNT_INSR_MNGM_NO,0,6) AS OPEN_YM
+					, SUM(A.BILL_AMT) AS BOND_AMT
+					, 0 AS RCV_AMT
+					, COUNT(DISTINCT A.BOND_SEQ_NUM) AS INST_OPEN_CNT
+			FROM 
+					MSP_BOND_DTL A, MSP_BOND_MST B
+			WHERE 	1=1
+					AND SUBSTR(B.GRNT_INSR_MNGM_NO,0,6) = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM')
+					AND B.CHRG_ITEM_CD = 'EQIST'
+					AND B.MST_YN = 'Y'
+					AND B.INST_YN = 'Y'
+					AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+					GROUP BY SUBSTR(B.GRNT_INSR_MNGM_NO,0,6)
+				
+	</insert>
+    
+
+    <!-- 개통월회차별채권정보 등록 -->
+	<insert id="insertSelectMspBondStaticDtl">
+		/* bondScheduleMapper.insertSelectMspBondStaticDtl */
+		
+		INSERT INTO MSP_BOND_STATIC_DTL 
+			(
+				OPEN_YM
+				, BILL_YM
+				, INST_MNTH_NUM
+				, BOND_AMT
+				, RCV_AMT
+				, RMN_CNTR_CNT
+			)
+			SELECT 
+					SUBSTR(B.GRNT_INSR_MNGM_NO,0,6) AS OPEN_YM
+					, A.BILL_YM
+					, A.INST_MNTH_NUM AS INST_MNTH_NUM
+					/*, SUM(A.BILL_AMT) AS BOND_AMT*/
+					, SUM(B.INST_AMT) AS BOND_AMT
+					, 0 AS RCV_AMT
+					, COUNT(A.INST_MNTH_NUM) AS RMN_CNTR_CNT
+			FROM 
+					MSP_BOND_DTL A, MSP_BOND_MST B
+			WHERE 	1=1
+					AND SUBSTR(B.GRNT_INSR_MNGM_NO,0,6) = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM') 
+					AND B.CHRG_ITEM_CD = 'EQIST'
+					AND B.MST_YN = 'Y'
+					AND B.INST_YN = 'Y'
+					AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+					GROUP BY A.INST_MNTH_NUM, A.BILL_YM, SUBSTR(B.OPEN_DT,0,6)
+					ORDER BY SUBSTR(B.OPEN_DT,0,6)
+				
+	</insert>
+    
+
+    <!-- 보증보험정보 등록(신규) -->
+	<insert id="insertSelectMspGrntInsrInfo">
+		/* bondScheduleMapper.insertSelectMspGrntInsrInfo */
+		
+		INSERT INTO MSP_GRNT_INSR_INFO
+			(
+				GRNT_INSR_MNGM_NO
+				, CONTRACT_NUM
+				, APPL_END_DTTM
+				, APPL_STRT_DTTM
+				, PRDT_ID
+				, PRDT_SRL_NUM
+				, PRDT_AMT
+				, OPEN_DT
+				, INST_AMT
+				, INST_CNT
+				, INST_PAY_STRT_DT
+				, INST_PAY_END_DT
+				, GRNT_INSR_AMT
+				, GRNT_INSR_STRT_DT
+				, GRNT_INSR_END_DT
+				, SVC_CNTR_NO
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+			)
+			
+			SELECT    
+					A.GRNT_INSR_MNGM_NO   
+					, A.CONTRACT_NUM   
+					, '99991231235959' AS APPL_END_DTTM   
+					, B.EVNT_TRTM_DT AS APPL_STRT_DTTM   
+					, D.PRDT_ID AS PRDT_ID   
+					, D.PRDT_SRL_NUM AS PRDT_SRL_NUM   
+					, A.HNDST_AMT AS PRDT_AMT   
+					, A.OPEN_DT   
+					, A.INST_AMT   
+					, A.INST_MNTH_CNT AS INST_CNT   
+					, A.PAY_STRT_DT AS INST_PAY_STRT_DT  
+					, A.PAY_END_DT AS INST_PAY_END_DT 
+					, A.INST_AMT AS GRNT_INSR_AMT   
+					, SUBSTR(A.GRNT_INSR_MNGM_NO,0,8) AS GRNT_INSR_STRT_DT
+					, TO_CHAR(ADD_MONTHS(TO_DATE(SUBSTR(A.GRNT_INSR_MNGM_NO,0,8), 'YYYYMMDD'), A.INST_MNTH_CNT-1), 'YYYYMMDD') AS GRNT_INSR_END_DT   
+					, A.SVC_CNTR_NO AS SVC_CNTR_NO   
+					, 'SYSTEM' AS REGST_ID   
+					, SYSDATE AS REGST_DTTM   
+					, 'SYSTEM' AS RVISN_ID   
+					, SYSDATE AS RVISN_DTTM   
+			FROM   
+					MSP_BOND_MST A   
+					, MSP_JUO_SUB_INFO B   
+					, MSP_JUO_ADD_INFO C   
+					, ( SELECT DISTINCT A.CONTRACT_NUM, A.MODEL_ID AS PRDT_ID, B.PRDT_SRL_NUM  
+                        FROM    MSP_JUO_MODEL_INFO A  
+                                , LGS_PRDT_SRL_MST  B  
+                        WHERE   A.CONTRACT_NUM  = B.SVC_CT_NUM 
+                        AND     A.MODEL_ID = B.RPRS_PRDT_ID  
+                        AND     A.INTM_SRL_NO = B.PRDT_SRL_NUM   
+                        AND     A.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND MODEL_ID = A.MODEL_ID ) 
+                        UNION ALL 
+                        SELECT DISTINCT A.CONTRACT_NUM, A.MODEL_ID AS PRDT_ID, B.PRDT_SRL_NUM  
+                        FROM    MSP_JUO_MODEL_INFO A  
+                                , LGS_OTCP_SRL_MST  B  
+                        WHERE   A.CONTRACT_NUM = B.SVC_CT_NUM 
+                        AND     A.MODEL_ID = B.RPRS_PRDT_ID  
+                        AND     A.INTM_SRL_NO = B.PRDT_SRL_NUM   
+                        AND     A.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND MODEL_ID = A.MODEL_ID ) 
+                        ) D     
+			WHERE 1=1   
+					AND A.CONTRACT_NUM = B.CONTRACT_NUM   
+					AND A.CONTRACT_NUM = C.CONTRACT_NUM   
+					AND A.CONTRACT_NUM = D.CONTRACT_NUM   
+                    AND A.SVC_CNTR_NO = C.SVC_CNTR_NO   
+                    AND C.APP_END_DATE LIKE '99991231%'   
+					AND A.CHRG_ITEM_CD = 'EQIST'   
+					AND A.MST_YN = 'Y'   
+					AND SUBSTR(A.OPEN_DT,0,6) <![CDATA[<=]]> TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM')    
+					AND B.PPPO = 'PO'   
+					AND A.GRNT_INSR_MNGM_NO <![CDATA[<>]]> 'NONE'   
+					AND A.GRNT_INSR_MNGM_NO = UPPER(C.GRNT_INSR_MNGM_NO)
+					
+				
+	</insert>
+    
+    
+	<!-- 보증보험정보 업데이트 정보 가져오기 -->
+	<select id="getMspGrntInsrInfoTrgt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspGrntInsrInfoTrgt */
+   		SELECT
+				A. CONTRACT_NUM
+				, A.GRNT_INSR_MNGM_NO
+				, B.SVC_CNTR_NO AS NEW_SVC_CNTR_NO
+				, D.SVC_CNTR_NO AS OLD_SVC_CNTR_NO
+				, A.CONTRACT_NUM
+				, B.EVNT_TRTM_DT AS NAME_CHG_DT
+				, TO_CHAR(TO_DATE(B.EVNT_TRTM_DT, 'YYYYMMDDHH24MISS') - 1/(24*60*60), 'YYYYMMDDHH24MISS') AS APPL_END_DTTM
+				, D.PRDT_ID
+				, D.PRDT_SRL_NUM
+				, D.PRDT_AMT
+				, D.OPEN_DT
+				, D.INST_AMT
+				, D.INST_CNT
+				, D.INST_PAY_STRT_DT
+				, D.INST_PAY_END_DT
+				, D.GRNT_INSR_AMT
+				, D.GRNT_INSR_STRT_DT
+				, D.GRNT_INSR_END_DT
+		FROM
+				MSP_BOND_MST A
+				, MSP_JUO_SUB_INFO_HIST B
+				, MSP_JUO_SUB_INFO C
+				, MSP_GRNT_INSR_INFO D
+		WHERE 1=1
+				AND A.CHRG_ITEM_CD = 'EQIST'
+				AND A.MST_YN = 'Y'
+				AND SUBSTR(A.OPEN_DT,0,6) = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+				AND B.EVNT_CD = 'MCN'
+				AND C.PPPO='PO'
+				AND A.CONTRACT_NUM = B.CONTRACT_NUM
+				AND A.CONTRACT_NUM = C.CONTRACT_NUM
+				AND A.CONTRACT_NUM = D.CONTRACT_NUM
+				AND B.SVC_CNTR_NO <![CDATA[<>]]> B.SVC_CNTR_NO
+				AND D.APPL_END_DTTM = '99991231235959'
+   	</select>
+
+	<!-- 보증보험정보 업데이트 -->
+	<update id="updateMspGrntInsrInfo" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspGrntInsrInfo */
+   		UPDATE 
+   				MSP_GRNT_INSR_INFO
+		SET 
+				APPL_END_DTTM = #{applEndDttm}
+				, NAME_CHG_DT = SUBSTR(#{nameChgDt}, 0, 8)
+				, RVISN_ID = 'SYSTEM'
+				, RVISN_DTTM = SYSDATE
+			  
+		WHERE 	1 = 1
+				AND 	GRNT_INSR_MNGM_NO = #{grntInsrMngmNo}
+				AND 	CONTRACT_NUM = #{contractNum}
+				AND 	APPL_END_DTTM = '99991231235959'
+   	</update>
+
+    <!-- 보증보험정보 등록(업데이트 된 것) -->
+	<insert id="insertMspGrntInsrInfo" parameterType="Map">
+		/* bondScheduleMapper.insertMspGrntInsrInfo */
+		
+		INSERT INTO MSP_GRNT_INSR_INFO
+			(
+				GRNT_INSR_MNGM_NO
+				, CONTRACT_NUM
+				, APPL_END_DTTM
+				, APPL_STRT_DTTM
+				, PRDT_ID
+				, PRDT_SRL_NUM
+				, PRDT_AMT
+				, OPEN_DT
+				, INST_AMT
+				, INST_CNT
+				, INST_PAY_STRT_DT
+				, INST_PAY_END_DT
+				, GRNT_INSR_AMT
+				, GRNT_INSR_STRT_DT
+				, GRNT_INSR_END_DT
+				, SVC_CNTR_NO
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+			) VALUES (
+				#{grntInsrMngmNo}
+				, #{contractNum}
+				, '99991231235959'
+				, #{nameChgDt}
+				, #{prdtId}
+				, #{prdtSrlNum}
+				, #{prdtAmt}
+				, #{openDt}
+				, #{instAmt}
+				, #{instCnt}
+				, #{instPayStrtDt}
+				, #{instPayEndDt}
+				, #{grntInsrAmt}
+				, #{grntInsrStrtDt}
+				, #{grntInsrEndDt}
+				, #{newSvcCntrNo}
+				, 'SYSTEM'
+				, SYSDATE
+				, 'SYSTEM'
+				, SYSDATE
+			)
+				
+	</insert>
+    
+	<!-- 채권정보생성 프로시저 호출 -->
+	<insert id="callCreateBondMst" statementType="CALLABLE">
+   		/** bondScheduleMapper.callCreateBondMst */
+   		{ CALL P_BOND_REGIST_PARAM(TO_CHAR(ADD_MONTHS(SYSDATE,-1), 'YYYYMM')) }
+   		/*{ CALL P_BOND_REGIST_PARAM('201506') }*/
+   	</insert>
+
+</mapper>

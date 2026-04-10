@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.chgRcptMgmt.mapper.ChgRcptMgmtMapper">
+	
+	<!-- 조회이력생성 -->
+	<insert id="insertChgRcptSearchHst" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO">
+		/* chgRcptMapper.insertChgRcptSearchHst */
+		INSERT INTO MSP_CHG_RCPT_SEARCH_HST (
+		    SEQ_NUM
+		    , SUBSCRIBER_NO
+		    , AGNT_CD
+		    , REGST_ID
+		    , REGST_DTTM
+		) VALUES (
+		    SQ_CHG_RCPT_SEARCH_HST.NEXTVAL
+		    , #{searchGbVal}
+		    , #{sessionUserOrgnId}
+		    , #{sessionUserId}
+		    , SYSDATE
+		)
+	</insert>
+	
+	<select id="getContractInfo" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* chgRcptMapper.getContractInfo */
+		SELECT
+			A.CONTRACT_NUM
+			, A.CUST_NM
+			, A.PPPO
+			, A.SUB_STATUS
+			, FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS_NM
+			, A.OPEN_DT
+			, A.OPEN_AGNT_CD
+			, A.SCAN_ID
+			, FN_GET_AGE('X', A.CONTRACT_NUM) AS AGE
+			, A.CUSTOMER_TYPE
+			, A.INSR_CD
+			, FN_GET_CODENM('CMN0246', A.INSR_CD) AS INSR_NM
+			, A.STAT_CD
+			, DECODE(A.STAT_CD, 'A', '유지', 'C', '해지', '') AS STAT_NM
+			, A.END_DTTM
+			, A.ATM_OPEN_YN
+			, TRUNC(SYSDATE - TO_DATE(A.OPEN_DT, 'YYYYMMDD')) AS USG_DT /* 개통일 제외 사용일수 */
+			, A.INTM_INSR_PSBL_DAY
+			, A.INTM_INSR_PSBL_YN
+			, A.INSR_PROD_CD
+			, FN_GET_CODENM('CMN0247', A.INSR_PROD_CD) AS INTM_PROD_NM
+			, A.INTM_INSR_STAT_NM
+			, A.REQ_BUY_TYPE
+			, FN_GET_CODENM('RCP9004', A.REQ_BUY_TYPE) AS REQ_BUY_NM
+			, A.INSR_MODEL_NM
+			, A.INSR_MODEL_ID
+			, A.INSR_INTM_SRL_NO
+			, A.DVC_CHG_DT
+			, A.TRGT_MODEL_NM
+			, A.TRGT_MODEL_ID
+			, A.TRGT_INTM_SRL_NO
+		FROM
+			(
+				SELECT
+					A.CONTRACT_NUM                          /* 가입계약번호 */
+					, C.SVC_CNTR_NO                         /* 서비스계약번호 */
+					, A.SUB_LINK_NAME AS CUST_NM            /* 고객명 */
+					, A.PPPO                                /* 선후불구분 */
+					, A.SUB_STATUS                          /* 계약상태 */
+					, A.LST_COM_ACTV_DATE AS OPEN_DT        /* 최초개통일 */
+					, A.OPEN_AGNT_CD                        /* 개통대리점 */
+					, A.SCAN_ID                             /* 개통서식지 SCAN_ID */
+					, B.CUSTOMER_TYPE                       /* 고객유형 */
+					, C.INSR_CD                             /* 선택형단체보험 */
+					, C.STAT_CD                             /* 선택형단체보험상태 */
+					, DECODE(C.STAT_CD, 'A', '유지', 'C', '해지', '') AS STAT_NM    /* 선택형단체보험상태 */
+					, C.END_DTTM                            /* 선택형단체보험 해지일자 */
+					, NVL(( SELECT  DISTINCT 'Y'
+							FROM    MSP_JUO_ADD_INFO JAD
+									, CMN_GRP_CD_MST GCD
+							WHERE   JAD.CONTRACT_NUM = A.CONTRACT_NUM
+							AND     JAD.SVC_CNTR_NO = A.SVC_CNTR_NO
+							AND     JAD.CNTPNT_CD = GCD.CD_VAL
+							AND     GCD.GRP_ID = 'RCP2048'
+							AND     GCD.USG_YN = 'Y'
+						), 'N') AS ATM_OPEN_YN                 /* ATM 개통여부 */
+					, CASE
+						WHEN IIM.CONTRACT_NUM IS NULL THEN TO_CHAR(TO_DATE(NVL(DVC.DVC_CHG_DT, A.LST_COM_ACTV_DATE), 'YYYYMMDD') + 44, 'YYYYMMDD') /* 단말보험 미가입이면 개통일 또는 기변일로부터 D+44 일 */
+						ELSE TO_CHAR(TO_DATE(SUBSTR(IIM.STRT_DTTM, 1, 8), 'YYYYMMDD') + 44, 'YYYYMMDD')
+						END AS INTM_INSR_PSBL_DAY                         /* 개통일/기변일/보험가입일로부터 D+44일 */
+					, CASE 
+						WHEN IIM.CONTRACT_NUM IS NULL AND TO_DATE(NVL(DVC.DVC_CHG_DT, A.LST_COM_ACTV_DATE), 'YYYYMMDD') + 44 >= TRUNC(SYSDATE) THEN 'Y'
+						WHEN IIM.CONTRACT_NUM IS NOT NULL AND TO_DATE(SUBSTR(IIM.STRT_DTTM, 1, 8), 'YYYYMMDD') >= TRUNC(SYSDATE) THEN 'Y'
+						ELSE 'N'
+						END AS INTM_INSR_PSBL_YN              /* 개통일/기변일/보험가입일로부터 D+44 이면  단말보험가입가능 */
+					, IIM.INSR_PROD_CD
+					, FN_GET_CODENM('CMN0251', IIM.INSR_STAT_CD) AS INTM_INSR_STAT_NM
+					, DECODE(DVC.CONTRACT_NUM, NULL, MRD.REQ_BUY_TYPE, 'MM')    AS REQ_BUY_TYPE /* 기변이 있으면 단말구매, 아니면 최초 구매유형 */
+					, IIM.MODEL_NM      AS INSR_MODEL_NM    /* 현재 단말보험가입 모델명 */
+					, IIM.MODEL_ID      AS INSR_MODEL_ID    /* 현재 단말보험가입 모델 ID*/
+					, IIM.INTM_SRL_NO   AS INSR_INTM_SRL_NO /* 현재 단말보험가입 단말일련번호 */
+					, DVC.DVC_CHG_DT    /* 기변일자 */
+					, DECODE(DVC.CONTRACT_NUM, NULL, DECODE(MRD.REQ_BUY_TYPE, 'MM', TRIM(SUBSTR(MRD.FST_MODEL_INFO, 21, 20)), ''), DVC.MODEL_NM) AS TRGT_MODEL_NM   /* 가입대상 단말모델명 기기변경 후 보험 가입가능 단말 정보(기기변경이 없는 경우는 NULL)*/
+					, DECODE(DVC.CONTRACT_NUM, NULL, DECODE(MRD.REQ_BUY_TYPE, 'MM', TRIM(SUBSTR(MRD.FST_MODEL_INFO, 1, 20)), ''), DVC.MODEL_ID) AS TRGT_MODEL_ID    /* 가입대상 단말모델ID */
+					, DECODE(DVC.CONTRACT_NUM, NULL, DECODE(MRD.REQ_BUY_TYPE, 'MM', TRIM(SUBSTR(MRD.FST_MODEL_INFO, 41, 30)), ''), DVC.INTM_SRL_NO) AS TRGT_INTM_SRL_NO /* 가입대상 단말일련번호 */
+				FROM
+					MSP_JUO_SUB_INFO A
+					, MSP_JUO_CUS_INFO B
+					, MSP_INSR_MEMBER_MST C
+					, CMN_GRP_CD_MST D
+					, MSP_INTM_INSR_MEMBER IIM
+					, ( SELECT
+							B.CONTRACT_NUM
+							, SUBSTR(B.APPL_STRT_DTTM, 1, 8) AS DVC_CHG_DT
+							, B.MODEL_NM
+							, B.MODEL_ID
+							, B.INTM_SRL_NO
+						FROM
+							MSP_JUO_SUB_INFO A
+							, MSP_DVC_CHG_AGNT_HST B
+						WHERE	A.CONTRACT_NUM = B.CONTRACT_NUM
+						AND	B.REQUEST_KEY IS NOT NULL
+						/* 여러번 기변을 한 경우 최종 값을 조회 */
+						AND		B.APPL_STRT_DTTM = (SELECT MAX(APPL_STRT_DTTM) FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = B.CONTRACT_NUM AND REQUEST_KEY IS NOT NULL)
+					) DVC
+					, MSP_REQUEST_DTL MRD
+			WHERE	A.CUSTOMER_ID = B.CUSTOMER_ID
+			AND		A.SVC_CNTR_NO = C.SVC_CNTR_NO(+)
+			AND		C.END_DTTM(+) = '99991231235959'
+			AND		C.INSR_CD = D.CD_VAL(+)
+			AND		D.GRP_ID(+) = 'CMN0246'
+			AND		D.ETC2(+) = 'Y'
+			AND		A.CONTRACT_NUM = IIM.CONTRACT_NUM(+)
+			AND		IIM.END_DTTM(+) >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+			AND		A.CONTRACT_NUM = DVC.CONTRACT_NUM(+)
+			AND		A.CONTRACT_NUM = MRD.CONTRACT_NUM
+			AND		A.PPPO = 'PO'
+			<choose>
+				<when test='searchGb == "01"'>
+					AND		A.SUBSCRIBER_NO = #{searchGbVal}
+				</when>
+				<when test='searchGb == "02"'>
+					AND		A.CONTRACT_NUM = #{searchGbVal}
+				</when>
+			</choose>
+		) A
+		WHERE   ROWNUM = 1
+	</select>
+	
+	<!-- SEQ 채번 -->
+	<select id="getSeqNum" resultType="int">
+		/* chgRcptMapper.getSeqNum */
+		SELECT SQ_CHG_RCPT_MST.NEXTVAL AS seqNum FROM DUAL
+	</select>
+	
+	<!-- 변경업무생성 -->
+	<insert id="insertChgRcptMst" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO">
+		/* chgRcptMapper.insertChgRcptMst */
+		INSERT INTO MSP_CHG_RCPT_MST (
+		    SEQ_NUM
+		    , CONTRACT_NUM
+		    , TSK_TP
+		    , TSK_NM
+		    , OPEN_AGNT_CD
+		    , PROC_AGNT_CD
+		    , PROCR_ID
+		    , RMK
+		    , SCAN_ID
+		    , INSR_CD
+		    , CLAUSE_INSURANCE_FLAG
+		    , REGST_ID
+		    , REGST_DTTM
+		    , INSR_PROD_CD
+		    , CLAUSE_INSR_PROD_FLAG
+		) VALUES (
+		    #{seqNum, jdbcType=INTEGER}
+		    , #{contractNum, jdbcType=VARCHAR}
+		    , #{tskTp, jdbcType=VARCHAR}
+		    , #{tskNm, jdbcType=VARCHAR}
+		    , #{openAgntCd, jdbcType=VARCHAR}
+		    , #{sessionUserOrgnId, jdbcType=VARCHAR}
+		    , #{sessionUserId, jdbcType=VARCHAR}
+		    , #{rmk, jdbcType=VARCHAR}
+		    , #{newScanId, jdbcType=VARCHAR}
+		    , #{insrCd, jdbcType=VARCHAR}
+		    , DECODE(#{clauseInsuranceFlag, jdbcType=VARCHAR}, '0', '', #{clauseInsuranceFlag, jdbcType=VARCHAR})
+		    , #{sessionUserId}
+		    , SYSDATE
+		    , #{insrProdCd, jdbcType=VARCHAR}
+		    , DECODE(#{clauseInsrProdFlag, jdbcType=VARCHAR}, '0', '', #{clauseInsrProdFlag, jdbcType=VARCHAR})
+		)
+	</insert>
+	
+	<!-- 변경신청목록조회 -->
+	<select id="getChgRcptList" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* chgRcptMapper.getChgRcptList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT  A.CONTRACT_NUM
+			        , A.OPEN_AGNT_CD
+			        , FN_GET_ORGNM(A.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+			        , A.TSK_TP
+			        , NVL(FN_GET_CODENM('RCP0070', A.TSK_TP), A.TSK_NM) AS TSK_NM
+			        , B.PPPO
+			        , FN_GET_CODENM('CMN0032', B.PPPO) AS PAY_CL_NM
+			        , B.LST_COM_ACTV_DATE AS OPEN_DT
+			        , DECODE(B.SUB_STATUS, 'C', SUBSTR(B.SUB_STATUS_DATE, 1, 8), '') AS TMNT_DT
+			        , B.SUB_LINK_NAME AS CUST_NM
+			        , B.SUBSCRIBER_NO
+			        , B.SUB_STATUS
+			        , FN_GET_CODENM('MSP0003', B.SUB_STATUS) AS SUB_STATUS_NM
+			        , B.SCAN_ID
+			        , A.PROC_AGNT_CD
+			        , FN_GET_ORGNM(A.PROC_AGNT_CD) AS PROC_AGNT_NM
+			        , A.PROCR_ID
+			        , FN_GET_USRNM(A.PROCR_ID) AS PROCR_NM
+			        , TO_CHAR(A.REGST_DTTM, 'YYYYMMDD') AS PROC_DT
+			        , A.RMK
+			        , A.INSR_CD
+			        , FN_GET_CODENM('CMN0246', A.INSR_CD) AS INSR_NM
+			        , A.CLAUSE_INSURANCE_FLAG
+			        , (CASE WHEN A.TSK_TP = 'INS' THEN (SELECT DECODE(STAT_CD, 'A', '유지', '해지') FROM MSP_INSR_MEMBER_MST WHERE CONTRACT_NUM = A.CONTRACT_NUM AND INSR_CD = A.INSR_CD AND TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS') BETWEEN STRT_DTTM AND END_DTTM)
+			                ELSE '' END) AS STAT_NM
+			        , (SELECT COUNT(1) FROM EMV_SCAN_FILE@DL_MCP WHERE SCAN_ID = B.SCAN_ID) AS SCAN_FILE_CNT
+			        , A.INSR_PROD_CD
+			        , FN_GET_CODENM('CMN0247', A.INSR_PROD_CD) AS INSR_PROD_NM
+			        , A.CLAUSE_INSR_PROD_FLAG
+			FROM    MSP_CHG_RCPT_MST A
+			        , MSP_JUO_SUB_INFO B
+			WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+			AND     A.REGST_DTTM BETWEEN TO_DATE(#{strtDt} || '000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{endDt} || '235959', 'YYYYMMDDHH24MISS')
+			<if test="procAgntCd != null and procAgntCd != ''">
+				AND A.PROC_AGNT_CD = #{procAgntCd}
+			</if>
+			<if test="tskTp != null and tskTp != ''">
+				AND A.TSK_TP = #{tskTp}
+			</if>
+			<if test="searchClCd != null and searchClCd != ''">
+				<choose>
+					<when test="searchClCd == '20'">
+						AND B.SUBSCRIBER_NO = #{searchVal}
+					</when>
+					<when test="searchClCd == '10'">
+						AND B.SUB_LINK_NAME LIKE '%' || #{searchVal} || '%'
+					</when>
+				</choose>
+			</if>
+			ORDER BY A.REGST_DTTM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 단체보험변경은 당월에 1회 이상 신청할 수 없음 -->
+	<select id="getInsrChangeHst" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO" resultType="Integer">
+		/* chgRcptMapper.getInsrChangeHst */
+		<![CDATA[
+		SELECT  COUNT(1)
+		FROM    MSP_CHG_RCPT_MST A
+		WHERE   A.CONTRACT_NUM = #{contractNum}
+		AND     A.TSK_TP = 'INS'
+		AND     A.CLAUSE_INSURANCE_FLAG = 'Y'
+		AND     EXISTS (SELECT 1 FROM MSP_CHG_RCPT_MST WHERE CONTRACT_NUM = A.CONTRACT_NUM AND TSK_TP = A.TSK_TP AND TO_CHAR(REGST_DTTM, 'YYYYMM') = TO_CHAR(SYSDATE, 'YYYYMM'))
+		]]>
+	</select>
+	
+	<!-- 단체보험해지 -->
+	<update id="cancelInsrMember" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO">
+		/* chgRcptMapper.cancelInsrMember */
+		<![CDATA[
+		UPDATE  MSP_INSR_MEMBER_MST
+		SET     END_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		        , STAT_CD = 'C'
+		        , RMK = TO_CHAR(#{seqNum, jdbcType=INTEGER})
+		        , RVISN_DTTM = SYSDATE
+		WHERE   CONTRACT_NUM = #{contractNum}
+		AND     STAT_CD = 'A'
+		AND     SUBSTR(END_DTTM, 1, 8) >= TO_CHAR(SYSDATE, 'YYYYMMDD') 
+		AND     INSR_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0246' AND USG_YN = 'Y' AND ETC2 = 'Y')
+		]]>
+	</update>
+	
+	<!-- ATM개통 계약번호 조회 -->
+	<select id="getAtmOpenContract" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO" resultType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO">
+		/* chgRcptMapper.getAtmOpenContract */
+		SELECT  DISTINCT 
+		        A.CONTRACT_NUM  AS contractNum
+		        , A.SCAN_ID     AS scanId
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_JUO_ADD_INFO B
+		        , CMN_GRP_CD_MST C
+		WHERE   1 = 1
+		AND     A.CONTRACT_NUM = #{contractNum}
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     A.SVC_CNTR_NO = B.SVC_CNTR_NO
+		AND     B.CNTPNT_CD = C.CD_VAL
+		AND     C.GRP_ID = 'RCP2048'
+		AND     C.USG_YN = 'Y'
+	</select>
+	
+	<!-- ATM개통건 SCAN_ID 생성 -->
+	<update id="updateSubInfoScanId" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO">
+		/* chgRcptMapper.updateSubInfoScanId */
+		UPDATE  MSP_JUO_SUB_INFO
+		SET     SCAN_ID = #{scanId, jdbcType=VARCHAR}
+		WHERE   CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+	</update>
+	
+	<select id="getScanFileCount" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO" resultType="Integer">
+		/* chgRcptMapper.getScanFileCount */
+		SELECT  COUNT(1) 
+		FROM    EMV_SCAN_MST@DL_MCP 
+		WHERE   SCAN_ID = #{newScanId}
+	</select>
+	
+	<!-- 개통정보 SCAN_ID 조회 -->
+	<select id="getSubInfoScanId" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO" resultType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO">
+		/* chgRcptMapper.getSubInfoScanId */
+		SELECT  A.SCAN_ID AS scanId
+				, DECODE(B.SCAN_ID, NULL, 'N', 'Y') AS scanMstYn
+		FROM    MSP_JUO_SUB_INFO A
+				, EMV_SCAN_MST@DL_MCP B
+		WHERE   CONTRACT_NUM = #{contractNum}
+		AND     A.SCAN_ID = B.SCAN_ID(+)
+	</select>
+	
+	<!-- 변경신청 등록시 SCAN_ID 존재하면 개통서식지에 합본(EMV_SCAN_MST) -->
+	<insert id="insertEmvScanMst" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO">
+		/* chgRcptMapper.insertEmvScanMst */
+		INSERT INTO EMV_SCAN_MST@DL_MCP (
+			SCAN_ID
+			, WORK_ID
+			, AGENCY_ID
+			, COMPANY_ID
+			, CUST_NM
+			, C_MEMO
+			, SCAN_FILE_CNT
+			, DOC_TITLE
+			, DOC_STATUS
+			, DEL_REASON
+			, USE_YN
+			, RGST_DT 
+			, RGST_PRSN_ID
+			, MDFY_DT
+			, MDFY_PRSN_ID
+			, ONLINE_YN
+			, DOC_STAT
+			, PROC_PRSN_ID
+			, PROC_DTTM
+			, PROC_STAT_CD
+		)
+		SELECT
+			#{scanId}
+			, WORK_ID
+			, AGENCY_ID
+			, COMPANY_ID
+			, CUST_NM
+			, C_MEMO
+			, SCAN_FILE_CNT
+			, DOC_TITLE
+			, DOC_STATUS
+			, DEL_REASON
+			, USE_YN
+			, SYSDATE 
+			, RGST_PRSN_ID
+			, MDFY_DT
+			, MDFY_PRSN_ID
+			, ONLINE_YN
+			, DOC_STAT
+			, PROC_PRSN_ID
+			, PROC_DTTM
+			, PROC_STAT_CD
+		FROM  EMV_SCAN_MST@DL_MCP
+		WHERE SCAN_ID = #{newScanId}
+	</insert>
+	
+	<!-- 변경신청 등록시 SCAN_ID 존재하면 개통서식지에 합본(EMV_SCAN_FILE) -->
+	<insert id="insertEmvScanFile" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO">
+		/* chgRcptMapper.inserEmvScanFile */
+		INSERT INTO EMV_SCAN_FILE@DL_MCP (
+				FILE_ID
+				, SCAN_ID
+				, FILE_NUMBER
+				, FILE_SIZE
+				, FILE_EXT
+				, DOC_ID
+				, MAIN_DOC_CD
+				, USE_YN
+				, ORIGIN_DIR
+				, SAVE_DIR
+				, RGST_DT
+				, RGST_PRSN_ID
+				, MDFY_DT
+				, MDFY_PRSN_ID
+				, BANK_CD
+				, BANK_CD_NO
+				, CONTRACT_NUM
+		)
+		SELECT  FILE_ID
+				, #{scanId}
+				, NVL((SELECT MAX(FILE_NUMBER) + 1 FROM EMV_SCAN_FILE@DL_MCP WHERE SCAN_ID = #{scanId}), 0) AS FILE_NUMBER
+				, FILE_SIZE
+				, FILE_EXT
+				, DOC_ID
+				, MAIN_DOC_CD
+				, USE_YN
+				, ORIGIN_DIR
+				, SAVE_DIR
+				, RGST_DT
+				, RGST_PRSN_ID
+				, MDFY_DT
+				, MDFY_PRSN_ID
+				, BANK_CD
+				, BANK_CD_NO
+				, CONTRACT_NUM
+		FROM    EMV_SCAN_FILE@DL_MCP A
+		WHERE   A.SCAN_ID = #{newScanId}
+	</insert>
+	
+	<select  id="getInsrPsblYn" parameterType="com.ktis.msp.rcp.chgRcptMgmt.vo.ChgRcptMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* chgRcptMapper.getInsrPsblYn */
+		SELECT
+           		CASE
+	                WHEN (SELECT SUB_LMT_YN FROM MSP_INTM_INSR_MST WHERE INSR_PROD_CD = #{insrProdCd}) = 'N' THEN '99991231'
+	                WHEN IIM.CONTRACT_NUM IS NULL THEN TO_CHAR(TO_DATE(NVL(DVC.DVC_CHG_DT, A.LST_COM_ACTV_DATE), 'YYYYMMDD') + 44, 'YYYYMMDD') /* 단말보험 미가입이면 개통일 또는 기변일로부터 D+44 일 */
+	                ELSE TO_CHAR(TO_DATE(SUBSTR(IIM.STRT_DTTM, 1, 8), 'YYYYMMDD') + 44, 'YYYYMMDD')
+	                END AS INTM_INSR_PSBL_DAY
+				, CASE
+               		WHEN (SELECT SUB_LMT_YN FROM MSP_INTM_INSR_MST WHERE INSR_PROD_CD = #{insrProdCd}) = 'N' THEN 'Y'
+                    WHEN IIM.CONTRACT_NUM IS NULL AND TO_DATE(NVL(DVC.DVC_CHG_DT, A.LST_COM_ACTV_DATE), 'YYYYMMDD') + 44 >= TRUNC(SYSDATE) THEN 'Y'
+                    WHEN IIM.CONTRACT_NUM IS NOT NULL AND TO_DATE(SUBSTR(IIM.STRT_DTTM, 1, 8), 'YYYYMMDD') >= TRUNC(SYSDATE) THEN 'Y'
+                    ELSE 'N'
+                    END AS INTM_INSR_PSBL_YN
+			FROM
+				MSP_JUO_SUB_INFO A
+				, MSP_INTM_INSR_MEMBER IIM
+				, ( SELECT
+						B.CONTRACT_NUM
+						, SUBSTR(B.APPL_STRT_DTTM, 1, 8) AS DVC_CHG_DT
+					FROM
+						MSP_JUO_SUB_INFO A
+						, MSP_DVC_CHG_AGNT_HST B
+					WHERE	A.CONTRACT_NUM = B.CONTRACT_NUM
+					AND	B.REQUEST_KEY IS NOT NULL
+					/* 여러번 기변을 한 경우 최종 값을 조회 */
+					AND		B.APPL_STRT_DTTM = (SELECT MAX(APPL_STRT_DTTM) FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = B.CONTRACT_NUM AND REQUEST_KEY IS NOT NULL)
+				) DVC
+			WHERE	A.CONTRACT_NUM = IIM.CONTRACT_NUM(+)
+			AND		IIM.END_DTTM(+) >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+			AND		A.CONTRACT_NUM = DVC.CONTRACT_NUM(+)
+			AND		A.PPPO = 'PO'
+			<choose>
+				<when test='searchGb == "01"'>
+					AND		A.SUBSCRIBER_NO = #{searchGbVal}
+				</when>
+				<when test='searchGb == "02"'>
+					AND		A.CONTRACT_NUM = #{searchGbVal}
+				</when>
+			</choose>
+	</select>
+</mapper>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="5 seconds">
+	<appender name="console-log" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<logger name="com.ktmmobile.mcp" level="info" additivity="false">
+		<appender-ref ref="console-log" />
+	</logger>
+
+	<logger name="jdbc.resultsettable"> <!-- preapre sql,완성된 sql ,resultset 출력  -->
+		<level value="DEBUG" />
+		<appender-ref ref="console-log" />
+	</logger>
+
+	<logger name="jdbc.audit" additivity="false"> <!-- resultset 을 포함하지 않는 모든 jdbc log출력 -->
+		<level value="DEBUG" />
+		<appender-ref ref="console-log" />
+	</logger>
+
+	<logger name="jdbc.resultset" additivity="false" ><!-- resultset 을 포함한 모든 jdbc log 출력 -->
+		<level value="DEBUG" />
+		<appender-ref ref="console-log" />
+	</logger>
+
+	<logger name="jdbc.sqltiming" additivity="false"><!-- sql 문과 sql 실행시간 출력 -->
+		<level value="DEBUG" />
+		<appender-ref ref="console-log" />
+	</logger>
+
+	<root level="DEBUG">
+		<appender-ref ref="console-log" />
+	</root>
+</configuration>

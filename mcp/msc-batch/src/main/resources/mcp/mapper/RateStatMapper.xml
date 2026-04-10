@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RateStatMapper">
+
+    <!-- 유지고객 정보 갯수 확인 -->
+    <select id="getNmcpMonUseRateInfoCnt" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*)
+        FROM NMCP_MON_USE_RATE_INFO
+        WHERE BASE_MON = #{baseMon}
+    </select>
+
+    <!-- 유지고객 정보 삭제 -->
+    <delete id="deleteNmcpMonUseRateInfo" parameterType="java.lang.String">
+        DELETE FROM NMCP_MON_USE_RATE_INFO
+        WHERE BASE_MON <![CDATA[ <= ]]> #{baseMon}
+    </delete>
+
+    <!-- 유지요금제 집계 갯수 확인 -->
+    <select id="getNmcpMonUseRateStatCnt" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*)
+        FROM NMCP_MON_USE_RATE_STAT
+        WHERE BASE_MON = #{baseMon}
+    </select>
+    
+    <!-- 유지요금제 집계 저장 -->
+    <insert id="insertNmcpMonUseRateStat" parameterType="java.lang.String">
+        INSERT INTO NMCP_MON_USE_RATE_STAT (
+             BASE_MON
+            , BASE_TYPE
+            , GENDER
+            , AGE_GRP
+            , RATE_CD
+            , RATE_NM
+            , RATE_CNT
+            , CRET_ID
+            , CRET_DT
+        )
+        SELECT
+            BASE_MON
+            , BASE_TYPE
+            , GENDER
+            , AGE_GRP
+            , RATE_CD
+            , RATE_NM
+            , COUNT(*)
+            , 'SYSTEM'
+            , SYSDATE
+        FROM (
+            SELECT
+                BASE_MON
+                , CASE
+                    WHEN OPEN_DT BETWEEN TO_CHAR(SYSDATE,'YYYYMM') || '01' AND TO_CHAR(LAST_DAY(SYSDATE),'YYYYMMDD') THEN 'N'
+                    ELSE 'A'
+                END AS BASE_TYPE
+                , GENDER
+                , CASE
+                    WHEN TO_NUMBER(AGE) BETWEEN '1' AND '9' THEN '0'
+                    WHEN TO_NUMBER(AGE) BETWEEN '10' AND '19' THEN '10'
+                    WHEN TO_NUMBER(AGE) BETWEEN '20' AND '29' THEN '20'
+                    WHEN TO_NUMBER(AGE) BETWEEN '30' AND '39' THEN '30'
+                    WHEN TO_NUMBER(AGE) BETWEEN '40' AND '49' THEN '40'
+                    WHEN TO_NUMBER(AGE) BETWEEN '50' AND '59' THEN '50'
+                    WHEN TO_NUMBER(AGE) <![CDATA[>=]]> '60' THEN '60'
+                    ELSE '99'
+                END AS AGE_GRP
+                , RATE_CD
+                , RATE_NM
+            FROM NMCP_MON_USE_RATE_INFO
+            WHERE BASE_MON = #{baseMon}
+            )
+        GROUP BY BASE_MON, BASE_TYPE, GENDER, AGE_GRP, RATE_CD, RATE_NM
+    </insert>
+
+</mapper>
+

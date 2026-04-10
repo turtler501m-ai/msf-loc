@@ -1,0 +1,779 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.bnd.bondmgmt.mapper.BondChkScheduleMapper">
+	
+	<!-- 청구월 수납정보 가져오기 -->
+	<select id="getMspBondPayList" resultType="hashMap">
+		/* bondChkScheduleMapper.getMspBondPayList */
+		SELECT
+				A.BILL_YM AS BILL_YM
+				, A.SVC_CNTR_NO
+				, SUM(A.PYMN_AMNT) AS SUM_PYMN_AMT
+				, MAX(A.BLPYM_DATE) AS BLPYM_DATE
+				, B.CONTRACT_NUM AS CONTRACT_NUM
+				, C.BOND_SEQ_NUM AS BOND_SEQ_NUM
+		FROM 
+				CLS_BILL_PYMN_DATA A
+				, MSP_BOND_MST B
+				, MSP_BOND_DTL C
+		WHERE 1=1
+				AND 	B.BOND_SEQ_NUM = C.BOND_SEQ_NUM
+				AND 	C.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM') 
+				AND 	A.BILL_YM = C.BILL_YM
+				AND 	A.SVC_CNTR_NO = B.SVC_CNTR_NO
+				AND 	A.BILL_ITEM_CD IN ( 'EQIST', 'EQISV' )
+				AND 	A.PYMN_CD = 'PYM'
+				AND 	B.MST_YN = 'Y'
+				AND 	B.FULL_PAY_YN = 'N'
+				GROUP BY A.BILL_YM, A.SVC_CNTR_NO, B.CONTRACT_NUM, C.BOND_SEQ_NUM
+	</select>
+	
+	<!-- 미납월 수납정보 가져오기 -->
+	<select id="getMspBondUnpayList" resultType="hashMap">
+		/* bondChkScheduleMapper.getMspBondUnpayList */
+		SELECT
+				A.BILL_YM AS BILL_YM
+				, A.SVC_CNTR_NO
+				, SUM(A.PYMN_AMNT) AS SUM_PYMN_AMT
+				, MAX(A.BLPYM_DATE) AS BLPYM_DATE
+				, B.CONTRACT_NUM AS CONTRACT_NUM
+				, C.BOND_SEQ_NUM AS BOND_SEQ_NUM
+		FROM 
+				CLS_BILL_PYMN_DATA A
+				, MSP_BOND_MST B
+				, MSP_BOND_DTL C
+		WHERE 1=1
+				AND 	B.BOND_SEQ_NUM = C.BOND_SEQ_NUM
+				AND 	A.BILL_YM = C.BILL_YM
+				AND 	A.SVC_CNTR_NO = B.SVC_CNTR_NO
+				AND 	A.BILL_ITEM_CD IN ( 'EQIST', 'EQISV' )
+				AND 	A.PYMN_CD = 'PYM'
+				AND 	B.MST_YN = 'Y'
+				AND 	C.UNPAY_YN = 'Y'
+				AND 	B.FULL_PAY_YN = 'N'
+				GROUP BY A.BILL_YM, A.SVC_CNTR_NO, B.CONTRACT_NUM, C.BOND_SEQ_NUM
+	</select>
+	
+	<!-- 미납월 업데이트월 가져오기 -->
+	<select id="getMspBondUnpayMonthList" resultType="hashMap">
+		/* bondChkScheduleMapper.getMspBondUnpayMonthList */
+		SELECT
+				A.BILL_YM AS BILL_YM
+		FROM 
+				CLS_BILL_PYMN_DATA A
+				, MSP_BOND_MST B
+				, MSP_BOND_DTL C
+		WHERE 1=1
+				AND 	B.BOND_SEQ_NUM = C.BOND_SEQ_NUM
+				AND 	A.BILL_YM = C.BILL_YM
+				AND 	A.SVC_CNTR_NO = B.SVC_CNTR_NO
+				AND 	A.BILL_ITEM_CD IN ( 'EQIST', 'EQISV' )
+				AND 	A.PYMN_CD = 'PYM'
+				AND 	B.MST_YN = 'Y'
+				AND 	C.UNPAY_YN = 'Y'
+				AND 	B.FULL_PAY_YN = 'N'
+				GROUP BY A.BILL_YM
+	</select>
+	
+	<!-- 수납정보(MSP_BOND_DTL) 업데이트 -->
+	<update id="updateMspBondDtlPay" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondDtlPay */
+   		UPDATE MSP_BOND_DTL 
+		SET 
+			  PAY_YM = SUBSTR(#{payDt}, 0, 6)
+			  , PAY_AMT = #{payAmt}
+			  , PAY_DT = #{payDt}
+		WHERE 	1 = 1
+				AND 	BOND_SEQ_NUM = #{bondSeqNum}
+				AND		CONTRACT_NUM = #{contractNum}
+				AND 	BILL_YM = #{billYm}
+   	</update>
+
+	<!-- 수납정보(MSP_BOND_MST) 업데이트 -->
+	<update id="updateMspBondMstPay" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondMstPay */
+   		UPDATE MSP_BOND_MST 
+		SET 
+			  	PAY_AMT = (SELECT NVL(SUM(PAY_AMT), 0) FROM MSP_BOND_DTL WHERE BOND_SEQ_NUM = #{bondSeqNum})
+		WHERE 	1 = 1
+				AND 	BOND_SEQ_NUM = #{bondSeqNum}
+   	</update>
+
+	<!-- 수납정보(MSP_BOND_DTL) 미납여부 일괄 업데이트 -->
+	<update id="updateMspBondDtlUnpayY" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondDtlUnpayY */
+   		UPDATE MSP_BOND_DTL A
+		SET 
+			  UNPAY_YN = 'Y'
+			  
+		WHERE 	EXISTS (SELECT 1 FROM MSP_BOND_MST B WHERE A.BOND_SEQ_NUM = B.BOND_SEQ_NUM AND B.MST_YN = 'Y' AND B.FULL_PAY_YN = 'N' )
+				AND 	BILL_YM = #{billYm}
+				AND		(BILL_AMT - NVL(PAY_AMT,0)) <![CDATA[>]]> 0
+   	</update>
+	
+	
+	<!-- 수납정보(MSP_BOND_DTL) 완납여부 일괄 업데이트 -->
+	<update id="updateMspBondDtlUnpayN" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondDtlUnpayN */
+   		UPDATE MSP_BOND_DTL A
+		SET 
+			  UNPAY_YN = 'N'
+			  
+		WHERE 	EXISTS (SELECT 1 FROM MSP_BOND_MST B WHERE A.BOND_SEQ_NUM = B.BOND_SEQ_NUM AND B.MST_YN = 'Y' AND B.FULL_PAY_YN = 'N' )
+				AND 	BILL_YM = #{billYm}
+				AND		(BILL_AMT - NVL(PAY_AMT,0)) <![CDATA[<=]]> 0
+   	</update>
+
+	<!-- 수납정보(MSP_BOND_MST) 미납여부 일괄 업데이트 -->
+	<update id="updateMspBondMstUnpayY">
+   		/** bondChkScheduleMapper.updateMspBondMstUnpayY */
+   		UPDATE MSP_BOND_MST
+		SET 
+			  UNPAY_YN = 'Y'
+			  
+		WHERE 	1 = 1
+				AND 	BOND_SEQ_NUM IN (SELECT DISTINCT BOND_SEQ_NUM FROM MSP_BOND_DTL WHERE UNPAY_YN = 'Y')
+   	</update>
+	
+	
+	<!-- 완납대상자 가져오기 -->
+	<select id="getMspBondMstFullPayList" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondMstFullPayList */
+   		SELECT 
+   				A.CONTRACT_NUM
+		FROM 
+				MSP_BOND_MST A
+				, MSP_BOND_DTL B 
+		WHERE 	1 = 1
+				AND A.INST_AMT - NVL(A.PAY_AMT,0) <![CDATA[<=]]> 0 
+				AND A.INST_YN = 'Y' 
+				AND A.MST_YN = 'Y' 
+				AND A.CHRG_ITEM_CD = 'EQIST'
+				AND A.INST_AMT > 0 
+				AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+				AND A.FULL_PAY_YN = 'N'
+				GROUP BY A.CONTRACT_NUM
+   	</select>
+
+	<!-- 수납정보(MSP_BOND_MST) 완납여부 일괄 업데이트 -->
+	<update id="updateMspBondMstFullPay">
+   		/** bondChkScheduleMapper.updateMspBondMstFullPay */
+   		UPDATE MSP_BOND_MST
+		SET 
+			  FULL_PAY_YN = 'Y'
+			  
+		WHERE 	1 = 1
+				AND	CONTRACT_NUM = #{contractNum}
+   	</update>
+
+	<!-- 개통월별채권정보 업데이트 정보 가져오기 -->
+	<select id="getMspBondStaticMstTrgt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticMstTrgt */
+   		SELECT 
+   				SUBSTR(A.OPEN_DT, 0, 6) AS OPEN_YM
+   				, NVL(SUM(B.PAY_AMT),0) AS RCV_AMT
+		FROM 
+				MSP_BOND_MST A
+				, MSP_BOND_DTL B
+		WHERE 	1 = 1
+				AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+				AND B.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+				AND A.CHRG_ITEM_CD = 'EQIST'
+				AND A.MST_YN = 'Y'
+				/*AND A.FULL_PAY_YN = 'N'  이건 좀 생각해 봐야 함*/
+				GROUP BY SUBSTR(A.OPEN_DT, 0, 6)
+				ORDER BY OPEN_YM
+   	</select>
+
+	<!-- 개통월별채권정보 업데이트 -->
+	<update id="updateMspBondStaticMst" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticMst */
+   		UPDATE 
+   				MSP_BOND_STATIC_MST
+		SET 
+			  	RCV_AMT = #{rcvAmt}
+			  
+		WHERE 	1 = 1
+				AND		OPEN_YM = #{openYm}
+   	</update>
+
+
+	<!-- 개통월회차별채권정보 업데이트 정보 가져오기 -->
+	<select id="getMspBondStaticDtlTrgt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDtlTrgt */
+   		SELECT 
+   				SUBSTR(A.OPEN_DT, 0, 6) AS OPEN_YM
+   				, B.BILL_YM
+   				, NVL(SUM(B.PAY_AMT), 0) AS RCV_AMT
+		FROM 
+				MSP_BOND_MST A
+				, MSP_BOND_DTL B
+		WHERE 	1 = 1
+				AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+				AND B.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+				AND A.CHRG_ITEM_CD = 'EQIST'
+				AND A.MST_YN = 'Y'
+				AND A.CHRG_ITEM_CD = 'EQIST'
+				GROUP BY B.BILL_YM, SUBSTR(A.OPEN_DT, 0, 6)
+				ORDER BY OPEN_YM
+   	</select>
+
+	<!-- 개통월회차별채권정보 업데이트 -->
+	<update id="updateMspBondStaticDtl" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtl */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL
+		SET 
+			  	RCV_AMT = #{rcvAmt}
+			  
+		WHERE 	1 = 1
+				AND		OPEN_YM = #{openYm}
+				AND		BILL_YM = #{billYm}
+   	</update>
+
+	<!-- 개통월조기상환자 업데이트 정보 가져오기 -->
+	<select id="getMspBondStaticErlyTrgt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticErlyTrgt */
+   		SELECT 
+				SUBSTR(A.OPEN_DT,0,6) AS OPEN_YM
+				, SUM(B.PAY_AMT) AS ERLY_RFND_AMT
+				, COUNT(DISTINCT A.CONTRACT_NUM) AS ERLY_RFND_CNT
+		FROM 
+				MSP_BOND_MST A
+				, MSP_BOND_DTL B 
+		WHERE 	1 = 1
+				AND A.INST_AMT - NVL(A.PAY_AMT,0) <![CDATA[<=]]> 0 
+				AND A.INST_YN = 'Y' 
+				AND A.MST_YN = 'Y' 
+				AND A.INST_AMT > 0 
+				AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+				AND A.FULL_PAY_YN = 'N'
+				AND A.CHRG_ITEM_CD = 'EQIST'
+				AND A.INST_MNTH_CNT > (SELECT COUNT(PAY_AMT) FROM MSP_BOND_DTL WHERE BOND_SEQ_NUM = A.BOND_SEQ_NUM)
+				GROUP BY SUBSTR(A.OPEN_DT,0,6)
+   	</select>
+
+	<!-- 개통월별 조기상환자 업데이트 -->
+	<update id="updateMspBondStaticMstErly" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticMstErly */
+   		UPDATE 
+				MSP_BOND_STATIC_MST
+		SET 
+				ERLY_RFND_CNT = (SELECT SUM(ERLY_RFND_CNT) FROM MSP_BOND_STATIC_DTL WHERE OPEN_YM = #{openYm})
+				, ERLY_RFND_AMT = (SELECT SUM(ERLY_RFND_AMT) FROM MSP_BOND_STATIC_DTL WHERE OPEN_YM = #{openYm})
+		WHERE	1 = 1
+				AND OPEN_YM = #{openYm}
+   	</update>
+
+	<!-- 개통월회차별 조기상환자 업데이트 (청구월기준으로 업데이트)-->
+	<update id="updateMspBondStaticDtlErly" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlErly */
+   		UPDATE
+				MSP_BOND_STATIC_DTL
+		SET
+				ERLY_RFND_CNT = #{erlyRfndCnt}
+				, ERLY_RFND_AMT = #{erlyRfndAmt}
+		WHERE	1 =1
+				AND OPEN_YM = #{openYm}
+				AND BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 개통월회차별 잔여할부계약 업데이트 정보 가져오기 -->
+	<select id="getMspBondStaticRmnTrgt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticRmnTrgt */
+   		SELECT 
+				SUBSTR(A.OPEN_DT,0,6) AS OPEN_YM
+    			, COUNT(1) AS RMN_CNTR_CNT
+		FROM 
+				MSP_BOND_MST A
+		WHERE 	1 = 1
+				AND A.INST_YN = 'Y' 
+				AND A.MST_YN = 'Y' 
+				AND A.CHRG_ITEM_CD = 'EQIST'
+				AND A.INST_AMT > 0 
+				AND A.FULL_PAY_YN = 'N'
+				GROUP BY SUBSTR(A.OPEN_DT,0,6)
+   	</select>
+
+	<!-- 개통월회차별 잔여할부계약수 업데이트 (청구월기준으로 업데이트)-->
+	<update id="updateBondStaticDtlRmn" parameterType="Map">
+   		/** bondChkScheduleMapper.updateBondStaticDtlRmn */
+   		UPDATE
+				MSP_BOND_STATIC_DTL
+		SET
+				RMN_CNTR_CNT = 
+					(SELECT INST_OPEN_CNT FROM MSP_BOND_STATIC_MST WHERE OPEN_YM = #{openYm}) - 
+					NVL((SELECT SUM(ERLY_RFND_CNT) FROM MSP_BOND_STATIC_DTL WHERE OPEN_YM = #{openYm} AND BILL_YM <![CDATA[<=]]> TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')),0)
+		WHERE	1 =1
+				AND OPEN_YM = #{openYm}
+				AND BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 채권판매상세내역 수납정보 업데이트 (BOND_SALE_DTL) -->
+	<update id="updateBondSaleDtlPay" parameterType="Map">
+   		/** bondChkScheduleMapper.updateBondSaleDtlPay */
+   		UPDATE MSP_BOND_SALE_DTL 
+		SET 
+			  PAY_YM = SUBSTR(#{payDt}, 0, 6)
+			  , PAY_AMT = #{payAmt}
+		WHERE 	1 = 1
+				AND		CONTRACT_NUM = #{contractNum}
+				AND 	BILL_YM = #{billYm}
+   	</update>
+
+	<!-- 채권판매계약번호 수납정보 업데이트 (BOND_SALE_CNTR) -->
+	<update id="updateBondSaleCntrPay" parameterType="Map">
+   		/** bondChkScheduleMapper.updateBondSaleCntrPay */
+   		UPDATE MSP_BOND_SALE_CNTR 
+		SET 
+			  	PAY_AMT = (SELECT NVL(SUM(PAY_AMT),0) FROM MSP_BOND_SALE_DTL WHERE CONTRACT_NUM = #{contractNum})
+		WHERE 	1 = 1
+				AND 	CONTRACT_NUM = #{contractNum}
+   	</update>
+
+	<!-- 해지자(2개월전) 정보 가져오기 -->
+	<select id="getMspBondMstTmntTrgtList" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondMstTmntTrgtList */
+   		SELECT 
+   				A.CONTRACT_NUM
+   				, SUBSTR(A.SUB_STATUS_DATE,0,8) AS TMNT_DT
+   				, SUBSTR(B.OPEN_DT,0,6) AS OPEN_YM
+		FROM 
+				MSP_JUO_SUB_INFO A
+				, MSP_BOND_MST B
+		WHERE 	1=1
+				AND A.SUB_STATUS = 'C'
+				AND A.CONTRACT_NUM = B.CONTRACT_NUM
+				AND B.MST_YN = 'Y'
+				AND B.CHRG_ITEM_CD = 'EQIST'
+				AND SUBSTR(A.SUB_STATUS_DATE,0,6) = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM') 
+   	</select>
+
+	<!-- 개통월별 해지건수 정보 가져오기 -->
+	<select id="getMspBondMstTmntList" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondMstTmntList */
+   		SELECT 
+   				COUNT(A.CONTRACT_NUM) AS CAN_CNT
+   				, SUBSTR(B.OPEN_DT,0,6) AS OPEN_YM
+		FROM 
+				MSP_JUO_SUB_INFO A
+				, MSP_BOND_MST B
+		WHERE 	1=1
+				AND A.SUB_STATUS = 'C'
+				AND A.CONTRACT_NUM = B.CONTRACT_NUM
+				AND B.MST_YN = 'Y'
+				AND B.CHRG_ITEM_CD = 'EQIST'
+				AND SUBSTR(A.SUB_STATUS_DATE,0,6) = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM') 
+				GROUP BY SUBSTR(B.OPEN_DT,0,6)
+   	</select>
+
+	<!-- 해지자 해지일 업데이트 (BOND_MST) -->
+	<update id="updateMspBondMstTmnt" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondMstTmnt */
+   		UPDATE 
+   				MSP_BOND_MST 
+		SET 
+			  	TMNT_DT = #{tmntDt}
+		WHERE 	1 = 1
+				AND 	CONTRACT_NUM = #{contractNum}
+   	</update>
+
+	<!-- 개통월회차별 해지건수 업데이트 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlTmnt" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlTmnt */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL 
+		SET 
+			  	CAN_CNT = #{canCnt}
+		WHERE 	1 = 1
+				AND 	OPEN_YM = #{openYm}
+				AND		BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 개통월별 해지건수 업데이트 (MSP_BOND_STATIC_MST) -->
+	<update id="updateMspBondStaticMstTmnt" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticMstTmnt */
+   		UPDATE 
+   				MSP_BOND_STATIC_MST 
+		SET 
+			  	CAN_CNT = (SELECT SUM(CAN_CNT) FROM MSP_BOND_STATIC_DTL WHERE OPEN_YM = #{openYm})
+		WHERE 	1 = 1
+				AND 	OPEN_YM = #{openYm}
+   	</update>
+
+	<!-- 연체가산금 대상 정보 가져오기(2달전 청구에 대해서 연체가산금 수납 확인) -->
+	<select id="getMspBondStaticDlyTrgt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDlyTrgt */
+   		SELECT 
+   				SUM(PYMN_AMNT) AS DLY_ADD_AMT
+   				, SUBSTR(B.OPEN_DT,0,6) AS OPEN_YM
+   				, A.BILL_YM
+		FROM 
+				CLS_BILL_PYMN_DATA A
+				, MSP_BOND_MST B
+		WHERE 	1=1
+				AND A.BILL_ITEM_CD = 'LTPYM' 
+				AND A.PYMN_CD = 'PYM'
+				AND A.SVC_CNTR_NO = B.SVC_CNTR_NO
+				AND B.MST_YN = 'Y'
+				AND A.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM') 
+				GROUP BY SUBSTR(B.OPEN_DT,0,6), A.BILL_YM
+   	</select>
+
+	<!-- 연체가산금 정보 업데이트 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlDly" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlDly */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL 
+		SET 
+			  	DLY_ADD_AMT = #{dlyAddAmt}
+		WHERE 	1 = 1
+				AND 	OPEN_YM = #{openYm}
+				AND BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 개통월회차별 연체건수 구해오기 -->
+	<select id="getMspBondStaticDlyCnt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDlyCnt */
+   		SELECT 
+   				SUBSTR(A.OPEN_DT,0,6) AS OPEN_YM
+   				, B.BILL_YM
+   				, COUNT(B.BOND_SEQ_NUM) AS DLY_CNT
+		FROM 
+				MSP_BOND_MST A
+				, MSP_BOND_DTL B
+		WHERE 	1=1
+				AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+				AND A.MST_YN = 'Y'
+				AND A.INST_YN = 'Y'
+				AND A.CHRG_ITEM_CD = 'EQIST'
+				AND B.UNPAY_YN = 'Y'
+				AND B.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM') 
+				GROUP BY SUBSTR(A.OPEN_DT,0,6), B.BILL_YM
+   	</select>
+
+	<!-- 개통월회차별 연체건수 업데이트  (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlDlyCnt" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlDlyCnt */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL 
+		SET 
+			  	DLY_CNT = #{dlyCnt}
+		WHERE 	1 = 1
+				AND 	OPEN_YM = #{openYm}
+				AND BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 조정금액 대상 정보 가져오기 (2달전 청구에 대해서 조정된 금액 확인) -->
+	<select id="getMspBondStaticAdjTrgt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticAdjTrgt */
+   		SELECT 
+   				COUNT(A.SVC_CNTR_NO) AS ADJ_CNT
+   				, SUM(PYMN_AMNT) AS ADJ_AMT
+   				, SUBSTR(B.OPEN_DT,0,6) AS OPEN_YM
+   				, A.BILL_YM
+		FROM 
+				CLS_BILL_PYMN_DATA A
+				, MSP_BOND_MST B
+		WHERE 	1=1
+				AND A.PYMN_CD = 'ADJ' 
+				AND A.ADJS_RSN_CD = 'BA1' 
+				AND A.BILL_ITEM_CD = 'EQIST'  
+				AND A.SVC_CNTR_NO = B.SVC_CNTR_NO
+				AND B.MST_YN = 'Y'
+				AND A.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM') 
+				GROUP BY SUBSTR(B.OPEN_DT,0,6), A.BILL_YM
+   	</select>
+
+	<!-- 조정금액, 건수 업데이트 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlAdj" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlAdj */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL 
+		SET 
+			  	ADJ_CNT = #adjCnt}
+			  	, ADJ_AMT = #{adjAmt}
+		WHERE 	1 = 1
+				AND 	OPEN_YM = #{openYm}
+				AND BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 월초/월말 건수 및 금액 업데이트 대상 가져오기 -->
+	<select id="getMspBondStaticDtlMnthTrgt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDtlMnthTrgt */
+   		SELECT 
+				A.OPEN_YM
+				, A.BILL_YM
+				, B.BOND_AMT - NVL((SELECT SUM(RCV_AMT)+SUM(DLY_PAY_AMT)+SUM(ERLY_RFND_AMT) FROM MSP_BOND_STATIC_DTL WHERE OPEN_YM = A.OPEN_YM AND A.INST_MNTH_NUM > INST_MNTH_NUM),0) AS MNTH_FST_AMT
+				, (A.RMN_CNTR_CNT + A.ERLY_RFND_CNT) AS MNTH_FST_CNT
+				, B.BOND_AMT - NVL((SELECT SUM(RCV_AMT)+SUM(DLY_PAY_AMT)+SUM(ERLY_RFND_AMT) FROM MSP_BOND_STATIC_DTL WHERE OPEN_YM = A.OPEN_YM AND A.INST_MNTH_NUM >= INST_MNTH_NUM),0) AS MNTH_LST_AMT
+		FROM
+				MSP_BOND_STATIC_DTL A
+				, MSP_BOND_STATIC_MST B
+		WHERE 1=1
+				AND A.OPEN_YM = B.OPEN_YM
+				AND A.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</select>
+
+	<!-- 월초/월말 건수 및 금액 업데이트 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlMnth" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlMnth */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL 
+		SET 
+			  	MNTH_FST_AMT = #{mnthFstAmt}
+				, MNTH_FST_CNT = #{mnthFstCnt}
+				, MNTH_LST_AMT = #{mnthLstAmt} 
+		
+		WHERE 	1 = 1     
+				AND		OPEN_YM = #{openYm}   
+				AND     BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 11개월이내 연체인 경우 연체금액 구하기 업데이트 대상 가져오기 -->
+	<select id="getMspBondStaticDtlMnthDlyTrgt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDtlMnthDlyTrgt */
+   		SELECT 
+				OPEN_YM
+				, MAX(MON1) AS DLY_MON1
+				, MAX(MON2) AS DLY_MON2
+				, MAX(MON3) AS DLY_MON3
+				, MAX(MON4) AS DLY_MON4
+				, MAX(MON5) AS DLY_MON5
+				, MAX(MON6) AS DLY_MON6
+				, MAX(MON7) AS DLY_MON7
+				, MAX(MON8) AS DLY_MON8
+				, MAX(MON9) AS DLY_MON9
+				, MAX(MON10) AS DLY_MON10
+				, MAX(MON11) AS DLY_MON11
+		FROM (
+		    SELECT
+					SUBSTR(A.OPEN_DT,0,6) AS OPEN_YM
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 1, SUM(A.INST_AMT - A.PAY_AMT)) AS MON1
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 2, SUM(A.INST_AMT - A.PAY_AMT)) AS MON2
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 3, SUM(A.INST_AMT - A.PAY_AMT)) AS MON3
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 4, SUM(A.INST_AMT - A.PAY_AMT)) AS MON4
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 5, SUM(A.INST_AMT - A.PAY_AMT)) AS MON5
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 6, SUM(A.INST_AMT - A.PAY_AMT)) AS MON6
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 7, SUM(A.INST_AMT - A.PAY_AMT)) AS MON7
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 8, SUM(A.INST_AMT - A.PAY_AMT)) AS MON8
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 9, SUM(A.INST_AMT - A.PAY_AMT)) AS MON9
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 10, SUM(A.INST_AMT - A.PAY_AMT)) AS MON10
+		            , DECODE (ROUND(months_between(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))), 11, SUM(A.INST_AMT - A.PAY_AMT)) AS MON11
+		        FROM
+		            MSP_BOND_MST A
+		            , MSP_BOND_DTL B
+		        WHERE 1=1
+		            AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+		            AND A.MST_YN = 'Y'
+		            AND A.INST_YN = 'Y'
+		            AND B.UNPAY_YN = 'Y'
+		            AND A.CHRG_ITEM_CD = 'EQIST'
+		            AND B.BILL_YM <![CDATA[<=]]> TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+		            GROUP BY SUBSTR(A.OPEN_DT,0,6), B.BILL_YM
+		)
+		GROUP BY OPEN_YM
+
+   	</select>
+
+	<!-- 11개월이내 연체인 경우 연체금액 업데이트 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlMnthDly" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlMnthDly */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL     
+		SET     
+				DLY_MON_1            =  #{dlyMon1}
+				, DLY_MON_2          =  #{dlyMon2}
+				, DLY_MON_3          =  #{dlyMon3}
+				, DLY_MON_4          =  #{dlyMon4}
+				, DLY_MON_5          =  #{dlyMon5}
+				, DLY_MON_6          =  #{dlyMon6}
+				, DLY_MON_7          =  #{dlyMon7}
+				, DLY_MON_8          =  #{dlyMon8}
+				, DLY_MON_9          =  #{dlyMon9}
+				, DLY_MON_10        =  #{dlyMon10}
+				, DLY_MON_11        =  #{dlyMon11} 
+		
+		WHERE 	1 = 1     
+				AND		OPEN_YM = #{openYm}   
+				AND     BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 12개월이상 연체인 경우 연체금액 구하기 업데이트 대상 가져오기 -->
+	<select id="getMspBondStaticDtlMnthDlyTrgt2" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDtlMnthDlyTrgt2 */
+   		SELECT 
+				SUBSTR(A.OPEN_DT,0,6) AS OEPN_YM
+		    	, SUM(B.BILL_AMT - B.PAY_AMT) AS DLY_MON12
+		FROM
+			    MSP_BOND_MST A
+			    , MSP_BOND_DTL B
+		WHERE 1=1
+			    AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+			    AND A.MST_YN = 'Y'
+			    AND A.INST_YN = 'Y'
+			    AND B.UNPAY_YN = 'Y'
+			    AND A.CHRG_ITEM_CD = 'EQIST'
+			    AND B.BILL_YM <![CDATA[<=]]> TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+			    AND ROUND(MONTHS_BETWEEN(ADD_MONTHS(SYSDATE,-2), TO_DATE(B.BILL_YM,'YYYYMM'))) > 11
+				GROUP BY SUBSTR(A.OPEN_DT,0,6)
+
+   	</select>
+
+	<!-- 12개월이상 연체인 경우 연체금액 업데이트 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlMnthDly2" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlMnthDly2 */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL     
+		SET     
+				DLY_MON_12            =  #{dlyMon12}
+		WHERE 	1 = 1     
+				AND		OPEN_YM = #{openYm}   
+				AND     BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 연체잔액 중 미청구분 (연체가 한번이라도 남아 있는 채권의 청구월 이후의 채권잔액의 합계) -->
+	<select id="getMspBondStaticDtlNotBillAmt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDtlNotBillAmt */
+   		SELECT 
+                SUBSTR(A.OPEN_DT,0,6) AS OPEN_YM
+                , SUM(BILL_AMT) AS DLY_NOT_BILL_AMT
+        FROM 
+                MSP_BOND_MST A
+                , MSP_BOND_DTL B
+        WHERE 1=1
+                AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+                AND A.MST_YN = 'Y'
+                AND A.INST_YN = 'Y'
+                AND A.UNPAY_YN = 'Y'
+                AND A.CHRG_ITEM_CD = 'EQIST'
+                AND B.BILL_YM > TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+                GROUP BY SUBSTR(A.OPEN_DT,0,6) 
+
+   	</select>
+
+	<!-- 연체금액 중 미청구금액 업데이트 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlNotBillAmt" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlNotBillAmt */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL     
+		SET     
+				DLY_NOT_BILL_AMT            =  #{dlyNotBillAmt}
+		WHERE 	1 = 1     
+				AND		OPEN_YM = #{openYm}   
+				AND     BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 정상청구 금액 구하기 -->
+	<select id="getMspBondStaticDtlNmlAmt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDtlNmlAmt */
+   		SELECT 
+				SUBSTR(B.OPEN_DT,0,6) AS OPEN_YM
+				, A.BILL_YM
+				, SUM(A.PYMN_AMNT) AS NML_BILL_AMT
+		FROM 
+				CLS_BILL_PYMN_DATA A
+				, MSP_BOND_MST B
+				, MSP_BOND_DTL C
+		WHERE 1=1
+				AND A.SVC_CNTR_NO = B.SVC_CNTR_NO
+				AND B.BOND_SEQ_NUM = C.BOND_SEQ_NUM
+				AND A.BILL_YM = C.BILL_YM
+				AND B.MST_YN = 'Y'
+				AND B.CHRG_ITEM_CD = 'EQIST'
+				AND B.INST_YN = 'Y'
+				AND A.PYMN_CD = 'INV'
+				AND A.BILL_ITEM_CD IN ( 'EQIST', 'EQISV' )
+				AND A.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+				GROUP BY SUBSTR(B.OPEN_DT,0,6), A.BILL_YM
+   	</select>
+
+	<!-- 정상청구금액 및 정상입금액(수납금액 - 조기상환금액) 업데이트 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlNmlAmt" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlNmlAmt */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL     
+		SET     
+				NML_BILL_AMT            =  #{nmlBillAmt}
+				, RCV_AMT            =  RCV_AMT - ERLY_RFND_AMT
+		WHERE 	1 = 1     
+				AND		OPEN_YM = #{openYm}
+				AND     BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 연체청구금액 구하기 (수납처리 하기 전에 구해야 함) -->
+	<select id="getMspBondStaticDtlDlyBillAmt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDtlDlyBillAmt */
+   		SELECT 
+				SUBSTR(A.OPEN_DT,0,6) AS OPEN_YM
+				, SUM(B.BILL_AMT) - NVL(SUM(B.PAY_AMT),0) AS DLY_BILL_AMT
+		FROM 
+				MSP_BOND_MST A
+				, MSP_BOND_DTL B
+		WHERE 1=1
+				AND B.UNPAY_YN = 'Y'
+				AND A.MST_YN = 'Y'
+				AND A.CHRG_ITEM_CD = 'EQIST'
+				AND A.BOND_SEQ_NUM = B.BOND_SEQ_NUM
+				GROUP BY SUBSTR(A.OPEN_DT,0,6)
+   	</select>
+
+	<!-- 연체청구금액 업데이트. 수납처리 전에 업데이트 해야 함 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlDlyBillAmt" parameterType="Map">
+   		/** bondChkScheduleMapper."updateMspBondStaticDtlDlyBillAmt" */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL     
+		SET     
+				DLY_BILL_AMT            =  #{dlyBillAmt}
+		WHERE 	1 = 1     
+				AND		OPEN_YM = #{openYm}
+				AND     BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+	<!-- 연체청구 수납금액 구하기 (수납처리 하기 전에 구해야 함) -->
+	<select id="getMspBondStaticDtlDlyPayAmt" resultType="hashMap">
+   		/** bondChkScheduleMapper.getMspBondStaticDtlDlyPayAmt */
+   		SELECT 
+				SUBSTR(B.OPEN_DT,0,6) AS OPEN_YM
+				/*, A.BILL_YM AS BILL_YM*/
+				, SUM(A.PYMN_AMNT) AS DLY_PAY_AMT
+		FROM 
+				CLS_BILL_PYMN_DATA A
+				, MSP_BOND_MST B
+				, MSP_BOND_DTL C
+		WHERE 1=1
+				AND 	B.BOND_SEQ_NUM = C.BOND_SEQ_NUM
+				AND 	A.BILL_YM = C.BILL_YM
+				AND 	A.SVC_CNTR_NO = B.SVC_CNTR_NO
+				AND 	A.BILL_ITEM_CD IN ( 'EQIST', 'EQISV' )
+				AND 	A.PYMN_CD = 'PYM'
+				AND 	B.MST_YN = 'Y'
+				AND 	C.UNPAY_YN = 'Y'
+				AND 	B.FULL_PAY_YN = 'N'
+				GROUP BY SUBSTR(B.OPEN_DT,0,6)
+   	</select>
+
+	<!-- 연체수납금액 업데이트. 수납처리 전에 업데이트 해야 함 (MSP_BOND_STATIC_DTL) -->
+	<update id="updateMspBondStaticDtlDlyPayAmt" parameterType="Map">
+   		/** bondChkScheduleMapper.updateMspBondStaticDtlDlyPayAmt */
+   		UPDATE 
+   				MSP_BOND_STATIC_DTL     
+		SET     
+				DLY_PAY_AMT            =  #{dlyPayAmt}
+		WHERE 	1 = 1     
+				AND		OPEN_YM = #{openYm}
+				AND     BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')
+   	</update>
+
+
+    
+	<!-- 수납정보처리 프로시저 호출 -->
+	<insert id="callPayCheck" statementType="CALLABLE">
+   		/** bondScheduleMapper.callPayCheck */
+   		 { CALL P_BOND_PAY_CHECK_PARAM(TO_CHAR(ADD_MONTHS(SYSDATE,-2), 'YYYYMM')) } 
+   		/*{ CALL P_BOND_PAY_CHECK_PARAM('201505') }*/
+   	</insert>
+
+
+
+</mapper>

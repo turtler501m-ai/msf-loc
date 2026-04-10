@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.bpamgmt.mapper.BpaMgmtMapper">
+
+    <select id="getDataTaskList" parameterType="com.ktis.msp.org.bpamgmt.vo.BpaMgmtReqVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        SELECT
+            mbm.BPA_ID
+            ,cgcm.CD_DSC AS TASK_NM
+            ,mbm.DESCRIPTION
+            ,mbm.EXCEL_YN
+            ,mbm.PERIOD_CD
+            ,TO_CHAR(mbm.REGST_DTTM, 'YYYY-MM-DD') AS REGST_DTTM
+            ,cgcm.USG_YN
+        FROM MSP_BPA_MST mbm
+           , CMN_GRP_CD_MST cgcm
+        WHERE mbm.BPA_ID = cgcm.CD_VAL
+        AND cgcm.GRP_ID = 'BPA0001'
+        <if test='isAdminDev != "Y"'>
+            AND cgcm.USG_YN = 'Y'
+        </if>
+        <if test='bpaId != null and bpaId != ""'>
+            AND mbm.BPA_ID = #{bpaId}
+        </if>
+        ORDER BY cgcm.USG_YN DESC, cgcm.ETC1
+    </select>
+
+    <select id="selectBpaIdCnt" parameterType="String" resultType="int">
+        SELECT COUNT(1) FROM MSP_BPA_MST WHERE BPA_ID = #{bpaId}
+    </select>
+
+    <insert id="insertDataTask" parameterType="com.ktis.msp.org.bpamgmt.vo.BpaMgmtReqVO">
+        INSERT INTO MSP_BPA_MST
+        (
+             BPA_ID
+            ,DESCRIPTION
+            ,EXCEL_YN
+            ,PERIOD_CD
+            ,REGST_DTTM
+            ,REGST_ID
+        )
+        VALUES
+        (
+             #{bpaId}
+            ,#{description}
+            ,#{excelYn}
+            ,#{periodCd}
+            ,SYSDATE
+            ,#{sessionUserId}
+        )
+    </insert>
+
+    <update id="updateDataTask" parameterType="com.ktis.msp.org.bpamgmt.vo.BpaMgmtReqVO">
+        UPDATE MSP_BPA_MST
+        SET
+             DESCRIPTION = #{description}
+            ,EXCEL_YN = #{excelYn}
+            ,PERIOD_CD = #{periodCd}
+            ,RVISN_DTTM = SYSDATE
+            ,RVISN_ID = #{sessionUserId}
+       WHERE BPA_ID = #{bpaId}
+    </update>
+
+    <select id="getDataTaskFileList" parameterType="com.ktis.msp.org.bpamgmt.vo.BpaMgmtFileReqVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        SELECT
+            BPA_ID
+            ,FILE_ID
+            ,FILE_NM
+            ,BATCH_JOB_ID
+            ,SORT_NO
+            ,USE_YN
+            ,ETC1
+            ,ETC2
+            ,ETC3
+            ,RMK
+        FROM MSP_BPA_FILE_INFO
+        WHERE BPA_ID = #{bpaId}
+        <if test='isAdminDev != "Y"'>
+            AND USE_YN = 'Y'
+        </if>
+        ORDER BY USE_YN DESC, SORT_NO
+    </select>
+
+    <insert id="insertDataTaskFile" parameterType="com.ktis.msp.org.bpamgmt.vo.BpaMgmtFileReqVO">
+        INSERT INTO MSP_BPA_FILE_INFO
+        (
+             BPA_ID
+            ,FILE_ID
+            ,FILE_NM
+            ,BATCH_JOB_ID
+            ,SORT_NO
+            ,USE_YN
+            ,ETC1
+            ,ETC2
+            ,ETC3
+            ,RMK
+            ,REGST_ID
+            ,REGST_DTTM
+        )
+        VALUES
+        (
+             #{bpaId}
+            ,MSP_BPA_FILE_INFO_SEQ.nextVal
+            ,#{fileNm}
+            ,#{batchJobId}
+            ,#{sortNo}
+            ,#{useYn}
+            ,#{etc1}
+            ,#{etc2}
+            ,#{etc3}
+            ,#{rmk}
+            ,#{sessionUserId}
+            ,SYSDATE
+        )
+    </insert>
+
+    <update id="updateDataTaskFile" parameterType="com.ktis.msp.org.bpamgmt.vo.BpaMgmtFileReqVO">
+        UPDATE MSP_BPA_FILE_INFO
+        SET
+             FILE_NM = #{fileNm}
+            ,BATCH_JOB_ID = #{batchJobId}
+            ,SORT_NO = #{sortNo}
+            ,USE_YN = #{useYn}
+            ,ETC1 = #{etc1}
+            ,ETC2 = #{etc2}
+            ,ETC3 = #{etc3}
+            ,RMK = #{rmk}
+            ,RVISN_ID = #{sessionUserId}
+            ,RVISN_DTTM = SYSDATE
+        WHERE BPA_ID = #{bpaId}
+        AND FILE_ID = #{fileId}
+    </update>
+
+    <select id="selectBpaUploadInfoCnt" parameterType="String" resultType="int">
+        SELECT COUNT(*) FROM MSP_BPA_UPLOAD_INFO WHERE BPA_ID = #{BPA_ID} AND USE_YN = 'Y'
+    </select>
+
+    <delete id="deleteBpaUploadInfo" parameterType="String">
+        DELETE FROM MSP_BPA_UPLOAD_INFO WHERE BPA_ID = #{bpaId}
+    </delete>
+
+    <select id="getDataExcelList" parameterType="com.ktis.msp.org.bpamgmt.vo.BpaMgmtUploadInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        SELECT
+            SVC_CNTR_NO
+             ,TO_CHAR(REGST_DTTM, 'YYYYMMDD') AS REGST_DTTM
+        FROM MSP_BPA_UPLOAD_INFO
+        WHERE BPA_ID = #{bpaId}
+          AND USE_YN = 'Y'
+        ORDER BY SEQ
+    </select>
+
+    <insert id="insertBpaUploadInfo" parameterType="com.ktis.msp.org.bpamgmt.vo.BpaMgmtUploadInfoVO">
+        INSERT INTO MSP_BPA_UPLOAD_INFO
+        (
+          BPA_ID
+        ,SEQ
+        ,UPLOAD_FILE_NM
+        ,CONTRACT_NUM
+        ,SVC_CNTR_NO
+        ,USE_YN
+        ,REGST_ID
+        ,REGST_DTTM
+        )
+        SELECT
+            #{bpaId}
+             ,#{seq}
+             ,#{uploadFileNm}
+             ,(SELECT CONTRACT_NUM FROM MSP_JUO_SUB_INFO WHERE SVC_CNTR_NO = #{svcCntrNo})
+             ,#{svcCntrNo}
+             ,'Y'
+             ,#{regstId}
+             ,SYSDATE
+        FROM DUAL
+        WHERE NOT EXISTS ( SELECT 1 FROM MSP_BPA_UPLOAD_INFO
+                           WHERE BPA_ID  = #{bpaId}
+                             AND SVC_CNTR_NO = #{svcCntrNo}
+        )
+    </insert>
+
+    <update id="updateDataExcelListUseYn" parameterType="com.ktis.msp.org.bpamgmt.vo.BpaMgmtUploadInfoVO">
+        UPDATE MSP_BPA_UPLOAD_INFO
+        SET USE_YN = 'N'
+            ,RVISN_ID = #{sessionUserId}
+            ,RVISN_DTTM = SYSDATE
+        WHERE BPA_ID = #{bpaId}
+    </update>
+
+    <select id="selectContractNum" parameterType="String" resultType="String">
+        SELECT CONTRACT_NUM FROM MSP_JUO_SUB_INFO WHERE SVC_CNTR_NO = #{svcCntrNo}
+    </select>
+
+</mapper>

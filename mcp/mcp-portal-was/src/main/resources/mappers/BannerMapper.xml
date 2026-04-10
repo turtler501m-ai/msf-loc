@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="BannerMapper">
+
+    <select id="getBannerAllList" resultType="com.ktmmobile.mcp.common.dto.BannerDto">
+    <![CDATA[
+        SELECT /* BannerMapper.getBannerAllList */
+              A.BANN_SEQ
+            , A.BANN_CTG
+            , A.BANN_TYPE
+            , A.BANN_NM
+            , A.BANN_DESC
+            , A.BANN_IMG
+            , A.IMG_DESC
+            , A.LINK_TARGET
+            , A.LINK_URL_ADR
+            , A.STAT_VAL
+            , A.SNTY_PROD_SEQ
+            , A.BANN_APD_DESC
+            , A.MOBILE_BANN_IMG_NM
+            , A.MOBILE_LINK_URL
+            , A.SBSCRB_TYPE_CD
+            , A.AGRM_TYPE_CD
+            , A.CHRG_PLAN_CD
+            , A.BG_COLOR
+            , DECODE(A.INDC_ODRG, 0, 9999, A.INDC_ODRG) AS INDC_ODRG
+            , A.INDC_ODRG AS indcOdrg
+            , TO_CHAR(A.CRET_DT, 'YYYY.MM.DD') AS CRET_DT
+            , A.EVENT_TYPE
+            , A.EVENT_START_DT
+            , A.EVENT_END_DT
+            , A.PSTNG_START_DATE
+            , A.PSTNG_END_DATE
+            , A.TEXT_COLOR1
+            , A.TEXT_COLOR2
+            , A.BANN_IMG_SEC
+            , A.IMG_DESC_SEC
+            , A.BG_COLOR_SEC
+            , A.MOBILE_BANN_IMG_NM_SEC
+            , A.PSTNG_START_DATE_SEC
+            , A.PSTNG_END_DATE_SEC
+        FROM NMCP_BANN_BAS A
+        WHERE 1=1
+        AND A.STAT_VAL = 'Y'
+        ORDER BY A.BANN_CTG, TO_NUMBER(DECODE(A.INDC_ODRG, 0, 9999, A.INDC_ODRG)), A.BANN_SEQ
+    ]]>
+    </select>
+
+    <select id="getBannerApdList" resultType="com.ktmmobile.mcp.common.dto.BannerDto">
+    <![CDATA[
+        SELECT /* BannerMapper.getBannerApdList */
+             B.BANN_SEQ
+            , B.BANN_DTL_SEQ
+            , B.IMG_NM
+            , B.LINK_NM
+            , B.SORT_ODRG
+            , B.PSTNG_START_DATE
+            , B.PSTNG_END_DATE
+        FROM NMCP_BANN_BAS A, NMCP_BANN_BAS_APD B
+        WHERE 1=1
+        AND A.BANN_SEQ = B.BANN_SEQ
+        AND A.STAT_VAL = 'Y'
+        AND B.USE_YN = 'Y'
+        ORDER BY A.BANN_CTG, A.INDC_ODRG, A.BANN_SEQ, B.SORT_ODRG
+    ]]>
+    </select>
+
+    <insert id="insertBannAccessTxn" parameterType="com.ktmmobile.mcp.common.dto.db.BannAccessTxnDto">
+        <selectKey keyProperty="bannAccessSeqLong" resultType="long" order="BEFORE">
+                SELECT SQ_BANN_ACCESS_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_BANN_ACCESS_TXN(
+            BANN_ACCESS_SEQ
+            ,BANN_SEQ
+            ,ACCESS_DATE
+            ,ACCESS_TIME
+            ,PLATFORM_CD
+            ,BANN_CTG
+            ,MENU_SEQ
+            ,URL_SEQ
+            ,REQ_TRT_CD
+            ,USER_ID
+            ,ACCESS_IP
+        ) VALUES (
+            #{bannAccessSeqLong},
+            #{bannSeq},
+            to_char(SYSDATE,'yyyymmdd'),
+            to_char(SYSDATE,'hh24miss'),
+            #{platformCd},
+            #{bannCtg},
+            #{menuSeq},
+            #{urlSeq},
+            #{reqTrtCd},
+            #{userId},
+            #{accessIp}
+        )
+    </insert>
+
+    <select id="getBannerTextList" resultType="com.ktmmobile.mcp.common.dto.BannerTextDto">
+        /* BannerMapper.getBannerTextList */
+        SELECT A.BANN_TXT_SEQ
+             , B.TXT_DTL_SEQ
+             , A.BANN_TXT_TYPE
+             , A.BG_COLOR
+             , A.USE_YN             AS BANN_USE_YN
+             , A.PSTNG_START_DATE   AS BANN_PSTNG_START_DATE
+             , A.PSTNG_END_DATE     AS BANN_PSTNG_END_DATE
+             , B.TXT_CONTENT
+             , B.INDC_ODRG
+             , B.USE_YN             AS TXT_USE_YN
+             , B.PSTNG_START_DATE   AS TXT_PSTNG_START_DATE
+             , B.PSTNG_END_DATE     AS TXT_PSTNG_END_DATE
+        FROM NMCP_BANN_TXT_BAS A
+           , NMCP_BANN_TXT_DTL B
+        WHERE A.BANN_TXT_SEQ = B.BANN_TXT_SEQ
+          AND A.USE_YN = 'Y'
+          AND B.USE_YN = 'Y'
+          AND B.DELETE_YN = 'N'
+        ORDER BY A.BANN_TXT_TYPE, B.INDC_ODRG
+    </select>
+
+    <select id="getBannerFloatList" resultType="com.ktmmobile.mcp.common.dto.BannerFloatDto">
+        /* BannerMapper.getBannerFloatList */
+        SELECT
+            A.BANN_FLOAT_SEQ,
+            B.NTCART_SEQ,
+            A.BANN_FLOAT_NM,
+            A.PSTNG_START_DATE,
+            A.PSTNG_END_DATE,
+            A.BANN_FLOAT_PC_IMG,
+            A.BANN_FLOAT_MO_IMG,
+            A.BANN_FLOAT_PC_URL,
+            A.BANN_FLOAT_MO_URL,
+            A.BANN_FLOAT_IMG_ALT,
+            A.BANN_FLOAT_URL_TYPE
+        FROM
+            MCP_BANN_FLOAT A,
+            MCP_BANN_FLOAT_REL B
+        WHERE 1=1
+            AND A.BANN_FLOAT_SEQ = B.BANN_FLOAT_SEQ
+            AND A.USE_YN = 'Y'
+    </select>
+
+</mapper>

@@ -1,0 +1,33 @@
+config:
+  credentials_id: MSC-BATCH-DEV
+#  retry_with_prompt: true
+#  retry_and_return: true
+#  retry_count: 3
+
+remote_groups:
+  r_group_1:
+    - name: jboss
+      host: MSC-BATCH-DEV
+
+command_groups:
+  c_group_1:
+    - puts:
+        - from: '/data/release/dev/msc-batch/msc-batch.war'
+          into: '/home/jboss/domains/msc-batch/deployments/'
+          override: true
+        - from: '/data/release/dev/msc-batch/ctrl.sh'
+          into: '/home/jboss/domains/msc-batch/'
+          override: true
+    - commands:
+        - 'chmod 755 /home/jboss/domains/msc-batch/deployments/msc-batch.war'
+        - 'ls -lrt /home/jboss/domains/msc-batch/deployments/msc-batch.war'
+        - 'chmod 755 /home/jboss/domains/msc-batch/ctrl.sh'
+        - 'ls -lrt /home/jboss/domains/msc-batch/ctrl.sh'
+        - 'cd /home/jboss/domains/msc-batch; sh ctrl.sh restart'
+
+steps:
+  deploy:
+    - remote_groups:
+        - r_group_1
+      command_groups:
+        - c_group_1

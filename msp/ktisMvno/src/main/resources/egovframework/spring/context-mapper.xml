@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- SqlSession setup for MyBatis Database Layer -->
+<!-- 	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionFactoryBean"> -->
+<!-- 		<property name="dataSource" ref="dataSource" /> -->
+<!-- 		<property name="configLocation" value="classpath:/egovframework/sqlmap/example/sql-mapper-config.xml" /> -->
+<!-- 		<property name="mapperLocations" value="classpath:/egovframework/sqlmap/example/mappers/*.xml" /> -->
+<!-- 	</bean> -->
+
+	<!-- MapperConfigurer setup for MyBatis Database Layer with @Mapper("deptMapper") in DeptMapper Interface -->
+ 	<!-- <bean class="egovframework.rte.psl.dataaccess.mapper.MapperConfigurer">
+		<property name="basePackage" value="egovframework.example.sample.service.impl" />
+		<property name="basePackage" value="com.ktis.org.orgmgmt.mapper.SampleMapper" />
+	</bean>
+
+		<property name="basePackage" value="com.ktis.cls.stdrmgmt.mapper.StdrMgmtMapper" /> -->
+
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+	  	<property name="dataSource" ref="dataSource"/>
+	  	<property name="configLocation" value="classpath:/egovframework/sqlmap/sql-mapper-config.xml" />
+		<property name="mapperLocations" value="classpath*:egovframework/sqlmap/**/*/*_SQL.xml"/>
+	</bean>
+	
+	<bean id="ktisMapper" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.ktis.msp.*.*.mapper" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	</bean>
+	
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate"> 
+		<constructor-arg ref="sqlSessionFactory"/> 
+	</bean> 
+	<!-- 
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="configLocation" value="classpath:/egovframework/sqlmap/sql-mapper-config.xml" />
+	</bean>
+	 -->
+
+
+</beans>

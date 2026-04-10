@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.bnd.bondmgmt.mapper.BondMgmtMapper">
+	<!-- 채권판매정보 판매회차 가져오기 -->
+	<select id="selectBondSaleInfoNum" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* BondMgmtMapper.selectBondSaleInfoNum */
+	            SALE_NO AS TEXT
+	            , BOND_SEQ_NO AS VALUE
+		FROM
+				MSP_BOND_SALE_MST
+		WHERE 	
+				1 = 1
+				<if test='pSearchGbn == "A" '>
+					AND SALE_STAT_CD = 'A'
+				</if>
+				ORDER BY BOND_SEQ_NO
+	</select>
+	
+	<!-- 수납월/기준월 정보 가져오기 -->
+	<select id="selectBillYm" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* BondMgmtMapper.selectBillYm */
+		
+				A.BILL_YM AS TEXT
+	            , A.BILL_YM AS VALUE
+		FROM
+				MSP_BOND_SALE_STTC A
+		WHERE 1=1
+				AND A.BOND_SEQ_NO = #{bondSeqNo}
+				ORDER BY A.BILL_YM ASC
+	</select>
+</mapper>

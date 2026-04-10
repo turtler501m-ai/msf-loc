@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.m2m.usimordaddrgmt.mapper.UsimOrdAddrMapper">
+
+
+
+	<!-- M2M USIM 발주사 배송지 관리 -->
+	<select id="usimOrdAddrList" parameterType="com.ktis.msp.m2m.usimordaddrgmt.vo.UsimOrdAddrVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* UsimOrdAddrMapper.usimOrdAddrList */
+		SELECT
+			    SEQ
+			  , ORGN_ID
+			  , F_GET_AGENT_NM(A.ORGN_ID) AS ORGN_NM
+			  , AREA_NM
+			  , MNG_NM
+			  , MNG_NM AS MASK_MNG_NM
+			  , TEL_FN1
+			  , TEL_MN1
+			  , TEL_RN1
+			  , TEL_FN2
+			  , TEL_MN2
+			  , TEL_RN2
+			  , DECODE(TEL_FN1, NULL, '', TEL_FN1 || '-' || TEL_MN1 || '-' || TEL_RN1) MNG_PHN
+			  , DECODE(TEL_FN2, NULL, '', TEL_FN2 || '-' || TEL_MN2 || '-' || TEL_RN2) MNG_MBLPHN
+			  , USE_YN
+			  , POST
+			  , ADDR
+			  , ADDR_BJD
+			  , ADDR_DTL
+			  , ADDR_DTL AS MASK_ADDR_DTL
+			  , FN_GET_USRNM(RVISN_ID) AS USR_NM
+			  
+		FROM
+			    MSP_M2M_ADDR A
+		WHERE 1=1
+		 <if test="orgnId != null and orgnId != ''">
+		   AND  A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 </if>
+		   AND  NVL(A.DEL_YN,'N') = 'N'
+		
+		 
+		 ORDER  BY
+				ORGN_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+
+	<insert id="usimOrdAddrInsert" parameterType="com.ktis.msp.m2m.usimordaddrgmt.vo.UsimOrdAddrVO">
+		/* UsimOrdAddrMapper.usimOrdAddrInsert */
+		INSERT INTO MSP_M2M_ADDR
+		(
+		    SEQ
+		    , ORGN_ID
+		    , AREA_NM
+		    , MNG_NM
+			, TEL_FN1
+			, TEL_MN1
+			, TEL_RN1
+			, TEL_FN2
+			, TEL_MN2
+			, TEL_RN2
+		    , USE_YN
+		    , POST
+		    , ADDR
+		    , ADDR_BJD
+		    , ADDR_DTL
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		    , DEL_YN
+		)
+		VALUES
+		(
+			SQ_MSP_M2M_ADDR_01.NEXTVAL
+		  , #{orgnId, jdbcType=VARCHAR}
+		  , #{areaNm, jdbcType=VARCHAR}
+		  , #{mngNm, jdbcType=VARCHAR}
+		  
+		  , #{telFn1, jdbcType=VARCHAR}
+		  , #{telMn1, jdbcType=VARCHAR}
+		  , #{telRn1, jdbcType=VARCHAR}
+		  , #{telFn2, jdbcType=VARCHAR}
+		  , #{telMn2, jdbcType=VARCHAR}
+		  , #{telRn2, jdbcType=VARCHAR}
+		  
+		  , #{useYn, jdbcType=VARCHAR}
+
+		  , #{post, jdbcType=VARCHAR}
+		  , #{addr, jdbcType=VARCHAR}
+		  , #{addrBjd, jdbcType=VARCHAR}
+		  , #{addrDtl, jdbcType=VARCHAR}
+		  
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , 'N'
+		  
+		)
+	</insert>
+	
+	<update id="usimOrdAddrUpdate" parameterType="com.ktis.msp.m2m.usimordaddrgmt.vo.UsimOrdAddrVO">
+		/* UsimOrdAddrMapper.usimOrdAddrUpdate */
+		UPDATE  MSP_M2M_ADDR
+		   SET  ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		      , AREA_NM = #{areaNm, jdbcType=VARCHAR}
+		      , MNG_NM = #{mngNm, jdbcType=VARCHAR}
+			  
+			  , TEL_FN1 = #{telFn1, jdbcType=VARCHAR}
+			  , TEL_MN1 = #{telMn1, jdbcType=VARCHAR}
+			  , TEL_RN1 = #{telRn1, jdbcType=VARCHAR}
+			  , TEL_FN2 = #{telFn2, jdbcType=VARCHAR}
+			  , TEL_MN2 = #{telMn2, jdbcType=VARCHAR}
+			  , TEL_RN2 = #{telRn2, jdbcType=VARCHAR}
+			  
+		      , USE_YN = #{useYn, jdbcType=VARCHAR}
+		      , POST = #{post, jdbcType=VARCHAR}
+		      , ADDR = #{addr, jdbcType=VARCHAR}
+		      , ADDR_BJD = #{addrBjd, jdbcType=VARCHAR}
+		      , ADDR_DTL = #{addrDtl, jdbcType=VARCHAR}
+		      
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+		 WHERE  SEQ = #{seq, jdbcType=VARCHAR}
+	</update>	
+			
+	<select id="usimOrdAddrListEx" parameterType="com.ktis.msp.m2m.usimordaddrgmt.vo.UsimOrdAddrVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimOrdAddrMapper.usimOrdAddrListEx */
+		SELECT
+			    SEQ
+			  , ORGN_ID
+			  , F_GET_AGENT_NM(A.ORGN_ID) AS ORGN_NM
+			  , AREA_NM
+			  , MNG_NM
+			  , MNG_NM AS MASK_MNG_NM
+			  , DECODE(TEL_FN1, NULL, '', TEL_FN1 || '-' || TEL_MN1 || '-' || TEL_RN1) MNG_PHN
+			  , DECODE(TEL_FN2, NULL, '', TEL_FN2 || '-' || TEL_MN2 || '-' || TEL_RN2) MNG_MBLPHN
+			  , USE_YN
+			  , POST
+			  , ADDR
+			  , ADDR_BJD
+			  , ADDR_DTL
+			  , ADDR_DTL AS MASK_ADDR_DTL
+			  , FN_GET_USRNM(RVISN_ID) AS USR_NM
+		FROM
+			    MSP_M2M_ADDR A
+		WHERE 1=1
+		 <if test="orgnId != null and orgnId != ''">
+		   AND  A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 </if>
+	    AND  NVL(A.DEL_YN,'N') = 'N'
+		
+		 
+		 ORDER  BY
+				ORGN_ID
+	</select>
+
+	<select id="getOrgIdComboListOLD" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimOrdAddrMapper.getOrgIdComboList */
+        SELECT  DISTINCT 
+                ORG_ID AS VALUE
+              , ORG_NM AS TEXT
+        FROM MDS_AGNT_INFO BB
+        WHERE BB.CONT_MCTG_CRCLT_CH_CD = 'E0200' /* 계약채널(중) - 특수*/
+        AND   BB.CONT_CRCLT_CH_CD = 'E0211' /* 계약채널(소) - 특판(B2B)*/
+		ORDER BY 1
+	</select>
+
+	<select id="getOrgIdComboList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimOrdAddrMapper.getOrgIdComboList */
+        SELECT DISTINCT
+            B.ORGN_ID AS VALUE
+          , C.ORGN_NM AS TEXT
+        FROM
+            CMN_USG_GRP_ASGN_MST  a
+          , CMN_USR_MST           b
+          , ORG_ORGN_INFO_MST     C
+        WHERE   a.USR_ID = b.USR_ID (+)
+            AND B.ORGN_ID = C.ORGN_ID (+)
+            AND B.USG_YN <![CDATA[<>]]> 'N'
+            AND a.GRP_ID = 'G-PSCM2M'
+        ORDER BY
+            C.ORGN_NM
+	</select>
+			
+	<update id="usimOrdAddrDelete" parameterType="com.ktis.msp.m2m.usimordaddrgmt.vo.UsimOrdAddrVO">
+		/* UsimOrdAddrMapper.usimOrdAddrDelete */
+		UPDATE  MSP_M2M_ADDR
+		   SET  DEL_YN = 'Y'
+		      
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+		 WHERE  SEQ = #{seq, jdbcType=VARCHAR}
+	</update>	
+							
+</mapper>

@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.login.mapper.LoginMapper">
+
+	<!-- 로그인 시도시 쿼리 -->
+	<select id="selectLogin_20150310" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.login.selectLogin =========*/
+	      SELECT   '' || COUNT(1) AS  ID_CNT
+	              ,'' || SUM(DECODE(PASS, #{pass, jdbcType=VARCHAR}  , 1, 0)) PASS_CNT
+	              ,MAX(A.USR_NM)              USR_NM
+	              ,MAX(A.USR_ID)              USR_ID
+	              ,MAX(USG_END_DT)            USG_END_DT
+	              ,MAX(MSK_AUTH_YN)           MSK_AUTH_YN
+	              ,MAX(A.ORGN_ID)             ORGN_ID
+	              ,MAX(B.ORGN_NM)             ORGN_NM
+	              ,MAX(B.TYPE_CD)             TYPE_CD
+	              ,MAX(B.ORGN_LVL_CD)         ORGN_LVL_CD
+	              ,MAX(B.LOGIS_CNTER_YN)      LOGIS_CNTER_YN
+	              ,MAX('' || A.MNGR_RULE)     MNGR_RULE
+	              ,MAX(B.TYPE_DTL_CD1)        TYPE_DTL_CD1
+	       FROM CMN_USR_MST A,
+	              ORG_ORGN_INFO_MST B
+	       WHERE A.USR_ID  =  UPPER(#{usrId, jdbcType=VARCHAR})
+	         AND A.ORGN_ID = B.ORGN_ID(+)
+	         AND A.USG_YN = 'Y'
+	         <![CDATA[
+	           AND ( A.USG_STRT_DT IS NULL OR TO_CHAR(SYSDATE,'YYYYMMDD') >= A.USG_STRT_DT)
+	           AND ( A.USG_END_DT  IS NULL OR TO_CHAR(SYSDATE,'YYYYMMDD') <= A.USG_END_DT)
+	         ]]>
+	       and 1 =1
+	</select>
+
+	<select id="selectLogin" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	  /* loginMapper.selectLogin */
+	  SELECT
+	    '' || COUNT(1)                        ID_CNT
+	    , '' || SUM(DECODE(PASS, #{pass, jdbcType=VARCHAR}, 1, 0)) PASS_CNT
+	    , '' || SUM(DECODE(NVL(OTP,0), #{otp, jdbcType=VARCHAR}, 1, 0)) OTP_CNT
+	    , '' || SUM(DECODE(A.USG_YN, 'S', 1, 0)) AS STOP_CNT
+	    , MAX(A.USR_NM)                       USR_NM
+	    , MAX(A.USR_ID)                       USR_ID
+	    , MAX(USG_END_DT)                     USG_END_DT
+	    , MAX(MSK_AUTH_YN)                    MSK_AUTH_YN
+	    , MAX(A.ORGN_ID)                      ORGN_ID
+	    , MAX(B.ORGN_NM)                      ORGN_NM
+	    , MAX(B.TYPE_CD)                      TYPE_CD
+	    , MAX(B.ORGN_LVL_CD)                  ORGN_LVL_CD
+	    , MAX(B.LOGIS_CNTER_YN)               LOGIS_CNTER_YN
+	    , MAX('' || A.MNGR_RULE)              MNGR_RULE
+	    , MAX(B.TYPE_DTL_CD1)                 TYPE_DTL_CD1
+	    , DECODE(MAX(C.CD_DSC), NULL, 'N', 'Y')   ORG_CHG_YN
+	    , MAX((SELECT CGCM.USG_YN FROM CMN_GRP_CD_MST CGCM WHERE GRP_ID = 'DEV0000' AND CD_VAL = 'OTP')) AS USE_OTP
+	    <![CDATA[
+	    , MAX(
+	          CASE
+	              WHEN TO_DATE(PASS_LAST_RVISN_DT, 'YYYYMMDDHH24MISS') + 90 < SYSDATE THEN 'Y'
+	              ELSE 'N'
+	          END
+	      ) AS PASS_CHG_YN
+	    , MAX(
+	          CASE
+	              WHEN NVL(A.PASS_ATMT_NUM,0) > 2 THEN 'Y'
+	              ELSE 'N'
+	          END
+	      ) AS OTP_INIT_YN
+	    , MAX((SELECT USG_YN FROM CMN_GRP_CD_MST WHERE GRP_ID = 'DEV0000' AND CD_VAL = 'OTP1TYM')) AS OTP_ONETYM
+        , MAX(
+	          CASE
+	              WHEN NVL(LAST_LOGIN_DT, SYSDATE-1) > TRUNC(SYSDATE) THEN 'Y'
+	              ELSE 'N'
+	          END
+	      ) AS TODAY_LOGIN_YN
+	    , MAX(NVL((SELECT USG_YN FROM CMN_GRP_CD_MST WHERE GRP_ID = 'DEV0002' AND CD_VAL = UPPER(#{usrId, jdbcType=VARCHAR})),'N')) AS OTP_AUTH_YN 
+	    ]]>
+	    , MAX((
+	          SELECT DECODE(COUNT(*), 0, 'N', 1, 'Y')
+	            FROM CMN_USG_GRP_ASGN_MST CUGAM
+	           WHERE CUGAM.GRP_ID = 'admin'
+	             AND CUGAM.USR_ID = A.USR_ID
+	      )) AS ADMIN_YN 
+	    , MAX(PASS_INIT) AS FIRST_YN
+	    , CRYPTO_AES256.ENC_AES(MAX(A.USR_ID)) AS ENC_USER_ID
+	    , MAX(DECODE(A.STATUS_REQ , NULL , 'N' , A.STATUS_REQ ))  STATUS_REQ
+		, MAX(NVL((SELECT USG_YN FROM CMN_GRP_CD_MST WHERE GRP_ID = 'DEV0000' AND CD_VAL = 'UNIQUE'), 'N')) AS UNIQUE_YN
+	  FROM
+	    CMN_USR_MST A
+	    , ORG_ORGN_INFO_MST B
+	    , CMN_GRP_CD_MST C
+	  WHERE
+	    A.USR_ID      =  UPPER(#{usrId, jdbcType=VARCHAR})
+	    AND A.ORGN_ID = B.ORGN_ID(+)
+	    AND A.USG_YN  IN ('Y', 'S')
+	    AND A.ORGN_ID = C.CD_VAL(+)
+	    AND C.GRP_ID(+)   = 'CMN0041'
+	    AND C.USG_YN(+)   = 'Y'
+	  <![CDATA[
+	    AND A.ATTC_SCTN_CD <> '30'
+	    AND ( A.USG_STRT_DT IS NULL OR TO_CHAR(SYSDATE,'YYYYMMDD') >= A.USG_STRT_DT)
+	    AND ( A.USG_END_DT  IS NULL OR TO_CHAR(SYSDATE,'YYYYMMDD') <= A.USG_END_DT)
+	  ]]>
+	</select>
+
+	<insert  id="insertLog"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.login.insertLog =========*/
+	
+	  INSERT INTO CMN_USR_CNNCT_LOG_HST
+	  (
+	     LOG_DTTM,
+	     IP_INFO,
+	     MAC_ADDR,
+	     SUCC_YN,
+	     REGST_PRGM,
+	     REGSTST_ID,
+	     REGST_DTTM  ,
+	     USR_ID
+	  )
+	  VALUES
+	  (
+	      sysdate
+	     ,#{ipInfo     , jdbcType=VARCHAR}
+	     ,#{macAddr    , jdbcType=VARCHAR}
+	     ,#{succYn     , jdbcType=VARCHAR}
+	     ,#{regstPrgm  , jdbcType=VARCHAR}
+	     ,substrb(#{usrId},1,10)
+	     ,sysdate
+	     ,substrb(#{usrId},1,10)
+	  )
+	</insert>
+
+	<update id="updateUserLastLoginDt"  parameterType="java.util.HashMap"  >
+		/* ====== cmn.login.updateUserLastLoginDt =========*/
+		UPDATE	CMN_USR_MST
+	  	SET		LAST_LOGIN_DT = SYSDATE
+	  	WHERE	USR_ID  = #{usrId, jdbcType=VARCHAR}
+	</update>
+
+	<update id="updateUserPassErrNum"  parameterType="java.util.HashMap"  >
+		/* ====== cmn.login.updateUserPassErrNum =========*/
+		UPDATE	CMN_USR_MST
+		SET 	PASS_ERR_NUM = decode( #{loginResult, jdbcType=VARCHAR} , 'SUCCESS',0, 'WRONG_PASSWORD', nvl(PASS_ERR_NUM,0) + 1 , PASS_ERR_NUM  )
+		WHERE	USR_ID  = #{usrId, jdbcType=VARCHAR}
+	</update>
+   
+  	<update id="updateUserOtpErrNum"  parameterType="java.util.HashMap"  >
+		/* ====== cmn.login.updateUserPassErrNum =========*/
+		UPDATE  CMN_USR_MST
+		SET     PASS_ATMT_NUM = decode( #{loginResult, jdbcType=VARCHAR} , 'SUCCESS', 0, 'WRONG_OTP', NVL(PASS_ATMT_NUM,0) + 1 , PASS_ATMT_NUM  )
+		WHERE   USR_ID = #{usrId, jdbcType=VARCHAR}
+	</update>
+
+	<!-- 사용자MAC주소 체크 -->
+	<select id="getUsrMacAddr" parameterType="map" resultType="hashMap">
+	  	/* lognMapper.getUsrMacAddr */
+	  	SELECT  A.USR_ID
+	     		, A.APPL_END_DTTM
+	         	, A.APPL_STRT_DTTM
+	         	, A.MAC_ADDR
+	 	FROM    CMN_USR_MAC_ADDR A
+	 	WHERE   A.USR_ID        = #{usrId}
+	 	AND     A.APPL_END_DTTM = '99991231235959'
+	 	AND     A.MAC_ADDR      = #{MAC_ADDR}
+   </select>
+
+   <select id="selectLoginChk" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    /* loginMapper.selectLoginChk */
+    SELECT
+              DECODE(PASS, #{pass, jdbcType=VARCHAR}  , 'Y', 'N') PASS_YN
+            , DECODE(USG_YN, 'S', 'Y', 'N') AS STOP_YN
+            , MBLPHN_NUM
+            , ATTC_SCTN_CD
+            <![CDATA[
+            , CASE
+                WHEN ATTC_SCTN_CD > 10 THEN (
+                    CASE WHEN TO_CHAR(SYSDATE, 'HH24MI') BETWEEN ETC1 AND ETC2 THEN 'Y' ELSE 'N' END) 
+                ELSE 'Y'
+              END AS OPEN_YN
+            , (SELECT USG_YN FROM CMN_GRP_CD_MST WHERE GRP_ID = 'DEV0000' AND CD_VAL = 'OTP1TYM') AS OTP_ONETYM
+            , NVL((SELECT USG_YN FROM CMN_GRP_CD_MST WHERE GRP_ID = 'DEV0002' AND CD_VAL = #{usrId, jdbcType=VARCHAR}),'N') AS OTP_AUTH_YN
+	        , (
+		          CASE
+		              WHEN NVL(LAST_LOGIN_DT, SYSDATE-1) > TRUNC(SYSDATE) THEN 'Y'
+		              ELSE 'N'
+		          END
+		      ) AS TODAY_LOGIN_YN
+            ]]>
+            , TO_CHAR(TO_DATE(ETC1, 'HH24MI'), 'HH24:MI') AS OPEN_START
+            , TO_CHAR(TO_DATE(ETC2, 'HH24MI'), 'HH24:MI') AS OPEN_END
+            , DECODE(STATUS_REQ , NULL , 'N' , STATUS_REQ )  STATUS_REQ
+            , PASS_ERR_NUM
+            , OTP_CHK_NUM
+      FROM
+              CMN_USR_MST
+            , (SELECT ETC1,
+                      ETC2
+                 FROM CMN_GRP_CD_MST
+                WHERE GRP_ID = 'DEV0000'
+                  AND CD_VAL = 'OPEN')
+     WHERE
+            USR_ID = UPPER(#{usrId, jdbcType=VARCHAR})
+       AND  USG_YN  IN ('Y', 'S')
+    <![CDATA[
+       AND  (USG_STRT_DT IS NULL OR TO_CHAR(SYSDATE,'YYYYMMDD') >= USG_STRT_DT)
+       AND  (USG_END_DT IS NULL OR TO_CHAR(SYSDATE,'YYYYMMDD') <= USG_END_DT)
+    ]]>
+  </select>
+  
+  <select id="selectMacLoginChk" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    /* loginMapper.selectMacLoginChk */
+    SELECT 'Y' PASS_YN,
+           CASE
+             WHEN ATTC_SCTN_CD BETWEEN ETC1 AND ETC2 THEN 'Y'
+             ELSE 'N'
+           END TARGET_YN
+    FROM   CMN_USR_MST,
+           (SELECT ETC1,
+                   ETC2
+            FROM   CMN_GRP_CD_MST
+            WHERE  GRP_ID = 'DEV0000'
+            AND    CD_VAL = 'MAC')
+    WHERE  1 = 1
+    AND    USG_YN IN ('Y','S')
+    AND    ROWNUM = 1
+  </select>
+  
+  <select id="selectMacLoginChk_BACKUP" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    /* loginMapper.selectMacLoginChk */
+    SELECT DECODE(PASS, #{pass, jdbcType=VARCHAR}, 'Y', 'N') PASS_YN,
+           CASE
+             WHEN ATTC_SCTN_CD BETWEEN ETC1 AND ETC2 THEN 'Y'
+             ELSE 'N'
+           END TARGET_YN
+    FROM   CMN_USR_MST,
+           (SELECT ETC1,
+                   ETC2
+            FROM   CMN_GRP_CD_MST
+            WHERE  GRP_ID = 'DEV0000'
+            AND    CD_VAL = 'MAC')
+    WHERE  USR_ID = UPPER(#{usrId, jdbcType=VARCHAR})
+    AND    USG_YN IN ('Y','S')
+  </select>
+
+  <select id="selectAuthUseYN" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    /* loginMapper.selectAuthUseYN */
+    SELECT
+      USG_YN
+    FROM
+      CMN_GRP_CD_MST
+    WHERE
+      GRP_ID      = #{grpId}
+      AND CD_VAL  = #{cdVal}
+  </select>
+  
+  <select id="selectMacChkInfo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    /* loginMapper.selectMacChkInfo */
+    SELECT
+      CD_VAL,
+      CD_DSC
+    FROM
+      CMN_GRP_CD_MST
+    WHERE
+      GRP_ID      = 'DEV0001'
+  </select>
+
+    <update id="updateOtp"  parameterType="java.util.HashMap">
+        /* ====== cmn.login.updateOtp =========*/
+        UPDATE CMN_USR_MST
+           SET OTP = #{otp}
+           	   , PASS_ATMT_NUM = 0
+         WHERE USR_ID = #{usrId}
+    </update>
+    
+    <update id="updatePassInfo"  parameterType="java.util.HashMap">
+        /* ====== cmn.login.updatePassInfo =========*/
+        UPDATE  CMN_USR_MST
+           SET  PASS = #{pass}
+                , PASS_ERR_NUM = 0
+                , PASS_LAST_RVISN_DT = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+                , PASS_INIT = 'N'
+         WHERE  USR_ID = UPPER(#{usrId})
+           AND  PASS = #{oldPass}
+    </update>
+
+    <select id="getUsrMskYn" parameterType="String" resultType="String">
+        /* loginMapper.getUsrMskYn */
+        SELECT MSK_AUTH_YN
+        FROM   CMN_USR_MST
+        WHERE  USR_ID = #{userId}
+    </select>
+    
+    <!-- 대리점 매니저 전화번호 조회 -->
+	<select id="getUpMngTel" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* loginMapper.getUpMngTel */
+	SELECT A.ORGN_NM , B.USR_ID ,C.MBLPHN_NUM , DECODE(A.TYPE_CD , '20' , '대리점' , '판매점') AS ORG_TYPE
+	 FROM 
+	 ORG_ORGN_INFO_MST A
+	,CMN_USR_MST B /*정지사용자*/
+	,CMN_USR_MST C /*매니저*/
+	WHERE A.ORGN_ID = B.ORGN_ID
+	  AND A.ADM_USER_ID = C.NRDS_ID
+	  AND B.USR_ID = #{usrId, jdbcType=VARCHAR}
+   </select>
+ 	
+ 	<update id="updateUsrStatusReq"  parameterType="java.util.HashMap">
+		/* ====== cmn.login.updateUsrStatusReq =========*/
+		UPDATE  CMN_USR_MST
+		SET     STATUS_REQ = 'R',
+		           RVISN_ID = SUBSTRB(#{usrId, jdbcType=VARCHAR},1,10),   
+			 	   RVISN_DTTM = SYSDATE   
+		WHERE   USR_ID = #{usrId}
+	</update>
+	
+	<select id="selectUsrChk" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	    /* loginMapper.selectUsrChk */
+		    SELECT
+				USG_YN
+				, MBLPHN_NUM
+				, ATTC_SCTN_CD
+				<!-- 엠모바일고객센터만 사용가능 -->
+				, ORGN_ID
+			FROM	CMN_USR_MST
+			WHERE	USR_ID = UPPER(#{usrId, jdbcType=VARCHAR})
+			AND	MBLPHN_NUM = #{ctn}
+			AND	USG_YN  IN ('Y', 'S')
+	</select>
+  
+	<select id="selectUsrOtpChk" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	  	SELECT
+			'' || SUM(DECODE(NVL(OTP,0), #{otp, jdbcType=VARCHAR}, 1, 0)) OTP_CNT
+			, 'Y' AS USE_OTP
+			<!-- , MAX((SELECT CGCM.USG_YN FROM CMN_GRP_CD_MST CGCM WHERE GRP_ID = 'DEV0000' AND CD_VAL = 'OTP')) AS USE_OTP -->
+			<![CDATA[
+				, MAX(
+					CASE
+						WHEN NVL(A.PASS_ATMT_NUM,0) > 2 THEN 'Y'
+						ELSE 'N'
+					END
+				) AS OTP_INIT_YN
+			]]>
+			, MAX(PASS_INIT) AS FIRST_YN
+		FROM		CMN_USR_MST A
+		WHERE	A.USR_ID	= UPPER(#{usrId, jdbcType=VARCHAR})
+		AND A.MBLPHN_NUM	= UPPER(#{ctn, jdbcType=VARCHAR})
+		AND A.USG_YN  IN ('Y', 'S')
+		<![CDATA[
+			AND A.ATTC_SCTN_CD <> '30'
+			AND ( A.USG_STRT_DT IS NULL OR TO_CHAR(SYSDATE,'YYYYMMDD') >= A.USG_STRT_DT)
+			AND ( A.USG_END_DT  IS NULL OR TO_CHAR(SYSDATE,'YYYYMMDD') <= A.USG_END_DT)
+		]]>
+	</select>
+	
+	<select id="selectUsrPwdReset" parameterType="java.util.HashMap" resultType="int">
+		/* loginMapper.selectUsrPwdReset */
+	  	SELECT
+			COUNT(*) AS CNT
+		FROM		CMN_USR_PWD_RESET
+		WHERE	USR_ID	= UPPER(#{usrId, jdbcType=VARCHAR})
+		AND STATUS NOT IN ('Y','C')
+	</select>
+  
+	<insert id="insertUsrPwdReset" parameterType="java.util.HashMap">
+		/* loginMapper.insertUsrPwdReset */
+		INSERT INTO CMN_USR_PWD_RESET
+		(
+			USR_ID
+			,STATUS
+			,REG_DTTM
+		) VALUES (
+			#{usrId}
+			,#{status}
+			,SYSDATE
+		)
+	</insert>
+	
+	<update id="updateUserOtpChk" parameterType="java.util.HashMap">
+		/* ====== cmn.login.updateUserOtpChk =========*/
+        UPDATE  CMN_USR_MST
+           SET  OTP_CHK_NUM = #{otpChkNum}
+           		, LOCK_YN = #{lockYn}
+         WHERE  USR_ID = #{usrId}
+	</update>
+</mapper>

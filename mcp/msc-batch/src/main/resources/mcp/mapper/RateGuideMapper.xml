@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RateGuideMapper">
+
+    <select id="getRateAdsvcGdncSeqList" resultType="Integer">
+        SELECT RATE_ADSVC_GDNC_SEQ
+        FROM NMCP_RATE_ADSVC_GDNC_BAS
+        ORDER BY RATE_ADSVC_GDNC_SEQ
+    </select>
+
+    <select id="getRateAdsvcGdncBasXml" parameterType="Integer" resultType="com.ktmmobile.mcp.rate.guide.dto.RateAdsvcGdncBasXML">
+        SELECT
+            A.RATE_ADSVC_GDNC_SEQ
+            , A.RATE_ADSVC_DIV_CD
+            , A.RATE_DIV_CD
+            , ( SELECT DTL_CD_NM
+                  FROM NMCP_CD_DTL
+                 WHERE CD_GROUP_ID='GD0002' AND DTL_CD=A.RATE_ADSVC_DIV_CD) AS RATE_ADSVC_DIV_NM
+            , A.RATE_ADSVC_NM
+            , A.RATE_ADSVC_APD_NM
+            , A.RATE_ADSVC_BAS_DESC
+            , A.RATE_ADSVC_IMG_NM
+            , A.MM_BAS_AMT_DESC
+            , A.MM_BAS_AMT_VAT_DESC
+            , A.PROMOTION_AMT_DESC
+            , A.PROMOTION_AMT_VAT_DESC
+            , A.GDNC_FILE_NM
+            , A.USE_YN
+            , TO_CHAR(TO_DATE(A.PSTNG_START_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS  PSTNG_START_DATE
+            , TO_CHAR(TO_DATE(A.PSTNG_END_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS  PSTNG_END_DATE
+            , 'U' AS MOD_IU
+            , A.CRET_IP
+            , A.CRET_DT
+            , A.CRET_ID
+            , A.AMD_IP
+            , A.AMD_DT
+            , A.AMD_ID
+            , STICKER_CTG
+            , RATE_CTG
+        FROM NMCP_RATE_ADSVC_GDNC_BAS A
+        WHERE A.RATE_ADSVC_GDNC_SEQ = #{rateAdsvcGdncSeq}
+    </select>
+
+    <select id="getRateAdsvcBnfitGdncDtlXmlList" parameterType="Integer" resultType="com.ktmmobile.mcp.rate.guide.dto.RateAdsvcBnfitGdncDtlXML" >
+        SELECT
+            B.RATE_ADSVC_BNFIT_SEQ
+             , B.RATE_ADSVC_GDNC_SEQ
+             , B.RATE_ADSVC_BNFIT_ITEM_CD
+             , (SELECT DTL_CD_NM
+                FROM NMCP_CD_DTL
+                WHERE CD_GROUP_ID='CO0003' AND DTL_CD=B.RATE_ADSVC_BNFIT_ITEM_CD) AS RATE_ADSVC_BNFIT_ITEM_NM
+             , B.SORT_ODRG
+             , B.RATE_ADSVC_ITEM_IMG_NM AS RATE_ADSVC_ITEM_IMG_CD
+             , (SELECT IMG_NM
+                FROM NMCP_CD_DTL
+                WHERE CD_GROUP_ID='CO0012' AND DTL_CD=B.RATE_ADSVC_ITEM_IMG_NM) AS RATE_ADSVC_ITEM_IMG_NM
+             , B.RATE_ADSVC_ITEM_NM
+             , B.RATE_ADSVC_ITEM_DESC
+             , B.RATE_ADSVC_ITEM_APD_DESC
+             , B.USE_YN
+             , TO_CHAR(TO_DATE(B.PSTNG_START_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS  PSTNG_START_DATE
+             , TO_CHAR(TO_DATE(B.PSTNG_END_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS  PSTNG_END_DATE
+        FROM NMCP_RATE_ADSVC_GDNC_BAS A
+                 LEFT JOIN NMCP_RATE_ADSVC_BNFIT_GDNC_DTL B
+                           ON A.RATE_ADSVC_GDNC_SEQ = B.RATE_ADSVC_GDNC_SEQ
+        WHERE 1=1
+          AND A.USE_YN = 'Y'
+          AND B.USE_YN = 'Y'
+          AND B.RATE_ADSVC_GDNC_SEQ = #{rateAdsvcGdncSeq}
+        ORDER BY TO_NUMBER(B.SORT_ODRG) ASC
+    </select>
+
+    <select id="getRateAdsvcGdncDtlXmlList" parameterType="Integer" resultType="com.ktmmobile.mcp.rate.guide.dto.RateAdsvcGdncDtlXML">
+        SELECT
+            T.RATE_ADSVC_GDNC_DTL_SEQ
+             , T.RATE_ADSVC_GDNC_SEQ
+             , T.RATE_ADSVC_ITEM_CD
+             , T.ITEM_SORT_KEY
+             , T.SORT_ODRG
+             , CASE WHEN RATE_ADSVC_ITEM_CD = 'RATE199' THEN T.RATE_ADSVC_ITEM_NM
+                    WHEN RATE_ADSVC_ITEM_CD = 'ADDSV199' THEN T.RATE_ADSVC_ITEM_NM
+                    ELSE T.RATE_ADSVC_ITEM_CD_NM
+            END RATE_ADSVC_ITEM_NM
+             , T.FONT_STYLE_CD
+             , T.RATE_ADSVC_ITEM_SBST
+             , T.USE_YN
+             , T.PSTNG_START_DATE
+             , T.PSTNG_END_DATE
+             , T.CRET_IP
+             , T.CRET_DT
+             , T.CRET_ID
+             , T.AMD_IP
+             , T.AMD_DT
+             , T.AMD_ID
+        FROM (
+                 SELECT B.RATE_ADSVC_GDNC_DTL_SEQ
+                      , B.RATE_ADSVC_GDNC_SEQ
+                      , B.RATE_ADSVC_ITEM_CD
+                      , B.ITEM_SORT_KEY
+                      , B.SORT_ODRG
+                      , B.RATE_ADSVC_ITEM_NM
+                      , (SELECT DTL_CD_NM
+                         FROM NMCP_CD_DTL
+                         WHERE (CD_GROUP_ID='CO0004' OR CD_GROUP_ID='CO0005') AND DTL_CD=B.RATE_ADSVC_ITEM_CD) AS RATE_ADSVC_ITEM_CD_NM
+                      , B.FONT_STYLE_CD
+                      , B.RATE_ADSVC_ITEM_SBST
+                      , B.USE_YN
+                      , TO_CHAR(TO_DATE(B.PSTNG_START_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS  PSTNG_START_DATE
+                      , TO_CHAR(TO_DATE(B.PSTNG_END_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS  PSTNG_END_DATE
+                      , B.CRET_IP
+                      , B.CRET_DT
+                      , B.CRET_ID
+                      , B.AMD_IP
+                      , B.AMD_DT
+                      , B.AMD_ID
+                 FROM NMCP_RATE_ADSVC_GDNC_BAS A
+                          LEFT JOIN NMCP_RATE_ADSVC_GDNC_DTL B
+                                    ON A.RATE_ADSVC_GDNC_SEQ = B.RATE_ADSVC_GDNC_SEQ
+                 WHERE 1=1
+                   AND A.USE_YN = 'Y'
+                   AND B.USE_YN = 'Y'
+                   AND B.RATE_ADSVC_GDNC_SEQ = #{rateAdsvcGdncSeq}
+             ) T
+        ORDER BY T.SORT_ODRG ASC
+    </select>
+
+    <select id="getRateAdsvcGdncLinkDtlXmlList" parameterType="Integer" resultType="com.ktmmobile.mcp.rate.guide.dto.RateAdsvcGdncLinkDtlXML" >
+        SELECT
+            B.RATE_ADSVC_LINK_SEQ
+             , B.RATE_ADSVC_GDNC_SEQ
+             , B.LINK_CD
+             , B.SORT_ODRG
+             , B.LINK_NM
+             , B.LINK_URL
+             , B.USE_YN
+             , TO_CHAR(TO_DATE(B.PSTNG_START_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS  PSTNG_START_DATE
+             , TO_CHAR(TO_DATE(B.PSTNG_END_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS  PSTNG_END_DATE
+             , B.CRET_IP
+             , B.CRET_DT
+             , B.CRET_ID
+             , B.AMD_IP
+             , B.AMD_DT
+             , B.AMD_ID
+        FROM NMCP_RATE_ADSVC_GDNC_BAS A
+                 LEFT JOIN NMCP_RATE_ADSVC_GDNC_LINK_DTL B
+                           ON A.RATE_ADSVC_GDNC_SEQ = B.RATE_ADSVC_GDNC_SEQ
+        WHERE 1=1
+          AND A.USE_YN = 'Y'
+          AND B.USE_YN = 'Y'
+          AND B.RATE_ADSVC_GDNC_SEQ = #{rateAdsvcGdncSeq}
+        ORDER BY B.SORT_ODRG ASC
+    </select>
+
+    <select id="getRateAdsvcGdncBannerDtlXmlList" resultType="com.ktmmobile.mcp.rate.guide.dto.RateGdncBannerDtlDTO" parameterType="Integer" >
+        SELECT
+            RATE_ADSVC_GDNC_SEQ
+             , SORT_ODRG                --정렬순서
+             , BANNER_SBST              --배너테스트내용
+             , BANNER_COLOR             --텍스트컬러코드
+             , BANNER_BACK_COLOR        --배경컬러코드
+        FROM   NMCP_RATE_GDNC_BANNER_DTL
+        WHERE  RATE_ADSVC_GDNC_SEQ = #{rateAdsvcGdncSeq}
+        ORDER BY SORT_ODRG
+    </select>
+
+    <select id="getRateGdncPropertyList" resultType="com.ktmmobile.mcp.rate.guide.dto.RateGdncPropertyDtlDTO" parameterType="int" >
+        SELECT
+            RATE_ADSVC_GDNC_SEQ
+             , SORT_ODRG                --정렬순서
+             , PROPERTY_CODE            --속성코드
+             , PROPERTY_SBST            --속성내용
+        FROM   NMCP_RATE_GDNC_PROPERTY_DTL
+        WHERE  RATE_ADSVC_GDNC_SEQ = #{rateAdsvcGdncSeq}
+        ORDER BY SORT_ODRG
+    </select>
+
+    <select id="getRateGdncEffPriceList" resultType="com.ktmmobile.mcp.rate.guide.dto.RateGdncEffPriceDtlDTO" parameterType="int" >
+        SELECT /*RateAdd_Query.getRateGdncEffPriceList */
+            RATE_ADSVC_GDNC_SEQ
+             , JEHU_PRICE_REFLECT_CD         --제휴혜택 코드
+             , USE_YN                        --노출여부
+             , CUSTOM_MONTHS                 --프로모션 개월 수
+        FROM   NMCP_RATE_GDNC_EFF_PRICE_DTL
+        WHERE  RATE_ADSVC_GDNC_SEQ = #{rateAdsvcGdncSeq}
+    </select>
+
+    <select id="getNotLatestVersionSeqs" resultType="Long">
+        SELECT
+            SEQ
+        FROM NMCP_RATE_ADSVC_GDNC_VERSION
+        WHERE STATUS = 'SUCCESS'
+        AND SEQ <![CDATA[<]]> ( SELECT MAX(SEQ)
+                     FROM NMCP_RATE_ADSVC_GDNC_VERSION
+                     WHERE STATUS = 'SUCCESS' )
+    </select>
+
+    <update id="updateGdncVersionExpired" parameterType="Long">
+        UPDATE NMCP_RATE_ADSVC_GDNC_VERSION
+        SET STATUS = 'EXPIRED'
+            , EXPIRE_DT = SYSDATE
+            , AMD_ID = 'BATCH'
+            , AMD_DT = SYSDATE
+        WHERE SEQ = #{seq}
+    </update>
+
+    <select id="getExpiredVersions" resultType="com.ktmmobile.mcp.rate.guide.dto.RateAdsvcGdncVersionDto">
+        SELECT SEQ
+             , VERSION
+             , STATUS
+             , MSG
+             , EXPIRE_DT
+             , DELETE_DT
+        FROM NMCP_RATE_ADSVC_GDNC_VERSION
+        WHERE STATUS = 'EXPIRED'
+        AND EXPIRE_DT <![CDATA[<]]> TRUNC(SYSDATE) - 7
+    </select>
+
+    <update id="updateGdncVersionDeleted" parameterType="Long">
+        UPDATE NMCP_RATE_ADSVC_GDNC_VERSION
+        SET STATUS = 'DELETED'
+          , DELETE_DT = SYSDATE
+          , AMD_ID = 'BATCH'
+          , AMD_DT = SYSDATE
+        WHERE SEQ = #{seq}
+    </update>
+
+    <update id="updateGdncVersionFailed" parameterType="com.ktmmobile.mcp.rate.guide.dto.RateAdsvcGdncVersionDto">
+        UPDATE NMCP_RATE_ADSVC_GDNC_VERSION
+        SET STATUS = 'FAILED'
+          , MSG = #{msg}
+          , AMD_ID = 'BATCH'
+          , AMD_DT = SYSDATE
+        WHERE SEQ = #{seq}
+    </update>
+</mapper>

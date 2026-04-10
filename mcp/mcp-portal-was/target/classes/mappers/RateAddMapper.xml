@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RateAddMapper">
+    
+    <resultMap id="selectUsimRequestReviewListCollection" type="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        <result property="requestKey" column="REQUEST_KEY" />
+        <collection property="reviewImgList"
+                    ofType="com.ktmmobile.mcp.requestReview.dto.McpRequestReviewImgDto"
+                    column="{requestKey=REQUEST_KEY}"
+                    select="selectUsimRequestReviewImgList" >
+        </collection>
+    </resultMap>
+        
+    <select id="selectRequestreviewTotalCnt" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultType="int">
+        SELECT /* RateAddMapper.selectRequestreviewTotalCnt 요금제 부가서비스 사용후기 목록 COUNT  */
+            COUNT(1) AS CNT
+        FROM A.MCP_REQUEST_REVIEW A
+		WHERE 1=1
+		AND A.RATE_CD = #{rateAdsvcGdncSeq} 
+    </select>
+        
+    <select id="selectRequestreviewList" parameterType="com.ktmmobile.mcp.rate.dto.RateAdsvcCtgBasDTO" resultMap="selectUsimRequestReviewListCollection" >
+    	SELECT  /* RateAddMapper.selectRequestreviewList 요금제 부가서비스 사용후기 목록 조회 */
+    		  A.REQUEST_KEY
+		     , A.CONTRACT_NUM
+		     , A.REQ_BUY_TYPE
+		     , A.MODEL_ID
+		     , A.PROD_ID
+		     , A.REVIEW_SBST
+		     , A.COMMEND_YN
+		     , A.EVENT_CD
+		     , (SELECT DTL_CD_NM FROM NMCP_CD_DTL
+        		WHERE CD_GROUP_ID='ReviewEventInfo' AND DTL_CD=A.EVENT_CD) AS EVENT_NM
+		     , A.SNS_INFO
+		     , A.NTF_YN
+		     , A.PRIZE_SBST
+		     , A.STTUS_VAL
+		     , A.RIP
+		     , A.SYS_RDATE
+		     , A.SYS_RDATE_DD
+		     , A.REG_NM
+		     , DECODE(REQ_BUY_TYPE,'UU','유심 후기','MM','휴대폰 후기','-') AS REQ_BUY_TYPE_NM
+		FROM MCP_REQUEST_REVIEW A
+		WHERE 1=1
+		AND A.RATE_CD = #{rateAdsvcGdncSeq} 
+		ORDER BY A.NTF_YN  DESC, A.SYS_RDATE DESC
+    </select>
+    
+    <select id="selectUsimRequestReviewImgList" resultType="com.ktmmobile.mcp.requestReview.dto.McpRequestReviewImgDto" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        SELECT /* RateAddMapper.selectUsimRequestReviewImgList 개통후기 리스트 이미지 */
+	           REQUEST_KEY
+	         , IMD_SEQ
+	         , FILE_PATH_NM
+	         , FILE_TYPE
+	         , FILE_CAPA
+       FROM MCP_REQUEST_REVIEW_IMG
+       WHERE REQUEST_KEY = #{requestKey}
+       <if test="imdSeq != null and imdSeq gt -1 ">
+       	   AND IMD_SEQ = #{imdSeq}
+       </if>
+       ORDER BY IMD_SEQ
+    </select>
+    
+    <select id="selectRateAgreeView" resultType="com.ktmmobile.mcp.rate.dto.RateAgreeDTO">
+        SELECT /* RateAddMapper.selectRateAgreeView 약정할인 프로그램 및 할인반환금 안내 조회 */
+        	   CD_GROUP_ID1
+			 , CD_GROUP_ID2
+			 , DOC_VER
+			 , DOC_CONTENT
+			 , USE_YN
+			 , CRET_ID
+			 , CRET_DT
+			 , AMD_ID
+			 , AMD_DT
+		FROM NMCP_FORM_DTL
+		WHERE CD_GROUP_ID1 = 'INFO' 
+		AND CD_GROUP_ID2 = 'RATEAGREE'
+		AND USE_YN = 'Y'
+		AND DOC_TYPE = '01'
+    </select>    
+    
+    <select id="getRateAdsvcBnfitGdncDtlList" resultType="com.ktmmobile.mcp.rate.dto.RateAdsvcBnfitGdncDtlDTO" parameterType="com.ktmmobile.mcp.rate.dto.RateAdsvcCtgBasDTO">
+        SELECT /* RateAddMapper.getRateAdsvcBnfitGdncDtlList 요금제부가서비스혜택안내 목록 조회 */
+        	  RATE_ADSVC_BNFIT_SEQ
+		     , RATE_ADSVC_GDNC_SEQ
+		     , RATE_ADSVC_BNFIT_ITEM_CD
+		     , SORT_ODRG
+		     , RATE_ADSVC_ITEM_IMG_NM
+		     , RATE_ADSVC_ITEM_NM
+		     , RATE_ADSVC_ITEM_DESC
+		     , RATE_ADSVC_ITEM_APD_DESC
+		     , USE_YN
+		     , TO_CHAR(TO_DATE(PSTNG_START_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') AS PSTNG_START_DATE
+			, TO_CHAR(TO_DATE(PSTNG_END_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') AS PSTNG_END_DATE
+		FROM NMCP_RATE_ADSVC_BNFIT_GDNC_DTL
+		WHERE 1=1
+		AND RATE_ADSVC_GDNC_SEQ = #{rateAdsvcGdncSeq}
+		ORDER BY TO_NUMBER(SORT_ODRG) ASC
+    </select>
+    
+</mapper>

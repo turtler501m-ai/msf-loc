@@ -1,0 +1,714 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rsk.rskMgmt.mapper.RskMgmtMapper">
+	
+	<sql id="getNgCustList">
+		SELECT
+		          A.CONTRACT_NUM
+		        , A.CUST_NM
+		        , A.SSN
+		        , A.BAN
+		        , A.SUBSCRIBER_NO
+		        , A.SUB_STATUS
+		        , A.SUB_STATUS_NM
+		        , A.SERVICE_TYPE
+		        , A.SERVICE_TYPE_NM
+		        , A.ON_OFF_TYPE
+		        , A.ON_OFF_TYPE_NM
+		        , A.OPEN_DT
+		        , A.TMNT_DT
+		        , A.TMNT_RSN_NM
+		        , A.REQ_DT
+		        , A.AGNCY_CD
+		        , A.AGNCY_NM
+		        , A.SHOP_USM_ID
+		        , A.REQ_BUY_TYPE
+		        , A.REQ_BUY_TYPE_NM
+		        , A.PLCY_SALE_NM
+		        , A.AGRM_TRM
+		        , A.INST_MNTH_CNT
+		        , A.FST_PRDT_CODE
+		        , A.FST_INTM_SRL_NO
+		        , A.LST_PRDT_CODE
+		        , A.LST_INTM_SRL_NO
+		        , A.FST_DVC_CHG_DT
+		        , A.LST_DVC_CHG_DT
+		        , A.FST_RATE_CD
+		        , A.FST_RATE_NM
+		        , A.LST_RATE_CD
+		        , A.LST_RATE_NM
+		        , A.CHG_RATE_DT
+		        , A.RATE_USG_CNT
+		        , A.FST_SUS_DT
+		        , A.FST_MCN_DT
+		        , A.USG_DT_CNT
+		        , A.STOP_DT_CNT
+		  FROM  (        
+		            SELECT  SUB.CONTRACT_NUM
+		                    , SUB.SUB_LINK_NAME AS CUST_NM
+		                    , SUB.USER_SSN AS SSN
+		                    , SUB.BAN
+		                    , SUB.SUBSCRIBER_NO
+		                    , SUB.SUB_STATUS
+		                    , (SELECT CD_DSC 
+		                         FROM CMN_GRP_CD_MST 
+		                        WHERE GRP_ID = 'MSP0003' 
+		                          AND CD_VAL = SUB.SUB_STATUS) AS SUB_STATUS_NM 
+		                    , SUB.PPPO AS SERVICE_TYPE
+		                    , DECODE(SUB.PPPO, 'PO', '후불', '선불') AS SERVICE_TYPE_NM
+		                    , SUB.ON_OFF_TYPE
+		                    , DECODE(SUB.ON_OFF_TYPE, '1', '오프라인', '2', '홈쇼핑', '온라인') AS ON_OFF_TYPE_NM
+		                    , SUB.LST_COM_ACTV_DATE AS OPEN_DT
+		                    , DECODE(SUB.SUB_STATUS, 'C', SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), '') AS TMNT_DT
+		                    , CASE WHEN SUB.SUB_STATUS = 'C' THEN
+		                        CASE
+		                            WHEN TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') = 0 THEN '당일개통취소'
+		                            WHEN TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') &lt; 15 THEN '14일이내해지'
+		                            WHEN TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') &lt; 90 THEN '90일이내해지'
+		                            ELSE '일반해지'
+		                        END
+		                      ELSE ''  END AS TMNT_RSN_NM          
+		                    , SUBSTR(REQ.REQ_IN_DAY, 1,8) AS REQ_DT
+		                    , SUB.OPEN_AGNT_CD AS AGNCY_CD
+		                    , SUB.SUB_STATUS_DATE AS SUB_STATUS_DATE
+		                    , SUB.CUSTOMER_ID AS CUSTOMER_ID
+		                    , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = SUB.OPEN_AGNT_CD AND ROWNUM = 1) AS AGNCY_NM
+		                    , REQ.SHOP_USM_ID
+		                    , REQ.REQ_BUY_TYPE
+		                    , DECODE(REQ.REQ_BUY_TYPE, 'MM', '단말구매', '유심단독구매') AS REQ_BUY_TYPE_NM
+		                    , REQ.SALE_PLCY_NM AS PLCY_SALE_NM
+		                    , TO_NUMBER(SUBSTR(REQ.INST_INFO, 26, 3)) AS AGRM_TRM
+		                    , TO_NUMBER(SUBSTR(REQ.INST_INFO, 23, 3)) AS INST_MNTH_CNT
+		                    , NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 21 , 30)), REQ.REQ_USIM_NAME) AS FST_PRDT_CODE
+		                    , TRIM(SUBSTR(REQ.FST_MODEL_INFO, 51 , 30)) AS FST_INTM_SRL_NO
+		                    , SUB.MODEL_NAME AS LST_PRDT_CODE
+		                    , SUB.INTM_SRL_NO AS LST_INTM_SRL_NO
+		                    , (SELECT SUBSTR(MIN(EVNT_TRTM_DT), 1,8) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = SUB.CONTRACT_NUM AND INTM_SRL_NO &lt;&gt; NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 51 , 30)), SUB.ICC_ID) AND MODEL_TYPE = 'D1' AND EVNT_CD &lt;&gt; 'NAC') AS FST_DVC_CHG_DT
+		                    , (SELECT SUBSTR(MAX(EVNT_TRTM_DT), 1,8) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = SUB.CONTRACT_NUM AND INTM_SRL_NO &lt;&gt; NVL(TRIM(SUBSTR(REQ.FST_MODEL_INFO, 51 , 30)), SUB.ICC_ID) AND MODEL_TYPE = 'D1' ) AS LST_DVC_CHG_DT
+		                    , REQ.FST_RATE_CD
+		                    , REQ.FST_RATE_NM
+		                    , REQ.LST_RATE_CD
+		                    , REQ.LST_RATE_NM
+		                    , (SELECT SUBSTR(MIN(EFFECTIVE_DATE), 1,8) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = SUB.CONTRACT_NUM AND SERVICE_TYPE = 'P' AND SOC &lt;&gt; REQ.FST_RATE_CD) AS CHG_RATE_DT
+		                    , DECODE((SELECT TO_DATE(SUBSTR(MAX(EFFECTIVE_DATE), 1,8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = SUB.CONTRACT_NUM AND SERVICE_TYPE = 'P' AND SOC &lt;&gt; REQ.FST_RATE_CD),0,99,(SELECT TO_DATE(SUBSTR(MAX(EFFECTIVE_DATE), 1,8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = SUB.CONTRACT_NUM AND SERVICE_TYPE = 'P' AND SOC &lt;&gt; REQ.FST_RATE_CD)) AS RATE_USG_CNT
+		                    , (SELECT SUBSTR(MIN(EVNT_TRTM_DT), 1,8) FROM MSP_JUO_STOP_INFO WHERE CONTRACT_NUM = SUB.CONTRACT_NUM ) AS FST_SUS_DT
+		                    , (SELECT SUBSTR(MIN(EVNT_TRTM_DT), 1, 8) AS FST_MCN_DT FROM MSP_JUO_SUB_INFO_HIST WHERE CONTRACT_NUM = SUB.CONTRACT_NUM  AND EVNT_CD IN ( 'MCN', 'UPD', 'UPS' ) AND CONTRACT_NUM &lt;&gt; SVC_CNTR_NO GROUP BY CONTRACT_NUM) AS FST_MCN_DT
+		                    , TRUNC(DECODE(SUB.SUB_STATUS, 'C', TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD'), SYSDATE) - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')) AS USG_DT_CNT
+		                    , NVL((SELECT SUM(NVL(EVNT_STOP_DAY, TO_DATE(TO_CHAR(SYSDATE, 'YYYYMMDD'), 'YYYYMMDD') - TO_DATE(SUBSTR(EVNT_TRTM_DT,1,8), 'YYYYMMDD')))  FROM MSP_JUO_STOP_INFO WHERE CONTRACT_NUM = SUB.CONTRACT_NUM GROUP BY CONTRACT_NUM),0) AS STOP_DT_CNT
+		              FROM    MSP_JUO_SUB_INFO SUB 
+		                    , MSP_REQUEST_DTL REQ
+		             WHERE  1=1
+		               AND  SUB.LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+		               AND  SUB.PPPO = 'PO'
+		               AND  SUB.CONTRACT_NUM = REQ.CONTRACT_NUM
+		            <if test="orgnId != null and orgnId != ''">
+		               AND  SUB.OPEN_AGNT_CD = #{orgnId}
+		            </if>   
+		        ) A
+		 WHERE  1=1
+		<choose>
+		    <when test='searchType == "10"'>
+		    <!-- 90일이내해지 -->
+		        AND SUB_STATUS = 'C'
+		        AND TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(A.OPEN_DT, 'YYYYMMDD') &lt;= 90
+		    </when>
+		    <when test='searchType == "20"'>
+		    <!-- 90일이내정지 -->
+		        AND TO_DATE(A.FST_SUS_DT, 'YYYYMMDD') - TO_DATE(A.OPEN_DT, 'YYYYMMDD') &lt;= 90
+		    </when>
+		    <when test='searchType == "30"'>
+		    <!-- 90일이내기변 -->
+		        AND TO_DATE(A.FST_DVC_CHG_DT, 'YYYYMMDD') - TO_DATE(A.OPEN_DT, 'YYYYMMDD') &lt;= 90
+		    </when>
+		    <when test='searchType == "40"'>
+		    <!-- 90일이내 명변 -->
+		        AND TO_DATE(A.FST_MCN_DT, 'YYYYMMDD') - TO_DATE(A.OPEN_DT, 'YYYYMMDD') &lt;= 90
+		    </when>
+		    <when test='searchType == "50"'>
+		    <!-- 90일이내 요금제변경 -->
+		        AND RATE_USG_CNT &lt;= 90
+		    </when>
+		    <when test='searchType == "70"'>
+		    <!-- 조회기간내다회선 -->
+		        AND ( SELECT COUNT(1) FROM MSP_JUO_SUB_INFO 
+		               WHERE LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt} 
+		                 AND CUSTOMER_ID = A.CUSTOMER_ID ) &gt; 1
+		   </when>
+		   <when test='searchType == "80"'>
+		   <!-- 조회기간내다중납부 -->
+		        AND ( SELECT COUNT(1) FROM MSP_JUO_SUB_INFO 
+		               WHERE LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+		                 AND BAN = A.BAN ) &gt; 1
+		   </when>
+		</choose>
+		<if test="searchVal != null and searchVal != ''">
+		    <choose>
+		        <when test="searchCd == '10'">
+		            AND (A.CONTRACT_NUM = #{searchVal}
+     					OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+		        </when>
+		        <when test="searchCd == '20'">
+		            AND A.CUST_NM LIKE '%' || #{searchVal} || '%'
+		        </when>
+		        <when test="searchCd == '30'">
+		            AND A.SUBSCRIBER_NO = #{searchVal}
+		        </when>
+		    </choose>
+		</if>
+		 ORDER BY A.CUST_NM 
+	 </sql>
+	 
+	 <sql id="getNgAccList">
+		SELECT LST.CONTRACT_NUM
+		       , LST.SUB_LINK_NAME
+		       , LST.SUBSCRIBER_NO AS CTN
+		       , LST.AGNCY_NM
+		       , LST.SALE_PLCY_NM AS PLCY_SALE_NM
+		       , LST.FST_RATE_NM
+		       , LST.BAN_LINK_NAME
+		       , LST.FST_MODEL_NM
+		       , LST.SUB_STATUS_NM
+		       , LST.SSN
+		       , LST.MINOR_AGENT_NAME
+		       , LST.MINOR_AGENT_RELATION
+		  FROM (SELECT 
+		               RD.CONTRACT_NUM
+		               , SI.SUB_LINK_NAME
+		               , SI.SUBSCRIBER_NO
+		               , CD2.ORGN_NM AS AGNCY_NM
+		               , RD.SALE_PLCY_NM
+		               , RD.FST_RATE_NM
+		               , SI.BAN_LINK_NAME
+		               , DECODE(RD.FST_MODEL_INFO, NULL, FN_GET_FST_MODELNM(RD.CONTRACT_NUM), TRIM(SUBSTR(RD.FST_MODEL_INFO, 21, 30))) AS FST_MODEL_NM
+		               , CD1.CD_DSC AS SUB_STATUS_NM
+		               , SI.BANK_ACCT_HOLDER_ID AS SSN
+		               , RA.MINOR_AGENT_NAME
+		               , CD3.CD_DSC AS MINOR_AGENT_RELATION
+		               , SI.LST_COM_ACTV_DATE
+		               , ROW_NUMBER() OVER(PARTITION BY RD.CONTRACT_NUM ORDER BY TO_NUMBER(R.REQUEST_KEY) DESC) AS CNT
+		          FROM MSP_REQUEST_DTL RD
+		               , (SELECT SIBI.CONTRACT_NUM
+		                         , SIBI.SUB_LINK_NAME
+		                         , SIBI.SUBSCRIBER_NO
+		                         , SIBI.BAN_LINK_NAME
+		                         , SIBI.BANK_ACCT_HOLDER_ID
+		                         , SIBI.SUB_STATUS
+		                         , SIBI.CNT
+		                         , SIBI.LST_COM_ACTV_DATE
+		                    FROM (SELECT /*+ INDEX(JSI MSP_JUO_SUB_INFO_IDX3) INDEX(JBI PK_MSP_JUO_BAN_INFO_BAN) */
+		                                 JSI.CONTRACT_NUM
+		                                 , JSI.SUB_LINK_NAME
+		                                 , JSI.SUBSCRIBER_NO
+		                                 , JSI.OPEN_AGNT_CD
+		                                 , JSI.SUB_STATUS
+		                                 , JSI.LST_COM_ACTV_DATE
+		                                 , JBI.BAN
+		                                 , JBI.BANK_ACCT_HOLDER_ID
+		                                 , JBI.BAN_LINK_NAME
+		                                 , COUNT(*) OVER(PARTITION BY JBI.BANK_ACCT_HOLDER_ID, JBI.BAN_LINK_NAME) AS CNT
+		                            FROM MSP_JUO_SUB_INFO JSI
+		                                 , MSP_JUO_BAN_INFO JBI
+		                           WHERE 1=1
+		                             AND JSI.BAN = JBI.BAN
+		                             AND JSI.LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+		                             AND JSI.PPPO = 'PO'
+		                             AND JBI.BANK_ACCT_HOLDER_ID IS NOT NULL) SIBI
+		                   WHERE 1=1
+		                     AND SIBI.CNT > 1) SI
+		               , MSP_REQUEST R
+		               , MSP_REQUEST_AGENT RA
+		               , (SELECT CD_VAL
+		                         , CD_DSC
+		                    FROM CMN_GRP_CD_MST
+		                   WHERE 1=1
+		                     AND GRP_ID = 'MSP0003') CD1
+		               , ORG_ORGN_INFO_MST CD2
+		               , (SELECT CD_VAL
+		                         , CD_DSC
+		                    FROM CMN_GRP_CD_MST
+		                   WHERE 1=1
+		                     AND GRP_ID = 'RCP9003') CD3
+		         WHERE 1=1
+		           AND RD.CONTRACT_NUM = SI.CONTRACT_NUM
+		           AND RD.CONTRACT_NUM = R.CONTRACT_NUM
+		           AND R.REQUEST_KEY = RA.REQUEST_KEY
+		           AND SI.SUB_STATUS = CD1.CD_VAL
+		           AND RD.OPEN_AGNT_CD = CD2.ORGN_ID
+		           AND RA.MINOR_AGENT_RELATION = CD3.CD_VAL(+)
+		           AND R.REQ_BUY_TYPE = 'MM') LST
+		 WHERE 1=1
+		   AND LST.CNT = 1
+		   <if test="searchVal != null and searchVal != ''">
+		      <choose>
+		         <when test="searchCd == '10'">
+		            AND (LST.CONTRACT_NUM = #{searchVal}
+     					OR LST.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+		         </when>
+		         <when test="searchCd == '20'">
+		            AND LST.SUB_LINK_NAME LIKE '%' || #{searchVal} || '%'
+		         </when>
+		         <when test="searchCd == '30'">
+		            AND LST.SUBSCRIBER_NO = #{searchVal}
+		         </when>
+		      </choose>
+		   </if>
+		ORDER BY LST.SUB_LINK_NAME, LST.LST_COM_ACTV_DATE
+	 </sql>
+	
+	<select id="getNgCustMgmtList" parameterType="com.ktis.msp.rsk.rskMgmt.vo.RskMgmtVO" 
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* ngCustMgmt.getNgCustMgmtList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="getNgCustList" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getNgCustMgmtListExcel" parameterType="com.ktis.msp.rsk.rskMgmt.vo.RskMgmtVO" 
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* ngCustMgmt.getNgCustMgmtListExcel */
+		<include refid="getNgCustList" />
+	</select>
+	
+	<select id="getNgAccMgmtList" parameterType="com.ktis.msp.rsk.rskMgmt.vo.RskMgmtVO" 
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* ngCustMgmt.getNgCustMgmtList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="getNgAccList" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getNgAccMgmtListExcel" parameterType="com.ktis.msp.rsk.rskMgmt.vo.RskMgmtVO" 
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* ngCustMgmt.getNgCustMgmtListExcel */
+		<include refid="getNgAccList" />
+	</select>
+	
+	
+		
+	<sql id="getNgCustList_20151124">
+		SELECT  SUB.CONTRACT_NUM
+		        , SUB.SUB_LINK_NAME                                                                           AS CUST_NM
+		        , SUB.SUBSCRIBER_NO
+		        , SUB.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', SUB.SUB_STATUS)                                                    AS SUB_STATUS_NM
+		        , SUB.USER_SSN                                                                                AS SSN
+		        , SUB.ON_OFF_TYPE
+		        , DECODE(NVL(REQ.ON_OFF_TYPE, SUB.ON_OFF_TYPE), '1', '오프라인', '2', '홈쇼핑', '온라인')     AS ON_OFF_TYPE_NM
+		        , SUB.LST_COM_ACTV_DATE                                                                       AS OPEN_DT
+		        , DECODE(SUB.SUB_STATUS, 'C', SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), '')                          AS TMNT_DT
+		        , FN_GET_CANRSN(SUB.CONTRACT_NUM)                                                             AS TMNT_RSN_CD
+		        , FN_GET_CODENM('RCP0060', FN_GET_CANRSN(SUB.CONTRACT_NUM))                                   AS TMNT_RSN_NM
+		        , TO_CHAR(REQ.REQ_IN_DAY, 'YYYYMMDD')                                                         AS REQ_DT
+		        , NVL(REQ.CNTPNT_SHOP_ID, SUB.OPEN_AGNT_CD)                                                   AS AGNCY_CD
+		        , FN_GET_ORGNM(NVL(REQ.CNTPNT_SHOP_ID, SUB.OPEN_AGNT_CD))                                     AS AGNCY_NM
+		        , REQ.SHOP_USM_ID
+		        , REQ.REQ_BUY_TYPE
+		        , DECODE(REQ.REQ_BUY_TYPE, 'MM', '단말구매', '유심단독구매')                                  AS REQ_BUY_TYPE_NM
+		        , SALE.MODEL_SALE_POLICY_CODE
+		        , DECODE(SALE.MODEL_SALE_POLICY_CODE, FN_GET_SALECD(SUB.CONTRACT_NUM, SALE.MODEL_SALE_POLICY_CODE), PLCY.SALE_PLCY_NM
+		                , ( SELECT SALE_PLCY_NM FROM MSP_SALE_PLCY_MST WHERE SALE_PLCY_CD = FN_GET_SALECD(SUB.CONTRACT_NUM, SALE.MODEL_SALE_POLICY_CODE))
+		        )                                                                                             AS SALE_PLCY_NM
+		        , SALE.MODEL_MONTHLY                                                                          AS INST_MNTH_CNT
+		        , TO_CHAR(NVL(SALE.ENGG_MNTH_CNT, 0))                                                         AS AGRM_TRM
+		        , ( SELECT PRDT_CODE FROM CMN_INTM_MDL WHERE RPRS_PRDT_ID = SALE.MODEL_ID AND RPRS_YN = 'Y' ) AS REQ_MODEL_NM
+		        , REQ.REQ_PHONE_SN
+		        , CASE
+		              WHEN REQ.REQ_BUY_TYPE = 'MM' THEN DECODE(SUB.LST_COM_ACTV_DATE, SUB.LST_DEV_CHG_DATE, '', SUB.LST_DEV_CHG_DATE)
+		              ELSE ''
+		        END                                                                                           AS LST_DVC_CHG_DT
+		        , NVL(( SELECT  /* INDEX_DESC(X PK_MSP_JUO_MODEL_INFO) */
+		                        X.MODEL_NM
+		                FROM    MSP_JUO_MODEL_INFO X
+		                WHERE   X.CONTRACT_NUM  = SUB.CONTRACT_NUM
+		                AND     X.MODEL_TYPE    = 'D1'
+		                AND     LENGTH(X.INTM_SRL_NO) <![CDATA[ < ]]> 10
+		                AND     ROWNUM          = 1
+		              ), ( SELECT PRDT_CODE FROM CMN_INTM_MDL WHERE RPRS_PRDT_ID = SALE.MODEL_ID AND RPRS_YN = 'Y' )
+		        )                                                                                             AS MODEL_NM
+		        , NVL(( SELECT  /* INDEX_DESC(X PK_MSP_JUO_MODEL_INFO) */
+		                        X.INTM_SRL_NO
+		                FROM    MSP_JUO_MODEL_INFO X
+		                WHERE   X.CONTRACT_NUM  = SUB.CONTRACT_NUM
+		                AND     X.MODEL_TYPE    = 'D1'
+		                AND     LENGTH(X.INTM_SRL_NO) <![CDATA[ < ]]> 10
+		                AND     ROWNUM          = 1
+		              ), REQ.REQ_PHONE_SN )                                                                   AS PHONE_SN
+		        , SALE.SOC_CODE                                                                               AS FST_RATE_CD
+		        , RATE.RATE_NM                                                                                AS FST_RATE_NM
+		        , ( SELECT  /*+ INDEX_DESC(X MSP_JUO_FEATURE_INFO_IDX1) */
+		                    X.SOC
+		            FROM    MSP_JUO_FEATURE_INFO X
+		            WHERE   X.CONTRACT_NUM  = SUB.CONTRACT_NUM
+		            AND     X.SERVICE_TYPE  = 'P'
+		            AND     ROWNUM          = 1
+		        )                                                                                             AS RATE_CD
+		        , ( SELECT  /*+ INDEX_DESC(X MSP_JUO_FEATURE_INFO_IDX1) */
+		                    Y.RATE_NM
+		            FROM    MSP_JUO_FEATURE_INFO X
+		                    , MSP_RATE_MST Y
+		            WHERE   X.CONTRACT_NUM  = SUB.CONTRACT_NUM
+		            AND     X.SERVICE_TYPE  = 'P'
+		            AND     X.SOC           = Y.RATE_CD
+		            AND     ROWNUM          = 1
+		        )                                                                                             AS RATE_NM
+		        , ( SELECT  /*+ INDEX_ASC(X PK_MSP_JUO_SUB_INFO_HIST) */
+		                    SUBSTR(X.EVNT_TRTM_DT, 1, 8)
+		            FROM    MSP_JUO_SUB_INFO_HIST X
+		            WHERE   X.EVNT_CD       = 'SUS'
+		            AND     X.CONTRACT_NUM  = SUB.CONTRACT_NUM
+		            AND     ROWNUM          = 1
+		        )                                                                                             AS FST_SUS_DT
+		        , ( SELECT  /*+ INDEX_ASC(A PK_MSP_JUO_SUB_INFO_HIST) */
+		                    SUBSTR(A.EVNT_TRTM_DT, 1, 8)
+		            FROM    MSP_JUO_SUB_INFO_HIST A
+		            WHERE   A.EVNT_CD       = 'MCN'
+		            AND     A.CONTRACT_NUM  = SUB.CONTRACT_NUM
+		            AND     ROWNUM          = 1
+		        )                                                                                             AS FST_MCN_DT
+		        , TRUNC(DECODE(SUB.SUB_STATUS, 'C', TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD'), SYSDATE) - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')) AS USG_DT_CNT
+		        , FN_GET_STOP_DAY(SUB.CONTRACT_NUM)                                                           AS STOP_DT_CNT
+		FROM    MSP_JUO_SUB_INFO SUB
+		        , MSP_REQUEST REQ
+		        , MSP_REQUEST_SALEINFO SALE
+		        , MSP_SALE_PLCY_MST PLCY
+		        , MSP_RATE_MST RATE
+		WHERE   SUB.LST_COM_ACTV_DATE       BETWEEN #{strtDt} AND #{endDt}
+		AND     SUB.CONTRACT_NUM            = REQ.CONTRACT_NUM(+)
+		AND     REQ.REQ_BUY_TYPE(+)         = 'MM'
+		AND     REQ.REQUEST_KEY             = SALE.REQUEST_KEY(+)
+		AND     SALE.MODEL_SALE_POLICY_CODE = PLCY.SALE_PLCY_CD(+)
+		AND     SALE.SOC_CODE               = RATE.RATE_CD(+)
+		<if test="orgnId != null and orgnId != ''">
+			AND NVL(REQ.CNTPNT_SHOP_ID, SUB.OPEN_AGNT_CD) = #{orgnId}
+		</if>
+		<if test="serviceType != null and serviceType != ''">
+			AND SUB.PPPO = #{serviceType}
+		</if>
+		<choose>
+			<when test='searchType == "10"'>
+				/* 90일이내 해지 */
+				AND SUB.SUB_STATUS = 'C'
+				AND TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ <= ]]> 90
+			</when>
+			<when test='searchType == "20"'>
+				/* 90일이내 정지 */
+				AND ( SELECT  /*+ INDEX_ASC(X PK_MSP_JUO_SUB_INFO_HIST) */
+				              TO_DATE(SUBSTR(X.EVNT_TRTM_DT, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')
+				      FROM    MSP_JUO_SUB_INFO_HIST X
+				      WHERE   CONTRACT_NUM = SUB.CONTRACT_NUM
+				      AND     EVNT_CD      = 'SUS'
+				      AND     ROWNUM       = 1 ) <![CDATA[ <= ]]> 90
+			</when>
+			<when test='searchType == "30"'>
+				/* 90일이내 기변 */
+				AND REQ.REQ_BUY_TYPE = 'MM'
+				AND SUB.LST_COM_ACTV_DATE <![CDATA[ <> ]]> SUB.LST_DEV_CHG_DATE
+				AND ( SELECT  /*+ INDEX_ASC(A MSP_JUO_MODEL_INFO_IDX3) */
+				              TO_DATE(SUBSTR(A.EVNT_TRTM_DT, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')
+				      FROM    MSP_JUO_MODEL_INFO A 
+				      WHERE   A.CONTRACT_NUM = SUB.CONTRACT_NUM 
+				      AND     A.MODEL_TYPE = 'D1'
+				      AND     A.EVNT_CD   = 'C07'
+				      AND     A.INTM_SRL_NO <![CDATA[ <> ]]> REQ.REQ_PHONE_SN
+				      AND     ROWNUM = 1 ) <![CDATA[ <= ]]> 90
+			</when>
+			<when test='searchType == "40"'>
+				/* 90일이내 명변 */
+				AND ( SELECT  /*+ INDEX_ASC(X PK_MSP_JUO_SUB_INFO_HIST) */
+				              TO_DATE(SUBSTR(X.EVNT_TRTM_DT, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')
+				      FROM    MSP_JUO_SUB_INFO_HIST X
+				      WHERE   CONTRACT_NUM = SUB.CONTRACT_NUM
+				      AND     EVNT_CD      = 'MCN'
+				      AND     ROWNUM       = 1 ) <![CDATA[ <= ]]> 90
+			</when>
+			<when test='searchType == "50"'>
+				/* 90일이내 요금제변경 */
+				AND ( SELECT    CASE WHEN TO_DATE(SUBSTR(MIN(X.APP_START_DD), 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') = 0 THEN 99
+			                         ELSE TO_DATE(SUBSTR(MIN(X.APP_START_DD), 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')
+			                    END
+			          FROM      MSP_JUO_FEATURE_INFO X
+			          WHERE     X.CONTRACT_NUM  = SUB.CONTRACT_NUM
+			          AND       X.SERVICE_TYPE  = 'P'
+			          AND       X.EVNT_CD       = 'SCH' ) <![CDATA[ <= ]]> 90
+			</when>
+		</choose>
+		ORDER BY SUB.SUB_LINK_NAME
+	</sql>
+	
+	<sql id="getNgCustList_20170414">
+	  SELECT  SUB.CONTRACT_NUM
+	          , SUB.SUB_LINK_NAME AS CUST_NM
+	          , SUB.USER_SSN AS SSN
+	          , SUB.BAN
+	          , SUB.SUBSCRIBER_NO
+	          , SUB.SUB_STATUS
+	          , FN_GET_CODENM('MSP0003', SUB.SUB_STATUS) AS SUB_STATUS_NM
+	          , SUB.PPPO AS SERVICE_TYPE
+	          , DECODE(SUB.PPPO, 'PO', '후불', '선불') AS SERVICE_TYPE_NM
+	          , SUB.ON_OFF_TYPE
+	          , DECODE(SUB.ON_OFF_TYPE, '1', '오프라인', '2', '홈쇼핑', '온라인') AS ON_OFF_TYPE_NM
+	          , SUB.LST_COM_ACTV_DATE AS OPEN_DT
+	          , DECODE(SUB.SUB_STATUS, 'C', SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), '') AS TMNT_DT
+	          , FN_GET_CODENM('RCP0060', FN_GET_CANRSN(SUB.CONTRACT_NUM)) AS TMNT_RSN_NM
+	          , TO_CHAR(REQ.REQ_IN_DAY, 'YYYYMMDD') AS REQ_DT
+	          , NVL(REQ.CNTPNT_SHOP_ID, SUB.OPEN_AGNT_CD) AS AGNCY_CD
+	          , FN_GET_ORGNM(NVL(REQ.CNTPNT_SHOP_ID, SUB.OPEN_AGNT_CD)) AS AGNCY_NM
+	          , REQ.SHOP_USM_ID
+	          , REQ.REQ_BUY_TYPE
+	          , DECODE(REQ.REQ_BUY_TYPE, 'MM', '단말구매', '유심단독구매') AS REQ_BUY_TYPE_NM
+	          , ( SELECT SALE_PLCY_NM FROM MSP_SALE_PLCY_MST WHERE SALE_PLCY_CD = FN_GET_SALECD(SUB.CONTRACT_NUM, SALE.MODEL_SALE_POLICY_CODE) ) AS PLCY_SALE_NM
+	          , SALE.MODEL_MONTHLY AS INST_MNTH_CNT
+	          , TO_CHAR(NVL(SALE.ENGG_MNTH_CNT, 0)) AS AGRM_TRM
+	          , ( CASE WHEN BOND.REMAIN_AMT > 0 THEN 'N' ELSE 'Y' END ) AS FULL_PAY_YN
+	          , MDL.FST_PRDT_CODE
+	          , MDL.FST_INTM_SRL_NO
+	          , MDL.LST_PRDT_CODE
+	          , MDL.LST_INTM_SRL_NO
+	          , MDL.FST_DVC_CHG_DT
+	          , MDL.LST_DVC_CHG_DT
+	          , RTE.FST_RATE_CD
+	          , RTE.FST_RATE_NM
+	          , RTE.LST_RATE_CD
+	          , RTE.LST_RATE_NM
+	          , RTE.CHG_RATE_DT
+	          , RTE.RATE_USG_CNT
+	          , SUS.FST_SUS_DT
+	          , MCN.FST_MCN_DT
+	          , TRUNC(DECODE(SUB.SUB_STATUS, 'C', TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD'), SYSDATE) - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')) AS USG_DT_CNT
+	          , FN_GET_STOP_DAY(SUB.CONTRACT_NUM) AS STOP_DT_CNT
+	  FROM    MSP_JUO_SUB_INFO SUB
+	          , MSP_REQUEST REQ
+	          , MSP_REQUEST_SALEINFO SALE
+	          , MSP_JUO_BAN_INFO BAN
+	          , MSP_BOND_MST BOND
+	          , ( SELECT  A.CONTRACT_NUM
+			             , B.MODEL_ID AS FST_PRDT_ID
+			             , B.MODEL_NM AS FST_PRDT_CODE
+			             , B.INTM_SRL_NO AS FST_INTM_SRL_NO
+			             , C.MODEL_ID AS LST_PRDT_ID
+			             , C.MODEL_NM AS LST_PRDT_CODE
+			             , C.INTM_SRL_NO AS LST_INTM_SRL_NO
+			             , CASE
+			                 WHEN B.MODEL_ID = C.MODEL_ID AND B.INTM_SRL_NO = C.INTM_SRL_NO THEN ''
+			                 ELSE SUBSTR(C.EVNT_TRTM_DT, 1, 8)
+			             END AS LST_DVC_CHG_DT
+			             , ( SELECT  SUBSTR(MIN(EVNT_TRTM_DT), 1, 8) 
+			                 FROM    MSP_JUO_MODEL_INFO
+			                 WHERE   CONTRACT_NUM = A.CONTRACT_NUM
+			                 AND     MODEL_TYPE = 'D1'
+			                 AND     EVNT_TRTM_NO <![CDATA[ <> ]]> A.FST_EVNT_NO
+			                 AND     MODEL_ID NOT IN ( SELECT PRDT_ID FROM CMN_INTM_MDL WHERE PRDT_TYPE_CD = '02' )
+			                 AND     ( MODEL_ID <![CDATA[ <> ]]> B.MODEL_ID OR INTM_SRL_NO <![CDATA[ <> ]]> B.INTM_SRL_NO )
+			                 AND     TO_DATE(SUBSTR(APP_END_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(EVNT_TRTM_DT, 1, 8), 'YYYYMMDD') > 1 
+			             ) AS FST_DVC_CHG_DT
+			     FROM
+			         (   SELECT  A.CONTRACT_NUM
+			                     , MIN(B.EVNT_TRTM_NO) AS FST_EVNT_NO
+			                     , MAX(B.EVNT_TRTM_NO) AS LST_EVNT_NO 
+			             FROM    MSP_JUO_SUB_INFO A
+			                     , MSP_JUO_MODEL_INFO B
+			             WHERE   A.LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+			             <if test="serviceType != null and serviceType != ''">
+			              AND A.PPPO = #{serviceType}
+			             </if>
+			             <if test="orgnId != null and orgnId != ''">
+			              AND A.OPEN_AGNT_CD = #{orgnId}
+			             </if>
+			             AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+			             GROUP BY A.CONTRACT_NUM
+			         ) A
+			         , MSP_JUO_MODEL_INFO B
+			         , MSP_JUO_MODEL_INFO C
+			     WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+			     AND     B.EVNT_TRTM_NO = A.FST_EVNT_NO
+			     AND     B.MODEL_TYPE = 'D1'
+			     AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+			     AND     C.EVNT_TRTM_NO = A.LST_EVNT_NO
+			     AND     C.MODEL_TYPE = 'D1'
+			     AND     ( EXISTS ( SELECT 1 FROM LGS_PRDT_SRL_MST WHERE RPRS_PRDT_ID = B.MODEL_ID AND PRDT_SRL_NUM = B.INTM_SRL_NO )
+			               OR EXISTS ( SELECT 1 FROM LGS_OTCP_SRL_MST WHERE RPRS_PRDT_ID = B.MODEL_ID AND PRDT_SRL_NUM = B.INTM_SRL_NO ) )
+	          ) MDL
+	          , ( SELECT  C.CONTRACT_NUM
+	                      , C.FST_RATE_CD
+	                      , A.RATE_NM AS FST_RATE_NM
+	                      , C.LST_RATE_CD
+	                      , B.RATE_NM AS LST_RATE_NM
+	                      , C.CHG_RATE_DT
+	                      , C.RATE_USG_CNT
+	              FROM    MSP_RATE_MST A
+	                      , MSP_RATE_MST B
+	                      , ( SELECT  A.CONTRACT_NUM
+	                                  , B.SOC AS FST_RATE_CD
+	                                  , C.SOC AS LST_RATE_CD
+	                                  , ( SELECT  SUBSTR(MIN(EVNT_TRTM_DT), 1, 8)
+	                                      FROM    MSP_JUO_FEATURE_INFO
+	                                      WHERE   CONTRACT_NUM = A.CONTRACT_NUM
+	                                      AND     SERVICE_TYPE = 'P'
+	                                      AND     SOC <![CDATA[ <> ]]> B.SOC
+	                                  ) AS CHG_RATE_DT
+	                                  , CASE
+	                                      WHEN ( SELECT  TO_DATE(SUBSTR(MIN(EVNT_TRTM_DT), 1, 8), 'YYYYMMDD')
+	                                             FROM    MSP_JUO_FEATURE_INFO
+	                                             WHERE   CONTRACT_NUM = A.CONTRACT_NUM
+	                                             AND     SERVICE_TYPE = 'P'
+	                                             AND     SOC <![CDATA[ <> ]]> B.SOC ) - TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD') = 0 THEN 99
+	                                      ELSE  ( SELECT  TO_DATE(SUBSTR(MIN(EVNT_TRTM_DT), 1, 8), 'YYYYMMDD')
+	                                             FROM    MSP_JUO_FEATURE_INFO
+	                                             WHERE   CONTRACT_NUM = A.CONTRACT_NUM
+	                                             AND     SERVICE_TYPE = 'P'
+	                                             AND     SOC <![CDATA[ <> ]]> B.SOC ) - TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD')
+	                                  END AS RATE_USG_CNT
+	                          FROM    MSP_JUO_SUB_INFO A
+	                                  , MSP_JUO_FEATURE_INFO B
+	                                  , MSP_JUO_FEATURE_INFO C
+	                                  , ( SELECT  A.CONTRACT_NUM
+	                                              , MIN(B.EVNT_TRTM_NO) FST_TRTM_NO
+	                                              , MAX(B.EVNT_TRTM_NO) LST_TRTM_NO 
+	                                      FROM    MSP_JUO_SUB_INFO A
+	                                              , MSP_JUO_FEATURE_INFO B
+	                                      WHERE   A.LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+	                                      <if test="serviceType != null and serviceType != ''">
+	                                       AND A.PPPO = #{serviceType}
+	                                      </if>
+	                                      <if test="orgnId != null and orgnId != ''">
+	                                       AND A.OPEN_AGNT_CD = #{orgnId}
+	                                      </if>
+	                                      AND     A.PPPO = 'PO'
+	                                      AND     A.CONTRACT_NUM  = B.CONTRACT_NUM
+	                                      AND     B.SERVICE_TYPE  = 'P'
+	                                      GROUP BY A.CONTRACT_NUM
+	                                  ) D
+	                          WHERE   A.LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+	                          <if test="serviceType != null and serviceType != ''">
+	                           AND A.PPPO = #{serviceType}
+	                          </if>
+	                          <if test="orgnId != null and orgnId != ''">
+	                           AND A.OPEN_AGNT_CD = #{orgnId}
+	                          </if>
+	                          AND     A.CONTRACT_NUM  = B.CONTRACT_NUM
+	                          AND     B.SERVICE_TYPE  = 'P'
+	                          AND     B.EVNT_TRTM_NO  = D.FST_TRTM_NO
+	                          AND     B.CONTRACT_NUM  = D.CONTRACT_NUM
+	                          AND     A.CONTRACT_NUM  = C.CONTRACT_NUM
+	                          AND     C.SERVICE_TYPE  = 'P'
+	                          AND     C.EVNT_TRTM_NO  = D.LST_TRTM_NO
+	                          AND     C.CONTRACT_NUM  = D.CONTRACT_NUM
+	                      ) C
+	              WHERE   A.RATE_CD = C.FST_RATE_CD
+	              AND     A.SERVICE_TYPE = 'P'
+	              AND     B.RATE_CD = C.LST_RATE_CD
+	              AND     B.SERVICE_TYPE = 'P'
+	          ) RTE   /* 요금제 */
+	          , ( SELECT  A.CONTRACT_NUM
+	                      , SUBSTR(MIN(B.EFFECTIVE_DATE), 1, 8) AS FST_SUS_DT
+	              FROM    MSP_JUO_SUB_INFO A
+	                      , MSP_JUO_SUB_HIST B
+	              WHERE   A.LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+	              <if test="serviceType != null and serviceType != ''">
+	               AND A.PPPO = #{serviceType}
+	              </if>
+	              <if test="orgnId != null and orgnId != ''">
+	               AND A.OPEN_AGNT_CD = #{orgnId}
+	              </if>
+	              AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+	              AND     B.EVNT_CD = 'SUS'
+	              GROUP BY A.CONTRACT_NUM
+	          ) SUS   /* 최초정지 */
+	          , ( SELECT  A.CONTRACT_NUM
+	                      , SUBSTR(MIN(B.EVNT_TRTM_DT), 1, 8) AS FST_MCN_DT
+	              FROM    MSP_JUO_SUB_INFO A
+	                      , MSP_JUO_SUB_INFO_HIST B
+	              WHERE   A.LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+	              <if test="serviceType != null and serviceType != ''">
+	               AND A.PPPO = #{serviceType}
+	              </if>
+	              <if test="orgnId != null and orgnId != ''">
+	               AND A.OPEN_AGNT_CD = #{orgnId}
+	              </if>
+	              AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+	              AND     B.EVNT_CD IN ( 'MCN', 'UPD', 'UPS' )
+	              AND     B.CONTRACT_NUM <![CDATA[ <> ]]> B.SVC_CNTR_NO
+	              GROUP BY A.CONTRACT_NUM
+	          ) MCN   /* 최초명변 */
+	  WHERE   SUB.LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+	  <if test="serviceType != null and serviceType != ''">
+	   AND SUB.PPPO = #{serviceType}
+	  </if>
+	  <if test="orgnId != null and orgnId != ''">
+	   AND SUB.OPEN_AGNT_CD = #{orgnId}
+	  </if>
+	  AND     SUB.CONTRACT_NUM    = REQ.CONTRACT_NUM(+)
+	  AND     REQ.REQUEST_KEY     = SALE.REQUEST_KEY(+)
+	  AND     SUB.BAN             = BAN.BAN
+	  AND     SUB.CONTRACT_NUM    = BOND.CONTRACT_NUM(+)
+	  AND     SUB.CONTRACT_NUM    = MDL.CONTRACT_NUM
+	  AND     SUB.CONTRACT_NUM    = RTE.CONTRACT_NUM
+	  AND     SUB.CONTRACT_NUM    = SUS.CONTRACT_NUM(+)
+	  AND     SUB.CONTRACT_NUM    = MCN.CONTRACT_NUM(+)
+	  <choose>
+	   <when test='searchType == "10"'>
+	    <!-- 90일이내해지 -->
+	    AND     SUB.SUB_STATUS          = 'C'
+	    AND     TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ <= ]]> 90
+	   </when>
+	   <when test='searchType == "20"'>
+	    <!-- 90일이내정지 -->
+	    AND     TO_DATE(SUS.FST_SUS_DT, 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ <= ]]> 90
+	   </when>
+	   <when test='searchType == "30"'>
+	    <!-- 90일이내기변 -->
+	    AND     TO_DATE(MDL.FST_DVC_CHG_DT, 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ <= ]]> 90
+	   </when>
+	   <when test='searchType == "40"'>
+	    <!-- 90일이내 명변 -->
+	    AND     TO_DATE(MCN.FST_MCN_DT, 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ <= ]]> 90
+	   </when>
+	   <when test='searchType == "50"'>
+	    <!-- 90일이내 요금제변경 -->
+	    AND     RTE.RATE_USG_CNT <![CDATA[ <= ]]> 90
+	   </when>
+	   <when test='searchType == "60"'>
+				<!-- 
+					90일이내 완납
+						개통일과 단말구매일 다를 수 있음.
+						단말 구매일 기준으로 3개월이내 완납시 조회
+						A : 개통후 즉시완납
+						B : 중도완납
+						C : 할부중
+						D : 개통취소
+						E : 보증보험청구(미납)
+						F : 정상완료
+				 -->
+				AND BOND.BOND_TMNT_YM(+) IS NOT NULL
+				AND BOND.INST_BOND_STAT_CD(+) IN ( 'A', 'B' )
+				AND ( CASE WHEN TO_DATE(BOND_TMNT_YM, 'YYYYMM') - TO_DATE(SUBSTR(GRNT_INSR_MNGM_NO, 0, 6), 'YYYYMM') <![CDATA[ <= ]]> 3 THEN 'Y' ELSE 'N' END ) = 'Y'
+			</when>
+	   <when test='searchType == "70"'>
+	    <!-- 조회기간내다회선 -->
+	    AND     ( SELECT COUNT(1) FROM MSP_JUO_SUB_INFO 
+	              WHERE  LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt} 
+	              AND    CUSTOMER_ID = SUB.CUSTOMER_ID ) > 1
+	   </when>
+	   <when test='searchType == "80"'>
+	    <!-- 조회기간내다중납부 -->
+	    AND     ( SELECT COUNT(1) FROM MSP_JUO_SUB_INFO 
+	              WHERE  LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+	              AND    BAN = SUB.BAN ) > 1
+	   </when>
+	  </choose>
+	  <if test="searchVal != null and searchVal != ''">
+	   <choose>
+	    <when test="searchCd == '10'">
+	     AND SUB.CONTRACT_NUM = #{searchVal}
+	    </when>
+	    <when test="searchCd == '20'">
+	     AND SUB.SUB_LINK_NAME LIKE '%' || #{searchVal} || '%'
+	    </when>
+	    <when test="searchCd == '30'">
+	     AND SUB.SUBSCRIBER_NO = #{searchVal}
+	    </when>
+	   </choose>
+	  </if>
+	  ORDER BY SUB.SUB_LINK_NAME
+	 </sql>
+</mapper>

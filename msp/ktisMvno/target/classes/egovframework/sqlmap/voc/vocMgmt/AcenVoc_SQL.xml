@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.voc.vocMgmt.mapper.AcenVocMapper">
+
+	<sql id="getAcenVoc">
+		SELECT
+			   A.REQ_SEQ
+			  ,A.VOC_SEQ
+			  ,A.CONTRACT_NUM
+			  ,FN_GET_CODENM('MSP0003', B.SUB_STATUS) AS SUB_STATUS_NM
+			  ,B.SUB_LINK_NAME AS CSTMR_NAME
+			  ,A.VOC_AGNT_CD
+			  ,FN_GET_ORGNM(A.VOC_AGNT_CD) AS ORGN_NAME
+			  ,FN_GET_ORGNM(A.VOC_AGNT_CD) || '/' || A.VOC_AGNT_CD AS VOC_AGNT_CD_NAME
+			  ,FN_GET_CODENM('ACEN0006', A.VOC_SUB_CTG_CD) AS VOC_SUB_CTG_CD_NAME
+			  ,TO_CHAR(A.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS VOC_DTTM
+			  ,A.STATUS
+			  ,FN_GET_CODENM('ACEN0005', A.STATUS) AS STATUS_NAME
+			  ,FN_GET_USRNM(A.VOC_RCP_ID) AS VOC_RCP_NAME
+			  ,TO_CHAR(TO_DATE(A.DUE_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS DUE_DT
+			  ,TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+			  ,DECODE(A.RVISN_ID, 'ACEN', A.RVISN_ID, FN_GET_USRNM(A.RVISN_ID)) AS RVISN_NAME
+			FROM NMCP_ACEN_VOC_REQ@DL_MCP A
+				,MSP_JUO_SUB_INFO B
+				,MSP_REQUEST_DTL C
+			WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+			  AND A.CONTRACT_NUM = C.CONTRACT_NUM
+			  <if test='srchStrtDt != null and srchStrtDt != "" and srchEndDt != null and srchEndDt != ""'>
+				AND A.REGST_DTTM BETWEEN TO_DATE(#{srchStrtDt},'YYYYMMDD') AND TO_DATE(#{srchEndDt},'YYYYMMDD') + 1
+			  </if>
+			  <if test='compStrtDt != null and compStrtDt != "" and compEndDt != null and compEndDt != ""'>
+				AND A.STATUS IN ('05', '06', '07')
+				AND A.RVISN_DTTM BETWEEN TO_DATE(#{compStrtDt},'YYYYMMDD') AND TO_DATE(#{compEndDt},'YYYYMMDD') + 1
+			  </if>
+			  <if test='cntpntShopId != null and cntpntShopId != ""'>
+				AND A.VOC_AGNT_CD = #{cntpntShopId}
+			  </if>
+			  <if test='sessionUserOrgnTypeCd != "10"'>
+				AND A.STATUS != '00'
+			  </if>
+			  <if test='status != null and status != ""'>
+				AND A.STATUS = #{status}
+			  </if>
+			  <if test='searchGbn != null and searchGbn != ""'>
+				<!--계약번호 필터-->
+				<if test='searchGbn == "01"'>
+				AND (B.CONTRACT_NUM = #{searchName} OR
+					   B.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchName}))
+				</if>
+				<!--휴대폰번호 필터-->
+				<if test='searchGbn == "02"'>
+				AND B.SUBSCRIBER_NO = #{searchName}
+				</if>
+				<!--요금제 필터-->
+				<if test='searchGbn == "03"'>
+				AND C.LST_RATE_NM LIKE '%' || #{searchName} || '%'
+				</if>
+				<!--고객명 필터-->
+				<if test='searchGbn == "04"'>
+				AND UPPER(B.SUB_LINK_NAME) LIKE UPPER(#{searchName}) || '%'
+				</if>
+			  </if>
+		ORDER BY A.REQ_SEQ DESC
+	</sql>
+	
+	<!--대리점 VOC 목록 리스트 조회-->
+	<select id="getAcenVocList" parameterType="com.ktis.msp.voc.vocMgmt.vo.AcenVocVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	  /*AcenVocMapper.getAcenVocList*/
+	  <include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="getAcenVoc" />
+	  <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!--대리점 VOC 목록 엑셀 리스트 조회-->
+	<select id="getAcenVocListExcel" parameterType="com.ktis.msp.voc.vocMgmt.vo.AcenVocVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	  /*AcenVocMapper.getAcenVocListExcel*/
+	  <include refid="getAcenVoc" />
+	</select>
+
+	<sql id="getAcenVocHist">
+		SELECT
+		   A.VOC_SEQ
+		  ,A.CONTRACT_NUM
+		  ,TO_CHAR(B.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM
+		  ,FN_GET_ORGNM(B.VOC_AGNT_CD) || '/' || B.VOC_AGNT_CD AS VOC_AGNT_CD_NAME
+		  ,FN_GET_CODENM('ACEN0006', B.VOC_SUB_CTG_CD) AS VOC_SUB_CTG_CD_NAME
+		  ,TO_CHAR(TO_DATE(B.DUE_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS DUE_DT
+		  ,FN_GET_CODENM('ACEN0005', B.STATUS) AS STATUS_NAME
+		  ,B.VOC_CONTENT
+		  ,B.ANS_CONTENT
+		  ,B.CALL_CONTENT
+		  ,DECODE(B.REGST_ID, 'ACEN', B.REGST_ID, FN_GET_USRNM(B.REGST_ID)) AS REGST_NAME
+		FROM NMCP_ACEN_VOC_REQ@DL_MCP A
+		    ,NMCP_ACEN_VOC_HIST@DL_MCP B
+		WHERE A.REQ_SEQ = B.REQ_SEQ
+		  AND A.REQ_SEQ = #{reqSeq}
+		  <if test='cntpntShopId != null and cntpntShopId != ""'>
+			AND A.VOC_AGNT_CD = #{cntpntShopId}
+		  </if>
+		  <if test='sessionUserOrgnTypeCd != "10"'>
+			AND A.STATUS != '00'
+		  </if>
+	  ORDER BY B.SEQ DESC
+	</sql>
+
+	<!--대리점 VOC 목록 리스트 수정이력 조회-->
+	<select id="getAcenVocHistList" parameterType="com.ktis.msp.voc.vocMgmt.vo.AcenVocVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*AcenVocMapper.getAcenVocHistList*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			<include refid="getAcenVocHist" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!--대리점 VOC 목록 엑셀 리스트 수정이력 조회-->
+	<select id="getAcenVocHistListExcel" parameterType="com.ktis.msp.voc.vocMgmt.vo.AcenVocVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*AcenVocMapper.getAcenVocHistListExcel*/
+		<include refid="getAcenVocHist" />
+	</select>
+
+	<!--대리점 VOC 목록 개별건 조회-->
+	<select id="getAcenVocInfo" parameterType="com.ktis.msp.voc.vocMgmt.vo.AcenVocVo" resultType="com.ktis.msp.voc.vocMgmt.vo.AcenVocVo">
+		/*AcenVocMapper.getAcenVocInfo*/
+		SELECT
+		   REQ_SEQ AS reqSeq
+		  ,VOC_SEQ AS vocSeq
+		  ,CONTRACT_NUM AS contractNum
+		  ,VOC_AGNT_CD AS vocAgntCd
+		  ,STATUS AS status
+		  ,VOC_SUB_CTG_CD AS vocSubCtgCd
+		  ,VOC_CONTENT AS vocContent
+		  ,DUE_DT AS dueDt
+		  ,ANS_CONTENT AS ansContent
+		  ,CALL_CONTENT AS callContent
+		  ,TO_CHAR(RVISN_DTTM, 'YYYYMMDDHH24MISS') AS rvisnDttm
+		  ,RVISN_ID AS rvisnId
+		FROM NMCP_ACEN_VOC_REQ@DL_MCP
+		WHERE REQ_SEQ = #{reqSeq}
+		<if test='cntpntShopId != null and cntpntShopId != ""'>
+			AND VOC_AGNT_CD = #{cntpntShopId}
+		</if>
+	</select>
+
+	<!--대리점 VOC 수정-->
+	<update id="updateAcenVocInfo" parameterType="com.ktis.msp.voc.vocMgmt.vo.AcenVocVo">
+		/*AcenVocMapper.updateAcenVocInfo*/
+		UPDATE NMCP_ACEN_VOC_REQ@DL_MCP
+		SET RVISN_ID = #{sessionUserId}
+		   ,RVISN_DTTM = SYSDATE
+		   <if test='vocAgntCd != null and vocAgntCd != ""'>
+			 ,VOC_AGNT_CD = #{vocAgntCd}
+		   </if>
+		   <if test='status != null and status != ""'>
+			 ,STATUS = #{status}
+		   </if>
+		   <if test='dueDt != null and dueDt != ""'>
+			 ,DUE_DT = #{dueDt}
+		   </if>
+		   <if test='ansContent != null and ansContent != ""'>
+			 ,ANS_CONTENT = #{ansContent}
+		   </if>
+		   <if test='callContent != null and callContent != ""'>
+			 ,CALL_CONTENT = #{callContent}
+		   </if>
+		WHERE REQ_SEQ = #{reqSeq}
+	</update>
+
+	<!--대리점 VOC 수정이력 저장-->
+	<insert id="insertAcenVocHist" parameterType="java.lang.String">
+		/*AcenVocMapper.insertAcenVocHist*/
+		INSERT INTO NMCP_ACEN_VOC_HIST@DL_MCP(
+		   REQ_SEQ
+		  ,SEQ
+		  ,VOC_AGNT_CD
+		  ,STATUS
+		  ,DUE_DT
+		  ,VOC_SUB_CTG_CD
+		  ,VOC_CONTENT
+		  ,ANS_CONTENT
+		  ,CALL_CONTENT
+		  ,REGST_ID
+		  ,REGST_DTTM
+		)
+		SELECT
+			REQ_SEQ
+			,NVL((SELECT MAX(SEQ) + 1 FROM NMCP_ACEN_VOC_HIST@DL_MCP WHERE REQ_SEQ = #{reqSeq}), 1)
+			,VOC_AGNT_CD
+			,STATUS
+			,DUE_DT
+			,VOC_SUB_CTG_CD
+			,VOC_CONTENT
+			,ANS_CONTENT
+			,CALL_CONTENT
+			,RVISN_ID
+			,SYSDATE
+		FROM NMCP_ACEN_VOC_REQ@DL_MCP
+		WHERE REQ_SEQ = #{reqSeq}
+	</insert>
+
+</mapper>

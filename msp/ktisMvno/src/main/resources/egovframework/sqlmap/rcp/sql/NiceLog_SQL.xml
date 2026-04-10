@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.NiceLogMapper">
+
+    <update id="insertMcpNiceHist" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.NiceLogVO" >
+        <selectKey keyProperty="niceHistSeq" resultType="Long" order="BEFORE">
+            SELECT SQ_HIST_SEQ.NEXTVAL@DL_MCP FROM DUAL
+        </selectKey>
+        INSERT INTO MCP_NICE_HIST@DL_MCP (
+            NICE_HIST_SEQ,              --PK
+            REQ_SEQ,                    --일련번호 기본키
+            RES_SEQ,                    --요청 일련번호
+            AUTH_TYPE,                  --요청 구분
+            NAME,                       --인증성명
+            BIRTH_DATE,                 --인증생년월일
+            GENDER,                     --GENDER
+            NATIONAL_INFO,              --NATIONAL_INFO
+            DUP_INFO,                   --DUP_INFO
+            CONN_INFO,                  --CONN_INFO
+            PARAM_R1,                   --PARAM_R1
+            PARAM_R2,                   --PARAM_R2
+            PARAM_R3,                   --PARAM_R3
+            END_YN,                     --종료여부
+            N_REFERER,                  --referer
+            RIP,                        --등록아이피
+            SYS_RDATE_DT,               --등록일
+            SYS_RDATE,                  --등록일시
+            RVISN_DTTM,                 --수정일
+            COMPL_DTTM,                 --인증 완료시
+            MOBILE_CO,                  --이동사구분 (모바일 인증)
+            MOBILE_NO                   --휴대폰 번호 (모바일 인증)
+        ) VALUES (
+            #{niceHistSeq},
+            #{reqSeq},
+            #{resSeq},
+            #{authType},
+            #{name},
+            #{birthDate},
+            #{gender},
+            #{nationalInfo},
+            #{dupInfo},
+            #{connInfo},
+            #{paramR1},
+            #{paramR2},
+            #{paramR3},
+            'N',
+            #{nReferer},
+            #{rip},
+            TO_CHAR(SYSDATE, 'YYYYMMDD'),
+            <choose>
+                <when test="sysRdate != null">
+                    #{sysRdate},
+                </when>
+                <otherwise>
+                    SYSDATE,
+                </otherwise>
+            </choose>
+            SYSDATE,
+            SYSDATE,
+            #{sMobileCo},
+            #{sMobileNo}
+        )
+    </update>
+
+</mapper>

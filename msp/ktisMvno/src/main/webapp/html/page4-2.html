@@ -1,0 +1,138 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<title>iframe sample</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<!-- Library -->
+<link rel="stylesheet" type="text/css" href="../lib/dhtmlx/codebase/dhtmlx.css"/>
+<link rel="stylesheet" type="text/css" href="../css/mvno.css"/>
+<script src="../lib/jquery/jquery-1.9.1.js"></script>
+<script src="../lib/dhtmlx/codebase/dhtmlx.js"></script>
+<script src="../js/mvno.js"></script>
+<!-- //Library  -->
+
+</head>
+
+<body>
+
+	<!-- 화면 배치 -->
+	<div id="FORM1"></div>
+
+	<!-- Script -->
+	<script type="text/javascript">
+
+		var DHX = {
+             FORM1 : {
+				 //title : "타이틀",
+				 items : [
+
+{type:"settings", position:"label-left", labelAlign:"left", labelWidth:55, blockOffset:0}
+
+					//사번, 이름
+					,{type:"block", list:[
+						{type:"input", label:"사번", width:100}
+						,{type:"newcolumn"}
+						,{type:"input", label:"이름", width:100, offsetLeft:60}
+					]}
+
+					//성별, 나이
+					,{type:"block", list:[
+						{type: "label", label: "성별", list:[
+							{type:"settings", position:"label-right", labelWidth:20}
+							,{type: "radio", name: "", value: "", label: "남", checked: true}
+							,{type:"newcolumn"}
+							,{type: "radio", name: "", value: "", label: "여"}
+						]}
+						,{type:"newcolumn"}
+						,{type:"input", label:"나이", width:100, offsetLeft:76}
+					]}
+
+					//입사일자, 부서
+					,{type:"block", list:[
+						{type:"calendar", label:"입사일자", width:100}
+						,{type:"newcolumn"}
+						,{type:"input", label:"부서", width:100, offsetLeft:60}
+						,{type:"newcolumn"}
+						,{type:"button", value:"찾기"}
+						,{type:"newcolumn"}
+						,{type:"input", width:100}
+					]}
+
+					//직급, 취미
+					,{type:"block", list:[
+						{type:"select", label:"직급", width:100, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"newcolumn"}
+						,{type: "label", label: "취미", offsetLeft:60, list:[
+							{type:"settings", position:"label-right", labelWidth:30}
+							,{type: "checkbox", label: "등산", checked: true}
+							,{type:"newcolumn"}
+							,{type: "checkbox", label: "낚시"}
+							,{type:"newcolumn"}
+							,{type: "checkbox", label: "바둑"}
+							,{type:"newcolumn"}
+							,{type: "checkbox", label: "영화감상", labelWidth:60}
+							,{type:"newcolumn"}
+							,{type: "checkbox", label: "게임1"}
+							,{type:"newcolumn"}
+							,{type: "checkbox", label: "게임2"}
+						]}
+					]}
+
+					,{type:"newcolumn"}
+					,{type: "fieldset", label: "조직부가정보", inputWidth:910, list:[{type:"settings", position:"label-right", labelWidth:90}
+						,{type: "checkbox", name: "", value: 1, label: "단말주문여부"}
+						,{type:"newcolumn"}
+						,{type: "checkbox", name: "", value: 2, label: "단말재고여부"}
+						,{type:"newcolumn"}
+						,{type: "checkbox", name: "", value: 3, label: "세금계산서발행여부", labelWidth:120}
+						,{type:"newcolumn"}
+						,{type: "checkbox", name: "", value: 4, label: "수수료지급여부"}
+					]}
+
+					,{type:"newcolumn"}
+					,{type: "fieldset", label: "선순위내역", inputWidth:910, list:[{type:"settings", labelWidth:90}
+						,{type:"input", label: "선순위자명1"}
+						,{type:"newcolumn"}
+						,{type:"input", label: "선순위자명2", offsetLeft:10}
+						,{type:"newcolumn"}
+						,{type:"input", label: "선순위자명3", offsetLeft:10}
+						
+						,{type:"newcolumn"}
+						,{type:"block", blockOffset:0, list:[
+							{type:"input", label: "선순위자금액1"}
+							,{type:"newcolumn"}
+							,{type:"input", label: "선순위자금액2", offsetLeft:10}
+							,{type:"newcolumn"}
+							,{type:"input", label: "선순위자금액3", offsetLeft:10}
+						]},
+					]}
+				],
+				buttons : {
+					left : {
+						btn1 : { label : "버튼1" },
+						btn2 : { label : "버튼2"}
+					},
+					right : {
+						btnAddRow : { label : "AddRow" },
+						btnDeleteRow : { label : "DeleteRow"}
+					}
+				}
+
+
+			 }
+		};
+
+        var PAGE = {
+			onOpen : function() {
+				mvno.ui.createForm("FORM1");
+			}
+		};
+	</script>
+
+	<script src="../js/mvno_footer.js"></script>
+
+</body>
+</html>

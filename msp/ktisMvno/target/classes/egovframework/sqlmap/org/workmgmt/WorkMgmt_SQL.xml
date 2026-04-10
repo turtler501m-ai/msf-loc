@@ -1,0 +1,574 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace= "com.ktis.msp.org.workmgmt.mapper.WorkMgmtMapper">
+
+    <sql id="workTmplList">
+        WITH ITEM_INFO AS (
+                SELECT  TIT.WORK_TMPL_ID
+                        ,COUNT(DISTINCT TIT.ITEM_ID) AS DOC_CNT
+                        ,LISTAGG(IT.ITEM_NM, ',') WITHIN GROUP (ORDER BY IT.ITEM_NM) AS ITEM_NM
+                        ,LISTAGG(IT.REQUEST_YN, ',') WITHIN GROUP (ORDER BY IT.REQUEST_YN) AS REQUEST_YN
+                FROM    NMCP_WORK_TMPL_ITEM@DL_MCP TIT
+                        ,NMCP_WORK_ITEM@DL_MCP IT
+                WHERE   TIT.ITEM_ID = IT.ITEM_ID
+                GROUP BY TIT.WORK_TMPL_ID
+        ),
+            OWNER_INFO AS (
+                SELECT TOW.WORK_TMPL_ID
+                        ,LISTAGG(OW.OWNER_NM, ',') WITHIN GROUP (ORDER BY OW.OWNER_NM) AS OWNER_NM
+                FROM    NMCP_WORK_TMPL_OWNER@DL_MCP TOW
+                        ,NMCP_WORK_OWNER@DL_MCP OW
+                WHERE   TOW.OWNER_ID = OW.OWNER_ID
+                GROUP BY TOW.WORK_TMPL_ID
+        ),
+            RQSTR_INFO AS (
+                SELECT TRQ.WORK_TMPL_ID
+                        ,LISTAGG(RQ.RQSTR_NM, ',') WITHIN GROUP (ORDER BY RQ.RQSTR_NM) AS RQSTR_NM
+                FROM    NMCP_WORK_TMPL_RQSTR@DL_MCP TRQ
+                        ,NMCP_WORK_RQSTR@DL_MCP RQ
+                WHERE   TRQ.RQSTR_ID = RQ.RQSTR_ID
+                GROUP BY TRQ.WORK_TMPL_ID
+        )
+        SELECT TMPL.WORK_TMPL_ID
+                ,TMPL.WORK_TMPL_NM
+                ,TMPL.WORK_ID
+                ,(SELECT WORK_NM FROM EMV_SCAN_WORK@DL_MCP WHERE WORK_ID = TMPL.WORK_ID AND ROWNUM = 1) AS  WORK_NM
+                ,NVL(I.DOC_CNT,0) AS DOC_CNT
+                ,I.ITEM_NM
+                ,I.REQUEST_YN
+                ,O.OWNER_NM
+                ,R.RQSTR_NM
+                ,TO_CHAR(TMPL.START_DT, 'YYYYMMDDHH24MISS') AS START_DT
+                ,TO_CHAR(TMPL.END_DT, 'YYYYMMDDHH24MISS') AS END_DT
+                ,FN_GET_USRNM(TMPL.CRET_ID) AS CRET_NM
+                ,TO_CHAR(TMPL.CRET_DT,'YYYYMMDD') AS CRET_DT
+                ,FN_GET_USRNM(TMPL.AMD_ID) AS AMD_NM
+                ,TO_CHAR(TMPL.AMD_DT,'YYYYMMDD') AS AMD_DT
+                ,TMPL.USE_YN
+                ,FN_GET_CODENM('CMN0011', TMPL.USE_YN) AS USE_YN_NM
+        FROM    NMCP_WORK_TMPL@DL_MCP TMPL
+                ,ITEM_INFO I
+                ,OWNER_INFO O
+                ,RQSTR_INFO R
+        WHERE 1=1
+        AND TMPL.WORK_TMPL_ID = I.WORK_TMPL_ID
+        AND TMPL.WORK_TMPL_ID = O.WORK_TMPL_ID
+        AND TMPL.WORK_TMPL_ID = R.WORK_TMPL_ID
+        AND TO_DATE(#{searchBaseDate}, 'YYYYMMDD') BETWEEN TRUNC(TMPL.START_DT) AND TRUNC(TMPL.END_DT)
+        <if test="workId != null and workId != ''">
+            AND TMPL.WORK_ID = #{workId}
+        </if>
+        <if test="workTmplNm != null and workTmplNm != ''">
+            AND UPPER(TMPL.WORK_TMPL_NM) LIKE '%' || UPPER(#{workTmplNm}) || '%'
+        </if>
+        <if test="itemNm != null and itemNm != ''">
+            AND UPPER(I.ITEM_NM) LIKE '%' || UPPER(#{itemNm}) || '%'
+        </if>
+        <if test="ownerNm != null and ownerNm != ''">
+            AND UPPER(O.OWNER_NM) LIKE '%' || UPPER(#{ownerNm}) || '%'
+        </if>
+        <if test="rqstrNm != null and rqstrNm != ''">
+            AND UPPER(R.RQSTR_NM) LIKE '%' || UPPER(#{rqstrNm}) || '%'
+        </if>
+        <if test="useYn != null and useYn != ''">
+            AND TMPL.USE_YN = #{useYn}
+        </if>
+        <if test="rqstrId != null and rqstrId != ''">
+            AND EXISTS ( SELECT 1
+                           FROM NMCP_WORK_TMPL_RQSTR@DL_MCP WTR
+                          WHERE WTR.WORK_TMPL_ID = TMPL.WORK_TMPL_ID
+                            AND WTR.RQSTR_ID = #{rqstrId} )
+        </if>
+        ORDER BY TMPL.WORK_TMPL_ID DESC
+    </sql>
+
+    <!--업무템플릿 조회-->
+    <select id="getWorkTmplList" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*WorkMgmtMapper.getWorkTmplList*/
+        <include refid="com.ktis.msp.cmn.include.paging-start" />
+        <include refid="workTmplList" />
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+
+    <!--업무템플릿 목록 엑셀다운로드-->
+    <select id="getWorkTmplListExcel" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*StatsMgmtMapper.getWorkTmplListExcel*/
+        <include refid="workTmplList" />
+    </select>
+
+    <!--수취서류명 중복체크-->
+    <select id="dupChkItem" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="int">
+        /*WorkMgmtMapper.dupChkItem*/
+        SELECT COUNT(1)
+        FROM NMCP_WORK_ITEM@DL_MCP
+        WHERE ITEM_NM = #{itemNm}
+          AND STATUS = 'A'
+          <if test="itemId != null and itemId != ''">
+            AND ITEM_ID != #{itemId}
+          </if>
+    </select>
+
+    <!--수취서류구분 등록-->
+    <insert id="insertWorkItem" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.insertWorkItem */
+        INSERT INTO NMCP_WORK_ITEM@DL_MCP
+        (
+            ITEM_ID
+            ,ITEM_NM
+            ,STATUS
+            ,REQUEST_YN
+            ,CRET_ID
+            ,CRET_DT
+         )
+        VALUES
+        (
+            TO_CHAR(SYSDATE,'YYYYMMDD') || LPAD(SQ_WORK_ITEM.NEXTVAL@DL_MCP, 4, '0')
+            ,#{itemNm}
+            ,'A'
+            ,#{requestYn}
+            ,#{sessionUserId}
+            ,SYSDATE
+        )
+    </insert>
+
+    <!--수취서류구분 수정-->
+    <update id="updateWorkItem" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.updateWorkItem */
+        UPDATE NMCP_WORK_ITEM@DL_MCP
+        SET ITEM_NM = #{itemNm}
+            ,REQUEST_YN = #{requestYn}
+            ,AMD_ID = #{sessionUserId}
+            ,AMD_DT = SYSDATE
+        WHERE ITEM_ID = #{itemId}
+    </update>
+
+    <!--수취서류구분 종료(삭제)-->
+    <update id="updateWorkItemEnd" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.updateWorkItemEnd */
+        UPDATE NMCP_WORK_ITEM@DL_MCP
+        SET STATUS = 'D'
+          ,DEL_DT = SYSDATE
+          ,AMD_ID = #{sessionUserId}
+          ,AMD_DT = SYSDATE
+        WHERE ITEM_ID = #{itemId}
+    </update>
+
+    <!--수취서류구분 목록 조회-->
+    <select id="getWorkItemList" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*WorkMgmtMapper.getWorkItemList*/
+         SELECT DECODE(B.ITEM_ID, NULL, '0', '1') AS ROW_CHECK
+               ,A.ITEM_ID
+               ,A.STATUS
+               ,A.ITEM_NM
+               ,A.REQUEST_YN
+               ,FN_GET_USRNM(A.CRET_ID) AS CRET_NM
+               ,TO_CHAR(A.CRET_DT, 'YYYYMMDD') AS CRET_DT
+               ,FN_GET_USRNM(A.AMD_ID) AS AMD_NM
+               ,TO_CHAR(A.AMD_DT, 'YYYYMMDD') AS AMD_DT
+        FROM NMCP_WORK_ITEM@DL_MCP A
+            ,NMCP_WORK_TMPL_ITEM@DL_MCP B
+        WHERE   A.ITEM_ID = B.ITEM_ID(+)
+          AND   B.WORK_TMPL_ID(+) = #{workTmplId}
+          AND   (A.STATUS = 'A' OR  B.ITEM_ID IS NOT NULL)
+        ORDER BY ROW_CHECK DESC, A.ITEM_NM
+    </select>
+
+    <!--명의자구분명 중복체크-->
+    <select id="dupChkOwner" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="int">
+        /*WorkMgmtMapper.dupChkOwner*/
+        SELECT COUNT(1)
+        FROM NMCP_WORK_OWNER@DL_MCP
+        WHERE OWNER_NM = #{ownerNm}
+          AND STATUS = 'A'
+        <if test="ownerId != null and ownerId != ''">
+            AND OWNER_ID != #{ownerId}
+        </if>
+    </select>
+
+    <!--명의자구분 등록-->
+    <insert id="insertWorkOwner" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.insertWorkOwner */
+        INSERT INTO NMCP_WORK_OWNER@DL_MCP
+        (
+            OWNER_ID
+            ,OWNER_NM
+            ,STATUS
+            ,CRET_ID
+            ,CRET_DT
+         )
+        VALUES
+        (
+            TO_CHAR(SYSDATE,'YYYYMMDD') || LPAD(SQ_WORK_OWNER.NEXTVAL@DL_MCP, 4, '0')
+            ,#{ownerNm}
+            ,'A'
+            ,#{sessionUserId}
+            ,SYSDATE
+        )
+    </insert>
+
+    <!--명의자구분 수정-->
+    <update id="updateWorkOwner" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.updateWorkOwner */
+        UPDATE NMCP_WORK_OWNER@DL_MCP
+        SET OWNER_NM = #{ownerNm}
+            ,AMD_ID = #{sessionUserId}
+            ,AMD_DT = SYSDATE
+        WHERE OWNER_ID = #{ownerId}
+    </update>
+
+    <!--명의자구분 종료(삭제)-->
+    <update id="updateWorkOwnerEnd" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.updateWorkOwnerEnd */
+        UPDATE NMCP_WORK_OWNER@DL_MCP
+        SET STATUS = 'D'
+          ,DEL_DT = SYSDATE
+          ,AMD_ID = #{sessionUserId}
+          ,AMD_DT = SYSDATE
+        WHERE OWNER_ID = #{ownerId}
+    </update>
+
+    <!--명의자구분 목록 조회-->
+    <select id="getWorkOwnerList" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*WorkMgmtMapper.getWorkOwnerList*/
+        SELECT DECODE(B.OWNER_ID, NULL, '0', '1') AS ROW_CHECK
+             ,A.OWNER_ID
+             ,A.STATUS
+             ,A.OWNER_NM
+             ,FN_GET_USRNM(A.CRET_ID) AS CRET_NM
+             ,TO_CHAR(A.CRET_DT, 'YYYYMMDD') AS CRET_DT
+             ,FN_GET_USRNM(A.AMD_ID) AS AMD_NM
+             ,TO_CHAR(A.AMD_DT, 'YYYYMMDD') AS AMD_DT
+        FROM NMCP_WORK_OWNER@DL_MCP A
+           ,NMCP_WORK_TMPL_OWNER@DL_MCP B
+        WHERE   A.OWNER_ID = B.OWNER_ID(+)
+          AND   B.WORK_TMPL_ID(+) = #{workTmplId}
+          AND   (A.STATUS = 'A' OR B.OWNER_ID IS NOT NULL)
+        ORDER BY ROW_CHECK DESC, A.OWNER_NM
+    </select>
+
+    <!--요청자구분명 중복체크-->
+    <select id="dupChkRqstr" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="int">
+        /*WorkMgmtMapper.dupChkRqstr*/
+        SELECT COUNT(1)
+        FROM NMCP_WORK_RQSTR@DL_MCP
+        WHERE RQSTR_NM = #{rqstrNm}
+          AND STATUS = 'A'
+        <if test="rqstrId != null and rqstrId != ''">
+            AND RQSTR_ID != #{rqstrId}
+        </if>
+    </select>
+
+    <!--요청자구분 등록-->
+    <insert id="insertWorkRqstr" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.insertWorkRqstr */
+        INSERT INTO NMCP_WORK_RQSTR@DL_MCP
+        (
+             RQSTR_ID
+            ,RQSTR_NM
+            ,STATUS
+            ,CRET_ID
+            ,CRET_DT
+         )
+        VALUES
+        (
+            TO_CHAR(SYSDATE,'YYYYMMDD') || LPAD(SQ_WORK_RQSTR.NEXTVAL@DL_MCP, 4, '0')
+            ,#{rqstrNm}
+            ,'A'
+            ,#{sessionUserId}
+            ,SYSDATE
+        )
+    </insert>
+
+    <!--요청자구분 수정-->
+    <update id="updateWorkRqstr" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.updateWorkRqstr */
+        UPDATE NMCP_WORK_RQSTR@DL_MCP
+        SET RQSTR_NM = #{rqstrNm}
+            ,AMD_ID = #{sessionUserId}
+            ,AMD_DT = SYSDATE
+        WHERE RQSTR_ID = #{rqstrId}
+    </update>
+
+    <!--id업무템플릿 내 사용여부 조회-->
+    <select id="checkWorkTmplInUse" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* WorkMgmtMapper.checkWorkTmplInUse */
+        SELECT  A.WORK_TMPL_ID
+                ,A.WORK_TMPL_NM
+        FROM    NMCP_WORK_TMPL@DL_MCP A
+                ,NMCP_WORK_TMPL_ITEM@DL_MCP B
+                ,NMCP_WORK_TMPL_OWNER@DL_MCP C
+                ,NMCP_WORK_TMPL_RQSTR@DL_MCP D
+        WHERE   A.WORK_TMPL_ID = B.WORK_TMPL_ID
+          AND   A.WORK_TMPL_ID = C.WORK_TMPL_ID
+          AND   A.WORK_TMPL_ID = D.WORK_TMPL_ID
+          AND   A.END_DT <![CDATA[ > ]]> SYSDATE
+          <if test="itemId != null and itemId != ''">
+            AND   B.ITEM_ID = #{itemId}
+          </if>
+          <if test="ownerId != null and ownerId != ''">
+            AND   C.OWNER_ID = #{ownerId}
+          </if>
+          <if test="rqstrId != null and rqstrId != ''">
+            AND   D.RQSTR_ID = #{rqstrId}
+          </if>
+          AND   ROWNUM = 1
+    </select>
+
+    <!--요청자구분 종료(삭제)-->
+    <update id="updateWorkRqstrEnd" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.updateWorkRqstrEnd */
+        UPDATE NMCP_WORK_RQSTR@DL_MCP
+        SET STATUS = 'D'
+          ,DEL_DT = SYSDATE
+          ,AMD_ID = #{sessionUserId}
+          ,AMD_DT = SYSDATE
+        WHERE RQSTR_ID = #{rqstrId}
+    </update>
+
+    <!--요청자구분 목록조회-->
+    <select id="getWorkRqstrList" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*WorkMgmtMapper.getWorkRqstrList*/
+        SELECT DECODE(B.RQSTR_ID, NULL, '0', '1') AS ROW_CHECK
+             ,A.RQSTR_ID
+             ,A.STATUS
+             ,A.RQSTR_NM
+             ,FN_GET_USRNM(A.CRET_ID) AS CRET_NM
+             ,TO_CHAR(A.CRET_DT, 'YYYYMMDD') AS CRET_DT
+             ,FN_GET_USRNM(A.AMD_ID) AS AMD_NM
+             ,TO_CHAR(A.AMD_DT, 'YYYYMMDD') AS AMD_DT
+        FROM NMCP_WORK_RQSTR@DL_MCP A
+           ,NMCP_WORK_TMPL_RQSTR@DL_MCP B
+        WHERE   A.RQSTR_ID = B.RQSTR_ID(+)
+          AND   B.WORK_TMPL_ID(+) = #{workTmplId}
+          AND   (A.STATUS = 'A' OR B.RQSTR_ID IS NOT NULL)
+        ORDER BY ROW_CHECK DESC, A.RQSTR_NM
+    </select>
+
+    <!--문자템플릿 목록조회-->
+    <select id="getWorkSmsList" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*WorkMgmtMapper.getWorkSmsList*/
+        SELECT DECODE(B.SMS_TEMPLATE_ID, NULL, '0', '1') AS ROW_CHECK
+               ,A.TEMPLATE_ID AS SMS_TEMPLATE_ID
+               ,A.TEMPLATE_NM AS SMS_TEMPLATE_NM
+               ,A.SUBJECT
+               ,FN_GET_CODENM('CMN0070', A.CALLBACK) AS CALLBACK
+               ,A.TEXT AS SMS_TEXT
+        FROM MSP_SMS_TEMPLATE_MST A
+            ,NMCP_WORK_TMPL_SMS@DL_MCP B
+        WHERE   A.TEMPLATE_ID = B.SMS_TEMPLATE_ID(+)
+        AND     A.WORK_TYPE = 'DOC'
+        AND     B.WORK_TMPL_ID(+) = #{workTmplId}
+        AND     A.TEMPLATE_ID != 394
+        ORDER BY ROW_CHECK DESC, A.TEMPLATE_NM
+    </select>
+
+    <!--문자템플릿 목록조회-->
+    <select id="getWorkSmsListByWorkTmplId" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*WorkMgmtMapper.getWorkSmsListByWorkTmplId*/
+        SELECT WTS.SMS_TEMPLATE_ID
+             , SMS.TEMPLATE_NM AS SMS_TEMPLATE_NM
+             , SMS.SUBJECT
+             , FN_GET_CODENM('CMN0070', SMS.CALLBACK) AS CALLBACK
+             , SMS.TEXT AS SMS_TEXT
+        FROM NMCP_WORK_TMPL_SMS@DL_MCP WTS
+           , MSP_SMS_TEMPLATE_MST SMS
+        WHERE WTS.WORK_TMPL_ID = #{workTmplId}
+          AND WTS.SMS_TEMPLATE_ID = SMS.TEMPLATE_ID
+        ORDER BY WTS.SMS_TEMPLATE_ID
+    </select>
+
+    <!--업무 템플릿 등록-->
+    <insert id="insertWorkTmpl" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.insertWorkTmpl */
+        <selectKey keyProperty="workTmplId" order="BEFORE" resultType="String">
+            SELECT TO_CHAR(SYSDATE,'YYYYMMDD') || LPAD(SQ_WORK_TMPL.NEXTVAL@DL_MCP, 4, '0') AS WORK_TMPL_ID
+            FROM DUAL
+        </selectKey>
+
+        INSERT INTO NMCP_WORK_TMPL@DL_MCP
+        (
+            WORK_TMPL_ID
+            ,WORK_ID
+            ,WORK_TMPL_NM
+            ,USE_YN
+            ,START_DT
+            ,END_DT
+            ,CRET_ID
+            ,CRET_DT
+        )
+        VALUES
+        (
+            #{workTmplId}
+            ,#{workId}
+            ,#{workTmplNm}
+            ,#{useYn}
+            ,SYSDATE
+            ,TO_DATE('9999-12-31 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+            ,#{sessionUserId}
+            ,SYSDATE
+        )
+    </insert>
+
+    <!--업무 템플릿 수취서류 관계 등록-->
+    <insert id="insertWorkTmplItem" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.insertWorkTmplItem */
+        INSERT INTO NMCP_WORK_TMPL_ITEM@DL_MCP
+        (
+            WORK_TMPL_ID
+            ,ITEM_ID
+            ,CRET_ID
+            ,CRET_DT
+        )
+        VALUES
+        (
+            #{workTmplId}
+            ,#{itemId}
+            ,#{sessionUserId}
+            ,SYSDATE
+        )
+    </insert>
+
+    <!--업무 템플릿 명의자 관계 등록-->
+    <insert id="insertWorkTmplOwner" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.insertWorkTmplOwner */
+        INSERT INTO NMCP_WORK_TMPL_OWNER@DL_MCP
+        (
+            WORK_TMPL_ID
+            ,OWNER_ID
+            ,CRET_ID
+            ,CRET_DT
+        )
+        VALUES
+        (
+            #{workTmplId}
+            ,#{ownerId}
+            ,#{sessionUserId}
+            ,SYSDATE
+        )
+    </insert>
+
+    <!--업무 템플릿 요청자 관계 등록-->
+    <insert id="insertWorkTmplRqstr" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.insertWorkTmplRqstr */
+        INSERT INTO NMCP_WORK_TMPL_RQSTR@DL_MCP
+        (
+            WORK_TMPL_ID
+            ,RQSTR_ID
+            ,CRET_ID
+            ,CRET_DT
+        )
+        VALUES
+        (
+            #{workTmplId}
+            ,#{rqstrId}
+            ,#{sessionUserId}
+            ,SYSDATE
+        )
+    </insert>
+
+    <!--업무 템플릿 문자템플릿 관계 등록-->
+    <insert id="insertWorkTmplSms" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.insertWorkTmplSms */
+        INSERT INTO NMCP_WORK_TMPL_SMS@DL_MCP
+        (
+            WORK_TMPL_ID
+            ,SMS_TEMPLATE_ID
+            ,CRET_ID
+            ,CRET_DT
+        )
+        VALUES
+        (
+            #{workTmplId}
+            ,#{smsTemplateId}
+            ,#{sessionUserId}
+            ,SYSDATE
+        )
+    </insert>
+
+    <!--업무템플릿 기존 데이터 종료-->
+    <select id="getWorkTmplEndDt" resultType="String" parameterType="String">
+        /* WorkMgmtMapper.getWorkTmplEndDt */
+        SELECT TO_CHAR(END_DT, 'YYYYMMDDHH24MISS') AS END_DT
+        FROM NMCP_WORK_TMPL@DL_MCP
+        WHERE WORK_TMPL_ID = #{workTmplId}
+    </select>
+
+    <!--업무 템플릿 수취서류 관계 조회-->
+    <select id="getWorkTmplItemList" resultType="String" parameterType="String">
+        /* WorkMgmtMapper.getWorkTmplItemList */
+        SELECT ITEM_ID
+        FROM NMCP_WORK_TMPL_ITEM@DL_MCP
+        WHERE WORK_TMPL_ID = #{workTmplId}
+    </select>
+
+    <!--업무 템플릿 명의자 관계 조회-->
+    <select id="getWorkTmplOwnerList" resultType="String" parameterType="String">
+        /* WorkMgmtMapper.getWorkTmplOwnerList */
+        SELECT OWNER_ID
+        FROM NMCP_WORK_TMPL_OWNER@DL_MCP
+        WHERE WORK_TMPL_ID = #{workTmplId}
+    </select>
+
+    <!--업무 템플릿 요청자 관계 조회-->
+    <select id="getWorkTmplRqstrList" resultType="String" parameterType="String">
+        /* WorkMgmtMapper.getWorkTmplRqstrList */
+        SELECT RQSTR_ID
+        FROM NMCP_WORK_TMPL_RQSTR@DL_MCP
+        WHERE WORK_TMPL_ID = #{workTmplId}
+    </select>
+
+    <!--업무템플릿 문자템플릿 관계 조회-->
+    <select id="getWorkTmplSmsList" resultType="String" parameterType="String">
+        /* WorkMgmtMapper.getWorkTmplSmsList */
+        SELECT SMS_TEMPLATE_ID
+        FROM NMCP_WORK_TMPL_SMS@DL_MCP
+        WHERE WORK_TMPL_ID = #{workTmplId}
+    </select>
+
+    <!--업무템플릿 종료(기존데이터)-->
+    <update id="updateWorkTmplEnd" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.updateWorkTmplEnd */
+        UPDATE NMCP_WORK_TMPL@DL_MCP
+        SET END_DT = SYSDATE
+            ,USE_YN = 'N'
+            ,AMD_ID = #{sessionUserId}
+            ,AMD_DT = SYSDATE
+        WHERE WORK_TMPL_ID = #{workTmplId}
+    </update>
+
+    <!--업무템플릿 수정(업무유형, 업무명, 사용여부)-->
+    <update id="updateWorkTmpl" parameterType="com.ktis.msp.org.workmgmt.vo.WorkMgmtVO">
+        /* WorkMgmtMapper.updateWorkTmpl */
+        UPDATE NMCP_WORK_TMPL@DL_MCP
+        SET WORK_ID = #{workId}
+            ,WORK_TMPL_NM = #{workTmplNm}
+            ,USE_YN = #{useYn}
+            ,AMD_ID = #{sessionUserId}
+            ,AMD_DT = SYSDATE
+        WHERE WORK_TMPL_ID = #{workTmplId}
+    </update>
+
+    <!--업무유형 목록조회-->
+    <select id="getWorkIdList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* WorkMgmtMapper.getWorkIdList */
+        SELECT WORK_ID AS VALUE
+               ,WORK_NM AS TEXT
+        FROM   EMV_SCAN_WORK@DL_MCP
+        WHERE 1 = 1
+        AND USE_YN = 'Y'
+    </select>
+
+    <select id="getRqstrCdList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* WorkMgmtMapper.getRqstrCdList */
+        SELECT RQSTR_NM AS TEXT
+             , RQSTR_ID AS VALUE
+        FROM NMCP_WORK_RQSTR@DL_MCP
+        WHERE RQSTR_ID IN ( SELECT WTR.RQSTR_ID
+                            FROM NMCP_WORK_TMPL@DL_MCP WT
+                               , NMCP_WORK_TMPL_RQSTR@DL_MCP WTR
+                            WHERE SYSDATE BETWEEN WT.START_DT AND WT.END_DT
+                              AND WT.USE_YN = 'Y'
+                              AND WT.WORK_TMPL_ID = WTR.WORK_TMPL_ID )
+    </select>
+</mapper>

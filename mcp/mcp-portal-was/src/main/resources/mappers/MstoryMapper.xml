@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MstoryMapper">
+
+	<resultMap id="selectMstoryListCollection" type="com.ktmmobile.mcp.mstory.dto.MstoryDto">
+		<result property="ntcartSeq" column="NTCART_SEQ" />
+		<collection property="mstoryAttDtoList"
+					ofType="com.ktmmobile.mcp.mstory.dto.MstoryAttDto"
+					column="{ntcartSeq=NTCART_SEQ}"
+					select="selectMstoryAttList" >
+		</collection>
+	</resultMap>
+
+	<select id="selectMstoryAttList" resultType="com.ktmmobile.mcp.mstory.dto.MstoryAttDto" parameterType="com.ktmmobile.mcp.mstory.dto.MstoryDto">
+		SELECT
+			ATT_SEQ
+			 ,NTCART_SEQ
+			 ,IMG_NM
+			 ,IMG_DESC
+			 ,SORT_ODRG
+			 ,USE_YN
+			 ,PSTNG_START_DATE
+			 ,PSTNG_END_DATE
+			 ,CRET_IP
+			 ,CRET_DT
+			 ,CRET_ID
+			 ,AMD_IP
+			 ,AMD_DT
+			 ,AMD_ID
+		FROM
+			NMCP_SNS_BOARD_ATT_DTL
+		WHERE
+			NTCART_SEQ = #{ntcartSeq}
+		ORDER BY SORT_ODRG
+	</select>
+
+	<select id="getMonthlyUsimList" parameterType="java.lang.String" resultMap="selectMstoryListCollection">
+		SELECT
+			NTCART_SEQ
+			 ,SNS_CTG_CD
+			 ,YY
+			 ,MM
+			 ,SNS_CNTPNT_CD
+			 ,NTCART_TITLE
+			 ,THUMB_IMG_NM
+			 ,THUMB_IMG_DESC
+			 ,PC_LIST_IMG_NM
+			 ,PC_LIST_IMG_DESC
+			 ,MOBILE_LIST_IMG_NM
+			 ,MOBILE_LIST_IMG_DESC
+			 ,PC_LINK_URL
+			 ,MOBILE_LINK_URL
+			 ,NTCART_DATE
+			 ,HIT_CNT
+			 ,SORT_ODRG
+			 ,USE_YN
+			 ,PSTNG_START_DATE
+			 ,PSTNG_END_DATE
+			 ,CRET_IP
+			 ,CRET_DT
+			 ,CRET_ID
+			 ,AMD_IP
+			 ,AMD_DT
+			 ,AMD_ID
+		FROM
+			NMCP_SNS_BOARD_BAS
+		WHERE
+			USE_YN = 'Y'
+		  AND SNS_CTG_CD = 'SNS001'
+		  AND YY = #{value}
+		  AND TO_CHAR(SYSDATE, 'YYYYMMDDHHMMSS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+		ORDER BY
+			MM
+	</select>
+
+	<select id="getMonthlyUsimYearList" resultType="java.lang.String">
+		SELECT
+			DISTINCT YY
+		FROM
+			NMCP_SNS_BOARD_BAS
+		WHERE
+			USE_YN = 'Y'
+		  AND SNS_CTG_CD = 'SNS001'
+		  AND TO_CHAR(SYSDATE, 'YYYYMMDDHHMMSS') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
+		ORDER BY YY DESC
+	</select>
+
+	<select id="getMonthlyUsimDetail" parameterType="com.ktmmobile.mcp.mstory.dto.MstoryDto" resultType="com.ktmmobile.mcp.mstory.dto.MstoryDto">
+		SELECT
+			NTCART_SEQ
+			 ,SNS_CTG_CD
+			 ,YY
+			 ,MM
+			 ,SNS_CNTPNT_CD
+			 ,NTCART_TITLE
+			 ,THUMB_IMG_NM
+			 ,THUMB_IMG_DESC
+			 ,PC_LIST_IMG_NM
+			 ,PC_LIST_IMG_DESC
+			 ,MOBILE_LIST_IMG_NM
+			 ,MOBILE_LIST_IMG_DESC
+			 ,PC_LINK_URL
+			 ,MOBILE_LINK_URL
+			 ,NTCART_DATE
+			 ,HIT_CNT
+			 ,SORT_ODRG
+			 ,USE_YN
+			 ,PSTNG_START_DATE
+			 ,PSTNG_END_DATE
+			 ,CRET_IP
+			 ,CRET_DT
+			 ,CRET_ID
+			 ,AMD_IP
+			 ,AMD_DT
+			 ,AMD_ID
+		FROM
+			NMCP_SNS_BOARD_BAS
+		WHERE
+			NTCART_SEQ = #{ntcartSeq}
+		  AND USE_YN = 'Y'
+		  AND SNS_CTG_CD = 'SNS001'
+		  AND YY = #{yy}
+		  AND PSTNG_END_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHHMMSS')
+	</select>
+
+	<select id="getMonthlyUsimAttList" parameterType="com.ktmmobile.mcp.mstory.dto.MstoryDto" resultType="com.ktmmobile.mcp.mstory.dto.MstoryAttDto">
+		SELECT
+			ATT_SEQ
+			 ,NTCART_SEQ
+			 ,IMG_NM
+			 ,IMG_DESC
+			 ,SORT_ODRG
+			 ,USE_YN
+			 ,PSTNG_START_DATE
+			 ,PSTNG_END_DATE
+			 ,CRET_IP
+			 ,CRET_DT
+			 ,CRET_ID
+			 ,AMD_IP
+			 ,AMD_DT
+			 ,AMD_ID
+		FROM
+			NMCP_SNS_BOARD_ATT_DTL
+		WHERE
+			NTCART_SEQ = #{ntcartSeq}
+	</select>
+
+	<select id="getMonthlyUsimDetailList" parameterType="com.ktmmobile.mcp.mstory.dto.MstoryDto" resultMap="selectMstoryListCollection">
+		SELECT
+			NTCART_SEQ
+			 ,MM
+			 ,THUMB_IMG_NM
+			 ,THUMB_IMG_DESC
+			 ,PC_LIST_IMG_NM
+			 ,PC_LIST_IMG_DESC
+			 ,MOBILE_LIST_IMG_NM
+			 ,MOBILE_LIST_IMG_DESC
+			 ,PC_LINK_URL
+			 ,MOBILE_LINK_URL
+			 ,NTCART_DATE
+			 ,HIT_CNT
+			 ,USE_YN
+			 ,PSTNG_START_DATE
+			 ,PSTNG_END_DATE
+		FROM
+			NMCP_SNS_BOARD_BAS
+		WHERE
+			USE_YN = 'Y'
+		  AND SNS_CTG_CD = 'SNS001'
+		  AND YY = #{yy}
+		  AND PSTNG_END_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHHMMSS')
+		ORDER BY
+			MM
+	</select>
+
+	<update id="modifyMonthlyUsimHit" parameterType="com.ktmmobile.mcp.mstory.dto.MstoryDto">
+		UPDATE
+			NMCP_SNS_BOARD_BAS
+		SET
+			HIT_CNT = HIT_CNT + 1
+		WHERE
+			NTCART_SEQ = #{ntcartSeq}
+	</update>
+
+	<select id="getSnsList" parameterType="com.ktmmobile.mcp.mstory.dto.MstoryDto" resultType="com.ktmmobile.mcp.mstory.dto.MstoryDto">
+		SELECT
+		NTCART_SEQ
+		,SNS_CTG_CD
+		,YY
+		,MM
+		,SNS_CNTPNT_CD
+		,NTCART_TITLE
+		,THUMB_IMG_NM
+		,THUMB_IMG_DESC
+		,PC_LIST_IMG_NM
+		,PC_LIST_IMG_DESC
+		,MOBILE_LIST_IMG_NM
+		,MOBILE_LIST_IMG_DESC
+		,PC_LINK_URL
+		,MOBILE_LINK_URL
+		,NTCART_DATE
+		,HIT_CNT
+		,SORT_ODRG
+		,USE_YN
+		,PSTNG_START_DATE
+		,PSTNG_END_DATE
+		,CRET_IP
+		,CRET_DT
+		,CRET_ID
+		,AMD_IP
+		,AMD_DT
+		,AMD_ID
+		FROM
+		NMCP_SNS_BOARD_BAS
+		WHERE
+		USE_YN = 'Y'
+		AND SNS_CTG_CD = #{snsCtgCd}
+		<if test="snsCntpntCd != null and snsCntpntCd != ''">
+			AND SNS_CNTPNT_CD = #{snsCntpntCd}
+		</if>
+		AND PSTNG_END_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHHMMSS')
+		ORDER BY
+		SORT_ODRG
+
+	</select>
+
+</mapper>

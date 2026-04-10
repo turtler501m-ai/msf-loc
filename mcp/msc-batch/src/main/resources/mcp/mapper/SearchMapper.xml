@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SearchMapper">
+
+	<select id="selectMenuIndexing" resultType="com.ktmmobile.mcp.search.dto.SearchDto">
+		SELECT
+			'menu' SEARCH_TYPE
+			, MB.MENU_SEQ -- 메뉴일련번호 long
+			, MB.MENU_CODE -- 메뉴코드
+			, MB.MENU_NM -- 메뉴명(색인)
+			, MB.GROUP_KEY -- 그룹키
+			--, PRNTS_KEY -- 부모키
+			, CASE WHEN MB.DEPTH_KEY = '1' THEN MB.MENU_NM
+		           WHEN MB.DEPTH_KEY = '2' THEN (B.MENU_NM || ' &gt; ' || MB.MENU_NM )
+		           ELSE (C.MENU_NM || ' &gt; ' || B.MENU_NM || ' &gt; ' || MB.MENU_NM )
+                   END AS PRNTS_KEY
+			, MB.DEPTH_KEY -- DEPTH키 long
+			, MB.URL_ADR -- URL
+			, MB.REP_URL_SEQ -- URL일련번호
+			, MB.CHATBOT_TIP_SBST -- 챗봇말풍선내용(색인)
+			, MB.MENU_DESC -- 메뉴설명(색인)
+			, MB.ATT_YN	-- 새창여부
+			, MB.SORT_KEY
+			--, MENU_OUTPUT_CD
+		FROM NMCP_USER_MENU_BAS MB
+		LEFT OUTER JOIN NMCP_USER_MENU_BAS B
+             ON MB.PRNTS_KEY = B.MENU_CODE
+        LEFT OUTER JOIN NMCP_USER_MENU_BAS C
+             ON B.PRNTS_KEY = C.MENU_CODE
+		WHERE TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(MB.PSTNG_START_DATE, 8) AND RPAD(MB.PSTNG_END_DATE, 8)
+		AND MB.USE_YN = 'Y'
+		AND MB.STAT_VAL = 'Y'
+		AND MB.ACES_ALWD_YN = 'Y'
+		AND MB.CNTPNT_CD = 'F'
+		AND MB.MENU_OUTPUT_CD IN ('MENUPC001','MENUMO001')
+		ORDER BY MB.SORT_KEY
+	</select>
+
+	<select id="selectRateIndexing" resultType="com.ktmmobile.mcp.search.dto.SearchDto">
+	    SELECT BAS.RATE_ADSVC_GDNC_SEQ  -- 요금제안내일련번호
+	        , BAS.RATE_DIV_CD -- 휴대폰/유심요금제구분
+	        , BAS.RATE_ADSVC_NM	-- 요금제부가서비스명(색인)
+	        , BAS.RATE_ADSVC_APD_NM	-- 요금제부가서비스추가명(색인)
+	        , BAS.RATE_ADSVC_BAS_DESC	-- 요금제부가서비스기본설명(색인)
+	        , BAS.MM_BAS_AMT_DESC	-- 월기본금액설명(색인)
+	        , BAS.MM_BAS_AMT_VAT_DESC	-- 월기본금액VAT(포함)설명(색인)
+	        , BAS.PROMOTION_AMT_DESC	-- 프로모션요금설명(색인)
+	        , BAS.PROMOTION_AMT_VAT_DESC	-- 프로모션요금VAT(포함)설명(색인)
+	        , CTG.RATE_ADSVC_CTG_CD -- 카테고리코드
+	        , CTG.RATE_ADSVC_CTG_NM	-- 요금제부가서비스카테고리명(색인)
+	        , CTG.RATE_ADSVC_CTG_BAS_DESC	-- 요금제부가서비스카테고리기본설명(색인)
+	        , CTG.RATE_ADSVC_CTG_DTL_DESC	-- 요금제부가서비스카테고리상세설명(색인)
+	        , REL.RATE_ADSVC_PROD_REL_SEQ	-- 요금제부가서비스상품관계일련번호
+	        , REL.RATE_ADSVC_CD	-- 요금제부가서비스코드
+	        , DTL.RATE_ADSVC_ITEM_CD	-- 요금제부가서비스항목코드
+	        , CASE WHEN DTL.RATE_ADSVC_ITEM_CD = 'RATE199' THEN DTL.RATE_ADSVC_ITEM_NM
+	              ELSE (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'CO0004' AND DTL_CD = DTL.RATE_ADSVC_ITEM_CD)
+	          END AS RATE_ADSVC_ITEM_NM1	-- 요금제부가서비스항목명(색인)
+	        , DTL.RATE_ADSVC_ITEM_SBST	-- 요금제부가서비스항목내용(색인)
+	        , BNF.RATE_ADSVC_BNFIT_ITEM_CD	-- 요금제부가서비스혜택항목코드
+	        , (SELECT CD.DTL_CD_NM FROM NMCP_CD_DTL CD WHERE CD.CD_GROUP_ID = 'CO0003' AND CD.DTL_CD = BNF.RATE_ADSVC_BNFIT_ITEM_CD) AS RATE_ADSVC_ITEM_NM2	-- 요금제부가서비스항목명(색인)
+	        , BNF.RATE_ADSVC_ITEM_DESC	-- 요금제부가서비스항목설명(색인)
+	        , BNF.RATE_ADSVC_ITEM_APD_DESC	-- 요금제부가서비스항목추가설명(색인)
+	        , CTG.SORT_ODRG SORT_ODRG1
+	        , CTGREL.SORT_ODRG SORT_ODRG2
+	    FROM NMCP_RATE_ADSVC_GDNC_BAS BAS
+	       INNER JOIN NMCP_RATE_ADSVC_CTG_GDNC_REL CTGREL
+	                  ON CTGREL.RATE_ADSVC_GDNC_SEQ = BAS.RATE_ADSVC_GDNC_SEQ
+	                 AND CTGREL.USE_YN = 'Y'
+	                 AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(CTGREL.PSTNG_START_DATE, 8) AND RPAD(CTGREL.PSTNG_END_DATE, 8)
+	       INNER JOIN NMCP_RATE_ADSVC_CTG_BAS CTG
+	                  ON CTG.RATE_ADSVC_CTG_CD = CTGREL.RATE_ADSVC_CTG_CD
+                     AND CTG.CTG_OUTPUT_CD = 'CO00130001'
+	                 AND CTG.RATE_ADSVC_DIV_CD = 'RATE'
+	                 AND CTG.USE_YN = 'Y'
+	                 AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(CTG.PSTNG_START_DATE, 8) AND RPAD(CTG.PSTNG_END_DATE, 8)
+	       INNER JOIN NMCP_RATE_ADSVC_GDNC_PROD_REL REL
+	                  ON REL.RATE_ADSVC_GDNC_SEQ = BAS.RATE_ADSVC_GDNC_SEQ
+	                 AND REL.USE_YN = 'Y'
+	                 AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(REL.PSTNG_START_DATE, 8) AND RPAD(REL.PSTNG_END_DATE, 8)
+	       LEFT OUTER JOIN (SELECT RATE_ADSVC_GDNC_SEQ, RATE_ADSVC_ITEM_CD, RATE_ADSVC_ITEM_NM, RATE_ADSVC_ITEM_SBST
+	                          FROM ( SELECT RANK() OVER(PARTITION BY RATE_ADSVC_GDNC_SEQ ORDER BY RATE_ADSVC_GDNC_DTL_SEQ) AS RNK
+	                                        , RATE_ADSVC_GDNC_SEQ, RATE_ADSVC_ITEM_CD, RATE_ADSVC_ITEM_NM, RATE_ADSVC_ITEM_SBST
+	                                   FROM NMCP_RATE_ADSVC_GDNC_DTL
+	                                  WHERE USE_YN = 'Y'
+	                                    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(PSTNG_START_DATE, 8) AND RPAD(PSTNG_END_DATE, 8)
+	                               )
+	                         WHERE RNK = 1
+	                       ) DTL
+	                  ON DTL.RATE_ADSVC_GDNC_SEQ = BAS.RATE_ADSVC_GDNC_SEQ
+	        LEFT OUTER JOIN (SELECT RATE_ADSVC_GDNC_SEQ, RATE_ADSVC_BNFIT_ITEM_CD, RATE_ADSVC_ITEM_NM, RATE_ADSVC_ITEM_DESC, RATE_ADSVC_ITEM_APD_DESC
+	                          FROM ( SELECT RANK() OVER(PARTITION BY RATE_ADSVC_GDNC_SEQ ORDER BY RATE_ADSVC_BNFIT_SEQ) AS RNK
+	                                        , RATE_ADSVC_GDNC_SEQ, RATE_ADSVC_BNFIT_ITEM_CD, RATE_ADSVC_ITEM_NM, RATE_ADSVC_ITEM_DESC, RATE_ADSVC_ITEM_APD_DESC
+	                                   FROM NMCP_RATE_ADSVC_BNFIT_GDNC_DTL
+	                                  WHERE USE_YN = 'Y'
+	                                    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(PSTNG_START_DATE, 8) AND RPAD(PSTNG_END_DATE, 8)
+	                               )
+	                         WHERE RNK = 1
+	                       ) BNF
+	                  ON BNF.RATE_ADSVC_GDNC_SEQ = BAS.RATE_ADSVC_GDNC_SEQ
+	    WHERE BAS.RATE_ADSVC_DIV_CD = 'RATE'
+	      AND BAS.USE_YN = 'Y'
+	      AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(BAS.PSTNG_START_DATE, 8) AND RPAD(BAS.PSTNG_END_DATE, 8)
+	    ORDER BY CTG.SORT_ODRG, CTGREL.SORT_ODRG
+	</select>
+
+	<select id="selectAdsvcIndexing" resultType="com.ktmmobile.mcp.search.dto.SearchDto">
+		SELECT BAS.RATE_ADSVC_GDNC_SEQ  -- 요금제안내일련번호
+	        , BAS.RATE_ADSVC_NM	-- 요금제부가서비스명(색인)
+	        , BAS.RATE_ADSVC_APD_NM	-- 요금제부가서비스추가명(색인)
+	        , BAS.RATE_ADSVC_BAS_DESC	-- 요금제부가서비스기본설명(색인)
+	        , BAS.MM_BAS_AMT_DESC	-- 월기본금액설명(색인)
+	        , BAS.MM_BAS_AMT_VAT_DESC	-- 월기본금액VAT(포함)설명(색인)
+	        , BAS.PROMOTION_AMT_DESC	-- 프로모션요금설명(색인)
+	        , BAS.PROMOTION_AMT_VAT_DESC	-- 프로모션요금VAT(포함)설명(색인)
+	        , CTG.RATE_ADSVC_CTG_CD -- 카테고리코드
+	        , CTG.RATE_ADSVC_CTG_NM	-- 요금제부가서비스카테고리명(색인)
+	        , CTG.RATE_ADSVC_CTG_BAS_DESC	-- 요금제부가서비스카테고리기본설명(색인)
+	        , CTG.RATE_ADSVC_CTG_DTL_DESC	-- 요금제부가서비스카테고리상세설명(색인)
+            --, CTG.RATE_ADSVC_CTG_IMG_NM     -- 요금제부가서비스카테고리이미지명 -- 추후 추가
+	        , REL.RATE_ADSVC_PROD_REL_SEQ	-- 요금제부가서비스상품관계일련번호
+	        , REL.RATE_ADSVC_CD	-- 요금제부가서비스코드
+	        , DTL.RATE_ADSVC_ITEM_CD	-- 요금제부가서비스항목코드
+	        , CASE WHEN DTL.RATE_ADSVC_ITEM_CD = 'RATE199' THEN DTL.RATE_ADSVC_ITEM_NM
+	              ELSE (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'CO0005' AND DTL_CD = DTL.RATE_ADSVC_ITEM_CD)
+	          END AS RATE_ADSVC_ITEM_NM	-- 요금제부가서비스항목명(색인)
+	        , DTL.RATE_ADSVC_ITEM_SBST	-- 요금제부가서비스항목내용(색인)
+	        , CTG.SORT_ODRG SORT_ODRG1
+	        , CTGREL.SORT_ODRG SORT_ODRG2
+	    FROM NMCP_RATE_ADSVC_GDNC_BAS BAS
+	       INNER JOIN NMCP_RATE_ADSVC_CTG_GDNC_REL CTGREL
+	                  ON CTGREL.RATE_ADSVC_GDNC_SEQ = BAS.RATE_ADSVC_GDNC_SEQ
+	                 AND CTGREL.USE_YN = 'Y'
+	                 AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(CTGREL.PSTNG_START_DATE, 8) AND RPAD(CTGREL.PSTNG_END_DATE, 8)
+	       INNER JOIN NMCP_RATE_ADSVC_CTG_BAS CTG
+	                  ON CTG.RATE_ADSVC_CTG_CD = CTGREL.RATE_ADSVC_CTG_CD
+                     AND CTG.CTG_OUTPUT_CD = 'CO00130001'
+	                 AND CTG.RATE_ADSVC_DIV_CD = 'ADDSV'
+	                 AND CTG.USE_YN = 'Y'
+	                 AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(CTG.PSTNG_START_DATE, 8) AND RPAD(CTG.PSTNG_END_DATE, 8)
+          LEFT OUTER JOIN (SELECT RATE_ADSVC_PROD_REL_SEQ, RATE_ADSVC_CD, RATE_ADSVC_GDNC_SEQ
+                          FROM ( SELECT RANK() OVER(PARTITION BY RATE_ADSVC_GDNC_SEQ ORDER BY RATE_ADSVC_PROD_REL_SEQ ) AS RNK
+                                        , RATE_ADSVC_PROD_REL_SEQ, RATE_ADSVC_CD, RATE_ADSVC_GDNC_SEQ
+                                   FROM NMCP_RATE_ADSVC_GDNC_PROD_REL
+                                  WHERE USE_YN = 'Y'
+                                    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(PSTNG_START_DATE, 8) AND RPAD(PSTNG_END_DATE, 8)
+                               )
+                         WHERE RNK = 1
+                       ) REL
+                  ON REL.RATE_ADSVC_GDNC_SEQ = BAS.RATE_ADSVC_GDNC_SEQ
+	       LEFT OUTER JOIN (SELECT RATE_ADSVC_GDNC_SEQ, RATE_ADSVC_ITEM_CD, RATE_ADSVC_ITEM_NM, RATE_ADSVC_ITEM_SBST
+	                          FROM ( SELECT RANK() OVER(PARTITION BY RATE_ADSVC_GDNC_SEQ ORDER BY RATE_ADSVC_GDNC_DTL_SEQ) AS RNK
+	                                        , RATE_ADSVC_GDNC_SEQ, RATE_ADSVC_ITEM_CD, RATE_ADSVC_ITEM_NM, RATE_ADSVC_ITEM_SBST
+	                                   FROM NMCP_RATE_ADSVC_GDNC_DTL
+	                                  WHERE USE_YN = 'Y'
+	                                    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(PSTNG_START_DATE, 8) AND RPAD(PSTNG_END_DATE, 8)
+	                               )
+	                         WHERE RNK = 1
+	                       ) DTL
+	                  ON DTL.RATE_ADSVC_GDNC_SEQ = BAS.RATE_ADSVC_GDNC_SEQ
+	    WHERE BAS.RATE_ADSVC_DIV_CD = 'ADDSV'
+	      AND BAS.USE_YN = 'Y'
+	      AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN RPAD(BAS.PSTNG_START_DATE, 8) AND RPAD(BAS.PSTNG_END_DATE, 8)
+	    ORDER BY CTG.SORT_ODRG, CTGREL.SORT_ODRG
+	</select>
+
+	<select id="selectBoardIndexing" resultType="com.ktmmobile.mcp.search.dto.SearchDto">
+		SELECT SBST_CTG -- 게시물카테고리
+		       , SBST_SUB_CTG_CD -- 서브카테고리코드
+		       , CD.DTL_CD_NM -- 카테고리명(색인)
+		       , BOARD_SEQ -- 게시물인련번호
+		       , BOARD_SUBJECT -- 게시물제목(색인)
+		       , BOARD_CONTENTS -- 게시물내용(색인)
+		       , BOARD_HIT_CNT -- 조회수
+		  FROM NMCP_BOARD_BAS BAS
+		LEFT OUTER JOIN NMCP_CD_DTL CD
+		             ON CD_GROUP_ID = 'FAQB'
+		            AND CD.DTL_CD = BAS.SBST_CTG
+		 WHERE BOARD_CTG_SEQ = '57'
+		   AND VIEW_YN = 'Y'
+		 ORDER BY BOARD_HIT_CNT DESC
+	</select>
+
+
+	<delete id="deleteSearchPplrWord">
+		DELETE FROM NMCP_SEARCH_PPLR_WORD_BAS WHERE CRET_DATE = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+	</delete>
+
+
+	<insert id="insertSearchPplrWord">
+    	INSERT INTO NMCP_SEARCH_PPLR_WORD_BAS (
+          CRET_DATE              --등록일자[일자별 30개 관리]
+        , SEARCH_WORD            --검색어
+        , SEARCH_WORD_RANK       --검색순위[1~30]
+        , SEARCH_REPEAT_CNT      --검색횟수
+        , SEARCH_RISE_NVAL       --전일기준상승수치[-30 ~ 30]
+        , CRET_ID                --시스템등록아이디
+        , CRET_DT                --시스템등록일시
+        , AMD_ID                 --시스템수정아이디
+        , AMD_DT                 --시스템수정일시
+    	)
+    	SELECT TO_CHAR(SYSDATE - 1, 'YYYYMMDD') AS REG_DT
+         , A.SEARCH_WORD
+         , A.SRARCH_RANK
+         , A.SEARCH_CNT
+         , ( NVL(B.SEARCH_WORD_RANK, 31) - A.SRARCH_RANK )  AS SEARCH_UP_NVAL
+         , 'admin'
+         , SYSDATE
+         , 'admin'
+         , SYSDATE
+      	FROM (
+                SELECT SEARCH_WORD
+                     , SEARCH_CNT
+                     , ROWNUM AS SRARCH_RANK
+                  FROM (
+                            SELECT SEARCH_WORD
+                                 , COUNT(1) AS SEARCH_CNT
+                              FROM NMCP_SEARCH_TXN  -- 검색어 이력
+                             WHERE CRET_DATE BETWEEN TO_CHAR(SYSDATE - 7, 'YYYYMMDD') AND TO_CHAR(SYSDATE - 1, 'YYYYMMDD') -- 전일~1주일
+                               AND SEARCH_RSLT_CASCNT > 0
+                            GROUP BY SEARCH_WORD
+                            ORDER BY COUNT(1) DESC
+                       )
+                 WHERE ROWNUM <![CDATA[<=]]> 30
+        ) A
+        LEFT OUTER JOIN (
+                SELECT SEARCH_WORD              -- 검색어
+                     , SEARCH_WORD_RANK              -- 검색순위[1~30]
+                  FROM NMCP_SEARCH_PPLR_WORD_BAS G   -- 인기검색어관리
+                 WHERE CRET_DATE = (SELECT MAX(CRET_DATE) FROM NMCP_SEARCH_PPLR_WORD_BAS WHERE CRET_DATE <![CDATA[<]]> TO_CHAR(SYSDATE - 1, 'YYYYMMDD') )
+        ) B
+        ON B.SEARCH_WORD = A.SEARCH_WORD
+      ORDER BY A.SRARCH_RANK
+	</insert>
+
+
+
+</mapper>

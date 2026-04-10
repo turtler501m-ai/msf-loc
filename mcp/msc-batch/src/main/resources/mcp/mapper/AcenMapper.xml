@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AcenMapper">
+
+    <!-- ACEN MNP 제외 일자 조회 -->
+    <select id="getMnpLimitDayCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+        /*AcenMapper.getMnpLimitDayCnt*/
+        SELECT COUNT(DTL_CD)
+        FROM NMCP_CD_DTL
+        WHERE CD_GROUP_ID = 'AcenMnpLimit'
+          AND EXPNSN_STR_VAL1 = #{nowDate}
+          AND USE_YN = 'Y'
+    </select>
+
+    <!-- ACEN 연동 대상 추출 (OSST 진행 건) - 종결 상태 UPDATE -->
+    <update id="updateAcenOsstTrg">
+        /*AcenMapper.updateAcenOsstTrg*/
+        UPDATE NMCP_ACEN_REQ
+        SET END_STATUS= 'P'
+        WHERE REQUEST_KEY IN ( SELECT REQUEST_KEY
+                               FROM (
+                                      SELECT REQUEST_KEY
+                                      FROM NMCP_ACEN_REQ
+                                      WHERE NVL(RTY_DT, REGST_DT) BETWEEN TO_CHAR(SYSDATE-14, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                      AND END_STATUS = 'N'
+                                      AND REQ_STATUS != 'Y'
+                                      AND (REQ_STATUS = 'T' OR PRE_CHECK_YN = 'Y') /*OSST 연동 대기 상태 또는 사전체크 완료된 건*/
+                                      ORDER BY REGST_DTTM
+                                    )
+                               WHERE ROWNUM <![CDATA[<=]]> #{limitCnt}
+                             )
+    </update>
+
+    <!-- ACEN 연동 대상 추출 - 종결 상태 UPDATE -->
+    <update id="updateAcenTrg" parameterType="java.util.HashMap">
+        /*AcenMapper.updateAcenTrg*/
+        UPDATE NMCP_ACEN_REQ
+        SET END_STATUS = 'P'
+        WHERE REQUEST_KEY IN ( SELECT REQUEST_KEY
+                               FROM (
+                                        WITH ACEN_REQ AS (
+                                            SELECT REQUEST_KEY, EVNT_TYPE, REGST_DTTM
+                                            FROM NMCP_ACEN_REQ
+                                            WHERE NVL(RTY_DT, REGST_DT) BETWEEN TO_CHAR(SYSDATE-14, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+                                            AND END_STATUS = 'N'
+                                            AND REQ_STATUS != 'Y'
+                                            /*상담사 신규가입 제외*/
+                                            <if test='nacFlag == false'>
+                                              AND EVNT_GRP_CD != 'NEW_NOSIM'
+                                              AND EVNT_GRP_CD != 'NEW_SIM'
+                                            </if>
+                                            /*상담사 번호이동 제외*/
+                                            <if test='mnpFlag == false'>
+                                              AND EVNT_GRP_CD != 'MNP_NOSIM'
+                                              AND EVNT_GRP_CD != 'MNP_SIM'
+                                            </if>
+                                            /*셀프개통 사후해피콜 제외*/
+                                            <if test='selfFlag == false'>
+                                              AND EVNT_GRP_CD != 'SLF_CST'
+                                            </if>
+                                        )
+                                        SELECT A.REQUEST_KEY, A.REGST_DTTM
+                                        FROM ACEN_REQ A, MCP_REQUEST B
+                                        WHERE A.REQUEST_KEY = B.REQUEST_KEY
+                                        AND EXISTS (
+                                                      SELECT 1 FROM NMCP_CD_DTL
+                                                      WHERE CD_GROUP_ID = 'AcenReqStateCd'
+                                                      AND EXPNSN_STR_VAL1 = A.EVNT_TYPE
+                                                      AND EXPNSN_STR_VAL2 = B.PSTATE
+                                                      AND EXPNSN_STR_VAL3 = B.REQUEST_STATE_CODE
+                                                   )
+                                        ORDER BY A.REGST_DTTM
+                                    )
+                               WHERE ROWNUM <![CDATA[<=]]> #{count}
+                             )
+    </update>
+
+    <!-- ACEN 연동 대상 조회 -->
+    <select id="getAcenPendingTrg" resultType="com.ktmmobile.mcp.acen.dto.AcenDto">
+        /*AcenMapper.getAcenPendingTrg*/
+        SELECT
+             A.REQUEST_KEY         --신청키
+            ,A.RES_NO              --예약번호
+            ,A.EVNT_GRP_CD         --업무그룹
+            ,A.EVNT_TYPE           --업무유형
+            ,A.REQ_STATUS          --요청상태
+            ,A.END_STATUS          --종료상태
+            ,A.PRE_CHECK_YN        --사전체크 여부
+            ,A.OPEN_YN             --개통여부
+            ,B.PSTATE              --신청서 상태
+            ,B.REQUEST_STATE_CODE  --신청서 진행상태
+            ,C.DLVRY_TYPE          --배송유형
+        FROM  NMCP_ACEN_REQ A
+             ,MCP_REQUEST B
+             ,MCP_REQUEST_DLVRY C
+        WHERE A.REQUEST_KEY = B.REQUEST_KEY
+          AND B.REQUEST_KEY = C.REQUEST_KEY
+        AND NVL(A.RTY_DT, A.REGST_DT) BETWEEN TO_CHAR(SYSDATE-14, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+        AND A.END_STATUS = 'P'
+        ORDER BY A.REGST_DTTM
+    </select>
+
+    <!-- ACEN 현행화 상태 UPDATE -->
+    <update id="updateAcenReqInfo" parameterType="com.ktmmobile.mcp.acen.dto.AcenDto">
+        /*AcenMapper.updateAcenReqInfo*/
+        UPDATE NMCP_ACEN_REQ
+        SET RVISN_ID = 'ACEN01'
+           ,RVISN_DTTM = SYSDATE
+           <if test="reqStatus != null and reqStatus != ''">
+           ,REQ_STATUS = #{reqStatus}
+           </if>
+           <if test="endStatus != null and endStatus != ''">
+           ,END_STATUS = #{endStatus}
+           </if>
+           <if test="succYn != null and succYn != ''">
+           ,SUCC_YN = #{succYn}
+           </if>
+           <if test="preCheckYn != null and preCheckYn != ''">
+           ,PRE_CHECK_YN = #{preCheckYn}
+           </if>
+           <if test="openYn != null and openYn != ''">
+           ,OPEN_YN = #{openYn}
+           </if>
+           <if test="rmk != null and rmk != ''">
+           ,RMK = #{rmk}
+           </if>
+        WHERE REQUEST_KEY = #{requestKey}
+    </update>
+
+    <!-- 신청서 상태 UPDATE -->
+    <update id="updateMcpReqInfo" parameterType="com.ktmmobile.mcp.acen.dto.AcenDto">
+        /*AcenMapper.updateMcpReqInfo*/
+        UPDATE MCP_REQUEST
+        SET RVISN_ID = 'ACEN'
+           ,RVISN_DTTM = SYSDATE
+           <if test="pstate != null and pstate != ''">
+           ,PSTATE = #{pstate}
+           </if>
+           <if test="requestStateCode != null and requestStateCode != ''">
+           ,REQUEST_STATE_CODE = #{requestStateCode}
+           </if>
+        WHERE REQUEST_KEY = #{requestKey}
+    </update>
+
+    <!-- OSST 응답 결과 조회 -->
+    <select id="getOsstResult" parameterType="com.ktmmobile.mcp.common.mplatform.dto.McpRequestOsstDto" resultType="com.ktmmobile.mcp.common.mplatform.dto.McpRequestOsstDto">
+        /*AcenMapper.getOsstResult*/
+        SELECT
+            MVNO_ORD_NO         --MVNO오더번호
+           ,SEQ                 --일련번호
+           ,OSST_ORD_NO         --OSST오더번호
+           ,PRGR_STAT_CD        --이벤트코드
+           ,RSLT_CD             --처리결과코드
+           ,RSLT_MSG            --처리결과내용
+        FROM (
+               SELECT MVNO_ORD_NO, SEQ, OSST_ORD_NO, PRGR_STAT_CD, RSLT_CD, RSLT_MSG
+               FROM MCP_REQUEST_OSST
+               WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')
+               AND PRGR_STAT_CD = #{prgrStatCd}
+               ORDER BY SEQ DESC
+             )
+        WHERE ROWNUM = 1
+    </select>
+
+    <!-- 신청정보의 희망번호 조회 -->
+    <select id="getWantNumbers" parameterType="java.lang.String" resultType="java.util.HashMap">
+        /*AcenMapper.getWantNumbers*/
+        SELECT
+            REQ_WANT_NUMBER
+           ,REQ_WANT_NUMBER2
+           ,REQ_WANT_NUMBER3
+           ,NVL((SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'AcenLimit' AND DTL_CD = 'findLimit'), '3') AS FIND_COUNT
+        FROM MCP_REQUEST
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>
+
+    <!-- 번호예약 요청 OSST 테이블 INSERT -->
+    <insert id="insertOsstResvTlhp" parameterType="com.ktmmobile.mcp.common.mplatform.dto.MPhoneNoVo">
+        /*AcenMapper.insertOsstResvTlhp*/
+        INSERT INTO MCP_REQUEST_OSST (
+             MVNO_ORD_NO
+            ,SEQ
+            ,OSST_ORD_NO
+            ,PRGR_STAT_CD
+            ,RSLT_CD
+            ,RSLT_DT
+            ,TLPH_NO_STAT_CD
+            ,ASGN_AGNC_ID
+            ,TLPH_NO_OWN_CMPN_CD
+            ,OPEN_SVC_IND_CD
+            ,ENCD_TLPH_NO
+            ,TLPH_NO
+            ,IF_TYPE
+            ,REGST_DTTM
+        ) VALUES (
+             LPAD(#{resNo}, 14, '0')
+            ,(SELECT MAX(SEQ+1) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{resNo}, 14, '0'))
+            ,(SELECT MAX(OSST_ORD_NO) FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{resNo}, 14, '0') AND PRGR_STAT_CD = 'PC2' AND RSLT_CD = '0000')
+            ,'NU2'
+            ,'0000'
+            ,TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+            ,#{tlphNoStatCd}
+            ,#{asgnAgncId}
+            ,#{tlphNoOwnCmncCmpnCd}
+            ,#{openSvcIndCd}
+            ,#{encdTlphNo}
+            ,#{tlphNo}
+            ,'RSV'
+            ,SYSDATE
+        )
+  </insert>
+
+  <!-- ACEN 연동 미완료건 조회 (사전체크 요청은 진행됐으나 개통완료가 되지 않은 케이스) -->
+  <select id="getAcenEndTrg" resultType="com.ktmmobile.mcp.acen.dto.AcenDto">
+    /*AcenMapper.getAcenEndTrg*/
+    SELECT
+       A.REQUEST_KEY
+      ,A.EVNT_TYPE
+      ,B.PSTATE
+      ,B.REQUEST_STATE_CODE
+    FROM NMCP_ACEN_REQ A
+        ,MCP_REQUEST B
+    WHERE A.REQUEST_KEY = B.REQUEST_KEY
+      AND NVL(A.RTY_DT, A.REGST_DT) BETWEEN TO_CHAR(SYSDATE-15, 'YYYYMMDD') AND TO_CHAR(SYSDATE-1, 'YYYYMMDD')
+      AND A.END_STATUS = 'N'
+      AND (A.REQ_STATUS = 'T' OR A.PRE_CHECK_YN = 'Y')
+  </select>
+
+  <!-- ACEN 연동 미완료건 조회 (연동 기간 종결건) -->
+  <select id="getAcenPeriodEndTrg" resultType="com.ktmmobile.mcp.acen.dto.AcenDto">
+    /*AcenMapper.getAcenPeriodEndTrg*/
+    SELECT
+       A.REQUEST_KEY
+      ,A.EVNT_TYPE
+      ,B.PSTATE
+      ,B.REQUEST_STATE_CODE
+    FROM NMCP_ACEN_REQ A
+        ,MCP_REQUEST B
+    WHERE A.REQUEST_KEY = B.REQUEST_KEY
+      AND NVL(A.RTY_DT, A.REGST_DT) = TO_CHAR(SYSDATE-15, 'YYYYMMDD')
+      AND A.END_STATUS = 'N'
+  </select>
+
+    <!-- 신청내역 조회 -->
+    <select id="getAppformReq" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.acen.dto.AcenDto">
+        /*AcenMapper.getAppformReq*/
+        SELECT
+            A.REQUEST_KEY
+             ,A.RES_NO
+             ,B.ENGG_MNTH_CNT
+             ,B.SOC_CODE
+             ,A.ON_OFF_TYPE
+             ,A.OPER_TYPE
+             ,A.REQ_BUY_TYPE
+             ,A.CNTPNT_SHOP_ID
+             ,TO_CHAR(A.REQ_IN_DAY, 'YYYYMMDD') AS REQ_IN_DAY
+        FROM MCP_REQUEST A
+           ,MCP_REQUEST_SALEINFO B
+        WHERE A.REQUEST_KEY = B.REQUEST_KEY
+          AND A.REQUEST_KEY = #{requestKey}
+    </select>
+
+  <!-- 신청서 상태 정상으로 UPDATE -->
+  <update id="updateNormalPState">
+    /*AcenMapper.updateNormalPState*/
+    UPDATE MCP_REQUEST
+    SET PSTATE = '00'
+    WHERE TO_CHAR(REQ_IN_DAY, 'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE-15, 'YYYYMMDD') AND TO_CHAR(SYSDATE-1, 'YYYYMMDD')
+      AND PSTATE = '50'
+      AND REQUEST_STATE_CODE = '21'
+  </update>
+
+  <!-- 신청상태 조회 -->
+  <select id="getMcpRequestStateInfo" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.acen.dto.AcenDto">
+    /*AcenMapper.getMcpRequestStateInfo*/
+    SELECT
+      PSTATE              --신청서 상태
+     ,REQUEST_STATE_CODE  --신청서 진행상태
+     ,RVISN_ID            --신청서 수정자
+    FROM MCP_REQUEST
+    WHERE REQUEST_KEY = #{requestKey}
+  </select>
+
+  <!-- ACEN 실패이력 INSERT -->
+  <insert id="insertAcenFailHist" parameterType="java.lang.String">
+    /*AcenMapper.insertAcenFailHist*/
+    INSERT INTO NMCP_ACEN_FAIL_HIST (
+       REQUEST_KEY
+      ,SEQ
+      ,RES_NO
+      ,EVNT_GRP_CD
+      ,EVNT_TYPE
+      ,REQ_STATUS
+      ,FAIL_RMK
+      ,RTY_ID
+      ,RTY_DTTM
+      ,REGST_ID
+      ,REGST_DTTM
+    )
+    SELECT
+       REQUEST_KEY
+      ,NVL((SELECT MAX(SEQ) + 1 FROM NMCP_ACEN_FAIL_HIST WHERE REQUEST_KEY= #{requestKey}), 1)
+      ,RES_NO
+      ,EVNT_GRP_CD
+      ,EVNT_TYPE
+      ,REQ_STATUS
+      ,RMK
+      ,RTY_ID
+      ,RTY_DTTM
+      ,'ACEN01'
+      ,SYSDATE
+    FROM NMCP_ACEN_REQ
+    WHERE REQUEST_KEY = #{requestKey}
+  </insert>
+
+  <!-- 당일 사전체크 / 개통 성공이력 조회 -->
+  <select id="getPreCheckSuccessCnt" parameterType="java.util.Map" resultType="java.lang.Integer">
+    /*AcenMapper.getPreCheckSuccessCnt*/
+    SELECT COUNT(MVNO_ORD_NO)
+    FROM MCP_REQUEST_OSST
+    WHERE MVNO_ORD_NO = LPAD(#{resNo}, 14, '0')
+      AND PRGR_STAT_CD = #{prgrStatCd}
+      <choose>
+        <when test='prgrStatCd == "PC2"'>
+          AND RSLT_CD = '0000'
+          AND SUBSTR(RSLT_DT, 1,8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+        </when>
+        <otherwise>
+          AND RSLT_CD IN ('0000', '3060', '3070')
+        </otherwise>
+      </choose>
+  </select>
+
+  <!-- 번호 예약/취소 최근 이벤트 조회 -->
+  <select id="getLatestResvTlphIfType" parameterType="java.lang.String" resultType="java.lang.String">
+    /*AcenMapper.getPreCheckSuccessCnt*/
+    SELECT IF_TYPE
+    FROM MCP_REQUEST_OSST
+    WHERE MVNO_ORD_NO = LPAD(#{resNo}, 14, '0')
+      AND SEQ = (SELECT SEQ
+                 FROM (
+                        SELECT ROW_NUMBER() OVER(ORDER BY SEQ DESC) RNK, SEQ
+                        FROM MCP_REQUEST_OSST
+                        WHERE MVNO_ORD_NO = LPAD(#{resNo}, 14, '0')
+                        AND PRGR_STAT_CD= 'NU2'
+                        AND SUBSTR(RSLT_DT, 1,8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+                        AND IF_TYPE = 'WEB'
+                        AND RSLT_CD = 'N'
+                      )
+                 WHERE RNK = 1) -1
+  </select>
+
+  <!-- ACEN 해피콜 미응답건 조회 -->
+  <select id="getAcenNoResponseTrg" resultType="com.ktmmobile.mcp.acen.dto.AcenDto">
+    /*AcenMapper.getAcenNoResponseTrg*/
+    SELECT
+       REQUEST_KEY
+      ,EVNT_TYPE
+      ,PSTATE
+      ,REQUEST_STATE_CODE
+    FROM (
+            SELECT
+               A.REQUEST_KEY
+              ,A.EVNT_TYPE
+              ,B.RSLT_DATE
+              ,C.PSTATE
+              ,C.REQUEST_STATE_CODE
+              ,DECODE(D.DLVRY_TYPE, '02', E.EXPNSN_STR_VAL3 , E.EXPNSN_STR_VAL2) AS LIMIT_TIME
+            FROM NMCP_ACEN_REQ A
+                ,NMCP_ACEN_HIST B
+                ,MCP_REQUEST C
+                ,MCP_REQUEST_DLVRY D
+                ,NMCP_CD_DTL E
+          WHERE A.REQUEST_KEY = B.REQUEST_KEY
+            AND A.REQUEST_KEY = C.REQUEST_KEY
+            AND A.REQUEST_KEY = D.REQUEST_KEY
+            AND A.EVNT_TYPE = E.DTL_CD
+            AND B.SEQ = (SELECT MAX(SEQ) FROM NMCP_ACEN_HIST WHERE REQUEST_KEY = B.REQUEST_KEY)
+            AND E.CD_GROUP_ID = 'AcenEvntType'
+            AND A.END_STATUS = 'N'
+            AND A.REQ_STATUS = 'Y'
+    )
+    WHERE NVL(LIMIT_TIME, '0') != '0'
+    AND RSLT_DATE + LIMIT_TIME/24/60 <![CDATA[<=]]> SYSDATE
+    ORDER BY REQUEST_KEY
+  </select>
+
+  <!-- ACEN 해피콜 연동 최대 건수 조회  -->
+  <select id="getMaxProcCnt" resultType="java.lang.Integer">
+    /*AcenMapper.getMaxProcCnt*/
+    SELECT NVL(EXPNSN_STR_VAL1, '30')
+    FROM NMCP_CD_DTL
+    WHERE CD_GROUP_ID = 'AcenLimit'
+      AND DTL_CD = 'procCnt'
+  </select>
+
+</mapper>
+

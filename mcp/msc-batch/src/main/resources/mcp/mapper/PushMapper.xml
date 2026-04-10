@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PushMapper">
+
+    <select id="getPushSendData" parameterType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto" resultType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto">
+    SELECT /* PushMapper.getPushSendData */
+        A.PUSH_SND_PROC_SNO,
+        A.PUSH_SND_SET_SNO,
+        A.USERID,
+        B.UDID,
+        B.OS,
+        B.SEND_YN,
+        B.LAST_ACCESS_DT,
+        A.APP_OS_TP,
+        A.PROC_ST,
+        A.SND_PROC_DT,
+        A.SND_TITLE,
+        A.SND_MSG,
+        A.PUSH_IMG_URL,
+        A.LINK_URL,
+        A.SND_CNT,
+        A.SND_TEST_YN
+    FROM NMCP_PUSH_SND_PROC_TRGT_LIST A,
+        (
+            SELECT UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS
+            FROM (
+                SELECT UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS,
+                RANK() OVER (PARTITION BY USER_ID ORDER BY UP_DT DESC) AS RNK
+                FROM NMCP_USR_APP_INFO
+                WHERE USER_ID IS NOT NULL
+                )
+            WHERE RNK = '1'
+        ) B
+    WHERE 1=1
+    AND A.USERID = B.USER_ID
+    <if test="procSt == null">
+    AND A.PROC_ST IS NULL
+    </if>
+    <if test="procSt != null and procSt != ''">
+    AND A.PROC_ST = #{procSt}
+    </if>
+    ORDER BY PUSH_SND_PROC_SNO DESC
+    </select>
+
+    <update id="sendPushSendResult" parameterType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto">
+    UPDATE /* PushMapper.sendPushSendResult */
+    NMCP_PUSH_SND_PROC_TRGT_LIST SET
+    <if test="procSt != null and procSt != ''">
+        PROC_ST = #{procSt},
+    </if>
+        SND_CNT = #{sndCnt},
+        SND_PROC_DT = SYSDATE,
+        SYS_CHG_DTIME = SYSDATE
+    WHERE 1=1
+    AND PUSH_SND_PROC_SNO = #{pushSndProcSno}
+    AND PUSH_SND_SET_SNO = #{pushSndSetSno}
+    AND USERID = #{userId}
+    </update>
+
+
+    <!-- 성능이슈로 5000단위부터 select 차후 up	-->
+    <select id="selectPushTargets" resultType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto" parameterType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto">
+        SELECT
+            A.PUSH_SEQ,
+            A.PUSH_SND_PROC_SNO,
+            A.PUSH_SND_SET_SNO,
+            A.USERID,
+            B.UDID,
+            B.OS,
+            B.SEND_YN,
+            B.LAST_ACCESS_DT,
+            A.APP_OS_TP,
+            A.PROC_ST,
+            A.SND_PROC_DT,
+            A.SND_TITLE,
+            A.SND_MSG,
+            A.PUSH_IMG_URL,
+            A.LINK_URL,
+            A.SND_CNT,
+            A.SND_TEST_YN,
+            A.CURRENT_STAT
+        FROM NMCP_PUSH_SND_PROC_SCD_TRGT  A,
+             (SELECT
+                  UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS
+              FROM (
+                       SELECT
+                           UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS,
+                           RANK() OVER (PARTITION BY USER_ID ORDER BY UP_DT DESC) AS RNK
+                       FROM NMCP_USR_APP_INFO
+                       WHERE USER_ID IS NOT NULL)
+              WHERE RNK = '1') B
+        WHERE 1=1
+          AND A.USERID = B.USER_ID
+          AND A.PROC_ST IS NULL
+          AND A.CURRENT_STAT IS NULL
+          AND PUSH_SEQ between #{minCnt} and #{maxCnt}
+        ORDER BY PUSH_SEQ asc
+    </select>
+
+    <update id="updatePushStanding" parameterType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto">
+        UPDATE /* PushMapper.updatePushStanding  */
+            NMCP_PUSH_SND_PROC_SCD_TRGT
+        SET CURRENT_STAT = 'T',
+            SYS_CHG_DTIME = SYSDATE
+        WHERE 1=1
+        AND PUSH_SEQ BETWEEN #{minCnt} AND #{maxCnt}
+        AND CURRENT_STAT IS NULL
+    </update>
+
+
+    <update id="updateSendPushHist" parameterType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto">
+            UPDATE /* PushMapper.updateSendPushHist */
+                NMCP_PUSH_SND_PROC_SCD_TRGT
+            SET
+                PROC_ST = #{procSt},
+                SND_CNT = #{sndCnt},
+                CURRENT_STAT = #{currentStat},
+                SND_PROC_DT = SYSDATE,
+                SYS_CHG_DTIME = SYSDATE
+            WHERE 1=1
+            AND PUSH_SEQ = #{pushSeq} --seq
+    </update>
+
+    <select id="selectTargetCnt" resultType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto" parameterType="java.lang.Integer">
+        SELECT min(push_seq) as minCnt,
+               min(push_seq) + #{unitCnt} as maxCnt
+        FROM NMCP_PUSH_SND_PROC_SCD_TRGT a,
+             (SELECT
+                  UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS
+              FROM (
+                       SELECT
+                           UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS,
+                           RANK() OVER (PARTITION BY USER_ID ORDER BY UP_DT DESC) AS RNK
+                       FROM NMCP_USR_APP_INFO
+                       WHERE USER_ID IS NOT NULL)
+              WHERE RNK = '1') B
+        WHERE a.USERID = b.USER_ID
+          AND PROC_ST IS NULL
+          AND CURRENT_STAT IS NULL
+    </select>
+
+    <select id="selectPushAllCount" resultType="java.lang.Integer">
+        SELECT count(*)
+        FROM NMCP_PUSH_SND_PROC_SCD_TRGT A,
+             (SELECT
+                  USER_ID
+              FROM (
+                       SELECT
+                          USER_ID,
+                          RANK() OVER (PARTITION BY USER_ID ORDER BY UP_DT DESC) AS RNK
+                       FROM NMCP_USR_APP_INFO
+                       WHERE USER_ID IS NOT NULL AND UDID IS NOT NULL)
+              WHERE RNK = '1') B
+        WHERE A.USERID = B.USER_ID
+          AND A.CURRENT_STAT = 'M'
+    </select>
+
+    <select id="selectPushAllTargets" resultType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto">
+        SELECT
+            A.PUSH_SEQ,
+            A.USERID,
+            B.UDID,
+            A.APP_OS_TP,
+            A.SND_TITLE,
+            A.SND_MSG,
+            A.LINK_URL,
+            A.CURRENT_STAT,
+            A.PUSH_SND_PROC_SNO
+        FROM NMCP_PUSH_SND_PROC_SCD_TRGT A,
+             (SELECT
+                  UDID, USER_ID
+              FROM (
+                       SELECT
+                          UDID, USER_ID,
+                           RANK() OVER (PARTITION BY USER_ID ORDER BY UP_DT DESC) AS RNK
+                       FROM NMCP_USR_APP_INFO
+                       WHERE USER_ID IS NOT NULL AND UDID IS NOT NULL)
+              WHERE RNK = '1') B
+        WHERE 1=1
+          AND A.USERID = B.USER_ID
+          AND A.CURRENT_STAT = 'M'
+        ORDER BY PUSH_SEQ
+    </select>
+
+    <update id="updatePushAllStanding">
+        UPDATE
+            NMCP_PUSH_SND_PROC_SCD_TRGT
+        SET CURRENT_STAT = 'T',
+            SYS_CHG_DTIME = SYSDATE
+        WHERE 1=1
+        AND CURRENT_STAT = 'M'
+    </update>
+
+    <select id="selectSendPushInfo" resultType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto" parameterType="java.lang.String">
+        SELECT
+            PUSH_SND_ID
+            ,PUSH_SND_DD
+            ,PUSH_TITLE
+            ,PUSH_MSG
+            ,PUSH_LINK
+            ,PREV_TEL_CODE
+            ,PUSH_STAT
+            ,CRET_ID
+            ,AMD_ID
+            ,CRET_DT
+            ,AMD_DT
+            ,RIP
+        FROM MCP_PUSH_SND_INFO
+        WHERE 1=1
+        AND PUSH_STAT = 'R'
+        AND PUSH_SND_DD = #{pushSndDd}
+    </select>
+
+    <update id="updateSendPushInfo" parameterType="java.lang.String">
+        UPDATE MCP_PUSH_SND_INFO
+        SET PUSH_STAT = 'W',
+            AMD_DT = SYSDATE
+        WHERE PUSH_SND_DD = #{pushSndDd} and PUSH_STAT = 'R'
+    </update>
+
+    <update id="completeSendPushInfo" parameterType="com.ktmmobile.mcp.push.dto.PushSndProcTrgtDto">
+        UPDATE MCP_PUSH_SND_INFO
+        SET PUSH_STAT = 'C',
+            AMD_DT = SYSDATE,
+            SUCCESS_COUNT = #{successCount},
+            FAIL_COUNT = #{failCount}
+        WHERE PUSH_SND_DD = #{pushSndDd} and PUSH_STAT = 'W'
+    </update>
+
+    <delete id="deleteSendPushAll">
+        DELETE FROM NMCP_PUSH_SND_PROC_SCD_TRGT WHERE CURRENT_STAT = 'T'
+    </delete>
+
+    <insert id="insertPushSndTrgtHist" parameterType="java.lang.String">
+        INSERT INTO NMCP_PUSH_SND_TRGT_HIST (
+          PUSH_SEQ,
+          PUSH_SND_PROC_SNO,
+          PUSH_SND_SET_SNO,
+          USERID,
+          CELL_NO,
+          APP_OS_TP,
+          APP_ID,
+          PROC_ST,
+          APP_OS_VER,
+          SND_PROC_DT,
+          SERVER_COLCT_YN,
+          APP_COLCT_YN,
+          PUSH_ICON_TP,
+          SND_TITLE,
+          SND_MSG,
+          PUSH_IMG_URL,
+          PUSH_IMG_NM,
+          LINK_DIV,
+          LINK_URL,
+          SND_CNT,
+          SND_TEST_YN,
+          TGT_SERVER,
+          SYS_REG_IP,
+          SYS_REG_DTIME,
+          SYS_REG_ID,
+          SYS_CHG_IP,
+          SYS_CHG_DTIME,
+          SYS_CHG_ID,
+          CURRENT_STAT
+        )
+        SELECT
+          (SELECT NVL(MAX(PUSH_SEQ), 0) FROM NMCP_PUSH_SND_TRGT_HIST) + ROW_NUMBER() OVER (ORDER BY A.PUSH_SEQ) AS PUSH_SEQ,
+          A.PUSH_SND_PROC_SNO,
+          A.PUSH_SND_SET_SNO,
+          A.USERID,
+          A.CELL_NO,
+          A.APP_OS_TP,
+          A.APP_ID,
+          A.PROC_ST,
+          A.APP_OS_VER,
+          A.SND_PROC_DT,
+          A.SERVER_COLCT_YN,
+          A.APP_COLCT_YN,
+          A.PUSH_ICON_TP,
+          A.SND_TITLE,
+          A.SND_MSG,
+          A.PUSH_IMG_URL,
+          A.PUSH_IMG_NM,
+          A.LINK_DIV,
+          A.LINK_URL,
+          A.SND_CNT,
+          A.SND_TEST_YN,
+          A.TGT_SERVER,
+          A.SYS_REG_IP,
+          A.SYS_REG_DTIME,
+          A.SYS_REG_ID,
+          A.SYS_CHG_IP,
+          A.SYS_CHG_DTIME,
+          A.SYS_CHG_ID,
+          A.CURRENT_STAT
+        FROM NMCP_PUSH_SND_PROC_SCD_TRGT A
+        WHERE A.PUSH_SND_PROC_SNO = #{pushSndProcSno}
+    </insert>
+
+</mapper>

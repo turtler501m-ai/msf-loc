@@ -1,0 +1,562 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.RcpSelfSuffMapper">
+
+	<sql id="getRcpMgmtSelfSuff">
+ 		SELECT  
+		  		A.REQUEST_KEY
+		        , A.CNTPNT_SHOP_ID
+		        , FN_GET_ORGNM(A.CNTPNT_SHOP_ID) AS AGENT_NAME
+		        , A.REQ_BUY_TYPE
+		        , FN_GET_CODENM('RCP9004', A.REQ_BUY_TYPE) AS REQ_BUY_NM
+		        , A.OPER_TYPE
+		        , FN_GET_CODENM('RCP9001', A.OPER_TYPE) AS OPER_NAME
+		        , A.SERVICE_TYPE
+		        , FN_GET_CODENM('RCP0013', A.SERVICE_TYPE) AS SERVICE_NAME
+		        , A.ON_OFF_TYPE
+		        , FN_GET_CODENM('RCP0007', NVL(A.ON_OFF_TYPE, '0')) ON_OFF_NM
+		        , A.OPEN_MARKET_REFERER
+		        , MDL.MNFCT_ID
+		        , DECODE(A.REQ_BUY_TYPE, 'MM', ( SELECT MNFCT_NM FROM ORG_MNFCT_MST WHERE MNFCT_ID = MDL.MNFCT_ID ), '') AS MNFCT_NM
+		        , ( SELECT MNFCT_NM FROM ORG_MNFCT_MST WHERE MNFCT_ID = USIM.MNFCT_ID ) AS USIM_MNFCT_NM
+		        , A.REQ_USIM_SN AS OLD_USIM_SN
+		        , A.SPC_CODE
+		        , C.SOC_CODE
+		        , FN_GET_RATENM(C.SOC_CODE) AS SOC_NAME
+		        , A.CSTMR_TYPE
+		        , B.CSTMR_NATIVE_RRN
+		        , B.CSTMR_FOREIGNER_RRN
+		        , B.CSTMR_PRIVATE_CNAME
+		        , B.CSTMR_PRIVATE_NUMBER
+		        , B.CSTMR_JURIDICAL_CNAME
+		        , B.CSTMR_JURIDICAL_RRN
+		        , B.CSTMR_TEL_FN
+		        , B.CSTMR_TEL_MN
+		        , B.CSTMR_TEL_RN
+		        , B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN AS CSTMR_TEL
+		        , B.CSTMR_MOBILE_FN
+		        , B.CSTMR_MOBILE_MN
+		        , B.CSTMR_MOBILE_RN
+		        , B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN AS CSTMR_MOBILE
+		        , B.CSTMR_POST
+		        , B.CSTMR_ADDR
+		        , B.CSTMR_ADDR_DTL
+		        , B.CSTMR_MAIL
+		        , TO_CHAR(A.SYS_RDATE, 'YYYYMMDDHH24MISS') AS SYS_RDATE
+		        , A.RVISN_ID AS RVISN_ID
+		        , FN_GET_USRNM(A.RVISN_ID) AS RVISN_NM
+		        , TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+				, A.PROD_NM AS DRCT_MNGM_PRDC_NM	/* 직영상품명 */
+		        , A.RES_NO																					/* 예약번호 */
+		        , TO_CHAR(A.REQ_IN_DAY, 'YYYYMMDD') REQ_IN_DT												/* 신청일자 */
+		        , B.CSTMR_NAME																				/* 고객명 */
+		        , B.CSTMR_NAME AS CSTMR_NAME2
+                , C.SESPLS_PROD_ID                                                                          /* 단말ID */
+		        , MDL.PRDT_CODE AS PRDT_CODE                                                                /* 단말코드 */
+		        , MDL.PRDT_NM AS MODEL_NAME                                                                 /* 단말명 */
+		        , NVL(FN_GET_CODENM ('CMN0044', MDL.PRDT_COLR_CD), A.REQ_MODEL_COLOR) AS REQ_MODEL_COLOR    /* 단말색상 */
+		        , A.REQ_PHONE_SN                                                                            /* 단말일련번호 */
+                , C.HNDSET_SALE_PRICE                                                                       /* 출고가 */
+                , NVL(C.CARD_TOT_DC_AMT,0) AS CARD_DC_AMT           										/* 즉시할인 */
+                , NVL(C.USE_POINT,0) AS USE_POINT															/* 포인트 */
+                , TO_NUMBER(C.HNDSET_SALE_PRICE) - TO_NUMBER(NVL(C.CARD_TOT_DC_AMT,0)) - TO_NUMBER(NVL(C.USE_POINT,0)) AS TOT_AMT /* 결제금액 */
+		        , A.MEMO AS REQUEST_MEMO                                                                    /* 메모 */
+		        , APD.REQUEST_STATE_CODE AS PHONE_STATE_CODE												/* 단말진행상태 */
+		        , FN_GET_CODENM('RCP0006', APD.REQUEST_STATE_CODE) PHONE_STATE_NAME							/* 단말진행상태명 */
+		        , USIM.PRDT_NM AS USIM_NAME                                                                 /* 유심모델 */
+		        , USIM.PRDT_CODE AS USIM_ID                                                                 /* 유심제품명 */
+		        , A.REQ_USIM_SN                                                                             /* 유심번호 */     
+		        , FN_GET_CODENM('RCP2035', A.USIM_KINDS_CD) AS USIM_KINDS_NM           
+		        , A.REQUEST_STATE_CODE AS USIM_STATE_CODE													/* 유심진행상태 */
+		        , FN_GET_CODENM('RCP0006', A.REQUEST_STATE_CODE) AS USIM_STATE_NAME							/* 유심진행상태명 */
+		        , D.DLVRY_NAME                                                                              /* 배송받는분 */
+		        , D.DLVRY_TEL_FN
+		        , D.DLVRY_TEL_MN
+		        , D.DLVRY_TEL_RN
+		        , D.DLVRY_MOBILE_FN
+		        , D.DLVRY_MOBILE_MN
+		        , D.DLVRY_MOBILE_RN
+		        , D.DLVRY_MOBILE_FN || D.DLVRY_MOBILE_MN ||  D.DLVRY_MOBILE_RN AS DLVRY_MOBILE_NO
+		        , D.DLVRY_POST                                                                              /* 우편번호 */
+		        , D.DLVRY_ADDR                                                                              /* 주소 */
+		        , D.DLVRY_ADDR_DTL                                                                          /* 상세주소 */
+		        , D.DLVRY_MEMO                                                                              /* 요청사항 */
+		        , E.TB_CD                                                                                   /* 유심택배사 */
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'PERCEL' AND DTL_CD = E.TB_CD) AS TB_NM /* 유심택배사명 */
+		        , E.DLVRY_NO                                                                                /* 유심택배사 송장번호 */
+		        , APD.TB_CD AS PHONE_TB_CD                                                                  /* 단말택배사 */
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'PERCEL' AND DTL_CD = APD.TB_CD) AS PHONE_TB_NM /* 단말택배사명 */
+		        , APD.DLVRY_NO AS PHONE_DLVRY_NO                                                            /* 단말택배사 송장번호 */
+		        , A.PSTATE																					/* 신청서상태 */
+		        , FN_GET_CODENM('RCP0005', A.PSTATE) PSTATE_NAME											/* 신청서상태명 */
+		FROM    MCP_REQUEST@DL_MCP A
+		        , MCP_REQUEST_CSTMR@DL_MCP B
+		        , MCP_REQUEST_SALEINFO@DL_MCP C
+		        , MCP_REQUEST_DLVRY@DL_MCP D
+		        , MCP_REQUEST_STATE@DL_MCP E
+		        , CMN_INTM_MDL MDL
+		        , CMN_INTM_MDL USIM
+		        , NMCP_REQUEST_APD_STATE@DL_MCP APD /* 단말진행상태 */
+		WHERE   1 = 1
+		AND     A.REQUEST_KEY       = B.REQUEST_KEY
+		AND     A.REQUEST_KEY       = C.REQUEST_KEY
+		AND     A.REQUEST_KEY       = D.REQUEST_KEY
+		AND     A.REQUEST_KEY       = E.REQUEST_KEY
+		AND     C.SESPLS_PROD_ID    = MDL.PRDT_ID(+)
+		AND     A.REQ_USIM_NAME     = USIM.PRDT_CODE(+)
+		AND     A.REQUEST_KEY       = APD.REQUEST_KEY
+		AND		A.PROD_TYPE			= '04' 
+		AND     A.REQ_IN_DAY        BETWEEN TO_DATE(#{strtDt} || '000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{endDt} || '235959', 'YYYYMMDDHH24MISS')
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+					AND B.CSTMR_NAME LIKE #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "2"'>
+					AND A.CONTRACT_NUM = #{searchVal}
+				</when>
+				<when test='searchCd == "3"'>
+					AND NVL(B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_TEL_RN, B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_MOBILE_RN) LIKE TRANSLATE(#{searchVal},'1234567890-','1234567890')||'%'
+				</when>
+				<when test='searchCd == "4"'>
+					AND A.REQ_PHONE_SN LIKE '%' || #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "5"'>
+					AND A.RES_NO LIKE '%' || #{searchVal} || '%'
+				</when>
+			</choose>
+		</if>
+		<if test="paramPhoneStateCode != null and paramPhoneStateCode != ''"> <!-- 단말진행상태 -->
+			AND APD.REQUEST_STATE_CODE = #{paramPhoneStateCode}
+		</if>
+		<if test="paramUsimStateCode != null and paramUsimStateCode != ''"> <!-- 유심진행상태 -->
+			AND A.REQUEST_STATE_CODE = #{paramUsimStateCode}
+		</if>
+		<if test="paramPstate != null and paramPstate != ''"> <!-- 신청서신청상태 -->
+			AND A.PSTATE = #{paramPstate}
+		</if>
+		ORDER BY A.REQUEST_KEY DESC
+	</sql>
+	
+	<!-- 신청정보(자급제) 조회 -->
+	<select id="getRcpMgmtListSelfSuff" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* rcpSelfSuffMapper.getRcpMgmtListSelfSuff */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getRcpMgmtSelfSuff" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+		
+	<!-- 신청정보(자급제) 엑셀 -->
+	<select id="getSelfSuffListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* rcpSelfSuffMapper.getSelfSuffListByExcel */		
+		<include refid="getRcpMgmtSelfSuff" />
+	</select>
+	
+	<!-- 신청정보(자급제) 상세조회 -->
+	<select id="getRcpMgmtListSelfSuffDtl" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT  /* rcpSelfSuffMapper.getRcpMgmtListSelfSuffDtl */
+		  		A.REQUEST_KEY
+		        , A.CNTPNT_SHOP_ID
+		        , FN_GET_ORGNM(A.CNTPNT_SHOP_ID) AS AGENT_NAME
+		        , A.REQ_BUY_TYPE
+		        , FN_GET_CODENM('RCP9004', A.REQ_BUY_TYPE) AS REQ_BUY_NM
+		        , A.OPER_TYPE
+		        , FN_GET_CODENM('RCP9001', A.OPER_TYPE) AS OPER_NAME
+		        , A.SERVICE_TYPE
+		        , FN_GET_CODENM('RCP0013', A.SERVICE_TYPE) AS SERVICE_NAME
+		        , A.ON_OFF_TYPE
+		        , FN_GET_CODENM('RCP0007', NVL(A.ON_OFF_TYPE, '0')) ON_OFF_NM
+		        , A.OPEN_MARKET_REFERER
+		        , MDL.MNFCT_ID
+		        , DECODE(A.REQ_BUY_TYPE, 'MM', ( SELECT MNFCT_NM FROM ORG_MNFCT_MST WHERE MNFCT_ID = MDL.MNFCT_ID ), '') AS MNFCT_NM
+		        , ( SELECT MNFCT_NM FROM ORG_MNFCT_MST WHERE MNFCT_ID = USIM.MNFCT_ID ) AS USIM_MNFCT_NM
+		        , A.REQ_USIM_SN AS OLD_USIM_SN
+		        , A.SPC_CODE
+		        , C.SOC_CODE
+		        , FN_GET_RATENM(C.SOC_CODE) AS SOC_NAME
+		        , A.CSTMR_TYPE
+		        , B.CSTMR_NATIVE_RRN
+		        , B.CSTMR_FOREIGNER_RRN
+		        , B.CSTMR_PRIVATE_CNAME
+		        , B.CSTMR_PRIVATE_NUMBER
+		        , B.CSTMR_JURIDICAL_CNAME
+		        , B.CSTMR_JURIDICAL_RRN
+		        , B.CSTMR_TEL_FN
+		        , B.CSTMR_TEL_MN
+		        , B.CSTMR_TEL_RN
+		        , B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN AS CSTMR_TEL
+		        , B.CSTMR_MOBILE_FN
+		        , B.CSTMR_MOBILE_MN
+		        , B.CSTMR_MOBILE_RN
+		        , B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN AS CSTMR_MOBILE
+		        , B.CSTMR_POST
+		        , B.CSTMR_ADDR
+		        , B.CSTMR_ADDR_DTL
+		        , B.CSTMR_MAIL
+		        , TO_CHAR(A.SYS_RDATE, 'YYYYMMDDHH24MISS') AS SYS_RDATE
+		        , FN_GET_USRNM(A.RVISN_ID) AS RVISN_NM
+		        , TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+				, A.PROD_NM AS DRCT_MNGM_PRDC_NM	/* 직영상품명 */
+		        , A.RES_NO																					/* 예약번호 */
+		        , TO_CHAR(A.REQ_IN_DAY, 'YYYYMMDD') REQ_IN_DT												/* 신청일자 */
+		        , B.CSTMR_NAME																				/* 고객명 */
+		        , B.CSTMR_NAME AS CSTMR_NAME2
+                , C.SESPLS_PROD_ID                                                                          /* 단말ID */
+		        , MDL.PRDT_CODE AS PRDT_CODE                                                                /* 단말코드 */
+		        , MDL.PRDT_NM AS MODEL_NAME                                                                 /* 단말명 */
+		        , NVL(FN_GET_CODENM ('CMN0044', MDL.PRDT_COLR_CD), A.REQ_MODEL_COLOR) AS REQ_MODEL_COLOR    /* 단말색상 */
+		        , A.REQ_PHONE_SN                                                                            /* 단말일련번호 */
+                , C.HNDSET_SALE_PRICE                                                                       /* 출고가 */
+                , NVL(C.CARD_TOT_DC_AMT,0) AS CARD_DC_AMT           										/* 즉시할인 */
+                , NVL(C.USE_POINT,0) AS USE_POINT															/* 포인트 */
+                , TO_NUMBER(C.HNDSET_SALE_PRICE) - TO_NUMBER(NVL(C.CARD_TOT_DC_AMT,0)) - TO_NUMBER(NVL(C.USE_POINT,0)) AS TOT_AMT /* 결제금액 */
+		        , A.MEMO AS REQUEST_MEMO                                                                    /* 메모 */
+		        , APD.REQUEST_STATE_CODE AS PHONE_STATE_CODE												/* 단말진행상태 */
+		        , FN_GET_CODENM('RCP0006', APD.REQUEST_STATE_CODE) PHONE_STATE_NAME							/* 단말진행상태명 */
+		        , USIM.PRDT_NM AS USIM_NAME                                                                 /* 유심모델 */
+		        , USIM.PRDT_CODE AS USIM_ID                                                                 /* 유심제품명 */
+		        , A.REQ_USIM_SN                                                                             /* 유심번호 */     
+		        , FN_GET_CODENM('RCP2035', A.USIM_KINDS_CD) AS USIM_KINDS_NM           
+		        , A.REQUEST_STATE_CODE AS USIM_STATE_CODE													/* 유심진행상태 */
+		        , FN_GET_CODENM('RCP0006', A.REQUEST_STATE_CODE) AS USIM_STATE_NAME							/* 유심진행상태명 */
+		        , D.DLVRY_NAME                                                                              /* 배송받는분 */
+		        , D.DLVRY_TEL_FN
+		        , D.DLVRY_TEL_MN
+		        , D.DLVRY_TEL_RN
+		        , D.DLVRY_TEL_FN||D.DLVRY_TEL_MN||D.DLVRY_TEL_RN AS DLVRY_TEL
+		        , D.DLVRY_MOBILE_FN
+		        , D.DLVRY_MOBILE_MN
+		        , D.DLVRY_MOBILE_RN
+		        , D.DLVRY_MOBILE_FN||D.DLVRY_MOBILE_MN||D.DLVRY_MOBILE_RN AS DLVRY_MOBILE
+		        , D.DLVRY_POST                                                                              /* 우편번호 */
+		        , D.DLVRY_ADDR                                                                              /* 주소 */
+		        , D.DLVRY_ADDR_DTL                                                                          /* 상세주소 */
+		        , D.DLVRY_MEMO                                                                              /* 요청사항 */
+		        , E.TB_CD                                                                                   /* 유심택배사 */
+		        , E.DLVRY_NO                                                                                /* 유심택배사 송장번호 */
+		        , APD.TB_CD AS PHONE_TB_CD                                                                  /* 단말택배사 */
+		        , APD.DLVRY_NO AS PHONE_DLVRY_NO                                                            /* 단말택배사 송장번호 */
+		        , A.PSTATE																					/* 신청서상태 */
+		        , FN_GET_CODENM('RCP0005', A.PSTATE) PSTATE_NAME											/* 신청서상태명 */
+		FROM    MCP_REQUEST@DL_MCP A
+		        , MCP_REQUEST_CSTMR@DL_MCP B
+		        , MCP_REQUEST_SALEINFO@DL_MCP C
+		        , MCP_REQUEST_DLVRY@DL_MCP D
+		        , MCP_REQUEST_STATE@DL_MCP E
+		        , CMN_INTM_MDL MDL
+		        , CMN_INTM_MDL USIM
+			    , NMCP_REQUEST_APD_STATE@DL_MCP APD /* 단말진행상태 */
+		WHERE   1 = 1
+		AND     A.REQUEST_KEY       = B.REQUEST_KEY
+		AND     A.REQUEST_KEY       = C.REQUEST_KEY
+		AND     A.REQUEST_KEY       = D.REQUEST_KEY
+		AND     A.REQUEST_KEY       = E.REQUEST_KEY
+		AND     C.SESPLS_PROD_ID    = MDL.PRDT_ID(+)
+		AND     A.REQ_USIM_NAME     = USIM.PRDT_CODE(+)
+		AND     A.REQUEST_KEY       = APD.REQUEST_KEY
+		AND		A.PROD_TYPE			= '04' 
+<!-- 		AND		C.SESPLS_YN			= 'Y'  -->
+		AND 	A.REQUEST_KEY = #{requestKey}
+		ORDER BY A.REQUEST_KEY DESC
+	</select>
+	
+
+	<!-- 신청정보 수정 -->
+	<update id="updateMcpReq" parameterType="map">
+		/* rcpSelfSuffMapper.updateMcpReq */
+		UPDATE	MCP_REQUEST@DL_MCP
+		SET		REQUEST_STATE_CODE = #{usimStateCode}
+			<if test="pstate != null and pstate != ''">
+				, PSTATE = #{pstate}
+			</if>
+				, REQ_PHONE_SN = #{reqPhoneSn}
+				, REQ_USIM_SN = #{reqUsimSn}
+				, RVISN_ID = #{SESSION_USER_ID}
+				, RVISN_DTTM = SYSDATE 
+		WHERE 	REQUEST_KEY = #{requestKey}
+	</update>
+
+	<!-- 신청정보 APD 수정 -->
+	<update id="updateMcpApdReq" parameterType="map">
+		/* rcpSelfSuffMapper.updateMcpApdReq */
+		UPDATE	NMCP_REQUEST_APD@DL_MCP
+		SET		REQUEST_STATE_CODE = #{usimStateCode}
+			<if test="pstate != null and pstate != ''">
+				, PSTATE = #{pstate}
+			</if>
+				, REQ_PHONE_SN = #{reqPhoneSn}
+				, REQ_USIM_SN = #{reqUsimSn}
+				, RVISN_ID = #{SESSION_USER_ID}
+				, RVISN_DTTM = SYSDATE 
+		WHERE 	REQUEST_KEY = #{requestKey}
+	</update>
+	
+	<!-- 유심 상태정보 수정 -->
+	<update id="updateMcpReqStateUsim" parameterType="map">
+		/* rcpSelfSuffMapper.updateMcpReqStateUsim */
+		UPDATE	MCP_REQUEST_STATE@DL_MCP
+		SET		REQUEST_STATE_CODE = #{usimStateCode}
+			<if test="tbCd != null and tbCd != ''">
+				, TB_CD = #{tbCd}
+			</if>
+				, DLVRY_NO = #{dlvryNo}
+				, RVISN_ID = #{SESSION_USER_ID}
+				, RVISN_DTTM = SYSDATE 
+		WHERE REQUEST_KEY = #{requestKey}
+	</update>
+	
+	<!-- 단말 상태정보 수정 -->
+	<update id="updateMcpReqStatePhone" parameterType="map">
+		/* rcpSelfSuffMapper.updateMcpReqStatePhone */
+		UPDATE	NMCP_REQUEST_APD_STATE@DL_MCP
+		SET		REQUEST_STATE_CODE = #{phoneStateCode}
+			<if test="phoneTbCd != null and phoneTbCd != ''">
+				, TB_CD = #{phoneTbCd}
+			</if>
+				, DLVRY_NO = #{phoneDlvryNo}
+				, RVISN_ID = #{SESSION_USER_ID}
+				, RVISN_DTTM = SYSDATE 
+		WHERE REQUEST_KEY = #{requestKey}
+	</update>
+	
+	<!-- 배송정보 수정 -->
+	<update id="updateMcpReqDlvry" parameterType="map">
+		/* rcpSelfSuffMapper.updateMcpReqDlvry */
+		UPDATE	MCP_REQUEST_DLVRY@DL_MCP
+		SET		RVISN_ID = #{SESSION_USER_ID}
+				, RVISN_DTTM = SYSDATE
+		<if test="dlvryName != null and dlvryName != ''">
+				, DLVRY_NAME = #{dlvryName}
+		</if>
+		<if test="dlvryTelFn != null and dlvryTelFn != ''">
+				, DLVRY_TEL_FN = #{dlvryTelFn}
+		</if>
+		<if test="dlvryTelMn != null and dlvryTelMn != ''">
+				, DLVRY_TEL_MN = #{dlvryTelMn}
+		</if>
+		<if test="dlvryTelRn != null and dlvryTelRn != ''">
+				, DLVRY_TEL_RN = #{dlvryTelRn}
+		</if>
+		<if test="dlvryMobileFn != null and dlvryMobileFn != ''">
+				, DLVRY_MOBILE_FN = #{dlvryMobileFn}
+		</if>
+		<if test="dlvryMobileMn != null and dlvryMobileMn != ''">
+				, DLVRY_MOBILE_MN = #{dlvryMobileMn}
+		</if>
+		<if test="dlvryMobileRn != null and dlvryMobileRn != ''">
+				, DLVRY_MOBILE_RN = #{dlvryMobileRn}
+		</if>
+		<if test="dlvryPost != null and dlvryPost != ''">
+				, DLVRY_POST = #{dlvryPost}
+		</if>
+		<if test="dlvryAddr != null and dlvryAddr != ''">
+				, DLVRY_ADDR = #{dlvryAddr}
+		</if>
+		<if test="dlvryAddrDtl != null and dlvryAddrDtl != ''">
+				, DLVRY_ADDR_DTL = #{dlvryAddrDtl}
+		</if>
+		<if test="dlvryMemo != null and dlvryMemo != ''">
+				, DLVRY_MEMO = #{dlvryMemo}
+		</if>
+		WHERE REQUEST_KEY = #{requestKey}
+	</update>
+	
+	<!-- 배송정보 APD 수정 -->
+	<update id="updateMcpReqApdDlvry" parameterType="map">
+		/* rcpSelfSuffMapper.updateMcpReqApdDlvry */
+		UPDATE	NMCP_REQUEST_APD_DLVRY@DL_MCP
+		SET		RVISN_ID = #{SESSION_USER_ID}
+				, RVISN_DTTM = SYSDATE
+		<if test="dlvryName != null and dlvryName != ''">
+				, DLVRY_NAME = #{dlvryName}
+		</if>
+		<if test="dlvryTelFn != null and dlvryTelFn != ''">
+				, DLVRY_TEL_FN = #{dlvryTelFn}
+		</if>
+		<if test="dlvryTelMn != null and dlvryTelMn != ''">
+				, DLVRY_TEL_MN = #{dlvryTelMn}
+		</if>
+		<if test="dlvryTelRn != null and dlvryTelRn != ''">
+				, DLVRY_TEL_RN = #{dlvryTelRn}
+		</if>
+		<if test="dlvryMobileFn != null and dlvryMobileFn != ''">
+				, DLVRY_MOBILE_FN = #{dlvryMobileFn}
+		</if>
+		<if test="dlvryMobileMn != null and dlvryMobileMn != ''">
+				, DLVRY_MOBILE_MN = #{dlvryMobileMn}
+		</if>
+		<if test="dlvryMobileRn != null and dlvryMobileRn != ''">
+				, DLVRY_MOBILE_RN = #{dlvryMobileRn}
+		</if>
+		<if test="dlvryPost != null and dlvryPost != ''">
+				, DLVRY_POST = #{dlvryPost}
+		</if>
+		<if test="dlvryAddr != null and dlvryAddr != ''">
+				, DLVRY_ADDR = #{dlvryAddr}
+		</if>
+		<if test="dlvryAddrDtl != null and dlvryAddrDtl != ''">
+				, DLVRY_ADDR_DTL = #{dlvryAddrDtl}
+		</if>
+		<if test="dlvryMemo != null and dlvryMemo != ''">
+				, DLVRY_MEMO = #{dlvryMemo}
+		</if>
+		WHERE REQUEST_KEY = #{requestKey}
+	</update>
+	
+	<!-- 신청정보 마스킹 수정 -->
+	<update id="updateMcpReqMask" parameterType="map">
+		/* rcpSelfSuffMapper.updateMcpReqMask */
+		UPDATE	MCP_REQUEST@DL_MCP
+		SET		PSTATE = #{pstate}
+				, RVISN_ID = #{SESSION_USER_ID}
+				, RVISN_DTTM = SYSDATE 
+		WHERE 	REQUEST_KEY = #{requestKey}
+	</update>
+
+	<!-- 신청정보 APD 수정 -->
+	<update id="updateMcpApdReqMask" parameterType="map">
+		/* rcpSelfSuffMapper.updateMcpApdReqMask */
+		UPDATE	NMCP_REQUEST_APD@DL_MCP
+		SET		PSTATE = #{pstate}
+				, RVISN_ID = #{SESSION_USER_ID}
+				, RVISN_DTTM = SYSDATE 
+		WHERE 	REQUEST_KEY = #{requestKey}
+	</update>
+	
+	<!-- 택배사 코드 가져오기 -->
+	<select id="getDlvryTbCd" parameterType="String" resultType="String">
+		SELECT  DTL_CD AS TB_CD
+		FROM    NMCP_CD_DTL@DL_MCP
+		WHERE   CD_GROUP_ID = 'PERCEL'
+		AND		DTL_CD_NM = TRIM(#{tbNm, jdbcType=VARCHAR})
+	</select>
+	
+	<!-- 단말 송장번호 등록 확인 -->
+	<select id="isPhoneDlvryInfoChk" parameterType="String" resultType="String">
+		SELECT  DECODE(STE.DLVRY_NO, NULL, DLY.DLVRY_MOBILE_FN||DLY.DLVRY_MOBILE_MN||DLY.DLVRY_MOBILE_RN, 'N') 
+		FROM    NMCP_REQUEST_APD_STATE@DL_MCP STE
+                , MCP_REQUEST_DLVRY@DL_MCP DLY
+		WHERE   STE.REQUEST_KEY = DLY.REQUEST_KEY
+        AND     RES_NO = #{resNo}
+	</select>
+	
+	<!-- 단말 송장번호 등록 -->
+	<update id="updatePhoneDlvryNo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSuffVO">
+		/* rcpSelfSuffMapper.updatePhoneDlvryNo */
+		UPDATE	NMCP_REQUEST_APD_STATE@DL_MCP
+		SET		TB_CD 					= #{tbCd, jdbcType=VARCHAR}
+				, DLVRY_NO				= #{dlvryNo, jdbcType=VARCHAR}
+				, REQUEST_STATE_CODE	= #{reqStateCd, jdbcType=VARCHAR} 
+			   	, RVISN_ID  			= #{sessionUserId, jdbcType=VARCHAR}
+				, RVISN_DTTM 			= SYSDATE 
+		WHERE	RES_NO 					= #{resNo, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 유심 송장번호 등록 확인 -->
+	<select id="isUsimDlvryInfoChk" parameterType="String" resultType="String">
+		SELECT  DECODE(STE.DLVRY_NO, NULL, DLY.DLVRY_MOBILE_FN||DLY.DLVRY_MOBILE_MN||DLY.DLVRY_MOBILE_RN, 'N') 
+		FROM    MCP_REQUEST_STATE@DL_MCP STE
+                , MCP_REQUEST_DLVRY@DL_MCP DLY
+		WHERE   STE.REQUEST_KEY = DLY.REQUEST_KEY
+        AND     RES_NO = #{resNo}
+	</select>
+	
+	<!-- 유심 송장번호 등록 -->
+	<update id="updateUsimDlvryNo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSuffVO">
+		/* rcpSelfSuffMapper.updateUsimDlvryNo */
+		UPDATE	MCP_REQUEST_STATE@DL_MCP
+		SET		TB_CD 					= #{tbCd, jdbcType=VARCHAR}
+				, DLVRY_NO				= #{dlvryNo, jdbcType=VARCHAR}
+				, REQUEST_STATE_CODE	= #{reqStateCd, jdbcType=VARCHAR} 
+			   	, RVISN_ID  			= #{sessionUserId, jdbcType=VARCHAR}
+				, RVISN_DTTM 			= SYSDATE 
+		WHERE	RES_NO 					= #{resNo, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 일련번호 업데이트 -->
+	<update id="updateReqSrNo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSuffVO">
+		/* rcpSelfSuffMapper.updateReqSrNo */
+		UPDATE  MCP_REQUEST@DL_MCP A
+		SET		RVISN_ID  		= #{sessionUserId, jdbcType=VARCHAR}
+				, RVISN_DTTM 		=  SYSDATE
+			<if test="reqSrLeng == 19">
+				, REQUEST_STATE_CODE 	= #{reqStateCd, jdbcType=VARCHAR}
+				, REQ_USIM_SN 		= #{reqSrNo, jdbcType=VARCHAR}
+			</if>
+			<if test="reqSrLeng == 7">
+				, REQ_PHONE_SN 		= #{reqSrNo, jdbcType=VARCHAR}
+			</if>
+		WHERE   RES_NO 				= #{resNo, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 일련번호 APD 업데이트 -->
+	<update id="updateReqApdSrNo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSuffVO">
+		/* rcpSelfSuffMapper.updateReqApdSrNo */
+		UPDATE  NMCP_REQUEST_APD@DL_MCP A
+		SET		RVISN_ID  		= #{sessionUserId, jdbcType=VARCHAR}
+				, RVISN_DTTM 		=  SYSDATE
+			<if test="reqSrLeng == 19">
+				, REQUEST_STATE_CODE 	= #{reqStateCd, jdbcType=VARCHAR}
+				, REQ_USIM_SN 		= #{reqSrNo, jdbcType=VARCHAR}
+			</if>
+			<if test="reqSrLeng == 7">
+				, REQ_PHONE_SN 		= #{reqSrNo, jdbcType=VARCHAR}
+			</if>
+		WHERE   RES_NO 				= #{resNo, jdbcType=VARCHAR}
+	</update>
+	
+		
+	
+	<!-- 단말 배송완료 확인 -->
+	<select id="isPhoneDlvryOkChk" parameterType="String" resultType="String">
+		SELECT  RES_NO
+		FROM    NMCP_REQUEST_APD_STATE@DL_MCP
+		WHERE   DLVRY_NO = #{dlvryNo}
+	</select>
+	<!-- 유심 배송완료 확인 -->
+	<select id="isUsimDlvryOkChk" parameterType="String" resultType="String">
+		SELECT  RES_NO
+		FROM    MCP_REQUEST_STATE@DL_MCP
+		WHERE   DLVRY_NO = #{dlvryNo}
+	</select>
+	
+	<!-- 단말 배송완료 업데이트 -->
+	<update id="updatePhoneDlvryOk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSuffVO">
+		/* rcpSelfSuffMapper.updatePhoneDlvryOk */
+		UPDATE	NMCP_REQUEST_APD_STATE@DL_MCP
+		SET		REQUEST_STATE_CODE	= #{reqStateCd, jdbcType=VARCHAR} 
+			   	, RVISN_ID  			= #{sessionUserId, jdbcType=VARCHAR}
+				, RVISN_DTTM 			= SYSDATE 
+		WHERE	RES_NO 					= #{resNo, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 유심 배송완료 업데이트 -->
+	<update id="updateUsimDlvryOk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSuffVO">
+		/* rcpSelfSuffMapper.updateUsimDlvryOk */
+		UPDATE	MCP_REQUEST_STATE@DL_MCP
+		SET		REQUEST_STATE_CODE	= #{reqStateCd, jdbcType=VARCHAR} 
+			   	, RVISN_ID  			= #{sessionUserId, jdbcType=VARCHAR}
+				, RVISN_DTTM 			= SYSDATE 
+		WHERE	RES_NO 					= #{resNo, jdbcType=VARCHAR}
+	</update>	
+	<!-- 유심 배송완료 업데이트(MCP_REQ) -->
+	<update id="updateReqUsimDlvryOk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSuffVO">
+		/* rcpSelfSuffMapper.updateReqUsimDlvryOk */
+		UPDATE	MCP_REQUEST@DL_MCP
+		SET		REQUEST_STATE_CODE = #{reqStateCd, jdbcType=VARCHAR}
+			   	, RVISN_ID  			= #{sessionUserId, jdbcType=VARCHAR}
+				, RVISN_DTTM 			= SYSDATE 
+		WHERE 	RES_NO 					= #{resNo, jdbcType=VARCHAR}
+	</update>	
+	<!-- 유심 배송완료 업데이트(NMCP_REQ_APD) -->
+	<update id="updateApdUsimDlvryOk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSuffVO">
+		/* rcpSelfSuffMapper.updateApdUsimDlvryOk */
+		UPDATE	NMCP_REQUEST_APD@DL_MCP
+		SET		REQUEST_STATE_CODE = #{reqStateCd, jdbcType=VARCHAR}
+			   	, RVISN_ID  			= #{sessionUserId, jdbcType=VARCHAR}
+				, RVISN_DTTM 			= SYSDATE 
+		WHERE 	RES_NO 					= #{resNo, jdbcType=VARCHAR}
+	</update>
+</mapper>

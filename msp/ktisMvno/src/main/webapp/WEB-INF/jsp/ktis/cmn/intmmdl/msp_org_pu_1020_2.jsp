@@ -1,0 +1,196 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%
+	/**
+	 * @Class Name : msp_org_pu_1020_2.jsp
+	 * @Description : 색상모델 찾기 화면
+	 * @
+	 * @ 수정일		수정자 수정내용
+	 * @ ---------- ------ -----------------------------
+	 * @ 2015.07.31 심정보 최초생성
+	 * @ 
+	 * @author : 심정보
+	 * @Create Date : 2015. 7. 31.
+	 */
+%>
+
+<!-- header -->
+<div class="page-header">
+	<h1>색상모델 찾기 팝업</h1>
+</div>
+
+<!-- 화면 배치 -->
+<div id="FORM1" class="section-search"></div>
+<div id="GRID1"></div>
+
+<!-- Script -->
+<script type="text/javascript">
+var DHX = {
+		//------------------------------------------------------------
+		FORM1 : {
+			items : [
+				{type:"block", list:[
+					{type:"settings", position:"label-left", labelAlign:"left", blockOffset:0},			  
+					{type : "input",label : "대표모델ID",name : "rprsPrdtId" ,width:100, value:'' , offsetLeft:10, labelWidth:60, maxLength:10},
+					{type: 'newcolumn'},
+					{type:"input", name:"rprsPrdtIdResult", value:"", width:200, disabled: true},
+					{type: 'newcolumn'},
+					{type : "input",label : "색상모델ID",name : "prdtId", width:100 ,offsetLeft:15, value:'', labelWidth:60, maxLength:10},
+					{type: 'newcolumn'},
+					{type:"input", name:"prdtIdResult", value:"", width:200, disabled: true}
+				]},
+				{type:"block", list:[
+					{type : "input",label : "모델명",name : "prdtNm" ,width:200, value:'' , offsetLeft:10, labelWidth:60, maxLength:10},
+					{type: 'newcolumn'},
+					{type: 'select', label: '모델유형', name: 'prdtTypeCd', width:100, offsetLeft:118, value:'', labelWidth:60},
+					{type: 'newcolumn'},
+					{type: 'select', label: '제조사명', name: 'mnfctId', width:100, offsetLeft:43, value:'', labelWidth:60},
+					
+					
+				]},
+				{type: 'newcolumn', offset:100},
+				{type: 'button', value: '조회', name: 'btnSearch' , className:"btn-search2"}
+			],
+			onChange: function (name, value) {
+				switch(name) {
+					case 'rprsPrdtId':
+						if(value.length >= 4){
+							mvno.cmn.ajax(ROOT + "/cmn/intmmdl/selectRprsPrdtNm.json", {rprsPrdtId:value, rprsYn:"Y"}, function(resultData) {
+								if(resultData.result.resultCnt > 0){
+									//대표모델 존재
+									PAGE.FORM1.setItemValue("rprsPrdtIdResult", "[" + resultData.result.resultList[0].prdtNm + "/" + resultData.result.resultList[0].prdtCode + "]"); 
+								}else{
+									//대표모델 미존재
+									PAGE.FORM1.setItemValue("rprsPrdtIdResult", "");
+								} 
+							});
+						} else {
+							
+							PAGE.FORM1.setItemValue("rprsPrdtIdResult", "");
+						}
+						break;
+					
+					case 'prdtId':
+						if(value.length >= 4){
+							mvno.cmn.ajax(ROOT + "/cmn/intmmdl/selectRprsPrdtNm.json", {prdtId:value, rprsYn:"N"}, function(resultData) {
+								if(resultData.result.resultCnt > 0){
+									//색상모델 존재
+									PAGE.FORM1.setItemValue("prdtIdResult", "[" + resultData.result.resultList[0].prdtNm + "/" + resultData.result.resultList[0].prdtCode + "]"); 
+								}else{
+									//색상모델 미존재
+									PAGE.FORM1.setItemValue("prdtIdResult", "");
+								} 
+							});
+						} else {
+							PAGE.FORM1.setItemValue("prdtIdResult", "");	
+						}
+						break;
+				}
+			},
+			onButtonClick : function(btnId) {
+
+				var form = this;
+
+				switch (btnId) {
+
+					case "btnSearch":
+
+						PAGE.GRID1.list(ROOT + "/cmn/intmmdl/intmColrMdlPopUpList.json", form);
+						break;
+				}
+
+			}
+		},
+		
+	// ----------------------------------------
+		GRID1 : {
+			css : {
+				height : "260px"
+			},
+			title : "색상모델",
+			header : "대표모델ID,대표모델코드,색상모델ID,색상모델코드,모델명,색상,모델유형,모델구분,제조사,출시일자,단종일자",
+			columnIds : "rprsPrdtId,rprsPrdtCode,prdtId,prdtCode,prdtNm,prdtColrNm,prdtTypeNm,prdtIndNm,mnfctNm,prdtLnchDt,prdtDt",
+			colAlign : "center,left,center,left,left,center,center,center,left,center,center",
+			colTypes : "ro,ro,ro,ro,ro,ro,ro,ro,ro,roXd,roXd",
+			colSorting : "str,str,str,str,str,str,str,str,str,str,str",
+			widths : "80,100,80,120,150,80,80,80,100,100,100",
+			paging:true,
+			showPagingAreaOnInit: true,
+			buttons : {
+				center : {
+					btnApply : { label : "확인" },
+					btnClose : { label : "닫기" }
+				}
+			},
+			checkSelectedButtons : ["btnApply"],
+			onRowDblClicked : function(rowId, celInd) {
+				// 선택버튼 누른것과 같이 처리
+				this.callEvent('onButtonClick', ['btnApply']);
+			},
+			onButtonClick : function(btnId, selectedData) {
+				
+				switch (btnId) {
+
+					case "btnApply":
+						/*
+						모델ID			: prdtId
+						대표모델ID		: rprsPrdtId
+						대표여부		: rprsYn
+						모델코드		: prdtCode
+						대표모델 코드	: rprsPrdtCode
+						모델명			: prdtNm
+						제조사ID		: mnfctId
+						제조사명		: mnfctNm
+						모델유형코드	: prdtTypeCd
+						모델유형명		: prdtTypeNm
+						모델구분코드	: prdtIndCd
+						모델구분명		: prdtIndNm
+						모델출시일자	: prdtLnchDt
+						모델단종일자	: prdtDt
+						모델색상코드	: prdtColrCd
+						모델색상명		: prdtColrNm
+						*/
+						if(selectedData.mnfctNm != null && selectedData.mnfctNm != ""){
+							selectedData.mnfctNm = selectedData.mnfctNm.replace(/&amp;/g,"&");
+						}
+						
+						mvno.ui.closeWindow(selectedData, true);
+						break; 
+					case "btnClose" :
+						
+						mvno.ui.closeWindow();	
+						break
+
+				}
+			}
+		}
+};
+
+var PAGE = {
+
+	onOpen : function() {
+
+		mvno.ui.createForm("FORM1");
+		mvno.ui.createGrid("GRID1");
+		
+		//제조사 셀렉트박스 셋팅
+		mvno.cmn.ajax4lov( ROOT + "/org/mnfctmgmt/selectMnfctList.json", {mnfctYn:"Y"}, PAGE.FORM1, "mnfctId");
+		//조회조건 모델유형 셀렉트박스 셋팅
+		mvno.cmn.ajax4lov(ROOT+"/cmn/cmnCdMgmtService/getCommCombo.json", {grpId:"ORG0007"}, PAGE.FORM1, "prdtTypeCd");
+		
+		//모델유형(prdtTypeCd) 파라메터가 넘어오면 모델유형 선택불가.
+		if(PAGE.param.data != undefined) {
+			if(PAGE.param.data.prdtTypeCd != null && PAGE.param.data.prdtTypeCd != "" ){
+				PAGE.FORM1.setItemValue("prdtTypeCd",PAGE.param.data.prdtTypeCd);
+				PAGE.FORM1.disableItem("prdtTypeCd");
+			}
+		}
+		
+// 		if(PAGE.param.data.prdtTypeCd != null || PAGE.param.data.prdtTypeCd != "" ){
+// 			PAGE.FORM1.setItemValue("prdtTypeCd",PAGE.param.data.prdtTypeCd);
+// 			PAGE.FORM1.disableItem("prdtTypeCd");
+			
+// 		}
+	}
+
+};
+</script>

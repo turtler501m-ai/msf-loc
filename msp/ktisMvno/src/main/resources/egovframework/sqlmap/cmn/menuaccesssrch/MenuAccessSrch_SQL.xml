@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.menuaccesssrch.mapper.MenuAccessSrchMapper">
+
+	<select id="selectList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.menuaccesssrch.selectList =========*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT  
+			         A.MENU_ID 
+			        ,A.USR_ID 
+			        ,B.USR_NM
+			        ,B.ORGN_ID
+			        ,FN_GET_ORGNM(B.ORGN_ID) AS ORGN_NM
+			        ,TO_CHAR(TO_DATE(A.CONN_DT, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')  CONN_DT
+			        ,A.IP_INFO 
+			        ,A.MENU_NM 
+			        ,A.DUTY_NM
+			FROM CMN_MENU_CONN_LOG_MST A,
+			     CMN_USR_MST B
+			WHERE A.USR_ID = B.USR_ID
+			<if test="orgnId != null and orgnId != ''">
+				AND B.ORGN_ID = #{orgnId}
+			</if>
+	        <if test="searchUsrNm != null and searchUsrNm != ''">	
+				AND B.USR_NM like '%' ||  #{searchUsrNm} || '%'
+	        </if>
+	        			
+	        <if test="searchMenuList != null and searchMenuList != '' and searchMenuList != '-1'">
+	            AND A.MENU_ID = #{searchMenuList}
+	        </if>
+	        
+<!-- 	        20140912 -->
+	        <if test="searchStrtDt != null and searchStrtDt != ''">
+	            <![CDATA[
+	            AND A.CONN_DT >= #{searchStrtDt}
+	            ]]>
+	        </if>
+	        
+	        <if test="searchEndDt != null and searchEndDt != ''">
+	            <![CDATA[
+	            AND A.CONN_DT < #{searchEndDt} + 1 || '000000000'     
+	            ]]>
+	        </if>
+	        order by   A.CONN_DT desc      	        			
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+</mapper>

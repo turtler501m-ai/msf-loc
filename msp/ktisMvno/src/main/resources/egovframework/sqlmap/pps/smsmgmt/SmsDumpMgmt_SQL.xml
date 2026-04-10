@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.smsmgmt.mapper.PpsSmsDumpMgmtMapper">
+
+<!-- dumpSeq를 얻음 -->
+<select id="getDumpSeq" resultType="integer">
+	SELECT PPS_SMS_DUMP_SEQ.NEXTVAL FROM DUAL
+</select>
+
+<!-- 문자관리 단문문자전송 -->
+<select id="getPpsSmsDumpShortProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+	{CALL P_SMS_DUMP_INPUT(
+				    #{opCode, jdbcType=VARCHAR}
+				    , #{dumpSeq, jdbcType=VARCHAR}
+				    , #{smsTitle, jdbcType=VARCHAR}
+				    , #{lmsTitle, jdbcType=VARCHAR}
+				    , #{smsMsg, jdbcType=VARCHAR}
+				    , #{callingNumber, jdbcType=VARCHAR}
+				    , #{calledNumber, jdbcType=VARCHAR}
+				    , #{smsType, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+				   , #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+</select>
+
+<!--문자관리 문자전송내역 목록조회 -->
+    <select id="getSmsDumpMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	/* PpsSmsDumpMgmtMapper.getSmsDumpMgmtList */       
+		<include refid="com.ktis.msp.cmn.include.paging-start" /> 
+			SELECT
+			    MSG_TYPE, SCHEDULE_TIME, SUBJECT, ORGN_NM, SYSTEM_NM, SUM(CNT) AS CNT
+			FROM
+			    (
+			    SELECT
+			        DECODE(MSG_TYPE,1,'SMS',2,'LMS',3,'MMS',6,'KAKAO') MSG_TYPE
+			        ,SUBSTR(SCHEDULE_TIME,0,8) SCHEDULE_TIME
+			        ,NVL((SELECT TEMPLATE_NM FROM MSP_SMS_TEMPLATE_MST WHERE TEMPLATE_ID = DECODE(REGEXP_INSTR(RESERVED02,'^[0-9]+$'),1,RESERVED02,0)),DECODE(RESERVED02,'OTP',RESERVED02, '')) SUBJECT
+			        ,(SELECT FN_GET_ORGNM(MGMT_ORGN_ID) FROM MSP_SMS_TEMPLATE_MST WHERE TEMPLATE_ID = DECODE(REGEXP_INSTR(RESERVED02,'^[0-9]+$'),1,RESERVED02,0)) ORGN_NM
+			        ,DECODE(RESERVED01,'MCP','고객포탈','CTI','고객센터','M전산') SYSTEM_NM
+			        ,COUNT(*) AS CNT
+			    FROM
+			        AM2X_SUBMIT_LOG A
+			    WHERE 1=1
+			    AND (A.RESULT = '0' OR A.KKO_RESULT = '0')
+			    AND A.RESERVED03 <![CDATA[<>]]> 'SmsRsvSendSchedule'
+			    AND SCHEDULE_TIME BETWEEN #{searchStartDate} AND #{searchEndDate}
+			    GROUP BY MSG_TYPE,SUBSTR(SCHEDULE_TIME,0,8),RESERVED01,RESERVED02
+			    UNION ALL
+			    SELECT
+			             DECODE(A.MSG_TYPE,1,'SMS',2,'LMS',3,'MMS',6,'KAKAO') MSG_TYPE
+			            , SUBSTR(SCHEDULE_TIME,0,8) SCHEDULE_TIME
+			            , B.SUBJECT
+			            , FN_GET_ORGNM(C.ORGN_ID) ORGN_NM
+			            , '대량문자발송' SYSTEM_NM
+			            , COUNT(*) CNT
+			    FROM    AM2X_SUBMIT_LOG A
+			            , MSG_SMS_LIST B
+			            , CMN_USR_MST C
+			    WHERE   1=1
+			    AND     (A.RESULT = '0' OR A.KKO_RESULT = '0')
+			    AND     A.SCHEDULE_TIME BETWEEN #{searchStartDate} AND #{searchEndDate}
+			    AND     A.RESERVED03 = 'SmsRsvSendSchedule'
+			    AND     A.RESERVED02 = B.MSG_NO
+			    AND     B.REGST_ID = C.USR_ID
+			    GROUP BY A.MSG_TYPE, SUBSTR(SCHEDULE_TIME,0,8), B.SUBJECT, C.ORGN_ID
+			    )
+			GROUP BY SCHEDULE_TIME, MSG_TYPE, SUBJECT, ORGN_NM, SYSTEM_NM
+			ORDER BY SCHEDULE_TIME, MSG_TYPE, SUBJECT, ORGN_NM, SYSTEM_NM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+    
+<!--문자관리 문자전송내역 목록조회 엑셀 -->
+    <select id="getSmsDumpMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">        
+			SELECT
+			    MSG_TYPE, SCHEDULE_TIME, SUBJECT, ORGN_NM, SYSTEM_NM, SUM(CNT) AS CNT
+			FROM
+			    (
+			    SELECT
+			        DECODE(MSG_TYPE,1,'SMS',2,'LMS',3,'MMS',6,'KAKAO') MSG_TYPE
+			        ,SUBSTR(SCHEDULE_TIME,0,8) SCHEDULE_TIME
+			        ,NVL((SELECT TEMPLATE_NM FROM MSP_SMS_TEMPLATE_MST WHERE TEMPLATE_ID = DECODE(REGEXP_INSTR(RESERVED02,'^[0-9]+$'),1,RESERVED02,0)),DECODE(RESERVED02,'OTP',RESERVED02, '')) SUBJECT
+			        ,(SELECT FN_GET_ORGNM(MGMT_ORGN_ID) FROM MSP_SMS_TEMPLATE_MST WHERE TEMPLATE_ID = DECODE(REGEXP_INSTR(RESERVED02,'^[0-9]+$'),1,RESERVED02,0)) ORGN_NM
+			        ,DECODE(RESERVED01,'MCP','고객포탈','CTI','고객센터','M전산') SYSTEM_NM
+			        ,COUNT(*) AS CNT
+			    FROM
+			        AM2X_SUBMIT_LOG A
+			    WHERE 1=1
+			    AND (A.RESULT = '0' OR A.KKO_RESULT = '0')
+			    AND A.RESERVED03 <![CDATA[<>]]> 'SmsRsvSendSchedule'
+			    AND SCHEDULE_TIME BETWEEN #{searchStartDate} AND #{searchEndDate}
+			    GROUP BY MSG_TYPE,SUBSTR(SCHEDULE_TIME,0,8),RESERVED01,RESERVED02
+			    UNION ALL
+			    SELECT
+			             DECODE(A.MSG_TYPE,1,'SMS',2,'LMS',3,'MMS',6,'KAKAO') MSG_TYPE
+			            , SUBSTR(SCHEDULE_TIME,0,8) SCHEDULE_TIME
+			            , B.SUBJECT
+			            , FN_GET_ORGNM(C.ORGN_ID) ORGN_NM
+			            , '대량문자발송' SYSTEM_NM
+			            , COUNT(*) CNT
+			    FROM    AM2X_SUBMIT_LOG A
+			            , MSG_SMS_LIST B
+			            , CMN_USR_MST C
+			    WHERE   1=1
+			    AND     (A.RESULT = '0' OR A.KKO_RESULT = '0')
+			    AND     A.SCHEDULE_TIME BETWEEN #{searchStartDate} AND #{searchEndDate}
+			    AND     A.RESERVED03 = 'SmsRsvSendSchedule'
+			    AND     A.RESERVED02 = B.MSG_NO
+			    AND     B.REGST_ID = C.USR_ID
+			    GROUP BY A.MSG_TYPE, SUBSTR(SCHEDULE_TIME,0,8), B.SUBJECT, C.ORGN_ID
+			    )
+			GROUP BY SCHEDULE_TIME, MSG_TYPE, SUBJECT, ORGN_NM, SYSTEM_NM
+			ORDER BY SCHEDULE_TIME, MSG_TYPE, SUBJECT, ORGN_NM, SYSTEM_NM
+    </select> 
+    
+<!--문자관리 문자전송내역 목록조회 -->
+    <select id="getSelectPpsCallingNumList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+		SELECT	CALLING_NUMBER value,
+		        CALLING_NUMBER text
+ 		FROM PPS_CODE_CALLING_NUM
+    </select>   
+	
+	
+	<select id="getMsgQueueSeq" resultType="String">
+		SELECT SMS_SEQ.NEXTVAL AS mseq FROM DUAL
+	</select>	
+	
+        
+	<update id="updateFile" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* PpsSmsDumpMgmtMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		       , ATT_SCTN = 'MMS'
+		 WHERE FILE_ID = #{file_upload1_s_0}	
+	</update> 
+	
+	<update id="updateFile1" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* PpsSmsDumpMgmtMapper.updateFile1 */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		       , ATT_SCTN = 'MMS'
+		 WHERE FILE_ID = #{file_upload1_s_1}	
+	</update> 
+		
+	<update id="updateFile2" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* PpsSmsDumpMgmtMapper.updateFile2 */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		       , ATT_SCTN = 'MMS'
+		 WHERE FILE_ID = #{file_upload1_s_2}	
+	</update>
+		
+	<update id="updateFile3" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* PpsSmsDumpMgmtMapper.updateFile3 */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		       , ATT_SCTN = 'MMS'
+		 WHERE FILE_ID = #{file_upload1_s_3}	
+	</update>
+		
+	<update id="updateFile4" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* PpsSmsDumpMgmtMapper.updateFile4 */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		       , ATT_SCTN = 'MMS'
+		 WHERE FILE_ID = #{file_upload1_s_4}	
+	</update>
+
+
+    <select id="getMmsFileList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	/* PpsSmsDumpMgmtMapper.getMmsFileList */
+		SELECT <![CDATA['/data/MMS/' || FILE_NM]]> AS FILE_LOC
+		       ,ATT_ROUT
+		       ,FILE_NM
+		  FROM ORG_FILE_MGMT_MST
+		 WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		   AND ATT_SCTN = 'MMS'
+    </select>
+    
+</mapper>

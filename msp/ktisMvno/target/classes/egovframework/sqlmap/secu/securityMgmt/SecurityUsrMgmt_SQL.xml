@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.secu.securityMgmt.mapper.SecurityUsrMgmtMapper">
+    
+	<select id="mspUsrMgmtList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* ====== secu.securityMgmt.mspUsrMgmtList =========*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT 
+			  a.ORGN_ID AS orgn_id
+			  , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = a.ORGN_ID AND ROWNUM = 1) AS orgn_nm
+			  , a.USR_ID AS usr_id
+			  , a.USR_NM AS usr_nm
+			  , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = a.ATTC_SCTN_CD) AS attc_sctn 
+			  ,TO_CHAR(a.REGST_DTTM, 'YYYY.MM.DD hh24:mi:ss')  AS reg_date
+			  ,TO_CHAR(a.LAST_LOGIN_DT, 'YYYY.MM.DD hh24:mi:ss') AS lst_date
+			  ,TO_CHAR(a.RVISN_DTTM, 'YYYY.MM.DD hh24:mi:ss') AS rvs_date
+			  , NVL(DEL_YN , 'N') AS del_yn
+			  , NVL(USG_YN , 'N') AS usg_yn
+			FROM 
+			(
+			SELECT
+			--  count(*)
+			  CUM.ORGN_ID
+			  , CUM.USR_ID
+			  , CUM.USR_NM
+			  , CUM.ATTC_SCTN_CD
+			  , CUM.REGST_DTTM
+			  , CUM.LAST_LOGIN_DT
+			  , CUM.RVISN_DTTM
+			  , DEL_YN
+			  , USG_YN
+			FROM CMN_USR_MST CUM
+			WHERE 1=1
+			  AND USG_YN IN ('Y', 'S')
+			  AND REGST_DTTM BETWEEN TO_DATE(#{searchStrtDt}, 'YYYYMMDD') AND TO_DATE(#{searchEndDt}, 'YYYYMMDD')
+			UNION ALL
+			SELECT
+			  CUM.ORGN_ID
+			  , CUM.USR_ID
+			  , CUM.USR_NM
+			  , CUM.ATTC_SCTN_CD
+			  , CUM.REGST_DTTM
+			  , CUM.LAST_LOGIN_DT
+			  , CUM.RVISN_DTTM
+			  , DEL_YN
+			  , USG_YN
+			FROM CMN_USR_MST CUM
+			WHERE 1=1
+			  AND USG_YN IN ('N')
+			  AND REGST_DTTM BETWEEN TO_DATE(#{searchStrtDt}, 'YYYYMMDD') AND TO_DATE(#{searchEndDt}, 'YYYYMMDD')
+			) A 
+			ORDER BY A.REGST_DTTM, A.ORGN_ID
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+	<select id="mspUsrMgmtListExcel" parameterType="java.util.HashMap" resultType="com.ktis.msp.secu.securityMgmt.vo.SecurityMgmtVo">
+		/* ====== secu.securityMgmt.mspUsrMgmtListExcel =========*/		
+			SELECT 
+			  a.ORGN_ID AS orgnId
+			  , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = a.ORGN_ID AND ROWNUM = 1) AS orgnNm
+			  , a.USR_ID AS usrId
+			  , a.USR_NM AS usrNm
+			  , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = a.ATTC_SCTN_CD) AS attcSctnNm 
+			  ,TO_CHAR(a.REGST_DTTM, 'YYYY.MM.DD hh24:mi:ss')  AS regstDttm
+			  , TO_CHAR(a.LAST_LOGIN_DT, 'YYYY.MM.DD hh24:mi:ss') AS lastLoginDt
+			  , TO_CHAR(a.RVISN_DTTM, 'YYYY.MM.DD hh24:mi:ss') AS rvisnDttm
+			  , NVL(DEL_YN , 'N') AS delYn
+			  , NVL(USG_YN , 'N') AS usgYn
+			FROM 
+			(
+			SELECT
+			--  count(*)
+			  CUM.ORGN_ID
+			  , CUM.USR_ID
+			  , CUM.USR_NM
+			  , CUM.ATTC_SCTN_CD
+			  , CUM.REGST_DTTM
+			  , CUM.LAST_LOGIN_DT
+			  , CUM.RVISN_DTTM
+			  , DEL_YN
+			  , USG_YN
+			FROM CMN_USR_MST CUM
+			WHERE 1=1
+			  AND USG_YN IN ('Y', 'S')
+			  AND REGST_DTTM BETWEEN TO_DATE(#{searchStrtDt}, 'YYYYMMDD') AND TO_DATE(#{searchEndDt}, 'YYYYMMDD')
+			UNION ALL
+			SELECT
+			  CUM.ORGN_ID
+			  , CUM.USR_ID
+			  , CUM.USR_NM
+			  , CUM.ATTC_SCTN_CD
+			  , CUM.REGST_DTTM
+			  , CUM.LAST_LOGIN_DT
+			  , CUM.RVISN_DTTM
+			  , DEL_YN
+			  , USG_YN
+			FROM CMN_USR_MST CUM
+			WHERE 1=1
+			  AND USG_YN IN ('N')
+			  AND REGST_DTTM BETWEEN TO_DATE(#{searchStrtDt}, 'YYYYMMDD') AND TO_DATE(#{searchEndDt}, 'YYYYMMDD')
+			) A 
+			ORDER BY A.REGST_DTTM, A.ORGN_ID
+	</select>
+	
+	<select id="mspUsrMaskList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* ====== secu.securityMgmt.mspUsrMaskList =========*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT USR_ID,
+		    USR_NM,  
+			FN_GET_ORGNM(ORGN_ID) AS orgn_nm
+			FROM CMN_USR_MST WHERE MSK_AUTH_YN IN ('Y' , '1')
+			AND USG_YN = 'Y'
+			AND USR_ID LIKE '%' || #{usrId} || '%'
+			AND USR_NM LIKE '%' || #{usrNm} || '%'
+			ORDER BY USR_NM , ORGN_ID
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+	<select id="mspUsrMaskListExcel" parameterType="java.util.HashMap" resultType="com.ktis.msp.secu.securityMgmt.vo.SecurityMgmtVo">
+		/* ====== secu.securityMgmt.mspUsrMaskListExcel =========*/		
+		SELECT USR_ID as usrId,
+		    USR_NM as usrNm,  
+			FN_GET_ORGNM(ORGN_ID) AS orgnNm
+			FROM CMN_USR_MST WHERE MSK_AUTH_YN IN ('Y' , '1')
+			AND USG_YN = 'Y'
+			AND USR_ID LIKE '%' || #{usrId} || '%'
+			AND USR_NM LIKE '%' || #{usrNm} || '%'
+			ORDER BY USR_NM , ORGN_ID
+	</select>
+	
+	<select id="mspUsrDelList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* ====== secu.securityMgmt.mspUsrDelList =========*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT
+			  CUM.ORGN_ID as orgn_id
+			  , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = CUM.ORGN_ID AND ROWNUM = 1) AS orgn_nm
+			  , CUM.USR_ID AS usr_id
+			  , CUM.USR_NM AS usr_nm
+			  , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = CUM.ATTC_SCTN_CD) AS attc_sctn 
+			   ,TO_CHAR(CUM.RVISN_DTTM, 'YYYY.MM.DD hh24:mi:ss') AS rvs_date
+			  , TO_CHAR(CUM.REGST_DTTM, 'YYYY.MM.DD hh24:mi:ss') AS reg_date
+			  , TO_CHAR(CUM.LAST_LOGIN_DT, 'YYYY.MM.DD hh24:mi:ss') AS lst_date
+			  , CASE WHEN CUM.USG_YN = 'S' THEN '정지' WHEN CUM.USG_YN = 'N' THEN '삭제' ELSE CUM.USG_YN END as status
+			FROM CMN_USR_MST CUM
+			WHERE USG_YN NOT IN ('Y', 'S')
+			  AND CUM.RVISN_DTTM BETWEEN TO_DATE(#{searchStrtDt}, 'YYYYMMDD') AND TO_DATE(#{searchEndDt}, 'YYYYMMDD')
+			  and CUM.PASS_LAST_RVISN_DT <![CDATA[ <]]> #{searchEndDt}
+			<!--   AND CUM.REGST_DTTM < '20170701' /*전월에 살아있던 건수 확인 필요 */ -->
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+	<select id="mspUsrDelListExcel" parameterType="java.util.HashMap" resultType="com.ktis.msp.secu.securityMgmt.vo.SecurityMgmtVo">
+		/* ====== secu.securityMgmt.mspUsrDelListExcel =========*/		
+		SELECT
+			  CUM.ORGN_ID as orgnId
+			  , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = CUM.ORGN_ID AND ROWNUM = 1) AS orgnNm
+			  , CUM.USR_ID AS usrId
+			  , CUM.USR_NM AS usrNm
+			  , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = CUM.ATTC_SCTN_CD) AS attcSctnNm 
+			   ,TO_CHAR(CUM.RVISN_DTTM, 'YYYY.MM.DD hh24:mi:ss')  AS rvisnDttm
+			  , TO_CHAR(CUM.REGST_DTTM, 'YYYY.MM.DD hh24:mi:ss') AS regstDttm
+			  , TO_CHAR(CUM.LAST_LOGIN_DT, 'YYYY.MM.DD hh24:mi:ss') AS lastLoginDt
+			  , CASE WHEN CUM.USG_YN = 'S' THEN '정지' WHEN CUM.USG_YN = 'N' THEN '삭제' ELSE CUM.USG_YN END as status
+			FROM CMN_USR_MST CUM
+			WHERE USG_YN NOT IN ('Y', 'S')
+			  AND CUM.RVISN_DTTM BETWEEN TO_DATE(#{searchStrtDt}, 'YYYYMMDD') AND TO_DATE(#{searchEndDt}, 'YYYYMMDD')
+			  and CUM.PASS_LAST_RVISN_DT <![CDATA[ <]]> #{searchEndDt}
+	</select>
+	
+	<select id="mspAllUsrMgmtList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		/* ====== secu.securityMgmt.mspUsrDelList =========*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT 
+				  org_id
+				  ,orgn_nm
+				  , usr_id
+				  , usr_nm
+				  , attc_sctn
+				  , reg_date 
+				  , lst_date
+				  ,ATTC_SCTN_CD 
+				  ,ORGN_ID
+				  ,REGST_DTTM
+				FROM
+				(
+				    SELECT 
+				      CUM.ORGN_ID as org_id
+				      , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = CUM.ORGN_ID AND ROWNUM = 1) AS orgn_nm
+				      , CUM.USR_ID AS usr_id
+				      , CUM.USR_NM AS usr_nm
+				      , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = CUM.ATTC_SCTN_CD) AS attc_sctn 
+				      , TO_CHAR(CUM.REGST_DTTM, 'YYYY.MM.DD hh24:mi:ss') AS reg_date
+				      , TO_CHAR(CUM.LAST_LOGIN_DT, 'YYYY.MM.DD hh24:mi:ss') AS lst_date
+				      , DEL_YN as del_yn
+				      , USG_YN as usg_yn
+				      ,ATTC_SCTN_CD 
+				      ,ORGN_ID
+				      ,REGST_DTTM
+				    FROM CMN_USR_MST CUM
+				    WHERE 1=1
+				      AND CUM.USG_YN in ('Y', 'S')
+				      AND CUM.REGST_DTTM BETWEEN TO_DATE('20000101', 'YYYYMMDD') AND TO_DATE(#{searchEndDt}, 'YYYYMMDD')
+				    UNION all
+				    SELECT 
+				      CUM.ORGN_ID as org_id
+				      , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = CUM.ORGN_ID AND ROWNUM = 1) AS orgn_nm
+				      , CUM.USR_ID AS usr_id
+				      , CUM.USR_NM AS usr_nm
+				      , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = CUM.ATTC_SCTN_CD) AS attc_sctn 
+				      , TO_CHAR(CUM.REGST_DTTM, 'YYYY.MM.DD hh24:mi:ss') AS reg_date
+				      , TO_CHAR(CUM.LAST_LOGIN_DT, 'YYYY.MM.DD hh24:mi:ss') AS lst_date
+				      , DEL_YN as del_yn
+				      , USG_YN as usg_yn
+				      ,ATTC_SCTN_CD 
+				      ,ORGN_ID
+				      ,REGST_DTTM
+				    FROM CMN_USR_MST CUM
+				    WHERE 1=1
+				      AND CUM.USG_YN NOT IN ('Y', 'S')
+				      AND CUM.RVISN_DTTM  <![CDATA[ <]]> TO_DATE(#{searchEndDt}, 'YYYYMMDD')  
+				      AND CUM.REGST_DTTM  <![CDATA[ >]]> TO_DATE(#{searchEndDt}, 'YYYYMMDD')  
+				) a
+				ORDER BY a.ATTC_SCTN_CD, a.ORGN_ID,  a.REGST_DTTM
+				
+							
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+	<select id="mspAllUsrMgmtListExcel" parameterType="java.util.HashMap" resultType="com.ktis.msp.secu.securityMgmt.vo.SecurityMgmtVo">
+		/* ====== secu.securityMgmt.mspUsrDelListExcel =========*/		
+		SELECT 
+				  orgnId
+				  ,orgnNm
+				  , usrId
+				  , usrNm
+				  , attcSctnNm
+				  , regstDttm  
+				  , lastLoginDt
+				  ,ATTC_SCTN_CD 
+				   ,ORGN_ID
+				   ,REGST_DTTM
+				FROM
+				(
+				    SELECT 
+				      CUM.ORGN_ID as orgnId
+				      , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = CUM.ORGN_ID AND ROWNUM = 1) AS orgnNm
+				      , CUM.USR_ID AS usrId
+				      , CUM.USR_NM AS usrNm
+				      , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = CUM.ATTC_SCTN_CD) AS attcSctnNm 
+				      , TO_CHAR(CUM.REGST_DTTM, 'YYYY.MM.DD hh24:mi:ss') AS regstDttm
+				      , TO_CHAR(CUM.LAST_LOGIN_DT, 'YYYY.MM.DD hh24:mi:ss') AS lastLoginDt
+				      , DEL_YN as delYn
+				      , USG_YN as usgYn
+				      ,ATTC_SCTN_CD 
+				      ,ORGN_ID
+				      ,REGST_DTTM
+				    FROM CMN_USR_MST CUM
+				    WHERE 1=1
+				      AND CUM.USG_YN in ('Y', 'S')
+				      AND CUM.REGST_DTTM BETWEEN TO_DATE('20000101', 'YYYYMMDD') AND TO_DATE(#{searchEndDt}, 'YYYYMMDD')
+				    UNION all
+				    SELECT 
+				      CUM.ORGN_ID as orgnId
+				      , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = CUM.ORGN_ID AND ROWNUM = 1) AS orgnNm
+				      , CUM.USR_ID AS usrId
+				      , CUM.USR_NM AS usrNm
+				      , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = CUM.ATTC_SCTN_CD) AS attcSctnNm 
+				      , TO_CHAR(CUM.REGST_DTTM, 'YYYY.MM.DD hh24:mi:ss') AS regstDttm
+				      , TO_CHAR(CUM.LAST_LOGIN_DT, 'YYYY.MM.DD hh24:mi:ss') AS lastLoginDt
+				      , DEL_YN as delYn
+				      , USG_YN as usgYn
+				      ,ATTC_SCTN_CD 
+				      ,ORGN_ID
+				      ,REGST_DTTM
+				    FROM CMN_USR_MST CUM
+				    WHERE 1=1
+				      AND CUM.USG_YN NOT IN ('Y', 'S')
+				      AND CUM.RVISN_DTTM  <![CDATA[ <]]> TO_DATE(#{searchEndDt}, 'YYYYMMDD')  
+				      AND CUM.REGST_DTTM <![CDATA[ >]]> TO_DATE(#{searchEndDt}, 'YYYYMMDD')  
+				) a
+				ORDER BY a.ATTC_SCTN_CD, a.ORGN_ID,  a.REGST_DTTM
+	</select>
+	
+</mapper>

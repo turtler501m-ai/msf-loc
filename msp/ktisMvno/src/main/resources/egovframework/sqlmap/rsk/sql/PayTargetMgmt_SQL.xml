@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rsk.payTargetMgmt.mapper.PayTargetMapper">
+
+	<!-- 납부대상 조회 -->
+    <select id="payTargetMgmtList" parameterType="com.ktis.msp.rsk.payTargetMgmt.vo.PayTargetVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">          
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT A.LST_COM_ACTV_DATE AS LST_COM_ACTV_DATE									/* 개통일 */
+			       , A.CONTRACT_NUM	AS CONTRACT_NUM											/* 계약번호 */	
+			       , FN_GET_ORGNM(A.OPEN_AGNT_CD) AS OPEN_AGNT_CD							/* 대리점명 */
+			       , ( SELECT RATE_NM 
+			       		 FROM MSP_RATE_MST 
+			       		WHERE RATE_CD = C.SOC_CODE ) AS RATE_NM								/* 요금제 */
+			       , (SELECT SALE_PLCY_NM
+			            FROM MSP_SALE_PLCY_MST
+			           WHERE SALE_PLCY_CD = C.MODEL_SALE_POLICY_CODE ) AS SALE_PLCY_NM		/* 판매정책 */
+			       , FN_GET_CODENM('RCP9001', D.OPER_TYPE) AS OPER_TYPE						/* 개통유형 */
+			       , FN_GET_CODENM('RCP9004', D.REQ_BUY_TYPE) AS REQ_BUY_TYPE				/* 구매유형 */
+			       , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS					/* 상태값 */
+			  FROM   MSP_JUO_SUB_INFO A
+			       , MSP_JUO_BAN_INFO B
+			       , MSP_REQUEST_SALEINFO C
+			       , MSP_REQUEST D
+			       , (
+			            SELECT  AA.CONTRACT_NUM
+			                    , SUM(NVL(BB.EVNT_STOP_DAY,0)) AS EVNT_STOP_DAY 
+			              FROM  MSP_JUO_SUB_INFO AA
+			                    , MSP_JUO_STOP_INFO BB
+			             WHERE  AA.PPPO = 'PO'
+					    <if test="searchStartDt != null and searchStartDt != '' and searchEndDt != null and searchEndDt != '' ">
+					    	AND AA.LST_COM_ACTV_DATE BETWEEN #{searchStartDt} AND #{searchEndDt}
+					    </if>
+			               AND AA.CONTRACT_NUM = BB.CONTRACT_NUM
+			             GROUP BY AA.CONTRACT_NUM
+			        ) E
+			 WHERE 1=1
+			   AND A.BAN = B.BAN(+)
+			   AND A.PPPO = 'PO'
+			   AND A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+			   AND D.REQUEST_KEY = C.REQUEST_KEY(+)
+			   AND A.CONTRACT_NUM = E.CONTRACT_NUM(+)
+	    <if test="searchStartDt != null and searchStartDt != '' and searchEndDt != null and searchEndDt != '' ">
+	    	AND A.LST_COM_ACTV_DATE BETWEEN #{searchStartDt} AND #{searchEndDt}
+	    </if>
+		<if test="searchGbn != null and searchGbn != ''"><!-- 검색구분 -->
+			AND B.BL_BILLING_METHOD = #{searchGbn} <!-- R = 지로, C = 카드, D = 자동이체 -->
+		</if>
+	    <include refid="com.ktis.msp.cmn.include.paging-end" />  
+	</select>
+	
+	
+	<!-- 납부대상 조회 엑셀용 -->
+    <select id="payTargetMgmtEx" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">     
+			SELECT A.LST_COM_ACTV_DATE AS LST_COM_ACTV_DATE									/* 개통일 */
+			       , A.CONTRACT_NUM	AS CONTRACT_NUM											/* 계약번호 */	
+			       , FN_GET_ORGNM(A.OPEN_AGNT_CD) AS OPEN_AGNT_CD							/* 대리점명 */
+			       , ( SELECT RATE_NM 
+			       		 FROM MSP_RATE_MST 
+			       		WHERE RATE_CD = C.SOC_CODE ) AS RATE_NM								/* 요금제 */
+			       , (SELECT SALE_PLCY_NM
+			            FROM MSP_SALE_PLCY_MST
+			           WHERE SALE_PLCY_CD = C.MODEL_SALE_POLICY_CODE ) AS SALE_PLCY_NM		/* 판매정책 */
+			       , FN_GET_CODENM('RCP9001', D.OPER_TYPE) AS OPER_TYPE						/* 개통유형 */
+			       , FN_GET_CODENM('RCP9004', D.REQ_BUY_TYPE) AS REQ_BUY_TYPE				/* 구매유형 */
+			       , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS					/* 상태값 */
+			  FROM   MSP_JUO_SUB_INFO A
+			       , MSP_JUO_BAN_INFO B
+			       , MSP_REQUEST_SALEINFO C
+			       , MSP_REQUEST D
+			       , (
+			            SELECT  AA.CONTRACT_NUM
+			                    , SUM(NVL(BB.EVNT_STOP_DAY,0)) AS EVNT_STOP_DAY 
+			              FROM  MSP_JUO_SUB_INFO AA
+			                    , MSP_JUO_STOP_INFO BB
+			             WHERE  AA.PPPO = 'PO'
+					    <if test="searchStartDt != null and searchStartDt != '' and searchEndDt != null and searchEndDt != '' ">
+					    	AND AA.LST_COM_ACTV_DATE BETWEEN #{searchStartDt} AND #{searchEndDt}
+					    </if>
+			               AND AA.CONTRACT_NUM = BB.CONTRACT_NUM
+			             GROUP BY AA.CONTRACT_NUM
+			        ) E
+			 WHERE 1=1
+			   AND A.BAN = B.BAN(+)
+			   AND A.PPPO = 'PO'
+			   AND A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+			   AND D.REQUEST_KEY = C.REQUEST_KEY(+)
+			   AND A.CONTRACT_NUM = E.CONTRACT_NUM(+)
+	    <if test="searchStartDt != null and searchStartDt != '' and searchEndDt != null and searchEndDt != '' ">
+	    	AND A.LST_COM_ACTV_DATE BETWEEN #{searchStartDt} AND #{searchEndDt}
+	    </if>
+		<if test="searchGbn != null and searchGbn != ''"><!-- 검색구분 -->
+			AND B.BL_BILLING_METHOD = #{searchGbn} <!-- R = 지로, C = 카드, D = 자동이체 -->
+		</if>
+	</select>
+</mapper>

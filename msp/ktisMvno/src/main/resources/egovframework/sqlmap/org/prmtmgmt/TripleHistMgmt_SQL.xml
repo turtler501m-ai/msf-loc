@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace= "com.ktis.msp.org.prmtmgmt.mapper.TripleHistMgmtMapper">
+	
+	<!-- 트리플 할인 목록 조회 -->
+	<select id="getTripleHistList" parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* TripleHistMgmtMapper.getTripleHistList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT 
+		    A.KT_INTERNET_ID
+		    ,A.CONTRACT_NUM
+		    ,B.SUB_LINK_NAME
+		    ,B.SUBSCRIBER_NO
+		    ,SUBSTR(CRYPTO_AES256.DEC_AES(NVL(B.USER_SSN, ' ')), 1,6) AS USER_SSN
+		    ,C.LST_RATE_NM
+		    ,(SELECT DISTINCT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.RATE_CD) AS RATE_NM
+		    ,A.RATE_CD
+		    ,(SELECT DISTINCT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.ADDITION_CD) AS ADDITION_NM
+		    ,A.ADDITION_CD
+		    ,B.LST_COM_ACTV_DATE
+		    ,A.INSTALL_DD
+		    ,A.APP_ROUTE
+		    ,A.PRCS_MDL_IND
+		    ,A.CRET_DD
+		    ,A.CRET_ID
+		    ,A.AMD_ID
+		    ,TO_CHAR(A.CRET_DT,'YYYY-MM-DD HH24:MI:SS') AS CRET_DT
+		    ,A.AMD_DT
+		    ,DECODE(A.SUCC_YN,'Y','성공','실패') AS SUCC_YN
+		    ,A.PROC_YN
+		    ,A.PROC_ID AS PROC_ID
+		    ,FN_GET_USRNM(A.PROC_ID) AS PROC_NM
+		    ,TO_CHAR(A.PROC_DT,'YYYY-MM-DD HH24:MI:SS') AS PROC_DT
+		    ,A.REASON_FAIL
+		FROM MCP_TRIPLE_DISCOUNT@DL_MCP A, MSP_JUO_SUB_INFO B, MSP_REQUEST_DTL C
+		WHERE 1=1
+		AND A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND A.CONTRACT_NUM = C.CONTRACT_NUM
+		<if test='srchStrtDt != null and srchStrtDt != "" and srchEndDt != null and srchEndDt != "" '>
+			AND TO_CHAR(A.CRET_DT,'YYYYMMDD') BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>
+		<if test="searchGbn != null and searchGbn != ''">
+			<if test='searchGbn == "1"'>
+				AND A.CONTRACT_NUM = #{searchName}
+			</if>
+			<if test='searchGbn == "2"'>
+				AND B.SUB_LINK_NAME LIKE '%' || #{searchName} || '%'
+			</if>
+			<if test='searchGbn == "3"'>
+				AND A.KT_INTERNET_ID = #{searchName}
+			</if>
+			<if test='searchGbn == "4"'>
+				AND B.SUBSCRIBER_NO = #{searchName}
+			</if>
+			<if test='searchGbn == "5"'>
+				AND (SELECT DISTINCT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.ADDITION_CD) LIKE '%' || #{searchName} || '%'
+			</if>
+		</if>
+		<if test="appRoute != null and appRoute != ''">
+			AND A.APP_ROUTE = #{appRoute}
+		</if>
+		<if test="succYn != null and succYn != ''">
+			AND A.SUCC_YN = #{succYn}
+		</if>
+		<if test="procYn != null and procYn != ''">
+			AND DECODE(A.PROC_YN,'Y','Y','N') = #{procYn}
+		</if>
+		ORDER BY A.CRET_DT DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 트리플 할인 목록 엑셀 다운로드 -->
+	<select id="getTripleHistListExcel" parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* TripleHistMgmtMapper.getTripleHistListExcel */
+		SELECT 
+		    A.KT_INTERNET_ID
+		    ,A.CONTRACT_NUM
+		    ,B.SUB_LINK_NAME
+		    ,B.SUBSCRIBER_NO
+		    ,SUBSTR(CRYPTO_AES256.DEC_AES(NVL(B.USER_SSN, ' ')), 1,6) AS USER_SSN
+		    ,C.LST_RATE_NM
+		    ,(SELECT DISTINCT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.RATE_CD) AS RATE_NM
+		    ,A.RATE_CD
+		    ,(SELECT DISTINCT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.ADDITION_CD) AS ADDITION_NM
+		    ,A.ADDITION_CD
+		    ,B.LST_COM_ACTV_DATE
+		    ,A.INSTALL_DD
+		    ,A.APP_ROUTE
+		    ,A.PRCS_MDL_IND
+		    ,A.CRET_DD
+		    ,A.CRET_ID
+		    ,A.AMD_ID
+		    ,TO_CHAR(A.CRET_DT,'YYYY-MM-DD HH24:MI:SS') AS CRET_DT
+		    ,A.AMD_DT
+		    ,DECODE(A.SUCC_YN,'Y','성공','실패') AS SUCC_YN
+		    ,A.PROC_YN
+		    ,A.PROC_ID AS PROC_ID
+		    ,FN_GET_USRNM(A.PROC_ID) AS PROC_NM
+		    ,TO_CHAR(A.PROC_DT,'YYYY-MM-DD HH24:MI:SS') AS PROC_DT
+		    ,A.REASON_FAIL
+		FROM MCP_TRIPLE_DISCOUNT@DL_MCP A, MSP_JUO_SUB_INFO B, MSP_REQUEST_DTL C
+		WHERE 1=1
+		AND A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND A.CONTRACT_NUM = C.CONTRACT_NUM
+		<if test='srchStrtDt != null and srchStrtDt != "" and srchEndDt != null and srchEndDt != "" '>
+			AND TO_CHAR(A.CRET_DT,'YYYYMMDD') BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>
+		<if test="searchGbn != null and searchGbn != ''">
+			<if test='searchGbn == "1"'>
+				AND A.CONTRACT_NUM = #{searchName}
+			</if>
+			<if test='searchGbn == "2"'>
+				AND B.SUB_LINK_NAME LIKE '%' || #{searchName} || '%'
+			</if>
+			<if test='searchGbn == "3"'>
+				AND A.KT_INTERNET_ID = #{searchName}
+			</if>
+			<if test='searchGbn == "4"'>
+				AND B.SUBSCRIBER_NO = #{searchName}
+			</if>
+			<if test='searchGbn == "5"'>
+				AND (SELECT DISTINCT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.ADDITION_CD) LIKE '%' || #{searchName} || '%'
+			</if>
+		</if>
+		<if test="appRoute != null and appRoute != ''">
+			AND A.APP_ROUTE = #{appRoute}
+		</if>
+		<if test="succYn != null and succYn != ''">
+			AND A.SUCC_YN = #{succYn}
+		</if>
+		<if test="procYn != null and procYn != ''">
+			AND DECODE(A.PROC_YN,'Y','Y','N') = #{procYn}
+		</if>
+		ORDER BY A.CRET_DT DESC
+	</select>
+	
+	<select id="getTripleHistContractNum" parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* TripleHistMgmtMapper.getTripleHistContractNum */
+		SELECT
+		    A.CONTRACT_NUM
+		    ,A.SUBSCRIBER_NO AS CTN
+		    ,SUBSTR(CRYPTO_AES256.DEC_AES(NVL(A.USER_SSN, ' ')), 1,6) AS USER_SSN
+		    ,A.SUB_LINK_NAME
+		    ,B.LST_RATE_CD
+		    ,B.LST_RATE_NM
+		FROM MSP_JUO_SUB_INFO A, MSP_REQUEST_DTL B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND   A.CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<select id="getTripleHistRate" parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* TripleHistMgmtMapper.getTripleHistRate */
+		SELECT 
+            A.RATE_CD
+            , A.RATE_NM
+            , A.APPL_STRT_DT
+            , A.APPL_END_DT
+            , A.BASE_AMT
+        FROM 
+        	MSP_RATE_MST A
+        WHERE 1=1
+	        AND A.SERVICE_TYPE 	= 'P'
+	        AND A.APPL_END_DT = '99991231'
+	        AND A.RATE_CD = #{rateCd}
+		ORDER BY A.RATE_NM
+	</select>
+	
+	<select id="getTripleHistAddition" parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* TripleHistMgmtMapper.getTripleHistAddition */
+		SELECT 
+		    A.RATE_CD
+		    , B.ADD_SVC_CD AS ADD_SVC_CD
+		    , B.SVC_REL_TP
+		    , B.SERVICE_TYPE
+		    , FN_GET_CODENM('CMN0059', B.SVC_REL_TP) AS SVC_REL_TP_NM
+		    , C.RATE_NM AS ADD_SVC_NM
+		    , C.APPL_STRT_DT
+		    , C.APPL_END_DT
+		    , C.BASE_AMT
+		FROM 
+		    MSP_RATE_MST A
+		    , MSP_PROD_REL_MST B
+		    , MSP_RATE_MST C
+		WHERE 1=1
+		    AND A.RATE_CD = #{rateCd}
+		    AND B.ADD_SVC_CD = #{additionCd}
+		    AND A.RATE_CD = B.RATE_CD
+		    AND B.ADD_SVC_CD = C.RATE_CD
+		    AND C.SERVICE_TYPE 	= 'R'
+		ORDER BY A.APPL_STRT_DT DESC
+	</select>
+	
+	<select id="getTripleHistChk" parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM MCP_TRIPLE_DISCOUNT@DL_MCP
+		WHERE KT_INTERNET_ID = #{nKtInternetId}
+		AND CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<insert id="insertTripleHist" parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO">
+		/* TripleHistMgmtMapper.insertTripleHist */
+		INSERT INTO MCP_TRIPLE_DISCOUNT@DL_MCP
+		(
+			CONTRACT_NUM
+			,KT_INTERNET_ID
+			,RATE_CD
+			,ADDITION_CD
+			,INSTALL_DD
+			,APP_ROUTE
+			,CRET_DD
+			,CRET_ID
+			,CRET_DT
+			,RIP
+			,SUCC_YN
+		) VALUES(
+			#{contractNum}
+			,#{nKtInternetId}
+			,#{rateCd}
+			,#{additionCd}
+			,#{installDd}
+			,'고객센터'
+			,TO_CHAR(SYSDATE,'YYYYMMDD')
+			,#{regId}
+			,SYSDATE
+			,#{rip}
+			,'Y'
+		)
+	</insert>
+	
+	<update id="updateTripleHist" parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO">
+		UPDATE MCP_TRIPLE_DISCOUNT@DL_MCP
+		SET
+			KT_INTERNET_ID = #{nKtInternetId}
+			,INSTALL_DD = #{installDd}
+			,AMD_ID = #{rvisnId}
+			,AMD_DT = SYSDATE
+		WHERE CONTRACT_NUM = #{contractNum}
+		AND KT_INTERNET_ID = #{ktInternetId}
+	</update>
+	
+	<update id="updateTripleHistStatus" parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO">
+		UPDATE MCP_TRIPLE_DISCOUNT@DL_MCP
+		SET
+			PROC_YN = 'Y'
+			,PROC_ID = #{regId}
+			,PROC_DT = SYSDATE
+			,AMD_ID = #{rvisnId}
+			,AMD_DT = SYSDATE
+		WHERE CONTRACT_NUM = #{contractNum}
+		AND KT_INTERNET_ID = #{ktInternetId}
+	</update>
+	
+	<select id="getTriplePrmtData"  parameterType="com.ktis.msp.org.prmtmgmt.vo.TripleHistMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT  
+	        CD_VAL						AS ADDITION_CD
+	        , CD_DSC						AS ADDITION_NM
+		FROM    CMN_GRP_CD_MST A
+		        , MSP_RATE_MST B
+		        , MSP_TRIPLE_PRMT_ADD C
+		WHERE   A.GRP_ID = 'RCP9043'
+		AND     A.CD_VAL = B.RATE_CD
+		AND     B.APPL_END_DT = '99991231'
+		AND     B.RATE_CD = C.SOC(+)
+		AND     C.PRMT_ID IN (
+		    SELECT 
+		        A.PRMT_ID 
+		    FROM MSP_TRIPLE_PRMT A
+		        , MSP_TRIPLE_PRMT_RATE B 
+		    WHERE A.PRMT_ID = B.PRMT_ID 
+		    AND A.USG_YN = 'Y' 
+		    AND B.RATE_CD = #{rateCd}
+		    AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN A.STRT_DT AND A.END_DT
+			)
+	</select>
+</mapper>

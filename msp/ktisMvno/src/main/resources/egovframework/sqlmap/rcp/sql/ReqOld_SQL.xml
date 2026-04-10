@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.old.mapper.RequestOldMapper">
+	<sql id="Condition">
+	    <if test="@org.apache.commons.lang.StringUtils@isNotEmpty( searchServiceType )" >
+	        AND A.SERVICE_TYPE = #{searchServiceType}
+	    </if>
+	    <if test="@org.apache.commons.lang.StringUtils@isNotEmpty( searchPstate )" >
+	        AND A.PSTATE = #{searchPstate}
+	    </if>
+	    <if test="@org.apache.commons.lang.StringUtils@isNotEmpty( searchRequestStateCode )">
+	        AND A.REQUEST_STATE_CODE = #{searchRequestStateCode}
+	    </if>
+	    <if test="@org.apache.commons.lang.StringUtils@isNotEmpty( searchCntpntShopId )">
+	    	AND A.CNTPNT_SHOP_ID		= #{searchCntpntShopId}
+	    </if>
+	    <if test="@org.apache.commons.lang.StringUtils@isNotEmpty( searchStartDate ) and @org.apache.commons.lang.StringUtils@isNotEmpty( searchEndDate )">
+	        AND (TO_NUMBER(TO_CHAR(A.SYS_RDATE, 'YYYYMMDD')) <![CDATA[>=]]> #{searchStartDateOnlyNumber} AND  TO_NUMBER(TO_CHAR(A.SYS_RDATE, 'YYYYMMDD')) <![CDATA[<=]]> #{searchEndDateOnlyNumber})
+	    </if>
+
+	    <if test="@org.apache.commons.lang.StringUtils@isNotEmpty( searchAgentCode )">
+	        AND A.AGENT_CODE = #{searchAgentCode}
+	    </if>
+	    <if test="@org.apache.commons.lang.StringUtils@isNotEmpty( searchOnlineAuthType )">
+	        <choose>
+            	<when test="@org.apache.commons.lang.StringUtils@equesl( searchOnlineAuthType, 'NOT_FN' )">
+	            AND A.ONLINE_AUTH_TYPE <![CDATA[<>]]> 'FN'
+            	</when>
+	            <otherwise>
+	            AND A.ONLINE_AUTH_TYPE = #{searchOnlineAuthType}
+	            </otherwise>
+	        </choose>
+	    </if>
+
+	    <if test="@org.apache.commons.lang.StringUtils@isNotEmpty( searchSelect )">
+	        <if test="@org.apache.commons.lang.StringUtils@isNotEmpty( searchValue )">
+	            AND (
+	            <if test="@org.apache.commons.lang.StringUtils@equals( searchSelect , 'uniqueAll')">
+	                B.CSTMR_NATIVE_RRN     LIKE '%' || #{searchValue} || '%'
+	                OR B.CSTMR_FOREIGNER_RRN    LIKE '%' || #{searchValue} || '%'
+	                OR B.CSTMR_FOREIGNER_PN     LIKE '%' || #{searchValue} || '%'
+	                OR B.CSTMR_PRIVATE_NUMBER   LIKE '%' || #{searchValue} || '%'
+	                OR B.CSTMR_JURIDICAL_RRN    LIKE '%' || #{searchValue} || '%'
+	                OR B.CSTMR_JURIDICAL_NUMBER LIKE '%' || #{searchValue} || '%'
+	            </if>
+                <if test="@org.apache.commons.lang.StringUtils@equals( searchSelect , 'cstmrName')">
+	                B.CSTMR_NAME                LIKE '%' || #{searchValue} || '%'
+	            </if>
+	            <if test="@org.apache.commons.lang.StringUtils@equals( searchSelect , 'cstmrPrivateCname')">
+	                B.CSTMR_PRIVATE_CNAME       LIKE '%' || #{searchValue} || '%'
+	            </if>
+	            <if test="@org.apache.commons.lang.StringUtils@equals( searchSelect , 'cstmrJuridicalCname')">
+	                B.CSTMR_JURIDICAL_CNAME     LIKE '%' || #{searchValue} || '%'
+	            </if>
+	            <if test="@org.apache.commons.lang.StringUtils@equals( searchSelect , 'cstmrTelRn')">
+	                B.CSTMR_TEL_RN              LIKE '%' || #{searchValue} || '%'
+	            </if>
+	            <if test="@org.apache.commons.lang.StringUtils@equals( searchSelect , 'cstmrMobileRn')">
+	                B.CSTMR_MOBILE_RN           LIKE '%' || #{searchValue} || '%'
+	            </if>
+	            <if test="@org.apache.commons.lang.StringUtils@equals( searchSelect , 'cstmrAddr')">
+	                B.CSTMR_ADDR                LIKE '%' || #{searchValue} || '%'
+	            </if>
+	            <if test="@org.apache.commons.lang.StringUtils@equals( searchSelect , 'cstmrMail')">
+	                B.CSTMR_MAIL                LIKE '%' || #{searchValue} || '%'
+	            </if>
+	            <if test="@org.apache.commons.lang.StringUtils@equals( searchSelect , 'resNo')">
+	                A.RES_NO                    LIKE '%' || #{searchValue} || '%'
+                </if>
+	            )
+	        </if>
+	    </if>
+	</sql>
+	<select id="selectList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap" parameterType="com.ktis.msp.rcp.old.vo.RequestOldVo">
+		SELECT  T2.*
+		FROM    (
+		 	SELECT 	ROWNUM RN, T1.*
+		 	FROM	(
+			 		SELECT    A.REQUEST_KEY
+					        , A.MANAGER_CODE
+					        , A.AGENT_CODE
+					        , A.SERVICE_TYPE
+					        , A.OPER_TYPE
+					        , A.CSTMR_TYPE
+					        , A.RES_CODE
+					        , A.RES_MSG
+					        , A.RES_NO
+					        , A.CLAUSE_PRI_COLLECT_FLAG
+					        , A.CLAUSE_PRI_OFFER_FLAG
+					        , A.CLAUSE_ESS_COLLECT_FLAG
+					        , A.CLAUSE_PRI_TRUST_FLAG
+					        , A.CLAUSE_PRI_AD_FLAG
+					        , A.CLAUSE_CONFIDENCE_FLAG
+					        , A.ONLINE_AUTH_TYPE
+					        , A.ONLINE_AUTH_INFO
+					        , A.PSTATE
+					        , A.REQUEST_STATE_CODE
+					        , A.OPEN_NO
+					        , A.FILE01
+					        , A.FILE01_MASK
+					        , A.FAXYN
+					        , A.FAXNUM
+					        , A.SCAN_ID
+					        , A.ON_OFF_TYPE
+					        , A.RIP
+					        , A.REQ_WANT_NUMBER
+					        , A.REQ_WANT_NUMBER2
+					        , A.REQ_WANT_NUMBER3
+					        , A.REQ_BUY_TYPE
+					        , A.REQ_MODEL_NAME
+					        , A.REQ_MODEL_COLOR
+					        , A.REQ_PHONE_SN
+					        , A.REQ_USIM_SN
+					        , A.REQ_PAY_TYPE
+					        , A.REQ_ADDITION
+					        , A.SHOP_CD
+					        , A.APP_FORM_YN
+					        , A.REQ_IN_DAY
+					        , A.CONTRACT_NUM
+					        , A.ETC_SPECIAL
+					        , A.REQ_USIM_NAME
+					        , A.PHONE_PAYMENT
+					        , A.REQ_ADDITION_PRICE
+					        , A.APP_FORM_XML_YN
+					        , TO_CHAR(A.OPEN_REQ_DATE,  'YYYY.MM.DD : HH24:MI:SS')  AS OPEN_REQ_DATE
+					        , TO_CHAR(A.SYS_RDATE,      'YYYY.MM.DD : HH24:MI:SS')  AS RDATE
+					        , B.CSTMR_FOREIGNER_NATION
+					        , B.CSTMR_FOREIGNER_PN
+					        , B.CSTMR_FOREIGNER_RRN
+					        , B.CSTMR_FOREIGNER_SDATE
+					        , B.CSTMR_FOREIGNER_EDATE
+					        , B.CSTMR_PRIVATE_CNAME
+					        , B.CSTMR_PRIVATE_NUMBER
+					        , B.CSTMR_JURIDICAL_CNAME
+					        , B.CSTMR_JURIDICAL_RRN
+					        , B.CSTMR_JURIDICAL_NUMBER
+					        , B.CSTMR_TEL_FN
+					        , B.CSTMR_TEL_MN
+					        , B.CSTMR_TEL_RN
+					        , B.CSTMR_MOBILE_FN
+					        , B.CSTMR_MOBILE_MN
+					        , B.CSTMR_MOBILE_RN
+					        , B.CSTMR_MOBILE_FN || '-' || B.CSTMR_MOBILE_MN || '-' || B.CSTMR_MOBILE_RN  AS CSTMR_MOBILE
+					        , B.CSTMR_POST
+					        , B.CSTMR_ADDR
+					        , B.CSTMR_ADDR_DTL
+					        , B.CSTMR_ADDR_BJD
+					        , B.CSTMR_BILL_SEND_CODE
+					        , B.CSTMR_MAIL
+					        , B.CSTMR_MAIL_RECEIVE_FLAG
+					        , B.CSTMR_VISIT_TYPE
+					        , B.CSTMR_RECEIVE_TEL_FN
+					        , B.CSTMR_RECEIVE_TEL_NM
+					        , B.CSTMR_RECEIVE_TEL_RN
+					        , B.OTHERS_PAYMENT_AG
+					        , B.OTHERS_PAYMENT_NM
+					        , B.OTHERS_PAYMENT_RRN
+					        , B.OTHERS_PAYMENT_RELATION
+					        , B.OTHERS_PAYMENT_RNM
+					        , B.CSTMR_NAME
+					        , B.CSTMR_NATIVE_RRN
+					        , C.MINOR_AGENT_NAME
+					        , C.MINOR_AGENT_RRN
+					        , C.MINOR_AGENT_TEL_FN
+					        , C.MINOR_AGENT_TEL_MN
+					        , C.MINOR_AGENT_TEL_RN
+					        , C.MINOR_AGENT_RELATION
+					        , C.JRDCL_AGENT_NAME
+					        , C.JRDCL_AGENT_RRN
+					        , C.JRDCL_AGENT_TEL_FN
+					        , C.JRDCL_AGENT_TEL_MN
+					        , C.JRDCL_AGENT_TEL_RN
+					        , C.ENTRUST_REQ_NM
+					        , C.ENTRUST_RES_NM
+					        , C.ENTRUST_REQ_RELATION
+					        , C.ENTRUST_RES_RRN
+					        , C.ENTRUST_RES_TEL_FN
+					        , C.ENTRUST_RES_TEL_MN
+					        , C.ENTRUST_RES_TEL_RN
+					        , D.MOVE_COMPANY
+					        , D.MOVE_MOBILE_FN
+					        , D.MOVE_MOBILE_MN
+					        , D.MOVE_MOBILE_RN
+					        , D.MOVE_AUTH_TYPE
+					        , D.MOVE_AUTH_NUMBER
+					        , D.MOVE_THISMONTH_PAY_TYPE
+					        , D.MOVE_ALLOTMENT_STAT
+					        , D.MOVE_REFUND_AGREE_FLAG
+					        , D.REQ_GUIDE_FLAG
+					        , D.REQ_GUIDE_FN
+					        , D.REQ_GUIDE_RN
+					        , D.REQ_GUIDE_MN
+					        , E.REQ_AC_TYPE
+					        , E.REQ_AC01_BALANCE
+					        , E.REQ_AC02_DAY
+					        , E.REQ_AC01_AMOUNT
+					        , E.REQ_AC02_AMOUNT
+					        , F.MODEL_ID
+					        , F.MODEL_MONTHLY
+					        , F.MODEL_INSTALLMENT
+					        , F.MODEL_SALE_POLICY_CODE
+					        , F.RECYCLE_YN
+					        , F.MODEL_DISCOUNT1
+					        , F.MODEL_DISCOUNT2
+					        , F.SOC_CODE
+					        /*
+					        , CASE WHEN (SELECT    P.RATE_NAME
+						                     FROM      MCP_RATE@DL_MCP          P
+						                     WHERE     P.ACT_FLAG        = 'Y'
+						                     AND       (P.AGREEMENT      = '0'
+						                     OR         P.AGREEMENT      IS NULL)
+						                     AND       P.KT_RATE_CODE    = F.SOC_CODE
+						                     AND       ROWNUM            = 1)    IS NULL
+						               THEN  F.SOC_CODE
+						               ELSE  (SELECT    P.RATE_NAME
+						                      FROM      MCP_RATE@DL_MCP          P
+						                      WHERE     P.ACT_FLAG        = 'Y'
+						                      AND       (P.AGREEMENT      = '0'
+						                      OR         P.AGREEMENT      IS NULL)
+						                      AND       P.KT_RATE_CODE    = F.SOC_CODE
+						                      AND       ROWNUM            = 1)
+						                END RATE_NAME
+						    */
+                            , ( SELECT RATE_NM FROM MSP_RATE_MST MRM WHERE MRM.RATE_CD = F.SOC_CODE )         AS RATE_NAME
+					        , F.USIM_PRICE_TYPE
+					        , F.JOIN_PRICE_TYPE
+					        , F.JOIN_PRICE
+					        , F.USIM_PRICE
+					        , F.MODEL_PRICE
+					        , F.ADDTION_SERVICE
+					        , F.ADDTION_SERVICE_SUM
+					        , F.ENGG_MNTH_CNT
+					        , F.MODEL_PRICE_VAT
+					        , G.NAME_CHANGE_NM
+					        , G.NAME_CHANGE_TEL_FN
+					        , G.NAME_CHANGE_TEL_MN
+					        , G.NAME_CHANGE_TEL_RN
+					        , G.NAME_CHANGE_RRN
+					        , G.NAME_CHANGE_PINSTALLMENT
+					        , H.DLVRY_NAME
+					        , H.DLVRY_TEL_FN
+					        , H.DLVRY_TEL_MN
+					        , H.DLVRY_TEL_RN
+					        , H.DLVRY_MOBILE_FN
+					        , H.DLVRY_MOBILE_MN
+					        , H.DLVRY_MOBILE_RN
+					        , H.DLVRY_POST
+					        , H.DLVRY_ADDR
+					        , H.DLVRY_ADDR_DTL
+					        , H.DLVRY_ADDR_BJD
+					        , H.DLVRY_MEMO
+					        , I.REQ_BANK
+					        , I.REQ_ACCOUNT_NAME
+					        , I.REQ_ACCOUNT_RRN
+					        , I.REQ_ACCOUNT_RELATION
+					        , I.REQ_ACCOUNT_NUMBER
+					        , I.REQ_CARD_NAME
+					        , I.REQ_CARD_RRN
+					        , I.REQ_CARD_COMPANY
+					        , I.REQ_CARD_NO
+					        , I.REQ_CARD_YY
+					        , I.REQ_CARD_MM
+					        , I.REQ_WIRE_TYPE
+					        , A.CNTPNT_SHOP_ID
+					FROM      MSP_REQUEST           A
+					        , MSP_REQUEST_CSTMR     B
+					        , MSP_REQUEST_AGENT     C
+					        , MSP_REQUEST_MOVE      D
+					        , MSP_REQUEST_PAYMENT   E
+					        , MSP_REQUEST_SALEINFO  F
+					        , MSP_REQUEST_CHANGE    G
+					        --, MSP_REQUSET_DLVRY     H
+					        , MSP_REQUEST_DLVRY     H
+					        , MSP_REQUEST_REQ       I
+					WHERE     A.REQUEST_KEY         = B.REQUEST_KEY
+					AND       B.REQUEST_KEY         = C.REQUEST_KEY
+					AND       C.REQUEST_KEY         = D.REQUEST_KEY
+					AND       D.REQUEST_KEY         = E.REQUEST_KEY
+					AND       E.REQUEST_KEY         = F.REQUEST_KEY
+					AND       F.REQUEST_KEY         = G.REQUEST_KEY
+					AND       G.REQUEST_KEY         = H.REQUEST_KEY
+					AND       H.REQUEST_KEY         = I.REQUEST_KEY
+					AND       A.REQUEST_KEY         <![CDATA[<]]> 10000
+				   	<include refid="Condition"/>
+				   	ORDER BY A.REQUEST_KEY DESC
+		 	) T1 WHERE ROWNUM <![CDATA[<=]]>  #{lastIndex}
+		) T2 WHERE RN  <![CDATA[ > ]]> #{firstIndex}
+	</select>
+
+	<select id="selectListCount" resultType="Integer">
+		SELECT    COUNT(*)
+		FROM      MSP_REQUEST           A
+		        , MSP_REQUEST_CSTMR     B
+		        , MSP_REQUEST_AGENT     C
+		        , MSP_REQUEST_MOVE      D
+		        , MSP_REQUEST_PAYMENT   E
+		        , MSP_REQUEST_SALEINFO  F
+		        , MSP_REQUEST_CHANGE    G
+		        --, MSP_REQUSET_DLVRY     H
+		        , MSP_REQUEST_DLVRY     H
+		        , MSP_REQUEST_REQ       I
+		WHERE     A.REQUEST_KEY         = B.REQUEST_KEY
+		AND       B.REQUEST_KEY         = C.REQUEST_KEY
+		AND       C.REQUEST_KEY         = D.REQUEST_KEY
+		AND       D.REQUEST_KEY         = E.REQUEST_KEY
+		AND       E.REQUEST_KEY         = F.REQUEST_KEY
+		AND       F.REQUEST_KEY         = G.REQUEST_KEY
+		AND       G.REQUEST_KEY         = H.REQUEST_KEY
+		AND       H.REQUEST_KEY         = I.REQUEST_KEY
+		AND       A.REQUEST_KEY         <![CDATA[<]]> 10000
+		<include refid="Condition"/>
+	</select>
+
+	<select id="selectRowByPk" parameterType="String" resultType="com.ktis.msp.rcp.old.vo.RequestVO">
+		SELECT
+			A.REQUEST_KEY                           requestKey
+			, A.SERVICE_TYPE                          serviceType
+			, F.SOC_CODE															rateCode
+			/*
+			, CASE WHEN (SELECT    P.RATE_NAME
+		                     FROM      MCP_RATE@DL_MCP          P
+		                     WHERE     P.ACT_FLAG        = 'Y'
+		                     AND       (P.AGREEMENT      = '0'
+		                     OR         P.AGREEMENT      IS NULL)
+		                     AND       P.KT_RATE_CODE    = F.SOC_CODE
+		                     AND       ROWNUM            = 1)    IS NULL
+		               THEN  F.SOC_CODE
+		               ELSE  (SELECT    P.RATE_NAME
+		                      FROM      MCP_RATE@DL_MCP          P
+		                      WHERE     P.ACT_FLAG        = 'Y'
+		                      AND       (P.AGREEMENT      = '0'
+		                      OR         P.AGREEMENT      IS NULL)
+		                      AND       P.KT_RATE_CODE    = F.SOC_CODE
+		                      AND       ROWNUM            = 1)
+		                END rateName
+		    */
+		    , ( SELECT RATE_NM FROM MSP_RATE_MST MRM WHERE MRM.RATE_CD = F.SOC_CODE )         AS rateName
+			, A.OPER_TYPE                             operType
+			, A.CSTMR_TYPE                            cstmrType
+			, B.CSTMR_NAME                            cstmrName
+			, B.CSTMR_NATIVE_RRN                      cstmrNativeRrn
+			, B.CSTMR_FOREIGNER_NATION                cstmrForeignerNation
+			, B.CSTMR_FOREIGNER_RRN                   cstmrForeignerRrn
+			, B.CSTMR_FOREIGNER_PN                    cstmrForeignerPn
+			, B.CSTMR_FOREIGNER_SDATE                 cstmrForeignerSdate
+			, B.CSTMR_FOREIGNER_EDATE                 cstmrForeignerEdate
+			, B.CSTMR_PRIVATE_CNAME                   cstmrPrivateCname
+			, B.CSTMR_PRIVATE_NUMBER                  cstmrPrivateNumber
+			, B.CSTMR_JURIDICAL_CNAME                 cstmrJuridicalCname
+			, B.CSTMR_JURIDICAL_RRN                   cstmrJuridicalRrn
+			, B.CSTMR_JURIDICAL_NUMBER                cstmrJuridicalNumber
+			, B.CSTMR_TEL_FN                          cstmrTelFn
+			, B.CSTMR_TEL_MN                          cstmrTelMn
+			, B.CSTMR_TEL_RN                          cstmrTelRn
+			, B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN AS cstmrTel
+			, B.CSTMR_MOBILE_FN                       cstmrMobileFn
+			, B.CSTMR_MOBILE_MN                       cstmrMobileMn
+			, B.CSTMR_MOBILE_RN                       cstmrMobileRn
+			, B.CSTMR_MOBILE_FN || '-' || B.CSTMR_MOBILE_MN || '-' || B.CSTMR_MOBILE_RN  AS cstmrMobile
+			, B.CSTMR_POST                            cstmrPost
+			, B.CSTMR_ADDR                            cstmrAddr
+			, B.CSTMR_ADDR_DTL                        cstmrAddrDtl
+			, B.CSTMR_BILL_SEND_CODE                  cstmrBillSendCode
+			, B.CSTMR_MAIL                            cstmrMail
+			, B.CSTMR_MAIL_RECEIVE_FLAG               cstmrMailReceiveFlag
+			, A.REQ_WANT_NUMBER                       reqWantNumber
+			, A.REQ_PAY_TYPE                          reqPayType
+			, I.REQ_BANK                              reqBank
+			, I.REQ_ACCOUNT_NAME                      reqAccountName
+			, I.REQ_ACCOUNT_RRN							          reqAccountRrn
+			, I.REQ_ACCOUNT_RELATION                  reqAccountRelation
+			, I.REQ_ACCOUNT_NUMBER                    reqAccountNumber
+			, I.REQ_CARD_NAME							            reqCardName
+			, I.REQ_CARD_RRN								          reqCardRrn
+			, I.REQ_CARD_COMPANY						          reqCardCompany
+			, I.REQ_CARD_NO                           reqCardNo
+			, I.REQ_CARD_YY                           reqCardYy
+			, I.REQ_CARD_MM                           reqCardMm
+			, E.REQ_AC_TYPE                           reqAcType
+			, E.REQ_AC01_BALANCE                      reqAc01Balance
+			, E.REQ_AC01_AMOUNT                       reqAc01Amount
+			, E.REQ_AC02_DAY                          reqAc02Day
+			, E.REQ_AC02_AMOUNT                       reqAc02Amount
+			, D.REQ_GUIDE_FLAG                        reqGuideFlag
+			, D.REQ_GUIDE_FN                          reqGuideFn
+			, D.REQ_GUIDE_MN                          reqGuideMn
+			, D.REQ_GUIDE_RN                          reqGuideRn
+			, D.REQ_GUIDE_FN || D.REQ_GUIDE_MN || D.REQ_GUIDE_RN AS reqGuide
+			, I.REQ_WIRE_TYPE                         reqWireType
+			, A.REQ_BUY_TYPE                          reqBuyType
+			, A.REQ_MODEL_NAME						            reqModelName
+			, A.REQ_ADDITION                          reqAddition
+			, D.MOVE_COMPANY                          moveCompany
+			, D.MOVE_MOBILE_FN                        moveMobileFn
+			, D.MOVE_MOBILE_MN                        moveMobileMn
+			, D.MOVE_MOBILE_RN                        moveMobileRn
+			, D.MOVE_MOBILE_FN || D.MOVE_MOBILE_MN || D.MOVE_MOBILE_RN AS moveMobile
+			, D.MOVE_AUTH_TYPE                        moveAuthType
+			, D.MOVE_AUTH_NUMBER                      moveAuthNumber
+			, D.MOVE_THISMONTH_PAY_TYPE               moveThismonthPayType
+			, D.MOVE_ALLOTMENT_STAT                   moveAllotmentStat
+			, D.MOVE_REFUND_AGREE_FLAG                moveRefundAgreeFlag
+			, C.MINOR_AGENT_NAME                      minorAgentName
+			, C.MINOR_AGENT_RRN                       minorAgentRrn
+			, C.MINOR_AGENT_TEL_FN                    minorAgentTelFn
+			, C.MINOR_AGENT_TEL_MN                    minorAgentTelMn
+			, C.MINOR_AGENT_TEL_RN                    minorAgentTelRn
+			, C.MINOR_AGENT_TEL_FN || C.MINOR_AGENT_TEL_MN || C.MINOR_AGENT_TEL_RN AS minorAgentTel
+			, C.MINOR_AGENT_RELATION                  minorAgentRelation
+			, C.JRDCL_AGENT_NAME                      jrdclAgentName
+			, C.JRDCL_AGENT_RRN                       jrdclAgentRrn
+			, C.JRDCL_AGENT_TEL_FN                    jrdclAgentTelFn
+			, C.JRDCL_AGENT_TEL_MN                    jrdclAgentTelMn
+			, C.JRDCL_AGENT_TEL_RN                    jrdclAgentTelRn
+			, C.JRDCL_AGENT_TEL_FN || C.JRDCL_AGENT_TEL_MN || C.JRDCL_AGENT_TEL_RN AS jrdclAgentTel
+			, H.DLVRY_NAME								            dlvryName
+			, H.DLVRY_TEL_FN								          dlvryTelFn
+			, H.DLVRY_TEL_MN								          dlvryTelMn
+			, H.DLVRY_TEL_RN								          dlvryTelRn
+			, H.DLVRY_TEL_FN || H.DLVRY_TEL_MN || H.DLVRY_TEL_RN 		AS dlvryTel
+			, H.DLVRY_MOBILE_FN							          dlvryMobileFn
+			, H.DLVRY_MOBILE_MN						            dlvryMobileMn
+			, H.DLVRY_MOBILE_RN						  	        dlvryMobileRn
+			, H.DLVRY_MOBILE_FN || H.DLVRY_MOBILE_MN || H.DLVRY_MOBILE_RN  AS dlvryMobile
+			, H.DLVRY_POST								            dlvryPost
+			, H.DLVRY_ADDR									          dlvryAddr
+			, H.DLVRY_ADDR_DTL							          dlvryAddrDtl
+			, H.DLVRY_MEMO								            dlvryMemo
+			, A.CLAUSE_PRI_COLLECT_FLAG               clausePriCollectFlag
+			, A.CLAUSE_PRI_OFFER_FLAG                 clausePriOfferFlag
+			, A.CLAUSE_ESS_COLLECT_FLAG               clauseEssCollectFlag
+			, A.CLAUSE_PRI_TRUST_FLAG                 clausePriTrustFlag
+			, A.CLAUSE_PRI_AD_FLAG                    clausePriAdFlag
+			, A.CLAUSE_CONFIDENCE_FLAG         	      clauseConfidenceFlag
+			, A.ONLINE_AUTH_TYPE                   	  onlineAuthType
+			, A.ONLINE_AUTH_INFO                      onlineAuthInfo
+			, A.RES_CODE                              resCode
+			, A.RES_MSG                               resMsg
+			, A.RES_NO                                resNo
+			, A.PSTATE                                pstate
+			, A.REQUEST_STATE_CODE                    requestStateCode
+			, A.OPEN_NO                               openNo
+			, A.RIP                               		rip
+			, TO_CHAR(A.SYS_RDATE, 'YYYY.MM.DD : HH24:MI:SS')     rdate
+			, A.AGENT_CODE														agentCode
+			, A.MANAGER_CODE													managerCode
+			, A.FILE01																file01
+			, A.FILE01_MASK                           file01Mask
+			, A.CNTPNT_SHOP_ID						cntpntShopId
+		 FROM      MSP_REQUEST           A
+		        , MSP_REQUEST_CSTMR     B
+		        , MSP_REQUEST_AGENT     C
+		        , MSP_REQUEST_MOVE      D
+		        , MSP_REQUEST_PAYMENT   E
+		        , MSP_REQUEST_SALEINFO  F
+		        , MSP_REQUEST_CHANGE    G
+		        --, MSP_REQUSET_DLVRY     H
+		        , MSP_REQUEST_DLVRY     H
+		        , MSP_REQUEST_REQ       I
+		WHERE    A.REQUEST_KEY 		= #{requestKey}
+		AND       A.REQUEST_KEY         = B.REQUEST_KEY
+		AND       B.REQUEST_KEY         = C.REQUEST_KEY
+		AND       C.REQUEST_KEY         = D.REQUEST_KEY
+		AND       D.REQUEST_KEY         = E.REQUEST_KEY
+		AND       E.REQUEST_KEY         = F.REQUEST_KEY
+		AND       F.REQUEST_KEY         = G.REQUEST_KEY
+		AND       G.REQUEST_KEY         = H.REQUEST_KEY
+		AND       H.REQUEST_KEY         = I.REQUEST_KEY
+	</select>
+
+	<select id="selectListForExcel" resultType="egovframework.rte.psl.dataaccess.util.EgovMap" parameterType="com.ktis.msp.rcp.old.vo.RequestOldVo" >
+ 		SELECT   A.REQUEST_KEY
+		         , CASE(A.SERVICE_TYPE)
+		            WHEN 'PP' THEN '선불'
+		            WHEN 'PO' THEN '후불'
+		            ELSE '' END
+		          AS SERVICE_TYPE
+		        , F.SOC_CODE 				RATE_CODE
+		        /*
+		        , CASE WHEN (SELECT    P.RATE_NAME
+			                     FROM      MCP_RATE@DL_MCP          P
+			                     WHERE     P.ACT_FLAG        = 'Y'
+			                     AND       (P.AGREEMENT      = '0'
+			                     OR         P.AGREEMENT      IS NULL)
+			                     AND       P.KT_RATE_CODE    = F.SOC_CODE
+			                     AND       ROWNUM            = 1)    IS NULL
+			               THEN  F.SOC_CODE
+			               ELSE  (SELECT    P.RATE_NAME
+			                      FROM      MCP_RATE@DL_MCP          P
+			                      WHERE     P.ACT_FLAG        = 'Y'
+			                      AND       (P.AGREEMENT      = '0'
+			                      OR         P.AGREEMENT      IS NULL)
+			                      AND       P.KT_RATE_CODE    = F.SOC_CODE
+			                      AND       ROWNUM            = 1)
+			                END RATE_NAME
+			    */
+			    , ( SELECT RATE_NM FROM MSP_RATE_MST MRM WHERE MRM.RATE_CD = F.SOC_CODE )         AS RATE_NAME
+		        , CASE(A.OPER_TYPE)
+		            WHEN 'HCN3' THEN '기기변경'
+		            WHEN 'HDN3' THEN '보상기변3G'
+		            WHEN 'MNP3' THEN '번호이동'
+		            WHEN 'NAC3' THEN '신규가입'
+		            ELSE '' END
+		          AS OPER_TYPE
+		        , CASE(A.CSTMR_TYPE)
+		            WHEN 'NA' THEN '내국인'
+		            WHEN 'NM' THEN '내국인(미성년자)'
+		            WHEN 'FN' THEN '외국인'
+		            WHEN 'JP' THEN '법인사업자'
+		            WHEN 'PP' THEN '개인사업자'
+		            ELSE '' END
+		          AS CSTMR_TYPE
+		        , B.CSTMR_NAME
+		        , B.CSTMR_NATIVE_RRN
+		        , B.CSTMR_FOREIGNER_NATION
+		        , B.CSTMR_FOREIGNER_RRN
+		        , B.CSTMR_FOREIGNER_PN
+		        , B.CSTMR_FOREIGNER_SDATE
+		        , B.CSTMR_FOREIGNER_EDATE
+		        , B.CSTMR_PRIVATE_CNAME
+		        , B.CSTMR_PRIVATE_NUMBER
+		        , B.CSTMR_JURIDICAL_CNAME
+		        , B.CSTMR_JURIDICAL_RRN
+		        , B.CSTMR_JURIDICAL_NUMBER
+		        , B.CSTMR_TEL_FN
+		        , B.CSTMR_TEL_MN
+		        , B.CSTMR_TEL_RN
+		        , B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN AS CSTMR_TEL
+		        , B.CSTMR_MOBILE_FN
+		        , B.CSTMR_MOBILE_MN
+		        , B.CSTMR_MOBILE_RN
+		        , B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN AS CSTMR_MOBILE
+		        , CASE(B.CSTMR_POST)
+		            WHEN '' THEN ''
+		            ELSE SUBSTR(B.CSTMR_POST, 1, 3) || '-' || SUBSTR(B.CSTMR_POST, 4, 3) END
+		          AS CSTMR_POST
+		        , B.CSTMR_ADDR
+		        , B.CSTMR_ADDR_DTL
+		        , CASE(B.CSTMR_BILL_SEND_CODE)
+		            WHEN 'LX' THEN '우편발송'
+		            WHEN 'CB' THEN '이메일방송'
+		            ELSE '' END
+		          AS CSTMR_BILL_SEND_CODE
+		        , B.CSTMR_MAIL
+		        , B.CSTMR_MAIL_RECEIVE_FLAG
+		        , A.REQ_WANT_NUMBER
+		        , A.REQ_PAY_TYPE
+		        , I.REQ_BANK
+		        , I.REQ_ACCOUNT_NAME
+		        , I.REQ_ACCOUNT_RRN
+		        , I.REQ_ACCOUNT_RELATION
+		        , I.REQ_ACCOUNT_NUMBER
+		        , I.REQ_CARD_NAME
+		        , I.REQ_CARD_RRN
+		        , I.REQ_CARD_COMPANY
+		        , I.REQ_CARD_NO
+		        , I.REQ_CARD_YY
+		        , I.REQ_CARD_MM
+		        , E.REQ_AC_TYPE
+		        , E.REQ_AC01_BALANCE
+		        , E.REQ_AC01_AMOUNT
+		        , E.REQ_AC02_DAY
+		        , E.REQ_AC02_AMOUNT
+		        , D.REQ_GUIDE_FLAG
+		        , D.REQ_GUIDE_FN
+		        , D.REQ_GUIDE_MN
+		        , D.REQ_GUIDE_RN
+		        , D.REQ_GUIDE_FN || D.REQ_GUIDE_MN || D.REQ_GUIDE_RN AS REQ_GUIDE
+		        , I.REQ_WIRE_TYPE
+		        , A.REQ_BUY_TYPE
+		        , A.REQ_MODEL_NAME
+		        , A.REQ_ADDITION
+		        , D.MOVE_COMPANY
+		        , D.MOVE_MOBILE_FN
+		        , D.MOVE_MOBILE_MN
+		        , D.MOVE_MOBILE_RN
+		        , D.MOVE_MOBILE_FN || D.MOVE_MOBILE_MN || D.MOVE_MOBILE_RN AS MOVE_MOBILE
+		        , D.MOVE_AUTH_TYPE
+		        , D.MOVE_AUTH_NUMBER
+		        , D.MOVE_THISMONTH_PAY_TYPE
+		        , D.MOVE_ALLOTMENT_STAT
+		        , D.MOVE_REFUND_AGREE_FLAG
+		        , C.MINOR_AGENT_NAME
+		        , C.MINOR_AGENT_RRN
+		        , C.MINOR_AGENT_TEL_FN
+		        , C.MINOR_AGENT_TEL_MN
+		        , C.MINOR_AGENT_TEL_RN
+		        , C.MINOR_AGENT_TEL_FN || C.MINOR_AGENT_TEL_MN || C.MINOR_AGENT_TEL_RN AS MINOR_AGENT_TEL
+		        , C.MINOR_AGENT_RELATION
+		        , C.JRDCL_AGENT_NAME
+		        , C.JRDCL_AGENT_RRN
+		        , C.JRDCL_AGENT_TEL_FN
+		        , C.JRDCL_AGENT_TEL_MN
+		        , C.JRDCL_AGENT_TEL_RN
+		        , C.JRDCL_AGENT_TEL_FN || C.JRDCL_AGENT_TEL_MN || C.JRDCL_AGENT_TEL_RN AS JRDCL_AGENT_TEL
+		        , H.DLVRY_NAME
+		        , H.DLVRY_TEL_FN
+		        , H.DLVRY_TEL_MN
+		        , H.DLVRY_TEL_RN
+		        , H.DLVRY_TEL_FN || H.DLVRY_TEL_MN || H.DLVRY_TEL_RN AS DLVRY_TEL
+		        , H.DLVRY_MOBILE_FN
+		        , H.DLVRY_MOBILE_MN
+		        , H.DLVRY_MOBILE_RN
+		        , H.DLVRY_MOBILE_FN || H.DLVRY_MOBILE_MN || H.DLVRY_MOBILE_RN AS DLVRY_MOBILE
+		        , CASE(H.DLVRY_POST)
+		            WHEN '' THEN ''
+		            ELSE SUBSTR(H.DLVRY_POST, 1, 3) || '-' || SUBSTR(H.DLVRY_POST, 4, 3) END
+		          AS DLVRY_POST
+		        , H.DLVRY_ADDR
+		        , H.DLVRY_ADDR_DTL
+		        , H.DLVRY_MEMO
+		        , A.CLAUSE_PRI_COLLECT_FLAG
+		        , A.CLAUSE_PRI_OFFER_FLAG
+		        , A.CLAUSE_ESS_COLLECT_FLAG
+		        , A.CLAUSE_PRI_TRUST_FLAG
+		        , A.CLAUSE_PRI_AD_FLAG
+		        , A.CLAUSE_CONFIDENCE_FLAG
+		        , CASE(A.ONLINE_AUTH_TYPE)
+		            WHEN 'M' THEN '휴대폰인증'
+		            WHEN 'C' THEN '신용카드인증'
+		            WHEN 'X' THEN '범용인증서인증'
+		            WHEN 'FN' THEN 'FAX인증(관리자인증 대기중)'
+		            WHEN 'FY' THEN 'FAX인증(관리자인증 완료)'
+		            ELSE '' END
+		          AS ONLINE_AUTH_TYPE
+		        , A.ONLINE_AUTH_INFO
+		        , A.RES_CODE
+		        , A.RES_MSG
+		        , A.RES_NO
+		        , CASE(A.PSTATE)
+		              WHEN '00' THEN '정상처리'
+		            WHEN '10' THEN '고객취소'
+		            WHEN '20' THEN '관리자삭제'
+		            ELSE '' END
+		          AS PSTATE
+		        , CASE(A.REQUEST_STATE_CODE)
+		            WHEN '00' THEN '접수'
+		            WHEN '01' THEN '접수완료'
+		              WHEN '10' THEN '배송대기'
+		            WHEN '11' THEN '배송중'
+		            WHEN '12' THEN '배송완료'
+		            WHEN '20' THEN '개통대기'
+		            WHEN '21' THEN '개통완료'
+		            ELSE '' END
+		          AS REQUEST_STATE_CODE
+		        , A.OPEN_NO
+		        , A.RIP
+		        , TO_CHAR(A.SYS_RDATE, 'YYYY.MM.DD : HH24:MI')     RDATE
+		        , A.AGENT_CODE
+		        , A.MANAGER_CODE
+		        , A.FILE01
+		        , A.FILE01_MASK
+		        , A.CNTPNT_SHOP_ID
+		        , (SELECT TO_CHAR(SYS_RDATE, 'YYYY.MM.DD : HH24:MI') FROM MSP_REQUEST_STATE WHERE REQUEST_KEY = A.REQUEST_KEY AND REQUEST_STATE_CODE = '21') AS OPEN_RDATE
+		FROM      MSP_REQUEST           A
+		        , MSP_REQUEST_CSTMR     B
+		        , MSP_REQUEST_AGENT     C
+		        , MSP_REQUEST_MOVE      D
+		        , MSP_REQUEST_PAYMENT   E
+		        , MSP_REQUEST_SALEINFO  F
+		        , MSP_REQUEST_CHANGE    G
+		        --, MSP_REQUSET_DLVRY     H
+		        , MSP_REQUEST_DLVRY     H
+		        , MSP_REQUEST_REQ       I
+		WHERE     A.REQUEST_KEY         = B.REQUEST_KEY
+		AND       B.REQUEST_KEY         = C.REQUEST_KEY
+		AND       C.REQUEST_KEY         = D.REQUEST_KEY
+		AND       D.REQUEST_KEY         = E.REQUEST_KEY
+		AND       E.REQUEST_KEY         = F.REQUEST_KEY
+		AND       F.REQUEST_KEY         = G.REQUEST_KEY
+		AND       G.REQUEST_KEY         = H.REQUEST_KEY
+		AND       H.REQUEST_KEY         = I.REQUEST_KEY
+		AND       A.REQUEST_KEY         <![CDATA[<]]> 10000
+	   	<include refid="Condition"/>
+	   	ORDER BY A.REQUEST_KEY DESC
+	</select>
+
+</mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.fileup.mapper.FileUpMapper">
+
+	
+	
+	<insert  id="insertCmnFileUpldMgmtMst"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.fileup.insertCmnFileUpldMgmtMst =========*/	
+	    INSERT INTO CMN_FILE_UPLD_MGMT_MST 
+	    (
+		   	 USR_ID
+		   , MENU_ID
+		   , FILE_UPLD_DT
+		   , FILE_NM
+		   , FILE_DESC
+		   , DUTY_NM
+		   , FILE_URL
+		   , FILE_SIZE
+		   , DATA_CNT
+		 ) 
+		VALUES
+		 ( 
+		   	 #{SESSION_USER_ID}
+		   , nvl(#{menuId},'*')
+		   , sysdate
+		   , #{FILE_NM}
+		   , #{FILE_DESC}
+		   , #{DUTY_NM}
+		   , #{FILE_URL}
+		   , #{FILE_SIZE}
+		   , #{DATA_CNT}
+		 )
+ 
+    
+        
+	</insert>
+	
+</mapper>

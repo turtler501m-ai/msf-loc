@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.rcgautomgmt.mapper.PpsRcgAutoMgmtMapper">
+
+	<!--자동충전관리 목록조회 -->
+    <select id="getRcgAutoInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         		SELECT /*+ INDEX_DESC(A PPS_CODE_AGENT_RCG_AUTO_IDX1)*/
+         		        SOC,
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('SOC', SOC) SOC_NM,
+				        AGENT_ID, 
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('AGENT_ID', AGENT_ID) AGENT_NM,
+				        CUST_IDNT_NO_IND_CD, 
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD) CUST_IDNT_NO_IND_CD_NM,
+				        REQ_TYPE, 
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('REQ_TYPE', REQ_TYPE) REQ_TYPE_NM,
+				        AMOUNT, 
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('AMOUNT', TO_CHAR(AMOUNT)) AMOUNT_NM,
+				        REMARK, 
+				        TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') REG_DT, 
+				        TO_CHAR(MOD_DT, 'YYYY-MM-DD HH24:MI:SS') MOD_DT, 
+				        ADMIN_ID,
+				        F_GET_ADMIN_NM(ADMIN_ID) ADMIN_NM,
+				        CASE WHEN SOC = 'PPS35' THEN 'Y'
+				        	 WHEN (SELECT 'Y' FROM PPS_CODE_SERVICE_TOPUP WHERE SOC = A.SOC AND KT_MODE &lt;> 'TOPUP_REFILL' AND ROWNUM = 1) = 'Y' THEN 'Y'
+				        	 ELSE 'N'
+				        END PPS35_FLAG
+				FROM PPS_CODE_AGENT_RCG_AUTO A
+				WHERE 1=1
+				      
+		  		<if test="searchNm != null and searchNm != ''">
+		  			<if test="searchType !=null and searchType != ''">
+						<if test="searchType == 'admin_id'">
+								AND A.ADMIN_ID = #{searchNm}
+						</if>
+					</if>
+				</if>
+				
+				<if test="startDt != null and startDt != ''">
+					AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				
+				<if test="searchSoc != null and searchSoc != '' ">
+					AND SOC = #{searchSoc}
+				</if>
+				
+				<if test="searchReqType != null and searchReqType != ''">
+					AND REQ_TYPE = #{searchReqType}
+				</if>
+				
+				<if test="searchCustIdntNoIndCd != null and searchCustIdntNoIndCd != ''">
+					AND CUST_IDNT_NO_IND_CD = #{searchCustIdntNoIndCd}
+				</if>
+				
+				<if test="searchAgentId != null and searchAgentId != ''">
+					AND AGENT_ID = #{searchAgentId}
+				</if>
+				
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--자동충전관리 목록조회엑셀출력 -->
+    <select id="getRcgAutoInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+     
+       		SELECT /*+ INDEX_DESC(A PPS_CODE_AGENT_RCG_AUTO_IDX1)*/
+       				NVL(SOC, '-') SOC,
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('SOC', SOC), '-') SOC_NM,
+			        NVL(AGENT_ID, '-') AGENT_ID, 
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('AGENT_ID', AGENT_ID), '-') AGENT_NM,
+			        NVL(CUST_IDNT_NO_IND_CD, '-') CUST_IDNT_NO_IND_CD, 
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD), '-') CUST_IDNT_NO_IND_CD_NM,
+			        NVL(REQ_TYPE, '-') REQ_TYPE, 
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('REQ_TYPE', REQ_TYPE), '-') REQ_TYPE_NM,
+			        NVL(AMOUNT, 0) AMOUNT, 
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('AMOUNT', TO_CHAR(AMOUNT)), '-') AMOUNT_NM,
+			        NVL(REMARK, '-') REMARK, 
+			        NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS'), '-') REG_DT, 
+			        NVL(TO_CHAR(MOD_DT, 'YYYY-MM-DD HH24:MI:SS'), '-') MOD_DT, 
+			        NVL(ADMIN_ID, '-') ADMIN_ID,
+			        NVL(F_GET_ADMIN_NM(ADMIN_ID), '-') ADMIN_NM,
+			        NVL(CASE WHEN SOC = 'PPS35' THEN 'Y'
+			        	 WHEN (SELECT 'Y' FROM PPS_CODE_SERVICE_TOPUP WHERE SOC = A.SOC AND KT_MODE &lt;> 'TOPUP_REFILL' AND ROWNUM = 1) = 'Y' THEN 'Y'
+			        	 ELSE 'N'
+			        END, '-') PPS35_FLAG
+			FROM PPS_CODE_AGENT_RCG_AUTO A
+			WHERE 1=1
+			      
+	  		<if test="searchNm != null and searchNm != ''">
+	  			<if test="searchType !=null and searchType != ''">
+					<if test="searchType == 'admin_id'">
+							AND A.ADMIN_ID = #{searchNm}
+					</if>
+				</if>
+			</if>
+			
+			<if test="startDt != null and startDt != ''">
+				AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			
+			<if test="searchSoc != null and searchSoc != '' ">
+				AND SOC = #{searchSoc}
+			</if>
+			
+			<if test="searchReqType != null and searchReqType != ''">
+				AND REQ_TYPE = #{searchReqType}
+			</if>
+			
+			<if test="searchCustIdntNoIndCd != null and searchCustIdntNoIndCd != ''">
+				AND CUST_IDNT_NO_IND_CD = #{searchCustIdntNoIndCd}
+			</if>
+			
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID = #{searchAgentId}
+			</if>
+             
+	    
+    </select>
+    
+    <!--자동충전변경이력 목록조회 -->
+    <select id="getRcgAutoHistInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         		SELECT /*+ INDEX_DESC(A PPS_CODE_AGENT_RCG_HIST_IDX1)*/
+         		        SOC,
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('SOC', SOC) SOC_NM,
+				        AGENT_ID, 
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('AGENT_ID', AGENT_ID) AGENT_NM,
+				        CUST_IDNT_NO_IND_CD, 
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD) CUST_IDNT_NO_IND_CD_NM,
+				        REQ_TYPE, 
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('REQ_TYPE', REQ_TYPE) REQ_TYPE_NM,
+				        AMOUNT, 
+				        F_GET_CODE_AGENT_RCG_AUTO_NM('AMOUNT', TO_CHAR(AMOUNT)) AMOUNT_NM,
+				        REMARK, 
+				        TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') REG_DT, 
+				        TO_CHAR(MOD_DT, 'YYYY-MM-DD HH24:MI:SS') MOD_DT, 
+				        ADMIN_ID,
+				        F_GET_ADMIN_NM(ADMIN_ID) ADMIN_NM,
+				        TO_CHAR(HIS_DT, 'YYYY-MM-DD HH24:MI:SS') HIS_DT,
+				        HIS_ADMIN,
+				        F_GET_ADMIN_NM(HIS_ADMIN) HIS_ADMIN_NM, 
+				        F_GET_KT_CODE_NM('PPS_CODE_AGENT_RCG_AUTO_HIST', 'HIS_OP_CODE', HIS_OP_CODE) HIS_OP_CODE_NM
+				FROM PPS_CODE_AGENT_RCG_AUTO_HIST A
+				WHERE 1=1
+				      
+		  		<if test="searchNm != null and searchNm != ''">
+		  			<if test="searchType !=null and searchType != ''">
+						<if test="searchType == 'admin_id'">
+								AND A.HIS_ADMIN = #{searchNm}
+						</if>
+					</if>
+				</if>
+				
+				<if test="startDt != null and startDt != ''">
+					AND HIS_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND HIS_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				
+				<if test="searchSoc != null and searchSoc != '' ">
+					AND SOC = #{searchSoc}
+				</if>
+				
+				<if test="searchReqType != null and searchReqType != ''">
+					AND REQ_TYPE = #{searchReqType}
+				</if>
+				
+				<if test="searchCustIdntNoIndCd != null and searchCustIdntNoIndCd != ''">
+					AND CUST_IDNT_NO_IND_CD = #{searchCustIdntNoIndCd}
+				</if>
+				
+				<if test="searchAgentId != null and searchAgentId != ''">
+					AND AGENT_ID = #{searchAgentId}
+				</if>
+				
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--자동충전변경이력 목록조회엑셀출력 -->
+    <select id="getRcgAutoHistInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+     
+       		SELECT /*+ INDEX_DESC(A PPS_CODE_AGENT_RCG_HIST_IDX1)*/
+       				NVL(SOC, '-') SOC,
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('SOC', SOC), '-') SOC_NM,
+			        NVL(AGENT_ID, '-') AGENT_ID, 
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('AGENT_ID', AGENT_ID), '-') AGENT_NM,
+			        NVL(CUST_IDNT_NO_IND_CD, '-') CUST_IDNT_NO_IND_CD, 
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD), '-') CUST_IDNT_NO_IND_CD_NM,
+			        NVL(REQ_TYPE, '-') REQ_TYPE, 
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('REQ_TYPE', REQ_TYPE), '-') REQ_TYPE_NM,
+			        NVL(AMOUNT, 0) AMOUNT, 
+			        NVL(F_GET_CODE_AGENT_RCG_AUTO_NM('AMOUNT', TO_CHAR(AMOUNT)), '-') AMOUNT_NM,
+			        NVL(REMARK, '-') REMARK, 
+			        NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS'), '-') REG_DT, 
+			        NVL(TO_CHAR(MOD_DT, 'YYYY-MM-DD HH24:MI:SS'), '-') MOD_DT, 
+			        NVL(ADMIN_ID, '-') ADMIN_ID,
+			        NVL(F_GET_ADMIN_NM(ADMIN_ID), '-') ADMIN_NM,
+			        NVL(TO_CHAR(HIS_DT, 'YYYY-MM-DD HH24:MI:SS'), '-') HIS_DT,
+			        NVL(HIS_ADMIN, '-') HIS_ADMIN,
+			        NVL(F_GET_ADMIN_NM(HIS_ADMIN), '-') HIS_ADMIN_NM, 
+			        NVL(F_GET_KT_CODE_NM('PPS_CODE_AGENT_RCG_AUTO_HIST', 'HIS_OP_CODE', HIS_OP_CODE), '-') HIS_OP_CODE_NM
+			FROM PPS_CODE_AGENT_RCG_AUTO_HIST A
+			WHERE 1=1
+
+			<if test="searchNm != null and searchNm != ''">
+				<if test="searchType !=null and searchType != ''">
+					<if test="searchType == 'admin_id'">
+						AND A.HIS_ADMIN = #{searchNm}
+					</if>
+				</if>
+			</if>
+			
+			<if test="startDt != null and startDt != ''">
+				AND HIS_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND HIS_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			
+			<if test="searchSoc != null and searchSoc != '' ">
+				AND SOC = #{searchSoc}
+			</if>
+			
+			<if test="searchReqType != null and searchReqType != ''">
+				AND REQ_TYPE = #{searchReqType}
+			</if>
+			
+			<if test="searchCustIdntNoIndCd != null and searchCustIdntNoIndCd != ''">
+				AND CUST_IDNT_NO_IND_CD = #{searchCustIdntNoIndCd}
+			</if>
+			
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID = #{searchAgentId}
+			</if>
+             
+	    
+    </select>
+    
+    <!-- 자동충전관리 등록/삭제 -->
+	<select id="ppsRcgAutoReg"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{call P_CODE_AGENT_RCG_AUTO(
+				    #{opCode, jdbcType=VARCHAR}
+				    , #{soc, jdbcType=CLOB}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{custIdntNoIndCd, jdbcType=VARCHAR}
+				    , #{reqType, jdbcType=VARCHAR}
+				    , #{amount, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+				   ,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 대리점명 조회해서 대리점콤보박스 옵션목록 가져오기    -->
+	<select id="getSelectPpsRcgAutoAgentList"  parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<if test="searchAgentNm == null or searchAgentNm == ''">
+		SELECT 'ALL' value,
+			   '-- ALL 대리점 --' text
+		FROM DUAL
+		UNION ALL
+		</if>
+		SELECT *
+		FROM (
+			SELECT 
+				  ORGN_ID AS value
+				,ORGN_NM AS text
+			FROM ORG_ORGN_INFO_MST 
+			WHERE ORGN_LVL_CD ='10'
+			AND TYPE_CD='20'
+			AND TYPE_DTL_CD1='SU'
+			AND TYPE_DTL_CD2 ='SU1'
+			AND ORGN_STAT_CD IN ('1', '4')
+			<if test="searchAgentNm != null and searchAgentNm != ''">
+			AND ORGN_NM LIKE '%' || #{searchAgentNm} || '%'
+			</if>
+			ORDER BY ORGN_ID, ORGN_NM
+		)
+	</select>
+	
+	<!-- 요금제 코드 -->
+	<select id="getPpsRcgAutoSocListData"  parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT 'BASIC' value,
+			   '-- 일반요금제 --' text
+		FROM DUAL
+		UNION ALL 
+		SELECT 'PPS35' value,
+			   '-- RS요금제 --' text
+		FROM DUAL
+		UNION ALL 
+		SELECT *
+		FROM (
+		    SELECT value, 
+		           text
+		    FROM (
+		        select 
+		            RATE_CD value, 
+		            CASE WHEN (SELECT 'Y' FROM PPS_CODE_SERVICE_TOPUP WHERE SOC = A.RATE_CD AND KT_MODE &lt;> 'TOPUP_REFILL' AND ROWNUM = 1) = 'Y' THEN '(RS) ' || RATE_NM 
+		            ELSE '(일반) ' || RATE_NM 
+		            END text
+		        from MSP_RATE_MST A
+		        where PAY_CL_CD = 'PP'
+		    )
+		    ORDER BY TEXT ASC
+		)
+	</select>
+	
+	<!--RS요금제 여부확인 -->
+    <select id="getRcgAutoPps35Chk" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         SELECT CASE WHEN #{soc} = 'PPS35' THEN 'Y'
+		        	 WHEN (SELECT 'Y' FROM PPS_CODE_SERVICE_TOPUP WHERE SOC = #{soc} AND KT_MODE &lt;> 'TOPUP_REFILL' AND ROWNUM = 1) = 'Y' THEN 'Y'
+		        	 ELSE 'N'
+		        END PPS35_FLAG
+		FROM DUAL
+    </select>
+	
+</mapper>

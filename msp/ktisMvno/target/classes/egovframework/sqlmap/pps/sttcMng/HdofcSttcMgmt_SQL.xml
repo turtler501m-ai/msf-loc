@@ -1,0 +1,1344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.sttcmgmt.mapper.PpsHdofcSttcMgmtMapper">
+
+<!--개통현황 목록조회 -->
+    <select id="getSttcOpenMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         	
+					SELECT
+						<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+							SOC, SOC_NM,
+						</if>
+						<if test="searchSoc == null or searchSoc == '' or searchSoc ==0">
+							'ALL' SOC, 'ALL' SOC_NM,
+						</if>
+						<if test="searchAgentId != null and searchAgentId != '' and searchAgentId !=0">
+							AGENT_ID, AGENT_NM, 
+						</if>
+						<if test="searchAgentId == null or searchAgentId == '' or searchAgentId ==0">
+							'ALL' AGENT_ID, 'ALL' AGENT_NM, 
+						</if>	
+							STATUS_DATE, 
+							OPEN_CNT, 
+							STOP_CNT, 
+							CANCEL_CNT,
+							TOTAL_OPEN_CNT 
+				FROM ( SELECT
+						<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+							SOC, DECODE(SOC,'', '', NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC AND ROWNUM = 1),SOC) ) SOC_NM,
+						</if>
+						<if test="searchAgentId != null and searchAgentId != '' and searchAgentId !=0">
+							AGENT_ID, FN_GET_ORGNM(AGENT_ID) AGENT_NM, 
+						</if>
+						<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+							TO_CHAR(TO_DATE(STATUS_DATE,'YYYY-MM-DD'),'YYYY-MM-DD') STATUS_DATE,
+						</if>
+						<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc != 0"  >
+							TO_CHAR(TO_DATE(STATUS_DATE,'YYYY-MM-DD'),'YYYY-MM') STATUS_DATE,
+						 </if>
+						
+					          SUM(OPEN_CNT) OPEN_CNT, 
+						      SUM(STOP_CNT) STOP_CNT, 
+						      SUM(CANCEL_CNT) CANCEL_CNT,
+						      SUM(OPEN_CNT)+SUM(STOP_CNT)+SUM(CANCEL_CNT) TOTAL_OPEN_CNT
+					    FROM V_STATS_OPEN
+					    WHERE TO_DATE(STATUS_DATE,'YYYY-MM-DD HH24:MI:SS') >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+					    AND TO_DATE(STATUS_DATE,'YYYY-MM-DD HH24:MI:SS') &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+					     <if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+							    GROUP BY TO_CHAR(TO_DATE(STATUS_DATE,'YYYY-MM-DD'),'YYYY-MM')
+						</if>
+						<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+							 	 GROUP BY TO_CHAR(TO_DATE(STATUS_DATE,'YYYY-MM-DD'),'YYYY-MM-DD')
+						 </if>
+              			<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+					 			,SOC
+						</if>
+						<if test="searchAgentId != null and searchAgentId != '' and searchAgentId !=0">
+								,AGENT_ID
+						</if>
+						ORDER BY STATUS_DATE DESC
+						)
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--개통현황 목록조회 엑셀출력 -->
+    <select id="getSttcOpenMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">   
+    				SELECT
+						<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+							NVL(SOC,'-') SOC, NVL(SOC_NM,'-') SOC_NM,
+						</if>
+						<if test="searchSoc == null or searchSoc == '' or searchSoc ==0">
+						     'ALL' SOC_NM,
+						</if>
+						<if test="searchAgentId != null and searchAgentId != '' and searchAgentId !=0">
+							NVL(AGENT_ID,'-') AGENT_ID, NVL(AGENT_NM,'-') AGENT_NM, 
+						</if>
+						<if test="searchAgentId == null or searchAgentId == '' or searchAgentId ==0">
+							 'ALL' AGENT_NM, 
+						</if>	
+							NVL(STATUS_DATE,'-') STATUS_DATE, 
+							NVL(OPEN_CNT,0) OPEN_CNT, 
+							NVL(STOP_CNT,0) STOP_CNT, 
+							NVL(CANCEL_CNT,0) CANCEL_CNT,
+							NVL(TOTAL_OPEN_CNT,0) TOTAL_OPEN_CNT 
+				FROM ( SELECT
+						<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+							SOC, DECODE(SOC,'', '', NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC AND ROWNUM = 1),SOC) ) SOC_NM,
+						</if>
+						<if test="searchAgentId != null and searchAgentId != '' and searchAgentId !=0">
+							AGENT_ID, FN_GET_ORGNM(AGENT_ID) AGENT_NM, 
+						</if>
+						<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+							TO_CHAR(TO_DATE(STATUS_DATE,'YYYY-MM-DD'),'YYYY-MM-DD') STATUS_DATE,
+						</if>
+						<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc != 0"  >
+							TO_CHAR(TO_DATE(STATUS_DATE,'YYYY-MM-DD'),'YYYY-MM') STATUS_DATE,
+						 </if>
+						
+					          SUM(OPEN_CNT) OPEN_CNT, 
+						      SUM(STOP_CNT) STOP_CNT, 
+						      SUM(CANCEL_CNT) CANCEL_CNT,
+						      SUM(OPEN_CNT)+SUM(STOP_CNT)+SUM(CANCEL_CNT) TOTAL_OPEN_CNT
+					    FROM V_STATS_OPEN
+					    WHERE TO_DATE(STATUS_DATE,'YYYY-MM-DD HH24:MI:SS') >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+					    AND TO_DATE(STATUS_DATE,'YYYY-MM-DD HH24:MI:SS') &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+					     <if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+							    GROUP BY TO_CHAR(TO_DATE(STATUS_DATE,'YYYY-MM-DD'),'YYYY-MM')
+						</if>
+						<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+							 	 GROUP BY TO_CHAR(TO_DATE(STATUS_DATE,'YYYY-MM-DD'),'YYYY-MM-DD')
+						 </if>
+              			<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+					 			,SOC
+						</if>
+						<if test="searchAgentId != null and searchAgentId != '' and searchAgentId !=0">
+								,AGENT_ID
+						</if>
+						ORDER BY STATUS_DATE DESC
+						)
+    </select>
+    
+    <!--충전현황 목록조회 -->
+    <select id="getSttcRechargeMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         select
+				<if test="searchChgType != null  and  searchChgType != '' and searchChgType !=0" >
+									CHG_TYPE, CHG_TYPE_NM,
+				</if>
+				<if test="searchChgType == null  or  searchChgType == '' or searchChgType ==0" >
+									'ALL' CHG_TYPE, 'ALL' CHG_TYPE_NM,
+				</if>
+					RECHARGE_DATE,
+				<if test="searchRechargeMethod != null and searchRechargeMethod != '' and searchRechargeMethod!=0">
+									RECHARGE_METHOD,
+				</if>
+				<if test="searchRechargeMethod == null or searchRechargeMethod == '' or searchRechargeMethod==0">
+									'ALL' RECHARGE_METHOD,
+				</if>
+				<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+									AGENT_ID, AGENT_NM,
+				</if>
+				<if test="searchAgentId == null or searchAgentId == '' or searchAgentId==0">
+									'ALL' AGENT_ID, 'ALL' AGENT_NM,
+				</if>
+				<if test="searchRechargeAgentId != null and searchRechargeAgentId != '' and searchRechargeAgentId !=0  ">
+									RECHARGE_AGENT, 
+									RECHARGE_AGENT_NM,
+				</if>
+				<if test="searchRechargeAgentId == null or searchRechargeAgentId == '' or searchRechargeAgentId ==0  ">
+									'ALL' RECHARGE_AGENT, 
+									'ALL' RECHARGE_AGENT_NM,
+				</if>
+				 
+									RECHARGE_CNT, 
+									AMOUNT, 
+									IN_AMOUNT, 
+									VOICE_RECHARGE, 
+									FREE_RECHARGE
+									FROM ( 
+										SELECT
+												<if test="searchChgType != null  and  searchChgType != '' and searchChgType !=0" >
+													CHG_TYPE, F_GET_KT_CODE_NM('PPS_RCG','CHG_TYPE',CHG_TYPE) CHG_TYPE_NM,
+												</if>
+												<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+													TO_CHAR(RECHARGE_DATE, 'YYYY-MM') RECHARGE_DATE,
+												</if>
+												<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+									 	 			 TO_CHAR(RECHARGE_DATE, 'YYYY-MM-DD') RECHARGE_DATE,
+												 </if>
+												<if test="searchRechargeMethod != null and searchRechargeMethod != '' and searchRechargeMethod!=0">
+													RECHARGE_METHOD,
+												</if>
+												<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+													AGENT_ID, FN_GET_ORGNM(AGENT_ID) AGENT_NM,
+												</if>
+												<if test="searchRechargeAgentId != null and searchRechargeAgentId != '' and searchRechargeAgentId !=0  ">
+													RECHARGE_AGENT, FN_GET_ORGNM(RECHARGE_AGENT) RECHARGE_AGENT_NM,
+												</if>
+													
+							            COUNT(*) RECHARGE_CNT, 
+							            SUM(AMOUNT) AMOUNT, 
+							            SUM(IN_AMOUNT) IN_AMOUNT,
+							            SUM(DECODE(CHG_TYPE, 'V', AMOUNT, 0)) VOICE_RECHARGE, 
+							            SUM(DECODE(RECHARGE_METHOD, '일괄충전', AMOUNT, '자동충전', AMOUNT, '무료충전', AMOUNT, 0)) FREE_RECHARGE
+							    FROM PPS_RCG
+							    WHERE RECHARGE_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+									  AND RECHARGE_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+									  AND KT_RES_CODE = '0000'
+									  AND CANCEL_FLAG = 'N'
+									  AND RECHARGE_METHOD IN ('가상계좌', '현금충전', '일괄충전', '신용카드', '무료충전', '자동충전', '예치금충전', 'POS충전', '선불카드', '계좌이체', 'CMS충전', 'ATM(KT)')
+							   
+							   		 <if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+									    GROUP BY TO_CHAR(RECHARGE_DATE, 'YYYY-MM')
+									</if>
+									<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+									 	 GROUP BY TO_CHAR(RECHARGE_DATE, 'YYYY-MM-DD')
+									 </if>
+									<if test="searchChgType != null  and  searchChgType != '' and searchChgType !=0" >
+																		,CHG_TYPE
+									</if>
+									
+									<if test="searchRechargeMethod != null and searchRechargeMethod != '' and searchRechargeMethod!=0">
+																		,RECHARGE_METHOD
+									</if>
+									<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+																		,AGENT_ID
+									</if>
+									<if test="searchRechargeAgentId != null and searchRechargeAgentId != '' and searchRechargeAgentId !=0  ">
+																		,RECHARGE_AGENT
+									</if>
+					
+													ORDER BY RECHARGE_DATE DESC
+									<if test="searchChgType != null  and  searchChgType != '' and searchChgType !=0" >
+																		,CHG_TYPE ASC
+									</if>
+									<if test="searchRechargeMethod != null and searchRechargeMethod != '' and searchRechargeMethod!=0">
+																		,RECHARGE_METHOD ASC
+									</if>
+									<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+																		,AGENT_ID ASC
+									</if>
+									<if test="searchRechargeAgentId != null and searchRechargeAgentId != '' and searchRechargeAgentId !=0  ">
+																		,RECHARGE_AGENT ASC
+									</if>
+											)
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	 </select>
+	 
+	 <!--충전현황 목록조회 엑셀출력 -->
+     <select id="getSttcRechargeMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+         select
+				<if test="searchChgType != null  and  searchChgType != '' and searchChgType !=0" >
+									CHG_TYPE, CHG_TYPE_NM,
+				</if>
+				<if test="searchChgType == null  or  searchChgType == '' or searchChgType ==0" >
+									'ALL' AS CHG_TYPE_NM,
+				</if>
+					RECHARGE_DATE,
+				<if test="searchRechargeMethod != null and searchRechargeMethod != '' and searchRechargeMethod!=0">
+									RECHARGE_METHOD,
+				</if>
+				<if test="searchRechargeMethod == null or searchRechargeMethod == '' or searchRechargeMethod == 0">
+								'ALL' AS	RECHARGE_METHOD,
+				</if>
+				<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+									AGENT_ID, AGENT_NM,
+				</if>
+				<if test="searchAgentId == null or searchAgentId == '' or searchAgentId ==0">
+									'ALL' AS AGENT_NM,
+				</if>
+				<if test="searchRechargeAgentId != null and searchRechargeAgentId != '' and searchRechargeAgentId !=0  ">
+									RECHARGE_AGENT, 
+									RECHARGE_AGENT_NM,
+				</if>
+				<if test="searchRechargeAgentId == null or searchRechargeAgentId == '' or searchRechargeAgentId ==0  ">
+								  'ALL' AS	RECHARGE_AGENT_NM,
+				</if>
+						
+									RECHARGE_DATE, 
+									RECHARGE_CNT, 
+									AMOUNT, 
+									IN_AMOUNT, 
+									VOICE_RECHARGE, 
+									FREE_RECHARGE
+									FROM ( 
+										SELECT
+												<if test="searchChgType != null  and  searchChgType != '' and searchChgType !=0" >
+													CHG_TYPE, F_GET_KT_CODE_NM('PPS_RCG','CHG_TYPE',CHG_TYPE) CHG_TYPE_NM,
+												</if>
+												<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+													TO_CHAR(RECHARGE_DATE, 'YYYY-MM') RECHARGE_DATE,
+												</if>
+												<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+									 	 			 TO_CHAR(RECHARGE_DATE, 'YYYY-MM-DD') RECHARGE_DATE,
+												 </if>
+												<if test="searchRechargeMethod != null and searchRechargeMethod != '' and searchRechargeMethod!=0">
+													RECHARGE_METHOD,
+												</if>
+												<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+													NVL(AGENT_ID,'-') AGENT_ID, NVL(FN_GET_ORGNM(AGENT_ID),'-') AGENT_NM,
+												</if>
+												<if test="searchRechargeAgentId != null and searchRechargeAgentId != '' and searchRechargeAgentId !=0  ">
+													RECHARGE_AGENT, FN_GET_ORGNM(RECHARGE_AGENT) RECHARGE_AGENT_NM,
+												</if>
+									            COUNT(*) RECHARGE_CNT, 
+									            SUM(AMOUNT) AMOUNT, 
+									            SUM(IN_AMOUNT) IN_AMOUNT,
+									            SUM(DECODE(CHG_TYPE, 'V', AMOUNT, 0)) VOICE_RECHARGE, 
+									            SUM(DECODE(RECHARGE_METHOD, '일괄충전', AMOUNT, '자동충전', AMOUNT, '무료충전', AMOUNT, 0)) FREE_RECHARGE
+									    FROM PPS_RCG
+									    WHERE RECHARGE_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+											  AND RECHARGE_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+											  AND KT_RES_CODE = '0000'
+											  AND CANCEL_FLAG = 'N'
+											  AND RECHARGE_METHOD IN ('가상계좌', '현금충전', '일괄충전', '신용카드', '무료충전', '자동충전', '예치금충전', 'POS충전', '선불카드', '계좌이체', 'CMS충전', 'ATM(KT)')
+							    <if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+									    GROUP BY TO_CHAR(RECHARGE_DATE, 'YYYY-MM')
+									</if>
+									<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+									 	 GROUP BY TO_CHAR(RECHARGE_DATE, 'YYYY-MM-DD')
+									 </if>
+									<if test="searchChgType != null  and  searchChgType != '' and searchChgType !=0" >
+																		,CHG_TYPE
+									</if>
+									
+									<if test="searchRechargeMethod != null and searchRechargeMethod != '' and searchRechargeMethod!=0">
+																		,RECHARGE_METHOD
+									</if>
+									<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+																		,AGENT_ID
+									</if>
+									<if test="searchRechargeAgentId != null and searchRechargeAgentId != '' and searchRechargeAgentId !=0  ">
+																		,RECHARGE_AGENT
+									</if>
+					
+													ORDER BY RECHARGE_DATE DESC
+									<if test="searchChgType != null  and  searchChgType != '' and searchChgType !=0" >
+																		,CHG_TYPE ASC
+									</if>
+									<if test="searchRechargeMethod != null and searchRechargeMethod != '' and searchRechargeMethod!=0">
+																		,RECHARGE_METHOD ASC
+									</if>
+									<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+																		,AGENT_ID ASC
+									</if>
+									<if test="searchRechargeAgentId != null and searchRechargeAgentId != '' and searchRechargeAgentId !=0  ">
+																		,RECHARGE_AGENT ASC
+									</if>
+											)
+	 </select>
+	 
+	   <!--예치금입금현황 목록조회 -->
+    <select id="getSttcDepositInMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         			SELECT
+				<if test="searchDepositType != null and searchDepositType != '' and searchDepositType != 0">
+						DEPOSIT_TYPE, DEPOSIT_TYPE_NM,				
+				</if>
+				<if test="searchDepositType == null or searchDepositType == '' or searchDepositType == 0">
+						'ALL' DEPOSIT_TYPE, 'ALL' DEPOSIT_TYPE_NM,				
+				</if>
+				<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+								AGENT_ID, AGENT_NM,									
+				</if>
+				<if test="searchAgentId == null or searchAgentId == '' or searchAgentId == 0">
+								'ALL' AGENT_ID, 'ALL' AGENT_NM,									
+				</if>
+				<if test="searchVacBankNm != null and searchVacBankNm != '' and searchVacBankNm != 0">
+								VAC_BANK_CD,VAC_BANK_NAME,				
+				</if>
+				<if test="searchVacBankNm == null or searchVacBankNm == '' or searchVacBankNm == 0">
+								'ALL' VAC_BANK_CD,'ALL' VAC_BANK_NAME,				
+				</if>
+								DEPOSIT_DATE, 
+								RECHARGE
+								FROM ( 
+									SELECT 
+									<if test="searchDepositType != null and searchDepositType != '' and searchDepositType != 0">
+												DEPOSIT_TYPE, F_GET_KT_CODE_NM('PPS_AGENT_DEPOSIT','DEPOSIT_TYPE',DEPOSIT_TYPE) DEPOSIT_TYPE_NM,				
+									</if>
+									<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+													TO_CHAR(DEPOSIT_DATE, 'YYYY-MM') DEPOSIT_DATE,
+												</if>
+												<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+									 	 			 TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD') DEPOSIT_DATE,
+												 </if>
+									<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+												AGENT_ID, FN_GET_ORGNM(AGENT_ID) AGENT_NM,
+									</if>
+									<if test="searchVacBankNm != null and searchVacBankNm != '' and searchVacBankNm != 0">
+												VAC_BANK_CD, f_get_kt_code_nm('PPS_RCG_VAC', 'PAY_BANK_CODE', VAC_BANK_CD) AS VAC_BANK_NAME,				
+									</if>						
+												
+											  SUM(RECHARGE) RECHARGE
+									FROM V_STATS_PLUS_DEPOSIT
+									WHERE DEPOSIT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+									AND DEPOSIT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+									<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+									    GROUP BY TO_CHAR(DEPOSIT_DATE, 'YYYY-MM')
+									</if>
+									<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+									 	 GROUP BY TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD')
+									 </if>			
+									<if test="searchDepositType != null and searchDepositType != '' and searchDepositType!= 0">
+															, DEPOSIT_TYPE
+									</if>
+									<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+															,AGENT_ID
+									</if>
+									<if test="searchVacBankNm != null and searchVacBankNm != '' and searchVacBankNm != 0">
+															,VAC_BANK_CD
+									</if>
+							)
+            <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	 </select>
+	 
+	   <!--예치금입금현황 목록조회 엑셀출력-->
+    <select id="getSttcDepositInMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+         		SELECT
+				<if test="searchDepositType != null and searchDepositType != '' and searchDepositType != 0">
+						DEPOSIT_TYPE, DEPOSIT_TYPE_NM,				
+				</if>
+				<if test="searchDepositType == null or searchDepositType == '' or searchDepositType == 0">
+						'ALL' AS  DEPOSIT_TYPE_NM,				
+				</if>
+				<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+								AGENT_ID, AGENT_NM,									
+				</if>
+				<if test="searchAgentId == null or searchAgentId == '' or searchAgentId == 0">
+								'ALL' AS AGENT_NM,									
+				</if>
+				<if test="searchVacBankNm != null and searchVacBankNm != '' and searchVacBankNm != 0">
+								VAC_BANK_CD,VAC_BANK_NAME,				
+				</if>
+				<if test="searchVacBankNm == null or searchVacBankNm == '' or searchVacBankNm == 0">
+								'ALL' AS VAC_BANK_NAME,				
+				</if>
+								DEPOSIT_DATE, 
+								RECHARGE
+								FROM ( 
+									SELECT 
+									<if test="searchDepositType != null and searchDepositType != '' and searchDepositType != 0">
+												DEPOSIT_TYPE, F_GET_KT_CODE_NM('PPS_AGENT_DEPOSIT','DEPOSIT_TYPE',DEPOSIT_TYPE) DEPOSIT_TYPE_NM,				
+									</if>
+									<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+													TO_CHAR(DEPOSIT_DATE, 'YYYY-MM') DEPOSIT_DATE,
+												</if>
+												<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+									 	 			 TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD') DEPOSIT_DATE,
+												 </if>
+									<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+												AGENT_ID, FN_GET_ORGNM(AGENT_ID) AGENT_NM,
+									</if>
+									<if test="searchVacBankNm != null and searchVacBankNm != '' and searchVacBankNm != 0">
+												VAC_BANK_CD, f_get_kt_code_nm('PPS_RCG_VAC', 'PAY_BANK_CODE', VAC_BANK_CD) AS VAC_BANK_NAME,				
+									</if>
+											  SUM(RECHARGE) RECHARGE
+									FROM V_STATS_PLUS_DEPOSIT
+									WHERE DEPOSIT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+									AND DEPOSIT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+									<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+									    GROUP BY TO_CHAR(DEPOSIT_DATE, 'YYYY-MM')
+									</if>
+									<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+									 	 GROUP BY TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD')
+									 </if>			
+									<if test="searchDepositType != null and searchDepositType != '' and searchDepositType!= 0">
+															, DEPOSIT_TYPE
+									</if>
+									<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+															,AGENT_ID
+									</if>
+									<if test="searchVacBankNm != null and searchVacBankNm != '' and searchVacBankNm != 0">
+															,VAC_BANK_CD
+									</if>
+							)
+	 </select>
+	 
+	    <!--예치금출금현황 목록조회 -->
+    <select id="getSttcDepositOutMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         					SELECT
+								DEPOSIT_DATE,
+							<if test="searchAgentId != null and searchAgentId != ''and searchAgentId!=0 ">
+								AGENT_ID,AGENT_NM,
+							</if>
+							<if test="searchAgentId == null or searchAgentId == '' or searchAgentId==0 ">
+								'ALL' AGENT_ID,'ALL' AGENT_NM,
+							</if>
+							<if test="searchDepositType != null and searchDepositType != '' and searchDepositType!=0">
+								DEPOSIT_TYPE, DEPOSIT_TYPE_NM,
+							</if>
+							<if test="searchDepositType == null or searchDepositType == '' or searchDepositType==0">
+								'ALL' DEPOSIT_TYPE, 'ALL' DEPOSIT_TYPE_NM,
+							</if>
+								RECHARGE
+								FROM(        
+										SELECT
+											<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+												AGENT_ID, FN_GET_ORGNM(AGENT_ID) AGENT_NM,
+											</if>
+											<if test="searchDepositType != null and searchDepositType != '' and searchDepositType != 0 ">
+												DEPOSIT_TYPE, F_GET_KT_CODE_NM('PPS_AGENT_DEPOSIT', 'DEPOSIT_TYPE', DEPOSIT_TYPE) DEPOSIT_TYPE_NM,
+											</if>
+											<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+													TO_CHAR(DEPOSIT_DATE, 'YYYY-MM') DEPOSIT_DATE,
+											</if>
+											<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+									 	 			 TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD') DEPOSIT_DATE,
+											 </if>
+												SUM(RECHARGE) RECHARGE
+												FROM V_STATS_MINUS_DEPOSIT
+												WHERE DEPOSIT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+													AND DEPOSIT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+												<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+												    GROUP BY TO_CHAR(DEPOSIT_DATE, 'YYYY-MM')
+												</if>
+												<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+												 	 GROUP BY TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD')
+												 </if>	
+												<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+															, AGENT_ID
+												</if>
+												<if test="searchDepositType != null and searchDepositType != '' and searchDepositType!=0 ">
+															, DEPOSIT_TYPE
+												</if>
+				
+												ORDER BY DEPOSIT_DATE
+												<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+															, AGENT_ID
+												</if>
+												<if test="searchDepositType != null and searchDepositType != '' and searchDepositType !=0 ">
+															, DEPOSIT_TYPE
+												</if>
+							)
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	 </select>
+       
+        <!--예치금출금현황 목록조회엑셀출력 -->
+       <select id="getSttcDepositOutMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+       					SELECT
+								DEPOSIT_DATE,
+							<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+								AGENT_ID,AGENT_NM,
+							</if>
+							<if test="searchAgentId == null or searchAgentId == '' or searchAgentId == 0">
+								 'ALL' AS AGENT_NM,
+							</if>
+							<if test="searchDepositType != null and searchDepositType != '' and searchDepositType!=0">
+								DEPOSIT_TYPE, DEPOSIT_TYPE_NM,
+							</if>
+							<if test="searchDepositType == null or searchDepositType == '' or searchDepositType == 0">
+								'ALL' AS DEPOSIT_TYPE_NM,
+							</if>
+								RECHARGE
+								FROM(        
+										SELECT
+											<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+												AGENT_ID, FN_GET_ORGNM(AGENT_ID) AGENT_NM,
+											</if>
+											<if test="searchDepositType != null and searchDepositType != '' and searchDepositType != 0 ">
+												DEPOSIT_TYPE, F_GET_KT_CODE_NM('PPS_AGENT_DEPOSIT', 'DEPOSIT_TYPE', DEPOSIT_TYPE) DEPOSIT_TYPE_NM,
+											</if>
+											<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+													TO_CHAR(DEPOSIT_DATE, 'YYYY-MM') DEPOSIT_DATE,
+											</if>
+											<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+									 	 			 TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD') DEPOSIT_DATE,
+											 </if>
+												SUM(RECHARGE) RECHARGE
+												FROM V_STATS_MINUS_DEPOSIT
+												WHERE DEPOSIT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+													AND DEPOSIT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+												<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+												    GROUP BY TO_CHAR(DEPOSIT_DATE, 'YYYY-MM')
+												</if>
+												<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+												 	 GROUP BY TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD')
+												 </if>	
+												<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != 0">
+															, AGENT_ID
+												</if>
+												<if test="searchDepositType != null and searchDepositType != '' and searchDepositType!=0 ">
+															, DEPOSIT_TYPE
+												</if>
+				
+												ORDER BY DEPOSIT_DATE
+												<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+															, AGENT_ID
+												</if>
+												<if test="searchDepositType != null and searchDepositType != '' and searchDepositType !=0 ">
+															, DEPOSIT_TYPE
+												</if>
+							)
+	 </select>
+       
+    <!--사용현황 목록조회 -->
+    <select id="getSttcUseMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+       	SELECT		<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+						TO_CHAR(CALL_DATE, 'YYYY-MM') CALL_DATE,
+					</if>
+					<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+						 TO_CHAR(CALL_DATE, 'YYYY-MM-DD') CALL_DATE,
+					</if>
+		        	SUM(DAY_MINUS_CNT) DAY_MINUS_CNT,
+		      	  SUM(DAY_MINUS_AMOUNT) DAY_MINUS_AMOUNT,
+			  	    SUM(IN_CALL_DURATION) IN_CALL_DURATION,
+				    	SUM(IN_CALL_AMOUNT) IN_CALL_AMOUNT,
+					    SUM(OUT_CALL_DURATION) OUT_CALL_DURATION,
+					    SUM(OUT_CALL_AMOUNT) OUT_CALL_AMOUNT,
+					    TRUNC((SUM(IN_DATA_PKT_DURATION)/1024)/1024,0) IN_DATA_PKT_DURATION, 
+					    SUM(IN_DATA_PKT_AMOUNT) IN_DATA_PKT_AMOUNT,
+					    SUM(IN_SMS_CNT) IN_SMS_CNT, 
+					    SUM(IN_SMS_AMOUNT) IN_SMS_AMOUNT,
+					    SUM(OUT_SMS_CNT) OUT_SMS_CNT,
+					    SUM(OUT_SMS_AMOUNT) OUT_SMS_AMOUNT,
+					    SUM(ETC_CNT) ETC_CNT,
+					    SUM(ETC_AMOUNT) ETC_AMOUNT,
+					    SUM(CHARGE) CHARGE
+		FROM PPS_STATS_CALL
+		WHERE CALL_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND CALL_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+			    GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM')
+		</if>
+		<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+			 	 GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM-DD')
+		</if>	
+		ORDER BY CALL_DATE DESC
+        <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	 </select> 
+	 
+	 <!--사용현황 목록조회 엑셀출력 -->
+	 <select id="getSttcUseMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+             SELECT		<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+						TO_CHAR(CALL_DATE, 'YYYY-MM') CALL_DATE,
+					</if>
+					<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+						 TO_CHAR(CALL_DATE, 'YYYY-MM-DD') CALL_DATE,
+					</if>
+		        	SUM(DAY_MINUS_CNT) DAY_MINUS_CNT,
+		      	  SUM(DAY_MINUS_AMOUNT) DAY_MINUS_AMOUNT,
+			  	    SUM(IN_CALL_DURATION) IN_CALL_DURATION,
+				    	SUM(IN_CALL_AMOUNT) IN_CALL_AMOUNT,
+					    SUM(OUT_CALL_DURATION) OUT_CALL_DURATION,
+					    SUM(OUT_CALL_AMOUNT) OUT_CALL_AMOUNT,
+					    TRUNC((SUM(IN_DATA_PKT_DURATION)/1024)/1024,0) IN_DATA_PKT_DURATION, 
+					    SUM(IN_DATA_PKT_AMOUNT) IN_DATA_PKT_AMOUNT,
+					    SUM(IN_SMS_CNT) IN_SMS_CNT, 
+					    SUM(IN_SMS_AMOUNT) IN_SMS_AMOUNT,
+					    SUM(OUT_SMS_CNT) OUT_SMS_CNT,
+					    SUM(OUT_SMS_AMOUNT) OUT_SMS_AMOUNT,
+					    SUM(ETC_CNT) ETC_CNT,
+					    SUM(ETC_AMOUNT) ETC_AMOUNT,
+					    SUM(CHARGE) CHARGE
+		FROM PPS_STATS_CALL
+		WHERE CALL_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		AND CALL_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+			    GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM')
+		</if>
+		<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+			 	 GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM-DD')
+		</if>	
+		ORDER BY CALL_DATE DESC
+	 </select> 
+     
+      <!--국제현황 목록조회 -->
+    <select id="getSttcIntrnMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         SELECT
+						CALL_CNT,
+						CALL_TIME,
+						CALL_AMOUNT,
+						SMS_CNT,
+						SMS_AMOUNT,						
+				<if test="searchTelcoPx != null and searchTelcoPx != '' and searchTelcoPx!=0">
+						TELCO_PX,
+				</if>
+				<if test="searchTelcoPx == null or searchTelcoPx == '' or searchTelcoPx==0">
+						'ALL' TELCO_PX,
+				</if>
+				<if test="searchPreFix != null and searchPreFix != '' and searchPreFix!=0">
+						prefix, prefix_nm,
+				</if>
+				<if test="searchPreFix == null or searchPreFix == '' or searchPreFix==0">
+						'ALL' prefix, 'ALL' prefix_nm,
+				</if>
+						CALL_DATE
+				from(        
+						select
+							<if test="searchTelcoPx != null and searchTelcoPx != ''and searchTelcoPx!=0">
+									TELCO_PX,
+							</if>
+							<if test="searchPreFix != null and searchPreFix != '' and searchPreFix!=0">
+									PREFIX, F_GET_PREFIX_NM(PREFIX) PREFIX_NM,
+							</if>
+							<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+									TO_CHAR(CALL_DATE, 'YYYY-MM') CALL_DATE,
+							</if>
+							<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+						 			TO_CHAR(CALL_DATE, 'YYYY-MM-DD') CALL_DATE,
+							</if>
+								SUM(CALL_CNT) CALL_CNT,
+								SUM(CALL_TIME) CALL_TIME,
+								SUM(CALL_AMOUNT) CALL_AMOUNT,
+								SUM(SMS_CNT) SMS_CNT,	
+								SUM(SMS_AMOUNT) SMS_AMOUNT
+						FROM PPS_STATS_KJ_CALL
+						WHERE CALL_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+								AND CALL_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+								AND TELCO_PX IS NOT NULL
+				<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+			   		 GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM')
+				</if>
+				<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+					 	 GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM-DD')
+				</if>	
+				<if test="searchTelcoPx != null and searchTelcoPx != '' and  searchTelcoPx!=0">
+						,TELCO_PX
+				</if>
+				<if test="searchPreFix != null and searchPreFix != '' and searchPreFix!=0 ">
+						,PREFIX
+				</if>
+						ORDER BY CALL_DATE DESC
+						)
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	 </select> 
+	 
+	     <!--국제현황 목록조회 엑셀출력-->
+    <select id="getSttcIntrnMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+       SELECT
+						CALL_CNT,
+						CALL_TIME,
+						CALL_AMOUNT,
+						SMS_CNT,
+						SMS_AMOUNT,						
+				<if test="searchTelcoPx != null and searchTelcoPx != '' and searchTelcoPx!=0">
+						TELCO_PX,
+				</if>
+				<if test="searchTelcoPx == null or searchTelcoPx == '' or searchTelcoPx==0">
+						'ALL' AS TELCO_PX,
+				</if>
+				<if test="searchPreFix != null and searchPreFix != '' and searchPreFix!=0">
+						PREFIX, PREFIX_NM,
+				</if>
+				<if test="searchPreFix == null or searchPreFix == '' or searchPreFix==0">
+						'ALL' AS PREFIX_NM,
+				</if>
+				
+						CALL_DATE
+				from(        
+						select
+							<if test="searchTelcoPx != null and searchTelcoPx != ''and searchTelcoPx!=0">
+									TELCO_PX,
+							</if>
+							<if test="searchPreFix != null and searchPreFix != '' and searchPreFix!=0">
+									PREFIX, F_GET_PREFIX_NM(PREFIX) PREFIX_NM,
+							</if>
+							<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+									TO_CHAR(CALL_DATE, 'YYYY-MM') CALL_DATE,
+							</if>
+							<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+						 			TO_CHAR(CALL_DATE, 'YYYY-MM-DD') CALL_DATE,
+							</if>
+								SUM(CALL_CNT) CALL_CNT,
+								SUM(CALL_TIME) CALL_TIME,
+								SUM(CALL_AMOUNT) CALL_AMOUNT,
+								SUM(SMS_CNT) SMS_CNT,	
+								SUM(SMS_AMOUNT) SMS_AMOUNT
+						FROM PPS_STATS_KJ_CALL
+						WHERE CALL_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+								AND CALL_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+								AND TELCO_PX IS NOT NULL
+				<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+			   		 GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM')
+				</if>
+				<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+					 	 GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM-DD')
+				</if>	
+				<if test="searchTelcoPx != null and searchTelcoPx != '' and  searchTelcoPx!=0">
+						,TELCO_PX
+				</if>
+				<if test="searchPreFix != null and searchPreFix != '' and searchPreFix!=0 ">
+						,PREFIX
+				</if>
+						ORDER BY CALL_DATE DESC
+						)
+         
+    </select> 
+    
+     <!--선불 카드 통계목록조회 -->
+      <select id="getSttcCardMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         	SELECT
+				A.CREATE_PIN_CNT,
+				A.PIN_OUT_CNT,
+				A.PIN_NON_OUT_CNT,
+				A.PIN_OPEN_CNT,
+				A.OPEN_CHARGE,
+				A.NON_OPEN_CNT,
+				A.RCG_CNT,
+				A.RCG_CHARGE,
+				A.RCG_NON_CNT,
+				<if test="searchOnOffGubun != null and searchOnOffGubun != '' and searchOnOffGubun!=0">
+								A.ONOFF_GUBUN, A.ONOFF_GUBUN_NM,
+				</if>
+				<if test="searchOnOffGubun == null or searchOnOffGubun == '' or searchOnOffGubun==0">
+								'ALL' ONOFF_GUBUN_NM,
+				</if>
+				
+								A.PIN_GUBUN, A.PIN_GUBUN_NM,
+				
+				 A.CR_DATE
+	 		 FROM(        
+			 		SELECT
+				<if test="searchOnOffGubun != null and searchOnOffGubun != '' and searchOnOffGubun!=0">
+								ONOFF_GUBUN, F_GET_KT_CODE_NM('PPS_PIN_INFO', 'ONOFF_GUBUN', ONOFF_GUBUN) ONOFF_GUBUN_NM,
+				</if>
+				
+								PIN_GUBUN, F_GET_KT_CODE_NM('PPS_PIN_INFO', 'PIN_GUBUN', PIN_GUBUN) PIN_GUBUN_NM, 
+				
+				<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+								TO_CHAR(CR_DATE, 'YYYY-MM') CR_DATE,
+				</if>
+				<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+					 			TO_CHAR(CR_DATE, 'YYYY-MM-DD') CR_DATE,
+				</if>
+								SUM(CREATE_PIN_CNT) CREATE_PIN_CNT,
+								SUM(PIN_OUT_CNT) PIN_OUT_CNT,
+								SUM(PIN_NON_OUT_CNT) PIN_NON_OUT_CNT,
+								SUM(PIN_OPEN_CNT) PIN_OPEN_CNT,
+								SUM(OPEN_CHARGE) OPEN_CHARGE,
+								SUM(NON_OPEN_CNT) NON_OPEN_CNT,
+								SUM(RCG_CNT) RCG_CNT,
+								SUM(RCG_CHARGE) RCG_CHARGE,
+								SUM(RCG_NON_CNT) RCG_NON_CNT
+						FROM V_STATS_CARD
+						WHERE CR_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+						AND CR_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+					<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0">
+			   		 GROUP BY TO_CHAR(CR_DATE, 'YYYY-MM')
+				</if>
+				<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0">
+					 	 GROUP BY TO_CHAR(CR_DATE, 'YYYY-MM-DD')
+				</if>	
+				<if test="searchOnOffGubun != null and searchOnOffGubun != ''and searchOnOffGubun!=0">
+						, ONOFF_GUBUN
+				</if>
+				
+						, PIN_GUBUN
+				
+						ORDER BY CR_DATE
+				<if test="searchOnOffGubun != null and searchOnOffGubun != '' and searchOnOffGubun!=0">
+						, ONOFF_GUBUN
+				</if>
+				
+						, PIN_GUBUN
+				
+						) A
+						
+           <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	 </select> 
+	 
+	 
+	 <!--선불 카드 통계목록조회엑셀출력 -->
+      <select id="getSttcCardMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+          	SELECT
+				A.CREATE_PIN_CNT,
+				A.PIN_OUT_CNT,
+				A.PIN_NON_OUT_CNT,
+				A.PIN_OPEN_CNT,
+				A.OPEN_CHARGE,
+				A.NON_OPEN_CNT,
+				A.RCG_CNT,
+				A.RCG_CHARGE,
+				A.RCG_NON_CNT,
+				<if test="searchOnOffGubun != null and searchOnOffGubun != '' and searchOnOffGubun!=0">
+								A.ONOFF_GUBUN, A.ONOFF_GUBUN_NM,
+				</if>
+				<if test="searchOnOffGubun == null or searchOnOffGubun == '' or searchOnOffGubun==0">
+							    'ALL' AS ONOFF_GUBUN_NM,
+				</if>
+				
+								A.PIN_GUBUN, A.PIN_GUBUN_NM,
+				
+				
+				 A.CR_DATE
+	 		 FROM(        
+			 		SELECT
+				<if test="searchOnOffGubun != null and searchOnOffGubun != '' and searchOnOffGubun!=0">
+								ONOFF_GUBUN, F_GET_KT_CODE_NM('PPS_PIN_INFO', 'ONOFF_GUBUN', ONOFF_GUBUN) ONOFF_GUBUN_NM,
+				</if>
+				
+								PIN_GUBUN, F_GET_KT_CODE_NM('PPS_PIN_INFO', 'PIN_GUBUN', PIN_GUBUN) PIN_GUBUN_NM, 
+				
+				<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+								TO_CHAR(CR_DATE, 'YYYY-MM') CR_DATE,
+				</if>
+				<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+					 			TO_CHAR(CR_DATE, 'YYYY-MM-DD') CR_DATE,
+				</if>
+								SUM(CREATE_PIN_CNT) CREATE_PIN_CNT,
+								SUM(PIN_OUT_CNT) PIN_OUT_CNT,
+								SUM(PIN_NON_OUT_CNT) PIN_NON_OUT_CNT,
+								SUM(PIN_OPEN_CNT) PIN_OPEN_CNT,
+								SUM(OPEN_CHARGE) OPEN_CHARGE,
+								SUM(NON_OPEN_CNT) NON_OPEN_CNT,
+								SUM(RCG_CNT) RCG_CNT,
+								SUM(RCG_CHARGE) RCG_CHARGE,
+								SUM(RCG_NON_CNT) RCG_NON_CNT
+						FROM V_STATS_CARD
+						WHERE CR_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+						AND CR_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+					<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0">
+			   		 GROUP BY TO_CHAR(CR_DATE, 'YYYY-MM')
+				</if>
+				<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0">
+					 	 GROUP BY TO_CHAR(CR_DATE, 'YYYY-MM-DD')
+				</if>	
+				<if test="searchOnOffGubun != null and searchOnOffGubun != ''and searchOnOffGubun!=0">
+						, ONOFF_GUBUN
+				</if>
+				
+						, PIN_GUBUN
+				
+						ORDER BY CR_DATE
+				<if test="searchOnOffGubun != null and searchOnOffGubun != '' and searchOnOffGubun!=0">
+						, ONOFF_GUBUN
+				</if>
+				
+						, PIN_GUBUN
+				
+						) A
+	 </select>
+	 
+	 <!--ARPU분석통계 목록조회 -->
+    <select id="getSttcArpuMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+       <include refid="com.ktis.msp.cmn.include.paging-start" />
+       
+		  SELECT 
+		   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+		  		A.STAT_MONTH,
+		  </if>
+		   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+             	A.ENTER_DATE,	   
+		   </if>		  
+       A.SOC,
+       (SELECT RATE_NM SERVICE_NM 
+         FROM MSP_RATE_MST 
+        WHERE RATE_CD = A.SOC 
+              AND ROWNUM = 1
+       ) AS SOC_NM,
+       COUNT(*) AS TOT_CNT,
+       SUM(DECODE(B.GENDER,'1',1,'3',1,'5',1,'7',1,0)) AS TOT_M_CNT,
+       SUM(DECODE(B.GENDER,'2',1,'4',1,'6',1,'8',1,0)) AS TOT_F_CNT,
+       SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,1)) AS TOT_ETC_CNT,
+       ROUND(SUM(DECODE(B.GENDER,'1',1,'3',1,'5',1,'7',1,0)) /COUNT(*) *100,2)  AS M_CNT_PER,
+       ROUND(SUM(DECODE(B.GENDER,'2',1,'4',1,'6',1,'8',1,0)) /COUNT(*) *100,2)   AS F_CNT_PER,                                                                            
+       ROUND(SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,1))/COUNT(*) * 100,2) AS ETC_CNT_PER,  
+       SUM(DECODE(B.GENDER,'1',A.USE_CHARGE,'3',A.USE_CHARGE,'5',A.USE_CHARGE,'7',A.USE_CHARGE,0)) AS M_USE_CHARGE,
+       SUM(DECODE(B.GENDER,'2',A.USE_CHARGE,'4',A.USE_CHARGE,'6',A.USE_CHARGE,'8',A.USE_CHARGE,0)) AS F_USE_CHARGE,
+       SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,A.USE_CHARGE)) AS ETC_USE_CHARGE,
+       ROUND(DECODE(SUM(DECODE(B.GENDER,'1',A.USE_CHARGE,'3',A.USE_CHARGE,'5',A.USE_CHARGE,'7',A.USE_CHARGE,0)),0,0,SUM(DECODE(B.GENDER,'1',A.USE_CHARGE,'3',A.USE_CHARGE,'5',A.USE_CHARGE,'7',A.USE_CHARGE,0))/ SUM(DECODE(B.GENDER,'1',1,'3',1,'5',1,'7',1,0)) ),2)AS AVG_M_USE_CHARGE,
+       ROUND(DECODE(SUM(DECODE(B.GENDER,'2',A.USE_CHARGE,'4',A.USE_CHARGE,'6',A.USE_CHARGE,'8',A.USE_CHARGE,0)),0,0,SUM(DECODE(B.GENDER,'2',A.USE_CHARGE,'4',A.USE_CHARGE,'6',A.USE_CHARGE,'8',A.USE_CHARGE,0))/ SUM(DECODE(B.GENDER,'2',1,'4',1,'6',1,'8',1,0)) ),2)AS AVG_F_USE_CHARGE,
+       ROUND(DECODE(SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,A.USE_CHARGE)),0,0, SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,A.USE_CHARGE))/SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,1))),2)  AS AVG_ETC_USE_CHARGE,
+       SUM(A.USE_CHARGE) AS SUM_REAL_USE_CHARGE,
+       ROUND(SUM(A.USE_CHARGE)/COUNT(*),2)   AS APRU_CHARGE,
+       SUM(A.USE_TERM) AS SUM_USE_TERM,
+       ROUND(SUM(A.USE_TERM) / COUNT(*),2) AS AVG_USE_TERM,  
+       SUM(A.USE_CHARGE) AS SUM_USE_CHAGE,
+       ROUND(SUM(A.USE_CHARGE) / COUNT(*),2) AS AVG_USE_CHARGE, 
+       SUM(A.RCG_FREE_CHARGE) AS SUM_RCG_FREE_CHARGE,
+       ROUND(SUM(A.RCG_FREE_CHARGE) / COUNT(*),2) AS AVG_RCG_FREE_CHARGE,
+       SUM(A.RCG_PAY_CHARGE) AS SUM_RCG_PAY_CHARGE,
+       ROUND(SUM(A.RCG_PAY_CHARGE) / COUNT(*),2) AS AVG_RCG_PAY_CHARGE,
+       SUM(A.DAY_CHARGE) AS SUM_DAY_CHARGE,  
+       ROUND(SUM(A.DAY_CHARGE) / COUNT(*),2) AS AVG_DAY_CHARGE,  
+       SUM(A.VOC_N_CHARGE) AS SUM_VOC_N_CHARGE,
+       ROUND(SUM(A.VOC_N_CHARGE) / COUNT(*),2) AS AVG_VOC_N_CHARGE,       
+       SUM(A.VOC_I_CHARGE) AS SUM_VOC_I_CHARGE,
+       ROUND(SUM(A.VOC_I_CHARGE) / COUNT(*),2) AS AVG_VOC_I_CHARGE,  
+       SUM(A.SMS_N_CHARGE) AS SUM_SMS_N_CHARGE,
+       ROUND(SUM(A.SMS_N_CHARGE) / COUNT(*),2) AS AVG_SMS_N_CHARGE,  
+       SUM(A.SMS_I_CHARGE) AS SUM_SMS_I_CHARGE,
+       ROUND(SUM(A.SMS_I_CHARGE) / COUNT(*),2) AS AVG_SMS_I_CHARGE,  
+       SUM(A.PKT_N_CHARGE) AS SUM_PKT_N_CHARGE,
+       ROUND(SUM(A.PKT_N_CHARGE) / COUNT(*),2) AS AVG_PKT_N_CHARGE,
+       SUM(A.PKT_I_CHARGE) AS SUM_PKT_I_CHARGE,
+       ROUND( SUM(A.PKT_I_CHARGE) / COUNT(*),2) AS AVG_PKT_I_CHARGE,     
+       <if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+	     A.AGENT_ID,
+		  F_GET_AGENT_NM(AGENT_ID) AGENT_NM,    				  
+		</if>          
+		<if test="searchAgentId == null or searchAgentId == '' or searchAgentId==0">
+			 'ALL' AS AGENT_ID,
+		     'ALL' AS AGENT_NM,    	
+		</if>
+		 <if test="searchNation != null and searchNation != '' and searchNation!=0">
+	     A.AD_NATION,
+		 DECODE(AD_NATION,'','미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', AD_NATION)) AD_NATION_NM,     				  
+		</if>          
+		<if test="searchNation == null or searchNation == '' or searchNation==0">
+			 'ALL' AS AD_NATION,
+		     'ALL' AS AD_NATION_NM,    	
+		</if>    
+     SUM(A.ETC_CHARGE) AS SUM_ETC_CHARGE,
+     ROUND(SUM(A.ETC_CHARGE) / COUNT(*),2) AS AVG_ETC_CHARGE
+  FROM (SELECT 
+  			   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+  			   		/*+ index_desc(C PPS_STATS_CDR_PK)*/
+			   		TO_CHAR(STAT_MONTH, 'YYYY-MM') STAT_MONTH,
+			   </if>
+			   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+			   		/*+ INDEX_DESC(C PPS_STATS_CDR_ENTER_DT_IDX)*/
+	             	TO_CHAR(ENTER_DATE, 'YYYY-MM') ENTER_DATE,	   
+			   </if>
+			   CONTRACT_NUM,
+               SOC,
+               SUM(USE_CHARGE) USE_CHARGE,
+               MAX(USE_TERM) USE_TERM,
+               SUM(RCG_FREE_CHARGE) RCG_FREE_CHARGE,
+               SUM(RCG_PAY_CHARGE) RCG_PAY_CHARGE,
+               SUM(DAY_CHARGE)  DAY_CHARGE,
+               SUM(VOC_N_CHARGE)  VOC_N_CHARGE,
+               SUM(VOC_I_CHARGE)  VOC_I_CHARGE,
+               SUM(SMS_N_CHARGE)  SMS_N_CHARGE,
+               SUM(SMS_I_CHARGE)  SMS_I_CHARGE,
+               SUM(PKT_N_CHARGE)  PKT_N_CHARGE,
+               SUM(PKT_I_CHARGE)  PKT_I_CHARGE,
+               SUM(ETC_CHARGE)  ETC_CHARGE,
+               AGENT_ID,
+               AD_NATION
+        FROM PPS_STATS_CDR C
+        WHERE 1=1
+        <if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+		   <if test="searchDate != null and searchDate != '' ">
+				AND STAT_MONTH >= TO_DATE(#{searchDate}, 'YYYYMM')
+				AND STAT_MONTH &lt; add_months(TO_DATE(#{searchDate},'yyyymm'), 1) 				    
+		   </if>
+	   </if>
+	   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+	   	   <if test="searchDate != null and searchDate != '' ">
+	   	   		AND ENTER_DATE >= TO_DATE(#{searchDate}, 'YYYYMM')
+				AND ENTER_DATE &lt; add_months(TO_DATE(#{searchDate},'yyyymm'), 1) 		   
+	       </if>
+	   </if>
+        GROUP BY CONTRACT_NUM, SOC, AGENT_ID, AD_NATION,
+        		<if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+			   		TO_CHAR(STAT_MONTH, 'YYYY-MM')
+			    </if>
+			    <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+	             	TO_CHAR(ENTER_DATE, 'YYYY-MM')	   
+			    </if> 
+        ) A,
+  	   MSP_JUO_SUB_INFO B
+  WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+ 		AND B.SUB_STATUS IN ('A','S')
+ 		
+  <if test="searchType != null and searchType != '' and searchType == 'under'">
+  	<if test="searchName != null and searchName != ''">
+ 	  AND  A.USE_TERM &lt;= #{searchName}
+ 	  </if>
+  </if>
+   <if test="searchType != null and searchType != '' and searchType == 'over'">
+  	<if test="searchName != null and searchName != ''">
+ 	  AND  A.USE_TERM >= #{searchName}
+ 	  </if>
+  </if>
+  
+ GROUP BY  A.SOC
+    <if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+	   ,A.STAT_MONTH
+	 </if>
+	  <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+      	,A.ENTER_DATE   
+	</if>		
+ 	 <if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">	
+	 	,AGENT_ID
+	 </if>
+	 <if test="searchNation != null and searchNation != '' and searchNation!=0">	
+	 	,AD_NATION
+	 </if>
+ 
+  		 <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	 </select>
+	 
+	 
+	 
+	 
+	  <!--ARPU분석통계엑셀출력 -->
+      <select id="getSttcArpuMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		  SELECT 
+		   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+		  		A.STAT_MONTH,
+		  </if>
+		   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+             	A.ENTER_DATE,	   
+		   </if>		  
+       NVL(A.SOC, '-') SOC,
+       (SELECT NVL(RATE_NM, '-') SERVICE_NM 
+         FROM MSP_RATE_MST 
+        WHERE RATE_CD = A.SOC 
+              AND ROWNUM = 1
+       ) AS SOC_NM,
+       COUNT(*) AS TOT_CNT,
+       SUM(DECODE(B.GENDER,'1',1,'3',1,'5',1,'7',1,0)) AS TOT_M_CNT,
+       SUM(DECODE(B.GENDER,'2',1,'4',1,'6',1,'8',1,0)) AS TOT_F_CNT,
+       SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,1)) AS TOT_ETC_CNT,
+       ROUND(SUM(DECODE(B.GENDER,'1',1,'3',1,'5',1,'7',1,0)) /COUNT(*) *100,2)  AS M_CNT_PER,
+       ROUND(SUM(DECODE(B.GENDER,'2',1,'4',1,'6',1,'8',1,0)) /COUNT(*) *100,2)   AS F_CNT_PER,                                                                            
+       ROUND(SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,1))/COUNT(*) * 100,2) AS ETC_CNT_PER,  
+       SUM(DECODE(B.GENDER,'1',A.USE_CHARGE,'3',A.USE_CHARGE,'5',A.USE_CHARGE,'7',A.USE_CHARGE,0)) AS M_USE_CHARGE,
+       SUM(DECODE(B.GENDER,'2',A.USE_CHARGE,'4',A.USE_CHARGE,'6',A.USE_CHARGE,'8',A.USE_CHARGE,0)) AS F_USE_CHARGE,
+       SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,A.USE_CHARGE)) AS ETC_USE_CHARGE,
+       ROUND(DECODE(SUM(DECODE(B.GENDER,'1',A.USE_CHARGE,'3',A.USE_CHARGE,'5',A.USE_CHARGE,'7',A.USE_CHARGE,0)),0,0,SUM(DECODE(B.GENDER,'1',A.USE_CHARGE,'3',A.USE_CHARGE,'5',A.USE_CHARGE,'7',A.USE_CHARGE,0))/ SUM(DECODE(B.GENDER,'1',1,'3',1,'5',1,'7',1,0)) ),2)AS AVG_M_USE_CHARGE,
+       ROUND(DECODE(SUM(DECODE(B.GENDER,'2',A.USE_CHARGE,'4',A.USE_CHARGE,'6',A.USE_CHARGE,'8',A.USE_CHARGE,0)),0,0,SUM(DECODE(B.GENDER,'2',A.USE_CHARGE,'4',A.USE_CHARGE,'6',A.USE_CHARGE,'8',A.USE_CHARGE,0))/ SUM(DECODE(B.GENDER,'2',1,'4',1,'6',1,'8',1,0)) ),2)AS AVG_F_USE_CHARGE,
+       ROUND(DECODE(SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,A.USE_CHARGE)),0,0, SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,A.USE_CHARGE))/SUM(DECODE(B.GENDER,'1',0,'2',0,'3',0,'4',0,'5',0,'6',0,'7',0,'8',0,1))),2)  AS AVG_ETC_USE_CHARGE,
+       SUM(A.USE_CHARGE) AS SUM_REAL_USE_CHARGE,
+       ROUND(SUM(A.USE_CHARGE)/COUNT(*),2)   AS APRU_CHARGE,
+       SUM(A.USE_TERM) AS SUM_USE_TERM,
+       ROUND(SUM(A.USE_TERM) / COUNT(*),2) AS AVG_USE_TERM,  
+       SUM(A.USE_CHARGE) AS SUM_USE_CHAGE,
+       ROUND(SUM(A.USE_CHARGE) / COUNT(*),2) AS AVG_USE_CHARGE, 
+       SUM(A.RCG_FREE_CHARGE) AS SUM_RCG_FREE_CHARGE,
+       ROUND(SUM(A.RCG_FREE_CHARGE) / COUNT(*),2) AS AVG_RCG_FREE_CHARGE,
+       SUM(A.RCG_PAY_CHARGE) AS SUM_RCG_PAY_CHARGE,
+       ROUND(SUM(A.RCG_PAY_CHARGE) / COUNT(*),2) AS AVG_RCG_PAY_CHARGE,
+       SUM(A.DAY_CHARGE) AS SUM_DAY_CHARGE,  
+       ROUND(SUM(A.DAY_CHARGE) / COUNT(*),2) AS AVG_DAY_CHARGE,  
+       SUM(A.VOC_N_CHARGE) AS SUM_VOC_N_CHARGE,
+       ROUND(SUM(A.VOC_N_CHARGE) / COUNT(*),2) AS AVG_VOC_N_CHARGE,       
+       SUM(A.VOC_I_CHARGE) AS SUM_VOC_I_CHARGE,
+       ROUND(SUM(A.VOC_I_CHARGE) / COUNT(*),2) AS AVG_VOC_I_CHARGE,  
+       SUM(A.SMS_N_CHARGE) AS SUM_SMS_N_CHARGE,
+       ROUND(SUM(A.SMS_N_CHARGE) / COUNT(*),2) AS AVG_SMS_N_CHARGE,  
+       SUM(A.SMS_I_CHARGE) AS SUM_SMS_I_CHARGE,
+       ROUND(SUM(A.SMS_I_CHARGE) / COUNT(*),2) AS AVG_SMS_I_CHARGE,  
+       SUM(A.PKT_N_CHARGE) AS SUM_PKT_N_CHARGE,
+       ROUND(SUM(A.PKT_N_CHARGE) / COUNT(*),2) AS AVG_PKT_N_CHARGE,
+       SUM(A.PKT_I_CHARGE) AS SUM_PKT_I_CHARGE,
+       ROUND( SUM(A.PKT_I_CHARGE) / COUNT(*),2) AS AVG_PKT_I_CHARGE,     
+       <if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">
+	      NVL(A.AGENT_ID, '-') AGENT_ID,
+		  NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM,    				  
+		</if>          
+		<if test="searchAgentId == null or searchAgentId == '' or searchAgentId==0">
+			 'ALL' AS AGENT_ID,
+		     'ALL' AS AGENT_NM,    	
+		</if>
+		 <if test="searchNation != null and searchNation != '' and searchNation!=0">
+	     NVL(A.AD_NATION, '-') AD_NATION,
+		 DECODE(AD_NATION,'','미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', AD_NATION)) AD_NATION_NM,     				  
+		</if>          
+		<if test="searchNation == null or searchNation == '' or searchNation==0">
+			 'ALL' AS AD_NATION,
+		     'ALL' AS AD_NATION_NM,    	
+		</if>    
+     SUM(A.ETC_CHARGE) AS SUM_ETC_CHARGE,
+     ROUND(SUM(A.ETC_CHARGE) / COUNT(*),2) AS AVG_ETC_CHARGE
+  FROM (SELECT 
+  			   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+  			   		/*+ index_desc(C PPS_STATS_CDR_PK)*/
+			   		TO_CHAR(STAT_MONTH, 'YYYY-MM') STAT_MONTH,
+			   </if>
+			   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+			   		/*+ INDEX_DESC(C PPS_STATS_CDR_ENTER_DT_IDX)*/
+	             	TO_CHAR(ENTER_DATE, 'YYYY-MM') ENTER_DATE,	   
+			   </if>
+			   CONTRACT_NUM,
+               SOC,
+               SUM(USE_CHARGE) USE_CHARGE,
+               MAX(USE_TERM) USE_TERM,
+               SUM(RCG_FREE_CHARGE) RCG_FREE_CHARGE,
+               SUM(RCG_PAY_CHARGE) RCG_PAY_CHARGE,
+               SUM(DAY_CHARGE)  DAY_CHARGE,
+               SUM(VOC_N_CHARGE)  VOC_N_CHARGE,
+               SUM(VOC_I_CHARGE)  VOC_I_CHARGE,
+               SUM(SMS_N_CHARGE)  SMS_N_CHARGE,
+               SUM(SMS_I_CHARGE)  SMS_I_CHARGE,
+               SUM(PKT_N_CHARGE)  PKT_N_CHARGE,
+               SUM(PKT_I_CHARGE)  PKT_I_CHARGE,
+               SUM(ETC_CHARGE)  ETC_CHARGE,
+               AGENT_ID,
+               AD_NATION
+        FROM PPS_STATS_CDR C
+        WHERE 1=1
+        <if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+		   <if test="searchDate != null and searchDate != '' ">
+		   		AND STAT_MONTH >= TO_DATE(#{searchDate}, 'YYYYMM')
+				AND STAT_MONTH &lt; add_months(TO_DATE(#{searchDate},'yyyymm'), 1) 			    
+		   </if>
+	   </if>
+	   <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+	   	   <if test="searchDate != null and searchDate != '' ">
+	   	   		AND ENTER_DATE >= TO_DATE(#{searchDate}, 'YYYYMM')
+				AND ENTER_DATE &lt; add_months(TO_DATE(#{searchDate},'yyyymm'), 1) 		   
+	       </if>
+	   </if>
+        GROUP BY CONTRACT_NUM, SOC, AGENT_ID, AD_NATION,
+        		<if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+			   		TO_CHAR(STAT_MONTH, 'YYYY-MM')
+			    </if>
+			    <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+	             	TO_CHAR(ENTER_DATE, 'YYYY-MM')	   
+			    </if> 
+        ) A,
+  	   MSP_JUO_SUB_INFO B
+  WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+ 		AND B.SUB_STATUS IN ('A','S')
+ 		
+  <if test="searchType != null and searchType != '' and searchType == 'under'">
+  	<if test="searchName != null and searchName != ''">
+ 	  AND  A.USE_TERM &lt;= #{searchName}
+ 	  </if>
+  </if>
+   <if test="searchType != null and searchType != '' and searchType == 'over'">
+  	<if test="searchName != null and searchName != ''">
+ 	  AND  A.USE_TERM >= #{searchName}
+ 	  </if>
+  </if>
+  
+ GROUP BY  A.SOC
+    <if test="searchMonthType != null and searchMonthType != '' and searchMonthType=='useMonth'">
+	   ,A.STAT_MONTH
+	 </if>
+	  <if test="searchMonthType != null and searchMonthType != '' and searchMonthType!='useMonth'">
+      	,A.ENTER_DATE   
+	</if>		
+ 	 <if test="searchAgentId != null and searchAgentId != '' and searchAgentId!=0">	
+	 	,AGENT_ID
+	 </if>
+	 <if test="searchNation != null and searchNation != '' and searchNation!=0">	
+	 	,AD_NATION
+	 </if>
+      </select>
+      
+      <!--사용현황2 목록조회 -->
+    <select id="getSttcUse2MgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+	       	SELECT		<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+							TO_CHAR(CALL_DATE, 'YYYY-MM') CALL_DATE,
+						</if>
+						<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+							 TO_CHAR(CALL_DATE, 'YYYY-MM-DD') CALL_DATE,
+						</if>
+						<choose>
+							<when test="searchSocType != null and searchSocType != '' and searchSocType !=0">
+								NVL(F_GET_KT_CODE_NM('PPS_STATS_CALL_VL', 'SOC_TYPE', SOC_TYPE), '-') SOC_TYPE_NM,
+							</when>
+							<otherwise>
+								'ALL' SOC_TYPE_NM,
+							</otherwise>
+						</choose>
+			        		SUM(DAY_MINUS_CNT) DAY_MINUS_CNT,
+			      	  		SUM(DAY_MINUS_AMOUNT) DAY_MINUS_AMOUNT,
+				  	    	SUM(IN_CALL_DURATION) IN_CALL_DURATION,
+					    	SUM(IN_CALL_AMOUNT) IN_CALL_AMOUNT,
+						    SUM(OUT_CALL_DURATION) OUT_CALL_DURATION,
+						    SUM(OUT_CALL_AMOUNT) OUT_CALL_AMOUNT,
+						    TRUNC((SUM(IN_DATA_PKT_DURATION)/1024)/1024,0) IN_DATA_PKT_DURATION, 
+						    SUM(IN_DATA_PKT_AMOUNT) IN_DATA_PKT_AMOUNT,
+						    SUM(IN_SMS_CNT) IN_SMS_CNT, 
+						    SUM(IN_SMS_AMOUNT) IN_SMS_AMOUNT,
+						    SUM(OUT_SMS_CNT) OUT_SMS_CNT,
+						    SUM(OUT_SMS_AMOUNT) OUT_SMS_AMOUNT,
+						    SUM(ETC_CNT) ETC_CNT,
+						    SUM(ETC_AMOUNT) ETC_AMOUNT,
+						    SUM(CHARGE) CHARGE
+			FROM PPS_STATS_CALL_VL
+			WHERE CALL_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			AND CALL_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+				    GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM')
+			</if>
+			<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+				 	 GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM-DD')
+			</if>	
+			<choose>
+				<when test="searchSocType != null and searchSocType != '' and searchSocType !=0">
+					, SOC_TYPE
+				</when>
+				<otherwise>
+					, 'ALL'
+				</otherwise>
+			</choose>
+			
+			ORDER BY CALL_DATE DESC
+			
+			<choose>
+				<when test="searchSocType != null and searchSocType != '' and searchSocType !=0">
+					, SOC_TYPE_NM DESC
+				</when>
+				<otherwise>
+					
+				</otherwise>
+			</choose>
+        <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	 </select> 
+	 
+	 <!--사용현황2 목록조회 엑셀출력 -->
+	 <select id="getSttcUse2MgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+	            SELECT		<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+						TO_CHAR(CALL_DATE, 'YYYY-MM') CALL_DATE,
+					</if>
+					<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc == 0"  >
+						 TO_CHAR(CALL_DATE, 'YYYY-MM-DD') CALL_DATE,
+					</if>
+					<choose>
+						<when test="searchSocType != null and searchSocType != '' and searchSocType !=0">
+							NVL(F_GET_KT_CODE_NM('PPS_STATS_CALL_VL', 'SOC_TYPE', SOC_TYPE), '-') SOC_TYPE_NM,
+						</when>
+						<otherwise>
+							'ALL' SOC_TYPE_NM,
+						</otherwise>
+					</choose>
+		        		SUM(DAY_MINUS_CNT) DAY_MINUS_CNT,
+		      	  		SUM(DAY_MINUS_AMOUNT) DAY_MINUS_AMOUNT,
+			  	    	SUM(IN_CALL_DURATION) IN_CALL_DURATION,
+				    	SUM(IN_CALL_AMOUNT) IN_CALL_AMOUNT,
+					    SUM(OUT_CALL_DURATION) OUT_CALL_DURATION,
+					    SUM(OUT_CALL_AMOUNT) OUT_CALL_AMOUNT,
+					    TRUNC((SUM(IN_DATA_PKT_DURATION)/1024)/1024,0) IN_DATA_PKT_DURATION, 
+					    SUM(IN_DATA_PKT_AMOUNT) IN_DATA_PKT_AMOUNT,
+					    SUM(IN_SMS_CNT) IN_SMS_CNT, 
+					    SUM(IN_SMS_AMOUNT) IN_SMS_AMOUNT,
+					    SUM(OUT_SMS_CNT) OUT_SMS_CNT,
+					    SUM(OUT_SMS_AMOUNT) OUT_SMS_AMOUNT,
+					    SUM(ETC_CNT) ETC_CNT,
+					    SUM(ETC_AMOUNT) ETC_AMOUNT,
+					    SUM(CHARGE) CHARGE
+				FROM PPS_STATS_CALL_VL
+				WHERE CALL_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				AND CALL_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				
+				<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+					    GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM')
+				</if>
+				<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+					 	 GROUP BY TO_CHAR(CALL_DATE, 'YYYY-MM-DD')
+				</if>
+				<choose>
+					<when test="searchSocType != null and searchSocType != '' and searchSocType !=0">
+						, SOC_TYPE
+					</when>
+					<otherwise>
+						, 'ALL'
+					</otherwise>
+				</choose>
+					
+				ORDER BY CALL_DATE DESC
+				
+				<choose>
+					<when test="searchSocType != null and searchSocType != '' and searchSocType !=0">
+						, SOC_TYPE_NM DESC
+					</when>
+					<otherwise>
+						
+					</otherwise>
+				</choose>
+	 </select> 
+</mapper>

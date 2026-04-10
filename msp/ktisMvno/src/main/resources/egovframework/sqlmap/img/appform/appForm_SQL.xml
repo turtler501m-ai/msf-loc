@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.img.applicationForm.mapper.AppFormMapper">
+   
+   
+   <select id="getScnViewerInfo" parameterType="HashMap" resultType="HashMap">
+		SELECT /** AppFormMapper.getScnViewerInfo */
+		       SCAN_ID ,
+		       REQUEST_STATE_CODE 
+		FROM  MCP_REQUEST@DL_MCP
+		WHERE REQUEST_KEY = #{resNo}
+	</select>
+	
+   <select id="getScnViewerInfoTypeS" parameterType="HashMap" resultType="HashMap">
+		SELECT /** AppFormMapper.getScnViewerInfoTypeS */
+		       SCAN_ID ,
+		       REQUEST_STATE_CODE
+		FROM  MSP_REQUEST
+		WHERE REQUEST_KEY = #{resNo}
+	</select>
+	
+	<select id="getScanViewerVersion" resultType="String">
+		SELECT /** AppFormMapper.getScanViewerVersion */
+		       DOC_NM 
+		  FROM EMV_SCAN_DOC@DL_MCP
+		WHERE DOC_ID = 'E9999'
+	</select>
+	
+	<update id="deleteScanImageCallTypeByC" parameterType="String">
+		/** AppFormMapper.deleteScanImageCallTypeByC */
+		UPDATE EMV_SCAN_FILE@DL_MCP
+		SET USE_YN = 'N'
+		WHERE FILE_ID = #{fileId}
+	</update>
+	
+	<update id="deleteScanImageCallTypeByS" parameterType="String">
+		/** AppFormMapper.deleteScanImageCallTypeByS */
+		UPDATE EMV_SCAN_FILE
+		SET USE_YN = 'N'
+		WHERE FILE_ID = #{fileId}
+	</update>
+	
+	 <select id="getScnViewerRgstDtTypeS" parameterType="HashMap" resultType="String">
+		SELECT /** AppFormMapper.getScnViewerRgstDtTypeS */
+		       TO_CHAR(RGST_DT,'YYYY-MM-DD')AS RGST_DT 
+		FROM  EMV_SCAN_MST
+		WHERE SCAN_ID = #{SCAN_ID}
+	</select>
+	
+	<select id="getScnViewerRgstDt" parameterType="HashMap" resultType="String">
+		SELECT /** AppFormMapper.getScnViewerRgstDt */
+		       TO_CHAR(RGST_DT,'YYYY-MM-DD')AS RGST_DT 
+		FROM  EMV_SCAN_MST@DL_MCP
+		WHERE SCAN_ID = #{SCAN_ID}
+	</select>
+
+    <select id="getScanFile" parameterType="String" resultType="com.ktis.msp.img.applicationForm.vo.ScanFileVO">
+        SELECT SCAN_ID AS scanId
+             , FILE_ID AS fileId
+             , DOC_ID AS docId
+             , ORIGIN_DIR AS originDir
+        FROM EMV_SCAN_FILE@DL_MCP
+        WHERE FILE_ID = #{fileId}
+    </select>
+
+    <delete id="deleteScanFileByFileId" parameterType="String">
+        DELETE FROM EMV_SCAN_FILE@DL_MCP
+        WHERE FILE_ID = #{fileId}
+    </delete>
+
+    <update id="insertScanLogTxn" parameterType="com.ktis.msp.img.applicationForm.vo.ScanLogVO">
+        <selectKey keyProperty="seqNum" resultType="Long" order="BEFORE">
+            SELECT SCAN_LOG_SEQ.NEXTVAL@DL_MCP FROM DUAL
+        </selectKey>
+        INSERT INTO EMV_SCAN_LOG_TXN@DL_MCP (
+            SEQ_NUM
+            , DOC_ID
+            , BIZ_TYPE
+            , SCAN_ID
+            , FILE_ID
+            , PRCS_SBST
+            , PROC_PRSN_ID
+            , PROC_DTTM
+        ) VALUES (
+            #{seqNum}
+            , #{docId}
+            , #{bizType}
+            , #{scanId}
+            , #{fileId}
+            , #{prcsSbst}
+            , #{procPrsnId}
+            , SYSDATE
+        )
+    </update>
+
+    <update id="insertOriginScanFileFrom" parameterType="com.ktis.msp.img.applicationForm.vo.ScanFileVO">
+        <selectKey keyProperty="fileNumber" resultType="Integer" order="BEFORE">
+            SELECT NVL(MAX(FILE_NUMBER), 0) + 1 FROM EMV_SCAN_FILE@DL_MCP WHERE SCAN_ID = #{originScanId}
+        </selectKey>
+        INSERT INTO EMV_SCAN_FILE@DL_MCP(
+            FILE_ID
+            , SCAN_ID
+            , FILE_NUMBER
+            , FILE_SIZE
+            , FILE_EXT
+            , DOC_ID
+            , MAIN_DOC_CD
+            , USE_YN
+            , ORIGIN_DIR
+            , SAVE_DIR
+            , RGST_DT
+            , RGST_PRSN_ID
+            , BANK_CD
+            , BANK_CD_NO
+            , CONTRACT_NUM
+            , ITEM_ID
+            , ANN
+            , CHANNEL
+        )
+        SELECT
+            FILE_ID
+            , #{originScanId}
+            , #{fileNumber}
+            , FILE_SIZE
+            , FILE_EXT
+            , DOC_ID
+            , MAIN_DOC_CD
+            , USE_YN
+            , ORIGIN_DIR
+            , SAVE_DIR
+            , SYSDATE
+            , #{userId}
+            , BANK_CD
+            , BANK_CD_NO
+            , CONTRACT_NUM
+            , ITEM_ID
+            , ANN
+            , CHANNEL
+          FROM EMV_SCAN_FILE@DL_MCP
+         WHERE SCAN_ID = #{scanId}
+           AND FILE_ID = #{fileId}
+    </update>
+</mapper>

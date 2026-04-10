@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.rcgmgmt.mapper.PpsAgencyRcgMgmtMapper">
+   <!--충전내역 목록조회 -->
+    <select id="getAgencyRcgInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+	      SELECT	/*+ INDEX_DESC(A PPS_RCG_IDX1) */
+		  			SEQ, 
+				  B.SUBSCRIBER_NO,
+				  NVL(A.CONTRACT_NUM,'') CONTRACT_NUM,
+				  NVL(REQ_SRC,'-') REQ_SRC,
+				  NVL(REQ_TYPE,'-') REQ_TYPE,
+				  NVL(RECHARGE_INFO,'-') RECHARGE_INFO,
+				  NVL(RECHARGE_METHOD,'-') RECHARGE_METHOD,
+				  NVL(AMOUNT,0) AMOUNT,
+				  NVL(IN_AMOUNT,0) IN_AMOUNT,
+				  NVL(KT_RES_CODE,'-') KT_RES_CODE,
+				  DECODE(KT_RES_CODE,'0000', '성공', '', '', '실패') KT_RES_CODE_NM,
+				  NVL(TO_CHAR(KT_RES_DT, 'YYYY-MM-DD HH24:MI:SS'),'-') KT_RES_DT,
+				  NVL(ADMIN_ID,'-') ADMIN_ID,
+				  NVL(RECHARGE_AGENT,'-') RECHARGE_AGENT,
+				  NVL(FN_GET_ORGNM(RECHARGE_AGENT),'-') RECHARGE_AGENT_NAME,
+				  NVL(CHG_TYPE,'-') CHG_TYPE,
+				  NVL(F_GET_KT_CODE_NM('PPS_RCG','CHG_TYPE',CHG_TYPE),'-') CHG_TYPE_NAME,
+				  NVL(CANCEL_FLAG,'-') CANCEL_FLAG,
+				  NVL(TO_CHAR(CANCEL_DT,'YYYY-MM-DD'),'-')  CANCEL_DT,
+				  NVL(BASIC_REMAINS,0) BASIC_REMAINS,
+				  NVL(TO_CHAR(RECHARGE_DATE, 'YYYY-MM-DD HH24:MI:SS'),'-') RECHARGE_DATE, 
+				  DECODE(KT_RES_CODE, '0000', '취소', '') cancelBtn,
+				  NVL(TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD'),'-') BASIC_EXPIRE,
+				  REMARK
+		  FROM PPS_RCG A, MSP_JUO_SUB_INFO B
+	 	  WHERE A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+	 	  AND RECHARGE_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+	 	  AND AMOUNT > 0
+		  AND RECHARGE_DATE &lt; SYSDATE
+		  AND AGENT_ID = #{agentId}
+		  		<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'contract_num'">
+							AND A.CONTRACT_NUM = #{searchNm}
+						</when>
+						<when test="searchType == 'subscriber_no'">
+							AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+						</when>
+						<when test="searchType == 'vac_id' or searchType == 'recharge_info'">
+							AND RECHARGE_INFO = #{searchNm}
+						</when>
+					</choose>
+				</if>
+				<if test="startDt != null and startDt != ''">
+					AND RECHARGE_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND RECHARGE_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchReqSrc != null and searchReqSrc != ''">
+					AND REQ_SRC = #{searchReqSrc}
+				</if>
+				<if test="searchChgType != null and searchChgType != ''">
+					AND CHG_TYPE = #{searchChgType}
+				</if>
+				<if test="searchRechargeMethod != null and searchRechargeMethod != ''">
+					<choose>
+						<when test="searchRechargeMethod == 'CMS'">
+							AND (REQ_TYPE =  'CMS_RCG_VOICE' OR REQ_TYPE =  'CMS_RCG_DATA')
+						</when>
+						<when test="searchRechargeMethod == 'POS충전'">
+							AND (REQ_TYPE =  'POS_RCG_VOICE' OR REQ_TYPE =  'POS_RCG_DATA')
+						</when>
+						<otherwise>
+							AND RECHARGE_METHOD = #{searchRechargeMethod}
+						</otherwise>
+					</choose>
+				</if>
+				<if test="searchKtResCode != null and searchKtResCode != ''">
+					<if test="searchKtResCode == 'success'">
+						AND KT_RES_CODE = '0000'
+					</if>
+					<if test="searchKtResCode == 'fault'">
+						AND (KT_RES_CODE &lt;> '0000' OR KT_RES_CODE IS NULL) 
+					</if>
+				</if>
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    <!--충전내역 목록조회엑셀출력 -->
+	<select id="getAgencyRcgInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">     
+     		SELECT	/*+ INDEX_DESC(A PPS_RCG_IDX1) */
+		  		  SEQ, 
+				  NVL(B.SUBSCRIBER_NO, '-')SUBSCRIBER_NO,
+				  NVL(A.CONTRACT_NUM,'') CONTRACT_NUM,
+				  NVL(REQ_SRC,'-') REQ_SRC,
+				  NVL(REQ_TYPE,'-') REQ_TYPE,
+				  NVL(RECHARGE_INFO,'-') RECHARGE_INFO,
+				  NVL(RECHARGE_METHOD,'-') RECHARGE_METHOD,
+				  NVL(AMOUNT,0) AMOUNT,
+				  NVL(IN_AMOUNT,0) IN_AMOUNT,
+				  NVL(KT_RES_CODE,'-') KT_RES_CODE,
+				  DECODE(KT_RES_CODE,'0000', '성공', '', '-', '실패') KT_RES_CODE_NM,
+				  NVL(TO_CHAR(KT_RES_DT, 'YYYY-MM-DD HH24:MI:SS'),'-') KT_RES_DT,
+				  NVL(ADMIN_ID,'-') ADMIN_ID,
+				  NVL(RECHARGE_AGENT,'-') RECHARGE_AGENT,
+				  NVL(FN_GET_ORGNM(RECHARGE_AGENT),'-') RECHARGE_AGENT_NAME,
+				  NVL(CHG_TYPE,'-') CHG_TYPE,
+				  NVL(F_GET_KT_CODE_NM('PPS_RCG','CHG_TYPE',CHG_TYPE),'-') CHG_TYPE_NAME,
+				  NVL(CANCEL_FLAG,'-') CANCEL_FLAG,
+				  NVL(TO_CHAR(CANCEL_DT,'YYYY-MM-DD'),'-')  CANCEL_DT,
+				  NVL(BASIC_REMAINS,0) BASIC_REMAINS,
+				  NVL(TO_CHAR(RECHARGE_DATE, 'YYYY-MM-DD HH24:MI:SS'),'-') RECHARGE_DATE, 
+				  NVL(TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD'),'-') BASIC_EXPIRE,
+				  NVL(DECODE(KT_RES_CODE, '4002', '미가입고객', REMARK), '-') REMARK
+		  FROM PPS_RCG A, MSP_JUO_SUB_INFO B
+	 	  WHERE A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+	 	  AND RECHARGE_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+	 	  AND AMOUNT > 0
+		  AND RECHARGE_DATE &lt; SYSDATE
+		  AND AGENT_ID = #{agentId}
+		  		<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'contract_num'">
+							AND A.CONTRACT_NUM = #{searchNm}
+						</when>
+						<when test="searchType == 'subscriber_no'">
+							AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+						</when>
+						<when test="searchType == 'vac_id' or searchType == 'recharge_info'">
+							AND RECHARGE_INFO = #{searchNm}
+						</when>
+					</choose>
+				</if>
+				<if test="startDt != null and startDt != ''">
+					AND RECHARGE_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND RECHARGE_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchReqSrc != null and searchReqSrc != ''">
+					AND REQ_SRC = #{searchReqSrc}
+				</if>
+				<if test="searchChgType != null and searchChgType != ''">
+					AND CHG_TYPE = #{searchChgType}
+				</if>
+				<if test="searchRechargeMethod != null and searchRechargeMethod != ''">
+					<choose>
+						<when test="searchRechargeMethod == 'CMS'">
+							AND (REQ_TYPE =  'CMS_RCG_VOICE' OR REQ_TYPE =  'CMS_RCG_DATA')
+						</when>
+						<when test="searchRechargeMethod == 'POS충전'">
+							AND (REQ_TYPE =  'POS_RCG_VOICE' OR REQ_TYPE =  'POS_RCG_DATA')
+						</when>
+						<otherwise>
+							AND RECHARGE_METHOD = #{searchRechargeMethod}
+						</otherwise>
+					</choose>
+				</if>
+				<if test="searchKtResCode != null and searchKtResCode != ''">
+					<if test="searchKtResCode == 'success'">
+						AND KT_RES_CODE = '0000'
+					</if>
+					<if test="searchKtResCode == 'fault'">
+						AND (KT_RES_CODE &lt;> '0000' OR KT_RES_CODE IS NULL) 
+					</if>
+				</if>
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+             
+    </select>
+    
+    <!-- 대리점 가상계좌조회/임시 -->
+    <select id="getAgencyRcgAgentInfoMgmt" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+     
+         		 SELECT ROWNUM, VAC_ID, VAC_BANK_CD
+         		 FROM (SELECT
+         		 		ROWNUM,	
+         		 		VAC_ID, 
+         		 		f_get_kt_code_nm('PPS_VAC', 'BANK_CODE', VAC_BANK_CD) VAC_BANK_CD 
+						from pps_vac
+						where agent_id = #{orgnId}
+						ORDER By OPEN_DATE desc)
+				WHERE ROWNUM = 1
+    </select>
+    
+
+   <select id="getAgencyRcgDepositHstList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+				SELECT
+					TO_CHAR(REG_DTTM, 'YYYY-MM-DD') regDttm,
+					DPST_RSN dpstRsn,
+					DPST_AMT dpstAmt,
+					STOF_AMT stofAmt,
+					(DPST_AMT - STOF_AMT) remains
+		  		FROM CLS_DPST_INFO
+	 	  		WHERE ORGN_ID = #{orgnId}
+	 	  		ORDER BY REG_DTTM desc
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!-- 전화번호로 가입자조회 -->
+    <select id="agencySearchCtn" parameterType="hashmap" resultType="int">       
+     	  SELECT	COUNT(*)
+		  FROM MSP_JUO_SUB_INFO 
+		  WHERE SUB_STATUS IN ('A', 'S')
+				AND (SUBSCRIBER_NO = #{subscriberNo} OR CONTRACT_NUM = #{subscriberNo})
+    </select>
+    
+    <!-- 잔액조회 -->
+
+	<select id="getAgenyCusRemains"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_KT_IN_REQ(
+				    #{seq, jdbcType=VARCHAR}, #{reqType, jdbcType=VARCHAR}, #{ip, jdbcType=VARCHAR}, #{contractNum, jdbcType=VARCHAR}, #{subscriberNo, jdbcType=VARCHAR}, #{amount, jdbcType=VARCHAR}, #{dataVaId, jdbcType=VARCHAR}, #{dataVaRemains, jdbcType=VARCHAR}, #{dataQuota, jdbcType=VARCHAR}, #{dataMode, jdbcType=VARCHAR}, #{nasIp, jdbcType=VARCHAR}, #{topupGubun, jdbcType=VARCHAR}, #{rechargeInfo, jdbcType=VARCHAR}, #{rechargeAgent, jdbcType=VARCHAR}, #{adminId, jdbcType=VARCHAR}, #{accessId, jdbcType=VARCHAR}, #{remark, jdbcType=VARCHAR}
+				   ,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 대리점 충전 -->
+	<select id="agencyRecharge"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{call p_rcg_bill(
+				    #{opCode, jdbcType=VARCHAR}
+				    , #{seq, jdbcType=VARCHAR}
+				    , #{reqType, jdbcType=VARCHAR}
+				    , #{subscriberNo, jdbcType=VARCHAR}
+				    , #{recharge, jdbcType=VARCHAR}
+				    , #{rechargeInfo, jdbcType=VARCHAR}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+				    , #{ip, jdbcType=VARCHAR}
+				    , #{dataVaId, jdbcType=VARCHAR}
+				    , #{topupGubun, jdbcType=VARCHAR}
+				   ,#{seq, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	
+         
+</mapper>

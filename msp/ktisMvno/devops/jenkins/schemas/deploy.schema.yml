@@ -1,0 +1,215 @@
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+# version: 1.0.0
+# 배포 YAML 구성 스키마 (deploy.yml 검증용)
+
+# ✅ 최상위 구조 정의
+type: object
+required:
+  - config
+  - remote_groups
+  - command_groups
+  - steps
+
+properties:
+  # ------------------------------
+  # 🔧 전역 설정 (config)
+  # ------------------------------
+  config:
+    type: object
+    description: 배포 전역 설정
+    properties:
+      parallel_deploy:
+        type: boolean
+        description: 병렬 배포 여부 (true면 여러 서버에 동시에 실행)
+
+  # ------------------------------
+  # 🌐 원격 서버 그룹 정의 (remote_groups)
+  # ------------------------------
+  remote_groups:
+    type: object
+    description: 원격 서버 그룹 정의
+    additionalProperties:
+      type: array
+      items:
+        type: object
+        properties:
+          user:
+            type: string
+            description: SSH 사용자명
+          host:
+            type: string
+            description: 서버 호스트명 또는 IP
+          port:
+            type: integer
+            description: SSH 포트 (기본값 22)
+            default: 22
+          credentials:
+            type: object
+            required: [id, type]
+            properties:
+              id:
+                type: string
+                description: Jenkins Credentials ID
+              type:
+                type: string
+                enum: [userpass, sshkey]
+                description: 인증 타입 (ID/PW 또는 SSH Key)
+          gateway:
+            type: object
+            description: 중간 게이트웨이(점프 서버) 설정 (선택)
+            properties:
+              name:
+                type: string
+                description: 게이트웨이 이름
+              host:
+                type: string
+                description: 게이트웨이 호스트명 또는 IP
+              port:
+                type: integer
+                description: 게이트웨이 포트 (기본값 22)
+                default: 22
+              user:
+                type: string
+                description: 게이트웨이 접속 사용자
+              credentials:
+                type: object
+                required: [id, type]
+                properties:
+                  id:
+                    type: string
+                    description: Jenkins Credentials ID
+                  type:
+                    type: string
+                    enum: [userpass, sshkey]
+                    description: 인증 타입
+            required: [host]
+            additionalProperties: false
+        required: [user, host, credentials]
+        additionalProperties: false
+
+  # ------------------------------
+  # 🧩 명령 그룹 정의 (command_groups)
+  # ------------------------------
+  command_groups:
+    type: object
+    description: 실행 가능한 명령 그룹 정의
+    additionalProperties:
+      type: array
+      items:
+        type: object
+        properties:
+          commands:
+            type: array
+            description: 원격 명령 실행 목록
+            items:
+              type: string
+          puts:
+            type: array
+            description: 파일 전송 정의 (로컬 → 원격)
+            items:
+              type: object
+              required: [from, into]
+              properties:
+                from:
+                  type: string
+                  description: 로컬 경로
+                into:
+                  type: string
+                  description: 원격 경로
+                override:
+                  type: boolean
+                  default: true
+                  description: 기존 파일 덮어쓰기 여부
+                recursive:
+                  type: boolean
+                  default: false
+                  description: 디렉토리 복사 포함 여부
+              additionalProperties: false
+          gets:
+            type: array
+            description: 파일 수집 정의 (원격 → 로컬)
+            items:
+              type: object
+              required: [from, into]
+              properties:
+                from:
+                  type: string
+                  description: 원격 경로
+                into:
+                  type: string
+                  description: 로컬 저장 경로
+                compress:
+                  type: boolean
+                  default: false
+                  description: 전송 전 압축 여부
+                recursive:
+                  type: boolean
+                  default: false
+                  description: 디렉토리 포함 여부
+              additionalProperties: false
+          remove:
+            type: array
+            description: 원격 파일 제거 정의
+            items:
+              type: object
+              properties:
+                paths:
+                  type: array
+                  description: 삭제할 경로 목록
+                  items:
+                    type: string
+                force:
+                  type: boolean
+                  default: true
+                  description: 강제 삭제 여부
+                recursive:
+                  type: boolean
+                  default: true
+                  description: 디렉토리 삭제 포함 여부
+              additionalProperties: false
+          env:
+            type: object
+            description: 명령 실행 시 환경 변수 정의
+            additionalProperties:
+              type: string
+          additionalProperties: false
+
+  # ------------------------------
+  # 🚀 단계별 배포 절차 정의 (steps)
+  # ------------------------------
+  steps:
+    type: object
+    description: 단계별 배포 절차 정의
+    additionalProperties:
+      type: array
+      description: 각 단계(step)에 대한 세부 실행 목록
+      items:
+        type: object
+        properties:
+          remote_groups:
+            description: 실행 대상 서버 그룹 지정 (nullable)
+            oneOf:
+              - type: 'null'
+              - type: 'object'
+                properties:
+                  hosts:
+                    type: array
+                    description: 실행 대상 서버 그룹 이름 목록
+                    items:
+                      type: string
+                  contexts:
+                    type: array
+                    description: 실행 시 컨텍스트 변수 목록 (예; APP_HOME, APP_NAME 등)
+                    items:
+                      type: object
+                      additionalProperties:
+                        type: string
+                required: [hosts]
+                additionalProperties: false
+          command_groups:
+            type: array
+            description: 실행할 명령 그룹 이름 목록
+            items:
+              type: string
+        required: [command_groups]
+        additionalProperties: false

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.commdatmgmt.mapper.CommDatMgmtMapper">
+
+	<sql id="getCommDateList">
+		SELECT
+			 A.APY_SEQ 
+			, A.APY_NM
+			, A.BTHDAY
+			, A.SBSC_PRDT_CD
+			, DECODE(A.SBSC_PRDT_CD, '01', '모바일', '') AS SBSC_PRDT_NM
+			, REPLACE(A.CNTC_TEL_NO, '-', '') AS CNTC_TEL_NO
+			, REPLACE(A.TGT_SVC_NO, '-', '') AS TGT_SVC_NO
+			, A.RECP_EMAIL
+			, A.CONF_SBST01_YN
+			, A.CONF_SBST02_YN
+			, A.CONF_SBST03_YN
+			, A.CONF_SBST04_YN
+			, TO_CHAR(A.APY_DT, 'YYYYMMDD') AS APY_DT
+			, DECODE(A.RESULT_YN, 'Y', '처리', '미처리') AS RESULT_YN
+			, TO_CHAR(A.PROC_DT, 'YYYYMMDD') AS PROC_DT
+			, FN_GET_USRNM(A.PROCR_ID) AS PROCR_NM 
+			, CASE
+		        WHEN 'REQ' = #{searchCd} THEN
+		            DECODE((SELECT COUNT(*) FROM MSP_INVST_REQ_MST B, MSP_JUO_CUS_INFO C
+		                    WHERE REPLACE(A.TGT_SVC_NO, '-', '') = B.SUBSCRIBER_NO
+		                    AND A.MYSLF_ATHN_CI = C.SELF_CSTMR_CI
+		                    AND B.CUSTOMER_ID = C.CUSTOMER_ID
+		                    AND REQ_TYPE = '10'
+<!-- 		                    AND PROC_DT BETWEEN TO_CHAR(ADD_MONTHS(A.APY_DT, -12), 'YYYYMMDD') AND TO_CHAR(A.APY_DT, 'YYYYMMDD') -->
+		                    ), 0, 'N', 'Y')
+		        WHEN 'PRV' = #{searchCd} THEN
+		            DECODE((SELECT COUNT(*) FROM MSP_INVST_REQ_MST B, MSP_JUO_CUS_INFO C
+		                    WHERE REPLACE(A.TGT_SVC_NO, '-', '') = SUBSCRIBER_NO
+		                    AND A.MYSLF_ATHN_CI = C.SELF_CSTMR_CI
+		                    AND B.CUSTOMER_ID = C.CUSTOMER_ID
+		                    AND REQ_TYPE = '10'
+<!-- 		                    AND PROC_DT BETWEEN #{strtDt} AND #{endDt} -->
+		                    ), 0, 'N', 'Y')
+		        ELSE 'N'
+		    END AS IS_INVST_PROC
+		FROM 
+			MSP_COMM_DAT_PRV_TXN A
+		WHERE
+			TO_CHAR(A.APY_DT, 'YYYYMMDD') BETWEEN #{strtDt} AND #{endDt}
+		<if test="searchType != null and searchType != ''">
+			<if test= "searchType == 10">
+				AND A.APY_NM LIKE '%' || #{searchVal} || '%'
+			</if>
+			<if test= "searchType == 20">
+				AND REPLACE(A.CNTC_TEL_NO, '-', '') = #{searchVal}
+			</if>
+		</if>
+		<if test="resultYn != null and resultYn != ''">
+			AND NVL(A.RESULT_YN, 'N') = #{resultYn}
+		</if>
+	</sql>
+		
+	<select id="getCommDatePrvList" parameterType="com.ktis.msp.rcp.commdatmgmt.vo.CommDatMgmtVO" 
+										resultType="egovframework.rte.psl.dataaccess.util.EgovMap" >
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT 
+				APY_SEQ 
+			, APY_NM
+			, BTHDAY
+			, SBSC_PRDT_CD
+			, SBSC_PRDT_NM
+			, CNTC_TEL_NO
+			, TGT_SVC_NO
+			, RECP_EMAIL
+			, CONF_SBST01_YN
+			, CONF_SBST02_YN
+			, CONF_SBST03_YN
+			, CONF_SBST04_YN
+			, APY_DT
+			, RESULT_YN
+			, PROC_DT
+			, PROCR_NM 
+			, DECODE(IS_INVST_PROC, 'Y', '제공', '미제공') AS IS_INVST_PROC_NM
+			, IS_INVST_PROC
+		FROM(
+			<include refid="getCommDateList" />
+		)
+		WHERE
+		 1=1
+		 <if test="isInvstProc != null and isInvstProc != ''">
+		 	AND IS_INVST_PROC = #{isInvstProc}
+		 </if>
+		ORDER BY APY_DT DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getCommDatePrvListEx" parameterType="com.ktis.msp.rcp.commdatmgmt.vo.CommDatMgmtVO" 
+										resultType="egovframework.rte.psl.dataaccess.util.EgovMap" >
+		SELECT 
+				APY_SEQ 
+			, APY_NM
+			, BTHDAY
+			, SBSC_PRDT_CD
+			, SBSC_PRDT_NM
+			, CNTC_TEL_NO
+			, TGT_SVC_NO
+			, RECP_EMAIL
+			, CONF_SBST01_YN
+			, CONF_SBST02_YN
+			, CONF_SBST03_YN
+			, CONF_SBST04_YN
+			, APY_DT
+			, RESULT_YN
+			, PROC_DT
+			, PROCR_NM 
+			, DECODE(IS_INVST_PROC, 'Y', '제공', '미제공') AS IS_INVST_PROC_NM
+		FROM(
+			<include refid="getCommDateList" />
+		)
+		WHERE
+		 1=1
+		 <if test="isInvstProc != null and isInvstProc != ''">
+		 	AND IS_INVST_PROC = #{isInvstProc}
+		 </if>
+		ORDER BY APY_DT DESC
+	</select>
+	
+	<update id="updateResultYN" parameterType="com.ktis.msp.rcp.commdatmgmt.vo.CommDatMgmtVO" >
+		UPDATE 
+			MSP_COMM_DAT_PRV_TXN
+		SET 
+			 RESULT_YN = #{resultYn}
+			, PROCR_ID = #{sessionUserId}
+			, PROC_DT = SYSDATE
+		WHERE 
+			APY_SEQ = #{apySeq}
+	</update>
+	
+	<select id="getCommDatePrv" parameterType="com.ktis.msp.rcp.commdatmgmt.vo.CommDatMgmtVO" resultType="com.ktis.msp.rcp.commdatmgmt.vo.CommDatMgmtVO">
+		SELECT  APY_NM AS apyNm
+				, CNTC_TEL_NO AS cntcTelNo
+		FROM 	MSP_COMM_DAT_PRV_TXN 
+		WHERE 	APY_SEQ = #{apySeq}
+	</select>
+</mapper>

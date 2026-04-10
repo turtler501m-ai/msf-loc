@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.mnfctmgmt.mapper.MnfctMgmtMapper">
+
+    <!-- 제조사/공급사 조회 -->
+	<select id="selectMnfctMgmtList" parameterType="com.ktis.msp.org.mnfctmgmt.vo.MnfctMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* MnfctMgmtMapper.selectSampleList */
+			 MNFCT_ID										/*  0 : 제조사ID */
+			,MNFCT_NM                                		/*  0 : 제조사명 */
+			,BIZ_REG_NUM                             		/*  1 : 사업자등록번호 */
+			,RPRSEN_NM                               		/*  2 : 대표자명 */
+			,ZIPCD                                   		/*  3 : 우편번호 */
+			,ADDR                                    		/*  4 : 주소 */
+			,DTL_ADDR                                		/*  5 : 상세주소 */
+			,REG_ID                                  		/*  6 : 등록자ID */
+			,REG_DTTM                                		/*  7 : 등록일시 */
+			,RVISN_ID                                		/*  8 : 수정자ID */
+			,RVISN_DTTM                              		/*  9 : 수정일시 */
+			,DECODE(MNFCT_YN, 'Y', '제조사','공급사')      AS MNFCT_YN                          		/* 10 : 제조사여부 */
+			,TELNUM                                  		/* 11 : 전화번호 */
+			,FAX                                     		/* 12 : 팩스번호 */
+			,EMAIL                                   		/* 13 : 이메일 */
+			,SERIALNO_FLG                            		/* 14 : SerialNo구분자 */
+		FROM ORG_MNFCT_MST
+	   WHERE 1=1
+        <if test="mnfctId != null and mnfctId != ''">		
+		 AND LOWER(MNFCT_ID) LIKE  '%'||#{mnfctId}||'%'
+        </if>	
+         <if test="mnfctNm != null and mnfctNm != ''">      
+         AND MNFCT_NM LIKE  '%'||#{mnfctNm}||'%'
+        </if>		
+        <if test="mnfctYn != null and mnfctYn != ''">
+         AND MNFCT_YN = #{mnfctYn}
+        </if>
+       ORDER BY TO_NUMBER(MNFCT_ID)
+        <include refid="com.ktis.msp.cmn.include.paging-end" />  
+	</select>
+	
+	<insert id="insertMnfctMgmt" parameterType="com.ktis.msp.org.mnfctmgmt.vo.MnfctMgmtVo">
+		INSERT /* MnfctMgmtMapper.insertMnfctMgmt */
+		  INTO ORG_MNFCT_MST
+		       (		
+		             MNFCT_ID    /* 제조사ID */
+		           , MNFCT_NM    /* 제조사명 */
+		           , BIZ_REG_NUM    /* 사업자등록번호 */
+		           , RPRSEN_NM    /* 대표자명 */
+		           , ZIPCD    /* 우편번호 */
+		           , ADDR    /* 주소 */
+		           , DTL_ADDR    /* 상세주소 */
+		           , REG_ID    /* 등록자ID */
+		           , REG_DTTM    /* 등록일시 */
+		           , RVISN_ID    /* 수정자ID */
+		           , RVISN_DTTM    /* 수정일시 */
+		           , MNFCT_YN    /* 제조사여부 */
+		           , TELNUM    /* 전화번호 */
+		           , FAX    /* 팩스번호 */
+		           , EMAIL    /* 이메일 */
+		           , SERIALNO_FLG    /* SerialNo구분자 */	
+		       )
+		VALUES
+			   (
+          			 TRIM(TO_CHAR(SQ_ORG_MNFCT_MST_01.NEXTVAL, '0000')) /* 제조사ID */
+		           , #{mnfctNm, jdbcType=VARCHAR} /* 제조사명 */
+		           , #{bizRegNum, jdbcType=VARCHAR} /* 사업자등록번호 */
+		           , #{rprsenNm, jdbcType=VARCHAR} /* 대표자명 */
+		           , #{zipcd, jdbcType=VARCHAR} /* 우편번호 */
+		           , #{addr, jdbcType=VARCHAR} /* 주소 */
+		           , #{dtlAddr, jdbcType=VARCHAR} /* 상세주소 */
+		           , #{regId, jdbcType=VARCHAR} /* 등록자ID */
+		           , SYSDATE /* 등록일시 */
+		           , #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+		           , SYSDATE /* 수정일시 */
+		           , #{mnfctYn, jdbcType=VARCHAR} /* 제조사여부 */
+		           , #{telnum, jdbcType=VARCHAR} /* 전화번호 */
+		           , #{fax, jdbcType=VARCHAR} /* 팩스번호 */
+		           , #{email, jdbcType=VARCHAR} /* 이메일 */
+		           , #{serialnoFlg, jdbcType=VARCHAR} /* SerialNo구분자 */			   
+			   )	
+	</insert>				      
+	
+	<update id="updateMnfctMgmt" parameterType="com.ktis.msp.org.mnfctmgmt.vo.MnfctMgmtVo">
+		UPDATE ORG_MNFCT_MST  /* MnfctMgmtMapper.updateMnfctMgmt */
+		SET 
+           <if test = "mnfctNm != null and mnfctNm != '' "> MNFCT_NM = #{mnfctNm, jdbcType=VARCHAR} </if>
+           <if test = "bizRegNum != null and bizRegNum != '' ">, BIZ_REG_NUM = #{bizRegNum, jdbcType=VARCHAR} </if>
+           <if test = "rprsenNm != null and rprsenNm != '' ">, RPRSEN_NM = #{rprsenNm, jdbcType=VARCHAR} </if>
+           <if test = "zipcd != null and zipcd != '' ">, ZIPCD = #{zipcd, jdbcType=VARCHAR} </if>
+           <if test = "addr != null and addr != '' ">, ADDR = #{addr, jdbcType=VARCHAR} </if>
+           <if test = "dtlAddr != null and dtlAddr != '' ">, DTL_ADDR = #{dtlAddr, jdbcType=VARCHAR} </if>
+           <if test = "rvisnId != null and rvisnId != '' ">, RVISN_ID = #{rvisnId, jdbcType=VARCHAR} </if>
+           , RVISN_DTTM = SYSDATE
+           <if test = "mnfctYn != null and mnfctYn != '' ">, MNFCT_YN = #{mnfctYn, jdbcType=VARCHAR} </if>
+           <if test = "telnum != null and telnum != '' ">, TELNUM = #{telnum, jdbcType=VARCHAR} </if>
+           <if test = "fax != null and fax != '' ">, FAX = #{fax, jdbcType=VARCHAR} </if>
+           <if test = "email != null and email != '' ">, EMAIL = #{email, jdbcType=VARCHAR} </if>
+           <if test = "serialnoFlg != null and serialnoFlg != '' ">, SERIALNO_FLG = #{serialnoFlg, jdbcType=VARCHAR} </if>
+        WHERE MNFCT_ID = #{mnfctId}
+	</update>
+	
+	<!-- 셀렉트박스 용 제조사/공급사 리스트 조회 -->
+	<select id="selectMnfctList" parameterType="com.ktis.msp.org.mnfctmgmt.vo.MnfctMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        SELECT /* MnfctMgmtMapper.selectMnfctList */
+             MNFCT_ID as value                                      /*  0 : 제조사ID */
+            ,MNFCT_NM  as text                                     /*  0 : 제조사명 */
+        FROM ORG_MNFCT_MST
+        WHERE 1=1
+        <if test="mnfctYn != null and mnfctYn != ''">
+         AND MNFCT_YN = #{mnfctYn}
+        </if>
+    </select>
+</mapper>

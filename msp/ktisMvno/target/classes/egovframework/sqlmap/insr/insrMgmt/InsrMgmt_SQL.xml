@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.insr.insrMgmt.mapper.InsrMgmtMapper">
+	
+	<select id="getIntmInsrProdList" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO">
+		/* InsrMgmtMapper.getIntmInsrProdList */
+		SELECT 
+				A.RATE_CD		AS insrProdCd
+				, A.RATE_NM		AS insrProdNm
+				, A.BASE_AMT	AS baseAmt
+				, B.ETC1		AS insrTypeCd
+		FROM
+				MSP_RATE_MST A
+				, CMN_GRP_CD_MST B
+		WHERE	A.RATE_CD = B.CD_VAL
+		AND		B.GRP_ID = 'CMN0247'
+		AND		B.USG_YN = 'Y'
+		AND		#{trtmDt} BETWEEN A.APPL_STRT_DT AND A.APPL_END_DT
+		ORDER	BY B.ETC6
+	</select>
+	
+	<select id="chkDupIntmInsrProd" resultType="int">
+		/* InsrMgmtMapper.chkDupIntmInsrProd */
+		SELECT	COUNT(INSR_PROD_CD)
+		FROM	MSP_INTM_INSR_MST A
+		WHERE	INSR_PROD_CD = #{insrProdCd}
+	</select>
+	
+	<insert id="regIntmInsrMst" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO">
+		/* InsrMgmtMapper.regIntmInsrMst */
+		INSERT
+		INTO	MSP_INTM_INSR_MST (
+				INSR_PROD_CD
+				, CMPN_LMT_AMT
+				, INSR_ENGG_CNT
+				, INSR_TYPE_CD
+				, USG_YN
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+				, SUB_LMT_YN
+		)
+		VALUES (
+				#{insrProdCd}
+				, #{cmpnLmtAmt}
+				, #{insrEnggCnt}
+				, #{insrTypeCd}
+				, NVL(#{usgYn}, 'Y')
+				, #{sessionUserId}
+				, SYSDATE
+				, #{sessionUserId}
+				, SYSDATE
+				, #{subLmtYn}
+		)
+	</insert>
+	
+	<update id="updIntmInsrMst" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO">
+		/* InsrMgmtMapper.updIntmInsrMst */
+		UPDATE MSP_INTM_INSR_MST
+		SET		USG_YN = #{usgYn}
+				, CMPN_LMT_AMT = #{cmpnLmtAmt}
+				, INSR_ENGG_CNT = #{insrEnggCnt}
+				, RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+				, SUB_LMT_YN = #{subLmtYn}
+		WHERE	INSR_PROD_CD = #{insrProdCd}
+	</update>
+	
+	<select id="getIntmInsrMstList" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO">
+		/* InsrMgmtMapper.getIntmInsrMstList */
+		SELECT	DISTINCT
+				A.RATE_CD									 AS insrProdCd
+				, A.RATE_NM									 AS insrProdNm
+				, C.CMPN_LMT_AMT							 AS cmpnLmtAmt
+				, A.BASE_AMT								 AS baseAmt
+				, FN_GET_CODENM('CMN0248', C.INSR_ENGG_CNT)	 AS insrEnggCnt
+				, C.INSR_TYPE_CD							 AS insrTypeCd
+				, C.USG_YN									 AS usgYn
+				, FN_GET_USRNM(C.REGST_ID)					 AS regstId
+				, TO_CHAR(C.REGST_DTTM, 'YYYYMMDDHH24MISS')	 AS regstDttm
+				, FN_GET_USRNM(C.RVISN_ID)					 AS rvisnId
+				, TO_CHAR(C.RVISN_DTTM, 'YYYYMMDDHH24MISS')	 AS rvisnDttm
+				, C.SUB_LMT_YN								 AS subLmtYn
+				, B.ETC6									 AS ordrNo
+		FROM
+				MSP_RATE_MST A
+				, CMN_GRP_CD_MST B
+				, MSP_INTM_INSR_MST C
+				, MSP_INTM_INSR_REL D
+		WHERE	A.RATE_CD = B.CD_VAL
+		AND		B.GRP_ID = 'CMN0247'
+		AND		A.RATE_CD = C.INSR_PROD_CD
+		AND		C.INSR_PROD_CD = D.INSR_PROD_CD(+)
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">
+			AND		D.RPRS_PRDT_ID = #{rprsPrdtId}
+			<if test="applYn != null and applYn != ''">
+				AND		D.APPL_YN = #{applYn}
+			</if>
+		</if>
+		<if test="usgYn != null and usgYn != ''">
+			AND		C.USG_YN = #{usgYn}
+		</if>
+		AND		#{trtmDt} BETWEEN APPL_STRT_DT AND APPL_END_DT
+		ORDER BY B.ETC6
+	</select>
+	
+	<select id="getPrdtListByPrdtNm" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO">
+		/* InsrMgmtMapper.getPrdtListByPrdtNm */
+		SELECT 
+				C.INSR_PROD_CD		AS insrProdCd
+				, D.RATE_NM			AS insrProdNm
+				, B.MNFCT_NM		AS mnfctNm
+				, A.RPRS_PRDT_ID	AS rprsPrdtId
+				, A.PRDT_CODE		AS prdtCode
+				, A.PRDT_NM			AS prdtNm
+		FROM
+				CMN_INTM_MDL A
+				, ORG_MNFCT_MST B
+				, MSP_INTM_INSR_MST C
+				, MSP_RATE_MST D
+		WHERE	A.RPRS_YN ='Y'
+		AND 	A.MNFCT_ID = B.MNFCT_ID
+		AND 	UPPER(A.PRDT_NM) LIKE '%'|| UPPER(#{prdtNm}) ||'%'
+		AND 	C.INSR_PROD_CD = #{insrProdCd}
+		AND 	C.INSR_PROD_CD = D.RATE_CD
+		AND 	#{trtmDt} BETWEEN D.APPL_STRT_DT AND D.APPL_END_DT
+		ORDER BY A.MNFCT_ID, A.PRDT_CODE, A.PRDT_NM
+	</select>
+	
+	<insert id="regIntmInsrRel" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO">
+		/* InsrMgmtMapper.regIntmInsrRel */
+		INSERT
+		INTO	MSP_INTM_INSR_REL (
+				INSR_PROD_CD
+				, RPRS_PRDT_ID
+				, APPL_YN
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+		)
+		VALUES (
+				#{insrProdCd}
+				, #{rprsPrdtId}
+				, DECODE(#{applYn}, 1, 'Y', 0, 'N', NVL(#{applYn}, 'Y'))
+				, #{sessionUserId}
+				, SYSDATE
+				, #{sessionUserId}
+				, SYSDATE
+		)
+	</insert>
+	
+	<select id="chkDupIntmInsrPrdt" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO" resultType="int">
+		/* InsrMgmtMapper.chkDupIntmInsrPrdt */
+		SELECT 	COUNT(INSR_PROD_CD)
+		FROM 	MSP_INTM_INSR_REL
+		WHERE 	INSR_PROD_CD =  #{insrProdCd}
+		AND 	RPRS_PRDT_ID = #{rprsPrdtId}
+	</select>
+	
+	<sql id="getIntmInsrRel">
+		SELECT 
+				C.INSR_PROD_CD								 AS insrProdCd
+				, D.RATE_NM									 AS insrProdNm
+				, B.MNFCT_NM								 AS mnfctNm
+				, A.RPRS_PRDT_ID							 AS rprsPrdtId
+				, A.PRDT_CODE								 AS prdtCode
+				, A.PRDT_NM									 AS prdtNm
+				, DECODE(C.APPL_YN, 'Y', 1, 'N', 0)			 AS applYn
+				, C.APPL_YN									 AS applYnNm
+				, FN_GET_USRNM(C.REGST_ID)					 AS regstId
+				, TO_CHAR(C.REGST_DTTM, 'YYYYMMDDHH24MISS')	 AS regstDttm
+				, FN_GET_USRNM(C.RVISN_ID)					 AS rvisnId
+				, TO_CHAR(C.RVISN_DTTM, 'YYYYMMDDHH24MISS')	 AS rvisnDttm
+				, F.SUB_LMT_YN								 AS subLmtYn
+		FROM
+				CMN_INTM_MDL A
+				, ORG_MNFCT_MST B
+				, MSP_INTM_INSR_REL C
+				, MSP_RATE_MST D
+				, CMN_GRP_CD_MST E
+				, MSP_INTM_INSR_MST F
+		WHERE	A.RPRS_YN ='Y'
+		AND 	A.MNFCT_ID = B.MNFCT_ID
+		AND 	C.RPRS_PRDT_ID = A.RPRS_PRDT_ID
+		AND 	C.INSR_PROD_CD = D.RATE_CD
+		AND 	C.INSR_PROD_CD = E.CD_VAL
+		AND 	E.GRP_ID = 'CMN0247'
+		AND 	C.INSR_PROD_CD = F.INSR_PROD_CD
+		<if test="insrProdCd != null and insrProdCd != ''">
+			AND 	C.INSR_PROD_CD = #{insrProdCd}
+		</if>
+		<if test="applYn != null and applYn != ''">
+			AND 	C.APPL_YN = #{applYn}
+		</if>
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">
+			AND 	A.RPRS_PRDT_ID = #{rprsPrdtId}
+		</if>
+		<if test="prdtNm != null and prdtNm != ''">
+			AND 	UPPER(A.PRDT_NM) LIKE '%'|| UPPER(#{prdtNm}) ||'%'
+		</if>
+		<if test="usgYn != null and usgYn != ''">
+			AND 	F.USG_YN = #{usgYn}
+		</if>
+		AND 	#{trtmDt} BETWEEN D.APPL_STRT_DT AND D.APPL_END_DT
+		ORDER BY E.ETC6, A.MNFCT_ID, A.PRDT_CODE, A.PRDT_NM
+	</sql>
+	
+	<select id="getIntmInsrRelList" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO">
+		/* InsrMgmtMapper.getIntmInsrRelList */
+		<include refid="getIntmInsrRel" />
+	</select>	
+	
+	<select id="getIntmInsrRelListByPaging" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO">
+		/* InsrMgmtMapper.getIntmInsrRelListByPaging */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getIntmInsrRel" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<update id="updIntmInsrRel" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO">
+		/* InsrMgmtMapper.updIntmInsrRel */
+		UPDATE 	MSP_INTM_INSR_REL
+		SET		APPL_YN = DECODE(#{applYn}, 1, 'Y', 0, 'N', NVL(#{applYn}, 'Y'))
+				, RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+		WHERE	INSR_PROD_CD = #{insrProdCd}
+		AND 	RPRS_PRDT_ID = #{rprsPrdtId}
+	</update>
+	
+	
+	<select id="getInsrCombo" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* InsrMgmtMapper.getInsrCombo */
+		SELECT
+			A.INSR_PROD_CD AS value
+			, C.RATE_NM AS text
+		FROM MSP_INTM_INSR_MST A
+			, CMN_GRP_CD_MST B
+			, MSP_RATE_MST C
+		WHERE A.INSR_PROD_CD = B.CD_VAL
+		AND   B.GRP_ID = 'CMN0247'
+		AND   A.INSR_PROD_CD = C.RATE_CD
+		<if test="usgYn != null and usgYn != ''">
+			AND   A.USG_YN = #{usgYn}
+		</if>
+		<if test="reqBuyType != null and reqBuyType != ''">
+			<choose>
+				<when test='reqBuyType == "UU"'>
+					AND A.INSR_TYPE_CD = '02'
+				</when>
+				<when test='reqBuyType == "MM"'>
+					<if test="rprsPrdtId != null and rprsPrdtId != ''">
+						AND A.INSR_PROD_CD IN (SELECT INSR_PROD_CD FROM MSP_INTM_INSR_REL WHERE RPRS_PRDT_ID = #{rprsPrdtId} AND APPL_YN = 'Y')
+					</if>
+				</when>
+			</choose>
+		</if>
+		ORDER BY ETC6
+	</select>
+	
+	<select id="getChgInsrCombo" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* InsrMgmtMapper.getChgInsrCombo */
+		<if test="reqBuyType != null and reqBuyType != ''">
+			<choose>
+				<when test='reqBuyType == "UU"'>
+					SELECT	A.INSR_PROD_CD AS value
+							, C.RATE_NM AS text
+					FROM 	MSP_INTM_INSR_MST A
+							, CMN_GRP_CD_MST B
+							, MSP_RATE_MST C
+					WHERE 	A.INSR_PROD_CD = B.CD_VAL
+					AND 	B.GRP_ID = 'CMN0247'
+					AND 	A.INSR_PROD_CD = C.RATE_CD
+					AND 	A.USG_YN = #{usgYn}
+					AND		A.INSR_TYPE_CD = '02'
+					ORDER BY ETC6
+				</when>
+				<when test='reqBuyType == "MM"'>
+					<if test="rprsPrdtId != null and rprsPrdtId != ''">
+						SELECT	VALUE 
+						        , TEXT 
+						FROM
+						        (
+						            SELECT	A.INSR_PROD_CD AS value
+						                    , C.RATE_NM AS text
+						                    , B.ETC6
+						            FROM    MSP_INTM_INSR_MST A
+						                    , CMN_GRP_CD_MST B
+						                    , MSP_RATE_MST C
+						            WHERE   A.INSR_PROD_CD = B.CD_VAL
+						            AND     B.GRP_ID = 'CMN0247'
+						            AND     A.INSR_PROD_CD = C.RATE_CD
+						            AND     A.USG_YN = #{usgYn}
+						            AND     A.INSR_PROD_CD IN ( 
+						                                        SELECT  INSR_PROD_CD 
+						                                        FROM    MSP_INTM_INSR_REL 
+						                                        WHERE   RPRS_PRDT_ID = #{rprsPrdtId} 
+						                                        AND     APPL_YN = 'Y'
+						                                      )
+						            UNION
+						            SELECT	A.INSR_PROD_CD AS value
+						                    , C.RATE_NM AS text
+						                    , B.ETC6
+						            FROM    MSP_INTM_INSR_MST A
+						                    , CMN_GRP_CD_MST B
+						                    , MSP_RATE_MST C
+						            WHERE   A.INSR_PROD_CD = B.CD_VAL
+						            AND     B.GRP_ID = 'CMN0247'
+						            AND     A.INSR_PROD_CD = C.RATE_CD
+						            AND     A.USG_YN = #{usgYn}
+						            AND     A.INSR_TYPE_CD = '02'
+						        )
+						ORDER BY ETC6
+					</if>
+					<if test="rprsPrdtId == null or rprsPrdtId == ''">
+						SELECT	A.INSR_PROD_CD AS value
+								, C.RATE_NM AS text
+						FROM 	MSP_INTM_INSR_MST A
+								, CMN_GRP_CD_MST B
+								, MSP_RATE_MST C
+						WHERE 	A.INSR_PROD_CD = B.CD_VAL
+						AND 	B.GRP_ID = 'CMN0247'
+						AND 	A.INSR_PROD_CD = C.RATE_CD
+						AND 	A.USG_YN = #{usgYn}
+						ORDER BY ETC6
+					</if>
+				</when>
+			</choose>
+		</if>
+		<if test="reqBuyType == null or reqBuyType == ''">
+			SELECT	A.INSR_PROD_CD AS value
+					, C.RATE_NM AS text
+			FROM 	MSP_INTM_INSR_MST A
+					, CMN_GRP_CD_MST B
+					, MSP_RATE_MST C
+			WHERE 	A.INSR_PROD_CD = B.CD_VAL
+			AND 	B.GRP_ID = 'CMN0247'
+			AND 	A.INSR_PROD_CD = C.RATE_CD
+			AND 	A.USG_YN = #{usgYn}
+			ORDER BY ETC6
+		</if>
+	</select>
+</mapper>

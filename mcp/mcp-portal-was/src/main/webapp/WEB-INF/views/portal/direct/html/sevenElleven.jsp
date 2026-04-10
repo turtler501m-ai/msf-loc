@@ -1,0 +1,205 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="t"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="nmcp" uri="nmcp.tag"%>
+
+<t:insertDefinition name="layoutMainDefault">
+	<t:putAttribute name="scriptHeaderAttr">
+		<script src="../../resources/js/portal/vendor/swiper.min.js"></script>
+		<script type="text/javascript" src="/resources/js/portal/usim/html/storeCom.js"></script>
+	</t:putAttribute>
+
+	<t:putAttribute name="contentAttr">
+		<div class="ly-content" id="main-content">
+	      <div class="ly-page--title">
+	        <h2 class="c-page--title">편의점 조회(세븐일레븐)</h2>
+	      </div>
+	      <div class="c-row c-row--xlg">
+	        <div class="cvs-wrap cvs-wrap__7-11">
+	          <img src="../../resources/images/portal/cvs/7-11/img_01.jpg" alt="쉽고 빠른 세븐일레븐 유심 가입하기">
+	          <img src="../../resources/images/portal/cvs/7-11/img_02.jpg" alt="세븐일레븐 개통방법">
+	          <img src="../../resources/images/portal/cvs/7-11/img_03.jpg" alt="전국 세븐일레븐에서 유심 구매 가능, 상담없이 직접하는 셀프개통!">
+	          <table>
+	            <tbody>
+	              <tr>
+	                <td>
+	                  <a href="/direct/storeInfo.do">
+	                    <img src="../../resources/images/portal/cvs/7-11/img_04_01.jpg" alt="편의점 찾기">
+	                  </a>
+	                </td>
+	                <td>
+	                <button class="c-button c-button c-button--white" data-dialog-trigger="#join-info-modal" id="selfBtn" style="display:none;">셀프개통 가능 시간 안내 popup 호출</button>
+	                  <a href="#" onclick="selfTimeChk()">
+	                    <img src="../../resources/images/portal/cvs/7-11/img_04_02.jpg" alt="셀프개통">
+	                  </a>
+	                </td>
+	              </tr>
+	            </tbody>
+	          </table>
+	          <img src="../../resources/images/portal/cvs/7-11/img_05.jpg" alt="공백">
+	          <img src="../../resources/images/portal/cvs/7-11/img_06.jpg" alt="구매부터 개통까지 특별한 혜택">
+	          <img src="../../resources/images/portal/cvs/7-11/img_07.jpg" alt="편의점 구매 고객의 솔직한 사용후기">
+	          <div class="cvs_notice">
+	            <h3 class="c-text--fs32 c-text--bold">※&nbsp;유의사항</h3>
+	            <h4 class="c-text--fs18 c-text--bold u-mt--30">[셀프개통 관련]</h4>
+	            <ul class="u-mt--20 u-plr--20 c-text--fs18 list-s-square c-text--regular">
+	              <li class="list-c-y">셀프개통을 위해서는 미리 구매 또는 신청 시 배송 요청하신 유심을 준비해 주십시오 (유심 일련번호 입력 필요)</li>
+	              <li class="list-c-y">번호이동할 회선으로 셀프개통을 진행하실 경우 전 통신사 해지로 오류가 발생할 수 있으므로, 일반 Wi-Fi 환경에서 개통을 진행하시거나 유선 또는 다른 회선을 이용하여 개통을 진행해 주십시오.</li>
+	              <li>당일 작성 완료되지 않은 신청 정보는, 창을 닫거나 개통이 완료되지 않을 경우 자동 삭제됩니다.</li>
+	              <li>이 경우 익일 재신청이 필요합니다.</li>
+	              <li>신청 가능 시간:번호이동 10시~19시(일요일/전산 휴무일 개통 불가) / 신규가입 09시~21시(전산 휴무일 개통 불가)</li>
+	              <li>유심을 휴대폰에 장착한 뒤 2~3회 껐다가 켜주시면 정상적인 이용이 가능합니다.</li>
+	              <li>타사 신규개통/명의변경/번호이동 후 3개월 이내 kt M모바일 번호이동 시 셀프개통이 불가합니다.</li>
+	              <li>5G요금제는 '유심 직접구매'를 통해 셀프개통 가능합니다.(유심 배송 요청 불가)</li>
+	            </ul>
+	            <h4 class="c-text--fs18 c-text--bold u-mt--30">[공통]</h4>
+	            <ul class="u-mt--20 u-plr--20 c-text--fs18 list-s-square">
+	              <li>평생할인 및 프로모션 혜택은 가입 신청일 기준으로 제공됩니다.</li>
+	              <li>각 요금제 외 요금제로 변경/해지/일시정지 시 해당 요금제에 제공하는 할인혜택(평생할인)은 종료되며, 할인금액은 일할 계산으로 적용됩니다.</li>
+	              <li>가입비 면제 혜택은 익월 청구내역에서 확인가능합니다.</li>
+	              <li>평생할인 금액 및 혜택은 다이렉트몰에서 가입해야 적용 가능합니다. 또한 평생할인 혜택은 가입 첫 달에는 일할 적용되며, 가입 익월부터 정상적용됩니다.</li>
+	              <li>프로모션 혜택 제공을 위한 할인 방법은 변경될 수 있으며(요금조정 등) 변경 시에는 혜택의 금액은 동일하며, 할인 방법 변경 시 홈페이지를 통해 공지할 예정입니다.</li>
+	              <li>데이터쉐어링 전용 요금제는 셀프개통을 통한 가입 신청이 불가합니다.</li>
+	              <li class="list-s-none">* 데이터 맘껏 12GB+/100분, 데이터 맘껏 10GB+/100분, 데이터 맘껏 15GB+/300분, 데이터 맘껏 15GB+/100분, 모두다 맘껏 12GB+, 모두다 맘껏 11GB+, 모두다 맘껏 100GB+(시즌), 모두다 맘껏 100GB+(게임박스), 구글플레이기프트(11GB+/통화맘껏), 구글플레이기프트(15GB+/100분), 구글플레이기프트(100GB+/통화맘껏), 모두다 맘껏 11GB+(지니뮤직 FREE), 모두다 맘껏 11GB+(기프티쇼 5000P), 모두다 맘껏 11GB+(Pay쿠폰 5000P), 모두다 맘껏 11GB+(블라이스 FREE), 데이터 맘껏 15GB+/100분(지니뮤직 FREE), 데이터 맘껏 15GB+/100분(기프티쇼 5000P), 데이터 맘껏 15GB+/100분(Pay쿠폰 5000P), 데이터 맘껏 15GB+/300분(지니뮤직 FREE), 데이터 맘껏 15GB+/300분(기프티쇼 5000P), 데이터 맘껏 15GB+/300분(Pay쿠폰 5000P), 모두다 맘껏 일5GB+(시즌) 이용 고객님들께서는 데이터쉐어링 전용 요금제(기본료 0원) 별도 신규 가입신청해주시면 서비스 이용이 가능합니다.</li>
+	              <li>셀프개통으로 신규 가입하신 고객님의 과다요금방지를 위해 로밍 음성/문자/데이터가 자동 차단되오니 해외출국(예정) 전 고객님께서는 고객센터를 통해 해외-로밍 사용신청 부탁드립니다.</li>
+	              <li class="list-s-none">* 번호이동 가입고객 제외</li>
+	              <li class="list-s-none">* 로밍사용 희망 시, 고객센터(114)를 통해 로밍 사용신청(무료)</li>
+	              <li>비 정상적인 개통 취소 및 재 개통 사례가 발생될 경우, 당사 규정에 따라 예외처리 될 수 있습니다.</li>
+	              <li>가입신청 시 기재하신 주소지 또는 번호로 프로모션 종류에 따라 사은품 지급시기에 순차적으로 발송되며, 주소지/전화번호 오기입으로 인한 오발송,미수령 시 재발송되지 않으니 가입신청 시 정보 기입에 오류가 없도록 확인부탁드립니다.</li>
+	              <li>개통 후 사은품 지급 시 까지 요금제 변경/해지/정지 고객은 혜택 대상에서 제외됩니다.</li>
+	              <li>프로모션 내용은 당사 사정에 따라 변경될 수 있으며, 혜택은 동급 또는 동일 수준의 타 경품으로 대체될 수 있습니다.</li>
+	            </ul>
+	            <h4 class="c-text--fs18 c-text--bold u-mt--30">[가입고객 사은품 제공 프로모션]</h4>
+	            <ul class="u-mt--20 u-plr--20 c-text--fs18 list-s-square">
+	              <li>이벤트 기간 : 1월 1일부터 1월 13일까지</li>
+	              <li>셀프개통 프로모션 사은품은 개통완료 고객 대상으로 사은품 선택 요청 LMS 문자가 발송되며, 함께 발송되는 URL에서 사은품 선택이 가능합니다.</li>
+	              <li>LMS 문자 발송은 개통시점 D+2일에 1회 발송되며, 사은품 미 선택 고객 대상으로 D+4일에 추가 발송됩니다. (D+8일에 입력이 종료되며, 이 후 사은품 변경은 불가합니다)</li>
+	              <li>선택형 사은품은 LMS로 신청하신 주소 및 번호로 발송되고, 입력 완료된 주소지 및 연락처 변경은 불가능합니다. 또한 주소 오기재로 인한 오발송 건은 당사에서 책임지지 않습니다.</li>
+	              <li>해당 요금제 사은품은 ‘최초 가입 요금제‘ 기준으로 선택 가능한 사은품이 제공됩니다.</li>
+	              <li>인기요금제 15종 셀프개통 가입 시</li>
+	              <li class="list-s-none u-mt--8">- 15종 요금제 가입 시 [상품권 택1 + 콘텐츠 이용권 택1] 조합으로 2개 사은품 선택이 가능하며 콘텐츠 이용권 2개 조합으로 선택할 경우, 전산 상 사은품 발송이 불가하여 제공되지 않으므로 안내사항대로 선택하도록 유의 부탁드립니다.</li>
+	              <li class="list-s-none u-mt--8">- 상품권 : 이마트 상품권 2만원 / 배달의민족 쿠폰 2만원 / 네이버페이포인트 2만원 중 택 1</li>
+	              <li class="list-s-none u-mt--8">- 콘텐츠 이용권 : 왓챠플레이 베이직 3개월 / 티빙 베이직 3개월 / 멜론 모바일 스트리밍 티켓 3개월/ 지니뮤직 스마트 음악감상 3개월 / 밀리의서재 3개월 이용권 중 택 1</li>
+	              <li class="list-s-none u-mt--8">- 콘텐츠 이용권 중 ‘왓챠플레이 베이직 3개월’ 와 ‘티빙 베이직 3개월’ 이용권은 3개월 이후 유료결제로 전환됨을 참고 부탁드리고, ‘멜론 모바일 스트리밍 티켓 3개월‘,’지니뮤직 스마트 음악감상 3개월’,’밀리의서재 3개월’ 이용권은 3개월 이후 자동종료 됩니다.</li>
+	              <li class="list-s-none u-mt--8">- 대상 요금제 15종 : 모두다 맘껏 7.0GB+,모두다 맘껏 11GB+,모두다 맘껏 100GB+(시즌),모두다 맘껏 100GB+(게임박스),모두다 맘껏 일5GB+(시즌),구글플레이기프트(15GB+/100분),구글플레이기프트(11GB+/통화맘껏),구글플레이기프트(100GB+/통화맘껏),통화 맘껏 2.5GB,통화 맘껏 4.5GB,데이터 맘껏 15GB+/100분, 시니어 안심 2GB+,시니어 안심 4GB+, 시니어 모두다 맘껏 4GB+, 시니어 모두다 맘껏 8GB+</li>
+	              <li>5천원 이상 요금제 셀프개통 가입 시</li>
+	              <li class="list-s-none u-mt--8">- 이마트 상품권 1만원 / 배달의민족 쿠폰 1만원 / 네이버페이포인트 1만원 중 택 1 가능합니다.</li>
+	              <li class="list-s-none u-mt--8">- 대상 요금제 : 5천원 이상 요금제</li>
+	              <li class="list-s-none u-mt--8">- 제외 요금제 : 데이터 쉐어링 전용요금제,데이터년9GB,5천원 미만 요금제,인기 요금제 13종,모두다 맘껏 11GB+(지니뮤직 FREE),데이터 맘껏 15GB+/300분(지니뮤직 FREE),데이터 맘껏 15GB+/100분(지니뮤직 FREE),데이터 맘껏 10GB+/180분,데이터 맘껏 15GB+/300분</li>
+	              <li>기간 내 사은품 미 선택 시 사은품은 지급되지 않으니, 기간 내 사은품 선택을 완료하여 주시길 바랍니다.</li>
+	              <li>셀프개통 가입 시 이마트 상품권 추가 증정 프로모션 관련(1월 1일부터 1월 13일까지)</li>
+	              <li class="list-s-none u-mt--8">- 편의점, 마트 유심을 통한 셀프개통 가입 고객 전원 이마트 상품권 1만원 추가 증정</li>
+	              <li class="list-s-none u-mt--8">- 제외 대상 : 데이터쉐어링 전용요금제, 데이터 년9GB, 5천원 미만 요금제,모두다 맘껏 11GB+(지니뮤직 FREE),데이터 맘껏 15GB+/300분(지니뮤직 FREE),데이터 맘껏 15GB+/100분(지니뮤직 FREE),데이터 맘껏 10GB+/180분,데이터 맘껏 15GB+/300분</li>
+	              <li class="list-s-none u-mt--8">- 지급시기 : 개통월 기준 익익월 말 발송</li>
+	              <li>여기어때, 펫프렌즈 쿠폰 증정 프로모션 관련(1월 1일부터 1월 13일까지)</li>
+	              <li class="list-s-none u-mt--8">- 편의점, 마트 유심을 통한 가입 고객 전원 여기어때, 펫프렌즈 할인쿠폰 증정</li>
+	              <li class="list-s-none u-mt--8">- 지급시기 : 개통월 기준 익월 말 발송</li>
+	              <li class="list-s-none u-mt--8">- 여기어때 쿠폰은 5천원, 7천원, 1만원권 3종이 지급되며 펫프렌즈 쿠폰은 1만원권 증정됩니다.</li>
+	              <li class="list-s-none u-mt--8">- 본 쿠폰은 일정 금액 이상 구매 시 사용 가능한 쿠폰 입니다.</li>
+	              <li>여기어때 : 5천원 쿠폰 (5만원 이상 구매 시), 7천원 쿠폰 (7만원 이상 구매 시), 1만원 쿠폰 (10만원 이상 구매시)</li>
+	              <li>펫프렌즈 : 1만원 쿠폰 (3만원 이상 구매 시)</li>
+	              <li class="list-s-none u-mt--8">- 제외대상 : 데이터 쉐어링 전용 요금제, 데이터년 9GB, 1만원 미만 요금제,모두다 맘껏 11GB+(지니뮤직 FREE),데이터 맘껏 15GB+/300분(지니뮤직 FREE),데이터 맘껏 15GB+/100분(지니뮤직 FREE),데이터 맘껏 10GB+/180분,데이터 맘껏 15GB+/300분</li>
+	              <li class="list-s-none u-mt--8">- 쿠폰 사용 방법, 유효기간 등 자세한 사항은 쿠폰 문자 발송 시 안내 드릴 예정 입니다.</li>
+	              <li class="list-s-none u-mt--8">- 본 쿠폰은 여기어때, 펫프렌즈 내 타 이벤트 쿠폰과 중복 사용이 불가합니다.</li>
+	            </ul>
+	            <h4 class="c-text--fs18 c-text--bold u-mt--30">[갤럭시Z 자급제 프로모션]</h4>
+	            <ul class="u-mt--20 u-plr--20 c-text--fs18 list-s-square">
+	              <li>이벤트 기간 : 1월 1일부터 1월 13일까지</li>
+	              <li>본 이벤트는 갤럭시 Z폴드3, 갤럭시 Z플립3 자급제 단말기 사용자 대상으로 진행하는 이벤트입니다.</li>
+	              <li>사은품은 유심요금제 가입 후 자급제 기기로 유심 장착 후 “모델명등록”을 한 고객님을 대상으로 증정됩니다. (기기정보등록은 고객센터 1899 - 5000 에서 가능)</li>
+	              <li>해당 프로모션 사은품은 프로모션 기간 내 갤럭시 Z폴드3, Z플립3 자급제 유심 개통 고객 대상으로 익월 말에 이마트 상품권 1만원 증정됩니다.</li>
+	              <li class="list-s-none u-mt--8">- 제외 요금제: 데이터쉐어링, 데이터년9GB, 10,000원 미만 요금제, 모두다 맘껏 11GB+(지니뮤직 FREE),데이터 맘껏 15GB+/300분(지니뮤직 FREE),데이터 맘껏 15GB+/100분(지니뮤직 FREE),데이터 맘껏 10GB+/180분,데이터 맘껏 15GB+/300분</li>
+	            </ul>
+	            <h4 class="c-text--fs18 c-text--bold u-mt--30">[아이폰13 자급제 프로모션]</h4>
+	            <ul class="u-mt--20 u-plr--20 c-text--fs18 list-s-square">
+	              <li>이벤트 기간 : 1월 1일부터 1월 13일까지</li>
+	              <li>본 이벤트는 아이폰13 시리즈 자급제 단말기 사용자 대상으로 진행하는 이벤트입니다.</li>
+	              <li class="list-s-none u-mt--8">- 제외 요금제: 데이터쉐어링, 데이터년9GB, 15,000원 미만 요금제, 모두다 맘껏 11GB+(지니뮤직 FREE),데이터 맘껏 15GB+/300분(지니뮤직 FREE),데이터 맘껏 15GB+/100분(지니뮤직 FREE),데이터 맘껏 10GB+/180분,데이터 맘껏 15GB+/300분</li>
+	              <li>본 이벤트는 프로모션 기간 내 아이폰 13 자급제 기기를 등록하신 고객 대상으로 4월 말에 아이폰 정품 20w 충전기 어댑터 증정되며 2월 말 멜론 모바일 스트리밍 티켓 3개월을 지급합니다.</li>
+	              <li>사은품은 유심요금제 가입 후 자급제 기기로 유심 장착 후 “모델명등록”을 한 고객님을 대상으로 증정됩니다. (기기정보등록은 고객센터 1899 - 5000 에서 가능)</li>
+	            </ul>
+	            <h4 class="c-text--fs18 c-text--bold u-mt--30">[유심비 무료 프로모션]</h4>
+	            <ul class="u-mt--20 u-plr--20 c-text--fs18 list-s-square">
+	              <li>이벤트 기간 : 1월 1일부터 1월 13일까지</li>
+	              <li>유심비 전액지원 프로모션 기간 내 가입 신청서를 접수/개통하신 고객님께는 익월 말 개통된 번호로 유심비 지원을 위한 상품권이 지급됩니다.</li>
+	              <li class="list-s-none u-mt--8">- 지원금액 : 편의점(NFC 9,000원권/ 일반 7,000원권) / 스토리웨이 편의점(NFC 5,000원/ 일반유심 4,000원) / 홈플러스, 쿠팡 로켓배송 : NFC 5,000원권 / 그 외 오픈마켓(네이버,쿠팡일반,옥션, G마켓,11번가,위메프,카카오쇼핑) NFC 9,000원, 일반 7,000원권 / 다이렉트몰(일반유심 7,000원) 제공</li>
+	              <li class="list-s-none u-mt--8">- 제외요금제 : 데이터쉐어링 전용요금제, 데이터 년9GB,데이터 맘껏 10GB+/180분,데이터 맘껏 15GB+/300분</li>
+	            </ul>
+	            <h4 class="c-text--fs18 c-text--bold u-mt--30">[친구초대 프로모션]</h4>
+	            <ul class="u-mt--20 u-plr--20 c-text--fs18 list-s-square">
+	              <li>이벤트 기간 : 1월 1일부터 1월 31일까지</li>
+	              <li>본 친구 초대 이벤트는 kt M모바일 사용 고객이 가족 및 지인에게 추천하여, 추천받으신 분(피추천인)이 다이렉트몰을 통해 개통을 완료 할 경우에 한해 참여 가능합니다.</li>
+	              <li>추천인과 피추천인이 동일할 경우(명의자 기준) 및 피추천인이 기기변경, 선불요금제로 가입 시 이벤트 대상에서 제외됩니다.</li>
+	              <li>모바일 상품권은 피추천인 개통월 기준, 익월 말 추천인에게 모바일 상품권 형태로 제공됩니다. (예시) 2021년 1월에 2명 개통 완료 시, 2월 말 모바일 상품권 2만원 지급.</li>
+	              <li>해당 프로모션은 5명까지 1명 초대 당 1만원 증정 진행되며, 설연휴 특집 이벤트로 6명 이상 초대 시 이마트 상품권 5만원, 10명 이상 초대 시 이마트 상품권 10만원을 추가로 증정해드립니다.</li>
+	              <li>피추천인 혜택 제외 요금제 : 데이터쉐어링 전용 요금제,데이터년9GB,5천원 미만 요금제</li>
+	              <li>피추천인이 추천인 정보(친구초대ID)를 온라인 가입 신청서에 기입하여 개통한 경우에만 혜택이 지급되며, 지급일 기준 피추천인 또는 추천인이 일시 정지, 해지, 명의변경, 요금제 변경 시 혜택 제공이 제한될 수 있습니다.</li>
+	              <li>친구 초대 이벤트는 ID발급/공유일 또는 피추천인의 신청일 기준이 아닌 피추천인의 개통일을 기준으로 하며 혜택은 친구 초대ID에 따라 제공됩니다.</li>
+	              <li>추천인과 피추천인이 동일할 경우(명의자 기준) 혜택 지급 대상에서 제외되며, 혜택은 친구초대ID에 따라 제공됩니다.</li>
+	              <li>모바일 상품권의 유효기간은 30일이며, 유효기간 내 미 사용 시 재발송이 불가하오니 이 점 유의하시기 바랍니다.</li>
+	            </ul>
+	            <h4 class="c-text--fs18 c-text--bold u-mt--30">[후후 프리미엄 서비스 증정 프로모션]</h4>
+	            <ul class="u-mt--20 u-plr--20 c-text--fs18 list-s-square">
+	              <li>후후 프리미엄 서비스 3개월 증정 프로모션 관련(1월 1일부터 1월 13일까지)</li>
+	              <li>본 프로모션의 서비스는 50대 이상 유심, 단말 가입 고객 대상으로 증정 됩니다.</li>
+	              <li class="list-s-none u-mt--8">- 제외 요금제 : 데이터쉐어링, 데이터년 9GB, 5,000원 미만 요금제,모두다 맘껏 11GB+(지니뮤직 FREE),데이터 맘껏 15GB+/300분(지니뮤직 FREE),데이터 맘껏 15GB+/100분(지니뮤직 FREE),데이터 맘껏 10GB+/180분,데이터 맘껏 15GB+/300분</li>
+	              <li>‘후후 프리미엄’ 서비스는 kt M모바일 고객 전용 보이스피싱/스팸 차단/생활 안전사고 보험 혜택 제공 앱 서비스 입니다.</li>
+	              <li>해당 서비스는 안드로이드 OS 8 이상 버전 단말에서 사용 가능하며 iOS 고객은 가입 이용이 불가합니다.</li>
+	              <li>해당 서비스는 SMS로 앱 설치 URL을 전송드리며, 다운로드 및 후후 계정 가입 후 이용 가능합니다.</li>
+	              <li>기존 후후 앱이 설치되어 있거나 계정 가입이 되어있는 고객의 경우 실행 시 해당 앱은 자동으로 후후 프리미엄 앱으로 전환됩니다.</li>
+	              <li>생활 안전사고 보험가입의 경우 후후 설치 및 계정 가입 후 안내되는 별도 보험 가입 페이지를 통해 가입 가능합니다.</li>
+	              <li>후후 서비스에 관해 문의사항이 있다면 후후 고객센터(02-2104-0082, 평일 08~17시 운영)로 문의 부탁드립니다.</li>
+	            </ul>
+	          </div>
+	        </div>
+	      </div>
+	    </div>
+	    <div class="c-modal c-modal--sm" id="join-info-modal" role="dialog" tabindex="-1" aria-labelledby="#join-info-modal__title">
+			<div class="c-modal__dialog" role="document">
+				<div class="c-modal__content">
+					<div class="c-modal__body">
+						<div class="self-opening">
+							<strong class="self-opening__title">신규 가입만 가능한 시간입니다.</strong>
+							<p class="self-opening__text">
+								번호 이동 셀프 개통은 <br> <a class="u-td-underline u-fw--medium" href="/appForm/appCounselorInfo.do">온라인 가입신청</a>을 이용해 주세요.
+							</p>
+							<span class="c-text-label c-text-label--type2 c-text-label--red rectangle">셀프개통 가능시간</span>
+							<div class="c-table">
+								<table>
+									<caption>번호이동, 신규가입을 포함한 셀프개통 가능 시간 정보</caption>
+									<colgroup>
+										<col style="width: 50%">
+										<col style="width: 50%">
+									</colgroup>
+									<thead>
+										<tr>
+											<th scope="col">번호이동</th>
+											<th scope="col">신규가입</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>
+												<strong class="self-opening__highlight">10:00 ~ 19:00</strong>
+												<p class="c-bullet c-bullet--fyr u-co-gray">일요일, 신정/설/추석 당일 제외</p></td>
+											<td>
+												<strong class="self-opening__highlight">09:00 ~ 21:00</strong>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="c-button-wrap u-mt--48">
+							<a class="c-button c-button--full c-button--primary" href="/appForm/appFormDesignView.do?orgnId=V000017488" id="movBtn" style="display:none;">확인</a>
+							<a class="c-button c-button--full c-button--primary" data-dialog-close id="closeBtn">확인</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</t:putAttribute>
+	
+</t:insertDefinition>

@@ -1,0 +1,90 @@
+# remote.yml
+# yaml-language-server: $schema=../../../devops/jenkins/schemas/deploy.schema.yml
+# 💡 Jenkins 스테이징(STG) 배포 스크립트 정의 파일
+# - 원격 서버 접속 정보(remote_groups)
+# - 배포 명령(command_groups)
+# - 실행 단계(steps) 구성
+
+config:
+  parallel_deploy: false  # 병렬 배포 여부 (false: 순차 실행)
+
+remote_groups:
+  # 📦 스테이징 서버 그룹 정의
+  stg_servers:
+    - user: jboss                   # 원격 서버 로그인 계정
+      host: stg-msp-portal-host        # 원격 서버 호스트명 또는 IP
+      credentials:                  # Jenkins Credentials ID 매핑
+        id: MSP-PORTAL-STG             # Jenkins에 등록된 Credential ID
+        type: userpass              # 인증 방식: userpass(아이디/비밀번호) 또는 sshKey      
+
+command_groups:
+  # 🛑 1. WAS 중지
+  stop_was:
+    - commands:
+        - "cd /jboss/domains/msp_stg/; ./stop.sh||true"  # stop.sh 실행 (실패해도 계속 진행)
+      env:
+        JAVA_HOME: "/jboss/jdk1.6.0_45"                  # JDK 설정
+        PATH: "$JAVA_HOME/bin:$PATH"                     # PATH 환경 변수 추가
+
+  # 🧹 2. 기존 WAR 파일 제거
+  clean_war:
+    - remove:
+        - paths:
+            - '/jboss/applications/msp_stg/#{APP_NAME}*'    # 기존 배포 파일 및 배포 관리 파일 전체
+            # - '/jboss/applications/msp_stg/#{APP_NAME}.dodeploy'
+            # - '/jboss/applications/msp_stg/#{APP_NAME}.isdeploying'
+          force: true                                     # 강제 삭제 (-f)
+
+  # 📦 3. 신규 WAR 파일 배포
+  deploy_war:
+    - puts:
+        - from: '/home/jenkins/data/release/stg/msp-portal/#{APP_NAME}'  # Jenkins 빌드 산출물 경로
+          into: '/jboss/applications/msp_stg/'                        # 대상 서버 배포 경로
+          override: true                                              # 기존 파일 덮어쓰기
+    - commands:
+        - 'chmod 755 /jboss/applications/msp_stg/#{APP_NAME}'         # 실행 권한 부여
+        - 'ls -lrt /jboss/applications/msp_stg/#{APP_NAME}'           # 배포 결과 확인
+
+  # 🚀 4. WAS 기동
+  start_was:
+    - commands:
+        - "export BUILD_ID=dontKillMe; cd /jboss/domains/msp_stg; ./start.sh"  # Jenkins 프로세스 보호 후 start.sh 실행
+      env:
+        JAVA_HOME: "/jboss/jdk1.6.0_45"
+        PATH: "$JAVA_HOME/bin:$PATH"
+
+  # 📁 5. Jenkins 내부에서 정적 리소스(NFS) 복사
+  copy_static_files_to_nfs:  # 4. Jenkins 내부에서 NFS로 정적 파일 복제
+    - commands:
+        - "cp -rf #{MSP_WORKSPACE}/src/main/webapp/css #{JBOSS_NAS}"
+        - "cp -rf #{MSP_WORKSPACE}/src/main/webapp/js #{JBOSS_NAS}"
+        - "cp -rf #{MSP_WORKSPACE}/src/main/webapp/lib #{JBOSS_NAS}"
+        - "cp -rf #{MSP_WORKSPACE}/src/main/webapp/images #{JBOSS_NAS}"
+        - "cp -rf #{MSP_WORKSPACE}/src/main/webapp/ubireport/ajax #{JBOSS_NAS}/ubireport/ajax"
+        - "cp -rf #{MSP_WORKSPACE}/src/main/webapp/ubi4 #{JBOSS_NAS}/ubi4"
+
+
+steps:
+  # 🧩 단계별 실행 정의
+
+  deploy:
+    # 스테이징 서버 배포 단계
+    - remote_groups:
+        hosts: [stg_servers]                 # 스테이징 서버 그룹 지정
+        contexts:
+          - APP_NAME: "msp-portal.war"          # 배포할 WAR 파일 이름 (context 변수로 사용 가능)
+      command_groups:
+        - stop_was                           # 1. WAS 중지
+        - clean_war                          # 2. 기존 WAR 삭제
+        - deploy_war                         # 3. 신규 WAR 배포
+        - start_was                          # 4. WAS 재기동
+
+  copy_static:
+    # 정적 파일 복사 단계 (로컬 실행)
+    - remote_groups:
+        hosts: []                            # 원격 서버 없음 (Jenkins 내부 실행)
+        contexts:
+          - MSP_WORKSPACE: "/home/jenkins/.jenkins/workspace/MSP/msp-portal-stg"  # Jenkins 워크스페이스 경로
+            JBOSS_NAS: "/jboss/nfs/mspstg/default"                 # NFS 대상 경로
+      command_groups:
+        - copy_static_files_to_nfs           # NFS 복사 명령 그룹 실행

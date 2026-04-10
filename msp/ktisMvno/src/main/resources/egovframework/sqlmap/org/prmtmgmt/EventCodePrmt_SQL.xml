@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace= "com.ktis.msp.org.prmtmgmt.mapper.EventCodePrmtMapper">
+
+    <select id="getEventCodePrmtList" parameterType="com.ktis.msp.org.prmtmgmt.vo.EventCodePrmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+        /* eventCodePrmtMapper.getEventCodePrmtList */
+        SELECT	DTL.EVNT_CD_PRMT AS EVNT_CD
+				, DTL.EVNT_CD_NM AS EVNT_NM
+            	, SUB.CONTRACT_NUM
+            	, SUB.SUB_LINK_NAME
+            	, SUB.SUBSCRIBER_NO
+            	, DTL.FST_RATE_NM
+            	, DTL.LST_RATE_NM
+            	, SUB.LST_COM_ACTV_DATE
+            	, DTL.MOVE_COMPANY_NM
+            	, DTL.RECOMMEND_INFO
+        FROM 	MSP_JUO_SUB_INFO SUB
+            	, MSP_REQUEST_DTL DTL
+        WHERE 	SUB.CONTRACT_NUM = DTL.CONTRACT_NUM
+        AND 	DTL.EVNT_CD_PRMT IS NOT NULL
+        <if test="srchStrtDt != null and srchStrtDt != '' and srchEndDt != null and srchEndDt != ''">
+        	AND 	SUB.LST_COM_ACTV_DATE BETWEEN #{srchStrtDt} AND #{srchEndDt}
+        </if>
+        <if test="srchEventCd != null and srchEventCd != ''">
+            AND 	DTL.EVNT_CD_PRMT = #{srchEventCd}
+        </if>
+        ORDER BY SUB.LST_COM_ACTV_DATE DESC
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+
+</mapper>

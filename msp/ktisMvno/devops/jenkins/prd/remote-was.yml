@@ -1,0 +1,76 @@
+# remote.yml
+# yaml-language-server: $schema=../../../devops/jenkins/schemas/deploy.schema.yml
+# 💡 Jenkins 프로덕션(운영) 배포 스크립트 정의 파일
+# - 원격 서버 접속 정보(remote_groups)
+# - 배포 명령(command_groups)
+# - 실행 단계(steps) 구성
+
+config:
+  parallel_deploy: false  # 병렬 배포 여부 
+
+remote_groups:
+  was_servers:
+    - user: jboss                   # 원격 서버 로그인 계정
+      host: prd-msp-portal-host-01        # 원격 서버 호스트명 또는 IP
+      credentials:                  # Jenkins Credentials ID 매핑
+        id: MSP-PORTAL-PRD             # Jenkins에 등록된 Credential ID
+        type: userpass              # 인증 방식: userpass(아이디/비밀번호) 또는 sshKey      
+    - user: jboss                   # 원격 서버 로그인 계정
+      host: prd-msp-portal-host-02        # 원격 서버 호스트명 또는 IP
+      credentials:                  # Jenkins Credentials ID 매핑
+        id: MSP-PORTAL-PRD             # Jenkins에 등록된 Credential ID
+        type: userpass              # 인증 방식: userpass(아이디/비밀번호) 또는 sshKey  
+    
+command_groups:
+  # 🛑 1. WAS 중지
+  stop_was:
+    - commands:
+        - "cd /jboss/domains/#{APP_HOME}/; ./stop.sh||true"  # stop.sh 실행 (실패해도 계속 진행)
+      env:
+        JAVA_HOME: "/jboss/jdk1.6.0_45"
+        PATH: "$JAVA_HOME/bin:$PATH"
+
+  # 🧹 2. 기존 WAR 파일 및 관리 파일 제거
+  clean_war:
+    - remove:
+        - paths:
+            - '/jboss/applications/#{APP_HOME}/#{APP_NAME}*'     # 기존 배포 파일 및 배포 관리 파일 전체
+            # - '/jboss/applications/#{APP_HOME}/#{APP_NAME}.dodeploy'
+            # - '/jboss/applications/#{APP_HOME}/#{APP_NAME}.isdeploying'
+          force: true                            # 강제 삭제 (-f)
+
+  # 📦 3. 신규 WAR 파일 배포
+  deploy_war:
+    - puts:
+        - from: '/home/jenkins/data/release/prd/msp-portal/#{APP_NAME}'  # Jenkins 빌드 산출물 경로
+          into: '/jboss/applications/#{APP_HOME}/'                         # 대상 서버 배포 경로
+          override: true                                              # 기존 파일 덮어쓰기
+    - commands:
+        - 'chmod 755 /jboss/applications/#{APP_HOME}/#{APP_NAME}'          # 실행 권한 부여
+        - 'ls -lrt /jboss/applications/#{APP_HOME}/#{APP_NAME}'            # 배포 결과 확인
+
+  # 🚀 4. WAS 기동
+  start_was:
+    - commands:
+        - "export BUILD_ID=dontKillMe; cd /jboss/domains/#{APP_HOME}; ./start.sh"  # Jenkins 빌드 프로세스 보호 후 start.sh 실행
+      env:
+        JAVA_HOME: "/jboss/jdk1.6.0_45"
+        PATH: "$JAVA_HOME/bin:$PATH"
+
+steps:
+  # 🧩 단계별 실행 정의
+  deploy_was:
+    # 운영 서버 배포 단계
+    - remote_groups:
+        hosts: [was_servers]                  # 운영 서버 그룹 지정
+        contexts:
+          - APP_HOME: "msp1"                  # 1'st host context 변수 치환 값
+            APP_NAME: "msp-portal.war"
+          - APP_HOME: "msp2"                  # 2'nd context 변수 치환 값
+            APP_NAME: "msp-portal.war"
+           
+      command_groups:
+        - stop_was                            # 1. WAS 중지
+        - clean_war                           # 2. 기존 WAR 삭제
+        - deploy_war                          # 3. 신규 WAR 배포
+        - start_was                           # 4. WAS 재기동

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.csanalyticmgmt.mapper.AcenCnsltHistMapper">
+
+    <select id="getAcenCnsltSrList" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenCnsltHistVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*AcenCnsltHistMapper.getAcenCnsltSrList*/
+        <include refid="com.ktis.msp.cmn.include.paging-start" />
+        SELECT
+           TO_CHAR(MST.TALK_DT, 'YYYY-MM-DD') AS TALK_DT
+          ,FN_GET_CODENM('ACEN0010', MST.TALK_TYPE) AS TALK_TYPE
+          ,DTL.CONTRACT_NUM
+          ,SUB.SUB_LINK_NAME AS CUSTOMER_NM
+          ,MST.CNSLT_TYPE_FIR_NM
+          ,MST.CNSLT_TYPE_SEC_NM
+          ,MST.CNSLT_TYPE_THI_NM
+          ,MST.CNSLT_TYPE_DTL_NM
+          ,NVL2(DTL.OPEN_AGNT_CD, FN_GET_ORGNM(DTL.OPEN_AGNT_CD) || '/' || DTL.OPEN_AGNT_CD, '') AS OPEN_AGNT
+          ,FN_GET_CODENM('MSP0003', DTL.SUB_STATUS) AS SUB_STATUS_NM
+          ,TO_CHAR(TO_DATE(DTL.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') AS LST_COM_ACTV_DATE
+          ,FN_GET_CODENM('RCP9001', DTL.OPER_TYPE) AS OPER_TYPE
+          ,FN_GET_CODENM('RCP9004', DTL.REQ_BUY_TYPE) AS REQ_BUY_TYPE
+          ,FN_GET_USRNM(MST.CNSLT_MID) AS CNSLT_NM
+        FROM NMCP_ACEN_CNSLT_MST@DL_MCP MST
+            ,NMCP_ACEN_CNSLT_DTL@DL_MCP DTL
+            ,MSP_JUO_SUB_INFO SUB
+            ,MSP_RATE_MST RATE
+        WHERE MST.CNSLT_SEQ = DTL.CNSLT_SEQ
+          AND DTL.CONTRACT_NUM = SUB.CONTRACT_NUM(+)
+          AND DTL.RATE_CD = RATE.RATE_CD(+)
+          AND MST.TALK_DT BETWEEN TO_DATE(#{callStrtDt} || '000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{callEndDt} || '235959', 'YYYYMMDDHH24MISS')
+          AND MST.TALK_YM BETWEEN SUBSTR(#{callStrtDt}, 1, 6) AND SUBSTR(#{callEndDt}, 1, 6)
+          /*상담사ID*/
+          <if test='searchCnsltId != null and searchCnsltId != ""'>
+            AND MST.CNSLT_ID = #{searchCnsltId}
+          </if>
+          /*SR(대)*/
+          <if test='searchSrFir != null and searchSrFir != ""'>
+            AND MST.CNSLT_TYPE_FIR_NM LIKE '%' || #{searchSrFir} || '%'
+          </if>
+          /*SR(중)*/
+          <if test='searchSrSec != null and searchSrSec != ""'>
+            AND MST.CNSLT_TYPE_SEC_NM LIKE '%' || #{searchSrSec} || '%'
+          </if>
+          /*SR(소)*/
+          <if test='searchSrThi != null and searchSrThi != ""'>
+            AND MST.CNSLT_TYPE_THI_NM LIKE '%' || #{searchSrThi} || '%'
+          </if>
+          /*SR(세)*/
+          <if test='searchSrDtl != null and searchSrDtl != ""'>
+            AND MST.CNSLT_TYPE_DTL_NM LIKE '%' || #{searchSrDtl} || '%'
+          </if>
+          /*통화유형*/
+          <if test='searchTalkType != null and searchTalkType != ""'>
+            AND MST.TALK_TYPE = #{searchTalkType}
+          </if>
+          /*검색구분(계약번호)*/
+          <if test='searchVal != null and searchVal != "" and searchCd == "01"'>
+            AND (DTL.CONTRACT_NUM = #{searchVal} OR
+                 DTL.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+          </if>
+          /*검색구분-CTN*/
+          <if test='searchVal != null and searchVal != "" and searchCd == "02"'>
+            AND SUB.SUBSCRIBER_NO = #{searchVal}
+          </if>
+          /*검색구분-요금제*/
+          <if test='searchVal != null and searchVal != "" and searchCd == "03"'>
+            AND RATE.RATE_NM LIKE '%' || #{searchVal} || '%'
+          </if>
+          /*검색구분-고객명*/
+          <if test='searchVal != null and searchVal != "" and searchCd == "04"'>
+            AND UPPER(SUB.SUB_LINK_NAME) LIKE UPPER(#{searchVal}) || '%'
+          </if>
+        ORDER BY MST.TALK_DT DESC, MST.CNSLT_SEQ DESC
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+
+    <select id="getAcenCnsltSrStatsList" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenCnsltHistVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*AcenCnsltHistMapper.getAcenCnsltSrStatsList*/
+        <include refid="com.ktis.msp.cmn.include.paging-start" />
+        SELECT
+           TO_CHAR(TO_DATE(TALK_YM, 'YYYYMM'), 'YYYY-MM') AS TALK_YM
+          ,CNSLT_TYPE_FIR_NM
+          ,CNSLT_TYPE_SEC_NM
+          ,CNSLT_TYPE_THI_NM
+          ,CNSLT_TYPE_DTL_NM
+          ,COUNT(CNSLT_SEQ) AS TOTAL_CNT
+        FROM NMCP_ACEN_CNSLT_MST@DL_MCP
+        WHERE TALK_DT BETWEEN TO_DATE(#{strtDttm} || '000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{endDttm} || '235959', 'YYYYMMDDHH24MISS')
+          AND TALK_YM BETWEEN #{strtDt} AND #{endDt}
+          /*SR(대)*/
+          <if test='searchSrFir != null and searchSrFir != ""'>
+            AND CNSLT_TYPE_FIR_NM LIKE '%' || #{searchSrFir} || '%'
+          </if>
+          /*SR(중)*/
+          <if test='searchSrSec != null and searchSrSec != ""'>
+            AND CNSLT_TYPE_SEC_NM LIKE '%' || #{searchSrSec} || '%'
+          </if>
+          /*SR(소)*/
+          <if test='searchSrThi != null and searchSrThi != ""'>
+            AND CNSLT_TYPE_THI_NM LIKE '%' || #{searchSrThi} || '%'
+          </if>
+          /*상세*/
+          <if test='searchSrDtl != null and searchSrDtl != ""'>
+            AND CNSLT_TYPE_DTL_NM LIKE '%' || #{searchSrDtl} || '%'
+          </if>
+        GROUP BY TALK_YM, CNSLT_TYPE_FIR_NM, CNSLT_TYPE_SEC_NM, CNSLT_TYPE_THI_NM, CNSLT_TYPE_DTL_NM
+        ORDER BY TALK_YM DESC
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+
+</mapper>

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+
+	<bean name="propertiesService" class="egovframework.rte.fdl.property.impl.EgovPropertyServiceImpl" destroy-method="destroy">
+		<property name="properties">
+			<map>
+				<entry key="pageUnit" value="10"/>
+				<entry key="pageSize" value="10"/>
+				<entry key="fileUploadBaseDirectory"  value="D:/temp"/>
+				<entry key="fileUploadSizeLimit"  value="100000000"  />
+				<entry key="sessionPeriodSeconds"  value="3600"  />
+				<entry key="passEnc"  value="true"  />
+				<entry key="passChange"  value="false"  />
+				<entry key="initPass"  value="b7287095459267f38a3d705d99bd61cd9497bfead1d6afd0dd68f84544324e80db244976693fd19fa264aa12cdfa5138429ccaf434c0802ef27882a62e16cdeb"  />
+				<entry key="excelPath"  value="c:/temp/excel/"/>
+				<entry key="excelPathLen"  value="3"/>
+
+				<entry key="orgPath"  value="c:/temp/FileUpload/"/>
+				<entry key="orgPath2"  value="D:/temp/"/>
+				<entry key="orgPathLen2"  value="9"/>
+
+				<entry key="ppsPath"  value="/jboss/data/webscan/prd" />
+				<entry key="ppsPathLen2"  value="28"/>
+
+				<!--  mcp url -->
+				<entry key="mcp.url"  value="http://mspdev.ktmmobile.com"  />
+
+				<!--  prx 서버 url -->
+				<entry key="nStep.prx.url"  value="http://112.175.98.116:8180/nStep/serviceCall.do"  />
+				<!-- <entry key="nStep.prx.url"  value="http://128.134.37.215:8180/nStep/serviceCall.do"/> -->
+				<!-- scan Url -->
+				<!-- <entry key="scan.app.url" value="http://scndev.ktmmobile.com" /> -->
+				<!-- <entry key="scan.download.url" value="https://scndev.ktmmobile.com/webscan/ui/downloadInstallProgram.jsp" /> -->
+
+				<entry key="scan.app.url" value="http://scndev.ktmmobile.com" />
+				<entry key="scan.app.port" value="80" />
+
+				<!-- <entry key="scan.download.url" value="http://10.220.68.87:19001/webscan/ui/downloadInstallProgram.jsp" /> -->
+				<entry key="scan.download.url" value="http://scndev.ktmmobile.com/webscan/ui/downloadInstallProgram.jsp" />
+
+				<!-- <entry key="scan.search.url" value="http://10.220.68.87:19001/webscan/ui/searchScanImages.jsp" /> -->
+				<entry key="fax.search.url" value="http://10.220.68.87:19001/webscan/ui/searchFaxImages.jsp" />
+
+				<!-- <entry key="scan.search.url" value="http://localhost:18080/webscan/ui/callImageViewer.jsp" /> -->
+				<!-- <entry key="scan.search.url" value="http://scndev.ktmmobile.com/webscan/ui/callImageViewer.jsp" /> -->
+				<entry key="scan.search.url" value="http://127.0.0.1:27583/ImageAgent.do" />
+
+				<!-- Admin 권한 체크 여부 -->
+				<entry key="admChkYn" value="N" />
+				<!--  OTP 적용 여부 -->
+				<entry key="otpYn" value="N" />
+				<!--  MAC인증 적용 여부 -->
+				<entry key="macYn" value="Y" />
+				<!--  OTP SMS INFO  -->
+				<entry key="otp.sms.callcenter" value="18995000" />
+
+				<!-- ibsheet url -->
+				<entry key="mvno.ibsheet.url" value="http://statlocal.ktmmobile.com:8080" />
+
+				<!-- sftp 정보 -->
+				<entry key="msp.sftp.host" value="10.220.71.229" />
+				<entry key="msp.sftp.port" value="5007" />
+				<entry key="msp.sftp.username" value="jboss" />
+				<entry key="msp.sftp.pwd" value="ktmm0601!!" />
+				<entry key="msp.sftp.local.base.dir" value="d:/temp/partner/" />
+				<!-- <entry key="msp.sftp.local.base.dir" value="/jboss/data/msp_dev/ptnr/" /> -->
+
+				<entry key="sms.callcenter" value="18995000" />
+
+				<!-- 온라인서식지 -->
+				<entry key="scan.form.path" value="d:/temp/data/scan/" />
+				<entry key="scan.form.url" value="https://scndev.ktmmobile.com/webscan/interface/SCAN_ONLINEUPLOAD.jsp" />
+
+				<!--  사용자설명서 -->
+				<entry key="helpPath"  value="E:/temp/"/>
+
+				<!-- 주소찾기 -->
+				<entry key="juso.interface.server"  value="http://10.20.28.38:18810/app/search/addrSearchApi.do"/>
+				<entry key="juso.key"  value="U01TX0FVVEgyMDE2MDIyMzEwMTQ1MDA="/>
+
+				<!-- 개통간소화 prx url -->
+				<entry key="simpleOpenUrl" value="http://112.175.98.116:8180/mPlatform/simpleOpenServiceCall.do" />
+
+				<!-- MP 셀프케어 url -->
+				<entry key="mplatform.selfcare.url" value="http://112.175.98.116:8180/mPlatform/serviceCall.do" />
+				<entry key="mplatform.selfcare.json.url" value="http://112.175.98.116:8180/mPlatform/serviceCallJson.do" />
+
+				<!-- 롯데멤버스 암호화keyfile -->
+				<entry key="msp.lpoint.keyfile" value="D:/temp/partner/lpoint/keyFile/KTMF_key.dat" />
+				<entry key="msp.lpoint.partnerId" value="P010900002" />
+				
+				<!-- 카카오 알림톡 -->
+				<entry key="msp.kakao.kNextType" value="9" />
+				<entry key="msp.kakao.senderKey" value="0521ebd06826053de983524b65b92cce0f303f17" />
+				
+				<!-- 바로배송 prx url -->
+				<entry key="dvryUsimUrl" value="http://112.175.98.116:8180/mPlatform/serviceCall.do" />
+
+				<!-- 사은품 이미지 저장 -->
+				<entry key="gift.fileupload.base" value="c:/temp/FileUpload/gift/" />
+				<entry key="gift.fileupload.web" value="/temp/FileUpload/gift/" />
+
+				<!-- CI prx url -->
+				<entry key="ciPrx.siteCode" value="K406"/>
+				<entry key="ciPrx.sitePw" value="f7LF8IPD"/>
+				<entry key="nicePinCi.prx.url" value="http://10.20.28.38:7006/getNicePinCi.do"/>
+
+				<!-- 대용량 업로드 정보 -->
+				<entry key="msp.upload.dburl" value="jdbc:oracle:thin:@10.220.71.231:2521:MSPDEV" />
+				<entry key="msp.upload.dbuser" value="MSP_WAS" />
+				<entry key="msp.upload.dbpass" value="ktmm0601!!" />
+
+				<!--hub ext 서버 url-->
+				<entry key="ext.url"  value="http://localhost:8095"  />
+
+				<!--MCP-ACEN-REQ (ext)-->
+				<!--<entry key="acen.req.url" value="http://10.20.28.38:8251" />-->
+
+				<!--MCP-ACEN-REQ (req)-->
+				<entry key="acen.req.url" value="http://10.20.28.38:8282" />
+
+			</map>
+		</property>
+	</bean>
+
+</beans>

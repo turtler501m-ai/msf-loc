@@ -1,0 +1,1302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.cardmgmt.mapper.PpsHdofcCardMgmtMapper">
+
+	<!--PIN관리 목록조회 -->
+    <select id="getPinInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT	 
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'pin_number'">
+							
+						</when>
+						<otherwise>
+							/*+ INDEX_DESC(A PPS_PIN_INFO_PK) */
+						</otherwise>
+					</choose>
+				</if>
+			  MNG_CODE,
+			  STATUS,
+			 NVL((SELECT CD_NM FROM PPS_KT_COMMON_CD WHERE TABLE_NM='PPS_PIN_INFO' AND COL='STATUS' AND CD= A.STATUS),'') STATUS_NM,
+			  PIN_GUBUN,
+        	  NVL((SELECT CD_NM FROM PPS_KT_COMMON_CD WHERE TABLE_NM='PPS_PIN_INFO' AND COL='PIN_GUBUN' AND CD= A.PIN_GUBUN),'') PIN_GUBUN_NM,
+			  ONOFF_GUBUN,
+        	  NVL((SELECT CD_NM FROM PPS_KT_COMMON_CD WHERE TABLE_NM='PPS_PIN_INFO' AND COL='ONOFF_GUBUN' AND CD= A.ONOFF_GUBUN),'') ONOFF_GUBUN_NM,
+			  TO_CHAR(OPEN_DATE, 'YYYY-MM-DD') OPEN_DATE,
+			  TO_CHAR(OUT_DATE, 'YYYY-MM-DD') OUT_DATE,
+			  START_PRICE,
+			  NOW_PRICE,
+			  OUT_PRICE,
+			  TO_CHAR(RCG_DATE, 'YYYY-MM-DD') RCG_DATE,
+			  TO_CHAR(CR_DATE, 'YYYY-MM-DD') CR_DATE,
+			  TO_CHAR(EXPIRE_DATE, 'YYYY-MM-DD') EXPIRE_DATE,
+			  OUT_AGENT_ID,
+			  F_GET_AGENT_NM(OUT_AGENT_ID) OUT_AGENT_NM,
+			  OUT_DEALER_ID,
+			  F_GET_AGENT_NM(OUT_DEALER_ID) OUT_DEALER_NM,
+			  TO_CHAR(NVL(CONTRACT_NUM,0),'9999999999') CONTRACT_NUM,
+			  RCG_FLAG,
+			  FREE_FLAG, 
+       		  DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') FREE_FLAG_NM ,     
+			  PIN_NUMBER
+		 FROM PPS_PIN_INFO A
+		 WHERE CR_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+		 	<if test="searchNm != null and searchNm != ''">
+				<choose>
+					<when test="searchType == 'mng_code'">
+						AND MNG_CODE LIKE '%' || #{searchNm}
+					</when>
+					<when test="searchType == 'subscriber_no'">
+						AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+					</when>
+					<when test="searchType == 'pin_number'">
+						AND PIN_NUMBER = CRYPTO_AES256.ENC_AES(#{searchNm})
+					</when>
+					<when test="searchType == 'start_price'">
+						AND START_PRICE = #{searchNm}
+					</when>
+				</choose>
+			</if>
+			<if test="searchNm == null or searchNm == ''">
+				<if test="startDtCreate != null and startDtCreate != ''">
+					AND CR_DATE >= TO_DATE(#{startDtCreate}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtCreate != null and endDtCreate != ''">
+					AND CR_DATE &lt; TO_DATE(#{endDtCreate}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="startDtOut != null and startDtOut != ''">
+					AND OUT_DATE >= TO_DATE(#{startDtOut}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtOut != null and endDtOut != ''">
+					AND OUT_DATE &lt; TO_DATE(#{endDtOut}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="startDtOpen != null and startDtOpen != ''">
+					AND OPEN_DATE >= TO_DATE(#{startDtOpen}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtOpen != null and endDtOpen != ''">
+					AND OPEN_DATE &lt; TO_DATE(#{endDtOpen}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="startDtExpire != null and startDtExpire != ''">
+					AND EXPIRE_DATE >= TO_DATE(#{startDtExpire}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDtExpire != null and endDtExpire != ''">
+					AND EXPIRE_DATE &lt; TO_DATE(#{endDtExpire}, 'YYYY-MM-DD')+1
+				</if>	
+				<if test="searchPinStatus != null and searchPinStatus != ''">
+						AND STATUS = #{searchPinStatus}
+				</if>
+				<if test="searchOnOffGubun != null and searchOnOffGubun != ''">
+						AND ONOFF_GUBUN = #{searchOnOffGubun}
+				</if>
+				<if test="searchAgentNm != null and searchAgentNm != ''">
+						AND OUT_AGENT_ID = #{searchAgentNm}
+				</if>
+				<if test="searchDealerNm != null and searchDealerNm != ''">
+						AND OUT_DEALER_ID = #{searchDealerNm}
+				</if>
+				<if test="searchPinRcgFlag != null and searchPinRcgFlag != ''">
+						AND RCG_FLAG = #{searchPinRcgFlag}
+				</if>
+				<if test="searchPinGubun != null and searchPinGubun != ''">
+						AND PIN_GUBUN = #{searchPinGubun}
+				</if>
+				<if test="searchFreeFlag != null and searchFreeFlag != ''">
+						AND FREE_FLAG = #{searchFreeFlag}
+				</if>
+			
+				<if test="searchManageCodeHeader != null and searchManageCodeHeader != ''">
+						AND MNG_CODE LIKE #{searchManageCodeHeader} || '%'
+					<if test="searchManageCodeStart != null and searchManageCodeStart != ''">
+						AND MNG_CODE >= #{searchManageCodeHeader}||LPAD(#{searchManageCodeStart}, 9, '0')
+					</if>
+					<if test="searchManageCodeEnd != null and searchManageCodeEnd != ''">
+						AND MNG_CODE &lt;= #{searchManageCodeHeader}||LPAD(#{searchManageCodeEnd}, 9, '0')
+					</if>
+				</if>
+			</if>
+
+		 <include refid="com.ktis.msp.cmn.include.paging-end2" />
+
+    </select>
+	<!--PIN관리 목록조회엑셀출력 -->
+    <select id="getPinInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+
+			
+			SELECT	 
+				<if test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'pin_number'">
+							
+						</when>
+						<otherwise>
+							/*+ INDEX_DESC(A PPS_PIN_INFO_PK) */
+						</otherwise>
+					</choose>
+				</if>
+			  NVL(MNG_CODE,'-') MNG_CODE,
+			  NVL(STATUS,'-') STATUS,
+			  NVL((SELECT CD_NM FROM PPS_KT_COMMON_CD WHERE TABLE_NM='PPS_PIN_INFO' AND COL='STATUS' AND CD= A.STATUS),'-') STATUS_NM,
+			  NVL(PIN_GUBUN,'-') PIN_GUBUN,
+			  NVL((SELECT CD_NM FROM PPS_KT_COMMON_CD WHERE TABLE_NM='PPS_PIN_INFO' AND COL='PIN_GUBUN' AND CD= A.PIN_GUBUN),'-') PIN_GUBUN_NM,
+			  NVL(ONOFF_GUBUN,'-') ONOFF_GUBUN,
+			  NVL((SELECT CD_NM FROM PPS_KT_COMMON_CD WHERE TABLE_NM='PPS_PIN_INFO' AND COL='ONOFF_GUBUN' AND CD= A.ONOFF_GUBUN),'-') ONOFF_GUBUN_NM,
+			  NVL(TO_CHAR(OPEN_DATE, 'YYYY-MM-DD'),'-') OPEN_DATE,
+			  NVL(TO_CHAR(OUT_DATE, 'YYYY-MM-DD'),'-') OUT_DATE,
+			  NVL(START_PRICE,0) START_PRICE,
+			  NVL(NOW_PRICE,0) NOW_PRICE,
+			  NVL(OUT_PRICE,0) OUT_PRICE,
+			  NVL(TO_CHAR(RCG_DATE, 'YYYY-MM-DD'),'-') RCG_DATE,
+			  NVL(TO_CHAR(CR_DATE, 'YYYY-MM-DD'),'-') CR_DATE,
+			  NVL(TO_CHAR(EXPIRE_DATE, 'YYYY-MM-DD'),'-') EXPIRE_DATE,
+			  NVL(OUT_AGENT_ID,'-') OUT_AGENT_ID,
+			  NVL(F_GET_AGENT_NM(OUT_AGENT_ID),'-') OUT_AGENT_NM,
+			  NVL(OUT_DEALER_ID,'-') OUT_DEALER_ID,
+			  NVL(F_GET_AGENT_NM(OUT_DEALER_ID),'-') OUT_DEALER_NM,
+			  NVL(CONTRACT_NUM,0) CONTRACT_NUM,
+			  NVL(RCG_FLAG,'-') RCG_FLAG,
+			  NVL(FREE_FLAG,'-') FREE_FLAG,	
+			  DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') FREE_FLAG_NM ,    		  
+			  NVL(PIN_NUMBER,'-') PIN_NUMBER
+		 FROM PPS_PIN_INFO A
+		 WHERE CR_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+		 
+		 	<if test="searchNm != null and searchNm != ''">
+				<choose>
+					<when test="searchType == 'mng_code'">
+						AND MNG_CODE LIKE '%' || #{searchNm}
+					</when>
+					<when test="searchType == 'subscriber_no'">
+						AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+					</when>
+					<when test="searchType == 'pin_number'">
+						AND PIN_NUMBER = CRYPTO_AES256.ENC_AES(#{searchNm})
+					</when>
+					<when test="searchType == 'start_price'">
+						AND START_PRICE = #{searchNm}
+					</when>
+				</choose>
+			</if>
+			<if test="startDtCreate != null and startDtCreate != ''">
+				AND CR_DATE >= TO_DATE(#{startDtCreate}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDtCreate != null and endDtCreate != ''">
+				AND CR_DATE &lt; TO_DATE(#{endDtCreate}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="startDtOut != null and startDtOut != ''">
+				AND OUT_DATE >= TO_DATE(#{startDtOut}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDtOut != null and endDtOut != ''">
+				AND OUT_DATE &lt; TO_DATE(#{endDtOut}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="startDtOpen != null and startDtOpen != ''">
+				AND OPEN_DATE >= TO_DATE(#{startDtOpen}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDtOpen != null and endDtOpen != ''">
+				AND OPEN_DATE &lt; TO_DATE(#{endDtOpen}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="startDtExpire != null and startDtExpire != ''">
+				AND EXPIRE_DATE >= TO_DATE(#{startDtExpire}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDtExpire != null and endDtExpire != ''">
+				AND EXPIRE_DATE &lt; TO_DATE(#{endDtExpire}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="searchPinStatus != null and searchPinStatus != ''">
+					AND STATUS = #{searchPinStatus}
+			</if>
+			<if test="searchOnOffGubun != null and searchOnOffGubun != ''">
+					AND ONOFF_GUBUN = #{searchOnOffGubun}
+			</if>
+			<if test="searchAgentNm != null and searchAgentNm != ''">
+					AND OUT_AGENT_ID = #{searchAgentNm}
+			</if>
+			<if test="searchDealerNm != null and searchDealerNm != ''">
+					AND OUT_DEALER_ID = #{searchDealerNm}
+			</if>
+			<if test="searchPinRcgFlag != null and searchPinRcgFlag != ''">
+					AND RCG_FLAG = #{searchPinRcgFlag}
+			</if>
+			<if test="searchPinGubun != null and searchPinGubun != ''">
+					AND PIN_GUBUN = #{searchPinGubun}
+			</if>
+			<if test="searchFreeFlag != null and searchFreeFlag != ''">
+						AND FREE_FLAG = #{searchFreeFlag}
+			</if>
+			<if test="searchNm == null or searchNm == ''">
+				<if test="searchManageCodeHeader != null and searchManageCodeHeader != ''">
+						AND MNG_CODE LIKE #{searchMngCodeHeader} || '%'
+					<if test="searchManageCodeStart != null and searchManageCodeStart != ''">
+						AND MNG_CODE >= #{searchManageCodeHeader}||LPAD(#{searchManageCodeStart}, 9, '0')
+					</if>
+					<if test="searchManageCodeEnd != null and searchManageCodeEnd != ''">
+						AND MNG_CODE &lt;= #{searchManageCodeHeader}||LPAD(#{searchManageCodeEnd}, 9, '0')
+					</if>
+				</if>
+			</if>
+
+
+
+    </select>
+
+   	<!--PIN생성관리 목록조회 -->
+    <select id="getPinCreateMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+          SELECT		/*+ INDEX_DESC(A PPS_PIN_SUMMARY_CR_DATE_IDX) */
+				CR_SEQ,
+				PIN_LENGTH,
+				CR_COUNT,
+				START_PRICE,
+				START_MNG_CODE,
+				END_MNG_CODE,
+				START_MNG_CODE||'~'|| END_MNG_CODE  AS MNG_CODE_STR,
+				PIN_GUBUN,
+				F_GET_KT_CODE_NM('PPS_PIN_SUMMARY_CREATE','PIN_GUBUN',PIN_GUBUN) PIN_GUBUN_NM,
+				ONOFF_GUBUN,
+				F_GET_KT_CODE_NM('PPS_PIN_SUMMARY_CREATE','ONOFF_GUBUN',ONOFF_GUBUN) ONOFF_GUBUN_NM,
+				CR_ADMIN_ID AS CR_ADMIN_ID,
+				F_GET_ADMIN_NM(CR_ADMIN_ID) AS CR_ADMIN_NM,
+				TO_CHAR(CR_DATE, 'YYYY-MM-DD') CR_DATE,
+				REMARK,
+				CANCEL_FLAG,
+       			DECODE(CANCEL_FLAG,'N','취소', 'Y','취소완료', '-') CANCEL_FLAG_NM ,      
+       			TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE
+		 FROM PPS_PIN_SUMMARY_CREATE A
+		 WHERE CR_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+ 				<if test="startDt != null and startDt != ''">
+					AND CR_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND CR_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchOnOffGubun != null and searchOnOffGubun != ''">
+					AND ONOFF_GUBUN = #{searchOnOffGubun}
+				</if>
+				<if test="searchPinGubun != null and searchPinGubun != ''">
+					AND PIN_GUBUN = #{searchPinGubun}
+				</if>
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+				<if test="searchManageCodeHeader != null and searchManageCodeHeader != ''">
+					AND START_MNG_CODE LIKE #{searchManageCodeHeader} || '%'
+					<if test="searchStartMngCode != null and searchStartMngCode != ''">
+						AND END_MNG_CODE >= #{searchManageCodeHeader}||LPAD(#{searchStartMngCode}, 9, '0')
+					</if>
+					<if test="searchEndMngCode != null and searchEndMngCode != ''">
+						AND START_MNG_CODE &lt;= #{searchManageCodeHeader}||LPAD(#{searchEndMngCode}, 9, '0')
+					</if>
+				</if>
+
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+
+
+	<!--PIN생성관리 목록조회 엑셀출력 -->
+    <select id="getPinCreateMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+
+          SELECT		/*+ INDEX_DESC(A PPS_PIN_SUMMARY_CR_DATE_IDX) */
+				CR_SEQ,
+				PIN_LENGTH,
+				CR_COUNT,
+				START_PRICE,
+				START_MNG_CODE,
+				END_MNG_CODE,
+				START_MNG_CODE||'~'|| END_MNG_CODE  AS MNG_CODE_STR,
+				PIN_GUBUN,
+				NVL(F_GET_KT_CODE_NM('PPS_PIN_SUMMARY_CREATE','PIN_GUBUN',PIN_GUBUN),'-') PIN_GUBUN_NM,
+				ONOFF_GUBUN,
+				NVL(F_GET_KT_CODE_NM('PPS_PIN_SUMMARY_CREATE','ONOFF_GUBUN',ONOFF_GUBUN),'-') ONOFF_GUBUN_NM,
+				NVL(CR_ADMIN_ID,'-') CR_ADMIN_ID,
+				NVL(F_GET_ADMIN_NM(CR_ADMIN_ID),'-') AS CR_ADMIN_NM,
+				TO_CHAR(CR_DATE, 'YYYY-MM-DD') CR_DATE,
+				NVL(REMARK,'-') REMARK,
+				NVL(CANCEL_FLAG, '-') CANCEL_FLAG,
+       			DECODE(CANCEL_FLAG,'N','취소', 'Y','취소완료', '-') CANCEL_FLAG_NM ,      
+       			NVL(TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD'), '-')  CANCEL_DATE
+		 FROM PPS_PIN_SUMMARY_CREATE A
+		 WHERE CR_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+
+ 				<if test="startDt != null and startDt != ''">
+					AND CR_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND CR_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchOnOffGubun != null and searchOnOffGubun != ''">
+					AND ONOFF_GUBUN = #{searchOnOffGubun}
+				</if>
+				<if test="searchPinGubun != null and searchPinGubun != ''">
+					AND PIN_GUBUN = #{searchPinGubun}
+				</if>
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+				<if test="searchManageCodeHeader != null and searchManageCodeHeader != ''">
+					AND START_MNG_CODE LIKE #{searchManageCodeHeader} || '%'
+					<if test="searchStartMngCode != null and searchStartMngCode != ''">
+						AND END_MNG_CODE >= #{searchManageCodeHeader}||LPAD(#{searchStartMngCode}, 9, '0')
+					</if>
+					<if test="searchEndMngCode != null and searchEndMngCode != ''">
+						AND START_MNG_CODE &lt;= #{searchManageCodeHeader}||LPAD(#{searchEndMngCode}, 9, '0')
+					</if>
+				</if>
+
+    </select>
+
+       	<!--PIN개통관리 목록조회 -->
+    <select id="getPinOpenMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+           SELECT		/*+ INDEX_DESC(A PPS_PIN_SUMMARY_OPEN_DATE_IDX) */
+				OPEN_SEQ,
+				A.START_MNG_CODE,
+				END_MNG_CODE,
+				START_MNG_CODE||'~'|| END_MNG_CODE  AS MNG_CODE_STR,
+				OPEN_COUNT,
+				PIN_CHARGE_SUM,
+				AGENT_CHARGE_SUM,
+				OPEN_ADMIN_ID,
+				NVL(F_GET_ADMIN_NM(OPEN_ADMIN_ID),'-') OPEN_ADMIN_NM,
+				NVL(TO_CHAR(OPEN_DATE, 'YYYY-MM-DD HH24:MI:SS'),'-') OPEN_DATE,
+				OPEN_AGENT_TYPE,
+				NVL(F_GET_KT_CODE_NM('PPS_PIN_SUMMARY_OPEN', 'OPEN_AGENT_TYPE', OPEN_AGENT_TYPE),'-') OPEN_AGENT_TYPE_NM,
+				OPEN_AGENT_ID,
+				NVL(FN_GET_ORGNM(OPEN_AGENT_ID),'-') OPEN_AGENT_NM,
+				OPEN_DEALER_ID,
+				NVL(FN_GET_ORGNM(OPEN_DEALER_ID),'-') OPEN_DEALER_NM,
+				PAY_AMT,
+				PAY_FLAG,
+				NVL(TO_CHAR(PAY_DATE, 'YYYY-MM-DD'),'-') PAY_DATE,
+				NVL(TO_CHAR(RECORD_DATE, 'YYYY-MM-DD'),'-') RECORD_DATE,
+				NVL(REMARK,'-') REMARK,
+				CANCEL_FLAG,
+       			DECODE(CANCEL_FLAG,'N','취소', 'Y','취소완료', '-') CANCEL_FLAG_NM ,      
+       			TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE,
+       			STOP_SEQ,
+       			PIN_DIS_RATE,
+       			FREE_FLAG, 
+       			DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') FREE_FLAG_NM ,    
+       			'수정' AS UPD_NM_STR,
+				NVL((SELECT TO_CHAR(MAX(OUT_DATE), 'YYYY-MM-DD HH24:MI:SS') FROM PPS_PIN_SUMMARY_OUT B WHERE B.START_MNG_CODE = A.START_MNG_CODE AND CANCEL_FLAG = 'N'),'-') OUT_DATE
+			 FROM PPS_PIN_SUMMARY_OPEN A
+			 WHERE OPEN_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+			
+ 				<if test="startDt != null and startDt != ''">
+					AND OPEN_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND OPEN_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchPinPayFlag != null and searchPinPayFlag != ''">
+					AND PAY_FLAG = #{searchPinPayFlag}
+				</if>
+				<if test="searchPinOpenAgentType != null and searchPinOpenAgentType != ''">
+					AND OPEN_AGENT_TYPE = #{searchPinOpenAgentType}
+				</if>
+				
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+				
+				<if test="searchAgentNm != null and searchAgentNm != ''">
+					AND OPEN_AGENT_ID = #{searchAgentNm}
+				</if>
+				<if test="searchDealerNm != null and searchDealerNm != ''">
+					AND OPEN_DEALER_ID = #{searchDealerNm}
+				</if>
+				<if test="searchManageCodeHeader != null and searchManageCodeHeader != ''">
+					AND START_MNG_CODE LIKE #{searchManageCodeHeader} || '%'
+
+					<if test="searchManageCodeStart != null and searchManageCodeStart != ''">
+						AND END_MNG_CODE >= #{searchManageCodeHeader}||LPAD(#{searchManageCodeStart}, 9, '0')
+					</if>
+					<if test="searchManageCodeEnd != null and searchManageCodeEnd != ''">
+						AND START_MNG_CODE &lt;= #{searchManageCodeHeader}||LPAD(#{searchManageCodeEnd}, 9, '0')
+					</if>
+				</if>
+				
+
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+
+       	<!--PIN개통관리 목록조회엑셀출력 -->
+    <select id="getPinOpenMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+            SELECT		/*+ INDEX_DESC(A PPS_PIN_SUMMARY_OPEN_DATE_IDX) */
+				OPEN_SEQ,
+				START_MNG_CODE,
+				END_MNG_CODE,
+				START_MNG_CODE||'~'|| END_MNG_CODE  AS MNG_CODE_STR,
+				NVL(OPEN_COUNT,0) AS OPEN_COUNT,
+				NVL(PIN_CHARGE_SUM,0) AS PIN_CHARGE_SUM,
+				NVL(AGENT_CHARGE_SUM,0)AS AGENT_CHARGE_SUM,
+				NVL(OPEN_ADMIN_ID,'-') AS OPEN_ADMIN_ID,
+				NVL(F_GET_ADMIN_NM(OPEN_ADMIN_ID),'-') AS OPEN_ADMIN_NM,
+				NVL(TO_CHAR(OPEN_DATE, 'YYYY-MM-DD HH24:MI:SS'),'-') AS OPEN_DATE,
+				NVL(OPEN_AGENT_TYPE,'-') AS OPEN_AGENT_TYPE,
+				NVL(F_GET_KT_CODE_NM('PPS_PIN_SUMMARY_OPEN', 'OPEN_AGENT_TYPE', OPEN_AGENT_TYPE),'-')AS OPEN_AGENT_TYPE_NM,
+				NVL(OPEN_AGENT_ID,'-')AS OPEN_AGENT_ID,
+				NVL(F_GET_AGENT_NM(OPEN_AGENT_ID),'-')AS OPEN_AGENT_NM,
+				NVL(OPEN_DEALER_ID,'-')AS OPEN_DEALER_ID,
+				NVL(F_GET_AGENT_NM(OPEN_DEALER_ID),'-')AS OPEN_DEALER_NM,
+				NVL(PAY_AMT,0)AS PAY_AMT,
+				NVL(PAY_FLAG,'-')AS PAY_FLAG,
+				NVL(TO_CHAR(PAY_DATE, 'YYYY-MM-DD'),'-') AS PAY_DATE,
+				NVL(TO_CHAR(RECORD_DATE, 'YYYY-MM-DD'),'-') AS RECORD_DATE,
+				NVL(REMARK,'-') AS REMARK,
+				NVL(CANCEL_FLAG,'-')AS CANCEL_FLAG,
+       			DECODE(CANCEL_FLAG,'N','취소', 'Y','취소완료', '-')AS CANCEL_FLAG_NM ,      
+       			NVL(TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD'),'-')AS CANCEL_DATE,
+       			NVL(STOP_SEQ,0) AS STOP_SEQ,
+       			NVL(FREE_FLAG,'-')AS FREE_FLAG, 
+       			DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') AS FREE_FLAG_NM ,   
+       			NVL(PIN_DIS_RATE,0)AS PIN_DIS_RATE,
+				NVL((SELECT TO_CHAR(MAX(OUT_DATE), 'YYYY-MM-DD HH24:MI:SS') FROM PPS_PIN_SUMMARY_OUT B WHERE B.START_MNG_CODE = A.START_MNG_CODE  AND CANCEL_FLAG = 'N'),'-')AS OUT_DATE
+			 FROM PPS_PIN_SUMMARY_OPEN A
+			 WHERE OPEN_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+ 				<if test="startDt != null and startDt != ''">
+					AND OPEN_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND OPEN_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchPinPayFlag != null and searchPinPayFlag != ''">
+					AND PAY_FLAG = #{searchPinPayFlag}
+				</if>
+				  
+				<if test="searchPinOpenAgentType != null and searchPinOpenAgentType != ''">
+					AND OPEN_AGENT_TYPE = #{searchPinOpenAgentType}
+				</if>
+				
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+				
+				<if test="searchManageCodeHeader != null and searchManageCodeHeader != ''">
+					AND START_MNG_CODE LIKE #{searchManageCodeHeader} || '%'
+
+					<if test="searchManageCodeStart != null and searchManageCodeStart != ''">
+						AND END_MNG_CODE >= #{searchManageCodeHeader}||LPAD(#{searchManageCodeStart}, 9, '0')
+					</if>
+					<if test="searchManageCodeEnd != null and searchManageCodeEnd != ''">
+						AND START_MNG_CODE &lt;= #{searchManageCodeHeader}||LPAD(#{searchManageCodeEnd}, 9, '0')
+					</if>
+				</if>
+				<if test="searchAgentNm != null and searchAgentNm != ''">
+					AND OPEN_AGENT_ID = #{searchAgentNm}
+				</if>
+				<if test="searchDealerNm != null and searchDealerNm != ''">
+					AND OPEN_DEALER_ID = #{searchDealerNm}
+				</if>
+    </select>
+
+       	<!--PIN출고관리 목록조회 -->
+    <select id="getPinReleaseMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+             SELECT	 /*+ INDEX_DESC(A PPS_PIN_SUMMARY_OUT_DATE_IDX) */
+					OUT_SEQ,
+					F_GET_PIN_COUNT('OPEN_CNT_TO_OUT', OUT_SEQ) OPEN_COUNT,
+					START_MNG_CODE,
+					END_MNG_CODE,
+					START_MNG_CODE||'~'|| END_MNG_CODE  AS MNG_CODE_STR,
+					OUT_COUNT,
+					OUT_ADMIN_ID,
+					NVL(F_GET_ADMIN_NM(OUT_ADMIN_ID), OUT_ADMIN_ID) OUT_ADMIN_NM,
+					TO_CHAR(OUT_DATE, 'YYYY-MM-DD') OUT_DATE,
+					OUT_AGENT_TYPE,
+					F_GET_KT_CODE_NM('PPS_PIN_SUMMARY_OPEN', 'OPEN_AGENT_TYPE', OUT_AGENT_TYPE) OUT_AGENT_TYPE_NM,
+					OUT_AGENT_ID,
+					FN_GET_ORGNM(OUT_AGENT_ID) OUT_AGENT_NM,
+					OUT_DEALER_ID,
+					FN_GET_ORGNM(OUT_DEALER_ID) OUT_DEALER_NM,
+					TO_CHAR(RECORD_DATE, 'YYYY-MM-DD') RECORD_DATE,
+					REMARK,
+					CANCEL_FLAG,
+       				DECODE(CANCEL_FLAG,'N','취소', 'Y','취소완료', '') CANCEL_FLAG_NM ,
+       				FREE_FLAG, 
+       				DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') FREE_FLAG_NM ,          
+      				TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE       				
+			FROM PPS_PIN_SUMMARY_OUT A
+			WHERE OUT_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+				<if test="startDt != null and startDt != ''">
+					AND OUT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND OUT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchStatus != null and searchStatus != ''">
+					AND STATUS = #{searchStatus}
+				</if>
+				<if test="searchPinOpenAgentType != null and searchPinOpenAgentType != ''">
+					AND OUT_AGENT_TYPE = #{searchPinOpenAgentType}
+				</if>
+				<if test="searchFreeFlag != null and searchFreeFlag != ''">
+							AND FREE_FLAG = #{searchFreeFlag}
+				</if>					
+				<if test="recharge_flag != null and recharge_flag != ''">
+					AND RECHARGE_FLAG = #{RECHARGE_FLAG}
+				</if>
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+				<if test="searchAgentNm != null and searchAgentNm != ''">
+					AND OUT_AGENT_ID = #{searchAgentNm}
+				</if>
+				<if test="searchDealerNm != null and searchDealerNm != ''">
+					AND OUT_DEALER_ID = #{searchDealerNm}
+				</if>
+				<if test="searchManageCodeHeader != null and searchManageCodeHeader != ''">
+					AND START_MNG_CODE LIKE #{searchManageCodeHeader} || '%'
+
+					<if test="searchManageCodeStart != null and searchManageCodeStart != ''">
+						AND END_MNG_CODE >= #{searchManageCodeHeader}||LPAD(#{searchManageCodeStart}, 9, '0')
+					</if>
+					<if test="searchManageCodeEnd != null and searchManageCodeEnd != ''">
+						AND START_MNG_CODE &lt;= #{searchManageCodeHeader}||LPAD(#{searchManageCodeEnd}, 9, '0')
+					</if>
+				</if>
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+
+       	<!--PIN출고관리 목록조회엑셀출력 -->
+    <select id="getPinReleaseMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+            SELECT	 /*+ INDEX_DESC(A PPS_PIN_SUMMARY_OUT_DATE_IDX) */
+					OUT_SEQ,
+					F_GET_PIN_COUNT('OPEN_CNT_TO_OUT', OUT_SEQ) OPEN_COUNT,
+					START_MNG_CODE,
+					END_MNG_CODE,
+					START_MNG_CODE||'~'|| END_MNG_CODE  AS MNG_CODE_STR,
+					OUT_COUNT,
+					OUT_ADMIN_ID,
+					NVL(F_GET_ADMIN_NM(OUT_ADMIN_ID), '-') OUT_ADMIN_NM,
+					NVL(TO_CHAR(OUT_DATE, 'YYYY-MM-DD'),'-') OUT_DATE,
+					OUT_AGENT_TYPE,
+					NVL(F_GET_KT_CODE_NM('PPS_PIN_SUMMARY_OPEN', 'OPEN_AGENT_TYPE', OUT_AGENT_TYPE),'-') OUT_AGENT_TYPE_NM,
+					OUT_AGENT_ID,
+					NVL(FN_GET_ORGNM(OUT_AGENT_ID),'-') OUT_AGENT_NM,
+					OUT_DEALER_ID,
+					NVL(FN_GET_ORGNM(OUT_DEALER_ID),'-') OUT_DEALER_NM,
+					NVL(TO_CHAR(RECORD_DATE, 'YYYY-MM-DD'),'-') RECORD_DATE,
+					NVL(REMARK,'-') REMARK,
+					NVL(CANCEL_FLAG,'-') CANCEL_FLAG ,
+       				NVL(DECODE(CANCEL_FLAG,'N','취소', 'Y','취소완료', ''),'-') CANCEL_FLAG_NM ,
+       				NVL(FREE_FLAG,'-') FREE_FLAG ,
+       				DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') FREE_FLAG_NM ,          
+      				NVL(TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD'),'-') CANCEL_DATE  
+			FROM PPS_PIN_SUMMARY_OUT A
+			WHERE OUT_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+				<if test="startDt != null and startDt != ''">
+					AND OUT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND OUT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchStatus != null and searchStatus != ''">
+					AND STATUS = #{searchStatus}
+				</if>
+				<if test="searchPinOpenAgentType != null and searchPinOpenAgentType != ''">
+					AND OUT_AGENT_TYPE = #{searchPinOpenAgentType}
+				</if>
+				<if test="searchFreeFlag != null and searchFreeFlag != ''">
+						AND FREE_FLAG = #{searchFreeFlag}
+				</if>
+				<if test="recharge_flag != null and recharge_flag != ''">
+					AND RECHARGE_FLAG = #{RECHARGE_FLAG}
+				</if>
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+				<if test="searchAgentNm != null and searchAgentNm != ''">
+					AND OUT_AGENT_ID = #{searchAgentNm}
+				</if>
+				<if test="searchDealerNm != null and searchDealerNm != ''">
+					AND OUT_DEALER_ID = #{searchDealerNm}
+				</if>
+				<if test="searchManageCodeHeader != null  and searchManageCodeHeader != ''">
+					AND START_MNG_CODE LIKE #{searchManageCodeHeader} || '%'
+
+					<if test="searchManageCodeStart != null and searchManageCodeStart != ''">
+						AND END_MNG_CODE >= #{searchManageCodeHeader}||LPAD(#{searchManageCodeStart}, 9, '0')
+					</if>
+					<if test="searchManageCodeEnd != null and searchManageCodeEnd != ''">
+						AND START_MNG_CODE &lt;= #{searchManageCodeHeader}||LPAD(#{searchManageCodeEnd}, 9, '0')
+					</if>
+				</if>
+    </select>
+<!--  핀정보조회 -->
+<select id="getPpsPinInfoData" parameterType="hashmap" resultType="com.ktis.msp.pps.hdofccustmgmt.vo.PpsPinInfoVo">
+SELECT
+	MNG_CODE  AS mngCode
+  , PIN_NUMBER As pinNumber
+  , TO_CHAR(EXPIRE_DATE, 'YYYY-MM-DD') AS expireDate
+  , PIN_GUBUN AS pinGubun
+  , F_GET_KT_CODE_NM('PPS_PIN_INFO', 'PIN_GUBUN', PIN_GUBUN) AS pinGubunNm
+  , ONOFF_GUBUN AS onoffGubun
+  , F_GET_KT_CODE_NM('PPS_PIN_INFO', 'ONOFF_GUBUN' , ONOFF_GUBUN) AS onoffGubunNm
+  , STATUS AS status
+  , F_GET_KT_CODE_NM('PPS_PIN_INFO', 'STATUS', STATUS) AS statusNm
+  , START_PRICE AS startPrice
+  , NOW_PRICE AS nowPrice
+  , CR_ADMIN_ID AS crAdminId
+  , F_GET_ADMIN_NM(CR_ADMIN_ID)  AS CR_ADMIN_NM
+  , TO_CHAR(CR_DATE, 'YYYY-MM-DD') AS crDate
+  , CR_SN AS crSn
+  , CR_SEQ AS crSeq
+  , OUT_FLAG AS outFlag
+  , F_GET_KT_CODE_NM('PPS_PIN_INFO', 'OUT_FLAG', OUT_FLAG) AS outFlagNm
+  , TO_CHAR(OUT_DATE, 'YYYY-MM-DD') AS outDate
+  , OUT_ADMIN_ID  AS outAdminId
+  , F_GET_ADMIN_NM(OUT_ADMIN_ID) AS outAdminNm
+  , OUT_AGENT_TYPE  AS outAgentType
+  , F_GET_KT_CODE_NM('PPS_PIN_INFO', 'OUT_AGENT_TYPE', OUT_AGENT_TYPE) AS outAgentTypeNm
+  , OUT_AGENT_ID AS outAgentId
+  , F_GET_AGENT_NM(OUT_AGENT_ID) AS outAgentNm
+  , OUT_DEALER_ID AS outDealerId
+  , F_GET_AGENT_NM(OUT_DEALER_ID) AS outDealerNm
+  , OUT_PRICE AS outPrice
+  , OUT_SEQ AS outSeq
+  , OPEN_FLAG AS openFlag
+  , F_GET_KT_CODE_NM('PPS_PIN_INFO', 'OPEN_FLAG', OPEN_FLAG) AS openFlagNm
+  , OPEN_ADMIN_ID  AS openAdminId
+  , F_GET_ADMIN_NM(OPEN_ADMIN_ID) AS openAdminNm
+  , TO_CHAR(OPEN_DATE, 'YYYY-MM-DD') AS openDate
+  , OPEN_SEQ AS openSeq
+  , SALE_FLAG AS saleFlag
+  , F_GET_KT_CODE_NM('PPS_PIN_INFO', 'SALE_FLAG', SALE_FLAG) AS saleFlagNm
+  , SALE_ADMIN_ID AS saleAdminId
+  , F_GET_ADMIN_NM(SALE_ADMIN_ID) AS saleAdminNm
+  , TO_CHAR(SALE_DATE, 'YYYY-MM-DD') AS saleDate
+  , SALE_SEQ AS saleSeq
+  , RCG_FLAG AS rcgFlag
+  , F_GET_KT_CODE_NM('PPS_PIN_INFO', 'RCG_FLAG', RCG_FLAG) AS rcgFlagNm
+  , TO_CHAR(RCG_DATE, 'YYYY-MM-DD') AS rcgDate
+  , RCG_SEQ AS rcgSeq
+  , FREE_FLAG AS freeFlag 
+  , DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') AS freeFlagNm   
+  , DECODE(CONTRACT_NUM, 0, '', CONTRACT_NUM) AS contractNum
+  , REMARK  AS remark
+  FROM PPS_PIN_INFO
+  WHERE MNG_CODE = #{mngCode}
+</select>
+<!--  핀생성 처리  -->
+<select id="getPpsPinInfoCreate"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+{CALL P_PIN_CREATE(
+					#{opCode, jdbcType=VARCHAR}
+					, #{crSeq, jdbcType=VARCHAR}
+				    , #{pinGubun, jdbcType=VARCHAR}
+				    , #{onoffGubun, jdbcType=VARCHAR}
+				    , #{pinLength, jdbcType=VARCHAR}
+				    , #{crCount, jdbcType=VARCHAR}
+				    , #{crAdminId, jdbcType=VARCHAR}
+				    , #{startPrice, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+				   , #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+</select>
+
+<!--  핀출고 처리  -->
+<select id="getPpsPinOutProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+	{CALL P_PIN_OUT(
+				    #{opCode, jdbcType=VARCHAR}
+				    , #{outSeq, jdbcType=VARCHAR}
+				    , #{startMngCode, jdbcType=VARCHAR}
+				    , #{endMngCode, jdbcType=VARCHAR}
+				    , #{outDate, jdbcType=VARCHAR}
+				    , #{outAgentType, jdbcType=VARCHAR}
+				    , #{freeFlag, jdbcType=VARCHAR}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+				    , #{payAmt, jdbcType=VARCHAR}
+				    , #{payFlag, jdbcType=VARCHAR}
+				    , #{payDate, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+				    , #{reqOutCount, jdbcType=VARCHAR}
+				   , #{oRetOutCount, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetTotalCharge, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetAgentCharge, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+</select>
+
+<select id="getPpsPinOpenProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+	{CALL P_PIN_OPEN(
+				    #{opCode, jdbcType=VARCHAR}
+				    , #{openSeq, jdbcType=VARCHAR}
+				    , #{startMngCode, jdbcType=VARCHAR}
+				    , #{endMngCode, jdbcType=VARCHAR}
+				    , #{openDate, jdbcType=VARCHAR}
+				    , #{openAgentType, jdbcType=VARCHAR}
+				    , #{freeFlag, jdbcType=VARCHAR}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+				    , #{payAmt, jdbcType=VARCHAR}
+				    , #{payFlag, jdbcType=VARCHAR}
+				    , #{payDate, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+				    , #{reqOpenCount, jdbcType=VARCHAR}
+				   , #{oRetOpenCount, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetTotalCharge, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetAgentCharge, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+</select>
+
+<!--생성출고개통시 PIN 목록엑셀출력 -->
+    <select id="getPinInfListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+
+		SELECT	 /*+ INDEX_DESC(A PPS_PIN_INFO_PK) */
+			  NVL(MNG_CODE,'-') MNG_CODE,
+			  NVL(STATUS,'-') STATUS,
+			  NVL(F_GET_KT_CODE_NM('PPS_PIN_INFO', 'STATUS', STATUS),'-') STATUS_NM,
+			  NVL(PIN_GUBUN,'-') PIN_GUBUN,
+			  NVL(F_GET_KT_CODE_NM('PPS_PIN_INFO', 'PIN_GUBUN', PIN_GUBUN),'-') PIN_GUBUN_NM,
+			  NVL(ONOFF_GUBUN,'-') ONOFF_GUBUN,
+			  NVL(F_GET_KT_CODE_NM('PPS_PIN_INFO', 'ONOFF_GUBUN', ONOFF_GUBUN),'-') ONOFF_GUBUN_NM,
+			  NVL(TO_CHAR(OPEN_DATE, 'YYYY-MM-DD'),'-') OPEN_DATE,
+			  NVL(TO_CHAR(OUT_DATE, 'YYYY-MM-DD'),'-') OUT_DATE,
+			  NVL(START_PRICE,0) START_PRICE,
+			  NVL(NOW_PRICE,0) NOW_PRICE,
+			  NVL(OUT_PRICE,0) OUT_PRICE,
+			  NVL(TO_CHAR(RCG_DATE, 'YYYY-MM-DD'),'-') RCG_DATE,
+			  NVL(TO_CHAR(CR_DATE, 'YYYY-MM-DD'),'-') CR_DATE,
+			  NVL(TO_CHAR(EXPIRE_DATE, 'YYYY-MM-DD'),'-') EXPIRE_DATE,
+			  NVL(OUT_AGENT_ID,'-') OUT_AGENT_ID,
+			  NVL(F_GET_AGENT_NM(OUT_AGENT_ID),'-') OUT_AGENT_NM,
+			  NVL(OUT_DEALER_ID,'-') OUT_DEALER_ID,
+			  NVL(F_GET_AGENT_NM(OUT_DEALER_ID),'-') OUT_DEALER_NM,
+			  NVL(CONTRACT_NUM,0) CONTRACT_NUM,
+			  NVL(RCG_FLAG,'-') RCG_FLAG,
+			  NVL(FREE_FLAG,'-')FREE_FLAG, 
+  			  DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') AS FREE_FLAG_NM,  
+			  NVL(PIN_NUMBER,'-') PIN_NUMBER
+		 FROM PPS_PIN_INFO
+		 WHERE CR_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+		 
+		 <if test="startMngCode != null and endMngCode != ''">
+		 		 AND MNG_CODE BETWEEN #{startMngCode} AND #{endMngCode}
+		 </if>
+		 ORDER BY MNG_CODE ASC
+
+
+    </select>
+	<!--  관리 코드 해더 조회 -->
+    <select id="getMngCodeHeaderList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT value, text
+		FROM (
+                  SELECT
+				SUBSTR(START_MNG_CODE, 1, 6) AS value,
+				SUBSTR(START_MNG_CODE, 1, 6) AS text
+				FROM PPS_PIN_SUMMARY_CREATE
+				WHERE START_MNG_CODE IS NOT NULL
+    		)	
+		GROUP BY text
+		ORDER BY text DESC
+	</select>
+	<!--  개통 정보 상세 조회 -->
+	 <select id="getPpsPinOpenSummaryInfo" parameterType="hashmap" resultType="com.ktis.msp.pps.cardmgmt.vo.PpsPinSummaryOpenVo">
+	 SELECT A.OPEN_SEQ AS openSeq,
+	       A.START_MNG_CODE AS startMngCode,
+	       A.END_MNG_CODE AS endMngCode,
+	       A.START_MNG_CODE||'~'|| A.END_MNG_CODE  AS mngCodeStr,
+	       A.OPEN_COUNT AS openCount,
+	       A.PIN_CHARGE_SUM AS pinChargeSum,
+	       A.AGENT_CHARGE_SUM AS agentChargeSum,
+	       A.OPEN_ADMIN_ID AS openAdminId,
+	       F_GET_ADMIN_NM(OPEN_ADMIN_ID) AS openAdminNm,
+	       A.OPEN_DATE AS openDate,
+	       A.OPEN_AGENT_TYPE AS openAgentType,
+	       F_GET_KT_CODE_NM('PPS_PIN_SUMMARY_OPEN', 'OPEN_AGENT_TYPE', OPEN_AGENT_TYPE) AS openAgentTypeNm,
+	       A.OPEN_AGENT_ID AS openAgentId,
+	       F_GET_AGENT_NM(OPEN_AGENT_ID) AS openAgentNm,
+	       A.OPEN_DEALER_ID,
+	       F_GET_AGENT_NM(OPEN_DEALER_ID) AS openDealerNm,
+	       A.PAY_AMT AS payAmt,
+	       A.PAY_FLAG AS payFlag,
+	       DECODE(PAY_FLAG,'Y','수납','미수납') AS payFlagNm,
+	       TO_CHAR(A.PAY_DATE, 'YYYY-MM-DD')  AS payDate,
+	       TO_CHAR(A.RECORD_DATE, 'YYYY-MM-DD')  AS recodeDate,
+	       A.FREE_FLAG AS freeFlag, 
+       	   DECODE(A.FREE_FLAG,'N','판매', 'Y','수수료', '-')AS freeFlagNm ,   
+	       A.REMARK AS remark
+  		FROM PPS_PIN_SUMMARY_OPEN A
+  		WHERE A.OPEN_SEQ = #{searchOpenSeq}
+	 </select>
+	 
+	 <!-- 대리점 정보 상세  -->
+	  <select id="getAgentInfo" parameterType="hashmap" resultType="com.ktis.msp.pps.hdofccustmgmt.vo.PpsAgentVo">
+		SELECT AGENT_ID AS agentId, 
+	       F_GET_AGENT_NM(AGENT_ID) AS agentNm, 
+	       NVL(DEPOSIT,0) AS deposit, 
+	       DEPOSIT_RATE AS depositRate, 
+	       PPS35_DEPOSIT_RATE AS pps35DepositRate,
+	       DATA_RATE AS dataRate,
+	       PIN_BUY_RATE AS pinBuyRate, 
+	       RENTAL_FEE AS rentalFee, 
+	       VIR_ACCOUNT_ID AS virAccountId,
+	       NVL(F_GET_VAC_BANK_NAME(VIR_ACCOUNT_ID),'') virBankNm,
+	       NVL(F_GET_VAC_BANK_CODE(VIR_ACCOUNT_ID),'') virBankCd, 
+	       ADMIN_ID AS adminId, 
+	       F_GET_ADMIN_NM(ADMIN_ID) AS adminNm, 
+	       TO_CHAR(RECORD_DATE,'YYYY-MM-DD') AS recordDate 
+  		FROM PPS_AGENT
+  	 	WHERE AGENT_ID=#{searchAgentId}
+	 </select>
+	 
+	 <!--PIN생성통계 목록조회 -->
+    <select id="getPinCreateStatsMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+	         SELECT *
+	         FROM (
+		         SELECT
+		         
+		         	<choose>
+						<when test='searchAdminId == "Y"'>
+							F_GET_ADMIN_NM(CR_ADMIN_ID) CR_ADMIN_NM,   
+						</when>
+						<otherwise>
+							'ALL' CR_ADMIN_NM,  
+						</otherwise>
+					</choose>
+				    
+				    <choose>
+						<when test='searchMonth == "Y"'>
+						TO_CHAR(CR_DATE, 'YYYY-MM') CR_DATE,
+						</when>
+						<otherwise>
+						'ALL' CR_DATE,
+						</otherwise>
+					</choose>
+				    
+				    SUM(CR_COUNT) CR_CNT,
+				    SUM(CR_COUNT * START_PRICE) CR_AMT,
+				    SUM(DECODE(CANCEL_FLAG, 'Y', CR_COUNT, 0)) CR_CAN_CNT,
+				    SUM(DECODE(CANCEL_FLAG, 'Y', CR_COUNT, 0) * START_PRICE) CR_CAN_AMT
+				FROM PPS_PIN_SUMMARY_CREATE
+				WHERE 1=1
+				
+				<if test="startDt != null and startDt != ''">
+					AND CR_DATE >= TO_DATE(#{startDt}, 'YYYYMM')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND CR_DATE &lt; ADD_MONTHS(TO_DATE(#{endDt}, 'YYYYMM'), 1)
+				</if>   
+				
+				GROUP BY 'ALL'
+				
+				<choose>
+					<when test='searchAdminId == "Y"'>
+						, CR_ADMIN_ID
+					</when>
+				</choose>
+				
+				<choose>
+					<when test='searchMonth == "Y"'>
+						, TO_CHAR(CR_DATE, 'YYYY-MM') 
+					</when>
+				</choose>
+				
+				ORDER BY 'ALL' 
+				
+				<choose>
+					<when test='searchAdminId == "Y"'>
+						, CR_ADMIN_NM ASC
+					</when>
+				</choose>
+				
+				<choose>
+					<when test='searchMonth == "Y"'>
+						, CR_DATE DESC
+					</when>
+				</choose>
+			 )
+         
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!--PIN생성통계 목록조회 엑셀출력 -->
+    <select id="getPinCreateStatsMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+
+         SELECT *
+         FROM (
+	         SELECT
+	         
+	         	<choose>
+					<when test='searchAdminId == "Y"'>
+						F_GET_ADMIN_NM(CR_ADMIN_ID) CR_ADMIN_NM,   
+					</when>
+					<otherwise>
+						'ALL' CR_ADMIN_NM,  
+					</otherwise>
+				</choose>
+			    
+			    <choose>
+					<when test='searchMonth == "Y"'>
+					TO_CHAR(CR_DATE, 'YYYY-MM') CR_DATE,
+					</when>
+					<otherwise>
+					'ALL' CR_DATE,
+					</otherwise>
+				</choose>
+			    
+			    SUM(CR_COUNT) CR_CNT,
+			    SUM(CR_COUNT * START_PRICE) CR_AMT,
+			    SUM(DECODE(CANCEL_FLAG, 'Y', CR_COUNT, 0)) CR_CAN_CNT,
+			    SUM(DECODE(CANCEL_FLAG, 'Y', CR_COUNT, 0) * START_PRICE) CR_CAN_AMT
+			FROM PPS_PIN_SUMMARY_CREATE
+			WHERE 1=1
+			
+			<if test="startDt != null and startDt != ''">
+				AND CR_DATE >= TO_DATE(#{startDt}, 'YYYYMM')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND CR_DATE &lt; ADD_MONTHS(TO_DATE(#{endDt}, 'YYYYMM'), 1)
+			</if>
+			
+			GROUP BY 'ALL'
+			
+			<choose>
+				<when test='searchAdminId == "Y"'>
+					, CR_ADMIN_ID
+				</when>
+			</choose>
+			
+			<choose>
+				<when test='searchMonth == "Y"'>
+					, TO_CHAR(CR_DATE, 'YYYY-MM') 
+				</when>
+			</choose>
+			
+			ORDER BY 'ALL' 
+			
+			<choose>
+				<when test='searchAdminId == "Y"'>
+					, CR_ADMIN_NM ASC
+				</when>
+			</choose>
+			
+			<choose>
+				<when test='searchMonth == "Y"'>
+					, CR_DATE DESC
+				</when>
+			</choose>
+		 )
+
+    </select>
+    
+    <!--PIN개통통계 목록조회 -->
+    <select id="getPinOpenStatsMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+	         SELECT *
+	         FROM (
+		         SELECT
+		         
+		         	<choose>
+						<when test='searchAdminId == "Y"'>
+							F_GET_ADMIN_NM(OPEN_ADMIN_ID) OP_ADMIN_NM,   
+						</when>
+						<otherwise>
+							'ALL' OP_ADMIN_NM,  
+						</otherwise>
+					</choose>
+				    
+				    <choose>
+						<when test='searchMonth == "Y"'>
+						TO_CHAR(OPEN_DATE, 'YYYY-MM') OP_DATE,
+						</when>
+						<otherwise>
+						'ALL' OP_DATE,
+						</otherwise>
+					</choose>
+				    
+				    SUM(OPEN_COUNT) OP_CNT,
+				    SUM(PIN_CHARGE_SUM) OP_AMT,
+				    SUM(AGENT_CHARGE_SUM) SL_AMT,
+				    SUM(DECODE(CANCEL_FLAG, 'Y', OPEN_COUNT, 0)) OP_CAN_CNT,
+				    SUM(DECODE(CANCEL_FLAG, 'Y', PIN_CHARGE_SUM, 0)) OP_CAN_AMT
+				FROM PPS_PIN_SUMMARY_OPEN
+				WHERE 1=1
+				
+				<if test="startDt != null and startDt != ''">
+					AND OPEN_DATE >= TO_DATE(#{startDt}, 'YYYYMM')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND OPEN_DATE &lt; ADD_MONTHS(TO_DATE(#{endDt}, 'YYYYMM'), 1)
+				</if>  
+				
+				GROUP BY 'ALL'
+				
+				<choose>
+					<when test='searchAdminId == "Y"'>
+						, OPEN_ADMIN_ID
+					</when>
+				</choose>
+				
+				<choose>
+					<when test='searchMonth == "Y"'>
+						, TO_CHAR(OPEN_DATE, 'YYYY-MM') 
+					</when>
+				</choose>
+				
+				ORDER BY 'ALL' 
+				
+				<choose>
+					<when test='searchAdminId == "Y"'>
+						, OP_ADMIN_NM ASC
+					</when>
+				</choose>
+				
+				<choose>
+					<when test='searchMonth == "Y"'>
+						, OP_DATE DESC
+					</when>
+				</choose>
+			 )
+         
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!--PIN생성통계 목록조회 엑셀출력 -->
+    <select id="getPinOpenStatsMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+
+         SELECT *
+         FROM (
+	         SELECT
+	         
+	         	<choose>
+					<when test='searchAdminId == "Y"'>
+						F_GET_ADMIN_NM(OPEN_ADMIN_ID) OP_ADMIN_NM,   
+					</when>
+					<otherwise>
+						'ALL' OP_ADMIN_NM,  
+					</otherwise>
+				</choose>
+			    
+			    <choose>
+					<when test='searchMonth == "Y"'>
+					TO_CHAR(OPEN_DATE, 'YYYY-MM') OP_DATE,
+					</when>
+					<otherwise>
+					'ALL' OP_DATE,
+					</otherwise>
+				</choose>
+			    
+			    SUM(OPEN_COUNT) OP_CNT,
+			    SUM(PIN_CHARGE_SUM) OP_AMT,
+			    SUM(AGENT_CHARGE_SUM) SL_AMT,
+			    SUM(DECODE(CANCEL_FLAG, 'Y', OPEN_COUNT, 0)) OP_CAN_CNT,
+			    SUM(DECODE(CANCEL_FLAG, 'Y', PIN_CHARGE_SUM, 0)) OP_CAN_AMT
+			FROM PPS_PIN_SUMMARY_OPEN
+			WHERE 1=1
+			
+			<if test="startDt != null and startDt != ''">
+				AND OPEN_DATE >= TO_DATE(#{startDt}, 'YYYYMM')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND OPEN_DATE &lt; ADD_MONTHS(TO_DATE(#{endDt}, 'YYYYMM'), 1)
+			</if>
+			
+			GROUP BY 'ALL'
+			
+			<choose>
+				<when test='searchAdminId == "Y"'>
+					, OPEN_ADMIN_ID
+				</when>
+			</choose>
+			
+			<choose>
+				<when test='searchMonth == "Y"'>
+					, TO_CHAR(OPEN_DATE, 'YYYY-MM') 
+				</when>
+			</choose>
+			
+			ORDER BY 'ALL' 
+			
+			<choose>
+				<when test='searchAdminId == "Y"'>
+					, OP_ADMIN_NM ASC
+				</when>
+			</choose>
+			
+			<choose>
+				<when test='searchMonth == "Y"'>
+					, OP_DATE DESC
+				</when>
+			</choose>
+		 )
+
+    </select>
+    
+    <!--PIN현황통계 목록조회 -->
+    <select id="getPinInfoStatsMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+	         SELECT *
+	         FROM (
+		         SELECT
+		         
+		         	<choose>
+						<when test='searchStartPrice == "Y"'>
+							START_PRICE,   
+						</when>
+						<otherwise>
+							'ALL' START_PRICE,  
+						</otherwise>
+					</choose>
+				    
+				    <choose>
+						<when test='searchMonth == "Y"'>
+						TO_CHAR(CR_DATE, 'YYYY-MM') CR_DATE,
+						</when>
+						<otherwise>
+						'ALL' CR_DATE,
+						</otherwise>
+					</choose>
+				    
+				    SUM(TOT_CNT) TOT_CNT,
+				    SUM(TOT_AMT) TOT_AMT,
+				    SUM(CR_CNT) CR_CNT,
+				    SUM(CR_AMT) CR_AMT,
+				    SUM(OT_CNT) OT_CNT,
+				    SUM(OT_AMT) OT_AMT,
+				    SUM(OP_CNT) OP_CNT,
+				    SUM(OP_AMT) OP_AMT,
+				    SUM(RE_CNT) RE_CNT,
+				    SUM(RE_AMT) RE_AMT,
+				    SUM(ST_CNT) ST_CNT,
+				    SUM(ST_AMT) ST_AMT,
+				    SUM(CL_CNT) CL_CNT,
+				    SUM(CL_AMT) CL_AMT,
+				    SUM(ETC_CNT) ETC_CNT,
+				    SUM(ETC_AMT) ETC_AMT,
+				    SUM(OT_CNT + OP_CNT) SL_CNT,
+				    SUM(OT_AMT + OP_AMT) SL_AMT
+				FROM PPS_PIN_STATS_DAILY
+				WHERE 1=1 
+				
+				<if test="startDt != null and startDt != ''">
+					AND CR_DATE >= TO_DATE(#{startDt}, 'YYYYMM')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND CR_DATE &lt; ADD_MONTHS(TO_DATE(#{endDt}, 'YYYYMM'), 1)
+				</if> 
+				
+				GROUP BY 'ALL'
+				
+				<choose>
+					<when test='searchStartPrice == "Y"'>
+						, START_PRICE
+					</when>
+				</choose>
+				
+				<choose>
+					<when test='searchMonth == "Y"'>
+						, TO_CHAR(CR_DATE, 'YYYY-MM') 
+					</when>
+				</choose>
+				
+				ORDER BY 'ALL' 
+				
+				<choose>
+					<when test='searchStartPrice == "Y"'>
+						, START_PRICE ASC
+					</when>
+				</choose>
+				
+				<choose>
+					<when test='searchMonth == "Y"'>
+						, CR_DATE DESC
+					</when>
+				</choose>
+			 )
+         
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!--PIN현황통계 목록조회 엑셀출력 -->
+    <select id="getPinInfoStatsMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+
+         SELECT *
+         FROM (
+	         SELECT
+	         
+	         	<choose>
+					<when test='searchStartPrice == "Y"'>
+						START_PRICE,   
+					</when>
+					<otherwise>
+						'ALL' START_PRICE,  
+					</otherwise>
+				</choose>
+			    
+			    <choose>
+					<when test='searchMonth == "Y"'>
+					TO_CHAR(CR_DATE, 'YYYY-MM') CR_DATE,
+					</when>
+					<otherwise>
+					'ALL' CR_DATE,
+					</otherwise>
+				</choose>
+			    
+			    SUM(TOT_CNT) TOT_CNT,
+			    SUM(TOT_AMT) TOT_AMT,
+			    SUM(CR_CNT) CR_CNT,
+			    SUM(CR_AMT) CR_AMT,
+			    SUM(OT_CNT) OT_CNT,
+			    SUM(OT_AMT) OT_AMT,
+			    SUM(OP_CNT) OP_CNT,
+			    SUM(OP_AMT) OP_AMT,
+			    SUM(RE_CNT) RE_CNT,
+			    SUM(RE_AMT) RE_AMT,
+			    SUM(ST_CNT) ST_CNT,
+			    SUM(ST_AMT) ST_AMT,
+			    SUM(CL_CNT) CL_CNT,
+			    SUM(CL_AMT) CL_AMT,
+			    SUM(ETC_CNT) ETC_CNT,
+			    SUM(ETC_AMT) ETC_AMT,
+			    SUM(OT_CNT + OP_CNT) SL_CNT,
+			    SUM(OT_AMT + OP_AMT) SL_AMT
+			FROM PPS_PIN_STATS_DAILY
+			WHERE 1=1 
+			
+			<if test="startDt != null and startDt != ''">
+				AND CR_DATE >= TO_DATE(#{startDt}, 'YYYYMM')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND CR_DATE &lt; ADD_MONTHS(TO_DATE(#{endDt}, 'YYYYMM'), 1)
+			</if> 
+			
+			GROUP BY 'ALL'
+			
+			<choose>
+				<when test='searchStartPrice == "Y"'>
+					, START_PRICE
+				</when>
+			</choose>
+			
+			<choose>
+				<when test='searchMonth == "Y"'>
+					, TO_CHAR(CR_DATE, 'YYYY-MM') 
+				</when>
+			</choose>
+			
+			ORDER BY 'ALL' 
+			
+			<choose>
+				<when test='searchStartPrice == "Y"'>
+					, START_PRICE ASC
+				</when>
+			</choose>
+			
+			<choose>
+				<when test='searchMonth == "Y"'>
+					, CR_DATE DESC
+				</when>
+			</choose>
+		 )
+
+    </select>
+
+</mapper>

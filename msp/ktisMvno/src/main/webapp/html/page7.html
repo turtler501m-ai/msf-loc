@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<title>iframe sample</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<!-- Library -->
+<link rel="stylesheet" type="text/css" href="../lib/dhtmlx/codebase/dhtmlx.css"/>
+<link rel="stylesheet" type="text/css" href="../css/mvno.css"/>
+<script src="../lib/jquery/jquery-1.9.1.js"></script>
+<script src="../lib/dhtmlx/codebase/dhtmlx.js"></script>
+<script src="../js/mvno.js"></script>
+<!-- //Library  -->
+
+</head>
+
+<body>
+
+	<!-- header -->
+	<div class="page-header">
+		<h1>단말기관리</h1>
+		<a href="#" class="favor">즐겨찾기 추가</a>
+		<ul>
+			<li>HOME</li>
+			<li>조직관리</li>
+			<li>단말기관리</li>
+		</ul>
+	</div>
+	<!-- //header -->
+
+	<!-- 화면 배치 -->
+	<div id="POP" class="row">
+		<div id="GRID1" class="c4-5"></div>
+		<div id="FORM1" class="c1 section-normal"></div>
+		<div id="GRID2" class="c4-5"></div>
+		<div id="FORM2" class="section-pagescope"></div>
+	</div>
+
+	<!-- Script -->
+	<script type="text/javascript">
+
+		var DHX = {
+			GRID1 : {
+				css : {
+					height : "250px"
+				},
+				title : "입고 대상 내역",
+				header : "순번, 모델ID, 모델명, 단말일련번호",
+				widths : "60,60,100,100"
+			 },
+			 GRID2 : {
+				css : {
+					height : "250px"
+				},
+				title : "바코드 검수 내역",
+				header : "단말 일련번호, 검수여부",
+				widths : "140,150"
+			 },
+			 FORM1 : {
+				 items : [
+					{type:"block", offsetLeft:"14", offsetTop:"50", list:[
+						{type:"button", value: "", className:"btn-add-all"}
+						,{type:"button", value: "", className:"btn-add"}
+						,{type:"button", value: "", className:"btn-delete"}
+						,{type:"button", value: "", className:"btn-delete-all"}
+						,{type:"button", value: "삭제"}
+					]}
+				]
+			 },
+			 FORM2 : {
+					buttons : {
+						left : {
+							btn1 : { label : "출력(착오분)" },
+						},
+						right : {
+							btn2 : { label : "저장" },
+							btn3 : { label : "닫기" }
+						}
+					}
+			 },
+		};
+
+        var PAGE = {
+			onOpen : function() {
+				mvno.ui.createForm("FORM1");
+				mvno.ui.createForm("FORM2");
+				mvno.ui.createGrid("GRID1");
+				mvno.ui.createGrid("GRID2");
+				mvno.ui.popupWindowById("POP", "입고검수", 800, 450);
+			}
+		}
+	</script>
+
+	<script src="../js/mvno_footer.js"></script>
+
+</body>
+</html>

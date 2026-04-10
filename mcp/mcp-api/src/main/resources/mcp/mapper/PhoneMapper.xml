@@ -1,0 +1,1181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.phone.mapper.PhoneMapper">
+
+    <!-- 핸드폰상품관리 리스트용  collection 단품정보를 포함하고있다. -->
+    <resultMap id="listPhoneMapForCollection" type="com.ktmmobile.mcp.phone.dto.PhoneProdBasDto">
+        <collection property="phoneSntyBasDtosList"
+                    ofType="com.ktmmobile.mcp.phone.dto.PhoneSntyBasDto"
+                    column="{prodId=PROD_ID}"
+                    select="triggerSelectSntyBasList" >
+        </collection>
+    </resultMap>
+
+    <!-- 핸드폰 상품 상세용 collection 단품정보,업로드이미지정보(색상별),MSP 정책정보를 포함하고있다. -->
+    <resultMap id="findPhoneMapForCollection" type="com.ktmmobile.mcp.phone.dto.PhoneProdBasDto">
+        <collection property="phoneSntyBasDtosList"
+                    ofType="com.ktmmobile.mcp.phone.dto.PhoneSntyBasDto"
+                    column="{prodId=PROD_ID}"
+                    select="triggerSelectSntyBasList" >
+        </collection>
+        <collection property="phoneProdImgDtoList"
+                    ofType="com.ktmmobile.mcp.phone.dto.PhoneProdImgDto"
+                    column="{prodId=PROD_ID}"
+                    select="triggerSelectProdBasImgDtlList" >
+        </collection>
+    </resultMap>
+
+    <!-- 색상별(업로드된 이미지정보중 4면(앞,뒤,옆,모바일)별 이미지 정보 조회  -->
+    <resultMap id="findPhoneColorDetailForCollection" type="com.ktmmobile.mcp.phone.dto.PhoneProdImgDto">
+        <collection property="phoneProdImgDetailDtoList"
+                    ofType="com.ktmmobile.mcp.phone.dto.PhoneProdImgDetailDto"
+                    column="{prodId=PROD_ID},{sntyColorCd=SNTY_COLOR_CD}"
+                    select="triggerSelectProdBasImgDtlShapeList" >
+        </collection>
+    </resultMap>
+
+    <!-- lte3GphoneCount 조회시 BigDemical => Integer로 캐스팅 -->
+    <resultMap id="lte3GphoneCountMap" type="map" >
+        <id column="LTEC" property="LTEC" javaType="integer" />
+        <id column="G3C" property="G3C" javaType="integer" />
+        <id column="G5C" property="G5C" javaType="integer" />
+    </resultMap>
+
+    <select id="triggerSelectProdBasImgDtlShapeList" resultType="com.ktmmobile.mcp.phone.dto.PhoneProdImgDetailDto" parameterType="com.ktmmobile.mcp.phone.dto.PhoneProdImgDto">
+        SELECT /*Phone_Query.triggerSelectProdBasImgDtlShapeList 핸드폰 상세 측면별 이미지정보 조회 */
+            SNTY_COLOR_CD,
+            PROD_ID,
+            IMG_TYPE_CD,
+            IMG_PATH,
+            CRET_ID,
+            AMD_ID,
+            CRET_DT,
+            AMD_DT
+        FROM
+            NMCP_PROD_IMG_DTL
+        WHERE
+            PROD_ID = #{prodId}
+          AND SNTY_COLOR_CD = #{sntyColorCd}
+        ORDER BY IMG_TYPE_CD
+    </select>
+
+    <select id="triggerSelectProdBasImgDtlList" resultMap="findPhoneColorDetailForCollection" parameterType="com.ktmmobile.mcp.phone.dto.PhoneProdBasDto">
+        SELECT /*Phone_Query.triggerSelectProdBasImgDtlList 핸드폰 색상속성 정보 조회 */
+            A.PROD_ID,
+            A.ATRIB_VAL_CD_1 as SNTY_COLOR_CD,
+            A.ATRIB_VAL_NM_1 as ATRIB_VAL,
+            A.PROD_ID AS prodId,
+            A.ATRIB_VAL_CD_1 as sntyColorCd
+        FROM
+            NMCP_SNTY_PROD_BAS A,
+            NMCP_PROD_ATRIB_VAL_DTL B
+        WHERE
+            PROD_ID = #{prodId}
+          AND a.atrib_val_cd_1 = a.atrib_val_cd_1
+          AND B.ATRIB_CD='P0'
+        GROUP BY
+            A.ATRIB_VAL_CD_1,A.PROD_ID,A.ATRIB_VAL_NM_1
+    </select>
+
+    <select id="triggerSelectSntyBasList" resultType="com.ktmmobile.mcp.phone.dto.PhoneSntyBasDto" parameterType="com.ktmmobile.mcp.phone.dto.PhoneProdBasDto">
+        SELECT  /*Phone_Query.triggerSelectSntyBasList 핸드폰 단품정보(속성) 조회  */
+        PROD_ID,                --상품아이디
+        HNDSET_MODEL_ID,        --단말기모델아이디
+        HNDSET_MODEL_NM,        --단말기모델명
+        ATRIB_CD_1,             --속성코드1
+        ATRIB_NM_1,             --속성명1
+        ATRIB_VAL_CD_1,         --속성값코드1
+        ATRIB_VAL_NM_1,         --속성값명1
+        ATRIB_CD_2,             --속성코드2
+        ATRIB_NM_2,             --속성명2
+        ATRIB_VAL_CD_2,         --속성값코드2
+        ATRIB_VAL_NM_2,         --속성값명2
+        ATRIB_CD_3,             --속성코드3
+        ATRIB_NM_3,             --속성명3
+        ATRIB_VAL_CD_3,         --속성값코드3
+        ATRIB_VAL_NM_3,         --속성값명3
+        SALE_YN,                --판매여부
+        SDOUT_YN,               --품절여부
+        REP_PROD_YN,            --대표상품여부
+        CRET_ID,                --생성자아이디
+        AMD_ID,                 --수정자아이디
+        CRET_DT,                --생성일시
+        AMD_DT,                 --수정일시
+        RPRS_PRDT_YN
+        FROM
+        NMCP_SNTY_PROD_BAS
+        WHERE
+        PROD_ID = #{prodId}
+        <if test="hndsetModelId != null  and hndsetModelId != ''">
+            AND HNDSET_MODEL_ID = #{hndsetModelId}
+        </if>
+    </select>
+
+    <select id="listPhoneMspDto" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto" resultType="com.ktmmobile.mcp.phone.dto.PhoneMspDto">
+        <!-- 정책 판매중인 핸드폰 리스트 정보 조회 only msp db링크를 통한 조회만 한다. -->
+        SELECT /*PhoneMapper.listPhoneMspDto 정책 판매중인 핸드폰 리스트 정보 조회 only msp db링크를 통한 조회만 한다.  */
+        A.PRDT_ID,
+        A.RPRS_PRDT_ID,
+        A.RPRS_YN,
+        A.PRDT_NM,
+        A.PRDT_CODE,
+        A.PRDT_TYPE_CD,
+        A.PRDT_IND_CD,
+        A.PRDT_COLR_CD,
+        A.MNFCT_ID,
+        A.PRDT_LNCH_DT,
+        A.PRDT_DT,
+        C.MNFCT_NM
+        FROM
+        CMN_INTM_MDL@DL_MSP A,
+        ORG_MNFCT_MST@DL_MSP C
+        WHERE
+        A.PRDT_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+        AND A.MNFCT_ID = C.MNFCT_ID
+        AND C.MNFCT_YN = 'Y' --제조사 여부 N 일경우 공급사
+        <if test="rprsYn != null and rprsYn != ''">
+            AND A.RPRS_YN = #{rprsYn} -- 대표상품여부
+        </if>
+        <choose>
+            <when test="searchCategoryId == ''"> <!-- 전체 -->
+                AND  (
+                C.MNFCT_NM LIKE '%' || UPPER(#{searchValue}) || '%'
+                or UPPER(PRDT_CODE) LIKE '%' || UPPER(#{searchValue}) || '%'
+                or UPPER(PRDT_NM) LIKE '%' || UPPER(#{searchValue}) || '%'
+                )
+            </when>
+            <when test="searchCategoryId == '01'"> <!-- 제조사 -->
+                AND C.MNFCT_NM LIKE '%' || UPPER(#{searchValue}) || '%'
+            </when>
+            <when test="searchCategoryId == '02'"> <!-- 모델명 -->
+                AND UPPER(PRDT_CODE) LIKE '%' || UPPER(#{searchValue}) || '%'
+            </when>
+            <when test="searchCategoryId == '03'"> <!-- 상품명 -->
+                AND UPPER(PRDT_NM) LIKE '%' || UPPER(#{searchValue}) || '%'
+            </when>
+            <when test="searchCategoryId == '04'"> <!-- 대표모델ID -->
+                AND A.RPRS_PRDT_ID = #{searchValue}
+            </when>
+        </choose>
+        ORDER BY A.PRDT_IND_CD DESC
+        ,A.MNFCT_ID
+        ,A.RPRS_PRDT_ID
+    </select>
+
+    <select id="listPhoneProdsCount" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto">
+        SELECT /* Phone_Query.listPhoneProdsCount*/
+        COUNT(1)
+        FROM
+        NMCP_PROD_BAS A,
+        ORG_MNFCT_MST@DL_MSP B
+        WHERE
+        A.MAKR_CD = B.MNFCT_ID(+)
+        AND DEL_YN  <![CDATA[<>]]> 'Y'
+        AND B.MNFCT_YN(+) = 'Y' --제조사 여부 N 일경우 공급사
+        <if test="shandYn != null and shandYn != ''">
+            AND A.SHAND_YN = #{shandYn} --중고폰여부
+        </if>
+        <if test="searchSaleYn != null and searchSaleYn != ''">
+            AND A.SALE_YN = #{searchSaleYn}
+        </if>
+        <if test="searchShowYn != null and searchShowYn != ''">
+            AND A.SHOW_YN = #{searchShowYn}
+        </if>
+        <if test="prodType != null and prodType != ''">
+            AND A.PROD_TYPE = #{prodType}
+        </if>
+        <if test="searchValue != null and searchValue != ''">
+            <choose>
+                <when test="searchCategoryId == ''"> <!-- 전체 -->
+                    AND  (
+                    A.PROD_NM LIKE '%' ||#{searchValue}|| '%'
+                    or B.MNFCT_NM LIKE '%' ||#{searchValue}|| '%'
+                    or A.PROD_ID = #{searchValue}
+                    )
+                </when>
+                <when test="searchCategoryId == '01'"> <!-- 상품명 -->
+                    AND A.PROD_NM LIKE '%' ||#{searchValue}|| '%'
+                </when>
+                <when test="searchCategoryId == '02'"> <!-- 제조사 -->
+                    <choose>
+                        <when test='shandYn == "Y"'>
+                            AND A.MAKR_NM LIKE '%' ||#{searchValue}|| '%'
+                        </when>
+                        <otherwise>
+                            AND B.MNFCT_NM LIKE '%' ||#{searchValue}|| '%'
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="searchCategoryId == '03'"> <!-- 상품코드 -->
+                    AND A.PROD_ID = #{searchValue}
+                </when>
+                <when test="searchCategoryId == '04'"> <!-- 모델명 -->
+                    AND A.SNTY_MODEL_ID LIKE '%' ||#{searchValue}|| '%'
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <select id="listphoneProd" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto"  resultMap="listPhoneMapForCollection">
+        SELECT /*Phone_Query.listphoneProd 22핸드폰 상품관리 리스트 조회 */
+        A.PROD_ID,                 --상품아이디
+        A.PROD_ID as prodId,       -- 상품 아이디
+        A.PROD_CTG_ID,            --상품분류아이디 (lte,3g)
+        A.PROD_NM,                --상품명
+        A.MAKR_CD,                --제조사코드
+        A.RPRS_PRDT_ID,           --대표모델ID
+        A.SHOW_YN,                --노출여부
+        A.SALE_YN,                --판매여부
+        A.OFW_DATE,               --출고일자
+        A.LIST_SHOW_TEXT,         --목록노출텍스트
+        A.LIST_SHOW_OPTN,         --목록노출옵션
+        A.APD_DESC_1,             --추가설명1
+        A.APD_DESC_2,             --추가설명2
+        A.APD_DESC_3,             --추가설명3
+        A.STCK_TYPE_TOP,          --스티커노출(상)
+        A.STCK_TYPE_TAIL,         --스티커노출(하)
+        A.LAYER_YN,               --레이어팝업 노출여부
+        A.LAYER_IMAGE_URL,        --레이어이미지URL
+        A.SHOW_ODRG,              --노출순서
+        A.SNTY_PROD_DESC,         --단말기상품설명
+        A.SNTY_NET,               --단말기네트워크
+        A.SNTY_DISP,              --단말기디스플레이
+        A.SNTY_SIZE,              --단말기크기
+        A.SNTY_WEIGHT,            --단말기무게
+        A.SNTY_MEMR,              --단말기메모리
+        A.SNTY_BTRY,              --단말기배터리
+        A.SNTY_OS,                --단말기OS
+        A.SNTY_WAIT_TIME,         --단말기대기시간
+        A.SNTY_CAM,               --단말기카메라
+        A.SNTY_VIDE_TLK,          --단말기영상통화
+        A.SNTY_PROD_NM,           --단말기명
+        A.SNTY_REL_MONTH,         --출시월
+        A.SNTY_COLOR,             --단말기색상
+        A.SNTY_MAKER,             --단말기제조사/브랜드명
+        A.SNTY_MODEL_ID,          --단말기모델번호
+        A.CRET_ID,                --생성자아이디
+        A.AMD_ID,                 --수정자아이디
+        A.CRET_DT,                --생성일시
+        A.AMD_DT,                 --수정일시
+        B.MNFCT_NM,               --제조사명
+        A.MAKR_NM,              --제조사명 중고폰에서만사용
+        A.INVENTORY_AMT,            --중고폰 재고수량
+        A.SALE_PRICE,               --중고폰 판매가격
+        A.PROD_GRADE,               --종고폰 등급
+        A.SHAND_TYPE,               --중고폰type 구분(중고폰,외산폰)
+        A.RECOMMEND_RATE,       --추천요금제
+        A.USED_WARRANTY,
+        NVL(A.OFW_DATE,'') as ORDER_CRET_DT,
+        A.PROD_TYPE,			--상품구분 (01:일반 , 02:0원렌탈)
+        NVL(A.SESPLS_YN,'N') AS SESPLS_YN --자급제여부 구분(Y,N)
+        FROM
+        NMCP_PROD_BAS A,
+        ORG_MNFCT_MST@DL_MSP B
+        WHERE
+        A.MAKR_CD = B.MNFCT_ID(+)
+        AND DEL_YN  <![CDATA[<>]]> 'Y'
+        AND B.MNFCT_YN(+) = 'Y' --제조사 여부 N 일경우 공급사
+        <if test="shandYn != null and shandYn != ''">
+            AND A.SHAND_YN = #{shandYn} --중고폰여부
+        </if>
+        <if test="searchSaleYn != null and searchSaleYn != ''">
+            AND A.SALE_YN = #{searchSaleYn}
+        </if>
+        <if test="searchShowYn != null and searchShowYn != ''">
+            AND A.SHOW_YN = #{searchShowYn}
+        </if>
+        <choose>
+            <when test="prodType == '01'"> <!-- 전체 -->
+                AND A.PROD_TYPE  IN('01','04')
+            </when>
+            <when test="prodType != null and prodType != ''"> <!-- 상품명 -->
+                AND A.PROD_TYPE = #{prodType}
+            </when>
+        </choose>
+        <if test="searchValue != null and searchValue != ''">
+            <choose>
+                <when test="searchCategoryId == ''"> <!-- 전체 -->
+                    AND  (
+                    A.PROD_NM LIKE '%' ||#{searchValue}|| '%'
+                    or B.MNFCT_NM LIKE '%' ||#{searchValue}|| '%'
+                    or A.PROD_ID = #{searchValue}
+                    )
+                </when>
+                <when test="searchCategoryId == '01'"> <!-- 상품명 -->
+                    AND A.PROD_NM LIKE '%' ||#{searchValue}|| '%'
+                </when>
+                <when test="searchCategoryId == '02'"> <!-- 제조사 -->
+                    <choose>
+                        <when test='shandYn == "Y"'>
+                            AND A.MAKR_NM LIKE '%' ||#{searchValue}|| '%'
+                        </when>
+                        <otherwise>
+                            AND B.MNFCT_NM LIKE '%' ||#{searchValue}|| '%'
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="searchCategoryId == '03'"> <!-- 상품코드 -->
+                    AND A.PROD_ID = #{searchValue}
+                </when>
+            </choose>
+        </if>
+        ORDER BY CRET_DT DESC
+    </select>
+
+    <select id="findNmcpProdBas" parameterType="com.ktmmobile.mcp.phone.dto.PhoneProdBasDto"  resultMap="findPhoneMapForCollection">
+        SELECT /*Phone_Query.findNmcpProdBas 핸드폰 상품관리 상세 조회 */
+            A.PROD_ID,                 --상품아이디
+            A.PROD_ID as prodId,       -- 상품 아이디
+            A.PROD_CTG_ID,            --상품분류아이디 (lte,3g)
+            A.PROD_NM,                --상품명
+            A.MAKR_CD,                --제조사코드
+            A.RPRS_PRDT_ID,           --대표모델ID
+            A.SHOW_YN,                --노출여부
+            A.SALE_YN,                --판매여부
+            A.OFW_DATE,               --출고일자
+            A.LIST_SHOW_TEXT,         --목록노출텍스트
+            A.LIST_SHOW_OPTN,         --목록노출옵션
+            A.APD_DESC_1,             --추가설명1
+            A.APD_DESC_2,             --추가설명2
+            A.APD_DESC_3,             --추가설명3
+            A.STCK_TYPE_TOP,          --스티커노출(상)
+            A.STCK_TYPE_TAIL,         --스티커노출(하)
+            A.LAYER_YN,               --레이어팝업 노출여부
+            A.LAYER_IMAGE_URL,        --레이어이미지URL
+            A.SHOW_ODRG,              --노출순서
+            A.SNTY_PROD_DESC,         --단말기상품설명
+            A.SNTY_NET,               --단말기네트워크
+            A.SNTY_DISP,              --단말기디스플레이
+            A.SNTY_SIZE,              --단말기크기
+            A.SNTY_WEIGHT,            --단말기무게
+            A.SNTY_MEMR,              --단말기메모리
+            A.SNTY_BTRY,              --단말기배터리
+            A.SNTY_OS,                --단말기OS
+            A.SNTY_WAIT_TIME,         --단말기대기시간
+            A.SNTY_CAM,               --단말기카메라
+            A.SNTY_VIDE_TLK,          --단말기영상통화
+            A.SNTY_PROD_NM,           --단말기명
+            A.SNTY_REL_MONTH,         --출시월
+            A.SNTY_COLOR,             --단말기색상
+            A.SNTY_MAKER,             --단말기제조사/브랜드명
+            A.SNTY_MODEL_ID,          --단말기모델번호
+            A.CRET_ID,                --생성자아이디
+            A.AMD_ID,                 --수정자아이디
+            A.CRET_DT,                --생성일시
+            A.AMD_DT,                 --수정일시
+            B.MNFCT_NM,               --제조사명
+            A.SNTY_DETAIL_SPEC,       --휴대폰상세기능
+            A.MAKR_NM,              --제조사명 중고폰에서만사용
+            A.INVENTORY_AMT,            --중고폰 재고수량
+            A.SALE_PRICE,               --중고폰 판매가격
+            A.PROD_GRADE,               --종고폰 등급
+            A.SHAND_TYPE,               --중고폰type 구분(중고폰,외산폰)
+            A.RECOMMEND_RATE,       --추천요금제
+            A.USED_WARRANTY,
+            NVL(A.OFW_DATE,'') as ORDER_CRET_DT,
+            A.RINK_URL,				--링크유알엘
+            A.PROD_TYPE,			--상품 분류 (일반 :01, 0원 상품 :02)
+            A.RENTAL_BASE_AMT,		--렌탈 기본료 금액
+            A.RENTAL_BASE_DC_AMT,	--렌탈 기본료 할인 금액
+            A.RENTAL_MODEL_CP_AMT,	-- 단말기 배상 금액
+            NVL(A.SETTL_YN,'N') as SETTL_YN,  -- 결제여부(Y,N)
+            NVL(A.SESPLS_YN,'N') AS SESPLS_YN --자급제여부 구분(Y,N)
+                , (
+                SELECT CHA.OUT_UNIT_PRIC * 1.1
+                FROM CMN_HNDST_AMT@DL_MSP CHA
+                WHERE CHA.RPRS_PRDT_ID = A.RPRS_PRDT_ID
+                  AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN CHA.UNIT_PRIC_APPL_DTTM AND CHA.UNIT_PRIC_EXPR_DTTM
+                  AND ROWNUM = 1
+            ) AS OUT_UNIT_PRIC
+                , (
+                SELECT IN_UNIT_PRIC * 1.1
+                FROM CMN_MNFCT_AMT@DL_MSP CMN
+                WHERE
+                    RPRS_PRDT_ID = A.RPRS_PRDT_ID
+                  AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN CMN.UNIT_PRIC_APPL_DTTM AND CMN.UNIT_PRIC_EXPR_DTTM
+                  AND ROWNUM = 1
+            ) AS IN_UNIT_PRIC
+            , A.RECOMMEND_RATE_NOARGM    -- 무약정추천요금
+            , A.AGRM_TRM_BASE            -- 기본 약정
+            , A.REP_RATE                -- 대표요금제
+            , (SELECT DATA_TYPE FROM MSP_RATE_MST@DL_MSP WHERE RATE_CD = A.REP_RATE) AS REP_RATE_DATA_TYPE
+        FROM
+            NMCP_PROD_BAS A,
+            ORG_MNFCT_MST@DL_MSP B
+        WHERE
+            A.MAKR_CD = B.MNFCT_ID(+)
+          AND B.MNFCT_YN(+) = 'Y' --제조사 여부 N 일경우 공급사
+          AND PROD_ID = #{prodId}
+    </select>
+
+    <select id="listphoneProdForSort" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto"  resultType ="com.ktmmobile.mcp.phone.dto.PhoneProdBasDto">
+        SELECT /*Phone_Query.listphoneProdForSort 핸드폰 상품순서관리  */
+        A.PROD_ID,                 --상품아이디
+        A.PROD_ID as prodId,       -- 상품 아이디
+        A.PROD_CTG_ID,            --상품분류아이디 (lte,3g)
+        A.PROD_NM,                --상품명
+        A.MAKR_CD,                --제조사코드
+        A.RPRS_PRDT_ID,           --대표모델ID
+        A.SHOW_YN,                --노출여부
+        A.SALE_YN,                --판매여부
+        A.OFW_DATE,               --출고일자
+        A.LIST_SHOW_TEXT,         --목록노출텍스트
+        A.LIST_SHOW_OPTN,         --목록노출옵션
+        A.APD_DESC_1,             --추가설명1
+        A.APD_DESC_2,             --추가설명2
+        A.APD_DESC_3,             --추가설명3
+        A.STCK_TYPE_TOP,          --스티커노출(상)
+        A.STCK_TYPE_TAIL,         --스티커노출(하)
+        A.LAYER_YN,               --레이어팝업 노출여부
+        A.LAYER_IMAGE_URL,        --레이어이미지URL
+        A.SHOW_ODRG,              --노출순서
+        A.SNTY_PROD_DESC,         --단말기상품설명
+        A.SNTY_NET,               --단말기네트워크
+        A.SNTY_DISP,              --단말기디스플레이
+        A.SNTY_SIZE,              --단말기크기
+        A.SNTY_WEIGHT,            --단말기무게
+        A.SNTY_MEMR,              --단말기메모리
+        A.SNTY_BTRY,              --단말기배터리
+        A.SNTY_OS,                --단말기OS
+        A.SNTY_WAIT_TIME,         --단말기대기시간
+        A.SNTY_CAM,               --단말기카메라
+        A.SNTY_VIDE_TLK,          --단말기영상통화
+        A.SNTY_PROD_NM,           --단말기명
+        A.SNTY_REL_MONTH,         --출시월
+        A.SNTY_COLOR,             --단말기색상
+        A.SNTY_MAKER,             --단말기제조사/브랜드명
+        A.SNTY_MODEL_ID,          --단말기모델번호
+        A.CRET_ID,                --생성자아이디
+        A.AMD_ID,                 --수정자아이디
+        A.CRET_DT,                --생성일시
+        A.AMD_DT,                 --수정일시
+        B.MNFCT_NM,               --제조사명
+        A.RECOMMEND_RATE,           --추천요금제
+        A.USED_WARRANTY,            --중고폰 워런티
+        NVL(A.OFW_DATE,'') as ORDER_CRET_DT
+        FROM
+        NMCP_PROD_BAS A,
+        ORG_MNFCT_MST@DL_MSP B
+        WHERE
+        A.MAKR_CD = B.MNFCT_ID(+)
+        AND B.MNFCT_YN(+) = 'Y' --제조사 여부 N 일경우 공급사
+        AND A.SHOW_YN = 'Y' --노출여부 Y/N
+        AND A.SALE_YN = 'Y'
+        AND A.SHAND_YN = #{shandYn} --중고폰여부
+        <if test="saleYn != null and saleYn != ''">
+            AND A.SALE_YN = #{saleYn}
+        </if>
+        <if test="searchValue != null and searchValue != ''">
+            <choose>
+                <when test="searchCategoryId == ''"> <!-- 전체 -->
+                    AND  (
+                    A.PROD_NM LIKE '%' ||#{searchValue}|| '%'
+                    or B.MNFCT_NM LIKE '%' ||#{searchValue}|| '%'
+                    or A.PROD_ID = #{searchValue}
+                    )
+                </when>
+                <when test="searchCategoryId == '01'"> <!-- 상품명 -->
+                    AND A.PROD_NM LIKE '%' ||#{searchValue}|| '%'
+                </when>
+                <when test="searchCategoryId == '02'"> <!-- 제조사 -->
+                    AND B.MNFCT_NM LIKE '%' ||#{searchValue}|| '%'
+                </when>
+                <when test="searchCategoryId == '03'"> <!-- 상품코드 -->
+                    AND A.PROD_ID = #{searchValue}
+                </when>
+            </choose>
+        </if>
+        ORDER BY SHOW_ODRG
+    </select>
+
+    <select id="listPhoneProdBasForFront" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto"  resultMap="findPhoneMapForCollection">
+        /*Phone_Query.listPhoneProdBasForFront 핸드폰 상품 리스트 프론트 */
+        SELECT
+        A.PROD_ID,                 --상품아이디
+        A.PROD_ID as prodId,       -- 상품 아이디
+        A.PROD_CTG_ID,            --상품분류아이디 (lte,3g)
+        A.PROD_NM,                --상품명
+        A.MAKR_CD,                --제조사코드
+        A.RPRS_PRDT_ID,           --대표모델ID
+        A.SHOW_YN,                --노출여부
+        A.SALE_YN,                --판매여부
+        A.OFW_DATE,               --출고일자
+        A.LIST_SHOW_TEXT,         --목록노출텍스트
+        A.LIST_SHOW_OPTN,         --목록노출옵션
+        A.APD_DESC_1,             --추가설명1
+        A.APD_DESC_2,             --추가설명2
+        A.APD_DESC_3,             --추가설명3
+        A.STCK_TYPE_TOP,          --스티커노출(상)
+        A.STCK_TYPE_TAIL,         --스티커노출(하)
+        A.LAYER_YN,               --레이어팝업 노출여부
+        A.LAYER_IMAGE_URL,        --레이어이미지URL
+        A.SHOW_ODRG,              --노출순서
+        A.SNTY_PROD_DESC,         --단말기상품설명
+        A.SNTY_NET,               --단말기네트워크
+        A.SNTY_DISP,              --단말기디스플레이
+        A.SNTY_SIZE,              --단말기크기
+        A.SNTY_WEIGHT,            --단말기무게
+        A.SNTY_MEMR,              --단말기메모리
+        A.SNTY_BTRY,              --단말기배터리
+        A.SNTY_OS,                --단말기OS
+        A.SNTY_WAIT_TIME,         --단말기대기시간
+        A.SNTY_CAM,               --단말기카메라
+        A.SNTY_VIDE_TLK,          --단말기영상통화
+        A.SNTY_PROD_NM,           --단말기명
+        A.SNTY_REL_MONTH,         --출시월
+        A.SNTY_COLOR,             --단말기색상
+        A.SNTY_MAKER,             --단말기제조사/브랜드명
+        A.SNTY_MODEL_ID,          --단말기모델번호
+        A.CRET_ID,                --생성자아이디
+        A.AMD_ID,                 --수정자아이디
+        A.CRET_DT,                --생성일시
+        A.AMD_DT,                 --수정일시
+        A.SNTY_DETAIL_SPEC,       --휴대폰상세기능
+        A.MAKR_NM,                --제조사명 중고폰에서만사용
+        A.INVENTORY_AMT,          --중고폰 재고수량
+        A.SALE_PRICE,             --중고폰 판매가격
+        A.PROD_GRADE,             --종고폰 등급
+        A.SHAND_TYPE,             --중고폰type 구분(중고폰,외산폰)
+        A.RECOMMEND_RATE,         --추천요금제
+        B.MNFCT_NM,               --제조사명
+        A.USED_WARRANTY,          --중고폰 워런티
+        NVL(A.OFW_DATE,'') as ORDER_CRET_DT ,
+        A.RINK_URL                -- 중고폰 링크URL
+        FROM
+        NMCP_PROD_BAS A,
+        ORG_MNFCT_MST@DL_MSP B
+        WHERE
+        A.MAKR_CD = B.MNFCT_ID(+)
+        AND B.MNFCT_YN(+) = 'Y' --제조사 여부 N 일경우 공급사
+        AND A.SHOW_YN = 'Y' --노출여부 Y/N
+        AND A.SHAND_YN = #{shandYn} --중고폰여부
+        AND A.SALE_YN = 'Y' --판매여부
+        <if test="prodCtgId != null and prodCtgId != ''">
+            AND A.PROD_CTG_ID = #{prodCtgId}
+        </if>
+        <if test="makrCd != null and makrCd != ''">
+            AND B.MNFCT_ID = #{makrCd}
+        </if>
+        <if test="shandType!= null and shandType != ''">
+            AND A.SHAND_TYPE = #{shandType}
+        </if>
+        ORDER BY SHOW_ODRG
+    </select>
+
+    <select id="listPhoneProdBasForFrontOneQuery" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto" resultType="com.ktmmobile.mcp.phone.dto.PhoneProdBasForFrontListDto">
+        SELECT /*Phone_Query.listPhoneProdBasForFrontOneQuery 상품리스트 조회 시작 */
+        A.PROD_ID,                --상품아이디
+        A.PROD_ID as prodId,      -- 상품 아이디
+        A.PROD_CTG_ID,            --상품분류아이디 (lte,3g)
+        A.PROD_NM,                --상품명
+        A.MAKR_CD,                --제조사코드
+        A.RPRS_PRDT_ID,           --대표모델ID
+        A.SHOW_YN,                --노출여부
+        A.SALE_YN,                --판매여부
+        A.OFW_DATE,               --출고일자
+        A.LIST_SHOW_TEXT,         --목록노출텍스트
+        A.LIST_SHOW_OPTN,         --목록노출옵션
+        A.APD_DESC_1,             --추가설명1
+        A.APD_DESC_2,             --추가설명2
+        A.APD_DESC_3,             --추가설명3
+        A.STCK_TYPE_TOP,          --스티커노출(상)
+        A.STCK_TYPE_TAIL,         --스티커노출(하)
+        A.LAYER_YN,               --레이어팝업 노출여부
+        A.LAYER_IMAGE_URL,        --레이어이미지URL
+        <choose>
+            <when test="ctgCd != null and ctgCd!= ''">
+                T1.INDC_ODRG  AS SHOW_ODRG ,  -- 노출 순서
+            </when>
+            <otherwise>
+                A.SHOW_ODRG,              --노출순서
+            </otherwise>
+        </choose>
+        A.SNTY_PROD_DESC,         --단말기상품설명
+        A.SNTY_NET,               --단말기네트워크
+        A.SNTY_DISP,              --단말기디스플레이
+        A.SNTY_SIZE,              --단말기크기
+        A.SNTY_WEIGHT,            --단말기무게
+        A.SNTY_MEMR,              --단말기메모리
+        A.SNTY_BTRY,              --단말기배터리
+        A.SNTY_OS,                --단말기OS
+        A.SNTY_WAIT_TIME,         --단말기대기시간
+        A.SNTY_CAM,               --단말기카메라
+        A.SNTY_VIDE_TLK,          --단말기영상통화
+        A.SNTY_PROD_NM,           --단말기명
+        A.SNTY_REL_MONTH,         --출시월
+        A.SNTY_COLOR,             --단말기색상
+        A.SNTY_MAKER,             --단말기제조사/브랜드명
+        A.SNTY_MODEL_ID,          --단말기모델번호
+        A.CRET_ID,                --생성자아이디
+        A.AMD_ID,                 --수정자아이디
+        A.CRET_DT,                --생성일시
+        A.AMD_DT,                 --수정일시
+        B.MNFCT_NM,               --제조사명
+        A.MAKR_NM,                --제조사명 중고폰에서만사용
+        A.INVENTORY_AMT,          --중고폰 재고수량
+        A.SALE_PRICE,             --중고폰 판매가격
+        A.PROD_GRADE,             --종고폰 등급
+        A.SHAND_TYPE,             --중고폰type 구분(중고폰,외산폰)
+        A.RECOMMEND_RATE,         --추천요금제
+        A.USED_WARRANTY,          --중고폰 워런티
+        NVL(A.OFW_DATE,'') as ORDER_CRET_DT,
+        IMG.SNTY_COLOR_CD,        --색상코드
+        IMG.IMG_TYPE_CD,          --이미지유형구분(앞,뒤..)
+        IMG.IMG_PATH,             --이미지경로
+        PD_SALE.SALE_PLCY_CD,     --정책코드
+        NVL(SESPLS_YN,'N') AS SESPLS_YN,--자급제여부 구분(Y,N)
+        A.REP_RATE,  --대표요금제 코드
+        A.AGRM_TRM_BASE-- 약정유형
+        ,(SELECT LISTAGG(SNTY.ATRIB_VAL_CD_1, ',') WITHIN GROUP(ORDER BY SNTY.PROD_ID) FROM NMCP_SNTY_PROD_BAS SNTY WHERE SNTY.PROD_ID = A.PROD_ID AND NVL(SNTY.SDOUT_YN,'N') <![CDATA[<>]]> 'Y' GROUP BY SNTY.PROD_ID) AS COLOR_CODES
+        , (
+        SELECT CHA.OUT_UNIT_PRIC
+        FROM CMN_HNDST_AMT@DL_MSP CHA
+        WHERE CHA.RPRS_PRDT_ID = A.RPRS_PRDT_ID
+        AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN CHA.UNIT_PRIC_APPL_DTTM AND CHA.UNIT_PRIC_EXPR_DTTM
+        AND ROWNUM = 1
+        ) AS OUT_UNIT_PRIC
+        , (
+        SELECT IN_UNIT_PRIC
+        FROM CMN_MNFCT_AMT@DL_MSP CMN
+        WHERE
+        RPRS_PRDT_ID = A.RPRS_PRDT_ID
+        AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN CMN.UNIT_PRIC_APPL_DTTM AND CMN.UNIT_PRIC_EXPR_DTTM
+        AND ROWNUM = 1
+        ) AS IN_UNIT_PRIC,
+            A.LAYER_YN,     --레이어이미지 노출여부
+            A.LAYER_IMAGE_URL -- 레이어이미지경로
+        FROM
+        NMCP_PROD_BAS A,
+        ORG_MNFCT_MST@DL_MSP B,
+        NMCP_SNTY_PROD_BAS SNTY,
+        NMCP_PROD_IMG_DTL IMG,
+        (
+        SELECT
+        PRDT_ID
+        , MAX(SALE_PLCY_CD) AS SALE_PLCY_CD
+        FROM
+        MSP_SALE_PRDT_MST@DL_MSP
+        WHERE
+        SALE_PLCY_CD IN
+        <foreach item="prdt" index="index" collection="listMspSaleDto"
+                 open="(" separator="," close=")">
+            #{prdt.salePlcyCd}
+        </foreach>
+        GROUP BY PRDT_ID
+        ) PD_SALE
+        <if test="ctgCd != null and ctgCd != ''">
+            , (
+            SELECT /* 기획전 상품 리스트 */
+            PROD_ID
+            ,INDC_ODRG
+            FROM PLN_PRDT_INFO
+            WHERE 1=1
+            AND CTG_CD = #{ctgCd}
+            AND USE_YN = 'Y'
+            AND SYSDATE BETWEEN TO_DATE(PSTNG_START_DATE,'YYYYMMDDHH24MISS') AND
+            TO_DATE(PSTNG_END_DATE,'YYYYMMDDHH24MISS')
+            ) T1
+        </if>
+        WHERE
+        A.SHOW_YN ='Y'
+        AND A.RPRS_PRDT_ID = PD_SALE.PRDT_ID
+        AND A.SALE_YN ='Y'
+        AND A.MAKR_CD = B.MNFCT_ID
+        <if test="shandYn != null and shandYn != ''">
+            AND A.SHAND_YN = #{shandYn}
+        </if>
+        AND A.PROD_ID  = SNTY.PROD_ID
+        <if test="prodCtgId != null and prodCtgId != ''">
+            AND A.PROD_CTG_ID = #{prodCtgId}
+        </if>
+        AND SNTY.RPRS_PRDT_YN = 'Y'
+        AND A.PROD_ID = IMG.PROD_ID
+        AND SNTY.PROD_ID = IMG.PROD_ID
+        AND SNTY.ATRIB_VAL_CD_1 = IMG.SNTY_COLOR_CD
+        AND IMG_TYPE_CD='01'
+        <if test="makrCd != null and makrCd != ''">
+            AND A.MAKR_CD = #{makrCd}
+        </if>
+        <choose>
+            <when test="ctgCd != null and ctgCd!= ''">
+                AND A.PROD_ID = T1.PROD_ID
+            </when>
+            <when test="(sesplsYn != null and sesplsYn.equals('Y')) or (prodType == null or prodType.equals(''))">
+                AND A.PROD_TYPE IN('01','04','05','06')
+            </when>
+            <otherwise>
+                AND PROD_TYPE =#{prodType}
+            </otherwise>
+        </choose>
+
+        <if test="sesplsYn != null and sesplsYn != ''">
+            AND NVL(SESPLS_YN,'N') = #{sesplsYn}
+        </if>
+        <if test="prodId != null and prodId != ''">
+            AND A.PROD_ID = #{prodId}
+        </if>
+    </select>
+
+    <select id="listPhoneProdBasForFrontTwoQuery" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto" resultType="com.ktmmobile.mcp.phone.dto.PhoneProdBasForFrontListDto">
+        SELECT /*Phone_Query.listPhoneProdBasForFrontTwoQuery 상품리스트 정책단위 조회 시작 */
+        A.PROD_ID,                --상품아이디
+        A.PROD_ID as prodId,      -- 상품 아이디
+        A.PROD_CTG_ID,            --상품분류아이디 (lte,3g)
+        A.PROD_NM,                --상품명
+        A.MAKR_CD,                --제조사코드
+        A.RPRS_PRDT_ID,           --대표모델ID
+        A.SHOW_YN,                --노출여부
+        A.SALE_YN,                --판매여부
+        A.OFW_DATE,               --출고일자
+        A.LIST_SHOW_TEXT,         --목록노출텍스트
+        A.LIST_SHOW_OPTN,         --목록노출옵션
+        A.APD_DESC_1,             --추가설명1
+        A.APD_DESC_2,             --추가설명2
+        A.APD_DESC_3,             --추가설명3
+        A.STCK_TYPE_TOP,          --스티커노출(상)
+        A.STCK_TYPE_TAIL,         --스티커노출(하)
+        A.LAYER_YN,               --레이어팝업 노출여부
+        A.LAYER_IMAGE_URL,        --레이어이미지URL
+        A.SHOW_ODRG,              --노출순서
+        A.SNTY_PROD_DESC,         --단말기상품설명
+        A.SNTY_NET,               --단말기네트워크
+        A.SNTY_DISP,              --단말기디스플레이
+        A.SNTY_SIZE,              --단말기크기
+        A.SNTY_WEIGHT,            --단말기무게
+        A.SNTY_MEMR,              --단말기메모리
+        A.SNTY_BTRY,              --단말기배터리
+        A.SNTY_OS,                --단말기OS
+        A.SNTY_WAIT_TIME,         --단말기대기시간
+        A.SNTY_CAM,               --단말기카메라
+        A.SNTY_VIDE_TLK,          --단말기영상통화
+        A.SNTY_PROD_NM,           --단말기명
+        A.SNTY_REL_MONTH,         --출시월
+        A.SNTY_COLOR,             --단말기색상
+        A.SNTY_MAKER,             --단말기제조사/브랜드명
+        A.SNTY_MODEL_ID,          --단말기모델번호
+        A.CRET_ID,                --생성자아이디
+        A.AMD_ID,                 --수정자아이디
+        A.CRET_DT,                --생성일시
+        A.AMD_DT,                 --수정일시
+        B.MNFCT_NM,               --제조사명
+        A.MAKR_NM,                --제조사명 중고폰에서만사용
+        A.INVENTORY_AMT,          --중고폰 재고수량
+        A.SALE_PRICE,             --중고폰 판매가격
+        A.PROD_GRADE,             --종고폰 등급
+        A.SHAND_TYPE,             --중고폰type 구분(중고폰,외산폰)
+        A.RECOMMEND_RATE,         --추천요금제
+        A.USED_WARRANTY,          --중고폰 워런티
+        NVL(A.OFW_DATE,'') as ORDER_CRET_DT,
+        IMG.SNTY_COLOR_CD,        --색상코드
+        IMG.IMG_TYPE_CD,          --이미지유형구분(앞,뒤..)
+        IMG.IMG_PATH,             --이미지경로
+        PD_SALE.SALE_PLCY_CD,     --정책코드
+        NVL(SESPLS_YN,'N') AS SESPLS_YN --자급제여부 구분(Y,N)
+        ,(SELECT LISTAGG(SNTY.ATRIB_VAL_CD_1, ',') WITHIN GROUP(ORDER BY SNTY.PROD_ID) FROM NMCP_SNTY_PROD_BAS SNTY WHERE SNTY.PROD_ID = A.PROD_ID AND NVL(SNTY.SDOUT_YN,'N') <![CDATA[<>]]> 'Y' GROUP BY SNTY.PROD_ID) AS COLOR_CODES
+        , (
+        SELECT CHA.OUT_UNIT_PRIC
+        FROM CMN_HNDST_AMT@DL_MSP CHA
+        WHERE CHA.RPRS_PRDT_ID = A.RPRS_PRDT_ID
+        AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN CHA.UNIT_PRIC_APPL_DTTM AND CHA.UNIT_PRIC_EXPR_DTTM
+        AND ROWNUM = 1
+        ) AS OUT_UNIT_PRIC
+        , (
+        SELECT IN_UNIT_PRIC
+        FROM CMN_MNFCT_AMT@DL_MSP CMN
+        WHERE
+        RPRS_PRDT_ID = A.RPRS_PRDT_ID
+        AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN CMN.UNIT_PRIC_APPL_DTTM AND CMN.UNIT_PRIC_EXPR_DTTM
+        AND ROWNUM = 1
+        ) AS IN_UNIT_PRIC
+        FROM
+        NMCP_PROD_BAS A,
+        ORG_MNFCT_MST@DL_MSP B,
+        NMCP_SNTY_PROD_BAS SNTY,
+        NMCP_PROD_IMG_DTL IMG,
+        (SELECT
+        DISTINCT PRDT_ID
+        , SALE_PLCY_CD
+        FROM
+        MSP_SALE_PRDT_MST@DL_MSP
+        WHERE
+        SALE_PLCY_CD IN
+        <foreach item="prdt" index="index" collection="listMspSaleDto"
+                 open="(" separator="," close=")">
+            #{prdt.salePlcyCd}
+        </foreach>
+        ) PD_SALE
+        WHERE
+        A.SHOW_YN ='Y'
+        AND A.RPRS_PRDT_ID = PD_SALE.PRDT_ID
+        AND A.SALE_YN ='Y'
+        AND A.MAKR_CD = B.MNFCT_ID
+        <if test="shandYn != null and shandYn != ''">
+            AND A.SHAND_YN = #{shandYn}
+        </if>
+        AND A.PROD_ID  = SNTY.PROD_ID
+        <if test="prodCtgId != null and prodCtgId != ''">
+            AND A.PROD_CTG_ID = #{prodCtgId}
+        </if>
+        AND SNTY.RPRS_PRDT_YN = 'Y'
+        AND A.PROD_ID = IMG.PROD_ID
+        AND SNTY.PROD_ID = IMG.PROD_ID
+        AND SNTY.ATRIB_VAL_CD_1 = IMG.SNTY_COLOR_CD
+        AND IMG_TYPE_CD='01'
+        <if test="makrCd != null and makrCd != ''">
+            AND A.MAKR_CD = #{makrCd}
+        </if>
+        <choose>
+            <when test=" (sesplsYn != null and sesplsYn.equals('Y')) or (prodType == null or prodType.equals('')) ">
+                AND A.PROD_TYPE IN('01','04','05')
+            </when>
+            <otherwise>
+                AND PROD_TYPE =#{prodType}
+            </otherwise>
+        </choose>
+        <if test="sesplsYn != null and sesplsYn != ''">
+            AND NVL(SESPLS_YN,'N') = #{sesplsYn}
+        </if>
+        <if test="prodId != null and prodId != ''">
+            AND A.PROD_ID = #{prodId}
+        </if>
+    </select>
+
+
+
+    <select id="listPhoneProdBasForFrontOneQuery2" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto" resultType="com.ktmmobile.mcp.phone.dto.PhoneProdBasForFrontListDto">
+        SELECT /*Phone_Query.listPhoneProdBasForFrontOneQuery2 상품리스트 조회 시작 */
+        A.PROD_ID,                --상품아이디
+        A.PROD_ID as prodId,      -- 상품 아이디
+        A.PROD_CTG_ID,            --상품분류아이디 (lte,3g)
+        A.PROD_NM,                --상품명
+        A.MAKR_CD,                --제조사코드
+        A.RPRS_PRDT_ID,           --대표모델ID
+        A.SHOW_YN,                --노출여부
+        A.SALE_YN,                --판매여부
+        A.OFW_DATE,               --출고일자
+        A.LIST_SHOW_TEXT,         --목록노출텍스트
+        A.LIST_SHOW_OPTN,         --목록노출옵션
+        A.APD_DESC_1,             --추가설명1
+        A.APD_DESC_2,             --추가설명2
+        A.APD_DESC_3,             --추가설명3
+        A.STCK_TYPE_TOP,          --스티커노출(상)
+        A.STCK_TYPE_TAIL,         --스티커노출(하)
+        A.LAYER_YN,               --레이어팝업 노출여부
+        A.LAYER_IMAGE_URL,        --레이어이미지URL
+        A.SHOW_ODRG,              --노출순서
+        A.SNTY_PROD_DESC,         --단말기상품설명
+        A.SNTY_NET,               --단말기네트워크
+        A.SNTY_DISP,              --단말기디스플레이
+        A.SNTY_SIZE,              --단말기크기
+        A.SNTY_WEIGHT,            --단말기무게
+        A.SNTY_MEMR,              --단말기메모리
+        A.SNTY_BTRY,              --단말기배터리
+        A.SNTY_OS,                --단말기OS
+        A.SNTY_WAIT_TIME,         --단말기대기시간
+        A.SNTY_CAM,               --단말기카메라
+        A.SNTY_VIDE_TLK,          --단말기영상통화
+        A.SNTY_PROD_NM,           --단말기명
+        A.SNTY_REL_MONTH,         --출시월
+        A.SNTY_COLOR,             --단말기색상
+        A.SNTY_MAKER,             --단말기제조사/브랜드명
+        A.SNTY_MODEL_ID,          --단말기모델번호
+        A.CRET_ID,                --생성자아이디
+        A.AMD_ID,                 --수정자아이디
+        A.CRET_DT,                --생성일시
+        A.AMD_DT,                 --수정일시
+        B.MNFCT_NM,               --제조사명
+        A.MAKR_NM,                --제조사명 중고폰에서만사용
+        A.INVENTORY_AMT,          --중고폰 재고수량
+        A.SALE_PRICE,             --중고폰 판매가격
+        A.PROD_GRADE,             --종고폰 등급
+        A.SHAND_TYPE,             --중고폰type 구분(중고폰,외산폰)
+        A.RECOMMEND_RATE,         --추천요금제
+        A.USED_WARRANTY,          --중고폰 워런티
+        NVL(A.OFW_DATE,'') as ORDER_CRET_DT,
+        IMG.SNTY_COLOR_CD,        --색상코드
+        IMG.IMG_TYPE_CD,          --이미지유형구분(앞,뒤..)
+        IMG.IMG_PATH,             --이미지경로
+        PD_SALE.SALE_PLCY_CD,     --정책코드
+        NVL(SESPLS_YN,'N') AS SESPLS_YN, --자급제여부 구분(Y,N)
+        A.REP_RATE, --대표요금제 코드
+        A.AGRM_TRM_BASE           -- 약정유형
+        ,(SELECT LISTAGG(SNTY.ATRIB_VAL_CD_1, ',') WITHIN GROUP(ORDER BY SNTY.PROD_ID) FROM NMCP_SNTY_PROD_BAS SNTY WHERE SNTY.PROD_ID = A.PROD_ID AND NVL(SNTY.SDOUT_YN,'N') <![CDATA[<>]]> 'Y' GROUP BY SNTY.PROD_ID) AS COLOR_CODES
+        , (
+        SELECT CHA.OUT_UNIT_PRIC
+        FROM CMN_HNDST_AMT@DL_MSP CHA
+        WHERE CHA.RPRS_PRDT_ID = A.RPRS_PRDT_ID
+        AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN CHA.UNIT_PRIC_APPL_DTTM AND CHA.UNIT_PRIC_EXPR_DTTM
+        AND ROWNUM = 1
+        ) AS OUT_UNIT_PRIC
+        , (
+        SELECT IN_UNIT_PRIC
+        FROM CMN_MNFCT_AMT@DL_MSP CMN
+        WHERE
+        RPRS_PRDT_ID = A.RPRS_PRDT_ID
+        AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN CMN.UNIT_PRIC_APPL_DTTM AND CMN.UNIT_PRIC_EXPR_DTTM
+        AND ROWNUM = 1
+        ) AS IN_UNIT_PRIC
+        FROM
+        NMCP_PROD_BAS A,
+        ORG_MNFCT_MST@DL_MSP B,
+        NMCP_SNTY_PROD_BAS SNTY,
+        NMCP_PROD_IMG_DTL IMG,
+        (SELECT DISTINCT PRDT_SCTN_CD, SALE_PLCY_CD --DISTINCT SALE_PLCY_CD AS SALE_PLCY_CD
+        FROM MSP_SALE_PLCY_MST@DL_MSP PL
+        WHERE SALE_PLCY_CD IN (SELECT SALE_PLCY_CD FROM MSP_SALE_ORGN_MST@DL_MSP WHERE ORGN_ID = 'V000019481')
+        AND TO_CHAR(SYSDATE,'yyyymmddhh24miss') BETWEEN PL.SALE_STRT_DTTM AND PL.SALE_END_DTTM AND ROWNUM = 1) PD_SALE
+        WHERE
+        A.SHOW_YN ='Y'
+        AND A.SALE_YN ='Y'
+        AND A.MAKR_CD = B.MNFCT_ID
+        <if test="shandYn != null and shandYn != ''">
+            AND A.SHAND_YN = #{shandYn}
+        </if>
+        AND A.PROD_ID  = SNTY.PROD_ID
+        <if test="prodCtgId != null and prodCtgId != ''">
+            AND A.PROD_CTG_ID = #{prodCtgId}
+        </if>
+        AND SNTY.RPRS_PRDT_YN = 'Y'
+        AND A.PROD_ID = IMG.PROD_ID
+        AND SNTY.PROD_ID = IMG.PROD_ID
+        AND SNTY.ATRIB_VAL_CD_1 = IMG.SNTY_COLOR_CD
+        AND IMG_TYPE_CD='01'
+        <if test="makrCd != null and makrCd != ''">
+            AND A.MAKR_CD = #{makrCd}
+        </if>
+        <choose>
+            <when test=" (sesplsYn != null and sesplsYn.equals('Y')) or (prodType == null or prodType.equals('')) ">
+                AND A.PROD_TYPE IN('01','04','05')
+            </when>
+            <otherwise>
+                AND PROD_TYPE =#{prodType}
+            </otherwise>
+        </choose>
+        <if test="sesplsYn != null and sesplsYn != ''">
+            AND NVL(SESPLS_YN,'N') = #{sesplsYn}
+        </if>
+        <if test="prodId != null and prodId != ''">
+            AND A.PROD_ID = #{prodId}
+        </if>
+    </select>
+
+
+    <select id="findLte3GphoneCount" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto" resultMap="lte3GphoneCountMap">
+        SELECT
+        NVL(MAX(DECODE(PROD_CTG_ID, '04', CT)),0) AS LTEC,
+        NVL(MAX(DECODE(PROD_CTG_ID, '03', CT)),0) AS G3C,
+        NVL(MAX(DECODE(PROD_CTG_ID, '08', CT)),0) AS G5C
+
+        FROM
+        (
+        SELECT A.PROD_CTG_ID,
+        COUNT(A.PROD_CTG_ID) CT
+        FROM
+        NMCP_PROD_BAS A,
+        ORG_MNFCT_MST@DL_MSP B,
+        NMCP_SNTY_PROD_BAS SNTY,
+        NMCP_PROD_IMG_DTL IMG,
+        (SELECT
+        DISTINCT prdt_id
+        FROM
+        msp_sale_prdt_mst@dl_msp
+        WHERE
+        sale_plcy_cd IN
+        <foreach item="prdt" index="index" collection="listMspSaleDto"
+                 open="(" separator="," close=")">
+            #{prdt.salePlcyCd}
+        </foreach>
+        ) PD_SALE
+        WHERE  A.SHOW_YN = 'Y'
+        AND A.RPRS_PRDT_ID = PD_SALE.PRDT_ID
+        AND A.SALE_YN = 'Y'
+        AND A.MAKR_CD = B.MNFCT_ID
+        AND A.SHAND_YN = #{shandYn}
+        AND A.PROD_ID  = SNTY.PROD_ID
+        AND SNTY.RPRS_PRDT_YN = 'Y'
+        AND A.PROD_ID = IMG.PROD_ID
+        AND SNTY.PROD_ID = IMG.PROD_ID
+        AND SNTY.ATRIB_VAL_CD_1 = IMG.SNTY_COLOR_CD
+        AND IMG_TYPE_CD='01'
+        <if test="makrCd != null and makrCd != ''">
+            AND A.MAKR_CD = #{makrCd}
+        </if>
+        <if test="prodType != null and prodType != ''">
+            AND A.PROD_TYPE = #{prodType}
+        </if>
+        GROUP  BY A.PROD_CTG_ID
+        )
+    </select>
+
+    <select id="selectInUnitPricQuery" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto" resultType="com.ktmmobile.mcp.phone.dto.PhoneSesplsDto">
+        SELECT A.RPRS_PRDT_ID /* 대표모델ID */,
+               C.PRDT_CODE AS RPRS_PRDT_CODE /* 대표모델코드 */,
+               C.PRDT_NM /* 모델명 */,
+               A.OLD_YN /* 중고여부 */,
+               FN_GET_CODENM@DL_MSP('ORG0011', A.OLD_YN) AS OLD_YN_NM /* 중고여부명 */,
+                A.MNFCT_ID /* 제조사ID */,
+               B.MNFCT_NM /* 제조사명 */,
+               A.UNIT_PRIC_EXPR_DTTM /* 단가만료일시 */,
+               A.UNIT_PRIC_APPL_DTTM /* 단가적용일시 */,
+               A.IN_UNIT_PRIC /* 입고단가 */,
+               A.REMRK /* 비고 */,
+               A.REG_ID /* 등록자ID */,
+               A.REG_DTTM /* 등록일시 */,
+               A.RVISN_ID /* 수정자ID */,
+               A.RVISN_DTTM /* 수정일시 */
+        FROM CMN_MNFCT_AMT@DL_MSP A /* 공급사단가 */,
+             CMN_INTM_MDL@DL_MSP C ,
+             ORG_MNFCT_MST@DL_MSP B
+        WHERE A.RPRS_PRDT_ID = C.RPRS_PRDT_ID
+          AND C.RPRS_YN = 'Y'
+          AND A.MNFCT_ID = B.MNFCT_ID(+)
+          AND A.RPRS_PRDT_ID = #{searchValue} --대표모델ID
+          AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN A.UNIT_PRIC_APPL_DTTM AND A.UNIT_PRIC_EXPR_DTTM
+    </select>
+
+    <select id="selectOutUnitPricQuery" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto" resultType="com.ktmmobile.mcp.phone.dto.PhoneSesplsDto">
+        SELECT A.RPRS_PRDT_ID /* 대표모델ID */,
+               B.PRDT_CODE AS RPRS_PRDT_CODE /* 대표모델코드 */,
+               B.PRDT_NM /* 모델명 */,
+               A.OLD_YN /* 중고여부 */,
+               FN_GET_CODENM@DL_MSP('ORG0011', A.OLD_YN) AS OLD_YN_NM /* 중고여부명 */,
+                A.UNIT_PRIC_EXPR_DTTM /* 단가만료일시 */,
+               A.UNIT_PRIC_APPL_DTTM /* 단가적용일시 */,
+               A.OUT_UNIT_PRIC /* 출고단가 */,
+               A.MNFCT_GRANT /* 제조사장려금 */,
+               A.REMRK /* 비고 */,
+               A.REG_ID /* 등록자ID */,
+               A.REG_DTTM /* 등록일시 */,
+               A.RVISN_ID /* 수정자ID */,
+               A.RVISN_DTTM /* 수정일시 */
+        FROM CMN_HNDST_AMT@DL_MSP A /* 제품단가*/ ,
+             CMN_INTM_MDL@DL_MSP B
+        WHERE A.RPRS_PRDT_ID = B.RPRS_PRDT_ID
+          AND B.RPRS_YN = 'Y'
+          AND A.RPRS_PRDT_ID = #{searchValue} --대표모델ID
+          AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN A.UNIT_PRIC_APPL_DTTM AND A.UNIT_PRIC_EXPR_DTTM
+    </select>
+
+    <select id="selectRepModelIdList" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto" resultType="com.ktmmobile.mcp.phone.dto.PhoneProdBasDto">
+        select
+        A.PROD_ID,                 --상품아이디
+        A.PROD_ID as prodId,       -- 상품 아이디
+        A.PROD_CTG_ID,            --상품분류아이디 (lte,3g)
+        A.PROD_NM,                --상품명
+        A.MAKR_CD,                --제조사코드
+        A.RPRS_PRDT_ID,           --대표모델ID
+        A.SHOW_YN,                --노출여부
+        A.SALE_YN,                --판매여부
+        A.OFW_DATE,               --출고일자
+        A.LIST_SHOW_TEXT,         --목록노출텍스트
+        A.LIST_SHOW_OPTN,         --목록노출옵션
+        A.APD_DESC_1,             --추가설명1
+        A.APD_DESC_2,             --추가설명2
+        A.APD_DESC_3,             --추가설명3
+        A.STCK_TYPE_TOP,          --스티커노출(상)
+        A.STCK_TYPE_TAIL,         --스티커노출(하)
+        A.LAYER_YN,               --레이어팝업 노출여부
+        A.LAYER_IMAGE_URL,        --레이어이미지URL
+        A.SHOW_ODRG,              --노출순서
+        A.SNTY_PROD_DESC,         --단말기상품설명
+        A.SNTY_NET,               --단말기네트워크
+        A.SNTY_DISP,              --단말기디스플레이
+        A.SNTY_SIZE,              --단말기크기
+        A.SNTY_WEIGHT,            --단말기무게
+        A.SNTY_MEMR,              --단말기메모리
+        A.SNTY_BTRY,              --단말기배터리
+        A.SNTY_OS,                --단말기OS
+        A.SNTY_WAIT_TIME,         --단말기대기시간
+        A.SNTY_CAM,               --단말기카메라
+        A.SNTY_VIDE_TLK,          --단말기영상통화
+        A.SNTY_PROD_NM,           --단말기명
+        A.SNTY_REL_MONTH,         --출시월
+        A.SNTY_COLOR,             --단말기색상
+        A.SNTY_MAKER,             --단말기제조사/브랜드명
+        A.SNTY_MODEL_ID,          --단말기모델번호
+        A.CRET_ID,                --생성자아이디
+        A.AMD_ID,                 --수정자아이디
+        A.CRET_DT,                --생성일시
+        A.AMD_DT,                 --수정일시
+        B.MNFCT_NM,               --제조사명
+        A.MAKR_NM,              --제조사명 중고폰에서만사용
+        A.INVENTORY_AMT,            --중고폰 재고수량
+        A.SALE_PRICE,               --중고폰 판매가격
+        A.PROD_GRADE,               --종고폰 등급
+        A.SHAND_TYPE,               --중고폰type 구분(중고폰,외산폰)
+        A.RECOMMEND_RATE,       --추천요금제
+        A.USED_WARRANTY,
+        NVL(A.OFW_DATE,'') as ORDER_CRET_DT,
+        A.PROD_TYPE,			--상품구분 (01:일반 , 02:0원렌탈)
+        NVL(A.SESPLS_YN,'N') AS SESPLS_YN --자급제여부 구분(Y,N)
+        from NMCP_PROD_BAS a, ORG_MNFCT_MST@DL_MSP b
+        where a.MAKR_CD = b.mnfct_id(+)
+        and DEL_YN <![CDATA[<>]]> 'Y'
+        and b.mnfct_yn(+) = 'Y'
+        <if test="searchValue != null and searchValue != ''">
+            <choose>
+                <when test="searchCategoryId == ''"> <!-- 전체 -->
+                    AND  (
+                    A.PROD_NM LIKE '%' ||#{searchValue}|| '%'
+                    or B.MNFCT_NM LIKE '%' ||#{searchValue}|| '%'
+                    or A.PROD_ID = #{searchValue}
+                    )
+                </when>
+                <when test="searchCategoryId == '01'"> <!-- 상품명 -->
+                    AND A.PROD_NM LIKE '%' ||#{searchValue}|| '%'
+                </when>
+                <when test="searchCategoryId == '02'"> <!-- 제조사 -->
+                    <choose>
+                        <when test='shandYn == "Y"'>
+                            AND A.MAKR_NM LIKE '%' ||#{searchValue}|| '%'
+                        </when>
+                        <otherwise>
+                            AND B.MNFCT_NM LIKE '%' ||#{searchValue}|| '%'
+                        </otherwise>
+                    </choose>
+                </when>
+                <when test="searchCategoryId == '03'"> <!-- 상품코드 -->
+                    AND A.PROD_ID = #{searchValue}
+                </when>
+                <when test="searchCategoryId == '04'"> <!-- 모델명 -->
+                    AND A.SNTY_MODEL_ID LIKE '%' ||#{searchValue}|| '%'
+                </when>
+            </choose>
+        </if>
+        ORDER BY CRET_DT DESC
+
+    </select>
+
+    <select id="selectPhonePordSnty" parameterType="com.ktmmobile.mcp.phone.dto.PhoneSntyBasDto" resultType="com.ktmmobile.mcp.phone.dto.PhoneSntyBasDto" >
+        SELECT  /* PhoneMapper.selectPhonePordSnty 휴대폰 속성정보(판매가능) 조회 */
+            PROD_ID,                --상품아이디
+            HNDSET_MODEL_ID,        --단말기모델아이디
+            HNDSET_MODEL_NM,        --단말기모델명
+            ATRIB_CD_1,             --속성코드1
+            ATRIB_NM_1,             --속성명1
+            ATRIB_VAL_CD_1,         --속성값코드1
+            ATRIB_VAL_NM_1,         --속성값명1
+            ATRIB_CD_2,             --속성코드2
+            ATRIB_NM_2,             --속성명2
+            ATRIB_VAL_CD_2,         --속성값코드2
+            ATRIB_VAL_NM_2,         --속성값명2
+            ATRIB_CD_3,             --속성코드3
+            ATRIB_NM_3,             --속성명3
+            ATRIB_VAL_CD_3,         --속성값코드3
+            ATRIB_VAL_NM_3,         --속성값명3
+            SALE_YN,                --판매여부
+            SDOUT_YN,               --품절여부
+            REP_PROD_YN,            --대표상품여부
+            CRET_ID,                --생성자아이디
+            AMD_ID,                 --수정자아이디
+            CRET_DT,                --생성일시
+            AMD_DT,                 --수정일시
+            RPRS_PRDT_YN
+        FROM NMCP_SNTY_PROD_BAS
+        WHERE PROD_ID = #{prodId}
+          and SDOUT_YN is null
+        order by ATRIB_VAL_CD_1 asc
+    </select>
+
+
+</mapper>

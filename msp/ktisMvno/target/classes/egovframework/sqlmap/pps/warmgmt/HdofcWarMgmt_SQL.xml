@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.warmgmt.mapper.PpsWarMgmtMapper">
+
+	<!--다량문자모니터링 목록조회 -->
+    <select id="getWarInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         		SELECT A.CONTRACT_NUM,
+				     --SUBSCRIBER_NO,
+				     SUB_LINK_NAME,
+				     SOC,
+				     (SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC AND ROWNUM = 1) SERVICE_NM,
+				     SUB_STATUS,
+				     F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS) SUB_STATUS_NM,
+				     TO_CHAR(TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') LST_COM_ACTV_DATE,
+				     DECODE(SUB_STATUS, 'A', '', 'S', TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD'), TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD')) SUB_STATUS_DATE,
+				     TO_NUMBER(DECODE(B.SUB_STATUS,'A', CEIL(SYSDATE - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYY-MM-DD')),'S', CEIL(C.STATUS_STOP_DT - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYY-MM-DD')),'C', CEIL(C.STATUS_CANCEL_DT - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYY-MM-DD')), '')) USE_TERM,
+				     VOICE_CNT,
+				     TRUNC(VOICE_DUR/60, 2) VOICE_DUR,
+				     SMS_CNT,
+				     MMS_CNT,
+				     TOT_SMS_MAX,
+				     TOT_SMS,
+				     CASE WHEN TO_DATE(#{startDt}, 'YYYY-MM-DD') &lt; TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD') THEN TRUNC(TOT_SMS / (TO_DATE(#{endDt}, 'YYYY-MM-DD') - TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD')) +1)
+				     	  ELSE TRUNC(TOT_SMS / ((TO_DATE(#{endDt}, 'YYYY-MM-DD') - TO_DATE(#{startDt}, 'YYYYMMDD')) +1))
+				     END SMS_CNT_DAY,
+				     F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+				     F_GET_AGENT_NM(AGENT_SALE_ID) AGENT_SALE_NM,
+				     (SELECT 'Y' FROM PPS_CUSTOMER_WAR WHERE CONTRACT_NUM = A.CONTRACT_NUM AND DEL_YN = 'N' AND ROWNUM = 1) WAR_FLAG
+				FROM (
+				        SELECT /*+ INDEX_DESC(A PPS_STATS_CDR_WAR_PK) */
+				               CONTRACT_NUM,
+				               SUM(SMS_CNT) SMS_CNT,
+				               SUM(MMS_CNT) MMS_CNT,
+				               SUM(TOT_SMS) TOT_SMS,
+				               SUM(VOICE_CNT) VOICE_CNT,
+				               SUM(VOICE_DUR) VOICE_DUR,
+				               MAX(TOT_SMS) TOT_SMS_MAX
+				        FROM PPS_STATS_CDR_WAR
+				        WHERE 1=1
+				        
+				        <if test="startDt != null and startDt != ''">
+							AND STAT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+						</if>
+						<if test="endDt != null and endDt != ''">
+							AND STAT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+						</if>
+				        
+				        GROUP BY CONTRACT_NUM
+				     ) A,
+				     MSP_JUO_SUB_INFO B,
+				     PPS_CUSTOMER C
+				WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+				      AND A.CONTRACT_NUM = C.CONTRACT_NUM
+				      
+		  		<if test="searchNm != null and searchNm != ''">
+		  			<if test="searchType !=null and searchType != ''">
+						<choose>
+							<when test="searchType == 'contractNum'">
+								AND A.CONTRACT_NUM = #{searchNm}
+							</when>
+							<when test="searchType == 'subscriberNo'">
+								AND B.SUBSCRIBER_NO LIKE '%' || #{searchNm} || '%'
+							</when>
+							<when test="searchType == 'subLinkName'">
+								AND B.SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+							</when>
+							<when test="searchType == 'userSsn'">
+								AND B.USER_SSN = CRYPTO_AES256.ENC_AES(#{searchNm})
+							</when>
+						</choose>
+					</if>
+				</if>
+				<if test="searchSmsCnt != null and searchSmsCnt != '' ">
+					AND TOT_SMS >= TO_NUMBER(#{searchSmsCnt})
+				</if>
+				
+				<if test="searchFeatures != null and searchFeatures != ''">
+					AND C.SOC = #{searchFeatures}
+				</if>
+				
+				<if test="searchSubStatus != null and searchSubStatus != ''">
+					<choose>
+						<when test="searchSubStatus == 'AS'">
+							AND B.SUB_STATUS IN ('A', 'S')
+						</when>
+						<otherwise>
+							AND B.SUB_STATUS = #{searchSubStatus}
+						</otherwise>
+					</choose>
+				</if>
+				
+				<if test="searchRegFlag != null and searchRegFlag != ''">
+					<if test='searchRegFlag == "Y"'>
+						AND A.CONTRACT_NUM IN (SELECT CONTRACT_NUM FROM PPS_CUSTOMER_WAR WHERE DEL_YN = 'N')
+					</if>
+					<if test='searchRegFlag == "N"'>
+						AND A.CONTRACT_NUM NOT IN (SELECT CONTRACT_NUM FROM PPS_CUSTOMER_WAR WHERE DEL_YN = 'N')
+					</if>
+				</if>
+				
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--다량문자모니터링 목록조회엑셀출력 -->
+    <select id="getWarInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+     
+       		SELECT 	 NVL(A.CONTRACT_NUM, '-') CONTRACT_NUM,
+				     --NVL(SUBSCRIBER_NO, '-') SUBSCRIBER_NO,
+				     NVL(SUB_LINK_NAME, '-') SUB_LINK_NAME,
+				     NVL(SOC, '-') SOC,
+				     NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC AND ROWNUM = 1), '-') SERVICE_NM,
+				     NVL(SUB_STATUS, '-') SUB_STATUS,
+				     NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS), '-') SUB_STATUS_NM,
+				     NVL(TO_CHAR(TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'), '-') LST_COM_ACTV_DATE,
+				     NVL(DECODE(SUB_STATUS, 'A', '', 'S', TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD'), TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD')), '-') SUB_STATUS_DATE,
+				     NVL(TO_NUMBER(DECODE(B.SUB_STATUS,'A', CEIL(SYSDATE - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYY-MM-DD')),'S', CEIL(C.STATUS_STOP_DT - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYY-MM-DD')),'C', CEIL(C.STATUS_CANCEL_DT - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYY-MM-DD')), '')), 0) USE_TERM,
+				     NVL(VOICE_CNT, 0) VOICE_CNT,
+				     NVL(TRUNC(VOICE_DUR/60, 2), 0) VOICE_DUR,
+				     NVL(SMS_CNT, 0) SMS_CNT,
+				     NVL(MMS_CNT, 0) MMS_CNT,
+				     NVL(TOT_SMS_MAX, 0) TOT_SMS_MAX,
+				     NVL(CASE WHEN TO_DATE(#{startDt}, 'YYYY-MM-DD') &lt; TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD') THEN TRUNC(TOT_SMS / (TO_DATE(#{endDt}, 'YYYY-MM-DD') - TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD')) +1)
+				     	  ELSE TRUNC(TOT_SMS / ((TO_DATE(#{endDt}, 'YYYY-MM-DD') - TO_DATE(#{startDt}, 'YYYYMMDD')) +1))
+				     END, 0) SMS_CNT_DAY,
+				     NVL(TOT_SMS, 0) TOT_SMS,
+				     NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM,
+				     NVL(F_GET_AGENT_NM(AGENT_SALE_ID), '-') AGENT_SALE_NM,
+				     NVL((SELECT 'Y' FROM PPS_CUSTOMER_WAR WHERE CONTRACT_NUM = A.CONTRACT_NUM AND DEL_YN = 'N' AND ROWNUM = 1), '-') WAR_FLAG
+			FROM (
+			        SELECT /*+ INDEX_DESC(A PPS_STATS_CDR_WAR_PK) */
+			               CONTRACT_NUM,
+			               SUM(SMS_CNT) SMS_CNT,
+			               SUM(MMS_CNT) MMS_CNT,
+			               SUM(TOT_SMS) TOT_SMS,
+			               SUM(VOICE_CNT) VOICE_CNT,
+			               SUM(VOICE_DUR) VOICE_DUR,
+			               MAX(TOT_SMS) TOT_SMS_MAX
+			        FROM PPS_STATS_CDR_WAR
+			        WHERE 1=1
+			        
+			        <if test="startDt != null and startDt != ''">
+						AND STAT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+					</if>
+					<if test="endDt != null and endDt != ''">
+						AND STAT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+					</if>
+			        
+			        GROUP BY CONTRACT_NUM
+			     ) A,
+			     MSP_JUO_SUB_INFO B,
+			     PPS_CUSTOMER C
+			WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+			      AND A.CONTRACT_NUM = C.CONTRACT_NUM
+			      
+	  		<if test="searchNm != null and searchNm != ''">
+	  			<if test="searchType !=null and searchType != ''">
+					<choose>
+						<when test="searchType == 'contractNum'">
+							AND A.CONTRACT_NUM = #{searchNm}
+						</when>
+						<when test="searchType == 'subscriberNo'">
+							AND B.SUBSCRIBER_NO LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'subLinkName'">
+							AND B.SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'userSsn'">
+							AND B.USER_SSN = CRYPTO_AES256.ENC_AES(#{searchNm})
+						</when>
+					</choose>
+				</if>
+			</if>
+			<if test="searchSmsCnt != null and searchSmsCnt != '' ">
+				AND TOT_SMS >= TO_NUMBER(#{searchSmsCnt})
+			</if>
+			
+			<if test="searchFeatures != null and searchFeatures != ''">
+				AND C.SOC = #{searchFeatures}
+			</if>
+			
+			<if test="searchSubStatus != null and searchSubStatus != ''">
+				<choose>
+					<when test="searchSubStatus == 'AS'">
+						AND B.SUB_STATUS IN ('A', 'S')
+					</when>
+					<otherwise>
+						AND B.SUB_STATUS = #{searchSubStatus}
+					</otherwise>
+				</choose>
+			</if>
+			
+			<if test="searchRegFlag != null and searchRegFlag != ''">
+				<if test='searchRegFlag == "Y"'>
+					AND A.CONTRACT_NUM IN (SELECT CONTRACT_NUM FROM PPS_CUSTOMER_WAR WHERE DEL_YN = 'N')
+				</if>
+				<if test='searchRegFlag == "N"'>
+					AND A.CONTRACT_NUM NOT IN (SELECT CONTRACT_NUM FROM PPS_CUSTOMER_WAR WHERE DEL_YN = 'N')
+				</if>
+			</if>
+             
+	    
+    </select>
+    
+    <!-- 주의고객 등록/삭제 -->
+	<select id="ppsWarReg"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{call P_CUSTOMER_WAR(
+				    #{opCode, jdbcType=VARCHAR}
+				    , #{contractNum, jdbcType=CLOB}
+				    , #{warCd1, jdbcType=VARCHAR}
+				    , #{warCd2, jdbcType=VARCHAR}
+				    , #{descInfo, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+				   ,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!--주의고객관리 목록조회 -->
+    <select id="getWarRegInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         		SELECT /*+ INDEX_DESC(A PPS_CUSTOMER_WAR_IDX1) ORDERED USE_NL(B)*/
+				       A.CONTRACT_NUM,
+				       --C.SUBSCRIBER_NO,
+				       SUB_LINK_NAME,
+				       SOC,
+					   (SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC AND ROWNUM = 1) SERVICE_NM,
+				       SUB_STATUS,
+					   F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS) SUB_STATUS_NM,
+				       TO_CHAR(TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') LST_COM_ACTV_DATE,
+				       DECODE(SUB_STATUS, 'A', '', 'S', TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD'), TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD')) SUB_STATUS_DATE,
+				       TO_NUMBER(DECODE(C.SUB_STATUS,'A', CEIL(SYSDATE - TO_DATE(C.LST_COM_ACTV_DATE, 'YYYY-MM-DD')),'S', CEIL(B.STATUS_STOP_DT - TO_DATE(C.LST_COM_ACTV_DATE, 'YYYY-MM-DD')),'C', CEIL(B.STATUS_CANCEL_DT - TO_DATE(C.LST_COM_ACTV_DATE, 'YYYY-MM-DD')), '')) USE_TERM,
+				       F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+					   F_GET_AGENT_NM(AGENT_SALE_ID) AGENT_SALE_NM,
+				       F_GET_KT_CODE_NM('CUSTOMER_WAR', 'WAR_CD_1', WAR_CD_1) WAR_CD_1_NM,
+				       F_GET_KT_CODE_NM('CUSTOMER_WAR', 'WAR_CD_2', WAR_CD_2) WAR_CD_2_NM,
+				       TO_CHAR(A.ENTER_DATE, 'YYYY-MM-DD HH24:MI:SS') ENTER_DATE,
+				       A.DESC_INFO,
+				       A.ADMIN_ID,
+				       F_GET_ADMIN_NM(A.ADMIN_ID) ADMIN_NM
+				FROM PPS_CUSTOMER_WAR A,
+				     PPS_CUSTOMER B,
+				     MSP_JUO_SUB_INFO C
+				WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+				      AND A.CONTRACT_NUM = C.CONTRACT_NUM
+				      AND A.DEL_YN = 'N'
+				      
+				<if test="startDt != null and startDt != ''">
+					AND A.ENTER_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND A.ENTER_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				      
+		  		<if test="searchNm != null and searchNm != ''">
+		  			<if test="searchType !=null and searchType != ''">
+						<choose>
+							<when test="searchType == 'contractNum'">
+								AND A.CONTRACT_NUM = #{searchNm}
+							</when>
+							<when test="searchType == 'subscriberNo'">
+								AND C.SUBSCRIBER_NO LIKE '%' || #{searchNm} || '%'
+							</when>
+							<when test="searchType == 'subLinkName'">
+								AND C.SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+							</when>
+							<when test="searchType == 'userSsn'">
+								AND C.USER_SSN = CRYPTO_AES256.ENC_AES(#{searchNm})
+							</when>
+						</choose>
+					</if>
+				</if>
+				<if test="searchWarCd1 != null and searchWarCd1 != '' ">
+					AND WAR_CD_1 = #{searchWarCd1}
+				</if>
+				
+				<if test="searchWarCd2 != null and searchWarCd2 != '' ">
+					AND WAR_CD_2 = #{searchWarCd2}
+				</if>
+				
+				<if test="searchSubStatus != null and searchSubStatus != ''">
+					<choose>
+						<when test="searchSubStatus == 'AS'">
+							AND C.SUB_STATUS IN ('A', 'S')
+						</when>
+						<otherwise>
+							AND C.SUB_STATUS = #{searchSubStatus}
+						</otherwise>
+					</choose>
+				</if>
+				
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--주의고객관리 목록조회엑셀출력 -->
+    <select id="getWarRegInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+     
+       		SELECT /*+ INDEX_DESC(A PPS_CUSTOMER_WAR_IDX1) ORDERED USE_NL(B)*/
+			       NVL(A.CONTRACT_NUM, '-') CONTRACT_NUM,
+			       --NVL(C.SUBSCRIBER_NO, '-') SUBSCRIBER_NO,
+			       NVL(SUB_LINK_NAME, '-') SUB_LINK_NAME,
+			       NVL(SOC, '-') SOC,
+				   NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC AND ROWNUM = 1), '-') SERVICE_NM,
+			       NVL(SUB_STATUS, '-') SUB_STATUS,
+				   NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS), '-') SUB_STATUS_NM,
+			       NVL(TO_CHAR(TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'), '-') LST_COM_ACTV_DATE,
+			       NVL(DECODE(SUB_STATUS, 'A', '', 'S', TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD'), TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD')), '-') SUB_STATUS_DATE,
+			       NVL(TO_NUMBER(DECODE(C.SUB_STATUS,'A', CEIL(SYSDATE - TO_DATE(C.LST_COM_ACTV_DATE, 'YYYY-MM-DD')),'S', CEIL(B.STATUS_STOP_DT - TO_DATE(C.LST_COM_ACTV_DATE, 'YYYY-MM-DD')),'C', CEIL(B.STATUS_CANCEL_DT - TO_DATE(C.LST_COM_ACTV_DATE, 'YYYY-MM-DD')), '')), 0) USE_TERM,
+			       NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM,
+				   NVL(F_GET_AGENT_NM(AGENT_SALE_ID), '-') AGENT_SALE_NM,
+			       NVL(F_GET_KT_CODE_NM('CUSTOMER_WAR', 'WAR_CD_1', WAR_CD_1), '-') WAR_CD_1_NM,
+			       NVL(F_GET_KT_CODE_NM('CUSTOMER_WAR', 'WAR_CD_2', WAR_CD_2), '-') WAR_CD_2_NM,
+			       NVL(TO_CHAR(A.ENTER_DATE, 'YYYY-MM-DD HH24:MI:SS'), '-') ENTER_DATE,
+			       NVL(A.DESC_INFO, '-') DESC_INFO,
+			       NVL(A.ADMIN_ID, '-') ADMIN_ID,
+			       NVL(F_GET_ADMIN_NM(A.ADMIN_ID), '-') ADMIN_NM
+			FROM PPS_CUSTOMER_WAR A,
+			     PPS_CUSTOMER B,
+			     MSP_JUO_SUB_INFO C
+			WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+			      AND A.CONTRACT_NUM = C.CONTRACT_NUM
+			      AND A.DEL_YN = 'N'
+			      
+			<if test="startDt != null and startDt != ''">
+				AND A.ENTER_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND A.ENTER_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			      
+	  		<if test="searchNm != null and searchNm != ''">
+	  			<if test="searchType !=null and searchType != ''">
+					<choose>
+						<when test="searchType == 'contractNum'">
+							AND A.CONTRACT_NUM = #{searchNm}
+						</when>
+						<when test="searchType == 'subscriberNo'">
+							AND C.SUBSCRIBER_NO LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'subLinkName'">
+							AND C.SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'userSsn'">
+							AND C.USER_SSN = CRYPTO_AES256.ENC_AES(#{searchNm})
+						</when>
+					</choose>
+				</if>
+			</if>
+			<if test="searchWarCd1 != null and searchWarCd1 != '' ">
+				AND WAR_CD_1 = #{searchWarCd1}
+			</if>
+			
+			<if test="searchWarCd2 != null and searchWarCd2 != '' ">
+				AND WAR_CD_2 = #{searchWarCd2}
+			</if>
+			
+			<if test="searchSubStatus != null and searchSubStatus != ''">
+				<choose>
+					<when test="searchSubStatus == 'AS'">
+						AND C.SUB_STATUS IN ('A', 'S')
+					</when>
+					<otherwise>
+						AND C.SUB_STATUS = #{searchSubStatus}
+					</otherwise>
+				</choose>
+			</if>
+             
+	    
+    </select>
+</mapper>

@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.courtMgmt.mapper.RegstCrCstmrMapper">
+    <!-- 법정관리고객 등록 조회 -->
+    <select id="chkCrCstmrRrn" parameterType="map" resultType="_int">
+        /* RegstCrCstmrMapper.chkCrCstmrRrn */
+		SELECT  COUNT(*) AS CHK_CSTMR_RRN
+		FROM    MSP_COURT_RCV
+		WHERE   CSTMR_RRN = #{searchRrn}
+    </select>
+    
+    <insert id="regstCrCstmr" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.regstCrCstmr */
+		INSERT INTO MSP_COURT_RCV
+		(
+		    CR_SEQ
+		    , CSTMR_NAME
+		    , CSTMR_RRN
+		    , CR_TP
+		    , END_YN
+		    , CR_COMP
+		    , NO_JUDG
+		    , JUDG_PAN
+		    , RB_STRT_DT
+		    , RB_ESTI
+		    , RB_RATE
+		    , RB_PRID
+		    , AC_REG_DT
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		) VALUES (
+		    SEQ_CR_MST.NEXTVAL
+		    , #{cstmrName}
+		    , #{cstmrRrn}
+		    , #{crTpCd}
+		    , #{endYn}
+		    , #{crComp}
+		    , #{noJudg}
+		    , #{judgPan}
+		    , #{rbStrtDt}
+		    , #{rbEsti}
+		    , #{rbRate}
+		    , #{rbPrid}
+		    , #{acRegDt}
+		    , #{sessionUserId}
+		    , SYSDATE
+		    , #{sessionUserId}
+		    , SYSDATE
+		)
+    </insert>
+    
+    <select id="getCrSeq" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO" resultType="_int">
+        /* RegstCrCstmrMapper.getCrSeq */
+		SELECT  CR_SEQ
+		FROM    MSP_COURT_RCV
+		WHERE   CSTMR_RRN = #{cstmrRrn}
+    </select>
+    
+    <select id="getLcMstSeq" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO" resultType="string">
+        /* RegstCrCstmrMapper.getLcMstSeq */
+		SELECT  LC_SEQ AS LC_MST_SEQ
+		FROM    MSP_LC_MST
+		WHERE   CSTMR_RRN = #{cstmrRrn}
+		AND		LC_STAT_CD = '2'
+    </select>
+    
+    <select id="getLcDtlSeq" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO" resultType="String">
+        /* RegstCrCstmrMapper.getLcDtlSeq */
+		SELECT  LC_DTL_SEQ
+		FROM    MSP_LC_DTL
+		WHERE   LC_SEQ = #{lcMstSeq}
+    </select>
+    
+    <update id="modifyCrCstmr" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.modifyCrCstmr */
+		UPDATE  MSP_COURT_RCV
+		SET     CSTMR_NAME = #{cstmrName},
+		        CSTMR_RRN = #{cstmrRrn},
+		        CR_TP = #{crTpCd},
+		        END_YN = #{endYn},
+		        CR_COMP = #{crComp},
+		        NO_JUDG = #{noJudg},
+		        JUDG_PAN = #{judgPan},
+		        RB_STRT_DT = #{rbStrtDt},
+		        RB_ESTI = #{rbEsti},
+		        RB_RATE = #{rbRate},
+		        RB_PRID = #{rbPrid},
+		        AC_REG_DT = #{acRegDt},
+		        RVISN_ID = #{sessionUserId},
+		        RVISN_DTTM = SYSDATE
+		WHERE   CR_SEQ = #{crSeq}
+    </update>
+    
+   	<select id="getCrCstmr" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* RegstCrCstmrMapper.getCrCstmr */
+		SELECT  CSTMR_NAME,
+		        CRYPTO_AES256.DEC_AES(CSTMR_RRN) AS CSTMR_RRN,
+		        CR_TP		AS CR_TP_CD,
+		        END_YN,
+		        CR_COMP,
+		        NO_JUDG,
+		        JUDG_PAN,
+		        RB_STRT_DT,
+		        RB_ESTI,
+		        RB_RATE,
+		        RB_PRID,
+		        AC_REG_DT,
+		        TO_CHAR(REGST_DTTM, 'YYYY-MM-DD')	AS FIRST_DT,
+		        ( SELECT TO_CHAR(MAX(REGST_DTTM), 'YYYY-MM-DD') FROM MSP_COURT_RCV_RCIV WHERE CR_SEQ = #{crSeq}) AS LAST_DT,
+				FN_GET_CODENM(DECODE(CR_TP,
+									'1', 'MSP0033',
+									'2', 'MSP0034',
+										 'MSP0035'), (	SELECT MAX(TP_JINH)
+					                                    FROM   MSP_COURT_RCV_RCIV
+					                                    WHERE  CR_SEQ = #{crSeq}
+					                                    AND    STAN_DTTM = (SELECT MAX(STAN_DTTM)
+					                                                        FROM   MSP_COURT_RCV_RCIV
+					                                                        WHERE  CR_SEQ = #{crSeq} ))) AS TP_JINH,
+                (   SELECT  SUM(SUM_PRC)
+                    FROM    MSP_COURT_RCV_BOND
+                    WHERE   CR_SEQ = #{crSeq}  	) AS TOTAL_PRIC,
+                (	SELECT	TO_CHAR(MAX(TO_DATE(INOUT_DTTM, 'YYYYMMDD')), 'YYYY-MM-DD')
+                	FROM	MSP_COURT_RCV_INOUT
+                	WHERE	CR_SEQ = #{crSeq}	) AS LAST_INOUT_DT
+		FROM    MSP_COURT_RCV
+		WHERE   CR_SEQ = #{crSeq}
+    </select>
+    
+    <select id="chkBondNum" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO" resultType="_int">
+        /* RegstCrCstmrMapper.chkBondNum */
+		SELECT COUNT(*)
+		  FROM MSP_COURT_RCV_BOND
+		 WHERE CR_SEQ = #{crSeq}
+		   AND BOND_NUM = #{bondNum}
+    </select>
+    
+    <select id="chkBondNumModi" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO" resultType="_int">
+        /* RegstCrCstmrMapper.chkBondNumModi */
+		SELECT COUNT(*)
+		  FROM MSP_COURT_RCV_BOND
+		 WHERE CR_BOND_SEQ = #{crBondSeq}
+		   AND BOND_NUM = #{bondNum}
+    </select>
+    
+    <insert id="insertCrBond" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.insertCrBond */
+		INSERT INTO MSP_COURT_RCV_BOND
+		(
+		    CR_BOND_SEQ,
+		    CR_SEQ,
+		    BOND_NUM,
+		    MOBILE_NO,
+		    OPEN_DT,
+		    UNPD_PRC,
+		    INST_PRC,
+		    SUM_PRC,
+		    REGST_ID,
+		    REGST_DTTM,
+		    RVISN_ID,
+		    RVISN_DTTM
+		) VALUES (
+		    SEQ_CR_BOND.NEXTVAL,
+		    #{crSeq},
+		    #{bondNum},
+		    #{mobileNo},
+		    #{openDt},
+		    #{unpdPrc},
+		    #{instPrc},
+		    #{sumPrc},
+		    #{sessionUserId},
+		    SYSDATE,
+		    #{sessionUserId},
+		    SYSDATE
+		)
+    </insert>
+    
+    <insert id="insertCrBondByLc" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.insertCrBondByLc */
+		INSERT INTO MSP_COURT_RCV_BOND
+		(
+			   CR_BOND_SEQ,
+			   CR_SEQ,
+			   BOND_NUM,
+			   MOBILE_NO,
+			   OPEN_DT,
+			   UNPD_PRC,
+			   INST_PRC,
+			   SUM_PRC,
+			   REGST_ID,
+			   REGST_DTTM,
+			   RVISN_ID,
+			   RVISN_DTTM
+		)
+		SELECT SEQ_CR_BOND.NEXTVAL,
+		       #{crSeq},
+		       NULL,
+		       DTL.MOBILE_NO,
+		       DTL.OPEN_DT,
+		       DTL.UNPD_PRC,
+		       DTL.INST_PRC,
+		       DTL.SUM_PRC,
+		       DTL.REGST_ID,
+		       DTL.REGST_DTTM,
+		       DTL.RVISN_ID,
+		       DTL.RVISN_DTTM
+		  FROM MSP_LC_DTL DTL
+		 WHERE DTL.LC_DTL_SEQ = #{lcDtlSeq}
+    </insert>
+    
+    <update id="modifyCrBond" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.modifyCrBond */
+		UPDATE  MSP_COURT_RCV_BOND
+		SET     BOND_NUM = #{bondNum},
+		        MOBILE_NO = #{mobileNo},
+		        OPEN_DT = #{openDt},
+		        UNPD_PRC = #{unpdPrc},
+		        INST_PRC = #{instPrc},
+		        SUM_PRC = #{sumPrc},
+		        RVISN_ID = #{sessionUserId},
+		        RVISN_DTTM = SYSDATE
+		WHERE   CR_BOND_SEQ = #{crBondSeq}
+    </update>
+    
+    <delete id="deleteCrBond" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper."deleteCrBond" */
+        DELETE FROM MSP_COURT_RCV_BOND
+        WHERE CR_BOND_SEQ = #{crBondSeq}
+    </delete>
+    
+   	<select id="getCrBondList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* RegstCrCstmrMapper.getCrBondList */
+		SELECT   BOND_NUM,
+		         SUBSTR(MOBILE_NO, 1, 3) || '-' || SUBSTR(MOBILE_NO, 4, 4) || '-' || SUBSTR(MOBILE_NO, 8, 4) AS MOBILE_NO,
+		         TO_CHAR(TO_DATE(OPEN_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS OPEN_DT,
+		         UNPD_PRC,
+		         INST_PRC,
+		         SUM_PRC,
+                 (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = BOND.REGST_ID) AS REGST_ID,
+		         TO_CHAR(REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,
+                 (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = BOND.RVISN_ID) AS RVISN_ID,
+		         TO_CHAR(RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM,
+		         TO_CHAR(TO_DATE(OPEN_DT, 'YYYYMMDD'), 'YYYYMMDD') AS OPEN_DATE,
+		         CR_BOND_SEQ
+		  FROM   MSP_COURT_RCV_BOND BOND
+		 WHERE   CR_SEQ = #{crSeq}
+		ORDER BY REGST_DTTM
+    </select>
+    
+    <insert id="insertCrRciv" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.insertCrRciv */
+		INSERT INTO MSP_COURT_RCV_RCIV
+		(
+		    CR_RCIV_SEQ,
+		    CR_SEQ,
+		    RCIV_DTTM,
+		    STAN_DTTM,
+		    TP_JINH,
+		    STR_DTL,
+		    REGST_ID,
+		    REGST_DTTM,
+		    RVISN_ID,
+		    RVISN_DTTM    
+		) VALUES (
+		    SEQ_CR_RCIV.NEXTVAL,
+		    #{crSeq},
+		    #{rcivDt},
+		    #{stanDt},
+		    #{tpJinh},
+		    #{strDtl},
+		    #{sessionUserId},
+		    SYSDATE,
+		    #{sessionUserId},
+		    SYSDATE
+		)
+    </insert>
+    
+    <insert id="insertCrRcivByLc" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.insertCrRcivByLc */
+			INSERT INTO MSP_COURT_RCV_RCIV
+			(
+			       CR_RCIV_SEQ,
+			       CR_SEQ,
+			       RCIV_DTTM,
+			       STAN_DTTM,
+			       TP_JINH,
+			       STR_DTL,
+			       FILE_DIR,
+			       REGST_ID,
+			       REGST_DTTM,
+			       RVISN_ID,
+			       RVISN_DTTM,
+			       FILE_NAME,
+			       FILE_ID   
+			)
+			SELECT SEQ_CR_RCIV.NEXTVAL,
+				   #{crSeq},
+			       TO_CHAR(MST.ISSUE_DTTM, 'YYYYMMDD'),
+			       TO_CHAR(MST.ISSUE_DTTM, 'YYYYMMDD'),
+			       '01',
+			       NULL,
+			       NULL,
+			       MST.ISSUE_ID,
+			       MST.ISSUE_DTTM,
+			       MST.ISSUE_ID,
+			       MST.ISSUE_DTTM,
+			       NULL,
+			       NULL
+			  FROM MSP_LC_MST MST
+			 WHERE MST.LC_SEQ = #{lcMstSeq}
+    </insert>
+    
+    <update id="modifyCrRciv" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.modifyCrRciv */
+		UPDATE  MSP_COURT_RCV_RCIV
+		SET     RCIV_DTTM = #{rcivDt},
+		        STAN_DTTM = #{stanDt},
+		        TP_JINH = #{tpJinh},
+		        STR_DTL = #{strDtl},
+		        RVISN_ID = #{sessionUserId},
+		        RVISN_DTTM = SYSDATE
+		WHERE   CR_RCIV_SEQ = #{crRcivSeq}
+    </update>
+    
+    <delete id="deleteCrRciv" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper."deleteCrRciv" */
+		DELETE FROM MSP_COURT_RCV_RCIV
+		WHERE CR_RCIV_SEQ = #{crRcivSeq}
+    </delete>
+    
+   	<select id="getCrRcivList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* RegstCrCstmrMapper.getCrRcivList */
+        SELECT   RCIV.CR_RCIV_SEQ,
+		         TO_CHAR(TO_DATE(RCIV_DTTM, 'YYYYMMDD'), 'YYYY-MM-DD') AS RCIV_DT,
+		         TO_CHAR(TO_DATE(STAN_DTTM, 'YYYYMMDD'), 'YYYY-MM-DD') AS STAN_DT,
+		         FN_GET_CODENM(DECODE(RSV.CR_TP,
+									'1', 'MSP0033',
+									'2', 'MSP0034',
+										 'MSP0035'), TP_JINH ) AS TP_JINH,
+		         STR_DTL,
+		         DECODE(YN.FILE_YN, 0, '', '등록') AS FILE_REG,
+		         (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = RCIV.REGST_ID) AS REGST_ID,
+		         TO_CHAR(RCIV.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,
+		         (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = RCIV.RVISN_ID) AS RVISN_ID,
+		         TO_CHAR(RCIV.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM,
+		         TO_CHAR(TO_DATE(RCIV_DTTM, 'YYYYMMDD'), 'YYYYMMDD') AS RCIV_DATE,
+		         TO_CHAR(TO_DATE(STAN_DTTM, 'YYYYMMDD'), 'YYYYMMDD') AS STAN_DATE,
+		         TP_JINH AS TP_JINH_CD,
+		         DECODE(YN.FILE_YN, 0, 'N', 'Y') AS FILE_YN,
+		         FILE_DIR AS FILE_PATH,
+		         FILE_NAME,
+		         FILE_ID
+		FROM     MSP_COURT_RCV RSV,
+                 MSP_COURT_RCV_RCIV RCIV,
+		         (   SELECT COUNT(FILE_ID) AS FILE_YN,
+		                    CR_RCIV_SEQ
+		               FROM MSP_COURT_RCV_RCIV
+		           GROUP BY CR_RCIV_SEQ               ) YN
+		WHERE    RCIV.CR_SEQ = #{crSeq}
+		AND      RCIV.CR_RCIV_SEQ = YN.CR_RCIV_SEQ(+)
+        AND      RCIV.CR_SEQ = RSV.CR_SEQ(+)
+		ORDER BY RCIV.TP_JINH
+    </select>
+    
+    <select id="getFileNmSeq" resultType="String">
+		SELECT 	/* RegstCrCstmrMapper.getFileNmSeq */
+				TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_MSP_COURT_01.NEXTVAL, '00000000000')) AS FILE_NM_SEQ
+		FROM 	DUAL
+	</select>
+	
+	<select id="getEvidenceFileExtList" resultType="String">
+    	/* RegstCrCstmrMapper.getEvidenceFileExtList */
+    	SELECT B.CD_VAL
+		  FROM CMN_GRP_MST A
+		       , CMN_GRP_CD_MST B
+		 WHERE 1=1
+		   AND A.GRP_ID = B.GRP_ID
+		   AND A.USG_YN = 'Y'
+		   AND B.USG_YN = 'Y'
+		   AND A.GRP_ID = 'CMN0232'
+    </select>
+    
+    <select id="getEvidenceFileSizeTargetChk" parameterType="String" resultType="String">
+    	/* RegstCrCstmrMapper."getEvidenceFileSizeTargetChk" */
+		SELECT B.ETC3
+		  FROM CMN_GRP_MST A
+		       , CMN_GRP_CD_MST B
+		 WHERE 1=1
+		   AND A.GRP_ID = B.GRP_ID
+		   AND A.USG_YN = 'Y'
+		   AND B.USG_YN = 'Y'
+		   AND A.GRP_ID = 'CMN0212'
+		   AND B.CD_VAL = #{cdVal, jdbcType=VARCHAR}
+    </select>
+    
+    <select id="getEvidenceFileResizeExtList" parameterType="String" resultType="String">
+    	/* RegstCrCstmrMapper.getEvidenceFileExtList */
+    	SELECT B.CD_VAL
+		  FROM CMN_GRP_MST A
+		       , CMN_GRP_CD_MST B
+		 WHERE 1=1
+		   AND A.GRP_ID = B.GRP_ID
+		   AND A.USG_YN = 'Y'
+		   AND B.USG_YN = 'Y'
+		   AND A.GRP_ID = 'CMN0212'
+		   AND B.ETC3 = #{etc3, jdbcType=VARCHAR}
+    </select>
+    
+    <update id="updateRcivFile"   parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+    	/* RegstCrCstmrMapper.updateRcivFile */
+	    UPDATE MSP_COURT_RCV_RCIV	
+	   	   SET FILE_DIR = #{realFileDir},
+	           FILE_NAME = #{realFileName},
+	           FILE_ID = #{fileId},
+	           RVISN_ID = #{sessionUserId},
+	           RVISN_DTTM = SYSDATE
+		 WHERE CR_RCIV_SEQ = #{crRcivSeq}
+    </update>
+    
+    <select id="getFileNmDtl" parameterType= "String" resultType="String">
+		/* RegstCrCstmrMapper.getFileNmDtl */
+		SELECT  (FILE_DIR || FILE_NAME) AS FILE_NM
+		FROM    MSP_COURT_RCV_RCIV
+		WHERE   CR_RCIV_SEQ = #{crRcivSeq}
+    </select>
+    
+    <update id="deleteFile" parameterType="String">
+		/* RegstCrCstmrMapper.deleteFile */
+		UPDATE	MSP_COURT_RCV_RCIV
+	   	   SET 	FILE_DIR = '',
+	          	FILE_NAME = '',
+	           	FILE_ID = '',
+	           	RVISN_ID = #{sessionUserId},
+	           	RVISN_DTTM = SYSDATE
+		 WHERE 	CR_RCIV_SEQ = #{crRcivSeq}	 
+	</update>
+    
+   	<select id="pVacOnceVacId"  statementType="CALLABLE"  parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO"  resultType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+		{CALL P_VAC_ONCE_VAC_ID(
+				#{opCode, jdbcType=VARCHAR}
+				, #{gubun, jdbcType=VARCHAR}
+				, #{orderKey, jdbcType=VARCHAR}
+				, #{vacBankCd, jdbcType=VARCHAR}
+				, #{vacId, jdbcType=VARCHAR}
+				, #{payAmt, jdbcType=VARCHAR}
+				, #{sessionUserId, jdbcType=VARCHAR}
+				, #{retCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				, #{oVacBankCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				, #{oVacBankNm, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				, #{oVacId, mode=OUT, javaType=string, jdbcType=VARCHAR}
+			)
+		}
+	</select>
+	
+    <select id="chkDclrDate" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO" resultType="string">
+        /* RegstCrCstmrMapper.chkDclrDate */
+		SELECT  DCLR_DATE
+		FROM    MSP_COURT_RCV_ACCT
+		WHERE   CR_SEQ = #{crSeq}
+		AND		VAC_STAT = 'Y'
+    </select>
+	
+    <update id="updateDclrDate" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.updateDclrDate */
+		UPDATE  MSP_COURT_RCV_ACCT
+		SET     DCLR_DATE = #{dclrDate}
+		WHERE   CR_SEQ = #{crSeq}
+		AND		VAC_STAT = 'Y'
+    </update>
+    
+    <insert id="insertCrInout" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.insertCrInout */
+		INSERT INTO   MSP_COURT_RCV_INOUT
+		(
+		    CR_INOUT_SEQ,
+		    CR_SEQ,
+		    INOUT_ORDER,
+		    INOUT_NAME,
+		    INOUT_DTTM,
+		    INOUT_PRIC,
+		    ETC_MEMO,
+		    REGST_ID,
+		    REGST_DTTM,
+		    RVISN_ID,
+		    RVISN_DTTM
+		) VALUES (
+		    SEQ_CR_INOUT.NEXTVAL,
+		    #{crSeq},
+		    #{inoutOrder},
+		    #{inoutName},    
+		    #{inoutDttm},
+		    #{inoutPric},
+    		#{etcMemo},
+		    #{sessionUserId},
+		    SYSDATE,
+		    #{sessionUserId},
+		    SYSDATE
+		)
+    </insert>
+    
+    <update id="modifyCrInout" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.modifyCrInout */
+		UPDATE  MSP_COURT_RCV_INOUT
+		SET     INOUT_NAME = #{inoutName},
+				INOUT_ORDER = #{inoutOrder},
+		        INOUT_DTTM = #{inoutDttm},
+		        INOUT_PRIC = #{inoutPric},
+		        ETC_MEMO = #{etcMemo},
+		        RVISN_ID = #{sessionUserId},
+		        RVISN_DTTM = SYSDATE
+		WHERE   CR_INOUT_SEQ = #{crInoutSeq}
+    </update>
+    
+    <delete id="deleteCrInout" parameterType="com.ktis.msp.rcp.courtMgmt.vo.RegstCrCstmrVO">
+        /* RegstCrCstmrMapper.deleteCrInout */
+		DELETE 	FROM MSP_COURT_RCV_INOUT
+		WHERE 	CR_INOUT_SEQ = #{crInoutSeq}
+    </delete>
+    
+   	<select id="getCrInoutList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* RegstCrCstmrMapper.getCrInoutList */
+		<![CDATA[
+ 		SELECT  INOUT_ORDER,
+		        INOUT_NAME,
+		        TO_CHAR(TO_DATE(INOUT_DTTM, 'YYYYMMDD'), 'YYYY-MM-DD') AS INOUT_DT,
+ 		        ( CASE WHEN INOUT_PRIC >= 0
+		        	   THEN INOUT_PRIC
+		        	   ELSE NULL END	) AS IN_PRIC,
+			    ( CASE WHEN INOUT_PRIC < 0
+			           THEN INOUT_PRIC
+			           ELSE NULL END	) AS OUT_PRIC,
+		        ETC_MEMO,
+		        (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = INOUT.REGST_ID) AS REGST_ID,
+		        TO_CHAR(REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,
+		        (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = INOUT.RVISN_ID) AS RVISN_ID,
+		        TO_CHAR(RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM,
+		        TO_CHAR(TO_DATE(INOUT_DTTM, 'YYYYMMDD'), 'YYYYMMDD') AS INOUT_DATE,
+		        CR_INOUT_SEQ
+		FROM    MSP_COURT_RCV_INOUT INOUT
+		WHERE   CR_SEQ = #{crSeq}
+		ORDER BY INOUT_ORDER DESC
+		]]>
+    </select>
+    
+    <select id="getCrInoutTotal" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	/* RegstCrCstmrMapper.getCrInoutTotal */
+		SELECT  INOUT.INOUT_TOTAL,
+		        INOUT.INOUT_CNT,
+		        ACCT.VAC_BANK_NM,
+		        ACCT.VAC_ID
+		FROM    ( SELECT  #{crSeq} AS CR_SEQ
+		          FROM    DUAL ) SQ,
+		        ( SELECT  SUM(INOUT_PRIC) AS INOUT_TOTAL,
+		                  COUNT(INOUT_PRIC) AS INOUT_CNT,
+		                  CR_SEQ
+		          FROM    MSP_COURT_RCV_INOUT
+		          GROUP BY CR_SEQ ) INOUT,
+		        ( SELECT  ( F_GET_KT_CODE_NM('PPS_VAC', 'BANK_CODE', VAC_BANK_CD) ) AS VAC_BANK_NM,
+		                  VAC_ID,
+		                  CR_SEQ
+		          FROM    MSP_COURT_RCV_ACCT
+		          WHERE   VAC_STAT = 'Y' ) ACCT
+		WHERE   SQ.CR_SEQ = INOUT.CR_SEQ(+)
+		AND     SQ.CR_SEQ = ACCT.CR_SEQ(+)
+    </select>
+    
+</mapper>

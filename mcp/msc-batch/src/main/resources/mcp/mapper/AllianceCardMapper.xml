@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AllianceCardMapper">
+
+	<select id="getPlanBannerEnabledAllianceCardXml" resultType="com.ktmmobile.mcp.alliance.dto.AlliCardDtlContDtoXML">
+		SELECT
+			A.CPRT_CARD_GDNC_SEQ
+			,A.CPRT_CARD_GDNC_NM
+			,A.CPRT_CARD_CD
+			, (SELECT A.DTL_CD_NM
+			FROM NMCP_CD_DTL A
+			WHERE A.CD_GROUP_ID='CO0008' AND A.DTL_CD=CPRT_CARD_CD) AS CPRT_CARD_NM
+			,A.CPRT_CARD_BAS_DESC
+			,A.CPRT_CARD_THUMB_IMG_NM
+			,A.CPRT_CARD_LARGE_IMG_NM
+			,A.GDNC_FILE_NM
+			,A.USE_YN
+			,A.PSTNG_START_DATE
+			,A.PSTNG_END_DATE
+			,A.CRET_IP
+			,A.CRET_DT
+			,A.CRET_ID
+			,A.AMD_IP
+			,A.AMD_DT
+			,A.AMD_ID
+			, IS_PLAN_BANNER_ENABLED
+			, PLAN_BANNER_TITLE
+			, PLAN_BANNER_TEXT
+		FROM NMCP_CPRT_CARD_GDNC_BAS A
+		WHERE 1=1
+		AND IS_PLAN_BANNER_ENABLED = 'Y'
+		AND USE_YN ='Y'
+		AND ROWNUM = 1
+	</select>
+
+</mapper>

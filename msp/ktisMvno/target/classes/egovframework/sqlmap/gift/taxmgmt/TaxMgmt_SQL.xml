@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.gift.taxmgmt.mapper.TaxMgmtMapper">
+
+	<!-- 제세공과금 SEQ 생성 -->
+	<select id="taxSmsListTaxNo" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="String">
+		/* taxMgmtMapper.taxSmsListTaxNo */
+		SELECT TAX_NO.NEXTVAL AS TAX_NO
+		FROM DUAL
+	</select>
+
+	<!-- 제세공과금 조회 -->
+	<select id="getTaxSmsSendList" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			/* taxMgmtMapper.getTaxSmsSendList */
+			SELECT
+				A.TAX_NO 			/* 제세공과금 NO */
+				, A.SUBJECT  		/* 제목 */
+				, A.SEND_CNT 		/* 발신건수 */
+				, NVL((SELECT ''||COUNT(*) FROM MSP_TAX_SMS_SEND_LIST B WHERE A.TAX_NO = B.TAX_NO  AND TAX_RECV_TIME IS NOT NULL),'-') AS REPLY_CNT		/* 회신건수 */
+				, TO_CHAR(TO_DATE(A.REQUEST_TIME,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI')	AS	REQUEST_TIME		/* 예약전송일자 */
+				, TO_CHAR(TO_DATE(A.REQUEST_TIME,'YYYYMMDDHH24MISS'),'HH')	AS	REQUEST_HOUR		/* 예약전송시간 */
+				, A.REGST_ID			/* 등록자ID */
+				, FN_GET_USRNM(A.REGST_ID) AS REGST_NM 	/* 등록자 */
+				, TO_CHAR(A.REGST_TIME, 'YYYY-MM-DD HH24:MI:SS') AS REGST_TIME /* 등록시간 */
+				, A.TAX_TMP_ID 	/* 템플릿ID */
+				, A.TAX_USG_YN 	/* 사용여부 (R : 진행대기, S : 완료, F : 실패, N : 삭제) */
+				, A.KAKAO_YN 		/* 카카오여부 */	
+				, A.ADDRESS_YN 	/* 주소여부 */
+				, A.AGENT_YN		/* 법정대리인 문자발송 여부 */
+				, A.AGENT_TMP_ID	/* 법정대리인 템플릿 ID */
+		FROM MSP_TAX_SMS_LIST A
+		WHERE A.TAX_USG_YN != 'N'
+		<if test="srchStrtDt != null and srchStrtDt != '' and srchEndDt != null and srchEndDt != ''">
+			AND TO_CHAR(TO_DATE(REQUEST_TIME,'YYYYMMDDHH24MISS'),'YYYYMMDD') BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>			
+		<if test="subject != null and subject != ''">
+			AND SUBJECT LIKE '%' || #{subject} || '%'
+		</if>
+		ORDER BY REQUEST_TIME DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 제세공과금상세 데이터조회 -->
+	<select id="getTaxSmsSendListDt" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		 /* taxMgmtMapper.getTaxSmsSendListDt */
+		 SELECT
+		 	A.TAX_NO
+			, A.CONTRACT_NUM 																/* 받는 사람 예약번호 */
+			, SUBSTR(CRYPTO_AES256.DEC_AES(A.USER_SSN)	,1,6)||' - '|| SUBSTR(CRYPTO_AES256.DEC_AES(A.USER_SSN) ,7 ,7)	AS SSN 		/* 주민번호 */
+			, A.TAX_ADR_ZIP AS ZIP															/* 우편번호 */
+			, DECODE(TAX_ADR_ZIP,'','','('||A.TAX_ADR_ZIP||')'||A.TAX_ADR_PRIMARY_LN||' '||A.TAX_ADR_SECONDARY_LN) AS ADDR	/* 주소 */
+			, A.TEL_NO AS TEL_NO 														/*수신번호*/ 
+			, A.USER_NM AS CUST_NAME 											/*고객명*/ 
+			, TO_CHAR(A.TAX_RECV_TIME,'YYYY-MM-DD HH24:MI:SS') AS RECV_TIME /*회신일자*/ 
+			, A.AGENT_TEL_NUM AS AGENT_TEL_NUM /*법정대리인 연락처*/
+        FROM MSP_TAX_SMS_SEND_LIST A
+        WHERE TAX_NO = #{taxNo}
+        ORDER BY CONTRACT_NUM DESC
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 제세공과금상세 엑셀다운로드 -->
+	<select id="getTaxSmsSendListByExcel" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		 /* taxMgmtMapper.getTaxSmsSendListByExcel */
+		SELECT
+		 	A.TAX_NO
+			, A.CONTRACT_NUM 																/* 받는 사람 예약번호 */
+			, SUBSTR(CRYPTO_AES256.DEC_AES(A.USER_SSN)	,1,6)||' - '|| SUBSTR(CRYPTO_AES256.DEC_AES(A.USER_SSN) ,7 ,7)	AS SSN 		/* 주민번호 */
+			, A.TAX_ADR_ZIP AS ZIP															/* 우편번호 */
+			, DECODE(TAX_ADR_ZIP,'','','('||A.TAX_ADR_ZIP||')'||A.TAX_ADR_PRIMARY_LN||' '||A.TAX_ADR_SECONDARY_LN) AS ADDR	/* 주소 */
+			, A.TEL_NO AS TEL_NO 														/*수신번호*/ 
+			, A.USER_NM AS CUST_NAME 											/*고객명*/ 
+			, TO_CHAR(A.TAX_RECV_TIME,'YYYY-MM-DD HH24:MI:SS') AS RECV_TIME /*회신일자*/ 
+			, A.AGENT_TEL_NUM AS AGENT_TEL_NUM /*법정대리인 연락처*/
+        FROM MSP_TAX_SMS_SEND_LIST A
+        WHERE TAX_NO = #{taxNo}
+        ORDER BY CONTRACT_NUM DESC
+	</select>
+	
+	<select id="getContractNumChk" parameterType="String" resultType="int">
+		SELECT 	COUNT(CONTRACT_NUM)
+		FROM	MSP_JUO_SUB_INFO
+		WHERE	CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<select id="getContractNumDupChk" parameterType="String" resultType="int">
+		SELECT 	COUNT(CONTRACT_NUM)
+		FROM	MSP_TAX_SMS_SEND_LIST
+		WHERE	TAX_NO = #{taxNo}
+		AND CONTRACT_NUM = #{contractNum}
+	</select>
+		
+	<!-- 제세공과금 등록 -->
+	<select id="insertTaxSmsTmp" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" >
+		/* taxMgmtMapper.insertTaxSmsTmp */	
+		INSERT INTO MSP_TAX_SMS_LIST(
+			TAX_NO
+			, SUBJECT
+			, REQUEST_TIME
+			, REGST_ID
+			, REGST_TIME
+			, TAX_TMP_ID
+			, TAX_USG_YN
+			, KAKAO_YN
+			, ADDRESS_YN
+			, AGENT_YN
+			, AGENT_TMP_ID
+		) VALUES (
+			 #{taxNo}				/* 문자NO */
+			, #{subject}			/* 제목 */	
+			, #{requestTime}	/* 예약전송일자 */
+			, #{regstId}			/* 등록자 */
+			, SYSDATE			/* 등록시간 */
+			, #{taxTmpId}		/* 템플릿ID */
+			, 'R'					/* 사용여부 (R : 진행대기, S : 완료, F : 실패, N : 삭제)*/
+			, #{kakaoYn}			/* 카카오YN	*/
+			, #{addressYn}		/* 주소YN */
+			, #{agentYn}			/* 법정대리인 문자발송YN */
+			, #{agentTmpId}		/* 법정대리인 템플릿ID */
+		)						
+	</select>
+
+	<!-- 제세공과금 상세 등록 -->
+	<select id="insertTaxSmsSendTmp" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" >
+		/* taxMgmtMapper.insertTaxSmsSendTmp */	
+		INSERT INTO MSP_TAX_SMS_SEND_LIST (
+			TAX_NO
+			, CONTRACT_NUM
+			, TEL_NO
+			, USER_NM
+			, USER_SSN
+			, AGENT_TEL_NUM
+		) VALUES (
+			 #{taxNo}				/* 문자NO */
+			, #{contractNum}	/* 계약번호 */
+			, (SELECT SUBSCRIBER_NO FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = #{contractNum})	/* 수신번호 */
+			, (SELECT SUB_LINK_NAME FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = #{contractNum})	/* 고객명 */
+			, (SELECT USER_SSN FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = #{contractNum})	/* 주민등록번호 */
+			, (SELECT LGL_AGNT_NO FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = #{contractNum})	/* 법정대리인 연락처 */
+		)						
+	</select>
+	
+	<!-- MSP_TAX_SMS_LIST 삭제 가능 여부를 확인한다. -->
+	<select id="isTaxSmsDeleteAuth" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="String">
+		/* taxMgmtMapper.isTaxSmsDeleteAuth */
+		SELECT  DECODE(COUNT(*), 1, 'Y', 'N') RESULT
+		FROM    MSP_TAX_SMS_LIST
+		WHERE   TAX_NO = #{taxNo}
+		AND	REGST_ID = #{sessionUserId}
+		<!-- 전송대기를 제외한 상태일 경우 삭제 불가 -->
+		AND	TAX_USG_YN = 'R' 
+		<!-- 전송일자 당일 및 지났을 경우 삭제 불가 -->
+		AND	REQUEST_TIME <![CDATA[ > ]]> TO_CHAR(SYSDATE,'YYYYMMDD')
+	</select>
+	
+	<!-- MSP_TAX_SMS_LIST 사용여부를 N으로 변경한다. -->
+	<update id="deleteTaxSmsList" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO">
+		/* taxMgmtMapper.deleteTaxSmsList */
+		UPDATE	MSP_TAX_SMS_LIST
+		SET	
+			TAX_USG_YN = 'N'										/* 사용여부 */		
+			, RVISN_ID = #{sessionUserId} 						/* 수정자이름 */
+			, RVISN_DTTM = SYSDATE			   				/* 수정날짜 */
+			, SEND_CNT = (SELECT COUNT(*) FROM MSP_TAX_SMS_SEND_LIST WHERE TAX_NO = #{taxNo})						
+		WHERE	TAX_NO = #{taxNo}	
+		AND	REGST_ID = #{sessionUserId}
+		AND	TAX_USG_YN = 'R'
+	</update>
+	
+	<!-- 사용여부를 N으로 변경하면 MSG_SMS_SEND_LIST(상세) 데이터를 삭제한다. -->
+	<delete id="deleteTaxSmsListDt" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO">
+	 /* taxMgmtMapper.deleteTaxSmsListDt */
+	 DELETE 
+	 	FROM MSP_TAX_SMS_SEND_LIST
+     WHERE TAX_NO = #{taxNo, jdbcType=VARCHAR}	
+	</delete>
+	
+	<!-- 엑셀업로드 후 MSG_SMS_LIST의 전송요청건수를 업데이트 함 -->
+	<update id="getTaxSendListCount" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO">
+	 	 /* taxMgmtMapper.getTaxSendListCount */
+	 	UPDATE MSP_TAX_SMS_LIST A
+			SET A.SEND_CNT = 
+    			(SELECT COUNT(*) FROM MSP_TAX_SMS_SEND_LIST B
+       			 WHERE TAX_NO = #{taxNo, jdbcType=VARCHAR})
+		WHERE A.TAX_NO = #{taxNo, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- SMS 템플릿 번호 조회해서 일치하는 메세지 타입 가져오기  메세지타입 1:SMS 2:SMS URL 3:MMS 4:MMS URL  -->
+	<select id="getTaxSendTaxType" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="Map">
+		/* taxMgmtMapper.getTaxSendTaxType */
+		SELECT 
+			MSG_TYPE AS MSG_TMP_ID
+			,TEXT
+		FROM   MSP_SMS_TEMPLATE_MST 
+		WHERE  TEMPLATE_ID = #{taxTmpId}
+	</select>
+
+	<!-- (법정대리인) SMS 템플릿 번호 조회해서 일치하는 메세지 타입 가져오기  메세지타입 1:SMS 2:SMS URL 3:MMS 4:MMS URL  -->
+	<select id="getAgentSendTaxType" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="Map">
+		/* taxMgmtMapper.getAgentSendTaxType */
+		SELECT 
+			MSG_TYPE AS MSG_TMP_ID
+			,TEXT AS AGENT_TEXT
+		FROM   MSP_SMS_TEMPLATE_MST 
+		WHERE  TEMPLATE_ID = #{agentTmpId}
+	</select>
+	
+	<!-- SMS 템플릿 K_TEMPLATE_CODE 조회해서 코드값이 등록되어 있는지 확인   -->
+	<select id="getTaxSendKakaoYn" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="String">
+		/* taxMgmtMapper.getTaxSendKakaoYn */
+		SELECT DECODE(K_TEMPLATE_CODE, NULL, 'N', 'Y')  AS KAKAO_YN
+		FROM   MSP_SMS_TEMPLATE_MST 
+		WHERE  TEMPLATE_ID = #{taxTmpId}
+	</select>
+
+	<!-- (법정대리인) SMS 템플릿 K_TEMPLATE_CODE 조회해서 코드값이 등록되어 있는지 확인   -->
+	<select id="getAgentSendKakaoYn" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="String">
+		/* taxMgmtMapper.getAgentSendKakaoYn */
+		SELECT DECODE(K_TEMPLATE_CODE, NULL, 'N', 'Y')  AS AGENT_KAKAO_YN
+		FROM   MSP_SMS_TEMPLATE_MST 
+		WHERE  TEMPLATE_ID = #{agentTmpId}
+	</select>
+	
+	<!-- 템플릿 테이블에서 CALLBACK(보내는전화번호) , SUBJECT(제목) , TAX_TEXT(내용)을 가져온다 -->
+	<update id="getTaxTmpCallBack" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO">
+	 /* taxMgmtMapper.getTaxTmpCallBack */
+	 UPDATE MSP_TAX_SMS_LIST A
+		SET A.TAX_SEND_CTN = (SELECT CALLBACK FROM  MSP_SMS_TEMPLATE_MST B WHERE TEMPLATE_ID = #{taxTmpId, jdbcType=VARCHAR})
+		   ,A.TAX_TITLE = (SELECT SUBJECT FROM MSP_SMS_TEMPLATE_MST B WHERE TEMPLATE_ID = #{taxTmpId, jdbcType=VARCHAR})
+		   ,A.TAX_TEXT = #{text}
+		   <if test='agentYn != null and agentYn != "" and agentYn == "Y"'>
+				,A.AGENT_TEXT = #{agentText}
+		   </if>
+		WHERE A.TAX_NO = #{taxNo, jdbcType=VARCHAR}
+	</update>
+	
+	<select id="getChkTaxCnt" parameterType="com.ktis.msp.gift.taxmgmt.vo.TaxMgmtVO" resultType="int">
+	/* taxMgmtMapper.getChkTaxCnt */
+	SELECT
+		COUNT(*)
+	FROM MSP_TAX_SMS_LIST
+	WHERE REQUEST_TIME = #{requestTime}
+	</select>
+</mapper>

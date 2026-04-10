@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.filemgmt.mapper.PpsFileMapper">
+	
+    
+    <select id="ppsProcImageUploadAndDelete"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_CUSTOMER_IMAGE(
+							#{opCode, jdbcType=VARCHAR}
+							, #{contractNum, jdbcType=VARCHAR}
+							, #{paperImage, jdbcType=VARCHAR}						
+							, #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+							, #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR} 
+							)
+	     }
+	</select>
+	
+	<select id="getPpsCustomerImageInfoList"  parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	 <include refid="com.ktis.msp.cmn.include.paging-start" />
+	 	 SELECT /*+ index_desc(a pps_customer_image_rec_dt_idx) */
+		  A.IMG_SEQ,
+		  A.CONTRACT_NUM,
+		 A.IMG_GUBUN,
+		 F_GET_KT_CODE_NM('PPS_CUSTOMER_IMAGE', 'IMG_GUBUN', IMG_GUBUN) AS IMG_GUBUN_NM,
+		 A.IMG_FILE,
+		 A.IMG_PATH,
+		 A.STATUS,
+		 DECODE(A.STATUS,'A','정상', 'D','삭제', '-') AS STATUS_NM ,     
+		 A.MEMO,
+		 A.REC_ID,
+		 NVL(F_GET_ADMIN_NM(A.REC_ID),'') AS REC_ID_NM,
+		 TO_CHAR(A.REC_DT, 'YYYY-MM-DD') AS REC_DT,
+		 ENC_FLAG,
+		  TO_CHAR(C.ENTER_DATE, 'YYYY-MM-DD HH24:MI:SS')AS ENTER_DATE, 
+		  B.SUBSCRIBER_NO,
+		  B.SUB_STATUS,
+		   F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',B.SUB_STATUS) AS SUB_STATUS_NM, 
+		  B.DEALER_CODE,
+		  F_GET_AGENT_NM(B.DEALER_CODE)AS DEALER_CODE_NM,
+		  B.OPEN_AGNT_CD AS AGENT_ID,
+		  FN_GET_ORGNM(B.OPEN_AGNT_CD) AS AGENT_ID_NM
+		FROM
+		  MSP_JUO_SUB_INFO B,
+		  PPS_CUSTOMER_IMAGE A,
+          PPS_CUSTOMER C 
+          WHERE A.CONTRACT_NUM = B.CONTRACT_NUM 
+          AND  B.CONTRACT_NUM = C.CONTRACT_NUM
+          AND  A.STATUS &lt;> 'D'
+          AND A.REC_DT > TO_DATE('20100101', 'YYYYMMDD')
+          <!-- 
+           AND A.CONTRACT_NUM NOT IN (
+            SELECT CONTRACT_NUM     
+			  FROM MSP_MNG.MSP_JUO_SUB_INFO
+			  WHERE SUB_STATUS ='C'
+			  AND SUB_STATUS_DATE &lt;= TO_CHAR(ADD_MONTHS(sysdate,-6),'YYYYMMDD')
+          ) 
+           -->
+         <if test="searchSubStatus != null and searchSubStatus != ''">
+				AND B.SUB_STATUS = #{searchSubStatus}
+		</if>
+		<if test="searchImgGubun != null and searchImgGubun != ''">
+				AND A.IMG_GUBUN = #{searchImgGubun}
+		</if>
+		 <if test="searchNm != null and searchNm != ''">
+			<choose>
+				<when test="searchType == 'contract_num'">
+					AND A.CONTRACT_NUM = #{searchNm}
+				</when>
+				<when test="searchType == 'subscriber_no'">
+					AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+				</when>
+				<when test="searchType == 'rec_id_nm'">
+					AND REC_ID IN (SELECT USR_ID FROM CMN_USR_MST WHERE USR_NM LIKE '%' || #{searchNm} || '%')
+				</when>
+			</choose>
+		</if>
+		<if test="startDt != null and startDt != ''">
+				AND REC_DT >= to_date(#{startDt}, 'yyyy-mm-dd')
+		</if>
+		<if test="endDt != null and endDt != ''">
+				AND REC_DT &lt; to_date(#{endDt}, 'yyyy-mm-dd')+1
+		</if>
+	 
+	  <include refid="com.ktis.msp.cmn.include.paging-end2" />	
+	</select>
+	
+	
+	<select id="getPpsCustomerImageInfoListExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+	 SELECT /*+ index_desc(a pps_customer_image_rec_dt_idx) */
+		  A.IMG_SEQ,
+		  A.CONTRACT_NUM,
+		 A.IMG_GUBUN,
+		 F_GET_KT_CODE_NM('PPS_CUSTOMER_IMAGE', 'IMG_GUBUN', IMG_GUBUN) AS IMG_GUBUN_NM,
+		 A.IMG_FILE,
+		 A.IMG_PATH,
+		 A.STATUS,
+		 DECODE(A.STATUS,'A','정상', 'D','삭제', '-') AS STATUS_NM ,     
+		 A.MEMO,
+		 A.REC_ID,
+		 NVL(F_GET_ADMIN_NM(A.REC_ID),'') AS REC_ID_NM,
+		 TO_CHAR(A.REC_DT, 'YYYY-MM-DD') AS REC_DT,
+		  TO_CHAR(C.ENTER_DATE, 'YYYY-MM-DD HH24:MI:SS')AS ENTER_DATE, 
+		  B.SUBSCRIBER_NO,
+		  B.SUB_STATUS,
+		   F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',B.SUB_STATUS) AS SUB_STATUS_NM, 
+		  B.DEALER_CODE,
+		  F_GET_AGENT_NM(B.DEALER_CODE)AS DEALER_CODE_NM,
+		  B.OPEN_AGNT_CD AS AGENT_ID,
+		  FN_GET_ORGNM(B.OPEN_AGNT_CD) AS AGENT_ID_NM
+		FROM
+		  MSP_JUO_SUB_INFO B,
+		  PPS_CUSTOMER_IMAGE A,
+          PPS_CUSTOMER C 
+          WHERE A.CONTRACT_NUM = B.CONTRACT_NUM 
+          AND  B.CONTRACT_NUM = C.CONTRACT_NUM
+          AND  A.STATUS &lt;> 'D'
+          AND A.REC_DT > TO_DATE('20100101', 'YYYYMMDD')
+           AND A.CONTRACT_NUM NOT IN (
+            SELECT CONTRACT_NUM     
+			  FROM MSP_MNG.MSP_JUO_SUB_INFO
+			  WHERE SUB_STATUS ='C'
+			  AND SUB_STATUS_DATE &lt;= TO_CHAR(ADD_MONTHS(sysdate,-6),'YYYYMMDD')
+          ) 
+         <if test="searchSubStatus != null and searchSubStatus != ''">
+				AND B.SUB_STATUS = #{searchSubStatus}
+		</if>
+		<if test="searchImgGubun != null and searchImgGubun != ''">
+				AND A.IMG_GUBUN = #{searchImgGubun}
+		</if>
+		 <if test="searchNm != null and searchNm != ''">
+			<choose>
+				<when test="searchType == 'contract_num'">
+					AND A.CONTRACT_NUM = #{searchNm}
+				</when>
+				<when test="searchType == 'subscriber_no'">
+					AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+				</when>
+				<when test="searchType == 'rec_id_nm'">
+					AND REC_ID IN (SELECT USR_ID FROM CMN_USR_MST WHERE USR_NM LIKE '%' || #{searchNm} || '%')
+				</when>
+			</choose>
+		</if>
+		<if test="startDt != null and startDt != ''">
+				AND REC_DT >= to_date(#{startDt}, 'yyyy-mm-dd')
+		</if>
+		<if test="endDt != null and endDt != ''">
+				AND REC_DT &lt; to_date(#{endDt}, 'yyyy-mm-dd')+1
+		</if>
+	</select>
+	
+	 <select id="getPpsCustomerImageInfoTabList"  parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+	   SELECT /*+ index_desc(a pps_customer_image_rec_dt_idx) */
+	   	   A.IMG_SEQ,
+	       A.CONTRACT_NUM,
+	       A.IMG_GUBUN,
+	       F_GET_KT_CODE_NM('PPS_CUSTOMER_IMAGE', 'IMG_GUBUN', IMG_GUBUN) AS IMG_GUBUN_NM,
+	       A.IMG_FILE,
+	       A.IMG_PATH,
+	       A.STATUS,
+	        DECODE(A.STATUS,'A','정상', 'D','삭제', '-') AS STATUS_NM ,
+	       A.ENC_FLAG,
+	       A.MEMO,
+	       A.REC_ID,
+	        NVL(F_GET_ADMIN_NM(A.REC_ID),'') AS REC_ID_NM,
+	        TO_CHAR(A.REC_DT, 'YYYY-MM-DD') AS REC_DT
+	  FROM PPS_CUSTOMER_IMAGE A
+	  WHERE  A.CONTRACT_NUM = #{contractNum}
+	  AND  A.STATUS &lt;> 'D'
+	  AND A.REC_DT > TO_DATE('20100101', 'YYYYMMDD')
+	   AND A.CONTRACT_NUM NOT IN (
+            SELECT CONTRACT_NUM     
+			  FROM MSP_MNG.MSP_JUO_SUB_INFO
+			  WHERE SUB_STATUS ='C'
+			  AND SUB_STATUS_DATE &lt;= TO_CHAR(ADD_MONTHS(sysdate,-6),'YYYYMMDD')
+          ) 
+	   
+	   <include refid="com.ktis.msp.cmn.include.paging-end2" />	
+	 </select>
+	
+	 <!--  선불고객 서식지관리 처리   -->
+	<select id="procPpsCustomerImgeInsertUpdate"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_CUSTOMER_IMAGE_UPLOAD(
+	 			 #{opCode, jdbcType=VARCHAR}
+					,#{imgSeq, jdbcType=VARCHAR}  
+				    ,#{contractNum, jdbcType=VARCHAR} 
+				    ,#{imgGubun, jdbcType=VARCHAR}
+				    ,#{imgFile, jdbcType=VARCHAR}
+				    ,#{imgPath, jdbcType=VARCHAR}
+				    ,#{status, jdbcType=VARCHAR}
+				    ,#{memo, jdbcType=VARCHAR}
+				   	,#{adminId, jdbcType=VARCHAR}
+					,#{oRetCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+
+	</select>
+	
+	<!--  선불고객 서식지관리 처리   -->
+	<select id="procPpsRealPayInfoUpdate"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_REAL_USER_000(
+	 			 #{contractNum, jdbcType=VARCHAR}
+					,#{cmsBankCode, jdbcType=VARCHAR}  
+				    ,#{cmsAccount, jdbcType=VARCHAR} 
+				    ,#{cmsUserSsn, jdbcType=VARCHAR}
+				    ,#{cmsUserName, jdbcType=VARCHAR}
+				    ,#{subscriberNo, jdbcType=VARCHAR}
+				    ,#{payMethod, jdbcType=VARCHAR}
+				    ,#{regTypePop, jdbcType=VARCHAR}
+				   	,#{fileType, jdbcType=VARCHAR}
+				   	,#{fileLen, jdbcType=VARCHAR}
+				   	,#{filePath, jdbcType=VARCHAR}
+				   	,#{fileEnc, jdbcType=CLOB}
+				   	,#{adminId, jdbcType=VARCHAR}
+					,#{oRetCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+
+	</select>
+	
+	<!--  대리점 회원증빙   -->
+	<select id="procAgencyPpsAgentCmsReq"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_AGENT_CMS_REQ(
+			    #{opCode, jdbcType=VARCHAR}
+			    , #{seq, jdbcType=VARCHAR}
+			    , #{contractNum, jdbcType=VARCHAR}
+			    , #{cmsChargeType, jdbcType=VARCHAR}
+			    , #{cmsBankCode, jdbcType=VARCHAR}
+			    , #{cmsAccount, jdbcType=VARCHAR}
+			    , #{cmsCharge, jdbcType=VARCHAR}
+			    , #{cmsTryRemains, jdbcType=VARCHAR}
+			    , #{cmsChargeDate, jdbcType=VARCHAR}
+			    , #{cmsChargeMonth, jdbcType=VARCHAR}
+			    , #{status, jdbcType=VARCHAR}
+			    , #{adminMemo, jdbcType=VARCHAR}
+			    , #{regTypePop, jdbcType=VARCHAR}
+			   	, #{fileType, jdbcType=VARCHAR}
+			   	, #{fileLen, jdbcType=VARCHAR}
+			   	, #{filePath, jdbcType=VARCHAR}
+			   	, #{fileEnc, jdbcType=CLOB}
+			    , #{agentId, jdbcType=VARCHAR}
+			    , #{adminId, jdbcType=VARCHAR} 
+			   , #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+			   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+			  )
+     	}
+
+	</select>
+	   
+</mapper>

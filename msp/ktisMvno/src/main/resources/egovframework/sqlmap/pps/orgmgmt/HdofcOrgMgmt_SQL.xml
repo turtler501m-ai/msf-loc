@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.orgmgmt.mapper.PpsHdofcOrgMgmtMapper">
+    
+     <!--예치금출금내역 목록조회 -->
+    <select id="getAgentDepositMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         	 SELECT	 /*+ INDEX_DESC(A PPS_DEPOSIT_DATE_IDX) */
+					  AGENT_ID,
+					  FN_GET_ORGNM(AGENT_ID) AGENT_NAME,
+					  DEPOSIT_TYPE,
+					   NVL((SELECT CD_NM FROM PPS_KT_COMMON_CD WHERE TABLE_NM='PPS_AGENT_DEPOSIT' AND COL='DEPOSIT_TYPE' AND CD= A.DEPOSIT_TYPE),'') DEPOSIT_TYPE_NAME,
+					  CONTRACT_NUM,
+					  TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD HH24:MI:SS') DEPOSIT_DATE,
+					  RECHARGE,
+					  MINUS_DEPOSIT,
+					  PLUS_DEPOSIT,
+					  REMAINS,
+					  ADMIN_ID,
+					  NVL(F_GET_ADMIN_NM(ADMIN_ID),'-') ADMIN_NM,
+					  REMARK
+			 FROM PPS_AGENT_DEPOSIT A 
+			 WHERE DEPOSIT_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+			 <if test="startDt == null or startDt == ''">
+			 	<if test="endDt == null or endDt == ''">
+			 	AND  DEPOSIT_DATE > ADD_MONTHS(SYSDATE,-12)
+			 	</if>
+			 </if>
+
+			<if test='searchNm != null and searchNm != ""'>
+				<choose>
+					<when test='searchType == "agent_id"'>
+						AND AGENT_ID = #{searchNm}
+					</when>
+					<when test='searchType == "contract_num"'>
+						AND CONTRACT_NUM = #{searchNm}
+					</when>
+				</choose>
+			</if>
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID = #{searchAgentId}
+			</if>
+			<if test="startDt != null and startDt != ''">
+				AND DEPOSIT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND DEPOSIT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="searchOrgDepositGubun != null and searchOrgDepositGubun != ''">
+				AND DEPOSIT_TYPE=	#{searchOrgDepositGubun}
+			</if> 	 	
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+     <!--예치금출금내역 목록조회엑셀출력 -->
+    <select id="getAgentDepositMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+              	 SELECT	 /*+ INDEX_DESC(A PPS_DEPOSIT_DATE_IDX) */
+					  NVL(AGENT_ID, '') ADMINID,
+					  NVL(FN_GET_ORGNM(AGENT_ID), '') AGENTNAME,
+					  NVL(DEPOSIT_TYPE, '') DEPOSITTYPE,
+					  NVL((SELECT CD_NM FROM PPS_KT_COMMON_CD WHERE TABLE_NM='PPS_AGENT_DEPOSIT' AND COL='DEPOSIT_TYPE' AND CD= A.DEPOSIT_TYPE),'-') DEPOSITTYPENAME,
+					  NVL(CONTRACT_NUM, '-') CONTRACTNUM,
+					  NVL(TO_CHAR(DEPOSIT_DATE, 'YYYY-MM-DD HH24:MI:SS'),'') DEPOSITDATE,
+					  NVL(RECHARGE, '0') RECHARGE,
+					  NVL(MINUS_DEPOSIT, '0') MINUSDEPOSIT,
+					  NVL(PLUS_DEPOSIT,'') PLUSDEPOSIT,
+					  NVL(REMAINS, '0') REMAINS,
+					  NVL(ADMIN_ID,'') ADMINID,
+					  NVL(F_GET_ADMIN_NM(ADMIN_ID),'') ADMINNM,
+					  NVL(REMARK,'') REMARK
+			 FROM PPS_AGENT_DEPOSIT A 
+			 WHERE DEPOSIT_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+			 <if test="startDt == null or startDt == ''">
+			 	<if test="endDt == null or endDt == ''">
+			 	AND  DEPOSIT_DATE > ADD_MONTHS(SYSDATE,-12)
+			 	</if>
+			 </if>
+
+			<if test='searchNm != null and searchNm != ""'>
+				<choose>
+					<when test='searchType == "agent_id"'>
+						AND AGENT_ID = #{searchNm}
+					</when>
+					<when test='searchType == "contract_num"'>
+						AND CONTRACT_NUM = #{searchNm}
+					</when>
+				</choose>
+			</if>
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID = #{searchAgentId}
+			</if>
+			<if test="startDt != null and startDt != ''">
+				AND DEPOSIT_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND DEPOSIT_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="searchOrgDepositGubun != null and searchOrgDepositGubun != ''">
+				DEPOSIT_TYPE=	#{searchOrgDepositGubun}
+			</if> 	
+         		
+	    
+    </select>
+    
+    <!--온라인주문내역 목록조회 -->
+    <select id="getOnlineOrderMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+    		 SELECT	 
+				ORDER_SEQ,
+				ORDER_ITEM,
+				F_GET_KT_CODE_NM('PPS_ONLINE_ORDER', 'ORDER_ITEM', ORDER_ITEM) ORDER_ITEM_NM,
+				MODEL_NM,
+				AMOUNT,
+				TO_CHAR(SHIP_DATE, 'YYYY-MM-DD') SHIP_DATE,
+				SHIP_ADDRESS,
+				OP_NM,
+				OP_PHONE,
+				AGENT_MEMO,
+				AGENT_ID,
+				FN_GET_ORGNM(AGENT_ID) AGENT_NAME,
+				TO_CHAR(REQ_DATE, 'YYYY-MM-DD') REQ_DATE,
+				TO_CHAR(RECORD_DATE, 'YYYY-MM-DD') RECORD_DATE,
+				STATUS,
+				DECODE(STATUS,'0','접수','1','처리중','처리완료') STATUS_NM,
+				TO_CHAR(OP_DATE, 'YYYY-MM-DD') OP_DATE,
+				ADMIN_ID,
+				BONSA_ADMIN_ID,
+				ADMIN_MEMO,
+				TO_CHAR(FINISH_DATE, 'YYYY-MM-DD HH:MI:SS') AS FINISH_DATE
+		 FROM PPS_ONLINE_ORDER A 
+		 WHERE RECORD_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+		  	<if test="searchNm != null and searchNm != ''">
+				<if test="searchType == 'agent_id'">
+					AND AGENT_ID LIKE #{searchNm}
+				</if>
+		  	</if>
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID = #{searchAgentId}
+			</if>
+			<if test="searchStatus  != null and searchStatus  != ''">
+				AND STATUS  = #{searchStatus}
+			</if>
+			
+    	 <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--온라인주문내역 목록조회 엑셀출력-->
+    <select id="getOnlineOrderMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+           SELECT	 
+				ORDER_SEQ ORDERSEQ,
+				ORDER_ITEM ORDERITEM,
+				F_GET_KT_CODE_NM('PPS_ONLINE_ORDER', 'ORDER_ITEM', ORDER_ITEM) ORDERITEMNM,
+				MODEL_NM MODELNM,
+				AMOUNT,
+				TO_CHAR(SHIP_DATE, 'YYYY-MM-DD') SHIPDATE,
+				SHIPADDRESS,
+				OP_NM OPNM,
+				OP_PHONE OPPHONE,
+				AGENT_MEMO AGENTMEMO,
+				AGENT_ID AGENTID,
+				FN_GET_ORGNM(AGENT_ID) AGENTNAME,
+				TO_CHAR(REQ_DATE, 'YYYY-MM-DD') REQDATE,
+				TO_CHAR(RECORD_DATE, 'YYYY-MM-DD') RECORDDATE,
+				STATUS,
+				DECODE(STATUS,'0','접수','1','처리중','처리완료') STATUSNM,
+				NVL(TO_CHAR(OP_DATE, 'YYYY-MM-DD'),'-') OPDATE,
+				NVL(ADMIN_ID,'-') ADMINID,
+				NVL(BONSA_ADMIN_ID,'-') BONSAADMINID ,
+				NVL(ADMIN_MEMO,'-') ADMINMEMO,
+				NVL(TO_CHAR(FINISH_DATE, 'YYYY-MM-DD HH:MI:SS'),'-') AS FINISHDATE
+		 FROM PPS_ONLINE_ORDER A 
+		 WHERE RECORD_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+			<if test="searchNm != null and searchNm != ''">
+				<if test="searchType == 'agent_id'">
+					AND AGENT_ID LIKE #{searchNm}
+				</if>
+			</if>
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID = #{searchAgentId}
+			</if>
+			<if test="searchStatus  != null and searchStatus  != ''">
+				AND STATUS  = #{searchStatus}
+			</if>
+	    
+    </select>
+    
+    <select id="getOnlineOrderInfo" parameterType="hashmap" resultType="com.ktis.msp.pps.orgmgmt.vo.PpsOnlineOrderVo"> 
+     		SELECT  	 
+					ORDER_SEQ orderSeq,       
+					ORDER_ITEM orderItem,       
+					MODEL_NM modelNm,       
+					AMOUNT amount,       
+					TO_CHAR(SHIP_DATE, 'YYYY-MM-DD') shipDate,       
+					SHIP_ADDRESS shipAddress,       
+					OP_NM opNm,       
+					OP_PHONE opPhone,       
+					AGENT_MEMO agentMemo,       
+					AGENT_ID agentId,       
+					--F_GET_AGENT_NM(AGENT_ID) AGENT_NAME,       
+					AGENT_ID agentName,       
+					TO_CHAR(REQ_DATE, 'YYYY-MM-DD') reqDate,       
+					TO_CHAR(RECORD_DATE, 'YYYY-MM-DD') recordDate,       
+					STATUS status,       
+					TO_CHAR(OP_DATE, 'YYYY-MM-DD') opDate,       
+					ADMIN_ID adminId,       
+					BONSA_ADMIN_ID bonsaAdminId,       
+					ADMIN_MEMO adminMemo,       
+					TO_CHAR(FINISH_DATE, 'YYYY-MM-DD') finishDate 
+		  FROM PPS_ONLINE_ORDER
+		  WHERE ORDER_SEQ = #{orderSeq}
+    </select>
+    
+    
+    <select id="getPpsOnlineOrderAdminProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+    	{CALL P_ONLINE_ORDER_ADMIN(
+						#{orderSeq, jdbcType=VARCHAR}
+						, #{status, jdbcType=VARCHAR}
+						, #{adminId, jdbcType=VARCHAR}
+						, #{adminMemo, jdbcType=VARCHAR}
+						, #{oRetCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+						, #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+						)
+		}
+    
+    </select>
+    <select id="getPpsOnlineOrderAgentProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+    	{CALL P_ONLINE_ORDER(
+						#{opCode, jdbcType=VARCHAR} 
+						, #{orderSeq, jdbcType=VARCHAR} 
+						, #{orderItem, jdbcType=VARCHAR} 
+						, #{modelNm, jdbcType=VARCHAR} 
+						, #{amount, jdbcType=VARCHAR} 
+						, #{shipDate, jdbcType=VARCHAR} 
+						, #{shipAddress, jdbcType=VARCHAR} 
+						, #{opNm, jdbcType=VARCHAR} 
+						, #{opPhone, jdbcType=VARCHAR}
+						, #{agentMemo, jdbcType=VARCHAR} 
+						, #{agentId, jdbcType=VARCHAR} 
+						, #{adminId, jdbcType=VARCHAR}
+						, #{oRetCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+						, #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+						)
+		}
+    
+    </select>
+    
+     <!--  개통대리점 목록조회  -->
+    <select id="getOpenAgentInfoList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">  
+
+    <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+    	SELECT A.AGENT_ID AGENT_ID,
+		       B.ORGN_NM AGENT_NM,
+		       B.TELNUM TELNUM,
+		       B.FAX FAX,
+		       B.RPRSEN_NM RPRSEN_NM,
+		       B.RESPN_PRSN_NUM RESPN_PRSN_NUM,  
+		       TO_CHAR( A.DEPOSIT , '999,999,999,999,999') DEPOSIT,
+		       A.DEPOSIT_RATE DEPOSIT_RATE,
+		       A.PPS35_DEPOSIT_RATE PPS35_DEPOSIT_RATE,
+		       A.DATA_RATE DATA_RATE,
+		       A.PIN_BUY_RATE PIN_BUY_RATE,
+		       A.RENTAL_FEE RENTAL_FEE,
+		       A.VIR_ACCOUNT_ID VIR_ACCOUNT_ID,
+		       NVL(F_GET_VAC_BANK_NAME(A.VIR_ACCOUNT_ID),'') VIR_BANK_NM,
+		       NVL(F_GET_VAC_BANK_CODE(A.VIR_ACCOUNT_ID),'') VIR_BANK_CD,
+		       A.ADMIN_ID ADMIN_ID,
+		       F_GET_ADMIN_NM(A.ADMIN_ID) ADMIN_NM,
+		       TO_CHAR(B.REG_DTTM,'YYYY-MM-DD') REG_DTTM
+		  FROM PPS_AGENT A,ORG_ORGN_INFO_MST B
+		  WHERE A.AGENT_ID = B.ORGN_ID
+		  AND B.ORGN_LVL_CD ='10'
+		  AND B.TYPE_CD='20'
+		  AND B.TYPE_DTL_CD1='SU'
+		  AND B.TYPE_DTL_CD2 ='SU1'
+		     <if test="searchAgentNm != null and searchAgentNm != ''">
+					AND A.AGENT_ID = #{searchAgentNm}
+			</if>
+			<if test="searchVacFlag!=null and searchVacFlag!=''">
+				<choose>
+					<when test='searchVacFlag=="Y"'>
+			    		AND A.VIR_ACCOUNT_ID IS NOT NULL
+					</when>	
+					<when test='searchVacFlag=="N"'>
+			   			AND A.VIR_ACCOUNT_ID IS NULL
+					</when>
+				</choose>
+			</if>
+			 <if test="searchStartDeposit != null and searchStartDeposit != ''">
+			        AND  A.DEPOSIT >= #{searchStartDeposit}
+			 </if>
+			 <if test="searchEndDeposit != null and searchEndDeposit != ''">
+			 		AND  A.DEPOSIT &lt;= #{searchEndDeposit}
+			 </if>
+	 
+    <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+
+    </select>
+    
+    
+    <!--  개통대리점 목록조회 엑셀출력  -->
+    <select id="getOpenAgentInfoListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">  
+    	SELECT NVL(A.AGENT_ID,'-') AGENTID,
+		       NVL(B.ORGN_NM,'-') AGENTNM,
+		       NVL(B.TELNUM,'-') TELNUM,
+		       NVL(B.FAX,'-') FAX,
+		       NVL(B.RPRSEN_NM,'-') RPRSENNM,
+		       NVL(B.RESPN_PRSN_NUM,'-') RESPNPRSNNUM,
+		       NVL(A.DEPOSIT,0) DEPOSIT,
+		       NVL(A.DEPOSIT_RATE,0) DEPOSITRATE,
+		       NVL(A.PPS35_DEPOSIT_RATE,0) PPS35DEPOSITRATE,
+		       NVL(A.DATA_RATE,0) DATARATE,
+		       NVL(A.PIN_BUY_RATE,0) PINBUYRATE,
+		       NVL(A.RENTAL_FEE,0) RENTALFEE,
+		       NVL(A.VIR_ACCOUNT_ID,'-') VIRACCOUNTID,
+		       NVL(F_GET_VAC_BANK_NAME(A.VIR_ACCOUNT_ID),'-') VIRBANKNM,
+		       NVL(A.ADMIN_ID,'-') ADMINID,
+		       NVL(F_GET_ADMIN_NM(A.ADMIN_ID),'-') ADMINNM,
+		       NVL(TO_CHAR(B.REG_DTTM,'YYYY-MM-DD'),'-') REGDTTM
+		  FROM PPS_AGENT A,ORG_ORGN_INFO_MST B
+		  WHERE A.AGENT_ID = B.ORGN_ID
+		  AND B.ORGN_LVL_CD ='10'
+		  AND B.TYPE_CD='20' 
+		  AND B.TYPE_DTL_CD1='SU'
+		  AND B.TYPE_DTL_CD2 ='SU1'
+		     <if test="searchAgentNm != null and searchAgentNm != ''">
+					AND A.AGENT_ID = #{searchAgentNm}
+			</if>
+			<if test="searchVacFlag!=null and searchVacFlag!=''">
+				<choose>
+					<when test='searchVacFlag=="Y"'>
+			    		AND A.VIR_ACCOUNT_ID IS NOT NULL
+					</when>	
+					<when test='searchVacFlag=="N"'>
+			   		AND A.VIR_ACCOUNT_ID IS NULL
+					</when>
+				</choose>
+			</if>
+			 <if test="searchStartDeposit != null and searchStartDeposit != ''">
+			        AND  A.DEPOSIT >= #{searchStartDeposit}
+			 </if>
+			 <if test="searchEndDeposit != null and searchEndDeposit != ''">
+			 		AND  A.DEPOSIT &lt;= #{searchEndDeposit}
+			 </if>
+    </select>
+        
+</mapper>

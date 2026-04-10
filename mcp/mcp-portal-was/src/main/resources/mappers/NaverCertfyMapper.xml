@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="NaverCertfyMapper">
+
+    <update id="updateMcpAuth" parameterType="com.ktmmobile.mcp.common.dto.NaverDto">
+
+		MERGE INTO MCP_AUTH_DATA
+		USING DUAL ON (ID = #{id})
+			WHEN MATCHED THEN
+				UPDATE SET
+			        	 NAME = #{name}
+			        	, TXID = #{txId}
+		             	, ACCESS_TOKEN = #{accessToken}
+			        	, PLATFORM = #{platform}
+			        	, SYS_RDATE = SYSDATE
+
+			WHEN NOT MATCHED THEN
+				INSERT (
+		             	  ID
+		             	, NAME
+		             	, TXID
+		             	, ACCESS_TOKEN
+		             	, PLATFORM
+		             	, SYS_RDATE
+		        )
+				VALUES
+				(
+					 	  #{id}
+					 	, #{name}
+		             	, #{txId}
+		             	, #{accessToken}
+		             	, #{platform}
+		             	, SYSDATE
+		      )
+	</update>
+
+	<select id="getMcpAuth"  parameterType="com.ktmmobile.mcp.common.dto.NaverDto"  resultType="com.ktmmobile.mcp.common.dto.NaverDto">
+        SELECT
+           ID
+           , NAME
+           , TXID
+           , ACCESS_TOKEN
+           , PLATFORM
+           , SYS_RDATE
+        FROM MCP_AUTH_DATA
+        WHERE 1=1
+        AND TXID = #{txId}
+    </select>
+
+
+</mapper>

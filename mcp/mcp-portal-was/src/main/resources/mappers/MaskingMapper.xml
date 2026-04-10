@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MaskingMapper">
+
+    <!-- 마스킹 해제 이력 등록 -->
+    <insert id="insertMaskingRelease" parameterType="com.ktmmobile.mcp.mypage.dto.MaskingDto">
+
+        <selectKey keyProperty="maskingReleaseSeq" resultType="int" order="BEFORE">
+            SELECT MCP_MASKING_RELEASE_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+
+    INSERT INTO MCP_MASKING_RELEASE
+    (
+        MASKING_RELEASE_SEQ       --마스킹해제 일련번호 MCP_MASKING_RELEASE_SEQ SEQUENCE
+         , USER_ID                --유저아이디
+         , AUTH_TYPE              --본인인증수단
+         , CI                     --CI
+         , UNMASKING_START_DT     --마스킹해제 시작시간
+         , CRET_DD                --신청일
+         , ACCESS_IP              --처리IP
+         , CRET_ID                --신청자아이디
+         , AMD_ID                 --수정자아이디
+         , CRET_DT                --신청일시
+         , AMD_DT                 --수정일시
+    ) VALUES (
+
+         #{maskingReleaseSeq}
+         , #{userId}
+         , #{authType}
+         , #{ci}
+         , SYSDATE
+         , TO_CHAR(SYSDATE, 'YYYYMMDD')
+         , #{accessIp}
+         , #{cretId}
+         , #{amdId}
+         , SYSDATE
+         , SYSDATE
+    )
+
+    </insert>
+
+
+    <!-- 마스킹 해제 상세 이력 등록 -->
+    <insert id="insertMaskingReleaseHist" parameterType="com.ktmmobile.mcp.mypage.dto.MaskingDto">
+
+    INSERT INTO MCP_MASKING_RELEASE_HIST
+    (
+        MASKING_RELEASE_SEQ       --마스킹해제 일련번호
+         , SEQ                    --일련번호
+         , USER_ID                --유저아이디
+         , UNMASKING_INFO         --마스킹해제정보
+         , CRET_DD                --신청일
+         , ACCESS_IP              --처리IP
+         , ACCESS_URL             --처리페이지URL
+         , CRET_ID                --신청자아이디
+         , AMD_ID                 --수정자아이디
+         , CRET_DT                --신청일시
+         , AMD_DT                 --수정일시
+    ) VALUES (
+
+         #{maskingReleaseSeq}
+         , NVL((SELECT MAX(SEQ) + 1 FROM MCP_MASKING_RELEASE_HIST WHERE MASKING_RELEASE_SEQ = #{maskingReleaseSeq}), 1)
+         , #{userId}
+         , #{unmaskingInfo}
+         , TO_CHAR(SYSDATE, 'YYYYMMDD')
+         , #{accessIp}
+         , #{accessUrl}
+         , #{cretId}
+         , #{amdId}
+         , SYSDATE
+         , SYSDATE
+    )
+
+    </insert>
+
+
+</mapper>

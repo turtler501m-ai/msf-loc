@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="5 seconds">
+	<appender name="console-log" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="rolling-log" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>/home/jboss/jb_log/msc-batch/server.log</file>
+		<encoder>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+		</encoder>
+		<rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<fileNamePattern>/home/jboss/jb_log/msc-batch/server.log.%d{yyyy-MM-dd}.%i</fileNamePattern>
+			<maxFileSize>200MB</maxFileSize>
+			<maxHistory>90</maxHistory> <!-- 한 파일의 최대 저장 기한 -->
+		</rollingPolicy >
+	</appender>
+
+	<logger name="com.ktmmobile.mcp" level="info" additivity="false">
+		<appender-ref ref="console-log" />
+		<appender-ref ref="rolling-log"/>
+	</logger>
+
+	<logger name="jdbc.resultsettable"> <!-- preapre sql,완성된 sql ,resultset 출력  -->
+		<level value="DEBUG" />
+		<appender-ref ref="console-log" />
+		<appender-ref ref="rolling-log"/>
+	</logger>
+
+	<logger name="jdbc.audit" additivity="false"> <!-- resultset 을 포함하지 않는 모든 jdbc log출력 -->
+		<level value="DEBUG" />
+		<appender-ref ref="console-log" />
+		<appender-ref ref="rolling-log"/>
+	</logger>
+
+	<logger name="jdbc.resultset" additivity="false" ><!-- resultset 을 포함한 모든 jdbc log 출력 -->
+		<level value="DEBUG" />
+		<appender-ref ref="console-log" />
+		<appender-ref ref="rolling-log"/>
+	</logger>
+
+	<logger name="jdbc.sqltiming" additivity="false"><!-- sql 문과 sql 실행시간 출력 -->
+		<level value="DEBUG" />
+		<appender-ref ref="console-log" />
+		<appender-ref ref="rolling-log"/>
+	</logger>
+
+	<springProfile name="local|dev">
+		<root level="DEBUG">
+			<appender-ref ref="console-log"/>
+			<appender-ref ref="rolling-log"/>
+		</root>
+	</springProfile>
+	<springProfile name="stg|prd">
+		<root level="DEBUG">
+			<appender-ref ref="rolling-log"/>
+		</root>
+	</springProfile>
+</configuration>

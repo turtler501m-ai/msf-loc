@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.banner.mapper.BannerMapper">
+	
+	<select id="selectContentBanner" parameterType="com.ktmmobile.mcp.banner.dto.BannerDto" resultType="com.ktmmobile.mcp.banner.dto.BannerDto">
+		<!-- 컨텐츠 이미지 배너 선택 -->
+		SELECT A.BANN_SEQ,
+               A.BANN_CTG,
+               A.BANN_TYPE,
+               A.BANN_NM,
+               A.BANN_DESC,
+               A.BANN_IMG,
+               A.IMG_DESC,
+               A.LINK_TARGET,
+               A.LINK_URL_ADR,
+               A.STAT_VAL,
+               A.PROD_NM,
+               A.PROD_ID,
+               A.SNTY_PROD_SEQ,
+               A.SBSCRB_TYPE_CD,
+               A.AGRM_TYPE_CD,
+               A.CHRG_PLAN_CD,
+               A.INDC_ODRG,
+               A.CRET_ID,
+               A.AMD_ID,
+               TO_CHAR (A.CRET_DT, 'YYYY.MM.DD') AS CRET_DT,
+               A.ATRIB_VAL_CD_1,
+               A.ATRIB_VAL_CD_2,
+               A.RATE_CD,
+               A.SALE_PLCY_CD,
+               A.NEW_YN,
+               A.MNP_YN,
+               A.HCN_YN,
+               A.AGRM_TRM,
+               A.BG_COLOR,
+               C.RATE_NM,
+                E.ATRIB_VAL_NM_1,
+                 E.ATRIB_VAL_NM_2,
+                E.SDOUT_YN,
+               A.AMD_DT,
+               A.AD_DESC
+          FROM NMCP_BANN_BAS A,
+               MSP_SALE_AGRM_MST@DL_MSP B,
+               MSP_RATE_MST@DL_MSP C,
+               MSP_SALE_RATE_MST@DL_MSP D,
+               (select DISTINCT ATRIB_VAL_NM_1,
+                                ATRIB_VAL_NM_2,
+                                SDOUT_YN,
+                                HNDSET_MODEL_ID,
+                                b.BANN_SEQ
+               from  NMCP_SNTY_PROD_BAS a
+                   , NMCP_BANN_BAS b
+               where a.HNDSET_MODEL_ID = b.SNTY_PROD_SEQ
+                 AND A.PROD_ID = B.PROD_ID
+               and b.SNTY_PROD_SEQ <![CDATA[<>]]> 0
+               and b.SNTY_PROD_SEQ is not null
+               ) E
+        WHERE
+            ROWNUM <![CDATA[<=]]> 5
+             AND A.BANN_CTG  = '07'
+            AND A.INDC_ODRG != '0'
+           AND a.BANN_SEQ = e.BANN_SEQ(+)
+           AND A.SALE_PLCY_CD = B.SALE_PLCY_CD(+)
+           AND A.AGRM_TRM = B.AGRM_TRM(+)
+           AND A.SALE_PLCY_CD = D.SALE_PLCY_CD(+)
+           AND A.RATE_CD = D.RATE_CD(+)
+           AND D.RATE_CD = C.RATE_CD(+)
+           <!--  AND A.SNTY_PROD_SEQ = E.HNDSET_MODEL_ID(+)
+             AND A.ATRIB_VAL_CD_1 = E.ATRIB_VAL_CD_1(+)
+            AND A.ATRIB_VAL_CD_2 = E.ATRIB_VAL_CD_2(+) -->
+            ORDER BY INDC_ODRG ASC
+	</select>
+	
+	<select id="selectBannerDtl" parameterType="com.ktmmobile.mcp.banner.dto.BannerDto" resultType="com.ktmmobile.mcp.banner.dto.BannerDto">
+		SELECT 
+               PAY_CL_CD,
+               DATA_TYPE,
+               A.BANN_SEQ,
+               A.BANN_CTG,
+               A.BANN_TYPE,
+               A.BANN_NM,
+               A.BANN_DESC,
+               A.BANN_IMG,
+               A.IMG_DESC,
+               A.LINK_TARGET,
+               A.LINK_URL_ADR,
+               A.STAT_VAL,
+               A.PROD_NM,
+               A.PROD_ID,
+               A.SNTY_PROD_SEQ,
+               A.SBSCRB_TYPE_CD,
+               A.AGRM_TYPE_CD,
+               A.CHRG_PLAN_CD,
+               A.INDC_ODRG,
+               A.CRET_ID,
+               A.AMD_ID,
+               TO_CHAR (A.CRET_DT, 'YYYY.MM.DD') AS CRET_DT,
+               A.ATRIB_VAL_CD_1,
+               A.ATRIB_VAL_CD_2,
+               A.RATE_CD,
+               A.SALE_PLCY_CD,
+               A.NEW_YN,
+               A.MNP_YN,
+               A.HCN_YN,
+               A.AGRM_TRM,
+               A.BG_COLOR,
+               C.RATE_NM,
+               E.ATRIB_VAL_NM_1,
+               E.ATRIB_VAL_NM_2,
+               E.SDOUT_YN,
+               A.AMD_DT,
+               A.AD_DESC,
+               A.EVENT_TYPE, --이벤트배너타입 이벤트:E,제휴:J,제휴카드:C
+               A.EVENT_START_DT,
+               A.EVENT_END_DT,
+               A.MORE_BANN_IMG, --더보기 배너이미지               
+               A.BANN_APD_DESC,
+			   A.MOBILE_BANN_IMG_NM,
+			   A.MOBILE_LINK_URL,
+			   TO_CHAR(TO_DATE(A.PSTNG_START_DATE, 'YYYYMMDDHH24MISS'), 'YYYY.MM.DD') AS PSTNG_START_DATE ,
+			   TO_CHAR(TO_DATE(A.PSTNG_END_DATE, 'YYYYMMDDHH24MISS'), 'YYYY.MM.DD') AS PSTNG_END_DATE,
+		       A.TEXT_COLOR1,
+               A.TEXT_COLOR2,
+               A.BANN_IMG_SEC,
+               A.MOBILE_BANN_IMG_NM_SEC,
+               A.BG_COLOR_SEC,
+               A.IMG_DESC_SEC,
+               TO_CHAR(TO_DATE(A.PSTNG_START_DATE_SEC, 'YYYYMMDDHH24MISS'), 'YYYY.MM.DD') AS PSTNG_START_DATE_SEC,
+               TO_CHAR(TO_DATE(A.PSTNG_END_DATE_SEC, 'YYYYMMDDHH24MISS'), 'YYYY.MM.DD') AS PSTNG_END_DATE_SEC
+          FROM NMCP_BANN_BAS A,
+               MSP_SALE_AGRM_MST@DL_MSP B,
+               MSP_RATE_MST@DL_MSP C,
+               MSP_SALE_RATE_MST@DL_MSP D,
+               (select DISTINCT ATRIB_VAL_NM_1,
+                                ATRIB_VAL_NM_2,
+                                SDOUT_YN,
+                                HNDSET_MODEL_ID,
+                                b.BANN_SEQ
+               from  NMCP_SNTY_PROD_BAS a
+                   , NMCP_BANN_BAS b
+               where a.HNDSET_MODEL_ID = b.SNTY_PROD_SEQ
+               AND A.PROD_ID = B.PROD_ID
+               and b.SNTY_PROD_SEQ <![CDATA[<>]]> 0
+               and b.SNTY_PROD_SEQ is not null
+               ) E
+         WHERE     A.BANN_SEQ = #{bannSeq}
+               and a.BANN_SEQ = e.BANN_SEQ(+)
+               AND A.SALE_PLCY_CD = B.SALE_PLCY_CD(+)
+               AND A.AGRM_TRM = B.AGRM_TRM(+)
+               AND A.SALE_PLCY_CD = D.SALE_PLCY_CD(+)
+               AND A.RATE_CD = D.RATE_CD(+)
+               AND D.RATE_CD = C.RATE_CD(+)
+            <!-- AND A.SNTY_PROD_SEQ = E.HNDSET_MODEL_ID(+) -->
+            <!-- AND A.ATRIB_VAL_CD_1 = E.ATRIB_VAL_CD_1(+)
+            AND A.ATRIB_VAL_CD_2 = E.ATRIB_VAL_CD_2(+) -->
+	</select>
+	
+	<select id="selectListBannerBySubCtg" parameterType="com.ktmmobile.mcp.banner.dto.BannerDto" resultType="com.ktmmobile.mcp.banner.dto.BannerDto">
+		SELECT
+            A.BANN_SEQ,
+            A.BANN_CTG,
+            A.BANN_TYPE,
+            A.BANN_NM,
+            A.BANN_DESC,
+            A.BANN_IMG,
+            A.IMG_DESC,
+            A.LINK_TARGET,
+            A.LINK_URL_ADR,
+            A.STAT_VAL,
+            A.PROD_NM,
+            A.PROD_ID,
+            A.SNTY_PROD_SEQ,
+            A.SBSCRB_TYPE_CD,
+            A.AGRM_TYPE_CD,
+            A.CHRG_PLAN_CD,
+            A.CRET_ID,
+            A.AMD_ID,
+            A.CRET_DT,
+            A.AMD_DT,
+            A.INDC_ODRG,
+            A.ATRIB_VAL_CD_1,
+            A.ATRIB_VAL_CD_2,
+            A.RATE_CD,
+            A.SALE_PLCY_CD,
+            A.NEW_YN,
+            A.MNP_YN,
+            A.HCN_YN,
+            A.AGRM_TRM,
+            A.BG_COLOR,
+            A.AD_DESC,
+            B.EXPNSN_STR_VAL3,
+            B.DTL_CD_NM,
+            (SELECT RA.PAY_CL_CD    -- 선불 후불구분 PO 후불 PP선불
+             FROM MSP_RATE_MST@DL_MSP RA,
+                MSP_SALE_RATE_MST@DL_MSP SA,
+               CMN_GRP_CD_MST@DL_MSP GR
+             WHERE APPL_END_DT = '99991231'
+               AND RA.PAY_CL_CD = GR.CD_VAL
+               AND GR.GRP_ID='CMN0032'	--선불후불 구분 코트값의 그룹코드
+               AND SA.SALE_PLCY_CD = A.SALE_PLCY_CD
+               AND RA.RATE_CD = SA.RATE_CD
+              AND RA.RATE_CD = A.RATE_CD) as PAY_CL_CD,
+              (CASE WHEN (SELECT COUNT(*) FROM NMCP_PROD_BAS WHERE PROD_ID = A.PROD_ID) > 0 THEN 'Y' ELSE 'N' END) AS PHONE_YN,
+            A.EVENT_TYPE, --이벤트배너타입 이벤트:E,제휴:J,제휴카드:C
+            A.EVENT_START_DT,
+            A.EVENT_END_DT,
+            A.MORE_BANN_IMG
+        FROM
+            NMCP_BANN_BAS A,
+            NMCP_CD_DTL B
+        WHERE
+            1=1
+            AND CAST(NVL(A.INDC_ODRG,0) AS NUMERIC) >  0
+        <if test="bannCtg != null and bannCtg != ''">
+            AND A.BANN_CTG = #{bannCtg}
+        </if>
+            AND B.CD_GROUP_ID = #{cdGroupId}
+            AND A.BANN_CTG = B.DTL_CD
+        <if test="bannType != null and bannType != ''">
+            AND A.BANN_TYPE = #{bannType}
+        </if>
+        AND A.STAT_VAL = 'Y'
+        <if test="expnsnStrVal1 != null and expnsnStrVal1 != ''">
+              AND B.EXPNSN_STR_VAL1 = #{expnsnStrVal1}
+              ORDER BY A.INDC_ODRG, B.EXPNSN_STR_VAL2 DESC
+          </if>
+           <if test="expnsnStrVal1 eq null or expnsnStrVal1 eq ''">
+              ORDER BY A.INDC_ODRG
+          </if>
+	</select>
+	
+</mapper>

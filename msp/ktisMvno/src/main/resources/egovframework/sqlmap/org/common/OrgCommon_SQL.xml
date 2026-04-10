@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.common.mapper.OrgCommonMapper">
+	
+	<!-- 	해당월의 시작일을 가지고 온다 -->
+	<select id="getFirstDay" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getFirstDay */
+				TO_CHAR(TO_DATE(TO_CHAR(SYSDATE, 'YYYYMM'),'YYYYMM'), 'YYYYMM') ||'01' AS FIRSTDAY
+		FROM
+			DUAL
+	</select>
+	
+	<!-- 	해당월의 마지막일을 가지고 온다 -->
+	<select id="getLastDay" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getLastDay */
+				TO_CHAR(LAST_DAY(TO_DATE(TO_CHAR(SYSDATE, 'YYYYMMDD'),'YYYYMMDD')), 'YYYYMMDD') AS LASTDAY
+		FROM
+			DUAL
+	</select>	
+
+	<!-- 	해당월을 가지고 온다 -->
+	<select id="getToMonth" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getToMonth */
+				TO_CHAR(TO_DATE(TO_CHAR(SYSDATE, 'YYYYMM'),'YYYYMM'), 'YYYYMM') AS TOMONTH
+		FROM
+			DUAL
+	</select>	
+	
+	<!-- 	해당일을 가지고 온다 -->
+	<select id="getToDay" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getToDay */
+				TO_CHAR(TO_DATE(TO_CHAR(SYSDATE, 'YYYYMMDD'),'YYYYMMDD'), 'YYYYMMDD') AS TOMONTH
+		FROM
+			DUAL
+	</select>
+	
+	<!-- 	해당 시간 가지고 온다 -->
+	<select id="getToTime" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getToTime */
+				TO_CHAR(TO_DATE(TO_CHAR(SYSDATE, 'HH24'),'HH24'), 'HH24') AS TOMONTH
+		FROM
+			DUAL
+	</select>
+		
+	<!-- 	전월을 가지고 온다 -->
+	<select id="getLastMonth" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getLastMonth */
+				TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -1) + 1) - TO_CHAR(SYSDATE,'DD'), 'YYYYMM') AS LASTMONTH
+		FROM
+			DUAL
+	</select>
+
+	<!-- 	전월 01일을 가지고 온다 -->
+	<select id="getLastMonthDay" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getLastMonth */
+				TO_CHAR(TRUNC(ADD_MONTHS(SYSDATE, -1) + 1) - TO_CHAR(SYSDATE,'DD'), 'YYYYMM') || '01' AS LASTMONTH
+		FROM
+			DUAL
+	</select>
+	
+		<!-- 	전월 마지막일을 가지고 온다 -->
+	<select id="getLastMonthMaxDay" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getLastMonthMaxDay */
+				TO_CHAR(TRUNC(last_day(ADD_MONTHS(SYSDATE , -1))) + 0.99999421, 'YYYYMMDD')
+		FROM
+			DUAL
+	</select>
+	
+	<!-- 	해당일에 +된 일자를 추가 -->
+	<select id="getWantDay" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getWantDay */
+				TO_CHAR(TO_DATE(TO_CHAR(SYSDATE + #{addition}, 'YYYYMMDD'),'YYYYMMDD'), 'YYYYMMDD') AS TOMONTH
+		FROM
+			DUAL
+	</select>	
+
+	<!-- 	해당일을 가지고 온다 -->
+	<select id="getToDayTime" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getToDayTime */
+				TO_CHAR(TO_DATE(TO_CHAR(SYSDATE, 'YYYYMMDDHH24'),'YYYYMMDDHH24'), 'YYYYMMDDHH24') || '0000' AS TOMONTH
+		FROM
+			DUAL
+	</select>
+
+	<!-- 	해당일에 +된 일자를 추가 -->
+	<select id="getWantDayTime" parameterType="int" resultType="String">
+		SELECT /* OrgCommonMapper.getWantDayTime */
+				TO_CHAR(TO_DATE(TO_CHAR(SYSDATE + #{addition}, 'YYYYMMDDHH24'),'YYYYMMDDHH24'), 'YYYYMMDDHH24') || '5959' AS TOMONTH
+		FROM
+			DUAL
+	</select>
+
+	<!--특정월 마지막일을 가지고 온다-->
+	<select id="getCertainMonthMaxDay" parameterType="String" resultType="String">
+		SELECT /* OrgCommonMapper.getCertainMonthMaxDay */
+			TO_CHAR(LAST_DAY(TO_DATE(#{wantDate},'YYYYMMDD')), 'YYYYMMDD') AS LASTDAY
+		FROM DUAL
+	</select>
+
+	<insert id="insertFile" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		INSERT /* OrgCommonMapper.insertFile */
+		  INTO ORG_FILE_MGMT_MST
+		       (
+                     REGST_ID    /* 등록자ID */
+                   , REG_DTTM    /* 등록일시 */
+                   , RVISN_ID    /* 수정자ID */
+                   , RVISN_DTTM    /* 수정일시 */
+                   , ATT_DTTM    /* 첨부일시 */
+                   , FILE_NM    /* 파일명 */
+                   , ATT_DSC    /* 첨부설명 */
+                   , ATT_ROUT    /* 첨부경로 */
+                   , ATT_SCTN    /* 업무구분 */
+                   , ORGN_ID    /* SEQ */
+                   , FILE_ID    /* 파일ID */       
+		       )
+		VALUES
+			   (
+                     #{regstId, jdbcType=VARCHAR} /* 등록자ID */
+                   , sysdate /* 등록일시 */
+                   , #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+                   , SYSDATE /* 수정일시 */
+                   , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') /* 첨부일시 */
+                   , #{fileNm, jdbcType=VARCHAR} /* 파일명 */
+                   , #{attDsc, jdbcType=VARCHAR} /* 첨부설명 */
+                   , #{attRout, jdbcType=VARCHAR} /* 첨부경로 */
+                   , #{attSctn, jdbcType=VARCHAR} /* 업무구분 */
+                   , #{fileSeq, jdbcType=VARCHAR} /* SEQ */
+                   , #{fileId, jdbcType=VARCHAR} /* 파일ID */	
+			   )	
+	</insert>
+	
+	<update id="updateFile" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload1_s_0}	
+	</update> 
+	
+	<update id="updateFile1" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload1_s_1}	
+	</update> 
+		
+	<update id="updateFile2" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload1_s_2}	
+	</update>
+	
+	<update id="updateFile3" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload2_s_0}	
+	</update> 
+	
+	<update id="updateFile4" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload2_s_1}	
+	</update> 
+		
+	<update id="updateFile5" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload2_s_2}	
+	</update>
+
+	<update id="updateFile6" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload3_s_0}	
+	</update>
+	
+	<!-- 녹취 파일 정보를 변경한다. -->
+	<update id="updateFile7" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile7 */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		       ,CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload4_s_0}	
+	</update>
+	
+	<!-- 녹취 파일 정보를 RequestKey 변경 -->
+	<update id="updateFile8" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile8 */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{fileId}	
+	</update>
+		
+	<select id="getFile1" parameterType="com.ktis.msp.org.common.vo.FileInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* OrgCommonMapper.getFile */
+	             ATT_ROUT    /* 파일경로 */
+	           , FILE_NM    /* 파일명 */
+	           , FILE_ID    /* 파일ID */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	     AND ATT_SCTN = 'ORG'
+	   ORDER BY REG_DTTM
+	</select>
+	
+	<select id="getFile2" parameterType="com.ktis.msp.org.common.vo.FileInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* OrgCommonMapper.getFile2 */
+	             ATT_ROUT    /* 파일경로 */
+	           , FILE_NM    /* 파일명 */
+	           , FILE_ID    /* 파일ID */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	     AND ATT_SCTN = 'MRT'
+	   ORDER BY REG_DTTM
+	</select>
+	
+	<select id="getFile3" parameterType="com.ktis.msp.org.common.vo.FileInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* OrgCommonMapper.getFile3 */
+	             ATT_ROUT    /* 파일경로 */
+	           , FILE_NM    /* 파일명 */
+	           , FILE_ID    /* 파일ID */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	     AND ATT_SCTN = 'CRD'
+	   ORDER BY REG_DTTM
+	</select>
+			
+	<select id="getFileNm" parameterType="String" resultType="String">
+		SELECT /* OrgCommonMapper.getFileNm */
+	             ATT_ROUT || '/' || FILE_NM AS   FILE_NM /* 파일명 */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE FILE_ID = #{fileId, jdbcType=VARCHAR}
+	   ORDER BY REG_DTTM
+	</select>
+	
+	<select id="getFileNm2" parameterType="String" resultType="String">
+		SELECT /* OrgCommonMapper.getFileNm2 */
+	             ATT_ROUT || '/' || FILE_NM AS   FILE_NM /* 파일명 */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	</select>
+		
+	<delete id="deleteFile" parameterType="String">
+		DELETE /* OrgCommonMapper.deleteFile */
+		  FROM ORG_FILE_MGMT_MST
+		 WHERE FILE_ID = #{fileId, jdbcType=VARCHAR}	 
+	</delete>	
+	
+	<select id="getFileCnt" parameterType="com.ktis.msp.org.common.vo.FileInfoVO" resultType="Int">
+        SELECT /* OrgCommonMapper.getFileCnt */
+                 COUNT(*)
+        FROM ORG_FILE_MGMT_MST
+       WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+       AND ATT_SCTN = #{attSctn}
+    </select>
+    
+	<!-- 녹취파일명을 찾아온다. -->
+	<select id="getFile4" parameterType="com.ktis.msp.org.common.vo.FileInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* OrgCommonMapper.getFile4 */
+	             ATT_ROUT    /* 파일경로 */
+	           , FILE_NM    /* 파일명 */
+	           , FILE_ID    /* 파일ID */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	     AND CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+	     AND ATT_SCTN = 'REC'
+	   ORDER BY REG_DTTM
+	</select> 
+	
+
+		
+	<!-- 녹취파일 건수를 체크한다. -->
+	<select id="getFile5" parameterType="com.ktis.msp.org.common.vo.FileInfoVO" resultType="Int">
+		SELECT /* OrgCommonMapper.getFile5 */
+	           COUNT(*)
+		FROM ORG_FILE_MGMT_MST
+	   WHERE FILE_ID = #{fileId, jdbcType=VARCHAR}
+	</select>	  
+	
+	<!-- 녹취파일 건수를 체크한다. -->
+	<select id="getFile6" parameterType="com.ktis.msp.org.common.vo.FileInfoVO" resultType="Int">
+		SELECT /* OrgCommonMapper.getFile6 */
+	           COUNT(*)
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	     AND ATT_SCTN = 'REC'
+	</select>	 
+
+	<!-- 녹취파일명을 찾아온다. -->
+	<select id="getFile7" parameterType="com.ktis.msp.org.common.vo.FileInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* OrgCommonMapper.getFile7 */
+	             ATT_ROUT    /* 파일경로 */
+	           , FILE_NM    /* 파일명 */
+	           , FILE_ID    /* 파일ID */
+	           , ATT_DSC    /* SEQ */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	     AND ATT_SCTN = 'REC'
+	   ORDER BY REG_DTTM
+	</select> 
+	
+	<select id="getFileNm8" parameterType="String" resultType="String">
+		SELECT /* OrgCommonMapper.getFileNm8 */
+	             ATT_ROUT || ATT_DSC AS   FILE_NM /* 파일명 */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE FILE_ID = #{fileId, jdbcType=VARCHAR}
+	</select>
+		
+	<!-- 녹취파일 시퀸스 조회하기 -->
+	<select id="getRecSeq" parameterType="String" resultType="String">
+  		SELECT /* OrgCommonMapper.getRecSeq */
+		       TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') || TRIM(TO_CHAR(SQ_MSP_REQUEST_REC_01.NEXTVAL, '00000')) AS RECSEQ
+		  FROM DUAL
+	</select>
+
+	<select id="getRequestKey" parameterType="com.ktis.msp.org.common.vo.FileInfoVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* OrgCommonMapper.getRequestKey */
+	             ATT_ROUT    /* 파일경로 */
+	           , FILE_NM    /* 파일명 */
+	           , FILE_ID    /* 파일ID */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	     AND ATT_SCTN = 'REC'
+	   ORDER BY REG_DTTM
+	</select>	
+	
+	<update id="updateFile23" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile23 */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload1_s_3}	
+	</update>
+	
+	<update id="updateFile24" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile24 */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload1_s_4}	
+	</update>
+
+	<select id="getRequestKeyCnt" parameterType="String" resultType="int">
+		SELECT /* OrgCommonMapper.getRequestKeyCnt */
+	             COUNT(*)
+		FROM MCP_REQUEST@DL_MCP A, ORG_FILE_MGMT_MST B
+	   WHERE A.REQUEST_KEY = B.ORGN_ID
+	     AND A.REQUEST_KEY = #{orgnId, jdbcType=VARCHAR}
+	     AND A.REC_YN = 'Y'
+	</select>	
+	
+	<update id="getRequestKeyUpdate" parameterType="String">
+		UPDATE /* OrgCommonMapper.getRequestKeyUpdate */
+			   MCP_REQUEST@DL_MCP
+		   SET REC_YN = 'N'
+		 WHERE REQUEST_KEY = #{orgnId, jdbcType=VARCHAR}
+	</update>
+	
+</mapper>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.powertmntmgmt.mapper.PowerTmntMgmtMapper">
+
+	<select id="selectPowerTmntMgmtList_20160516" parameterType="com.ktis.msp.org.powertmntmgmt.vo.PowerTmntMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* PowerTmntMgmtMapper.selectPowerTmntMgmtList_20160516 */
+	             SLS_CMPN_CD    /* 판매회사코드  */
+	           , SVC_CNTR_NO    /* 서비스계약번호 */
+	           , BILL_ACNT_NO    /* 청구계정번호 */
+	           , CUST_NO    /* 고객번호 */
+	           , TLPH_NO    /* 전화번호  */
+	           , CUST_NM    /* 고객명 */
+	           , TO_CHAR(TO_DATE(OPEN_DT, 'YYYY-MM-DD'), 'YYYY-MM-DD') AS OPEN_DT   /* 개통일시 */
+	           , TO_CHAR(TO_DATE(SVC_CNTR_STOP_DT, 'YYYY-MM-DD'), 'YYYY-MM-DD') AS SVC_CNTR_STOP_DT   /* 이용정지일시 */
+	           , BANK_NM    /* 은행코드명 */
+	           , BNKACN_NO    /* 가상계좌번호  */
+	           , PRDC_NM    /* 상품명 */
+	           , ADDRESS    /* 주소  */
+	           , ZIP_NO    /* 우편번호 */
+	           , EMP_NM    /* 담당자 이름 */
+	           , TEL_NO_1    /* 담당자 연락처 */
+	           , TO_CHAR(TO_DATE(INPUT_DATE, 'YYYY-MM-DD'), 'YYYY-MM-DD') AS INPUT_DATE    /* 데이터 추출일자  */
+	           , UNPD_AMNT    /* 미납금액 */
+		FROM CLS_AHRT_TMNT_TRGT_DATA
+	   WHERE 1=1
+        <if test="slsCmpnCd != null and slsCmpnCd != ''">		
+		 AND SLS_CMPN_CD LIKE '%'||#{slsCmpnCd}||'%'
+        </if>	
+        <if test="searchStartDt != null and searchStartDt != '' and searchEndDt != null and searchEndDt != ''">              
+         AND TO_DATE(INPUT_DATE, 'YYYYMMDD') BETWEEN TO_DATE(#{searchStartDt, jdbcType=VARCHAR},'YYYYMMDD' ) AND TO_DATE(#{searchEndDt, jdbcType=VARCHAR},'YYYYMMDD' )
+        </if>
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="selectPowerTmntMgmtListEx_20160516" parameterType="com.ktis.msp.org.powertmntmgmt.vo.PowerTmntMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* PowerTmntMgmtMapper.selectPowerTmntMgmtListEx */
+	             NVL(SLS_CMPN_CD, ' ') AS SLS_CMPN_CD    /* 판매회사코드  */
+	           , NVL(SVC_CNTR_NO, ' ') AS SVC_CNTR_NO    /* 서비스계약번호 */
+	           , NVL(BILL_ACNT_NO, ' ') AS BILL_ACNT_NO    /* 청구계정번호 */
+	           , NVL(CUST_NO, ' ') AS CUST_NO    /* 고객번호 */
+	           , NVL(TLPH_NO, ' ') AS TLPH_NO    /* 전화번호  */
+	           , NVL(CUST_NM, ' ') AS CUST_NM   /* 고객명 */
+	           , NVL(TO_CHAR(TO_DATE(OPEN_DT, 'YYYY-MM-DD'), 'YYYY-MM-DD'), ' ')  AS OPEN_DT   /* 개통일시 */
+	           , NVL(TO_CHAR(TO_DATE(SVC_CNTR_STOP_DT, 'YYYY-MM-DD'), 'YYYY-MM-DD'), ' ')  AS SVC_CNTR_STOP_DT   /* 이용정지일시 */
+	           , NVL(BANK_NM, ' ') AS  BANK_NM   /* 은행코드명 */
+	           , NVL(BNKACN_NO, ' ') AS BNKACN_NO    /* 가상계좌번호  */
+	           , NVL(PRDC_NM, ' ') AS PRDC_NM    /* 상품명 */
+	           , NVL(ADDRESS, ' ') AS ADDRESS    /* 주소  */
+	           , NVL(ZIP_NO, ' ') AS  ZIP_NO   /* 우편번호 */
+	           , NVL(EMP_NM, ' ') AS  EMP_NM   /* 담당자 이름 */
+	           , NVL(TEL_NO_1, ' ') AS TEL_NO_1    /* 담당자 연락처 */
+	           , NVL(TO_CHAR(TO_DATE(INPUT_DATE, 'YYYY-MM-DD'), 'YYYY-MM-DD'), ' ')  AS INPUT_DATE    /* 데이터 추출일자  */
+	           , NVL(UNPD_AMNT, 0) AS UNPD_AMNT    /* 미납금액 */
+		FROM CLS_AHRT_TMNT_TRGT_DATA
+	   WHERE 1=1
+        <if test="slsCmpnCd != null and slsCmpnCd != ''">		
+		 AND SLS_CMPN_CD LIKE '%'||#{slsCmpnCd}||'%'
+        </if>	
+        <if test="searchStartDt != null and searchStartDt != '' and searchEndDt != null and searchEndDt != ''">              
+         AND TO_DATE(INPUT_DATE, 'YYYYMMDD') BETWEEN TO_DATE(#{searchStartDt, jdbcType=VARCHAR},'YYYYMMDD' ) AND TO_DATE(#{searchEndDt, jdbcType=VARCHAR},'YYYYMMDD' )
+        </if>
+	</select>
+	
+	<sql id="getPowerTmntMgmtList">
+		/* PowerTmntMgmtMapper.selectPowerTmntMgmtList */
+		SELECT  A.SLS_CMPN_CD           /* 판매회사코드  */
+		        , A.SVC_CNTR_NO         /* 서비스계약번호 */
+		        , A.BILL_ACNT_NO        /* 청구계정번호 */
+		        , A.CUST_NO             /* 고객번호 */
+		        , A.TLPH_NO             /* 전화번호  */
+		        , A.CUST_NM             /* 고객명 */
+		        , A.OPEN_DT             /* 개통일시 */
+		        , A.SVC_CNTR_STOP_DT    /* 이용정지일시 */
+		        , A.BANK_NM             /* 은행코드명 */
+		        , CRYPTO_AES256.DEC_AES(A.BNKACN_NO) AS BNKACN_NO           /* 가상계좌번호  */
+		        , A.PRDC_NM             /* 상품명 */
+		        , A.ADDRESS             /* 주소  */
+		        , A.ZIP_NO              /* 우편번호 */
+		        , A.EMP_NM              /* 담당자 이름 */
+		        , A.TEL_NO_1            /* 담당자 연락처 */
+		        , A.INPUT_DATE          /* 데이터 추출일자  */
+		        , A.UNPD_AMNT           /* 미납금액 */
+		        , NVL(B.CONTRACT_NUM, A.SVC_CNTR_NO) AS CONTRACT_NUM
+		        , B.OPEN_AGNT_CD
+		        , FN_GET_ORGNM(B.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+		        , FN_GET_CODENM('CMN0032', B.PPPO) AS PPPO
+		        , FN_GET_CODENM('MSP0003', B.SUB_STATUS) AS SUB_STATUS_NM
+                , C.REQ_BUY_TYPE_NM AS REQ_BUY_TYPE_NM	/* 구매유형 */
+                , FN_GET_ORGNM(B.OPEN_AGNT_CD) ORG_NM	/* 대리점 */
+                , CASE
+                    WHEN MSD.REQ_USIM_SN IS NOT NULL THEN '직영온라인'
+                    ELSE FN_GET_ORGNM(PUM.ORGN_ID)
+                  END AS FST_USIM_ORG_NM     			/* 유심접점 */
+		FROM    CLS_AHRT_TMNT_TRGT_DATA A
+		        , MSP_JUO_SUB_INFO B
+                , MSP_REQUEST_DTL C
+                , MSP_PARTNER_USIM_MST PUM
+                , NMCP_USIM_BUY_TXN@DL_MCP MSD
+		WHERE   1=1
+		AND     A.SVC_CNTR_NO = B.SVC_CNTR_NO(+)
+        AND     B.CONTRACT_NUM = C.CONTRACT_NUM(+)
+        AND     C.FST_USIM_NO = PUM.USIM_NO(+)
+        AND     B.ICC_ID = MSD.REQ_USIM_SN(+)
+		AND     A.INPUT_DATE BETWEEN #{strtYm} || '01' AND TO_CHAR(LAST_DAY(TO_DATE(#{endYm}, 'YYYYMM')), 'YYYYMMDD')
+		<if test="searchGb != '' and searchVal != ''">
+			<choose>
+				<when test="searchGb == '10'">
+					AND (B.CONTRACT_NUM = #{searchVal}
+     					OR B.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+				</when>
+				<when test="searchGb == '20'">
+					AND A.CUST_NM LIKE #{searchVal} || '%'
+				</when>
+				<when test="searchGb == '30'">
+					AND A.TLPH_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+	</sql>
+	
+	<select id="selectPowerTmntMgmtList" parameterType="com.ktis.msp.org.powertmntmgmt.vo.PowerTmntMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getPowerTmntMgmtList" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="selectPowerTmntMgmtListEx" parameterType="com.ktis.msp.org.powertmntmgmt.vo.PowerTmntMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="getPowerTmntMgmtList" />
+	</select>
+	
+</mapper>

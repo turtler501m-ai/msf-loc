@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="OrderMapper">
+
+    <select id="selectOrderaImg" parameterType="com.ktmmobile.mcp.order.dto.OrderDto" resultType="String">
+        SELECT IMG_PATH
+        FROM NMCP_USIM_BAS
+        WHERE DATA_TYPE=#{prdtSctnCd}
+        AND ROWNUM = 1
+    </select>
+
+    <select id="selectOrderaImgMM" parameterType="com.ktmmobile.mcp.order.dto.OrderDto" resultType="String">
+        SELECT IMG_PATH
+        FROM NMCP_PROD_IMG_DTL
+        WHERE PROD_ID = #{prodId}
+        AND SNTY_COLOR_CD = #{sntyColorCd}
+        AND  ROWNUM=1
+        ORDER BY IMG_TYPE_CD ASC
+    </select>
+
+    <select id="selectMcpRequestSelfDlvry"  parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto"  resultType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto">
+        SELECT
+            SELF_DLVRY_IDX
+         , USIM_PROD_ID
+         , USIM_PROD_DTL_ID
+         , CSTMR_NAME
+         , CSTMR_NATIVE_RRN
+         , ONLINE_AUTH_TYPE
+         , ONLINE_AUTH_INFO
+         , ONLINE_AUTH_DI
+         , DLVRY_NAME
+         , DLVRY_TEL_FN
+         , DLVRY_TEL_MN
+         , DLVRY_TEL_RN
+         , DLVRY_POST
+         , DLVRY_ADDR
+         , DLVRY_ADDR_DTL
+         , DLVRY_MEMO
+         , SELF_MEMO
+         , REQ_USIM_SN
+         , DLVRY_STATE_CODE
+         , SELF_STATE_CODE
+         , DLVRY_NO
+         , TB_CD
+         , CONTRACT_NUM
+         , CRET_ID
+         , RVISN_ID
+         , RVISN_DTTM
+         , SYS_RDATE
+         , REQ_BUY_QNTY
+         , USIM_UCOST
+         , USIM_PRICE
+         , (SELECT CD_DTL.DTL_CD_DESC FROM NMCP_CD_DTL CD_DTL WHERE CD_DTL.CD_GROUP_ID = 'PERCEL' AND CD_DTL.USE_YN = 'Y' AND CD_DTL.DTL_CD = TB_CD) AS PERCEL_URL
+         , '01' AS DLVRY_KIND
+      FROM MCP_REQUEST_SELF_DLVRY
+      WHERE 1=1
+          <if test="selfDlvryIdx != null and selfDlvryIdx > 0 ">
+              AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+          </if>
+          <if test="onlineAuthDi !=null and onlineAuthDi != ''" >
+              AND ONLINE_AUTH_DI = #{onlineAuthDi}
+          </if>
+          <if test="cretId !=null and cretId != ''" >
+              AND CRET_ID = #{cretId}
+          </if>
+          <if test=" !(cretId !=null and cretId != '') " >
+              AND CSTMR_NAME = #{cstmrName} AND DLVRY_TEL_FN || DLVRY_TEL_MN || DLVRY_TEL_RN = #{dlvryTelFn}||#{dlvryTelMn}||#{dlvryTelRn}
+          </if>
+          <if test="sysRdateS !=null and sysRdateS != '' and sysRdateE !=null and sysRdateE != ''" >
+              AND SYS_RDATE BETWEEN  TO_DATE(#{sysRdateS}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{sysRdateE}||'235959', 'YYYYMMDDHH24MISS')
+          </if>
+      UNION ALL
+      SELECT
+        SELF_DLVRY_IDX
+         , USIM_PROD_ID
+         , USIM_PROD_DTL_ID
+         , CSTMR_NAME
+         , CSTMR_NATIVE_RRN
+         , ONLINE_AUTH_TYPE
+         , ONLINE_AUTH_INFO
+         , ONLINE_AUTH_DI
+         , DLVRY_NAME
+         , DLVRY_TEL_FN
+         , DLVRY_TEL_MN
+         , DLVRY_TEL_RN
+         , DLVRY_POST
+         , DLVRY_ADDR
+         , DLVRY_ADDR_DTL
+         , DLVRY_MEMO
+         , SELF_MEMO
+         , REQ_USIM_SN
+         , DLVRY_STATE_CODE
+         , SELF_STATE_CODE
+         , DLVRY_NO
+         , TB_CD
+         , CONTRACT_NUM
+         , CRET_ID
+         , RVISN_ID
+         , RVISN_DTTM
+         , SYS_RDATE
+         , REQ_BUY_QNTY
+         , USIM_UCOST
+         , USIM_AMT AS USIM_PRICE
+         , (SELECT CD_DTL.DTL_CD_DESC FROM NMCP_CD_DTL CD_DTL WHERE CD_DTL.CD_GROUP_ID = 'PERCEL' AND CD_DTL.USE_YN = 'Y' AND CD_DTL.DTL_CD = TB_CD) AS PERCEL_URL
+         , '02' AS DLVRY_KIND
+      FROM MCP_REQUEST_NOW_DLVRY
+      WHERE 1=1
+            <if test="selfDlvryIdx != null and selfDlvryIdx > 0 ">
+              AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+          </if>
+          <if test="onlineAuthDi !=null and onlineAuthDi != ''" >
+              AND ONLINE_AUTH_DI = #{onlineAuthDi}
+          </if>
+          <if test="cretId !=null and cretId != ''" >
+              AND CRET_ID = #{cretId}
+          </if>
+          <if test=" !(cretId !=null and cretId != '') " >
+              AND CSTMR_NAME = #{cstmrName} AND DLVRY_TEL_FN || DLVRY_TEL_MN || DLVRY_TEL_RN = #{dlvryTelFn}||#{dlvryTelMn}||#{dlvryTelRn}
+          </if>
+          <if test="sysRdateS !=null and sysRdateS != '' and sysRdateE !=null and sysRdateE != ''" >
+              AND SYS_RDATE BETWEEN  TO_DATE(#{sysRdateS}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{sysRdateE}||'235959', 'YYYYMMDDHH24MISS')
+          </if>
+      ORDER BY SELF_DLVRY_IDX DESC
+    </select>
+
+    <select id="selectMcpRequestSelfDlvryCount"  parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto"  resultType="Integer">
+      SELECT COUNT(*) FROM
+      (
+      SELECT
+        SELF_DLVRY_IDX
+      FROM MCP_REQUEST_SELF_DLVRY
+      WHERE 1=1
+          <if test="selfDlvryIdx != null and selfDlvryIdx > 0 ">
+              AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+          </if>
+          <if test="onlineAuthDi !=null and onlineAuthDi != ''" >
+              AND ONLINE_AUTH_DI = #{onlineAuthDi}
+          </if>
+          <if test="cretId !=null and cretId != ''" >
+              AND CRET_ID = #{cretId}
+          </if>
+          <if test=" !(cretId !=null and cretId != '') " >
+              AND CSTMR_NAME = #{cstmrName} AND DLVRY_TEL_FN || DLVRY_TEL_MN || DLVRY_TEL_RN = #{dlvryTelFn}||#{dlvryTelMn}||#{dlvryTelRn}
+          </if>
+          <if test="sysRdateS !=null and sysRdateS != '' and sysRdateE !=null and sysRdateE != ''" >
+              AND SYS_RDATE BETWEEN  TO_DATE(#{sysRdateS}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{sysRdateE}||'235959', 'YYYYMMDDHH24MISS')
+          </if>
+       UNION ALL
+       SELECT
+            SELF_DLVRY_IDX
+       FROM MCP_REQUEST_NOW_DLVRY
+       WHERE 1=1
+            <if test="selfDlvryIdx != null and selfDlvryIdx > 0 ">
+              AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+          </if>
+          <if test="onlineAuthDi !=null and onlineAuthDi != ''" >
+              AND ONLINE_AUTH_DI = #{onlineAuthDi}
+          </if>
+          <if test="cretId !=null and cretId != ''" >
+              AND CRET_ID = #{cretId}
+          </if>
+          <if test=" !(cretId !=null and cretId != '') " >
+              AND CSTMR_NAME = #{cstmrName} AND DLVRY_TEL_FN || DLVRY_TEL_MN || DLVRY_TEL_RN = #{dlvryTelFn}||#{dlvryTelMn}||#{dlvryTelRn}
+          </if>
+          <if test="sysRdateS !=null and sysRdateS != '' and sysRdateE !=null and sysRdateE != ''" >
+              AND SYS_RDATE BETWEEN  TO_DATE(#{sysRdateS}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{sysRdateE}||'235959', 'YYYYMMDDHH24MISS')
+          </if>
+       ) UNION_GROUP
+    </select>
+
+    <select id="selectMcpRequestSelfDlvryStateCount"  parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto"  resultType="com.ktmmobile.mcp.order.dto.OrderDto">
+        SELECT
+        DLVRY_STATE_CODE AS STATE , COUNT(DLVRY_STATE_CODE) AS STATE_COUNT
+          FROM MCP_REQUEST_SELF_DLVRY
+          WHERE SELF_STATE_CODE = '01'
+          <if test="selfDlvryIdx != null and selfDlvryIdx > 0 ">
+              AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+          </if>
+          <if test="onlineAuthDi !=null and onlineAuthDi != ''" >
+              AND ONLINE_AUTH_DI = #{onlineAuthDi}
+          </if>
+          <if test="cretId !=null and cretId != ''" >
+              AND CRET_ID = #{cretId}
+          </if>
+          <if test=" !(cretId !=null and cretId != '') " >
+              AND CSTMR_NAME = #{cstmrName} AND DLVRY_TEL_FN || DLVRY_TEL_MN || DLVRY_TEL_RN = #{dlvryTelFn}||#{dlvryTelMn}||#{dlvryTelRn}
+          </if>
+          <if test="sysRdateS !=null and sysRdateS != '' and sysRdateE !=null and sysRdateE != ''" >
+              AND SYS_RDATE BETWEEN  TO_DATE(#{sysRdateS}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{sysRdateE}||'235959', 'YYYYMMDDHH24MISS')
+          </if>
+         GROUP BY DLVRY_STATE_CODE
+    </select>
+
+    <select id="selectMcpRequestNowDlvryStateCount"  parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto"  resultType="com.ktmmobile.mcp.order.dto.OrderDto">
+        SELECT
+        DLVRY_STATE_CODE AS STATE , COUNT(DLVRY_STATE_CODE) AS STATE_COUNT
+          FROM MCP_REQUEST_NOW_DLVRY
+          WHERE 1=1
+          <if test="selfDlvryIdx != null and selfDlvryIdx > 0 ">
+              AND SELF_DLVRY_IDX = #{selfDlvryIdx}
+          </if>
+          <if test="onlineAuthDi !=null and onlineAuthDi != ''" >
+              AND ONLINE_AUTH_DI = #{onlineAuthDi}
+          </if>
+          <if test="cretId !=null and cretId != ''" >
+              AND CRET_ID = #{cretId}
+         </if>
+          <if test=" !(cretId !=null and cretId != '') " >
+              AND CSTMR_NAME = #{cstmrName} AND DLVRY_TEL_FN || DLVRY_TEL_MN || DLVRY_TEL_RN = #{dlvryTelFn}||#{dlvryTelMn}||#{dlvryTelRn}
+          </if>
+          <if test="sysRdateS !=null and sysRdateS != '' and sysRdateE !=null and sysRdateE != ''" >
+              AND SYS_RDATE BETWEEN  TO_DATE(#{sysRdateS}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{sysRdateE}||'235959', 'YYYYMMDDHH24MISS')
+          </if>
+         GROUP BY DLVRY_STATE_CODE
+    </select>
+
+    <select id="selectRequestOrderStateCount"  parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto"  resultType="com.ktmmobile.mcp.order.dto.OrderDto">
+        SELECT UNION_GROUP.REQUEST_STATE_CODE AS STATE, COUNT(UNION_GROUP.REQUEST_STATE_CODE) AS STATE_COUNT FROM
+        (
+        SELECT
+            A.REQUEST_KEY
+            ,A.REQUEST_STATE_CODE
+        FROM
+             MCP_REQUEST A
+            ,MCP_REQUEST_CSTMR B
+            ,MCP_REQUEST_STATE C
+            ,MCP_REQUEST_SALEINFO D
+            ,MCP_REQUEST_DLVRY E
+        WHERE 1=1
+            <if test="cretId ==null or cretId ==''">
+                AND( (B.CSTMR_NAME = #{cstmrName} AND B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN = #{cstmrMobileFn}||#{cstmrMobileMn}||#{cstmrMobileRn} )
+                       OR ( E.DLVRY_NAME =  #{cstmrName} AND E.DLVRY_MOBILE_FN || E.DLVRY_MOBILE_MN || E.DLVRY_MOBILE_RN = #{cstmrMobileFn}||#{cstmrMobileMn}||#{cstmrMobileRn}  ))
+            </if>
+            <if test="cretId !=null and cretId !=''">
+                AND A.CRET_ID = #{cretId}
+            </if>
+            <if test="reqBuyType !=null and reqBuyType !=''">
+                AND A.REQ_BUY_TYPE = #{reqBuyType}
+            </if>
+            AND A.REQUEST_KEY = B.REQUEST_KEY
+            AND B.REQUEST_KEY = C.REQUEST_KEY
+            AND A.REQUEST_KEY = D.REQUEST_KEY
+            AND A.REQUEST_KEY = E.REQUEST_KEY
+            AND A.REQ_IN_DAY BETWEEN  TO_DATE(#{searchStart}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{searchEnd}||'235959', 'YYYYMMDDHH24MISS')
+        UNION ALL
+        SELECT
+            A.REQUEST_KEY
+            ,A.REQUEST_STATE_CODE
+        FROM
+             NMCP_REQUEST_APD A
+            ,NMCP_REQUEST_APD_STATE C
+            ,NMCP_REQUEST_APD_SALEINFO D
+            ,MCP_REQUEST_DLVRY   E
+        WHERE 1=1
+            <if test="cretId ==null or cretId ==''">
+                AND E.DLVRY_NAME =  #{cstmrName} AND E.DLVRY_MOBILE_FN || E.DLVRY_MOBILE_MN || E.DLVRY_MOBILE_RN = #{cstmrMobileFn}||#{cstmrMobileMn}||#{cstmrMobileRn}
+            </if>
+            <if test="cretId !=null and cretId !=''">
+                AND A.CRET_ID = #{cretId}
+            </if>
+            AND A.REQUEST_KEY = C.REQUEST_KEY
+            AND A.REQUEST_KEY = D.REQUEST_KEY
+            AND A.REQUEST_KEY = E.REQUEST_KEY
+            AND A.REQ_IN_DAY BETWEEN  TO_DATE(#{searchStart}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{searchEnd}||'235959', 'YYYYMMDDHH24MISS')
+        ) UNION_GROUP GROUP BY UNION_GROUP.REQUEST_STATE_CODE
+    </select>
+
+</mapper>

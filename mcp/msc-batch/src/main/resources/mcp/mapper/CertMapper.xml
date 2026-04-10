@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CertMapper">
+
+    <select id="getCertDelDay" resultType="java.lang.String">
+        SELECT 
+        	NVL(EXPNSN_STR_VAL1, '0') AS DEL_DAY 
+        FROM NMCP_CD_DTL 
+		WHERE 1 = 1
+		    AND CD_GROUP_ID = 'CDD'
+		    AND DTL_CD = '01'
+    </select>
+
+    <delete id="deleteCertFailData" parameterType="int">
+        DELETE FROM NMCP_CRT_VLD_DTL
+		WHERE REGST_DT <![CDATA[<=]]> TO_CHAR(SYSDATE-#{delDay}, 'YYYYMMDD') 
+    </delete>
+
+</mapper>

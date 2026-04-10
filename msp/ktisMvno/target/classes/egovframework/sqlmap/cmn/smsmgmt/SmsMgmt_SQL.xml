@@ -1,0 +1,1420 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.smsmgmt.mapper.SmsMgmtMapper">
+	
+	<!-- SMS 템플릿 목록 조회 -->
+	<select id="getSmsTemplateList" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsTemplateReqVO" resultType="com.ktis.msp.cmn.smsmgmt.vo.SmsTemplateResVO">
+		<include refid="com.ktis.msp.cmn.include.paging-start-vo" />
+		/* SmsMgmtMapper.getSmsTemplateList */
+		SELECT TEMPLATE_ID AS templateId
+		      ,TEMPLATE_NM AS templateNm
+		      ,MGMT_ORGN_ID AS mgmtOrgnId
+		      ,FN_GET_ORGNM(MGMT_ORGN_ID) AS mgmtOrgnNm
+		      ,WORK_TYPE AS workType
+		      ,FN_GET_CODENM('CMN0069', WORK_TYPE) AS workTypeNm
+		      ,CALLBACK
+		      ,FN_GET_CODENM('CMN0070', CALLBACK) AS callbackNm
+		      ,EXPIRE_HOUR AS expireHour
+		      ,SUBJECT
+		      ,TEXT
+		      ,RETRY
+		      ,REGST_ID AS regstId
+		      ,FN_GET_USRNM(REGST_ID) AS regstNm
+		      ,TO_CHAR(REGST_DTTM, 'YYYYMMDDHH24MISS') AS regstDttm
+		      ,RVISN_ID AS rvisnId
+		      ,FN_GET_USRNM(RVISN_ID) AS rvisnNm
+		      ,TO_CHAR(RVISN_DTTM, 'YYYYMMDDHH24MISS') AS rvisnDttm
+		      ,K_TEMPLATE_CODE AS kTemplateCode
+		FROM   MSP_SMS_TEMPLATE_MST
+		<where>
+			<if test="searchOrgnId != null and searchOrgnId != ''">
+				AND    MGMT_ORGN_ID = #{searchOrgnId}
+			</if>
+			<if test="searchWorkType != null and searchWorkType != ''">
+				AND    WORK_TYPE = #{searchWorkType}
+			</if>
+			<if test="searchTemplateNm != null and searchTemplateNm != ''">
+				AND    UPPER(TEMPLATE_NM) LIKE '%' || UPPER(#{searchTemplateNm}) || '%'
+			</if>
+		</where>
+		ORDER BY TEMPLATE_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- SMS 템플릿 수정 -->
+	<update id="updateSmsTemplate" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsTemplateResVO">
+		/* SmsMgmtMapper.updateSmsTemplate */
+		UPDATE MSP_SMS_TEMPLATE_MST
+		SET    TEMPLATE_NM = #{templateNm}
+			  ,MGMT_ORGN_ID = #{mgmtOrgnId}
+			  ,WORK_TYPE = #{workType}
+			  ,MSG_TYPE = #{msgType}
+			  ,CALLBACK = #{callback}
+			  ,EXPIRE_HOUR = #{expireHour}
+			  ,SUBJECT = #{subject}
+			  ,RETRY = NVL(#{retry}, 0)
+			  ,TEXT = #{text}
+			  ,RVISN_ID = #{sessionUserId}
+			  ,RVISN_DTTM = SYSDATE
+			  ,K_TEMPLATE_CODE = #{kTemplateCode}
+		WHERE  TEMPLATE_ID = #{templateId}
+	</update>
+	
+	<!-- SMS 템플릿 ID -->
+	<select id="getTemplateId" resultType="String">
+		/* SmsMgmtMapper.getTemplateId */
+		SELECT NVL(MAX(TEMPLATE_ID), 0) + 1 AS newTemplateId
+		FROM   MSP_SMS_TEMPLATE_MST
+	</select>
+	
+	<!-- SMS 템플릿ID 체크 -->
+	<select id="checkTemplateId" parameterType="String" resultType="String">
+		/* SmsMgmtMapper.checkTemplateId */
+		SELECT DECODE(COUNT(1), 0, 'N', 'Y') AS existFlag
+		FROM   MSP_SMS_TEMPLATE_MST
+		WHERE  TEMPLATE_ID = #{newTemplateId}
+	</select>
+	
+	<!-- SMS 템플릿 등록 -->
+	<insert id="insertSmsTemplate" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsTemplateResVO">
+		/* SmsMgmtMapper.insertSmsTemplate */
+		INSERT INTO MSP_SMS_TEMPLATE_MST (
+			 TEMPLATE_ID
+			,TEMPLATE_NM
+			,MGMT_ORGN_ID
+			,MSG_TYPE
+			,CALLBACK
+			,TEXT
+			,EXPIRE_HOUR
+			,SUBJECT
+			,WORK_TYPE
+			,RETRY
+			,REGST_ID
+			,REGST_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+			,K_TEMPLATE_CODE
+		)
+		VALUES (
+			 #{templateId}
+			,#{templateNm}
+			,#{mgmtOrgnId}
+			,#{msgType}
+			,#{callback}
+			,#{text}
+			,#{expireHour}
+			,#{subject}
+			,#{workType}
+			,NVL(#{retry}, 0)
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+			,#{kTemplateCode}
+		)
+	</insert>
+	
+	<!-- SMS 템플릿 이력등록 -->
+	<insert id="insertSmsTemplateHst" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsTemplateResVO">
+		/* SmsMgmtMapper.insertSmsTemplateHst */
+		INSERT INTO MSP_SMS_TEMPLATE_HST (
+			 RVISN_ID
+			,RVISN_DTTM
+			,TEMPLATE_ID
+			,TEMPLATE_NM
+			,TEMPLATE_DSC
+			,MGMT_ORGN_ID
+			,WORK_TYPE
+			,MSG_TYPE
+			,CALLBACK
+			,SUBJECT
+			,TEXT
+			,EXPIRE_HOUR
+			,RETRY
+			,REGST_ID
+			,REGST_DTTM
+		)
+		SELECT RVISN_ID
+			  ,RVISN_DTTM
+			  ,TEMPLATE_ID
+			  ,TEMPLATE_NM
+			  ,TEMPLATE_DSC
+			  ,MGMT_ORGN_ID
+			  ,WORK_TYPE
+			  ,MSG_TYPE
+			  ,CALLBACK
+			  ,SUBJECT
+			  ,TEXT
+			  ,EXPIRE_HOUR
+			  ,RETRY
+			  ,REGST_ID
+			  ,REGST_DTTM
+		FROM   MSP_SMS_TEMPLATE_MST
+		WHERE  TEMPLATE_ID = #{templateId}
+	</insert>
+	
+	<!-- SMS발송조회 -->
+	<select id="getSmsSendList" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendReqVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* SmsMgmtMapper.getSmsSendList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT A.MSG_ID
+				, A.SUBMIT_TIME
+		        , A.SCHEDULE_TIME
+				, A.SUBJECT
+				, A.RCPT_DATA
+				, A.CALLBACK_NUM
+				, A.MESSAGE
+				, A.MSG_TYPE
+				, A.RESERVED01
+				, A.RESERVED02
+				, A.RESERVED03
+				, A.K_MESSAGE
+				, A.K_TMPLCODE
+				, A.K_SENDERKEY
+				, B.CD_DSC AS RESULT_NM
+				, C.CD_DSC AS KKO_RESULT_NM
+		FROM    AM2X_SUBMIT_LOG A
+		        , CMN_GRP_CD_MST B
+		        , CMN_GRP_CD_MST C
+		WHERE  1=1
+		AND    TRIM(A.RESULT) = B.CD_VAL(+) 
+        AND    B.GRP_ID(+) = 'CMN0283'
+		AND    TRIM(A.KKO_RESULT) = C.CD_VAL(+) 
+        AND    C.GRP_ID(+) = 'CMN0283'
+		AND    A.SCHEDULE_TIME BETWEEN #{searchStartDate} AND #{searchEndDate}
+ 		<if test="searchValue != '' and searchValue != null">
+			<choose>
+				<when test="searchCode == 'subject' "><!-- 제목 조회 -->
+ 				AND     A.SUBJECT LIKE '%' || #{searchValue} || '%'
+	 			</when>
+				<when test="searchCode == 'rcptData' "><!-- 수신자 번호 조회 -->
+				AND     A.RCPT_DATA = #{searchValue}
+				</when>
+				<when test="searchCode == 'reserved02' "><!-- 템플릿ID 조회 -->
+				AND     A.RESERVED02 = #{searchValue}
+				</when>
+			</choose>
+		</if> 
+		ORDER BY A.SCHEDULE_TIME DESC
+	<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- SMS발송내역 에 등록 -->
+	<insert id="insertSmsSendMst" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendVO">
+		/* SmsMgmtMapper.insertSmsSendMst */
+		INSERT INTO MSP_SMS_RESEND_MST (
+			 SEND_SEQ			/* 일련번호	*/
+			,TEMPLATE_ID		/* SMS Template ID */
+			,MSG_ID				/* SMS일련번호 */
+			,SEND_REQ_DTTM		/* 발송요청일시 */
+			,REGST_ID			/* 등록자ID */
+			,REGST_DTTM			/* 등록일시 */
+			,RVISN_ID			/* 수정자ID */
+			,RVISN_DTTM			/* 수정일시 */
+		)
+		VALUES (
+			 SMS_RESEND_SEQ.NEXTVAL
+			,#{templateId}
+			,#{msgId}
+			,#{sendReqDttm}
+			,#{reqId}
+			,SYSDATE
+			,#{reqId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 템플릿 제목, 내용 조회 -->
+	<select id="getTemplateText" parameterType="String" resultType="com.ktis.msp.cmn.smsmgmt.vo.MsgQueueReqVO">
+		/* SmsMgmtMapper.getTemplateText */
+		SELECT text AS templateText
+			  ,subject AS templateSubject
+		FROM   MSP_SMS_TEMPLATE_MST
+		WHERE  TEMPLATE_ID = #{templateId}
+	</select>
+	
+	<!-- MSG_RESULT 확인 -->
+	<select id="checkMsgResult" parameterType="com.ktis.msp.cmn.smsmgmt.vo.MsgQueueReqVO" resultType="int">
+		/* SmsMgmtMapper.checkMsgResult */
+		SELECT COUNT(1) AS CNT
+		FROM   MSG_RESULT
+		WHERE  MSEQ = #{mseq}
+	</select>
+	
+	<!-- 템플릿combo -->
+	<select id="getTemplateCombo" parameterType="com.ktis.msp.cmn.cdmgmt.vo.CmnCdMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* SmsMgmtMapper.getTemplateCombo */
+		SELECT  TEMPLATE_ID     AS VALUE
+		        , TEMPLATE_NM   AS TEXT
+		FROM    MSP_SMS_TEMPLATE_MST A
+		WHERE   1 = 1
+		<if test=' etc1 != null and etc1 == "Y" '>
+			AND INSTR(A.TEXT, '#') = 0
+		</if> 
+		<if test=' etc2 != null and etc2 == "Y" '>
+			AND A.WORK_TYPE IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0069' AND ETC2 = 'Y')
+		</if> 
+		ORDER BY 1 DESC
+	</select>
+	
+	<!-- 요금제 combo -->
+	<select id="getRateCombo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* SmsMgmtMapper.getRateCombo */
+		SELECT  A.RATE_CD   AS VALUE
+		        , A.RATE_NM AS TEXT
+		FROM    MSP_RATE_MST A
+		WHERE   A.SERVICE_TYPE = 'P'
+		AND     TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A.APPL_STRT_DT AND A.APPL_END_DT
+		ORDER BY A.PAY_CL_CD, A.APPL_STRT_DT DESC, A.RATE_NM ASC
+	</select>
+	
+	<!-- SMS 수신자선택발송 조회 (개통고객) -->
+	<select id="getMspSelectList" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendReqVO" resultType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO">
+		/* SmsMgmtMapper.getMspSelectList */
+		<include refid="com.ktis.msp.cmn.include.paging-start-vo" />
+		SELECT    'MSP' AS custDiv
+		        , A.SUB_LINK_NAME AS custNm
+		        , A.SUB_LINK_NAME AS custNmMsk
+		        , A.SUBSCRIBER_NO AS mobileNo
+		        , A.SUBSCRIBER_NO AS mobileNoMsk
+		        , A.LST_COM_ACTV_DATE AS openDt
+		        , B.LST_RATE_CD AS rateCd
+		        , FN_GET_RATENM(B.LST_RATE_CD) AS rateNm
+		        , FN_GET_CODENM('RCP9004', B.REQ_BUY_TYPE) AS buyTypeNm
+		        , NVL(C.AGR_YN, 'N') AS marketingCd
+		        , (SELECT LISTAGG(Y.RATE_NM, '|') WITHIN GROUP(ORDER BY X.SOC)
+		           FROM   MSP_JUO_FEATURE_INFO X
+		                  , MSP_RATE_MST Y
+		           WHERE  X.SOC = Y.RATE_CD
+		           AND    X.CONTRACT_NUM = A.CONTRACT_NUM
+		           AND    X.SERVICE_TYPE <![CDATA[ <> ]]> 'P'
+		           AND    X.APP_END_DATE = '99991231000000'
+		           <if test=" searchCode == 'addService' and searchValue != null and searchValue != '' ">
+		           AND    Y.RATE_NM LIKE '%' || #{searchValue} || '%'
+		           </if>
+		           GROUP BY X.CONTRACT_NUM
+		        ) AS addService
+		        , A.CONTRACT_NUM AS contractNum
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_REQUEST_DTL B
+		        , MSP_MRKT_AGR_MGMT C
+		WHERE   A.SUB_STATUS <![CDATA[ <> ]]> 'C'
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+		AND     A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+		AND     C.END_DTTM(+) = '99991231235959'
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != '' and searchToDt != ''">
+			AND     A.LST_COM_ACTV_DATE BETWEEN #{searchFromDt} AND #{searchToDt}
+		</if>
+		<if test="searchValue != null and searchValue != ''">
+			<choose>
+				<when test="searchCode == 'custNm'">
+					AND    UPPER(A.SUB_LINK_NAME) LIKE '%' || UPPER(#{searchValue}) || '%'
+				</when>
+				<when test="searchCode == 'mobileNo'">
+					AND    A.SUBSCRIBER_NO = #{searchValue}
+				</when>
+			</choose>
+		</if>
+		<if test="searchBuyType != null and searchBuyType != ''">
+			AND     B.REQ_BUY_TYPE = #{searchBuyType}
+		</if>
+		<if test="searchOrgnId != null and searchOrgnId != ''">
+			AND     A.OPEN_AGNT_CD = #{searchOrgnId}
+		</if>
+		<if test="searchRateCd != null and searchRateCd != ''">
+			AND     B.LST_RATE_CD = #{searchRateCd}
+		</if>
+		<if test="searchMarketing != null and searchMarketing != ''">
+			AND     NVL(C.AGR_YN, 'N') = #{searchMarketing}
+		</if>
+		ORDER BY A.LST_COM_ACTV_DATE
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- SMS 수신자선택발송 조회 (홈페이지) -->
+	<select id="getMcpSelectList" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendReqVO" resultType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO">
+		/* SmsMgmtMapper.getMcpSelectList */
+		<include refid="com.ktis.msp.cmn.include.paging-start-vo" />
+		<![CDATA[
+		SELECT 'MCP' AS custDiv
+		       , A.NAME AS custNm
+		       , A.NAME AS custNmMsk
+		       , A.MOBILE_NO AS mobileNo
+		       , A.MOBILE_NO AS mobileNoMsk
+		       , TO_CHAR(A.SYS_RDATE, 'YYYYMMDD') AS sysRdate
+		       , A.EMAIL_RCV_YN AS emailAgr
+		       , A.SMS_RCV_YN AS smsAgr
+		       , A.USERID AS portalId
+		FROM   MCP_USER@DL_MCP A
+		WHERE  A.STATUS <> '3'
+		AND    A.AUTH_CODE = 'USER_ROLE'
+		]]>
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != '' and searchToDt != '' and searchValue == ''">
+			AND    A.SYS_RDATE BETWEEN TO_DATE(#{searchFromDt}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{searchToDt}||'235959', 'YYYYMMDDHH24MISS')
+		</if>
+		<if test="searchValue != null and searchValue != ''">
+			<choose>
+				<when test="searchCode == 'custNm'">
+					AND    UPPER(A.NAME) LIKE '%' || UPPER(#{searchValue}) || '%'
+				</when>
+				<when test="searchCode == 'mobileNo'">
+					AND    A.MOBILE_NO = #{searchValue}
+				</when>
+			</choose>
+		</if>
+		<if test='searchMarketing == "Y"'>
+			AND   (A.EMAIL_RCV_YN = #{searchMarketing} OR A.SMS_RCV_YN = #{searchMarketing})
+		</if>
+		<if test='searchMarketing == "N"'>
+			AND    A.EMAIL_RCV_YN = #{searchMarketing}
+			AND    A.SMS_RCV_YN = #{searchMarketing}
+		</if>
+		ORDER BY A.NAME
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 신청고객( 신청서 정상, 접수대기 상태만 조회 ) -->
+	<select id="getReqSelectList" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendReqVO" resultType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO">
+		/* SmsMgmtMapper.getReqSelectList */
+		<include refid="com.ktis.msp.cmn.include.paging-start-vo" />
+		
+		SELECT  DISTINCT 'REQ' AS custDiv
+		        , TO_CHAR(A.REQ_IN_DAY, 'YYYYMMDD') AS reqInDay
+		        , B.CSTMR_NAME AS custNm
+		        , B.CSTMR_NAME AS custNmMsk
+		        , NVL(B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN, B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN) AS mobileNo
+		        , NVL(B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN, B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN) AS mobileNoMsk
+		        , D.CD_DSC AS reqStateNm
+		FROM    MCP_REQUEST@DL_MCP A
+		        , MCP_REQUEST_CSTMR@DL_MCP B
+		        , MCP_REQUEST_SALEINFO@DL_MCP C
+		        , CMN_GRP_CD_MST D
+		WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+		AND     A.REQUEST_KEY = C.REQUEST_KEY
+		AND     A.PSTATE = '00'
+		AND     A.REQUEST_STATE_CODE = '00'
+		AND     A.REQUEST_STATE_CODE = D.CD_VAL
+		AND     D.GRP_ID = 'RCP0006'
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != '' and searchToDt != '' and searchValue == ''">
+			AND    A.REQ_IN_DAY BETWEEN TO_DATE(#{searchFromDt}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{searchToDt}||'235959', 'YYYYMMDDHH24MISS')
+		</if>
+		<if test="searchOrgnId != null and searchOrgnId != ''">
+			AND    A.CNTPNT_SHOP_ID = #{searchOrgnId}
+		</if>
+		<if test="searchValue != null and searchValue != ''">
+			<choose>
+				<when test="searchCode == 'custNm'">
+					AND    UPPER(B.CSTMR_NAME) LIKE '%' || UPPER(#{searchValue}) || '%'
+				</when>
+				<when test="searchCode == 'mobileNo'">
+					AND    NVL(B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN, B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN) = #{searchValue}
+				</when>
+			</choose>
+		</if>
+		ORDER BY 2
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- SMS 템플릿 확인 -->
+	<select id="getSendTemplate" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO" resultType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO">
+		/* SmsMgmtMapper.getSendTemplate */
+		SELECT TEMPLATE_ID AS templateId
+		      ,TEMPLATE_NM AS templateNm
+		      ,TEXT        AS text
+              ,CALLBACK    AS callbackNum
+              ,SUBJECT     AS subject
+		FROM   MSP_SMS_TEMPLATE_MST
+		WHERE  TEMPLATE_ID = #{templateId}
+	</select>
+	
+	<!-- CONTRACT_NUM 조회 -->
+	<select id="getContractNum" parameterType="String" resultType="String">
+		/* SmsMgmtMapper.getContractNum */
+		<![CDATA[
+		SELECT MAX(CONTRACT_NUM) KEEP(DENSE_RANK FIRST ORDER BY LST_COM_ACTV_DATE DESC) AS contractNum
+		FROM   MSP_JUO_SUB_INFO
+		WHERE  SUBSCRIBER_NO = #{mobileNo}
+		AND    SUB_STATUS <>  'C'
+		]]>
+	</select>
+	
+	<!-- 전화번호그룹 목록 -->
+	<select id="smsSendPhoneGrpList" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* ====== smsMgmtMapper.smsSendPhoneGrpList =========*/
+		SELECT 
+		         A.GRP_ID     --그룹코드
+		       , A.GRP_NM     --그룹명
+		       , A.STRT_DT    --시작일자
+		       , A.END_DT     --종료일자
+		       , A.USE_YN     --사용여부
+		       , A.REGST_ID
+		       , A.REGST_DTTM
+		       , A.RVISN_ID
+		       , A.RVISN_DTTM
+		       , (SELECT COUNT(*) FROM MSP_SMS_PHONE_GRP_DTL WHERE GRP_ID = A.GRP_ID) AS CNT
+		  FROM MSP_SMS_PHONE_GRP_MST A
+		 WHERE 1=1
+		<if test="useYn != null and useYn != ''">
+			AND A.USE_YN = #{useYn}
+			AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN A.STRT_DT AND A.END_DT
+		</if>
+		ORDER BY A.REGST_DTTM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 전화번호그룹 insert -->
+	<insert  id="insertSmsSendPhoneGrp"  parameterType="java.util.HashMap"  >
+		/* ====== smsMgmtMapper.insertSmsSendPhoneGrp =========*/
+		INSERT INTO MSP_SMS_PHONE_GRP_MST
+		(
+			  GRP_ID
+			, GRP_NM
+			, STRT_DT
+			, END_DT
+			, USE_YN
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		)
+		VALUES
+		(
+			  #{grpId}
+			, #{grpNm}
+			, #{strtDt}
+			, #{endDt}
+			, NVL(#{useYn},'N')
+			, #{SESSION_USER_ID}
+			, SYSDATE
+			, #{SESSION_USER_ID}
+			, SYSDATE
+		)
+	</insert>
+	
+	<!-- 전화번호그룹 update -->
+	<update id="updateSmsSendPhoneGrp"  parameterType="java.util.HashMap"  >
+		/* ====== smsMgmtMapper.updateSmsSendPhoneGrp =========*/
+		UPDATE MSP_SMS_PHONE_GRP_MST
+		SET 
+				  GRP_NM            = #{grpNm}
+				, STRT_DT           = #{strtDt}
+				, END_DT            = #{endDt}
+				, USE_YN            = NVL(#{useYn},'N')
+				, RVISN_ID          = #{SESSION_USER_ID}
+				, RVISN_DTTM        = SYSDATE
+		WHERE  GRP_ID = #{grpId}
+	</update>
+	
+	<!-- 전화번호그룹상세 목록 -->
+	<select id="smsSendPhoneGrpDtl" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* ====== smsMgmtMapper.smsSendPhoneGrpDtl =========*/
+		SELECT 
+		         A.GRP_ID     --그룹코드
+		       , A.GRP_NM     --그룹명
+		       , A.USR_ID     --사용자ID
+		       , A.USR_NM     --사용자명
+		       , A.MBLPHN_NUM --전화번호
+		       , A.USR_ID AS USR_ID_MSK     	--사용자ID
+		       , A.USR_NM AS USR_NM_MSK    		--사용자명
+		       , A.MBLPHN_NUM AS MBLPHN_NUM_MSK --전화번호
+		       , A.REGST_ID
+		       , A.REGST_DTTM
+		  FROM MSP_SMS_PHONE_GRP_DTL A
+		 WHERE A.GRP_ID = #{grpId}
+		ORDER BY A.REGST_DTTM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 전화번호그룹상세(기타등록) insert -->
+	<insert  id="insertSmsSendPhoneGrpDtlEtc"  parameterType="java.util.HashMap"  >
+		/* ====== smsMgmtMapper.insertSmsSendPhoneGrpDtlEtc =========*/
+		INSERT INTO MSP_SMS_PHONE_GRP_DTL
+		(
+			  GRP_ID
+			, GRP_NM
+			, USR_NM
+			, MBLPHN_NUM
+			, REGST_ID
+			, REGST_DTTM
+		)
+		VALUES
+		( 
+			  #{grpId}
+			, (SELECT GRP_NM FROM MSP_SMS_PHONE_GRP_MST WHERE GRP_ID = #{grpId})
+			, #{usrNm}
+			, #{mblphnNum}
+			, #{SESSION_USER_ID}
+			, SYSDATE
+		)	    
+
+	</insert>
+	
+	<!-- 전화번호그룹상세 insert -->
+	<insert  id="insertSmsSendPhoneGrpDtl"  parameterType="java.util.HashMap"  >
+		/* ====== smsMgmtMapper.insertSmsSendPhoneGrpDtl =========*/
+		INSERT INTO MSP_SMS_PHONE_GRP_DTL
+		(
+			  GRP_ID
+			, GRP_NM
+			, USR_ID
+			, USR_NM
+			, MBLPHN_NUM
+			, REGST_ID
+			, REGST_DTTM
+		)
+		VALUES
+		( 
+			  #{grpId}
+			, (SELECT GRP_NM FROM MSP_SMS_PHONE_GRP_MST WHERE GRP_ID = #{grpId})
+			, #{usrId}
+			, (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = #{usrId})
+			, (SELECT MBLPHN_NUM FROM CMN_USR_MST WHERE USR_ID = #{usrId})
+			, #{SESSION_USER_ID}
+			, SYSDATE
+		)	    
+
+	</insert>
+	
+	<!-- 전화번호그룹상세 delete -->
+	<delete id="deleteSmsSendPhoneGrpDtl"  parameterType="java.util.HashMap"  >
+		/* ====== smsMgmtMapper.deleteSmsSendPhoneGrpDtl =========*/
+		DELETE MSP_SMS_PHONE_GRP_DTL A
+		 WHERE A.GRP_ID = #{grpId}
+		   AND A.USR_NM = #{usrNm}
+		   AND A.MBLPHN_NUM = #{mblphnNum} 
+	</delete>
+	
+	<!-- 전화번호그룹상세 delete -->
+<!-- 	<delete id="deleteSmsSendPhoneGrpDtl"  parameterType="java.util.HashMap"  > -->
+<!-- 		/* ====== smsMgmtMapper.deleteSmsSendPhoneGrpDtl =========*/ -->
+<!-- 		DELETE MSP_SMS_PHONE_GRP_DTL A -->
+<!-- 		 WHERE A.GRP_ID = #{grpId} -->
+<!-- 		   AND A.USR_ID = #{usrId}  -->
+<!-- 	</delete> -->
+	
+	<!-- 전화번호그룹상세 목록 -->
+	<select id="getSmsPhoneGrpDtlList" parameterType="java.util.HashMap" resultType="com.ktis.msp.cmn.smsmgmt.vo.SmsPhoneGrpVO">
+		/* ====== smsMgmtMapper.getSmsPhoneGrpDtlList =========*/
+		SELECT 
+		       MBLPHN_NUM AS mblphnNum     --전화번호
+		  FROM MSP_SMS_PHONE_GRP_DTL A
+		 WHERE A.GRP_ID = #{grpId}
+		ORDER BY A.REGST_DTTM
+	</select>	
+	
+	<!-- 전화번호그룹이력 insert -->
+	<insert  id="insertSmsSendPhoneGrpHst"  parameterType="java.util.HashMap"  >
+		/* ====== smsMgmtMapper.insertSmsSendPhoneGrpHst =========*/
+		INSERT INTO MSP_SMS_PHONE_GRP_HST
+		(
+			  SEQ_NUM
+			, GRP_ID
+			, GRP_NM
+			, STRT_DT
+			, END_DT
+			, USE_YN
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+			, OPER_TYPE
+		)
+		VALUES
+		(
+			  SEQ_PHONE_GRP_HST.NEXTVAL
+			, #{grpId}
+			, (SELECT GRP_NM FROM MSP_SMS_PHONE_GRP_MST WHERE GRP_ID = #{grpId})
+			, #{strtDt}
+			, #{endDt}
+			, NVL(#{useYn},'N')
+			, #{SESSION_USER_ID}
+			, SYSDATE
+			, #{SESSION_USER_ID}
+			, SYSDATE
+			, #{operType}
+		)
+	</insert>
+	
+
+	<!-- 전화번호그룹이력(기타등록) insert -->
+	<insert  id="insertSmsSendPhoneGrpDtlHstEtc"  parameterType="java.util.HashMap"  >
+		/* ====== smsMgmtMapper.insertSmsSendPhoneGrpDtlHstEtc =========*/
+		INSERT INTO MSP_SMS_PHONE_GRP_DTL_HST
+		(
+			  SEQ_NUM
+			, GRP_ID
+			, GRP_NM
+			, USR_NM
+			, MBLPHN_NUM
+			, REGST_ID
+			, REGST_DTTM
+			, OPER_TYPE
+		)
+		VALUES
+		(
+			  SEQ_PHONE_GRP_DTL_HST.NEXTVAL
+			, #{grpId}
+			, (SELECT GRP_NM FROM MSP_SMS_PHONE_GRP_MST WHERE GRP_ID = #{grpId})
+			, #{usrNm}
+			, #{mblphnNum}
+			, #{SESSION_USER_ID}
+			, SYSDATE
+			, #{operType}
+		)
+	</insert>	
+	
+	<!-- 전화번호그룹이력 insert -->
+	<insert  id="insertSmsSendPhoneGrpDtlHst"  parameterType="java.util.HashMap"  >
+		/* ====== smsMgmtMapper.insertSmsSendPhoneGrpDtlHst =========*/
+		INSERT INTO MSP_SMS_PHONE_GRP_DTL_HST
+		(
+			  SEQ_NUM
+			, GRP_ID
+			, GRP_NM
+			, USR_ID
+			, USR_NM
+			, MBLPHN_NUM
+			, REGST_ID
+			, REGST_DTTM
+			, OPER_TYPE
+		)
+		VALUES
+		(
+			  SEQ_PHONE_GRP_DTL_HST.NEXTVAL
+			, #{grpId}
+			, (SELECT GRP_NM FROM MSP_SMS_PHONE_GRP_MST WHERE GRP_ID = #{grpId})
+			, #{usrId}
+			, (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = #{usrId})
+			, (SELECT MBLPHN_NUM FROM CMN_USR_MST WHERE USR_ID = #{usrId})
+			, #{SESSION_USER_ID}
+			, SYSDATE
+			, #{operType}
+		)
+	</insert>
+	
+	
+	<!-- /////////////////////////////// 대량문자 시작 /////////////////////////////// -->
+	<!-- 문자 SEQ 생성 -->
+	<select id="msgSmsListMsgNo" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO" resultType="String">
+		/* smsMgmtMapper.msgSmsListMsgNo */
+		SELECT MSG_NO.NEXTVAL AS MSG_NO
+		FROM   DUAL
+	</select>
+
+	<!-- 대량문자 발송조회 -->
+	<select id="getMsgSmsSendList" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			/* smsMgmtMapper.getMsgSmsSendList */
+			SELECT
+		        	MSG_NO			   									 AS MSG_NO      							/* 문자NO 	   */
+				,	MSG_TYPE	     									 AS MSG_TYPE  		  	 				    /* 1:SMS 2:SMS URL 3:MMS 4:MMS URL    */
+				,	SUBJECT			  									 AS SUBJECT      						    /* 제목 	   */
+				,	SEND_CNT		  									 AS SEND_CNT      						    /* 전송건수       */
+				,	TO_CHAR(TO_DATE(REQUEST_TIME,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') 	  AS REQUEST_TIME	/* 예약전송시간  */
+				,	REGST_ID		  									 AS REGST_ID     							/* 등록자 	   */
+				,	TO_CHAR(REGST_TIME, 'YYYY-MM-DD HH24:MI:SS')		 AS REGST_TIME      						/* 등록시간	   */
+				,   MSG_SMS_TYPE 										 AS MSG_SMS_TYPE							/* 발송타입	   */
+				,	DECODE(MSG_SMS_TYPE, 'S' , '템플릿', 'MMS')  		 AS MSG_SMS_TYPE_NM   							/* S:같은내용 D:다른내용  */
+				,	MSG_TMP_ID		  									 AS MSG_TMP_ID								/* 템플릿ID   */
+				,	MSG_USG_YN		  									 AS MSG_USG_YN   							/* 사용여부YN */
+				,	RESULT_YN    										 AS RESULT_YN								/* 처리결과YN */
+				,	DECODE(RESULT_YN,'Y','완료','N','대기','E','오류',RESULT_YN)	 	 AS RESULT_YN_NM    			/* 처리결과	  */
+				,	RESULT_CODE											 AS RESULT_CODE								/* RESULTCODE */	
+				,   KAKAO_YN										     AS KAKAO_YN								/* 카카오여부 */	
+		FROM MSG_SMS_LIST 	
+		WHERE MSG_USG_YN = 'Y'
+		<if test="srchStrtDt != null and srchStrtDt != '' and srchEndDt != null and srchEndDt != ''">
+			AND TO_CHAR(TO_DATE(REQUEST_TIME,'YYYYMMDDHH24MISS'),'YYYYMMDD') BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>			
+		<if test="searchGbn != null and searchGbn != ''">
+				<if test='searchGbn == "1"'>
+					AND SUBJECT LIKE '%' || #{searchName} || '%'
+				</if>
+				<if test='searchGbn == "2"'>
+					AND REGST_ID = #{searchName}
+				</if>
+		</if>
+		<if test="resultYn != null and resultYn != ''">
+			AND RESULT_YN = #{resultYn}
+		</if>
+		ORDER BY REQUEST_TIME DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 대량문자상세 데이터조회 -->
+	<select id="getMsgSmsSendListDt" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		 /* smsMgmtMapper.getMsgSmsSendListDt */
+		 SELECT
+                 MSG_NO				AS MSG_NO			/* 문자NO 	   */
+                ,MSG_SEND_CTN 		AS MSG_SEND_CTN		/* 보내는 사람 	   */
+                ,MSG_RECV_CTN 		AS MSG_RECV_CTN		/* 받는 사람 	   */
+                ,MSG_TITLE    		AS MSG_TITLE		/* 제목 	 	   */
+                ,MSG_TEXT	  		AS MSG_TEXT			/* 내용 	 	   */
+        FROM MSG_SMS_SEND_LIST
+        WHERE MSG_NO = #{msgNo}
+        ORDER BY MSG_RECV_CTN ASC
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+		
+	<!-- 대량문자 템플릿 등록 -->
+	<select id="insertMsgSmsTmp" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO" >	
+		INSERT	/* smsMgmtMapper.insertMsgSmsTmp */
+			INTO MSG_SMS_LIST(
+			MSG_NO					/* 문자NO 			*/
+		,	MSG_TYPE				/* 문자타입			*/	
+		,	SUBJECT					/* 제목 				*/
+		,	REQUEST_TIME			/* 예약전송시간 		*/
+		,	REGST_ID				/* 등록자 				*/
+		,	REGST_TIME				/* 등록시간 			*/
+		,	MSG_SMS_TYPE			/* S:같은내용 D:다른내용   */
+		,	MSG_TMP_ID				/* 템플릿ID 			*/
+		,	MSG_USG_YN				/* 사용여부YN 			*/
+		,	RESULT_YN				/* 처리결과YN 			*/
+		,   KAKAO_YN				/* 카카오YN 			*/
+		)
+		VALUES
+		(
+			 #{msgNo}				/* 문자NO 			*/
+		,    #{msgType}				/* 문자타입			*/
+		,	 #{subject}				/* 제목 				*/	
+		,	 #{requestTime}			/* 예약전송시간 		*/
+		,	 #{regstId}				/* 등록자 				*/
+		,	 SYSDATE				/* 등록시간 			*/
+		,	 #{msgSmsType}			/* S:같은내용 D:다른내용   */
+		,	 #{msgTmpId}			/* 템플릿ID 			*/
+		,	 'Y'					/* 사용여부YN 			*/
+		,	 'N'					/* 처리결과YN 			*/	
+		,    #{kakaoYn}				/* 카카오YN			*/
+		)						
+	</select>
+	
+	<!-- MSG_SMS_LIST 삭제 가능 여부를 확인한다. -->
+	<select id="isMsgSmsDeleteAuth" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO" resultType="String">
+		/* smsMgmtMapper.isMsgSmsDeleteAuth */
+		SELECT  DECODE(COUNT(*), 1, 'Y', 'N') RESULT
+		FROM    MSG_SMS_LIST
+		WHERE   MSG_NO = #{msgNo}
+		AND     REGST_ID = #{sessionUserId}
+        AND     RESULT_YN = 'N'
+		AND     MSG_USG_YN = 'Y'
+	</select>
+	
+	<!-- MSG_SMS_LIST 사용여부를 N으로 변경한다. -->
+	<update id="deleteMsgSmsList" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO">
+		/* smsMgmtMapper.deleteMsgSmsList */
+		UPDATE	MSG_SMS_LIST
+		SET		MSG_USG_YN = 'N'										/* 사용여부 	*/		
+			,  	RVISN_ID = #{sessionUserId} 							/* 수정자이름 	*/
+			,  	RVISN_DTTM = SYSDATE			   						/* 수정날짜 	*/
+			,   SEND_CNT = (SELECT COUNT(*) FROM MSG_SMS_SEND_LIST WHERE MSG_NO = #{msgNo})						
+		WHERE	MSG_NO = #{msgNo}
+		AND		REGST_ID = #{sessionUserId}
+		AND		RESULT_YN = 'N'
+		AND     MSG_USG_YN = 'Y'
+	</update>
+	
+	<!-- 바로위에 사용여부를 N으로 변경하면 MSG_SMS_SEND_LIST(상세) 데이터를 삭제한다. -->
+	<delete id="deleteMsgSmsListDt" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO">
+	 /* smsMgmtMapper.deleteMsgSmsListDt */
+	 DELETE 
+	 	FROM MSG_SMS_SEND_LIST
+     WHERE MSG_NO = #{msgNo, jdbcType=VARCHAR}	
+	</delete>
+	
+	<!-- 예약전송시간 중복체크 -->
+	<select id="reqTimeCountChk" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	 	 /* smsMgmtMapper.reqTimeCountChk */
+	 	SELECT
+        CASE 
+            WHEN TRUNC((TO_DATE(#{requestTime}, 'YYYYMMDDHH24MISS') - SYSDATE) * 24 * 60) 	<![CDATA[>]]> 30 
+            THEN 0 
+            ELSE 1
+        END AS CHK_YN 
+        , COUNT(*) AS OVER_LAP
+		FROM MSG_SMS_LIST
+		WHERE REQUEST_TIME = #{requestTime}
+		AND MSG_USG_YN = 'Y' 
+	</select>
+	
+	<!-- 엑셀업로드 후 MSG_SMS_LIST의 전송요청건수를 업데이트 함 -->
+	<update id="getSmsSendListCount" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO">
+	 	 /* smsMgmtMapper.getSmsSendListCount */
+	 	UPDATE MSG_SMS_LIST A
+			SET A.SEND_CNT = 
+    			(SELECT COUNT(*) FROM MSG_SMS_SEND_LIST B
+       			 WHERE MSG_NO = #{msgNo, jdbcType=VARCHAR})
+		WHERE A.MSG_NO = #{msgNo, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- SMS 템플릿 번호 조회해서 일치하는 메세지 타입 가져오기  메세지타입 1:SMS 2:SMS URL 3:MMS 4:MMS URL  -->
+	<select id="getMsgSendMsgType" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO" resultType="String">
+		/* smsMgmtMapper.getMsgSendMsgType */
+		SELECT MSG_TYPE AS MSG_TMP_ID
+		FROM   MSP_SMS_TEMPLATE_MST 
+		WHERE  TEMPLATE_ID = #{msgTmpId}
+	</select>
+	
+		<!-- SMS 템플릿 번호 조회해서   -->
+	<select id="getMsgSendKakaoYn" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO" resultType="String">
+		/* smsMgmtMapper.getMsgSendKakaoYn */
+		SELECT K_TEMPLATE_CODE AS KAKAO_YN
+		FROM   MSP_SMS_TEMPLATE_MST 
+		WHERE  TEMPLATE_ID = #{msgTmpId}
+	</select>
+	
+	<!-- 템플릿 테이블에서 CALLBACK(보내는전화번호) , SUBJECT(제목) , MSG_TEXT(내용)을 가져온다 -->
+	<update id="getSmsTmpCallBack" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendResVO">
+	 /* smsMgmtMapper.getSmsTmpCallBack */
+	 UPDATE MSG_SMS_SEND_LIST A
+		SET A.MSG_SEND_CTN = (SELECT CALLBACK FROM  MSP_SMS_TEMPLATE_MST B WHERE TEMPLATE_ID = #{msgTmpId, jdbcType=VARCHAR})
+		   ,A.MSG_TITLE = (SELECT SUBJECT FROM MSP_SMS_TEMPLATE_MST B WHERE TEMPLATE_ID = #{msgTmpId, jdbcType=VARCHAR})
+		   ,A.MSG_TEXT = (SELECT TEXT FROM  MSP_SMS_TEMPLATE_MST B WHERE TEMPLATE_ID = #{msgTmpId, jdbcType=VARCHAR})
+		WHERE A.MSG_NO = #{msgNo, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- TEMPLATE 조회 후 MSG_QUEUE 에 등록 -->
+	<insert id="insertMsgTmpQueue" parameterType="com.ktis.msp.cmn.smsmgmt.vo.MsgQueueReqVO">
+		<selectKey keyProperty="mseq,requestTime" order="BEFORE" resultType="com.ktis.msp.cmn.smsmgmt.vo.MsgQueueReqVO">
+			SELECT SMS_SEQ.NEXTVAL AS mseq
+			      ,DECODE(NVL(#{sendType}, 'I'), 'I', TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), #{requestTime}) AS requestTime
+			FROM   DUAL
+		</selectKey>
+		/* SmsMgmtMapper.insertMsgTmpQueue */
+		INSERT INTO MSG_QUEUE 
+		(
+			 MSEQ			 /* Sequence		*/
+			,MSG_TYPE		 /* 1:SMS 2:SMS URL 3:MMS 4:MMS URL	*/
+			,DSTADDR		 /* 수신자 번호	*/
+			,CALLBACK		 /* 발신자 번호	*/
+			,SUBJECT		 /* 제목 		*/
+			,TEXT			 /* 전송메시지	*/
+			,EXPIRETIME		 /* 유효시간		*/
+			,REQUEST_TIME	 /* 발송요청시간	*/
+			,OPT_ID			 /* SMS TEMPLATE ID	*/
+			,TEXT2           /* 카카오 실패 시 대체발송 메세지 */
+			,K_TEMPLATE_CODE /* 카카오 알림톡 템플릿 코드 */
+			,K_NEXT_TYPE     /* 카카오 실패 시 대체발송 메세지 타입 7:SMS, 8:LMS, 9:MMS */
+			,SENDER_KEY      /* 카카오 발신프로필키 */
+		)
+		SELECT #{mseq}
+			<choose>
+				<when test="senderKey != null and senderKey != ''"> ,'6' </when>
+				<otherwise>	,MSG_TYPE </otherwise>
+			</choose>
+			 ,#{mobileNo}
+		     ,CALLBACK
+		     ,NVL( #{subject}, SUBJECT )
+		     ,NVL( #{text}, TEXT )
+		     ,<![CDATA[EXPIRE_HOUR * 60 * 60]]>
+		     ,TO_DATE(#{requestTime}, 'YYYYMMDDHH24MISS')
+		     ,TEMPLATE_ID
+		     ,NVL( #{text2}, TEXT )
+		     ,NVL( K_TEMPLATE_CODE, '')
+		     ,NVL( #{kNextType}, '')
+		     ,NVL( #{senderKey}, '')
+		FROM   MSP_SMS_TEMPLATE_MST
+		WHERE  TEMPLATE_ID = #{templateId}
+	</insert>
+	
+	<!-- MSG_QUEUE 에 등록 -->
+	<insert id="insertMsgQueue" parameterType="com.ktis.msp.cmn.smsmgmt.vo.MsgQueueReqVO">
+		/* SmsMgmtMapper.insertMsgQueue */
+		INSERT INTO MSG_QUEUE 
+		(
+			MSEQ
+			<if test="msgType != null and msgType != ''">
+			    ,MSG_TYPE
+			</if>
+			<if test="dstaddr != null and dstaddr != ''">
+			    ,DSTADDR
+			</if>
+			<if test="callback != null and callback != ''">
+			    ,CALLBACK
+			</if>
+			<if test="subject != null and subject != ''">
+			    ,SUBJECT
+			</if>
+			<if test="stat != null and stat != ''">
+			    ,STAT
+			</if>
+			<if test="textType != null and textType != ''">
+			    ,TEXT_TYPE
+			</if>
+			<if test="text != null and text != ''">
+			    ,TEXT
+			</if>
+			<if test="expiretime != null and expiretime != ''">
+			    ,EXPIRETIME
+			</if>
+			<if test="requestTime != null and requestTime != ''">
+			    ,REQUEST_TIME
+			</if>
+			<if test="optId != null and optId != ''">
+			    ,OPT_ID
+			</if>
+			<if test="extCol0 != null and extCol0 != ''">
+			    ,EXT_COL0
+			</if>
+			<if test="text2 != null and text2 != ''">
+			    ,TEXT2
+			</if>
+			<if test="kTemplateCode != null and kTemplateCode != ''">
+			    ,K_TEMPLATE_CODE
+			</if>
+			<if test="kNextType != null and kNextType != ''">
+			    ,K_NEXT_TYPE
+			</if>
+			<if test="senderKey != null and senderKey != ''">
+			    ,SENDER_KEY
+			</if>
+			<if test="fileCnt != null and fileCnt != ''">
+			    ,FILECNT
+			</if>
+			<if test="fileLoc1 != null and fileLoc1 != ''">
+			    ,FILELOC1
+			</if>
+			<if test="fileLoc2 != null and fileLoc2 != ''">
+			    ,FILELOC2
+			</if>
+			<if test="fileLoc3 != null and fileLoc3 != ''">
+			    ,FILELOC3
+			</if>
+			<if test="fileLoc4 != null and fileLoc4 != ''">
+			    ,FILELOC4
+			</if>
+			<if test="fileLoc5 != null and fileLoc5 != ''">
+			    ,FILELOC5
+			</if>
+		) VALUES (
+			SMS_SEQ.NEXTVAL
+			<if test="msgType != null and msgType != ''">
+			    ,#{msgType}
+			</if>
+			<if test="dstaddr != null and dstaddr != ''">
+			    ,#{dstaddr}
+			</if>
+			<if test="callback != null and callback != ''">
+			    ,#{callback}
+			</if>
+			<if test="subject != null and subject != ''">
+			    ,#{subject}
+			</if>
+			<if test="stat != null and stat != ''">
+			    ,#{stat}
+			</if>
+			<if test="textType != null and textType != ''">
+			    ,#{textType}
+			</if>
+			<if test="text != null and text != ''">
+			    ,#{text}
+			</if>
+			<if test="expiretime != null and expiretime != ''">
+			    ,#{expiretime}
+			</if>
+			<if test="requestTime != null and requestTime != ''">
+				,TO_DATE(#{requestTime}, 'YYYYMMDDHH24MISS')
+			</if>
+			<if test="optId != null and optId != ''">
+			    ,#{optId}
+			</if>
+			<if test="extCol0 != null and extCol0 != ''">
+			    ,#{extCol0}
+			</if>
+			<if test="text2 != null and text2 != ''">
+			    ,#{text2}
+			</if>
+			<if test="kTemplateCode != null and kTemplateCode != ''">
+			    ,#{kTemplateCode}
+			</if>
+			<if test="kNextType != null and kNextType != ''">
+			    ,#{kNextType}
+			</if>
+			<if test="senderKey != null and senderKey != ''">
+			    ,#{senderKey}
+			</if>
+			<if test="fileCnt != null and fileCnt != ''">
+			    ,#{fileCnt}
+			</if>
+			<if test="fileLoc1 != null and fileLoc1 != ''">
+			    ,#{fileLoc1}
+			</if>
+			<if test="fileLoc2 != null and fileLoc2 != ''">
+			    ,#{fileLoc2}
+			</if>
+			<if test="fileLoc3 != null and fileLoc3 != ''">
+			    ,#{fileLoc3}
+			</if>
+			<if test="fileLoc4 != null and fileLoc4 != ''">
+			    ,#{fileLoc4}
+			</if>
+			<if test="fileLoc5 != null and fileLoc5 != ''">
+			    ,#{fileLoc5}
+			</if>
+		)
+
+	</insert>
+	
+	<!-- MSG_QUEUE 에 등록 -->
+	<insert id="insertKtMsgQueue" parameterType="com.ktis.msp.cmn.smsmgmt.vo.KtMsgQueueReqVO">
+		/* SmsMgmtMapper.insertKtMsgQueue */
+		INSERT INTO AM2X_SUBMIT 
+		(
+			MSG_ID
+			<if test="subject != null and subject != ''">
+			    ,SUBJECT
+			</if>
+			<if test="msgType != null and msgType != ''">
+			    ,MSG_TYPE
+			</if>
+			<if test="msgTypeSecond != null and msgTypeSecond != ''">
+			    ,MSG_TYPE_SECOND
+			</if>
+			<if test="msgTypeThird != null and msgTypeThird != ''">
+			    ,MSG_TYPE_THIRD
+			</if>
+			    ,SCHEDULE_TIME
+			    ,SUBMIT_TIME
+			<if test="message != null and message != ''">
+			    ,MESSAGE
+			</if>
+			<if test="callbackNum != null and callbackNum != ''">
+			    ,CALLBACK_NUM
+			</if>
+			<if test="rcptData != null and rcptData != ''">
+			    ,RCPT_DATA
+			</if>
+			<if test="fileCount != null and fileCount != ''">
+			    ,FILE_COUNT
+			</if>
+			<if test="fileName1 != null and fileName1 != ''">
+			    ,FILE_NAME1
+			</if>
+			<if test="fileName2 != null and fileName2 != ''">
+			    ,FILE_NAME2
+			</if>
+			<if test="fileName3 != null and fileName3 != ''">
+			    ,FILE_NAME3
+			</if>
+			<if test="cdrId != null and cdrId != ''">
+			    ,CDR_ID
+			</if>
+			<if test="failSend != null and failSend != ''">
+			    ,FAIL_SEND
+			</if>
+			<if test="kTmplcode != null and kTmplcode != ''">
+			    ,K_TMPLCODE
+			</if>
+			<if test="kMessage != null and kMessage != ''">
+			    ,K_MESSAGE
+			</if>
+			<if test="kButton != null and kButton != ''">
+			    ,K_BUTTON
+			</if>
+			<if test="kAdflag != null and kAdflag != ''">
+			    ,K_ADFLAG
+			</if>
+			<if test="kSenderkey != null and kSenderkey != ''">
+			    ,K_SENDERKEY
+			</if>
+			<if test="rMessagebaseid != null and rMessagebaseid != ''">
+			    ,R_MESSAGEBASEID
+			</if>
+			<if test="rBody != null and rBody != ''">
+			    ,R_BODY
+			</if>
+			<if test="rButton != null and rButton != ''">
+			    ,R_BUTTON
+			</if>
+			<if test="rHeader != null and rHeader != ''">
+			    ,R_HEADER
+			</if>
+			<if test="rFooter != null and mrFootersgType != ''">
+			    ,R_FOOTER
+			</if>
+			<if test="rCopyallowed != null and rCopyallowed != ''">
+			    ,R_COPYALLOWED
+			</if>
+			<if test="rQueryid != null and rQueryid != ''">
+			    ,R_QUERYID
+			</if>
+			<if test="reserved01 != null and reserved01 != ''">
+			    ,RESERVED01
+			</if>
+			<if test="reserved02 != null and reserved02 != ''">
+			    ,RESERVED02
+			</if>
+			<if test="reserved03 != null and reserved03 != ''">
+			    ,RESERVED03
+			</if>
+			<if test="kisaOrigCode != null and kisaOrigCode != ''">
+			    ,KISA_ORIG_CODE
+			</if>
+			<if test="rAgencyid != null and rAgencyid != ''">
+			    ,R_AGENCYID
+			</if>
+			<if test="rAgencykey != null and rAgencykey != ''">
+			    ,R_AGENCYKEY
+			</if>
+			<if test="rBrandkey != null and rBrandkey != ''">
+			    ,R_BRANDKEY
+			</if>
+			<if test="rCdrId != null and rCdrId != ''">
+			    ,R_CDR_ID
+			</if>
+			
+		) VALUES (
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			<if test="subject != null and subject != ''">
+			    ,#{subject}
+			</if>
+			<if test="msgType != null and msgType != ''">
+				<if test="fileCount != null and fileCount != ''">
+				    ,#{msgType}
+				</if>
+				<if test="fileCount == null or fileCount == ''">
+				    ,DECODE(#{msgType}, '3', '2', #{msgType})
+				</if>
+			</if>
+			<if test="msgTypeSecond != null and msgTypeSecond != ''">
+			    ,#{msgTypeSecond}
+			</if>
+			<if test="msgTypeThird != null and msgTypeThird != ''">
+			    ,#{msgTypeThird}
+			</if>
+			<choose>
+				<when test="scheduleTime != null and scheduleTime != ''"> ,#{scheduleTime} </when>
+				<otherwise>,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') </otherwise>
+			</choose>
+			<choose>
+				<when test="submitTime != null and submitTime != ''"> ,#{submitTime} </when>
+				<otherwise>,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') </otherwise>
+			</choose>
+			<if test="message != null and message != ''">
+			    ,#{message}
+			</if>
+			<if test="callbackNum != null and callbackNum != ''">
+			    ,#{callbackNum}
+			</if>
+			<if test="rcptData != null and rcptData != ''">
+			    ,REPLACE(#{rcptData},CHR(10),'')
+			</if>
+			<if test="fileCount != null and fileCount != ''">
+			    ,#{fileCount}
+			</if>
+			<if test="fileName1 != null and fileName1 != ''">
+			    ,#{fileName1}
+			</if>
+			<if test="fileName2 != null and fileName2 != ''">
+			    ,#{fileName2}
+			</if>
+			<if test="fileName3 != null and fileName3 != ''">
+			    ,#{fileName3}
+			</if>
+			<if test="cdrId != null and cdrId != ''">
+			    ,#{cdrId}
+			</if>
+			<if test="failSend != null and failSend != ''">
+			    ,#{failSend}
+			</if>
+			<if test="kTmplcode != null and kTmplcode != ''">
+			    ,#{kTmplcode}
+			</if>
+			<if test="kMessage != null and kMessage != ''">
+			    ,#{kMessage}
+			</if>
+			<if test="kButton != null and kButton != ''">
+			    ,#{kButton}
+			</if>
+			<if test="kAdflag != null and kAdflag != ''">
+			    ,#{kAdflag}
+			</if>
+			<if test="kSenderkey != null and kSenderkey != ''">
+			    ,#{kSenderkey}
+			</if>
+			<if test="rMessagebaseid != null and rMessagebaseid != ''">
+			    ,#{rMessagebaseid}
+			</if>
+			<if test="rBody != null and rBody != ''">
+			    ,#{rBody}
+			</if>
+			<if test="rButton != null and rButton != ''">
+			    ,#{rButton}
+			</if>
+			<if test="rHeader != null and rHeader != ''">
+			    ,#{rHeader}
+			</if>
+			<if test="rFooter != null and mrFootersgType != ''">
+			    ,#{rFooter}
+			</if>
+			<if test="rCopyallowed != null and rCopyallowed != ''">
+			    ,#{rCopyallowed}
+			</if>
+			<if test="rQueryid != null and rQueryid != ''">
+			    ,#{rQueryid}
+			</if>
+			<if test="reserved01 != null and reserved01 != ''">
+			    ,#{reserved01}
+			</if>
+			<if test="reserved02 != null and reserved02 != ''">
+			    ,#{reserved02}
+			</if>
+			<if test="reserved03 != null and reserved03 != ''">
+			    ,#{reserved03}
+			</if>
+			<if test="kisaOrigCode != null and kisaOrigCode != ''">
+			    ,#{kisaOrigCode}
+			</if>
+			<if test="rAgencyid != null and rAgencyid != ''">
+			    ,#{rAgencyid}
+			</if>
+			<if test="rAgencykey != null and rAgencykey != ''">
+			    ,#{rAgencykey}
+			</if>
+			<if test="rBrandkey != null and rBrandkey != ''">
+			    ,#{rBrandkey}
+			</if>
+			<if test="rCdrId != null and rCdrId != ''">
+			    ,#{rCdrId}
+			</if>
+		)
+
+	</insert>	
+	
+	<!-- TEMPLATE 조회 후 AM2X_SUBMIT 에 등록 -->
+	<insert id="insertKtMsgTmpQueue" parameterType="com.ktis.msp.cmn.smsmgmt.vo.KtMsgQueueReqVO">
+		<selectKey keyProperty="msgId,scheduleTime" order="BEFORE" resultType="com.ktis.msp.cmn.smsmgmt.vo.KtMsgQueueReqVO">
+			SELECT AM2X_SUBMIT_SEQ.NEXTVAL AS msgId
+			      ,DECODE(NVL(#{sendType}, 'I'), 'I', TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), #{scheduleTime}) AS scheduleTime
+			FROM   DUAL
+		</selectKey>
+		/* SmsMgmtMapper.insertKtMsgTmpQueue */
+		INSERT INTO AM2X_SUBMIT 
+		(
+			 MSG_ID			 		/* Sequence		*/
+			,MSG_TYPE		 		/* 1=SMS 2=LMS 3=MMS 6=A_KAKAO */
+			,FAIL_SEND		 		/* 실패시 재 발송 여부(카카오 실패일 경우 발송)*/
+			,RCPT_DATA		 		/* 수신자 번호	*/
+			,CALLBACK_NUM		/* 발신자 번호	*/
+			,SUBJECT		 			/* 제목 		*/
+			,MESSAGE			 	/* 전송메시지	*/
+			,SCHEDULE_TIME	 	/* 발송요청시간	*/
+			,SUBMIT_TIME	 		/* 등록시간	*/
+			,RESERVED01			/* MSP	*/
+			,RESERVED02			/* SMS TEMPLATE ID	*/
+			,RESERVED03			/* 발송자,발송화면	*/
+			,K_MESSAGE           	/* 카카오 실패 시 대체발송 메세지 */
+			,K_TMPLCODE		  	/* 카카오 알림톡 템플릿 코드 */
+			,MSG_TYPE_SECOND 	/*  카카오 실패 시 대체발송 메세지 타입 1=SMS 2=LMS 3=MMS */
+			,K_SENDERKEY      		/* 카카오 발신프로필키 */
+		)
+		SELECT #{msgId}
+			<choose>
+				<when test="kSenderkey != null and kSenderkey != ''"> , '6', 'Y'</when>
+				<otherwise>	,DECODE(MSG_TYPE, '3', '2', MSG_TYPE), 'N' </otherwise>
+			</choose>
+			 ,#{rcptData}
+		     ,CALLBACK
+		     ,NVL( #{subject}, SUBJECT )
+		     ,NVL( #{message}, TEXT )
+		     ,#{scheduleTime}
+		     ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		     ,#{reserved01}
+		     ,#{reserved02}
+		     ,#{reserved03}
+		     <choose>
+				<when test="kSenderkey != null and kSenderkey != ''"> ,NVL( #{kMessage}, TEXT )</when>
+				<otherwise>, ''</otherwise>
+			</choose>
+		     ,NVL( K_TEMPLATE_CODE, '')
+		     ,NVL( #{msgTypeSecond}, 0)
+		     ,NVL( #{kSenderkey}, '')
+		FROM   MSP_SMS_TEMPLATE_MST
+		WHERE  TEMPLATE_ID = #{templateId}
+	</insert>
+	
+	<!-- 발송내역을 Kt 재발송내역으로 수정 -->
+	<update id="updateKtSmsSendMst" parameterType="com.ktis.msp.cmn.smsmgmt.vo.KtMsgQueueReqVO">
+		/* SmsMgmtMapper.updateSmsSendMst */
+		UPDATE  MSP_SMS_SEND_MST
+		SET     SEND_CNT = SEND_CNT + 1
+		       ,MSEQ = #{msgId}
+		       ,SEND_REQ_DTTM = #{scheduleTime}
+		       ,RVISN_ID = #{userId}
+		       ,RVISN_DTTM = SYSDATE
+		WHERE   SEND_SEQ = #{sendSeq}
+		AND 		KT_SMS_YN = 'Y'
+	</update>
+	
+	<!-- AM2X_SUBMIT_LOG 확인 -->
+	<select id="checkKtMsgResult" parameterType="com.ktis.msp.cmn.smsmgmt.vo.KtMsgQueueReqVO" resultType="int">
+		/* SmsMgmtMapper.checkKtMsgResult */
+		SELECT COUNT(1) AS CNT
+		FROM   AM2X_SUBMIT_LOG
+		WHERE  MSG_ID = #{msgId}
+	</select>
+	
+	<!-- AM2X_SUBMIT 삭제 -->
+	<delete id="deleteKtMsgQueue" parameterType="com.ktis.msp.cmn.smsmgmt.vo.KtMsgQueueReqVO">
+		/* SmsMgmtMapper.deleteKtMsgQueue */
+		DELETE
+		FROM   AM2X_SUBMIT
+		WHERE  MSG_ID = #{msgId}
+	</delete>
+	
+	<!-- MSP_SMS_SEND_MST 삭제 -->
+	<delete id="deleteKtSmsSendMst" parameterType="com.ktis.msp.cmn.smsmgmt.vo.KtMsgQueueReqVO">
+		/* SmsMgmtMapper.deleteKtSmsSendMst */
+		DELETE
+		FROM   MSP_SMS_SEND_MST
+		WHERE  SEND_SEQ = #{sendSeq}
+		AND 	   KT_SMS_YN = 'Y'
+	</delete>
+	
+	<!-- Kt 메세지 전송 Agent 사용 여부 확인 -->
+	<select id="isOtpUseKt" resultType="String">
+		/* SmsMgmtMapper.isOtpUseKt */
+		SELECT USG_YN
+		FROM   CMN_GRP_CD_MST
+		WHERE  GRP_ID = 'DEV0000'
+		AND    CD_VAL = 'OTPUSEKT'
+	</select>
+	
+	<!-- 템플릿 제목, 내용 조회 -->
+	<select id="getKtTemplateText" parameterType="String" resultType="com.ktis.msp.cmn.smsmgmt.vo.KtMsgQueueReqVO">
+		/* SmsMgmtMapper.getTemplateText */
+		SELECT text AS templateText
+			  ,subject AS templateSubject
+              ,template_id AS templateId
+              ,callback AS callbackNum
+		FROM   MSP_SMS_TEMPLATE_MST
+		WHERE  TEMPLATE_ID = #{templateId}
+	</select>
+	
+	<insert id='insertMsgDetailDt' parameterType="com.ktis.msp.cmn.smsmgmt.vo.KtMsgQueueReqVO">
+		/* SmsMgmtMapper.getMsgDetailDt */
+		INSERT INTO AM2X_SUBMIT (MSG_ID, SUBJECT, MSG_TYPE, MSG_TYPE_SECOND, SCHEDULE_TIME, SUBMIT_TIME, MESSAGE, CALLBACK_NUM, RCPT_DATA, FAIL_SEND, K_TMPLCODE ,K_MESSAGE, K_SENDERKEY,RESERVED01, RESERVED02, RESERVED03)
+		SELECT
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			,SUBJECT
+			,MSG_TYPE
+			,MSG_TYPE_SECOND
+			,TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+			,TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+			,MESSAGE
+			,CALLBACK_NUM
+			,RCPT_DATA
+			,FAIL_SEND
+			,K_TMPLCODE
+			,K_MESSAGE
+			,K_SENDERKEY
+			,#{reserved01}
+			,#{reserved02}
+			,#{reserved03}
+		FROM AM2X_SUBMIT_LOG
+		WHERE MSG_ID = #{msgId}	
+	</insert>
+</mapper>

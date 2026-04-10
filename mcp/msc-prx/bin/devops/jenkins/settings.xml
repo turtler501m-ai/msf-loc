@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+
+  <servers>
+    <server>
+      <id>maven-public-prx</id>
+      <username>jenkins</username>
+      <password>{lCss2nK7qT8H5fwMG6IW+t5yJl+VCHvsaslScvid1kE=}</password>
+    </server>
+  </servers>
+  <mirrors>
+
+    <mirror>
+      <id>maven-public-prx</id>
+      <mirrorOf>external:*</mirrorOf>
+      <url>http://211.253.137.5:8081/nexus/repository/maven-public-prx/</url>
+    </mirror>
+  </mirrors>
+  <localRepository>/home/cicd/.m2/repository</localRepository>
+</settings>

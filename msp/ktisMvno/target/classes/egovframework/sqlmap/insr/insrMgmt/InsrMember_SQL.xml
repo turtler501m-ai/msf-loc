@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.insr.insrMgmt.mapper.InsrMemberMapper">
+	
+	<sql id="getInsrMember">
+		SELECT
+				B.SUBSCRIBER_NO									AS subscriberNo
+				, B.SUB_LINK_NAME								AS subLinkName
+				, A.CONTRACT_NUM								AS contractNum
+				, A.INSR_PROD_CD								AS insrProdCd
+				, FN_GET_RATENM(A.INSR_PROD_CD)					AS insrProdNm
+				, A.STRT_DTTM									AS strtDttm
+				, A.END_DTTM									AS endDttm
+				, A.INSR_STAT_CD								AS insrStatCd
+				, FN_GET_CODENM('CMN0251', A.INSR_STAT_CD)		AS insrStatNm
+				, A.MODEL_NM									AS modelNm
+				, A.INTM_SRL_NO									AS intmSrlNo
+				, A.MODEL_ID									AS modelId
+				, A.CHN_CD										AS chnCd
+				, FN_GET_CODENM('CMN0249', A.CHN_CD)			AS chnNm
+				, C.REQ_BUY_TYPE								AS reqBuyType
+				, FN_GET_CODENM('RCP9004', C.REQ_BUY_TYPE)		AS reqBuyTypeNm
+				, B.SCAN_ID										AS scanId
+				, C.RES_NO										AS resNo
+				, B.OPEN_AGNT_CD								AS openAgntCd
+				, FN_GET_ORGNM(B.OPEN_AGNT_CD)					AS openAgntNm
+				, A.INSR_MNGM_NO								AS insrMngmNo
+				, NVL(A.RMN_CMPN_AMT, D.CMPN_LMT_AMT)			AS rmnCmpnAmt
+				, A.CAN_RSLT_CD									AS canRsltCd
+				, FN_GET_CODENM('CMN0252', A.CAN_RSLT_CD)		AS canRsltNm
+				, D.CMPN_LMT_AMT								AS cmpnLmtAmt
+				, D.INSR_ENGG_CNT								AS insrEnggCnt
+                , A.REQ_IN_DAY									AS reqinday        /* 신청일자 */
+		FROM
+				MSP_INTM_INSR_MEMBER A
+				, MSP_JUO_SUB_INFO B
+				, MSP_REQUEST_DTL C
+				, MSP_INTM_INSR_MST D
+		WHERE	A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND		A.CONTRACT_NUM = C.CONTRACT_NUM
+		AND		A.INSR_PROD_CD = D.INSR_PROD_CD
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+			<choose>
+				<when test='searchGb == "reqinday"'><!-- 신청일자 조회 -->
+				AND A.REQ_IN_DAY BETWEEN #{searchFromDt} || '000000'  AND #{searchToDt} || '235959'
+				</when>
+				<when test='searchGb == "strtDttm"'><!-- 가입일자 조회 -->
+				AND A.STRT_DTTM BETWEEN #{searchFromDt} || '000000'  AND #{searchToDt} || '235959'
+				</when>
+			</choose>
+		</if>
+		<if test="insrProdCd != null and insrProdCd != ''">
+			AND A.INSR_PROD_CD = #{insrProdCd}
+		</if>
+		<if test="reqBuyType != null and reqBuyType != ''">
+			AND C.REQ_BUY_TYPE = #{reqBuyType}
+		</if>
+		<if test="insrStatCd != null and insrStatCd != ''">
+			AND A.INSR_STAT_CD = #{insrStatCd}
+		</if>
+		<choose>
+			<when test='searchCd == "10"'>
+				AND B.CONTRACT_NUM = #{searchVal}
+			</when>
+			<when test='searchCd == "20"'>
+				AND B.SUB_LINK_NAME LIKE #{searchVal} || '%'
+			</when>
+			<when test='searchCd == "30"'>
+				AND B.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+			</when>
+		</choose>
+		<if test="agntId != null and agntId != ''">
+			AND B.OPEN_AGNT_CD =  #{agntId}
+		</if>
+		ORDER BY A.STRT_DTTM, B.SUB_LINK_NAME
+	</sql>
+	
+	<select id="getInsrMemberList" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMemberVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrMemberVO">
+		/* InsrMemberMapper.getInsrMemberList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getInsrMember" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getInsrMemberListByExcel" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrMemberVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrMemberVO">
+		/* InsrMemberMapper.getInsrMemberListByExcel */
+		<include refid="getInsrMember" />
+	</select>
+	
+	<select id="getInsrCntrInfo" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrRegVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrRegVO">
+		/* InsrMemberMapper.getInsrCntrInfo */
+		SELECT
+			A.SUBSCRIBER_NO								AS subscriberNo
+			, A.CONTRACT_NUM							AS contractNum
+			, A.SUB_LINK_NAME							AS custNm
+			, A.SUB_STATUS								AS subStatus
+			, FN_GET_CODENM('MSP0003', A.SUB_STATUS)	AS subStatusNm
+			, A.OPEN_AGNT_CD							AS openAgntCd
+			, FN_GET_ORGNM(A.OPEN_AGNT_CD)				AS openAgntNm
+			, A.LST_COM_ACTV_DATE						AS openDt
+			, DVC.DVC_CHG_DT							AS dvcChgDt
+			, B.SOC										AS insrProdCd
+			, FN_GET_RATENM(B.SOC)						AS insrProdNm
+			, B.EFFECTIVE_DATE							AS strtDt
+			, B.EXPIRATION_DATE							AS endDt
+			, B.EVNT_TRTM_DT      						AS reqinday
+			, DECODE(DVC.CONTRACT_NUM, NULL, MRD.REQ_BUY_TYPE, 'MM')							AS reqBuyType
+			, FN_GET_CODENM('RCP9004', DECODE(DVC.CONTRACT_NUM, NULL, MRD.REQ_BUY_TYPE, 'MM'))	AS reqBuyTypeNm
+			, FN_GET_CODENM('CMN0251', IIM.INSR_STAT_CD)										AS intmInsrStatNm
+			, IIM.INSR_PROD_CD																	AS sbscInsrProdCd
+			, FN_GET_RATENM(IIM.INSR_PROD_CD)													AS sbscInsrProdNm
+			, IIM.STRT_DTTM																		AS sbscInsrStrtDt
+			, IIM.END_DTTM																		AS sbscInsrEndDt
+			, IIM.MODEL_NM																		AS insrModelNm
+			, IIM.MODEL_ID																		AS insrModelId
+			, IIM.INTM_SRL_NO																	AS insrIntmSrlNo
+			, DECODE(DVC.CONTRACT_NUM, NULL, DECODE(MRD.REQ_BUY_TYPE, 'MM', TRIM(SUBSTR(MRD.FST_MODEL_INFO, 21, 20)), ''), DVC.MODEL_NM)	AS trgtModelNm
+			, DECODE(DVC.CONTRACT_NUM, NULL, DECODE(MRD.REQ_BUY_TYPE, 'MM', TRIM(SUBSTR(MRD.FST_MODEL_INFO, 1, 20)), ''), DVC.MODEL_ID)		AS trgtModelId
+			, DECODE(DVC.CONTRACT_NUM, NULL, DECODE(MRD.REQ_BUY_TYPE, 'MM', TRIM(SUBSTR(MRD.FST_MODEL_INFO, 41, 30)), ''), DVC.INTM_SRL_NO)	AS trgtIntmSrlNo
+		FROM
+			MSP_JUO_SUB_INFO A
+			, MSP_JUO_FEATURE_INFO B
+			, MSP_INTM_INSR_MST C
+			, MSP_INTM_INSR_MEMBER IIM
+			, ( SELECT
+					B.CONTRACT_NUM
+					, SUBSTR(B.APPL_STRT_DTTM, 1, 8) AS DVC_CHG_DT
+					, B.MODEL_NM
+					, B.MODEL_ID
+					, B.INTM_SRL_NO
+				FROM
+					MSP_JUO_SUB_INFO A
+					, MSP_DVC_CHG_AGNT_HST B
+				WHERE	A.CONTRACT_NUM = B.CONTRACT_NUM
+				AND		B.REQUEST_KEY IS NOT NULL
+				/* 여러번 기변을 한 경우 최종 값을 조회 */
+				AND		B.APPL_STRT_DTTM = (SELECT MAX(APPL_STRT_DTTM) FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = B.CONTRACT_NUM AND REQUEST_KEY IS NOT NULL)
+			) DVC
+			, MSP_REQUEST_DTL MRD
+		WHERE	A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND		B.SOC = C.INSR_PROD_CD
+		AND		B.APP_END_DATE >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		AND		A.CONTRACT_NUM = IIM.CONTRACT_NUM
+		AND		IIM.END_DTTM = (SELECT MAX(END_DTTM) FROM MSP_INTM_INSR_MEMBER WHERE CONTRACT_NUM = A.CONTRACT_NUM )
+		AND		A.CONTRACT_NUM = DVC.CONTRACT_NUM(+)
+		AND		A.CONTRACT_NUM = MRD.CONTRACT_NUM
+		AND		A.PPPO = 'PO'
+		AND		A.SUB_STATUS IN ('A', 'S')
+		AND		A.CONTRACT_NUM = #{searchCntrNo}
+	</select>
+	
+	<select id="getIntmInsrOrderYn" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrRegVO" resultType="String">
+		/* InsrMemberMapper.getIntmInsrOrderYn */
+		SELECT	DECODE(COUNT(1), 0, 'N', 'Y') UPD_YN
+		FROM	MSP_INTM_INSR_ORDER
+		WHERE	CONTRACT_NUM = #{contractNum}
+		AND		INSR_PROD_CD = #{insrProdCd}
+		AND		STRT_DTTM = #{strtDt}
+		AND		IF_TRGT_CD IN ('N', 'Y')
+	</select>
+	
+	<update id="updMspIntmInsrOrderByCancel" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper.updMspIntmInsrOrder */
+		UPDATE MSP_INTM_INSR_ORDER
+		SET		IF_TRGT_CD = 'C'
+				, END_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+				, RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+		WHERE	CONTRACT_NUM = #{contractNum}
+		AND		INSR_PROD_CD = #{insrProdCd}
+		AND		STRT_DTTM = #{strtDt}
+	</update>
+	
+	<insert id="regMspIntmInsrOrder" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper."regMspIntmInsrOrder" */
+		INSERT INTO MSP_INTM_INSR_ORDER
+		(
+			CONTRACT_NUM
+			, INSR_PROD_CD
+			, STRT_DTTM
+			, END_DTTM
+			, IF_TRGT_CD
+			, INSR_STAT_CD
+			, CHN_CD
+			, INSR_EVNT_CD
+			, REQ_BUY_TYPE
+			, DVC_CHG_DT
+			, OPEN_DT
+			, MODEL_NM
+			, MODEL_ID
+			, INTM_SRL_NO
+			, CLAUSE_FLAG
+			, IMG_CHK_YN
+			, VRFY_RSLT_CD
+			, FST_VRFY_DTTM
+			, FST_VRFY_ID
+			, SND_VRFY_DTTM
+			, SND_VRFY_ID
+			, RMK
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+			, REQ_IN_DAY
+		)
+		VALUES
+		(
+			#{contractNum}
+			, #{insrProdCd}
+			, #{strtDt}
+			, #{endDt}
+			, 'Y'
+			, '1'
+			, '3'
+			, DECODE(#{dvcChgDt}, NULL, '1', '2')
+			, #{reqBuyType}
+			, #{dvcChgDt}
+			, #{openDt}
+			, #{trgtModelNm}
+			, #{trgtModelId}
+			, #{trgtIntmSrlNo}
+			, 'Y'
+			, 'Y'
+			, 'FOK'
+			, SYSDATE
+			, #{sessionUserId}
+			, NULL
+			, NULL
+			, NULL
+			, #{sessionUserId}
+			, SYSDATE
+			, #{sessionUserId}
+			, SYSDATE
+			, #{reqinday}
+		)
+	</insert>
+	
+</mapper>

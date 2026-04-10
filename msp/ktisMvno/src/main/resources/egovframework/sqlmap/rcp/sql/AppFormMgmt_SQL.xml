@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.AppFormMgmtMapper">
+	
+	<sql id="getAppFormData">
+		SELECT  A.SCAN_ID
+		        , A.WORK_ID
+		        , B.WORK_NM
+		        , A.AGENCY_ID
+		        , FN_GET_ORGNM(A.AGENCY_ID) AS AGNT_NM
+		        , A.COMPANY_ID
+		        , FN_GET_ORGNM(A.COMPANY_ID) AS SHOP_NM
+		        , A.CUST_NM
+		        , A.C_MEMO
+		        , A.SCAN_FILE_CNT
+		        , A.DOC_TITLE
+		        , A.DOC_STATUS
+		        , A.USE_YN
+		        , A.RGST_PRSN_ID
+		        , FN_GET_USRNM(A.RGST_PRSN_ID) AS RGST_PRSN_NM
+		        , A.ONLINE_YN
+		        , A.RGST_DT
+		        , TO_CHAR(A.RGST_DT, 'YYYY-MM-DD HH24:MI:SS') AS REG_DTTM
+		        , A.PROC_PRSN_ID
+		        , FN_GET_USRNM(A.PROC_PRSN_ID) AS PROC_PRSN_NM
+		        , TO_CHAR(A.PROC_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS PROC_DTTM
+		        , NVL(A.PROC_STAT_CD, '00') AS PROC_STAT_CD
+		        , NVL(A.PROC_STAT_CD, '00') AS ORG_PROC_STAT_CD
+		        , FN_GET_CODENM('RCP0065', NVL(A.PROC_STAT_CD, '00')) AS PROC_STAT_NM
+		        , CASE
+		            WHEN A.PROC_STAT_CD IN ( '90', '99' ) AND A.PROC_DTTM <![CDATA[ < ]]> SYSDATE - 14 THEN 'N'
+		            ELSE 'Y'
+		        END AS VIEW_YN
+		        , NVL(( SELECT  CASE WHEN A.PROC_STAT_CD IN ('10', '11', '20') THEN MAX(RES_NO) ELSE '' END 
+		            FROM    MCP_REQUEST@DL_MCP
+		            WHERE   SCAN_ID = A.SCAN_ID
+		            AND     PSTATE = '00'
+		        ), 'TMP1234') AS RES_NO
+		FROM    EMV_SCAN_MST@DL_MCP A
+		        , EMV_SCAN_WORK@DL_MCP B
+		WHERE   1 = 1
+		AND     A.WORK_ID = B.WORK_ID
+		AND     A.RGST_DT BETWEEN TO_DATE(#{strtDt} || '000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{endDt} || '235959', 'YYYYMMDDHH24MISS')
+		<if test="agntCd != null and agntCd != ''">
+			AND A.AGENCY_ID = #{agntCd}
+		</if>
+		<if test="shopCd != null and shopCd != ''">
+			AND A.COMPANY_ID = #{shopCd}
+		</if>
+		<if test="procStatCd != null and procStatCd != ''">
+			AND NVL(A.PROC_STAT_CD, '00') = #{procStatCd} 
+		</if>
+		<if test="custNm != null and custNm != ''">
+			AND A.CUST_NM LIKE '%' || #{custNm} || '%'
+		</if>
+		ORDER BY A.RGST_DT DESC
+	</sql>
+	
+	<!-- 서식지함조회 -->
+	<select id="getAppFormMgmtList"
+			parameterType="com.ktis.msp.rcp.rcpMgmt.vo.AppFormMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* appFormMapper.getAppFormMgmtList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getAppFormData" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 서식지함엑셀다운로드 -->
+	<select id="getAppFormMgmtListExcel"
+			parameterType="com.ktis.msp.rcp.rcpMgmt.vo.AppFormMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* appFormMapper.getAppFormMgmtListExcel */
+		
+		<include refid="getAppFormData" />
+		
+	</select>
+	
+	<!-- 서식지함상태변경 -->
+	<update id="updateAppFormData" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.AppFormMgmtVO">
+		/* appFormMapper.updateAppFormData */
+		UPDATE  EMV_SCAN_MST@DL_MCP
+		SET     PROC_STAT_CD = #{procStatCd}
+		<if test="custNm != null and custNm != ''">
+		        , CUST_NM = NVL(#{custNm}, CUST_NM)
+		</if>
+		<if test="cMemo != null and cMemo != ''">
+		        , C_MEMO = #{cMemo}
+		</if>
+		<choose>
+			<when test="procStatCd == '10' or procStatCd == '11' or procStatCd == '90' or procStatCd == '99'">
+				, PROC_PRSN_ID = #{sessionUserId}
+				, PROC_DTTM = SYSDATE
+			</when>
+			<otherwise>
+				, MDFY_DT = SYSDATE
+				, MDFY_PRSN_ID = #{sessionUserId}
+			</otherwise>
+		</choose>
+		WHERE   SCAN_ID = #{scanId}
+	</update>
+	
+	<!-- 상태체크 -->
+	<select id="getAppFormStatCd"
+			parameterType="com.ktis.msp.rcp.rcpMgmt.vo.AppFormMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* appFormMapper.getAppFormStatCd */
+		SELECT  NVL(PROC_STAT_CD, '00') AS PROC_STAT_CD
+		FROM    EMV_SCAN_MST@DL_MCP
+		WHERE   SCAN_ID = #{scanId}
+	</select>
+	
+</mapper>

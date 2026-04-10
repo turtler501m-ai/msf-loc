@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+
+  <servers>
+    <server>
+        <id>maven-mirror</id> <!-- mirror id 또는 repository id -->
+        <username>jenkins</username>
+        <password>new1234!</password>
+    </server>
+  </servers>
+  <mirrors>
+    <!--
+    <mirror>
+      <id>public</id>
+      <mirrorOf>external:*</mirrorOf>
+      <url>http://211.253.137.5:8081/nexus/repository/maven-public/</url>
+    </mirror>
+    -->
+    <mirror>
+        <id>nexus-mirror</id>
+        <mirrorOf>*</mirrorOf>
+        <url>http://nexus.ktmmobile.com:8082/repository/maven-public/</url>
+    </mirror>
+  </mirrors>
+  <localRepository>/home/cicd/.m2/repository</localRepository>
+</settings>

@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.insr.insrMgmt.mapper.InsrCmpnMapper">
+	
+	<select id="getInsrCmpnListByInsrMngmNo" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO">
+		/* InsrOrderMapper.getInsrCmpnListByInsrMngmNo */
+		SELECT
+				FN_GET_CODENM('CMN0253', A.IF_CD)				AS cmpnTypeNm
+				, A.INSR_MNGM_NO		AS insrMngmNo
+				, A.ACDNT_NO			AS acdntNo
+				, A.ACDNT_REG_DT		AS acdntRegDt
+				, A.ACDNT_DT			AS acdntDt
+				, A.CMPN_CNFM_DT		AS cmpnCnfmDt
+				, A.RMN_CMPN_AMT		AS rmnCmpnAmt		--잔여보상금액
+				, A.CMPN_ACML_AMT		AS cmpnAcmlAmt		--보상누적금액
+				, A.RMN_CMPN_LMT_AMT	AS rmnCmpnLmtAmt	--잔여보상한도금액
+				, A.CUST_BRDN_AMT		AS custBrdnAmt		--고객부담금
+				, A.REAL_CMPN_AMT		AS realCmpnAmt		--실보상금액
+				, A.OVER_AMT			AS overAmt			--초과금
+				, A.USIM_AMT			AS usimAmt			--유심비용
+				, FN_GET_USRNM(A.REGST_ID)					AS rvisnId
+				, TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS')	AS regstDttm
+		FROM	MSP_INTM_INSR_CMPN_MST_IF A
+		WHERE	A.IF_CD IN ('A', 'P')
+		AND		A.INSR_MNGM_NO = #{insrMngmNo}
+		ORDER BY A.ACDNT_DT
+	</select>
+	
+	<sql id="getInsrCmpn">
+		SELECT
+			C.SUBSCRIBER_NO								AS subscriberNo
+			, C.SUB_LINK_NAME							AS subLinkName
+			, A.CONTRACT_NUM							AS contractNum
+			, B.INSR_PROD_CD							AS insrProdCd
+			, FN_GET_RATENM(B.INSR_PROD_CD)				AS insrProdNm
+			, A.IF_CD									AS cmpnType
+			, FN_GET_CODENM('CMN0253', A.IF_CD)			AS cmpnTypeNm
+			, B.MODEL_NM								AS modelNm
+			, B.MODEL_ID								AS modelId
+			, B.INTM_SRL_NO								AS intmSrlNo
+			, A.INSR_MNGM_NO							AS insrMngmNo
+			, A.ACDNT_NO								AS acdntNo			--상담(사고)번호
+			, A.ACDNT_REG_DT							AS acdntRegDt		--사고등록일자
+			, A.ACDNT_DT								AS acdntDt			--사고일자
+			, A.ACDNT_TP								AS acdntTp			--사고유형
+			, A.CMPN_CNFM_DT							AS cmpnCnfmDt		--승인일자
+			, A.CMPN_LMT_AMT							AS cmpnLmtAmt		--보상한도금액
+			, A.RMN_CMPN_AMT							AS rmnCmpnAmt		--잔여보상금액
+			, A.CMPN_ACML_AMT							AS cmpnAcmlAmt		--보상누적금액
+			, A.RMN_CMPN_LMT_AMT						AS rmnCmpnLmtAmt	--잔여보상한도금액
+			, A.RCPT_AMT								AS rcptAmt			--영수증금액
+			, A.REAL_CMPN_AMT							AS realCmpnAmt		--실보상금액
+			, A.BANK_NM									AS bankNm			--은행명
+			, CRYPTO_AES256.DEC_AES(A.ACNT_NO)			AS acntNo			--입금계좌번호
+			, A.DPST_NM									AS dpstNm			--예금주
+			, DECODE(A.IF_CD,'A',A.OUT_UNIT_PRIC,'')    AS outUnitPric      --출고가
+			, A.CUST_BRDN_AMT							AS custBrdnAmt		--고객부담금
+			, A.OVER_AMT								AS overAmt			--초과금
+			, A.USIM_AMT								AS usimAmt			--유심비용
+			, A.CMPN_MODEL_NM							AS cmpnModelNm		--대표모델
+			, A.CMPN_MODEL_COLOR						AS cmpnModelColor	--색상모델
+			, FN_GET_CODENM('RCP0200', D.VRFY_RSLT_CD)  AS vrfyRsltNm		--검증결과
+			, E.PAY_TYPE								AS payType			--결제유형
+			, FN_GET_CODENM('CMN0254', E.PAY_TYPE)		AS payTypeNm
+			, E.PAY_AMT									AS payAmt			--결제금액
+			, E.PAY_YN									AS payYn			--결제상태
+			, E.VAC_BANK_CD								AS vacBankCd		--가상계좌은행
+			, F_GET_KT_CODE_NM('PPS_VAC', 'BANK_CODE', E.VAC_BANK_CD)
+														AS vacBankNm
+			, CRYPTO_AES256.DEC_AES(E.VAC_ID)			AS vacId			--가상계좌
+			, E.CMPN_CTN								AS cmpnCtn			--연락처
+			, E.PAY_DTTM								AS payDttm			--결제일시
+			, E.RES_NO									AS resNo			--예약번호
+			, F.REQ_PHONE_SN							AS reqPhoneSn		--단말기일련번호
+			, G.DLVRY_NO								AS dlvryNo			--송장번호
+			, G.TB_CD									AS tbCd				--택배사
+			, FN_GET_CODENM('RCP0025', G.TB_CD)			AS tbNm
+			, FN_GET_USRNM(E.RVISN_ID)					AS rvisnId			--처리자
+			, TO_CHAR(E.RVISN_DTTM, 'YYYYMMDDHH24MISS')	AS rvisnDttm		--처리일시
+			, A.INSR_CMPN_NUM							AS insrCmpnNum
+		FROM
+			MSP_INTM_INSR_CMPN_MST_IF A
+			, MSP_INTM_INSR_MEMBER B
+			, MSP_JUO_SUB_INFO C
+			, MSP_INTM_INSR_ORDER D
+			, MSP_INTM_INSR_CMPN_DTL E
+			, MCP_REQUEST@DL_MCP F
+			, MCP_REQUEST_STATE@DL_MCP G
+		WHERE	A.IF_CD IN ('A', 'P')
+		AND		A.INSR_MNGM_NO = B.INSR_MNGM_NO
+		AND		B.CONTRACT_NUM = C.CONTRACT_NUM
+		AND		B.CONTRACT_NUM = D.CONTRACT_NUM
+		AND		B.INSR_PROD_CD = D.INSR_PROD_CD
+		AND		B.STRT_DTTM = D.STRT_DTTM
+		AND		A.INSR_CMPN_NUM = E.INSR_CMPN_NUM(+)
+		AND		E.RES_NO = F.RES_NO(+)
+		AND		E.RES_NO = G.RES_NO(+)
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+			AND A.CMPN_CNFM_DT BETWEEN #{searchFromDt} AND #{searchToDt}
+		</if>
+		<if test="cmpnType != null and cmpnType != ''">
+			AND A.IF_CD = #{cmpnType}
+		</if>
+		<if test="payType != null and payType != ''">
+			AND A.PAY_TYPE = #{payType}
+		</if>
+		<if test="payYn != null and payYn != ''">
+			AND E.PAY_YN = #{payYn}
+		</if>
+		<if test="insrProdCd != null and insrProdCd != ''">
+			AND A.INSR_PROD_CD = #{insrProdCd}
+		</if>
+		<if test="searchCd != null and searchCd != ''">
+			<choose>
+				<when test='searchCd == "10"'>
+					AND C.CONTRACT_NUM = #{searchVal}
+				</when>
+				<when test='searchCd == "20"'>
+					AND C.SUB_LINK_NAME LIKE #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "30"'>
+					AND C.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+				</when>
+			</choose>
+		</if>
+		ORDER BY C.SUB_LINK_NAME, C.SUBSCRIBER_NO, A.ACDNT_DT DESC
+	</sql>
+	
+	<select id="getInsrCmpnList" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO">
+		/* InsrCmpnMapper.getInsrCmpnList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getInsrCmpn" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getInsrCmpnListByExcel" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO">
+		/* InsrCmpnMapper.getInsrCmpnListByExcel */
+		<include refid="getInsrCmpn" />
+	</select>
+	
+	<update id="updIntmInsrCmpnDtl" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO">
+		/* InsrCmpnMapper.updIntmInsrCmpnDtl */
+		UPDATE MSP_INTM_INSR_CMPN_DTL
+		SET		RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+				<if test="cmpnTrtmTypeCd != null and cmpnTrtmTypeCd != ''">
+					<choose>
+						<when test='cmpnTrtmTypeCd == "01"'>
+							, CMPN_CTN = #{cmpnCtn}
+						</when>
+						<when test='cmpnTrtmTypeCd == "02"'>
+							, PAY_TYPE = #{payType}
+							, VAC_BANK_CD = #{vacBankCd}
+							, VAC_ID = CRYPTO_AES256.ENC_AES(#{vacId})
+						</when>
+						<when test='cmpnTrtmTypeCd == "03"'>
+							, VAC_BANK_CD = #{vacBankCd}
+							, VAC_ID = CRYPTO_AES256.ENC_AES(#{vacId})
+						</when>
+						<when test='cmpnTrtmTypeCd == "04"'>
+							, PAY_YN = #{payYn}
+							, PAY_DTTM = SYSDATE
+						</when>
+						<when test='cmpnTrtmTypeCd == "05"'>
+							, RES_NO = #{resNo}
+						</when>
+					</choose>
+				</if>
+		WHERE	INSR_CMPN_NUM = #{insrCmpnNum}
+	</update>
+	
+	<select id="pVacOnce"  statementType="CALLABLE"  parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO"  resultType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO">
+		{call P_VAC_ONCE(
+				#{opCode, jdbcType=VARCHAR}
+				, #{gubun, jdbcType=VARCHAR}
+				, #{insrCmpnNum, jdbcType=VARCHAR}
+				, #{vacBankCd, jdbcType=VARCHAR}
+				, #{payAmt, jdbcType=VARCHAR}
+				, #{expireDt, jdbcType=VARCHAR}
+				, #{remark, jdbcType=VARCHAR}
+				, #{sessionUserId, jdbcType=VARCHAR}
+				, #{retCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				, #{oVacBankCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				, #{oVacId, mode=OUT, javaType=string, jdbcType=VARCHAR}
+			)
+		}
+	</select>
+	
+	<sql id="getInsrCmpnMbs">
+		SELECT
+			C.SUBSCRIBER_NO								AS subscriberNo
+			, C.SUB_LINK_NAME							AS subLinkName
+			, A.CONTRACT_NUM							AS contractNum
+			, B.INSR_PROD_CD							AS insrProdCd
+			, FN_GET_RATENM(B.INSR_PROD_CD)				AS insrProdNm
+			, A.IF_CD									AS cmpnType
+			, FN_GET_CODENM('CMN0253', A.IF_CD)			AS cmpnTypeNm
+			, B.MODEL_NM								AS modelNm
+			, B.MODEL_ID								AS modelId
+			, B.INTM_SRL_NO								AS intmSrlNo
+			, A.INSR_MNGM_NO							AS insrMngmNo
+			, A.ACDNT_NO								AS acdntNo			/*상담(사고)번호*/
+			, A.ACDNT_REG_DT							AS acdntRegDt		/*사고등록일자*/
+			, A.ACDNT_DT								AS acdntDt			/*사고일자*/
+			, A.CMPN_CNFM_DT							AS cmpnCnfmDt		/*승인일자*/
+			, A.CMPN_LMT_AMT							AS cmpnLmtAmt		/*보상한도금액*/
+			, A.RMN_CMPN_AMT							AS rmnCmpnAmt		/*잔여보상금액*/
+			, A.CMPN_ACML_AMT							AS cmpnAcmlAmt		/*보상누적금액*/
+			, A.RMN_CMPN_LMT_AMT						AS rmnCmpnLmtAmt	/*잔여보상한도금액*/
+			, A.RCPT_AMT								AS rcptAmt			/*영수증금액*/
+			, A.REAL_CMPN_AMT							AS realCmpnAmt		/*실보상금액*/
+			, A.CUST_BRDN_AMT							AS custBrdnAmt		/*고객부담금*/
+			, A.OVER_AMT								AS overAmt			/*초과금*/
+			, A.USIM_AMT								AS usimAmt			/*유심비용*/
+			, A.CMPN_MODEL_NM							AS cmpnModelNm		/*대표모델*/
+			, FN_GET_USRNM(E.RVISN_ID)					AS rvisnId
+			, TO_CHAR(E.RVISN_DTTM, 'YYYYMMDDHH24MISS')	AS rvisnDttm
+			, E.PAY_YN									AS payYn			/*결제여부*/
+			, TO_CHAR(E.PAY_DTTM, 'YYYYMMDDHH24MISS')	AS payDttm			/*결제일시*/
+			, FN_GET_CODENM('RCP0025', F.TB_CD)			AS tbNm				/*택배사*/
+			, F.DLVRY_NO								AS dlvryNo			/*송장번호*/
+			, G.REQ_PHONE_SN							AS reqPhoneSn		/*단말기일련번호*/
+		FROM
+			MSP_INTM_INSR_CMPN_MST_IF A
+			, MSP_INTM_INSR_MEMBER B
+			, MSP_JUO_SUB_INFO C
+			, MSP_INTM_INSR_CMPN_DTL E
+			, MCP_REQUEST_STATE@DL_MCP F
+			, MCP_REQUEST@DL_MCP G
+		WHERE A.IF_CD IN ('A', 'P')
+		AND   A.INSR_MNGM_NO = B.INSR_MNGM_NO
+		AND   B.CONTRACT_NUM = C.CONTRACT_NUM
+		AND   A.INSR_CMPN_NUM = E.INSR_CMPN_NUM(+)
+		AND   E.RES_NO = F.RES_NO(+)
+		AND   E.RES_NO = G.RES_NO(+)
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+			AND A.CMPN_CNFM_DT BETWEEN #{searchFromDt} AND #{searchToDt}
+		</if>
+		<if test="cmpnType != null and cmpnType != ''">
+			AND A.IF_CD = #{cmpnType}
+		</if>
+		<if test="payYn != null and payYn != ''">
+			AND E.PAY_YN = #{payYn}
+		</if>
+		<if test="insrProdCd != null and insrProdCd != ''">
+			AND A.INSR_PROD_CD = #{insrProdCd}
+		</if>
+		<if test="searchCd != null and searchCd != ''">
+			<choose>
+				<when test='searchCd == "10"'>
+					AND C.CONTRACT_NUM = #{searchVal}
+				</when>
+				<when test='searchCd == "20"'>
+					AND C.SUB_LINK_NAME LIKE #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "30"'>
+					AND C.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+				</when>
+			</choose>
+		</if>
+		ORDER BY C.SUB_LINK_NAME, C.SUBSCRIBER_NO, A.ACDNT_DT DESC
+	</sql>
+	
+	<select id="getInsrCmpnMbsList" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO">
+		/* InsrCmpnMapper.getInsrCmpnMbsList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getInsrCmpnMbs" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getInsrCmpnMbsListByExcel" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO">
+		/* InsrCmpnMapper.getInsrCmpnMbsListByExcel */
+		<include refid="getInsrCmpnMbs" />
+	</select>
+	
+	
+	<sql id="getInsrCan">
+			SELECT  
+				    IICI.CTN AS subscriberNo
+			        , JSI.SUB_LINK_NAME AS subLinkName
+			        , IICI.CONTRACT_NUM AS contractNum
+			        , FN_GET_CODENM('MSP0003', JSI.SUB_STATUS) AS subStatusNm
+			        , IICI.INSR_PROD_CD AS insrProdCd
+			        , (SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = IICI.INSR_PROD_CD) AS insrProdNm
+			        , TO_CHAR(TO_DATE(IICI.STRT_DTTM, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')  AS strtDttm
+			        , TO_CHAR(IICI.PROC_DT , 'YYYY-MM-DD HH24:MI:SS') AS procDt
+			        , FN_GET_CODENM('CMN0252', IICI.CAN_RSLT_CD) AS canRsltCd
+			        , IICI.RSLT_MSG AS rsltMsg
+			        , IIO.RMK AS rmk
+			FROM    MSP_INTM_INSR_CAN_INFO IICI
+					, MSP_INTM_INSR_ORDER IIO
+			        , MSP_JUO_FEATURE_INFO JFI
+			        , MSP_JUO_SUB_INFO JSI
+			WHERE   IICI.CONTRACT_NUM = JFI.CONTRACT_NUM
+			AND     IICI.INSR_PROD_CD = JFI.SOC
+			AND     IICI.STRT_DTTM = JFI.EFFECTIVE_DATE
+			AND     IICI.END_DTTM = JFI.EXPIRATION_DATE
+			AND     IICI.CONTRACT_NUM = JSI.CONTRACT_NUM
+			AND     IICI.CONTRACT_NUM = IIO.CONTRACT_NUM
+            AND     IICI.INSR_PROD_CD = IIO.INSR_PROD_CD
+            AND     IICI.STRT_DTTM = IIO.STRT_DTTM
+            AND     IICI.END_DTTM = IIO.END_DTTM
+			AND     IICI.RSLT_CD <![CDATA[ <> ]]> '0000'
+			AND     IICI.PROC_YN = 'Y'
+			AND     TO_DATE(IICI.END_DTTM, 'YYYYMMDDHH24MISS') > SYSDATE
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+			AND TO_CHAR(IICI.PROC_DT, 'YYYYMMDD') BETWEEN #{searchFromDt} AND #{searchToDt}
+		</if>
+		<if test="searchCd != null and searchCd != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+					AND IICI.CONTRACT_NUM = #{searchVal}
+				</when>
+				<when test='searchCd == "2"'>
+					AND JSI.SUB_LINK_NAME LIKE #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "3"'>
+					AND IICI.CTN= REPLACE(#{searchVal},'-')
+				</when>
+			</choose>
+		</if>
+		ORDER BY IICI.PROC_DT, IICI.CTN DESC
+	</sql>	
+	
+	<select id="getInsrCanListByExcel" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO">
+		/* InsrCmpnMapper.getInsrCanListByExcel */
+		<include refid="getInsrCan" />
+	</select>
+	
+	
+	<select id="getInsrCanList" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrCmpnVO">
+		/* InsrCmpnMapper.getInsrCanList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getInsrCan" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+</mapper>

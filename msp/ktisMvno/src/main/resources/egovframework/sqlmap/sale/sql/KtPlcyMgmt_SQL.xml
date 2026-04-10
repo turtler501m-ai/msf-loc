@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.sale.ktPlcyMgmt.mapper.KtPlcyMgmtMapper">
+	
+	<select id="getKtPlcyList" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO" resultType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.getKtPlcyList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT
+			A.PLCY_ID									AS plcyId
+			,A.SLS_NO									AS slsNo
+			,A.SLS_NM									AS slsNm
+			,A.PLCY_TYPE								AS plcyType
+			,FN_GET_CODENM('ORG0073', A.PLCY_TYPE)		AS plcyTypeNm
+			,A.PPPO										AS pppo
+			,FN_GET_CODENM('RCP0013', A.PPPO)			AS pppoNm
+			,A.USE_YN									AS useYn
+			,FN_GET_CODENM('CMN0011', A.USE_YN)			AS useYnNm
+			,FN_GET_USRNM(A.REGST_ID)					AS regstId
+			,TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS')	AS regstDttm
+		FROM MSP_KT_PLCY_MST A
+		WHERE 1 = 1
+		<if test="useYn != null and useYn != ''">
+		AND   A.USE_YN = #{useYn, jdbcType=VARCHAR}
+		</if>
+		<if test="plcyType != null and plcyType != ''">
+		AND   A.PLCY_TYPE = #{plcyType, jdbcType=VARCHAR}
+		</if>
+		<if test="pppo != null and pppo != ''">
+		AND   A.PPPO = #{pppo, jdbcType=VARCHAR}
+		</if>
+		<if test="slsNm != null and slsNm != ''">
+		AND   A.SLS_NM LIKE '%'||#{slsNm, jdbcType=VARCHAR}||'%'
+		</if>
+		ORDER BY A.USE_YN DESC, A.PLCY_TYPE DESC, A.PPPO, A.RVISN_DTTM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<sql id="getKtPlcyInfo">
+		SELECT
+			ROWNUM										AS ktPlcyNum
+			,HST.PLCY_ID								AS plcyId
+			,HST.SLS_NO									AS slsNo
+			,HST.SLS_NM									AS slsNm
+			,HST.PLCY_TYPE								AS plcyType
+			,FN_GET_CODENM('ORG0073', HST.PLCY_TYPE)	AS plcyTypeNm
+			,HST.PPPO									AS pppo
+			,FN_GET_CODENM('RCP0013', HST.PPPO)			AS pppoNm
+			,HST.USE_YN									AS useYn
+			,FN_GET_CODENM('CMN0011', HST.USE_YN)		AS useYnNm
+			,DIST.DC_TYPE								AS dcType
+			,DIST.DC_TYPE_NM							AS dcTypeNm
+			,OPER.OPER_TYPE								AS operType
+			,OPER.OPER_TYPE_NM							AS operTypeNm
+			,INST.INST_CNT								AS instCnt
+			,INST.INST_CNT_NM							AS instCntNm
+			,ENGG.ENGG_CNT								AS enggCnt
+			,ENGG.ENGG_CNT_NM							AS enggCntNm
+			,FN_GET_USRNM(HST.REGST_ID)					AS regstId
+			,HST.REGST_DTTM								AS regstDttm
+		FROM
+			MSP_KT_PLCY_HST HST,
+			(SELECT
+				A.PLCY_ID,
+				A.SLS_NO,
+				LTRIM(SYS_CONNECT_BY_PATH(A.DC_TYPE, '/'), '/') AS DC_TYPE,
+				LTRIM(SYS_CONNECT_BY_PATH(A.CD_DSC, '/'), '/') AS DC_TYPE_NM
+			FROM
+				(SELECT
+					A.PLCY_ID,
+					A.SLS_NO,
+					A.DC_TYPE,
+					B.CD_DSC,
+					ROW_NUMBER() OVER (PARTITION BY A.PLCY_ID ORDER BY A.PLCY_ID) AS NUM,
+					COUNT(*) OVER (PARTITION BY A.PLCY_ID ORDER BY A.PLCY_ID) AS CNT
+				FROM
+					MSP_KT_PLCY_DISCOUNT A,
+					CMN_GRP_CD_MST B
+				WHERE A.DC_TYPE = B.CD_VAL
+				AND   B.GRP_ID = 'CMN0074'
+				AND   A.SLS_NO = #{slsNo, jdbcType=VARCHAR}
+				) A
+			WHERE  LEVEL = CNT START WITH NUM=1 CONNECT BY PRIOR A.PLCY_ID = A.PLCY_ID
+			AND    PRIOR NUM = NUM-1) DIST,
+			(SELECT
+				A.PLCY_ID,
+				A.SLS_NO,
+				LTRIM(SYS_CONNECT_BY_PATH(A.OPER_TYPE, '/'), '/') AS OPER_TYPE,
+				LTRIM(SYS_CONNECT_BY_PATH(A.CD_DSC, '/'), '/') AS OPER_TYPE_NM
+			FROM
+				(SELECT
+					A.PLCY_ID,
+					A.SLS_NO,
+					A.OPER_TYPE,
+					B.CD_DSC,
+					ROW_NUMBER() OVER (PARTITION BY A.PLCY_ID ORDER BY A.PLCY_ID) AS NUM,
+					COUNT(*) OVER (PARTITION BY A.PLCY_ID ORDER BY A.PLCY_ID) AS CNT
+				FROM
+					MSP_KT_PLCY_OPER A,
+					CMN_GRP_CD_MST B
+				WHERE A.OPER_TYPE = B.CD_VAL
+				AND   B.GRP_ID = 'CMN0049'
+				AND   A.SLS_NO = #{slsNo, jdbcType=VARCHAR}
+				) A
+			WHERE  LEVEL = CNT START WITH NUM=1 CONNECT BY PRIOR A.PLCY_ID = A.PLCY_ID
+			AND    PRIOR NUM = NUM-1) OPER,
+			(SELECT
+				A.PLCY_ID,
+				A.SLS_NO,
+				LTRIM(SYS_CONNECT_BY_PATH(A.INST_CNT, '/'), '/') AS INST_CNT,
+				LTRIM(SYS_CONNECT_BY_PATH(A.CD_DSC, '/'), '/') AS INST_CNT_NM
+			FROM
+				(SELECT
+					A.PLCY_ID,
+					A.SLS_NO,
+					A.INST_CNT,
+					B.CD_DSC,
+					ROW_NUMBER() OVER (PARTITION BY A.PLCY_ID ORDER BY A.PLCY_ID) AS NUM,
+					COUNT(*) OVER (PARTITION BY A.PLCY_ID ORDER BY A.PLCY_ID) AS CNT
+				FROM
+					MSP_KT_PLCY_INST A,
+					CMN_GRP_CD_MST B
+				WHERE A.INST_CNT = B.CD_VAL
+				AND   B.GRP_ID = 'ORG0017'
+				AND   A.SLS_NO = #{slsNo, jdbcType=VARCHAR}
+				) A
+			WHERE  LEVEL = CNT START WITH NUM=1 CONNECT BY PRIOR A.PLCY_ID = A.PLCY_ID
+			AND    PRIOR NUM = NUM-1) INST,
+			(SELECT
+				A.PLCY_ID,
+				A.SLS_NO,
+				LTRIM(SYS_CONNECT_BY_PATH(A.ENGG_CNT, '/'), '/') AS ENGG_CNT,
+				LTRIM(SYS_CONNECT_BY_PATH(A.CD_DSC, '/'), '/') AS ENGG_CNT_NM
+			FROM
+				(SELECT 
+					A.PLCY_ID,
+					A.SLS_NO,
+					A.ENGG_CNT,
+					B.CD_DSC,
+					ROW_NUMBER() OVER (PARTITION BY A.PLCY_ID ORDER BY A.PLCY_ID) AS NUM,
+					COUNT(*) OVER (PARTITION BY A.PLCY_ID ORDER BY A.PLCY_ID) AS CNT
+				FROM
+					MSP_KT_PLCY_ENGG A,
+					CMN_GRP_CD_MST B
+				WHERE A.ENGG_CNT = B.CD_VAL
+				AND   B.GRP_ID = 'CMN0053'
+				AND   A.SLS_NO = #{slsNo, jdbcType=VARCHAR}
+				) A
+			WHERE  LEVEL = CNT START WITH NUM=1 CONNECT BY PRIOR A.PLCY_ID = A.PLCY_ID
+			AND    PRIOR NUM = NUM-1) ENGG
+		WHERE HST.PLCY_ID = DIST.PLCY_ID
+		AND   HST.SLS_NO = DIST.SLS_NO
+		AND   HST.PLCY_ID = OPER.PLCY_ID
+		AND   HST.SLS_NO = OPER.SLS_NO
+		AND   HST.PLCY_ID = INST.PLCY_ID
+		AND   HST.SLS_NO = INST.SLS_NO
+		AND   HST.PLCY_ID = ENGG.PLCY_ID
+		AND   HST.SLS_NO = ENGG.SLS_NO
+		AND   HST.SLS_NO = #{slsNo, jdbcType=VARCHAR}
+		ORDER BY HST.PLCY_ID DESC
+	</sql>
+	
+	<select id="getKtPlcyDtlList" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO" resultType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.getKtPlcyDtlList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getKtPlcyInfo" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getMspKtPlcyDiscountByGrid" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO" resultType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.getMspKtPlcyDiscountByGrid */
+		SELECT
+			DECODE(A.DC_TYPE, NULL, '0', '1')	AS chk
+			,CD_VAL								AS cdVal
+			,CD_DSC								AS cdNm
+		FROM
+			MSP_KT_PLCY_DISCOUNT A
+			,CMN_GRP_CD_MST B
+		WHERE A.DC_TYPE(+) = B.CD_VAL
+		AND   B.GRP_ID = 'CMN0074'
+		AND   B.USG_YN = 'Y'
+		AND   A.SLS_NO(+) = #{slsNo, jdbcType=VARCHAR}
+		AND   A.PLCY_ID(+) = #{plcyId, jdbcType=VARCHAR}
+		ORDER BY ETC1
+	</select>
+	
+	<select id="getMspKtPlcyOperByGrid" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO" resultType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.getMspKtPlcyOperByGrid */
+		SELECT
+			DECODE(A.OPER_TYPE, NULL, '0', '1')	AS chk
+			,CD_VAL								AS cdVal
+			,CD_DSC								AS cdNm
+		FROM
+			MSP_KT_PLCY_OPER A
+			,CMN_GRP_CD_MST B
+		WHERE A.OPER_TYPE(+) = B.CD_VAL
+		AND   B.GRP_ID = 'CMN0049'
+		AND   B.USG_YN = 'Y'
+		AND   A.SLS_NO(+) = #{slsNo, jdbcType=VARCHAR}
+		AND   A.PLCY_ID(+) = #{plcyId, jdbcType=VARCHAR}
+		ORDER BY ETC1
+	</select>
+	
+	<select id="getMspKtPlcyInstGrid" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO" resultType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.getMspKtPlcyInstGrid */
+		SELECT
+			DECODE(A.INST_CNT, NULL, '0', '1')	AS chk
+			,CD_VAL								AS cdVal
+			,CD_DSC								AS cdNm
+		FROM
+			MSP_KT_PLCY_INST A
+			,CMN_GRP_CD_MST B
+		WHERE A.INST_CNT(+) = B.CD_VAL
+		AND   B.GRP_ID = 'ORG0017'
+		AND   B.USG_YN = 'Y'
+		AND   A.SLS_NO(+) = #{slsNo, jdbcType=VARCHAR}
+		AND   A.PLCY_ID(+) = #{plcyId, jdbcType=VARCHAR}
+		ORDER BY ETC1
+	</select>
+	
+	<select id="getMspKtPlcyEnggByGrid" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO" resultType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.getMspKtPlcyEnggByGrid */
+		SELECT
+			DECODE(A.ENGG_CNT, NULL, '0', '1')	AS chk
+			,CD_VAL								AS cdVal
+			,CD_DSC								AS cdNm
+		FROM
+			MSP_KT_PLCY_ENGG A
+			,CMN_GRP_CD_MST B
+		WHERE A.ENGG_CNT(+) = B.CD_VAL
+		AND   B.GRP_ID = 'CMN0053'
+		AND   B.USG_YN = 'Y'
+		AND   A.SLS_NO(+) = #{slsNo, jdbcType=VARCHAR}
+		AND   A.PLCY_ID(+) = #{plcyId, jdbcType=VARCHAR}
+		ORDER BY ETC1
+	</select>
+	
+	<select id="getMspKtPlcyMstBySlsNo" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO" resultType="int">
+		SELECT COUNT(SLS_NO) FROM MSP_KT_PLCY_MST A WHERE A.SLS_NO = #{slsNo, jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="regMspKtPlcyMst" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		<selectKey keyProperty="plcyId" order="BEFORE" resultType="String">
+			SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(TO_NUMBER(NVL(SUBSTR(MAX(PLCY_ID), 9), '00')) + 1, '00')) AS plcyId
+			FROM   MSP_KT_PLCY_MST
+			WHERE  SUBSTR(PLCY_ID, 1, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		</selectKey>
+		/* KtPlcyMgmtMapper.regMspKtPlcyMst */
+		INSERT INTO MSP_KT_PLCY_MST (
+			PLCY_ID
+			,SLS_NO
+			,SLS_NM
+			,PLCY_TYPE
+			,PPPO
+			,USE_YN
+			,REGST_ID
+			,REGST_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+		) VALUES (
+			 #{plcyId}
+			,#{slsNo}
+			,#{slsNm}
+			,#{plcyType}
+			,#{pppo}
+			,#{useYn}
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<insert id="regMspKtPlcyHst" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.regMspKtPlcyHst */
+		INSERT INTO MSP_KT_PLCY_HST (
+			PLCY_ID
+			,SLS_NO
+			,SLS_NM
+			,PLCY_TYPE
+			,PPPO
+			,USE_YN
+			,REGST_ID
+			,REGST_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+		) VALUES (
+			 #{plcyId}
+			,#{slsNo}
+			,#{slsNm}
+			,#{plcyType}
+			,#{pppo}
+			,#{useYn}
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<insert id="regMspKtPlcyDiscount" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.regMspKtPlcyDiscount */
+		INSERT INTO MSP_KT_PLCY_DISCOUNT (
+			PLCY_ID
+			,SLS_NO
+			,DC_TYPE
+			,REGST_ID
+			,REGST_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+		) VALUES (
+			 #{plcyId}
+			,#{slsNo}
+			,#{dcType}
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<insert id="regMspKtPlcyOper" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.regMspKtPlcyOper */
+		INSERT INTO MSP_KT_PLCY_OPER (
+			PLCY_ID
+			,SLS_NO
+			,OPER_TYPE
+			,REGST_ID
+			,REGST_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+		) VALUES (
+			 #{plcyId}
+			,#{slsNo}
+			,#{operType}
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<insert id="regMspKtPlcyInst" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.regMspKtPlcyInst */
+		INSERT INTO MSP_KT_PLCY_INST (
+			PLCY_ID
+			,SLS_NO
+			,INST_CNT
+			,REGST_ID
+			,REGST_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+		) VALUES (
+			 #{plcyId}
+			,#{slsNo}
+			,#{instCnt}
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<insert id="regMspKtPlcyEngg" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		/* KtPlcyMgmtMapper.regMspKtPlcyEngg */
+		INSERT INTO MSP_KT_PLCY_ENGG (
+			PLCY_ID
+			,SLS_NO
+			,ENGG_CNT
+			,REGST_ID
+			,REGST_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+		) VALUES (
+			 #{plcyId}
+			,#{slsNo}
+			,#{enggCnt}
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<update id="updMspKtPlcyMst" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO">
+		<selectKey keyProperty="plcyId" order="BEFORE" resultType="String">
+			SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(TO_NUMBER(NVL(SUBSTR(MAX(PLCY_ID), 9), '00')) + 1, '00')) AS plcyId
+			FROM   MSP_KT_PLCY_MST
+			WHERE  SUBSTR(PLCY_ID, 1, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		</selectKey>
+		/* KtPlcyMgmtMapper.updMspKtPlcyMst */
+		UPDATE MSP_KT_PLCY_MST
+		SET 
+			PLCY_ID = #{plcyId}
+			,SLS_NM = #{slsNm}
+			,PLCY_TYPE = #{plcyType}
+			,PPPO = #{pppo}
+			,USE_YN = #{useYn}
+			,RVISN_ID = #{sessionUserId}
+			,RVISN_DTTM = SYSDATE
+		WHERE SLS_NO = #{slsNo}
+	</update>
+	
+	
+	<select id="getKtPlcyListCombo" parameterType="com.ktis.msp.sale.ktPlcyMgmt.vo.KtPlcyMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* KtPlcyMgmtMapper.getKtPlcyListCombo */
+		SELECT
+			'[' || A.SLS_NO || ']'|| A.SLS_NM	AS text
+			,A.SLS_NO							AS value
+		FROM
+			MSP_KT_PLCY_MST A
+			,MSP_KT_PLCY_DISCOUNT B
+			,MSP_KT_PLCY_OPER C
+			,MSP_KT_PLCY_INST D
+			,MSP_KT_PLCY_ENGG E
+		WHERE 1 = 1
+		<if test="useYn != null and useYn != ''">
+		AND   A.USE_YN = #{useYn}
+		</if>
+		AND   A.PPPO = #{pppo}
+		AND   A.PLCY_ID = B.PLCY_ID
+		AND   A.SLS_NO = B.SLS_NO
+		AND   A.PLCY_ID = C.PLCY_ID
+		AND   A.SLS_NO = C.SLS_NO
+		AND   A.PLCY_ID = D.PLCY_ID
+		AND   A.SLS_NO = D.SLS_NO
+		AND   A.PLCY_ID = E.PLCY_ID
+		AND   A.SLS_NO = E.SLS_NO
+		AND   A.PLCY_TYPE = DECODE(#{plcyType},'MM','01','UU','02',#{plcyType})	--01 : 단말, 02 : USIM
+		AND   B.DC_TYPE = NVL(#{dcType},'NN')
+		AND   C.OPER_TYPE = #{operType}
+		AND   D.INST_CNT = #{instCnt}
+		AND   E.ENGG_CNT = #{enggCnt}
+		ORDER BY A.RVISN_DTTM DESC
+	</select>
+</mapper>

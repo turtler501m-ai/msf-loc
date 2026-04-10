@@ -1,0 +1,33 @@
+config:
+  credentials_id: MCP-WAS-DEV
+#  retry_with_prompt: true
+#  retry_and_return: true
+#  retry_count: 3
+
+remote_groups:
+  r_group_1:
+    - name: jboss
+      host: MCP-WAS-DEV
+
+command_groups:
+  c_group_1:
+    - puts:
+        - from: '/data/release/dev/mcp-portal/mcp-portal.war'
+          into: '/jboss/applications/mcp-portal/was/'
+          override: true
+        - from: '/data/release/dev/mcp-portal/ctrl.sh'
+          into: '/jboss/domains/'
+          override: true
+    - commands:
+        - 'chmod 755 /jboss/applications/mcp-portal/was/mcp-portal.war'
+        - 'ls -lrt /jboss/applications/mcp-portal/was/mcp-portal.war'
+        - 'chmod 755 /jboss/domains/ctrl.sh'
+        - 'ls -lrt /jboss/domains/ctrl.sh'
+        - 'cd /jboss/domains; sh ctrl.sh'
+
+steps:
+  deploy:
+    - remote_groups:
+        - r_group_1
+      command_groups:
+        - c_group_1

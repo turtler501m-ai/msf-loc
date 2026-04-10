@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.statsMgmt.mapper.AcenReceptionMapper">
+
+	<sql id="getAcenReception">
+		SELECT
+		   A.SEQ
+		  ,TO_CHAR(A.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM
+		  ,A.CONTRACT_NUM
+		  ,B.SUB_STATUS
+		  ,FN_GET_CODENM('MSP0003', B.SUB_STATUS) AS SUB_STATUS_NM
+		  ,B.BAN
+		  ,B.SUB_LINK_NAME AS CSTMR_NAME
+		  ,A.DOC_TYPE
+		  ,FN_GET_CODENM('ACEN0001', A.DOC_TYPE) AS DOC_TYPE_NAME
+		  ,A.RECEIVE_TYPE
+		  ,FN_GET_CODENM('ACEN0002', A.RECEIVE_TYPE) AS RECEIVE_TYPE_NAME
+		  ,A.FAX_NO
+		  ,DECODE(A.START_YM, NULL, '', SUBSTR(A.START_YM, 1, 4) || '-' || SUBSTR(A.START_YM, 5)) AS START_YM
+		  ,DECODE(A.END_YM, NULL, '', SUBSTR(A.END_YM, 1, 4) || '-' || SUBSTR(A.END_YM, 5)) AS END_YM
+		  ,A.STATUS
+		  ,FN_GET_CODENM('ACEN0003', A.STATUS) AS STATUS_NAME
+		  ,TO_CHAR(A.PROC_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS PROC_DTTM
+		  ,FN_GET_USRNM(A.PROC_ID) AS PROC_NAME
+		  ,TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+		  ,FN_GET_USRNM(A.RVISN_ID) AS RVISN_NAME
+		FROM NMCP_ACEN_DOC_REQ@DL_MCP A
+		    ,MSP_JUO_SUB_INFO B
+		    ,MSP_REQUEST_DTL C
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		  AND A.CONTRACT_NUM = C.CONTRACT_NUM
+		  <if test='srchStrtDt != null and srchStrtDt != "" and srchEndDt != null and srchEndDt != ""'>
+			AND A.REGST_DTTM BETWEEN TO_DATE(#{srchStrtDt},'YYYYMMDD') AND TO_DATE(#{srchEndDt},'YYYYMMDD') + 1
+		  </if>
+		  <if test='compStrtDt != null and compStrtDt != "" and compEndDt != null and compEndDt != ""'>
+			AND A.STATUS = '01'
+			AND A.PROC_DTTM BETWEEN TO_DATE(#{compStrtDt},'YYYYMMDD') AND TO_DATE(#{compEndDt},'YYYYMMDD') + 1
+		  </if>
+		  <if test='cntpntShopId != null and cntpntShopId != ""'>
+			AND (B.OPEN_AGNT_CD = #{cntpntShopId} OR TRIM(SUBSTR(C.DVC_CHG_INFO, 69, 10)) = #{cntpntShopId})
+		  </if>
+		  <if test='docType != null and docType != ""'>
+			AND A.DOC_TYPE = #{docType}
+	 	  </if>
+		  <if test='receiveType != null and receiveType != ""'>
+			AND A.RECEIVE_TYPE = #{receiveType}
+		  </if>
+		  <if test='status != null and status != ""'>
+			AND A.STATUS = #{status}
+		  </if>
+		  <if test='searchGbn != null and searchGbn != ""'>
+			  <!--계약번호 필터-->
+				<if test='searchGbn == "01"'>
+				AND (B.CONTRACT_NUM = #{searchName} OR
+					   B.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchName}))
+				</if>
+				<!--휴대폰번호 필터-->
+				<if test='searchGbn == "02"'>
+				AND B.SUBSCRIBER_NO = #{searchName}
+				</if>
+				<!--요금제 필터-->
+				<if test='searchGbn == "03"'>
+				AND C.LST_RATE_NM LIKE '%' || #{searchName} || '%'
+				</if>
+				<!--고객명 필터-->
+			  <if test='searchGbn == "04"'>
+				AND UPPER(B.SUB_LINK_NAME) LIKE UPPER(#{searchName}) || '%'
+			  </if>
+				<!--청구계정번호 필터-->
+				<if test='searchGbn == "05"'>
+				AND B.BAN = #{searchName}
+				</if>
+			  <!--FAX번호 필터-->
+			  <if test='searchGbn == "06"'>
+				AND A.FAX_NO = #{searchName}
+			  </if>
+		  </if>
+		ORDER BY A.SEQ DESC
+	</sql>
+	
+	<!--각종 내역서 발급요청 리스트 조회-->
+	<select id="getAcenReceptionList" parameterType="com.ktis.msp.rcp.statsMgmt.vo.AcenReceptionVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	  /*AcenReceptionMapper.getAcenReceptionList*/
+	  <include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="getAcenReception" />
+	  <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!--각종 내역서 발급요청 엑셀 리스트 조회-->
+	<select id="getAcenReceptionListExcel" parameterType="com.ktis.msp.rcp.statsMgmt.vo.AcenReceptionVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	  /*AcenReceptionMapper.getAcenReceptionListExcel*/
+	  <include refid="getAcenReception" />
+	</select>
+
+	<!--MP 연동데이터 조회-->
+	<select id="getMpData" parameterType="java.lang.String" resultType="java.util.Map">
+		/*AcenReceptionMapper.getMpData*/
+		SELECT
+			 SVC_CNTR_NO   AS NCN
+			,SUBSCRIBER_NO AS CTN
+			,CUSTOMER_ID AS CUST_ID
+			,SUB_STATUS
+		FROM MSP_JUO_SUB_INFO
+		WHERE CONTRACT_NUM = #{contractNum}
+	</select>
+
+	<!--각종 내역서 발급요청 완료처리-->
+	<update id="completeAcenReception" parameterType="com.ktis.msp.rcp.statsMgmt.vo.AcenReceptionVo">
+		/*AcenReceptionMapper.completeAcenReception*/
+		UPDATE NMCP_ACEN_DOC_REQ@DL_MCP
+		SET STATUS = #{status}
+			 ,RVISN_ID = #{sessionUserId}
+			 ,RVISN_DTTM = SYSDATE
+			 ,PROC_ID = #{sessionUserId}
+			 ,PROC_DTTM = SYSDATE
+		WHERE SEQ = #{seq}
+	</update>
+
+	<!--각종 내역서 발급요청 완료 취소처리-->
+	<update id="cancelAcenReception" parameterType="com.ktis.msp.rcp.statsMgmt.vo.AcenReceptionVo">
+		/*AcenReceptionMapper.cancelAcenReception*/
+		UPDATE NMCP_ACEN_DOC_REQ@DL_MCP
+		SET STATUS = #{status}
+			 ,RVISN_ID = #{sessionUserId}
+			 ,RVISN_DTTM = SYSDATE
+			 ,PROC_ID = NULL
+			 ,PROC_DTTM = NULL
+		WHERE SEQ = #{seq}
+	</update>
+
+	<!--각종 내역서 발급요청 처리이력 저장-->
+	<insert id="insertAcenReceptionHist" parameterType="com.ktis.msp.rcp.statsMgmt.vo.AcenReceptionVo">
+		/*AcenReceptionMapper.insertAcenReceptionHist*/
+		INSERT INTO NMCP_ACEN_DOC_HIST@DL_MCP(
+			 SEQ
+			,SUB_SEQ
+			,STATUS
+			,REGST_ID
+			,REGST_DTTM
+		)VALUES(
+			 #{seq}
+		  	,NVL((SELECT MAX(SUB_SEQ) + 1 FROM NMCP_ACEN_DOC_HIST@DL_MCP WHERE SEQ = #{seq}), 1)
+			,#{status}
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+
+</mapper>

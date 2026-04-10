@@ -1,0 +1,459 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.ScanMapper">
+	
+	<select id="getAppFormData" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.ScanVO" resultType="map">
+		/* scanMapper.getAppFormData */
+		<![CDATA[
+		SELECT  CASE WHEN MAINDATA.MODEL_MONTHLY_SUB = 1 then 0
+		             WHEN MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT) <= 0 then 0
+		             ELSE TRUNC((MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT))*0.059/12*POWER((1+0.059/12), MODEL_MONTHLY)/(POWER((1+0.059/12), MODEL_MONTHLY)-1),0) - TRUNC(((MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT))/MODEL_MONTHLY),0)
+		        END AS MODEL_MM_CHARGE,
+		        CASE WHEN INST_AMT <= 0 THEN 0
+		             ELSE DECODE(MAINDATA.MODEL_MONTHLY_SUB, 1, 0,
+		                        ROUND( (INST_AMT + ( TRUNC(INST_AMT * 0.059 / 12 * VAL_POW / (VAL_POW-1),0) * MODEL_MONTHLY_SUB - INST_AMT)
+		                               ) / MODEL_MONTHLY_SUB
+		                             ,0)
+		                  )
+		        END AS MODEL_MM_PAYMENT, /*핸드폰 월 납부액  단말요금 : (할부원금+총할부수수료)/할부개월수 */
+		        CASE WHEN MAINDATA.MODEL_MONTHLY_SUB = 1 THEN 0
+		             WHEN MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT) <= 0 THEN 0
+		             ELSE DECODE(MAINDATA.MODEL_MONTHLY_SUB, 1, 0, TRUNC((MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT))/ MAINDATA.MODEL_MONTHLY_SUB) )
+		        END AS REAL_MM_MONEY, /* 월 할부금 */
+		        CASE WHEN INST_AMT > 0 THEN
+		                DECODE(MAINDATA.MODEL_MONTHLY_SUB, 1, MAINDATA.TEL_MM_PATMENT,
+		                        ROUND(
+		                              (  INST_AMT + ( TRUNC(INST_AMT * 0.059 / 12 * VAL_POW / (VAL_POW-1),0) * MODEL_MONTHLY_SUB - INST_AMT )
+		                              ) / MODEL_MONTHLY_SUB
+		                         ,0) + MAINDATA.TEL_MM_PATMENT
+		                )
+		            ELSE MAINDATA.TEL_MM_PATMENT
+		        END AS BASIC_MM_PAYMENT,
+		        MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT AS CONTRACT_SUPPORT,
+		        MODEL_MONTHLY,
+		        '4' AS PAGE4DEFAULT,
+		        MAINDATA.*
+		FROM    (
+		    SELECT  REQUEST_KEY,
+		            MODEL_PRICE-(NVL(MODEL_DISCOUNT1, 0) + NVL(MODEL_DISCOUNT2, 0)  + NVL(MODEL_DISCOUNT3, 0)) AS INST_AMT ,  -- 할부원금
+		            POWER((1+0.059/12), MODEL_MONTHLY_SUB) AS VAL_POW , -- 년 수수년 계산
+		            CASE WHEN SPRT_TP = 'KD' THEN '0'
+		                 WHEN SPRT_TP = 'PM' THEN '2'
+		                 WHEN REQ_BUY_TYPE = 'UU' AND ENGG_MNTH_CNT > 1 THEN '1'
+		            ELSE '' END DISCOUNTPR,
+		            MODEL_PRICE ,
+		            PROD_TYPE ,
+		            /* GREATEST(NVL( (MODEL_PRICE ) - NVL(MODEL_DISCOUNT1, 0) - NVL(MODEL_DISCOUNT2, 0) - NVL(MODEL_DISCOUNT3, 0), 0),0) AS MODEL_INSTALLMENT, */
+		            DECODE(
+		              PROD_TYPE,'02','0',
+		                        '01',GREATEST(NVL( (MODEL_PRICE ) - NVL(MODEL_DISCOUNT1, 0) - NVL(MODEL_DISCOUNT2, 0) - NVL(MODEL_DISCOUNT3, 0), 0),0),
+		                        NULL,GREATEST(NVL( (MODEL_PRICE ) - NVL(MODEL_DISCOUNT1, 0) - NVL(MODEL_DISCOUNT2, 0) - NVL(MODEL_DISCOUNT3, 0), 0),0)
+		            ) AS MODEL_INSTALLMENT,
+		            NVL(MODEL_DISCOUNT1, 0) + NVL(MODEL_DISCOUNT2, 0) AS OPEN_DISCOUNT,
+		            NVL(MODEL_DISCOUNT3, 0) AS ADD_DISCOUNT,
+		            0 AS MODEL_DISCOUNT,
+		            NVL(INST_INTRATE, 0.25 ) AS INST_INTRATE,
+		            MODEL_MONTHLY_SUB,
+		            RES_NO,
+		            OPER_TYPE,
+		            CSTMR_TYPE_ORG,
+		            CSTMR_TYPE,
+		            ETC_SPECIAL,
+		            REQ_USIM_NAME,
+		            REQ_USIM_SN,
+		            PHONE_PAYMENT,
+		            REQ_IN_DAY_YYYY,
+		            REQ_IN_DAY_MM,
+		            REQ_IN_DAY_DD,
+		            REQ_ADDITION,
+		            REQ_ADDITION_PRICE,
+		            USIM_PRICE_TYPE,
+		            USIM_PRICE,
+		            JOIN_PRICE_TYPE,
+		            CSTMR_NAME,
+		            CSTMR_NATIVE_RRN,
+		            CSTMR_FOREIGNER_RRN,
+		            CSTMR_FOREIGNER_NATION,
+		            CSTMR_RECEIVE_TEL_FN,
+		            CSTMR_BILL_SEND_CODE,
+		            CSTMR_MAIL,
+		            CSTMR_ADDR,
+		            CSTMR_ADDR_BJD,
+		            CSTMR_PRIVATE_NUMBER,
+		            CSTMR_JURIDICAL_NUMBER,
+		            CSTMR_JURIDICAL_RRN,
+		            REQ_PAY_TYPE,
+		            REQ_BANK,
+		            REQ_ACCOUNT_NUMBER,
+		            REQ_CARD_YY,
+		            REQ_CARD_MM,
+		            REQ_ACCOUNT_NAME,
+		            REQ_ACCOUNT_RELATION,
+		            REQ_WANT_NUMBER,
+		            REQ_WANT_NUMBER2,
+		            REQ_WANT_NUMBER3,
+		            REQ_WIRE_TYPE,
+		            REQ_AC01_BALANCE,
+		            REQ_AC01_AMOUNT,
+		            REQ_AC02_DAY,
+		            REQ_AC02_AMOUNT,
+		            REQ_GUIDE,
+		            REQ_GUIDE_FN,
+		            REQ_GUIDE_MN,
+		            REQ_GUIDE_RN,
+		            MOVE_MOBILE_FN,
+		            MOVE_AUTH_TYPE,
+		            MOVE_AUTH_NUMBER_1,
+		            MOVE_AUTH_NUMBER_2,
+		            MOVE_AUTH_NUMBER_3,
+		            MOVE_AUTH_NUMBER_4,
+		            MOVE_THISMONTH_PAY_TYPE,
+		            MOVE_ALLOTMENT_STAT,
+		            MOVE_REFUND_AGREE_FLAG,
+		            MOVE_COMPANY,
+		            MOVE_COMPANY_MVNO,
+		            TRUNC (MONTHLY_FEE * 1.1, -1) AS MONTHLY_FEE,
+		            DISCOUNT_PRICE,
+		            RATE_NAME,
+		            TEL_MM_PATMENT,
+		            REQ_CARD_COMPANY,
+		            REQ_CARD_NO,
+		            PAGE3DEFAULT,
+		            AGENT_CODE,
+		            NAME_CHANGE_NM,
+		            NAME_CHANGE_TEL_FN,
+		            NAME_CHANGE_RRN,
+		            NAME_CHANGE_PINSTALLMENT,
+		            MINOR_AGENT_NAME,
+		            MINOR_AGENT_RELATION,
+		            MINOR_AGENT_RRN,
+		            MINOR_AGENT_TEL_FN,
+		            ENTRUST_REQ_NM,
+		            ENTRUST_RES_NM,
+		            ENTRUST_REQ_RELATION,
+		            ENTRUST_RES_RRN,
+		            ENTRUST_RES_TEL_FN,
+		            SERVICE_TYPE,
+		            REQ_PAY_OTHER_FLAG,
+		            REQ_CARD_NAME,
+		            CLAUSE_PRI_AD_FLAG,
+		            REQ_BUY_TYPE,
+					DECODE(REQ_BUY_TYPE,'MM','P',DECODE(USIM_KINDS_CD,'09','E','U')) AS USIM_KINDS_CD,  -- USIM, eSIM , 단말기 구분
+		            REQ_MODEL_NAME,
+		            (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0044' AND CD_VAL = REQ_MODEL_COLOR) AS REQ_MODEL_COLOR,
+		            CASE WHEN TO_NUMBER(MODEL_MONTHLY_SUB) <= 1 THEN 'R'
+		                 WHEN TO_NUMBER(MODEL_MONTHLY_SUB) > 1 THEN 'P'
+		                 ELSE 'S'
+		            END AS MODEL_MONTHLY_TYPE,
+		            OTHERS_PAYMENT_RRN,
+		            OTHERS_PAYMENT_AG,
+		            OTHERS_PAYMENT_NM,
+		            OTHERS_PAYMENT_RELATION,
+		            SOC_CODE,
+		            CNTPNT_SHOP_ID,
+		            MODEL_SALE_POLICY_CODE,
+		            ENGG_MNTH_CNT,
+		            NW_BLCK_AGRM_YN,
+		            APP_BLCK_AGRM_YN,
+                    NVL(CLAUSE_JEHU_FLAG,'N') AS CLAUSE_JEHU_FLAG,
+		            APP_CD,
+		            APP_CD_NAME,ETC_DISCOUNT,
+		            MODEL_MONTHLY,
+		            NVL(CLAUSE_RENTAL_MODEL_CP,'N') AS CLAUSE_RENTAL_MODEL_CP,      		--단말배상금 안내사항 동의여부
+		            NVL(CLAUSE_RENTAL_MODEL_CP_PR,'N') AS CLAUSE_RENTAL_MODEL_CP_PR,		--단말배상금(부분파손) 안내사항 동의여부
+		            NVL(CLAUSE_RENTAL_SERVICE,'N') AS CLAUSE_RENTAL_SERVICE,        		--중고렌탈 프로그램 서비스 이용에 대한 동의서 동의여부
+		            CLAUSE_MPPS35_FLAG,														--선불요금제 MPPS35 제약사항 동의 여부
+					CLAUSE_FINANCE_FLAG,													--동부화재 제휴 요금제 약관 동의 여부
+		            NVL(CLAUSE_5G_COVERAGE_FLAG,'N' )AS CLAUSE_5G_COVERAGE_FLAG,        	--5g 커버리지 확인 및 가입 동의
+		            NVL(PERSONAL_INFO_COLLECT_AGREE,'N') AS PERSONAL_INFO_COLLECT_AGREE,	--고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의
+		            NVL(OTHERS_TRNS_AGREE,'N') AS OTHERS_TRNS_AGREE,        				--혜택 제공을 위한 제3자 제공 동의(엠모바일)
+		            NVL(CLAUSE_PARTNER_OFFER_FLAG,'N') AS CLAUSE_PARTNER_OFFER_FLAG, 		--개인정보 제3자 제공 동의(제휴사)
+					OPEN_MARKET_REFERER,													--제휴사
+					JEHU_PROD_TYPE,															--제휴처(제휴요금제)
+					JEHU_PARTNER_TYPE,														--제휴사 구분(서식지)
+					NVL(OTHERS_TRNS_KT_AGREE,'N') AS OTHERS_TRNS_KT_AGREE,					--혜택 제공을 위한 제3자 제공 동의(KT)
+					NVL(OTHERS_AD_RECEIVE_AGREE,'N') AS OTHERS_AD_RECEIVE_AGREE,       		--제 3자 제공 동의
+					NVL(CLAUSE_FATH_FLAG , 'N') as CLAUSE_FATH_FLAG,            			-- 민감정보(생체인식정보)수집 및 이용동의
+					NVL(CLAUSE_FATH_FLAG , 'N') as CLAUSE_FATH_FLAG2,            			-- 민감정보(생체인식정보)수집 및 이용동의
+					NVL(COMBINE_SOLO_FLAG , 'N') as COMBINE_SOLO_FLAG            			-- 아무나솔로 결합 신청 동의
+		    FROM    (
+		            SELECT  A.*,
+		                    TRUNC( ( (NVL(b.DC_AMT,0)  ) + NVL(b.ADD_DC_AMT,0)) * 1.1  , 0) AS DISCOUNT_PRICE,
+		                    TRUNC(A.MONTHLY_FEE * 1.1 - ( ((NVL(b.DC_AMT,0)) + NVL(b.ADD_DC_AMT,0))  * 1.1), -1) AS TEL_MM_PATMENT
+		            FROM    (
+		                    SELECT  MQ.REQUEST_KEY,
+		                            OSPM.INST_RATE AS INST_INTRATE,
+		                            MQ.ONLINE_AUTH_INFO AS RES_NO,
+		                            MRS.SOC_CODE,
+		                            MQ.CNTPNT_SHOP_ID,
+		                            MRS.MODEL_SALE_POLICY_CODE,
+		                            DECODE(MQ.PROD_TYPE,'01',MRS.MODEL_PRICE + MRS.MODEL_PRICE_VAT,NULL,MRS.MODEL_PRICE + MRS.MODEL_PRICE_VAT,'02',MRS.RENTAL_MODEL_CP_AMT) AS MODEL_PRICE,
+		                            MQ.PROD_TYPE,
+		                            MRS.MODEL_DISCOUNT1,
+		                            MRS.MODEL_DISCOUNT2,
+		                            MRS.MODEL_DISCOUNT3,
+		                            CASE WHEN OOIM.ORGN_NM IS NOT NULL THEN OOIM.ORGN_NM
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100011741' THEN 'M모바일(직영온라인)'
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100011744' THEN 'M모바일(사내특판)'
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100011745' THEN '총판((주)프리피아)'
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100005928' THEN 'M모바일(직영온라인)'
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100013265' THEN '홈쇼핑'
+		                                 ELSE '온라인'
+		                            END AS AGENT_CODE,
+		                            MQ.OPER_TYPE,
+		                            CSTMR_TYPE AS CSTMR_TYPE_ORG,
+		                            DECODE(CSTMR_TYPE , 'NM','NA','FN','NE',CSTMR_TYPE) AS CSTMR_TYPE,
+		                            MQ.ETC_SPECIAL,
+		                            MQ.REQ_USIM_NAME,
+		                            TO_CHAR (MQ.REQ_USIM_SN) AS REQ_USIM_SN,
+		                            PHONE_PAYMENT,
+		                            SUBSTR (TO_CHAR (MQ.REQ_IN_DAY, 'YYYYMMDD'), 1, 4) AS REQ_IN_DAY_YYYY,
+		                            SUBSTR (TO_CHAR (MQ.REQ_IN_DAY, 'YYYYMMDD'), 5, 2) AS REQ_IN_DAY_MM,
+		                            SUBSTR (TO_CHAR (MQ.REQ_IN_DAY, 'YYYYMMDD'), 7, 2) AS REQ_IN_DAY_DD,
+		                            DECODE (NVL (MRS.MODEL_MONTHLY, 0), '0', '1', MRS.MODEL_MONTHLY) AS MODEL_MONTHLY_SUB,  /**  할부 개월수  **/
+		                            MODEL_MONTHLY,
+		                            MQ.REQ_ADDITION,
+		                            TO_CHAR (MQ.REQ_ADDITION_PRICE) AS REQ_ADDITION_PRICE,
+		                            MRS.USIM_PRICE_TYPE,
+		                            TO_CHAR (MRS.USIM_PRICE) AS USIM_PRICE,
+		                            MRS.JOIN_PRICE_TYPE,
+		                            MRC.CSTMR_NAME, /**substr(MRC.CSTMR_NATIVE_RRN,1,6) AS CSTMR_NATIVE_RRN, **/
+		                            CSTMR_NATIVE_RRN,
+		                            MRC.CSTMR_FOREIGNER_RRN,
+									NVL(FN_GET_CODENM('RCP2038', MRC.CSTMR_FOREIGNER_NATION), MRC.CSTMR_FOREIGNER_NATION) AS CSTMR_FOREIGNER_NATION,
+		                            MRC.CSTMR_TEL_FN || '-' || MRC.CSTMR_TEL_MN || '-' || MRC.CSTMR_TEL_RN || ',' ||
+		                                MRC.CSTMR_MOBILE_FN || '-' || MRC.CSTMR_MOBILE_MN || '-' || MRC.CSTMR_MOBILE_RN AS CSTMR_RECEIVE_TEL_FN,
+		                            MRC.CSTMR_BILL_SEND_CODE,
+		                            MRC.CSTMR_MAIL,
+		                            MRC.CSTMR_ADDR || '  ' || MRC.CSTMR_ADDR_DTL AS CSTMR_ADDR,
+		                            MRC.CSTMR_ADDR_BJD,
+		                            MRC.OTHERS_PAYMENT_RNM,
+		                            MRC.CSTMR_PRIVATE_NUMBER,
+		                            MRC.CSTMR_JURIDICAL_NUMBER,
+		                            MRC.CSTMR_JURIDICAL_RRN,
+		                            MCENB.CODE_NAME AS REQ_BANK,
+		                            MRR.REQ_ACCOUNT_NUMBER,
+		                            MRR.REQ_CARD_YY,
+		                            REQ_CARD_MM,
+		                            MRR.REQ_ACCOUNT_NAME,
+		                            MRR.REQ_ACCOUNT_RELATION,
+		                            MRR.REQ_CARD_COMPANY,
+		                            MRR.REQ_CARD_NO,
+		                            MQ.REQ_WANT_NUMBER,
+		                            MQ.REQ_WANT_NUMBER2,
+		                            MQ.REQ_WANT_NUMBER3,
+		                            MRR.REQ_WIRE_TYPE,
+		                            MQ.REQ_PAY_TYPE,
+		                            TO_CHAR (MRP.REQ_AC01_BALANCE) AS REQ_AC01_BALANCE,
+		                            TO_CHAR (MRP.REQ_AC01_AMOUNT) AS REQ_AC01_AMOUNT,
+		                            MRP.REQ_AC02_DAY,
+		                            TO_CHAR (MRP.REQ_AC02_AMOUNT) AS REQ_AC02_AMOUNT,
+		                            CASE WHEN(MRM.REQ_GUIDE_MN IS NOT NULL ) THEN MRM.REQ_GUIDE_FN||'-'||MRM.REQ_GUIDE_MN||'-'||MRM.REQ_GUIDE_RN
+		                                 ELSE ''
+		                            END AS REQ_GUIDE,
+		                            MRM.REQ_GUIDE_FN,
+		                            MRM.REQ_GUIDE_MN,
+		                            MRM.REQ_GUIDE_RN,
+		                            DECODE (MRM.MOVE_MOBILE_MN, NULL, NULL, MRM.MOVE_MOBILE_FN || '-' || MRM.MOVE_MOBILE_MN || '-' || MRM.MOVE_MOBILE_RN) AS MOVE_MOBILE_FN,
+		                            MRM.MOVE_AUTH_TYPE,
+		                            SUBSTR (MRM.MOVE_AUTH_NUMBER, 1, 1) AS MOVE_AUTH_NUMBER_1,
+		                            SUBSTR (MRM.MOVE_AUTH_NUMBER, 2, 1) AS MOVE_AUTH_NUMBER_2,
+		                            SUBSTR (MRM.MOVE_AUTH_NUMBER, 3, 1) AS MOVE_AUTH_NUMBER_3,
+		                            SUBSTR (MRM.MOVE_AUTH_NUMBER, 4, 1) AS MOVE_AUTH_NUMBER_4,
+		                            MRM.MOVE_THISMONTH_PAY_TYPE,
+		                            MRM.MOVE_ALLOTMENT_STAT,
+		                            MRM.MOVE_REFUND_AGREE_FLAG,
+									CASE
+										WHEN MRM.MOVE_COMPANY IN ('SKT', 'LGT', 'KTF') THEN MRM.MOVE_COMPANY
+										WHEN MRM.MOVE_COMPANY IS NOT NULL THEN 'MVNO'
+										ELSE ''
+									END AS MOVE_COMPANY,
+									CASE
+										WHEN MRM.MOVE_COMPANY IN ('SKT', 'LGT', 'KTF') THEN ''
+										ELSE MC.CODE_NAME
+									END AS MOVE_COMPANY_MVNO,
+		                            MR.BASE_AMT AS MONTHLY_FEE,
+		                            MR.RATE_NM AS RATE_NAME,
+		                            '3' AS PAGE3DEFAULT,
+		                            MRCG.NAME_CHANGE_NM,
+		                            DECODE (MRCG.NAME_CHANGE_TEL_MN, NULL, NULL, MRCG.NAME_CHANGE_TEL_FN || '-' || MRCG.NAME_CHANGE_TEL_MN || '-' || MRCG.NAME_CHANGE_TEL_RN) AS NAME_CHANGE_TEL_FN,
+		                            MRCG.NAME_CHANGE_RRN,
+		                            MRCG.NAME_CHANGE_PINSTALLMENT,
+		                            MRA.MINOR_AGENT_NAME,
+		                            MCMINOR.CODE_NAME AS MINOR_AGENT_RELATION,
+		                            MRA.MINOR_AGENT_RRN,
+		                            DECODE(MRA.MINOR_AGENT_TEL_FN, NULL, NULL, MRA.MINOR_AGENT_TEL_FN || '-' || MRA.MINOR_AGENT_TEL_MN || '-' || MRA.MINOR_AGENT_TEL_RN) AS MINOR_AGENT_TEL_FN,
+		                            MRA.ENTRUST_REQ_NM,
+		                            MRA.ENTRUST_RES_NM,
+		                            MCENT.CODE_NAME AS ENTRUST_REQ_RELATION,
+		                            MRR.REQ_CARD_NAME,
+		                            MRA.ENTRUST_RES_RRN,
+		                            MQ.SERVICE_TYPE,
+		                            MQ.CLAUSE_PRI_AD_FLAG,
+		                            MQ.REQ_BUY_TYPE,
+									MQ.USIM_KINDS_CD,
+		                            MQ.REQ_MODEL_NAME,
+		                            MQ.REQ_MODEL_COLOR,
+		                            DECODE ( MRA.ENTRUST_RES_TEL_FN, NULL, NULL, MRA.ENTRUST_RES_TEL_FN || '-' || MRA.ENTRUST_RES_TEL_MN || '-' || MRA.ENTRUST_RES_TEL_RN) AS ENTRUST_RES_TEL_FN,
+		                            MRR.REQ_PAY_OTHER_FLAG,
+		                            CASE WHEN REQ_PAY_TYPE = 'C' THEN REQ_CARD_RRN
+		                                 WHEN REQ_PAY_TYPE = 'D' THEN REQ_ACCOUNT_RRN
+		                                 ELSE CSTMR_NATIVE_RRN
+		                            END AS OTHERS_PAYMENT_RRN,
+		                            CASE WHEN MINOR_AGENT_NAME IS NOT NULL OR (REQ_PAY_TYPE = 'C' AND REQ_PAY_OTHER_FLAG = 'Y') OR (REQ_PAY_TYPE = 'D' AND REQ_PAY_OTHER_FLAG = 'Y') THEN 'Y'
+		                                 ELSE 'N'
+		                            END AS OTHERS_PAYMENT_AG,
+		                            CASE WHEN REQ_PAY_TYPE = 'C' THEN REQ_CARD_NAME
+		                                 WHEN REQ_PAY_TYPE = 'D' THEN REQ_ACCOUNT_NAME
+		                                 ELSE CSTMR_NAME
+		                            END AS OTHERS_PAYMENT_NM,
+		                            NVL(MCMINOR.CODE_NAME, '본인') AS OTHERS_PAYMENT_RELATION,
+		                            NVL( MRS.ENGG_MNTH_CNT, 0 ) AS ENGG_MNTH_CNT,
+		                            MQ.NW_BLCK_AGRM_YN,
+		                            MQ.APP_BLCK_AGRM_YN,
+		                            MQ.CLAUSE_JEHU_FLAG,
+		                            DECODE(MQ.APP_CD,'1','1','3','3',null,'' ,'','','0')AS APP_CD,
+		                            (SELECT CODE_NAME FROM MCP_CODE@DL_MCP WHERE CODE_SYS = 'CHA' AND CODE = MQ.APP_CD) AS APP_CD_NAME,
+		                            '0'AS ETC_DISCOUNT,
+		                            MRS.SPRT_TP, /* 지원금 유형 */
+		                            MRS.MODEL_ID,
+		                            MR.RATE_CD,
+		                            OSPM.SALE_PLCY_CD,
+		                            MQ.CLAUSE_RENTAL_MODEL_CP,      --단말배상금 안내사항 동의여부
+		                            MQ.CLAUSE_RENTAL_MODEL_CP_PR,   --단말배상금(부분파손) 안내사항 동의여부
+		                            MQ.CLAUSE_RENTAL_SERVICE,       --중고렌탈 프로그램 서비스 이용에 대한 동의서 동의여부
+		                            MQ.CLAUSE_MPPS35_FLAG,          --선불요금제 MPPS35 제약사항 동의 여부
+		                            MQ.CLAUSE_FINANCE_FLAG,         --동부화재 제휴 요금제 약관 동의 여부
+									MQ.CLAUSE_5G_COVERAGE_FLAG, 	--5g 커버리지 확인 및 가입 동의
+									MQ.PERSONAL_INFO_COLLECT_AGREE, --고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의
+									MQ.OTHERS_TRNS_AGREE, 			--혜택 제공을 위한 제3자 제공 동의(엠모바일)
+									MQ.CLAUSE_PARTNER_OFFER_FLAG,	--개인정보 제3자 제공 동의(제휴사)
+		                    		MQ.OPEN_MARKET_REFERER,			--제휴사
+									MQ.JEHU_PROD_TYPE,				--제휴처(제휴요금제)
+									MQ.JEHU_PARTNER_TYPE,           --제휴사 구분(서식지)
+									MQ.OTHERS_TRNS_KT_AGREE, 		--혜택 제공을 위한 제3자 제공 동의(KT)
+									MQ.OTHERS_AD_RECEIVE_AGREE,		--제3자 제공관련 광고 수신 동의
+									MQ.CLAUSE_FATH_FLAG,
+									MQ.COMBINE_SOLO_FLAG
+		                    FROM    MCP_REQUEST@DL_MCP MQ,
+		                            MCP_REQUEST_CSTMR@DL_MCP MRC,
+		                            MCP_REQUEST_REQ@DL_MCP MRR,
+		                            MCP_REQUEST_PAYMENT@DL_MCP MRP,
+		                            MCP_REQUEST_MOVE@DL_MCP MRM,
+		                            MCP_REQUEST_SALEINFO@DL_MCP MRS,
+		                            MCP_CODE@DL_MCP MC,
+		                            MCP_REQUEST_CHANGE@DL_MCP MRCG,
+		                            MCP_REQUEST_AGENT@DL_MCP MRA,
+		                            MCP_CODE@DL_MCP MCMINOR,
+		                            MCP_CODE@DL_MCP MCENT,
+		                            MCP_CODE@DL_MCP MCENB,
+		                            MSP_RATE_MST MR,
+		                            ORG_ORGN_INFO_MST OOIM,
+		                            MSP_SALE_PLCY_MST OSPM
+		                    WHERE   MQ.REQUEST_KEY = #{requestKey}
+		                    AND     MRC.REQUEST_KEY = MQ.REQUEST_KEY
+		                    AND     MRC.REQUEST_KEY = MRR.REQUEST_KEY(+)
+		                    AND     MRC.REQUEST_KEY = MRP.REQUEST_KEY(+)
+		                    AND     MRC.REQUEST_KEY = MRS.REQUEST_KEY
+		                    AND     MRC.REQUEST_KEY = MRM.REQUEST_KEY(+)
+		                    AND     MRC.REQUEST_KEY = MRCG.REQUEST_KEY(+)
+		                    AND     MRC.REQUEST_KEY = MRA.REQUEST_KEY(+)
+		                    AND     MC.CODE_SYS(+) = 'NSC'
+		                    AND     MC.CODE(+) = MRM.MOVE_COMPANY
+		                    AND     MRS.SOC_CODE = MR.RATE_CD
+		                    AND     MCMINOR.CODE_SYS(+) = 'AGR'
+		                    AND     MCMINOR.CODE(+) = MRA.MINOR_AGENT_RELATION
+		                    AND     MCENT.CODE_SYS(+) = 'AGR'
+		                    AND     MCENT.CODE(+) = MRA.ENTRUST_REQ_RELATION
+		                    AND     MCENB.CODE_SYS(+) = 'BNK'
+		                    AND     MCENB.CODE(+) = MRR.REQ_BANK
+		                    AND     MQ.CNTPNT_SHOP_ID = OOIM.ORGN_ID(+)
+		                    AND     MRS.MODEL_SALE_POLICY_CODE =  OSPM.SALE_PLCY_CD(+)
+		            )A,
+		            MSP_SALE_SUBSD_MST B
+		    WHERE   A.SALE_PLCY_CD = B.SALE_PLCY_CD(+)
+		    AND     A.SOC_CODE = B.RATE_CD(+)
+		    AND     A.MODEL_ID = B.PRDT_ID(+)
+		    AND     A.ENGG_MNTH_CNT = B.AGRM_TRM(+)
+		    AND     A.CNTPNT_SHOP_ID = B.ORGN_ID(+)
+		    AND     A.OPER_TYPE = B.OPER_TYPE(+)) APPDATA
+		) MAINDATA
+		]]>
+	</select>
+
+	<select id="getAppFormUserData" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.ScanVO"  resultType="map">
+		/* scanMapper.getRequestJoinUserData */
+		SELECT  MRC.CSTMR_NAME
+		        , MQ.RES_NO
+		        , MQ.AGENT_CODE
+		        , MQ.CNTPNT_SHOP_ID
+		FROM    MCP_REQUEST@DL_MCP MQ
+		        , MCP_REQUEST_CSTMR@DL_MCP MRC
+		WHERE   MQ.REQUEST_KEY = #{requestKey}
+		AND     MQ.REQUEST_KEY = MRC.REQUEST_KEY
+	</select>
+	
+	<update id="updateAppFormXmlYn" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.ScanVO">
+		/* scanMapper.updateAppFormXmlYn */
+		UPDATE  MCP_REQUEST@DL_MCP
+		SET     APP_FORM_XML_YN = 'Y',
+				RVISN_ID = #{userId},
+				RVISN_DTTM = SYSDATE 
+		WHERE   REQUEST_KEY = #{requestKey}
+	</update>
+	
+	<select id="getAppFormPointList" resultType="map">
+		/* scanMapper.getAppFormPointList */
+		SELECT  COLUMN_NAME
+		        , METAROW
+		        , METALINE
+		        , APP_KEY
+		        , CODEDATA
+		        , CODEDATA_YN
+		        , PAGEINDEX
+		        , DELETECOLUMNYN
+		FROM    MCP_APPLICATION_FORM_INFO@DL_MCP
+		ORDER BY PAGEINDEX, APP_KEY
+	</select>
+	
+	<select id="getAppFormPointGroupList" parameterType="String" resultType="map">
+		/* scanMapper.getAppFormPointGroupList */
+		SELECT
+		    A.GROUP_CODE,
+		    B.PAGE_SEQ,
+		    C.PAGE_CODE,
+		    C.COLUMN_NAME,
+		    C.METAROW,
+		    C.METALINE,
+		    C.CODEDATA,
+		    C.CODEDATA_YN,
+		    C.DELETECOLUMNYN
+		FROM
+		    NMCP_APP_GROUP_MST@DL_MCP A,
+		    NMCP_APP_GROUP_INFO@DL_MCP B,
+		    NMCP_APP_FORM_INFO@DL_MCP C
+		WHERE
+			A.STATUS = 'A'
+		    AND A.GROUP_CODE = #{groupCode}
+		    AND A.GROUP_CODE = B.GROUP_CODE
+		    AND B.STATUS = 'A'
+		    AND B.PAGE_CODE = C.PAGE_CODE
+		ORDER BY B.PAGE_SEQ, C.APP_KEY
+	</select>
+	
+	<select id="getMcpCodeList" parameterType="String" resultType="map">
+		/* scanMapper.getMcpCodeList */
+		SELECT  A.CD_GROUP_ID
+		        , B.DTL_CD
+		        , COUNT(1) OVER() AS TOTAL_CNT
+		FROM    NMCP_CD_GROUP_BAS@DL_MCP A
+		        , NMCP_CD_DTL@DL_MCP B
+		WHERE   A.CD_GROUP_ID = B.CD_GROUP_ID
+		AND     A.CD_GROUP_ID = #{groupId}
+		AND     A.USE_YN = 'Y' 
+		/* 2022.03.02 M포탈 리뉴얼로 조회 조건 추가  */
+		AND     (A.PSTNG_START_DATE IS NULL OR A.PSTNG_END_DATE IS NULL OR SYSDATE BETWEEN TO_DATE(A.PSTNG_START_DATE, 'YYYYMMDDHH24MISS') AND TO_DATE(A.PSTNG_END_DATE, 'YYYYMMDDHH24MISS'))
+		AND     (B.PSTNG_START_DATE IS NULL OR B.PSTNG_END_DATE IS NULL OR SYSDATE BETWEEN TO_DATE(B.PSTNG_START_DATE, 'YYYYMMDDHH24MISS') AND TO_DATE(B.PSTNG_END_DATE, 'YYYYMMDDHH24MISS'))
+	</select>
+	
+</mapper>

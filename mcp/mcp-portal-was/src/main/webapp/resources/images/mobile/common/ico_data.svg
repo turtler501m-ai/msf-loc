@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 27.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="레이어_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+	 y="0px" viewBox="0 0 24 24" style="enable-background:new 0 0 24 24;" xml:space="preserve">
+<style type="text/css">
+	.st0{filter:url(#Adobe_OpacityMaskFilter);}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	
+		.st2{mask:url(#b_00000108990907661779551290000017766979994026580904_);fill-rule:evenodd;clip-rule:evenodd;fill:#CCCCCC;stroke:#CCCCCC;}
+	.st3{filter:url(#Adobe_OpacityMaskFilter_00000107563496633427053190000018419940354670156458_);}
+	
+		.st4{mask:url(#b_00000114031632759392713470000005095661236066595730_);fill-rule:evenodd;clip-rule:evenodd;fill:#CCCCCC;stroke:#CCCCCC;}
+</style>
+<g>
+	<defs>
+		<filter id="Adobe_OpacityMaskFilter" filterUnits="userSpaceOnUse" x="5.4" y="6" width="6.1" height="12.2">
+			<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+		</filter>
+	</defs>
+	
+		<mask maskUnits="userSpaceOnUse" x="5.4" y="6" width="6.1" height="12.2" id="b_00000108990907661779551290000017766979994026580904_">
+		<g class="st0">
+			<path id="a_00000142855095295937416960000008610198333626544822_" class="st1" d="M0,0h24v24H0V0z"/>
+		</g>
+	</mask>
+	<path class="st2" d="M8.4,17.7l2.5-3c0.2-0.3,0.1-0.6-0.1-0.8c-0.1-0.1-0.2-0.1-0.4-0.1H10L9.5,7.1c0-0.3-0.2-0.6-0.6-0.6
+		c0,0,0,0,0,0H8.1c-0.3,0-0.6,0.3-0.6,0.6c0,0,0,0,0,0v6.7c-0.6-0.1-1.1,0-1.4,0.2C6,14,5.9,14.2,5.9,14.4c0,0.1,0,0.2,0.1,0.4
+		l2,2.7C8.1,17.6,8.2,17.6,8.4,17.7L8.4,17.7z"/>
+	<defs>
+		
+			<filter id="Adobe_OpacityMaskFilter_00000131345954670609673000000007200194358579102882_" filterUnits="userSpaceOnUse" x="12.4" y="6" width="6.1" height="12.2">
+			<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+		</filter>
+	</defs>
+	
+		<mask maskUnits="userSpaceOnUse" x="12.4" y="6" width="6.1" height="12.2" id="b_00000114031632759392713470000005095661236066595730_">
+		<g style="filter:url(#Adobe_OpacityMaskFilter_00000131345954670609673000000007200194358579102882_);">
+			<path id="a_00000106826345737379577170000014249714003830201266_" class="st1" d="M0,0h24v24H0V0z"/>
+		</g>
+	</mask>
+	<path class="st4" d="M15.4,6.5l2.5,3c0.2,0.3,0.1,0.6-0.1,0.8c-0.1,0.1-0.2,0.1-0.4,0.1H17l-0.5,6.7c0,0.3-0.2,0.6-0.6,0.6
+		c0,0,0,0,0,0h-0.8c-0.3,0-0.6-0.3-0.6-0.6c0,0,0,0,0,0v-6.7c-0.6,0.1-1.1,0-1.4-0.2c-0.1-0.1-0.2-0.2-0.2-0.4c0-0.1,0-0.2,0.1-0.4
+		l2-2.7C15.1,6.6,15.2,6.5,15.4,6.5L15.4,6.5z"/>
+</g>
+</svg>

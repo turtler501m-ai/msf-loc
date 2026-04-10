@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.unpdmgmt.mapper.UnpdMgmtMapper">
+
+	<sql id="getUnpdMgmtListInfo">
+		SELECT  A.BILL_YM
+		        , A.WORK_DT
+		        , A.SVC_CNTR_NUM
+		        , A.BILL_ITEM_CD
+		        , A.BILL_ITEM_NM
+		        , A.UNPAY_AMNT
+		        , B.CONTRACT_NUM
+		        , B.SUB_LINK_NAME AS CUST_NM
+		        , B.SUBSCRIBER_NO AS SVC_TEL_NUM
+		        , B.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', B.SUB_STATUS) AS SUB_STATUS_NM
+		        , B.LST_COM_ACTV_DATE AS OPEN_DT
+		        , DECODE(B.SUB_STATUS, 'C', SUBSTR(B.SUB_STATUS_DATE, 1, 8), '') AS TMNT_DT
+		        , ( CASE WHEN B.CONTRACT_NUM  !=  B.SVC_CNTR_NO THEN 'Y' ELSE 'N' END ) AS MCN_YN
+		        , FN_GET_ORGNM(B.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+		FROM    CLS_UNPD_DATA A
+		        , MSP_JUO_SUB_INFO B
+		WHERE   1 = 1
+		AND     (A.SVC_CNTR_NUM  = B.SVC_CNTR_NO OR A.SVC_CNTR_NUM  = B.CONTRACT_NUM)
+		AND     A.BILL_YM       = #{billYm}
+		<if test="cntpntShopId != null and cntpntShopId != ''">
+		AND     B.OPEN_AGNT_CD  = #{cntpntShopId}
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchType == "contractNum"'>
+				AND (B.CONTRACT_NUM = #{searchVal}
+     				OR B.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+				</when>
+				<when test='searchType == "custNm"'>
+				AND    B.SUB_LINK_NAME LIKE '%' || #{searchVal} || '%'
+				</when>
+				<when test='searchType == "svcTelNum"'>
+				AND    B.SUBSCRIBER_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		<if test="billItemCd != null and billItemCd !=''">
+		AND     A.BILL_ITEM_CD  = #{billItemCd}
+		</if>
+		<if test="subStatus != null and subStatus !=''">
+		AND     B.SUB_STATUS    = #{subStatus}
+		</if>
+		<if test="mcnYn != null and mcnYn != ''">
+		AND     ( CASE WHEN B.CONTRACT_NUM  !=  B.SVC_CNTR_NO THEN 'Y' ELSE 'N' END ) = #{mcnYn}
+		</if>
+	</sql>
+	
+	<select id="getUnpdMgmtList" parameterType="com.ktis.msp.org.unpdmgmt.vo.UnpdMgmtVo"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+			/* unpdMapper.getUnpdMgmtList */
+			<include refid="com.ktis.msp.cmn.include.paging-start" />
+			
+			<include refid="getUnpdMgmtListInfo" />
+			
+			<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getUnpdMgmtListExcel" parameterType="com.ktis.msp.org.unpdmgmt.vo.UnpdMgmtVo"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+			/* unpdMapper.getUnpdMgmtListExcel */
+			
+			<include refid="getUnpdMgmtListInfo" />
+			
+	</select>
+	
+</mapper>

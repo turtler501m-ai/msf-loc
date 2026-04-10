@@ -1,0 +1,62 @@
+# === Build / Output directories ===
+target
+build
+lib
+out
+dist
+bin
+obj
+.gradle
+.idea
+.vscode
+
+# === Logs / Temp ===
+*.log
+*.tmp
+*.temp
+*.swp
+*.bak
+
+# === OS Specific ===
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# === Dependency cache ===
+node_modules
+.m2
+vendor
+
+# === IDE / Editor files ===
+*.iml
+*.ipr
+*.iws
+*.class
+*.project
+*.classpath
+*.settings/
+*.sublime-workspace
+*.sublime-project
+
+# === Coverage / Reports ===
+coverage
+test-output
+reports
+jacoco.exec
+
+# === Environment / Secrets ===
+.env
+*.env.local
+*.key
+*.pem
+*.crt
+*.keystore
+
+# === Temporary tools ===
+__pycache__
+venv
+.env/
+.npm/
+.yarn/
+.cache/

@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.sgiMgmt.mapper.SgiMgmtMapper">
+	<select id="getSgiDmndList"  parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtDmndListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* SgiMgmtMapper.getSgiDmndList */
+		SELECT 
+			FN_GET_CODENM('CMN0218', DUTY_SCTN)               AS DUTY_SCTN
+			,FN_GET_CODENM('CMN0224', CMPN_SCTN)              AS CMPN_SCTN
+			,INSR_BILL_REQ_NO                                 AS INSR_BILL_REQ_NO
+			,RESULT_CD                                        AS RESULT_CD
+			,ERR_RESULT_CNTT                                  AS ERR_RESULT_CNTT
+			,BLANKS                                           AS BLANKS
+			,SECURITIES_NO                                    AS SECURITIES_NO
+			,INSR_MNGM_NO                                     AS INSR_MNGM_NO
+			,SVC_NO                                           AS SVC_NO
+			,SVC_NO_BLANKS                                    AS SVC_NO_BLANKS
+			,FN_GET_CODENM('CMN0219', CSTMR_CD)               AS CSTMR_CD
+			,SUBSTR(USER_SSN, 1,6)                                         AS USER_SSN
+			,CSTMR_NAME                                       AS CSTMR_NAME
+			,INDV_ENTR_NO                                     AS INDV_ENTR_NO
+			,PAYER_ID                                         AS PAYER_ID
+			,LST_MODEL_NAME                                   AS LST_MODEL_NAME
+			,LST_MODEL_SERIAL_NO                              AS LST_MODEL_SERIAL_NO
+			,SUBSCRIBER_NO                                    AS SUBSCRIBER_NO
+			,OFFICIO_REVOCATION_DATE                          AS OFFICIO_REVOCATION_DATE
+			,FN_GET_CODENM('CMN0220', PART_PAY_REVOCATION_YN) AS PART_PAY_REVOCATION_YN
+			,NAME_CHANGE_DATE                                 AS NAME_CHANGE_DATE
+			,PHONE_JOIN_DATE                                  AS PHONE_JOIN_DATE
+			,INSR_STRT_DATE                                   AS INSR_STRT_DATE
+			,INSR_TRMN_DATE                                   AS INSR_TRMN_DATE
+			,INST_CNT                                         AS INST_CNT
+			,INST_PAY_NUM                                     AS INST_PAY_NUM
+			,INSR_JOIN_AMT                                    AS INSR_JOIN_AMT
+			,BILL_DATE                                        AS BILL_DATE
+			,BILL_AMT                                         AS BILL_AMT
+			,INST_RATE                                        AS INST_RATE
+			,FST_UNPAY_DATE                                   AS FST_UNPAY_DATE
+			,FST_UNPAY_NUM                                    AS FST_UNPAY_NUM
+			,RESIDENCE_SUBSCRIBER_NO                          AS RESIDENCE_SUBSCRIBER_NO
+			,RESIDENCE_POST                                   AS RESIDENCE_POST
+			,BILL_ADDR_SUBSCRIBER_NO                          AS BILL_ADDR_SUBSCRIBER_NO
+			,BILL_ADDR_POST                                   AS BILL_ADDR_POST
+			,FN_GET_CODENM('CMN0221', RESIDENCE_CD)           AS RESIDENCE_CD
+			,RESIDENCE_ADDR||RESIDENCE_ADDR_DTL               AS RESIDENCE_ADDR
+			,FN_GET_CODENM('CMN0222', BILL_ADDR_CD)           AS BILL_ADDR_CD
+			,BILL_ADDR||BILL_ADDR_DTL                         AS BILL_ADDR
+			,BRANCH_CD                                        AS BRANCH_CD
+			,MINOR_NAME                                       AS MINOR_NAME
+			,MINOR_SSN                                        AS MINOR_SSN
+			,INDV_REVIVAL_YN 								AS INDV_REVIVAL_YN
+			,FN_GET_CODENM('CMN0227',INDV_REVIVAL_STEP)		AS INDV_REVIVAL_STEP
+			,INDV_REVIVAL_REPAY_YN							AS INDV_REVIVAL_REPAY_YN
+			,INDV_REVIVAL_REPAY_AMT							AS INDV_REVIVAL_REPAY_AMT
+			,BANKRUPTCY_EXEMPTION_YN						AS BANKRUPTCY_EXEMPTION_YN
+		FROM  CMN_SGIH_DMND
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_DMND_SEQ_NUM
+        <include refid="com.ktis.msp.cmn.include.paging-end" />   			
+	</select>
+	
+	<select id="getSgiDmndListEx"  parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtDmndListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* SgiMgmtMapper.getSgiDmndListEx */
+		SELECT 
+			FN_GET_CODENM('CMN0218', DUTY_SCTN)               AS DUTY_SCTN
+			,FN_GET_CODENM('CMN0224', CMPN_SCTN)              AS CMPN_SCTN
+			,INSR_BILL_REQ_NO                                 
+			,RESULT_CD                                        
+			,ERR_RESULT_CNTT                                  
+			,BLANKS                                           
+			,SECURITIES_NO                                    
+			,INSR_MNGM_NO                                     
+			,SVC_NO                                           
+			,SVC_NO_BLANKS                                    
+			,FN_GET_CODENM('CMN0219', CSTMR_CD)               AS CSTMR_CD
+			,USER_SSN                                         
+			,CSTMR_NAME                                       
+			,INDV_ENTR_NO                                     
+			,PAYER_ID                                         
+			,LST_MODEL_NAME                                   
+			,LST_MODEL_SERIAL_NO                              
+			,SUBSCRIBER_NO                                    
+			,OFFICIO_REVOCATION_DATE                          
+			,FN_GET_CODENM('CMN0220', PART_PAY_REVOCATION_YN) AS PART_PAY_REVOCATION_YN
+			,NAME_CHANGE_DATE                                 
+			,PHONE_JOIN_DATE                                  
+			,INSR_STRT_DATE                                   
+			,INSR_TRMN_DATE                                   
+			,INST_CNT                                         
+			,INST_PAY_NUM                                     
+			,INSR_JOIN_AMT                                    
+			,BILL_DATE                                        
+			,BILL_AMT                                         
+			,INST_RATE                                        
+			,FST_UNPAY_DATE                                   
+			,FST_UNPAY_NUM                                    
+			,RESIDENCE_SUBSCRIBER_NO                          
+			,RESIDENCE_POST                                   
+			,BILL_ADDR_SUBSCRIBER_NO                          
+			,BILL_ADDR_POST                                   
+			,FN_GET_CODENM('CMN0221', RESIDENCE_CD)           AS RESIDENCE_CD
+			,RESIDENCE_ADDR||RESIDENCE_ADDR_DTL               AS RESIDENCE_ADDR
+			,FN_GET_CODENM('CMN0222', BILL_ADDR_CD)           AS BILL_ADDR_CD
+			,BILL_ADDR||BILL_ADDR_DTL                         AS BILL_ADDR
+			,BRANCH_CD                                        
+			,MINOR_NAME                                       
+			,MINOR_SSN                                        
+			,INDV_REVIVAL_YN 								
+			,FN_GET_CODENM('CMN0227',INDV_REVIVAL_STEP)		AS INDV_REVIVAL_STEP
+			,INDV_REVIVAL_REPAY_YN							
+			,INDV_REVIVAL_REPAY_AMT							
+			,BANKRUPTCY_EXEMPTION_YN						
+		FROM  CMN_SGIH_DMND
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_DMND_SEQ_NUM
+	</select>
+
+	<!-- 단말상세 조회 -->
+	<select id="getSgiDmndDtlList"  parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtDmndDtlListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* SgiMgmtMapper.getSgiDmndDtlList */
+		SELECT
+			FN_GET_CODENM('CMN0223', DUTY_SCTN)  AS DUTY_SCTN
+			,FN_GET_CODENM('CMN0224', CMPN_SCTN) AS CMPN_SCTN
+			,INSR_BILL_REQ_NO                    
+			,ERR_RESULT_CD                      
+			,GRNT_INSR_MNGM_NO                   
+			,BLANKS                             
+			,FN_GET_CODENM('CMN0225', INST_YEAR_NUM)  AS INST_YEAR_NUM
+			,DUEDAT_DATE_1                      
+			,DUEDAT_DATE_2                      
+			,DUEDAT_DATE_3                       
+			,DUEDAT_DATE_4                       
+			,DUEDAT_DATE_5                       
+			,DUEDAT_DATE_6                       
+			,DUEDAT_DATE_7                       
+			,DUEDAT_DATE_8                       
+			,DUEDAT_DATE_9                       
+			,DUEDAT_DATE_10                      
+			,DUEDAT_DATE_11                      
+			,DUEDAT_DATE_12                      
+			,INST_AMT_1                          
+			,INST_AMT_2                          
+			,INST_AMT_3                          
+			,INST_AMT_4                          
+			,INST_AMT_5                          
+			,INST_AMT_6                          
+			,INST_AMT_7                          
+			,INST_AMT_8                          
+			,INST_AMT_9                          
+			,INST_AMT_10                         
+			,INST_AMT_11                         
+			,INST_AMT_12                         
+			,INSR_INT_AMT_1                      
+			,INSR_INT_AMT_2                      
+			,INSR_INT_AMT_3                      
+			,INSR_INT_AMT_4                      
+			,INSR_INT_AMT_5                      
+			,INSR_INT_AMT_6                      
+			,INSR_INT_AMT_7                      
+			,INSR_INT_AMT_8                      
+			,INSR_INT_AMT_9                      
+			,INSR_INT_AMT_10                     
+			,INSR_INT_AMT_11                     
+			,INSR_INT_AMT_12                     
+			,ADD_AMT_1                           
+			,ADD_AMT_2                           
+			,ADD_AMT_3                           
+			,ADD_AMT_4                           
+			,ADD_AMT_5                           
+			,ADD_AMT_6                           
+			,ADD_AMT_7                           
+			,ADD_AMT_8                           
+			,ADD_AMT_9                           
+			,ADD_AMT_10                          
+			,ADD_AMT_11                          
+			,ADD_AMT_12                          
+			,UNPAY_INST_AMT_1                    
+			,UNPAY_INST_AMT_2                    
+			,UNPAY_INST_AMT_3                    
+			,UNPAY_INST_AMT_4                    
+			,UNPAY_INST_AMT_5                    
+			,UNPAY_INST_AMT_6                    
+			,UNPAY_INST_AMT_7                    
+			,UNPAY_INST_AMT_8                    
+			,UNPAY_INST_AMT_9                    
+			,UNPAY_INST_AMT_10                   
+			,UNPAY_INST_AMT_11                   
+			,UNPAY_INST_AMT_12                   
+			,UNPAY_INST_INT_AMT_1                
+			,UNPAY_INST_INT_AMT_2                
+			,UNPAY_INST_INT_AMT_3                
+			,UNPAY_INST_INT_AMT_4                
+			,UNPAY_INST_INT_AMT_5                
+			,UNPAY_INST_INT_AMT_6                
+			,UNPAY_INST_INT_AMT_7                
+			,UNPAY_INST_INT_AMT_8                
+			,UNPAY_INST_INT_AMT_9                
+			,UNPAY_INST_INT_AMT_10               
+			,UNPAY_INST_INT_AMT_11               
+			,UNPAY_INST_INT_AMT_12               
+			,UNPAY_INST_ADD_AMT_1                
+			,UNPAY_INST_ADD_AMT_2                
+			,UNPAY_INST_ADD_AMT_3                
+			,UNPAY_INST_ADD_AMT_4                
+			,UNPAY_INST_ADD_AMT_5                
+			,UNPAY_INST_ADD_AMT_6                
+			,UNPAY_INST_ADD_AMT_7                
+			,UNPAY_INST_ADD_AMT_8                
+			,UNPAY_INST_ADD_AMT_9                
+			,UNPAY_INST_ADD_AMT_10               
+			,UNPAY_INST_ADD_AMT_11               
+			,UNPAY_INST_ADD_AMT_12               
+			,FILLER1 
+		FROM  CMN_SGIH_DMND_DTL
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_DMND_DTL_SEQ_NUM
+        <include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+
+	<select id="getSgiDmndDtlListEx"  parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtDmndDtlListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* SgiMgmtMapper.getSgiDmndDtlList */
+		SELECT
+			FN_GET_CODENM('CMN0223', DUTY_SCTN)  AS DUTY_SCTN
+			,FN_GET_CODENM('CMN0224', CMPN_SCTN) AS CMPN_SCTN
+			,INSR_BILL_REQ_NO                    
+			,ERR_RESULT_CD                      
+			,GRNT_INSR_MNGM_NO                   
+			,BLANKS                             
+			,FN_GET_CODENM('CMN0225', INST_YEAR_NUM)  AS INST_YEAR_NUM
+			,DUEDAT_DATE_1                      
+			,DUEDAT_DATE_2                      
+			,DUEDAT_DATE_3                       
+			,DUEDAT_DATE_4                       
+			,DUEDAT_DATE_5                       
+			,DUEDAT_DATE_6                       
+			,DUEDAT_DATE_7                       
+			,DUEDAT_DATE_8                       
+			,DUEDAT_DATE_9                       
+			,DUEDAT_DATE_10                      
+			,DUEDAT_DATE_11                      
+			,DUEDAT_DATE_12                      
+			,INST_AMT_1                          
+			,INST_AMT_2                          
+			,INST_AMT_3                          
+			,INST_AMT_4                          
+			,INST_AMT_5                          
+			,INST_AMT_6                          
+			,INST_AMT_7                          
+			,INST_AMT_8                          
+			,INST_AMT_9                          
+			,INST_AMT_10                         
+			,INST_AMT_11                         
+			,INST_AMT_12                         
+			,INSR_INT_AMT_1                      
+			,INSR_INT_AMT_2                      
+			,INSR_INT_AMT_3                      
+			,INSR_INT_AMT_4                      
+			,INSR_INT_AMT_5                      
+			,INSR_INT_AMT_6                      
+			,INSR_INT_AMT_7                      
+			,INSR_INT_AMT_8                      
+			,INSR_INT_AMT_9                      
+			,INSR_INT_AMT_10                     
+			,INSR_INT_AMT_11                     
+			,INSR_INT_AMT_12                     
+			,ADD_AMT_1                           
+			,ADD_AMT_2                           
+			,ADD_AMT_3                           
+			,ADD_AMT_4                           
+			,ADD_AMT_5                           
+			,ADD_AMT_6                           
+			,ADD_AMT_7                           
+			,ADD_AMT_8                           
+			,ADD_AMT_9                           
+			,ADD_AMT_10                          
+			,ADD_AMT_11                          
+			,ADD_AMT_12                          
+			,UNPAY_INST_AMT_1                    
+			,UNPAY_INST_AMT_2                    
+			,UNPAY_INST_AMT_3                    
+			,UNPAY_INST_AMT_4                    
+			,UNPAY_INST_AMT_5                    
+			,UNPAY_INST_AMT_6                    
+			,UNPAY_INST_AMT_7                    
+			,UNPAY_INST_AMT_8                    
+			,UNPAY_INST_AMT_9                    
+			,UNPAY_INST_AMT_10                   
+			,UNPAY_INST_AMT_11                   
+			,UNPAY_INST_AMT_12                   
+			,UNPAY_INST_INT_AMT_1                
+			,UNPAY_INST_INT_AMT_2                
+			,UNPAY_INST_INT_AMT_3                
+			,UNPAY_INST_INT_AMT_4                
+			,UNPAY_INST_INT_AMT_5                
+			,UNPAY_INST_INT_AMT_6                
+			,UNPAY_INST_INT_AMT_7                
+			,UNPAY_INST_INT_AMT_8                
+			,UNPAY_INST_INT_AMT_9                
+			,UNPAY_INST_INT_AMT_10               
+			,UNPAY_INST_INT_AMT_11               
+			,UNPAY_INST_INT_AMT_12               
+			,UNPAY_INST_ADD_AMT_1                
+			,UNPAY_INST_ADD_AMT_2                
+			,UNPAY_INST_ADD_AMT_3                
+			,UNPAY_INST_ADD_AMT_4                
+			,UNPAY_INST_ADD_AMT_5                
+			,UNPAY_INST_ADD_AMT_6                
+			,UNPAY_INST_ADD_AMT_7                
+			,UNPAY_INST_ADD_AMT_8                
+			,UNPAY_INST_ADD_AMT_9                
+			,UNPAY_INST_ADD_AMT_10               
+			,UNPAY_INST_ADD_AMT_11               
+			,UNPAY_INST_ADD_AMT_12               
+			,FILLER1 
+		FROM  CMN_SGIH_DMND_DTL
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_DMND_DTL_SEQ_NUM
+	</select>	
+
+	<!-- 청구취소 조회 -->
+	<select id="getSgiCanList"  parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtCanListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* SgiMgmtMapper.getSgiCanList */
+		SELECT
+			COMPENSATION_BILL_DATE 
+			,COMPENSATION_BILL_NO  
+			,CSTMR_NAME            
+			,USER_SSN              
+			,GRNT_INSR_MNGM_NO     
+			,TO_CHAR(SVC_CNTR_NO) AS SVC_CNTR_NO           
+			,SUBSCRIBER_NO         
+			,CAN_RSN               
+			,BILL_CAN_AMT          
+			,CAN_RSN_CD            
+		FROM CMN_SGIH_CAN
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_CAN_SEQ_NUM
+        <include refid="com.ktis.msp.cmn.include.paging-end" />   
+	</select>
+
+	<!-- 청구취소 조회 -->
+	<select id="getSgiCanListEx" parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtCanListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* SgiMgmtMapper.getSgiCanListEx */
+		SELECT COMPENSATION_BILL_DATE 
+			,COMPENSATION_BILL_NO  
+			,CSTMR_NAME            
+			,USER_SSN              
+			,GRNT_INSR_MNGM_NO     
+			,TO_CHAR(SVC_CNTR_NO) AS SVC_CNTR_NO           
+			,SUBSCRIBER_NO         
+			,CAN_RSN               
+			,BILL_CAN_AMT          
+			,CAN_RSN_CD            
+		FROM CMN_SGIH_CAN
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_CAN_SEQ_NUM
+	</select>
+		
+	<!-- 과납내역 조회 -->
+	<select id="getSgiOverPymList"  parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtOverPymListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* SgiMgmtMapper.getSgiOverPymList */
+		SELECT
+			BAN                 
+			,SUBSCRIBER_NO      
+			,USER_SSN           
+			,CSTMR_NAME         
+			,GRNT_INSR_MNGM_NO  
+			,SVC_CNTR_NO        
+			,BLPYM_DATE         
+			,INV_AMT            
+			,PYMN_AMT           
+			,EXCESS_AMT         
+		FROM CMN_SGIH_OVERPYM
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_OVERPYM_SEQ_NUM
+        <include refid="com.ktis.msp.cmn.include.paging-end" />   
+	</select>
+	
+	<!-- 과납내역 조회 -->
+	<select id="getSgiOverPymListEx"  parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtOverPymListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* SgiMgmtMapper.getSgiOverPymListEx */
+		SELECT
+			BAN                 
+			,SUBSCRIBER_NO      
+			,USER_SSN           
+			,CSTMR_NAME         
+			,GRNT_INSR_MNGM_NO  
+			,SVC_CNTR_NO        
+			,BLPYM_DATE         
+			,INV_AMT            
+			,PYMN_AMT           
+			,EXCESS_AMT         
+		FROM CMN_SGIH_OVERPYM
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_OVERPYM_SEQ_NUM
+	</select>
+		
+	<!-- 불능처리 조회 -->
+	<select id="getSgiRejectList"  parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtRejectListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* SgiMgmtMapper.getSgiRejectList */
+		SELECT
+			FN_GET_CODENM('CMN0224', CMPN_CD)    AS CMPN_CD
+			,INSR_BILL_REQ_NO                    
+			,INSR_MNGM_NO                       
+			,REJECT_RSN                          
+			,GRNT_BILL_REQ_DATE                
+			,PAYER_ID                           
+			,SUBSCRIBER_NO                      
+			,FN_GET_CODENM('CMN0219', CSTMR_CD)  AS CSTMR_CD
+			,USER_SSN                         
+			,CSTMR_NO                            
+			,INSR_STRT_DATE                      
+			,OFFICIO_REVOCATION_DATE             
+			,SECURITIES_NO                       
+			,INSR_JOIN_AMT                       
+			,BILL_AMT                            
+			,CSTMR_NAME                          
+			,TOP_SALES_TEAM_NAME                 
+			,AGNT_CD                             
+			,AGNT_NAME                           
+			,HOME_BRANCH_NAME                    
+			,MNGM_CREDIT_TEAM_NAME 
+		FROM CMN_SGIH_REJECT
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_REJECT_SEQ_NUM
+        <include refid="com.ktis.msp.cmn.include.paging-end" />   
+	</select>
+	
+	<!-- 불능처리 조회 -->
+	<select id="getSgiRejectListEx" parameterType="com.ktis.msp.rcp.sgiMgmt.vo.SgiMgmtRejectListVO"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* SgiMgmtMapper.getSgiRejectList */
+		SELECT
+			FN_GET_CODENM('CMN0224', CMPN_CD)    AS CMPN_CD
+			,INSR_BILL_REQ_NO                    
+			,INSR_MNGM_NO                       
+			,REJECT_RSN                          
+			,GRNT_BILL_REQ_DATE                
+			,PAYER_ID                           
+			,SUBSCRIBER_NO                      
+			,FN_GET_CODENM('CMN0219', CSTMR_CD)  AS CSTMR_CD
+			,NVL(SUBSTR(USER_SSN, 1,6), ' ') AS USER_SSN                      
+			,CSTMR_NO                            
+			,INSR_STRT_DATE                      
+			,OFFICIO_REVOCATION_DATE             
+			,SECURITIES_NO                       
+			,INSR_JOIN_AMT                       
+			,BILL_AMT                            
+			,CSTMR_NAME                          
+			,TOP_SALES_TEAM_NAME                 
+			,AGNT_CD                             
+			,AGNT_NAME                           
+			,HOME_BRANCH_NAME                    
+			,MNGM_CREDIT_TEAM_NAME               
+		FROM CMN_SGIH_REJECT
+		<if test="baseDate != null and baseDate != ''">
+			WHERE FILE_NM LIKE '%'||#{baseDate}||'%'
+		</if>
+		ORDER BY CMN_SGIH_REJECT_SEQ_NUM
+	</select>			
+</mapper>

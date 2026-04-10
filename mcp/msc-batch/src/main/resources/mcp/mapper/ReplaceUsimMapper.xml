@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ReplaceUsimMapper">
+
+  <select id="selectFreeUsimSettings" parameterType="java.lang.String" resultType="java.lang.String">
+    /*ReplaceUsimMapper.selectFreeUsimSettings*/
+    SELECT DTL_CD_NM
+    FROM NMCP_CD_DTL
+    WHERE CD_GROUP_ID = 'FreeUsimSettings'
+      AND DTL_CD = #{dtlCd}
+  </select>
+
+  <select id="generateReplaceUsimOsstNo" parameterType="java.lang.Long" resultType="java.lang.Long">
+    /*ReplaceUsimMapper.generateReplaceUsimOsstNo*/
+    SELECT DECODE(NVL(OSST_NO, 0), 0, SQ_FREE_USIM_OSST.NEXTVAL, OSST_NO) AS OSST_NO
+    FROM NMCP_FREE_USIM_REQ_MST
+    WHERE SEQ = #{seq}
+  </select>
+
+  <insert id="saveFreeUsimOsst" parameterType="com.ktmmobile.mcp.common.mplatform.dto.UsimChgAcceptVO">
+    /*ReplaceUsimMapper.saveFreeUsimOsst*/
+    INSERT INTO NMCP_FREE_USIM_OSST (
+       OSST_NO
+      ,CONTRACT_NUM
+      ,SVC_CNTR_NO
+      ,PRGR_STAT_CD
+      ,NSTEP_GLOBAL_ID
+      ,RESPONSE_CODE
+      ,RESPONSE_BASIC
+      ,RSLT_CD
+      ,RSLT_MSG
+      ,REGST_ID
+      ,REGST_DTTM
+    ) VALUES (
+       #{osstNo}
+      ,#{contractNum}
+      ,#{svcCntrNo}
+      ,'T02'
+      ,#{globalNo}
+      ,#{resultCode}
+      ,#{svcMsg}
+      ,#{rsltCd}
+      ,#{rsltMsg}
+      ,'MCP_BATCH'
+      ,SYSDATE
+    )
+  </insert>
+
+  <update id="updateFreeUsimReqDtl" parameterType="com.ktmmobile.mcp.usim.dto.ReplaceUsimDto">
+    /*ReplaceUsimMapper.updateFreeUsimReqDtl*/
+    UPDATE NMCP_FREE_USIM_REQ_DTL
+    SET APPLY_RSLT_CD = #{applyRsltCd}
+       ,APPLY_RSLT_MSG = DECODE(#{applyRsltCd}, '00', '처리성공', #{applyRsltMsg})
+       ,AMD_ID = 'MCP_BATCH'
+       ,AMD_DTTM = SYSDATE
+    WHERE SEQ = #{seq}
+      AND SUB_SEQ = #{subSeq}
+      AND APPLY_RSLT_CD IS NULL
+  </update>
+
+  <update id="updateFreeUsimReqMst" parameterType="com.ktmmobile.mcp.usim.dto.ReplaceUsimDto">
+    /*ReplaceUsimMapper.updateFreeUsimReqMst*/
+    UPDATE NMCP_FREE_USIM_REQ_MST
+    SET OSST_NO = #{osstNo}
+       ,AMD_ID = 'MCP_BATCH'
+       ,AMD_DTTM = SYSDATE
+    WHERE SEQ = #{seq}
+  </update>
+
+</mapper>
+

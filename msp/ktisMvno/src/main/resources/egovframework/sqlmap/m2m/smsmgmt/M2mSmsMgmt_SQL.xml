@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.m2m.smsmgmt.mapper.M2mSmsMgmtMapper">
+	               
+	
+	<!-- SMS발송조회 -->
+	<select id="getSmsSendList" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendReqVO" resultType="com.ktis.msp.m2m.smsmgmt.vo.SmsSendResVO">
+		<include refid="com.ktis.msp.cmn.include.paging-start-vo" />
+		/* SmsMgmtMapper.getSmsSendList */
+		SELECT S.*
+		      ,FN_GET_CODENM('CMN0069', S.workType) AS workTypeNm
+		      ,FN_GET_CODENM('CMN0071', S.sendDivision) AS sendDivisionNm
+		      ,FN_GET_CODENM('CMN0068', S.result) AS resultNm
+		      ,DECODE(S.result, '100', TO_CHAR(S.REPORT_RECV_TIME, 'YYYYMMDDHH24MISS'), '') AS sendTime
+		      ,NVL(FN_GET_USRNM(S.procId), S.procId) AS procNm
+		      ,DECODE(S.sendYn, 'N', '실패', 'S', '대기', '성공') AS sendYnNm
+		FROM  (
+				SELECT T.SEND_REQ_DTTM AS sendReqDttm
+				      ,B.WORK_TYPE AS workType
+				      ,T.receiveNm
+				      ,T.mobileNo AS maskMobileNo
+				      ,T.SEND_DIVISION AS sendDivision
+				      ,T.CONTRACT_NUM AS contractNum
+				      ,T.PORTAL_USER_ID AS portalUserId
+				      ,T.MSP_USER_ID AS mspUserId
+				      ,T.RES_NO AS resNo
+				      ,B.TEMPLATE_ID AS templateId
+				      ,B.TEMPLATE_NM AS templateNm 
+				      ,CASE WHEN D.DELIVER_TIME IS NOT NULL THEN 'Y'
+				      		WHEN TO_DATE(T.SEND_REQ_DTTM, 'YYYYMMDDHH24MISS') <![CDATA[ > ]]> SYSDATE THEN 'S'
+				      		ELSE 'N' END AS sendYn
+				      ,TRIM(D.RESULT) AS result
+				      ,T.SEND_CNT AS sendCnt
+				      ,D.REPORT_RECV_TIME
+				      ,T.REGST_ID AS procId
+				      ,NVL(D.MESSAGE, (SELECT Q.MESSAGE FROM AM2X_SUBMIT Q WHERE Q.MSG_ID = T.MSEQ)) AS text
+				      ,T.MSEQ AS mseq
+				      ,T.SEND_SEQ AS sendSeq
+				FROM  (
+						/* USR */
+						SELECT A.SEND_REQ_DTTM
+						      ,C.USR_NM AS receiveNm
+						      ,C.MBLPHN_NUM AS mobileNo
+						      ,A.SEND_DIVISION
+						      ,A.CONTRACT_NUM
+						      ,A.PORTAL_USER_ID
+						      ,A.MSP_USER_ID
+						      ,A.RES_NO
+						      ,A.SEND_CNT
+						      ,A.REGST_ID
+						      ,A.TEMPLATE_ID
+						      ,A.MSEQ
+						      ,A.SEND_SEQ
+						FROM   MSP_SMS_SEND_MST A
+						      ,CMN_USR_MST C
+						WHERE	A.MSP_USER_ID = C.USR_ID
+						AND		A.SEND_DIVISION = 'M2M'
+						AND		A.KT_SMS_YN = 'Y'
+				      ) T
+				      ,MSP_SMS_TEMPLATE_MST B
+				      ,AM2X_SUBMIT_LOG D
+				WHERE  T.TEMPLATE_ID = B.TEMPLATE_ID
+				AND    T.MSEQ = D.MSG_ID(+)
+				AND    T.SEND_REQ_DTTM BETWEEN #{searchStartDate} || '000000' AND #{searchEndDate} || '235959'
+				<if test="searchWorkType != null and searchWorkType != ''">
+					AND    B.WORK_TYPE = #{searchWorkType}
+				</if>
+				<if test="searchTemplateNm != null and searchTemplateNm != ''">
+					AND    TO_CHAR(B.TEMPLATE_ID) = #{searchTemplateNm}
+				</if>
+				
+				<if test="searchValue != null and searchValue != ''">
+					<choose>
+						<when test="searchCode == 'receiveNm'">
+							AND    UPPER(T.receiveNm) LIKE '%' || UPPER(#{searchValue}) || '%'
+						</when>
+						<when test="searchCode == 'mobileNo'">
+							AND    T.mobileNo = #{searchValue}
+						</when>
+						<when test="searchCode == 'mspUserId'">
+							AND    T.MSP_USER_ID = #{searchValue}
+						</when>
+					</choose>
+				</if>
+		      ) S
+		<where>
+			<if test="searchSendYn != null and searchSendYn != ''">
+				AND    S.sendYn = #{searchSendYn}
+			</if>
+		</where>
+		ORDER BY S.sendReqDttm DESC, S.workType, S.templateNm, S.receiveNm
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 수신자번호 조회 -->
+	<select id="getMobileNo" parameterType="com.ktis.msp.m2m.smsmgmt.vo.SmsSendResVO" resultType="String">
+		/* SmsMgmtMapper.getMobileNo */
+			SELECT C.MBLPHN_NUM AS mobileNo
+			FROM   MSP_SMS_SEND_MST A
+			      ,CMN_USR_MST C
+			WHERE  A.MSP_USER_ID = C.USR_ID
+			AND    A.SEND_DIVISION = #{sendDivision}
+			AND    A.SEND_SEQ = #{sendSeq}
+			AND    A.KT_SMS_YN = 'Y'
+	</select>
+	
+	<!-- 템플릿combo -->
+	<select id="getTemplateCombo" parameterType="com.ktis.msp.cmn.cdmgmt.vo.CmnCdMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* SmsMgmtMapper.getTemplateCombo */
+		SELECT  TEMPLATE_ID     AS VALUE
+		        , TEMPLATE_NM   AS TEXT
+		FROM    MSP_SMS_TEMPLATE_MST A
+		WHERE   A.WORK_TYPE IN ('M2M')
+		ORDER BY 1 DESC
+	</select>
+	
+    <!-- 검색구분코드Combo -->
+	<select id="getSearchCodeCombo" parameterType="com.ktis.msp.cmn.cdmgmt.vo.CmnCdMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	
+		SELECT /* CmnCdMgmtMapper.getCommCombo */
+			  GCM.CD_VAL AS value	/* 코드 값 */
+			, GCM.CD_DSC AS text	/* 코드 내용 */
+		FROM  CMN_GRP_MST CGM
+			, CMN_GRP_CD_MST GCM
+		WHERE 1 = 1
+		  AND CGM.GRP_ID = GCM.GRP_ID
+		  AND CGM.GRP_ID = #{grpId}
+		  AND GCM.CD_VAL IN ('mobileNo','receiveNm','mspUserId')
+		  AND GCM.USG_YN = 'Y'
+		<if test="etc1 != null and etc1 != ''">
+		  AND GCM.ETC1 = #{etc1, jdbcType=VARCHAR}
+		</if>
+		<if test="etc2 != null and etc2 != ''">
+		  AND GCM.ETC2 = #{etc2, jdbcType=VARCHAR}
+		</if>
+		<if test="etc3 != null and etc3 != ''">
+		  AND GCM.ETC3 = #{etc3, jdbcType=VARCHAR}
+		</if>
+		<if test="etc4 != null and etc4 != ''">
+		  AND GCM.ETC4 = #{etc4, jdbcType=VARCHAR}
+		</if>
+		<if test="etc5 != null and etc5 != ''">
+		  AND GCM.ETC5 = #{etc5, jdbcType=VARCHAR}
+		</if>
+		<if test="etc6 != null and etc6 != ''">
+		  AND GCM.ETC6 = #{etc6, jdbcType=VARCHAR}
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			<if test="orderBy == 'etc1'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC1) ASC
+			</if>
+			<if test="orderBy == 'etc2'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC2) ASC
+			</if>
+			<if test="orderBy == 'etc3'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC3) ASC
+			</if>
+			<if test="orderBy == 'etc4'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC4) ASC
+			</if>
+			<if test="orderBy == 'etc5'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC5) ASC
+			</if>
+			<if test="orderBy == 'etc6'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC6) ASC
+			</if>
+		</if>
+		<if test="orderBy == null or orderBy == ''">
+		ORDER BY
+			GCM.CD_VAL ASC
+		</if>
+		
+	</select>
+	
+	<!-- SMS발송조회(과거) -->
+	<select id="getSmsSendListOld" parameterType="com.ktis.msp.cmn.smsmgmt.vo.SmsSendReqVO" resultType="com.ktis.msp.m2m.smsmgmt.vo.SmsSendResVO">
+		<include refid="com.ktis.msp.cmn.include.paging-start-vo" />
+		/* M2mSmsMgmtMapper.getSmsSendListOld */
+		SELECT S.*
+		      ,FN_GET_CODENM('CMN0069', S.workType) AS workTypeNm
+		      ,FN_GET_CODENM('CMN0071', S.sendDivision) AS sendDivisionNm
+		      ,FN_GET_CODENM('CMN0068', S.result) AS resultNm
+		      ,DECODE(S.result, '100', TO_CHAR(S.REPORT_TIME, 'YYYYMMDDHH24MISS'), '') AS sendTime
+		      ,NVL(FN_GET_USRNM(S.procId), S.procId) AS procNm
+		      ,DECODE(S.sendYn, 'N', '실패', 'S', '대기', '성공') AS sendYnNm
+		FROM  (
+				SELECT T.SEND_REQ_DTTM AS sendReqDttm
+				      ,B.WORK_TYPE AS workType
+				      ,T.receiveNm
+				      ,T.mobileNo AS maskMobileNo
+				      ,T.SEND_DIVISION AS sendDivision
+				      ,T.CONTRACT_NUM AS contractNum
+				      ,T.PORTAL_USER_ID AS portalUserId
+				      ,T.MSP_USER_ID AS mspUserId
+				      ,T.RES_NO AS resNo
+				      ,B.TEMPLATE_ID AS templateId
+				      ,B.TEMPLATE_NM AS templateNm 
+				      ,CASE WHEN D.SEND_TIME IS NOT NULL THEN 'Y'
+				      		WHEN TO_DATE(T.SEND_REQ_DTTM, 'YYYYMMDDHH24MISS') <![CDATA[ > ]]> SYSDATE THEN 'S'
+				      		ELSE 'N' END AS sendYn
+				      ,TRIM(D.RESULT) AS result
+				      ,T.SEND_CNT AS sendCnt
+				      ,D.REPORT_TIME
+				      ,T.REGST_ID AS procId
+				      ,NVL(D.TEXT, (SELECT Q.TEXT FROM MSG_QUEUE Q WHERE Q.MSEQ = T.MSEQ)) AS text
+				      ,T.MSEQ AS mseq
+				      ,T.SEND_SEQ AS sendSeq
+				FROM  (
+						/* USR */
+						SELECT A.SEND_REQ_DTTM
+						      ,C.USR_NM AS receiveNm
+						      ,C.MBLPHN_NUM AS mobileNo
+						      ,A.SEND_DIVISION
+						      ,A.CONTRACT_NUM
+						      ,A.PORTAL_USER_ID
+						      ,A.MSP_USER_ID
+						      ,A.RES_NO
+						      ,A.SEND_CNT
+						      ,A.REGST_ID
+						      ,A.TEMPLATE_ID
+						      ,A.MSEQ
+						      ,A.SEND_SEQ
+						FROM   MSP_SMS_SEND_MST A
+						      ,CMN_USR_MST C
+						WHERE  A.MSP_USER_ID = C.USR_ID
+						AND    A.SEND_DIVISION = 'M2M'
+						AND 	 A.KT_SMS_YN IS NULL
+				      ) T
+				      ,MSP_SMS_TEMPLATE_MST B
+				      ,MSG_RESULT D
+				WHERE  T.TEMPLATE_ID = B.TEMPLATE_ID
+				AND    T.MSEQ = D.MSEQ(+)
+				AND    T.SEND_REQ_DTTM BETWEEN #{searchStartDate} || '000000' AND #{searchEndDate} || '235959'
+				<if test="searchWorkType != null and searchWorkType != ''">
+					AND    B.WORK_TYPE = #{searchWorkType}
+				</if>
+				<if test="searchTemplateNm != null and searchTemplateNm != ''">
+					AND    TO_CHAR(B.TEMPLATE_ID) = #{searchTemplateNm}
+				</if>
+				
+				<if test="searchValue != null and searchValue != ''">
+					<choose>
+						<when test="searchCode == 'receiveNm'">
+							AND    UPPER(T.receiveNm) LIKE '%' || UPPER(#{searchValue}) || '%'
+						</when>
+						<when test="searchCode == 'mobileNo'">
+							AND    T.mobileNo = #{searchValue}
+						</when>
+						<when test="searchCode == 'mspUserId'">
+							AND    T.MSP_USER_ID = #{searchValue}
+						</when>
+					</choose>
+				</if>
+		      ) S
+		<where>
+			<if test="searchSendYn != null and searchSendYn != ''">
+				AND    S.sendYn = #{searchSendYn}
+			</if>
+			<if test="searchResult != null and searchResult != ''">
+				AND    S.result = #{searchResult}
+			</if>
+		</where>
+		ORDER BY S.sendReqDttm DESC, S.workType, S.templateNm, S.receiveNm
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+</mapper>

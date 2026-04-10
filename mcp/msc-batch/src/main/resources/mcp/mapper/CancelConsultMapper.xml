@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CancelConsultMapper">
+
+    <select id="selectCancelConsultCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM MCP_CANCEL_REQUEST
+        WHERE (PROC_CD IS NULL OR PROC_CD != 'CP')
+          AND SYS_RDATE_DD <![CDATA[<=]]> TO_CHAR(LAST_DAY(ADD_MONTHS(SYSDATE, -6)), 'YYYYMMDD')
+    </select>
+
+    <delete id="deleteCancelConsult" parameterType="int">
+        DELETE FROM MCP_CANCEL_REQUEST
+        WHERE (PROC_CD IS NULL OR PROC_CD != 'CP')
+          AND SYS_RDATE_DD <![CDATA[<=]]> TO_CHAR(LAST_DAY(ADD_MONTHS(SYSDATE, -6)), 'YYYYMMDD')
+    </delete>
+
+</mapper>

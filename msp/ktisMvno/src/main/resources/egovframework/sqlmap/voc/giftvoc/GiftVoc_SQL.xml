@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.voc.giftvoc.mapper.GiftVocMapper">
+	
+	<!-- 사은품 VOC 목록 조회-->
+	<select id="getGiftVocList" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*GiftVocMapper.getGiftVocList*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT ROWNUM AS RNUM
+			   , GIFT_VOC_SEQ
+			   , EXTNL_ORGN_REF_YN
+			   , FN_GET_CODENM('VOC0034', VOC_STAT) AS VOC_STAT
+			   , FN_GET_CODENM('VOC0033', VOC_TYPE) AS VOC_TYPE
+			   , CONTRACT_NUM
+			   , SUB_LINK_NAME
+			   , SUBSCRIBER_NO
+			   , LST_COM_ACTV_DATE
+			   , REQ_IN_DAY
+			   , FST_RATE_NM
+			   , LST_RATE_NM
+			   , FN_GET_CODENM('MSP0003', SUB_STATUS) AS SUB_STATUS
+			   , FN_GET_CODENM('VOC0032', ANS_STAT) AS ANS_STAT
+			   , TO_CHAR(REGST_DTTM, 'YYYYMMDD') AS REGST_DTTM
+			   , REGST_ID
+			   , FN_GET_USRNM(REGST_ID) AS REGST_NM
+			   , RECOMMEND_INFO
+			   , FN_GET_CODENM('RCP0007', ON_OFF_TYPE) AS ON_OFF_TYPE
+			   , OPEN_MARKET_REFERER
+			   , FN_GET_CODENM('VOC0030', VOC_MNG_ORGN) AS VOC_MNG_ORGN
+			   , ANS_PAY_PLAN_MON
+			   , TO_CHAR(RVISN_DTTM, 'YYYYMMDD') AS RVISN_DTTM
+			   , RVISN_ID
+			   , FN_GET_USRNM(RVISN_ID) AS RVISN_NM
+		FROM (
+				/* 대외민원언급여부 Y, VOC접수상태 접수인 데이터 우선 노출*/
+				SELECT A.GIFT_VOC_SEQ
+					   , A.EXTNL_ORGN_REF_YN
+					   , A.VOC_STAT
+					   , A.VOC_TYPE
+					   , A.CONTRACT_NUM
+					   , B.SUB_LINK_NAME
+					   , B.SUBSCRIBER_NO
+					   , B.LST_COM_ACTV_DATE
+					   , C.REQ_IN_DAY
+					   , C.FST_RATE_NM
+					   , C.LST_RATE_NM
+					   , B.SUB_STATUS
+					   , A.ANS_STAT
+					   , A.REGST_DTTM
+					   , A.REGST_ID
+					   , C.RECOMMEND_INFO
+					   , C.ON_OFF_TYPE
+					   , C.OPEN_MARKET_REFERER
+					   , A.VOC_MNG_ORGN
+					   , A.ANS_PAY_PLAN_MON
+					   , A.RVISN_DTTM
+					   , A.RVISN_ID
+					   , A.ANS_PROC_DTTM
+					   , A.PROM_NM
+				FROM   MSP_GIFT_VOC_MGMT A
+					   , MSP_JUO_SUB_INFO B
+					   , MSP_REQUEST_DTL C
+				WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+				AND    B.CONTRACT_NUM = C.CONTRACT_NUM
+				ORDER BY (CASE WHEN A.EXTNL_ORGN_REF_YN = 'Y' AND A.VOC_STAT = 'W' THEN 1 ELSE 2 END), GIFT_VOC_SEQ DESC
+			) AA
+		WHERE 1=1
+		<if test='srchStrtDt != null and srchStrtDt != "" and srchEndDt != null and srchEndDt != ""'>  <!-- 접수일자 -->
+			AND TO_CHAR(REGST_DTTM, 'YYYYMMDD') BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>
+		<if test='procStrtDt != null and procStrtDt != "" and procEndDt != null and procEndDt != ""'>  <!-- 처리일자 -->
+			AND TO_CHAR(ANS_PROC_DTTM, 'YYYYMMDD') BETWEEN #{procStrtDt} AND #{procEndDt}
+		</if>
+		<if test='planStrtDt != null and planStrtDt != "" and planEndDt != null and planEndDt != ""'>  <!-- 지급예상월 -->
+			AND ANS_PAY_PLAN_MON BETWEEN #{planStrtDt} AND #{planEndDt}
+		</if>
+		<if test='searchGbn != null and searchGbn != ""'>
+			<if test='searchGbn == "NCN"'> <!--계약번호 필터-->
+				AND CONTRACT_NUM = #{searchName}
+			</if>
+			<if test='searchGbn == "CTN"'> <!--휴대폰번호 필터-->
+				AND SUBSCRIBER_NO = #{searchName}
+			</if>
+			<if test='searchGbn == "CNM"'> <!--고객명 필터-->
+				AND SUB_LINK_NAME LIKE '%' || #{searchName} || '%'
+			</if>
+			<if test='searchGbn == "PRM"'> <!--프로모션명 필터-->
+				AND PROM_NM LIKE '%' || #{searchName} || '%'
+			</if>
+		</if>
+		<if test='vocMngOrgn != null and vocMngOrgn != ""'> <!--담당부서-->
+			AND VOC_MNG_ORGN = #{vocMngOrgn}
+		</if>
+		<if test='ansStat != null and ansStat != ""'> <!--답변상태-->
+			AND ANS_STAT = #{ansStat}
+		</if>
+		<if test='vocType != null and vocType != ""'> <!--VOC 구분-->
+			AND VOC_TYPE = #{vocType}
+		</if>
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 사은품 VOC 상세 조회-->
+	<select id="getGiftVocDtl" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo" resultType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo">
+		/*GiftVocMapper.getGiftVocDtl*/
+		SELECT A.GIFT_VOC_SEQ AS giftVocSeq
+			   , A.CONTRACT_NUM AS contractNum
+			   , B.SUB_LINK_NAME AS subLinkName
+			   , B.SUBSCRIBER_NO AS subscriberNo
+			   , B.LST_COM_ACTV_DATE AS lstComActvDate
+			   , TO_CHAR(TO_DATE(C.REQ_IN_DAY,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS reqInDay
+			   , C.FST_RATE_NM AS fstRateNm
+			   , C.LST_RATE_NM AS lstRateNm
+			   , FN_GET_CODENM('MSP0003', B.SUB_STATUS) AS subStatus
+			   , C.RECOMMEND_INFO AS recommendInfo
+			   , FN_GET_CODENM('RCP0007', C.ON_OFF_TYPE) AS onOffType
+			   , C.OPEN_MARKET_REFERER AS openMarketReferer
+			   , A.CUST_NM AS custNm
+			   , A.PROM_NM AS promNm
+			   , A.GIFT_TYPE AS giftType
+			   , A.GIFT_AMT AS giftAmt
+			   , A.VOC_STAT AS vocStat
+			   , A.VOC_CTN AS vocCtn
+			   , A.DIVISN AS divisn
+			   , A.RMK AS rmk
+			   , A.VOC_MNG_ORGN AS vocMngOrgn
+			   , A.VOC_TYPE AS vocType
+			   , A.VOC_REQ_DT AS vocReqDt
+			   , A.USER_ID AS userId
+			   , A.RECOMM_ID AS recommId
+			   , A.RECOMM_CONTRACT_NUM AS recommContractNum
+			   , DECODE(A.EXTNL_ORGN_REF_YN, 'Y', '1', '0') AS extnlOrgnRefYn
+			   , A.VOC_DESC AS vocDesc
+			   , A.ANS_RMK AS ansRmk
+			   , A.ANS_PAY_RSN AS ansPayRsn
+			   , A.ANS_PAY_ITEM AS ansPayItem
+			   , A.ANS_PAY_AMT AS ansPayAmt
+			   , A.ANS_PAY_PLAN_MON AS ansPayPlanMon
+			   , A.ANS_STAT AS ansStat
+		FROM   MSP_GIFT_VOC_MGMT A
+			   , MSP_JUO_SUB_INFO B
+			   , MSP_REQUEST_DTL C
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND B.CONTRACT_NUM = C.CONTRACT_NUM
+		AND A.GIFT_VOC_SEQ = #{giftVocSeq}
+	</select>
+
+	<!--사은품 VOC 수정-->
+	<update id="updateGiftVoc" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo">
+		/*GiftVocMapper.updateGiftVoc*/
+		UPDATE MSP_GIFT_VOC_MGMT
+		SET    RVISN_DTTM = SYSDATE
+			   , RVISN_ID = #{rvisnId}
+			   , PROM_NM = #{promNm}
+			   , GIFT_TYPE = #{giftType}
+			   , GIFT_AMT = #{giftAmt}
+			   , VOC_STAT = #{vocStat}
+			   , DIVISN = #{divisn}
+			   , RMK = #{rmk}
+			   , VOC_MNG_ORGN = #{vocMngOrgn}
+			   , VOC_TYPE = #{vocType}
+			   , VOC_REQ_DT = #{vocReqDt}
+			   , RECOMM_CONTRACT_NUM = #{recommContractNum}
+			   , EXTNL_ORGN_REF_YN = DECODE(#{extnlOrgnRefYn}, 'Y', 'Y', '1', 'Y', 'N')
+			   , VOC_DESC = #{vocDesc}
+		/*마스킹 권한자만 민감정보 수정 가능*/
+		<if test='maskingYn != null and maskingYn == "Y"'>
+			   , CUST_NM = #{custNm}
+			   , VOC_CTN = #{vocCtn}
+			   , USER_ID = #{userId}
+			   , RECOMM_ID = #{recommId}
+		</if>
+		WHERE GIFT_VOC_SEQ = #{giftVocSeq}
+	</update>
+
+	<!--사은품 VOC 상태 변경-->
+	<update id="updateGiftVocStat" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo">
+		/*GiftVocMapper.updateGiftVocStat*/
+		UPDATE MSP_GIFT_VOC_MGMT
+		SET    VOC_STAT = #{vocStat}
+		WHERE GIFT_VOC_SEQ = #{giftVocSeq}
+	</update>
+
+	<!--사은품 VOC 답변 수정-->
+	<update id="updateGiftVocAns" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo">
+		/*GiftVocMapper.updateGiftVocAns*/
+		UPDATE MSP_GIFT_VOC_MGMT
+		SET    RVISN_DTTM = SYSDATE
+               , RVISN_ID = #{rvisnId}
+		 	   , ANS_PROC_DTTM = SYSDATE
+		 	   , ANS_PROC_ID = #{ansProcId}
+		 	   , ANS_RMK = #{ansRmk}
+		 	   , ANS_PAY_RSN = #{ansPayRsn}
+		 	   , ANS_PAY_ITEM = #{ansPayItem}
+		 	   , ANS_PAY_AMT = #{ansPayAmt}
+		 	   , ANS_PAY_PLAN_MON = #{ansPayPlanMon}
+		 	   , ANS_STAT = #{ansStat}
+		WHERE  GIFT_VOC_SEQ = #{giftVocSeq}
+	</update>
+
+	<!-- 30일 이내 등록된 VOC 가 있는지 체크 -->
+	<select id="dupChkGiftVoc" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo" resultType="int">
+		/*GiftVocMapper.dupChkGiftVoc*/
+		SELECT COUNT(*)
+		FROM MSP_GIFT_VOC_MGMT
+		WHERE CONTRACT_NUM = #{contractNum}
+		AND REGST_DTTM <![CDATA[ > ]]> SYSDATE - 30
+	</select>
+
+	<!-- 고객정보 가져오기 -->
+	<select id="getCustInfo" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo" resultType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo">
+		/*GiftVocMapper.getCustInfo*/
+		SELECT A.CONTRACT_NUM AS contractNum
+			 , A.SUB_LINK_NAME AS subLinkName
+			 , A.SUBSCRIBER_NO AS subscriberNo
+			 , TO_CHAR(TO_DATE(A.LST_COM_ACTV_DATE,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS lstComActvDate
+			 , TO_CHAR(TO_DATE(B.REQ_IN_DAY,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS reqInDay
+			 , B.FST_RATE_NM AS fstRateNm
+			 , B.LST_RATE_NM AS lstRateNm
+			 , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS subStatus
+			 , B.RECOMMEND_INFO AS recommendInfo
+			 , FN_GET_CODENM('RCP0007', B.ON_OFF_TYPE) AS onOffType
+			 , B.OPEN_MARKET_REFERER AS openMarketReferer
+		FROM MSP_JUO_SUB_INFO A
+		     , MSP_REQUEST_DTL B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+		  AND A.CONTRACT_NUM = #{contractNum}
+	</select>
+
+	<!--사은품 VOC 저장-->
+	<insert id="insertGiftVoc" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftVocVo">
+		/*GiftVocMapper.insertGiftVoc*/
+		INSERT INTO MSP_GIFT_VOC_MGMT (
+				GIFT_VOC_SEQ
+				, CONTRACT_NUM
+				, CUST_NM
+				, PROM_NM
+				, GIFT_TYPE
+				, GIFT_AMT
+				, VOC_STAT
+				, VOC_CTN
+				, DIVISN
+				, RMK
+				, VOC_MNG_ORGN
+				, VOC_TYPE
+				, VOC_REQ_DT
+				, USER_ID
+				, RECOMM_ID
+				, RECOMM_CONTRACT_NUM
+				, EXTNL_ORGN_REF_YN
+				, VOC_DESC
+				, REGST_DTTM
+				, REGST_ID
+		) VALUES (
+				MSP_GIFT_VOC_MGMT_SEQ.NEXTVAL
+				, #{contractNum}
+				, #{custNm}
+				, #{promNm}
+				, #{giftType}
+				, #{giftAmt}
+				, #{vocStat}
+				, #{vocCtn}
+				, #{divisn}
+				, #{rmk}
+				, #{vocMngOrgn}
+				, #{vocType}
+				, #{vocReqDt}
+				, #{userId}
+				, #{recommId}
+				, #{recommContractNum}
+				, DECODE(#{extnlOrgnRefYn}, 'Y', 'Y', '1', 'Y', 'N')
+				, #{vocDesc}
+				, SYSDATE
+				, #{regstId}
+		)
+	</insert>
+
+	<!-- 사은품 지급 리스트 목록 조회-->
+	<select id="giftPayStatList" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftPayStatVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*GiftVocMapper.giftPayStatList*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT A.GIFT_PAY_STAT_SEQ
+			   , A.PAY_MON
+			   , A.CONTRACT_NUM
+			   , A.CUST_NM
+			   , A.CTN
+			   , FN_GET_CODENM('MSP0003', B.SUB_STATUS) AS SUB_STATUS
+		       , FN_GET_ORGNM(B.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+			   , A.TAX_RPLY_YN
+			   , A.PROM_NM
+			   , A.GIFT_TYPE
+			   , A.GIFT_AMT
+		FROM   MSP_GIFT_PAY_STAT A
+			   , MSP_JUO_SUB_INFO B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		<if test='srchStrtDt != null and srchStrtDt != "" and srchEndDt != null and srchEndDt != ""'>  <!-- 지급월 -->
+			AND A.PAY_MON BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>
+		<if test='searchGbn != null and searchGbn != ""'>
+			<if test='searchGbn == "NCN"'> <!--계약번호 필터-->
+				AND A.CONTRACT_NUM = #{searchName}
+			</if>
+			<if test='searchGbn == "CTN"'> <!--휴대폰번호 필터-->
+				AND A.CTN = #{searchName}
+			</if>
+			<if test='searchGbn == "CNM"'> <!--고객명 필터-->
+				AND A.CUST_NM LIKE '%' || #{searchName} || '%'
+			</if>
+		</if>
+		<if test='giftType != null and giftType != ""'> <!--사은품종류-->
+			AND A.GIFT_TYPE LIKE '%' || #{giftType} || '%'
+		</if>
+		<if test='promNm != null and promNm != ""'> <!--프로모션명-->
+			AND A.PROM_NM LIKE '%' || #{promNm} || '%'
+		</if>
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!--사은품 지급 리스트 저장-->
+	<insert id="insertGiftPayStat" parameterType="com.ktis.msp.voc.giftvoc.vo.GiftPayStatVo">
+		/*GiftVocMapper.insertGiftPayStat*/
+		INSERT INTO MSP_GIFT_PAY_STAT(
+				GIFT_PAY_STAT_SEQ
+				, PAY_MON
+				, CONTRACT_NUM
+				, CUST_NM
+				, CTN
+				, TAX_RPLY_YN
+				, PROM_NM
+				, GIFT_TYPE
+				, GIFT_AMT
+				, REGST_DTTM
+				, REGST_ID
+		) VALUES (
+				MSP_GIFT_PAY_STAT_SEQ.NEXTVAL
+				, #{payMon}
+				, #{contractNum}
+				, #{custNm}
+				, #{ctn}
+				, #{taxRplyYn}
+				, #{promNm}
+				, #{giftType}
+				, #{giftAmt}
+				, SYSDATE
+				, #{regstId}
+		)
+	</insert>
+</mapper>

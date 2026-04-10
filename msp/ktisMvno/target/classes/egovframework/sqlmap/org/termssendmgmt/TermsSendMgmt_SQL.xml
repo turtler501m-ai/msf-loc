@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.termssendmgmt.mapper.TermsSendMgmtMapper">
+	
+	<select id="getTermsSendTrgt" parameterType="com.ktis.msp.org.termssendmgmt.vo.TermsSendVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT
+			  SEQ_NUM 
+			, CONTRACT_NUM
+			, TRGT_YM
+			, TYPE_CD
+			, FN_GET_CODENM('CMN0105', TYPE_CD) AS TYPE_CD_NM
+			, SUB_STAT
+			, FN_GET_CODENM('MSP0003', SUB_STAT) AS SUB_STAT_NM
+			, OPEN_DT
+			, TMNT_DT
+			, NAME
+			, MOBILE_NO
+			, EMAIL
+			, DECODE(RESULT_YN, 'Y', '전송', '미전송') AS RESULT_YN
+			, REGST_ID
+			, TO_CHAR(REGST_DTTM, 'YYYYMMDD') AS REGST_DTTM
+			, RVISN_ID
+			, NVL(FN_GET_USRNM(RVISN_ID), 'SYSTEM') AS RVISN_NM
+			, TO_CHAR(RVISN_DTTM, 'YYYYMMDD') AS RVISN_DTTM
+		    , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0236' AND CD_VAL = SEND_RSN_CD) AS SEND_RSN
+		    , DECODE(SEND_YN, 'Y', '처리', '미처리') AS SEND_YN
+		FROM CMN_TERMS_SMS_SEND_MST
+		WHERE 
+			TRGT_YM = #{trgtYm}
+		<if test="name != null and name != ''">
+			AND NAME LIKE #{name} || '%'
+		</if>
+		<if test="typeCd != null and typeCd != ''">
+			AND TYPE_CD = #{typeCd}
+		</if>
+        <if test="sendYn != null and sendYn != ''">		
+			AND SEND_YN = #{sendYn}
+        </if>	
+        <if test="sendRsn != null and sendRsn != ''">
+			AND SEND_RSN_CD = #{sendRsn} || ' '
+        </if>	
+		ORDER BY CONTRACT_NUM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<update id="updateResultYn"  parameterType="com.ktis.msp.org.termssendmgmt.vo.TermsSendVO">
+		UPDATE 
+			CMN_TERMS_SEND_MST
+		SET
+			 RESULT_YN = #{resultYn}
+			, RVISN_ID = #{sessionUserId}
+			, RVISN_DTTM = SYSDATE
+		WHERE SEQ_NUM = #{seqNum}
+	</update>
+	
+	<select id="termsSendListEx" parameterType="com.ktis.msp.org.termssendmgmt.vo.TermsSendVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT 
+			 CONTRACT_NUM
+			, TO_CHAR(TO_DATE(TRGT_YM, 'YYYYMMDD'), 'YYYY-MM-DD') AS TRGT_YM
+			, TYPE_CD
+			, FN_GET_CODENM('CMN0105', TYPE_CD) AS TYPE_CD_NM
+			, SUB_STAT
+			, FN_GET_CODENM('MSP0003', SUB_STAT) AS SUB_STAT_NM
+			, OPEN_DT
+			, TMNT_DT
+			, NAME
+			, MOBILE_NO
+			, EMAIL
+			, DECODE(RESULT_YN, 'Y', '전송', '미전송') AS RESULT_YN
+			, RVISN_ID
+			, NVL(FN_GET_USRNM(RVISN_ID), 'SYSTEM') AS RVISN_NM
+			, TO_CHAR(RVISN_DTTM, 'YYYY-MM-DD') AS RVISN_DTTM
+		    , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0236' AND CD_VAL = SEND_RSN_CD) AS SEND_RSN
+		    , DECODE(SEND_YN, 'Y', '처리', '미처리') AS SEND_YN
+		FROM CMN_TERMS_SMS_SEND_MST
+		WHERE 
+			TRGT_YM = #{trgtYm}
+		<if test="name != null and name != ''">
+			AND NAME LIKE #{name} || '%'
+		</if>
+		<if test="typeCd != null and typeCd != ''">
+			AND TYPE_CD = #{typeCd}
+		</if>
+        <if test="sendYn != null and sendYn != ''">		
+			AND SEND_YN = #{sendYn}
+        </if>	
+        <if test="sendRsn != null and sendRsn != ''">
+			AND SEND_RSN_CD = #{sendRsn} || ' '
+        </if>	
+		ORDER BY CONTRACT_NUM
+	</select>
+	
+	<insert id="insertTermsSendTrgt">
+		INSERT INTO CMN_TERMS_SEND_MST
+			(
+				SEQ_NUM
+				, TRGT_YM
+				, TYPE_CD
+				, CONTRACT_NUM
+				, MOBILE_NO
+				, NAME
+				, EMAIL
+				, SUB_STAT
+				, OPEN_DT
+				, TMNT_DT
+				, RESULT_YN
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM)
+		 SELECT  TO_CHAR(SYSDATE,'YYMM')||SQ_MAIL_TERM_SEND.NEXTVAL
+				, TO_CHAR(SYSDATE, 'YYYYMM') AS TRGT_YM
+				, TYPE_CD
+				, CONTRCT_NUM
+				, CTN
+				, NAME
+				, EMAIL
+				, SUB_STATUS
+				, OPEN_DT
+				, TMNT_DT
+				, 'N' AS RESULT_YN
+				, 'BATCH' AS REGST_ID
+				,  SYSDATE AS REGST_DTTM
+				,  'BATCH' AS RVISN_ID
+				,  SYSDATE AS RVISN_DTTM
+		FROM (
+				SELECT    'WEB' AS TYPE_CD
+						, B.SVC_CNTR_NO AS CONTRCT_NUM
+						, B.CNTR_MOBILE_NO AS CTN
+						, A.NAME
+						, A.EMAIL
+						, C.SUB_STATUS
+						, C.LST_COM_ACTV_DATE AS OPEN_DT
+						, DECODE(C.SUB_STATUS, 'C' , SUBSTR(C.SUB_STATUS_DATE, 1 , 8), '') AS TMNT_DT
+				FROM    MCP_USER@DL_MCP A
+						, MCP_USER_CNTR_MNG@DL_MCP B
+						, MSP_JUO_SUB_INFO C
+				WHERE   TO_CHAR(A.SYS_RDATE,'MM') = TO_CHAR(SYSDATE, 'MM')
+				AND     TO_CHAR(A.SYS_RDATE,'YYYY') != TO_CHAR(SYSDATE, 'YYYY')
+				AND     REVOCATION_DATE IS NULL
+				AND     A.USERID = B.USERID(+)
+				AND     A.STATUS != '3'
+				AND     B.SVC_CNTR_NO = C.CONTRACT_NUM (+)
+				UNION ALL
+				SELECT    'REQ' AS CD
+						, A.CONTRACT_NUM
+						, C.SUBSCRIBER_NO AS CTN
+						, B.CSTMR_NAME
+						, B.CSTMR_MAIL
+						, C.SUB_STATUS
+						, C.LST_COM_ACTV_DATE AS OPEN_DT
+						, DECODE(C.SUB_STATUS, 'C' , SUBSTR(C.SUB_STATUS_DATE, 1 , 8), '') AS TMNT_DT
+				FROM    MCP_REQUEST@DL_MCP A
+						, MCP_REQUEST_CSTMR@DL_MCP B
+						, MSP_JUO_SUB_INFO C
+				WHERE   TO_CHAR(A.REQ_IN_DAY,'MM') = TO_CHAR(SYSDATE, 'MM')
+				AND     TO_CHAR(A.REQ_IN_DAY,'YYYY') != TO_CHAR(SYSDATE, 'YYYY')
+				AND     A.REQUEST_KEY = B.REQUEST_KEY
+				AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+		)
+	</insert>
+	
+</mapper>

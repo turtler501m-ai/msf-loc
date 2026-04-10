@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PointMapper">
+	<update id="updateCustPointGiveBaseBas" parameterType="com.ktmmobile.mcp.point.dto.CustPointTxnDto">
+		UPDATE NMCP_CUST_POINT_GIVE_BASE_BAS 
+		SET 
+			<if test='pointTrtCd == "S" '>
+                TOT_ACU_POINT = TOT_ACU_POINT + #{point}
+                ,TOT_REMAIN_POINT = TOT_REMAIN_POINT + #{point}
+            </if>
+            <if test='pointTrtCd == "U" '>
+                TOT_USE_POINT = TOT_USE_POINT + #{point}
+                ,TOT_REMAIN_POINT = TOT_REMAIN_POINT - #{point}
+            </if>
+            <if test='pointTrtCd == "E" '>
+                TOT_EXTINCTION_POINT = TOT_EXTINCTION_POINT + #{point}
+                ,TOT_REMAIN_POINT = TOT_REMAIN_POINT - #{point}
+            </if>
+			,POINT_SUM_BASE_DATE = to_char(SYSDATE,'yyyymmddhh24miss')
+			,AMD_IP = #{cretIp}
+			,AMD_DT = SYSDATE
+			,AMD_ID = #{cretId}
+		WHERE SVC_CNTR_NO = #{svcCntrNo}
+	</update>
+	
+	<insert id="insertCustPointTxn" parameterType="com.ktmmobile.mcp.point.dto.CustPointTxnDto" useGeneratedKeys="true" keyProperty="pointTxnSeq">
+		<selectKey keyProperty="pointTxnSeq" resultType="int" order="BEFORE">
+		    select SQ_POINT_TXN_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_CUST_POINT_TXN
+		(
+			POINT_TXN_SEQ
+			,POINT_CUST_SEQ
+			,POINT_DIV_CD
+			,POINT_TRT_CD
+			,POINT_GIVE_BASE_SEQ
+			,POINT
+			,TOT_REMAIN_POINT
+			,POINT_USE_POSBL_ST_DATE
+			,POINT_USE_POSBL_END_DATE
+			,POINT_TXN_RSN_CD
+			,POINT_TXN_DTL_RSN_DESC
+			,POINT_ALL_GIVE_SEQ
+			,USER_POINT_TRT_SEQ
+			,REQUEST_KEY
+			,POINT_TRT_DT
+			,POINT_TRT_MEMO
+			,CRET_IP
+			,CRET_DT
+			,CRET_ID
+			, AMD_IP
+            , AMD_DT
+            , AMD_ID
+		)
+		VALUES
+		(
+			#{pointTxnSeq}
+			,#{pointCustSeq}
+			,#{pointDivCd}
+			,#{pointTrtCd}
+			,#{pointGiveBaseSeq}
+			,#{point}
+			,#{remainPoint}
+			,to_char(SYSDATE,'yyyymmddhh24miss')
+			
+			<if test='pointTrtCd == "S" '>
+                ,to_char(add_months(SYSDATE,12),'yyyymmddhh24miss')
+            </if>
+            <if test='pointTrtCd == "U" '>
+                ,to_char(SYSDATE,'yyyymmddhh24miss')
+            </if>
+            <if test='pointTrtCd == "E" '>
+                ,to_char(SYSDATE,'yyyymmddhh24miss')
+            </if>
+			
+			,#{pointTxnRsnCd}
+			,#{pointTxnDtlRsnDesc}
+			,#{pointAllGiveSeq}
+			,#{userPointTrtSeq}
+			,#{requestKey}
+			,SYSDATE
+			,#{pointTrtMemo}
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+		)
+	</insert>
+	
+	<select id="selectPsblCustPointTxnDtlList" resultType="com.ktmmobile.mcp.point.dto.CustPointTxnDtlDto">
+		SELECT 
+		    NCPATD.POINT_TXN_SEQ
+		    ,NCPATD.REMAIN_POINT
+		FROM 
+			NMCP_CUST_POINT_TXN NCPT
+			,NMCP_CUST_POINT_ACU_TXN_DTL NCPATD
+		WHERE NCPT.POINT_TXN_SEQ = NCPATD.POINT_TXN_SEQ
+			AND NCPATD.REMAIN_POINT <![CDATA[>]]> 0
+			AND NCPT.POINT_USE_POSBL_ST_DATE <![CDATA[<=]]> TO_CHAR(SYSDATE,'yyyymmddhh24miss')
+			AND NCPT.POINT_USE_POSBL_END_DATE <![CDATA[>=]]> TO_CHAR(SYSDATE,'yyyymmddhh24miss')
+			AND NCPT.POINT_CUST_SEQ = #{pointCustSeq}
+		ORDER BY NCPT.POINT_USE_POSBL_END_DATE ASC, POINT_TXN_SEQ ASC
+	</select>
+	
+	<insert id="insertCustPointTxnDtl">
+		INSERT INTO NMCP_CUST_POINT_TXN_DTL
+		(
+			POINT_TXN_DTL_SEQ
+			,POINT_TXN_SEQ
+			,ACU_POINT_TXN_SEQ
+			,REMAIN_POINT
+			,USE_POINT
+			,CRET_IP
+			,CRET_DT
+			,CRET_ID
+			, AMD_IP
+            , AMD_DT
+            , AMD_ID
+		)
+		VALUES
+		(
+			SQ_POINT_TXN_DTL_SEQ.NEXTVAL
+			,#{pointTxnSeq}
+			,#{acuPointTxnSeq}
+			,#{remainPoint}
+			,#{usePoint}
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+		)
+	</insert>
+	
+	<update id="updateCustPointTxnDtl">
+		UPDATE
+			NMCP_CUST_POINT_ACU_TXN_DTL
+		SET REMAIN_POINT = REMAIN_POINT - #{remainPoint}
+			,AMD_IP = #{cretIp}
+			,AMD_DT = SYSDATE
+			,AMD_ID = #{cretId}
+		WHERE 
+			POINT_TXN_SEQ = #{pointTxnSeq}
+	</update>
+	
+	
+    <!-- //포인트 회선일련번호 조회 -->
+ 	<select id="selectCustPointGiveBaseBas" resultType="com.ktmmobile.mcp.point.dto.CustPointDto" parameterType="com.ktmmobile.mcp.point.dto.CustPointDto">
+ 		SELECT 
+ 			POINT_CUST_SEQ
+ 			, USER_ID
+ 			, SVC_CNTR_NO
+ 			, TOT_ACU_POINT
+ 			, TOT_USE_POINT
+ 			, TOT_REMAIN_POINT
+ 			, TOT_EXTINCTION_POINT
+ 			, TO_CHAR(TO_DATE(POINT_SUM_BASE_DATE,'YYYYMMDDHH24MISS'),'YYYYMMDDHH24MISS') AS POINT_SUM_BASE_DATE
+ 		FROM
+ 			NMCP_CUST_POINT_GIVE_BASE_BAS
+ 		WHERE
+ 			1=1 
+ 			AND SVC_CNTR_NO = #{svcCntrNo}
+ 	</select>
+ 	<!-- //포인트 회선일련번호 조회 -->
+
+
+    <!-- //고객 포인트 기준정보 생성 -->
+	<insert id="insertCustPointGiveBaseBas" parameterType="com.ktmmobile.mcp.point.dto.CustPointDto">
+		<selectKey keyProperty="pointCustSeq" resultType="int" order="BEFORE">
+		    select SQ_POINT_CUST_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_CUST_POINT_GIVE_BASE_BAS
+		(
+			POINT_CUST_SEQ
+            , USER_ID
+            , SVC_CNTR_NO
+            , TOT_ACU_POINT
+            , TOT_USE_POINT
+            , TOT_REMAIN_POINT
+            , TOT_EXTINCTION_POINT
+            , POINT_SUM_BASE_DATE
+			, CRET_IP
+			, CRET_DT
+			, CRET_ID
+			, AMD_IP
+            , AMD_DT
+            , AMD_ID
+		)
+		VALUES
+		(
+			#{pointCustSeq}
+			,#{userId}
+			,#{svcCntrNo}
+			,#{totAcuPoint}
+			,#{totUsePoint}
+			,#{totRemainPoint}
+			,#{totExtinctionPoint}
+			,to_char(SYSDATE,'yyyymmddhh24miss')
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+			,#{amdIp}
+			,SYSDATE
+			,#{amdId}
+		)
+	</insert>
+	<!-- //고객 포인트 기준정보 생성 -->
+	
+	
+	
+	<!-- //고객포인트내역 insert --> 
+	<insert id="insertCustPointTxnSUE" parameterType="com.ktmmobile.mcp.point.dto.CustPointTxnDto">
+		<selectKey keyProperty="pointTxnSeq" resultType="int" order="BEFORE">
+			SELECT SQ_POINT_TXN_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_CUST_POINT_TXN (
+			POINT_TXN_SEQ
+			, POINT_CUST_SEQ
+			, POINT_DIV_CD
+			, POINT_TRT_CD
+			, POINT_GIVE_BASE_SEQ
+			, POINT
+			, TOT_REMAIN_POINT
+			, POINT_USE_POSBL_ST_DATE
+			, POINT_USE_POSBL_END_DATE
+			, POINT_TXN_RSN_CD
+			, POINT_TXN_DTL_RSN_DESC
+			, POINT_ALL_GIVE_SEQ
+			, USER_POINT_TRT_SEQ
+			, REQUEST_KEY
+			, POINT_TRT_DT
+			, POINT_TRT_MEMO
+			, CRET_IP
+			, CRET_DT
+			, CRET_ID
+			, AMD_IP
+			, AMD_DT
+			, AMD_ID
+		)
+		VALUES
+			(
+			  #{pointTxnSeq}
+			, #{pointCustSeq}
+			, #{pointDivCd} 
+			, #{pointTrtCd}
+			, #{pointGiveBaseSeq}
+			, #{point}			
+			<choose>
+                <when test='pointTrtCd == "U" or pointTrtCd == "E"'>
+                 , (SELECT TOT_REMAIN_POINT - #{totRemainPoint} FROM NMCP_CUST_POINT_GIVE_BASE_BAS WHERE POINT_CUST_SEQ = #{pointCustSeq}) 
+                </when>
+                <when test='pointTrtCd == "S"'>
+                 , (SELECT TOT_REMAIN_POINT + #{totRemainPoint} FROM NMCP_CUST_POINT_GIVE_BASE_BAS WHERE POINT_CUST_SEQ = #{pointCustSeq}) 
+                </when>
+           </choose>
+			, #{pointUsePosblStDate}
+			, #{pointUsePosblEndDate}
+			, #{pointTxnRsnCd}
+			, #{pointTxnDtlRsnDesc}
+			, #{pointAllGiveSeq}
+			, #{userPointTrtSeq}
+			, #{requestKey}
+			, SYSDATE
+			, #{pointTrtMemo}
+			, #{cretIp}
+			, SYSDATE
+			, #{cretId}
+			, #{cretIp}
+			, SYSDATE
+			, #{cretId}
+		)
+	</insert>
+	<!-- //고객포인트내역 insert --> 
+	
+	
+    <!-- //고객포인트적립내역 상세 -->
+	<insert id="insertCustPointAcuTxnDtl" parameterType="com.ktmmobile.mcp.point.dto.CustPointTxnDto">
+		<selectKey keyProperty="pointTxnSeq" resultType="int" order="BEFORE">
+			SELECT SQ_POINT_TXN_SEQ.CURRVAL FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_CUST_POINT_ACU_TXN_DTL
+		(
+			POINT_TXN_SEQ
+            ,REMAIN_POINT
+			,CRET_IP
+			,CRET_DT
+			,CRET_ID
+			,AMD_IP
+            ,AMD_DT
+            ,AMD_ID
+		)
+		VALUES
+		(
+			#{pointTxnSeq}
+			,#{remainPoint}
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+			,#{amdIp}
+			,SYSDATE
+			,#{amdId}
+		)
+	</insert>
+	<!-- //고객포인트적립내역 상세 -->
+	
+	
+	<!-- //포인트 적립대상 등록 -->
+	<insert id="insertCustPointGiveTgtBas" parameterType="com.ktmmobile.mcp.point.dto.CustPointGiveTgtBasDto">
+		<selectKey keyProperty="custPointGiveTgtSeq" resultType="int" order="BEFORE">
+			SELECT SQ_CUST_POINT_GIVE_TGT_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_CUST_POINT_GIVE_TGT_BAS
+		(
+			CUST_POINT_GIVE_TGT_SEQ
+            , SVC_CNTR_NO
+            , POINT_GIVE_BASE_SEQ
+            , POINT_GIVE_BASE_DTL_SEQ
+            , ORDR_NO
+            , POINT_GIVE_BASE_RATE_CD
+            , POINT_GIVE_BASE_RATE_AMT
+            , POINT_GIVE_DATE
+            , POINT_GIVE_VALID_YN
+            , POINT_DIV_CD
+            , POINT_TRT_CD
+            , POINT
+            , POINT_USE_POSBL_ST_DATE
+            , POINT_USE_POSBL_END_DATE
+            , POINT_TXN_RSN_CD
+            , POINT_TXN_DTL_RSN_DESC
+            , POINT_CUST_SEQ
+            , POINT_GIVE_CPLT_YN
+            , POINT_GIVE_CPLT_DATE
+            , CRET_IP
+            , CRET_DT
+            , CRET_ID
+            , AMD_IP
+            , AMD_DT
+            , AMD_ID
+		)
+		VALUES
+		(
+			#{custPointGiveTgtSeq}
+            , #{svcCntrNo}
+            , #{pointGiveBaseSeq}
+            , #{pointGiveBaseDtlSeq}
+            , #{ordrNo}
+            , #{pointGiveBaseRateCd}
+            , #{pointGiveBaseRateAmt}
+            , #{pointGiveDate}
+            , #{pointGiveValidYn}
+            , #{pointDivCd}
+            , #{pointTrtCd}
+            , #{point}
+            , #{pointUsePosblStDate}
+            , #{pointUsePosblEndDate}
+            , #{pointTxnRsnCd}
+            , #{pointTxnDtlRsnDesc}
+            , #{pointCustSeq}
+            , #{pointGiveCpltYn}
+            , #{pointGiveCpltDate}
+            , #{cretIp}
+            , SYSDATE
+            , #{cretId}
+            , #{amdIp}
+            , SYSDATE
+            , #{amdId}
+		)
+	</insert>
+	<!-- //포인트 적립대상 등록 -->
+
+
+	<update id="updateCouponOutside" parameterType="com.ktmmobile.mcp.coupon.dto.CouponOutsideDto">
+    	UPDATE NMCP_COUPN_OUTSIDE_BAS SET
+			COUPN_AMT = #{coupnAmt}
+			,USE_YN = #{useYn}
+			,PSTNG_START_DATE = #{pstngStartDate}
+			,PSTNG_END_DATE = #{pstngEndDate}
+			,USER_ID = #{userId}
+			,REAL_COUPN_NO = #{realCoupnNo}
+			,SVC_CNTR_NO = #{svcCntrNo}
+			,AMD_IP = #{cretIp}
+			,AMD_DT = SYSDATE
+			,AMD_ID	 = #{cretId}
+		where COUPN_NO = #{coupnNo}
+    </update>
+
+
+</mapper>

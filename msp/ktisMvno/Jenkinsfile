@@ -1,0 +1,334 @@
+#!/usr/bin/env groovy
+
+@Library('utils@trunk/utils') _   // Global Shared Library 로드
+//마이그후에 폴더 구조 변경 필요
+
+pipeline {
+  agent any
+  options {
+    ansiColor('css')   // Jenkins 콘솔 출력에서 ANSI 컬러 활성화
+  }
+
+  parameters {
+      booleanParam(
+          name: 'DRY_RUN',
+          defaultValue: true,
+          description: 'Dry Run 모드로 실행 (배포시 실행 명령 만 출력, 실제 실행하지 않음)'
+      )
+  }
+  // -------------------------------
+  // Global 환경 변수 선언
+  // 모든 stage에서 공통으로 접근 가능
+  // -------------------------------
+  environment {
+    MVN_HOME = tool 'maven-3.8.9'           // Maven 설치 경로
+    JDK_HOME = tool 'jdk8'                 // JDK 설치 경로
+    JENKINS_PROPERTIES = 'devops/jenkins/jenkins.properties' // Jenkins 전용 프로퍼티 파일
+  }
+
+  stages {
+
+    // -------------------------------
+    // 1. 환경 체크 및 JOB 정보 파싱
+    // - JOB_NAME에서 MCP 접두사 제거
+    // - jobName을 '-' 기준으로 나눔
+    // - platformNm, targetEnv 전역 변수 등록
+    // - Groovy와 Shell에서 모두 확인 가능하도록 echo 출력
+    // -------------------------------
+    stage('Environment Check') {
+      steps {
+        script {
+          // MCP 접두사 제거
+          def jobName = env.JOB_NAME.tokenize('/').last()        // "msp-portal-service-01-prd"
+          def varField = jobName.split('-')                      // ["msp", "portal", "web|was|all", "prd"]
+
+          // 전역 env 변수 등록
+          env.platformNm   = "${varField[0]}-${varField[1]}"        // 예: msp-portal
+          env.serviceName  = varField[2]                            // 예: web|was|all
+          env.targetEnv    = varField.last()                        // 예: prd
+
+          // -------------------------------
+          // 환경 정보 출력
+          // Groovy 변수 및 시스템 환경 변수 확인
+          // -------------------------------
+          echo """
+================= Jenkins Environment Check =================
+JOB_NAME    : ${env.JOB_NAME}
+jobName     : ${jobName}
+JDK_HOME    : ${env.JDK_HOME}
+MVN_HOME    : ${env.MVN_HOME}
+targetEnv   : ${env.targetEnv}
+platformNm  : ${env.platformNm}
+serviceName : ${env.serviceName}
+varField    : ${varField}
+
+================= System Environment Variables ===============
+${sh(script: 'printenv | sort | grep -E "JOB_NAME|BUILD_NUMBER|WORKSPACE|JAVA_HOME|PATH|platformNm|targetEnv" || true', returnStdout: true).trim()}
+==============================================================
+"""
+        }
+      }
+    }
+
+    // -------------------------------
+    // 3. UBI GW: LIcense 복제 실행
+    // - 라이센스 변경
+    // -------------------------------
+    stage('UBI GW: LIcense 복제') {
+      when {
+        expression { env.serviceName == 'all' || env.serviceName == 'was' }
+      }
+      steps {
+          script {
+                def resourceEnv = (env.targetEnv == "dev") ? "oper" :
+                              (env.targetEnv == "prd") ? "live" :
+                              (env.targetEnv == "stg") ? "stg" : ""
+
+              def files = [
+                  [
+                      src: "${env.WORKSPACE}/src/main/webapp/WEB-INF/lib/ubigateway.property_${resourceEnv}",
+                      dest: "${env.WORKSPACE}/src/main/webapp/WEB-INF/lib/ubigateway.property"
+                  ],
+                  [
+                      src: "${env.WORKSPACE}/src/main/webapp/ubireport/license/License.xml_${resourceEnv}",
+                      dest: "${env.WORKSPACE}/src/main/webapp/ubireport/license/License.xml"
+                  ]
+              ]  
+              files.each { file ->
+                  def isDifferent = sh(
+                      script: "diff -q ${file.src} ${file.dest} > /dev/null || echo 'DIFF'",
+                      returnStdout: true
+                  ).trim()
+  
+                  if (isDifferent == 'DIFF') {
+                      echo "[INFO] File changed → replacing: ${file.dest}"
+                      sh "mv ${file.src} ${file.dest}"
+                  } else {
+                      echo "[INFO] No changes in ${file.dest}, skipping move."
+                  }
+              }
+          }
+      }
+    }
+
+    // -------------------------------
+    // 4. Maven Build & Unit Test 실행
+    // - Jenkins Properties 파일 읽기
+    // - Unit Test 수행 여부 확인
+    // - Maven 환경 변수 설정 후 빌드 수행
+    // - Unix / Windows 환경 분기 처리
+    // - Unit Test와 SonarQube 분석 수행
+    // - 실패 시 workspace 정리 및 빌드 실패 처리
+    // -------------------------------
+    stage('Maven Build & PMD & Unit Test') {
+      when {
+        expression { env.serviceName == 'all' || env.serviceName == 'was' }
+      }
+      steps {
+        script {
+          // Jenkins Properties 파일 읽기
+          def props = readProperties file: "${env.WORKSPACE}/${env.JENKINS_PROPERTIES}"
+
+          // 유닛 테스트 수행 여부 파라미터
+          def unitTestEnable = params.unitTestEnable ?: false
+          echo "unitTestEnable = ${unitTestEnable}"
+
+          // Maven POM, settings 경로 설정
+          def mvnPom = "${env.WORKSPACE}/${props.mvnPomFile}"
+          def mvnSettings = "${env.WORKSPACE}/${props.devopsPath}/${props.mvnSetFile}"
+          def mvnSecSettings = "${env.WORKSPACE}/${props.devopsPath}/${props.mvnSecSetFile}"
+
+          // target 서버에 따라 profile 변경
+          def aProfile = resolveProfile(env.targetEnv, env.serviceName)
+
+          echo "\u001B[36m🔧 [Maven Build Start] Profile=${aProfile}, UnitTest=${unitTestEnable}\u001B[0m"
+
+          try {
+            // Maven 실행용 환경 변수 설정
+            withEnv([
+              "MAVEN_HOME=${env.MVN_HOME}",
+              "JAVA_HOME=${env.JDK_HOME}",
+              "PATH=${env.JDK_HOME}/bin:${env.PATH}"
+            ]) {
+              if (isUnix()) {
+                // -------------------------------
+                // Unix 환경에서 Maven clean & package 수행
+                // - 메모리 옵션 지정
+                // - 테스트 제외(-DskipTests)
+                // -------------------------------
+                sh """
+                  export MAVEN_OPTS="-Xms1G -Xmx2G -Xss10m"
+                  ${MAVEN_HOME}/bin/mvn -f ${mvnPom} clean package pmd:pmd \
+                    -P ${aProfile} -DskipTests \
+                    --settings ${mvnSettings} -Dsettings.security="${mvnSecSettings}"
+                """
+
+                // -------------------------------
+                // Unit Test 수행 시 SonarQube 분석
+                // - allowEmptyResults: 테스트 결과가 없어도 실패하지 않음
+                // -------------------------------
+                if (unitTestEnable) {
+                  withSonarQubeEnv('sonarqube-devops'){
+                    sh """
+                      ${MAVEN_HOME}/bin/mvn -f ${mvnPom} sonar:sonar \
+                        --settings ${mvnSettings} -Dsettings.security="${mvnSecSettings}"
+                    """
+                    junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+                  }
+                }
+              } else {
+                // Windows 환경
+                bat(/"%MAVEN_HOME%\bin\mvn" clean package -X -P ${aProfile} -DskipTests --settings "%mvnSettings%"/)
+              }
+            }
+          } catch(e) {
+            // -------------------------------
+            // 빌드 실패 처리
+            // - workspace 정리
+            // - 빌드 실패 설정
+            // - 에러 메시지 출력
+            // -------------------------------
+            echo "Build 실패 → workspace 정리: ${env.JOB_NAME}"
+            currentBuild.result = "FAILURE"
+            throw e
+          }
+        }
+      }
+    }
+
+    // -------------------------------
+    // 5. Publish PMD Results
+    // - 지원 안됨
+    // -------------------------------
+    // stage('Publish PMD Results') {
+    //     steps {
+    //         // Warnings NG plugin 사용
+    //       step([$class: 'PmdPublisher',
+    //             pattern: '**/target/site/pmd.xml',
+    //             healthy: 0,
+    //             unHealthy: 0,
+    //             canComputeNew: false
+    //       ])
+    //     }
+    // }
+    // -------------------------------
+    // 5. SSH Known Hosts 확인
+    // - 지시대로 처리
+    // -------------------------------
+      stage('SSH Known Hosts 안내') {
+          when { expression { params.DRY_RUN } }
+          steps {
+              script {
+                  def hostExample = "MSC-WAS-DEV"
+                  def knownHostsFile = "${env.HOME}/.ssh/known_hosts"
+      
+                  echo "\033[1;34m================= SSH Known Hosts 확인 안내 =================\033[0m"
+                  echo "\033[1;33m✔ 예시 대상 서버: ${hostExample}\033[0m"  // 노란색 강조
+                  echo "\033[0;36m✔ Jenkins 계정 HOME: ${env.HOME}\033[0m"  // 청색
+                  echo "\033[0;36m✔ known_hosts 파일 위치: ${knownHostsFile}\033[0m"  // 청색
+                  echo ""
+                  echo "\033[0;32m📌 안내 (예시 명령어):\033[0m"  // 초록색
+                  echo "1. 이미 등록된 SSH key 확인:"
+                  echo "   ssh-keygen -F ${hostExample.toLowerCase()} -f ${knownHostsFile}"
+                  echo "2. 등록되어 있지 않다면 공개키 추가:"
+                  echo "   ssh-keyscan -H ${hostExample.toLowerCase()} >> ${knownHostsFile}"
+                  echo ""
+                  echo "\033[1;31m⚠️ 주의: host명은 반드시 소문자로 입력해야 합니다.\033[0m"  // 빨강 강조
+                  echo "\033[1;35m❗ 실제 환경에 맞게 서버명으로 변경 후 사용하세요.\033[0m"  // 보라 강조
+                  echo "\033[1;34m============================================================\033[0m"
+              }
+          }
+      }
+
+
+
+    
+    // -------------------------------
+    // 6. Source Deploy
+    // - 빌드 성공 시에만 실행
+    // - 배포용 script 파일 복사 및 원격 실행
+    // -------------------------------
+    stage('Deploy Application') {
+      when {
+        expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+      }
+      steps {
+        script {
+          // Properties 다시 읽기
+          def props = readProperties file: "${env.WORKSPACE}/${env.JENKINS_PROPERTIES}"
+
+          // -------------------------------
+          // PATH 환경 변수만 stage-specific 적용
+          // - props 파일 경로 출력
+          // - 배포용 파일 복사
+          // - 원격 배포 실행
+          // -------------------------------
+
+          def targetYamlFile = resolveDeployConfig(env.targetEnv, env.serviceName, props)
+
+          def deployConfigPath = "${env.WORKSPACE}/${props.devopsPath}/${env.targetEnv}/${targetYamlFile}"
+          echo "deployConfig   : ${deployConfigPath}"
+
+           def result = nativeSsh(deployConfigPath, params.DRY_RUN)
+          /// def result = nativeSsh(deployConfigPath)
+           echo "[WARN] Message: ${result.message}"
+           if (!result.success) {
+            currentBuild.result = 'FAILURE'
+            error("[ERROR] Remote execution failed: ${result.message}")
+           }
+        
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "\u001B[32m✅ [SUCCESS] 빌드 및 배포 완료.\u001B[0m"
+      cleanWs(deleteDirs: true, notFailBuild: true)
+    }
+
+    failure {
+      echo "\u001B[31m🚨 [FAILURE] 빌드 실패 — 로그를 확인하세요.\u001B[0m"
+      // 필요시 슬랙/메일 알림 함수 연결 가능
+      // notifyFailure(env.JOB_NAME, currentBuild.result)
+    }
+
+    always {
+      echo "\u001B[33m📦 [CLEANUP] Workspace 정리 중...\u001B[0m"
+      // 예: 임시 파일 삭제만
+      sh 'rm -rf tmp/* || true'
+    }
+  }
+}
+
+//
+private def resolveProfile(String targetEnv, String serviceName) {
+    def profileMap = [
+        prd: [ "all": "prd", "was": "prd", "_": "prd" ],
+        stg: [ "_": "stg" ],
+        dev: [ "_": "dev" ]
+    ]
+
+    def envConf = profileMap[targetEnv]
+    if (!envConf) error("Unknown env: ${targetEnv}")
+
+    def profileName = envConf[serviceName] ?: envConf["_"]
+    echo "\u001B[32m✅ 선택된 Maven profile: ${profileName} (targetEnv=${targetEnv}, serviceName=${serviceName})\u001B[0m"
+    return profileName
+}
+
+private def resolveDeployConfig(String targetEnv, String serviceName, def props) {
+    def profileMap = [
+        prd: [ "all": props.utilPropsFile0,  "was": props.utilPropsFile1, "web": props.utilPropsFile2, "_": props.utilPropsFile0 ],
+        stg: [ "_": props.utilPropsFile3 ],
+        dev: [ "_": props.utilPropsFile3 ]
+    ]
+
+    def envConf = profileMap[targetEnv]
+    if (!envConf) error("Unknown env: ${targetEnv}")
+
+    def deployYaml = envConf[serviceName] ?: envConf["_"]
+    echo "✅ Selected deploy config: ${deployYaml}"
+    return deployYaml
+}

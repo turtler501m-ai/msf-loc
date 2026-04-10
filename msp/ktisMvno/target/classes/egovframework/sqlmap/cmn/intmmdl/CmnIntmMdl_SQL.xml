@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.intmmdl.mapper.CmnIntmMdlMapper">
+	<!-- 대표모델리스트 -->
+	<select id="selectIntmMdlList" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* CmnIntmMdlMapper.selectIntmMdlList */
+			  A.PRDT_ID													/* 모델ID */
+			, A.RPRS_PRDT_ID											/* 대표모델ID */
+			, A.RPRS_YN													/* 대표여부 */
+			, A.PRDT_CODE												/* 모델코드 */
+			, A.PRDT_NM													/* 모델명 */
+			, A.MNFCT_ID												/* 제조사ID */
+			, B.MNFCT_NM												/* 제조사명 */
+			, A.PRDT_TYPE_CD											/* 모델유형코드 */
+			, FN_GET_CODENM('ORG0007', PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+			, A.PRDT_IND_CD												/* 모델구분코드 */
+			, FN_GET_CODENM('CMN0045', PRDT_IND_CD) AS PRDT_IND_NM		/* 모델구분명 */
+			, A.PRDT_LNCH_DT											/* 모델출시일자 */
+			, A.PRDT_DT													/* 모델단종일자 */
+			, A.PRDT_COLR_CD											/* 모델색상코드 */
+			, FN_GET_CODENM('CMN0044', PRDT_COLR_CD) AS PRDT_COLR_NM	/* 모델색상명 */
+			, A.REG_ID													/* 등록자ID */
+			, A.REG_DTTM												/* 등록일시 */
+			, A.RVISN_ID												/* 수정자ID */
+			, A.RVISN_DTTM												/* 수정일시 */
+			, A.NFC_USIM_YN												/* NFC사용여부 */
+		FROM CMN_INTM_MDL A
+			, ORG_MNFCT_MST B
+		WHERE 1=1
+		AND A.MNFCT_ID = B.MNFCT_ID
+		AND A.RPRS_YN = 'Y'
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">		
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}							/* 대표모델ID */
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+			AND A.RPRS_PRDT_ID IN (SELECT RPRS_PRDT_ID FROM CMN_INTM_MDL WHERE  PRDT_ID = #{prdtId})
+		</if>
+		<if test="mnfctId != null and mnfctId != ''">
+			AND A.MNFCT_ID = #{mnfctId}									/* 제조사ID */
+		</if>
+		<if test="prdtTypeCd != null and prdtTypeCd != ''">
+			AND A.PRDT_TYPE_CD = #{prdtTypeCd}							/* 모델유형코드 */
+		</if>
+		<if test="prdtNm != null and prdtNm != ''">
+			AND UPPER(A.PRDT_NM) like '%'||UPPER(#{prdtNm})||'%'							/* 모델명 */
+		</if>
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+	<!-- 대표모델리스트(엑셀) -->
+	<select id="selectIntmMdlListExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* CmnIntmMdlMapper.selectIntmMdlListExcel */
+			  A.PRDT_ID													/* 모델ID */
+			, A.RPRS_PRDT_ID											/* 대표모델ID */
+			, A.RPRS_YN													/* 대표여부 */
+			, A.PRDT_CODE												/* 모델코드 */
+			, A.PRDT_NM													/* 모델명 */
+			, A.MNFCT_ID												/* 제조사ID */
+			<![CDATA[ , REPLACE(B.MNFCT_NM,'&amp;','&') ]]> AS MNFCT_NM				/* 제조사명 */
+			, A.PRDT_TYPE_CD											/* 모델유형코드 */
+			, FN_GET_CODENM('ORG0007', PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+			, A.PRDT_IND_CD												/* 모델구분코드 */
+			, FN_GET_CODENM('CMN0045', PRDT_IND_CD) AS PRDT_IND_NM		/* 모델구분명 */
+			, A.PRDT_LNCH_DT											/* 모델출시일자 */
+			, A.PRDT_DT													/* 모델단종일자 */
+			, A.PRDT_COLR_CD											/* 모델색상코드 */
+			, FN_GET_CODENM('CMN0044', PRDT_COLR_CD) AS PRDT_COLR_NM	/* 모델색상명 */
+			, A.REG_ID													/* 등록자ID */
+			, A.REG_DTTM												/* 등록일시 */
+			, A.RVISN_ID												/* 수정자ID */
+			, A.RVISN_DTTM												/* 수정일시 */
+			, A.NFC_USIM_YN												/* NFC사용여부 */
+		FROM CMN_INTM_MDL A
+			, ORG_MNFCT_MST B
+		WHERE 1=1
+		AND A.MNFCT_ID = B.MNFCT_ID
+		AND A.RPRS_YN = 'Y'
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">		
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}							/* 대표모델ID */
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+			AND A.RPRS_PRDT_ID IN (SELECT RPRS_PRDT_ID FROM CMN_INTM_MDL WHERE  PRDT_ID = #{prdtId})
+		</if>
+		<if test="mnfctId != null and mnfctId != ''">
+			AND A.MNFCT_ID = #{mnfctId}									/* 제조사ID */
+		</if>
+		<if test="prdtTypeCd != null and prdtTypeCd != ''">
+			AND A.PRDT_TYPE_CD = #{prdtTypeCd}							/* 모델유형코드 */
+		</if>
+		<if test="prdtNm != null and prdtNm != ''">
+			AND UPPER(A.PRDT_NM) like '%'||UPPER(#{prdtNm})||'%'							/* 모델명 */
+		</if>
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+	</select>	
+	
+	<!-- 색상모델리스트 -->
+	<select id="selectIntmColrMdlList" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* CmnIntmMdlMapper.selectIntmColrMdlList */
+			  A.PRDT_ID													/* 모델ID */
+			, A.RPRS_PRDT_ID											/* 대표모델ID */
+			, A.RPRS_YN													/* 대표여부 */
+			, A.PRDT_CODE												/* 모델코드 */
+			, (SELECT PRDT_CODE 
+			   FROM CMN_INTM_MDL B 
+			   WHERE B.PRDT_ID = A.RPRS_PRDT_ID
+				AND RPRS_YN = 'Y') AS RPRS_PRDT_CODE					/* 대표모델 코드*/
+			, A.PRDT_NM													/* 모델명 */
+			, A.MNFCT_ID												/* 제조사ID */
+			, A.PRDT_TYPE_CD											/* 모델유형코드 */
+			, FN_GET_CODENM('ORG0007', PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+			, A.PRDT_IND_CD												/* 모델구분코드 */
+			, FN_GET_CODENM('CMN0045', PRDT_IND_CD) AS PRDT_IND_NM		/* 모델구분명 */
+			, A.PRDT_LNCH_DT											/* 모델출시일자 */
+			, A.PRDT_DT													/* 모델단종일자 */
+			, A.PRDT_COLR_CD											/* 모델색상코드 */
+			, FN_GET_CODENM('CMN0044', PRDT_COLR_CD) AS PRDT_COLR_NM	/* 모델색상명 */
+			, A.REG_ID													/* 등록자ID */
+			, A.REG_DTTM												/* 등록일시 */
+			, A.RVISN_ID												/* 수정자ID */
+			, A.RVISN_DTTM												/* 수정일시 */
+		FROM CMN_INTM_MDL A
+		WHERE 1=1
+			AND A.RPRS_YN = 'N'
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}						/* 대표모델ID */
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+	<!-- 색상모델리스트(엑셀) -->
+	<select id="selectIntmColrMdlListExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* CmnIntmMdlMapper.selectIntmColrMdlListExcel */
+			  A.PRDT_ID													/* 모델ID */
+			, A.RPRS_PRDT_ID											/* 대표모델ID */
+			, A.RPRS_YN													/* 대표여부 */
+			, A.PRDT_CODE												/* 모델코드 */
+			, (SELECT PRDT_CODE 
+			   FROM CMN_INTM_MDL B 
+			   WHERE B.PRDT_ID = A.RPRS_PRDT_ID
+				AND RPRS_YN = 'Y') AS RPRS_PRDT_CODE					/* 대표모델 코드*/
+			, A.PRDT_NM													/* 모델명 */
+			, A.MNFCT_ID												/* 제조사ID */
+			, A.PRDT_TYPE_CD											/* 모델유형코드 */
+			, FN_GET_CODENM('ORG0007', PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+			, A.PRDT_IND_CD												/* 모델구분코드 */
+			, FN_GET_CODENM('CMN0045', PRDT_IND_CD) AS PRDT_IND_NM		/* 모델구분명 */
+			, A.PRDT_LNCH_DT											/* 모델출시일자 */
+			, A.PRDT_DT													/* 모델단종일자 */
+			, A.PRDT_COLR_CD											/* 모델색상코드 */
+			, FN_GET_CODENM('CMN0044', PRDT_COLR_CD) AS PRDT_COLR_NM	/* 모델색상명 */
+			, A.REG_ID													/* 등록자ID */
+			, A.REG_DTTM												/* 등록일시 */
+			, A.RVISN_ID												/* 수정자ID */
+			, A.RVISN_DTTM												/* 수정일시 */
+		FROM CMN_INTM_MDL A
+		WHERE 1=1
+			AND A.RPRS_YN = 'N'
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}						/* 대표모델ID */
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+	</select>
+	
+	<!-- 대표모델 정보조회 -->
+	<select id="selectRprsPrdtNm" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* CmnIntmMdlMapper.selectRprsPrdtNm */
+			  A.PRDT_ID													/* 모델ID */
+			, A.RPRS_PRDT_ID											/* 대표모델ID */
+			, A.RPRS_YN													/* 대표여부 */
+			, (SELECT PRDT_CODE 
+			   FROM CMN_INTM_MDL B 
+			   WHERE B.PRDT_ID = A.RPRS_PRDT_ID
+				AND RPRS_YN = 'Y') AS RPRS_PRDT_CODE					/* 대표모델 코드*/
+			, A.PRDT_CODE												/* 모델코드 */
+			, A.PRDT_NM													/* 모델명 */
+			, A.MNFCT_ID												/* 제조사ID */
+			, A.PRDT_TYPE_CD											/* 모델유형코드 */
+			, A.PRDT_IND_CD												/* 모델구분코드 */
+			, A.PRDT_LNCH_DT											/* 모델출시일자 */
+			, A.PRDT_DT													/* 모델단종일자 */
+			, A.PRDT_COLR_CD											/* 모델색상코드 */
+			, A.NFC_USIM_YN												/* NFC사용여부 */
+		FROM CMN_INTM_MDL A
+		WHERE 1=1
+		AND A.RPRS_YN = #{rprsYn}
+			<if test="rprsYn != null and rprsYn != ''">
+				<if test='rprsYn == "Y"'>
+					AND A.RPRS_PRDT_ID = #{rprsPrdtId}						/* 대표모델ID */
+				</if>
+				<if test='rprsYn == "N"'>
+					AND A.PRDT_ID = #{prdtId}								/* 모델ID */
+				</if>
+			</if>
+		ORDER BY A.REG_DTTM  DESC
+	</select>
+	
+	<!-- 대표모델ID 중복체크 -->
+	<select id="isExistRprsPrdtId" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO" resultType="int">
+		SELECT /* CmnIntmMdlMapper.isExistRprsPrdtId */
+			COUNT(*)
+		FROM CMN_INTM_MDL
+		WHERE 1=1
+			AND RPRS_PRDT_ID = #{rprsPrdtId}
+	</select>
+	
+	<!-- 모델코드(대표) 중복체크 -->
+	<select id="isExistRprsPrdtCode" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO" resultType="int">
+		SELECT /* CmnIntmMdlMapper.isExistRprsPrdtId */
+			COUNT(*)
+		FROM CMN_INTM_MDL
+		WHERE 1=1
+			AND RPRS_YN = 'Y'
+			AND UPPER(PRDT_CODE) = UPPER(#{prdtCode})
+	</select>
+	
+	<!-- 대표모델 등록 -->
+	<insert id="insertIntmMdl" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO">
+		INSERT /* CmnIntmMdlMapper.insertIntmMdl */
+			INTO CMN_INTM_MDL
+			(
+			  PRDT_ID				/* 모델ID */ 
+			, RPRS_PRDT_ID			/* 대표모델ID */ 
+			, RPRS_YN				/* 대표여부 */ 
+			, PRDT_NM				/* 모델명 */ 
+			, PRDT_CODE				/* 모델코드 */ 
+			, PRDT_TYPE_CD			/* 모델유형코드 */ 
+			, PRDT_IND_CD			/* 모델구분코드 */ 
+			, PRDT_COLR_CD			/* 모델색상코드 */ 
+			, MNFCT_ID				/* 제조사ID */ 
+			, PRDT_LNCH_DT			/* 모델출시일자 */ 
+			, PRDT_DT				/* 모델단종일자 */ 
+			, REG_ID				/* 등록자ID */ 
+			, REG_DTTM				/* 등록일시 */ 
+			, RVISN_ID				/* 수정자ID */ 
+			, RVISN_DTTM			/* 수정일시 */
+			, NFC_USIM_YN			/* NFC지원여부 */
+			)
+		VALUES
+			(
+			  #{prdtId, jdbcType=VARCHAR}
+			, #{rprsPrdtId, jdbcType=VARCHAR}
+			, #{rprsYn, jdbcType=VARCHAR}
+			, #{prdtNm, jdbcType=VARCHAR}
+			, UPPER(#{prdtCode, jdbcType=VARCHAR})
+			, #{prdtTypeCd, jdbcType=VARCHAR}
+			, #{prdtIndCd, jdbcType=VARCHAR}
+			, #{prdtColrCd, jdbcType=VARCHAR}
+			, #{mnfctId, jdbcType=VARCHAR}
+			, #{prdtLnchDt, jdbcType=VARCHAR}
+			, #{prdtDt, jdbcType=VARCHAR}
+			, #{regId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{rvisnId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{nfcUsimYn, jdbcType=VARCHAR}
+			)
+	</insert> 
+	
+	<!-- 대표모델 수정 -->
+	<update id="updateIntmMdl" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO">
+		UPDATE CMN_INTM_MDL /* CmnIntmMdlMapper.updateIntmMdl */
+		SET
+			RVISN_DTTM = SYSDATE
+			, NFC_USIM_YN = #{nfcUsimYn, jdbcType=VARCHAR}
+			, RVISN_ID = #{rvisnId, jdbcType=VARCHAR} 
+			<if test="prdtNm != null and prdtNm != '' ">			, PRDT_NM = #{prdtNm, jdbcType=VARCHAR} </if>				/* 모델명 */
+			<if test="mnfctId != null and mnfctId != '' ">			, MNFCT_ID = #{mnfctId, jdbcType=VARCHAR} </if>				/* 제조사ID */ 
+			<if test="prdtIndCd != null and prdtIndCd != '' ">		, PRDT_IND_CD = #{prdtIndCd, jdbcType=VARCHAR} </if>		/* 모델구분코드 */ 
+			<if test="prdtLnchDt != null and prdtLnchDt != '' ">	, PRDT_LNCH_DT = #{prdtLnchDt, jdbcType=VARCHAR} </if>		/* 모델출시일자 */ 
+		WHERE 1=1
+			AND RPRS_PRDT_ID = #{rprsPrdtId}
+	</update>
+	
+	<!-- 대표모델 단종일자 수정 -->
+	<update id="updateIntmMdlPrdtDt" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO">
+		UPDATE CMN_INTM_MDL /* CmnIntmMdlMapper.updateIntmMdlPrdtDt */
+		SET
+			RVISN_DTTM = SYSDATE
+			, RVISN_ID = #{rvisnId, jdbcType=VARCHAR} 
+			<if test="prdtDt != null and prdtDt != '' ">			, PRDT_DT = #{prdtDt, jdbcType=VARCHAR} </if>				/* 모델단종일자 */
+		WHERE 1=1
+			AND RPRS_PRDT_ID = #{rprsPrdtId}
+			AND PRDT_DT <![CDATA[>=]]> (SELECT PRDT_DT
+										FROM CMN_INTM_MDL
+										WHERE 1=1
+										AND RPRS_PRDT_ID = #{rprsPrdtId}
+										AND RPRS_YN = 'Y'
+										  )	
+	</update>
+	
+	<!-- 색상모델ID 중복체크 -->
+	<select id="isExistPrdtId" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO" resultType="int">
+		SELECT /* CmnIntmMdlMapper.isExistPrdtId */
+			COUNT(*)
+		FROM CMN_INTM_MDL
+		WHERE 1=1
+			AND PRDT_ID = #{prdtId}
+	</select>
+	
+	<!-- 색상모델 등록 -->
+	<insert id="insertIntmColrMdl" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO">
+		INSERT /* CmnIntmMdlMapper.insertIntmColrMdl */
+			INTO CMN_INTM_MDL
+			(
+			  PRDT_ID				/* 모델ID */ 
+			, RPRS_PRDT_ID			/* 대표모델ID */ 
+			, RPRS_YN				/* 대표여부 */ 
+			, PRDT_NM				/* 모델명 */ 
+			, PRDT_CODE				/* 모델코드 */ 
+			, PRDT_TYPE_CD			/* 모델유형코드 */ 
+			, PRDT_IND_CD			/* 모델구분코드 */ 
+			, PRDT_COLR_CD			/* 모델색상코드 */ 
+			, MNFCT_ID				/* 제조사ID */ 
+			, PRDT_LNCH_DT			/* 모델출시일자 */ 
+			, PRDT_DT				/* 모델단종일자 */ 
+			, REG_ID				/* 등록자ID */ 
+			, REG_DTTM				/* 등록일시 */ 
+			, RVISN_ID				/* 수정자ID */ 
+			, RVISN_DTTM			/* 수정일시 */
+			)
+		VALUES
+			(
+			  #{prdtId, jdbcType=VARCHAR}
+			, #{rprsPrdtId, jdbcType=VARCHAR}
+			, #{rprsYn, jdbcType=VARCHAR}
+			, #{prdtNm, jdbcType=VARCHAR}
+			, UPPER(#{prdtCode, jdbcType=VARCHAR})
+			, #{prdtTypeCd, jdbcType=VARCHAR}
+			, #{prdtIndCd, jdbcType=VARCHAR}
+			, #{prdtColrCd, jdbcType=VARCHAR}
+			, #{mnfctId, jdbcType=VARCHAR}
+			, #{prdtLnchDt, jdbcType=VARCHAR}
+			, #{prdtDt, jdbcType=VARCHAR}
+			, #{regId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{rvisnId, jdbcType=VARCHAR}
+			, SYSDATE
+			)
+	</insert> 
+	
+	<!-- 색상모델 수정 -->
+	<update id="updateIntmColrMdl" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO">
+		UPDATE CMN_INTM_MDL /* CmnIntmMdlMapper.updateIntmColrMdl */
+		SET
+			RVISN_DTTM = SYSDATE
+			, RVISN_ID = #{rvisnId, jdbcType=VARCHAR} 
+			<if test="prdtCode != null and prdtCode != '' ">		, PRDT_CODE = UPPER(#{prdtCode, jdbcType=VARCHAR}) </if>	/* 모델코드 */ 
+			<if test="prdtColrCd != null and prdtColrCd != '' ">	, PRDT_COLR_CD = #{prdtColrCd, jdbcType=VARCHAR} </if>		/* 모델색상코드 */
+			<if test="prdtDt != null and prdtDt != '' ">	, PRDT_DT = #{prdtDt, jdbcType=VARCHAR} </if>		/* 단종일자 */ 
+		WHERE 1=1
+			AND PRDT_ID = #{prdtId}
+			AND RPRS_PRDT_ID = #{rprsPrdtId}
+	</update>
+	
+	<!-- 색상모델리스트 -팝업 -->
+	<select id="intmColrMdlPopUpList" parameterType="com.ktis.msp.cmn.intmmdl.vo.CmnIntmMdlVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* CmnIntmMdlMapper.intmColrMdlPopUpList */
+			  A.PRDT_ID													/* 모델ID */
+			, A.RPRS_PRDT_ID											/* 대표모델ID */
+			, A.RPRS_YN													/* 대표여부 */
+			, A.PRDT_CODE												/* 모델코드 */
+			, (SELECT PRDT_CODE 
+			   FROM CMN_INTM_MDL B 
+			   WHERE B.PRDT_ID = A.RPRS_PRDT_ID
+				AND RPRS_YN = 'Y') AS RPRS_PRDT_CODE					/* 대표모델 코드*/
+			, A.PRDT_NM													/* 모델명 */
+			, A.MNFCT_ID												/* 제조사ID */
+			, B.MNFCT_NM												/* 제조사명 */
+			, A.PRDT_TYPE_CD											/* 모델유형코드 */
+			, FN_GET_CODENM('ORG0007', PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+			, A.PRDT_IND_CD												/* 모델구분코드 */
+			, FN_GET_CODENM('CMN0045', PRDT_IND_CD) AS PRDT_IND_NM		/* 모델구분명 */
+			, A.PRDT_LNCH_DT											/* 모델출시일자 */
+			, A.PRDT_DT													/* 모델단종일자 */
+			, A.PRDT_COLR_CD											/* 모델색상코드 */
+			, FN_GET_CODENM('CMN0044', PRDT_COLR_CD) AS PRDT_COLR_NM	/* 모델색상명 */
+			, A.REG_ID													/* 등록자ID */
+			, A.REG_DTTM												/* 등록일시 */
+			, A.RVISN_ID												/* 수정자ID */
+			, A.RVISN_DTTM												/* 수정일시 */
+		FROM CMN_INTM_MDL A
+			, ORG_MNFCT_MST B
+		WHERE 1=1
+			AND A.MNFCT_ID = B.MNFCT_ID
+			AND ((A.RPRS_YN = 'N' AND PRDT_TYPE_CD = '01') 
+				  OR (A.RPRS_YN = 'Y' AND PRDT_TYPE_CD <![CDATA[<>]]> '01')
+				 )
+			<if test="rprsPrdtId != null and rprsPrdtId != ''">		
+				AND A.RPRS_PRDT_ID = #{rprsPrdtId}							/* 대표모델ID */
+			</if>
+			<if test="prdtId != null and prdtId != ''">
+				AND A.PRDT_ID = #{prdtId}
+			</if>
+			<if test="mnfctId != null and mnfctId != ''">
+				AND A.MNFCT_ID = #{mnfctId}									/* 제조사ID */
+			</if>
+			<if test="prdtNm != null and prdtNm != ''">
+				AND UPPER(A.PRDT_NM) like '%'||UPPER(#{prdtNm})||'%'							/* 모델명 */
+			</if>
+			<if test="prdtTypeCd != null and prdtTypeCd != ''">
+				AND A.PRDT_TYPE_CD = #{prdtTypeCd}
+			</if>
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+	
+</mapper>

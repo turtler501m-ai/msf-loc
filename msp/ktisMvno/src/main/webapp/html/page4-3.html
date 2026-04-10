@@ -1,0 +1,125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<title>iframe sample</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<!-- Library -->
+<link rel="stylesheet" type="text/css" href="../lib/dhtmlx/codebase/dhtmlx.css"/>
+<link rel="stylesheet" type="text/css" href="../css/mvno.css"/>
+<script src="../lib/jquery/jquery-1.9.1.js"></script>
+<script src="../lib/dhtmlx/codebase/dhtmlx.js"></script>
+<script src="../js/mvno.js"></script>
+<!-- //Library  -->
+
+</head>
+
+<body>
+
+	<!-- 화면 배치 -->
+	<div id="FORM1"></div>
+
+	<!-- Script -->
+	<script type="text/javascript">
+
+		var DHX = {
+             FORM1 : {
+				 items :  [
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:70, blockOffset:0}
+
+					// 수수료명,수수료정책번호,수수료정책명
+					,{type:"block", list:[
+							{type:"select", label:"수수료명", width:100, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+							,{type:"newcolumn"}
+							,{type:"input", label:"수수료정책번호",labelWidth:90, width:30, offsetLeft:30}
+							,{type:"newcolumn"}
+							,{type:"input", label:"수수료정책명",labelWidth:90, width:100, offsetLeft:30}
+					]}
+
+					,{type:"input", label:"정책설명", width:482}
+
+					,{type:"block", list:[
+						{type:"select", label:"대리점유형", width:100, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"newcolumn"}
+						,{type:"select", label:"대리점등급", labelWidth:100, width:100, offsetLeft:150, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+					]}
+
+					,{type:"block", list:[
+						{type:"calendar", label:"유효기간", width:100}
+						,{type:"newcolumn"}
+						,{type:"calendar", label:"~", labelWidth:10, offsetLeft:5, width:100}
+						,{type:"newcolumn"}
+						,{type:"select", label:"구간수수료 여부", labelWidth:100, width:100, offsetLeft:29, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+					]}
+
+					,{type:"block", list:[
+						,{type: "label", label: "율/금액선택", list:[
+							{type:"settings", position:"label-right", labelWidth:30}
+							,{type: "radio", label: "율", checked: true}
+							,{type:"newcolumn"}
+							,{type: "radio", label: "금액"}
+						]}
+						,{type:"newcolumn", offset:146}
+						,{type:"block", list:[
+							{type:"input", label:"수수료율/금액", labelWidth:100, width:40}
+							,{type:"newcolumn"}
+							,{type: "label", label: "%", offsetLeft:5}
+						]}
+					]}
+
+/* column 방식 배치
+					,{type:"newcolumn"}
+					,{type:"select", label:"대리점유형", width:100, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+
+					,{type:"block", list:[
+						{type:"calendar", label:"유효기간", width:100}
+						,{type:"newcolumn"}
+						,{type:"calendar", label:"~", labelWidth:10, offsetLeft:5, width:100}
+					]}
+
+					,{type: "label", label: "율/금액선택", list:[
+						{type:"settings", position:"label-right", labelWidth:30}
+						,{type: "radio", label: "율", checked: true}
+						,{type:"newcolumn"}
+						,{type: "radio", label: "금액"}
+					]}
+
+					,{type:"newcolumn", offset:40}
+					,{type:"select", label:"대리점등급", labelWidth:100, width:100, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+
+					,{type:"select", label:"구간수수료 여부", labelWidth:100, width:100, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+
+					,{type:"block", list:[
+						{type:"input", label:"수수료율/금액", labelWidth:100, width:40}
+						,{type:"newcolumn"}
+						,{type: "label", label: "%", offsetLeft:5}
+					]}
+*/
+					],
+					buttons : {
+						left : {
+							btn1 : { label : "버튼1" },
+							btn2 : { label : "버튼2" }
+						},
+						right : {
+							btnAddRow : { label : "AddRow" },
+							btnDeleteRow : { label : "DeleteRow" }
+						}
+					}
+			 }
+		};
+
+        var PAGE = {
+			onOpen : function() {
+				mvno.ui.createForm("FORM1");
+				mvno.ui.popupWindowById("FORM1", "테스트", 700, 250);
+			}
+		}
+	</script>
+
+	<script src="../js/mvno_footer.js"></script>
+
+</body>
+</html>

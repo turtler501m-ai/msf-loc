@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SearchEventMapper">
+	
+	<select id="selectEventIndexing" resultType="com.ktmmobile.mcp.search.dto.SearchDto">
+	    SELECT EV.NTCART_SEQ -- 게시물일련번호
+	       , EV.SBST_CTG -- 게시물카테고리(색인)
+	       , EV.NTCART_SUBJECT -- 제목(색인)
+	       , EV.LIST_IMG -- 이미지
+	       , EV.THUMB_IMG_NM -- 썸네일이미지
+	       , EV.THUMB_IMG_DESC -- 섬네일이미지설명(색인)
+	       , EV.MOBILE_LIST_IMG_NM -- 이미지
+	       , EV.IMG_DESC -- 이미지설명(색인)
+	       , NTCART_SBST -- 게시물내용(색인)
+	       , TO_CHAR(EV.EVENT_START_DT,'YYYY.MM.DD HH:MM') AS EVENT_START_DT -- 시작일
+	       , TO_CHAR(EV.EVENT_END_DT,'YYYY.MM.DD HH:MM') AS EVENT_END_DT -- 종료일
+	       , EV.EVENT_START_DT EVENT_START_DATE -- 시작일
+	       , EV.EVENT_END_DT EVENT_END_DATE -- 종료일
+	       , EV.START_HOUR -- 시작시간
+	       , EV.END_HOUR -- 종료시간
+	       , EV.LINK_TARGET -- 링크유형
+	       , EV.LINK_URL_ADR -- 링크URL
+	       , EV.EVENT_URL_ADR -- 이벤트URL
+	       , EV.NTCART_HIT_CNT -- 조회수
+	       , EV.EVENT_ADD1_YN -- 친구초대이벤트여부
+	       , EV.EVENT_ADD1_SBST -- 친구초대이벤트내용
+	       , EV.EVENT_ADD2_YN -- 제휴카드이벤트여부
+	       , EV.EVENT_ADD3_YN -- 편의점/마트이벤트여부
+	       , EV.VERIFICATION_URL -- 검증URL
+	       , PLN_SMALL_TITLE	-- 기획전 한정 소제목(색인)
+	       , PLN_CONTENT	-- 기획전 한정 내용(색인)
+	       , SNS_SBST	-- SNS에 표시될 내용(색인)
+	       , NTCART_SBST2	-- 모바일 이벤트 내용(색인)
+	       , PLN_CONTENT2	-- 모바일 기획전 내용(색인)
+	  FROM mcpeventmng.NMCP_EVENT_BOARD_BAS EV
+	 WHERE 1=1
+	   AND LIST_VIEW_YN = 'Y'
+	   AND EVENT_VIEW_YN = 'Y'
+       AND (TO_CHAR(CURRENT_DATE, 'YYYYMMDD') <![CDATA[>=]]> TO_CHAR(EV.EVENT_START_DT,'YYYYMMDD') 
+        AND TO_CHAR(CURRENT_DATE, 'YYYYMMDD') <![CDATA[<=]]> TO_CHAR(EV.EVENT_END_DT,'YYYYMMDD'))
+	 ORDER BY EV.EVENT_END_DT
+	</select>
+
+
+</mapper>

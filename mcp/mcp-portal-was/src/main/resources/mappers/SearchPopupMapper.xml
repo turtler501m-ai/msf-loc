@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="SearchPopupMapper">
+
+
+    <select id="getRelationWordListAjax" resultType="com.ktmmobile.mcp.search.dto.SearchCrrlDto">
+    /* SearchPopupMapper.getRelationWordListAjax /연관검색어10개,자동완성목록 */
+	    SELECT
+		      CRRL_SEARCH_WORD, USE_YN
+		FROM
+		    NMCP_SEARCH_CRRL_WORD_BAS
+		WHERE USE_YN = 'Y'
+		AND SEARCH_WORD LIKE '%' || #{srchText} || '%'
+		AND SYSDATE BETWEEN TO_DATE(PSTNG_START_DATE, 'yyyymmddhh24miss') AND TO_DATE(PSTNG_END_DATE, 'yyyymmddhh24miss')
+		AND ROWNUM <![CDATA[<=]]> 10
+
+	</select>
+	
+	<select id="getRecommendWordListAjax" resultType="com.ktmmobile.mcp.search.dto.SearchRecomDto">
+	/* SearchPopupMapper.getRecommendWordListAjax / 추천검색어 10개 */
+		SELECT
+		    SEARCH_WORD
+		    , SEARCH_WORD_RANK
+		    , A.RNK AS SEARCH_RNK
+		FROM ( SELECT SEARCH_WORD
+					    , SEARCH_WORD_RANK
+					    , USE_YN
+					    , PSTNG_START_DATE
+					    , PSTNG_END_DATE
+					    , RANK() OVER (ORDER BY SEARCH_WORD_RANK, CRET_DT) RNK 
+                 FROM NMCP_SEARCH_RECOMMEND_WORD_BAS 
+             ) A
+      WHERE A.RNK <![CDATA[<=]]> 10
+		AND USE_YN = 'Y'
+		AND SYSDATE BETWEEN TO_DATE(PSTNG_START_DATE, 'yyyy-mm-dd hh24:mi:ss') AND TO_DATE(PSTNG_END_DATE, 'yyyy-mm-dd hh24:mi:ss')  
+		ORDER BY SEARCH_WORD_RANK
+	</select>
+	
+	<select id="getPopularWordListAjax" resultType="com.ktmmobile.mcp.search.dto.SearchPplrDto">
+	/* SearchPopupMapper.getPopularWordListAjax / 인기검색어 10개 */
+		SELECT
+		      SEARCH_WORD
+		    , SEARCH_WORD_RANK
+		    , SEARCH_REPEAT_CNT
+		    , SEARCH_RISE_NVAL
+		FROM
+		    NMCP_SEARCH_PPLR_WORD_BAS
+		WHERE ROWNUM <![CDATA[<=]]> 10
+		  AND CRET_DATE = TO_CHAR(SYSDATE -1, 'YYYYMMDD')
+		ORDER BY SEARCH_WORD_RANK
+	</select>
+	
+	<insert id="insertSearchTxt" parameterType="com.ktmmobile.mcp.search.dto.SearchParamDto">
+        INSERT INTO NMCP_SEARCH_TXN( 
+          CRET_DATE, 
+          USER_ID,
+          SEARCH_WORD, 
+          SEARCH_RSLT_CASCNT, 
+          CRET_IP,
+          CRET_DT, 
+          CRET_ID, 
+          AMD_IP, 
+          AMD_DT, 
+          AMD_ID 
+        )
+        VALUES(
+           TO_CHAR(SYSDATE, 'YYYYMMDD')   
+         , #{userId}         
+         , #{searchKeyword}         
+         , #{searchTotal}            
+         , #{cretIp}         
+         , SYSDATE           
+         , #{cretId}
+         , #{amdIp}          
+         , SYSDATE
+         , #{amdId}
+        )
+    </insert>
+	
+	
+	
+	
+	
+   
+</mapper>

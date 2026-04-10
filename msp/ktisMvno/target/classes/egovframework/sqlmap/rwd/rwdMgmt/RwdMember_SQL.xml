@@ -1,0 +1,748 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rwd.rwdMgmt.mapper.RwdMemberMapper">
+	
+	<!-- 보상서비스 접수 정보 -->
+	<sql id="getJoinMember">
+		SELECT
+		        regstDt
+		        , subscriberNo
+		        , subLinkName
+		        , contractNum
+		        , searchCntrNo
+		        , openAgntCd
+		        , openAgntNm
+		        , rwdProdCd
+		        , rwdProdNm
+		        , ifTrgtCd
+		        , ifTrgtNm
+		        , chnCd
+		        , chnNm
+		        , modelNm
+		        , modelId
+		        , reqBuyType
+		        , reqBuyTypeNm
+		        , imei
+		        , imeiTwo
+		        , scanId
+		        , vrfyRsltCd
+		        , vrfyRsltNm
+		        , resNo
+		        , vrfyId
+		        , vrfyDttm
+		        , rmk
+		        , buyPric
+		        , custNm
+				, subStatusNm
+		        , openDt
+		        , rwdSeq
+		FROM (
+		        SELECT
+		                TO_CHAR(A.REGST_DTTM, 'YYYY-MM-DD')				AS regstDt
+		                , B.SUBSCRIBER_NO								AS subscriberNo
+		                , B.SUB_LINK_NAME								AS subLinkName
+		                , B.CONTRACT_NUM								AS contractNum
+		                , B.CONTRACT_NUM								AS searchCntrNo
+		                , B.OPEN_AGNT_CD								AS openAgntCd
+		                , FN_GET_ORGNM(B.OPEN_AGNT_CD)					AS openAgntNm
+		                , A.RWD_PROD_CD								    AS rwdProdCd
+		                , FN_GET_RATENM(A.RWD_PROD_CD)					AS rwdProdNm
+		                , A.IF_TRGT_CD									AS ifTrgtCd
+		                , FN_GET_CODENM('CMN0260', A.IF_TRGT_CD)		AS ifTrgtNm
+		                , A.CHN_CD										AS chnCd
+		                , FN_GET_CODENM('CMN0249', A.CHN_CD)			AS chnNm
+		                , B.MODEL_NAME									AS modelNm
+		                , B.MODEL_ID									AS modelId
+		                , C.REQ_BUY_TYPE								AS reqBuyType
+		                , FN_GET_CODENM('RCP9004', C.REQ_BUY_TYPE)		AS reqBuyTypeNm
+		                , A.IMEI                                        AS imei
+		                , A.IMEI_TWO                                    AS imeiTwo
+		                , B.SCAN_ID										AS scanId
+		                , A.VRFY_RSLT_CD								AS vrfyRsltCd
+		                , FN_GET_CODENM('CMN0261', A.VRFY_RSLT_CD)		AS vrfyRsltNm
+		                , C.RES_NO										AS resNo
+		                , A.VRFY_ID										AS vrfyId
+		                , A.VRFY_DTTM									AS vrfyDttm
+		                , A.RMK										    AS rmk
+		                , A.BUY_PRIC                                    AS buyPric
+		                , B.SUB_LINK_NAME								AS custNm
+		                , FN_GET_CODENM('MSP0003', B.SUB_STATUS)		AS subStatusNm
+		                , B.LST_COM_ACTV_DATE							AS openDt
+		                , A.RWD_SEQ										AS rwdSeq
+		        FROM      MSP_RWD_ORDER A
+		                , MSP_JUO_SUB_INFO B
+		                , MSP_REQUEST_DTL C
+		                , MSP_RWD_MST D
+		                , MSP_RWD_MEMBER E
+		        WHERE	A.CONTRACT_NUM = B.CONTRACT_NUM
+		        AND		A.CONTRACT_NUM = C.CONTRACT_NUM
+		        AND		A.RWD_PROD_CD = D.RWD_PROD_CD
+		        AND     A.RWD_SEQ = E.RWD_SEQ(+)
+		        <if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+		            AND TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS') BETWEEN #{searchFromDt} || '000000' AND #{searchToDt} || '235959'
+		        </if>
+		        <if test="searchRsltCd != null and searchRsltCd != ''">
+		            AND A.VRFY_RSLT_CD = #{searchRsltCd}
+		        </if>
+		        <if test="searchRwdProdCd != null and searchRwdProdCd != ''">
+		            AND A.RWD_PROD_CD = #{searchRwdProdCd}
+		        </if>
+		        <if test="searchIfTrgtCd != null and searchIfTrgtCd != ''">
+		            AND A.IF_TRGT_CD = #{searchIfTrgtCd}
+		        </if>
+		        <if test="searchChnCd != null and searchChnCd != ''">
+		            AND A.CHN_CD = #{searchChnCd}
+		        </if>
+		        <choose>
+		            <when test='searchCd == "10"'>
+		                AND A.CONTRACT_NUM = #{searchVal}
+		            </when>
+		            <when test='searchCd == "20"'>
+		                AND B.SUB_LINK_NAME LIKE #{searchVal} || '%'
+		            </when>
+		            <when test='searchCd == "30"'>
+		                AND B.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+		            </when>
+		        </choose>
+		        <if test="agntId != null and agntId != ''">
+		            AND B.OPEN_AGNT_CD = #{agntId}
+		        </if>
+		        
+		        UNION ALL
+		        
+		        SELECT
+		                TO_CHAR(A.REGST_DTTM, 'YYYY-MM-DD')             AS regstDt
+		                , NVL(TRIM(C.CSTMR_MOBILE_FN) || TRIM(C.CSTMR_MOBILE_MN) || TRIM(C.CSTMR_MOBILE_RN),
+		                            TRIM(C.CSTMR_TEL_FN) || TRIM(C.CSTMR_TEL_MN) || TRIM(C.CSTMR_TEL_RN))   AS subscriberNo
+		                , C.CSTMR_NAME                                  AS subLinkName
+		                , B.CONTRACT_NUM                                AS contractNum
+		                , B.CONTRACT_NUM                                AS searchCntrNo
+		                , B.CNTPNT_SHOP_ID                              AS openAgntCd
+		                , FN_GET_ORGNM(B.CNTPNT_SHOP_ID)                AS openAgntNm
+		                , A.RWD_PROD_CD								    AS rwdProdCd
+		                , FN_GET_RATENM(A.RWD_PROD_CD)					AS rwdProdNm
+		                , A.IF_TRGT_CD									AS ifTrgtCd
+		                , FN_GET_CODENM('CMN0260', A.IF_TRGT_CD)		AS ifTrgtNm
+		                , A.CHN_CD										AS chnCd
+		                , FN_GET_CODENM('CMN0249', A.CHN_CD)			AS chnNm
+		                , E.PRDT_CODE									AS modelNm
+		                , D.MODEL_ID                                    AS modelId
+		                , B.REQ_BUY_TYPE                                AS reqBuyType
+		                , FN_GET_CODENM('RCP9004', B.REQ_BUY_TYPE)		AS reqBuyTypeNm
+		                , A.IMEI                                        AS imei
+		                , A.IMEI_TWO                                    AS imeiTwo
+		                , B.SCAN_ID										AS scanId
+		                , A.VRFY_RSLT_CD								AS vrfyRsltCd
+		                , FN_GET_CODENM('CMN0261', A.VRFY_RSLT_CD)		AS vrfyRsltNm
+		                , A.RES_NO										AS resNo
+		                , A.VRFY_ID										AS vrfyId
+		                , A.VRFY_DTTM									AS vrfyDttm
+		                , A.RMK										    AS rmk
+		                , A.BUY_PRIC                                    AS buyPric
+		                , C.CSTMR_NAME  								AS custNm
+		                , ''											AS subStatusNm
+		                , ''											AS openDt
+		                , A.RWD_SEQ										AS rwdSeq
+		        FROM    MSP_RWD_ORDER A
+		                , MCP_REQUEST@DL_MCP B
+		                , MCP_REQUEST_CSTMR@DL_MCP C
+		                , MCP_REQUEST_SALEINFO@DL_MCP D
+		                , CMN_INTM_MDL E
+		        WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+		        AND     A.REQUEST_KEY = C.REQUEST_KEY
+		        AND     A.REQUEST_KEY = D.REQUEST_KEY
+		        AND     D.MODEL_ID = E.PRDT_ID(+)
+		        AND     A.CONTRACT_NUM IS NULL
+		        <if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+		            AND TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS') BETWEEN #{searchFromDt} || '000000' AND #{searchToDt} || '235959'
+		        </if>
+		        <if test="searchRsltCd != null and searchRsltCd != ''">
+		            AND A.VRFY_RSLT_CD = #{searchRsltCd}
+		        </if>
+		        <if test="searchRwdProdCd != null and searchRwdProdCd != ''">
+		            AND A.RWD_PROD_CD = #{searchRwdProdCd}
+		        </if>
+		        <if test="searchIfTrgtCd != null and searchIfTrgtCd != ''">
+		            AND A.IF_TRGT_CD = #{searchIfTrgtCd}
+		        </if>
+		        <if test="searchChnCd != null and searchChnCd != ''">
+		            AND A.CHN_CD = #{searchChnCd}
+		        </if>
+		        <choose>
+		            <when test='searchCd == "10"'>
+		                AND A.CONTRACT_NUM = #{searchVal}
+		            </when>
+		            <when test='searchCd == "20"'>
+		                AND C.CSTMR_NAME LIKE #{searchVal} || '%'
+		            </when>
+		            <when test='searchCd == "30"'>
+		                AND (C.CSTMR_MOBILE_FN || C.CSTMR_MOBILE_MN || C.CSTMR_MOBILE_RN LIKE '%'|| TRANSLATE(#{searchVal},'1234567890-','1234567890')||'%' 
+							OR C.CSTMR_TEL_FN || C.CSTMR_TEL_MN || C.CSTMR_TEL_RN LIKE '%'|| TRANSLATE(#{searchVal},'1234567890-','1234567890')||'%')
+		            </when>
+		        </choose>
+		        <if test="agntId != null and agntId != ''">
+		            AND B.CNTPNT_SHOP_ID = #{agntId}
+		        </if>
+		)
+		ORDER BY rwdSeq DESC
+	</sql>
+	
+	<!-- 보상서비스 가입 정보 -->
+	<sql id="getMember">
+		SELECT
+				  B.SUBSCRIBER_NO					            AS subscriberNo
+				, B.SUB_LINK_NAME						        AS subLinkName
+				, B.CONTRACT_NUM								AS contractNum
+				, B.CONTRACT_NUM								AS searchCntrNo
+				, B.OPEN_AGNT_CD								AS openAgntCd
+				, FN_GET_ORGNM(B.OPEN_AGNT_CD)					AS openAgntNm
+				, A.RWD_PROD_CD								    AS rwdProdCd
+				, FN_GET_RATENM(A.RWD_PROD_CD)					AS rwdProdNm
+                , B.LST_COM_ACTV_DATE                           AS lstComActvDate
+                , A.STRT_DTTM							        AS strtDttm
+                , A.END_DTTM							        AS endDttm
+				, A.CHN_CD										AS chnCd
+				, FN_GET_CODENM('CMN0249', A.CHN_CD)			AS chnNm
+				, B.MODEL_NAME									AS modelNm
+				, B.MODEL_ID									AS modelId
+				, C.REQ_BUY_TYPE								AS reqBuyType
+				, FN_GET_CODENM('RCP9004', C.REQ_BUY_TYPE)		AS reqBuyTypeNm
+                , A.IMEI                                        AS imei
+                , A.IMEI_TWO                                    AS imeiTwo
+				, B.SCAN_ID										AS scanId
+				, C.RES_NO										AS resNo
+                , A.BUY_PRIC                                    AS buyPric
+				, B.SUB_LINK_NAME								AS custNm
+				, FN_GET_CODENM('MSP0003', B.SUB_STATUS)		AS subStatusNm
+				, B.LST_COM_ACTV_DATE							AS openDt
+				, A.RWD_SEQ										AS rwdSeq
+                , CAN_RSLT_CD                                   AS canRsltCd
+                , FN_GET_CODENM('CMN0262', A.CAN_RSLT_CD)       AS canRsltNm
+				, FN_GET_CODENM('CMN0265', A.RWD_STAT_CD)		AS rwdStatCd
+                , B.INTM_SRL_NO                                 AS intmSrlNo
+                , FN_GET_CODENM('CMN0259', (SELECT RWD_PRD FROM MSP_RWD_MST WHERE RWD_PROD_CD = A.RWD_PROD_CD)) AS rwdPrd
+		  FROM MSP_RWD_MEMBER A, MSP_JUO_SUB_INFO B, MSP_REQUEST_DTL C
+         WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+           AND A.CONTRACT_NUM = C.CONTRACT_NUM
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+			AND A.STRT_DTTM BETWEEN #{searchFromDt} || '000000' AND #{searchToDt} || '235959'
+		</if>
+		<if test="searchRsltCd != null and searchRsltCd != ''">
+			AND A.RWD_STAT_CD = #{searchRsltCd}
+		</if>
+		<if test="searchRwdProdCd != null and searchRwdProdCd != ''">
+			AND A.RWD_PROD_CD = #{searchRwdProdCd}
+		</if>
+		<if test="searchChnCd != null and searchChnCd != ''">
+			AND A.CHN_CD = #{searchChnCd}
+		</if>
+		<choose>
+			<when test='searchCd == "10"'>
+				AND B.CONTRACT_NUM = #{searchVal}
+			</when>
+			<when test='searchCd == "20"'>
+				AND B.SUB_LINK_NAME LIKE #{searchVal} || '%'
+			</when>
+			<when test='searchCd == "30"'>
+				AND B.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+			</when>
+		</choose>
+		<if test="agntId != null and agntId != ''">
+			AND B.OPEN_AGNT_CD =  #{agntId}
+		</if>
+		ORDER BY A.STRT_DTTM, B.SUB_LINK_NAME
+	</sql>
+	
+	<!-- 보상서비스 도래 정보 -->
+	<sql id="getCmpn">
+		SELECT
+				  B.SUBSCRIBER_NO					            AS subscriberNo
+				, B.SUB_LINK_NAME						        AS subLinkName
+				, B.CONTRACT_NUM								AS contractNum
+				, B.CONTRACT_NUM								AS searchCntrNo
+				, B.OPEN_AGNT_CD								AS openAgntCd
+				, FN_GET_ORGNM(B.OPEN_AGNT_CD)					AS openAgntNm
+				, A.RWD_PROD_CD								    AS rwdProdCd
+				, FN_GET_RATENM(A.RWD_PROD_CD)					AS rwdProdNm
+                , B.LST_COM_ACTV_DATE                           AS lstComActvDate
+                , A.STRT_DTTM							        AS strtDttm
+                , A.END_DTTM							        AS endDttm
+				, A.CHN_CD										AS chnCd
+				, FN_GET_CODENM('CMN0249', A.CHN_CD)			AS chnNm
+				, B.MODEL_NAME									AS modelNm
+				, B.MODEL_ID									AS modelId
+				, C.REQ_BUY_TYPE								AS reqBuyType
+				, FN_GET_CODENM('RCP9004', C.REQ_BUY_TYPE)		AS reqBuyTypeNm
+                , A.IMEI                                        AS imei
+                , A.IMEI_TWO                                    AS imeiTwo
+				, B.SCAN_ID										AS scanId
+				, C.RES_NO										AS resNo
+                , A.BUY_PRIC                                    AS buyPric
+				, B.SUB_LINK_NAME								AS custNm
+				, FN_GET_CODENM('MSP0003', B.SUB_STATUS)		AS subStatusNm
+				, B.LST_COM_ACTV_DATE							AS openDt
+				, A.RWD_SEQ										AS rwdSeq
+                , CAN_RSLT_CD                                   AS canRsltCd
+                , FN_GET_CODENM('CMN0262', A.CAN_RSLT_CD)       AS canRsltNm
+				, FN_GET_CODENM('CMN0265', A.RWD_STAT_CD)		AS rwdStatCd
+                , B.INTM_SRL_NO                                 AS intmSrlNo
+                , FN_GET_CODENM('CMN0259', (SELECT RWD_PRD FROM MSP_RWD_MST WHERE RWD_PROD_CD = A.RWD_PROD_CD)) AS rwdPrd
+                , TO_DATE(SUBSTR(END_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SYSDATE) || '일' AS leftPrd
+		 FROM MSP_RWD_MEMBER A, MSP_JUO_SUB_INFO B, MSP_REQUEST_DTL C
+         WHERE 1 = 1
+         	AND A.CONTRACT_NUM = B.CONTRACT_NUM
+           	AND A.CONTRACT_NUM = C.CONTRACT_NUM
+           	AND A.RWD_STAT_CD = '1'
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+			AND A.END_DTTM BETWEEN #{searchFromDt} || '000000' AND #{searchToDt} || '235959'
+		</if>
+		<if test="searchRwdProdCd != null and searchRwdProdCd != ''">
+			AND A.RWD_PROD_CD = #{searchRwdProdCd}
+		</if>
+		<if test="searchTermCd != null and searchTermCd != ''">
+			AND TO_DATE(SUBSTR(END_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SYSDATE) BETWEEN 0 AND TO_NUMBER(#{searchTermCd})
+		</if>
+		<choose>
+			<when test='searchCd == "10"'>
+				AND B.CONTRACT_NUM = #{searchVal}
+			</when>
+			<when test='searchCd == "20"'>
+				AND B.SUB_LINK_NAME LIKE #{searchVal} || '%'
+			</when>
+			<when test='searchCd == "30"'>
+				AND B.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+			</when>
+		</choose>
+		ORDER BY A.STRT_DTTM, B.SUB_LINK_NAME
+	</sql>
+	
+	<!-- 보상서비스 신청 정보 -->
+	<select id="getMemberJoinList" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.getMemberJoinList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getJoinMember" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 보상서비스 신청 정보 엑셀 -->
+	<select id="getRwdMemberJoinListByExcel" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.getRwdMemberListByExcel */
+		<include refid="getJoinMember" />
+	</select>
+	
+	<!-- 보상서비스 가입 정보 -->
+	<select id="getMemberList" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.getMemberList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getMember" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 보상서비스 가입 정보 엑셀 -->
+	<select id="getRwdMemberListByExcel" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.getRwdMemberListByExcel */
+		<include refid="getMember" />
+	</select>
+	
+	<!-- 보상서비스 보상도래 정보 -->
+	<select id="getCmpnMemberList" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.getCmpnMemberList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getCmpn" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 보상서비스 보상도래 엑셀 -->
+	<select id="getCmpnMemberListByExcel" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.getCmpnMemberListByExcel */
+		<include refid="getCmpn" />
+	</select>
+	
+	<!-- 보상서비스 계약 확인 -->
+	<select id="getRwdCntrInfo" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.getRwdCntrInfo */
+		SELECT
+			  A.SUBSCRIBER_NO							AS subscriberNo
+			, A.CONTRACT_NUM							AS contractNum
+			, A.CONTRACT_NUM							AS searchCntrNo
+			, A.SUB_LINK_NAME							AS custNm
+			, A.SUB_STATUS								AS subStatus
+			, FN_GET_CODENM('MSP0003', A.SUB_STATUS)	AS subStatusNm
+			, A.OPEN_AGNT_CD							AS openAgntCd
+			, FN_GET_ORGNM(A.OPEN_AGNT_CD)				AS openAgntNm
+			, A.LST_COM_ACTV_DATE						AS openDt
+			, MRD.REQ_BUY_TYPE							AS reqBuyType
+			, A.MODEL_ID                                AS modelId
+			, A.MODEL_NAME                              AS modelNm
+			, A.IMEI                                    AS imei
+			, FN_GET_CODENM('RCP9004', MRD.REQ_BUY_TYPE)	AS reqBuyTypeNm
+			, MRD.RES_NO								AS resNo
+			, MRD.REQUEST_KEY							AS requestKey
+		FROM
+			  MSP_JUO_SUB_INFO A
+			, MSP_REQUEST_DTL MRD
+		WHERE	A.CONTRACT_NUM = MRD.CONTRACT_NUM
+		AND		A.PPPO = 'PO'
+		AND		A.SUB_STATUS IN ('A', 'S')
+		<if test="searchGb != null and searchGb != ''">
+			<choose>
+				<when test="searchGb == '00'">
+					AND A.SUBSCRIBER_NO = #{searchGbVal}
+				</when>
+				<when test="searchGb != '00'">
+					AND A.CONTRACT_NUM = #{searchGbVal}
+				</when>
+			</choose>
+		</if>
+		AND		rownum = 1
+	</select>
+	
+	<!-- 보상서비스 신청 내역 확인 : 계약번호 값이 존재하는지 확인한다. -->
+	<select id="getRwdOrderCntrCnt" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="int">
+		/* RwdMemberMapper.getRwdOrderCntrCnt */
+		SELECT COUNT(*)
+		  FROM MSP_RWD_ORDER
+		 WHERE (IF_TRGT_CD = 'Y' OR (IF_TRGT_CD = 'S' AND VRFY_RSLT_CD = 'Z'))
+		   AND CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- 보상서비스 신청 내역 확인 : IMEI 값이 존재하는지 확인한다. -->
+	<select id="getRwdOrderImeiCnt" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="int">
+		/* RwdMemberMapper.getRwdOrderImeiCnt */
+		SELECT COUNT(*)
+		  FROM MSP_RWD_ORDER
+		 WHERE (IF_TRGT_CD = 'Y' OR (IF_TRGT_CD = 'S' AND VRFY_RSLT_CD = 'Z'))
+		   AND (IMEI IN (#{imei}, #{imeiTwo}) OR IMEI_TWO IN (#{imei}, #{imeiTwo}))
+		<if test="updType == 'UPD'">
+		  	AND NOT RWD_SEQ = #{rwdSeq}
+		</if>
+	</select>
+	
+	<!-- 보상서비스 가입 내역 확인 : 계약번호 값이 존재하는지 확인한다. -->
+	<select id="getRwdMemCntrCnt" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="int">
+		/* RwdMemberMapper.getRwdMemCntrCnt */
+		SELECT COUNT(*)
+		FROM MSP_RWD_MEMBER
+		WHERE 1 = 1
+		  AND CONTRACT_NUM = #{contractNum}
+		  AND RWD_STAT_CD IN ('0', '1')
+	</select>
+	
+	<!-- 보상서비스 가입 내역 확인 : IMEI 값이 존재하는지 확인한다. -->
+	<select id="getRwdMemImeiCnt" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="int">
+		/* RwdMemberMapper.getRwdMemImeiCnt */
+		SELECT COUNT(*)
+		FROM MSP_RWD_MEMBER
+		WHERE 1 = 1
+		  AND (IMEI IN (#{imei}, #{imeiTwo}) OR IMEI_TWO IN (#{imei}, #{imeiTwo}))
+		  AND RWD_STAT_CD IN ('0', '1')
+	</select>
+	
+	<!-- 보상서비스 신청 정보 등록 -->
+	<insert id="regMspRwdOrder" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.regMspRwdOrder */
+		INSERT INTO MSP_RWD_ORDER
+		(
+			  RWD_SEQ
+			, RWD_PROD_CD
+			, RES_NO
+			, REQUEST_KEY
+			, CONTRACT_NUM
+			, IF_TRGT_CD
+			, CHN_CD
+			, IMEI
+			, IMEI_TWO
+			, BUY_PRIC
+			, RMK
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		)
+		VALUES
+		(
+			  TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(RWD_SEQ.NEXTVAL, '0000'))
+			, #{sbscRwdProdNm}
+			, #{resNo}
+			, #{requestKey}
+			, #{contractNum}
+			, 'Y'
+			<if test="sessionUserOrgnTypeCd == '10'">
+				, '3'
+			</if>
+			<if test="sessionUserOrgnTypeCd == '20'">
+				, '1'
+			</if>
+			, #{imei}
+			, #{imeiTwo}
+			, #{buyPric}
+			, #{rmk}
+		    , #{sessionUserId}
+			, SYSDATE
+		    , #{sessionUserId}
+			, SYSDATE
+		)
+	</insert>
+
+	<!-- 보상서비스 신청 정보 업데이트 가능 여부 확인 -->
+	<select id="getOrderIfTrgtCd" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="String">
+		/* RwdMemberMapper.getOrderIfTrgtCd */
+		SELECT	IF_TRGT_CD
+		FROM    MSP_RWD_ORDER
+		WHERE   RWD_SEQ = #{rwdSeq}
+	</select>
+	
+	<!-- 보상서비스 신청 정보 업데이트 -->
+	<update id="updateRwdOrder" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.updateRwdOrder */
+		UPDATE MSP_RWD_ORDER
+		   SET IF_TRGT_CD = #{ifTrgtCd}
+		   	   , RVISN_ID = #{sessionUserId}
+			   , RVISN_DTTM = SYSDATE
+		   <if test="updType != 'CAN'">
+		   	   , BUY_PRIC = #{buyPric}
+		       , IMEI = #{imei}
+		       , IMEI_TWO = #{imeiTwo}
+	       </if>
+		 WHERE RWD_SEQ = #{rwdSeq}
+	</update>
+	
+	<!-- 보상서비스 구매 영수증 파일 정보 가져오기 -->
+	<select id="getFile1" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* RwdMemberMapper.getFile1 */
+	             FILE_ID     /* 파일명 */
+	           , FILE_EXT    /* 파일 확장자 */
+	           , FILE_DIR    /* 파일 경로 */
+	           , RWD_SEQ
+		FROM MSP_RWD_ORDER
+	   WHERE RWD_SEQ = #{rwdSeq, jdbcType=VARCHAR}
+	     AND FILE_DIR IS NOT NULL
+	</select>
+	
+	<!-- 보상서비스 구매 영수증 파일명 가져오기 -->
+	<select id="getFileNm" parameterType="String" resultType="String">
+		SELECT /* RwdMemberMapper.getFileNm */
+	             FILE_DIR AS FILE_NM /* 파일명 */
+		FROM MSP_RWD_ORDER
+	   WHERE RWD_SEQ = #{rwdSeq, jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 보상서비스 구매 영수증 파일 정보 지우기 -->
+	<update id="deleteFile" parameterType="String">
+		/* RwdMemberMapper.deleteFile */
+		UPDATE MSP_RWD_ORDER
+		   SET FILE_ID = ''
+		     , FILE_DIR = ''
+		     , FILE_EXT = ''
+		 WHERE RWD_SEQ = #{rwdSeq, jdbcType=VARCHAR}	 
+	</update>	
+
+	<!-- 보상서비스 구매 영수증 파일 정보 수정 -->
+	<update id="insertImageFile" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMemberVO">
+		/* RwdMemberMapper.insertFile */
+		UPDATE MSP_RWD_ORDER
+		   SET FILE_EXT = #{ext, jdbcType=VARCHAR}	
+		     , FILE_DIR = #{realFilePath, jdbcType=VARCHAR}
+		     , FILE_ID  = #{realFileNm, jdbcType=VARCHAR}
+		 WHERE RWD_SEQ = #{rwdSeq, jdbcType=VARCHAR}	 
+	</update>	
+	
+	<!-- 보상서비스 구매 영수증 파일명 -->
+	<select id="getFileName" resultType="String">
+		SELECT /* RwdMemberMapper.getFileName */
+	             TO_CHAR(SYSTIMESTAMP, 'YYYYMMDDHH24MISSFF4')
+		FROM DUAL
+	</select>
+	
+	<!--파일이름 시퀀스 찾아오기 -->
+    <select id="getFileNmSeq" resultType="String">
+		SELECT 	/* RwdMemberMapper.getFileNmSeq */
+				TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_MSP_RWD_01.NEXTVAL, '000000')) AS FILE_NM_SEQ
+		FROM 	DUAL
+	</select>
+	
+	<!-- 보상서비스 코드로 보상서비스명 찾아오기 -->
+	<select id="getItemCdNm" parameterType="map" resultType="String">
+		SELECT CD_DSC
+		FROM   CMN_GRP_CD_MST
+		WHERE  GRP_ID = 'CMN0258'
+		AND    CD_VAL = #{searchRwdProdCd}
+	</select>
+
+	<!-- 보상서비스 청구수납 정보 -->
+	<sql id="getRwdBillPay">
+		SELECT
+		        TO_CHAR(TO_DATE(BILL.BILL_YM, 'YYYYMM'), 'YYYY-MM') 			AS BILL_YM
+		        , SUB.SUBSCRIBER_NO
+		        , SUB.SUB_LINK_NAME                             				AS CUST_NM
+		        , BILL.CONTRACT_NUM
+		        , FN_GET_CODENM('CMN0249', MEM.CHN_CD)							AS CHN_NM
+		        , FN_GET_CODENM('CMN0258', MEM.RWD_PROD_CD)						AS RWD_PROD_NM
+		        , FN_GET_CODENM('CLS0029', BILL.PYMN_CD)						AS PYMN_CD
+		        , TO_CHAR(TO_DATE(BILL.BLPYM_DATE, 'YYYYMMDD'), 'YYYY-MM-DD')	AS BLPYM_DATE
+		        , BILL.PYMN_AMNT
+		        , BILL.PYMN_MTHD_NM
+		FROM    MSP_RWD_BILL_OUT BILL,
+				MSP_RWD_MEMBER MEM,
+		        MSP_JUO_SUB_INFO SUB
+		WHERE   BILL.CONTRACT_NUM = SUB.CONTRACT_NUM
+		AND		BILL.CONTRACT_NUM = MEM.CONTRACT_NUM
+		<if test="searchBillYm != null and searchBillYm != ''">
+			AND BILL.BILL_YM = #{searchBillYm}
+		</if>
+		<if test="searchRwdProdCd != null and searchRwdProdCd != ''">
+			AND MEM.RWD_PROD_CD = #{searchRwdProdCd}
+		</if>
+		<if test="searchChnCd != null and searchChnCd != ''">
+			AND MEM.CHN_CD = #{searchChnCd}
+		</if>
+		<choose>
+			<when test='searchCd == "10"'>
+				AND SUB.CONTRACT_NUM = #{searchVal}
+			</when>
+			<when test='searchCd == "20"'>
+				AND SUB.SUB_LINK_NAME LIKE #{searchVal} || '%'
+			</when>
+			<when test='searchCd == "30"'>
+				AND SUB.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+			</when>
+		</choose>
+		ORDER BY BILL.BILL_YM DESC, BILL.RWD_SEQ, BILL.RWD_BILL_OUT_SEQ
+	</sql>
+	
+	<!-- 보상서비스 청구수납 목록 -->
+	<select id="getRwdBillPayList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RwdMemberMapper.getRwdBillPayList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getRwdBillPay" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 보상서비스 청구수납 목록 엑셀 다운-->
+	<select id="getRwdBillPayListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RwdMemberMapper.getRwdBillPayListByExcel */		
+		<include refid="getRwdBillPay" />
+	</select>
+	
+	<!-- 보상서비스 권리실행 접수현황 -->
+	<sql id="getRwdMemCmpn">
+		SELECT
+		        TO_CHAR(TO_DATE(CMPN.CMPN_DT, 'YYYYMMDD'), 'YYYY-MM-DD')    AS CMPN_DT
+		        , SUB.SUBSCRIBER_NO
+		        , SUB.SUB_LINK_NAME											AS CUST_NM
+		        , MEM.CONTRACT_NUM
+		        , FN_GET_CODENM('CMN0258', MEM.RWD_PROD_CD)                 AS RWD_PROD_NM
+		        , FN_GET_CODENM('CMN0264', CMPN.CMPN_STAT_CD)               AS CMPN_STAT_CD
+		        , CMPN.BUY_PRIC
+		        , CMPN.RWD_RT
+		        , CMPN.FTR_PRIC
+		        , CMPN.OST_PRIC
+		        , CMPN.ASR_PRIC
+		        , CMPN.OST_RESN
+		        , CMPN.CNFM_LV
+		        , TO_CHAR(TO_DATE(CMPN.PAY_PLAN_DTTM, 'YYYYMMDD'), 'YYYY-MM-DD') AS PAY_PLAN_DTTM
+		        , TO_CHAR(CMPN.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') 		AS REGST_DTTM
+		        , TO_CHAR(CMPN.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') 		AS RVISN_DTTM
+		FROM    MSP_RWD_CMPN CMPN,
+		        MSP_RWD_MEMBER MEM,
+		        MSP_JUO_SUB_INFO SUB
+		WHERE   CMPN.RWD_SEQ = MEM.RWD_SEQ
+		AND     MEM.CONTRACT_NUM = SUB.CONTRACT_NUM
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+		    AND CMPN.CMPN_DT BETWEEN #{searchFromDt} AND #{searchToDt}
+		</if>
+		<if test="cmpnStatCd != null and cmpnStatCd != ''">
+		    AND CMPN.CMPN_STAT_CD = #{cmpnStatCd}
+		</if>
+		<if test="searchRwdProdCd != null and searchRwdProdCd != ''">
+		    AND MEM.RWD_PROD_CD = #{searchRwdProdCd}
+		</if>
+		<choose>
+		    <when test='searchCd == "10"'>
+		        AND SUB.CONTRACT_NUM = #{searchVal}
+		    </when>
+		    <when test='searchCd == "20"'>
+		        AND SUB.SUB_LINK_NAME LIKE #{searchVal} || '%'
+		    </when>
+		    <when test='searchCd == "30"'>
+		        AND SUB.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+		    </when>
+		</choose>
+		ORDER BY CMPN.CMPN_DT DESC
+	</sql>
+	
+	<!-- 보상서비스 권리실행 접수현황 -->
+	<select id="getRwdMemCmpnList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RwdMemberMapper.getRwdBillPayList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getRwdMemCmpn" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 보상서비스 권리실행 접수현황 엑셀 다운-->
+	<select id="getRwdMemCmpnListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RwdMemberMapper.getRwdBillPayListByExcel */		
+		<include refid="getRwdMemCmpn" />
+	</select>
+	
+	<!-- 보상서비스 보상지급현황 -->
+	<sql id="getRwdMemPay">
+		SELECT
+		        TO_CHAR(TO_DATE(CMPN.PAY_DTTM, 'YYYYMMDD'), 'YYYY-MM-DD') AS PAY_DTTM
+		        , SUB.SUBSCRIBER_NO
+		        , SUB.SUB_LINK_NAME                         AS CUST_NM
+		        , SUB.CONTRACT_NUM
+		        , FN_GET_CODENM('CMN0258', MEM.RWD_PROD_CD) AS RWD_PROD_NM
+		        , CMPN.ASR_PRIC
+		        , CMPN.REAL_CMPN_AMT
+		FROM    MSP_RWD_CMPN CMPN,
+		        MSP_RWD_MEMBER MEM,
+		        MSP_JUO_SUB_INFO SUB
+		WHERE   CMPN.RWD_SEQ = MEM.RWD_SEQ
+		AND     MEM.CONTRACT_NUM = SUB.CONTRACT_NUM
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+		    AND CMPN.PAY_DTTM BETWEEN #{searchFromDt} || '000000' AND #{searchToDt} || '235959'
+		</if>
+		<if test="searchRwdProdCd != null and searchRwdProdCd != ''">
+		    AND MEM.RWD_PROD_CD = #{searchRwdProdCd}
+		</if>
+		<choose>
+		    <when test='searchCd == "10"'>
+		        AND SUB.CONTRACT_NUM = #{searchVal}
+		    </when>
+		    <when test='searchCd == "20"'>
+		        AND SUB.SUB_LINK_NAME LIKE #{searchVal} || '%'
+		    </when>
+		    <when test='searchCd == "30"'>
+		        AND SUB.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+		    </when>
+		</choose>
+		ORDER BY CMPN.PAY_DTTM DESC
+	</sql>
+	
+	<!-- 보상서비스 보상지급현황 -->
+	<select id="getRwdMemPayList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RwdMemberMapper.getRwdMemPayList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getRwdMemPay" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 보상서비스 보상지급현황 엑셀 다운-->
+	<select id="getRwdMemPayListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RwdMemberMapper.getRwdMemPayListByExcel */		
+		<include refid="getRwdMemPay" />
+	</select>
+</mapper>

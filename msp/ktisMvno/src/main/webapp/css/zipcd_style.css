@@ -1,0 +1,55 @@
+@charset "utf-8"; 
+
+/* 초기셋팅 */
+body {margin:0; padding:0; font-family: 돋움, "나눔고딕", AppleGothic, Droid Sans, Droid Sans Fallback, sans-serif, Arial, Tahoma, 돋움; font-size:12px; line-height:1.4; color:#737373; -webkit-text-size-adjust:none}
+* {margin:0; padding:0}
+select, textarea {border:1px solid #B7B6B6; background:#fff; vertical-align:middle; font-size:1em}
+strong, b, legend {font-weight:bold}
+img, fieldset, button {border:0}
+select, input, li img, span#location img,td *,fieldset * {vertical-align:middle}
+ul, li, ol {list-style-type : none}
+hr {display:none}
+a {color:#000; text-decoration:none}
+a:hover {text-decoration:none}
+em {font-style:normal; color:#ce3e3e}
+
+#wrapper{width:100%;text-align:;left;}
+#header{background:#75afc7 repeat-y;height:65px}
+#header h1{text-align:center;}
+#container{margin:0 auto;width:440px;}
+#content{margin:0 16px}
+.tab{display:inline-block; /*padding-left: 58px;*/}
+.tab li{float:left;margin-top:11px;}
+.p{clear:both;margin:8px 0 0 0px;color:#000;text-align:left;}
+.form{margin:5px 0 0 0;text-align: center;}
+.form legend{display:none}
+.form label strong{width:60px;display:inline-block}
+.form .input{height:27px;margin:0px;text-align: left;}
+.form .green{color:#2d9e21;display:block;margin:6px 10px 0 10px}
+.form .gray{margin:0 17px 0 17px}
+.form .list{margin-left:25px}
+.road {color:#000000;display:block;text-align: left}
+.road a{color:#2d9e21;display:block;text-align: left}
+.form .inputdata {color:#000000;display:block;text-align: center}
+.road2 {color:#000000;display:block;text-align: left;background:#dcdcdc;}
+.road2 a{color:#2d9e21;display:block;text-align: left;background:#dcdcdc;}
+.popuproad {color:#000000;display:block;text-align: left;margin-top:5px;}
+.popuproad input{width:220px}
+/*.form .item{color:#000000;background:url(/images/common/lnb_bg.gif) repeat-y 0 0}*/
+.text{border:1px solid #bbc1cc;height:20px;line-height:22px}
+.group{border-top:0px solid #bbc1cc;border-bottom:0px solid #bbc1cc;padding:0px 0px;margin-top:10px;}
+.btn{width:100%;text-align:center;margin-top:10px}
+
+.paging {padding:4px 8px;border:1px solid #ddd;}
+/*
+.paging a {border:0px solid #ddd;}
+.paging a, .paging em {float:left; display:block; margin:0 0px; text-align: center;}
+.paging a:hover, .paging em {border:0px solid #ddd;}
+.paging span {float:left; display:block; margin:0 5px; ext-align: center; border:0px solid #ddd;}
+*/
+
+#formbox2{margin-top:10px;}
+
+
+
+

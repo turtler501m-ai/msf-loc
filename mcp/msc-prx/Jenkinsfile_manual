@@ -1,0 +1,215 @@
+#!/usr/bin/env groovy
+import java.io.File
+import java.lang.String
+
+library identifier: 'utils@',
+    retriever: modernSCM([
+      $class: 'SubversionSCMSource',
+      //credentialsId: 'jenkins',
+      //remoteBase: 'http://10.20.28.19:3690/svn/utils/trunk/utils/'
+      credentialsId: 'bd22fc4b-1fd9-42fe-94ff-22863002d3e4',
+      remoteBase: 'https://scm.ktmmobile.com/repo/mcp/utils/trunk/utils/'
+])
+
+pipeline {
+    agent any
+    options {
+        ansiColor('css')
+    }
+
+    environment {
+        mvnHome = tool 'apache-maven-3.2.5'
+        jdkHome = tool 'jdk1.6.0_45'
+        varField = "${env.JOB_NAME}".split('-')
+        platformNm = "${varField[0]}-${varField[1]}"
+        validCat = "${varField[2]}"
+        jenkinsProp = "devops/jenkins/jenkins.properties"
+    }
+
+    stages {
+
+        stage("Init Function Setting") {
+            steps {
+                script {
+                    properties([
+                        parameters([
+
+                            [$class: 'ChoiceParameter',
+                                choiceType: 'PT_SINGLE_SELECT',
+                                description: 'Select the SELECT_ENV from the Dropdown List',
+                                filterLength: 1,
+                                filterable: false,
+                                name: 'SELECT_ENV',
+                                script: [$class: 'GroovyScript',
+                                    fallbackScript: [ classpath: [], sandbox: false,
+                                        script:
+                                            "return['Could not get The environemnts']"
+                                        ],
+                                        script: [ classpath: [], sandbox: false,
+                                            script:
+                                                "return['stg','prd']"
+                                        ]
+                                    ]
+                                ],
+                            [$class: 'ChoiceParameter',
+                                choiceType: 'PT_SINGLE_SELECT',
+                                description: 'Select the SELECT_FUNC from the Dropdown List.',
+                                filterLength: 1,
+                                filterable: false,
+                                name: 'SELECT_FUNC',
+                                script: [$class: 'GroovyScript',
+                                    fallbackScript: [ classpath: [], sandbox: false,
+                                        script:
+                                            "return['Could not get The function.']"
+                                        ],
+                                        script: [ classpath: [], sandbox: false,
+                                            script:
+                                                "return['build','deploy']"
+                                        ]
+                                    ]
+                                ],
+                            [$class: 'CascadeChoiceParameter',
+                                choiceType: 'PT_SINGLE_SELECT',
+                                description: 'Select the SELECT_HOST from the Dropdown List',
+                                name: 'SELECT_HOST',
+                                referencedParameters: "SELECT_ENV, SELECT_FUNC",
+                                script: [$class: 'GroovyScript',
+                                    fallbackScript: [ classpath: [], sandbox: false,
+                                        script:
+                                            "return['Could not get Environment from SELECT_ENV Param']"
+                                        ],
+                                        script: [ classpath: [], sandbox: false,
+                                            script: """
+                                                if (SELECT_FUNC.contains('deploy')){
+                                                    if ("${platformNm}".equals("mcp-admin") && "${validCat}".equals("was") && SELECT_ENV.equals("dev")) {
+                                                        return["MCP-ADMIN-DEV"]
+                                                    } else if("${platformNm}".equals("mcp-admin") && "${validCat}".equals("web") && SELECT_ENV.equals("dev")) {
+                                                        return["MCP-WEB-DEV"]
+                                                    } else if("${platformNm}".equals("mcp-portal") && "${validCat}".equals("was") && SELECT_ENV.equals("dev")) {
+                                                        return["MCP-WAS-DEV"]
+                                                    } else if("${platformNm}".equals("mcp-portal") && "${validCat}".equals("web") && SELECT_ENV.equals("dev")) {
+                                                        return["MCP-WEB-DEV"]
+                                                    } else if("${platformNm}".equals("mcp-widget") && "${validCat}".equals("was") && SELECT_ENV.equals("dev")) {
+                                                        return["MCP-WASwidget-DEV"]
+                                                    } else if("${platformNm}".equals("mcp-widget") && "${validCat}".equals("web") && SELECT_ENV.equals("dev")) {
+                                                        return["MCP-WEBWidget-DEV"]
+                                                    } else if("${platformNm}".equals("mcp-api") && SELECT_ENV.equals("dev")) {
+                                                        return["MSC-API-DEV"]
+                                                    } else if("${platformNm}".equals("mcp-search") && SELECT_ENV.equals("dev")) {
+                                                        return["MCP-SEARCH-DEV"]
+                                                    } else if("${platformNm}".equals("msc-batch") && SELECT_ENV.equals("dev")) {
+                                                        return["MSC-BATCH-DEV"]
+                                                    } else if("${platformNm}".equals("mcp-admin") && "${validCat}".equals("was") && SELECT_ENV.equals("stg")) {
+                                                        return["MCP-ADMIN-STG"]
+                                                    } else if("${platformNm}".equals("mcp-admin") && "${validCat}".equals("web") && SELECT_ENV.equals("stg")) {
+                                                        return["MCP-WEB1-STG", "MCP-WEB2-STG"]
+                                                    } else if("${platformNm}".equals("mcp-portal") && "${validCat}".equals("was") && SELECT_ENV.equals("stg")) {
+                                                        return["MCP-WAS1-STG", "MCP-WAS2-STG"]
+                                                    } else if("${platformNm}".equals("mcp-portal") && "${validCat}".equals("web") && SELECT_ENV.equals("stg")) {
+                                                        return["MCP-WEB1-STG", "MCP-WEB2-STG"]
+                                                    } else if("${platformNm}".equals("mcp-widget") && "${validCat}".equals("was") && SELECT_ENV.equals("stg")) {
+                                                        return["MCP-WAS1-widget-STG", "MCP-WAS2-widget-STG"]
+                                                    } else if("${platformNm}".equals("mcp-widget") && "${validCat}".equals("web") && SELECT_ENV.equals("stg")) {
+                                                        return["MCP-WEB1-widget-STG", "MCP-WEB2-widget-STG"]
+                                                    } else if("${platformNm}".equals("mcp-api") && SELECT_ENV.equals("stg")) {
+                                                        return["MSC-API1-STG", "MSC-API2-STG"]
+                                                    } else if("${platformNm}".equals("mcp-search") && SELECT_ENV.equals("stg")) {
+                                                        return["MCP-SEARCH-STG"]
+                                                    } else if("${platformNm}".equals("msc-batch") && SELECT_ENV.equals("stg")) {
+                                                        return["MCP-BATCH-STG"]
+                                                    } else if("${platformNm}".equals("msc-prx") && SELECT_ENV.equals("stg")) {
+                                                        return["MSC-PRX1-STG", "MSC-PRX2-STG"]
+                                                    } else if("${platformNm}".equals("mcp-admin") && "${validCat}".equals("was") && SELECT_ENV.equals("prd")) {
+                                                        return["MCP-ADMIN-PRD"]
+                                                    } else if("${platformNm}".equals("mcp-admin") && "${validCat}".equals("web") && SELECT_ENV.equals("prd")) {
+                                                        return["MCP-WEB1-PRD", "MCP-WEB2-PRD", "MCP-WEB3-PRD", "MCP-WEB4-PRD"]
+                                                    } else if("${platformNm}".equals("mcp-portal") && "${validCat}".equals("was") && SELECT_ENV.equals("prd")) {
+                                                        return["MCP-WAS1-PRD", "MCP-WAS2-PRD"]
+                                                    } else if("${platformNm}".equals("mcp-portal") && "${validCat}".equals("web") && SELECT_ENV.equals("prd")) {
+                                                        return["MCP-WEB1-PRD", "MCP-WEB2-PRD", "MCP-WEB3-PRD", "MCP-WEB4-PRD"]
+                                                    } else if("${platformNm}".equals("mcp-widget") && "${validCat}".equals("was") && SELECT_ENV.equals("prd")) {
+                                                        return["MCP-WAS1-widget-PRD", "MCP-WAS2-widget-PRD"]
+                                                    } else if("${platformNm}".equals("mcp-widget") && "${validCat}".equals("web") && SELECT_ENV.equals("prd")) {
+                                                        return["MCP-WEB1-widget-PRD", "MCP-WEB2-widget-PRD"]
+                                                    } else if("${platformNm}".equals("mcp-api") && SELECT_ENV.equals("prd")) {
+                                                        return["MSC-API1-PRD", "MSC-API2-PRD"]
+                                                    } else if("${platformNm}".equals("mcp-search") && SELECT_ENV.equals("prd")) {
+                                                        return["MCP-SEARCH1-PRD", "MCP-SEARCH2-PRD"]
+                                                    } else if("${platformNm}".equals("msc-batch") && SELECT_ENV.equals("prd")) {
+                                                        return["MCP-BATCH-PRD"]
+                                                    } else if("${platformNm}".equals("msc-prx") && SELECT_ENV.equals("prd")) {
+                                                        return["MSC-PRX1-PRD", "MSC-PRX2-PRD"]
+                                                    }
+                                                }
+                                            """
+                                        ]
+                                    ]
+                                ]
+
+                            ])
+                        ])
+
+                }
+
+            }
+        }
+
+        stage("Call Function") {
+            when {
+                expression {
+                    currentBuild.result == null || currentBuild.result == 'SUCCESS'
+                }
+            }
+            steps {
+                script {
+                    def remoteId = "";
+                    def targetEnv = "${params.SELECT_ENV}";
+                    def credId = deployer.removeAllDigit("${params.SELECT_HOST}");
+                    def remoteHost = "${params.SELECT_HOST}";
+                    def validFunc = "${params.SELECT_FUNC}";
+                    if ("${params.SELECT_HOST}".contains("WEB")) {
+                        remoteId = "apache"
+                    } else {
+                        remoteId = "jboss"
+                    }
+
+                    try {
+                        withEnv(["FUNC=${validFunc}", "PATH=${env.PATH}"]) {
+                            switch("${FUNC}") {
+                                case 'build':
+                                    if (validCat.equals("web")) {
+                                        builder.funcWebBuild(jenkinsProp, antHome, jdkHome, targetEnv);
+                                    } else {
+                                        builder.funcWasBuild(jenkinsProp, mvnHome, jdkHome, targetEnv);
+                                    }
+                                    break
+                                case 'deploy':
+                                    if (validCat.equals("web")) {
+                                        deployer.sshWebPut(credId, remoteId, remoteHost, jenkinsProp, targetEnv);
+                                        deployer.sshWebCommand(credId, remoteId, remoteHost, jenkinsProp, targetEnv);
+                                    } else {
+                                        deployer.sshWasPut(credId, remoteId, remoteHost, jenkinsProp, targetEnv);
+                                        deployer.sshWasCommand(credId, remoteId, remoteHost, jenkinsProp, targetEnv);
+                                    }
+                                    break
+                                default:
+                                    log.info "clean up workspace >> ${env.JOB_NAME}"
+                                    currentBuild.result = "FAILED"
+                                    sh 'ls -A1|xargs rm -rf' /* clean up our workspace */
+                                    log.error e.getMessage()
+                            }
+                        }
+                    } catch(e) {
+                        log.info "clean up workspace >> ${env.JOB_NAME}"
+                        currentBuild.result = "FAILED"
+                        sh 'ls -A1|xargs rm -rf' /* clean up our workspace */
+                        log.error e.getMessage()
+                    }
+
+                }
+
+            }
+        }
+
+    }
+}

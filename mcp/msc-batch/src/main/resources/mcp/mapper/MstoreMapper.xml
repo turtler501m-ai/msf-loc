@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MstoreMapper">
+
+	<!-- Mstore 연동 결과 update (MSTORE 활성회원이 아닌 경우) -->
+	<update id="updateNotMstoreCanTrg" parameterType="java.util.HashMap">
+		UPDATE NMCP_MSTORE_CAN_TRG
+		SET RVISN_DTTM = SYSDATE
+		   ,PROC_TRG_YN = 'N'
+		   ,PROC_YN = 'Y'
+			 ,PROC_HIST_SEQ = NULL
+		<if test="resultCode != null and resultCode != ''">
+			,RESULT_CODE = #{resultCode}
+		</if>
+		<if test="message != null and message != ''">
+			,MESSAGE = #{message}
+		</if>
+		<if test="sreTpCd != null and sreTpCd != ''">
+			,MSTORE_USER_STAT = #{sreTpCd}
+		</if>
+		WHERE CAN_TRG_SEQ = #{canTrgSeq}
+	</update>
+
+	<!-- Mstore 연동 결과 update (MSTORE 활성회원인 경우) -->
+	<update id="updateMstoreCanTrg" parameterType="java.util.HashMap">
+		UPDATE NMCP_MSTORE_CAN_TRG
+		SET RVISN_DTTM = SYSDATE
+		   ,PROC_TRG_YN = 'Y'
+		   ,PROC_HIST_SEQ = #{histSeq}
+		   ,PROC_YN = 'Y'
+		   ,RESULT_CODE = '00'
+		   ,MESSAGE = '성공'
+		   ,MSTORE_USER_STAT = '10'
+		WHERE PROC_TRG_YN IS NULL
+		AND CAN_TRG_SEQ BETWEEN #{firstSeq} AND #{lastSeq}
+	</update>
+
+	<!-- MSTORE 인사정보 탈퇴 연동 응답 로그 insert -->
+	<insert id="insertMstoreProcHist" parameterType="java.util.HashMap">
+		<selectKey keyProperty="histSeq" resultType="java.lang.String" order="BEFORE">
+			SELECT (TO_CHAR(SYSDATE,'YYYYMMDD')||TRIM(TO_CHAR(SQ_MSTORE_PROC_HIST.NEXTVAL, '0000'))) AS histSeq FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_MSTORE_PROC_HIST (
+				HIST_SEQ
+		   ,TOTAL_CNT
+		   ,RESULT_CODE
+		   ,MESSAGE
+			 <if test="result != null and result != ''">
+		   ,RESULT
+			 </if>
+			 <if test="resultDtl != null and resultDtl != ''">
+			 ,RESULT_DTL
+			 </if>
+		   ,PROC_DIV_STAT
+		) VALUES (
+			  #{histSeq}
+		   ,#{totalCnt}
+		   ,#{resultCode}
+		   ,#{message}
+			 <if test="result != null and result != ''">
+			 ,#{result}
+		   </if>
+		   <if test="resultDtl != null and resultDtl != ''">
+		   ,#{resultDtl}
+		   </if>
+		   ,#{procDivStat}
+		)
+	</insert>
+
+	<!-- M스토어 약관 만료처리 (준회원 탈퇴대상) -->
+	<update id="updateAgreeAssociateMember" parameterType="java.util.HashMap">
+		UPDATE NMCP_MSTORE_TERM_HIST
+		SET
+			 RVISN_DTTM= TO_DATE(#{rvisnDttm}, 'YYYYMMDDHH24MISS')
+			,RVISN_ID= #{rvisnId}
+			,END_DTTM= TO_CHAR(SYSDATE - 1/24/60/60, 'YYYYMMDDHH24MISS')
+		WHERE END_DTTM= '99991231235959'
+		AND USERID IN (
+										SELECT USERID
+										FROM MCP_USER
+										WHERE USER_DIVISION = '00'
+										AND NVL(SYS_LDATE, TO_CHAR(SYS_RDATE, 'YYYY-MM-DD')) <![CDATA[<]]> TO_CHAR(ADD_MONTHS(SYSDATE, -12), 'YYYY-MM-DD')
+										AND STATUS != '3'
+									)
+	</update>
+
+	<!-- MSTORE 탈퇴 연동 대상 회원 insert -->
+	<insert id="insertMstoreCanTrg" parameterType="java.util.HashMap">
+		INSERT INTO NMCP_MSTORE_CAN_TRG (
+			CAN_TRG_SEQ, CHN_CD, PROC_YN, USERID
+		)
+		SELECT
+			 TO_CHAR(SYSDATE,'YYYYMMDD') || TRIM(TO_CHAR(SQ_MSTORE_CAN_TRG.NEXTVAL, '0000'))
+		  ,'04'
+		  ,'N'
+			,A.USERID
+		FROM
+		(
+			SELECT USERID
+			FROM NMCP_MSTORE_TERM_HIST
+			WHERE TO_CHAR(RVISN_DTTM, 'YYYYMMDDHH24MISS') = #{rvisnDttm}
+			AND RVISN_ID= #{rvisnId}
+			AND AGR_YN= 'Y'
+		) A
+	</insert>
+
+	<!-- MSTORE 탈퇴 연동 대상 SSO INFO 제거 -->
+	<update id="deleteMstoreSsoInfo" parameterType="java.util.HashMap">
+		UPDATE NMCP_MSTORE_SSO_INFO
+		SET EMPEN= NULL
+		   ,LST_COM_ACTV_DATE= NULL
+		   ,MBR_GRD_CD= NULL
+		   ,SYS_CDATE= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+			 ,RVISN_ID= 'BATCH'
+		   ,RVISN_DTTM= SYSDATE
+		<choose>
+			<when test="histSeq != null and histSeq != ''">
+				WHERE USERID IN (SELECT USERID FROM NMCP_MSTORE_CAN_TRG WHERE PROC_HIST_SEQ= #{histSeq})
+			</when>
+			<otherwise>
+				WHERE USERID = (SELECT USERID FROM NMCP_MSTORE_CAN_TRG WHERE CAN_TRG_SEQ= #{canTrgSeq})
+			</otherwise>
+		</choose>
+	</update>
+
+	<!-- Mstore 재처리 연동결과 update (MSTORE 활성회원인 경우) -->
+	<update id="updateMstoreRtyCanTrg" parameterType="java.util.HashMap">
+		UPDATE NMCP_MSTORE_CAN_TRG A
+		SET RVISN_DTTM = SYSDATE
+			 ,PROC_HIST_SEQ = #{histSeq}
+		WHERE A.CAN_TRG_SEQ BETWEEN #{firstSeq} AND #{lastSeq}
+			AND A.PROC_YN = 'Y'
+			AND A.PROC_TRG_YN= 'Y'
+			AND A.PROC_HIST_SEQ IS NOT NULL
+			AND NOT EXISTS (SELECT 1 FROM NMCP_MSTORE_PROC_HIST WHERE HIST_SEQ= A.PROC_HIST_SEQ AND RESULT_CODE = '00')
+	</update>
+
+    <select id="getContentSeqByHash" parameterType="com.ktmmobile.mcp.mstore.dto.MstoreContentDto" resultType="Long">
+        SELECT NVL(CONTENT_SEQ, 0)
+        FROM (
+            SELECT CONTENT_SEQ
+            FROM NMCP_MSTORE_CONTENT
+            WHERE JSON_HASH = #{jsonHash}
+            AND DEVC_TP_CD = #{devcTpCd}
+            ORDER BY CONTENT_SEQ
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <update id="insertMstoreContent" parameterType="com.ktmmobile.mcp.mstore.dto.MstoreContentDto">
+        <selectKey keyProperty="contentSeq" resultType="Long" order="BEFORE">
+            SELECT SQ_MSTORE_CONTENT.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_MSTORE_CONTENT (
+            CONTENT_SEQ
+            , CRET_DAY
+            , DEVC_TP_CD
+            , STATUS
+            , FAIL_MESSAGE
+            , JSON_HASH
+            , CRET_ID
+            , CRET_DT
+        ) VALUES (
+            #{contentSeq}
+            , TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , #{devcTpCd}
+            , #{status}
+            , #{failMessage}
+            , #{jsonHash}
+            , #{userId}
+            , SYSDATE
+        )
+    </update>
+
+    <insert id="insertMstoreContentItem" parameterType="com.ktmmobile.mcp.mstore.dto.MstoreContentItemDto">
+        INSERT INTO NMCP_MSTORE_CONTENT_ITEM (
+            ITEM_SEQ
+            , CONTENT_SEQ
+            , ITEM_TYPE
+            , NAME
+            , URL
+            , IMG_URL_PC
+            , IMG_URL_MO
+            , ORIGINAL_PRICE
+            , DISCOUNT_PRICE
+            , CRET_ID
+            , CRET_DT
+        ) VALUES (
+            SQ_MSTORE_CONTENT_ITEM.NEXTVAL
+            , #{contentSeq}
+            , #{itemType}
+            , #{name}
+            , #{url}
+            , #{imgUrlPc}
+            , #{imgUrlMo}
+            , #{originalPrice}
+            , #{discountPrice}
+            , #{userId}
+            , SYSDATE
+        )
+    </insert>
+
+</mapper>
+

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TextingMapper">
+
+    <!-- 상담사 개통 접수대기 대상 조회 -->
+    <select id="selectTextingNoList" resultType="com.ktmmobile.mcp.texting.dto.TextingDto">
+        SELECT
+            B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN AS MOBILENO
+        FROM MCP_REQUEST A
+        LEFT JOIN MCP_REQUEST_CSTMR B ON A.REQUEST_KEY = B.REQUEST_KEY
+        WHERE A.ON_OFF_TYPE IN ('0','3','6','8') -- 모바일(해피콜(8)) or 모바일(3) or 온라인(해피콜(6)) or 온라인(0)
+            AND A.SHOP_CD = '1100011741' -- 대리점: M모바일(직영온라인)/1100011741
+            AND A.PSTATE = '00' -- 신청서 상태: 정상
+            AND A.REQUEST_STATE_CODE = '00' -- 진행상태: 접수대기
+            AND A.RVISN_DTTM IS NULL  -- 수정일자: 공란
+            AND A.REQ_BUY_TYPE = 'UU'  -- 구매유형: 유심단독구매
+            AND A.CSTMR_TYPE = 'NA' -- 대상자: 성인-내국인 (미성년자 / 외국인 제외)
+            AND TO_CHAR(A.REQ_IN_DAY,'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE - #{stratDt},'YYYYMMDD')
+                                                                                                            AND TO_CHAR(SYSDATE,'YYYYMMDD')  -- 신청기간: 60일전 ~현재 (현 추출 시점 기준)
+            AND B.CSTMR_MOBILE_FN IS NOT NULL
+        GROUP BY B.CSTMR_MOBILE_FN, B.CSTMR_MOBILE_MN, B.CSTMR_MOBILE_RN
+    </select>
+
+</mapper>

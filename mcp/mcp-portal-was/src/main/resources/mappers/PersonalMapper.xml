@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PersonalMapper">
+
+  <!--발급된 개인화 URL 조회-->
+  <select id="getPersonalUrl" parameterType="com.ktmmobile.mcp.personal.dto.PersonalDto" resultType="com.ktmmobile.mcp.personal.dto.PersonalDto">
+    /*PersonalMapper.getPersonalUrl*/
+    SELECT SEQ, CONTRACT_NUM, SVC_CNTR_NO, PAGE_TYPE, LANDING
+    FROM NMCP_ACEN_PERSONAL_URL
+    WHERE END_DTTM <![CDATA[ > ]]> SYSDATE+10/24/60
+      AND SEQ = #{seq}
+      AND PAGE_TYPE = #{pageType}
+      AND LANDING = #{landing}
+  </select>
+
+</mapper>

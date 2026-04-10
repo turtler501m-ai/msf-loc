@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TempMapper">
+    <select id="selectTempRequestKey" resultType="java.lang.Long">
+        SELECT
+            REQUEST_KEY
+        FROM NMCP_REQUEST_TEMP
+        WHERE SYS_RDATE <![CDATA[<]]> SYSDATE-7
+    </select>
+
+    <delete id="deleteNmcpRequestAdditionTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_ADDITION_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestAgentTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_AGENT_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+    </delete>
+
+    <delete id="deleteNmcpRequestApdSaleinfoTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_APD_SALEINFO_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestApdTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_APD_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+    </delete>
+
+    <delete id="deleteNmcpRequestChangeTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_CHANGE_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestClauseTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_CLAUSE_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestCstmrTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_CSTMR_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestDlvryTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_DLVRY_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestDvcChgTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_DVC_CHG_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestMoveTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_MOVE_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestPaymentTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_PAYMENT_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestReqTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_REQ_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestSaleinfoTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_SALEINFO_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+
+    </delete>
+
+    <delete id="deleteNmcpRequestTempData" parameterType="java.lang.Long">
+        DELETE FROM NMCP_REQUEST_TEMP
+        WHERE REQUEST_KEY=#{requestKey}
+    </delete>
+
+
+    <select id="getRateResChgList"  parameterType="com.ktmmobile.mcp.rate.dto.McpIpStatisticDto"  resultType="com.ktmmobile.mcp.rate.dto.McpIpStatisticDto">
+        SELECT /*TempMapper.getRateResChgList   */
+            RATE_RES_CHG_SEQ
+            , SVC_CNTR_NO
+            , MOBILE_NO
+            , USER_ID
+            , EVENT_CODE
+            , RES_CHG_RATE_CD
+            , BEF_CHG_RATE_CD
+            , BEF_CHG_RATE_AMNT
+            ,PARAM
+            ,RES_CHG_DATE
+            ,RES_CHG_APY_DATE
+            ,TRT_MDL_DIV
+            ,GLOBAL_NO
+            ,BATCH_RSLT_CD
+            ,CRET_IP
+            ,CRET_DT
+        FROM
+            NMCP_RATE_RES_CHG_BAS
+        WHERE 1=1
+            <if test="resChgApyDate != null and resChgApyDate != ''">
+                AND RES_CHG_APY_DATE = #{resChgApyDate}
+            </if>
+            <if test="rateResChgSeq != null and rateResChgSeq != ''">
+                AND RATE_RES_CHG_SEQ = #{rateResChgSeq}
+            </if>
+            <choose>
+                <when test="batchRsltCd !=null and batchRsltCd != ''" >
+                     AND BATCH_RSLT_CD = #{batchRsltCd}
+                </when>
+                <otherwise>
+                      AND NVL(BATCH_RSLT_CD,'-1') = '-1'
+                </otherwise>
+            </choose>
+        ORDER BY  RATE_RES_CHG_SEQ
+    </select>
+
+</mapper>

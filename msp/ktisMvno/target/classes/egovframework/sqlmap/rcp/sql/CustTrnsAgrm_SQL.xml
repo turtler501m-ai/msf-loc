@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.custTrnsMgmt.mapper.CustTrnsMgmtMapper">
+    <!-- 사업이관고객동의관련 -->
+	
+	<!-- 고객동의목록조회 -->
+	<sql id="getCustTrnsAgrm">
+		SELECT  A.CONTRACT_NUM
+		        , A.SUB_LINK_NAME															AS CUST_NM
+		        , A.SUBSCRIBER_NO															AS SVC_TEL_NO
+		        , A.USER_SSN																AS SSN
+		        , NVL(A.PPPO, 'PP') 														AS SERVICE_TYPE
+		        , DECODE(NVL(A.PPPO, 'PP'), 'PP', '선불', '후불') 							AS SERVICE_TYPE_NM
+		        , A.LST_COM_ACTV_DATE														AS OPEN_DT
+		        , A.SUB_STATUS																AS SUB_STATUS
+		        , CMN.CD_DSC 																AS SUB_STATUS_NM
+		        , B.REQ_BUY_TYPE															AS BUY_TYPE
+		        , DECODE(B.REQ_BUY_TYPE, 'MM', '단말구매', 'UU', '유심단독', '유심단독')	AS BUY_TYPE_NM
+		        , NVL(TO_CHAR(C.ENGG_MNTH_CNT), '0')										AS ENGG_MNTH_CNT
+		        , NVL(C.MODEL_MONTHLY, '0')													AS MODEL_MONTHLY
+		        , FN_GET_USRNM(AGRM.CNSL_ID)												AS CNSL_NM
+		        , TO_CHAR(AGRM.TRNS_AGRM_DTTM, 'YYYY-MM-DD HH24:MI:SS')						AS TRNS_AGRM_DTTM
+		        , DECODE(AGRM.TRNS_AGRM_YN, 'Y', '동의', 'N', '미동의', '') 				AS TRNS_AGRM_NM
+		        , NVL(AGRM.TRNS_AGRM_YN, 'Y') 												AS TRNS_AGRM_YN
+		        , AGRM.PROC_MTHD_CD															AS PROC_MTHD_CD
+		        , DECODE(AGRM.PROC_MTHD_CD, '10', '해지', '20', '(타사)번호이동', '')		AS PROC_MTHD_NM
+		        , AGRM.TRNS_MEMO															AS TRNS_MEMO
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_REQUEST B
+		        , MSP_REQUEST_SALEINFO C
+		        , MSP_SO_TRNS_AGRM_MST AGRM
+		        , CMN_GRP_CD_MST CMN
+		WHERE   A.SUB_STATUS NOT IN ( 'C' )
+		AND     A.CONTRACT_NUM  = B.CONTRACT_NUM(+)
+		AND     B.REQUEST_KEY   = C.REQUEST_KEY(+)
+		AND     A.CONTRACT_NUM  = AGRM.CONTRACT_NUM(+) 
+		AND     A.SUB_STATUS    = CMN.CD_VAL
+		AND     CMN.GRP_ID      = 'MSP0003'
+	</sql>
+	
+	<select id="getCustTrnsAgrmList" parameterType="com.ktis.msp.rcp.custTrnsMgmt.vo.CustTrnsVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* custTrnsAgrmMapper.getCustTrnsAgrmList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getCustTrnsAgrm"/>
+		
+		<if test="serviceType != null and serviceType != ''">
+		AND		NVL(A.PPPO, 'PP')	= #{serviceType}
+		</if>
+		<if test="subStatus != null and subStatus != ''">
+		AND     A.SUB_STATUS    = #{subStatus}
+		</if>
+		<if test='trnsAgrmYn != null and trnsAgrmYn == "N"'>
+		AND     AGRM.TRNS_AGRM_YN   = 'N'
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+		AND     ( A.SUBSCRIBER_NO LIKE '%' || #{searchVal} || '%' OR UPPER(A.SUB_LINK_NAME) LIKE '%' || UPPER(#{searchVal}) || '%' )
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getCustTrnsAgrmListEx" parameterType="com.ktis.msp.rcp.custTrnsMgmt.vo.CustTrnsVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+
+		<include refid="getCustTrnsAgrm"/>
+		
+		<if test="serviceType != null and serviceType != ''">
+		AND		NVL(A.PPPO, 'PP')	= #{serviceType}
+		</if>
+		<if test="subStatus != null and subStatus != ''">
+		AND     A.SUB_STATUS    = #{subStatus}
+		</if>
+		<if test='trnsAgrmYn != null and trnsAgrmYn == "N"'>
+		AND     AGRM.TRNS_AGRM_YN   = 'N'
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+		AND     ( A.SUBSCRIBER_NO LIKE '%' || #{searchVal} || '%' OR UPPER(A.SUB_LINK_NAME) LIKE '%' || UPPER(#{searchVal}) || '%' )
+		</if>
+		
+	</select>
+	
+	<insert id="insertSoTrnsAgrmMst" parameterType="com.ktis.msp.rcp.custTrnsMgmt.vo.CustTrnsVO">
+		/* custTrnsAgrmMapper.insertSoTrnsAgrmMst */
+		INSERT INTO MSP_SO_TRNS_AGRM_MST (
+				CONTRACT_NUM
+				, SVC_TEL_NO
+				, CUST_NM
+				, SERVICE_TYPE
+				, BUY_TYPE
+				, TRNS_AGRM_YN
+				, TRNS_AGRM_DTTM
+				, CNSL_ID
+				, PROC_MTHD_CD
+				, TRNS_MEMO
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+		) VALUES (
+				#{contractNum, jdbcType=VARCHAR}
+				, #{svcTelNo, jdbcType=VARCHAR}
+				, #{custNm, jdbcType=VARCHAR}
+				, #{serviceType, jdbcType=VARCHAR}
+				, #{buyType, jdbcType=VARCHAR}
+				, #{trnsAgrmYn, jdbcType=VARCHAR}
+				, SYSDATE
+				, #{userId, jdbcType=VARCHAR}
+				, #{procMthdCd, jdbcType=VARCHAR}
+				, #{trnsMemo, jdbcType=VARCHAR}
+				, #{userId, jdbcType=VARCHAR}
+				, SYSDATE
+				, #{userId, jdbcType=VARCHAR}
+				, SYSDATE
+		)
+	</insert>
+	
+	<update id="updateMspRequestSoCd" parameterType="com.ktis.msp.rcp.custTrnsMgmt.vo.CustTrnsVO">
+		UPDATE	MSP_REQUEST
+		SET		SO_CD	= 'I'
+		WHERE	CONTRACT_NUM	= #{contractNum}
+	</update>
+	
+	<update id="updatePpsCustomerSoCd" parameterType="com.ktis.msp.rcp.custTrnsMgmt.vo.CustTrnsVO">
+		UPDATE	PPS_CUSTOMER
+		SET		SO_CD	= 'I'
+		WHERE	CONTRACT_NUM	= #{contractNum}
+	</update>
+	
+</mapper>

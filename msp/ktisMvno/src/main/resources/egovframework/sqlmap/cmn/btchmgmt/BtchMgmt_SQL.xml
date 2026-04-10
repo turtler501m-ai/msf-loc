@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.btchmgmt.mapper.BtchMgmtMapper">
+
+	<!-- JUICE BATCH ID 조회 -->
+	<select id="getJuiceBtchIdList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT CGCM.CD_VAL AS value
+		       , CGCM.CD_DSC AS text
+		  FROM CMN_GRP_MST CGM
+		       , CMN_GRP_CD_MST CGCM
+		 WHERE CGM.GRP_ID = CGCM.GRP_ID
+		   AND CGM.USG_YN = 'Y'
+		   AND CGCM.USG_YN = 'Y'
+		   AND CGM.GRP_ID = 'CMN0109'
+		ORDER BY ETC1 ASC
+	</select>
+	
+	<!-- JUICE BATCH Log 조회 -->
+	<select id="getCmnJuiceBtchLogList" parameterType="com.ktis.msp.cmn.btchmgmt.vo.JuiceBtchLogMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* btchMgmtMapper.getCmnJuiceBtchLogList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT CJBM.OPRT_SCTN_CD
+		       , CMN.CD_DSC
+		       , CJBM.OPRT_STAT_CD
+		       , (SELECT B.CD_DSC FROM CMN_GRP_MST A, CMN_GRP_CD_MST B WHERE A.GRP_ID = B.GRP_ID AND A.GRP_ID = 'CMN0110' AND A.USG_YN = 'Y' AND B.USG_YN = 'Y' AND B.CD_VAL = CJBM.OPRT_STAT_CD) AS OPRT_STAT_NM
+		       , TO_CHAR(CJBM.OPRT_STRT_DT, 'YYYY-MM-DD HH24:MI:SS') AS OPRT_STRT_DT
+		       , TO_CHAR(CJBM.OPRT_END_DT, 'YYYY-MM-DD HH24:MI:SS') AS OPRT_END_DT
+		       , CJBM.REMRK
+		       , CJBM.OPRT_SUCC_DATA_CNT
+		       , B.OPRT_FILE_NM
+               , B.OPRT_SUCC_DATA_CNT DTL_CNT
+		  FROM CMN_JUICE_BATCH_MST CJBM
+		       , (SELECT CJBD.OPRT_DT
+                         , CJBD.OPRT_SCTN_CD
+                         , CJBD.OPRT_SEQ
+                         , CJBD.OPRT_FILE_NM
+                         , OPRT_SUCC_DATA_CNT
+                    FROM CMN_JUICE_BATCH_DTL CJBD
+                   WHERE CJBD.OPRT_MOD = 'S') B
+		       , (SELECT CGCM.CD_VAL
+		       			 , CGCM.CD_DSC
+		       			 , CGCM.ETC1
+		  			FROM CMN_GRP_MST CGM
+		       			 , CMN_GRP_CD_MST CGCM
+		 		   WHERE CGM.GRP_ID = CGCM.GRP_ID
+		   			 AND CGM.GRP_ID = 'CMN0109'
+		   			 AND CGM.USG_YN = 'Y'
+		   			 AND CGCM.USG_YN = 'Y') CMN
+		 WHERE 1=1
+           AND CJBM.OPRT_DT = B.OPRT_DT(+)
+           AND CJBM.OPRT_SCTN_CD = B.OPRT_SCTN_CD(+)
+           AND CJBM.OPRT_SEQ = B.OPRT_SEQ(+)
+		   AND CJBM.OPRT_SCTN_CD = CMN.CD_VAL
+		 <if test="oprtSctnCd != null and oprtSctnCd != ''">
+		 	AND CJBM.OPRT_SCTN_CD = #{oprtSctnCd, jdbcType=VARCHAR}
+		 </if>
+		 <if test="oprtStrtDt != null and oprtStrtDt != '' and oprtEndDt != null and oprtEndDt != ''">
+		 	AND CJBM.OPRT_DT BETWEEN #{oprtStrtDt, jdbcType=VARCHAR} AND #{oprtEndDt, jdbcType=VARCHAR}
+		 </if>
+		 <if test="oprtStatCd != null and oprtStatCd != ''">
+		 	AND CJBM.OPRT_STAT_CD = #{oprtStatCd, jdbcType=VARCHAR}
+			<if test="oprtStatCd == '0000'">
+		 		AND CJBM.OPRT_SUCC_DATA_CNT > 0
+		 	</if>
+		 </if>
+		ORDER BY OPRT_STRT_DT DESC
+        <!-- ORDER BY CMN.ETC1 ASC, CJBM.OPRT_DT DESC, CJBM.OPRT_SCTN_CD DESC, CJBM.OPRT_SEQ DESC -->
+		 <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 배치 작업 요청 INSERT -->
+	<insert id="insertBatchRequest" parameterType="com.ktis.msp.cmn.btchmgmt.vo.BatchJobVO">
+		/* btchMgmtMapper.insertBatchRequest */
+		INSERT INTO CMN_BATCH_REQUEST (
+			 BATCH_JOB_ID
+			,BATCH_REQ_ID
+			,REQ_DTTM
+			,EXEC_YN
+			,EXEC_PARAM
+			,EXEC_TYPE_CD
+			,REG_ID
+			,REG_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+			,EXCL_DNLD_ID
+		)
+		VALUES (
+			 #{batchJobId}
+			,BATCH_JOB_SEQ.nextVal
+			,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+			,'N'
+			,#{execParam}
+			,#{execTypeCd}
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+			,nvl(#{exclDnldId},'')
+		)
+	</insert>
+	
+	<!-- 배치정보조회 -->
+	<select id="getBatchInfo" parameterType="com.ktis.msp.cmn.btchmgmt.vo.BatchJobVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* btchMgmtMapper.getBatchInfo */
+		SELECT BATCH_JOB_ID
+			  ,BATCH_JOB_NM
+			  ,BATCH_JOB_DSC
+			  ,DUTY_SCTN
+			  ,FN_GET_CODENM('CMN0023', DUTY_SCTN) AS DUTY_SCTN_NM
+			  ,EXEC_SERVICE
+			  ,BATCH_TYPE_CD
+			  ,FN_GET_CODENM('CMN0024', BATCH_TYPE_CD) AS BATCH_TYPE_NM
+			  ,EXEC_TM_CD
+			  ,EXEC_CRON
+			  ,USG_YN
+			  ,FN_GET_CODENM('CMN0011', USG_YN) AS USG_YN_NM
+			  ,SERVER_TYPE
+			  ,FN_GET_CODENM('CMN0029', SERVER_TYPE) AS SERVER_TYPE_NM
+		FROM   CMN_BATCH_INFO
+		<where>
+			<if test="searchBatchJobNm != null and searchBatchJobNm != ''">
+				AND BATCH_JOB_NM like '%' || #{searchBatchJobNm} || '%'
+			</if>
+			<if test="searchDutySctn != null and searchDutySctn != ''">
+				AND DUTY_SCTN = #{searchDutySctn}
+			</if>
+			<if test="searchUsgYn != null and searchUsgYn != ''">
+				AND USG_YN = #{searchUsgYn}
+			</if>
+			<if test="searchBatchTypeCd != null and searchBatchTypeCd != ''">
+				AND BATCH_TYPE_CD = #{searchBatchTypeCd}
+			</if>
+			<if test="serverType != null and serverType != ''">
+				AND SERVER_TYPE = #{serverType}
+			</if>
+		</where>
+		ORDER BY BATCH_JOB_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 배치정보등록 -->
+	<insert id="insertBatchInfo" parameterType="com.ktis.msp.cmn.btchmgmt.vo.BatchJobVO">
+		<selectKey keyProperty="batchJobId" order="BEFORE" resultType="String">
+			SELECT 'BATCH' || LPAD(NVL(TO_NUMBER(SUBSTR(MAX(BATCH_JOB_ID), 6)),0) + 1, 5, '0') AS batchJobId
+			FROM   CMN_BATCH_INFO
+		</selectKey>
+		/* btchMgmtMapper.insertBatchInfo */
+		INSERT INTO CMN_BATCH_INFO
+		(
+			 BATCH_JOB_ID
+			,BATCH_JOB_NM
+			,BATCH_JOB_DSC
+			,DUTY_SCTN
+			,EXEC_SERVICE
+			,BATCH_TYPE_CD
+			,EXEC_TM_CD
+			,EXEC_CRON
+			,USG_YN
+			,REG_ID
+			,REG_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+            ,SERVER_TYPE
+		)
+		VALUES
+		(
+			 #{batchJobId}
+			,#{batchJobNm}
+			,#{batchJobDsc}
+			,#{dutySctn}
+			,#{execService}
+			,#{batchTypeCd}
+			,#{execTmCd}
+			,#{execCron}
+			,#{usgYn}
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+			,#{serverType}
+		)
+	</insert>
+	
+	<!-- 배치 실행서비스 중복확인 -->
+	<select id="getExecDupCheck" parameterType="com.ktis.msp.cmn.btchmgmt.vo.BatchJobVO" resultType="String">
+		SELECT DECODE(COUNT(*) , 0 , 'N', 'Y') AS dupFlag
+		FROM   CMN_BATCH_INFO
+		WHERE  EXEC_SERVICE = #{execService}
+	</select>
+	
+	<!-- 배치정보수정 -->
+	<update id="updateBatchInfo"  parameterType="com.ktis.msp.cmn.btchmgmt.vo.BatchJobVO" >
+		/* btchMgmtMapper.updateBatchInfo */
+		UPDATE CMN_BATCH_INFO
+		SET    BATCH_JOB_NM = #{batchJobNm}
+		      ,BATCH_JOB_DSC = #{batchJobDsc}
+		      ,DUTY_SCTN = #{dutySctn}
+		      ,EXEC_SERVICE = #{execService}
+		      ,BATCH_TYPE_CD = #{batchTypeCd}
+		      ,EXEC_TM_CD = #{execTmCd}
+		      ,EXEC_CRON = #{execCron}
+		      ,USG_YN = #{usgYn}
+		      ,RVISN_ID = #{sessionUserId}
+		      ,RVISN_DTTM = SYSDATE
+		      ,SERVER_TYPE = #{serverType}
+		WHERE  BATCH_JOB_ID = #{batchJobId}
+	</update>
+	
+	<!-- 배치실행이력조회 -->
+	<select id="getBatchExecHst" parameterType="com.ktis.msp.cmn.btchmgmt.vo.BatchJobVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* btchMgmtMapper.getBatchExecHst */
+		SELECT A.BATCH_JOB_ID
+		      ,A.BATCH_JOB_NM
+		      ,T.BATCH_EXEC_ID
+		      ,T.BATCH_REQ_ID
+		      ,T.STAT_CD
+		      ,FN_GET_CODENM('CMN0027', T.STAT_CD) AS STAT_NM
+		      ,T.STRT_DTTM
+		      ,T.END_DTTM
+		      ,T.EXEC_PARAM
+		      ,T.EXEC_COUNT
+		      ,T.ERR_CD
+		      ,T.ERR_MSG
+		      ,T.REMRK
+		      ,A.DUTY_SCTN
+		      ,FN_GET_CODENM('CMN0023', A.DUTY_SCTN) AS DUTY_SCTN_NM
+		      ,A.EXEC_SERVICE
+		      ,A.BATCH_TYPE_CD
+		      ,FN_GET_CODENM('CMN0024', A.BATCH_TYPE_CD) AS BATCH_TYPE_NM
+		      ,A.EXEC_CRON
+		      ,T.REQ_DTTM
+		      ,T.EXEC_TYPE_CD
+		      ,FN_GET_CODENM('CMN0028', T.EXEC_TYPE_CD) AS EXEC_TYPE_NM
+		      ,A.SERVER_TYPE
+		      ,FN_GET_CODENM('CMN0029', A.SERVER_TYPE) AS SERVER_TYPE_NM
+		FROM   CMN_BATCH_INFO A
+			  ,(SELECT NVL(B.BATCH_JOB_ID, C.BATCH_JOB_ID) AS BATCH_JOB_ID
+			          ,B.BATCH_EXEC_ID
+			          ,C.BATCH_REQ_ID
+			          ,NVL(B.STAT_CD, 'STB') AS STAT_CD
+			          ,B.STRT_DTTM
+			          ,B.END_DTTM
+			          ,NVL(B.EXEC_PARAM, C.EXEC_PARAM) AS EXEC_PARAM
+			          ,B.EXEC_COUNT
+			          ,B.ERR_CD
+			          ,B.ERR_MSG
+			          ,B.REMRK
+			          ,C.REQ_DTTM
+			          ,NVL(B.EXEC_TYPE_CD, C.EXEC_TYPE_CD) AS EXEC_TYPE_CD
+			    FROM   CMN_BATCH_EXEC_HST B
+			        FULL OUTER JOIN CMN_BATCH_REQUEST C
+			        ON B.BATCH_JOB_ID = C.BATCH_JOB_ID 
+			        AND B.BATCH_REQ_ID = C.BATCH_REQ_ID
+			    WHERE (B.STRT_DTTM BETWEEN #{searchStartDate} || '000000' AND #{searchEndDate} || '235959' 
+			        OR C.REQ_DTTM BETWEEN #{searchStartDate} || '000000' AND #{searchEndDate} || '235959')
+			   ) T
+		WHERE  A.BATCH_JOB_ID = T.BATCH_JOB_ID
+		<if test = "searchBatchJobId != null and searchBatchJobId != ''">
+			AND  A.BATCH_JOB_ID LIKE '%' || #{searchBatchJobId} || '%'
+		</if>
+		<if test = "searchBatchJobNm != null and searchBatchJobNm != ''">
+			AND  A.BATCH_JOB_NM LIKE '%' || #{searchBatchJobNm} || '%'
+		</if>
+		<if test = "searchStatCd != null and searchStatCd != ''">
+			AND  T.STAT_CD = #{searchStatCd}
+		</if>
+		<if test = "searchDutySctn != null and searchDutySctn != ''">
+			AND  A.DUTY_SCTN = #{searchDutySctn}
+		</if>
+		<if test = "searchExecService != null and searchExecService != ''">
+			AND  A.EXEC_SERVICE LIKE '%' || #{searchExecService} || '%'
+		</if>
+		<if test="serverType != null and serverType != ''">
+			AND SERVER_TYPE = #{serverType}
+		</if>
+		ORDER BY NVL(T.STRT_DTTM, T.REQ_DTTM) DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- JUICE BATCH ID로 요청중인 배치 조회 -->
+	<select id="getExecBatchCnt" parameterType="com.ktis.msp.cmn.btchmgmt.vo.BatchJobVO" resultType="Int">
+		/* btchMgmtMapper.getExecBatchCnt */
+        SELECT  
+                count(*) AS cntBatch
+        FROM    CMN_EXCL_DNLD_HST A
+                , CMN_FILE_DNLD_MGMT_MST B
+                , CMN_BATCH_REQUEST C
+                , CMN_BATCH_EXEC_HST D
+        WHERE   A.EXCL_DNLD_ID = B.EXCL_DNLD_ID(+)
+        AND     A.EXCL_DNLD_ID = C.EXCL_DNLD_ID
+        AND     C.BATCH_REQ_ID = D.BATCH_REQ_ID(+)
+        AND     TO_CHAR(A.EXCL_STRT_DT, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+        AND     (C.EXEC_YN='N' OR (C.EXEC_YN='Y' AND D.STAT_CD='ING'))
+        AND     A.USR_ID = #{sessionUserId}
+    </select>
+
+</mapper>

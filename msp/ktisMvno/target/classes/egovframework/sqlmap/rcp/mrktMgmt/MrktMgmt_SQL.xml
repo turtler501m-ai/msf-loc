@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.mrktMgmt.mapper.MrktMgmtMapper">
+
+	<!-- 발송이력 조회 -->
+	<select id="getMarketingSmsSendList" parameterType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+
+		/* MrktMgmtMapper.getMarketingSmsSendList */
+		SELECT *
+		FROM  (
+		<if test='searchSendDiv != "MCP"'>
+			SELECT  TO_CHAR(TO_DATE(A.SEND_REQ_DTTM,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS SEND_REQ_DTTM
+			, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP2046' AND CD_VAL = A.SEND_DIVISION) AS SEND_DIVISION
+			, A.CONTRACT_NUM
+			, A.PORTAL_USER_ID
+			<![CDATA[
+				        , (SELECT SUB_LINK_NAME
+				             FROM MSP_JUO_SUB_INFO_HIST
+                            WHERE 1=1
+                              AND (EVNT_CHANGE_DATE <= D.REPORT_RECV_TIME AND EVNT_CHANGE_DATE >= (SELECT MAX(EVNT_CHANGE_DATE)
+				                                                                                                            FROM MSP_JUO_SUB_INFO_HIST
+				                                                                                                           WHERE 1=1
+				                                                                                                             AND CONTRACT_NUM = A.CONTRACT_NUM
+				                                                                                                             AND SUB_LINK_NAME IS NOT NULL
+				                                                                                                             AND EVNT_CHANGE_DATE <= D.REPORT_RECV_TIME))
+                               AND CONTRACT_NUM = A.CONTRACT_NUM
+                               AND SUB_LINK_NAME IS NOT NULL
+                               AND ROWNUM = 1
+                          ) AS CUST_NM
+				        , (SELECT SUBSCRIBER_NO
+				             FROM MSP_JUO_SUB_INFO_HIST
+                            WHERE 1=1
+                              AND (EVNT_CHANGE_DATE <= D.REPORT_RECV_TIME AND EVNT_CHANGE_DATE >= (SELECT MAX(EVNT_CHANGE_DATE)
+				                                                                                                            FROM MSP_JUO_SUB_INFO_HIST
+				                                                                                                           WHERE 1=1
+				                                                                                                             AND CONTRACT_NUM = A.CONTRACT_NUM
+				                                                                                                             AND SUBSCRIBER_NO IS NOT NULL
+				                                                                                                             AND EVNT_CHANGE_DATE <= D.REPORT_RECV_TIME))
+                               AND CONTRACT_NUM = A.CONTRACT_NUM
+                               AND SUBSCRIBER_NO IS NOT NULL
+                               AND ROWNUM = 1
+                          ) AS MOBILE_NO
+                         ]]>
+			, DECODE(D.RESULT, NULL, 'N', 'Y') AS SEND_YN
+			, DECODE(TRIM(D.RESULT), '0',
+			TO_CHAR(TO_DATE(D.REPORT_RECV_TIME,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS'), '') AS SEND_TIME
+			, TO_CHAR(TO_DATE(C.STRT_DTTM,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS STRT_DTTM
+			, A.SEND_CNT
+			, FN_GET_CODENM('CMN0283', TRIM(D.RESULT)) AS RESULT_NM
+			FROM   MSP_SMS_SEND_MST A
+			, MSP_MRKT_AGR_MGMT C
+			, AM2X_SUBMIT_LOG D
+			WHERE   A.SEND_DIVISION = 'MSP'
+			AND     A.SEND_REQ_DTTM BETWEEN  #{sendStDt} || '000000' AND #{sendEdDt} || '235959'
+			AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+			AND     A.SEND_REQ_DTTM BETWEEN C.STRT_DTTM AND C.END_DTTM
+			AND     A.MSEQ = D.MSG_ID(+)
+			AND     A.TEMPLATE_ID = 1
+			AND     A.KT_SMS_YN = 'Y'
+		</if>
+
+		<if test="searchSendDiv == null or searchSendDiv == ''">
+			UNION ALL
+		</if>
+
+		<if test='searchSendDiv != "MSP"'>
+			SELECT  TO_CHAR(TO_DATE(A.SEND_REQ_DTTM,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS SEND_REQ_DTTM
+			, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP2046' AND CD_VAL = A.SEND_DIVISION) AS SEND_DIVISION
+			, A.CONTRACT_NUM
+			, A.PORTAL_USER_ID
+			, C.NAME AS CUST_NM
+			, C.MOBILE_NO
+			, DECODE(B.RESULT, NULL, 'N', 'Y') AS SEND_YN
+			, DECODE(TRIM(B.RESULT), '0',
+			TO_CHAR(TO_DATE(B.REPORT_RECV_TIME,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS'), '') AS SEND_TIME
+			, TO_CHAR(TO_DATE(
+			(SELECT MIN(STRT_DTTM)
+			FROM MCP_MRKT_HIST@DL_MCP
+			WHERE USERID = C.USERID
+			AND A.SEND_REQ_DTTM BETWEEN STRT_DTTM AND END_DTTM
+			AND AGR_YN = 'Y')
+			,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS STRT_DTTM
+			, A.SEND_CNT
+			, FN_GET_CODENM('CMN0283', TRIM(B.RESULT)) AS RESULT_NM
+			FROM    MSP_SMS_SEND_MST A
+			, AM2X_SUBMIT_LOG B
+			, MCP_USER@DL_MCP C
+			WHERE   A.SEND_DIVISION = 'MCP'
+			AND     A.SEND_REQ_DTTM BETWEEN  #{sendStDt} || '000000' AND #{sendEdDt} || '235959'
+			AND     A.MSEQ = B.MSG_ID(+)
+			AND     A.PORTAL_USER_ID = C.USERID
+			AND     A.TEMPLATE_ID = 2
+			AND     A.KT_SMS_YN = 'Y'
+		</if>
+		)
+		WHERE  1 = 1
+		<if test="searchSendYn != null and searchSendYn != ''">
+			AND    DECODE(B.RESULT, NULL, 'N', 'Y') = #{searchSendYn}
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test="searchCd == 'contractNum'">
+					AND (CONTRACT_NUM = #{searchVal}
+					OR CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+				</when>
+				<when test="searchCd == 'custName'">
+					AND    UPPER(CUST_NM) LIKE '%' || UPPER(#{searchVal}) || '%'
+				</when>
+				<when test="searchCd == 'mobileNo'">
+					AND    MOBILE_NO = #{searchVal}
+				</when>
+				<when test="searchCd == 'portalId'">
+					AND    PORTAL_USER_ID = #{searchVal}
+				</when>
+			</choose>
+		</if>
+
+		ORDER BY SEND_REQ_DTTM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 발송이력 조회(과거) -->
+	<select id="getMarketingSmsSendListOld" parameterType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+
+		/* MrktMgmtMapper.getMarketingSmsSendListOld */
+		SELECT *
+		FROM  (
+		<if test='searchSendDiv != "MCP"'>
+			SELECT  TO_CHAR(TO_DATE(A.SEND_REQ_DTTM,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS SEND_REQ_DTTM
+			, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP2046' AND CD_VAL = A.SEND_DIVISION) AS SEND_DIVISION
+			, A.CONTRACT_NUM
+			, A.PORTAL_USER_ID
+			<![CDATA[
+				        , (SELECT SUB_LINK_NAME
+				             FROM MSP_JUO_SUB_INFO_HIST
+                            WHERE 1=1
+                              AND (EVNT_CHANGE_DATE <= TO_CHAR(D.REPORT_TIME,'YYYYMMDDHH24MISS') AND EVNT_CHANGE_DATE >= (SELECT MAX(EVNT_CHANGE_DATE)
+				                                                                                                            FROM MSP_JUO_SUB_INFO_HIST
+				                                                                                                           WHERE 1=1
+				                                                                                                             AND CONTRACT_NUM = A.CONTRACT_NUM
+				                                                                                                             AND SUB_LINK_NAME IS NOT NULL
+				                                                                                                             AND EVNT_CHANGE_DATE <= TO_CHAR(D.REPORT_TIME,'YYYYMMDDHH24MISS')))
+                               AND CONTRACT_NUM = A.CONTRACT_NUM
+                               AND SUB_LINK_NAME IS NOT NULL
+                               AND ROWNUM = 1
+                          ) AS CUST_NM
+				        , (SELECT SUBSCRIBER_NO
+				             FROM MSP_JUO_SUB_INFO_HIST
+                            WHERE 1=1
+                              AND (EVNT_CHANGE_DATE <= TO_CHAR(D.REPORT_TIME,'YYYYMMDDHH24MISS') AND EVNT_CHANGE_DATE >= (SELECT MAX(EVNT_CHANGE_DATE)
+				                                                                                                            FROM MSP_JUO_SUB_INFO_HIST
+				                                                                                                           WHERE 1=1
+				                                                                                                             AND CONTRACT_NUM = A.CONTRACT_NUM
+				                                                                                                             AND SUBSCRIBER_NO IS NOT NULL
+				                                                                                                             AND EVNT_CHANGE_DATE <= TO_CHAR(D.REPORT_TIME,'YYYYMMDDHH24MISS')))
+                               AND CONTRACT_NUM = A.CONTRACT_NUM
+                               AND SUBSCRIBER_NO IS NOT NULL
+                               AND ROWNUM = 1
+                          ) AS MOBILE_NO
+                         ]]>
+			, DECODE(D.SEND_TIME, NULL, 'N', 'Y') AS SEND_YN
+			, DECODE(TRIM(D.RESULT), '100',
+			TO_CHAR(D.REPORT_TIME,'YYYY-MM-DD HH24:MI:SS'), '') AS SEND_TIME
+			, TO_CHAR(TO_DATE(C.STRT_DTTM,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS STRT_DTTM
+			, A.SEND_CNT
+			, FN_GET_CODENM('CMN0068', TRIM(D.RESULT)) AS RESULT_NM
+			FROM   MSP_SMS_SEND_MST A
+			, MSP_MRKT_AGR_MGMT C
+			, MSG_RESULT D
+			WHERE   A.SEND_DIVISION = 'MSP'
+			AND     A.SEND_REQ_DTTM BETWEEN  #{sendStDt} || '000000' AND #{sendEdDt} || '235959'
+			AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+			AND     A.SEND_REQ_DTTM BETWEEN C.STRT_DTTM AND C.END_DTTM
+			AND     A.MSEQ = D.MSEQ(+)
+			AND     A.TEMPLATE_ID = 1
+			AND     A.KT_SMS_YN IS NULL
+		</if>
+
+		<if test="searchSendDiv == null or searchSendDiv == ''">
+			UNION ALL
+		</if>
+
+		<if test='searchSendDiv != "MSP"'>
+			SELECT  TO_CHAR(TO_DATE(A.SEND_REQ_DTTM,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS SEND_REQ_DTTM
+			, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP2046' AND CD_VAL = A.SEND_DIVISION) AS SEND_DIVISION
+			, A.CONTRACT_NUM
+			, A.PORTAL_USER_ID
+			, C.NAME AS CUST_NM
+			, C.MOBILE_NO
+			, DECODE(B.SEND_TIME, NULL, 'N', 'Y') AS SEND_YN
+			, DECODE(TRIM(B.RESULT), '100',
+			TO_CHAR(B.REPORT_TIME,'YYYY-MM-DD HH24:MI:SS'), '') AS SEND_TIME
+			, TO_CHAR(TO_DATE(
+			(SELECT MIN(STRT_DTTM)
+			FROM MCP_MRKT_HIST@DL_MCP
+			WHERE USERID = C.USERID
+			AND A.SEND_REQ_DTTM BETWEEN STRT_DTTM AND END_DTTM
+			AND AGR_YN = 'Y')
+			,'YYYYMMDDHH24MISS'),'YYYY-MM-DD') AS STRT_DTTM
+			, A.SEND_CNT
+			, FN_GET_CODENM('CMN0068', TRIM(B.RESULT)) AS RESULT_NM
+			FROM    MSP_SMS_SEND_MST A
+			, MSG_RESULT B
+			, MCP_USER@DL_MCP C
+			WHERE   A.SEND_DIVISION = 'MCP'
+			AND     A.SEND_REQ_DTTM BETWEEN  #{sendStDt} || '000000' AND #{sendEdDt} || '235959'
+			AND     A.MSEQ = B.MSEQ(+)
+			AND     A.PORTAL_USER_ID = C.USERID
+			AND     A.TEMPLATE_ID = 2
+			AND     A.KT_SMS_YN IS NULL
+		</if>
+		)
+		WHERE  1 = 1
+		<if test="searchSendYn != null and searchSendYn != ''">
+			AND    SEND_YN = #{searchSendYn}
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test="searchCd == 'contractNum'">
+					AND (CONTRACT_NUM = #{searchVal}
+					OR CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+				</when>
+				<when test="searchCd == 'custName'">
+					AND    UPPER(CUST_NM) LIKE '%' || UPPER(#{searchVal}) || '%'
+				</when>
+				<when test="searchCd == 'mobileNo'">
+					AND    MOBILE_NO = #{searchVal}
+				</when>
+				<when test="searchCd == 'portalId'">
+					AND    PORTAL_USER_ID = #{searchVal}
+				</when>
+			</choose>
+		</if>
+
+		ORDER BY SEND_REQ_DTTM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+
+	<!-- 마케팅동의 조회 -->
+	<select id="getMarketingHistoryList" parameterType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+
+		/* MrktMgmtMapper.getMarketingHistoryList */
+		SELECT A.CONTRACT_NUM
+		,B.SUB_LINK_NAME AS CUST_NM
+		,B.SUBSCRIBER_NO AS MOBILE_NO
+		,TO_CHAR(TO_DATE(A.STRT_DTTM,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS STRT_DTTM
+		,DECODE(A.AGR_YN,'Y','동의','미동의') AS AGR_YN
+		/*20230821  개인정보 수집이용 동의(혜택), 제 3자제공동의 추기*/
+		,CASE WHEN A.PERSONAL_INFO_COLLECT_AGREE = 'Y' THEN '동의'
+		WHEN A.PERSONAL_INFO_COLLECT_AGREE = 'N' THEN '미동의'
+		ELSE A.PERSONAL_INFO_COLLECT_AGREE
+		END AS PERSONAL_INFO_COLLECT_AGREE
+		,CASE WHEN A.OTHERS_TRNS_AGREE = 'Y' THEN '동의'
+		WHEN A.OTHERS_TRNS_AGREE = 'N' THEN '미동의'
+		ELSE A.OTHERS_TRNS_AGREE
+		END AS OTHERS_TRNS_AGREE
+
+		,CASE WHEN A.OTHERS_TRNS_KT_AGREE = 'Y' THEN '동의'
+		WHEN A.OTHERS_TRNS_KT_AGREE = 'N' THEN '미동의'
+		ELSE A.OTHERS_TRNS_KT_AGREE
+		END AS OTHERS_TRNS_KT_AGREE
+		,CASE WHEN A.OTHERS_AD_RECEIVE_AGREE = 'Y' THEN '동의'
+		WHEN A.OTHERS_AD_RECEIVE_AGREE = 'N' THEN '미동의'
+		ELSE A.OTHERS_AD_RECEIVE_AGREE
+		END AS OTHERS_AD_RECEIVE_AGREE
+
+		FROM   MSP_MRKT_AGR_MGMT A, MSP_JUO_SUB_INFO B
+		WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND    B.SUB_STATUS <![CDATA[ <> ]]> 'C'
+		AND    A.AGR_YN = #{searchAgrYn}
+		AND    TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN A.STRT_DTTM AND A.END_DTTM
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test="searchCd == 'contractNum'">
+					AND (A.CONTRACT_NUM = #{searchVal}
+					OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+				</when>
+				<when test="searchCd == 'custName'">
+					AND    UPPER(B.SUB_LINK_NAME) LIKE '%' || UPPER(#{searchVal}) || '%'
+				</when>
+				<when test="searchCd == 'mobileNo'">
+					AND    B.SUBSCRIBER_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		ORDER BY B.SUB_LINK_NAME
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<select id="getMspMrktAgrMgmtByInfo"
+			parameterType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO"
+			resultType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO">
+		/* MrktMgmtMapper.getMspMrktAgrMgmtByInfo */
+		SELECT A.AGR_YN AS agrYn
+			 ,A.PERSONAL_INFO_COLLECT_AGREE AS personalInfoCollectAgree
+			 ,A.OTHERS_TRNS_AGREE AS othersTrnsAgree
+			 ,A.OTHERS_TRNS_KT_AGREE AS othersTrnsKtAgree
+			 ,A.OTHERS_AD_RECEIVE_AGREE AS othersAdReceiveAgree
+			 ,TO_CHAR(A.MRKT_RVISN_DTTM , 'YYYY/MM/DD HH24:MI:SS') AS mrktRvisnDttm
+			 ,TO_CHAR(A.PERSONAL_INFO_RVISN_DTTM , 'YYYY/MM/DD HH24:MI:SS') AS personalInfoRvisnDttm
+			 ,TO_CHAR(A.OTHERS_TRNS_RVISN_DTTM , 'YYYY/MM/DD HH24:MI:SS') AS othersTrnsRvisnDttm
+			 ,TO_CHAR(A.OTHERS_TRNS_KT_RVISN_DTTM , 'YYYY/MM/DD HH24:MI:SS') AS othersTrnsKtAgree
+			 ,TO_CHAR(A.OTHERS_AD_RECEIVE_RVISN_DTTM , 'YYYY/MM/DD HH24:MI:SS') AS othersAdReceiveAgree
+		FROM   MSP_MRKT_AGR_MGMT A
+		WHERE  A.CONTRACT_NUM = #{contractNum}
+		  AND    A.END_DTTM = '99991231235959'
+	</select>
+
+	<update id="expireMrktAgrMgmt" parameterType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO">
+		/* MrktMgmtMapper.expireMrktAgrMgmt */
+		UPDATE MSP_MRKT_AGR_MGMT A
+		SET A.END_DTTM = TO_CHAR(SYSDATE - 1/24/60/60, 'YYYYMMDDHH24MISS')
+		  ,A.RVISN_ID = #{sessionUserId}
+		  ,A.RVISN_DTTM = SYSDATE
+		WHERE  A.CONTRACT_NUM = #{contractNum}
+		  AND    A.END_DTTM = '99991231235959'
+	</update>
+
+	<insert id="regMspMrktAgrMgmtByInfo" parameterType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO">
+		/* MrktMgmtMapper.regMspMrktAgrMgmtByInfo */
+		INSERT INTO MSP_MRKT_AGR_MGMT (
+									   CONTRACT_NUM
+									  ,AGR_YN
+			/*20230821  개인정보 수집이용 동의(혜택), 제 3자제공동의 추기*/
+									  ,PERSONAL_INFO_COLLECT_AGREE
+									  ,OTHERS_TRNS_AGREE
+									  ,OTHERS_TRNS_KT_AGREE
+									  ,OTHERS_AD_RECEIVE_AGREE
+									  ,STRT_DTTM
+									  ,END_DTTM
+									  ,REGST_ID
+									  ,REGST_DTTM
+									  ,RVISN_ID
+									  ,RVISN_DTTM
+									  ,MRKT_RVISN_DTTM
+									  ,PERSONAL_INFO_RVISN_DTTM
+									  ,OTHERS_TRNS_RVISN_DTTM
+									  ,OTHERS_TRNS_KT_RVISN_DTTM
+									  ,OTHERS_AD_RECEIVE_RVISN_DTTM
+		) VALUES (
+					 #{contractNum}
+				 ,#{agrYn}
+				 ,#{personalInfoCollectAgree}
+				 ,#{othersTrnsAgree}
+				 ,#{othersTrnsKtAgree}
+		         ,#{othersAdReceiveAgree}
+				 ,TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+				 ,'99991231235959'
+				 ,#{sessionUserId}
+				 ,SYSDATE
+				 ,#{sessionUserId}
+				 ,SYSDATE
+				 ,TO_DATE(#{mrktRvisnDttm} , 'yyyy/mm/dd hh24:mi:ss')
+				 ,TO_DATE(#{personalInfoRvisnDttm} , 'yyyy/mm/dd hh24:mi:ss')
+				 ,TO_DATE(#{othersTrnsRvisnDttm} , 'yyyy/mm/dd hh24:mi:ss')
+				 ,TO_DATE(#{othersTrnsKtRvisnDttm} , 'yyyy/mm/dd hh24:mi:ss')
+				 ,TO_DATE(#{othersAdReceiveRvisnDttm} , 'yyyy/mm/dd hh24:mi:ss')
+				 )
+	</insert>
+
+	<update id="updMspRequestByInfo" parameterType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO">
+		/* MrktMgmtMapper.updMspRequestByInfo */
+		UPDATE MSP_REQUEST A
+		SET A.CLAUSE_PRI_AD_FLAG = #{agrYn}
+		WHERE  A.CONTRACT_NUM = #{contractNum}
+	</update>
+
+	<select id="getContractInfo" parameterType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO" resultType="com.ktis.msp.rcp.mrktMgmt.vo.MrktMgmtVO">
+		/* MrktMgmtMapper.getContractInfo */
+		SELECT SUB.CONTRACT_NUM		AS contractNum
+			 , SUB.SUBSCRIBER_NO	AS subscriberNo
+		     , SUB.SVC_CNTR_NO      AS svcCntrNo
+			 , CUS.CUSTOMER_ID	    AS customerId
+		FROM MSP_JUO_SUB_INFO SUB
+		   , MSP_JUO_CUS_INFO CUS
+		WHERE SUB.CUSTOMER_ID = CUS.CUSTOMER_ID
+		  AND SUB.CONTRACT_NUM = #{contractNum}
+		  AND SUB.SUB_STATUS <![CDATA[<>]]> 'C'
+	</select>
+
+</mapper>

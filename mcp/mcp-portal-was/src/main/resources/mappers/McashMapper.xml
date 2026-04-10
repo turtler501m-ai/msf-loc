@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="McashMapper">
+
+    <!-- M쇼핑할인 회원정보 조회  -->
+    <select id="getMcashUserByUserid" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.mcash.dto.McashUserDto">
+        /* McashMapper.getMcashUserByUserid */
+        SELECT USERID
+             , STATUS
+             , CUSTOMER_ID
+             , CONTRACT_NUM
+             , SVC_CNTR_NO
+             , STRT_DTTM
+             , END_DTTM
+             , EVNT_TYPE
+             , EVNT_TYPE_DTL
+        FROM NMCP_MCASH_USER
+        WHERE USERID = #{userid}
+    </select>
+
+    <!-- M쇼핑할인 회원정보 조회 (CUSTOMER_ID) -->
+    <select id="getMcashUserByCustomerId" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.mcash.dto.McashUserDto">
+        /* McashMapper.getMcashUserByCustomerId */
+        SELECT *
+        FROM ( SELECT USERID
+                    , STATUS
+                    , CUSTOMER_ID
+                    , CONTRACT_NUM
+                    , SVC_CNTR_NO
+                    , STRT_DTTM
+                    , END_DTTM
+                    , EVNT_TYPE
+                    , EVNT_TYPE_DTL
+              FROM NMCP_MCASH_USER
+              WHERE CUSTOMER_ID = #{customerId}
+              ORDER BY RVISN_DTTM DESC )
+        WHERE ROWNUM = 1
+    </select>
+
+    <!-- M쇼핑할인 회원정보 조회  (svcCntrNo) -->
+    <select id="getMcashUserBySvcCntrNo" parameterType="com.ktmmobile.mcp.mcash.dto.McashUserDto" resultType="com.ktmmobile.mcp.mcash.dto.McashUserDto">
+        /* McashMapper.getMcashUserByUserid */
+        SELECT USERID
+             , STATUS
+             , CUSTOMER_ID
+             , CONTRACT_NUM
+             , SVC_CNTR_NO
+             , STRT_DTTM
+             , END_DTTM
+             , EVNT_TYPE
+             , EVNT_TYPE_DTL
+        FROM NMCP_MCASH_USER
+        WHERE USERID = #{userid}
+        AND   SVC_CNTR_NO = #{svcCntrNo}
+    </select>
+
+    <!-- M쇼핑할인 가입고객 수 -->
+    <select id="getMcashJoinCnt" parameterType="java.lang.String"  resultType="java.lang.Integer">
+        /* McashMapper.getMcashJoinCnt */
+        SELECT COUNT(USERID)
+        FROM NMCP_MCASH_USER
+        WHERE USERID = #{userid}
+        AND STATUS = 'A'
+    </select>
+
+    <!-- M쇼핑할인 회원정보 insert -->
+    <insert id="insertMcashUserInfo" parameterType="com.ktmmobile.mcp.mcash.dto.McashUserDto">
+        /* McashMapper.insertMcashUserInfo */
+        INSERT INTO NMCP_MCASH_USER (
+            USERID
+            , STATUS
+            , CUSTOMER_ID
+            , CONTRACT_NUM
+            , SVC_CNTR_NO
+            , STRT_DTTM
+            , END_DTTM
+            , EVNT_TYPE
+            , EVNT_TYPE_DTL
+            , EVNT_DT
+            , REGST_ID
+            , REGST_DTTM
+            , RVISN_ID
+            , RVISN_DTTM
+        ) VALUES (
+            #{userid}
+            , 'A'
+            , #{customerId}
+            , #{contractNum}
+            , #{svcCntrNo}
+            , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , '99991231235959'
+            , #{evntType}
+            , #{evntTypeDtl}
+            , TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , #{userid}
+            , SYSDATE
+            , #{userid}
+            , SYSDATE
+        )
+    </insert>
+
+    <!-- M쇼핑할인 회원정보 update -->
+    <update id="updateMcashUserInfo" parameterType="com.ktmmobile.mcp.mcash.dto.McashUserDto">
+        /* McashMapper.updateMcashUserInfo */
+        UPDATE NMCP_MCASH_USER
+        SET STATUS = #{status}
+            , CONTRACT_NUM = #{contractNum}
+            , SVC_CNTR_NO = #{svcCntrNo}
+            , EVNT_TYPE = #{evntType}
+            , EVNT_TYPE_DTL = #{evntTypeDtl}
+            , EVNT_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , RVISN_ID = #{userid}
+            , RVISN_DTTM = SYSDATE
+        <if test='evntType != null and (evntType == "JOIN" or evntType == "REPAIR")'>
+            , STRT_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+        </if>
+        <choose>
+            <when test='status != null and status == "C"'>
+                , END_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            </when>
+            <when test='status != null and status == "A"'>
+                , END_DTTM = '99991231235959'
+            </when>
+        </choose>
+        WHERE USERID = #{userid}
+    </update>
+
+    <!-- M쇼핑할인 회원정보 이력 insert -->
+    <update id="insertMcashUserHist" parameterType="com.ktmmobile.mcp.mcash.dto.McashUserDto">
+        /* McashMapper.insertMcashUserHist */
+        INSERT INTO NMCP_MCASH_USER_HIST (
+            HIST_SEQ
+            , USERID
+            , STATUS
+            , CUSTOMER_ID
+            , CONTRACT_NUM
+            , SVC_CNTR_NO
+            , STRT_DTTM
+            , END_DTTM
+            , EVNT_TYPE
+            , EVNT_TYPE_DTL
+            , EVNT_DT
+            , REGST_ID
+            , REGST_DTTM
+            , RVISN_ID
+            , RVISN_DTTM
+        )
+        SELECT
+            SQ_MCASH_USER_HIST.NEXTVAL
+            , USERID
+            , STATUS
+            , CUSTOMER_ID
+            , CONTRACT_NUM
+            , SVC_CNTR_NO
+            , STRT_DTTM
+            , END_DTTM
+            , EVNT_TYPE
+            , EVNT_TYPE_DTL
+            , EVNT_DT
+            , REGST_ID
+            , REGST_DTTM
+            , RVISN_ID
+            , RVISN_DTTM
+        FROM (  SELECT USERID
+                       , STATUS
+                       , CUSTOMER_ID
+                       , CONTRACT_NUM
+                       , SVC_CNTR_NO
+                       , STRT_DTTM
+                       , END_DTTM
+                       , EVNT_TYPE
+                       , EVNT_TYPE_DTL
+                       , EVNT_DT
+                       , REGST_ID
+                       , REGST_DTTM
+                       , RVISN_ID
+                       , RVISN_DTTM
+                FROM NMCP_MCASH_USER
+                WHERE CUSTOMER_ID = #{customerId}
+                ORDER BY RVISN_DTTM DESC )
+        WHERE ROWNUM = 1
+    </update>
+
+    <select id="getMcashMenuAccessCnt" resultType="java.lang.Integer">
+        /* McashMapper.getMcashMenuAccessCnt */
+        SELECT SUM(MENU_SEQ_CNT)
+          FROM MV_MCP_ACCESS_TRACE
+         WHERE MENU_SEQ IN ( SELECT MENU_SEQ
+                               FROM NMCP_USER_MENU_BAS
+                              WHERE URL_ADR IN ('/mcash/mcashView.do', '/m/mcash/mcashView.do') )
+    </select>
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rsk.grntInsrMgmt.mapper.GrntInsrMgmtMapper">
+	<sql id="grntInsrBillList">
+		/* GrntInsrMgmtMapper.grntInsrBillList */
+		SELECT A.WORK_YM,
+			TO_CHAR(TO_DATE(A.WORK_YM, 'YYYYMM'), 'YYYY-MM') AS WORK_YM_EX,
+			B.CONTRACT_NUM,
+			B.SUB_STATUS,
+			FN_GET_CODENM('MSP0003', B.SUB_STATUS) AS SUB_STATUS_NM,
+			A.GRNT_INSR_MNGM_NO,
+			A.BILL_DT,
+			TO_CHAR(TO_DATE(A.BILL_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS BILL_DT_EX,
+			A.BILL_AMNT,
+			A.PYMN_DT,
+			TO_CHAR(TO_DATE(A.PYMN_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS PYMN_DT_EX,
+			A.PYMN_AMNT,
+			A.ERR_CD,
+			A.ERR_DSCR
+		FROM CLS_BOND_INSR_BILL_DATA A, MSP_DAILY_CLOSE_STTC B
+		WHERE
+			1 = 1
+		  AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO(+)
+		  AND A.WORK_YM BETWEEN #{strtYm} AND #{endYm}
+		<if test="searchType !='' and searchType != null">
+			<if test="searchType == 10">
+				AND A.GRNT_INSR_MNGM_NO = #{searchVal}
+			</if>
+			<if test="searchType == 20">
+				AND (B.CONTRACT_NUM = #{searchVal}
+     				OR B.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+			</if>
+		</if>
+		ORDER BY A.WORK_YM, B.CONTRACT_NUM
+	</sql>
+	
+	<select id="getGrntInsrList" parameterType="com.ktis.msp.rsk.grntInsrMgmt.vo.GrntInsrMgmtVO" 
+										resultType="egovframework.rte.psl.dataaccess.util.EgovMap" >
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			<include refid="grntInsrBillList" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getGrntInsrListEx" parameterType="com.ktis.msp.rsk.grntInsrMgmt.vo.GrntInsrMgmtVO" 
+									resultType="egovframework.rte.psl.dataaccess.util.EgovMap" >
+		<include refid="grntInsrBillList" />
+	</select>
+</mapper>

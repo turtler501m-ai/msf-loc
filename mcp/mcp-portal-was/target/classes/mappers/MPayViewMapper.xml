@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MPayViewMapper">
+	
+	 <resultMap id="mPayDateMap" type="HashMap" >
+        <result property="monthTitle" column="MONTH_TITLE"></result>
+        <result property="monthFirstDay" column="MONTH_FIRST_DAY"></result>
+        <result property="monthLastDay" column="MONTH_LAST_DAY"></result>
+    </resultMap>
+	
+	<!-- 소액결제 내역 -->
+	<select id="selectMPayList" resultType="com.ktmmobile.mcp.mypage.dto.MPayViewDto" parameterType="com.ktmmobile.mcp.mypage.dto.MPayViewDto">
+		SELECT 
+			SETTL_DEAL_NO, 
+			SETTL_NO, 
+			PAY_STATUS, 
+			(SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'MPAY' AND USE_YN='Y' AND DTL_CD= T.PAY_STATUS) AS PAY_STATUS_NM,
+            (SELECT INDC_ODRG FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'MPAY' AND USE_YN='Y' AND DTL_CD= T.PAY_STATUS) AS PAY_STATUS_CD,
+			SETTL_DT, 
+			SETTL_DT_FMT, 
+			SETTL_NM,
+			AMT, 
+			TMON_LMT_AMT, 
+			RMND_LMT_AMT, 
+			PTNR_PG_ID, 
+			PTNR_PG_NM, 
+			PTNR_CP_ID, 
+			PTNR_CP_NM, 
+			PTNR_SVC_ID, 
+			PTNR_SVC_NM
+		FROM(	
+			SELECT 
+			    S.SETTL_DEAL_NO, -- PK
+			    S.SETTL_NO, -- 결제번호 
+			    CASE WHEN ( SELECT COUNT(*)
+			                FROM NMCP_MPAY_SETTL_KIS
+			                WHERE VENDOR_CD= 'KIS'
+			                AND NSTEP_SVC_CONT_NO= #{svcCntrNo}
+			                AND S.SETTL_NO= SETTL_NO) > 1 THEN 'PRTLPAY'
+			         ELSE 'FULLPAY' END AS PAY_STATUS, -- 부분결제, 결제 구분  
+			    S.SETTL_DT,  
+			    TO_CHAR(TO_DATE(S.SETTL_DT,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS' ) AS  SETTL_DT_FMT, -- 결제일시
+			    S.SETTL_NM,    -- 구매상품
+			    S.SETTL_AMT AS AMT, -- 금액
+			    S.TMON_LMT_AMT,  -- 당월한도금액
+			    S.RMND_LMT_AMT,  -- 잔여한도금액
+			    S.PTNR_PG_ID,
+			    S.PTNR_PG_NM, -- 결제대행사
+			    S.PTNR_CP_ID,
+			    S.PTNR_CP_NM,  -- 이용업체명
+			    S.PTNR_SVC_ID,
+			    S.PTNR_SVC_NM  -- 이용서비스
+			FROM NMCP_MPAY_SETTL_KIS S
+			WHERE VENDOR_CD= 'KIS'  
+			AND NSTEP_SVC_CONT_NO= #{svcCntrNo}  --  계약번호
+			AND (SUBSTR(SETTL_DT, 0,6) = #{mPayPeriod})  -- 날짜 조건
+			UNION ALL
+	 		SELECT 
+		        S.SETTL_DEAL_NO, -- PK
+		        S.SETTL_NO, -- 결제번호 
+		        CASE WHEN (C.PRTL_CNCL_YN='Y') THEN 'PRTLCNCL'
+		             WHEN(C.PRTL_CNCL_YN='N') THEN 'FULLCNCL'
+		             ELSE '' END AS PAY_STATUS, -- 부분취소, 취소 
+		        S.SETTL_DT,  
+		        TO_CHAR(TO_DATE(S.SETTL_DT,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS' ) AS  SETTL_DT_FMT, -- 결제일시
+		        S.SETTL_NM,    -- 구매상품
+		        CASE WHEN (C.PRTL_CNCL_YN= 'N') THEN  C.SETTL_AMT
+		             ELSE C.CNCL_AMT END AS AMT, -- 취소금액
+		        S.TMON_LMT_AMT,  -- 당월한도금액
+		        S.RMND_LMT_AMT,  -- 잔여한도금액
+		        S.PTNR_PG_ID,
+		        S.PTNR_PG_NM, -- 결제대행사
+		        S.PTNR_CP_ID,
+		        S.PTNR_CP_NM,  -- 이용업체명
+		        S.PTNR_SVC_ID,
+		        S.PTNR_SVC_NM  -- 이용서비스  
+			FROM
+			(
+			  SELECT SETTL_DEAL_NO, SETTL_NO, SETTL_DT, SETTL_NM, TMON_LMT_AMT, RMND_LMT_AMT, PTNR_PG_ID, PTNR_PG_NM,
+			  		 PTNR_CP_ID, PTNR_CP_NM, PTNR_SVC_ID, PTNR_SVC_NM
+			  FROM NMCP_MPAY_SETTL_KIS
+			  WHERE VENDOR_CD= 'KIS'  
+			  AND NSTEP_SVC_CONT_NO= #{svcCntrNo}  --  계약번호
+			  AND (SUBSTR(SETTL_DT, 0,6) = #{mPayPeriod})  -- 날짜 조건
+			) S , NMCP_MPAY_CANCEL_KIS C
+			WHERE  S.SETTL_DEAL_NO = C.SETTL_DEAL_NO(+)
+		) T
+		WHERE PAY_STATUS IS NOT NULL
+		ORDER BY SETTL_DT DESC , PAY_STATUS_CD ASC
+	</select>
+	
+	<!-- 소액결제 조회 날짜 리스트 -->
+    <select id="getDateListFromOpening" resultMap="mPayDateMap">
+		SELECT MONTH_TITLE, MONTH_FIRST_DAY, MONTH_LAST_DAY
+		FROM 
+		(
+			SELECT TO_CHAR(ADD_MONTHS(SYSDATE, -(LEVEL- 1)), 'YYYYMM') AS MONTH_TITLE,
+			       		   TO_CHAR(ADD_MONTHS(LAST_DAY(SYSDATE)+1,-(LEVEL)),'YYYY.MM.DD') MONTH_FIRST_DAY,
+			       		   TO_CHAR(ADD_MONTHS(LAST_DAY(SYSDATE),-(LEVEL-1)),'YYYY.MM.DD') MONTH_LAST_DAY
+			FROM DUAL
+			CONNECT BY LEVEL <![CDATA[<=]]> 13
+		)
+		WHERE TO_DATE(MONTH_TITLE, 'YYYYMM') <![CDATA[>=]]> TO_DATE('202207','YYYYMM')
+    </select>
+	
+	<!-- 소액결제 차단여부 조회 -->
+	<select id="getMpayAgree" resultType="String" parameterType="com.ktmmobile.mcp.mypage.dto.MPayViewDto">
+		SELECT CHG_YN
+		FROM
+		( SELECT CHG_YN FROM NMCP_MPAY_TERMS_KIS
+		  WHERE VENDOR_CD= 'KIS'
+		  AND SUBSTR(JUICE_SRC_COMB_ID,0,9) = #{svcCntrNo}
+		  ORDER BY RQT_DT DESC
+		)
+		WHERE ROWNUM=1
+	</select>
+	
+	<!-- 소액결제 한도조정 내역 조회 -->
+	<select id="getMpayAdjAmt" resultType="String" parameterType="com.ktmmobile.mcp.mypage.dto.MPayViewDto">
+		SELECT ADJ_AMT
+		FROM 
+		( SELECT ADJ_AMT FROM NMCP_MPAY_ADJUST_KIS
+		  WHERE VENDOR_CD= 'KIS'
+		  AND SUBSTR(JUICE_SRC_COMB_ID,0,9) =  #{svcCntrNo}
+		  ORDER BY RQT_DT DESC
+		)
+		WHERE ROWNUM=1
+	</select>
+	
+	<!-- 최근 결제내역 1건 조회하여 최근 소액결제 한도 확인 -->
+	<select id="getLastTmonLmtAmt" resultType="String" parameterType="com.ktmmobile.mcp.mypage.dto.MPayViewDto">
+		SELECT TMON_LMT_AMT
+		FROM
+		( SELECT TMON_LMT_AMT  FROM NMCP_MPAY_SETTL_KIS
+		  WHERE VENDOR_CD= 'KIS'  
+		  AND NSTEP_SVC_CONT_NO= #{svcCntrNo}
+		  ORDER BY SETTL_DT DESC
+		)
+		WHERE ROWNUM =1
+	</select>
+	
+</mapper>

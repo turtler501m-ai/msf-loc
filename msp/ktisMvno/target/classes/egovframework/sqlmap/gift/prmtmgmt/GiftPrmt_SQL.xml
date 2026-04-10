@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace= "com.ktis.msp.gift.prmtmgmt.mapper.GiftPrmtMapper">
+	
+	<!-- 사은품 프로모션 목록 조회 -->
+	<select id="getGiftPrmtList" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+		/*PromotionMapper.getGiftPrmtList*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  A.PRMT_ID					AS prmtId
+				, A.PRMT_NM					AS prmtNm
+				, A.STRT_DT					AS strtDt
+				, A.END_DT					AS endDt
+				, A.NAC_YN					AS nacYn
+				, A.MNP_YN					AS mnpYn
+				, A.ORGN_TYPE				AS orgnType
+				, FN_GET_CODENM('CMN0055', A.ORGN_TYPE)	AS orgnTypeNm
+				, A.REQ_BUY_TYPE			AS reqBuyType
+				, FN_GET_CODENM('RCP9022', A.REQ_BUY_TYPE)	AS reqBuyTypeNm
+				, A.ENGG_CNT_0				AS enggCnt0
+				, A.ENGG_CNT_12				AS enggCnt12
+				, A.ENGG_CNT_18				AS enggCnt18
+				, A.ENGG_CNT_24				AS enggCnt24
+				, A.ENGG_CNT_30				AS enggCnt30
+				, A.ENGG_CNT_36				AS enggCnt36
+				, A.USG_YN					AS usgYn
+				, A.REGST_ID				AS regstId
+				, FN_GET_USRNM(A.REGST_ID)	AS regstNm
+				, A.REGST_DTTM				AS regstDttm
+				, A.RVISN_ID				AS rvisnId
+				, FN_GET_USRNM(A.RVISN_ID)	AS rvisnNm
+				, A.RVISN_DTTM				AS rvisnDttm
+				, A.AMOUNT_LIMIT            AS amountLimit
+				, A.PRMT_TEXT				AS prmtText
+				, A.PRMT_TYPE				AS prmtType
+				, FN_GET_CODENM('ORG1010', A.PRMT_TYPE)	AS prmtTypeNm
+				, A.CHOICE_LIMIT			AS choiceLimit
+                , A.SHOW_YN                   AS showYn
+                , A.BILL_DT                   AS billDt
+                , A.ORGN_ID                   AS prmtOrgnId
+                , DECODE(A.SHOW_YN ,'N','비노출','노출')   AS showYnNm
+                , A.WIRELESS_YN AS wirelessYn
+                , DECODE(A.WIRELESS_YN ,'N','유선프로모션','무선프로모션')   AS wirelessYnNm
+		FROM    MSP_GIFT_PRMT A
+		WHERE   A.STRT_DT BETWEEN #{searchBaseDate} AND #{searchBaseEndDate}
+		<if test="prmtNm != null and prmtNm != ''">
+			AND     UPPER(A.PRMT_NM) LIKE '%' || UPPER( #{prmtNm} ) || '%'
+		</if>
+		<if test='orgnType != null and orgnType != "" and orgnType != "ALL"'>
+			AND     A.ORGN_TYPE = #{orgnType}
+		</if>
+		<if test="reqBuyType != null and reqBuyType != ''">
+			AND     A.REQ_BUY_TYPE = #{reqBuyType}
+		</if>
+		<if test="onOffType != null and onOffType != ''">
+			AND     EXISTS (SELECT 1 FROM MSP_GIFT_PRMT_ONOFF WHERE PRMT_ID = A.PRMT_ID AND ON_OFF_TYPE = #{onOffType})
+		</if>
+		<if test="showYn != null and showYn != ''">
+			AND     A.SHOW_YN = #{showYn}
+		</if>
+		AND      A.USG_YN = 'Y'
+		ORDER BY A.REGST_DTTM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+	<!-- 사은품 프로모션 목록 엑셀 다운로드 -->
+	<select id="getGiftPrmtListEx" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+		/*PromotionMapper.getGiftPrmtListEx*/
+
+		SELECT  A.PRMT_ID					AS prmtId
+				, A.PRMT_NM					AS prmtNm
+				, A.STRT_DT					AS strtDt
+				, A.END_DT					AS endDt
+				, A.NAC_YN					AS nacYn
+				, A.MNP_YN					AS mnpYn
+				, A.ORGN_TYPE				AS orgnType
+				, FN_GET_CODENM('CMN0055', A.ORGN_TYPE)	AS orgnTypeNm
+				, A.REQ_BUY_TYPE			AS reqBuyType
+				, FN_GET_CODENM('RCP9022', A.REQ_BUY_TYPE)	AS reqBuyTypeNm
+				, A.ENGG_CNT_0				AS enggCnt0
+				, A.ENGG_CNT_12				AS enggCnt12
+				, A.ENGG_CNT_18				AS enggCnt18
+				, A.ENGG_CNT_24				AS enggCnt24
+				, A.ENGG_CNT_30				AS enggCnt30
+				, A.ENGG_CNT_36				AS enggCnt36
+				, A.USG_YN					AS usgYn
+				, A.REGST_ID				AS regstId
+				, FN_GET_USRNM(A.REGST_ID)	AS regstNm
+				, A.REGST_DTTM				AS regstDttm
+				, A.RVISN_ID				AS rvisnId
+				, FN_GET_USRNM(A.RVISN_ID)	AS rvisnNm
+				, A.RVISN_DTTM				AS rvisnDttm
+				, A.AMOUNT_LIMIT            AS amountLimit
+				, A.PRMT_TEXT				AS prmtText
+				, A.PRMT_TYPE				AS prmtType
+				, FN_GET_CODENM('ORG1010', A.PRMT_TYPE)	AS prmtTypeNm
+				, A.CHOICE_LIMIT			AS choiceLimit
+                , A.SHOW_YN					AS showYn
+                , A.BILL_DT					AS billDt
+                , A.ORGN_ID					AS prmtOrgnId
+                , DECODE(A.SHOW_YN ,'N','비노출','노출')   AS showYnNm
+		FROM    MSP_GIFT_PRMT A
+		WHERE   A.STRT_DT BETWEEN #{searchBaseDate} AND #{searchBaseEndDate}
+		<if test="prmtNm != null and prmtNm != ''">
+			AND     UPPER(A.PRMT_NM) LIKE '%' || UPPER( #{prmtNm} ) || '%'
+		</if>
+		<if test='orgnType != null and orgnType != "" and orgnType != "ALL"'>
+			AND     A.ORGN_TYPE = #{orgnType}
+		</if>
+		<if test="reqBuyType != null and reqBuyType != ''">
+			AND     A.REQ_BUY_TYPE = #{reqBuyType}
+		</if>
+		<if test="onOffType != null and onOffType != ''">
+			AND     EXISTS (SELECT 1 FROM MSP_GIFT_PRMT_ONOFF WHERE PRMT_ID = A.PRMT_ID AND ON_OFF_TYPE = #{onOffType})
+		</if>
+		<if test="showYn != null and showYn != ''">
+			AND     A.SHOW_YN = #{showYn}
+		</if>
+		AND      A.USG_YN = 'Y'
+		ORDER BY A.REGST_DTTM DESC
+	</select>
+	
+	<!-- 사은품 프로모션 조직 목록 조회 -->
+	<select id="getGiftPrmtOrgnList" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.getGiftPrmtOrgnList*/
+			SELECT    DECODE(C.ORGN_ID, NULL, '0', '1') AS rowCheck
+					, A.ORGN_ID							AS orgnId
+					, A.ORGN_NM							AS orgnNm
+					, B.CD_DSC							AS typeNm
+			FROM      ORG_ORGN_INFO_MST A
+					, CMN_GRP_CD_MST B
+					, MSP_GIFT_PRMT_ORG C
+			WHERE   A.TYPE_DTL_CD3  = B.CD_VAL
+			AND     A.ORGN_ID = C.ORGN_ID(+)
+			AND     A.TYPE_CD       = '20'  -- 대리점
+			AND     A.ORGN_STAT_CD  = '4'   -- 가동
+			AND     B.GRP_ID        = 'ORG0043'
+			AND     B.USG_YN        = 'Y'
+			AND     C.PRMT_ID(+) = #{prmtId}
+			<if test='orgnType != null and orgnType != "" and orgnType != "ALL"'>
+				AND     A.TYPE_DTL_CD2  = #{orgnType}
+			</if>
+			ORDER BY rowCheck DESC, orgnNm
+	</select>
+	
+	<!-- 사은품 프로모션 요금제 목록 조회 -->
+	<select id="getGiftPrmtSocList" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.getGiftPrmtSocList*/
+			SELECT  DECODE(B.RATE_CD, NULL, '0', '1') AS rowCheck
+					,A.RATE_CD						AS rateCd
+					,A.RATE_NM						AS rateNm
+					,A.DATA_TYPE					AS dataType
+					,A.BASE_AMT						AS baseAmt
+			FROM   MSP_RATE_MST A
+			      ,MSP_GIFT_PRMT_SOC B
+			WHERE  A.RATE_CD = B.RATE_CD(+)
+			AND    A.APPL_END_DT = '99991231'
+			AND    A.SERVICE_TYPE = 'P'
+			AND    A.PAY_CL_CD = 'PO'
+			<if test='dataType != null and dataType != ""'>
+				AND    A.DATA_TYPE = #{dataType}
+			</if>
+			AND    B.PRMT_ID(+) =  #{prmtId}
+			ORDER BY rowCheck DESC, dataType DESC, rateNm 
+	</select>
+	
+	<!-- 사은품 프로모션 사은품 목록 조회 -->
+	<select id="getGiftPrmtPrdtList" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.getGiftPrmtPrdtList*/
+			SELECT  DECODE(C.PRDT_ID, NULL, '0', '1')	AS rowCheck
+					, B.PRDT_ID						AS prdtId
+					, B.PRDT_NM						AS prdtNm
+					, 'N'					        AS dupYn
+					,B.OUT_UNIT_PRIC				AS outUnitPric
+					,C.SORT                         AS sort
+			FROM     MSP_GIFT_PRDT B
+					, MSP_GIFT_PRMT_PRDT C
+			WHERE   B.USE_YN = 'Y'
+			AND     B.PRDT_ID = C.PRDT_ID(+)
+			AND     C.PRMT_ID(+) = #{prmtId}
+			ORDER BY rowCheck DESC, prdtNm 
+	</select>
+	
+	<!-- 사은품 프로모션 중복 체크 -->
+	<select id="getGiftPrmtDupByInfo" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+			/*PromotionMapper.getGiftPrmtDupByInfo*/
+			SELECT  DISTINCT
+					A.PRMT_ID		AS prmtId
+					, B.ORGN_ID		AS orgnId
+					, C.RATE_CD		AS rateCd
+					, D.ON_OFF_TYPE AS onOffType
+					, E.MODEL_ID 	AS modelId
+			FROM    MSP_GIFT_PRMT A
+					, MSP_GIFT_PRMT_ORG B
+					, MSP_GIFT_PRMT_SOC C
+					, MSP_GIFT_PRMT_ONOFF D
+					, MSP_GIFT_PRMT_MODEL E
+			WHERE   A.USG_YN = 'Y'
+			AND     A.PRMT_ID = B.PRMT_ID
+			AND     A.PRMT_ID = C.PRMT_ID
+			AND     A.PRMT_ID = D.PRMT_ID
+			AND     A.PRMT_ID = E.PRMT_ID
+			AND     #{strtDt} <![CDATA[<=]]> A.END_DT
+			AND     #{endDt} <![CDATA[>=]]> A.STRT_DT
+			AND     A.REQ_BUY_TYPE = #{reqBuyType}
+			AND     ((A.NAC_YN = 'Y' AND A.MNP_YN = 'Y')
+					<if test='nacYn != null and nacYn != "" and nacYn == "1"'>
+						OR A.NAC_YN = DECODE(#{nacYn},1,'Y','N')
+					</if>
+					<if test='mnpYn != null and mnpYn != "" and mnpYn == "1"'>
+						OR A.MNP_YN = DECODE(#{mnpYn},1,'Y','N')
+					</if>
+					)
+			AND     ((A.ENGG_CNT_0 = 'Y' AND A.ENGG_CNT_12 = 'Y' AND A.ENGG_CNT_18 = 'Y' AND A.ENGG_CNT_24 = 'Y' AND A.ENGG_CNT_30 = 'Y' AND A.ENGG_CNT_36 = 'Y') 
+					<if test='enggCnt0 != null and enggCnt0 != "" and enggCnt0 == "1"'>
+						OR A.ENGG_CNT_0 = DECODE(#{enggCnt0},1,'Y','N')
+					</if>
+					<if test='enggCnt12 != null and enggCnt12 != "" and enggCnt12 == "1"'>
+						OR A.ENGG_CNT_12 = DECODE(#{enggCnt12},1,'Y','N')
+					</if>
+					<if test='enggCnt18 != null and enggCnt18 != "" and enggCnt18 == "1"'>
+						OR A.ENGG_CNT_18 = DECODE(#{enggCnt18},1,'Y','N')
+					</if>
+					<if test='enggCnt24 != null and enggCnt24 != "" and enggCnt24 == "1"'>
+						OR A.ENGG_CNT_24 = DECODE(#{enggCnt24},1,'Y','N')
+					</if>
+					<if test='enggCnt30 != null and enggCnt30 != "" and enggCnt30 == "1"'>
+						OR A.ENGG_CNT_30 = DECODE(#{enggCnt30},1,'Y','N')
+					</if>
+					<if test='enggCnt36 != null and enggCnt36 != "" and enggCnt36 == "1"'>
+						OR A.ENGG_CNT_36 = DECODE(#{enggCnt36},1,'Y','N')
+					</if>
+					)
+			<if test='prmtId != null and prmtId != ""'>
+				AND     B.ORGN_ID IN (SELECT ORG.ORGN_ID FROM MSP_GIFT_PRMT_ORG ORG WHERE ORG.PRMT_ID = #{prmtId})
+				AND     C.RATE_CD IN (SELECT SOC.RATE_CD FROM MSP_GIFT_PRMT_SOC SOC WHERE SOC.PRMT_ID = #{prmtId})
+				AND     D.ON_OFF_TYPE IN (SELECT MCPO.ON_OFF_TYPE FROM MSP_GIFT_PRMT_ONOFF MCPO WHERE MCPO.PRMT_ID = #{prmtId})
+				AND     E.MODEL_ID IN (SELECT MOD.MODEL_ID FROM MSP_GIFT_PRMT_MODEL MOD WHERE MOD.PRMT_ID = #{prmtId})
+				AND     A.PRMT_ID NOT IN (#{prmtId})
+			</if>
+			ORDER BY B.ORGN_ID, C.RATE_CD, D.ON_OFF_TYPE, E.MODEL_ID
+	</select>
+	
+	<!-- 사은품 프로모션 수정을 위한 중복 체크 -->
+	<select id="getGiftPrmtDupByInfoToMod" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+			/*PromotionMapper.getGiftPrmtDupByInfo*/
+			SELECT  DISTINCT
+					A.PRMT_ID		AS prmtId
+					, B.ORGN_ID		AS orgnId
+					, C.RATE_CD		AS rateCd
+					, D.ON_OFF_TYPE AS onOffType
+			FROM    MSP_GIFT_PRMT A
+					, MSP_GIFT_PRMT_ORG B
+					, MSP_GIFT_PRMT_SOC C
+					, MSP_GIFT_PRMT_ONOFF D
+			WHERE   A.USG_YN = 'Y'
+			AND     A.PRMT_ID = B.PRMT_ID
+			AND     A.PRMT_ID = C.PRMT_ID
+			AND     A.PRMT_ID = D.PRMT_ID
+			AND     #{strtDt} <![CDATA[<=]]> A.END_DT
+			AND     #{endDt} <![CDATA[>=]]> A.STRT_DT
+			AND     A.REQ_BUY_TYPE = #{reqBuyType}
+			AND     ((A.NAC_YN = 'Y' AND A.MNP_YN = 'Y')
+					<if test='nacYn != null and nacYn != "" and nacYn == "1"'>
+						OR A.NAC_YN = DECODE(#{nacYn},1,'Y','N')
+					</if>
+					<if test='mnpYn != null and mnpYn != "" and mnpYn == "1"'>
+						OR A.MNP_YN = DECODE(#{mnpYn},1,'Y','N')
+					</if>
+					)
+			AND     ((A.ENGG_CNT_0 = 'Y' AND A.ENGG_CNT_12 = 'Y' AND A.ENGG_CNT_18 = 'Y' AND A.ENGG_CNT_24 = 'Y' AND A.ENGG_CNT_30 = 'Y' AND A.ENGG_CNT_36 = 'Y') 
+					<if test='enggCnt0 != null and enggCnt0 != "" and enggCnt0 == "1"'>
+						OR A.ENGG_CNT_0 = DECODE(#{enggCnt0},1,'Y','N')
+					</if>
+					<if test='enggCnt12 != null and enggCnt12 != "" and enggCnt12 == "1"'>
+						OR A.ENGG_CNT_12 = DECODE(#{enggCnt12},1,'Y','N')
+					</if>
+					<if test='enggCnt18 != null and enggCnt18 != "" and enggCnt18 == "1"'>
+						OR A.ENGG_CNT_18 = DECODE(#{enggCnt18},1,'Y','N')
+					</if>
+					<if test='enggCnt24 != null and enggCnt24 != "" and enggCnt24 == "1"'>
+						OR A.ENGG_CNT_24 = DECODE(#{enggCnt24},1,'Y','N')
+					</if>
+					<if test='enggCnt30 != null and enggCnt30 != "" and enggCnt30 == "1"'>
+						OR A.ENGG_CNT_30 = DECODE(#{enggCnt30},1,'Y','N')
+					</if>
+					<if test='enggCnt36 != null and enggCnt36 != "" and enggCnt36 == "1"'>
+						OR A.ENGG_CNT_36 = DECODE(#{enggCnt36},1,'Y','N')
+					</if>
+					)
+			<if test='prmtId != null and prmtId != ""'>
+				AND     A.PRMT_ID NOT IN (#{prmtId})
+			</if>
+			ORDER BY B.ORGN_ID, C.RATE_CD, D.ON_OFF_TYPE
+	</select>
+	
+	<!-- 사은품 프로모션 마스터 추가 -->
+	<insert id="insertMspGiftPrmt" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+		<selectKey keyProperty="prmtId" order="BEFORE" resultType="String">
+			SELECT 'C' || TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(TO_NUMBER(NVL(SUBSTR(MAX(PRMT_ID),10), '000')) + 1, '000')) AS prmtId
+			FROM   MSP_GIFT_PRMT
+			WHERE  SUBSTR(PRMT_ID, 2, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		</selectKey>
+			/*PromotionMapper.insertMspGiftPrmt*/
+			INSERT INTO MSP_GIFT_PRMT (
+				 PRMT_ID
+				,PRMT_NM
+				,STRT_DT
+				,END_DT
+				,NAC_YN
+				,MNP_YN
+				,ORGN_TYPE
+				,REQ_BUY_TYPE
+				,AMOUNT_LIMIT
+				,ENGG_CNT_0
+				,ENGG_CNT_12
+				,ENGG_CNT_18
+				,ENGG_CNT_24
+				,ENGG_CNT_30
+				,ENGG_CNT_36
+				,USG_YN
+				,REGST_ID
+				,REGST_DTTM
+				,RVISN_ID
+				,RVISN_DTTM
+				,PRMT_TEXT
+				,PRMT_TYPE
+				,CHOICE_LIMIT
+				,SHOW_YN
+				,BILL_DT
+				,ORGN_ID
+				<!-- 20251104 유무선정책 추가 -->
+				,WIRELESS_YN
+			) VALUES (
+				 #{prmtId}
+				,#{prmtNm}
+				,#{strtDt}
+				,#{endDt}
+				,DECODE(NVL(#{nacYn}, 'N'), 1, 'Y', 'N')
+				,DECODE(NVL(#{mnpYn}, 'N'), 1, 'Y', 'N')
+				,#{orgnType}
+				,#{reqBuyType}
+				,REPLACE(#{amountLimit},',','')
+				,DECODE(NVL(#{enggCnt0}, 'N'), 1, 'Y', 'N')
+				,DECODE(NVL(#{enggCnt12}, 'N'), 1, 'Y', 'N')
+				,DECODE(NVL(#{enggCnt18}, 'N'), 1, 'Y', 'N')
+				,DECODE(NVL(#{enggCnt24}, 'N'), 1, 'Y', 'N')
+				,DECODE(NVL(#{enggCnt30}, 'N'), 1, 'Y', 'N')
+				,DECODE(NVL(#{enggCnt36}, 'N'), 1, 'Y', 'N')
+				,NVL(#{usgYn}, 'Y')
+				,#{sessionUserId}
+				,SYSDATE
+				,#{sessionUserId}
+				,SYSDATE
+				,#{prmtText}
+				,#{prmtType}
+				,#{choiceLimit}
+				,#{showYn}
+				,#{billDt}
+				,#{prmtOrgnId}
+				<!-- 20251104 유무선정책 추가 -->
+				,#{wirelessYn}
+			)
+	</insert>
+	
+	<!-- 사은품 프로모션 마스터 수정 -->
+	<update id="updateMspGiftPrmt" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+			/*PromotionMapper.updateMspGiftPrmt*/
+			UPDATE MSP_GIFT_PRMT 
+			SET
+				 PRMT_NM = #{prmtNm}
+				,STRT_DT = #{strtDt}
+				,END_DT = #{endDt}
+				,NAC_YN = DECODE(NVL(#{nacYn}, 'N'), 1, 'Y', 'N')
+				,MNP_YN = DECODE(NVL(#{mnpYn}, 'N'), 1, 'Y', 'N')
+				,ORGN_TYPE = #{orgnType}
+				,REQ_BUY_TYPE = #{reqBuyType}
+				,AMOUNT_LIMIT = REPLACE(#{amountLimit},',','')
+				,ENGG_CNT_0  = DECODE(NVL(#{enggCnt0}, 'N'), 1, 'Y', 'N') 
+				,ENGG_CNT_12 = DECODE(NVL(#{enggCnt12}, 'N'), 1, 'Y', 'N')
+				,ENGG_CNT_18 = DECODE(NVL(#{enggCnt18}, 'N'), 1, 'Y', 'N')
+				,ENGG_CNT_24 = DECODE(NVL(#{enggCnt24}, 'N'), 1, 'Y', 'N')
+				,ENGG_CNT_30 = DECODE(NVL(#{enggCnt30}, 'N'), 1, 'Y', 'N')
+				,ENGG_CNT_36 = DECODE(NVL(#{enggCnt36}, 'N'), 1, 'Y', 'N')
+				,USG_YN      = NVL(#{usgYn}, 'Y')
+				,RVISN_ID    = #{sessionUserId}  
+				,RVISN_DTTM  = SYSDATE
+				,PRMT_TEXT   = #{prmtText}     
+				,SHOW_YN   = #{showYn}   
+				,BILL_DT   = #{billDt}   
+				,ORGN_ID   = #{prmtOrgnId}    
+				,WIRELESS_YN   = #{wirelessYn}    
+			WHERE PRMT_ID = #{prmtId}
+	</update>
+	
+	<!-- 사은품 프로모션 조직 추가 -->
+	<insert id="insertMspGiftPrmtOrg" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.insertMspGiftPrmtOrg*/
+			INSERT INTO MSP_GIFT_PRMT_ORG (
+				 PRMT_ID
+				,ORGN_ID
+				,REGST_ID
+				,REGST_DTTM
+				,RVISN_ID
+				,RVISN_DTTM
+			)VALUES(
+				 #{prmtId}
+				,#{orgnId}
+				,#{sessionUserId}
+				,SYSDATE
+				,#{sessionUserId}
+				,SYSDATE
+			)
+	</insert>
+	
+	<!-- 사은품 프로모션 조직 삭제 -->
+	<delete id="deleteMspGiftPrmtOrg" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+			/*PromotionMapper.deleteMspGiftPrmtOrg*/
+			DELETE MSP_GIFT_PRMT_ORG 
+			WHERE	 PRMT_ID = #{prmtId}
+	</delete>
+	
+	<!-- 사은품 프로모션 요금제 추가 -->
+	<insert id="insertMspGiftPrmtSoc" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.insertMspGiftPrmtSoc*/
+			INSERT INTO MSP_GIFT_PRMT_SOC (
+				 PRMT_ID
+				,RATE_CD
+				,REGST_ID
+				,REGST_DTTM
+				,RVISN_ID
+				,RVISN_DTTM
+			)VALUES(
+				 #{prmtId}
+				,#{rateCd}
+				,#{sessionUserId}
+				,SYSDATE
+				,#{sessionUserId}
+				,SYSDATE
+			)
+	</insert>
+	
+	<!-- 사은품 프로모션 요금제 삭제 -->
+	<delete id="deleteMspGiftPrmtSoc" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+			/*PromotionMapper.deleteMspGiftPrmtSoc*/
+			DELETE MSP_GIFT_PRMT_SOC 
+			WHERE PRMT_ID = #{prmtId}
+	</delete>
+	
+	<!-- 사은품 프로모션 사은품 추가 -->
+	<insert id="insertMspGiftPrmtPrdt" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.insertMspGiftPrmtPrdt*/
+			INSERT INTO MSP_GIFT_PRMT_PRDT (
+				 PRMT_ID
+				,PRDT_ID
+				,REGST_ID
+				,REGST_DTTM
+				,RVISN_ID
+				,RVISN_DTTM
+				,SORT
+			)VALUES(
+				 #{prmtId}
+				,#{prdtId}
+				,#{sessionUserId}
+				,SYSDATE
+				,#{sessionUserId}
+				,SYSDATE
+				,#{sort}
+			)
+	</insert>
+	
+	<!-- 사은품 프로모션 사은품 삭제 -->
+	<delete id="deleteMspGiftPrmtPrdt" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+			/*PromotionMapper.deleteMspGiftPrmtPrdt*/
+			DELETE MSP_GIFT_PRMT_PRDT 
+			WHERE PRMT_ID = #{prmtId}
+	</delete>
+	
+	<!-- 사은품 프로모션 사용여부 변경 -->
+	<update id="updGiftPrmtByInfo" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+			/*PromotionMapper.updGiftPrmtByInfo*/
+			UPDATE  MSP_GIFT_PRMT
+			SET     RVISN_ID = #{sessionUserId}
+					,RVISN_DTTM = SYSDATE
+					<if test='chngTypeCd != null and chngTypeCd != ""'>
+						<choose>
+							<when test='chngTypeCd == "D"'>
+								,USG_YN = NVL(#{usgYn}, 'N')
+							</when>
+							<when test='chngTypeCd == "U"'>
+								,END_DT = #{endDt}
+							</when>
+							<when test='chngTypeCd == "T"'>
+								,PRMT_TEXT = #{prmtText}
+							</when>
+						</choose>
+					</if>
+			WHERE  PRMT_ID = #{prmtId}
+	</update>
+	
+	<!-- 모집경로 목록 조회 -->
+	<select id="getGiftPrmtOnoffList" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.getGiftPrmtOnoffList*/
+			SELECT  DECODE(B.ON_OFF_TYPE, NULL, '0', '1')	AS rowCheck
+					, CD_VAL						AS onOffType
+					, CD_DSC						AS onOffTypeNm
+			FROM    CMN_GRP_CD_MST A
+					, MSP_GIFT_PRMT_ONOFF B
+			WHERE   A.GRP_ID = 'RCP0007'
+			AND     A.USG_YN = 'Y'
+			AND     A.CD_VAL = B.ON_OFF_TYPE(+)
+			AND     B.PRMT_ID(+) = #{prmtId}
+			ORDER BY rowCheck DESC, A.CD_VAL 
+	</select>
+	
+	<!-- 모집경로 추가 -->
+	<insert id="insertMspGiftPrmtOnOff" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.insertMspGiftPrmtOnOff*/
+			INSERT INTO MSP_GIFT_PRMT_ONOFF (
+				 PRMT_ID
+				,ON_OFF_TYPE
+				,REGST_ID
+				,REGST_DTTM
+				,RVISN_ID
+				,RVISN_DTTM
+			)VALUES(
+				 #{prmtId}
+				,#{onOffType}
+				,#{sessionUserId}
+				,SYSDATE
+				,#{sessionUserId}
+				,SYSDATE
+			)
+	</insert>
+	
+	<!-- 모집경로 삭제 -->
+	<delete id="deleteMspGiftPrmtOnOff" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+			/*PromotionMapper.deleteMspGiftPrmtOnOff*/
+			DELETE MSP_GIFT_PRMT_ONOFF 
+			WHERE PRMT_ID = #{prmtId}
+	</delete>
+	
+	
+	<!-- 대상제품 목록 조회 -->
+	<select id="getGiftPrmtModelList" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.getGiftPrmtModelList*/
+			SELECT  DECODE(B.MODEL_ID, NULL, '0', '1')	AS rowCheck
+					, A.PRDT_ID							AS modelId
+					, A.PRDT_CODE						AS modelCode
+					, A.PRDT_NM						    AS modelNm
+			FROM    CMN_INTM_MDL A
+					, MSP_GIFT_PRMT_MODEL B
+			WHERE   A.PRDT_ID = B.MODEL_ID(+)
+            AND     A.RPRS_YN		= 'Y'
+            AND		A.PRDT_DT		= '99991231'
+            <if test="reqBuyType != null and reqBuyType != '' and reqBuyType == 'MM'">
+            AND     A.PRDT_TYPE_CD  = '01'
+            </if>
+            <if test="reqBuyType != null and reqBuyType != '' and reqBuyType == 'UU'">
+            AND     A.PRDT_TYPE_CD  = '02'
+            </if>
+			AND     B.PRMT_ID(+) = #{prmtId}
+			ORDER BY rowCheck DESC, A.PRDT_CODE
+	</select>
+	
+	<!-- 대상제품 추가 -->
+	<insert id="insertMspGiftPrmtModel" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.insertMspGiftPrmtModel*/
+			INSERT INTO MSP_GIFT_PRMT_MODEL (
+				 PRMT_ID
+				,MODEL_ID
+				,REGST_ID
+				,REGST_DTTM
+				,RVISN_ID
+				,RVISN_DTTM
+			)VALUES(
+				 #{prmtId}
+				,#{modelId}
+				,#{sessionUserId}
+				,SYSDATE
+				,#{sessionUserId}
+				,SYSDATE
+			)
+	</insert>
+	
+	<!-- 대상제품 삭제 -->
+	<delete id="deleteMspGiftPrmtModel" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtVO">
+			/*PromotionMapper.deleteMspGiftPrmtModel*/
+			DELETE MSP_GIFT_PRMT_MODEL 
+			WHERE PRMT_ID = #{prmtId}
+	</delete>
+	
+	<select id="getExcelUpSocList" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+		/* PromotionMapper.getExcelUpSocList */
+			SELECT  DECODE(B.RATE_CD, NULL, '0', '1') AS rowCheck
+					,A.RATE_CD						AS rateCd
+					,A.RATE_NM						AS rateNm
+					,A.DATA_TYPE					AS dataType
+					,A.BASE_AMT						AS baseAmt
+			FROM   MSP_RATE_MST A
+			      ,(SELECT RATE_CD FROM MSP_RATE_MST WHERE 1=1
+			     <choose>
+				     <when test="socList.size != 0">
+					    AND	RATE_CD IN
+						<foreach collection="socList" item="item" index="index" separator="," open="(" close=")">
+							#{item}
+						</foreach>
+					</when>
+				</choose>
+				 ) B
+			WHERE  A.RATE_CD = B.RATE_CD(+)
+			AND    A.APPL_END_DT = '99991231'
+			AND    A.SERVICE_TYPE = 'P'
+			AND    A.PAY_CL_CD = 'PO'
+			ORDER BY rowCheck DESC, dataType DESC, rateNm 
+	</select>
+	
+	<select id="getExcelUpModelList" parameterType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO" resultType="com.ktis.msp.gift.prmtmgmt.vo.GiftPrmtMgmtSubVO">
+			/*PromotionMapper.getExcelUpModelList*/
+			SELECT  DECODE(B.PRDT_ID, NULL, '0', '1')	AS rowCheck
+					, A.PRDT_ID							AS modelId
+					, A.PRDT_CODE						AS modelCode
+					, A.PRDT_NM						    AS modelNm
+			FROM    CMN_INTM_MDL A
+					, (SELECT PRDT_ID FROM CMN_INTM_MDL WHERE 1=1
+					<choose>
+				     <when test="modelCdList.size != 0">
+					    AND	PRDT_CODE IN
+						<foreach collection="modelCdList" item="item" index="index" separator="," open="(" close=")">
+							#{item}
+						</foreach>
+					</when>
+				</choose>
+					 ) B
+			WHERE   A.PRDT_ID = B.PRDT_ID(+)
+            AND     A.RPRS_YN		= 'Y'
+            AND		A.PRDT_DT		= '99991231'
+            <if test="reqBuyType != null and reqBuyType != '' and reqBuyType == 'MM'">
+            AND     A.PRDT_TYPE_CD  = '01'
+            </if>
+            <if test="reqBuyType != null and reqBuyType != '' and reqBuyType == 'UU'">
+            AND     A.PRDT_TYPE_CD  = '02'
+            </if>
+			ORDER BY rowCheck DESC, A.PRDT_CODE
+	</select>
+	
+	<!-- 사은품 프로모션 권한여부 조회 -->
+	<select id="groupUserAuth" parameterType="String" resultType="Integer">
+		SELECT COUNT(USR_ID)
+		  FROM CMN_USG_GRP_ASGN_MST
+		 WHERE GRP_ID = 'G_GIFT_PRM'
+		   AND USR_ID = #{usrId}
+	</select>	
+</mapper>

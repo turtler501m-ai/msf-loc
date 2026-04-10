@@ -1,0 +1,1404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.bnd.bondmgmt.mapper.BondSaleMgmtMapper">
+	
+	<select id="selectSoldReceiptByMonth" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* bondSaleMapper.selectSoldReceiptByMonth */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  A.GRNT_INSR_MNGM_NO
+		        , A.YET_PYMN_AMNT + A.REAL_PYMN_AMNT + A.MID_PRFPAY_AMNT + A.GRNT_INSR_AMNT + A.ADJS_AMNT AS PRV_YET_PYMN_AMNT
+		        , CASE WHEN A.TTL_INST_MNTH_CNT - A.RMN_INST_CNT > 0 THEN ABS(A.TTL_INST_MNTH_CNT - A.RMN_INST_CNT) ELSE 0 END AS INST_CNT
+		        , A.BILL_AMNT
+		        , A.PYMN_AMNT
+		        , A.UNPAY_AMNT
+		        , CASE WHEN A.UNPAY_ARRS_AMNT - B.UNPAY_ARRS_AMNT > 0 THEN A.UNPAY_ARRS_AMNT - B.UNPAY_ARRS_AMNT ELSE 0 END AS TO_UNPAY_ARRS_AMNT
+		        , A.UNPAY_ARRS_AMNT
+		        , A.UNPAY_ARRS_TMSCNT
+		        , CASE WHEN A.MID_PRFPAY_AMNT > 0 AND A.YET_PYMN_AMNT = 0 THEN A.MID_PRFPAY_AMNT ELSE 0 END AS FULL_PRFPAY_AMNT
+		        , CASE WHEN A.MID_PRFPAY_AMNT > 0 AND A.YET_PYMN_AMNT > 0 THEN A.MID_PRFPAY_AMNT ELSE 0 END AS MID_PRFPAY_AMNT
+		        , A.GRNT_INSR_AMNT
+		        , A.ADJS_AMNT
+		        , CASE WHEN A.UNPAY_ARRS_FEE_AMNT - B.UNPAY_ARRS_FEE_AMNT + B.ARRS_FEE_AMNT > 0 THEN A.UNPAY_ARRS_FEE_AMNT - B.UNPAY_ARRS_FEE_AMNT + B.ARRS_FEE_AMNT ELSE 0 END AS ARRS_FEE_INV_AMNT
+		        , A.ARRS_FEE_AMNT
+		        , B.YET_PYMN_AMNT - A.YET_PYMN_AMNT AS DSC_AMNT
+		        , A.REAL_PYMN_AMNT + A.GRNT_INSR_AMNT + A.MID_PRFPAY_AMNT + A.ADJS_AMNT + A.ARRS_FEE_AMNT AS REAL_PYMN_AMNT
+		        , A.YET_PYMN_AMNT
+		FROM    MSP_BOND_ASSET A
+		        , MSP_BOND_ASSET B
+		        , MSP_BOND_SALE_DTL C
+		WHERE   1 = 1
+		AND     C.GRNT_INSR_MNGM_NO = A.GRNT_INSR_MNGM_NO
+		AND     A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+--		AND     A.BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(B.BILL_YM, 'YYYYMM'), 1), 'YYYYMM')
+		AND     B.BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(#{billYm}, 'YYYYMM'), -1), 'YYYYMM')
+		AND     C.BOND_SEQ_NO = #{bondSeqNo}
+		AND     A.BILL_YM = #{billYm}
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="selectSoldReceiptByMonthSum" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* bondSaleMapper.selectSoldReceiptByMonthSum */
+		SELECT  SUM(A.YET_PYMN_AMNT + A.REAL_PYMN_AMNT + A.MID_PRFPAY_AMNT + A.GRNT_INSR_AMNT + A.ADJS_AMNT) AS PRV_YET_PYMN_AMNT
+		        , NULL AS INST_CNT
+		        , SUM(A.BILL_AMNT) AS BILL_AMNT
+		        , SUM(A.PYMN_AMNT) AS PYMN_AMNT
+		        , SUM(A.UNPAY_AMNT) AS UNPAY_AMNT
+		        , SUM(CASE WHEN A.UNPAY_ARRS_AMNT - B.UNPAY_ARRS_AMNT > 0 THEN A.UNPAY_ARRS_AMNT - B.UNPAY_ARRS_AMNT ELSE 0 END) AS TO_UNPAY_ARRS_AMNT
+		        , SUM(A.UNPAY_ARRS_AMNT) AS UNPAY_ARRS_AMNT
+		        , NULL AS UNPAY_ARRS_TMSCNT
+		        , SUM(CASE WHEN A.MID_PRFPAY_AMNT > 0 AND A.YET_PYMN_AMNT = 0 THEN A.MID_PRFPAY_AMNT ELSE 0 END) AS FULL_PRFPAY_AMNT
+		        , SUM(CASE WHEN A.MID_PRFPAY_AMNT > 0 AND A.YET_PYMN_AMNT > 0 THEN A.MID_PRFPAY_AMNT ELSE 0 END) AS MID_PRFPAY_AMNT
+		        , SUM(A.GRNT_INSR_AMNT) AS GRNT_INSR_AMNT
+		        , SUM(A.ADJS_AMNT) AS ADJS_AMNT
+		        , SUM(CASE WHEN A.UNPAY_ARRS_FEE_AMNT - B.UNPAY_ARRS_FEE_AMNT + B.ARRS_FEE_AMNT > 0 THEN A.UNPAY_ARRS_FEE_AMNT - B.UNPAY_ARRS_FEE_AMNT + B.ARRS_FEE_AMNT ELSE 0 END) AS ARRS_FEE_INV_AMNT
+		        , SUM(A.ARRS_FEE_AMNT) AS ARRS_FEE_AMNT
+		        , SUM(B.YET_PYMN_AMNT - A.YET_PYMN_AMNT) AS DSC_AMNT
+		        , SUM(A.REAL_PYMN_AMNT + A.GRNT_INSR_AMNT + A.MID_PRFPAY_AMNT + A.ADJS_AMNT + A.ARRS_FEE_AMNT) AS REAL_PYMN_AMNT
+		        , SUM(A.YET_PYMN_AMNT) AS YET_PYMN_AMNT
+		FROM    MSP_BOND_ASSET A
+		        , MSP_BOND_ASSET B
+		        , MSP_BOND_SALE_DTL C
+		WHERE   1 = 1
+		AND     C.GRNT_INSR_MNGM_NO = A.GRNT_INSR_MNGM_NO
+		AND     A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+--		AND     A.BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(B.BILL_YM, 'YYYYMM'), 1), 'YYYYMM')
+		AND     B.BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(#{billYm}, 'YYYYMM'), -1), 'YYYYMM')
+		AND     C.BOND_SEQ_NO = #{bondSeqNo}
+		AND     A.BILL_YM = #{billYm}
+	</select>
+	
+   
+   <!-- 판매대상상세내역 조회 -->
+   <select id="getBondSaleObjectLstInfo" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.getBondSaleObjectLstInfo */
+      <include refid="com.ktis.msp.cmn.include.paging-start" />
+      SELECT
+            CONTRACT_NUM ,
+              SUB_LINK_NAME ,
+              FN_GET_CODENM('BND1000' ,GRNT_INSR_STAT_CHNG_RSN_CD) AS  GRNT_INSR_STAT_CHNG_RSN_CD ,
+              UNPAID_YN,
+              TTL_INST_AMNT ,
+              TTL_INST_MNTH_CNT ,
+              MNT_INST_AMT,
+              PAY_AMT,
+              YET_PYMN_AMNT ,
+              RMN_INST_CNT ,
+              PAY_STRT_DT,
+              PAY_END_DT,
+              GRNT_INSR_MNGM_NO,
+              INST_STRT_DATE,
+              INSR_TRMN_DATE,
+              PYMN_CNT
+        FROM (
+            
+            SELECT
+                    CONTRACT_NUM ,
+                    SUB_LINK_NAME ,
+                    GRNT_INSR_STAT_CHNG_RSN_CD ,
+                    DECODE(UNPAY_ARRS_TMSCNT,0,'N','Y') AS UNPAID_YN,
+                    TTL_INST_AMNT ,
+                    TTL_INST_MNTH_CNT ,
+                    TRUNC(TTL_INST_AMNT / TTL_INST_MNTH_CNT,-1) AS MNT_INST_AMT,
+                    (TTL_INST_AMNT - YET_PYMN_AMNT ) AS PAY_AMT,
+                    YET_PYMN_AMNT ,
+                    RMN_INST_CNT ,
+                    TO_CHAR(ADD_MONTHS(TO_DATE(INST_STRT_DATE, 'YYYYMMDD'), 1), 'YYYYMM')||'01' AS PAY_STRT_DT,
+                    TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(INSR_TRMN_DATE, 'YYYYMMDD'), 1)), 'YYYYMMDD') AS PAY_END_DT,
+                    GRNT_INSR_MNGM_NO,
+                    INST_STRT_DATE,
+                    INSR_TRMN_DATE,
+                    MONTHS_BETWEEN(TO_DATE(BILL_YM, 'YYYYMM'), TO_DATE(SUBSTR(GRNT_INSR_MNGM_NO, 0, 6), 'YYYYMM')) - UNPAY_ARRS_TMSCNT AS PYMN_CNT
+             FROM   MSP_BOND_ASSET
+             WHERE 1 = 1
+               AND  MST_YN = 'Y'
+               AND  CHK_YN = 'N'
+               AND  YET_PYMN_AMNT > 0
+               AND  GRNT_INSR_STAT_CHNG_RSN_CD IN ('A1','A3','A6','A9','Y1')
+               AND  GRNT_INSR_MNGM_NO NOT IN ( SELECT GRNT_INSR_MNGM_NO
+                                         FROM  MSP_BOND_SALE_DTL A, MSP_BOND_SALE_MST B
+                                          WHERE  A.BOND_SEQ_NO = B.BOND_SEQ_NO
+                                            AND  B.SALE_STAT_CD = 'A'
+                                         )
+      )
+      WHERE    1 = 1
+            <if test='trgtStrtDt != null and trgtStrtDt != "" and trgtEndDt != null and trgtEndDt != "" '>
+               AND   INST_STRT_DATE BETWEEN #{trgtStrtDt} AND #{trgtEndDt}
+            </if>
+            <if test='trgtRmnAmt != null and trgtRmnAmt != "" '>
+               AND YET_PYMN_AMNT >= #{trgtRmnAmt}
+            </if>
+            <if test='trgtRmnCnt != null and trgtRmnCnt != "" '>
+               AND RMN_INST_CNT >= #{trgtRmnCnt}
+            </if>
+            <if test='trgtPymCnt != null and trgtPymCnt != "" '>
+               AND PYMN_CNT >= #{trgtPymCnt}
+            </if>
+            <if test='trgtUnpaidYn != null and trgtUnpaidYn != "" '>
+               AND   UNPAID_YN = #{trgtUnpaidYn}
+            </if>
+            ORDER BY INST_STRT_DATE DESC
+      <include refid="com.ktis.msp.cmn.include.paging-end" />
+   </select>
+   
+   <!-- 판매대상건수 및 총금액 조회 -->
+   <select id="getBondSaleObjectHap" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.getBondSaleObjectHap */
+      SELECT
+            COUNT(GRNT_INSR_MNGM_NO) AS TOTAL_CNT ,
+            NVL(SUM(YET_PYMN_AMNT), 0) AS TOTAL_YET_PYMN_AMNT,
+            NVL(CASE WHEN SUM(NVL(BILL_AMNT, 0)) = 0 THEN 0
+                ELSE ROUND(SUM(PYMN_AMNT)/SUM(BILL_AMNT)*100, 2)
+                END, 0) AS BPYMN_PER, -- 수납율
+            NVL(CASE WHEN SUM(NVL(PRV_YET_PYMN_AMNT, 0)) = 0 THEN 0
+                ELSE ROUND(SUM(UNPAY_ARRS_AMNT)/SUM(PRV_YET_PYMN_AMNT)*100, 2)
+                END, 0) AS UNPAY_PER, -- 미납율
+            NVL(CASE WHEN SUM(NVL(PRV_UNPAY_ARRS_AMNT, 0)) = 0 THEN 0
+                ELSE ROUND(SUM(UNPAY_AMNT)/SUM(NVL(PRV_UNPAY_ARRS_AMNT, 0))*100, 2)
+                END, 0) AS RTN_PER -- 미납회수율
+      FROM (
+            SELECT
+                  A.CONTRACT_NUM ,
+                  A.SUB_LINK_NAME ,
+                  A.GRNT_INSR_STAT_CHNG_RSN_CD ,
+                  DECODE(A.UNPAY_ARRS_TMSCNT,0,'N','Y') AS UNPAID_YN,
+                  A.TTL_INST_AMNT ,
+                  A.TTL_INST_MNTH_CNT ,
+                  (A.TTL_INST_AMNT - A.YET_PYMN_AMNT ) AS PAY_AMT,
+                  A.YET_PYMN_AMNT ,
+                  A.RMN_INST_CNT ,
+                  TO_CHAR(ADD_MONTHS(TO_DATE(A.INST_STRT_DATE, 'YYYYMMDD'), 1), 'YYYYMM')||'01' AS PAY_STRT_DT,
+                  TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(A.INSR_TRMN_DATE, 'YYYYMMDD'), 1)), 'YYYYMMDD') AS PAY_END_DT,
+                  A.GRNT_INSR_MNGM_NO,
+                  A.INST_STRT_DATE,
+                  A.INSR_TRMN_DATE,
+                  MONTHS_BETWEEN(TO_DATE(A.BILL_YM, 'YYYYMM'), TO_DATE(SUBSTR(A.GRNT_INSR_MNGM_NO, 0, 6), 'YYYYMM')) - A.UNPAY_ARRS_TMSCNT AS PYMN_CNT,
+                  A.UNPAY_ARRS_AMNT,
+                  A.BILL_AMNT,
+                  A.PYMN_AMNT,
+                  A.UNPAY_AMNT,
+                  B.UNPAY_ARRS_AMNT AS PRV_UNPAY_ARRS_AMNT,
+                  B.YET_PYMN_AMNT AS PRV_YET_PYMN_AMNT
+           FROM   MSP_BOND_ASSET A, MSP_BOND_ASSET B
+           WHERE 1 = 1
+             AND  A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO(+)
+             AND  TO_CHAR(ADD_MONTHS(TO_DATE(A.BILL_YM, 'YYYYMM'), -1), 'YYYYMM') = B.BILL_YM(+)
+             AND  A.MST_YN = 'Y'
+             AND  A.CHK_YN = 'N'
+             AND  A.YET_PYMN_AMNT > 0
+             AND  A.GRNT_INSR_STAT_CHNG_RSN_CD IN ('A1','A3','A6','A9','Y1')
+             AND  A.GRNT_INSR_MNGM_NO NOT IN ( SELECT GRNT_INSR_MNGM_NO
+                                           FROM  MSP_BOND_SALE_DTL A, MSP_BOND_SALE_MST B
+                                          WHERE  A.BOND_SEQ_NO = B.BOND_SEQ_NO
+                                            AND  B.SALE_STAT_CD = 'A'
+                                        )
+           )
+      WHERE  1 = 1
+            <if test='trgtStrtDt != null and trgtStrtDt != "" and trgtEndDt != null and trgtEndDt != "" '>
+               AND   INST_STRT_DATE BETWEEN #{trgtStrtDt} AND #{trgtEndDt}
+            </if>
+            <if test='trgtRmnAmt != null and trgtRmnAmt != "" '>
+               AND YET_PYMN_AMNT >= #{trgtRmnAmt}
+            </if>
+            <if test='trgtRmnCnt != null and trgtRmnCnt != "" '>
+               AND RMN_INST_CNT >= #{trgtRmnCnt}
+            </if>
+            <if test='trgtPymCnt != null and trgtPymCnt != "" '>
+               AND PYMN_CNT >= #{trgtPymCnt}
+            </if>
+            <if test='trgtUnpaidYn != null and trgtUnpaidYn != "" '>
+               AND   UNPAID_YN = #{trgtUnpaidYn}
+            </if>
+   </select>
+   
+   <!--
+    * 채권판매생성
+    * IBSHEET -> DHX 전환 처리
+    * 저장성 업무는 제외 처리 하여 기존 IBSHEET 원본 소스 주석 처리 
+   <insert id="callCreateBondSale" statementType="CALLABLE" parameterType="paramMap">
+      /** BondSaleMapper.callCreateBondSale */
+      { CALL P_BOND_SALE_DATA(#{saleNo}, #{title}, replace(#{trgtStrtDt}, '-', ''), replace(#{trgtEndDt}, '-', ''), #{trgtRmnAmt}, #{trgtRmnCnt}, #{trgtPymCnt}, #{trgtUnpaidCnt}, #{trgtUnpaidYn}, '',  #{sessionUserId}) }
+   </insert> 
+   -->
+   
+   <!-- 채권판매정보 판매내역 가져오기 -->
+   <select id="getBondSaleInfo" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.getBondSaleInfo */
+      SELECT
+                C.BOND_SEQ_NO
+                , C.SALE_NO
+                , C.TITLE
+                , C.SALE_STAT_CD
+                , C.TRGT_STRT_DT
+                , C.TRGT_END_DT
+                , (TO_CHAR(TO_DATE(C.TRGT_STRT_DT,'YYYYMMDD'), 'YYYY-MM-DD') || ' ~ ' || TO_CHAR(TO_DATE(C.TRGT_END_DT,'YYYYMMDD'), 'YYYY-MM-DD')) AS TRGT_PERIOD
+                , FN_GET_USRNM(C.SALE_CFM_ID) AS SALE_CNFM_ID
+                , SUBSTR(C.SALE_CFM_DT,0,8) AS SALE_CNFM_DTTM
+                , COUNT(B.GRNT_INSR_MNGM_NO) AS TOTAL_CNT
+                , SUM(B.YET_PYMN_AMNT) AS TOTAL_RMN_AMT
+                , DECODE((SELECT COUNT(*) FROM MSP_BOND_SALE_STTC WHERE (BILL_YM, BOND_SEQ_NO) IN ( SELECT MAX(BILL_YM), MAX(BOND_SEQ_NO) FROM MSP_BOND_SALE_STTC WHERE BOND_SEQ_NO = A.BOND_SEQ_NO ) AND RUN_USR_ID IS NULL ),1,'Y','N') AS RTN_YN
+        FROM
+                MSP_BOND_SALE_DTL A
+                , MSP_BOND_ASSET B
+                , MSP_BOND_SALE_MST C
+        WHERE     1 = 1
+                AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+                AND A.BOND_SEQ_NO = C.BOND_SEQ_NO
+                AND A.BOND_SEQ_NO = #{bondSeqNo}
+                AND B.BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.SALE_YM,'YYYYMM'),-1),'YYYYMM')
+                GROUP BY C.BOND_SEQ_NO
+                , C.SALE_NO
+                , C.TITLE
+                , C.SALE_STAT_CD
+                , C.TRGT_STRT_DT
+                , C.TRGT_END_DT
+                , C.SALE_CFM_ID
+                , C.SALE_CFM_DT
+                , A.BOND_SEQ_NO, C.SALE_STAT_CD
+   </select>
+   
+   <!-- 채권판매정보 계약내역 가져오기 -->
+   <select id="getBondSaleCntrList" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      <include refid="com.ktis.msp.cmn.include.paging-start" />
+      /* BondSaleMapper.getBondSaleCntrList */
+      SELECT
+              /*+ FIRST_ROWS */
+              B.CONTRACT_NUM
+            , B.SUBSCRIBER_NO
+            , B.SUB_LINK_NAME
+            , FN_GET_CODENM('RCP001', B.CUSTOMER_TYPE) AS CUSTOMER_TYPE
+            , DECODE(B.CUSTOMER_TYPE, 'I', SUBSTR(CRYPTO_AES256.DEC_AES(B.USER_SSN),0,6), '') AS USER_SSN
+            , B.TAX_ID
+            , B.SUB_ADR_PRIMARY_LN
+            , C.ORGN_NM AS OPEN_AGNT_CD
+            , B.TTL_INST_AMNT
+            , B.TTL_INST_MNTH_CNT
+            , B.RMN_INST_CNT
+            , TRUNC(B.TTL_INST_AMNT / B.TTL_INST_MNTH_CNT,-1) AS MNT_INST_AMT
+            , TO_CHAR(ADD_MONTHS(TO_DATE(B.INST_STRT_DATE, 'YYYYMMDD'), 1), 'YYYYMM')||'01' AS PAY_STRT_DT
+            , TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(B.INSR_TRMN_DATE, 'YYYYMMDD'), 1)), 'YYYYMMDD') AS PAY_END_DT
+            , B.YET_PYMN_AMNT
+            , A.BOND_SEQ_NO
+            , A.GRNT_INSR_MNGM_NO
+            , DECODE(A.RTN_YM, null, 'N', 'Y') AS RTN_YN
+            , FN_GET_CODENM('BND1000' ,B.GRNT_INSR_STAT_CHNG_RSN_CD) AS  GRNT_INSR_STAT_CHNG_RSN_CD
+      FROM
+            MSP_BOND_SALE_DTL A
+            , MSP_BOND_ASSET B
+            , ORG_ORGN_INFO_MST C
+      WHERE    1 = 1
+            AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+            AND A.BOND_SEQ_NO = #{bondSeqNo}
+            AND B.BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.SALE_YM,'YYYYMM'),-1),'YYYYMM')
+            AND B.OPEN_AGNT_CD = C.ORGN_ID(+)
+            <if test='insrPayYn != null and insrPayYn != "" and insrPayYn =="Y" '>
+               AND (B.INSR_BILL_AMNT > 0 AND B.UNPAY_AMNT > 0)
+            </if>
+            <if test='insrPayYn != null and insrPayYn != "" and insrPayYn =="N" '>
+               AND (B.INSR_BILL_AMNT = 0 OR B.UNPAY_AMNT = 0)
+            </if>
+            <if test='pSearchName != null and pSearchName != "" and pSearchGbn =="1" '>   
+               AND B.GRNT_INSR_MNGM_NO = #{pSearchName}
+            </if>
+            <if test='pSearchName != null and pSearchName != "" and pSearchGbn =="2" '>
+               AND B.CONTRACT_NUM = #{pSearchName}
+            </if>
+            <if test='pSearchName != null and pSearchName != "" and pSearchGbn =="3" '>
+               AND B.SUBSCRIBER_NO = #{pSearchName}
+            </if>
+            <if test='pSearchName != null and pSearchName != "" and pSearchGbn =="4" '>
+               AND B.SUB_LINK_NAME = #{pSearchName}
+            </if>
+            <if test='rtnYn != null and rtnYn != "" '>
+               AND DECODE(A.RTN_YM, null, 'N', 'Y') = #{rtnYn}
+            </if>
+      <include refid="com.ktis.msp.cmn.include.paging-end" />
+   </select>
+   
+   <!-- 채권 상세정보 가져오기 -->
+   <select id="getBondSaleAssetDtlInfo" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.getBondSaleAssetDtlInfo */
+      SELECT
+            A.GRNT_INSR_MNGM_NO
+              , A.BILL_YM
+              , A.CONTRACT_NUM
+              , A.SUB_LINK_NAME
+              , A.USER_SSN
+              , A.TTL_INST_AMNT
+              , A.TTL_INST_MNTH_CNT
+              , A.TTL_INST_MNTH_AMNT
+              , A.RMN_INST_CNT
+              , A.BPYMN_CNT
+              , A.YET_BILL_AMNT
+              , A.YET_PYMN_AMNT
+              , A.BILL_AMNT
+              , A.PYMN_AMNT
+              , A.UNPAY_AMNT
+              , A.ARRS_FEE_YN
+              , A.ARRS_FEE_AMNT
+              , A.FULL_PRFPAY_YN
+              , A.FULL_PRFPAY_AMNT
+              , A.MID_PRFPAY_YN
+              , A.MID_PRFPAY_AMNT
+              , A.ADJS_YN
+              , A.ADJS_AMNT
+              , A.UNPAY_ARRS_YN
+              , A.UNPAY_ARRS_AMNT
+              , A.UNPAY_ARRS_FEE_AMNT
+              , A.UNPAY_ARRS_TMSCNT
+              , A.UNPAY_YN
+              , A.INSR_BILL_YN
+              , A.INSR_PYMN_YN
+              , A.INSR_BILL_AMNT
+              , A.INSR_PYMN_AMNT
+              , A.MST_YN
+      FROM   (SELECT 
+                  GRNT_INSR_MNGM_NO
+                  , BILL_YM
+                  , CONTRACT_NUM
+                  , SUB_LINK_NAME
+                  , USER_SSN
+                  , TTL_INST_AMNT
+                  , TTL_INST_MNTH_CNT
+                  , TRUNC(ROUND(TTL_INST_AMNT/TTL_INST_MNTH_CNT, -1)) AS TTL_INST_MNTH_AMNT
+                  , RMN_INST_CNT
+                  , CASE
+                           WHEN YET_BILL_AMNT = 0 THEN 0
+                        ELSE MONTHS_BETWEEN(TO_DATE(BILL_YM, 'YYYYMM'), TO_DATE(SUBSTR(GRNT_INSR_MNGM_NO, 0, 6), 'YYYYMM'))
+                        END AS BPYMN_CNT
+                        , YET_BILL_AMNT
+                        , YET_PYMN_AMNT
+                        , BILL_AMNT
+                        , PYMN_AMNT
+                        , UNPAY_AMNT
+                        , CASE
+                        WHEN ARRS_FEE_AMNT > 0 THEN 'Y'
+                        ELSE 'N'
+                        END AS ARRS_FEE_YN
+                        , ARRS_FEE_AMNT
+                        , CASE
+                          WHEN MID_PRFPAY_AMNT > 0 AND YET_PYMN_AMNT = 0 THEN 'Y'
+                          ELSE 'N'
+                        END AS FULL_PRFPAY_YN
+                        , CASE
+                          WHEN MID_PRFPAY_AMNT > 0 AND YET_PYMN_AMNT = 0 THEN MID_PRFPAY_AMNT
+                          ELSE 0
+                     END AS FULL_PRFPAY_AMNT
+                     , CASE
+                          WHEN MID_PRFPAY_AMNT > 0 AND YET_PYMN_AMNT > 0 THEN 'Y'
+                          ELSE 'N'
+                     END AS MID_PRFPAY_YN
+                     , CASE
+                          WHEN MID_PRFPAY_AMNT > 0 AND YET_PYMN_AMNT > 0 THEN MID_PRFPAY_AMNT
+                          ELSE 0
+                        END AS MID_PRFPAY_AMNT
+                        , CASE
+                          WHEN ADJS_AMNT > 0 AND GRNT_INSR_STAT_CHNG_RSN_CD NOT IN ('A2', 'A5') THEN 'Y'
+                          ELSE 'N'
+                        END AS ADJS_YN
+                        , ADJS_AMNT
+                        , CASE
+                          WHEN UNPAY_ARRS_AMNT > 0 THEN 'Y'
+                          ELSE 'N'
+                        END AS UNPAY_ARRS_YN
+                        , UNPAY_ARRS_AMNT
+                        , UNPAY_ARRS_FEE_AMNT
+                        , UNPAY_ARRS_TMSCNT
+                        , DECODE(UNPAY_ARRS_TMSCNT, 0, 'N', 'Y') AS UNPAY_YN
+                        , CASE
+                          WHEN INSR_BILL_AMNT > 0 AND UNPAY_ARRS_AMNT = 0 THEN 'Y'
+                          ELSE 'N'
+                        END AS INSR_BILL_YN
+                        , CASE
+                          WHEN INSR_BILL_AMNT > 0 AND REAL_PYMN_AMNT > 0 AND UNPAY_ARRS_AMNT = 0 THEN 'Y'
+                          ELSE 'N'
+                        END AS INSR_PYMN_YN
+                        , CASE
+                          WHEN INSR_BILL_AMNT > 0 AND UNPAY_ARRS_AMNT = 0 THEN INSR_BILL_AMNT
+                          ELSE 0
+                        END AS INSR_BILL_AMNT
+                        , CASE
+                          WHEN INSR_BILL_AMNT > 0 AND REAL_PYMN_AMNT > 0 AND UNPAY_ARRS_AMNT = 0 THEN REAL_PYMN_AMNT
+                          ELSE 0
+                        END AS INSR_PYMN_AMNT
+                        , MST_YN
+              FROM   MSP_BOND_ASSET
+              WHERE  1 = 1
+                  AND    GRNT_INSR_MNGM_NO = #{grntInsrMngmNo}
+              ) A
+              , MSP_BOND_SALE_DTL B
+      WHERE  1 = 1
+            AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+            AND B.BOND_SEQ_NO = #{bondSeqNo}
+            <if test='billYm != null and billYm != "" '>
+               AND A.BILL_YM >= B.SALE_YM
+            </if>
+            ORDER BY BILL_YM ASC
+   </select>
+   
+   <!--
+    * 채권판매제외시 채권판매상세 삭제
+    * IBSHEET -> DHX 전환 처리
+    * 저장성 업무는 제외 처리 하여 기존 IBSHEET 원본 소스 주석 처리 
+   <delete id="deleteBondSaleDtl" parameterType="paramMap">
+      DELETE   /* BondSaleMapper.deleteBondSaleDtl */
+      
+      FROM
+            MSP_BOND_SALE_DTL
+      WHERE    1 = 1
+            AND BOND_SEQ_NO = #{bondSeqNo}
+            AND GRNT_INSR_MNGM_NO = #{grntInsrMngmNo}
+    </delete> 
+   -->
+   
+   <!--
+    * 채권판매처리시 채권판매정보 업데이트(상태)
+    * IBSHEET -> DHX 전환 처리
+    * 저장성 업무는 제외 처리 하여 기존 IBSHEET 원본 소스 주석 처리 
+   <update id="updateBondSaleInfo" parameterType="paramMap">
+      UPDATE   /* BondSaleMapper.updateBondSaleInfo */
+            MSP_BOND_SALE_MST
+      SET
+            SALE_STAT_CD = 'A'
+            , SALE_CFM_ID = #{sessionUserId}
+            , SALE_CFM_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+      WHERE    1 = 1
+            AND BOND_SEQ_NO = #{bondSeqNo}
+    </update>
+   -->
+   
+   <!--
+    * 회수처리 등록
+    * IBSHEET -> DHX 전환 처리
+    * 저장성 업무는 제외 처리 하여 기존 IBSHEET 원본 소스 주석 처리 
+   <insert id="updateBckBondSaleDtl" parameterType="paramMap">
+         /** BondSaleMapper.updateBckBondSaleDtl */
+         UPDATE 
+               MSP_BOND_SALE_DTL
+         SET
+               RTN_YM = (SELECT BILL_YM FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = #{grntInsrMngmNo} AND MST_YN = 'Y')
+               , RTN_RSN = #{rtnRsn}
+               , RTN_ID = #{sessionUserId}
+               , CHNG_DTTM = SYSDATE
+         WHERE 1=1
+            AND BOND_SEQ_NO = #{bondSeqNo}
+            AND GRNT_INSR_MNGM_NO = #{grntInsrMngmNo}
+   </insert>
+      
+   <insert id="updateBckBondAsset" parameterType="paramMap">
+         /** BondSaleMapper.updateBckBondAsset */
+         UPDATE 
+               MSP_BOND_ASSET
+         SET
+               BOND_SEQ_NO = NULL
+         WHERE 1=1
+            AND BILL_YM = (SELECT BILL_YM FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = #{grntInsrMngmNo} AND MST_YN = 'Y')
+            AND GRNT_INSR_MNGM_NO = #{grntInsrMngmNo}
+   </insert>
+      
+   <insert id="updateBckBondSaleSttc" parameterType="paramMap">
+         /** BondSaleMapper.updateBckBondSaleSttc */
+         UPDATE 
+               MSP_BOND_SALE_STTC
+         SET
+               NR_RTN_AMNT = NR_RTN_AMNT + (SELECT YET_PYMN_AMNT FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = #{grntInsrMngmNo} AND MST_YN = 'Y')
+               , NR_RTN_CNT = NR_RTN_CNT + 1
+         WHERE 1=1
+            AND BILL_YM = (SELECT BILL_YM FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = #{grntInsrMngmNo} AND MST_YN = 'Y')
+            AND BOND_SEQ_NO = #{bondSeqNo}
+   </insert>
+   -->
+   
+   <select id="selectSoldAssetList" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* bondSaleMapper.selectSoldAssetList */
+      <include refid="com.ktis.msp.cmn.include.paging-start" />
+      SELECT
+              B.CONTRACT_NUM
+            , B.SUB_LINK_NAME
+            , FN_GET_CODENM('RCP001', B.CUSTOMER_TYPE) AS CUSTOMER_TYPE
+            , DECODE(B.CUSTOMER_TYPE, 'I', SUBSTR(CRYPTO_AES256.DEC_AES(B.USER_SSN),0,6), '') AS USER_SSN
+            , B.TAX_ID
+            , B.OPEN_AGNT_CD
+            , C.ORGN_NM
+            , B.SUB_ADR_PRIMARY_LN
+            , B.SUBSCRIBER_NO
+            , TO_CHAR(ADD_MONTHS(TO_DATE(B.INST_STRT_DATE, 'YYYYMMDD'), 1), 'YYYYMM')||'01' AS PAY_STRT_DT
+            , TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(B.INSR_TRMN_DATE, 'YYYYMMDD'), 1)), 'YYYYMMDD') AS PAY_END_DT
+            , '매월말일' AS REDEEM_DT
+            , F_GET_KT_CODE_NM('MSP_JUO_BAN_INFO', 'BL_BILLING_METHOD', B.BL_BILLING_METHOD) AS BL_BILLING_METHOD
+            , B.TTL_INST_AMNT
+            , 0 AS INST_INT_AMT
+            , 0 AS INST_ETC_AMT
+            , B.TTL_INST_AMNT + 0 + 0 AS INST_TOTAL_AMT
+            , (SELECT YET_PYMN_AMNT FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = A.GRNT_INSR_MNGM_NO AND BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.SALE_YM,'YYYYMM'),-1),'YYYYMM') AND A.RTN_YM IS NULL ) AS BOND_SALE_AMT
+            , 0 AS BOND_SALE_INT_AMT
+            , 0 AS BOND_SALE_ETC_AMT
+            , (SELECT YET_PYMN_AMNT FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = A.GRNT_INSR_MNGM_NO AND BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.SALE_YM,'YYYYMM'),-1),'YYYYMM') AND A.RTN_YM IS NULL ) + 0 + 0 AS BOND_SALE_TOTAL_AMT
+            , B.YET_PYMN_AMNT
+            , TRUNC(B.TTL_INST_AMNT/B.TTL_INST_MNTH_CNT,-1) AS MON_BILL
+            , B.TTL_INST_MNTH_CNT
+            , B.RMN_INST_CNT
+            , B.GRNT_INSR_MNGM_NO
+            , A.BOND_SEQ_NO
+      FROM 
+            MSP_BOND_SALE_DTL A
+            , MSP_BOND_ASSET B
+            , ORG_ORGN_INFO_MST C
+      WHERE    
+            1 = 1
+            AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+            AND B.BILL_YM = #{billYm}
+            AND A.BOND_SEQ_NO = #{bondSeqNo}
+            AND A.RTN_YM IS NULL
+            AND B.OPEN_AGNT_CD = C.ORGN_ID(+)
+            <if test='billArrAmtYn != null and billArrAmtYn != "" '>
+               AND DECODE(B.UNPAY_ARRS_FEE_AMNT,0,'N','Y') = #{billArrAmtYn}
+            </if>
+            <if test='adjsAmtYn != null and adjsAmtYn != "" '>
+               AND DECODE(B.ADJS_AMNT,0,'N','Y') = #{adjsAmtYn}
+            </if>
+            <if test='midPrfpayAmtYn != null and midPrfpayAmtYn != "" and midPrfpayAmtYn =="Y" '>
+               AND ( B.MID_PRFPAY_AMNT <![CDATA[>]]> 0 AND B.YET_PYMN_AMNT = 0 )
+            </if>
+            <if test='midPrfpayAmtYn != null and midPrfpayAmtYn != "" and midPrfpayAmtYn =="N" '>
+               AND B.MID_PRFPAY_AMNT = 0
+            </if>
+            <if test='midPayAmtYn != null and midPayAmtYn != "" and midPayAmtYn =="Y" '>
+               AND ( B.MID_PRFPAY_AMNT <![CDATA[>]]> 0 AND B.YET_PYMN_AMNT <![CDATA[>]]> 0 )
+            </if>
+            <if test='midPayAmtYn != null and midPayAmtYn != "" and midPayAmtYn =="N" '>
+               AND B.MID_PRFPAY_AMNT = 0
+            </if>
+            <if test='insrBillYn != null and insrBillYn != "" '>
+               AND DECODE(B.INSR_BILL_AMNT,0,'N','Y') = #{insrBillYn}
+            </if>
+            ORDER BY B.GRNT_INSR_MNGM_NO
+      <include refid="com.ktis.msp.cmn.include.paging-end" />
+   </select>
+   
+   <select id="selectSoldAssetListBySum" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.selectSoldAssetListBySum */
+      SELECT
+              SUM(B.TTL_INST_AMNT) AS TOTAL_INST_AMT
+            , SUM((SELECT YET_PYMN_AMNT FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = A.GRNT_INSR_MNGM_NO AND BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.SALE_YM,'YYYYMM'),-1),'YYYYMM') )) AS TOTAL_BOND_SALE_AMT
+            , SUM((SELECT YET_PYMN_AMNT FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = A.GRNT_INSR_MNGM_NO AND BILL_YM = B.BILL_YM AND BOND_SEQ_NO IS NOT NULL )) AS TOTAL_RMN_INST_AMT
+      FROM 
+            MSP_BOND_SALE_DTL A
+            , MSP_BOND_ASSET B
+      WHERE    
+            1 = 1
+            AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+            AND B.BILL_YM = #{billYm}
+            AND A.BOND_SEQ_NO = #{bondSeqNo}
+   </select>
+   
+   <select id="selectSoldAssetDtlInfo" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* bondSaleMapper.selectSoldAssetDtlInfo */
+      SELECT
+            A.GRNT_INSR_MNGM_NO
+            , A.BILL_YM
+            , A.CONTRACT_NUM
+            , A.SUB_LINK_NAME
+            , A.USER_SSN
+            , A.TTL_INST_AMNT
+            , A.TTL_INST_MNTH_CNT
+            , A.TTL_INST_MNTH_AMNT
+            , A.RMN_INST_CNT
+            , A.BPYMN_CNT
+            , A.YET_BILL_AMNT
+            , A.YET_PYMN_AMNT
+            , A.BILL_AMNT
+            , A.PYMN_AMNT
+            , A.UNPAY_AMNT
+            , A.ARRS_FEE_YN
+            , A.ARRS_FEE_AMNT
+            , A.FULL_PRFPAY_YN
+            , A.FULL_PRFPAY_AMNT
+            , A.MID_PRFPAY_YN
+            , A.MID_PRFPAY_AMNT
+            , A.ADJS_YN
+            , A.ADJS_AMNT
+            , A.UNPAY_ARRS_YN
+            , A.UNPAY_ARRS_AMNT
+            , A.UNPAY_ARRS_FEE_AMNT
+            , A.UNPAY_ARRS_TMSCNT
+            , A.UNPAY_YN
+            , A.INSR_BILL_YN
+            , A.INSR_PYMN_YN
+            , A.INSR_BILL_AMNT
+            , A.INSR_PYMN_AMNT
+      FROM  (SELECT 
+                  GRNT_INSR_MNGM_NO
+                  , BILL_YM
+                  , CONTRACT_NUM
+                  , SUB_LINK_NAME
+                  , USER_SSN
+                  , TTL_INST_AMNT
+                  , TTL_INST_MNTH_CNT
+                  , TRUNC(ROUND(TTL_INST_AMNT/TTL_INST_MNTH_CNT, -1)) AS TTL_INST_MNTH_AMNT
+                  , RMN_INST_CNT
+                  , CASE
+                        WHEN YET_BILL_AMNT = 0 THEN 0
+                        ELSE MONTHS_BETWEEN(TO_DATE(BILL_YM, 'YYYYMM'), TO_DATE(SUBSTR(GRNT_INSR_MNGM_NO, 0, 6), 'YYYYMM'))
+                        END AS BPYMN_CNT
+                  , YET_BILL_AMNT
+                  , YET_PYMN_AMNT
+                  , BILL_AMNT
+                  , PYMN_AMNT
+                  , UNPAY_AMNT
+                  , CASE
+                        WHEN ARRS_FEE_AMNT > 0 THEN 'Y'
+                        ELSE 'N'
+                        END AS ARRS_FEE_YN
+                  , ARRS_FEE_AMNT
+                  , CASE
+                        WHEN MID_PRFPAY_AMNT > 0 AND YET_PYMN_AMNT = 0 THEN 'Y'
+                        ELSE 'N'
+                        END AS FULL_PRFPAY_YN
+                  , CASE
+                        WHEN MID_PRFPAY_AMNT > 0 AND YET_PYMN_AMNT = 0 THEN MID_PRFPAY_AMNT
+                        ELSE 0
+                        END AS FULL_PRFPAY_AMNT
+                  , CASE
+                        WHEN MID_PRFPAY_AMNT > 0 AND YET_PYMN_AMNT > 0 THEN 'Y'
+                        ELSE 'N'
+                        END AS MID_PRFPAY_YN
+                  , CASE
+                        WHEN MID_PRFPAY_AMNT > 0 AND YET_PYMN_AMNT > 0 THEN MID_PRFPAY_AMNT
+                        ELSE 0
+                        END AS MID_PRFPAY_AMNT
+                  , CASE
+                        WHEN ADJS_AMNT > 0 AND GRNT_INSR_STAT_CHNG_RSN_CD NOT IN ('A2', 'A5') THEN 'Y'
+                        ELSE 'N'
+                        END AS ADJS_YN
+                  , ADJS_AMNT
+                  , CASE
+                        WHEN UNPAY_ARRS_AMNT > 0 THEN 'Y'
+                        ELSE 'N'
+                        END AS UNPAY_ARRS_YN
+                  , UNPAY_ARRS_AMNT
+                  , UNPAY_ARRS_FEE_AMNT
+                  , UNPAY_ARRS_TMSCNT
+                  , DECODE(UNPAY_ARRS_TMSCNT, 0, 'N', 'Y') AS UNPAY_YN
+                  , CASE
+                        WHEN INSR_BILL_AMNT > 0 AND UNPAY_ARRS_AMNT = 0 THEN 'Y'
+                        ELSE 'N'
+                        END AS INSR_BILL_YN
+                  , CASE
+                        WHEN INSR_BILL_AMNT > 0 AND REAL_PYMN_AMNT > 0 AND UNPAY_ARRS_AMNT = 0 THEN 'Y'
+                        ELSE 'N'
+                        END AS INSR_PYMN_YN
+                  , CASE
+                        WHEN INSR_BILL_AMNT > 0 AND UNPAY_ARRS_AMNT = 0 THEN INSR_BILL_AMNT
+                        ELSE 0
+                        END AS INSR_BILL_AMNT
+                  , CASE
+                        WHEN INSR_BILL_AMNT > 0 AND REAL_PYMN_AMNT > 0 AND UNPAY_ARRS_AMNT = 0 THEN REAL_PYMN_AMNT
+                        ELSE 0
+                        END AS INSR_PYMN_AMNT
+              FROM   MSP_BOND_ASSET
+              WHERE  1 = 1
+                  AND    GRNT_INSR_MNGM_NO = #{grntInsrMngmNo}
+              ) A
+              , MSP_BOND_SALE_DTL B
+      WHERE  1 = 1
+            AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+            AND B.BOND_SEQ_NO = #{bondSeqNo}
+            <if test='billYm != null and billYm != "" '>
+               AND A.BILL_YM >= B.SALE_YM
+            </if>
+            ORDER BY BILL_YM ASC
+   </select>
+   
+   <!-- 판매채권 STATIC DATA 가져오기 (STATIC DATA) -->
+   <select id="selectSoldBondStaticInfoList" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* bondSaleMapper.selectSoldBondStaticInfoList */
+      SELECT 
+            B.SALE_NO
+            , A.BOND_SEQ_NO
+            , A.BILL_YM
+            , A.YET_PYMN_AMNT
+            , A.BILL_AMNT
+            , A.PYMN_AMNT
+            , A.REAL_PYMN_AMNT
+            , A.MID_PRFPAY_AMNT
+            , A.UNPAY_AMNT
+            , A.ARRS_FEE_AMNT
+            , A.UNPAY_ARRS_AMNT
+            , A.UNPAY_ARRS_FEE_AMNT
+            , A.ADJS_AMNT
+            , A.NR_FULL_PRFPAY_AMNT
+            , A.NR_MID_PRFPAY_AMNT
+            , A.NR_PYMN_AMNT
+            , A.NR_CANC_AMNT
+            , A.NR_RTN_AMNT
+            , A.INSR_BILL_AMNT
+            , A.INSR_PYMN_AMNT
+            , A.RUN_AMNT
+            , A.RUN_USR_ID
+            , A.RUN_DT
+            , A.BOND_CNT
+            , A.NR_FULL_PRFPAY_CNT
+            , A.NR_MID_PRFPAY_CNT
+            , A.NR_PYMN_CNT
+            , A.NR_CANC_CNT
+            , A.ADJ_CNT
+            , A.INSR_BILL_CNT
+            , A.INSR_PYMN_CNT
+            , A.NR_RTN_CNT
+            , A.YET_PYMN_AMNT_00
+            , A.YET_PYMN_AMNT_01
+            , A.YET_PYMN_AMNT_02
+            , A.YET_PYMN_AMNT_03
+            , A.YET_PYMN_AMNT_04
+            , A.YET_PYMN_AMNT_05
+            , A.YET_PYMN_AMNT_06
+            , A.YET_PYMN_AMNT_07
+            , A.YET_PYMN_AMNT_08
+            , A.YET_PYMN_AMNT_09
+            , A.YET_PYMN_AMNT_10
+            , A.YET_PYMN_AMNT_11
+            , A.YET_PYMN_AMNT_12
+            , A.REG_ID
+            , A.REG_DTTM
+            , A.CHNG_ID
+            , A.CHNG_DTTM
+            , YET_PYMN_AMNT + REAL_PYMN_AMNT + MID_PRFPAY_AMNT + ADJS_AMNT + NR_CANC_AMNT AS MNTH_FST_AMT
+            , (INSR_BILL_AMNT - INSR_PYMN_AMNT) AS INSR_MTG_AMT
+            , 0 AS INSR_BCK_INT_AMT
+            , BOND_CNT - NR_FULL_PRFPAY_CNT - NR_PYMN_CNT - INSR_PYMN_CNT - NR_RTN_CNT AS MNTH_LST_CNT
+            , NVL((SELECT UNPAY_ARRS_AMNT
+                      FROM   MSP_BOND_SALE_STTC
+                      WHERE  BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.BILL_YM, 'YYYYMM'), -1), 'YYYYMM')
+                      and BOND_SEQ_NO = A.BOND_SEQ_NO
+                      ),0) AS DLY_BILL_AMT
+      FROM 
+            MSP_BOND_SALE_STTC A
+            , MSP_BOND_SALE_MST B
+      WHERE    
+            1 = 1
+            AND A.BOND_SEQ_NO = B.BOND_SEQ_NO
+            <if test='bondSeqNo != null and bondSeqNo != "" '>
+               AND A.BOND_SEQ_NO = #{bondSeqNo}
+            </if>
+            ORDER BY A.BOND_SEQ_NO, A.BILL_YM ASC
+   </select>
+   
+   <!-- 판매된 채권 수납내역서 (STATIC DATA) -->
+   <select id="selectSaleStaticDtl" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.selectSaleStaticDtl */
+      SELECT
+            '' AS RCV_NM
+            , '' AS SND_NM
+            , '' AS RCV_DEP
+            , '' AS SND_DEP
+            , '' AS RCV_FAX
+            , '' AS SND_FAX
+            , '' AS PAY_DATE
+            , '' AS PAY_ACCOUNT
+            , A.BOND_SEQ_NO
+            , A.BILL_YM
+            , A.YET_PYMN_AMNT
+            , A.BILL_AMNT
+            , A.PYMN_AMNT
+            , A.REAL_PYMN_AMNT
+            , A.MID_PRFPAY_AMNT
+            , A.UNPAY_AMNT
+            , A.ARRS_FEE_AMNT
+            , A.UNPAY_ARRS_AMNT
+            , A.UNPAY_ARRS_FEE_AMNT
+            , A.ADJS_AMNT
+            , A.NR_FULL_PRFPAY_AMNT
+            , A.NR_MID_PRFPAY_AMNT
+            , A.NR_PYMN_AMNT
+            , A.NR_CANC_AMNT
+            , A.NR_RTN_AMNT
+            , A.INSR_BILL_AMNT
+            , A.INSR_PYMN_AMNT
+            , A.RUN_AMNT
+            , A.RUN_USR_ID
+            , A.RUN_DT
+            , A.BOND_CNT
+            , A.NR_FULL_PRFPAY_CNT
+            , A.NR_MID_PRFPAY_CNT
+            , A.NR_PYMN_CNT
+            , A.NR_CANC_CNT
+            , A.ADJ_CNT
+            , A.INSR_BILL_CNT
+            , A.INSR_PYMN_CNT
+            , A.NR_RTN_CNT
+            , A.YET_PYMN_AMNT_00
+            , A.YET_PYMN_AMNT_01
+            , A.YET_PYMN_AMNT_02
+            , A.YET_PYMN_AMNT_03
+            , A.YET_PYMN_AMNT_04
+            , A.YET_PYMN_AMNT_05
+            , A.YET_PYMN_AMNT_06
+            , A.YET_PYMN_AMNT_07
+            , A.YET_PYMN_AMNT_08
+            , A.YET_PYMN_AMNT_09
+            , A.YET_PYMN_AMNT_10
+            , A.YET_PYMN_AMNT_11
+            , A.YET_PYMN_AMNT_12
+            , A.REG_ID
+            , A.REG_DTTM
+            , A.CHNG_ID
+            , A.CHNG_DTTM
+            , DECODE(RUN_USR_ID,NULL,'N','Y') AS MTG_CFM_YN
+            , (INSR_BILL_AMNT - INSR_PYMN_AMNT) AS INSR_MTG_AMNT
+            , RUN_AMNT AS MTG_TOTAL_AMT
+            , (PYMN_AMNT + MID_PRFPAY_AMNT + UNPAY_AMNT + INSR_PYMN_AMNT + RUN_AMNT + ADJS_AMNT + (INSR_BILL_AMNT - INSR_PYMN_AMNT)) AS SUB_SUM_AMT
+            , (PYMN_AMNT + MID_PRFPAY_AMNT + UNPAY_AMNT + INSR_PYMN_AMNT + RUN_AMNT + ADJS_AMNT + (INSR_BILL_AMNT - INSR_PYMN_AMNT) + UNPAY_ARRS_FEE_AMNT) AS TOTAL_SUM_AMT
+            , YET_PYMN_AMNT + REAL_PYMN_AMNT + MID_PRFPAY_AMNT + ADJS_AMNT + NR_CANC_AMNT AS MNTH_FST_AMT
+            , BOND_CNT - NR_FULL_PRFPAY_CNT - NR_PYMN_CNT - INSR_PYMN_CNT - NR_RTN_CNT AS MNTH_LST_CNT
+            , NVL((SELECT UNPAY_ARRS_AMNT
+                      FROM   MSP_BOND_SALE_STTC
+                      WHERE  BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.BILL_YM, 'YYYYMM'), -1), 'YYYYMM')
+                      and BOND_SEQ_NO = A.BOND_SEQ_NO
+                      ),0) AS DLY_BILL_AMT
+      FROM
+            MSP_BOND_SALE_STTC A
+      WHERE 1=1
+            AND A.BOND_SEQ_NO = #{bondSeqNo}
+            AND A.BILL_YM = #{billYm}
+   </select>
+   
+   <!-- 수납내역서 확정 업데이트 (STATIC DATA) -->
+   <update id="confirmReceipt" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO">
+      /** BondSaleMapper.confirmReceipt */
+      UPDATE 
+            MSP_BOND_SALE_STTC
+      SET
+            RUN_AMNT = #{mtgPayAmt}
+            , RUN_USR_ID = #{sessionUserId}
+            , RUN_DT = #{runDt}
+      WHERE 1=1
+            AND BILL_YM = #{billYm}
+            AND BOND_SEQ_NO = #{bondSeqNo}
+   </update>
+   
+   <!-- 회수채권 정보 조회 -->
+   <select id="selectSaleBckInfoList" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.selectSaleBckInfoList */
+      SELECT
+      
+            A.RTN_RSN
+            , B.YET_PYMN_AMNT AS RTN_AMT
+            , A.RTN_YM
+            , FN_GET_USRNM(A.RTN_ID) AS RTN_ID
+            , A.BOND_SEQ_NO
+            , B.CONTRACT_NUM
+            , A.GRNT_INSR_MNGM_NO
+            , B.SUBSCRIBER_NO
+            , C.SALE_NO
+      FROM
+            MSP_BOND_SALE_DTL A
+            , MSP_BOND_ASSET B
+            , MSP_BOND_SALE_MST C
+      WHERE 1=1
+            AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+            AND A.RTN_YM = B.BILL_YM
+            AND A.RTN_YM IS NOT NULL
+            AND A.BOND_SEQ_NO = C.BOND_SEQ_NO
+            <if test='bondSeqNo != null and bondSeqNo != "" '>
+               AND A.BOND_SEQ_NO = #{bondSeqNo}
+            </if>
+            ORDER BY A.RTN_YM DESC
+   </select>
+   
+   <!-- 회수채권 정보 합계 조회 -->
+   <select id="selectSaleBckInfoListBySum" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.selectSaleBckInfoListBySum */
+      SELECT
+            SUM(B.YET_PYMN_AMNT) AS RTN_AMT_SUM
+      FROM
+            MSP_BOND_SALE_DTL A
+            , MSP_BOND_ASSET B
+            , MSP_BOND_SALE_MST C
+      WHERE 1=1
+            AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+            AND A.RTN_YM = B.BILL_YM
+            AND A.RTN_YM IS NOT NULL
+            AND A.BOND_SEQ_NO = C.BOND_SEQ_NO
+            <if test='bondSeqNo != null and bondSeqNo != "" '>
+               AND A.BOND_SEQ_NO = #{bondSeqNo}
+            </if>
+   </select>
+   
+   <!-- Scheduled CF 조회 -->
+   <select id="selectScheduledCfList" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.selectScheduledCfList */
+      WITH BOND_SALE_DATA_STTC AS
+            (SELECT C.YET_PYMN_AMNT AS REMAIN_AMT,
+                           C.TTL_INST_MNTH_CNT - MONTHS_BETWEEN(TO_DATE(B.SALE_YM, 'YYYYMM'), TO_DATE(SUBSTR(C.GRNT_INSR_MNGM_NO, 0, 6), 'YYYYMM')) AS REMAIN_CNT,
+                           A.SALE_YM
+                    FROM   MSP_BOND_SALE_MST A,
+                           MSP_BOND_SALE_DTL B,
+                           MSP_BOND_ASSET C
+                    WHERE  A.BOND_SEQ_NO = B.BOND_SEQ_NO
+                    AND    B.GRNT_INSR_MNGM_NO = C.GRNT_INSR_MNGM_NO
+                    AND    TO_CHAR(ADD_MONTHS(TO_DATE(B.SALE_YM, 'YYYYMM'), -1), 'YYYYMM') = C.BILL_YM
+                    AND    B.GRNT_INSR_MNGM_NO = C.GRNT_INSR_MNGM_NO
+                    AND    A.BOND_SEQ_NO = #{bondSeqNo} )
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-0) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-0) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 1), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-1) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-1) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 2), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-2) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-2) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 3), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-3) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-3) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 4), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-4) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-4) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 5), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-5) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-5) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 6), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-6) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-6) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 7), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-7) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-7) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 8), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-8) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-8) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 9), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-9) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-9) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 10), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-10) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-10) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 11), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-11) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-11) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 12), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-12) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-12) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 13), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-13) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-13) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 14), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-14) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-14) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 15), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-15) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-15) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 16), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-16) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-16) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 17), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-17) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-17) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 18), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-18) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-18) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 19), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-19) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-19) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 20), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-20) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-20) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 21), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-21) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-21) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 22), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-22) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-22) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 23), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-23) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-23) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 24), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-24) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-24) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 25), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-25) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-25) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 26), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-26) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-26) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 27), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-27) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-27) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 28), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-28) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-28) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 29), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-29) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-29) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 30), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-30) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-30) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 31), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-31) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-31) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 32), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-32) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-32) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 33), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-33) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-33) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 34), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-34) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-34) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+            UNION ALL
+            SELECT SALE_YM,
+                   SUM(MON_AMT) AS EXP_BOND_AMT
+            FROM   (SELECT TO_CHAR(ADD_MONTHS(TO_DATE(SALE_YM, 'YYYYMM'), 35), 'YYYYMM') AS SALE_YM,
+                                   CASE
+                                     WHEN (REMAIN_CNT-35) = 1 THEN REMAIN_AMT - ( TRUNC(REMAIN_AMT/REMAIN_CNT, -1) * ( REMAIN_CNT - 1 ) )
+                                     WHEN (REMAIN_CNT-35) > 1 THEN TRUNC(REMAIN_AMT/REMAIN_CNT, -1)
+                                     ELSE 0
+                                   END AS MON_AMT
+                    FROM   BOND_SALE_DATA_STTC )
+            GROUP BY SALE_YM
+   </select>
+   
+   <!-- 공시용자산명세서 조회 -->
+   <select id="selectSoldAssetList2" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      <include refid="com.ktis.msp.cmn.include.paging-start" />
+      /* BondSaleMapper.selectSoldAssetList2 */
+      SELECT
+              B.CONTRACT_NUM
+            , B.SUB_LINK_NAME
+            , FN_GET_CODENM('RCP001', B.CUSTOMER_TYPE) AS CUSTOMER_TYPE
+            , DECODE(B.CUSTOMER_TYPE, 'I', SUBSTR(CRYPTO_AES256.DEC_AES(B.USER_SSN),0,6), '') AS USER_SSN
+            , B.TAX_ID
+            , B.OPEN_AGNT_CD
+            , C.ORGN_NM
+            , B.SUB_ADR_PRIMARY_LN
+            , B.SUBSCRIBER_NO
+            , TO_CHAR(ADD_MONTHS(TO_DATE(B.INST_STRT_DATE, 'YYYYMMDD'), 1), 'YYYYMM')||'01' AS PAY_STRT_DT
+            , TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(B.INSR_TRMN_DATE, 'YYYYMMDD'), 1)), 'YYYYMMDD') AS PAY_END_DT
+            , '매월말일' AS REDEEM_DT
+            , F_GET_KT_CODE_NM('MSP_JUO_BAN_INFO', 'BL_BILLING_METHOD', B.BL_BILLING_METHOD) AS BL_BILLING_METHOD
+            , B.TTL_INST_AMNT
+            , 0 AS INST_INT_AMT
+            , 0 AS INST_ETC_AMT
+            , B.TTL_INST_AMNT + 0 + 0 AS INST_TOTAL_AMT
+            , (SELECT YET_PYMN_AMNT FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = A.GRNT_INSR_MNGM_NO AND BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.SALE_YM,'YYYYMM'),-1),'YYYYMM') AND A.RTN_YM IS NULL ) AS BOND_SALE_AMT
+            , 0 AS BOND_SALE_INT_AMT
+            , 0 AS BOND_SALE_ETC_AMT
+            , (SELECT YET_PYMN_AMNT FROM MSP_BOND_ASSET WHERE GRNT_INSR_MNGM_NO = A.GRNT_INSR_MNGM_NO AND BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(A.SALE_YM,'YYYYMM'),-1),'YYYYMM') AND A.RTN_YM IS NULL ) + 0 + 0 AS BOND_SALE_TOTAL_AMT
+            , B.YET_PYMN_AMNT
+            , TRUNC(B.TTL_INST_AMNT/B.TTL_INST_MNTH_CNT,-1) AS MON_BILL
+            , B.TTL_INST_MNTH_CNT
+            , B.RMN_INST_CNT
+            , B.GRNT_INSR_MNGM_NO
+            , A.BOND_SEQ_NO
+      FROM 
+            MSP_BOND_SALE_DTL A
+            , MSP_BOND_ASSET B
+            , ORG_ORGN_INFO_MST C
+      WHERE    
+            1 = 1
+            AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+            AND A.BOND_SEQ_NO = #{bondSeqNo}
+            AND A.RTN_YM IS NULL
+            AND B.MST_YN = 'Y'
+            AND B.OPEN_AGNT_CD = C.KT_ORG_ID(+)
+            AND C.TYPE_CD(+) = '20'
+            ORDER BY B.OPEN_DT DESC
+      <include refid="com.ktis.msp.cmn.include.paging-end" />
+   </select>
+   
+   <!-- 공시용자산명세서 합계 조회 -->
+   <select id="selectSoldAssetList2BySum" parameterType="com.ktis.msp.bnd.bondmgmt.vo.BondSaleMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* BondSaleMapper.selectSoldAssetList2BySum */
+      SELECT
+            SUM(B.TTL_INST_AMNT) AS TOTAL_INST_AMT
+            , SUM(B.YET_PYMN_AMNT) AS TOTAL_REMAIN_AMT
+      FROM 
+            MSP_BOND_SALE_DTL A
+            , MSP_BOND_ASSET B
+      WHERE    
+            1 = 1
+            AND A.GRNT_INSR_MNGM_NO = B.GRNT_INSR_MNGM_NO
+            AND A.BOND_SEQ_NO = #{bondSeqNo}
+            AND A.RTN_YM IS NULL
+            AND B.MST_YN = 'Y'
+   </select>
+   
+</mapper>

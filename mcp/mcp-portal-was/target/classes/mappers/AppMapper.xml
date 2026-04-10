@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="AppMapper">
+
+	<select id="selectUsrAppDetail" parameterType="com.ktmmobile.mcp.app.dto.AppInfoDTO" resultType="com.ktmmobile.mcp.app.dto.AppInfoDTO">
+		SELECT /*  AppMapper.selectUsrAppDetail */
+			a.UUID,
+			a.USER_ID,
+			a.UDID,
+			a.OS,
+			a.VERSION,
+			a.SEND_YN,
+			a.APP_OS_VER,
+			a.APP_NM,
+			a.LAST_ACCESS_DT,
+			a.BADGE_CNT,
+			a.AUTO_LOGIN_YN as simpleLoginYn,
+			a.BIO_LOGIN_YN,
+			a.WDGT_USE_QNTY_CALL_CYCL_CD,
+			a.CRET_ID,
+			a.UP_ID,
+			b.TOKEN,
+			b.TOKEN_REG_DT,
+			b.TOKEN_VALID_PERIOD,
+			a.SEND_YN_REFERER,
+			a.SEND_YN_UP_DT
+		FROM NMCP_USR_APP_INFO a, NMCP_AUTO_LOGIN_TXN b
+		WHERE 1=1
+		AND a.USER_ID = b.USER_ID(+)
+		<if test="uuid != null and uuid != ''">
+		AND a.UUID = #{uuid}
+		</if>
+		<if test="token != null and token != ''">
+		AND b.TOKEN = #{token}
+		</if>
+		<if test="userId != null and userId != ''">
+		AND a.USER_ID = #{userId}
+		</if>
+		ORDER BY a.UP_DT DESC
+	</select>
+
+	<update id="updateUsrAppInfo" parameterType="com.ktmmobile.mcp.app.dto.AppInfoDTO">
+		UPDATE NMCP_USR_APP_INFO SET
+			UP_DT = SYSDATE
+            , LAST_ACCESS_DT = SYSDATE
+        	<if test="udid != null and udid != ''">
+	        , UDID = #{udid}
+	        </if>
+        	<if test="userId != null and userId != ''">
+           	, UP_ID = #{userId}
+			,  USER_ID = #{userId}
+        	</if>
+        	<if test="version != null and version != ''">
+        	, VERSION = #{version}
+        	</if>
+        	<if test="os != null and os != ''">
+			, OS = #{os}
+        	</if>
+        	<if test="sendYn != null and sendYn != ''">
+        	, SEND_YN = #{sendYn}
+        	</if>
+        	<if test="appOsVer != null and appOsVer != ''">
+            , APP_OS_VER = #{appOsVer}
+        	</if>
+        	<if test="appNm != null and appNm != ''">
+            , APP_NM = #{appNm}
+        	</if>
+        	<if test="badgeCnt != null and badgeCnt != ''">
+            , BADGE_CNT = #{badgeCnt}
+        	</if>
+        	<if test="simpleLoginYn != null and simpleLoginYn != ''">
+        	, AUTO_LOGIN_YN = #{simpleLoginYn}
+        	</if>
+        	<if test="bioLoginYn != null and bioLoginYn != ''">
+			, BIO_LOGIN_YN = #{bioLoginYn}
+			</if>
+        	<if test="wdgtUseQntyCallCyclCd != null and wdgtUseQntyCallCyclCd != ''">
+			, WDGT_USE_QNTY_CALL_CYCL_CD = #{wdgtUseQntyCallCyclCd}
+			</if>
+        	<if test="sendYnReferer != null and sendYnReferer != ''">
+			, SEND_YN_REFERER = #{sendYnReferer}
+			</if>
+        	<if test="sendYn != null and sendYn != ''">
+			, SEND_YN_UP_DT = SYSDATE
+			</if>
+		 WHERE	UUID = #{uuid}
+	</update>
+
+	<update id="updateUsrAppInfoById" parameterType="com.ktmmobile.mcp.app.dto.AppInfoDTO">
+		UPDATE NMCP_USR_APP_INFO SET
+        	  AUTO_LOGIN_YN = 'N'
+			, BIO_LOGIN_YN = 'N'
+		 WHERE USER_ID = #{userId}
+	</update>
+
+	<insert id="insertUsrAppInfo" parameterType="com.ktmmobile.mcp.app.dto.AppInfoDTO">
+		INSERT INTO NMCP_USR_APP_INFO (
+             	  UUID
+	        	<if test="userId != null and userId != ''">
+               	, USER_ID
+				</if>
+             	, UDID
+             	, OS
+             	, VERSION
+	        	, SEND_YN
+             	, CRET_DT
+             	, CRET_ID
+             	, UP_DT
+             	, UP_ID
+                , APP_OS_VER
+                , APP_NM
+                , LAST_ACCESS_DT
+                , BADGE_CNT
+                , AUTO_LOGIN_YN
+                , BIO_LOGIN_YN
+                , WDGT_USE_QNTY_CALL_CYCL_CD
+				<if test="sendYnReferer != null and sendYnReferer != ''">
+                , SEND_YN_REFERER
+				</if>
+				<if test="sendYn != null and sendYn != ''">
+                , SEND_YN_UP_DT
+				</if>
+        )
+		VALUES
+		(
+			 	  #{uuid}
+	        	<if test="userId != null and userId != ''">
+				, #{userId}
+				</if>
+             	, #{udid}
+             	, #{os}
+             	, #{version}
+             	, 'Y'
+             	, SYSDATE
+             	, #{userId}
+             	, SYSDATE
+             	, #{userId}
+             	, #{appOsVer}
+             	, #{appNm}
+             	, SYSDATE
+             	, #{badgeCnt}
+             	, 'N'
+             	, 'N'
+             	, #{wdgtUseQntyCallCyclCd}
+				<if test="sendYnReferer != null and sendYnReferer != ''">
+             	, #{sendYnReferer}
+				</if>
+				<if test="sendYn != null and sendYn != ''">
+             	, SYSDATE
+				</if>
+      )
+	</insert>
+
+	<update id="mergeUsrAppInfo" parameterType="com.ktmmobile.mcp.app.dto.AppInfoDTO">
+		MERGE INTO NMCP_USR_APP_INFO USING DUAL ON (UUID = #{uuid})
+			WHEN MATCHED THEN
+				UPDATE SET
+					UP_DT = SYSDATE
+		        	<if test="udid != null and udid != ''">
+			        , UDID = #{udid}
+			        </if>
+		        	<if test="userId != null and userId != ''">
+	               	, UP_ID = #{userId}
+					</if>
+		        	<if test="userId != null and userId != ''">
+					,  USER_ID = #{userId}
+		        	</if>
+		        	<if test="version != null and version != ''">
+		        	, VERSION = #{version}
+		        	</if>
+		        	<if test="os != null and os != ''">
+					, OS = #{os}
+		        	</if>
+		        	<if test="sendYn != null and sendYn != ''">
+		        	, SEND_YN = #{sendYn}
+		        	</if>
+		        	<if test="appOsVer != null and appOsVer != ''">
+	                , APP_OS_VER = #{appOsVer}
+		        	</if>
+		        	<if test="appNm != null and appNm != ''">
+	                , APP_NM = #{appNm}
+		        	</if>
+		        	<if test="badgeCnt != null and badgeCnt != ''">
+	                , BADGE_CNT = #{badgeCnt}
+		        	</if>
+		        	<if test="simpleLoginYn != null and simpleLoginYn != ''">
+		        	, AUTO_LOGIN_YN = #{simpleLoginYn}
+		        	</if>
+		        	<if test="bioLoginYn != null and bioLoginYn != ''">
+					, BIO_LOGIN_YN = #{bioLoginYn}
+					</if>
+		        	<if test="wdgtUseQntyCallCyclCd != null and wdgtUseQntyCallCyclCd != ''">
+					, WDGT_USE_QNTY_CALL_CYCL_CD = #{wdgtUseQntyCallCyclCd}
+					</if>
+	                , LAST_ACCESS_DT = SYSDATE
+			WHEN NOT MATCHED THEN
+				INSERT (
+		             	  UUID
+			        	<if test="userId != null and userId != ''">
+		               	, USER_ID
+						</if>
+		             	, UDID
+		             	, OS
+		             	, VERSION
+			        	, SEND_YN
+		             	, CRET_DT
+		             	, CRET_ID
+		             	, UP_DT
+		             	, UP_ID
+		                , APP_OS_VER
+		                , APP_NM
+		                , LAST_ACCESS_DT
+		                , BADGE_CNT
+		                , AUTO_LOGIN_YN
+		                , BIO_LOGIN_YN
+		                , WDGT_USE_QNTY_CALL_CYCL_CD
+		        )
+				VALUES
+				(
+					 	  #{uuid}
+			        	<if test="userId != null and userId != ''">
+						, #{userId}
+						</if>
+		             	, #{udid}
+		             	, #{os}
+		             	, #{version}
+		             	, 'Y'
+		             	, SYSDATE
+		             	, #{userId}
+		             	, SYSDATE
+		             	, #{userId}
+		             	, #{appOsVer}
+		             	, #{appNm}
+		             	, SYSDATE
+		             	, #{badgeCnt}
+		             	, 'N'
+		             	, 'N'
+		             	, #{wdgtUseQntyCallCyclCd}
+		      )
+	</update>
+
+	<select id="selectAppVersion" parameterType="java.lang.String" resultType="java.util.Map">
+		SELECT
+			OS
+			, VERSION
+			, MUST_UP
+			, DN_URL
+		FROM NMCP_APP_VERSION
+		WHERE USE_YN = 'Y'
+		AND OS = #{os}
+		AND ROWNUM = 1
+		ORDER BY SEQ DESC
+	</select>
+
+	<update id="userRepChange" parameterType="java.lang.String">
+		UPDATE MCP_USER_CNTR_MNG 
+		SET REP_NO = DECODE(#{ncn},SVC_CNTR_NO,'R','')
+		    , SYS_UDATE = SYSDATE
+	    WHERE UPPER(USERID) = UPPER(#{userId})
+	    AND CUSTOMER_ID = #{customerId}
+	</update>
+
+
+
+
+	<select id="selectPushSetupBase" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.app.dto.PushBaseVO">
+		SELECT PUSH_SND_SET_SNO		/* 푸쉬발송설정일련번호 */
+			, SND_PROC_DIV			/* 발송처리구분 */
+			, SND_CNT_DIV			    /* 발송횟수구분 */
+			, SND_DT_DIV			    /* 발송일구분 */
+			, SND_TIME				/* 발송시간 */
+			, APPROVE_YN			    /* 승인여부 */
+			, APLY_STRT_DTIME		/* 사용기간시작일 */
+			, APLY_END_DTIME		/* 사용기간종료일 */
+			, MSG_TP				    /* 메시지유형 */
+			, PUSH_TP				    /* 푸쉬유형 */
+			, PUSH_ICON_TP			/* 푸쉬아이콘 */
+			, PUSH_WORK_TP			/* 푸쉬대상업무유형 */
+			, SND_TITLE				/* 발송제목 */
+			, SND_MSG				    /* 발송메시지 */
+			, PUSH_IMG_URL			/* 푸쉬 이미지 */
+			, PUSH_IMG_NM				/* 푸쉬 이미지명 */
+			, LINK_DIV				/* 링크구분 */
+			, LINK_URL				/* 링크URL */
+			, PUSH_SND_PROC_NO		/* 푸쉬발송고유번호 */
+		FROM NMCP_PUSH_SND_SETUP_BASE
+		WHERE PUSH_SND_SET_SNO = #{pushSndSetSno}
+		AND APPROVE_YN = 'Y'
+	</select>
+
+	<update id="insertPushTargetUserSnd" parameterType="java.util.List" useGeneratedKeys="false">
+		<selectKey keyProperty="pushSndProcSno" resultType="java.lang.String" order="BEFORE">
+			SELECT TO_CHAR(SYSTIMESTAMP, 'YYYYMMDDHH24MISSFF') || ROUND(DBMS_RANDOM.VALUE () * 100000) AS PUSH_SND_PROC_SNO
+			FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_PUSH_SND_PROC_TRGT_LIST (
+			PUSH_SND_PROC_SNO /*푸쉬발송처리일련번호*/
+			,PUSH_SND_SET_SNO  /*실시간발송이력위해관리*/
+			,USERID /*고객id*/
+			,CELL_NO /*핸드폰번호*/
+			,APP_OS_TP /*A:Android, I:IOS*/
+			,PROC_ST /*코드값(Y : 발송 / N : 대기 / X : 오류)*/
+			,APP_OS_VER /*단말기OS버전*/
+			,SND_PROC_DT /*발송처리일자*/
+			,SERVER_COLCT_YN /*코드값(Y : 수집 / N : 미수집) / 서버에서 결과값을 등록*/
+			,APP_COLCT_YN /*코드값(Y : 수집 / N : 미수집) / 앱에서 연동API를 통한 결과값을 등록*/
+			,PUSH_ICON_TP /* 푸쉬아이콘유형*/
+			,SND_TITLE /*발송제목*/
+			,SND_MSG /*문구/HTML*/
+			<if test="pushImgUrl != null and pushImgUrl != ''">
+				,PUSH_IMG_URL
+			</if>
+			<if test="pushImgNm != null and pushImgNm != ''">
+				,PUSH_IMG_NM /*NAS 이미지 명*/
+			</if>
+			<if test="linkDiv != null and linkDiv != ''">
+				,LINK_DIV /*A:App실행, O:외부링크*/
+			</if>
+			<if test="linkUrl != null and linkUrl != ''">
+				,LINK_URL /* 링크URL*/
+			</if>
+			,SND_CNT /*default: 1 , 최대 5회 재발송*/
+			,SND_TEST_YN /*코드값(Y : 테스트발송 / N : 실제발송)*/
+			,TGT_SERVER /*타겟서버*/
+			,SYS_REG_IP
+			,SYS_REG_DTIME
+			,SYS_REG_ID
+			,SYS_CHG_IP
+			,SYS_CHG_DTIME
+			,SYS_CHG_ID
+		)
+		SELECT #{pushSndSetSno}	/* 푸쉬발송설정일련번호 */
+			, #{pushSndProcSno}	/* 푸쉬발송처리일련번호 */
+			, A.USERID			/* 회원번호 */
+			, A.MOBILE_NO		/* 핸드폰번호 */
+			, A.OS				/* 단말기OS유형 */
+			, #{procSt}			/* 처리상태 */
+			, A.VERSION
+			, SYSDATE
+			, #{serverColctYn}	/* 서버수집여부 */
+			, #{appColctYn}		/* 앱수집여부 */
+			, #{pushIconTp}		/* 푸쉬아이콘 */
+			, #{sndTitle}
+			, #{sndMsg}			/* 발송메시지 */
+			<if test="pushImgUrl != null and pushImgUrl != ''">
+				, #{pushImgUrl}		/* 푸쉬 이미지 */
+			</if>
+			<if test="pushImgNm != null and pushImgNm != ''">
+				, #{pushImgNm}		/* 푸쉬 이미지 */
+			</if>
+			<if test="linkDiv != null and linkDiv != ''">
+				, #{linkDiv}		/* 링크구분 */
+			</if>
+			<if test="linkUrl != null and linkUrl != ''">
+				, #{linkUrl}		/* 링크URL */
+			</if>
+			, #{sndCnt}			/* 발송횟수 */
+			, #{sndTestYn}		/* 발송테스트여부 */
+			, #{tgtServer}
+			, #{sysRegIp}		/* 시스템등록아이디 */
+			, SYSDATE			/* 시스템등록일시 */
+			, #{sysRegId}		/* 시스템등록아이디 */
+			, #{sysChgIp}		/* 시스템수정아이디 */
+			, SYSDATE			/* 시스템수정일시 */
+			, #{sysChgId}		/* 시스템수정아이디 */
+		FROM (
+	     	 SELECT   TMMB.USERID            /* 회원넘버 */
+					, TMMB.MOBILE_NO          /* 휴대폰번호 */
+					, TUMAI.OS    			 /* APP 설치버전 */
+					, TUMAI.UDID
+					, TUMAI.VERSION
+				FROM MCP_USER TMMB
+				LEFT JOIN (
+					SELECT UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS,VERSION
+						FROM (
+							SELECT UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS,VERSION,
+							RANK() OVER (PARTITION BY USER_ID ORDER BY UP_DT DESC) AS RNK
+							FROM NMCP_USR_APP_INFO
+							WHERE SEND_YN = 'Y'
+							)
+						WHERE RNK = '1'
+				) TUMAI
+				ON TMMB.USERID = TUMAI.USER_ID
+				WHERE REVOCATION_DATE IS NULL   /* 탈퇴일자 */
+			<if test="testCellNo != null">
+				AND TMMB.MOBILE_NO = #{testCellNo}
+			</if>
+				AND TMMB.USERID = #{userId}
+		)A
+	</update>
+	
+	<!-- NMCP_USER_APP_INFO_HIST INSERT -->
+	<insert id="insertUsrAppInfoHist" parameterType="com.ktmmobile.mcp.app.dto.AppInfoDTO">
+		<selectKey keyProperty="appHstSeq" resultType="String" order="BEFORE">
+			SELECT APP_HST_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_USR_APP_INFO_HIST (
+			APP_HST_SEQ,
+			UUID,
+			USER_ID,
+			UDID,
+			OS,
+			VERSION,
+			SEND_YN,
+			CRET_DT,
+			CRET_ID,
+			UP_DT,
+			UP_ID,
+			APP_OS_VER,
+			APP_NM,
+			LAST_ACCESS_DT,
+			BADGE_CNT,
+			AUTO_LOGIN_YN,
+			BIO_LOGIN_YN,
+			WDGT_USE_QNTY_CALL_CYCL_CD,
+			SEND_YN_REFERER,
+			SEND_YN_UP_DT
+		)
+		SELECT
+			#{appHstSeq},
+			UUID,
+			USER_ID,
+			UDID,
+			OS,
+			VERSION,
+			SEND_YN,
+			CRET_DT,
+			CRET_ID,
+			UP_DT,
+			UP_ID,
+			APP_OS_VER,
+			APP_NM,
+			LAST_ACCESS_DT,
+			BADGE_CNT,
+			AUTO_LOGIN_YN,
+			BIO_LOGIN_YN,
+			WDGT_USE_QNTY_CALL_CYCL_CD,
+			SEND_YN_REFERER,
+			SEND_YN_UP_DT
+		FROM   NMCP_USR_APP_INFO
+		WHERE  UUID = #{uuid}
+	</insert>
+
+</mapper>

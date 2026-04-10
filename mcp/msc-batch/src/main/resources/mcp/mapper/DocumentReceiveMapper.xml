@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DocumentReceiveMapper">
+
+    <update id="expireDocRcvUrl" parameterType="String">
+        UPDATE NMCP_DOC_RCV_URL
+           SET STATUS = 'E'
+               , AMD_ID = 'BATCH'
+               , AMD_DT = TO_DATE(#{batchExeDate}, 'YYYYMMDD')
+         WHERE STATUS != 'E'
+           AND EXPIRE_DT BETWEEN TO_DATE(#{batchExeDate}, 'YYYYMMDD') - 1 AND TO_DATE(#{batchExeDate}, 'YYYYMMDD')
+    </update>
+
+    <select id="getExpiredDocRcvIds" parameterType="String" resultType="String">
+        SELECT DOC_RCV_ID
+          FROM ( SELECT DOC_RCV_ID
+                        , STATUS
+                        , AMD_DT
+                        , ROW_NUMBER() OVER(PARTITION BY DOC_RCV_ID ORDER BY ISSUE_DT DESC) AS RN
+                   FROM NMCP_DOC_RCV_URL )
+         WHERE RN = 1
+           AND STATUS = 'E'
+           AND AMD_DT <![CDATA[ >= ]]> TO_DATE(#{batchExeDate}, 'YYYYMMDD') - 1
+    </select>
+
+    <update id="syncDocRcvStatusExpired" parameterType="java.util.List">
+        INSERT INTO NMCP_DOC_RCV_STATUS (
+            DOC_RCV_ID, DOC_SEQ, RCV_YN, RCV_DT, PROC_STATUS, PROC_DT, CRET_ID, CRET_DT
+        )
+        SELECT STT.DOC_RCV_ID
+             , MSTT.DOC_SEQ + 1
+             , STT.RCV_YN
+             , STT.RCV_DT
+             , 'E'
+             , SYSDATE
+             , 'BATCH'
+             , SYSDATE
+        FROM NMCP_DOC_RCV_STATUS STT
+           , ( SELECT DOC_RCV_ID
+                    , MAX(DOC_SEQ) AS DOC_SEQ
+               FROM NMCP_DOC_RCV_STATUS
+               GROUP BY DOC_RCV_ID ) MSTT
+        WHERE STT.DOC_RCV_ID = MSTT.DOC_RCV_ID
+          AND STT.DOC_SEQ = MSTT.DOC_SEQ
+          AND STT.PROC_STATUS = 'N'
+          AND STT.DOC_RCV_ID IN
+        <foreach item="docRcvId" collection="list" open="(" separator="," close=")">
+            #{docRcvId}
+        </foreach>
+    </update>
+
+    <update id="syncDocRcvStatusIncompleted" parameterType="java.util.List">
+        INSERT INTO NMCP_DOC_RCV_STATUS (
+            DOC_RCV_ID, DOC_SEQ, RCV_YN, RCV_DT, PROC_STATUS, PROC_DT, CRET_ID, CRET_DT
+        )
+        SELECT STT.DOC_RCV_ID
+             , MSTT.DOC_SEQ + 1
+             , STT.RCV_YN
+             , STT.RCV_DT
+             , 'I'
+             , SYSDATE
+             , 'BATCH'
+             , SYSDATE
+        FROM NMCP_DOC_RCV_STATUS STT
+           , ( SELECT DOC_RCV_ID
+                    , MAX(DOC_SEQ) AS DOC_SEQ
+               FROM NMCP_DOC_RCV_STATUS
+               GROUP BY DOC_RCV_ID ) MSTT
+        WHERE STT.DOC_RCV_ID = MSTT.DOC_RCV_ID
+          AND STT.DOC_SEQ = MSTT.DOC_SEQ
+          AND STT.PROC_STATUS = 'R'
+          AND STT.DOC_RCV_ID IN
+        <foreach item="docRcvId" collection="list" open="(" separator="," close=")">
+            #{docRcvId}
+        </foreach>
+    </update>
+</mapper>

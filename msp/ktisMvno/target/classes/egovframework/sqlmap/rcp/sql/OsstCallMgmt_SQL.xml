@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.OsstCallMapper">
+	<insert id="insertRequestOsstHist" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OsstReqVO">
+		/* osstCallMapper.insertRequestOsstHist */
+		INSERT INTO MCP_REQUEST_OSST@DL_MCP (
+		    MVNO_ORD_NO
+		    , SEQ
+		    , OSST_ORD_NO
+		    , PRGR_STAT_CD
+		    , RSLT_CD
+		    , RSLT_DT
+		    , TLPH_NO_STAT_CD
+		    , ASGN_AGNC_ID
+		    , TLPH_NO_OWN_CMPN_CD
+		    , OPEN_SVC_IND_CD
+		    , ENCD_TLPH_NO
+		    , TLPH_NO
+		    , IF_TYPE
+		    , REGST_DTTM
+		) VALUES (
+		    LPAD(#{resNo, jdbcType=VARCHAR}, 14, '0')
+		    , (SELECT MAX(SEQ) + 1 FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = LPAD(#{resNo, jdbcType=VARCHAR}, 14, '0'))
+		    , (SELECT MAX(OSST_ORD_NO) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = LPAD(#{resNo, jdbcType=VARCHAR}, 14, '0') AND PRGR_STAT_CD = 'PC2' AND RSLT_CD = '0000')
+		    , #{appEventCd, jdbcType=VARCHAR}
+		    , '0000'
+		    , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+		    , #{tlphNoStatCd, jdbcType=VARCHAR}
+		    , #{asgnAgncId, jdbcType=VARCHAR}
+		    , #{tlphNoOwnCmncCmpnCd, jdbcType=VARCHAR}
+		    , #{openSvcIndCd, jdbcType=VARCHAR}
+		    , #{encdTlphNo, jdbcType=VARCHAR}
+		    , #{tlphNo, jdbcType=VARCHAR}
+		    , NVL(#{gubun}, 'WEB')
+		    , SYSDATE
+		)
+	</insert>
+	
+	<!-- 최종결과조회 -->
+	<select id="getTcpResult" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OsstReqVO" resultType="com.ktis.msp.rcp.rcpMgmt.vo.OsstResVO">
+		/* osstCallMapper.getTcpResult */
+		SELECT  RSLT_CD                 AS rsltCd
+				, RSLT_MSG              AS rsltMsg
+				, PRDC_CHK_NOTI_MSG     AS prdcChkNotiMsg
+				, NP_NCHRG_AMT          AS npNchrgAmt
+				, NP_PNLT_AMT           AS npPnltAmt
+				, NP_UNPAY_AMT          AS npUnpayAmt
+				, NP_HNDST_INST_AMT     AS npHndstInstAmt
+		FROM    MCP_REQUEST_OSST@DL_MCP A
+		WHERE   MVNO_ORD_NO = LPAD(#{resNo}, 14, '0')
+		AND     SEQ = (SELECT MAX(SEQ) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = A.MVNO_ORD_NO
+						<if test="appEventCd != null and appEventCd != ''">
+						 AND PRGR_STAT_CD = #{appEventCd}
+						</if>
+						)
+	</select>
+	
+	<!-- 번호이동사전인증 -->
+	<select id="getNpReqInfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OsstReqVO" resultType="com.ktis.msp.rcp.rcpMgmt.vo.OsstResVO">
+		/* osstCallMapper.getNpReqInfo */
+		SELECT  DECODE(A.OPER_TYPE, 'MNP3', B.MOVE_MOBILE_FN || B.MOVE_MOBILE_MN || B.MOVE_MOBILE_RN)   AS npTlphNo
+		        , B.MOVE_COMPANY    AS moveCompany
+		        , A.CSTMR_TYPE      AS cstmrType
+		        , C.SELF_CERT_TYPE  AS selfCertType
+		        , C.CSTMR_NAME      AS cstmrName
+		        , CRYPTO_AES256.DEC_AES(TRIM(C.CSTMR_NATIVE_RRN)) AS custIdntNo
+		        , CRYPTO_AES256.DEC_AES(TRIM(C.CSTMR_JURIDICAL_RRN)) AS crprNo
+		        , A.CNTPNT_SHOP_ID  AS cntpntShopId
+		FROM    MCP_REQUEST@DL_MCP A
+		        , MCP_REQUEST_MOVE@DL_MCP B
+		        , MCP_REQUEST_CSTMR@DL_MCP C
+		WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+		AND     A.REQUEST_KEY = C.REQUEST_KEY
+		AND     A.RES_NO = #{resNo}
+	</select>
+	
+	<select id="isOrgChk" parameterType="String" resultType="Integer">
+		/* osstCallMapper.isOrgChk */
+		SELECT  COUNT(1)
+		FROM    CMN_GRP_CD_MST
+		WHERE   GRP_ID = 'RCP3001'
+		AND     CD_VAL = (SELECT CNTPNT_SHOP_ID FROM MCP_REQUEST@DL_MCP WHERE REQUEST_KEY = #{requestKey})
+		AND     USG_YN = 'Y'
+	</select>
+
+	<insert id="insertDisApd" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+		<selectKey keyProperty="apdSeq" order="BEFORE" resultType="String">
+			SELECT 'AD' || TO_CHAR(SYSDATE,'YYYYMMDD') || TRIM(TO_CHAR(SQ_DIS_AD.NEXTVAL, '000000')) AS apdSeq
+			FROM   DUAL
+		</selectKey>
+			/* osstCallMapper.insertDisApd */
+			INSERT INTO MSP_DIS_APD (
+				     APD_SEQ
+				    ,REGST_DT
+				    ,PROC_YN
+				    ,REQUEST_KEY
+				    ,RES_NO
+				    ,PRMT_ID
+				    ,CHNL_CD
+				    ,EVNT_CD
+				    ,ENGG_MNTH_CNT
+				    ,OPEN_AGNT_CD
+				    ,RATE_CD
+				    ,ON_OFF_TYPE
+				    ,OPER_TYPE
+				    ,REQ_BUY_TYPE
+				    ,REGST_ID
+				    ,REGST_DTTM
+				    ,PRMT_AGNT_CD
+				) VALUES (
+				     #{apdSeq}
+	    			, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+	    			, 'N'
+	    			, #{requestKey}
+	    			, #{resNo}
+	    			, #{disPrmtId}
+	    			, '02'
+	    			, #{evntCd}
+	    			, #{agrmTrm}
+	    			, #{cntpntShopId}
+	    			, #{socCode}
+	    			, #{onOffType}
+	    			, #{operType}
+	    			, #{reqBuyType}
+	    			, 'MSP'
+	    			, SYSDATE
+	    			, #{cntpntShopId}
+				)
+	</insert>
+
+	<select id="knoteScanInfoChk" parameterType="String" resultType="Integer">
+		/* osstCallMapper.knoteScanInfoChk */
+		SELECT  COUNT(1)
+		FROM    KIS_KNOTE_SCAN_INFO
+		WHERE   ITEM_ID = #{frmpapId}
+	</select>
+
+	<select id="getKnoteKtOrgId"  parameterType="String" resultType="String" >
+		/* osstCallMapper.getKnoteKtOrgId */
+		SELECT 	KT_ORG_ID
+		FROM 	ORG_ORGN_INFO_MST
+		WHERE	ORGN_ID = #{orgnId} AND ROWNUM = 1
+	</select>
+
+	<select id="getKnoteOrgn"  parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap" >
+		/* osstCallMapper.getKnoteOrgn */
+		SELECT 	CASE
+				    WHEN (SELECT TYPE_CD FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = #{cntpntCd} AND ROWNUM = 1) = '30' THEN HGHR_ORGN_CD
+				    ELSE ORGN_ID
+			    END AS ORGN_ID
+		FROM 	ORG_ORGN_INFO_MST
+		WHERE	KT_ORG_ID = #{mngmAgncId}
+		  AND 	ORGN_ID = #{cntpntCd}
+	</select>
+
+	<select id="getKnoteCode"  parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap" >
+		/* osstCallMapper.getKnoteCode */
+		SELECT  CD_VAL
+		    	,CD_DSC
+				,ETC1
+		FROM    CMN_GRP_CD_MST
+		WHERE   GRP_ID = #{grpId}
+		<if test="cdVal != null and cdVal != ''">
+			AND     CD_VAL = #{cdVal}
+		</if>
+		<if test="ETC2 != null and ETC2 != ''">
+			AND     ETC2 = #{ETC2}
+		</if>
+		AND     USG_YN = 'Y'
+	</select>
+
+
+
+</mapper>

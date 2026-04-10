@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.insr.insrMgmt.mapper.InsrOrderMapper">
+	
+	<!-- 2022.10.26 wooki 추가수정(안심보험 신청현황조회 관련) -->
+	<sql id="getInsrOrder">
+		SELECT
+				B.SUBSCRIBER_NO									AS subscriberNo
+				, B.SUB_LINK_NAME								AS subLinkName
+				, A.CONTRACT_NUM								AS contractNum
+				, A.INSR_PROD_CD								AS insrProdCd
+				, FN_GET_RATENM(A.INSR_PROD_CD)					AS insrProdNm
+				, A.STRT_DTTM									AS strtDttm
+				, A.END_DTTM									AS endDttm
+				, A.IF_TRGT_CD									AS ifTrgtCd
+				, FN_GET_CODENM('CMN0250', A.IF_TRGT_CD)		AS ifTrgtNm
+				, A.INSR_STAT_CD								AS insrStatCd
+				, FN_GET_CODENM('CMN0251', A.INSR_STAT_CD)		AS insrStatNm
+				, A.IMG_CHK_YN									AS imgChkYn
+				, A.MODEL_NM									AS modelNm
+				, A.INTM_SRL_NO									AS intmSrlNo
+				, A.MODEL_ID									AS modelId
+				, A.CHN_CD										AS chnCd
+				, FN_GET_CODENM('CMN0249', A.CHN_CD)			AS chnNm
+				, A.REQ_BUY_TYPE								AS reqBuyType
+				, FN_GET_CODENM('RCP9004', A.REQ_BUY_TYPE)		AS reqBuyTypeNm
+				, A.VRFY_RSLT_CD								AS vrfyRsltCd
+				, FN_GET_CODENM('RCP0200', A.VRFY_RSLT_CD)		AS vrfyRsltNm
+				, FN_GET_USRNM(A.FST_VRFY_ID)					AS fstVrfyId
+				, TO_CHAR(A.FST_VRFY_DTTM, 'YYYYMMDDHH24MISS')	AS fstVrfyDttm
+				, FN_GET_USRNM(A.SND_VRFY_ID)					AS sndVrfyId
+				, TO_CHAR(A.SND_VRFY_DTTM, 'YYYYMMDDHH24MISS')	AS sndVrfyDttm
+				, A.RMK											AS rmk
+				, B.SCAN_ID										AS scanId
+				, C.RES_NO										AS resNo
+				, CASE WHEN (SELECT MAX(RGST_DT) FROM EMV_SCAN_FILE@DL_MCP WHERE SCAN_ID = B.SCAN_ID) > A.FST_VRFY_DTTM THEN 'Y' ELSE 'N' END AS scanMdyYn
+				, B.OPEN_AGNT_CD								AS openAgntCd
+				, FN_GET_ORGNM(B.OPEN_AGNT_CD)					AS openAgntNm
+				, D.INSR_TYPE_CD								AS insrTypeCd
+				, (SELECT PRDT_NM FROM CMN_INTM_MDL WHERE PRDT_ID = A.MODEL_ID) AS prdtNm
+				, NVL((SELECT ETC_MEMO FROM NMCP_CUST_REQUEST_MST@DL_MCP RM, NMCP_CUST_REQUEST_INSR@DL_MCP RI WHERE RM.CUST_REQ_SEQ = RI.CUST_REQ_SEQ AND RM.REQ_TYPE = 'IS'
+                        AND RM.CONTRACT_NUM = A.CONTRACT_NUM AND TO_CHAR(RM.SYS_RDATE, 'YYYYMMDD') = SUBSTR(A.STRT_DTTM, 1, 8) AND ROWNUM = 1), '') AS smsPhone  /* SMS전송전화번호 */
+                , FN_GET_CODENM('RCP0007', C.ON_OFF_TYPE) AS onOffTypeNm /* 모집유형 */
+                , NVL((SELECT (SELECT ORGN_NM
+                                        FROM   ORG_ORGN_INFO_MST 
+                                        WHERE  ORGN_ID = PUM.ORGN_ID
+                                        AND    ROWNUM = 1)
+                                FROM   MSP_PARTNER_USIM_MST PUM
+                                WHERE  B.ICC_ID = PUM.USIM_NO), 'M모바일(직영온라인)') AS usimOrgNm /* 유심접점 */
+                , FN_GET_AGE_JAVA(CRYPTO_AES256.DEC_AES(B.USER_SSN)) AS custAge /* 나이 */,
+                                       CASE
+                                         WHEN SUBSTR(REPLACE(CRYPTO_AES256.DEC_AES(B.USER_SSN), '-', ''), 7, 1) IN ('1' ,
+                               '3' ,
+                               '5' ,
+                               '7') THEN '남자'
+                                         WHEN SUBSTR(REPLACE(CRYPTO_AES256.DEC_AES(B.USER_SSN), '-', ''), 7, 1) IN ('2' ,
+                               '4' ,
+                               '6' ,
+                               '8') THEN '여자'
+                                       END AS genderType /* 성별 */
+                 , TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') AS lstComActvDate /* 개통일 */
+                 , FN_GET_CODENM('RCP9001', C.OPER_TYPE) 				AS operTypeNm				/* 업무구분 */
+                 , C.OPER_TYPE 														AS operType
+                 , FN_GET_CODENM('RCP0063', NVL(C.PROD_TYPE, '01')) 	AS prodTypeNm				/* 상품구분 */
+                 , C.PROD_TYPE 													AS prodType
+                 , A.REQ_IN_DAY											AS reqinday        /* 신청일자 */
+		FROM
+				MSP_INTM_INSR_ORDER A
+				, MSP_JUO_SUB_INFO B
+				, MSP_REQUEST_DTL C
+				, MSP_INTM_INSR_MST D
+		WHERE	A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND		A.CONTRACT_NUM = C.CONTRACT_NUM
+		AND		A.INSR_PROD_CD = D.INSR_PROD_CD
+       	<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">         		
+			<choose>
+				<when test='searchGb == "reqinday"'><!-- 신청일자 조회 -->
+				AND A.REQ_IN_DAY BETWEEN #{searchFromDt} || '000000'  AND #{searchToDt} || '235959'
+				</when>
+				<when test='searchGb == "strtDttm"'><!-- 가입일자 조회 -->
+				AND A.STRT_DTTM BETWEEN #{searchFromDt} || '000000'  AND #{searchToDt} || '235959'
+				</when>
+			</choose>
+		</if> 
+		
+		<if test="chnCd != null and chnCd != ''">
+			AND A.CHN_CD = #{chnCd}
+		</if>
+		<if test="imgChkYn != null and imgChkYn != ''">
+			AND A.IMG_CHK_YN = #{imgChkYn}
+		</if>
+		<if test="vrfyRsltCd != null and vrfyRsltCd != ''">
+			AND A.VRFY_RSLT_CD = #{vrfyRsltCd}
+		</if>
+		<if test="insrProdCd != null and insrProdCd != ''">
+			AND A.INSR_PROD_CD = #{insrProdCd}
+		</if>
+		<if test="ifTrgtCd != null and ifTrgtCd != ''">
+			AND A.IF_TRGT_CD = #{ifTrgtCd}
+		</if>
+		<if test="reqBuyType != null and reqBuyType != ''">
+			AND A.REQ_BUY_TYPE = #{reqBuyType}
+		</if>
+		<if test="operType != null and operType != ''">
+			AND C.OPER_TYPE = #{operType}
+		</if>
+		<if test="prodType != null and prodType != ''">
+			AND NVL(C.PROD_TYPE, '01') = #{prodType}
+		</if>
+		<if test="searchCd != null and searchCd != ''">
+			<choose>
+				<when test='searchCd == "10"'>
+					AND B.CONTRACT_NUM = #{searchVal}
+				</when>
+				<when test='searchCd == "20"'>
+					AND B.SUB_LINK_NAME LIKE #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "30"'>
+					AND B.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+				</when>
+			</choose>
+		</if>
+		<if test="agntId != null and agntId != ''">
+			AND B.OPEN_AGNT_CD =  #{agntId}
+		</if>
+		ORDER BY A.STRT_DTTM, B.SUB_LINK_NAME
+	</sql>
+	
+	<select id="getInsrOrderList" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper.getInsrOrderList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getInsrOrder" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getInsrOrderListByExcel" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper.getInsrOrderListByExcel */
+		<include refid="getInsrOrder" />
+	</select>
+	
+	<update id="regIntmInfoByUsimCust" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper.regIntmInfoByUsimCust */
+		UPDATE MSP_INTM_INSR_ORDER
+		SET		MODEL_NM = #{modelNm}
+				, MODEL_ID = #{modelId}
+				, INTM_SRL_NO = #{intmSrlNo}
+				, IMG_CHK_YN = #{imgChkYn}
+				, RMK = #{rmk}
+				, RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+		WHERE	CONTRACT_NUM = #{contractNum}
+		AND		INSR_PROD_CD = #{insrProdCd}
+		AND		STRT_DTTM = #{strtDttm}
+	</update>
+	
+	<update id="regVrfyRslt" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper.regVrfyRslt */
+		UPDATE MSP_INTM_INSR_ORDER
+		SET		VRFY_RSLT_CD = #{vrfyRsltCd}
+				<if test="vrfyRsltCd != null and (vrfyRsltCd == 'FNOK' or vrfyRsltCd == 'FOK')">
+				, FST_VRFY_ID = #{sessionUserId}
+				, FST_VRFY_DTTM = SYSDATE
+				</if>
+				<if test="vrfyRsltCd != null and (vrfyRsltCd == 'SNOK' or vrfyRsltCd == 'SOK')">
+				, SND_VRFY_ID = #{sessionUserId}
+				, SND_VRFY_DTTM = SYSDATE
+				</if>
+				, RMK = #{rmk}
+				, RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+		WHERE	CONTRACT_NUM = #{contractNum}
+		AND		INSR_PROD_CD = #{insrProdCd}
+		AND		STRT_DTTM = #{strtDttm}
+	</update>
+	
+	<update id="regAdmsn" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper.regAdmsn */
+		UPDATE MSP_INTM_INSR_ORDER
+		SET		IF_TRGT_CD = #{ifTrgtCd}
+				, RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+		WHERE	CONTRACT_NUM = #{contractNum}
+		AND		INSR_PROD_CD = #{insrProdCd}
+		AND		STRT_DTTM = #{strtDttm}
+	</update>
+	
+	<insert id="regIntmInsrCanInfo" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper.regIntmInsrCanInfo */
+		INSERT
+		INTO	MSP_INTM_INSR_CAN_INFO (
+				INSR_CAN_NUM
+				, CONTRACT_NUM
+				, INSR_PROD_CD
+				, STRT_DTTM
+				, END_DTTM
+				, NCN
+				, CTN
+				, CUST_ID
+				, CAN_RSLT_CD
+				, REGST_ID
+				, REGST_DTTM
+		) 
+		SELECT
+				INSR_CAN_NUM_SEQ.NEXTVAL
+				, A.CONTRACT_NUM
+				, A.INSR_PROD_CD
+				, A.STRT_DTTM
+				, A.END_DTTM
+				, B.SVC_CNTR_NO
+				, B.SUBSCRIBER_NO
+				, B.CUSTOMER_ID
+				, 'UNQ'
+				, #{sessionUserId}
+				, SYSDATE
+		FROM	MSP_INTM_INSR_ORDER A
+				, MSP_JUO_SUB_INFO B
+		WHERE	A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND		A.CONTRACT_NUM = #{contractNum}
+		AND		A.INSR_PROD_CD = #{insrProdCd}
+		AND		A.STRT_DTTM = #{strtDttm}
+	</insert>
+	
+	<sql id="getInsrReady">
+		SELECT
+				B.SUBSCRIBER_NO									AS subscriberNo		/* 전화번호 */
+				, B.SUB_LINK_NAME								AS subLinkName		/* 고객명 */
+				, A.CONTRACT_NUM								AS contractNum		/* 계약번호 */
+				, FN_GET_CODENM('RCP0037', B.SUB_STATUS)		AS subStatusNm		/* 계약상태 */
+				, FN_GET_ORGNM(B.OPEN_AGNT_CD)					AS openAgntNm		/* 개통대리점 */
+				, FN_GET_RATENM(A.INSR_PROD_CD)					AS insrProdNm		/* 보험상품명 */
+				, A.REQ_IN_DAY									AS reqinday			/* 신청일자 */
+				, A.STRT_DTTM									AS strtDttm			/* 시작일자 */
+				, A.END_DTTM									AS endDttm			/* 종료일자 */
+		FROM
+				MSP_INTM_INSR_READY A
+				, MSP_JUO_SUB_INFO B
+		WHERE	A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND		A.WORK_CD = 'I'
+		AND     A.PROC_CD = 'N'
+		AND		B.SUB_STATUS != 'C'
+       	<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">         		
+			<choose>
+				<when test='searchGb == "reqinday"'><!-- 신청일자 조회 -->
+				AND A.REQ_IN_DAY BETWEEN #{searchFromDt} || '000000'  AND #{searchToDt} || '235959'
+				</when>
+				<when test='searchGb == "strtDttm"'><!-- 가입일자 조회 -->
+				AND A.STRT_DTTM BETWEEN #{searchFromDt} || '000000'  AND #{searchToDt} || '235959'
+				</when>
+			</choose>
+		</if> 
+		<if test="searchCd != null and searchCd != ''">
+			<choose>
+				<when test='searchCd == "10"'>
+					AND B.CONTRACT_NUM = #{searchVal}
+				</when>
+				<when test='searchCd == "20"'>
+					AND B.SUB_LINK_NAME LIKE #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "30"'>
+					AND B.SUBSCRIBER_NO = REPLACE(#{searchVal},'-')
+				</when>
+			</choose>
+		</if>
+		ORDER BY A.REQ_IN_DAY, B.SUB_LINK_NAME
+	</sql>
+	
+	<select id="getInsrReadyList" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper.getInsrReadyList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="getInsrReady" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getInsrReadyListByExcel" parameterType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO" resultType="com.ktis.msp.insr.insrMgmt.vo.InsrOrderVO">
+		/* InsrOrderMapper.getInsrReadyListByExcel */
+		<include refid="getInsrReady" />
+	</select>
+</mapper>

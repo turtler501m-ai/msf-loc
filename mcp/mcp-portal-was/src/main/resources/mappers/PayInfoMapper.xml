@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PayInfoMapper">
+
+    <insert id="insetPayInfo" parameterType="com.ktmmobile.mcp.payinfo.dto.PayInfoDto">
+        INSERT INTO /*페이인포 최초저장*/
+        NMCP_PAY_INFO (
+           BIRTH_DATE, CREATE_YN, CSTMR_NAME,
+           CTN, PAY_SEQ, REQ_ACCOUNT_NUMBER,
+           REQ_BANK, RES_NO , USER_ID)
+        VALUES (
+            #{birthDate},
+            #{createYn},
+            #{cstmrName},
+            #{ctn},
+            #{paySeq},
+            #{reqAccountNumber},
+            #{reqBank},
+            #{resNo},
+            #{userId}
+        )
+    </insert>
+
+    <update id="updatePayInto" parameterType="com.ktmmobile.mcp.payinfo.dto.PayInfoDto">
+        UPDATE NMCP_PAY_INFO /*페이인포 이미지 생성후 파일생성여부 업데이트*/
+        SET    CREATE_YN          = #{createYn}
+        WHERE PAY_SEQ = #{paySeq}
+    </update>
+
+    <select id="getPositionList" resultType="com.ktmmobile.mcp.payinfo.dto.PayInfoFormDto">
+        SELECT /* 변경 신청서 이미지 좌표 */
+            COLUNM_NAME,
+            META_ROW,
+            META_LINE,
+            CODEDATA_YN,
+            CODEDATA
+        FROM NMCP_PAY_INFO_FORM
+        ORDER BY APP_KEY ASC
+    </select>
+
+
+    <select id="selectPayInfo" parameterType="com.ktmmobile.mcp.payinfo.dto.PayInfoDto" resultType="com.ktmmobile.mcp.payinfo.dto.PayInfoDto">
+        SELECT
+            PAY_SEQ,
+            CSTMR_NAME,
+            BIRTH_DATE,
+            CTN,
+            REQ_BANK,
+            REQ_ACCOUNT_NUMBER,
+            RES_NO,
+            CREATE_YN,
+            USER_ID
+        FROM NMCP_PAY_INFO
+        WHERE PAY_SEQ=#{paySeq}
+    </select>
+</mapper>

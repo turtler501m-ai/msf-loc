@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.csanalyticmgmt.mapper.AcenVocAgntMapper">
+
+	<sql id="getAcenVocAgnt">
+		SELECT
+		   A.SEQ
+		  ,A.VOC_AGNT_CD
+		  ,(SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = A.VOC_AGNT_CD AND ROWNUM = 1) AS ORGN_NAME
+		  ,A.VOC_AGNT_ID
+		  ,A.VOC_AGNT_ID AS USR_ID
+		  ,B.USR_NM AS VOC_AGNT_NAME
+		  ,B.MBLPHN_NUM AS MOBILE_NUM
+		  ,A.USE_YN
+		  ,TO_CHAR(A.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM
+		  ,FN_GET_USRNM(A.REGST_ID) AS REGST_NAME
+		  ,TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+		  ,FN_GET_USRNM(A.RVISN_ID) AS RVISN_NAME
+		FROM NMCP_ACEN_VOC_AGNT@DL_MCP A
+		    ,CMN_USR_MST B
+		WHERE A.VOC_AGNT_ID = B.USR_ID
+		  AND B.USG_YN IN ('Y', 'S')
+      <if test='cntpntShopId != null and cntpntShopId != ""'>
+			AND A.VOC_AGNT_CD = #{cntpntShopId}
+		  </if>
+		  <if test='searchGbn != null and searchGbn != ""'>
+			  <!--담당자 필터-->
+				<if test='searchGbn == "01"'>
+				AND UPPER(B.USR_NM) LIKE UPPER(#{searchName}) || '%'
+				</if>
+				<!--담당자ID 필터-->
+				<if test='searchGbn == "02"'>
+		    AND A.VOC_AGNT_ID = #{searchName}
+				</if>
+				<!--휴대폰번호 필터-->
+				<if test='searchGbn == "03"'>
+				AND B.MBLPHN_NUM = #{searchName}
+				</if>
+		  </if>
+		ORDER BY A.SEQ DESC
+	</sql>
+	
+	<!--VOC 담당자 정보 리스트 조회-->
+	<select id="getAcenVocAgntList" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenVocAgntVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	  /*AcenVocAgntMapper.getAcenVocAgntList*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+	  <include refid="getAcenVocAgnt" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!--VOC 담당자 정보 엑셀 리스트 조회-->
+	<select id="getAcenVocAgntListExcel" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenVocAgntVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	  /*AcenVocAgntMapper.getAcenVocAgntListExcel*/
+	  <include refid="getAcenVocAgnt" />
+	</select>
+
+	<!--대리점 조회-->
+	<select id="getOrgnIdCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+		/*AcenVocAgntMapper.getOrgnIdCnt*/
+		SELECT COUNT(*)
+		FROM ORG_ORGN_INFO_MST
+		WHERE ORGN_ID = #{orgnId}
+	</select>
+
+	<!--사용자 조회-->
+	<select id="getUserIdCnt" parameterType="java.lang.String" resultType="java.lang.Integer">
+		/*AcenVocAgntMapper.getUserIdCnt*/
+		SELECT COUNT(*)
+		FROM CMN_USR_MST
+		WHERE USR_ID = #{usrId}
+		AND USG_YN IN ('Y', 'S')
+	</select>
+
+	<!--VOC 담당자 등록여부 확인-->
+	<select id="getAcenVocAgntDupCnt" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenVocAgntVO" resultType="java.lang.Integer">
+		/*AcenVocAgntMapper.getAcenVocAgntDupCnt*/
+		SELECT COUNT(*)
+		FROM NMCP_ACEN_VOC_AGNT@DL_MCP
+		WHERE VOC_AGNT_CD = #{vocAgntCd}
+			AND VOC_AGNT_ID = #{usrId}
+	</select>
+
+	<!--VOC 담당자 등록-->
+	<insert id="insertAcenVocAgnt" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenVocAgntVO">
+		/*AcenVocAgntMapper.insertAcenVocAgnt*/
+		<selectKey keyProperty="seq" order="BEFORE" resultType="java.lang.Long">
+			SELECT SQ_ACEN_VOC_AGNT.NEXTVAL@DL_MCP FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_ACEN_VOC_AGNT@DL_MCP(
+		   SEQ
+		  ,VOC_AGNT_CD
+		  ,VOC_AGNT_ID
+		  ,USE_YN
+		  ,REGST_ID
+		  ,REGST_DTTM
+		)VALUES (
+			 #{seq}
+			,#{vocAgntCd}
+			,#{usrId}
+			,#{useYn}
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+
+	<!--VOC 담당자 수정-->
+	<update id="updateAcenVocAgnt" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenVocAgntVO">
+		/*AcenVocAgntMapper.updateAcenVocAgnt*/
+		UPDATE NMCP_ACEN_VOC_AGNT@DL_MCP
+		SET USE_YN = #{useYn}
+			 ,RVISN_ID = #{sessionUserId}
+			 ,RVISN_DTTM = SYSDATE
+		WHERE SEQ = #{seq}
+	</update>
+
+	<!--VOC 담당자 리스트 조회(문자발송대상)-->
+	<select id="getAcenVocAgntListByOrgnId" parameterType="java.lang.String" resultType="com.ktis.msp.org.userinfomgmt.vo.UserInfoMgmtVo">
+		/*AcenVocAgntMapper.getAcenVocAgntListByOrgnId*/
+		SELECT
+		   B.USR_ID AS usrId
+		  ,B.USR_NM AS usrNm
+		  ,B.MBLPHN_NUM AS mblphnNum
+		FROM NMCP_ACEN_VOC_AGNT@DL_MCP A
+		    ,CMN_USR_MST B
+		WHERE A.VOC_AGNT_ID = B.USR_ID
+			AND A.VOC_AGNT_CD = #{orgnId}
+			AND A.USE_YN = 'Y'
+			AND B.USG_YN IN ('Y', 'S')
+	</select>
+
+</mapper>

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RateMapper">
+    
+	<!-- 요금제 예약 변경 전문 대상 수 조회(batchMod별로) -->
+    <select id="selectRateResChgTrgCntByMod"  parameterType="int"  resultType="java.lang.Integer">
+	    SELECT	/* RateMapper.selectRateResChgTrgCntByMod */
+	            COUNT(*)
+	      FROM  NMCP_RATE_RES_CHG_TRG
+	     WHERE  RES_CHG_APY_DATE = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+	       AND  PROC_YN = 'N'
+	       AND  MOD(TO_NUMBER(SUBSTR(RES_CHG_TRG_SEQ, -6)), 4) = #{batchMod}
+    </select>
+    
+	<!-- 요금제 예약 변경 전문 대상 목록 조회(batchMod별로) -->
+    <select id="selectRateResChgTrgListByMod"  parameterType="int"  resultType="com.ktmmobile.mcp.rate.dto.RateResChgTrgDto">
+	    SELECT	/* RateMapper.selectRateResChgTrgListByMod */
+	            RES_CHG_TRG_SEQ
+		        , RES_CHG_BAS_SEQ
+		        , RES_CHG_APY_DATE
+		        , PROC_YN
+		        , EVNT_TRTM_NO
+		        , EVNT_TRTM_DT
+		        , REGST_ID
+		        , REGST_DTTM
+	      FROM  NMCP_RATE_RES_CHG_TRG
+	     WHERE  RES_CHG_APY_DATE = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+	       AND  PROC_YN = 'N'
+	       AND  MOD(TO_NUMBER(SUBSTR(RES_CHG_TRG_SEQ, -6)), 4) = #{batchMod}
+	  ORDER BY  RES_CHG_TRG_SEQ ASC
+    </select>
+
+    <!-- 요금제 예약변경 미처리 대상 수 조회 -->
+    <select id="selectRateResChgCntNotProcess" resultType="java.lang.Integer">
+        SELECT /* RateMapper.selectRateResChgCntNotProcess */
+	          COUNT(*)
+         FROM NMCP_RATE_RES_CHG_BAS
+        WHERE RES_CHG_APY_DATE = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+          AND NVL(BATCH_RSLT_CD, '-1') IN ('-1', '99999')
+    </select>
+    
+	<!-- 요금제 예약변경 미처리 목록 조회 -->
+    <select id="selectRateResChgListNotProcess" resultType="com.ktmmobile.mcp.rate.dto.RateResChgBasDto">
+        SELECT /* RateMapper.selectRateResChgListNotProcess */
+	              RATE_RES_CHG_SEQ
+	            , SVC_CNTR_NO
+	            , MOBILE_NO
+	            , USER_ID
+	            , EVENT_CODE
+	            , RES_CHG_RATE_CD
+	            , BEF_CHG_RATE_CD
+	            , BEF_CHG_RATE_AMNT
+	            , PARAM
+	            , RES_CHG_DATE
+	            , RES_CHG_APY_DATE
+	            , TRT_MDL_DIV
+	            , GLOBAL_NO
+	            , BATCH_RSLT_CD
+	            , CRET_IP
+	            , CRET_DT
+         FROM NMCP_RATE_RES_CHG_BAS
+        WHERE RES_CHG_APY_DATE = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+          AND NVL(BATCH_RSLT_CD, '-1') IN ('-1', '99999')
+     ORDER BY RATE_RES_CHG_SEQ ASC
+    </select>
+    
+    <!-- 요금제 예약 변경 대상 중 부가서비스 해지 실패 건수 조회 -->
+    <select id="selectRateResChgCntFailCancel" resultType="java.lang.Integer">
+        SELECT /* RateMapper.selectRateResChgCntFailCancel */
+	           COUNT(*)
+		  FROM NMCP_RATE_RES_CHG_BAS
+		 WHERE RATE_RES_CHG_SEQ IN ( SELECT SUBSTR(PRCS_MDL_IND, 4)						 
+									   FROM ( SELECT PRCS_MDL_IND
+													 , RSLT_CD
+													 , ROW_NUMBER() OVER(PARTITION BY PRCS_MDL_IND ORDER BY SYS_RDATE DESC) RNUM
+												FROM MCP_SERVICE_ALTER_TRACE
+											   WHERE NCN IN ( SELECT SVC_CNTR_NO
+																FROM NMCP_RATE_RES_CHG_BAS
+															   WHERE RES_CHG_APY_DATE = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+																 AND BATCH_RSLT_CD = '00000' )
+												 AND SYS_DT = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+												 AND EVENT_CODE = 'X38'
+												 AND PRCS_MDL_IND LIKE 'BA_%' )
+									  WHERE RNUM = 1
+									    AND RSLT_CD IN ('ITL_SYS_E0001', '9998', '9999') )
+	  ORDER BY RATE_RES_CHG_SEQ ASC
+    </select>
+    
+	<!-- 요금제 예약 변경 대상 중 부가서비스 해지 실패 목록 조회 -->
+    <select id="selectRateResChgListFailCancel" resultType="com.ktmmobile.mcp.rate.dto.RateResChgBasDto">
+		SELECT /* RateMapper.selectRateResChgListFailCancel */	
+				 RATE_RES_CHG_SEQ
+			   , SVC_CNTR_NO
+			   , MOBILE_NO
+			   , USER_ID
+			   , EVENT_CODE
+			   , RES_CHG_RATE_CD
+			   , BEF_CHG_RATE_CD
+			   , BEF_CHG_RATE_AMNT
+			   , PARAM
+			   , RES_CHG_DATE
+			   , RES_CHG_APY_DATE
+			   , TRT_MDL_DIV
+			   , GLOBAL_NO
+			   , BATCH_RSLT_CD
+			   , CRET_IP
+			   , CRET_DT
+		  FROM NMCP_RATE_RES_CHG_BAS
+		 WHERE RATE_RES_CHG_SEQ IN ( SELECT SUBSTR(PRCS_MDL_IND, 4)						 
+									   FROM ( SELECT PRCS_MDL_IND
+													 , RSLT_CD
+													 , ROW_NUMBER() OVER(PARTITION BY PRCS_MDL_IND ORDER BY SYS_RDATE DESC) RNUM
+												FROM MCP_SERVICE_ALTER_TRACE
+											   WHERE NCN IN ( SELECT SVC_CNTR_NO
+																FROM NMCP_RATE_RES_CHG_BAS
+															   WHERE RES_CHG_APY_DATE = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+																 AND BATCH_RSLT_CD = '00000' )
+												 AND SYS_DT = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+												 AND EVENT_CODE = 'X38'
+												 AND PRCS_MDL_IND LIKE 'BA_%' )
+									  WHERE RNUM = 1
+									    AND RSLT_CD IN ('ITL_SYS_E0001', '9998', '9999') )
+	  ORDER BY RATE_RES_CHG_SEQ ASC
+    </select>
+    
+    <!-- 요금제 예약 변경 대상 중 부가서비스 가입 실패 이력 건수 조회 -->
+    <select id="selectRateResChgCntFailSubscribe" resultType="java.lang.Integer">
+		SELECT /* RateMapper.selectRateResChgListFailSubscribe */
+			   COUNT(*)
+		  FROM ( SELECT PRCS_MDL_IND
+		                , RSLT_CD
+		                , T_SOC_CODE
+		                , ROW_NUMBER() OVER(PARTITION BY PRCS_MDL_IND, T_SOC_CODE ORDER BY SYS_RDATE DESC) RNUM
+				   FROM MCP_SERVICE_ALTER_TRACE
+				  WHERE NCN IN ( SELECT SVC_CNTR_NO
+								   FROM NMCP_RATE_RES_CHG_BAS
+								  WHERE RES_CHG_APY_DATE = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+									AND BATCH_RSLT_CD = '00000' )
+					AND SYS_DT = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+					AND EVENT_CODE = 'X21'
+					AND PRCS_MDL_IND LIKE 'BA_%' )
+		 WHERE RNUM = 1
+		   AND RSLT_CD IN ('ITL_SYS_E0001', 'ITL_999_COMS9999', 'ITL_999_FWCS0005', 'MCG_BIZ_E0421', '9998', '9999')
+    </select>
+    
+	<!-- 요금제 예약 변경 대상 중 부가서비스 가입 실패 이력 목록 조회 -->
+    <select id="selectRateResChgListFailSubscribe" resultType="com.ktmmobile.mcp.rate.dto.McpServiceAlterTraceDto">
+		SELECT /* RateMapper.selectRateResChgListFailSubscribe */
+			   PRCS_MDL_IND
+		       , T_SOC_CODE
+		  FROM ( SELECT PRCS_MDL_IND
+		                , RSLT_CD
+		                , T_SOC_CODE
+		                , ROW_NUMBER() OVER(PARTITION BY PRCS_MDL_IND, T_SOC_CODE ORDER BY SYS_RDATE DESC) RNUM
+				   FROM MCP_SERVICE_ALTER_TRACE
+				  WHERE NCN IN ( SELECT SVC_CNTR_NO
+								   FROM NMCP_RATE_RES_CHG_BAS
+								  WHERE RES_CHG_APY_DATE = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+									AND BATCH_RSLT_CD = '00000' )
+					AND SYS_DT = TO_CHAR(SYSDATE, 'YYYYMM') || '01'
+					AND EVENT_CODE = 'X21'
+					AND PRCS_MDL_IND LIKE 'BA_%' )
+		 WHERE RNUM = 1
+		   AND RSLT_CD IN ('ITL_SYS_E0001', 'ITL_999_COMS9999', 'ITL_999_FWCS0005', 'MCG_BIZ_E0421', '9998', '9999')
+    </select>
+    
+	<!-- 요금제 예약변경 대상 조회 -->
+    <select id="selectRateResChgBas"  parameterType="String"  resultType="com.ktmmobile.mcp.rate.dto.RateResChgBasDto">
+        SELECT /* RateMapper.selectRateResChgBas */
+	              RATE_RES_CHG_SEQ
+	            , SVC_CNTR_NO
+	            , MOBILE_NO
+	            , USER_ID
+	            , EVENT_CODE
+	            , RES_CHG_RATE_CD
+	            , BEF_CHG_RATE_CD
+	            , BEF_CHG_RATE_AMNT
+	            , PARAM
+	            , RES_CHG_DATE
+	            , RES_CHG_APY_DATE
+	            , TRT_MDL_DIV
+	            , GLOBAL_NO
+	            , BATCH_RSLT_CD
+	            , CRET_IP
+	            , CRET_DT
+         FROM NMCP_RATE_RES_CHG_BAS
+        WHERE RATE_RES_CHG_SEQ = #{rateResChgSeq}
+    </select>
+    
+    <!-- 부가서비스 정보 조회(코드, 이름, 금액) -->
+    <select id="selectAddSvcInfo" resultType="com.ktmmobile.mcp.rate.dto.McpUserCntrMngDto" parameterType="string">
+	    SELECT /* RateMapper.selectAddSvcInfo */
+	    	   ADDITION_NAME	AS SOC_NM
+	           , RANTAL			AS SOC_PRICE
+	           , SOC			AS SOC_CODE
+	      FROM MCP_ADDITION
+	     WHERE SOC = #{socCode}
+    </select>
+    
+	<!-- 요금제 예약 변경 전문 대상 처리여부 업데이트 -->
+    <update id="updateRateResChgTrgComplete" parameterType="String" >
+        UPDATE /* RateMapper.updateRateResChgTrgComplete */
+               NMCP_RATE_RES_CHG_TRG
+           SET PROC_YN = 'Y'
+         WHERE RES_CHG_TRG_SEQ = #{resChgTrgSeq}
+    </update>    
+    
+	<!-- 요금제 예약 변경 대상 검증결과 업데이트 -->
+    <update id="updateBatchRsltCd" parameterType="com.ktmmobile.mcp.rate.dto.RateResChgBasDto" >
+        UPDATE /*RateMapper.updateBatchRsltCd   */
+               NMCP_RATE_RES_CHG_BAS
+           SET BATCH_RSLT_CD = #{batchRsltCd}
+         WHERE RATE_RES_CHG_SEQ = #{rateResChgSeq}
+    </update>
+    
+	<!-- 트레이스 로그 -->
+    <insert id="insertServiceAlterTrace" parameterType="com.ktmmobile.mcp.rate.dto.McpServiceAlterTraceDto">
+        INSERT INTO /*RateMapper.insertServiceAlterTrace 서비스 변경 이력 저장  */
+           MCP_SERVICE_ALTER_TRACE (
+              NCN                      --New 계약번호
+            , CONTRACT_NUM             --계약번호
+            , SEQ                      --일련번호
+            , GLOBAL_NO
+            , SUBSCRIBER_NO            --전화번호 CTN
+            , EVENT_CODE               --이벤트 코드
+            , PRCS_MDL_IND             --처리 모듈 구분
+            , TRTM_RSLT_SMST           --호출 내용
+            , PRCS_SBST                --처리 결과 내용
+            , RSLT_CD                  --처리결과코드
+            , A_SOC_CODE               --이전 코드 값
+            , T_SOC_CODE               --이후 코드 값
+            , A_SOC_AMNT               --변경전 요금제 할인 월정액
+            , T_SOC_AMNT               --변경후 요금제 할인 월정액
+            , PARAMETER                --인자값 설정값
+            , ACCESS_IP                --접속 IP
+            , ACCESS_URL               --REFERER URL
+            , USER_ID                  --아이디
+            , SYS_DT                   --등록일
+            , SYS_RDATE                --등록일시
+        ) VALUES (
+              #{ncn}
+            , #{contractNum}
+            , (SELECT NVL(MAX(SEQ), 0)+1 FROM MCP_SERVICE_ALTER_TRACE WHERE NCN=#{ncn} AND SYS_DT = TO_CHAR(SYSDATE, 'YYYYMMDD'))
+            , #{globalNo}
+            , #{subscriberNo}
+            , #{eventCode}
+            , #{prcsMdlInd}
+            , #{trtmRsltSmst}
+            , #{prcsSbst}
+            , #{rsltCd}
+            , #{aSocCode}
+            , #{tSocCode}
+            , #{aSocAmnt}
+            , #{tSocAmnt}
+            , #{parameter}
+            , #{accessIp}
+            , #{accessUrl}
+            , #{userId}
+            , TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , SYSDATE
+        )
+    </insert>
+</mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SendScanMapper">
+
+    <select id="selectSendScanList"  resultType="com.ktmmobile.mcp.send.dto.SendScanDto">
+        <![CDATA[
+        SELECT
+            REQUEST_KEY
+        FROM MCP_REQUEST T1
+        WHERE 1=1
+        AND TO_CHAR(T1.SYS_RDATE,'YYYYMMDD') > TO_CHAR(SYSDATE - 5,'YYYYMMDD')
+        AND ( T1.ON_OFF_TYPE IN ('0', '3',  '6',  '8') OR ( T1.ON_OFF_TYPE IN ('5', '7')  AND CONTRACT_NUM IS NOT NULL ) )
+        AND T1.PSTATE = '00'
+        AND (T1.SCAN_ID IS NULL OR T1.SCAN_ID = '999999')
+        AND T1.APP_FORM_XML_YN = 'N'
+        ORDER BY T1.SYS_RDATE
+        ]]>
+    </select>
+
+</mapper>
+
+
+
+

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.include">
+
+	<sql id="paging-start">
+		select data.* from ( select '' || count(1) OVER() TOTAL_COUNT, rownum ROW_NUM, rownum LINENUM, data.* from (
+	</sql>
+	<sql id="paging-start-vo">
+		select data.* from ( select '' || count(1) OVER() AS totalCount, rownum ROW_NUM, data.* from (
+	</sql>
+	<sql id="paging-end">
+		) data	) data 
+		<![CDATA[	where data.row_num > ( nvl(#{pageIndex , jdbcType=VARCHAR }, 1) -1) * nvl(#{pageSize , jdbcType=VARCHAR } ,10)   and data.row_num <= nvl(#{pageIndex , jdbcType=VARCHAR }, 1)  * nvl(#{pageSize , jdbcType=VARCHAR } ,10)		]]>
+	</sql>
+    <sql id="paging-end2">
+		) data	) data 
+		<![CDATA[	where data.row_num > ( nvl(#{pageIndex , jdbcType=VARCHAR }, 1) -1) * nvl(#{pageSize , jdbcType=VARCHAR } ,10)   and rownum <= nvl(#{pageSize , jdbcType=VARCHAR } ,10)		]]>
+	</sql>
+		
+	<sql id="paging-end_____">
+		) data	) data 
+		<![CDATA[	where data.row_num >= #{page_start_row , jdbcType=VARCHAR } and data.row_num <= #{page_end_row , jdbcType=VARCHAR} 		]]>
+	</sql>
+
+</mapper>

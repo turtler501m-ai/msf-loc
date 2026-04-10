@@ -1,0 +1,555 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.UsimDlvryMgmtMapper">
+	
+	<!-- 신청정보(유심배송) 조회 -->
+	<select id="getUsimDlvryList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* usimDlvryMgmtMapper.getUsimDlvryList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT
+				  A.SELF_DLVRY_IDX
+		        , A.CONTRACT_NUM
+		        , A.CSTMR_NAME
+		        , A.DLVRY_TEL_FN||A.DLVRY_TEL_MN||A.DLVRY_TEL_RN AS DLVRY_TEL
+		        , A.USIM_PROD_ID
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'usimProdInfo' AND DTL_CD = A.USIM_PROD_ID) AS USIM_PROD_NM
+		        , A.USIM_PROD_DTL_ID
+		--        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'usimProdDetailInfo' AND DTL_CD = USIM_PROD_DTL_ID) AS USIM_PROD_DETAIL_NM
+		        , A.REQ_USIM_SN
+		        , A.SELF_MEMO
+		        , TO_CHAR(A.SYS_RDATE, 'YYYY-MM-DD') AS SYS_RDATE
+		        , A.DLVRY_STATE_CODE
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'dStateCode' AND DTL_CD = A.DLVRY_STATE_CODE) AS DLVRY_STATE_NM
+		        , A.SELF_STATE_CODE
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'sStateCode' AND DTL_CD = A.SELF_STATE_CODE) AS SELF_STATE_NM
+		        , A.DLVRY_NAME
+		        , A.DLVRY_POST
+		        , A.DLVRY_ADDR
+		        , A.DLVRY_ADDR_DTL
+		        , A.DLVRY_MEMO
+		        , A.TB_CD
+		        , A.DLVRY_NO
+				, NVL(A.MINOR_AGENT_NAME, D.MINOR_AGENT_NAME) AS MINOR_AGENT_NAME
+		        , (SELECT USR_NM
+		        	FROM CMN_USR_MST
+		        	WHERE USR_ID = A.RVISN_ID) AS RVISN_ID
+		        , TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+		        , A.DLVRY_TYPE
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0257' AND CD_VAL = A.DLVRY_TYPE) AS DLVRY_TYPE_NM
+                , A.REQ_BUY_QNTY
+                , B.REQ_USIM_SN1
+                , B.REQ_USIM_SN2
+                , B.REQ_USIM_SN3
+                , B.REQ_USIM_SN4
+                , B.REQ_USIM_SN5
+                , B.REQ_USIM_SN6
+                , B.REQ_USIM_SN7
+                , B.REQ_USIM_SN8
+                , B.REQ_USIM_SN9
+                , B.REQ_USIM_SN10
+                , B.REQ_USIM_SN1 AS REQ_USIM_SN1ORG
+                , B.REQ_USIM_SN2 AS REQ_USIM_SN2ORG
+                , B.REQ_USIM_SN3 AS REQ_USIM_SN3ORG
+                , B.REQ_USIM_SN4 AS REQ_USIM_SN4ORG
+                , B.REQ_USIM_SN5 AS REQ_USIM_SN5ORG
+                , B.REQ_USIM_SN6 AS REQ_USIM_SN6ORG
+                , B.REQ_USIM_SN7 AS REQ_USIM_SN7ORG
+                , B.REQ_USIM_SN8 AS REQ_USIM_SN8ORG
+                , B.REQ_USIM_SN9 AS REQ_USIM_SN9ORG
+                , B.REQ_USIM_SN10 AS REQ_USIM_SN10ORG
+                , C.RES_NO
+                , A.REQ_TYPE
+                , DECODE(A.REQ_TYPE , '01' , '유심구매' , '02', '온라인신청서') AS REQ_TYPE_NM
+                , DECODE(
+                	(SELECT DISTINCT CNCL_RST_CD 
+                	   FROM NMCP_DAOUPAY_INFO@DL_MCP 
+                	  WHERE ORDERNO = TO_CHAR(A.SELF_DLVRY_IDX))
+               		, '01', '성공', '02', '오류', '') AS CNCL_YN_STAT					-- 결제취소 상태
+                , (SELECT DISTINCT CNCL_FAIL_RSN 
+                	 FROM NMCP_DAOUPAY_INFO@DL_MCP 
+                	WHERE ORDERNO = TO_CHAR(A.SELF_DLVRY_IDX)) AS CNCL_FAIL_RSN		-- 결제취소 실패사유
+                , (SELECT ADM.ADMIN_NM 
+                    FROM NMCP_ADMIN_MEMBER_BAS@DL_MCP ADM 
+                        , NMCP_DAOUPAY_INFO@DL_MCP DAU
+                    WHERE DAU.CNCL_ID = ADM.ADMIN_ID 
+                      AND DAU.ORDERNO = TO_CHAR(A.SELF_DLVRY_IDX)) AS CNCL_NM		-- 결제취소 처리자
+                , (SELECT DISTINCT TO_CHAR(CNCL_DT, 'YYYY-MM-DD HH24:MI:SS') 
+                	 FROM NMCP_DAOUPAY_INFO@DL_MCP 
+                	WHERE TO_CHAR(A.SELF_DLVRY_IDX) = ORDERNO) AS CNCL_DT			-- 결제취소 처리일시
+		FROM    MCP_REQUEST_SELF_DLVRY@DL_MCP A
+                , (
+                SELECT 
+                        MYSLF_DLVR_SEQ
+                        , MIN(DECODE(NUM,1,REQ_USIM_SN)) AS REQ_USIM_SN1
+                        , MIN(DECODE(NUM,2,REQ_USIM_SN)) AS REQ_USIM_SN2
+                        , MIN(DECODE(NUM,3,REQ_USIM_SN)) AS REQ_USIM_SN3
+                        , MIN(DECODE(NUM,4,REQ_USIM_SN)) AS REQ_USIM_SN4
+                        , MIN(DECODE(NUM,5,REQ_USIM_SN)) AS REQ_USIM_SN5
+                        , MIN(DECODE(NUM,6,REQ_USIM_SN)) AS REQ_USIM_SN6
+                        , MIN(DECODE(NUM,7,REQ_USIM_SN)) AS REQ_USIM_SN7
+                        , MIN(DECODE(NUM,8,REQ_USIM_SN)) AS REQ_USIM_SN8
+                        , MIN(DECODE(NUM,9,REQ_USIM_SN)) AS REQ_USIM_SN9
+                        , MIN(DECODE(NUM,10,REQ_USIM_SN)) AS REQ_USIM_SN10
+                FROM (
+                       SELECT ROW_NUMBER() OVER (PARTITION BY MYSLF_DLVR_SEQ ORDER BY USIM_BUY_SEQ DESC) AS NUM, MYSLF_DLVR_SEQ, REQ_USIM_SN FROM NMCP_USIM_BUY_TXN@DL_MCP
+                    ) 
+                GROUP BY MYSLF_DLVR_SEQ
+                ) B
+                , MCP_REQUEST@DL_MCP C
+                , MCP_REQUEST_AGENT@DL_MCP D
+		WHERE	1=1	
+        AND     A.SELF_DLVRY_IDX = B.MYSLF_DLVR_SEQ(+)
+        AND     A.REQUEST_KEY = C.REQUEST_KEY(+)
+        AND     A.REQUEST_KEY = D.REQUEST_KEY(+)
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND	TO_CHAR(A.SYS_RDATE, 'YYYYMMDD') BETWEEN #{strtDt} AND #{endDt}
+		</if>
+		<if test="usimProdInfo != null and usimProdInfo != ''">
+			AND A.USIM_PROD_ID = #{usimProdInfo}
+		</if>
+		<if test="dlvryType != null and dlvryType != ''">
+			AND A.DLVRY_TYPE = #{dlvryType}
+		</if>
+		<if test="dStateCode != null and dStateCode != ''">
+			AND A.DLVRY_STATE_CODE = #{dStateCode}
+		</if>
+		<if test="sStateCode != null and sStateCode != ''">
+			AND A.SELF_STATE_CODE = #{sStateCode}
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+					AND A.SELF_DLVRY_IDX = #{searchVal}
+				</when>
+				<when test='searchCd == "2"'>
+					AND A.CSTMR_NAME LIKE '%' || #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "3"'>
+					AND A.DLVRY_TEL_FN || A.DLVRY_TEL_MN || A.DLVRY_TEL_RN = translate(#{searchVal},'1234567890-','1234567890')
+				</when>
+				<when test='searchCd == "4"'>
+					AND A.REQ_USIM_SN = #{searchVal}
+				</when>
+				<when test='searchCd == "5"'>
+					AND A.DLVRY_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		ORDER BY A.SELF_DLVRY_IDX DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 신청정보(유심배송) 상세 조회 -->
+	<select id="getUsimDlvryDtlList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* usimDlvryMgmtMapper.getUsimDlvryDtlList */
+		SELECT 
+		        B.USIM_BUY_SEQ
+		        , A.SELF_DLVRY_IDX
+		        , B.MYSLF_DLVR_SEQ
+		        , A.REQ_BUY_QNTY || '-' || ROW_NUMBER() OVER (PARTITION BY A.SELF_DLVRY_IDX ORDER BY B.CRET_DT, B.USIM_BUY_SEQ DESC) AS QNTY_SORT
+				, (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'usimProdDetailInfo' AND DTL_CD = A.USIM_PROD_DTL_ID) AS USIM_PROD_DTL_NM
+		        , B.REQ_USIM_SN
+		        , B.REQ_USIM_SN AS REQ_USIM_SN_ORG
+		        , B.SVC_CNTR_NO
+		        , TO_CHAR(B.CRET_DT,'YYYY-MM-DD') AS CRET_DT
+		        , B.CRET_ID
+		        , B.AMD_DT
+		        , B.AMD_ID
+		FROM    MCP_REQUEST_SELF_DLVRY@DL_MCP A 
+		        , NMCP_USIM_BUY_TXN@DL_MCP B
+		WHERE   A.SELF_DLVRY_IDX = B.MYSLF_DLVR_SEQ(+)
+		AND		B.MYSLF_DLVR_SEQ = #{selfDlvryIdx}
+		ORDER BY A.SELF_DLVRY_IDX DESC, B.CRET_DT, B.USIM_BUY_SEQ DESC
+	</select>
+	
+	<!-- 신청정보(유심배송) 엑셀다운로드 조회 -->
+	<select id="getUsimDlvryListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* usimDlvryMgmtMapper.getUsimDlvryListByExcel */
+		SELECT
+				  A.SELF_DLVRY_IDX
+		        , A.CONTRACT_NUM
+		        , (SELECT B.LST_COM_ACTV_DATE FROM MSP_JUO_SUB_INFO B WHERE B.CONTRACT_NUM = A.CONTRACT_NUM) AS LST_COM_ACTV_DATE
+		        , A.CSTMR_NAME
+		        , A.SELF_MEMO AS SELF_MEMO
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'usimProdInfo' AND DTL_CD = USIM_PROD_ID) AS USIM_PROD_NM
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'usimProdDetailInfo' AND DTL_CD = USIM_PROD_DTL_ID) AS USIM_PROD_DTL_NM
+		        , A.REQ_USIM_SN
+		        , A.DLVRY_POST
+		        , A.DLVRY_ADDR||' '||A.DLVRY_ADDR_DTL AS DLVRY_ADDR
+		        , A.DLVRY_TEL_FN||A.DLVRY_TEL_MN||A.DLVRY_TEL_RN AS DLVRY_TEL
+		        , A.DLVRY_MEMO
+		        , TO_CHAR(A.SYS_RDATE, 'YYYY-MM-DD') AS SYS_RDATE
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'dStateCode' AND DTL_CD = DLVRY_STATE_CODE) AS DLVRY_STATE_NM
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'sStateCode' AND DTL_CD = SELF_STATE_CODE) AS SELF_STATE_NM
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'PERCEL' AND DTL_CD = TB_CD) AS TB_NM
+		        , A.DLVRY_NO
+				, NVL(A.MINOR_AGENT_NAME, B.MINOR_AGENT_NAME) AS MINOR_AGENT_NAME
+		        , A.RVISN_ID
+		        , TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+                , A.REQ_BUY_QNTY
+                , DECODE(
+                	(SELECT DISTINCT CNCL_RST_CD 
+                	   FROM NMCP_DAOUPAY_INFO@DL_MCP 
+                	  WHERE ORDERNO = TO_CHAR(A.SELF_DLVRY_IDX))
+               		, '01', '성공', '02', '오류', '') AS CNCL_YN_STAT					-- 결제취소 상태
+                , (SELECT DISTINCT CNCL_FAIL_RSN 
+                	 FROM NMCP_DAOUPAY_INFO@DL_MCP 
+                	WHERE ORDERNO = TO_CHAR(A.SELF_DLVRY_IDX)) AS CNCL_FAIL_RSN		-- 결제취소 실패사유
+                , (SELECT ADM.ADMIN_NM 
+                    FROM NMCP_ADMIN_MEMBER_BAS@DL_MCP ADM 
+                        , NMCP_DAOUPAY_INFO@DL_MCP DAU
+                    WHERE DAU.CNCL_ID = ADM.ADMIN_ID 
+                      AND DAU.ORDERNO = TO_CHAR(A.SELF_DLVRY_IDX)) AS CNCL_NM		-- 결제취소 처리자
+                , (SELECT DISTINCT TO_CHAR(CNCL_DT, 'YYYY-MM-DD HH24:MI:SS') 
+                	 FROM NMCP_DAOUPAY_INFO@DL_MCP 
+                	WHERE TO_CHAR(A.SELF_DLVRY_IDX) = ORDERNO) AS CNCL_DT			-- 결제취소 처리일시
+		FROM    MCP_REQUEST_SELF_DLVRY@DL_MCP A
+				, MCP_REQUEST_AGENT@DL_MCP B
+		WHERE	1=1
+		AND     A.REQUEST_KEY = B.REQUEST_KEY(+)
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND	TO_CHAR(A.SYS_RDATE, 'YYYYMMDD') BETWEEN #{strtDt} AND #{endDt}
+		</if>
+		<if test="usimProdInfo != null and usimProdInfo != ''">
+			AND A.USIM_PROD_ID = #{usimProdInfo}
+		</if>
+		<if test="dlvryType != null and dlvryType != ''">
+			AND A.DLVRY_TYPE = #{dlvryType}
+		</if>
+		<if test="dStateCode != null and dStateCode != ''">
+			AND A.DLVRY_STATE_CODE = #{dStateCode}
+		</if>
+		<if test="sStateCode != null and sStateCode != ''">
+			AND A.SELF_STATE_CODE = #{sStateCode}
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+					AND A.SELF_DLVRY_IDX = #{searchVal}
+				</when>
+				<when test='searchCd == "2"'>
+					AND A.CSTMR_NAME LIKE '%' || #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "3"'>
+					AND A.DLVRY_TEL_FN || A.DLVRY_TEL_MN || A.DLVRY_TEL_RN = translate(#{searchVal},'1234567890-','1234567890')
+				</when>
+				<when test='searchCd == "4"'>
+					AND A.REQ_USIM_SN = #{searchVal}
+				</when>
+				<when test='searchCd == "5"'>
+					AND A.DLVRY_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		ORDER BY A.SELF_DLVRY_IDX DESC
+		
+	</select>
+	
+	<!-- 신청정보(유심배송) 엑셀상세다운로드 조회 -->
+	<select id="getUsimDlvryDtlListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* usimDlvryMgmtMapper.getUsimDlvryDtlListByExcel */
+		SELECT 
+		          A.SELF_DLVRY_IDX
+		        , B.USIM_BUY_SEQ
+		        , A.CONTRACT_NUM
+		        , (SELECT SUB.LST_COM_ACTV_DATE FROM MSP_JUO_SUB_INFO SUB WHERE SUB.CONTRACT_NUM = A.CONTRACT_NUM) AS LST_COM_ACTV_DATE
+		        , A.CSTMR_NAME
+		        , A.SELF_MEMO AS SELF_MEMO
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'usimProdInfo' AND DTL_CD = A.USIM_PROD_ID) AS USIM_PROD_NM
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'usimProdDetailInfo' AND DTL_CD = A.USIM_PROD_DTL_ID) AS USIM_PROD_DTL_NM
+		        , A.REQ_USIM_SN
+		        , A.DLVRY_POST
+		        , A.DLVRY_ADDR||' '||A.DLVRY_ADDR_DTL AS DLVRY_ADDR
+		        , A.DLVRY_TEL_FN||A.DLVRY_TEL_MN||A.DLVRY_TEL_RN AS DLVRY_TEL
+		        , A.DLVRY_MEMO
+		        , TO_CHAR(A.SYS_RDATE, 'YYYY-MM-DD') AS SYS_RDATE
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'dStateCode' AND DTL_CD = A.DLVRY_STATE_CODE) AS DLVRY_STATE_NM
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'sStateCode' AND DTL_CD = A.SELF_STATE_CODE) AS SELF_STATE_NM
+		        , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'PERCEL' AND DTL_CD = A.TB_CD) AS TB_NM
+		        , A.DLVRY_NO
+				, NVL(A.MINOR_AGENT_NAME, C.MINOR_AGENT_NAME) AS MINOR_AGENT_NAME
+		        , A.RVISN_ID
+		        , TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+		        , B.SVC_CNTR_NO AS CONTRACT_NUM_TXN
+		        , A.DLVRY_TYPE
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0257' AND CD_VAL = A.DLVRY_TYPE) AS DLVRY_TYPE_NM
+                , A.REQ_BUY_QNTY 
+                , A.REQ_BUY_QNTY || '-' || ROW_NUMBER() OVER (PARTITION BY A.SELF_DLVRY_IDX ORDER BY B.CRET_DT, B.USIM_BUY_SEQ DESC) AS QNTY_SORT
+		        , B.REQ_USIM_SN AS REQ_USIM_SN_TXN
+		        , B.AMD_ID
+		        , NVL(TO_CHAR(B.AMD_DT, 'YYYY-MM-DD HH24:MI:SS'), TO_CHAR(B.CRET_DT, 'YYYY-MM-DD HH24:MI:SS')) AS AMD_DT
+		FROM    MCP_REQUEST_SELF_DLVRY@DL_MCP A
+		        , NMCP_USIM_BUY_TXN@DL_MCP B
+				, MCP_REQUEST_AGENT@DL_MCP C
+		WHERE	1=1	
+        AND     A.SELF_DLVRY_IDX = B.MYSLF_DLVR_SEQ(+)
+        AND     A.REQUEST_KEY = C.REQUEST_KEY(+)
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND	TO_CHAR(A.SYS_RDATE, 'YYYYMMDD') BETWEEN #{strtDt} AND #{endDt}
+		</if>
+		<if test="usimProdInfo != null and usimProdInfo != ''">
+			AND A.USIM_PROD_ID = #{usimProdInfo}
+		</if>
+		<if test="dlvryType != null and dlvryType != ''">
+			AND DLVRY_TYPE = #{dlvryType}
+		</if>
+		<if test="dStateCode != null and dStateCode != ''">
+			AND A.DLVRY_STATE_CODE = #{dStateCode}
+		</if>
+		<if test="sStateCode != null and sStateCode != ''">
+			AND A.SELF_STATE_CODE = #{sStateCode}
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+					AND A.SELF_DLVRY_IDX = #{searchVal}
+				</when>
+				<when test='searchCd == "2"'>
+					AND A.CSTMR_NAME LIKE '%' || #{searchVal} || '%'
+				</when>
+				<when test='searchCd == "3"'>
+					AND A.DLVRY_TEL_FN || A.DLVRY_TEL_MN || A.DLVRY_TEL_RN = translate(#{searchVal},'1234567890-','1234567890')
+				</when>
+				<when test='searchCd == "4"'>
+					AND A.REQ_USIM_SN = #{searchVal}
+				</when>
+				<when test='searchCd == "5"'>
+					AND A.DLVRY_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		ORDER BY A.SELF_DLVRY_IDX DESC, B.CRET_DT, B.USIM_BUY_SEQ DESC
+		
+	</select>
+	
+	<select id="getDlvryTbCd" parameterType="String" resultType="String">
+		SELECT  DTL_CD AS TB_CD
+		FROM    NMCP_CD_DTL@DL_MCP
+		WHERE   CD_GROUP_ID = 'PERCEL'
+		AND		DTL_CD_NM = TRIM(#{tbNm, jdbcType=VARCHAR})
+	</select>
+	
+	<select id="isDlvryInfoChk" parameterType="String" resultType="String">
+		SELECT  DECODE(DLVRY_NO, NULL, DLVRY_TEL_FN||DLVRY_TEL_MN||DLVRY_TEL_RN, 'N') 
+		FROM    MCP_REQUEST_SELF_DLVRY@DL_MCP
+		WHERE   SELF_DLVRY_IDX = #{selfDlvryIdx}
+	</select>
+	
+	<select id="isDlvryIdxChk" parameterType="String" resultType="String">
+		SELECT  DECODE(SELF_DLVRY_IDX, NULL, '', 'Y') 
+		FROM    MCP_REQUEST_SELF_DLVRY@DL_MCP
+		WHERE   SELF_DLVRY_IDX = #{selfDlvryIdx}
+	</select>
+	
+	<select id="isDlvryNoChk" parameterType="String" resultType="String">
+		SELECT  DLVRY_STATE_CODE 
+		FROM    MCP_REQUEST_SELF_DLVRY@DL_MCP
+		WHERE   DLVRY_NO = #{dlvryNo}
+	</select>
+	
+	<select id="isOpenInfoChk" parameterType="String" resultType="String">
+		SELECT  DECODE(CONTRACT_NUM, NULL, 'Y', 'N') 
+		FROM    MCP_REQUEST_SELF_DLVRY@DL_MCP
+		WHERE   SELF_DLVRY_IDX = #{selfDlvryIdx}
+	</select>
+	
+	<update id="updateUsimDlvryInfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateUsimDlvryInfo */
+		UPDATE	MCP_REQUEST_SELF_DLVRY@DL_MCP
+		SET		DLVRY_STATE_CODE    = #{dlvryStateCode, jdbcType=VARCHAR}
+		        , SELF_STATE_CODE   = #{selfStateCode, jdbcType=VARCHAR}
+		        , USIM_PROD_ID      = #{usimProdId, jdbcType=VARCHAR}
+		        , USIM_PROD_DTL_ID  = #{usimProdDtlId, jdbcType=VARCHAR}
+<!-- 		        , REQ_USIM_SN       = #{reqUsimSn, jdbcType=VARCHAR} -->
+		        , DLVRY_TYPE 		= #{dlvryType, jdbcType=VARCHAR}
+		        , SELF_MEMO         = #{selfMemo, jdbcType=VARCHAR}
+		        , DLVRY_NAME        = #{dlvryName, jdbcType=VARCHAR}
+		        , DLVRY_TEL_FN      = #{dlvryTelFn, jdbcType=VARCHAR}
+		        , DLVRY_TEL_MN      = #{dlvryTelMn, jdbcType=VARCHAR}
+		        , DLVRY_TEL_RN      = #{dlvryTelRn, jdbcType=VARCHAR}
+		        , DLVRY_POST        = #{dlvryPost, jdbcType=VARCHAR}
+		        , DLVRY_ADDR        = #{dlvryAddr, jdbcType=VARCHAR}
+		        , DLVRY_ADDR_DTL    = #{dlvryAddrDtl, jdbcType=VARCHAR}
+		        , DLVRY_MEMO        = #{dlvryMemo, jdbcType=VARCHAR}
+		        , TB_CD             = #{tbCd, jdbcType=VARCHAR}    
+		        , DLVRY_NO          = #{dlvryNo, jdbcType=VARCHAR}
+		        , RVISN_ID          = #{sessionUserId, jdbcType=VARCHAR}
+		        , RVISN_DTTM        = SYSDATE
+		WHERE	SELF_DLVRY_IDX      = #{selfDlvryIdx, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateDlvryNo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateDlvryNo */
+		UPDATE	MCP_REQUEST_SELF_DLVRY@DL_MCP
+		SET		TB_CD 				= #{tbCd, jdbcType=VARCHAR}
+				, DLVRY_NO			= #{dlvryNo, jdbcType=VARCHAR}
+		WHERE	SELF_DLVRY_IDX 		= #{selfDlvryIdx, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateDlvryWait" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateDlvryOk */
+		UPDATE	MCP_REQUEST_SELF_DLVRY@DL_MCP
+		SET		DLVRY_STATE_CODE 	= '05'
+		WHERE	SELF_DLVRY_IDX 		= #{selfDlvryIdx, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateDlvryOk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateDlvryOk */
+		UPDATE	MCP_REQUEST_SELF_DLVRY@DL_MCP
+		SET		DLVRY_STATE_CODE 	= '03'
+		WHERE	DLVRY_NO 			= #{dlvryNo, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateOpenOk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateOpenOk */
+		UPDATE	MCP_REQUEST_SELF_DLVRY@DL_MCP
+		SET		DLVRY_STATE_CODE	= '04'
+				, CONTRACT_NUM		= #{contractNum, jdbcType=VARCHAR}
+		WHERE	SELF_DLVRY_IDX 		= #{selfDlvryIdx, jdbcType=VARCHAR}
+	</update>
+	
+		<!-- 엑셀업로드2022.06.02  진행상태값  업데이트 추가  -->	
+	<update id="updateUsimSn" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateUsimSn */
+		UPDATE	MCP_REQUEST_SELF_DLVRY@DL_MCP
+		SET		DLVRY_STATE_CODE	= '02'
+		WHERE	SELF_DLVRY_IDX 		= #{selfDlvryIdx, jdbcType=VARCHAR}
+		AND 	DLVRY_STATE_CODE = '05'
+	</update>	
+	
+	<update id="updateUsimDlvryInfoMask" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateUsimDlvryInfoMask */
+		UPDATE	MCP_REQUEST_SELF_DLVRY@DL_MCP
+		SET		SELF_STATE_CODE   = #{selfStateCode, jdbcType=VARCHAR}
+				, RVISN_ID        = #{sessionUserId, jdbcType=VARCHAR}
+		        , RVISN_DTTM      = SYSDATE
+		WHERE	SELF_DLVRY_IDX    = #{selfDlvryIdx, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 주문갯수 초과 체크 -->
+	<select id="usimReqOverChk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO" resultType="String">
+		SELECT 
+			CASE 
+				WHEN TO_NUMBER(A.CNT) <![CDATA[ < ]]> TO_NUMBER(B.REQ_BUY_QNTY) THEN 'Y'
+				WHEN TO_NUMBER(A.CNT) = TO_NUMBER(B.REQ_BUY_QNTY) THEN 'E'
+				ELSE 'N'
+			END AS OVER_CHK
+		FROM 
+			(
+				SELECT	COUNT(*) CNT
+				FROM	NMCP_USIM_BUY_TXN@DL_MCP
+				WHERE	MYSLF_DLVR_SEQ = #{selfDlvryIdx, jdbcType=VARCHAR}
+                AND     REQ_USIM_SN IS NOT NULL
+			) A
+			, (
+				SELECT	REQ_BUY_QNTY
+				FROM	MCP_REQUEST_SELF_DLVRY@DL_MCP
+				WHERE	SELF_DLVRY_IDX = #{selfDlvryIdx, jdbcType=VARCHAR}
+			) B
+	</select>
+	
+	<!-- 유심일련번호 중복체크 -->
+	<select id="usimSnDupChk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO" resultType="int">
+		SELECT  COUNT(*)
+		FROM    NMCP_USIM_BUY_TXN@DL_MCP
+		WHERE   MYSLF_DLVR_SEQ = #{selfDlvryIdx}
+		AND		REQ_USIM_SN = #{reqUsimSn}
+	</select>
+	<!-- 유심일련번호 등록 -->
+<!-- 	<insert id="insertUsimSn" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO"> -->
+<!-- 		INSERT INTO /* usimDlvryMgmtMapper.insertUsimSn */ -->
+<!-- 		    NMCP_USIM_BUY_TXN@DL_MCP ( -->
+<!-- 		        USIM_BUY_SEQ -->
+<!-- 		        , MYSLF_DLVR_SEQ -->
+<!-- 		        , USIM_BUY_DIV_CD -->
+<!-- 		        , REQ_USIM_SN -->
+<!-- 		        , CRET_IP -->
+<!-- 		        , CRET_DT -->
+<!-- 		        , CRET_ID -->
+<!-- 		        , AMD_IP -->
+<!-- 		        , AMD_DT -->
+<!-- 		        , AMD_ID -->
+<!-- 		    ) VALUES ( -->
+<!-- 		        (SELECT MAX(USIM_BUY_SEQ)+1 FROM NMCP_USIM_BUY_TXN@DL_MCP) -->
+<!-- 		        , #{selfDlvryIdx, jdbcType=VARCHAR} -->
+<!-- 		        , (SELECT DECODE(DLVRY_TYPE,'01','SELF','02','NOW','03','03','SELF') FROM MCP_REQUEST_SELF_DLVRY@DL_MCP WHERE SELF_DLVRY_IDX = #{selfDlvryIdx, jdbcType=VARCHAR}) -->
+<!-- 		        , #{reqUsimSn, jdbcType=VARCHAR} -->
+<!-- 		        , #{ipAddr, jdbcType=VARCHAR} -->
+<!-- 		        , SYSDATE -->
+<!-- 		        , #{sessionUserId, jdbcType=VARCHAR} -->
+<!-- 		        , #{ipAddr, jdbcType=VARCHAR} -->
+<!-- 		        , SYSDATE -->
+<!-- 		        , #{sessionUserId, jdbcType=VARCHAR} -->
+<!-- 		    ) -->
+<!-- 	</insert> -->
+	
+	<!-- 개통완료 중복체크 -->
+	<select id="isUsimOpenInfoChk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO" resultType="String">
+		SELECT  DECODE(SVC_CNTR_NO, NULL, 'Y', 'N') 
+		FROM    NMCP_USIM_BUY_TXN@DL_MCP
+		WHERE   USIM_BUY_SEQ = #{usimBuySeq}
+	</select>
+	
+	<!-- 개통완료 업데이트 -->
+	<update id="updateDlvryStateOpenOk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateDlvryStateOpenOk */
+		UPDATE	MCP_REQUEST_SELF_DLVRY@DL_MCP
+		SET		DLVRY_STATE_CODE	= '04'
+				, RVISN_DTTM		= SYSDATE
+				, RVISN_ID			= #{sessionUserId, jdbcType=VARCHAR}
+		WHERE	SELF_DLVRY_IDX 		= #{selfDlvryIdx, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 개통완료(계약번호) 업데이트 -->
+	<update id="updateUsimOpenOk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateUsimOpenOk */
+		UPDATE	NMCP_USIM_BUY_TXN@DL_MCP
+		SET		SVC_CNTR_NO		= #{contractNum, jdbcType=VARCHAR}
+		        , AMD_IP			= #{ipAddr, jdbcType=VARCHAR}
+				, AMD_DT			= SYSDATE
+				, AMD_ID			= #{sessionUserId, jdbcType=VARCHAR}
+		WHERE	USIM_BUY_SEQ 	= #{usimBuySeq, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 유심일련번호가 NULL 인 SEQ 가져오기 -->
+	<select id="getUsimBuySeqNull" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT	/* usimDlvryMgmtMapper.getUsimBuySeqNull */
+				USIM_BUY_SEQ
+		FROM 	NMCP_USIM_BUY_TXN@DL_MCP
+		WHERE 	MYSLF_DLVR_SEQ = #{selfDlvryIdx, jdbcType=VARCHAR}
+        AND     REQ_USIM_SN IS NULL
+		ORDER BY USIM_BUY_SEQ DESC
+	</select>
+	
+	<!-- 유심일련번호가 NULL 이 아닌 SEQ 가져오기 -->
+	<select id="getUsimBuySeqNotNull" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO" resultType="String">
+		SELECT	/* usimDlvryMgmtMapper.getUsimBuySeqNotNull */
+				USIM_BUY_SEQ
+		FROM 	NMCP_USIM_BUY_TXN@DL_MCP
+		WHERE 	MYSLF_DLVR_SEQ = #{selfDlvryIdx, jdbcType=VARCHAR}
+        AND     REQ_USIM_SN = #{reqUsimSnOrg, jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 신청서 유심정보 업데이트 -->
+	<update id="updateUsimBuyTxnSn" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryMgmtVO">
+		/* usimDlvryMgmtMapper.updateUsimBuyTxnSn */
+		UPDATE	NMCP_USIM_BUY_TXN@DL_MCP
+		SET		REQ_USIM_SN			= #{reqUsimSn, jdbcType=VARCHAR}
+			<if test="contractNum != null and contractNum != ''">
+				, SVC_CNTR_NO		= #{contractNum, jdbcType=VARCHAR}
+			</if>
+				, USIM_BUY_DIV_CD 	= (SELECT DECODE(DLVRY_TYPE,'01','SELF','02','NOW','03','03','SELF') FROM MCP_REQUEST_SELF_DLVRY@DL_MCP WHERE SELF_DLVRY_IDX = #{selfDlvryIdx, jdbcType=VARCHAR})
+		        , AMD_IP			= #{ipAddr, jdbcType=VARCHAR}
+				, AMD_DT			= SYSDATE
+				, AMD_ID			= #{sessionUserId, jdbcType=VARCHAR}
+		WHERE	USIM_BUY_SEQ 		= #{usimBuySeq, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 신청정보(유심배송) 엑셀업로드전에 진행상태확인  -->
+	<select id="isIdxCodeChk" parameterType="String" resultType="String">
+		SELECT  DLVRY_STATE_CODE
+		FROM    MCP_REQUEST_SELF_DLVRY@DL_MCP
+		WHERE   SELF_DLVRY_IDX = #{selfDlvryIdx}
+	</select>	
+	
+ </mapper>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.RcpCustPointMapper">
+	<!-- 고객포인트 조회 -->
+	<select id="getRcpCustPointList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* rcpCustPointMapper.getRcpCustPointList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT	A.POINT_TXN_SEQ					--포인트내역일련번호
+				, A.POINT_CUST_SEQ				--포인트고객일련번호
+				, B.USER_ID						--사용자 id 비회원일 경우 NULL
+				, A.REQUEST_KEY					--주문번호
+				, B.SVC_CNTR_NO					--계약번호 준회원일 경우 NULL
+				, B.TOT_ACU_POINT				--누적적립포인트
+				, B.TOT_USE_POINT				--누적사용포인트
+				, B.TOT_REMAIN_POINT			--잔여포인트
+				, B.TOT_EXTINCTION_POINT		--소멸포인트
+				, TO_CHAR(TO_DATE(B.POINT_SUM_BASE_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS POINT_SUM_BASE_DATE	--포인트 집계 기준일자
+				, (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0007' AND DTL_CD = A.POINT_DIV_CD) AS POINT_DIV_CD --포인트 명
+				, (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0011' AND DTL_CD = A.POINT_TRT_CD) AS POINT_TRT_CD --포인트 내역 S U E
+				, A.POINT 						--포인트
+				, A.TOT_REMAIN_POINT AS TOT_REMAIN_POINT_TXN			--시점잔여포인트
+				, TO_CHAR(TO_DATE(A.POINT_USE_POSBL_ST_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS POINT_USE_POSBL_ST_DATE	--포인트사용가능 시작일
+				, TO_CHAR(TO_DATE(A.POINT_USE_POSBL_END_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS POINT_USE_POSBL_END_DATE	--포인트사용가능 종료일
+				, DECODE(A.POINT_TRT_CD, 'S', (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0009' AND DTL_CD = A.POINT_TXN_RSN_CD), 
+				                         'U', (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0010' AND DTL_CD = A.POINT_TXN_RSN_CD),
+				                         'E', (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0019' AND DTL_CD = A.POINT_TXN_RSN_CD)) AS POINT_TXN_RSN_CD --포인트 내역 사유
+				, A.POINT_TXN_DTL_RSN_DESC 		--포인트 처리 상세사유
+				, TO_CHAR(A.POINT_TRT_DT, 'YYYY-MM-DD HH24:MI:SS') AS POINT_TRT_DT --포인트 처리일시
+				, A.POINT_TRT_MEMO 				--포인트 처리메모
+				, TO_CHAR(A.CRET_DT, 'YYYY-MM-DD HH24:MI:SS') AS CRET_DT --생성일시
+		FROM	NMCP_CUST_POINT_TXN@DL_MCP A
+		       	, NMCP_CUST_POINT_GIVE_BASE_BAS@DL_MCP B
+		WHERE 	A.POINT_CUST_SEQ = B.POINT_CUST_SEQ
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND		TO_CHAR(A.POINT_TRT_DT, 'YYYYMMDDHH24MISS') BETWEEN #{strtDt} || '000000' AND #{endDt} || '235959'
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+				AND		B.USER_ID = #{searchVal}
+				</when>
+				<when test='searchCd == "2"'>
+				AND		A.REQUEST_KEY = #{searchVal}
+				</when>
+				<when test='searchCd == "3"'>
+				AND 	B.SVC_CNTR_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		ORDER BY CRET_DT DESC
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+ 	<select id="getRcpCustPointListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* rcpCustPointMapper.getRcpCustPointListByExcel */
+		SELECT	A.POINT_TXN_SEQ					--포인트내역일련번호
+				, A.POINT_CUST_SEQ				--포인트고객일련번호
+				, B.USER_ID						--사용자 id 비회원일 경우 NULL
+				, A.REQUEST_KEY					--주문번호
+				, B.SVC_CNTR_NO					--계약번호 준회원일 경우 NULL
+				, B.TOT_ACU_POINT				--누적적립포인트
+				, B.TOT_USE_POINT				--누적사용포인트
+				, B.TOT_REMAIN_POINT			--잔여포인트
+				, B.TOT_EXTINCTION_POINT		--소멸포인트
+				, TO_CHAR(TO_DATE(B.POINT_SUM_BASE_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS POINT_SUM_BASE_DATE	--포인트 집계 기준일자
+				, (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0007' AND DTL_CD = A.POINT_DIV_CD) AS POINT_DIV_CD --포인트 명
+				, (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0011' AND DTL_CD = A.POINT_TRT_CD) AS POINT_TRT_CD --포인트 내역 S U E
+				, A.POINT 						--포인트
+				, A.TOT_REMAIN_POINT AS TOT_REMAIN_POINT_TXN 			--시점잔여포인트
+				, TO_CHAR(TO_DATE(A.POINT_USE_POSBL_ST_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS POINT_USE_POSBL_ST_DATE	--포인트사용가능 시작일
+				, TO_CHAR(TO_DATE(A.POINT_USE_POSBL_END_DATE, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS POINT_USE_POSBL_END_DATE	--포인트사용가능 종료일
+				, DECODE(A.POINT_TRT_CD, 'S', (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0009' AND DTL_CD = A.POINT_TXN_RSN_CD), 
+				                         'U', (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0010' AND DTL_CD = A.POINT_TXN_RSN_CD),
+				                         'E', (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'BE0019' AND DTL_CD = A.POINT_TXN_RSN_CD)) AS POINT_TXN_RSN_CD --포인트 내역 사유
+				, A.POINT_TXN_DTL_RSN_DESC 		--포인트 처리 상세사유
+				, TO_CHAR(A.POINT_TRT_DT, 'YYYY-MM-DD HH24:MI:SS') AS POINT_TRT_DT --포인트 처리일시
+				, A.POINT_TRT_MEMO 				--포인트 처리메모
+				, TO_CHAR(A.CRET_DT, 'YYYY-MM-DD HH24:MI:SS') AS CRET_DT --생성일시
+		FROM 	NMCP_CUST_POINT_TXN@DL_MCP A
+				, NMCP_CUST_POINT_GIVE_BASE_BAS@DL_MCP B
+		WHERE	A.POINT_CUST_SEQ = B.POINT_CUST_SEQ
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND		TO_CHAR(A.POINT_TRT_DT, 'YYYYMMDDHH24MISS') BETWEEN #{strtDt} || '000000' AND #{endDt} || '235959'
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+				AND		B.USER_ID = #{searchVal}
+				</when>
+				<when test='searchCd == "2"'>
+				AND		A.REQUEST_KEY = #{searchVal}
+				</when>
+				<when test='searchCd == "3"'>
+				AND 	B.SVC_CNTR_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		ORDER BY CRET_DT DESC
+	</select>	
+ </mapper>

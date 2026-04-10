@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions
+PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+"http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+
+    <!-- PC main -->
+    <definition name="layoutMainDefault" template="/WEB-INF/views/layouts/pcLayoutDefault.jsp" >
+        <put-attribute name="mncpGnbAttr" value="/WEB-INF/views/layouts/pcGnb.jsp" />
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/pcFooter.jsp" />
+    </definition>
+
+
+    <!-- PC -->
+    <definition name="layoutGnbDefault" template="/WEB-INF/views/layouts/pcLayoutDefault.jsp" >
+        <put-attribute name="mncpGnbAttr" value="/WEB-INF/views/layouts/pcGnb.jsp" />
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/pcFooter.jsp" />
+    </definition>
+
+    <!-- PC -->
+    <definition name="layoutGnbDefaultTitle" template="/WEB-INF/views/layouts/pcLayoutDefaultTitle.jsp" >
+        <put-attribute name="mncpGnbAttr" value="/WEB-INF/views/layouts/pcGnb.jsp" />
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/pcFooter.jsp" />
+    </definition>
+
+    <!-- PC No GNB-->
+    <definition name="layoutNoGnbDefault" template="/WEB-INF/views/layouts/pcLayoutNoGnbFooter.jsp" >
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/pcFooter.jsp" />
+    </definition>
+
+    <!-- PC No GNB-->
+    <definition name="layoutOutFormGnbDefault" template="/WEB-INF/views/layouts/pcLayoutNoGnbFooter.jsp" >
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/pcOutFormFooter.jsp" />
+    </definition>
+
+    <!-- PC No GNB / No footer -->
+    <definition name="layoutNoGnbNoFooter" template="/WEB-INF/views/layouts/pcLayoutNoGnbNoFooter.jsp" >
+    </definition>
+
+
+    <!-- PC - bodyondy -->
+    <definition name="layoutNoGnb" template="/WEB-INF/views/layouts/pcLayoutNoGnb.jsp" >
+    </definition>
+
+
+    <!-- Mobile main -->
+    <definition name="mlayoutMainDefault" template="/WEB-INF/views/layouts/mobileLayoutDefault.jsp" >
+        <put-attribute name="mncpGnbAttr" value="/WEB-INF/views/layouts/mobileGnb.jsp" />
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/mobileFooter.jsp" />
+    </definition>
+
+    <!-- Mobile -->
+    <definition name="mlayoutDefault" template="/WEB-INF/views/layouts/mobileLayoutDefault.jsp" >
+        <put-attribute name="mncpGnbAttr" value="/WEB-INF/views/layouts/mobileGnb.jsp" />
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/mobileFooter.jsp" />
+    </definition>
+
+
+    <!-- Mobile -->
+    <definition name="mlayoutDefaultTitle" template="/WEB-INF/views/layouts/mobileLayoutDefaultTitle.jsp" >
+        <put-attribute name="mncpGnbAttr" value="/WEB-INF/views/layouts/mobileGnb.jsp" />
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/mobileFooter.jsp" />
+    </definition>
+
+    <!-- Mobile No GNB -->
+    <definition name="mlayoutNoGnbFotter" template="/WEB-INF/views/layouts/mobileLayoutNoGnbFooter.jsp" >
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/mobileFooter.jsp" />
+    </definition>
+
+    <definition name="mlayoutOutFormFotter" template="/WEB-INF/views/layouts/mobileLayoutNoGnbFooter.jsp" >
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/mobileOutFormFooter.jsp" />
+    </definition>
+
+    <!-- Mobile No GNB / No footer -->
+    <definition name="mlayoutNoGnbNoFooter" template="/WEB-INF/views/layouts/mobileLayoutNoGnbNoFooter.jsp" >
+    </definition>
+
+    <!-- Mobile - bodyondy -->
+    <definition name="mlayoutNoGnb" template="/WEB-INF/views/layouts/mobileLayoutNoGnb.jsp" >
+    </definition>
+
+
+
+    <!-- wire PC 유선 -->
+    <definition name="layoutWireDefault" template="/WEB-INF/views/layouts/layoutWireDefault.jsp" >
+        <put-attribute name="mncpWireGnbAttr" value="/WEB-INF/views/layouts/wireGnb.jsp" />
+        <put-attribute name="mncpWireFooterAttr" value="/WEB-INF/views/layouts/wireDefaultFooter.jsp" />
+    </definition>
+
+    <definition name="layoutWirePopupDefault" template="/WEB-INF/views/layouts/layoutWirePopupDefault.jsp" >
+    </definition>
+
+    <!-- company PC -->
+    <definition name="layoutCompanyDefault" template="/WEB-INF/views/layouts/layoutCompanyDefault.jsp" >
+        <put-attribute name="mncpGnbAttr" value="/WEB-INF/views/layouts/pcGnb.jsp" />
+        <put-attribute name="mncpFooterAttr" value="/WEB-INF/views/layouts/pcFooter.jsp" />
+    </definition>
+
+</tiles-definitions>

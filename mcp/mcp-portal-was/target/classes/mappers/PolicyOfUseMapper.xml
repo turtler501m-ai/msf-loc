@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PolicyOfUseMapper">
+
+	<!-- 파일 가져오기 -->
+	<select id="getPolicyFile" resultType="com.ktmmobile.mcp.board.dto.FileDownloadDto" parameterType="int">
+		SELECT	 ATT_SEQ 			AS fileSeq
+				, FILE_PATH_NM		AS filePath
+				, FILE_NM			AS fileNm
+				, FILE_CAPA			AS fileSize
+		FROM	NMCP_STPLT_DTL
+		WHERE ATT_SEQ = #{attSeq}
+	</select>
+
+</mapper>

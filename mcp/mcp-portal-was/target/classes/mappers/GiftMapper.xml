@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="GiftMapper">
+
+  <!--프로모션 아이디에 해당하는 요금제 혜택요약 시퀀스 조회-->
+  <select id="selectRateGiftPrmtSeqByIdList" parameterType="java.util.List" resultType="java.lang.Long">
+    /*GiftMapper.selectRateGiftPrmtSeqByIdList*/
+    SELECT SEQ
+    FROM NMCP_RATE_GIFT_PRMT
+    WHERE PRMT_ID IN
+    <foreach item="item" collection="list" open="(" separator="," close=")">
+      #{item}
+    </foreach>
+  </select>
+
+</mapper>

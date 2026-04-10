@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.grpcdmgmt.mapper.GrpCdMgmtMapper">
+
+    <!-- 그룹 코드 조회 -->
+    <select id="selectGrpMgmtList" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+<!--       <include refid="com.ktis.msp.cmn.include.paging-start" /> -->
+        SELECT /* GrpCdMgmtMapper.selectGrpMgmtList */
+             GRP_ID    /* 그룹 ID */
+           , GRP_KOR_NM    /* 그룹 한글명 */
+           , GRP_ENG_NM    /* 그룹 영어명 */
+           , GRP_DSC    /* 그룹 설명 */
+           , USG_YN    /* 사용 여부 */
+           , COL_KOR_NM    /* 컬럼 한글명 */
+           , COL_ENG_NM    /* 컬럼 영어명 */
+           , DUTY_SCTN    /* 업무 구분 */
+           , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0023' AND CD_VAL = DUTY_SCTN) as DUTY_SCTN_NM    /* 업무 구분명 */
+           , REMRK    /* 비고 */
+           , REGST_ID    /* 등록자 ID */
+           , RVISN_ID    /* 수정자 ID */
+        FROM CMN_GRP_MST
+        WHERE 1=1
+        <if test="grpKorNm != null and grpKorNm != ''">     
+         AND (GRP_KOR_NM LIKE '%'||#{grpKorNm}||'%' OR GRP_ID LIKE UPPER('%'||#{grpKorNm}||'%'))
+        </if>               
+        <if test="dutySctn != null and dutySctn != ''">     
+         AND DUTY_SCTN = #{dutySctn}
+        </if>           
+        <if test="usgYn != null and usgYn != ''">       
+         AND USG_YN =  #{usgYn}
+        </if>           
+        ORDER BY GRP_ID
+<!--         <include refid="com.ktis.msp.cmn.include.paging-end" /> -->
+    </select>
+    
+    <insert id="insertGrpMgmt" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpMgmtVO" >
+        INSERT /* GrpCdMgmtMapper.insertGrpMgmt */
+              INTO CMN_GRP_MST
+              (        
+                GRP_ID    /* 그룹 ID */
+               , GRP_KOR_NM    /* 그룹 한글명 */
+               , GRP_ENG_NM    /* 그룹 영어명 */
+               , GRP_DSC    /* 그룹 설명 */
+               , USG_YN    /* 사용 여부 */
+               , COL_KOR_NM    /* 컬럼 한글명 */
+               , COL_ENG_NM    /* 컬럼 영어명 */
+               , DUTY_SCTN    /* 업무 구분 */
+               , REMRK    /* 비고 */
+               , REGST_ID    /* 등록자 ID */
+               , REGST_DTTM    /* 등록 일시 */
+               , RVISN_ID    /* 수정자 ID */
+               , RVISN_DTTM    /* 수정 일시 */
+           ) VALUES (
+<!--                  #{dutySctn} || TRIM(TO_CHAR(SQ_CMN_GRP_MST_01.NEXTVAL, '0000')) -->
+                 #{grpId, jdbcType=VARCHAR} /* 그룹 ID */ 
+               , #{grpKorNm, jdbcType=VARCHAR} /* 그룹 한글명 */
+               , #{grpEngNm, jdbcType=VARCHAR} /* 그룹 영어명 */
+               , #{grpDsc, jdbcType=VARCHAR} /* 그룹 설명 */
+               , #{usgYn, jdbcType=VARCHAR} /* 사용 여부 */
+               , #{colKorNm, jdbcType=VARCHAR} /* 컬럼 한글명 */
+               , #{colEngNm, jdbcType=VARCHAR} /* 컬럼 영어명 */
+               , #{dutySctn, jdbcType=VARCHAR} /* 업무 구분 */
+               , #{remrk, jdbcType=VARCHAR} /* 비고 */
+               , #{regstId, jdbcType=VARCHAR} /* 등록자 ID */
+               , SYSDATE /* 등록 일시 */
+               , #{rvisnId, jdbcType=VARCHAR} /* 수정자 ID */
+               , SYSDATE /* 수정 일시 */
+           )      
+    </insert>
+    
+    <update id="updateGrpMgmt" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpMgmtVO" >
+       UPDATE CMN_GRP_MST /** GrpCdMgmtMapper.updateGrpMgmt */ 
+           SET
+           <if test = "grpKorNm != null and grpKorNm != '' "> GRP_KOR_NM = #{grpKorNm, jdbcType=VARCHAR} </if>
+           <if test = "grpEngNm != null ">, GRP_ENG_NM = #{grpEngNm, jdbcType=VARCHAR} </if>
+           <if test = "grpDsc != null ">, GRP_DSC = #{grpDsc, jdbcType=VARCHAR} </if>
+           <if test = "usgYn != null and usgYn != '' ">, USG_YN = #{usgYn, jdbcType=VARCHAR} </if>
+           <if test = "colKorNm != null ">, COL_KOR_NM = #{colKorNm, jdbcType=VARCHAR} </if>
+           <if test = "colEngNm != null ">, COL_ENG_NM = #{colEngNm, jdbcType=VARCHAR} </if>
+           <if test = "dutySctn != null and dutySctn != '' ">, DUTY_SCTN = #{dutySctn, jdbcType=VARCHAR} </if>
+           <if test = "remrk != null ">, REMRK = #{remrk, jdbcType=VARCHAR} </if>
+           <if test = "rvisnId != null and rvisnId != '' ">, RVISN_ID = #{rvisnId, jdbcType=VARCHAR} </if>
+           , RVISN_DTTM = SYSDATE
+        WHERE
+            GRP_ID = #{grpId}        
+    </update>
+    
+    <delete id="deleteGrpMgmt" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpMgmtVO" >
+        DELETE /** GrpCdMgmtMapper.deleteGrpMgmt */ 
+        FROM CMN_GRP_MST
+        WHERE GRP_ID = #{grpId} 
+    </delete>
+    
+    <select id="existKorNmGrpMgmt" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpMgmtVO" resultType="int">
+       SELECT COUNT(*) FROM CMN_GRP_MST WHERE GRP_KOR_NM = #{grpKorNm}
+    </select>
+    
+    <!-- 그룹 상세코드 조회 -->
+    <select id="selectGrpCdMgmtList" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpCdMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+<!--        <include refid="com.ktis.msp.cmn.include.paging-start" /> -->
+        SELECT /* GrpCdMgmtMapper.selectGrpCdMgmtList */
+             GRP_ID    /* 그룹 ID */
+           , CD_VAL    /* 코드 값 */
+           , CD_DSC    /* 코드 내용 */
+           , USG_YN    /* 사용 여부 */
+           , REGST_ID    /* 등록자 ID */
+           , RVISN_ID    /* 수정자 ID */
+           , ETC1    /* 기타1 */
+           , ETC2    /* 기타2 */
+           , ETC3    /* 기타3 */
+           , ETC4    /* 기타4 */
+           , ETC5    /* 기타5 */
+           , ETC6    /* 기타6 */
+        FROM CMN_GRP_CD_MST
+        WHERE
+               GRP_ID = #{grpId}
+<!--         <include refid="com.ktis.msp.cmn.include.paging-end" /> -->
+    </select>
+    
+    <insert id="insertGrpCdMgmt" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpCdMgmtVO" >
+        INSERT /* GrpCdMgmtMapper.insertGrpCdMgmt */
+              INTO CMN_GRP_CD_MST
+              (        
+                 GRP_ID    /* 그룹 ID */
+               , CD_VAL    /* 코드 값 */
+               , CD_DSC    /* 코드 내용 */
+               , USG_YN    /* 사용 여부 */
+               , REGST_ID    /* 등록자 ID */
+               , REGST_DTTM    /* 등록 일시 */
+               , RVISN_ID    /* 수정자 ID */
+               , RVISN_DTTM    /* 수정 일시 */
+               , ETC1    /* 기타1 */
+               , ETC2    /* 기타2 */
+               , ETC3    /* 기타3 */
+               , ETC4    /* 기타4 */
+               , ETC5    /* 기타5 */
+               , ETC6    /* 기타6 */
+           ) VALUES (
+                #{grpId, jdbcType=VARCHAR} /* 그룹 ID */
+               , #{cdVal, jdbcType=VARCHAR} /* 코드 값 */
+               , #{cdDsc, jdbcType=VARCHAR} /* 코드 내용 */
+               , #{usgYn, jdbcType=VARCHAR} /* 사용 여부 */
+               , #{regstId, jdbcType=VARCHAR} /* 등록자 ID */
+               , SYSDATE /* 등록 일시 */
+               , #{rvisnId, jdbcType=VARCHAR} /* 수정자 ID */
+               , SYSDATE /* 수정 일시 */
+               , #{etc1, jdbcType=VARCHAR} /* 기타1 */
+               , #{etc2, jdbcType=VARCHAR} /* 기타2 */
+               , #{etc3, jdbcType=VARCHAR} /* 기타3 */
+               , #{etc4, jdbcType=VARCHAR} /* 기타4 */
+               , #{etc5, jdbcType=VARCHAR} /* 기타5 */
+               , #{etc6, jdbcType=VARCHAR} /* 기타6 */
+           )      
+    </insert>
+    
+    <update id="updateGrpCdMgmt" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpCdMgmtVO" >
+       UPDATE CMN_GRP_CD_MST /** GrpCdMgmtMapper.updateGrpCdMgmt */ 
+           SET
+           <if test = "cdVal != null and cdVal != '' "> CD_VAL = #{cdVal, jdbcType=VARCHAR} </if>
+           <if test = "cdDsc != null and cdDsc != '' ">, CD_DSC = #{cdDsc, jdbcType=VARCHAR} </if>
+           <if test = "usgYn != null and usgYn != '' ">, USG_YN = #{usgYn, jdbcType=VARCHAR} </if>
+           <if test = "rvisnId != null and rvisnId != '' ">, RVISN_ID = #{rvisnId, jdbcType=VARCHAR} </if>
+           , RVISN_DTTM = SYSDATE
+           <if test = "etc1 != null ">, ETC1 = #{etc1, jdbcType=VARCHAR} </if>
+           <if test = "etc2 != null ">, ETC2 = #{etc2, jdbcType=VARCHAR} </if>
+           <if test = "etc3 != null ">, ETC3 = #{etc3, jdbcType=VARCHAR} </if>
+           <if test = "etc4 != null ">, ETC4 = #{etc4, jdbcType=VARCHAR} </if>
+           <if test = "etc5 != null ">, ETC5 = #{etc5, jdbcType=VARCHAR} </if>
+           <if test = "etc6 != null ">, ETC6 = #{etc6, jdbcType=VARCHAR} </if>
+        WHERE
+            GRP_ID = #{grpId}        
+            AND CD_VAL = #{cdValOld}
+    </update>
+    
+    <delete id="deleteGrpCdMgmt" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpCdMgmtVO" >
+        DELETE /** GrpCdMgmtMapper.deleteGrpCdMgmt */ 
+        FROM CMN_GRP_CD_MST
+        WHERE 
+            GRP_ID = #{grpId} 
+            AND CD_VAL = #{cdVal}
+    </delete>
+    
+    <delete id="deleteAllGrpCdMgmt" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpMgmtVO" >
+        DELETE /** GrpCdMgmtMapper.deleteAllGrpCdMgmt */ 
+        FROM CMN_GRP_CD_MST
+        WHERE 
+            GRP_ID = #{grpId} 
+    </delete>
+    
+    <!-- 공통코드 LOV 파일형식으로 가져오기 -->
+    <select id="listGrpCdLOV" parameterType="String" resultType="hashmap">
+    <![CDATA[   /** GrpCdMgmtMapper.listGrpCdLOV */ 
+        SELECT GRP_ID || ' : "' || LTRIM(LTRIM(LIST_VAL,','),' ') || '",' AS CODE
+          FROM 
+                (
+                  SELECT GRP_ID, MAX(SYS_CONNECT_BY_PATH (VAL , ', ')) LIST_VAL 
+                    FROM
+                         (SELECT A.GRP_ID, CD_VAL || ':' || CD_DSC VAL, ROW_NUMBER() OVER(PARTITION BY B.GRP_ID ORDER BY CD_DSC) AS RNUM 
+                            FROM CMN_GRP_MST A,  CMN_GRP_CD_MST B
+                           WHERE A.GRP_ID = B.GRP_ID
+                             AND A.USG_YN='Y'
+                             AND B.USG_YN='Y'
+                             AND B.GRP_ID != 'MSP0004'
+                )
+         START WITH RNUM = 1 
+         CONNECT BY PRIOR RNUM + 1 = RNUM AND PRIOR GRP_ID = GRP_ID
+         GROUP BY GRP_ID
+         )
+         ORDER BY GRP_ID
+     ]]>
+    </select>
+    
+    <!-- 그룹ID 중복체크 -->
+    <select id="isExistGrpCdMgmt" parameterType="com.ktis.msp.org.grpcdmgmt.vo.GrpCdMgmtVO" resultType="int">
+       SELECT /* GrpCdMgmtMapper.isExistGrpCdMgmt */
+       COUNT(*) 
+       FROM CMN_GRP_MST 
+       WHERE GRP_ID = #{grpId}
+    </select>
+    
+    <!-- 업무구분 공통코드 조회 -->
+    <select id="listCmnCd" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        SELECT B.CD_VAL as value, B.CD_DSC as text
+        FROM CMN_GRP_MST A, CMN_GRP_CD_MST B
+        WHERE
+            A.GRP_ID = B.GRP_ID
+            AND B.USG_YN = 'Y'
+            AND B.GRP_ID = #{code}
+        ORDER BY CD_VAL 
+    </select> 
+</mapper>

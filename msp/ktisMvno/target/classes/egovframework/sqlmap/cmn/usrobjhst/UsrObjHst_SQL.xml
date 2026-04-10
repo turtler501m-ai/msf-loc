@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.usrobjhst.mapper.UsrObjHstMapper">
+
+	<select id="getObjHstList" parameterType="com.ktis.msp.cmn.usrobjhst.vo.UsrObjHstVO" resultType="com.ktis.msp.cmn.usrobjhst.vo.UsrObjHstVO">
+		SELECT OBJECT_NAME AS objectName										/* object명 */
+			   , OWNER AS owner													/* 소유자 */
+			   , OBJECT_TYPE AS objectType										/* object타입 */
+			   , TO_CHAR(CREATED, 'YYYY-MM-DD HH24:MI:SS') AS created			/* 최초등록일 */
+			   , TO_CHAR(LAST_DDL_TIME, 'YYYY-MM-DD HH24:MI:SS') AS lastDdlTime	/* 수정일 */
+			   , TO_CHAR(REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS regstDttm		/* 등록일 */
+		  FROM CMN_USER_OBJECT_HST
+		<where>
+			<choose>
+				<when test="pObjName != null and pObjName != ''">
+					AND    UPPER(OBJECT_NAME) LIKE '%' || UPPER(#{pObjName}) || '%'
+				</when>
+				<otherwise>
+					<if test="pSearchStartDt != null and pSearchStartDt != '' and pSearchEndDt != null and pSearchEndDt != ''">
+						<if test='dateGbn == "1"'>
+							AND TO_CHAR(LAST_DDL_TIME,'YYYYMMDD') BETWEEN #{pSearchStartDt} AND #{pSearchEndDt}
+						</if>
+						<if test='dateGbn == "2"'>
+							AND TO_CHAR(REGST_DTTM,'YYYYMMDD') BETWEEN #{pSearchStartDt} AND #{pSearchEndDt}
+						</if>
+					</if>
+				</otherwise>
+			</choose>
+			<if test="pOwner != null and pOwner != ''">
+				AND    OWNER = #{pOwner}
+			</if>
+			<if test="pObjType != null and pObjType != ''">
+				AND    OBJECT_TYPE LIKE #{pObjType} || '%'
+			</if>
+		</where>			
+		GROUP BY OBJECT_NAME,OWNER,OBJECT_ID,OBJECT_TYPE,CREATED,LAST_DDL_TIME,REGST_ID,REGST_DTTM
+		ORDER BY LAST_DDL_TIME DESC, REGST_DTTM DESC
+	
+	</select>
+
+	<select id="getObjSource" parameterType="com.ktis.msp.cmn.usrobjhst.vo.UsrObjHstVO" resultType="com.ktis.msp.cmn.usrobjhst.vo.UsrObjHstVO">
+		SELECT OBJECT_NAME AS objectName
+			   , SOURCE_TEXT AS sourceText
+		  FROM CMN_USER_OBJECT_HST
+		 WHERE OBJECT_NAME = #{objectName}
+		   AND TO_CHAR(LAST_DDL_TIME,'YYYY-MM-DD HH24:MI:SS') = #{lastDdlTime}
+		ORDER BY LAST_DDL_TIME, TO_NUMBER(SOURCE_LINE)
+	</select>
+	
+
+<!-- 	<select id="getObjHstListExcel" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.AppFormMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap"> -->
+	
+	
+	
+<!-- 	</select> -->
+</mapper>

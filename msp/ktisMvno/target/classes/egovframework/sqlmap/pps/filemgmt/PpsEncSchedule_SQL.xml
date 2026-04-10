@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.schedule.mapper.PpsEncScheduleMapper">
+
+	<!-- 서식지 파일 암호화 처리  -->
+	<select id="ppsEncScheduleProc"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_CUSTOMER_IMAGE_ENC(
+						#{iOpCode, jdbcType=VARCHAR} 
+						,#{iImgSeq, jdbcType=VARCHAR} 
+						,#{iNewImgPath, jdbcType=VARCHAR} 
+						,#{iRetCd, jdbcType=VARCHAR} 
+						,#{iRetMsg, jdbcType=VARCHAR} 
+						,#{oImgSeq,mode=OUT, javaType=string, jdbcType=VARCHAR} 
+						,#{oImgPath,mode=OUT, javaType=string, jdbcType=VARCHAR} 
+						,#{oNewImgPath, mode=OUT, javaType=string, jdbcType=VARCHAR} 
+						,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+						,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+						)
+	     }
+	</select>
+	
+</mapper>

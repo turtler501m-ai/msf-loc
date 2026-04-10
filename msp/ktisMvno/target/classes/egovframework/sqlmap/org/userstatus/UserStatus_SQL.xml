@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.userstatus.mapper.UserStatusMapper">
+
+	<!-- 사용자 정지상태 변경 Procedure 호출 -->
+	<insert id="callUserStopStatusProc" statementType="CALLABLE" >
+		/* userStatusMapper.callUserStopStatusProc */
+		{ CALL P_USER_STOP_STATUS() }
+	</insert>
+	
+	
+</mapper>

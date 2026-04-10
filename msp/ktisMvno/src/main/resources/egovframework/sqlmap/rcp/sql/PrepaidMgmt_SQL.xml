@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.prepaidMgmt.mapper.PrepaidMgmtMapper">
+
+	<select id="getList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap" parameterType="com.ktis.msp.rcp.prepaidMgmt.vo.PrepaidVo">       
+		/* PrepaidMgmtMapper.getList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" /> 
+		<include refid="getChargelist" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+    <select id="getlistExcel" resultType="egovframework.rte.psl.dataaccess.util.EgovMap" parameterType="com.ktis.msp.rcp.prepaidMgmt.vo.PrepaidVo">       
+		/* PrepaidMgmtMapper.getlistExcel */
+		<include refid="getChargelist" />
+    </select>
+    <sql id="getChargelist">
+			SELECT  
+                A.REQ_TYPE,
+                B.SUBSCRIBER_NO,
+                A.CONTRACT_NUM,  
+			    C.LST_RATE_NM,
+                A.RECHARGE_AGENT, 
+                NVL(A.RECHARGE , 0) AS RECHARGE,
+                A.RET_CODE,
+                DECODE(A.RET_CODE,'0000','성공','실패') AS RET_CODE_NM,
+                A.RET_MSG, 
+                NVL(A.O_AMOUNT , 0) AS O_AMOUNT,
+                NVL(A.O_TES_CHARGE_MAX , 0) AS O_TES_CHARGE_MAX,
+                TO_CHAR(A.REQ_DATE,'YYYY-MM-DD')AS REQ_DATE,
+                NVL(A.O_TES_BASER , 0) AS O_TES_BASER,
+                NVL(A.O_TES_CHGR , 0) AS O_TES_CHGR,
+                NVL(A.O_TES_MAGICR , 0) AS O_TES_MAGICR,
+                NVL(A.O_TES_FSMSR , 0) AS O_TES_FSMSR
+            FROM PPS_RCG_TES A , 
+                 MSP_JUO_SUB_INFO B,
+                 MSP_REQUEST_DTL C
+            WHERE 1=1
+            AND A.CONTRACT_NUM = B.CONTRACT_NUM
+            AND A.CONTRACT_NUM = C.CONTRACT_NUM 
+            <if test="searchCd != null and searchCd != '' and searchVal != null and searchVal != ''">
+				<choose>
+					<when test="searchCd == 'subscriberNo'">
+          			  	AND  B.SUBSCRIBER_NO = #{searchVal} 
+					</when>
+					<when test="searchCd == 'contractNum'">
+		            	AND (A.CONTRACT_NUM = #{searchVal}
+		     				OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+					</when>
+				</choose>
+			</if>            
+            <if test="sysRdateS != null and sysRdateS !='' and sysRdateE != null and sysRdateE !=''">
+            	AND TO_CHAR(REQ_DATE , 'yyyymmdd') BETWEEN  #{sysRdateS} AND #{sysRdateE}
+            </if>
+            ORDER BY A.REQ_DATE DESC
+	</sql>
+ </mapper>

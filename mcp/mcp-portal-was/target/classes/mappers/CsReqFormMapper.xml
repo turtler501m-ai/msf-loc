@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CsReqFormMapper">
+<!-- 공지 -->
+ <select id="selectNoticeBoard" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+       SELECT  RNUM
+                , RNUM_ORDER
+                , BOARD_SEQ
+                , BOARD_SUBJECT
+                , BOARD_CONTENTS
+                , CRET_DT
+                , BOARD_ATT_YN
+                , ATT_SEQ
+                , FILE_PATH_NM
+                , FILE_TYPE
+                , FILE_CAPA
+                , CRET_DT
+        FROM    (
+            SELECT  ROW_NUMBER () OVER (ORDER BY AA.BOARD_SEQ DESC, AA.CRET_DT DESC)
+                                  AS RNUM_ORDER
+                    ,ROW_NUMBER () OVER (ORDER BY AA.BOARD_SEQ ASC, AA.CRET_DT ASC)
+                                  AS RNUM
+                    , AA.BOARD_SEQ AS BOARD_SEQ
+                    , AA.BOARD_SUBJECT AS BOARD_SUBJECT
+                    , AA.BOARD_CONTENTS AS BOARD_CONTENTS
+                    , TO_CHAR (AA.CRET_DT, 'YYYY.MM.DD') AS CRET_DT
+                    , AA.BOARD_ATT_YN AS BOARD_ATT_YN
+                    , BB.ATT_SEQ AS ATT_SEQ
+                    , BB.FILE_PATH_NM AS FILE_PATH_NM
+                    , BB.FILE_TYPE AS FILE_TYPE
+                    , BB.FILE_CAPA AS FILE_CAPA
+               FROM NMCP_BOARD_BAS AA,
+                     (  SELECT AA.ATT_SEQ AS ATT_SEQ
+                             , AA.FILE_PATH_NM AS FILE_PATH_NM
+                             , AA.FILE_TYPE AS FILE_TYPE
+                             , AA.FILE_CAPA AS FILE_CAPA
+                             , AA.BOARD_SEQ
+                        FROM NMCP_BOARD_ATT_DTL AA,
+                             (  SELECT  MAX (ATT_SEQ) AS ATT_SEQ, BOARD_SEQ
+                                FROM    NMCP_BOARD_ATT_DTL
+                                GROUP   BY BOARD_SEQ) BB
+                        WHERE AA.ATT_SEQ = BB.ATT_SEQ
+                        AND AA.BOARD_SEQ = BB.BOARD_SEQ) BB
+               WHERE AA.BOARD_CTG_SEQ = 53
+               AND   AA.VIEW_YN = 'Y'
+               AND   AA.NOTI_YN = 'Y'
+               AND   AA.BOARD_SEQ = BB.BOARD_SEQ(+)
+               ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+            )
+        WHERE ROWNUM <![CDATA[<=]]> 3
+        ORDER BY RNUM DESC
+    </select>
+
+
+    <select id="getTotalCount" resultType="Integer" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+		SELECT
+			COUNT(BOARD_SEQ)
+        FROM    (
+            SELECT  ROW_NUMBER () OVER (ORDER BY AA.BOARD_SEQ DESC, AA.CRET_DT DESC)
+                                  AS RNUM_ORDER
+                    ,ROW_NUMBER () OVER (ORDER BY AA.BOARD_SEQ ASC, AA.CRET_DT ASC)
+                                  AS RNUM
+                    , AA.BOARD_SEQ AS BOARD_SEQ
+                    , AA.BOARD_SUBJECT AS BOARD_SUBJECT
+                    , AA.BOARD_CONTENTS AS BOARD_CONTENTS
+                    , TO_CHAR (AA.CRET_DT, 'YYYY.MM.DD') AS CRET_DT
+                    , AA.BOARD_ATT_YN AS BOARD_ATT_YN
+                    , BB.ATT_SEQ AS ATT_SEQ
+                    , BB.FILE_PATH_NM AS FILE_PATH_NM
+                    , BB.FILE_TYPE AS FILE_TYPE
+                    , BB.FILE_CAPA AS FILE_CAPA
+               FROM NMCP_BOARD_BAS AA,
+                     (  SELECT AA.ATT_SEQ AS ATT_SEQ
+                             , AA.FILE_PATH_NM AS FILE_PATH_NM
+                             , AA.FILE_TYPE AS FILE_TYPE
+                             , AA.FILE_CAPA AS FILE_CAPA
+                             , AA.BOARD_SEQ
+                        FROM NMCP_BOARD_ATT_DTL AA,
+                             (  SELECT  MAX (ATT_SEQ) AS ATT_SEQ, BOARD_SEQ
+                                FROM    NMCP_BOARD_ATT_DTL
+                                GROUP   BY BOARD_SEQ) BB
+                        WHERE AA.ATT_SEQ = BB.ATT_SEQ
+                        AND AA.BOARD_SEQ = BB.BOARD_SEQ) BB
+               WHERE AA.BOARD_CTG_SEQ = 53
+               AND	 AA.VIEW_YN = 'Y'
+               AND   AA.BOARD_SEQ = BB.BOARD_SEQ(+)
+               AND   AA.BOARD_SEQ NOT IN (
+                        SELECT BOARD_SEQ FROM (
+                              SELECT
+                                  BOARD_SEQ
+                              FROM    NMCP_BOARD_BAS
+                              WHERE  BOARD_CTG_SEQ =  53
+                              AND       NOTI_YN = 'Y'
+                              AND       VIEW_YN = 'Y'
+                              ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+                        ) A WHERE ROWNUM <![CDATA[<=]]> 3
+                )
+               <if test="searchNm != null and searchNm != ''">
+                    AND    (UPPER(fnHTMLtoTEXT(AA.BOARD_SUBJECT)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                    OR    UPPER(fnHTMLtoTEXT(AA.BOARD_CONTENTS)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+               </if>
+            )
+        ORDER BY RNUM DESC
+	</select>
+
+ 	<!-- 신청서 양식 -->
+	<select id="selectBoardList" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT  RNUM
+                , RNUM_ORDER
+                , BOARD_SEQ
+                , BOARD_SUBJECT
+                , BOARD_CONTENTS
+                , CRET_DT
+                , BOARD_ATT_YN
+                , ATT_SEQ
+                , FILE_PATH_NM
+                , FILE_TYPE
+                , FILE_CAPA
+        FROM    (
+            SELECT  ROW_NUMBER () OVER (ORDER BY AA.BOARD_SEQ DESC, AA.CRET_DT DESC)
+                                  AS RNUM_ORDER
+                    ,ROW_NUMBER () OVER (ORDER BY AA.BOARD_SEQ ASC, AA.CRET_DT ASC)
+                                  AS RNUM
+                    , AA.BOARD_SEQ AS BOARD_SEQ
+                    , AA.BOARD_SUBJECT AS BOARD_SUBJECT
+                    , AA.BOARD_CONTENTS AS BOARD_CONTENTS
+                    , TO_CHAR (AA.CRET_DT, 'YYYY.MM.DD') AS CRET_DT
+                    , AA.BOARD_ATT_YN AS BOARD_ATT_YN
+                    , BB.ATT_SEQ AS ATT_SEQ
+                    , BB.FILE_PATH_NM AS FILE_PATH_NM
+                    , BB.FILE_TYPE AS FILE_TYPE
+                    , BB.FILE_CAPA AS FILE_CAPA
+               FROM NMCP_BOARD_BAS AA,
+                     (  SELECT AA.ATT_SEQ AS ATT_SEQ
+                             , AA.FILE_PATH_NM AS FILE_PATH_NM
+                             , AA.FILE_TYPE AS FILE_TYPE
+                             , AA.FILE_CAPA AS FILE_CAPA
+                             , AA.BOARD_SEQ
+                        FROM NMCP_BOARD_ATT_DTL AA,
+                             (  SELECT  MAX (ATT_SEQ) AS ATT_SEQ, BOARD_SEQ
+                                FROM    NMCP_BOARD_ATT_DTL
+                                GROUP   BY BOARD_SEQ) BB
+                        WHERE AA.ATT_SEQ = BB.ATT_SEQ
+                        AND AA.BOARD_SEQ = BB.BOARD_SEQ) BB
+               WHERE AA.BOARD_CTG_SEQ = 53
+               AND	 AA.VIEW_YN = 'Y'
+               AND   AA.BOARD_SEQ = BB.BOARD_SEQ(+)
+               AND   AA.BOARD_SEQ NOT IN (
+                        SELECT BOARD_SEQ FROM (
+                              SELECT
+                                  BOARD_SEQ
+                              FROM    NMCP_BOARD_BAS
+                              WHERE  BOARD_CTG_SEQ =  53
+                              AND       NOTI_YN = 'Y'
+                              AND       VIEW_YN = 'Y'
+                              ORDER BY BOARD_WRITE_DT DESC, BOARD_SEQ DESC
+                        ) A WHERE ROWNUM <![CDATA[<=]]> 3
+                )
+               <if test="searchNm != null and searchNm != ''">
+                    AND    (UPPER(fnHTMLtoTEXT(AA.BOARD_SUBJECT)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                    OR    UPPER(fnHTMLtoTEXT(AA.BOARD_CONTENTS)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+               </if>
+            )
+        ORDER BY RNUM DESC
+	</select>
+
+
+
+    <update id="reqFormDownloadCountUpdate" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+
+        UPDATE NMCP_BOARD_ATT_DTL
+        SET DOWNLOAD_COUNT = (SELECT NVL(DOWNLOAD_COUNT,0) + 1 FROM NMCP_BOARD_ATT_DTL WHERE BOARD_SEQ = #{boardSeq})
+        WHERE BOARD_SEQ = #{boardSeq}
+
+    </update>
+
+    <update id="reqFormDownloadCountUpdateStplt" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+
+        UPDATE NMCP_STPLT_DTL
+        SET DOWNLOAD_COUNT = (SELECT NVL(DOWNLOAD_COUNT,0) + 1 FROM NMCP_STPLT_DTL WHERE STPLT_BAS_SEQ = #{boardSeq})
+        WHERE STPLT_BAS_SEQ = #{boardSeq}
+
+    </update>
+
+</mapper>

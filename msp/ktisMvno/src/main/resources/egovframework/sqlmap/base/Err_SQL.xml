@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.base.interceptor.mapper.ErrMapper">
+
+  <insert  id="insertLog"  parameterType="java.util.HashMap"  >
+  /* ====== ErrMapper.insertLog =========*/
+    INSERT INTO CMN_MSP_EXEC_HST
+    (
+       CMN_MSP_EXEC_HST_SEQ,
+       CATEGORY,
+       PRGM_ID,
+       PRGM_NM,
+       PRGM_URL,
+       STAT_CD,
+       ERR_DTTM,
+       EXEC_PARAM,
+       ERR_CD,
+       ERR_MSG,
+       REMRK,
+       REGST_ID,
+       REGST_DTTM,
+       RVISN_ID,
+       RVISN_DTTM
+    )
+    VALUES
+    (
+       CMN_MSP_EXEC_HST_SEQ.NEXTVAL
+       ,#{category   , jdbcType=VARCHAR}
+       ,#{prgmId     , jdbcType=VARCHAR}
+       ,#{prgmNm     , jdbcType=VARCHAR}
+       ,#{requestMapping     , jdbcType=VARCHAR}
+       ,#{statCd     , jdbcType=VARCHAR}
+       ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+       ,#{execParam  , jdbcType=VARCHAR}
+       ,#{errCd      , jdbcType=VARCHAR}
+       ,#{errMsg     , jdbcType=VARCHAR}
+       ,#{remrk      , jdbcType=VARCHAR}
+       ,#{regstId    , jdbcType=VARCHAR}
+       ,SYSDATE
+       ,#{rvisnId    , jdbcType=VARCHAR}
+       ,SYSDATE
+    )
+  </insert>
+
+</mapper>

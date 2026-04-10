@@ -1,0 +1,542 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.login.mapper.MenuAuthMapper">
+
+	
+	<select id="selectMenuAuthXXXXXXXXXXXXXX" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.login.selectMenuAuth =========*/
+	    	    
+                SELECT 
+                        #{SESSION_USER_ID , jdbcType=VARCHAR}  USR_ID
+                       ,MAX(AUTH_TYPE       ) AUTH_TYPE
+                       ,MENU_ID
+                       ,MENU_NM
+                       ,MAX(NVL(CREAT_ABABLE_YN   ,'N' )) CREAT_ABABLE_YN
+                       ,MAX(NVL(DEL_AUTH          ,'N' )) DEL_AUTH
+                       ,MAX(NVL(RVISN_AUTH        ,'N' )) RVISN_AUTH
+                       ,MAX(NVL(SRCH_AUTH         ,'N' )) SRCH_AUTH
+                       ,MAX(NVL(EXEL_ABABLE_YN    ,'N' )) EXEL_ABABLE_YN
+                       ,MAX(NVL(PRNT_ABABLE_YN    ,'N' )) PRNT_ABABLE_YN                   
+                       --,MAX(HAS_AUTH) HAS_AUTH
+                FROM
+                    (
+                        SELECT   
+                                 'U' AUTH_TYPE
+                                ,C.MENU_ID 
+                                ,C.MENU_NM
+                                ,B.CREAT_ABABLE_YN
+                                ,B.DEL_AUTH
+                                ,B.RVISN_AUTH
+                                ,B.SRCH_AUTH
+                                ,B.EXEL_ABABLE_YN
+                                ,B.PRNT_ABABLE_YN
+                                --,DECODE(B.MENU_ID,NULL, 'N','Y') HAS_AUTH
+                        FROM CMN_USR_MST A
+                             ,CMN_USR_MENU_ASGN_MST B
+                             ,CMN_MENU_MST C
+                        WHERE  A.USR_ID =  #{SESSION_USER_ID , jdbcType=VARCHAR} 
+                           AND  A.USR_ID = B.USR_ID
+                           AND  B.MENU_ID = C.MENU_ID
+                        UNION 
+                        SELECT  
+                                 'G' AUTH_TYPE
+                                ,E.MENU_ID
+                                ,E.MENU_NM
+                                ,D.CREAT_ABABLE_YN
+                                ,D.DEL_AUTH
+                                ,D.RVISN_AUTH
+                                ,D.SRCH_AUTH
+                                ,D.EXEL_ABABLE_YN
+                                ,D.PRNT_ABABLE_YN
+                                --,DECODE(D.MENU_ID,NULL, 'N','Y') HAS_AUTH
+                        FROM
+                                CMN_USR_MST A
+                               ,CMN_USG_GRP_ASGN_MST B
+                               ,CMN_GRP_AUTH_ASGN_MST C
+                               ,CMN_AUTH_MENU_ASGN_MST D
+                               ,CMN_MENU_MST E
+                        WHERE 1 =1
+                          AND A.USR_ID =  #{SESSION_USER_ID , jdbcType=VARCHAR} /* ID0005*/
+                          AND A.USR_ID = B.USR_ID      
+                          AND B.GRP_ID = C.GRP_ID
+                          AND C.AUTH_ID = D.AUTH_ID
+                          AND D.MENU_ID = E.MENU_ID
+                    )
+                GROUP BY 
+                        MENU_ID
+                       ,MENU_NM
+                       ,CREAT_ABABLE_YN
+                       ,DEL_AUTH
+                       ,RVISN_AUTH
+                       ,SRCH_AUTH
+                       ,EXEL_ABABLE_YN
+                       ,PRNT_ABABLE_YN                     
+				   
+	</select>
+	
+
+	
+	
+	<select id="buttonAuthForCRUD" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.login.buttonAuthForCRUD =========*/	    
+			 SELECT A.*,
+			       DECODE(A.PRGM_TYPE,'MAIN',  'Y', 
+			            'CREAT', CREAT_ABABLE_YN, 
+			            'DEL'  , DEL_AUTH, 
+			            'RVISN', RVISN_AUTH, 
+			            'SRCH' , SRCH_AUTH, 
+			            'EXEL' , EXEL_ABABLE_YN, 
+			            'PRNT' , PRNT_ABABLE_YN, 
+			            'ETC'  , 'Y',
+			            NULL) ALLOW
+			FROM
+			    (
+			        with CMN_PRGM_MST_WITH_MAIN as
+			            (                    
+			                SELECT  A.*, B.PRGM_ID PRGM_ID_MAIN, B.PRGM_TYPE PRGM_TYPE_MAIN, B.PRGM_URL PRGM_URL_MAIN
+			                FROM 
+			                     CMN_PRGM_MST A
+			                    ,(
+			                        select * 
+			                        from
+			                            (  
+			                                SELECT A.*, 
+			                                    ROW_NUMBER() OVER( PARTITION BY MENU_ID order by prgm_id ) row_index
+			                                FROM CMN_PRGM_MST A  
+			                                WHERE a.PRGM_TYPE = 'MAIN'
+			                    )  B
+			                where row_index = 1
+			                    ) b    
+			                WHERE A.MENU_ID  = B.MENU_ID
+			                  AND B.PRGM_TYPE = 'MAIN'
+			            )
+				        , PRGM_URL_PARAM AS
+				            ( SELECT #{pgmUrl} PRGM_URL
+				                     ,#{SESSION_USER_ID} USR_ID 
+				              FROM DUAL ) 
+			        SELECT A.*
+			        FROM
+			        (      
+			            SELECT  
+			                     '' USR_ID
+			                    ,'X' AUTH_TYPE
+			                    ,M.MENU_ID
+			                    ,M.MENU_NM
+			                    ,'' CREAT_ABABLE_YN
+			                    ,'' DEL_AUTH
+			                    ,'' RVISN_AUTH
+			                    ,'' SRCH_AUTH
+			                    ,'' EXEL_ABABLE_YN
+			                    ,'' PRNT_ABABLE_YN
+			                    ,F.PRGM_URL
+			                    ,F.PRGM_URL_MAIN
+			                    ,'' GRP_ID
+			                    ,'' AUTH_ID
+			                    ,F.PRGM_TYPE
+			                    ,F.PRGM_TYPE_MAIN
+			                    --,DECODE(D.MENU_ID,NULL, 'N','Y') HAS_AUTH
+			            FROM
+			                    CMN_MENU_MST M
+			                   ,CMN_PRGM_MST_WITH_MAIN F
+			                   ,PRGM_URL_PARAM
+			            WHERE 1 =1
+			              AND M.MENU_ID = F.MENU_ID
+			              /* AND F.PRGM_TYPE = 'MAIN' */
+			              AND F.PRGM_URL = PRGM_URL_PARAM.PRGM_URL -- '/cmn/authmgmt/authInsert.json' /*  '/cmn/accessLogSrch/form.do'*/
+			              AND ROWNUM = 1
+			            UNION ALL
+			            SELECT   
+			                      A.USR_ID
+			                    ,'U' AUTH_TYPE
+			                    ,M.MENU_ID 
+			                    ,M.MENU_NM
+                                ,MAX(B_MAIN.CREAT_ABABLE_YN)
+                                ,MAX(B_MAIN.DEL_AUTH)
+                                ,MAX(B_MAIN.RVISN_AUTH)
+                                ,MAX(B_MAIN.SRCH_AUTH)
+                                ,MAX(B_MAIN.EXEL_ABABLE_YN)
+                                ,MAX(B_MAIN.PRNT_ABABLE_YN)
+                                ,MAX(D.PRGM_URL)
+                                ,MAX(D.PRGM_URL_MAIN)
+                                ,'' GRP_ID
+                                ,'' AUTH_ID
+                                ,MAX(D.PRGM_TYPE)
+                                ,MAX(D.PRGM_TYPE_MAIN)
+			                    --,DECODE(B.MENU_ID,NULL, 'N','Y') HAS_AUTH
+			            FROM CMN_USR_MST A
+			                 ,CMN_USR_MENU_ASGN_MST B
+			                 ,CMN_USR_MENU_ASGN_MST B_MAIN
+			                 ,CMN_PRGM_MST_WITH_MAIN D
+			                 ,CMN_MENU_MST M
+			                 ,PRGM_URL_PARAM
+			            WHERE  A.USR_ID = PRGM_URL_PARAM.USR_ID 
+			               AND A.USR_ID = B.USR_ID
+			               AND B.MENU_ID = D.MENU_ID
+			               AND A.USR_ID = B_MAIN.USR_ID
+			               AND B_MAIN.MENU_ID = D.MENU_ID
+			               /* AND D.PRGM_TYPE = 'MAIN' */
+			               AND D.PRGM_URL = PRGM_URL_PARAM.PRGM_URL   /*  '/cmn/accessLogSrch/form.do'*/
+			               AND M.MENU_ID = D.MENU_ID
+                           AND M.USG_YN = 'Y' 
+                        GROUP BY
+                                A.USR_ID 
+                               ,M.MENU_ID
+                               ,M.MENU_NM
+                               ,d.PRGM_URL                               
+			            UNION 
+			            SELECT  
+			                      A.USR_ID
+			                    ,'G' AUTH_TYPE
+			                    ,M.MENU_ID
+			                    ,M.MENU_NM
+			                    ,MAX(D_MAIN.CREAT_ABABLE_YN)
+			                    ,MAX(D_MAIN.DEL_AUTH)
+			                    ,MAX(D_MAIN.RVISN_AUTH)
+			                    ,MAX(D_MAIN.SRCH_AUTH)
+			                    ,MAX(D_MAIN.EXEL_ABABLE_YN)
+			                    ,MAX(D_MAIN.PRNT_ABABLE_YN)
+			                    ,MAX(F.PRGM_URL)
+			                    ,MAX(F.PRGM_URL_MAIN)
+			                    ,MAX(B.GRP_ID)
+			                    ,MAX(C.AUTH_ID)
+			                    ,MAX(F.PRGM_TYPE)
+			                    ,MAX(F.PRGM_TYPE_MAIN)
+			                    --,DECODE(D.MENU_ID,NULL, 'N','Y') HAS_AUTH
+			            FROM
+			                    CMN_USR_MST A
+			                   ,CMN_USG_GRP_ASGN_MST B
+			                   ,CMN_GRP_AUTH_ASGN_MST C
+			                   ,CMN_AUTH_MENU_ASGN_MST D
+			                   ,CMN_AUTH_MENU_ASGN_MST D_MAIN
+			                   ,CMN_PRGM_MST_WITH_MAIN F
+			                   ,CMN_MENU_MST M
+                               ,CMN_USR_GRP_MST G
+                               ,CMN_AUTH_MST AU
+			                   ,PRGM_URL_PARAM
+			            WHERE 1 =1	
+			              AND A.USR_ID = PRGM_URL_PARAM.USR_ID 
+			              AND A.USR_ID = B.USR_ID      
+			              AND B.GRP_ID = C.GRP_ID
+			              AND C.AUTH_ID = D.AUTH_ID
+			              AND D.MENU_ID = F.MENU_ID
+			              AND C.AUTH_ID = D_MAIN.AUTH_ID
+			              AND D_MAIN.MENU_ID = F.MENU_ID                          
+			              /* AND F.PRGM_TYPE = 'MAIN' */
+			              AND F.PRGM_URL = PRGM_URL_PARAM.PRGM_URL  /*  '/cmn/accessLogSrch/form.do'*/
+			              AND M.MENU_ID = F.MENU_ID
+                          AND M.USG_YN = 'Y' 
+                          AND B.GRP_ID = G.GRP_ID
+                          AND G.USG_YN = 'Y'
+                          AND C.AUTH_ID = AU.AUTH_ID
+                          AND AU.USG_YN = 'Y'
+			            GROUP BY
+			                    A.USR_ID 
+			                   ,M.MENU_ID
+			                   ,M.MENU_NM
+			                   ,F.PRGM_URL
+			            ORDER BY AUTH_TYPE DESC      
+			        )   A 
+			        WHERE 1=1
+			        ORDER BY A.AUTH_TYPE DESC                               
+			    ) A       
+	</select>
+	
+	<select id="selectMenuAuthForURLxxxxxxxxxxx" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.login.selectMenuAuthForURLxxxxxxxxxxx =========*/	    
+              SELECT 
+                        MAX(USR_ID          ) USR_ID
+                       ,MAX(AUTH_TYPE       ) AUTH_TYPE
+                       ,MENU_ID
+                       ,MENU_NM
+                       ,MAX(NVL(CREAT_ABABLE_YN   ,'N' )) CREAT_ABABLE_YN
+                       ,MAX(NVL(DEL_AUTH          ,'N' )) DEL_AUTH
+                       ,MAX(NVL(RVISN_AUTH        ,'N' )) RVISN_AUTH
+                       ,MAX(NVL(SRCH_AUTH         ,'N' )) SRCH_AUTH
+                       ,MAX(NVL(EXEL_ABABLE_YN    ,'N' )) EXEL_ABABLE_YN
+                       ,MAX(NVL(PRNT_ABABLE_YN    ,'N' )) PRNT_ABABLE_YN                   
+                       --,MAX(HAS_AUTH) HAS_AUTH
+                FROM
+                    (
+                        SELECT   
+                                  A.USR_ID
+                                ,'U' AUTH_TYPE
+                                ,C.MENU_ID 
+                                ,C.MENU_NM
+                                ,B.CREAT_ABABLE_YN
+                                ,B.DEL_AUTH
+                                ,B.RVISN_AUTH
+                                ,B.SRCH_AUTH
+                                ,B.EXEL_ABABLE_YN
+                                ,B.PRNT_ABABLE_YN
+                                --,DECODE(B.MENU_ID,NULL, 'N','Y') HAS_AUTH
+                        FROM CMN_USR_MST A
+                             ,CMN_USR_MENU_ASGN_MST B
+                             ,CMN_MENU_MST C
+                             ,CMN_PRGM_MST D
+                        WHERE  A.USR_ID(+) =  #{SESSION_USER_ID}
+                           AND A.USR_ID(+) = B.USR_ID
+                           AND B.MENU_ID(+) = C.MENU_ID
+                           AND C.MENU_ID(+) = D.MENU_ID
+                           /* AND D.PRGM_TYPE = 'MAIN' */
+                           AND D.PRGM_URL = #{pgmUrl}  /*  '/cmn/accessLogSrch/form.do'*/
+                        UNION 
+                        SELECT  
+                                  A.USR_ID
+                                ,'G' AUTH_TYPE
+                                ,E.MENU_ID
+                                ,E.MENU_NM
+                                ,D.CREAT_ABABLE_YN
+                                ,D.DEL_AUTH
+                                ,D.RVISN_AUTH
+                                ,D.SRCH_AUTH
+                                ,D.EXEL_ABABLE_YN
+                                ,D.PRNT_ABABLE_YN
+                                --,DECODE(D.MENU_ID,NULL, 'N','Y') HAS_AUTH
+                        FROM
+                                CMN_USR_MST A
+                               ,CMN_USG_GRP_ASGN_MST B
+                               ,CMN_GRP_AUTH_ASGN_MST C
+                               ,CMN_AUTH_MENU_ASGN_MST D
+                               ,CMN_MENU_MST E
+                               ,CMN_PRGM_MST F
+                        WHERE 1 =1
+                          AND A.USR_ID(+) =  #{SESSION_USER_ID}
+                          AND A.USR_ID(+) = B.USR_ID      
+                          AND B.GRP_ID(+) = C.GRP_ID
+                          AND C.AUTH_ID(+) = D.AUTH_ID
+                          AND D.MENU_ID(+) = E.MENU_ID
+                          AND E.MENU_ID(+) = F.MENU_ID
+                          /* AND F.PRGM_TYPE = 'MAIN' */
+                          AND F.PRGM_URL = #{pgmUrl} /*  '/cmn/accessLogSrch/form.do'*/
+                    )
+                GROUP BY 
+                        MENU_ID
+                       ,MENU_NM
+                       ,CREAT_ABABLE_YN
+                       ,DEL_AUTH
+                       ,RVISN_AUTH
+                       ,SRCH_AUTH
+                       ,EXEL_ABABLE_YN
+                       ,PRNT_ABABLE_YN          
+	</select>
+	
+	
+	
+	
+	<select id="usrGrpAuthForButtonXXXXXXXXXXXXXXX" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.login.usrGrpAuthForButton =========*/	    
+  
+         SELECT  DISTINCT
+                   A.USR_ID
+                /*  , B.GRP_ID */
+                 , C.AUTH_ID
+         FROM
+                 CMN_USR_MST A
+                ,CMN_USG_GRP_ASGN_MST B
+                ,CMN_GRP_AUTH_ASGN_MST C
+         WHERE 1 =1
+           AND A.USR_ID = #{SESSION_USER_ID , jdbcType=VARCHAR} /* ID0005*/
+           AND A.USR_ID = B.USR_ID      
+           AND B.GRP_ID = C.GRP_ID
+           AND C.AUTH_ID = #{authId , jdbcType=VARCHAR} /* ID0005*/
+	</select>
+	
+	
+	<select id="usrGrpAuthListForButton" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.login.usrGrpAuthListForButton =========*/	    
+         SELECT  DISTINCT
+                   A.USR_ID
+                 /* , B.GRP_ID */
+                 , C.AUTH_ID
+         FROM
+                 CMN_USR_MST A
+                ,CMN_USG_GRP_ASGN_MST B
+                ,CMN_GRP_AUTH_ASGN_MST C
+         WHERE 1 =1
+           AND A.USR_ID = #{SESSION_USER_ID , jdbcType=VARCHAR} /* ID0005*/
+           AND A.USR_ID = B.USR_ID      
+           AND B.GRP_ID = C.GRP_ID
+	</select>
+	
+	<select id="chkUsrGrpAuthListForButton" parameterType="java.util.HashMap" resultType="int">
+	/* ====== cmn.login.chkUsrGrpAuthListForButton =========*/
+		SELECT COUNT(1)
+		  FROM (SELECT DISTINCT A.USR_ID
+		               , C.AUTH_ID
+		          FROM CMN_USR_MST A
+		               , CMN_USG_GRP_ASGN_MST B
+		               , CMN_GRP_AUTH_ASGN_MST C
+		         WHERE 1 =1
+		           AND A.USR_ID = #{SESSION_USER_ID , jdbcType=VARCHAR}
+		           AND A.USR_ID = B.USR_ID
+		           AND B.GRP_ID = C.GRP_ID
+		           AND C.AUTH_ID = #{AUTH_ID , jdbcType=VARCHAR}) T
+	</select>
+
+		
+	
+	<insert  id="insertLog"  parameterType="java.util.HashMap"  >
+		<selectKey keyProperty="connDt" order="BEFORE" resultType="String">
+			SELECT TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') AS connDt FROM DUAL
+		</selectKey>
+	/* ====== cmn.login.insertLog =========*/	    
+	    
+		INSERT INTO CMN_MENU_CONN_LOG_MST
+            (	
+            	  MENU_ID 
+              	, USR_ID 
+              	, CONN_DT 
+              	, IP_INFO 
+              	, MENU_NM 
+              	, DUTY_NM
+            ) 
+        SELECT 
+               	  #{MENU_ID}
+              	, SUBSTRB(#{SESSION_USER_ID},1,10)  /* ID0005*/
+              	--, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+              	, #{connDt}
+              	, #{IP_INFO}
+              	, A.MENU_NM
+              	, A.DUTY_NM
+        FROM 	CMN_MENU_MST  A
+        WHERE 	MENU_ID = #{MENU_ID} /*  'MSP2000001'   */   
+        AND     NOT EXISTS (	SELECT 	1 
+        					FROM 	CMN_MENU_CONN_LOG_MST
+        					WHERE	MENU_ID = #{MENU_ID}
+        					AND		USR_ID = SUBSTRB(#{SESSION_USER_ID},1,10)
+        					AND		CONN_DT = #{connDt}
+        				  )
+        
+	</insert>
+	
+	<select id="buttonAuthChk" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.buttonAuthChk =========*/
+		SELECT    MAX(CREAT_ABABLE_YN) AS CREAT_YN
+		        , MAX(DEL_AUTH) AS DEL_YN
+		        , MAX(RVISN_AUTH) AS RVISN_YN
+		        , MAX(SRCH_AUTH) AS SRCH_YN
+		        , MAX(EXEL_ABABLE_YN) AS EXEL_YN
+		        , MAX(PRNT_ABABLE_YN) AS PRNT_YN
+		  FROM  (
+		        SELECT    A.AUTH_ID
+		                , D.AUTH_NM
+		                , D.USG_YN AUTH_USG_YN
+		                , DECODE(A.PRGM_TYPE, 'MAIN','메인', 'SRCH','검색','CREAT','등록','RVISN','변경','DEL','삭제','EXEL','엑셀','PRNT','출력','ETC','기타') PRGM_TYPE
+		                , PRGM_NM
+		                , DECODE(A.PRGM_TYPE,'MAIN','Y','CREAT',CREAT_ABABLE_YN,'DEL',DEL_AUTH,'RVISN',RVISN_AUTH,'SRCH',SRCH_AUTH,'EXEL',EXEL_ABABLE_YN,'PRNT',PRNT_ABABLE_YN,'ETC','Y',NULL) ALLOW                    
+		                , DECODE(PRGM_TYPE,'MAIN', CREAT_ABABLE_YN,'CREAT', CREAT_ABABLE_YN, NULL) CREAT_ABABLE_YN
+		                , DECODE(PRGM_TYPE,'MAIN', DEL_AUTH,'DEL', DEL_AUTH, NULL) DEL_AUTH
+		                , DECODE(PRGM_TYPE,'MAIN', RVISN_AUTH,'RVISN', RVISN_AUTH, NULL) RVISN_AUTH
+		                , DECODE(PRGM_TYPE,'MAIN', SRCH_AUTH,'SRCH', SRCH_AUTH, NULL) SRCH_AUTH
+		                , DECODE(PRGM_TYPE,'MAIN', EXEL_ABABLE_YN,'EXEL', EXEL_ABABLE_YN, NULL) EXEL_ABABLE_YN
+		                , DECODE(PRGM_TYPE,'MAIN', PRNT_ABABLE_YN,'PRNT', PRNT_ABABLE_YN, NULL) PRNT_ABABLE_YN
+		          FROM  (
+		                WITH CMN_PRGM_MST_WITH_MAIN AS
+		                    (
+		                        SELECT  A.*, B.PRGM_ID PRGM_ID_MAIN, B.PRGM_TYPE PRGM_TYPE_MAIN, B.PRGM_URL PRGM_URL_MAIN
+		                          FROM  CMN_PRGM_MST A
+		                                , (
+		                                    SELECT  * 
+		                                      FROM  (  
+		                                                SELECT  A.*, ROW_NUMBER() OVER( PARTITION BY MENU_ID ORDER BY PRGM_ID ) ROW_INDEX
+		                                                  FROM  CMN_PRGM_MST A  
+		                                                 WHERE  A.PRGM_TYPE = 'MAIN'
+		                                            ) B
+		                                     WHERE  ROW_INDEX = 1
+		                                ) B    
+		                         WHERE  A.MENU_ID = B.MENU_ID
+		                           AND  B.PRGM_TYPE = 'MAIN'
+		                    )
+		                , PRGM_URL_PARAM AS (SELECT #{SESSION_USER_ID} USR_ID FROM DUAL) 
+		                SELECT  A.*
+		                  FROM  (      
+		                            SELECT    A.USR_ID
+		                                    , '사용자권한' AUTH_TYPE
+		                                    , M.MENU_ID 
+		                                    , M.MENU_NM
+		                                    , B_MAIN.CREAT_ABABLE_YN
+		                                    , B_MAIN.DEL_AUTH
+		                                    , B_MAIN.RVISN_AUTH
+		                                    , B_MAIN.SRCH_AUTH
+		                                    , B_MAIN.EXEL_ABABLE_YN
+		                                    , B_MAIN.PRNT_ABABLE_YN
+		                                    , D.PRGM_NM
+		                                    , D.PRGM_URL
+		                                    , D.PRGM_URL_MAIN
+		                                    , '' GRP_ID
+		                                    , '' AUTH_ID
+		                                    , D.PRGM_TYPE
+		                                    , D.PRGM_TYPE_MAIN
+		                              FROM    CMN_USR_MST A
+		                                    , CMN_USR_MENU_ASGN_MST B
+		                                    , CMN_USR_MENU_ASGN_MST B_MAIN
+		                                    , CMN_PRGM_MST_WITH_MAIN D
+		                                    , CMN_MENU_MST M
+		                                    , PRGM_URL_PARAM
+		                             WHERE  A.USR_ID = PRGM_URL_PARAM.USR_ID 
+		                               AND  A.USR_ID = B.USR_ID
+		                               AND  B.MENU_ID = D.MENU_ID
+		                               AND  A.USR_ID = B_MAIN.USR_ID
+		                               AND  B_MAIN.MENU_ID = D.MENU_ID
+		                               AND  M.MENU_ID = D.MENU_ID
+		                             UNION 
+		                            SELECT    A.USR_ID
+		                                    , '그룹권한' AUTH_TYPE
+		                                    , M.MENU_ID
+		                                    , M.MENU_NM
+		                                    , D_MAIN.CREAT_ABABLE_YN
+		                                    , D_MAIN.DEL_AUTH
+		                                    , D_MAIN.RVISN_AUTH
+		                                    , D_MAIN.SRCH_AUTH
+		                                    , D_MAIN.EXEL_ABABLE_YN
+		                                    , D_MAIN.PRNT_ABABLE_YN
+		                                    , F.PRGM_NM
+		                                    , F.PRGM_URL
+		                                    , F.PRGM_URL_MAIN
+		                                    , B.GRP_ID
+		                                    , C.AUTH_ID
+		                                    , F.PRGM_TYPE
+		                                    , F.PRGM_TYPE_MAIN
+		                              FROM    CMN_USR_MST A
+		                                    , CMN_USG_GRP_ASGN_MST B
+		                                    , CMN_GRP_AUTH_ASGN_MST C
+		                                    , CMN_AUTH_MENU_ASGN_MST D
+		                                    , CMN_AUTH_MENU_ASGN_MST D_MAIN
+		                                    , CMN_PRGM_MST_WITH_MAIN F
+		                                    , CMN_MENU_MST M
+		                                    , PRGM_URL_PARAM
+		                             WHERE  1 =1
+		                               AND  A.USR_ID = PRGM_URL_PARAM.USR_ID 
+		                               AND  A.USR_ID = B.USR_ID      
+		                               AND  B.GRP_ID = C.GRP_ID
+		                               AND  C.AUTH_ID = D.AUTH_ID
+		                               AND  D.MENU_ID = F.MENU_ID
+		                               AND  C.AUTH_ID = D_MAIN.AUTH_ID
+		                               AND  D_MAIN.MENU_ID = F.MENU_ID                          
+		                               AND  M.MENU_ID = F.MENU_ID
+		                        ) A 
+		                 WHERE  1=1
+		                ) A
+		                , CMN_MENU_MST B
+		                , CMN_USR_GRP_MST C
+		                , CMN_AUTH_MST D
+		         WHERE  1 =1 
+		           AND  A.MENU_ID(+) = B.MENU_ID  
+		           AND  A.GRP_ID = C.GRP_ID(+)
+		           AND  A.AUTH_ID = D.AUTH_ID(+)  
+		           AND  B.USG_YN = 'Y'
+		           AND  A.MENU_ID = #{AUTH_MENU_ID}
+		        )
+        
+	</select>
+	<select id="breadCrumb" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+			SELECT MENU_ID , MENU_NM FROM CMN_MENU_MST
+		    WHERE 1=1
+		    START WITH MENU_ID =(SELECT MENU_ID from CMN_PRGM_MST
+												    WHERE PRGM_URL = #{pgmUrl}
+												    AND PRGM_TYPE = 'MAIN'    
+												    AND USG_YN = 'Y')
+		    CONNECT BY PRIOR HGHR_MENU_ID = MENU_ID
+		    ORDER BY MENU_LVL ASC
+	</select>
+</mapper>

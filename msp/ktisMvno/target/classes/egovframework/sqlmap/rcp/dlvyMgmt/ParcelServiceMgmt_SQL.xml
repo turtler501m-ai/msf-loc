@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.dlvyMgmt.mapper.ParcelServiceMapper">
+	
+	<sql id="ParcelServiceLstInfo">
+		SELECT  SUBSTR(TO_CHAR(REQ.SYS_RDATE,'YYYYMMDDHH24MISS'),0,8) AS sysRdate
+			  , FN_GET_CODENM('RCP0025', REQ.TB_CD)		AS tbCd
+			  , REQ.DLVRY_NO				AS dlvrNo
+			  , REQ.RES_NO					AS resNo
+			  , DLV.DLVRY_NAME				AS dlvryName
+			  , DLV.DLVRY_ADDR				AS dlvryAddr
+			  , DLV.DLVRY_ADDR_DTL			AS dlvryAddrDtl
+			  , DLV.DLVRY_POST				AS dlvryPost
+			  , DLV.DLVRY_MEMO				AS dlvryMemo
+			  , DLV.DLVRY_MOBILE_FN||'-'||DLV.DLVRY_MOBILE_MN||'-'||DLV.DLVRY_MOBILE_RN AS mobileNo
+			  , FN_GET_CODENM('RCP9002', REQ.REQUEST_STATE_CODE)	AS requestStateCode
+		  FROM  MCP_REQUEST_STATE@DL_MCP REQ
+			  , MCP_REQUEST_DLVRY@DL_MCP DLV
+		 WHERE  REQ.REQUEST_KEY = DLV.REQUEST_KEY
+		   AND  REQ.TB_CD IS NOT NULL
+		   AND  REQ.DLVRY_NO IS NOT NULL
+		   AND  REQ.SYS_RDATE BETWEEN TO_DATE(#{frmStartDate, jdbcType=VARCHAR}||'000000','YYYYMMDDHH24MISS')
+								  AND TO_DATE(#{frmEndDate, jdbcType=VARCHAR}||'235959','YYYYMMDDHH24MISS') 
+		 <if test="frmDlvryName != null and frmDlvryName != ''"> 
+		   AND  DLV.DLVRY_NAME LIKE '%'||#{frmDlvryName, jdbcType=VARCHAR}||'%'
+		 </if>
+		 <if test="frmTbCd != null and frmTbCd != ''">
+		   AND  REQ.TB_CD = #{frmTbCd, jdbcType=VARCHAR}
+		 </if>
+		 <if test="frmDlvrNo != null and frmDlvrNo != ''">
+		   AND  REQ.DLVRY_NO = REPLACE(#{frmDlvrNo, jdbcType=VARCHAR},'-','')
+		 </if>
+		 <if test="frmResNo != null and frmResNo != ''">
+		   AND  REQ.RES_NO = #{frmResNo, jdbcType=VARCHAR}
+		 </if>
+		 <if test="frmMobileNo != null and frmMobileNo != ''">
+		   AND  DLV.DLVRY_MOBILE_FN||DLV.DLVRY_MOBILE_MN||DLV.DLVRY_MOBILE_RN LIKE '%'||#{frmMobileNo, jdbcType=VARCHAR}||'%'
+		 </if>
+		 ORDER  BY
+				REQ.SYS_RDATE DESC
+	</sql>
+	
+	<!-- 택배발송현황조회 -->
+	<select id="getParcelServiceLstInfo" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO" resultType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO">
+		/* ParcelServiceMapper.getParcelServiceLstInfo */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="ParcelServiceLstInfo" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 택배발송현황조회(엑셀) -->
+	<select id="getParcelServiceLstInfoByExcel" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO" resultType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO">
+		/* ParcelServiceMapper.getParcelServiceLstInfoByExcel */
+		<include refid="ParcelServiceLstInfo" />
+	</select>
+	
+	<!-- 택배정보변경(MCP) -->
+	<update id="updMcpParcelServiceCodeInfo" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO">
+	
+		/* ParcelServiceMapper.updMcpParcelServiceCodeInfo */
+		UPDATE  MCP_REQUEST_STATE@DL_MCP
+		   SET  TB_CD = #{tbCd, jdbcType=VARCHAR}
+		      , DLVRY_NO = REPLACE(#{dlvrNo, jdbcType=VARCHAR},'-','')
+		      , RVISN_ID = #{sessionUserId}
+		      , RVISN_DTTM = SYSDATE 
+		 WHERE  RES_NO = #{resNo, jdbcType=VARCHAR}
+		
+	</update>
+	
+	
+	<!-- 택배정보변경(MSP) -->
+	<update id="updMspParcelServiceCodeInfo" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO">
+	
+		/* ParcelServiceMapper.updMspParcelServiceCodeInfo */
+		UPDATE  MSP_REQUEST_STATE
+		   SET  TB_CD = #{tbCd, jdbcType=VARCHAR}
+		      , DLVRY_NO = REPLACE(#{dlvrNo, jdbcType=VARCHAR},'-','')
+		 WHERE  RES_NO = #{resNo, jdbcType=VARCHAR}
+		
+	</update>
+
+	
+	<!-- 신청서 수정자,수정일시 -->
+	<update id="updMspRequest" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO">
+	
+		/* ParcelServiceMapper.updMspRequest */
+		UPDATE  MCP_REQUEST@DL_MCP
+		   SET RVISN_ID = #{sessionUserId}
+		      , RVISN_DTTM = SYSDATE 
+		 WHERE  RES_NO = #{resNo, jdbcType=VARCHAR}
+		
+	</update>
+
+	<!-- 신청서 등록 시 대상 조직인지 확인 -->
+	<select id="selectMsgCnt" parameterType="String" resultType="String">
+		/* ParcelServiceMapper.selectMsgCnt */
+		SELECT NVL( D.DLVRY_MOBILE_FN||D.DLVRY_MOBILE_MN||D.DLVRY_MOBILE_RN, C.CSTMR_MOBILE_FN||C.CSTMR_MOBILE_MN||C.CSTMR_MOBILE_RN) AS TEL
+		  FROM CMN_GRP_CD_MST A, MCP_REQUEST@DL_MCP B, MCP_REQUEST_CSTMR@DL_MCP C, MCP_REQUEST_DLVRY@DL_MCP D
+		 WHERE A.GRP_ID = 'RCP9018'
+		   AND A.USG_YN = 'Y'
+		   AND B.RES_NO = #{resNo}
+		   AND B.REQUEST_KEY = C.REQUEST_KEY
+		   AND B.REQUEST_KEY = D.REQUEST_KEY
+		   AND A.CD_VAL = B.CNTPNT_SHOP_ID
+	</select>
+	
+	<update id="updMspRequestByParcelInfo" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO">
+		/* ParcelServiceMapper.updMspRequestByParcelInfo */
+		UPDATE MSP_REQUEST
+		SET REQUEST_STATE_CODE = #{requestStateCode, jdbcType=VARCHAR}
+		WHERE  RES_NO = #{resNo, jdbcType=VARCHAR}
+		AND    REQUEST_STATE_CODE = '10'
+	</update>
+	
+	<update id="updMcpRequestByParcelInfo" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO">
+		/* ParcelServiceMapper.updMcpRequestByParcelInfo */
+		UPDATE MCP_REQUEST@DL_MCP
+		SET RVISN_ID = #{sessionUserId}
+			, RVISN_DTTM = SYSDATE
+			, REQUEST_STATE_CODE = #{requestStateCode, jdbcType=VARCHAR}
+		WHERE  RES_NO = #{resNo, jdbcType=VARCHAR}
+		AND    REQUEST_STATE_CODE = '10'
+	</update>
+	
+	<update id="updMspRequestStateByParcelInfo" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO">
+		/* ParcelServiceMapper.updMspRequestStateByParcelInfo */
+		UPDATE MSP_REQUEST_STATE
+		SET  REQUEST_STATE_CODE = #{requestStateCode, jdbcType=VARCHAR}
+		WHERE  RES_NO = #{resNo, jdbcType=VARCHAR}
+		AND    REQUEST_STATE_CODE = '10'
+	</update>
+	
+	<update id="updMcpRequestStateByParcelInfo" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO">
+		/* ParcelServiceMapper.updMcpRequestStateByParcelInfo */
+		UPDATE MCP_REQUEST_STATE@DL_MCP
+		SET RVISN_ID = #{sessionUserId}
+			, RVISN_DTTM = SYSDATE
+			, REQUEST_STATE_CODE = #{requestStateCode, jdbcType=VARCHAR}
+		WHERE  RES_NO = #{resNo, jdbcType=VARCHAR}
+		AND    REQUEST_STATE_CODE = '10'
+	</update>
+	
+	<select id="getResNo" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO" resultType="java.util.Map">
+		/* ParcelServiceMapper.getResNo */
+		SELECT  A.RES_NO
+		        , COUNT(1) OVER() AS CNT
+		FROM    MCP_REQUEST_STATE@DL_MCP A
+		        , CMN_GRP_CD_MST B
+		        , CMN_GRP_CD_MST C
+		WHERE   A.REQUEST_STATE_CODE = '10'
+		AND     A.DLVRY_NO = REPLACE(#{dlvrNo, jdbcType=VARCHAR},'-','')
+		AND     A.TB_CD = B.CD_VAL
+		AND     B.GRP_ID = 'RCP0025'
+		AND     B.CD_DSC = TRIM(#{tbCd, jdbcType=VARCHAR})
+		AND     C.GRP_ID = 'LGS1006'
+		AND     INSTR(C.CD_VAL, 'Y') > 0
+		AND     C.CD_DSC = TRIM(#{requestStateCode, jdbcType=VARCHAR})
+	</select>
+	
+	<select id="getTbCd" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO" resultType="String">
+		/* ParcelServiceMapper.getTbCd */
+		SELECT  CD_VAL
+		FROM    CMN_GRP_CD_MST
+		WHERE   GRP_ID = 'RCP0025'
+		AND     CD_DSC = TRIM(#{tbCd, jdbcType=VARCHAR})
+	</select>
+
+	<select id="getTbCdName" parameterType="com.ktis.msp.rcp.dlvyMgmt.vo.ParcelServiceVO" resultType="String">
+		/* ParcelServiceMapper.getTbCdName */
+		SELECT  CD_DSC
+		FROM    CMN_GRP_CD_MST
+		WHERE   GRP_ID = 'RCP0025'
+		AND     CD_VAL = #{tbCd, jdbcType=VARCHAR}
+	</select>	
+</mapper>

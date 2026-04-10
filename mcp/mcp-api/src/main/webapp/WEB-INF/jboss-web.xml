@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-web>
+    <session-config>
+       <cookie-config>
+          <path>/</path>
+       </cookie-config>
+    </session-config>
+	<context-root>/</context-root>
+	
+    <replication-config>
+        <cache-name>custom-session-cache</cache-name>
+      	<replication-trigger>SET_AND_GET</replication-trigger>  
+      	<replication-granularity>SESSION</replication-granularity>  
+		<use-jk>true</use-jk>
+    </replication-config>	
+</jboss-web>

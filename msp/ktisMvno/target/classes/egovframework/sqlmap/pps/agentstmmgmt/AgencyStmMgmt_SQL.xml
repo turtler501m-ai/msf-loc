@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.agentstmmgmt.mapper.PpsAgencyStmMgmtMapper">
+
+    <!-- 대리점별 정산내역 조회 -->
+    <select id="getAgentStmHistoryMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_AGENT_PK) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			AGENT_ID, 
+			F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+			BASIC_CARD_SD, 
+			BASIC_CASH_SD, 
+			BASIC_DEP_SD, 
+			GRADE_CARD_SD, 
+			GRADE_CASH_SD, 
+			GRADE_DEP_SD, 
+			MB_CARD_SD, 
+			MB_CASH_SD, 
+			MB_DEP_SD, 
+			UL_CARD_SD, 
+			UL_CASH_SD, 
+			UL_DEP_SD, 
+			CMS_CARD_SD, 
+			CMS_CASH_SD, 
+			CMS_DEP_SD, 
+			USIM_CARD_SD, 
+			USIM_CASH_SD, 
+			USIM_DEP_SD, 
+			RCG_CARD_SD, 
+			RCG_CASH_SD, 
+			RCG_DEP_SD, 
+			REFUND_FREE_RCG_AMT,
+			REFUND_CARD_SD, 
+			REFUND_CASH_SD, 
+			REFUND_DEP_SD, 
+			MOD_CARD_SD, 
+			MOD_CASH_SD, 
+			MOD_DEP_SD, 
+			MOD_AGENT_CARD_SD, 
+			MOD_AGENT_CASH_SD, 
+			MOD_AGENT_DEP_SD,  
+			CARD_SD, 
+			CASH_SD, 
+			DEP_SD, 
+			CONFIRM_FLAG, 
+			TO_CHAR(CONFIRM_DT, 'YYYY-MM-DD') CONFIRM_DT, 
+			CONFIRM_ADMIN, 
+			F_GET_ADMIN_NM(CONFIRM_ADMIN) CONFIRM_ADMIN_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM_AGENT A
+		WHERE 1=1
+		  AND AGENT_ID = #{loginAgentId}
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+	
+    </select>
+    
+    <!-- 대리점별 정산내역 Excel-->
+    <select id="getAgentStmHistoryMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_AGENT_PK) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(AGENT_ID,'-') AS AGENT_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_ID),'-') AS AGENT_NM,
+			NVL(BASIC_CARD_SD,0) AS BASIC_CARD_SD, 
+			NVL(BASIC_CASH_SD,0) AS BASIC_CASH_SD, 
+			NVL(BASIC_DEP_SD,0) AS BASIC_DEP_SD, 
+			NVL(GRADE_CARD_SD,0) AS GRADE_CARD_SD, 
+			NVL(GRADE_CASH_SD,0) AS GRADE_CASH_SD, 
+			NVL(GRADE_DEP_SD,0) AS GRADE_DEP_SD, 
+			NVL(MB_CARD_SD,0) AS MB_CARD_SD, 
+			NVL(MB_CASH_SD,0) AS MB_CASH_SD, 
+			NVL(MB_DEP_SD,0) AS MB_DEP_SD, 
+			NVL(UL_CARD_SD,0) AS UL_CARD_SD, 
+			NVL(UL_CASH_SD,0) AS UL_CASH_SD, 
+			NVL(UL_DEP_SD,0) AS UL_DEP_SD, 
+			NVL(CMS_CARD_SD,0) AS CMS_CARD_SD, 
+			NVL(CMS_CASH_SD,0) AS CMS_CASH_SD, 
+			NVL(CMS_DEP_SD,0) AS CMS_DEP_SD, 
+			NVL(USIM_CARD_SD,0) AS USIM_CARD_SD, 
+			NVL(USIM_CASH_SD,0) AS USIM_CASH_SD, 
+			NVL(USIM_DEP_SD,0) AS USIM_DEP_SD, 
+			NVL(RCG_CARD_SD,0) AS RCG_CARD_SD, 
+			NVL(RCG_CASH_SD,0) AS RCG_CASH_SD, 
+			NVL(RCG_DEP_SD,0) AS RCG_DEP_SD, 
+			NVL(REFUND_FREE_RCG_AMT,0) AS REFUND_FREE_RCG_AMT,
+			NVL(REFUND_CARD_SD,0) AS REFUND_CARD_SD, 
+			NVL(REFUND_CASH_SD,0) AS REFUND_CASH_SD, 
+			NVL(REFUND_DEP_SD,0) AS REFUND_DEP_SD, 
+			NVL(MOD_CARD_SD,0) AS MOD_CARD_SD, 
+			NVL(MOD_CASH_SD,0) AS MOD_CASH_SD, 
+			NVL(MOD_DEP_SD,0) AS MOD_DEP_SD, 
+			NVL(MOD_AGENT_CARD_SD,0) AS MOD_AGENT_CARD_SD, 
+			NVL(MOD_AGENT_CASH_SD,0) AS MOD_AGENT_CASH_SD, 
+			NVL(MOD_AGENT_DEP_SD,0) AS MOD_AGENT_DEP_SD, 
+			NVL(CARD_SD,0) AS CARD_SD, 
+			NVL(CASH_SD,0) AS CASH_SD, 
+			NVL(DEP_SD,0) AS DEP_SD, 
+			NVL(CONFIRM_FLAG,'-') AS CONFIRM_FLAG, 
+			NVL(TO_CHAR(CONFIRM_DT, 'YYYY-MM-DD'),'-') AS CONFIRM_DT, 
+			NVL(CONFIRM_ADMIN,'-') AS CONFIRM_ADMIN, 
+			NVL(F_GET_ADMIN_NM(CONFIRM_ADMIN),'-') AS CONFIRM_ADMIN_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM_AGENT A
+		WHERE 1=1
+		  AND AGENT_ID = #{loginAgentId}
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		
+    </select>
+    
+    <!-- 대리점별정산관리 조회 -->
+    <select id="getAgentStmSelfMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_SELF_IDX1) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			AGENT_ID,
+			OP_OPEN_AMT, 
+			OP_RCG_AMT, 
+			OP_PPS, 
+			OP_OPEN_CNT, 
+			OP_CAN_CNT, 
+			NVL(OP_OPEN_CNT, 0) - NVL(OP_CAN_CNT, 0) OP_REAL_CNT,
+			PSD_CNT, 
+			PSD_AMT, 
+			PSD_PPS, 
+			MNG_CNT, 
+			MNG_AMT, 
+			MNG_PPS, 
+			PRM_CNT, 
+			PRM_AMT, 
+			PRM_PPS, 
+			RF_CNT, 
+			RF_AMT, 
+			RF_PPS, 
+			LAST_AMT, 
+			LAST_PPS, 
+			ETC_AMT, 
+			ETC_PPS, 
+			NVL(OP_PPS, 0) + NVL(PSD_PPS, 0) + NVL(MNG_PPS, 0) + NVL(PRM_PPS, 0) + NVL(RF_PPS, 0) + NVL(LAST_PPS, 0) + NVL(ETC_PPS, 0) TOT_PPS,
+			NVL(OP_OPEN_AMT, 0) + NVL(OP_RCG_AMT, 0) + NVL(PSD_AMT, 0) + NVL(MNG_AMT, 0) + NVL(PRM_AMT, 0) + NVL(RF_AMT, 0) + NVL(LAST_AMT, 0) + NVL(ETC_AMT, 0) TOT_AMT,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM_SELF A
+		WHERE AGENT_ID = #{loginAgentId}
+			  AND BILL_MONTH >= TO_DATE('20180101', 'YYYYMMDD')
+			  
+	
+    </select>
+    
+</mapper>

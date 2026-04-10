@@ -1,0 +1,434 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<title>iframe sample</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<!-- Library -->
+<link rel="stylesheet" type="text/css" href="../lib/dhtmlx/codebase/dhtmlx.css"/>
+<link rel="stylesheet" type="text/css" href="../css/mvno.css"/>
+<script src="../lib/jquery/jquery-1.9.1.js"></script>
+<script src="../lib/dhtmlx/codebase/dhtmlx.js"></script>
+<script src="../js/mvno.js"></script>
+<!-- //Library  -->
+
+</head>
+
+<body>
+
+	<!-- header -->
+	<div class="page-header">
+		<h1>후불가입신청관리</h1>
+		<a href="#" class="favor">즐겨찾기 추가</a>
+		<ul>
+			<li>HOME</li>
+			<li>조직관리</li>
+			<li>단말기관리</li>
+		</ul>
+	</div>
+	<!-- //header -->
+
+	<!-- 화면 배치 -->
+    <div id="FORM1" class="section-application"></div>
+
+	<!-- Script -->
+	<script type="text/javascript">
+
+        var saleItmCdValue = '';
+
+        var DHX = { 
+
+ 
+    			FORM1 : {
+   				 //title: "고객정보",
+   				 items : [
+   	   					{type:"settings", position:"label-left", labelAlign:"right", labelWidth:100, blockOffset:0}
+
+						,{type: "fieldset", label: "조직부가정보", inputWidth:910, list:[{type:"settings"}
+							,{type:"block", list:[
+								{type:"select", width:100, label:"고객구분",name:"cstmrType", labelAlign:"right", options:[{value:"NA", text:"내국인", selected:true},{value:"NM", text:"내국인(미성년자)"},{value:"FN", text:"외국인"},{value:"JP", text:"법인"},{value:"PP", text:"개인사업자"}]}
+								,{type:"newcolumn"}
+								,{type:"select", width:100, label:"서비스구분",name:"serviceType", labelAlign:"right",offsetLeft:55, options:[{value:"PP", text:"선불", selected:true},{value:"PO", text:"후불"}]}
+								,{type:"newcolumn"}
+								,{type:"select", width:100, label:"요금제", name:"socCode",labelAlign:"right", offsetLeft:55,options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+							]}
+
+							,{type:"block", list:[
+								{type:"select", width:100, label:"업무구분",name:"operType", labelAlign:"right", options:[{value:"HCN3", text:"기기변경", selected:true},{value:"HDN3", text:"보상기변3G"},{value:"MNP3", text:"번호이동"},{value:"NAC3", text:"개통"},{value:"ICN3", text:"명의변경"}]}
+								,{type:"newcolumn"}
+								,{type:"input",  label:"고객명",name:"cstmrName", labelAlign:"right",width:100,offsetLeft:55}
+								,{type:"newcolumn"}
+								,{type:"input", width:60, label:"주민번호",name:"cstmrNativeRrn1", labelAlign:"right",offsetLeft:55}
+								,{type:"newcolumn"}
+								,{type:"input", width:80, label:"-",name:"cstmrNativeRrn2",labelAlign:"center",labelWidth:5}
+							]}
+							,{type:"block",name:"FN", list:[
+												{type:"select", width:100, label:"여권번호",name:"cstmrForeignerPn", labelAlign:"right", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+												,{type:"newcolumn"}
+											,{type:"calendar", width:100,label:"체류기간",name:"cstmrForeignerSdate",offsetLeft:55}
+											,{type:"newcolumn"}
+											,{type:"calendar", label:"~",name:"cstmrForeignerEdate", labelAlign:"center", labelWidth:10, offsetLeft:5, width:100}
+								]}
+							,{type:"block",name:"JP", list:[
+														{type:"input",  label:"법인명",name:"cstmrJuridicalCname",width:101}
+													,{type:"newcolumn"}
+												,{type:"input", width:60, label:"법인번호",name:"cstmrJuridicalRrn1", labelAlign:"right",offsetLeft:55}
+											,{type:"newcolumn"}
+											,{type:"input", width:80, label:"-",name:"cstmrJuridicalRrn2",labelAlign:"center",labelWidth:5}
+												,{type:"newcolumn"}
+												,{type:"input", width:40, label:"사업자등록번호",name:"cstmrJuridicalNumber1", labelAlign:"right",offsetLeft:5}
+											,{type:"newcolumn"}
+											,{type:"input", width:30, label:"-",name:"cstmrJuridicalNumber2",labelAlign:"center",labelWidth:5}
+											,{type:"newcolumn"}
+											,{type:"input", width:40, label:"-",name:"cstmrJuridicalNumber3",labelAlign:"center",labelWidth:5}
+											]}
+							,{type:"block", name:"PP",list:[
+												{type:"select", width:100, label:"상호명",name:"cstmrPrivateCname", labelAlign:"right", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+												,{type:"newcolumn"}
+											,{type:"input", width:40, label:"사업자등록번호",name:"cstmrPrivateNumber1", labelAlign:"right",offsetLeft:55}
+										,{type:"newcolumn"}
+										,{type:"input", width:30, label:"-",name:"cstmrPrivateNumber2",labelAlign:"center",labelWidth:5}
+										,{type:"newcolumn"}
+										,{type:"input", width:40, label:"-",name:"cstmrPrivateNumber3",labelAlign:"center",labelWidth:5}
+										]}
+							,{type:"block", list:[
+								{type:"input",  label:"메일",name:"cstmrMail1",width:101}
+								,{type:"newcolumn"}
+								,{type:"input", label:"@",name:"cstmrMail2", labelAlign:"center", labelWidth:10, offsetLeft:5, width:135}
+								,{type:"newcolumn"}
+								,{type:"select", width:100,name:"cstmrMail3" , options:[{value:"hanmail.net", text:"한메일", selected:true},{value:"gmail.com", text:"구글메일"}]}
+								,{type:"newcolumn"}
+								,{type: "label", labelWidth:10, position:"label-left",  list:[
+																	{type:"settings",position:"label-left", labelWidth:40}
+																	,{type: "radio", name: "cstmrMailReceiveFlag", value: "Y", label: "수신", checked: true}
+																	,{type:"newcolumn"}
+																	,{type: "radio", name: "cstmrMailReceiveFlag", value: "N", label: "미수신"}
+																	]}
+
+							]}
+							,{type:"block", list:[
+								{type:"input",  label:"주소",name:"cstmrAddr",width:255}
+								,{type:"newcolumn"}
+								,{type:"input", label:"",name:"cstmrAddrDtl",  width:257}
+								,{type:"newcolumn"}
+								,{type:"button", value: "주소찾기"}
+							]}
+							,{type:"block", list:[
+								{type:"select", label:"명세서수신유형",width:100,  options:[{value:"CB", text:"이메일", selected:true},{value:"LX", text:"우편"},{value:"MB", text:"모바일"},{value:"AB", text:"이메일+모바일"}]}
+								,{type:"newcolumn"}
+								,{type:"select", width:50, label:"전화번호",name:"cstmrTelFn", offsetLeft:55, options:[{value:"02", text:"02", selected:true},{value:"031", text:"031"}]}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, name:"cstmrTelMn", label:""}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, name:"cstmrTelRn",label:""}	
+								,{type:"newcolumn"}
+								,{type:"select", width:50, label:"휴대폰",name:"cstmrMobileFn",labelAlign:"right", labelWidth:99, options:[{value:"010", text:"010", selected:true},{value:"011", text:"011"}]}
+								,{type:"newcolumn"}
+								,{type:"input", width:50,name:"cstmrMobileMn", label:""}
+								,{type:"newcolumn"}
+								,{type:"input", width:50,name:"cstmrMobileRn", label:""}
+							]}
+							,{type:"block", list:[
+								 {type:"input",  label:"신청일자",name:"reqInDay",width:101, userdata: { popover: "여기에 풍선도움말에 나올 내용을 넣으세요" }}
+								,{type:"newcolumn"}				
+								,{type:"input",  label:"본인인증방식",name:"onlineAuthType",offsetLeft:55,value:"신용카드",width:101,readonly:true}
+								,{type:"newcolumn"}				
+								,{type:"input",  label:"본인인증정보",name:"onlineAuthInfo",offsetLeft:55,value:"ReqNO:",width:101,readonly:true}
+							]}
+							,{type:"block", list:[
+								 {type:"select", label:"신청진행상태",name:"pstate",width:80,  options:[{value:"00", text:"정상", selected:true},{value:"10", text:"고객취소"},{value:"20", text:"관리자삭제"}]}
+								,{type:"newcolumn"}	
+								,{type:"button", value: "변경적용"}
+								,{type:"newcolumn"}				
+								,{type:"select", label:"개통진행상태",name:"requestStateCode",width:80,offsetLeft:2,  options:[{value:"00", text:"접수대기", selected:true},{value:"01", text:"겁수"},{value:"10", text:"배송중"},{value:"20", text:"개통대기"},{value:"01", text:"개통완료"}]}
+								,{type:"newcolumn"}	
+								,{type:"button", value: "변경적용", userdata: { popover: "여기에 풍선도움말에 나올 내용을 넣으세요" }}
+								,{type:"newcolumn"}	
+								 ,{type:"select", label:"모집경로",name:"onOffType",width:80,offsetLeft:2,  options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]} 					 					 
+							]}
+							
+							,{type:"block", list:[
+								{type:"input",  label:"서식지",width:101,readonly:true}
+								,{type:"newcolumn"}	
+								,{type:"input", width:101,readonly:true}
+								,{type:"newcolumn"}	
+								,{type:"input", width:101,readonly:true}
+								,{type:"newcolumn"}	
+								,{type:"input", width:101,readonly:true}
+								,{type:"newcolumn"}	
+								,{type:"input", width:101,readonly:true}
+								]}
+							,{type:"block", list:[
+													{type:"label",readonly:true}
+							]}
+
+							,{type:"button", value: "?", position:"absolute", inputTop:"-21", inputLeft:"80", className:"btn-helper", userdata: { popover: "여기에 풍선도움말에 나올 내용을 넣으세요" }}/* 도움말 */
+
+						]}
+   	   					/************************/
+						,{type: "fieldset", label: "배송정보", inputWidth:910, list:[{type:"settings"}
+							,{type:"block", list:[
+								{type:"input", width:60,name:"dlvryName", label:"받으시는 분"}
+								,{type:"newcolumn"}
+								,{type:"checkbox", width:40, label:"고객상동", position:"label-right", labelAlign:"left", labelWidth:60}
+								,{type:"newcolumn"}
+								,{type:"select", width:50, label:"전화번호", name:"dlvryTelFn",offsetLeft:10, options:[{value:"02", text:"02", selected:true},{value:"031", text:"031"}]}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"dlvryTelMn"}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"dlvryTelRn"}
+								,{type:"newcolumn"}
+								,{type:"select", width:50, label:"휴대폰",name:"dlvryMobileFn",labelAlign:"right", labelWidth:98, options:[{value:"010", text:"010", selected:true},{value:"011", text:"011"}]}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"dlvryMobileMn"}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"dlvryMobileRn"}
+							]},
+							,{type:"block", list:[
+								{type:"input",  label:"주소",name:"dlvryAddr",width:255}
+								,{type:"newcolumn"}
+								,{type:"input", label:"",name:"dlvryAddrDtl",  width:257}
+								,{type:"newcolumn"}
+								,{type:"button", value: "주소찾기"}
+							]}
+							,{type:"block", list:[
+								{type:"input", width:590, label:"요청사항",name:"dlvryMemo"}
+
+							]}
+							,{type:"block", list:[
+													{type:"label",readonly:true}
+							]}
+							,{type:"button", value: "?", position:"absolute", inputTop:"-21", inputLeft:"80", className:"btn-helper"}/* 도움말 */
+						]}
+   	   					/************************/
+						,{type: "fieldset", label: "타이틀", inputWidth:910, list:[{type:"settings"}
+							,{type:"block", list:[
+								{type:"select", width:100, label:"요금납부방법",name:"reqPayType", options:[{value:"C", text:"신용카드", selected:true},{value:"D", text:"자동이체"},{value:"R", text:"지로"},{value:"AA", text:"자동충전"},{value:"VA", text:"가상계좌"}]}
+								,{type:"newcolumn"}
+								,{type:"select", width:103, label:"은행명 및 계좌번호",name:"reqBank", labelWidth:120, offsetLeft:35, options:[{value:"XX", text:"xx은행", selected:true},{value:"YY", text:"yy은행"}]}
+								,{type:"newcolumn"}
+								,{type:"input", width:150, label:"",name:"reqAccountNumber"}
+							]},
+							,{type:"block", list:[
+								{type:"input", width:60, label:"예금주 성명",name:"reqAccountName"}
+								,{type:"newcolumn"}
+								,{type:"checkbox", width:60, label:"타인납부", position:"label-right", labelAlign:"left", labelWidth:50}
+								,{type:"newcolumn"}
+								,{type:"input", width:60, label:"예금주 주민번호",name:"reqAccountRrn1", labelAlign:"right",offsetLeft:20}
+								,{type:"newcolumn"}
+								,{type:"input", width:80, label:"-",name:"reqAccountRrn2",labelAlign:"center",labelWidth:5}
+			
+							]}
+							,{type:"block", list:[
+													{type:"label",readonly:true}
+							]}
+							,{type:"button", value: "?", position:"absolute", inputTop:"-21", inputLeft:"80", className:"btn-helper"}/* 도움말 */
+						]}
+   	   					/************************/
+						,{type: "fieldset", label: "타이틀", inputWidth:910, list:[{type:"settings"}
+							,{type:"block", list:[
+								{type:"select", width:100, label:"요금납부방법", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+								,{type:"newcolumn"}
+								,{type:"select", width:103, label:"카드사 및 카드번호", labelWidth:120, offsetLeft:35, options:[{value:"XX", text:"xx카드사", selected:true},{value:"YY", text:"yy카드사"}]}
+								,{type:"newcolumn"}
+								,{type:"input", width:35, label:"",name:"reqCardNo1",labelAlign:"center",labelWidth:5}
+								,{type:"newcolumn"}
+								,{type:"input", width:35, label:"-",name:"reqCardNo2",labelAlign:"center",labelWidth:5}
+								,{type:"newcolumn"}
+								,{type:"input", width:35, label:"-",name:"reqCardNo3",labelAlign:"center",labelWidth:5}
+								,{type:"newcolumn"}
+								,{type:"input", width:35, label:"-",name:"reqCardNo4",labelAlign:"center",labelWidth:5}
+								,{type:"newcolumn"}
+								,{type:"input", width:30, label:"/ 월",name:"eqCardMm",offsetLeft:5,labelAlign:"center",labelWidth:25}
+								,{type:"newcolumn"}
+								,{type:"input", width:30, label:"년",name:"eqCardYy",labelAlign:"center",labelWidth:15}
+
+							]},
+							,{type:"block", list:[
+								{type:"input", width:60, label:"명의자 성명",name:"reqCardName"}
+								,{type:"newcolumn"}
+								,{type:"checkbox", width:60, label:"타인납부", position:"label-right", labelAlign:"left", labelWidth:50}
+								,{type:"newcolumn"}
+								,{type:"input", width:60, label:"명의자 주민번호",name:"reqCardRrn1", labelAlign:"right",offsetLeft:20}
+								,{type:"newcolumn"}
+								,{type:"input", width:80, label:"-",name:"reqCardRrn2",labelAlign:"center",labelWidth:5}
+			
+							]}
+							,{type:"block", list:[
+													{type:"label",readonly:true}
+							]}
+							,{type:"button", value: "?", position:"absolute", inputTop:"-21", inputLeft:"80", className:"btn-helper"}/* 도움말 */
+						]}
+   	   					/************************/
+						,{type: "fieldset", label: "타이틀", inputWidth:910, list:[{type:"settings"}
+							,{type:"block", list:[
+								{type:"select", width:100, label:"구매유형",name:"reqBuyType", options:[{value:"MM", text:"단말구매", selected:true},{value:"UU", text:"유심단독구매"}]}
+								,{type:"newcolumn"}
+								,{type:"input",  label:"휴대폰모델", name:"reqModelName",labelAlign:"right",width:100,offsetLeft:95}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"가입희망번호",name:"reqWantNumber1",offsetLeft:15, labelAlign:"right"}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"reqWantNumber2"}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"reqWantNumber3"}
+							
+							]},
+							,{type:"block", list:[
+								{type:"checkbox",width:10, label:"번호연결서비스",name:"reqGuideFlag", position:"label-left", labelAlign:"right"}
+								,{type:"newcolumn"}
+								,{type:"select", width:50, label:"",name:"reqGuideFn",labelAlign:"right", labelWidth:98, options:[{value:"010", text:"010", selected:true},{value:"011", text:"011"}]}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"reqGuideRn"}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"reqGuideMn"}
+								,{type:"newcolumn"}
+								,{type: "label",label:"무선데이터",offsetLeft:50, labelWidth:100, labelAlign:"right",position:"label-left",  list:[
+																							{type:"settings",position:"label-left", labelWidth:25}
+																							,{type: "radio", name: "reqWireType", value: "", label: "이용",labelWidth:30,width:30, checked: true}
+																							,{type:"newcolumn"}
+																							,{type: "radio", name: "reqWireType", value: "", label: "차단",labelWidth:30,width:30}
+																							,{type:"newcolumn"}
+																							,{type: "radio", name: "reqWireType", value: "", label: "데이터로밍 차단",labelWidth:100,width:150}
+																							]}
+								
+							]}
+							,{type:"block", list:[
+								{type:"input", label:"부가서비스",name:"additionKey",  width:590}
+								,{type:"newcolumn"}
+								,{type:"button", value: "부가서비스",name:"additionName"}
+							]}
+							,{type:"block", list:[
+													{type:"input", label:"단말정보",name:"",  width:590}
+							]}		
+							,{type:"block", list:[
+													{type:"label",readonly:true}
+							]}
+							,{type:"button", value: "?", position:"absolute", inputTop:"-21", inputLeft:"80", className:"btn-helper"}/* 도움말 */
+						]}	
+   	   					/*****************************/
+						,{type: "fieldset", label: "타이틀", inputWidth:910, list:[{type:"settings"}
+							,{type:"block", list:[
+								{type:"select", width:50, label:"이동전화번호",name:"moveMobileFn",labelAlign:"right", labelWidth:99, options:[{value:"010", text:"010", selected:true},{value:"011", text:"011"}]}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"moveMobileMn"}
+								,{type:"newcolumn"}
+								,{type:"input", width:50, label:"",name:"moveMobileRn"}
+								,{type:"newcolumn"}
+								,{type:"select", width:100, label:"변경전 통신사",name:"moveCompany", labelAlign:"right",offsetLeft:37, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+								,{type:"newcolumn"}
+								,{type:"select", width:100, label:"이번달 사용요금", name:"moveThismonthPayType",labelAlign:"right",offsetLeft:15, options:[{value:"PP", text:"즉시납부", selected:true},{value:"NM", text:"다음달요금합산"}]}
+										
+							]},
+							,{type:"block", list:[
+								{type:"select", width:50, label:"휴대폰 할부금",name:"moveAllotmentStat",labelAlign:"right", labelWidth:99, options:[{value:"FB", text:"완납", selected:true},{value:"AD", text:"할부지속"}]}
+								,{type:"newcolumn"}
+								,{type: "label", label:"미환급액 요금상계", labelWidth:100, position:"label-left",offsetLeft:145,  list:[
+																							{type:"settings",position:"label-right", labelWidth:40}
+																							,{type: "radio", name: "moveRefundAgreeFlag", value: "Y", label: "동의", checked: true}
+																							,{type:"newcolumn"}
+																							,{type: "radio", name: "moveRefundAgreeFlag", value: "N", label: "미동의"}
+																							]}		
+								]}
+							,{type:"block", list:[
+								{type:"select", width:120,labelWidth:100, label:"인증유형",name:"moveAuthType",labelAlign:"right", options:[{value:"M", text:"휴대폰인증", selected:true},{value:"C", text:"신용카드인증"},{value:"X", text:"범용인증서"},{value:"FN", text:"fax(관리자인증전)"},{value:"FN", text:"fax(관리자인증됨)"}]}
+								,{type:"newcolumn"}
+								,{type:"input", width:200, label:""}						
+							]}
+							,{type:"block", list:[
+													{type:"label",readonly:true}
+							]}
+							,{type:"button", value: "?", position:"absolute", inputTop:"-21", inputLeft:"80", className:"btn-helper"}/* 도움말 */
+						]}	
+   	   					/**************************/
+						,{type: "fieldset", label: "타이틀", inputWidth:910, list:[{type:"settings"}
+   	   					,{type:"block", list:[
+   	   							{type:"input", width:60, label:"대리인성명",name:"jrdclAgentName"}
+   	   						,{type:"newcolumn"}
+   	   						,{type:"select", width:50, label:"관계",name:"minorAgentRelation",labelAlign:"right", labelWidth:30, options:[{value:"01", text:"부", selected:true}
+   	   																																											,{value:"02", text:"모"}
+   	   																																										,{value:"03", text:"후견인"}
+   	   																																									,{value:"04", text:"연대보증인"}
+   	   																																								,{value:"05", text:"가족"}
+   	   																																							,{value:"06", text:"친척"}
+   	   																																						,{value:"07", text:"친구"}
+   	   																																					,{value:"08", text:"회사동료"}
+   	   																																				,{value:"10", text:"그외"}
+   	   																																			,{value:"11", text:"한정위탁"}
+   	   																																		,{value:"12", text:"지정위탁"}]}
+   	   						,{type:"newcolumn"}
+   	   						,{type:"input", width:60, label:"대리인 주민번호",name:"entrustResRrn1", labelAlign:"right",offsetLeft:50}
+   	   						,{type:"newcolumn"}
+   	   						,{type:"input", width:80, label:"-",name:"entrustResRrn2",labelAlign:"center",labelWidth:5}	
+   	   						,{type:"newcolumn"}
+   	   						,{type:"select", width:50, label:"연락처",name:"entrustResTelFn",labelAlign:"right", labelWidth:65, options:[{value:"010", text:"010", selected:true},{value:"011", text:"011"}]}
+   	   						,{type:"newcolumn"}
+   	   						,{type:"input", width:50, label:"",name:"entrustResTelMn"}
+   	   						,{type:"newcolumn"}
+   	   						,{type:"input", width:50, label:"",name:"entrustResTelRn"}						
+   	   					]}
+   	   					,{type:"block", list:[
+   	   										    {type:"label",readonly:true}
+   	   					]}
+						,{type:"button", value: "?", position:"absolute", inputTop:"-21", inputLeft:"80", className:"btn-helper"}/* 도움말 */
+					]}	
+   				],
+   				  onChange : function() {
+
+     		    		var gbn= PAGE.FORM2.getItemValue("cstmrType");
+     		    		switch (gbn) {
+
+     		    		case "PP" :
+     		    			PAGE.FORM2.showItem("PP");
+     		    			PAGE.FORM2.hideItem("JP");
+     		    			PAGE.FORM2.hideItem("FN");
+     		    			break;
+     		    		case "JP" :
+     		    			PAGE.FORM2.hideItem("PP");
+     		    			PAGE.FORM2.showItem("JP");
+     		    			PAGE.FORM2.hideItem("FN");
+     		    			break;
+     		    		case "FN" :
+     		    			PAGE.FORM2.hideItem("PP");
+     		    			PAGE.FORM2.hideItem("JP");
+     		    			PAGE.FORM2.showItem("FN");
+     		    			break;
+     		    			
+     		    		default :
+     		    			PAGE.FORM2.hideItem("PP");
+     		    			PAGE.FORM2.hideItem("JP");
+     		    			PAGE.FORM2.hideItem("FN");
+     		    		}     		    			
+     		    			
+     		    			
+     		    			
+     	              		
+     						
+     	   			           
+     	   		      }	
+   				
+   			 }       
+
+              	
+        }; // end dhx
+        
+
+        var PAGE = {
+
+            onOpen : function() {
+				mvno.ui.createForm("FORM1");
+				mvno.ui.popupWindowById("FORM1", "후불가입신청관리",900, 500);
+            }
+
+        };
+
+	</script>
+
+
+
+
+	<script src="../js/mvno_footer.js"></script>
+
+</body>
+</html>

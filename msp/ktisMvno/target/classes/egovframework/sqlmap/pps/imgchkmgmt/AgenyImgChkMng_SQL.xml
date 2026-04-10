@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.imgchkmgmt.mapper.PpsAgencyImgChkMgmtMapper">
+	<!--검수관리 목록조회 -->
+    <select id="getAgencyCustImgChkMngList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		SELECT /*+ INDEX_DESC(A PPS_CUSTOMER_IMAGE_CHK_IDX1) ORDERED USE_NL(B C)*/
+			   SEQ,
+		       	EVENT_SEQ,
+		       	A.CONTRACT_NUM,
+		       	SUBSCRIBER_NO,
+		       	DECODE(MNP_IND_CD, '', '신규', '이동') MNP_IND_CD_NM,
+		       	SUBSTR(LST_COM_ACTV_DATE, 1, 4) || '-' || SUBSTR(LST_COM_ACTV_DATE, 5, 2) || '-' || SUBSTR(LST_COM_ACTV_DATE, 7) LST_COM_ACTV_DATE,
+		       	AGENT_ID,
+		       	F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+		       	TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT,
+		       	CHK_STATUS,
+		       	F_GET_KT_CODE_NM('PPS_CUSTOMER_IMAGE_CHK', 'CHK_STATUS', CHK_STATUS) CHK_STATUS_NM,
+		       	(SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN IN ('10', '11', '12') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM) IMG_OPEN_CNT,
+		       	(SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN IN ('20', '21', '22', '23', '24') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM) IMG_ID_CNT,
+		       	(SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN NOT IN ('10', '11', '12', '20', '21', '22', '23', '24') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM) IMG_ETC_CNT,
+		       	DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|D') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음') D_STR,
+		       	DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|I') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음') I_STR,
+		       	DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|E') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음') E_STR,
+		       	DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|S') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음') S_STR,
+		       	AGENT_MEMO
+		FROM PPS_CUSTOMER_IMAGE_CHK A,
+		     MSP_JUO_SUB_INFO B,
+		     PPS_CUSTOMER C
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		      AND A.CONTRACT_NUM = C.CONTRACT_NUM
+		      AND AGENT_ID = #{loginAgentId}
+		      AND CHK_STATUS = '20'
+		      
+		<if test="startDt != null and startDt != ''">
+			AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		</if>
+		
+		<if test="searchNm != null and searchNm != ''">
+			<choose>
+				<when test="searchType == 'SUBSCRIBER_NO'">
+					AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+				</when>
+				<when test="searchType == 'CONTRACT_NUM'">
+					AND A.CONTRACT_NUM = #{searchNm}
+				</when>
+				<when test="searchType == 'EVENT_SEQ'">
+					AND A.EVENT_SEQ = #{searchNm}
+				</when>
+			</choose>
+		</if>
+		<if test="searchChkStatus != null and searchChkStatus != ''">
+			AND CHK_STATUS = #{searchChkStatus}
+		</if>
+				
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	
+    </select>
+    
+    <!--개통정보 목록조회 엑셀출력-->
+     <select id="getAgencyCustImgChkMngExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_DESC(A PPS_CUSTOMER_IMAGE_CHK_IDX1) ORDERED USE_NL(B C)*/
+			    SEQ,
+		       	NVL(EVENT_SEQ, '-') EVENT_SEQ,
+		       	NVL(A.CONTRACT_NUM, '-') CONTRACT_NUM,
+		       	NVL(SUBSCRIBER_NO, '-') SUBSCRIBER_NO,
+		       	NVL(DECODE(MNP_IND_CD, '', '신규', '이동'), '-') MNP_IND_CD_NM,
+		       	NVL(SUBSTR(LST_COM_ACTV_DATE, 1, 4) || '-' || SUBSTR(LST_COM_ACTV_DATE, 5, 2) || '-' || SUBSTR(LST_COM_ACTV_DATE, 7), '-') LST_COM_ACTV_DATE,
+		       	NVL(AGENT_ID, '-') AGENT_ID,
+		       	NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM,
+		       	NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'), '-') REG_DT,
+		       	NVL(CHK_STATUS, '-') CHK_STATUS,
+		       	NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER_IMAGE_CHK', 'CHK_STATUS', CHK_STATUS), '-') CHK_STATUS_NM,
+		       	NVL((SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN IN ('10', '11', '12') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM), 0) IMG_OPEN_CNT,
+		       	NVL((SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN IN ('20', '21', '22', '23', '24') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM), 0) IMG_ID_CNT,
+		       	NVL((SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN NOT IN ('10', '11', '12', '20', '21', '22', '23', '24') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM), 0) IMG_ETC_CNT,
+		       	NVL(DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|D') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음'), '-') D_STR,
+		       	NVL(DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|I') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음'), '-') I_STR,
+		       	NVL(DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|E') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음'), '-') E_STR,
+		       	NVL(DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|S') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음'), '-') S_STR,
+		       	NVL(AGENT_MEMO, '-') AGENT_MEMO
+		FROM PPS_CUSTOMER_IMAGE_CHK A,
+		     MSP_JUO_SUB_INFO B,
+		     PPS_CUSTOMER C
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		      AND A.CONTRACT_NUM = C.CONTRACT_NUM
+		      AND AGENT_ID = #{loginAgentId}
+		      AND CHK_STATUS = '20'
+		      
+		<if test="startDt != null and startDt != ''">
+			AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		</if>
+		
+		<if test="searchNm != null and searchNm != ''">
+			<choose>
+				<when test="searchType == 'SUBSCRIBER_NO'">
+					AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+				</when>
+				<when test="searchType == 'CONTRACT_NUM'">
+					AND A.CONTRACT_NUM = #{searchNm}
+				</when>
+				<when test="searchType == 'EVENT_SEQ'">
+					AND A.EVENT_SEQ = #{searchNm}
+				</when>
+			</choose>
+		</if>
+		<if test="searchChkStatus != null and searchChkStatus != ''">
+			AND CHK_STATUS = #{searchChkStatus}
+		</if>
+     </select>
+     
+     <!--검수관리 검수수정 -->
+    <select id="getPpsAgencyCustImgChkChgProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_CUSTOMER_IMAGE_CHK_CHG(
+						#{opCode, jdbcType=VARCHAR}
+					    ,#{seq, jdbcType=VARCHAR}
+					    , #{chkStatus, jdbcType=VARCHAR}
+					    , #{chkManty, jdbcType=VARCHAR}
+					    , #{memo, jdbcType=VARCHAR}
+					    , #{agentMemo, jdbcType=VARCHAR}
+					    , #{adminId, jdbcType=VARCHAR}
+					   , #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					  )
+		     }
+	</select>
+
+</mapper>

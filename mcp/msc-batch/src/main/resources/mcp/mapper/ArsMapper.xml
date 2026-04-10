@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ArsMapper">
+
+  <select id="getAcenVocEndTrg" resultType="com.ktmmobile.mcp.acenars.dto.ArsDto">
+    /*ArsMapper.getAcenVocEndTrg*/
+    SELECT REQ_SEQ, STATUS
+    FROM NMCP_ACEN_VOC_REQ
+    WHERE DUE_DT <![CDATA[ < ]]> TO_CHAR(SYSDATE, 'YYYYMMDD')
+    AND STATUS IN ('00', '01')
+    ORDER BY REQ_SEQ
+  </select>
+
+  <update id="updateAcenVocInfo" parameterType="java.lang.String">
+    /*ArsMapper.updateAcenVocInfo*/
+    UPDATE NMCP_ACEN_VOC_REQ
+    SET STATUS = '02'
+       ,RVISN_ID = 'ACEN'
+       ,RVISN_DTTM = SYSDATE
+    WHERE REQ_SEQ = #{reqSeq}
+  </update>
+
+  <insert id="insertAcenVocHist" parameterType="java.lang.String">
+    /*ArsMapper.insertAcenVocHist*/
+    INSERT INTO NMCP_ACEN_VOC_HIST(
+       REQ_SEQ
+      ,SEQ
+      ,VOC_AGNT_CD
+      ,STATUS
+      ,DUE_DT
+      ,VOC_SUB_CTG_CD
+      ,VOC_CONTENT
+      ,ANS_CONTENT
+      ,CALL_CONTENT
+      ,REGST_ID
+      ,REGST_DTTM
+    )
+    SELECT
+       REQ_SEQ
+      ,NVL((SELECT MAX(SEQ) + 1 FROM NMCP_ACEN_VOC_HIST WHERE REQ_SEQ = #{reqSeq}), 1)
+      ,VOC_AGNT_CD
+      ,STATUS
+      ,DUE_DT
+      ,VOC_SUB_CTG_CD
+      ,VOC_CONTENT
+      ,ANS_CONTENT
+      ,CALL_CONTENT
+      ,RVISN_ID
+      ,SYSDATE
+    FROM NMCP_ACEN_VOC_REQ
+    WHERE REQ_SEQ = #{reqSeq}
+  </insert>
+
+  <select id="getAcenVocInfo" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.acenars.dto.ArsDto">
+    /*ArsMapper.getAcenVocInfo*/
+    SELECT
+       REQ_SEQ
+      ,VOC_SEQ
+      ,CONTRACT_NUM
+      ,VOC_AGNT_CD
+      ,STATUS
+      ,VOC_SUB_CTG_CD
+      ,VOC_CONTENT
+      ,DUE_DT
+      ,ANS_CONTENT
+      ,TO_CHAR(RVISN_DTTM, 'YYYYMMDDHH24MISS') AS RVISN_DTTM
+      ,RVISN_ID
+    FROM NMCP_ACEN_VOC_REQ
+    WHERE REQ_SEQ = #{reqSeq}
+  </select>
+
+</mapper>
+

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tree id="0" radio="1">
+	<item text="주문내역조회" id="2-2-1"></item>
+	<item text="판매자배정조회" id="2-2-2"></item>
+	<item text="본부주문출고조회" id="2-2-3"></item>
+	<item text="물류센터주문출고조회" id="2-2-4"></item>
+	<item text="대리점입고확인조회" id="2-2-5"></item>
+</tree>

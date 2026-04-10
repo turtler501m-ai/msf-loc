@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.courtMgmt.mapper.CourtLcMgmtMapper">
+    <!-- 부채증명서 발급 목록 조회 -->
+    <select id="getCourtLcMgmtList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* CourtLcMgmtMapper.getCourtLcMgmtList */
+        <include refid="com.ktis.msp.cmn.include.paging-start" />
+        SELECT	MST.LC_SEQ,
+        		MST.LC_NUM,
+                FN_GET_CODENM('MSP0015', MST.LC_STAT_CD) AS LC_STAT_CD,
+                MST.CSTMR_NAME,
+                CRYPTO_AES256.DEC_AES(MST.CSTMR_RRN) AS CSTMR_RRN,
+                SUM(DTL.UNPD_PRC) AS UNPD_PRC,
+                SUM(DTL.INST_PRC) AS INST_PRC,
+                SUM(DTL.UNPD_PRC) + SUM(DTL.INST_PRC) AS TOTAL,
+                (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = MST.ISSUE_ID) AS ISSUE_ID,
+                CASE MST.LC_STAT_CD
+                    WHEN '2' THEN TO_CHAR(MST.ISSUE_DTTM, 'YYYY-MM-DD HH24:MI:SS')
+                    ELSE ''
+                END AS ISSUE_DTTM,
+                DECODE(MST.LC_STAT_CD, 2, '가능', '불가능') AS PRINT_YN,
+                (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = MST.REGST_ID) AS REGST_ID,
+                TO_CHAR(MST.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,
+                (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = MST.RVISN_ID) AS RVISN_ID,
+                TO_CHAR(MST.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM,
+                MST.CSTMR_ADDR
+        FROM    MSP_LC_MST MST, MSP_LC_DTL DTL
+        WHERE   MST.LC_SEQ = DTL.LC_SEQ (+)
+        <if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+            AND TO_CHAR(MST.REGST_DTTM, 'YYYYMMDDHH24MISS') BETWEEN #{strtDt} || '000000' AND #{endDt} || '235959'
+        </if>
+        <if test="searchVal != null and searchVal != ''">
+            <choose>
+                <when test='searchCd == "1"'>
+                    AND MST.CSTMR_NAME LIKE '%' || #{searchVal} || '%'	
+                </when>
+                <when test='searchCd == "2"'>
+                    AND		MST.CSTMR_RRN = #{searchRrn}
+                </when>
+            </choose>
+        </if>
+        <if test="lcStatCd != null and lcStatCd != ''">
+            AND MST.LC_STAT_CD = #{lcStatCd}
+        </if>
+            GROUP BY MST.LC_SEQ, MST.LC_NUM, MST.LC_STAT_CD, MST.CSTMR_NAME,MST.CSTMR_RRN, MST.ISSUE_ID,TO_CHAR(MST.ISSUE_DTTM, 'YYYY-MM-DD HH24:MI:SS'), MST.REGST_ID, TO_CHAR(MST.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS'), MST.RVISN_ID, TO_CHAR(MST.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS'),MST.CSTMR_ADDR
+            ORDER BY MST.LC_SEQ DESC
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+
+    <select id="getCourtLcMgmtListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* courtLcMgmtMapper.getCourtLcMgmtListByExcel */
+        SELECT	MST.LC_SEQ,
+        		MST.LC_NUM,
+                FN_GET_CODENM('MSP0015', MST.LC_STAT_CD) AS LC_STAT_CD,
+                MST.CSTMR_NAME,
+                CRYPTO_AES256.DEC_AES(MST.CSTMR_RRN) AS CSTMR_RRN,
+                SUM(DTL.UNPD_PRC) AS UNPD_PRC,
+                SUM(DTL.INST_PRC) AS INST_PRC,
+                SUM(DTL.UNPD_PRC) + SUM(DTL.INST_PRC) AS TOTAL,
+                (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = MST.ISSUE_ID) AS ISSUE_ID,
+                CASE MST.LC_STAT_CD
+                    WHEN '2' THEN TO_CHAR(MST.ISSUE_DTTM, 'YYYY-MM-DD HH24:MI:SS')
+                    ELSE ''
+                END AS ISSUE_DTTM,
+                DECODE(MST.LC_STAT_CD, 2, '가능', '불가능') AS PRINT_YN,
+                (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = MST.REGST_ID) AS REGST_ID,
+                TO_CHAR(MST.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,
+                (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = MST.RVISN_ID) AS RVISN_ID,
+                TO_CHAR(MST.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM,
+                MST.CSTMR_ADDR
+        FROM    MSP_LC_MST MST, MSP_LC_DTL DTL
+        WHERE   MST.LC_SEQ = DTL.LC_SEQ (+)
+        <if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+            AND TO_CHAR(MST.REGST_DTTM, 'YYYYMMDDHH24MISS') BETWEEN #{strtDt} || '000000' AND #{endDt} || '235959'
+        </if>
+        <if test="searchVal != null and searchVal != ''">
+            <choose>
+                <when test='searchCd == "1"'>
+                    AND MST.CSTMR_NAME LIKE '%' || #{searchVal} || '%'	
+                </when>
+                <when test='searchCd == "2"'>
+                    AND		MST.CSTMR_RRN = #{searchRrn}
+                </when>
+            </choose>
+        </if>
+        <if test="lcStatCd != null and lcStatCd != ''">
+            AND MST.LC_STAT_CD = #{lcStatCd}
+        </if>
+            GROUP BY MST.LC_SEQ, MST.LC_NUM, MST.LC_STAT_CD, MST.CSTMR_NAME,MST.CSTMR_RRN, MST.ISSUE_ID,TO_CHAR(MST.ISSUE_DTTM, 'YYYY-MM-DD HH24:MI:SS'), MST.REGST_ID, TO_CHAR(MST.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS'), MST.RVISN_ID, TO_CHAR(MST.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS'),MST.CSTMR_ADDR
+            ORDER BY MST.LC_SEQ DESC
+    </select>
+
+    <select id="getCourtLcMgmtDtlList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* courtLcMgmtMapper.getCourtLcMgmtDtlList */
+        <include refid="com.ktis.msp.cmn.include.paging-start" />
+        SELECT  LC_DTL_SEQ,
+                SUBSTR(MOBILE_NO, 1, 3) || '-' || SUBSTR(MOBILE_NO, 4, 4) || '-' || SUBSTR(MOBILE_NO, 8, 4) AS MOBILE_NO,
+                TO_CHAR(TO_DATE(OPEN_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS OPEN_DT,
+                UNPD_PRC,
+                INST_PRC,
+                SUM_PRC,
+                (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = DTL.REGST_ID) AS REGST_ID,
+                TO_CHAR(REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,
+                (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = DTL.RVISN_ID) AS RVISN_ID,
+                TO_CHAR(RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM,
+                TO_CHAR(TO_DATE(OPEN_DT, 'YYYYMMDD'), 'YYYYMMDD') AS OPEN_DATE
+        FROM    MSP_LC_DTL DTL
+        WHERE   LC_SEQ = #{lcMstSeq}
+        ORDER BY LC_DTL_SEQ
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+    
+    <select id="checkLcMst" parameterType="com.ktis.msp.rcp.courtMgmt.vo.CourtLcMgmtVO" resultType="_int">
+        /* courtLcMgmtMapper.checkLcMst */
+		SELECT	COUNT(*)
+	    FROM	MSP_LC_MST
+		WHERE	CSTMR_RRN = #{cstmrRrn}
+		AND		LC_STAT_CD IN ('1', '2')
+ 	</select>
+ 	
+ 	<select id="checkLcSeq" parameterType="com.ktis.msp.rcp.courtMgmt.vo.CourtLcMgmtVO" resultType="_int">
+        /* courtLcMgmtMapper.checkLcSeq */
+		SELECT	COUNT(*)
+	    FROM	MSP_LC_MST
+		WHERE	LC_SEQ = #{lcMstSeq}
+ 	</select>
+    
+    <select id="getLcMstSeqNvl" resultType="String">
+    	/* CourtLcMgmtMapper.getLcMstSeqNvl */
+        SELECT SEQ_LC_MST.NEXTVAL
+        FROM   DUAL
+    </select>
+
+    <insert id="insertLcMst" parameterType="com.ktis.msp.rcp.courtMgmt.vo.CourtLcMgmtVO">
+        /* CourtLcMgmtMapper.insertLcMst */
+        INSERT INTO MSP_LC_MST
+        (
+            LC_SEQ
+            , LC_STAT_CD
+            , CSTMR_NAME
+            , CSTMR_RRN
+            , CSTMR_ADDR
+            , REGST_ID
+            , REGST_DTTM
+            , RVISN_ID
+            , RVISN_DTTM
+        )
+        VALUES
+        (
+            #{lcMstSeq}
+            , '1'
+            , #{cstmrName}
+            , #{cstmrRrn}
+            , #{cstmrAddr}
+            , #{sessionUserId}
+            , SYSDATE
+            , #{sessionUserId}
+            , SYSDATE
+        )
+    </insert>
+	
+    <insert id="insertLcDtl" parameterType="com.ktis.msp.rcp.courtMgmt.vo.CourtLcMgmtVO">
+        /* CourtLcMgmtMapper.insertLcDtl */
+        INSERT INTO MSP_LC_DTL
+        (
+            LC_DTL_SEQ
+            , LC_SEQ
+            , MOBILE_NO
+            , OPEN_DT
+            , UNPD_PRC
+            , INST_PRC
+            , SUM_PRC
+            , REGST_ID
+            , REGST_DTTM
+            , RVISN_ID
+            , RVISN_DTTM
+        )
+        VALUES
+        (
+            SEQ_LC_DTL.NEXTVAL
+            , #{lcMstSeq}
+            , #{contactNum}
+            , #{openDt}
+            , #{unpdPrc}
+            , #{instPrc}
+            , #{totalPrc}
+            , #{sessionUserId}
+            , SYSDATE
+            , #{sessionUserId}
+            , SYSDATE
+        )
+    </insert>
+
+    <update id="updateLcDtl" parameterType="com.ktis.msp.rcp.courtMgmt.vo.CourtLcMgmtVO">
+        /* CourtLcMgmtMapper.updateLcDtl */
+        UPDATE  MSP_LC_DTL
+        SET     MOBILE_NO = #{contactNum},
+                OPEN_DT = #{openDt},
+                UNPD_PRC = #{unpdPrc},
+                INST_PRC = #{instPrc},
+                SUM_PRC = #{totalPrc},
+                RVISN_ID = #{sessionUserId},
+                RVISN_DTTM = SYSDATE
+        WHERE   LC_DTL_SEQ = #{lcDtlSeq}
+    </update>
+
+    <delete id="deleteLcDtl" parameterType="com.ktis.msp.rcp.courtMgmt.vo.CourtLcMgmtVO">
+        /* CourtLcMgmtMapper.deleteLcDtl */
+        DELETE FROM MSP_LC_DTL
+        WHERE LC_DTL_SEQ = #{lcDtlSeq}
+    </delete>
+    
+    <select id="cntLcYear" resultType="_int">
+    	/* CourtLcMgmtMapper.chkNewYear */
+        SELECT  COUNT(ISSUE_DTTM) AS CHK_NEW_YEAR
+		FROM    MSP_LC_MST
+		WHERE   TO_CHAR(SYSDATE, 'YYYY') = TO_CHAR(ISSUE_DTTM, 'YYYY')
+    </select>
+
+    <update id="issueLcMst" parameterType="com.ktis.msp.rcp.courtMgmt.vo.CourtLcMgmtVO">
+        /* CourtLcMgmtMapper.issueLcMst */
+        UPDATE   MSP_LC_MST
+        SET      LC_NUM = '부채-' || TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(#{maxLcNumNvl}, '0000'))
+   			   , LC_STAT_CD = '2'
+               , ISSUE_ID = #{sessionUserId}
+               , ISSUE_DTTM = SYSDATE
+               , RVISN_ID = #{sessionUserId}
+               , RVISN_DTTM = SYSDATE
+        WHERE    LC_SEQ = #{lcMstSeq}
+    </update>
+    
+    <update id="discardLcMst" parameterType="com.ktis.msp.rcp.courtMgmt.vo.CourtLcMgmtVO">
+        /* CourtLcMgmtMapper.discardLcMst */
+        UPDATE	 MSP_LC_MST
+        SET		 LC_STAT_CD = '3'
+        		,RVISN_ID = #{sessionUserId}
+        		,RVISN_DTTM = SYSDATE
+        WHERE	 LC_SEQ = #{lcMstSeq}
+    </update>
+
+</mapper>

@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.RcpSimpMgmtMapper">
+	
+	<!-- 부가서비스 신청가능 목록 -->
+	<select id="getRcpSimpRateList" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpRateVO" resultType="com.ktis.msp.rcp.rcpMgmt.vo.RcpRateVO">
+		/* RcpSimpMgmtMapper.getRcpSimpRateList */
+		SELECT  A.ADDITION_KEY          AS additionKey
+		        , A.ADDITION_NAME       AS additionName
+		        , A.ADDITION_CHECKED    AS additionChecked
+		        , A.RANTAL              AS rantal
+		        , A.GRP_NM              AS grpNm
+		FROM    (
+		    SELECT  '1' AS SORT_ORD
+		            , A.ADDITION_KEY
+		            , B.ADDITION_NAME
+		            , '1' AS ADDITION_CHECKED
+		            , NVL(B.RANTAL, 0) AS RANTAL
+		            , B.CHARGE_FLAG
+		            , '프로모션할인' AS GRP_NM
+		    FROM    VW_CHRG_PRMT_DTL A
+		            , MCP_ADDITION@DL_MCP B
+		    WHERE   A.ADDITION_KEY = B.ADDITION_KEY
+		    AND     A.USG_YN = 'Y'
+		    AND     NVL(REPLACE(#{reqInDay}, '-', ''), TO_CHAR(SYSDATE, 'YYYYMMDD')) BETWEEN A.STRT_DT AND A.END_DT
+		    AND     A.ORGN_ID = #{cntpntShopId}
+		    AND     A.REQ_BUY_TYPE = #{reqBuyType}
+		    AND     A.RATE_CD = #{rateCd}
+		    AND     (CASE WHEN #{operType} = 'NAC3' THEN A.NAC_YN
+		                  WHEN #{operType} = 'MNP3' THEN A.MNP_YN
+		                  ELSE 'N'
+		            END) = 'Y'
+		    AND     (CASE WHEN #{agrmTrm} = '0' THEN A.ENGG_CNT_0
+		                  WHEN #{agrmTrm} = '12' THEN A.ENGG_CNT_12
+		                  WHEN #{agrmTrm} = '18' THEN A.ENGG_CNT_18
+		                  WHEN #{agrmTrm} = '24' THEN A.ENGG_CNT_24
+		                  WHEN #{agrmTrm} = '30' THEN A.ENGG_CNT_30
+		                  WHEN #{agrmTrm} = '36' THEN A.ENGG_CNT_36
+		                  ELSE 'N'
+		            END) = 'Y'
+		    <if test="onOffType != null and onOffType != ''">
+		    AND     A.ON_OFF_TYPE = #{onOffType}
+		    </if>
+		    UNION ALL
+		    SELECT  '2' AS SORT_ORD
+		            , A.ADDITION_KEY
+		            , A.ADDITION_NAME
+		            , '1' AS ADDITION_CHECKED
+		            , NVL(A.RANTAL, 0) AS RANTAL
+		            , A.CHARGE_FLAG
+		            , B.CD_DSC AS GRP_NM
+		    FROM    MCP_ADDITION@DL_MCP A
+		            , CMN_GRP_CD_MST B
+		    WHERE   A.CHARGE_FLAG = B.CD_VAL
+		    AND     B.GRP_ID = 'RCP9008'
+		    AND     A.ACT_FLAG = 'Y'
+		    AND     A.CHARGE_FLAG = 'F'
+		    UNION ALL
+		    SELECT  '3' AS SORT_ORD
+		            , A.ADDITION_KEY
+		            , A.ADDITION_NAME
+		            , DECODE(C.ADDITION_KEY, NULL, '0', '1') AS ADDITION_CHECKED
+		            , NVL(A.RANTAL, 0) AS RANTAL
+		            , A.CHARGE_FLAG
+		            , D.CD_DSC AS GRP_NM
+		    FROM    MCP_ADDITION@DL_MCP A
+		            , MSP_RATE_MST B
+		            , MCP_REQUEST_ADDITION@DL_MCP C
+		            , CMN_GRP_CD_MST D
+		    WHERE   A.SOC = B.RATE_CD
+		    AND     A.CHARGE_FLAG = D.CD_VAL
+		    AND     D.GRP_ID = 'RCP9008'
+		    AND     A.ACT_FLAG = 'Y'
+		    AND     A.OSST_YN = 'Y'
+		    AND     A.CHARGE_FLAG <![CDATA[ <> ]]> 'R'
+		    AND     A.ADDITION_KEY = C.ADDITION_KEY(+)
+		    AND     C.REQUEST_KEY(+) = #{requestKey}
+		) A
+		ORDER BY A.SORT_ORD, A.CHARGE_FLAG, A.RANTAL, A.ADDITION_NAME
+	</select>
+	
+	<!-- 부가서비스배타관계 -->
+	<select id="getExclusiveRateList" resultType="com.ktis.msp.rcp.rcpMgmt.vo.RcpRateVO">
+		/* RcpSimpMgmtMapper.getExclusiveRateList */
+		SELECT  '1'                     AS additionChecked
+		        , A.EXPNSN_STR_VAL1     AS additionKey
+		        , A.EXPNSN_STR_VAL2     AS exclusiveKey
+		        , A.EXPNSN_STR_VAL3     AS msg
+		FROM    NMCP_CD_DTL@DL_MCP A
+		WHERE   A.CD_GROUP_ID = 'additionbeta'
+	</select>
+	
+	<select id="getRcpSimpRsvTlphNoByInfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpTlphNoVO" resultType="com.ktis.msp.rcp.rcpMgmt.vo.RcpTlphNoVO">
+		/* RcpSimpMgmtMapper.getRcpSimpRsvTlphNoByInfo */
+		SELECT 
+			A.TLPH_NO_STAT_CD			AS tlphNoStatCd
+			, A.ASGN_AGNC_ID			AS asgnAgncId
+			, A.TLPH_NO_OWN_CMPN_CD		AS tlphNoOwnCmpnCd
+			, A.OPEN_SVC_IND_CD			AS openSvcIndCd
+			, A.ENCD_TLPH_NO			AS encdTlphNo
+			, A.TLPH_NO					AS tlphNo
+		FROM   MCP_REQUEST_OSST@DL_MCP A
+		WHERE  MVNO_ORD_NO = LPAD(#{resNo}, 14, '0')
+		AND    SEQ = (SELECT MAX(SEQ)
+				FROM   MCP_REQUEST_OSST@DL_MCP
+				WHERE  MVNO_ORD_NO = A.MVNO_ORD_NO
+				AND    PRGR_STAT_CD = 'NU2'
+				AND    RSLT_CD = '0000'
+				AND    IF_TYPE = 'RSV')
+		AND    NOT EXISTS (SELECT 1
+				FROM   MCP_REQUEST_OSST@DL_MCP
+				WHERE  MVNO_ORD_NO = A.MVNO_ORD_NO
+				AND    PRGR_STAT_CD = 'NU2'
+				AND    SEQ > A.SEQ
+				AND    IF_TYPE = 'RRS')
+	</select>
+	
+	<!-- 납부주장 등록 -->
+	<update id="updMcpMovePayClaByInfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSimpVO">
+		/* RcpSimpMgmtMapper.updMcpMovePayClaByInfo */
+		UPDATE MCP_REQUEST_MOVE@DL_MCP
+		SET
+			OSST_PAY_DAY		= #{osstPayDay}
+			, OSST_PAY_TYPE		= #{osstPayType}
+ 			, RVISN_ID 			= #{sessionUserId}
+			, RVISN_DTTM 		= SYSDATE
+		WHERE REQUEST_KEY = #{requestKey}
+	</update>
+	
+	<!-- 연동결과메시지 -->
+	<select id="getOsstRsltMsg" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OsstReqVO" resultType="com.ktis.msp.rcp.rcpMgmt.vo.OsstResVO">
+		/* osstCallMapper.getOsstRsltMsg */
+		<![CDATA[
+		SELECT  LISTAGG('[' || 
+		            (CASE WHEN A.PRGR_STAT_CD = 'NU2' THEN DECODE(A.IF_TYPE, 'RSV', '예약요청', 'RRS', '예약취소', '예약결과')
+		                  ELSE FN_GET_CODENM('RCP2040', A.PRGR_STAT_CD)
+		             END) || '] ' || NVL(RSLT_MSG, '정상처리'), chr(13) || chr(10)) WITHIN GROUP(ORDER BY A.SEQ DESC) AS rsltMsg
+		FROM    MCP_REQUEST_OSST@DL_MCP A
+		WHERE   A.MVNO_ORD_NO = LPAD(#{resNo}, 14, 0)
+		GROUP BY A.MVNO_ORD_NO
+		]]>
+	</select>
+	
+	<select id="getRcpSmsTemplateList" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RcpSimpMgmtMapper.getRcpSmsTemplateList */
+		SELECT  A.TEMPLATE_ID
+		        , A.TEMPLATE_NM
+		        , A.CALLBACK
+		        , A.SUBJECT
+		        , A.TEXT
+		        , A.MSG_TYPE
+		        , A.EXPIRE_HOUR * 60 * 60 AS EXPIRE_TIME
+		FROM    MSP_SMS_TEMPLATE_MST A
+		        , CMN_GRP_CD_MST B
+		WHERE   A.TEMPLATE_ID = B.CD_VAL
+		AND     B.GRP_ID = 'RCP2043'
+		AND     B.USG_YN = 'Y'
+		<if test="operType != null and operType != ''">
+			AND INSTR(B.ETC1, #{operType}) > 0
+		</if>
+		ORDER BY A.TEMPLATE_ID
+	</select>
+	
+	<select id="getRcpSmsSendList" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSimpVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RcpSimpMgmtMapper.getRcpSmsSendList */
+		SELECT  NVL(B.CD_DSC, '일반발송') AS TEMPLATE_NM
+		        , A.DSTADDR
+		        , A.CALLBACK
+		        , TO_CHAR(A.REQUEST_TIME, 'YYYYMMDDHH24MISS') AS REQUEST_TIME
+		        , TO_CHAR(A.SEND_TIME, 'YYYYMMDDHH24MISS') AS SEND_TIME
+		        , A.TEXT
+		        , A.SUBJECT
+		        , A.EXPIRETIME AS EXPIRE_TIME
+		        , A.MSG_TYPE
+		        , A.OPT_ID AS TEMPLATE_ID
+		        , A.EXT_COL0 AS RES_NO
+		        , C.CD_DSC AS RESULT_NM
+		FROM    MSG_RESULT A
+		        , CMN_GRP_CD_MST B
+		        , CMN_GRP_CD_MST C
+		WHERE   A.OPT_ID = B.CD_VAL(+)
+		AND     B.GRP_ID(+) = 'RCP2043'
+		AND     TRIM(A.RESULT) = C.CD_VAL
+		AND     C.GRP_ID = 'CMN0068'
+		AND     TRUNC(A.REQUEST_TIME) BETWEEN TRUNC(TO_DATE(#{searchStartDt}, 'YYYYMMDD')) AND TRUNC(TO_DATE(#{searchEndDt}, 'YYYYMMDD'))
+		<choose>
+			<when test='searchGb == "dstaddr"'><!-- 수신번호 조회 -->
+			AND     A.DSTADDR = #{searchVal}
+			</when>
+			<when test='searchGb == "resno"'><!-- 예약번호 조회 -->
+			AND     A.EXT_COL0 = #{searchVal}
+			</when>
+		</choose>
+		ORDER BY A.REQUEST_TIME DESC
+	</select>
+
+	<select id="getRcpSmsSendListOld" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSimpVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RcpSimpMgmtMapper.getRcpSmsSendListOld */
+		SELECT  NVL(B.CD_DSC, '일반발송') AS TEMPLATE_NM
+		        , A.DSTADDR
+		        , A.CALLBACK
+		        , TO_CHAR(A.REQUEST_TIME, 'YYYYMMDDHH24MISS') AS REQUEST_TIME
+		        , TO_CHAR(A.SEND_TIME, 'YYYYMMDDHH24MISS') AS SEND_TIME
+		        , A.TEXT
+		        , A.SUBJECT
+		        , A.EXPIRETIME AS EXPIRE_TIME
+		        , A.MSG_TYPE
+		        , A.OPT_ID AS TEMPLATE_ID
+		        , A.EXT_COL0 AS RES_NO
+		        , C.CD_DSC AS RESULT_NM
+		FROM    MSG_RESULT_20190521 A
+		        , CMN_GRP_CD_MST B
+		        , CMN_GRP_CD_MST C
+		WHERE   A.OPT_ID = B.CD_VAL(+)
+		AND     B.GRP_ID(+) = 'RCP2043'
+		AND     TRIM(A.RESULT) = C.CD_VAL
+		AND     C.GRP_ID = 'CMN0068'
+		AND     TRUNC(A.REQUEST_TIME) BETWEEN TRUNC(TO_DATE(#{searchStartDt}, 'YYYYMMDD')) AND TRUNC(TO_DATE(#{searchEndDt}, 'YYYYMMDD'))
+		<choose>
+			<when test='searchGb == "dstaddr"'><!-- 수신번호 조회 -->
+			AND     A.DSTADDR = #{searchVal}
+			</when>
+			<when test='searchGb == "resno"'><!-- 예약번호 조회 -->
+			AND     A.EXT_COL0 = #{searchVal}
+			</when>
+		</choose>
+		ORDER BY A.REQUEST_TIME DESC
+	</select>
+		
+</mapper>

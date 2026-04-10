@@ -1,0 +1,1506 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.authmgmt.mapper.AuthMgmtMapper">
+    <resultMap id="FormInfoResultMap"  type="java.util.HashMap" >
+        <result property="xml" column="xml"  jdbcType="CLOB" javaType="java.lang.String" />
+    </resultMap>
+    
+	<select id="prgmList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.prgmList =========*/
+			SELECT 
+			        a.PRGM_ID
+			      , a.MENU_ID
+			      , a.PRGM_NM
+			      , a.PRGM_DESC
+			      , a.PRGM_URL
+			      , a.USG_YN
+			      , a.REGST_ID
+			      , TO_CHAR(a.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+			      , a.RVISN_ID
+			      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+			      , a.PRGM_TYPE
+			      , DECODE(a.PRGM_TYPE, 'MAIN','메인', 'SRCH','검색','CREAT','등록','RVISN','변경','DEL','삭제','EXEL','엑셀','PRNT','출력','ETC','기타') PRGM_TYPE_STRING
+			      , a.UPPR_PRGM_ID
+              	, B.MENU_NM_HGHR
+			FROM CMN_PRGM_MST a,
+	            (
+	                 SELECT         
+	                        ROWNUM ROW_INDEX
+	                      , a.MENU_ID
+	                      , replace(RPAD(' ', 4*(LEVEL - 1)),' ','.') || MENU_NM MENU_NM_HGHR
+	                FROM CMN_MENU_MST a
+	                START WITH  '0' =  a.MENU_LVL
+	                CONNECT BY a.HGHR_MENU_ID = PRIOR a.MENU_ID
+	                ORDER SIBLINGS BY   1 + ALGN_SEQ   
+	            ) b    
+			WHERE 1 = 1
+				AND A.MENU_ID = B.MENU_ID(+)
+			<if test="MENU_ID != null and MENU_ID != '' and MENU_ID != 'MSP0000000' ">
+	            AND a.MENU_ID =  #{MENU_ID} 
+	        </if>
+	        ORDER BY B.ROW_INDEX
+        
+	</select>
+	
+	<select id="prgmList2" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* ====== cmn.authmgmt.prgmList2 =========*/
+		SELECT PRGM_ID
+		      ,MENU_ID
+		      ,PRGM_NM
+		      ,PRGM_DESC
+		      ,PRGM_URL
+		      ,USG_YN
+		      ,REGST_ID
+		      ,REGST_DTTM
+		      ,RVISN_ID
+		      ,RVISN_DTTM
+		      ,PRGM_TYPE
+		      ,UPPR_PRGM_ID
+		      , DECODE(PRGM_TYPE, 'MAIN','메인', 'SRCH','검색','CREAT','등록','RVISN','변경','DEL','삭제','EXEL','엑셀','PRNT','출력','ETC','기타') PRGM_TYPE_STRING
+		FROM CMN_PRGM_MST
+		WHERE 1=1
+		<if test="PRGM_ID != null and PRGM_ID != '' ">
+		  AND UPPER(PRGM_ID) LIKE '%' || UPPER(#{PRGM_ID}) || '%'
+		</if>
+		<if test="PRGM_NM != null and PRGM_NM != '' ">
+		  AND UPPER(PRGM_NM) LIKE '%' || UPPER(#{PRGM_NM}) || '%'
+		</if>
+		<if test="PRGM_TYPE != null and PRGM_TYPE != '' ">
+		  AND PRGM_TYPE = #{PRGM_TYPE}
+		</if>
+		<if test="USG_YN != null and USG_YN != '' ">
+		  AND USG_YN = #{USG_YN}
+		</if>
+		ORDER BY MENU_ID ASC, PRGM_NM ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="prgmDetail" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.prgmDetail =========*/
+	    SELECT 
+		        a.PRGM_ID
+		      , a.MENU_ID
+		      , a.PRGM_NM
+		      , a.PRGM_DESC
+		      , a.PRGM_URL
+		      , a.USG_YN
+		      , a.REGST_ID
+		      , TO_CHAR(a.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+		      , a.RVISN_ID
+		      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+		      , a.PRGM_TYPE
+		      , a.UPPR_PRGM_ID
+		FROM CMN_PRGM_MST a
+		WHERE a.PRGM_ID =   #{PRGM_ID} 
+
+	</select>
+
+	<select id="prgmInsertDupMainCheck" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.prgmInsertDupMainCheck =========*/
+	    	    
+		SELECT 
+		        a.PRGM_ID
+		      , a.MENU_ID
+		      , a.PRGM_NM
+		      , a.PRGM_DESC
+		      , a.PRGM_URL
+		      , a.USG_YN
+		      , a.REGST_ID
+		      , TO_CHAR(a.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+		      , a.RVISN_ID
+		      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+		      , a.PRGM_TYPE
+		      , a.UPPR_PRGM_ID
+		FROM CMN_PRGM_MST a
+		WHERE a.MENU_ID =   #{MENU_ID} 
+		  AND A.PRGM_TYPE = 'MAIN'
+		  AND #{PRGM_TYPE} = 'MAIN' 
+	</select>
+
+	
+	<select id="prgmUpdateDupMainCheck" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.prgmUpdateDupMainCheck =========*/
+	    	    
+		SELECT 
+		        a.PRGM_ID
+		      , a.MENU_ID
+		      , a.PRGM_NM
+		      , a.PRGM_DESC
+		      , a.PRGM_URL
+		      , a.USG_YN
+		      , a.REGST_ID
+		      , TO_CHAR(a.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+		      , a.RVISN_ID
+		      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+		      , a.PRGM_TYPE
+		      , a.UPPR_PRGM_ID
+		FROM CMN_PRGM_MST a
+		WHERE a.MENU_ID =   #{MENU_ID} 
+		  AND A.PRGM_TYPE = 'MAIN'
+		  AND A.PRGM_ID != #{PRGM_ID} 
+		  AND #{PRGM_TYPE} = 'MAIN' 
+	</select>
+		
+	
+	<insert  id="prgmInsert"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.prgmInsert =========*/
+	    	    
+		INSERT INTO CMN_PRGM_MST
+		(
+		    PRGM_ID
+	      , MENU_ID           
+	      , PRGM_NM           
+	      , PRGM_DESC         
+	      , PRGM_URL          
+	      , USG_YN            
+	      , REGST_ID          
+	      , REGST_DTTM        
+	      , RVISN_ID          
+	      , RVISN_DTTM      
+	      , PRGM_TYPE   
+		  , UPPR_PRGM_ID      
+		)
+		VALUES
+		( 
+	        #{PRGM_ID         }
+	      , #{MENU_ID         }
+	      , #{PRGM_NM         }
+	      , #{PRGM_DESC       }
+	      , #{PRGM_URL        }
+	      , NVL(#{USG_YN      },'N')
+	      , #{SESSION_USER_ID }
+	      , SYSDATE
+	      , #{SESSION_USER_ID }
+	      , SYSDATE
+	      , #{PRGM_TYPE       }
+	      , #{UPPR_PRGM_ID       }
+		)
+
+	</insert>
+	
+	
+	<insert  id="prgmInsert2"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.prgmInsert =========*/
+	    	    
+		INSERT INTO CMN_PRGM_MST
+		(
+		    PRGM_ID
+	      , MENU_ID           
+	      , PRGM_NM           
+	      , PRGM_DESC         
+	      , PRGM_URL          
+	      , USG_YN            
+	      , REGST_ID          
+	      , REGST_DTTM        
+	      , RVISN_ID          
+	      , RVISN_DTTM      
+	      , PRGM_TYPE   
+		  , UPPR_PRGM_ID      
+		)
+		VALUES
+		( 
+	        #{PRGM_ID         }
+	      , 'REG'
+	      , #{PRGM_NM         }
+	      , #{PRGM_DESC       }
+	      , #{PRGM_URL        }
+	      , NVL(#{USG_YN      },'N')
+	      , #{SESSION_USER_ID }
+	      , SYSDATE
+	      , #{SESSION_USER_ID }
+	      , SYSDATE
+	      , #{PRGM_TYPE       }
+	      , #{UPPR_PRGM_ID       }
+		)
+
+	</insert>
+	
+	
+	
+	
+	<update id="prgmUpdate"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.prgmUpdate =========*/
+	    	    
+		UPDATE CMN_PRGM_MST
+		SET 
+		        MENU_ID           =    #{MENU_ID         }
+		      , PRGM_NM           =    #{PRGM_NM         }
+		      , PRGM_DESC         =    #{PRGM_DESC       }
+		      , PRGM_URL          =    #{PRGM_URL        }
+		      , USG_YN            =    NVL(#{USG_YN      },'N')
+		      , RVISN_ID          =    #{SESSION_USER_ID }
+		      , RVISN_DTTM        =    SYSDATE
+		      , PRGM_TYPE         =    #{PRGM_TYPE       }
+		      , UPPR_PRGM_ID      =    #{UPPR_PRGM_ID       }
+		WHERE  PRGM_ID = #{PRGM_ID}
+	</update>
+	
+		
+	<delete id="prgmDelete"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.prgmDelete =========*/
+	    	    
+		DELETE CMN_PRGM_MST
+		WHERE  PRGM_ID = #{PRGM_ID}
+
+	</delete>
+	
+			
+	
+	
+	<select id="menuList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.menuList =========*/
+	    	    
+
+		SELECT 
+		        a.MENU_ID
+		      , a.MENU_LVL
+		      , a.MENU_NM
+		      , a.MENU_DSC
+		      , a.HGHR_MENU_ID
+		      , a.ALGN_SEQ
+		      , a.USG_YN
+		      , a.LMT_ORGN_LVL_CD
+		      , a.REGST_ID
+		      , TO_CHAR(a.REG_DTTM, 'YYYY-MM-DD HH24:MI:SS') REG_DTTM
+		      , a.RVISN_ID
+		      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+		      , a.DUTY_NM
+		      , a.DEL_YN
+		      , a.PRGM_ID
+		      , a.DUTY_ID
+		FROM CMN_MENU_MST a
+		WHERE 1 = 1
+		<if test="searchMenuNm != null and searchMenuNm != ''">
+            AND a.MENU_NM like '%' ||  #{searchMenuNm} || '%'
+        </if>
+
+		<if test="searchMenuLvl != null and searchMenuLvl != ''">
+            AND a.MENU_LVL =  #{searchMenuLvl} '
+        </if>
+        
+	</select>
+		
+	<select id="menuHghrList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.menuHghrList =========*/
+	    	    
+		SELECT a.* 
+		FROM
+		    (
+			 SELECT 		ROWNUM ROW_INDEX
+                          , a.MENU_ID
+			              , a.MENU_LVL
+			              , a.MENU_NM
+			              , replace(RPAD(' ', 4*(LEVEL - 1)),' ','.') || MENU_NM MENU_NM_HGHR
+			              , a.MENU_DSC
+			              , a.HGHR_MENU_ID
+			              , a.ALGN_SEQ
+			              , a.USG_YN
+			              , a.LMT_ORGN_LVL_CD
+			              , a.REGST_ID
+			              , TO_CHAR(a.REG_DTTM, 'YYYY-MM-DD HH24:MI:SS') REG_DTTM
+			              , a.RVISN_ID
+			              , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+			              , a.DUTY_NM
+			              , a.DEL_YN
+			              , a.PRGM_ID
+			              , a.DUTY_ID
+			        FROM CMN_MENU_MST a
+			        START WITH  '0' =  a.MENU_LVL
+			        CONNECT BY a.HGHR_MENU_ID = PRIOR a.MENU_ID
+			        ORDER SIBLINGS BY   1 + ALGN_SEQ   
+		    ) a
+		WHERE 1 = 1
+		<if test="searchMenuNm != null and searchMenuNm != ''">
+            AND a.MENU_NM like '%' ||  #{searchMenuNm} || '%'
+        </if>
+
+		<if test="searchMenuLvl != null and searchMenuLvl != ''">
+             AND a.MENU_LVL =  #{searchMenuLvl} 
+        </if>		    
+ 
+		ORDER BY ROW_INDEX
+		        
+	</select>
+	
+	<select id="menuHghrListXml" parameterType="java.util.HashMap" resultMap="FormInfoResultMap" >
+	/* ====== cmn.authmgmt.menuHghrListXml =========*/
+
+		select DBMS_XMLGEN.getXML(DBMS_XMLGEN.newcontextfromhierarchy( #{querySql} )) xml
+		 from dual 	    
+
+
+	</select>	
+		
+	<select id="menuDetail" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.menuDetail =========*/
+	    	    
+
+		SELECT 
+		        a.MENU_ID
+		      , a.MENU_LVL
+		      , a.MENU_NM
+		      , a.MENU_DSC
+		      , a.HGHR_MENU_ID
+		      , a.ALGN_SEQ
+		      , a.USG_YN
+		      , a.LMT_ORGN_LVL_CD
+		      , a.REGST_ID
+		      , TO_CHAR(a.REG_DTTM, 'YYYY-MM-DD HH24:MI:SS') REG_DTTM
+		      , a.RVISN_ID
+		      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+		      , a.DUTY_NM
+		      , a.DEL_YN
+		      , a.PRGM_ID
+		      , a.DUTY_ID
+		FROM CMN_MENU_MST a
+		WHERE a.MENU_ID =   #{MENU_ID} 			
+	</select>
+
+
+
+	<insert  id="menuInsert"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.menuInsert =========*/
+	    	    
+		
+		INSERT INTO CMN_MENU_MST
+		(
+            MENU_ID
+		      , MENU_LVL
+		      , MENU_NM
+		      , MENU_DSC
+		      , HGHR_MENU_ID
+		      , ALGN_SEQ
+		      , USG_YN
+		      , LMT_ORGN_LVL_CD
+		      , REGST_ID
+		      , REG_DTTM
+		      , RVISN_ID
+		      , RVISN_DTTM
+		      , DUTY_NM
+		      , DEL_YN
+		      , PRGM_ID
+		      , DUTY_ID
+		      , IBSHEET_YN
+		)
+		VALUES
+		( 
+            	#{menuId                } 
+		      , #{menuLvl               }
+		      , #{menuNm                }
+		      , #{menuDsc               }
+		      , #{hghrMenuId           }
+		      , #{algnSeq               }
+		      , NVL(#{usgYn             },'N')
+		      , #{LMT_ORGN_LVL_CD        }
+		      , #{SESSION_USER_ID        }
+		      , SYSDATE                
+		      , #{SESSION_USER_ID        }
+		      , SYSDATE     
+		      , #{DUTY_NM                }
+		      , #{DEL_YN                 }
+		      , 'SYSTEM'
+		      , 'SYSTEM'
+		      , NVL(#{ibsheetYn}, 'N')
+		)
+
+	</insert>
+	
+	
+	
+	<update id="menuUpdate"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.menuUpdate =========*/
+	    	    
+		UPDATE CMN_MENU_MST
+		SET 
+            	MENU_ID              =   #{menuId                }
+		      , MENU_LVL             =   #{menuLvl               }
+		      , MENU_NM              =   #{menuNm                }
+		      , MENU_DSC             =   #{menuDsc               }
+		      , HGHR_MENU_ID         =   #{hghrMenuId           }
+		      , ALGN_SEQ             =   #{algnSeq               }
+		      , USG_YN               =   NVL(#{usgYn             },'N')
+		      , LMT_ORGN_LVL_CD      =   #{LMT_ORGN_LVL_CD        }
+		      , RVISN_ID             =   #{SESSION_USER_ID        }
+		      , RVISN_DTTM           =   SYSDATE                   
+		      , DUTY_NM              =   #{DUTY_NM                }
+		      , DEL_YN               =   #{DEL_YN                 }
+		      , IBSHEET_YN           =   NVL(#{ibsheetYn}, 'N')
+		WHERE  MENU_ID = #{menuId}
+	</update>
+	
+		
+	<delete id="menuDelete"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.menuDelete =========*/
+	    	    
+		DELETE CMN_MENU_MST
+		WHERE  MENU_ID = #{MENU_ID}
+
+	</delete>	
+	
+	<select id="authList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.authList =========*/
+	    	    
+		SELECT 
+		        a.AUTH_ID
+		      , a.ORGN_ID
+		      , a.AUTH_NM
+		      , a.AUTH_DSC
+		      , a.USG_YN
+		      , a.LMT_ORGN_LVL_CD
+		      , a.REGST_ID
+		      , TO_CHAR(a.REG_DTTM, 'YYYY-MM-DD HH24:MI:SS') REG_DTTM
+		      , a.RVISN_ID
+		      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+		FROM CMN_AUTH_MST a
+		WHERE 1 = 1 
+		<if test="searchAuthNm != null and searchAuthNm != ''">
+            AND a.AUTH_NM like '%' ||   #{searchAuthNm} || '%' 
+        </if>
+
+		<if test="searchUsgYn != null and searchUsgYn != ''">
+            AND (a.USG_YN IS NULL OR a.USG_YN =  #{searchUsgYn} )  
+        </if>	
+        ORDER BY a.AUTH_ID
+	</select>
+	
+	<select id="authListPaging" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* ====== cmn.authmgmt.authList =========*/
+		    	    
+			SELECT 
+			        a.AUTH_ID
+			      , a.ORGN_ID
+			      , a.AUTH_NM
+			      , a.AUTH_DSC
+			      , a.USG_YN
+			      , a.LMT_ORGN_LVL_CD
+			      , a.REGST_ID
+			      , TO_CHAR(a.REG_DTTM, 'YYYY-MM-DD HH24:MI:SS') REG_DTTM
+			      , a.RVISN_ID
+			      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+			FROM CMN_AUTH_MST a
+			WHERE 1 = 1 
+			<if test="searchAuthNm != null and searchAuthNm != ''">
+	            AND a.AUTH_NM like '%' ||   #{searchAuthNm} || '%' 
+	        </if>
+	
+			<if test="searchUsgYn != null and searchUsgYn != ''">
+	            AND (a.USG_YN IS NULL OR a.USG_YN =  #{searchUsgYn} )  
+	        </if>	
+	        ORDER BY a.AUTH_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+
+	<select id="authDetail" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.authDetail =========*/
+	    	    
+		SELECT 
+		        a.AUTH_ID
+		      , a.ORGN_ID
+		      , a.AUTH_NM
+		      , a.AUTH_DSC
+		      , a.USG_YN
+		      , a.LMT_ORGN_LVL_CD
+		      , a.REGST_ID
+		      , TO_CHAR(a.REG_DTTM, 'YYYY-MM-DD HH24:MI:SS') REG_DTTM
+		      , a.RVISN_ID
+		      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+		FROM CMN_AUTH_MST a
+		WHERE a.AUTH_ID =   #{AUTH_ID} 					
+	</select>	
+
+
+
+	<insert  id="authInsert"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.authInsert =========*/
+	    	    
+		
+		INSERT INTO CMN_AUTH_MST
+		(
+	        AUTH_ID
+	      , ORGN_ID
+	      , AUTH_NM
+	      , AUTH_DSC
+	      , USG_YN
+	      , LMT_ORGN_LVL_CD
+	      , REGST_ID
+	      , REG_DTTM
+	      , RVISN_ID
+	      , RVISN_DTTM
+		)
+		VALUES
+		( 
+	        #{AUTH_ID              }
+	      , #{ORGN_ID              }
+	      , #{AUTH_NM              }
+	      , #{AUTH_DSC             }
+	      , NVL(#{USG_YN           },'N')
+	      , #{LMT_ORGN_LVL_CD      }
+	      , #{SESSION_USER_ID      }
+	      , SYSDATE  
+	      , #{SESSION_USER_ID     }
+	      , SYSDATE  
+		)		 
+
+	</insert>
+	
+	
+	
+	<update id="authUpdate"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.authUpdate =========*/
+	    	    
+		UPDATE CMN_AUTH_MST
+		SET 
+           	ORGN_ID            =   #{ORGN_ID              } 
+	      , AUTH_NM            =   #{AUTH_NM              } 
+	      , AUTH_DSC           =   #{AUTH_DSC             } 
+	      , USG_YN             =   NVL(#{USG_YN           },'N')
+	      , LMT_ORGN_LVL_CD    =   #{LMT_ORGN_LVL_CD      } 
+	      , RVISN_ID           =   #{SESSION_USER_ID      }  
+	      , RVISN_DTTM         =   SYSDATE                  
+		WHERE  AUTH_ID = #{AUTH_ID}
+	</update>
+	
+		
+	<delete id="authDelete"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.authDelete =========*/
+	    	    
+		DELETE CMN_AUTH_MST
+		WHERE  AUTH_ID = #{AUTH_ID}
+
+	</delete>	
+	
+	<select id="groupSearchList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.groupSearchList =========*/
+	    	    
+
+		SELECT 
+		          a.GRP_ID
+		        , a.GRP_NM
+		        , a.GRP_DSC
+		        , a.USG_YN
+		        , a.REGST_ID
+		        , TO_CHAR(a.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+		        , a.RVISN_ID
+		        , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+		FROM CMN_USR_GRP_MST a
+
+	</select>
+		
+	<select id="authMenuList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.authMenuList =========*/
+	    	    
+
+		SELECT 
+		        a.AUTH_ID
+		      , a.MENU_ID
+		      , a.CREAT_ABABLE_YN
+		      , a.DEL_AUTH
+		      , a.RVISN_AUTH
+		      , a.SRCH_AUTH
+		      , a.EXEL_ABABLE_YN
+		      , a.PRNT_ABABLE_YN
+		      , a.REGST_ID
+		      , TO_CHAR(a.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+		      , a.RVISN_ID
+		      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+<!-- 		      , B.MENU_NM -->
+		      , B.MENU_LVL
+<![CDATA[ 	  , trim(replace(C.MENU_NM_PATH,' >  >','')) MENU_NM   ]]>
+		FROM CMN_AUTH_MENU_ASGN_MST a,
+		     CMN_MENU_MST B,
+             (
+                      SELECT         ROWNUM ROW_INDEX
+                      , a.MENU_ID
+<![CDATA[                      ,SYS_CONNECT_BY_PATH(decode(level,0, '', 1,'', a.MENU_NM), ' > ') MENU_NM_PATH  ]]>
+                FROM CMN_MENU_MST a
+                START WITH  '0' =  a.MENU_LVL
+                CONNECT BY a.HGHR_MENU_ID = PRIOR a.MENU_ID
+                ORDER SIBLINGS BY   1 + ALGN_SEQ   
+            ) C
+		WHERE 1 = 1
+		  AND A.MENU_ID = B.MENU_ID
+		  AND A.MENU_ID = C.MENU_ID
+		<if test="AUTH_ID != null and AUTH_ID != ''">
+            AND a.AUTH_ID =  #{AUTH_ID} 
+        </if>
+
+		<if test="MENU_ID != null and MENU_ID != ''">
+            AND a.MENU_ID =  #{MENU_ID} 
+        </if>	        
+	        			
+	</select>
+			
+
+	<select id="authMenuDetail" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.authMenuDetail =========*/
+	    	    
+
+		SELECT 
+		        a.AUTH_ID
+		      , a.MENU_ID
+		      , a.CREAT_ABABLE_YN
+		      , a.DEL_AUTH
+		      , a.RVISN_AUTH
+		      , a.SRCH_AUTH
+		      , a.EXEL_ABABLE_YN
+		      , a.PRNT_ABABLE_YN
+		      , a.REGST_ID
+		      , TO_CHAR(a.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+		      , a.RVISN_ID
+		      , TO_CHAR(a.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM
+		FROM CMN_AUTH_MENU_ASGN_MST a
+        WHERE 1 = 1
+          AND a.AUTH_ID =  #{AUTH_ID} 
+          AND a.MENU_ID =  #{MENU_ID} 
+     
+	        			
+	</select>
+		
+
+	<insert  id="authMenuInsert"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.authMenuInsert =========*/
+	    	    
+		
+		INSERT INTO CMN_AUTH_MENU_ASGN_MST
+		(
+		        AUTH_ID
+		      , MENU_ID
+		      , CREAT_ABABLE_YN
+		      , DEL_AUTH
+		      , RVISN_AUTH
+		      , SRCH_AUTH
+		      , EXEL_ABABLE_YN
+		      , PRNT_ABABLE_YN
+		      , REGST_ID
+		      , REGST_DTTM
+		      , RVISN_ID
+		      , RVISN_DTTM
+		)
+		VALUES
+		( 
+		        #{AUTH_ID             }     
+		      , #{MENU_ID             }
+		      , #{CREAT_ABABLE_YN     }
+		      , #{DEL_AUTH            }
+		      , #{RVISN_AUTH          }
+		      , #{SRCH_AUTH           }
+		      , #{EXEL_ABABLE_YN      }
+		      , #{PRNT_ABABLE_YN      }
+		      , #{SESSION_USER_ID     }
+		      , SYSDATE
+		      , #{SESSION_USER_ID     }
+		      , SYSDATE
+		)		   
+
+	</insert>
+	
+	
+	
+	<update id="authMenuUpdate"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.authMenuUpdate =========*/
+	    	    
+		UPDATE CMN_AUTH_MENU_ASGN_MST
+		SET 
+	         CREAT_ABABLE_YN   = #{CREAT_ABABLE_YN     }  
+	       , DEL_AUTH          = #{DEL_AUTH            }  
+	       , RVISN_AUTH        = #{RVISN_AUTH          }  
+	       , SRCH_AUTH         = #{SRCH_AUTH           }  
+	       , EXEL_ABABLE_YN    = #{EXEL_ABABLE_YN      }  
+	       , PRNT_ABABLE_YN    = #{PRNT_ABABLE_YN      }  
+	       , RVISN_ID          = #{SESSION_USER_ID     }  
+	       , RVISN_DTTM        = SYSDATE                  
+		WHERE  AUTH_ID = #{AUTH_ID}
+		   AND MENU_ID = #{MENU_ID}
+	</update>
+	
+		
+	<delete id="authMenuDelete"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.authMenuDelete =========*/
+	    	    
+		DELETE CMN_AUTH_MENU_ASGN_MST
+		WHERE  AUTH_ID = #{AUTH_ID}
+		   AND MENU_ID = #{MENU_ID}
+
+	</delete>	
+		
+	<select id="usrMenuAsgnList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.usrMenuAsgnList =========*/
+	    	    
+
+		SELECT 
+		        a.USR_ID
+		      , a.USR_ID AS USR_ID_MSK
+		      , a.MENU_ID
+		      , a.CREAT_ABABLE_YN
+		      , a.DEL_AUTH
+		      , a.RVISN_AUTH
+		      , a.SRCH_AUTH
+		      , a.EXEL_ABABLE_YN
+		      , a.PRNT_ABABLE_YN
+		      , a.REGST_ID
+		      , a.REGST_DTTM
+		      , a.RVISN_ID
+		      , a.RVISN_DTTM
+		      , b.USR_NM
+<!-- 		      , c.MENU_NM -->
+<![CDATA[		      , trim(replace(d.MENU_NM_PATH,' >  >','')) MENU_NM   ]]>
+		FROM CMN_USR_MENU_ASGN_MST a,
+		     CMN_USR_MST B,
+<!-- 		     CMN_MENU_MST C, -->
+             (
+                      SELECT         ROWNUM ROW_INDEX
+                      , a.MENU_ID
+<![CDATA[                      ,SYS_CONNECT_BY_PATH(decode(level,0, '', 1,'', a.MENU_NM), ' > ') MENU_NM_PATH   ]]>
+                FROM CMN_MENU_MST a
+                START WITH  '0' =  a.MENU_LVL
+                CONNECT BY a.HGHR_MENU_ID = PRIOR a.MENU_ID
+                ORDER SIBLINGS BY   1 + ALGN_SEQ   
+            ) d
+		WHERE 1 = 1
+		  AND A.USR_ID = B.USR_ID
+<!-- 		  AND A.MENU_ID = C.MENU_ID -->
+		  AND A.MENU_ID = d.MENU_ID
+		<if test="MENU_ID != null and MENU_ID != ''">
+            AND a.MENU_ID =  #{MENU_ID} 
+        </if>	 
+<!-- 		<if test="USR_ID != null and USR_ID != ''"> -->
+            AND a.USR_ID =  #{USR_ID} 
+<!--         </if>	 	         -->
+		ORDER BY d.ROW_INDEX
+		
+	</select>
+	
+		
+
+	<select id="usrMenuAsgnDetail" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.usrMenuAsgnDetail =========*/
+	    	    
+
+		SELECT 
+		        a.USR_ID
+		      , a.USR_ID AS USR_ID_MSK
+		      , a.MENU_ID
+		      , a.CREAT_ABABLE_YN
+		      , a.DEL_AUTH
+		      , a.RVISN_AUTH
+		      , a.SRCH_AUTH
+		      , a.EXEL_ABABLE_YN
+		      , a.PRNT_ABABLE_YN
+		      , a.REGST_ID
+		      , a.REGST_DTTM
+		      , a.RVISN_ID
+		      , a.RVISN_DTTM
+		      , b.USR_NM
+		FROM CMN_USR_MENU_ASGN_MST a,
+		     CMN_USR_MST B
+		WHERE 1 = 1
+		  AND A.USR_ID = B.USR_ID
+          AND a.MENU_ID =  #{MENU_ID} 
+            AND a.USR_ID =  #{USR_ID} 
+		
+	</select>
+	
+		
+
+	<insert  id="usrMenuAsgnInsert"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.usrMenuAsgnInsert =========*/
+	    	    
+		
+		INSERT INTO CMN_USR_MENU_ASGN_MST
+		(
+		        USR_ID            
+		      , MENU_ID           
+		      , CREAT_ABABLE_YN   
+		      , DEL_AUTH          
+		      , RVISN_AUTH        
+		      , SRCH_AUTH         
+		      , EXEL_ABABLE_YN    
+		      , PRNT_ABABLE_YN    
+		      , REGST_ID          
+		      , REGST_DTTM        
+		      , RVISN_ID          
+		      , RVISN_DTTM        
+		)
+		VALUES
+		( 
+		        #{USR_ID              }     
+		      , #{MENU_ID             }
+		      , #{CREAT_ABABLE_YN     }
+		      , #{DEL_AUTH            }
+		      , #{RVISN_AUTH          }
+		      , #{SRCH_AUTH           }
+		      , #{EXEL_ABABLE_YN      }
+		      , #{PRNT_ABABLE_YN      }
+		      , #{SESSION_USER_ID     }
+		      , SYSDATE
+		      , #{SESSION_USER_ID     }
+		      , SYSDATE
+		)	   
+
+	</insert>
+	
+	
+	
+	<update id="usrMenuAsgnUpdate"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.usrMenuAsgnUpdate =========*/
+	    	    
+		UPDATE CMN_USR_MENU_ASGN_MST
+		SET 
+	         CREAT_ABABLE_YN   = #{CREAT_ABABLE_YN     }  
+	        ,DEL_AUTH          = #{DEL_AUTH            }  
+	        ,RVISN_AUTH        = #{RVISN_AUTH          }  
+	        ,SRCH_AUTH         = #{SRCH_AUTH           }  
+	        ,EXEL_ABABLE_YN    = #{EXEL_ABABLE_YN      }  
+	        ,PRNT_ABABLE_YN    = #{PRNT_ABABLE_YN      }  
+	        ,RVISN_ID          = #{SESSION_USER_ID     }  
+	        ,RVISN_DTTM        = SYSDATE                  
+		WHERE  USR_ID = #{USR_ID}
+		   AND MENU_ID = #{MENU_ID}
+	</update>
+	
+		
+	<delete id="usrMenuAsgnDelete"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.usrMenuAsgnDelete =========*/
+	    	    
+		DELETE CMN_USR_MENU_ASGN_MST
+		WHERE  USR_ID = #{USR_ID}
+		   AND MENU_ID = #{MENU_ID}
+
+	</delete>	
+	
+										
+	<select id="grpAuthAsgnList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.grpAuthAsgnList =========*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+	    	    
+		SELECT 
+		        a.GRP_ID
+		      , a.AUTH_ID
+		      , a.REGST_ID
+		      , a.REGST_DTTM
+		      , a.RVISN_ID
+		      , a.RVISN_DTTM
+		      , B.GRP_NM
+		      , B.GRP_DSC
+		FROM CMN_GRP_AUTH_ASGN_MST a,
+			 CMN_USR_GRP_MST B
+		WHERE 1 = 1
+		  AND A.GRP_ID = B.GRP_ID
+		  
+		<if test="GRP_ID != null and GRP_ID != ''">
+            AND a.GRP_ID =  #{GRP_ID} 
+        </if>	 
+		<if test="AUTH_ID != null and AUTH_ID != ''">
+            AND a.AUTH_ID =  #{AUTH_ID} 
+        </if>
+        ORDER BY a.GRP_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>	
+
+
+	
+
+	<insert  id="grpAuthAsgnInsert"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.grpAuthAsgnInsert =========*/
+	    	    
+		
+		INSERT INTO CMN_GRP_AUTH_ASGN_MST
+		(
+		        GRP_ID            
+		      , AUTH_ID           
+		      , REGST_ID          
+		      , REGST_DTTM        
+		      , RVISN_ID          
+		      , RVISN_DTTM        
+		)
+		VALUES
+		( 
+		        #{GRP_ID              }     
+		      , #{AUTH_ID             }
+		      , #{SESSION_USER_ID     }
+		      , SYSDATE
+		      , #{SESSION_USER_ID     }
+		      , SYSDATE
+		)	   
+
+	</insert>
+
+		
+	<delete id="grpAuthAsgnDelete"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.grpAuthAsgnDelete =========*/
+	    	    
+		DELETE CMN_GRP_AUTH_ASGN_MST
+		WHERE  GRP_ID = #{GRP_ID}
+		   AND AUTH_ID = #{AUTH_ID}
+
+	</delete>	
+	
+										
+	<select id="usrGrpList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.usrGrpList =========*/
+	    	    
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT 
+		        GRP_ID
+		      , GRP_NM
+		      , GRP_DSC
+		      , USG_YN
+		      , REGST_ID
+		      ,TO_CHAR(REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+		      , RVISN_ID
+		      , RVISN_DTTM
+		 FROM CMN_USR_GRP_MST
+		WHERE 1=1
+		<if test="GRP_ID != null and GRP_ID != ''">
+		   AND ( GRP_ID LIKE '%' || UPPER( #{GRP_ID} ) || '%' OR GRP_ID LIKE '%' || LOWER( #{GRP_ID} ) || '%' )
+		</if>
+		<if test="GRP_NM != null and GRP_NM != ''">
+		   AND ( GRP_NM LIKE '%' || UPPER( #{GRP_NM} ) || '%' OR GRP_NM LIKE '%' || LOWER( #{GRP_NM} ) || '%' )
+		</if>
+		<if test="REGST_ID != null and REGST_ID != ''">
+		   AND ( REGST_ID LIKE '%' || UPPER( #{REGST_ID} ) || '%' OR GRP_NM LIKE '%' || LOWER( #{REGST_ID} ) || '%' )
+		</if>
+		ORDER BY GRP_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+
+
+	<select id="usrGrpDetail" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.usrGrpDetail =========*/
+	    	    
+		
+		SELECT 
+		        GRP_ID
+		      , GRP_NM
+		      , GRP_DSC
+		      , USG_YN
+		      , REGST_ID
+		      , REGST_DTTM
+		      , RVISN_ID
+		      , RVISN_DTTM
+		FROM CMN_USR_GRP_MST 	        
+		WHERE GRP_ID = #{GRP_ID}
+	</select>	
+	
+
+	<insert  id="usrGrpInsert"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.usrGrpInsert =========*/
+	    	    
+		
+		INSERT INTO CMN_USR_GRP_MST
+		(
+	        GRP_ID
+	      , GRP_NM
+	      , GRP_DSC
+	      , USG_YN
+	      , REGST_ID
+	      , REGST_DTTM
+	      , RVISN_ID
+	      , RVISN_DTTM
+		)
+		VALUES
+		( 
+          	#{GRP_ID     }
+	      , #{GRP_NM     }
+	      , #{GRP_DSC    }
+	      , NVL(#{USG_YN          },'N')
+	      , #{SESSION_USER_ID     }
+	      , SYSDATE
+	      , #{SESSION_USER_ID     }
+	      , SYSDATE
+		)	    
+
+	</insert>
+	
+	
+	
+	<update id="usrGrpUpdate"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.usrGrpUpdate =========*/
+	    	    
+		UPDATE CMN_USR_GRP_MST
+		SET 
+ 	       GRP_NM            = #{GRP_NM    }  
+	      , GRP_DSC           = #{GRP_DSC    }  
+	      , USG_YN            = NVL(#{USG_YN          },'N')
+	      , RVISN_ID          = #{SESSION_USER_ID     }  
+	      , RVISN_DTTM        = SYSDATE                  
+		WHERE  GRP_ID = #{GRP_ID}
+	</update>
+	
+		
+	<delete id="usrGrpDelete"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.usrGrpDelete =========*/
+	    	    
+		DELETE CMN_USR_GRP_MST
+		WHERE  GRP_ID = #{GRP_ID}
+
+	</delete>	
+	
+				
+							
+										
+
+	
+	<select id="usrGrpAsgnList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.authmgmt.usrGrpAsgnList =========*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+	    	    
+
+		SELECT 
+		        a.USR_ID
+		      , a.USR_ID AS USR_ID_MSK
+		      , a.GRP_ID
+		      , a.REGST_ID
+		      , a.REGST_DTTM
+		      , a.RVISN_ID
+		      , a.RVISN_DTTM
+	          , C.ORGN_NM
+	          , b.USR_NM
+		FROM CMN_USG_GRP_ASGN_MST a
+       	   , CMN_USR_MST b
+              , ORG_ORGN_INFO_MST C
+		WHERE 1 = 1
+			AND a.USR_ID = b.USR_ID(+)
+            AND B.ORGN_ID = C.ORGN_ID(+)
+            AND B.USG_YN <![CDATA[ <> ]]> 'N'
+		<if test="GRP_ID != null and GRP_ID != ''">
+            AND a.GRP_ID =  #{GRP_ID} 
+        </if>	 
+		<if test="USR_ID != null and USR_ID != ''">
+            AND a.USR_ID =  #{USR_ID} 
+        </if>
+       ORDER BY  C.ORGN_NM, a.USR_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+
+
+	
+	<insert  id="usrGrpAsgnInsert"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt.usrGrpAsgnInsert =========*/
+	    	    
+		
+		INSERT INTO CMN_USG_GRP_ASGN_MST
+		(
+	        USR_ID
+	      , GRP_ID
+	      , REGST_ID
+	      , REGST_DTTM
+	      , RVISN_ID
+	      , RVISN_DTTM
+		)
+		VALUES
+		( 
+          	#{USR_ID     }
+	      , #{GRP_ID     }
+	      , #{SESSION_USER_ID     }
+	      , SYSDATE
+	      , #{SESSION_USER_ID     }
+	      , SYSDATE
+		)	    
+
+	</insert>
+	
+	<insert  id="usrGrpAsgnHstInsert"  parameterType="java.util.HashMap"  >
+		/* ====== cmn.authmgmt.usrGrpAsgnHstInsert =========*/
+		INSERT INTO CMN_USG_GRP_ASGN_HST
+		(
+	        USR_ID
+	      , GRP_ID
+	      , REGST_ID
+	      , REGST_DTTM
+	      , SEQ_NUM
+	      , OPER_TPYE
+		)
+		VALUES
+		( 
+          	#{USR_ID}
+	      , #{GRP_ID}
+	      , #{SESSION_USER_ID}
+	      , SYSDATE
+	      , (SELECT NVL(MAX(TO_NUMBER(SEQ_NUM)) + 1, 1) FROM CMN_USG_GRP_ASGN_HST WHERE USR_ID = #{USR_ID})
+	      , #{operType}
+		)	    
+
+	</insert>	
+	
+		
+	<delete id="usrGrpAsgnDelete"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.authmgmt."usrGrpAsgnDelete" =========*/
+	    	    
+		DELETE CMN_USG_GRP_ASGN_MST A
+		WHERE  a.GRP_ID = #{GRP_ID}
+		   AND a.USR_ID =  #{USR_ID} 
+	</delete>	
+	
+	
+	
+	<select id="grpIdList"  resultType="hashMap">
+	/* ====== cmn.authmgmt.grpIdList =========*/
+	    	    
+		SELECT
+            '' AS GRP_ID
+            , '선택' AS GRP_NM
+        FROM 
+            DUAL
+        UNION ALL
+        SELECT
+            A.GRP_ID
+            , A.GRP_NM
+        FROM
+            CMN_USR_GRP_MST A
+        WHERE
+            A.USG_YN = 'Y'
+	</select>
+	
+		
+	<select id="usrAuthReportList"  resultType="hashMap">
+	/* ====== cmn.authmgmt.usrAuthReportList =========*/
+	    	    
+            with CMN_MENU_MST_HGHR as
+               (             
+                     SELECT         
+                            ROWNUM ROW_INDEX
+                          , a.MENU_ID
+                          , a.MENU_LVL
+                          , a.MENU_NM
+                          , replace(RPAD(' ', 4*(LEVEL - 1)),' ','.') || MENU_NM MENU_NM_HGHR
+                          , a.MENU_DSC
+                          , a.HGHR_MENU_ID
+                          , a.ALGN_SEQ
+                          , a.USG_YN
+                          , a.LMT_ORGN_LVL_CD
+                          , a.DUTY_NM
+                          , a.DUTY_ID
+                    FROM CMN_MENU_MST a
+                    START WITH  '0' =  a.MENU_LVL
+                    CONNECT BY a.HGHR_MENU_ID = PRIOR a.MENU_ID
+                    ORDER SIBLINGS BY    1 + ALGN_SEQ
+                )                      
+             SELECT 
+                    B.ROW_INDEX
+                    ,DECODE(LAG(B.MENU_ID) OVER(ORDER BY ROW_INDEX, B.MENU_ID), B.MENU_ID, '', B.MENU_ID) MENU_ID
+                    ,DECODE(LAG(B.MENU_NM_HGHR) OVER(ORDER BY ROW_INDEX, B.MENU_ID), B.MENU_NM_HGHR, '', B.MENU_NM_HGHR) MENU_NM_HGHR
+                    ,B.USG_YN MENU_USG_YN
+                    ,A.AUTH_TYPE
+                    ,A.GRP_ID
+                    ,C.GRP_NM
+                    ,C.USG_YN GRP_USG_YN
+                    ,A.AUTH_ID
+                    ,D.AUTH_NM
+                    ,D.USG_YN AUTH_USG_YN
+                    , DECODE(A.PRGM_TYPE, 'MAIN','메인', 'SRCH','검색','CREAT','등록','RVISN','변경','DEL','삭제','EXEL','엑셀','PRNT','출력','ETC','기타') PRGM_TYPE
+                    ,PRGM_NM
+                   ,DECODE(A.PRGM_TYPE,'MAIN',  'Y', 
+                        'CREAT', CREAT_ABABLE_YN, 
+                        'DEL'  , DEL_AUTH, 
+                        'RVISN', RVISN_AUTH, 
+                        'SRCH' , SRCH_AUTH, 
+                        'EXEL' , EXEL_ABABLE_YN, 
+                        'PRNT' , PRNT_ABABLE_YN, 
+                        'ETC'  , 'Y',
+                        NULL) ALLOW                    
+                    ,DECODE(PRGM_TYPE,'MAIN', CREAT_ABABLE_YN,'CREAT', CREAT_ABABLE_YN, NULL) CREAT_ABABLE_YN
+                    ,DECODE(PRGM_TYPE,'MAIN', DEL_AUTH,'DEL', DEL_AUTH, NULL) DEL_AUTH
+                    ,DECODE(PRGM_TYPE,'MAIN', RVISN_AUTH,'RVISN', RVISN_AUTH, NULL) RVISN_AUTH
+                    ,DECODE(PRGM_TYPE,'MAIN', SRCH_AUTH,'SRCH', SRCH_AUTH, NULL) SRCH_AUTH
+                    ,DECODE(PRGM_TYPE,'MAIN', EXEL_ABABLE_YN,'EXEL', EXEL_ABABLE_YN, NULL) EXEL_ABABLE_YN
+                    ,DECODE(PRGM_TYPE,'MAIN', PRNT_ABABLE_YN,'PRNT', PRNT_ABABLE_YN, NULL) PRNT_ABABLE_YN
+                    ,PRGM_URL_MAIN
+                    ,PRGM_URL
+             FROM
+                (
+                    with CMN_PRGM_MST_WITH_MAIN as
+                        (                    
+                            SELECT  A.*, B.PRGM_ID PRGM_ID_MAIN, B.PRGM_TYPE PRGM_TYPE_MAIN, B.PRGM_URL PRGM_URL_MAIN
+                            FROM 
+                                 CMN_PRGM_MST A
+                                ,(
+                                    select * 
+                                    from
+                                        (  
+                                            SELECT A.*, 
+                                                ROW_NUMBER() OVER( PARTITION BY MENU_ID order by prgm_id ) row_index
+                                            FROM CMN_PRGM_MST A  
+                                            WHERE a.PRGM_TYPE = 'MAIN'
+                                )  B
+                            where row_index = 1
+                                ) b    
+                            WHERE A.MENU_ID  = B.MENU_ID
+                              AND B.PRGM_TYPE = 'MAIN'
+                        )
+                        , PRGM_URL_PARAM AS
+                            ( SELECT 
+                                     #{searchUsrId     }   USR_ID 
+                              FROM DUAL ) 
+                    SELECT A.*
+                    FROM
+                    (      
+                        SELECT   
+                                  A.USR_ID
+                                ,'사용자권한' AUTH_TYPE
+                                ,M.MENU_ID 
+                                ,M.MENU_NM
+                                ,B_MAIN.CREAT_ABABLE_YN
+                                ,B_MAIN.DEL_AUTH
+                                ,B_MAIN.RVISN_AUTH
+                                ,B_MAIN.SRCH_AUTH
+                                ,B_MAIN.EXEL_ABABLE_YN
+                                ,B_MAIN.PRNT_ABABLE_YN
+                                ,D.PRGM_NM
+                                ,D.PRGM_URL
+                                ,D.PRGM_URL_MAIN
+                                ,'' GRP_ID
+                                ,'' AUTH_ID
+                                ,D.PRGM_TYPE
+                                ,D.PRGM_TYPE_MAIN
+                        FROM CMN_USR_MST A
+                             ,CMN_USR_MENU_ASGN_MST B
+                             ,CMN_USR_MENU_ASGN_MST B_MAIN
+                             ,CMN_PRGM_MST_WITH_MAIN D
+                             ,CMN_MENU_MST M
+                             ,PRGM_URL_PARAM
+                        WHERE  A.USR_ID = PRGM_URL_PARAM.USR_ID 
+                           AND A.USR_ID = B.USR_ID
+                           AND B.MENU_ID = D.MENU_ID
+                           AND A.USR_ID = B_MAIN.USR_ID
+                           AND B_MAIN.MENU_ID = D.MENU_ID
+                           AND M.MENU_ID = D.MENU_ID
+                        UNION 
+                        SELECT  
+                                  A.USR_ID
+                                ,'그룹권한' AUTH_TYPE
+                                ,M.MENU_ID
+                                ,M.MENU_NM
+                                ,D_MAIN.CREAT_ABABLE_YN
+                                ,D_MAIN.DEL_AUTH
+                                ,D_MAIN.RVISN_AUTH
+                                ,D_MAIN.SRCH_AUTH
+                                ,D_MAIN.EXEL_ABABLE_YN
+                                ,D_MAIN.PRNT_ABABLE_YN
+                                ,F.PRGM_NM
+                                ,F.PRGM_URL
+                                ,F.PRGM_URL_MAIN
+                                ,B.GRP_ID
+                                ,C.AUTH_ID
+                                ,F.PRGM_TYPE
+                                ,F.PRGM_TYPE_MAIN
+                        FROM
+                                CMN_USR_MST A
+                               ,CMN_USG_GRP_ASGN_MST B
+                               ,CMN_GRP_AUTH_ASGN_MST C
+                               ,CMN_AUTH_MENU_ASGN_MST D
+                               ,CMN_AUTH_MENU_ASGN_MST D_MAIN
+                               ,CMN_PRGM_MST_WITH_MAIN F
+                               ,CMN_MENU_MST M
+                               ,PRGM_URL_PARAM
+                        WHERE 1 =1
+                          AND A.USR_ID = PRGM_URL_PARAM.USR_ID 
+                          AND A.USR_ID = B.USR_ID      
+                          AND B.GRP_ID = C.GRP_ID
+                          AND C.AUTH_ID = D.AUTH_ID
+                          AND D.MENU_ID = F.MENU_ID
+                          AND C.AUTH_ID = D_MAIN.AUTH_ID
+                          AND D_MAIN.MENU_ID = F.MENU_ID                          
+                          AND M.MENU_ID = F.MENU_ID
+                    )   A 
+                    WHERE 1=1
+                ) A
+                ,CMN_MENU_MST_HGHR B
+                ,CMN_USR_GRP_MST C
+                ,CMN_AUTH_MST D
+            WHERE 1 =1 
+              AND A.MENU_ID(+) = B.MENU_ID  
+              AND A.GRP_ID = C.GRP_ID(+)
+              AND A.AUTH_ID = D.AUTH_ID(+)  
+            ORDER BY B.ROW_INDEX  , A.MENU_NM 
+<!--             , DECODE(A.PRGM_TYPE, 'MAIN',1, 'SRCH',5,'CREAT',2,'RVISN',4,'DEL',3,'EXEL',6,'PRNT',7,'ETC',8)            -->
+	</select>
+	
+	
+	<select id="userInfoMgmtList"  resultType="hashMap">
+		SELECT /* userInfoMgmtList */
+                 CUM.USR_ID    /* 사용자 ID */
+               , CUM.USR_ID AS USR_ID_MSK    /* 사용자 ID */
+               , CUM.ATTC_SCTN_CD    /* 소속 구분 코드 */
+               , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = CUM.ATTC_SCTN_CD) as ATTC_SCTN_CD_NM
+               , CUM.USR_NM    /* 사용자 명 */
+               , CUM.PASS    /* 비밀번호 */
+               , CUM.TEL_NUM    /* 전화 번호 */
+               , CUM.MBLPHN_NUM    /* 핸드폰 번호 */
+               , CUM.LAST_LOGIN_DT    /* 최종 로그인 일시 */
+               , CUM.PASS_ERR_NUM    /* 암호 오류 횟수 */
+               , CUM.PRES_BIZ    /* 사번 */
+               , CUM.EMAIL    /* 이메일 */
+               , CUM.POS    /* 직위 */
+               , CUM.ODTY    /* 직책 */
+               , CUM.ADDR    /* 주소 */
+               , CUM.DTL_ADDR    /* 상세 주소 */
+               , CUM.ZIPCD    /* 우편 번호 */
+               , CUM.FAX    /* FAX 번호 */
+               , CUM.PASS_ATMT_NUM    /* 비밀번호 시도 횟수 */
+               , CUM.DEL_YN    /* 삭제 여부 */
+               , CUM.REGST_ID    /* 등록자 ID */
+               , TO_CHAR(CUM.REGST_DTTM,'YYYY-MM-DD HH:mm:ss') as REGST_DTTM    /* 등록 일시 */
+               , CUM.RVISN_ID    /* 수정자 ID */
+               , FN_GET_USRNM(CUM.RVISN_ID) AS RVISN_NM    /* 수정자 */
+               , CUM.RVISN_DTTM    /* 수정일시 */
+               , CUM.DEPT    /* 부서코드 */
+               , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0006' AND CD_VAL = CUM.DEPT) as DEPT_NM
+               , CUM.IP_INFO    /* IP정보 */
+               , CUM.MAC_ADDR    /* MAC주소 */
+               , CUM.USG_YN    /* 사용여부 */
+               , CUM.USG_STRT_DT    /* 사용시작일자 */
+               , CUM.USG_END_DT    /* 사용종료일자 */
+               , CUM.PASS_LAST_RVISN_DT    /* 최종비밀번호변경일시 */
+               , CUM.MNGR_RULE    /* 관리자롤 */
+               , CUM.MSK_AUTH_YN    /* 마스킹권한여부 */
+               , ORGN_ID
+               , FN_GET_ORGNM(CUM.ORGN_ID) as ORGN_NM
+        FROM CMN_USR_MST CUM
+	   WHERE 1=1
+	   AND USG_YN <![CDATA[ <> ]]> 'N'
+	   AND (DEL_YN IS NULL OR DEL_YN = 'N')
+        <if test="USR_ID != null and USR_ID != ''">		
+		 AND USR_ID LIKE UPPER(#{USR_ID}||'%')
+        </if>				
+        <if test="USR_NM != null and USR_NM != ''">		
+		 AND USR_NM LIKE '%'|| #{USR_NM}||'%'
+        </if>			
+        ORDER BY REGST_DTTM DESC
+	</select>
+	
+	
+	<!-- 메뉴 조회(트리구조) -->
+	<select id="treeMenuList" parameterType="com.ktis.msp.cmn.authmgmt.vo.AuthMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	SELECT
+			    A.*,
+			    NVL(LAG(MENU_LVL ) OVER( ORDER BY ROW_INDEX ),-1) MENU_LVL_PREV
+			FROM
+			(
+			             SELECT ROWNUM ROW_INDEX 
+                      		, A.MENU_ID ID
+			                , A.MENU_ID  MENU_ID
+			                , A.MENU_LVL || '' MENU_LVL 
+			                , A.MENU_NM 
+			                , A.MENU_DSC
+			                , A.HGHR_MENU_ID
+			                , A.ALGN_SEQ
+			                , A.USG_YN
+			                , A.LMT_ORGN_LVL_CD
+			                , A.DUTY_NM
+			                , A.DEL_YN
+			                , A.DUTY_ID
+			                , B.PRGM_ID
+			                , B.PRGM_NM
+			                , B.PRGM_DESC
+			                , B.PRGM_URL URL
+			                , B.PRGM_TYPE
+			                , CASE 
+				                    WHEN (SELECT COUNT(*) FROM CMN_MENU_MST WHERE HGHR_MENU_ID = A.MENU_ID) > 0 THEN 'true'
+				                    ELSE 'false'
+				               END XMLKIDS_BO
+			            FROM CMN_MENU_MST A,   
+			                 CMN_PRGM_MST B
+			            WHERE A.MENU_ID = B.MENU_ID(+)
+			              AND ( A.DEL_YN IS NULL OR A.DEL_YN = 'N') 
+			              AND B.PRGM_TYPE(+) = 'MAIN'
+			) A
+		WHERE 1=1 
+	<choose>
+		<when test=" (searchMenuNm != null and searchMenuNm != '') or (searchMenuLvl != null and searchMenuLvl != '')">
+			<if test="searchMenuNm != null and searchMenuNm != ''">
+				AND a.MENU_NM like '%' ||  #{searchMenuNm} || '%'
+			</if>
+			<if test="searchMenuLvl != null and searchMenuLvl != ''">
+				AND a.MENU_LVL =  #{searchMenuLvl}
+			</if>
+		</when>
+		<otherwise>
+			<if test="menuId != null and menuId != ''">
+				AND A.HGHR_MENU_ID = #{menuId}
+			</if>
+			<if test="menuId == null or menuId == '' ">
+				AND A.MENU_LVL = 0
+			</if>
+		</otherwise>
+	</choose>
+	ORDER by A.ALGN_SEQ ASC, MENU_LVL ASC
+	</select>
+	
+	<!-- 메뉴 전체 조회(트리구조) -->
+    <select id="treeMenuAllList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    SELECT
+            A.*,
+            NVL(LAG(MENU_LVL ) OVER( ORDER BY ROW_INDEX ),-1) MENU_LVL_PREV
+        FROM
+        (
+	         SELECT ROWNUM ROW_INDEX 
+	            , A.MENU_ID ID
+	            , A.MENU_ID  MENU_ID
+	            , A.MENU_LVL || '' MENU_LVL 
+	            , A.MENU_NM 
+	            , A.MENU_DSC
+	            , A.HGHR_MENU_ID
+	            , A.ALGN_SEQ
+	            , A.USG_YN
+	            , A.LMT_ORGN_LVL_CD
+	            , A.DUTY_NM
+	            , A.DEL_YN
+	            , A.DUTY_ID
+	            , A.IBSHEET_YN
+	            , B.PRGM_ID
+	            , B.PRGM_NM
+	            , B.PRGM_DESC
+	            , B.PRGM_URL URL
+	            , B.PRGM_TYPE
+	            , CASE 
+                     WHEN (SELECT COUNT(*) FROM CMN_MENU_MST WHERE HGHR_MENU_ID = A.MENU_ID) > 0 THEN 'true'
+                     ELSE 'false'
+                END XMLKIDS_BO
+	        FROM CMN_MENU_MST A,   
+	             CMN_PRGM_MST B
+	        WHERE A.MENU_ID = B.MENU_ID(+)
+	          AND ( A.DEL_YN IS NULL OR A.DEL_YN = 'N') 
+	          AND B.PRGM_TYPE(+) = 'MAIN'
+        ) A
+    WHERE 1=1 
+    START WITH HGHR_MENU_ID = '0'
+    CONNECT BY PRIOR MENU_ID = HGHR_MENU_ID
+    ORDER BY MENU_LVL
+    </select>
+
+	<!-- 사용자그룹이력로그 -->
+    <select id="usrGrpHstList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />  
+		SELECT   A.SEQ_NUM
+		       , A.GRP_ID
+		       , B.GRP_NM
+		       , B.GRP_DSC
+		       , A.USR_ID
+		       , FN_GET_USRNM(A.USR_ID) AS USR_NM
+		       , TO_CHAR(A.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM
+		       , DECODE(A.OPER_TPYE, 'I', '등록', 'D','삭제', '알수없음') AS OPER_TPYE
+		  FROM CMN_USG_GRP_ASGN_HST A, CMN_USR_GRP_MST B
+		 WHERE A.GRP_ID = B.GRP_ID
+        <if test="searchUsrId != null and searchUsrId != ''">		
+		 AND A.USR_ID LIKE UPPER(#{searchUsrId}||'%')
+        </if>				
+        <if test="searchStrtDt != null and searchStrtDt != ''">
+            <![CDATA[
+            AND A.REGST_DTTM >= TO_DATE(#{searchStrtDt}, 'YYYYMMDD')
+            ]]>
+        </if>
+        
+        <if test="searchEndDt != null and searchEndDt != ''">
+            <![CDATA[
+            AND A.REGST_DTTM < TO_DATE(#{searchEndDt}, 'YYYYMMDD') + 1
+            ]]>
+        </if>
+        ORDER BY A.REGST_DTTM DESC
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+    
+</mapper>

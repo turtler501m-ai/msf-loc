@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="NewsDataMapper">
+
+
+
+    <!-- 프론트 보도자료 리스트 카운터 -->
+    <select id="countNewsDataList" parameterType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto" resultType="int">
+        SELECT count(*)
+        FROM NMCP_NEWS_DATA_BAS
+        WHERE STAT_VAL = 'Y' AND
+        (
+            (ST_DT IS NOT NULL AND ED_DT IS NOT NULL AND ST_DT <![CDATA[<=]]> SYSDATE AND ED_DT <![CDATA[>=]]> TRUNC(SYSDATE))
+                OR
+            (ST_DT IS NULL OR ED_DT IS NULL)
+        )
+    </select>
+
+    <!-- 프론트 보도자료 공지사항 리스트 -->
+    <select id="newsNotiList" parameterType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto" resultType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto">
+        SELECT ROWNUM, NEWS_DAT_SEQ, NEWS_DAT_SUBJECT, STAT_VAL, NEWS_DAT_IMG, IMG_DESC, NEWS_LINE_SBST, NEWS_DAT_SBST, NEWS_DAT_HIT_CNT,
+                LINK_URL_ADR, NOTI_YN, CRET_ID, AMD_ID, CRET_DT, AMD_DT, LINK_TARGET, NOTI_IMG_PATH, NOTI_IMG_DESC
+        FROM NMCP_NEWS_DATA_BAS
+        WHERE STAT_VAL = 'Y' AND NOTI_YN = 'Y' AND ROWNUM <![CDATA[<]]> 6
+        ORDER BY NOTI_YN DESC, CRET_DT DESC
+    </select>
+
+    <!-- 프론트 보도자료 리스트 -->
+    <select id="newsDataList" parameterType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto" resultType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto">
+        SELECT  NEWS_DAT_SEQ,
+                NEWS_DAT_SUBJECT,
+                NEWS_DAT_SBST,
+                STAT_VAL,
+                NEWS_DAT_IMG,
+                NEWS_DAT_SBST,
+                IMG_DESC,
+                NEWS_LINE_SBST,
+                NEWS_DAT_HIT_CNT,
+                LINK_URL_ADR,
+                CRET_DT,
+                LINK_TARGET,
+                UP_DT,
+                ST_DT,
+                ED_DT
+        FROM NMCP_NEWS_DATA_BAS
+        WHERE STAT_VAL = 'Y' AND
+        (
+            (ST_DT IS NOT NULL AND ED_DT IS NOT NULL AND ST_DT <![CDATA[<=]]> SYSDATE AND ED_DT <![CDATA[>=]]> TRUNC(SYSDATE))
+                OR
+            (ST_DT IS NULL OR ED_DT IS NULL)
+        )
+        ORDER BY
+            CASE
+                WHEN UP_DT IS NOT NULL THEN UP_DT
+            ELSE CRET_DT
+                END DESC,
+            NEWS_DAT_SEQ DESC
+    </select>
+
+    <select id="newsDetailNotiSelect" parameterType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto" resultType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto">
+        SELECT
+            NEWS_DAT_SEQ, NEWS_DAT_SUBJECT, STAT_VAL, NEWS_DAT_IMG, IMG_DESC, NEWS_DAT_SBST, NEWS_DAT_HIT_CNT,
+            LINK_URL_ADR, NOTI_YN, CRET_ID, AMD_ID, CRET_DT, AMD_DT, LINK_TARGET, NEWS_LINE_SBST,
+            PRE_SEQ,
+            PRE_SUBJECT,
+            PRE_DT,
+            NEXT_SEQ,
+            NEXT_SUBJECT,
+            NEXT_DT
+        FROM
+            (
+            SELECT NEWS_DAT_SEQ, NEWS_DAT_SUBJECT, STAT_VAL, NEWS_DAT_IMG, IMG_DESC, NEWS_DAT_SBST, NEWS_DAT_HIT_CNT,
+                    LINK_URL_ADR, NOTI_YN, CRET_ID, AMD_ID, CRET_DT, AMD_DT, LINK_TARGET, NEWS_LINE_SBST,
+                    '' as PRE_SEQ,
+                    '' as PRE_SUBJECT,
+                    '' as PRE_DT,
+                    '' as NEXT_SEQ,
+                    '' as NEXT_SUBJECT,
+                    '' as NEXT_DT
+            FROM NMCP_NEWS_DATA_BAS
+            WHERE STAT_VAL = 'Y'
+            )
+        <where>
+            AND NEWS_DAT_SEQ = #{newsDatSeq}
+        </where>
+    </select>
+
+    <select id="linkListSelect" parameterType="int" resultType="com.ktmmobile.mcp.mmobile.dto.NewsDataLinkDto">
+        SELECT LINK_SEQ, NEWS_DAT_SEQ, LINK_NM, LINK_URL_ADR, CRET_ID, AMD_ID, CRET_DT, AMD_DT
+        FROM NMCP_NEWS_DATA_LINK_DTL
+        <where>
+            AND NEWS_DAT_SEQ = #{newsDatSeq}
+        </where>
+    </select>
+
+    <select id="newsDetailSelect" parameterType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto" resultType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto">
+        SELECT
+            NEWS_DAT_SEQ, NEWS_DAT_SUBJECT, STAT_VAL, NEWS_DAT_IMG, IMG_DESC, NEWS_DAT_SBST, NEWS_DAT_HIT_CNT,
+            LINK_URL_ADR, NOTI_YN, CRET_ID, AMD_ID, CRET_DT, AMD_DT, LINK_TARGET, NEWS_LINE_SBST,
+            PRE_SEQ,
+            PRE_SUBJECT,
+            PRE_DT,
+            NEXT_SEQ,
+            NEXT_SUBJECT,
+            NEXT_DT,
+            UP_DT
+        FROM
+            (
+            SELECT NEWS_DAT_SEQ, NEWS_DAT_SUBJECT, STAT_VAL, NEWS_DAT_IMG, IMG_DESC, NEWS_DAT_SBST, NEWS_DAT_HIT_CNT,
+                    LINK_URL_ADR, NOTI_YN, CRET_ID, AMD_ID, CRET_DT, AMD_DT, LINK_TARGET, NEWS_LINE_SBST,
+                    LEAD(NEWS_DAT_SEQ, 1) OVER (ORDER BY NVL(UP_DT, CRET_DT) DESC, NEWS_DAT_SEQ DESC) AS PRE_SEQ,
+                    lead(NEWS_DAT_SUBJECT,1,'이전글이 없습니다.') over (ORDER BY NVL(UP_DT, CRET_DT) DESC, NEWS_DAT_SEQ DESC) PRE_SUBJECT,
+                    lead(CRET_DT,1,'') over (order by CRET_DT DESC) PRE_DT,
+                    lag(NEWS_DAT_SEQ, 1) OVER (ORDER BY NVL(UP_DT, CRET_DT) DESC, NEWS_DAT_SEQ DESC) AS NEXT_SEQ,
+                    lag(NEWS_DAT_SUBJECT,1,'다음글이 없습니다.') over (ORDER BY NVL(UP_DT, CRET_DT) DESC, NEWS_DAT_SEQ DESC) NEXT_SUBJECT,
+                    lag(CRET_DT,1,'') over (order by CRET_DT DESC) NEXT_DT,
+                    UP_DT
+            FROM NMCP_NEWS_DATA_BAS
+            WHERE STAT_VAL = 'Y'
+            AND (
+            (ST_DT IS NOT NULL AND ED_DT IS NOT NULL AND ST_DT <![CDATA[<=]]> SYSDATE AND ED_DT <![CDATA[>=]]> TRUNC(SYSDATE))
+                OR
+            (ST_DT IS NULL OR ED_DT IS NULL)
+            )
+            )
+             <where>
+            AND NEWS_DAT_SEQ = #{newsDatSeq}
+            </where>
+                  ORDER BY
+               CASE WHEN UP_DT IS NOT NULL THEN UP_DT
+            ELSE CRET_DT
+                END DESC,
+            NEWS_DAT_SEQ DESC
+
+
+    </select>
+
+      <update id="updateHit" parameterType="com.ktmmobile.mcp.mmobile.dto.NewsDataBasDto">
+          UPDATE NMCP_NEWS_DATA_BAS SET NEWS_DAT_HIT_CNT = NEWS_DAT_HIT_CNT +1
+          WHERE NEWS_DAT_SEQ = #{newsDatSeq}
+      </update>
+
+    <select id="getPrevNewsSeq" parameterType="int">
+        SELECT MAX(NEWS_DAT_SEQ)
+        FROM NMCP_NEWS_DATA_BAS
+        WHERE NEWS_DAT_SEQ <![CDATA[<]]> #{currentSeq}
+        AND STAT_VAL = 'Y'
+        AND (
+            (ST_DT IS NOT NULL AND ED_DT IS NOT NULL AND ST_DT <![CDATA[<=]]> SYSDATE AND ED_DT <![CDATA[>=]]> TRUNC(SYSDATE))
+                OR
+            (ST_DT IS NULL OR ED_DT IS NULL)
+        )
+    </select>
+
+</mapper>

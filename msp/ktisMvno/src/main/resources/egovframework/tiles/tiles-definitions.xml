@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN" "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+
+	<definition name="image.viewer" template="/WEB-INF/jsp/layout/image.jsp" >
+	</definition>
+
+	<definition name="img/scannerImageViewer" extends="image.viewer">
+        <put-attribute name="body" value="/WEB-INF/jsp/ktis/img/scannerImageViewer.jsp" />
+    </definition>
+
+	<definition name="mcp/requestOldList/*" extends="image.viewer">
+        <put-attribute name="body" value="/WEB-INF/jsp/ktis/rcp/reqOld/{1}.jsp" />
+    </definition>
+		
+	
+	<!-- Common Definition -->    
+	<definition name="base.login" template="/WEB-INF/tiles/layout/login-layout.jsp">
+    	<put-attribute name="title"		value="kt is 모바일웹 관리자"></put-attribute>
+    	<put-attribute name="header"	value="/WEB-INF/tiles/partials/header.jsp"></put-attribute>
+    </definition>
+
+    <definition name="login/*" extends="base.login">
+        <put-attribute name="body" value="/WEB-INF/tiles/views/login/{1}.jsp" />
+    </definition>
+    <definition name="error" extends="base.login">
+        <put-attribute name="body" value="/WEB-INF/tiles/views/error.jsp" />
+    </definition>
+    
+    <!-- Main Page -->
+    <definition name="main.page" template="/WEB-INF/jsp/layout/main-layout.jsp">
+    	<put-attribute name="title"		value="kt M mobile Sales Portal"></put-attribute>
+    	<put-attribute name="header"	value="/WEB-INF/jsp/partials/header.jsp"></put-attribute>
+    	<put-attribute name="head"		value="/WEB-INF/jsp/partials/head.jsp"></put-attribute>
+    	<put-attribute name="foot"		value="/WEB-INF/jsp/partials/foot.jsp"></put-attribute>
+    </definition>
+
+    
+    <!-- Base Page -->
+    <definition name="base.page" template="/WEB-INF/jsp/layout/base-layout.jsp">
+    	<put-attribute name="title"		value="kt M mobile Sales Portal"></put-attribute>
+    	<put-attribute name="header"	value="/WEB-INF/jsp/partials/header.jsp"></put-attribute>	
+    	<put-attribute name="footer"	value="/WEB-INF/jsp/partials/footer.jsp"></put-attribute>	
+    </definition>
+
+    <definition name="main" extends="base.page">
+        <put-attribute name="body" value="/WEB-INF/jsp/ktis/main.jsp"></put-attribute>
+    </definition>
+
+    <definition name="*/*" extends="base.page">
+        <put-attribute name="body" value="/WEB-INF/jsp/ktis/{1}/{2}.jsp"></put-attribute>
+    </definition>
+    <definition name="*/*/*" extends="base.page">
+        <put-attribute name="body" value="/WEB-INF/jsp/ktis/{1}/{2}/{3}.jsp"></put-attribute>
+    </definition>
+     <definition name="*/*/*/*" extends="base.page">
+        <put-attribute name="body" value="/WEB-INF/jsp/ktis/{1}/{2}/{3}/{4}.jsp"></put-attribute>
+    </definition>
+    
+    <!-- Popup Page -->
+    <definition name="popup.page" template="/WEB-INF/jsp/layout/popup_layout.jsp">
+		<put-attribute name="title"		value="kt M mobile Sales Portal"></put-attribute>
+		<put-attribute name="header" 	value="/WEB-INF/tiles/partials/header.jsp" />
+	</definition>
+    
+    <!-- Web PC GNB, LNB, FOOTER 없는   -->
+    <definition name="layoutPopupDefault" template="/WEB-INF/jsp/layout/mcp/layoutPopupDefault.jsp" >
+    </definition>
+    
+</tiles-definitions>

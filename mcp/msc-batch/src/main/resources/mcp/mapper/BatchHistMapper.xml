@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BatchHistMapper">
+
+	<insert id="insertHist" parameterType="com.ktmmobile.mcp.log.dto.BathHistDto">
+		INSERT INTO NMCP_BATCH_EXE_TXN
+		(
+			BATCH_CD
+			, EXE_MTHD
+			, BATCH_EXE_DATE
+			, BATCH_EXE_ST_DATE
+			, BATCH_EXE_END_DATE
+			, BATCH_EXE_CASCNT
+			, SUCCESS_CASCNT
+			, FAIL_CASCNT
+			, MSG_DTL
+			, CRET_DT
+			, CRET_ID
+		) VALUES
+		(
+			#{batchCd}
+			, #{exeMthd}
+			, #{batchExeDate}
+			, #{batchExeStDate}
+			, #{batchExeEndDate}
+			, #{batchExeCascnt}
+			, #{successCascnt}
+			, #{failCascnt}
+			, #{msgDtl , jdbcType=CLOB}
+			, SYSDATE
+			, 'BATCH'
+		)
+
+	</insert>
+
+</mapper>

@@ -1,0 +1,481 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+	
+var _FORMITEMS_ = {
+
+	//조직검색
+	form1 : [
+		{type:"settings", position:"label-left", labelAlign:"left", labelWidth:55, blockOffset:0},
+		
+		{type:"block", list:[
+			{type : "input",label : "조직 ID",name : "orgnId", width:90, offsetLeft:10, value:'',labelWidth:45}
+			,{type:"newcolumn", offset:20}
+			,{type : "input",label : "조직 명",name : "orgnNm", width:90, offsetLeft:0, value:'',labelWidth:45}
+			,{type:"newcolumn", offset:20}
+			,{type : "select",label : "조직 유형",name : "typeCd", width:90}
+			,{type:"newcolumn", offset:20}
+			,{type : "select",label : "조직 레벨",name : "orgnLvlCd", width:90}
+			,{type : "hidden",label : "사용자 조직 레벨",name : "userOrgnLvlCd", value : ''}
+			,{type:"newcolumn", offset:20}
+			,{type : "select",label : "조직 상태",name : "orgnStatCd", width:90}
+			,{type:"newcolumn", offset:20}
+		]},
+		
+		{type:"newcolumn", offset:0},
+		{type : "button",name : "btnSearch",value : "조회", className:"btn-search1"}
+	],
+	//조직 상세 내역
+	form2 : [
+		{type: 'settings', position: 'label-left', labelAlign:"left", labelWidth: '120'},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'orgnId', label: '조직ID',  width: 120, offsetLeft: 40,  value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'orgnNm', label: '조직명',  width: 120, offsetLeft:50, value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'orgnStatNm', label: '조직상태',  width: 120, offsetLeft:70,  value: '' , readonly:true}
+		]},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'hghrOrgnCd', label: '상위조직ID',  width: 120, offsetLeft: 40,  value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'hghrOrgnNm', label: '상위조직명',  width: 120, offsetLeft: 50, value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'ktOrgId', label: 'KT대리점코드',  width: 120, offsetLeft: 70, value: '' , readonly:true}
+		]},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'typeNm', label: '조직유형',  width: 120, offsetLeft: 40,  value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'orgnLvlNm', label: '조직레벨',  width: 120, offsetLeft: 50, value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'orgnGrdNm', label: '대리점권역',  width: 120, offsetLeft: 70, value: '' , readonly:true}
+		]},
+		
+		{type: "block", list: [
+			{type: 'calendar', name: 'applStrtDt' , label: '적용시작일자', width:120, offsetLeft: 40,  dateFormat: '%Y-%m-%d', serverDateFormat: '%Y%m%d', value: '', disabled:true, userdata: { align: "center" }}
+			,{type: "newcolumn"}
+			,{type: 'calendar', name: 'applCmpltDt', label: '적용종료일자', width:120, offsetLeft: 50,  dateFormat: '%Y-%m-%d', serverDateFormat: '%Y%m%d', value: '', disabled:true, userdata: { align: "center" }}
+			,{type: "newcolumn"}
+			,{type: "checkbox", name: 'mclubYn', label: "M클럽점여부", value: 'Y', offsetLeft: 70, readonly: true}
+		]},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'typeDtlCdNm1', label: '대리점유형',  width: 120, offsetLeft: 40,  value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'typeDtlCdNm2', label: '대리점유형상세',  width: 120, offsetLeft: 50, value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'typeDtlCdNm3', label: '채널상세',  width: 120, offsetLeft: 70, value: '' , readonly:true}
+		]},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'bizTypeNm', label: '사업자구분',  width: 120, offsetLeft: 40,  value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'bizRegNum', label: '사업자등록번호',  width: 120, offsetLeft: 50, value: '' , readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'corpRegNum', label: '법인등록번호',  width: 120, offsetLeft: 70, value: '' , readonly:true}
+		]},
+		
+		{type: 'fieldset', label: '담당직원정보', inputWidth:857, offsetLeft:40, list:[
+			{type:"settings", labelWidth:60, inputWidth:100}
+			,{type: 'input', name: 'respnPrsnNm', label: '담당자명', readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'respnPrsnIdMsk', label: '담당자ID',offsetLeft:40, value: '' , readonly:true}
+			,{type: 'hidden', name: 'respnPrsnId'}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'respnPrsnMblphn', label: '휴대전화',offsetLeft:40,   value: '', readonly:true}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'respnPrsnEmail', label: '이메일',offsetLeft:40, value: '' , readonly:true}
+		]}
+	],
+
+	//조직 등록
+	form3 : [
+		{type: 'settings', position: 'label-left', labelAlign:"left", labelWidth: '80'},
+		{type: "block", list: [
+			{type: 'input', name: 'hghrOrgnCd', label: '상위조직',  width: 140, offsetLeft: 10,  value: '' , disabled:true}
+			,{type: "newcolumn"}
+			,{type:"button", name: 'btnOrgFind', value:"찾기"}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'hghrOrgnNm', width: 200, value: '', disabled:true}
+		]},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'orgnId', label: '조직ID',  width: 140, offsetLeft:10, required:true, maxLength:10, validate: 'ValidAplhaNumeric'}
+			,{type: "newcolumn"}
+			,{type: 'button', value: '중복', name: 'btnExist'}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'orgnNm', width: 200, maxLength:30}
+			,{type: "newcolumn"}
+			,{type: 'select', name: 'orgnStatCd', label: '조직상태', width: 140, offsetLeft:10}
+			,{type: 'hidden', name: 'btnExistFlag', value: '0'}
+			//,{type: 'hidden', name: 'orgnLvlCd', label: '조직레벨'}
+		]},
+		
+		{type: "block", list: [
+			{type: 'calendar', name: 'applStrtDt' , label: '시작일자', dateFormat: '%Y-%m-%d', serverDateFormat: '%Y%m%d', calendarPosition: 'right', width:140, offsetLeft: 10, required: true}
+			,{type: "newcolumn"}
+			,{type: 'calendar', name: 'applCmpltDt', label: '종료일자', dateFormat: '%Y-%m-%d', serverDateFormat: '%Y%m%d', calendarPosition: 'right', width:140, offsetLeft: 20}
+		]},
+		
+		{type: "block", list: [
+			{type: 'select', name: 'typeDtlCd1', label: '대리점유형',  width: 140, offsetLeft: 10,  value: ''}
+			,{type: "newcolumn"}
+			,{type: 'select', name: 'typeDtlCd2', label: '상세유형',  width: 140, offsetLeft: 20, value: ''}
+			,{type: "newcolumn"}
+			,{type: 'select', name: 'typeDtlCd3', label: '채널상세',  width: 140, offsetLeft: 20, value: ''}
+		]},
+		
+		{type: "block", list: [
+			{type: 'select', name: 'bizTypeCd', label: '사업자구분',  width: 140, offsetLeft: 10,  value: ''}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'bizRegNum1', label: '사업자번호', width: 30, offsetLeft: 20, validate: 'ValidInteger', maxLength:3}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'bizRegNum2', width: 20, validate: 'ValidInteger', maxLength:2}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'bizRegNum3', width: 50, validate: 'ValidInteger', maxLength:5}
+			,{type: "newcolumn"},
+			,{type: 'input', name: 'corpRegNum1', label: '법인번호', width: 60, offsetLeft: 52, validate: 'ValidInteger', maxLength:6}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'corpRegNum2', width: 70, validate: 'ValidInteger', maxLength:7}
+		]},
+		
+		{type: "block", list: [
+			//{type: 'input', name: 'ktOrgId', label: 'KT대리점코드',  width: 140, offsetLeft: 10, value: ''  ,maxLength:10}
+			//,{type: "newcolumn"}
+			{type: 'select', name: 'orgnGrd', label: '대리점권역', width: 140, offsetLeft: 10}
+			,{type: "newcolumn"}
+			,{type: "checkbox", name: 'mclubYn', label: "M클럽점여부", value: 'Y', offsetLeft: 20}
+		]},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'respnPrsnId', label: '담당자', width: 140, offsetLeft:10, disabled:true}
+			,{type: "newcolumn"}
+			,{type:"button", name: 'btnUseFind', value:"찾기"}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'respnPrsnNm', width: 140, disabled:true}
+		]}
+		
+	],
+
+	//조직 수정
+	form4 : [
+		{type: 'settings', position: 'label-left', labelAlign:"left", labelWidth: '80'},
+		{type: "block", list: [
+			{type: 'input', name: 'hghrOrgnCd', label: '상위조직',  width: 140, offsetLeft: 10, disabled:true}
+			,{type: "newcolumn"}
+			,{type:"button", name: 'btnOrgFind', value:"찾기"}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'hghrOrgnNm', width: 200, disabled:true}
+		]},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'orgnId', label: '조직ID',  width: 140, offsetLeft:10, required:true, maxLength:10, validate: 'ValidAplhaNumeric'}
+			,{type: "newcolumn"}
+			,{type: 'button', value: '중복', name: 'btnExist'}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'orgnNm', width: 200, maxLength:30}
+			,{type: "newcolumn"}
+			,{type: 'select', name: 'orgnStatCd', label: '조직상태', width: 140, offsetLeft:10}
+			,{type: 'hidden', name: 'btnExistFlag', value: '0'}
+			//,{type: 'hidden', name: 'orgnLvlCd', label: '조직레벨'}
+		]},
+		
+		{type: "block", list: [
+			{type: 'calendar', name: 'applStrtDt' , label: '시작일자', dateFormat: '%Y-%m-%d', serverDateFormat: '%Y%m%d', calendarPosition: 'right', width:140, offsetLeft: 10, required: true}
+			,{type: "newcolumn"}
+			,{type: 'calendar', name: 'applCmpltDt', label: '종료일자', dateFormat: '%Y-%m-%d', serverDateFormat: '%Y%m%d', calendarPosition: 'right', width:140, offsetLeft: 20}
+		]},
+		
+		{type: "block", list: [
+			{type: 'select', name: 'typeDtlCd1', label: '대리점유형',  width: 140, offsetLeft: 10,  value: ''}
+			,{type: "newcolumn"}
+			,{type: 'select', name: 'typeDtlCd2', label: '상세유형',  width: 140, offsetLeft: 20, value: ''}
+			,{type: "newcolumn"}
+			,{type: 'select', name: 'typeDtlCd3', label: '채널상세',  width: 140, offsetLeft: 20, value: ''}
+		]},
+		
+		{type: "block", list: [
+			{type: 'select', name: 'bizTypeCd', label: '사업자구분',  width: 140, offsetLeft: 10,  value: ''}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'bizRegNum1', label: '사업자번호', width: 30, offsetLeft: 20, validate: 'ValidInteger', maxLength:3}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'bizRegNum2', width: 20, validate: 'ValidInteger', maxLength:2}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'bizRegNum3', width: 50, validate: 'ValidInteger', maxLength:5}
+			,{type: "newcolumn"},
+			,{type: 'input', name: 'corpRegNum1', label: '법인번호', width: 60, offsetLeft: 52, validate: 'ValidInteger', maxLength:6}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'corpRegNum2', width: 70, validate: 'ValidInteger', maxLength:7}
+		]},
+		
+		{type: "block", list: [
+			//{type: 'input', name: 'ktOrgId', label: 'KT대리점코드',  width: 140, offsetLeft: 10, value: ''  ,maxLength:10}
+			//,{type: "newcolumn"}
+			{type: 'select', name: 'orgnGrd', label: '대리점권역', width: 140, offsetLeft: 10}
+			,{type: "newcolumn"}
+			,{type: "checkbox", name: 'mclubYn', label: "M클럽점여부", value: 'Y', offsetLeft: 20}
+		]},
+		
+		{type: "block", list: [
+			{type: 'input', name: 'respnPrsnIdMsk', label: '담당자', width: 140, offsetLeft:10, disabled:true}
+			,{type: 'hidden', name: 'respnPrsnId'}
+			,{type: "newcolumn"}
+			,{type:"button", name: 'btnUseFind', value:"찾기"}
+			,{type: "newcolumn"}
+			,{type: 'input', name: 'respnPrsnNm', width: 140, disabled:true}
+		]}
+		
+	],
+	
+	// 선불조직
+	form21 : [
+		{type: 'hidden', name: 'virBankNm', value: ''},
+		{type: 'hidden', name: 'virBankCd', value: ''},
+		{type: 'hidden', name: 'rentalFee', value: ''},
+		{type:"settings", position:"label-left", labelAlign:"left"},
+		
+		{type:"block", width:140,height:15, list:[
+			{type:"label", label:"대리점아이디"},
+			{type:"label", label:"가상계좌"},
+			{type:"label", label:"예치금차감율(일반)"},
+			{type:"label", label:"데이타요율"},
+			{type:"label", label:"KOS 전산 아이디"},
+			{type:"label", label:"상위조직ID"}
+		]},
+		{type:"newcolumn"},
+		{type:"block", width:200,height:15, list:[
+			//대리점아이디
+			{type:"input", name: "agentId", value: '' ,readonly:true},
+			// 가상계좌
+			{type:"block", list:[
+				{type:"input", name:"virAccountId", value: '' , readonly:true, validate:"ValidNumeric"}
+			]},
+			// 예치금차감율
+			{type:"block", list:[
+				{type:"input", name:"depositRate", value: '' , readonly:true, validate:"ValidNumeric"},
+				{type:"newcolumn", offset:3},
+				{type:"label",label:"%", labelHeight:14, labelWidth:"5"}
+			]},
+			//데이타요율
+			{type:"block", list:[
+				{type:"input", name:"dataRate", value: '' , readonly:true, validate:"ValidNumeric"},
+				{type:"newcolumn", offset:3},
+				{type:"label",label:"%", labelHeight:14, labelWidth:"5"}
+			]},
+			//KOS 전산 아이디
+			{type:"block", list:[
+				{type:"input", name:"ktAgencyId", readonly:true, value: ''}
+			]},
+			// 상위조직ID
+			{type:"input", name:"adminId", value: '' , readonly:true}
+		]},
+		{type:"newcolumn" , offset:30},
+		{type:"block", width:140,height:15, list:[
+			{type:"label", label:"대리점명"},
+			{type:"label", label:"예치금"},
+			{type:"label", label:"예치금차감율(RS)"},
+			{type:"label", label:"핀구매할인율"},
+			{type:"label", label:"대리점서식지 노출여부"},
+			{type:"label", label:"등록수정일자"}
+			]
+		},
+		{type:"newcolumn"},
+		{type:"block", width:200,height:15, list:[
+			//대리점명
+			{type:"input", name:"agentNm", value: '' , readonly:true},
+			//예치금
+			{type:"block", list:[
+				{type:"input", name:"deposit", value: '' , readonly:true, numberFormat:"0,000,000,000", validate:"ValidNumeric"}
+			]},
+			//PPS35예치금차감율
+			{type:"block", list:[
+				{type:"input", name:"pps35DepositRate", value: '' , readonly:true, validate:"ValidNumeric"},
+				{type:"newcolumn", offset:3},
+				{type:"label",label:"%", labelHeight:14, labelWidth:"5"}
+			]},
+			// 핀구매할인율
+			{type:"block", list:[
+				{type:"input", name:"pinBuyRate", value: '' , readonly:true, validate:"ValidNumeric"},
+				{type:"newcolumn", offset:3},
+				{type:"label",label:"%", labelHeight:14, labelWidth:"5"}
+			]},
+			// 대리점 서식지 노출여부
+			{type:"block", list:[
+				{type : "select",name : "agentDocFlag", width:125 ,required:true, height : 14, labelHeight:14}
+			]},
+			// 등록수정일
+			{type:"input", name:"recordDate", value: '' , readonly:true}
+			]
+		}
+	],
+	// 조직 선불 등록/수정 팝업
+	form23 : [
+		{type: 'hidden', name: 'opCode', value: ''},
+		{type: 'hidden', name: 'rentalFee', value: '0'},
+		{type: 'hidden', name: 'virBankNm', value: ''},
+		{type: 'hidden', name: 'virBankCd', value: ''},
+		{type:"settings", position:"label-left", labelAlign:"left"},
+		
+		{type:"block", width:140,height:15, list:[
+			{type:"label", label:"대리점아이디"},
+			{type:"label", label:"가상계좌"},
+			{type:"label", label:"예치금차감율(일반)"},
+			{type:"label", label:"데이타요율"},
+			{type:"label", label:"KOS 전산 아이디"},
+			{type:"label", label:"상위조직ID"}
+		]},
+		{type:"newcolumn"},
+		{type:"block", width:200,height:15, list:[
+			//대리점아이디
+			{type:"input", name: "agentId", value: '' ,readonly:true},
+			// 가상계좌
+			{type:"block", list:[
+				{type:"input", name:"virAccountId", value: '' , readonly:true, validate:"ValidNumeric"},
+				{type:"newcolumn"},
+				{type:"button", name:"btnVACChange",value:"변경"}
+			]},
+			// 예치금차감율
+			{type:"block", list:[
+				{type:"input", name:"depositRate", value: '' , validate:"ValidNumeric"},
+				{type:"newcolumn", offset:3},
+				{type:"label",label:"%", labelHeight:14, labelWidth:"5"}
+			]},
+			//데이타요율
+			{type:"block", list:[
+				{type:"input", name:"dataRate", value: '' , validate:"ValidNumeric"},
+				{type:"newcolumn", offset:3},
+				{type:"label",label:"%", labelHeight:14, labelWidth:"5"}
+			]},
+			//KOS 전산 아이디
+			{type:"block", list:[
+				{type:"input", name:"ktAgencyId", value: ''}
+			]},
+			// 상위조직ID
+			{type:"input", name:"adminId", value: '' , readonly:true}
+			]
+		},
+		{type:"newcolumn" , offset:30},
+		{type:"block", width:140,height:15, list:[
+			{type:"label", label:"대리점명"},
+			{type:"label", label:"예치금"},
+			{type:"label", label:"예치금차감율(RS)"},
+			{type:"label", label:"핀구매할인율"},
+			{type:"label", label:"대리점서식지 노출여부"},
+			{type:"label", label:"등록수정일자"}
+			]
+		},
+		{type:"newcolumn"},
+		{type:"block", width:200,height:15, list:[
+			//대리점명
+			{type:"input", name:"agentNm", value: '' , readonly:true},
+			//예치금
+			{type:"block", list:[
+				{type:"input", name:"deposit", value: '' , readonly:true, numberFormat:"0,000,000,000", validate:"ValidNumeric"},
+				{type:"newcolumn"},
+				{type:"button", name:"btnDepositChange",value:"변경"}
+			]},
+			//예치금차감율
+			{type:"block", list:[
+				{type:"input", name:"pps35DepositRate", value: '' , validate:"ValidNumeric"},
+				{type:"newcolumn", offset:3},
+				{type:"label",label:"%", labelHeight:14, labelWidth:"5"}
+			]},
+			//핀구매할인율
+			{type:"block", list:[
+				{type:"input", name:"pinBuyRate", value: '' , validate:"ValidNumeric"},
+				{type:"newcolumn", offset:3},
+				{type:"label",label:"%", labelHeight:14, labelWidth:"5"}
+			]},
+			// 대리점 서식지 노출여부
+			{type:"block", list:[
+				{type : "select",name : "agentDocFlag", width:125 ,required:true, height : 14, labelHeight:14}
+			]},
+			// 등록수정일
+			{type:"input", name:"recordDate", value: '' , readonly:true}
+			]
+		}
+	],
+	
+	//조직파일관리
+	form25 : [
+			{type:"settings", position:"label-left", labelAlign:"left", labelWidth:80},
+			
+			{type: "block", list: [
+			{type: 'input', name: 'orgnId', label: '조직 ID',  width: 100, value: '' ,readonly:true, offsetLeft:20, disabled:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'orgnNm', label: '조직 명',  width: 150, value: '',readonly:true, offsetLeft:20, disabled:true}]},
+			
+			{type: 'fieldset', label: '조직 관련 파일 첨부',  inputWidth:500, offsetLeft:10, offsetTop:40, list:[
+			{type: "block", list: [
+			{type: 'input', name: 'fileName1', label: '파일 명',  width: 230, value: '', disabled:true, offsetLeft:20},
+			{type: 'hidden', name: 'fileId1', label: '파일ID'},
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDown1', value:"다운로드"},
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDel1', value:"삭제"},
+			]},
+			
+			{type: "block", list: [
+			{type: 'input', name: 'fileName2', label: '파일 명',  width: 230, value: '', disabled:true, offsetLeft:20},
+			{type: 'hidden', name: 'fileId2', label: '파일ID'},
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDown2', value:"다운로드"},	
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDel2', value:"삭제"},		
+			]},
+			
+			{type: "block", list: [
+			{type: 'input', name: 'fileName3', label: '파일 명',  width: 230, value: '', disabled:true, offsetLeft:20},
+			{type: 'hidden', name: 'fileId3', label: '파일ID'},
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDown3', value:"다운로드"},	
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDel3', value:"삭제"},		
+			]},
+			
+			{type: "block", list: [
+			{type: "upload", label:"파일업로드" ,name: "file_upload1",width: 384 ,inputWidth: 330 ,url: "/org/common/fileUpLoad.do" ,autoStart: false, offsetLeft:20, userdata: { limitCount : 3, limitsize: 1000, delUrl:"/org/common/deleteFile2.json"} }
+			]}]}
+		],
+	//담보파일관리
+	form26 : [
+			{type:"settings", position:"label-left", labelAlign:"left", labelWidth:80},
+			
+			{type: "block", list: [
+			{type: 'input', name: 'orgnId', label: '조직 ID',  width: 100, value: '' ,readonly:true, offsetLeft:20, disabled:true},
+			{type: "newcolumn"},
+			{type: 'input', name: 'orgnNm', label: '조직 명',  width: 150, value: '',readonly:true, offsetLeft:20, disabled:true}]},
+			
+			{type: 'fieldset', label: '담보 관련 파일 첨부',  inputWidth:500, offsetLeft:10, offsetTop:40, list:[
+			{type: "block", list: [
+			{type: 'input', name: 'fileName4', label: '파일 명',  width: 230, value: '', disabled:true, offsetLeft:20},
+			{type: 'hidden', name: 'fileId4', label: '파일ID'},
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDown4', value:"다운로드"},
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDel4', value:"삭제"},
+			]},
+			
+			{type: "block", list: [
+			{type: 'input', name: 'fileName5', label: '파일 명',  width: 230, value: '', disabled:true, offsetLeft:20},
+			{type: 'hidden', name: 'fileId5', label: '파일ID'},
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDown5', value:"다운로드"},	
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDel5', value:"삭제"},		
+			]},
+			
+			{type: "block", list: [
+			{type: 'input', name: 'fileName6', label: '파일 명',  width: 230, value: '', disabled:true, offsetLeft:20},
+			{type: 'hidden', name: 'fileId6', label: '파일ID'},
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDown6', value:"다운로드"},	
+			{type: "newcolumn"},			
+			{type:"button", name: 'fileDel6', value:"삭제"},		
+			]},
+			
+			{type: "block", labelWidth:80, list: [
+			{type: "upload", label:"파일업로드" ,name: "file_upload2",width: 384 ,inputWidth: 330 ,url: "/org/common/fileUpLoad2.do" ,autoStart: false, offsetLeft:20, userdata: { limitCount : 3, limitsize: 1000, delUrl:"/org/common/deleteFile2.json"} }
+			]}]}
+		]	
+};

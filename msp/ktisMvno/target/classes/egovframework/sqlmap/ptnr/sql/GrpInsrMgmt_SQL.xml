@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.ptnr.grpinsrmgmt.mapper.GrpInsrMgmtMapper">
+	
+	<!-- 단체보험조회 -->
+	<select id="getGrpInsrMgmtList" parameterType="com.ktis.msp.ptnr.grpinsrmgmt.vo.GrpInsrReqVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* grpInsrMapper.getGrpInsrMgmtList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  A.SEQ
+		        , A.GRP_INSR_NM
+		        , A.STRT_DT
+		        , A.END_DT
+		        , A.INSR_NM
+		        , A.USG_YN
+		        , FN_GET_USRNM(A.REGST_ID) AS REGST_NM
+		        , TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS') AS REGST_DT
+		        , FN_GET_USRNM(A.RVISN_ID) AS RVISN_NM
+		        , TO_CHAR(A.RVISN_DTTM, 'YYYYMMDDHH24MISS') AS RVISN_DT
+		FROM    MSP_GRP_INSR_MST A
+		WHERE   #{stdrDt} BETWEEN A.STRT_DT AND A.END_DT
+		<if test='usgYn == "Y" '>
+		AND     A.USG_YN = 'Y'
+		</if>
+		<if test="grpInsrCd != null and grpInsrCd != ''">
+			AND     INSTR(A.INSR_CD, #{grpInsrCd}) > 1
+		</if>
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 단체보험코드조회 -->
+	<select id="getGrpInsrCdList" parameterType="com.ktis.msp.ptnr.grpinsrmgmt.vo.GrpInsrReqVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* grpInsrMapper.getGrpInsrCdList */
+		<![CDATA[
+		WITH TMP AS (
+		    SELECT  REPLACE(SUBSTR(INSR_CD, START_POS, END_POS - START_POS), ',', '') AS INSR_CD
+		    FROM    (   SELECT  INSR_CD
+		                        , DECODE(LEVEL, 1, 1, INSTR(INSR_CD, ',', 1, LEVEL-1)) AS START_POS
+		                        , INSTR(INSR_CD, ',', 1, LEVEL) AS END_POS
+		                        , LEVEL AS LVL
+		                FROM    (   SELECT  INSR_CD || ',' AS INSR_CD
+		                                    , LENGTH(INSR_CD) AS ORI_LEN
+		                                    , LENGTH(REPLACE(INSR_CD, ',', '')) AS NEW_LEN
+		                            FROM    MSP_GRP_INSR_MST
+		                            WHERE   SEQ = #{seq}
+		                        )
+		                CONNECT BY LEVEL <= ORI_LEN - NEW_LEN + 1
+		            ) A
+		)
+		]]>
+		SELECT  DECODE(A.INSR_CD, NULL, 0, 1) AS CHK
+		        , B.CD_VAL AS INSR_CD
+		        , B.CD_DSC AS INSR_NM
+		FROM    TMP A
+		        , CMN_GRP_CD_MST B
+		WHERE   A.INSR_CD(+) = B.CD_VAL
+		AND     B.GRP_ID = 'CMN0246'
+		AND     B.USG_YN = 'Y'
+		AND     B.ETC2 = 'Y'
+		ORDER BY B.CD_VAL
+	</select>
+	
+	<!-- 단체보험등록 -->
+	<insert id="insertGrpInsrMst" parameterType="com.ktis.msp.ptnr.grpinsrmgmt.vo.GrpInsrResVO">
+		<selectKey keyProperty="seq" order="BEFORE" resultType="com.ktis.msp.ptnr.grpinsrmgmt.vo.GrpInsrResVO">
+			SELECT NVL(MAX(SEQ) + 1, 1) AS seq FROM MSP_GRP_INSR_MST
+		</selectKey>
+		/* grpInsrMapper.insertGrpInsrMst */
+		INSERT INTO MSP_GRP_INSR_MST (
+		    SEQ
+		    , GRP_INSR_NM
+		    , STRT_DT
+		    , END_DT
+		    , USG_YN
+		    , INSR_CD
+		    , INSR_NM
+		    , EXCEPT_RATE
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		) VALUES (
+		    #{seq}
+		    , #{grpInsrNm, jdbcType=VARCHAR}
+		    , #{strtDt, jdbcType=VARCHAR}
+		    , #{endDt, jdbcType=VARCHAR}
+		    , DECODE(#{usgYn, jdbcType=VARCHAR}, '0', 'N', #{usgYn, jdbcType=VARCHAR})
+		    , #{insrCds, jdbcType=VARCHAR}
+		    , #{insrNms, jdbcType=VARCHAR}
+		    , #{exceptRate, jdbcType=VARCHAR}
+		    , #{sessionUserId, jdbcType=VARCHAR}
+		    , SYSDATE
+		    , #{sessionUserId, jdbcType=VARCHAR}
+		    , SYSDATE
+		)
+	</insert>
+	
+	<!-- 단체보험 수정 -->
+	<update id="updateGrpInsrMst" parameterType="com.ktis.msp.ptnr.grpinsrmgmt.vo.GrpInsrResVO">
+		/* grpInsrMapper.updateGrpInsrMst */
+		UPDATE  MSP_GRP_INSR_MST
+		SET     USG_YN = DECODE(#{usgYn, jdbcType=VARCHAR}, '0', 'N', #{usgYn, jdbcType=VARCHAR})
+		WHERE   SEQ = #{seq}
+	</update>
+	
+	<!-- 단체보험 이벤트 여부 -->
+	<select id="getGrpInsrYn" parameterType="com.ktis.msp.ptnr.grpinsrmgmt.vo.GrpInsrReqVO" resultType="int">
+		/* grpInsrMapper.getGrpInsrYn */
+		SELECT  COUNT(1)
+		FROM    MSP_GRP_INSR_MST A
+		WHERE   NVL(#{reqInDay}, TO_CHAR(SYSDATE, 'YYYYMMDD')) BETWEEN A.STRT_DT AND A.END_DT
+		AND     A.USG_YN = 'Y'
+	</select>
+	
+	<!-- 신청등록 콤보박스 -->
+	<select id="getGrpInsrCombo" parameterType="com.ktis.msp.ptnr.grpinsrmgmt.vo.GrpInsrReqVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* grpInsrMapper.getGrpInsrCombo */
+		<![CDATA[
+		WITH TMP AS (
+		    SELECT  DISTINCT
+		            REPLACE(SUBSTR(INSR_CD, START_POS, END_POS - START_POS), ',', '') AS INSR_CD
+		    FROM    (
+		        SELECT  DISTINCT
+		                INSR_CD
+		                , DECODE(LEVEL, 1, 1, INSTR(INSR_CD, ',', 1, LEVEL-1)) AS START_POS
+		                , INSTR(INSR_CD, ',', 1, LEVEL) AS END_POS
+		                , LEVEL AS LVL
+		        FROM    (
+		            SELECT  A.INSR_CD || ',' AS INSR_CD
+		                    , LENGTH(A.INSR_CD) AS ORI_LEN
+		                    , LENGTH(REPLACE(A.INSR_CD, ',', '')) AS NEW_LEN
+		            FROM    MSP_GRP_INSR_MST A
+		            WHERE   NVL(#{reqInDay}, TO_CHAR(SYSDATE, 'YYYYMMDD')) BETWEEN A.STRT_DT AND A.END_DT
+		            AND     A.USG_YN = 'Y'
+		        )
+		        CONNECT BY LEVEL <= ORI_LEN - NEW_LEN + 1
+		    )
+		)
+		]]>
+		SELECT  A.INSR_CD   AS VALUE
+		        , B.CD_DSC  AS TEXT
+		FROM    TMP A
+		        , CMN_GRP_CD_MST B
+		WHERE   A.INSR_CD = B.CD_VAL
+		AND     B.GRP_ID = 'CMN0246'
+		AND     B.USG_YN = 'Y'
+		AND     B.ETC2 = 'Y'
+		ORDER BY B.CD_VAL
+	</select>
+	
+</mapper>

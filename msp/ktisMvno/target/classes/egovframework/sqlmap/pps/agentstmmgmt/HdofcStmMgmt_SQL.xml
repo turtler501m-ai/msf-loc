@@ -1,0 +1,2550 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.agentstmmgmt.mapper.PpsHdofcStmMgmtMapper">
+
+    <!-- 개통기본수수료조회 -->
+    <select id="getStmInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  /*+ INDEX_ASC(A PPS_AGENT_STM_BASIC_IDX) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			A.CONTRACT_NUM, 
+			BASIC_CARD_SD, 
+			BASIC_CASH_SD, 
+			BASIC_DEP_SD, 
+			BASIC_STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_BASIC', 'BASIC_STATUS', BASIC_STATUS) BASIC_STATUS_NM,
+			USIM_CARD_SD, 
+			USIM_CASH_SD, 
+			USIM_DEP_SD, 
+			USIM_STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_BASIC', 'USIM_STATUS', USIM_STATUS) USIM_STATUS_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT, 
+			CUSTOMER_ID, 
+			SUBSCRIBER_NO, 
+			SUB_LINK_NAME, 
+			TO_CHAR(ENTER_DATE, 'YYYY-MM-DD') ENTER_DATE, 
+			CUST_IDNT_NO_IND_CD, 
+			F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD) CUST_IDNT_NO_IND_CD_NM, 
+			SOC, 
+			(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1) SOC_NM,
+			ONOFF, 
+			SUB_STATUS_1, 
+			F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_1) SUB_STATUS_1_NM,
+			AGENT_ID_1, 
+			F_GET_AGENT_NM(AGENT_ID_1) AGENT_1_NM,
+			AGENT_SALE_ID_1, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_1) AGENT_SALE_1_NM,
+			DATA_TYPE_1, 
+			DOC_CNT_1, 
+			OVERLAP_STATUS,
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'OVERLAP_STATUS', OVERLAP_STATUS) OVERLAP_STATUS_NM,
+			MODEL_FLAG_15, 
+			REFUND_FLAG, 
+			TO_CHAR(REFUND_DT, 'YYYY-MM-DD') REFUND_DT, 
+			REFUND_RSN, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'REFUND_RSN', REFUND_RSN) REFUND_RSN_NM,
+			REFUND_ADMIN,
+			F_GET_ADMIN_NM(REFUND_ADMIN) REFUND_ADMIN_NM,
+			MNP_GUBUN,
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'MNP_GUBUN', MNP_GUBUN) MNP_GUBUN_NM
+		FROM PPS_AGENT_STM_BASIC A,
+     		PPS_AGENT_STM_OPEN B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriberNo'">
+						AND SUBSCRIBER_NO = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'contractNum'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'subLinkName'">
+						AND SUB_LINK_NAME LIKE '%' || #{searchSValue} || '%'
+					</when>
+					<when test="searchSItem == 'customerId'">
+						AND CUSTOMER_ID = #{searchSValue}
+					</when>
+					
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchSubStatus1 != null and searchSubStatus1 != ''">
+			<choose>
+				 <when test='searchSubStatus1 == "AS"'>
+				 	AND SUB_STATUS_1 IN ('A','S')
+				 </when>
+				 <otherwise>
+				 	AND SUB_STATUS_1 = #{searchSubStatus1}
+				 </otherwise>
+			</choose>
+				
+		</if>
+		<if test="searchBasicStatus != null and searchBasicStatus != ''">
+				AND BASIC_STATUS = #{searchBasicStatus}
+		</if>
+		<if test="searchUsimStatus != null and searchUsimStatus != ''">
+				AND USIM_STATUS = #{searchUsimStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		<if test="searchOverlapStatus != null and searchOverlapStatus != ''">
+				AND OVERLAP_STATUS = #{searchOverlapStatus}
+		</if>
+		<if test="searchMnpGubun != null and searchMnpGubun != ''">
+				AND MNP_GUBUN = #{searchMnpGubun}
+		</if>
+		<if test="searchModelFlag15 != null and searchModelFlag15 != ''">
+			<choose>
+				<when test='searchModelFlag15 == "Y"'>
+					AND MODEL_FLAG_15 = 'Y'
+				</when>
+				<when test='searchModelFlag15 == "N"'>
+					AND (MODEL_FLAG_15 = 'N' OR MODEL_FLAG_15 IS NULL)
+				</when>
+			</choose>
+		</if>
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	       
+    </select>
+    
+    <!-- 개통기본수수료조회 Excel -->
+    <select id="getStmInfoMgmtListExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT  /*+ INDEX_ASC(A PPS_AGENT_STM_BASIC_IDX) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(A.CONTRACT_NUM,'-') AS CONTRACT_NUM, 
+			NVL(BASIC_CARD_SD, 0) AS BASIC_CARD_SD, 
+			NVL(BASIC_CASH_SD, 0) AS BASIC_CASH_SD, 
+			NVL(BASIC_DEP_SD, 0) AS BASIC_DEP_SD, 
+			NVL(BASIC_STATUS,'-') AS BASIC_STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_BASIC', 'BASIC_STATUS', BASIC_STATUS),'-') AS BASIC_STATUS_NM,
+			NVL(USIM_CARD_SD, 0) AS USIM_CARD_SD, 
+			NVL(USIM_CASH_SD, 0) AS USIM_CASH_SD, 
+			NVL(USIM_DEP_SD, 0) AS USIM_DEP_SD, 
+			NVL(USIM_STATUS,'-') AS USIM_STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_BASIC', 'USIM_STATUS', USIM_STATUS),'-') AS USIM_STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT, 
+			NVL(CUSTOMER_ID,'-') AS CUSTOMER_ID, 
+			NVL(SUBSCRIBER_NO,'-') AS SUBSCRIBER_NO, 
+			NVL(SUB_LINK_NAME,'-') AS SUB_LINK_NAME, 
+			NVL(TO_CHAR(ENTER_DATE, 'YYYY-MM-DD'),'-') AS ENTER_DATE, 
+			NVL(CUST_IDNT_NO_IND_CD,'-') AS CUST_IDNT_NO_IND_CD, 
+			NVL(F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD),'-') AS CUST_IDNT_NO_IND_CD_NM, 
+			NVL(SOC,'-') AS SOC, 
+			NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1),'-') AS SOC_NM,
+			NVL(ONOFF,'-') AS ONOFF, 
+			NVL(SUB_STATUS_1,'-') AS SUB_STATUS_1, 
+			NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_1),'-') AS SUB_STATUS_1_NM,
+			NVL(AGENT_ID_1,'-') AS AGENT_ID_1, 
+			NVL(F_GET_AGENT_NM(AGENT_ID_1),'-') AS AGENT_1_NM,
+			NVL(AGENT_SALE_ID_1,'-') AS AGENT_SALE_ID_1, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_1),'-') AS AGENT_SALE_1_NM,
+			NVL(DATA_TYPE_1,'-') AS DATA_TYPE_1, 
+			NVL(DOC_CNT_1, 0) AS DOC_CNT_1, 
+			NVL(OVERLAP_STATUS, '-') OVERLAP_STATUS,
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'OVERLAP_STATUS', OVERLAP_STATUS), '-') OVERLAP_STATUS_NM,
+			NVL(MODEL_FLAG_15, 'N') MODEL_FLAG_15,
+			NVL(REFUND_FLAG,'-') AS REFUND_FLAG, 
+			NVL(TO_CHAR(REFUND_DT, 'YYYY-MM-DD'),'-') AS REFUND_DT, 
+			NVL(REFUND_RSN,'-') AS REFUND_RSN, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'REFUND_RSN', REFUND_RSN),'-') AS REFUND_RSN_NM,
+			NVL(REFUND_ADMIN,'-') AS REFUND_ADMIN,
+			NVL(F_GET_ADMIN_NM(REFUND_ADMIN),'-') AS REFUND_ADMIN_NM,
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'MNP_GUBUN', MNP_GUBUN), '-') MNP_GUBUN_NM
+		FROM PPS_AGENT_STM_BASIC A,
+     		PPS_AGENT_STM_OPEN B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriberNo'">
+						AND SUBSCRIBER_NO = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'contractNum'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'subLinkName'">
+						AND SUB_LINK_NAME LIKE '%' || #{searchSValue} || '%'
+					</when>
+					<when test="searchSItem == 'customerId'">
+						AND CUSTOMER_ID = #{searchSValue}
+					</when>
+					
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchSubStatus1 != null and searchSubStatus1 != ''">
+			<choose>
+				 <when test='searchSubStatus1 == "AS"'>
+				 	AND SUB_STATUS_1 IN ('A','S')
+				 </when>
+				 <otherwise>
+				 	AND SUB_STATUS_1 = #{searchSubStatus1}
+				 </otherwise>
+			</choose>
+				
+		</if>
+		<if test="searchBasicStatus != null and searchBasicStatus != ''">
+				AND BASIC_STATUS = #{searchBasicStatus}
+		</if>
+		<if test="searchUsimStatus != null and searchUsimStatus != ''">
+				AND USIM_STATUS = #{searchUsimStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+				AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		<if test="searchOverlapStatus != null and searchOverlapStatus != ''">
+				AND OVERLAP_STATUS = #{searchOverlapStatus}
+		</if>
+		<if test="searchMnpGubun != null and searchMnpGubun != ''">
+				AND MNP_GUBUN = #{searchMnpGubun}
+		</if>
+		<if test="searchModelFlag15 != null and searchModelFlag15 != ''">
+			<choose>
+				<when test='searchModelFlag15 == "Y"'>
+					AND MODEL_FLAG_15 = 'Y'
+				</when>
+				<when test='searchModelFlag15 == "N"'>
+					AND (MODEL_FLAG_15 = 'N' OR MODEL_FLAG_15 IS NULL)
+				</when>
+			</choose>
+		</if>
+		       
+    </select>
+    
+    <!-- Grade수수료조회 -->
+    <select id="getStmGradeMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  /*+ INDEX_DESC(A PPS_AGENT_STM_GRADE_IDX) */
+			A.CONTRACT_NUM, 
+			SUBSCRIBER_NO, 
+			SUB_LINK_NAME, 
+			TO_CHAR(ENTER_DATE, 'YYYY-MM-DD') AS ENTER_DATE, 
+			CUST_IDNT_NO_IND_CD,
+			F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD) AS CUST_IDNT_NO_IND_CD_NM, 
+			SOC,
+			(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1) AS SOC_NM, 
+			SUB_STATUS_1,
+			F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_1) AS SUB_STATUS_NM_1, 
+			SUB_STATUS_15,
+			F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_15) AS SUB_STATUS_NM_15, 
+			AGENT_ID_1,
+			F_GET_AGENT_NM(AGENT_ID_1) AS AGENT_ID_NM_1, 
+			AGENT_ID_15,
+			F_GET_AGENT_NM(AGENT_ID_15) AS AGENT_ID_NM_15, 
+			AGENT_SALE_ID_1,
+			F_GET_AGENT_NM(AGENT_SALE_ID_1) AS AGENT_SALE_ID_NM_1, 
+			AGENT_SALE_ID_15,
+			F_GET_AGENT_NM(AGENT_SALE_ID_15) AS AGENT_SALE_ID_NM_15, 
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') AS BILL_MONTH, 
+			CARD_SD_1, 
+			CASH_SD_1, 
+			DEP_SD_1, 
+			STATUS_1,
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_GRADE', 'STATUS', STATUS_1) AS STATUS_NM_1, 
+			CARD_SD_15, 
+			CASH_SD_15, 
+			DEP_SD_15, 
+			STATUS_15,
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_GRADE', 'STATUS', STATUS_15) AS STATUS_NM_15, 
+			OVERLAP_STATUS,
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'OVERLAP_STATUS', OVERLAP_STATUS) OVERLAP_STATUS_NM,
+			REMARK, 
+			REG_ADMIN,
+			F_GET_ADMIN_NM(REG_ADMIN) AS REG_ADMIN_NM, 
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') AS REG_DT
+		FROM PPS_AGENT_STM_GRADE A,
+		     PPS_AGENT_STM_OPEN B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriberNo'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contractNum'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'subLinkName'">
+						AND SUB_LINK_NAME LIKE '%' || #{searchSValue} || '%'
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchFeatures != null and searchFeatures != ''">
+			AND SOC = #{searchFeatures}
+		</if>
+		<if test="searchCustIdntNoIndCd != null and searchCustIdntNoIndCd != ''">
+			<choose>
+				<when test="searchCustIdntNoIndCd == '04'">
+					AND CUST_IDNT_NO_IND_CD = '04'
+				</when>
+				<when test="searchCustIdntNoIndCd == 'ETC'">
+					AND CUST_IDNT_NO_IND_CD &lt;> '04'
+				</when>
+			</choose>
+		</if>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND ( STATUS_1 = #{searchStatus} OR STATUS_15 = #{searchStatus} )
+		</if>
+		<if test="searchSubStatus != null and searchSubStatus != ''">
+			AND ( SUB_STATUS_1 = #{searchSubStatus} OR SUB_STATUS_15 = #{searchSubStatus} )
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		<if test="searchOverlapStatus != null and searchOverlapStatus != ''">
+				AND OVERLAP_STATUS = #{searchOverlapStatus}
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    <!-- Grade 수수료 조회 Excel -->
+    <select id="getStmGradeMgmtListExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT  /*+ INDEX_DESC(A PPS_AGENT_STM_GRADE_IDX) */
+			NVL(A.CONTRACT_NUM,'-') AS CONTRACT_NUM,  
+			NVL(SUBSCRIBER_NO,'-') AS SUBSCRIBER_NO, 
+			NVL(SUB_LINK_NAME,'-') AS SUB_LINK_NAME, 
+			NVL(TO_CHAR(ENTER_DATE, 'YYYY-MM-DD'),'-') AS ENTER_DATE, 
+			NVL(CUST_IDNT_NO_IND_CD,'-') AS CUST_IDNT_NO_IND_CD,
+			NVL(F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD),'-') AS CUST_IDNT_NO_IND_CD_NM, 
+			NVL(SOC,'-') AS SOC,
+			NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1),'-') AS SOC_NM, 
+			NVL(SUB_STATUS_1,'-') AS SUB_STATUS_1,
+			NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_1),'-') AS SUB_STATUS_NM_1, 
+			NVL(SUB_STATUS_15,'-') AS SUB_STATUS_15,
+			NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_15),'-') AS SUB_STATUS_NM_15, 
+			NVL(AGENT_ID_1,'-') AS AGENT_ID_1,
+			NVL(F_GET_AGENT_NM(AGENT_ID_1),'-') AS AGENT_ID_NM_1, 
+			NVL(AGENT_ID_15,'-') AS AGENT_ID_15,
+			NVL(F_GET_AGENT_NM(AGENT_ID_15),'-') AS AGENT_ID_NM_15, 
+			NVL(AGENT_SALE_ID_1,'-') AS AGENT_SALE_ID_1,
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_1),'-') AS AGENT_SALE_ID_NM_1, 
+			NVL(AGENT_SALE_ID_15,'-') AS AGENT_SALE_ID_15,
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_15),'-') AS AGENT_SALE_ID_NM_15, 
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(CARD_SD_1,0) AS CARD_SD_1, 
+			NVL(CASH_SD_1,0) AS CASH_SD_1,
+			NVL(DEP_SD_1,0) AS DEP_SD_1, 
+			NVL(STATUS_1,'-') AS STATUS_1,
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_GRADE', 'STATUS', STATUS_1),'-') AS STATUS_NM_1, 
+			NVL(CARD_SD_15,0) AS CARD_SD_15, 
+			NVL(CASH_SD_15,0) AS CASH_SD_15, 
+			NVL(DEP_SD_15,0) AS DEP_SD_15, 
+			NVL(STATUS_15,'-') AS STATUS_15,
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_GRADE', 'STATUS', STATUS_15),'-') AS STATUS_NM_15, 
+			NVL(OVERLAP_STATUS, '-') OVERLAP_STATUS,
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'OVERLAP_STATUS', OVERLAP_STATUS), '-') OVERLAP_STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN,
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM, 
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM_GRADE A,
+		     PPS_AGENT_STM_OPEN B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriberNo'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contractNum'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'subLinkName'">
+						AND SUB_LINK_NAME LIKE '%' || #{searchSValue} || '%'
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchFeatures != null and searchFeatures != ''">
+			AND SOC = #{searchFeatures}
+		</if>
+		<if test="searchCustIdntNoIndCd != null and searchCustIdntNoIndCd != ''">
+			<choose>
+				<when test="searchCustIdntNoIndCd == '04'">
+					AND CUST_IDNT_NO_IND_CD = '04'
+				</when>
+				<when test="searchCustIdntNoIndCd == 'ETC'">
+					AND CUST_IDNT_NO_IND_CD &lt;> '04'
+				</when>
+			</choose>
+		</if>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND ( STATUS_1 = #{searchStatus} OR STATUS_15 = #{searchStatus} )
+		</if>
+		<if test="searchSubStatus != null and searchSubStatus != ''">
+			AND ( SUB_STATUS_1 = #{searchSubStatus} OR SUB_STATUS_15 = #{searchSubStatus} )
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		<if test="searchOverlapStatus != null and searchOverlapStatus != ''">
+				AND OVERLAP_STATUS = #{searchOverlapStatus}
+		</if>
+    </select>
+    
+    <!-- 명변수료조회 -->
+    <select id="getStmMbMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_MB_IDX) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			CONTRACT_NUM, 
+			SUBSCRIBER_NO,
+			AGENT_ID, 
+			F_GET_AGENT_NM(AGENT_ID) AS AGENT_NM,
+			AGENT_SALE_ID, 
+			F_GET_AGENT_NM(AGENT_SALE_ID) AS AGENT_SALE_NM,
+			SUB_STATUS, 
+			F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS) AS SUB_STATUS_NM,
+			CUST_IDNT_NO_IND_CD_OLD, 
+			F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD_OLD) AS CUST_IDNT_NO_IND_CD_OLD_NM,
+			CUST_IDNT_NO_IND_CD, 
+			F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD) AS CUST_IDNT_NO_IND_CD_NM,
+			TO_CHAR(MB_DT, 'YYYY-MM-DD') MB_DT, 
+			RCG_FREE_AMT, 
+			RCG_PAY_AMT, 
+			RCG_AMT, 
+			CARD_SD, 
+			CASH_SD, 
+			DEP_SD, 
+			GUBUN, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_MB', 'GUBUN', GUBUN) AS GUBUN_NM,
+			STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_MB', 'STATUS', STATUS) AS STATUS_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) AS REG_ADMIN_NM, 
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') AS REG_DT
+		FROM PPS_AGENT_STM_MB A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchSubStatus != null and searchSubStatus != ''">
+			<choose>
+				 <when test='searchSubStatus == "AS"'>
+				 	AND SUB_STATUS IN ('A','S')
+				 </when>
+				 <otherwise>
+				 	AND SUB_STATUS = #{searchSubStatus}
+				 </otherwise>
+			</choose> 
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		<if test="searchMbtype != null and searchMbtype != ''">
+			AND GUBUN = #{searchMbtype}
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 명변수료조회 Excel -->
+    <select id="getStmMbMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_MB_IDX) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(CONTRACT_NUM,'-') AS CONTRACT_NUM, 
+			NVL(SUBSCRIBER_NO,'-') AS SUBSCRIBER_NO,
+			NVL(AGENT_ID,'-') AS AGENT_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_ID),'-') AS AGENT_NM,
+			NVL(AGENT_SALE_ID,'-') AS AGENT_SALE_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID),'-') AS AGENT_SALE_NM,
+			NVL(SUB_STATUS,'-') AS SUB_STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS),'-') AS SUB_STATUS_NM,
+			NVL(CUST_IDNT_NO_IND_CD_OLD,'-') AS CUST_IDNT_NO_IND_CD_OLD, 
+			NVL(F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD_OLD),'-') AS CUST_IDNT_NO_IND_CD_OLD_NM,
+			NVL(CUST_IDNT_NO_IND_CD,'-') AS CUST_IDNT_NO_IND_CD, 
+			NVL(F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD),'-') AS CUST_IDNT_NO_IND_CD_NM,
+			NVL(TO_CHAR(MB_DT, 'YYYY-MM-DD'),'-') AS MB_DT, 
+			NVL(RCG_FREE_AMT,0) AS RCG_FREE_AMT, 
+			NVL(RCG_PAY_AMT,0) AS RCG_PAY_AMT, 
+			NVL(RCG_AMT,0) AS RCG_AMT, 
+			NVL(CARD_SD,0) AS CARD_SD, 
+			NVL(CASH_SD,0) AS CASH_SD, 
+			NVL(DEP_SD,0) AS DEP_SD, 
+			NVL(GUBUN,'-') AS GUBUN, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_MB', 'GUBUN', GUBUN),'-') AS GUBUN_NM,
+			NVL(STATUS,'-') AS STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_MB', 'STATUS', STATUS),'-') AS STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM, 
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM_MB A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchSubStatus != null and searchSubStatus != ''">
+			<choose>
+				 <when test='searchSubStatus == "AS"'>
+				 	AND SUB_STATUS IN ('A','S')
+				 </when>
+				 <otherwise>
+				 	AND SUB_STATUS = #{searchSubStatus}
+				 </otherwise>
+			</choose> 
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		<if test="searchMbtype != null and searchMbtype != ''">
+			AND GUBUN = #{searchMbtype}
+		</if>
+    </select>
+    
+    <!-- 우량 고객 수료조회 -->
+    <select id="getStmUlMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_UL_IDX) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			A.CONTRACT_NUM, 
+			USE_AMT, 
+			USE_CNT, 
+			CARD_SD, 
+			CASH_SD, 
+			DEP_SD, 
+			STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_UL', 'STATUS', STATUS) STATUS_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT, 
+			SUBSCRIBER_NO, 
+			SUB_LINK_NAME, 
+			TO_CHAR(ENTER_DATE, 'YYYY-MM-DD') ENTER_DATE, 
+			CUST_IDNT_NO_IND_CD, 
+			F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD) CUST_IDNT_NO_IND_CD_NM,
+			SOC, 
+			(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1) SOC_NM,
+			SUB_STATUS_15, 
+			F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_15) SUB_STATUS_15_NM,
+			AGENT_ID_15, 
+			F_GET_AGENT_NM(AGENT_ID_15) AGENT_15_NM,
+			AGENT_SALE_ID_15, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_15) AGENT_SALE_15_NM,
+			MODEL_FLAG_15,
+			OVERLAP_STATUS,
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'OVERLAP_STATUS', OVERLAP_STATUS) OVERLAP_STATUS_NM
+		FROM PPS_AGENT_STM_UL A,
+		     PPS_AGENT_STM_OPEN B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriberNo'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contractNum'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'subLinkName'">
+						AND SUB_LINK_NAME LIKE '%' || #{searchSValue} || '%'
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchSubStatus != null and searchSubStatus != ''">
+			<choose>
+				 <when test='searchSubStatus == "AS"'>
+				 	AND SUB_STATUS_15 IN ('A','S')
+				 </when>
+				 <otherwise>
+				 	AND SUB_STATUS_15 = #{searchSubStatus}
+				 </otherwise>
+			</choose> 
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		<if test="searchMobelFlag != null and searchMobelFlag != ''">
+			AND MODEL_FLAG_15 = #{searchMobelFlag}
+		</if>
+		<if test="searchCustIdntNoIndCd != null and searchCustIdntNoIndCd != ''">
+			<choose>
+				<when test="searchCustIdntNoIndCd == '04'">
+					AND CUST_IDNT_NO_IND_CD = '04'
+				</when>
+				<when test="searchCustIdntNoIndCd == 'ETC'">
+					AND CUST_IDNT_NO_IND_CD &lt;> '04'
+				</when>
+			</choose>
+		</if>
+		<if test="searchFeatures != null and searchFeatures != ''">
+			AND SOC = #{searchFeatures}
+		</if>
+		<if test="searchOverlapStatus != null and searchOverlapStatus != ''">
+			AND OVERLAP_STATUS = #{searchOverlapStatus}
+		</if>
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 우량 고객 수료조회 Excel -->
+    <select id="getStmUlMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_UL_IDX) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(A.CONTRACT_NUM,'-') AS CONTRACT_NUM, 
+			NVL(USE_AMT,0) AS USE_AMT, 
+			NVL(USE_CNT,0) AS USE_CNT, 
+			NVL(CARD_SD,0) AS CARD_SD, 
+			NVL(CASH_SD,0) AS CASH_SD, 
+			NVL(DEP_SD,0) AS DEP_SD, 
+			NVL(STATUS,'-') AS STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_UL', 'STATUS', STATUS),'-') AS STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT, 
+			NVL(SUBSCRIBER_NO,'-') AS SUBSCRIBER_NO, 
+			NVL(SUB_LINK_NAME,'-') AS SUB_LINK_NAME, 
+			NVL(TO_CHAR(ENTER_DATE, 'YYYY-MM-DD'),'-') AS ENTER_DATE, 
+			NVL(CUST_IDNT_NO_IND_CD,'-') AS CUST_IDNT_NO_IND_CD, 
+			NVL(F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD),'-') AS CUST_IDNT_NO_IND_CD_NM,
+			NVL(SOC,'-') AS SOC, 
+			NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1),'-') AS SOC_NM,
+			NVL(SUB_STATUS_15,'-') AS SUB_STATUS_15, 
+			NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_15),'-') AS SUB_STATUS_15_NM,
+			NVL(AGENT_ID_15,'-') AS AGENT_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_ID_15),'-') AS AGENT_15_NM,
+			NVL(AGENT_SALE_ID_15,'-') AS AGENT_SALE_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_15),'-') AS AGENT_SALE_15_NM,
+			NVL(MODEL_FLAG_15,'-') AS MODEL_FLAG_15 ,
+			NVL(OVERLAP_STATUS, '-') OVERLAP_STATUS,
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'OVERLAP_STATUS', OVERLAP_STATUS), '-') OVERLAP_STATUS_NM
+		FROM PPS_AGENT_STM_UL A,
+		     PPS_AGENT_STM_OPEN B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriberNo'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contractNum'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'subLinkName'">
+						AND SUB_LINK_NAME LIKE '%' || #{searchSValue} || '%'
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchSubStatus != null and searchSubStatus != ''">
+			<choose>
+				 <when test='searchSubStatus == "AS"'>
+				 	AND SUB_STATUS_15 IN ('A','S')
+				 </when>
+				 <otherwise>
+				 	AND SUB_STATUS_15 = #{searchSubStatus}
+				 </otherwise>
+			</choose> 
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		<if test="searchMobelFlag != null and searchMobelFlag != ''">
+			AND MODEL_FLAG_15 = #{searchMobelFlag}
+		</if>
+		<if test="searchCustIdntNoIndCd != null and searchCustIdntNoIndCd != ''">
+			<choose>
+				<when test="searchCustIdntNoIndCd == '04'">
+					AND CUST_IDNT_NO_IND_CD = '04'
+				</when>
+				<when test="searchCustIdntNoIndCd == 'ETC'">
+					AND CUST_IDNT_NO_IND_CD &lt;> '04'
+				</when>
+			</choose>
+		</if>
+		<if test="searchFeatures != null and searchFeatures != ''">
+			AND SOC = #{searchFeatures}
+		</if>
+		<if test="searchOverlapStatus != null and searchOverlapStatus != ''">
+			AND OVERLAP_STATUS = #{searchOverlapStatus}
+		</if>
+    </select>
+    
+    <!-- 환수 등록 목록 조회 -->
+    <select id="getStmRefundExcelMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_REFUND_EXCEL_PK) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			GUBUN, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_REFUND_EXCEL','GUBUN',GUBUN) GUBUN_NM,
+			CONTRACT_NUM, 
+			AGENT_ID_1,
+			F_GET_AGENT_NM(AGENT_ID_1) AGENT_1_NM,
+			AGENT_SALE_ID_1, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_1) AGENT_SALE_1_NM,
+			AGENT_ID_15, 
+			F_GET_AGENT_NM(AGENT_ID_15) AGENT_15_NM,
+			AGENT_SALE_ID_15, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_15) AGENT_SALE_15_NM,
+			FREE_RCG_AMT,
+			CARD_SD_1, 
+			CASH_SD_1, 
+			DEP_SD_1, 
+			STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_REFUND_EXCEL','STATUS',STATUS) STATUS_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM_REFUND_EXCEL A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		<if test="searchGubun != null and searchGubun != ''">
+			AND GUBUN = #{searchGubun}
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 환수 등록 목록 조회 Excel -->
+    <select id="getStmRefundExcelMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_REFUND_EXCEL_PK) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(GUBUN,'-') AS GUBUN, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_REFUND_EXCEL','GUBUN',GUBUN),'-') AS GUBUN_NM,
+			NVL(CONTRACT_NUM,'-') AS CONTRACT_NUM, 
+			NVL(AGENT_ID_1,'-') AS AGENT_ID_1,
+			NVL(F_GET_AGENT_NM(AGENT_ID_1),'-') AS AGENT_1_NM,
+			NVL(AGENT_SALE_ID_1,'-') AS AGENT_SALE_ID_1, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_1),'-') AS AGENT_SALE_1_NM,
+			NVL(AGENT_ID_15,'-') AS AGENT_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_ID_15),'-') AS AGENT_15_NM,
+			NVL(AGENT_SALE_ID_15,'-') AS AGENT_SALE_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_15),'-') AS AGENT_SALE_15_NM,
+			NVL(FREE_RCG_AMT,0) AS FREE_RCG_AMT,
+			NVL(CARD_SD_1,0) AS CARD_SD_1, 
+			NVL(CASH_SD_1,0) AS CASH_SD_1, 
+			NVL(DEP_SD_1,0) AS DEP_SD_1, 
+			NVL(STATUS,'-') AS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_REFUND_EXCEL','STATUS',STATUS),'-') AS STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM_REFUND_EXCEL A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		<if test="searchGubun != null and searchGubun != ''">
+			AND GUBUN = #{searchGubun}
+		</if>
+
+    </select>
+    
+    <!-- 환수 등록  -->
+	<select id="procPpsStmRefundExcel"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_REFUND_EXCEL(
+					#{opCode, jdbcType=VARCHAR}
+				    , #{billMonth, jdbcType=VARCHAR}
+				    , #{gubun, jdbcType=VARCHAR}
+				    , #{contractNum, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+					, #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+    
+    <!-- 자동이체  수수료조회 -->
+    <select id="getStmCmsMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_CMS_IDX) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			CONTRACT_NUM, 
+			AGENT_ID, 
+			F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+			AGENT_SALE_ID, 
+			F_GET_AGENT_NM(AGENT_SALE_ID) AGENT_SALE_NM,
+			SOC, 
+			(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1) SOC_NM,
+			CMS_AMT_SETUP, 
+			CMS_AMT, 
+			TO_CHAR(CMS_DT, 'YYYY-MM-DD') CMS_DT, 
+			CARD_SD, 
+			CASH_SD, 
+			DEP_SD, 
+			STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_CMS', 'STATUS', STATUS) STATUS_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM_CMS A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		<if test="searchFeatures != null and searchFeatures != ''">
+			AND SOC = #{searchFeatures}
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 자동이체  수수료조회 Excel -->
+    <select id="getStmCmsMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_CMS_IDX) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(CONTRACT_NUM,'-') AS CONTRACT_NUM, 
+			NVL(AGENT_ID,'-') AS AGENT_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_ID),'-') AS AGENT_NM,
+			NVL(AGENT_SALE_ID,'-') AS AGENT_SALE_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID),'-') AS AGENT_SALE_NM,
+			NVL(SOC,'-') AS SOC, 
+			NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1),'-') AS SOC_NM,
+			NVL(CMS_AMT_SETUP,0) AS CMS_AMT_SETUP, 
+			NVL(CMS_AMT,0) AS CMS_AMT, 
+			NVL(TO_CHAR(CMS_DT, 'YYYY-MM-DD'),'-') AS CMS_DT, 
+			NVL(CARD_SD,0) AS CARD_SD, 
+			NVL(CASH_SD,0) AS CASH_SD, 
+			NVL(DEP_SD,0) AS DEP_SD, 
+			NVL(STATUS,'-') AS STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_CMS', 'STATUS', STATUS),'-') AS STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM_CMS A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		<if test="searchFeatures != null and searchFeatures != ''">
+			AND SOC = #{searchFeatures}
+		</if>
+    </select>
+    
+    <!-- 해지 환수 조회 -->
+    <select id="getStmRefundMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    	
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_REFUND_IDX) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			CONTRACT_NUM,
+			SUBSCRIBER_NO, 
+			AGENT_ID_1,
+			F_GET_AGENT_NM(AGENT_ID_1) AGENT_1_NM,
+			AGENT_SALE_ID_1, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_1) AGENT_SALE_1_NM,
+			AGENT_ID_15, 
+			F_GET_AGENT_NM(AGENT_ID_15) AGENT_15_NM,
+			AGENT_SALE_ID_15, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_15) AGENT_SALE_15_NM,
+			TO_CHAR(ENTER_DATE, 'YYYY-MM-DD') ENTER_DATE, 
+			TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE, 
+			CANCEL_RSN,
+			FN_GET_CODENM('RCP0060', FN_GET_CANRSN(A.CONTRACT_NUM)) MVNO_CANCEL_RSN_NM,
+			USE_CNT_SETUP, 
+			USE_CNT, 
+			CARD_SD_1, 
+			CASH_SD_1, 
+			DEP_SD_1, 
+			STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_REFUND','STATUS',STATUS) STATUS_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT,
+			FREE_RCG_AMT,
+			SOC, 
+			(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1) SOC_NM
+		FROM PPS_AGENT_STM_REFUND A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND SUBSCRIBER_NO = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		
+		<if test="searchSoc != null and searchSoc != ''">
+			AND SOC = #{searchSoc}
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 해지 환수 조회 Excel -->
+    <select id="getStmRefundMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_REFUND_IDX) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(CONTRACT_NUM,'-') AS CONTRACT_NUM,
+			NVL(SUBSCRIBER_NO,'-') AS SUBSCRIBER_NO, 
+			NVL(AGENT_ID_1,'-') AS AGENT_ID_1,
+			NVL(F_GET_AGENT_NM(AGENT_ID_1),'-') AS AGENT_1_NM,
+			NVL(AGENT_SALE_ID_1,'-') AS AGENT_SALE_ID_1, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_1),'-') AS AGENT_SALE_1_NM,
+			NVL(AGENT_ID_15,'-') AS AGENT_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_ID_15),'-') AS AGENT_15_NM,
+			NVL(AGENT_SALE_ID_15,'-') AS AGENT_SALE_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_15),'-') AS AGENT_SALE_15_NM,
+			NVL(TO_CHAR(ENTER_DATE, 'YYYY-MM-DD'),'-') AS ENTER_DATE, 
+			NVL(TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD'),'-') AS CANCEL_DATE, 
+			NVL(CANCEL_RSN,'-') AS CANCEL_RSN,
+			NVL((SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID ='MSP0004' AND CD_VAL = CANCEL_RSN),'-') AS CANCEL_RSN_NM,
+			NVL(FN_GET_CODENM('RCP0060', FN_GET_CANRSN(A.CONTRACT_NUM)),'-') AS MVNO_CANCEL_RSN_NM,
+			NVL(USE_CNT_SETUP,0) AS USE_CNT_SETUP, 
+			NVL(USE_CNT,0) AS USE_CNT, 
+			NVL(CARD_SD_1,0) AS CARD_SD_1, 
+			NVL(CASH_SD_1,0) AS CASH_SD_1, 
+			NVL(DEP_SD_1,0) AS DEP_SD_1, 
+			NVL(STATUS,'-') AS STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_REFUND','STATUS',STATUS),'-') AS STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT,
+			NVL(FREE_RCG_AMT,0) AS FREE_RCG_AMT,
+			NVL(SOC, '-') SOC, 
+			NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1), '-') SOC_NM
+		FROM PPS_AGENT_STM_REFUND A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND SUBSCRIBER_NO = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		
+		<if test="searchSoc != null and searchSoc != ''">
+			AND SOC = #{searchSoc}
+		</if>
+    </select>
+    
+    <!-- 미사용 환수 조회 -->
+    <select id="getStmNoUseMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    	
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_NOUSE_IDX) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			CONTRACT_NUM,
+			SUBSCRIBER_NO, 
+			AGENT_ID_1,
+			F_GET_AGENT_NM(AGENT_ID_1) AGENT_1_NM,
+			AGENT_SALE_ID_1, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_1) AGENT_SALE_1_NM,
+			AGENT_ID_15, 
+			F_GET_AGENT_NM(AGENT_ID_15) AGENT_15_NM,
+			AGENT_SALE_ID_15, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_15) AGENT_SALE_15_NM,
+			SUB_STATUS, 
+			F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',SUB_STATUS) SUB_STATUS_NM,
+			SOC, 
+			(SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1) SOC_NM,
+			FREE_RCG_AMT,
+			CARD_SD_1, 
+			CASH_SD_1, 
+			DEP_SD_1, 
+			STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_NOUSE','STATUS',STATUS) STATUS_NM,
+			FREE_RCG, 
+			PAY_RCG, 
+			RCG_AMT, 
+			RCG_SETUP_AMT, 
+			USE_BASIC, 
+			USE_VOICE, 
+			USE_SMS, 
+			USE_DATA, 
+			USE_ETC, 
+			USE_AMT, 
+			USE_SETUP_AMT, 
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT,
+			TO_CHAR(ENTER_DATE, 'YYYY-MM-DD') ENTER_DATE
+		FROM PPS_AGENT_STM_NOUSE A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND SUBSCRIBER_NO = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 미사용 환수 조회 Excel-->
+    <select id="getStmNoUseMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_NOUSE_IDX) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(CONTRACT_NUM,'-') AS CONTRACT_NUM,
+			NVL(SUBSCRIBER_NO,'-') AS SUBSCRIBER_NO, 
+			NVL(AGENT_ID_1,'-') AS AGENT_ID_1,
+			NVL(F_GET_AGENT_NM(AGENT_ID_1),'-') AS AGENT_1_NM,
+			NVL(AGENT_SALE_ID_1,'-') AS AGENT_SALE_ID_1, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_1),'-') AS AGENT_SALE_1_NM,
+			NVL(AGENT_ID_15,'-') AS AGENT_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_ID_15),'-') AS AGENT_15_NM,
+			NVL(AGENT_SALE_ID_15,'-') AS AGENT_SALE_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_15),'-') AS AGENT_SALE_15_NM,
+			NVL(SUB_STATUS,'-') AS SUB_STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',SUB_STATUS),'-') AS SUB_STATUS_NM,
+			NVL(SOC,'-') AS SOC, 
+			NVL((SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1),'-') AS SOC_NM,
+			NVL(FREE_RCG_AMT, 0) FREE_RCG_AMT,
+			NVL(CARD_SD_1,0) AS CARD_SD_1, 
+			NVL(CASH_SD_1,0) AS CASH_SD_1, 
+			NVL(DEP_SD_1,0) AS DEP_SD_1, 
+			NVL(STATUS,'-') AS STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_NOUSE','STATUS',STATUS),'-') AS STATUS_NM,
+			NVL(FREE_RCG,0) AS FREE_RCG, 
+			NVL(PAY_RCG,0) AS PAY_RCG, 
+			NVL(RCG_AMT,0) AS RCG_AMT, 
+			NVL(RCG_SETUP_AMT,0) AS RCG_SETUP_AMT, 
+			NVL(USE_BASIC,0) AS USE_BASIC, 
+			NVL(USE_VOICE,0) AS USE_VOICE, 
+			NVL(USE_SMS,0) AS USE_SMS, 
+			NVL(USE_DATA,0) AS USE_DATA, 
+			NVL(USE_ETC,0) AS USE_ETC, 
+			NVL(USE_AMT,0) AS USE_AMT, 
+			NVL(USE_SETUP_AMT,0) AS USE_SETUP_AMT, 
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT,
+			NVL(TO_CHAR(ENTER_DATE, 'YYYY-MM-DD'),'-') ENTER_DATE
+		FROM PPS_AGENT_STM_NOUSE A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND SUBSCRIBER_NO = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+	
+    </select>
+    
+    <!-- 비 정상 관리 조회 -->
+    <select id="getStmReOpenMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_REOPEN_IDX) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			CANCEL_CONTRACT_NUM, 
+			TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD') CANCEL_DATE, 
+			CANCEL_RSN, 
+			OPEN_CONTRACT_NUM, 
+			TO_CHAR(ENTER_DATE, 'YYYY-MM-DD') ENTER_DATE, 
+			AGENT_ID_1,
+			F_GET_AGENT_NM(AGENT_ID_1) AGENT_1_NM,
+			AGENT_SALE_ID_1, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_1) AGENT_SALE_1_NM,
+			AGENT_ID_15, 
+			F_GET_AGENT_NM(AGENT_ID_15) AGENT_15_NM,
+			AGENT_SALE_ID_15, 
+			F_GET_AGENT_NM(AGENT_SALE_ID_15) AGENT_SALE_15_NM,
+			OPEN_CNT, 
+			START_CNT_SETUP, 
+			END_CNT_SETUP, 
+			STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_REOPEN','STATUS',STATUS) STATUS_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM_REOPEN A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND (A.CANCEL_CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+							OR A.OPEN_CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual))
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND (A.CANCEL_CONTRACT_NUM = #{searchSValue}
+						     OR A.OPEN_CONTRACT_NUM = #{searchSValue})
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+	
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 비 정상 관리 조회 Excel-->
+    <select id="getStmReOpenMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_REOPEN_IDX) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(CANCEL_CONTRACT_NUM,'-') AS CANCEL_CONTRACT_NUM, 
+			NVL(TO_CHAR(CANCEL_DATE, 'YYYY-MM-DD'),'-') AS CANCEL_DATE, 
+			NVL(CANCEL_RSN,'-') AS CANCEL_RSN, 
+			FN_GET_CODENM('RCP0060', FN_GET_CANRSN(CANCEL_CONTRACT_NUM)) CANCEL_RSN_NM,
+			NVL(OPEN_CONTRACT_NUM,'-') AS OPEN_CONTRACT_NUM, 
+			NVL(TO_CHAR(ENTER_DATE, 'YYYY-MM-DD'),'-') AS ENTER_DATE, 
+			NVL(AGENT_ID_1,'-') AS AGENT_ID_1,
+			NVL(F_GET_AGENT_NM(AGENT_ID_1),'-') AS AGENT_1_NM,
+			NVL(AGENT_SALE_ID_1,'-') AS AGENT_SALE_ID_1, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_1),'-') AS AGENT_SALE_1_NM,
+			NVL(AGENT_ID_15,'-') AS AGENT_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_ID_15),'-') AS AGENT_15_NM,
+			NVL(AGENT_SALE_ID_15,'-') AS AGENT_SALE_ID_15, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID_15),'-') AS AGENT_SALE_15_NM,
+			NVL(OPEN_CNT,0) AS OPEN_CNT, 
+			NVL(START_CNT_SETUP,0) AS START_CNT_SETUP, 
+			NVL(END_CNT_SETUP,0) AS END_CNT_SETUP, 
+			NVL(STATUS,'-') AS STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_REOPEN','STATUS',STATUS),'-') AS STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM_REOPEN A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND (A.CANCEL_CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+							OR A.OPEN_CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual))
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND (A.CANCEL_CONTRACT_NUM = #{searchSValue}
+						     OR A.OPEN_CONTRACT_NUM = #{searchSValue})
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID_1 = #{searchAgentId}
+		</if>
+	
+    </select>
+    
+    <!-- 재충전 수수료 조회 -->
+    <select id="getStmRcgMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    	
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_REOPEN_IDX) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			CONTRACT_NUM, 
+			AGENT_ID, 
+			F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+			AGENT_SALE_ID, 
+			F_GET_AGENT_NM(AGENT_SALE_ID) AGENT_SALE_NM,
+			SOC,
+			(SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1) SOC_NM,
+			PPS_AMT, 
+			PPS_RATE, 
+			PPS_CARD_SD, 
+			PPS_CASH_SD, 
+			PPS_DEP_SD, 
+			VAC_AMT, 
+			VAC_RATE, 
+			VAC_CARD_SD, 
+			VAC_CASH_SD, 
+			VAC_DEP_SD, 
+			CMS_AMT, 
+			CMS_RATE, 
+			CMS_CARD_SD, 
+			CMS_CASH_SD, 
+			CMS_DEP_SD, 
+			CCD_AMT, 
+			CCD_RATE, 
+			CCD_CARD_SD, 
+			CCD_CASH_SD, 
+			CCD_DEP_SD, 
+			POS_AMT, 
+			POS_RATE, 
+			POS_CARD_SD, 
+			POS_CASH_SD, 
+			POS_DEP_SD, 
+			DEP_AMT, 
+			DEP_RATE, 
+			DEP_CARD_SD, 
+			DEP_CASH_SD, 
+			DEP_DEP_SD, 
+			CARD_SD, 
+			CASH_SD, 
+			DEP_SD, 
+			STATUS, 
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_RCG','STATUS',STATUS) STATUS_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM_RCG A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		<if test="searchFeatures != null and searchFeatures != ''">
+			AND SOC = #{searchFeatures}
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 재충전 수수료 조회 Excel -->
+    <select id="getStmRcgMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_REOPEN_IDX) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(CONTRACT_NUM,'-') AS CONTRACT_NUM, 
+			NVL(AGENT_ID,'-') AS AGENT_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_ID),'-') AS AGENT_NM,
+			NVL(AGENT_SALE_ID,'-') AS AGENT_SALE_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID),'-') AS AGENT_SALE_NM,
+			NVL(SOC,'-') AS SOC,
+			NVL((SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1),'-') AS SOC_NM,
+			NVL(PPS_AMT,0) AS PPS_AMT, 
+			NVL(PPS_RATE,0) AS PPS_RATE, 
+			NVL(PPS_CARD_SD,0) AS PPS_CARD_SD, 
+			NVL(PPS_CASH_SD,0) AS PPS_CASH_SD, 
+			NVL(PPS_DEP_SD,0) AS PPS_DEP_SD, 
+			NVL(VAC_AMT,0) AS VAC_AMT, 
+			NVL(VAC_RATE,0) AS VAC_RATE, 
+			NVL(VAC_CARD_SD,0) AS VAC_CARD_SD, 
+			NVL(VAC_CASH_SD,0) AS VAC_CASH_SD, 
+			NVL(VAC_DEP_SD,0) AS VAC_DEP_SD, 
+			NVL(CMS_AMT,0) AS CMS_AMT, 
+			NVL(CMS_RATE,0) AS CMS_RATE, 
+			NVL(CMS_CARD_SD,0) AS CMS_CARD_SD, 
+			NVL(CMS_CASH_SD,0) AS CMS_CASH_SD, 
+			NVL(CMS_DEP_SD,0) AS CMS_DEP_SD, 
+			NVL(CCD_AMT,0) AS CCD_AMT, 
+			NVL(CCD_RATE,0) AS CCD_RATE, 
+			NVL(CCD_CARD_SD,0) AS CCD_CARD_SD, 
+			NVL(CCD_CASH_SD,0) AS CCD_CASH_SD, 
+			NVL(CCD_DEP_SD,0) AS CCD_DEP_SD, 
+			NVL(POS_AMT,0) AS POS_AMT, 
+			NVL(POS_RATE,0) AS POS_RATE, 
+			NVL(POS_CARD_SD,0) AS POS_CARD_SD, 
+			NVL(POS_CASH_SD,0) AS POS_CASH_SD, 
+			NVL(POS_DEP_SD,0) AS POS_DEP_SD, 
+			NVL(DEP_AMT,0) AS DEP_AMT, 
+			NVL(DEP_RATE,0) AS DEP_RATE, 
+			NVL(DEP_CARD_SD,0) AS DEP_CARD_SD, 
+			NVL(DEP_CASH_SD,0) AS DEP_CASH_SD, 
+			NVL(DEP_DEP_SD,0) AS DEP_DEP_SD, 
+			NVL(CARD_SD,0) AS CARD_SD, 
+			NVL(CASH_SD,0) AS CASH_SD, 
+			NVL(DEP_SD,0) AS DEP_SD, 
+			NVL(STATUS,'-') AS STATUS, 
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_RCG','STATUS',STATUS),'-') AS STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM_RCG A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		<if test="searchFeatures != null and searchFeatures != ''">
+			AND SOC = #{searchFeatures}
+		</if>
+    </select>
+    
+    <!-- 조정수수료 관리 조회 -->
+    <select id="getStmModMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    	
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_MOD_PK) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			CONTRACT_NUM, 
+			AGENT_ID, 
+			F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+			AGENT_SALE_ID, 
+			F_GET_AGENT_NM(AGENT_SALE_ID) AGENT_SALE_NM,
+			CARD_SD, 
+			CASH_SD, 
+			DEP_SD, 
+			STATUS,
+			F_GET_KT_CODE_NM('PPS_AGENT_STM_MOD','STATUS',STATUS) STATUS_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM_MOD A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+	
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 조정수수료 관리 조회 Excel-->
+    <select id="getStmModMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_MOD_PK) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(CONTRACT_NUM,'-') AS CONTRACT_NUM, 
+			NVL(AGENT_ID,'-') AS AGENT_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_ID),'-') AS AGENT_NM,
+			NVL(AGENT_SALE_ID,'-') AS AGENT_SALE_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_SALE_ID),'-') AS AGENT_SALE_NM,
+			NVL(CARD_SD,0) AS CARD_SD, 
+			NVL(CASH_SD,0) AS CASH_SD, 
+			NVL(DEP_SD,0) AS DEP_SD, 
+			NVL(STATUS,'-') AS STATUS,
+			NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_MOD','STATUS',STATUS),'-') AS STATUS_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM_MOD A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchStatus != null and searchStatus != ''">
+			AND STATUS = #{searchStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+	
+    </select>
+    
+    <!-- 대리점별 정산내역 조회 -->
+    <select id="getStmHistoryMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    	
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_AGENT_PK) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			AGENT_ID, 
+			F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+			BASIC_CARD_SD, 
+			BASIC_CASH_SD, 
+			BASIC_DEP_SD, 
+			GRADE_CARD_SD, 
+			GRADE_CASH_SD, 
+			GRADE_DEP_SD, 
+			MB_CARD_SD, 
+			MB_CASH_SD, 
+			MB_DEP_SD, 
+			UL_CARD_SD, 
+			UL_CASH_SD, 
+			UL_DEP_SD, 
+			CMS_CARD_SD, 
+			CMS_CASH_SD, 
+			CMS_DEP_SD, 
+			USIM_CARD_SD, 
+			USIM_CASH_SD, 
+			USIM_DEP_SD, 
+			RCG_CARD_SD, 
+			RCG_CASH_SD, 
+			RCG_DEP_SD, 
+			REFUND_FREE_RCG_AMT, 
+			REFUND_CARD_SD, 
+			REFUND_CASH_SD, 
+			REFUND_DEP_SD, 
+			MOD_CARD_SD, 
+			MOD_CASH_SD, 
+			MOD_DEP_SD, 
+			MOD_AGENT_CARD_SD, 
+			MOD_AGENT_CASH_SD, 
+			MOD_AGENT_DEP_SD,  
+			CARD_SD, 
+			CASH_SD, 
+			DEP_SD, 
+			CONFIRM_FLAG, 
+			TO_CHAR(CONFIRM_DT, 'YYYY-MM-DD') CONFIRM_DT, 
+			CONFIRM_ADMIN, 
+			F_GET_ADMIN_NM(CONFIRM_ADMIN) CONFIRM_ADMIN_NM,
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM_AGENT A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+	
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 대리점별 정산내역 Excel-->
+    <select id="getStmHistoryMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_AGENT_PK) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(AGENT_ID,'-') AS AGENT_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_ID),'-') AS AGENT_NM,
+			NVL(BASIC_CARD_SD,0) AS BASIC_CARD_SD, 
+			NVL(BASIC_CASH_SD,0) AS BASIC_CASH_SD, 
+			NVL(BASIC_DEP_SD,0) AS BASIC_DEP_SD, 
+			NVL(GRADE_CARD_SD,0) AS GRADE_CARD_SD, 
+			NVL(GRADE_CASH_SD,0) AS GRADE_CASH_SD, 
+			NVL(GRADE_DEP_SD,0) AS GRADE_DEP_SD, 
+			NVL(MB_CARD_SD,0) AS MB_CARD_SD, 
+			NVL(MB_CASH_SD,0) AS MB_CASH_SD, 
+			NVL(MB_DEP_SD,0) AS MB_DEP_SD, 
+			NVL(UL_CARD_SD,0) AS UL_CARD_SD, 
+			NVL(UL_CASH_SD,0) AS UL_CASH_SD, 
+			NVL(UL_DEP_SD,0) AS UL_DEP_SD, 
+			NVL(CMS_CARD_SD,0) AS CMS_CARD_SD, 
+			NVL(CMS_CASH_SD,0) AS CMS_CASH_SD, 
+			NVL(CMS_DEP_SD,0) AS CMS_DEP_SD, 
+			NVL(USIM_CARD_SD,0) AS USIM_CARD_SD, 
+			NVL(USIM_CASH_SD,0) AS USIM_CASH_SD, 
+			NVL(USIM_DEP_SD,0) AS USIM_DEP_SD, 
+			NVL(RCG_CARD_SD,0) AS RCG_CARD_SD, 
+			NVL(RCG_CASH_SD,0) AS RCG_CASH_SD, 
+			NVL(RCG_DEP_SD,0) AS RCG_DEP_SD, 
+			NVL(REFUND_FREE_RCG_AMT,0) AS REFUND_FREE_RCG_AMT, 
+			NVL(REFUND_CARD_SD,0) AS REFUND_CARD_SD, 
+			NVL(REFUND_CASH_SD,0) AS REFUND_CASH_SD, 
+			NVL(REFUND_DEP_SD,0) AS REFUND_DEP_SD, 
+			NVL(MOD_CARD_SD,0) AS MOD_CARD_SD, 
+			NVL(MOD_CASH_SD,0) AS MOD_CASH_SD, 
+			NVL(MOD_DEP_SD,0) AS MOD_DEP_SD, 
+			NVL(MOD_AGENT_CARD_SD,0) AS MOD_AGENT_CARD_SD, 
+			NVL(MOD_AGENT_CASH_SD,0) AS MOD_AGENT_CASH_SD, 
+			NVL(MOD_AGENT_DEP_SD,0) AS MOD_AGENT_DEP_SD, 
+			NVL(CARD_SD,0) AS CARD_SD, 
+			NVL(CASH_SD,0) AS CASH_SD, 
+			NVL(DEP_SD,0) AS DEP_SD, 
+			NVL(CONFIRM_FLAG,'-') AS CONFIRM_FLAG, 
+			NVL(TO_CHAR(CONFIRM_DT, 'YYYY-MM-DD'),'-') AS CONFIRM_DT, 
+			NVL(CONFIRM_ADMIN,'-') AS CONFIRM_ADMIN, 
+			NVL(F_GET_ADMIN_NM(CONFIRM_ADMIN),'-') AS CONFIRM_ADMIN_NM,
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM_AGENT A
+		WHERE 1=1
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriber_no'">
+						AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+					</when>
+					<when test="searchSItem == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		
+    </select>
+    
+    <!-- 통합수수료정산 조회 -->
+    <select id="getStmMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    	
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_PK) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			BASIC_CARD_SD, 
+			BASIC_CASH_SD, 
+			BASIC_DEP_SD, 
+			GRADE_CARD_SD, 
+			GRADE_CASH_SD, 
+			GRADE_DEP_SD, 
+			MB_CARD_SD, 
+			MB_CASH_SD, 
+			MB_DEP_SD, 
+			UL_CARD_SD, 
+			UL_CASH_SD, 
+			UL_DEP_SD, 
+			CMS_CARD_SD, 
+			CMS_CASH_SD, 
+			CMS_DEP_SD, 
+			USIM_CARD_SD, 
+			USIM_CASH_SD, 
+			USIM_DEP_SD, 
+			RCG_CARD_SD, 
+			RCG_CASH_SD, 
+			RCG_DEP_SD, 
+			REFUND_FREE_RCG_AMT,
+			REFUND_CARD_SD, 
+			REFUND_CASH_SD, 
+			REFUND_DEP_SD, 
+			MOD_CARD_SD, 
+			MOD_CASH_SD, 
+			MOD_DEP_SD, 
+			MOD_AGENT_CARD_SD, 
+			MOD_AGENT_CASH_SD, 
+			MOD_AGENT_DEP_SD, 
+			CARD_SD, 
+			CASH_SD, 
+			DEP_SD, 
+			END_FLAG, 
+			TO_CHAR(END_DT, 'YYYY-MM-DD') END_DT, 
+			END_ADMIN, 
+			F_GET_ADMIN_NM(END_ADMIN) END_ADMIN_NM, 
+			REMARK, 
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM A
+	   WHERE 1=1
+		<if test="startDt != null and startDt != ''">
+			AND BILL_MONTH >= TO_DATE(#{startDt}, 'YYYY-MM')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND BILL_MONTH &lt;  ADD_MONTHS(TO_DATE(#{endDt}, 'YYYY-MM'),1)
+		</if>
+    
+    	<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 통합수수료정산 Excel-->
+    <select id="getStmMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_PK) */
+			NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'),'-') AS BILL_MONTH, 
+			NVL(BASIC_CARD_SD,0) AS BASIC_CARD_SD, 
+			NVL(BASIC_CASH_SD,0) AS BASIC_CASH_SD, 
+			NVL(BASIC_DEP_SD,0) AS BASIC_DEP_SD, 
+			NVL(GRADE_CARD_SD,0) AS GRADE_CARD_SD, 
+			NVL(GRADE_CASH_SD,0) AS GRADE_CASH_SD, 
+			NVL(GRADE_DEP_SD,0) AS GRADE_DEP_SD, 
+			NVL(MB_CARD_SD,0) AS MB_CARD_SD, 
+			NVL(MB_CASH_SD,0) AS MB_CASH_SD, 
+			NVL(MB_DEP_SD,0) AS MB_DEP_SD, 
+			NVL(UL_CARD_SD,0) AS UL_CARD_SD, 
+			NVL(UL_CASH_SD,0) AS UL_CASH_SD, 
+			NVL(UL_DEP_SD,0) AS UL_DEP_SD, 
+			NVL(CMS_CARD_SD,0) AS CMS_CARD_SD, 
+			NVL(CMS_CASH_SD,0) AS CMS_CASH_SD, 
+			NVL(CMS_DEP_SD,0) AS CMS_DEP_SD, 
+			NVL(USIM_CARD_SD,0) AS USIM_CARD_SD, 
+			NVL(USIM_CASH_SD,0) AS USIM_CASH_SD, 
+			NVL(USIM_DEP_SD,0) AS USIM_DEP_SD, 
+			NVL(RCG_CARD_SD,0) AS RCG_CARD_SD, 
+			NVL(RCG_CASH_SD,0) AS RCG_CASH_SD, 
+			NVL(RCG_DEP_SD,0) AS RCG_DEP_SD, 
+			NVL(REFUND_FREE_RCG_AMT,0) AS REFUND_FREE_RCG_AMT,
+			NVL(REFUND_CARD_SD,0) AS REFUND_CARD_SD, 
+			NVL(REFUND_CASH_SD,0) AS REFUND_CASH_SD, 
+			NVL(REFUND_DEP_SD,0) AS REFUND_DEP_SD, 
+			NVL(MOD_CARD_SD,0) AS MOD_CARD_SD, 
+			NVL(MOD_CASH_SD,0) AS MOD_CASH_SD, 
+			NVL(MOD_DEP_SD,0) AS MOD_DEP_SD, 
+			NVL(MOD_AGENT_CARD_SD,0) AS MOD_AGENT_CARD_SD, 
+			NVL(MOD_AGENT_CASH_SD,0) AS MOD_AGENT_CASH_SD, 
+			NVL(MOD_AGENT_DEP_SD,0) AS MOD_AGENT_DEP_SD, 
+			NVL(CARD_SD,0) AS CARD_SD, 
+			NVL(CASH_SD,0) AS CASH_SD, 
+			NVL(DEP_SD,0) AS DEP_SD, 
+			NVL(END_FLAG,'-') AS END_FLAG, 
+			NVL(TO_CHAR(END_DT, 'YYYY-MM-DD'),'-') AS END_DT, 
+			NVL(END_ADMIN,'-') AS END_ADMIN, 
+			NVL(F_GET_ADMIN_NM(END_ADMIN),'-') AS END_ADMIN_NM, 
+			NVL(REMARK,'-') AS REMARK, 
+			NVL(REG_ADMIN,'-') AS REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN),'-') AS REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'),'-') AS REG_DT
+		FROM PPS_AGENT_STM A
+	   WHERE 1=1
+   		<if test="startDt != null and startDt != ''">
+			AND BILL_MONTH >= TO_DATE(#{startDt}, 'YYYY-MM')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND BILL_MONTH &lt;  ADD_MONTHS(TO_DATE(#{endDt}, 'YYYY-MM'),1)
+		</if>
+    
+    </select>
+    
+    <!-- 각 수수료 상태 변경  -->
+	<select id="procPpsStmStatusChg"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_STATUS_CHG(
+					#{opCode, jdbcType=VARCHAR}
+				    , #{billMonth, jdbcType=VARCHAR}
+				    , #{gubun, jdbcType=VARCHAR}
+				    , #{contractNum, jdbcType=VARCHAR}
+				    , #{status1, jdbcType=VARCHAR}
+				    , #{status2, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+					, #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+
+	<!-- 대리점별 정산내역 수정  -->
+	<select id="procPpsAgentStmAgentMod"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_AGENT_MOD(
+				    #{billMonth, jdbcType=VARCHAR}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{cardSd, jdbcType=VARCHAR}
+				    , #{cashSd, jdbcType=VARCHAR}
+				    , #{depSd, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+					, #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 조정수수료 등록  -->
+	<select id="procPpsAgentStmMod"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_MOD(
+					#{opCode, jdbcType=VARCHAR}
+				    , #{billMonth, jdbcType=VARCHAR}
+				    , #{contractNum, jdbcType=VARCHAR}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{agentSaleId, jdbcType=VARCHAR}
+				    , #{cardSd, jdbcType=VARCHAR}
+				    , #{cashSd, jdbcType=VARCHAR}
+				    , #{depSd, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+					, #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 정책그룹 코드 -->
+	<select id="getPpsAgentStmGroupData"  parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT 
+			GROUP_ID value, 
+			GROUP_NAME text 
+		FROM PPS_AGENT_STM_GROUP
+		ORDER BY GROUP_ID ASC
+	</select>
+	
+	<!-- 정책관리 리스트 -->
+    <select id="getStmSetupMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT SETUP_SEQ, 
+				GROUP_ID, 
+				(SELECT GROUP_NAME FROM PPS_AGENT_STM_GROUP WHERE GROUP_ID = A.GROUP_ID) GROUP_NAME,
+				SETUP_NAME, 
+				SETUP_DTL_NAME, 
+				DTL_CD, 
+				DECODE(DTL_CD, '', '', 'Y') DTL_FLAG,
+				SETUP_CD, 
+				DECODE(SETUP_VIEW, '', '', 'Y') SETUP_FLAG,
+				SETUP_VIEW, 
+				REMARK,
+				DECODE((SELECT COUNT(*) FROM PPS_AGENT_STM_CODE WHERE DTL_CD = A.DTL_CD AND ROWNUM = 1), 1, 'Y', '') REG_FLAG
+		FROM PPS_AGENT_STM_SETUP A
+		WHERE 1=1
+				
+		<if test="searchGroupId != null and searchGroupId != ''">
+			AND GROUP_ID = #{searchGroupId}
+		</if>
+		
+		ORDER BY VIEW_ORDER ASC
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	
+    </select>
+    
+    <!-- 정책 값 변경  -->
+	<select id="procPpsStmSetupChg"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_SETUP_CHG(
+					#{opCode, jdbcType=VARCHAR}
+				    , #{dtlCd, jdbcType=VARCHAR}
+				    , #{dtlSeq, jdbcType=VARCHAR}
+				    , #{codeA, jdbcType=VARCHAR}
+				    , #{codeAFlag, jdbcType=VARCHAR}
+				    , #{codeB, jdbcType=VARCHAR}
+				    , #{codeBFlag, jdbcType=VARCHAR}
+				    , #{codeC, jdbcType=VARCHAR}
+				    , #{codeCFlag, jdbcType=VARCHAR}
+				    , #{codeD, jdbcType=VARCHAR}
+				    , #{codeDFlag, jdbcType=VARCHAR}
+				    , #{codeE, jdbcType=VARCHAR}
+				    , #{codeEFlag, jdbcType=VARCHAR}
+				    , #{stmGubun, jdbcType=VARCHAR}
+				    , #{stmSd, jdbcType=VARCHAR}
+				    , #{stmFlag, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+					, #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+
+				  )
+	     }
+	</select>
+	
+	<!-- 정책 세부내역 리스트 -->
+    <select id="getStmSetupDtlMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    	SELECT  DTL_SEQ, 
+		        DTL_CD, 
+		        CODE_A, 
+		        CODE_A_NM,
+		        CODE_A_TYPE,
+		        CODE_A_COMBO,
+		        CODE_A_HEAD_NM,
+		        CODE_A_MOD_FLAG,    
+		        CODE_B, 
+		        CODE_B_NM,
+		        CODE_B_TYPE,
+		        CODE_B_COMBO,
+		        CODE_B_HEAD_NM,
+		        CODE_B_MOD_FLAG, 
+		        CODE_C, 
+		        CODE_C_NM,
+		        CODE_C_TYPE,
+		        CODE_C_COMBO,
+		        CODE_C_HEAD_NM,
+		        CODE_C_MOD_FLAG, 
+		        CODE_D, 
+		        CODE_D_NM,
+		        CODE_D_TYPE,
+		        CODE_D_COMBO,
+		        CODE_D_HEAD_NM,
+		        CODE_D_MOD_FLAG, 
+		        CODE_E, 
+		        CODE_E_NM,
+		        CODE_E_TYPE,
+		        CODE_E_COMBO,
+		        CODE_E_HEAD_NM,
+		        CODE_E_MOD_FLAG, 
+		        STM_GUBUN,
+		        F_GET_KT_CODE_NM('PPS_AGENT_STM_SETUP_DTL', 'STM_GUBUN', STM_GUBUN) STM_GUBUN_NM,
+		        STM_COMBO, 
+		        STM_SD,  
+		        DEL_FLAG, 
+		        VIEW_ORDER, 
+		        REG_DT, 
+		        REG_ADMIN, 
+		        REMARK
+		FROM PPS_AGENT_STM_SETUP_DTL A
+		WHERE 1=1
+				
+		<if test="dtlCd != null and dtlCd != ''">
+			AND DTL_CD = #{dtlCd}
+		</if>
+		
+		ORDER BY VIEW_ORDER ASC
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	
+    </select>
+    
+    <!-- 정책 세부내역 리스트 -->
+    <select id="getStmCodeMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	SELECT  DTL_CD, 
+				CODE_A_TYPE, 
+				CODE_A_COMBO, 
+				CODE_A_HEAD_NM, 
+				CODE_A_MOD_FLAG, 
+				CODE_B_TYPE, 
+				CODE_B_COMBO, 
+				CODE_B_HEAD_NM, 
+				CODE_B_MOD_FLAG, 
+				CODE_C_TYPE, 
+				CODE_C_COMBO, 
+				CODE_C_HEAD_NM, 
+				CODE_C_MOD_FLAG, 
+				CODE_D_TYPE, 
+				CODE_D_HEAD_NM, 
+				CODE_D_COMBO, 
+				CODE_D_MOD_FLAG, 
+				CODE_E_TYPE, 
+				CODE_E_HEAD_NM, 
+				CODE_E_COMBO, 
+				CODE_E_MOD_FLAG, 
+				STM_COMBO, 
+				DEL_FLAG, 
+				REMARK
+		FROM PPS_AGENT_STM_CODE A
+		WHERE 1=1
+				
+		<if test="dtlCd != null and dtlCd != ''">
+			AND DTL_CD = #{dtlCd}
+		</if>
+			
+    </select>
+    
+    <!-- 중복 개통 조회 -->
+    <select id="getStmOverlapList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    	
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_OPEN_IDX4) ORDERED USE_NL(A B) */
+		        A.CONTRACT_NUM, 
+		        A.CUSTOMER_ID, 
+		        SUBSCRIBER_NO, 
+		        SUB_LINK_NAME,  
+		        TO_CHAR(ENTER_DATE, 'YYYY-MM-DD') ENTER_DATE, 
+		        CUST_IDNT_NO_IND_CD, 
+		        F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD) CUST_IDNT_NO_IND_CD_NM, 
+		        SOC, 
+		        (SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1) SOC_NM,
+		        ONOFF, 
+		        OVERLAP_STATUS, 
+		        F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'OVERLAP_STATUS', OVERLAP_STATUS) OVERLAP_STATUS_NM,
+		        SUB_STATUS_1, 
+		        F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_1) SUB_STATUS_1_NM,
+		        A.AGENT_ID_1, 
+		        F_GET_AGENT_NM(A.AGENT_ID_1) AGENT_ID_1_NM,
+		        DATA_TYPE_1, 
+		        DOC_CNT_1, 
+		        TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+		        REMARK, 
+		        BASIC_STATUS,
+		        F_GET_KT_CODE_NM('PPS_AGENT_STM_BASIC', 'BASIC_STATUS', BASIC_STATUS) BASIC_STATUS_NM
+		FROM PPS_AGENT_STM_OPEN A,
+		     PPS_AGENT_STM_BASIC B,
+		     (
+		        SELECT AGENT_ID_1, CUSTOMER_ID
+		        FROM PPS_AGENT_STM_OPEN
+		        WHERE AGENT_ID_1 IS NOT NULL
+		              AND SUB_STATUS_1 IN ('A', 'S')
+		              
+		              <choose>
+							<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+								AND 1=1
+							</when>
+							<otherwise>
+								<if test="startDt != null and startDt != ''">
+									AND ENTER_DATE >= ADD_MONTHS(TO_DATE(#{startDt}||'01', 'YYYYMMDD'), -1)
+									AND ENTER_DATE &lt; TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+								</if>
+							</otherwise>
+						</choose>
+
+		        GROUP BY AGENT_ID_1, CUSTOMER_ID
+		        HAVING COUNT(*) > 1
+		     ) C
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		      AND A.AGENT_ID_1 = C.AGENT_ID_1
+		      AND A.CUSTOMER_ID = C.CUSTOMER_ID
+		      AND SUB_STATUS_1 IN ('A', 'S')
+		      AND A.AGENT_ID_1 IS NOT NULL
+
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriberNo'">
+						AND SUBSCRIBER_NO = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'contractNum'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'subLinkName'">
+						AND SUB_LINK_NAME LIKE '%' || #{searchSValue} || '%'
+					</when>
+					<when test="searchSItem == 'customerId'">
+						AND A.CUSTOMER_ID = #{searchSValue}
+					</when>
+					
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchBasicStatus != null and searchBasicStatus != ''">
+				AND BASIC_STATUS = #{searchBasicStatus}
+		</if>
+		<if test="searchOverlapStatus != null and searchOverlapStatus != ''">
+				AND OVERLAP_STATUS = #{searchOverlapStatus}
+		</if>
+		
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND ( A.AGENT_ID_1 = #{searchAgentId} )
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />  
+    </select>
+    
+    <!-- 중복 개통 조회 Excel -->
+    <select id="getStmOverlapListExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_OPEN_IDX4)ORDERED USE_NL(A B) */
+		        NVL(A.CONTRACT_NUM, '-') CONTRACT_NUM, 
+		        NVL(A.CUSTOMER_ID, '-') CUSTOMER_ID, 
+		        NVL(SUBSCRIBER_NO, '-') SUBSCRIBER_NO, 
+		        NVL(SUB_LINK_NAME, '-') SUB_LINK_NAME,  
+		        NVL(TO_CHAR(ENTER_DATE, 'YYYY-MM-DD'), '-') ENTER_DATE, 
+		        NVL(CUST_IDNT_NO_IND_CD, '-') CUST_IDNT_NO_IND_CD, 
+		        NVL(F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO', 'CUST_IDNT_NO_IND_CD', CUST_IDNT_NO_IND_CD), '-') CUST_IDNT_NO_IND_CD_NM, 
+		        NVL(SOC, '-') SOC, 
+		        NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1), '-') SOC_NM,
+		        NVL(ONOFF, '-') ONOFF, 
+		        NVL(OVERLAP_STATUS, '-') OVERLAP_STATUS, 
+		        NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_OPEN', 'OVERLAP_STATUS', OVERLAP_STATUS), '-') OVERLAP_STATUS_NM,
+		        NVL(SUB_STATUS_1, '-') SUB_STATUS_1, 
+		        NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', SUB_STATUS_1), '-') SUB_STATUS_1_NM,
+		        NVL(A.AGENT_ID_1, '-') AGENT_ID_1, 
+		        NVL(F_GET_AGENT_NM(A.AGENT_ID_1), '-') AGENT_ID_1_NM,
+		        NVL(DATA_TYPE_1, '-') DATA_TYPE_1, 
+		        NVL(DOC_CNT_1, 0) DOC_CNT_1, 
+		        NVL(TO_CHAR(BILL_MONTH, 'YYYY-MM'), '-') BILL_MONTH, 
+		        NVL(REMARK, '-') REMARK, 
+		        NVL(BASIC_STATUS, '-') BASIC_STATUS,
+		        NVL(F_GET_KT_CODE_NM('PPS_AGENT_STM_BASIC', 'BASIC_STATUS', BASIC_STATUS), '-') BASIC_STATUS_NM
+		FROM PPS_AGENT_STM_OPEN A,
+		     PPS_AGENT_STM_BASIC B,
+		     (
+		        SELECT AGENT_ID_1, CUSTOMER_ID
+		        FROM PPS_AGENT_STM_OPEN
+		        WHERE AGENT_ID_1 IS NOT NULL
+		              AND SUB_STATUS_1 IN ('A', 'S')
+		              
+		              <choose>
+							<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+								AND 1=1
+							</when>
+							<otherwise>
+								<if test="startDt != null and startDt != ''">
+									AND ENTER_DATE >= ADD_MONTHS(TO_DATE(#{startDt}||'01', 'YYYYMMDD'), -1)
+									AND ENTER_DATE &lt; TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+								</if>
+							</otherwise>
+						</choose>
+
+		        GROUP BY AGENT_ID_1, CUSTOMER_ID
+		        HAVING COUNT(*) > 1
+		     ) C
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		      AND A.AGENT_ID_1 = C.AGENT_ID_1
+		      AND A.CUSTOMER_ID = C.CUSTOMER_ID
+		      AND SUB_STATUS_1 IN ('A', 'S')
+		      AND A.AGENT_ID_1 IS NOT NULL
+
+		<choose>
+			<when test="searchSValue != null and searchSValue != '' and searchSItem != null and searchSItem != ''">
+				<choose>
+					<when test="searchSItem == 'subscriberNo'">
+						AND SUBSCRIBER_NO = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'contractNum'">
+						AND A.CONTRACT_NUM = #{searchSValue}
+					</when>
+					<when test="searchSItem == 'subLinkName'">
+						AND SUB_LINK_NAME LIKE '%' || #{searchSValue} || '%'
+					</when>
+					<when test="searchSItem == 'customerId'">
+						AND A.CUSTOMER_ID = #{searchSValue}
+					</when>
+					
+				</choose>
+			</when>
+			<otherwise>
+				<if test="startDt != null and startDt != ''">
+					AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+				</if>
+			</otherwise>
+		</choose>
+		<if test="searchBasicStatus != null and searchBasicStatus != ''">
+				AND BASIC_STATUS = #{searchBasicStatus}
+		</if>
+		<if test="searchOverlapStatus != null and searchOverlapStatus != ''">
+				AND OVERLAP_STATUS = #{searchOverlapStatus}
+		</if>
+		
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND ( A.AGENT_ID_1 = #{searchAgentId} )
+		</if>
+		        
+    </select>
+    
+    <!-- 현재 정산 진행상태 체크 -->
+    <select id="getStmCntMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	SELECT CASE WHEN TO_CHAR(SYSDATE, 'DD') &lt; 15 THEN 'N'
+		       ELSE 'Y' END DT_FLAG,
+		       CASE WHEN (SELECT COUNT(*) FROM PPS_AGENT_STM_AGENT WHERE BILL_MONTH = TRUNC(SYSDATE, 'MM') AND ROWNUM = 1) = 0 THEN 'Y'
+		       ELSE 'N' END AGENT_FLAG,
+		       CASE WHEN (SELECT COUNT(*) FROM PPS_AGENT_STM WHERE BILL_MONTH = TRUNC(SYSDATE, 'MM') AND ROWNUM = 1) = 0 THEN 'Y'
+		       ELSE 'N' END STM_FLAG,
+		       CASE WHEN (SELECT COUNT(*) FROM PPS_AGENT_STM WHERE BILL_MONTH = TRUNC(SYSDATE, 'MM') AND END_FLAG = 'Y' AND ROWNUM = 1) = 0 THEN 'Y'
+		       ELSE 'N' END END_FLAG
+		FROM DUAL
+    </select>
+    
+    <!-- 수동 기본수수료 정산  -->
+	<select id="procPpsStmBasic"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_BASIC(
+					#{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 grade수수료 정산  -->
+	<select id="procPpsStmGrade"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_GRADE(
+					#{opCode, jdbcType=VARCHAR}
+					, #{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 명변수수료 정산  -->
+	<select id="procPpsStmMb"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_MB(
+					#{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 재충전수수료 정산  -->
+	<select id="procPpsStmRcg"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_RCG(
+					#{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 비정상해지 정산  -->
+	<select id="procPpsStmRefund"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_REFUND(
+					#{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 기준사용미달 정산  -->
+	<select id="procPpsStmNouse"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_NOUSE(
+					#{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 해지후재가입 정산  -->
+	<select id="procPpsStmReopen"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_REOPEN(
+					#{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 우량수수료 정산  -->
+	<select id="procPpsStmUl"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_UL(
+					#{opCode, jdbcType=VARCHAR}
+					, #{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 자동이체수수료 정산  -->
+	<select id="procPpsStmCms"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_CMS(
+					#{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 대리점별 정산  -->
+	<select id="procPpsStmAgent"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_AGENT(
+					#{opCode, jdbcType=VARCHAR}
+				    , #{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 수동 통합 정산  -->
+	<select id="procPpsStm"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM(
+					#{opCode, jdbcType=VARCHAR}
+				    , #{billMonth, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!-- 대리점정산관리 조회 -->
+    <select id="getStmSelfMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+    	
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_SELF_PK) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			AGENT_ID, 
+			F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+			OP_OPEN_AMT, 
+			OP_RCG_AMT, 
+			OP_PPS, 
+			OP_OPEN_CNT, 
+			OP_CAN_CNT, 
+			NVL(OP_OPEN_CNT, 0) - NVL(OP_CAN_CNT, 0) OP_REAL_CNT,
+			PSD_CNT, 
+			PSD_AMT, 
+			PSD_PPS, 
+			MNG_CNT, 
+			MNG_AMT, 
+			MNG_PPS, 
+			PRM_CNT, 
+			PRM_AMT, 
+			PRM_PPS, 
+			RF_CNT, 
+			RF_AMT, 
+			RF_PPS, 
+			LAST_AMT, 
+			LAST_PPS, 
+			ETC_AMT, 
+			ETC_PPS, 
+			NVL(OP_PPS, 0) + NVL(PSD_PPS, 0) + NVL(MNG_PPS, 0) + NVL(PRM_PPS, 0) + NVL(RF_PPS, 0) + NVL(LAST_PPS, 0) + NVL(ETC_PPS, 0) TOT_PPS,
+			NVL(OP_OPEN_AMT, 0) + NVL(OP_RCG_AMT, 0) + NVL(PSD_AMT, 0) + NVL(MNG_AMT, 0) + NVL(PRM_AMT, 0) + NVL(RF_AMT, 0) + NVL(LAST_AMT, 0) + NVL(ETC_AMT, 0) TOT_AMT,
+			REG_ADMIN, 
+			F_GET_ADMIN_NM(REG_ADMIN) REG_ADMIN_NM,
+			TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		FROM PPS_AGENT_STM_SELF A
+		WHERE 1=1
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		
+		<if test="startDt != null and startDt != ''">
+			AND BILL_MONTH = TO_DATE(REPLACE(#{startDt}, '-', '')||'01', 'YYYYMMDD')
+		</if>
+	
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />
+    </select>
+    
+    <!-- 대리점정산관리 Excel -->
+    <select id="getStmSelfMgmtListExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+		SELECT /*+ INDEX_ASC(A PPS_AGENT_STM_SELF_PK) */
+			TO_CHAR(BILL_MONTH, 'YYYY-MM') BILL_MONTH, 
+			AGENT_ID, 
+			NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM,
+			NVL(OP_OPEN_AMT, 0) OP_OPEN_AMT, 
+			NVL(OP_RCG_AMT, 0) OP_RCG_AMT, 
+			NVL(OP_PPS, 0) OP_PPS, 
+			NVL(OP_OPEN_CNT, 0) OP_OPEN_CNT, 
+			NVL(OP_CAN_CNT, 0) OP_CAN_CNT, 
+			NVL(OP_OPEN_CNT, 0) - NVL(OP_CAN_CNT, 0) OP_REAL_CNT,
+			NVL(PSD_CNT, 0) PSD_CNT, 
+			NVL(PSD_AMT, 0) PSD_AMT, 
+			NVL(PSD_PPS, 0) PSD_PPS, 
+			NVL(MNG_CNT, 0) MNG_CNT, 
+			NVL(MNG_AMT, 0) MNG_AMT, 
+			NVL(MNG_PPS, 0) MNG_PPS, 
+			NVL(PRM_CNT, 0) PRM_CNT, 
+			NVL(PRM_AMT, 0) PRM_AMT, 
+			NVL(PRM_PPS, 0) PRM_PPS, 
+			NVL(RF_CNT, 0) RF_CNT, 
+			NVL(RF_AMT, 0) RF_AMT, 
+			NVL(RF_PPS, 0) RF_PPS, 
+			NVL(LAST_AMT, 0) LAST_AMT, 
+			NVL(LAST_PPS, 0) LAST_PPS, 
+			NVL(ETC_AMT, 0) ETC_AMT, 
+			NVL(ETC_PPS, 0) ETC_PPS, 
+			NVL(OP_PPS, 0) + NVL(PSD_PPS, 0) + NVL(MNG_PPS, 0) + NVL(PRM_PPS, 0) + NVL(RF_PPS, 0) + NVL(LAST_PPS, 0) + NVL(ETC_PPS, 0) TOT_PPS,
+			NVL(OP_OPEN_AMT, 0) + NVL(OP_RCG_AMT, 0) + NVL(PSD_AMT, 0) + NVL(MNG_AMT, 0) + NVL(PRM_AMT, 0) + NVL(RF_AMT, 0) + NVL(LAST_AMT, 0) + NVL(ETC_AMT, 0) TOT_AMT,
+			REG_ADMIN, 
+			NVL(F_GET_ADMIN_NM(REG_ADMIN), '-') REG_ADMIN_NM,
+			NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'), '-') REG_DT
+		FROM PPS_AGENT_STM_SELF A
+		WHERE 1=1
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		
+		<if test="startDt != null and startDt != ''">
+			AND BILL_MONTH = TO_DATE(#{startDt}||'01', 'YYYYMMDD')
+		</if>
+		       
+    </select>
+    
+    <!-- 대리점정산관리 등록  -->
+	<select id="procPpsAgentStmSelf"  statementType="CALLABLE"  parameterType="hashmap"  resultType="hashmap">
+		{call P_AGENT_STM_Self(
+					#{opCode, jdbcType=VARCHAR}
+				    , #{billMonth, jdbcType=VARCHAR}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{opOpenAmt, jdbcType=VARCHAR}
+				    , #{opRcgAmt, jdbcType=VARCHAR}
+				    , #{opPps, jdbcType=VARCHAR}
+				    , #{opOpenCnt, jdbcType=VARCHAR}
+				    , #{opCanCnt, jdbcType=VARCHAR}
+				    , #{psdCnt, jdbcType=VARCHAR}
+				    , #{psdAmt, jdbcType=VARCHAR}
+				    , #{psdPps, jdbcType=VARCHAR}
+				    , #{mngCnt, jdbcType=VARCHAR}
+				    , #{mngAmt, jdbcType=VARCHAR}
+				    , #{mngPps, jdbcType=VARCHAR}
+				    , #{prmCnt, jdbcType=VARCHAR}
+				    , #{prmAmt, jdbcType=VARCHAR}
+				    , #{prmPps, jdbcType=VARCHAR}
+				    , #{rfCnt, jdbcType=VARCHAR}
+				    , #{rfAmt, jdbcType=VARCHAR}
+				    , #{rfPps, jdbcType=VARCHAR}
+				    , #{lastAmt, jdbcType=VARCHAR}
+				    , #{lastPps, jdbcType=VARCHAR}
+				    , #{etcAmt, jdbcType=VARCHAR}
+				    , #{etcPps, jdbcType=VARCHAR}
+					, #{adminId, jdbcType=VARCHAR}
+					, #{retCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					, #{retMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+    
+</mapper>

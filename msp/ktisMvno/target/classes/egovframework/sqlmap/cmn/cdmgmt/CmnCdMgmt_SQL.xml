@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.cdmgmt.mapper.CmnCdMgmtMapper">
+
+    <resultMap id="cmnCdMgmtVo" type="com.ktis.msp.cmn.cdmgmt.vo.CmnCdMgmtVo">
+        <result property="cdVal" column="CD_VAL"/>
+        <result property="cdDsc" column="CD_DSC"/>
+    </resultMap>
+     
+
+	<!-- 공통코드조회 -->
+	<select id="getCmnCdList" parameterType="java.util.Map" resultMap="cmnCdMgmtVo">
+	   <if test="'NONE'.equals(sctn)">
+		   SELECT
+			    '' AS GRP_ID
+	        <if test="'ALL'.equals(sctnCd)">
+			    , '' AS CD_VAL
+			    , '전체' AS CD_DSC
+	        </if>
+	        <if test="'SEL'.equals(sctnCd)">
+			    , '' AS CD_VAL
+			    , '선택' AS CD_DSC
+	        </if>
+			    , '' AS ETC1
+			    , '' AS ETC2
+			    , '' AS ETC3
+			    , '' AS ETC4
+			    , '' AS ETC5
+			    , '' AS ETC6
+			    , '1' AS SORT_NO
+			FROM
+			    DUAL
+			UNION ALL
+	   </if>
+			SELECT
+			    B.GRP_ID
+			    , B.CD_VAL
+			    , B.CD_DSC
+			    , B.ETC1
+			    , B.ETC2
+			    , B.ETC3
+			    , B.ETC4
+			    , B.ETC5
+			    , B.ETC6
+			    , '2' AS SORT_NO
+			FROM
+			    CMN_GRP_MST A
+			    , CMN_GRP_CD_MST B
+			WHERE
+			    A.GRP_ID = B.GRP_ID
+			    AND B.USG_YN = 'Y'
+			    AND B.GRP_ID = #{grpId}
+			ORDER BY SORT_NO ASC, CD_VAL ASC 
+	</select>
+	
+	<!-- 공통코드조회 -->
+	<select id="getCmnCdList2" parameterType="java.util.Map" resultMap="cmnCdMgmtVo">
+	   <if test="'NONE'.equals(sctn)">
+		   SELECT
+			    '' AS GRP_ID
+	        <if test="'ALL'.equals(sctnCd)">
+			    , '' AS CD_VAL
+			    , '전체' AS CD_DSC
+	        </if>
+	        <if test="'SEL'.equals(sctnCd)">
+			    , '' AS CD_VAL
+			    , '선택' AS CD_DSC
+	        </if>
+			    , '' AS ETC1
+			    , '' AS ETC2
+			    , '' AS ETC3
+			    , '' AS ETC4
+			    , '' AS ETC5
+			    , '' AS ETC6
+			    , '1' AS SORT_NO
+			FROM
+			    DUAL
+			UNION ALL
+	   </if>
+			SELECT
+			    B.GRP_ID
+			    , B.CD_VAL
+			    , B.CD_DSC
+			    , B.ETC1
+			    , B.ETC2
+			    , B.ETC3
+			    , B.ETC4
+			    , B.ETC5
+			    , B.ETC6
+			    , '2' AS SORT_NO
+			FROM
+			    CMN_GRP_MST A
+			    , CMN_GRP_CD_MST B
+			WHERE
+			    A.GRP_ID = B.GRP_ID
+			    AND B.USG_YN = 'Y'
+			    AND B.GRP_ID = #{grpId}
+			ORDER BY SORT_NO ASC, CD_VAL ASC 
+	</select>
+
+    <!-- resultmap 정의 -->
+	<resultMap id="tableColumnMap" type="com.ktis.msp.cmn.db.vo.TableColumn">
+        <result property="table_name"     column="table_name" />
+        <result property="column_id"  column="column_id" />
+        <result property="column_name"  column="column_name" />
+        <result property="data_type"       column="data_type" />
+        <result property="data_length"     column="data_length" />
+        <result property="nullable"          column="nullable" />
+        <result property="constraint"       column="constraint_type" />
+        </resultMap>
+        
+    <select id="getCmnGrpMst" timeout="20" parameterType="java.util.HashMap" resultType="java.util.HashMap">  
+    SELECT 
+		 GRP_KOR_NM                              		/*  0 : 그룹 한글명 */
+		,GRP_ENG_NM                              		/*  1 : 그룹 영어명 */
+		,GRP_DSC                                 		/*  2 : 그룹 설명 */
+		,USG_YN                                  		/*  3 : 사용여부 */
+		,COL_KOR_NM                              		/*  4 : 컬럼 한글명 */
+		,COL_ENG_NM                              		/*  5 : 컬럼 영어명 */
+		,REMRK                                   		/*  6 : 비고 */
+		,REGST_ID                                		/*  7 : 등록자ID */
+		,REG_DTTM                                		/*  8 : 등록일시 */
+		,RVISN_ID                                		/*  9 : 수정자ID */
+		,RVISN_DTTM                              		/* 10 : 수정일시 */
+		,DUTY_SCTN                               		/* 11 : 업무 구분 */
+	FROM CMN_GRP_MST
+	WHERE
+		GRP_ID = #{GRP_ID}
+	</select>
+	
+    <select id="getFormMapping" resultType="java.util.HashMap">  
+		SELECT	form_name, 		/* 폼명 */
+				table_name		/* 테이블명 */
+		FROM TEMP_FORM_TABLE
+		ORDER BY form_name, table_name
+    </select>
+    <!-- 1. DB Table 목록을 Retrieval -->
+    <select id="getAllTables" parameterType="String" resultType="java.util.HashMap">
+		SELECT owner, table_name 
+		FROM all_tables 
+		WHERE owner = 'MSP_MNG'
+    </select>
+
+    <!-- 2. mvno 테이블내 컬럶 코멘트 정보를 Retrieval -->
+    <select id="getAllComments" resultType="java.util.HashMap">  
+		SELECT table_name, column_name, comments  
+		FROM all_col_comments
+		WHERE owner = 'MSP_MNG'
+		ORDER BY table_name, column_name
+    </select>
+
+    <!-- 2. mvno 테이블내 컬럶 코멘트 정보를 Retrieval -->
+    <select id="getAllDBFields" resultMap="tableColumnMap">  
+		SELECT TBL_A.table_name,			/* 테이블명 */ 
+					TBL_A.column_id, 		/* 컬럼순번 */
+					TBL_A.column_name, 		/* 컬럼명 */
+					TBL_A.data_type, 		/* 컬럼유형 */
+					TBL_A.data_length, 		/* 컬럼길이 */
+					TBL_A.nullable, 		/* Nullable */
+			   		TBL_B.constraint_type 	/* 키  */
+		FROM all_tab_columns TBL_A
+		LEFT JOIN 
+		 ( SELECT cols.table_name, cols.column_name, cols.position, 
+				 cons.constraint_type, cons.status, cons.owner
+			FROM all_constraints cons, all_cons_columns cols 
+			WHERE cons.constraint_type = 'P' 
+				 AND cons.constraint_name = cols.constraint_name
+				 AND cons.owner = cols.owner
+				 AND cons.owner = 'MSP_MNG' ) TBL_B
+		ON TBL_A.table_name = TBL_B.table_name AND TBL_A.column_name = TBL_B.column_name
+		where TBL_A.owner = 'MSP_MNG'
+		ORDER BY TBL_A.table_name, TBL_A.column_id
+    </select>
+    
+    <select id="getAllTempDBFields" resultMap="tableColumnMap">  
+		SELECT  table_name,			/* 테이블명 */ 
+				column_id, 		/* 컬럼순번 */
+				column_name, 		/* 컬럼명 */
+				data_type, 		/* 컬럼유형 */
+				data_length, 		/* 컬럼길이 */
+				nullable, 		/* Nullable */
+			   	constraint_type 	/* 키  */
+		FROM TEMP_TABLE_COLUMNS
+		ORDER BY table_name, column_id
+    </select>
+    
+    <!-- 공통코드Combo -->
+	<select id="getCommCombo" parameterType="com.ktis.msp.cmn.cdmgmt.vo.CmnCdMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	
+		SELECT /* CmnCdMgmtMapper.getCommCombo */
+			  GCM.CD_VAL AS value	/* 코드 값 */
+			, GCM.CD_DSC AS text	/* 코드 내용 */
+		FROM  CMN_GRP_MST CGM
+			, CMN_GRP_CD_MST GCM
+		WHERE 1 = 1
+		  AND CGM.GRP_ID = GCM.GRP_ID
+		  AND CGM.GRP_ID = #{grpId}
+		  AND GCM.USG_YN = 'Y'
+		<if test="etc1 != null and etc1 != ''">
+		  AND GCM.ETC1 = #{etc1, jdbcType=VARCHAR}
+		</if>
+		<if test="etc2 != null and etc2 != ''">
+		  AND GCM.ETC2 = #{etc2, jdbcType=VARCHAR}
+		</if>
+		<if test="etc3 != null and etc3 != ''">
+		  AND GCM.ETC3 = #{etc3, jdbcType=VARCHAR}
+		</if>
+		<if test="etc4 != null and etc4 != ''">
+		  AND GCM.ETC4 = #{etc4, jdbcType=VARCHAR}
+		</if>
+		<if test="etc5 != null and etc5 != ''">
+		  AND GCM.ETC5 = #{etc5, jdbcType=VARCHAR}
+		</if>
+		<if test="etc6 != null and etc6 != ''">
+		  AND GCM.ETC6 = #{etc6, jdbcType=VARCHAR}
+		</if>
+		<if test="orderBy != null and orderBy != ''">
+			<if test="orderBy == 'etc1'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC1) ASC
+			</if>
+			<if test="orderBy == 'etc2'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC2) ASC
+			</if>
+			<if test="orderBy == 'etc3'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC3) ASC
+			</if>
+			<if test="orderBy == 'etc4'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC4) ASC
+			</if>
+			<if test="orderBy == 'etc5'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC5) ASC
+			</if>
+			<if test="orderBy == 'etc6'">
+			ORDER BY
+				TO_NUMBER(GCM.ETC6) ASC
+			</if>
+		</if>
+		<if test="orderBy == null or orderBy == ''">
+		ORDER BY
+			GCM.CD_VAL ASC
+		</if>
+		
+	</select>
+	
+	<select id="getMcpCommCombo" parameterType="com.ktis.msp.cmn.cdmgmt.vo.CmnCdMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* CmnCdMgmtMapper.getMcpCommCombo */
+		SELECT 
+				  CD.DTL_CD		AS value	/* 코드 값 */
+				, CD.DTL_CD_NM	AS text		/* 코드 내용 */
+		FROM 	  NMCP_CD_GROUP_BAS@DL_MCP CG
+				, NMCP_CD_DTL@DL_MCP CD
+		WHERE	CG.CD_GROUP_ID = CD.CD_GROUP_ID
+		AND		CG.USE_YN = 'Y'
+		AND		CD.USE_YN = 'Y'	
+		AND		CG.CD_GROUP_ID = #{grpId}
+		/* 2022.03.02 M포탈 리뉴얼로 조회 조건 추가  */
+		AND   (CG.PSTNG_START_DATE IS NULL OR CG.PSTNG_END_DATE IS NULL OR SYSDATE BETWEEN TO_DATE(CG.PSTNG_START_DATE, 'YYYYMMDDHH24MISS') AND TO_DATE(CG.PSTNG_END_DATE, 'YYYYMMDDHH24MISS'))
+		AND   (CD.PSTNG_START_DATE IS NULL OR CD.PSTNG_END_DATE IS NULL OR SYSDATE BETWEEN TO_DATE(CD.PSTNG_START_DATE, 'YYYYMMDDHH24MISS') AND TO_DATE(CD.PSTNG_END_DATE, 'YYYYMMDDHH24MISS'))
+		<if test="etc1 != null and etc1 != ''">
+		  AND 	CD.EXPNSN_STR_VAL1 = #{etc1, jdbcType=VARCHAR}
+		</if>
+		<if test="etc2 != null and etc2 != ''">
+		  AND 	CD.EXPNSN_STR_VAL2 = #{etc2, jdbcType=VARCHAR}
+		</if>
+		<if test="etc3 != null and etc3 != ''">
+		  AND 	CD.EXPNSN_STR_VAL3 = #{etc3, jdbcType=VARCHAR}
+		</if>
+		ORDER BY CD.INDC_ODRG
+	</select>
+
+	<select id="getCmnGrpCdMst" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT
+		    GRP_ID
+		  , CD_VAL
+		  , CD_DSC
+		  , USG_YN
+		  , ETC1
+		  , ETC2
+		  , ETC3
+		  , ETC4
+		  , ETC5
+		  , ETC6
+		FROM CMN_GRP_CD_MST
+		WHERE GRP_ID = #{grpId}
+		AND CD_VAL = #{cdVal}
+	</select>
+
+	<select id="getMcpCommCdDtl" parameterType="com.ktis.msp.cmn.cdmgmt.vo.CmnCdMgmtVo" resultType="java.util.HashMap">
+		SELECT
+		    CD_GROUP_ID
+			, DTL_CD
+			, DTL_CD_NM
+      , DTL_CD_DESC
+      , USE_YN
+      , EXPNSN_STR_VAL1
+      , EXPNSN_STR_VAL2
+      , EXPNSN_STR_VAL3
+		FROM NMCP_CD_DTL@DL_MCP
+		WHERE CD_GROUP_ID = #{grpId}
+		AND DTL_CD = #{cdVal}
+	</select>
+
+</mapper>

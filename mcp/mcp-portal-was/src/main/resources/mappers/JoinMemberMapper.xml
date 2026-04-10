@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="JoinMemberMapper">
+
+    <!-- 아이디 중복 확인 -->
+    <select id="duplicateId" resultType="int">
+        SELECT
+            SUM(CNT)
+        FROM
+            (
+                SELECT
+                    COUNT(*) CNT
+                FROM MCP_USER
+                WHERE 1=1
+                  AND USERID = #{checkId}
+                UNION
+                SELECT
+                    COUNT(*) CNT
+                FROM NMCP_USER_HST
+                WHERE 1=1
+                  AND	USER_ID = #{checkId}
+                  AND USER_STTUS = '4'
+                  AND HST_CHG_DT IS NULL
+                UNION
+                SELECT
+                    COUNT(*) CNT
+                FROM MCP_REC_USER
+                WHERE 1=1
+                  AND USERID = #{checkId}
+            )
+    </select>
+
+    <insert id="inserMember" parameterType="com.ktmmobile.mcp.join.dto.JoinDto">
+        INSERT INTO
+            MCP_USER	(
+                          USERID
+                        , PASSWORD
+                        , NAME
+                        , AUTH_CODE
+                        , EMAIL
+                        , POST
+                        , ADDRESS
+                        , ADDRESS_DTL
+                        , MOBILE_NO
+                        , BIRTHDAY
+                        , SYS_RDATE
+                        , LOGIN_COUNT
+                        , STATUS
+                        , USER_DIVISION
+                        , SMS_RCV_YN
+                        , EMAIL_RCV_YN
+                        , PIN
+                        , GENDER
+                        , PWD_CHG_DT
+                        , CLAUSE_PRI_AD_FLAG
+                        , PERSONAL_INFO_COLLECT_AGREE
+                        , OTHERS_TRNS_AGREE
+                        , AUTH_TEL_CODE
+        )
+        VALUES 		(
+                          #{userId}
+                      , #{password}
+                      , #{name}
+                      , 'USER_ROLE'
+                      , #{email}
+                      , #{post}
+                      , #{address}
+                      , #{addressDtl}
+                      , #{mobileNo}
+                      , #{birthday}
+                      , SYSDATE
+                      , 0
+                      , '1'
+                      , '00'
+                      , #{agreeSMS}
+                      , #{agreeEmail}
+                      , #{pin}
+                      , #{gender}
+                      , SYSDATE
+                      , #{clausePriAdFlag}
+                      , #{personalInfoCollectAgree}
+                      , #{othersTrnsAgree}
+                      , #{authTelCode}
+                      )
+    </insert>
+
+    <select id="dupleChk" resultType="int">
+        SELECT	COUNT(PIN)
+        FROM	MCP_USER
+        WHERE	1=1
+          AND		PIN = #{pin}
+    </select>
+
+    <update id="insetUserAgent" parameterType="com.ktmmobile.mcp.join.dto.UserAgentDto" >
+        MERGE INTO  MCP_USER_AGENT
+            USING   DUAL
+            ON      (USERID = #{userid})
+            WHEN MATCHED THEN
+                UPDATE SET
+                    MINOR_AGENT_NAME = #{minorAgentName}                            --미성년자 법정대리인 성명
+                    , MINOR_AGENT_RRN = #{minorAgentRrn}                             --미성년자 법정대리인 생년월일
+                    , MINOR_AGENT_CI = #{minorAgentCi}                               --미성년자 법정대리인 CI
+                    , AGENT_AUTH_INFO = #{agentAuthInfo}                             --인증정보
+                    , MINOR_AGENT_AGREE = #{minorAgentAgree}                         --미성년자 법정대리인 개인정보 수집이용 동의여부
+                    , SYS_RDATE = SYSDATE                                            --등록
+            WHEN NOT MATCHED THEN
+                INSERT (
+                        USERID                   --회원아이디
+                    , MINOR_AGENT_NAME         --미성년자 법정대리인 성명
+                    , MINOR_AGENT_RRN          --미성년자 법정대리인 생년월일
+                    , MINOR_AGENT_CI           --미성년자 법정대리인 CI
+                    , AGENT_AUTH_INFO          --인증정보
+                    , MINOR_AGENT_AGREE        --미성년자 법정대리인 개인정보 수집이용 동의여부
+                    , SYS_RDATE                --등록
+                    ) VALUES (
+                                 #{userid}
+                             , #{minorAgentName}
+                             , #{minorAgentRrn}
+                             , #{minorAgentCi}
+                             , #{agentAuthInfo}
+                             , #{minorAgentAgree}
+                             , SYSDATE
+                             )
+    </update>
+
+    <select id="dormancyDupleChk" resultType="int">
+        SELECT
+            COUNT(PIN)
+        FROM NMCP_USER_HST
+        WHERE 1=1
+          AND PIN = #{pin}
+          AND USER_STTUS = '4'
+          AND HST_CHG_DT IS NULL
+    </select>
+
+    <insert id="insertSnsInfo" parameterType="com.ktmmobile.mcp.join.dto.JoinDto">
+        INSERT INTO NMCP_SNS_LOGIN_TXN
+        (
+            SNS_LOGIN_SEQ
+        , USER_ID
+        , SNS_CD
+        , SNS_ID
+        , CRET_DT
+        , USE_YN
+        )
+        VALUES
+            (
+                SQ_SNS_LOGIN_SEQ.NEXTVAL
+            , #{userId}
+            , #{snsCd}
+            , #{snsId}
+            , SYSDATE
+            , 'Y'
+            )
+    </insert>
+
+    <select id="getPinToUserInfo" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.join.dto.JoinDto">
+        SELECT
+            USERID
+             , NAME
+        FROM MCP_USER
+        WHERE 1=1
+          AND PIN = #{pin}
+          AND STATUS = '1'
+    </select>
+
+    <select id="getUserToPinInfo" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.join.dto.JoinDto">
+        SELECT
+            USERID
+             , PASSWORD
+             , NAME
+             , AUTH_CODE
+             , EMAIL
+             , POST
+             , ADDRESS
+             , ADDRESS_DTL
+             , MOBILE_NO
+             , BIRTHDAY
+             , SYS_RDATE
+             , LOGIN_COUNT
+             , STATUS
+             , USER_DIVISION
+             , SMS_RCV_YN
+             , EMAIL_RCV_YN
+             , PIN
+             , GENDER
+             , PWD_CHG_DT
+             , CLAUSE_PRI_AD_FLAG
+        FROM MCP_USER
+        WHERE 1=1
+          AND USERID = #{userId}
+          AND STATUS = '1'
+    </select>
+
+    <update id="updateClausePriAdFlag" parameterType="com.ktmmobile.mcp.join.dto.JoinDto">
+        UPDATE MCP_USER SET
+            SMS_RCV_YN = #{agreeSMS}
+                          , EMAIL_RCV_YN = #{agreeEmail}
+        WHERE 1=1
+          AND USERID = #{userId}
+    </update>
+
+    <update id="updauteMrktHistAree" parameterType="com.ktmmobile.mcp.common.dto.db.McpMrktHistDto">
+        update MCP_MRKT_HIST
+        set END_DTTM = #{newEndDttm},
+            RVISN_DTTM = sysdate,
+            MKT_AGR_REFERER = #{mtkAgrReferer}
+        where GUBUN = #{gubun}
+          and STRT_DTTM = #{strtDttm}
+          and END_DTTM = #{endDttm}
+          and USERID = #{userid}
+    </update>
+
+    <insert id="insertMrktHist" parameterType="com.ktmmobile.mcp.common.dto.db.McpMrktHistDto">
+        insert into MCP_MRKT_HIST(
+            USERID,
+            GUBUN,
+            STRT_DTTM,
+            END_DTTM,
+            AGR_YN,
+            REGST_ID,
+            REGST_DTTM,
+            RVISN_ID,
+            RVISN_DTTM,
+            MKT_AGR_REFERER
+        ) values (
+                     #{userid},
+                     #{gubun},
+                     #{strtDttm},
+                     #{endDttm},
+                     #{agrYn},
+                     #{userid},
+                     sysdate,
+                     #{userid},
+                     sysdate,
+                     #{mtkAgrReferer}
+                 )
+    </insert>
+</mapper>

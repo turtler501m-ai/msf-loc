@@ -1,0 +1,711 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.orgmgmt.mapper.PpsAgencyOrgMgmtMapper">
+    
+     <!-- 선불(대리점)  판매점관리  조회 -->
+    <select id="getAgencyOrgMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    SELECT data.*,
+ 		NVL(F_GET_VAC_BANK_NAME(data.VIR_ACCOUNT_ID),'') AS VIR_BANK_NM
+	FROM(  
+	SELECT /* OrgMgmtMapper.listOrgMgmt */
+	             OIM.ORGN_ID    /* 조직 ID */
+	           , OIM.ORGN_NM    /* 조직명 */
+	           , OIM.TYPE_CD    /* 유형코드 */
+		       ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = OIM.TYPE_CD) as TYPE_NM 
+	           , OIM.ORGN_LVL_CD    /* 조직레벨코드 */
+		       ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0006' AND CD_VAL = OIM.ORGN_LVL_CD) as ORGN_LVL_NM 
+	           , OIM.APPL_STRT_DT  /* 적용시작일자 */
+	           , OIM.APPL_CMPLT_DT  /* 적용종료일자 */
+	           , OIM.OPEN_CRDT_LOAN_YN    /* 개통여신여부 */
+		       ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'ORG0012' AND CD_VAL = OIM.OPEN_CRDT_LOAN_YN) as OPEN_CRDT_LOAN_NM
+	           , OIM.OPEN_CRDT_LOAN_STRT_DT    /* 개통여신시작일자 */
+	           , DECODE(OIM.TAXBILL_YN, 'Y','Y','N')  AS TAXBILL_YN  /* 세금계산서발행여부 */
+	           , DECODE(OIM.CMSN_PRVD_YN, 'Y','Y','N')  AS  CMSN_PRVD_YN  /* 수수료지급여부 */
+	           , DECODE(OIM.HNDST_INVTR_YN, 'Y','Y','N')  AS HNDST_INVTR_YN   /* 단말재고여부 */
+	           , OIM.BIZ_TYPE_CD    /* 사업자구분 */
+		       ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0007' AND CD_VAL = OIM.BIZ_TYPE_CD) as BIZ_TYPE_NM 
+	           , OIM.BIZ_REG_NUM    /* 사업자등록번호 */
+	           , OIM.CORP_REG_NUM    /* 법인등록번호 */
+	           , OIM.BIZ_CAT    /* 업종 */
+	           , OIM.BIZ_CON    /* 업태 */
+	           , OIM.RPRSEN_NM    /* 대표자명 */
+	           , OIM.RPRSEN_RRNUM    /* 대표자주민번호 */
+	           , OIM.TELNUM    /* 전화번호 */
+	           , OIM.FAX    /* 팩스번호 */
+	           , OIM.EMAIL    /* 이메일 */
+	           , OIM.ZIPCD    /* 우편번호 */
+	           , OIM.ADDR1    /* 주소1 */
+	           , OIM.ADDR2    /* 주소2 */
+	           , OIM.RESPN_PRSN_ID    /* 담당자ID */
+	           ,(SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = OIM.RESPN_PRSN_ID) as RESPN_PRSN_NM
+	           ,(SELECT TEL_NUM FROM CMN_USR_MST WHERE USR_ID = OIM.RESPN_PRSN_ID) as RESPN_PRSN_NUM
+	           ,(SELECT MBLPHN_NUM FROM CMN_USR_MST WHERE USR_ID = OIM.RESPN_PRSN_ID) as RESPN_PRSN_MBLPHN
+	           ,(SELECT EMAIL FROM CMN_USR_MST WHERE USR_ID = OIM.RESPN_PRSN_ID) as RESPN_PRSN_EMAIL
+	           , OIM.HNDST_ORD_YN    /* 단말주문여부 */
+	           , OIM.ORGN_STAT_CD    /* 조직상태코드 */
+		       ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0005' AND CD_VAL = OIM.ORGN_STAT_CD) as ORGN_STAT_NM 
+	           , OIM.TMNT_DT    /* 해지일자 */
+	           , OIM.TYPE_DTL_CD    /* 유형상세코드 */
+		       ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0004' AND CD_VAL = OIM.TYPE_DTL_CD) as TYPE_DTL_NM  
+	           , OIM.HGHR_ORGN_CD    /* 상위조직코드 */
+             
+	           , F_GET_AGENT_NM( OIM.HGHR_ORGN_CD) AS HGHR_ORGN_NM  /* 상위조직코드명 */
+	           , OIM.ORGN_GRD    /* 조직등급 */
+	           , OIM.CLOSE_YN    /* 정리점여부 */
+	           , OIM.LOGIS_CNTER_YN    /* 물류센터여부 */
+	           , OIM.REG_ID    /* 등록자ID */
+	           , TO_CHAR(OIM.REG_DTTM, 'YYYYMMDD') AS REG_DTTM /*등록일시 */
+	           , OIM.KT_ORG_ID /* KT조직ID */
+	           , OIM.TYPE_DTL_CD1 /* 유형상세코드1 */               
+               , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE CD_VAL = OIM.TYPE_DTL_CD1 AND USG_YN = 'Y') as TYPE_DTL_CD_NM1
+               , OIM.TYPE_DTL_CD2 /* 유형상세코드2 */
+               , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE CD_VAL = OIM.TYPE_DTL_CD2 AND USG_YN = 'Y' AND ETC1 IS NOT NULL) as TYPE_DTL_CD_NM2                            
+               , OIM.TYPE_DTL_CD3 /* 유형상세코드3 */
+               , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE CD_VAL = OIM.TYPE_DTL_CD3 AND USG_YN = 'Y' AND ETC1 IS NOT NULL) as TYPE_DTL_CD_NM3
+               , (SELECT VIR_ACCOUNT_ID FROM MSP_MNG.PPS_AGENT A WHERE ADMIN_ID =OIM.ORGN_ID ) AS VIR_ACCOUNT_ID       
+		  FROM ORG_ORGN_INFO_MST OIM
+		 WHERE OIM.TYPE_DTL_CD = 'Y'
+		 AND (OIM.TYPE_CD='30' AND OIM.ORGN_LVL_CD='20')
+		  <if test="orgnId != null and orgnId != ''">
+	       AND OIM.ORGN_ID LIKE UPPER('%'||#{orgnId}||'%')
+	    </if>
+	    <if test="orgnNm != null and orgnNm != ''">
+	       AND OIM.ORGN_NM LIKE '%'||#{orgnNm}||'%'
+	    </if>
+		 <if test="startDt != null and startDt != ''">
+				AND OIM.REG_DTTM >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND OIM.REG_DTTM &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND	OIM.HGHR_ORGN_CD = #{searchAgentId}
+			</if>
+			 <if test="searchNm != null and searchNm != ''">
+		        <choose>
+                    <when test="searchType == 'rprsen_nm'">
+                        AND OIM.RPRSEN_NM LIKE '%'||#{searchNm}||'%'
+                    </when>
+                    <when test="searchType == 'telnum'">
+                        AND OIM.TELNUM LIKE '%'||#{searchNm}||'%'
+                    </when>
+                </choose>
+			</if>
+ 			) data
+	
+	
+    </select>
+    
+    <!--판매점내역 목록조회엑셀출력 -->
+	<select id="getAgencyOrgMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">     
+     		SELECT /* OrgMgmtMapper.listOrgMgmt */
+			        NVL(OIM.ORGN_ID, '-') ORGN_ID    /* 조직 ID */
+					, NVL(OIM.ORGN_NM, '-') ORGN_NM   /* 조직명 */
+					, NVL(OIM.APPL_STRT_DT, '-') APPL_STRT_DT  /* 적용시작일자 */
+					, NVL(OIM.APPL_CMPLT_DT, '-') APPL_CMPLT_DT  /* 적용종료일자 */
+					, NVL(OIM.RPRSEN_NM, '-') RPRSEN_NM    /* 대표자명 */
+					, NVL(OIM.TELNUM, '-') TELNUM   /* 전화번호 */
+					, NVL(OIM.FAX, '-') FAX    /* 팩스번호 */
+					, NVL(TO_CHAR(OIM.REG_DTTM, 'YYYYMMDD'), '-') AS REG_DTTM /*등록일시 */
+					, NVL(OIM.ORGN_STAT_CD, '-') ORGN_STAT_CD    /* 조직상태코드 */
+					, NVL((SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0005' AND CD_VAL = OIM.ORGN_STAT_CD), '-') as ORGN_STAT_NM    
+			 FROM ORG_ORGN_INFO_MST OIM
+			 WHERE OIM.TYPE_DTL_CD = 'Y'
+			 AND (OIM.TYPE_CD='30' AND OIM.ORGN_LVL_CD='20')
+			  <if test="orgnId != null and orgnId != ''">
+		       AND OIM.ORGN_ID LIKE UPPER('%'||#{orgnId}||'%')
+		    </if>
+		    <if test="orgnNm != null and orgnNm != ''">
+		       AND OIM.ORGN_NM LIKE '%'||#{orgnNm}||'%'
+		    </if>
+			 <if test="startDt != null and startDt != ''">
+				AND OIM.REG_DTTM >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND OIM.REG_DTTM &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="searchAgentId != null and searchAgentId != ''">
+				AND	OIM.HGHR_ORGN_CD = #{searchAgentId}
+			</if>
+            <if test="searchNm != null and searchNm != ''">
+                <choose>
+                    <when test="searchType == 'rprsen_nm'">
+                        AND OIM.RPRSEN_NM LIKE '%'||#{searchNm}||'%'
+                    </when>
+                    <when test="searchType == 'telnum'">
+                        AND OIM.TELNUM LIKE '%'||#{searchNm}||'%'
+                    </when>
+                </choose>
+            </if>
+             
+    </select>
+    
+<!-- 판매점 조직아이디 생성 -->
+	<select id="getPpsSearchOrgnId" resultType="String">
+		SELECT 'PPS' || TRIM(TO_CHAR(PPS_ORGN_ID_SEQ.NEXTVAL, '0000000')) FROM DUAL
+	</select>
+	
+	 <!-- 조직 상세 조회 -->
+    <select id="ppsDetailOrgMgmt" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO" resultType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO">
+	    SELECT /* OrgMgmtMapper.detailOrgMgmt */
+	         A.ORGN_ID  as orgnId 
+	        ,A.ORGN_NM  as orgnNm                                      /*  0 : 조직명 */
+	        ,A.TYPE_CD  as typeCd                                      /*  1 : 유형코드 */
+	        ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0003' AND CD_VAL = A.TYPE_CD) as typeNm 
+	        ,ORGN_LVL_CD as orgnLvlCd                                    /*  2 : 조직레벨코드 */
+	        ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0006' AND CD_VAL = A.ORGN_LVL_CD) as orgnLvlNm 
+	        ,A.APPL_STRT_DT as  applStrtDt                                /*  3 : 적용시작일자 */
+	        ,A.APPL_CMPLT_DT  as applCmpltDt                              /*  4 : 적용종료일자 */
+	        ,A.OPEN_CRDT_LOAN_YN  as  openCrdtLoanYn                         /*  5 : 개통여신여부 */
+	        ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'ORG0012' AND CD_VAL = A.OPEN_CRDT_LOAN_YN) as OPEN_CRDT_LOAN_NM
+	        ,A.OPEN_CRDT_LOAN_STRT_DT  as openCrdtLoanStrtDt                     /*  6 : 개통여신시작일자 */
+	        ,A.TAXBILL_YN as   taxbillYn                                /*  7 : 세금계산서발행여부 */
+	        ,A.CMSN_PRVD_YN   as  cmsnPrvdYn                             /*  8 : 수수료지급여부 */
+	        ,A.HNDST_INVTR_YN  as  hndstInvtrYn                            /*  9 : 단말재고여부 */
+	        ,A.BIZ_TYPE_CD     as    bizTypeCd                          /* 10 : 사업자구분 */
+	        ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0007' AND CD_VAL = A.BIZ_TYPE_CD) as bizTypeNm 
+	        ,A.BIZ_REG_NUM  as  bizRegNum                               /* 11 : 사업자등록번호 */
+	        ,A.CORP_REG_NUM   as  corpRegNum                             /* 12 : 법인등록번호 */
+	        ,A.BIZ_CAT as   bizCat                                   /* 13 : 업종 */
+	        ,A.BIZ_CON     as   bizCon                               /* 14 : 업태 */
+	        ,A.RPRSEN_NM      as    rprsenNm                           /* 15 : 대표자명 */
+	        ,A.RPRSEN_RRNUM   as  rprsenRrnum                             /* 16 : 대표자주민번호 */
+	        ,A.TELNUM  as  telnum                                    /* 17 : 전화번호 */
+	        ,A.FAX       as  fax                                  /* 18 : 팩스번호 */
+	        ,A.EMAIL        as   email                              /* 19 : 이메일 */
+	        ,A.ZIPCD        as   zipcd                              /* 20 : 우편번호 */
+	        ,A.ADDR1        as   addr1                              /* 21 : 주소1 */
+	        ,A.ADDR2           as    addr2                          /* 22 : 주소2 */
+	        ,A.RESPN_PRSN_ID        as    respnPrsnId                     /* 24 : 담당자ID */
+	        ,(SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = A.RESPN_PRSN_ID) as respnPrsnNm
+            ,(SELECT TEL_NUM FROM CMN_USR_MST WHERE USR_ID = A.RESPN_PRSN_ID) as respnPrsnNum
+            ,(SELECT MBLPHN_NUM FROM CMN_USR_MST WHERE USR_ID = A.RESPN_PRSN_ID) as respnPrsnMblphn
+            ,(SELECT EMAIL FROM CMN_USR_MST WHERE USR_ID = A.RESPN_PRSN_ID) as respnPrsnEmail
+	        ,A.HNDST_ORD_YN   as   hndstOrdYn                            /* 32 : 단말주문여부 */
+	        ,A.ORGN_STAT_CD       as      orgnStatCd                     /* 33 : 조직상태코드 */
+	        ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0005' AND CD_VAL = A.ORGN_STAT_CD) as orgnStatNm 
+	        ,A.TYPE_DTL_CD    as     typeDtlCd                          /* 35 : 유형상세코드 */
+	        ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0004' AND CD_VAL = A.TYPE_DTL_CD) as typeDtlNm 
+	        ,A.HGHR_ORGN_CD       as  hghrOrgnCd                         /* 37 : 상위조직코드 */
+	        ,(SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = A.HGHR_ORGN_CD) as HGHR_ORGN_NM  /* 상위조직코드명 */
+	        ,A.ORGN_GRD     as orgnGrd                                /* 38 : 조직등급 */
+	        ,A.CLOSE_YN      as closeYn                               /* 39 : 정리점여부 */
+	        ,A.KT_ORG_ID /* KT조직ID */
+	        ,A.TYPE_DTL_CD1 /* 유형상세코드1 */
+	        ,A.TYPE_DTL_CD2 /* 유형상세코드2 */
+	        ,A.TYPE_DTL_CD3 /* 유형상세코드3 */
+	    FROM ORG_ORGN_INFO_MST A
+	    WHERE 1=1	    
+	    <if test="orgnId != null and orgnId != ''">
+	      AND A.ORGN_ID = #{orgnId} 
+	    </if>        
+    </select> 
+    
+    <insert id="ppsInsertOrgMgmt" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO">
+		INSERT /* OrgMgmtMapper.insertOrgMgmt */
+		  INTO ORG_ORGN_INFO_MST
+		       (
+		             ORGN_ID    /* 조직 ID */
+		           , ORGN_NM    /* 조직명 */
+		           , TYPE_CD    /* 유형코드 */
+		           , ORGN_LVL_CD    /* 조직레벨코드 */
+		           , APPL_STRT_DT    /* 적용시작일자 */
+		           , APPL_CMPLT_DT    /* 적용종료일자 */
+		           , OPEN_CRDT_LOAN_YN    /* 개통여신여부 */
+		           , OPEN_CRDT_LOAN_STRT_DT    /* 개통여신시작일자 */
+		           , TAXBILL_YN    /* 세금계산서발행여부 */
+		           , CMSN_PRVD_YN    /* 수수료지급여부 */
+		           , HNDST_INVTR_YN    /* 단말재고여부 */
+		           , BIZ_TYPE_CD    /* 사업자구분 */
+		           , BIZ_REG_NUM    /* 사업자등록번호 */
+		           , CORP_REG_NUM    /* 법인등록번호 */
+		           , BIZ_CAT    /* 업종 */
+		           , BIZ_CON    /* 업태 */
+		           , RPRSEN_NM    /* 대표자명 */
+		           , RPRSEN_RRNUM    /* 대표자주민번호 */
+		           , TELNUM    /* 전화번호 */
+		           , FAX    /* 팩스번호 */
+		           , EMAIL    /* 이메일 */
+		           , ZIPCD    /* 우편번호 */
+		           , ADDR1    /* 주소1 */
+		           , ADDR2    /* 주소2 */
+		           , RESPN_PRSN_ID    /* 담당자ID */
+		           , REG_ID    /* 등록자ID */
+		           , REG_DTTM    /* 등록일시 */
+		           , RVISN_ID    /* 수정자ID */
+		           , RVISN_DTTM    /* 수정일시 */
+		           , HNDST_ORD_YN    /* 단말주문여부 */
+		           , ORGN_STAT_CD    /* 조직상태코드 */
+		           , TMNT_DT    /* 해지일자 */
+		           , TYPE_DTL_CD    /* 유형상세코드 */
+		           , HGHR_ORGN_CD    /* 상위조직코드 */
+		           , ORGN_GRD    /* 조직등급 */
+		           , CLOSE_YN    /* 정리점여부 */
+		           , LOGIS_CNTER_YN    /* 물류센터여부 */   
+		           , KT_ORG_ID    /* KT조직ID */  
+		           , TYPE_DTL_CD1    /* 유형상세코드1 */     
+		           , TYPE_DTL_CD2    /* 유형상세코드2 */      
+		           , TYPE_DTL_CD3    /* 유형상세코드3 */         
+		       )
+		VALUES
+			   (
+		             #{orgnId} /* 조직 ID */
+		           , #{orgnNm, jdbcType=VARCHAR} /* 조직명 */
+		           , #{typeCd, jdbcType=VARCHAR} /* 유형코드 */
+		           , #{orgnLvlCd, jdbcType=VARCHAR} /* 조직레벨코드 */
+		           , #{applStrtDt, jdbcType=VARCHAR} /* 적용시작일자 */
+		           , #{applCmpltDt, jdbcType=VARCHAR} /* 적용종료일자 */
+		           , #{openCrdtLoanYn, jdbcType=VARCHAR} /* 개통여신여부 */
+		           , #{openCrdtLoanStrtDt, jdbcType=VARCHAR} /* 개통여신시작일자 */
+		           , #{taxbillYn, jdbcType=VARCHAR} /* 세금계산서발행여부 */
+		           , #{cmsnPrvdYn, jdbcType=VARCHAR} /* 수수료지급여부 */
+		           , #{hndstInvtrYn, jdbcType=VARCHAR} /* 단말재고여부 */
+		           , #{bizTypeCd, jdbcType=VARCHAR} /* 사업자구분 */
+		           , #{bizRegNum, jdbcType=VARCHAR} /* 사업자등록번호 */
+		           , #{corpRegNum, jdbcType=VARCHAR} /* 법인등록번호 */
+		           , #{bizCat, jdbcType=VARCHAR} /* 업종 */
+		           , #{bizCon, jdbcType=VARCHAR} /* 업태 */
+		           , #{rprsenNm, jdbcType=VARCHAR} /* 대표자명 */
+		           , #{rprsenRrnum, jdbcType=VARCHAR} /* 대표자주민번호 */
+		           , #{telnum, jdbcType=VARCHAR} /* 전화번호 */
+		           , #{fax, jdbcType=VARCHAR} /* 팩스번호 */
+		           , #{email, jdbcType=VARCHAR} /* 이메일 */
+		           , #{zipcd, jdbcType=VARCHAR} /* 우편번호 */
+		           , #{addr1, jdbcType=VARCHAR} /* 주소1 */
+		           , #{addr2, jdbcType=VARCHAR} /* 주소2 */
+		           , #{respnPrsnId, jdbcType=VARCHAR} /* 담당자ID */
+		           , #{regId, jdbcType=VARCHAR} /* 등록자ID */
+		           , SYSDATE /* 등록일시 */
+		           , #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+		           , SYSDATE /* 수정일시 */
+		           , #{hndstOrdYn, jdbcType=VARCHAR} /* 단말주문여부 */
+		           , '1' /* 조직상태코드 */
+		           , #{tmntDt, jdbcType=VARCHAR} /* 해지일자 */
+		           , 'Y' /* 유형상세코드 */
+		           , #{hghrOrgnCd, jdbcType=VARCHAR} /* 상위조직코드 */
+		           , #{orgnGrd, jdbcType=VARCHAR} /* 조직등급 */
+		           , #{closeYn, jdbcType=VARCHAR} /* 정리점여부 */
+		           , #{logisCnterYn, jdbcType=VARCHAR} /* 물류센터여부 */	  
+		           , #{ktOrgId, jdbcType=VARCHAR} /* KT조직ID */	  
+		           , #{typeDtlCd1, jdbcType=VARCHAR} /* 유형상세코드1 */	
+		           , #{typeDtlCd2, jdbcType=VARCHAR} /* 유형상세코드2 */	
+		           , #{typeDtlCd3, jdbcType=VARCHAR} /* 유형상세코드3 */	
+			   )	
+	</insert>
+	
+	<!-- 이력 건수 조회 -->
+    <select id="ppsIntCntFaxMgmt" parameterType="com.ktis.msp.pps.orgmgmt.vo.FaxHstVO" resultType="int">
+        SELECT /* FaxMgmtMapper.intCntFaxMgmt */
+               COUNT(*)
+          FROM ORG_FAX_HST
+         WHERE ORGN_ID = #{orgnId} 
+    </select>
+    
+    <!-- 이력 seq 조회 -->
+    <select id="ppsMaxSeqFaxMgmt" parameterType="com.ktis.msp.pps.orgmgmt.vo.FaxHstVO" resultType="String">
+        SELECT /* FaxMgmtMapper.maxSeqFaxMgmt */
+               NVL(MAX(TO_NUMBER (FAX_SEQ_NUM)),0) AS FAX_SEQ_NUM
+          FROM ORG_FAX_HST
+         WHERE ORGN_ID = #{orgnId} 
+    </select> 
+    
+    <!--Fax 추가 -->
+    <insert id="ppsInsertFaxMgmt" parameterType="com.ktis.msp.pps.orgmgmt.vo.FaxHstVO"  >        
+        INSERT INTO ORG_FAX_HST /** FaxMgmtMapper.insertFaxMgmt */ 
+            (
+	             FAX_SEQ_NUM    /* 이력일련번호 */
+	           , FAX    /* FAX번호 */
+	           , REG_ID    /* 등록자ID */
+	           , REG_DTTM    /* 등록일시 */
+	           , RVISN_ID    /* 수정자ID */
+	           , RVISN_DTTM    /* 수정일시 */
+	           , ORGN_ID    /* 조직 ID */
+	           , APPL_STRT_DTTM    /* 적용시작일시 */
+	           , APPL_CMPLT_DTTM    /* 적용종료일시 */         
+            )
+        VALUES 
+            (    
+	            #{faxSeqNum, jdbcType=VARCHAR} /* 이력일련번호 */
+	           , #{fax, jdbcType=VARCHAR} /* FAX번호 */
+	           , #{regId, jdbcType=VARCHAR} /* 등록자ID */
+	           , SYSDATE
+	           , #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+	           , SYSDATE
+	           , #{orgnId, jdbcType=VARCHAR} /* 조직 ID */
+	           , #{applStrtDttm, jdbcType=VARCHAR} /* 적용시작일시 */
+	           , #{applCmpltDttm, jdbcType=VARCHAR} /* 적용종료일시 */           
+            )
+    </insert>
+    
+    <update id="ppsUpdateFaxMgmt" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO">
+        UPDATE /* OrgMgmtMapper.updateOrgMgmt */
+               ORG_FAX_HST
+        SET RVISN_DTTM = SYSDATE
+        <if test = "rvisnId != null and rvisnId != '' ">, RVISN_ID = #{rvisnId, jdbcType=VARCHAR} </if>
+        <if test = "applCmpltDttm != null and applCmpltDttm != '' ">, APPL_CMPLT_DTTM = #{applCmpltDttm, jdbcType=VARCHAR} </if>
+         WHERE ORGN_ID = #{orgnId}   
+           AND FAX_SEQ_NUM = #{faxSeqNum} 
+    </update> 
+    
+    <update id="ppsUpdateOrgMgmtFax" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO">
+		UPDATE /* OrgMgmtMapper.updateOrgMgmtFax */
+			   ORG_ORGN_INFO_MST
+		   SET FAX = #{fax, jdbcType=VARCHAR} 
+		 WHERE ORGN_ID = #{orgnId}	
+	</update>
+	
+	<!-- 대리점정보조회 -->
+	<select id="ppsGetAgncyInfo" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO" resultType="hashMap">
+		/* org.orgmgmt.getAgncyInfo */
+		SELECT
+			A.ORGN_ID
+			, TO_CHAR(SYSDATE, 'YYYYMMDD') AS APPL_STRT_DT
+			, TO_CHAR(SYSDATE - 1, 'YYYYMMDD') AS APPL_END_DT
+			, A.ORGN_STAT_CD
+			, A.TYPE_DTL_CD1 AS AGNCY_TYPE_CD
+			, A.TYPE_DTL_CD2 AS AGNCY_TYPE_DTL_CD
+			, A.TYPE_DTL_CD3 AS CHNL_DTL_CD
+			, A.TYPE_DTL_CD AS MVNO_ORGN_YN
+			, DECODE(A.OPEN_CRDT_LOAN_YN, '0', 'N', 'Y') AS OPEN_CRDT_LOAN_YN
+			, DECODE(A.CMSN_PRVD_YN, '0', 'N', A.CMSN_PRVD_YN) AS CMSN_PRVD_YN
+			, DECODE(A.HNDST_ORD_YN, '0', 'N', A.HNDST_ORD_YN) AS HNDST_ORD_YN
+			, DECODE(A.HNDST_INVTR_YN, '0', 'N', A.HNDST_INVTR_YN) AS HNDST_INVTR_YN
+			, DECODE(A.TAXBILL_YN, '0', 'N', A.TAXBILL_YN) AS TAXBILL_YN
+			, DECODE(A.CLOSE_YN, '0', 'N', A.CLOSE_YN) AS CLOSE_YN
+			, A.KT_ORG_ID
+			, A.HGHR_ORGN_CD
+			, #{regId} AS USER_ID
+			, (SELECT NVL(MAX(CHG_SEQ), 1) FROM ORG_AGNCY_TYPE_HST WHERE ORGN_ID = #{orgnId} AND APPL_END_DT = '99991231') AS CHG_SEQ
+		FROM
+			ORG_ORGN_INFO_MST A
+		WHERE
+			A.TYPE_CD = '20'
+		<![CDATA[
+			AND A.TYPE_DTL_CD1 <> 'SU'
+		]]>
+			AND A.ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 대리점유형이력수정 -->
+	<update id="ppsUpdateAgncyTypeHst" parameterType="map">
+		/* org.orgmgmt.updateAgncyTypeHst */
+		UPDATE ORG_AGNCY_TYPE_HST
+		SET
+			APPL_END_DT = #{APPL_END_DT}
+			, RVISN_ID = #{USER_ID}
+			, RVISN_DTTM = SYSDATE
+		WHERE
+			ORGN_ID = #{ORGN_ID}
+			AND APPL_END_DT = '99991231'
+			AND CHG_SEQ = #{CHG_SEQ}
+	</update>
+	
+	<!-- 대리점유형이력생성 -->
+	<insert id="ppsInsertAgncyTypeHstFst" parameterType="map">
+		/* org.orgmgmt.insertAgncyTypeHstFst */
+		INSERT INTO ORG_AGNCY_TYPE_HST (
+			ORGN_ID
+			, APPL_END_DT
+			, CHG_SEQ
+			, APPL_STRT_DT
+			, ORGN_STAT_CD
+			, AGNCY_TYPE_CD
+			, AGNCY_TYPE_DTL_CD
+			, CHNL_DTL_CD
+			, MVNO_ORGN_YN
+			, OPEN_CRDT_LOAN_YN
+			, CMSN_PRVD_YN
+			, HNDST_ORD_YN
+			, HNDST_INVTR_YN
+			, TAXBILL_YN
+			, CLOSE_YN
+			, KT_ORG_ID
+			, HGHR_ORGN_CD
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		)
+		SELECT
+			A.ORGN_ID
+			, #{APPL_END_DT}
+			, 1
+			, '20141101'
+			, A.ORGN_STAT_CD
+			, A.TYPE_DTL_CD1 AS AGNCY_TYPE_CD
+			, A.TYPE_DTL_CD2 AS AGNCY_TYPE_DTL_CD
+			, A.TYPE_DTL_CD3 AS CHNL_DTL_CD
+			, A.TYPE_DTL_CD AS MVNO_ORGN_YN
+			, DECODE(A.OPEN_CRDT_LOAN_YN, '0', 'N', NVL(A.OPEN_CRDT_LOAN_YN, 'N')) AS OPEN_CRDT_LOAN_YN
+			, DECODE(A.CMSN_PRVD_YN, '0', 'N', NVL(A.CMSN_PRVD_YN, 'N')) AS CMSN_PRVD_YN
+			, DECODE(A.HNDST_ORD_YN, '0', 'N', NVL(A.HNDST_ORD_YN, 'N')) AS HNDST_ORD_YN
+			, DECODE(A.HNDST_INVTR_YN, '0', 'N', NVL(A.HNDST_INVTR_YN, 'N')) AS HNDST_INVTR_YN
+			, DECODE(A.TAXBILL_YN, '0', 'N', NVL(A.TAXBILL_YN, 'N')) AS TAXBILL_YN
+			, DECODE(A.CLOSE_YN, '0', 'N', NVL(A.CLOSE_YN, 'N')) AS CLOSE_YN
+			, A.KT_ORG_ID
+			, A.HGHR_ORGN_CD
+			, #{USER_ID}
+			, SYSDATE
+			, #{USER_ID}
+			, SYSDATE
+		FROM
+			ORG_ORGN_INFO_HST A
+			, ( SELECT
+            		DECODE(MAX(HST_SEQ) - 1, 0, 1, MAX(HST_SEQ) - 1) AS HST_SEQ 
+                FROM ORG_ORGN_INFO_HST
+                WHERE ORGN_ID = #{ORGN_ID}
+            ) B
+		WHERE
+			A.ORGN_ID = #{ORGN_ID}
+			AND A.HST_SEQ = B.HST_SEQ
+	</insert>
+	
+	<!-- 대리점유형이력생성 -->
+	<insert id="ppsInsertAgncyTypeHst" parameterType="map">
+		/* org.orgmgmt.insertAgncyTypeHst */
+		INSERT INTO ORG_AGNCY_TYPE_HST (
+			ORGN_ID
+			, APPL_END_DT
+			, CHG_SEQ
+			, APPL_STRT_DT
+			, ORGN_STAT_CD
+			, AGNCY_TYPE_CD
+			, AGNCY_TYPE_DTL_CD
+			, CHNL_DTL_CD
+			, MVNO_ORGN_YN
+			, OPEN_CRDT_LOAN_YN
+			, CMSN_PRVD_YN
+			, HNDST_ORD_YN
+			, HNDST_INVTR_YN
+			, TAXBILL_YN
+			, CLOSE_YN
+			, KT_ORG_ID
+			, HGHR_ORGN_CD
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			#{ORGN_ID}
+			, '99991231'
+			, ( SELECT NVL(MAX(CHG_SEQ) + 1, 1) FROM ORG_AGNCY_TYPE_HST WHERE ORGN_ID = #{ORGN_ID} AND APPL_END_DT = #{APPL_END_DT} )
+			, #{APPL_STRT_DT}
+			, #{ORGN_STAT_CD}
+			, #{AGNCY_TYPE_CD}
+			, #{AGNCY_TYPE_DTL_CD}
+			, #{CHNL_DTL_CD}
+			, #{MVNO_ORGN_YN}
+			, #{OPEN_CRDT_LOAN_YN}
+			, #{CMSN_PRVD_YN}
+			, #{HNDST_ORD_YN}
+			, #{HNDST_INVTR_YN}
+			, #{TAXBILL_YN}
+			, #{CLOSE_YN}
+			, #{KT_ORG_ID}
+			, #{HGHR_ORGN_CD}
+			, #{USER_ID}
+			, SYSDATE
+			, #{USER_ID}
+			, SYSDATE
+		)
+	</insert>
+	
+	<update id="ppsUpdateOrgMgmtMasking" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO">
+		UPDATE /* OrgMgmtMapper.updateOrgMgmtMasking */
+			   ORG_ORGN_INFO_MST
+		   SET RVISN_DTTM = SYSDATE
+	           <if test = "corpRegNum != null and corpRegNum != '' ">, CORP_REG_NUM = #{corpRegNum, jdbcType=VARCHAR} </if>
+	           <if test = "rprsenNm != null and rprsenNm != '' ">, RPRSEN_NM = #{rprsenNm, jdbcType=VARCHAR} </if>
+	           <if test = "rprsenRrnum != null and rprsenRrnum != '' ">, RPRSEN_RRNUM = #{rprsenRrnum, jdbcType=VARCHAR} </if>
+	           <if test = "telnum != null and telnum != '' ">, TELNUM = #{telnum, jdbcType=VARCHAR} </if>
+	           <if test = "email != null and email != '' ">, EMAIL = #{email, jdbcType=VARCHAR} </if>
+	           <if test = "addr1 != null and addr1 != '' ">, ADDR1 = #{addr1, jdbcType=VARCHAR} </if>
+	           <if test = "addr2 != null and addr2 != '' ">, ADDR2 = #{addr2, jdbcType=VARCHAR} </if>
+		 WHERE ORGN_ID = #{orgnId}	
+	</update> 
+	
+	<!-- 가상계좌 체크 -->
+	<select id="ppsSelectValCnt" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO" resultType="int">
+		SELECT /** OrgnRelMgmtMapper.selectValCnt */
+		       COUNT(*) AS TOTAL_CNT
+		  FROM ORG_VRTL_ACNT_MGMT_MST 
+		 WHERE ACNT_STAT = '1' -- 정상계좌
+		   AND CACL_DT > TO_CHAR(SYSDATE, 'YYYYMMDD')
+	       AND ORGN_ID = #{orgnId}
+	</select>  
+	
+	<!-- 담보 체크 -->
+	<select id="ppsSelectValCnt1" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO" resultType="int">
+		SELECT /** OrgnRelMgmtMapper.selectValCnt1 */
+		       COUNT(*) AS TOTAL_CNT
+		  FROM ORG_MRTG_MGMT_MST
+		 WHERE TMNT_DT > TO_CHAR(SYSDATE, 'YYYYMMDD')
+		   AND STUP_AMT > 0
+	       AND ORGN_ID = #{orgnId}
+	</select>
+	
+	<update id="ppsUpdateOrgMgmt" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO">
+		UPDATE /* OrgMgmtMapper.updateOrgMgmt */
+			   ORG_ORGN_INFO_MST
+		   SET RVISN_DTTM = SYSDATE
+	           , ORGN_NM = #{orgnNm, jdbcType=VARCHAR}
+	           , TYPE_CD = #{typeCd, jdbcType=VARCHAR}
+	           , ORGN_LVL_CD = #{orgnLvlCd, jdbcType=VARCHAR} 
+	           , APPL_STRT_DT = #{applStrtDt, jdbcType=VARCHAR} 
+	           , APPL_CMPLT_DT = #{applCmpltDt, jdbcType=VARCHAR} 
+	           , OPEN_CRDT_LOAN_YN = #{openCrdtLoanYn, jdbcType=VARCHAR} 
+	           , OPEN_CRDT_LOAN_STRT_DT = #{openCrdtLoanStrtDt, jdbcType=VARCHAR} 
+	           , TAXBILL_YN = #{taxbillYn, jdbcType=VARCHAR} 
+	           , CMSN_PRVD_YN = #{cmsnPrvdYn, jdbcType=VARCHAR} 
+	           , HNDST_INVTR_YN = #{hndstInvtrYn, jdbcType=VARCHAR} 
+	           , BIZ_TYPE_CD = #{bizTypeCd, jdbcType=VARCHAR} 
+	           , BIZ_REG_NUM = #{bizRegNum, jdbcType=VARCHAR} 
+	           , BIZ_CAT = #{bizCat, jdbcType=VARCHAR} 
+	           , BIZ_CON = #{bizCon, jdbcType=VARCHAR} 
+	           , FAX = #{fax, jdbcType=VARCHAR} 
+	           , ZIPCD = #{zipcd, jdbcType=VARCHAR} 
+	           , RESPN_PRSN_ID = #{respnPrsnId, jdbcType=VARCHAR}
+	           , RVISN_ID = #{rvisnId, jdbcType=VARCHAR} 
+	           , HNDST_ORD_YN = #{hndstOrdYn, jdbcType=VARCHAR} 
+	           , ORGN_STAT_CD = #{orgnStatCd, jdbcType=VARCHAR} 
+	           , TMNT_DT = #{tmntDt, jdbcType=VARCHAR} 
+	           , TYPE_DTL_CD = #{typeDtlCd, jdbcType=VARCHAR} 
+	           , HGHR_ORGN_CD = #{hghrOrgnCd, jdbcType=VARCHAR} 
+	           , ORGN_GRD = #{orgnGrd, jdbcType=VARCHAR} 
+	           , CLOSE_YN = #{closeYn, jdbcType=VARCHAR} 
+	           , LOGIS_CNTER_YN = #{logisCnterYn, jdbcType=VARCHAR} 
+	           , KT_ORG_ID = #{ktOrgId, jdbcType=VARCHAR} 
+	           , TYPE_DTL_CD1 = #{typeDtlCd1, jdbcType=VARCHAR} 
+	           , TYPE_DTL_CD2 = #{typeDtlCd2, jdbcType=VARCHAR} 
+	           , TYPE_DTL_CD3 = #{typeDtlCd3, jdbcType=VARCHAR} 
+		 WHERE ORGN_ID = #{orgnId}	
+	</update> 
+	
+	<!-- 조직 이력 건수 조회 -->
+    <select id="ppsListCntOrgMgmtHst" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO" resultType="int">
+		SELECT /* OrgMgmtMapper.listCntOrgMgmtHst */
+		       COUNT(*)
+		  FROM ORG_ORGN_INFO_HST
+		 WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR} 
+	</select>
+	
+	<!-- 조직 이력 seq 조회 -->
+    <select id="ppsListSeqOrgMgmtHst" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO" resultType="String">
+		SELECT /* OrgMgmtMapper.listCntOrgMgmtHst */
+			   NVL(MAX(TO_NUMBER (HST_SEQ)),0)+1 AS HST_SEQ
+		  FROM ORG_ORGN_INFO_HST
+		 WHERE ORGN_ID = #{orgnId, jdbcType=VARCHAR} 
+	</select> 
+	
+	<insert id="ppsInsertOrgMgmtHst" parameterType="com.ktis.msp.org.orgmgmt.vo.OrgMgmtVO">
+		INSERT INTO ORG_ORGN_INFO_HST
+		    (       
+		             HST_SEQ
+		           , ORGN_ID    /* 조직 ID */
+		           , ORGN_NM    /* 조직명 */
+		           , TYPE_CD    /* 유형코드 */
+		           , ORGN_LVL_CD    /* 조직레벨코드 */
+		           , APPL_STRT_DT    /* 적용시작일자 */
+		           , APPL_CMPLT_DT    /* 적용종료일자 */
+		           , OPEN_CRDT_LOAN_YN    /* 개통여신여부 */
+		           , OPEN_CRDT_LOAN_STRT_DT    /* 개통여신시작일자 */
+		           , TAXBILL_YN    /* 세금계산서발행여부 */
+		           , CMSN_PRVD_YN    /* 수수료지급여부 */
+		           , HNDST_INVTR_YN    /* 단말재고여부 */
+		           , BIZ_TYPE_CD    /* 사업자구분 */
+		           , BIZ_REG_NUM    /* 사업자등록번호 */
+		           , CORP_REG_NUM    /* 법인등록번호 */
+		           , BIZ_CAT    /* 업종 */
+		           , BIZ_CON    /* 업태 */
+		           , RPRSEN_NM    /* 대표자명 */
+		           , RPRSEN_RRNUM    /* 대표자주민번호 */
+		           , TELNUM    /* 전화번호 */
+		           , FAX    /* 팩스번호 */
+		           , EMAIL    /* 이메일 */
+		           , ZIPCD    /* 우편번호 */
+		           , ADDR1    /* 주소1 */
+		           , ADDR2    /* 주소2 */
+		           , RESPN_PRSN_ID    /* 담당자ID */
+		           , REG_ID    /* 등록자ID */
+		           , REG_DTTM    /* 등록일시 */
+		           , RVISN_ID    /* 수정자ID */
+		           , RVISN_DTTM    /* 수정일시 */
+		           , HNDST_ORD_YN    /* 단말주문여부 */
+		           , ORGN_STAT_CD    /* 조직상태코드 */
+		           , TMNT_DT    /* 해지일자 */
+		           , TYPE_DTL_CD    /* 유형상세코드 */
+		           , HGHR_ORGN_CD    /* 상위조직코드 */
+		           , ORGN_GRD    /* 조직등급 */
+		           , CLOSE_YN    /* 정리점여부 */
+		           , LOGIS_CNTER_YN    /* 물류센터여부 */
+		           , KT_ORG_ID    /* KT조직ID */
+	               , TYPE_DTL_CD1 /* 유형상세코드1 */
+	               , TYPE_DTL_CD2 /* 유형상세코드2 */
+	               , TYPE_DTL_CD3 /* 유형상세코드3 */
+		           )
+		SELECT 
+		             #{orgnSeq}
+		           , ORGN_ID    /* 조직 ID */
+		           , ORGN_NM    /* 조직명 */
+		           , TYPE_CD    /* 유형코드 */
+		           , ORGN_LVL_CD    /* 조직레벨코드 */
+		           , APPL_STRT_DT    /* 적용시작일자 */
+		           , APPL_CMPLT_DT    /* 적용종료일자 */
+		           , OPEN_CRDT_LOAN_YN    /* 개통여신여부 */
+		           , OPEN_CRDT_LOAN_STRT_DT    /* 개통여신시작일자 */
+		           , TAXBILL_YN    /* 세금계산서발행여부 */
+		           , CMSN_PRVD_YN    /* 수수료지급여부 */
+		           , HNDST_INVTR_YN    /* 단말재고여부 */
+		           , BIZ_TYPE_CD    /* 사업자구분 */
+		           , BIZ_REG_NUM    /* 사업자등록번호 */
+		           , CORP_REG_NUM    /* 법인등록번호 */
+		           , BIZ_CAT    /* 업종 */
+		           , BIZ_CON    /* 업태 */
+		           , RPRSEN_NM    /* 대표자명 */
+		           , RPRSEN_RRNUM    /* 대표자주민번호 */
+		           , TELNUM    /* 전화번호 */
+		           , FAX    /* 팩스번호 */
+		           , EMAIL    /* 이메일 */
+		           , ZIPCD    /* 우편번호 */
+		           , ADDR1    /* 주소1 */
+		           , ADDR2    /* 주소2 */
+		           , RESPN_PRSN_ID    /* 담당자ID */
+		           , REG_ID    /* 등록자ID */
+		           , REG_DTTM    /* 등록일시 */
+		           , RVISN_ID    /* 수정자ID */
+		           , RVISN_DTTM    /* 수정일시 */
+		           , HNDST_ORD_YN    /* 단말주문여부 */
+		           , ORGN_STAT_CD    /* 조직상태코드 */
+		           , TMNT_DT    /* 해지일자 */
+		           , TYPE_DTL_CD    /* 유형상세코드 */
+		           , HGHR_ORGN_CD    /* 상위조직코드 */
+		           , ORGN_GRD    /* 조직등급 */
+		           , CLOSE_YN    /* 정리점여부 */
+		           , LOGIS_CNTER_YN    /* 물류센터여부 */
+		           , KT_ORG_ID    /* KT조직ID */
+	               , TYPE_DTL_CD1 /* 유형상세코드1 */
+	               , TYPE_DTL_CD2 /* 유형상세코드2 */
+	               , TYPE_DTL_CD3 /* 유형상세코드3 */
+		  FROM ORG_ORGN_INFO_MST
+		 WHERE ORGN_ID = #{orgnId}	 	 
+	 </insert> 
+	 
+	 <select id="ppsSelectOrgnTypeDtlCd" parameterType="string" resultType="string">
+ 		SELECT /* orgMgmtMapper.selectOrgnTypeDtlCd */
+			   DISTINCT GRP_ID
+		  FROM CMN_GRP_CD_MST
+		 WHERE CD_VAL = #{orgnType}
+		   AND USG_YN = 'Y'
+		   AND ETC2 IS NOT NULL
+    </select> 
+    
+    <select id="ppsSelectOrgnTypeDtl" parameterType="string" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+ 		SELECT /* orgMgmtMapper.selectOrgnTypeDtl */
+			   CD_VAL AS VALUE,
+		       CD_DSC AS TEXT
+		  FROM CMN_GRP_CD_MST
+		 WHERE GRP_ID = #{orgnType}
+		   AND USG_YN = 'Y'
+    </select>	
+
+</mapper>

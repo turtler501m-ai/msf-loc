@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.canusrmgmt.mapper.PpsHdofcCanUsrMgmtMapper">
+
+	<!--해지대상자조회 목록조회 -->
+    <select id="getCanUsrMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+				SELECT
+					<choose>
+						<when test="searchType == 'subscriberNo' or searchType == 'contractNum'">
+							<choose>
+								<when test="searchNm == null or searchNm == ''">
+									/*+ INDEX_DESC(B MSP_JUO_SUB_INFO_IDX3)  ORDERED USE_NL(A)*/
+								</when>
+							</choose>
+						</when>
+						<otherwise>
+							/*+ INDEX_DESC(B MSP_JUO_SUB_INFO_IDX3)  ORDERED USE_NL(A)*/ 
+						</otherwise>
+					</choose> 
+	                  B.CONTRACT_NUM  CONTRACT_NUM, 
+				      A.SOC, 
+				      RATE_NM SERVICE_NM,
+				      NVL(AGENT_ID, '') AGENT_ID, 
+				      F_GET_AGENT_NM(AGENT_ID) AGENT_NM, 
+				      BASIC_REMAINS, 
+				      TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD') BASIC_EXPIRE, 
+				      TO_CHAR(MVNO_BASIC_EXPIRE, 'YYYY-MM-DD') MVNO_BASIC_EXPIRE, 
+				      TO_CHAR(BASIC_EMPT_DT, 'YYYY-MM-DD') BASIC_EMPT_DT_STR, 
+				      BASIC_EMPT_DT,
+				      B.SUBSCRIBER_NO, 
+				      B.SUB_STATUS, 
+				      F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',B.SUB_STATUS) SUB_STATUS_NM, 
+				      B.SUB_LINK_NAME AS SUB_LINK_NAME, 
+				      SUBSTR(B.LST_COM_ACTV_DATE, 1, 4) || '-' || SUBSTR(B.LST_COM_ACTV_DATE, 5, 2) || '-' || SUBSTR(B.LST_COM_ACTV_DATE, 7, 2) AS LST_COM_ACTV_DATE, 
+				      TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD') STATUS_STOP_DT, 
+				      TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD') STATUS_CANCEL_DT, 
+				      NVL(A.AGENT_SALE_ID,'') AGENT_SALE_ID ,
+				      F_GET_AGENT_NM(AGENT_SALE_ID) AGENT_SALE_NM,
+				      RECHARGE_FLAG,
+				      TO_CHAR(STAY_EXPIR_DT, 'YYYY-MM-DD') STAY_EXPIR_DT,
+				      TO_CHAR(LAST_BASIC_CHG_DT, 'YYYY-MM-DD') LAST_BASIC_CHG_DT,
+				      NVL(D.PAPER_IMAGE, 0) PAPER_IMAGE
+				FROM  MSP_JUO_SUB_INFO B,
+					  PPS_CUSTOMER A, 
+				      MSP_RATE_MST C,
+				      (SELECT COUNT(*) PAPER_IMAGE, CONTRACT_NUM
+                        FROM PPS_CUSTOMER_IMAGE 
+                        WHERE STATUS &lt;> 'D'
+                        GROUP BY CONTRACT_NUM) D
+				WHERE B.CONTRACT_NUM = A.CONTRACT_NUM
+				      AND A.SOC = C.RATE_CD
+				      AND B.CONTRACT_NUM = D.CONTRACT_NUM(+)
+				      AND B.SUB_STATUS IN ('A','S')
+				      AND C.PAY_CL_CD = 'PP'
+				      AND A.CONTRACT_NUM IS NOT NULL 
+	                  AND B.CUSTOMER_ID IS NOT NULL
+	                  AND B.SUBSCRIBER_NO IS NOT NULL
+	                  AND A.CONTRACT_NUM NOT IN (SELECT CONTRACT_NUM FROM PPS_CAN_USR_QUEUE WHERE STATUS NOT IN ('D', 'F1', 'F2', 'S2') ) 
+	           <!--!!필수!! 여기 검색조건 쿼리 수정시 P_PPS_CAN_USR_QUEUE 프로시져도 수정해 주셔야해요^^ -->        
+				<choose>
+					<when test="searchNm != null and searchNm != ''">
+						<choose>
+							<when test="searchType == 'subscriberNo'">
+								AND SUBSCRIBER_NO LIKE '%' || #{searchNm} || '%'
+							</when>
+							<when test="searchType == 'contractNum'">
+								AND A.CONTRACT_NUM = #{searchNm}
+							</when>
+							<when test="searchType == 'subLinkName'">
+								AND B.SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+							</when>
+						</choose>
+					</when>
+					<otherwise>
+						<if test="startDt != null and startDt != ''">
+							AND LST_COM_ACTV_DATE >= #{startDt}
+						</if>
+						<if test="endDt != null and endDt != ''">
+							AND  LST_COM_ACTV_DATE &lt;= #{endDt}
+						</if>
+					</otherwise>
+				</choose>
+				
+				<choose>
+					<when test="searchPaperImg != null and searchPaperImg != ''">
+						<choose>
+								<when test='searchPaperImg == "O"'>
+									 AND D.CONTRACT_NUM IS NOT NULL 
+								</when>
+								<when test='searchPaperImg == "X"'>
+									AND D.CONTRACT_NUM IS NULL 
+								</when>
+							</choose>
+					</when>
+					
+				</choose>
+				
+				<!--!!필수!! 여기 검색조건 쿼리 수정시 P_PPS_CAN_USR_QUEUE 프로시져도 수정해 주셔야해요^^ --> 
+				
+				<if test="basicExpireStartDt != null and basicExpireStartDt != ''">
+					AND BASIC_EXPIRE >= TO_DATE(#{basicExpireStartDt}, 'YYYYMMDD')
+				</if>
+				<if test="basicExpireEndDt != null and basicExpireEndDt != ''">
+					AND  BASIC_EXPIRE &lt; TO_DATE(#{basicExpireEndDt}, 'YYYYMMDD')+1
+				</if>
+				<if test="mvnoBasicExpireStartDt != null and mvnoBasicExpireStartDt != ''">
+					AND MVNO_BASIC_EXPIRE >= TO_DATE(#{mvnoBasicExpireStartDt}, 'YYYYMMDD')
+				</if>
+				<if test="mvnoBasicExpireEndDt != null and mvnoBasicExpireEndDt != ''">
+					AND  MVNO_BASIC_EXPIRE &lt; TO_DATE(#{mvnoBasicExpireEndDt}, 'YYYYMMDD')+1
+				</if>
+				<if test="searchSoc != null and searchSoc != ''">
+					AND SOC = #{searchSoc}
+				</if>
+				<if test="searchSubStatus != null and searchSubStatus != ''">
+					AND SUB_STATUS = #{searchSubStatus}
+				</if>
+				<if test="searchExpireCnt != null and searchExpireCnt != ''">
+					AND BASIC_EXPIRE &lt; TRUNC(SYSDATE) + 1 - TO_NUMBER(#{searchExpireCnt})
+				</if>
+				<if test="searchMvnoExpireCnt != null and searchMvnoExpireCnt != ''">
+					AND MVNO_BASIC_EXPIRE &lt; TRUNC(SYSDATE) + 1 - TO_NUMBER(#{searchMvnoExpireCnt})
+				</if>
+				<if test="searchEmptCnt != null and searchEmptCnt != ''">
+					AND BASIC_EMPT_DT &lt; TRUNC(SYSDATE) + 1 - TO_NUMBER(#{searchEmptCnt}) AND LAST_BASIC_CHG_DT &lt; BASIC_EMPT_DT
+				</if>
+			 <!--!!필수!! 여기 검색조건 쿼리 수정시 P_PPS_CAN_USR_QUEUE 프로시져도 수정해 주셔야해요^^ --> 
+
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	
+
+    </select>
+    
+    <!--해지대상자조회 엑셀 -->
+    <select id="getCanUsrMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10"> 
+			SELECT
+					<choose>
+						<when test="searchType == 'subscriberNo' or searchType == 'contractNum'">
+							<choose>
+								<when test="searchNm == null or searchNm == ''">
+									/*+ INDEX_DESC(B MSP_JUO_SUB_INFO_IDX3)  ORDERED USE_NL(A)*/
+								</when>
+							</choose>
+						</when>
+						<otherwise>
+							/*+ INDEX_DESC(B MSP_JUO_SUB_INFO_IDX3)  ORDERED USE_NL(A)*/ 
+						</otherwise>
+					</choose> 
+	                  NVL(B.CONTRACT_NUM, '-')  CONTRACT_NUM, 
+				      NVL(A.SOC, '-') SOC, 
+				      NVL(RATE_NM, '-') SERVICE_NM,
+				      NVL(AGENT_ID, '-') AGENT_ID, 
+				      NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM, 
+				      NVL(BASIC_REMAINS, 0) BASIC_REMAINS, 
+				      NVL(TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD'), '-') BASIC_EXPIRE, 
+				      NVL(TO_CHAR(MVNO_BASIC_EXPIRE, 'YYYY-MM-DD'), '-') MVNO_BASIC_EXPIRE, 
+				      NVL(TO_CHAR(BASIC_EMPT_DT, 'YYYY-MM-DD'), '-') BASIC_EMPT_DT_STR, 
+				      BASIC_EMPT_DT,
+				      NVL(B.SUBSCRIBER_NO, '-') SUBSCRIBER_NO, 
+				      NVL(B.SUB_STATUS, '-') SUB_STATUS, 
+				      NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',B.SUB_STATUS), '-') SUB_STATUS_NM, 
+				      NVL(B.SUB_LINK_NAME, '-') AS SUB_LINK_NAME, 
+				      SUBSTR(B.LST_COM_ACTV_DATE, 1, 4) || '-' || SUBSTR(B.LST_COM_ACTV_DATE, 5, 2) || '-' || SUBSTR(B.LST_COM_ACTV_DATE, 7, 2) AS LST_COM_ACTV_DATE, 
+				      NVL(TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD'), '-') STATUS_STOP_DT, 
+				      NVL(TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD'), '-') STATUS_CANCEL_DT, 
+				      NVL(NVL(A.AGENT_SALE_ID,''), '-') AGENT_SALE_ID ,
+				      NVL(F_GET_AGENT_NM(AGENT_SALE_ID), '-') AGENT_SALE_NM,
+				      NVL(RECHARGE_FLAG, '-') RECHARGE_FLAG,
+				      NVL(TO_CHAR(STAY_EXPIR_DT, 'YYYY-MM-DD'), '-') STAY_EXPIR_DT,
+				      NVL(TO_CHAR(LAST_BASIC_CHG_DT, 'YYYY-MM-DD'), '-') LAST_BASIC_CHG_DT,
+				      NVL(D.PAPER_IMAGE, 0) PAPER_IMAGE
+				FROM  MSP_JUO_SUB_INFO B,
+					  PPS_CUSTOMER A, 
+				      MSP_RATE_MST C,
+				      (SELECT COUNT(*) PAPER_IMAGE, CONTRACT_NUM
+                        FROM PPS_CUSTOMER_IMAGE 
+                        WHERE STATUS &lt;> 'D'
+                        GROUP BY CONTRACT_NUM) D
+				WHERE B.CONTRACT_NUM = A.CONTRACT_NUM
+				      AND A.SOC = C.RATE_CD
+				      AND B.CONTRACT_NUM = D.CONTRACT_NUM(+)
+				      AND B.SUB_STATUS IN ('A','S')
+				      AND C.PAY_CL_CD = 'PP'
+				      AND A.CONTRACT_NUM IS NOT NULL 
+	                  AND B.CUSTOMER_ID IS NOT NULL
+	                  AND B.SUBSCRIBER_NO IS NOT NULL
+	                  AND A.CONTRACT_NUM NOT IN (SELECT CONTRACT_NUM FROM PPS_CAN_USR_QUEUE WHERE STATUS NOT IN ('D', 'F1', 'F2', 'S2') ) 
+	           <!--!!필수!! 여기 검색조건 쿼리 수정시 P_PPS_CAN_USR_QUEUE 프로시져도 수정해 주셔야해요^^ -->        
+				<choose>
+					<when test="searchNm != null and searchNm != ''">
+						<choose>
+							<when test="searchType == 'subscriberNo'">
+								AND SUBSCRIBER_NO LIKE '%' || #{searchNm} || '%'
+							</when>
+							<when test="searchType == 'contractNum'">
+								AND A.CONTRACT_NUM = #{searchNm}
+							</when>
+							<when test="searchType == 'subLinkName'">
+								AND B.SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+							</when>
+						</choose>
+					</when>
+					<otherwise>
+						<if test="startDt != null and startDt != ''">
+							AND LST_COM_ACTV_DATE >= #{startDt}
+						</if>
+						<if test="endDt != null and endDt != ''">
+							AND  LST_COM_ACTV_DATE &lt;= #{endDt}
+						</if>
+					</otherwise>
+				</choose>
+				
+				<choose>
+					<when test="searchPaperImg != null and searchPaperImg != ''">
+						<choose>
+								<when test='searchPaperImg == "O"'>
+									 AND D.CONTRACT_NUM IS NOT NULL 
+								</when>
+								<when test='searchPaperImg == "X"'>
+									AND D.CONTRACT_NUM IS NULL 
+								</when>
+							</choose>
+					</when>
+					
+				</choose>
+				
+				<!--!!필수!! 여기 검색조건 쿼리 수정시 P_PPS_CAN_USR_QUEUE 프로시져도 수정해 주셔야해요^^ --> 
+				
+				<if test="basicExpireStartDt != null and basicExpireStartDt != ''">
+					AND BASIC_EXPIRE >= TO_DATE(#{basicExpireStartDt}, 'YYYYMMDD')
+				</if>
+				<if test="basicExpireEndDt != null and basicExpireEndDt != ''">
+					AND  BASIC_EXPIRE &lt; TO_DATE(#{basicExpireEndDt}, 'YYYYMMDD')+1
+				</if>
+				<if test="mvnoBasicExpireStartDt != null and mvnoBasicExpireStartDt != ''">
+					AND MVNO_BASIC_EXPIRE >= TO_DATE(#{mvnoBasicExpireStartDt}, 'YYYYMMDD')
+				</if>
+				<if test="mvnoBasicExpireEndDt != null and mvnoBasicExpireEndDt != ''">
+					AND  MVNO_BASIC_EXPIRE &lt; TO_DATE(#{mvnoBasicExpireEndDt}, 'YYYYMMDD')+1
+				</if>
+				<if test="searchSoc != null and searchSoc != ''">
+					AND SOC = #{searchSoc}
+				</if>
+				<if test="searchSubStatus != null and searchSubStatus != ''">
+					AND SUB_STATUS = #{searchSubStatus}
+				</if>
+				<if test="searchExpireCnt != null and searchExpireCnt != ''">
+					AND BASIC_EXPIRE &lt; TRUNC(SYSDATE) + 1 - TO_NUMBER(#{searchExpireCnt})
+				</if>
+				<if test="searchMvnoExpireCnt != null and searchMvnoExpireCnt != ''">
+					AND MVNO_BASIC_EXPIRE &lt; TRUNC(SYSDATE) + 1 - TO_NUMBER(#{searchMvnoExpireCnt})
+				</if>
+				<if test="searchEmptCnt != null and searchEmptCnt != ''">
+					AND BASIC_EMPT_DT &lt; TRUNC(SYSDATE) + 1 - TO_NUMBER(#{searchEmptCnt}) AND LAST_BASIC_CHG_DT &lt; BASIC_EMPT_DT
+				</if>
+    </select>
+    
+    <!--직권해지처리 목록조회 -->
+    <select id="getCanUsrQueueMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT
+				<choose>
+					<when test="searchType == 'SUBSCRIBER_NO' or searchType == 'CONRACT_NUM'">
+						<choose>
+							<when test="searchNm == null or searchNm == ''">
+								/*+ INDEX_DESC (A PPS_CAN_USR_QUEUE_IDX2)*/
+							</when>
+						</choose>
+					</when>
+					<otherwise>
+						/*+ INDEX_DESC (A PPS_CAN_USR_QUEUE_IDX2)*/ 
+					</otherwise>
+				</choose> 
+                    SEQ, 
+			        GROUP_SEQ, 
+			        CONTRACT_NUM, 
+			        CUSTOMER_ID, 
+			        SUBSCRIBER_NO, 
+			        SUB_LINK_NAME, 
+			        STATUS, 
+			        F_GET_KT_CODE_NM('PPS_CAN_USR_QUEUE','STATUS',STATUS) STATUS_NM,
+			        SOC, 
+			        (SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1)AS SERVICE_NM,
+			        SUB_STATUS, 
+			        F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',SUB_STATUS) SUB_STATUS_NM, 
+			        BASIC_REMAINS, 
+			        TO_CHAR(BASIC_EMPT_DT, 'YYYY-MM-DD') BASIC_EMPT_DT, 
+			        TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD') BASIC_EXPIRE, 
+			        TO_CHAR(MVNO_BASIC_EXPIRE, 'YYYY-MM-DD') MVNO_BASIC_EXPIRE, 
+			        TO_CHAR(LAST_BASIC_CHG_DT, 'YYYY-MM-DD') LAST_BASIC_CHG_DT, 
+			        TO_CHAR(OPEN_DATE, 'YYYY-MM-DD') OPEN_DATE, 
+			        TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD') STATUS_STOP_DT, 
+			        TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD') STATUS_CANCEL_DT, 
+			        AGENT_ID, 
+			        F_GET_AGENT_NM(AGENT_ID) AGENT_NM, 
+			        AGENT_SALE_ID, 
+			        F_GET_AGENT_NM(AGENT_SALE_ID) AGENT_SALE_NM,
+			        REQ_GUBUN, 
+			        F_GET_KT_CODE_NM('PPS_CAN_USR_QUEUE','REQ_GUBUN',REQ_GUBUN) REQ_GUBUN_NM, 
+			        REQ_ID, 
+			        F_GET_ADMIN_NM(REQ_ID) REQ_NM,
+			        TO_CHAR(REQ_DT, 'YYYY-MM-DD') REQ_DT, 
+			        MOD_ID, 
+			        MOD_DT, 
+			        CONFIRM_ID, 
+			        F_GET_ADMIN_NM(CONFIRM_ID) CONFIRM_NM,
+			        TO_CHAR(CONFIRM_DT, 'YYYY-MM-DD') CONFIRM_DT, 
+			        DECODE(STATUS, 'F1', CONN_RSLT_MSG, TCP_RSLT_MSG) RET_MSG,
+			        CONN_RSLT_MSG, 
+			        TCP_RSLT_MSG, 
+			        REMARK
+			FROM PPS_CAN_USR_QUEUE A
+			WHERE REQ_DT > TO_DATE('20170101', 'YYYYMMDD')
+			      AND STATUS &lt;> 'D'
+       
+			<choose>
+				<when test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'CONTRACT_NUM'">
+							AND CONTRACT_NUM LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'GROUP_SEQ'">
+							AND GROUP_SEQ LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'SUBSCRIBER_NO'">
+							AND SUBSCRIBER_NO LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'SUB_LINK_NAME'">
+							AND SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+						</when>
+					</choose>
+				</when>
+			</choose>
+			<if test="searchStatus != null and searchStatus != ''">
+				AND STATUS = #{searchStatus}
+			</if>
+			<if test="startDt != null and startDt != ''">
+				AND REQ_DT >= TO_DATE(#{startDt}, 'YYYYMMDD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND REQ_DT &lt; TO_DATE(#{endDt}, 'YYYYMMDD')+1
+			</if>
+			<if test="searchReqGubun != null and searchReqGubun != ''">
+				AND REQ_GUBUN = #{searchReqGubun}
+			</if>
+			
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	
+
+    </select>
+    
+    <!--직권해지처리 엑셀 -->
+    <select id="getCanUsrQueueMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10"> 
+			SELECT
+				<choose>
+					<when test="searchType == 'SUBSCRIBER_NO' or searchType == 'CONRACT_NUM'">
+						<choose>
+							<when test="searchNm == null or searchNm == ''">
+								/*+ INDEX_DESC (A PPS_CAN_USR_QUEUE_IDX2)*/
+							</when>
+						</choose>
+					</when>
+					<otherwise>
+						/*+ INDEX_DESC (A PPS_CAN_USR_QUEUE_IDX2)*/ 
+					</otherwise>
+				</choose> 
+                    NVL(SEQ, NULL) SEQ, 
+			        NVL(GROUP_SEQ, NULL) GROUP_SEQ, 
+			        NVL(CONTRACT_NUM, NULL) CONTRACT_NUM, 
+			        NVL(CUSTOMER_ID, '-') CUSTOMER_ID, 
+			        NVL(SUBSCRIBER_NO, '-') SUBSCRIBER_NO, 
+			        NVL(SUB_LINK_NAME, '-') SUB_LINK_NAME, 
+			        NVL(STATUS, '-') STATUS, 
+			        NVL(F_GET_KT_CODE_NM('PPS_CAN_USR_QUEUE','STATUS',STATUS), '-') STATUS_NM,
+			        NVL(SOC, '-') SOC, 
+			        NVL((SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1), '-') AS SERVICE_NM,
+			        NVL(SUB_STATUS, '-') SUB_STATUS, 
+			        NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',SUB_STATUS), '-') SUB_STATUS_NM, 
+			        NVL(BASIC_REMAINS, NULL) BASIC_REMAINS, 
+			        NVL(TO_CHAR(BASIC_EMPT_DT, 'YYYY-MM-DD'), '-') BASIC_EMPT_DT, 
+			        NVL(TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD'), '-') BASIC_EXPIRE,
+			        NVL(TO_CHAR(MVNO_BASIC_EXPIRE, 'YYYY-MM-DD'), '-') MVNO_BASIC_EXPIRE,  
+			        NVL(TO_CHAR(LAST_BASIC_CHG_DT, 'YYYY-MM-DD'), '-') LAST_BASIC_CHG_DT, 
+			        NVL(TO_CHAR(OPEN_DATE, 'YYYY-MM-DD'), '-') OPEN_DATE, 
+			        NVL(TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD'), '-') STATUS_STOP_DT, 
+			        NVL(TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD'), '-') STATUS_CANCEL_DT, 
+			        NVL(AGENT_ID, '-') AGENT_ID, 
+			        NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM, 
+			        NVL(AGENT_SALE_ID, '-') AGENT_SALE_ID, 
+			        NVL(F_GET_AGENT_NM(AGENT_SALE_ID), '-') AGENT_SALE_NM,
+			        NVL(REQ_GUBUN, '-') REQ_GUBUN, 
+			        NVL(F_GET_KT_CODE_NM('PPS_CAN_USR_QUEUE','REQ_GUBUN',REQ_GUBUN), '-') REQ_GUBUN_NM, 
+			        NVL(REQ_ID, '-') REQ_ID, 
+			        NVL(F_GET_ADMIN_NM(REQ_ID), '-') REQ_NM,
+			        NVL(TO_CHAR(REQ_DT, 'YYYY-MM-DD'), '-') REQ_DT, 
+			        NVL(CONFIRM_ID, '-') CONFIRM_ID, 
+			        NVL(F_GET_ADMIN_NM(CONFIRM_ID), '-') CONFIRM_NM,
+			        NVL(TO_CHAR(CONFIRM_DT, 'YYYY-MM-DD'), '-') CONFIRM_DT, 
+			        NVL(DECODE(STATUS, 'F1', CONN_RSLT_MSG, TCP_RSLT_MSG), '-') RET_MSG,
+			        NVL(CONN_RSLT_MSG, '-') CONN_RSLT_MSG, 
+			        NVL(TCP_RSLT_MSG, '-') TCP_RSLT_MSG, 
+			        NVL(REMARK, '-') REMARK
+			FROM PPS_CAN_USR_QUEUE A
+			WHERE REQ_DT > TO_DATE('20170101', 'YYYYMMDD')
+			      AND STATUS &lt;> 'D'
+       
+			<choose>
+				<when test="searchNm != null and searchNm != ''">
+					<choose>
+						<when test="searchType == 'CONTRACT_NUM'">
+							AND CONTRACT_NUM LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'GROUP_SEQ'">
+							AND GROUP_SEQ LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'SUBSCRIBER_NO'">
+							AND SUBSCRIBER_NO LIKE '%' || #{searchNm} || '%'
+						</when>
+						<when test="searchType == 'SUB_LINK_NAME'">
+							AND SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+						</when>
+					</choose>
+				</when>
+			</choose>
+			<if test="searchStatus != null and searchStatus != ''">
+				AND STATUS = #{searchStatus}
+			</if>
+			<if test="startDt != null and startDt != ''">
+				AND REQ_DT >= TO_DATE(#{startDt}, 'YYYYMMDD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND REQ_DT &lt; TO_DATE(#{endDt}, 'YYYYMMDD')+1
+			</if>
+			<if test="searchReqGubun != null and searchReqGubun != ''">
+				AND REQ_GUBUN = #{searchReqGubun}
+			</if>
+    </select>
+    
+    <!--해지결과 목록조회 -->
+    <select id="getCanUsrStatsMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT /*+ INDEX_DESC(A PPS_CAN_USR_GROUP_IDX1)*/
+			       A.GROUP_SEQ,
+			       COUNT(*) CONFIRM_CNT,
+			       SUM(DECODE(STATUS, 'I', 1, 0)) ING_CNT,
+			       SUM(DECODE(STATUS, 'D', 1, 0)) CAN_CNT,
+			        SUM(DECODE(STATUS, 'S1', 1, 0)) S1_CNT,
+			        SUM(DECODE(STATUS, 'F1', 1, 0)) F1_CNT,
+			        SUM(DECODE(STATUS, 'S2', 1, 0)) S2_CNT,
+			        SUM(DECODE(STATUS, 'F2', 1, 0)) F2_CNT,
+			        TO_CHAR(A.CONFIRM_DT, 'YYYY-MM-DD HH24:MI:SS') CONFIRM_DT,
+			        F_GET_ADMIN_NM(A.CONFIRM_ID) CONFIRM_NM,
+			        A.REMARK
+			FROM PPS_CAN_USR_GROUP A,
+			     PPS_CAN_USR_QUEUE B
+			WHERE A.GROUP_SEQ = B.GROUP_SEQ
+			
+			<if test="startDt != null and startDt != ''">
+				AND A.CONFIRM_DT >= TO_DATE(#{startDt}, 'YYYYMMDD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND A.CONFIRM_DT &lt; TO_DATE(#{endDt}, 'YYYYMMDD')+1
+			</if>
+			<if test="searchReqGubun != null and searchReqGubun != ''">
+				AND REQ_GUBUN = #{searchReqGubun}
+			</if>
+			
+			GROUP BY A.GROUP_SEQ, A.CONFIRM_ID, A.CONFIRM_DT, A.REMARK
+			ORDER BY CONFIRM_DT DESC
+       
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	
+
+    </select>
+    
+    <!--해지결과 엑셀 -->
+    <select id="getCanUsrStatsMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10"> 
+			SELECT /*+ INDEX_DESC(A PPS_CAN_USR_GROUP_IDX1)*/
+			       A.GROUP_SEQ,
+			       COUNT(*) CONFIRM_CNT,
+			       NVL(SUM(DECODE(STATUS, 'I', 1, 0)), 0) ING_CNT,
+			       NVL(SUM(DECODE(STATUS, 'D', 1, 0)), 0) CAN_CNT,
+			        NVL(SUM(DECODE(STATUS, 'S1', 1, 0)), 0) S1_CNT,
+			        NVL(SUM(DECODE(STATUS, 'F1', 1, 0)), 0) F1_CNT,
+			        NVL(SUM(DECODE(STATUS, 'S2', 1, 0)), 0) S2_CNT,
+			        NVL(SUM(DECODE(STATUS, 'F2', 1, 0)), 0) F2_CNT,
+			        TO_CHAR(A.CONFIRM_DT, 'YYYY-MM-DD HH24:MI:SS') CONFIRM_DT,
+			        NVL(F_GET_ADMIN_NM(A.CONFIRM_ID), '-') CONFIRM_NM,
+			        NVL(A.REMARK, '-') REMARK
+			FROM PPS_CAN_USR_GROUP A,
+			     PPS_CAN_USR_QUEUE B
+			WHERE A.GROUP_SEQ = B.GROUP_SEQ
+			
+			<if test="startDt != null and startDt != ''">
+				AND A.CONFIRM_DT >= TO_DATE(#{startDt}, 'YYYYMMDD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND A.CONFIRM_DT &lt; TO_DATE(#{endDt}, 'YYYYMMDD')+1
+			</if>
+			<if test="searchReqGubun != null and searchReqGubun != ''">
+				AND REQ_GUBUN = #{searchReqGubun}
+			</if>
+			
+			GROUP BY A.GROUP_SEQ, A.CONFIRM_ID, A.CONFIRM_DT, A.REMARK
+			ORDER BY CONFIRM_DT DESC
+    </select>
+    
+    <!-- 해지요청 -->
+	<select id="getPpsCanUsrQueue"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_PPS_CAN_USR_QUEUE(
+					    #{opCode, jdbcType=VARCHAR}
+					    , #{param, jdbcType=CLOB}
+					    , #{searchEmptCnt, jdbcType=VARCHAR}
+					    , #{searchExpireCnt, jdbcType=VARCHAR}
+					    , #{searchMvnoExpireCnt, jdbcType=VARCHAR}
+					    , #{searchSoc, jdbcType=VARCHAR}
+					    , #{searchSubStatus, jdbcType=VARCHAR}
+					    , #{startDt, jdbcType=VARCHAR}
+					    , #{endDt, jdbcType=VARCHAR}
+					    , #{basicExpireStartDt, jdbcType=VARCHAR}
+					    , #{basicExpireEndDt, jdbcType=VARCHAR}
+					    , #{mvnoBasicExpireStartDt, jdbcType=VARCHAR}
+					    , #{mvnoBasicExpireEndDt, jdbcType=VARCHAR}
+					    , #{searchPaperImg, jdbcType=VARCHAR} 
+					    , #{searchType, jdbcType=VARCHAR}
+					    , #{searchNm, jdbcType=VARCHAR}
+					    , #{remark, jdbcType=VARCHAR}
+					    , #{adminId, jdbcType=VARCHAR}
+					   , #{oRetCode, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					  )
+		     }
+	</select>
+	
+</mapper>

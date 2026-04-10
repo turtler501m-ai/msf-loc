@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-web>  
+    <context-root>/</context-root>
+    
+    <replication-config>
+        <cache-name>custom-session-cache</cache-name>
+      	<replication-trigger>SET_AND_GET</replication-trigger>  
+<!--       	<replication-granularity>ATTRIBUTE</replication-granularity>  -->
+      	<replication-granularity>SESSION</replication-granularity>  
+		<use-jk>false</use-jk>
+    </replication-config>
+</jboss-web>  

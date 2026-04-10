@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.favrmenu.mapper.FavrMenuMapper">
+
+	<select id="favrMenuList" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.favrmenu.favrMenuList =========*/	
+	    	    
+		SELECT 
+		        ROWNUM   id
+		      , a.USR_ID
+		      , a.MENU_ID
+		      , a.ALGN_SEQ
+		      , a.REGST_ID
+		      , a.REGST_DTTM
+		      , d.MENU_NM  text
+              , C.PRGM_URL URL
+              , d.IBSHEET_YN
+              , d.STYLE
+		FROM CMN_FAVR_MENU_MST a,
+<!-- 			 CMN_MENU_MST b,    -->
+             CMN_PRGM_MST c,
+	            (
+	                 SELECT         
+	                        ROWNUM ROW_INDEX
+	                      , a.MENU_ID
+	                      , a.MENU_NM
+	                      , A.DEL_YN
+	                      , replace(RPAD(' ', 4*(LEVEL - 1)),' ','.') || MENU_NM MENU_NM_HGHR
+	                      , a.IBSHEET_YN
+                          , DECODE(a.IBSHEET_YN, 'Y', 'background-color:#A0AFFF;font-weight:bold;', '') AS STYLE
+	                FROM CMN_MENU_MST a
+	                START WITH  '0' =  a.MENU_LVL
+	                CONNECT BY a.HGHR_MENU_ID = PRIOR a.MENU_ID
+	                ORDER SIBLINGS BY   1 + ALGN_SEQ   
+	            ) d    
+	    WHERE 1 = 1 
+	      and a.menu_id = d.menu_id
+	      and A.MENU_ID = c.MENU_ID(+)
+          AND ( d.DEL_YN IS NULL OR D.DEL_YN = 'N') 
+          AND c.PRGM_TYPE(+) = 'MAIN'
+		  AND A.USR_ID  =  #{SESSION_USER_ID     }  
+
+	        <if test="menuId != null and menuId  != ''">	
+				AND A.MENU_ID  =  #{menuId} 
+	        </if>
+<!-- 	    ORDER BY ALGN_SEQ    -->
+		ORDER BY D.ROW_INDEX
+	</select>
+	
+
+	<insert  id="favrMenuInsert"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.favrmenu.favrMenuInsert =========*/		
+		INSERT INTO CMN_FAVR_MENU_MST
+		(
+		        USR_ID
+		      , MENU_ID
+		      , ALGN_SEQ
+		      , REGST_ID
+		      , REGST_DTTM
+		)
+		VALUES
+		( 
+		        #{SESSION_USER_ID     }  
+		      , #{menuId             }
+		      , #{ALGN_SEQ            }
+		      , #{SESSION_USER_ID     }
+		      , SYSDATE
+		)		   
+
+	</insert>
+	
+	
+		
+	<delete id="favrMenuDelete"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.favrmenu.favrMenuDelete =========*/	    
+		DELETE CMN_FAVR_MENU_MST
+		WHERE  USR_ID = #{SESSION_USER_ID     }  
+		   AND MENU_ID = #{menuId}
+
+	</delete>	
+	
+</mapper>

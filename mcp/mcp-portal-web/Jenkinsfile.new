@@ -1,0 +1,121 @@
+#!/usr/bin/env groovy
+
+@Library('utils@trunk/utils') _   // Global Shared Library 로드
+//마이그후에 폴더 구조 변경 필요
+
+pipeline {
+  agent any
+  options {
+    ansiColor('css')
+  }
+
+  // ======================================================
+  // 전역 환경 변수 선언
+  // 모든 stage에서 공통으로 접근 가능
+  // ======================================================
+  environment {
+    ANT_HOME = tool 'ant-1.10.15'                  // ANT 설치 경로
+    JDK_HOME = tool 'jdk11'                        // JDK 설치 경로
+    JENKINS_PROPERTIES = 'devops/jenkins/jenkins-new.properties' // Jenkins 전용 프로퍼티
+  }
+
+  stages {
+
+    // ======================================================
+    // Stage 1: 환경 확인 및 Job 정보 파싱
+    // ======================================================
+    stage('Environment Check') {
+      steps {
+        script {
+          // MCP/ 접두사 제거 후 Job명 파싱
+          def jobName = env.JOB_NAME.tokenize('/').last()            // ex) mcp-admin-web-dev
+          def varField = jobName.split('-')                          // ["mcp", "admin", "web", "dev"]
+
+          // platform 이름, 카테고리, 타겟 환경을 전역 env 변수로 등록
+          env.platformNm = "${varField[0]}-${varField[1]}"          // ex) mcp-admin
+          env.targetEnv = varField.last()                       // ex) dev
+
+          echo """
+================= Jenkins Environment Check =================
+JOB_NAME    : ${env.JOB_NAME}
+jobName     : ${jobName}
+ANT_HOME    : ${env.ANT_HOME}
+JDK_HOME    : ${env.JDK_HOME}
+targetEnv   : ${env.targetEnv}
+platformNm  : ${env.platformNm}
+varField    : ${varField}
+
+================= System Environment Variables ===============
+${sh(script: 'printenv | sort | grep -E "JOB_NAME|BUILD_NUMBER|WORKSPACE|JAVA_HOME|PATH" || true', returnStdout: true).trim()}
+==============================================================
+"""
+        }
+      }
+    }
+
+    // ======================================================
+    // Stage 2: Ant 빌드
+    // - Jenkins Properties 읽기
+    // - 타겟 디렉토리 생성
+    // - workspace 압축
+    // ======================================================
+    stage('Ant Build') {
+      steps {
+        script {
+          def props = readProperties file: "${env.WORKSPACE}/${env.JENKINS_PROPERTIES}"
+          def targetDir = "${props.releaseDir}/${env.targetEnv}/${env.platformNm}"
+          def fileNm = "${env.platformNm}.${props.tarFile}"
+
+          echo "Target directory: ${targetDir}/${fileNm}"
+
+          try {
+            // ENV 변수만 stage-specific로 적용, ANT_HOME/JDK_HOME는 이미 전역 environment에 있음
+            withEnv(["ENV=${env.targetEnv}"]) {
+              if (isUnix()) {
+                sh """
+                  mkdir -p "${targetDir}"
+                  cd "${env.WORKSPACE}"
+                  tar -czf "${targetDir}/${fileNm}" .
+                """
+              } else {
+                bat """
+                  if not exist "${targetDir}" mkdir "${targetDir}"
+                  powershell -Command "Compress-Archive -Path '${env.WORKSPACE}\\*' -DestinationPath '${targetDir}\\${fileNm}' -Force"
+                """
+              }
+              echo "Compressed file >> ${targetDir}/${fileNm}"
+            }
+          } catch(e) {
+            echo "Clean up workspace >> ${env.JOB_NAME}"
+            sh 'ls -A1 | xargs rm -rf'
+            currentBuild.result = "FAILED"
+            error e.toString()
+          }
+        }
+      }
+    }
+
+    // ======================================================
+    // Stage 3: Source Deploy
+    // - 타겟 환경에 따라 deployment 수행
+    // - ENV 변수만 stage-specific로 적용
+    // ======================================================
+    stage('Source Deploy') {
+      when {
+        expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+      }
+      steps {
+        script {
+          def props = readProperties file: "${env.WORKSPACE}/${env.JENKINS_PROPERTIES}"  
+          def propsFile = "${env.WORKSPACE}/${props.devopsPath}/${env.platformNm}/${env.targetEnv}/${props.utilPropsFile}"
+
+          withEnv(["PATH=${env.PATH}"]) {
+            echo "propsFile   : ${propsFile}"
+            sshRemote(propsFile)
+          }            
+        }
+      }
+    }
+
+  }
+}

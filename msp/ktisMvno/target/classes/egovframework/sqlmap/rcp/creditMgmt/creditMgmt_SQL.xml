@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.creditMgmt.mapper.CreditMgmtMapper">
+	<select id="selectCreditList" parameterType="com.ktis.msp.rcp.creditMgmt.vo.CreditVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  /** CreditMgmtMapper.selectCreditList */
+		CREDIT_ID			
+		,TO_CHAR(TO_DATE(REG_DATE), 'YYYY-MM-DD') AS REG_DATE
+        ,ORG_CODE
+        ,ORG_NAME
+        ,CUST_NAME
+        ,TEL_NO
+        ,REG_ID
+        ,REG_NAME
+		FROM MSP_CREDIT_AGREEMENT
+		WHERE	TO_CHAR(TO_DATE(REG_DATE), 'YYYYMMDD') BETWEEN #{startDate} AND #{endDate}
+		<if test="orgnId != null and orgnId != '' ">
+			AND	ORG_CODE = #{orgnId}
+		</if>
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getCreditId" resultType="String">
+		SELECT CREDIT_SEQ.NEXTVAL FROM DUAL	
+	</select>
+	
+	<insert  id="creditInsert"  parameterType="java.util.HashMap"  >
+		INSERT INTO MSP_CREDIT_AGREEMENT 
+		(
+			CREDIT_ID
+			,REG_DATE
+			,ORG_CODE
+			,ORG_NAME
+			,CUST_NAME
+			,TEL_NO
+			,REG_ID
+			,REG_NAME
+		)
+		VALUES
+		(
+			#{CREDIT_ID}
+			,SYSDATE
+			,#{orgnId}
+			,#{orgnNm}
+			,#{custName}
+			,#{telNo}
+			,#{SESSION_USER_ID }
+			,#{SESSION_USER_NAME}
+		)
+	</insert>
+	
+	<select id="getFile1" parameterType="com.ktis.msp.rcp.creditMgmt.vo.CreditVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT
+	             ATT_ROUT   /* 파일경로 */
+	           , FILE_NM    /* 파일명 */
+	           , FILE_ID    /* 파일ID */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{creditId}
+	   ORDER BY REG_DTTM
+	</select>
+</mapper>

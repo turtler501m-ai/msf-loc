@@ -1,0 +1,37 @@
+@charset "utf-8";
+/* freecommerce (http://www.freedi.kr/) PJI */
+
+/* 공통클래스 */
+.va_t {vertical-align:top;}
+.va_m {vertical-align:middle;}
+.va_b {vertical-align:bottom;}
+.mt_5 {margin-top:5px;}
+
+/* 기본 테이블 */
+.tb_base{width:100%; border-collapse:collapse; margin:10px 0 5px 0 ; font-size:12px; border:1px solid #d0d3d8;}
+.tb_base caption span{position:absolute; top:-10000em;}
+.tb_base thead th{padding:11px 0 8px 0; background:#eaeaea; border-left:1px solid #d5d5d5; border-right:1px solid #d5d5d5; border-bottom:1px solid #d5d5d5; color:#333;}/* border-bottom:1px solid #d5d5d5; 추가 20140826 JMH */
+.tb_base tbody th {padding:8px 5px 6px 5px; text-align:center; background:#f8f8f8; border-bottom:1px solid #d0d3d9; color:#5c6472;}
+.tb_base tbody td {padding:8px 5px 6px 5px; text-align:center; border:1px solid #d0d3d8; vertical-align:middle; }
+.tb_base tbody.write td {padding:8px 5px 6px 10px; text-align:left; border:1px solid #d0d3d8; vertical-align:middle; }
+.tb_base tbody .tb_ipty{border:1px solid #d0d3d8; width:95%; height:18px; vertical-align:middle; padding-left:5px;}
+.tb_base tbody .sel_type{border:1px solid #d0d3d8; height:20px; vertical-align:middle;}
+.tb_base tbody td img{vertical-align:bottom;}
+
+
+/* 에디터영역 */
+	.wirte_edit {overflow:hidden; width:99.7%; height:500px; border:1px solid #d0d3d8; }
+
+
+
+/* paging */
+.paging {margin:15px 0 0 0; text-align:center;}
+.paging li{display:inline; padding:0px 3px;}
+.paging li.btncl{padding:0;}
+.paging li img{vertical-align:middle;}
+.paging li strong{color:#2e2e2e;}
+
+/* 버튼제어 */
+p.btn_list {text-align:right; margin-top:15px;}
+p.btn_list1 {text-align:right; margin-top:0;}
+p.btn_list2 {text-align:center; margin-top:15px;}

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.m2m.usimprdtgmt.mapper.UsimPrdtMngMapper">
+
+
+	<!-- M2M USIM 제품 관리 -->
+	<select id="usimPrdtMngList" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* UsimPrdtMngMapper.usimPrdtMngList */
+		SELECT
+			    RPRS_PRDT_ID
+			  , PRDT_CODE
+			  , PRDT_NM
+			  , PRDT_DESC
+			  , OUT_UNIT_PRIC
+			  , USE_YN
+			  , UNIT_PRIC_APPL_DTTM
+			  , UNIT_PRIC_EXPR_DTTM
+			  , IMG_FILE
+			  , (SELECT	FILE_NM       /* 파일명 */
+				 FROM   ORG_FILE_MGMT_MST OFMM
+		 		 WHERE  OFMM.ATT_SCTN = 'M2M'
+		   		 AND	OFMM.ORGN_ID = A.RPRS_PRDT_ID) AS ORG_IMG_FILE
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+		FROM    MSP_M2M_MDL A
+		WHERE 1=1
+		 <if test="rprsPrdtId != null and rprsPrdtId != ''">
+		   AND  A.RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="prdtCode != null and prdtCode != ''">
+		   AND  A.PRDT_CODE = #{prdtCode, jdbcType=VARCHAR}
+		 </if>
+		 <if test="prdtNm != null and prdtNm != ''">
+		   AND  A.PRDT_NM LIKE '%' || #{prdtNm, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="useYn != null and useYn != ''">
+		   AND  A.USE_YN = #{useYn, jdbcType=VARCHAR}
+		 </if>
+		ORDER BY A.RPRS_PRDT_ID, A.PRDT_CODE, A.PRDT_NM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+
+	<select id="usimPrdtMngHist" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* UsimPrdtMngMapper.usimPrdtMngHist */
+		SELECT
+			    RPRS_PRDT_ID
+			  , PRDT_CODE
+			  , PRDT_NM
+			  , PRDT_DESC
+			  , OUT_UNIT_PRIC
+			  , OUT_UNIT_PRIC * 1.1 OUT_UNIT_PRIC_VAT
+			  , USE_YN
+			  , UNIT_PRIC_APPL_DTTM
+			  , UNIT_PRIC_EXPR_DTTM
+			  , IMG_FILE
+			  , ORG_IMG_FILE
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+			  , TO_CHAR(RVISN_DTTM,'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM 
+		FROM    MSP_M2M_MDL_HIST A
+		WHERE 1=1
+		 <if test="rprsPrdtId != null and rprsPrdtId != ''">
+		   AND  A.RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+		 </if>
+		ORDER BY A.SEQ_NUM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />		
+	</select>		
+
+
+	<insert id="usimPrdtInsert" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO">
+		/* UsimPrdtMngMapper.usimPrdtInsert */
+		INSERT INTO MSP_M2M_MDL
+		(
+		    RPRS_PRDT_ID
+		    , PRDT_CODE
+		    , PRDT_NM
+		    , PRDT_DESC
+		    , OUT_UNIT_PRIC
+		    , USE_YN
+		    , UNIT_PRIC_APPL_DTTM
+		    , UNIT_PRIC_EXPR_DTTM
+		    , IMG_FILE
+		    , ORG_IMG_FILE
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		VALUES
+		(
+			#{rprsPrdtId, jdbcType=VARCHAR}
+		  , #{prdtCode, jdbcType=VARCHAR}
+		  , #{prdtNm, jdbcType=VARCHAR}
+		  , #{prdtDesc, jdbcType=VARCHAR}
+		  , #{outUnitPric, jdbcType=VARCHAR}
+		  , #{useYn, jdbcType=VARCHAR}
+		  , #{unitPricApplDttm, jdbcType=VARCHAR}
+		  , #{unitPricExprDttm, jdbcType=VARCHAR}
+		  , #{imgFile, jdbcType=VARCHAR}
+		  , #{orgImgFile, jdbcType=VARCHAR}
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		)
+	</insert>
+	
+	<update id="usimPrdtUpdate" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO">
+		/* UsimPrdtMngMapper.usimPrdtUpdate */
+		UPDATE  MSP_M2M_MDL
+		   SET  PRDT_CODE = #{prdtCode, jdbcType=VARCHAR}
+		      , PRDT_NM = #{prdtNm, jdbcType=VARCHAR}
+		      , PRDT_DESC = #{prdtDesc, jdbcType=VARCHAR}
+		      , OUT_UNIT_PRIC = #{outUnitPric, jdbcType=VARCHAR}
+		      , USE_YN = #{useYn, jdbcType=VARCHAR}
+		      , UNIT_PRIC_APPL_DTTM = #{unitPricApplDttm, jdbcType=VARCHAR}
+		      , UNIT_PRIC_EXPR_DTTM = #{unitPricExprDttm, jdbcType=VARCHAR}
+		      , IMG_FILE = #{imgFile, jdbcType=VARCHAR}
+		      , ORG_IMG_FILE = #{orgImgFile, jdbcType=VARCHAR}
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+		 WHERE  RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+	</update>	
+		
+	<insert id="usimPrdtHistInsert" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO">
+		/* UsimPrdtMngMapper.usimPrdtHistInsert */
+		INSERT INTO MSP_M2M_MDL_HIST
+		(
+			SEQ_NUM
+		    , RPRS_PRDT_ID
+		    , PRDT_CODE
+		    , PRDT_NM
+		    , PRDT_DESC
+		    , OUT_UNIT_PRIC
+		    , USE_YN
+		    , UNIT_PRIC_APPL_DTTM
+		    , UNIT_PRIC_EXPR_DTTM
+		    , IMG_FILE
+		    , ORG_IMG_FILE
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT  SQ_MSP_M2M_MDL_HIST_01.nextVal
+			    , RPRS_PRDT_ID
+			    , PRDT_CODE
+			    , PRDT_NM
+			    , PRDT_DESC
+			    , OUT_UNIT_PRIC
+			    , USE_YN
+			    , UNIT_PRIC_APPL_DTTM
+			    , UNIT_PRIC_EXPR_DTTM
+			    , IMG_FILE
+			    , (SELECT	FILE_NM       /* 파일명 */
+				   FROM   ORG_FILE_MGMT_MST OFMM
+		 		   WHERE  OFMM.ATT_SCTN = 'M2M'
+		   		   AND	OFMM.ORGN_ID = A.RPRS_PRDT_ID) AS ORG_IMG_FILE
+			    , #{sessionUserId, jdbcType=VARCHAR}
+			    , SYSDATE
+			    , #{sessionUserId, jdbcType=VARCHAR}
+			    , SYSDATE
+			    
+		  FROM  MSP_M2M_MDL A
+		 WHERE  RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+		 
+	</insert>
+
+	<select id="usimPrdtMngListEx" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimPrdtMngMapper.usimPrdtMngListEx */
+		SELECT
+			    RPRS_PRDT_ID
+			  , PRDT_CODE
+			  , PRDT_NM
+			  , PRDT_DESC
+			  , OUT_UNIT_PRIC
+			  , USE_YN
+			  , UNIT_PRIC_APPL_DTTM
+			  , UNIT_PRIC_EXPR_DTTM
+			  , IMG_FILE
+			  , (SELECT	FILE_NM       /* 파일명 */
+				 FROM   ORG_FILE_MGMT_MST OFMM
+		 		 WHERE  OFMM.ATT_SCTN = 'M2M'
+		   		 AND	OFMM.ORGN_ID = A.RPRS_PRDT_ID) AS ORG_IMG_FILE
+			  , FN_GET_USRNM(A.RVISN_ID) AS USR_NM
+		FROM    MSP_M2M_MDL A
+		WHERE 1=1
+		 <if test="rprsPrdtId != null and rprsPrdtId != ''">
+		   AND  A.RPRS_PRDT_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+		 </if>
+		 <if test="prdtCode != null and prdtCode != ''">
+		   AND  A.PRDT_CODE = #{prdtCode, jdbcType=VARCHAR}
+		 </if>
+		 <if test="prdtNm != null and prdtNm != ''">
+		   AND  A.PRDT_NM LIKE '%' || #{prdtNm, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="useYn != null and useYn != ''">
+		   AND  A.USE_YN = #{useYn, jdbcType=VARCHAR}
+		 </if>
+		ORDER BY A.RPRS_PRDT_ID, A.PRDT_CODE, A.PRDT_NM
+	</select>	
+
+	<select id="getImageFile" parameterType="com.ktis.msp.m2m.usimprdtgmt.vo.UsimPrdtMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT	/* UsimPrdtMngMapper.getImageFile */
+		          ATT_ROUT      /* 파일경로 */
+		        , FILE_NM       /* 파일명 */
+		        , FILE_ID       /* 파일ID */
+		  FROM    ORG_FILE_MGMT_MST OFMM
+		 WHERE  OFMM.ATT_SCTN = 'M2M'
+		   AND	OFMM.ORGN_ID = #{rprsPrdtId, jdbcType=VARCHAR}
+	     ORDER 	BY OFMM.REG_DTTM
+	</select>
+	
+
+
+
+
+
+
+
+					
+			
+</mapper>

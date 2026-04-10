@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.requestreview.mapper.RequestReviewMapper">
+
+    <select id="selectMcpRequestData" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.requestreview.dto.RequestReviewDto">
+
+        WITH MSPDB AS (
+
+            SELECT
+                MSP.CONTRACT_NUM
+                ,MSP.MODEL_ID
+                ,REQ.AGENT_CODE
+                ,REQ.REQ_BUY_TYPE
+                ,REQ.PROD_ID
+                ,REQ.SYS_RDATE
+
+            FROM MSP_JUO_SUB_INFO@DL_MSP MSP
+            INNER JOIN MSP_REQUEST@DL_MSP REQ
+            ON MSP.CONTRACT_NUM = REQ.CONTRACT_NUM
+            WHERE 1=1
+            AND MSP.CONTRACT_NUM = #{contractNum}
+        )
+        SELECT
+                MSPDB.CONTRACT_NUM
+                ,MSPDB.MODEL_ID
+                ,MSPDB.AGENT_CODE
+                ,MSPDB.REQ_BUY_TYPE
+                ,MSPDB.PROD_ID
+                ,MSPDB.SYS_RDATE
+                 ,REQUEST_KEY
+        FROM MCP_REQUEST MCP
+        INNER JOIN MSPDB
+        ON MCP.CONTRACT_NUM = MSPDB.CONTRACT_NUM
+        <![CDATA[
+        WHERE ROWNUM < 2
+        ]]>
+        ORDER BY MSPDB.SYS_RDATE DESC ,MCP.REQUEST_KEY DESC
+    </select>
+
+    <select id="selectMspJuoSubInfo" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.requestreview.dto.RequestReviewDto">
+        <!--  -->
+        <![CDATA[
+
+        SELECT
+            CASE	WHEN TRUNC(SYSDATE)-TO_DATE(LST_COM_ACTV_DATE,'YYYYMMDD') > 90 THEN 'N'
+            WHEN TRUNC(SYSDATE)-TO_DATE(LST_COM_ACTV_DATE,'YYYYMMDD') <= 90 THEN 'Y'
+            ELSE 'N'
+            END AS DAY_OVER
+            ,SUB_LINK_NAME
+        FROM MSP_JUO_SUB_INFO@DL_MSP
+        WHERE CONTRACT_NUM = #{contractNum}
+
+        ]]>
+    </select>
+
+    <select id="selectMcpJuoFeatSocInfo" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT
+            SOC
+        FROM
+            MSP_JUO_FEATURE_INFO@DL_MSP
+        WHERE
+            CONTRACT_NUM = #{value}
+            AND SERVICE_TYPE = 'P'
+            AND EXPIRATION_DATE = '99991231000000'
+            AND ROWNUM = 1
+    </select>
+
+    <select id="selectReviewExcel" parameterType="com.ktmmobile.mcp.requestreview.dto.RequestReviewDto" resultType="com.ktmmobile.mcp.requestreview.dto.RequestReviewDto">
+        select
+            MRR.SYS_RDATE,
+            MRR.SYS_RDATE_DD,
+            MRR.REQ_BUY_TYPE,
+            DECODE(MRR.REQ_BUY_TYPE,'UU','유심 후기','MM','휴대폰 후기','-') AS REQ_BUY_EVENT_TYPE_NM,
+            MRR.REG_NM,
+            MJSI.DOBYYYYMMDD,
+            MJSI.SUBSCRIBER_NO,
+            MJSI.SUB_ADR_PRIMARY_LN,
+            MJSI.SUB_ADR_SECONDARY_LN,
+            DECODE(MRR.REQ_BUY_TYPE,'UU','유심','MM','휴대폰','-') AS REQ_BUY_TYPE_NM,
+            MRR.COMMEND_YN,
+            DECODE(MRR.COMMEND_YN, '1', '추천', '비추천')COMMEND_nm,
+            MRR.REVIEW_SBST,
+            (select FILE_PATH_NM from MCP_REQUEST_REVIEW_IMG img where MRR.REQUEST_KEY = img.REQUEST_KEY and IMD_SEQ = 0) IMG1,
+            (select FILE_PATH_NM from MCP_REQUEST_REVIEW_IMG img where MRR.REQUEST_KEY = img.REQUEST_KEY and IMD_SEQ = 1) IMG2,
+            MRR.SNS_INFO
+        from MCP_REQUEST_REVIEW MRR,
+             MSP_JUO_SUB_INFO@DL_MSP MJSI
+        where MRR.CONTRACT_NUM = MJSI.CONTRACT_NUM(+)
+          <if test="startDate != null and startDate != ''">
+              and TO_CHAR(MRR.SYS_RDATE, 'YYYYMM') = #{startDate}
+          </if>
+    </select>
+</mapper>

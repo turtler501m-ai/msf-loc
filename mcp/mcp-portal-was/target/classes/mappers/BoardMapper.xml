@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="boardMapper">
+
+    <resultMap id="boardKey" type="com.ktmmobile.mcp.board.dto.BoardDto">
+       <result property="boardCtgSeq" column="BOARD_CTG_SEQ"   />
+       <result property="sbstCtg" column="SBST_CTG"  />
+       <result property="boardSeq" column="BOARD_SEQ" />
+       <result property="boardSubject" column="BOARD_SUBJECT"  />
+       <result property="viewYn" column="VIEW_YN"  />
+       <result property="notiYn" column="NOTI_YN"  />
+       <result property="boardContents" column="BOARD_CONTENTS" jdbcType="CLOB" javaType="java.lang.String" />
+       <result property="boardWriterNm" column="BOARD_WRITER_NM"  />
+       <result property="boardWriteDt" column="BOARD_WRITE_DT"   />
+       <result property="boardWriteTm" column="BOARD_WRITE_TM"   />
+       <result property="boardAttYn" column="BOARD_ATT_YN"  />
+       <result property="boardHitCnt" column="BOARD_HIT_CNT"   />
+       <result property="cretId" column="CRET_ID"  />
+       <result property="amdId" column="AMD_ID"  />
+       <result property="cretDt" column="CRET_DT"   />
+       <result property="amdDt" column="AMD_DT"   />
+       <result property="fileType" column="FILE_TYPE"   />
+       <result property="fileCapa" column="FILE_CAPA"   />
+       <result property="sbstCtgNm" column="SBST_CTG_NM"   />
+       <result property="attSeq" column="ATT_SEQ"   />
+       <result property="filePathNM" column="FILE_PATH_NM"   />
+      <result property="fileType" column="FILE_TYPE"  />
+      <result property="fileCapa" column="FILE_CAPA"  />
+     </resultMap>
+
+    <!-- 게시판 insert -->
+    <insert id="selectInsert" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        <selectKey keyProperty="boardSeq" resultType="Integer" order="BEFORE">
+                SELECT SQ_BOARD_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_BOARD_BAS(
+            BOARD_CTG_SEQ,
+            SBST_CTG,
+            BOARD_SEQ,
+            BOARD_SUBJECT,
+            VIEW_YN,
+            NOTI_YN,
+            BOARD_CONTENTS,
+            BOARD_WRITER_NM,
+            BOARD_WRITE_DT,
+            BOARD_ATT_YN,
+            BOARD_HIT_CNT,
+            CRET_ID,
+            CRET_DT
+        ) VALUES (
+            #{boardCtgSeq},
+            #{sbstCtg},
+            #{boardSeq, jdbcType=NUMERIC},
+            #{boardSubject},
+            #{viewYn},
+            #{notiYn},
+            #{boardContents},
+            #{boardWriterNm},
+            SYSDATE,
+            #{boardAttYn},
+            0,
+            #{cretId},
+            SYSDATE
+        )
+    </insert>
+
+
+    <select id="countBylistBoardBas" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.common.dto.db.NmcpBoardBasDto">
+        SELECT /*boardMapper.countBylistProdCommend  */
+            COUNT(*)
+        FROM
+            NMCP_BOARD_BAS
+        WHERE 1=1
+
+            <choose>
+                <when test="boardCtgSeqArray != null and boardCtgSeqArray.length > 0">
+                    AND BOARD_CTG_SEQ IN
+                    <foreach item="item" collection="boardCtgSeqArray" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </when>
+                <otherwise>
+                    AND BOARD_CTG_SEQ = #{boardCtgSeq}
+                </otherwise>
+            </choose>
+
+            <if test="sbstCtg != null and sbstCtg != '' ">
+                AND SBST_CTG = #{sbstCtg}
+            </if>
+            <if test="boardSubject != null and boardSubject != '' ">
+                AND BOARD_SUBJECT LIKE '%' || #{boardSubject} ||'%'
+            </if>
+            <if test="viewYn != null and viewYn != '' ">
+                AND VIEW_YN  = #{viewYn}
+            </if>
+            <if test='searchNm != "" and searchNm != null'>
+                AND ( UPPER(fnHTMLtoTEXT(BOARD_SUBJECT)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                      OR UPPER(fnHTMLtoTEXT(BOARD_CONTENTS)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+            </if>
+    </select>
+
+
+    <select id="listBoardBas" parameterType="com.ktmmobile.mcp.common.dto.db.NmcpBoardBasDto"  resultType="com.ktmmobile.mcp.common.dto.db.NmcpBoardBasDto" >
+        SELECT /*boardMapper.listBoardBas */
+              BOARD_CTG_SEQ            --카테고리일련번호
+            , SBST_CTG                 --게시물카테고리
+            , BOARD_SEQ                --게시물인련번호
+            , BOARD_SUBJECT            --게시물제목
+            , VIEW_YN                  --노출여부
+            , NOTI_YN                  --공지여부
+            , BOARD_WRITER_NM          --작성자
+            , BOARD_WRITE_DT           --작성일
+            , BOARD_ATT_YN             --첨부여부
+            , BOARD_HIT_CNT            --조회수
+            , CRET_ID                  --생성자아이디
+            , AMD_ID                   --수정자아이디
+            , CRET_DT                  --생성일시
+            , AMD_DT                   --수정일시
+        FROM
+            NMCP_BOARD_BAS
+        WHERE 1=1
+            <choose>
+                <when test="boardCtgSeqArray != null and boardCtgSeqArray.length > 0">
+                    AND BOARD_CTG_SEQ IN
+                    <foreach item="item" collection="boardCtgSeqArray" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </when>
+                <otherwise>
+                    AND BOARD_CTG_SEQ = #{boardCtgSeq}
+                </otherwise>
+            </choose>
+            <if test="sbstCtg != null and sbstCtg != '' ">
+                AND SBST_CTG = #{sbstCtg}
+            </if>
+            <if test="boardSubject != null and boardSubject != '' ">
+                AND BOARD_SUBJECT LIKE '%' || #{boardSubject} ||'%'
+            </if>
+            <if test="viewYn != null and viewYn != '' ">
+                AND VIEW_YN  = #{viewYn}
+            </if>
+            <if test='searchNm != "" and searchNm != null'>
+                AND ( UPPER(fnHTMLtoTEXT(BOARD_SUBJECT)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                      OR UPPER(fnHTMLtoTEXT(BOARD_CONTENTS)) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+            </if>
+        ORDER BY CRET_DT DESC, BOARD_SEQ DESC
+    </select>
+
+
+      <!-- 게시판 글 수 받아오기 -->
+    <select id="getTotalCount" resultType="Integer" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+    <!-- Test 게시판 글 총 갯수-->
+    SELECT
+        COUNT(BOARD_SEQ)
+    FROM
+        NMCP_BOARD_BAS
+      WHERE
+                       BOARD_CTG_SEQ =  #{boardCtgSeq}
+
+                <if test="boardWriterNm != null and boardWriterNm == ''">
+                    AND BOARD_WRITER_NM = #{boardWriterNm}
+                </if>
+                <if test='boardCtgSeq == 51 or boardCtgSeq == 53'>
+                    AND BOARD_SEQ NOT IN (SELECT board_seq
+                                          FROM (
+                                            SELECT ROWNUM AS RNUM, A.BOARD_SEQ
+                                            FROM (
+                                                    SELECT
+                                                        BOARD_SEQ,
+                                                        BOARD_CTG_SEQ,
+                                                        SBST_CTG,
+                                                        (
+                                                            SELECT
+                                                                DTL_CD_NM
+                                                            FROM nmcp_cd_dtl
+                                                            WHERE CD_GROUP_ID = 'FAQB' AND DTL_CD = SBST_CTG
+                                                        ) AS SBST_CTG_NM,
+                                                        BOARD_SUBJECT,
+                                                        VIEW_YN,
+                                                        NOTI_YN,
+                                                        BOARD_WRITER_NM,
+                                                        TO_CHAR (BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                                                        BOARD_ATT_YN,
+                                                        BOARD_HIT_CNT
+                                                    FROM NMCP_BOARD_BAS
+                                                    WHERE BOARD_CTG_SEQ = #{boardCtgSeq} AND NOTI_YN = 'Y'
+                                                    ORDER BY CRET_DT DESC,BOARD_SEQ DESC
+                                            ) A
+                                          )
+                                         WHERE RNUM <![CDATA[>=]]> 1 AND RNUM <![CDATA[<=]]> 5)
+                </if>
+                <if test="searchNm != null and searchNm != ''">
+                    AND ( BOARD_SUBJECT LIKE '%' || #{searchNm} ||'%'
+                            OR BOARD_CONTENTS LIKE '%' || #{searchNm} ||'%')
+                   </if>
+                <if test='searchOpt == "title"'>
+                   AND BOARD_SUBJECT LIKE '%' || #{searchNm} || '%'
+                </if>
+                <if test='searchOpt == "content"'>
+                   AND BOARD_CONTENTS LIKE '%' || #{searchNm} ||'%'
+                </if>
+
+                <if test='boardCtgSeq == 57 and searchNm != null '>
+                    AND BOARD_SUBJECT LIKE '%' || #{searchNm} ||'%'
+                </if>
+                <if test="sbstCtg != null and sbstCtg != '' and sbstCtg != 'all'">
+                     AND SBST_CTG = #{sbstCtg}
+                </if>
+    </select>
+
+      <!-- 글 조회 -->
+     <select id="selectBoard" resultMap="boardKey" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+
+     SELECT
+            BOARD_CTG_SEQ,
+            SBST_CTG,
+            (SELECT DTL_CD_NM FROM nmcp_cd_dtl WHERE CD_GROUP_ID = 'FAQB' AND DTL_CD = SBST_CTG ) AS SBST_CTG_NM,
+            BOARD_SEQ,
+            BOARD_SUBJECT,
+            VIEW_YN,
+            NOTI_YN,
+            BOARD_CONTENTS,
+            BOARD_WRITER_NM,
+            TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+            TO_CHAR(BOARD_WRITE_DT, 'HH:MM') AS BOARD_WRITE_TM,
+            BOARD_ATT_YN,
+            BOARD_HIT_CNT,
+            AMD_ID,
+            TO_CHAR(CRET_DT, 'YYYY.MM.DD') AS CRET_DT,
+            TO_CHAR(AMD_DT, 'YYYY.MM.DD') AS AMD_DT
+
+     FROM 	NMCP_BOARD_BAS
+     WHERE
+           BOARD_SEQ =  #{boardSeq}
+
+     </select>
+
+     <!-- 글 리스트 조회 -->
+    <select id="selectBoardList" resultMap="boardKey" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+
+     SELECT
+        RNUM
+        ,RNUM_SHOW
+        ,BOARD_SEQ
+        ,BOARD_CTG_SEQ
+        ,SBST_CTG
+        ,CRET_DT
+        ,SBST_CTG_NM
+        ,BOARD_SUBJECT
+        ,VIEW_YN
+        ,NOTI_YN
+        ,BOARD_WRITER_NM
+        ,BOARD_WRITE_DT
+        ,BOARD_WRITE_TM
+        ,BOARD_ATT_YN
+        ,BOARD_HIT_CNT
+     FROM (
+           SELECT
+                ROW_NUMBER() OVER (ORDER BY A.CRET_DT DESC, A.BOARD_SEQ DESC) AS RNUM<!-- 페이징 -->
+                , ROW_NUMBER() OVER (ORDER BY  A.CRET_DT , A.BOARD_SEQ ASC) AS RNUM_SHOW<!-- 보여줄거 -->
+                , A.BOARD_SEQ
+                , A.BOARD_CTG_SEQ
+                , A.SBST_CTG
+                , A.CRET_DT
+                , A.SBST_CTG_NM
+                , A.BOARD_SUBJECT
+                , A.VIEW_YN
+                , A.NOTI_YN
+                , A.BOARD_WRITER_NM
+                ,A.BOARD_WRITE_DT
+            ,A.BOARD_WRITE_TM
+            ,A.BOARD_ATT_YN
+            ,A.BOARD_HIT_CNT
+     FROM (
+              SELECT
+                       BOARD_SEQ,
+                     BOARD_CTG_SEQ,
+                     SBST_CTG,
+                     CRET_DT,
+                     (SELECT DTL_CD_NM FROM nmcp_cd_dtl WHERE CD_GROUP_ID = 'FAQB' AND DTL_CD = SBST_CTG ) AS SBST_CTG_NM,
+                     BOARD_SUBJECT,
+                     VIEW_YN,
+                     NOTI_YN,
+                     BOARD_WRITER_NM,
+                     TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                     TO_CHAR(BOARD_WRITE_DT, 'HH:MM') AS BOARD_WRITE_TM,
+                     BOARD_ATT_YN,
+                     BOARD_HIT_CNT
+               FROM
+                     NMCP_BOARD_BAS
+               WHERE
+                       BOARD_CTG_SEQ =  #{boardCtgSeq}
+
+                <if test="boardWriterNm != null and boardWriterNm == ''">
+                    AND BOARD_WRITER_NM = #{boardWriterNm}
+                </if>
+                <if test="notiYn != null and notiYn != ''">
+                    <if test='notiYn == "Y"'>
+                    AND NOTI_YN = #{notiYn}
+                    </if>
+                    <if test='notiYn == "N"'>
+                        AND BOARD_SEQ NOT IN (SELECT board_seq
+                                              FROM (SELECT ROWNUM AS RNUM, A.BOARD_SEQ
+                                                      FROM (  SELECT BOARD_SEQ,
+                                                                     BOARD_CTG_SEQ,
+                                                                     SBST_CTG,
+                                                                     (SELECT DTL_CD_NM
+                                                                        FROM nmcp_cd_dtl
+                                                                       WHERE CD_GROUP_ID = 'FAQB' AND DTL_CD = SBST_CTG)
+                                                                        AS SBST_CTG_NM,
+                                                                     BOARD_SUBJECT,
+                                                                     VIEW_YN,
+                                                                     NOTI_YN,
+                                                                     BOARD_WRITER_NM,
+                                                                     TO_CHAR (BOARD_WRITE_DT, 'YYYY.MM.DD')
+                                                                        AS BOARD_WRITE_DT,
+                                                                     BOARD_ATT_YN,
+                                                                     BOARD_HIT_CNT
+                                                                FROM NMCP_BOARD_BAS
+                                                               WHERE BOARD_CTG_SEQ = 51 AND NOTI_YN = 'Y'
+                                                            ORDER BY CRET_DT DESC, BOARD_SEQ DESC) A)
+                                                 WHERE RNUM <![CDATA[>=]]> 1 AND RNUM <![CDATA[<=]]> 5)
+                    </if>
+                </if>
+                <if test="searchNm != null and searchNm != ''">
+                    AND ( BOARD_SUBJECT LIKE '%' || #{searchNm} ||'%'
+                            OR BOARD_CONTENTS LIKE '%' || #{searchNm} ||'%')
+                   </if>
+                <if test='searchOpt == "title"'>
+                   AND BOARD_SUBJECT LIKE '%' || #{searchNm} || '%'
+                </if>
+                <if test='searchOpt == "content"'>
+                   AND BOARD_CONTENTS LIKE '%' || #{searchNm} ||'%'
+                </if>
+
+                <if test='boardCtgSeq == 57 and searchNm != null '>
+                    AND BOARD_SUBJECT LIKE '%' || #{searchNm} ||'%'
+                </if>
+                <if test="sbstCtg != null and sbstCtg != '' and sbstCtg != 'all'">
+                     AND SBST_CTG = #{sbstCtg}
+                </if>
+                <if test="viewYn != null and viewYn != ''">
+                    AND VIEW_YN = #{viewYn}
+                </if>
+               ORDER BY CRET_DT DESC, BOARD_SEQ DESC
+           ) A
+     )
+     WHERE RNUM <![CDATA[>]]> (#{pagingStartNo}-1) * #{pagingSize} AND RNUM <![CDATA[<=]]> #{pagingEndNo} * #{pagingStartNo}
+
+    </select>
+
+    <!-- 파일 리스트 조회하기 -->
+    <select id="selectFileboardList" resultMap="boardKey" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+     SELECT
+        RNUM<!-- 페이징 -->
+        ,RNUM_SHOW<!-- 보여줄거 -->
+        ,BOARD_SEQ
+        ,BOARD_CTG_SEQ
+        ,SBST_CTG
+        ,CRET_DT
+        ,BOARD_SUBJECT
+        ,VIEW_YN
+        ,NOTI_YN
+        ,BOARD_WRITER_NM
+        ,BOARD_WRITE_DT
+        ,BOARD_ATT_YN
+        ,BOARD_HIT_CNT
+        ,ATT_SEQ
+        ,FILE_PATH_NM
+        ,FILE_TYPE
+        ,DOWNLOAD_COUNT
+     FROM (
+           SELECT
+                ROW_NUMBER() OVER (ORDER BY A.CRET_DT DESC,A.BOARD_SEQ DESC) AS RNUM<!-- 페이징 -->
+                , ROW_NUMBER() OVER (ORDER BY  A.CRET_DT , A.BOARD_SEQ ASC) AS RNUM_SHOW<!-- 보여줄거 -->
+                , A.BOARD_SEQ
+                , A.BOARD_CTG_SEQ
+                , A.SBST_CTG
+                , A.CRET_DT
+                , A.BOARD_SUBJECT
+                , A.VIEW_YN
+                , A.NOTI_YN
+                , A.BOARD_WRITER_NM
+                , A.BOARD_WRITE_DT
+                , A.BOARD_ATT_YN
+                , A.BOARD_HIT_CNT
+                , A.ATT_SEQ
+                , A.FILE_PATH_NM
+                , A.FILE_TYPE
+                , A.DOWNLOAD_COUNT
+          FROM (
+              SELECT
+                       A.BOARD_SEQ,
+                     A.BOARD_CTG_SEQ,
+                     A.SBST_CTG,
+                     A.CRET_DT,
+                     A.BOARD_SUBJECT,
+                     A.VIEW_YN,
+                     A.NOTI_YN,
+                     A.BOARD_WRITER_NM,
+                     TO_CHAR(A.BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                     A.BOARD_ATT_YN,
+                     A.BOARD_HIT_CNT,
+                     B.ATT_SEQ,
+                     REPLACE(B.FILE_PATH_NM, '\', '/') AS FILE_PATH_NM,
+                     B.FILE_TYPE,
+                     B.DOWNLOAD_COUNT
+               FROM   NMCP_BOARD_BAS A
+                         , (
+                              SELECT AA.ATT_SEQ, AA.FILE_PATH_NM,AA.FILE_TYPE,AA.BOARD_SEQ,AA.DOWNLOAD_COUNT
+                                FROM NMCP_BOARD_ATT_DTL AA
+                                  , (
+                                     SELECT MAX(ATT_SEQ) AS ATT_SEQ,BOARD_SEQ
+                                       FROM NMCP_BOARD_ATT_DTL
+                                      GROUP BY BOARD_SEQ
+                                    ) BB
+                                   WHERE AA.ATT_SEQ = BB.ATT_SEQ
+                                AND AA.BOARD_SEQ = BB.BOARD_SEQ
+                             ) B
+               WHERE BOARD_CTG_SEQ =  #{boardCtgSeq}
+               AND		A.BOARD_SEQ = B.BOARD_SEQ(+)
+               <if test="boardWriterNm != null and boardWriterNm == ''">
+                    AND BOARD_WRITER_NM = #{boardWriterNm}
+                </if>
+                <if test="notiYn != null and notiYn != ''">
+                    AND NOTI_YN = #{notiYn}
+                </if>
+                <if test='searchOpt == "title"'>
+                   AND BOARD_SUBJECT LIKE '%' || #{searchNm} || '%'
+                </if>
+                <if test='searchOpt == "content"'>
+                   AND BOARD_CONTENTS LIKE '%' || #{searchNm} ||'%'
+                </if>
+
+                <if test='boardCtgSeq == 57 and searchNm != null '>
+                    AND BOARD_SUBJECT LIKE '%' || #{searchNm} ||'%'
+                </if>
+                <if test="sbstCtg != null and sbstCtg != '' and sbstCtg != 'all'">
+                     AND SBST_CTG = #{sbstCtg}
+                </if>
+
+                <if test='boardCtgSeq == 53'>
+                    AND A.BOARD_SEQ NOT IN (SELECT board_seq
+                          FROM (SELECT ROWNUM AS RNUM, AA.BOARD_SEQ
+                                  FROM (  SELECT BOARD_SEQ,
+                                                 BOARD_CTG_SEQ,
+                                                 SBST_CTG,
+                                                 (SELECT DTL_CD_NM
+                                                    FROM nmcp_cd_dtl
+                                                   WHERE CD_GROUP_ID = 'FAQB' AND DTL_CD = SBST_CTG)
+                                                    AS SBST_CTG_NM,
+                                                 BOARD_SUBJECT,
+                                                 VIEW_YN,
+                                                 NOTI_YN,
+                                                 BOARD_WRITER_NM,
+                                                 TO_CHAR (BOARD_WRITE_DT, 'YYYY.MM.DD')
+                                                    AS BOARD_WRITE_DT,
+                                                 BOARD_ATT_YN,
+                                                 BOARD_HIT_CNT
+                                            FROM NMCP_BOARD_BAS
+                                           WHERE BOARD_CTG_SEQ = 53 AND NOTI_YN = 'Y'
+                                        ORDER BY CRET_DT DESC, BOARD_SEQ DESC) AA)
+                             WHERE RNUM <![CDATA[>=]]> 1 AND RNUM <![CDATA[<=]]> 5)
+                </if>
+
+                ORDER BY A.CRET_DT DESC, A.BOARD_SEQ DESC
+           ) A
+     )
+     WHERE RNUM <![CDATA[>]]> (#{pagingStartNo}-1) * #{pagingSize} AND RNUM <![CDATA[<=]]> #{pagingEndNo} * #{pagingStartNo}
+
+    </select>
+
+    <select id="selectNotiesList" resultMap="boardKey" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+     SELECT
+        RNUM
+        , BOARD_SEQ
+        , BOARD_CTG_SEQ
+        , SBST_CTG
+        , SBST_CTG_NM
+        , BOARD_SUBJECT
+        , VIEW_YN
+        , NOTI_YN
+        , BOARD_WRITER_NM
+        , BOARD_WRITE_DT
+        , BOARD_ATT_YN
+        , BOARD_HIT_CNT
+        , ATT_SEQ
+        , FILE_PATH_NM
+        , FILE_TYPE
+        , DOWNLOAD_COUNT
+     FROM (
+           SELECT
+                ROWNUM AS RNUM
+                , A.BOARD_SEQ
+                , A.BOARD_CTG_SEQ
+                , A.SBST_CTG
+                , A.SBST_CTG_NM
+                , A.BOARD_SUBJECT
+                , A.VIEW_YN
+                , A.NOTI_YN
+                , A.BOARD_WRITER_NM
+                , A.BOARD_WRITE_DT
+                , A.BOARD_ATT_YN
+                , A.BOARD_HIT_CNT
+                , A.ATT_SEQ
+                , A.FILE_PATH_NM
+                , A.FILE_TYPE
+                , A.DOWNLOAD_COUNT
+           FROM (
+                   SELECT
+                         AA.BOARD_SEQ
+                         , AA.BOARD_CTG_SEQ
+                         , AA.SBST_CTG
+                         , (SELECT DTL_CD_NM FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'FAQB' AND DTL_CD = AA.SBST_CTG ) AS SBST_CTG_NM
+                         , AA.BOARD_SUBJECT
+                         , AA.VIEW_YN
+                         , AA.NOTI_YN
+                         , AA.BOARD_WRITER_NM
+                         , TO_CHAR(AA.BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT
+                         , AA.BOARD_ATT_YN
+                         , AA.BOARD_HIT_CNT
+                         , BB.ATT_SEQ
+                         , REPLACE(BB.FILE_PATH_NM, '\', '/') AS FILE_PATH_NM
+                         , BB.FILE_TYPE
+                         , BB.DOWNLOAD_COUNT
+                   FROM
+                         NMCP_BOARD_BAS AA
+                         , (
+                              SELECT
+                              		AAA.ATT_SEQ
+                              		, AAA.FILE_PATH_NM
+                              		, AAA.FILE_TYPE
+                              		, AAA.BOARD_SEQ
+                              		, AAA.DOWNLOAD_COUNT
+                              FROM  NMCP_BOARD_ATT_DTL AAA
+                                    , (
+                                       SELECT MAX(ATT_SEQ) AS ATT_SEQ,BOARD_SEQ
+                                       FROM   NMCP_BOARD_ATT_DTL
+                                       GROUP BY BOARD_SEQ
+                                    ) BBB
+                              WHERE AAA.ATT_SEQ = BBB.ATT_SEQ
+                              AND   AAA.BOARD_SEQ = BBB.BOARD_SEQ
+                         ) BB
+                   WHERE AA.BOARD_CTG_SEQ =  #{boardCtgSeq}
+                   AND   AA.NOTI_YN = 'Y'
+                   AND   AA.BOARD_SEQ = BB.BOARD_SEQ(+)
+                   ORDER BY AA.CRET_DT DESC, AA.BOARD_SEQ DESC
+           ) A
+     )
+     WHERE RNUM <![CDATA[>=]]> 1 AND RNUM <![CDATA[<=]]> #{pagingSize}
+
+    </select>
+
+    <!-- 글 업데이트 -->
+    <update id="updateBoard" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+      UPDATE NMCP_BOARD_BAS SET
+                   <if test="boardCtgSeq != null and boardCtgSeq > 0">
+                       BOARD_CTG_SEQ =  #{boardCtgSeq},
+                   </if>
+                   SBST_CTG = #{sbstCtg},
+                   BOARD_SUBJECT = #{boardSubject},
+                   VIEW_YN = #{viewYn},
+                   NOTI_YN = #{notiYn},
+                   BOARD_CONTENTS = #{boardContents},
+                   BOARD_WRITER_NM = #{boardWriterNm},
+                   BOARD_ATT_YN = #{boardAttYn},
+                   AMD_ID = #{amdId},
+                   AMD_DT = SYSDATE
+      WHERE
+                BOARD_SEQ = #{boardSeq}
+    </update>
+
+     <!-- 글 삭제 -->
+    <delete id="deleteBoard" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        DELETE FROM NMCP_BOARD_BAS WHERE BOARD_SEQ = #{boardSeq}
+    </delete>
+
+     <!-- 글 조회수 업데이트 -->
+    <update id="updateReadCount">
+        UPDATE NMCP_BOARD_BAS SET READ_COUNT = BOART_HIT_CNT+1 WHERE BOARD_SEQ = #{value}
+    </update>
+
+     <!-- 글 조회 변경 -->
+    <update id="disableBoard">
+        UPDATE NMCP_BOARD_BAS SET VIEW_YN = 'Y' WHERE BOARD_SEQ = #{value}
+    </update>
+
+    <!-- FAQ 그룹코드 가져오기 -->
+    <select id="selectGroupCode" parameterType="String" resultType="hashmap">
+        SELECT
+                    DTL_CD_NM ,
+                    DTL_CD,
+                    EXPNSN_STR_VAL1
+        FROM 	NMCP_CD_DTL
+        WHERE
+                     CD_GROUP_ID = #{gId}
+                     AND USE_YN = 'Y'
+    </select>
+
+
+    <!-- FAQ 그룹코드 가져오기 -->
+    <select id="selectBoardBasSeq" resultType="Integer">
+        SELECT SQ_BOARD_SEQ.NEXTVAL FROM DUAL
+    </select>
+
+    <select id="getDownloadCount" resultType="java.lang.Integer" parameterType="java.lang.Integer">
+    <!--
+            Description: boardMapper.getDownloadCount 파일 다운로드 count
+      -->
+       SELECT SUM(NVL(DOWNLOAD_COUNT,0)) FROM NMCP_BOARD_ATT_DTL WHERE BOARD_SEQ = #{boardSeq}
+    </select>
+
+</mapper>

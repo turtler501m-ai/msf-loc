@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.RcpSelfSocFailMapper">
+
+	<sql id="getRcpSelfSocFailDtl">
+		SELECT /* RcpSelfSocFailMapper.getRcpSelfSocFailDtl */
+			 A.PRCS_MDL_IND
+			,A.EVENT_CODE
+			,A.SYS_DT
+			,TO_CHAR(A.SEQ) AS SEQ
+			,A.NCN AS SVC_CNTR_NO <!-- 계약번호 -->
+			,A.TRTM_RSLT_SMST <!-- 서비스명 -->
+			,A.T_SOC_CODE
+			,A.RSLT_CD AS SUCC_YN
+			,DECODE(A.RSLT_CD , '0000' , '성공' , '실패') AS SUCC_YN_NM  <!-- 성공여부 -->
+			,DECODE(A.RSLT_CD , '0000' , '' , PRCS_SBST) AS FAIL_RS_NM
+			,(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.A_SOC_CODE) AS A_SOC_NM
+			,(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.T_SOC_CODE) AS T_SOC_NM
+			,TO_CHAR(A.SYS_RDATE, 'YYYYMMDDHH24MISS') AS SYS_RDATE
+			,A.PROC_ID
+			,F_GET_ADMIN_NM(A.PROC_ID) AS PROC_NM
+			<if test="tSocCd != null and tSocCd != ''">
+				,TO_CHAR(A.RTY_SEQ) AS RTY_SEQ
+				,A.TB_NM
+			</if>
+		FROM
+			(
+				SELECT
+					PRCS_MDL_IND
+					,EVENT_CODE
+					,SYS_DT
+					,SEQ
+					,NCN
+					,TRTM_RSLT_SMST
+					,RSLT_CD
+					,PRCS_SBST
+					,A_SOC_CODE
+					,T_SOC_CODE
+					,SYS_RDATE
+					,'DTL' AS TB_NM
+					,0 AS RTY_SEQ
+					,'' AS PROC_ID
+				FROM  MCP_SERVICE_ALTER_TRACE@DL_MCP A
+				WHERE PRCS_MDL_IND = #{prcsMdlInd}
+				  AND NCN = #{contractNum}
+				  AND EVENT_CODE != 'FIN'
+				<if test="tSocCd != null and tSocCd != ''">
+				  AND T_SOC_CODE = #{tSocCd}
+				</if>
+				UNION ALL
+				SELECT
+					 PRCS_MDL_IND
+					,'X21' AS EVENT_CODE
+				    ,TRC_SYS_DT AS SYS_DT
+					,TRC_SEQ AS SEQ
+					,NCN
+					,'부가서비스 재처리' AS TRTM_RSLT_SMST
+					,RSLT_CD
+					,PRCS_SBST
+					,'' AS A_SOC_CODE
+					,SOC AS T_SOC_CODE
+					,PROC_DTTM AS SYS_RDATE
+					,'RTY' AS TB_NM
+					,SEQ AS RTY_SEQ
+					,PROC_ID
+				FROM MSP_SOCFAIL_PROC_RTY
+				WHERE PRCS_MDL_IND = #{prcsMdlInd}
+				  AND NCN = #{contractNum}
+				<if test="tSocCd != null and tSocCd != ''">
+				  AND SOC = #{tSocCd}
+				</if>
+			)A
+		ORDER BY SYS_RDATE DESC
+	</sql>
+
+
+	<select id="getRcpSelfSocFailList" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSocFailVO"
+		resultType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSocFailVO">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* RcpSelfSocFailMapper.getRcpSelfSocFailList */
+			A.PRCS_MDL_IND as prcsMdlInd,
+			TO_CHAR(A.SYS_RDATE, 'YYYYMMDDHH24MISS') AS sysRdate ,
+			(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.A_SOC_CODE) AS aSocNm,
+			(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.T_SOC_CODE) AS
+			tSocNm,
+			A.CONTRACT_NUM as contractNum,
+			(SELECT SUB_LINK_NAME FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM =
+			A.CONTRACT_NUM) AS custNm,
+			A.PROC_YN as procYn,
+			DECODE(A.PROC_DATE , NULL , '' , TO_CHAR(A.PROC_DATE, 'YYYYMMDDHH24MISS')) AS procDate,
+			A.PROC_ID as procId,
+			A.PROC_MEMO as procMemo,
+			A.SUCC_YN AS succYn,
+			NVL((SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9033' AND CD_VAL = A.SUCC_YN) , '실패' ) AS succNm,
+			(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9034' AND CD_VAL = A.CHG_TYPE) AS chgTypeNm
+		FROM MSP_SOCFAIL_PROC_MST A
+		WHERE
+			TO_CHAR(SYS_RDATE , 'YYYYMMDD' ) BETWEEN #{strDate} AND #{endDate}
+		<if test='contractNum != null and contractNum != ""'>
+			AND A.CONTRACT_NUM = #{contractNum}
+		</if>
+		<if test='procYn == "Y"'>
+			AND A.PROC_YN = #{procYn}
+		</if>
+		<if test='procYn == "N"'>
+			AND A.PROC_YN IS NULL
+		</if>
+		<if test='succYn != null and succYn != ""'>
+			<if test='succYn == "N"'>
+					AND (A.SUCC_YN  =  #{succYn} OR SUCC_YN IS NULL)
+			</if>
+			<if test='succYn == "Y"'>
+					AND A.SUCC_YN = #{succYn}
+			</if>
+		</if>
+		ORDER BY SYS_RDATE DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+
+	<select id="getRcpSelfSocFailDetail" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSocFailVO"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+
+		<include refid="getRcpSelfSocFailDtl"/>
+
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<update id="updateSelfSocFailProc" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSocFailVO">
+		UPDATE MSP_SOCFAIL_PROC_MST
+		SET PROC_YN = #{procYn, jdbcType=VARCHAR}
+		, PROC_ID = #{procId, jdbcType=VARCHAR}
+		, PROC_DATE = SYSDATE
+		, PROC_MEMO = #{procMemo, jdbcType=VARCHAR}
+		WHERE PRCS_MDL_IND = #{prcsMdlInd, jdbcType=VARCHAR}
+		AND CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+	</update>
+
+	<select id="getRcpSelfSocFailListExcel" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSocFailVO"
+		resultType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSocFailVO">
+		SELECT /* RcpSelfSocFailMapper.getRcpSelfSocFailListExcel */
+			A.PRCS_MDL_IND as prcsMdlInd,
+			TO_CHAR(A.SYS_RDATE, 'YYYY-MM-DD HH24:MI:SS') AS sysRdate,
+			(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.A_SOC_CODE) AS aSocNm,
+			(SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.T_SOC_CODE) AS
+			tSocNm,
+			A.CONTRACT_NUM as contractNum,
+			(SELECT SUB_LINK_NAME FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM =
+			A.CONTRACT_NUM) AS custNm,
+			A.PROC_YN as procYn,
+			DECODE(A.PROC_DATE , NULL , '' , TO_CHAR(A.PROC_DATE, 'YYYYMMDDHH24MISS')) AS procDate,
+			A.PROC_ID as procId,
+			A.PROC_MEMO as procMemo,
+			NVL((SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9033' AND CD_VAL = A.SUCC_YN) , '실패' ) AS succYn,
+			B.SUBSCRIBER_NO AS ctn ,
+			CASE WHEN SUBSTR(REPLACE(CRYPTO_AES256.DEC_AES(B.USER_SSN), '-', ''), 7,
+			1) IN ('1' , '3' , '5' , '7') THEN '남자'
+			WHEN SUBSTR(REPLACE(CRYPTO_AES256.DEC_AES(B.USER_SSN), '-', ''), 7, 1) IN
+			('2' , '4' , '6' , '8') THEN '여자'
+			END gender,
+			TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD' ), 'YYYY-MM-DD') AS lstComActvDate,
+			FN_GET_AGE_JAVA(CRYPTO_AES256.DEC_AES(B.USER_SSN)) AS age,
+			(SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = B.OPEN_AGNT_CD AND ROWNUM = 1) AS
+			openAgntNm,
+			FN_GET_CODENM('RCP0007', C.ON_OFF_TYPE) AS onOffType,
+			FN_GET_ORGNM(D.ORGN_ID) AS fstUsimOrgNm,
+			A.A_SOC_AMNT AS aSocAmnt,
+			A.T_SOC_AMNT AS tSocAmnt,
+			(CASE WHEN A.SUCC_YN = 'N' THEN E.PRCS_SBST
+			         WHEN A.SUCC_YN IS NULL THEN E.PRCS_SBST
+			         ELSE '' END) AS prcsSbst,
+			(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9034' AND CD_VAL = A.CHG_TYPE)  AS chgTypeNm
+		FROM MSP_SOCFAIL_PROC_MST A , MSP_JUO_SUB_INFO B , MSP_REQUEST_DTL C , MSP_PARTNER_USIM_MST D
+             , (SELECT NCN , PRCS_MDL_IND , TRTM_RSLT_SMST, PRCS_SBST, RSLT_CD FROM MCP_SERVICE_ALTER_TRACE@DL_MCP
+            WHERE RSLT_CD != '0000' AND EVENT_CODE != 'FIN') E
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+			AND A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+			AND C.FST_USIM_NO = D.USIM_NO(+)
+            AND A.PRCS_MDL_IND = E.PRCS_MDL_IND(+)
+            AND A.CONTRACT_NUM = E.NCN(+)
+			AND TO_CHAR(A.SYS_RDATE , 'YYYYMMDD' ) BETWEEN #{strDate} AND #{endDate}
+		<if test='contractNum != null and contractNum != ""'>
+			AND A.CONTRACT_NUM = #{contractNum}
+		</if>
+		<if test='procYn == "Y"'>
+			AND A.PROC_YN = #{procYn}
+		</if>
+		<if test='procYn == "N"'>
+			AND A.PROC_YN IS NULL
+		</if>
+		<if test='succYn != null and succYn != ""'>
+			<if test='succYn == "N"'>
+					AND (A.SUCC_YN  =  #{succYn} OR SUCC_YN IS NULL)
+			</if>
+			<if test='succYn == "Y"'>
+					AND A.SUCC_YN = #{succYn}
+			</if>
+		</if>
+		ORDER BY A.SYS_RDATE DESC
+	</select>
+
+	<!--(평생할인 자동 가입 재처리 금지 조건 체크) 1. 고객 계약번호 , 이벤트코드 가져오기-->
+	<select id="getCstmrChk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSocFailVO" resultType="java.util.HashMap">
+		/* StatsMgmtMapper.getCstmrChk */
+		SELECT A.PROC_YN
+			  ,A.SUCC_YN
+			  ,CASE WHEN A.CHG_TYPE = 'I' THEN B.CONTRACT_NUM
+					ELSE (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{ncn})
+					END CONTRACT_NUM
+			  ,B.EVENT_CODE
+			  ,B.T_SOC_CODE
+			  ,TO_CHAR(B.SYS_RDATE,'YYYYMMDDHH24MISS') AS SYS_RDATE
+		FROM  MSP_SOCFAIL_PROC_MST A
+		     ,MCP_SERVICE_ALTER_TRACE@DL_MCP B
+		WHERE A.PRCS_MDL_IND = #{prcsMdlInd}
+		  AND A.PRCS_MDL_IND = B.PRCS_MDL_IND
+		  AND B.NCN = #{ncn}
+		  AND A.CONTRACT_NUM = B.CONTRACT_NUM
+		  AND B.SEQ = #{seq}
+		  AND B.SYS_DT = #{sysDt}
+	</select>
+
+	<!--(평생할인 자동 가입 재처리 금지 조건 체크) 3. 고객 상태 확인-->
+	<select id="getCstmrPrmtId" parameterType="String" resultType="java.util.HashMap">
+		/* StatsMgmtMapper.getCstmrPrmtId */
+		SELECT PRMT_ID, DIS_PRMT_ID
+		FROM
+			(SELECT A.PRMT_ID , B.DIS_PRMT_ID
+			 FROM MSP_DIS_APD A, MSP_REQUEST_DTL B
+			 WHERE A.CONTRACT_NUM = #{contractNum}
+			   AND A.CONTRACT_NUM = B.CONTRACT_NUM
+			 ORDER BY A.APD_SEQ DESC) A
+		WHERE ROWNUM = 1
+	</select>
+
+	<select id="getSocRtyChkList" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSocFailVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+
+		<include refid="getRcpSelfSocFailDtl"/>
+
+	</select>
+
+	<!--재처리 시퀀스 생성 -->
+	<select id="getRtySeq" resultType="String">
+		SELECT ('RTY' || TO_CHAR(SYSDATE,'YYYYMMDD') || TRIM(TO_CHAR(SQ_RTY.NEXTVAL, '000000'))) AS PRC_RTY_SEQ FROM DUAL
+	</select>
+
+	<!--평생할인 프로모션 부가서비스 재처리 -->
+	<insert id="insertRtySocFail" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpSelfSocFailVO">
+		/* StatsMgmtMapper.insertRtySocFail */
+		INSERT INTO MSP_SOCFAIL_PROC_RTY(
+				 RTY_SEQ
+				,SEQ
+				,TRC_SEQ
+				,TRC_SYS_DT
+				,PRCS_MDL_IND
+				,CONTRACT_NUM
+				,NCN
+				,GLOBAL_NO
+				,SOC
+				,RSLT_CD
+				,PRCS_SBST
+				,ACCESS_IP
+				,PROC_ID
+				,PROC_DTTM
+		)VALUES(
+				#{rtySeq}
+			   ,(SELECT NVL(MAX(SEQ), 0)+1 FROM MSP_SOCFAIL_PROC_RTY WHERE RTY_SEQ = #{rtySeq})
+			   ,#{seq}
+			   ,#{sysDt}
+			   ,#{prcsMdlInd}
+			   ,#{contractNum}
+			   ,#{ncn}
+			   ,#{globalNo}
+			   ,#{tSocCd}
+			   ,#{rsltCd}
+			   ,#{prcsSbst}
+			   ,#{accessIp}
+			   ,#{userId}
+			   ,SYSDATE
+			   )
+	</insert>
+</mapper>

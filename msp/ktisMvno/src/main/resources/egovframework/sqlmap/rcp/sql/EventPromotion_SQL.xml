@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.statsMgmt.mapper.EventPromotionMapper">
+
+    <select id="getPromotionComboList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* EventPromotionMapper.getPromotionComboList */
+        SELECT
+            PROMOTION_ID AS VALUE,
+            '(' || TO_CHAR(TO_DATE(PROMOTION_START_DATE,'YYMMDD'), 'YY.MM.DD') || '~' || TO_CHAR(TO_DATE(PROMOTION_END_DATE,'YYMMDD'), 'YY.MM.DD') || ') ' ||PROMOTION_NAME AS TEXT
+        FROM NMCP_EVENT_PRMT@DL_MCP
+        WHERE USE_YN = 'Y'
+        ORDER BY PROMOTION_END_DATE DESC
+    </select>
+
+    <select id="getPrizeComboList" parameterType="com.ktis.msp.rcp.statsMgmt.vo.EventPromotionVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /* EventPromotionMapper.getPrizeComboList */
+        SELECT
+            PRIZE_ID AS VALUE,
+            PRIZE_NAME AS TEXT
+        FROM NMCP_EVENT_PRMT_PRIZE@DL_MCP PRIZE,
+             NMCP_EVENT_PRMT@DL_MCP PRMT
+        WHERE PRIZE.PROMOTION_ID = PRMT.PROMOTION_ID
+            AND PRMT.USE_YN = 'Y'
+            <if test='promotionId != null and promotionId != ""'>
+                AND PRIZE.PROMOTION_ID = #{promotionId}
+            </if>
+        ORDER BY PRIZE_NAME
+    </select>
+
+    <sql id="getEventPromotion">
+        SELECT
+            TO_CHAR(TO_DATE(PRMT.PARTICIPATE_DATE,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS PARTICIPATE_DATE,    /*참여일시*/
+            SUB.CONTRACT_NUM,    /*계약번호*/
+            PRMT.PROMOTION_NAME,     /*프로모션명*/
+            PRMT.PRIZE_NAME,    /*당첨결과*/
+            DECODE(PRMT.CERT_TYPE, '1', '휴대폰 번호') AS CERT_TYPE,    /*본인인증 수단*/
+            PRMT.CUSTOMER_NAME,    /*본인인증(이름)*/
+            PRMT.CERT_COMPANY,    /*본인인증(통신사)*/
+            SUBSTR(PRMT.CTN, 1, 3) || '-' || SUBSTR(PRMT.CTN, 4, 4) || '-' || SUBSTR(PRMT.CTN, 8, 4) AS CTN,    /*휴대폰 번호*/
+            SUBSTR(PRMT.BIRTH_DATE, 3, 6) AS BIRTH_DATE,    /*생년월일*/
+            DECODE(PRMT.GENDER, '1' , '남', '2', '여') AS GENDER,    /*성별*/
+            PRMT.PERSONAL_INFO_COLLECT_YN,    /*개인정보 수집 이용동의*/
+            PRMT.MARKETING_YN,    /*광고성 정보 수신 동의*/
+            SUB.MODEL_NAME,    /*단말모델명*/
+            FN_GET_CODENM('RCP9005', REQ.MOVE_COMPANY) AS MOVE_COMPANY,    /*이동전 통신사*/
+            TO_CHAR(TO_DATE(REQ.REQ_IN_DAY, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD') AS REQ_IN_DAY,     /*신청일자*/
+            TO_CHAR(TO_DATE(SUB.LST_COM_ACTV_DATE,'YYYYMMDD'),'YYYY-MM-DD') AS LST_COM_ACTV_DATE,    /*개통일자*/
+            FN_GET_CODENM('MSP0003', SUB.SUB_STATUS) AS SUB_STATUS,    /*회선상태*/
+            REQ.FST_RATE_CD,    /*최초요금제코드*/
+            REQ.FST_RATE_NM,    /*최초 요금제*/
+            REQ.LST_RATE_CD,    /*현재 요금제 코드*/
+            REQ.LST_RATE_NM,    /*현재 요금제*/
+            CASE
+                WHEN MSD.REQ_USIM_SN IS NOT NULL THEN 'M모바일(직영온라인)'
+                ELSE FN_GET_ORGNM(PUM.ORGN_ID)
+            END AS USIM_ORG_NM,    /*유심접점*/
+            FN_GET_ORGNM(SUB.OPEN_AGNT_CD) AS OPEN_AGNT_NM,    /*대리점*/
+            REQ.SHOP_NM    /*판매점*/
+        FROM NMCP_EVENT_PRMT_JOIN_HIST@DL_MCP PRMT,
+             MSP_JUO_SUB_INFO SUB,
+             MSP_REQUEST_DTL REQ,
+             NMCP_USIM_BUY_TXN@DL_MCP MSD,
+             MSP_PARTNER_USIM_MST PUM
+        WHERE PRMT.CTN = SUB.SUBSCRIBER_NO(+)
+            AND SUB.CONTRACT_NUM = REQ.CONTRACT_NUM(+)
+            AND SUB.ICC_ID = MSD.REQ_USIM_SN(+)
+            AND REQ.FST_USIM_NO = PUM.USIM_NO(+)
+            AND PRMT.PARTICIPATE_DATE BETWEEN #{srchStrtDt} || '000000'  AND #{srchEndDt} || '235959'
+            <if test='pSearchName != null and pSearchName != "" and pSearchGbn =="customerName" '>
+                AND PRMT.CUSTOMER_NAME = #{pSearchName}     /*고객명*/
+            </if>
+            <if test='pSearchName != null and pSearchName != "" and pSearchGbn =="contractNum" '>
+                AND SUB.CONTRACT_NUM = #{pSearchName}      /*계약번호*/
+            </if>
+            <if test='pSearchName != null and pSearchName != "" and pSearchGbn =="mobileNo" '>
+                AND PRMT.CTN = #{pSearchName}       /*휴대폰번호*/
+            </if>
+            <if test='promotionList != null and promotionList != ""'>
+                AND PRMT.PROMOTION_ID = #{promotionList}       /*프로모션명*/
+            </if>
+            <if test='prizeList != null and prizeList != ""'>
+                AND PRMT.PRIZE_ID = #{prizeList}       /*당첨결과*/
+            </if>
+        ORDER BY HIST_SEQ DESC
+    </sql>
+
+    <select id="getEventPromotionList" parameterType="com.ktis.msp.rcp.statsMgmt.vo.EventPromotionVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*EventPromotionMapper.getEventPromotionList*/
+        <include refid="com.ktis.msp.cmn.include.paging-start" />
+        <include refid="getEventPromotion" />
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+    </select>
+
+    <select id="getEventPromotionListExcel" parameterType="com.ktis.msp.rcp.statsMgmt.vo.EventPromotionVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+        /*EventPromotionMapper.getEventPromotionListExcel*/
+        <include refid="getEventPromotion" />
+    </select>
+</mapper>

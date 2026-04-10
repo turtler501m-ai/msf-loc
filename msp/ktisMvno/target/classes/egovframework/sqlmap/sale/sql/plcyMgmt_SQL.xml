@@ -1,0 +1,1743 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.sale.plcyMgmt.mapper.PlcyMgmtMapper">
+	
+	<sql id="getPlcyMgmtInfo">
+		SELECT    A.SALE_PLCY_CD
+		        , A.SALE_PLCY_NM
+		        , A.SALE_STRT_DTTM
+		        , SUBSTR(A.SALE_STRT_DTTM, 1, 8) AS SALE_STRT_DT
+		        , SUBSTR(A.SALE_STRT_DTTM, 9, 6) AS SALE_STRT_TM
+		        , A.SALE_END_DTTM
+		        , SUBSTR(A.SALE_END_DTTM, 1, 8) AS SALE_END_DT
+		        , SUBSTR(A.SALE_END_DTTM, 9, 6) AS SALE_END_TM
+		        , A.ORGN_TYPE
+		        , A.PLCY_TYPE_CD
+		        , FN_GET_CODENM('CMN0050', A.PLCY_TYPE_CD) AS PLCY_TYPE
+		        , A.PLCY_SCTN_CD
+		        , FN_GET_CODENM('ORG0007', A.PLCY_SCTN_CD) AS PLCY_SCTN
+		        , A.PRDT_SCTN_CD
+		        , A.APPL_SCTN_CD
+		        , FN_GET_CODENM('CMN0052', A.APPL_SCTN_CD) AS APPL_SCTN
+		        , A.SPRT_TP
+		        , FN_GET_CODENM('CMN0058', A.SPRT_TP) AS SPRT_TP_NM
+		        , A.INST_RATE
+		        , A.NEW_YN
+		        , A.MNP_YN
+		        , A.HCN_YN
+		        , A.HDN_YN
+		        , A.CNFM_YN
+		        , FN_GET_USRNM(A.CNFM_ID) AS CNFM_NM
+		        , A.CNFM_DTTM
+		        , A.SELF_OPEN_YN
+		FROM    MSP_SALE_PLCY_MST A
+		WHERE   #{stdrDt} BETWEEN SUBSTR(A.SALE_STRT_DTTM, 1, 8) AND SUBSTR(A.SALE_END_DTTM, 1, 8)
+		<if test="searchVal != null and searchVal != ''">
+		AND     ( UPPER(A.SALE_PLCY_CD) = UPPER( #{searchVal} ) OR UPPER(A.SALE_PLCY_NM) LIKE '%' || UPPER( #{searchVal} ) || '%' )
+		</if>
+		<if test="searchPlcyTypeCd != null and searchPlcyTypeCd != ''">
+		AND      A.PLCY_TYPE_CD = #{searchPlcyTypeCd}
+		</if>
+		<if test="searchPlcySctnCd != null and searchPlcySctnCd != ''">
+		AND      A.PLCY_SCTN_CD = #{searchPlcySctnCd}
+		</if>
+		<if test="searchSupportTypeCd != null and searchSupportTypeCd != ''">
+		AND      A.SPRT_TP = #{searchSupportTypeCd}
+		</if>
+		ORDER BY A.REGST_DTTM DESC
+
+	</sql>
+	
+	<select id="getPlcyMgmtList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getPlcyMgmtList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getPlcyMgmtInfo" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getPlcyMgmtListExcel" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getPlcyMgmtListExcel */
+		
+		<include refid="getPlcyMgmtInfo" />
+		
+	</select>
+	
+	<select id="getAgncyTrgtList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getAgncyTrgtList */
+		SELECT    '' AS CHK
+		        , A.ORGN_ID
+		        , A.ORGN_NM
+		        , B.CD_DSC AS TYPE_NM
+		FROM      ORG_ORGN_INFO_MST A
+		        , CMN_GRP_CD_MST B
+		WHERE   A.TYPE_CD       = '20'
+		AND     A.ORGN_STAT_CD  = '4'
+		AND     A.TYPE_DTL_CD3  = B.CD_VAL
+		AND     B.GRP_ID        = 'ORG0043'
+		AND     B.USG_YN        = 'Y'
+		<if test='orgnType != null and orgnType != "" and orgnType != "ALL"'>
+		AND     A.TYPE_DTL_CD2  = #{orgnType}
+		</if>
+		ORDER BY A.ORGN_NM
+	</select>
+	
+	<select id="getRateTrgtList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getRateTrgtList */
+		SELECT    '' AS CHK
+		        , A.RATE_GRP_CD
+		        , A.RATE_CD
+		        , A.RATE_NM
+		        , A.PAY_CL_CD
+		        , A.RATE_TYPE
+		        , A.DATA_TYPE
+		        , A.BASE_AMT
+		FROM    MSP_RATE_MST A 
+		WHERE   A.APPL_END_DT   = '99991231'
+			AND     A.SERVICE_TYPE  = 'P'
+			<if test="payClCd != null and payClCd != ''">
+			AND     A.PAY_CL_CD     = #{payClCd}
+			</if>
+			<if test="dataType != null and dataType != ''">
+				<choose>
+					<when test='dataType == "LTE5G"'>
+						AND A.DATA_TYPE IN ('LTE', '5G')
+					</when>
+					<otherwise>
+						AND A.DATA_TYPE = #{dataType}
+					</otherwise>
+				</choose>
+			</if>
+			<if test="rateType != null and rateType != ''">
+			AND     A.RATE_TYPE   IN ('00', #{rateType})
+			</if>
+		ORDER BY A.RATE_NM
+	</select>
+	
+	<select id="getPrdtTrgtList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getPrdtTrgtList */
+		SELECT    A.RPRS_PRDT_ID AS PRDT_ID
+		        , A.PRDT_CODE
+		        , A.PRDT_NM
+		        , C.OLD_YN
+		        , B.MNFCT_NM
+		        , C.OUT_UNIT_PRIC
+		        , '' AS NEW_CMSN_AMT
+		        , '' AS MNP_CMSN_AMT
+		        , '' AS HCN_CMSN_AMT
+		        , '' AS HDN_CMSN_AMT
+				, A.PRDT_IND_CD
+		FROM      CMN_INTM_MDL A
+		        , ORG_MNFCT_MST B
+		        , CMN_HNDST_AMT C
+		WHERE   A.RPRS_YN		= 'Y'
+		AND		A.PRDT_DT		= '99991231'
+		AND     A.MNFCT_ID		= B.MNFCT_ID
+		AND     A.RPRS_PRDT_ID  = C.RPRS_PRDT_ID
+		AND     #{saleStrtDt} BETWEEN C.UNIT_PRIC_APPL_DTTM AND C.UNIT_PRIC_EXPR_DTTM
+		<if test="prdtTypeCd != null and prdtTypeCd != ''">
+		AND     A.PRDT_TYPE_CD  = #{prdtTypeCd}
+		</if>
+		<if test="prdtIndCd != null and prdtIndCd != ''">
+			<choose>
+				<when test='prdtTypeCd == "02"'>
+					AND	A.PRDT_IND_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID ='CMN0045' AND USG_YN = 'Y' AND ETC1 = '02')
+				</when>
+				<when test='prdtTypeCd != "02"'>
+					<choose>	
+						<when test='prdtIndCd == "3G"'>
+							AND A.PRDT_IND_CD IN ('03','34')
+						</when>
+						<when test='prdtIndCd == "LTE"'>
+							AND A.PRDT_IND_CD IN ('04','34','45')
+						</when>
+						<when test='prdtIndCd == "5G"'>
+							AND A.PRDT_IND_CD IN ('08','45')
+						</when>
+						<when test='prdtIndCd == "LTE5G"'>
+							AND A.PRDT_IND_CD IN ('04','08','45')
+						</when>
+					</choose>
+				</when>
+			</choose>
+		</if>
+		<if test='selfOpenYn != null and selfOpenYn != "" and selfOpenYn == "Y"'>
+			AND A.PRDT_IND_CD NOT IN ('10', '11')
+		</if>
+		ORDER BY A.PRDT_CODE
+	</select>
+	
+	<select id="getRateArpuTrgtList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getRateArpuTrgtList */
+		SELECT    X.RATE_GRP_CD
+		        , X.RATE_CD
+		        , X.RATE_NM 
+		FROM
+		(	SELECT    A.RATE_GRP_CD
+			        , A.RATE_CD
+			        , A.RATE_NM
+			        , ROW_NUMBER () OVER (ORDER BY A.RATE_NM ) SORT
+			FROM    MSP_RATE_MST A 
+			WHERE   A.APPL_END_DT   = '99991231'
+			AND     A.SERVICE_TYPE  = 'P'
+			AND     '20'            = #{searchCd}
+			<choose>
+				<when test='searchDataType == "LTE5G"'>
+					AND A.DATA_TYPE IN ('LTE', '5G')
+				</when>
+				<otherwise>
+					AND A.DATA_TYPE = #{searchDataType}
+				</otherwise>
+			</choose>
+			AND     a.RATE_TYPE     in ('00', #{searchPlcySctnCd})
+			<if test="searchVal != null and searchVal != ''">
+			AND     A.RATE_NM LIKE '%' || UPPER( #{searchVal} ) || '%'
+			</if>
+			UNION ALL
+			SELECT    A.CD_VAL    AS RATE_GRP_CD
+			        , ''        AS RATE_CD
+			        , A.CD_DSC  AS RATE_NM
+			        , TO_NUMBER(NVL(A.ETC1, 99)) AS SORT
+			FROM    CMN_GRP_CD_MST A
+			WHERE   A.GRP_ID    = 'CMN0046'
+			AND     A.USG_YN    = 'Y'
+			AND     '10'        = #{searchCd}
+			<if test="searchVal != null and searchVal != ''">
+			AND     A.CD_DSC LIKE '%' || UPPER( #{searchVal} ) || '%'
+			</if>
+		) X
+		ORDER BY X.SORT
+	</select>
+	
+	<select id="getSalePlcyCd" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO" resultType="String">
+		SELECT
+			#{plcyTypeCd} || TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_ORG_SALE_PLCY_MST_01.NEXTVAL, '00000')) AS SALE_PLCY_CD
+		FROM	DUAL
+	</select>
+	
+	<insert id="insertSalePlcyMst" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.insertSalePlcyMst */
+		MERGE INTO MSP_SALE_PLCY_MST
+		USING DUAL
+			ON ( SALE_PLCY_CD = #{salePlcyCd, jdbcType=VARCHAR} )
+		WHEN MATCHED THEN
+			UPDATE SET
+				  SALE_PLCY_NM = #{salePlcyNm, jdbcType=VARCHAR}
+				, SALE_STRT_DTTM = #{saleStrtDt, jdbcType=VARCHAR} || #{saleStrtTm, jdbcType=VARCHAR}
+				, SALE_END_DTTM = #{saleEndDt, jdbcType=VARCHAR} || #{saleEndTm, jdbcType=VARCHAR}
+				, ORGN_TYPE = #{orgnType, jdbcType=VARCHAR}
+				, PLCY_TYPE_CD = #{plcyTypeCd, jdbcType=VARCHAR}
+				, PLCY_SCTN_CD = #{plcySctnCd, jdbcType=VARCHAR}
+				, PRDT_SCTN_CD = #{prdtSctnCd, jdbcType=VARCHAR}
+				, APPL_SCTN_CD = #{applSctnCd, jdbcType=VARCHAR}
+				, SPRT_TP = #{sprtTp, jdbcType=VARCHAR}
+				, INST_RATE = #{instRate, jdbcType=VARCHAR}
+				, NEW_YN = NVL( #{newYn, jdbcType=VARCHAR}, 'N' )
+				, MNP_YN = NVL( #{mnpYn, jdbcType=VARCHAR}, 'N' )
+				, HCN_YN = NVL( #{hcnYn, jdbcType=VARCHAR}, 'N' )
+				, HDN_YN = NVL( #{hdnYn, jdbcType=VARCHAR}, 'N' )
+				, SELF_OPEN_YN = NVL( #{selfOpenYn, jdbcType=VARCHAR}, 'N' )
+				, RVISN_ID = #{userId, jdbcType=VARCHAR}
+				, RVISN_DTTM = SYSDATE
+		WHEN NOT MATCHED THEN
+			INSERT (
+				  SALE_PLCY_CD
+				, SALE_PLCY_NM
+				, SALE_STRT_DTTM
+				, SALE_END_DTTM
+				, ORGN_TYPE
+				, PLCY_TYPE_CD
+				, PLCY_SCTN_CD
+				, PRDT_SCTN_CD
+				, APPL_SCTN_CD
+				, SPRT_TP
+				, INST_RATE
+				, NEW_YN
+				, MNP_YN
+				, HCN_YN
+				, HDN_YN
+				, SELF_OPEN_YN
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+			)VALUES(
+				  #{salePlcyCd, jdbcType=VARCHAR}
+				, #{salePlcyNm, jdbcType=VARCHAR}
+				, #{saleStrtDt, jdbcType=VARCHAR} || #{saleStrtTm, jdbcType=VARCHAR}
+				, #{saleEndDt, jdbcType=VARCHAR} || #{saleEndTm, jdbcType=VARCHAR}
+				, #{orgnType, jdbcType=VARCHAR}
+				, #{plcyTypeCd, jdbcType=VARCHAR}
+				, #{plcySctnCd, jdbcType=VARCHAR}
+				, #{prdtSctnCd, jdbcType=VARCHAR}
+				, #{applSctnCd, jdbcType=VARCHAR}
+				, #{sprtTp, jdbcType=VARCHAR}
+				, #{instRate, jdbcType=VARCHAR}
+				, NVL( #{newYn, jdbcType=VARCHAR}, 'N' )
+				, NVL( #{mnpYn, jdbcType=VARCHAR}, 'N' )
+				, NVL( #{hcnYn, jdbcType=VARCHAR}, 'N' )
+				, NVL( #{hdnYn, jdbcType=VARCHAR}, 'N' )
+				, NVL( #{selfOpenYn, jdbcType=VARCHAR}, 'N' )
+				, #{userId, jdbcType=VARCHAR}
+				, SYSDATE
+				, #{userId, jdbcType=VARCHAR}
+				, SYSDATE
+			)
+	</insert>
+	
+	<!-- <select id="getSalePlcyApplChk" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO" resultType="int">
+		/* plcyMapper.getSalePlcyApplChk */
+		SELECT  COUNT(1) AS CHK
+		FROM    (
+		    SELECT  'Y'
+		    FROM    MSP_SALE_PLCY_MST
+		    WHERE   SALE_PLCY_CD    = #{salePlcyCd}
+		    AND     CNFM_YN         = 'Y'
+		    AND     SALE_STRT_DTTM  <![CDATA[ <= ]]> TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		    UNION ALL
+		    SELECT  'Y'
+		    FROM    MCP_REQUEST_SALEINFO@DL_MCP
+		    WHERE   MODEL_SALE_POLICY_CODE = #{salePlcyCd}
+		) A
+	</select> -->
+	
+	<select id="getSalePlcyApplChk" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO" resultType="int">
+		/* plcyMapper.getSalePlcyApplChk */
+		SELECT  COUNT(1) AS CHK
+		FROM    MCP_REQUEST_SALEINFO@DL_MCP
+		WHERE   MODEL_SALE_POLICY_CODE = #{salePlcyCd}
+	</select>
+	
+	<select id="getPlcySubsdAmtList" parameterType="map"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getPlcySubsdAmtList */
+		SELECT    A.PRDT_ID
+		        , A.OLD_YN
+		        , A.SUBSD_AMT
+		        , A.RATE_CD
+		        , A.AGRM_TRM
+		        , A.OPER_TYPE
+		        , FN_GET_CODENM('CMN0049', A.OPER_TYPE) AS OPER_TYPE_NM
+		        , B.OUT_UNIT_PRIC
+		        , ROUND( A.SUBSD_AMT * 0.15, -2 ) AS AGNCY_SUBSD_AMT
+		        , ROUND( B.OUT_UNIT_PRIC * 1.1 - A.SUBSD_AMT ) AS INST_AMT
+		        , ROUND( ROUND( B.OUT_UNIT_PRIC * 1.1 - A.SUBSD_AMT ) * #{instRate} / 100, -1) AS INST_CMSN
+		        , C.ORGN_ID
+		        , C.ORGN_NM
+		        , D.PRDT_CODE
+		        , D.PRDT_NM
+		        , E.RATE_NM
+		FROM      MSP_OFCL_SUBSD_MST A
+		        , CMN_HNDST_AMT B
+		        , ORG_ORGN_INFO_MST C
+		        , CMN_INTM_MDL D
+		        , MSP_RATE_MST E
+		WHERE   A.APPL_STRT_DT  <![CDATA[ <= ]]> #{saleStrtDt}
+		AND     A.APPL_END_DT   <![CDATA[ >= ]]> #{saleEndDt} 
+		AND     A.RATE_CD       = #{rateCd}
+		AND     A.PRDT_ID       = #{prdtId}
+		AND     A.OLD_YN        = #{oldYn}
+		AND     A.AGRM_TRM      = #{agrmTrm}
+		AND     A.OPER_TYPE     = #{operType}
+		AND     A.PRDT_ID       = B.RPRS_PRDT_ID
+		AND     A.OLD_YN        = B.OLD_YN
+		AND     SUBSTR(B.UNIT_PRIC_APPL_DTTM, 1, 8) <![CDATA[ <= ]]> #{saleStrtDt}
+		AND     SUBSTR(B.UNIT_PRIC_EXPR_DTTM, 1, 8) <![CDATA[ >= ]]> #{saleEndDt} 
+		AND     C.ORGN_ID       = #{orgnId}
+		AND     A.PRDT_ID       = D.PRDT_ID
+		AND     A.RATE_CD       = E.RATE_CD
+		AND     E.APPL_END_DT   = '99991231'
+		AND     E.SERVICE_TYPE  = 'P'
+	</select>
+	
+	<delete id="deleteSalePrdtMst" parameterType="String">
+		/* plcyMapper.deleteSalePrdtMst */
+		DELETE	FROM	MSP_SALE_PRDT_MST
+		WHERE	SALE_PLCY_CD = #{salePlcyCd}
+	</delete>
+	
+	<insert id="insertSalePrdtMst" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.insertSalePrdtMst */
+		INSERT INTO MSP_SALE_PRDT_MST (
+			  SALE_PLCY_CD
+			, PRDT_ID
+			, OLD_YN
+			, NEW_CMSN_AMT
+			, MNP_CMSN_AMT
+			, HCN_CMSN_AMT
+			, HDN_CMSN_AMT
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			  #{salePlcyCd, jdbcType=VARCHAR}
+			, #{prdtId, jdbcType=VARCHAR}
+			, #{oldYn, jdbcType=VARCHAR}
+			, #{newCmsnAmt, jdbcType=INTEGER}
+			, #{mnpCmsnAmt, jdbcType=INTEGER}
+			, #{hcnCmsnAmt, jdbcType=INTEGER}
+			, #{hdnCmsnAmt, jdbcType=INTEGER}
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+		) 
+	</insert>
+	
+	<delete id="deleteSaleRateMst" parameterType="String">
+		/* plcyMapper.deleteSaleRateMst */
+		DELETE	FROM	MSP_SALE_RATE_MST
+		WHERE	SALE_PLCY_CD = #{salePlcyCd}
+	</delete>
+	
+	<insert id="insertSaleRateMst" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.insertSaleRateMst */
+		INSERT INTO MSP_SALE_RATE_MST (
+			  SALE_PLCY_CD
+			, RATE_CD
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		)VALUES(
+			  #{salePlcyCd, jdbcType=VARCHAR}
+			, #{rateCd, jdbcType=VARCHAR}
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+		) 
+	</insert>
+	
+	<delete id="deleteSaleAgrmMst" parameterType="String">
+		/* plcyMapper.deleteSaleAgrmMst */
+		DELETE	FROM	MSP_SALE_AGRM_MST	
+		WHERE	SALE_PLCY_CD = #{salePlcyCd}
+	</delete>
+	
+	<insert id="insertSaleAgrmMst" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.insertSaleAgrmMst */
+		INSERT INTO MSP_SALE_AGRM_MST (
+			  SALE_PLCY_CD
+			, AGRM_TRM
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		)VALUES(
+			  #{salePlcyCd, jdbcType=VARCHAR}
+			, #{agrmTrm, jdbcType=VARCHAR}
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+		) 
+	</insert>
+	
+	<delete id="deleteSaleOperMst" parameterType="String">
+		/* plcyMapper.deleteSaleOperMst */
+		DELETE	FROM	MSP_SALE_OPER_MST	
+		WHERE	SALE_PLCY_CD = #{salePlcyCd}
+	</delete>
+	
+	<insert id="insertSaleOperMst" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.insertSaleOperMst */
+		INSERT INTO MSP_SALE_OPER_MST (
+			  SALE_PLCY_CD
+			, OPER_TYPE
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		)VALUES(
+			  #{salePlcyCd, jdbcType=VARCHAR}
+			, #{operType, jdbcType=VARCHAR}
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+		) 
+	</insert>
+	
+	<delete id="deleteSaleOrgnMst" parameterType="String">
+		/* plcyMapper.deleteSaleOrgnMst */
+		DELETE	FROM	MSP_SALE_ORGN_MST
+		WHERE	SALE_PLCY_CD = #{salePlcyCd}	
+	</delete>
+	
+	<insert id="insertSaleOrgnMst" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.insertSaleOrgnMst */
+		INSERT INTO MSP_SALE_ORGN_MST (
+			  SALE_PLCY_CD
+			, ORGN_ID
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			  #{salePlcyCd, jdbcType=VARCHAR}
+			, #{orgnId, jdbcType=VARCHAR}
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+		) 
+	</insert>
+	
+	<select id="getRateGrpRateCdList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getRateGrpRateCdList */
+		SELECT  RATE_CD
+		FROM    MSP_RATE_MST
+		WHERE   RATE_GRP_CD = #{rateGrpCd}
+		AND     APPL_END_DT = '99991231'
+		AND     SERVICE_TYPE = 'P'
+		<if test="rateType != null and rateType != ''">
+		AND     RATE_TYPE   in ('00', #{rateType})
+		</if>
+		<if test="dataType != null and dataType != ''">
+			<choose>
+				<when test='dataType == "LTE5G"'>
+					AND DATA_TYPE IN ('LTE', '5G')
+				</when>
+				<otherwise>
+					AND DATA_TYPE = #{dataType}
+				</otherwise>
+			</choose>
+		</if>
+	</select>
+	
+	<delete id="deleteSaleArpuMst" parameterType="String">
+		/* plcyMapper.deleteSaleArpuMst */
+		DELETE	FROM	MSP_SALE_ARPU_MST
+		WHERE	SALE_PLCY_CD = #{salePlcyCd}
+	</delete>
+	
+	<insert id="insertSaleArpuMst" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.insertSaleArpuMst */
+		INSERT INTO MSP_SALE_ARPU_MST (
+			  SALE_PLCY_CD
+			, RATE_CD
+			, PRDT_ID
+			, OLD_YN
+			, CMSN_AMT
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			  #{salePlcyCd, jdbcType=VARCHAR}
+			, #{rateCd, jdbcType=VARCHAR}
+			, #{prdtId, jdbcType=VARCHAR}
+			, #{oldYn, jdbcType=VARCHAR}
+			, nvl( #{arpuCmsnAmt, jdbcType=INTEGER}, 0 )
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+		)
+	</insert>
+	
+	<delete id="deleteSaleSubsdMst" parameterType="String">
+		/* plcyMapper.deleteSaleSubsdMst */
+		DELETE	FROM	MSP_SALE_SUBSD_MST
+		WHERE	SALE_PLCY_CD = #{salePlcyCd}	
+	</delete>
+	
+	<sql id="saleSubsdMstKd">
+		SELECT  DISTINCT
+		          A.SALE_PLCY_CD
+		        , A.RATE_CD
+		        , A.PRDT_ID
+		        , A.OLD_YN
+		        , A.AGRM_TRM
+		        , A.OPER_TYPE
+		        , A.ORGN_ID
+		        , A.HNDST_AMT
+		        , NVL(B.SUBSD_AMT, 0) AS SUBSD_AMT
+		        , A.HNDST_AMT - NVL(B.SUBSD_AMT, 0) AS INST_AMT
+		        , ROUND( ( A.HNDST_AMT - NVL(B.SUBSD_AMT, 0) ) * A.INST_RATE / 100, -1 ) AS INST_CMSN
+		        , CASE
+		        	WHEN A.SPRT_TP ='KD'  --할인유형 : 단말할인
+		        		AND A.PLCY_TYPE_CD = 'D' --정책유형 : 직영
+                        AND A.ORGN_TYPE = 'CS7' --채널유형 : 직영
+                        AND A.ORGN_ID = '1100011741' --직영온라인
+                        THEN
+                        	CASE
+                            	WHEN ROUND( NVL(B.SUBSD_AMT, 0) * A.RATE , -2 ) > A.HNDST_AMT - NVL(B.SUBSD_AMT, 0) THEN A.HNDST_AMT - NVL(B.SUBSD_AMT, 0)
+                                ELSE ROUND( NVL(B.SUBSD_AMT, 0) * A.RATE , -2 )
+                            END     
+                    ELSE 0
+				END AS AGNCY_SUBSD_AMT
+		        , A.HNDST_AMT - NVL(B.SUBSD_AMT, 0) AS AGNCY_SUBSD_MAX
+		        , A.SPRT_TP
+		        , A.SALE_STRT_DTTM
+		        , A.BASE_AMT
+		FROM
+		    (   SELECT    PLCY.SALE_PLCY_CD
+		                , PLCY.INST_RATE
+		                , SUBSTR(PLCY.SALE_STRT_DTTM, 1, 8) AS STRT_DT
+		                , SUBSTR(PLCY.SALE_END_DTTM, 1, 8) AS END_DT
+		                , RATE.RATE_CD
+		                , PRDT.PRDT_ID
+		                , PRDT.OLD_YN
+		                , NVL(AGRM.AGRM_TRM, '0') AGRM_TRM
+		                , OPER.OPER_TYPE
+		                , ORGN.ORGN_ID
+		                , ROUND( PRIC.OUT_UNIT_PRIC * 1.1 ) AS HNDST_AMT
+		                , GRP.ETC1 AS RATE
+		                , PLCY.SPRT_TP
+		                , PLCY.SALE_STRT_DTTM
+		                , RATEMST.BASE_AMT
+		                , PLCY.PLCY_TYPE_CD 
+		                , PLCY.ORGN_TYPE
+		        FROM      MSP_SALE_PLCY_MST PLCY
+		                , MSP_SALE_RATE_MST RATE
+		                , MSP_SALE_PRDT_MST PRDT
+		                , MSP_SALE_AGRM_MST AGRM
+		                , MSP_SALE_OPER_MST OPER
+		                , MSP_SALE_ORGN_MST ORGN
+		                , CMN_HNDST_AMT PRIC
+		                , CMN_GRP_CD_MST GRP
+		                , MSP_RATE_MST RATEMST
+		        WHERE   PLCY.SALE_PLCY_CD   = RATE.SALE_PLCY_CD
+		        AND     PLCY.SALE_PLCY_CD   = PRDT.SALE_PLCY_CD
+		        AND     PLCY.SALE_PLCY_CD   = AGRM.SALE_PLCY_CD(+)
+		        AND     PLCY.SALE_PLCY_CD   = OPER.SALE_PLCY_CD
+		        AND     PLCY.SALE_PLCY_CD   = ORGN.SALE_PLCY_CD
+		        AND     PRDT.PRDT_ID        = PRIC.RPRS_PRDT_ID
+		        AND     PRDT.OLD_YN         = PRIC.OLD_YN
+		        AND     PLCY.SALE_STRT_DTTM BETWEEN PRIC.UNIT_PRIC_APPL_DTTM AND PRIC.UNIT_PRIC_EXPR_DTTM 
+		        AND     GRP.GRP_ID          = 'CMN0051'
+		        AND     GRP.CD_VAL          = '10'
+		        AND     RATE.RATE_CD        = RATEMST.RATE_CD
+		        AND     PLCY.SALE_PLCY_CD   = #{salePlcyCd}
+		        <if test="orgnId != null and orgnId != ''">
+		        AND     ORGN.ORGN_ID        = #{orgnId}
+		        </if>
+		        <if test="rateCd != null and rateCd != ''">
+				AND     RATE.RATE_CD        = #{rateCd}
+				</if>
+		    ) A
+		    , MSP_OFCL_SUBSD_MST B
+		WHERE   A.RATE_CD   = B.RATE_CD(+)
+		AND     A.PRDT_ID   = B.PRDT_ID(+)
+		AND     A.OLD_YN    = B.OLD_YN(+)
+		AND     DECODE(A.OPER_TYPE, 'HDN3', 'HCN3', A.OPER_TYPE) = B.OPER_TYPE(+)
+		AND     A.AGRM_TRM  = B.AGRM_TRM(+)
+		AND     DECODE(#{addRateYn}, 'Y', TO_CHAR(SYSDATE, 'YYYYMMDD'), A.STRT_DT)  <![CDATA[ >= ]]> B.APPL_STRT_DT(+)
+		AND     DECODE(#{addRateYn}, 'Y', TO_CHAR(SYSDATE, 'YYYYMMDD'), A.END_DT)  <![CDATA[ <= ]]> B.APPL_END_DT(+)
+	</sql>
+	
+	<sql id="saleSubsdMstPm">
+		SELECT  DISTINCT
+		          PLCY.SALE_PLCY_CD
+		        , RATE.RATE_CD
+		        , PRDT.PRDT_ID
+		        , PRDT.OLD_YN
+		        , NVL(AGRM.AGRM_TRM, '0') AS AGRM_TRM
+		        , OPER.OPER_TYPE
+		        , ORGN.ORGN_ID
+		        , ROUND( PRIC.OUT_UNIT_PRIC * 1.1 ) AS HNDST_AMT
+		        , 0 AS SUBSD_AMT
+		        , ROUND( PRIC.OUT_UNIT_PRIC * 1.1 ) AS INST_AMT
+		        , ROUND( ROUND( PRIC.OUT_UNIT_PRIC * 1.1 ) * PLCY.INST_RATE / 100, -1 ) AS INST_CMSN
+		        , 0 AS AGNCY_SUBSD_MAX
+		        , 0 AS AGNCY_SUBSD_AMT
+		        , PLCY.SPRT_TP
+                , PLCY.SALE_STRT_DTTM
+                , RATEMST.BASE_AMT
+		FROM      MSP_SALE_PLCY_MST PLCY
+		        , MSP_SALE_RATE_MST RATE
+		        , MSP_SALE_PRDT_MST PRDT
+		        , MSP_SALE_AGRM_MST AGRM
+		        , MSP_SALE_OPER_MST OPER
+		        , MSP_SALE_ORGN_MST ORGN
+		        , CMN_HNDST_AMT PRIC
+		        , MSP_RATE_MST RATEMST
+		WHERE   PLCY.SALE_PLCY_CD   = RATE.SALE_PLCY_CD
+		AND     PLCY.SALE_PLCY_CD   = PRDT.SALE_PLCY_CD
+		AND     PLCY.SALE_PLCY_CD   = AGRM.SALE_PLCY_CD(+)
+		AND     PLCY.SALE_PLCY_CD   = OPER.SALE_PLCY_CD
+		AND     PLCY.SALE_PLCY_CD   = ORGN.SALE_PLCY_CD
+		AND     PRDT.PRDT_ID        = PRIC.RPRS_PRDT_ID
+		AND     PRDT.OLD_YN         = PRIC.OLD_YN
+		AND     PLCY.SALE_STRT_DTTM BETWEEN PRIC.UNIT_PRIC_APPL_DTTM AND PRIC.UNIT_PRIC_EXPR_DTTM
+		AND     RATE.RATE_CD        = RATEMST.RATE_CD
+		AND     PLCY.SALE_PLCY_CD   = #{salePlcyCd}
+		<if test="orgnId != null and orgnId != ''">
+		AND     ORGN.ORGN_ID        = #{orgnId}
+		</if>
+		<if test="rateCd != null and rateCd != ''">
+		AND     RATE.RATE_CD        = #{rateCd}
+		</if>
+	</sql>
+	
+	<!-- MSP_SALE_SUBSD_MST 생성 -->
+	<insert id="insertSaleSubsdMst" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.insertSaleSubsdMst */
+		INSERT INTO MSP_SALE_SUBSD_MST (
+		      SALE_PLCY_CD
+		    , RATE_CD
+		    , PRDT_ID
+		    , OLD_YN
+		    , AGRM_TRM
+		    , OPER_TYPE
+		    , ORGN_ID
+		    , HNDST_AMT
+		    , SUBSD_AMT
+		    , INST_AMT
+		    , INST_CMSN
+		    , AGNCY_SUBSD_MAX
+		    , AGNCY_SUBSD_AMT
+		    , SPRT_TP
+		    , BASE_AMT
+		    , DC_AMT
+		    , ADD_DC_AMT
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+			, RVISN_DTTM
+		)
+		SELECT PLCYINFO.SALE_PLCY_CD
+		      ,PLCYINFO.RATE_CD
+		      ,PLCYINFO.PRDT_ID
+		      ,PLCYINFO.OLD_YN
+		      ,PLCYINFO.AGRM_TRM
+		      ,PLCYINFO.OPER_TYPE
+		      ,PLCYINFO.ORGN_ID
+		      ,PLCYINFO.HNDST_AMT
+		      ,PLCYINFO.SUBSD_AMT
+		      ,PLCYINFO.INST_AMT
+		      ,PLCYINFO.INST_CMSN
+		      ,PLCYINFO.AGNCY_SUBSD_MAX
+		      ,PLCYINFO.AGNCY_SUBSD_AMT
+		      ,PLCYINFO.SPRT_TP
+		      ,NVL(PLCYINFO.BASE_AMT, 0) AS BASE_AMT
+		      ,NVL(RATESPECKD.DC_AMT, 0) AS DC_AMT
+		      ,DECODE(PLCYINFO.SPRT_TP, 'KD', 0, 'SM', NVL(RATESPECSM.DC_AMT, 0),  NVL(RATESPECPM.DC_AMT, 0)) AS ADD_DC_AMT
+		      , #{userId}
+		      , SYSDATE
+		      , #{userId}
+		      , SYSDATE
+		FROM (
+		<if test='sprtTp != "PM"'>
+			<include refid="saleSubsdMstKd" />
+		</if>
+		
+		<if test='sprtTp == "PM"'>
+			<include refid="saleSubsdMstPm" />
+		</if>
+		     ) PLCYINFO
+		    , MSP_RATE_SPEC RATESPECKD
+		    , MSP_RATE_SPEC RATESPECPM
+		    , MSP_RATE_SPEC RATESPECSM
+		WHERE   PLCYINFO.RATE_CD = RATESPECKD.RATE_CD(+)
+		AND     PLCYINFO.AGRM_TRM = RATESPECKD.AGRM_TRM(+)
+		AND     RATESPECKD.SPRT_TP(+) = 'KD'
+		AND     PLCYINFO.RATE_CD = RATESPECPM.RATE_CD(+)
+		AND     PLCYINFO.AGRM_TRM = RATESPECPM.AGRM_TRM(+)
+		AND     RATESPECPM.SPRT_TP(+) = 'PM'
+		AND     PLCYINFO.RATE_CD = RATESPECSM.RATE_CD(+)
+		AND     PLCYINFO.AGRM_TRM = RATESPECSM.AGRM_TRM(+)
+		AND     RATESPECSM.SPRT_TP(+) = 'SM'
+		<if test='addRateYn == null or addRateYn !=  "Y"'><!-- 요금제추가가 아니면 정책시작일시 -->
+			AND     PLCYINFO.SALE_STRT_DTTM BETWEEN RATESPECKD.APPL_STRT_DTTM(+) AND RATESPECKD.APPL_END_DTTM(+)
+			AND     PLCYINFO.SALE_STRT_DTTM BETWEEN RATESPECPM.APPL_STRT_DTTM(+) AND RATESPECPM.APPL_END_DTTM(+)
+			AND     PLCYINFO.SALE_STRT_DTTM BETWEEN RATESPECSM.APPL_STRT_DTTM(+) AND RATESPECSM.APPL_END_DTTM(+)
+		</if>
+		<if test='addRateYn == "Y"'><!-- 요금제추가인 경우 현재일시로 조회 -->
+			AND     TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN RATESPECKD.APPL_STRT_DTTM(+) AND RATESPECKD.APPL_END_DTTM(+)
+			AND     TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN RATESPECPM.APPL_STRT_DTTM(+) AND RATESPECPM.APPL_END_DTTM(+)
+			AND     TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN RATESPECSM.APPL_STRT_DTTM(+) AND RATESPECSM.APPL_END_DTTM(+)
+		</if>
+	</insert>
+	
+	<select id="getPlcySubsdList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getPlcySubsdList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		SELECT    A.SALE_PLCY_CD
+		        , A.RATE_CD
+		        , D.RATE_NM
+		        , A.PRDT_ID
+		        , A.OLD_YN
+		        , A.AGRM_TRM
+		        , A.OPER_TYPE
+		        , E.CD_DSC AS OPER_TYPE_NM
+		        , A.HNDST_AMT
+		        , A.SUBSD_AMT
+		        , A.INST_AMT
+		        , A.INST_CMSN
+		        , A.AGNCY_SUBSD_MAX
+		        , A.AGNCY_SUBSD_AMT
+		        , B.ORGN_NM
+		        , C.PRDT_NM
+		        , A.SPRT_TP
+		        , FN_GET_CODENM('CMN0058', A.SPRT_TP) AS SPRT_TP_NM
+		        , NVL(A.BASE_AMT, 0) AS BASE_AMT
+		        , NVL(A.DC_AMT, 0) AS DC_AMT
+		        , NVL(A.ADD_DC_AMT, 0) AS ADD_DC_AMT
+		FROM      MSP_SALE_SUBSD_MST A
+		        , ORG_ORGN_INFO_MST B
+		        , CMN_INTM_MDL C
+		        , MSP_RATE_MST D
+		        , CMN_GRP_CD_MST E
+		WHERE   A.SALE_PLCY_CD  = #{salePlcyCd}
+		AND     A.ORGN_ID       = B.ORGN_ID
+		AND     A.PRDT_ID       = C.PRDT_ID
+		AND     C.RPRS_YN       = 'Y'
+		AND     A.RATE_CD       = D.RATE_CD
+		AND     D.APPL_END_DT   = '99991231'
+		AND     D.SERVICE_TYPE  = 'P'
+		AND     A.OPER_TYPE     = E.CD_VAL
+		AND     E.GRP_ID        = 'CMN0049'
+		ORDER BY B.ORGN_NM, C.PRDT_NM, D.RATE_NM, A.OPER_TYPE, A.AGRM_TRM
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getPlcySubsdListPart" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getPlcySubsdListPart */
+		SELECT *
+		FROM (
+			SELECT    A.SALE_PLCY_CD
+			        , A.RATE_CD
+			        , D.RATE_NM
+			        , A.PRDT_ID
+			        , A.OLD_YN
+			        , A.AGRM_TRM
+			        , A.OPER_TYPE
+			        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0049' AND CD_VAL = A.OPER_TYPE) AS OPER_TYPE_NM
+			        , A.HNDST_AMT
+			        , A.SUBSD_AMT
+			        , A.INST_AMT
+			        , A.INST_CMSN
+			        , A.AGNCY_SUBSD_MAX
+			        , A.AGNCY_SUBSD_AMT
+			        , B.ORGN_NM
+			        , C.PRDT_NM
+			        , A.SPRT_TP
+			        , FN_GET_CODENM('CMN0058', A.SPRT_TP) AS SPRT_TP_NM
+			        , NVL(A.BASE_AMT, 0) AS BASE_AMT
+			        , NVL(A.DC_AMT, 0) AS DC_AMT
+			        , NVL(A.ADD_DC_AMT, 0) AS ADD_DC_AMT
+			        , COUNT(1) OVER() AS TOTAL_COUNT
+				    , ROWNUM AS RN
+			FROM MSP_SALE_SUBSD_MST A
+			        , (SELECT A.ORGN_ID, A.ORGN_NM FROM ORG_ORGN_INFO_MST A, MSP_SALE_ORGN_MST B WHERE A.ORGN_ID = B.ORGN_ID AND B.SALE_PLCY_CD = #{salePlcyCd} AND ROWNUM <![CDATA[ <  ]]> 2) B
+			        , (SELECT A.PRDT_ID, A.PRDT_NM FROM CMN_INTM_MDL A, MSP_SALE_PRDT_MST B WHERE A.PRDT_ID = B.PRDT_ID AND B.SALE_PLCY_CD = #{salePlcyCd} AND ROWNUM <![CDATA[  < ]]> 6)  C
+			        , (SELECT A.RATE_CD, A.RATE_NM FROM MSP_RATE_MST A, MSP_SALE_RATE_MST B WHERE A.RATE_CD = B.RATE_CD AND B.SALE_PLCY_CD = #{salePlcyCd} AND ROWNUM <![CDATA[ <  ]]> 6) D
+			WHERE   A.SALE_PLCY_CD  = #{salePlcyCd}
+			AND     A.ORGN_ID       = B.ORGN_ID
+			AND     A.PRDT_ID       = C.PRDT_ID
+			AND     A.RATE_CD       = D.RATE_CD
+			)
+		WHERE RN <![CDATA[ <= ]]> 100
+	</select>
+	
+	<select id="getSaleOrgnList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getSaleOrgnList */
+		
+		SELECT    A.SALE_PLCY_CD
+		        , B.CHK
+		        , B.ORGN_ID
+		        , B.ORGN_NM
+		        , B.TYPE_NM
+		FROM    MSP_SALE_PLCY_MST A
+		        , ( SELECT    A.SALE_PLCY_CD
+		                    , DECODE(A.ORGN_ID, NULL, '0', '1') AS CHK
+		                    , B.ORGN_ID
+		                    , B.ORGN_NM
+		                    , B.TYPE_DTL_CD2
+		                    , C.CD_DSC AS TYPE_NM
+		            FROM      MSP_SALE_ORGN_MST A
+		                    , ORG_ORGN_INFO_MST B
+		                    , CMN_GRP_CD_MST C
+		            WHERE   A.ORGN_ID(+)        = B.ORGN_ID
+		            AND     B.TYPE_CD           = '20'
+		            AND     B.ORGN_STAT_CD      = '4'
+		            AND     B.TYPE_DTL_CD3      = C.CD_VAL
+		            AND     C.GRP_ID            = 'ORG0043'
+		            AND     A.SALE_PLCY_CD(+)   = #{salePlcyCd}
+		        ) B
+		WHERE   A.SALE_PLCY_CD  = #{salePlcyCd}
+		AND     B.TYPE_DTL_CD2  = DECODE(A.ORGN_TYPE, 'ALL', B.TYPE_DTL_CD2, A.ORGN_TYPE )
+		ORDER BY B.ORGN_NM
+		
+	</select>
+	
+	<select id="getSaleRateList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getSaleRateList */
+		
+		SELECT    DECODE(A.RATE_CD, NULL, '0', '1') CHK
+		        , A.SALE_PLCY_CD
+		        , B.RATE_CD
+		        , B.RATE_NM
+		        , B.BASE_AMT
+		FROM      MSP_SALE_RATE_MST A
+		        , MSP_RATE_MST B
+		        , MSP_SALE_PLCY_MST C
+		WHERE   A.RATE_CD(+)       = B.RATE_CD
+		AND     B.SERVICE_TYPE     = 'P'
+		AND     B.PAY_CL_CD        LIKE DECODE(C.ORGN_TYPE||C.PLCY_SCTN_CD, 'CS7'||'02', '%', 'PO')	/* 직영의 USIM인 경우 선불요금제도 조회 */
+		AND     B.APPL_END_DT      = '99991231'
+		AND     C.SALE_PLCY_CD     = #{salePlcyCd}
+		<choose>
+			<when test='prdtSctnCd == "LTE5G"'>
+				AND B.DATA_TYPE IN ('LTE', '5G')
+			</when>
+			<otherwise>
+				AND B.DATA_TYPE = C.PRDT_SCTN_CD
+			</otherwise>
+		</choose>
+		AND     (B.RATE_TYPE = '00' OR
+		           B.RATE_TYPE LIKE DECODE(C.ORGN_TYPE||C.PLCY_SCTN_CD, 'CS7'||'01', '%' ,  'CS4'||'01' , '%' ,  C.PLCY_SCTN_CD) || '%') /* 직영의 단말기인 경우 제품구분없이 조회 */
+		AND     A.SALE_PLCY_CD(+)  = #{salePlcyCd}
+		ORDER BY B.RATE_NM
+		
+	</select>
+	
+	<select id="getSaleOperList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getSaleOperList */
+		
+		SELECT    DECODE(A.OPER_TYPE, NULL, '0', '1') CHK
+		        , A.SALE_PLCY_CD
+		        , B.CD_VAL
+		        , B.CD_DSC AS CD_NM
+		FROM      MSP_SALE_OPER_MST A
+		        , CMN_GRP_CD_MST B
+		WHERE   A.OPER_TYPE(+)     = B.CD_VAL
+		AND     B.GRP_ID           = 'CMN0049'
+		AND     A.SALE_PLCY_CD(+)  = #{salePlcyCd}
+		ORDER BY B.ETC1
+	</select>
+	
+	<select id="getSaleAgrmList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getSaleAgrmList */
+		
+		SELECT    DECODE(A.AGRM_TRM, NULL, '0', '1') CHK
+		        , A.SALE_PLCY_CD
+		        , B.CD_VAL
+		        , B.CD_DSC AS CD_NM
+		FROM      MSP_SALE_AGRM_MST A
+		        , CMN_GRP_CD_MST B
+		WHERE   A.AGRM_TRM(+)      = B.CD_VAL
+		AND     B.GRP_ID           = 'CMN0053'
+		AND     B.USG_YN           = 'Y'
+		AND     A.SALE_PLCY_CD(+)  = #{salePlcyCd}
+		
+	</select>
+	
+	<select id="getSalePrdtList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getSalePrdtList */
+		
+		SELECT    A.SALE_PLCY_CD
+		        , A.PRDT_ID
+		        , B.PRDT_CODE
+		        , B.PRDT_NM
+		        , A.OLD_YN
+		        , A.NEW_CMSN_AMT
+		        , A.MNP_CMSN_AMT
+		        , A.HCN_CMSN_AMT
+		        , A.HDN_CMSN_AMT
+		FROM      MSP_SALE_PRDT_MST A
+		        , CMN_INTM_MDL B
+		WHERE   A.PRDT_ID       = B.PRDT_ID
+		AND     A.SALE_PLCY_CD  = #{salePlcyCd}
+		ORDER BY B.PRDT_CODE
+		
+	</select>
+	
+	<select id="getSaleArpuList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getSaleArpuList */
+		
+		SELECT    A.SALE_PLCY_CD
+		        , A.PRDT_ID
+		        , B.PRDT_CODE
+		        , A.OLD_YN
+		        , C.RATE_GRP_CD
+		        , A.RATE_CD
+		        , A.CMSN_AMT AS ARPU_CMSN_AMT
+		FROM      MSP_SALE_ARPU_MST A
+		        , CMN_INTM_MDL B
+		        , MSP_RATE_MST C
+		WHERE   A.PRDT_ID       = B.PRDT_ID
+		AND     A.RATE_CD       = C.RATE_CD
+		AND     C.APPL_END_DT   = '99991231'
+		AND     C.SERVICE_TYPE  = 'P'
+		AND     A.SALE_PLCY_CD  = #{salePlcyCd}
+		ORDER BY B.PRDT_CODE, A.RATE_CD
+		
+	</select>
+	
+	<update id="setPlcyConfirm" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.setPlcyConfirm */
+		UPDATE  MSP_SALE_PLCY_MST
+		SET       CNFM_YN         = 'Y'
+		        , CNFM_ID       = #{userId}
+		        , CNFM_DTTM     = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		        , RVISN_ID      = #{userId}
+		        , RVISN_DTTM    = SYSDATE
+		WHERE   SALE_PLCY_CD    = #{salePlcyCd}
+	</update>
+	
+	<update id="setPlcyCancel" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.setPlcyCancel */
+		UPDATE  MSP_SALE_PLCY_MST
+		SET       CNFM_YN         = 'N'
+		        , CNFM_ID       = ''
+		        , CNFM_DTTM     = ''
+		        , RVISN_ID      = #{userId}
+		        , RVISN_DTTM    = SYSDATE
+		WHERE   SALE_PLCY_CD    = #{salePlcyCd}
+	</update>
+	
+	
+	<sql id="getAgncySubsdInfo">
+		SELECT    A.SALE_PLCY_CD
+		        , A.SALE_PLCY_NM
+		        , A.SALE_STRT_DTTM
+		        , TO_CHAR(TO_DATE(A.SALE_STRT_DTTM, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS STRT_DTM
+		        , A.SALE_END_DTTM
+		        , TO_CHAR(TO_DATE(A.SALE_END_DTTM, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS END_DTM
+		        , B.RATE_CD
+		        , D.RATE_NM
+		        , B.ORGN_ID
+		        , C.ORGN_NM
+		        , B.PRDT_ID
+		        , E.PRDT_CODE
+		        , E.PRDT_NM
+		        , B.OLD_YN
+		        , DECODE(B.OLD_YN, 'N', '신품', '중고') AS OLD_NM
+		        , B.AGRM_TRM
+		        , B.OPER_TYPE
+		        , F.CD_DSC AS OPER_TYPE_NM
+		        , B.HNDST_AMT
+		        , B.SUBSD_AMT
+		        , B.AGNCY_SUBSD_MAX
+		        , B.AGNCY_SUBSD_AMT
+		        <![CDATA[
+		        , CASE
+		                WHEN B.INST_AMT  < 0 THEN 0
+		                ELSE B.INST_AMT
+		          END AS INST_AMT_ORGN
+		        , CASE
+		                WHEN B.INST_CMSN < 0 THEN 0
+		                ELSE B.INST_CMSN
+		          END AS INST_CMSN_ORGN
+		        , CASE
+		                WHEN B.HNDST_AMT - ( B.SUBSD_AMT + B.AGNCY_SUBSD_AMT ) < 0 THEN  0
+		                ELSE B.HNDST_AMT - ( B.SUBSD_AMT + B.AGNCY_SUBSD_AMT )
+		          END AS INST_AMT
+		        , CASE
+		                WHEN NVL( A.INST_RATE, 0 ) = 0 THEN 0
+		                ELSE    CASE
+		                            WHEN B.HNDST_AMT - ( B.SUBSD_AMT + B.AGNCY_SUBSD_AMT ) < 0 THEN 0
+		                            WHEN A.INST_RATE = 0 THEN 0
+		                            ELSE ROUND( ( B.HNDST_AMT - ( B.SUBSD_AMT + B.AGNCY_SUBSD_AMT ) ) * A.INST_RATE / 100, -1 )
+		                        END
+		          END AS INST_CMSN
+		     	, '일반' AS SELF_OPEN_NM
+		        , 'https://www.ktmmobile.com/request/marketRequest.do?a=' || B.ORGN_ID || '&o=' || B.OPER_TYPE || '&s=' || B.SALE_PLCY_CD || '&p=' || E.PRDT_CODE || '&g=' || A.SPRT_TP || '&r=' || B.RATE_CD || '&y=' || B.AGRM_TRM || '&u=' AS URL_PATH
+		        , 'https://www.ktmmobile.com/m/request/marketRequest.do?a=' || B.ORGN_ID || '&o=' || B.OPER_TYPE || '&s=' || B.SALE_PLCY_CD || '&p=' || E.PRDT_CODE || '&g=' || A.SPRT_TP || '&r=' || B.RATE_CD || '&y=' || B.AGRM_TRM || '&u=' AS MURL_PATH
+		        , CASE
+		                WHEN (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = #{orgnId}) = '00' THEN 'https://www.ktmmobile.com/appForm/appJehuFormDesignView.do?a=' || B.ORGN_ID
+		                WHEN (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = #{orgnId}) = '01' THEN 'https://www.ktmmobile.com/appForm/appJehuFormDesignView.do?a=' || B.ORGN_ID || '&r=' || B.RATE_CD
+		                ELSE ''
+		          END AS URL_PATH2
+		        , CASE
+		                WHEN (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = #{orgnId}) = '00' THEN 'https://www.ktmmobile.com/m/appForm/appJehuFormDesignView.do?a=' || B.ORGN_ID
+		                WHEN (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = #{orgnId}) = '01' THEN 'https://www.ktmmobile.com/m/appForm/appJehuFormDesignView.do?a=' || B.ORGN_ID || '&r=' || B.RATE_CD
+		                ELSE ''
+		          END AS MURL_PATH2
+		     	]]>
+<!-- 		        , 'https://www.ktmmobile.com/request/' || DECODE(A.PLCY_TYPE_CD, 'S', 'homeshopRequest.do?', 'marketRequest.do?') || 'a=' || B.ORGN_ID || '&o=' || B.OPER_TYPE || '&s=' || B.SALE_PLCY_CD || '&p=' || E.PRDT_CODE || '&g=' || A.SPRT_TP || '&u=' AS URL_PATH -->
+		        , G.NEW_CMSN_AMT
+		        , G.MNP_CMSN_AMT
+		        , G.HCN_CMSN_AMT
+		        , G.HDN_CMSN_AMT
+		        , B.SPRT_TP
+		        , FN_GET_CODENM('CMN0058', B.SPRT_TP) AS SPRT_TP_NM
+		        , B.BASE_AMT
+		        , B.DC_AMT
+		        , B.ADD_DC_AMT
+		FROM      MSP_SALE_PLCY_MST A
+		        , MSP_SALE_SUBSD_MST B
+		        , ORG_ORGN_INFO_MST C
+		        , MSP_RATE_MST D
+		        , CMN_INTM_MDL E
+		        , CMN_GRP_CD_MST F
+		        , MSP_SALE_PRDT_MST G
+		WHERE   A.CNFM_YN           = 'Y'
+		AND     A.SALE_PLCY_CD      = B.SALE_PLCY_CD
+		AND     B.ORGN_ID           = C.ORGN_ID
+		AND     B.RATE_CD           = D.RATE_CD
+		AND     D.APPL_END_DT       = '99991231'
+		AND     D.SERVICE_TYPE      = 'P'
+		AND     B.PRDT_ID           = E.PRDT_ID
+		AND     B.OPER_TYPE         = F.CD_VAL
+		AND     F.GRP_ID            = 'CMN0049'
+		AND     B.SALE_PLCY_CD      = G.SALE_PLCY_CD
+		AND     B.PRDT_ID           = G.PRDT_ID
+		AND     B.OLD_YN            = G.OLD_YN
+		AND     #{stdrDt}           BETWEEN SUBSTR(A.SALE_STRT_DTTM, 1, 8) AND SUBSTR(A.SALE_END_DTTM, 1, 8)
+		<if test="orgnId != null and orgnId != ''">
+		AND     B.ORGN_ID           = #{orgnId}
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+		AND     ( A.SALE_PLCY_CD LIKE '%' || #{searchVal} || '%' OR A.SALE_PLCY_NM LIKE '%' || #{searchVal} || '%' )
+		</if>
+		<if test="agrmTrm != null and agrmTrm != ''">
+		AND     B.AGRM_TRM          = #{agrmTrm}
+		</if>
+		<if test="operType != null and operType != ''">
+		AND     B.OPER_TYPE         = #{operType}
+		</if>
+		<if test="rateCd != null and rateCd != ''">
+		AND     B.RATE_CD           = #{rateCd}
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+		AND     B.PRDT_ID           = #{prdtId}
+		</if>
+		<if test="sprtTp != null and sprtTp != ''">
+		AND     B.SPRT_TP           = #{sprtTp}
+		</if>
+	</sql>
+
+	<sql id="getAgncySubsdSelfInfo">
+		SELECT    A.SALE_PLCY_CD
+		, A.SALE_PLCY_NM
+		, A.SALE_STRT_DTTM
+		, TO_CHAR(TO_DATE(A.SALE_STRT_DTTM, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS STRT_DTM
+		, A.SALE_END_DTTM
+		, TO_CHAR(TO_DATE(A.SALE_END_DTTM, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS END_DTM
+		, B.RATE_CD
+		, D.RATE_NM
+		, B.ORGN_ID
+		, C.ORGN_NM
+		, B.PRDT_ID
+		, E.PRDT_CODE
+		, E.PRDT_NM
+		, B.OLD_YN
+		, DECODE(B.OLD_YN, 'N', '신품', '중고') AS OLD_NM
+		, B.AGRM_TRM
+		, B.OPER_TYPE
+		, F.CD_DSC AS OPER_TYPE_NM
+		, B.HNDST_AMT
+		, B.SUBSD_AMT
+		, B.AGNCY_SUBSD_MAX
+		, B.AGNCY_SUBSD_AMT
+		<![CDATA[
+		        , CASE
+		                WHEN B.INST_AMT  < 0 THEN 0
+		                ELSE B.INST_AMT
+		          END AS INST_AMT_ORGN
+		        , CASE
+		                WHEN B.INST_CMSN < 0 THEN 0
+		                ELSE B.INST_CMSN
+		          END AS INST_CMSN_ORGN
+		        , CASE
+		                WHEN B.HNDST_AMT - ( B.SUBSD_AMT + B.AGNCY_SUBSD_AMT ) < 0 THEN  0
+		                ELSE B.HNDST_AMT - ( B.SUBSD_AMT + B.AGNCY_SUBSD_AMT )
+		          END AS INST_AMT
+		        , CASE
+		                WHEN NVL( A.INST_RATE, 0 ) = 0 THEN 0
+		                ELSE    CASE
+		                            WHEN B.HNDST_AMT - ( B.SUBSD_AMT + B.AGNCY_SUBSD_AMT ) < 0 THEN 0
+		                            WHEN A.INST_RATE = 0 THEN 0
+		                            ELSE ROUND( ( B.HNDST_AMT - ( B.SUBSD_AMT + B.AGNCY_SUBSD_AMT ) ) * A.INST_RATE / 100, -1 )
+		                        END
+		          END AS INST_CMSN
+		     	, '셀프개통' AS SELF_OPEN_NM
+		        , 'https://www.ktmmobile.com/appForm/appAgentFormDesignView.do?a=' || B.ORGN_ID || '&o=' || B.OPER_TYPE || '&s=' || B.SALE_PLCY_CD || '&p=' || E.PRDT_CODE || '&g=' || A.SPRT_TP || '&r=' || B.RATE_CD || '&y=' || B.AGRM_TRM || '&u=' AS URL_PATH
+		        , 'https://www.ktmmobile.com/m/appForm/appAgentFormDesignView.do?a=' || B.ORGN_ID || '&o=' || B.OPER_TYPE || '&s=' || B.SALE_PLCY_CD || '&p=' || E.PRDT_CODE || '&g=' || A.SPRT_TP || '&r=' || B.RATE_CD || '&y=' || B.AGRM_TRM || '&u=' AS MURL_PATH
+		     	, CASE				/*위탁온라인(셀프+상담사) URL생성 (00:조직코드만 생성, 01:기존과같이생성 - TOSS요청사항)*/
+		                WHEN (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = #{orgnId}) = '00' THEN 'https://www.ktmmobile.com/appForm/appJehuFormDesignView.do?a=' || B.ORGN_ID
+		                WHEN (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = #{orgnId}) = '01' THEN 'https://www.ktmmobile.com/appForm/appJehuFormDesignView.do?a='  || B.ORGN_ID || '&r=' || B.RATE_CD
+		                ELSE ''
+		          END AS URL_PATH2
+		        , CASE
+		                WHEN (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = #{orgnId}) = '00' THEN 'https://www.ktmmobile.com/m/appForm/appJehuFormDesignView.do?a=' || B.ORGN_ID
+		                WHEN (SELECT EXPNSN_STR_VAL1 FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = #{orgnId}) = '01' THEN 'https://www.ktmmobile.com/m/appForm/appJehuFormDesignView.do?a='  || B.ORGN_ID || '&r=' || B.RATE_CD
+		                ELSE ''
+		          END AS MURL_PATH2
+		    	]]>
+		<!-- 		        , 'https://www.ktmmobile.com/request/' || DECODE(A.PLCY_TYPE_CD, 'S', 'homeshopRequest.do?', 'marketRequest.do?') || 'a=' || B.ORGN_ID || '&o=' || B.OPER_TYPE || '&s=' || B.SALE_PLCY_CD || '&p=' || E.PRDT_CODE || '&g=' || A.SPRT_TP || '&u=' AS URL_PATH -->
+		, G.NEW_CMSN_AMT
+		, G.MNP_CMSN_AMT
+		, G.HCN_CMSN_AMT
+		, G.HDN_CMSN_AMT
+		, B.SPRT_TP
+		, FN_GET_CODENM('CMN0058', B.SPRT_TP) AS SPRT_TP_NM
+		, B.BASE_AMT
+		, B.DC_AMT
+		, B.ADD_DC_AMT
+		FROM      MSP_SALE_PLCY_MST A
+		, MSP_SALE_SUBSD_MST B
+		, ORG_ORGN_INFO_MST C
+		, MSP_RATE_MST D
+		, CMN_INTM_MDL E
+		, CMN_GRP_CD_MST F
+		, MSP_SALE_PRDT_MST G
+		WHERE   A.CNFM_YN           = 'Y'
+		AND     A.SALE_PLCY_CD      = B.SALE_PLCY_CD
+		AND     B.ORGN_ID           = C.ORGN_ID
+		AND     B.RATE_CD           = D.RATE_CD
+		AND     D.APPL_END_DT       = '99991231'
+		AND     D.SERVICE_TYPE      = 'P'
+		AND     B.PRDT_ID           = E.PRDT_ID
+		AND     B.OPER_TYPE         = F.CD_VAL
+		AND     F.GRP_ID            = 'CMN0049'
+		AND     B.SALE_PLCY_CD      = G.SALE_PLCY_CD
+		AND     B.PRDT_ID           = G.PRDT_ID
+		AND     B.OLD_YN            = G.OLD_YN
+		AND     #{stdrDt}           BETWEEN SUBSTR(A.SALE_STRT_DTTM, 1, 8) AND SUBSTR(A.SALE_END_DTTM, 1, 8)
+		AND     A.SELF_OPEN_YN      = 'Y'
+		<if test="orgnId != null and orgnId != ''">
+			AND     B.ORGN_ID           = #{orgnId}
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			AND     ( A.SALE_PLCY_CD LIKE '%' || #{searchVal} || '%' OR A.SALE_PLCY_NM LIKE '%' || #{searchVal} || '%' )
+		</if>
+		<if test="agrmTrm != null and agrmTrm != ''">
+			AND     B.AGRM_TRM          = #{agrmTrm}
+		</if>
+		<if test="operType != null and operType != ''">
+			AND     B.OPER_TYPE         = #{operType}
+		</if>
+		<if test="rateCd != null and rateCd != ''">
+			AND     B.RATE_CD           = #{rateCd}
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+			AND     B.PRDT_ID           = #{prdtId}
+		</if>
+		<if test="sprtTp != null and sprtTp != ''">
+			AND     B.SPRT_TP           = #{sprtTp}
+		</if>
+	</sql>
+
+	<select id="getAgncySubsdList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getAgncySubsdList */
+
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+
+		<include refid="getAgncySubsdInfo" />
+
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<select id="getAgncySubsdListExcel" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getAgncySubsdListExcel */
+
+		<include refid="getAgncySubsdInfo" />
+
+		UNION ALL
+
+		<include refid="getAgncySubsdSelfInfo" />
+
+	</select>
+
+	<update id="updateAgncySubsdAmt" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.updateAgncySubsdAmt */
+		UPDATE  MSP_SALE_SUBSD_MST
+		SET     AGNCY_SUBSD_AMT = CASE WHEN AGNCY_SUBSD_MAX <![CDATA[ >= ]]> #{agncySubsdAmt, jdbcType=INTEGER} THEN #{agncySubsdAmt, jdbcType=INTEGER}
+		                               ELSE AGNCY_SUBSD_MAX
+		                          END 
+		        , RVISN_ID      = #{userId, jdbcType=VARCHAR}
+		        , RVISN_DTTM    = SYSDATE
+		WHERE   SALE_PLCY_CD    = #{salePlcyCd, jdbcType=VARCHAR}
+		AND     ORGN_ID         = #{orgnId, jdbcType=VARCHAR}
+		AND     PRDT_ID         = #{prdtId, jdbcType=VARCHAR}
+		AND     OLD_YN          = #{oldYn, jdbcType=VARCHAR}
+		<!-- AND     AGNCY_SUBSD_MAX <![CDATA[ >= ]]> #{agncySubsdAmt, jdbcType=INTEGER} -->
+		<if test="rateCd != null and rateCd != ''">
+		AND     RATE_CD         = #{rateCd, jdbcType=VARCHAR}
+		</if>
+		<if test="agrmTrm != null and agrmTrm != ''">
+		AND     AGRM_TRM        = #{agrmTrm, jdbcType=VARCHAR}
+		</if>
+		<if test="operType != null and operType != ''">
+		AND     OPER_TYPE       = #{operType, jdbcType=VARCHAR}
+		</if>
+	</update>
+	
+	<delete id="deleteSalePlcyMst" parameterType="String">
+		/* plcyMapper.deleteSalePlcyMst */
+		DELETE  FROM    MSP_SALE_PLCY_MST
+		WHERE   SALE_PLCY_CD = #{salePlcyCd}
+	</delete>
+	
+	<update id="updatePlcyMgmtClose" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.updatePlcyMgmtClose */
+		UPDATE  MSP_SALE_PLCY_MST
+		SET     SALE_END_DTTM   = #{saleEndDt, jdbcType=VARCHAR} || #{saleEndTm, jdbcType=VARCHAR} 
+		        , RVISN_ID      = #{sessionUserId, jdbcType=VARCHAR}
+		        , RVISN_DTTM    = SYSDATE
+		WHERE   SALE_PLCY_CD    = #{salePlcyCd}
+		
+	</update>
+	
+	<select id="getPlcyAgncyAddList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getPlcyAgncyAddList */
+		SELECT    #{salePlcyCd} AS SALE_PLCY_CD
+		        , A.ORGN_ID
+		        , A.ORGN_NM
+		        , B.CD_DSC AS TYPE_NM
+		        , #{sprtTp} AS SPRT_TP
+		FROM      ORG_ORGN_INFO_MST A
+		        , CMN_GRP_CD_MST B
+		WHERE   A.TYPE_CD       = '20'
+		AND     A.ORGN_STAT_CD  = '4'
+		AND     A.TYPE_DTL_CD2  = B.CD_VAL
+		AND     B.GRP_ID        = 'ORG0020'
+		AND     A.TYPE_DTL_CD2  LIKE DECODE(#{orgnType}, 'ALL', '%', #{orgnType}) || '%'
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_SALE_ORGN_MST WHERE ORGN_ID = A.ORGN_ID AND SALE_PLCY_CD = #{salePlcyCd} )
+	</select>
+
+	<!-- 선불대리점추가 -->
+	<select id="getPlcyAgncyAddList2" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getPlcyAgncyAddList2 */
+		SELECT    #{salePlcyCd} AS SALE_PLCY_CD
+		        , A.ORGN_ID
+		        , A.ORGN_NM
+		        , '선불' AS TYPE_NM
+		        , '' AS SPRT_TP
+		FROM      ORG_ORGN_INFO_MST A
+		WHERE   A.TYPE_CD       = '20'
+		AND     A.TYPE_DTL_CD1 = 'SU'
+	</select>
+		
+	<insert id="insertSalePlcyMstCopy" parameterType="map">
+		/* plcyMapper.insertSalePlcyMstCopy */
+		INSERT INTO MSP_SALE_PLCY_MST (
+		      SALE_PLCY_CD
+		    , SALE_PLCY_NM
+		    , SALE_STRT_DTTM
+		    , SALE_END_DTTM
+		    , PLCY_TYPE_CD
+		    , PLCY_SCTN_CD
+		    , PRDT_SCTN_CD
+		    , APPL_SCTN_CD
+		    , SPRT_TP
+		    , INST_RATE
+		    , NEW_YN
+		    , MNP_YN
+		    , HCN_YN
+		    , HDN_YN
+		    , ORGN_TYPE
+		    , SELF_OPEN_YN
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT    #{newSalePlcyCd}
+		        , #{newSalePlcyNm}
+		        , #{newSaleStrtDt} || #{newSaleStrtTm}
+		        , #{newSaleEndDt} || #{newSaleEndTm}
+		        , #{newPlcyTypeCd}
+		        , A.PLCY_SCTN_CD
+		        , A.PRDT_SCTN_CD
+		        , A.APPL_SCTN_CD
+		        , A.SPRT_TP
+		        , A.INST_RATE
+		        , A.NEW_YN
+		        , A.MNP_YN
+		        , A.HCN_YN
+		        , A.HDN_YN
+		        , A.ORGN_TYPE
+		        , A.SELF_OPEN_YN
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		FROM    MSP_SALE_PLCY_MST A
+		WHERE   A.SALE_PLCY_CD    = #{salePlcyCd}
+	</insert>
+	
+	<insert id="insertSaleOrgnMstCopy" parameterType="map">
+		/* plcyMapper.insertSaleOrgnMstCopy */
+		INSERT INTO MSP_SALE_ORGN_MST (
+		      SALE_PLCY_CD
+		    , ORGN_ID
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT    #{newSalePlcyCd}
+		        , A.ORGN_ID
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		FROM    MSP_SALE_ORGN_MST A
+		WHERE   A.SALE_PLCY_CD = #{salePlcyCd}
+	</insert>
+	
+	<insert id="insertSaleOperMstCopy" parameterType="map">
+		/* plcyMapper.insertSaleOperMstCopy */
+		INSERT INTO MSP_SALE_OPER_MST (
+		      SALE_PLCY_CD
+		    , OPER_TYPE
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT    #{newSalePlcyCd}
+		        , A.OPER_TYPE
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		FROM    MSP_SALE_OPER_MST A
+		WHERE   A.SALE_PLCY_CD = #{salePlcyCd}
+	</insert>
+	
+	<insert id="insertSaleAgrmMstCopy" parameterType="map">
+		/* plcyMapper.insertSaleAgrmMstCopy */
+		INSERT INTO MSP_SALE_AGRM_MST (
+		      SALE_PLCY_CD
+		    , AGRM_TRM
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT    #{newSalePlcyCd}
+		        , A.AGRM_TRM
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		FROM    MSP_SALE_AGRM_MST A
+		WHERE   A.SALE_PLCY_CD = #{salePlcyCd}
+	</insert>
+	
+	<insert id="insertSaleRateMstCopy" parameterType="map">
+		/* plcyMapper.insertSaleRateMstCopy */
+		INSERT INTO MSP_SALE_RATE_MST (
+		      SALE_PLCY_CD
+		    , RATE_CD
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT    #{newSalePlcyCd}
+		        , A.RATE_CD
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		FROM    MSP_SALE_RATE_MST A
+		WHERE   A.SALE_PLCY_CD = #{salePlcyCd}
+	</insert>
+	
+	<insert id="insertSalePrdtMstCopy" parameterType="map">
+		/* plcyMapper.insertSalePrdtMstCopy */
+		INSERT INTO MSP_SALE_PRDT_MST (
+		      SALE_PLCY_CD
+		    , PRDT_ID
+		    , OLD_YN
+		    , NEW_CMSN_AMT
+		    , MNP_CMSN_AMT
+		    , HCN_CMSN_AMT
+		    , HDN_CMSN_AMT
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT    #{newSalePlcyCd}
+		        , A.PRDT_ID
+		        , A.OLD_YN
+		        , A.NEW_CMSN_AMT
+		        , A.MNP_CMSN_AMT
+		        , A.HCN_CMSN_AMT
+		        , A.HDN_CMSN_AMT
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		FROM    MSP_SALE_PRDT_MST A
+		WHERE   A.SALE_PLCY_CD = #{salePlcyCd}
+	</insert>
+	
+	<insert id="insertSaleArpuMstCopy" parameterType="map">
+		/* plcyMapper.insertSaleArpuMstCopy */
+		INSERT INTO MSP_SALE_ARPU_MST (
+		      SALE_PLCY_CD
+		    , RATE_CD
+		    , PRDT_ID
+		    , OLD_YN
+		    , CMSN_AMT
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT    #{newSalePlcyCd}
+		        , A.RATE_CD
+		        , A.PRDT_ID
+		        , A.OLD_YN
+		        , A.CMSN_AMT
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		        , #{SESSION_USER_ID}
+		        , SYSDATE
+		FROM    MSP_SALE_ARPU_MST A
+		WHERE   A.SALE_PLCY_CD = #{salePlcyCd}
+	</insert>
+	
+	<insert id="insertInstNomCopy" parameterType="map">
+      /* plcyMapper.insertInstNomCopy */
+      INSERT INTO ORG_INST_NOM_MST (
+            SALE_PLCY_CD
+          , INST_NOM
+          , REG_ID
+          , REG_DTTM
+          , RVISN_ID
+          , RVISN_DTTM
+      )
+      SELECT    #{newSalePlcyCd}
+              , A.INST_NOM
+              , #{SESSION_USER_ID}
+              , SYSDATE
+              , #{SESSION_USER_ID}
+              , SYSDATE
+      FROM    ORG_INST_NOM_MST A
+      WHERE   A.SALE_PLCY_CD    = #{salePlcyCd}
+   </insert>
+	
+	<!-- 할부개월수 조회 -->
+	<select id="getInstList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PolicyMapper.getInstList */
+		SELECT DECODE(B.INST_NOM, NULL, '0', '1') CHK,
+			   A.CD_VAL,
+			   A.CD_DSC AS CD_NM
+		FROM   CMN_GRP_CD_MST A, 
+			   ORG_INST_NOM_MST B
+		WHERE  A.CD_VAL = B.INST_NOM(+)
+		AND    A.USG_YN = 'Y'
+		AND    A.GRP_ID = 'ORG0017'
+		AND    B.SALE_PLCY_CD(+) = #{salePlcyCd}
+		ORDER BY A.ETC6, A.ETC1, A.CD_VAL
+	</select>
+	
+	<!-- 요금제추가 -->
+	<select id="getPlcyRateAddList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* plcyMapper.getPlcyRateAddList */
+		SELECT #{salePlcyCd} AS SALE_PLCY_CD,
+		       #{sprtTp} AS SPRT_TP,
+		       A.RATE_GRP_CD,
+		       A.RATE_CD,
+		       A.RATE_NM,
+		       A.BASE_AMT
+		FROM   MSP_RATE_MST A
+		WHERE  A.SERVICE_TYPE = 'P'
+		AND    A.APPL_END_DT = '99991231'
+		AND    A.PAY_CL_CD LIKE DECODE(#{orgnType}||#{plcySctnCd}, 'CS7'||'02', '%', 'PO') /* 직영의 USIM인 경우 선불요금제도 조회 */
+		<choose>
+			<when test='prdtSctnCd == "LTE5G"'>
+				AND A.DATA_TYPE IN ('LTE', '5G')
+			</when>
+			<otherwise>
+				AND A.DATA_TYPE = #{prdtSctnCd}
+			</otherwise>
+		</choose>
+		<if test='orgnType != "CS7" and orgnType != "CS4" or plcySctnCd != "01"'>
+			AND    A.RATE_TYPE   IN ('00', #{plcySctnCd}) /* 직영의 단말기인 경우 제품구분없이 조회 */
+		</if>
+		AND    NOT EXISTS ( SELECT 1 FROM MSP_SALE_RATE_MST WHERE RATE_CD = A.RATE_CD AND SALE_PLCY_CD = #{salePlcyCd} )
+		ORDER BY RATE_GRP_CD, A.RATE_NM
+	</select>
+	
+	<select id="getMblphnNum" parameterType="String" resultType="String">
+		SELECT MBLPHN_NUM AS mblphnNum
+		FROM   CMN_USR_MST
+		WHERE  USR_ID = #{userId}
+	</select>
+	
+	<select id="getMsgQueueSeq" resultType="String">
+		SELECT SMS_SEQ.NEXTVAL AS mseq FROM DUAL
+	</select>
+	
+	<!-- 정책 삭제 - ORG_INST_NOM_MST -->
+	<delete id="deleteInstNom" parameterType="String">
+		/* plcyMapper.deleteInstNom */
+		DELETE
+		FROM   ORG_INST_NOM_MST
+		WHERE  SALE_PLCY_CD = #{salePlcyCd}
+	</delete>
+	
+	<!-- 정책생성 - 할부개월수 -->
+	<insert id="insertInstNom" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.insertInstNom */
+		INSERT INTO ORG_INST_NOM_MST (
+			  SALE_PLCY_CD	/* 판매정책코드 */
+			, INST_NOM		/* 할부개월수 */
+			, REG_ID		/* 등록자ID */
+			, REG_DTTM		/* 등록일시 */
+			, RVISN_ID		/* 수정자ID */
+			, RVISN_DTTM	/* 수정일시 */
+		) VALUES (
+			  #{salePlcyCd}
+			, #{instTrm}
+			, #{userId}
+			, SYSDATE
+			, #{userId}
+			, SYSDATE
+		)
+	</insert>
+	
+	<!-- 정책 상세 생성/초기화/삭제 Procedure CALL (P_MSP_PLCY_DETAIL) -->
+	<select id="callPlcyDetail" statementType="CALLABLE" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		/* plcyMapper.callPlcyDetail */
+		{ CALL P_MSP_PLCY_DETAIL( #{salePlcyCd}, #{actionType}, #{userId}, #{plcyEventCd}, #{resultCd, mode=OUT, jdbcType=VARCHAR} ) }
+	</select>
+	
+	<!-- 정책 이벤트 로그 확인 -->
+	<select id="checkSaleEventLog" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PolicyLogVO" resultType="com.ktis.msp.sale.plcyMgmt.vo.PolicyLogVO">
+		/* plcyMapper.checkSaleEventLog */
+		SELECT SALE_PLCY_CD AS salePlcyCd
+		      ,PROC_ID AS procId
+		      ,FN_GET_USRNM(PROC_ID) AS procNm
+		      ,PLCY_EVENT_CD AS plcyEventCd
+		      ,FN_GET_CODENM('ORG0058', PLCY_EVENT_CD) AS plcyEventNm
+		      ,STRT_DTTM AS strtDttm
+		      ,END_DTTM AS endDttm
+		FROM   MSP_SALE_EVENT_LOG
+		WHERE  SALE_PLCY_CD = #{salePlcyCd}
+		AND    ROWNUM = 1
+		ORDER BY STRT_DTTM DESC
+	</select>
+	
+	<!-- 정책 이벤트 로그 insert -->
+	<insert id="insertSaleEventLog" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PolicyLogVO">
+		<selectKey keyProperty="strtDttm" order="BEFORE" resultType="String">
+			SELECT TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') AS strtDttm
+			FROM   DUAL
+		</selectKey>
+		/* plcyMapper.insertSaleEventLog */
+		INSERT INTO MSP_SALE_EVENT_LOG (
+			 SALE_PLCY_CD
+			,PROC_ID
+			,PLCY_EVENT_CD
+			,STRT_DTTM
+			,REGST_ID
+			,REGST_DTTM
+			,RVISN_ID
+			,RVISN_DTTM
+		)
+		VALUES (
+			 #{salePlcyCd}
+			,#{sessionUserId}
+			,#{plcyEventCd}
+			,#{strtDttm}
+			,#{sessionUserId}
+			,SYSDATE
+			,#{sessionUserId}
+			,SYSDATE
+		)
+	</insert>
+	
+	<!-- 정책 이벤트 로그 update 비고 -->
+	<update id="updateSaleEventLog" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PolicyLogVO">
+		/* plcyMapper.updateSaleEventLog */
+		update MSP_SALE_EVENT_LOG
+		SET    REMRK = #{remrk}
+		WHERE  SALE_PLCY_CD = #{salePlcyCd}
+		AND    STRT_DTTM = #{strtDttm}
+	</update>
+	
+	<!-- 정책 이벤트 로그 update 종료일시 -->
+	<update id="updateEndSaleEventLog" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PolicyLogVO">
+		/* plcyMapper.updateEndSaleEventLog */
+		update MSP_SALE_EVENT_LOG
+		SET    END_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		      ,REMRK = #{remrk}
+		WHERE  SALE_PLCY_CD = #{salePlcyCd}
+		AND    STRT_DTTM = #{strtDttm}
+	</update>
+	
+	<!-- 정책 확정 확인 -->
+	<select id="checkPolicyConfirm" parameterType="String" resultType="String">
+		/* plcyMapper.checkPolicyConfirm */
+		SELECT NVL(CNFM_YN, 'N') AS CNFM_YN
+		FROM   MSP_SALE_PLCY_MST
+		WHERE  SALE_PLCY_CD = #{salePlcyCd}
+	</select>
+	
+
+	<!-- 할부 개월 수 팝업 SELECT -->
+	<select id="selectInstNomPuList" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      SELECT /* plcyMapper.selectInstNomPuList */
+               DECODE(NVL(B.INST_NOM,''), '', '0','1') AS USE_YN,
+               CD_VAL AS INST_NOM
+        FROM   CMN_GRP_CD_MST A
+        LEFT OUTER JOIN ORG_INST_NOM_MST B
+          ON   A.CD_VAL = B.INST_NOM AND B.SALE_PLCY_CD = #{salePlcyCd, jdbcType=VARCHAR}
+       WHERE   A.GRP_ID = 'ORG0017'
+         AND   A.USG_YN = 'Y'
+	</select>	
+
+	<!-- 할부 개월 수 삭제(할부기간 팝업) -->
+	<delete id="deleteInstNomPu" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		DELETE /* plcyMapper.deleteInstNomPu */
+		  FROM ORG_INST_NOM_MST
+		 WHERE SALE_PLCY_CD = #{salePlcyCd, jdbcType=VARCHAR} /* 판매정책코드 */
+	</delete>
+		
+	<!-- 할부 개월 수 등록(할부기간 팝업) -->
+	<insert id="insertInstNomPu" parameterType="com.ktis.msp.sale.plcyMgmt.vo.PlcyMgmtVO">
+		MERGE INTO ORG_INST_NOM_MST /* plcyMapper.insertInstNomPu */
+		USING DUAL
+		ON(SALE_PLCY_CD = #{salePlcyCd, jdbcType=VARCHAR} AND INST_NOM = #{instNom, jdbcType=VARCHAR})
+		WHEN MATCHED THEN
+			UPDATE SET RVISN_DTTM = SYSDATE
+			          ,RVISN_ID = #{sessionUserId, jdbcType=VARCHAR} /* 수정자ID */
+     	WHEN NOT MATCHED THEN			
+			INSERT 
+			       (			
+	                     INST_NOM    /* 할부개월수 */
+	                   , REG_ID    /* 등록자ID */
+	                   , REG_DTTM    /* 등록일시 */
+	                   , RVISN_ID    /* 수정자ID */
+	                   , RVISN_DTTM    /* 수정일시 */
+	                   , SALE_PLCY_CD    /* 판매정책코드 */
+			       )
+			VALUES
+				   (
+	                     #{instNom, jdbcType=NUMERIC} /* 할부개월수 */
+	                   , #{sessionUserId, jdbcType=VARCHAR} /* 등록자ID */
+	                   , SYSDATE /* 등록일시 */
+	                   , #{sessionUserId, jdbcType=VARCHAR} /* 수정자ID */
+	                   , SYSDATE /* 수정일시 */
+	                   , #{salePlcyCd, jdbcType=VARCHAR} /* 판매정책코드 */ 
+				   )	
+	</insert>
+		
+</mapper>

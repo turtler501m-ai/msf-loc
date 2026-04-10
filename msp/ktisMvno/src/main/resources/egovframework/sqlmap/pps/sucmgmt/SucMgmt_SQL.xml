@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.sucmgmt.mapper.SucMgmtMapper">
+
+	<!--개통유심 등록관리 목록  -->
+    <select id="getSucList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap" parameterType="com.ktis.msp.pps.sucmgmt.vo.SucVo">       
+        <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+	 		SELECT
+				T.SELL_USIM_KEY,
+				T.USIM_NO,
+				T.FRGNR_NAME,
+				T.FRGNR_NAME AS FRGNR_NAME_MSK,
+				trim(T.MOBILE_FN) || '-' || trim(T.MOBILE_MN) || '-' || trim(T.MOBILE_RN) as MOBILE_NO ,
+				trim(T.MOBILE_FN) || '-' || trim(T.MOBILE_MN) || '-' || trim(T.MOBILE_RN) as MOBILE_NO_MSK ,
+				T.MAIL,
+				T.MAIL AS MAIL_MSK,
+				T.FRGNR_RN,
+				T.FRGNR_PN,
+				T.VDATE_START,
+				T.VDATE_END,
+				T.FILE_NAME,
+				T.FILE_MASK,
+				T.ETC_FILE_NAME,
+				T.ETC_FILE_MASK, 
+				T.LANG_TYPE,
+				T.PSTATE,
+				T.SSTATE,
+				F_GET_KT_CODE_NM('MCP_SELL_USIM', 'SSTATE', SSTATE)	AS SSTATE_NAME,
+				T.RIP,
+				TO_CHAR(T.SYS_RDATE, 'YYYY.MM.DD : HH24:MI:SS') RDATE,
+				T.UIP MIP ,
+				TO_CHAR(T.SYS_UDATE, 'YYYY.MM.DD : HH24:MI:SS') MDATE,
+				
+				CASE WHEN (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID=T.AGENT_ID) IS NOT NULL 
+                    THEN (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID=T.AGENT_ID) ||'('|| T.AGENT_ID ||')'     
+                ELSE 
+                    T.AGENT_ID
+                END 
+                AS   AGENT_ID,
+				
+				T.AGENT_ID AS USR_ID ,
+				
+				CASE WHEN T.FILE_MASK IS NOT NULL 
+                    THEN 'O'     
+                ELSE 
+                    'X'
+                END 
+                AS   FILE_OX,
+                
+                CASE WHEN T.ETC_FILE_MASK IS NOT NULL 
+                    THEN 'O'     
+                ELSE 
+                    'X'
+                END 
+                AS   ETC_FILE_OX,
+                T.FILE_ENC_FLAG AS FILE_ENC_FLAG,
+                T.RCG_AUTO_AMT AS RCG_AUTO_AMT,
+                T.END_USR_ID AS END_USR_ID,
+                FN_GET_USRNM(T.END_USR_ID) END_USR_NM,
+                TO_CHAR(T.END_DT, 'YYYY-MM-DD') AS END_DT,
+                T.CONTRACT_NUM AS CONTRACT_NUM,
+                T.RCG_SEQ AS RCG_SEQ,
+                T.REMARK AS REMARK
+		   	FROM
+		   		MCP_SELL_USIM@DL_MCP T
+		   		WHERE 1=1
+		   	<if test="searchName != null and searchName != '' ">
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'USIM_NO' )">
+		   			AND  T.USIM_NO LIKE '%'||#{searchName}||'%'
+		   		</if>
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'FRGNR_NAME' )">
+		   			AND  T.FRGNR_NAME LIKE '%'||#{searchName}||'%'  
+		   		</if>
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'MOBILE' )">
+		   			AND  RTRIM(LTRIM(MOBILE_FN || MOBILE_MN || MOBILE_RN)) LIKE '%'|| #{searchName}||'%'  
+		   		</if>
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'AGENT_ID' )">
+		   			AND  T.AGENT_ID LIKE '%'||#{searchName}||'%'  
+		   		</if>
+		   	</if>
+		   	<if test="sstate != null and sstate !=''">
+		   		AND T.SSTATE = #{sstate}
+		   	</if>	
+		   	<if test="cntpntShopId != null and cntpntShopId !=''">
+		   		AND T.AGENT_ID = #{cntpntShopId}
+		   	</if>
+		   	<if test="sysRdateS != null and sysRdateS !='' and sysRdateE != null and sysRdateE !=''">
+		   		AND TO_CHAR(SYS_RDATE , 'yyyymmdd') BETWEEN  #{sysRdateS} AND #{sysRdateE} 
+		   	</if>
+		   	
+		   	ORDER BY T.SELL_USIM_KEY DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />    
+    </select>
+    
+    <update id="updateSsate" parameterType="com.ktis.msp.pps.sucmgmt.vo.SucVo">
+		UPDATE MCP_SELL_USIM@DL_MCP 
+		SET
+			SSTATE = #{sstate},
+			AGENT_ID =  #{usrId},
+			END_USR_ID = DECODE(SSTATE, '20', #{adminId}, END_USR_ID ),
+			END_DT = DECODE(SSTATE, '20', TRUNC(SYSDATE), END_DT),
+			REMARK = DECODE(TRIM(#{inputRemark}), '', REMARK, '['||TO_CHAR(SYSDATE, 'YY/MM/DD')||' '||#{adminNm}||'] '||TRIM(#{inputRemark})||CHR(13)||REMARK)
+		WHERE
+			SELL_USIM_KEY = #{sellUsimKey}
+	</update>
+    
+    <delete id="deleteSellUsim" parameterType="com.ktis.msp.pps.sucmgmt.vo.SucVo">
+    	DELETE FROM MCP_SELL_USIM@DL_MCP WHERE SELL_USIM_KEY = #{sellUsimKey} 
+    </delete>
+    
+    <!-- 처리완료시 대리점업데이트처리  -->
+	<select id="procPpsOpenUsimDone"  statementType="CALLABLE"  parameterType="com.ktis.msp.pps.sucmgmt.vo.SucVo">
+		{call P_OPEN_USIM_DONE(
+				    #{sellUsimKey, jdbcType=VARCHAR}
+				    , #{usimNo, jdbcType=VARCHAR}
+				    , #{phone, jdbcType=VARCHAR}
+				    , #{rcgAutoAmt2, jdbcType=VARCHAR}
+				    , #{checkImgPath, jdbcType=VARCHAR}
+				    , #{checkEtcImgPath, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+    				, #{oRetCd, mode=INOUT, javaType=string, jdbcType=VARCHAR}
+				    , #{oRetMsg, mode=INOUT, javaType=string, jdbcType=VARCHAR}
+				    , #{seq, mode=INOUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+
+	</select>
+    
+    <select id="getExcelList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap" parameterType="com.ktis.msp.pps.sucmgmt.vo.SucVo">
+    	SELECT
+				T.SELL_USIM_KEY,
+				T.USIM_NO,
+				T.FRGNR_NAME,
+				trim(T.MOBILE_FN) || '-' || trim(T.MOBILE_MN) || '-' || trim(T.MOBILE_RN) as MOBILE_NO ,
+				T.MAIL,
+				T.FRGNR_RN,
+				T.FRGNR_PN,
+				T.VDATE_START,
+				T.VDATE_END,
+				T.FILE_NAME,
+				T.FILE_MASK,
+				T.ETC_FILE_NAME,
+				T.ETC_FILE_MASK, 
+				T.LANG_TYPE,
+				T.PSTATE,
+				T.SSTATE,
+				CASE 
+					WHEN (T.SSTATE) = '00' 
+						THEN '대기중(Waiting)' 
+					WHEN (T.SSTATE) = '10'
+						THEN  '등록요청(Request)'
+					WHEN (T.SSTATE) = '20'
+						THEN '처리완료(Finished)' 
+				END 
+				AS SSTATE_NAME,
+				T.RIP,
+				TO_CHAR(T.SYS_RDATE, 'YYYY.MM.DD : HH24:MI:SS') RDATE,
+				T.UIP MIP ,
+				TO_CHAR(T.SYS_UDATE, 'YYYY.MM.DD : HH24:MI:SS') MDATE,
+				
+				CASE WHEN (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID=T.AGENT_ID) IS NOT NULL 
+                    THEN (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID=T.AGENT_ID) ||'('|| T.AGENT_ID ||')'     
+                ELSE 
+                    T.AGENT_ID
+                END 
+                AS   AGENT_ID,
+				
+				T.AGENT_ID AS USR_ID ,
+				
+				CASE WHEN T.FILE_MASK IS NOT NULL 
+                    THEN 'O'     
+                ELSE 
+                    'X'
+                END 
+                AS   FILE_OX,
+                
+                CASE WHEN T.ETC_FILE_MASK IS NOT NULL 
+                    THEN 'O'     
+                ELSE 
+                    'X'
+                END 
+                AS   ETC_FILE_OX
+                
+		   	FROM
+		   		MCP_SELL_USIM@DL_MCP T
+		   		WHERE 1=1
+		   	<if test="searchName != null and searchName != '' ">
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'USIM_NO' )">
+		   			AND  T.USIM_NO LIKE '%'||#{searchName}||'%'
+		   		</if>
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'FRGNR_NAME' )">
+		   			AND  T.FRGNR_NAME LIKE '%'||#{searchName}||'%'  
+		   		</if>
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'MOBILE' )">
+		   			AND  RTRIM(LTRIM(MOBILE_FN || MOBILE_MN || MOBILE_RN)) LIKE '%'|| #{searchName}||'%'  
+		   		</if>
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'AGENT_ID' )">
+		   			AND  T.AGENT_ID LIKE '%'||#{searchName}||'%'  
+		   		</if>
+		   	</if>
+		   	<if test="sstate != null and sstate !=''">
+		   		AND T.SSTATE = #{sstate}
+		   	</if>	
+		   	<if test="cntpntShopId != null and cntpntShopId !=''">
+		   		AND T.AGENT_ID = #{cntpntShopId}
+		   	</if>
+		   	ORDER BY T.SELL_USIM_KEY DESC
+    </select>
+    
+    <!--유심 정지 통계  목록  -->
+    <select id="getSucStatisticsListAjax" resultType="egovframework.rte.psl.dataaccess.util.EgovMap" parameterType="com.ktis.msp.pps.sucmgmt.vo.SucVo">       
+        <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+			SELECT
+				COUNT(*) AS ROW_CNT,
+				SUM(DECODE(T.RES_CD,'0000',1,0)) AS SUCC_CNT,
+				SUM(DECODE(T.RES_CD,'0000',0,'',0,1)) AS FAIL_CNT,
+				SUM(DECODE(T.RES_CD,'',1,0)) AS ING_CNT,
+				TO_CHAR(T.BATCH_DT, 'YYYY-MM-DD') AS BATCH_DT,
+				--T.SUBSCRIBER_NO,
+				--T.USIM_NO,
+				--T.CONTRACT_NUM,
+				T.SETUP_ID,
+				T.SETUP_NM,
+				T.SOC,
+				(SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = T.SOC and rownum = 1) AS SERVICE_NM,
+				T.EXPIRE_CNT
+				--T.RCG_SEQ, 
+				--T.RES_CD
+			FROM
+				PPS_SELL_USIM_BATCH T
+			WHERE 1=1
+			<if test="searchName != null and searchName != '' ">
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'setupId' )">
+		   			AND  T.SETUP_ID LIKE '%'||#{searchName}||'%'
+		   		</if>
+		   		<if test="@org.apache.commons.lang.StringUtils@equals( searchGbn, 'setupNm' )">
+		   			AND  T.SETUP_NM LIKE '%'||#{searchName}||'%'  
+		   		</if>
+		   	</if>
+		   	<if test="sysRdateS != null and sysRdateS !='' and sysRdateE != null and sysRdateE !=''">
+		   		AND TO_CHAR(T.BATCH_DT , 'yyyymmdd') BETWEEN  #{sysRdateS} AND #{sysRdateE} 
+		   	</if>
+		   	GROUP BY T.BATCH_DT, T.SOC, T.SETUP_ID, T.SETUP_NM, T.EXPIRE_CNT
+		   	ORDER BY T.BATCH_DT DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />    
+    </select>
+
+	<select id="getSucInfo" parameterType="com.ktis.msp.pps.sucmgmt.vo.SucVo" resultType="com.ktis.msp.pps.sucmgmt.vo.SucVo">
+		SELECT	T.SELL_USIM_KEY		AS sellUsimKey
+				, T.FILE_NAME		AS fileName
+				, T.FILE_MASK		AS fileMask
+				, T.ETC_FILE_NAME	AS etcFileName
+				, T.ETC_FILE_MASK	AS etcFileMask
+		  FROM	MCP_SELL_USIM@DL_MCP T
+		 WHERE	1=1
+		   AND	T.SELL_USIM_KEY = #{sellUsimKey}
+		<if test="cntpntShopId != null and cntpntShopId !=''">
+			AND T.AGENT_ID = #{cntpntShopId}
+		</if>
+	</select>
+</mapper>

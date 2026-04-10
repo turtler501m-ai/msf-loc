@@ -1,0 +1,979 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- portal oracle -->
+<mapper namespace="EventBoardMapper">
+
+    <!-- 여기부터 프론트 -->
+
+    <!-- 이벤트/제휴 진행중 카운터 -->
+    <select id="countPlanListSelect" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="int">
+            SELECT
+                COUNT(*)
+            FROM mcpeventmng.NMCP_EVENT_BOARD_BAS
+            WHERE LIST_VIEW_YN = 'Y' AND SBST_CTG = #{eventBranch}
+        <if test='searchValue != null and searchValue != ""'>
+            AND UPPER(fnHTMLtoTEXT(NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+        </if>
+            AND ((TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(EVENT_START_DT,'YYYYMMDD') || START_HOUR
+                    AND TO_CHAR(EVENT_END_DT,'YYYYMMDD') || END_HOUR
+                )
+            OR (TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(EVENT_START_DT_SEC,'YYYYMMDD') || START_HOUR_SEC
+                    AND TO_CHAR(EVENT_END_DT_SEC,'YYYYMMDD') || END_HOUR_SEC
+                ))
+    </select>
+
+    <!-- 이벤트/제휴 진행중 리스트 -->
+    <select id="planListSelect" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="com.ktmmobile.mcp.event.dto.EventBoardDto">
+            SELECT
+                  a.NTCART_SEQ,
+                  a.NTCART_SUBJECT,
+                  a.LIST_VIEW_YN,
+                  a.EVENT_VIEW_YN,
+                  a.IMG_DESC,
+                  a.EVENT_START_DT,
+                  a.EVENT_END_DT,
+                  CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+                            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+                       THEN TO_CHAR(a.EVENT_START_DT,'YYYY.MM.DD')
+                       ELSE TO_CHAR(a.EVENT_START_DT_SEC,'YYYY.MM.DD')
+                       END AS COM_EVENT_START_DT,
+                  CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+                            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+                       THEN TO_CHAR(a.EVENT_END_DT,'YYYY.MM.DD')
+                       ELSE TO_CHAR(a.EVENT_END_DT_SEC,'YYYY.MM.DD')
+                       END AS COM_EVENT_END_DT,
+                  CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+                            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+                       THEN a.LIST_IMG
+                       ELSE a.LIST_IMG_SEC
+                       END AS LIST_IMG,
+                  a.EVENT_START_DT AS EVENT_START_DT_B,
+                  a.EVENT_END_DT AS EVENT_END_DT_B,
+                  a.START_HOUR,
+                  a.END_HOUR,
+                  a.NTCART_SBST,
+                  a.NTCART_WRITER,
+                  a.NTCART_WRITE_DT,
+                  a.NTCART_HIT_CNT,
+                  a.CRET_ID,
+                  a.AMD_ID,
+                  a.CRET_DT,
+                  a.AMD_DT,
+                  a.SBST_CTG,
+                  a.LINK_TARGET,
+                  a.LINK_URL_ADR,
+                  a.LINK_TARGET_MO,
+                  a.LINK_URL_ADR_MO,
+                  a.EVENT_URL_ADR,
+                  a.PLN_SMALL_TITLE,
+                  a.PLN_CONTENT,
+                  a.SNS_SBST,
+                  a.NTCART_SBST2,
+                  a.PLN_CONTENT2,
+                  DATE_PART('day',a.EVENT_END_DT-CURRENT_TIMESTAMP) as D_Day,
+                  (SELECT MAX(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE NTCART_SEQ = a.NTCART_SEQ) as WINNER_YN,
+                  CASE SIGN(DATE_PART('day',a.EVENT_END_DT-CURRENT_TIMESTAMP)) WHEN -1 THEN 0
+                       ELSE 1
+                       END AS ABS_DAY,
+                  a.MOBILE_LIST_IMG_NM,
+                  a.EVENT_CATEGORY
+            FROM mcpeventmng.NMCP_EVENT_BOARD_BAS a
+            WHERE a.LIST_VIEW_YN = 'Y' AND SBST_CTG = #{eventBranch}
+        <if test='searchValue != null and searchValue != ""'>
+            AND UPPER(fnHTMLtoTEXT(a.NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+        </if>
+            AND ((TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+                    AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+                )
+            OR (TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT_SEC,'YYYYMMDD') || a.START_HOUR_SEC
+                    AND TO_CHAR(a.EVENT_END_DT_SEC,'YYYYMMDD') || a.END_HOUR_SEC
+                ))
+            ORDER BY EVENT_ORDER, CRET_DT DESC
+    </select>
+
+    <!-- 이벤트/제휴 종료 카운터 -->
+    <select id="countEventListSelect" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="int">
+        SELECT COUNT(NTCART_SEQ)
+           FROM mcpeventmng.NMCP_EVENT_BOARD_BAS
+           WHERE  LIST_VIEW_YN = 'Y' AND SBST_CTG = #{eventBranch}
+        <if test='searchValue != null and searchValue != ""'>
+            AND UPPER(fnHTMLtoTEXT(NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+        </if>
+            AND TO_CHAR(CURRENT_DATE, 'YYYYMMDD') > TO_CHAR(EVENT_END_DT,'YYYYMMDD')
+    </select>
+
+    <!-- 이벤트/제휴 종료 리스트 -->
+    <select id="eventListSelect" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="com.ktmmobile.mcp.event.dto.EventBoardDto">
+        SELECT
+            ROW_NUMBER() OVER(ORDER BY NTCART_WRITE_DT) AS BOARD_NUM,
+            a.NTCART_SEQ,
+            a.NTCART_SUBJECT,
+            a.LIST_VIEW_YN,
+            a.EVENT_VIEW_YN,
+            a.LIST_IMG,
+            a.IMG_DESC,
+            a.EVENT_START_DT,
+            a.EVENT_END_DT,
+            TO_CHAR(a.EVENT_START_DT,'YYYY.MM.DD') AS COM_EVENT_START_DT,
+            TO_CHAR(a.EVENT_END_DT,'YYYY.MM.DD') AS COM_EVENT_END_DT,
+            a.START_HOUR,
+            a.END_HOUR,
+            a.NTCART_SBST,
+            a.NTCART_WRITER,
+            a.NTCART_WRITE_DT,
+            a.NTCART_HIT_CNT,
+            a.CRET_ID,
+            a.AMD_ID,
+            a.CRET_DT,
+            TO_CHAR(a.CRET_DT,'YYYY.MM.DD') AS COM_CRET_DT,
+            a.AMD_DT,
+            a.SBST_CTG,
+            a.LINK_TARGET,
+            a.LINK_URL_ADR,
+            a.LINK_URL_ADR_MO,
+            a.LINK_TARGET_MO,
+            a.EVENT_URL_ADR,
+            a.PLN_SMALL_TITLE,
+            a.PLN_CONTENT,
+            a.SNS_SBST,
+            a.NTCART_SBST2,
+            a.PLN_CONTENT2,
+            DATE_PART('day',a.EVENT_END_DT-CURRENT_TIMESTAMP) as D_Day,
+            (SELECT MAX(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE NTCART_SEQ = a.NTCART_SEQ AND STAT_VAL = 'Y') as WINNER_YN,
+            CASE SIGN(DATE_PART('day',a.EVENT_END_DT-CURRENT_TIMESTAMP)) WHEN -1 THEN 0
+                 ELSE 1
+                 END AS ABS_DAY,
+            a.MOBILE_LIST_IMG_NM
+        FROM mcpeventmng.NMCP_EVENT_BOARD_BAS a
+        WHERE a.LIST_VIEW_YN = 'Y' AND SBST_CTG = #{eventBranch}
+        <if test='searchValue != null and searchValue != ""'>
+            AND UPPER(fnHTMLtoTEXT(a.NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+        </if>
+          AND TO_CHAR(CURRENT_DATE, 'YYYYMMDD') > TO_CHAR(a.EVENT_END_DT,'YYYYMMDD')
+        ORDER BY EVENT_ORDER, CRET_DT DESC
+    </select>
+
+    <!-- 이벤트/제휴 당첨자 카윤터 -->
+    <select id="countWinnerListSelect" parameterType="com.ktmmobile.mcp.event.dto.WinnerBoardDto" resultType="int">
+        SELECT
+            COUNT(A.PWNR_SEQ)
+        FROM mcpeventmng.NMCP_PWNR_BOARD_BAS A,
+                 mcpeventmng.NMCP_EVENT_BOARD_BAS B
+        WHERE A.STAT_VAL = 'Y'
+                   AND A.NTCART_SEQ = B.NTCART_SEQ
+                   AND B.SBST_CTG = #{eventBranch}
+                <choose>
+                    <when test="sbstCtg != null and sbstCtg.equals(@com.ktmmobile.mcp.common.constants.Constants@WIRE_EVENT_SBSTCTG_CD)">
+                        AND B.SBST_CTG = 'WE'
+                    </when>
+                    <otherwise>
+                        AND B.SBST_CTG != 'WE'
+                    </otherwise>
+                </choose>
+                <if test='searchValue != null and searchValue != ""'>
+                    AND UPPER(fnHTMLtoTEXT(PWNR_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+                </if>
+        <!--ORDER BY PWNR_SEQ DESC-->
+    </select>
+
+    <!-- 이벤트/제휴 당첨자 리스트 -->
+    <select id="winnerListSelect" parameterType="com.ktmmobile.mcp.event.dto.WinnerBoardDto" resultType="com.ktmmobile.mcp.event.dto.WinnerBoardDto">
+        SELECT
+                A.PWNR_SEQ
+               , A.NTCART_SEQ
+               , A.PWNR_SUBJECT
+               , A.STAT_VAL
+               , TO_CHAR(A.EVENT_START_DT,'YYYY.MM.DD') AS EVENT_START_DT
+               , TO_CHAR(A.EVENT_END_DT,'YYYY.MM.DD') AS EVENT_END_DT
+               , A.CRET_DT
+               , B.SBST_CTG
+        FROM mcpeventmng.NMCP_PWNR_BOARD_BAS A,
+             mcpeventmng.NMCP_EVENT_BOARD_BAS B
+        WHERE A.STAT_VAL = 'Y'
+                   AND A.NTCART_SEQ = B.NTCART_SEQ
+                   AND B.SBST_CTG = #{eventBranch}
+        <choose>
+            <when test="sbstCtg != null and sbstCtg.equals(@com.ktmmobile.mcp.common.constants.Constants@WIRE_EVENT_SBSTCTG_CD)">
+                AND B.SBST_CTG = 'WE'
+            </when>
+            <otherwise>
+                AND B.SBST_CTG != 'WE'
+            </otherwise>
+        </choose>
+       ORDER BY CRET_DT DESC
+    </select>
+
+    <!-- 제휴 카운터 -->
+    <select id="countJehuListSelect" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="int">
+            SELECT
+                COUNT(*)
+            FROM mcpeventmng.NMCP_EVENT_BOARD_BAS
+            WHERE LIST_VIEW_YN = 'Y' AND SBST_CTG = 'J'
+        <if test='searchValue != null and searchValue != ""'>
+            AND UPPER(fnHTMLtoTEXT(NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+        </if>
+    </select>
+
+    <!-- 이벤트/제휴 상세보기 -->
+    <select id="selectEventDetailView" parameterType="java.lang.Integer" resultType="com.ktmmobile.mcp.event.dto.EventBoardDto">
+        SELECT
+            NTCART_SEQ,
+            NTCART_SUBJECT,
+            LIST_VIEW_YN,
+            EVENT_VIEW_YN,
+            IMG_DESC,
+            CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(EVENT_START_DT,'YYYYMMDD') || START_HOUR
+                      AND TO_CHAR(EVENT_END_DT,'YYYYMMDD') || END_HOUR
+                 THEN EVENT_START_DT
+                 ELSE EVENT_START_DT_SEC
+                 END AS EVENT_START_DT,
+            CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(EVENT_START_DT,'YYYYMMDD') || START_HOUR
+                      AND TO_CHAR(EVENT_END_DT,'YYYYMMDD') || END_HOUR
+                 THEN EVENT_END_DT
+                 ELSE EVENT_END_DT_SEC
+                 END AS EVENT_END_DT,
+            CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(EVENT_START_DT,'YYYYMMDD') || START_HOUR
+                      AND TO_CHAR(EVENT_END_DT,'YYYYMMDD') || END_HOUR
+                 THEN LIST_IMG
+                 ELSE LIST_IMG_SEC
+                 END AS LIST_IMG,
+            CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(EVENT_START_DT,'YYYYMMDD') || START_HOUR
+                      AND TO_CHAR(EVENT_END_DT,'YYYYMMDD') || END_HOUR
+                 THEN NTCART_SBST
+                 ELSE NTCART_SBST_SEC
+                 END AS NTCART_SBST,
+            CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(EVENT_START_DT,'YYYYMMDD') || START_HOUR
+                      AND TO_CHAR(EVENT_END_DT,'YYYYMMDD') || END_HOUR
+                 THEN NTCART_SBST2
+                 ELSE NTCART_SBST2_SEC
+                 END AS NTCART_SBST2,
+            NTCART_WRITER,
+            NTCART_WRITE_DT,
+            NTCART_HIT_CNT,
+            CRET_ID,
+            AMD_ID,
+            CRET_DT,
+            AMD_DT,
+            SBST_CTG,
+            LINK_TARGET,
+            LINK_URL_ADR,
+            LINK_TARGET_MO,
+            LINK_URL_ADR_MO,
+            EVENT_URL_ADR,
+            PLN_SMALL_TITLE,
+            PLN_CONTENT,
+            START_HOUR,
+            END_HOUR,
+            SNS_SBST,
+            PLN_CONTENT2,
+            EVENT_ORDER,
+            THUMB_IMG_NM,
+            THUMB_IMG_DESC,
+            MOBILE_LIST_IMG_NM,
+            EVENT_ADD1_YN,
+            EVENT_ADD1_SBST,
+            EVENT_ADD2_YN,
+            EVENT_ADD3_YN,
+            VERIFICATION_URL,
+            EVENTJOIN_CD
+        FROM
+            mcpeventmng.NMCP_EVENT_BOARD_BAS
+        WHERE 1=1
+            AND NTCART_SEQ = #{value}
+            AND ((TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(EVENT_START_DT,'YYYYMMDD') || START_HOUR
+                    AND TO_CHAR(EVENT_END_DT,'YYYYMMDD') || END_HOUR
+                )
+            OR (TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(EVENT_START_DT_SEC,'YYYYMMDD') || START_HOUR_SEC
+                    AND TO_CHAR(EVENT_END_DT_SEC,'YYYYMMDD') || END_HOUR_SEC
+                ))
+    </select>
+
+    <!-- 이벤트/제휴 당첨자 상세보기 -->
+    <select id="winnerDetailSelect" parameterType="com.ktmmobile.mcp.event.dto.WinnerBoardDto" resultType="com.ktmmobile.mcp.event.dto.WinnerBoardDto">
+        SELECT
+            PWNR_SEQ
+            , NTCART_SEQ
+            , PWNR_SUBJECT
+            , STAT_VAL
+            , TO_CHAR(EVENT_START_DT,'YYYY.MM.DD') AS EVENT_START_DT
+            , TO_CHAR(EVENT_END_DT,'YYYY.MM.DD') AS EVENT_END_DT
+            , PWNR_SBST
+            , PWNR_HIT_CNT
+            , CRET_ID
+            , AMD_ID
+            , CRET_DT
+            , AMD_DT
+            , DATE_PART('day',EVENT_END_DT-CURRENT_TIMESTAMP) as D_Day
+        FROM mcpeventmng.NMCP_PWNR_BOARD_BAS
+        <choose> <!-- 두번째꺼 3번째꺼 들어갈 필요도 있으니, seq로 조회 필요. -->
+            <when test="pwnrSeq != null and pwnrSeq != ''">
+                WHERE PWNR_SEQ = #{pwnrSeq}
+            </when>
+            <otherwise>
+                WHERE PWNR_SEQ = (SELECT MAX(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE NTCART_SEQ = #{ntcartSeq})
+            </otherwise>
+        </choose>
+        AND STAT_VAL = 'Y'
+    </select>
+
+
+
+    <select id="countWinnerMSelect" parameterType="com.ktmmobile.mcp.event.dto.WinnerBoardDto" resultType="int">
+        SELECT COUNT(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS
+        WHERE STAT_VAL = 'Y'
+
+    </select>
+
+
+    <select id="hotListSelect" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="com.ktmmobile.mcp.event.dto.EventBoardDto">
+
+        SELECT
+              aa.NTCART_SEQ
+            , aa.NTCART_SUBJECT
+            , aa.LIST_VIEW_YN
+            , aa.EVENT_VIEW_YN
+            , aa.LIST_IMG
+            , aa.IMG_DESC
+            , aa.EVENT_START_DT
+            , aa.EVENT_END_DT
+            , aa.START_HOUR
+            , aa.END_HOUR
+            , aa.NTCART_SBST
+            , aa.NTCART_WRITER
+            , aa.NTCART_WRITE_DT
+            , aa.NTCART_HIT_CNT
+            , aa.CRET_ID
+            , aa.AMD_ID
+            , aa.CRET_DT
+            , aa.AMD_DT
+            , aa.SBST_CTG
+            , aa.LINK_TARGET
+            , aa.LINK_URL_ADR
+            , aa.LINK_URL_ADR_MO
+            , aa.LINK_TARGET_MO
+            , aa.EVENT_URL_ADR
+            , aa.PLN_SMALL_TITLE
+            , aa.PLN_CONTENT
+            , aa.SNS_SBST
+            , aa.NTCART_SBST2
+            , aa.PLN_CONTENT2
+            , aa.D_DAY
+            , aa.WINNER_YN
+            , aa.ABS_DAY
+        FROM
+            (
+            SELECT
+                a.NTCART_SEQ,
+                a.NTCART_SUBJECT,
+                a.LIST_VIEW_YN,
+                a.EVENT_VIEW_YN,
+                a.LIST_IMG,
+                a.IMG_DESC,
+                a.EVENT_START_DT,
+                a.EVENT_END_DT,
+                a.START_HOUR,
+                a.END_HOUR,
+                a.NTCART_SBST,
+                a.NTCART_WRITER,
+                a.NTCART_WRITE_DT,
+                a.NTCART_HIT_CNT,
+                a.CRET_ID,
+                a.AMD_ID,
+                a.CRET_DT,
+                a.AMD_DT,
+                a.SBST_CTG,
+                a.LINK_TARGET,
+                a.LINK_URL_ADR,
+                a.LINK_URL_ADR_MO,
+                a.LINK_TARGET_MO,
+                a.EVENT_URL_ADR,
+                a.PLN_SMALL_TITLE,
+                a.PLN_CONTENT,
+                a.SNS_SBST,
+                a.NTCART_SBST2,
+                a.PLN_CONTENT2,
+                DATE_PART('day',a.EVENT_END_DT-CURRENT_TIMESTAMP) as D_Day,
+                (SELECT MAX(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE NTCART_SEQ = a.NTCART_SEQ AND STAT_VAL = 'Y') as WINNER_YN,
+                CASE SIGN(DATE_PART('day',a.EVENT_END_DT-CURRENT_TIMESTAMP)) WHEN -1 THEN 0
+                       ELSE 1
+                       END AS ABS_DAY
+            FROM mcpeventmng.NMCP_EVENT_BOARD_BAS a
+            WHERE a.LIST_VIEW_YN = 'Y'
+            ORDER BY ABS_DAY DESC, a.NTCART_WRITE_DT DESC
+            ) aa
+            WHERE SYSDATE BETWEEN aa.EVENT_START_DT AND aa.EVENT_END_DT
+            AND aa.SBST_CTG IN ('E','G') AND ROWNUM <![CDATA[<=]]> 3
+
+    </select>
+
+    <!-- 제휴 리스트 -->
+    <select id="jehuListSelect" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="com.ktmmobile.mcp.event.dto.EventBoardDto">
+            SELECT
+                a.NTCART_SEQ,
+                a.NTCART_SUBJECT,
+                a.LIST_VIEW_YN,
+                a.EVENT_VIEW_YN,
+                a.LIST_IMG,
+                a.IMG_DESC,
+                a.EVENT_START_DT,
+                a.EVENT_END_DT,
+                TO_CHAR(a.EVENT_START_DT,'YYYY.MM.DD')AS COM_EVENT_START_DT,
+                TO_CHAR(a.EVENT_END_DT,'YYYY.MM.DD')AS COM_EVENT_END_DT,
+                a.EVENT_START_DT AS EVENT_START_DT_B,
+                a.EVENT_END_DT AS EVENT_END_DT_B,
+                a.START_HOUR,
+                a.END_HOUR,
+                a.NTCART_SBST,
+                a.NTCART_WRITER,
+                a.NTCART_WRITE_DT,
+                a.NTCART_HIT_CNT,
+                a.CRET_ID,
+                a.AMD_ID,
+                a.CRET_DT,
+                a.AMD_DT,
+                a.SBST_CTG,
+                a.LINK_TARGET,
+                a.LINK_URL_ADR,
+                a.LINK_TARGET_MO,
+                a.LINK_URL_ADR_MO,
+                a.EVENT_URL_ADR,
+                a.PLN_SMALL_TITLE,
+                a.PLN_CONTENT,
+                a.SNS_SBST,
+                a.NTCART_SBST2,
+                a.PLN_CONTENT2,
+                DATE_PART('day',a.EVENT_END_DT-CURRENT_TIMESTAMP) as D_Day,
+                (SELECT MAX(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE NTCART_SEQ = a.NTCART_SEQ) as WINNER_YN,
+                CASE SIGN(TRUNC(a.EVENT_END_DT-sysdate)) WHEN -1 THEN 0
+                     ELSE 1
+                     END AS ABS_DAY
+            FROM mcpeventmng.NMCP_EVENT_BOARD_BAS a
+            WHERE a.LIST_VIEW_YN = 'Y' AND SBST_CTG = 'J'
+        <if test='searchValue != null and searchValue != ""'>
+            AND UPPER(fnHTMLtoTEXT(a.NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+        </if>
+            ORDER BY D_DAY DESC, a.NTCART_WRITE_DT DESC
+    </select>
+
+    <select id="eventDetailSelect" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="com.ktmmobile.mcp.event.dto.EventBoardDto">
+        SELECT
+             aa.BOARD_NUM
+           , aa.NTCART_SEQ
+           , aa.NTCART_SUBJECT
+           , aa.LIST_VIEW_YN
+           , aa.EVENT_VIEW_YN
+           , aa.LIST_IMG
+           , aa.IMG_DESC
+           , aa.EVENT_START_DT
+           , aa.EVENT_END_DT
+           , aa.NTCART_WRITER
+           , aa.NTCART_WRITE_DT
+           , aa.NTCART_HIT_CNT
+           , aa.CRET_ID
+           , aa.AMD_ID
+           , aa.CRET_DT
+           , aa.AMD_DT
+           , aa.SBST_CTG
+           , aa.LINK_TARGET
+           , aa.LINK_URL_ADR
+           , aa.LINK_TARGET_MO
+           , aa.LINK_URL_ADR_MO
+           , aa.EVENT_URL_ADR
+           , aa.PLN_SMALL_TITLE
+           , aa.SNS_SBST
+           , aa.EVENTJOIN_CD
+           <choose>
+                <when test='proModule != null and proModule == "m"'>
+                    , aa.NTCART_SBST2
+                    , aa.PLN_CONTENT2
+                </when>
+                <otherwise>
+                    , aa.NTCART_SBST
+                    , aa.PLN_CONTENT
+                </otherwise>
+            </choose>
+           , aa.DDAY
+           , aa.WINNER_YN
+           , aa.PRE_SEQ
+           , aa.PRE_SUBJECT
+           , aa.PRE_DT
+           , aa.NEXT_SEQ
+           , aa.NEXT_SUBJECT
+           , aa.NEXT_DT
+           , aa.EVENT_HEADER_TITLE
+           , aa.EVENT_KEYWORD
+           , aa.EVENT_TITLE
+           ,aa.EVENT_DESCRIPTION
+        FROM (
+            SELECT
+                ROW_NUMBER() OVER(ORDER BY a.NTCART_WRITE_DT) AS BOARD_NUM,
+                a.NTCART_SEQ,
+                a.NTCART_SUBJECT,
+                a.LIST_VIEW_YN,
+                a.EVENT_VIEW_YN,
+                a.IMG_DESC
+                ,CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+                            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+                       THEN TO_CHAR(a.EVENT_START_DT,'YYYY.MM.DD')
+                       ELSE TO_CHAR(a.EVENT_START_DT_SEC,'YYYY.MM.DD')
+                       END AS EVENT_START_DT
+                ,CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+                            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+                       THEN TO_CHAR(a.EVENT_END_DT,'YYYY.MM.DD')
+                       ELSE TO_CHAR(a.EVENT_END_DT_SEC,'YYYY.MM.DD')
+                       END AS EVENT_END_DT
+                ,CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+                            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+                       THEN LIST_IMG
+                       ELSE LIST_IMG_SEC
+                       END AS LIST_IMG
+                ,CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+                            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+                       THEN NTCART_SBST
+                       ELSE NTCART_SBST_SEC
+                       END AS NTCART_SBST
+                ,CASE WHEN TO_CHAR(CURRENT_TIMESTAMP,'YYYYMMDDHH24') BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+                            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+                       THEN NTCART_SBST2
+                       ELSE NTCART_SBST2_SEC
+                       END AS NTCART_SBST2,
+                a.NTCART_WRITER,
+                a.NTCART_WRITE_DT,
+                a.NTCART_HIT_CNT,
+                a.CRET_ID,
+                a.AMD_ID,
+                a.CRET_DT,
+                a.AMD_DT,
+                a.SBST_CTG,
+                a.LINK_TARGET,
+                a.LINK_URL_ADR,
+                a.LINK_TARGET_MO,
+                a.LINK_URL_ADR_MO,
+                a.EVENT_URL_ADR,
+                a.PLN_SMALL_TITLE,
+                a.PLN_CONTENT,
+                a.SNS_SBST,
+                a.EVENTJOIN_CD,
+                a.PLN_CONTENT2,
+                DATE_PART('day',a.EVENT_END_DT-CURRENT_TIMESTAMP) as dDay,
+                (SELECT MAX(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE NTCART_SEQ = a.NTCART_SEQ AND STAT_VAL = 'Y') as WINNER_YN,
+                lead(a.NTCART_SEQ,1) over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) NEXT_SEQ,
+                lead(a.NTCART_SUBJECT,1,'다음글이 없습니다.') over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) NEXT_SUBJECT,
+                lead(a.CRET_DT,1) over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) NEXT_DT,
+                lag(a.NTCART_SEQ,1) over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) PRE_SEQ,
+                lag(a.NTCART_SUBJECT,1,'이전글이 없습니다.') over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) PRE_SUBJECT,
+                lag(a.CRET_DT,1) over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) PRE_DT,
+                a.EVENT_HEADER_TITLE,
+                a.EVENT_KEYWORD,
+                a.EVENT_TITLE,
+                a.EVENT_DESCRIPTION
+            FROM mcpeventmng.NMCP_EVENT_BOARD_BAS a
+            WHERE a.EVENT_VIEW_YN = 'Y'
+            <if test='sbstCtg != null and sbstCtg != ""'>
+                AND a.SBST_CTG = #{sbstCtg}
+            </if>
+            AND a.LIST_VIEW_YN = (SELECT LIST_VIEW_YN FROM mcpeventmng.NMCP_EVENT_BOARD_BAS WHERE NTCART_SEQ = #{ntcartSeq})
+        <if test='searchValue != null and searchValue != ""'>
+            AND UPPER(fnHTMLtoTEXT(a.NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+        </if>
+        ) aa
+        WHERE aa.NTCART_SEQ = #{ntcartSeq}
+    </select>
+
+    <select id="eventPlanDetailSelect" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="com.ktmmobile.mcp.event.dto.PlanBoardDto">
+        SELECT PLN_SEQ, EVENT_BAS_CD, PLN_ODRG,
+               PLN_TITLE, PLN_RMARK, CRET_ID, AMD_ID, CRET_DT, AMD_DT
+        FROM mcpeventmng.NMCP_EVENT_PLN_BAS
+        WHERE EVENT_BAS_CD = #{ntcartSeq}
+    </select>
+
+    <select id="eventPlanProdSelect" parameterType="int" resultType="com.ktmmobile.mcp.event.dto.PlanProductDto">
+        SELECT
+            a.PLN_DTL_SEQ,
+            a.PLN_BAS_SEQ,
+            a.PLN_PROD_ID,
+            a.PLN_ATRIB_VAL_CD_1,
+            a.PLN_ATRIB_VAL_CD_2,
+            a.PLN_SHOW_WRDN_1,
+            a.PLN_SHOW_WRDN_2,
+            a.CRET_ID,
+            a.AMD_ID,
+            a.CRET_DT,
+            a.AMD_DT
+        FROM mcpeventmng.NMCP_EVENT_PLN_DTL a
+        WHERE a.PLN_BAS_SEQ = #{plnSeq}
+    </select>
+
+    <update id="updateHit" parameterType="int">
+        UPDATE mcpeventmng.NMCP_EVENT_BOARD_BAS SET NTCART_HIT_CNT = CAST(NTCART_HIT_CNT AS FLOAT8) +1
+          WHERE NTCART_SEQ = #{ntcartSeq}
+    </update>
+
+    <update id="updateWinnerHit" parameterType="int">
+        UPDATE mcpeventmng.NMCP_PWNR_BOARD_BAS SET PWNR_HIT_CNT = CAST(PWNR_HIT_CNT AS INT8) +1
+        WHERE NTCART_SEQ = #{ntcartSeq}
+    </update>
+
+    <delete id="deleteNmcpEventPlnBas" parameterType="int">
+        DELETE mcpeventmng.NMCP_EVENT_PLN_BAS WHERE EVENT_BAS_CD = #{ntcartSeq}
+    </delete>
+
+    <delete id="delEventProd" parameterType="int">
+        DELETE mcpeventmng.NMCP_EVENT_PLN_DTL WHERE PLN_BAS_SEQ  in (SELECT PLN_SEQ FROM mcpeventmng.NMCP_EVENT_PLN_BAS WHERE EVENT_BAS_CD = #{ntcartSeq})
+    </delete>
+
+    <delete id="delEvent" parameterType="int">
+        DELETE mcpeventmng.NMCP_EVENT_BOARD_BAS WHERE NTCART_SEQ = #{ntcartSeq}
+    </delete>
+
+    <delete id="delWinner" parameterType="int">
+        DELETE mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE PWNR_SEQ = #{pwnrSeq}
+    </delete>
+
+    <select id="countByListNmcpEventBoard" parameterType="com.ktmmobile.mcp.common.dto.db.NmcpEventBoardBasDto" resultType="int">
+        SELECT /*eventSql.countByListNmcpEventBoard  이벤트  리스트 count  */
+            COUNT(NTCART_SEQ)
+        FROM
+            mcpeventmng.NMCP_EVENT_BOARD_BAS
+        WHERE 1=1
+            AND LIST_VIEW_YN = 'Y'
+            AND SBST_CTG = #{sbstCtg}
+            AND EVENT_START_DT <![CDATA[<=]]> current_timestamp
+            <if test='ntcartSbst != null and ntcartSbst != ""'>
+                AND UPPER(fnHTMLtoTEXT(NTCART_SUBJECT)) LIKE '%' || UPPER(#{ntcartSbst}) || '%' ESCAPE '!'
+            </if>
+    </select>
+
+    <select id="listNmcpEventBoard" parameterType="com.ktmmobile.mcp.common.dto.db.NmcpEventBoardBasDto" resultType="com.ktmmobile.mcp.common.dto.db.NmcpEventBoardBasDto">
+        SELECT /*eventSql.listNmcpEventBoard  이벤트  리스트 조회   */
+            (SELECT MAX(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE NTCART_SEQ = T1.NTCART_SEQ AND STAT_VAL = 'Y') AS WINNER_YN
+            , NTCART_SEQ
+            , NTCART_SUBJECT
+            , EVENT_VIEW_YN
+            , LIST_IMG
+            , IMG_DESC
+            , EVENT_START_DT
+            , EVENT_END_DT
+            , NTCART_HIT_CNT
+            , LINK_TARGET
+            , LINK_URL_ADR
+            , EVENT_URL_ADR
+        FROM
+            mcpeventmng.NMCP_EVENT_BOARD_BAS T1
+        WHERE 1=1
+            AND LIST_VIEW_YN = 'Y'
+            AND SBST_CTG = #{sbstCtg}
+             <choose>
+                <when test='eventStatus != null and eventStatus == "ing"'>
+                AND EVENT_START_DT <![CDATA[<=]]> current_timestamp
+
+                </when>
+                <otherwise>
+                AND EVENT_END_DT <![CDATA[<]]> current_timestamp
+                </otherwise>
+            </choose>
+            <if test='ntcartSbst != null and ntcartSbst != ""'>
+                AND UPPER(fnHTMLtoTEXT(NTCART_SUBJECT)) LIKE '%' || UPPER(#{ntcartSbst}) || '%' ESCAPE '!'
+            </if>
+            ORDER BY CASE WHEN EVENT_END_DT > current_timestamp AND EVENT_ORDER IS NOT NULL THEN EVENT_ORDER
+             END ASC, EVENT_END_DT DESC, NTCART_SEQ DESC
+    </select>
+
+    <!-- 이벤트 로그 저장 -->
+    <insert id="insertNmcpEventLog" parameterType="com.ktmmobile.mcp.event.dto.NmcpEventLogDto">
+        INSERT INTO mcpeventmng.NMCP_EVENT_LOG (
+            EVENT_CD
+            ,EVENT_VAL
+            ,EVENT_RESULT
+            ,EVENT_STATUS
+            ,USERID
+            ,REGST_DTTM
+        ) VALUES (
+            #{eventCd}
+            ,#{eventVal}
+            ,#{eventResult}
+            ,#{eventStatus}
+            ,#{userid}
+            ,current_timestamp
+        )
+    </insert>
+
+
+    <select id="selectEventBoardList" resultType="com.ktmmobile.mcp.event.dto.EventBoardDto">
+        SELECT
+            NTCART_SEQ,
+            NTCART_SUBJECT,
+            LIST_VIEW_YN,
+            EVENT_VIEW_YN,
+            LIST_IMG,
+            IMG_DESC,
+            EVENT_START_DT,
+            EVENT_END_DT,
+            NTCART_SBST,
+            NTCART_WRITER,
+            NTCART_WRITE_DT,
+            NTCART_HIT_CNT,
+            CRET_ID,
+            AMD_ID,
+            CRET_DT,
+            AMD_DT,
+            SBST_CTG,
+            LINK_TARGET,
+            LINK_URL_ADR,
+            LINK_TARGET_MO,
+            LINK_URL_ADR_MO,
+            EVENT_URL_ADR,
+            PLN_SMALL_TITLE,
+            PLN_CONTENT,
+            START_HOUR,
+            END_HOUR,
+            SNS_SBST,
+            NTCART_SBST2,
+            PLN_CONTENT2,
+            EVENT_ORDER,
+            THUMB_IMG_NM,
+            THUMB_IMG_DESC,
+            MOBILE_LIST_IMG_NM,
+            EVENT_ADD1_YN,
+            EVENT_ADD1_SBST,
+            EVENT_ADD2_YN,
+            EVENT_ADD3_YN,
+            VERIFICATION_URL
+        FROM
+            mcpeventmng.NMCP_EVENT_BOARD_BAS
+        WHERE
+            EVENT_ADD1_YN = 'Y'
+            AND EVENT_START_DT &lt; current_timestamp
+            AND EVENT_END_DT &gt; current_timestamp
+
+    </select>
+
+    <!-- Recaptcha 로그 저장 -->
+    <insert id="insertRecaptchaLog" parameterType="java.util.Map">
+        INSERT INTO mcpeventmng.NMCP_RECAPTCHA_LOG(
+             SUCCESS
+            ,CHALLENGE_TS
+            ,HOSTNAME
+            ,SCORE
+            ,REQUEST_ACTION
+            ,ERROR_CODE
+            ,ACCESS_IP
+            ,USER_ID
+            ,PLATFORM_CD
+            ,REGST_DTTM
+        ) VALUES (
+            #{success}
+           ,#{challengeTs}
+           ,#{hostname}
+           ,#{score}
+           ,#{requestAction}
+           ,#{errorCode}
+           ,#{accessIp}
+           ,#{userId}
+           ,#{platformCd}
+           ,current_timestamp
+        )
+    </insert>
+
+    <!-- 날짜에 해당하는 이벤트 카운터 -->
+    <select id="countPlanListSelectByDate" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="int">
+        SELECT
+        COUNT(*)
+        FROM mcpeventmng.NMCP_EVENT_BOARD_BAS
+        WHERE LIST_VIEW_YN = 'Y' AND SBST_CTG = #{eventBranch}
+        <if test='searchValue != null and searchValue != ""'>
+            AND UPPER(fnHTMLtoTEXT(NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+        </if>
+        AND (#{adminEventDate} BETWEEN TO_CHAR(EVENT_START_DT,'YYYYMMDD') || START_HOUR
+        AND TO_CHAR(EVENT_END_DT,'YYYYMMDD') || END_HOUR
+        )
+        OR (#{adminEventDate} BETWEEN TO_CHAR(EVENT_START_DT_SEC,'YYYYMMDD') || START_HOUR_SEC
+        AND TO_CHAR(EVENT_END_DT_SEC,'YYYYMMDD') || END_HOUR_SEC
+        )
+    </select>
+
+    <!-- 날짜에 해당하는 이벤트 리스트 -->
+    <select id="planListSelectByDate" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="com.ktmmobile.mcp.event.dto.EventBoardDto">
+        SELECT
+        a.NTCART_SEQ,
+        a.NTCART_SUBJECT,
+        a.LIST_VIEW_YN,
+        a.EVENT_VIEW_YN,
+        a.IMG_DESC,
+        a.EVENT_START_DT,
+        a.EVENT_END_DT,
+        CASE WHEN #{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+        AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+        THEN TO_CHAR(a.EVENT_START_DT,'YYYY.MM.DD')
+        ELSE TO_CHAR(a.EVENT_START_DT_SEC,'YYYY.MM.DD')
+        END AS COM_EVENT_START_DT,
+        CASE WHEN #{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+        AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+        THEN TO_CHAR(a.EVENT_END_DT,'YYYY.MM.DD')
+        ELSE TO_CHAR(a.EVENT_END_DT_SEC,'YYYY.MM.DD')
+        END AS COM_EVENT_END_DT,
+        CASE WHEN #{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+        AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+        THEN a.LIST_IMG
+        ELSE a.LIST_IMG_SEC
+        END AS LIST_IMG,
+        a.EVENT_START_DT AS EVENT_START_DT_B,
+        a.EVENT_END_DT AS EVENT_END_DT_B,
+        a.START_HOUR,
+        a.END_HOUR,
+        a.NTCART_SBST,
+        a.NTCART_WRITER,
+        a.NTCART_WRITE_DT,
+        a.NTCART_HIT_CNT,
+        a.CRET_ID,
+        a.AMD_ID,
+        a.CRET_DT,
+        a.AMD_DT,
+        a.SBST_CTG,
+        a.LINK_TARGET,
+        a.LINK_URL_ADR,
+        a.LINK_TARGET_MO,
+        a.LINK_URL_ADR_MO,
+        a.EVENT_URL_ADR,
+        a.PLN_SMALL_TITLE,
+        a.PLN_CONTENT,
+        a.SNS_SBST,
+        a.NTCART_SBST2,
+        a.PLN_CONTENT2,
+        (SELECT MAX(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE NTCART_SEQ = a.NTCART_SEQ) as WINNER_YN,
+        a.MOBILE_LIST_IMG_NM,
+        a.EVENT_CATEGORY
+        FROM mcpeventmng.NMCP_EVENT_BOARD_BAS a
+        WHERE a.LIST_VIEW_YN = 'Y' AND SBST_CTG = #{eventBranch}
+        <if test='searchValue != null and searchValue != ""'>
+            AND UPPER(fnHTMLtoTEXT(a.NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+        </if>
+        AND (#{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+        AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+        )
+        OR (#{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT_SEC,'YYYYMMDD') || a.START_HOUR_SEC
+        AND TO_CHAR(a.EVENT_END_DT_SEC,'YYYYMMDD') || a.END_HOUR_SEC
+        )
+        ORDER BY EVENT_ORDER, CRET_DT DESC
+    </select>
+
+
+    <select id="getEventDetailByDate" parameterType="com.ktmmobile.mcp.event.dto.EventBoardDto" resultType="com.ktmmobile.mcp.event.dto.EventBoardDto">
+        SELECT
+            aa.BOARD_NUM
+            , aa.NTCART_SEQ
+            , aa.NTCART_SUBJECT
+            , aa.LIST_VIEW_YN
+            , aa.EVENT_VIEW_YN
+            , aa.LIST_IMG
+            , aa.IMG_DESC
+            , aa.EVENT_START_DT
+            , aa.EVENT_END_DT
+            , aa.NTCART_WRITER
+            , aa.NTCART_WRITE_DT
+            , aa.NTCART_HIT_CNT
+            , aa.CRET_ID
+            , aa.AMD_ID
+            , aa.CRET_DT
+            , aa.AMD_DT
+            , aa.SBST_CTG
+            , aa.LINK_TARGET
+            , aa.LINK_URL_ADR
+            , aa.LINK_TARGET_MO
+            , aa.LINK_URL_ADR_MO
+            , aa.EVENT_URL_ADR
+            , aa.PLN_SMALL_TITLE
+            , aa.SNS_SBST
+            , aa.EVENTJOIN_CD
+            <choose>
+                <when test='proModule != null and proModule == "m"'>
+                    , aa.NTCART_SBST2
+                    , aa.PLN_CONTENT2
+                </when>
+                <otherwise>
+                    , aa.NTCART_SBST
+                    , aa.PLN_CONTENT
+                </otherwise>
+            </choose>
+            , aa.DDAY
+            , aa.WINNER_YN
+            , aa.PRE_SEQ
+            , aa.PRE_SUBJECT
+            , aa.PRE_DT
+            , aa.NEXT_SEQ
+            , aa.NEXT_SUBJECT
+            , aa.NEXT_DT
+            , aa.EVENT_HEADER_TITLE
+            FROM (
+            SELECT
+            ROW_NUMBER() OVER(ORDER BY a.NTCART_WRITE_DT) AS BOARD_NUM,
+            a.NTCART_SEQ,
+            a.NTCART_SUBJECT,
+            a.LIST_VIEW_YN,
+            a.EVENT_VIEW_YN,
+            a.IMG_DESC
+            ,CASE WHEN #{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+            THEN TO_CHAR(a.EVENT_START_DT,'YYYY.MM.DD')
+            ELSE TO_CHAR(a.EVENT_START_DT_SEC,'YYYY.MM.DD')
+            END AS EVENT_START_DT
+            ,CASE WHEN #{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+            THEN TO_CHAR(a.EVENT_END_DT,'YYYY.MM.DD')
+            ELSE TO_CHAR(a.EVENT_END_DT_SEC,'YYYY.MM.DD')
+            END AS EVENT_END_DT
+            ,CASE WHEN #{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+            THEN LIST_IMG
+            ELSE LIST_IMG_SEC
+            END AS LIST_IMG
+            ,CASE WHEN #{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+            THEN NTCART_SBST
+            ELSE NTCART_SBST_SEC
+            END AS NTCART_SBST
+            ,CASE WHEN #{adminEventDate} BETWEEN TO_CHAR(a.EVENT_START_DT,'YYYYMMDD') || a.START_HOUR
+            AND TO_CHAR(a.EVENT_END_DT,'YYYYMMDD') || a.END_HOUR
+            THEN NTCART_SBST2
+            ELSE NTCART_SBST2_SEC
+            END AS NTCART_SBST2,
+            a.NTCART_WRITER,
+            a.NTCART_WRITE_DT,
+            a.NTCART_HIT_CNT,
+            a.CRET_ID,
+            a.AMD_ID,
+            a.CRET_DT,
+            a.AMD_DT,
+            a.SBST_CTG,
+            a.LINK_TARGET,
+            a.LINK_URL_ADR,
+            a.LINK_TARGET_MO,
+            a.LINK_URL_ADR_MO,
+            a.EVENT_URL_ADR,
+            a.PLN_SMALL_TITLE,
+            a.PLN_CONTENT,
+            a.SNS_SBST,
+            a.EVENTJOIN_CD,
+            a.PLN_CONTENT2,
+            DATE_PART('day',a.EVENT_END_DT-CURRENT_TIMESTAMP) as dDay,
+            (SELECT MAX(PWNR_SEQ) FROM mcpeventmng.NMCP_PWNR_BOARD_BAS WHERE NTCART_SEQ = a.NTCART_SEQ AND STAT_VAL = 'Y') as WINNER_YN,
+            lead(a.NTCART_SEQ,1) over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) NEXT_SEQ,
+            lead(a.NTCART_SUBJECT,1,'다음글이 없습니다.') over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) NEXT_SUBJECT,
+            lead(a.CRET_DT,1) over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) NEXT_DT,
+            lag(a.NTCART_SEQ,1) over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) PRE_SEQ,
+            lag(a.NTCART_SUBJECT,1,'이전글이 없습니다.') over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) PRE_SUBJECT,
+            lag(a.CRET_DT,1) over (order by a.EVENT_ORDER, a.NTCART_WRITE_DT DESC) PRE_DT,
+            a.EVENT_HEADER_TITLE
+            FROM mcpeventmng.NMCP_EVENT_BOARD_BAS a
+            WHERE a.EVENT_VIEW_YN = 'Y'
+            <if test='sbstCtg != null and sbstCtg != ""'>
+                AND a.SBST_CTG = #{sbstCtg}
+            </if>
+            AND a.LIST_VIEW_YN = (SELECT LIST_VIEW_YN FROM mcpeventmng.NMCP_EVENT_BOARD_BAS WHERE NTCART_SEQ = #{ntcartSeq})
+            <if test='searchValue != null and searchValue != ""'>
+                AND UPPER(fnHTMLtoTEXT(a.NTCART_SUBJECT)) LIKE '%' || UPPER(#{searchValue}) || '%' ESCAPE '!'
+            </if>
+            ) aa
+            WHERE aa.NTCART_SEQ = #{ntcartSeq}
+    </select>
+</mapper>

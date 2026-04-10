@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FrndInviUsimMapper">
+
+    <!-- 중복체크 -->
+    <select id="chkDup" parameterType="com.ktmmobile.mcp.event.dto.FrndInviUsimDto" resultType="int">
+		SELECT COUNT(*)
+		  FROM NMCP_FRND_INVI_USIM
+		 WHERE PHONE = #{phone}
+		   AND SYS_RMON = TO_CHAR(SYSDATE,'YYYYMM') /*한달에 한번만 신청가능*/
+    </select>
+
+    <!-- 등록 -->
+    <insert id="frndInviUsimReg" parameterType="com.ktmmobile.mcp.event.dto.FrndInviUsimDto">
+        INSERT INTO NMCP_FRND_INVI_USIM (
+            SYS_RMON
+            ,PHONE
+            ,NAME
+            ,COMMEND_ID
+            ,AGREE
+            ,FRND_NAME
+            ,FRND_PHONE
+            ,FRND_POST
+            ,FRND_ADDR
+            ,FRND_ADDR_DTL
+            ,SYS_RDATE
+        ) VALUES (
+            TO_CHAR(SYSDATE,'YYYYMM')
+            ,#{phone}
+            ,#{name}
+            ,#{commendId}
+            ,#{agree}
+            ,#{frndName}
+            ,#{frndPhone}
+            ,#{frndPost}
+            ,#{frndAddr}
+            ,#{frndAddrDtl}
+            ,SYSDATE
+        )
+    </insert>
+
+</mapper>

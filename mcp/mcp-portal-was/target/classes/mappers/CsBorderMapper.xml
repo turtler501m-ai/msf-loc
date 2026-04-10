@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CsBorderMapper">
+
+
+    <select id="getTotalCount" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+
+	    SELECT
+	         COUNT(BOARD_SEQ)
+	    FROM NMCP_BOARD_BAS
+	    WHERE 1=1
+    	<if test='searchNm != null and searchNm != ""'>
+        	AND	(UPPER(BOARD_SUBJECT) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                   OR UPPER(BOARD_CONTENTS) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+        </if>
+	    <if test="boardCtgSeq != null and boardCtgSeq != '' ">
+		   	AND BOARD_CTG_SEQ = #{boardCtgSeq}
+		</if>
+		<if test="sbstCtg != null and sbstCtg != '' ">
+		   	AND SBST_CTG = #{sbstCtg}
+		</if>
+		AND VIEW_YN = 'Y'
+		ORDER BY BOARD_SEQ DESC
+
+    </select>
+
+    <select id="selectBoardList" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+       SELECT
+		    RNUM
+		    ,BOARD_CTG_SEQ
+		    ,SBST_CTG
+		    ,BOARD_SEQ
+		    ,BOARD_SUBJECT
+		    ,BOARD_CONTENTS
+		    ,BOARD_WRITER_NM
+		    ,BOARD_WRITE_DT
+		    ,BOARD_ATT_YN
+		    ,SBST_SUB_CTG_CD
+		    ,CRET_DT
+		    ,CHAR_DT
+		    ,IMG_NM
+		FROM (
+		    SELECT
+		         ROW_NUMBER () OVER (ORDER BY BAS.CRET_DT ASC)  AS RNUM
+		        ,BAS.BOARD_CTG_SEQ
+		        ,BAS.SBST_CTG
+		        ,BAS.BOARD_SEQ
+		        ,BAS.BOARD_SUBJECT
+		        ,BAS.BOARD_CONTENTS
+		        ,BAS.BOARD_WRITER_NM
+		        ,BAS.BOARD_WRITE_DT
+		        ,BAS.BOARD_ATT_YN
+		        ,BAS.SBST_SUB_CTG_CD
+				,BAS.CRET_DT
+				,TO_CHAR(BAS.CRET_DT,'YYYY.MM.DD') AS CHAR_DT
+				,ATT.FILE_PATH_NM AS IMG_NM
+		    FROM NMCP_BOARD_BAS BAS
+		    LEFT OUTER JOIN
+		    (
+		    	SELECT
+		    		AA.ATT_SEQ AS ATT_SEQ
+                    , AA.FILE_PATH_NM AS FILE_PATH_NM
+                    , AA.FILE_TYPE AS FILE_TYPE
+                    , AA.FILE_CAPA AS FILE_CAPA
+                    , AA.BOARD_SEQ
+                FROM NMCP_BOARD_ATT_DTL AA,
+                 (
+                 	SELECT
+                 		MAX (ATT_SEQ) AS ATT_SEQ, BOARD_SEQ
+                    FROM    NMCP_BOARD_ATT_DTL
+                    GROUP   BY BOARD_SEQ
+                 ) BB
+                 WHERE AA.ATT_SEQ = BB.ATT_SEQ
+                 AND AA.BOARD_SEQ = BB.BOARD_SEQ
+		    ) ATT
+		    ON BAS.BOARD_SEQ = ATT.BOARD_SEQ
+		    WHERE 1=1
+	    	<if test='searchNm != null and searchNm != ""'>
+	        	AND	(UPPER(BAS.BOARD_SUBJECT) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                   OR UPPER(BAS.BOARD_CONTENTS) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+	        </if>
+		    <if test="boardCtgSeq != null and boardCtgSeq != '' ">
+			   	AND BAS.BOARD_CTG_SEQ = #{boardCtgSeq}
+			</if>
+			<if test="sbstCtg != null and sbstCtg != '' ">
+			   	AND BAS.SBST_CTG = #{sbstCtg}
+			</if>
+			AND BAS.VIEW_YN = 'Y'
+			)
+			ORDER BY CRET_DT DESC
+    </select>
+
+
+
+    <update id="updateHit" parameterType="java.lang.Integer">
+        UPDATE
+                    NMCP_BOARD_BAS
+        SET 		BOARD_HIT_CNT = NVL(BOARD_HIT_CNT,0) + 1
+        WHERE	1=1
+        AND       BOARD_SEQ = #{boardSeq}
+    </update>
+
+    <select id="selectBoardArticle" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="java.lang.Integer">
+        SELECT
+                   BOARD_SEQ,
+                   BOARD_CTG_SEQ,
+                   SBST_CTG,
+            	   SBST_SUB_CTG_CD,
+                   BOARD_SUBJECT,
+                   IMG_NM,
+                   BOARD_WRITER_NM,
+                   NOTI_YN,
+                   TO_CHAR(BOARD_WRITE_DT, 'YYYY.MM.DD') AS BOARD_WRITE_DT,
+                   BOARD_ATT_YN,
+                   BOARD_HIT_CNT,
+                   BOARD_CONTENTS,
+                   TO_CHAR(CRET_DT, 'YYYY.MM.DD') AS CHAR_DT
+
+       FROM     NMCP_BOARD_BAS
+       WHERE	1=1
+       AND	BOARD_SEQ = #{boardSeq}
+    </select>
+
+    <select id="selectIndex" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+            BOARD_SEQ
+            , BOARD_CTG_SEQ
+            , SBST_CTG
+            , SBST_SUB_CTG_CD
+            , BOARD_SUBJECT
+            , BOARD_WRITER_NM
+            , BOARD_CONTENTS
+            , NOTI_YN
+            , VIEW_YN
+            , IMG_NM
+            , BOARD_WRITE_DT
+            , BOARD_ATT_YN
+            , CRET_DT
+            , CHAR_DT
+            , NEXT_SEQ
+            , NEXT_SUBJECT
+            , NEXT_DT
+            , PRE_SEQ
+            , PRE_SUBJECT
+            , PRE_DT
+
+        FROM
+            (
+                SELECT
+                        BOARD_SEQ,
+                        BOARD_CTG_SEQ,
+                        SBST_CTG,
+            			SBST_SUB_CTG_CD,
+                        BOARD_SUBJECT,
+                        BOARD_CONTENTS,
+                        BOARD_WRITER_NM,
+                        NOTI_YN,
+                        IMG_NM,
+                        VIEW_YN,
+                        BOARD_WRITE_DT,
+                        TO_CHAR(CRET_DT, 'YYYY.MM.DD') AS CHAR_DT,
+                        BOARD_ATT_YN,
+                        CRET_DT,
+                        lead(BOARD_SEQ,1) over (order by CRET_DT) NEXT_SEQ,
+                        lead(BOARD_SUBJECT,1,'다음글이 없습니다.') over (order by CRET_DT) NEXT_SUBJECT,
+                        lead(CRET_DT,1,'') over (order by CRET_DT) NEXT_DT,
+                        lag(BOARD_SEQ,1) over (order by CRET_DT) PRE_SEQ,
+                        lag(BOARD_SUBJECT,1,'이전글이 없습니다.') over (order by CRET_DT) PRE_SUBJECT,
+                        lag(CRET_DT,1,'') over (order by CRET_DT) PRE_DT
+                  FROM	NMCP_BOARD_BAS
+                WHERE	BOARD_CTG_SEQ =  #{boardCtgSeq}
+                <if test='searchNm != null and searchNm != ""'>
+					 AND	(UPPER(BOARD_SUBJECT) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                     OR UPPER(BOARD_CONTENTS) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+                </if>
+                <if test="sbstCtg != null and sbstCtg != '' ">
+	            	AND SBST_CTG = #{sbstCtg}
+	            </if>
+	            <if test="sbstSubCtgCd != null and sbstSubCtgCd != '' ">
+	            	AND SBST_SUB_CTG_CD = #{sbstSubCtgCd}
+	            </if>
+                <!-- AND NOTI_YN = 'N' -->
+                AND VIEW_YN = 'Y'
+                ORDER BY CRET_DT DESC
+            )
+            WHERE BOARD_SEQ = #{boardSeq}
+    </select>
+
+
+
+
+
+
+</mapper>

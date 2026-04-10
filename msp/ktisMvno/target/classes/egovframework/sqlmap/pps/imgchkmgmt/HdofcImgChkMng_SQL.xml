@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.imgchkmgmt.mapper.PpsHdofcImgChkMgmtMapper">
+
+	<sql id="getCustImgChkMng">
+		<!-- 검수관리, 재검수관리 같이사용 -->
+		SELECT /*+ INDEX_DESC(A PPS_CUSTOMER_IMAGE_CHK_IDX1) ORDERED USE_NL(B C)*/
+			   <choose>
+					<when test="getColumn != null and getColumn != ''">
+						<if test='getColumn == "1"'>
+							COUNT(*) CNT
+						</if>
+						<if test='getColumn == "2"'>
+							SEQ,
+							EVENT_SEQ,
+							A.CONTRACT_NUM,
+							ROWNUM RNUM2
+						</if>
+						<if test='getColumn == "3"'>
+							SEQ,
+					       	EVENT_SEQ,
+					       	A.CONTRACT_NUM,
+					       	CUSTOMER_ID,
+					       	SUBSCRIBER_NO,
+					       	DECODE(MNP_IND_CD, '', '신규', '이동') MNP_IND_CD_NM,
+					       	F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO','CUST_IDNT_NO_IND_CD',(SELECT CUST_IDNT_NO_IND_CD FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID)) CUST_IDNT_NO_IND_CD_NM,
+					       	SUB_LINK_NAME,
+					       	SUBSTR(LST_COM_ACTV_DATE, 1, 4) || '-' || SUBSTR(LST_COM_ACTV_DATE, 5, 2) || '-' || SUBSTR(LST_COM_ACTV_DATE, 7) LST_COM_ACTV_DATE,
+					       	F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO','CUSTOMER_TYPE',(SELECT CUSTOMER_TYPE FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID)) CUSTOMER_TYPE_NM,
+					       	USER_SSN,
+					       	F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+					       	F_GET_AGENT_NM(AGENT_SALE_ID) AGENT_SALE_NM,
+					       	(SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM) IMG_CNT,
+					       	TO_CHAR(STAY_EXPIR_DT, 'YYYY-MM-DD') STAY_EXPIR_DT,
+					       	NVL(CHK_MANTY, '') CHK_MANTY,
+					       	MEMO1 MEMO1_STR,
+					       	AGENT_MEMO,
+					       	CHK_STATUS,
+					       	ROWNUM RNUM2
+						</if>
+					</when>
+					<otherwise>
+						SEQ,
+				       	EVENT_SEQ,
+				       	A.CONTRACT_NUM,
+				       	SUBSCRIBER_NO,
+				       	DECODE(MNP_IND_CD, '', '신규', '이동') MNP_IND_CD_NM,
+				       	SUBSTR(LST_COM_ACTV_DATE, 1, 4) || '-' || SUBSTR(LST_COM_ACTV_DATE, 5, 2) || '-' || SUBSTR(LST_COM_ACTV_DATE, 7) LST_COM_ACTV_DATE,
+				       	AGENT_ID,
+				       	F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+				       	TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT,
+				       	CHK_STATUS,
+				       	F_GET_KT_CODE_NM('PPS_CUSTOMER_IMAGE_CHK', 'CHK_STATUS', CHK_STATUS) CHK_STATUS_NM,
+				       	(SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN IN ('10', '11', '12') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM) IMG_OPEN_CNT,
+				       	(SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN IN ('20', '21', '22', '23', '24') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM) IMG_ID_CNT,
+				       	(SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN NOT IN ('10', '11', '12', '20', '21', '22', '23', '24') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM) IMG_ETC_CNT,
+				       	DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|D') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음') D_STR,
+				       	DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|I') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음') I_STR,
+				       	DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|E') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음') E_STR,
+				       	DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|S') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음') S_STR,
+				       	MEMO1,
+				       	DECODE(MEMO1, '', 'N', 'Y') MEMO1_FLAG,
+				       	REG_ADMIN_ID,
+				       	F_GET_ADMIN_NM(REG_ADMIN_ID) REG_ADMIN_NM,
+				       	CHK_ADMIN_ID,
+				       	F_GET_ADMIN_NM(CHK_ADMIN_ID) CHK_ADMIN_NM,
+				       	TO_CHAR(CHK_DATE, 'YYYY-MM-DD') CHK_DATE
+					</otherwise>
+			   </choose>
+		FROM PPS_CUSTOMER_IMAGE_CHK A,
+		     MSP_JUO_SUB_INFO B,
+		     PPS_CUSTOMER C
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		      AND A.CONTRACT_NUM = C.CONTRACT_NUM
+		      
+		<if test="startDt != null and startDt != ''">
+			AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		</if>
+		
+		<if test="searchNm != null and searchNm != ''">
+			<choose>
+				<when test="searchType == 'SUBSCRIBER_NO'">
+					AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+				</when>
+				<when test="searchType == 'CONTRACT_NUM'">
+					AND A.CONTRACT_NUM = #{searchNm}
+				</when>
+				<when test="searchType == 'EVENT_SEQ'">
+					AND A.EVENT_SEQ = #{searchNm}
+				</when>
+			</choose>
+		</if>
+		<if test="searchChkStatus != null and searchChkStatus != ''">
+			AND CHK_STATUS = #{searchChkStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		
+		<!-- 재검수관리에서 사용 -->
+		<if test="repageReq != null and repageReq != ''">
+			AND CHK_STATUS IN ('20', '21') 
+		</if>
+		
+		<!-- 전체검수일 경우 처리완료는 제거 -->
+		<if test="pageCode != null and pageCode != ''">
+			<if test='pageCode == "ALL" or pageCode == "BEFORE" or pageCode == "NEXT"'>
+				AND CHK_STATUS NOT IN ('00') 
+			</if>
+		</if>
+	</sql>
+
+	<!--검수관리 목록조회 -->
+    <select id="getCustImgChkMngList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getCustImgChkMng" />
+				
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	
+    </select>
+    
+    <select id="getCustImgChkGetRownum" parameterType="hashmap" resultType="integer">
+    	SELECT RNUM2
+    	FROM(
+    		<include refid="getCustImgChkMng" />
+    	)
+    	WHERE SEQ = #{seq}
+    </select>
+    
+    <select id="getCustImgChkGetRow" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	SELECT A.*
+    	FROM(
+	    	<include refid="getCustImgChkMng" />
+	    	<if test="rownum != null and rownum != ''">
+				AND ROWNUM &lt; #{rownum} +1
+			</if>
+			<if test="seq != null and seq != ''">
+				AND SEQ = #{seq}
+			</if>
+		) A
+		<if test="rownum != null and rownum != ''">
+			WHERE RNUM2 >= #{rownum} 
+		</if>
+    </select>
+    
+    <!--검수관리 목록조회 엑셀출력 -->
+    <select id="getCustImgChkMngExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+    	<!-- 검수관리, 재검수관리 같이사용 -->
+         SELECT /*+ INDEX_DESC(A PPS_CUSTOMER_IMAGE_CHK_IDX1) ORDERED USE_NL(B C)*/
+			   	SEQ,
+		       	NVL(EVENT_SEQ, '-') EVENT_SEQ,
+		       	NVL(A.CONTRACT_NUM, '-') CONTRACT_NUM,
+		       	NVL(SUBSCRIBER_NO, '-') SUBSCRIBER_NO,
+		       	NVL(DECODE(MNP_IND_CD, '', '신규', '이동'), '-') MNP_IND_CD_NM,
+		       	NVL(SUBSTR(LST_COM_ACTV_DATE, 1, 4) || '-' || SUBSTR(LST_COM_ACTV_DATE, 5, 2) || '-' || SUBSTR(LST_COM_ACTV_DATE, 7), '-') LST_COM_ACTV_DATE,
+		       	NVL(AGENT_ID, '-') AGENT_ID,
+		       	NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM,
+		       	NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'), '-') REG_DT,
+		       	NVL(CHK_STATUS, '-') CHK_STATUS,
+		       	NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER_IMAGE_CHK', 'CHK_STATUS', CHK_STATUS), '-') CHK_STATUS_NM,
+		       	NVL((SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN IN ('10', '11', '12') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM), 0) IMG_OPEN_CNT,
+		       	NVL((SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN IN ('20', '21', '22', '23', '24') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM), 0) IMG_ID_CNT,
+		       	NVL((SELECT COUNT(*) FROM PPS_CUSTOMER_IMAGE WHERE IMG_GUBUN NOT IN ('10', '11', '12', '20', '21', '22', '23', '24') AND STATUS = 'A' AND CONTRACT_NUM = A.CONTRACT_NUM), 0) IMG_ETC_CNT,
+		       	NVL(DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|D') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음'), '-') D_STR,
+		       	NVL(DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|I') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음'), '-') I_STR,
+		       	NVL(DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|E') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음'), '-') E_STR,
+		       	NVL(DECODE(SUBSTR(CHK_MANTY, INSTR(CHK_MANTY, '|S') + 2, 1), '0', '검수', '1', '미비', '2', '없음', '없음'), '-') S_STR,
+		       	NVL(MEMO1, '-') MEMO1,
+		       	NVL(DECODE(MEMO1, '', 'N', 'Y'), '-') MEMO1_FLAG,
+		       	NVL(REG_ADMIN_ID, '-') REG_ADMIN_ID,
+		       	NVL(F_GET_ADMIN_NM(REG_ADMIN_ID), '-') REG_ADMIN_NM,
+		       	NVL(CHK_ADMIN_ID, '-') CHK_ADMIN_ID,
+		       	NVL(F_GET_ADMIN_NM(CHK_ADMIN_ID), '-') CHK_ADMIN_NM,
+		       	NVL(TO_CHAR(CHK_DATE, 'YYYY-MM-DD'), '-') CHK_DATE
+		FROM PPS_CUSTOMER_IMAGE_CHK A,
+		     MSP_JUO_SUB_INFO B,
+		     PPS_CUSTOMER C
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		      AND A.CONTRACT_NUM = C.CONTRACT_NUM
+		<if test="startDt != null and startDt != ''">
+			AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		</if>
+		<if test="searchNm != null and searchNm != ''">
+			<choose>
+				<when test="searchType == 'SUBSCRIBER_NO'">
+					AND A.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+				</when>
+				<when test="searchType == 'CONTRACT_NUM'">
+					AND A.CONTRACT_NUM = #{searchNm}
+				</when>
+				<when test="searchType == 'EVENT_SEQ'">
+					AND A.EVENT_SEQ = #{searchNm}
+				</when>
+			</choose>
+		</if>
+		<if test="searchChkStatus != null and searchChkStatus != ''">
+			AND CHK_STATUS = #{searchChkStatus}
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		
+		<!-- 재검수관리에서 사용 -->
+		<if test="repageReq != null and repageReq != ''">
+			AND CHK_STATUS IN ('20', '21') 
+		</if>
+		
+		<!-- 전체검수일 경우 처리완료는 제거 -->
+		<if test="pageCode != null and pageCode != ''">
+			<if test='pageCode == "ALL" or pageCode == "BEFORE" or pageCode == "NEXT"'>
+				AND CHK_STATUS NOT IN ('00') 
+			</if>
+		</if>
+    </select>
+    
+    <!--검수관리 검수등록 -->
+    <select id="getPpsCustImgChkRegProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_CUSTOMER_IMAGE_CHK_REG(
+					    #{eventCd, jdbcType=VARCHAR}
+					    , #{startDt, jdbcType=VARCHAR}
+					    , #{endDt, jdbcType=VARCHAR}
+					    , #{option, jdbcType=VARCHAR}
+					    , #{adminId, jdbcType=VARCHAR}
+					    , #{accessIp, jdbcType=VARCHAR}
+					   , #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					  )
+		     }
+	</select>
+	
+	<!--검수관리 검수수정 -->
+    <select id="getPpsCustImgChkChgProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_CUSTOMER_IMAGE_CHK_CHG(
+						#{opCode, jdbcType=VARCHAR}
+					    ,#{seq, jdbcType=VARCHAR}
+					    , #{chkStatus, jdbcType=VARCHAR}
+					    , #{chkManty, jdbcType=VARCHAR}
+					    , #{memo, jdbcType=VARCHAR}
+					    , #{agentMemo, jdbcType=VARCHAR}
+					    , #{adminId, jdbcType=VARCHAR}
+					   , #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					  )
+		     }
+	</select>
+	
+	<!--검수이력관리 목록조회 -->
+    <select id="getCustImgChkGrpMngList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		SELECT 
+			   EVENT_SEQ,
+		       COUNT(*) TOT_CNT,
+		       SUM(DECODE(CHK_STATUS, '10', 1, 0)) STATUS10,
+		       SUM(DECODE(CHK_STATUS, '20', 1, 0)) STATUS20,
+		       SUM(DECODE(CHK_STATUS, '21', 1, 0)) STATUS21,
+		       SUM(DECODE(CHK_STATUS, '00', 1, 0)) STATUS00,
+		       SUM(DECODE(CHK_STATUS, '90', 1, 0)) STATUS90,
+		       SUM(DECODE(CHK_STATUS, '91', 1, 0)) STATUS91,
+		       SUM(DECODE(CHK_STATUS, '99', 1, 0)) STATUS99,
+		       REG_ADMIN_ID,
+		       F_GET_ADMIN_NM(REG_ADMIN_ID) REG_ADMIN_NM,
+		       TO_CHAR(EVENT_DT, 'YYYY-MM-DD') EVENT_DT,
+		       TO_CHAR(REG_DT, 'YYYY-MM-DD') REG_DT
+		       <choose>
+					<when test="agentGrpChk != null and agentGrpChk != '' and agentGrpChk !=0">
+						,AGENT_ID
+		       			,F_GET_AGENT_NM(AGENT_ID) AGENT_NM	
+					</when>
+					<otherwise>
+						,'ALL' AGENT_ID
+						,'ALL' AGENT_NM
+					</otherwise>
+				</choose>
+		       
+		FROM PPS_CUSTOMER_IMAGE_CHK A,
+		     PPS_CUSTOMER B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		
+		<if test="startDt != null and startDt != ''">
+			AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		</if>
+
+		<if test="searchNm != null and searchNm != ''">
+			<if test="searchType == 'EVENT_SEQ'">
+				AND A.EVENT_SEQ = #{searchNm}
+			</if>
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		
+		GROUP BY EVENT_SEQ, TO_CHAR(REG_DT, 'YYYY-MM-DD'), REG_ADMIN_ID, EVENT_DT
+		<if test="agentGrpChk != null and agentGrpChk != '' and agentGrpChk !=0">
+			,AGENT_ID
+		</if>
+		
+		ORDER BY EVENT_SEQ DESC
+				
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	
+    </select>
+    
+    <!--검수이력관리 목록조회 엑셀출력 -->
+    <select id="getCustImgChkGrpMngExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+         SELECT 
+			   EVENT_SEQ,
+		       COUNT(*) TOT_CNT,
+		       NVL(SUM(DECODE(CHK_STATUS, '10', 1, 0)), 0) STATUS10,
+		       NVL(SUM(DECODE(CHK_STATUS, '20', 1, 0)), 0) STATUS20,
+		       NVL(SUM(DECODE(CHK_STATUS, '21', 1, 0)), 0) STATUS21,
+		       NVL(SUM(DECODE(CHK_STATUS, '00', 1, 0)), 0) STATUS00,
+		       NVL(SUM(DECODE(CHK_STATUS, '90', 1, 0)), 0) STATUS90,
+		       NVL(SUM(DECODE(CHK_STATUS, '91', 1, 0)), 0) STATUS91,
+		       NVL(SUM(DECODE(CHK_STATUS, '99', 1, 0)), 0) STATUS99,
+		       NVL(REG_ADMIN_ID, '-') REG_ADMIN_ID,
+		       NVL(F_GET_ADMIN_NM(REG_ADMIN_ID), '-') REG_ADMIN_NM,
+		       NVL(TO_CHAR(EVENT_DT, 'YYYY-MM-DD'), '-') EVENT_DT,
+		       NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD'), '-') REG_DT
+		       <choose>
+					<when test="agentGrpChk != null and agentGrpChk != '' and agentGrpChk !=0">
+						,NVL(AGENT_ID, '-') AGENT_ID
+		       			,NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM	
+					</when>
+					<otherwise>
+						,'ALL' AGENT_ID
+						,'ALL' AGENT_NM
+					</otherwise>
+				</choose>
+		       
+		FROM PPS_CUSTOMER_IMAGE_CHK A,
+		     PPS_CUSTOMER B
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		
+		<if test="startDt != null and startDt != ''">
+			AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		</if>
+		<if test="endDt != null and endDt != ''">
+			AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		</if>
+
+		<if test="searchNm != null and searchNm != ''">
+			<if test="searchType == 'EVENT_SEQ'">
+				AND A.EVENT_SEQ = #{searchNm}
+			</if>
+		</if>
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+		
+		GROUP BY EVENT_SEQ, TO_CHAR(REG_DT, 'YYYY-MM-DD'), REG_ADMIN_ID, EVENT_DT
+		<if test="agentGrpChk != null and agentGrpChk != '' and agentGrpChk !=0">
+			,AGENT_ID
+		</if>
+		
+		ORDER BY EVENT_SEQ DESC
+    </select>
+    
+    <!--자동이체등록 목록조회 -->
+    <select id="getPpsAgentCmsReqMngList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		SELECT /*+ INDEX_DESC(A PPS_AGENT_CMS_REQ_IDX1) */
+		       SEQ,
+		       CONTRACT_NUM,
+		       STATUS,
+		       F_GET_KT_CODE_NM('PPS_AGENT_CMS_REQ', 'STATUS', STATUS) STATUS_NM,
+		       CMS_CHARGE_TYPE,
+		       F_GET_KT_CODE_NM('PPS_CUSTOMER', 'CMS_CHARGE_TYPE', CMS_CHARGE_TYPE) CMS_CHARGE_TYPE_NM,
+		       CMS_BANK_CODE,
+		       F_GET_KT_CODE_NM('PPS_RCG_REAL_CMS', 'BANK_CODE', CMS_BANK_CODE) CMS_BANK_CODE_NM,
+		       CMS_CHARGE,
+		       CMS_TRY_REMAINS,
+		       CASE WHEN CMS_CHARGE_DATE IS NOT NULL AND CMS_CHARGE_DATE &lt; 0 THEN '만료일' || ABS(CMS_CHARGE_DATE) || '일전'
+		       		ELSE CMS_CHARGE_DATE
+		       END CMS_CHARGE_DATE,
+		       CMS_CHARGE_MONTH,
+		       AGENT_ID,
+		       F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+		       TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS') REG_DT,
+		       MOD_ADMIN,
+		       F_GET_ADMIN_NM(MOD_ADMIN) MOD_ADMIN_NM,
+		       TO_CHAR(MOD_DT, 'YYYY-MM-DD HH24:MI:SS') MOD_DT
+		FROM PPS_AGENT_CMS_REQ A
+		WHERE SEQ IS NOT NULL
+		
+		<if test="startDt != null and startDt != ''">
+			AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		</if>
+		
+		<if test="endDt != null and endDt != ''">
+			AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		</if>
+		
+		<if test="status != null and status != ''">
+			AND STATUS = #{status}
+		</if>
+		
+		<if test="searchNm != null and searchNm != ''">
+			<choose>
+				<when test='searchType == "subscriber_no"'>
+					AND CONTRACT_NUM IN (SELECT CONTRACT_NUM FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{searchNm})
+				</when>
+				<when test='searchType == "contract_num"'>
+					AND CONTRACT_NUM = #{searchNm}
+				</when>
+			</choose>
+		</if>
+		
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+				
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	
+    </select>
+    
+    <!--자동이체등록 목록조회 엑셀출력 -->
+    <select id="getPpsAgentCmsReqMngListExcel"  parameterType="hashmap" resultType="hashmap" fetchSize="10">
+         SELECT /*+ INDEX_DESC(A PPS_AGENT_CMS_REQ_IDX1) */
+		       NVL(SEQ, 0),
+		       NVL(CONTRACT_NUM, '-') CONTRACT_NUM,
+		       NVL(STATUS, '-') STATUS,
+		       NVL(F_GET_KT_CODE_NM('PPS_AGENT_CMS_REQ', 'STATUS', STATUS), '-') STATUS_NM,
+		       NVL(CMS_CHARGE_TYPE, '-') CMS_CHARGE_TYPE,
+		       NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'CMS_CHARGE_TYPE', CMS_CHARGE_TYPE), '-') CMS_CHARGE_TYPE_NM,
+		       NVL(CMS_BANK_CODE, '-') CMS_BANK_CODE,
+		       NVL(F_GET_KT_CODE_NM('PPS_RCG_REAL_CMS', 'BANK_CODE', CMS_BANK_CODE), '-') CMS_BANK_CODE_NM,
+		       NVL(CMS_CHARGE, 0) CMS_CHARGE,
+		       NVL(CMS_TRY_REMAINS, 0) CMS_TRY_REMAINS,
+		       NVL(CASE WHEN CMS_CHARGE_DATE IS NOT NULL AND CMS_CHARGE_DATE &lt; 0 THEN '만료일' || ABS(CMS_CHARGE_DATE) || '일전'
+		       		ELSE CMS_CHARGE_DATE
+		       END, '-') CMS_CHARGE_DATE,
+		       NVL(CMS_CHARGE_MONTH, 0) CMS_CHARGE_MONTH,
+		       NVL(AGENT_ID, '-') AGENT_ID,
+		       NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM,
+		       NVL(TO_CHAR(REG_DT, 'YYYY-MM-DD HH24:MI:SS'), '-') REG_DT,
+		       NVL(MOD_ADMIN, '-') MOD_ADMIN,
+		       NVL(F_GET_ADMIN_NM(MOD_ADMIN), '-') MOD_ADMIN_NM,
+		       NVL(TO_CHAR(MOD_DT, 'YYYY-MM-DD HH24:MI:SS'), '-') MOD_DT
+		FROM PPS_AGENT_CMS_REQ A
+		WHERE SEQ IS NOT NULL
+		
+		<if test="startDt != null and startDt != ''">
+			AND REG_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+		</if>
+		
+		<if test="endDt != null and endDt != ''">
+			AND REG_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+		</if>
+		
+		<if test="status != null and status != ''">
+			AND STATUS = #{status}
+		</if>
+		
+		<if test="searchNm != null and searchNm != ''">
+			<choose>
+				<when test='searchType == "subscriber_no"'>
+					AND CONTRACT_NUM IN (SELECT CONTRACT_NUM FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{searchNm})
+				</when>
+				<when test='searchType == "contract_num"'>
+					AND CONTRACT_NUM = #{searchNm}
+				</when>
+			</choose>
+		</if>
+		
+		<if test="searchAgentId != null and searchAgentId != ''">
+			AND AGENT_ID = #{searchAgentId}
+		</if>
+    </select>
+    
+    <!--자동이체등록 세부내역 -->
+    <select id="getPpsAgentCmsReqRow" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT 
+		       STATUS,
+		       CMS_CHARGE_TYPE,
+		       CMS_BANK_CODE,
+		       CMS_CHARGE,
+		       CMS_TRY_REMAINS,
+		       CMS_CHARGE_DATE,
+		       CMS_CHARGE_MONTH,
+		       CMS_ACCOUNT,
+		       FILE_PATH,
+		       FILE_TYPE,
+		       ADMIN_MEMO,
+		       (SELECT MAX(RCG_AMT) FROM PPS_CODE_SERVICE_TOPUP WHERE KT_MODE = 'CHG_CASH_REFILL' AND SOC = (SELECT SOC FROM PPS_CUSTOMER WHERE CONTRACT_NUM = A.CONTRACT_NUM)) TOPUP_AMT
+		FROM PPS_AGENT_CMS_REQ A
+		WHERE CONTRACT_NUM = #{contractNum}
+			  AND SEQ = #{seq}
+		
+    </select>
+    
+    <!--자동이체등록 세부내역 -->
+    <select id="getPpsAgentCmsReqCustInfo" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT 
+		       CASE WHEN LENGTH(CRYPTO_AES256.DEC_AES(USER_SSN)) = 13 THEN SUBSTR(CRYPTO_AES256.DEC_AES(USER_SSN), 1, 6)
+		       		ELSE CRYPTO_AES256.DEC_AES(USER_SSN)
+		       	END USER_SSN,
+		       	SUB_LINK_NAME
+		FROM MSP_JUO_SUB_INFO B
+		WHERE CONTRACT_NUM = #{contractNum}
+		
+    </select>
+    
+    <select id="getPpsAgentCmsReqProc"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_AGENT_CMS_REQ(
+					    #{opCode, jdbcType=VARCHAR}
+					    , #{seq, jdbcType=VARCHAR}
+					    , #{contractNum, jdbcType=VARCHAR}
+					    , #{cmsChargeType, jdbcType=VARCHAR}
+					    , #{cmsBankCode, jdbcType=VARCHAR}
+					    , #{cmsAccount, jdbcType=VARCHAR}
+					    , #{cmsCharge, jdbcType=VARCHAR}
+					    , #{cmsTryRemains, jdbcType=VARCHAR}
+					    , #{cmsChargeDate, jdbcType=VARCHAR}
+					    , #{cmsChargeMonth, jdbcType=VARCHAR}
+					    , #{status, jdbcType=VARCHAR}
+					    , #{adminMemo, jdbcType=VARCHAR}
+					    , #{regTypePop, jdbcType=VARCHAR}
+					   	, #{fileType, jdbcType=VARCHAR}
+					   	, #{fileLen, jdbcType=VARCHAR}
+					   	, #{filePath, jdbcType=VARCHAR}
+					   	, #{fileEnc, jdbcType=CLOB}
+					    , #{agentId, jdbcType=VARCHAR}
+					    , #{adminId, jdbcType=VARCHAR} 
+					   , #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					  )
+		     }
+	</select>
+
+</mapper>

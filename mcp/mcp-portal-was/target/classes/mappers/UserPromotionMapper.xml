@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="UserPromotionMapper">
+
+    <!-- 회원가입 프로모션 등록 -->
+    <insert id="insertUserPromotion" parameterType="com.ktmmobile.mcp.event.dto.UserPromotionDto">
+    INSERT INTO MCP_USER_PROMOTION
+    (
+        USER_PROMO_ID               --프로모션 키 MCP_USER_PROMOTION_SEQ
+         , USERID                   --아이디
+         , INTEREST_CODE            --관심사코드(공통코드 2차)
+         , PROMOTION_CODE           --프로모션 코드(공통코드 2차)
+         , USE_TEL_CODE             --통신사 코드
+         , CRET_DD                  --생성일
+         , CRET_ID                  --생성자아이디
+         , AMD_ID                   --수정자ID
+         , CRET_DT                  --생성일시
+         , AMD_DT                   --수정일시
+         , RIP                      --등록아이피
+
+    ) VALUES (
+
+        MCP_USER_PROMOTION_SEQ .NEXTVAL
+         , #{userId}
+         , #{interestCode}
+         , #{promotionCode}
+         , #{useTelCode}
+         , TO_CHAR(SYSDATE, 'YYYYMMDD')
+         , #{userId}
+         , #{userId}
+         , SYSDATE
+         , SYSDATE
+         , #{rip}
+    )
+
+    </insert>
+
+
+   <!-- 회원가입 프로모션  등록 여부 조회 -->
+   <select id="selectUserPromoCnt" parameterType="com.ktmmobile.mcp.event.dto.UserPromotionDto" resultType="int">
+        SELECT
+            COUNT(1) AS CNT
+        FROM MCP_USER_PROMOTION A
+        WHERE 1=1
+        AND USERID = #{userId}
+    </select>
+
+
+    <!-- 회원가입 프로모션 삭제 -->
+    <delete id="deleteUserPromotion" parameterType="com.ktmmobile.mcp.event.dto.UserPromotionDto">
+        DELETE FROM MCP_USER_PROMOTION
+        WHERE 1=1
+        AND USERID = #{userId}
+    </delete>
+
+    <select id="selectUserPromotionList" parameterType="com.ktmmobile.mcp.event.dto.UserPromotionDto" resultType="com.ktmmobile.mcp.event.dto.UserPromotionDto">
+         SELECT
+           ncd.DTL_CD_NM,
+           mup.CRET_DT,
+           mup.PRIZE_YN,
+           mup.PRIZE_NM,
+           mup.RSLT_ANDT
+        FROM
+            MCP_USER_PROMOTION mup,
+            NMCP_CD_DTL ncd
+        WHERE 1=1
+        AND mup.PROMOTION_CODE = ncd.DTL_CD
+        AND ncd.CD_GROUP_ID = 'UserPromotion'
+        AND mup.USERID = #{userId}
+        ORDER BY mup.CRET_DT DESC
+    </select>
+
+
+</mapper>

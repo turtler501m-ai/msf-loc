@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.filedownsrch.mapper.FileDownSrchMapper">
+
+	<select id="selectList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.filedownsrch.selectList =========*/	
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+			SELECT
+					NVL(A.MENU_ID, D.MENU_ID) AS MENU_ID
+					, TO_CHAR(NVL(A.FILE_DN_DT, D.EXCL_STRT_DT), 'YYYY-MM-DD HH24:MI:SS') AS FILE_DN_DT
+					, NVL(A.USR_ID,D.USR_ID) AS USR_ID
+					, A.FILE_NM
+					, A.IP_INFO
+					, NVL(A.DUTY_NM, D.DUTY_NM) AS DUTY_NM
+					, A.FILE_ROUT
+					, A.FILE_SIZE/1024 AS FILE_SIZE
+					, A.DWNLD_RSN
+					, A.DATA_CNT
+					, NVL(C.MENU_NM, D.MENU_NM) AS MENU_NM
+					, FN_GET_USRNM(NVL(A.USR_ID,D.USR_ID)) AS USR_NM
+					, NVL(B.ORGN_ID, D.ORGN_ID) AS ORGN_ID
+					, FN_GET_ORGNM(NVL(B.ORGN_ID, D.ORGN_ID)) AS ORGN_NM
+		            , D.SEARCH_VAL
+			  FROM	CMN_FILE_DNLD_MGMT_MST A
+              LEFT	OUTER JOIN CMN_USR_MST B
+                ON	A.USR_ID = B.USR_ID
+              LEFT	OUTER JOIN CMN_MENU_MST C
+                ON	A.MENU_ID = C.MENU_ID
+              FULL	OUTER JOIN CMN_EXCL_DNLD_HST D
+                ON	A.EXCL_DNLD_ID = D.EXCL_DNLD_ID
+             WHERE	1=1
+			<if test="orgnId != null and orgnId != ''">
+			   AND	(B.ORGN_ID = #{orgnId}
+			   		OR D.ORGN_ID = #{orgnId})
+			</if>
+	        <if test="searchUsrNm != null and searchUsrNm != ''">	
+			   AND	(B.USR_NM like '%' ||  #{searchUsrNm} || '%'
+			   		OR D.USR_NM like '%' ||  #{searchUsrNm} || '%')
+	        </if>
+	        <if test="searchMenuList != null and searchMenuList != '' and searchMenuList != '-1'">
+	           AND	(A.MENU_ID = #{searchMenuList}
+	           		OR D.MENU_ID = #{searchMenuList})
+	        </if>
+	        <if test="searchStrtDt != null and searchStrtDt != '' and searchEndDt != null and searchEndDt != ''">
+ 	           AND	(A.FILE_DN_DT BETWEEN TO_DATE(#{searchStrtDt},'YYYYMMDD') AND TO_DATE(#{searchEndDt},'YYYYMMDD') + 1
+ 	           		OR D.EXCL_STRT_DT BETWEEN TO_DATE(#{searchStrtDt},'YYYYMMDD') AND TO_DATE(#{searchEndDt},'YYYYMMDD') + 1)
+	        </if>
+	         ORDER BY	NVL(A.FILE_DN_DT, D.EXCL_STRT_DT) DESC 	        	        			
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+</mapper>

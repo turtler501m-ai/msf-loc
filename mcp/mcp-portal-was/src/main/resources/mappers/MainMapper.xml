@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MainMapper">
+            
+    <select id="selectRecommendProdCtgScndList" parameterType="com.ktmmobile.mcp.main.dto.NmcpRecommendProdCtgBasDTO" resultType="com.ktmmobile.mcp.main.dto.NmcpRecommendProdCtgBasDTO">
+    	SELECT   /* MainMapper.selectRecommendProdCtgScndList 추천 상품 카테고리 2Depth 목록 조회 */
+    		   A.RECOMMEND_PROD_CTG_CD
+		     , A.RECOMMEND_PROD_CTG_NM
+		     , A.RECOMMEND_PROD_CTG_BAS_DESC
+		     , A.RECOMMEND_PROD_CTG_DTL_DESC
+		     , A.DEPTH_KEY
+		     , A.UP_RECOMMEND_PROD_CTG_CD
+		     , A.RECOMMEND_PROD_OUTPUT_CD
+		     , A.PROD_DIV_CD
+		     , A.SORT_ODRG
+		     , A.USE_YN
+		     , TO_CHAR(TO_DATE(A.PSTNG_START_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') AS PSTNG_START_DATE
+			 , TO_CHAR(TO_DATE(A.PSTNG_END_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') AS PSTNG_END_DATE
+			 , RECOMMEND_PROD_CTG_IMG_PATH
+    	     , LINK_USE_YN
+    	     , LINK_URL_PC
+    	     , LINK_URL_MO
+		FROM NMCP_RECOMMEND_PROD_CTG_BAS A
+		WHERE 1=1
+		AND A.USE_YN = 'Y'
+		AND A.DEPTH_KEY = '2'
+		AND A.PROD_DIV_CD = #{prodDivCd}
+		AND A.UP_RECOMMEND_PROD_CTG_CD = #{upRecommendProdCtgCd}
+		AND SYSDATE BETWEEN TO_DATE(A.PSTNG_START_DATE, 'YYYY-MM-DD HH24:MI:SS') AND TO_DATE(A.PSTNG_END_DATE, 'YYYY-MM-DD HH24:MI:SS')
+		ORDER BY A.SORT_ODRG ASC
+    </select>
+    
+    <select id="selectRecommendProdCtgRelList" parameterType="com.ktmmobile.mcp.main.dto.NmcpRecommendProdCtgBasDTO" resultType="com.ktmmobile.mcp.main.dto.NmcpRecommendProdCtgRelDTO">
+    	SELECT /* MainMapper.selectRecommendProdCtgRelList 추천 상품 카테고리 요금제 목록 조회 */
+    			A.RECOMMEND_PROD_CTG_CD
+		     , A.RECOMMEND_PROD_GDNC_SEQ
+		     , A.RATE_CD
+		     , A.PROD_ID
+		     , A.PRDT_ID
+		     , A.SALE_PLCY_CD
+		     , A.RECOMMEND_PROD_BAS_DESC
+		     , A.RECOMMEND_PROD_DTL_DESC
+		     , A.RECOMMEND_YN
+		     , A.NEW_YN
+		     , A.SALE_PRICE
+		     , A.LINK_CD
+		     , A.LINK_URL
+		     , A.SORT_ODRG
+		     , A.USE_YN
+    	     , A.LABEL_CODE
+		     , TO_CHAR(TO_DATE(A.PSTNG_START_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') AS PSTNG_START_DATE
+			 , TO_CHAR(TO_DATE(A.PSTNG_END_DATE, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') AS PSTNG_END_DATE
+		FROM NMCP_RECOMMEND_PROD_CTG_REL A
+		WHERE 1=1
+		AND A.USE_YN = 'Y'
+		AND A.RECOMMEND_PROD_CTG_CD = #{recommendProdCtgCd}
+		AND SYSDATE BETWEEN TO_DATE(A.PSTNG_START_DATE, 'YYYY-MM-DD HH24:MI:SS') AND TO_DATE(A.PSTNG_END_DATE, 'YYYY-MM-DD HH24:MI:SS')
+		ORDER BY A.SORT_ODRG ASC
+    </select>
+    
+    <!-- 추천 휴대폰/유심 조회 -->
+    <select id="selectNmcpRecommendProd" parameterType="com.ktmmobile.mcp.main.dto.NmcpRecommendProdCtgRelDTO" resultType="com.ktmmobile.mcp.main.dto.NmcpRecommendProdDTO">
+        SELECT A.PROD_ID                --상품아이디
+	       , A.PROD_CTG_ID            --상품분류아이디 (lte,3g)
+	       , CASE WHEN A.PROD_CTG_ID = '03' THEN '3G'
+	              WHEN A.PROD_CTG_ID = '04' THEN 'LTE'
+	              WHEN A.PROD_CTG_ID = '08' THEN '5G'
+	              ELSE 'LTE'
+	         END AS PROD_CTG_NAME     --상품(색인)
+	       , A.PROD_NM                --상품명(색인)
+	       , A.MAKR_CD                --제조사코드
+	       , A.RPRS_PRDT_ID           --대표모델ID
+	       , A.SHOW_YN                --노출여부
+	       , A.SALE_YN                --판매여부
+	       , A.OFW_DATE               --출고일자
+	       , A.LIST_SHOW_TEXT         --목록노출텍스트(색인)
+	       , A.LIST_SHOW_OPTN         --목록노출옵션(색인)
+	       , A.APD_DESC_1             --추가설명1(색인)
+	       , A.APD_DESC_2             --추가설명2(색인)
+	       , A.APD_DESC_3             --추가설명3(색인)
+	       , A.STCK_TYPE_TOP          --스티커노출(상)
+	       , A.STCK_TYPE_TAIL         --스티커노출(하)
+	       , A.SNTY_PROD_DESC         --단말기상품설명(색인)
+	       , A.SNTY_NET               --단말기네트워크(색인)
+	       , A.SNTY_DISP              --단말기디스플레이(색인)
+	       , A.SNTY_SIZE              --단말기크기(색인)
+	       , A.SNTY_WEIGHT            --단말기무게(색인)
+	       , A.SNTY_MEMR              --단말기메모리(색인)
+	       , A.SNTY_BTRY              --단말기배터리(색인)
+	       , A.SNTY_OS                --단말기OS(색인)
+	       , A.SNTY_WAIT_TIME         --단말기대기시간(색인)
+	       , A.SNTY_CAM               --단말기카메라(색인)
+	       , A.SNTY_VIDE_TLK          --단말기영상통화(색인)
+	       , A.SNTY_PROD_NM           --단말기명(색인)
+	       , A.SNTY_REL_MONTH         --출시월(색인)
+	       , A.SNTY_COLOR             --단말기색상(색인)
+	       , A.SNTY_MAKER             --단말기제조사/브랜드명(색인)
+	       , A.SNTY_MODEL_ID          --단말기모델번호(색인)
+	       , A.MAKR_NM                --제조사명 중고폰에서만사용
+	       , A.SHAND_YN               -- 중고폰여부
+	       , A.INVENTORY_AMT          --중고폰 재고수량
+	       , A.SALE_PRICE             --중고폰 판매가격
+	       , A.PROD_GRADE             --종고폰 등급(색인)
+	       , A.SHAND_TYPE             --중고폰분류값(중고폰,외산폰)
+	       , CASE WHEN A.SHAND_TYPE = '01' THEN '중고폰'
+	              WHEN A.SHAND_TYPE = '02' THEN '외산폰'
+	              ELSE '중고폰'
+	         END AS SHAND_TYPE_NAME     --중고폰분류(색인)
+	       , A.RECOMMEND_RATE         --추천요금제
+	       , A.USED_WARRANTY          --중고폰 워런티(색인)
+	       , CASE WHEN A.USED_WARRANTY = '01' THEN '중고폰'
+	              WHEN A.USED_WARRANTY = '02' THEN '외산폰'
+	              ELSE '신폰'
+	         END AS USED_WARRANTY_NAME --중고폰 워런티(색인)
+	       , IMG.SNTY_COLOR_CD        --색상코드
+	       , IMG.IMG_TYPE_CD          --이미지유형구분(앞,뒤..)
+	       , IMG.IMG_PATH             --이미지경로
+	       , SNTY.HNDSET_MODEL_NM     --단말기모델명(색인)
+	 FROM NMCP_PROD_BAS A
+	 LEFT OUTER JOIN NMCP_SNTY_PROD_BAS SNTY
+	              ON A.PROD_ID  = SNTY.PROD_ID
+	             AND SNTY.RPRS_PRDT_YN = 'Y' -- 대표
+	 LEFT OUTER JOIN ( SELECT PROD_ID, SNTY_COLOR_CD, IMG_TYPE_CD, IMG_PATH
+	                     FROM ( SELECT PROD_ID, SNTY_COLOR_CD, IMG_TYPE_CD, IMG_PATH, RANK() OVER (PARTITION BY PROD_ID ORDER BY IMG_TYPE_CD) RNK 
+	                              FROM NMCP_PROD_IMG_DTL 
+	                          )
+	                    WHERE RNK = 1
+	                 ) IMG
+	              ON A.PROD_ID = IMG.PROD_ID
+	             AND SNTY.PROD_ID = IMG.PROD_ID
+	             AND SNTY.ATRIB_VAL_CD_1 = IMG.SNTY_COLOR_CD
+	WHERE A.SHOW_YN ='Y'
+	  AND A.SALE_YN ='Y'
+	  AND SNTY.HNDSET_MODEL_ID = #{prdtId}
+	ORDER BY A.SHOW_ODRG
+    </select>	
+	
+	<select id="selectRateRecommendInqrBasList" resultType="com.ktmmobile.mcp.main.dto.NmcpRateRecommendInqrBasDTO">
+    	SELECT /* MainMapper.selectRateRecommendInqrBasList 요금제추천문의기본 목록 조회 */
+    		A.RATE_RECOMMEND_INQR_SEQ
+			 , A.SORT_ODRG
+			 , A.RATE_RECOMMEND_INQR_SBST
+			 , A.ANS_SBST1
+			 , A.ANS_SBST2
+			 , A.ANS_SBST3
+			 , A.ANS_SBST4
+			 , A.USE_YN
+			 , A.PSTNG_START_DATE
+			 , A.PSTNG_END_DATE
+			 , A.ANS_SBST1_DESC
+			 , A.ANS_SBST2_DESC
+			 , A.ANS_SBST3_DESC
+			 , A.ANS_SBST4_DESC
+		FROM NMCP_RATE_RECOMMEND_INQR_BAS A
+		WHERE 1=1
+		AND A.USE_YN = 'Y'
+		AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN A.PSTNG_START_DATE AND A.PSTNG_END_DATE
+    	ORDER BY A.SORT_ODRG ASC
+    </select>
+	
+    <select id="selectRateRecommendInqrRel" parameterType="com.ktmmobile.mcp.main.dto.NmcpRateRecommendInqrRelDTO" resultType="com.ktmmobile.mcp.main.dto.NmcpRateRecommendInqrRelDTO">
+    	SELECT A.RATE_RECOMMEND_INQR_REL_SEQ
+		     , A.ANS_NO
+		     , A.RATE_ADSVC_GDNC_SEQ
+		     , A.RATE_CD
+		     , A.RECOMMEND_PROD_DESC
+		     , A.SORT_ODRG
+		     , A.USE_YN
+		     , A.PSTNG_START_DATE
+		     , A.PSTNG_END_DATE
+		FROM NMCP_RATE_RECOMMEND_INQR_REL A
+		WHERE 1=1
+		    AND A.USE_YN = 'Y'
+		    AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN A.PSTNG_START_DATE AND A.PSTNG_END_DATE
+		    AND ANS_NO = #{ansNo}
+		ORDER BY SORT_ODRG
+    </select>
+</mapper>

@@ -1,0 +1,106 @@
+#!/usr/bin/env groovy
+import java.io.File
+import java.lang.String
+
+library identifier: 'utils@',
+    retriever: modernSCM([
+      $class: 'SubversionSCMSource',
+      //credentialsId: 'jenkins',
+      //remoteBase: 'http://10.20.28.19:3690/svn/utils/trunk/utils/'
+      credentialsId: 'bd22fc4b-1fd9-42fe-94ff-22863002d3e4',
+      remoteBase: 'https://scm.ktmmobile.com/repo/mcp/utils/trunk/utils/'
+])
+
+pipeline {
+    agent any
+    options {
+        ansiColor('css')
+    }
+
+    // global env variables
+    environment {
+        mvnHome = tool 'apache-maven-3.8.4'
+        jdkHome = tool 'jdk-11.0.2'
+        targetEnv = "${env.JOB_NAME}".split('-').last()
+        varField = "${env.JOB_NAME}".split('-')
+        platformNm = "${varField[0]}-${varField[1]}"
+    }
+
+    stages {
+
+        stage('Maven build &Unit Test') {
+            steps {
+
+                script {
+                    loadEnviromentVariables("devops/jenkins/jenkins.properties")
+                    def unitTestEnable = true
+                    unitTestEnable = params.unitTestEnable
+
+                    def mvnSettings = "${env.WORKSPACE}/${props.devopsPath}/${props.mvnSetFile}"
+                    def mvnSecSettings = "${env.WORKSPACE}/${props.devopsPath}/${props.mvnSecSetFile}"
+                    try {
+                        // Run the ant build
+                        withEnv(["MAVEN_HOME=$mvnHome", "ENV=$targetEnv", "JAVA_HOME=$jdkHome", "PATH=${jdkHome}/bin:${env.PATH}"]) {
+                            if (isUnix()) {
+                                sh """
+                                export MAVEN_OPTS="-Xms1G -Xmx2G -Xss10m"
+                                #${MAVEN_HOME}/bin/mvn clean package -X -P ${ENV} -DskipTests --settings ${mvnSettings} -Dsettings.security="${mvnSecSettings}"
+                                ${MAVEN_HOME}/bin/mvn clean package -X -P ${ENV} -DskipTests --settings ${mvnSettings}
+                               """
+                               // if maven repo forced update
+                               // ${MAVEN_HOME}/bin/mvn clean package -U -X -P ${ENV} -DskipTests --settings ${mvnSettings} -Dsettings.security="${mvnSecSettings}"
+                                if (unitTestEnable){
+                                    withSonarQubeEnv('sonarqube-devops'){
+                                        //sh returnStdout:true, script:"mvn sonar:sonar --settings ${mvnSettings} -Dsettings.security=${mvnSecSettings}"
+                                        sh returnStdout:true, script:"mvn sonar:sonar --settings ${mvnSettings}"
+                                        //Test Result Publish
+                                        junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
+                                    }
+                                }
+                            } else {
+                               bat(/"%MAVEN_HOME%\bin\mvn" clean package -X -P %ENV% -DskipTests --settings "%mvnSettings%"/)
+                            }
+                        }
+
+                    } catch(e) {
+                        log.info "clean up workspace >> ${env.JOB_NAME}"
+                        sh 'ls -A1|xargs rm -rf' /* clean up our workspace */
+                        currentBuild.result = "FAILED"
+                        log.error e.toString()
+                    }
+
+                }
+            }
+        }
+
+        stage('Source Deploy') {
+            when {
+              expression {
+                currentBuild.result == null || currentBuild.result == 'SUCCESS'
+              }
+            }
+            steps {
+                script {
+                    def scriptFile = "${env.WORKSPACE}/${props.devopsPath}/${props.instanceShell}"
+                    def targetDir = "${props.releaseDir}/${targetEnv}/${platformNm}"
+                    withEnv(["ENV=$targetEnv", "PATH=${env.PATH}"]) {
+                        switch("$ENV") {
+//                            case 'prd':
+//                                log.info 'build only production environment.'
+//                                break
+                            default:
+                                sh "cp ${scriptFile} ${targetDir}/"
+                                log.info "${env.WORKSPACE}/${props.devopsPath}/${ENV}/${props.utilPropsFile}"
+                                sshRemote("${env.WORKSPACE}/${props.devopsPath}/${ENV}/${props.utilPropsFile}");
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+}
+
+def loadEnviromentVariables(path) {
+    props = readProperties file: path
+}

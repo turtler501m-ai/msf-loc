@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.sale.subsdMgmt.mapper.SubsdMgmtMapper">
+	
+	<sql id="getSubsdAmtMainInfo">
+		SELECT 
+				 A.RATE_CD
+		        , A.RATE_NM
+		        , B.PRDT_ID
+		        , B.PRDT_CODE
+		        , B.PRDT_NM
+		        , C.OLD_YN
+		        , DECODE(C.OLD_YN, 'N', '신품', '중고') AS OLD_NM
+		        , C.APPL_STRT_DT
+		        , C.APPL_END_DT
+		        , C.SUBSD_AMT
+		FROM    MSP_RATE_MST A
+		        , CMN_INTM_MDL B
+		        , ( SELECT  /*+ INDEX(A MSP_OFCL_SUBSD_MST_IDX2 )*/
+		        	 A.RATE_CD, A.PRDT_ID, A.OLD_YN, A.SUBSD_AMT, A.APPL_STRT_DT, A.APPL_END_DT
+		            FROM    MSP_OFCL_SUBSD_MST A
+		            WHERE   #{stdrDt} BETWEEN A.APPL_STRT_DT AND A.APPL_END_DT
+		            <if test="rateCd != null and rateCd != ''">
+		            AND     A.RATE_CD = #{rateCd}
+		            </if>
+		            <if test="prdtId != null and prdtId != ''">
+		            AND     A.PRDT_ID = #{prdtId}
+		            </if>
+		            GROUP BY A.RATE_CD, A.PRDT_ID, A.OLD_YN, A.SUBSD_AMT, A.APPL_STRT_DT, A.APPL_END_DT
+		        ) C
+		WHERE   A.RATE_CD   = C.RATE_CD
+		AND     B.PRDT_ID   = C.PRDT_ID
+		ORDER BY A.RATE_NM, B.PRDT_NM
+	</sql>
+	
+	<select id="getSubsdMgmtMainList" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getSubsdMgmtMainList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getSubsdAmtMainInfo" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getSubsdMgmtMainListExcel" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getSubsdMgmtMainListExcel */
+		
+		<include refid="getSubsdAmtMainInfo" />
+		
+	</select>
+	
+	<select id="getPrdtIndCd"  parameterType="String" resultType="String" >
+		/* subsdMapper.getPrdtIndCd */
+		SELECT	PRDT_IND_CD
+		FROM	CMN_INTM_MDL
+		WHERE PRDT_ID	= #{prdtId}
+	</select>
+			
+	<sql id="getSubsdAmtDtlInfo">
+		/* subsdMapper.getSubsdAmtDtlInfo */
+		SELECT	A.RATE_CD
+				, FN_GET_CODENM('CMN0046', B.RATE_GRP_CD) AS RATE_GRP_NM
+				, B.RATE_NM
+				, A.PRDT_ID
+				, C.PRDT_CODE
+				, C.PRDT_NM
+				, A.OLD_YN
+				, DECODE(A.OLD_YN, 'N', '신품', '중고') AS OLD_NM
+				, A.OPER_TYPE
+				, FN_GET_CODENM('CMN0049', A.OPER_TYPE) AS OPER_TYPE_NM
+				, A.AGRM_TRM
+				, FN_GET_CODENM('CMS0029', A.AGRM_TRM) AS AGRM_TRM_NM
+				, A.APPL_STRT_DT
+				, A.APPL_END_DT
+				, A.SUBSD_AMT
+				, FN_GET_USRNM( A.REGST_ID ) AS REGST_NM
+				, TO_CHAR(A.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM
+				, FN_GET_USRNM( A.RVISN_ID ) AS RVISN_NM
+				, TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+		FROM	MSP_OFCL_SUBSD_MST A
+				, MSP_RATE_MST B
+				, CMN_INTM_MDL C
+		WHERE	#{stdrDt}	BETWEEN A.APPL_STRT_DT AND A.APPL_END_DT
+		<if test="rateCd != null and rateCd != ''">
+		AND		A.RATE_CD	= #{rateCd}
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+		AND		A.PRDT_ID	= #{prdtId}
+		</if>
+		<if test="oldYn != null and oldYn != ''">
+		AND		A.OLD_YN	= #{oldYn}
+		</if>
+		<if test="operType != null and operType != ''">
+		AND		A.OPER_TYPE	= #{operType}
+		</if>
+		<if test="agrmTrm != null and agrmTrm != ''">
+		AND		A.AGRM_TRM	= #{agrmTrm}
+		</if>
+		AND		A.RATE_CD		= B.RATE_CD
+		AND		B.APPL_END_DT	= '99991231'
+		AND		A.PRDT_ID		= C.PRDT_ID
+	</sql>
+	
+	<select id="getSubsdMgmtDtlList" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getSubsdMgmtList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getSubsdAmtDtlInfo" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getSubsdMgmtDtlListExcel" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getSubsdMgmtDtlListExcel */
+		
+		<include refid="getSubsdAmtDtlInfo" />
+		
+	</select>
+	
+	<select id="getRateGrpRateCdList" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getRateGrpRateCdList */
+		SELECT  A.RATE_CD
+		FROM    MSP_RATE_MST A
+		      , CMN_INTM_MDL B
+		WHERE   A.APPL_END_DT   = '99991231'
+		AND     A.SERVICE_TYPE  = 'P'
+		AND     A.RATE_GRP_CD   = #{rateGrpCd}
+		AND     B.PRDT_ID       = #{prdtId}
+		AND     A.RATE_TYPE IN (B.PRDT_TYPE_CD, '00')
+		<if test= "prdtIndCd == '34' ">
+		AND	   A.DATA_TYPE IN ('3G', 'LTE')
+		</if>
+		<if test="prdtIndCd == '45' ">
+		AND	   A.DATA_TYPE IN ('LTE', '5G')
+		</if>	
+		<if test="prdtIndCd == '03' ">	
+		AND	   A.DATA_TYPE = '3G'
+		</if>	
+		<if test="prdtIndCd == '04' ">	
+		AND	   A.DATA_TYPE = 'LTE'
+		</if>
+		<if test="prdtIndCd == '05' ">	
+		AND	   A.DATA_TYPE = '5G'
+		</if>			
+	</select>
+	
+	<select id="getPrdtComboList" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO"
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getPrdtComboList */
+		SELECT  A.PRDT_ID AS VALUE
+		        , A.PRDT_NM || '[' || A.PRDT_CODE || ']' AS TEXT
+		FROM    CMN_INTM_MDL A
+		WHERE   A.RPRS_YN       = 'Y'
+		<if test='prdtTypeCd == null or prdtTypeCd == ""'>
+		AND     A.PRDT_TYPE_CD  = '01'
+		</if>
+		AND     A.PRDT_DT       = '99991231'
+		ORDER BY 2
+	</select>
+	
+	<select id="getCommonGridList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getCommonGridList */
+		SELECT	'' CHK_YN
+				, CD_VAL
+				, CD_DSC AS CD_NM
+		FROM	CMN_GRP_CD_MST
+		WHERE	GRP_ID	= #{grpId}
+		AND		USG_YN	= 'Y'
+		<if test="optVal != null and optVal != ''">
+		AND     CD_VAL <![CDATA[ <> ]]> #{optVal}
+		</if>
+		ORDER BY ETC1
+	</select>
+	
+	<select id="getSubsbEndDt" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getSubsdEndDt */
+		SELECT  DISTINCT RATE_CD
+		        , PRDT_ID
+		        , OLD_YN
+		        , OPER_TYPE
+		        , AGRM_TRM
+		        , APPL_END_DT
+		        , TO_CHAR(TO_DATE(#{applStrtDt}, 'YYYYMMDD') - 1, 'YYYYMMDD') AS NEW_APPL_END_DT
+		        , #{userId} AS USER_ID
+		FROM    MSP_OFCL_SUBSD_MST
+		WHERE   RATE_CD     = #{rateCd}
+		AND     PRDT_ID     = #{prdtId}
+		AND     OLD_YN      = #{oldYn}
+		AND     OPER_TYPE   = #{operType}
+		AND     AGRM_TRM    = #{agrmTrm}
+		AND     APPL_END_DT <![CDATA[ >= ]]> #{applStrtDt}
+		AND     ROWNUM      = 1
+	</select>
+	
+	<update id="updateOfclSubsdEndDt" parameterType="map">
+		/* subsdMapper.updateOfclSubsdEndDt */
+		UPDATE	MSP_OFCL_SUBSD_MST
+		SET		APPL_END_DT 	= #{newApplEndDt, jdbcType=VARCHAR}
+				, RVISN_ID		= #{userId, jdbcType=VARCHAR}
+				, RVISN_DTTM	= SYSDATE
+		WHERE	RATE_CD			= #{rateCd, jdbcType=VARCHAR}
+		AND		PRDT_ID			= #{prdtId, jdbcType=VARCHAR}
+		AND		OLD_YN			= #{oldYn, jdbcType=VARCHAR}
+		AND		OPER_TYPE		= #{operType, jdbcType=VARCHAR}
+		AND		AGRM_TRM		= #{agrmTrm, jdbcType=VARCHAR}
+		AND		APPL_END_DT		= #{applEndDt, jdbcType=VARCHAR}
+	</update>
+	
+	<insert id="insertOfclSubsdMst" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO">
+		/* subsdMapper.insertOfclSubsdMst */
+		INSERT INTO MSP_OFCL_SUBSD_MST (
+			RATE_CD
+			, PRDT_ID
+			, OLD_YN
+			, AGRM_TRM
+			, OPER_TYPE
+			, APPL_END_DT
+			, APPL_STRT_DT
+			, SUBSD_AMT
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			#{rateCd, jdbcType=VARCHAR}
+			, #{prdtId, jdbcType=VARCHAR}
+			, NVL(#{oldYn, jdbcType=VARCHAR}, 'N')
+			, #{agrmTrm, jdbcType=VARCHAR}
+			, #{operType, jdbcType=VARCHAR}
+			, '99991231'
+			, #{applStrtDt, jdbcType=VARCHAR}
+			, #{subsdAmt, jdbcType=INTEGER}
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{userId, jdbcType=VARCHAR}
+			, SYSDATE
+		)
+	</insert>
+	
+	<update id="updateSubsdAmtInfo" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO">
+		/* subsdMapper.updateSubsdAmtInfo */
+		UPDATE  MSP_OFCL_SUBSD_MST
+		SET     SUBSD_AMT       = #{subsdAmt, jdbcType=INTEGER}
+		        , RVISN_ID      = #{sessionUserId, jdbcType=VARCHAR}
+		        , RVISN_DTTM    = SYSDATE 
+		WHERE   RATE_CD         = #{rateCd, jdbcType=VARCHAR}
+		AND     PRDT_ID         = #{prdtId, jdbcType=VARCHAR}
+		AND     OLD_YN          = #{oldYn, jdbcType=VARCHAR}
+		AND     APPL_END_DT     = #{applEndDt, jdbcType=VARCHAR}
+		AND     APPL_STRT_DT    = #{applStrtDt, jdbcType=VARCHAR}
+		<if test="operType != null and operType != ''">
+		AND     OPER_TYPE       = #{operType, jdbcType=VARCHAR}
+		</if>
+		<if test="agrmTrm != null and agrmTrm != ''">
+		AND     AGRM_TRM        = #{agrmTrm, jdbcType=VARCHAR}
+		</if>
+	
+	</update>
+	
+	<select id="getCmnGrpCdListByEtc5" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getCmnGrpCdListByEtc5 */
+		SELECT	CD_VAL
+			  , CD_DSC
+		FROM	CMN_GRP_CD_MST
+		WHERE	GRP_ID	= #{grpId}
+		AND		USG_YN	= 'Y'
+		<if test="optVal != null and optVal != ''">
+		AND     ETC5 = #{optVal}
+		</if>
+	</select>
+	
+	<select id="getCopySubsdAmtInfo" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* subsdMapper.getCopySubsdAmtInfo */
+		SELECT DISTINCT
+		 A.PRDT_ID
+		,A.OLD_YN
+		,A.SUBSD_AMT
+		,#{rateCd, jdbcType=VARCHAR} AS RATE_CD
+		,'N' AS RATE_GRP_YN
+		,#{applStrtDt, jdbcType=VARCHAR} AS APPL_STRT_DT
+		,#{agrmTrm, jdbcType=VARCHAR} AS AGRM_TRM
+		,#{agrmTrmNm, jdbcType=VARCHAR} AS AGRM_TRM_NM
+		,#{operType, jdbcType=VARCHAR} AS OPER_TYPE
+		,#{operTypeNm, jdbcType=VARCHAR} AS OPER_TYPE_NM
+		,B.PRDT_NM
+		FROM
+		    (
+		    SELECT /*+ LEADING(C B A D) */
+		        A.PRDT_ID
+		      , A.OLD_YN
+		      , MAX(A.SUBSD_AMT) AS SUBSD_AMT
+		    FROM MSP_OFCL_SUBSD_MST A
+		        ,MSP_RATE_MST       B
+		        ,MSP_RATE_MST       C
+		        ,CMN_GRP_CD_MST     D
+		    WHERE A.RATE_CD = B.RATE_CD
+		    AND   A.APPL_END_DT >= #{applStrtDt, jdbcType=VARCHAR}
+		    AND   B.RATE_GRP_CD = C.RATE_GRP_CD
+		    AND   C.RATE_CD = #{rateCd, jdbcType=VARCHAR}
+		    AND   A.AGRM_TRM = D.CD_VAL
+		    AND   D.GRP_ID = 'CMN0053'
+		    AND   D.USG_YN = 'Y'
+		    AND   D.ETC5   = 'Y'
+		    AND   #{applStrtDt, jdbcType=VARCHAR} BETWEEN B.APPL_STRT_DT  AND B.APPL_END_DT
+		    AND   #{applStrtDt, jdbcType=VARCHAR} BETWEEN C.APPL_STRT_DT  AND C.APPL_END_DT
+		    GROUP BY A.PRDT_ID, A.OLD_YN
+		    ) A
+		   ,CMN_INTM_MDL B
+		WHERE A.PRDT_ID = B.PRDT_ID
+		AND   B.RPRS_YN = 'Y'
+		AND   B.PRDT_TYPE_CD = '01'
+		AND   B.PRDT_DT = '99991231'
+		ORDER BY A.PRDT_ID, A.OLD_YN
+	</select>
+	
+	<insert id="regMspOfclSubsdDataUpload" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtByExcelVO">
+		/* subsdMapper.regMspOfclSubsdDataUpload */
+		INSERT INTO MSP_OFCL_SUBSD_DATA_UPLOAD (
+			SEQ_NUM
+			, TRTM_DT
+			, REGST_ID
+			, APPL_STRT_DT
+			, NAC_YN
+			, MNP_YN
+			, HCN_YN
+			, HDN_YN
+			, AGRM_12_YN
+			, AGRM_18_YN
+			, AGRM_24_YN
+			, AGRM_30_YN
+			, AGRM_36_YN
+			, RPRS_PRDT_ID
+			, COL_01
+			, COL_02
+			, COL_03
+			, COL_04
+			, COL_05
+			, COL_06
+			, COL_07
+			, COL_08
+			, COL_09
+			, COL_10
+			, COL_11
+			, COL_12
+			, COL_13
+			, COL_14
+			, COL_15
+			, COL_16
+			, COL_17
+			, COL_18
+			, COL_19
+			, COL_20
+			, COL_21
+			, COL_22
+			, COL_23
+			, COL_24
+			, COL_25
+			, COL_26
+			, COL_27
+			, COL_28
+			, COL_29
+			, COL_30
+			, COL_31
+			, COL_32
+			, COL_33
+			, COL_34
+			, COL_35
+			, COL_36
+			, COL_37
+			, COL_38
+			, COL_39
+			, COL_40
+			, REGST_DTTM
+		) VALUES (
+			#{seqNum}
+			, #{trtmDt}
+			, #{sessionUserId}
+			, #{applStrtDt}
+			, DECODE(#{nacYn}, '1', 'Y', 'N')
+			, DECODE(#{mnpYn}, '1', 'Y', 'N')
+			, DECODE(#{hcnYn}, '1', 'Y', 'N')
+			, DECODE(#{hdnYn}, '1', 'Y', 'N')
+			, DECODE(#{agrm12Yn}, '1', 'Y', 'N')
+			, DECODE(#{agrm18Yn}, '1', 'Y', 'N')
+			, DECODE(#{agrm24Yn}, '1', 'Y', 'N')
+			, DECODE(#{agrm30Yn}, '1', 'Y', 'N')
+			, DECODE(#{agrm36Yn}, '1', 'Y', 'N')
+			, #{rprsPrdtId}
+			, #{col01}
+			, #{col02}
+			, #{col03}
+			, #{col04}
+			, #{col05}
+			, #{col06}
+			, #{col07}
+			, #{col08}
+			, #{col09}
+			, #{col10}
+			, #{col11}
+			, #{col12}
+			, #{col13}
+			, #{col14}
+			, #{col15}
+			, #{col16}
+			, #{col17}
+			, #{col18}
+			, #{col19}
+			, #{col20}
+			, #{col21}
+			, #{col22}
+			, #{col23}
+			, #{col24}
+			, #{col25}
+			, #{col26}
+			, #{col27}
+			, #{col28}
+			, #{col29}
+			, #{col30}
+			, #{col31}
+			, #{col32}
+			, #{col33}
+			, #{col34}
+			, #{col35}
+			, #{col36}
+			, #{col37}
+			, #{col38}
+			, #{col39}
+			, #{col40}
+			, SYSDATE
+		)
+	</insert>
+	
+	<insert id="callOfclSubsdMst" statementType="CALLABLE" parameterType="com.ktis.msp.sale.subsdMgmt.vo.SubsdMgmtByExcelVO">
+		/* subsdMapper.callOfclSubsdMst */
+		{ CALL P_OFCL_SUBSD_MST(#{trtmDt}, #{sessionUserId}) }
+	</insert>
+	
+</mapper>

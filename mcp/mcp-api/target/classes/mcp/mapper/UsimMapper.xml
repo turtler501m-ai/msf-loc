@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.usim.mapper.UsimMapper">
+
+    <!-- 유심상품관리 리스트용  collection 단품정보를 포함하고있다. -->
+    <resultMap id="listUsimMapForCollection" type="com.ktmmobile.mcp.usim.dto.UsimBasDto">
+        <collection property="usimMspPlcyDtoList"
+                    ofType="com.ktmmobile.mcp.usim.dto.UsimMspPlcyDto"
+                    column="{salePlcyCd=SALE_PLCY_CD}"
+                    select="listUsimMspPlcyDto" >
+        </collection>
+    </resultMap>
+
+    <select id="selectUsimBasDto" parameterType="com.ktmmobile.mcp.usim.dto.UsimBasDto" resultMap="listUsimMapForCollection">
+        <!-- NMCP_USIM_BAS 의 USIM 흥보 글 조회 -->
+        SELECT
+            USIM_SEQ
+            ,USIM_DESC
+            ,SALE_PLCY_CD
+            ,SALE_PLCY_CD AS salePlcyCd
+            ,SALE_PLCY_NM
+            ,RATE_CD
+            ,RATE_NM
+            ,VIEW_YN
+            ,IMG_PATH
+            ,PAY_CL_CD   			-- 선불 후불구분 PO 후불 PP선불
+            ,DATA_TYPE	 			-- 데이터 타입
+            ,CRET_ID
+            ,AMD_ID
+            ,CRET_DT
+            ,AMD_DT
+            ,BEST_RATE				--추천 요금제
+            ,PRDT_NM
+            ,PRDT_ID
+            ,AGRM_TRM
+            ,PRDT_IND_CD
+        FROM NMCP_USIM_BAS
+        WHERE USIM_SEQ = #{usimSeq}
+    </select>
+
+    <select id="listUsimMspPlcyDto" resultType="com.ktmmobile.mcp.usim.dto.UsimMspPlcyDto">
+        <!-- USIM 판매정책 리스트 정보 조회 only msp db링크를 통한 조회만 한다. -->
+        SELECT
+                SALE_PLCY_CD	--판매정책코드
+                ,SALE_PLCY_NM	--판매정책명
+        FROM   MSP_SALE_PLCY_MST@DL_MSP D
+        WHERE
+            TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN
+            SALE_STRT_DTTM AND SALE_END_DTTM
+            AND D.PLCY_TYPE_CD = 'D'		  -- 온라인:O , 오프라인:M , 직영온라인 : D
+            AND D.PLCY_SCTN_CD = '02'		  -- 01:단말,02:유심
+            AND D.CNFM_YN = 'Y'				  --결제 YN (필수)
+    </select>
+
+    <select id="listUsimMspDto" parameterType="com.ktmmobile.mcp.usim.dto.UsimMspDto" resultType="com.ktmmobile.mcp.usim.dto.UsimMspDto">
+    <!-- USIM 판매정책코드를 이용한 USIM 상품 리스트 정보 조회 only msp db링크를 통한 조회만 한다. -->
+        SELECT
+            SA.SALE_PLCY_CD --정책코드
+            ,RA.RATE_CD    --상품코드
+            ,RA.RATE_NM   --상품명
+            ,RA.PAY_CL_CD    -- 선불 후불구분 PO 후불 PP선불
+              ,RA.DATA_TYPE	 -- 데이터 타입
+        FROM MSP_RATE_MST@DL_MSP RA,
+                MSP_SALE_RATE_MST@DL_MSP SA,
+               CMN_GRP_CD_MST@DL_MSP GR
+        WHERE
+                APPL_END_DT = '99991231'
+               AND RA.PAY_CL_CD = GR.CD_VAL
+               AND GR.GRP_ID='CMN0032'	--선불후불 구분 코트값의 그룹코드
+               AND SA.SALE_PLCY_CD = #{salePlcyCd}
+               AND RA.RATE_CD = SA.RATE_CD
+    </select>
+
+    <select id="selectUsimBasTotalCount" resultType="int" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto">
+    SELECT
+        COUNT(A.USIM_SEQ)
+    FROM
+        NMCP_USIM_BAS A,
+        MSP_SALE_PLCY_MST@DL_MSP B
+      WHERE
+           1=1
+           AND A.SALE_PLCY_CD = B.SALE_PLCY_CD(+)
+          <if test="showYn != null and showYn != ''">
+              AND A.VIEW_YN = #{showYn}
+          </if>
+           <if test='searchCategoryId == "rateNm"'>
+              AND A.PRDT_NM LIKE '%' || #{searchValue} || '%'
+          </if>
+          <if test='searchCategoryId == "prdtSctnCd"'>
+              AND B.PRDT_SCTN_CD LIKE '%' || #{searchValue} || '%'
+          </if>
+    </select>
+
+    <select id="selectUsimBasList" parameterType="com.ktmmobile.mcp.phone.dto.CommonSearchDto" resultType="com.ktmmobile.mcp.usim.dto.UsimBasDto">
+              SELECT
+                      ROW_NUMBER() OVER (ORDER BY USIM_SEQ ASC) AS ROW_NUM,
+                      A.USIM_SEQ,
+                    A.SALE_PLCY_NM,
+                    A.RATE_NM,
+                    B.PRDT_SCTN_CD,
+                    A.VIEW_YN,
+                    A.PRDT_NM,
+                    A.PAY_CL_CD,
+                    A.PRDT_ID
+               FROM
+                     NMCP_USIM_BAS A,
+                     MSP_SALE_PLCY_MST@DL_MSP B
+               WHERE
+                   1=1
+                   AND A.SALE_PLCY_CD = B.SALE_PLCY_CD(+)
+                  <if test="showYn != null and showYn != ''">
+                      AND A.VIEW_YN = #{showYn}
+                  </if>
+                   <if test='searchCategoryId == "rateNm"'>
+                      AND A.PRDT_NM LIKE '%' || #{searchValue} || '%'
+                  </if>
+                  <if test='searchCategoryId == "prdtSctnCd"'>
+                      AND B.PRDT_SCTN_CD LIKE '%' || #{searchValue} || '%'
+                  </if>
+               ORDER BY USIM_SEQ DESC
+    </select>
+
+    <select id="selectUsimPrdtList" parameterType="com.ktmmobile.mcp.usim.dto.UsimBasDto" resultType="com.ktmmobile.mcp.usim.dto.UsimBasDto">
+        SELECT /* 정책에 해당하는 상품의 상세정보를 가져온다. */
+            DISTINCT
+            B.PRDT_NM
+            , A.PRDT_ID
+            , C.PRDT_SCTN_CD
+            , RA.PAY_CL_CD
+        FROM
+            MSP_SALE_PRDT_MST@DL_MSP A -- 정책
+            , CMN_INTM_MDL@DL_MSP B
+            , MSP_SALE_PLCY_MST@DL_MSP C
+            , MSP_RATE_MST@DL_MSP RA
+            , MSP_SALE_RATE_MST@DL_MSP SA
+            , MSP_SALE_ORGN_MST@DL_MSP ORG
+        WHERE
+            C.PLCY_SCTN_CD = 02
+            AND A.PRDT_ID = B.PRDT_ID
+            AND A.SALE_PLCY_CD = C.SALE_PLCY_CD
+            AND A.SALE_PLCY_CD = SA.SALE_PLCY_CD
+            AND RA.RATE_CD = SA.RATE_CD
+            AND C.SALE_PLCY_CD = ORG.SALE_PLCY_CD
+            AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN C.SALE_STRT_DTTM AND C.SALE_END_DTTM
+            AND PAY_CL_CD = #{payClCd}
+            AND PRDT_SCTN_CD = #{prdtSctnCd}
+            AND ORG.ORGN_ID = #{orgnId}
+            <choose>
+                <when test="prdtIndCd == '10'">
+                    AND B.PRDT_IND_CD = 10
+                </when>
+                <when test="prdtIndCd == '11'">
+                    AND B.PRDT_IND_CD = 11
+                </when>
+                <otherwise>
+                    <![CDATA[
+                    AND B.PRDT_IND_CD <> 10
+                    ]]>
+                </otherwise >
+            </choose>
+    </select>
+
+    <select id="selectUsimSalePlcyCdToPrdtList" parameterType="com.ktmmobile.mcp.usim.dto.UsimBasDto" resultType="com.ktmmobile.mcp.usim.dto.UsimBasDto">
+        SELECT/*상품정보로 유효한 정책정보를 들고온다.*/
+            DISTINCT
+            C.SALE_PLCY_CD,
+            C.SALE_PLCY_NM
+        FROM	MSP_SALE_PRDT_MST@DL_MSP A -- 정책
+                , CMN_INTM_MDL@DL_MSP B
+                  , MSP_SALE_PLCY_MST@DL_MSP C
+                  , MSP_RATE_MST@DL_MSP RA
+                     , MSP_SALE_RATE_MST@DL_MSP SA
+                  , MSP_SALE_ORGN_MST@DL_MSP ORG
+                 , MSP_SALE_AGRM_MST@DL_MSP AG
+        WHERE 	C.PLCY_SCTN_CD = 02
+                AND A.PRDT_ID = B.PRDT_ID
+                AND SA.SALE_PLCY_CD = AG.SALE_PLCY_CD
+                AND A.SALE_PLCY_CD = C.SALE_PLCY_CD
+                AND A.SALE_PLCY_CD = SA.SALE_PLCY_CD
+                   AND RA.RATE_CD = SA.RATE_CD
+                AND C.SALE_PLCY_CD = ORG.SALE_PLCY_CD
+                AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN C.SALE_STRT_DTTM AND C.SALE_END_DTTM
+                and A.PRDT_ID = #{prdtId}
+                    AND RA.PAY_CL_CD = #{payClCd}
+                AND C.PRDT_SCTN_CD = #{prdtSctnCd}
+                AND ORG.ORGN_ID = #{orgnId}
+                <if test="agrmTrm !=null and agrmTrm != ''">
+                       AND AG.AGRM_TRM= #{agrmTrm} 								-- 약정기간 무약정0은 기본적으로 조회한다.
+                </if>
+        ORDER BY SALE_PLCY_CD
+    </select>
+
+    <select id="selectUsimNewRateList" parameterType="com.ktmmobile.mcp.usim.dto.UsimBasDto" resultType="com.ktmmobile.mcp.usim.dto.UsimBasDto">
+        SELECT
+            DISTINCT
+            AG.AGRM_TRM
+            ,SA.SALE_PLCY_CD --정책코드
+            ,RA.RATE_CD    --상품코드
+            ,RA.RATE_NM   --상품명
+            ,RA.PAY_CL_CD    -- 선불 후불구분 PO 후불 PP선불
+              ,RA.DATA_TYPE	 -- 데이터 타입
+        FROM MSP_RATE_MST@DL_MSP RA,
+                MSP_SALE_RATE_MST@DL_MSP SA,
+               CMN_GRP_CD_MST@DL_MSP GR,
+             MSP_SALE_AGRM_MST@DL_MSP AG
+        WHERE
+               APPL_END_DT = '99991231'
+              AND RA.PAY_CL_CD = GR.CD_VAL
+              AND SA.SALE_PLCY_CD IN
+                  <foreach item="item" collection="salePlcyCdList" open="(" separator="," close=")">
+                      #{item}
+                  </foreach>
+              AND RA.PAY_CL_CD = #{payClCd}
+              AND RA.RATE_CD = SA.RATE_CD
+              AND SA.SALE_PLCY_CD = AG.SALE_PLCY_CD
+    </select>
+
+    <select id="selectUsimSalePlcyCdBannerList" parameterType="com.ktmmobile.mcp.storeusim.dto.MspSalePlcyMstDto" resultType="com.ktmmobile.mcp.storeusim.dto.MspSalePlcyMstDto">
+    SELECT/*상품정보로 유효한 정책정보를 들고온다.(약정포함)*/
+            DISTINCT
+            C.SALE_PLCY_CD,
+            C.SALE_PLCY_NM,
+              AG.AGRM_TRM,
+              RA.PAY_CL_CD
+        FROM	MSP_SALE_PRDT_MST@DL_MSP A -- 정책
+                , CMN_INTM_MDL@DL_MSP B
+                  , MSP_SALE_PLCY_MST@DL_MSP C
+                  , MSP_RATE_MST@DL_MSP RA
+                     , MSP_SALE_RATE_MST@DL_MSP SA
+                  , MSP_SALE_ORGN_MST@DL_MSP ORG
+                 , MSP_SALE_AGRM_MST@DL_MSP AG
+        WHERE 	C.PLCY_SCTN_CD = 02
+                AND A.PRDT_ID = B.PRDT_ID
+                AND SA.SALE_PLCY_CD = AG.SALE_PLCY_CD
+                AND A.SALE_PLCY_CD = C.SALE_PLCY_CD
+                AND A.SALE_PLCY_CD = SA.SALE_PLCY_CD
+                   AND RA.RATE_CD = SA.RATE_CD
+                AND C.SALE_PLCY_CD = ORG.SALE_PLCY_CD
+                AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN C.SALE_STRT_DTTM AND C.SALE_END_DTTM
+                AND RA.PAY_CL_CD = #{payClCd}
+                AND C.PRDT_SCTN_CD = #{prdtSctnCd}
+                AND ORG.ORGN_ID = #{orgnId}
+                AND ORG.ORGN_ID = '1100011741'
+                ORDER BY AGRM_TRM ASC
+    </select>
+
+    <select  id="selectMspSaleAgrmMstMoreTwoRows" parameterType="com.ktmmobile.mcp.usim.dto.UsimBasDto" resultType="com.ktmmobile.mcp.usim.dto.UsimBasDto">
+        /*정책정보로 약정할인 조회.*/
+        SELECT
+            --RA.SALE_PLCY_CD,
+            RA.AGRM_TRM
+            --RA.REGST_ID,
+            --RA.REGST_DTTM,
+            --RA.RVISN_ID,
+            --RA.RVISN_DTTM
+        FROM
+            MSP_SALE_AGRM_MST@DL_MSP RA
+        WHERE
+            RA.SALE_PLCY_CD IN
+            <foreach item="item" collection="salePlcyCdList" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        GROUP BY AGRM_TRM
+        ORDER BY AGRM_TRM ASC
+    </select>
+
+    <update id="insertMcpUsimProdSort" parameterType="java.util.List">
+    <foreach collection="list" item="item" index="index" separator=" " open="INSERT ALL" close="SELECT * FROM DUAL">
+        INTO MCP_USIM_PROD_SORT
+       (
+        USIM_SEQ
+        ,SALE_PLCY_CD
+        ,PAY_SORT
+        ,RATE_CD
+        ,RATE_NM
+        ,PRDT_NM
+        ,PRDT_ID
+        ,CRET_ID
+        ,AMD_ID
+        ,CRET_DT
+        ,AMD_DT
+        ) VALUES
+
+            (
+            #{item.usimSeq}
+            , #{item.salePlcyCd}
+            , #{item.paySort}
+            , #{item.rateCd}
+            , (SELECT NVL(RATE_NM,'-') AS RATE_NM FROM MSP_RATE_MST@DL_MSP WHERE RATE_CD = #{item.rateCd})
+            , #{item.prdtNm}
+            , #{item.prdtId}
+            , #{item.cretId}
+            , #{item.amdId}
+            , SYSDATE
+            , SYSDATE
+            )
+        </foreach>
+    </update>
+
+</mapper>

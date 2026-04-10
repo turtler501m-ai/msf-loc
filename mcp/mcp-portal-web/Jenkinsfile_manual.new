@@ -1,0 +1,235 @@
+#!/usr/bin/env groovy
+
+@Library('utils@trunk/utils') _   // Global Shared Library 로드
+//마이그후에 폴더 구조 변경 필요
+
+pipeline {
+  agent any
+  options {
+    ansiColor('css')  // Jenkins 콘솔 출력에서 ANSI 색상 활성화
+  }
+
+  // ======================================================
+  // 전역 환경 변수 선언
+  // 모든 stage에서 공통으로 접근 가능
+  // ======================================================
+  environment {
+    ANT_HOME = tool 'ant-1.10.15'                // ANT 설치 경로
+    MVN_HOME = tool 'maven-3.8.9'               // Maven 설치 경로
+    JDK_HOME = tool 'jdk11'                     // JDK 설치 경로
+    JENKINS_PROPERTIES = "devops/jenkins/jenkins-new.properties" // Jenkins 전용 프로퍼티 파일
+  }
+
+  stages {
+
+    // ======================================================
+    // Stage 1: 환경 확인 및 Job 정보 파싱
+    // - MCP 접두사 제거
+    // - jobName을 '-' 기준으로 나눔
+    // - platformNm, validCat 전역 변수 등록
+    // ======================================================
+    stage('Environment Check') {
+      steps {
+        script {
+          // MCP 접두사 제거 (예: MCP/mcp-admin-web-dev → mcp-admin-web-dev)
+          def jobName = env.JOB_NAME.tokenize('/').last()
+          def varField = "${jobName}".split('-')
+
+          // 전역 env 변수 등록 (모든 stage에서 사용 가능)
+          env.platformNm = "${varField[0]}-${varField[1]}"  // 플랫폼 이름 예: mcp-admin
+          env.validCat = "${varField[2]}"                  // 카테고리 예: web
+
+          echo """
+================= Jenkins Environment Check =================
+JOB_NAME    : ${env.JOB_NAME}
+jobName     : ${jobName}
+ANT_HOME    : ${env.ANT_HOME}
+MVN_HOME    : ${env.MVN_HOME}
+JDK_HOME    : ${env.JDK_HOME}
+platformNm  : ${env.platformNm}
+validCat    : ${env.validCat}
+varField    : ${varField}
+
+================= System Environment Variables ===============
+${sh(script: 'printenv | sort | grep -E "JOB_NAME|BUILD_NUMBER|WORKSPACE|JAVA_HOME|PATH" || true', returnStdout: true).trim()}
+==============================================================
+"""
+        }
+      }
+    }
+
+    // ======================================================
+    // Stage 2: Jenkins Parameter 초기화
+    // - ChoiceParameter: SELECT_ENV, SELECT_FUNC
+    // - CascadeChoiceParameter: SELECT_HOST
+    // - SELECT_FUNC가 'deploy'인 경우만 HOST 리스트 생성
+    // ======================================================
+    stage("Init Function Setting") {
+      steps {
+        script {
+          properties([
+            parameters([
+
+              // =====================
+              // SELECT_ENV
+              // dev, stg, prd 중 선택
+              // =====================
+              [$class: 'ChoiceParameter',
+                choiceType: 'PT_SINGLE_SELECT',
+                description: 'Select the SELECT_ENV from the Dropdown List',
+                filterLength: 1,
+                filterable: false,
+                name: 'SELECT_ENV',
+                script: [$class: 'GroovyScript',
+                  fallbackScript: [classpath: [], sandbox: false, script: "return['Could not get The environments']"],
+                  script: [classpath: [], sandbox: false, script: "return['dev','stg','prd']"]
+                ]
+              ],
+
+              // =====================
+              // SELECT_FUNC
+              // build 또는 deploy 선택
+              // =====================
+              [$class: 'ChoiceParameter',
+                choiceType: 'PT_SINGLE_SELECT',
+                description: 'Select the SELECT_FUNC from the Dropdown List.',
+                filterLength: 1,
+                filterable: false,
+                name: 'SELECT_FUNC',
+                script: [$class: 'GroovyScript',
+                  fallbackScript: [classpath: [], sandbox: false, script: "return['Could not get The function.']"],
+                  script: [classpath: [], sandbox: false, script: "return['build','deploy']"]
+                ]
+              ],
+
+              // =====================
+              // SELECT_HOST
+              // CascadeChoiceParameter
+              // SELECT_ENV와 SELECT_FUNC에 따라 HOST 리스트 결정
+              // =====================
+              [$class: 'CascadeChoiceParameter',
+                choiceType: 'PT_SINGLE_SELECT',
+                description: 'Select the SELECT_HOST from the Dropdown List',
+                name: 'SELECT_HOST',
+                referencedParameters: "SELECT_ENV, SELECT_FUNC",
+                script: [$class: 'GroovyScript',
+                  fallbackScript: [classpath: [], sandbox: false, script: "return['Could not get Environment from SELECT_ENV Param']"],
+                  script: [classpath: [], sandbox: false,
+                    script: """
+                      def hosts = []
+
+                      // deploy 기능일 때만 host 리스트 생성
+                      if (SELECT_FUNC.contains('deploy')) {
+                        def envMap = [
+                          'dev': [
+                            'mcp-admin-web': ['MCP-WEB-DEV'],
+                            'mcp-admin-was': ['MCP-ADMIN-DEV'],
+                            'mcp-portal-web': ['MCP-WEB-DEV'],
+                            'mcp-portal-was': ['MCP-WAS-DEV'],
+                            'mcp-widget-web': ['MCP-WEBWidget-DEV'],
+                            'mcp-widget-was': ['MCP-WASwidget-DEV'],
+                            'mcp-api': ['MSC-API-DEV'],
+                            'mcp-search': ['MCP-SEARCH-DEV'],
+                            'msc-batch': ['MSC-BATCH-DEV']
+                          ],
+                          'stg': [
+                            'mcp-admin-web': ['MCP-WEB1-STG', 'MCP-WEB2-STG'],
+                            'mcp-admin-was': ['MCP-ADMIN-STG'],
+                            'mcp-portal-web': ['MCP-WEB1-STG', 'MCP-WEB2-STG'],
+                            'mcp-portal-was': ['MCP-WAS1-STG', 'MCP-WAS2-STG'],
+                            'mcp-widget-web': ['MCP-WEB1-widget-STG', 'MCP-WEB2-widget-STG'],
+                            'mcp-widget-was': ['MCP-WAS1-widget-STG', 'MCP-WAS2-widget-STG'],
+                            'mcp-api': ['MSC-API1-STG', 'MSC-API2-STG'],
+                            'mcp-search': ['MCP-SEARCH-STG'],
+                            'msc-batch': ['MCP-BATCH-STG'],
+                            'msc-prx': ['MSC-PRX1-STG', 'MSC-PRX2-STG']
+                          ],
+                          'prd': [
+                            'mcp-admin-web': ['MCP-WEB1-PRD', 'MCP-WEB2-PRD', 'MCP-WEB3-PRD', 'MCP-WEB4-PRD'],
+                            'mcp-admin-was': ['MCP-ADMIN-PRD'],
+                            'mcp-portal-web': ['MCP-WEB1-PRD', 'MCP-WEB2-PRD', 'MCP-WEB3-PRD', 'MCP-WEB4-PRD'],
+                            'mcp-portal-was': ['MCP-WAS1-PRD', 'MCP-WAS2-PRD'],
+                            'mcp-widget-web': ['MCP-WEB1-widget-PRD', 'MCP-WEB2-widget-PRD'],
+                            'mcp-widget-was': ['MCP-WAS1-widget-PRD', 'MCP-WAS2-widget-PRD'],
+                            'mcp-api': ['MSC-API1-PRD', 'MSC-API2-PRD'],
+                            'mcp-search': ['MCP-SEARCH1-PRD', 'MCP-SEARCH2-PRD'],
+                            'msc-batch': ['MCP-BATCH-PRD'],
+                            'msc-prx': ['MSC-PRX1-PRD', 'MSC-PRX2-PRD']
+                          ]
+                        ]
+
+                        def key = "${platformNm}-${validCat}"
+                        if (envMap.containsKey(SELECT_ENV) && envMap[SELECT_ENV].containsKey(key)) {
+                          hosts = envMap[SELECT_ENV][key]
+                        }
+                      }
+
+                      return hosts
+                    """
+                  ]
+                ]
+              ]
+
+            ])
+          ])
+        }
+      }
+    }
+
+    // ======================================================
+    // Stage 3: Function 호출 (Build/Deploy)
+    // - 파라미터 SELECT_FUNC에 따라 build 또는 deploy 수행
+    // - build: web / was 분기
+    // - deploy: web / was 분기
+    // - 에러 발생 시 workspace cleanup 및 빌드 실패 처리
+    // ======================================================
+    stage("Call Function") {
+      when { expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' } }
+      steps {
+        script {
+          def targetEnv = params.SELECT_ENV
+          def remoteHost = params.SELECT_HOST
+          def credId = deployer.removeAllDigit(remoteHost)  // 숫자 제거하여 credential ID 생성
+          def validFunc = params.SELECT_FUNC
+          def remoteId = remoteHost.contains("WEB") ? "apache" : "jboss"
+
+          try {
+            // FUNC, PATH 환경 변수만 stage-specific 적용
+            withEnv(["FUNC=${validFunc}", "PATH=${env.PATH}"]) {
+              switch(validFunc) {
+                case 'build':
+                  if (validCat == "web") {
+                    builder.funcWebBuild(env.JENKINS_PROPERTIES, env.ANT_HOME, env.JDK_HOME, targetEnv)
+                  } else {
+                    builder.funcWasBuild(env.JENKINS_PROPERTIES, env.MVN_HOME, env.JDK_HOME, targetEnv)
+                  }
+                  break
+
+                case 'deploy':
+                  if (validCat == "web") {
+                    deployer.sshWebPut(credId, remoteId, remoteHost, env.JENKINS_PROPERTIES, targetEnv)
+                    deployer.sshWebCommand(credId, remoteId, remoteHost, env.JENKINS_PROPERTIES, targetEnv)
+                  } else {
+                    deployer.sshWasPut(credId, remoteId, remoteHost, env.JENKINS_PROPERTIES, targetEnv)
+                    deployer.sshWasCommand(credId, remoteId, remoteHost, env.JENKINS_PROPERTIES, targetEnv)
+                  }
+                  break
+
+                default:
+                  echo "Unknown function >> ${validFunc}"
+                  currentBuild.result = "FAILED"
+                  sh 'ls -A1 | xargs rm -rf' // workspace cleanup
+              }
+            }
+          } catch(e) {
+            echo "Clean up workspace >> ${env.JOB_NAME}"
+            currentBuild.result = "FAILED"
+            sh 'ls -A1 | xargs rm -rf'
+            error e.toString()
+          }
+        }
+      }
+    }
+
+  } // end stages
+}

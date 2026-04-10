@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.gift.custgmt.mapper.CustMngMapper">
+
+
+	<!-- CUST GIFT 관리 -->
+	<select id="custMngList" parameterType="com.ktis.msp.gift.custgmt.vo.CustMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* CustMngMapper.custMngList */
+		SELECT
+			    A.PRMT_ID
+			  , E.PRMT_NM
+			  , A.CONTRACT_NUM
+			  , A.SUB_LINK_NAME      /* 고객명 */
+			  , A.SUBSCRIBER_NO      /* 전화번호 */
+			  , A.MNG_NM             /* 받는분이름 */
+			  , A.MNG_NM AS MASK_MNG_NM /* 받는분이름 */
+			  , A.TEL_FN1
+			  , A.TEL_MN1
+			  , A.TEL_RN1
+			  , A.TEL_FN1 || '-' || TEL_MN1 || '-' || TEL_RN1 AS TEL1
+			  , A.TEL_FN2
+			  , A.TEL_MN2
+			  , A.TEL_RN2
+			  , A.TEL_FN2 || '-' || TEL_MN2 || '-' || TEL_RN2 AS TEL2
+			  , A.POST
+			  , A.ADDR
+			  , A.ADDR_BJD
+			  , A.ADDR_DTL
+			  , A.ADDR_DTL AS MASK_ADDR_DTL
+
+			  , D.PRDT_NM || CASE WHEN (C.CNT = 1 OR C.CNT IS NULL) THEN ''
+			                       ELSE '(외)'
+			                  END AS PRDT_NM
+			  , (SELECT SUM(RE.QUANTITY)
+			     FROM   MSP_GIFT_PRDT PR
+			            ,MSP_GIFT_PRMT_RESULT RE
+			     WHERE  RE.CONTRACT_NUM = A.CONTRACT_NUM
+			     AND    RE.PRMT_ID = A.PRMT_ID
+			     AND    PR.PRDT_ID = RE.PRDT_ID
+			     ) QUANTITY
+			     
+			  , (SELECT SUM(RE.QUANTITY * PR.OUT_UNIT_PRIC)
+			     FROM   MSP_GIFT_PRDT PR
+			            ,MSP_GIFT_PRMT_RESULT RE
+			     WHERE  RE.CONTRACT_NUM = A.CONTRACT_NUM
+			     AND    RE.PRMT_ID = A.PRMT_ID
+			     AND    PR.PRDT_ID = RE.PRDT_ID
+			     ) SUM_AMOUNT
+			     
+			  , E.AMOUNT_LIMIT    /* 제한금액 */
+			  
+			  , TO_CHAR(TO_DATE(B.REQ_IN_DAY,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')  REQ_IN_DAY     /* 신청일 */
+
+			  , SUB.LST_COM_ACTV_DATE   /* 개통일 */
+
+			  , A.GIFT_REGST_DATE  /* 사은품 신청일 */
+
+			  , B.FST_RATE_CD      /* 고객 최초 요금제 */
+			  , B.FST_RATE_NM      /* 고객 최초 요금제명 */
+			  
+			  , B.LST_RATE_NM      /* 현재요금제명 */ 
+
+			  , A.SMS_SEND_DATE    /* 문자 전송일 */
+			  
+			  , A.REGST_ID
+			  , A.REGST_DTTM
+			  , A.RVISN_ID
+			  , A.RVISN_DTTM
+			  , E.PRMT_TYPE
+			  , FN_GET_CODENM('ORG1010', E.PRMT_TYPE)	AS PRMT_TYPE_NM
+			  , E.CHOICE_LIMIT
+			  , FN_GET_ORGNM(SUB.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+			  , FN_GET_ORGNM(PUM.ORGN_ID)  AS FST_USIM_ORG_NM
+			  , (SELECT MAX(TO_CHAR(TO_DATE(EFFECTIVE_DATE,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')) FROM MSP_JUO_FEATURE_INFO WHERE SERVICE_TYPE = 'P' AND SOC = B.LST_RATE_CD  AND CONTRACT_NUM = A.CONTRACT_NUM) AS LST_RATE_DT
+			  , (SELECT CD_DSC  FROM CMN_GRP_CD_MST  WHERE GRP_ID = 'MSP0003'  AND CD_VAL = SUB.SUB_STATUS) AS SUB_STATUS_NM
+              , E.SHOW_YN                   							AS SHOW_YN
+              , DECODE(E.SHOW_YN,'N','비노출','노출')   					AS SHOW_YN_NM
+              , TO_CHAR(TO_DATE(E.BILL_DT, 'YYYYMMDD'),'YYYY-MM-DD')	AS BILL_DT
+              , E.ORGN_ID                   							AS PRMT_ORGN_ID
+              , FN_GET_ORGNM(E.ORGN_ID) 								AS PRMT_ORGN_NM
+		FROM
+			    MSP_GIFT_PRMT_CUSTOMER A
+			   ,MSP_REQUEST_DTL B
+			   ,(SELECT CONTRACT_NUM
+			           , PRMT_ID
+			           , COUNT(*) CNT
+			           , MIN(PRDT_ID) PRDT_ID
+			     FROM   MSP_GIFT_PRMT_RESULT
+			     GROUP BY CONTRACT_NUM
+			              ,PRMT_ID
+			     ) C
+			    ,MSP_GIFT_PRDT D
+			    ,MSP_GIFT_PRMT E
+			    ,MSP_JUO_SUB_INFO SUB
+			    ,MSP_PARTNER_USIM_MST PUM
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM 
+		AND   A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+		AND   A.PRMT_ID = C.PRMT_ID(+)
+		AND   D.PRDT_ID(+) = C.PRDT_ID
+		AND   D.USE_YN(+) = 'Y'
+		AND   A.PRMT_ID = E.PRMT_ID
+		AND   A.CONTRACT_NUM = SUB.CONTRACT_NUM
+		AND   B.FST_USIM_NO = PUM.USIM_NO(+)
+		 <if test="frDate != null and frDate != '' and  toDate != null and toDate != '' ">
+		   AND  B.REQ_IN_DAY BETWEEN #{frDate, jdbcType=VARCHAR}||'000000' AND #{toDate, jdbcType=VARCHAR}||'235959'
+		 </if>
+		 <if test=" searchGbn == 1  and searchTxt != null and searchTxt != ''  ">
+		   AND  E.PRMT_NM LIKE '%' || #{searchTxt, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="searchGbn == 2 and searchTxt != null and searchTxt != '' ">
+		   AND  E.PRMT_ID = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test=" searchGbn == 3 and searchTxt != null and searchTxt != '' ">
+		   AND  D.PRDT_NM LIKE '%' || #{searchTxt, jdbcType=VARCHAR} || '%' 
+		 </if>
+		 <if test=" searchGbn == 4 and searchTxt != null and searchTxt != '' ">
+		   AND  D.PRDT_ID = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test=" searchGbn == 5 and searchTxt != null and searchTxt != '' ">
+		   AND  A.CONTRACT_NUM = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test=" searchGbn == 6 and searchTxt != null and searchTxt != '' ">
+		   AND  A.SUB_LINK_NAME LIKE '%' || #{searchTxt, jdbcType=VARCHAR} || '%' 
+		 </if>
+		 <if test="(searchGbn == null or searchGbn == 7 ) and searchTxt != null and searchTxt != '' ">
+		   AND  A.SUBSCRIBER_NO = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test="prmtOrgnId != null and prmtOrgnId != ''">
+		   AND E.ORGN_ID = #{prmtOrgnId}
+		 </if>
+		 <if test="billDt != null and billDt != ''">
+		   AND SUBSTR(E.BILL_DT, 1, 6) = #{billDt}
+		 </if>
+		 <if test="showYn != null and showYn != ''">
+		   AND E.SHOW_YN = #{showYn}
+		 </if>
+
+		 ORDER  BY
+				1,3
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+	
+	<update id="giftPrmtCustomerUpdate" parameterType="com.ktis.msp.gift.custgmt.vo.CustMngVO">
+		/* CustMngMapper.giftPrmtCustomerUpdate */
+		UPDATE  MSP_GIFT_PRMT_CUSTOMER
+		   SET  SMS_SEND_DATE = #{smsSendDate, jdbcType=VARCHAR}
+		      , GIFT_REGST_DATE = TO_CHAR(SYSDATE,'YYYYMMDD')
+		      , MNG_NM = #{mngNm, jdbcType=VARCHAR}
+			  
+			  , TEL_FN1 = #{telFn1, jdbcType=VARCHAR}
+			  , TEL_MN1 = #{telMn1, jdbcType=VARCHAR}
+			  , TEL_RN1 = #{telRn1, jdbcType=VARCHAR}
+			  , TEL_FN2 = #{telFn2, jdbcType=VARCHAR}
+			  , TEL_MN2 = #{telMn2, jdbcType=VARCHAR}
+			  , TEL_RN2 = #{telRn2, jdbcType=VARCHAR}
+
+		      , POST = #{post, jdbcType=VARCHAR}
+		      , ADDR = #{addr, jdbcType=VARCHAR}
+		      , ADDR_BJD = #{addrBjd, jdbcType=VARCHAR}
+		      , ADDR_DTL = #{addrDtl, jdbcType=VARCHAR}
+		      
+		      , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		      , RVISN_DTTM = SYSDATE
+
+		 WHERE  PRMT_ID = #{prmtId, jdbcType=VARCHAR}
+		 AND    CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+	</update>	
+	
+	<delete id="giftPrmtResultDelete" parameterType="com.ktis.msp.gift.custgmt.vo.CustMngVO">
+		/* CustMngMapper.giftPrmtResultDelete */
+		DELETE  MSP_GIFT_PRMT_RESULT
+		 WHERE  PRMT_ID = #{prmtId, jdbcType=VARCHAR}
+		 AND    CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+	</delete>	
+	
+	<insert id="giftPrmtResultInsert" parameterType="com.ktis.msp.gift.custgmt.vo.PrmtResultVO">
+		/* CustMngMapper.giftPrmtResultInsert */
+		INSERT INTO MSP_GIFT_PRMT_RESULT
+		(
+		    PRMT_ID
+		  , CONTRACT_NUM
+		  , PRDT_ID
+		  , QUANTITY
+
+		  , REGST_ID
+		  , REGST_DTTM
+		  , RVISN_ID
+		  , RVISN_DTTM
+		)
+		VALUES
+		(
+			
+		    #{prmtId, jdbcType=VARCHAR}
+		  , #{contractNum, jdbcType=VARCHAR}
+		  , #{prdtId, jdbcType=VARCHAR}
+		  , #{quantity, jdbcType=VARCHAR}
+		  
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  , #{sessionUserId, jdbcType=VARCHAR}
+		  , SYSDATE
+		  
+		)
+	</insert>
+	
+	<select id="custMngListEx" parameterType="com.ktis.msp.gift.custgmt.vo.CustMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* CustMngMapper.custMngListEx */
+		SELECT
+			    A.PRMT_ID
+			  , E.PRMT_NM
+			  , A.CONTRACT_NUM
+			  , A.SUB_LINK_NAME      /* 고객명 */
+			  , A.SUBSCRIBER_NO      /* 전화번호 */
+			  , A.MNG_NM             /* 받는분이름 */
+			  , A.MNG_NM AS MASK_MNG_NM /* 받는분이름 */
+			  , A.TEL_FN1
+			  , A.TEL_MN1
+			  , A.TEL_RN1
+			  , A.TEL_FN1 || '-' || TEL_MN1 || '-' || TEL_RN1 AS TEL1
+			  , A.TEL_FN2
+			  , A.TEL_MN2
+			  , A.TEL_RN2
+			  , A.TEL_FN2 || '-' || TEL_MN2 || '-' || TEL_RN2 AS TEL2
+			  , A.POST
+			  , A.ADDR
+			  , A.ADDR_BJD
+			  , A.ADDR_DTL
+			  , A.ADDR_DTL AS MASK_ADDR_DTL
+
+			  , D.PRDT_NM || CASE WHEN (C.CNT = 1 OR C.CNT IS NULL) THEN ''
+			                       ELSE '(외)'
+			                  END AS PRDT_NM
+			  , (SELECT SUM(RE.QUANTITY)
+			     FROM   MSP_GIFT_PRDT PR
+			            ,MSP_GIFT_PRMT_RESULT RE
+			     WHERE  RE.CONTRACT_NUM = A.CONTRACT_NUM
+			     AND    RE.PRMT_ID = A.PRMT_ID
+			     AND    PR.PRDT_ID = RE.PRDT_ID
+			     ) QUANTITY
+			     
+			  , (SELECT SUM(RE.QUANTITY * PR.OUT_UNIT_PRIC)
+			     FROM   MSP_GIFT_PRDT PR
+			            ,MSP_GIFT_PRMT_RESULT RE
+			     WHERE  RE.CONTRACT_NUM = A.CONTRACT_NUM
+			     AND    RE.PRMT_ID = A.PRMT_ID
+			     AND    PR.PRDT_ID = RE.PRDT_ID
+			     ) SUM_AMOUNT
+			     
+			  , E.AMOUNT_LIMIT    /* 제한금액 */
+			  
+			  , TO_CHAR(TO_DATE(B.REQ_IN_DAY,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')  REQ_IN_DAY     /* 신청일 */
+
+			  , TO_CHAR(TO_DATE(SUB.LST_COM_ACTV_DATE,'YYYYMMDD'),'YYYY-MM-DD')  LST_COM_ACTV_DATE   /* 개통일 */
+
+			  , TO_CHAR(TO_DATE(A.GIFT_REGST_DATE,'YYYYMMDD'),'YYYY-MM-DD') GIFT_REGST_DATE   /* 사은품 신청일 */
+
+			  , B.FST_RATE_CD      /* 고객 최초 요금제 */
+			  , B.FST_RATE_NM      /* 고객 최초 요금제명 */
+
+			  , B.LST_RATE_NM      /* 현재요금제명 */ 
+
+			  , A.SMS_SEND_DATE    /* 문자 전송일 */
+			  
+			  , A.REGST_ID
+			  , A.REGST_DTTM
+			  , A.RVISN_ID
+			  , A.RVISN_DTTM
+			  , FN_GET_CODENM('ORG1010', E.PRMT_TYPE)	AS PRMT_TYPE_NM
+			  , E.CHOICE_LIMIT
+			  , FN_GET_ORGNM(SUB.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+			  , FN_GET_ORGNM(PUM.ORGN_ID)  AS FST_USIM_ORG_NM
+			  , (SELECT MAX(TO_CHAR(TO_DATE(EFFECTIVE_DATE,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')) FROM MSP_JUO_FEATURE_INFO WHERE SERVICE_TYPE = 'P' AND SOC = B.LST_RATE_CD  AND CONTRACT_NUM = A.CONTRACT_NUM) AS LST_RATE_DT
+			  , (SELECT CD_DSC  FROM CMN_GRP_CD_MST  WHERE GRP_ID = 'MSP0003'  AND CD_VAL = SUB.SUB_STATUS) AS SUB_STATUS_NM
+              , E.SHOW_YN                   AS SHOW_YN
+              , DECODE(E.SHOW_YN,'N','비노출','노출')   AS SHOW_YN_NM
+              , E.BILL_DT                   AS BILL_DT
+              , E.ORGN_ID                   AS PRMT_ORGN_ID
+              , FN_GET_ORGNM(E.ORGN_ID) 	AS PRMT_ORGN_NM
+		FROM
+			    MSP_GIFT_PRMT_CUSTOMER A
+			   ,MSP_REQUEST_DTL B
+			   ,(SELECT CONTRACT_NUM
+			           , PRMT_ID
+			           , COUNT(*) CNT
+			           , MIN(PRDT_ID) PRDT_ID
+			     FROM   MSP_GIFT_PRMT_RESULT
+			     GROUP BY CONTRACT_NUM
+			              ,PRMT_ID
+			     ) C
+			    ,MSP_GIFT_PRDT D
+			    ,MSP_GIFT_PRMT E
+			    ,MSP_JUO_SUB_INFO SUB
+			    ,MSP_PARTNER_USIM_MST PUM
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM 
+		AND   A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+		AND   A.PRMT_ID = C.PRMT_ID(+)
+		AND   D.PRDT_ID(+) = C.PRDT_ID
+		AND   D.USE_YN(+) = 'Y'
+		AND   A.PRMT_ID = E.PRMT_ID
+		AND   A.CONTRACT_NUM = SUB.CONTRACT_NUM
+		AND   B.FST_USIM_NO = PUM.USIM_NO(+)
+		 <if test="frDate != null and frDate != '' and  toDate != null and toDate != '' ">
+		   AND  B.REQ_IN_DAY BETWEEN #{frDate, jdbcType=VARCHAR}||'000000' AND #{toDate, jdbcType=VARCHAR}||'235959'
+		 </if>
+		 <if test=" searchGbn == 1  and searchTxt != null and searchTxt != ''  ">
+		   AND  E.PRMT_NM LIKE '%' || #{searchTxt, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="searchGbn == 2 and searchTxt != null and searchTxt != '' ">
+		   AND  E.PRMT_ID = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test=" searchGbn == 3 and searchTxt != null and searchTxt != '' ">
+		   AND  D.PRDT_NM LIKE '%' || #{searchTxt, jdbcType=VARCHAR} || '%' 
+		 </if>
+		 <if test=" searchGbn == 4 and searchTxt != null and searchTxt != '' ">
+		   AND  D.PRDT_ID = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test=" searchGbn == 5 and searchTxt != null and searchTxt != '' ">
+		   AND  A.CONTRACT_NUM = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test=" searchGbn == 6 and searchTxt != null and searchTxt != '' ">
+		   AND  A.SUB_LINK_NAME LIKE '%' || #{searchTxt, jdbcType=VARCHAR} || '%' 
+		 </if>
+		 <if test="(searchGbn == null or searchGbn == 7 ) and searchTxt != null and searchTxt != '' ">
+		   AND  A.SUBSCRIBER_NO = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test="prmtOrgnId != null and prmtOrgnId != ''">
+		   AND E.ORGN_ID = #{prmtOrgnId}
+		 </if>
+		 <if test="billDt != null and billDt != ''">
+		   AND SUBSTR(E.BILL_DT, 1, 6) = #{billDt}
+		 </if>
+		 <if test="showYn != null and showYn != ''">
+		   AND E.SHOW_YN = #{showYn}
+		 </if>
+		 ORDER  BY
+				1
+	</select>
+
+	<select id="custMngListEx2" parameterType="com.ktis.msp.gift.custgmt.vo.CustMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* CustMngMapper.custMngListEx2 */
+		SELECT
+			    A.PRMT_ID
+			  , E.PRMT_NM
+			  , A.CONTRACT_NUM
+			  , A.SUB_LINK_NAME      /* 고객명 */
+			  , A.SUBSCRIBER_NO      /* 전화번호 */
+			  , A.MNG_NM             /* 받는분이름 */
+			  , A.MNG_NM AS MASK_MNG_NM /* 받는분이름 */
+			  , A.TEL_FN1
+			  , A.TEL_MN1
+			  , A.TEL_RN1
+			  , A.TEL_FN1 || '-' || TEL_MN1 || '-' || TEL_RN1 AS TEL1
+			  , A.TEL_FN2
+			  , A.TEL_MN2
+			  , A.TEL_RN2
+			  , A.TEL_FN2 || '-' || TEL_MN2 || '-' || TEL_RN2 AS TEL2
+			  , A.POST
+			  , A.ADDR
+			  , A.ADDR_BJD
+			  , A.ADDR_DTL
+			  , A.ADDR_DTL AS MASK_ADDR_DTL
+
+			  , D.PRDT_NM 
+			  , C.QUANTITY
+			  , C.QUANTITY * D.OUT_UNIT_PRIC AS SUM_AMOUNT
+
+			  , E.AMOUNT_LIMIT    /* 제한금액 */
+			  
+			  , TO_CHAR(TO_DATE(B.REQ_IN_DAY,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')  REQ_IN_DAY     /* 신청일 */
+
+			  , TO_CHAR(TO_DATE(SUB.LST_COM_ACTV_DATE,'YYYYMMDD'),'YYYY-MM-DD')  LST_COM_ACTV_DATE   /* 개통일 */
+
+			  , TO_CHAR(TO_DATE(A.GIFT_REGST_DATE,'YYYYMMDD'),'YYYY-MM-DD') GIFT_REGST_DATE   /* 사은품 신청일 */
+
+			  , B.FST_RATE_CD      /* 고객 최초 요금제 */
+			  , B.FST_RATE_NM      /* 고객 최초 요금제명 */
+
+			  , B.LST_RATE_NM      /* 현재요금제명 */ 
+
+			  , A.SMS_SEND_DATE    /* 문자 전송일 */
+			  
+			  , A.REGST_ID
+			  , A.REGST_DTTM
+			  , A.RVISN_ID
+			  , A.RVISN_DTTM
+			  , FN_GET_CODENM('ORG1010', E.PRMT_TYPE)	AS PRMT_TYPE_NM
+			  , E.CHOICE_LIMIT
+			  , FN_GET_ORGNM(SUB.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+			  , FN_GET_ORGNM(PUM.ORGN_ID)  AS FST_USIM_ORG_NM
+			  , (SELECT MAX(TO_CHAR(TO_DATE(EFFECTIVE_DATE,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS')) FROM MSP_JUO_FEATURE_INFO WHERE SERVICE_TYPE = 'P' AND SOC = B.LST_RATE_CD  AND CONTRACT_NUM = A.CONTRACT_NUM) AS LST_RATE_DT
+			  , (SELECT CD_DSC  FROM CMN_GRP_CD_MST  WHERE GRP_ID = 'MSP0003'  AND CD_VAL = SUB.SUB_STATUS) AS SUB_STATUS_NM
+		FROM
+			    MSP_GIFT_PRMT_CUSTOMER A
+			   ,MSP_REQUEST_DTL B
+			   ,MSP_GIFT_PRMT_RESULT C
+			   ,MSP_GIFT_PRDT D
+			   ,MSP_GIFT_PRMT E
+			   ,MSP_JUO_SUB_INFO SUB
+			   ,MSP_PARTNER_USIM_MST PUM
+		WHERE A.CONTRACT_NUM = B.CONTRACT_NUM 
+		AND   A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+		AND   A.PRMT_ID = C.PRMT_ID(+)
+		AND   D.PRDT_ID(+) = C.PRDT_ID
+		AND   D.USE_YN(+) = 'Y'
+		AND   A.PRMT_ID = E.PRMT_ID
+		AND   A.CONTRACT_NUM = SUB.CONTRACT_NUM
+		AND   B.FST_USIM_NO = PUM.USIM_NO(+)
+		 <if test="frDate != null and frDate != '' and  toDate != null and toDate != '' ">
+		   AND  B.REQ_IN_DAY BETWEEN #{frDate, jdbcType=VARCHAR}||'000000' AND #{toDate, jdbcType=VARCHAR}||'235959'
+		 </if>
+		 <if test=" searchGbn == 1  and searchTxt != null and searchTxt != ''  ">
+		   AND  E.PRMT_NM LIKE '%' || #{searchTxt, jdbcType=VARCHAR} || '%'
+		 </if>
+		 <if test="searchGbn == 2 and searchTxt != null and searchTxt != '' ">
+		   AND  E.PRMT_ID = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test=" searchGbn == 3 and searchTxt != null and searchTxt != '' ">
+		   AND  D.PRDT_NM LIKE '%' || #{searchTxt, jdbcType=VARCHAR} || '%' 
+		 </if>
+		 <if test=" searchGbn == 4 and searchTxt != null and searchTxt != '' ">
+		   AND  D.PRDT_ID = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test=" searchGbn == 5 and searchTxt != null and searchTxt != '' ">
+		   AND  A.CONTRACT_NUM = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+		 <if test=" searchGbn == 6 and searchTxt != null and searchTxt != '' ">
+		   AND  A.SUB_LINK_NAME LIKE '%' || #{searchTxt, jdbcType=VARCHAR} || '%' 
+		 </if>
+		 <if test="(searchGbn == null or searchGbn == 7 ) and searchTxt != null and searchTxt != '' ">
+		   AND  A.SUBSCRIBER_NO = #{searchTxt, jdbcType=VARCHAR} 
+		 </if>
+
+		 ORDER  BY
+				1
+
+	</select>
+
+	<!-- 고객이 선택한 사은품 목록 조회 -->
+	<select id="getCustGiftList" parameterType="com.ktis.msp.gift.custgmt.vo.CustMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+			/* PromotionMapper.getCustGiftList */
+			SELECT   B.PRDT_ID						
+					, B.PRDT_NM						
+					, 'N'					        AS dupYn
+					, B.OUT_UNIT_PRIC				
+                    , NVL(A.QUANTITY,'0')           AS quantity
+                    , B.OUT_UNIT_PRIC * NVL(A.QUANTITY,'0')  AS TOTAL
+                    , B.MAKER
+			FROM    MSP_GIFT_PRMT_RESULT A 
+			        , MSP_GIFT_PRDT B
+			WHERE   A.PRMT_ID = #{prmtId, jdbcType=VARCHAR}
+			AND     B.USE_YN = 'Y'
+			AND     A.CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+			AND     B.PRDT_ID = A.PRDT_ID
+
+			ORDER BY B.PRDT_NM 
+	</select>
+	
+	<!-- 사은품 프로모션 사은품 목록 조회 -->
+	<select id="getCustGiftPrmtPrdtList" parameterType="com.ktis.msp.gift.custgmt.vo.CustMngVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+			/* PromotionMapper.getCustGiftPrmtPrdtList */
+			SELECT  DECODE(A.PRDT_ID, NULL, '0', '1')	AS row_Check
+					, B.PRDT_ID						
+					, B.PRDT_NM						
+					, 'N'					        AS dup_Yn
+					, B.OUT_UNIT_PRIC				
+                    , NVL(A.QUANTITY,'0')           AS quantity
+			FROM    MSP_GIFT_PRMT_RESULT A 
+			        , MSP_GIFT_PRDT B
+					, MSP_GIFT_PRMT_PRDT C
+			WHERE   C.PRMT_ID = #{prmtId, jdbcType=VARCHAR}
+			AND     B.USE_YN = 'Y'
+			AND     B.PRDT_ID = C.PRDT_ID
+
+			AND     A.CONTRACT_NUM(+) = #{contractNum, jdbcType=VARCHAR}
+			AND     C.PRMT_ID = A.PRMT_ID(+)
+            AND     C.PRDT_ID = A.PRDT_ID(+)
+			ORDER BY row_Check DESC, PRDT_NM 
+	</select>
+	
+	<insert id="giftPrmtResultHistInsert" parameterType="java.util.HashMap">
+		/* PromotionMapper.giftPrmtResultHistInsert */
+		INSERT INTO MSP_GIFT_PRMT_RESULT_HIST(
+			GRP_NUM
+		 	, PRMT_ID
+			, CONTRACT_NUM
+			, PRDT_ID
+			, QUANTITY
+			, RVISN_RSN
+			, EVNT_CD
+			, REGST_ID
+			, REGST_DTTM
+		)
+		WITH GRP_V AS (
+			SELECT NVL(MAX(GRP_NUM)+1, 1) AS GRP_NUM
+			FROM   MSP_GIFT_PRMT_RESULT_HIST
+			WHERE  CONTRACT_NUM = #{contractNum}
+			AND    PRMT_ID = #{prmtId}
+		), TEMP_V AS (
+			<foreach item="item" index="index" collection="ALL" separator="UNION ALL" >
+				SELECT #{prmtId}					AS PRMT_ID
+				 	 , #{contractNum}				AS CONTRACT_NUM
+					 , #{item.prdtId}				AS PRDT_ID
+					 , TO_CHAR(#{item.quantity})	AS QUANTITY
+				FROM DUAL
+			</foreach>
+		), ORI_GPR_V AS (
+			SELECT CONTRACT_NUM
+				 , PRMT_ID
+				 , PRDT_ID
+				 , QUANTITY
+			FROM   MSP_GIFT_PRMT_RESULT
+			WHERE  CONTRACT_NUM = #{contractNum}
+			AND    PRMT_ID = #{prmtId}
+		)
+		SELECT (SELECT GRP_NUM FROM GRP_V) AS GRP_NUM
+			 , TV.PRMT_ID
+			 , TV.CONTRACT_NUM
+			 , TV.PRDT_ID
+			 , TV.QUANTITY
+			 , #{rvisnRsn}
+			 , 'U' AS EVNT_CD	/*수정*/
+			 , #{sessionUserId}
+			 , SYSDATE
+		FROM ORI_GPR_V OGV
+		INNER JOIN TEMP_V TV
+				ON OGV.CONTRACT_NUM = TV.CONTRACT_NUM
+				AND OGV.PRMT_ID = TV.PRMT_ID
+				AND OGV.PRDT_ID = TV.PRDT_ID
+		UNION ALL
+		SELECT (SELECT GRP_NUM FROM GRP_V) AS GRP_NUM
+			 , OGV.PRMT_ID
+			 , OGV.CONTRACT_NUM
+			 , OGV.PRDT_ID
+			 , OGV.QUANTITY
+			 , #{rvisnRsn}
+			 , 'D' AS EVNT_CD	/*삭제*/
+			 , #{sessionUserId}
+			 , SYSDATE
+		FROM ORI_GPR_V OGV
+		LEFT OUTER JOIN TEMP_V TV
+				ON OGV.CONTRACT_NUM = TV.CONTRACT_NUM
+				AND OGV.PRMT_ID = TV.PRMT_ID
+				AND OGV.PRDT_ID = TV.PRDT_ID
+		WHERE TV.PRDT_ID IS NULL
+		UNION ALL
+		SELECT (SELECT GRP_NUM FROM GRP_V) AS GRP_NUM
+			 , TV.PRMT_ID
+			 , TV.CONTRACT_NUM
+			 , TV.PRDT_ID
+			 , TV.QUANTITY
+			 , #{rvisnRsn}
+			 , 'I' AS EVNT_CD	/*추가*/
+			 , #{sessionUserId}
+			 , SYSDATE
+		FROM ORI_GPR_V OGV
+		RIGHT OUTER JOIN TEMP_V TV
+				ON OGV.CONTRACT_NUM = TV.CONTRACT_NUM
+				AND OGV.PRMT_ID = TV.PRMT_ID
+				AND OGV.PRDT_ID = TV.PRDT_ID
+		WHERE OGV.PRDT_ID IS NULL
+	</insert>
+	
+	<select id="getPrmtPrdtResultList" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT PM.PRMT_ID
+			 , PM.PRMT_NM 
+			 , PM.PRMT_TYPE
+			 , PM.CHOICE_LIMIT
+			 , FN_GET_CODENM('ORG1010', PM.PRMT_TYPE)	AS PRMT_TYPE_NM
+			 , PD.PRDT_NM
+			 , PMR.QUANTITY
+			 , DECODE(PMR.PRDT_ID, NULL, '0', '1')		AS ROW_CHECK
+			 , PMPD.SORT
+		FROM MSP_GIFT_PRMT PM
+		INNER JOIN MSP_GIFT_PRMT_PRDT PMPD
+				ON PM.PRMT_ID = PMPD.PRMT_ID
+		INNER JOIN MSP_GIFT_PRDT PD
+				ON PD.PRDT_ID = PMPD.PRDT_ID
+		LEFT OUTER JOIN MSP_GIFT_PRMT_CUSTOMER CUS
+				ON CUS.PRMT_ID = PM.PRMT_ID
+		LEFT OUTER JOIN MSP_REQUEST_DTL REQ 
+				ON REQ.CONTRACT_NUM = CUS.CONTRACT_NUM 
+		LEFT OUTER JOIN MSP_GIFT_PRMT_RESULT PMR
+				ON  PMR.PRMT_ID = CUS.PRMT_ID
+				AND PMR.CONTRACT_NUM = CUS.CONTRACT_NUM
+				AND PMR.PRDT_ID = PD.PRDT_ID 
+		WHERE REQ.REQUEST_KEY = #{requestKey}
+		ORDER BY PM.PRMT_ID, PMPD.SORT, PD.PRDT_NM
+	</select>
+	
+	<select id="getMPortalPrmtPrdtResultList" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT PM.PRMT_ID
+			 , PM.PRMT_NM 
+			 , PM.PRMT_TYPE
+			 , PM.CHOICE_LIMIT
+			 , FN_GET_CODENM('ORG1010', PM.PRMT_TYPE)	AS PRMT_TYPE_NM
+			 , PD.PRDT_NM
+			 , MPRT.QNTY								AS QUANTITY
+			 , DECODE(MPRT.PROM_CD, NULL, '0', '1')		AS ROW_CHECK
+			 , PMPD.SORT
+		FROM MSP_GIFT_PRMT PM
+		INNER JOIN MSP_GIFT_PRMT_PRDT PMPD
+				ON PM.PRMT_ID = PMPD.PRMT_ID
+		INNER JOIN MSP_GIFT_PRDT PD
+				ON PD.PRDT_ID = PMPD.PRDT_ID
+		LEFT OUTER JOIN NMCP_GIFT_REQ_TXN@DL_MCP MPRT
+				ON  MPRT.REQ_KEY = #{requestKey}
+				AND MPRT.PROM_CD = PM.PRMT_ID
+				AND MPRT.GIFT_CD = PD.PRDT_ID
+		WHERE PM.PRMT_ID IN (SELECT MPRT.PROM_CD FROM NMCP_GIFT_REQ_TXN@DL_MCP MPRT WHERE MPRT.REQ_KEY = #{requestKey})
+		ORDER BY PM.PRMT_ID, PMPD.SORT, PD.PRDT_NM
+	</select>
+	
+</mapper>

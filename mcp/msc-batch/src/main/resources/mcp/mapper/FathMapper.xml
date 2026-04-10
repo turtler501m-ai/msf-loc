@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FathMapper">
+
+    <!-- 셀프안면인증 URL 발송 대상조회 -->
+    <select id="selectFathSelfTrg" resultType="com.ktmmobile.mcp.fath.dto.FathDto">
+        /*FathMapper.selectFathSelfTrg*/
+        SELECT  A.EVNT_TYPE,
+                B.RES_NO,
+                C.FATH_MOBILE_FN || C.FATH_MOBILE_MN || C.FATH_MOBILE_RN AS SMS_RCV_TEL_NO,
+                B.OPER_TYPE
+        FROM    NMCP_ACEN_REQ A,
+                MCP_REQUEST B,
+                MCP_REQUEST_CSTMR C
+        WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+        AND     A.REQUEST_KEY = C.REQUEST_KEY
+        AND     A.END_STATUS != 'Y'
+        AND     A.REQ_STATUS = 'N'
+        AND     B.FATH_TRG_YN = 'Y'
+        AND     B.REQUEST_STATE_CODE = '50'
+        AND     NOT EXISTS(SELECT 1 FROM NMCP_FATH_SELF_URL WHERE RES_NO = A.RES_NO AND EXPIR_DT <![CDATA[ > ]]>  SYSDATE)
+    </select>
+
+    <!-- 셀프안면인증 URL 발급-->
+    <insert id="insertFathSelfUrl" parameterType="com.ktmmobile.mcp.fath.dto.FathDto">
+        /* FathMapper.insertFathSelfUrl */
+        INSERT INTO  NMCP_FATH_SELF_URL(
+            UUID,
+            RES_NO,
+            OPER_TYPE,
+            URL,
+            EXPIR_DT,
+            CRET_ID,
+            CRET_DT
+        )
+        VALUES(
+                  #{uuid},
+                  #{resNo},
+                  #{operType},
+                  #{url},
+                  SYSDATE + 1,
+                  'BATCH',
+                  SYSDATE
+              )
+    </insert>
+
+    <!--신청서 진행상태 변경-->
+    <update id="updateReqStateCode" parameterType="string">
+        /* FathMapper.updateReqStateCode */
+        UPDATE  MCP_REQUEST
+        SET     REQUEST_STATE_CODE = '51',
+                RVISN_ID  		= 'BATCH',
+                RVISN_DTTM      = SYSDATE
+        WHERE 	RES_NO = #{resNo}
+    </update>
+    
+    
+</mapper>
+

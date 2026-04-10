@@ -1,0 +1,862 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="RequestReviewMapper">
+
+    <!--  개통후기 리스트용  collection 단품정보를 포함하고있다. -->
+    <resultMap id="selectUsimRequestReviewListCollection" type="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        <result property="requestKey" column="REQUEST_KEY" />
+        <result property="reviewId" column="REVIEW_ID" />
+        <collection property="reviewImgList"
+                    ofType="com.ktmmobile.mcp.requestReview.dto.McpRequestReviewImgDto"
+                    column="{requestKey=REQUEST_KEY, reviewId=REVIEW_ID}"
+                    select="selectUsimRequestReviewImgList" >
+        </collection>
+        <collection property="reviewQuestionList"
+                    ofType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto"
+                    column="{requestKey=REQUEST_KEY, reviewId=REVIEW_ID}"
+                    select="selectReviewQuestionList">
+        </collection>
+    </resultMap>
+
+
+    <resultMap id="selectReviewDataListCollection" type="com.ktmmobile.mcp.requestReview.dto.ReviewDataInfo">
+        <result property="requestKey" column="REQUEST_KEY" />
+        <result property="reviewId" column="REVIEW_ID" />
+        <collection property="reviewImgList"
+                    ofType="com.ktmmobile.mcp.requestReview.dto.McpRequestReviewImgDto"
+                    column="{requestKey=REQUEST_KEY, reviewId=REVIEW_ID}"
+                    select="selectUsimRequestReviewImgList" >
+        </collection>
+        <collection property="reviewQuestionList"
+                    ofType="com.ktmmobile.mcp.requestReview.dto.ReviewQuestion"
+                    column="{requestKey=REQUEST_KEY, reviewId=REVIEW_ID}"
+                    select="selectReviewQuestionDateList">
+        </collection>
+    </resultMap>
+
+    <select id="selectUsimRequestReviewTotalCnt" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultType="int">
+        SELECT /*RequestReviewMapper.selectUsimRequestReviewTotalCnt 개통후기 리스트용 COUNT  */
+            COUNT(1) AS CNT
+        FROM MCP_REQUEST_REVIEW
+        WHERE 1=1
+            <if test="reqBuyType != null and reqBuyType != ''">
+                AND REQ_BUY_TYPE = #{reqBuyType}
+            </if>
+            <if test="sttusVal != null and sttusVal != ''">
+                AND STTUS_VAL = #{sttusVal}
+            </if>
+            <if test="commendYn != null and commendYn != ''">
+                AND COMMEND_YN = #{commendYn}
+            </if>
+            <if test="eventCd != null and eventCd != ''">
+                AND EVENT_CD = #{eventCd}
+            </if>
+            <if test="ntfYn != null and ntfYn != ''">
+                AND NTF_YN = #{ntfYn}
+            </if>
+            <if test="rateCd != null and rateCd != ''">
+                AND RATE_CD = #{rateCd}
+            </if>
+            <choose>
+                <when test="searchCategory == 'reviewSbst'">
+                     AND REVIEW_SBST LIKE '%' || UPPER(#{searchValue}) || '%'
+                </when>
+                <when test="searchCategory == 'regNm'">
+                    AND REG_NM LIKE '%' || UPPER(#{searchValue}) || '%'
+                </when>
+                <when test="searchCategory == 'prizeSbst'">
+                    AND PRIZE_SBST LIKE '%' || UPPER(#{searchValue}) || '%'
+                </when>
+             </choose>
+             <if test="requestKey != null and requestKey gt 0 ">
+                AND REQUEST_KEY = #{requestKey}
+            </if>
+            <if test="contractNumList != null and contractNumList.size != 0">
+                 AND CONTRACT_NUM IN
+                <foreach item="item" collection="contractNumList" open="(" separator="," close=")">
+                        #{item}
+                </foreach>
+            </if>
+            <if test="contractNum != null and contractNum != ''">
+                AND CONTRACT_NUM = #{contractNum}
+            </if>
+            <if test="prodId != null and prodId != ''">
+                AND PROD_ID = #{prodId}
+            </if>
+            <if test="searchCategory != null and searchCategory == 'chkMyReviewBest'">
+                AND LAST_BEST_REVIEW_CHK = 'Y'
+            </if>
+            <if test="searchCategory != null and searchCategory == 'chkMyReviewSns'">
+                AND SNS_INFO IS NOT NULL
+            </if>
+            <if test="mustVal != null and mustVal != ''">
+               AND TRUNC(SYSDATE) - TO_DATE(SYS_RDATE_DD, 'YYYYMMDD') <![CDATA[<]]> 90
+            </if>
+    </select>
+
+    <select id="selectReviewLimit" resultType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+    <![CDATA[
+        SELECT
+            CASE WHEN ROUND(AVG(COMMEND_YN)*100,1) > #{limitPer} THEN 'Y'
+            ELSE 'N'
+            END AS VIEW_LIMIT_YN
+            , ROUND(AVG(COMMEND_YN)*100,1) AS PERCENT
+        FROM MCP_REQUEST_REVIEW
+        WHERE 1=1
+        AND STTUS_VAL = '1'
+        ]]>
+        <if test="reqBuyType != null and reqBuyType != '' ">
+            AND REQ_BUY_TYPE = #{reqBuyType}
+        </if>
+    </select>
+
+    <select id="selectUsimRequestReviewList" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultMap="selectUsimRequestReviewListCollection">
+        SELECT /*RequestReviewMapper.selectUsimRequestReviewList 개통후기 리스트  */
+           REQUEST_KEY
+          , CONTRACT_NUM
+          , REQ_BUY_TYPE
+          , MODEL_ID
+          , PROD_ID
+          , REVIEW_SBST
+          , COMMEND_YN
+          , EVENT_CD
+          , SNS_INFO
+          , NTF_YN
+          , PRIZE_SBST
+          , STTUS_VAL
+          , RIP
+          , SYS_RDATE
+          , SYS_RDATE_DD
+          , REG_NM
+          , PROD_DIV_CD
+          ,	REQ_BUY_PROD_MSN
+          ,	RATE_CD
+          , DECODE(REQ_BUY_TYPE,'UU','유심 후기','MM','휴대폰 후기','-') AS REQ_BUY_TYPE_NM
+          , ADD_MONTHS(SYSDATE,-3) AS baseDate
+          , REVIEW_ID
+        FROM MCP_REQUEST_REVIEW
+        WHERE 1=1
+            <if test="reqBuyType != null and reqBuyType != ''">
+                AND REQ_BUY_TYPE = #{reqBuyType}
+            </if>
+            <if test="sttusVal != null and sttusVal != ''">
+                AND STTUS_VAL = #{sttusVal}
+            </if>
+            <if test="commendYn != null and commendYn != ''">
+                AND COMMEND_YN = #{commendYn}
+            </if>
+            <if test="eventCd != null and eventCd != ''">
+                AND EVENT_CD = #{eventCd}
+            </if>
+            <if test="ntfYn != null and ntfYn != ''">
+                AND NTF_YN = #{ntfYn}
+            </if>
+            <if test="rateCd != null and rateCd != ''">
+                AND RATE_CD = #{rateCd}
+            </if>
+            <choose>
+                <when test="searchValue != null and searchValue != '' and searchCategory == 'reviewSbst'">
+                     AND REVIEW_SBST LIKE '%' || UPPER(#{searchValue}) || '%'
+                </when>
+                <when test="searchValue != null and searchValue != '' and searchCategory == 'regNm'">
+                    AND REG_NM LIKE '%' || UPPER(#{searchValue}) || '%'
+                </when>
+                <when test="searchValue != null and searchValue != '' and searchCategory == 'prizeSbst'">
+                    AND PRIZE_SBST LIKE '%' || UPPER(#{searchValue}) || '%'
+                </when>
+             </choose>
+             <if test="requestKey != null and requestKey gt 0 ">
+                AND REQUEST_KEY = #{requestKey}
+            </if>
+        ORDER BY NTF_YN  DESC, SYS_RDATE DESC
+    </select>
+
+    <select id="selectUsimRequestReviewImgList" resultType="com.ktmmobile.mcp.requestReview.dto.McpRequestReviewImgDto" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        SELECT /*RequestReviewMapper.selectUsimRequestReviewImgList 개통후기 리스트 이미지 */
+           REQUEST_KEY
+         , IMD_SEQ
+         , FILE_PATH_NM
+         , FILE_TYPE
+         , FILE_CAPA
+         , FILE_ALT
+         , REVIEW_ID
+       FROM MCP_REQUEST_REVIEW_IMG
+       WHERE
+          REQUEST_KEY = #{requestKey}
+       AND REVIEW_ID = #{reviewId}
+          <if test="imdSeq != null and imdSeq gt -1 ">
+                AND IMD_SEQ = #{imdSeq}
+          </if>
+       ORDER BY IMD_SEQ
+    </select>
+
+    <insert id="insertMcpRequestReview" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+    INSERT INTO MCP_REQUEST_REVIEW
+    (
+        REQUEST_KEY
+        , CONTRACT_NUM
+        , REQ_BUY_TYPE
+        , MODEL_ID
+        , PROD_ID
+        , REVIEW_SBST
+        , COMMEND_YN
+        , EVENT_CD
+        , SNS_INFO
+        , NTF_YN
+        , PRIZE_SBST
+        , STTUS_VAL
+        , RIP
+        , SYS_RDATE
+        , SYS_RDATE_DD
+        , REG_NM
+        , PROD_DIV_CD
+        , REQ_BUY_PROD_MSN
+        , RATE_CD
+        , HIT_CNT
+        , REVIEW_ID
+    ) VALUES (
+
+        #{requestKey}
+        , #{contractNum}
+        , #{reqBuyType}
+        , #{modelId}
+        , #{prodId}
+        , #{reviewSbst}
+        , #{commendYn}
+        , #{eventCd}
+        , #{snsInfo}
+        , #{ntfYn}
+        , #{prizeSbst}
+        , #{sttusVal}
+        , #{rIP}
+        , SYSDATE
+        , TO_CHAR(SYSDATE,'YYYYMMDD')
+        , #{regNm}
+        , #{prodDivCd}
+        , #{reqBuyProdMsn}
+        , #{rateCd}
+        , NVL(#{hitCnt}, 0)
+        , MCP_REQUEST_REVIEW_SEQ.NEXTVAL
+    )
+
+    </insert>
+
+    <insert id="insertMcpRequestReviewImg" parameterType="com.ktmmobile.mcp.requestReview.dto.McpRequestReviewImgDto">
+        INSERT INTO MCP_REQUEST_REVIEW_IMG
+        (
+            REQUEST_KEY
+            , IMD_SEQ
+            , FILE_PATH_NM
+            , FILE_TYPE
+            , FILE_CAPA
+            , FILE_ALT
+            , REVIEW_ID
+        ) VALUES (
+            #{requestKey}
+            , #{imdSeq}
+            , #{filePathNm}
+            , #{fileType}
+            , #{fileCapa}
+            , #{fileAlt}
+            , #{reviewId}
+        )
+    </insert>
+
+    <select id="selectMypageReviewList" resultMap="selectUsimRequestReviewListCollection" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        SELECT /*RequestReview_Query.selectMypageReviewList 마이페이지 개통후기 리스트  */
+           REQUEST_KEY
+          , CONTRACT_NUM
+          , REQ_BUY_TYPE
+          , MODEL_ID
+          , PROD_ID
+          , REVIEW_SBST
+          , COMMEND_YN
+          , EVENT_CD
+          , SNS_INFO
+          , NTF_YN
+          , PRIZE_SBST
+          , STTUS_VAL
+          , RIP
+          , SYS_RDATE
+          , SYS_RDATE_DD
+          , REG_NM
+          , DECODE(REQ_BUY_TYPE,'UU','유심 후기','MM','휴대폰 후기','-') AS REQ_BUY_TYPE_NM
+          , PROD_DIV_CD
+          , REQ_BUY_PROD_MSN
+          , RATE_CD
+          , HIT_CNT
+          , RANK() OVER(ORDER BY HIT_CNT DESC) RANKING
+          , ADD_MONTHS(SYSDATE,-3) AS baseDate
+          , REVIEW_ID
+        FROM MCP_REQUEST_REVIEW
+        WHERE 1=1
+        AND STTUS_VAL = '1'
+        <if test="contractNumList != null and contractNumList.size != 0">
+                 AND CONTRACT_NUM IN
+                <foreach item="item" collection="contractNumList" open="(" separator="," close=")">
+                        #{item}
+                </foreach>
+            </if>
+        ORDER BY NTF_YN  DESC, RANKING, SYS_RDATE DESC
+    </select>
+
+
+    <select id="selectMypageReviewTotalCnt" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        SELECT
+            COUNT(1) AS CNT
+        FROM
+            MCP_REQUEST_REVIEW
+        WHERE 1=1
+        <if test="contractNumList != null and contractNumList.size != 0">
+             AND CONTRACT_NUM IN
+            <foreach item="item" collection="contractNumList" open="(" separator="," close=")">
+                    #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <delete id="deleteMcpRequestReview" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        DELETE MCP_REQUEST_REVIEW
+        WHERE REQUEST_KEY = #{requestKey}
+        AND REVIEW_ID = #{reviewId}
+    </delete>
+
+    <delete id="deleteMcpRequestReviewImg" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        DELETE MCP_REQUEST_REVIEW_IMG
+        WHERE REQUEST_KEY = #{requestKey}
+        AND REVIEW_ID = #{reviewId}
+        <if test="imdSeq != null and imdSeq gt -1 ">
+                AND IMD_SEQ = #{imdSeq}
+          </if>
+    </delete>
+
+    <select id="selectReviewDataList"  parameterType="com.ktmmobile.mcp.requestReview.dto.ReviewDataInfo"  resultMap="selectReviewDataListCollection">
+        SELECT
+            REQUEST_KEY
+             , REVIEW_ID
+             , REQ_BUY_TYPE
+             , MODEL_ID
+             , PROD_ID
+             , REVIEW_SBST
+             , COMMEND_YN
+             , EVENT_CD
+             , SNS_INFO
+             , NTF_YN
+             , PRIZE_SBST
+             , STTUS_VAL
+             , SYS_RDATE_DD
+             , RATE_CD
+             , HIT_CNT
+        FROM MCP_REQUEST_REVIEW
+        WHERE 1=1
+        ORDER BY SYS_RDATE DESC
+    </select>
+
+    <select id="selectRequestReviewList" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultMap="selectUsimRequestReviewListCollection">
+        SELECT  /*RequestReviewMapper.selectRequestReviewList 개통후기 리스트  */
+            a.REQUEST_KEY
+            , a.CONTRACT_NUM
+            , a.REQ_BUY_TYPE
+            , a.MODEL_ID
+            , a.PROD_ID
+            , a.REVIEW_SBST
+            , a.COMMEND_YN
+            , a.EVENT_CD
+            , a.SNS_INFO
+            , a.NTF_YN
+            , a.PRIZE_SBST
+            , a.STTUS_VAL
+            , a.RIP
+            , a.SYS_RDATE
+            , a.SYS_RDATE_DD
+            , a.REG_NM
+            , a.PROD_DIV_CD
+            , a.REQ_BUY_PROD_MSN
+            , a.RATE_CD
+            , a.HIT_CNT
+            , a.REQ_BUY_TYPE_NM
+            , a.RANKING
+            , ADD_MONTHS(SYSDATE,-3) AS baseDate
+            , LAST_BEST_REVIEW_CHK
+            , a.REVIEW_ID
+         FROM(
+            SELECT
+               REQUEST_KEY
+              , CONTRACT_NUM
+              , REQ_BUY_TYPE
+              , MODEL_ID
+              , PROD_ID
+              , REVIEW_SBST
+              , COMMEND_YN
+              , EVENT_CD
+              , SNS_INFO
+              , NTF_YN
+              , PRIZE_SBST
+              , STTUS_VAL
+              , RIP
+              , SYS_RDATE
+              , SYS_RDATE_DD
+              , REG_NM
+              , PROD_DIV_CD
+              , REQ_BUY_PROD_MSN
+              , RATE_CD
+              , HIT_CNT
+              , DECODE(REQ_BUY_TYPE,'UU','유심 후기','MM','휴대폰 후기','-') AS REQ_BUY_TYPE_NM
+              , RANK() OVER(ORDER BY HIT_CNT DESC) RANKING
+              , LAST_BEST_REVIEW_CHK
+              , REVIEW_ID
+            FROM MCP_REQUEST_REVIEW
+        ) a WHERE NTF_YN = '1'
+          AND STTUS_VAL = 1
+        <if test="reqBuyType != null and reqBuyType != ''">
+            AND REQ_BUY_TYPE = #{reqBuyType}
+        </if>
+        <if test="commendYn != null and commendYn != ''">
+            AND COMMEND_YN = #{commendYn}
+        </if>
+        <if test="eventCd != null and eventCd != ''">
+            AND EVENT_CD = #{eventCd}
+        </if>
+        <if test="contractNumList != null and contractNumList.size != 0">
+             AND CONTRACT_NUM IN
+            <foreach item="item" collection="contractNumList" open="(" separator="," close=")">
+                    #{item}
+            </foreach>
+        </if>
+        <if test="prodId != null and prodId != ''">
+            AND PROD_ID = #{prodId}
+        </if>
+        <if test="rateCd != null and rateCd != ''">
+            AND RATE_CD = #{rateCd}
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewBest'">
+            AND LAST_BEST_REVIEW_CHK = 'Y'
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewSns'">
+            AND SNS_INFO IS NOT NULL
+        </if>
+
+
+        UNION ALL
+
+        SELECT
+            c.REQUEST_KEY
+            , c.CONTRACT_NUM
+            , c.REQ_BUY_TYPE
+            , c.MODEL_ID
+            , c.PROD_ID
+            , c.REVIEW_SBST
+            , c.COMMEND_YN
+            , c.EVENT_CD
+            , c.SNS_INFO
+            , c.NTF_YN
+            , c.PRIZE_SBST
+            , c.STTUS_VAL
+            , c.RIP
+            , c.SYS_RDATE
+            , c.SYS_RDATE_DD
+            , c.REG_NM
+            , c.PROD_DIV_CD
+            , c.REQ_BUY_PROD_MSN
+            , c.RATE_CD
+            , c.HIT_CNT
+            , c.REQ_BUY_TYPE_NM
+            , c.RANKING
+            , ADD_MONTHS(SYSDATE,-3) AS baseDate
+            , c.LAST_BEST_REVIEW_CHK
+            , c.REVIEW_ID
+         FROM(
+            SELECT /*RequestReviewMapper.selectUsimRequestReviewList 개통후기 리스트  */
+               REQUEST_KEY
+              , CONTRACT_NUM
+              , REQ_BUY_TYPE
+              , MODEL_ID
+              , PROD_ID
+              , REVIEW_SBST
+              , COMMEND_YN
+              , EVENT_CD
+              , SNS_INFO
+              , NTF_YN
+              , PRIZE_SBST
+              , STTUS_VAL
+              , RIP
+              , SYS_RDATE
+              , SYS_RDATE_DD
+              , REG_NM
+              , PROD_DIV_CD
+              , REQ_BUY_PROD_MSN
+              , RATE_CD
+              , HIT_CNT
+              , DECODE(REQ_BUY_TYPE,'UU','유심 후기','MM','휴대폰 후기','-') AS REQ_BUY_TYPE_NM
+              , RANK() OVER(ORDER BY HIT_CNT DESC) RANKING
+              , LAST_BEST_REVIEW_CHK
+              , REVIEW_ID
+            FROM MCP_REQUEST_REVIEW
+            ORDER BY SYS_RDATE DESC
+        ) c WHERE NTF_YN != '1'
+        <if test="reqBuyType != null and reqBuyType != ''">
+            AND REQ_BUY_TYPE = #{reqBuyType}
+        </if>
+        <if test="sttusVal != null and sttusVal != ''">
+            AND STTUS_VAL = #{sttusVal}
+        </if>
+        <if test="commendYn != null and commendYn != ''">
+            AND COMMEND_YN = #{commendYn}
+        </if>
+        <if test="eventCd != null and eventCd != ''">
+            AND EVENT_CD = #{eventCd}
+        </if>
+        <if test="contractNumList != null and contractNumList.size != 0">
+             AND CONTRACT_NUM IN
+            <foreach item="item" collection="contractNumList" open="(" separator="," close=")">
+                    #{item}
+            </foreach>
+        </if>
+        <if test="prodId != null and prodId != ''">
+            AND PROD_ID = #{prodId}
+        </if>
+        <if test="rateCd != null and rateCd != ''">
+            AND RATE_CD = #{rateCd}
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewBest'">
+            AND LAST_BEST_REVIEW_CHK = 'Y'
+        </if>
+        <if test="searchCategory != null and searchCategory == 'chkMyReviewSns'">
+            AND SNS_INFO IS NOT NULL
+        </if>
+
+    </select>
+
+    <update id="modifyReviewHit" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        UPDATE
+            MCP_REQUEST_REVIEW
+        SET
+            HIT_CNT = HIT_CNT + 1
+        WHERE
+            REQUEST_KEY = #{requestKey}
+        AND REVIEW_ID = #{reviewId}
+
+    </update>
+
+    <select id="selectRequestReview" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        SELECT
+           REQUEST_KEY
+          , CONTRACT_NUM
+          , REQ_BUY_TYPE
+          , MODEL_ID
+          , PROD_ID
+          , REVIEW_SBST
+          , COMMEND_YN
+          , EVENT_CD
+          , SNS_INFO
+          , NTF_YN
+          , PRIZE_SBST
+          , STTUS_VAL
+          , RIP
+          , SYS_RDATE
+          , SYS_RDATE_DD
+          , REG_NM
+          , PROD_DIV_CD
+          , REQ_BUY_PROD_MSN
+          , RATE_CD
+          , HIT_CNT
+          , DECODE(REQ_BUY_TYPE,'UU','유심 후기','MM','휴대폰 후기','-') AS REQ_BUY_TYPE_NM
+        FROM
+            MCP_REQUEST_REVIEW
+        WHERE
+            REQUEST_KEY = #{requestKey}
+        AND REVIEW_ID = #{reviewId}
+    </select>
+
+    <select id="selectReviewQuestionList" resultType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+         SELECT /*RequestReviewMapper.selectReviewQuestionList 사용후기 질문 답변 리스트 */
+            A.QUESTION_DESC,
+            A.QUESTION_MM,
+            LISTAGG(D.ANSWER_DESC, ', ') WITHIN GROUP (ORDER BY D.ANSWER_DESC) AS ANSWER_DESC
+         FROM
+             MCP_REVIEW_QUESTION_BAS A
+             ,( SELECT B.QUESTION_ID, B.ANSWER_DESC
+                FROM
+                    MCP_REVIEW_QUESTION_DTL B
+                    , (
+                        SELECT QUESTION_ID, ANSWER_ID
+                        FROM MCP_REQUEST_REVIEW_ANSWER
+                        WHERE 1=1
+                           AND REQUEST_KEY = #{requestKey}
+                           AND REVIEW_ID = #{reviewId}
+                           AND USE_YN = 'Y'
+                    ) C
+                WHERE 1=1
+                    AND C.QUESTION_ID = B.QUESTION_ID
+                    AND C.ANSWER_ID = B.ANSWER_ID
+             ) D
+         WHERE 1=1
+            AND A.QUESTION_ID = D.QUESTION_ID
+         GROUP BY A.QUESTION_DESC, A.QUESTION_MM, D.QUESTION_ID, A.INDC_ODRG
+         ORDER BY A.INDC_ODRG
+    </select>
+
+
+    <select id="selectReviewQuestionDateList" resultType="com.ktmmobile.mcp.requestReview.dto.ReviewQuestion" parameterType="com.ktmmobile.mcp.requestReview.dto.ReviewDataInfo">
+        SELECT /*RequestReviewMapper.selectReviewQuestionList 사용후기 질문 답변 리스트 */
+            A.QUESTION_DESC,
+            A.QUESTION_MM,
+            LISTAGG(D.ANSWER_DESC, ', ') WITHIN GROUP (ORDER BY D.ANSWER_DESC) AS ANSWER_DESC
+        FROM
+            MCP_REVIEW_QUESTION_BAS A
+                ,( SELECT B.QUESTION_ID, B.ANSWER_DESC
+            FROM
+            MCP_REVIEW_QUESTION_DTL B
+                , (
+            SELECT QUESTION_ID, ANSWER_ID
+            FROM MCP_REQUEST_REVIEW_ANSWER
+            WHERE 1=1
+            AND REQUEST_KEY = #{requestKey}
+            AND REVIEW_ID = #{reviewId}
+            AND USE_YN = 'Y'
+            ) C
+            WHERE 1=1
+            AND C.QUESTION_ID = B.QUESTION_ID
+            AND C.ANSWER_ID = B.ANSWER_ID
+            ) D
+        WHERE 1=1
+          AND A.QUESTION_ID = D.QUESTION_ID
+        GROUP BY A.QUESTION_DESC, A.QUESTION_MM, D.QUESTION_ID, A.INDC_ODRG
+        ORDER BY A.INDC_ODRG
+    </select>
+
+<!--         <select id="selectReviewQuestionList" resultType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+      SELECT /*RequestReviewMapper.selectReviewQuestionList 사용후기 질문 답변 리스트 */
+         QUESTION_DESC
+       , QUESTION_MM
+       , ANSWER_DESC
+       FROM(
+            SELECT
+               A.QUESTION_DESC,
+               A.QUESTION_MM,
+               LISTAGG(D.ANSWER_DESC, ', ') WITHIN GROUP (ORDER BY D.ANSWER_DESC) AS ANSWER_DESC
+            FROM MCP_REVIEW_QUESTION_BAS A,
+                   (SELECT B.QUESTION_ID, B.ANSWER_DESC, RANK() OVER(PARTITION BY B.QUESTION_ID ORDER BY B.INDC_ODRG) RANK
+                      FROM MCP_REVIEW_QUESTION_DTL B,
+                           (SELECT QUESTION_ID, ANSWER_ID
+                              FROM MCP_REQUEST_REVIEW_ANSWER
+                             WHERE 1=1
+                               AND REQUEST_KEY = #{requestKey}
+                               AND USE_YN = 'Y') C
+                     WHERE 1=1
+                       AND C.QUESTION_ID = B.QUESTION_ID
+                       AND C.ANSWER_ID = B.ANSWER_ID) D
+            WHERE 1=1
+               AND A.QUESTION_ID = D.QUESTION_ID
+            GROUP BY A.QUESTION_DESC, A.QUESTION_MM, D.QUESTION_ID, A.INDC_ODRG
+            ORDER BY A.INDC_ODRG
+       )
+       WHERE ROWNUM BETWEEN 1 AND 3
+
+    </select> -->
+
+      <!-- 사용후기 질문 조회 -->
+    <select id="reviewCodeList" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        SELECT
+           QUESTION_ID
+         , QUESTION_MM
+        FROM MCP_REVIEW_QUESTION_BAS
+        WHERE 1=1
+        AND STAT_VIEW_YN = 'Y'
+        ORDER BY INDC_ODRG
+    </select>
+
+          <!-- 사용후기 review 차트 조회 -->
+    <select id="reviewAnswerList" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        SELECT
+            (
+             SELECT COUNT(*)
+             FROM MCP_REQUEST_REVIEW_ANSWER A,
+                  MCP_REVIEW_QUESTION_BAS B
+             WHERE 1=1
+             AND A.QUESTION_ID = B.QUESTION_ID
+             AND A.QUESTION_ID = #{questionId}
+             AND A.CRET_DD BETWEEN NVL(B.STAT_START_DD, TO_DATE('20000101', 'YYYYMMDD')) AND NVL(B.STAT_END_DD, TO_CHAR(SYSDATE , 'YYYYMMDD'))
+
+            ) AS TOTAL_CNT
+           , A.ANSWER_DESC
+           , SUM(CASE WHEN A.ANSWER_ID  = B.ANSWER_ID  THEN 1 ELSE 0 end) AS ANSWER_CNT
+           , A.QUESTION_ID
+        FROM
+            MCP_REVIEW_QUESTION_DTL A,
+            MCP_REQUEST_REVIEW_ANSWER B,
+            MCP_REVIEW_QUESTION_BAS C,
+            MCP_REQUEST_REVIEW D
+        WHERE 1=1
+        AND A.QUESTION_ID = B.QUESTION_ID
+        AND A.QUESTION_ID = C.QUESTION_ID
+        AND B.REQUEST_KEY = D.REQUEST_KEY
+        AND B.REVIEW_ID = D.REVIEW_ID
+        AND A.QUESTION_ID = #{questionId}
+        AND B.CRET_DD BETWEEN NVL(C.STAT_START_DD, TO_DATE('20000101', 'YYYYMMDD')) AND NVL(C.STAT_END_DD, TO_CHAR(SYSDATE , 'YYYYMMDD'))
+        <if test="eventCd != null and eventCd != ''">
+        AND D.EVENT_CD = #{eventCd}
+        </if>
+        GROUP BY A.ANSWER_ID,A.ANSWER_DESC,A.QUESTION_ID
+        ORDER BY A.ANSWER_ID
+    </select>
+
+
+
+    <resultMap id="makeListMap" type="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        <result property="questionId" column="QUESTION_ID" />
+        <result property="questionDesc" column="QUESTION_DESC" />
+        <result property="answerType" column="ANSWER_TYPE" />
+        <result property="authFlagYn" column="AUTH_FLAG_YN" />
+
+        <collection  property="subList" ofType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+            <result column="ANSWER_DESC" property="answerDesc" />
+            <result column="ANSWER_ID" property="answerId" />
+        </collection>
+    </resultMap>
+
+
+
+     <!-- 사용후기 작성 질문 조회 -->
+    <select id="reviewMakeList" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultMap="makeListMap">
+      SELECT
+          A.QUESTION_ID
+        , A.QUESTION_DESC
+        , B.ANSWER_DESC
+        , B.ANSWER_ID
+        , A.ANSWER_TYPE
+        , A.AUTH_FLAG_YN
+      FROM MCP_REVIEW_QUESTION_BAS A
+      INNER JOIN MCP_REVIEW_QUESTION_DTL B ON A.QUESTION_ID = B.QUESTION_ID
+      WHERE 1=1
+      AND A.USE_YN = 'Y'
+      AND B.USE_YN = 'Y'
+      AND TRUNC(SYSDATE) BETWEEN TO_DATE(A.QUESTION_START_DD,'YYYYMMDD') AND TO_DATE(A.QUESTION_END_DD,'YYYYMMDD')
+      ORDER BY A.INDC_ODRG,B.ANSWER_ID
+    </select>
+
+    <!-- 사용후기 작성 질문 답변 등록 -->
+    <insert id="insertReviewMake" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        INSERT INTO MCP_REQUEST_REVIEW_ANSWER
+        (
+            REQUEST_KEY
+            , QUESTION_ID
+            , ANSWER_ID
+            , CRET_DD
+            , CRET_ID
+            , AMD_ID
+            , RIP
+            , REVIEW_ID
+        ) VALUES (
+            #{requestKey}
+            , #{questionId}
+            , #{answerId}
+            , TO_CHAR(SYSDATE,'YYYYMMDD')
+            , #{cretId}
+            , #{amdId}
+            , #{rIP}
+            , #{reviewId}
+        )
+    </insert>
+
+    <select id="selectUserInfo" parameterType="java.lang.String" resultType="java.lang.String">
+       SELECT
+           A.USERID
+       FROM
+           MCP_USER_CNTR_MNG A
+           INNER JOIN MCP_USER B ON A.USERID = B.USERID
+       WHERE 1=1
+          AND A.SVC_CNTR_NO= #{contractNum}
+    </select>
+
+
+    <resultMap id="selectBestReviewListCollection" type="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        <result property="requestKey" column="REQUEST_KEY" />
+          <result property="reviewId" column="REVIEW_ID" />
+        <collection property="reviewImgList"
+                    ofType="com.ktmmobile.mcp.requestReview.dto.McpRequestReviewImgDto"
+                    column="{requestKey=REQUEST_KEY,reviewId=REVIEW_ID}"
+                    select="selectUsimRequestReviewImgList" >
+        </collection>
+         <collection property="reviewQuestionList"
+                    ofType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto"
+                    column="{requestKey=REQUEST_KEY,reviewId=REVIEW_ID}"
+                    select="selectReviewQuestionList">
+        </collection>
+    </resultMap>
+
+
+          <!-- 우수 사용후기  조회 -->
+    <select id="selectBestReviewList" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultMap="selectBestReviewListCollection">
+        SELECT /*RequestReviewMapper.selectBestReviewList 우수 개통후기 리스트  */
+           REQUEST_KEY
+          , CONTRACT_NUM
+          , REQ_BUY_TYPE
+          , MODEL_ID
+          , PROD_ID
+          , REVIEW_SBST
+          , COMMEND_YN
+          , EVENT_CD
+          , SNS_INFO
+          , NTF_YN
+          , PRIZE_SBST
+          , STTUS_VAL
+          , RIP
+          , SYS_RDATE
+          , SYS_RDATE_DD
+          , REG_NM
+          , PROD_DIV_CD
+          , REQ_BUY_PROD_MSN
+          , RATE_CD
+          , DECODE(REQ_BUY_TYPE,'UU','유심 후기','MM','휴대폰 후기','-') AS REQ_BUY_TYPE_NM
+          , ADD_MONTHS(SYSDATE,-3) AS baseDate
+          , REVIEW_ID
+        FROM MCP_REQUEST_REVIEW
+        WHERE 1=1
+        AND PRIZE_SBST IS NOT NULL
+        AND NTF_YN = 1
+        ORDER BY PRIZE_SBST
+    </select>
+
+    <delete id="deleteAnswerReview" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        DELETE MCP_REQUEST_REVIEW_ANSWER
+        WHERE REQUEST_KEY = #{requestKey}
+        AND REVIEW_ID = #{reviewId}
+    </delete>
+
+    <!-- 등록한 사용후기 reviewId 조회 -->
+    <select id="reviewIdList" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" resultType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        SELECT
+            REVIEW_ID
+          , REQUEST_KEY
+        FROM (
+               SELECT
+                   REVIEW_ID
+                 , REQUEST_KEY
+                 , ROW_NUMBER() OVER(PARTITION BY REQUEST_KEY ORDER BY SYS_RDATE DESC) AS rn
+                FROM MCP_REQUEST_REVIEW
+                WHERE REQUEST_KEY = #{requestKey}
+               )
+         WHERE rn = 1
+    </select>
+
+
+    <select id="selectReviewList" resultType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto" parameterType="com.ktmmobile.mcp.requestReview.dto.RequestReviewDto">
+        SELECT /*RequestReview_Query.selectReviewList  */
+        REVIEW_ID
+        FROM MCP_REQUEST_REVIEW
+        WHERE 1=1
+        <if test="contractNum !=null and contractNum != ''" >
+            AND CONTRACT_NUM = #{contractNum}
+        </if>
+        <if test="strtDttm !=null and strtDttm != ''" >
+            AND SYS_RDATE > TO_DATE(#{strtDttm}, 'YYYYMMDDHH24MISS')
+        </if>
+        ORDER BY SYS_RDATE DESC
+    </select>
+
+
+
+
+</mapper>

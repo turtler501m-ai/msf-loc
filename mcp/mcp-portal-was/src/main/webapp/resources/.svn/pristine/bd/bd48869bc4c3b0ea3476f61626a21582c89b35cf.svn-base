@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 27.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="레이어_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+	 y="0px" viewBox="0 0 64 64" style="enable-background:new 0 0 64 64;" xml:space="preserve">
+<style type="text/css">
+	.st0{filter:url(#Adobe_OpacityMaskFilter);}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	.st2{mask:url(#b_00000038377380310792119870000003565416658190775985_);fill-rule:evenodd;clip-rule:evenodd;fill:#B5B5B5;}
+	.st3{filter:url(#Adobe_OpacityMaskFilter_00000088108881542016365770000009627139968413997974_);}
+	.st4{mask:url(#b_00000105405753289287627320000000344722853014873782_);fill:#FFFFFF;}
+</style>
+<g>
+	<defs>
+		<filter id="Adobe_OpacityMaskFilter" filterUnits="userSpaceOnUse" x="6.9" y="13.2" width="50.2" height="37.7">
+			<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+		</filter>
+	</defs>
+	
+		<mask maskUnits="userSpaceOnUse" x="6.9" y="13.2" width="50.2" height="37.7" id="b_00000038377380310792119870000003565416658190775985_">
+		<g class="st0">
+			<path id="a_00000176724335564485626380000017330633507683095180_" class="st1" d="M-1.5-1.5h67v67h-67V-1.5z"/>
+		</g>
+	</mask>
+	<path class="st2" d="M11.1,13.2h41.9c2.3,0,4.2,1.9,4.2,4.2v29.3c0,2.3-1.9,4.2-4.2,4.2H11.1c-2.3,0-4.2-1.9-4.2-4.2V17.4
+		C6.9,15,8.8,13.2,11.1,13.2z"/>
+	<defs>
+		
+			<filter id="Adobe_OpacityMaskFilter_00000080887280401417073760000003616528298472470167_" filterUnits="userSpaceOnUse" x="13.2" y="21.6" width="37.5" height="14.2">
+			<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+		</filter>
+	</defs>
+	
+		<mask maskUnits="userSpaceOnUse" x="13.2" y="21.6" width="37.5" height="14.2" id="b_00000105405753289287627320000000344722853014873782_">
+		<g style="filter:url(#Adobe_OpacityMaskFilter_00000080887280401417073760000003616528298472470167_);">
+			<path id="a_00000013881915290607713380000003280232845497222282_" class="st1" d="M-1.5-1.5h67v67h-67V-1.5z"/>
+		</g>
+	</mask>
+	<path class="st4" d="M32.1,35.8c-0.7,0-1.4-0.2-2-0.6l-15.9-9.9c-1-0.6-1.2-1.8-0.7-2.8c0.6-1,1.8-1.2,2.8-0.7l15.8,9.8l15.6-9.8
+		c0.9-0.6,2.2-0.3,2.8,0.6c0.6,0.9,0.3,2.2-0.6,2.8l-15.7,9.8C33.5,35.6,32.8,35.8,32.1,35.8z"/>
+</g>
+</svg>

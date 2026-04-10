@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.mdlamtmgmt.mapper.CmnMdlAmtMgmtMapper">
+	
+	<!-- 모델단가 대표모델 리스트 조회 -->
+	<select id="selectIntmMdlAmtList" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* CmnMdlAmtMgmtMapper.selectIntmMdlAmtList */
+			  A.PRDT_ID													/* 모델ID */
+			, A.RPRS_PRDT_ID											/* 대표모델ID */
+			, A.RPRS_YN													/* 대표여부 */
+			, A.PRDT_CODE												/* 모델코드 */
+			, A.PRDT_NM													/* 모델명 */
+			, A.MNFCT_ID												/* 제조사ID */
+			, B.MNFCT_NM												/* 제조사명 */
+			, A.PRDT_TYPE_CD											/* 모델유형코드 */
+			, FN_GET_CODENM('ORG0007', PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+			, A.PRDT_IND_CD												/* 모델구분코드 */
+			, FN_GET_CODENM('CMN0045', PRDT_IND_CD) AS PRDT_IND_NM		/* 모델구분명 */
+			, A.PRDT_LNCH_DT											/* 모델출시일자 */
+			, A.PRDT_DT													/* 모델단종일자 */
+			, A.PRDT_COLR_CD											/* 모델색상코드 */
+			, FN_GET_CODENM('CMN0044', PRDT_COLR_CD) AS PRDT_COLR_NM	/* 모델색상명 */
+			, A.REG_ID													/* 등록자ID */
+			, A.REG_DTTM												/* 등록일시 */
+			, A.RVISN_ID												/* 수정자ID */
+			, A.RVISN_DTTM												/* 수정일시 */
+		FROM CMN_INTM_MDL A
+			, ORG_MNFCT_MST B
+		WHERE 1=1
+		AND A.MNFCT_ID = B.MNFCT_ID
+		AND A.RPRS_YN = 'Y'
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">		
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}							/* 대표모델ID */
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+			AND A.RPRS_PRDT_ID IN (SELECT RPRS_PRDT_ID FROM CMN_INTM_MDL WHERE  PRDT_ID = #{prdtId})
+		</if>
+		<if test="mnfctId != null and mnfctId != ''">
+			AND A.MNFCT_ID = #{mnfctId}									/* 제조사ID */
+		</if>
+		<if test="prdtTypeCd != null and prdtTypeCd != ''">
+			AND A.PRDT_TYPE_CD = #{prdtTypeCd}							/* 모델유형코드 */
+		</if>
+		<if test="prdtNm != null and prdtNm != ''">
+			AND UPPER(A.PRDT_NM) like '%'||UPPER(#{prdtNm})||'%'							/* 모델명 */
+		</if>
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+	<!-- 입고 -->
+	<!-- 입고 단가 이력 리스트 조회 -->
+	<select id="selectMnfctAmtHisList" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* CmnMdlAmtMgmtMapper.selectMnfctAmtHisList */
+			  A.RPRS_PRDT_ID				/* 대표모델ID */
+			, C.PRDT_CODE AS RPRS_PRDT_CODE	/* 대표모델코드 */
+			, C.PRDT_NM						/* 모델명 */
+			, A.OLD_YN						/* 중고여부 */
+			, FN_GET_CODENM('ORG0011', A.OLD_YN) AS OLD_YN_NM /* 중고여부명 */
+			, A.MNFCT_ID					/* 제조사ID */
+			, B.MNFCT_NM					/* 제조사명 */
+			, A.UNIT_PRIC_EXPR_DTTM			/* 단가만료일시 */
+			, A.UNIT_PRIC_APPL_DTTM			/* 단가적용일시 */
+			, A.IN_UNIT_PRIC				/* 입고단가 */
+			, A.REMRK						/* 비고 */
+			, A.REG_ID						/* 등록자ID */
+			, A.REG_DTTM					/* 등록일시 */
+			, A.RVISN_ID					/* 수정자ID */
+			, A.RVISN_DTTM					/* 수정일시 */
+		FROM CMN_MNFCT_AMT A 	/* 공급사단가 */
+			, CMN_INTM_MDL C
+			, ORG_MNFCT_MST B
+		WHERE 1=1
+			AND A.RPRS_PRDT_ID = C.RPRS_PRDT_ID
+			AND C.RPRS_YN = 'Y'
+			AND A.MNFCT_ID = B.MNFCT_ID(+)
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}
+			ORDER BY A.UNIT_PRIC_EXPR_DTTM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+	<!-- 입고 단가 등록 전 기등록 조회 -->
+	<select id="selectOldMnfctAmt" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO" resultType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		SELECT /* CmnMdlAmtMgmtMapper.selectValCnt */
+			  AMT.RPRS_PRDT_ID AS rprsPrdtId
+			, AMT.OLD_YN AS oldYn
+			, AMT.MNFCT_ID AS mnfctId
+			, AMT.UNIT_PRIC_EXPR_DTTM AS unitPricExprDttm
+			, SUBSTR(AMT.UNIT_PRIC_APPL_DTTM, 0, 8) AS unitPricApplDttm
+			, COUNT(*) OVER() AS totalCnt
+		FROM CMN_MNFCT_AMT AMT  
+		WHERE 1=1
+			AND AMT.RPRS_PRDT_ID = #{rprsPrdtId}
+			AND AMT.OLD_YN = #{oldYn, jdbcType=VARCHAR}
+			AND AMT.MNFCT_ID = #{mnfctId, jdbcType=VARCHAR}
+			AND AMT.UNIT_PRIC_EXPR_DTTM = '99991231235959'
+		ORDER BY AMT.UNIT_PRIC_EXPR_DTTM DESC
+	</select>
+
+
+	<!-- 입고단가 기등록건 수정 (미래데이터 수정) -->
+	<update id="updateMnfctAmt" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		UPDATE /* CmnMdlAmtMgmtMapper.updateMnfctAmt */
+			CMN_MNFCT_AMT
+			SET   RVISN_ID = #{rvisnId, jdbcType=VARCHAR}												/* 수정자ID */
+				, RVISN_DTTM = SYSDATE																	/* 수정일시 */
+				, UNIT_PRIC_APPL_DTTM = TO_CHAR(TO_DATE(#{unitPricApplDttm, jdbcType=VARCHAR},'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS')		/* 단가적용일시 */
+				, IN_UNIT_PRIC = #{inUnitPric}															/* 입고단가 */
+				, REMRK = #{remrk}																		/* 비고 */
+		WHERE 1=1
+			AND RPRS_PRDT_ID = #{rprsPrdtId} /* 대표모델ID */
+			AND OLD_YN = #{oldYn} /* 중고여부 */
+			AND MNFCT_ID = #{mnfctId } /* 공급사ID */
+			AND UNIT_PRIC_EXPR_DTTM = '99991231235959' /* 단가만료일시 */
+	</update>
+	
+	<!-- 최종 직전 기등록 데이터 만료일시 수정 (미래데이터 수정) -->
+	<update id="updateOldMnfctAmtExpire" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		UPDATE /* CmnMdlAmtMgmtMapper.updateOldMnfctAmtExpire */
+			CMN_MNFCT_AMT
+			SET RVISN_ID = #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+				, RVISN_DTTM = SYSDATE /* 수정일시*/
+				, UNIT_PRIC_EXPR_DTTM = TO_CHAR(TO_DATE(#{unitPricApplDttm, jdbcType=VARCHAR},'YYYYMMDDHH24MISS')-1, 'YYYYMMDD')||'235959' /* 단가만료일시 */
+		WHERE 1=1
+			AND RPRS_PRDT_ID = #{rprsPrdtId} /* 대표모델ID */
+			AND OLD_YN = #{oldYn} /* 중고여부 */
+			AND MNFCT_ID = #{mnfctId} /* 공급사ID */
+			AND UNIT_PRIC_EXPR_DTTM = (SELECT MAX(UNIT_PRIC_EXPR_DTTM)
+										FROM CMN_MNFCT_AMT
+										WHERE  1=1
+										AND RPRS_PRDT_ID = #{rprsPrdtId} /* 대표모델ID */
+										AND OLD_YN = #{oldYn} /* 중고여부 */
+										AND MNFCT_ID = #{mnfctId} /* 공급사ID */
+										AND UNIT_PRIC_EXPR_DTTM <![CDATA[<>]]> '99991231235959'
+									  ) /* 단가만료일시 */
+	</update>
+	
+	<!-- 입고단가 기등록건 이력으로 수정 -->
+	<update id="updateOldMnfctAmt" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		UPDATE /* CmnMdlAmtMgmtMapper.updateOldMnfctAmt */
+			CMN_MNFCT_AMT
+			SET RVISN_ID = #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+				, RVISN_DTTM = SYSDATE /* 수정일시*/
+				, UNIT_PRIC_EXPR_DTTM = TO_CHAR(TO_DATE(#{unitPricApplDttm, jdbcType=VARCHAR},'YYYYMMDDHH24MISS')-1, 'YYYYMMDD')||'235959' /* 단가만료일시 */
+		WHERE 1=1
+			AND RPRS_PRDT_ID = #{rprsPrdtId} /* 대표모델ID */
+			AND OLD_YN = #{oldYn} /* 중고여부 */
+			AND MNFCT_ID = #{mnfctId } /* 공급사ID */
+			AND UNIT_PRIC_EXPR_DTTM = '99991231235959' /* 단가만료일시 */
+	</update>
+	
+	<!-- 입고단가 등록 -->
+	<insert id="insertMnfctAmt" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		INSERT /* CmnMdlAmtMgmtMapper.insertMnfctAmt */
+			INTO CMN_MNFCT_AMT 
+			(
+			  RPRS_PRDT_ID
+			, OLD_YN
+			, MNFCT_ID
+			, UNIT_PRIC_EXPR_DTTM
+			, UNIT_PRIC_APPL_DTTM
+			, IN_UNIT_PRIC
+			, REMRK
+			, REG_ID
+			, REG_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+			)
+		VALUES 
+			(
+			  #{rprsPrdtId}
+			, #{oldYn}
+			, #{mnfctId}
+			, #{unitPricExprDttm}||'235959'
+			, TO_CHAR(TO_DATE(#{unitPricApplDttm, jdbcType=VARCHAR}, 'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS')
+			, #{inUnitPric}
+			, #{remrk}
+			, #{regId}
+			, SYSDATE
+			, #{rvisnId}
+			, SYSDATE
+			)
+	</insert>
+	
+	<!--  출고 -->
+	<!-- 출고 단가 이력 리스트 조회 -->
+	<select id="selectHndstAmtHisList" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT /* CmnMdlAmtMgmtMapper.selectHndstAmtHisList */
+				  A.RPRS_PRDT_ID																			/* 대표모델ID */
+				, B.PRDT_CODE AS RPRS_PRDT_CODE																/* 대표모델코드 */
+				, B.PRDT_NM																					/* 모델명 */
+				, A.OLD_YN																					/* 중고여부 */
+				, FN_GET_CODENM('ORG0011', A.OLD_YN) AS OLD_YN_NM 											/* 중고여부명 */
+				, A.UNIT_PRIC_EXPR_DTTM																		/* 단가만료일시 */
+				, A.UNIT_PRIC_APPL_DTTM																		/* 단가적용일시 */
+				, A.OUT_UNIT_PRIC																			/* 출고단가 */
+				, A.MNFCT_GRANT																				/* 제조사장려금 */
+				, A.REMRK																					/* 비고 */
+				, A.REG_ID																					/* 등록자ID */
+				, A.REG_DTTM																				/* 등록일시 */
+				, A.RVISN_ID																				/* 수정자ID */
+				, A.RVISN_DTTM																				/* 수정일시 */
+			FROM CMN_HNDST_AMT A -- 제품단가
+				, CMN_INTM_MDL B
+			WHERE 1=1
+			AND A.RPRS_PRDT_ID = B.RPRS_PRDT_ID
+			AND B.RPRS_YN = 'Y'
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}
+			ORDER BY A.UNIT_PRIC_EXPR_DTTM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+	<!-- 출고 단가 등록 전 기등록 조회 -->
+	<select id="selectOldHndstAmt" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO" resultType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		SELECT /* CmnMdlAmtMgmtMapper.selectOldHndstAmt */
+			  AMT.RPRS_PRDT_ID AS rprsPrdtId
+			, AMT.OLD_YN AS oldYn
+			, AMT.UNIT_PRIC_EXPR_DTTM AS unitPricExprDttm
+			, SUBSTR(AMT.UNIT_PRIC_APPL_DTTM, 0, 8) AS unitPricApplDttm
+			, COUNT(*) OVER() AS totalCnt
+		FROM CMN_HNDST_AMT AMT  
+		WHERE 1=1
+			AND AMT.RPRS_PRDT_ID = #{rprsPrdtId}
+			AND AMT.OLD_YN = #{oldYn, jdbcType=VARCHAR}
+			AND AMT.UNIT_PRIC_EXPR_DTTM = '99991231235959'
+	</select>
+	
+	<!-- 출고단가 기등록건 수정 (미래데이터 수정) -->
+	<update id="updateHndstAmt" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		UPDATE /* CmnMdlAmtMgmtMapper.updateHndstAmt */
+			CMN_HNDST_AMT
+			SET   RVISN_ID = #{rvisnId, jdbcType=VARCHAR}												/* 수정자ID */
+				, RVISN_DTTM = SYSDATE																	/* 수정일시 */
+				, UNIT_PRIC_APPL_DTTM = TO_CHAR(TO_DATE(#{unitPricApplDttm, jdbcType=VARCHAR},'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS')		/* 단가적용일시 */
+				, OUT_UNIT_PRIC = #{outUnitPric}														/* 출고단가 */
+				, MNFCT_GRANT = #{mnfctGrant}															/* 제조사장려금 */
+				, REMRK = #{remrk}																		/* 비고 */
+		WHERE 1=1
+			AND RPRS_PRDT_ID = #{rprsPrdtId} /* 대표모델ID */
+			AND OLD_YN = #{oldYn} /* 중고여부 */
+			AND UNIT_PRIC_EXPR_DTTM = '99991231235959' /* 단가만료일시 */
+	</update>
+	
+	<!-- 최종 직전 기등록 데이터 만료일시 수정 (미래데이터 수정) -->
+	<update id="updateOldHndstAmtExpire" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		UPDATE /* CmnMdlAmtMgmtMapper.updateOldHndstAmtExpire */
+			CMN_HNDST_AMT
+			SET RVISN_ID = #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+				, RVISN_DTTM = SYSDATE /* 수정일시*/
+				, UNIT_PRIC_EXPR_DTTM = TO_CHAR(TO_DATE(#{unitPricApplDttm, jdbcType=VARCHAR},'YYYYMMDDHH24MISS')-1, 'YYYYMMDD')||'235959' /* 단가만료일시 */
+		WHERE 1=1
+			AND RPRS_PRDT_ID = #{rprsPrdtId} /* 대표모델ID */
+			AND OLD_YN = #{oldYn} /* 중고여부 */
+			AND UNIT_PRIC_EXPR_DTTM = (SELECT MAX(UNIT_PRIC_EXPR_DTTM)
+										FROM CMN_HNDST_AMT
+										WHERE 1=1
+										AND RPRS_PRDT_ID = #{rprsPrdtId} /* 대표모델ID */
+										AND OLD_YN = #{oldYn} /* 중고여부 */
+										AND UNIT_PRIC_EXPR_DTTM <![CDATA[<>]]> '99991231235959' 
+										)  /* 단가만료일시 */
+	</update>
+	
+	<!-- 출고단가 기등록건 이력으로 수정 -->
+	<update id="updateOldHndstAmt" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		UPDATE /* CmnMdlAmtMgmtMapper.updateOldHndstAmt */
+			CMN_HNDST_AMT
+			SET RVISN_ID = #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+				, RVISN_DTTM = SYSDATE /* 수정일시*/
+				, UNIT_PRIC_EXPR_DTTM = TO_CHAR(TO_DATE(#{unitPricApplDttm, jdbcType=VARCHAR},'YYYYMMDDHH24MISS')-1, 'YYYYMMDD')||'235959' /* 단가만료일시 */
+		WHERE 1=1
+			AND RPRS_PRDT_ID = #{rprsPrdtId} /* 대표모델ID */
+			AND OLD_YN = #{oldYn} /* 중고여부 */
+			AND UNIT_PRIC_EXPR_DTTM = '99991231235959' /* 단가만료일시 */
+	</update>
+	
+	<!-- 출고단가 등록 -->
+	<insert id="insertHndstAmt" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO">
+		INSERT /* CmnMdlAmtMgmtMapper.insertHndstAmt */
+			INTO CMN_HNDST_AMT 
+			(
+			  RPRS_PRDT_ID			/* 대표제품ID */
+			, OLD_YN				/* 중고여부 */
+			, UNIT_PRIC_EXPR_DTTM	/* 단가만료일시 */
+			, UNIT_PRIC_APPL_DTTM	/* 단가적용일시 */
+			, OUT_UNIT_PRIC			/* 출고단가 */
+			, MNFCT_GRANT			/* 제조사장려금 */
+			, REMRK					/* 비고 */
+			, REG_ID				/* 등록자ID */
+			, REG_DTTM				/* 등록일시 */
+			, RVISN_ID				/* 수정자ID */
+			, RVISN_DTTM			/* 수정일시 */
+			)
+		VALUES 
+			(
+			  #{rprsPrdtId}
+			, #{oldYn}
+			, #{unitPricExprDttm}||'235959'
+			, TO_CHAR(TO_DATE(#{unitPricApplDttm, jdbcType=VARCHAR},'YYYYMMDDHH24MISS'), 'YYYYMMDDHH24MISS')
+			, #{outUnitPric}
+			, #{mnfctGrant}
+			, #{remrk}
+			, #{regId}
+			, SYSDATE
+			, #{rvisnId}
+			, SYSDATE
+			)
+	</insert>
+	
+	<!-- 대표모델 출고단가 찾기 팝업 리스트 조회 단종모델 제외 -->
+	<select id="selectRprsHndstAmtHisList" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* CmnMdlAmtMgmtMapper.selectRprsHndstAmtHisList */
+					  A.PRDT_ID													/* 모델ID */
+					, A.RPRS_PRDT_ID											/* 대표모델ID */
+					, A.RPRS_YN													/* 대표여부 */
+					, A.PRDT_CODE												/* 모델코드 */
+					, (SELECT PRDT_CODE 
+					   FROM CMN_INTM_MDL B 
+					   WHERE B.PRDT_ID = A.RPRS_PRDT_ID
+						AND RPRS_YN = 'Y') AS RPRS_PRDT_CODE					/* 대표모델 코드*/
+					, A.PRDT_NM													/* 모델명 */
+					, A.MNFCT_ID												/* 제조사ID */
+					, C.MNFCT_NM												/* 제조사명 */
+					, A.PRDT_TYPE_CD											/* 모델유형코드 */
+					, FN_GET_CODENM('ORG0007', A.PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+					, A.PRDT_IND_CD												/* 모델구분코드 */
+					, FN_GET_CODENM('CMN0045', A.PRDT_IND_CD) AS PRDT_IND_NM	/* 모델구분명 */
+					, A.PRDT_LNCH_DT											/* 모델출시일자 */
+					, A.PRDT_DT													/* 모델단종일자 */
+					, A.PRDT_COLR_CD											/* 모델색상코드 */
+					, FN_GET_CODENM('CMN0044', A.PRDT_COLR_CD) AS PRDT_COLR_NM									/* 모델색상명 */
+					, B.OLD_YN																					/* 중고여부 */
+					, FN_GET_CODENM('ORG0011', B.OLD_YN) AS OLD_YN_NM /* 중고여부명 */
+					, B.UNIT_PRIC_EXPR_DTTM																		/* 단가만료일시 */
+					, B.UNIT_PRIC_APPL_DTTM																		/* 단가적용일시 */
+					, B.OUT_UNIT_PRIC																			/* 출고단가 */
+					, B.MNFCT_GRANT																				/* 제조사장려금 */
+					, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'ORG0018' AND CD_VAL = '1') AS MAX_AMT	/* 정책보조금 */
+					, B.REMRK																					/* 비고 */
+		FROM CMN_INTM_MDL A
+			, CMN_HNDST_AMT B
+			, ORG_MNFCT_MST C
+		WHERE 1=1
+		AND A.RPRS_PRDT_ID = B.RPRS_PRDT_ID
+		AND A.MNFCT_ID = C.MNFCT_ID
+		AND A.PRDT_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+		AND ((A.RPRS_YN = 'N' AND PRDT_TYPE_CD = '01') 
+				  OR (A.RPRS_YN = 'Y' AND PRDT_TYPE_CD <![CDATA[<>]]> '01')
+				 )
+		AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN SUBSTR(B.UNIT_PRIC_APPL_DTTM, 0, 8 ) AND SUBSTR(B.UNIT_PRIC_EXPR_DTTM, 0, 8 )
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">		
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}							/* 대표모델ID */
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+			AND A.PRDT_ID = #{prdtId}
+		</if>
+		<if test="mnfctId != null and mnfctId != ''">
+			AND A.MNFCT_ID = #{mnfctId}									/* 제조사ID */
+		</if>
+		<if test="prdtTypeCd != null and prdtTypeCd != ''">
+			AND A.PRDT_TYPE_CD = #{prdtTypeCd}							/* 모델유형코드 */
+		</if>
+		<if test="oldYn != null and oldYn != ''">
+			AND B.OLD_YN = #{oldYn}										/* 중고여부 */
+		</if>
+		<if test="prdtNm != null and prdtNm != ''">
+			AND UPPER(A.PRDT_NM) like '%'||UPPER(#{prdtNm})||'%'							/* 모델명 */
+		</if>
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+	
+	<!-- 대표모델 출고단가 찾기 팝업 리스트 조회 단종모델 포함 -->
+	<select id="selectRprsHndstAmtAllHisList" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* CmnMdlAmtMgmtMapper.selectRprsHndstAmtAllHisList */
+					  A.PRDT_ID													/* 모델ID */
+					, A.RPRS_PRDT_ID											/* 대표모델ID */
+					, A.RPRS_YN													/* 대표여부 */
+					, A.PRDT_CODE												/* 모델코드 */
+					, (SELECT PRDT_CODE 
+					   FROM CMN_INTM_MDL B 
+					   WHERE B.PRDT_ID = A.RPRS_PRDT_ID
+						AND RPRS_YN = 'Y') AS RPRS_PRDT_CODE					/* 대표모델 코드*/
+					, A.PRDT_NM													/* 모델명 */
+					, A.MNFCT_ID												/* 제조사ID */
+					, C.MNFCT_NM												/* 제조사명 */
+					, A.PRDT_TYPE_CD											/* 모델유형코드 */
+					, FN_GET_CODENM('ORG0007', A.PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+					, A.PRDT_IND_CD												/* 모델구분코드 */
+					, FN_GET_CODENM('CMN0045', A.PRDT_IND_CD) AS PRDT_IND_NM	/* 모델구분명 */
+					, A.PRDT_LNCH_DT											/* 모델출시일자 */
+					, A.PRDT_DT													/* 모델단종일자 */
+					, A.PRDT_COLR_CD											/* 모델색상코드 */
+					, FN_GET_CODENM('CMN0044', A.PRDT_COLR_CD) AS PRDT_COLR_NM									/* 모델색상명 */
+					, B.OLD_YN																					/* 중고여부 */
+					, FN_GET_CODENM('ORG0011', B.OLD_YN) AS OLD_YN_NM /* 중고여부명 */
+					, B.UNIT_PRIC_EXPR_DTTM																		/* 단가만료일시 */
+					, B.UNIT_PRIC_APPL_DTTM																		/* 단가적용일시 */
+					, B.OUT_UNIT_PRIC																			/* 출고단가 */
+					, B.MNFCT_GRANT																				/* 제조사장려금 */
+					, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'ORG0018' AND CD_VAL = '1') AS MAX_AMT	/* 정책보조금 */
+					, B.REMRK																					/* 비고 */
+		FROM CMN_INTM_MDL A
+			, CMN_HNDST_AMT B
+			, ORG_MNFCT_MST C
+		WHERE 1=1
+		AND A.RPRS_PRDT_ID = B.RPRS_PRDT_ID
+		AND A.MNFCT_ID = C.MNFCT_ID
+		AND ((A.RPRS_YN = 'N' AND PRDT_TYPE_CD = '01') 
+				  OR (A.RPRS_YN = 'Y' AND PRDT_TYPE_CD <![CDATA[<>]]> '01')
+				 )
+		AND B.UNIT_PRIC_EXPR_DTTM = '99991231235959'
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">		
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}							/* 대표모델ID */
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+			AND A.PRDT_ID = #{prdtId}
+		</if>
+		<if test="mnfctId != null and mnfctId != ''">
+			AND A.MNFCT_ID = #{mnfctId}									/* 제조사ID */
+		</if>
+		<if test="prdtTypeCd != null and prdtTypeCd != ''">
+			AND A.PRDT_TYPE_CD = #{prdtTypeCd}							/* 모델유형코드 */
+		</if>
+		<if test="oldYn != null and oldYn != ''">
+			AND B.OLD_YN = #{oldYn}										/* 중고여부 */
+		</if>
+		<if test="prdtNm != null and prdtNm != ''">
+			AND UPPER(A.PRDT_NM) like '%'||UPPER(#{prdtNm})||'%'							/* 모델명 */
+		</if>
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+	<!-- 대표모델의 중고여부 단말 찾기 팝업 리스트 조회 단종모델 제외 -->
+	<select id="selectRprsHndstOldYnHisList" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* CmnMdlAmtMgmtMapper.selectRprsHndstOldYnHisList */
+					  A.PRDT_ID													/* 모델ID */
+					, A.RPRS_PRDT_ID											/* 대표모델ID */
+					, A.RPRS_YN													/* 대표여부 */
+					, A.PRDT_CODE												/* 모델코드 */
+					, (SELECT PRDT_CODE 
+					   FROM CMN_INTM_MDL B 
+					   WHERE B.PRDT_ID = A.RPRS_PRDT_ID
+						AND RPRS_YN = 'Y') AS RPRS_PRDT_CODE					/* 대표모델 코드*/
+					, A.PRDT_NM													/* 모델명 */
+					, A.MNFCT_ID												/* 제조사ID */
+					, C.MNFCT_NM												/* 제조사명 */
+					, A.PRDT_TYPE_CD											/* 모델유형코드 */
+					, FN_GET_CODENM('ORG0007', A.PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+					, A.PRDT_IND_CD												/* 모델구분코드 */
+					, FN_GET_CODENM('CMN0045', A.PRDT_IND_CD) AS PRDT_IND_NM	/* 모델구분명 */
+					, A.PRDT_LNCH_DT											/* 모델출시일자 */
+					, A.PRDT_DT													/* 모델단종일자 */
+					, A.PRDT_COLR_CD											/* 모델색상코드 */
+					, FN_GET_CODENM('CMN0044', A.PRDT_COLR_CD) AS PRDT_COLR_NM									/* 모델색상명 */
+					, B.OLD_YN																					/* 중고여부 */
+					, FN_GET_CODENM('ORG0011', B.OLD_YN) AS OLD_YN_NM /* 중고여부명 */
+					, B.UNIT_PRIC_EXPR_DTTM																		/* 단가만료일시 */
+					, B.UNIT_PRIC_APPL_DTTM																		/* 단가적용일시 */
+					, B.OUT_UNIT_PRIC																			/* 출고단가 */
+					, B.MNFCT_GRANT																				/* 제조사장려금 */
+					, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'ORG0018' AND CD_VAL = '1') AS MAX_AMT	/* 정책보조금 */
+					, B.REMRK																					/* 비고 */
+		FROM CMN_INTM_MDL A
+			, CMN_HNDST_AMT B
+			, ORG_MNFCT_MST C
+		WHERE 1=1
+		AND A.RPRS_PRDT_ID = B.RPRS_PRDT_ID
+		AND A.MNFCT_ID = C.MNFCT_ID
+		AND A.PRDT_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+		AND ((A.RPRS_YN = 'N' AND PRDT_TYPE_CD = '01') 
+				  OR (A.RPRS_YN = 'Y' AND PRDT_TYPE_CD <![CDATA[<>]]> '01')
+				 )
+		AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN SUBSTR(B.UNIT_PRIC_APPL_DTTM, 0, 8 ) AND SUBSTR(B.UNIT_PRIC_EXPR_DTTM, 0, 8 )
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">		
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}							/* 대표모델ID */
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+			AND A.PRDT_ID = #{prdtId}
+		</if>
+		<if test="mnfctId != null and mnfctId != ''">
+			AND A.MNFCT_ID = #{mnfctId}									/* 제조사ID */
+		</if>
+		<if test="prdtTypeCd != null and prdtTypeCd != ''">
+			AND A.PRDT_TYPE_CD = #{prdtTypeCd}							/* 모델유형코드 */
+		</if>
+		<if test="oldYn != null and oldYn != ''">
+			AND B.OLD_YN = #{oldYn}										/* 중고여부 */
+		</if>
+		<if test="prdtNm != null and prdtNm != ''">
+			AND UPPER(A.PRDT_NM) like '%'||UPPER(#{prdtNm})||'%'							/* 모델명 */
+		</if>
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+	
+	<!-- 대표모델의 중고여부 단말 찾기 팝업 리스트 조회 단종모델 포함 -->
+	<select id="selectRprsHndstOldYnAllHisList" parameterType="com.ktis.msp.cmn.mdlamtmgmt.vo.CmnMdlAmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* CmnMdlAmtMgmtMapper.selectRprsHndstOldYnAllHisList */
+					  A.PRDT_ID													/* 모델ID */
+					, A.RPRS_PRDT_ID											/* 대표모델ID */
+					, A.RPRS_YN													/* 대표여부 */
+					, A.PRDT_CODE												/* 모델코드 */
+					, (SELECT PRDT_CODE 
+					   FROM CMN_INTM_MDL B 
+					   WHERE B.PRDT_ID = A.RPRS_PRDT_ID
+						AND RPRS_YN = 'Y') AS RPRS_PRDT_CODE					/* 대표모델 코드*/
+					, A.PRDT_NM													/* 모델명 */
+					, A.MNFCT_ID												/* 제조사ID */
+					, C.MNFCT_NM												/* 제조사명 */
+					, A.PRDT_TYPE_CD											/* 모델유형코드 */
+					, FN_GET_CODENM('ORG0007', A.PRDT_TYPE_CD) AS PRDT_TYPE_NM	/* 모델유형명 */
+					, A.PRDT_IND_CD												/* 모델구분코드 */
+					, FN_GET_CODENM('CMN0045', A.PRDT_IND_CD) AS PRDT_IND_NM	/* 모델구분명 */
+					, A.PRDT_LNCH_DT											/* 모델출시일자 */
+					, A.PRDT_DT													/* 모델단종일자 */
+					, A.PRDT_COLR_CD											/* 모델색상코드 */
+					, FN_GET_CODENM('CMN0044', A.PRDT_COLR_CD) AS PRDT_COLR_NM									/* 모델색상명 */
+					, B.OLD_YN																					/* 중고여부 */
+					, FN_GET_CODENM('ORG0011', B.OLD_YN) AS OLD_YN_NM /* 중고여부명 */
+					, B.UNIT_PRIC_EXPR_DTTM																		/* 단가만료일시 */
+					, B.UNIT_PRIC_APPL_DTTM																		/* 단가적용일시 */
+					, B.OUT_UNIT_PRIC																			/* 출고단가 */
+					, B.MNFCT_GRANT																				/* 제조사장려금 */
+					, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'ORG0018' AND CD_VAL = '1') AS MAX_AMT	/* 정책보조금 */
+					, B.REMRK																					/* 비고 */
+		FROM CMN_INTM_MDL A
+			, CMN_HNDST_AMT B
+			, ORG_MNFCT_MST C
+		WHERE 1=1
+		AND A.RPRS_PRDT_ID = B.RPRS_PRDT_ID
+		AND A.MNFCT_ID = C.MNFCT_ID
+		AND ((A.RPRS_YN = 'N' AND PRDT_TYPE_CD = '01') 
+				  OR (A.RPRS_YN = 'Y' AND PRDT_TYPE_CD <![CDATA[<>]]> '01')
+				 )
+		AND B.UNIT_PRIC_EXPR_DTTM = '99991231235959'
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">		
+			AND A.RPRS_PRDT_ID = #{rprsPrdtId}							/* 대표모델ID */
+		</if>
+		<if test="prdtId != null and prdtId != ''">
+			AND A.PRDT_ID = #{prdtId}
+		</if>
+		<if test="mnfctId != null and mnfctId != ''">
+			AND A.MNFCT_ID = #{mnfctId}									/* 제조사ID */
+		</if>
+		<if test="prdtTypeCd != null and prdtTypeCd != ''">
+			AND A.PRDT_TYPE_CD = #{prdtTypeCd}							/* 모델유형코드 */
+		</if>
+		<if test="oldYn != null and oldYn != ''">
+			AND B.OLD_YN = #{oldYn}										/* 중고여부 */
+		</if>
+		<if test="prdtNm != null and prdtNm != ''">
+			AND UPPER(A.PRDT_NM) like '%'||UPPER(#{prdtNm})||'%'							/* 모델명 */
+		</if>
+		ORDER BY A.PRDT_DT DESC, A.PRDT_LNCH_DT DESC, A.RPRS_PRDT_ID DESC, A.PRDT_ID ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" /> 
+	</select>
+	
+</mapper>

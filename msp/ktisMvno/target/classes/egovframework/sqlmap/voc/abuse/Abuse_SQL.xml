@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace= "com.ktis.msp.voc.abuse.mapper.AbuseMapper">
+
+	<sql id="abuseList">
+		SELECT * FROM (
+			SELECT
+				ABUSE.MST_SEQ,
+				ABUSE.CONTRACT_NUM, /*계약번호*/
+				SUB.SUB_LINK_NAME, /*고객명*/
+				SUBSTR(SUB.SUBSCRIBER_NO, 1, 3) || '-' || SUBSTR(SUB.SUBSCRIBER_NO, 4, 4) || '-' || SUBSTR(SUB.SUBSCRIBER_NO, 8, 4) AS SUBSCRIBER_NO, /*휴대폰번호*/
+				REQ.REQ_BUY_TYPE_NM, /*구매유형*/
+				REQ.OPER_TYPE_NM, /*업무구분*/
+				REQ.FST_RATE_CD, /*최초요금제코드*/
+				REQ.FST_RATE_NM, /*최초요금제*/
+				REQ.LST_RATE_CD, /*현재요금제코드*/
+				REQ.LST_RATE_NM, /*현재요금제*/
+				FN_GET_CODENM('MSP0003' , SUB.SUB_STATUS) AS SUB_STATUS_NM, /*상태*/
+				CASE WHEN SUB.SUB_STATUS = 'C' THEN
+					CASE WHEN 0 = TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE,'YYYYMMDD')
+						THEN '당일개통취소'
+					WHEN 15 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')
+						THEN '14일이내해지'
+					WHEN 90 > TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')
+						THEN '90일이내해지'
+					ELSE '일반해지'
+				END ELSE '' END AS CAN_RSN, /*해지사유*/
+				FN_GET_CODENM('RCP0007', REQ.ON_OFF_TYPE) AS ON_OFF_TYPE_NM, /*모집경로*/
+				FN_GET_ORGNM(SUB.OPEN_AGNT_CD) AS OPEN_AGNT_NM, /*대리점*/
+				TO_CHAR(TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD' ), 'YYYY-MM-DD') AS LST_COM_ACTV_DATE, /*개통일자*/
+				TO_CHAR(TO_DATE(DECODE(SUB.SUB_STATUS,'C',SUBSTR(SUB.SUB_STATUS_DATE,1,8),''),'YYYYMMDD'),'YYYY-MM-DD') AS CAN_DATE, /*해지일자*/
+				CASE WHEN MSD.REQ_USIM_SN IS NOT NULL THEN '직영온라인'
+				ELSE FN_GET_ORGNM(PUM.ORGN_ID)
+				END AS USIM_ORG_NM, /*유심접접*/
+				FN_GET_ORGNM(PUM.ORGN_ID) AS FST_USIM_ORG_NM, /*최초유심접접*/
+				FN_GET_CODENM('RCP2001', R.ONLINE_AUTH_TYPE) AS AUTH_TYPE, /*본인인증방식*/
+				REQ.FST_USIM_NO, /*최초유심일련번호*/
+				DECODE( ABUSE.OPEN_YN,'Y','개통가능','개통불가') AS OPEN_YN_NM, /*단말상태*/
+				ABUSE.OPEN_YN AS OPEN_YN, /*단말상태 코드*/
+				CASE WHEN SUB.USIM_TYPE = 'E' THEN 'ESIM' WHEN SUB.USIM_TYPE = 'U' THEN 'USIM' ELSE '' END AS USIM_TYPE, /*유심구분*/
+				REQ.FST_ESIM_YN, /*최초 esim여부*/
+				(SELECT MODEL_NM
+					FROM MSP_JUO_MODEL_INFO
+					WHERE EVNT_TRTM_DT = (SELECT MAX(EVNT_TRTM_DT) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = ABUSE.CONTRACT_NUM AND MODEL_TYPE = 'D1')
+					AND APP_END_DATE = (SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = ABUSE.CONTRACT_NUM AND MODEL_TYPE = 'D1')
+					AND MODEL_TYPE = 'D1'
+					AND CONTRACT_NUM = ABUSE.CONTRACT_NUM
+				) AS LST_MODEL_NM,									/*단말모델명*/
+				(SELECT INTM_SRL_NO
+					FROM MSP_JUO_MODEL_INFO
+					WHERE EVNT_TRTM_DT = (SELECT MAX(EVNT_TRTM_DT) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = ABUSE.CONTRACT_NUM AND MODEL_TYPE = 'D1')
+						AND APP_END_DATE = (SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = ABUSE.CONTRACT_NUM AND MODEL_TYPE = 'D1')
+						AND MODEL_TYPE = 'D1'
+						AND CONTRACT_NUM = ABUSE.CONTRACT_NUM
+				) AS LST_MODEL_SRL_NUM,								/*단말일련번호*/
+				(SELECT MODEL_NM
+					FROM MSP_JUO_MODEL_INFO
+					WHERE EVNT_TRTM_DT = (SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = ABUSE.CONTRACT_NUM AND MODEL_TYPE = 'D1')
+						AND APP_END_DATE = (SELECT MIN(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = ABUSE.CONTRACT_NUM AND MODEL_TYPE = 'D1')
+						AND MODEL_TYPE = 'D1'
+						AND CONTRACT_NUM = ABUSE.CONTRACT_NUM
+				) AS FST_MODEL_NM,									/*최초단말모델명*/
+				(SELECT INTM_SRL_NO
+					FROM MSP_JUO_MODEL_INFO
+					WHERE EVNT_TRTM_DT = (SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = ABUSE.CONTRACT_NUM AND MODEL_TYPE = 'D1')
+					AND APP_END_DATE = (SELECT MIN(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = ABUSE.CONTRACT_NUM AND MODEL_TYPE = 'D1')
+					AND MODEL_TYPE = 'D1'
+					AND CONTRACT_NUM = ABUSE.CONTRACT_NUM
+				) AS FST_MODEL_SRL_NUM,											/*최초단말일련번호*/
+				FN_GET_CODENM('CMN0284', ABUSE.REASON) AS REASON_NM,				/*등록사유*/
+			 	ABUSE.REASON AS REASON,										/*등록사유 코드*/
+			 	ABUSE.REASON_DESC,												/*상세 사유*/
+				TO_CHAR(ABUSE.REGST_DTTM, 'YYYY-MM-DD') AS REGST_DT,			/*등록일자*/
+				TO_CHAR(ABUSE.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,	/*등록일시*/
+				FN_GET_USRNM(ABUSE.REGST_ID) AS REGST_NM,						/*등록자*/
+				TO_CHAR(ABUSE.RVISN_DTTM, 'YYYY-MM-DD') AS RVISN_DT,			/*수정일자*/
+				TO_CHAR(ABUSE.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM,			/*수정일시*/
+				FN_GET_USRNM(ABUSE.RVISN_ID) AS RVISN_NM						/*수정자*/
+			FROM
+				MSP_ABUSE_MST ABUSE,
+				MSP_JUO_SUB_INFO SUB,
+				MSP_REQUEST_DTL REQ,
+				MSP_PARTNER_USIM_MST PUM,
+				MSP_REQUEST R,
+				NMCP_USIM_BUY_TXN@DL_MCP MSD
+			WHERE ABUSE.CONTRACT_NUM = SUB.CONTRACT_NUM(+)
+				AND ABUSE.CONTRACT_NUM = REQ.CONTRACT_NUM(+)
+				AND REQ.FST_USIM_NO = PUM.USIM_NO(+)
+				AND SUB.ICC_ID = MSD.REQ_USIM_SN(+)
+				AND REQ.CONTRACT_NUM = R.CONTRACT_NUM(+)
+				AND REQ.RES_NO = R.RES_NO(+)
+			    AND ABUSE.CONTRACT_NUM IS NOT NULL
+				<if test="searchStartDt != null and searchStartDt != '' and searchEndDt != null and searchEndDt != ''">
+					AND ABUSE.REGST_DTTM BETWEEN TO_DATE(#{searchStartDt} || '000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{searchEndDt} || '235959', 'YYYYMMDDHH24MISS')
+				</if>
+				<if test='pSearchGbn != null and pSearchGbn != "" and pSearchGbn =="1" '>
+					AND ABUSE.CONTRACT_NUM = #{pSearchName}
+				</if>
+				<if test='pSearchGbn != null and pSearchGbn != "" and pSearchGbn =="2" '>
+					AND SUB.SUB_LINK_NAME = #{pSearchName}
+				</if>
+				<if test='pSearchGbn != null and pSearchGbn != "" and pSearchGbn =="3" '>
+					AND SUB.SUBSCRIBER_NO = #{pSearchName}
+				</if>
+				<if test='pSearchGbn != null and pSearchGbn != "" and pSearchGbn =="4" '>
+					AND EXISTS ( SELECT 1 FROM MSP_ABUSE_IMEI WHERE MST_SEQ = ABUSE.MST_SEQ AND REG_YN = 'Y' AND IMEI = #{pSearchName} )
+				</if>
+				<if test="openYn != null and openYn != ''">
+					AND ABUSE.OPEN_YN = #{openYn}
+				</if>
+			UNION ALL
+			SELECT
+				ABUSE.MST_SEQ,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				DECODE( ABUSE.OPEN_YN,'Y','개통가능','개통불가') AS OPEN_YN_NM, /*단말상태*/
+				ABUSE.OPEN_YN AS OPEN_YN, /*단말상태 코드*/
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				NULL,
+				FN_GET_CODENM('CMN0284', ABUSE.REASON) AS REASON_NM,					/*등록사유*/
+				ABUSE.REASON AS REASON,											/*등록사유 코드*/
+				ABUSE.REASON_DESC,													/*상세 사유*/
+				TO_CHAR(ABUSE.REGST_DTTM, 'YYYY-MM-DD') AS REGST_DT,				/*등록일자*/
+				TO_CHAR(ABUSE.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,	/*등록일시*/
+				FN_GET_USRNM(ABUSE.REGST_ID) AS REGST_NM,							/*등록자*/
+				TO_CHAR(ABUSE.RVISN_DTTM, 'YYYY-MM-DD') AS RVISN_DT,				/*수정일자*/
+				TO_CHAR(ABUSE.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM,	/*수정일시*/
+				FN_GET_USRNM(ABUSE.RVISN_ID) AS RVISN_NM							/*수정자*/
+			FROM MSP_ABUSE_MST ABUSE
+			WHERE ABUSE.CONTRACT_NUM IS NULL
+				<if test="searchStartDt != null and searchStartDt != '' and searchEndDt != null and searchEndDt != ''">
+					AND ABUSE.REGST_DTTM BETWEEN TO_DATE(#{searchStartDt} || '000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{searchEndDt} || '235959', 'YYYYMMDDHH24MISS')
+				</if>
+				<if test="pSearchGbn != null and pSearchGbn != ''">
+					<choose>
+						<when test='pSearchGbn == "4"'>
+							AND EXISTS ( SELECT 1 FROM MSP_ABUSE_IMEI WHERE MST_SEQ = ABUSE.MST_SEQ AND REG_YN = 'Y' AND IMEI = #{pSearchName} )
+						</when>
+			  			<otherwise>
+							AND 1 = 2
+						</otherwise>
+					</choose>
+				</if>
+				<if test="openYn != null and openYn != ''">
+					AND ABUSE.OPEN_YN = #{openYn}
+				</if>
+		)A ORDER BY A.MST_SEQ DESC
+	</sql>
+
+	<select id="getAbuseList" parameterType="com.ktis.msp.voc.abuse.vo.AbuseVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* abuseMapper.getAbuseList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="abuseList" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<select id="getAbuseInfoListExcelDown" parameterType="com.ktis.msp.voc.abuse.vo.AbuseVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* abuseMapper.getAbuseExcelList */
+		<include refid="abuseList" />
+	</select>
+
+	<insert id="insertAbuseInfo" parameterType="com.ktis.msp.voc.abuse.vo.AbuseVO">
+		<selectKey keyProperty="mstSeq" resultType="String" order="BEFORE">
+			SELECT SQ_ABUSE_MST.NEXTVAL AS MST_SEQ FROM DUAL
+		</selectKey>
+		/* abuseMapper.insertAbuseInfo */
+		INSERT INTO MSP_ABUSE_MST (
+			MST_SEQ,
+			CONTRACT_NUM,
+			OPEN_YN,
+			REASON,
+			REASON_DESC,
+			REGST_ID,
+			REGST_DTTM
+		) VALUES (
+			#{mstSeq},
+			#{contractNum},
+			#{openYn},
+			#{reason},
+			#{reasonDesc},
+			#{sessionUserId},
+			SYSDATE
+		)
+	</insert>
+
+	<insert id="insertAbuseImeiInfo" parameterType="com.ktis.msp.voc.abuse.vo.AbuseVO">
+		/* abuseMapper.insertAbuseImeiInfo */
+		INSERT INTO MSP_ABUSE_IMEI(
+			IMEI_SEQ,
+			MST_SEQ,
+			IMEI,
+			REG_YN,
+			REGST_ID,
+			REGST_DTTM
+		)VALUES(
+		   SQ_ABUSE_IMEI.NEXTVAL,
+		   #{mstSeq},
+		   #{imei},
+		   'Y',
+		   #{sessionUserId},
+		   SYSDATE
+	   )
+	</insert>
+
+	<select id="getAbuseImeiList" parameterType="com.ktis.msp.voc.abuse.vo.AbuseVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* abuseMapper.getAbuseImeiList */
+		SELECT
+		    IMEI
+		FROM MSP_ABUSE_IMEI
+		WHERE MST_SEQ = #{mstSeq}
+			AND REG_YN = 'Y'
+		ORDER BY IMEI_SEQ
+	</select>
+
+	<update id="updateAbuseInfo"  parameterType="com.ktis.msp.voc.abuse.vo.AbuseVO">
+		/* abuseMapper.updateAbuseInfo */
+		UPDATE
+		    MSP_ABUSE_MST
+		SET
+		    OPEN_YN = #{openYn},
+		    REASON = #{reason},
+		    REASON_DESC = #{reasonDesc},
+		    RVISN_ID = #{sessionUserId},
+		    RVISN_DTTM = SYSDATE
+		WHERE MST_SEQ = #{mstSeq}
+	</update>
+
+	<insert id="insertAbuseInfoHist"  parameterType="com.ktis.msp.voc.abuse.vo.AbuseVO">
+		/* abuseMapper.insertAbuseInfoHist */
+		INSERT INTO MSP_ABUSE_HIST(
+			HIST_SEQ,
+			MST_SEQ,
+			CONTRACT_NUM,
+			OPEN_YN,
+			REASON,
+			REASON_DESC,
+			REGST_ID,
+			REGST_DTTM
+		)SELECT
+			SQ_ABUSE_HIST.NEXTVAL,
+			MST_SEQ,
+			CONTRACT_NUM,
+			OPEN_YN,
+			REASON,
+			REASON_DESC,
+			#{sessionUserId},
+			SYSDATE
+		FROM MSP_ABUSE_MST
+		WHERE MST_SEQ = #{mstSeq}
+	</insert>
+
+	<update id="updateAbuseOrgImei"  parameterType="com.ktis.msp.voc.abuse.vo.AbuseVO">
+		/* abuseMapper.updateAbuseOrgImei */
+		UPDATE
+		    MSP_ABUSE_IMEI
+		SET
+		    REG_YN = 'N',
+			RVISN_ID = #{sessionUserId},
+			RVISN_DTTM = SYSDATE
+		WHERE MST_SEQ = #{mstSeq}
+		<choose>
+			<when test="orgImeiList.size != 0">
+				AND IMEI NOT IN
+				<foreach collection="orgImeiList" item="item" index="index" separator="," open="(" close=")">
+					#{item}
+				</foreach>
+			</when>
+		</choose>
+	</update>
+
+	<select id="getContractInfo" parameterType="com.ktis.msp.voc.abuse.vo.AbuseVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* abuseMapper.getContractInfo */
+		SELECT
+			 SUB.CONTRACT_NUM
+			 ,SUB.SUB_LINK_NAME
+			 ,FN_GET_CODENM('MSP0003', SUB.SUB_STATUS) AS SUB_STATUS_NM
+			 ,TO_CHAR(TO_DATE(SUB.LST_COM_ACTV_DATE,'YYYYMMDD'), 'YYYY-MM-DD') AS LST_COM_ACTV_DATE
+			 ,FN_GET_CODENM('RCP0007', REQ.ON_OFF_TYPE) AS ON_OFF_TYPE_NM
+			 ,REQ.REQ_BUY_TYPE_NM
+			 ,REQ.OPER_TYPE_NM
+		FROM
+			MSP_JUO_SUB_INFO SUB , MSP_REQUEST_DTL REQ
+		WHERE SUB.CONTRACT_NUM = REQ.CONTRACT_NUM
+			  AND  SUB.CONTRACT_NUM = #{contractNum}
+			  AND  ROWNUM = 1
+	</select>
+</mapper>

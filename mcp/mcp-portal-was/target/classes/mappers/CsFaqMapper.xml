@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CsFaqMapper">
+
+    <resultMap id="getListFaq" type="com.ktmmobile.mcp.board.dto.BoardDto">
+        <id property="boardSeq" column="BOARD_SEQ" />
+        <!-- <result property="rownum" column="RNUM" /> -->
+        <result property="sbstCtg" column="SBST_CTG" />
+        <result property="boardSubject" column="BOARD_SUBJECT" />
+        <result property="boardContents" column="BOARD_CONTENTS" jdbcType="CLOB" javaType="java.lang.String" />
+        <result property="boardHitCnt" column="BOARD_HIT_CNT" />
+
+    </resultMap>
+
+    <!-- 페이징 총 카운트 -->
+    <select id="getTotalCount" resultType="int" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT /*CsFaqMapper.getTotalCount  */
+            COUNT(BOARD_SEQ)
+        FROM    NMCP_BOARD_BAS
+        WHERE   BOARD_CTG_SEQ = 57
+        AND		VIEW_YN = 'Y'
+        <if test='sbstCtg != null and sbstCtg != ""'>
+        AND		SBST_CTG = #{sbstCtg}
+        </if>
+        <if test='searchNm != "" and searchNm != null'>
+             AND (	REPLACE(UPPER(BOARD_SUBJECT),' ','') LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+            OR REPLACE(UPPER(BOARD_CONTENTS),' ','') LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+        </if>
+    </select>
+
+    <!-- 자주묻는질문 리스트 -->
+    <select id="getFormList" resultMap="getListFaq" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT  BOARD_SEQ
+                , SBST_CTG
+                , BOARD_SUBJECT
+                , BOARD_HIT_CNT
+                , BOARD_CONTENTS
+        FROM    NMCP_BOARD_BAS
+        WHERE   BOARD_CTG_SEQ = 57
+        AND     VIEW_YN = 'Y'
+        <if test='sbstCtg != null and sbstCtg != ""'>
+            AND    SBST_CTG = #{sbstCtg}
+        </if>
+        <if test='searchNm != "" and searchNm != null'>
+            AND    (
+                    REPLACE(UPPER(BOARD_SUBJECT), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!'
+                    OR REPLACE(UPPER(BOARD_CONTENTS), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!'
+                )
+        </if>
+        ORDER BY
+            CASE
+                WHEN REPLACE(UPPER(BOARD_SUBJECT), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!' THEN 1
+                ELSE 2
+            END,
+            BOARD_HIT_CNT DESC
+    </select>
+
+    <select id="getAnswer" resultType="String" parameterType="Integer">
+        SELECT	BOARD_CONTENTS
+        FROM	NMCP_BOARD_BAS
+        WHERE	BOARD_SEQ = #{getAnswer}
+    </select>
+
+
+    <!-- 자주묻는질문 리스트 -->
+    <select id="getTopFormList" resultMap="getListFaq" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT  RNUM
+                , BOARD_SEQ
+                , SBST_CTG
+                , BOARD_SUBJECT
+                , BOARD_HIT_CNT
+                , BOARD_CONTENTS
+        FROM    (
+                    SELECT
+                            ROW_NUMBER() OVER (
+                                ORDER BY
+                                    CASE
+                                        WHEN REPLACE(UPPER(BOARD_SUBJECT), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!' THEN 1
+                                        ELSE 2
+                                    END,
+                                    BOARD_HIT_CNT DESC
+                            ) AS RNUM
+                            , BOARD_SEQ
+                            , SBST_CTG
+                            , BOARD_SUBJECT
+                            , BOARD_HIT_CNT
+                            , BOARD_CONTENTS
+                    FROM NMCP_BOARD_BAS
+                    WHERE BOARD_CTG_SEQ = 57
+                      AND VIEW_YN = 'Y'
+                    <if test='searchNm != null and searchNm != ""'>
+                        AND (
+                            REPLACE(UPPER(BOARD_SUBJECT), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!'
+                            OR REPLACE(UPPER(BOARD_CONTENTS), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!'
+                        )
+                    </if>
+                )
+        WHERE RNUM <![CDATA[<=]]> #{selectCnt}
+    </select>
+
+
+    <!-- 페이징 총 카운트 -->
+    <select id="getNotInTotalCount" resultType="int" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+            COUNT(BOARD_SEQ)
+        FROM NMCP_BOARD_BAS
+        WHERE BOARD_CTG_SEQ = 57
+        AND VIEW_YN = 'Y'
+        AND BOARD_SEQ NOT IN (
+
+            SELECT
+                BOARD_SEQ
+            FROM (
+                    SELECT
+                        BOARD_SEQ
+                    FROM NMCP_BOARD_BAS
+                    WHERE BOARD_CTG_SEQ = 57
+                    AND VIEW_YN = 'Y'
+                    <if test='searchNm != "" and searchNm != null'>
+                        AND ( UPPER(BOARD_SUBJECT) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+                        OR UPPER(BOARD_CONTENTS) LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+                    </if>
+                )
+            WHERE ROWNUM <![CDATA[<=]]> 10
+        )
+
+        <if test='searchNm != "" and searchNm != null'>
+            AND ( REPLACE(UPPER(BOARD_SUBJECT),' ','') LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!'
+            OR REPLACE(UPPER(BOARD_CONTENTS),' ','') LIKE '%' || UPPER(#{searchNm}) || '%' || '%' ESCAPE '!')
+        </if>
+
+    </select>
+
+    <!-- 자주묻는질문 리스트 -->
+    <select id="getNotInFormList" resultMap="getListFaq" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+        SELECT
+            BOARD_SEQ
+            , SBST_CTG
+            , BOARD_SUBJECT
+            , BOARD_HIT_CNT
+            , BOARD_CONTENTS
+        FROM NMCP_BOARD_BAS
+        WHERE BOARD_CTG_SEQ = 57
+          AND VIEW_YN = 'Y'
+          AND BOARD_SEQ NOT IN (
+              SELECT BOARD_SEQ
+              FROM (
+                  SELECT BOARD_SEQ
+                  FROM NMCP_BOARD_BAS
+                  WHERE BOARD_CTG_SEQ = 57
+                    AND VIEW_YN = 'Y'
+                    <if test='searchNm != null and searchNm != ""'>
+                        AND (
+                            REPLACE(UPPER(BOARD_SUBJECT), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!'
+                            OR REPLACE(UPPER(BOARD_CONTENTS), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!'
+                        )
+                    </if>
+                    AND ROWNUM <![CDATA[<=]]> 10
+              )
+          )
+        <if test='searchNm != null and searchNm != ""'>
+            AND (
+                REPLACE(UPPER(BOARD_SUBJECT), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!'
+                OR REPLACE(UPPER(BOARD_CONTENTS), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!'
+            )
+        </if>
+        ORDER BY
+            CASE
+                WHEN REPLACE(UPPER(BOARD_SUBJECT), ' ', '') LIKE '%' || REPLACE(UPPER(#{searchNm}), ' ', '') || '%' ESCAPE '!' THEN 1
+                ELSE 2
+            END,
+            BOARD_HIT_CNT DESC
+    </select>
+
+    <select id="getBoardHitCnt" resultType="com.ktmmobile.mcp.board.dto.BoardDto" parameterType="com.ktmmobile.mcp.board.dto.BoardDto">
+
+        SELECT
+                BOARD_HIT_CNT
+        FROM NMCP_BOARD_BAS
+        WHERE 1=1
+        AND BOARD_SEQ = #{boardSeq}
+
+    </select>
+
+
+</mapper>

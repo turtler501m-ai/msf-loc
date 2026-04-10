@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.agencycustmgmt.mapper.PpsAgencyCustMgmtMapper">
+	<!--개통정보 목록조회 -->
+    <select id="getAgencyOpenInfoMngList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+				SELECT 
+							<choose>
+								<when test="searchType == 'subscriberNo' or searchType == 'contractNum'">
+									<choose>
+										<when test="searchNm == null or searchNm == ''">
+											/*+ INDEX_DESC(A PPS_CUSTOMER_IDX1) ORDERED USE_NL(A B) */
+										</when>
+									</choose>
+								</when>
+								<otherwise>
+									/*+ INDEX_DESC(A PPS_CUSTOMER_IDX1) ORDERED USE_NL(A B) */
+								</otherwise>
+							</choose>
+									B.CONTRACT_NUM,
+									B.BAN CUSTOMER_BAN,
+									A.SOC,
+									DECODE(A.SOC,'', '', NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.SOC AND ROWNUM = 1),A.SOC) ) SERVICE_NM,
+									A.SERVICE_TYPE,
+									F_GET_KT_CODE_NM('PPS_CUSTOMER','SERVICE_TYPE',A.SERVICE_TYPE) SERVICE_TYPE_NM,
+									PAPER_IMAGE_1,
+									PAPER_IMAGE_2,
+									PAPER_IMAGE_3,
+									PAPER_IMAGE_4,
+									PAPER_IMAGE_5,
+									AGENT_ID,
+									FN_GET_ORGNM(AGENT_ID) AGENT_NM,
+									NVL(VIR_ACCOUNT_ID,'') VIR_ACCOUNT_ID,
+									NVL(F_GET_VAC_BANK_NAME(VIR_ACCOUNT_ID),'') VAC_BANK_NM,
+	                  				NVL(F_GET_VAC_BANK_CODE(VIR_ACCOUNT_ID),'') VAC_BANK_CD,
+									NVL(BASIC_REMAINS,0) BASIC_REMAINS,
+									TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD') BASIC_EXPIRE,
+									TO_CHAR(BASIC_EMPT_DT, 'YYYY-MM-DD') BASIC_EMPT_DT,
+									TO_CHAR(A.ENTER_DATE, 'YYYY-MM-DD HH24:MI:SS') ENTER_DATE,
+									LANG_CODE,
+									DECODE(AD_NATION,'','미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', AD_NATION)) AD_NATION_NM,
+									B.CUSTOMER_ID,
+									B.SUBSCRIBER_NO,
+									B.SUB_STATUS,
+									F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',B.SUB_STATUS) SUB_STATUS_NM,
+									B.USER_SSN,
+									B.SUB_LINK_NAME,
+									B.MODEL_NAME,
+									B.MODEL_ID,
+									NVL(A.AGENT_SALE_ID,'-') AGENT_SALE_ID,
+									NVL(FN_GET_ORGNM(AGENT_SALE_ID),'-') AGENT_SALE_NM,
+									NVL(AD_NAME, '') AD_NAME,
+									CUST_IDNT_NO_IND_CD,
+					  				F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO','CUST_IDNT_NO_IND_CD',CUST_IDNT_NO_IND_CD) CUST_IDNT_NO_IND_CD_NM,
+									B.LST_COM_ACTV_DATE,   
+									NVL(D.PAPER_IMAGE, 0) PAPER_IMAGE,
+									F_GET_KT_CODE_NM('PPS_CUSTOMER','CMS_CHARGE_TYPE',CMS_CHARGE_TYPE) CMS_CHARGE_TYPE_NM,
+									(SELECT MAX(RCG_AMT) FROM PPS_CODE_SERVICE_TOPUP WHERE SOC = A.SOC AND KT_MODE = 'CHG_CASH_REFILL') TOPUP_AMT
+								FROM PPS_CUSTOMER A, 
+									 MSP_JUO_SUB_INFO B,
+									 MSP_RATE_MST C,
+									 (SELECT COUNT(*) PAPER_IMAGE, CONTRACT_NUM
+				                        FROM PPS_CUSTOMER_IMAGE 
+				                        WHERE STATUS &lt;> 'D'
+				                        GROUP BY CONTRACT_NUM) D, 
+									 MSP_JUO_CUS_INFO E
+								WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+								AND A.SOC = C.RATE_CD
+								AND A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+								AND B.CUSTOMER_ID = E.CUSTOMER_ID
+								AND ENTER_DATE > TO_DATE('2013-01-01','YYYY-MM-DD')
+								AND AGENT_ID = #{loginAgentId}
+								AND B.SUB_STATUS IN ('A','S')
+								AND A.SERVICE_TYPE = 'PP'
+								AND C.PAY_CL_CD = 'PP' 
+								<choose>
+					<when test="searchNm != null and searchNm != ''">
+						<choose>
+							<when test="searchType == 'contractNum'">
+								AND A.CONTRACT_NUM = #{searchNm}
+							</when>
+							<when test="searchType == 'subscriberNo'">
+								AND B.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+							</when>
+							<when test="searchType == 'customerId'">
+								AND B.CUSTOMER_ID = #{searchNm}
+							</when>
+							<when test="searchType == 'subLinkName'">
+								AND B.SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+							</when>
+							<when test="searchType == 'userSsn'">
+								AND B.USER_SSN = CRYPTO_AES256.ENC_AES(#{searchNm})
+							</when>
+							<when test="searchType == 'vacId'">
+								AND A.CONTRACT_NUM IN (SELECT CONTRACT_NUM FROM PPS_VAC WHERE VAC_ID = #{searchNm})
+							</when>
+							<when test="searchType == 'customerBan'">
+								AND B.BAN  = #{searchNm}
+							</when>
+						</choose>
+					</when>
+					<otherwise>
+						<if test="startDt != null and startDt != ''">
+							AND ENTER_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+						</if>
+						<if test="endDt != null and endDt != ''">
+							AND ENTER_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+						</if>
+					</otherwise>
+				</choose>
+				<if test="searchStartRemains != null and searchStartRemains != ''">
+					AND BASIC_REMAINS >= #{searchStartRemains}
+				</if>
+				<if test="searchEndRemains != null and searchEndRemains != ''">
+					AND BASIC_REMAINS &lt;= #{searchEndRemains}
+				</if>
+				<if test="searchServiceType != null and searchServiceType != ''">
+					AND A.SERVICE_TYPE = #{searchServiceType}
+				</if>
+				<if test="contractNum != null and contractNum != ''">
+					AND A.CONTRACT_NUM = #{contractNum}
+				</if>
+				
+
+		 <include refid="com.ktis.msp.cmn.include.paging-end2" />
+
+    </select>
+    <!--개통정보 목록조회 엑셀출력-->
+     <select id="getAgencyOpenInfoMngListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">
+			SELECT 	
+							<choose>
+								<when test="searchType == 'subscriberNo' or searchType == 'contractNum'">
+									<choose>
+										<when test="searchNm == null or searchNm == ''">
+											/*+ INDEX_DESC(A PPS_CUSTOMER_IDX1) ORDERED USE_NL(A B) */
+										</when>
+									</choose>
+								</when>
+								<otherwise>
+									/*+ INDEX_DESC(A PPS_CUSTOMER_IDX1) ORDERED USE_NL(A B) */
+								</otherwise>
+							</choose>
+									NVL(B.CONTRACT_NUM,0)    CONTRACT_NUM,
+									NVL(B.BAN,'-') CUSTOMER_BAN,
+									NVL(A.SOC,'-') SOC,
+									DECODE(A.SOC,'', '-', NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.SOC AND ROWNUM = 1),A.SOC) ) SERVICE_NM,
+									NVL(A.SERVICE_TYPE,'-') SERVICE_TYPE,
+									NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER','SERVICE_TYPE',A.SERVICE_TYPE),'-') SERVICE_TYPE_NM,
+									PAPER_IMAGE_1,
+									PAPER_IMAGE_2,
+									PAPER_IMAGE_3,
+									PAPER_IMAGE_4,
+									PAPER_IMAGE_5, 
+									AGENT_ID,
+									NVL(FN_GET_ORGNM(AGENT_ID),'-') AGENT_NM,
+									VIR_ACCOUNT_ID,
+									NVL(BASIC_REMAINS,0) BASIC_REMAINS,
+									NVL(TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD'),'-') BASIC_EXPIRE,
+									NVL(TO_CHAR(BASIC_EMPT_DT, 'YYYY-MM-DD'),'-') BASIC_EMPT_DT,
+									NVL(TO_CHAR(A.ENTER_DATE, 'YYYY-MM-DD HH24:MI:SS'),'-') ENTER_DATE,
+									LANG_CODE,
+									DECODE(AD_NATION,'','미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', AD_NATION)) AD_NATION_NM,
+									B.CUSTOMER_ID,
+									B.SUBSCRIBER_NO,
+									B.SUB_STATUS,
+									NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',B.SUB_STATUS),'-') SUB_STATUS_NM,
+									NVL(B.USER_SSN,'-') USER_SSN,
+									NVL(B.SUB_LINK_NAME,'-') SUB_LINK_NAME,
+									NVL(B.MODEL_NAME,'-') MODEL_NAME,
+									NVL(B.MODEL_ID,'-')  MODEL_ID,
+									NVL(B.LST_COM_ACTV_DATE,'-') LST_COM_ACTV_DATE,
+									NVL(A.AGENT_SALE_ID,'-') AGENT_SALE_ID,
+									NVL(FN_GET_ORGNM(AGENT_SALE_ID),'-') AGENT_SALE_NM,
+									NVL(CUST_IDNT_NO_IND_CD, '-') CUST_IDNT_NO_IND_CD,
+					  				NVL(F_GET_KT_CODE_NM('MSP_JUO_CUS_INFO','CUST_IDNT_NO_IND_CD',CUST_IDNT_NO_IND_CD), '-') CUST_IDNT_NO_IND_CD_NM,
+									NVL(D.PAPER_IMAGE, 0) PAPER_IMAGE,
+									NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER','CMS_CHARGE_TYPE',CMS_CHARGE_TYPE), '-') CMS_CHARGE_TYPE_NM
+								FROM PPS_CUSTOMER A, 
+									 MSP_JUO_SUB_INFO B,
+									 MSP_RATE_MST C,
+									 (SELECT COUNT(*) PAPER_IMAGE, CONTRACT_NUM
+				                        FROM PPS_CUSTOMER_IMAGE 
+				                        WHERE STATUS &lt;> 'D'
+				                        GROUP BY CONTRACT_NUM) D, 
+									 MSP_JUO_CUS_INFO E
+								WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+								AND A.SOC = C.RATE_CD
+								AND A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+								AND B.CUSTOMER_ID = E.CUSTOMER_ID
+								AND ENTER_DATE > TO_DATE('2010-01-01','YYYY-MM-DD')
+								AND AGENT_ID = #{loginAgentId}
+								AND B.SUB_STATUS IN ('A','S')
+								AND A.SERVICE_TYPE = 'PP'
+								AND C.PAY_CL_CD = 'PP'  
+								<choose>
+					<when test="searchNm != null and searchNm != ''">
+						<choose>
+							<when test="searchType == 'contractNum'">
+								AND A.CONTRACT_NUM = #{searchNm}
+							</when>
+							<when test="searchType == 'subscriberNo'">
+								AND B.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+							</when>
+							<when test="searchType == 'subLinkName'">
+								AND B.SUB_LINK_NAME LIKE '%' || #{searchNm} || '%'
+							</when>
+							<when test="searchType == 'customerId'">
+								AND B.CUSTOMER_ID = #{searchNm}
+							</when>
+							<when test="searchType == 'userSsn'">
+								AND B.USER_SSN = CRYPTO_AES256.ENC_AES(#{searchNm})
+							</when>
+							<when test="searchType == 'vacId'">
+								AND A.CONTRACT_NUM IN (SELECT CONTRACT_NUM FROM PPS_VAC WHERE VAC_ID = #{searchNm})
+							</when>
+							<when test="searchType == 'customerBan'">
+								AND B.BAN  = #{searchNm}
+							</when>
+						</choose>
+					</when>
+					<otherwise>
+						<if test="startDt != null and startDt != ''">
+							AND ENTER_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+						</if>
+						<if test="endDt != null and endDt != ''">
+							AND ENTER_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+						</if>
+					</otherwise>
+				</choose>
+				<if test="searchStartRemains != null and searchStartRemains != ''">
+					AND BASIC_REMAINS >= #{searchStartRemains}
+				</if>
+				<if test="searchEndRemains != null and searchEndRemains != ''">
+					AND BASIC_REMAINS &lt;= #{searchEndRemains}
+				</if>
+				<if test="searchServiceType != null and searchServiceType != ''">
+					AND A.SERVICE_TYPE = #{searchServiceType}
+				</if>
+     </select>
+     
+     <!--개통정보 상세조회 -->
+    <select id="getAgencyOpenInfoMngDtlList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+				SELECT 
+									B.CONTRACT_NUM,
+									AGENT_ID,
+									NVL(BASIC_REMAINS,0) BASIC_REMAINS,
+									NVL(VIR_ACCOUNT_ID,'') VIR_ACCOUNT_ID,
+									NVL(F_GET_VAC_BANK_NAME(VIR_ACCOUNT_ID),'') VAC_BANK_NM,
+	                  				NVL(F_GET_VAC_BANK_CODE(VIR_ACCOUNT_ID),'') VAC_BANK_CD,
+									LANG_CODE,
+									AD_NATION,
+									B.SUBSCRIBER_NO,
+									B.SUB_LINK_NAME,
+									NVL(A.AGENT_SALE_ID,'') AGENT_SALE_ID
+								FROM PPS_CUSTOMER A, 
+									 MSP_JUO_SUB_INFO B
+								WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+								AND AGENT_ID = #{loginAgentId}
+								AND B.SUB_STATUS IN ('A','S')
+								AND A.SERVICE_TYPE = 'PP'
+								AND A.CONTRACT_NUM = #{contractNum}
+
+    </select>
+    
+    <!--대리점정보 검색 -->
+    <select id="getAgencyOpenInfoAgentList" parameterType="hashmap" resultType="hashmap">
+				SELECT 
+					AGENT_DOC_FLAG agentDocFlag
+				FROM PPS_AGENT
+				WHERE AGENT_ID = #{loginAgentId}
+
+    </select>
+    
+    <!-- CMS 정보 가져오기 -->
+	<select id="getPpsAgencyUserCmsInfo"  parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			A.CMS_CHARGE_TYPE AS cmsChargeType,
+			CMS_BANK_CODE AS cmsBankCode,
+			F_GET_KT_CODE_NM('PPS_RCG_REAL_CMS', 'BANK_CODE', CMS_BANK_CODE) AS cmsBankCodeNm,
+			CMS_ACCOUNT AS cmsAccount,
+			CMS_USER_NAME AS cmsUserName,
+			CMS_CHARGE AS cmsCharge,
+			CMS_TRY_REMAINS AS cmsTryRemains,
+			CMS_CHARGE_DATE AS cmsChargeDate,
+			CMS_CHARGE_MONTH AS cmsChargeMonth
+		FROM PPS_CUSTOMER A, MSP_JUO_SUB_INFO B
+		WHERE 
+		A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND A.CONTRACT_NUM = #{contractNum}
+		AND A.AGENT_ID = #{agentId}
+	</select>
+	
+	<select id="getAgencyPpsAgentCmsReq"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_AGENT_CMS_REQ(
+					    #{opCode, jdbcType=VARCHAR}
+					    , #{seq, jdbcType=VARCHAR}
+					    , #{contractNum, jdbcType=VARCHAR}
+					    , #{cmsChargeType, jdbcType=VARCHAR}
+					    , #{cmsBankCode, jdbcType=VARCHAR}
+					    , #{cmsAccount, jdbcType=VARCHAR}
+					    , #{cmsCharge, jdbcType=VARCHAR}
+					    , #{cmsTryRemains, jdbcType=VARCHAR}
+					    , #{cmsChargeDate, jdbcType=VARCHAR}
+					    , #{cmsChargeMonth, jdbcType=VARCHAR}
+					    , #{status, jdbcType=VARCHAR}
+					    , #{adminMemo, jdbcType=VARCHAR}
+					    , #{regTypePop, jdbcType=VARCHAR}
+					   	, #{fileType, jdbcType=VARCHAR}
+					   	, #{fileLen, jdbcType=VARCHAR}
+					   	, #{filePath, jdbcType=VARCHAR}
+					   	, #{fileEnc, jdbcType=CLOB}
+					    , #{agentId, jdbcType=VARCHAR}
+					    , #{adminId, jdbcType=VARCHAR} 
+					   , #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					   , #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+					  )
+		     }
+	</select>
+
+</mapper>

@@ -1,0 +1,740 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.DvcChgMgmtMapper">
+	
+	<sql id="getDvcChgTrgt">
+		SELECT  A.CRT_YM
+		        , A.CONTRACT_NUM
+		        , A.SVC_CNTR_NO
+		        , A.SUBSCRIBER_NO
+		        , A.SUBSCRIBER_NO AS SUBSCRIBER_NO_MASK
+		        , A.OPEN_DT
+		        , C.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', C.SUB_STATUS) AS SUB_STATUS_NM
+		        , D.CUSTOMER_LINK_NAME AS CUST_NM
+		        , D.CUSTOMER_LINK_NAME AS CUST_NM_MASK
+		        , D.CUSTOMER_TYPE AS CUST_TP
+		        , FN_GET_CODENM('MSP0009', D.CUSTOMER_TYPE) AS CUST_TP_NM
+		        , A.OPEN_AGNT_CD
+		        , FN_GET_ORGNM(A.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+		        , ( SELECT PRDT_CODE FROM CMN_INTM_MDL WHERE RPRS_PRDT_ID = A.MODEL_ID AND RPRS_YN = 'Y' ) AS PRDT_CODE
+		        , A.OUT_AMNT
+		        , B.INST_AMNT
+		        , A.INST_MNTH_CNT
+		        , CASE WHEN ADD_MONTHS(TO_DATE(SUBSTR(A.GRNT_INSR_MNGM_NO, 1, 8), 'YYYYMMDD'), A.INST_MNTH_CNT) <![CDATA[ <= ]]> SYSDATE THEN 0
+		               ELSE TRUNC(MONTHS_BETWEEN(ADD_MONTHS(TO_DATE(SUBSTR(A.GRNT_INSR_MNGM_NO, 1, 8), 'YYYYMMDD'), A.INST_MNTH_CNT), SYSDATE))
+		        END AS REMAIN_CNT
+		        , A.GRNT_INSR_MNGM_NO
+		        , A.AGRM_MNTH_CNT
+		        , CASE WHEN ADD_MONTHS(TO_DATE(A.OPEN_DT, 'YYYYMMDD'), A.AGRM_MNTH_CNT) <![CDATA[ <= ]]> SYSDATE THEN 0
+		               ELSE TRUNC(MONTHS_BETWEEN(ADD_MONTHS(TO_DATE(A.OPEN_DT, 'YYYYMMDD'), A.AGRM_MNTH_CNT), SYSDATE))
+		        END AS REMAIN_AGRM_CNT
+		        , FN_GET_CODENM('MSP0007', C.UNPD_IND_CD) AS UNPD_YN
+		        , A.CLAUSE_PRI_AD_FLAG AS MKT_AGRM_YN
+		        , A.VOC_PRSN_ID
+		        , FN_GET_USRNM(A.VOC_PRSN_ID) AS VOC_PRSN_NM
+		        , A.TM_STAT_CD
+		        , FN_GET_CODENM('RCP0066', A.TM_STAT_CD) AS TM_STAT_NM
+		        , A.TM_RSLT_CD
+		        , FN_GET_CODENM('RCP0069', A.TM_RSLT_CD) AS TM_RSLT_NM
+		        , A.VOC_RCP_ID
+		        , E.CNSL_MID_CD AS DVC_CHG_RSN_CD
+		        , SUBSTR(E.CNSL_DTL_CD, 4) AS DVC_CHG_RSN_DTL_CD
+		        , A.TM_CNTT
+		FROM    MSP_DVC_CHG_TRGT_MST A
+		        , MSP_DAILY_CLOSE_STTC B
+		        , MSP_JUO_SUB_INFO C
+		        , MSP_JUO_CUS_INFO D
+		        , MSP_VOC_MGMT_MST E
+		WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+		AND     A.CUSTOMER_ID = D.CUSTOMER_ID
+		AND     A.VOC_RCP_ID = E.RCP_ID(+)
+		AND     A.CLAUSE_PRI_AD_FLAG = 'Y'
+		<if test="crtYm != null and crtYm != ''">
+			AND A.CRT_YM = #{crtYm}
+		</if>
+		<if test="openAgntCd != null and openAgntCd != ''">
+			AND A.OPEN_AGNT_CD = #{openAgntCd}
+		</if>
+		<if test="tmStatCd != null and tmStatCd != ''">
+			AND A.TM_STAT_CD = #{tmStatCd}
+		</if>
+		<if test="tmRsltCd != null and tmRsltCd != ''">
+			AND A.TM_RSLT_CD = #{tmRsltCd}
+		</if>
+		<if test="srchTp != null and srchTp != '' and srchVal != null and srchVal != ''">
+			<choose>
+				<when test='srchTp == "1"'>
+					AND D.CUSTOMER_LINK_NAME LIKE '%' || #{srchVal} || '%'
+				</when>
+				<when test='srchTp == "2"'>
+					AND (A.CONTRACT_NUM = #{srchVal}
+     					OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{srchVal}))
+				</when>
+				<when test='srchTp == "3"'>
+					AND A.SUBSCRIBER_NO = #{srchVal}
+				</when>
+			</choose>
+		</if>
+		<if test="vocPrsnId != null and vocPrsnId != ''">
+			AND A.VOC_PRSN_ID = #{vocPrsnId}
+		</if>
+		
+		ORDER BY A.OPEN_DT
+	</sql>
+	
+	<!-- 기변대상조회 -->
+	<select id="getDvcChgTrgtList"
+		parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* dvcChgMapper.getDvcChgTrgtList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getDvcChgTrgt" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 기변대상조회 엑셀 -->
+	<select id="getDvcChgTrgtListExcel"
+		parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* dvcChgMapper.getDvcChgTrgtListExcel */
+		
+		<include refid="getDvcChgTrgt" />
+		
+	</select>
+	
+	<!-- 상담원 목록조회 -->
+	<select id="getAsgnTrgtPrsnList"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* dvcChgMapper.getAsgnTrgtPrsnList */
+		SELECT  A.CD_VAL
+		FROM    CMN_GRP_CD_MST A
+		WHERE   A.GRP_ID = 'VOC0018'
+		AND     A.USG_YN = 'Y'
+	</select>
+	
+	<!-- 상담할당대상조회 -->
+	<select id="getDvcChgAsgnTrgtList"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* dvcChgMapper.getDvcChgAsgnTrgtList */
+		
+		<include refid="getDvcChgTrgt" />
+		AND A.CLAUSE_PRI_AD_FLAG = 'Y'
+		AND A.VOC_PRSN_ID IS NULL
+	</select>
+	
+	<!-- 기변대상MST 수정 -->
+	<update id="updateDvcChgTrgtMst"
+		parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO">
+		/* dvcChgMapper.updateDvcChgTrgtMst */
+		UPDATE  MSP_DVC_CHG_TRGT_MST
+		SET     RVISN_ID = NVL(#{sessionUserId}, #{userId})
+		        , RVISN_DTTM = SYSDATE
+		<if test="vocRcpId != null and vocRcpId != ''">
+		        , VOC_RCP_ID = #{vocRcpId}
+		</if>
+		<if test="vocPrsnId != null and vocPrsnId != ''">
+		        , VOC_PRSN_ID = #{vocPrsnId}
+		</if>
+		<if test="tmStatCd != null and tmStatCd != ''">
+		        , TM_STAT_CD = #{tmStatCd}
+		</if>
+		<if test="tmRsltCd != null and tmRsltCd != ''">
+		        , TM_RSLT_CD = #{tmRsltCd}
+		</if>
+		<if test="tmCntt != null and tmCntt != ''">
+		        , TM_CNTT = #{tmCntt}
+		</if>
+		WHERE   CRT_YM = #{crtYm}
+		AND     CONTRACT_NUM = #{contractNum}
+	</update>
+	
+	<!-- 기기변경가능여부체크 -->
+	<!-- 일시정지인 경우 상세사유코드 조회 -->
+	<select id="getDvcChgPsblCheck"
+		parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* dvcChgMapper.getDvcChgPsblCheck */
+		<![CDATA[
+		WITH CNTR AS (
+		    SELECT  A.CONTRACT_NUM
+		            , D.CUSTOMER_LINK_NAME
+		            , A.SUBSCRIBER_NO
+		            , A.SUB_STATUS
+		            , A.SUB_STATUS_RSN_CODE
+		            , A.LST_COM_ACTV_DATE
+		            , A.ICC_ID
+		            , ( -- 기변이력이 2건 이상인 경우 처리를 위하여 MAX 사용
+		                SELECT  DISTINCT
+		                        MAX(DECODE(X.GRNT_INSR_MNGM_NO, 'none', SUBSTR(X.APP_START_DD, 1, 8), SUBSTR(X.GRNT_INSR_MNGM_NO, 1, 8)) ||
+		                            NVL(X.ENGG_MNTH_CNT, '0')) OVER (PARTITION BY X.CONTRACT_NUM)
+		                FROM    MSP_JUO_ADD_INFO X
+		                        , MSP_DVC_CHG_AGNT_HST Y
+		                WHERE   X.CONTRACT_NUM = A.CONTRACT_NUM
+		                AND     X.MODEL_CHN_CD = '01'
+		                AND     X.CONTRACT_NUM = Y.CONTRACT_NUM
+		                AND     X.EVNT_TRTM_NO = Y.EVNT_TRTM_NO
+		                AND     Y.APPL_END_DTTM = '99991231000000'
+		                UNION
+		                -- 기변개발전 우수기변 대상
+		                SELECT  DECODE(X.GRNT_INSR_MNGM_NO, 'none', MIN(SUBSTR(X.APP_START_DD, 1, 8)), SUBSTR(X.GRNT_INSR_MNGM_NO, 1, 8)) ||
+		                        MAX(X.ENGG_MNTH_CNT)
+		                FROM    MSP_JUO_ADD_INFO X
+		                WHERE   X.CONTRACT_NUM = A.CONTRACT_NUM
+		                AND     X.EVNT_CD IN ('UPD','UAD')
+		                AND     X.MODEL_CHN_CD = '01'
+		                AND     NOT EXISTS ( SELECT 1 FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = X.CONTRACT_NUM AND APPL_END_DTTM = '99991231000000' )
+		                GROUP BY X.GRNT_INSR_MNGM_NO, X.CONTRACT_NUM
+		                UNION
+		                -- 일반적인 경우
+		                SELECT  DISTINCT 
+		                        X.LST_COM_ACTV_DATE || 
+		                        NVL(Y.ENGG_MNTH_CNT, '0')
+		                FROM    MSP_JUO_SUB_INFO X
+		                        , MSP_JUO_ADD_INFO Y
+		                WHERE   X.CONTRACT_NUM = A.CONTRACT_NUM
+		                AND     X.CONTRACT_NUM = Y.CONTRACT_NUM
+		                AND     Y.MODEL_CHN_CD <> '01'
+		                AND     Y.ENGG_MNTH_CNT IS NOT NULL
+		                AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = Y.CONTRACT_NUM AND EVNT_CD = 'SIM' AND GRNT_INSR_STAT_CD = 'A' AND APP_END_DATE = '99991231000000' )
+		                AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = Y.CONTRACT_NUM AND EVNT_CD IN ('UPD', 'UAD') AND MODEL_CHN_CD = '01' )
+		                AND     NOT EXISTS ( SELECT 1 FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = X.CONTRACT_NUM AND APPL_END_DTTM LIKE '99991231%' )
+		            ) AS ENGG_INFO
+		            , DECODE(B.CONTRACT_NUM, NULL, 'N', 'Y') AS HIST_YN
+		            , DECODE(B.CONTRACT_NUM, NULL, '', SUBSTR(MAX(B.APPL_STRT_DTTM) OVER(PARTITION BY B.APPL_STRT_DTTM), 1, 8)) AS DVC_CHG_DT
+		            , C.ENGG_MNTH_CNT AS DVC_ENGG_MNTH_CNT
+		    FROM    MSP_JUO_SUB_INFO A
+		            , MSP_DVC_CHG_AGNT_HST B
+		            , MSP_JUO_ADD_INFO C
+		            , MSP_JUO_CUS_INFO D
+		    WHERE   A.SUB_STATUS <> 'C'
+		    AND     A.PPPO = 'PO'
+		    AND     A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+		    AND     B.REQUEST_KEY(+) IS NOT NULL
+		    AND     ( B.APPL_END_DTTM(+) = '99991231000000'
+		              OR TO_DATE(SUBSTR(B.APPL_END_DTTM(+), 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(B.APPL_STRT_DTTM(+), 1, 8), 'YYYYMMDD') >= 15 )
+		    AND     B.CONTRACT_NUM = C.CONTRACT_NUM(+)
+		    AND     B.EVNT_TRTM_NO = C.EVNT_TRTM_NO(+)
+		    AND     A.CUSTOMER_ID = D.CUSTOMER_ID
+		    AND     REPLACE(D.CUSTOMER_LINK_NAME, ' ', '') = REPLACE(UPPER(#{custNm}), ' ', '')
+		    AND     CASE
+		                WHEN D.CUSTOMER_TYPE = 'I' AND D.CUST_IDNT_NO_IND_CD IN ('01','05') THEN SUBSTR(CRYPTO_AES256.DEC_AES(D.CUSTOMER_SSN), 1, 6)
+		                ELSE D.TAX_ID
+		            END = #{idntNum}
+		    AND     A.SUBSCRIBER_NO = #{subscriberNo}
+		    ORDER BY B.APPL_STRT_DTTM DESC
+		)
+		SELECT  A.CONTRACT_NUM
+		        , A.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS_NM
+		        , DECODE(A.SUB_STATUS, 'S', A.SUB_STATUS_RSN_CODE, '') AS SUB_STATUS_RSN_CODE
+		        , DECODE(A.SUB_STATUS, 'S', C.CD_DSC, '') AS SUB_STATUS_RSN_NM
+		        , DECODE(A.SUB_STATUS, 'S', NVL(C.ETC1, 'N'), '') AS LOST_YN
+		        , A.LST_COM_ACTV_DATE
+		        , A.CUSTOMER_LINK_NAME
+		        , A.SUBSCRIBER_NO
+		        , A.ENGG_INFO
+		        , CASE
+		            WHEN A.HIST_YN = 'Y' AND SYSDATE - TO_DATE(A.DVC_CHG_DT, 'YYYYMMDD') < 15 THEN 'N'
+		            ELSE 'Y'
+		        END AS DVC_CHG_YN
+		        , CASE
+		            WHEN A.HIST_YN = 'Y' AND SYSDATE - TO_DATE(A.DVC_CHG_DT, 'YYYYMMDD') < 15 THEN '불가'
+		            ELSE '가능'
+		        END AS DVC_CHG_NM
+		        , CASE
+		            WHEN A.HIST_YN = 'Y' THEN
+		                CASE WHEN SYSDATE - TO_DATE(A.DVC_CHG_DT, 'YYYYMMDD') < 15 THEN '기변불가'
+		                     WHEN ADD_MONTHS(TO_DATE(A.DVC_CHG_DT, 'YYYYMMDD'), TO_NUMBER(NVL(A.DVC_ENGG_MNTH_CNT, 0))) - SYSDATE <= TO_NUMBER(B.CD_VAL) THEN 'HDN3'
+		                     ELSE 'HCN3'
+		                END
+		            ELSE
+		                CASE WHEN SUBSTR(A.ENGG_INFO, 9) = 0 THEN 'HCN3'
+		                     WHEN ADD_MONTHS(TO_DATE(SUBSTR(A.ENGG_INFO, 1, 8), 'YYYYMMDD'), TO_NUMBER(SUBSTR(A.ENGG_INFO, 9))) - SYSDATE <= TO_NUMBER(B.CD_VAL) THEN 'HDN3' 
+		                     ELSE 'HCN3'
+		                END
+		        END DVC_CHG_TP
+		        , CASE
+		            WHEN A.HIST_YN = 'Y' THEN
+		                CASE WHEN SYSDATE - TO_DATE(A.DVC_CHG_DT, 'YYYYMMDD') < 15 THEN '기변불가'
+		                     WHEN ADD_MONTHS(TO_DATE(A.DVC_CHG_DT, 'YYYYMMDD'), TO_NUMBER(NVL(A.DVC_ENGG_MNTH_CNT, 0))) - SYSDATE <= TO_NUMBER(B.CD_VAL) THEN '우수기변'
+		                     ELSE '일반기변'
+		                END
+		            ELSE
+		                CASE WHEN SUBSTR(A.ENGG_INFO, 9) = 0 THEN '일반기변'
+		                     WHEN ADD_MONTHS(TO_DATE(SUBSTR(A.ENGG_INFO, 1, 8), 'YYYYMMDD'), TO_NUMBER(SUBSTR(A.ENGG_INFO, 9))) - SYSDATE <= TO_NUMBER(B.CD_VAL) THEN '우수기변' 
+		                     ELSE '일반기변'
+		                END
+		        END DVC_CHG_TP_NM
+		        , A.ICC_ID
+		        , SUBSTR(A.SUBSCRIBER_NO, 1, 3) AS CSTMR_MOBILE_FN
+		        , SUBSTR(A.SUBSCRIBER_NO, 4, 4) AS CSTMR_MOBILE_MN
+		        , SUBSTR(A.SUBSCRIBER_NO, 8, 4) AS CSTMR_MOBILE_RN
+		        , FN_GET_UNPD_AMNT(A.CONTRACT_NUM) AS UNPD_AMNT
+		FROM    CNTR A
+		        , CMN_GRP_CD_MST B
+		        , CMN_GRP_CD_MST C
+		WHERE   B.GRP_ID = 'RCP0028'
+		AND     B.ETC1 = '10'
+		AND     A.SUB_STATUS_RSN_CODE = C.CD_VAL(+)
+		AND     C.GRP_ID(+) = 'MSP0004'
+		AND     ROWNUM = 1
+		]]>
+	</select>
+	
+	<!-- 상담ID 조회 -->
+	<select id="getVocRcpId" resultType="Integer">
+		/* dvcChgMapper.getVocRcpId */
+		SELECT MSP_VOC_MGMT_SEQ.NEXTVAL FROM DUAL
+	</select>
+	
+	<!-- 상담MST 생성 -->
+	<insert id="insertVocMgmtMst" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO">
+		/* dvcChgMapper.insertVocMgmtMst */
+		INSERT INTO MSP_VOC_MGMT_MST
+		(
+			RCP_ID
+			, CNSL_MST_CD
+			, CNSL_MID_CD
+			, CNSL_DTL_CD
+			, CUST_REL
+			, CUST_YN
+			, REQ_CUST_NM
+			, REQ_TEL_NUM
+			, TEL_NUM
+			, CUSTOMER_ID
+			, CONTRACT_NUM
+			, CNSL_STAT
+			, REQ_ORGN_ID
+			, REQR_ID
+			, REQ_DTTM
+			, PROC_ORGN_ID
+			, PROCR_ID
+			, PROC_DTTM
+		<if test='cnslStatCd == "COM"'>
+			, CMPL_ORGN_ID
+			, CMPLR_ID
+			, CMPL_DTTM
+			, PROC_MM
+		</if>
+			, REQ_CNTT
+			, RES_CNTT
+		)
+		SELECT  #{vocRcpId}
+		        , #{cnslMstCd}
+		        , #{cnslMidCd}
+		        , #{cnslDtlCd}
+		        , '10'
+		        , '1'
+		        , B.CUSTOMER_LINK_NAME
+		        , A.SUBSCRIBER_NO
+		        , A.SUBSCRIBER_NO
+		        , A.CUSTOMER_ID
+		        , A.CONTRACT_NUM
+		        , #{cnslStatCd}
+		        , #{userOrgnId}
+		        , #{userId}
+		        , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		        , #{userOrgnId}
+		        , #{userId}
+		        , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		<if test='cnslStatCd == "COM"'>
+		        , #{userOrgnId}
+		        , #{userId}
+		        , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		        , 0
+		</if>
+		        , ' '
+		        , ' '
+		FROM    MSP_DVC_CHG_TRGT_MST A
+		        , MSP_JUO_CUS_INFO B
+		WHERE   A.CRT_YM = #{crtYm}
+		AND     A.CONTRACT_NUM = #{contractNum}
+		AND     A.CUSTOMER_ID = B.CUSTOMER_ID
+	</insert>
+	
+	<!-- 상담내역상세 -->
+	<insert id="insertVocMgmtDtl" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO">
+		/* dvcChgMapper.insertVocMgmtDtl */
+		INSERT INTO MSP_VOC_MGMT_DTL
+		(
+			RCP_ID
+			, PROC_DTTM
+			, PROC_ORGN_ID
+			, PROCR_ID
+			, PROC_CNTT
+			, REGST_DTTM
+		)VALUES(
+			#{vocRcpId, jdbcType=INTEGER}
+			, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+			, #{userOrgnId, jdbcType=VARCHAR}
+			, #{userId, jdbcType=VARCHAR}
+			, #{tmCntt, jdbcType=VARCHAR}
+			, SYSDATE
+		)
+	</insert>
+	
+	<!-- 상담MST 수정 -->
+	<update id="updateVocMgmtMst" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO">
+		/* dvcChgMapper.updateVocMgmtMst */
+		UPDATE  MSP_VOC_MGMT_MST
+		SET     CNSL_STAT = #{cnslStatCd, jdbcType=VARCHAR}
+		        , CNSL_MID_CD = #{cnslMidCd, jdbcType=VARCHAR}
+		        , CNSL_DTL_CD = #{cnslDtlCd, jdbcType=VARCHAR}
+		        , PROC_ORGN_ID = #{userOrgnId, jdbcType=VARCHAR}
+		        , PROCR_ID = #{userId, jdbcType=VARCHAR}
+		        , PROC_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		        , RES_CNTT = #{tmCntt, jdbcType=VARCHAR}
+		<if test='cnslStatCd == "COM"'>
+		        , CMPL_ORGN_ID = #{userOrgnId, jdbcType=VARCHAR}
+		        , CMPLR_ID = #{userId, jdbcType=VARCHAR}
+		        , CMPL_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		        , PROC_MM = ROUND((SYSDATE - TO_DATE(REQ_DTTM, 'YYYYMMDDHH24MISS')) * 24 * 60)
+		</if>
+		WHERE   RCP_ID = #{vocRcpId, jdbcType=INTEGER}
+	</update>
+	
+	<!-- 권한자 체크 -->
+	<select id="getAuthCheck" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO" resultType="String">
+		/* dvcChgMapper.getAuthCheck */
+		SELECT  'Y'
+		FROM    CMN_GRP_CD_MST A
+		WHERE   A.GRP_ID = 'VOC0017'
+		AND     A.USG_YN = 'Y'
+		AND     A.CD_VAL = #{sessionUserId}
+	</select>
+	
+	<!--
+		2018.08.03 조회 시 MSP_SALE_PLCY_MST 테이블 삭제
+		[SRM18111484351] M전산 내 기기변경 리스트 수정 요청
+		2020.12.04 조회 시 그리드에 할인유형컬럼 추가
+		[SRM20112729346] M전산 기기변경목록 항목(할인유형) 추가 요청 
+	-->
+	<sql id="getDvcChg">
+		<![CDATA[
+		SELECT  A.CONTRACT_NUM
+		        , B.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', B.SUB_STATUS)                                        AS SUB_STATUS_NM
+		        , B.SUBSCRIBER_NO
+		        , B.SUBSCRIBER_NO                                                               AS SUBSCRIBER_NO_MASK
+		        , B.SUB_LINK_NAME                                                               AS CSTMR_NAME
+		        , SUBSTR(CRYPTO_AES256.DEC_AES(B.USER_SSN), 1, 6)                               AS BIRTH_DT
+		        , FN_GET_CODENM('RCP9001', C.OPER_TYPE)                                         AS OPER_TYPE_NM
+		        , FN_GET_CODENM('RCP9004', C.REQ_BUY_TYPE)                                      AS REQ_BUY_TYPE_NM
+		        , FN_GET_CODENM('RCP0007', C.ON_OFF_TYPE)                                       AS ON_OFF_TYPE_NM
+			    , CASE 
+			        WHEN SUBSTR(I.SIM_INFO, 36, 1) IN ('A', 'R') THEN (  SELECT CD_DSC 
+							            										FROM CMN_GRP_CD_MST 
+							            										WHERE GRP_ID = 'CMN0058' 
+							            										AND CD_VAL = SUBSTR(I.SIM_INFO, 1, 2)) 
+			        ELSE (SELECT CD_DSC 
+			            	FROM CMN_GRP_CD_MST 
+			            	WHERE GRP_ID = 'CMN0058' 
+			            	AND CD_VAL = SUBSTR(I.INST_INFO, 1, 2)) 
+			    END AS SPRT_TP_NM			        
+		        , TO_CHAR(C.REQ_IN_DAY, 'YYYYMMDDHH24MISS')                                     AS REQ_IN_DAY
+		        , TO_CHAR(C.REQ_IN_DAY, 'YYYY-MM-DD HH24:MI:SS')                                AS REQ_IN_DAY_EX
+		        , TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE,'YYYYMMDD'), 'YYYY-MM-DD')                                       AS LST_COM_ACTV_DATE
+		        , SUBSTR(A.APPL_STRT_DTTM, 1, 8)                                                AS DVC_CHG_DT
+		        , TO_CHAR(TO_DATE(SUBSTR(A.APPL_STRT_DTTM, 1, 8), 'YYYYMMDD'), 'YYYY-MM-DD')    AS DVC_CHG_DT_EX
+		        , DECODE(A.APPL_END_DTTM, '99991231000000', DECODE(B.SUB_STATUS , 'C' ,SUBSTR(SUB_STATUS_DATE , 0 , 8) , '' ), SUBSTR(A.APPL_END_DTTM, 1, 8))  AS DVC_CHG_TMNT_DT
+		        , DECODE(A.APPL_END_DTTM, '99991231000000', DECODE(B.SUB_STATUS , 'C' ,TO_CHAR(TO_DATE(SUBSTR(SUB_STATUS_DATE , 0 , 8) , 'YYYYMMDD') , 'YYYY-MM-DD') , '' ), TO_CHAR(TO_DATE(SUBSTR(A.APPL_END_DTTM, 1, 8), 'YYYYMMDD'), 'YYYY-MM-DD'))  AS DVC_CHG_TMNT_DT_EX
+		       , CASE
+		            WHEN A.APPL_END_DTTM = '99991231000000' THEN DECODE(B.SUB_STATUS , 'C' , 
+                     CASE
+                    WHEN TO_DATE(SUBSTR(B.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD') = 0 THEN '당일기변취소'
+                    WHEN TO_DATE(SUBSTR(B.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD') <   15 THEN '14일이내해지'
+                    WHEN TO_DATE(SUBSTR(B.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD') <   90 THEN '90일이내해지'
+                    ELSE '일반해지'
+                  END , ''
+                    )
+		            WHEN SUBSTR(A.APPL_END_DTTM, 1, 8) = SUBSTR(A.APPL_STRT_DTTM, 1, 8) THEN '당일기변취소'
+		            WHEN TO_DATE(SUBSTR(A.APPL_END_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(A.APPL_STRT_DTTM, 1, 8), 'YYYYMMDD') <= 14 THEN '14일이내취소'
+		            ELSE '일반취소'
+		        END                                                                             AS DVC_CHG_TMNT_RSN_NM
+		        , D.SOC_CODE                                                                    AS DVC_RATE_CD
+		        , FN_GET_RATENM(D.SOC_CODE)                                                     AS DVC_RATE_NM
+		        , E.SOC                                                                         AS RATE_CD
+		        , FN_GET_RATENM(E.SOC)                                                          AS RATE_NM
+		        , D.MODEL_SALE_POLICY_CODE                                                      AS SALE_PLCY_CD
+		        , TO_CHAR(NVL(D.ENGG_MNTH_CNT,0))                                            AS INST_MNTH_CNT
+		        , TO_CHAR(NVL(D.MODEL_MONTHLY,0)) 								AS ENGG_MNTH_CNT
+		        , A.MODEL_NM                                                                    AS DVC_MODEL_NM
+		        , A.INTM_SRL_NO                                                                 AS DVC_INTM_SRL_NO
+		        , H.MODEL_NM
+		        , H.INTM_SRL_NO
+		        , A.AGNT_CD
+		        ,FN_GET_ORGNM(B.OPEN_AGNT_CD)											AS OPEN_AGNT_NM
+		        , B.OPEN_AGNT_CD											
+		        , FN_GET_ORGNM(A.AGNT_CD)                                                       AS AGNT_NM
+		        , NVL(G.INST_ORGIN_AMNT, 0)                                                     AS INST_ORGIN_AMNT
+		        , D.MODEL_PRICE
+		        , G.GRNT_INSR_MNGM_NO
+		        , FN_GET_CODENM('MSP0011', G.GRNT_INSR_STAT_CD)                                 AS GRNT_INSR_STAT_NM
+                , (SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = I.FST_RATE_CD) AS FST_RATE_NM
+		FROM    MSP_DVC_CHG_AGNT_HST A
+		        , MSP_JUO_SUB_INFO B
+		        , MSP_REQUEST C
+		        , MSP_REQUEST_SALEINFO D
+		        , MSP_JUO_FEATURE_INFO E
+		        , MSP_JUO_ADD_INFO G
+		        , MSP_JUO_MODEL_INFO H
+                , MSP_REQUEST_DTL I
+		WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     A.REQUEST_KEY = C.REQUEST_KEY
+		AND     A.REQUEST_KEY = D.REQUEST_KEY
+		AND     B.CONTRACT_NUM = E.CONTRACT_NUM
+		AND     B.CONTRACT_NUM = I.CONTRACT_NUM
+		AND     E.SERVICE_TYPE = 'P'
+		AND     E.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = B.CONTRACT_NUM AND SERVICE_TYPE = 'P' )
+		AND     A.CONTRACT_NUM = G.CONTRACT_NUM
+		AND     A.EVNT_TRTM_NO = G.EVNT_TRTM_NO
+		AND     NVL(G.GRNT_INSR_STAT_CD, 'A') = 'A'		/* 동일 이벤트번호로 할부/약정 변경된 건 존재 */
+		AND     A.CONTRACT_NUM = H.CONTRACT_NUM
+		AND     H.MODEL_TYPE = 'D1'
+		AND     H.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = H.CONTRACT_NUM AND MODEL_TYPE = 'D1' )
+		]]>
+		<if test="applDateFrom != null and applDateFrom != '' and applDateTo != null and applDateTo != ''">
+			AND A.APPL_STRT_DTTM BETWEEN #{applDateFrom}||'000000' AND #{applDateTo}||'235959'
+		</if>
+		<if test="searchGbn != null and searchGbn != '' and searchName != null and searchName != ''">
+			<choose>
+				<when test='searchGbn == "1"'> 
+					AND (A.CONTRACT_NUM = #{searchName}
+     					OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchName}))
+				</when>
+				<when test='searchGbn == "2"'>
+					AND B.SUB_LINK_NAME LIKE '%' || #{searchName} || '%'
+				</when>
+				<when test='searchGbn == "3"'>
+					AND B.SUBSCRIBER_NO = #{searchName}
+				</when>
+			</choose>
+		</if>
+		<if test="subStatus != null and subStatus != ''">
+			AND B.SUB_STATUS = #{subStatus}
+		</if>
+		<if test="cntpntShopId != null and cntpntShopId != ''">
+			AND A.AGNT_CD = #{cntpntShopId}
+		</if>
+		<if test="operType != null and operType != ''">
+			AND C.OPER_TYPE = #{operType}
+		</if>
+		<if test="onOffType != null and onOffType != ''">
+			AND C.ON_OFF_TYPE = #{onOffType}
+		</if>
+		ORDER BY A.APPL_STRT_DTTM DESC
+	</sql>
+	
+	<!-- 기기변경목록조회 -->
+	<select id="getDvcChgList"
+		parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* dvcChgMapper.getDvcChgList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getDvcChg" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 기기변경목록조회 엑셀 -->
+	<select id="getDvcChgListExcel"
+		parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* dvcChgMapper.getDvcChgListExcel */
+		<![CDATA[
+			SELECT  A.CONTRACT_NUM
+			        , B.SUB_STATUS
+			        , FN_GET_CODENM('MSP0003', B.SUB_STATUS)                                        AS SUB_STATUS_NM
+			        , B.SUBSCRIBER_NO
+			        , B.SUBSCRIBER_NO                                                               AS SUBSCRIBER_NO_MASK
+			        , B.SUB_LINK_NAME                                                               AS CSTMR_NAME
+			        , SUBSTR(CRYPTO_AES256.DEC_AES(B.USER_SSN), 1, 6)                               AS BIRTH_DT
+			        , FN_GET_CODENM('RCP9001', C.OPER_TYPE)                                         AS OPER_TYPE_NM
+			        , FN_GET_CODENM('RCP9004', C.REQ_BUY_TYPE)                                      AS REQ_BUY_TYPE_NM
+			        , FN_GET_CODENM('RCP0007', C.ON_OFF_TYPE)                                       AS ON_OFF_TYPE_NM
+				    , CASE 
+				        WHEN SUBSTR(I.SIM_INFO, 36, 1) IN ('A', 'R') THEN (  SELECT CD_DSC 
+								            										FROM CMN_GRP_CD_MST 
+								            										WHERE GRP_ID = 'CMN0058' 
+								            										AND CD_VAL = SUBSTR(I.SIM_INFO, 1, 2)) 
+				        ELSE (SELECT CD_DSC 
+				            	FROM CMN_GRP_CD_MST 
+				            	WHERE GRP_ID = 'CMN0058' 
+				            	AND CD_VAL = SUBSTR(I.INST_INFO, 1, 2)) 
+				    END AS SPRT_TP_NM			        
+			        , TO_CHAR(C.REQ_IN_DAY, 'YYYYMMDDHH24MISS')                                     AS REQ_IN_DAY
+			        , TO_CHAR(C.REQ_IN_DAY, 'YYYY-MM-DD HH24:MI:SS')                                AS REQ_IN_DAY_EX
+			        , TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE,'YYYYMMDD'), 'YYYY-MM-DD')                                       AS LST_COM_ACTV_DATE
+			        , SUBSTR(A.APPL_STRT_DTTM, 1, 8)                                                AS DVC_CHG_DT
+			        , TO_CHAR(TO_DATE(SUBSTR(A.APPL_STRT_DTTM, 1, 8), 'YYYYMMDD'), 'YYYY-MM-DD')    AS DVC_CHG_DT_EX
+			        , DECODE(A.APPL_END_DTTM, '99991231000000', DECODE(B.SUB_STATUS , 'C' ,SUBSTR(SUB_STATUS_DATE , 0 , 8) , '' ), SUBSTR(A.APPL_END_DTTM, 1, 8))  AS DVC_CHG_TMNT_DT
+			        , DECODE(A.APPL_END_DTTM, '99991231000000', DECODE(B.SUB_STATUS , 'C' ,TO_CHAR(TO_DATE(SUBSTR(SUB_STATUS_DATE , 0 , 8) , 'YYYYMMDD') , 'YYYY-MM-DD') , '' ), TO_CHAR(TO_DATE(SUBSTR(A.APPL_END_DTTM, 1, 8), 'YYYYMMDD'), 'YYYY-MM-DD'))  AS DVC_CHG_TMNT_DT_EX
+			       , CASE
+			            WHEN A.APPL_END_DTTM = '99991231000000' THEN DECODE(B.SUB_STATUS , 'C' , 
+	                     CASE
+	                    WHEN TO_DATE(SUBSTR(B.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD') = 0 THEN '당일기변취소'
+	                    WHEN TO_DATE(SUBSTR(B.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD') <   15 THEN '14일이내해지'
+	                    WHEN TO_DATE(SUBSTR(B.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD') <   90 THEN '90일이내해지'
+	                    ELSE '일반해지'
+	                  END , ''
+	                    )
+			            WHEN SUBSTR(A.APPL_END_DTTM, 1, 8) = SUBSTR(A.APPL_STRT_DTTM, 1, 8) THEN '당일기변취소'
+			            WHEN TO_DATE(SUBSTR(A.APPL_END_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(A.APPL_STRT_DTTM, 1, 8), 'YYYYMMDD') <= 14 THEN '14일이내취소'
+			            ELSE '일반취소'
+			        END                                                                             AS DVC_CHG_TMNT_RSN_NM
+			        , D.SOC_CODE                                                                    AS DVC_RATE_CD
+			        , FN_GET_RATENM(D.SOC_CODE)                                                     AS DVC_RATE_NM
+			        , E.SOC                                                                         AS RATE_CD
+			        , FN_GET_RATENM(E.SOC)                                                          AS RATE_NM
+			        , D.MODEL_SALE_POLICY_CODE                                                      AS SALE_PLCY_CD
+			        , TO_CHAR(NVL(D.ENGG_MNTH_CNT,0))                                            AS INST_MNTH_CNT
+			        , TO_CHAR(NVL(D.MODEL_MONTHLY,0)) 								AS ENGG_MNTH_CNT
+			        , A.MODEL_NM                                                                    AS DVC_MODEL_NM
+			        , A.INTM_SRL_NO                                                                 AS DVC_INTM_SRL_NO
+			        , H.MODEL_NM
+			        , H.INTM_SRL_NO
+			        , A.AGNT_CD
+			        ,FN_GET_ORGNM(B.OPEN_AGNT_CD)											AS OPEN_AGNT_NM
+			        , B.OPEN_AGNT_CD											
+			        , FN_GET_ORGNM(A.AGNT_CD)                                                       AS AGNT_NM
+			        , NVL(G.INST_ORGIN_AMNT, 0)                                                     AS INST_ORGIN_AMNT
+			        , D.MODEL_PRICE
+			        , G.GRNT_INSR_MNGM_NO
+			        , FN_GET_CODENM('MSP0011', G.GRNT_INSR_STAT_CD)                                 AS GRNT_INSR_STAT_NM
+	                , (SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = I.FST_RATE_CD) AS FST_RATE_NM
+	                , NVL(G.KD_SUPOT_DSCN_AMNT, 0) AS KD_SUPOT_DSCN_AMNT
+			FROM    MSP_DVC_CHG_AGNT_HST A
+			        , MSP_JUO_SUB_INFO B
+			        , MSP_REQUEST C
+			        , MSP_REQUEST_SALEINFO D
+			        , MSP_JUO_FEATURE_INFO E
+			        , MSP_JUO_ADD_INFO G
+			        , MSP_JUO_MODEL_INFO H
+	                , MSP_REQUEST_DTL I
+			WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+			AND     A.REQUEST_KEY = C.REQUEST_KEY
+			AND     A.REQUEST_KEY = D.REQUEST_KEY
+			AND     B.CONTRACT_NUM = E.CONTRACT_NUM
+			AND     B.CONTRACT_NUM = I.CONTRACT_NUM
+			AND     E.SERVICE_TYPE = 'P'
+			AND     E.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = B.CONTRACT_NUM AND SERVICE_TYPE = 'P' )
+			AND     A.CONTRACT_NUM = G.CONTRACT_NUM
+			AND     A.EVNT_TRTM_NO = G.EVNT_TRTM_NO
+			AND     NVL(G.GRNT_INSR_STAT_CD, 'A') = 'A'		/* 동일 이벤트번호로 할부/약정 변경된 건 존재 */
+			AND     A.CONTRACT_NUM = H.CONTRACT_NUM
+			AND     H.MODEL_TYPE = 'D1'
+			AND     H.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = H.CONTRACT_NUM AND MODEL_TYPE = 'D1' )
+			]]>
+			<if test="applDateFrom != null and applDateFrom != '' and applDateTo != null and applDateTo != ''">
+				AND A.APPL_STRT_DTTM BETWEEN #{applDateFrom}||'000000' AND #{applDateTo}||'235959'
+			</if>
+			<if test="searchGbn != null and searchGbn != '' and searchName != null and searchName != ''">
+				<choose>
+					<when test='searchGbn == "1"'> 
+						AND (A.CONTRACT_NUM = #{searchName}
+	     					OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchName}))
+					</when>
+					<when test='searchGbn == "2"'>
+						AND B.SUB_LINK_NAME LIKE '%' || #{searchName} || '%'
+					</when>
+					<when test='searchGbn == "3"'>
+						AND B.SUBSCRIBER_NO = #{searchName}
+					</when>
+				</choose>
+			</if>
+			<if test="subStatus != null and subStatus != ''">
+				AND B.SUB_STATUS = #{subStatus}
+			</if>
+			<if test="cntpntShopId != null and cntpntShopId != ''">
+				AND A.AGNT_CD = #{cntpntShopId}
+			</if>
+			<if test="operType != null and operType != ''">
+				AND C.OPER_TYPE = #{operType}
+			</if>
+			<if test="onOffType != null and onOffType != ''">
+				AND C.ON_OFF_TYPE = #{onOffType}
+			</if>
+			ORDER BY A.APPL_STRT_DTTM DESC
+		
+	</select>
+	
+	<!-- 유심비조회 -->
+	<select id="getUsimPrice" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO" resultType="String">
+		/* dvcChgMapper.getUsimPrice */
+		SELECT  ETC2
+		FROM    CMN_GRP_CD_MST 
+		WHERE   GRP_ID = 'RCP0053' 
+		AND     CD_VAL = #{operType} || (SELECT DATA_TYPE FROM MSP_RATE_MST 
+		                                 WHERE RATE_CD = #{socCode}
+		                                 AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN APPL_STRT_DT AND APPL_END_DT)
+	</select>
+	<!-- 심플할인고객인지체크 -->
+	<!-- <select id="getDvcChgSimCheck"
+		parameterType="com.ktis.msp.rcp.rcpMgmt.vo.DvcChgMgmtVO"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* dvcChgMapper.getDvcChgSimCheck */
+		<![CDATA[
+	WITH  
+        SIMCTNR AS (
+        SELECT  A.CONTRACT_NUM
+              , D.CUSTOMER_LINK_NAME
+              , A.SUBSCRIBER_NO
+              , A.SUB_STATUS
+              , A.SUB_STATUS_RSN_CODE
+              , A.LST_COM_ACTV_DATE
+              , A.ICC_ID
+        ,(SELECT  SUBSTR(MAX(X.SIM_START_DT), 1, 8)
+           FROM    MSP_JUO_ADD_INFO X
+          WHERE   X.CONTRACT_NUM = A.CONTRACT_NUM
+            AND     X.EVNT_CD = 'SIM'
+            AND     X.GRNT_INSR_STAT_CD = 'A'
+            AND     X.APP_END_DATE = '99991231000000' GROUP BY X.CONTRACT_NUM ) AS SIM_STR_DT
+        ,(SELECT  SUBSTR(MAX(X.SIM_END_DT), 1, 8)
+            FROM    MSP_JUO_ADD_INFO X
+           WHERE   X.CONTRACT_NUM = A.CONTRACT_NUM
+             AND     X.EVNT_CD = 'SIM'
+             AND     X.GRNT_INSR_STAT_CD = 'A'
+             AND     X.APP_END_DATE = '99991231000000' GROUP BY X.CONTRACT_NUM ) AS SIM_END_DT
+                  FROM 
+                    MSP_JUO_SUB_INFO A
+                  , MSP_DVC_CHG_AGNT_HST B
+                  , MSP_JUO_ADD_INFO C
+                  , MSP_JUO_CUS_INFO D
+          WHERE   A.SUB_STATUS <> 'C'
+		    AND     A.PPPO = 'PO'
+		    AND     A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+		    AND     B.REQUEST_KEY(+) IS NOT NULL
+		    AND     ( B.APPL_END_DTTM(+) = '99991231000000'
+		              OR TO_DATE(SUBSTR(B.APPL_END_DTTM(+), 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(B.APPL_STRT_DTTM(+), 1, 8), 'YYYYMMDD') >= 15 )
+		    AND     B.CONTRACT_NUM = C.CONTRACT_NUM(+)
+		    AND     B.EVNT_TRTM_NO = C.EVNT_TRTM_NO(+)
+		    AND     A.CUSTOMER_ID = D.CUSTOMER_ID
+		    AND     REPLACE(D.CUSTOMER_LINK_NAME, ' ', '') = REPLACE(UPPER(#{custNm}), ' ', '')
+		    AND     CASE
+		                WHEN D.CUSTOMER_TYPE = 'I' AND D.CUST_IDNT_NO_IND_CD IN ('01','05') THEN SUBSTR(CRYPTO_AES256.DEC_AES(D.CUSTOMER_SSN), 1, 6)
+		                ELSE D.TAX_ID
+		            END = #{idntNum}
+		    AND     A.SUBSCRIBER_NO = #{subscriberNo}
+          ORDER BY B.APPL_STRT_DTTM DESC)
+          SELECT 
+                A.CONTRACT_NUM
+              , A.CUSTOMER_LINK_NAME
+              , A.SUBSCRIBER_NO
+              , A.SUB_STATUS
+              , A.SUB_STATUS_RSN_CODE
+              , A.LST_COM_ACTV_DATE
+              , A.ICC_ID
+              , A.SIM_STR_DT
+              , A.SIM_END_DT
+          FROM SIMCTNR A
+          WHERE TO_CHAR(SYSDATE , 'YYYYMMDD') BETWEEN A.SIM_STR_DT AND A.SIM_END_DT
+          AND SUB_STATUS = 'A' 
+		  AND     ROWNUM = 1
+		]]>
+	</select> -->
+</mapper>

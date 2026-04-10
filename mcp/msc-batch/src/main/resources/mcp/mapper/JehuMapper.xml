@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="JehuMapper">
+
+    <select id="selectJehuSuggCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM NMCP_JEHU_SUGGESTION
+        WHERE JEHU_REG_DT <![CDATA[>=]]> TRUNC(SYSDATE - 1) + INTERVAL '15' HOUR
+            AND JEHU_REG_DT <![CDATA[<=]]> SYSDATE
+    </select>
+
+    <select id="selectJehuManager" resultType="java.lang.String">
+        SELECT DTL_CD_NM
+        FROM NMCP_CD_DTL
+        WHERE CD_GROUP_ID = 'JehuSuggestionManager'
+            AND DTL_CD = 'JehuPhone'
+            AND USE_YN = 'Y'
+    </select>
+
+    <select id="selectDelCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM NMCP_JEHU_SUGGESTION
+        WHERE JEHU_ANSWER_STAT = 'C'
+             AND JEHU_ANSWER_DT  <![CDATA[<=]]> LAST_DAY(ADD_MONTHS(SYSDATE, -3))
+    </select>
+
+    <delete id="deleteJehuData" parameterType="int">
+        DELETE FROM NMCP_JEHU_SUGGESTION
+        WHERE JEHU_ANSWER_STAT = 'C'
+               AND JEHU_ANSWER_DT  <![CDATA[<=]]> LAST_DAY(ADD_MONTHS(SYSDATE, -3))
+    </delete>
+
+</mapper>

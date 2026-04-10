@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.fileup2.mapper.FileUp2Mapper">
+
+	
+	
+	<insert  id="insertCmnFileUpldMgmtMst"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.fileup2.insertCmnFileUpldMgmtMst =========*/
+	    
+	    INSERT INTO MSP_MNG.CMN_FILE_UPLD_MGMT_MST 
+	    (
+		   	 USR_ID
+		   , MENU_ID
+		   , FILE_UPLD_DT
+		   , FILE_NM
+		   , FILE_DESC
+		   , DUTY_NM
+		   , FILE_URL
+		   , FILE_SIZE
+		   , DATA_CNT
+		 ) 
+		VALUES
+		 ( 
+		   	 #{SESSION_USER_ID}
+		   , nvl(#{menuId},'*')
+		   , sysdate
+		   , #{FILE_NM}
+		   , #{FILE_DESC}
+		   , #{DUTY_NM}
+		   , #{FILE_URL}
+		   , #{FILE_SIZE}
+		   , #{DATA_CNT}
+		 )
+ 
+    
+        
+	</insert>
+	
+	<select  id="getFileMgmtMstId"  parameterType="java.util.HashMap"  resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.fileup2.getFileMgmtMstId =========*/
+	    
+		SELECT COUNT(*), 
+		        NVL(MAX(FILE_ID),0 ) + 1 FILE_ID
+		FROM
+		    (
+		        SELECT FILE_ID FILE_ID 
+		        FROM  CMN_FILE_MGMT_MST
+		        ORDER BY FILE_ID DESC
+		    )
+		WHERE ROWNUM = 1   
+        
+	</select>
+		
+		
+	<insert  id="insertFileMgmtMst"  parameterType="java.util.HashMap"  >
+	/* ====== cmn.fileup2.insertFileMgmtMst =========*/
+	    
+	    INSERT INTO CMN_FILE_MGMT_MST 
+		(
+			 FILE_ID
+			, MODULE_ID
+			, FILE_NM
+			, FILE_NM_PC
+			, FILE_ROUT
+			, FILE_SIZE
+			, REGST_ID
+			, REG_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) 
+		VALUES 
+		( 
+			  #{fileId }
+			, #{moduleId }
+			, #{fileNm }
+			, #{fileNmPc}
+			, #{fileRout}
+			, #{fileSize}
+			, #{SESSION_USER_ID }
+			, SYSDATE
+			, #{SESSION_USER_ID }
+			, SYSDATE
+		)
+        
+	</insert>
+
+	
+	<delete id="deleteFileMgmtById" parameterType="java.util.HashMap" >
+	/* ====== cmn.fileup2.deleteFileMgmtById =========*/
+	
+		DELETE CMN_FILE_MGMT_MST
+		WHERE FILE_ID    =  #{fileId} 
+		  AND MODULE_ID  =  #{moduleId}
+		
+
+	</delete>
+	
+	
+</mapper>

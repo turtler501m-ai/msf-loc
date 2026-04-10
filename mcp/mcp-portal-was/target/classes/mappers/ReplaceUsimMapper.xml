@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="ReplaceUsimMapper">
+
+  <select id="generateReplaceUsimOsstNo" resultType="java.lang.Long">
+    /*ReplaceUsimMapper.generateReplaceUsimOsstNo*/
+    SELECT SQ_FREE_USIM_OSST.NEXTVAL FROM DUAL
+  </select>
+
+  <insert id="saveFreeUsimOsst" parameterType="com.ktmmobile.mcp.common.mplatform.vo.RetvUsimChgAcceptPsblVO">
+    /*ReplaceUsimMapper.saveFreeUsimOsst*/
+    INSERT INTO NMCP_FREE_USIM_OSST (
+       OSST_NO
+      ,CONTRACT_NUM
+      ,SVC_CNTR_NO
+      ,PRGR_STAT_CD
+      ,NSTEP_GLOBAL_ID
+      ,RESPONSE_CODE
+      ,RESPONSE_BASIC
+      ,RSLT_CD
+      ,RSLT_MSG
+      ,OPEN_DT
+      ,USIM_CHG_DT
+      ,ACCEPT_DT
+      ,USIM_TYPE_CD
+      ,USIM_ONLY_YN
+      ,CTN_STATUS
+      ,REGST_ID
+      ,REGST_DTTM
+    ) VALUES (
+       #{osstNo}
+      ,#{contractNum}
+      ,#{svcCntrNo}
+      ,'T01'
+      ,#{globalNo}
+      ,#{resultCode}
+      ,#{svcMsg}
+      ,#{rsltCd}
+      ,#{rsltMsg}
+      ,#{openDt}
+      ,#{usimChgDt}
+      ,#{acceptDt}
+      ,#{usimTypeCd}
+      ,#{usimOnlyYn}
+      ,#{ctnStatus}
+      ,'MCP'
+      ,SYSDATE
+    )
+  </insert>
+
+  <insert id="saveFreeUsimReqMst" parameterType="com.ktmmobile.mcp.usim.dto.ReplaceUsimDto">
+    /*ReplaceUsimMapper.saveFreeUsimReqMst*/
+    <selectKey keyProperty="seq" resultType="long" order="BEFORE">
+      SELECT SQ_FREE_USIM_REQ_MST.NEXTVAL FROM DUAL
+    </selectKey>
+    INSERT INTO NMCP_FREE_USIM_REQ_MST (
+       SEQ
+      ,CUSTOMER_ID
+      ,CHNL_CD
+      ,REQ_QNTY
+      ,DLVRY_NAME
+      ,DLVRY_TEL_FN
+      ,DLVRY_TEL_MN
+      ,DLVRY_TEL_RN
+      ,DLVRY_POST
+      ,DLVRY_ADDR
+      ,DLVRY_ADDR_DTL
+      ,DLVRY_MEMO
+      ,AGRM_YN
+      ,ONLINE_AUTH_INFO
+      ,STATUS
+      ,REQ_IN_DAY
+      ,CRET_ID
+      ,CRET_DTTM
+      ,OSST_NO
+    ) VALUES (
+       #{seq}
+      ,#{customerId}
+      ,'ON'
+      ,#{reqQnty}
+      ,#{dlvryName}
+      ,#{dlvryTelFn}
+      ,#{dlvryTelMn}
+      ,#{dlvryTelRn}
+      ,#{dlvryPost}
+      ,#{dlvryAddr}
+      ,#{dlvryAddrDtl}
+      ,#{dlvryMemo}
+      ,#{agrmYn}
+      ,#{onlineAuthInfo}
+      ,'REQ'
+      ,SYSDATE
+      ,#{cretId}
+      ,SYSDATE
+      ,#{osstNo}
+    )
+  </insert>
+
+  <insert id="saveFreeUsimReqDtl" parameterType="com.ktmmobile.mcp.common.mplatform.vo.RetvUsimChgAcceptPsblVO">
+    /*ReplaceUsimMapper.saveFreeUsimReqDtl*/
+    INSERT INTO NMCP_FREE_USIM_REQ_DTL (
+       SEQ
+      ,SUB_SEQ
+      ,CONTRACT_NUM
+      ,STATUS
+      ,CRET_ID
+      ,CRET_DTTM
+      ,PRE_CHK_RSLT_CD
+      ,PRE_CHK_RSLT_MSG
+      ,NFC_USIM_YN
+      ,USIM_MODEL_CD
+      ,USIM_MODEL_ID
+    ) VALUES (
+       #{seq}
+      ,(SELECT COUNT(SEQ) + 1 FROM NMCP_FREE_USIM_REQ_DTL WHERE SEQ = #{seq})
+      ,#{contractNum}
+      ,'REQ'
+      ,#{cretId}
+      ,SYSDATE
+      ,'00'
+      ,'처리성공'
+      ,#{nfcUsimYn}
+      ,#{usimModelCd}
+      ,#{usimModelId}
+    )
+  </insert>
+
+  <select id="selectFreeUsimOsstResult" parameterType="java.lang.Long" resultType="com.ktmmobile.mcp.common.mplatform.vo.RetvUsimChgAcceptPsblVO">
+    SELECT
+       CONTRACT_NUM
+      ,RSLT_CD
+      ,USIM_TYPE_CD
+      ,SVC_CNTR_NO
+    FROM NMCP_FREE_USIM_OSST A
+    WHERE A.OSST_NO = #{osstNo}
+      AND PRGR_STAT_CD = 'T01'
+      AND NOT EXISTS (SELECT 1 FROM NMCP_FREE_USIM_REQ_DTL WHERE CONTRACT_NUM = A.CONTRACT_NUM)
+  </select>
+
+</mapper>

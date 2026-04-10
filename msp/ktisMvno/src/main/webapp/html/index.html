@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<title> kt알뜰폰 M mobile </title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<!-- Library -->
+<link rel="stylesheet" type="text/css" href="../lib/dhtmlx/codebase/dhtmlx.css"/>
+<link rel="stylesheet" type="text/css" href="../css/mvno.css"/>
+<script src="../lib/jquery/jquery-1.9.1.js"></script>
+<script src="../lib/dhtmlx/codebase/dhtmlx.js"></script>
+<script src="../js/mvno.js" ></script>
+<!-- //Library  -->
+
+</head>
+
+<body class="main">
+	<div id="wrap">
+		<div id="container">
+			<!-- 로고, 사용자 메뉴, 메뉴 -->
+			<div class="left_wrap" id="GNB">
+				<h1><img src="../images/logo.gif" width="198px" height="78px" alt="모바일 실용주의 kt M mobile" /></h1>
+				<!-- 사용자메뉴 -->
+				<h2 class="blind">사용자메뉴</h2>
+				<div class="lnb_user">
+					<dl>
+						<dt>이름</dt><dd>홍길동</dd>
+						<dt>조직</dt><dd title="KTIS영업2팀KTIS영업2팀KTIS영업2팀KTIS영업2팀">KTIS영업2팀</dd>
+					</dl>
+					<div class="ex">
+						<a href="#" class="btn_logout">로그아웃</a>
+						<a href="#" class="btn_my">개인정보</a>
+					</div>
+				</div>
+				<!-- //사용자메뉴 -->
+
+				<!-- 메뉴 -->
+				<h2 class="blind">주메뉴</h2>
+				<div id="mainAcc" class="gnb_mn_wrap"></div>
+
+				</div>
+
+				<!-- //메뉴 -->
+				<div class="mn_close" id="gnbClose"><a href="#none"><img src="../images/btn_close.gif" alt="메뉴닫기" /></a></div>
+				<div class="mn_open" id="gnbOpen" style="display:none;"><a href="#none"><img src="../images/btn_open.gif" alt="메뉴열기" /></a></div>
+				
+			<!-- //로고, 사용자 메뉴, 메뉴 -->
+
+			<!-- 콘텐츠 -->
+			<div id="contents" class="contents">
+				<!-- 공통 탭 --><div class="ui_tabbar" id="tabbar"></div>
+				<!-- 탭 전체닫기 --><a href="#" class="btn_allclose_tab" title="탭 전체닫기">탭 전체닫기</a>
+
+			</div>
+			<!-- //콘텐츠 -->
+		</div>
+
+		<!-- footer -->
+		<div id="footer_wrap">
+			<b>Copyright(c) 2015 <span>kt M mobile INC.</span> All rights reserved.</b> 
+		</div>
+		<!-- //footer -->
+	</div>
+
+
+	<!-- Script -->
+	<script type="text/javascript">
+
+		//-------------------------------------------------------------
+        // Accordion
+        //-------------------------------------------------------------
+        var acc = new dhtmlXAccordion({
+		  parent: "mainAcc",
+          items: [
+              { id: "a1", text: "메뉴" },
+              { id: "a2", text: "즐겨찾기" }
+          ]
+        });
+
+        //-------------------------------------------------------------
+        // Tree (메뉴)
+        //-------------------------------------------------------------
+        var tree = acc.cells("a1").attachTree();
+		tree.setImagePath("/lib/dhtmlx/codebase/imgs/dhxtree_skyblue/");
+        tree.loadXML("common/tree.xml");
+
+		//-------------------------------------------------------------
+        // Tree (즐겨찾기)
+        //-------------------------------------------------------------
+        var tree2 = acc.cells("a2").attachTree();
+		tree2.setImagePath("/lib/dhtmlx/codebase/imgs/dhxtree_skyblue/");
+        tree2.loadXML("common/tree2.xml");
+
+        //-------------------------------------------------------------
+        // TabBar
+        //-------------------------------------------------------------
+		var myTabbar;
+		myTabbar = new dhtmlXTabBar({
+			parent: "tabbar",
+			close_button: true,
+			tabs: [
+				{id: "aa0", text: "Guide"},
+				{id: "aa1", text: "Page1"},
+				{id: "aa2", text: "Page2", active: true},
+				{id: "aa3", text: "Page3"},
+				{id: "aa4", text: "Page4"},
+				{id: "aa5", text: "Page5(test)"},
+				{id: "aa6", text: "Page6(신청서)"},
+				{id: "aa7", text: "Page7(입고검수)"},
+				{id: "aa7", text: "매입 관리"},
+				{id: "aa8", text: "여신 관리"},
+				{id: "aa3", text: "Page3"},
+				{id: "aa4", text: "Page4"},
+				{id: "aa5", text: "Page5(test)"},
+				{id: "aa6", text: "Page6(신청서)"},
+				{id: "aa7", text: "Page7(입고검수)"},
+				{id: "aa7", text: "매입 관리"},
+				{id: "aa8", text: "여신 관리"},
+				{id: "aa9", text: "대리점 입금 관리"}/*,
+				{id: "aa10", text: "매입 관리"}*/
+			]
+		});
+		myTabbar.enableAutoReSize(true);
+		myTabbar.tabs("aa0").attachURL("guide.html");
+		myTabbar.tabs("aa1").attachURL("page1.html");
+		myTabbar.tabs("aa2").attachURL("page2.html");
+		myTabbar.tabs("aa3").attachURL("page3.html");
+		myTabbar.tabs("aa4").attachURL("page4.html");
+		myTabbar.tabs("aa5").attachURL("page5.html");
+		myTabbar.tabs("aa6").attachURL("page6.html");
+		myTabbar.tabs("aa7").attachURL("page7.html");
+
+		
+		/* 작업 전달용 즐겨찾기 삭제 버튼 */
+		$(".containerTableStyle:eq(1)").append("<button id='btn-del-favo' type='button' class='btn btn-normal btn_del_favo'>삭제</button>");
+
+
+	</script>
+
+<script src="../js/mvno_footer.js"></script>
+
+</body>
+</html>

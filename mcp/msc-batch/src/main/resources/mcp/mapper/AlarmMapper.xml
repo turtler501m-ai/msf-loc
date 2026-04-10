@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AlarmMapper">
+
+	<select id="selectNotiInfo" resultType="com.ktmmobile.mcp.alarm.dto.AlarmDto">
+		<![CDATA[
+		SELECT
+			USER_ID
+			,NOTI_DIV_CD
+			,NOTI_APY_DATE
+			,NOTI_TRT_STTUS_CD
+			,NOTI_SND_DT
+			,NOTI_WAY_CD
+			,NOTI_CD
+			,CRET_IP
+			,CRET_DT
+			,CRET_ID
+			,AMD_IP
+			,AMD_DT
+			,AMD_ID
+			,NM
+			,MOBILE_NO
+		FROM NMCP_APY_NOTI_TXN
+		WHERE 1=1
+		AND (SUBSTR(NOTI_APY_DATE,0,8) = TO_CHAR(SYSDATE,'YYYYMMDD') OR SUBSTR(NOTI_APY_DATE,0,8) = TO_CHAR(SYSDATE+30,'YYYYMMDD'))
+		AND NOTI_TRT_STTUS_CD = 'A'
+	   	]]>
+	</select>
+
+	<update id="updateNotiInfo" parameterType="com.ktmmobile.mcp.alarm.dto.AlarmDto">
+        UPDATE NMCP_APY_NOTI_TXN
+        SET NOTI_TRT_STTUS_CD = #{notiTrtSttusCd}
+        ,NOTI_SND_DT = SYSDATE
+        ,NOTI_WAY_CD = 'TALK'
+        ,NOTI_CD = 'NOTI001'
+        ,AMD_IP = #{amdIp}
+        ,AMD_DT = SYSDATE
+        ,AMD_ID = 'BATCH'
+	    WHERE MOBILE_NO = #{mobileNo}
+	    AND NOTI_DIV_CD = 'NOTI001'
+		AND NOTI_TRT_STTUS_CD = 'A'
+		AND SUBSTR(NOTI_APY_DATE,0,8) = TO_CHAR(SYSDATE,'YYYYMMDD')
+    </update>
+
+
+    <delete id="deleteNotiInfo">
+    <![CDATA[
+    	DELETE FROM NMCP_APY_NOTI_TXN
+    	WHERE NOTI_TRT_STTUS_CD IN ('C','S','F')
+    	AND ADD_MONTHS(TO_DATE(NOTI_APY_DATE,'YYYYMMDDHH24MISS'),3) < SYSDATE
+    ]]>
+    </delete>
+
+</mapper>

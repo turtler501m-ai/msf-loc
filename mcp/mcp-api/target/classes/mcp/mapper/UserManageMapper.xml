@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.usermanage.mapper.UserManageMapper">
+
+	<select id="selectMspJuoSubInfo" parameterType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto" resultType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto">
+		<!--  -->
+		SELECT
+			T2.CONTRACT_NUM
+			,T2.SUB_LINK_NAME
+			,T2.CUSTOMER_ID
+			,T1.CUSTOMER_TYPE
+		FROM MSP_JUO_CUS_INFO@DL_MSP T1
+            , MSP_JUO_SUB_INFO@DL_MSP T2
+		WHERE T1.CUSTOMER_ID = T2.CUSTOMER_ID
+		AND T2.SUBSCRIBER_NO = #{mobileNo}
+		AND T2.SUB_STATUS = 'A'
+	</select>
+
+<!--	<select id="selectMspJuoSubStopInfo" parameterType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto" resultType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto">-->
+	<select id="selectMspJuoSubStopInfo" parameterType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto" resultType="ArrayList">
+		<!--  -->
+		SELECT
+			T2.CONTRACT_NUM
+			,T2.SUB_LINK_NAME
+			,T2.CUSTOMER_ID
+			,T1.CUSTOMER_TYPE
+		FROM MSP_JUO_CUS_INFO@DL_MSP T1,
+			 MSP_JUO_SUB_INFO@DL_MSP T2
+		WHERE T1.CUSTOMER_ID = T2.CUSTOMER_ID
+		AND T2.SUBSCRIBER_NO = #{mobileNo}
+		AND T2.SUB_STATUS != 'A'
+
+	</select>
+
+	<select id="selectMcpUserCntrDtoList" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto">
+		<!--  -->
+		SELECT
+			A.USERID
+		   , B.SUB_LINK_NAME AS USER_NM
+		   , A.CNTR_MOBILE_NO AS MOBILE_NO
+		   , A.SVC_CNTR_NO AS CONTRACT_NUM
+		   , A.REP_NO
+		   , B.MODEL_NAME
+		   , B.MODEL_ID
+		   , B.SUB_STATUS
+		   , A.SYS_RDATE
+		   , C.CUSTOMER_TYPE
+		FROM MCP_USER_CNTR_MNG A, MSP_JUO_SUB_INFO@DL_MSP B, MSP_JUO_CUS_INFO@DL_MSP C
+		WHERE B.CUSTOMER_ID = C.CUSTOMER_ID
+		AND UPPER(A.USERID) = UPPER(#{cntrUserId})
+		AND A.SVC_CNTR_NO = B.CONTRACT_NUM
+		ORDER BY A.REP_NO ASC
+	</select>
+
+	<select id="selectMspJuoSubActive" parameterType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto" resultType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto">
+		SELECT
+			T2.CONTRACT_NUM
+			,T2.SUB_LINK_NAME
+			,T2.CUSTOMER_ID
+			,T1.CUSTOMER_TYPE
+			,T2.SVC_CNTR_NO
+		FROM MSP_JUO_CUS_INFO@DL_MSP T1
+		   , MSP_JUO_SUB_INFO@DL_MSP T2
+		WHERE T1.CUSTOMER_ID = T2.CUSTOMER_ID
+		  AND T2.SUBSCRIBER_NO = #{mobileNo}
+		  AND T2.SUB_STATUS = 'A'
+	</select>
+	
+	<!-- 현재 사용중인 회선정보 가져오기 2023.04 wooki -->
+	<select id="getMcpUserCntrInfoA" parameterType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto" resultType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto">
+		SELECT /*UserManageMapper.getMcpUserCntrInfoA*/
+			A.CONTRACT_NUM,
+			A.SUBSCRIBER_NO AS MOBILE_NO,
+			A.CUSTOMER_ID
+		FROM MSP_JUO_SUB_INFO@DL_MSP A, MSP_JUO_CUS_INFO@DL_MSP B
+		WHERE 1 = 1
+			AND A.CUSTOMER_ID = B.CUSTOMER_ID
+			<if test="mobileNo != null and mobileNo != ''">
+			AND A.SUBSCRIBER_NO = #{mobileNo}
+			</if>
+			<if test="customerId != null and customerId != ''">
+			AND A.CUSTOMER_ID = #{customerId}
+			</if>
+			AND A.SUB_STATUS = 'A'
+	</select>
+	
+	<!-- 홈페이지 userId로 현재 사용중인 회선 정보 가져오기 2023.04 wooki -->
+	<select id="getMcpUserCntrInfoAByUserId" parameterType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto" resultType="com.ktmmobile.mcp.usermanage.dto.McpUserCertDto">
+		SELECT /*UserManageMapper.getMcpUserCntrInfoAByUserId*/
+			A.USERID AS USER_ID,
+		   	B.SUB_LINK_NAME AS USER_NM,
+		   	A.CNTR_MOBILE_NO AS MOBILE_NO,
+		   	A.SVC_CNTR_NO AS CONTRACT_NUM
+		FROM MCP_USER_CNTR_MNG A, MSP_JUO_SUB_INFO@DL_MSP B
+		WHERE 1 = 1
+			AND UPPER(A.USERID) = UPPER(#{userId})
+			AND A.SVC_CNTR_NO = B.CONTRACT_NUM
+			AND SUB_STATUS = 'A'
+	</select>
+
+</mapper>

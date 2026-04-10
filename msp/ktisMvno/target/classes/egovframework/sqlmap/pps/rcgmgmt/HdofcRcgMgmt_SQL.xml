@@ -1,0 +1,1301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.rcgmgmt.mapper.PpsHdofcRcgMgmtMapper">
+   <!--충전내역 목록조회 -->
+    <select id="getRcgInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         		SELECT	/*+ INDEX_DESC(A PPS_RCG_IDX1) */
+			  			SEQ, 
+					  SUBSCRIBER_NO,
+					  NVL(DECODE(CONTRACT_NUM, 0, '', CONTRACT_NUM),'') CONTRACT_NUM,
+					  NVL(REQ_SRC,'') REQ_SRC,
+					  NVL(REQ_TYPE,'') REQ_TYPE,
+					  NVL(RECHARGE_INFO,'') RECHARGE_INFO,
+					  NVL(RECHARGE_METHOD,'') RECHARGE_METHOD,
+					  NVL(AMOUNT,0) AMOUNT,
+					  NVL(IN_AMOUNT,0) IN_AMOUNT,
+					  NVL(KT_RES_CODE,'') KT_RES_CODE,
+					  DECODE(KT_RES_CODE,'0000', '성공', '', '', '실패') KT_RES_CODE_NM,
+					  NVL(TO_CHAR(KT_RES_DT, 'YYYY-MM-DD HH24:MI:SS'),'') KT_RES_DT,
+					  NVL(ADMIN_ID, '') ADMIN_ID,
+					  NVL(F_GET_ADMIN_NM(ADMIN_ID),'') ADMIN_NM,
+					  NVL(RECHARGE_AGENT,'') RECHARGE_AGENT,
+					  NVL(F_GET_AGENT_NM(RECHARGE_AGENT),'') RECHARGE_AGENT_NAME,
+					  NVL(CHG_TYPE,'') CHG_TYPE,
+					  NVL(F_GET_KT_CODE_NM('PPS_RCG','CHG_TYPE',CHG_TYPE),'') CHG_TYPE_NAME,
+					  NVL(CANCEL_FLAG,'') CANCEL_FLAG,
+					  NVL(TO_CHAR(CANCEL_DT,'YYYY-MM-DD'),'')  CANCEL_DT,
+					  NVL(BASIC_REMAINS,0) BASIC_REMAINS,
+					  NVL(TO_CHAR(RECHARGE_DATE, 'YYYY-MM-DD HH24:MI:SS'),'') RECHARGE_DATE, 
+					  DECODE(CANCEL_FLAG, 'N', DECODE(KT_RES_CODE, '0000', DECODE(REQ_TYPE, 'BS_REMAINS_EDIT', '', '취소'), ''), '') CANCEL_BTN,
+					  NVL(TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD'),'') BASIC_EXPIRE,
+					  DECODE(KT_RES_CODE, '0000', '', DECODE(REMARK, '', NVL(F_GET_KT_CODE_NM('PPS_KT_IN_RES', 'RES_CODE', KT_RES_CODE), ''), REMARK)) REMARK,
+					  FREE_FLAG, 
+       		  		  DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') FREE_FLAG_NM ,     
+					  F_GET_AGENT_NM((SELECT AGENT_ID FROM PPS_CUSTOMER WHERE CONTRACT_NUM = A.CONTRACT_NUM)) OPEN_AGENT_NM,
+					  DECODE((SELECT AGENT_SALE_ID FROM PPS_CUSTOMER WHERE CONTRACT_NUM = A.CONTRACT_NUM), '', '', F_GET_AGENT_NM((SELECT AGENT_SALE_ID FROM PPS_CUSTOMER WHERE CONTRACT_NUM = A.CONTRACT_NUM))) OPEN_AGENT_SALE_NM,
+					  (SELECT LST_COM_ACTV_DATE FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM) AS LST_COM_ACTV_DATE,
+					  (SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = (SELECT SOC FROM PPS_CUSTOMER WHERE CONTRACT_NUM = A.CONTRACT_NUM) and rownum = 1) AS SOC_NM
+		  FROM PPS_RCG A 
+	 	  WHERE RECHARGE_DATE > TO_DATE('2010-01-01','YYYY-MM-DD')
+		  AND RECHARGE_DATE &lt; SYSDATE
+		  		<if test="searchSValue != null and searchSValue != ''">
+		  			<if test="searchSItem !=null and searchSItem != ''">
+						<choose>
+							<when test="searchSItem == 'contract_num'">
+								AND CONTRACT_NUM = #{searchSValue}
+							</when>
+							<when test="searchSItem == 'subscriber_no'">
+								AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+							</when>
+							<when test="searchSItem == 'vac_id' or searchSItem == 'recharge_info'">
+								AND RECHARGE_INFO = #{searchSValue}
+							</when>
+						</choose>
+					</if>
+				</if>
+				<if test="searchAgentId != null and searchAgentId != ''  and searchAgentId != '-1'">
+					AND AGENT_ID = #{searchAgentId}
+				</if>
+				<if test="startDt != null and startDt != ''">
+					AND RECHARGE_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND RECHARGE_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchReqSrc != null and searchReqSrc != ''">
+					AND REQ_SRC = #{searchReqSrc}
+				</if>
+				<if test="searchChgType != null and searchChgType != ''">
+					AND CHG_TYPE = #{searchChgType}
+				</if>
+				<if test="searchFeatures != null and searchFeatures != ''">
+					AND CONTRACT_NUM IN (SELECT CONTRACT_NUM FROM PPS_CUSTOMER WHERE SOC = #{searchFeatures})
+				</if>
+				<if test="searchRechargeMethod != null and searchRechargeMethod != ''">
+					<choose>
+						<when test="searchRechargeMethod == 'CMS'">
+							AND (REQ_TYPE =  'CMS_RCG_VOICE' OR REQ_TYPE =  'CMS_RCG_DATA')
+						</when>
+						<when test="searchRechargeMethod == 'POS충전'">
+							AND (REQ_TYPE =  'POS_RCG_VOICE' OR REQ_TYPE =  'POS_RCG_DATA')
+						</when>
+						<otherwise>
+							AND RECHARGE_METHOD = #{searchRechargeMethod}
+						</otherwise>
+					</choose>
+				</if>
+				<if test="searchKtResCode != null and searchKtResCode != ''">
+					<if test="searchKtResCode == 'success'">
+						AND KT_RES_CODE = '0000'
+					</if>
+					<if test="searchKtResCode == 'fault'">
+						AND (KT_RES_CODE &lt;> '0000' OR KT_RES_CODE IS NULL) 
+					</if>
+				</if>
+				<if test="searchRechargeAgent != null and searchRechargeAgent != ''">
+					AND RECHARGE_AGENT = #{searchRechargeAgent}
+				</if>
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+				<if test="searchFreeFlag != null and searchFreeFlag != ''">
+						AND FREE_FLAG = #{searchFreeFlag}
+				</if>
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--충전내역 목록조회엑셀출력 -->
+    <select id="getRcgInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+     
+       		SELECT	/*+ INDEX_DESC(A PPS_RCG_IDX1) */
+			  			SEQ, 
+					  NVL(SUBSCRIBER_NO,'-')  SUBSCRIBERNO,
+					  NVL(DECODE(CONTRACT_NUM, 0, '', CONTRACT_NUM),'-') CONTRACTNUM,
+					  NVL(REQ_SRC,'-') REQSRC,
+					  NVL(REQ_TYPE,'-') REQTYPE,
+					  NVL(RECHARGE_INFO,'-') RECHARGEINFO,
+					  NVL(RECHARGE_METHOD,'-') RECHARGEMETHOD,
+					  NVL(AMOUNT,0) AMOUNT,
+					  NVL(IN_AMOUNT,0) INAMOUNT,
+					  NVL(KT_RES_CODE,'-') KTRESCODE,
+					  DECODE(KT_RES_CODE,'0000', '성공', '', '-', '실패') KTRESCODENM,
+					  NVL(TO_CHAR(KT_RES_DT, 'YYYY-MM-DD HH24:MI:SS'),'-') KTRESDT,
+					  NVL(ADMIN_ID, '-') ADMINID,
+					  NVL(F_GET_ADMIN_NM(ADMIN_ID),'-') ADMINNM,
+					  NVL(RECHARGE_AGENT,'-') RECHARGEAGENT,
+					  NVL(FN_GET_ORGNM(RECHARGE_AGENT),'-') RECHARGEAGENTNAME,
+					  NVL(CHG_TYPE,'-') CHG_TYPE,
+					  NVL(F_GET_KT_CODE_NM('PPS_RCG','CHG_TYPE',CHG_TYPE),'-') CHGTYPENAME,
+					  NVL(CANCEL_FLAG,'-') CANCELFLAG,
+					  NVL(TO_CHAR(CANCEL_DT,'YYYY-MM-DD'),'-')  CANCELDT,
+					  NVL(BASIC_REMAINS,0) BASICREMAINS,
+					  NVL(TO_CHAR(RECHARGE_DATE, 'YYYY-MM-DD HH24:MI:SS'),'-') RECHARGEDATE, 
+					  DECODE(CANCEL_FLAG, 'N', DECODE(KT_RES_CODE, '0000', '취소', ''), '-') CANCELBTN,
+					  NVL(TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD'),'-') BASICEXPIRE,
+					  DECODE(KT_RES_CODE, '0000', '-', DECODE(REMARK, '', NVL(F_GET_KT_CODE_NM('PPS_KT_IN_RES', 'RES_CODE', KT_RES_CODE), '-'), REMARK)) REMARK,
+					  NVL(FREE_FLAG,'-') FREE_FLAG, 
+       		          DECODE(FREE_FLAG,'N','판매', 'Y','수수료', '-') FREE_FLAG_NM ,     
+					  NVL(F_GET_AGENT_NM((SELECT AGENT_ID FROM PPS_CUSTOMER WHERE CONTRACT_NUM = A.CONTRACT_NUM)),'-') OPENAGENTNM,
+					  DECODE((SELECT AGENT_SALE_ID FROM PPS_CUSTOMER WHERE CONTRACT_NUM = A.CONTRACT_NUM), '', '-', F_GET_AGENT_NM((SELECT AGENT_SALE_ID FROM PPS_CUSTOMER WHERE CONTRACT_NUM = A.CONTRACT_NUM))) OPENAGENTSALENM,
+					  NVL((SELECT TO_CHAR(TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM), '-') AS LSTCOMACTVDATE,
+					  NVL((SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = (SELECT SOC FROM PPS_CUSTOMER WHERE CONTRACT_NUM = A.CONTRACT_NUM) and rownum = 1), '-') AS SOC_NM
+		  FROM PPS_RCG A 
+	 	  WHERE RECHARGE_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+		  AND RECHARGE_DATE &lt; SYSDATE
+		  		<if test="searchSValue != null and searchSValue != ''">
+		  			<if test="searchSItem !=null and searchSItem != ''">
+						<choose>
+							<when test="searchSItem == 'contract_num'">
+								AND CONTRACT_NUM = #{searchSValue}
+							</when>
+							<when test="searchSItem == 'subscriber_no'">
+								AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchSValue}) from dual)
+							</when>
+							<when test="searchSItem == 'vac_id' or searchSItem == 'recharge_info'">
+								AND RECHARGE_INFO = #{searchSValue}
+							</when>
+						</choose>
+					</if>
+				</if>
+				<if test="searchAgentId != null and searchAgentId != ''  and searchAgentId != '-1'">
+					AND AGENT_ID = #{searchAgentId}
+				</if>
+				<if test="startDt != null and startDt != ''">
+					AND RECHARGE_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND RECHARGE_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchReqSrc != null and searchReqSrc != ''">
+					AND REQ_SRC = #{searchReqSrc}
+				</if>
+				<if test="searchChgType != null and searchChgType != ''">
+					AND CHG_TYPE = #{searchChgType}
+				</if>
+				<if test="searchFeatures != null and searchFeatures != ''">
+					AND CONTRACT_NUM IN (SELECT CONTRACT_NUM FROM PPS_CUSTOMER WHERE SOC = #{searchFeatures})
+				</if>
+				<if test="searchRechargeMethod != null and searchRechargeMethod != ''">
+					<choose>
+						<when test="searchRechargeMethod == 'CMS'">
+							AND (REQ_TYPE =  'CMS_RCG_VOICE' OR REQ_TYPE =  'CMS_RCG_DATA')
+						</when>
+						<when test="searchRechargeMethod == 'POS충전'">
+							AND (REQ_TYPE =  'POS_RCG_VOICE' OR REQ_TYPE =  'POS_RCG_DATA')
+						</when>
+						<otherwise>
+							AND RECHARGE_METHOD = #{searchRechargeMethod}
+						</otherwise>
+					</choose>
+				</if>
+				<if test="searchKtResCode != null and searchKtResCode != ''">
+					<if test="searchKtResCode == 'success'">
+						AND KT_RES_CODE = '0000'
+					</if>
+					<if test="searchKtResCode == 'fault'">
+						AND (KT_RES_CODE &lt;> '0000' OR KT_RES_CODE IS NULL) 
+					</if>
+				</if>
+				<if test="searchRechargeAgent != null and searchRechargeAgent != ''">
+					AND RECHARGE_AGENT = #{searchRechargeAgent}
+				</if>
+				<if test="searchCancelFlag != null and searchCancelFlag != ''">
+					AND CANCEL_FLAG = #{searchCancelFlag}
+				</if>
+				<if test="searchFreeFlag != null and searchFreeFlag != ''">
+						AND FREE_FLAG = #{searchFreeFlag}
+				</if>
+             
+	    
+    </select>
+    
+    
+    
+	<!--실시간자동출금내역 목록조회 -->
+    <select id="getRcgRealCmsMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+			SELECT	/*+ INDEX_DESC(A PPS_RCG_REAL_CMS_IDX) */ 
+				  CONTRACT_NUM,
+				  TO_CHAR(REQ_DATE, 'YYYY-MM-DD HH24:MI:SS') REQ_DATE,
+				  SUCC_FLAG,
+				  DECODE(SUCC_FLAG, 'Y', '성공','실패') SUCC_FlAG_NM,
+				  BANK_CODE,
+				  F_GET_KT_CODE_NM('PPS_RCG_REAL_CMS','BANK_CODE',BANK_CODE) BANK_CODE_NAME,
+				  BANK_ACCOUNT,
+				  BANK_USER_NAME,
+				  REQ_AMOUNT,
+				  RES_AMOUNT,
+				  RES_CODE,
+				  F_GET_REAL_CMS_CODE_NM(RES_CODE) RES_CODE_NAME,
+				  CHARGE_FEE,
+				  CMS_TYPE,
+				  RECHARGE_RESULT
+			 FROM PPS_RCG_REAL_CMS A
+			 WHERE REQ_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+			 <if test="searchNm != null and searchNm !=''">
+			 	<if test="searchType != null and searchType !=''">
+					<choose>
+						<when test="searchType == 'contract_num'">
+								AND A.CONTRACT_NUM = #{searchNm}
+						</when>
+						<when test="searchType == 'subscriber_no'">
+								AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+						</when>
+						<otherwise>
+								AND $searchType = #{searchNm}
+						</otherwise>
+					</choose>
+				</if>
+			 </if>
+			 <if test="startDt != null and startDt != ''">
+					AND REQ_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			 </if>
+			 <if test="endDt != null and endDt != ''">
+					AND REQ_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			 </if>
+			 <if test="searchRcgCmsBankNm != null and searchRcgCmsBankNm != ''">
+					AND BANK_CODE = #{searchRcgCmsBankNm}
+			 </if>
+			 <if test="searchRcgCmsSuccessFlag != null and searchRcgCmsSuccessFlag != ''">
+					AND SUCC_FLAG = #{searchRcgCmsSuccessFlag}
+			 </if>
+			 <if test='searchRcgFlag != null and searchRcgFlag != "" and searchRcgFlag =="Y" '>
+               	AND RECHARGE_RESULT = '0000'
+             </if>
+             <if test='searchRcgFlag != null and searchRcgFlag != "" and searchRcgFlag =="N" '>
+               	AND RECHARGE_RESULT &lt;> '0000' 
+             </if>
+			 
+			 
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--실시간자동출금내역 목록조회엑셀출력 -->
+    <select id="getRcgRealCmsMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+     			SELECT	/*+ INDEX_DESC(A PPS_RCG_REAL_CMS_IDX) */ 
+				  NVL(CONTRACT_NUM,0) CONTRACTNUM,
+				  TO_CHAR(REQ_DATE, 'YYYY-MM-DD HH24:MI:SS') REQDATE,
+				  NVL(SUCC_FLAG,'-') SUCCFLAG,
+				  DECODE(SUCC_FLAG, 'Y', '성공','실패') SUCCFlAGNM,
+				  BANK_CODE BANKCODE,
+				  F_GET_KT_CODE_NM('PPS_RCG_REAL_CMS','BANK_CODE',BANK_CODE) BANKCODENAME,
+				  BANK_ACCOUNT BANKACCOUNT,
+				  BANK_USER_NAME BANKUSERNAME,
+				  REQ_AMOUNT REQAMOUNT,
+				  NVL(RES_AMOUNT,0) RESAMOUNT,
+				  NVL(RES_CODE,'-') RESCODE,
+				  NVL(F_GET_REAL_CMS_CODE_NM(RES_CODE),'-') RESCODENAME,
+				  NVL(CHARGE_FEE,0) CHARGEFEE,
+				  NVL(RECHARGE_RESULT,'-') RECHARGERESULT,
+				  CMS_TYPE CMSTYPE
+			 FROM PPS_RCG_REAL_CMS A
+			 WHERE REQ_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+			 <if test="searchNm != null and searchNm !=''">
+			 	<if test="searchType != null and searchType !=''">
+					<choose>
+						<when test="searchType == 'contract_num'">
+								AND A.CONTRACT_NUM = #{searchNm}
+						</when>
+						<when test="searchType == 'subscriber_no'">
+								AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+						</when>
+						<otherwise>
+								AND $searchType = #{searchNm}
+						</otherwise>
+					</choose>
+				</if>
+			 </if>
+			 <if test="startDt != null and startDt != ''">
+					AND REQ_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			 </if>
+			 <if test="endDt != null and endDt != ''">
+					AND REQ_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			 </if>
+			 <if test="searchAgentId != null and searchAgentId != '' and searchAgentId != '-1'">
+					AND AGENT_ID = #{searchAgentId}
+			 </if>   
+			 <if test='searchRcgFlag != null and searchRcgFlag != "" and searchRcgFlag =="Y" '>
+               	AND RECHARGE_RESULT = '0000'
+             </if>
+             <if test='searchRcgFlag != null and searchRcgFlag != "" and searchRcgFlag =="N" '>
+               	AND RECHARGE_RESULT &lt;> '0000' 
+             </if>
+	    
+    </select>
+    
+       
+	<!--가상계좌입금내역 목록조회 -->
+    <select id="getRcgVacRechargeMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+          SELECT	 /*+ INDEX_DESC(A PPS_RCG_VAC_IDX2) */ 
+			  VACC_NO,
+			  DECODE(CONTRACT_NUM, 0, '', CONTRACT_NUM) CONTRACT_NUM,
+			  BANK_CODE,
+			  f_get_kt_code_nm('PPS_VAC', 'BANK_CODE', BANK_CODE) BANK_CD_NM,
+			  DECODE(USER_TYPE, 'A', '선불대리점', 'P', '후불대리점', '선불고객') USER_TYPE_NM,
+			  CUST_NAME,
+			  NVL(AGENT_ID, '') AGENT_ID,
+			  NVL(FN_GET_ORGNM(AGENT_ID), '') AGENT_NAME,
+			  TO_CHAR(TO_DATE(TX_DATE, 'YYYY-MM-DD'),'YYYY-MM-DD') ||' '|| TO_CHAR(TO_DATE(TX_TIME, 'HH24:MI:SS'),'HH24:MI:SS') TX_DATE,
+			  PAY_TOT_AMT,
+			  PAY_BANK_CODE,
+			  F_GET_KT_CODE_NM('PPS_RCG_VAC','PAY_BANK_CODE',PAY_BANK_CODE) PAY_BANK_NM,
+			  REQUESTER,
+			  BANK_NAME,
+			  RCG_SEQ,
+			  F_GET_RCG_RES_CODE(RCG_SEQ) RES_CODE,
+			  USER_TYPE,
+			  END_CODE,
+			  VAC_SEQ
+ 		FROM PPS_RCG_VAC A 
+ 		WHERE TO_DATE(TX_DATE, 'YYYY-MM-DD') > TO_DATE('1900-01-01','YYYY-MM-DD')
+ 				<if test="searchNm != null and searchNm != ''">
+ 					<if test="searchType != null and searchType != ''">
+						<choose>
+							<when test="searchType == 'subscriber_no'">
+								AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+							</when>
+							<when test="searchType == 'agent_id'">
+								AND AGENT_ID = #{searchNm}
+							</when>
+							<when test="searchType == 'contract_num'">
+								AND CONTRACT_NUM = #{searchNm}
+							</when>
+							<when test="searchType == 'vacc_no'">
+								AND VACC_NO = #{searchNm}
+							</when>
+						</choose>	
+					</if>
+				</if>
+				<if test="startDt != null and startDt != ''">
+					AND TO_DATE(TX_DATE,'YYYY-MM-DD') >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1 > TO_DATE(TX_DATE,'YYYY-MM-DD')
+				</if>				
+				<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != '-1'">
+					AND AGENT_ID = #{searchAgentId}
+				</if>
+				<if test="searchUserType != null and searchUserType != '' and searchUserType != '-1'">
+					AND USER_TYPE = #{searchUserType}
+				</if>
+				<if test="virBankNm != null and virBankNm != '' and virBankNm != '-1'">
+					AND BANK_CODE = #{virBankNm}
+				</if>    
+ 
+         
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+	<!--가상계좌입금내역 목록조회엑셀출력 -->
+    <select id="getRcgVacRechargeMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+       
+          SELECT	 /*+ INDEX_DESC(A PPS_RCG_VAC_IDX2) */ 
+			  VACC_NO VACCNO,
+			  NVL(CONTRACT_NUM,0) CONTRACTNUM,
+			  DECODE(USER_TYPE, 'A', NVL(FN_GET_ORGNM(AGENT_ID),'-'), 'P', NVL(FN_GET_ORGNM(AGENT_ID),'-'), NVL(CONTRACT_NUM,'-')) USERNUMBER,
+			  BANK_CODE BANKCODE,
+			  f_get_kt_code_nm('PPS_VAC', 'BANK_CODE', BANK_CODE) BANKCDNM,
+			  DECODE(USER_TYPE, 'A', '선불대리점', 'P', '후불대리점', '선불고객') USERTYPENM,
+			  NVL(CUST_NAME,'-') CUSTNAME  ,
+			  NVL(AGENT_ID,'-')  AGENTID ,
+			  NVL(FN_GET_ORGNM(AGENT_ID),'-') AGENTNAME,
+			  TO_CHAR(TO_DATE(TX_DATE, 'YYYY-MM-DD'),'YYYY-MM-DD') ||' '|| TO_CHAR(TO_DATE(TX_TIME, 'HH24:MI:SS'),'HH24:MI:SS') TXDATE,
+			  TO_CHAR(TO_NUMBER(PAY_TOT_AMT)) PAYTOTAMT,
+			  PAY_BANK_CODE PAYBANKCODE,
+			  NVL(F_GET_KT_CODE_NM('PPS_RCG_VAC','PAY_BANK_CODE',PAY_BANK_CODE),'-') PAYBANKNM,
+			  NVL(REQUESTER ,'-') REQUESTER,
+			  NVL(BANK_NAME,'-') BANKNAME ,
+			  RCG_SEQ RCGSEQ,
+			  F_GET_RCG_RES_CODE(RCG_SEQ) RESCODE,
+			  USER_TYPE USERTYPE,
+			  NVL(END_CODE,'-') ENDCODE
+ 		FROM PPS_RCG_VAC A 
+ 		WHERE TO_DATE(TX_DATE, 'YYYY-MM-DD') > TO_DATE('1900-01-01','YYYY-MM-DD')
+ 				<if test="searchNm != null and searchNm != ''">
+ 					<if test="searchType != null and searchType != ''">
+						<choose>
+							<when test="searchType == 'subscriber_no'">
+								AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+							</when>
+							<when test="searchType == 'agent_id'">
+								AND AGENT_ID = #{searchNm}
+							</when>
+							<when test="searchType == 'contract_num'">
+								AND CONTRACT_NUM = #{searchNm}
+							</when>
+							<when test="searchType == 'vacc_no'">
+								AND VACC_NO = #{searchNm}
+							</when>
+						</choose>
+					</if>	
+				</if>
+				<if test="startDt != null and startDt != ''">
+					AND TO_DATE(TX_DATE,'YYYY-MM-DD') >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND TO_DATE(#{endDt}, 'YYYY-MM-DD')+1 > TO_DATE(TX_DATE,'YYYY-MM-DD')
+				</if>
+				<if test="searchAgentId != null and searchAgentId != '' and searchAgentId != '-1'">
+					AND AGENT_ID = #{searchAgentId}
+				</if>
+				<if test="searchUserType != null and searchUserType != '' and searchUserType != '-1'">
+					AND USER_TYPE = #{searchUserType}
+				</if>
+				<if test="virBankNm != null and virBankNm != '' and virBankNm != '-1'">
+					AND BANK_CODE = #{virBankNm}
+				</if>  
+ 
+                 	    
+    </select>
+    
+	<!--가상계좌 관리 목록조회 -->
+    <select id="getRcgVacInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" />     
+		     SELECT	 /*+ INDEX_DESC(A PPS_VAC_SEQ_IDX) */ 
+					VAC_ID,
+					VAC_BANK_CD,
+					f_get_kt_code_nm('PPS_RCG_VAC', 'PAY_BANK_CODE', VAC_BANK_CD) VAC_BANK_NAME,
+					USER_TYPE,
+					DECODE(USER_TYPE, 'A', '선불대리점', 'P', '후불대리점','U','사용자','미사용') USER_TYPE_NM,
+					ADMIN_ID,
+					DECODE(CONTRACT_NUM, 0, '', CONTRACT_NUM) CONTRACT_NUM,
+					NVL(AGENT_ID, '') AGENT_ID,
+					NVL(FN_GET_ORGNM(AGENT_ID), '') AGENT_NAME,
+					STATUS,
+					DECODE(STATUS, 'N','미사용','Y','사용중') STATUS_NM,
+					TO_CHAR(OPEN_DATE, 'YYYY-MM-DD') OPEN_DATE,
+					TO_CHAR(CLOSE_DATE, 'YYYY-MM-DD') CLOSE_DATE,
+					TO_CHAR(LAST_PAYMENT_DATE, 'YYYY-MM-DD') LAST_PAYMENT_DATE,
+					PAY_COUNT,
+					USE_COUNT,
+					DECODE(STATUS, 'Y', DECODE(USER_TYPE, 'A', '회수', 'U', '회수'), '')RESET_BTN
+				FROM PPS_VAC
+				WHERE 1 = 1
+				<if test="searchNm != null and searchNm != ''">
+					<if test="searchType != null and searchType != ''">
+						<choose>
+							<when test="searchType == 'subscriber_no'">
+								AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+							</when>
+							<when test="searchType == 'vac_id'">
+								AND VAC_ID = #{searchNm}
+							</when>
+						</choose>
+					</if>
+				</if>
+				<if test="startDt != null and startDt != ''">
+					AND OPEN_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND OPEN_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!='-1'">
+					AND AGENT_ID = #{searchAgentId}
+				</if>
+				<if test="virBankNm != null and virBankNm != ''">
+					AND VAC_BANK_CD = #{virBankNm}
+				</if>
+				<if test="searchStatus != null and searchStatus != ''">
+					AND STATUS = #{searchStatus}
+				</if>
+				<if test="searchRcgVacUserType != null and searchRcgVacUserType != ''">
+					AND USER_TYPE = #{searchRcgVacUserType}
+				</if>  
+				 
+	    
+          
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--가상계좌 관리 목록조회엑셀출력 -->
+    <select id="getRcgVacInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+          SELECT	 /*+ INDEX_DESC(A PPS_VAC_SEQ_IDX) */ 
+					VAC_ID VACID,
+					VAC_BANK_CD VACBANKCD,
+					f_get_kt_code_nm('PPS_RCG_VAC', 'PAY_BANK_CODE', VAC_BANK_CD) VACBANKNAME,
+					USER_TYPE USERTYPE,
+					DECODE(USER_TYPE, 'A', '선불대리점', 'P', '후불대리점','U','사용자','미사용') USERTYPENM,
+					ADMIN_ID ADMINID,
+					DECODE(CONTRACT_NUM, 0, '-', '', '-', CONTRACT_NUM) CONTRACTNUM,
+					AGENT_ID AGENTID,
+					NVL(FN_GET_ORGNM(AGENT_ID),'-') AGENTNAME,
+					STATUS,
+					DECODE(STATUS, 'N','미사용','Y','사용중') STATUSNM,
+					NVL(TO_CHAR(OPEN_DATE, 'YYYY-MM-DD'),'-') OPENDATE,
+					NVL(TO_CHAR(CLOSE_DATE, 'YYYY-MM-DD'),'-') CLOSEDATE,
+					NVL(TO_CHAR(LAST_PAYMENT_DATE, 'YYYY-MM-DD'),'-') LASTPAYMENTDATE,
+					PAY_COUNT PAYCOUNT,
+					USE_COUNT USECOUNT
+				FROM PPS_VAC
+				WHERE 1 = 1
+				<if test="searchNm != null and searchNm != ''">
+					<if test="searchType != null and searchType != ''">
+						<choose>
+							<when test="searchType == 'subscriber_no'">
+								AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+							</when>
+							<when test="searchType == 'vac_id'">
+								AND VAC_ID = #{searchNm}
+							</when>
+						</choose>
+					</if>
+				</if>
+				<if test="startDt != null and startDt != ''">
+					AND OPEN_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+				</if>
+				<if test="endDt != null and endDt != ''">
+					AND OPEN_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+				</if>
+				<if test="searchAgentId != null and searchAgentId != '' and searchAgentId!='-1'">
+					AND AGENT_ID = #{searchAgentId}
+				</if>
+				<if test="virBankNm != null and virBankNm != ''">
+					AND VAC_BANK_CD = #{virBankNm}
+				</if>
+				<if test="searchStatus != null and searchStatus != ''">
+					AND STATUS = #{searchStatus}
+				</if>
+				<if test="searchRcgVacUserType != null and searchRcgVacUserType != ''">
+					AND USER_TYPE = #{searchRcgVacUserType}
+				</if>   
+	    
+    </select>
+    <!--POS충전내역 목록조회 -->
+    <select id="getRcgPosRechargeMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+         SELECT /*+ INDEX_DESC(A PPS_RCG_POS_IDX2) */
+		       POS_SEQ,
+		       STORE_CODE,
+		       F_GET_AGENT_NM(STORE_CODE) STORE_CODE_NM,
+		       AUTH_CODE,
+		       REQ_TYPE,
+		        NVL((SELECT B.CD_TXT AS REQ_TYPE_NM 
+		            FROM PPS_CODE_COMBO B
+  					WHERE B.LOV_CD='PPS0061'
+  						AND B.CD_VAL =REQ_TYPE),'') AS REQ_TYPE_NM,
+		        CONTRACT_NUM,
+		        SUBSCRIBER_NO,
+		        AMOUNT,
+		       TO_CHAR(RECORD_DATE,'YYYY-MM-DD HH24:MI:SS') RECORD_DATE,
+		       RET_CODE,
+		       F_GET_KT_CODE_NM('PPS_RCG_POS','RET_CODE',RET_CODE) RET_CODE_NM,
+		       CANCEL_FLAG,
+		       TO_CHAR(CANCEL_DATE,'YYYY-MM-DD') CANCEL_DATE ,
+		        RCG_SEQ
+		  FROM PPS_RCG_POS A
+		 WHERE RECORD_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+		 
+			 <if test="searchNm != null and searchNm != ''">
+			 	<if test="searchType != null and searchType != ''">
+					<choose>
+						<when test="searchType == 'contract_num'">
+							AND CONTRACT_NUM = #{searchNm}
+						</when>
+						<when test="searchType == 'subscriber_no'">
+							AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+						</when>
+						<when test="searchType == 'auth_code'">
+							AND AUTH_CODE = #{searchNm}
+						</when>
+					</choose>
+				</if>
+			 </if>
+			 <if test="searchReqType != null and searchReqType != ''">
+			 	AND REQ_TYPE = #{searchReqType}
+			 </if>
+			<if test="startDt != null and startDt != ''">
+				AND RECORD_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND RECORD_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test='searchCancelFlag != null and searchCancelFlag != "" and searchCancelFlag =="Y" '>
+               AND CANCEL_FLAG = 'Y'
+            </if>
+            <if test='searchCancelFlag != null and searchCancelFlag != "" and searchCancelFlag =="N" '>
+               AND CANCEL_FLAG = 'N'
+            </if>
+			
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--POS충전내역 목록조회 엑셀출력 -->
+    <select id="getRcgPosRechargeMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+        SELECT /*+ INDEX_DESC(A PPS_RCG_POS_IDX2) */
+		       NVL(POS_SEQ,0) POSSEQ,
+		       NVL(STORE_CODE,'-') STORECODE,
+		       NVL(F_GET_AGENT_NM(STORE_CODE),'-') STORECODENM,
+		       NVL(AUTH_CODE,'-') AUTHCODE,
+		       NVL(REQ_TYPE,'-') REQTYPE,
+		       NVL((SELECT B.CD_TXT AS REQ_TYPE_NM 
+		            FROM PPS_CODE_COMBO B
+  					WHERE B.LOV_CD='PPS0061'
+  						AND B.CD_VAL =REQ_TYPE),'-') AS REQTYPENM,
+		       NVL(CONTRACT_NUM,'-') CONTRACTNUM,
+		       NVL(SUBSCRIBER_NO,'-') SUBSCRIBERNO,
+		       NVL(AMOUNT,0) AMOUNT,
+		       NVL(TO_CHAR(RECORD_DATE,'YYYY-MM-DD HH24:MI:SS'),'-') RECORDDATE,
+		       NVL(RET_CODE,'-') RETCODE,
+		       NVL(F_GET_KT_CODE_NM('PPS_RCG_POS','RET_CODE',RET_CODE),'-') RETCODENM,
+		       NVL(CANCEL_FLAG,'-') CANCELFLAG,
+		       NVL(TO_CHAR(CANCEL_DATE,'YYYY-MM-DD'),'-') CANCELDATE ,
+		       NVL(RCG_SEQ,0) RCGSEQ
+		  FROM PPS_RCG_POS A
+		 WHERE RECORD_DATE > TO_DATE('1900-01-01','YYYY-MM-DD')
+		 
+			 <if test="searchNm != null and searchNm != ''">
+			 	<if test="searchType != null and searchType != ''">	
+					<choose>
+						<when test="searchType == 'contract_num'">
+							AND CONTRACT_NUM = #{searchNm}
+						</when>
+						<when test="searchType == 'subscriber_no'">
+							AND CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+						</when>
+						<when test="searchType == 'auth_code'">
+							AND AUTH_CODE = #{searchNm}
+						</when>
+					</choose>
+				</if>
+			 </if>
+			  <if test="searchReqType != null and searchReqType != ''">
+			 	AND REQ_TYPE = #{searchReqType}
+			 </if>
+			<if test="startDt != null and startDt != ''">
+				AND RECORD_DATE >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endDt != null and endDt != ''">
+				AND RECORD_DATE &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test='searchCancelFlag != null and searchCancelFlag != "" and searchCancelFlag =="Y" '>
+               AND CANCEL_FLAG = 'Y'
+            </if>
+            <if test='searchCancelFlag != null and searchCancelFlag != "" and searchCancelFlag =="N" '>
+               AND CANCEL_FLAG = 'N'
+            </if>
+			  
+	    
+    </select>  
+  
+       <!--일괄충전 고객조회 -->
+    <select id="getRcgBatchSearchMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">   
+    	<include refid="com.ktis.msp.cmn.include.paging-start" />    
+              SELECT  B.CONTRACT_NUM  CONTRACT_NUM, 
+	                  B.BAN AS CUSTOMER_BAN, 
+	                  A.SOC, 
+	                  AD_SSN,	                
+	                  (SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1) SERVICE_NAME,
+	                  A.SERVICE_TYPE, 
+	                  F_GET_KT_CODE_NM('PPS_CUSTOMER','SERVICE_TYPE',A.SERVICE_TYPE) SERVICE_TYPE_NAME, 
+	                  PAPER_IMAGE_1, 
+	                  PAPER_IMAGE_2, 
+	                  PAPER_IMAGE_3, 
+	                  PAPER_IMAGE_4, 
+	                  PAPER_IMAGE_5, 
+	                  DECODE(paper_Image_1,'','X','O' ) || DECODE(paper_Image_2,'','X','O' ) || DECODE(paper_Image_3,'','X','O' ) || DECODE(paper_Image_4,'','X','O' ) || DECODE(paper_Image_5,'','X','O' ) AS PAPER_IMAGE, 
+	                  AGENT_ID, FN_GET_ORGNM(AGENT_ID) AGENT_NAME, 
+	                  VIR_ACCOUNT_ID, 
+	                  BASIC_REMAINS, 
+	                  TO_CHAR(A.LAST_BASIC_CHG_DT,'YYYY-MM-DD') LAST_BASIC_CHG_DT,
+	                  TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD') BASIC_EXPIRE, 
+	                  TO_CHAR(BASIC_EMPT_DT, 'YYYY-MM-DD') BASIC_EMPT_DT, 
+	                  TO_CHAR(A.ENTER_DATE, 'YYYY-MM-DD HH24:MI:SS') ENTER_DATE, 
+	                  LANG_CODE, 
+	                  AD_NATION, 
+	                  DECODE(AD_NATION,'','미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', AD_NATION)) AD_NATION_NM, 
+	                  B.CUSTOMER_ID, 
+	                  B.SUBSCRIBER_NO, 
+	                  B.SUB_STATUS, 
+	                  F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',B.SUB_STATUS) SUB_STATUS_NAME, 
+	                  USER_SSN, 
+	                  B.SUB_LINK_NAME AS SUB_LINK_NAME, 
+	                  B.MODEL_NAME AS MODEL_NAME, 
+	                  B.MODEL_ID AS MODEL_ID, 
+	                  B.BAN AS BAN, 
+	                  B.LST_COM_ACTV_DATE, 
+	                  A.CMS_CHARGE_TYPE AS CMS_CHARGE_TYPE, 
+	                  NVL(A.AGENT_SALE_ID,'-') AGENT_SALE_ID ,
+	                  NVL(FN_GET_ORGNM(AGENT_SALE_ID),'-') AGENT_SALE_NM,
+	                  TO_CHAR(A.STATUS_STOP_DT, 'YYYY-MM-DD') STATUS_STOP_DT,
+	                  NVL(D.RECHARGE_CNT, 0) RECHARGE_CNT,
+                      NVL(D.RECHARGE_SUM, 0) RECHARGE_SUM
+	            FROM PPS_CUSTOMER A, 
+	                 MSP_JUO_SUB_INFO B,
+	                 MSP_RATE_MST C,
+	                 (SELECT COUNT(*) RECHARGE_CNT, 
+                              SUM(AMOUNT) RECHARGE_SUM, 
+                              CONTRACT_NUM
+                       FROM PPS_RCG
+                       WHERE KT_RES_CODE = '0000'
+                       AND CANCEL_FLAG = 'N'
+                       GROUP BY CONTRACT_NUM
+                      ) D
+	            WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+	            	   AND A.SOC = C.RATE_CD
+	            	   AND A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+	            	   AND ENTER_DATE > TO_DATE('1900-01-01','YYYY-MM-DD') 
+	                   AND ENTER_DATE &lt; SYSDATE 
+	                   AND B.SUB_STATUS IN ('A','S')
+	                   AND C.PAY_CL_CD = 'PP'
+	                   AND A.CONTRACT_NUM NOT IN(SELECT SERVICE_ACCOUNT FROM PPS_RCG_REMOTE_REQ) 
+		 
+			 <if test="searchNm != null and searchNm != ''">
+				<choose>
+					<when test="searchType == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchNm}
+					</when>
+					<when test="searchType == 'subscriber_no'">
+						AND B.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+					</when>
+				</choose>
+			 </if>
+			 <if test="searchAgentId != null and searchAgentId != '' and searchAgentId !='-1'">
+				<choose>
+					<when test="searchAgentId == '미등록'">
+						AND A.AGENT_ID IS NULL
+					</when>
+					<otherwise>
+						AND A.AGENT_ID = #{searchAgentId}
+					</otherwise>
+				</choose>
+			</if>
+			<if test="startOpenDt != null and startOpenDt != ''">
+				AND A.ENTER_DATE >= TO_DATE(#{startOpenDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endOpenDt != null and endOpenDt != ''">
+				AND A.ENTER_DATE &lt; TO_DATE(#{endOpenDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="startStopDt != null and startStopDt != ''">
+				AND A.STATUS_STOP_DT >= TO_DATE(#{startStopDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endStopDt != null and endStopDt != ''">
+				AND A.STATUS_STOP_DT &lt; TO_DATE(#{endStopDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="startExpireDt != null and startExpireDt != ''">
+				AND A.BASIC_EXPIRE >= TO_DATE(#{startExpireDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endExpireDt != null and endExpireDt != ''">
+				AND A.BASIC_EXPIRE &lt; TO_DATE(#{endExpireDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="emptyRemains != null and emptyRemains != ''">
+				<if test="emptyRemains == 'YFlag'">
+					AND A.BASIC_REMAINS = 0
+				</if>
+				<if test="emptyRemains == 'NFlag'">
+					AND A.BASIC_REMAINS > 0
+				</if>
+			</if>
+			<if test="startRemains != null and startRemains != ''">
+				AND A.BASIC_REMAINS >= #{startRemains}
+			</if>
+			<if test="endRemains != null and endRemains != ''">
+				AND A.BASIC_REMAINS &lt;= #{endRemains}
+			</if>
+			<if test="searchFeatures != null and searchFeatures != ''">
+				AND SOC = #{searchFeatures}
+			</if>
+			<if test="subStatus != null and subStatus != ''">
+				AND B.SUB_STATUS = #{subStatus}
+			</if>
+		<include refid="com.ktis.msp.cmn.include.paging-end2" />	    
+    </select>       
+    
+    <!-- 일괄충전 -->
+	<select id="ppsRcgBatch"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_RCG_BATCH (#{opCode, jdbcType=VARCHAR},#{contractNumArr, jdbcType=VARCHAR}, #{reqType, jdbcType=VARCHAR}, #{paramCnt, jdbcType=VARCHAR}, #{recharge, jdbcType=VARCHAR}, #{title, jdbcType=VARCHAR},#{ip, jdbcType=VARCHAR}, #{adminId, jdbcType=VARCHAR},
+		 #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR},
+		 #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+			)
+	     }
+	</select>
+	
+		<!--일괄충전 고객조회 엑셀저장 -->
+	<select id="getRcgBatchSearchMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">   
+    	
+              SELECT  NVL(B.CONTRACT_NUM,0)  CONTRACTNUM, 
+	                  NVL(B.BAN,'-') AS CUSTOMERBAN, 
+	                  NVL(A.SOC,'-') SOC, 
+	                  NVL(AD_SSN,'-') ADSSN,	                
+	                  NVL((SELECT RATE_NM SERVICE_NM FROM MSP_RATE_MST WHERE RATE_CD = SOC and rownum = 1),'-') SERVICENAME,
+	                  NVL(A.SERVICE_TYPE,'-') SERVICETYPE, 
+	                  NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER','SERVICE_TYPE',A.SERVICE_TYPE),'-') SERVICETYPENAME, 
+	                  NVL(PAPER_IMAGE_1,'-') PAPERIMAGE1, 
+	                  NVL(PAPER_IMAGE_2,'-') PAPERIMAGE2, 
+	                  NVL(PAPER_IMAGE_3,'-') PAPERIMAGE3, 
+	                  NVL(PAPER_IMAGE_4,'-') PAPERIMAGE4, 
+	                  NVL(PAPER_IMAGE_5,'-') PAPERIMAGE5, 
+	                  DECODE(paper_Image_1,'','X','O' ) || DECODE(paper_Image_2,'','X','O' ) || DECODE(paper_Image_3,'','X','O' ) || DECODE(paper_Image_4,'','X','O' ) || DECODE(paper_Image_5,'','X','O' ) AS PAPERIMAGE, 
+	                  NVL(AGENT_ID, '-') AGENTID, 
+	                  NVL(FN_GET_ORGNM(AGENT_ID),'-') AGENTNAME, 
+	                  NVL(VIR_ACCOUNT_ID,'-') VIRACCOUNTID, 
+	                  NVL(BASIC_REMAINS,0) BASICREMAINS, 
+	                  NVL(TO_CHAR(A.LAST_BASIC_CHG_DT,'YYYY-MM-DD'),'-') LASTBASICCHGDT,
+	                  NVL(TO_CHAR(BASIC_EXPIRE, 'YYYY-MM-DD'),'-') BASICEXPIRE, 
+	                  NVL(TO_CHAR(BASIC_EMPT_DT, 'YYYY-MM-DD'),'-') BASICEMPTDT, 
+	                  NVL(TO_CHAR(A.ENTER_DATE, 'YYYY-MM-DD HH24:MI:SS'),'-') ENTERDATE, 
+	                  NVL(LANG_CODE,'-') LANGCODE, 
+	                  NVL(AD_NATION,'-') ADNATION, 
+	                  DECODE(AD_NATION,'','미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', AD_NATION)) ADNATIONNM, 
+	                  NVL(B.CUSTOMER_ID,'-') CUSTOMERID, 
+	                  NVL(B.SUBSCRIBER_NO,'-') SUBSCRIBERNO, 
+	                  NVL(B.SUB_STATUS,'-') SUBSTATUS, 
+	                  NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER','SUB_STATUS',B.SUB_STATUS),'-') SUBSTATUSNAME, 
+	                  NVL(USER_SSN,'-') USERSSN, 
+	                  NVL(B.SUB_LINK_NAME,'-') AS SUBLINKNAME, 
+	                  NVL(B.MODEL_NAME,'-') AS MODELNAME, 
+	                  NVL(B.MODEL_ID,'-') AS MODELID, 
+	                  NVL(B.BAN,'-') AS BAN, 
+	                  NVL(B.LST_COM_ACTV_DATE,'-') LSTCOMACTVDATE, 
+	                  NVL(A.CMS_CHARGE_TYPE,'-') AS CMSCHARGETYPE, 
+	                  NVL(A.AGENT_SALE_ID,'-') AGENTSALEID ,
+	                  NVL(FN_GET_ORGNM(AGENT_SALE_ID),'-') AGENTSALENM,
+	                  NVL(TO_CHAR(A.STATUS_STOP_DT, 'YYYY-MM-DD'),'-') STATUSSTOPDT,
+	                  NVL(D.RECHARGE_CNT, 0) RECHARGE_CNT,
+                      NVL(D.RECHARGE_SUM, 0) RECHARGE_SUM
+	            FROM PPS_CUSTOMER A, 
+	                 MSP_JUO_SUB_INFO B,
+	                 MSP_RATE_MST C,
+	                 (SELECT COUNT(*) RECHARGE_CNT, 
+                              SUM(AMOUNT) RECHARGE_SUM, 
+                              CONTRACT_NUM
+                       FROM PPS_RCG
+                       WHERE KT_RES_CODE = '0000'
+                       AND CANCEL_FLAG = 'N'
+                       GROUP BY CONTRACT_NUM
+                      ) D
+	            WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+	            	   AND A.SOC = C.RATE_CD  
+	            	   AND A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+	            	   AND ENTER_DATE > TO_DATE('1900-01-01','YYYY-MM-DD') 
+	                   AND ENTER_DATE &lt; SYSDATE 
+	                   AND B.SUB_STATUS IN ('A','S')
+	                   AND C.PAY_CL_CD = 'PP'
+	                   AND A.CONTRACT_NUM NOT IN(SELECT SERVICE_ACCOUNT FROM PPS_RCG_REMOTE_REQ) 
+		 
+			 <if test="searchNm != null and searchNm != ''">
+				<choose>
+					<when test="searchType == 'contract_num'">
+						AND A.CONTRACT_NUM = #{searchNm}
+					</when>
+					<when test="searchType == 'subscriber_no'">
+						AND B.CONTRACT_NUM = (select F_GET_LIKE_CTN2_CONTRACT_NUM(#{searchNm}) from dual)
+					</when>
+				</choose>
+			 </if>
+			 <if test="searchAgentId != null and searchAgentId != '' and searchAgentId !='-1'">
+				<choose>
+					<when test="searchAgentId == '미등록'">
+						AND A.AGENT_ID IS NULL
+					</when>
+					<otherwise>
+						AND A.AGENT_ID = #{searchAgentId}
+					</otherwise>
+				</choose>
+			</if>
+			<if test="startOpenDt != null and startOpenDt != ''">
+				AND A.ENTER_DATE >= TO_DATE(#{startOpenDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endOpenDt != null and endOpenDt != ''">
+				AND A.ENTER_DATE &lt; TO_DATE(#{endOpenDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="startStopDt != null and startStopDt != ''">
+				AND A.STATUS_STOP_DT >= TO_DATE(#{startStopDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endStopDt != null and endStopDt != ''">
+				AND A.STATUS_STOP_DT &lt; TO_DATE(#{endStopDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="startExpireDt != null and startExpireDt != ''">
+				AND A.BASIC_EXPIRE >= TO_DATE(#{startExpireDt}, 'YYYY-MM-DD')
+			</if>
+			<if test="endExpireDt != null and endExpireDt != ''">
+				AND A.BASIC_EXPIRE &lt; TO_DATE(#{endExpireDt}, 'YYYY-MM-DD')+1
+			</if>
+			<if test="emptyRemains != null and emptyRemains != ''">
+				<if test="emptyRemains == 'YFlag'">
+					AND A.BASIC_REMAINS = 0
+				</if>
+				<if test="emptyRemains == 'NFlag'">
+					AND A.BASIC_REMAINS > 0
+				</if>
+			</if>
+			<if test="startRemains != null and startRemains != ''">
+				AND A.BASIC_REMAINS >= #{startRemains}
+			</if>
+			<if test="endRemains != null and endRemains != ''">
+				AND A.BASIC_REMAINS &lt;= #{endRemains}
+			</if>
+			<if test="searchFeatures != null and searchFeatures != ''">
+				AND SOC = #{searchFeatures}
+			</if>
+			<if test="subStatus != null and subStatus != ''">
+				AND B.SUB_STATUS = #{subStatus}
+			</if>
+		
+    </select>
+    
+    <!-- 가상계좌관리 - 가상계좌회수 -->
+	<select id="ppsRcgVacReset"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{CALL P_VAC (#{opCode, jdbcType=VARCHAR}, #{opMode, jdbcType=VARCHAR}, #{userType, jdbcType=VARCHAR}, #{reqBankName, jdbcType=VARCHAR}, #{userNumber, jdbcType=VARCHAR}, #{adminId, jdbcType=VARCHAR},
+		 #{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR},
+		 #{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+			)
+	     }
+	</select>
+	
+	<!-- 가상계좌관리 - 가상계좌회수 -->
+	<select id="ppsRcgCancel"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{call p_rcg_bill(
+				    #{opCode, jdbcType=VARCHAR}
+				    , #{seq, jdbcType=VARCHAR}
+				    , #{reqType, jdbcType=VARCHAR}
+				    , #{subscriberNo, jdbcType=VARCHAR}
+				    , #{recharge, jdbcType=VARCHAR}
+				    , #{rechargeInfo, jdbcType=VARCHAR}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+				    , #{ip, jdbcType=VARCHAR}
+				    , #{dataVaId, jdbcType=VARCHAR}
+				    , #{topupGubun, jdbcType=VARCHAR}
+				   ,#{seq, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!--대리점정보조회 -->
+    <select id="getAgentInfo" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">         
+      	  SELECT	
+	  		  AGENT_ID,
+	  		  NVL(FN_GET_ORGNM(AGENT_ID), '') AGENT_NM, 
+			  NVL(DEPOSIT, 0) DEPOSIT,
+			  NVL(VIR_ACCOUNT_ID, '') VIR_ACCOUNT_ID,
+		   	  NVL(F_GET_VAC_BANK_NAME(VIR_ACCOUNT_ID),'') VIR_BANK_NM
+		  FROM PPS_AGENT A 
+	 	  WHERE AGENT_ID = #{agentId}
+    </select>
+    
+    <!-- 대리점예치금조정 -->
+	<select id="goPpsDepositModify"  statementType="CALLABLE"  parameterType="java.util.Map"  resultType="java.util.Map">
+		{call P_AGENT_DEPOSIT(
+				    #{opCode, jdbcType=VARCHAR}
+				    , #{agentId, jdbcType=VARCHAR}
+				    , #{depositType, jdbcType=VARCHAR}
+				    , #{plusDeposit, jdbcType=VARCHAR}
+				    , #{remark, jdbcType=VARCHAR}
+				    , #{adminId, jdbcType=VARCHAR}
+				   ,#{oRetCd, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				   ,#{oRetMsg, mode=OUT, javaType=string, jdbcType=VARCHAR}
+				  )
+	     }
+	</select>
+	
+	<!--일괄충전내역 목록조회 -->
+    <select id="getRcgBatchInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         		SELECT BATCH_SEQ,
+				        REQ_TYPE,
+				        REQ_CNT,
+				        AMOUNT,
+				        RECHARGE_INFO,
+				        TITLE,
+				        REC_DT,
+				        ADMIN_ID,
+				        ADMIN_NM,
+				        LAST_BATCH_DT,
+				        DELAY_CNT,
+				        SUCC_CNT,
+				        FAIL_CNT
+				FROM(
+	         		SELECT /*+ INDEX_DESC(A PPS_RCG_BATCH_IDX) */
+					        BATCH_SEQ,
+					        REQ_TYPE,
+					        REQ_CNT,
+					        AMOUNT,
+					        RECHARGE_INFO,
+					        TITLE,
+					        TO_CHAR(REC_DT, 'YYYY-MM-DD HH24:MI:SS') REC_DT,
+					        ADMIN_ID,
+					        F_GET_ADMIN_NM(ADMIN_ID) ADMIN_NM,
+					        TO_CHAR(LAST_BATCH_DT, 'YYYY-MM-DD HH24:MI:SS') LAST_BATCH_DT,
+					        (SELECT COUNT(*) FROM PPS_RCG_REMOTE_REQ WHERE BATCH_SEQ = A.BATCH_SEQ) DELAY_CNT,
+					        (SELECT COUNT(*) FROM PPS_RCG_REMOTE_REQ_LOG WHERE BATCH_SEQ = A.BATCH_SEQ AND RECORD_DATE >= TRUNC(A.REC_DT) AND IN_REQ_CD = '0000' AND IN_RES_CD = '0000') SUCC_CNT,
+					        (SELECT COUNT(*) FROM PPS_RCG_REMOTE_REQ_LOG WHERE BATCH_SEQ = A.BATCH_SEQ AND RECORD_DATE >= TRUNC(A.REC_DT) AND (IN_REQ_CD &lt;> '0000' OR (IN_RES_CD &lt;> '0000' AND IN_RES_CD IS NOT NULL)) ) FAIL_CNT
+					FROM PPS_RCG_BATCH A
+					WHERE REC_DT > TO_DATE('20100101', 'YYYY-MM-DD')
+					<if test="searchNm != null and searchNm != ''">
+			  			<if test="searchType == 'admin_id'">
+							AND ADMIN_ID = #{searchNm}
+						</if>
+					</if>
+					
+					<if test="startDt != null and startDt != ''">
+						AND REC_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+					</if>
+					<if test="endDt != null and endDt != ''">
+						AND REC_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+					</if>
+				)
+				WHERE 1=1
+				<if test="searchSuccFlag != null and searchSuccFlag != ''">
+					<choose>
+						<when test='searchSuccFlag == "Y"'>
+							AND SUCC_CNT = REQ_CNT
+						</when>
+						<when test='searchSuccFlag == "N"'>
+							AND FAIL_CNT > 0
+						</when>
+					</choose>
+				</if>
+				
+				<if test="searchContinueFlag != null and searchContinueFlag != ''">
+					<choose>
+						<when test="searchContinueFlag == 'SUCC'">
+							AND DELAY_CNT = 0
+						</when>
+						<when test="searchContinueFlag == 'CONTINUE'">
+							AND DELAY_CNT > 0
+						</when>
+					</choose>
+				</if>
+
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--일괄충전내역 목록조회엑셀출력 -->
+    <select id="getRcgBatchInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+     
+       		SELECT 		NVL(BATCH_SEQ, 0) BATCHSEQ,
+				        NVL(REQ_TYPE, '-') REQTYPE,
+				        NVL(REQ_CNT, 0) REQCNT,
+				        NVL(AMOUNT, 0) AMOUNT,
+				        NVL(RECHARGE_INFO, '-') RECHARGEINFO,
+				        NVL(TITLE, '-') TITLE,
+				        NVL(REC_DT, '-') RECDT,
+				        NVL(ADMIN_ID, '-') ADMINID,
+				        NVL(ADMIN_NM, '-') ADMINNM,
+				        NVL(LAST_BATCH_DT, '-') LASTBATCHDT,
+				        DELAY_CNT DELAYCNT,
+				        SUCC_CNT SUCCCNT,
+				        FAIL_CNT FAILCNT
+				FROM(
+	         		SELECT /*+ INDEX_DESC(A PPS_RCG_BATCH_IDX) */
+					        BATCH_SEQ,
+					        REQ_TYPE,
+					        REQ_CNT,
+					        AMOUNT,
+					        RECHARGE_INFO,
+					        TITLE,
+					        TO_CHAR(REC_DT, 'YYYY-MM-DD HH24:MI:SS') REC_DT,
+					        ADMIN_ID,
+					        F_GET_ADMIN_NM(ADMIN_ID) ADMIN_NM,
+					        TO_CHAR(LAST_BATCH_DT, 'YYYY-MM-DD HH24:MI:SS') LAST_BATCH_DT,
+					        (SELECT COUNT(*) FROM PPS_RCG_REMOTE_REQ WHERE BATCH_SEQ = A.BATCH_SEQ) DELAY_CNT,
+					        (SELECT COUNT(*) FROM PPS_RCG_REMOTE_REQ_LOG WHERE BATCH_SEQ = A.BATCH_SEQ AND RECORD_DATE >= TRUNC(A.REC_DT) AND IN_REQ_CD = '0000' AND IN_RES_CD = '0000') SUCC_CNT,
+					        (SELECT COUNT(*) FROM PPS_RCG_REMOTE_REQ_LOG WHERE BATCH_SEQ = A.BATCH_SEQ AND RECORD_DATE >= TRUNC(A.REC_DT) AND (IN_REQ_CD &lt;> '0000' OR (IN_RES_CD &lt;> '0000' AND IN_RES_CD IS NOT NULL)) ) FAIL_CNT
+					FROM PPS_RCG_BATCH A
+					WHERE REC_DT > TO_DATE('20100101', 'YYYY-MM-DD')
+					<if test="searchNm != null and searchNm != ''">
+						<if test="searchType == 'admin_id'">
+							AND ADMIN_ID = #{searchNm}
+						</if>
+					</if>
+					
+					<if test="startDt != null and startDt != ''">
+						AND REC_DT >= TO_DATE(#{startDt}, 'YYYY-MM-DD')
+					</if>
+					<if test="endDt != null and endDt != ''">
+						AND REC_DT &lt; TO_DATE(#{endDt}, 'YYYY-MM-DD')+1
+					</if>
+				)
+				WHERE 1=1
+				<if test="searchSuccFlag != null and searchSuccFlag != ''">
+					<choose>
+						<when test='searchSuccFlag == "Y"'>
+							AND SUCC_CNT = REQ_CNT
+						</when>
+						<when test='searchSuccFlag == "N"'>
+							AND FAIL_CNT > 0
+						</when>
+					</choose>
+				</if>
+				
+				<if test="searchContinueFlag != null and searchContinueFlag != ''">
+					<choose>
+						<when test="searchContinueFlag == 'SUCC'">
+							AND DELAY_CNT = 0
+						</when>
+						<when test="searchContinueFlag == 'CONTINUE'">
+							AND DELAY_CNT > 0
+						</when>
+					</choose>
+				</if>
+             
+	    
+    </select>
+    
+    <!--ATM충전내역 목록조회 -->
+    <select id="getRcgFtpAtmRcgInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         		SELECT /*+ INDEX_DESC(A PPS_KT_FTP_ATM_RCG_IDX1) */
+						TO_CHAR(TO_DATE(TR_TIME, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') TR_TIME,
+						CONTRACT_NUM, 
+						REQ_TEL_NO,
+						PAY_CODE,
+						F_GET_KT_CODE_NM('KT_FTP_ATM_RCG', 'PAY_CODE', PAY_CODE) PAY_CODE_NM,
+						REFILL_CHARGE,
+						STATUS, 
+						DECODE(STATUS, '99', '충전성공', '충전실패') STATUS_NM,
+						R_CODE, 
+						F_GET_KT_CODE_NM('PPS_KT_FTP_ATM_RCG', 'R_CODE', R_CODE) R_CODE_NM,
+						PRE_BALANCE,
+						POST_BALANCE,
+						TO_CHAR(TO_DATE(PRE_BAL_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') PRE_BAL_DATE,
+						TO_CHAR(TO_DATE(POST_BAL_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') POST_BAL_DATE,
+						PIN_NO,
+						TR_NO,
+						NH_CODE,
+						CA_NAME,
+						PROC_RET_CD,
+						PROC_RET_MSG,
+						TO_CHAR(RECORD_DATE, 'YY/MM/DD HH24:MI') RECORD_DATE
+				FROM PPS_KT_FTP_ATM_RCG A 
+				WHERE 1=1
+				
+		  		<if test="searchNm != null and searchNm != ''">
+				  	<choose>
+						<when test="searchType == 'contract_num'">
+							AND CONTRACT_NUM = #{searchNm}
+						</when>
+						<when test="searchType == 'pin_no'">
+							AND PIN_NO = #{searchNm}
+						</when>
+						<when test="searchType == 'req_tel_no'">
+							AND REQ_TEL_NO = #{searchNm}
+						</when>
+						<when test="searchType == 'tr_no'">
+							AND TR_NO = #{searchNm}
+						</when>
+					</choose>
+				</if>
+				
+				<if test="startDt != null and startDt != ''">
+					AND TR_TIME >= REPLACE(#{startDt}, '-', '')
+				</if>
+				
+				<if test="endDt != null and endDt != ''">
+					AND TR_TIME &lt;= REPLACE(#{endDt} || '999999', '-', '')
+				</if>
+				
+				<if test="searchStatus != null and searchStatus != ''">
+					<choose>
+						<when test='searchStatus == "99"'>
+							AND STATUS = '99'
+						</when>
+						<otherwise>
+							AND STATUS &lt;> '99'
+						</otherwise>
+					</choose>
+				</if>
+				
+				<if test="searchProcRetCd != null and searchProcRetCd != ''">
+					<choose>
+						<when test='searchProcRetCd == "Y"'>
+							AND PROC_RET_CD = '0000'
+						</when>
+						<otherwise>
+							AND PROC_RET_CD &lt;> '0000'
+						</otherwise>
+					</choose>
+				</if>
+				
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--ATM충전내역 목록조회엑셀출력 -->
+    <select id="getRcgFtpAtmRcgInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+     
+       		SELECT /*+ INDEX_DESC(A PPS_KT_FTP_ATM_RCG_IDX1) */
+					NVL(TO_CHAR(TO_DATE(TR_TIME, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS'), '-') TR_TIME,
+					NVL(CONTRACT_NUM, '-') CONTRACT_NUM, 
+					NVL(REQ_TEL_NO, '-') SUBSCRIBER_NO,
+					NVL(PAY_CODE, '-') PAY_CODE,
+					NVL(F_GET_KT_CODE_NM('KT_FTP_ATM_RCG', 'PAY_CODE', PAY_CODE), '-') PAY_CODE_NM,
+					NVL(REFILL_CHARGE, 0) REFILL_CHARGE,
+					NVL(STATUS, '-') STATUS, 
+					NVL(DECODE(STATUS, '99', '충전성공', '충전실패'), '-') STATUS_NM,
+					NVL(R_CODE, '-') R_CODE, 
+					NVL(F_GET_KT_CODE_NM('PPS_KT_FTP_ATM_RCG', 'R_CODE', R_CODE), '-') R_CODE_NM,
+					NVL(PRE_BALANCE, 0) PRE_BALANCE,
+					NVL(POST_BALANCE, 0) POST_BALANCE,
+					NVL(TO_CHAR(TO_DATE(PRE_BAL_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'), '-') PRE_BAL_DATE,
+					NVL(TO_CHAR(TO_DATE(POST_BAL_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'), '-') POST_BAL_DATE,
+					NVL(PIN_NO, '-') PIN_NO,
+					NVL(TR_NO, '-') TR_NO,
+					NVL(NH_CODE, '-') NH_CODE,
+					NVL(CA_NAME, '-') CA_NAME,
+					NVL(PROC_RET_CD, '-') CA_NAME,
+					NVL(PROC_RET_MSG, '-') PROC_RET_MSG,
+					NVL(TO_CHAR(RECORD_DATE, 'YY/MM/DD HH24:MI'), '-') RECORD_DATE
+			FROM PPS_KT_FTP_ATM_RCG A 
+			WHERE 1=1
+
+			<if test="searchNm != null and searchNm != ''">
+				<choose>
+					<when test="searchType == 'contract_num'">
+						AND CONTRACT_NUM = #{searchNm}
+					</when>
+					<when test="searchType == 'pin_no'">
+						AND PIN_NO = #{searchNm}
+					</when>
+					<when test="searchType == 'req_tel_no'">
+						AND REQ_TEL_NO = #{searchNm}
+					</when>
+					<when test="searchType == 'tr_no'">
+						AND TR_NO = #{searchNm}
+					</when>
+				</choose>
+			</if>
+			
+			<if test="startDt != null and startDt != ''">
+				AND TR_TIME >= REPLACE(#{startDt}, '-', '')
+			</if>
+			
+			<if test="endDt != null and endDt != ''">
+				AND TR_TIME &lt;= REPLACE(#{endDt} || '999999', '-', '')
+			</if>
+			
+			<if test="searchStatus != null and searchStatus != ''">
+				<choose>
+					<when test='searchStatus == "99"'>
+						AND STATUS = '99'
+					</when>
+					<otherwise>
+						AND STATUS &lt;> '99'
+					</otherwise>
+				</choose>
+			</if>
+			
+			<if test="searchProcRetCd != null and searchProcRetCd != ''">
+				<choose>
+					<when test='searchProcRetCd == "Y"'>
+						AND PROC_RET_CD = '0000'
+					</when>
+					<otherwise>
+						AND PROC_RET_CD &lt;> '0000'
+					</otherwise>
+				</choose>
+			</if>
+	    
+    </select>
+         
+</mapper>

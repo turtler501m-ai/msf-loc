@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rsk.statMgmt.mapper.StatMgmtMapper">
+	
+	<sql id="getBillItemMgmt">
+		SELECT  A.BILL_ITEM_CD
+		        , A.ITEM_CD_NM
+		        , A.APPL_STRT_DT
+		        , A.APPL_END_DT
+		        , A.KT_INV_CD
+		        , FN_GET_CODENM('CLS0044', A.KT_INV_CD) AS KT_INV_CD_NM
+		        , A.KT_INV_RATE
+		        , A.ACNT_TP
+		        , FN_GET_CODENM('CLS0042', A.ACNT_TP) AS ACNT_TP_NM
+		        , A.STTL_ITM_CD
+		        , FN_GET_CODENM('CLS0043', A.STTL_ITM_CD) AS STTL_ITM_CD_NM
+		        , FN_GET_USRNM(A.REGST_ID) AS REGST_NM
+		        , TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS') AS REGST_DTTM
+		        , FN_GET_USRNM(A.RVISN_ID) AS RVISN_NM
+		        , TO_CHAR(A.RVISN_DTTM, 'YYYYMMDDHH24MISS') AS RVISN_DTTM
+		FROM    MSP_BILL_ITM_INFO A
+		WHERE   #{stdrDt} BETWEEN A.APPL_STRT_DT AND A.APPL_END_DT
+		<if test="searchVal != null and searchVal != ''">
+			AND ( A.BILL_ITEM_CD LIKE '%' || UPPER(#{searchVal}) || '%' OR A.ITEM_CD_NM LIKE '%' || UPPER(#{searchVal}) || '%' )
+		</if>
+		<if test="acntTp != null and acntTp != ''">
+			AND A.ACNT_TP = #{acntTp}
+		</if>
+	</sql>
+	
+	<select id="getBillItemMgmtList" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" 
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* statMgmtMapper.getBillItemMgmtList */
+		
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getBillItemMgmt" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+		
+	</select>
+	
+	<select id="getBillItemMgmtListExcel" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" 
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* statMgmtMapper.getBillItemMgmtListExcel */
+		
+		<include refid="getBillItemMgmt" />
+		
+	</select>
+	
+	<insert id="insertBillItmInfo" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO">
+		/* statMgmtMapper.insertBillItmInfo */
+		INSERT INTO MSP_BILL_ITM_INFO (
+			BILL_ITEM_CD
+			, ITEM_CD_NM
+			, APPL_STRT_DT
+			, APPL_END_DT
+			, KT_INV_CD
+			, KT_INV_RATE
+			, ACNT_TP
+			, STTL_ITM_CD
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			UPPER(#{billItemCd, jdbcType=VARCHAR})
+			, UPPER(#{itemCdNm, jdbcType=VARCHAR})
+			, #{applStrtDt, jdbcType=VARCHAR}
+			, NVL(#{applEndDt, jdbcType=VARCHAR}, '99991231')
+			, #{ktInvCd, jdbcType=VARCHAR}
+			, #{ktInvRate, jdbcType=FLOAT}
+			, #{acntTp, jdbcType=VARCHAR}
+			, #{sttlItmCd, jdbcType=VARCHAR}
+			, #{sessionUserId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{sessionUserId, jdbcType=VARCHAR}
+			, SYSDATE
+		)
+	</insert>
+	
+	<update id="updateBillItmInfo" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO">
+		/* statMgmtMapper.updateBillItemInfo */
+		UPDATE  MSP_BILL_ITM_INFO
+		SET     RVISN_ID = #{sessionUserId}
+		        , RVISN_DTTM = SYSDATE
+		        <if test="itemCdNm != null and itemCdNm != ''">, ITEM_CD_NM = #{itemCdNm} </if>
+		        <if test="acntTp != null and acntTp != ''">, ACNT_TP = #{acntTp} </if>
+		        <if test="sttlItmCd != null and sttlItmCd != ''">, STTL_ITM_CD = #{sttlItmCd} </if>
+		        <if test="applEndDt != null and applEndDt != ''">, APPL_END_DT = TO_CHAR(TO_DATE(#{applStrtDt}, 'YYYYMMDD') - 1, 'YYYYMMDD') </if>
+		WHERE   BILL_ITEM_CD = #{billItemCd}
+		AND     APPL_END_DT = #{applEndDt}
+	</update>
+	
+	<select id="getBillItmChk" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" resultType="Integer">
+		/* statMgmtMapper.getBillItmChk */
+		SELECT  COUNT(1) CHK
+		FROM    MSP_BILL_ITM_INFO
+		WHERE   BILL_ITEM_CD = #{billItemCd}
+		AND     APPL_END_DT <![CDATA[ <= ]]> #{applEndDt}
+		AND     APPL_STRT_DT <![CDATA[ >= ]]> #{applStrtDt}
+	</select>
+	
+	<!-- 청구수납자료조회시 기간 체크 -->
+	<select id="getInvPymPrdCheck" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" resultType="int">
+		/* statMgmtMapper.getInvPymPrdCheck */
+		SELECT COUNT(1) CNT FROM DUAL
+		WHERE   TO_CHAR(ADD_MONTHS(TO_DATE(#{endYm}, 'YYYYMM'), -60), 'YYYYMM') <![CDATA[ < ]]> #{strtYm}
+	</select>
+	
+	<!-- 청구수납자료조회 -->
+	<select id="getInvPymDataList" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" 
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* statMgmtMapper.getInvPymDataList */
+		
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		SELECT  B.CONTRACT_NUM
+		        , A.OPEN_DT
+		        , A.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS_NM
+		        , FN_GET_CODENM('CMN0032', A.LST_PAY_CL_CD) AS PPPO
+		        , A.AGRM_MNTH_CNT AS ENGG_MNTH_CNT
+		        , A.LST_RATE_CD AS RATE_CD
+		        , ( SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.LST_RATE_CD AND ROWNUM = 1 ) AS RATE_NM
+		        , #{strtYm} || '~' || #{endYm} AS BILL_YM
+		        , B.INV_AMNT
+		        , B.PYM_AMNT
+		        , B.INV_AMNT - B.PYM_AMNT AS UNPD_AMNT
+		        , CASE
+		            WHEN B.INV_AMNT = 0 THEN 0
+		            ELSE ROUND(( B.INV_AMNT - B.PYM_AMNT ) / B.INV_AMNT * 100, 1)
+		        END AS UNPD_RATIO
+		        , CASE WHEN B.INV_AMNT - B.PYM_AMNT > 0 THEN 'Y' ELSE 'N' END AS UNPD_YN 
+		FROM    MSP_DAILY_CLOSE_STTC A
+		    , ( SELECT  A.CRT_YM
+		                , A.CONTRACT_NUM
+		                , SUM(A.INV_AMNT) AS INV_AMNT
+		                , SUM(A.PYM_AMNT) AS PYM_AMNT
+		        FROM    MSP_INV_PYM_ACNT_DATA A
+		        WHERE   A.CRT_YM = #{trgtYm}
+		        AND     A.BILL_YM BETWEEN #{strtYm} AND #{endYm}
+		        GROUP BY A.CRT_YM, A.CONTRACT_NUM
+		    ) B
+		WHERE   B.CONTRACT_NUM = A.CONTRACT_NUM(+)
+		<if test="contractNum != null and contractNum != ''">
+			AND B.CONTRACT_NUM = #{contractNum}
+		</if>
+		<if test="pppo != null and pppo != ''">
+			AND A.LST_PAY_CL_CD = #{pppo}
+		</if>
+		<if test="unpdYn != null and unpdYn == 1">
+			AND B.INV_AMNT - B.PYM_AMNT > 0
+		</if>
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 생성중 자료있는지 확인 -->
+	<select id="getInvPymDataCheck" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" resultType="int">
+		/* statMgmtMapper.getInvPymDataCheck */
+		SELECT  COUNT(1) AS CNT 
+		FROM    CLS_SCHD_LOG 
+		WHERE   SCHD_ID = 'INVPYMDATA' 
+		AND     PARAM = #{sessionUserId} || '-' || #{trgtYm} || '-' || #{strtYm} || '-' || #{endYm} 
+		AND     PROC_STAT_CD = 'P'
+	</select>
+	
+	<!-- 청구수납자료엑셀요청 -->
+	<insert id="callInvPymData" statementType="CALLABLE" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO">
+		{ CALL P_ACNT_DATA_PROC(
+						#{trgtYm, jdbcType=VARCHAR}
+						, #{strtYm, jdbcType=VARCHAR}
+						, #{endYm, jdbcType=VARCHAR}
+						, #{sessionUserId, jdbcType=VARCHAR}
+			) }
+	</insert>
+	
+	<!-- 생성된 청구수납자료 조회 -->
+	<select id="getInvPymDataListExcel" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* statMgmtMapper.getInvPymDataListExcel */
+		SELECT  REGST_ID
+		        , TRGT_YM
+		        , STRT_YM
+		        , END_YM
+		        , STRT_YM || '~' || END_YM AS BILL_YM
+		        , CONTRACT_NUM
+		        , OPEN_DT
+		        , FN_GET_CODENM('MSP0003', SUB_STATUS) AS SUB_STATUS_NM
+		        , FN_GET_CODENM('CMN0032', PPPO) AS PPPO
+		        , ENGG_MNTH_CNT
+		        , RATE_NM
+		        , INV_AMNT
+		        , PYM_AMNT
+		        , UNPD_AMNT
+		        , UNPD_RATIO || '%' AS UNPD_RATIO
+		        , UNPD_YN
+		        , COL_001, COL_002, COL_003, COL_004, COL_005, COL_006, COL_007, COL_008, COL_009, COL_010
+		        , COL_011, COL_012, COL_013, COL_014, COL_015, COL_016, COL_017, COL_018, COL_019, COL_020
+		        , COL_021, COL_022, COL_023, COL_024, COL_025, COL_026, COL_027, COL_028, COL_029, COL_030
+		        , COL_031, COL_032, COL_033, COL_034, COL_035, COL_036, COL_037, COL_038, COL_039, COL_040
+		        , COL_041, COL_042, COL_043, COL_044, COL_045, COL_046, COL_047, COL_048, COL_049, COL_050
+		        , COL_051, COL_052, COL_053, COL_054, COL_055, COL_056, COL_057, COL_058, COL_059, COL_060
+		        , COL_061, COL_062, COL_063, COL_064, COL_065, COL_066, COL_067, COL_068, COL_069, COL_070
+		        , COL_071, COL_072, COL_073, COL_074, COL_075, COL_076, COL_077, COL_078, COL_079, COL_080
+		        , COL_081, COL_082, COL_083, COL_084, COL_085, COL_086, COL_087, COL_088, COL_089, COL_090
+		        , COL_091, COL_092, COL_093, COL_094, COL_095, COL_096, COL_097, COL_098, COL_099, COL_100
+		        , COL_101, COL_102, COL_103, COL_104, COL_105, COL_106, COL_107, COL_108, COL_109, COL_110
+		        , COL_111, COL_112, COL_113, COL_114, COL_115, COL_116, COL_117, COL_118, COL_119, COL_120
+		FROM    TMP_INV_PYM_DATA
+		WHERE   REGST_ID = #{sessionUserId}
+		AND     TRGT_YM = #{trgtYm}
+		AND     STRT_YM = #{strtYm}
+		AND     END_YM = #{endYm}
+	</select>
+	
+	<select id="getMblphnNum" parameterType="String" resultType="String">
+		SELECT MBLPHN_NUM FROM CMN_USR_MST WHERE USR_ID = #{userId}
+	</select>
+	
+	<sql id="getUsgAmntStatOrg">
+		SELECT  B.CONTRACT_NUM                                                   AS contractNum
+				, B.SUB_LINK_NAME                                                AS custNm
+				, B.SUBSCRIBER_NO                                                AS subscriberNo
+				, B.SUB_STATUS                                                   AS subStatus
+				, FN_GET_CODENM('MSP0003', B.SUB_STATUS)                         AS subStatusNm
+				, B.LST_COM_ACTV_DATE                                            AS openDt
+				, DECODE(B.SUB_STATUS, 'C', SUBSTR(B.SUB_STATUS_DATE, 1, 8), '') AS tmntDt
+				, B.OPEN_AGNT_CD                                                 AS openAgntCd
+				, FN_GET_ORGNM(B.OPEN_AGNT_CD)                                   AS openAgntNm
+				, A.VC_USG_AMNT  + A.SC_USG_AMNT                                 AS callUsgAmnt
+				, A.VC_FREE_AMNT + A.SC_FREE_AMNT                                AS callFreeAmnt
+				, A.VC_OVER_AMNT + A.SC_OVER_AMNT                                AS callOverAmnt
+				, A.SMS_USG_CNT  + A.MMS_USG_CNT  + A.LMS_USG_CNT                AS charUsgCnt
+				, A.SMS_FREE_CNT + A.MMS_FREE_CNT + A.LMS_FREE_CNT               AS charFreeCnt
+				, A.SMS_OVER_CNT + A.MMS_OVER_CNT + A.LMS_OVER_CNT               AS charOverCnt
+				, ROUND(A.DATA_USG_AMNT  * 512 / 1024 / 1024, 2)                 AS dataUsgAmnt
+				, ROUND(A.DATA_FREE_AMNT * 512 / 1024 / 1024, 2)                 AS dataFreeAmnt
+				, ROUND(A.DATA_OVER_AMNT * 512 / 1024 / 1024, 2)                 AS dataOverAmnt
+				, A.ROAM_USG_AMNT                                                AS roamUsgAmnt
+				, A.ROAM_FREE_AMNT                                               AS roamFreeAmnt
+				, A.ROAM_OVER_AMNT                                               AS roamOverAmnt
+		FROM    MSP_USG_AMNT_STTC A
+				, MSP_JUO_SUB_INFO B
+		WHERE   A.USG_YM = #{usgYm}
+		AND     SUBSTR(B.LST_COM_ACTV_DATE,1,6) = #{openYm}
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.PPPO = 'PO'
+		<if test="searchType != null and searchType != ''">
+			<choose>
+				<when test="searchType == '10'">
+					AND (A.CONTRACT_NUM = #{searchVal}
+     					OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchVal}))
+				</when>
+				<when test="searchType == '20'">
+					AND B.SUB_LINK_NAME LIKE '%' || #{searchVal} || '%'
+				</when>
+				<when test="searchType == '30'">
+					AND B.SUBSCRIBER_NO = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		<if test="orgnId != null and orgnId != ''">
+			AND B.OPEN_AGNT_CD = #{orgnId}
+		</if>
+	</sql>
+	
+	<select id="getUsgAmntStatOrgList" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" 
+			resultType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtUagAmntVO">
+		/* statMgmtMapper.getUsgAmntStatOrgList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getUsgAmntStatOrg" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+		
+	<select id="getUsgAmntStatOrgListExcel" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" 
+			resultType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtUagAmntVO">
+		/* statMgmtMapper.getUsgAmntStatOrgListExcel */
+		<include refid="getUsgAmntStatOrg" />		
+	</select>
+	
+	
+		<sql id="getInvItemData">
+		SELECT A.BILL_YM  as billYm
+			 	,A.FILE_NM as newFileNm
+				,A.BILL_ITEM_CD as billCd
+		       , A.ITEM_NM as itemNm
+		       , A.I_PYMN_PYM AS iPymnPym
+		       , A.I_PYMN_BCK  AS iPymnBck
+		       , A.I_PYMN_ADJ  AS iPymnAdj
+		       , A.I_PYMN_ADJR AS iPymnAdjr
+		       , A.I_PYMN_INV  AS iPymnInv
+		       , A.I_PYMN_RFN  AS iPymnRfn
+		       , A.I_PYMN_RFNR AS iPymnRfnr
+		       , A.I_VAT 			  AS iVat
+		       , A.B_PYMN_PYM  AS bPymnPym
+		       , A.B_PYMN_BCK  AS bPymnBck
+		       , A.B_PYMN_ADJ  AS bPymnAdj
+		       , A.B_PYMN_ADJR AS bPymnAdjr
+		       , A.B_PYMN_INV  AS bPymnInv
+		       , A.B_VAT 			  AS bVat
+		       , A.I_PYMN_PYM_VAT AS iPymnPymVat
+		       , A.I_PYMN_BCK_VAT  AS iPymnBckVat
+		       , A.I_PYMN_ADJ_VAT  AS iPymnAdjVat
+		       , A.I_PYMN_ADJR_VAT AS iPymnAdjrVat
+		       , A.I_PYMN_INV_VAT  AS iPymnInvVat
+		       , A.I_PYMN_RFN_VAT  AS iPymnRfnVat
+		       , A.I_PYMN_RFNR_VAT AS iPymnRfnrVat
+		       , A.I_VAT 			  AS iVat
+		       , A.B_PYMN_PYM_VAT  AS bPymnPymVat
+		       , A.B_PYMN_BCK_VAT  AS bPymnBckVat
+		       , A.B_PYMN_ADJ_VAT  AS bPymnAdjVat
+		       , A.B_PYMN_ADJR_VAT AS bPymnAdjrVat
+		       , A.B_PYMN_INV_VAT  AS bPymnInvVat
+		       , A.B_VAT 			  AS bVat
+		       , A.I_AD_PYM      AS iAdPym
+			   , A.I_AD_PYM_VAT  AS iAdPymVat    
+			   , A.I_AD_BCK      AS iAdBck    
+			   , A.I_AD_BCK_VAT  AS iAdBckVat    
+			   , A.I_AD_RFN      AS iAdRfn    
+			   , A.I_AD_RFN_VAT  AS iAdRfnVat    
+			   , A.I_AD_RFNR     AS iAdRfnr    
+			   , A.I_AD_RFNR_VAT AS iAdRfnrVat    
+			   , A.B_AD_PYM      AS bAdPym    
+			   , A.B_AD_PYM_VAT  AS bAdPymVat    
+			   , A.B_AD_BCK      AS bAdBck    
+			   , A.B_AD_BCK_VAT  AS bAdBckVat  
+		  FROM CLS_BILL_PYMN_CTTT A
+		  WHERE A.BILL_YM =  #{stdrDt}        
+		  ORDER by A.BILL_ITEM_CD
+		</sql>
+	
+	<select id="getInvItemDataList" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" 
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* statMgmtMapper.getInvItemDataList */
+		<include refid="getInvItemData" />
+	</select>
+	
+	<select id="getInvItemDataListExcel" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO" 
+			resultType="com.ktis.msp.rsk.statMgmt.vo.StatMgmtVO">
+		/* statMgmtMapper.getInvItemDataList */
+		<include refid="getInvItemData" />
+	</select>
+	
+	<select id="getDaily3gSubList" parameterType="com.ktis.msp.rsk.statMgmt.vo.StatMgmt3gSubVO" 
+			resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* statMgmtMapper.getDaily3gSubList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT CONTRACT_NUM
+		       , DECODE(REQ_BUY_TYPE,'UU','유심구매','MM','단말구매','') AS REQ_BUY_TYPE
+		       , LST_COM_ACTV_DATE
+		       , BIRTH_DT
+		       , GENDER
+		       , FN_GET_CODENM('RCP0037', SUB_STATUS) AS SUB_STATUS
+		       , OPEN_AGNT_CD
+		       , OPEN_AGNT_NM
+		       , LST_RATE_CD
+		       , LST_RATE_NM
+		       , FN_GET_CODENM('CMN0266', LST_RATE_TP) AS LST_RATE_TP
+		       , LST_MODEL_ID
+		       , LST_MODEL_NM
+		       , FN_GET_CODENM('CMN0266', LST_MODEL_TP) AS LST_MODEL_TP
+		       , MODEL_VOLTE_YN
+		       , MODEL_NFC_YN
+		       , LST_USIM_ID
+		       , LST_USIM_NM
+		       , FN_GET_CODENM('CMN0266', LST_USIM_TP) AS LST_USIM_TP
+		       , USIM_VOLTE_YN
+		       , USIM_NFC_YN
+		       , FN_GET_CODENM('CMN0058', BL_DC_TYPE) AS BL_DC_TYPE
+		       , ARGM_STRT_DT
+		       , ARGM_END_DT
+		       , STOP_DT
+		       , FN_GET_CODENM('MSP0004', STOP_RSN_CD) AS STOP_RSN_NM
+		       , FN_GET_CODENM('RCP0036', BILL_SEND_CD) AS BILL_SEND_NM
+		  FROM MSP_DAILY_3G_SUB
+		 WHERE STDR_DT = #{stdrDt} 
+		<if test='subStatus != null and subStatus != ""'>
+			AND SUB_STATUS = #{subStatus}
+		</if>
+		<if test='searchCd != null and searchCd != ""'>
+			<choose>
+				<when test='searchCd == "1"'>
+					AND CONTRACT_NUM = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		<if test='lstModelTp != null and lstModelTp != ""'>
+			<choose>
+				<when test='lstModelTp == "NONE"'>
+					AND LST_MODEL_ID IS NULL
+				</when>
+				<otherwise>
+					AND LST_MODEL_TP = #{lstModelTp}
+				</otherwise>
+			</choose>
+		</if>
+		<if test='lstRateTp != null and lstRateTp != ""'>
+			AND LST_RATE_TP = #{lstRateTp}
+		</if>
+		<if test='lstUsimTp != null and lstUsimTp != ""'>
+			AND LST_USIM_TP = #{lstUsimTp}
+		</if>
+		<if test='volteYn != null and volteYn != ""'>
+			AND MODEL_VOLTE_YN = #{volteYn}
+		</if>
+		ORDER BY LST_COM_ACTV_DATE DESC
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+</mapper>

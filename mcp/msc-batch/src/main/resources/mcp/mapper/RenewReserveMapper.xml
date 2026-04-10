@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RenewReserveMapper">
+
+    <select id="getRenewReserveList" parameterType="String" resultType="com.ktmmobile.mcp.renew.dto.RenewReserveDto">
+        SELECT
+            RENEW_SEQ
+            , RENEW_CD
+            , RENEW_DT
+            , TRG_KEY
+            , STATUS
+            , PROC_YN
+        FROM NMCP_RENEW_RESERVE
+        WHERE PROC_YN = 'N'
+          AND STATUS = '0'
+            <choose>
+                <when test="reserveDate != null and reserveDate != ''">
+                    AND RENEW_DT = #{reserveDate}
+                </when>
+                <otherwise>
+                    AND RENEW_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+                </otherwise>
+            </choose>
+    </select>
+
+    <update id="updateRenewReservePending" parameterType="Integer">
+        UPDATE NMCP_RENEW_RESERVE
+           SET PROC_YN = 'P'
+             , AMD_ID = 'BATCH'
+             , AMD_DTTM = SYSDATE
+         WHERE RENEW_SEQ = #{renewSeq}
+    </update>
+
+    <update id="updateRenewReserveSuccess" parameterType="com.ktmmobile.mcp.renew.dto.RenewReserveDto">
+        UPDATE NMCP_RENEW_RESERVE
+           SET PROC_YN = 'Y'
+             , AMD_ID = 'BATCH'
+             , AMD_DTTM = SYSDATE
+         WHERE RENEW_SEQ = #{renewSeq}
+    </update>
+
+    <update id="updateRenewReserveFail" parameterType="com.ktmmobile.mcp.renew.dto.RenewReserveDto">
+        UPDATE NMCP_RENEW_RESERVE
+        SET PROC_YN = 'E'
+          , AMD_ID = 'BATCH'
+          , AMD_DTTM = SYSDATE
+        WHERE RENEW_SEQ = #{renewSeq}
+    </update>
+</mapper>
+

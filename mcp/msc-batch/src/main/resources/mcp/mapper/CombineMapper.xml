@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CombineMapper">
+
+    <select id="getMasterCombineLineInfo" resultType="com.ktmmobile.mcp.combine.dto.ReqCombineDto">
+        SELECT COMB_SVC_NO
+             , COMB_SVC_CNTR_NO
+        FROM (
+            SELECT DTL_CD_NM AS COMB_SVC_NO
+                   , DTL_CD AS COMB_SVC_CNTR_NO
+              FROM NMCP_CD_DTL
+              WHERE CD_GROUP_ID = 'MasterCombineLineInfo'
+                AND USE_YN = 'Y'
+              ORDER BY INDC_ODRG
+        )
+        WHERE ROWNUM = 1
+    </select>
+
+    <update id="insertReqCombine" parameterType="com.ktmmobile.mcp.combine.dto.ReqCombineDto">
+        <selectKey resultType="Long" keyProperty="reqSeq" order="BEFORE">
+            SELECT MCP_REQ_COMBINE_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO MCP_REQ_COMBINE (
+            REQ_SEQ
+            , COMB_TYPE_CD
+            , M_CTN
+            , M_CUST_NM
+            , M_CUST_BIRTH
+            , M_SEX_CD
+            , M_SVC_CNTR_NO
+            , M_RATE_CD
+            , M_RATE_NM
+            , M_RATE_ADSVC_CD
+            , M_RATE_ADSVC_NM
+            , COMB_SVC_NO
+            , COMB_SVC_CNTR_NO
+            , COMB_CUST_NM
+            , COMB_BIRTH
+            , COMB_SEX_CD
+            , COMB_SOC_CD
+            , COMB_SOC_NM
+            , COMB_RATE_ADSVC_CD
+            , COMB_RATE_ADSVC_NM
+            , COMB_TGT_TYPE_CD
+            , RSLT_CD
+            , RSLT_MEMO
+            , SYS_DT
+            , REG_DT
+            , REQUEST_KEY
+        ) VALUES (
+            #{reqSeq}
+            , #{combTypeCd}
+            , #{mCtn}
+            , #{mCustNm}
+            , #{mCustBirth}
+            , #{mSexCd}
+            , #{mSvcCntrNo}
+            , #{mRateCd}
+            , #{mRateNm}
+            , #{mRateAdsvcCd}
+            , #{mRateAdsvcNm}
+            , #{combSvcNo}
+            , #{combSvcCntrNo}
+            , #{combCustNm}
+            , #{combBirth}
+            , #{combSexCd}
+            , #{combSocCd}
+            , #{combSocNm}
+            , #{combRateAdsvcCd}
+            , #{combRateAdsvcNm}
+            , #{combTgtTypeCd}
+            , #{rsltCd}
+            , #{rsltMemo}
+            , #{sysDt}
+            , SYSDATE
+            , #{requestKey}
+        )
+    </update>
+
+</mapper>
+

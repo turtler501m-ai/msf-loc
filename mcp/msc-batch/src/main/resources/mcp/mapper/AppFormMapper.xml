@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AppFormMapper">
+
+    <select id="selectDeleteMaterials" resultType="com.ktmmobile.mcp.appform.dto.AppFormDto">
+        SELECT
+            A.REQUEST_KEY,
+            A.RES_NO
+        FROM MCP_REQUEST A
+        WHERE TRUNC(A.REQ_IN_DAY) <![CDATA[<=]]> TRUNC(SYSDATE-7)
+        AND A.ON_OFF_TYPE IN ('5', '7')
+        AND A.SCAN_ID IS NULL
+        AND A.CONTRACT_NUM IS NULL
+    </select>
+
+    <delete id="deleteMcpRequest" parameterType="java.lang.String">
+        DELETE FROM  MCP_REQUEST WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestCstmr" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_CSTMR WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestSaleinfo" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_SALEINFO WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestDlvry" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_DLVRY WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestReq" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_REQ WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestMove" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_MOVE WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestPayment" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_PAYMENT WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestAgent" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_AGENT WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestState" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_STATE WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestChange" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_CHANGE WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestDvcChg" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_DVC_CHG WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestAddition" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_ADDITION WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMcpRequestOsst" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_OSST WHERE MVNO_ORD_NO = LPAD(#{resNo}, 14, 0)
+    </delete>
+
+    <delete id="deleteMcpRequestKtInter" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_KT_INTER WHERE RES_NO = #{resNo}
+    </delete>
+    <delete id="deleteMcpRequestDtl" parameterType="java.lang.String">
+        DELETE FROM MCP_REQUEST_DTL WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+</mapper>

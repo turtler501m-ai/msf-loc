@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.billMgmt.mapper.BillMgmtMapper">
+	
+	<sql id="getCustInvPymMgmtBase">
+		WITH TMP AS (
+		    SELECT  B.SVC_CNTR_NO
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') AND C.BILL_ITEM_CD IN ('MAVOI') THEN C.PYMN_AMNT ELSE 0 END) AS MAVOI_AMNT
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') AND C.BILL_ITEM_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP8002' AND USG_YN = 'Y') THEN C.PYMN_AMNT ELSE 0 END) AS RCP8002_AMNT   /* 국내음성통화료 */
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') AND C.BILL_ITEM_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP8003' AND USG_YN = 'Y') THEN C.PYMN_AMNT ELSE 0 END) AS RCP8003_AMNT   /* 국제로밍이용료 */
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') AND C.BILL_ITEM_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP8004' AND USG_YN = 'Y') THEN C.PYMN_AMNT ELSE 0 END) AS RCP8004_AMNT   /* 데이터통화료 */
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') AND C.BILL_ITEM_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP8005' AND USG_YN = 'Y') THEN C.PYMN_AMNT ELSE 0 END) AS RCP8005_AMNT   /* 올레국제통화료 */
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') AND C.BILL_ITEM_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP8006' AND USG_YN = 'Y') THEN C.PYMN_AMNT ELSE 0 END) AS RCP8006_AMNT   /* KT국제통화료 */
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') AND C.BILL_ITEM_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP8007' AND USG_YN = 'Y') THEN C.PYMN_AMNT ELSE 0 END) AS RCP8007_AMNT   /* 국제통화료 */
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') AND C.BILL_ITEM_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP8008' AND USG_YN = 'Y') THEN C.PYMN_AMNT ELSE 0 END) AS RCP8008_AMNT   /* 국제SMS이용료 */
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') 
+		                            AND C.BILL_ITEM_CD NOT IN ('MAVOI', 'EQIST', 'EQISV') 
+		                            AND C.BILL_ITEM_CD NOT IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID IN ('RCP8002', 'RCP8003', 'RCP8004', 'RCP8005', 'RCP8006', 'RCP8007', 'RCP8008') AND USG_YN = 'Y') THEN C.PYMN_AMNT ELSE 0 END) AS ETC_AMNT    /* 기타금액 */
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') AND C.BILL_ITEM_CD IN ('EQIST', 'EQISV') THEN C.PYMN_AMNT ELSE 0 END) AS EQIST_AMNT    /* 단말할부금 */
+		            , SUM(CASE WHEN C.PYMN_CD IN ('INV', 'ADJR') THEN C.VAT_AMNT ELSE 0 END) AS VAT_AMNT
+		            , SUM(CASE WHEN C.PYMN_CD = 'ADJ' THEN C.PYMN_AMNT * -1 ELSE 0 END) AS DISCOUNT_AMNT /* 할인금액 */
+		            , SUM(CASE WHEN C.PYMN_CD = 'ADJ' AND C.BILL_ITEM_CD NOT IN ('EQIST', 'EQISV') THEN C.VAT_AMNT * -1 ELSE 0 END) AS DISCOUNT_VAT  /* 할인금액부가세 */
+		            , (SELECT   SUM(CASE WHEN PYMN_CD IN ('INV', 'ADJR') THEN PYMN_AMNT + VAT_AMNT ELSE 0 END
+		                                - CASE WHEN PYMN_CD = 'ADJ' THEN PYMN_AMNT + VAT_AMNT ELSE 0 END)
+		               FROM     CLS_BILL_PYMN_DATA
+		               WHERE    SVC_CNTR_NO = B.SVC_CNTR_NO
+		               AND      BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(#{billYm}, 'YYYYMM'), -1), 'YYYYMM')
+		               AND      PYMN_CD IN ('INV', 'ADJ', 'ADJR')
+		            ) AS LAST_INV_AMNT   /* 전월청구금액 */
+		            , (SELECT   SUM(CASE WHEN PYMN_CD IN ('PYM', 'FNTT', 'RFNR') THEN PYMN_AMNT + VAT_AMNT ELSE 0 END
+		                                - CASE WHEN PYMN_CD NOT IN ('PYM', 'FNTT', 'RFNR') THEN PYMN_AMNT + VAT_AMNT ELSE 0 END)
+		               FROM     CLS_BILL_PYMN_DATA
+		               WHERE    SVC_CNTR_NO = B.SVC_CNTR_NO
+		               AND      BILL_YM = TO_CHAR(ADD_MONTHS(TO_DATE(#{billYm}, 'YYYYMM'), -1), 'YYYYMM')
+		               AND      PYMN_CD IN ('PYM', 'BCK', 'FNTT', 'FNTF', 'RFNR', 'RFN')
+		            ) AS LAST_PYM_AMNT   /* 전월수납금액 */
+		    FROM    CMN_GRP_CD_MST A
+		            , MSP_JUO_SUB_INFO B
+		            , CLS_BILL_PYMN_DATA C
+		    WHERE   A.GRP_ID = 'RCP8001'
+		    AND     A.USG_YN = 'Y'
+		    AND     A.CD_VAL = B.CUSTOMER_ID
+		    AND     B.SVC_CNTR_NO = C.SVC_CNTR_NO
+		    AND     C.PYMN_CD IN ('INV', 'ADJ', 'ADJR')
+		    AND     B.CUSTOMER_ID = #{customerId}
+		    AND     C.BILL_YM = #{billYm}
+			<if test="subscriberNo != null and subscriberNo != ''">
+			AND     B.SUBSCRIBER_NO = #{subscriberNo}
+			</if>
+		    GROUP BY B.CUSTOMER_ID, B.SVC_CNTR_NO
+		)
+		SELECT  B.BAN                   /* 청구계정번호 */
+		        , B.SVC_CNTR_NO         /* 서비스번호 */
+		        , B.SUBSCRIBER_NO       /* 서비스번호 */
+<!-- 		        , SUBSTR(B.SUBSCRIBER_NO, 1, 3) || '-' || SUBSTR(B.SUBSCRIBER_NO, 4, 4) || '-' || SUBSTR(B.SUBSCRIBER_NO, 8, 4) AS SVC_TEL_NO   /* 전화번호 */ -->
+		        , C.CUSTOMER_LINK_NAME  /* 고객명 */
+		        , B.SUB_LINK_NAME       /* 실사용자 */
+		        , NVL(A.MAVOI_AMNT, 0) AS MAVOI_AMNT        /* 월정액 */
+		        , NVL(A.RCP8002_AMNT, 0) AS RCP8002_AMNT    /* 국내음성통화료 */
+		        , NVL(A.RCP8003_AMNT, 0) AS RCP8003_AMNT    /* 국제로밍이용료 */
+		        , NVL(A.RCP8004_AMNT, 0) AS RCP8004_AMNT    /* 데이터통화료 */
+		        , NVL(A.RCP8005_AMNT, 0) AS RCP8005_AMNT    /* OM국제통화료 */
+		        , NVL(A.RCP8006_AMNT, 0) AS RCP8006_AMNT    /* KT국제통화료 */
+		        , NVL(A.RCP8007_AMNT, 0) AS RCP8007_AMNT    /* 국제통화료 */
+		        , NVL(A.RCP8008_AMNT, 0) AS RCP8008_AMNT    /* 국제SMS이용료 */
+		        , NVL(A.ETC_AMNT, 0) AS ETC_AMNT            /* 기타금액 */
+		        , NVL(A.VAT_AMNT, 0) AS VAT_AMNT            /* 할인전부가세 */
+		        , NVL(A.DISCOUNT_AMNT, 0) AS DISCOUNT_AMNT  /* 할인금액 */
+		        , NVL(A.DISCOUNT_VAT, 0) AS DISCOUNT_VAT    /* 할인금액부가세 */
+		        , NVL(A.EQIST_AMNT, 0) AS EQIST_AMNT        /* 단말할부금 */
+		        , NVL(A.MAVOI_AMNT, 0)
+		            + NVL(A.RCP8002_AMNT, 0)
+		            + NVL(A.RCP8003_AMNT, 0)
+		            + NVL(A.RCP8004_AMNT, 0)
+		            + NVL(A.RCP8005_AMNT, 0)
+		            + NVL(A.RCP8006_AMNT, 0)
+		            + NVL(A.RCP8007_AMNT, 0)
+		            + NVL(A.RCP8008_AMNT, 0)
+		            + NVL(A.ETC_AMNT, 0)
+		            + NVL(A.EQIST_AMNT, 0)
+		            + NVL(A.VAT_AMNT, 0) AS INV_AMNT        /* 당월요금계 */
+		        , NVL(A.MAVOI_AMNT, 0)
+		            + NVL(A.RCP8002_AMNT, 0)
+		            + NVL(A.RCP8003_AMNT, 0)
+		            + NVL(A.RCP8004_AMNT, 0)
+		            + NVL(A.RCP8005_AMNT, 0)
+		            + NVL(A.RCP8006_AMNT, 0)
+		            + NVL(A.RCP8007_AMNT, 0)
+		            + NVL(A.RCP8008_AMNT, 0)
+		            + NVL(A.ETC_AMNT, 0)
+		            + NVL(A.EQIST_AMNT, 0)
+		            + NVL(A.VAT_AMNT, 0)
+		            + NVL(A.DISCOUNT_AMNT, 0)
+		            + NVL(A.DISCOUNT_VAT, 0) AS TOT_INV_AMNT   /* 총청구금액 */
+		        , NVL(A.MAVOI_AMNT, 0)
+		            + NVL(A.RCP8002_AMNT, 0)
+		            + NVL(A.RCP8003_AMNT, 0)
+		            + NVL(A.RCP8004_AMNT, 0)
+		            + NVL(A.RCP8005_AMNT, 0)
+		            + NVL(A.RCP8006_AMNT, 0)
+		            + NVL(A.RCP8007_AMNT, 0)
+		            + NVL(A.RCP8008_AMNT, 0)
+		            + NVL(A.ETC_AMNT, 0)
+		            + NVL(A.DISCOUNT_AMNT, 0) AS SUPPLY_AMNT    /* 공급가액 */
+		        , NVL(A.VAT_AMNT, 0)
+		            + NVL(A.DISCOUNT_VAT, 0) AS SUPPLY_VAT      /* 공급가액부가세 */
+		        , NVL(A.LAST_INV_AMNT, 0) AS LAST_INV_AMNT      /* 전월청구금액 */
+		        , NVL(A.LAST_PYM_AMNT, 0) AS LAST_PYM_AMNT      /* 전월수납금액 */
+		        , D.LST_RATE_NM
+		FROM    TMP A
+		        , MSP_JUO_SUB_INFO B
+		        , MSP_JUO_CUS_INFO C
+		        , MSP_REQUEST_DTL D
+		WHERE   A.SVC_CNTR_NO = B.SVC_CNTR_NO
+		AND     B.CUSTOMER_ID = C.CUSTOMER_ID
+		AND     B.CONTRACT_NUM = D.CONTRACT_NUM
+	</sql>
+	
+	<select id="getCustInvPymMgmtList" parameterType="com.ktis.msp.rcp.billMgmt.vo.BillMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* billMgmtMapper.getCustInvPymMgmtList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="getCustInvPymMgmtBase" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getCustInvPymMgmtListExcel" parameterType="com.ktis.msp.rcp.billMgmt.vo.BillMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* billMgmtMapper.getCustInvPymMgmtListExcel */
+		<include refid="getCustInvPymMgmtBase" />
+	</select>
+	
+</mapper>

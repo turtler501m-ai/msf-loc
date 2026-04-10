@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.courtMgmt.mapper.CourtSttcMapper">
+	
+	<!-- 법정관리고객 집계현황 조회 -->
+	<select id="getCourtSttcList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* CourtSttcMapper.getCourtSttcList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  TO_CHAR(TO_DATE(REGST_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS REGST_DT,
+				TOTAL,
+				TOTAL_RG,
+				SUM_RG,
+				LC_RG,
+				NC_RG,
+				CC_RG,
+				RP_RG,
+				DP_RG,
+				ETC_RG,
+				SUM_RG_END,
+				IMM_RG_END,
+				DC_RG_END,
+				TOTAL_BR,
+				SUM_BR,
+				BR_BR,
+				ETC_BR,
+				SUM_BR_END,
+				IMM_BR_END,
+				DC_BR_END,
+				TOTAL_ENT,
+				SUM_ENT,
+				SUM_ENT_END,
+			    REGST_ID,
+			    TO_CHAR(REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,
+			    RVISN_ID,
+			    TO_CHAR(RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+		  FROM 	MSP_COURT_RCV_STTC
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+         WHERE  REGST_DT BETWEEN #{strtDt} AND #{endDt}
+        </if>
+        ORDER BY REGST_DT
+		  <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+ 	<select id="getCourtSttcListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* CourtSttcMapper.getCourtSttcListByExcel */
+		SELECT  TO_CHAR(TO_DATE(REGST_DT, 'YYYYMMDD'), 'YYYY-MM-DD') AS REGST_DT,
+				TOTAL,
+				TOTAL_RG,
+				SUM_RG,
+				LC_RG,
+				NC_RG,
+				CC_RG,
+				RP_RG,
+				DP_RG,
+				ETC_RG,
+				SUM_RG_END,
+				IMM_RG_END,
+				DC_RG_END,
+				TOTAL_BR,
+				SUM_BR,
+				BR_BR,
+				ETC_BR,
+				SUM_BR_END,
+				IMM_BR_END,
+				DC_BR_END,
+				TOTAL_ENT,
+				SUM_ENT,
+				SUM_ENT_END,
+			    REGST_ID,
+			    TO_CHAR(REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM,
+			    RVISN_ID,
+			    TO_CHAR(RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+		  FROM 	MSP_COURT_RCV_STTC
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+         WHERE  REGST_DT BETWEEN #{strtDt} AND #{endDt}
+        </if>
+        ORDER BY REGST_DT
+	</select>	
+ </mapper>

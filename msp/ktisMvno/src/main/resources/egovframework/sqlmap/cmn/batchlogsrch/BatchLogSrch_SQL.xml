@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.batchlogsrch.mapper.BatchLogSrchMapper">
+
+	<select id="selectList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+	/* ====== cmn.batchlogsrch.selectList =========*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+            SELECT 
+                    a.BTCH_PRGM_ID
+                  , TO_CHAR(a.OPRT_STRT_TM, 'YYYY-MM-DD HH24:MI:SS') OPRT_STRT_TM
+                  , a.OPRT_DM
+                  , a.REMRK
+                  , a.ERR_DSC
+                  , a.ERR_CD
+                  , a.ERR_CD || '-'  || a.ERR_DSC RESULT 
+                  , a.OPRT_STAT  /* 상태 */
+                  , a.OPRT_TYPE
+                  , TO_CHAR(a.OPRT_END_DT, 'YYYY-MM-DD HH24:MI:SS') OPRT_END_DT
+                  , a.REGST_ID
+                  , TO_CHAR(a.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+                  , b.BTCH_PRGM_NM
+                  , b.BTCH_TYPE
+                  , b.FLFIL_CYCL /* 실행주기 */
+                  , b.USG_YN    /* 사용여부 */
+            FROM CMN_BATCH_LOG_MGNT_MST a,
+                 CMN_BTCH_PRGM_MGMT b
+            where a.btch_prgm_id = b.btch_prgm_id(+)
+
+	        <if test="searchBtchPrgmNm != null and searchBtchPrgmNm != ''">
+	            AND b.BTCH_PRGM_NM like '%' ||  #{searchBtchPrgmNm} || '%'
+	        </if>
+
+
+<!-- 	        20140912 -->
+	        <if test="searchStrtDt != null and searchStrtDt != ''">
+	            <![CDATA[
+	            AND A.OPRT_DM >= #{searchStrtDt}
+	            ]]>
+	        </if>
+	        
+	        <if test="searchEndDt != null and searchEndDt != ''">
+	            <![CDATA[
+	            AND A.OPRT_DM <= #{searchEndDt} 
+	            ]]>
+	        </if>
+	        	        	        			
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+</mapper>

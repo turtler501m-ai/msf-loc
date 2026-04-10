@@ -1,0 +1,50 @@
+@charset "utf-8";
+/* freecommerce (http://www.freedi.kr/) BJH */
+
+/* skipnavigation */
+#skipnavigation {display :block; height:0px; width:0px; overflow:hidden; text-align:center; color:#000;} 
+
+body {background:url(/images/admin/common/bg_top_re.gif) repeat-x top;}
+
+/* toparea */
+#header {width:1020px; margin:0 auto; background:url(/images/admin/common/bg_head.gif) no-repeat;}
+#header h1 {height:60px; text-align:center;}
+
+/* lnb */
+#lnb {text-align:right;}
+	#lnb a {color:#d3d3d3; font-size:11px; font-weight:bold; text-align:center; height:26px; padding:14px 10px 0 10px; display:inline-block; background:url(/images/admin/common/lnb_line.gif) no-repeat right;}
+	#lnb a:hover, #lnb a:active, #lnb a:focus {color:#fff; text-decoration:underline;}
+	/* 현재 선택된 메뉴 일때 */
+	#lnb a.on {color:#fff; text-decoration:underline;}
+
+/*
+#container {width:1020px; margin:0 auto; padding:25px 0 30px 0; background:url(/images/admin/common/container_bg.gif) repeat-y left; overflow:hidden; }
+*/
+#container {width:1020px; margin:0 auto; padding:25px 0 30px 0; background:url(/images/admin/common/container_bg.gif) repeat-y left; *zoom:1;}
+#container:after {content:""; display:block; clear:both;}
+
+/* snb */
+#snb{width:160px; float:left;}
+	#snb h2 {height:60px;}
+	#snb ul li a {display:block; width:135px; padding:7px 0 8px 10px; border-bottom:1px solid #d2d2d2; color:#555; font-size:13px; font-weight:bold; background:url(/images/admin/common/bu_arrow.gif) no-repeat 0 10px;}
+	#snb ul li a:hover {display:block; width:135px; padding:7px 0 8px 10px; border-bottom:1px solid #d2d2d2; color:#198bcb; font-weight:bold; text-decoration:underline;}
+	/* 2차메뉴 현재 선택된 메뉴 일때 */
+	#snb ul li a.on {display:block; width:135px; padding:7px 0 8px 10px; border-bottom:1px solid #d2d2d2; color:#198bcb; font-weight:bold; text-decoration:underline;}
+	
+	#snb ul li ul {margin:3px 0;}
+	#snb ul li ul li a {width:135px; padding:5px 0 3px 15px; color:#666; font-weight:normal; font-size:12px; border-bottom:none; background:none;}
+	#snb ul li ul li a:hover {width:135px; padding:5px 0 3px 15px; color:#fff; font-weight:normal; border-bottom:none; background:#2994d1; text-decoration:underline;}
+	/* 3차메뉴 현재 선택된 메뉴 일때 */
+	#snb ul li ul li a.on {width:135px; padding:5px 0 3px 15px; color:#fff; font-weight:normal; border-bottom:none; background:#2994d1; text-decoration:underline;}
+
+
+#contents {position:relative; width:840px; padding-left:10px; float:left; background:url(/images/admin/common/contents_bg.gif) repeat-x;}
+
+/* con_header */
+#con_header h3 {height:37px; color:#222; padding:2px 0 0 25px; font-size:16px; background:url(/images/admin/common/icon_title.gif) no-repeat;}
+#location {position:absolute; top:0; right:0; text-align:right; font-size:11px;}
+
+/* con_body */
+#con_body {margin-top:10px; min-height:495px; _height:495px;} /* 높이값 지정이유 : 왼쪽bg반복 */
+
+#con_body h4 {color:#5c6472; padding:10px 0 0 20px; font-size:14px; background:url(/images/admin/common/bu_square.gif) no-repeat 3px 14px;}

@@ -1,0 +1,763 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.UsimDlvryChangeMapper">
+
+
+	<!--신청정보(유심교체) 조회-->
+	<select id="selectUsimChangeMstList" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*UsimDlvryChangeMapper.selectUsimChangeMstList*/
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="usimChangeMstList" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!--신청정보(유심교체) 목록-->
+	<sql id="usimChangeMstList">
+		SELECT  DISTINCT MST.SEQ
+				,MST.CUSTOMER_ID
+				,CUS.CUSTOMER_LINK_NAME
+				,MST.CHNL_CD
+				,(SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'UsimReqChnlCd' AND DTL_CD = MST.CHNL_CD) AS CHNL_NM
+				,MST.REQ_QNTY
+				,MST.DLVRY_NAME
+				,MST.DLVRY_TEL_FN || '-' || MST.DLVRY_TEL_MN || '-' || MST.DLVRY_TEL_RN AS DLVRY_TEL
+				,MST.DLVRY_POST
+				,MST.DLVRY_ADDR || ' ' || MST.DLVRY_ADDR_DTL AS DLVRY_ADDR
+				,MST.DLVRY_ADDR_DTL
+				,MST.DLVRY_MEMO
+				,(SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'PERCEL' AND DTL_CD = MST.TB_CD) AS TB_NM
+				,MST.DLVRY_NO
+				,MST.STATUS
+				,(SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'UsimReqStatus' AND DTL_CD = MST.STATUS) AS STATUS_NM
+				,MST.PROC_YN
+				,FN_GET_CODENM('CMN0084', NVL(MST.PROC_YN, 'N')) AS PROC_YN_NM
+				,MST.PROC_MEMO
+				,TO_CHAR(MST.PROC_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS PROC_DTTM
+				,TO_CHAR(MST.REQ_IN_DAY, 'YYYY-MM-DD') AS REQ_IN_DAY
+				,TO_CHAR(MST.REQ_IN_DAY, 'HH24:MI:SS') AS REQ_IN_TIME
+		FROM  	NMCP_FREE_USIM_REQ_MST@DL_MCP MST
+				,NMCP_FREE_USIM_REQ_DTL@DL_MCP DTL
+		    	,MSP_JUO_SUB_INFO SUB
+		    	,MSP_JUO_CUS_INFO CUS
+		WHERE   MST.SEQ = DTL.SEQ
+		AND 	DTL.CONTRACT_NUM = SUB.CONTRACT_NUM
+		AND   	MST.CUSTOMER_ID = CUS.CUSTOMER_ID
+		<if test="srchStrtDt != null and srchStrtDt != '' and srchEndDt != null and srchEndDt != ''">
+			AND TO_CHAR(MST.REQ_IN_DAY, 'YYYYMMDD') BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>
+		<if test='searchGbn != null and searchGbn != ""'>
+			<if test="searchGbn == '01'">
+				AND SUB.CONTRACT_NUM = #{searchName}
+			</if>
+			<if test="searchGbn == '02'">
+				AND UPPER(CUS.CUSTOMER_LINK_NAME) LIKE UPPER(#{searchName}) || '%'
+			</if>
+			<if test="searchGbn == '03'">
+				AND SUB.SUBSCRIBER_NO = #{searchName}
+			</if>
+			<if test="searchGbn == '04'">
+				AND MST.DLVRY_TEL_FN || MST.DLVRY_TEL_MN || MST.DLVRY_TEL_RN = translate(#{searchName},'1234567890-','1234567890')
+			</if>
+			<if test="searchGbn == '05'">
+				AND MST.DLVRY_NO = #{searchName}
+			</if>
+		</if>
+		<if test='procYn != null and procYn != ""'>
+			AND NVL(MST.PROC_YN, 'N') = #{procYn}
+		</if>
+		<if test='status != null and status != ""'>
+			AND MST.STATUS = #{status}
+		</if>
+		<if test='chnlCd != null and chnlCd != ""'>
+			AND MST.CHNL_CD = #{chnlCd}
+		</if>
+		<if test='dlvryYn != null and dlvryYn != ""'>
+			<if test='dlvryYn == "Y"'>
+				AND MST.DLVRY_NO IS NOT NULL
+			</if>
+			<if test='dlvryYn == "N"'>
+				AND MST.DLVRY_NO IS NULL
+			</if>
+		</if>
+		<!-- NFC 값을 찾을경우 null값도 같이 조회 -->
+		<if test="nfcUsimYn != null and nfcUsimYn != ''">
+			AND (
+				DTL.NFC_USIM_YN = #{nfcUsimYn}
+				<if test="nfcUsimYn == 'Y'.toString()">
+					OR DTL.NFC_USIM_YN IS NULL
+				</if>
+			)
+		</if>
+		ORDER BY MST.SEQ DESC
+	</sql>
+
+	<!--신청정보(유심교체) 엑셀다운로드-->
+	<select id="selectUsimChangeMstListExcel" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*UsimDlvryChangeMapper.selectUsimChangeMstListExcel*/
+		<include refid="usimChangeMstList" />
+	</select>
+
+	<!--신청정보(유심교체) 상세조회-->
+	<select id="selectUsimChangeDtlList" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*UsimDlvryChangeMapper.selectUsimChangeDtlList*/
+		SELECT  MST.SEQ
+				,MST.REQ_QNTY ||  '-' || DTL.SUB_SEQ AS REQ_QNTY
+				,DTL.PRDT_CODE
+				,DTL.USIM_SN
+				,DTL.CONTRACT_NUM
+				,DTL.CHG_YN
+				,TO_CHAR(TO_DATE(DTL.CHG_DTTM,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS CHG_DTTM
+				,SUB.ICC_ID
+				,DECODE(DTL.APPLY_RSLT_CD, NULL, NULL, '00', '성공', '실패') AS APPLY_RSLT_CD
+				,DTL.APPLY_RSLT_MSG
+		FROM	NMCP_FREE_USIM_REQ_MST@DL_MCP MST
+				,NMCP_FREE_USIM_REQ_DTL@DL_MCP DTL
+				,MSP_JUO_CUS_INFO CUS
+				,MSP_JUO_SUB_INFO SUB
+		WHERE   MST.SEQ = DTL.SEQ
+		AND  	DTL.CONTRACT_NUM = SUB.CONTRACT_NUM
+		AND  	MST.CUSTOMER_ID = CUS.CUSTOMER_ID
+		AND  	DTL.SEQ = #{seq}
+		ORDER BY DTL.SUB_SEQ
+	</select>
+
+	<!--신청정보(유심교체) 엑셀상세다운로드-->
+	<select id="selectUsimChangeDtlListExcel" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*UsimDlvryChangeMapper.selectUsimChangeDtlListExcel*/
+		SELECT  MST.SEQ
+				,(SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'UsimReqChnlCd' AND DTL_CD = MST.CHNL_CD) AS CHNL_NM
+				,DTL.CONTRACT_NUM
+				,CUS.CUSTOMER_LINK_NAME
+				,MST.REQ_QNTY ||  '-' || DTL.SUB_SEQ AS REQ_QNTY
+				,TO_CHAR(MST.REQ_IN_DAY, 'YYYY-MM-DD') AS REQ_IN_DAY
+				,TO_CHAR(MST.REQ_IN_DAY, 'HH24:MI:SS') AS REQ_IN_TIME
+				,DTL.PRDT_CODE
+				,DTL.USIM_SN
+				,DTL.CHG_YN
+				,TO_CHAR(TO_DATE(DTL.CHG_DTTM,'YYYYMMDDHH24MISS'),'YYYY-MM-DD HH24:MI:SS') AS CHG_DTTM
+				,DECODE(DTL.APPLY_RSLT_CD, NULL, NULL, '00', '성공', '실패') AS APPLY_RSLT_CD
+				,DTL.APPLY_RSLT_MSG
+		FROM	NMCP_FREE_USIM_REQ_MST@DL_MCP MST
+				,NMCP_FREE_USIM_REQ_DTL@DL_MCP DTL
+				,MSP_JUO_CUS_INFO CUS
+				,MSP_JUO_SUB_INFO SUB
+		WHERE	MST.SEQ = DTL.SEQ
+		  AND  	DTL.CONTRACT_NUM = SUB.CONTRACT_NUM
+		  AND 	MST.CUSTOMER_ID = CUS.CUSTOMER_ID
+		<if test="srchStrtDt != null and srchStrtDt != '' and srchEndDt != null and srchEndDt != ''">
+			AND TO_CHAR(MST.REQ_IN_DAY, 'YYYYMMDD') BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>
+		<if test='searchGbn != null and searchGbn != ""'>
+			<if test="searchGbn == '01'">
+				AND SUB.CONTRACT_NUM = #{searchName}
+			</if>
+			<if test="searchGbn == '02'">
+				AND UPPER(CUS.CUSTOMER_LINK_NAME) LIKE UPPER(#{searchName}) || '%'
+			</if>
+			<if test="searchGbn == '03'">
+				AND SUB.SUBSCRIBER_NO = #{searchName}
+			</if>
+			<if test="searchGbn == '04'">
+				AND MST.DLVRY_TEL_FN || MST.DLVRY_TEL_MN || MST.DLVRY_TEL_RN = translate(#{searchName},'1234567890-','1234567890')
+			</if>
+			<if test="searchGbn == '05'">
+				AND MST.DLVRY_NO = #{searchName}
+			</if>
+		</if>
+		<if test='procYn != null and procYn != ""'>
+			AND NVL(MST.PROC_YN, 'N') = #{procYn}
+		</if>
+		<if test='status != null and status != ""'>
+			AND MST.STATUS = #{status}
+		</if>
+		<if test='chnlCd != null and chnlCd != ""'>
+			AND MST.CHNL_CD = #{chnlCd}
+		</if>
+		<if test='dlvryYn != null and dlvryYn != ""'>
+			<if test='dlvryYn == "Y"'>
+				AND MST.DLVRY_NO IS NOT NULL
+			</if>
+			<if test='dlvryYn == "N"'>
+				AND MST.DLVRY_NO IS NULL
+			</if>
+		</if>
+		<!-- NFC 값을 찾을경우 null값도 같이 조회 -->
+		<if test="nfcUsimYn != null and nfcUsimYn != ''">
+			AND (
+				DTL.NFC_USIM_YN = #{nfcUsimYn}
+				<if test="nfcUsimYn == 'Y'.toString()">
+					OR DTL.NFC_USIM_YN IS NULL
+				</if>
+			)
+		</if>
+		ORDER BY MST.SEQ DESC, DTL.SUB_SEQ
+	</select>
+
+
+	<!--일련번호/송장 엑셀업로드양식 다운로드-->
+	<select id="selectUsimChgDlvryExcelTemp" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*UsimDlvryChangeMapper.selectUsimChgDlvryExcelTemp*/
+		SELECT  MST.SEQ
+				,(SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'UsimReqChnlCd' AND DTL_CD = MST.CHNL_CD) AS CHNL_NM
+				,DTL.CONTRACT_NUM
+				,CUS.CUSTOMER_LINK_NAME
+				,MST.REQ_QNTY ||  '-' || DTL.SUB_SEQ AS REQ_QNTY
+				,TO_CHAR(MST.REQ_IN_DAY, 'YYYY-MM-DD') AS REQ_IN_DAY
+				,TO_CHAR(MST.REQ_IN_DAY, 'HH24:MI:SS') AS REQ_IN_TIME
+		     	,MST.PROC_MEMO
+				,MST.DLVRY_NAME
+				,MST.DLVRY_POST
+				,MST.DLVRY_ADDR || ' ' || MST.DLVRY_ADDR_DTL AS DLVRY_ADDR
+				,MST.DLVRY_TEL_FN || '-' || MST.DLVRY_TEL_MN || '-' || MST.DLVRY_TEL_RN AS DLVRY_TEL
+				,MST.DLVRY_MEMO
+				,DTL.PRDT_CODE
+				,DTL.USIM_SN
+				,(SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'PERCEL' AND DTL_CD = MST.TB_CD) AS TB_NM
+				,MST.DLVRY_NO
+				,DECODE(DTL.NFC_USIM_YN, 'Y', 'NFC', 'N', '일반', '') AS NFC_USIM_TYPE
+				,USIM_MODEL_CD
+		FROM	NMCP_FREE_USIM_REQ_MST@DL_MCP MST
+				,NMCP_FREE_USIM_REQ_DTL@DL_MCP DTL
+				,MSP_JUO_CUS_INFO CUS
+				,MSP_JUO_SUB_INFO SUB
+		WHERE	MST.SEQ = DTL.SEQ
+		AND  	DTL.CONTRACT_NUM = SUB.CONTRACT_NUM
+		AND  	MST.CUSTOMER_ID = CUS.CUSTOMER_ID
+		<if test="srchStrtDt != null and srchStrtDt != '' and srchEndDt != null and srchEndDt != ''">
+			AND TO_CHAR(MST.REQ_IN_DAY, 'YYYYMMDD') BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>
+		<if test='searchGbn != null and searchGbn != ""'>
+			<if test="searchGbn == '01'">
+				AND SUB.CONTRACT_NUM = #{searchName}
+			</if>
+			<if test="searchGbn == '02'">
+				AND UPPER(CUS.CUSTOMER_LINK_NAME) LIKE UPPER(#{searchName}) || '%'
+			</if>
+			<if test="searchGbn == '03'">
+				AND SUB.SUBSCRIBER_NO = #{searchName}
+			</if>
+			<if test="searchGbn == '04'">
+				AND MST.DLVRY_TEL_FN || MST.DLVRY_TEL_MN || MST.DLVRY_TEL_RN = translate(#{searchName},'1234567890-','1234567890')
+			</if>
+			<if test="searchGbn == '05'">
+				AND MST.DLVRY_NO = #{searchName}
+			</if>
+		</if>
+		<if test='procYn != null and procYn != ""'>
+			AND NVL(MST.PROC_YN, 'N') = #{procYn}
+		</if>
+		<if test='chnlCd != null and chnlCd != ""'>
+			AND MST.CHNL_CD = #{chnlCd}
+		</if>
+		<if test='dlvryYn != null and dlvryYn != ""'>
+			<if test='dlvryYn == "Y"'>
+				AND MST.DLVRY_NO IS NOT NULL
+			</if>
+			<if test='dlvryYn == "N"'>
+				AND MST.DLVRY_NO IS NULL
+			</if>
+		</if>
+		<!-- NFC 값을 찾을경우 null값도 같이 조회 -->
+		<if test="nfcUsimYn != null and nfcUsimYn != ''">
+			AND (
+				DTL.NFC_USIM_YN = #{nfcUsimYn}
+				<if test="nfcUsimYn == 'Y'.toString()">
+					OR DTL.NFC_USIM_YN IS NULL
+				</if>
+			)
+		</if>
+		ORDER BY MST.SEQ DESC, DTL.SUB_SEQ
+	</select>
+	
+	<!--존재하는 주문건인지 조회 -->
+	<select id="selectUsimChangeMstBySeq" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO" resultType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.selectUsimChangeMstBySeq*/
+		SELECT 	SEQ AS seq
+		    	,STATUS AS status
+				,PROC_YN AS procYn
+				,DLVRY_TEL_FN || DLVRY_TEL_MN || DLVRY_TEL_RN AS dlvryTel
+				,TB_CD AS tbCd
+				,(SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'PERCEL' AND DTL_CD = TB_CD) AS tbNm
+				,DLVRY_NO AS dlvryNo
+		FROM 	NMCP_FREE_USIM_REQ_MST@DL_MCP
+		WHERE 	SEQ = #{seq}
+	</select>
+
+	<!--택배사 이름으로 택배사 코드 조회-->
+	<select id="getDlvryTbCd" parameterType="String" resultType="String">
+		SELECT  DTL_CD AS TB_CD
+		FROM  	NMCP_CD_DTL@DL_MCP
+		WHERE  	CD_GROUP_ID = 'PERCEL'
+		AND		DTL_CD_NM = TRIM(#{tbNm, jdbcType=VARCHAR})
+	</select>
+	
+	<!--신청경로 명으로 신청경로 코드 조회-->
+	<select id="getChnlCd" parameterType="String" resultType="String">
+		SELECT  DTL_CD AS CHNL_CD
+		FROM    NMCP_CD_DTL@DL_MCP
+		WHERE   CD_GROUP_ID = 'UsimReqChnlCd'
+		AND		DTL_CD_NM = TRIM(#{chnlNm, jdbcType=VARCHAR})
+	</select>
+	
+	<!--신청경로 명으로 신청경로 코드 조회-->
+	<select id="getProcYn" parameterType="String" resultType="String">
+		SELECT	CD_VAL 
+		FROM 	CMN_GRP_CD_MST
+		WHERE 	GRP_ID = 'CMN0084'
+		AND 	CD_DSC = TRIM(#{procYn, jdbcType=VARCHAR})
+	</select>
+
+	<!--신청정보(유심교체) 택배정보 업데이트  -->
+	<update id="updateDlvryInfoExcel" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.updateDlvryInfoExcel*/
+		UPDATE 	NMCP_FREE_USIM_REQ_MST@DL_MCP
+		SET		AMD_DTTM = SYSDATE
+				,AMD_ID = #{sessionUserId}
+			<if test='tbCd != null and tbCd != ""'>
+				,TB_CD = #{tbCd}
+			</if>
+			<if test='dlvryNo != null and dlvryNo != ""'>
+				,DLVRY_NO = #{dlvryNo}
+			</if>
+		WHERE 	SEQ = #{seq}
+	</update>
+
+	<!--신청정보(유심교체) DTL 테이블 유심정보 업데이트-->
+	<update id="updateUsimInfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.updateUsimInfo*/
+		UPDATE 	NMCP_FREE_USIM_REQ_DTL@DL_MCP
+		SET		AMD_DTTM = SYSDATE
+				,AMD_ID = #{sessionUserId}
+				<if test='prdtCode != null and prdtCode != ""'>
+					,PRDT_ID = (SELECT PRDT_ID from CMN_INTM_MDL where PRDT_CODE = #{prdtCode} AND ROWNUM = 1)
+					,PRDT_CODE = #{prdtCode}
+				</if>
+				<if test='usimSn != null and usimSn != ""'>
+					,USIM_SN = #{usimSn}
+				</if>
+		WHERE 	SEQ = #{seq}
+		AND 	CONTRACT_NUM = #{contractNum}
+	</update>
+
+	<!--신청정보(유심교체) MST 테이블 상태 업데이트-->
+	<update id="updateStatusMst" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.updateStatusMst*/
+		UPDATE 	NMCP_FREE_USIM_REQ_MST@DL_MCP
+		SET		AMD_DTTM = SYSDATE
+				,AMD_ID = #{sessionUserId}
+				,STATUS = #{status}
+		WHERE 	SEQ = #{seq}
+	</update>
+
+	<!--신청정보(유심교체) DTL 테이블 상태 업데이트-->
+	<update id="updateStatusDtl" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.updateStatusDtl*/
+		UPDATE 	NMCP_FREE_USIM_REQ_DTL@DL_MCP
+		SET		AMD_DTTM = SYSDATE
+				,AMD_ID = #{sessionUserId}
+				,STATUS = #{status}
+		WHERE 	SEQ = #{seq}
+	</update>
+
+	<!--신청정보(유심교체) MST 테이블 처리/메모 업데이트-->
+	<update id="updateUsimChgProcExcel" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.updateUsimChgProcExcel*/
+		UPDATE 	NMCP_FREE_USIM_REQ_MST@DL_MCP
+		SET		AMD_DTTM = SYSDATE
+				,AMD_ID = #{sessionUserId}
+				,PROC_YN = CASE WHEN #{procYn} = 'Y' THEN 'Y' ELSE 'N' END
+				,PROC_MEMO = #{procMemo}
+				,PROC_DTTM = CASE WHEN #{procYn} = 'Y' THEN SYSDATE ELSE NULL END
+		WHERE 	SEQ = #{seq}
+	</update>
+	
+	<!-- CUSTOMER_ID 조회(유효한 계약번호인지 여부 확인)-->
+	<select id="selectMspJuoSubInfoByContractNum" parameterType="String" resultType="String">
+		/*UsimDlvryChangeMapper.selectMspJuoSubInfoByContractNum*/
+		SELECT 	CUSTOMER_ID
+		FROM 	MSP_JUO_SUB_INFO
+		WHERE 	CONTRACT_NUM = #{contractNum}
+	</select>
+
+	<!--신청정보(유심교체) MST 테이블 주문번호 조회-->
+	<select id="selectSeqByContractNum" parameterType="String" resultType="String">
+		/*UsimDlvryChangeMapper.selectSeqByContractNum*/
+		SELECT 	SEQ
+		FROM 	NMCP_FREE_USIM_REQ_DTL@DL_MCP
+		WHERE 	CONTRACT_NUM = #{contractNum}
+	</select>
+
+	<!--엑셀 내 중복확인-->
+	<select id="dupChkByContractNum" parameterType="String" resultType="int">
+		/*UsimDlvryChangeMapper.dupChkByContractNum*/
+		SELECT 	count(1)
+		FROM 	NMCP_FREE_USIM_REQ_CHK@DL_MCP
+		WHERE 	CONTRACT_NUM = #{contractNum}
+	</select>
+
+	<!--신청정보(유심교체) 임시테이블 INSERT-->
+	<insert id="insertUsimChangeChk" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.insertUsimChangeChk*/
+		INSERT INTO NMCP_FREE_USIM_REQ_CHK@DL_MCP
+		(
+					CUSTOMER_ID
+					,CONTRACT_NUM
+					,CHNL_CD
+					,REQ_QNTY
+					,DLVRY_NAME
+					,DLVRY_TEL_FN
+					,DLVRY_TEL_MN
+					,DLVRY_TEL_RN
+					,DLVRY_POST
+					,DLVRY_ADDR
+					,DLVRY_ADDR_DTL
+					,DLVRY_MEMO
+					,TB_CD
+					,DLVRY_NO
+					,REQ_IN_DAY
+					,PRDT_ID
+					,PRDT_CODE
+					,USIM_SN
+					,CRET_ID
+					,CRET_DTTM
+		)
+		VALUES
+		(
+					(SELECT CUSTOMER_ID FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = #{contractNum})
+					,#{contractNum}
+					,#{chnlCd}
+					,#{reqQnty}
+					,#{dlvryName}
+					,SUBSTR(#{dlvryTel}, 1, 3)
+					,CASE WHEN (LENGTH(#{dlvryTel}) = 10) THEN SUBSTR(#{dlvryTel}, 4, 3) ELSE SUBSTR(#{dlvryTel}, 4, 4) END
+					,CASE WHEN (LENGTH(#{dlvryTel}) = 10) THEN SUBSTR(#{dlvryTel}, 7, 4) ELSE SUBSTR(#{dlvryTel}, 8, 4) END
+					,#{dlvryPost}
+					,#{dlvryAddr}
+					,#{dlvryAddrDtl}
+					,#{dlvryMemo}
+					,#{tbCd}
+					,#{dlvryNo}
+					,TO_DATE(#{reqInDay}, 'YYYYMMDD')
+					,(SELECT PRDT_ID FROM CMN_INTM_MDL WHERE PRDT_CODE = #{prdtCode} AND ROWNUM = 1)
+					,#{prdtCode}
+					,#{usimSn}
+					,#{sessionUserId}
+					,SYSDATE
+		)
+	</insert>
+
+	<!--임시테이블에서 고객번호 리스트 조회-->
+	<select id="selectCustomerIdList" resultType="String">
+		/*UsimDlvryChangeMapper.selectCustomerIdList*/
+		SELECT 	DISTINCT CUSTOMER_ID
+		FROM 	NMCP_FREE_USIM_REQ_CHK@DL_MCP
+	</select>
+
+	<!--신청정보(유심교체) 임시테이블 조회-->
+	<select id="selectUsimChangeChk" parameterType="String" resultType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.selectUsimChangeChk*/
+		SELECT	CUSTOMER_ID       AS customerId,
+				CONTRACT_NUM      AS contractNum,
+				CHNL_CD           AS chnlCd,
+				REQ_QNTY          AS reqQnty,
+				DLVRY_NAME        AS dlvryName,
+				DLVRY_TEL_FN      AS dlvryTelFn,
+				DLVRY_TEL_MN      AS dlvryTelMn,
+				DLVRY_TEL_RN      AS dlvryTelRn,
+				DLVRY_POST        AS dlvryPost,
+				DLVRY_ADDR        AS dlvryAddr,
+				DLVRY_ADDR_DTL    AS dlvryAddrDtl,
+				DLVRY_MEMO        AS dlvryMemo,
+				TB_CD             AS tbCd,
+				DLVRY_NO          AS dlvryNo,
+				TO_CHAR(REQ_IN_DAY, 'YYYYMMDD') AS reqInDay,
+				PRDT_ID           AS prdtId,
+				PRDT_CODE         AS prdtCode,
+				USIM_SN           AS usimSn
+		FROM 	NMCP_FREE_USIM_REQ_CHK@DL_MCP
+		WHERE 	CUSTOMER_ID = #{customerId}
+	</select>
+
+	<!--신청정보(유심교체) 주문번호(SEQ) 생성-->
+	<select id="selectUsimChangeSeq" resultType="String">
+		/* UsimDlvryChangeMapper.selectUsimChangeSeq */
+		SELECT	SQ_FREE_USIM_REQ_MST.NEXTVAL@DL_MCP AS seq
+		FROM 	DUAL
+	</select>
+
+	<!--신청정보(유심교체) MST 테이블 생성-->
+	<insert id="insertUsimChangeMst" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.insertUsimChangeMst*/
+		INSERT INTO  NMCP_FREE_USIM_REQ_MST@DL_MCP
+		(
+					 SEQ
+					 ,CUSTOMER_ID
+					 ,CHNL_CD
+					 ,REQ_QNTY
+					 ,DLVRY_NAME
+					 ,DLVRY_TEL_FN
+					 ,DLVRY_TEL_MN
+					 ,DLVRY_TEL_RN
+					 ,DLVRY_POST
+					 ,DLVRY_ADDR
+					 ,DLVRY_ADDR_DTL
+					 ,DLVRY_MEMO
+					 ,PROC_MEMO
+					 ,PROC_YN
+					 ,PROC_DTTM
+					 ,TB_CD
+					 ,DLVRY_NO
+					 ,STATUS
+					 ,REQ_IN_DAY
+					 ,CRET_ID
+					 ,CRET_DTTM
+					 ,OSST_NO
+		)
+		VALUES(
+					#{seq}
+					,#{customerId}
+					,#{chnlCd}
+					,#{reqQnty}
+					,#{dlvryName}
+					,#{dlvryTelFn}
+					,#{dlvryTelMn}
+					,#{dlvryTelRn}
+					,#{dlvryPost}
+					,#{dlvryAddr}
+					,#{dlvryAddrDtl}
+					,#{dlvryMemo}
+					,#{procMemo}
+					,#{procYn}
+			  		,CASE WHEN #{procYn} = 'Y' THEN SYSDATE ELSE NULL END
+					,#{tbCd}
+					,#{dlvryNo}
+					,'REQ'
+					,TO_DATE(NVL(#{reqInDay}, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')), 'YYYYMMDDHH24MISS')
+					,#{sessionUserId}
+					,SYSDATE
+					,#{osstNo}
+		)
+	</insert>
+
+	<!--신청정보(유심교체) DTL 테이블 생성-->
+	<insert id="insertUsimChangeDtl" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.insertUsimChangeDtl*/
+		INSERT INTO  NMCP_FREE_USIM_REQ_DTL@DL_MCP
+		(
+					 SEQ
+					 ,SUB_SEQ
+					 ,CONTRACT_NUM
+					 ,PRDT_ID
+					 ,PRDT_CODE
+					 ,USIM_SN
+					 ,STATUS
+					 ,CRET_ID
+					 ,CRET_DTTM
+					 ,PRE_CHK_RSLT_CD
+					 ,PRE_CHK_RSLT_MSG
+					 ,NFC_USIM_YN
+					 ,USIM_MODEL_CD
+					 ,USIM_MODEL_ID
+		)
+		VALUES(
+					#{seq}
+					,NVL((SELECT MAX(SUB_SEQ) + 1 FROM NMCP_FREE_USIM_REQ_DTL@DL_MCP WHERE SEQ = #{seq}) ,1)
+					,#{contractNum}
+					,#{prdtId}
+					,#{prdtCode}
+					,#{usimSn}
+					,'REQ'
+					,#{sessionUserId}
+					,SYSDATE
+					,'00'
+					,'처리성공'
+					,DECODE(#{nfcUsimType}, 'NFC', 'Y', '일반', 'N', '') 
+					,#{usimModelCd}
+					,#{usimModelId}
+		)
+	</insert>
+
+	<!--임시테이블 데이터 삭제-->
+	<delete id="deleteUsimChangeChk">
+		/*UsimDlvryChangeMapper.deleteUsimChangeChk*/
+		DELETE FROM NMCP_FREE_USIM_REQ_CHK@DL_MCP
+	</delete>
+
+	<!--엑셀 업로드 후 SMS(배송안내) 발송 대상 조회 -->
+	<select id="selectSmsSendList" resultType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.selectSmsSendList*/
+		SELECT 	SEQ AS seq
+			    ,MST.DLVRY_TEL_FN || MST.DLVRY_TEL_MN || MST.DLVRY_TEL_RN AS dlvryTel
+				,MST.TB_CD AS tbCd
+				,(SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'PERCEL' AND DTL_CD = MST.TB_CD) AS tbNm
+				,MST.DLVRY_NO AS dlvryNo
+		FROM 	NMCP_FREE_USIM_REQ_MST@DL_MCP MST
+		WHERE 	STATUS = 'REQ'
+		AND 	TB_CD IS NOT NULL
+		AND 	DLVRY_NO IS NOT NULL
+	</select>
+
+	<!--직접등록 고객정보 조회 -->
+	<select id="selectCustomerInfo" parameterType="string" resultType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.selectCustomerInfo*/
+		SELECT  SUB.CONTRACT_NUM AS contractNum
+		       	,SUB.SVC_CNTR_NO AS svcCntrNo
+				,SUB.CUSTOMER_ID AS customerId
+				,SUB.SUBSCRIBER_NO AS subscriberNo
+				,SUB.SUBSCRIBER_NO AS ctn
+				,CUS.CUSTOMER_LINK_NAME AS customerLinkName
+				,NVL(SUB.USIM_TYPE, 'U') AS usimType
+				,SUB.SUB_STATUS AS subStatus
+				,BAN.BAN_ADR_ZIP AS dlvryPost
+				,BAN.BAN_ADR_PRIMARY_LN AS dlvryAddr
+				,BAN.BAN_ADR_SECONDARY_LN AS dlvryAddrDtl
+		FROM    MSP_JUO_SUB_INFO SUB
+			    ,MSP_JUO_CUS_INFO CUS
+				,MSP_JUO_BAN_INFO BAN
+		WHERE 	SUB.CUSTOMER_ID = CUS.CUSTOMER_ID
+		AND   	SUB.BAN = BAN.BAN
+		AND   	CUS.CUSTOMER_TYPE = 'I'
+		AND   	SUB_STATUS != 'C'
+ 		AND   	SUB.PPPO = 'PO' 
+ 		AND   	SUB.CUSTOMER_ID = (SELECT CUSTOMER_ID FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND SUB_STATUS != 'C')
+		ORDER BY CASE
+			WHEN SUB.SUBSCRIBER_NO = #{subscriberNo} THEN 0  -- 조회한 번호가 최우선
+			ELSE 1
+		END, SUB.LST_COM_ACTV_DATE
+	</select>
+
+	<!--신청정보(유심교체) 연동번호(OSST_NO) 생성 -->
+	<select id="selectOsstNo" resultType="String">
+		/* UsimDlvryChangeMapper.selectOsstNo */
+		SELECT
+			SQ_FREE_USIM_OSST.NEXTVAL@DL_MCP AS osstNo
+		FROM DUAL
+	</select>
+	
+	<!--OSST 연동이력 생성-->
+	<insert id="insertOsstHist" parameterType="Map">
+		/* UsimDlvryChangeMapper.insertOsstHist */
+		INSERT INTO NMCP_FREE_USIM_OSST@DL_MCP
+		(			
+		 			OSST_NO
+					,CONTRACT_NUM
+					,SVC_CNTR_NO
+					,PRGR_STAT_CD
+					,NSTEP_GLOBAL_ID
+					,RESPONSE_CODE
+					,RESPONSE_BASIC
+					,RSLT_CD
+					,RSLT_MSG
+					,OPEN_DT
+					,USIM_CHG_DT
+					,ACCEPT_DT
+					,USIM_TYPE_CD
+					,USIM_ONLY_YN
+					,CTN_STATUS
+					,REGST_ID
+					,REGST_DTTM
+		)
+		VALUES
+		(
+					#{osstNo}
+					,#{contractNum}
+					,#{svcCntrNo}
+					,#{prgrStatCd}
+					,#{globalNo}
+					,#{responseCode}
+					,#{responseBasic}
+					,#{rsltCd}
+					,#{rsltMsg}
+					,#{openDt}
+					,#{usimChgDt}
+					,#{acceptDt}
+					,#{usimTypeCd}
+					,#{usimOnlyYn}
+					,#{ctnStatus}
+					,#{sessionUserId}
+					,SYSDATE
+		)
+	</insert>
+	
+	<!--신청정보(유심교체) 직접등록 상세조회-->
+	<select id="selectUsimChgInfo" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* UsimDlvryChangeMapper.selectUsimChgInfo */
+		SELECT	MST.SEQ
+				,CUS.CUSTOMER_LINK_NAME
+				,MST.CHNL_CD
+				,(SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'UsimReqChnlCd' AND DTL_CD = MST.CHNL_CD) AS CHNL_NM
+				,MST.DLVRY_NAME
+				,MST.DLVRY_TEL_FN 
+				,MST.DLVRY_TEL_MN 
+				,MST.DLVRY_TEL_RN
+				,MST.DLVRY_POST
+				,MST.DLVRY_ADDR
+				,MST.DLVRY_ADDR_DTL
+				,MST.DLVRY_MEMO
+				,MST.PROC_MEMO
+				,MST.PROC_YN
+				,TO_CHAR(MST.REQ_IN_DAY, 'YYYY-MM-DD') AS REQ_IN_DAY
+				,DTL.CONTRACT_NUM
+				,SUB.SUBSCRIBER_NO
+				,DTL.PRE_CHK_RSLT_CD
+				,DTL.PRE_CHK_RSLT_MSG
+				,DTL.PRDT_CODE
+				,DTL.USIM_SN
+				,DECODE(DTL.NFC_USIM_YN, 'Y', 'NFC', 'N', '일반', '') AS NFC_USIM_TYPE
+				,DTL.USIM_MODEL_CD
+				,DTL.USIM_MODEL_ID
+		FROM 	NMCP_FREE_USIM_REQ_MST@DL_MCP MST
+			   ,NMCP_FREE_USIM_REQ_DTL@DL_MCP DTL
+			   ,MSP_JUO_CUS_INFO CUS
+			   ,MSP_JUO_SUB_INFO SUB
+		WHERE 	MST.SEQ = DTL.SEQ
+		AND  	DTL.CONTRACT_NUM = SUB.CONTRACT_NUM
+		AND  	MST.CUSTOMER_ID = CUS.CUSTOMER_ID
+		AND  	DTL.SEQ = #{seq}
+		ORDER BY DTL.SUB_SEQ
+	</select>
+
+	<!--직접등록(수정) 업데이트  -->
+	<update id="updateUsimChg" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.UsimDlvryChangeVO">
+		/*UsimDlvryChangeMapper.updateUsimChg*/
+		UPDATE 	NMCP_FREE_USIM_REQ_MST@DL_MCP
+		SET		AMD_DTTM = SYSDATE
+				,AMD_ID = #{sessionUserId}
+			<if test='dlvryName != null and dlvryName != ""'>
+				,DLVRY_NAME = #{dlvryName}
+			</if>
+			<if test='dlvryTelFn != null and dlvryTelFn != ""'>
+				,DLVRY_TEL_FN = #{dlvryTelFn}
+			</if>
+			<if test='dlvryTelMn != null and dlvryTelMn != ""'>
+				,DLVRY_TEL_MN = #{dlvryTelMn}
+			</if>
+			<if test='dlvryTelRn != null and dlvryTelRn != ""'>
+				,DLVRY_TEL_RN = #{dlvryTelRn}
+			</if>
+			<if test='dlvryPost != null and dlvryPost != ""'>
+				,DLVRY_POST = #{dlvryPost}
+			</if>
+			<if test='dlvryAddr != null and dlvryAddr != ""'>
+				,DLVRY_ADDR = #{dlvryAddr}
+			</if>
+			<if test='dlvryAddrDtl != null and dlvryAddrDtl != ""'>
+				,DLVRY_ADDR_DTL = #{dlvryAddrDtl}
+			</if>
+				,DLVRY_MEMO = #{dlvryMemo}			
+				,PROC_MEMO = #{procMemo}
+				,PROC_YN = #{procYn}
+				,PROC_DTTM = CASE WHEN #{procYn} = 'Y' THEN SYSDATE ELSE NULL END
+		WHERE 	SEQ = #{seq}
+	</update>
+	
+	<select id="selectUsimModelData" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/*UsimDlvryChangeMapper.selectUsimModelData*/
+		SELECT
+			PRDT_CODE
+			,DECODE(NFC_USIM_YN, 'Y', 'NFC', 'N', '일반') AS NFC_USIM_TYPE
+		FROM CMN_INTM_MDL
+		WHERE RPRS_PRDT_ID = #{intmMdlId}
+	</select>
+	
+</mapper>

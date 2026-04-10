@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.prgmmgmt.mapper.PrgmMgmtMapper">
+
+	<!-- 배치프로그램목록 -->
+	<select id="getPrgmMgmtHst" parameterType="com.ktis.msp.cmn.prgmmgmt.vo.PrgmMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PrgmMgmtMapper.getPrgmMgmtHst */
+		
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		SELECT M.SYS_SCTN
+		       , M.PRGM_ID
+		       , M.PRGM_NM
+		       , M.STAT_CD
+		       , M.STAT_NM
+		       , M.START_DTTM
+		       , M.END_DTTM
+		       , M.EXEC_PARAM
+		       , M.ERR_CD
+		       , M.ERR_MSG
+		       , M.REMRK
+		       , M.PRGM_URL
+		       , M.REQ_DTTM
+		  FROM (
+		        SELECT 'BTCH' AS SYS_SCTN
+		              ,A.BATCH_JOB_ID AS PRGM_ID
+				      ,A.BATCH_JOB_NM AS PRGM_NM
+				      ,T.STAT_CD AS STAT_CD
+				      ,FN_GET_CODENM('CMN0027', T.STAT_CD) AS STAT_NM
+				      ,T.STRT_DTTM AS START_DTTM
+				      ,T.END_DTTM AS END_DTTM
+				      ,T.REQ_DTTM AS REQ_DTTM
+				      ,T.EXEC_PARAM AS EXEC_PARAM
+				      ,T.ERR_CD AS ERR_CD
+				      ,T.ERR_MSG AS ERR_MSG
+				      ,T.REMRK AS REMRK
+				      ,A.EXEC_SERVICE AS PRGM_URL
+				FROM   CMN_BATCH_INFO A
+					  ,(SELECT NVL(B.BATCH_JOB_ID, C.BATCH_JOB_ID) AS BATCH_JOB_ID
+					          ,B.BATCH_EXEC_ID
+					          ,C.BATCH_REQ_ID
+					          ,NVL(B.STAT_CD, 'STB') AS STAT_CD
+					          ,B.STRT_DTTM
+					          ,B.END_DTTM
+					          ,NVL(B.EXEC_PARAM, C.EXEC_PARAM) AS EXEC_PARAM
+					          ,B.EXEC_COUNT
+					          ,B.ERR_CD
+					          ,B.ERR_MSG
+					          ,B.REMRK
+					          ,C.REQ_DTTM
+					          ,NVL(B.EXEC_TYPE_CD, C.EXEC_TYPE_CD) AS EXEC_TYPE_CD
+					    FROM   CMN_BATCH_EXEC_HST B
+					        FULL OUTER JOIN CMN_BATCH_REQUEST C
+					        ON B.BATCH_JOB_ID = C.BATCH_JOB_ID 
+					        AND B.BATCH_REQ_ID = C.BATCH_REQ_ID
+					    WHERE (B.STRT_DTTM BETWEEN #{searchStartDate} || '000000' AND #{searchEndDate} || '235959' 
+					        OR C.REQ_DTTM BETWEEN #{searchStartDate} || '000000' AND #{searchEndDate} || '235959')
+					   ) T
+				WHERE  A.BATCH_JOB_ID = T.BATCH_JOB_ID
+		        <if test = "searchPrgmId != null and searchPrgmId != ''">
+		            AND  A.BATCH_JOB_ID LIKE '%' || #{searchPrgmId} || '%'
+		        </if>
+		        <if test = "searchPrgmNm != null and searchPrgmNm != ''">
+		            AND  A.BATCH_JOB_NM LIKE '%' || #{searchPrgmNm} || '%'
+		        </if>
+		        <if test = "searchStatCd != null and searchStatCd != ''">
+		            AND  T.STAT_CD = #{searchStatCd}
+		        </if>
+		        <if test = "searchExecService != null and searchExecService != ''">
+		            AND  A.EXEC_SERVICE LIKE '%' || #{searchExecService} || '%'
+		        </if>
+		        UNION ALL
+				SELECT CME.CATEGORY AS SYS_SCTN
+				       , CME.PRGM_ID
+				       , CME.PRGM_NM
+				       , CME.STAT_CD
+				       , 'UI' AS STAT_NM
+				       , '' AS START_DTTM
+				       , CME.ERR_DTTM AS END_DTTM
+				       , '' AS REQ_DTTM
+				       , CME.EXEC_PARAM
+				       , CME.ERR_CD
+				       , CME.ERR_MSG
+				       , CME.REMRK
+				       , CME.PRGM_URL
+				  FROM CMN_MSP_EXEC_HST CME
+		         WHERE CME.ERR_DTTM BETWEEN #{searchStartDate} || '000000' AND #{searchEndDate} || '235959'
+		        <if test = "searchPrgmId != null and searchPrgmId != ''">
+		            AND  CME.PRGM_ID LIKE '%' || #{searchPrgmId} || '%'
+		        </if>
+		        <if test = "searchPrgmNm != null and searchPrgmNm != ''">
+		            AND  CME.PRGM_NM LIKE '%' || #{searchPrgmNm} || '%'
+		        </if>
+		        <if test = "searchStatCd != null and searchStatCd != ''">
+		            AND  CME.STAT_CD = #{searchStatCd}
+		        </if>
+		        <if test = "searchExecService != null and searchExecService != ''">
+		            AND  CME.PRGM_URL LIKE '%' || #{searchExecService} || '%'
+		        </if>
+		) M
+		WHERE 1=1
+		<if test = "searchSysSctn != null and searchSysSctn != ''">
+		  AND M.SYS_SCTN = #{searchSysSctn}
+		</if>
+		ORDER BY END_DTTM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+		
+	</select>
+	
+</mapper>

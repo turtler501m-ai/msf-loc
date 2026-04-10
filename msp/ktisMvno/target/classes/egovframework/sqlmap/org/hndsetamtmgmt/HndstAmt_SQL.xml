@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.hndsetamtmgmt.mapper.HndstAmtMapper">
+		
+	
+	<select id="selectMaxAmt" parameterType="com.ktis.msp.org.hndsetamtmgmt.vo.HndstAmtVo" resultType="String">
+	    SELECT /* HndstAmtMapper.selectMaxAmt */
+	           CD_DSC AS MAX_AMT 
+	      FROM CMN_GRP_CD_MST 
+	     WHERE GRP_ID = 'ORG0018' 
+	       AND CD_VAL = '1'  
+	</select>
+		
+</mapper>

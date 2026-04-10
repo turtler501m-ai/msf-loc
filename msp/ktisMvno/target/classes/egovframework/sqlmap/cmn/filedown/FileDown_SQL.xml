@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.filedown.mapper.FileDownMapper">
+
+	
+	<insert  id="insertCmnFileDnldMgmtMst"  parameterType="java.util.HashMap"  >
+	
+	    INSERT INTO CMN_FILE_DNLD_MGMT_MST /**cmn.filedown.insertCmnFileDnldMgmtMst */ 
+		(
+			     MENU_ID
+			   , FILE_DN_DT
+			   , USR_ID
+			   , FILE_NM
+			   , IP_INFO
+			   , DUTY_NM
+			   , FILE_ROUT
+			   , FILE_SIZE
+			   , DWNLD_RSN
+			   , DATA_CNT
+			   , EXCL_DNLD_ID
+		) 
+		VALUES 
+		( 
+			  nvl(#{menuId},'*')
+			 ,sysdate
+			 ,#{SESSION_USER_ID }
+			 ,#{FILE_NM  }
+			 ,#{IP_INFO  }
+			 ,#{DUTY_NM  }
+			 ,#{FILE_ROUT  }
+			 ,#{FILE_SIZE  }
+			 ,#{DWNLD_RSN }
+			 ,#{DATA_CNT  }
+			 ,#{EXCL_DNLD_ID }
+		)
+		
+	</insert>
+	
+	<insert  id="insertCmnExclDnldHst"  parameterType="java.util.HashMap"  >
+	    INSERT INTO CMN_EXCL_DNLD_HST /**cmn.filedown.insertCmnExclDnldHst */ 
+		(
+			EXCL_DNLD_ID
+			, MENU_ID
+			, USR_ID
+			, USR_NM
+			, ORGN_ID
+			, DUTY_NM
+			, MENU_NM
+			, EXCL_STRT_DT
+			, SEARCH_VAL
+		) 
+		VALUES 
+		(
+			 #{EXCL_DNLD_ID}
+			 ,NVL(#{MENU_ID},'*')
+			 ,#{USR_ID}
+			 ,#{USR_NM}
+			 ,#{ORGN_ID}
+			 ,#{DUTY_NM}
+			 ,#{MENU_NM}
+			 ,SYSDATE
+			 ,#{SEARCH_VAL}
+		)
+	</insert>
+	
+	
+	<select id="getFileMgmtById" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.filedown.getFileMgmtById =========*/	
+	    	    
+		SELECT 
+		        FILE_ID
+		      , MODULE_ID
+		      , FILE_NM
+		      , FILE_NM_PC
+		      , FILE_ROUT
+		      , FILE_SIZE
+		      , REGST_ID
+		      , REG_DTTM
+		      , RVISN_ID
+		      ,RVISN_DTTM
+		FROM CMN_FILE_MGMT_MST
+		WHERE FILE_ID    =  #{fileId} 
+		  AND MODULE_ID  =  #{moduleId}
+		
+
+	</select>
+	
+	
+	<!-- 엑셀파일저장 -->
+	<insert id="insertExcelDown" parameterType="java.util.HashMap">
+		INSERT INTO /* cmn.filedown.insertExcelDown */
+				MSP_BOND_EXCEL_MGMT 
+				(EXCEL_DOWN_SEQ_NUM
+				, file_nm
+				, file_path
+				, regst_id
+				, REGST_DTTM) 
+		VALUES
+				(EXCEL_DOWN_SEQ.NEXTVAL
+				, #{fileNm}
+				, #{filePath}
+				, #{loginId}
+				, SYSDATE)
+	</insert>
+
+	<!-- 엑셀파일리스트 가져오기 -->
+	<select id="selectExcelList" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* cmn.filedown.selectExcelList */
+		SELECT  TO_CHAR(A.EXCL_STRT_DT, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM
+		        , A.MENU_NM
+		        , DECODE(C.EXEC_YN, 'N', '대기중', 'Y', FN_GET_CODENM('CMN0027',D.STAT_CD)) STAT_NM
+		        , B.FILE_ROUT FILE_ROUT
+		        , SUBSTR(B.FILE_ROUT,INSTR(B.FILE_ROUT,'/',-1)+1,lengthB(B.FILE_ROUT)) AS FILE_NM
+		        , A.USR_ID REGST_ID
+		        , A.USR_NM USR_NM
+		        , B.DWNLD_RSN DWNLD_RSN
+		        , A.EXCL_DNLD_ID
+		FROM    CMN_EXCL_DNLD_HST A
+		        , CMN_FILE_DNLD_MGMT_MST B
+		        , CMN_BATCH_REQUEST C
+		        , CMN_BATCH_EXEC_HST D
+		WHERE   A.EXCL_DNLD_ID = B.EXCL_DNLD_ID(+)
+			AND     A.EXCL_DNLD_ID = C.EXCL_DNLD_ID
+			AND     C.BATCH_REQ_ID = D.BATCH_REQ_ID(+)
+			AND     A.USR_ID = #{loginId}
+			<if test='searchStartDt != null and searchStartDt != ""'>
+			AND #{searchStartDt} = TO_CHAR(A.EXCL_STRT_DT, 'YYYYMMDD')
+			</if>		
+		ORDER BY A.EXCL_STRT_DT DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 엑셀파일명 및 경로 가져오기 -->
+	<select id="selectExcelFilePath" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* cmn.filedown.selectExcelFilePath */
+				FILE_NM
+				, FILE_PATH
+				, REGST_ID
+				, TO_CHAR(REGST_DTTM, 'YYYYMMDD HH24:MI:SS') AS REGST_DTTM
+		FROM
+				MSP_BOND_EXCEL_MGMT
+		WHERE 	
+				1 = 1
+				AND EXCEL_DOWN_SEQ_NUM = #{excelDownSeqNum}
+	</select>
+
+	<!-- EXCL_DNLD_ID 로 엑셀파일명 및 경로 가져오기 -->
+	<select id="selectExcelFilePathByExclDnldId" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* cmn.filedown.selectExcelFilePathByExclDnldId */
+		SELECT
+		    SUBSTR(B.FILE_ROUT,INSTR(B.FILE_ROUT,'/',-1)+1,lengthB(B.FILE_ROUT)) FILE_NM
+		    , B.FILE_ROUT FILE_PATH
+		    , B.USR_ID AS REGST_ID
+		    , TO_CHAR(B.FILE_DN_DT, 'YYYYMMDD HH24:MI:SS') AS REGST_DTTM
+		FROM CMN_FILE_DNLD_MGMT_MST B WHERE EXCL_DNLD_ID =#{exclDnldId}
+	</select>
+	
+	<select id="getSqCmnExclDnldHst" resultType="int">
+		/* cmn.filedown.getSqCmnExclDnldHst */
+		SELECT SQ_CMN_EXCL_DNLD_HST.NEXTVAL FROM DUAL
+	</select>
+	
+	<insert  id="insertCmnExclDnldHstVO"  parameterType="com.ktis.msp.cmn.btchmgmt.vo.BatchJobVO">
+	    INSERT INTO CMN_EXCL_DNLD_HST /**cmn.filedown.insertCmnExclDnldHstVO */ 
+		(
+			EXCL_DNLD_ID
+			, MENU_ID
+			, USR_ID
+			, USR_NM
+			, ORGN_ID
+			, DUTY_NM
+			, MENU_NM
+			, EXCL_STRT_DT
+			, SEARCH_VAL
+		) 
+		VALUES 
+		(
+			 #{exclDnldId}
+			 ,#{menuId}
+			 ,#{sessionUserId}
+			 ,#{sessionUserName}
+			 ,#{sessionUserOrgnId}
+			 ,#{dutyNm}
+			 ,#{menuNm}
+			 ,SYSDATE
+			 ,#{searchVal}
+		)
+	</insert>
+	
+	
+	
+</mapper>

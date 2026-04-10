@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.FathMapper">
+
+    <!-- 셀프안면인증 URL 이미발급한 존재하는지 조회-->
+    <select id="selectFathSelfUrl" parameterType="String" resultType="com.ktis.msp.rcp.rcpMgmt.vo.FathVO">
+        /* FathMapper.selectFathSelfUrl */
+        SELECT  URL
+                ,TO_CHAR(EXPIR_DT, 'YYYY-MM-DD HH24:MI:SS') AS expirDt
+        FROM    NMCP_FATH_SELF_URL@DL_MCP
+        WHERE   RES_NO = #{resNo}
+        AND     EXPIR_DT <![CDATA[ > ]]>  SYSDATE  /*유효기간이 남아있는 경우*/
+    </select>
+    
+	<!-- 셀프안면인증 URL 발급-->
+    <insert id="insertFathSelfUrl" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.FathVO">
+        /* FathMapper.insertFathSelfUrl */
+        INSERT INTO  NMCP_FATH_SELF_URL@DL_MCP(
+            UUID,                          
+            RES_NO,
+            OPER_TYPE,
+            URL,
+            EXPIR_DT,
+            CRET_ID,
+            CRET_DT                                                 
+        ) 
+        VALUES(
+            #{uuid},   
+            #{resNo},  
+            #{operType},  
+            #{url},
+            SYSDATE + 1,
+            #{sessionUserId},
+            SYSDATE               
+        )
+    </insert>
+
+    <!--안면인증 연락처 수정(명의변경)-->
+    <update id="updateNameChgFathMobile" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.FathVO">
+        /* FathMapper.updateFathMobile */
+        UPDATE  NMCP_CUST_REQUEST_NAME_CHG@DL_MCP
+        SET     FATH_TEL_NO         = #{smsRcvTelNo},
+                RVISN_ID  		    = #{sessionUserId},
+                RVISN_DTTM          = SYSDATE
+        WHERE 	MCN_RES_NO          = #{resNo}
+    </update>
+    
+
+    <!--안면인증 연락처 수정(신청서)-->
+    <update id="updateFathMobile" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.FathVO">
+        /* FathMapper.updateFathMobile */
+        UPDATE  MCP_REQUEST_CSTMR@DL_MCP
+        SET     FATH_MOBILE_FN      = SUBSTR(#{smsRcvTelNo}, 1, 3),
+                FATH_MOBILE_MN      = SUBSTR(#{smsRcvTelNo}, 4, 4),
+                FATH_MOBILE_RN      = SUBSTR(#{smsRcvTelNo}, 8, 4),
+                RVISN_ID  		    = #{sessionUserId},
+                RVISN_DTTM          = SYSDATE
+        WHERE 	REQUEST_KEY         = (SELECT REQUEST_KEY FROM MCP_REQUEST@DL_MCP WHERE RES_NO = #{resNo})
+    </update>
+    
+
+    <!--안면인증 대상여부 업데이트-->
+    <update id="updateFathTrgYn" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateFathTrgYn */
+        UPDATE  MCP_REQUEST@DL_MCP
+        SET     FATH_TRG_YN     = #{fathTrgYn},
+                RVISN_ID  		= #{sessionUserId},
+                RVISN_DTTM      = SYSDATE
+        WHERE 	RES_NO = #{resNo}
+    </update>
+    
+    <!--본인인증유형 업데이트-->
+    <update id="updateSelfCertType" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateSelfCertType */
+        UPDATE  MCP_REQUEST_CSTMR@DL_MCP
+        SET     SELF_CERT_TYPE  = #{selfCertType},
+                RVISN_ID  		= #{sessionUserId},
+                RVISN_DTTM      = SYSDATE
+        WHERE 	REQUEST_KEY = #{requestKey}
+    </update>
+
+    
+    <!--본인인증유형 업데이트(법정대리인)-->
+    <update id="updateSelfCertTypeMinor" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateSelfCertTypeMinor */
+        UPDATE  MCP_REQUEST_AGENT@DL_MCP
+        SET     MINOR_SELF_CERT_TYPE  = #{minorSelfCertType},
+                RVISN_ID  		= #{sessionUserId},
+                RVISN_DTTM      = SYSDATE
+        WHERE 	REQUEST_KEY = #{requestKey}
+    </update>
+
+    <!--본인인증유형 업데이트-->
+    <update id="updateNameChgSelfCertType" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateNameChgSelfCertType */
+        UPDATE  NMCP_CUST_REQUEST_NAME_CHG@DL_MCP
+        SET     SELF_CERT_TYPE  = #{selfCertType},
+                RVISN_ID  		= #{sessionUserId},
+                RVISN_DTTM      = SYSDATE
+        WHERE   MCN_RES_NO      = #{mcnResNo}
+    </update>
+
+
+    <!--본인인증유형 업데이트(법정대리인)-->
+    <update id="updateNameChgSelfCertTypeMinor" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateNameChgSelfCertTypeMinor */
+        UPDATE  NMCP_CUST_REQ_NAME_CHG_AGENT@DL_MCP
+        SET     NEE_AGENT_SELF_CERT_TYPE  = #{minorSelfCertType},
+                RVISN_ID  		= #{sessionUserId},
+                RVISN_DTTM      = SYSDATE
+        WHERE   CUST_REQ_SEQ    = (SELECT CUST_REQ_SEQ FROM NMCP_CUST_REQUEST_NAME_CHG@DL_MCP WHERE MCN_RES_NO = #{mcnResNo})
+    </update>
+    
+    
+
+    <!--안면인증 트랜잭션 ID 업데이트-->
+    <update id="updateFathTransacId" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateFathTransacId */
+        UPDATE  MCP_REQUEST@DL_MCP
+        SET     FATH_TRANSAC_ID  = #{fathTransacId},
+                FATH_CMPLT_NTFY_DT = '',
+                CPNT_ID          = #{cpntId},
+                RVISN_ID  		 = #{sessionUserId},
+                RVISN_DTTM       = SYSDATE
+        WHERE 	RES_NO = #{resNo}
+    </update>
+    
+    <!--안면인증 인증일자 업데이트-->
+    <update id="updateFathCmpltNtfyDt" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateFathCmpltNtfyDt */
+        UPDATE  MCP_REQUEST@DL_MCP
+        SET     FATH_CMPLT_NTFY_DT  = #{fathCmpltNtfyDt},
+                RVISN_ID  		    = #{sessionUserId},
+                RVISN_DTTM          = SYSDATE
+        WHERE 	RES_NO = #{resNo}
+    </update>
+
+    <!--안면인증 정보조회-->
+    <select id="selectFathInfo" parameterType="String" resultType="map">
+        /* FathMapper.selectFathInfo */
+        SELECT  CASE WHEN T1.CSTMR_TYPE = 'NM' THEN T3.MINOR_AGENT_NAME  /* 미성년자*/
+                      ELSE T2.CSTMR_NAME
+                    END AS CSTMR_NAME,
+                CASE WHEN T1.CSTMR_TYPE = 'NM' THEN CRYPTO_AES256.DEC_AES(T3.MINOR_AGENT_RRN)  /* 미성년자*/
+                      WHEN T1.CSTMR_TYPE = 'NA' THEN CRYPTO_AES256.DEC_AES(T2.CSTMR_NATIVE_RRN) /* 내국인*/
+                      ELSE CRYPTO_AES256.DEC_AES(T2.CSTMR_FOREIGNER_RRN)                        /* 외국인*/
+                    END AS CSTMR_RRN
+        FROM	MCP_REQUEST@DL_MCP T1
+               ,MCP_REQUEST_CSTMR@DL_MCP T2
+               ,MCP_REQUEST_AGENT@DL_MCP T3
+        WHERE	T1.REQUEST_KEY = T2.REQUEST_KEY
+          AND   T1.REQUEST_KEY = T3.REQUEST_KEY(+)
+          AND   T1.RES_NO = #{resNo}
+    </select>
+
+    <!--안면인증 결과 PUSH 조회-->
+    <select id="selectFathResltPush" parameterType="String" resultType="com.ktis.msp.rcp.rcpMgmt.vo.FathVO">
+        /* FathMapper.selectFathResltPush */
+        SELECT  FATH_TRANSAC_ID                             AS fathTransacId,
+                SLS_CMPC_CD                                 AS slsCmpcCd,
+                RETV_CD_VAL                                 AS retvCdVal,
+                CRYPTO_AES256.DEC_AES(CUST_NM)              AS custNm,
+                CRYPTO_AES256.DEC_AES(CUST_IDFY_NO)         AS custIdfyNo,
+                ISS_DATE_VAL                                AS issDateVal,
+                CRYPTO_AES256.DEC_AES(DRIVE_LICNS_NO)       AS driveLicnsNo,
+                MBL_IDCARD_QR_IMG                           AS mblIdcardQrImg,
+                IDCARD_CONF_WAY                             AS idcardConfWay,
+                DIST_RSRTN_YN                               AS distRsrtnYn,
+                FATH_PROGR_STEP_CD                          AS fathProgrStepCd,
+                FATH_CMPLT_NTFY_DT                          AS fathCmpltNtfyDt,
+                FATH_URL_RQT_DT                             AS fathUrlRqtDt,
+                FATH_RESLT_CD                               AS fathResltCd,
+                FATH_RESLT_SBST                             AS fathResltSbst,
+                FATH_RQTR_ID                                AS fathRqtrId
+        FROM    NMCP_FATH_RESLT_PUSH@DL_MCP
+        WHERE	FATH_TRANSAC_ID = #{fathTransacId}
+        AND     SEQ = (SELECT MAX(SEQ) FROM NMCP_FATH_RESLT_PUSH@DL_MCP WHERE  FATH_TRANSAC_ID = #{fathTransacId})
+    </select>
+    
+    <!--신청서 진행상태 변경-->
+    <update id="updateReqStateCode" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateReqStateCode */
+        UPDATE  MCP_REQUEST@DL_MCP
+        SET     REQUEST_STATE_CODE = #{requestStateCode},
+                RVISN_ID  		= #{sessionUserId},
+                RVISN_DTTM      = SYSDATE
+        WHERE 	RES_NO = #{resNo}
+    </update>
+
+    <!--Acen 업무유형 조회-->
+    <select id="selectAcenEvntType" parameterType="String" resultType="String">
+        /*FathMapper.selectAcenEvntType*/
+        SELECT  EVNT_TYPE
+        FROM    NMCP_ACEN_REQ@DL_MCP
+        WHERE   RES_NO = #{resNo}
+        AND     END_STATUS != 'Y'
+        AND     REQ_STATUS = 'N'
+    </select>
+
+    <!--명의변경 정보 업데이트-->
+    <update id="updateNameChgInfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateNameChgInfo */
+        UPDATE NMCP_CUST_REQUEST_NAME_CHG@DL_MCP SET
+            <if test='appEventCd == "FT0"'>
+                FATH_TRG_YN = #{fathTrgYn},
+                MCN_STATE_CODE = '01',
+            </if>
+            <if test='appEventCd == "FS8"'>
+                FATH_TRANSAC_ID = #{fathTransacId},
+                CLAUSE_FATH_FLAG = #{clauseFathFlag},
+                MCN_STATE_CODE = '02',
+            </if>
+            <if test='appEventCd == "FS9"'>
+                FATH_CMPLT_NTFY_DT = #{fathCmpltNtfyDt},
+                MCN_STATE_CODE = '03',
+            </if>
+            RVISN_ID = #{sessionUserId},
+            RVISN_DTTM = SYSDATE
+        WHERE MCN_RES_NO = #{mcnResNo}
+    </update>
+
+    <update id="updateNameChgInfoFathSkip" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateNameChgInfoFathSkip */
+        UPDATE NMCP_CUST_REQUEST_NAME_CHG@DL_MCP SET
+        MCN_STATE_CODE = '08',
+        RVISN_ID = #{sessionUserId},
+        RVISN_DTTM = SYSDATE
+        WHERE MCN_RES_NO = #{mcnResNo}
+    </update>
+
+    <!--안면인증 정보조회-->
+    <select id="getNameChgInfo" parameterType="String" resultType="java.util.HashMap">
+        /* FathMapper.getNameChgInfo */
+        SELECT
+            CSTMR_RECEIVE_TEL_FN
+            , CSTMR_RECEIVE_TEL_MN
+            , CSTMR_RECEIVE_TEL_RN
+        FROM NMCP_CUST_REQUEST_NAME_CHG@DL_MCP
+        WHERE MCN_RES_NO = #{mcnResNo}
+    </select>
+
+    <!--안면인증 정보조회-->
+    <select id="selectFathInfoMcn" parameterType="String" resultType="java.util.HashMap">
+        /* FathMapper.selectFathInfoMcn */
+        SELECT  CASE WHEN CHG.CSTMR_TYPE = 'NM' THEN AGT.NEE_AGENT_NAME  /* 미성년자*/
+                     ELSE CHG.CSTMR_NAME
+                END AS CSTMR_NAME,
+                CASE WHEN CHG.CSTMR_TYPE = 'NM' THEN CRYPTO_AES256.DEC_AES(AGT.NEE_AGENT_RRN)  /* 미성년자*/
+                       ELSE CRYPTO_AES256.DEC_AES(CHG.CSTMR_NATIVE_RRN)
+                END AS CSTMR_RRN
+        FROM    NMCP_CUST_REQUEST_NAME_CHG@DL_MCP CHG
+                ,NMCP_CUST_REQ_NAME_CHG_AGENT@DL_MCP AGT
+        WHERE   CHG.CUST_REQ_SEQ = AGT.CUST_REQ_SEQ(+)
+        AND     CHG.MCN_RES_NO = #{mcnResNo}
+    </select>
+
+    <!--고객신분증정보 변경(법정대리인)-->
+    <update id="updateSelfCertInfoMinor" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateSelfCertInfoMinor */
+        UPDATE  MCP_REQUEST_AGENT@DL_MCP
+        SET     MINOR_SELF_CERT_TYPE      = #{selfCertType},
+                MINOR_SELF_ISSU_EXPR_DT   = #{selfIssuExprDt},
+                MINOR_SELF_ISSU_NUM       = #{selfIssuNum},
+                RVISN_ID  		          = #{sessionUserId},
+                RVISN_DTTM                = SYSDATE
+        WHERE 	REQUEST_KEY               = (SELECT REQUEST_KEY FROM MCP_REQUEST@DL_MCP WHERE RES_NO = #{resNo})
+    </update>
+    
+    <!--고객신분증정보 변경-->
+    <update id="updateSelfCertInfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateSelfCertInfo */
+        UPDATE  MCP_REQUEST_CSTMR@DL_MCP
+        SET     SELF_CERT_TYPE      = #{selfCertType},
+                SELF_ISSU_EXPR_DT   = #{selfIssuExprDt},
+                SELF_ISSU_NUM       = #{selfIssuNum},
+                RVISN_ID  		    = #{sessionUserId},
+                RVISN_DTTM          = SYSDATE
+        WHERE 	REQUEST_KEY         = (SELECT REQUEST_KEY FROM MCP_REQUEST@DL_MCP WHERE RES_NO = #{resNo})
+    </update>
+    
+    <!--(대리점)안면인증 가능 접점ID조회-->
+    <select id="getCpntId" parameterType="String" resultType="String">
+    SELECT  CPNT_ID
+    FROM    (
+            SELECT  CPNT_ID
+            FROM    MDS_ORG_CPNT_INFO
+            WHERE   FILE_NM = (SELECT MAX(FILE_NM) FROM MDS_ORG_CPNT_INFO)
+            AND     CPNT_ID IN (SELECT  CPNT_ID
+                                FROM    MDS_ORG_REL_INFO
+                                WHERE   ORG_ID  = (SELECT KT_ORG_ID FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = #{cntpntShopId})
+                                AND     FILE_NM = (SELECT MAX(FILE_NM) FROM MDS_ORG_REL_INFO)
+                                )
+            AND CH_TYPE_DIV_CD   = '02' --비대면 (안면인증)
+            AND SALE_TYPE_DIV_CD = '14' --비대면 (안면인증)
+            ORDER BY CPNT_NO_SEQ
+            )
+    WHERE ROWNUM = 1
+    </select>
+
+
+    <!--명의변경 고객신분증정보 변경(법정대리인)-->
+    <update id="updateNameChgSelfCertInfoMinor" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateNameChgSelfCertInfoMinor */
+        UPDATE  NMCP_CUST_REQ_NAME_CHG_AGENT@DL_MCP
+        SET     NEE_AGENT_SELF_CERT_TYPE      = #{selfCertType},
+                NEE_AGENT_SELF_ISSU_EXPR_DT   = #{selfIssuExprDt},
+                NEE_AGENT_SELF_ISSU_NUM       = #{selfIssuNum},
+                RVISN_ID                      = #{sessionUserId},
+                RVISN_DTTM                    = SYSDATE
+        WHERE   CUST_REQ_SEQ                  = (SELECT CUST_REQ_SEQ FROM NMCP_CUST_REQUEST_NAME_CHG@DL_MCP WHERE MCN_RES_NO = #{mcnResNo})
+    </update>
+
+    <!--명의변경 고객신분증정보 변경-->
+    <update id="updateNameChgSelfCertInfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.RcpDetailVO">
+        /* FathMapper.updateNameChgSelfCertInfo */
+        UPDATE  NMCP_CUST_REQUEST_NAME_CHG@DL_MCP
+        SET     SELF_CERT_TYPE      = #{selfCertType},
+                SELF_ISSU_EXPR_DT   = #{selfIssuExprDt},
+                SELF_ISSU_NUM       = #{selfIssuNum},
+                RVISN_ID            = #{sessionUserId},
+                RVISN_DTTM          = SYSDATE
+        WHERE   MCN_RES_NO          = #{mcnResNo}
+    </update>
+
+    <select id="isEnabledFT1" resultType="boolean">
+        SELECT
+            CASE WHEN COUNT(1) > 0 THEN 1
+                 ELSE 0
+            END
+        FROM NMCP_CD_DTL@DL_MCP
+        WHERE CD_GROUP_ID = 'fathCertPolicy'
+        AND DTL_CD = 'FT1MSP'
+        AND DTL_CD_NM = 'Y'
+        AND USE_YN = 'Y'
+        AND SYSDATE BETWEEN TO_DATE(PSTNG_START_DATE, 'YYYYMMDDHH24MISS') AND TO_DATE(PSTNG_END_DATE, 'YYYYMMDDHH24MISS')
+    </select>
+</mapper>

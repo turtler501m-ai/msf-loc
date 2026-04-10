@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.point.mapper.MstoreMapper">
+
+    <!-- M모바일 회원 확인 -->
+    <select id="getMspCusInfo" resultType="com.ktmmobile.mcp.point.dto.MstoreDto" parameterType="com.ktmmobile.mcp.point.dto.MstoreDto">
+        /*MstoreMapper.getMspCusInfo 계약 현행화 정보  */
+        WITH CTI AS (
+            SELECT CUSTOMER_ID
+            FROM
+            (
+                SELECT CUSTOMER_ID
+                FROM MCP_USER_CNTR_MNG
+                WHERE UPPER(USERID) = UPPER(#{userId})
+                AND CUSTOMER_ID IS NOT NULL
+                ORDER BY REP_NO, SYS_RDATE DESC
+            )
+            WHERE ROWNUM = 1
+        )
+        SELECT
+             B.CUSTOMER_SSN AS USER_SSN
+            ,B.SELF_CSTMR_CI AS EMPEN
+            ,B.CUSTOMER_ID
+            ,B.CUSTOMER_TYPE
+            ,B.CUSTOMER_LINK_NAME AS USER_NAME
+            ,A.LST_COM_ACTV_DATE
+            ,A.CONTRACT_NUM
+            ,A.SUBSCRIBER_NO AS MOBILE_NO
+            ,A.SRL_IF_ID AS RES_NO
+        FROM
+            MSP_JUO_SUB_INFO @DL_MSP A
+           ,MSP_JUO_CUS_INFO @DL_MSP B
+           ,CTI C
+        WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
+        AND A.CUSTOMER_ID = C.CUSTOMER_ID
+        AND A.SUB_STATUS != 'C'
+        ORDER BY SUB_STATUS, LST_COM_ACTV_DATE
+    </select>
+
+    <!-- MCP 신청정보 조회 -->
+    <select id="getMcpRequestInfo" resultType="com.ktmmobile.mcp.point.dto.MstoreDto" parameterType="java.lang.String">
+        /*MstoreMapper.getMcpRequestInfo MCP 신청정보 조회  */
+        SELECT
+            A.CONTRACT_NUM
+           ,C.SELF_CSTMR_CI AS EMPEN
+        FROM  MSP_JUO_SUB_INFO@DL_MSP A
+             ,MCP_REQUEST B
+             ,MCP_REQUEST_CSTMR C
+        WHERE A.SRL_IF_ID= B.RES_NO
+          AND A.CONTRACT_NUM= B.CONTRACT_NUM
+          AND B.REQUEST_KEY = C.REQUEST_KEY
+          AND A.CUSTOMER_ID= #{customerId}
+          AND NVL(A.SRL_IF_ID, '0') != '0'
+          AND C.SELF_CSTMR_CI IS NOT NULL
+          AND B.CSTMR_TYPE != 'NM'
+    </select>
+
+    <!-- 개통 정보의 CI값 조회 -->
+    <select id="getMspCstmrCI" resultType="java.lang.String" parameterType="java.lang.String">
+        /*MstoreMapper.getMstoreTmpEmpen 탈퇴연동을 위한 CI값 조회  */
+        SELECT SELF_CSTMR_CI AS EMPEN
+        FROM MSP_JUO_CUS_INFO@DL_MSP
+        WHERE CUSTOMER_ID= #{customerId}
+    </select>
+
+    <!-- [AS-IS] MSTORE 연동 대상 조회 (최대 50건) -->
+    <select id="selectMstoreCanTrgList" resultType="com.ktmmobile.mcp.point.dto.MstoreCanTrgDto">
+        /*MstoreMapper.selectMstoreCanTrgList MSTORE 연동 대상 조회*/
+        SELECT CAN_TRG_SEQ
+              ,CRYPTO_AES256.ENC_AES@DL_MSP(selfCstmrCi) AS selfCstmrCi
+              ,CRYPTO_AES256.ENC_AES@DL_MSP(userName) AS userName
+        FROM(
+                SELECT
+                    A.CAN_TRG_SEQ
+                   ,NVL(B.SELF_CSTMR_CI,
+                        (SELECT V3.SELF_CSTMR_CI
+                         FROM  MSP_JUO_SUB_INFO@DL_MSP V1
+                              ,MCP_REQUEST V2
+                              ,MCP_REQUEST_CSTMR V3
+                         WHERE V1.SRL_IF_ID= V2.RES_NO
+                           AND V1.CONTRACT_NUM= V2.CONTRACT_NUM
+                           AND V2.REQUEST_KEY = V3.REQUEST_KEY
+                           AND V1.CUSTOMER_ID= A.CUSTOMER_ID
+                           AND NVL(V1.SRL_IF_ID, '0') != '0'
+                           AND V3.SELF_CSTMR_CI IS NOT NULL
+                           AND ROWNUM= 1)) AS selfCstmrCi
+                   ,B.CUSTOMER_LINK_NAME AS userName
+                FROM  NMCP_MSTORE_CAN_TRG A
+                     ,MSP_JUO_CUS_INFO@DL_MSP B
+                WHERE A.CUSTOMER_ID= B.CUSTOMER_ID(+)
+                  AND A.CUSTOMER_ID IS NOT NULL
+                  AND A.PROC_YN = 'N'
+                ORDER BY CAN_TRG_SEQ
+            )
+        WHERE ROWNUM <![CDATA[<=]]> 50
+    </select>
+
+    <!-- [TO-BE] MSTORE 연동 대상 조회 (최대 50건) -->
+    <select id="selectMstoreCanListNew" resultType="com.ktmmobile.mcp.point.dto.MstoreCanTrgDto">
+        /*MstoreMapper.selectMstoreCanListNew MSTORE 연동 대상 조회*/
+        SELECT
+            CAN_TRG_SEQ
+           ,CRYPTO_AES256.ENC_AES@DL_MSP(selfCstmrCi) AS selfCstmrCi
+           ,CRYPTO_AES256.ENC_AES@DL_MSP(userName) AS userName
+        FROM
+        (
+            SELECT A.CAN_TRG_SEQ, B.EMPEN AS selfCstmrCi, C.NAME AS userName
+            FROM NMCP_MSTORE_CAN_TRG A
+                 ,NMCP_MSTORE_SSO_INFO B
+                 ,MCP_USER C
+            WHERE A.USERID = B.USERID
+              AND B.USERID = C.USERID
+              AND A.PROC_YN = 'N'
+            ORDER BY CAN_TRG_SEQ
+        )
+        WHERE ROWNUM <![CDATA[<=]]> 50
+    </select>
+
+    <!-- [TO-BE] MSTORE 탈퇴 연동 실패 대상 조회 (최대 50건) - 재시도 -->
+    <select id="selectMstoreCanListRty" resultType="com.ktmmobile.mcp.point.dto.MstoreCanTrgDto">
+        /*MstoreMapper.selectMstoreCanListRty MSTORE 연동 대상 조회*/
+        SELECT
+            CAN_TRG_SEQ
+           ,CRYPTO_AES256.ENC_AES@DL_MSP(selfCstmrCi) AS selfCstmrCi
+           ,CRYPTO_AES256.ENC_AES@DL_MSP(userName) AS userName
+        FROM
+            (
+                SELECT A.CAN_TRG_SEQ, B.EMPEN AS selfCstmrCi, C.NAME AS userName
+                FROM NMCP_MSTORE_CAN_TRG A
+                   ,NMCP_MSTORE_SSO_INFO B
+                   ,MCP_USER C
+                   ,NMCP_MSTORE_PROC_HIST D
+                WHERE A.USERID = B.USERID
+                  AND B.USERID = C.USERID
+                  AND A.PROC_HIST_SEQ = D.HIST_SEQ
+                  AND A.PROC_YN = 'Y'
+                  AND A.PROC_TRG_YN= 'Y'
+                  AND D.RESULT_CODE != '00'
+                ORDER BY CAN_TRG_SEQ
+            )
+        WHERE ROWNUM <![CDATA[<=]]> 50
+    </select>
+
+</mapper>

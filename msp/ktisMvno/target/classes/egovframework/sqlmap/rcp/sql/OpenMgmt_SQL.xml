@@ -1,0 +1,940 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.openMgmt.mapper.OpenMgmtMapper">
+
+	<!-- 개통관리 조회 -->
+	<select id="getOpenMgmtListNew"  parameterType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtListVO" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtListVO">
+	<if test="(lstComActvDateF != null and lstComActvDateF != '' and lstComActvDateT != null and lstComActvDateT != '') or (searchGbn != null and searchGbn != '' and searchName != null and searchName != '')" >
+		/* OpenMgmtMapper.getOpenMgmtListNew */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT    REQ.RES_NO AS resNo															/*예약번호        */
+			        , SUB.SCAN_ID AS scanId															/*스캔ID          */
+			        , REQ.REQUEST_KEY AS requestKey
+			        , REQ.PROD_TYPE_NM AS prodTypeNm												/*상품구분        */   
+			        , SUB.CONTRACT_NUM AS contractNum												/*계약번호        */
+			        , SUB.SUB_LINK_NAME AS cstmrName												/*고객명          */
+			        , SUB.USER_SSN AS ssn															/*주민번호        */
+			        , SUB.SUBSCRIBER_NO AS subscriberNo												/*휴대폰번호      */
+			        , REQ.LST_RATE_NM AS lstRateNm													/*현재요금제      */
+			        , CASE 
+			            WHEN SUBSTR(REQ.SIM_INFO, 36, 1) IN ('A', 'R') THEN (  SELECT CD_DSC 
+							            													   FROM CMN_GRP_CD_MST 
+							            													  WHERE GRP_ID = 'CMN0058' 
+							            													    AND CD_VAL = SUBSTR(REQ.SIM_INFO, 1, 2)) 
+			            ELSE (SELECT CD_DSC 
+			            	    FROM CMN_GRP_CD_MST 
+			            	   WHERE GRP_ID = 'CMN0058' 
+			            	     AND CD_VAL = SUBSTR(REQ.INST_INFO, 1, 2)) 
+			          END AS sprtTpNm																/*할인유형        */ 
+			        , REQ.SALE_PLCY_NM AS salePlcyNm												/*판매정책        */
+			        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 26, 3)) AS enggMnthCnt						/*약정개월수      */
+			        , TO_NUMBER(SUBSTR(REQ.INST_INFO, 23, 3)) AS instMnthCnt						/*할부개월수      */
+			        , SUB.MODEL_NAME AS lstModelNm													/*단말모델명      */
+			        , SUB.INTM_SRL_NO AS lstModelSrlNum												/*단말일련번호    */
+			        , (SELECT CD_DSC 
+			        	 FROM CMN_GRP_CD_MST 
+			        	WHERE GRP_ID = 'MSP0003' 
+			        	  AND CD_VAL = SUB.SUB_STATUS) AS subStatusNm								/*상태            */
+		            , CASE WHEN SUB.SUB_STATUS = 'C' THEN
+		                CASE
+		                    WHEN TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') = 0 THEN '당일개통취소'
+		                    <![CDATA[ 
+		                    WHEN TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')  < 15 THEN '14일이내해지'
+		                    WHEN TO_DATE(SUBSTR(SUB.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD')  < 90 THEN '90일이내해지'
+		                    ]]>
+		                    ELSE '일반해지'
+		                END
+		              ELSE ''  END AS canRsn														/*해지사유        */
+			        , REQ.ON_OFF_TYPE AS onOffType													/* 모집경로 */
+			        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP0007' AND CD_VAL = REQ.ON_OFF_TYPE) AS onOffTypeNm
+			        , REQ.OPEN_MARKET_REFERER AS openMarketReferer									/*유입경로        */
+			        , REQ.RECOMMEND_FLAG_NM AS recommendFlagNm										/*추천인구분      */ 
+			        , REQ.RECOMMEND_INFO AS recommendInfo											/*추천인정보      */
+			        , REQ.REC_YN AS recYn															/*녹취여부        */
+			        , FN_GET_ORGNM(SUB.OPEN_AGNT_CD) || '/' || SUB.OPEN_AGNT_CD AS agentNm			/*대리점          */
+			        , REQ.SHOP_NM AS shopNm		/*판매점          */ 
+			        , DECODE(REQ.SHOP_USM_ID, NULL, '-' , REQ.SHOP_USM_ID) AS shopUsrId				/*판매자ID        */ 
+			        , DECODE(REQ.SHOP_USM_ID, NULL, '-' , 
+			        			(SELECT A.USR_NM 
+			        			   FROM CMN_USR_MST A 
+			        			  WHERE A.USR_ID = REQ.SHOP_USM_ID)) AS shopUsrNm					/*판매자명        */ 
+			        , REQ.REQ_PAY_TYPE AS reqPayType												/*요금납부방법    */ 
+			        , REQ.REQUEST_STATE_CODE AS requestStateCode									/*개통진행상태    */ 
+			        , REQ.CSTMR_TYPE AS cstmrType													/*고객구분코드    */ 
+			        , SUB.SUB_LINK_NAME AS custNmVoc												/*고객명VOC용     */ 
+			        , SUB.SUBSCRIBER_NO AS ctnVoc													/*휴대폰번호VOC용 */ 
+			        , SUBSTR(REQ.DVC_CHG_INFO, 1, 8) AS dvcChgDt									/* 기변일자 */
+			        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 9, 10)) AS dvcModelId							/* 기변모델ID */
+			        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 19, 30)) AS dvcModelNm							/* 기변모델명 */
+			        , TRIM(SUBSTR(REQ.DVC_CHG_INFO, 49, 20)) AS dvcIntmSrlNo						/* 기변일련번호 */
+			        , FN_GET_ORGNM(TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10))) AS dvcAgntNm 			/* 기변대리점 */
+			        , (SELECT CD_DSC 
+			        	 FROM CMN_GRP_CD_MST 
+			        	WHERE GRP_ID = 'CMN0049' 
+			        	  AND CD_VAL = SUBSTR(REQ.DVC_CHG_INFO, 79, 4)) AS dvcOperTypeNm 			/* 기변유형명 */
+			        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 83, 10)) AS dvcHndstAmnt					/* 기변단말출고가 */
+			        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 93, 10)) AS dvcInstOrginAmnt				/* 기변단말할부원금 */
+			        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 103, 3)) AS dvcInstMnthCnt					/* 기변단말할부개월수 */
+			        , TO_NUMBER(SUBSTR(REQ.DVC_CHG_INFO, 106, 3)) AS dvcEnggMnthCnt					/* 기변약정개월수 */
+			        , SUBSTR(REQ.DVC_CHG_INFO, 109) AS dvcSalePlcyNm								/* 기변판매정책 */
+			        , SUB.TRNS_YN AS trnsYn                                                         /* 이관여부 */
+			        , (SELECT PROMOTION_NM
+			           FROM   MSP_PROMOTION_MST
+			           WHERE  PROMOTION_CD = REQ.PROMOTION_CD) AS promotionNm						/* 프로모션명 */
+					, CASE SUBSTR(REQ.DIS_PRMT_ID, 1, 1)
+						WHEN 'F'
+						THEN (SELECT '(오프라인) ' || PRMT_NM FROM MSP_DIS_MST WHERE PRMT_ID = REQ.DIS_PRMT_ID)
+						WHEN 'C'
+						THEN (SELECT '(온라인) ' || PRMT_NM FROM MSP_CHRG_PRMT WHERE PRMT_ID = REQ.DIS_PRMT_ID)
+						ELSE '' END AS disPrmtNm														/* 평생할인 프로모션명*/
+					,SUB.BAN AS ban																/* 청구번호*/
+					,SUB.IMEI AS imei
+			FROM  MSP_JUO_SUB_INFO SUB
+			      , MSP_REQUEST_DTL REQ
+				<if test='searchGbn != null and searchGbn == "4"'>
+		            , ( SELECT CONTRACT_NUM
+		                FROM    MSP_JUO_MODEL_INFO
+		                WHERE   INTM_SRL_NO = #{searchName}
+		                GROUP BY CONTRACT_NUM
+		            ) MDL
+		        </if>
+				<if test="usimOrgCd != null and usimOrgCd != ''">
+					, MSP_PARTNER_USIM_MST PUM
+				</if>
+			    WHERE SUB.PPPO = 'PO'
+			       AND SUB.CONTRACT_NUM = REQ.CONTRACT_NUM
+			    <if test="lstComActvDateF != null and lstComActvDateF != '' and lstComActvDateT != null and lstComActvDateT != '' and operType != 'HCN3' and operType != 'HDN3'">
+					AND SUB.LST_COM_ACTV_DATE BETWEEN #{lstComActvDateF} AND #{lstComActvDateT}
+				</if>
+				<if test="subStatus != null and subStatus != ''">
+					AND SUB.SUB_STATUS = #{subStatus}
+				</if>
+				<if test="cntpntShopId != null and cntpntShopId != ''">
+					AND (SUB.OPEN_AGNT_CD = #{cntpntShopId}  OR TRIM(SUBSTR(REQ.DVC_CHG_INFO, 69, 10)) = #{cntpntShopId}) 
+				</if>
+				<if test="pAgentCode != null and pAgentCode != ''">
+					AND REQ.SHOP_CD = #{pAgentCode}
+				</if>
+				<if test="reqBuyTypeS != null and reqBuyTypeS != ''">
+					AND REQ.REQ_BUY_TYPE = #{reqBuyTypeS}
+				</if>
+				<if test="onOffType != null and onOffType != ''">
+					AND REQ.ON_OFF_TYPE = #{onOffType}
+				</if>
+				<if test='minorYn != null and minorYn == "Y"'>
+					AND REQ.CSTMR_TYPE = 'NM'
+				</if>
+				<if test='appBlckAgrmYn != null and appBlckAgrmYn == "Y"'>
+					AND REQ.APP_BLCK_AGRM_YN = 'Y'
+				</if>
+				<if test='appInstYn != null and appInstYn == "Y"'>
+					AND REQ.APP_INST_YN = 'Y'
+				</if>
+				<if test="searchGbn != null and searchGbn != ''">
+					<if test='searchGbn == "1"'>
+						AND SUB.SUB_LINK_NAME LIKE #{searchName} || '%'
+					</if>
+					<if test='searchGbn == "2"'>
+						AND (SUB.CONTRACT_NUM = #{searchName}
+     						 OR SUB.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchName}))
+					</if>
+					<if test='searchGbn == "3"'>
+						AND SUB.SUBSCRIBER_NO = #{searchName}
+					</if>
+					<if test='searchGbn == "4"'>
+						AND SUB.CONTRACT_NUM = MDL.CONTRACT_NUM
+					</if>
+					<if test='searchGbn == "5"'>
+						AND REQ.REQUEST_KEY IS NULL
+					</if>
+					<if test='searchGbn == "6"'>
+						AND EXISTS ( SELECT 1 FROM LGS_TELECOM_IF 
+						             WHERE  SVC_CT_NUM = SUB.CONTRACT_NUM
+						             AND    LGS_PRCS_YN = 'Y'
+						             AND    PRDT_TYPE_CD = 'D1'
+						             AND    TO_DATE(SUBSTR(SVC_OPEN_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ < ]]> 15 )
+						AND EXISTS ( SELECT 1 FROM MSP_JUO_MODEL_INFO
+						             WHERE  CONTRACT_NUM = SUB.CONTRACT_NUM
+						             AND    MODEL_TYPE = 'D1'
+						             AND    EVNT_CD = 'C07' )
+					</if>
+					<if test='searchGbn == "7"'>
+						AND REQ.LST_RATE_NM LIKE '%' || #{searchName} || '%'
+					</if>
+				</if>
+				<if test="sprtTp != null and sprtTp != ''">
+					<if test="sprtTp == 'SM'">
+						AND EXISTS ( SELECT 1 FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = SUB.CONTRACT_NUM AND SIM_ID IS NOT NULL )
+					</if>
+					<if test="sprtTp != 'SM'">
+						AND EXISTS ( SELECT 1 FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = SUB.CONTRACT_NUM AND BL_DC_TYPE = #{sprtTp} )
+					</if>
+				</if>
+				<if test="prodType != null and prodType != ''">
+					AND NVL(REQ.PROD_TYPE, '01') = #{prodType}
+				</if>
+				<if test="operType != null and operType != ''">
+					AND ( REQ.OPER_TYPE = #{operType}
+							OR EXISTS ( SELECT 1 FROM MSP_DVC_CHG_AGNT_HST X, MSP_REQUEST Y 
+										WHERE  X.REQUEST_KEY = Y.REQUEST_KEY
+										AND    X.CONTRACT_NUM = SUB.CONTRACT_NUM
+										AND    TO_DATE(SUBSTR(APPL_END_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(APPL_STRT_DTTM, 1, 8), 'YYYYMMDD') <![CDATA[ > ]]> 14
+										AND    Y.OPER_TYPE = #{operType}
+			    						<if test="lstComActvDateF != null and lstComActvDateF != '' and lstComActvDateT != null and lstComActvDateT != '' ">
+										AND    SUBSTR(X.APPL_STRT_DTTM, 1, 8) BETWEEN #{lstComActvDateF} AND #{lstComActvDateT}
+										</if>
+									) )
+				</if>
+				<if test='esimYn != null and esimYn == "Y"'>
+					AND SUB.USIM_TYPE = 'E'
+				</if>
+				
+				<if test="usimOrgCd != null and usimOrgCd != ''">
+					AND REQ.FST_USIM_NO = PUM.USIM_NO(+)
+					AND PUM.ORGN_ID = #{usimOrgCd}
+				</if>
+				<if test="pBirthDay == 'birthDay' and pBirthDayVal != null and pBirthDayVal != ''">
+					AND SUBSTR(CRYPTO_AES256.DEC_AES(SUB.USER_SSN), 0, 6) = #{pBirthDayVal}
+				</if>
+			 ORDER BY SUB.LST_COM_ACTV_DATE DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</if>
+	</select>	
+ 
+	<!-- 가입자정보 조회 -->
+	<select id="getOpenMgmtListDtl"  parameterType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/* OpenMgmtMapper.getOpenMgmtListDtl */		
+		WITH TT AS (
+		    SELECT  SUB.CONTRACT_NUM
+		            , SUB.SVC_CNTR_NO
+		            , SUB.SUBSCRIBER_NO
+		            , SUB.CUSTOMER_ID 
+		            , SUB.BAN
+		            , SUB.SUB_LINK_NAME
+		            , SUB.USER_SSN AS SSN
+		            , SUB.LST_COM_ACTV_DATE AS OPEN_DT
+		            , DECODE ( SUB.SUB_STATUS,'C' , SUBSTR ( SUB.SUB_STATUS_DATE, 1 , 8),'' ) AS TMNT_DT
+		            , DECODE ( SUB.SUB_STATUS,'C' , FN_GET_CODENM ('RCP0060' , FN_GET_CANRSN ( SUB.CONTRACT_NUM))) AS CAN_RSN
+		            , SUB.ICC_ID
+		            , SUB.OPEN_AGNT_CD
+		            , SUB.SUB_STATUS
+		            , SUB.REAL_USE_CUST_NO
+		            , BAN.BAN_ADR_PRIMARY_LN || ' ' || BAN.BAN_ADR_SECONDARY_LN AS CUSTOMER_ADR
+		            , SUB.UNPD_IND_CD
+		            , REQ.RES_NO
+		            , REQ.REQUEST_KEY
+		            , REQ.OPER_TYPE
+		            , REQ.CSTMR_TYPE
+		            , REQ.REQ_BUY_TYPE
+		            , REQ.APP_CD
+		            , REQ.ON_OFF_TYPE
+		            , REQ.OPEN_MARKET_REFERER
+		            , TO_CHAR(REQ.REQ_IN_DAY, 'YYYY-MM-DD HH24:MI:SS') AS REQ_IN_DAY
+		            , NVL(REQ.REC_YN, 'N') AS REC_YN
+					, NVL(REQ.SHOP_CD,
+							(SELECT CNTPNT_CD
+							FROM MSP_JUO_ADD_INFO A
+							WHERE A.CONTRACT_NUM = SUB.CONTRACT_NUM
+							AND A.EVNT_TRTM_DT = (SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM)
+							AND ROWNUM = 1)
+					) AS SHOP_CD /*판매점코드*/
+					, CASE
+						WHEN REQ.SHOP_CD IS NULL
+							THEN
+						    	(SELECT CNTPNT_CD
+								   FROM MSP_JUO_ADD_INFO A
+								  WHERE A.CONTRACT_NUM = SUB.CONTRACT_NUM
+								    AND A.EVNT_TRTM_DT = (SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM)
+									AND ROWNUM = 1)
+								|| '/' ||
+								(SELECT B.ORGN_NM
+								   FROM MSP_JUO_ADD_INFO A
+										, ORG_ORGN_INFO_MST B
+								  WHERE A.CONTRACT_NUM = SUB.CONTRACT_NUM
+									AND A.CNTPNT_CD = B.ORGN_ID
+									AND A.EVNT_TRTM_DT = (SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM)
+									AND ROWNUM = 1)
+						ELSE FN_GET_ORGNM(REQ.SHOP_CD) || '/' || REQ.SHOP_CD
+					END AS SHOP_NM /*판매점*/
+					, REQ.SHOP_USM_ID
+		            , REQ.REQ_USIM_NAME
+		            , MOV.MOVE_COMPANY
+		            , AGT.MINOR_AGENT_NAME
+		            , AGT.MINOR_AGENT_TEL_FN || AGT.MINOR_AGENT_TEL_MN || AGT.MINOR_AGENT_TEL_RN AS MINOR_AGENT_TEL
+		            , AGT.MINOR_AGENT_RELATION
+		            , SALE.MODEL_DISCOUNT3
+		            , SALE.USIM_PAY_MTHD_CD
+		            , SALE.JOIN_PAY_MTHD_CD
+		            , NVL(SALE.JOIN_PRICE, 0) AS JOIN_PRICE
+		            , NVL(SALE.USIM_PRICE, 0) AS USIM_PRICE
+		            , REQ.SCAN_ID
+		            , FN_GET_SALECD(SUB.CONTRACT_NUM , SALE.MODEL_SALE_POLICY_CODE) AS SALE_PLCY_CD
+		            , ( SELECT SALE_PLCY_NM FROM MSP_SALE_PLCY_MST WHERE SALE_PLCY_CD = FN_GET_SALECD (SUB.CONTRACT_NUM , SALE.MODEL_SALE_POLICY_CODE) ) AS SALE_PLCY_NM
+		            , ( SELECT  RPAD( A.MODEL_ID, 20, ' ' ) || RPAD(A.MODEL_NM, 30, ' ') || RPAD( A.INTM_SRL_NO, 30, ' ' )
+		                FROM    MSP_JUO_MODEL_INFO A
+		                WHERE   A.CONTRACT_NUM = SUB.CONTRACT_NUM
+		                AND     A.MODEL_TYPE = 'D1'
+		                AND     A.MODEL_ID NOT IN ( SELECT PRDT_ID FROM CMN_INTM_MDL WHERE PRDT_TYPE_CD = '02' )
+		                AND     A.EVNT_TRTM_DT = ( SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND MODEL_TYPE = 'D1' )
+		                AND     ROWNUM = 1
+		            ) AS FST_MODEL_INFO
+		            , ( SELECT  RPAD( A.MODEL_ID, 20, ' ' ) || RPAD(A.MODEL_NM, 30, ' ') || RPAD( A.INTM_SRL_NO, 30, ' ' )
+		                FROM    MSP_JUO_MODEL_INFO A
+		                WHERE   A.CONTRACT_NUM = SUB.CONTRACT_NUM
+		                AND     A.MODEL_TYPE = 'D1'
+		                AND     A.EVNT_TRTM_DT = ( SELECT MAX(EVNT_TRTM_DT) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND MODEL_TYPE = 'D1' )
+		                AND     ROWNUM = 1
+		            ) AS LST_MODEL_INFO
+		            , ( SELECT  RPAD(A.SOC, 10, ' ') || 
+		                        RPAD(B.DATA_TYPE, 10 , ' ') || 
+		                        B.RATE_NM
+		                FROM    MSP_JUO_FEATURE_INFO A
+		                        , MSP_RATE_MST B
+		                WHERE   A.CONTRACT_NUM  = SUB.CONTRACT_NUM
+		                AND     A.SERVICE_TYPE = 'P'
+		                AND     A.EVNT_TRTM_DT = ( SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND SERVICE_TYPE = 'P' )
+		                AND     A.SOC = B.RATE_CD
+		                AND     ROWNUM = 1
+		            ) AS FST_SOC_INFO
+		            , ( SELECT  RPAD(A.SOC, 10, ' ') || 
+		                        RPAD(B.DATA_TYPE, 10 , ' ') || 
+		                        B.RATE_NM
+		                FROM    MSP_JUO_FEATURE_INFO A
+		                        , MSP_RATE_MST B
+		                WHERE   A.CONTRACT_NUM  = SUB.CONTRACT_NUM
+		                AND     A.SERVICE_TYPE = 'P'
+		                AND     A.EVNT_TRTM_DT = ( SELECT MAX(EVNT_TRTM_DT) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND SERVICE_TYPE = 'P' )
+		                AND     A.SOC = B.RATE_CD
+		                AND     ROWNUM = 1
+		            ) AS LST_SOC_INFO
+		            , ( SELECT  NVL(A.BL_DC_TYPE, '  ') ||
+		                        LPAD(NVL(A.DVC_OFW_AMNT, 0), 10 , '0') ||
+		                        LPAD(NVL(A.INST_ORGIN_AMNT, 0 ), 10 , '0') ||
+		                        LPAD(NVL(A.INST_MNTH_CNT, 0), 3 , '0') ||
+		                        LPAD(NVL(A.ENGG_MNTH_CNT, 0), 3 , '0') ||
+		                        RPAD(DECODE(A.GRNT_INSR_MNGM_NO, 'none', '', A.GRNT_INSR_MNGM_NO), 14, ' ') ||
+		                        A.GRNT_INSR_STAT_CD
+		                FROM    MSP_JUO_ADD_INFO A
+		                WHERE   A.CONTRACT_NUM = SUB.CONTRACT_NUM
+		                AND     A.EVNT_TRTM_DT = ( SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM )
+		                AND     NOT EXISTS ( SELECT 1 FROM CMN_INTM_MDL WHERE RPRS_PRDT_ID = A.MODEL_ID AND PRDT_TYPE_CD = '02' )
+		                AND     ROWNUM = 1
+		           ) AS INST_INFO
+		           , ( SELECT  'SM' ||
+		                        LPAD(A.ENGG_MNTH_CNT, 3 , '0') ||
+		                        RPAD(A.SIM_ID, 14 , ' ') ||
+		                        SUBSTR(A.SIM_START_DT, 1 , 8) ||
+		                        SUBSTR(A.SIM_END_DT, 1 , 8) ||
+		                        A.GRNT_INSR_STAT_CD
+		                FROM    MSP_JUO_ADD_INFO A
+		                WHERE   A.CONTRACT_NUM = SUB.CONTRACT_NUM
+		                AND     A.SIM_ID IS NOT NULL
+		                AND     A.EVNT_TRTM_DT = ( SELECT MAX(EVNT_TRTM_DT) FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND SIM_ID IS NOT NULL )
+		                AND     ROWNUM = 1
+		            ) AS SIM_INFO
+		            , FN_GET_CODENM('RCP9011', CST.RECOMMEND_FLAG_CD) AS RECOMMEND_FLAG_NM			/* 추천인구분명 */
+		            , CST.RECOMMEND_INFO AS RECOMMEND_INFO											/* 추천인정보 */
+		            , REQ.PROD_TYPE
+		            , FN_GET_CODENM('RCP0063', NVL(REQ.PROD_TYPE, '01')) AS PROD_TYPE_NM
+		            , SALE.RENTAL_BASE_AMT
+		            , SALE.RENTAL_BASE_DC_AMT
+		            , SALE.RENTAL_MODEL_CP_AMT
+		            , ( SELECT  COUNT(1)
+		                FROM    MSP_DVC_CHG_AGNT_HST A
+		                        , MSP_REQUEST B
+		                WHERE   A.CONTRACT_NUM = SUB.CONTRACT_NUM
+		                AND     ( A.APPL_END_DTTM = '99991231000000'
+		                          OR TO_DATE(SUBSTR(A.APPL_END_DTTM, 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(A.APPL_STRT_DTTM, 1, 8), 'YYYYMMDD') <![CDATA[ > ]]> 14 )
+		                AND     A.REQUEST_KEY = B.REQUEST_KEY(+)
+		                AND     B.OPER_TYPE(+) IN ('HCN3', 'HDN3')
+		            ) AS DVC_CHG_CNT
+		            , SUB.TRNS_YN
+		            <!-- 개통관리 > 가입자정보(탭) 조회시 보험상품 조회 -->
+		            <!-- , (   SELECT LTRIM(SYS_CONNECT_BY_PATH(ETC2||INSR_NM, '@'), '@') AS INSR_NM
+		                  FROM  (SELECT A.CONTRACT_NUM
+		                                , A.INSR_CD
+		                                , B.CD_DSC AS INSR_NM
+		                                , B.ETC2
+		                                , ROW_NUMBER() OVER (PARTITION BY A.CONTRACT_NUM ORDER BY A.CONTRACT_NUM, A.INSR_CD) AS NUM
+		                                , COUNT(*) OVER (PARTITION BY A.CONTRACT_NUM) AS CNT
+		                         FROM   MSP_INSR_MEMBER_MST A
+		                                , CMN_GRP_CD_MST B
+		                         WHERE  A.STAT_CD = 'A'
+		                         AND    B.GRP_ID = 'CMN0246'
+		                         AND    B.USG_YN = 'Y'
+		                         AND    A.INSR_CD = B.CD_VAL
+		                         AND    A.CONTRACT_NUM = #{CONTRACT_NUM}
+		                         GROUP BY A.CONTRACT_NUM, A.INSR_CD, B.CD_DSC, B.ETC2
+		                         ORDER BY A.CONTRACT_NUM, B.ETC2 )
+		                  WHERE  LEVEL = CNT START WITH NUM=1 CONNECT BY PRIOR CONTRACT_NUM = CONTRACT_NUM
+		                  AND    PRIOR NUM = NUM-1
+		            ) AS INSR_NM -->
+		    FROM    MSP_JUO_SUB_INFO SUB
+		            , MSP_REQUEST REQ
+		            , MSP_REQUEST_SALEINFO SALE
+		            , MSP_REQUEST_MOVE MOV
+		            , MSP_REQUEST_AGENT AGT
+		            , MSP_REQUEST_CSTMR CST
+		    		, MSP_JUO_BAN_INFO BAN
+		    WHERE   SUB.PPPO = 'PO'
+		    AND     SUB.CONTRACT_NUM = REQ.CONTRACT_NUM(+)
+		    AND     REQ.OPER_TYPE(+) IN ( 'NAC3', 'MNP3')
+		    AND     REQ.REQUEST_KEY = SALE.REQUEST_KEY(+)
+		    AND     REQ.REQUEST_KEY = MOV.REQUEST_KEY(+)
+		    AND     REQ.REQUEST_KEY = AGT.REQUEST_KEY(+)
+		    AND     REQ.REQUEST_KEY = CST.REQUEST_KEY(+)
+		    AND     SUB.CONTRACT_NUM = #{CONTRACT_NUM}
+		    AND		SUB.BAN = BAN.BAN
+		)
+		SELECT    A.CONTRACT_NUM AS contractNum    									/*가입계약번호  */
+				, A.SVC_CNTR_NO AS svcCntrNo      									/*서비스계약번호*/
+				, A.SUBSCRIBER_NO AS subscriberNo   								/*휴대폰번호    */
+				, A.OPEN_DT AS openDt         										/*개통일자      */
+				, A.TMNT_DT AS tmntDt												/*해지일자      */
+				, A.CAN_RSN AS canRsn												/*해지사유      */
+				, FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS subStatusNm    			/*계약상태      */
+				, TRIM(SUBSTR(A.LST_SOC_INFO, 11 , 10)) AS lstDataType				/*고객구분      */
+				, SUBSTR(A.LST_SOC_INFO, 21 ) AS lstRateNm							/*요금제        */
+				, TRIM(SUBSTR(A.LST_MODEL_INFO, 21 , 30)) AS lstModelNm				/*단말모델명    */
+				, TRIM(SUBSTR(A.LST_MODEL_INFO, 51 , 30)) AS lstModelSrlNum			/*단말일련번호  */
+				, A.ICC_ID AS iccId        											/*USIM일련번호  */
+				, TO_NUMBER(SUBSTR(A.INST_INFO, 26, 3)) AS enggMnthCnt				/*약정개월수    */
+				, TO_NUMBER(SUBSTR(A.INST_INFO, 23, 3)) AS instMnthCnt				/*할부개월수    */
+				, TO_NUMBER(SUBSTR(A.INST_INFO, 13, 10)) AS instOrginAmnt			/*할부원금      */
+				, FN_GET_CODENM('RCP0048', A.JOIN_PAY_MTHD_CD) AS joinPayMthdNm		/*가입비납부방법*/
+				, FN_GET_CODENM('RCP0056', A.USIM_PAY_MTHD_CD) AS usimPayMthdNm		/*USIM납부방법  */
+				, A.USIM_PRICE AS usimPrice											/*USIM판매가    */
+				, FN_GET_CODENM('MSP0007', A.UNPD_IND_CD) AS unpdIndNm				/*미납상태      */
+				, A.BAN AS ban														/*청구계정ID    */
+				, A.CUSTOMER_ID AS customerId										/*고객ID        */
+				, A.SUB_LINK_NAME AS cstmrName										/*고객명        */
+				, ( SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = A.REAL_USE_CUST_NO ) AS realUseCustNm	/*실사용고객    */
+				, A.CUSTOMER_ADR AS customerAdr																					/*고객주소      */
+				, FN_GET_ORGNM(A.OPEN_AGNT_CD) || '/' || A.OPEN_AGNT_CD AS agentNm												/*개통대리점    */
+				, DECODE(A.SHOP_CD, NULL, NVL(A.SHOP_NM, '-'), FN_GET_ORGNM(A.SHOP_CD) || '/' || A.SHOP_CD) AS shopNm			/*판매점        */
+				, CASE
+		            WHEN SUBSTR(A.SIM_INFO, 36, 1) IN ('A', 'R') THEN FN_GET_CODENM('CMN0058', SUBSTR(A.SIM_INFO, 1, 2))
+		            ELSE FN_GET_CODENM ('CMN0058', SUBSTR(A.INST_INFO, 1, 2))
+		        END AS sprtTpNm																									/*할인유형      */
+				, CASE
+		            WHEN SUBSTR(A.SIM_INFO, 36, 1) IN ('A', 'R') THEN SUBSTR(A.SIM_INFO, 1, 2)
+		            ELSE SUBSTR(A.INST_INFO, 1, 2)
+		        END AS sprtTp	
+				, TO_NUMBER(SUBSTR(A.SIM_INFO, 3, 3)) AS simEnggMnthCnt
+				, TRIM(SUBSTR(A.SIM_INFO, 6, 14)) AS simId																		/*심플할인ID*/
+				, SUBSTR(A.SIM_INFO, 20, 8) AS simStartDt																		/*약정시작일*/
+				, SUBSTR(A.SIM_INFO, 28, 8) AS simEndDt																			/*약정종료일*/
+				<!-- , TO_CHAR(TO_DATE(SUBSTR(A.SIM_INFO, 28, 8), 'YYYYMMDD'), 'YYYY-MM-DD') AS SIM_END_DT_EX
+				, TO_CHAR(TO_DATE(SUBSTR(A.SIM_INFO, 20, 8), 'YYYYMMDD'), 'YYYY-MM-DD') AS SIM_START_DT_EX -->
+				, FN_GET_CODENM('MSP0010', SUBSTR(A.SIM_INFO, 36, 1)) AS simStatNm												/*할인유형코드  */
+				, A.TRNS_YN AS trnsYn	/* 이관여부 */
+				, (SELECT COUNT(1) FROM MSP_JUO_SUB_INFO@DL_CAN WHERE CONTRACT_NUM = A.CONTRACT_NUM) AS canChk					/*해지이관체크  */
+				<!-- , A.INSR_NM AS insrNm -->
+				, (SELECT COUNT(1) FROM EMV_SCAN_FILE@DL_MCP WHERE SCAN_ID = A.SCAN_ID) AS scanFileCnt						/*서식지파일갯수 */
+		  FROM  TT A
+	</select>
+
+	<!-- 계약이력 -->
+	<select id="getSubInfoHist" parameterType="map" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/* OpenMgmtMapper.getSubInfoHist */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			
+			SELECT  A.EVNT_CHANGE_DATE AS evntChangeDate													/*변경일시  */
+			        , A.EVNT_TRTM_NO AS evntTrtmNo
+			        , A.EVNT_CD AS evntCd
+			        , FN_GET_CODENM('MSP0005', A.EVNT_CD) AS evntNm											/*변경작업  */
+			        <![CDATA[ 
+			        , NVL(A.SUB_LINK_NAME, (SELECT SUB_LINK_NAME
+			                                  FROM MSP_JUO_SUB_INFO_HIST
+			                                 WHERE 1=1
+			                                   AND (EVNT_CHANGE_DATE <=  A.EVNT_CHANGE_DATE AND EVNT_CHANGE_DATE >= (SELECT MAX(EVNT_CHANGE_DATE) 
+			                                                                                                          FROM MSP_JUO_SUB_INFO_HIST 
+			                                                                                                         WHERE 1=1   
+			                                                                                                           AND CONTRACT_NUM = A.CONTRACT_NUM   
+			                                                                                                           AND SUB_LINK_NAME IS NOT NULL   
+			                                                                                                           AND EVNT_CHANGE_DATE <= A.EVNT_CHANGE_DATE))
+			                                   AND CONTRACT_NUM = A.CONTRACT_NUM
+			                                   AND SUB_LINK_NAME IS NOT NULL
+			                                   AND ROWNUM = 1
+			                                )) AS subLinkName			        							/*가입자명  */
+			        ]]>                        
+			        , A.SUB_STATUS AS subStatus
+			        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS subStatusNm									/*가입자상태*/
+			        , A.SVC_CNTR_NO AS svcCntrNo															/*서비스계약번호*/
+			        , C.SOC AS soc
+			        , ( SELECT DISTINCT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = C.SOC) AS socNm			/*요금제    */
+        			, FN_GET_ORGNM(NVL(A.OPEN_AGNT_CD, (SELECT OPEN_AGNT_CD 
+       													  FROM MSP_JUO_SUB_INFO 
+       													 WHERE CONTRACT_NUM = A.CONTRACT_NUM))) AS orgnNm	/*대리점    */
+			FROM    MSP_JUO_SUB_INFO_HIST A
+			        , MSP_JUO_FEATURE_INFO C
+			WHERE   A.CONTRACT_NUM = #{CONTRACT_NUM}
+			AND     A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+			AND     A.EVNT_TRTM_NO = C.EVNT_TRTM_NO(+)
+			AND     C.SERVICE_TYPE(+) = 'P' 
+			ORDER BY A.EVNT_CHANGE_DATE DESC
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+	<!-- 단말이력
+		2016-12-20, R-2017-081, 단말이력 이벤트 상세화 요청
+	-->
+	<select id="getModelHist" parameterType="map" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/** OpenMgmtMapper.getModelHist */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT  A.CONTRACT_NUM AS contractNum
+			        , A.MODEL_TYPE AS modelType
+			        , A.EVNT_STR AS evntStr													/*변경일시        */
+			        , A.EVNT_CD AS evntCd
+			        , CASE
+			            WHEN A.EVNT_CD = 'C07' AND E.MODEL_CHN_CD NOT IN ('32', '39', '45') THEN FN_GET_CODENM('RCP0020', E.MODEL_CHN_CD)
+			            ELSE FN_GET_CODENM('MSP0005', A.EVNT_CD)
+			        END AS evntNm															/*변경작업        */
+			        , A.MODEL_ID AS modelId
+			        , A.MODEL_NM AS modelName												/*모델명          */
+			        , A.INTM_SRL_NO AS intmSrlNo											/*단말일련번호    */
+			        , B.ICC_ID AS iccId														/*USIM카드일련번호*/
+			        , DECODE(A.INTM_SRL_NO, C.PRDT_SRL_NUM, B.WIFI_MAC_ID, '') AS wifiMacId	/*WIFI_MAC-ID     */
+			FROM    MSP_JUO_MODEL_INFO A
+			        , MSP_JUO_SUB_INFO B
+			        , LGS_PRDT_SRL_MST C
+			        , CMN_INTM_MDL D
+			        , MSP_JUO_ADD_INFO E
+			WHERE   A.CONTRACT_NUM = #{CONTRACT_NUM, jdbcType=VARCHAR}
+			AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+			AND     A.MODEL_ID = C.RPRS_PRDT_ID(+)
+			AND     A.INTM_SRL_NO = C.PRDT_SRL_NUM(+)
+			AND     A.MODEL_TYPE = 'D1'
+			AND     A.MODEL_ID = D.RPRS_PRDT_ID(+)
+			AND     D.RPRS_YN(+) = 'Y' 
+			AND     D.PRDT_TYPE_CD(+) = '01'
+			AND     A.CONTRACT_NUM = E.CONTRACT_NUM(+)
+			AND     A.EVNT_TRTM_NO = E.EVNT_TRTM_NO(+)
+			ORDER BY A.EVNT_STR DESC, A.MODEL_TYPE
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+	<!-- 상품이력 -->
+	<select id="getFeatureHist" parameterType="map" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/* OpenMgmtMapper.getFeatureHist */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT  A.CONTRACT_NUM AS contractNum
+			        , A.EVNT_TRTM_NO AS evntTrtmNo
+			        , A.EVNT_TRTM_DT AS evntTrtmDt			/*변경일시*/
+			        , A.SOC AS socCode
+			        , NVL(B.RATE_NM, A.SOC) AS socNm		/*상품명*/
+			        , A.FEATURE_CODE AS featureCode
+			        , A.SERVICE_TYPE AS serviceType
+			        , C.CD_DSC AS serviceTypeNm				/*상품유형*/
+			        , A.EFFECTIVE_DATE AS effectiveDate		/*시작일시*/
+			        , A.EXPIRATION_DATE AS expirationDate	/*종료일시*/
+			        , CASE 
+			            WHEN A.APP_END_DATE >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') THEN '사용'
+			            ELSE '만료'
+			        END AS status							/*상태    */
+			FROM    MSP_JUO_FEATURE_INFO A
+			        , ( SELECT  DISTINCT RATE_CD, RATE_NM
+			            FROM    MSP_RATE_MST ) B
+			        , CMN_GRP_CD_MST C
+			WHERE   A.CONTRACT_NUM = #{CONTRACT_NUM, jdbcType=VARCHAR}
+			AND     A.SOC = B.RATE_CD(+)
+			AND     A.SERVICE_TYPE = C.CD_VAL
+			AND     C.GRP_ID = 'MSP0008'
+			ORDER BY A.EVNT_TRTM_DT DESC, A.SERVICE_TYPE
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+		
+	</select>
+	
+	
+	<!-- 납부방법 -->
+	<select id="getBanHist" parameterType="map" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/** OpenMgmtMapper.getBanHist */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT  A.BAN AS ban     
+			        ,TO_CHAR (TO_DATE (A.EVNT_TRTM_DT, 'YYYY-MM-DD HH24:MI:SS'),'YYYY-MM-DD HH24:MI:SS') AS evntTrtmDt		/*변경일시*/
+			        ,A.CUSTOMER_ID AS customerId
+			        ,E.CD_DSC AS blBillingMethod							/*납부방법*/
+			        ,F.CD_DSC AS blSpclBanCode								/*BAN구분 */
+			        ,C.CD_DSC AS colDelinqStatus							/*미납상태*/
+			        ,A.BANK_ACCT_HOLDER_ID AS bankAcctHolderId				/*실납부자주민번호*/
+			        ,D.CD_DSC  AS MARKET_GUBUN
+			        ,SUBSTR(A.BAN_ADR_ZIP,1,3)||'-'||SUBSTR(A.BAN_ADR_ZIP,4,6) AS BAN_ADR_ZIP
+			        ,A.BAN_ADR_PRIMARY_LN
+			        ,A.BAN_ADR_PRIMARY_LN || A.BAN_ADR_SECONDARY_LN AS addr	/*납부자주소*/
+			        ,A.BAN_ADR_SECONDARY_LN AS banAdrSecondaryLn
+			        ,A.BAN_LINK_NAME AS banLinkName							/*납부자이름*/
+			        ,A.EVNT_CD AS evntCd             
+			        ,A.EVNT_TRTM_NO AS evntTrtmNo
+			FROM    MSP_JUO_BAN_INFO A
+			        ,CMN_GRP_CD_MST C
+			        ,CMN_GRP_CD_MST D
+			        ,CMN_GRP_CD_MST E
+			        ,CMN_GRP_CD_MST F
+			WHERE   1=1
+			AND     A.BAN  = #{BAN, jdbcType=VARCHAR}
+			AND     A.COL_DELINQ_STATUS  = C.CD_VAL(+)
+			AND     C.GRP_ID(+)     = 'RCP0004'
+			AND     A.MARKET_GUBUN       = D.CD_VAL(+)
+			AND     D.GRP_ID(+)     = 'RCP0005'
+			AND     A.BL_BILLING_METHOD  = E.CD_VAL(+)
+			AND     E.GRP_ID(+)     = 'RCP0036'
+			AND     A.BL_SPCL_BAN_CODE   = F.CD_VAL(+)
+			AND     F.GRP_ID(+)     = 'RCP0010'
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+
+	<!-- 청구수납이력 -->
+	<select id="getInvPymList" parameterType="map" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/* OpenMgmtMapper.getInvPymList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT  A.BILL_YM AS billYm 													/*청구월*/
+			        , FN_GET_SALE_ITMNM(A.BILL_ITEM_CD) AS billItemNm						/*청구항목*/
+			        , SUM(DECODE(A.PYMN_CD, 'INV', A.PYMN_AMNT + A.VAT_AMNT, 0)) AS invAmnt	/*청구금액*/
+			        , SUM(DECODE(A.PYMN_CD, 'ADJ', A.PYMN_AMNT + A.VAT_AMNT, 'ADJR', ( A.PYMN_AMNT + A.VAT_AMNT ) * -1, 0)) AS adjAmnt	/*조정금액*/
+			        , FN_GET_CODENM('CLS0045', MAX(A.PYMN_MTHD_CD)) AS pymnMthdNm			/*납부방법*/
+			        , MAX(A.BLPYM_DATE) AS blpymDate										/*수납일자*/
+			        , SUM(DECODE(A.PYMN_CD, 'PYM' , A.PYMN_AMNT + A.VAT_AMNT , 'BCK', ( A.PYMN_AMNT + A.VAT_AMNT ) * -1, 
+			                'RFN', ( A.PYMN_AMNT + A.VAT_AMNT ) * -1, 'RFNR' , A.PYMN_AMNT + A.VAT_AMNT , 
+			                'FNTF', ( A.PYMN_AMNT + A.VAT_AMNT ) * -1, 'FNTT', A.PYMN_AMNT + A.VAT_AMNT, 0)) AS pymAmnt		/*수납금액*/
+			FROM    CLS_BILL_PYMN_DATA A
+			WHERE   1 = 1
+			AND     A.SVC_CNTR_NO = #{CONTRACT_NUM}
+			GROUP BY A.BILL_YM, A.BILL_ITEM_CD
+			ORDER BY A.BILL_YM DESC, A.BILL_ITEM_CD
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+	<!-- 법정대리인 -->
+	<select id="getAgentInfo" parameterType="map" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/* OpenMgmtMapper.getAgentInfo */
+		SELECT	A.LGL_AGNT_NM AS minorAgentName                                                         /* 법정대리인명   */
+		    	, B.APP_BLCK_AGRM_YN AS appBlckAgrmYn													/* APP설치동의    */
+		    	, A.LGL_AGNT_NO AS agentTelNum	                                                        /* 대리인연락번호 */
+		    	, C.APP_INST_YN	AS appInstYn															/* APP설치확인    */
+		    	, FN_GET_CODENM('RCP9003', A.AGNT_REL_DIV_CD) AS agentRelNm                             /* 대리인관계     */
+		    	, FN_GET_USRNM(C.INST_CNFM_ID) AS instCnfmNm											/* 설치확인자     */
+		    	, TO_CHAR(C.INST_CNFM_DTTM, 'YYYY-MM-DD') AS instCnfmDt									/* 설치확인일     */
+		    	, B.REQUEST_KEY AS requestKey															/* 가입신청_키    */
+		FROM	MSP_JUO_SUB_INFO A
+		    	, MSP_REQUEST B
+		    	, MSP_REQUEST_AGENT C
+		WHERE	1 = 1
+		AND 	A.CONTRACT_NUM          = #{CONTRACT_NUM, jdbcType=VARCHAR}
+		AND 	A.PPPO 					= 'PO'
+		AND 	A.CONTRACT_NUM			= B.CONTRACT_NUM(+)
+		AND 	B.REQUEST_KEY			= C.REQUEST_KEY(+)
+	</select>
+	
+	<!-- 법정대리인(APP설치여부확인) -->
+	<update id="updateAppInstYnCnfm" parameterType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/* OpenMgmtMapper.updateAppInstYnCnfm */
+		UPDATE	MSP_REQUEST_AGENT
+		SET		APP_INST_YN			= #{appInstYn}
+				, INST_CNFM_ID		= #{instCnfmId}
+				, INST_CNFM_DTTM	= SYSDATE
+		WHERE	REQUEST_KEY	= #{requestKey}
+	</update>
+	
+	
+	<!-- 할인유형이력 -->
+	<select id="getAddInfoList" parameterType="map" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/* OpenMgmtMapper.getAddInfoList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT  A.EVNT_TRTM_DT AS evntTrtmDt				/*변경일시*/
+			        , A.EVNT_CD AS evntCd
+			        , FN_GET_CODENM('MSP0005', A.EVNT_CD) AS evntNm	/*전문유형*/
+			        , CASE
+			            WHEN A.SIM_ID IS NOT NULL THEN '심플할인'
+			            WHEN A.BL_DC_TYPE IN ('KD', 'PM') THEN FN_GET_CODENM('CMN0058', A.BL_DC_TYPE)
+			            ELSE ''
+			        END AS sprtTpNm									/*할인유형*/
+			        , A.ENGG_MNTH_CNT AS enggMnthCnt				/*약정기간*/
+			        , DECODE(UPPER(A.GRNT_INSR_MNGM_NO), 'NONE', '', A.GRNT_INSR_MNGM_NO) AS grntInsrMngmNo	/*보증보험가입번호*/
+			        , CASE
+			            WHEN A.SIM_ID IS NOT NULL THEN FN_GET_CODENM('MSP0010', A.GRNT_INSR_STAT_CD)
+			            WHEN A.BL_DC_TYPE IN ( 'KD', 'PM' ) THEN FN_GET_CODENM('MSP0011', A.GRNT_INSR_STAT_CD)
+			            ELSE ''
+			        END AS statNm									/*가입상태*/
+			        , A.SIM_ID AS simId								/*SIM ID*/
+			        , SUBSTR(A.SIM_START_DT, 1, 8) AS simStartDt	/*시작일자*/
+			        , SUBSTR(A.SIM_END_DT, 1, 8) AS simEndDt		/*종료일자*/
+			FROM    MSP_JUO_ADD_INFO A
+			WHERE   A.CONTRACT_NUM = #{CONTRACT_NUM}
+			AND     ( A.BL_DC_TYPE IS NOT NULL OR A.SIM_ID IS NOT NULL )
+			ORDER BY evntTrtmDt DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 2018-11-20, [SRM18111484351] M전산 내 기기변경 리스트 수정 요청, 신청정보 기준으로 수정 -->
+	<select id="getDvcChgList" parameterType="map" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/* OpenMgmtMapper.getDvcChgList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT  A.APPL_STRT_DTTM                            AS applStrtDttm		/*기변일시*/
+			        , FN_GET_CODENM('RCP0050', C.DVC_CHG_RSN_CD)    AS dvcChgTpNm
+			        , FN_GET_CODENM('RCP0051', C.DVC_CHG_RSN_DTL_CD) AS dvcChgRsnNm
+			        , A.MODEL_NM                                    AS modelNm
+			        , A.MODEL_ID                                    AS modelId
+			        , A.INTM_SRL_NO                                 AS intmSrlNo
+			        , B.MODEL_MONTHLY                               AS instMnthCnt		/*할부개월*/
+			        , B.ENGG_MNTH_CNT                               AS enggMnthCnt		/*약정개월*/
+			        , B.MODEL_PRICE + B.MODEL_PRICE_VAT             AS outAmnt			/*출고가*/
+			        , B.MODEL_INSTALLMENT                           AS instAmnt			/*할부원금*/
+			        , FN_GET_CODENM('CMN0058', D.BL_DC_TYPE)        AS sprtTpNm         /*할인유형*/
+			        , D.GRNT_INSR_MNGM_NO                           AS grntInsrMngmNo	/*보증보험번호*/
+			        , FN_GET_CODENM('MSP0011', D.GRNT_INSR_STAT_CD) AS grntInsrStatNm
+			FROM    MSP_DVC_CHG_AGNT_HST A
+			        , MSP_REQUEST_SALEINFO B
+			        , MSP_REQUEST_DVC_CHG C
+			        , MSP_JUO_ADD_INFO D
+			        , MSP_SALE_PLCY_MST E
+			WHERE   A.CONTRACT_NUM = #{CONTRACT_NUM}
+			AND     A.APPL_END_DTTM = '99991231000000'
+			AND     A.REQUEST_KEY = B.REQUEST_KEY
+			AND     B.REQUEST_KEY = C.REQUEST_KEY
+			AND     A.CONTRACT_NUM = D.CONTRACT_NUM
+			AND     A.EVNT_TRTM_NO = D.EVNT_TRTM_NO
+			AND     NVL(D.GRNT_INSR_STAT_CD, 'A') = 'A'
+			AND     B.MODEL_SALE_POLICY_CODE = E.SALE_PLCY_CD(+)
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 신청서정보조회 -->
+	<select id="getApplFormInfo" parameterType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO" resultType="com.ktis.msp.rcp.openMgmt.vo.OpenMgmtVO">
+		/* OpenMgmtMapper.getApplFormInfo */
+		SELECT
+		    A.REQUEST_KEY AS requestKey
+		    , A.CSTMR_TYPE AS cstmrType 						/*고객구분*/		    
+		    , A.SERVICE_TYPE AS serviceType						/*서비스구분*/		    
+		    , (SELECT CODE_NAME FROM MCP_CODE@DL_MCP WHERE CODE_SYS = 'PRO' AND CODE = A.SERVICE_TYPE) AS serviceName
+		    , A.OPER_TYPE AS operType 							/*업무구분*/
+		    , (SELECT CODE_NAME FROM  MCP_CODE@DL_MCP WHERE CODE_SYS = 'BSN' AND CODE = A.OPER_TYPE) AS operName
+		    , TO_CHAR(A.REQ_IN_DAY, 'YYYY-MM-DD') AS reqInDay	/*신청일자*/
+		    , A.ONLINE_AUTH_INFO AS onlineAuthInfo				/*본인인증정보*/
+		    , A.ONLINE_AUTH_TYPE AS onlineAuthType				/*본인인증방식*/
+		    , A.PSTATE AS pstate								/*신청취소*/
+		    , A.REQUEST_STATE_CODE AS requestStateCode			/*개통진행상태*/
+		    , (SELECT CODE_NAME FROM MCP_CODE@DL_MCP WHERE CODE_SYS = 'OPP' AND CODE = A.REQUEST_STATE_CODE)
+		    , A.ON_OFF_TYPE AS onOffType						/*모집경로*/
+		    , A.RES_NO AS resNo									/*예약번호*/
+		    , A.SCAN_ID AS scanId								/*스캔아이디*/
+		    , A.MANAGER_CODE AS managerCode						/*매니저코드*/
+		    , A.REQ_BUY_TYPE AS reqBuyType						/*구매유형*/
+		    , A.REQ_MODEL_NAME AS reqModelName					/*휴대폰모델명*/
+		    , A.REQ_MODEL_COLOR AS reqModelColor				/*휴대폰색상*/
+		    , A.REQ_WANT_NUMBER AS reqWantNumber				/*가입희망번호*/
+		    , A.REQ_WANT_NUMBER2 AS reqWantNumber2				/*가입희망번호2*/
+		    , A.REQ_WANT_NUMBER3 AS reqWantNumber3				/*가입희망번호3*/
+		    , A.REQ_USIM_SN AS reqUsimSn						/*유심번호*/
+		    , A.REQ_PHONE_SN AS reqPhoneSn						/*단말기일련번호*/
+		    , A.SPC_CODE AS spcCode								/*특별판매코드*/
+		    , A.MEMO AS requestMemo								/*메모*/
+		    , DECODE(A.CLAUSE_PRI_COLLECT_FLAG, 'Y', 1, 0)	AS clausePriCollectFlag		/* 약관_개인정보_수집_동의 */
+		    , DECODE(A.CLAUSE_PRI_OFFER_FLAG, 'Y', 1, 0)	AS clausePriOfferFlag		/* 약관_개인정보_제공_동의 */
+		    , DECODE(A.CLAUSE_ESS_COLLECT_FLAG, 'Y', 1, 0)	AS clauseEssCollectFlag		/* 약관_고유식별정보_수집이용제공_동의 */
+		    , DECODE(A.CLAUSE_PRI_TRUST_FLAG, 'Y', 1, 0)	AS clausePriTrustFlag		/* 약관_개인정보_위탁_동의 */
+		    , DECODE(A.CLAUSE_PRI_AD_FLAG, 'Y', 1, 0)		AS clausePriAdFlag			/* 약관_개인정보_광고전송_동의 */
+		    , DECODE(A.CLAUSE_CONFIDENCE_FLAG, 'Y', 1, 0)	AS clauseConfidenceFlag		/* 약관_신용정보_이용_동의 */
+		    , B.SOC_CODE AS socCode								/*요금제*/
+<!-- 		, (SELECT RATE_NAME FROM MCP_RATE@DL_MCP WHERE KT_RATE_CODE = B.SOC_CODE AND ROWNUM = 1) || NVL2(B.SOC_CODE, ' (' || B.SOC_CODE || ')', '')	AS SOC_NAME -->
+		    , (SELECT RATE_NM FROM MSP_RATE_MST MRM WHERE MRM.RATE_CD = B.SOC_CODE AND SERVICE_TYPE = 'P' AND ROWNUM = 1) || NVL2(B.SOC_CODE, ' (' || B.SOC_CODE || ')', '') AS socName
+		    , '가입비 : ' || B.JOIN_PRICE || ' / 유심비 : ' || B.USIM_PRICE ||
+		        (CASE WHEN A.OPER_TYPE = 'MNP3' THEN  ' / ' ||  ' 번호이동 시 수수료 800원' END ) AS trmnlInfo	/*단말정보*/
+		    , C.CSTMR_NAME AS cstmrName													/*고객명*/
+		    , NVL(TRIM(C.CSTMR_NATIVE_RRN), TRIM(C.CSTMR_FOREIGNER_PN)) AS ssn			/*생년월일(내국인주민번호앞6자리 또는 여권번호)*/
+		    , TRIM(C.CSTMR_FOREIGNER_PN) AS cstmrForeignerPn							/*여권번호*/
+		    , C.CSTMR_FOREIGNER_SDATE AS cstmrForeignerSdate							/*체류기간1*/
+		    , C.CSTMR_FOREIGNER_EDATE AS cstmrForeignerEdate							/*체류기간2*/
+		    , C.CSTMR_JURIDICAL_CNAME AS cstmrJuridicalCname							/*법인명*/
+		    , C.CSTMR_JURIDICAL_RRN AS cstmrJuridicalRrn
+		    , SUBSTR(C.CSTMR_JURIDICAL_RRN, 1, 6)		AS cstmrJuridicalRrn1			/*법인번호1*/
+		    , SUBSTR(C.CSTMR_JURIDICAL_RRN, 7, 7)		AS cstmrJuridicalRrn2			/*법인번호2*/
+		    , C.CSTMR_JURIDICAL_NUMBER
+		    , SUBSTR(C.CSTMR_JURIDICAL_NUMBER, 1, 3)	AS cstmrJuridicalNumber1		/*사업자번호1(법인)*/
+		    , SUBSTR(C.CSTMR_JURIDICAL_NUMBER, 4, 2)	AS cstmrJuridicalNumber2		/*사업자번호2(법인)*/
+		    , SUBSTR(C.CSTMR_JURIDICAL_NUMBER, 6, 5)	AS cstmrJuridicalNumber3		/*사업자번호3(법인)*/
+		    , C.CSTMR_PRIVATE_CNAME AS cstmrPrivateCname								/*상호명*/
+		    , C.CSTMR_PRIVATE_NUMBER AS cstmrPrivateNumber
+		    , SUBSTR(C.CSTMR_PRIVATE_NUMBER, 1, 3)		AS cstmrPrivateNumber1			/*사업자번호1(개인)*/
+		    , SUBSTR(C.CSTMR_PRIVATE_NUMBER, 4, 2)		AS cstmrPrivateNumber2			/*사업자번호2(개인)*/
+		    , SUBSTR(C.CSTMR_PRIVATE_NUMBER, 6, 5)		AS cstmrPrivateNumber3			/*사업자번호3(개인)*/
+		    , C.CSTMR_MAIL
+		    , SUBSTR(C.CSTMR_MAIL, 1, INSTR(C.CSTMR_MAIL, '@') - 1)	AS cstmrMail1		/*메일주소1*/
+		    , SUBSTR(C.CSTMR_MAIL, INSTR(C.CSTMR_MAIL, '@') + 1)	AS cstmrMail2		/*메일주소2*/
+		    , C.CSTMR_MAIL_RECEIVE_FLAG AS cstmrMailReceiveFlag							/*메일수신여부*/
+		    , C.CSTMR_POST AS cstmrPost													/*우편번호*/
+		    , C.CSTMR_ADDR AS cstmrAddr													/*고객주소*/
+		    , C.CSTMR_ADDR_DTL AS cstmrAddrDtl											/*상세주소*/
+		    , C.CSTMR_BILL_SEND_CODE AS cstmrBillSendCode								/*명세서수신유형*/
+		    , C.CSTMR_TEL_FN || '-' || C.CSTMR_TEL_MN || '-' || C.CSTMR_TEL_RN AS cstmrTel
+		    , C.CSTMR_TEL_FN AS cstmrTelFn												/*전화번호1*/
+		    , C.CSTMR_TEL_MN AS cstmrTelMn												/*전화번호2*/
+		    , C.CSTMR_TEL_RN AS cstmrTelRn												/*전화번호3*/
+		    , C.CSTMR_MOBILE_FN || '-' || C.CSTMR_MOBILE_MN || '-' || C.CSTMR_MOBILE_RN AS cstmrMobile
+		    , C.CSTMR_MOBILE_FN AS cstmrMobileFn										/*휴대폰번호1*/
+		    , C.CSTMR_MOBILE_MN AS cstmrMobileMn										/*휴대폰번호2*/
+		    , C.CSTMR_MOBILE_RN AS cstmrMobileRn										/*휴대폰번호3*/
+		    , D.DLVRY_NAME AS dlvryName													/*배송정보_받으시는분*/
+		    , D.DLVRY_TEL_FN || '-' || D.DLVRY_TEL_MN || '-' || D.DLVRY_TEL_RN AS dlvryTel
+		    , D.DLVRY_TEL_FN AS dlvryTelFn												/*배송정보_전화번호1*/
+		    , D.DLVRY_TEL_MN AS dlvryTelMn												/*배송정보_전화번호2*/
+		    , D.DLVRY_TEL_RN AS dlvryTelRn												/*배송정보_전화번호3*/
+		    , D.DLVRY_MOBILE_FN || '-' || D.DLVRY_MOBILE_MN || '-' || D.DLVRY_MOBILE_RN AS dlvryMobile
+		    , D.DLVRY_MOBILE_FN AS dlvryMobileFn										/*배송정보_휴대폰1*/
+		    , D.DLVRY_MOBILE_MN AS dlvryMobileMn										/*배송정보_휴대폰2*/
+		    , D.DLVRY_MOBILE_RN AS dlvryMobileRn										/*배송정보_휴대폰3*/
+		    , D.DLVRY_POST AS dlvryPost													/*배송정보_우편번호*/
+		    , D.DLVRY_ADDR AS dlvryAddr													/*배송정보_주소*/
+		    , D.DLVRY_ADDR_DTL AS dlvryAddrDtl											/*배송정보_상세주소*/
+		    , D.DLVRY_MEMO AS dlvryMemo													/*배송정보_메모*/
+		    , E.TB_CD AS tbCd															/*택배사*/
+		    , E.DLVRY_NO AS dlvryNo														/*송장번호*/
+		    , A.REQ_PAY_TYPE AS reqPayType												/*요금납부방법*/
+		    , F.REQ_PAY_OTHER_FLAG AS othersPaymentAg	   						        /*타인납부여부*/
+		    , NVL(CASE WHEN A.REQ_PAY_TYPE = 'C' THEN TRANSLATE(C.OTHERS_PAYMENT_AG,'YN','10') END, 0)	AS othersPaymentAgClone	/*타인납부여부(카드)*/
+		    , F.REQ_BANK AS reqBank														/*납부정보_은행*/
+		    , F.REQ_ACCOUNT_NUMBER AS reqAccountNumber									/*납부정보_계좌번호*/
+		    , F.REQ_ACCOUNT_NAME AS reqAccountName										/*납부정보_예금주명 */
+		    , TRIM(F.REQ_ACCOUNT_RRN) AS reqAccountRrn									/*납부정보_예금주주민번호*/
+		    , F.REQ_ACCOUNT_RELATION AS reqAccountRelation							
+		    , F.REQ_CARD_NAME AS reqCardName											/*납부정보_카드_명의자*/
+		    , TRIM(F.REQ_CARD_RRN) AS reqCardRrn										/*납부정보_카드주_주민번호*/
+		    , F.REQ_CARD_COMPANY AS reqCardCompany										/*납부정보_카드사*/
+		    , F.REQ_CARD_NO AS reqCardNo												/*납부정보_카드번호*/
+		    , F.REQ_CARD_MM AS reqCardMm												/*납부정보_유효기간_월*/
+		    , F.REQ_CARD_YY AS reqCardYy												/*납부정보_유효기간_년*/
+		    , (CASE WHEN INSTR(F.REQ_WIRE_TYPE,'AY') > 0 THEN 1 ELSE 0 END) AS reqWireType1	/*신청정보_무선데이터_이용_타입(이용)*/
+		    , (CASE WHEN INSTR(F.REQ_WIRE_TYPE,'AN') > 0 THEN 1 ELSE 0 END) AS reqWireType2	/*신청정보_무선데이터_이용_타입(차단)*/
+		    , (CASE WHEN INSTR(F.REQ_WIRE_TYPE,'DN') > 0 THEN 1 ELSE 0 END) AS reqWireType3	/*신청정보_무선데이터_이용_타입(데이터로밍차단)*/
+		    , G.MINOR_AGENT_NAME AS minorAgentName										/*미성년자_법정대리인_성명*/
+		    , G.MINOR_AGENT_RELATION AS minorAgentRelation								/*미성년자_법정대리인_관계*/
+		    , TRIM(G.MINOR_AGENT_RRN) AS minorAgentRrn									/*미성년자_법정대리인_주민번호*/
+		    , G.MINOR_AGENT_TEL_FN || '-' || G.MINOR_AGENT_TEL_MN || '-' || G.MINOR_AGENT_TEL_RN AS minorAgentTel
+		    , G.MINOR_AGENT_TEL_FN AS minorAgentTelFn									/*미성년자_법정대리인_연락처1*/
+		    , G.MINOR_AGENT_TEL_MN AS minorAgentTelMn									/*미성년자_법정대리인_연락처2*/
+		    , G.MINOR_AGENT_TEL_RN AS minorAgentTelRn									/*미성년자_법정대리인_연락처3*/
+		    , TRANSLATE(H.REQ_GUIDE_FLAG, 'YN', '10') AS reqGuideFlag					/*신청정보_번호연결서비스_여부*/
+		    , H.REQ_GUIDE_FN || '-' || H.REQ_GUIDE_MN || '-' || H.REQ_GUIDE_RN AS reqGuide
+		    , H.REQ_GUIDE_FN AS reqGuideFn												/*신청정보_번호연결_전화번호1*/
+		    , H.REQ_GUIDE_MN AS reqGuideMn												/*신청정보_번호연결_전화번호2*/
+		    , H.REQ_GUIDE_RN AS reqGuideRn												/*신청정보_번호연결_전화번호3*/
+		    , H.MOVE_COMPANY AS moveCompany												/*번호이동_변경전통신사*/
+		    , H.MOVE_MOBILE_FN || '-' || H.MOVE_MOBILE_MN || '-' || H.MOVE_MOBILE_RN AS moveMobile
+		    , H.MOVE_MOBILE_FN AS moveMobileFn											/*번호이동_이동번호1*/
+		    , H.MOVE_MOBILE_MN AS moveMobileMn											/*번호이동_이동번호2*/
+		    , H.MOVE_MOBILE_RN AS moveMobileRn											/*번호이동_이동번호3*/
+		    , H.MOVE_THISMONTH_PAY_TYPE AS moveThismonthPayType							/*번호이동_이달사용요금납부방법*/
+		    , H.MOVE_ALLOTMENT_STAT AS moveAllotmentStat								/*번호이동_휴대폰_할부금상태*/
+		    , H.MOVE_REFUND_AGREE_FLAG AS moveRefundAgreeFlag							/*번호이동_미환급액요금상계동의_여부*/
+		    , H.MOVE_AUTH_TYPE AS moveAuthType											/*번호이동_인증유형*/
+		    , H.MOVE_AUTH_NUMBER AS moveAuthNumber										/*번호이동_인증번호*/
+		    , I.REQ_AC_TYPE AS reqAcType												/*충전방법*/
+		    , I.REQ_AC01_BALANCE AS reqAc01Balance										/*충전잔액*/
+		    , I.REQ_AC02_DAY AS reqAc02Day												/*충전일*/
+		    , DECODE(I.REQ_AC_TYPE, '01', I.REQ_AC01_AMOUNT, I.REQ_AC02_AMOUNT) AS reqAcAmount	/*충전금액*/
+		    , ( SELECT  LISTAGG(ADDITION_NAME, ',') WITHIN GROUP(ORDER BY ADDITION_NAME) ADDITION_NAME
+		        FROM    MCP_REQUEST_ADDITION@DL_MCP
+		        WHERE   REQUEST_KEY = A.REQUEST_KEY
+		            GROUP BY REQUEST_KEY
+		    ) AS additionName															/*부가서비스명*/
+		    , DECODE(A.NW_BLCK_AGRM_YN, 'Y', 1, 0) AS nwBlckAgrmYn						/*네트워크_차단동의*/
+		    , DECODE(A.APP_BLCK_AGRM_YN, 'Y', 1, 0) AS appBlckAgrmYn					/*유해정보차단APP_설치동의*/
+		    , ( SELECT CODE_NAME FROM MCP_CODE@DL_MCP WHERE CODE_SYS = 'CHA' AND CODE = A.APP_CD) AS appNm	/*유해정보차단APP명*/
+<!-- 			, FN_GET_CODENM('CMN0058', (SELECT BL_DC_TYPE FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM  -->
+<!--                 AND EVNT_TRTM_DT             = ( SELECT MAX(EVNT_TRTM_DT) FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM ) -->
+<!--                 AND APP_END_DATE             = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM ) -->
+<!--                 )) AS BL_DC_TYPE            /* 지원금유형 */  -->
+		    , B.MODEL_SALE_POLICY_CODE AS plcyCd										/*판매정책코드*/
+		    , (SELECT SALE_PLCY_NM FROM MSP_SALE_PLCY_MST WHERE SALE_PLCY_CD = B.MODEL_SALE_POLICY_CODE) AS plcyNm	/*판매정책명*/
+		    , FN_GET_CODENM('CMN0058', (SELECT BL_DC_TYPE FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND BL_DC_TYPE IS NOT NULL AND ROWNUM = 1)) AS blDcType	/*할인유형*/ 
+		    , A.PROD_TYPE AS prodType
+		    , FN_GET_CODENM('RCP0063', NVL(A.PROD_TYPE, '01')) AS prodTypeNm
+		    , DECODE(A.CLAUSE_RENTAL_SERVICE, 'Y', 1, 0) AS clauseRentalService			/*렌탈서비스 이용 동의*/
+		    , DECODE(A.CLAUSE_RENTAL_MODEL_CP, 'Y', 1, 0) AS clauseRentalModelCp		/*단말배상금 안내사항 동의*/
+		    , DECODE(A.CLAUSE_RENTAL_MODEL_CP_PR, 'Y', 1, 0) AS clauseRentalModelCpPr	/*단말배상금(부분파손) 안내사항 동의*/
+		    , B.RENTAL_BASE_AMT AS rentalBaseAmt										/*렌탈기본료*/
+		    , B.RENTAL_BASE_DC_AMT AS rentalBaseDcAmt									/*렌탈료할인*/
+		    , B.RENTAL_MODEL_CP_AMT AS rentalModelCpAmt									/*렌탈단말금액*/
+		FROM
+		    MSP_REQUEST A				/* 가입신청정보 */
+		    , MSP_REQUEST_SALEINFO B	/* 판매정보 */
+		    , MSP_REQUEST_CSTMR C		/* 고객정보 */
+		    , MSP_REQUEST_DLVRY D		/* 배송정보 */
+		    , MSP_REQUEST_STATE E		/* 신청서상태정보 */
+		    , MSP_REQUEST_REQ F			/* 납부정보 */
+		    , MSP_REQUEST_AGENT G		/* 대리인정보 */
+		    , MSP_REQUEST_MOVE H		/* 번호이동정보 */
+		    , MSP_REQUEST_PAYMENT I		/* 선불충전 */
+		WHERE
+		    A.REQUEST_KEY       = #{requestKey}
+		    AND A.REQUEST_KEY   = B.REQUEST_KEY
+		    AND A.REQUEST_KEY   = C.REQUEST_KEY
+		    AND A.REQUEST_KEY   = D.REQUEST_KEY
+		    AND A.REQUEST_KEY   = E.REQUEST_KEY(+)
+		    AND A.REQUEST_STATE_CODE = E.REQUEST_STATE_CODE(+)
+		    AND A.REQUEST_KEY   = F.REQUEST_KEY
+		    AND A.REQUEST_KEY   = G.REQUEST_KEY
+		    AND A.REQUEST_KEY   = H.REQUEST_KEY
+		    AND A.REQUEST_KEY   = I.REQUEST_KEY
+	</select>
+	
+		
+	<!-- 녹취파일조회 -->
+	<select id="getFile1" parameterType="com.ktis.msp.rcp.custMgmt.vo.FileInfoCuVO" resultType="com.ktis.msp.rcp.custMgmt.vo.FileInfoCuVO">
+		SELECT  /** OpenMgmtMapper.getFile1 */
+	            ATT_ROUT AS attRout		/* 파일경로 */
+	          , FILE_NM AS fileNm		/* 파일명 */
+	          , FILE_ID AS fileId		/* 파일ID */
+	    FROM ORG_FILE_MGMT_MST
+	    WHERE CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+	    ORDER BY REG_DTTM
+	</select>	
+	
+	
+	<!-- 녹취파일업로드 -->
+	<insert id="fileInsertByCust" parameterType="com.ktis.msp.rcp.custMgmt.vo.FileInfoCuVO">
+		/** OpenMgmtMapper.fileInsertByCust */
+		INSERT INTO ORG_FILE_MGMT_MST
+		(
+                     REGST_ID    /* 등록자ID */
+                   , REG_DTTM    /* 등록일시 */
+                   , RVISN_ID    /* 수정자ID */
+                   , RVISN_DTTM    /* 수정일시 */
+                   , ATT_DTTM    /* 첨부일시 */
+                   , FILE_NM    /* 파일명 */
+                   , ATT_DSC    /* 첨부설명 */
+                   , ATT_ROUT    /* 첨부경로 */
+                   , ATT_SCTN    /* 업무구분 */
+                   , ORGN_ID    /* SEQ */
+                   , FILE_ID    /* 파일ID */
+                   , CONTRACT_NUM
+		       )
+		VALUES
+			   (
+                     #{regstId, jdbcType=VARCHAR} /* 등록자ID */
+                   , sysdate /* 등록일시 */
+                   , #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+                   , SYSDATE /* 수정일시 */
+                   , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') /* 첨부일시 */
+                   , #{fileNm, jdbcType=VARCHAR} /* 파일명 */
+                   , #{attDsc, jdbcType=VARCHAR} /* 첨부설명 */
+                   , #{attRout, jdbcType=VARCHAR} /* 첨부경로 */
+                   , #{attSctn, jdbcType=VARCHAR} /* 업무구분 */
+                   , #{fileSeq, jdbcType=VARCHAR} /* SEQ */
+                   , #{fileId, jdbcType=VARCHAR} /* 파일ID */
+                   , #{contractNum, jdbcType=VARCHAR} /* 파일ID */
+			   )
+	</insert>
+	
+		<!-- 해지고객인지 조회 20180809에 추가-->
+	<select id="validationCanScan"  parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT 
+		CONTRACT_NUM AS contractNum
+		FROM MSP_JUO_SUB_INFO@DL_CAN
+		WHERE CONTRACT_NUM =  #{CONTRACT_NUM}/* 계약번호 */
+	</select>	
+</mapper>

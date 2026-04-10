@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PushBatchMapper">
+
+  <select id="getPushScheduleList" resultType="com.ktmmobile.mcp.push.dto.PushBatchVO"  parameterType="com.ktmmobile.mcp.push.dto.PushBatchVO">
+  		/* QUERYID(PushBatchMapper.getPushScheduleList : 푸쉬 스케줄 조회) */
+  		SELECT TUPB.PUSH_SND_SET_SNO	/* 푸쉬발송설정일련번호 */
+			, TUPB.SND_PROC_DIV			/* 발송처리구분 */
+			, TUPB.SND_CNT_DIV			/* 발송횟수구분 */
+			, TUPB.SND_DT_DIV			/* 발송일구분 */
+			, TUPB.SND_TIME				/* 발송시간 */
+			, TUPB.APPROVE_YN			/* 승인여부 */
+			, TUPB.APLY_STRT_DTIME			/* 사용기간시작일 */
+			, TUPB.APLY_END_DTIME			/* 사용기간종료일 */
+			, TUPB.MSG_TP				/* 메시지유형 */
+			, TUPB.PUSH_TP				/* 푸쉬유형 */
+			, TUPB.PUSH_ICON_TP			/* 푸쉬아이콘 */
+			, TUPB.PUSH_WORK_TP			/* 푸쉬대상업무유형 */
+			, TUPB.SND_TITLE			/* 발송제목 */
+			, TUPB.SND_MSG				/* 발송메시지 */
+			, TUPB.PUSH_IMG_URL			/* 푸쉬 이미지경로 */
+			, TUPB.PUSH_IMG_NM			/* 푸쉬 이미지명 */
+			, TUPB.LINK_DIV				/* 링크구분 */
+			, TUPB.LINK_URL				/* 링크URL */
+			, TUPB.PUSH_SND_PROC_NO		/* 푸쉬발송고유번호 */
+			, TUPS.SND_DOW_LST			/* 발송요일목록 */
+			, TO_CHAR(SYSDATE , 'd') SND_DOW	/* 발송요일 */
+			, CASE WHEN TUPS.SND_DAYS = TO_CHAR(SYSDATE , 'DD')
+			THEN TUPS.SND_DAYS ELSE NULL END AS SND_DAYS	/* 발송일 */
+			, CASE WHEN TUPS.SND_DT = TO_CHAR(SYSDATE , 'YYYYMMDD')
+			THEN TUPS.SND_DT ELSE NULL END AS SND_DT	/* 발송일자 */
+			, TUPI.SND_TARGET_EXTR_DIV	/* 발송대상자추출구분 */
+			, TUPI.APP_OS_TP			/* 단말기OS유형 */
+			, TUPI.AND_OS_VER_LST		/* 안드로이드 OS버전목록 */
+			, TUPI.AND_INSTL_VER_LST	/* 안드로이드 APP 설치버전목록 */
+			, TUPI.IOS_OS_VER_LST		/* IOS OS버전목록 */
+			, TUPI.IOS_INSTL_VER_LST	/* IOS APP 설치버전목록 */
+			, TUPI.CUST_TP				/* 고객선택조건유형 */
+			, TUPI.CUST_DIV_LST			/* 고객구분목록 */
+		FROM NMCP_PUSH_SND_SETUP_BASE TUPB	/* 푸쉬발송설정관리 */
+		LEFT JOIN NMCP_PUSH_SND_SCHDUL_BASE TUPS	/* 푸쉬발송스케줄관리 */
+		ON TUPB.PUSH_SND_SET_SNO = TUPS.PUSH_SND_SET_SNO
+		LEFT JOIN NMCP_PUSH_SND_TRGT_EXTR_INFO TUPI	/* 푸쉬발송대상자추출조건 */
+		ON TUPB.PUSH_SND_SET_SNO = TUPI.PUSH_SND_SET_SNO
+		WHERE TUPB.SND_PROC_DIV = #{sndProcDiv}
+	 	AND TUPB.APPROVE_YN =#{approveYn}
+	 	AND (TUPB.SND_TIME IS NULL OR TUPB.SND_TIME = TO_CHAR(SYSDATE , 'HH24'))
+		AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN TUPB.APLY_STRT_DTIME AND TUPB.APLY_END_DTIME
+		ORDER BY TUPB.PUSH_SND_SET_SNO DESC
+  </select>
+  
+  <select id="getPushSndProcCount" resultType="java.lang.Integer">
+	/* QUERYID(pushBatch.getPushSndProcCount : 푸쉬 발송 처리 대상자 카운트) */
+	SELECT COUNT(*) AS CNT
+		FROM NMCP_PUSH_SND_PROC_TRGT_LIST
+	WHERE PUSH_SND_PROC_SNO = #{pushSndProcSno}	/* 푸쉬발송처리일련번호 */
+	AND PUSH_SND_SET_SNO = #{pushSndSetSno}	/* 푸쉬발송설정일련번호 */
+</select>
+
+<update id="mergePushSndRst" parameterType="com.ktmmobile.mcp.push.dto.PushBatchVO">
+	/* QUERYID(pushBatch.mergePushSndRst : 푸쉬 발송 결과 업데이트) */
+	MERGE INTO NMCP_PUSH_SND_PROC_RST_LIST A
+	USING (
+		SELECT PUSH_SND_PROC_SNO
+			, SUM(CASE WHEN APP_COLCT_YN = 'Y' THEN 1 ELSE 0 END) AS SUCCESS_CNT
+			, SUM(CASE WHEN APP_COLCT_YN = 'Y' THEN 0 ELSE 1 END) AS FAIL_CNT
+			, MIN(SND_PROC_DT) AS SND_PROC_DT
+		FROM NMCP_PUSH_SND_PROC_TRGT_LIST TUPSPTL
+		WHERE NVL(SND_TEST_YN, 'N') = 'N'
+		AND SND_PROC_DT BETWEEN TO_TIMESTAMP(SYSDATE - 1) AND TO_TIMESTAMP(SYSDATE)
+		GROUP BY PUSH_SND_PROC_SNO
+	) B
+	ON (A.PUSH_SND_PROC_SNO = B.PUSH_SND_PROC_SNO)
+	WHEN MATCHED THEN
+	UPDATE SET
+		A.SUCCESS_CNT = B.SUCCESS_CNT
+		, A.FAIL_CNT = B.FAIL_CNT
+		, A.SND_PROC_DT = B.SND_PROC_DT
+		, A.SYS_CHG_ID= #{sysModId}
+		, A.SYS_CHG_DTIME = SYSTIMESTAMP
+	</update>
+	
+  <insert id="insertPushSndResult" parameterType="com.ktmmobile.mcp.push.dto.PushBatchVO" useGeneratedKeys="false">
+		/* QUERYID(push.insertPushSndResult ::  푸쉬발송처리결과 등록) */
+		<selectKey keyProperty="pushSndProcSno" resultType="java.lang.String" order="BEFORE">
+			SELECT TO_CHAR(SYSTIMESTAMP, 'YYYYMMDDHH24MISSFF') || ROUND(DBMS_RANDOM.VALUE () * 100000) AS PUSH_SND_PROC_SNO
+			FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_PUSH_SND_PROC_RST_LIST (
+			PUSH_SND_PROC_SNO	/* 푸쉬발송처리일련번호 */
+			, PUSH_SND_SET_SNO	/* 푸쉬발송설정일련번호 */
+			, TOT_CNT			/* 총건수 */
+			, SUCCESS_CNT		/* 성공건수 */
+			, FAIL_CNT			/* 실패건수 */
+			, SND_PROC_DT		/* 발송처리일자 */
+			, SYS_REG_IP
+			, SYS_REG_ID		/* 시스템등록아이디 */
+			, SYS_REG_DTIME		/* 시스템등록일시 */
+			, SYS_CHG_IP
+			, SYS_CHG_DTIME		/* 시스템수정아이디 */
+			, SYS_CHG_ID		/* 시스템수정일시 */
+		) VALUES (
+			#{pushSndProcSno}
+			, #{pushSndSetSno}
+			, #{totCnt}
+			, #{successCnt}
+			, #{failCnt}
+			, SYSDATE
+			, #{sysRegIp}
+			, #{sysRegId}
+			, SYSDATE
+			, #{sysRegIp}
+			, SYSDATE
+			, #{sysRegId}
+		)
+  </insert>
+  
+  <insert id="insertPushTargetUserGet" parameterType="java.util.List" useGeneratedKeys="false">
+  		INSERT INTO NMCP_PUSH_SND_PROC_TRGT_LIST (
+			PUSH_SND_PROC_SNO /*푸쉬발송처리일련번호*/
+			,PUSH_SND_SET_SNO  /*실시간발송이력위해관리*/
+			,USERID /*고객id*/
+			,CELL_NO /*핸드폰번호*/
+			,APP_OS_TP /*A:Android, I:IOS*/
+			,PROC_ST /*코드값(Y : 발송 / N : 대기 / X : 오류)*/
+			,APP_OS_VER /*단말기OS버전*/
+			,SND_PROC_DT /*발송처리일자*/
+			,SERVER_COLCT_YN /*코드값(Y : 수집 / N : 미수집) / 서버에서 결과값을 등록*/
+			,APP_COLCT_YN /*코드값(Y : 수집 / N : 미수집) / 앱에서 연동API를 통한 결과값을 등록*/
+			,PUSH_ICON_TP /* 푸쉬아이콘유형*/
+			,SND_TITLE /*발송제목*/
+			,SND_MSG /*문구/HTML*/
+			<if test="pushImgUrl != null and pushImgUrl != ''">
+				,PUSH_IMG_URL
+			</if>
+			<if test="pushImgNm != null and pushImgNm != ''">
+				,PUSH_IMG_NM /*NAS 이미지 명*/
+			</if>		
+			<if test="linkDiv != null and linkDiv != ''">
+				,LINK_DIV /*A:App실행, O:외부링크*/
+			</if>
+			<if test="linkUrl != null and linkUrl != ''">
+				,LINK_URL /* 링크URL*/
+			</if>
+			,SND_CNT /*default: 1 , 최대 5회 재발송*/
+			,SND_TEST_YN /*코드값(Y : 테스트발송 / N : 실제발송)*/
+			,TGT_SERVER /*타겟서버*/
+			,SYS_REG_IP
+			,SYS_REG_DTIME
+			,SYS_REG_ID
+			,SYS_CHG_IP
+			,SYS_CHG_DTIME
+			,SYS_CHG_ID
+		)
+		SELECT #{pushSndSetSno}	/* 푸쉬발송설정일련번호 */
+			, #{pushSndProcSno}	/* 푸쉬발송처리일련번호 */
+			, A.USERID			/* 회원번호 */
+			, A.MOBILE_NO		/* 핸드폰번호 */
+			, A.OS				/* 단말기OS유형 */
+			, #{procSt}			/* 처리상태 */
+			, A.APP_OS_VER
+			, SYSDATE
+			, #{serverColctYn}	/* 서버수집여부 */
+			, #{appColctYn}		/* 앱수집여부 */
+			, #{pushIconTp}		/* 푸쉬아이콘 */
+			, #{sndTitle}
+			, #{sndMsg}			/* 발송메시지 */
+			<if test="pushImgUrl != null and pushImgUrl != ''">
+				, #{pushImgUrl}		/* 푸쉬 이미지 */
+			</if>
+			<if test="pushImgNm != null and pushImgNm != ''">
+				, #{pushImgNm}		/* 푸쉬 이미지 */
+			</if>
+			<if test="linkDiv != null and linkDiv != ''">
+				, #{linkDiv}		/* 링크구분 */
+			</if>
+			<if test="linkUrl != null and linkUrl != ''">
+				, #{linkUrl}		/* 링크URL */
+			</if>
+			, #{sndCnt}			/* 발송횟수 */
+			, #{sndTestYn}		/* 발송테스트여부 */
+			, 'admin'
+			, #{sysRegIp}		/* 시스템등록아이디 */
+			, SYSDATE			/* 시스템등록일시 */
+			, #{sysRegId}		/* 시스템등록아이디 */
+			, #{sysRegIp}		/* 시스템수정아이디 */
+			, SYSDATE			/* 시스템수정일시 */
+			, #{sysRegId}		/* 시스템수정아이디 */
+		FROM (
+	     	 SELECT   TMMB.USERID            /* 회원넘버 */
+					, TMMB.MOBILE_NO          /* 휴대폰번호 */
+					, TUMAI.OS    			 /* APP 설치버전 */
+					, TUMAI.UDID
+					, CASE
+						WHEN INSTR(APP_OS_VER,'.',1,2) > 0
+						THEN SUBSTR(APP_OS_VER,1,INSTR(APP_OS_VER,'.',1,2)-1)
+						WHEN INSTR(APP_OS_VER,'.',1,1) = 0
+						THEN APP_OS_VER || '.0'
+						ELSE APP_OS_VER
+						END AS APP_OS_VER
+					, TUMAI.SEND_YN
+					,TUMAI.VERSION
+				FROM MCP_USER TMMB
+				LEFT JOIN (
+					SELECT UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS,APP_OS_VER,VERSION
+						FROM (
+							SELECT UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS,APP_OS_VER,VERSION,
+							RANK() OVER (PARTITION BY USER_ID ORDER BY UP_DT DESC) AS RNK
+							FROM NMCP_USR_APP_INFO
+							WHERE UDID IS NOT NULL 
+							)
+						WHERE RNK = '1' 	
+				) TUMAI
+				ON TMMB.USERID = TUMAI.USER_ID
+				LEFT JOIN (
+				SELECT 
+					 PUSH_SND_SET_SNO
+					, USERID
+				FROM (
+						SELECT ROW_NUMBER() OVER(PARTITION BY PUSH_SND_SET_SNO, PUSH_SND_SET_SNO ORDER BY SYS_CHG_DTIME DESC) AS ITEM_NO
+							, PUSH_SND_SET_SNO
+							, USERID
+						FROM NMCP_PUSH_SND_TRGT_LIST
+					) WHERE ITEM_NO = 1
+				) TUPSI
+				ON TMMB.USERID = TUPSI.USERID
+				WHERE REVOCATION_DATE IS NULL   /* 탈퇴일자 */
+				AND TUMAI.SEND_YN = 'Y'
+			<if test="pushSndSetSno != null and pushSndSetSno != '' ">
+				AND TUPSI.PUSH_SND_SET_SNO = #{pushSndSetSno}
+			</if>
+		ORDER BY TUPSI.PUSH_SND_SET_SNO
+		)A
+  </insert>
+  
+
+ <insert id="insertPushTargetUserFind" parameterType="java.util.List" useGeneratedKeys="false">
+ 			/* QUERYID(push.insertPushTargetUserFind ::  푸쉬발송 대상자 추출 등록) */
+ 		INSERT INTO NMCP_PUSH_SND_PROC_TRGT_LIST (
+			PUSH_SND_PROC_SNO /*푸쉬발송처리일련번호*/
+			,PUSH_SND_SET_SNO  /*실시간발송이력위해관리*/
+			,USERID /*고객id*/
+			,CELL_NO /*핸드폰번호*/
+			,APP_OS_TP /*A:Android, I:IOS*/
+			,PROC_ST /*코드값(Y : 발송 / N : 대기 / X : 오류)*/
+			,APP_OS_VER /*단말기OS버전*/
+			,SND_PROC_DT /*발송처리일자*/
+			,SERVER_COLCT_YN /*코드값(Y : 수집 / N : 미수집) / 서버에서 결과값을 등록*/
+			,APP_COLCT_YN /*코드값(Y : 수집 / N : 미수집) / 앱에서 연동API를 통한 결과값을 등록*/
+			,PUSH_ICON_TP /* 푸쉬아이콘유형*/
+			,SND_TITLE /*발송제목*/
+			,SND_MSG /*문구/HTML*/
+			<if test="pushImgUrl != null and pushImgUrl != ''">
+				,PUSH_IMG_URL
+			</if>
+			<if test="pushImgNm != null and pushImgNm != ''">
+				,PUSH_IMG_NM /*NAS 이미지 명*/
+			</if>		
+			<if test="linkDiv != null and linkDiv != ''">
+				,LINK_DIV /*A:App실행, O:외부링크*/
+			</if>
+			<if test="linkUrl != null and linkUrl != ''">
+				,LINK_URL /* 링크URL*/
+			</if>
+			,SND_CNT /*default: 1 , 최대 5회 재발송*/
+			,SND_TEST_YN /*코드값(Y : 테스트발송 / N : 실제발송)*/
+			,TGT_SERVER /*타겟서버*/
+			,SYS_REG_IP
+			,SYS_REG_DTIME
+			,SYS_REG_ID
+			,SYS_CHG_IP
+			,SYS_CHG_DTIME
+			,SYS_CHG_ID
+		)
+		SELECT #{pushSndSetSno}	/* 푸쉬발송설정일련번호 */
+			, #{pushSndProcSno}	/* 푸쉬발송처리일련번호 */
+			, A.USERID			/* 회원번호 */
+			, A.MOBILE_NO		/* 핸드폰번호 */
+			, A.OS				/* 단말기OS유형 */
+			, #{procSt}			/* 처리상태 */
+			, A.APP_OS_VER
+			, SYSDATE
+			, #{serverColctYn}	/* 서버수집여부 */
+			, #{appColctYn}		/* 앱수집여부 */
+			, #{pushIconTp}		/* 푸쉬아이콘 */
+			, #{sndTitle}
+			, #{sndMsg}			/* 발송메시지 */
+			<if test="pushImgUrl != null and pushImgUrl != ''">
+				, #{pushImgUrl}		/* 푸쉬 이미지 */
+			</if>
+			<if test="pushImgNm != null and pushImgNm != ''">
+				, #{pushImgNm}		/* 푸쉬 이미지 */
+			</if>
+			<if test="linkDiv != null and linkDiv != ''">
+				, #{linkDiv}		/* 링크구분 */
+			</if>
+			<if test="linkUrl != null and linkUrl != ''">
+				, #{linkUrl}		/* 링크URL */
+			</if>
+			, #{sndCnt}			/* 발송횟수 */
+			, #{sndTestYn}		/* 발송테스트여부 */
+			, 'admin'
+			, #{sysRegIp}		/* 시스템등록아이디 */
+			, SYSDATE			/* 시스템등록일시 */
+			, #{sysRegId}		/* 시스템등록아이디 */
+			, #{sysRegIp}		/* 시스템수정아이디 */
+			, SYSDATE			/* 시스템수정일시 */
+			, #{sysRegId}		/* 시스템수정아이디 */
+		FROM (
+	     	 SELECT   TMMB.USERID            /* 회원넘버 */
+					, TMMB.MOBILE_NO          /* 휴대폰번호 */
+					, TUMAI.OS    			 /* APP 설치버전 */
+					, TUMAI.UDID
+					,CASE
+					WHEN INSTR(APP_OS_VER,'.',1,2) > 0
+					THEN SUBSTR(APP_OS_VER,1,INSTR(APP_OS_VER,'.',1,2)-1)
+					WHEN INSTR(APP_OS_VER,'.',1,1) = 0
+					THEN APP_OS_VER || '.0'
+					ELSE APP_OS_VER
+					END AS APP_OS_VER
+					,TUMAI.VERSION
+				FROM MCP_USER TMMB
+				LEFT JOIN (
+					SELECT UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS,VERSION, APP_OS_VER
+						FROM (
+							SELECT UUID, UDID, USER_ID,LAST_ACCESS_DT,SEND_YN,OS,VERSION, APP_OS_VER, 
+							RANK() OVER (PARTITION BY USER_ID ORDER BY UP_DT DESC) AS RNK
+							FROM NMCP_USR_APP_INFO
+							WHERE UDID IS NOT NULL 
+							)
+						WHERE RNK = '1' 	
+				) TUMAI
+				ON TMMB.USERID = TUMAI.USER_ID
+				WHERE REVOCATION_DATE IS NULL   /* 탈퇴일자 */
+				AND   TUMAI.SEND_YN = 'Y'
+
+		
+				<choose>
+					<when test='appOsTp == "A"'>
+					    /* 단말기OS유형, 단말기OS버전, APP 설치버전 */
+					    AND TUMAI.OS = 'A'
+						<if test="andOsVerLst2 != null">
+						    AND TUMAI.APP_OS_VER IN (#{andOsVerLst2})
+					    </if>
+						<if test="andInstlVerLst2 != null">
+						    AND TUMAI.VERSION IN (#{andInstlVerLst2})
+					    </if>
+					</when>
+					<when test='appOsTp == "I"'>
+					    /* 단말기OS유형, 단말기OS버전, APP 설치버전 */
+					    AND TUMAI.OS = 'I'
+						<if test="iosOsVerLst2 != null">
+						    AND TUMAI.APP_OS_VER IN (#{iosOsVerLst2})
+					    </if>
+						<if test="iosInstlVerLst2 != null">
+						    AND TUMAI.VERSION IN (#{iosInstlVerLst2})
+					    </if>		    
+					</when>
+					<when test='appOsTp == "Z"'>
+					    /* 단말기OS유형, 단말기OS버전, APP 설치버전 */
+						<if test="andVerList != null and iosVerList != null">
+						    AND ( (TUMAI.OS = 'A' AND TUMAI.APP_OS_VER IN (#{andOsVerLst2}) AND TUMAI.VERSION IN (#{andInstlVerLst2}) ) OR ( TUMAI.OS = 'I' AND TUMAI.APP_OS_VER IN (#{iosOsVerLst2}) AND TUMAI.VERSION IN (#{iosInstlVerLst2}) ) )
+						</if>
+					</when>
+			 </choose>
+
+			<if test="custDivLst != null and custDivLst != ''">
+				/* 회원구분코드 */
+				AND TMMB.USER_DIVISION =#{custDivLst}
+			</if>
+		)A
+ 	
+ </insert>
+ 
+ 
+  <update id="updatePushSndResult" parameterType="com.ktmmobile.mcp.push.dto.PushBatchVO">
+	/* QUERYID(pushBatch.updatePushSndResult : 푸쉬 발송 결과 업데이트) */
+	UPDATE NMCP_PUSH_SND_PROC_RST_LIST SET
+		SYS_CHG_ID = #{sysModId}	/* 시스템 수정 아이디 */
+		, SYS_CHG_DTIME = SYSDATE	/* 시스템 수정 일시 */
+		<if test="totCnt != null and totCnt != ''">
+			, TOT_CNT = #{totCnt}	/* 총건수 */
+		</if>
+	WHERE PUSH_SND_PROC_SNO = #{pushSndProcSno}	/* 푸쉬발송처리일련번호 */
+	AND PUSH_SND_SET_SNO = #{pushSndSetSno}	/* 푸쉬발송설정일련번호 */
+ </update>  
+
+</mapper>

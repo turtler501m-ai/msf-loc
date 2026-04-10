@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="FqcServiceMapper">
+
+
+	<select id="getFqcPlcyBasList"    resultType="com.ktmmobile.mcp.fqc.dto.FqcPlcyBasDto">
+		SELECT /*fqcMapper.getFqcPlcyBasList   */
+			FQC_PLCY_CD
+			 , FQC_PLCY_NM
+			 , FQC_PLCY_DESC
+			 , FQC_TRGT_CUST
+			 , FQC_PLAN_INCL_YN
+			 , STRT_DTTM
+		FROM MCP_FQC_PLCY_BAS
+		WHERE 1=1
+		  AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN STRT_DTTM AND END_DTTM
+		  AND STATE_CODE = 'A'
+		ORDER BY  FQC_TRGT_CUST DESC , FQC_PLAN_INCL_YN DESC
+	</select>
+
+
+	<select id="getFqcPlcyBas"  resultType="com.ktmmobile.mcp.fqc.dto.FqcPlcyBasDto" parameterType="String">
+		SELECT /*fqcMapper.getFqcPlcyBasList   */
+			FQC_PLCY_CD
+			 , FQC_PLCY_NM
+			 , FQC_PLCY_DESC
+			 , FQC_TRGT_CUST
+			 , FQC_PLAN_INCL_YN
+			 , STRT_DTTM
+		FROM MCP_FQC_PLCY_BAS
+		WHERE 1=1
+		  AND FQC_PLCY_CD = #{fqcPlcyCd}
+		  AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN STRT_DTTM AND END_DTTM
+		  AND STATE_CODE = 'A'
+	</select>
+
+
+	<insert id="insertFqcBas" parameterType="com.ktmmobile.mcp.fqc.dto.FqcBasDto">
+		<selectKey keyProperty="fqcSeq" resultType="Integer" order="BEFORE">
+			SELECT SQ_FQC_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO MCP_FQC_BAS (
+		FQC_SEQ                  --참여 일련번호
+		, FQC_PLCY_CD              --프리퀀시 정책 코드
+		, USER_ID                  --회원아이디
+		, BNF_CD                   --혜택코드
+		, FQC_DESC                 --설명
+		, SYS_RDATE_DD             --등록일 YYYYMMDD
+		, STRT_DTTM                --시작일
+		, END_DTTM                 --종료일
+		, RIP                      --등록아이피
+		, REGST_ID                 --등록자 ID
+		, REGST_DTTM               --등록일시
+		, RVISN_ID                 --수정자 ID
+		, RVISN_DTTM               --수정일시
+		) VALUES (
+		#{fqcSeq}
+		, #{fqcPlcyCd}
+		, #{userId}
+		, #{bnfCd}
+		, #{fqcDesc}
+		, TO_CHAR(SYSDATE, 'YYYYMMDD')
+		, TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+		, '99991231235959'
+		, #{rip}
+		, #{userId}
+		, SYSDATE
+		, #{userId}
+		, SYSDATE
+		)
+	</insert>
+
+	<resultMap id="fqcInfoMap" type="com.ktmmobile.mcp.fqc.dto.FqcBasDto">
+		<result property="fqcSeq" column="FQC_SEQ" />
+		<collection property="fqcDltDtoList"
+					ofType="com.ktmmobile.mcp.fqc.dto.FqcDltDto"
+					column="{fqcSeq=FQC_SEQ}"
+					select="getFqcDltList" >
+		</collection>
+	</resultMap>
+
+
+	<select id="getFqcBas" parameterType="com.ktmmobile.mcp.fqc.dto.FqcBasDto"  resultMap="fqcInfoMap" >
+		SELECT FQC_SEQ
+			 , T1.FQC_PLCY_CD
+			 , USER_ID
+			 , BNF_CD
+			 , FQC_DESC
+			 , SYS_RDATE_DD
+			 , T1.STRT_DTTM
+			 , T1.END_DTTM
+			 , T1.RVISN_DTTM
+		FROM MCP_FQC_BAS T1 , MCP_FQC_PLCY_BAS T2
+		WHERE 1=1
+		  AND T1.FQC_PLCY_CD = T2.FQC_PLCY_CD
+		  AND T1.END_DTTM > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		  AND STATE_CODE = 'A'
+		  AND USER_ID = #{userId}
+		  AND ROWNUM = 1
+	</select>
+
+	<update id="updateFqcBas" parameterType="com.ktmmobile.mcp.fqc.dto.FqcBasDto" >
+		UPDATE MCP_FQC_BAS SET
+		RVISN_DTTM = SYSDATE                --수정일시
+		, RVISN_ID = #{regstId}             --수정자 ID
+		<if test="bnfCd !=null and bnfCd != ''" >
+			, BNF_CD = #{bnfCd}                 --혜택코드
+		</if>
+		<if test="fqcDesc !=null and fqcDesc != ''" >
+			, FQC_DESC = #{fqcDesc}             --설명
+		</if>
+		<if test="endDttm !=null and endDttm != ''" >
+			, END_DTTM = #{endDttm}  --종료일
+		</if>
+		WHERE
+		FQC_SEQ = #{fqcSeq}
+	</update>
+
+
+
+	<select id="getFqcDltList" resultType="com.ktmmobile.mcp.fqc.dto.FqcDltDto" parameterType="com.ktmmobile.mcp.fqc.dto.FqcDltDto"  >
+		SELECT FQC_SEQ
+		, FQC_PLCY_MSN_CD		   --프리퀀시 정책미션 코드
+		, MSN_TP_CD                --미션 종류 코드
+		, STATE_CODE               --상태값
+		, BYPASS_CHECK_YN          --Y인 경우 검증 로직을 수행하지 않음
+		, CONTRACT_NUM             --계약번호
+		, UET_SEQ                  --이벤트 공유 키값
+		, MRK_STRT_DTTM            --약관동의날짜
+		, COMMEND_ID               --추천인 아이디
+		, RE_CONTRACT_NUM          --피추천인 계약번호
+		, REVIEW_ID                --사용후기 일련번호
+		, INTERNET_ID              --kt internet id
+		, DTL_DESC
+		, SYS_RDATE_DD
+		, STRT_DTTM
+		, END_DTTM
+		FROM MCP_FQC_DLT
+		WHERE 1=1
+		AND FQC_SEQ  = #{fqcSeq}
+		<if test="msnTpCd !=null and msnTpCd != ''" >
+			AND MSN_TP_CD = #{msnTpCd}
+		</if>
+		<choose>
+			<when test="endDttm !=null and endDttm != ''">
+				AND END_DTTM = #{endDttm}
+			</when>
+			<otherwise>
+				AND END_DTTM > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+			</otherwise>
+		</choose>
+	</select>
+
+
+
+
+	<insert id="insertFqcDlt" parameterType="com.ktmmobile.mcp.fqc.dto.FqcDltDto">
+		INSERT INTO MCP_FQC_DLT (
+								  FQC_SEQ                  --참여 일련번호
+								, FQC_PLCY_MSN_CD          --프리퀀시 정책미션 코드
+								, MSN_TP_CD                --미션 종류 코드
+								, STATE_CODE               --상태값
+								, CONTRACT_NUM             --계약번호
+								, UET_SEQ                  --이벤트 공유 키값
+								, COMMEND_ID               --추천인 아이디
+								, MRK_STRT_DTTM            --약관동의날짜
+								, RE_CONTRACT_NUM          --피추천인 계약번호
+								, REVIEW_ID                --사용후기 일련번호
+								, INTERNET_ID              --kt internet id
+								, DTL_DESC                 --설명
+								, SYS_RDATE_DD             --등록일 YYYYMMDD
+								, STRT_DTTM                --시작일
+								, END_DTTM                 --종료일
+								, RIP                      --등록아이피
+								, REGST_ID                 --등록자 ID
+								, REGST_DTTM               --등록일시
+								, RVISN_ID                 --수정자 ID
+								, RVISN_DTTM               --수정일시
+		) VALUES (
+				   #{fqcSeq}
+				 , #{fqcPlcyMsnCd}
+				 , #{msnTpCd}
+				 , #{stateCode}
+				 , #{contractNum}
+				 , #{uetSeq}
+				 , #{commendId}
+				 , #{mrkStrtDttm}
+				 , #{reContractNum}
+				 , #{reviewId}
+				 , #{internetId}
+				 , #{dtlDesc}
+				 , TO_CHAR(SYSDATE, 'YYYYMMDD')
+				 , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+				 , '99991231235959'
+				 , #{rip}
+				 , #{regstId}
+				 , SYSDATE
+				 , #{regstId}
+				 , SYSDATE
+				 )
+	</insert>
+
+	<update id="updateFqcDlt" parameterType="com.ktmmobile.mcp.fqc.dto.FqcDltDto" >
+		UPDATE MCP_FQC_DLT SET
+		RVISN_DTTM = SYSDATE                --수정일시
+		, RVISN_ID = #{regstId}             --수정자 ID
+		<if test="stateCode !=null and stateCode != ''" >
+			, STATE_CODE = #{stateCode}     --상태값
+		</if>
+		<if test="contractNum !=null and contractNum != ''" >
+			, CONTRACT_NUM = #{contractNum} --계약번호
+		</if>
+		<if test="uetSeq !=null and uetSeq != ''" >
+			, UET_SEQ = #{uetSeq}            --이벤트 공유 키값
+		</if>
+		<if test="commendId !=null and commendId != ''" >
+			, COMMEND_ID = #{commendId}                   --추천인 아이디
+		</if>
+		<if test="mrkStrtDttm !=null and mrkStrtDttm != ''" >
+			, MRK_STRT_DTTM = #{mrkStrtDttm}                                 --약관동의날짜
+		</if>
+		<if test="reContractNum !=null and reContractNum != ''" >
+			, RE_CONTRACT_NUM = #{reContractNum}     --피추천인 계약번호
+		</if>
+		<if test="reviewId !=null and reviewId != ''" >
+			, REVIEW_ID = #{reviewId}                     --사용후기 일련번호
+		</if>
+		<if test="dtlDesc !=null and dtlDesc != ''" >
+			, DTL_DESC = #{dtlDesc}                       --설명
+		</if>
+		<if test="internetId !=null and internetId != ''" >
+			, INTERNET_ID = #{internetId}                 --kt internet id
+		</if>
+		<if test="upEndDttm !=null and upEndDttm != ''" >
+			, END_DTTM = #{upEndDttm}                       --종료일
+		</if>
+		<if test="sysRdateDd !=null and sysRdateDd != ''" >
+			, SYS_RDATE_DD = #{sysRdateDd}                   --등록일 YYYYMMDD
+		</if>
+		<if test="fqcPlcyMsnCdUp !=null and fqcPlcyMsnCdUp != ''" >
+			, FQC_PLCY_MSN_CD = #{fqcPlcyMsnCdUp}
+		</if>
+		WHERE 1=1
+		AND FQC_SEQ = #{fqcSeq}
+		AND END_DTTM = #{endDttm}
+		<if test="fqcPlcyMsnCd !=null and fqcPlcyMsnCd != ''" >
+			AND FQC_PLCY_MSN_CD = #{fqcPlcyMsnCd}
+		</if>
+	</update>
+
+	<select id="isFqcPlcyPlaCount" resultType="java.lang.Integer" parameterType="java.util.HashMap">
+		SELECT COUNT(*) FROM MCP_FQC_PLCY_PLA
+		WHERE 1=1
+		  AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN STRT_DTTM AND END_DTTM
+		  AND FQC_PLCY_CD = #{fqcPlcyCd}
+		  AND SOC_CODE = #{socCode}
+	</select>
+
+	<select id="getPlcyMsnCd"  resultType="String" parameterType="java.util.HashMap" >
+		SELECT FQC_PLCY_MSN_CD
+		FROM MCP_FQC_PLCY_MSN
+		WHERE 1=1
+		  AND FQC_PLCY_CD = #{fqcPlcyCd}
+		  AND MSN_TP_CD = #{msnTpCd}
+	</select>
+
+	<select id="getFqcPlcyBnfList" resultType="com.ktmmobile.mcp.fqc.dto.FqcPlcyBnfDto" parameterType="String"  >
+		SELECT
+			FQC_PLCY_CD
+			 , MSN_CNT
+			 , BNF_CD
+			 , BNF_LVL
+		FROM MCP_FQC_PLCY_BNF
+		WHERE 1=1
+		  AND FQC_PLCY_CD = #{fqcPlcyCd}
+	</select>
+
+
+</mapper>

@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.usimmgmt.mapper.UsimMgmtMapper">
+	<!-- 2021.01.21 [SRM21011583814] M전산 제휴유심관리 內 단말기코드 항목 추가요청  조회시  단말ID,모델코드 조회되도록 수정 -->
+	<select id="getUsimMgmtList" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* usimMgmtMapper.getUsimMgmtList  */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT 
+				  USIM_NO
+				, USIM_NO AS USIM_NO_MSK
+		        , ORGN_ID
+		        , FN_GET_ORGNM(ORGN_ID) AS ORGN_NM
+		        , REGST_ID
+		        , TO_CHAR(REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM
+		        , RVISN_ID
+		        , TO_CHAR(RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+		        , DELIVERY_DTTM
+		        , ORDER_NUM
+				, USIM_PRDT_ID
+				, USIM_PRDT_CODE		
+		FROM    MSP_PARTNER_USIM_MST
+		WHERE	1=1
+		<if test="orgnId != null and orgnId != ''">
+			AND ORGN_ID = #{orgnId}
+		</if>
+		<if test="usimNo != null and usimNo != ''">
+			AND USIM_NO = #{usimNo}
+		</if>
+		<if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+        	AND     REGST_DTTM BETWEEN TO_DATE(#{searchFromDt}||'000000', 'YYYYMMDDHH24MISS') AND TO_DATE(#{searchToDt}||'235959', 'YYYYMMDDHH24MISS')
+        </if>
+		ORDER BY NVL(RVISN_DTTM, REGST_DTTM) DESC, REGST_DTTM DESC, USIM_NO DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getActiveUsimList" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* usimMgmtMapper.getActiveUsimList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  JSI.LST_COM_ACTV_DATE
+		        , JSI.CONTRACT_NUM
+		        , DECODE(JSI.SUB_STATUS, 'A', '사용중', 'S', '정지', 'C', '해지', 'R', '예약', JSI.SUB_STATUS) STATUS
+                , FN_GET_ORGNM(JSI.OPEN_AGNT_CD) AS AGENT_NM
+                , TO_CHAR(TO_DATE(DECODE(JSI.SUB_STATUS,'C',SUBSTR(JSI.SUB_STATUS_DATE,1,8),''),'YYYYMMDD'),'YYYY-MM-DD') AS TMNT_DT
+                , CASE WHEN JSI.SUB_STATUS = 'C' THEN
+                    CASE
+                        WHEN 0 = TO_DATE(SUBSTR(JSI.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(JSI.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '당일개통취소'
+                        WHEN 15 > TO_DATE(SUBSTR(JSI.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(JSI.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '14일이내해지'
+                        WHEN 90 > TO_DATE(SUBSTR(JSI.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(JSI.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '90일이내해지'
+                        ELSE '일반해지'
+                    END
+                  ELSE ''  END AS CAN_RSN
+                , PUM.USIM_NO
+		        , PUM.ORGN_ID
+		        , FN_GET_ORGNM(PUM.ORGN_ID) AS ORGN_NM
+		        , TO_CHAR(TO_DATE(MRD.REQ_IN_DAY,'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS REQ_IN_DAY
+                , MRD.FST_RATE_NM
+		FROM    MSP_PARTNER_USIM_MST PUM,
+		        MSP_JUO_SUB_INFO JSI,
+        		MSP_REQUEST_DTL MRD
+		WHERE   JSI.CONTRACT_NUM = MRD.CONTRACT_NUM
+		--AND		NVL(TRIM(SUBSTR(MRD.FST_MODEL_INFO, 51 , 30)), JSI.ICC_ID) = PUM.USIM_NO
+		AND		MRD.FST_USIM_NO = PUM.USIM_NO
+		<if test="orgnId != null and orgnId != ''">
+        	AND     PUM.ORGN_ID = #{orgnId}
+        </if>
+        <if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+        	AND     JSI.LST_COM_ACTV_DATE BETWEEN #{searchFromDt} AND #{searchToDt}
+        </if>
+		ORDER BY JSI.LST_COM_ACTV_DATE DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<select id="getActiveUsimListByExcel" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* usimMgmtMapper.getActiveUsimListByExcel */
+		SELECT  JSI.LST_COM_ACTV_DATE
+		        , JSI.CONTRACT_NUM
+		        , DECODE(JSI.SUB_STATUS, 'A', '사용중', 'S', '정지', 'C', '해지', 'R', '예약', JSI.SUB_STATUS) STATUS
+                , FN_GET_ORGNM(JSI.OPEN_AGNT_CD) AS AGENT_NM
+                , TO_CHAR(TO_DATE(DECODE(JSI.SUB_STATUS,'C',SUBSTR(JSI.SUB_STATUS_DATE,1,8),''),'YYYYMMDD'),'YYYY-MM-DD') AS TMNT_DT
+                , CASE WHEN JSI.SUB_STATUS = 'C' THEN
+                    CASE
+                        WHEN 0 = TO_DATE(SUBSTR(JSI.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(JSI.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '당일개통취소'
+                        WHEN 15 > TO_DATE(SUBSTR(JSI.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(JSI.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '14일이내해지'
+                        WHEN 90 > TO_DATE(SUBSTR(JSI.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(JSI.LST_COM_ACTV_DATE, 'YYYYMMDD') THEN '90일이내해지'
+                        ELSE '일반해지'
+                    END
+                  ELSE ''  END AS CAN_RSN
+                , PUM.USIM_NO
+		        , PUM.ORGN_ID
+		        , FN_GET_ORGNM(PUM.ORGN_ID) AS ORGN_NM
+		        , TO_CHAR(TO_DATE(MRD.REQ_IN_DAY,'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') AS REQ_IN_DAY
+                , MRD.FST_RATE_NM
+		FROM    MSP_PARTNER_USIM_MST PUM,
+		        MSP_JUO_SUB_INFO JSI,
+        		MSP_REQUEST_DTL MRD
+		WHERE   JSI.CONTRACT_NUM = MRD.CONTRACT_NUM
+		--AND		NVL(TRIM(SUBSTR(MRD.FST_MODEL_INFO, 51 , 30)), JSI.ICC_ID) = PUM.USIM_NO
+		AND		MRD.FST_USIM_NO = PUM.USIM_NO
+		<if test="orgnId != null and orgnId != ''">
+        	AND     PUM.ORGN_ID = #{orgnId}
+        </if>
+        <if test="searchFromDt != null and searchFromDt != '' and searchToDt != null and searchToDt != ''">
+        	AND     JSI.LST_COM_ACTV_DATE BETWEEN #{searchFromDt} AND #{searchToDt}
+        </if>
+		ORDER BY JSI.LST_COM_ACTV_DATE DESC
+	</select>
+	
+	<select id="getUsimDupChk" parameterType="String" resultType="int">
+		SELECT 	COUNT(USIM_NO)
+		FROM	MSP_PARTNER_USIM_MST
+		WHERE	USIM_NO = #{usimNo}
+	</select>
+	<!-- 2021.01.21 [SRM21011583814] M전산 제휴유심관리 內 단말기코드 항목 추가요청  MSP_PARTNER_USIM_MST 단말ID,모델코드 추가 -->
+	<insert id="insertUsimMgmt" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO">
+		/* usimMgmtMapper.insertUsimMgmt */
+		INSERT INTO MSP_PARTNER_USIM_MST (
+			USIM_NO
+			, ORGN_ID
+			, REGST_ID
+			, REGST_DTTM
+			, DELIVERY_DTTM
+			, ORDER_NUM
+			, USIM_PRDT_ID
+			, USIM_PRDT_CODE			
+		) VALUES (
+			#{usimNo, jdbcType=VARCHAR}
+			, #{orgnId, jdbcType=VARCHAR}
+			, #{sessionUserId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{deliveryDttm, jdbcType=VARCHAR}
+			, #{orderNum, jdbcType=VARCHAR}
+			, #{usimPrdtId, jdbcType=VARCHAR}
+			, #{usimPrdtCode, jdbcType=VARCHAR}
+		) 
+	</insert>
+	
+	<update id="updateUsimMgmt" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO">
+		/* usimMgmtMapper.updateUsimMgmt */
+		UPDATE	MSP_PARTNER_USIM_MST
+		SET		ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+				, RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+				, RVISN_DTTM = SYSDATE
+		WHERE	USIM_NO = #{usimNo, jdbcType=VARCHAR}
+	</update>
+	
+	<delete id="deleteUsimMgmt" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO">
+		/* usimMgmtMapper.deleteUsimMgmt */
+		DELETE	FROM MSP_PARTNER_USIM_MST
+		WHERE	USIM_NO = #{usimNo, jdbcType=VARCHAR}
+	</delete>
+	<!-- 2021.01.21 [SRM21011583814] M전산 제휴유심관리 內 단말기코드 항목 추가요청  MSP_PARTNER_USIM_HIST 단말ID,모델코드 추가 -->
+	<insert id="insertUsimHist" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO">
+		/* usimMgmtMapper."insertUsimHist" */
+		INSERT INTO MSP_PARTNER_USIM_HIST (
+			USIM_NO
+			, ORGN_ID
+			, EVNT_SEQ
+			, EVNT_CD
+			, EVNT_REGST_ID
+			, EVNT_DTTM
+			, DELIVERY_DTTM
+			, ORDER_NUM
+			, USIM_PRDT_ID
+			, USIM_PRDT_CODE
+		) VALUES (
+			#{usimNo, jdbcType=VARCHAR}
+			, #{orgnId, jdbcType=VARCHAR}
+			, (SELECT NVL(MAX(EVNT_SEQ)+1,1) FROM MSP_PARTNER_USIM_HIST WHERE USIM_NO = #{usimNo, jdbcType=VARCHAR})
+			, #{evntCd, jdbcType=VARCHAR}
+			, #{sessionUserId, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{deliveryDttm, jdbcType=VARCHAR}
+			, #{orderNum, jdbcType=VARCHAR}
+			, #{usimPrdtId, jdbcType=VARCHAR}
+			, #{usimPrdtCode, jdbcType=VARCHAR}
+			
+		)
+	</insert>
+	
+	<select id="getUsimHistList" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* usimMgmtMapper.getUsimHistList */
+		SELECT 
+				  EVNT_SEQ
+				, USIM_NO
+				, TO_CHAR(EVNT_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS EVNT_DTTM
+				, DECODE(EVNT_CD, 'I', '등록', 'U', '수정', 'D', '삭제') AS EVNT_NM
+		        , ORGN_ID
+		        , FN_GET_ORGNM(ORGN_ID) AS ORGN_NM
+		        , EVNT_REGST_ID
+		FROM    MSP_PARTNER_USIM_HIST
+		WHERE	USIM_NO = #{usimNo}
+		ORDER BY EVNT_SEQ DESC
+	</select>
+	
+	<update id="updateUsimVrfyYn" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO">
+		/* usimMgmtMapper.updateUsimVrfyYn */
+		UPDATE	MSP_USIM_MGMT_MST
+		SET		VRFY_YN = 'Y'
+				, VRFY_ID = #{vrfyId}
+				, VRFY_DTTM = SYSDATE
+		WHERE	SEQ IN
+				<foreach collection="arrSeq" item="seq" open="(" close=")" separator=",">
+					#{seq}
+				</foreach>
+	</update>
+	<!-- 2021.01.21 [SRM21011583814] M전산 제휴유심관리 內 단말기코드 항목 추가요청 모델코드 기준으로 모델ID 조회  -->
+	<select id="isExistRprsPrdtIdUsimMgmt" parameterType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO" resultType="String">
+		 /* usimMgmtMapper.isExistRprsPrdtId */
+		SELECT RPRS_PRDT_ID 
+		FROM CMN_INTM_MDL
+		WHERE 1=1
+		AND PRDT_TYPE_CD ='02' 
+		AND UPPER(PRDT_CODE) = #{usimPrdtCode}
+	
+	</select>
+
+	<!-- 2026.02.24 M전산 제휴유심관리 內 유심접점 미입력 시 MVNO-RDS 연동 데이터로 매핑 -->
+	<select id="getMdsIntmDlvrTxn" parameterType="java.lang.String" resultType="com.ktis.msp.org.usimmgmt.vo.UsimMgmtVO">
+		SELECT
+	     V.ORGN_ID AS orgnId
+			,V.DLVR_DATE AS deliveryDttm
+		  ,V.ORDR_SEQ AS orderNum
+			,V.INTM_MODEL_ID AS usimPrdtId
+			,UPPER(V.PRDT_CODE) AS usimPrdtCode
+		FROM (
+					 SELECT
+						  OOIM.ORGN_ID
+						 ,MIDT.DLVR_DATE
+						 ,MIDT.ORDR_SEQ
+						 ,MIDT.INTM_MODEL_ID
+						 ,CIM.PRDT_CODE
+					 FROM MDS_INTM_DLVR_TXN MIDT
+					     ,ORG_ORGN_INFO_MST OOIM
+					 		 ,CMN_INTM_MDL CIM
+					 WHERE MIDT.DLVR_ORG_ID = OOIM.KT_ORG_ID
+					   AND MIDT.INTM_MODEL_ID = CIM.PRDT_ID
+						 AND MIDT.INTM_SEQ = #{usimNo}
+						 AND OOIM.TYPE_CD = '20'
+					   AND CIM.PRDT_TYPE_CD ='02'
+					 ORDER BY MIDT.ORDR_DATE DESC
+				 ) V
+		WHERE ROWNUM = 1
+	</select>
+
+</mapper>

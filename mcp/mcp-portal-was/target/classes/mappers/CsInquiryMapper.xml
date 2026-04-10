@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CsInquiryMapper">
+
+	<select id="getRPhone1" parameterType="com.ktmmobile.mcp.common.dto.UserSessionDto" resultType="java.lang.String">
+		SELECT
+			MOBILE_NO
+		FROM
+			MCP_USER
+		WHERE USERID = #{userId}
+	</select>
+
+	<select id="getRPhone2" parameterType="com.ktmmobile.mcp.mypage.dto.McpUserCntrMngDto" resultType="java.lang.String">
+		SELECT
+			CNTR_MOBILE_NO
+		FROM
+			MCP_USER_CNTR_MNG B
+		WHERE USERID = #{userId}
+		  AND 		REP_NO = 'R'
+	</select>
+
+	<select id="getRPhoneCount" parameterType="com.ktmmobile.mcp.mypage.dto.McpUserCntrMngDto" resultType="Integer">
+		SELECT
+			COUNT(*)
+		FROM
+			MCP_USER_CNTR_MNG B
+		WHERE USERID = #{userId}
+		  AND 		REP_NO = 'R'
+	</select>
+
+	<!-- 1:1 게시판 insert -->
+	<insert id="inquiryInsert" parameterType="com.ktmmobile.mcp.cs.dto.InquiryBoardDto">
+		<selectKey keyProperty="qnaSeq" resultType="Integer" order="BEFORE">
+			SELECT SQ_QNA_BOARD_SEQ.NEXTVAL FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_QNA_BOARD_BAS(
+		QNA_SEQ,
+		QNA_CTG,
+		QNA_SUB_CTG_CD,
+		QNA_SUBJECT,
+		QNA_WRITER_ID,
+		QNA_NM,
+		MOBILE_NO,
+		QNA_CONTENT,
+		ANS_SUBJECT,
+		ANS_CONTENT,
+		ANS_STAT_VAL,
+		ANS_NM,
+		ANS_TEAM_NM,
+		SMS_SEND_YN,
+		QNA_SMS_SEND_YN,
+		DEL_YN,
+		CRET_ID,
+		AMD_ID,
+		CRET_DT,
+		AMD_DT
+		) VALUES (
+		#{qnaSeq},
+		#{qnaCtg},
+		#{qnaSubCtgCd},
+		#{qnaSubject},
+		#{qnaWriterID},
+		#{qnaNM},
+		#{mobileNo},
+		#{qnaContent},
+		#{ansSubject},
+		#{ansContent},
+		'0',
+		#{ansNM},
+		#{ansTeamNM},
+		#{smsSendYN},
+		#{qnaSmsSendYn},
+		'N',
+		#{qnaWriterID},
+		#{qnaWriterID},
+		SYSDATE,
+		SYSDATE
+		)
+	</insert>
+
+	<update id="deleteInquiry" parameterType="java.lang.Integer">
+		UPDATE NMCP_QNA_BOARD_BAS
+		SET DEL_YN = 'Y'
+		WHERE QNA_SEQ = #{qnaSeq}
+	</update>
+
+	<!-- 공통 그룹코드 가져오기 -->
+	<select id="selectGroupCode" parameterType="String" resultType="hashmap">
+		SELECT
+			DTL_CD_NM ,
+			DTL_CD
+		FROM 	NMCP_CD_DTL
+		WHERE
+			CD_GROUP_ID = #{gId}
+		  AND USE_YN = 'Y'
+	</select>
+
+	<!-- 1:1 총 글 수 받아오기 -->
+	<select id="getTotalCount" resultType="Integer" parameterType="com.ktmmobile.mcp.cs.dto.InquiryBoardDto">
+		SELECT
+		COUNT(QNA_SEQ)
+		FROM
+		NMCP_QNA_BOARD_BAS
+		WHERE  1=1
+		AND NVL(DEL_YN, 'N') = 'N'
+		<if test="qnaWriterID != null and qnaWriterID != ''">
+			AND	QNA_WRITER_ID = #{qnaWriterID}
+		</if>
+		<if test="ansStatVal != null and ansStatVal != '' and ansStatVal != 'all'">
+			AND ANS_STAT_VAL = #{ansStatVal}
+		</if>
+	</select>
+
+	<!-- 1:1 리스트 조회 -->
+	<select id="inquiryBoardList" resultType="com.ktmmobile.mcp.cs.dto.InquiryBoardDto" parameterType="com.ktmmobile.mcp.cs.dto.InquiryBoardDto">
+		SELECT
+		QNA_SEQ,
+		QNA_CTG,
+		(SELECT DTL_CD_NM FROM nmcp_cd_dtl WHERE CD_GROUP_ID = 'QNA' AND DTL_CD = QNA_CTG ) AS QNA_CTG_NM,
+		QNA_NM,
+		QNA_SUBJECT,
+		QNA_CONTENT,
+		QNA_WRITER_ID,
+		TO_CHAR(CRET_DT, 'YYYY.MM.DD') AS CRET_DT,
+		TO_CHAR(AMD_DT, 'YYYY.MM.DD hh24:mi') AS AMD_DT,
+		SMS_SEND_YN,
+		QNA_SMS_SEND_YN,
+		ANS_STAT_VAL,
+		ANS_SUBJECT,
+		ANS_CONTENT,
+		MOBILE_NO,
+		QNA_SUB_CTG_CD
+		FROM
+		NMCP_QNA_BOARD_BAS
+		WHERE  1=1
+		AND NVL(DEL_YN, 'N') = 'N'
+		<if test="qnaWriterID != null and qnaWriterID != ''">
+			AND	QNA_WRITER_ID = #{qnaWriterID}
+		</if>
+		<if test="ansStatVal != null and ansStatVal != '' and ansStatVal != 'all'">
+			AND ANS_STAT_VAL = #{ansStatVal}
+		</if>
+		ORDER BY QNA_SEQ DESC
+	</select>
+
+	<!-- 모바일 부가서비스 게시글 총 개수 가져오기 -->
+	<select id="getMobileTotalCnt" resultType="Integer" parameterType="com.ktmmobile.mcp.cont.dto.ContDTO">
+		SELECT
+		COUNT(QNA_SEQ)
+		FROM
+		NMCP_QNA_BOARD_BAS
+		WHERE  1=1
+		AND NVL(DEL_YN, 'N') = 'N'
+		<if test="qnaWriterID != null and qnaWriterID != ''">
+			AND	QNA_WRITER_ID = #{qnaWriterID}
+		</if>
+		<if test="ansStatVal != null and ansStatVal != '' and ansStatVal != 'all'">
+			AND ANS_STAT_VAL = #{ansStatVal}
+		</if>
+	</select>
+
+
+
+	<insert id="callASInsert" parameterType="com.ktmmobile.mcp.mypage.dto.CallASDto" >
+		INSERT INTO MCP_CALL_QUALITY_AS_LIST
+		(
+			REQ_SEQ
+		,USER_ID
+		,CONTRACT_NUM
+		,CSTMR_NAME
+		,MOBILE_NO
+		,ERROR_START_DATE
+		,ERROR_END_DATE
+		,ERROR_TYPE_CD
+		,ERROR_VOICE
+		,ERROR_CALL
+		,ERROR_SMS
+		,ERROR_WIFI
+		,ERROR_DATA
+		,ERROR_LOC_TYPE_CD
+		,CSTMR_POST
+		,CSTMR_ADDR
+		,CSTMR_ADDR_DTL
+		,REG_NM
+		,REG_MOBILE_NO
+		,SYS_DT
+		,REG_DT
+		,COUNSEL_RSLT_CD
+		)
+		VALUES
+			(
+				MCP_CALL_QUALITY_AS_LIST_SEQ.NEXTVAL
+			,#{userId}
+			,#{contractNum}
+			,#{cstmrName}
+			,#{mobileNo}
+			,#{errorStartDate}
+			,#{errorEndDate}
+			,#{errorTypeCd}
+			,#{errorVoice}
+			,#{errorCall}
+			,#{errorSms}
+			,#{errorWifi}
+			,#{errorData}
+			,#{errorLocTypeCd}
+			,#{cstmrPost}
+			,#{cstmrAddr}
+			,#{cstmrAddrDtl}
+			,#{regNm}
+			,#{regMobileNo}
+			,TO_CHAR(SYSDATE,'YYYYMMDD')
+			,SYSDATE
+			,'R'
+			)
+
+	</insert>
+
+	<select id="callASListCnt" resultType="Integer" parameterType="com.ktmmobile.mcp.mypage.dto.CallASDto">
+		SELECT
+			COUNT(*)
+		FROM
+			MCP_CALL_QUALITY_AS_LIST
+		WHERE  1=1
+		  AND	CONTRACT_NUM = #{contractNum}
+		  AND COUNSEL_RSLT_CD = 'R'
+
+	</select>
+
+
+</mapper>

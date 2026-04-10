@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.familyMgmt.mapper.FamilyMgmtMapper">
+	
+	<sql id="familyRelList">
+		SELECT MST.FAM_SEQ
+			   , MEM.SVC_CNTR_NO
+			   , SUB.SUB_LINK_NAME
+			   , SUBSTR(CRYPTO_AES256.DEC_AES(CUS.CUSTOMER_SSN), 1, 6)		AS BIRTH_DT
+			   , FN_GET_AGE_NEW(CRYPTO_AES256.DEC_AES(CUS.CUSTOMER_SSN))	AS AGE
+			   , SUB.SUBSCRIBER_NO
+			   , MST.USE_YN													AS USE_YN
+			   , FN_GET_CODENM('RCP9045', MST.USE_YN)						AS USE_YN_NM
+			   , MST.STRT_DTTM
+			   , MST.END_DTTM
+			   , MST.END_CODE
+			   , FN_GET_CODENM('RCP9049', MST.END_CODE)						AS END_CODE_NM
+			   , MST.END_MSG
+			   , NVL(FN_GET_USRNM(MST.REGST_ID), MST.REGST_ID)				AS REGST_ID
+			   , TO_CHAR(MST.REGST_DTTM, 'YYYYMMDDHH24MISS')				AS REGST_DTTM
+			   , NVL(FN_GET_USRNM(MST.RVISN_ID), MST.RVISN_ID)				AS RVISN_ID
+			   , TO_CHAR(MST.RVISN_DTTM, 'YYYYMMDDHH24MISS')				AS RVISN_DTTM
+		  FROM MSP_FAM_REL_MST MST
+			   , ( SELECT FAM_SEQ
+						  , SVC_CNTR_NO
+						  , RANK() OVER (PARTITION BY FAM_SEQ ORDER BY USE_YN DESC, SEQ) RNK
+					 FROM MSP_FAM_REL_MEM
+					WHERE MEM_TYPE = '10' ) MEM
+			   , MSP_JUO_SUB_INFO SUB
+			   , MSP_JUO_CUS_INFO CUS
+		 WHERE MST.FAM_SEQ = MEM.FAM_SEQ
+		   AND MEM.RNK = 1
+		   AND MEM.SVC_CNTR_NO = SUB.SVC_CNTR_NO
+		   AND SUB.CUSTOMER_ID = CUS.CUSTOMER_ID
+		<if test="searchGbn == null or searchGbn == ''">
+			AND SUBSTR(MST.STRT_DTTM, 1, 8) BETWEEN #{srchStrtDt} AND #{srchEndDt}
+		</if>
+		<if test="searchGbn != null and searchGbn != ''">
+			<choose>
+				<when test="searchGbn == 'svcCntrNo'">
+					AND EXISTS ( SELECT 1
+					               FROM MSP_FAM_REL_MEM MEM2
+					    		  WHERE MEM2.FAM_SEQ = MST.FAM_SEQ
+					    		    AND MEM2.SVC_CNTR_NO = #{searchName} )
+				</when>
+				<when test="searchGbn == 'mobileNo'">
+					AND EXISTS ( SELECT 1
+								   FROM MSP_FAM_REL_MEM MEM2
+								   		, MSP_JUO_SUB_INFO SUB2
+								  WHERE MEM2.FAM_SEQ = MST.FAM_SEQ
+									AND MEM2.SVC_CNTR_NO = SUB2.SVC_CNTR_NO
+					    			AND SUB2.SUBSCRIBER_NO = #{searchName} )
+				</when>
+			</choose>
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND MST.USE_YN = #{useYn}
+		</if>
+		ORDER BY MST.FAM_SEQ DESC
+	</sql>
+
+	<!-- 가족관계 목록 조회 -->
+	<select id="getFamilyRelList" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* FamilyMgmtMapper.getFamilyRelList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		<include refid="familyRelList" />
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 가족관계 목록 엑셀 다운로드 -->
+	<select id="getFamilyRelListExcel" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* FamilyMgmtMapper.getFamilyRelListExcel */
+		<include refid="familyRelList" />
+	</select>
+
+	<!-- 가족관계 구성원 조회 -->
+	<select id="getFamilyMemberList" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* FamilyMgmtMapper.getFamilyMemberList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT MEM.FAM_SEQ
+		  	   , MEM.SEQ
+			   , MEM.SVC_CNTR_NO
+			   , MEM.MEM_TYPE
+			   , FN_GET_CODENM('RCP9047', MEM.MEM_TYPE)						AS MEM_TYPE_NM
+			   , MEM.CHILD_TYPE
+			   , FN_GET_CODENM('RCP9048', MEM.CHILD_TYPE)					AS CHILD_TYPE_NM
+			   , JUO.SUB_LINK_NAME
+			   , SUBSTR(CRYPTO_AES256.DEC_AES(JUO.CUSTOMER_SSN), 1, 6)		AS BIRTH_DT
+			   , FN_GET_AGE_NEW(CRYPTO_AES256.DEC_AES(JUO.CUSTOMER_SSN))	AS AGE
+			   , JUO.SUBSCRIBER_NO
+			   , MEM.USE_YN
+			   , FN_GET_CODENM('RCP9045', MEM.USE_YN)						AS USE_YN_NM
+			   , MEM.STRT_DTTM
+			   , MEM.END_DTTM
+			   , MEM.END_CODE
+			   , FN_GET_CODENM('RCP9049', MEM.END_CODE)						AS END_CODE_NM
+			   , MEM.END_MSG
+			   , NVL(FN_GET_USRNM(MEM.REGST_ID), MEM.REGST_ID)				AS REGST_ID
+			   , TO_CHAR(MEM.REGST_DTTM, 'YYYYMMDDHH24MISS')				AS REGST_DTTM
+			   , NVL(FN_GET_USRNM(MEM.RVISN_ID), MEM.RVISN_ID)				AS RVISN_ID
+			   , TO_CHAR(MEM.RVISN_DTTM, 'YYYYMMDDHH24MISS')				AS RVISN_DTTM
+		  FROM MSP_FAM_REL_MEM MEM
+			   , ( SELECT SUB.SVC_CNTR_NO
+			           	  , SUB.SUB_LINK_NAME
+			       		  , SUB.SUBSCRIBER_NO
+			       		  , CUS.CUSTOMER_SSN
+					 FROM MSP_JUO_SUB_INFO SUB
+						  , MSP_JUO_CUS_INFO CUS
+					WHERE SUB.CUSTOMER_ID = CUS.CUSTOMER_ID ) JUO
+		 WHERE MEM.FAM_SEQ = #{famSeq}
+		   AND MEM.SVC_CNTR_NO = JUO.SVC_CNTR_NO (+)
+		ORDER BY MEM.SEQ
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+	<!-- 사용 중인 법정대리인인지 확인 -->
+	<select id="isFamilyMemberParent" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMemberVO" resultType="String">
+		/* FamilyMgmtMapper.isFamilyMemberParent */
+		SELECT CASE WHEN COUNT(*) > 0
+					THEN 'Y'
+					ELSE 'N'
+		       END						AS USE_YN
+          FROM MSP_FAM_REL_MST MST
+			   , MSP_FAM_REL_MEM MEM
+		 WHERE MST.FAM_SEQ = MEM.FAM_SEQ
+		   AND MST.USE_YN = 'Y'
+		   AND MEM.USE_YN = 'Y'
+		   AND MEM.MEM_TYPE = '10'
+		   AND MEM.SVC_CNTR_NO = #{svcCntrNo}
+	</select>
+
+	<!-- 사용 중인 피부양자인지 확인 -->
+	<select id="isFamilyMemberChild" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMemberVO" resultType="String">
+		/* FamilyMgmtMapper.isFamilyMemberChild */
+		SELECT CASE WHEN COUNT(*) > 0
+		    		THEN 'Y'
+					ELSE 'N'
+		       END						AS USE_YN
+		FROM MSP_FAM_REL_MST MST
+		   , MSP_FAM_REL_MEM MEM
+		WHERE MST.FAM_SEQ = MEM.FAM_SEQ
+		  AND MST.USE_YN = 'Y'
+		  AND MEM.USE_YN = 'Y'
+		  AND MEM.MEM_TYPE = '20'
+		  AND MEM.SVC_CNTR_NO = #{svcCntrNo}
+	</select>
+
+	<!-- 사용 중인 법정대리인 수 확인 -->
+	<select id="countFamilyMemberParent" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMemberVO" resultType="int">
+		/* FamilyMgmtMapper.countFamilyMemberParent */
+		SELECT COUNT(*)
+		  FROM MSP_FAM_REL_MEM
+		 WHERE FAM_SEQ = #{famSeq}
+		   AND MEM_TYPE = '10'
+		   AND USE_YN = 'Y'
+	</select>
+
+	<!-- 사용 중인 피부양자 수 확인 -->
+	<select id="countFamilyMemberChild" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMemberVO" resultType="int">
+		/* FamilyMgmtMapper.countFamilyMemberChild */
+		SELECT COUNT(*)
+		  FROM MSP_FAM_REL_MEM
+		 WHERE FAM_SEQ = #{famSeq}
+		   AND MEM_TYPE = '20'
+		   AND USE_YN = 'Y'
+	</select>
+
+	<!-- 가족관계 신규 등록 -->
+	<insert id="insertFamilyRel" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMgmtVO">
+		/* FamilyMgmtMapper.insertFamilyRel */
+		<selectKey keyProperty="famSeq" order="BEFORE" resultType="String">
+			SELECT SQ_FAM_REL_MST.NEXTVAL AS famSeq FROM DUAL
+		</selectKey>
+		INSERT INTO MSP_FAM_REL_MST (
+			FAM_SEQ
+			, USE_YN
+			, STRT_DTTM
+			, END_DTTM
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			#{famSeq}
+			, 'Y'
+			, #{strtDttm}
+			, '99991231235959'
+			, #{sessionUserId}
+		    , SYSDATE
+			, #{sessionUserId}
+			, SYSDATE
+		)
+	</insert>
+
+	<!-- 가족관계 구성원(법정대리인) 등록 -->
+	<insert id="insertFamilyParent" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMemberVO">
+		/* FamilyMgmtMapper.insertFamilyParent */
+		<selectKey keyProperty="seq" order="BEFORE" resultType="String">
+			SELECT NVL(MAX(SEQ), 0) + 1 AS seq FROM MSP_FAM_REL_MEM WHERE FAM_SEQ = #{famSeq}
+		</selectKey>
+		INSERT INTO MSP_FAM_REL_MEM (
+			FAM_SEQ
+			, SEQ
+			, SVC_CNTR_NO
+			, CONTRACT_NUM
+			, MEM_TYPE
+			, USE_YN
+			, STRT_DTTM
+			, END_DTTM
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			#{famSeq}
+			, #{seq}
+			, #{svcCntrNo}
+		    , ( SELECT CONTRACT_NUM
+		    	  FROM MSP_JUO_SUB_INFO
+		    	 WHERE SVC_CNTR_NO = #{svcCntrNo}
+		    	   AND ROWNUM = 1 )
+			, '10'
+		    , 'Y'
+		    , #{strtDttm}
+		    , '99991231235959'
+			, #{sessionUserId}
+			, SYSDATE
+			, #{sessionUserId}
+			, SYSDATE
+		)
+	</insert>
+
+	<!-- 가족관계 구성원(피부양자) 등록 -->
+	<insert id="insertFamilyChild" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMemberVO">
+		/* FamilyMgmtMapper.insertFamilyChild */
+		<selectKey keyProperty="seq" order="BEFORE" resultType="String">
+			SELECT NVL(MAX(SEQ), 0) + 1 AS seq FROM MSP_FAM_REL_MEM WHERE FAM_SEQ = #{famSeq}
+		</selectKey>
+		INSERT INTO MSP_FAM_REL_MEM (
+			FAM_SEQ
+			, SEQ
+			, SVC_CNTR_NO
+			, CONTRACT_NUM
+			, MEM_TYPE
+			, CHILD_TYPE
+			, USE_YN
+			, STRT_DTTM
+			, END_DTTM
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		) VALUES (
+			#{famSeq}
+			, #{seq}
+			, #{svcCntrNo}
+			, ( SELECT CONTRACT_NUM
+				  FROM MSP_JUO_SUB_INFO
+				 WHERE SVC_CNTR_NO = #{svcCntrNo}
+				   AND ROWNUM = 1 )
+			, '20'
+			, #{childType}
+			, 'Y'
+			, #{strtDttm}
+		    <choose>
+				<when test="endDttm != null and endDttm != ''">
+					, #{endDttm}
+				</when>
+		    	<otherwise>
+					, '99991231235959'
+				</otherwise>
+			</choose>
+			, #{sessionUserId}
+			, SYSDATE
+			, #{sessionUserId}
+			, SYSDATE
+		)
+	</insert>
+
+	<update id="cancelFamilyRel" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMgmtVO">
+		/* FamilyMgmtMapper.cancelFamilyRel */
+		UPDATE MSP_FAM_REL_MST
+		   SET END_DTTM = #{endDttm}
+		       , END_CODE = #{endCode}
+			   , END_MSG = #{endMsg}
+			   , USE_YN = 'N'
+			   , RVISN_ID = #{sessionUserId}
+			   , RVISN_DTTM = SYSDATE
+		 WHERE FAM_SEQ = #{famSeq}
+		   AND USE_YN = 'Y'
+	</update>
+
+	<update id="cancelFamilyAllMember" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMemberVO">
+		/* FamilyMgmtMapper.cancelFamilyAllMember */
+		UPDATE MSP_FAM_REL_MEM
+		   SET END_DTTM = #{endDttm}
+			   , END_CODE = #{endCode}
+			   , END_MSG = #{endMsg}
+			   , USE_YN = 'N'
+			   , RVISN_ID = #{sessionUserId}
+			   , RVISN_DTTM = SYSDATE
+		 WHERE FAM_SEQ = #{famSeq}
+		   AND USE_YN = 'Y'
+	</update>
+
+	<update id="cancelFamilyMember" parameterType="com.ktis.msp.rcp.familyMgmt.vo.FamilyMemberVO">
+		/* FamilyMgmtMapper.cancelFamilyMember */
+		UPDATE MSP_FAM_REL_MEM
+		   SET END_DTTM = #{endDttm}
+			   , END_CODE = #{endCode}
+			   , END_MSG = #{endMsg}
+			   , USE_YN = 'N'
+			   , RVISN_ID = #{sessionUserId}
+			   , RVISN_DTTM = SYSDATE
+		 WHERE FAM_SEQ = #{famSeq}
+		   AND SEQ = #{seq}
+		   AND USE_YN = 'Y'
+	</update>
+</mapper>

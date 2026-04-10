@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.courtMgmt.mapper.CourtDpstMapper">
+	<!-- 법정관리고객 입금 현황 조회 -->
+	<select id="getCourtDpstList" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* courtDpstMapper.getCourtDpstList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  TO_CHAR(TO_DATE(INOUT.INOUT_DTTM, 'YYYYMMDD'), 'YYYY-MM-DD') AS INOUT_DT,
+		        F_GET_KT_CODE_NM('PPS_VAC', 'BANK_CODE', ACCT.VAC_BANK_CD) AS VAC_BANK_NM,
+		        ACCT.VAC_ID,
+		        TO_CHAR(TO_DATE(ACCT.DCLR_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') AS VAC_DT,
+		        RSV.CSTMR_NAME,
+		        FN_GET_CODENM('MSP0031', RSV.CR_TP ) AS CR_TP,
+		        RSV.CR_COMP,
+		        RSV.NO_JUDG,
+		        RSV.RB_PRID,
+		        INOUT.INOUT_PRIC AS TOTAL_PRIC,
+		        INOUT.INOUT_NAME,
+		        INOUT.INOUT_ORDER
+		FROM    (SELECT CSTMR_NAME,
+						CSTMR_RRN,
+		                CR_TP,
+		                CR_COMP,
+		                NO_JUDG,
+		                RB_PRID,
+		                CR_SEQ
+		         FROM   MSP_COURT_RCV ) RSV,
+		        (SELECT A.VAC_BANK_CD,
+                        A.VAC_ID,
+                        A.CR_SEQ,
+                        A.DCLR_DATE
+                 FROM   MSP_COURT_RCV_ACCT A,
+                        (SELECT CR_SEQ,
+                                MAX(CR_ACCT_SEQ) AS ACCT_SEQ
+                         FROM   MSP_COURT_RCV_ACCT
+                         GROUP BY CR_SEQ ) B
+                 WHERE  A.CR_SEQ = B.CR_SEQ
+                 AND    A.CR_ACCT_SEQ = B.ACCT_SEQ ) ACCT,
+		        (SELECT INOUT_DTTM,
+		                INOUT_PRIC,
+		                INOUT_NAME,
+		                INOUT_ORDER,
+		                CR_SEQ,
+		                CR_INOUT_SEQ
+		         FROM   MSP_COURT_RCV_INOUT ) INOUT
+		WHERE   RSV.CR_SEQ = ACCT.CR_SEQ (+)
+		AND     RSV.CR_SEQ = INOUT.CR_SEQ
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND TO_CHAR(TO_DATE(INOUT.INOUT_DTTM, 'YYYYMMDD'), 'YYYYMMDDHH24MISS') BETWEEN #{strtDt} || '000000' AND #{endDt} || '235959'
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+				AND ACCT.VAC_ID = #{searchVal}
+				</when>
+				<when test='searchCd == "2"'>
+				AND RSV.CSTMR_RRN = #{searchRrn}
+				</when>
+			</choose>
+		</if>
+		ORDER BY INOUT.INOUT_DTTM DESC, INOUT.CR_INOUT_SEQ DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+ 	<select id="getCourtDpstListByExcel" parameterType="map" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* courtDpstMapper.getCourtDpstListByExcel */
+		SELECT  TO_CHAR(TO_DATE(INOUT.INOUT_DTTM, 'YYYYMMDD'), 'YYYY-MM-DD') AS INOUT_DT,
+		        F_GET_KT_CODE_NM('PPS_VAC', 'BANK_CODE', ACCT.VAC_BANK_CD) AS VAC_BANK_NM,
+		        ACCT.VAC_ID,
+		        TO_CHAR(TO_DATE(ACCT.DCLR_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') AS VAC_DT,
+		        RSV.CSTMR_NAME,
+		        FN_GET_CODENM('MSP0031', RSV.CR_TP ) AS CR_TP,
+		        RSV.CR_COMP,
+		        RSV.NO_JUDG,
+		        RSV.RB_PRID,
+		        INOUT.INOUT_PRIC AS TOTAL_PRIC,
+		        INOUT.INOUT_NAME,
+		        INOUT.INOUT_ORDER
+		FROM    (SELECT CSTMR_NAME,
+						CSTMR_RRN,
+		                CR_TP,
+		                CR_COMP,
+		                NO_JUDG,
+		                RB_PRID,
+		                CR_SEQ
+		         FROM   MSP_COURT_RCV ) RSV,
+		        (SELECT A.VAC_BANK_CD,
+                        A.VAC_ID,
+                        A.CR_SEQ,
+                        A.DCLR_DATE
+                 FROM   MSP_COURT_RCV_ACCT A,
+                        (SELECT CR_SEQ,
+                                MAX(CR_ACCT_SEQ) AS ACCT_SEQ
+                         FROM   MSP_COURT_RCV_ACCT
+                         GROUP BY CR_SEQ ) B
+                 WHERE  A.CR_SEQ = B.CR_SEQ
+                 AND    A.CR_ACCT_SEQ = B.ACCT_SEQ ) ACCT,
+		        (SELECT INOUT_DTTM,
+		                INOUT_PRIC,
+		                INOUT_NAME,
+		                INOUT_ORDER,
+		                CR_SEQ,
+		                CR_INOUT_SEQ
+		         FROM   MSP_COURT_RCV_INOUT ) INOUT
+		WHERE   RSV.CR_SEQ = ACCT.CR_SEQ (+)
+		AND     RSV.CR_SEQ = INOUT.CR_SEQ
+		<if test="strtDt != null and strtDt != '' and endDt != null and endDt != ''">
+			AND TO_CHAR(TO_DATE(INOUT.INOUT_DTTM, 'YYYYMMDD'), 'YYYYMMDDHH24MISS') BETWEEN #{strtDt} || '000000' AND #{endDt} || '235959'
+		</if>
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+				AND ACCT.VAC_ID = #{searchVal}
+				</when>
+				<when test='searchCd == "2"'>
+				AND RSV.CSTMR_RRN = #{searchRrn}
+				</when>
+			</choose>
+		</if>
+		ORDER BY INOUT.INOUT_DTTM DESC, INOUT.CR_INOUT_SEQ DESC
+	</select>	
+ </mapper>

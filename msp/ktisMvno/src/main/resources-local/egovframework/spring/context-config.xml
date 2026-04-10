@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:util="http://www.springframework.org/schema/util"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context 
+        http://www.springframework.org/schema/context/spring-context-3.2.xsd
+        http://www.springframework.org/schema/util 
+        http://www.springframework.org/schema/util/spring-util-3.2.xsd">
+
+    <!--  JJM 추가 (properties 로딩) -->
+  
+    <context:component-scan base-package="com"/>
+ 
+    <!--<util:properties> 로 생성된 빈은 java.util.Properties 의 인스턴스이기 때문에
+        java내의 Autowired 해서 쓸 수 있다. --> 
+    <util:properties id="prop" location="classpath:/egovframework/properties/web.local.properties"/>
+    
+</beans>

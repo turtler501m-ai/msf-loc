@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.csanalyticmgmt.mapper.AcenRcpMgmtMapper">
+
+  <!--A'Cen 자동개통 통계 list-->
+  <select id="getAcenRcpMgmtList" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenRcpMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    /*AcenRcpMgmtMapper.getAcenRcpMgmtList*/
+    <include refid="com.ktis.msp.cmn.include.paging-start" />
+    SELECT
+         REQ.REQUEST_KEY                                                        /*신청키*/
+       , TO_CHAR(REQ.REQ_IN_DAY, 'YYYY-MM-DD HH24:MI:SS') AS REQ_IN_DAY         /*신청일자*/
+       , REQ.RES_NO                                                             /*예약번호*/
+       , CST.CSTMR_NAME AS CSTMR_NM                                             /*고객명*/
+       , REQ.CSTMR_TYPE
+       , (SELECT RATE_NM FROM MSP_RATE_MST
+          WHERE RATE_CD = SAL.SOC_CODE
+          AND SERVICE_TYPE = 'P' AND ROWNUM = 1)
+          || '(' || SAL.SOC_CODE || ')' AS SOC_NM	                              /*요금제*/
+       , FN_GET_CODENM('RCP9001', REQ.OPER_TYPE) AS OPER_NM                     /*업무구분*/
+       , FN_GET_CODENM('RCP0006', REQ.REQUEST_STATE_CODE) AS REQUEST_STATE_NM   /*진행상태*/
+       , FN_GET_CODENM('RCP0005', REQ.PSTATE) AS PSTATE_NM                      /*신청서상태*/
+       , FN_GET_CODENM('RCP9032', DLV.DLVRY_TYPE) AS DLVRY_TYPE_NM              /*배송방법*/
+       , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP
+          WHERE CD_GROUP_ID = 'AcenEvntGrp'
+          AND DTL_CD = ACEN.EVNT_GRP_CD) AS ACEN_EVNT_GRP_NM                    /*시나리오*/
+       , CASE ACEN.SUCC_YN WHEN 'Y' THEN '성공'
+                           WHEN 'N' THEN '실패'
+                           ELSE '진행중' END AS ACEN_STATUS                      /*성공여부*/
+       , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP
+          WHERE CD_GROUP_ID = 'AcenErrCd'
+          AND DTL_CD = ACEN.RMK) AS ACEN_FAIL_RMK                               /*실패사유*/
+       , REQ.MEMO AS REQUEST_MEMO                                               /*처리메모*/
+       , DECODE(REQ.RVISN_ID, 'ACEN', REQ.RVISN_ID, FN_GET_USRNM(REQ.RVISN_ID)) AS RVISN_NM
+       , TO_CHAR(REQ.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS RVISN_DTTM
+       ,(SELECT COUNT(1)
+         FROM CMN_GRP_CD_MST A
+         WHERE A.GRP_ID = 'RCP0073'
+         AND A.USG_YN = 'Y'
+         AND A.CD_VAL = REQ.CNTPNT_SHOP_ID
+         AND EXISTS (SELECT 1 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP0074' AND CD_VAL = REQ.OPER_TYPE AND USG_YN = 'Y')
+         AND EXISTS (SELECT 1 FROM CMN_USR_MST WHERE USR_ID = #{sessionUserId} AND KOS_ID IS NOT NULL)
+        ) AS OSST_CHK       /* 직접개통 처리여부 추가 */
+    FROM NMCP_ACEN_REQ@DL_MCP ACEN
+       , MCP_REQUEST@DL_MCP REQ
+       , MCP_REQUEST_CSTMR@DL_MCP CST
+       , MCP_REQUEST_SALEINFO@DL_MCP SAL
+       , MCP_REQUEST_DLVRY@DL_MCP DLV
+    WHERE ACEN.REQUEST_KEY = REQ.REQUEST_KEY
+      AND ACEN.REQUEST_KEY = CST.REQUEST_KEY
+      AND ACEN.REQUEST_KEY = SAL.REQUEST_KEY
+      AND ACEN.REQUEST_KEY = DLV.REQUEST_KEY
+      /*신청일자필터*/
+      <if test='srchStrtDt != null and srchStrtDt != "" and srchEndDt != null and srchEndDt != ""'>
+        AND REQ.REQ_IN_DAY BETWEEN TO_DATE(#{srchStrtDt},'YYYYMMDD') AND TO_DATE(#{srchEndDt},'YYYYMMDD') + 1
+      </if>
+      /*업무구분필터*/
+      <if test='pOperType != null and pOperType != ""'>
+        AND REQ.OPER_TYPE = #{pOperType}
+      </if>
+      /*구매유형필터*/
+      <if test='pReqBuyType != null and pReqBuyType != ""'>
+        AND REQ.REQ_BUY_TYPE = #{pReqBuyType}
+      </if>
+      /*대리점필터*/
+      <if test='pAgentCode != null and pAgentCode != ""'>
+        AND (REQ.SHOP_CD = #{pAgentCode} OR REQ.CNTPNT_SHOP_ID = #{pAgentCode})
+      </if>
+      /*진행상태필터*/
+      <if test='pRequestStateCode != null and pRequestStateCode != ""'>
+        AND REQ.REQUEST_STATE_CODE = #{pRequestStateCode}
+      </if>
+      /*신청취소필터*/
+      <if test='pPstate != null and pPstate != ""'>
+        AND REQ.PSTATE = #{pPstate}
+      </if>
+      /*시나리오필터*/
+      <if test='pAcenEvntGrp != null and pAcenEvntGrp != ""'>
+        AND ACEN.EVNT_GRP_CD = #{pAcenEvntGrp}
+      </if>
+      /*성공여부필터*/
+      <if test='pSuccYn != null and pSuccYn != ""'>
+        AND ACEN.SUCC_YN = #{pSuccYn}
+      </if>
+      /*실패사유필터*/
+      <if test='pAcenErrCd != null and pAcenErrCd != ""'>
+        AND ACEN.RMK = #{pAcenErrCd}
+      </if>
+      /*모집경로필터*/
+      <if test='pOnOffType != null and pOnOffType != ""'>
+        AND REQ.ON_OFF_TYPE = #{pOnOffType}
+      </if>
+      /*eSIM여부필터*/
+      <if test='pEsimYn != null and pEsimYn == "Y"'>
+        AND REQ.USIM_KINDS_CD = '09'
+      </if>
+      /*검색구분필터-고객명*/
+      <if test='pSearchName != null and pSearchName != "" and pSearchGbn =="1"'>
+        AND CST.CSTMR_NAME LIKE #{pSearchName} || '%'
+      </if>
+      /*검색구분필터-계약번호*/
+      <if test='pSearchName != null and pSearchName != "" and pSearchGbn == "2"'>
+        AND REQ.CONTRACT_NUM = #{pSearchName}
+      </if>
+      /*검색구분필터-연락처*/
+      <if test='pSearchName != null and pSearchName != "" and pSearchGbn == "3"'>
+        AND (CST.CSTMR_MOBILE_FN || CST.CSTMR_MOBILE_MN || CST.CSTMR_MOBILE_RN = TRANSLATE(#{pSearchName},'1234567890-','1234567890')
+             OR CST.CSTMR_TEL_FN || CST.CSTMR_TEL_MN || CST.CSTMR_TEL_RN = TRANSLATE(#{pSearchName},'1234567890-','1234567890'))
+      </if>
+      /*검색구분필터-단말기일련번호*/
+      <if test='pSearchName != null and pSearchName != "" and pSearchGbn == "4"'>
+        AND REQ.REQ_PHONE_SN = #{pSearchName}
+      </if>
+      /*검색구분필터-예약번호*/
+      <if test='pSearchName != null and pSearchName != "" and pSearchGbn == "7"'>
+        AND REQ.RES_NO = #{pSearchName}
+      </if>
+      /*검색구분필터-요금제*/
+      <if test='pSearchName != null and pSearchName != "" and pSearchGbn == "8"'>
+        AND SAL.SOC_CODE IN (SELECT RATE_CD FROM MSP_RATE_MST WHERE SERVICE_TYPE = 'P' AND RATE_NM LIKE UPPER(#{pSearchName}) || '%')
+      </if>
+      /*셀프개통 제외 필터*/
+      <if test='pSelfYn != null and pSelfYn == "Y"'>
+		AND REQ.ON_OFF_TYPE NOT IN ('5','7')
+	  </if>
+    ORDER BY REQ.REQUEST_KEY DESC
+    <include refid="com.ktis.msp.cmn.include.paging-end" />
+  </select>
+
+  <!--A'Cen 연동이력 list-->
+  <select id="getAcenHist" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenRcpMgmtVO" resultType="com.ktis.msp.org.csanalyticmgmt.vo.AcenHistVO">
+    /*AcenRcpMgmtMapper.getAcenHist*/
+    <include refid="com.ktis.msp.cmn.include.paging-start" />
+    SELECT
+        ACEN.RES_NO  AS resNo                                             /*예약번호*/
+      , TO_CHAR(ACEN.RSLT_DATE, 'YYYY-MM-DD HH24:MI:SS') AS rsltDttm      /*연동일시*/
+      , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP
+         WHERE CD_GROUP_ID = 'AcenEvntType'
+         AND DTL_CD = ACEN.EVNT_TYPE) AS evntTypeNm                       /*시나리오(상세)*/
+      , DECODE(ACEN.CHNL_CD,'01','요청','응답') AS chnlCdNm                 /*연동유형*/
+      , ACEN.CHNL_CD AS chnlCd
+      , ACEN.RSLT_CD AS rsltCd
+      , ACEN.RSLT_MSG AS rsltMsg
+      , ACEN.PROC_CD AS procCd
+      , ACEN.ERR_CD AS errCd
+      , ACEN.ERR_MSG AS errMsg
+    FROM NMCP_ACEN_HIST@DL_MCP ACEN
+    WHERE REQUEST_KEY = #{requestKey}
+    ORDER BY SEQ DESC
+    <include refid="com.ktis.msp.cmn.include.paging-end" />
+  </select>
+
+  <!--A'Cen 실패이력 list-->
+  <select id="getAcenFailHist" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenRcpMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    /*AcenRcpMgmtMapper.getAcenFailHist*/
+    <include refid="com.ktis.msp.cmn.include.paging-start" />
+    SELECT
+        B.CSTMR_NAME AS CSTMR_NM                                        /*고객명*/
+      , A.RES_NO                                                        /*예약번호*/
+      , TO_CHAR(A.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM    /*실패일시*/
+      , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP
+         WHERE CD_GROUP_ID = 'AcenEvntType'
+         AND DTL_CD = A.EVNT_TYPE) AS EVNT_TYPE_NM                      /*실패시나리오*/
+      , DECODE(A.REQ_STATUS, 'Y', '요청','미요청') AS REQ_STATUS_NM       /*요청여부*/
+      , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP
+         WHERE CD_GROUP_ID = 'AcenErrCd'
+         AND DTL_CD = A.FAIL_RMK) AS ACEN_FAIL_RMK                      /*실패사유*/
+    FROM NMCP_ACEN_FAIL_HIST@DL_MCP A
+       , MCP_REQUEST_CSTMR@DL_MCP B
+    WHERE A.REQUEST_KEY = B.REQUEST_KEY
+    AND A.REQUEST_KEY = #{requestKey}
+    ORDER BY SEQ DESC
+    <include refid="com.ktis.msp.cmn.include.paging-end" />
+  </select>
+
+  <!--A'Cen 재실행이력 list-->
+  <select id="getAcenRetryHist" parameterType="com.ktis.msp.org.csanalyticmgmt.vo.AcenRcpMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    /*AcenRcpMgmtMapper.getAcenRetryHist*/
+    <include refid="com.ktis.msp.cmn.include.paging-start" />
+    SELECT
+        RES_NO                                                        /*예약번호*/
+      , TO_CHAR(REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') AS REGST_DTTM    /*재실행일시*/
+      , (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP
+         WHERE CD_GROUP_ID = 'AcenEvntType'
+         AND DTL_CD = EVNT_TYPE) AS EVNT_TYPE_NM                      /*재실행시나리오*/
+      , DECODE(REGST_ID, 'ACEN', REGST_ID, FN_GET_USRNM(REGST_ID)) AS REGST_NM   /*요청자*/
+    FROM NMCP_ACEN_RTY_HIST@DL_MCP
+    WHERE REQUEST_KEY = #{requestKey}
+    ORDER BY SEQ DESC
+    <include refid="com.ktis.msp.cmn.include.paging-end" />
+  </select>
+
+  <!--A'Cen 재실행 가능여부 판단 데이터-->
+  <select id="getAcenProcStatus" parameterType="java.lang.String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+    /*AcenRcpMgmtMapper.getAcenProcStatus*/
+    SELECT
+        A.EVNT_GRP_CD
+      , A.EVNT_TYPE
+      , A.END_STATUS
+      , A.SUCC_YN
+      , A.OPEN_YN
+      , B.PSTATE
+      , B.REQUEST_STATE_CODE
+      , B.REQ_USIM_SN
+      , C.DLVRY_TYPE
+    FROM NMCP_ACEN_REQ@DL_MCP A
+       , MCP_REQUEST@DL_MCP B
+       , MCP_REQUEST_DLVRY@DL_MCP C
+    WHERE A.REQUEST_KEY = B.REQUEST_KEY
+      AND A.REQUEST_KEY = C.REQUEST_KEY
+      AND A.REQUEST_KEY = #{requestKey}
+  </select>
+
+  <!-- A'Cen 재실행 처리 update -->
+  <update id="updateAcenWithRty" parameterType="java.util.HashMap">
+    /*AcenRcpMgmtMapper.updateAcenWithRty*/
+    UPDATE NMCP_ACEN_REQ@DL_MCP
+    SET EVNT_TYPE = #{rtyEvntType}
+      , REQ_STATUS = 'N'
+      , END_STATUS = 'N'
+      , SUCC_YN = NULL
+      , PRE_CHECK_YN = #{preCheckYn}
+      , OPEN_YN = NULL
+      , RMK = NULL
+      , RVISN_ID = #{sessionUserId}
+      , RVISN_DTTM = SYSDATE
+      , RTY_ID = #{sessionUserId}
+      , RTY_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+      , RTY_DTTM = SYSDATE
+    WHERE REQUEST_KEY = #{requestKey}
+  </update>
+
+  <!-- 신청서 상태 update -->
+  <update id="updateMcpRequestState" parameterType="java.util.HashMap">
+    /*AcenRcpMgmtMapper.updateMcpRequestState*/
+    UPDATE MCP_REQUEST@DL_MCP
+    SET  RVISN_ID = #{sessionUserId}
+        ,RVISN_DTTM = SYSDATE
+        ,PSTATE = #{pstate}
+        ,REQUEST_STATE_CODE = #{requestStateCode}
+    WHERE REQUEST_KEY = #{requestKey}
+  </update>
+
+  <!--A'Cen 재실행 이력 insert-->
+  <insert id="insertAcenRtyHist" parameterType="java.util.HashMap">
+    /*AcenRcpMgmtMapper.insertAcenRtyHist*/
+    INSERT INTO NMCP_ACEN_RTY_HIST@DL_MCP(
+        REQUEST_KEY
+      , SEQ
+      , RES_NO
+      , EVNT_GRP_CD
+      , EVNT_TYPE
+      , REGST_ID
+      , REGST_DTTM
+    )
+    SELECT
+        REQUEST_KEY
+      , NVL((SELECT MAX(SEQ) + 1 FROM NMCP_ACEN_RTY_HIST@DL_MCP WHERE REQUEST_KEY= #{requestKey}), 1)
+      , RES_NO
+      , EVNT_GRP_CD
+      , #{rtyEvntType}
+      , #{sessionUserId}
+      , SYSDATE
+    FROM NMCP_ACEN_REQ@DL_MCP
+    WHERE REQUEST_KEY = #{requestKey}
+  </insert>
+
+
+</mapper>

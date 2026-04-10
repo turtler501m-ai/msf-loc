@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.menu.mapper.MenuMapper">
+
+<!-- 	====================================================  -->	
+<!-- 	메뉴 계층적으로 가져옴 , 메인화면 메뉴에서 사용 -->
+<!-- 	====================================================  -->	
+	<select id="menuPrgmMstListXXXXXXXX" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.menu.menuPrgmMstListXXXXXXXX =========*/
+	    SELECT
+		    A.*,
+		    nvl(LAG(MENU_LVL ) OVER( ORDER BY ROW_INDEX ),-1) MENU_LVL_PREV
+		FROM
+		(
+		            SELECT ROWNUM ROW_INDEX 
+		                , ROWNUM -1  id
+		                , A.MENU_ID  MENU_ID
+		                , A.MENU_LVL || '' MENU_LVL 
+		                , A.MENU_NM  text
+		                , A.MENU_DSC
+		                , A.HGHR_MENU_ID
+		                , A.ALGN_SEQ
+		                , A.USG_YN
+		                , A.LMT_ORGN_LVL_CD
+		                , A.DUTY_NM
+		                , A.DEL_YN
+		                , A.DUTY_ID
+		                , B.PRGM_ID
+		                , B.PRGM_NM
+		                , B.PRGM_DESC
+		                , B.PRGM_URL URL
+		                , B.PRGM_TYPE
+		                , nvl(PRIOR A.MENU_LVL,-1)  MENU_LVL_PRIOR
+		            FROM CMN_MENU_MST A,   
+		                 CMN_PRGM_MST B
+		            WHERE A.MENU_ID = B.MENU_ID(+)
+		              AND ( A.DEL_YN IS NULL OR A.DEL_YN = 'N') 
+		              AND B.PRGM_TYPE(+) = 'MAIN'
+		            START WITH A.MENU_LVL = 0  
+		            CONNECT BY PRIOR A.MENU_ID = A.HGHR_MENU_ID
+		            ORDER SIBLINGS  BY  1+ A.ALGN_SEQ
+		) A     
+			
+	</select>
+
+
+
+<!-- 	====================================================  -->	
+<!-- 	메뉴 계층적으로 가져옴 , 메인화면 메뉴에서 사용  사용자 권한 까지 포함한 경우-->
+<!-- 	====================================================  -->	
+	<select id="menuPrgmMstList" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.menu.menuPrgmMstList =========*/
+	    SELECT  A.*,
+                nvl(LAG(MENU_LVL ) OVER( ORDER BY ROW_INDEX ),-1) MENU_LVL_PREV
+        FROM
+            (
+                SELECT ROWNUM ROW_INDEX 
+                    , ROWNUM -1  id
+                    , A.MENU_ID  MENU_ID
+                    , A.MENU_LVL || '' MENU_LVL 
+                    , nvl(PRIOR A.MENU_LVL,-1)  MENU_LVL_PRIOR
+                    , replace(RPAD(' ', 4*(LEVEL - 1)),' ','.') || A.MENU_NM MENU_NM_HGHR
+                    , A.MENU_NM  text
+                    , A.MENU_DSC
+                    , A.HGHR_MENU_ID
+                    , A.ALGN_SEQ
+                    , A.USG_YN
+                    , A.LMT_ORGN_LVL_CD
+                    , A.DUTY_NM
+                    , A.DEL_YN
+                    , A.DUTY_ID
+                    , A.IBSHEET_YN
+                    , DECODE(A.IBSHEET_YN, 'Y', 'background-color:#A0AFFF;font-weight:bold;', '') AS STYLE
+                    , B.PRGM_ID
+                    , B.PRGM_NM
+                    , B.PRGM_DESC
+                    , B.PRGM_URL URL
+                    , B.PRGM_TYPE
+                FROM CMN_MENU_MST A,   
+                     CMN_PRGM_MST B
+                WHERE A.MENU_ID = B.MENU_ID(+)
+                  AND ( A.DEL_YN IS NULL OR A.DEL_YN = 'N') 
+                  AND B.PRGM_TYPE(+) = 'MAIN'
+                  AND A.MENU_ID NOT IN ('PPS1300004', 'PPS1100007', 'MSP1020220', 'PSC1000000', 'PSC1000030', 'PSC0000001', 'PSC0000002')
+                START WITH A.MENU_LVL = 0  
+                CONNECT BY PRIOR A.MENU_ID = A.HGHR_MENU_ID
+                  AND ( A.USG_YN = 'Y' OR A.USG_YN IS NULL )
+                ORDER SIBLINGS  BY  1 + A.ALGN_SEQ
+            )A
+        WHERE A.MENU_ID IN
+            (    
+                    SELECT A.MENU_ID 
+                    FROM CMN_MENU_MST A
+                    START WITH 
+                          A.MENU_ID IN (
+                            SELECT DISTINCT MENU_ID
+                            FROM
+                                (
+                                	SELECT   
+                                             A.MENU_ID 
+                                    FROM CMN_MENU_MST A
+                                    WHERE  A.MENU_LVL = 0
+                                    UNION 
+                                    SELECT   
+                                             B.MENU_ID 
+                                    FROM CMN_USR_MST A
+                                         ,CMN_USR_MENU_ASGN_MST B
+                                    WHERE  A.USR_ID =  #{SESSION_USER_ID}
+                                       AND  A.USR_ID = B.USR_ID
+                                    UNION 
+                                    SELECT  
+                                             D.MENU_ID
+                                    FROM
+                                            CMN_USR_MST A
+                                           ,CMN_USG_GRP_ASGN_MST B
+                                           ,CMN_GRP_AUTH_ASGN_MST C
+                                           ,CMN_AUTH_MENU_ASGN_MST D
+                                    WHERE 1 =1
+                                      AND A.USR_ID = #{SESSION_USER_ID}
+                                      AND A.USR_ID = B.USR_ID      
+                                      AND B.GRP_ID = C.GRP_ID
+                                      AND C.AUTH_ID = D.AUTH_ID
+                                )
+                           ) 
+                    CONNECT BY  A.MENU_ID = PRIOR A.HGHR_MENU_ID
+              )
+        ORDER BY A.ROW_INDEX
+			
+	</select>
+	
+</mapper>

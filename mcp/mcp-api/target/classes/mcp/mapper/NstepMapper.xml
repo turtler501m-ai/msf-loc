@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.nstep.mapper.NstepMapper">
+
+	<select id="getNstepConnectTimeout" resultType="int">
+		SELECT CGCM.CD_VAL
+		  FROM CMN_GRP_MST@DL_MSP CGM
+		       , CMN_GRP_CD_MST@DL_MSP CGCM
+		 WHERE CGM.GRP_ID = CGCM.GRP_ID
+		   AND CGM.USG_YN = 'Y'
+		   AND CGCM.USG_YN = 'Y'
+		   AND CGM.GRP_ID = 'CMN0202'
+    </select>
+
+	<select id="getOrgCnt" parameterType="String" resultType="int">
+		SELECT COUNT(*)
+		  FROM ORG_ORGN_INFO_MST@DL_MSP
+		 WHERE ORGN_ID =  #{orgnId}
+		   AND NEW_KT_ORG_ID IS NOT NULL
+    </select>
+
+	<select id="getOrgnId" parameterType="String" resultType="String">
+		SELECT NEW_KT_ORG_ID
+		  FROM ORG_ORGN_INFO_MST@DL_MSP
+		 WHERE ORGN_ID =  #{orgnId}
+		   AND NEW_KT_ORG_ID IS NOT NULL
+    </select>
+
+</mapper>

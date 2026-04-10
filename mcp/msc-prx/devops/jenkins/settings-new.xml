@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+
+  <servers>
+      <server>
+          <id>maven-mirror</id> <!-- mirror id 또는 repository id -->
+          <username>jenkins</username>
+          <password>{iDme/EV5eREH+ZdfQLCra3pTTkuFU0ele20toukVN4g=}</password>
+      </server>
+
+  </servers>
+  <mirrors>
+      <mirror>
+          <id>nexus-mirror</id>
+          <mirrorOf>*</mirrorOf>
+              <!-- 신규 nexus https URL -->
+         <url>https://nexus.ktmmobile.com/repository/maven-public/</url>
+         <!-- nexus http 서버 -->
+          <!-- <url>http://nexus.ktmmobile.com:8082/repository/maven-public/</url> -->
+      </mirror>
+
+  </mirrors>
+</settings>

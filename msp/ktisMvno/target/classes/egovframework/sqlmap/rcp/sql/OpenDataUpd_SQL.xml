@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.OpenDataUpdMapper">
+
+    <!-- MCP_REQUEST 조회 -->
+    <select id="getMcpRequestInfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO" resultType="hashMap">
+    	/* rcp.rcptmgmt.openDataUpd.getMcpRequestInfo */
+    	SELECT
+    		TO_CHAR(REQUEST_KEY) AS REQUEST_KEY
+    		, SCAN_ID
+    	FROM
+    		MCP_REQUEST@DL_MCP
+    	WHERE
+    		RES_NO = #{resNo}
+    </select>
+    
+	<!-- EMV_SCAN_MST -->
+	<insert id="insertEmvScanMst" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+		/* rcp.rcpMgmt.openDataUpd.insertEmvScanMst */
+		INSERT INTO EMV_SCAN_MST
+		(
+			SCAN_ID
+			, WORK_ID
+			, AGENCY_ID
+			, COMPANY_ID
+			, CUST_NM
+			, C_MEMO
+			, DOC_TITLE
+			, SCAN_FILE_CNT
+			, USE_YN
+			, RGST_DT
+			, RGST_PRSN_ID
+			, MDFY_DT
+			, MDFY_PRSN_ID
+			, DEL_REASON
+			, DOC_STATUS
+			, ONLINE_YN
+		)
+		SELECT
+			SCAN_ID
+			, WORK_ID
+			, AGENCY_ID
+			, COMPANY_ID
+			, CUST_NM
+			, C_MEMO
+			, DOC_TITLE
+			, SCAN_FILE_CNT
+			, USE_YN
+			, RGST_DT
+			, RGST_PRSN_ID
+			, MDFY_DT
+			, MDFY_PRSN_ID
+			, DEL_REASON
+			, DOC_STATUS
+			, ONLINE_YN
+		FROM
+			EMV_SCAN_MST@DL_MCP
+		WHERE
+			SCAN_ID = #{scanId}
+	</insert>
+
+	<!-- EMV_SCAN_FILE -->
+	<insert id="insertEmvScanFile" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+		/* rcp.rcpMgmt.openDataUpd.insertEmvScanFile */
+		INSERT INTO EMV_SCAN_FILE
+		(
+			FILE_ID
+			, SCAN_ID
+			, FILE_NUMBER
+			, FILE_SIZE
+			, FILE_EXT
+			, DOC_ID
+			, MAIN_DOC_CD
+			, USE_YN
+			, ORIGIN_DIR
+			, RGST_DT
+			, RGST_PRSN_ID
+			, MDFY_DT
+			, MDFY_PRSN_ID
+			, SAVE_DIR
+		)
+		SELECT
+			FILE_ID
+			, SCAN_ID
+			, FILE_NUMBER
+			, FILE_SIZE
+			, FILE_EXT
+			, DOC_ID
+			, MAIN_DOC_CD
+			, USE_YN
+			, ORIGIN_DIR
+			, RGST_DT
+			, RGST_PRSN_ID
+			, MDFY_DT
+			, MDFY_PRSN_ID
+			, SAVE_DIR
+		FROM
+			EMV_SCAN_FILE@DL_MCP
+		WHERE
+			SCAN_ID = #{scanId}
+	</insert>
+
+	<!-- 여신부활처리 -->
+	<select id="setCrdtLoanRvlProc" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO" resultType="hashMap">
+		/* rcp.rcpMgmt.openDataUpd.setCrdtLoanRvlProc */
+		SELECT
+			'Y' AS CRDT_LOAN_APPL_YN
+		    , 'R' AS CRDT_LOAN_TSK									/* 여신부활 */
+		    , '20' AS TSK_TP										/* 개통 */
+		    , '2' AS CRDT_LOAN_CL
+		    , A.OPEN_AGNT_CD AS ORGN_ID								/* 개통대리점 */
+		    , DECODE(NVL(C.MODEL_MONTHLY, '0'), '0', NVL(C.MODEL_DISCOUNT2, 0), NVL(C.MODEL_PRICE, 0) + NVL(C.MODEL_PRICE_VAT, 0)) AS CRDT_LOAN_AMT    /* 여신금액 */
+		    , TO_CHAR(SYSDATE, 'YYYYMMDD') AS CRDT_LOAN_DT			/* 여신일자 */
+		    , A.CUSTOMER_ID AS CUST_ID								/* 고객번호 */
+		    , A.CONTRACT_NUM AS SRVC_CNTR_NUM						/* 계약번호 */
+		    , 1 AS QNTY
+		    , NVL(C.MODEL_PRICE, 0) AS OUT_AMT						/* 출고단가 */
+		    , NVL(C.MODEL_INSTALLMENT, 0) AS INST_AMT				/* 할부원금 */
+		    , #{regstId} AS USER_ID
+		FROM
+		    MSP_JUO_SUB_INFO A										/* 계약현행화 */
+		    , MSP_REQUEST B											/* 가입신청 */
+		    , MSP_REQUEST_SALEINFO C								/* 판매정보 */
+		WHERE
+		    A.SUB_STATUS NOT IN ('C')								/* C: 해지 */
+		    AND A.PPPO = 'PO'										/* 후불 */
+		    AND A.SVC_CNTR_NO IS NOT NULL
+		    AND A.CONTRACT_NUM = B.CONTRACT_NUM
+		    AND B.OPER_TYPE NOT IN ('ICN3')							/* 명의변경 제외 */
+		    AND B.REQUEST_STATE_CODE = '21'							/* 개통완료 */
+		    AND B.PSTATE = '00'										/* 정상 */
+		    AND B.REQUEST_KEY = C.REQUEST_KEY
+		    AND C.MODEL_SALE_POLICY_CODE IS NOT NULL				/* 판매정책코드 여부 */
+			<![CDATA[
+			AND NVL(C.MODEL_PRICE, 0) <> 0
+			]]>
+			AND A.CONTRACT_NUM = #{contractNum}
+	</select>
+
+    <delete id="deleteMspRequest" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequest */
+    	DELETE FROM MSP_REQUEST WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMspRequestAddition" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestAddition */
+    	DELETE FROM MSP_REQUEST_ADDITION WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMspRequestAgent" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestAgent */
+    	DELETE FROM MSP_REQUEST_AGENT WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMspRequestChange" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestChange */
+    	DELETE FROM MSP_REQUEST_CHANGE WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMspRequestCstmr" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestCstmr */
+    	DELETE FROM MSP_REQUEST_CSTMR WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMspRequestMove" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestMove */
+    	DELETE FROM MSP_REQUEST_MOVE WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMspRequestPayment" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestPayment */
+    	DELETE FROM MSP_REQUEST_PAYMENT WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMspRequestReq" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestReq */
+    	DELETE FROM MSP_REQUEST_REQ WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMspRequestSaleinfo" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestSaleinfo */
+    	DELETE FROM MSP_REQUEST_SALEINFO WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+
+    <delete id="deleteMspRequestState" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestState */
+    	DELETE FROM MSP_REQUEST_STATE WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+    <delete id="deleteMspRequestDlvry" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteMspRequestDlvry */
+    	DELETE FROM MSP_REQUEST_DLVRY WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+
+    <delete id="deleteEmvScanMst" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteEmvScanMst */
+    	DELETE FROM EMV_SCAN_MST WHERE SCAN_ID = #{scanId}
+    </delete>
+
+    <delete id="deleteEmvScanFile" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+    	/* rcp.rcpMgmt.openDataUpd.deleteEmvScanFile */
+    	DELETE FROM EMV_SCAN_FILE WHERE SCAN_ID = #{scanId}
+    </delete>
+
+	<delete id="deleteMspRequestDvcChg" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.OpenDataUpdVO">
+		DELETE FROM MSP_REQUEST_DVC_CHG WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+</mapper>

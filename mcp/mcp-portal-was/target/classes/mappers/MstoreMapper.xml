@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MstoreMapper">
+
+    <!-- mstore 약관 동의 여부 조회  -->
+    <select id="getMstoreTermsAgreeInfo" parameterType="java.lang.String" resultType="java.util.Map">
+        /*MstoreMapper.getMstoreTermsAgreeInfo*/
+        SELECT STRT_DTTM ,END_DTTM, AGR_YN, CUSTOMER_ID
+        FROM NMCP_MSTORE_TERM_HIST
+        WHERE USERID= #{userId}
+        AND END_DTTM= '99991231235959'
+    </select>
+
+    <!-- MSTORE 약관 동의 이력 업데이트  -->
+    <update id="updateMstoreTermsAgreeInfo" parameterType="java.lang.String">
+        /*MstoreMapper.updateMstoreTermsAgreeInfo*/
+        UPDATE NMCP_MSTORE_TERM_HIST
+        SET
+           RVISN_DTTM= SYSDATE
+          ,RVISN_ID= #{userId}
+          ,END_DTTM= TO_CHAR(SYSDATE - 1/24/60/60, 'YYYYMMDDHH24MISS')
+        WHERE USERID= #{userId}
+        AND END_DTTM= '99991231235959'
+    </update>
+
+    <!-- MSTORE 약관 동의 이력 신규 insert  -->
+    <insert id="insertMstoreTermsAgreeInfo" parameterType="com.ktmmobile.mcp.point.dto.MstoreDto">
+        INSERT INTO NMCP_MSTORE_TERM_HIST
+        (
+            USERID
+           ,STRT_DTTM
+           ,END_DTTM
+           ,AGR_YN
+           ,REGST_ID
+           ,REGST_DTTM
+           ,RVISN_ID
+           ,RVISN_DTTM
+        )
+        VALUES
+        (
+            #{userId}
+           ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+           ,'99991231235959'
+           ,UPPER(#{termsAgreeYn})
+           ,#{userId}
+           ,SYSDATE
+           ,#{userId}
+           ,SYSDATE
+        )
+    </insert>
+
+    <!-- MSTORE 탈퇴 연동 대상 회원 insert  -->
+    <insert id="insertMstoreCanTrg" parameterType="com.ktmmobile.mcp.point.dto.MstoreCanTrgDto">
+        /*MstoreMapper.insertMstoreCanTrg*/
+        <selectKey keyProperty="canTrgSeq" resultType="java.lang.String" order="BEFORE">
+        SELECT (TO_CHAR(SYSDATE,'YYYYMMDD') || TRIM(TO_CHAR(SQ_MSTORE_CAN_TRG.NEXTVAL, '0000'))) AS canTrgSeq FROM DUAL
+        </selectKey>
+        INSERT INTO NMCP_MSTORE_CAN_TRG (
+            CAN_TRG_SEQ
+           ,CHN_CD
+           ,PROC_YN
+           ,USERID
+        ) VALUES (
+            #{canTrgSeq}
+           ,#{chnCd}
+           ,#{procYn}
+           ,#{userId}
+        )
+    </insert>
+
+    <!-- MSTORE SSO 연동 정보 조회  -->
+    <select id="getMstoreSSOInfo" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.point.dto.MstoreDto">
+        /*MstoreMapper.getMstoreSSOInfo*/
+        SELECT
+            USERID
+           ,EMPEN
+           ,MBR_GRD_CD
+           ,LST_COM_ACTV_DATE
+        FROM NMCP_MSTORE_SSO_INFO
+        WHERE USERID= #{userId}
+        AND SYS_CDATE IS NULL
+    </select>
+
+    <!-- MSTORE SSO 연동 정보 저장  -->
+    <update id="mergeMstoreSSOInfo" parameterType="java.util.HashMap">
+        MERGE INTO NMCP_MSTORE_SSO_INFO
+        USING DUAL
+        ON (USERID = #{userId})
+        WHEN MATCHED THEN
+            UPDATE SET
+                EMPEN= #{memId}
+               ,MBR_GRD_CD = #{mbrGrdCd}
+               ,LST_COM_ACTV_DATE = #{lstComActvDate}
+               ,SYS_LDATE = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+               ,RVISN_ID = #{userId}
+               ,RVISN_DTTM = SYSDATE
+        WHEN NOT MATCHED THEN
+            INSERT (
+                USERID
+               ,EMPEN
+               ,MBR_GRD_CD
+               ,LST_COM_ACTV_DATE
+               ,SYS_LDATE
+               ,REGST_ID
+               ,REGST_DTTM
+               ,RVISN_ID
+               ,RVISN_DTTM
+            ) VALUES (
+                #{userId}
+               ,#{memId}
+               ,#{mbrGrdCd}
+               ,#{lstComActvDate}
+               ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+               ,#{userId}
+               ,SYSDATE
+               ,#{userId}
+               ,SYSDATE
+            )
+    </update>
+
+    <!-- 정회원 정보 중 CONTRACT_NUM 가져오기 -->
+    <select id="getMcpUserCntrMngInfo" parameterType="java.lang.String" resultType="java.lang.String">
+        /*MstoreMapper.getMcpUserCntrMngInfo*/
+        SELECT SVC_CNTR_NO
+        FROM (SELECT SVC_CNTR_NO FROM MCP_USER_CNTR_MNG WHERE USERID= #{userId} ORDER BY REP_NO)
+        WHERE ROWNUM= 1
+    </select>
+
+    <select id="getMstoreContentItemListPc" parameterType="String" resultType="com.ktmmobile.mcp.point.dto.MstoreContentItemDto">
+        SELECT MCI.CONTENT_SEQ
+             , MCI.ITEM_SEQ
+             , MCI.ITEM_TYPE
+             , MCI.NAME
+             , MCI.URL
+             , MCI.ORIGINAL_PRICE
+             , MCI.DISCOUNT_PRICE
+             , MCI.IMG_URL_PC AS IMG_URL
+        FROM NMCP_MSTORE_CONTENT_ITEM MCI
+           , ( SELECT MAX(CONTENT_SEQ) AS CONTENT_SEQ
+               FROM NMCP_MSTORE_CONTENT
+               WHERE DEVC_TP_CD = '20'
+               AND STATUS = 'SUCCESS') MC
+        WHERE MC.CONTENT_SEQ = MCI.CONTENT_SEQ
+    </select>
+
+    <select id="getMstoreContentItemListMobile" parameterType="String" resultType="com.ktmmobile.mcp.point.dto.MstoreContentItemDto">
+        SELECT MCI.CONTENT_SEQ
+             , MCI.ITEM_SEQ
+             , MCI.ITEM_TYPE
+             , MCI.NAME
+             , MCI.URL
+             , MCI.ORIGINAL_PRICE
+             , MCI.DISCOUNT_PRICE
+             , MCI.IMG_URL_MO AS IMG_URL
+        FROM NMCP_MSTORE_CONTENT_ITEM MCI
+           , ( SELECT MAX(CONTENT_SEQ) AS CONTENT_SEQ
+               FROM NMCP_MSTORE_CONTENT
+               WHERE DEVC_TP_CD = '30'
+                 AND STATUS = 'SUCCESS') MC
+        WHERE MC.CONTENT_SEQ = MCI.CONTENT_SEQ
+    </select>
+
+</mapper>
+

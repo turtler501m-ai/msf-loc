@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.datamgmt.mapper.PpsAgencyDataMgmtMapper">
+
+   <!--대리점 실시간선불관리대상 목록조회 -->
+    <select id="getAgencyDataInfoMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         SELECT /*+ INDEX_DESC(A PPS_REAL_STATS_CDR_IDX)*/
+         		A.CONTRACT_NUM,
+         		SUBSCRIBER_NO,
+		        A.SUB_LINK_NAME,
+		        AD_NATION,
+		        DECODE(AD_NATION, '', '미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', AD_NATION)) AD_NATION_NM,
+		        SOC,
+		        (SELECT RATE_NM SERVICE_NM
+		          FROM MSP_RATE_MST
+		         WHERE RATE_CD = SOC
+		         and rownum = 1) AS SERVICE_NM,
+		        A.SUB_STATUS,
+		        F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', A.SUB_STATUS) AS SUB_STATUS_NM,
+		        TO_CHAR(ENTER_DATE, 'YYYY-MM-DD') ENTER_DATE,
+		        TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD') STATUS_STOP_DT,
+		        TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD') STATUS_CANCEL_DT,
+		        TO_CHAR(BASIC_EXPIRE , 'YYYY-MM-DD') BASIC_EXPIRE,
+		        A.MODEL_NAME,
+		        USE_TERM,
+		        TO_CHAR(LAST_BASIC_CHG_DT , 'YYYY-MM-DD') LAST_BASIC_CHG_DT,
+		        AGENT_ID,
+		        F_GET_AGENT_NM(AGENT_ID) AGENT_NM,
+		        NVL(AGENT_SALE_ID, '') AGENT_SALE_ID ,
+		        F_GET_AGENT_NM(AGENT_SALE_ID) AGENT_SALE_NM,
+		        DECODE(VIZA_FLAG, 'Y', 'Y', '') VIZA_FLAG,
+		        BASIC_REMAINS,
+		        TRY_RCG_CNT,
+		        TRY_RCG_CHARGE,
+		        RCG_EDIT_CHARGE,
+		        RCG_FREE_CHARGE,
+		        RCG_PAY_CHARGE,
+		        RCG_FREE_CANCEL_CHARGE,
+		        RCG_PAY_CANCEL_CHARGE,
+		        TOT_RCG_CHARGE,
+		        USE_CNT,
+		        ROUND(USE_DUR, 2) USE_DUR,
+		        USE_CHARGE,
+		        ROUND(USE_PKT, 2) USE_PKT,
+		        ROUND(VOC_N_DUR, 2) VOC_N_DUR,
+		        VOC_N_CHARGE,
+		        ROUND(VOC_I_DUR, 2) VOC_I_DUR,
+		        VOC_I_CHARGE,
+		        SMS_N_CNT,
+		        SMS_N_CHARGE,
+		        SMS_I_CNT,
+		        SMS_I_CHARGE,
+		        ROUND(PKT_N_DUR, 2) PKT_N_DUR,
+		        PKT_N_CHARGE,
+		        PKT_N_CHARGE + PKT_I_CHARGE TOT_PKT_CHARGE,
+		        DAY_CNT,
+		        DAY_CHARGE,
+		        ETC_CNT,
+		        ETC_CHARGE
+		 FROM PPS_REAL_STATS_CDR A,
+		 	  MSP_JUO_SUB_INFO B
+		 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		 	   AND ENTER_DATE > TO_DATE('20140101', 'YYYYMMDD')
+		 	   AND AGENT_ID = #{loginAgentId}
+		 
+		 		<if test="searchStartDt != null and searchStartDt != '' ">
+					    AND  ENTER_DATE >= to_date(#{searchStartDt}, 'yyyymmdd')		    
+				</if>
+				<if test="searchEndDt != null and searchEndDt != '' ">
+						AND  ENTER_DATE &lt; to_date(#{searchEndDt}, 'yyyymmdd')+1			    
+				</if>
+				<if test="searchCancelDate != null and searchCancelDate != '' ">
+                        AND  STATUS_CANCEL_DT >= to_date(#{searchCancelDate} || '01', 'yyyymmdd')
+						AND  STATUS_CANCEL_DT &lt; last_day(to_date(#{searchCancelDate}, 'yyyymm'))+1					    
+			    </if>
+			    <if test="searchAgentSale != null and searchAgentSale != ''">
+					    AND (AGENT_SALE_ID LIKE '%' || #{searchAgentSale} || '%' OR AGENT_SALE_ID IN (SELECT ORGN_ID FROM ORG_ORGN_INFO_MST WHERE ORGN_LVL_CD = '20' AND ORGN_NM LIKE '%' || #{searchAgentSale} || '%'))
+				</if>
+				<if test="searchSubStatus != null and searchSubStatus != ''">
+				    	AND A.SUB_STATUS = #{searchSubStatus}
+		        </if>
+						
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+	    
+    </select>
+    
+    <!--실시간선불관리대상 목록조회엑셀출력 -->
+     <select id="getAgencyDataInfoMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">       
+     	SELECT /*+ INDEX_DESC(A PPS_REAL_STATS_CDR_IDX)*/
+         		NVL(A.CONTRACT_NUM, '-') CONTRACT_NUM,
+         		NVL(SUBSCRIBER_NO, '-') SUBSCRIBER_NO,
+		        NVL(A.SUB_LINK_NAME, '-') SUB_LINK_NAME,
+		        NVL(AD_NATION, '-') AD_NATION,
+		        NVL(DECODE(AD_NATION, '', '미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', AD_NATION)), '-') AD_NATION_NM,
+		        NVL(SOC, '-') SOC,
+		        NVL((SELECT RATE_NM SERVICE_NM
+		          FROM MSP_RATE_MST
+		         WHERE RATE_CD = SOC
+		         and rownum = 1), '-') AS SERVICE_NM,
+		        NVL(A.SUB_STATUS, '-') SUB_STATUS,
+		        NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', A.SUB_STATUS), '-') AS SUB_STATUS_NM,
+		        NVL(TO_CHAR(ENTER_DATE, 'YYYY-MM-DD'), '-') ENTER_DATE,
+		        NVL(TO_CHAR(STATUS_STOP_DT, 'YYYY-MM-DD'), '-') STATUS_STOP_DT,
+		        NVL(TO_CHAR(STATUS_CANCEL_DT, 'YYYY-MM-DD'), '-') STATUS_CANCEL_DT,
+		        NVL(TO_CHAR(BASIC_EXPIRE , 'YYYY-MM-DD'), '-') BASIC_EXPIRE,
+		        NVL(A.MODEL_NAME, '-') MODEL_NAME,
+		        NVL(USE_TERM, 0) USE_TERM,
+		        NVL(TO_CHAR(LAST_BASIC_CHG_DT , 'YYYY-MM-DD'), '-') LAST_BASIC_CHG_DT,
+		        NVL(AGENT_ID, '-') AGENT_ID,
+		        NVL(F_GET_AGENT_NM(AGENT_ID), '-') AGENT_NM,
+		        NVL(AGENT_SALE_ID, '-') AGENT_SALE_ID ,
+		        NVL(F_GET_AGENT_NM(AGENT_SALE_ID), '-') AGENT_SALE_NM,
+		        DECODE(VIZA_FLAG, 'Y', 'Y', '-') VIZA_FLAG,
+		        NVL(BASIC_REMAINS, 0) BASIC_REMAINS,
+		        NVL(TRY_RCG_CNT, 0) TRY_RCG_CNT,
+		        NVL(TRY_RCG_CHARGE, 0) TRY_RCG_CHARGE,
+		        NVL(RCG_EDIT_CHARGE, 0) RCG_EDIT_CHARGE,
+		        NVL(RCG_FREE_CHARGE, 0) RCG_FREE_CHARGE,
+		        NVL(RCG_PAY_CHARGE, 0) RCG_PAY_CHARGE,
+		        NVL(RCG_FREE_CANCEL_CHARGE, 0) RCG_FREE_CANCEL_CHARGE,
+		        NVL(RCG_PAY_CANCEL_CHARGE, 0) RCG_PAY_CANCEL_CHARGE,
+		        NVL(TOT_RCG_CHARGE, 0) TOT_RCG_CHARGE,
+		        NVL(USE_CNT, 0) USE_CNT,
+		        NVL(ROUND(USE_DUR, 2), 0) USE_DUR,
+		        NVL(USE_CHARGE, 0) USE_CHARGE,
+		        NVL(ROUND(USE_PKT, 2), 0) USE_PKT,
+		        NVL(ROUND(VOC_N_DUR, 2), 0) VOC_N_DUR,
+		        NVL(VOC_N_CHARGE, 0) VOC_N_CHARGE,
+		        NVL(ROUND(VOC_I_DUR, 2), 0) VOC_I_DUR,
+		        NVL(VOC_I_CHARGE, 0) VOC_I_CHARGE,
+		        NVL(SMS_N_CNT, 0) SMS_N_CNT,
+		        NVL(SMS_N_CHARGE, 0) SMS_N_CHARGE,
+		        NVL(SMS_I_CNT, 0) SMS_I_CNT,
+		        NVL(SMS_I_CHARGE, 0) SMS_I_CHARGE,
+		        NVL(ROUND(PKT_N_DUR, 2), 0) PKT_N_DUR,
+		        NVL(PKT_N_CHARGE, 0) PKT_N_CHARGE,
+		        NVL(PKT_N_CHARGE, 0) + NVL(PKT_I_CHARGE, 0) TOT_PKT_CHARGE,
+		        NVL(DAY_CNT, 0) DAY_CNT,
+		        NVL(DAY_CHARGE, 0) DAY_CHARGE,
+		        NVL(ETC_CNT, 0) ETC_CNT,
+		        NVL(ETC_CHARGE, 0) ETC_CHARGE
+		 FROM PPS_REAL_STATS_CDR A,
+		 	  MSP_JUO_SUB_INFO B
+		 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		 	   AND ENTER_DATE > TO_DATE('20140101', 'YYYYMMDD')
+		 	   AND AGENT_ID = #{loginAgentId}
+		 
+		 		<if test="searchStartDt != null and searchStartDt != '' ">
+					    AND  ENTER_DATE >= to_date(#{searchStartDt}, 'yyyymmdd')		    
+				</if>
+				<if test="searchEndDt != null and searchEndDt != '' ">
+						AND  ENTER_DATE &lt; to_date(#{searchEndDt}, 'yyyymmdd')+1			    
+				</if>
+				<if test="searchCancelDate != null and searchCancelDate != '' ">
+                        AND  STATUS_CANCEL_DT >= to_date(#{searchCancelDate} || '01', 'yyyymmdd')
+						AND  STATUS_CANCEL_DT &lt; last_day(to_date(#{searchCancelDate}, 'yyyymm'))+1					    
+			    </if>
+			    <if test="searchAgentSale != null and searchAgentSale != ''">
+					    AND (AGENT_SALE_ID LIKE '%' || #{searchAgentSale} || '%' OR AGENT_SALE_ID IN (SELECT ORGN_ID FROM ORG_ORGN_INFO_MST WHERE ORGN_LVL_CD = '20' AND ORGN_NM LIKE '%' || #{searchAgentSale} || '%'))
+				</if>
+				<if test="searchSubStatus != null and searchSubStatus != ''">
+				    	AND A.SUB_STATUS = #{searchSubStatus}
+		        </if>
+    </select>
+           
+</mapper>

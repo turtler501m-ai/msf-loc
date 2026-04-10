@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.cs.mapper.CsBookingMapper">
+
+    <!--예약상담제 공통코드 조회-->
+    <select id="selectBookingCd" parameterType="com.ktmmobile.mcp.msp.dto.CmnGrpCdMst" resultType="com.ktmmobile.mcp.msp.dto.CmnGrpCdMst">
+        /*CsBookingMapper.selectBookingCd*/
+        SELECT
+            GRP_ID,
+            CD_VAL,
+            CD_DSC,
+            ETC1,
+            ETC2
+        FROM CMN_GRP_CD_MST@DL_MSP
+        WHERE NVL(USG_YN, 'N') = 'Y'
+        AND GRP_ID = #{grpId}
+        <if test="etc2 != null and etc2 != ''">
+        AND ETC2 = #{etc2}
+        </if>
+        ORDER BY ETC1
+    </select>
+
+    <!--특정 예약 일시에 예약가능 인원 수 존재여부 확인-->
+    <select id="checkBookingAvailableByDt" resultType="java.lang.String" parameterType="java.lang.String">
+        /*CsBookingMapper.checkBookingAvailableByDt*/
+        SELECT
+            CASE WHEN SUM(PER_CNT - RES_CNT) <![CDATA[>]]> 0 THEN 'Y' ELSE 'N' END AS REMAIN_YN
+        FROM
+        (
+            SELECT
+                A.CS_RES_DT,
+                A.CS_RES_TM,
+                A.PER_CNT,
+                FN_GET_CODENM@DL_MSP('VOC0024',A.CS_RES_TM)AS CS_RES_TM_NM,
+                (SELECT COUNT(CS_RES_SEQ) FROM MSP_CS_RES_CSTMR@DL_MSP B WHERE B.CS_RES_DT=#{csResDt} AND B.CS_RES_TM= A.CS_RES_TM AND NVL(B.DEL_YN, 'N') != 'Y') AS RES_CNT
+            FROM MSP_CS_RES@DL_MSP A
+            WHERE A.CS_RES_DT = #{csResDt}
+        )
+        WHERE TO_DATE(#{csResDt}, 'YYYYMMDD') <![CDATA[>]]> SYSDATE
+    </select>
+
+    <!--특정 예약 일시에 해당하는 예약시간대 조회-->
+    <select id="getBookingTimeList" resultType="com.ktmmobile.mcp.cs.dto.BookingDateDto" parameterType="com.ktmmobile.mcp.cs.dto.BookingDateDto">
+        /*CsBookingMapper.getBookingTimeList*/
+        SELECT
+            CS_RES_DT,
+            CS_RES_TM,
+            CS_RES_TM_NM,
+            CASE WHEN (PER_CNT-RES_CNT) <![CDATA[<=]]> 0 THEN 'N'
+                 WHEN TO_DATE((CS_RES_DT),'YYYYMMDD') <![CDATA[<=]]> SYSDATE THEN 'N'
+                 ELSE 'Y' END AS REMAIN_YN
+        FROM
+        (
+            SELECT
+                 A.CS_RES_DT,
+                 A.CS_RES_TM,
+                 A.PER_CNT,
+                 FN_GET_CODENM@DL_MSP('VOC0024',A.CS_RES_TM)AS CS_RES_TM_NM,
+                 (SELECT COUNT(CS_RES_SEQ) FROM MSP_CS_RES_CSTMR@DL_MSP B WHERE B.CS_RES_DT=#{csResDt} AND B.CS_RES_TM= A.CS_RES_TM AND NVL(B.DEL_YN, 'N') != 'Y') AS RES_CNT
+            FROM MSP_CS_RES@DL_MSP A
+            WHERE A.CS_RES_DT = #{csResDt}
+            <if test="csResTm != null and csResTm != ''">
+            AND A.CS_RES_TM = #{csResTm}
+            </if>
+        )
+        ORDER BY CS_RES_TM
+    </select>
+
+    <!--  사용자 예약 가능여부 체크  -->
+    <select id="overNum" resultType="java.util.Map" parameterType="com.ktmmobile.mcp.cs.dto.BookingUserDto" >
+        /*CsBookingMapper.overNum*/
+        SELECT
+            COUNT(CS_RES_SEQ) AS CNT,
+            (CASE WHEN (TO_DATE(#{csResDt}, 'YYYYMMDD')<![CDATA[<=]]> SYSDATE) THEN 'N'
+                  ELSE 'Y' END) AS POSSIBLE
+        FROM MSP_CS_RES_CSTMR@DL_MSP
+        WHERE CS_RES_DT=#{csResDt}
+        AND CONTRACT_NUM = #{contractNum}
+        AND NVL(DEL_YN,'N')!='Y'
+    </select>
+
+    <!--예약상담 접수하기-->
+    <insert id="insertBooking" parameterType="com.ktmmobile.mcp.cs.dto.BookingUserDto">
+        /*CsBookingMapper.insertBooking*/
+        <selectKey keyProperty="csResSeq,regstDt,regstDttm" resultType="com.ktmmobile.mcp.cs.dto.BookingUserDto" order="BEFORE">
+            SELECT
+                 (TO_CHAR(SYSDATE,'YYYYMMDD')||TRIM(TO_CHAR(SQ_CS_RES_CSTMR.NEXTVAL@DL_MSP, '0000')))AS csResSeq,
+                 TO_CHAR(SYSDATE,'YYYYMMDD') AS regstDt,
+                 SYSDATE AS regstDttm
+            FROM DUAL
+        </selectKey>
+            INSERT INTO MSP_CS_RES_CSTMR@DL_MSP(
+                CS_RES_SEQ,
+                CS_RES_DT,
+                CS_RES_TM,
+                USR_ID,
+                CONTRACT_NUM,
+                VOC_FIR,
+                VOC_SEC,
+                VOC_THI,
+                VOC_DTL,
+                CS_SUBJECT,
+                CS_CONTENT,
+                REGST_DT,
+                REGST_DTTM,
+                CS_STAT_CD
+            ) VALUES (
+                #{csResSeq},
+                #{csResDt},
+                #{csResTm},
+                #{usrId},
+                #{contractNum},
+                #{vocFir},
+                #{vocSec},
+                #{vocThi},
+                #{vocDtl},
+                #{csSubject},
+                #{csContent},
+                #{regstDt},
+                #{regstDttm},
+                'RCP'
+            )
+    </insert>
+
+    <!-- 예약상담 접수 연동 실패로 예약상담 삭제 처리 (DEL_YN 컬럼 Y로 업데이트) -->
+    <update id="updateBookingInfo" parameterType="com.ktmmobile.mcp.cs.dto.BookingUserDto">
+        /*CsBookingMapper.updateDelYn*/
+        UPDATE MSP_CS_RES_CSTMR@DL_MSP
+        SET DEL_YN='Y', CS_STAT_CD=NULL
+        WHERE CS_RES_SEQ=#{csResSeq}
+    </update>
+
+
+    <!--  예약한 목록 갯수 확인 -->
+    <select id="bookingTotalCount" parameterType="com.ktmmobile.mcp.cs.dto.BookingUserDto" resultType="Integer">
+        /*CsBookingMapper.bookingTotalCount*/
+        SELECT
+            COUNT(CS_RES_SEQ)AS CNT
+        FROM MSP_CS_RES_CSTMR@DL_MSP
+        WHERE  1=1
+        AND USR_ID= #{usrId}
+        AND NVL(DEL_YN,'N')!='Y'
+        AND TO_DATE(CS_RES_DT || '235959','YYYYMMDDHH24MISS')<![CDATA[>=]]> ADD_MONTHS(SYSDATE,-3)
+    </select>
+
+
+    <!-- 상담 예약 결과보기-->
+    <select id="bookingList" resultType="com.ktmmobile.mcp.cs.dto.BookingUserDto" parameterType="com.ktmmobile.mcp.cs.dto.BookingUserDto">
+        /*CsBookingMapper.bookingList*/
+        SELECT
+            A.CS_RES_SEQ,
+            TO_CHAR(TO_DATE(A.REGST_DT, 'YYYYMMDD'), 'YYYY.MM.DD')AS REGST_DT,
+            TO_CHAR(TO_DATE(A.CS_RES_DT, 'YYYYMMDD'), 'YYYY.MM.DD')AS CS_RES_DT,
+            A.VOC_THI,
+            A.CS_SUBJECT,
+            A.CS_CONTENT,
+            B.SUBSCRIBER_NO AS unSvcNo,
+            FN_GET_CODENM@DL_MSP('VOC0024',A.CS_RES_TM)AS CS_RES_TM,
+            FN_GET_CODENM@DL_MSP('VOC0028',A.VOC_DTL)AS VOC_DTL,
+            (CASE WHEN  A.CS_STAT_CD='TRS' THEN '진행중'
+                  WHEN A.CS_STAT_CD='COM' THEN '완료'
+                  ELSE '미처리'
+                  END) AS CS_STAT_CD
+        FROM MSP_CS_RES_CSTMR@DL_MSP A ,
+             MSP_JUO_SUB_INFO@DL_MSP B
+        WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+        AND USR_ID=#{usrId}
+        AND NVL(DEL_YN,'N')!='Y'
+        AND TO_DATE(CS_RES_DT || '235959','YYYYMMDDHH24MISS')<![CDATA[>=]]> ADD_MONTHS(SYSDATE,-3)
+        ORDER BY REGST_DTTM DESC
+    </select>
+
+</mapper>

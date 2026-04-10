@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.pps.sttcmgmt.mapper.PpsAgencySttcMgmtMapper">
+
+	 <!-- 대리점  개통현황 목록조회 -->
+    <select id="getAgencySttcOpenMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" /> 
+         	
+			SELECT
+			<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+				NVL(A.SOC,'-') SOC, NVL(DECODE(A.SOC,'', '', NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.SOC AND ROWNUM = 1), A.SOC)),'-') SOC_NM,
+			</if>
+			<if test="searchSoc == null or searchSoc == '' or searchSoc ==0">
+			     'ALL' SOC_NM,
+			</if>
+			
+			NVL(A.AGENT_ID,'-') AGENT_ID, NVL(FN_GET_ORGNM(A.AGENT_ID),'-') AGENT_NM, 
+
+			<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+				NVL(TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'),'-') STATUS_DATE,
+			</if>
+			<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc != 0"  >
+				NVL(TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM'),'-') STATUS_DATE,
+			 </if>
+			
+		          NVL(SUM(DECODE(B.SUB_STATUS, 'A', 1, 0)),0) OPEN_CNT, 
+			      NVL(SUM(DECODE(B.SUB_STATUS, 'S', 1, 0)),0) STOP_CNT, 
+			      NVL(SUM(DECODE(B.SUB_STATUS, 'C', 1, 0)),0) CANCEL_CNT,
+			      COUNT(*) TOTAL_OPEN_CNT
+		    FROM PPS_CUSTOMER A, 
+		    	 MSP_JUO_SUB_INFO B,
+		    	 MSP_RATE_MST C
+		    WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		    	  AND A.SOC = C.RATE_CD
+		    	  AND C.PAY_CL_CD = 'PP'
+		          AND B.LST_COM_ACTV_DATE >= #{startDt}
+                  AND B.LST_COM_ACTV_DATE &lt;= #{endDt}
+		    AND  AGENT_ID =	#{searchAgentId}
+
+		     <if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+				    GROUP BY TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM')
+			</if>
+			<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+				 	 GROUP BY TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD')
+			 </if>
+           			<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+		 			,A.SOC
+			</if>
+
+			,A.AGENT_ID
+
+			ORDER BY STATUS_DATE DESC
+          <include refid="com.ktis.msp.cmn.include.paging-end2" />   
+	    
+    </select>
+
+    <!--대리점  개통현황 목록조회 엑셀출력 -->
+    <select id="getAgencySttcOpenMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">   
+    		SELECT
+			<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+				NVL(A.SOC,'-') SOC, NVL(DECODE(A.SOC,'', '', NVL((SELECT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.SOC AND ROWNUM = 1), A.SOC)),'-') SOC_NM,
+			</if>
+			<if test="searchSoc == null or searchSoc == '' or searchSoc ==0">
+			     'ALL' SOC_NM,
+			</if>
+			
+			NVL(A.AGENT_ID,'-') AGENT_ID, NVL(FN_GET_ORGNM(A.AGENT_ID),'-') AGENT_NM, 
+
+			<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+				NVL(TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'),'-') STATUS_DATE,
+			</if>
+			<if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc != 0"  >
+				NVL(TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM'),'-') STATUS_DATE,
+			 </if>
+			
+		          NVL(SUM(DECODE(B.SUB_STATUS, 'A', 1, 0)),0) OPEN_CNT, 
+			      NVL(SUM(DECODE(B.SUB_STATUS, 'S', 1, 0)),0) STOP_CNT, 
+			      NVL(SUM(DECODE(B.SUB_STATUS, 'C', 1, 0)),0) CANCEL_CNT,
+			      COUNT(*) TOTAL_OPEN_CNT
+		    FROM PPS_CUSTOMER A, 
+		    	 MSP_JUO_SUB_INFO B,
+		    	 MSP_RATE_MST C
+		    WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		    	  AND A.SOC = C.RATE_CD
+		    	  AND C.PAY_CL_CD = 'PP'
+		          AND B.LST_COM_ACTV_DATE >= #{startDt}
+                  AND B.LST_COM_ACTV_DATE &lt;= #{endDt}
+		    AND  AGENT_ID =	#{searchAgentId}
+
+		     <if test="searchReqSrc != null and searchReqSrc != '' and searchReqSrc !=0"  >
+				    GROUP BY TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM')
+			</if>
+			<if test="searchReqSrc == null or searchReqSrc == '' or searchReqSrc ==0"  >
+				 	 GROUP BY TO_CHAR(TO_DATE(B.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD')
+			 </if>
+           			<if test="searchSoc != null and searchSoc != '' and searchSoc !=0">
+		 			,A.SOC
+			</if>
+
+			,A.AGENT_ID
+
+			ORDER BY STATUS_DATE DESC
+    </select>
+    
+    <!--대리점  가입자이용통계 목록조회  -->
+     <select id="getAgencySttcSubscribersMgmtList" parameterType="hashmap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">       
+         <include refid="com.ktis.msp.cmn.include.paging-start" />
+         
+         SELECT 
+                       B.CONTRACT_NUM,
+                       B.SUB_LINK_NAME,
+                       B.AD_NATION,
+                       DECODE(B.AD_NATION, '', '미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', B.AD_NATION)) AD_NATION_NM,
+                       B.SOC,
+                       (SELECT RATE_NM SERVICE_NM
+                          FROM MSP_RATE_MST
+                         WHERE RATE_CD = B.SOC
+                           and rownum = 1) AS SERVICE_NM,
+                       B.FIRST_SOC,
+                       (SELECT RATE_NM SERVICE_NM
+                          FROM MSP_RATE_MST
+                         WHERE RATE_CD = B.SOC
+                           and rownum = 1) AS FIRST_SERVICE_NM,
+                       B.SUB_STATUS,
+                       F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', B.SUB_STATUS) AS SUB_STATUS_NM,
+                       TO_CHAR(B.ENTER_DATE, 'YYYY-MM-DD')AS ENTER_DATE,
+                       TO_CHAR(B.STATUS_STOP_DT, 'YYYY-MM-DD')AS STATUS_STOP_DT,
+                       TO_CHAR(B.STATUS_CANCEL_DT, 'YYYY-MM-DD')AS STATUS_CANCEL_DT,
+                       TO_CHAR(B.BASIC_EXPIRE, 'YYYY-MM-DD') AS BASIC_EXPIRE,
+                       B.MODEL_NAME,
+                       B.USE_TERM,
+                       TO_CHAR(B.LAST_BASIC_CHG_DT, 'YYYY-MM-DD')AS LAST_BASIC_CHG_DT,
+                       AGENT_ID,
+                       F_GET_AGENT_NM(B.AGENT_ID) AGENT_NM,
+                       NVL(B.AGENT_SALE_ID, '') AGENT_SALE_ID ,
+                       F_GET_AGENT_NM(B.AGENT_SALE_ID) AGENT_SALE_NM,
+                       BASIC_REMAINS,
+                       TRY_RCG_CNT,
+                       TRY_RCG_CHARGE,
+                       RCG_EDIT_CHARGE,
+                       RCG_FREE_CHARGE,
+                       RCG_PAY_CHARGE,
+                       RCG_FREE_CANCEL_CHARGE,
+                       RCG_PAY_CANCEL_CHARGE,
+                       TOT_RCG_CNT,
+                       TOT_RCG_CHARGE,
+                       RCG_CARD_CHARGE,
+                       RCG_CMS_CHARGE,
+                       RCG_VAC_CHARGE,
+                       RCG_POS_CHARGE,
+                       RCG_ETC_CHARGE,
+                       USE_CNT,
+                       USE_DUR,
+                       USE_CHARGE,
+                       USE_PKT,
+                       VOC_N_DUR,
+                       VOC_N_CHARGE,
+                       VOC_I_DUR,
+                       VOC_I_CHARGE,
+                       TOT_VOC_DUR,
+                       TOT_VOC_CHARGE,
+                       VID_N_DUR,
+                       VID_N_CHARGE,
+                       VID_I_DUR,
+                       VID_I_CHARGE,
+                       TOT_VID_DUR,
+                       TOT_VID_CHARGE,
+                       SMS_N_CNT,
+                       SMS_N_CHARGE,
+                       SMS_I_CNT,
+                       SMS_I_CHARGE,
+                       TOT_SMS_CNT,
+                       TOT_SMS_CHARGE,
+                       PKT_N_DUR,
+                       PKT_N_CHARGE,
+                       PKT_I_DUR,
+                       PKT_I_CHARGE,
+                       TOT_PKT_DUR,
+                       TOT_PKT_CHARGE,
+                       DAY_CNT,
+                       DAY_CHARGE,
+                       ETC_CNT,
+                       ETC_DUR,
+                       ETC_PKT,
+                       ETC_CHARGE
+                  FROM ( SELECT /*+ INDEX_DESC(C PPS_STATS_CDR_ENTER_DT_IDX)*/
+                  			   CONTRACT_NUM,  
+                               SUM(BASIC_REMAINS) BASIC_REMAINS,
+                               SUM(TRY_RCG_CNT) TRY_RCG_CNT,
+                               SUM(TRY_RCG_CHARGE) TRY_RCG_CHARGE,
+                               SUM(RCG_EDIT_CHARGE) RCG_EDIT_CHARGE,
+                               SUM(RCG_FREE_CHARGE) RCG_FREE_CHARGE,
+                               SUM(RCG_PAY_CHARGE) RCG_PAY_CHARGE,
+                               SUM(RCG_FREE_CANCEL_CHARGE) RCG_FREE_CANCEL_CHARGE,
+                               SUM(RCG_PAY_CANCEL_CHARGE) RCG_PAY_CANCEL_CHARGE,
+                               SUM(TOT_RCG_CNT) TOT_RCG_CNT,
+                               SUM(TOT_RCG_CHARGE) TOT_RCG_CHARGE,
+                               SUM(RCG_CARD_CHARGE) RCG_CARD_CHARGE,
+                               SUM(RCG_CMS_CHARGE) RCG_CMS_CHARGE,
+                               SUM(RCG_VAC_CHARGE) RCG_VAC_CHARGE,
+                               SUM(RCG_POS_CHARGE) RCG_POS_CHARGE,
+                               SUM(RCG_ETC_CHARGE) RCG_ETC_CHARGE,
+                               SUM(USE_CNT) USE_CNT,
+                               SUM(USE_DUR) USE_DUR,
+                               SUM(USE_CHARGE) USE_CHARGE,
+                               SUM(USE_PKT) USE_PKT,
+                               SUM(VOC_N_DUR) VOC_N_DUR,
+                               SUM(VOC_N_CHARGE) VOC_N_CHARGE,
+                               SUM(VOC_I_DUR) VOC_I_DUR,
+                               SUM(VOC_I_CHARGE) VOC_I_CHARGE,
+                               SUM((VOC_N_DUR+VOC_I_DUR)) AS TOT_VOC_DUR,
+                               SUM((VOC_N_CHARGE+VOC_I_CHARGE)) AS TOT_VOC_CHARGE,
+                               SUM(VID_N_DUR) VID_N_DUR,
+                               SUM(VID_N_CHARGE) VID_N_CHARGE,
+                               SUM(VID_I_DUR) VID_I_DUR,
+                               SUM(VID_I_CHARGE) VID_I_CHARGE,
+                               SUM((VID_N_DUR+VID_I_DUR)) AS TOT_VID_DUR,
+                               SUM((VID_N_CHARGE+VID_I_CHARGE)) AS TOT_VID_CHARGE,
+                               SUM(SMS_N_CNT) SMS_N_CNT,
+                               SUM(SMS_N_CHARGE) SMS_N_CHARGE,
+                               SUM(SMS_I_CNT) SMS_I_CNT,
+                               SUM(SMS_I_CHARGE) SMS_I_CHARGE,
+                               SUM((SMS_N_CNT+SMS_I_CNT)) AS TOT_SMS_CNT,
+                               SUM((SMS_N_CHARGE+SMS_I_CHARGE)) AS TOT_SMS_CHARGE,
+                               SUM(PKT_N_DUR) PKT_N_DUR,
+                               SUM(PKT_N_CHARGE) PKT_N_CHARGE,
+                               SUM(PKT_I_DUR) PKT_I_DUR,
+                               SUM(PKT_I_CHARGE) PKT_I_CHARGE,
+                               SUM((PKT_N_DUR+PKT_I_DUR)) AS TOT_PKT_DUR,
+                               SUM((PKT_N_CHARGE+PKT_I_CHARGE)) AS TOT_PKT_CHARGE,
+                               SUM(DAY_CNT) DAY_CNT,
+                               SUM(DAY_CHARGE) DAY_CHARGE,
+                               SUM(ETC_CNT) ETC_CNT,
+                               SUM(ETC_DUR) ETC_DUR,
+                               SUM(ETC_PKT) ETC_PKT,
+                               SUM(ETC_CHARGE) ETC_CHARGE
+                         FROM PPS_STATS_CDR C 
+					     WHERE  ENTER_DATE >= to_date(#{searchDate} || '01', 'yyyymmdd')
+						 		AND  ENTER_DATE &lt; last_day(to_date(#{searchDate}, 'yyyymm'))+1			    
+							    AND  AGENT_ID =	#{searchAgentId}
+                         GROUP BY CONTRACT_NUM
+                        ) A,
+                       (SELECT /*+ INDEX_DESC(D PPS_STATS_CDR_ENTER_DT_IDX)*/
+                       		   CONTRACT_NUM,
+                               SUB_LINK_NAME,
+                               AD_NATION,
+                               SOC,
+                               SUB_STATUS,
+                               ENTER_DATE,
+                               STATUS_STOP_DT,
+                               STATUS_CANCEL_DT,
+                               FIRST_SOC,
+                               BASIC_EXPIRE,
+                               MODEL_NAME,
+                               LAST_BASIC_CHG_DT,
+                               USE_TERM,
+                               NVL(AGENT_ID, '') AGENT_ID,
+                               NVL(AGENT_SALE_ID, '') AGENT_SALE_ID
+                        FROM PPS_STATS_CDR D
+                        WHERE STAT_MONTH = (SELECT MAX(STAT_MONTH) STAT_MONTH_MAX FROM PPS_STATS_CDR)
+						    AND  ENTER_DATE >= to_date(#{searchDate} || '01', 'yyyymmdd')
+							AND  ENTER_DATE &lt; last_day(to_date(#{searchDate}, 'yyyymm'))+1			    
+							AND  AGENT_ID =	#{searchAgentId}				    
+
+                        ) B
+                 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM	
+          
+         <include refid="com.ktis.msp.cmn.include.paging-end2" />    
+    
+    </select>
+    <!--대리점  가입자이용통계 목록조회 엑셀출력 -->
+    <select id="getAgencySttcSubscribersMgmtListExcel" parameterType="hashmap" resultType="hashmap" fetchSize="10">  
+      SELECT 
+                       NVL(B.CONTRACT_NUM, '-') CONTRACT_NUM,
+                       NVL(B.SUB_LINK_NAME, '-') SUB_LINK_NAME,
+                       NVL(B.AD_NATION, '-') AD_NATION,
+                       NVL(DECODE(B.AD_NATION, '', '미등록', F_GET_KT_CODE_NM('PPS_CUSTOMER', 'AD_NATION', B.AD_NATION)), '-') AD_NATION_NM,
+                       NVL(B.SOC, '-') SOC,
+                       NVL((SELECT RATE_NM SERVICE_NM
+                          FROM MSP_RATE_MST
+                         WHERE RATE_CD = B.SOC
+                           and rownum = 1), '-') AS SERVICE_NM,
+                       NVL(B.FIRST_SOC, '-') FIRST_SOC,
+                       NVL((SELECT RATE_NM SERVICE_NM
+                          FROM MSP_RATE_MST
+                         WHERE RATE_CD = B.SOC
+                           and rownum = 1), '-') AS FIRST_SERVICE_NM,
+                       NVL(B.SUB_STATUS, '-') SUB_STATUS,
+                       NVL(F_GET_KT_CODE_NM('PPS_CUSTOMER', 'SUB_STATUS', B.SUB_STATUS), '-') AS SUB_STATUS_NM,
+                       NVL(TO_CHAR(B.ENTER_DATE, 'YYYY-MM-DD'), '-') AS ENTER_DATE,
+                       NVL(TO_CHAR(B.STATUS_STOP_DT, 'YYYY-MM-DD'), '-') AS STATUS_STOP_DT,
+                       NVL(TO_CHAR(B.STATUS_CANCEL_DT, 'YYYY-MM-DD'), '-') AS STATUS_CANCEL_DT,
+                       NVL(TO_CHAR(B.BASIC_EXPIRE, 'YYYY-MM-DD'), '-') AS BASIC_EXPIRE,
+                       NVL(B.MODEL_NAME, '-') MODEL_NAME,
+                       NVL(B.USE_TERM, '0') USE_TERM,
+                       NVL(TO_CHAR(B.LAST_BASIC_CHG_DT, 'YYYY-MM-DD'), '-') AS LAST_BASIC_CHG_DT,
+                       NVL(AGENT_ID, '-') AGENT_ID,
+                       NVL(F_GET_AGENT_NM(B.AGENT_ID), '-') AGENT_NM,
+                       NVL(B.AGENT_SALE_ID, '-') AGENT_SALE_ID ,
+                       NVL(F_GET_AGENT_NM(B.AGENT_SALE_ID), '-') AGENT_SALE_NM,
+                       BASIC_REMAINS,
+                       TRY_RCG_CNT,
+                       TRY_RCG_CHARGE,
+                       RCG_EDIT_CHARGE,
+                       RCG_FREE_CHARGE,
+                       RCG_PAY_CHARGE,
+                       RCG_FREE_CANCEL_CHARGE,
+                       RCG_PAY_CANCEL_CHARGE,
+                       TOT_RCG_CNT,
+                       TOT_RCG_CHARGE,
+                       RCG_CARD_CHARGE,
+                       RCG_CMS_CHARGE,
+                       RCG_VAC_CHARGE,
+                       RCG_POS_CHARGE,
+                       RCG_ETC_CHARGE,
+                       USE_CNT,
+                       USE_DUR,
+                       USE_CHARGE,
+                       USE_PKT,
+                       VOC_N_DUR,
+                       VOC_N_CHARGE,
+                       VOC_I_DUR,
+                       VOC_I_CHARGE,
+                       TOT_VOC_DUR,
+                       TOT_VOC_CHARGE,
+                       VID_N_DUR,
+                       VID_N_CHARGE,
+                       VID_I_DUR,
+                       VID_I_CHARGE,
+                       TOT_VID_DUR,
+                       TOT_VID_CHARGE,
+                       SMS_N_CNT,
+                       SMS_N_CHARGE,
+                       SMS_I_CNT,
+                       SMS_I_CHARGE,
+                       TOT_SMS_CNT,
+                       TOT_SMS_CHARGE,
+                       PKT_N_DUR,
+                       PKT_N_CHARGE,
+                       PKT_I_DUR,
+                       PKT_I_CHARGE,
+                       TOT_PKT_DUR,
+                       TOT_PKT_CHARGE,
+                       DAY_CNT,
+                       DAY_CHARGE,
+                       ETC_CNT,
+                       ETC_DUR,
+                       ETC_PKT,
+                       ETC_CHARGE
+                  FROM ( SELECT /*+ INDEX_DESC(C PPS_STATS_CDR_ENTER_DT_IDX)*/
+                  			   CONTRACT_NUM,  
+                               SUM(BASIC_REMAINS) BASIC_REMAINS,
+                               SUM(TRY_RCG_CNT) TRY_RCG_CNT,
+                               SUM(TRY_RCG_CHARGE) TRY_RCG_CHARGE,
+                               SUM(RCG_EDIT_CHARGE) RCG_EDIT_CHARGE,
+                               SUM(RCG_FREE_CHARGE) RCG_FREE_CHARGE,
+                               SUM(RCG_PAY_CHARGE) RCG_PAY_CHARGE,
+                               SUM(RCG_FREE_CANCEL_CHARGE) RCG_FREE_CANCEL_CHARGE,
+                               SUM(RCG_PAY_CANCEL_CHARGE) RCG_PAY_CANCEL_CHARGE,
+                               SUM(TOT_RCG_CNT) TOT_RCG_CNT,
+                               SUM(TOT_RCG_CHARGE) TOT_RCG_CHARGE,
+                               SUM(RCG_CARD_CHARGE) RCG_CARD_CHARGE,
+                               SUM(RCG_CMS_CHARGE) RCG_CMS_CHARGE,
+                               SUM(RCG_VAC_CHARGE) RCG_VAC_CHARGE,
+                               SUM(RCG_POS_CHARGE) RCG_POS_CHARGE,
+                               SUM(RCG_ETC_CHARGE) RCG_ETC_CHARGE,
+                               SUM(USE_CNT) USE_CNT,
+                               SUM(USE_DUR) USE_DUR,
+                               SUM(USE_CHARGE) USE_CHARGE,
+                               SUM(USE_PKT) USE_PKT,
+                               SUM(VOC_N_DUR) VOC_N_DUR,
+                               SUM(VOC_N_CHARGE) VOC_N_CHARGE,
+                               SUM(VOC_I_DUR) VOC_I_DUR,
+                               SUM(VOC_I_CHARGE) VOC_I_CHARGE,
+                               SUM((VOC_N_DUR+VOC_I_DUR)) AS TOT_VOC_DUR,
+                               SUM((VOC_N_CHARGE+VOC_I_CHARGE)) AS TOT_VOC_CHARGE,
+                               SUM(VID_N_DUR) VID_N_DUR,
+                               SUM(VID_N_CHARGE) VID_N_CHARGE,
+                               SUM(VID_I_DUR) VID_I_DUR,
+                               SUM(VID_I_CHARGE) VID_I_CHARGE,
+                               SUM((VID_N_DUR+VID_I_DUR)) AS TOT_VID_DUR,
+                               SUM((VID_N_CHARGE+VID_I_CHARGE)) AS TOT_VID_CHARGE,
+                               SUM(SMS_N_CNT) SMS_N_CNT,
+                               SUM(SMS_N_CHARGE) SMS_N_CHARGE,
+                               SUM(SMS_I_CNT) SMS_I_CNT,
+                               SUM(SMS_I_CHARGE) SMS_I_CHARGE,
+                               SUM((SMS_N_CNT+SMS_I_CNT)) AS TOT_SMS_CNT,
+                               SUM((SMS_N_CHARGE+SMS_I_CHARGE)) AS TOT_SMS_CHARGE,
+                               SUM(PKT_N_DUR) PKT_N_DUR,
+                               SUM(PKT_N_CHARGE) PKT_N_CHARGE,
+                               SUM(PKT_I_DUR) PKT_I_DUR,
+                               SUM(PKT_I_CHARGE) PKT_I_CHARGE,
+                               SUM((PKT_N_DUR+PKT_I_DUR)) AS TOT_PKT_DUR,
+                               SUM((PKT_N_CHARGE+PKT_I_CHARGE)) AS TOT_PKT_CHARGE,
+                               SUM(DAY_CNT) DAY_CNT,
+                               SUM(DAY_CHARGE) DAY_CHARGE,
+                               SUM(ETC_CNT) ETC_CNT,
+                               SUM(ETC_DUR) ETC_DUR,
+                               SUM(ETC_PKT) ETC_PKT,
+                               SUM(ETC_CHARGE) ETC_CHARGE
+                         FROM PPS_STATS_CDR C
+					     WHERE  ENTER_DATE >= to_date(#{searchDate} || '01', 'yyyymmdd')
+						 	AND  ENTER_DATE &lt; last_day(to_date(#{searchDate}, 'yyyymm'))+1			    
+							AND  AGENT_ID =	#{searchAgentId}
+                         GROUP BY CONTRACT_NUM
+                        ) A,
+                       (SELECT /*+ INDEX_DESC(D PPS_STATS_CDR_ENTER_DT_IDX)*/
+                       		   CONTRACT_NUM,
+                               SUB_LINK_NAME,
+                               AD_NATION,
+                               SOC,
+                               SUB_STATUS,
+                               ENTER_DATE,
+                               STATUS_STOP_DT,
+                               STATUS_CANCEL_DT,
+                               FIRST_SOC,
+                               BASIC_EXPIRE,
+                               MODEL_NAME,
+                               LAST_BASIC_CHG_DT,
+                               USE_TERM,
+                               NVL(AGENT_ID, '') AGENT_ID,
+                               NVL(AGENT_SALE_ID, '') AGENT_SALE_ID
+                        FROM PPS_STATS_CDR D
+                        WHERE STAT_MONTH = (SELECT MAX(STAT_MONTH) STAT_MONTH_MAX FROM PPS_STATS_CDR)
+						    AND  ENTER_DATE >= to_date(#{searchDate} || '01', 'yyyymmdd')
+							AND  ENTER_DATE &lt; last_day(to_date(#{searchDate}, 'yyyymm'))+1			    
+							AND  AGENT_ID =	#{searchAgentId}				    
+                        ) B
+                 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM	
+    </select>
+    
+
+</mapper>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.ptnr.ptnrmgmt.mapper.PtnrInsrMemberMapper">
+	
+	<!-- 보험가입자조회 -->
+	<select id="getInsrMemberList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInsrMemberVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* ptnrInsrMapper.getInsrMemberList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  A.CONTRACT_NUM
+		        , A.CUST_NM
+		        , A.CTN
+		        , A.RATE_CD
+		        , A.RATE_NM
+		        , A.INSR_CD
+		        , FN_GET_CODENM('CMN0246', A.INSR_CD) AS INSR_NM
+		        , A.EFCT_STRT_DT
+		        , A.EFCT_END_DT
+		        , A.PYMN_YN
+		        , A.BIRTH_DT
+		        , A.MINOR_AGENT_NM
+		        , A.MINOR_AGENT_TEL
+		        , A.OPEN_AGNT_CD
+		        , A.OPEN_AGNT_NM
+		        , FN_GET_AGE('X', A.CONTRACT_NUM) AS AGE
+		FROM    MSP_PARTNER_DONGBU_01 A
+		WHERE   1 = 1
+		<if test="searchBaseDate != null and searchBaseDate != ''">
+			AND     A.SEND_DT = #{searchBaseDate}
+		</if>
+		<if test="searchInsrStatus != null and searchInsrStatus != ''">
+			AND     A.STAT_CD = #{searchInsrStatus}
+		</if>
+		<if test="searchPymnYn != null and searchPymnYn != ''">
+			AND     A.PYMN_YN = #{searchPymnYn}
+		</if>
+		<if test="searchEfctYn != null and searchEfctYn != ''">
+			AND     (CASE WHEN A.SUB_STATUS = 'C' OR A.PYMN_YN = 'N' THEN 'N' ELSE 'Y' END) = #{searchEfctYn}
+		</if>
+		<if test="searchRateCd != null and searchRateCd != ''">
+			AND     A.RATE_CD = #{searchRateCd}
+		</if>
+		<if test="searchCd != null and searchCd != '' and searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchCd == "1"'>
+					AND     UPPER(A.CUST_NM) = #{searchVal}
+				</when>
+				<when test='searchCd == "2"'>
+					AND     A.CONTRACT_NUM = #{searchVal}
+				</when>
+				<when test='searchCd == "3"'>
+					AND     A.CTN = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		<if test="searchInsrCd != null and searchInsrCd != ''">
+			AND     A.INSR_CD = #{searchInsrCd}
+		</if>
+		ORDER BY A.CUST_NM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 가입자이력조회 -->
+	<select id="getInsrHistory" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInsrMemberVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* ptnrInsrMapper.getInsrHistory */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT  A.RATE_CD
+		        , FN_GET_RATENM(A.RATE_CD) AS RATE_NM
+		        , A.INSR_CD
+		        , FN_GET_CODENM('CMN0246', A.INSR_CD) AS INSR_NM
+		        , TO_CHAR(TO_DATE(SUBSTR(A.STRT_DTTM, 1, 8), 'YYYYMMDD') + 1, 'YYYYMMDD') AS EFCT_STRT_DT
+		        , SUBSTR(A.END_DTTM, 1, 8) AS EFCT_END_DT
+		        , (SELECT SUB_LINK_NAME FROM MSP_JUO_SUB_INFO_HIST
+		           WHERE  CONTRACT_NUM = A.CONTRACT_NUM
+		           AND    SVC_CNTR_NO = A.SVC_CNTR_NO
+		           AND    SUB_LINK_NAME IS NOT NULL
+		           AND    ROWNUM = 1) AS CUST_NM
+		FROM    MSP_INSR_MEMBER_MST A
+		WHERE   A.CONTRACT_NUM = #{contractNum}
+		AND     A.INSR_CD = #{insrCd}
+		ORDER BY A.END_DTTM DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 요금제콤보 -->
+	<select id="selectDongbuRate" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrInsrMemberVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* ptnrInsrMapper.selectDongbuRate */
+		SELECT  DISTINCT
+		        A.RATE_CD   AS value
+		        , B.RATE_NM AS text
+		FROM    MSP_PARTNER_RATE_MST A
+		        , MSP_RATE_MST B
+		WHERE   A.RATE_CD = B.RATE_CD
+		AND     A.USE_YN = 'Y'
+		<if test="parnterId != null and parnterId != ''">	
+			AND A.PARTNER_ID = #{parnterId}
+		</if>
+		ORDER BY 2
+	</select>
+</mapper>

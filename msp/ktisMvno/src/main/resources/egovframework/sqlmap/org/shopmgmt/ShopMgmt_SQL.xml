@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.shopmgmt.mapper.ShopMgmtMapper">
+
+	<select id="isExistBizRegNum" parameterType="com.ktis.msp.org.shopmgmt.vo.ShopMgmtVO" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			ORG_ORGN_INFO_MST
+		WHERE
+			BIZ_REG_NUM = #{bizRegNum, jdbcType=VARCHAR}
+	</select>
+	
+	<select id="getMappingShopList" parameterType="com.ktis.msp.org.shopmgmt.vo.ShopMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			/* ShopMgmtMapper.getMappingShopList */
+			SELECT 
+				  A.ORGN_ID
+				, A.ORGN_NM
+				, A.ORGN_STAT_CD
+				, FN_GET_CODENM('CMN0005', A.ORGN_STAT_CD) AS ORGN_STAT_NM
+				, A.BIZ_REG_NUM
+				, A.TELNUM
+				, A.FAX
+				, A.APPL_STRT_DT
+				, A.APPL_CMPLT_DT
+				, B.REL_STRT_DT
+				, B.REL_END_DT
+				, A.RPRSEN_NM
+			FROM ORG_ORGN_INFO_MST A,
+			     ORG_AGNCY_SHOP_REL B
+			WHERE A.ORGN_ID = B.SHOP_ORGN_ID
+			  AND B.REL_END_DT = '99991231235959'
+			  AND B.REL_STAT_CD = 'CFM'
+	 		  AND B.AGNCY_ORGN_ID = #{orgnId}
+	 		ORDER BY
+	 			A.ORGN_ID
+ 			<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+</mapper>

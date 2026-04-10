@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.custMgmt.mapper.CustMgmtMapper">
+
+	<update id="updateRecYn" parameterType="String">
+		/** CustMgmtMapper.updateRecYn */
+	    UPDATE MSP_REQUEST
+	    SET    REC_YN = 'Y'
+	    WHERE REQUEST_KEY= #{requestKey}
+	</update>
+
+
+
+	<select id="getCnslDetail" parameterType="String" resultType="HashMap">
+		SELECT /** CustMgmtMapper.getCnslDetail */
+		        REQ_GBN
+		        , CSTMR_REL
+		        , PROG_GBN
+		        , PROG_STT
+		FROM    MSP_CNSL
+		WHERE   CNSL_KEY =  #{clnsKey}
+	</select>
+
+	<insert id="fileInsertByCust" parameterType="com.ktis.msp.rcp.custMgmt.vo.FileInfoCuVO">
+		/** CustMgmtMapper.fileInsertByCust */
+		INSERT INTO ORG_FILE_MGMT_MST
+		(
+                     REGST_ID    /* 등록자ID */
+                   , REG_DTTM    /* 등록일시 */
+                   , RVISN_ID    /* 수정자ID */
+                   , RVISN_DTTM    /* 수정일시 */
+                   , ATT_DTTM    /* 첨부일시 */
+                   , FILE_NM    /* 파일명 */
+                   , ATT_DSC    /* 첨부설명 */
+                   , ATT_ROUT    /* 첨부경로 */
+                   , ATT_SCTN    /* 업무구분 */
+                   , ORGN_ID    /* SEQ */
+                   , FILE_ID    /* 파일ID */
+                   , CONTRACT_NUM
+		       )
+		VALUES
+			   (
+                     #{regstId, jdbcType=VARCHAR} /* 등록자ID */
+                   , sysdate /* 등록일시 */
+                   , #{rvisnId, jdbcType=VARCHAR} /* 수정자ID */
+                   , SYSDATE /* 수정일시 */
+                   , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') /* 첨부일시 */
+                   , #{fileNm, jdbcType=VARCHAR} /* 파일명 */
+                   , #{attDsc, jdbcType=VARCHAR} /* 첨부설명 */
+                   , #{attRout, jdbcType=VARCHAR} /* 첨부경로 */
+                   , #{attSctn, jdbcType=VARCHAR} /* 업무구분 */
+                   , #{fileSeq, jdbcType=VARCHAR} /* SEQ */
+                   , #{fileId, jdbcType=VARCHAR} /* 파일ID */
+                   , #{contractNum, jdbcType=VARCHAR} /* 파일ID */
+			   )
+	</insert>
+</mapper>

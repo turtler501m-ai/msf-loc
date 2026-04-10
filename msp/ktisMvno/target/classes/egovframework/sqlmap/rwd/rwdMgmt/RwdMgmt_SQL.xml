@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rwd.rwdMgmt.mapper.RwdMgmtMapper">
+	
+	<select id="getRwdProdList" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO">
+		/* RwdMgmtMapper.getRwdProdList */
+		SELECT 
+				A.RATE_CD		AS rwdProdCd
+				, A.RATE_NM		AS rwdProdNm
+				, A.BASE_AMT	AS baseAmt
+				, B.ETC1		AS rwdTypeCd
+		FROM
+				MSP_RATE_MST A ,
+				CMN_GRP_CD_MST B
+		WHERE	A.RATE_CD = B.CD_VAL
+		AND		B.GRP_ID = 'CMN0258'
+		AND		B.USG_YN = 'Y'
+		AND		#{trtmDt} BETWEEN A.APPL_STRT_DT AND A.APPL_END_DT
+		ORDER	BY B.ETC6
+	</select>
+	
+	<select id="chkDupRwdProd" resultType="int">
+		/* RwdMgmtMapper.chkDupRwdProd */
+		SELECT	COUNT(RWD_PROD_CD)
+		FROM	MSP_RWD_MST A
+		WHERE	RWD_PROD_CD = #{rwdProdCd}
+	</select>
+	
+	<insert id="regRwdMst" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO">
+		/* RwdMgmtMapper.regRwdMst */
+		INSERT
+		INTO	MSP_RWD_MST (
+				  RWD_PROD_CD
+				, RWD_PRD
+				, USE_YN
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+		)
+		VALUES (
+				  #{rwdProdCd}
+				, #{rwdPrd}
+				, NVL(#{useYn}, 'Y')
+				, #{sessionUserId}
+				, SYSDATE
+				, #{sessionUserId}
+				, SYSDATE
+		)
+	</insert>
+	
+	<update id="updRwdMst" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO">
+		/* RwdMgmtMapper.updRwdMst */
+		UPDATE MSP_RWD_MST
+		SET		  USE_YN = #{useYn}
+				, RWD_PRD = #{rwdPrd}
+				, RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+		WHERE	RWD_PROD_CD = #{rwdProdCd}
+	</update>
+	
+	<select id="getRwdMstList" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO">
+		/* RwdMgmtMapper.getRwdMstList */
+		SELECT	DISTINCT
+				  A.RATE_CD									 AS rwdProdCd
+				, A.RATE_NM									 AS rwdProdNm
+				, A.BASE_AMT								 AS baseAmt
+				, FN_GET_CODENM('CMN0259', C.RWD_PRD)	     AS rwdPrd
+				, C.USE_YN									 AS useYn
+				, FN_GET_USRNM(C.REGST_ID)					 AS regstId
+				, TO_CHAR(C.REGST_DTTM, 'YYYYMMDDHH24MISS')	 AS regstDttm
+				, FN_GET_USRNM(C.RVISN_ID)					 AS rvisnId
+				, TO_CHAR(C.RVISN_DTTM, 'YYYYMMDDHH24MISS')	 AS rvisnDttm
+				, B.ETC6									 AS ordrNo
+		FROM
+				  MSP_RATE_MST A
+				, CMN_GRP_CD_MST B
+				, MSP_RWD_MST C
+				, MSP_RWD_REL D
+		WHERE	A.RATE_CD = B.CD_VAL
+			AND	B.GRP_ID = 'CMN0258'
+			AND	A.RATE_CD = C.RWD_PROD_CD
+			AND	C.RWD_PROD_CD = D.RWD_PROD_CD(+)
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">
+			AND	D.RPRS_PRDT_ID = #{rprsPrdtId}
+			<if test="applYn != null and applYn != ''">
+				AND	D.APPL_YN = #{applYn}
+			</if>
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND	C.USE_YN = #{useYn}
+		</if>
+			AND	#{trtmDt} BETWEEN A.APPL_STRT_DT AND A.APPL_END_DT
+		ORDER BY B.ETC6
+	</select>
+	
+	<select id="getPrdtListByPrdtNm" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO">
+		/* RwdMgmtMapper.getPrdtListByPrdtNm */
+		SELECT 
+				  C.RWD_PROD_CD		AS rwdProdCd
+				, D.RATE_NM			AS rwdProdNm
+				, B.MNFCT_NM		AS mnfctNm
+				, A.RPRS_PRDT_ID	AS rprsPrdtId
+				, A.PRDT_CODE		AS prdtCode
+				, A.PRDT_NM			AS prdtNm
+		FROM
+				  CMN_INTM_MDL A
+				, ORG_MNFCT_MST B
+				, MSP_RWD_MST C
+				, MSP_RATE_MST D
+		WHERE	A.RPRS_YN ='Y'
+		AND 	A.MNFCT_ID = B.MNFCT_ID
+		AND     A.PRDT_TYPE_CD = '01'
+		AND 	UPPER(A.PRDT_NM) LIKE '%'|| UPPER(#{prdtNm}) ||'%'
+		AND 	C.RWD_PROD_CD = #{rwdProdCd}
+		AND 	C.RWD_PROD_CD = D.RATE_CD
+		AND 	#{trtmDt} BETWEEN D.APPL_STRT_DT AND D.APPL_END_DT
+		ORDER BY A.MNFCT_ID, A.PRDT_CODE, A.PRDT_NM
+	</select>
+	
+	<insert id="regRwdRel" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO">
+		/* RwdMgmtMapper.regRwdRel */
+		INSERT
+		INTO	MSP_RWD_REL (
+				  RWD_PROD_CD
+				, RPRS_PRDT_ID
+				, APPL_YN
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM
+		)
+		VALUES (
+				  #{rwdProdCd}
+				, #{rprsPrdtId}
+				, DECODE(#{applYn}, 1, 'Y', 0, 'N', NVL(#{applYn}, 'Y'))
+				, #{sessionUserId}
+				, SYSDATE
+				, #{sessionUserId}
+				, SYSDATE
+		)
+	</insert>
+	
+	<select id="chkDupRwdPrdt" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO" resultType="int">
+		/* RwdMgmtMapper.chkDupRwdPrdt */
+		SELECT 	COUNT(RWD_PROD_CD)
+		FROM 	MSP_RWD_REL
+		WHERE 	RWD_PROD_CD =  #{rwdProdCd}
+		AND 	RPRS_PRDT_ID = #{rprsPrdtId}
+	</select>
+	
+	<sql id="getRwdRel">
+		SELECT 
+				  C.RWD_PROD_CD							     AS rwdProdCd
+				, D.RATE_NM									 AS rwdProdNm
+				, B.MNFCT_NM								 AS mnfctNm
+				, A.RPRS_PRDT_ID							 AS rprsPrdtId
+				, A.PRDT_CODE								 AS prdtCode
+				, A.PRDT_NM									 AS prdtNm
+				, DECODE(C.APPL_YN, 'Y', 1, 'N', 0)			 AS applYn
+				, C.APPL_YN									 AS applYnNm
+				, FN_GET_USRNM(C.REGST_ID)					 AS regstId
+				, TO_CHAR(C.REGST_DTTM, 'YYYYMMDDHH24MISS')	 AS regstDttm
+				, FN_GET_USRNM(C.RVISN_ID)					 AS rvisnId
+				, TO_CHAR(C.RVISN_DTTM, 'YYYYMMDDHH24MISS')	 AS rvisnDttm
+		FROM
+				  CMN_INTM_MDL A
+				, ORG_MNFCT_MST B
+				, MSP_RWD_REL C
+				, MSP_RATE_MST D
+				, CMN_GRP_CD_MST E
+				, MSP_RWD_MST F
+		WHERE	A.RPRS_YN ='Y'
+		AND 	A.MNFCT_ID = B.MNFCT_ID
+		AND 	C.RPRS_PRDT_ID = A.RPRS_PRDT_ID
+		AND 	C.RWD_PROD_CD = D.RATE_CD
+		AND 	C.RWD_PROD_CD = E.CD_VAL
+		AND 	E.GRP_ID = 'CMN0258'
+		AND 	C.RWD_PROD_CD = F.RWD_PROD_CD
+		<if test="rwdProdCd != null and rwdProdCd != ''">
+			AND 	C.RWD_PROD_CD = #{rwdProdCd}
+		</if>
+		<if test="applYn != null and applYn != ''">
+			AND 	C.APPL_YN = #{applYn}
+		</if>
+		<if test="rprsPrdtId != null and rprsPrdtId != ''">
+			AND 	A.RPRS_PRDT_ID = #{rprsPrdtId}
+		</if>
+		<if test="prdtNm != null and prdtNm != ''">
+			AND 	UPPER(A.PRDT_NM) LIKE '%'|| UPPER(#{prdtNm}) ||'%'
+		</if>
+		<if test="useYn != null and useYn != ''">
+			AND 	F.USE_YN = #{useYn}
+		</if>
+		AND 	#{trtmDt} BETWEEN D.APPL_STRT_DT AND D.APPL_END_DT
+		ORDER BY E.ETC6, A.MNFCT_ID, A.PRDT_CODE, A.PRDT_NM
+	</sql>
+	
+	<select id="getRwdRelList" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO">
+		/* RwdMgmtMapper.getRwdRelList */
+		<include refid="getRwdRel" />
+	</select>	
+	
+	<select id="getRwdRelListByPaging" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO" resultType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO">
+		/* RwdMgmtMapper.getRwdRelListByPaging */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="getRwdRel" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<update id="updRwdRel" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO">
+		/* RwdMgmtMapper.updRwdRel */
+		UPDATE 	MSP_RWD_REL
+		SET		APPL_YN = DECODE(#{applYn}, 1, 'Y', 0, 'N', NVL(#{applYn}, 'Y'))
+				, RVISN_ID = #{sessionUserId}
+				, RVISN_DTTM = SYSDATE
+		WHERE	RWD_PROD_CD = #{rwdProdCd}
+		AND 	RPRS_PRDT_ID = #{rprsPrdtId}
+	</update>
+	
+	
+	<select id="getRwdCombo" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RwdMgmtMapper.getRwdCombo */
+		SELECT
+			  A.RWD_PROD_CD AS value
+			, C.RATE_NM AS text
+		FROM  MSP_RWD_MST A
+			, CMN_GRP_CD_MST B
+			, MSP_RATE_MST C
+		WHERE A.RWD_PROD_CD = B.CD_VAL
+		AND   B.GRP_ID = 'CMN0258'
+		AND   A.RWD_PROD_CD = C.RATE_CD
+		<if test="useYn != null and useYn != ''">
+			AND   A.USE_YN = #{useYn}
+		</if>
+		ORDER BY ETC6
+	</select>
+	
+	<select id="getChgRwdCombo" parameterType="com.ktis.msp.rwd.rwdMgmt.vo.RwdMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* RwdMgmtMapper.getChgRwdCombo */
+		SELECT	  A.RWD_PROD_CD AS value
+				, C.RATE_NM AS text
+		FROM 	  MSP_RWD_MST A
+				, CMN_GRP_CD_MST B
+				, MSP_RATE_MST C
+		WHERE 	A.RWD_PROD_CD = B.CD_VAL
+		AND 	B.GRP_ID = 'CMN0258'
+		AND 	A.RWD_PROD_CD = C.RATE_CD
+		AND 	A.USE_YN = #{useYn}
+		ORDER BY ETC6
+	</select>
+</mapper>

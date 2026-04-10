@@ -1,0 +1,1492 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.schedule.mapper.CanCustTransferScheduleMapper">
+
+	<!-- 해지이관 대상 고객 목록 -->
+	<select id="getCanCustTrgtList" resultType="hashMap">
+		/* canCustTransferSchduleMapper.getCanCustTrgtList */
+		SELECT 
+		        A.CONTRACT_NUM
+		        , A.CUSTOMER_ID
+		        , A.BAN
+		        , B.REQUEST_KEY
+		        , NVL(B.REQ_BUY_TYPE, 'UU') AS REQ_BUY_TYPE
+		        , C.SOC
+<!-- 		        , D.PAY_CL_CD -->
+		        , ( SELECT DISTINCT PAY_CL_CD FROM MSP_RATE_MST WHERE RATE_CD = C.SOC AND SERVICE_TYPE = 'P' ) AS PAY_CL_CD
+		FROM     MSP_JUO_SUB_INFO A
+		        , MSP_REQUEST B
+		        , MSP_JUO_FEATURE_INFO C
+<!-- 		        , MSP_RATE_MST D -->
+		        , MSP_BOND_MST E
+		WHERE   1=1
+		AND     A.SUB_STATUS = 'C'
+		AND     SUBSTR(A.SUB_STATUS_DATE, 1, 8) <![CDATA[ < ]]> TO_CHAR(ADD_MONTHS(SYSDATE, -6), 'YYYYMMDD')
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_SUB_INFO WHERE CUSTOMER_ID = A.CUSTOMER_ID AND CONTRACT_NUM <![CDATA[ <> ]]> A.CONTRACT_NUM AND SUB_STATUS <![CDATA[ <> ]]> 'C' )
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+		AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+		AND     C.APP_END_DATE = ( SELECT MAX(APP_END_DATE) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND SERVICE_TYPE = 'P' )
+		AND     C.SERVICE_TYPE = 'P'
+<!-- 		AND     C.SOC = D.RATE_CD -->
+		AND     A.CONTRACT_NUM = E.CONTRACT_NUM(+)
+		AND     E.FULL_PAY_YN(+) = 'Y'
+		GROUP BY A.CONTRACT_NUM, A.CUSTOMER_ID, A.BAN, B.REQUEST_KEY, B.REQ_BUY_TYPE, A.PPPO, C.SOC, D.PAY_CL_CD
+	</select>
+	
+	
+	<!-- 이관대상 PPS_CUSTOMER 정보 가져오기 -->
+	<select id="getPpsCustomer" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getPpsCustomer */
+		SELECT
+			CONTRACT_NUM
+			, SOC
+			, SERVICE_TYPE
+			, ENTER_DATE
+			, STATUS_STOP_DT
+			, STATUS_STOP_CD
+			, STATUS_CANCEL_DT
+			, STATUS_CANCEL_CD
+			, BASIC_REMAINS
+			, BASIC_EXPIRE
+			, BASIC_EMPT_DT
+			, VOICE_RATE
+			, DATA_REG
+			, DATA_REG_DT
+			, DATA_MODE
+			, DATA_SERVICE_CODE
+			, DATA_QUOTA
+			, DATA_QUOTA_REMAINS
+			, DATA_VA_REMAINS
+			, DATA_EXPIRE
+			, DATA_LIMIT
+			, LAST_KT_IN_MODE
+			, LAST_KT_SYN_DT
+			, LAST_BASIC_CHG_DT
+			, LAST_DATA_CHG_DT
+			, POINT
+			, POINT_LAST_DT
+			, US_LC_VOICE
+			, US_LC_SMS
+			, US_LC_DATA
+			, US_LC_LAST_DATE
+			, TOTAL_POINT
+			, TOTAL_BASIC_CHG
+			, TOTAL_BASIC_CNT
+			, TOTAL_DATA_CHG
+			, TOTAL_DATA_CNT
+			, RECHARGE_FLAG
+			, RECHARGE_FLAG_DT
+			, SMS_PHONE
+			, SMS_FLAG
+			, RENTAL_STATUS
+			, RENTAL_DT
+			, VIR_ACCOUNT_ID
+			, CMS_CHARGE_TYPE
+			, CMS_BANK_CODE
+			, CMS_ACCOUNT
+			, CMS_USER_NAME
+			, CMS_USER_SSN
+			, CMS_CHARGE
+			, CMS_TRY_REMAINS
+			, CMS_CHARGE_DATE
+			, CMS_CHARGE_MONTH
+			, PAPER_IMAGE_1
+			, PAPER_IMAGE_2
+			, PAPER_IMAGE_3
+			, PAPER_IMAGE_4
+			, PAPER_IMAGE_5
+			, AD_NAME
+			, AD_SSN
+			, AD_ADDRESS
+			, AD_NATION
+			, LANG_CODE
+			, WWW_REG_FLAG
+			, WWW_REG_DT
+			, AGENT_ID
+			, AGENT_CH_DT
+			, ADMIN_ID
+			, ADMIN_CH_DT
+			, REMARK
+			, AGENT_SALE_ID
+			, AGENT_SALE_ADMIN
+			, AGENT_SALE_DATE
+			, AGNT_DP_RCG_FLAG
+			, AGNT_DP_RCG_REMAINS
+			, AGNT_DP_RCG_CHARGE
+			, RECHARGE_FLAG_ADMIN
+			, SO_CD
+		FROM
+			PPS_CUSTOMER
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- 이미 CAN_PPS_CUSTOMER 등록되어 있는지 확인 -->
+	<select id="getPpsCustomerCnt" parameterType="String" resultType="int">
+		/* canCustTransferSchduleMapper.getPpsCustomerCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_PPS_CUSTOMER
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- CAN_PPS_CUSTOMER 등록 -->
+	<insert id="insertCanPpsCustomer" parameterType="String">
+		/* canCustTransferSchduleMapper.insertCanPpsCustomer */
+		
+		INSERT INTO CAN_PPS_CUSTOMER 
+			SELECT * 
+			FROM 
+				PPS_CUSTOMER
+			WHERE 
+				CONTRACT_NUM = #{contractNum}
+				
+	</insert>
+	
+	<!-- PPS_CUSTOMER 삭제 -->
+	<delete id="deletePpsCustomer" parameterType="String">
+    	/* canCustTransferSchduleMapper.deletePpsCustomer */
+    	DELETE 
+    	FROM 
+    		PPS_CUSTOMER 
+    	WHERE 
+    		CONTRACT_NUM = #{contractNum}
+    </delete>
+
+
+	<!-- 이관대상 PPS_CUSTOMER_KT 정보 가져오기 -->
+	<select id="getPpsCustomerKt" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getPpsCustomerKt */
+		SELECT
+			ACT_CODE
+			, TID
+			, ENTER_DATE
+			, TBL_NM
+			, CUSTOMER_ID
+			, BAN
+			, CONTRACT_NUM
+			, SUBSCRIBER_NO_OLD
+			, SUBSCRIBER_NO
+			, SVC_CNTR_NO
+			, BAN_ADR_PRIMARY_LN
+			, BAN_ADR_SECONDARY_LN
+			, BAN_ADR_ZIP
+			, BAN_LINK_NAME
+			, BANK_ACCT_HOLDER_ID
+			, BL_BILLING_METHOD
+			, BL_SPCL_BAN_CODE
+			, CNTR_USE_CD
+			, COL_DELINQ_STATUS
+			, CUST_IDNT_NO_IND_CD
+			, CUSTOMER_ADR_PRIMARY_LN
+			, CUSTOMER_ADR_SECONDARY_LN
+			, CUSTOMER_ADR_ZIP
+			, CUSTOMER_BAN
+			, CUSTOMER_LINK_NAME
+			, CUSTOMER_SSN
+			, CUSTOMER_TYPE
+			, DEALER_CODE
+			, DRIVR_LICNS_NO
+			, EFFECTIVE_DATE
+			, EXPIRATION_DATE
+			, FEATURE_CODE
+			, G3_IND
+			, ICC_ID
+			, IMEI
+			, IMSI
+			, INBH_ID
+			, INTM_SRL_NO
+			, ITNET_BAL_YN
+			, LST_COM_ACTV_DATE
+			, LST_DEV_CHG_DATE
+			, MARKET_GUBUN
+			, MODEL_ID
+			, MODEL_NAME
+			, MVNO_YN
+			, NCN
+			, NCN_GRADE
+			, OCCUPATION_CODE
+			, REAL_USE_CUST_NO
+			, SERVICE_TYPE
+			, SLS_CMPN_CD
+			, SOC
+			, SOC_CCR_DISPLAY_IND
+			, SRL_IF_ID
+			, SUB_ADR_PRIMARY_LN
+			, SUB_ADR_SECONDARY_LN
+			, SUB_ADR_ZIP
+			, SUB_LINK_NAME
+			, SUB_STATUS
+			, SUB_STATUS_DATE
+			, SUB_STATUS_LAST_ACTV_CD
+			, SUB_STATUS_RSN_CODE
+			, SYS_CREATION_DATE
+			, SYS_UPDATE_DATE
+			, TAX_ID
+			, USER_SSN
+			, USIM_FXD_ID
+			, WIBRO_IMEI
+			, WIBRO_MAC_ID
+			, WIFI_MAC_ID
+			, EVNT_CD
+			, EVNT_TRTM_CD
+			, EVNT_TRTM_DT
+		FROM
+			PPS_CUSTOMER_KT
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- 이미 CAN_PPS_CUSTOMER 등록되어 있는지 확인 -->
+	<select id="getPpsCustomerKtCnt" parameterType="String" resultType="int">
+		/* canCustTransferSchduleMapper.getPpsCustomerKtCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_PPS_CUSTOMER_KT
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- CAN_PPS_CUSTOMER_KT 등록 -->
+	<insert id="insertCanPpsCustomerKt" parameterType="Map">
+		/* canCustTransferSchduleMapper.insertCanPpsCustomerKt */
+		INSERT INTO CAN_PPS_CUSTOMER_KT 
+			SELECT * 
+			FROM 
+				PPS_CUSTOMER_KT
+			WHERE 
+				CONTRACT_NUM = #{contractNum} OR BAN = #{ban} OR CUSTOMER_ID = #{customerId}
+		
+	</insert>
+	
+	<!-- PPS_CUSTOMER_KT 삭제 -->
+	<delete id="deletePpsCustomerKt" parameterType="Map">
+    	/* canCustTransferSchduleMapper.deletePpsCustomerKt */
+    	DELETE 
+    	FROM 
+    		PPS_CUSTOMER_KT 
+    	WHERE 
+    		CONTRACT_NUM = #{contractNum} OR BAN = #{ban} OR CUSTOMER_ID = #{customerId}
+    </delete>
+
+	<!-- 이관대상 MSP_JUO_ADD_INFO 정보 가져오기 -->
+	<select id="getMspJuoAddInfo" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspJuoAddInfo */
+		SELECT
+			CONTRACT_NUM
+			, SALORG_CD
+			, OPEN_SHOP_CD
+			, TRRM_SHOP_CD
+			, CNTPNT_CD
+			, SLS_PRSN_ID
+			, TRTM_PRSN_ID
+			, ENCR_PRSN_ID
+			, SLS_NO
+			, DVC_OFW_AMNT
+			, INST_ORGIN_AMNT
+			, INST_MNTH_CNT
+			, EVNT_CD
+			, EVNT_TRTM_NO
+			, EVNT_TRTM_DT
+			, APP_START_DD
+			, APP_END_DATE
+			, MODEL_NAME
+			, MODEL_ID
+			, ENGG_MNTH_CNT
+			, SVC_CNTR_NO
+			, GRNT_INSR_MNGM_NO
+			, MODEL_CHN_CD
+			, BL_DC_TYPE
+			, GRNT_INSR_STAT_CD
+		FROM
+			MSP_JUO_ADD_INFO
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- 이미 CAN_MSP_JUO_ADD_INFO 등록되어 있는지 확인 -->
+	<select id="getMspJuoAddInfoCnt" parameterType="String" resultType="int">
+		/* canCustTransferSchduleMapper.getMspJuoAddInfoCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_JUO_ADD_INFO
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- CAN_MSP_JUO_ADD_INFO 등록 -->
+	<insert id="insertCanMspJuoAddInfo" parameterType="String">
+		/* canCustTransferSchduleMapper.insertCanMspJuoAddInfo */
+		INSERT INTO CAN_MSP_JUO_ADD_INFO 
+			SELECT * 
+			FROM 
+				MSP_JUO_ADD_INFO
+			WHERE 
+				CONTRACT_NUM = #{contractNum}
+
+	</insert>
+	
+	<!-- MSP_JUO_ADD_INFO 삭제 -->
+	<delete id="deleteMspJuoAddInfo" parameterType="String">
+    	/* canCustTransferSchduleMapper.deleteMspJuoAddInfo */
+    	DELETE FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = #{contractNum}
+    </delete>
+
+
+	<!-- 이관대상 MSP_JUO_BAN_INFO 정보 가져오기 -->
+	<select id="getMspJuoBanInfo" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspJuoBanInfo */
+		SELECT
+			BAN
+			, CUSTOMER_ID
+			, COL_DELINQ_STATUS
+			, MARKET_GUBUN
+			, BL_BILLING_METHOD
+			, BL_SPCL_BAN_CODE
+			, BANK_ACCT_HOLDER_ID
+			, BAN_ADR_ZIP
+			, BAN_ADR_PRIMARY_LN
+			, BAN_ADR_SECONDARY_LN
+			, BAN_LINK_NAME
+			, EVNT_CD
+			, EVNT_TRTM_NO
+			, EVNT_TRTM_DT
+		FROM
+			MSP_JUO_BAN_INFO
+		WHERE
+			BAN = #{ban}
+	</select>
+	
+	<!-- 이미 CAN_MSP_JUO_BAN_INFO 등록되어 있는지 확인 -->
+	<select id="getMspJuoBanInfoCnt" parameterType="String" resultType="int">
+		/* canCustTransferSchduleMapper.getMspJuoBanInfoCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_JUO_BAN_INFO
+		WHERE
+			BAN = #{ban}
+	</select>
+	
+	<!-- CAN_MSP_JUO_BAN_INFO 등록 -->
+	<insert id="insertCanMspJuoBanInfo" parameterType="String">
+		/* canCustTransferSchduleMapper.insertCanMspJuoBanInfo */
+		INSERT INTO CAN_MSP_JUO_BAN_INFO 
+			SELECT * 
+			FROM 
+				MSP_JUO_BAN_INFO
+			WHERE 
+				BAN = #{ban}
+
+	</insert>
+	
+	<!-- MSP_JUO_BAN_INFO 삭제 -->
+	<delete id="deleteMspJuoBanInfo" parameterType="String">
+    	/* canCustTransferSchduleMapper.deleteMspJuoBanInfo */
+    	DELETE FROM MSP_JUO_BAN_INFO WHERE BAN = #{ban}
+    </delete>
+
+
+	<!-- 이관대상 MSP_JUO_BAN_INFO_HIST 정보 가져오기 -->
+	<select id="getMspJuoBanInfoHist" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspJuoBanInfoHist */
+		SELECT
+			BAN
+			, EVNT_CHANGE_DATE
+			, EVNT_TRTM_DT
+			, CUSTOMER_ID
+			, COL_DELINQ_STATUS
+			, MARKET_GUBUN
+			, BL_BILLING_METHOD
+			, BL_SPCL_BAN_CODE
+			, BANK_ACCT_HOLDER_ID
+			, BAN_ADR_ZIP
+			, BAN_ADR_PRIMARY_LN
+			, BAN_ADR_SECONDARY_LN
+			, BAN_LINK_NAME
+			, EVNT_CD
+			, EVNT_TRTM_NO
+		FROM
+			MSP_JUO_BAN_INFO_HIST
+		WHERE
+			BAN = #{ban}
+	</select>
+	
+	<!-- 이미 CAN_MSP_JUO_BAN_INFO_HIST 등록되어 있는지 확인 -->
+	<select id="getMspJuoBanInfoHistCnt" parameterType="String" resultType="int">
+		/* canCustTransferSchduleMapper.getMspJuoBanInfoHistCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_JUO_BAN_INFO_HIST
+		WHERE
+			BAN = #{ban}
+	</select>
+	
+	<!-- CAN_MSP_JUO_BAN_INFO_HIST 등록 -->
+	<insert id="insertCanMspJuoBanInfoHist" parameterType="String">
+		/* canCustTransferSchduleMapper.insertCanMspJuoBanInfoHist */
+		INSERT INTO CAN_MSP_JUO_BAN_INFO_HIST
+			SELECT * 
+			FROM 
+				MSP_JUO_BAN_INFO_HIST
+			WHERE 
+				BAN = #{ban}
+
+	</insert>
+	
+	<!-- MSP_JUO_BAN_INFO_HIST 삭제 -->
+	<delete id="deleteMspJuoBanInfoHist" parameterType="String">
+    	/* canCustTransferSchduleMapper.deleteMspJuoBanInfoHist */
+    	DELETE FROM MSP_JUO_BAN_INFO_HIST WHERE BAN = #{ban}
+    </delete>
+
+
+	<!-- 이관대상 MSP_JUO_CUS_INFO 정보 가져오기 -->
+	<select id="getMspJuoCusInfo" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspJuoCusInfo */
+		SELECT
+			CUSTOMER_ID
+			, CUSTOMER_TYPE
+			, CUSTOMER_SSN
+			, DRIVR_LICNS_NO
+			, TAX_ID
+			, CUSTOMER_ADR_ZIP
+			, CUSTOMER_ADR_PRIMARY_LN
+			, CUSTOMER_ADR_SECONDARY_LN
+			, CUSTOMER_LINK_NAME
+			, OCCUPATION_CODE
+			, CUST_IDNT_NO_IND_CD
+			, EVNT_CD
+			, EVNT_TRTM_NO
+			, EVNT_TRTM_DT
+			, REVOCATION_TYPE
+		FROM
+			MSP_JUO_CUS_INFO
+		WHERE
+			CUSTOMER_ID = #{customerId}
+	</select>
+	
+	<!-- 이미 CAN_MSP_JUO_CUS_INFO 등록되어 있는지 확인 -->
+	<select id="getMspJuoCusInfoCnt" parameterType="String" resultType="int">
+		/* canCustTransferSchduleMapper.getMspJuoCusInfoCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_JUO_CUS_INFO
+		WHERE
+			CUSTOMER_ID = #{customerId}
+	</select>
+	
+	<!-- CAN_MSP_JUO_CUS_INFO 등록 -->
+	<insert id="insertCanMspJuoCusInfo" parameterType="String">
+		/* canCustTransferSchduleMapper.insertCanMspJuoCusInfo */
+		INSERT INTO CAN_MSP_JUO_CUS_INFO 
+			SELECT * 
+			FROM 
+				MSP_JUO_CUS_INFO
+			WHERE 
+				CUSTOMER_ID = #{customerId}
+
+	</insert>
+	
+	<!-- MSP_JUO_CUS_INFO 삭제 -->
+	<delete id="deleteMspJuoCusInfo" parameterType="String">
+    	/* canCustTransferSchduleMapper.deleteMspJuoCusInfo */
+    	DELETE FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = #{customerId}
+    </delete>
+
+
+	<!-- 이관대상 MSP_JUO_CUS_INFO_HIST 정보 가져오기 -->
+	<select id="getMspJuoCusInfoHist" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspJuoCusInfoHist */
+		SELECT
+			CUSTOMER_ID
+			, CUSTOMER_TYPE
+			, CUSTOMER_SSN
+			, DRIVR_LICNS_NO
+			, TAX_ID
+			, CUSTOMER_ADR_ZIP
+			, CUSTOMER_ADR_PRIMARY_LN
+			, CUSTOMER_ADR_SECONDARY_LN
+			, CUSTOMER_LINK_NAME
+			, OCCUPATION_CODE
+			, CUST_IDNT_NO_IND_CD
+			, EVNT_CD
+			, EVNT_TRTM_NO
+			, EVNT_TRTM_DT
+			, REVOCATION_TYPE
+			, EVNT_CHANGE_DATE
+		FROM
+			MSP_JUO_CUS_INFO_HIST
+		WHERE
+			CUSTOMER_ID = #{customerId}
+	</select>
+	
+	<!-- 이미 CAN_MSP_JUO_CUS_INFO_HIST 등록되어 있는지 확인 -->
+	<select id="getMspJuoCusInfoHistCnt" parameterType="String" resultType="int">
+		/* canCustTransferSchduleMapper.getMspJuoCusInfoHistCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_JUO_CUS_INFO_HIST
+		WHERE
+			CUSTOMER_ID = #{customerId}
+	</select>
+	
+	<!-- CAN_MSP_JUO_CUS_INFO_HIST 등록 -->
+	<insert id="insertCanMspJuoCusInfoHist" parameterType="String">
+		/* canCustTransferSchduleMapper.insertCanMspJuoCusInfoHist */
+		INSERT INTO CAN_MSP_JUO_CUS_INFO_HIST 
+			SELECT * 
+			FROM 
+				MSP_JUO_CUS_INFO_HIST
+			WHERE 
+				CUSTOMER_ID = #{customerId}
+
+	</insert>
+	
+	<!-- MSP_JUO_CUS_INFO_HIST 삭제 -->
+	<delete id="deleteMspJuoCusInfoHist" parameterType="String">
+    	/* canCustTransferSchduleMapper.deleteMspJuoCusInfoHist */
+    	DELETE FROM MSP_JUO_CUS_INFO_HIST WHERE CUSTOMER_ID = #{customerId}
+    </delete>
+
+
+	<!-- MSP_REQUEST_AGENT 테이블 작업 -->
+	<!-- 이관대상 MSP_REQUEST_AGENT 정보 가져오기 -->
+	<select id="getMspRequestAgent" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspRequestAgent */
+		SELECT
+			REQUEST_KEY
+			, MINOR_AGENT_NAME
+			, MINOR_AGENT_RRN
+			, MINOR_AGENT_TEL_FN
+			, MINOR_AGENT_TEL_MN
+			, MINOR_AGENT_TEL_RN
+			, MINOR_AGENT_RELATION
+			, JRDCL_AGENT_NAME
+			, JRDCL_AGENT_RRN
+			, JRDCL_AGENT_TEL_FN
+			, JRDCL_AGENT_TEL_MN
+			, JRDCL_AGENT_TEL_RN
+			, ENTRUST_REQ_NM
+			, ENTRUST_RES_NM
+			, ENTRUST_REQ_RELATION
+			, ENTRUST_RES_RRN
+			, ENTRUST_RES_TEL_FN
+			, ENTRUST_RES_TEL_MN
+			, ENTRUST_RES_TEL_RN
+			, SYS_RDATE
+			, APP_INST_YN
+			, INST_CNFM_ID
+			, INST_CNFM_DTTM
+		FROM
+			MSP_REQUEST_AGENT
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 CAN_MSP_REQUEST_AGENT 등록되어 있는지 확인 -->
+	<select id="getMspRequestAgentCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMspRequestAgentCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_REQUEST_AGENT
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MSP_REQUEST_AGENT 등록 -->
+	<insert id="insertCanMspRequestAgent" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMspRequestAgent */
+		INSERT INTO CAN_MSP_REQUEST_AGENT 
+			SELECT * 
+			FROM 
+				MSP_REQUEST_AGENT
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MSP_REQUEST_AGENT 삭제 -->
+	<delete id="deleteMspRequestAgent" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMspRequestAgent */
+    	DELETE FROM MSP_REQUEST_AGENT WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MSP_REQUEST_MOVE 테이블 작업 -->
+	<!-- 이관대상 MSP_REQUEST_MOVE 정보 가져오기 -->
+	<select id="getMspRequestMove" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspRequestMove */
+		SELECT
+			REQUEST_KEY
+			, MOVE_COMPANY
+			, MOVE_MOBILE_FN
+			, MOVE_MOBILE_MN
+			, MOVE_MOBILE_RN
+			, MOVE_AUTH_NUMBER
+			, MOVE_AUTH_TYPE
+			, MOVE_THISMONTH_PAY_TYPE
+			, MOVE_ALLOTMENT_STAT
+			, REQ_GUIDE_FLAG
+			, REQ_GUIDE_FN
+			, REQ_GUIDE_RN
+			, REQ_GUIDE_MN
+			, MOVE_REFUND_AGREE_FLAG
+			, SYS_RDATE
+		FROM
+			MSP_REQUEST_MOVE
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MSP_REQUEST_MOVE 등록되어 있는지 확인 -->
+	<select id="getMspRequestMoveCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMspRequestMoveCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_REQUEST_MOVE
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MSP_REQUEST_MOVE 등록 -->
+	<insert id="insertCanMspRequestMove" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMspRequestMove */
+		INSERT INTO CAN_MSP_REQUEST_MOVE 
+			SELECT * 
+			FROM 
+				MSP_REQUEST_MOVE
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MSP_REQUEST_MOVE 삭제 -->
+	<delete id="deleteMspRequestMove" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMspRequestMove */
+    	DELETE FROM MSP_REQUEST_MOVE WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MSP_REQUEST_CSTMR 테이블 작업 -->
+	<!-- 이관대상 MSP_REQUEST_CSTMR 정보 가져오기 -->
+	<select id="getMspRequestCstmr" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspRequestCstmr */
+		SELECT
+			REQUEST_KEY
+			, CSTMR_NAME
+			, CSTMR_NATIVE_RRN
+			, CSTMR_FOREIGNER_NATION
+			, CSTMR_FOREIGNER_PN
+			, CSTMR_FOREIGNER_SDATE
+			, CSTMR_FOREIGNER_EDATE
+			, CSTMR_FOREIGNER_RRN
+			, CSTMR_PRIVATE_CNAME
+			, CSTMR_JURIDICAL_CNAME
+			, CSTMR_PRIVATE_NUMBER
+			, CSTMR_JURIDICAL_RRN
+			, CSTMR_JURIDICAL_NUMBER
+			, CSTMR_TEL_FN
+			, CSTMR_TEL_MN
+			, CSTMR_TEL_RN
+			, CSTMR_MOBILE_FN
+			, CSTMR_MOBILE_MN
+			, CSTMR_MOBILE_RN
+			, CSTMR_POST
+			, CSTMR_ADDR
+			, CSTMR_ADDR_BJD
+			, CSTMR_ADDR_DTL
+			, CSTMR_BILL_SEND_CODE
+			, CSTMR_MAIL_RECEIVE_FLAG
+			, CSTMR_MAIL
+			, CSTMR_VISIT_TYPE
+			, CSTMR_RECEIVE_TEL_FN
+			, CSTMR_RECEIVE_TEL_NM
+			, CSTMR_RECEIVE_TEL_RN
+			, OTHERS_PAYMENT_AG
+			, OTHERS_PAYMENT_NM
+			, OTHERS_PAYMENT_RRN
+			, OTHERS_PAYMENT_RELATION
+			, OTHERS_PAYMENT_RNM
+			, SYS_RDATE
+			, CSTMR_FOREIGNER_DOD
+			, CSTMR_FOREIGNER_BIRTH
+		FROM
+			MSP_REQUEST_CSTMR
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MSP_REQUEST_CSTMR 등록되어 있는지 확인 -->
+	<select id="getMspRequestCstmrCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMspRequestCstmrCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_REQUEST_CSTMR
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MSP_REQUEST_CSTMR 등록 -->
+	<insert id="insertCanMspRequestCstmr" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMspRequestCstmr */
+		INSERT INTO CAN_MSP_REQUEST_CSTMR 
+			SELECT * 
+			FROM 
+				MSP_REQUEST_CSTMR
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MSP_REQUEST_CSTMR 삭제 -->
+	<delete id="deleteMspRequestCstmr" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMspRequestCstmr */
+    	DELETE FROM MSP_REQUEST_CSTMR WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MSP_REQUEST_REQ 테이블 작업 -->
+	<!-- 이관대상 MSP_REQUEST_REQ 정보 가져오기 -->
+	<select id="getMspRequestReq" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspRequestReq */
+		SELECT
+			REQUEST_KEY
+			, REQ_BANK
+			, REQ_ACCOUNT_NAME
+			, REQ_ACCOUNT_RRN
+			, REQ_ACCOUNT_RELATION
+			, REQ_ACCOUNT_NUMBER
+			, REQ_CARD_NAME
+			, REQ_CARD_RRN
+			, REQ_CARD_COMPANY
+			, REQ_CARD_NO
+			, REQ_CARD_YY
+			, REQ_CARD_MM
+			, REQ_WIRE_TYPE
+			, SYS_RDATE
+			, REQ_PAY_OTHER_FLAG
+			, REQ_PAY_OTHER_TEL_FN
+			, REQ_PAY_OTHER_TEL_MN
+			, REQ_PAY_OTHER_TEL_RN
+		FROM
+			MSP_REQUEST_REQ
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MSP_REQUEST_REQ 등록되어 있는지 확인 -->
+	<select id="getMspRequestReqCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMspRequestReqCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_REQUEST_REQ
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MSP_REQUEST_REQ 등록 -->
+	<insert id="insertCanMspRequestReq" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMspRequestReq */
+		INSERT INTO CAN_MSP_REQUEST_REQ 
+			SELECT * 
+			FROM 
+				MSP_REQUEST_REQ
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MSP_REQUEST_REQ 삭제 -->
+	<delete id="deleteMspRequestReq" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMspRequestReq */
+    	DELETE FROM MSP_REQUEST_REQ WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MSP_REQUEST_CHANGE 테이블 작업 -->
+	<!-- 이관대상 MSP_REQUEST_CHANGE 정보 가져오기 -->
+	<select id="getMspRequestChange" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspRequestChange */
+		SELECT
+			REQUEST_KEY
+			, NAME_CHANGE_NM
+			, NAME_CHANGE_TEL_FN
+			, NAME_CHANGE_TEL_MN
+			, NAME_CHANGE_TEL_RN
+			, NAME_CHANGE_RRN
+			, NAME_CHANGE_PINSTALLMENT
+			, SYS_RDATE
+		FROM
+			MSP_REQUEST_CHANGE
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MSP_REQUEST_CHANGE 등록되어 있는지 확인 -->
+	<select id="getMspRequestChangeCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMspRequestChangeCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_REQUEST_CHANGE
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MSP_REQUEST_CHANGE 등록 -->
+	<insert id="insertCanMspRequestChange" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMspRequestChange */
+		INSERT INTO CAN_MSP_REQUEST_CHANGE 
+			SELECT * 
+			FROM 
+				MSP_REQUEST_CHANGE
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MSP_REQUEST_CHANGE 삭제 -->
+	<delete id="deleteMspRequestChange" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMspRequestChange */
+    	DELETE FROM MSP_REQUEST_CHANGE WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MSP_REQUEST_DLVRY 테이블 작업 -->
+	<!-- 이관대상 MSP_REQUEST_DLVRY 정보 가져오기 -->
+	<select id="getMspRequestDlvry" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspRequestDlvry */
+		SELECT
+			REQUEST_KEY
+			, DLVRY_NAME
+			, DLVRY_TEL_FN
+			, DLVRY_TEL_MN
+			, DLVRY_TEL_RN
+			, DLVRY_MOBILE_FN
+			, DLVRY_MOBILE_MN
+			, DLVRY_MOBILE_RN
+			, DLVRY_POST
+			, DLVRY_ADDR
+			, DLVRY_ADDR_BJD
+			, DLVRY_ADDR_DTL
+			, DLVRY_MEMO
+			, SYS_RDATE
+			, TB_CD
+		FROM
+			MSP_REQUEST_DLVRY
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MSP_REQUEST_DLVRY 등록되어 있는지 확인 -->
+	<select id="getMspRequestDlvryCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMspRequestDlvryCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_REQUEST_DLVRY
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MSP_REQUEST_DLVRY 등록 -->
+	<insert id="insertCanMspRequestDlvry" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMspRequestDlvry */
+		INSERT INTO CAN_MSP_REQUEST_DLVRY 
+			SELECT * 
+			FROM 
+				MSP_REQUEST_DLVRY
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MSP_REQUEST_DLVRY 삭제 -->
+	<delete id="deleteMspRequestDlvry" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMspRequestDlvry */
+    	DELETE FROM MSP_REQUEST_DLVRY WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MCP_REQUEST_AGENT 테이블 작업 -->
+	<!-- 이관대상 MCP_REQUEST_AGENT 정보 가져오기 -->
+	<select id="getMcpRequestAgent" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMcpRequestAgent */
+		SELECT
+			REQUEST_KEY
+			, MINOR_AGENT_NAME
+			, MINOR_AGENT_RRN
+			, MINOR_AGENT_TEL_FN
+			, MINOR_AGENT_TEL_MN
+			, MINOR_AGENT_TEL_RN
+			, MINOR_AGENT_RELATION
+			, JRDCL_AGENT_NAME
+			, JRDCL_AGENT_RRN
+			, JRDCL_AGENT_TEL_FN
+			, JRDCL_AGENT_TEL_MN
+			, JRDCL_AGENT_TEL_RN
+			, ENTRUST_REQ_NM
+			, ENTRUST_RES_NM
+			, ENTRUST_REQ_RELATION
+			, ENTRUST_RES_RRN
+			, ENTRUST_RES_TEL_FN
+			, ENTRUST_RES_TEL_MN
+			, ENTRUST_RES_TEL_RN
+			, SYS_RDATE
+			, MINOR_SELF_INQRY_AGRM_YN
+			, MINOR_SELF_CERT_TYPE
+			, MINOR_SELF_ISSU_EXPR_DT
+			, MINOR_SELF_ISSU_NUM
+		FROM
+			MCP_REQUEST_AGENT@DL_MCP
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MCP_REQUEST_AGENT 등록되어 있는지 확인 -->
+	<select id="getMcpRequestAgentCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMcpRequestAgentCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MCP_REQUEST_AGENT@DL_CAN
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MCP_REQUEST_AGENT 등록 -->
+	<insert id="insertCanMcpRequestAgent" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMcpRequestAgent */
+		INSERT INTO CAN_MCP_REQUEST_AGENT@DL_CAN
+			SELECT * 
+			FROM 
+				MCP_REQUEST_AGENT@DL_MCP
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MCP_REQUEST_AGENT 삭제 -->
+	<delete id="deleteMcpRequestAgent" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMcpRequestAgent */
+    	DELETE FROM MCP_REQUEST_AGENT@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MCP_REQUEST_MOVE 테이블 작업 -->
+	<!-- 이관대상 MCP_REQUEST_MOVE 정보 가져오기 -->
+	<select id="getMcpRequestMove" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMcpRequestMove */
+		SELECT
+			REQUEST_KEY
+			, MOVE_COMPANY
+			, MOVE_MOBILE_FN
+			, MOVE_MOBILE_MN
+			, MOVE_MOBILE_RN
+			, MOVE_AUTH_TYPE
+			, MOVE_AUTH_NUMBER
+			, MOVE_THISMONTH_PAY_TYPE
+			, MOVE_ALLOTMENT_STAT
+			, MOVE_REFUND_AGREE_FLAG
+			, SYS_RDATE
+			, REQ_GUIDE_FLAG
+			, REQ_GUIDE_FN
+			, REQ_GUIDE_RN
+			, REQ_GUIDE_MN
+		FROM
+			MCP_REQUEST_MOVE@DL_MCP
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MCP_REQUEST_MOVE 등록되어 있는지 확인 -->
+	<select id="getMcpRequestMoveCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMcpRequestMoveCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MCP_REQUEST_MOVE@DL_CAN
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MCP_REQUEST_MOVE 등록 -->
+	<insert id="insertCanMcpRequestMove" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMcpRequestMove */
+		INSERT INTO CAN_MCP_REQUEST_MOVE@DL_CAN
+			SELECT * 
+			FROM 
+				MCP_REQUEST_MOVE@DL_MCP
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MCP_REQUEST_MOVE 삭제 -->
+	<delete id="deleteMcpRequestMove" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMcpRequestMove */
+    	DELETE FROM MCP_REQUEST_MOVE@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MCP_REQUEST_CSTMR 테이블 작업 -->
+	<!-- 이관대상 MCP_REQUEST_CSTMR 정보 가져오기 -->
+	<select id="getMcpRequestCstmr" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMcpRequestCstmr */
+		SELECT
+			REQUEST_KEY
+			, CSTMR_FOREIGNER_NATION
+			, CSTMR_FOREIGNER_PN
+			, CSTMR_FOREIGNER_RRN
+			, CSTMR_FOREIGNER_SDATE
+			, CSTMR_FOREIGNER_EDATE
+			, CSTMR_PRIVATE_CNAME
+			, CSTMR_PRIVATE_NUMBER
+			, CSTMR_JURIDICAL_CNAME
+			, CSTMR_JURIDICAL_RRN
+			, CSTMR_JURIDICAL_NUMBER
+			, CSTMR_TEL_FN
+			, CSTMR_TEL_MN
+			, CSTMR_TEL_RN
+			, CSTMR_MOBILE_FN
+			, CSTMR_MOBILE_MN
+			, CSTMR_MOBILE_RN
+			, CSTMR_POST
+			, CSTMR_ADDR
+			, CSTMR_ADDR_DTL
+			, CSTMR_ADDR_BJD
+			, CSTMR_BILL_SEND_CODE
+			, CSTMR_MAIL
+			, CSTMR_MAIL_RECEIVE_FLAG
+			, CSTMR_VISIT_TYPE
+			, CSTMR_RECEIVE_TEL_FN
+			, CSTMR_RECEIVE_TEL_NM
+			, CSTMR_RECEIVE_TEL_RN
+			, OTHERS_PAYMENT_AG
+			, OTHERS_PAYMENT_NM
+			, OTHERS_PAYMENT_RRN
+			, OTHERS_PAYMENT_RELATION
+			, OTHERS_PAYMENT_RNM
+			, SYS_RDATE
+			, CSTMR_NAME
+			, CSTMR_NATIVE_RRN
+			, CSTMR_FOREIGNER_DOD
+			, CSTMR_FOREIGNER_BIRTH
+			, SELF_INQRY_AGRM_YN
+			, SELF_CERT_TYPE
+			, SELF_ISSU_EXPR_DT
+			, SELF_ISSU_NUM
+		FROM
+			MCP_REQUEST_CSTMR@DL_MCP
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MCP_REQUEST_CSTMR 등록되어 있는지 확인 -->
+	<select id="getMcpRequestCstmrCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMcpRequestCstmrCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MCP_REQUEST_CSTMR@DL_CAN
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MCP_REQUEST_CSTMR 등록 -->
+	<insert id="insertCanMcpRequestCstmr" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMcpRequestCstmr */
+		INSERT INTO CAN_MCP_REQUEST_CSTMR@DL_CAN 
+			SELECT * 
+			FROM 
+				MCP_REQUEST_CSTMR@DL_MCP
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MCP_REQUEST_CSTMR 삭제 -->
+	<delete id="deleteMcpRequestCstmr" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMcpRequestCstmr */
+    	DELETE FROM MCP_REQUEST_CSTMR@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MCP_REQUEST_REQ 테이블 작업 -->
+	<!-- 이관대상 MCP_REQUEST_REQ 정보 가져오기 -->
+	<select id="getMcpRequestReq" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMcpRequestReq */
+		SELECT
+			REQUEST_KEY
+			, REQ_BANK
+			, REQ_ACCOUNT_NAME
+			, REQ_ACCOUNT_RRN
+			, REQ_ACCOUNT_RELATION
+			, REQ_ACCOUNT_NUMBER
+			, REQ_CARD_NAME
+			, REQ_CARD_RRN
+			, REQ_CARD_COMPANY
+			, REQ_CARD_NO
+			, REQ_CARD_YY
+			, REQ_CARD_MM
+			, REQ_WIRE_TYPE
+			, SYS_RDATE
+			, REQ_PAY_OTHER_FLAG
+			, REQ_PAY_OTHER_TEL_FN
+			, REQ_PAY_OTHER_TEL_MN
+			, REQ_PAY_OTHER_TEL_RN
+		FROM
+			MCP_REQUEST_REQ@DL_MCP
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MCP_REQUEST_REQ 등록되어 있는지 확인 -->
+	<select id="getMcpRequestReqCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMcpRequestReqCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MCP_REQUEST_REQ@DL_CAN
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MCP_REQUEST_REQ 등록 -->
+	<insert id="insertCanMcpRequestReq" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMcpRequestReq */
+		INSERT INTO CAN_MCP_REQUEST_REQ@DL_CAN
+			SELECT * 
+			FROM 
+				MCP_REQUEST_REQ@DL_MCP
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MCP_REQUEST_REQ 삭제 -->
+	<delete id="deleteMcpRequestReq" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMcpRequestReq */
+    	DELETE FROM MCP_REQUEST_REQ@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MCP_REQUEST_CHANGE 테이블 작업 -->
+	<!-- 이관대상 MCP_REQUEST_CHANGE 정보 가져오기 -->
+	<select id="getMcpRequestChange" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMcpRequestChange */
+		SELECT
+			NAME_CHANGE_NM
+			, NAME_CHANGE_TEL_FN
+			, NAME_CHANGE_TEL_MN
+			, NAME_CHANGE_TEL_RN
+			, NAME_CHANGE_RRN
+			, NAME_CHANGE_PINSTALLMENT
+			, REQUEST_KEY
+			, SYS_RDATE
+		FROM
+			MCP_REQUEST_CHANGE@DL_MCP
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MCP_REQUEST_CHANGE 등록되어 있는지 확인 -->
+	<select id="getMcpRequestChangeCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMcpRequestChangeCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MCP_REQUEST_CHANGE@DL_CAN
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MCP_REQUEST_CHANGE 등록 -->
+	<insert id="insertCanMcpRequestChange" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMcpRequestChange */
+		INSERT INTO CAN_MCP_REQUEST_CHANGE@DL_CAN
+			SELECT * 
+			FROM 
+				MCP_REQUEST_CHANGE@DL_MCP
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MCP_REQUEST_CHANGE 삭제 -->
+	<delete id="deleteMcpRequestChange" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMcpRequestChange */
+    	DELETE FROM MCP_REQUEST_CHANGE@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MCP_REQUEST_DLVRY 테이블 작업 -->
+	<!-- 이관대상 MCP_REQUEST_DLVRY 정보 가져오기 -->
+	<select id="getMcpRequestDlvry" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMcpRequestDlvry */
+		SELECT
+			REQUEST_KEY
+			, DLVRY_NAME
+			, DLVRY_TEL_FN
+			, DLVRY_TEL_MN
+			, DLVRY_TEL_RN
+			, DLVRY_MOBILE_FN
+			, DLVRY_MOBILE_MN
+			, DLVRY_MOBILE_RN
+			, DLVRY_POST
+			, DLVRY_ADDR
+			, DLVRY_ADDR_DTL
+			, DLVRY_ADDR_BJD
+			, DLVRY_MEMO
+			, SYS_RDATE
+			, TB_CD
+		FROM
+			MCP_REQUEST_DLVRY@DL_MCP
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+
+	<!-- 이미 MCP_REQUEST_DLVRY 등록되어 있는지 확인 -->
+	<select id="getMcpRequestDlvryCnt" parameterType="int" resultType="int">
+		/* canCustTransferSchduleMapper.getMcpRequestDlvryCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MCP_REQUEST_DLVRY@DL_CAN
+		WHERE
+			REQUEST_KEY = #{requestKey}
+	</select>
+	
+	<!-- CAN_MCP_REQUEST_DLVRY 등록 -->
+	<insert id="insertCanMcpRequestDlvry" parameterType="int">
+		/* canCustTransferSchduleMapper.insertMcpRequestDlvry */
+		INSERT INTO CAN_MCP_REQUEST_DLVRY@DL_CAN
+			SELECT * 
+			FROM 
+				MCP_REQUEST_DLVRY@DL_MCP
+			WHERE 
+				REQUEST_KEY = #{requestKey}
+
+	</insert>
+	
+	<!-- MCP_REQUEST_DLVRY 삭제 -->
+	<delete id="deleteMcpRequestDlvry" parameterType="int">
+    	/* canCustTransferSchduleMapper.deleteMcpRequestDlvry */
+    	DELETE FROM MCP_REQUEST_DLVRY@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+    </delete>
+
+	
+	<!-- MSP_JUO_SUB_INFO 테이블 작업 -->
+	<!-- 이관대상 MSP_JUO_SUB_INFO 정보 가져오기 -->
+	<select id="getMspJuoSubInfo" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspJuoSubInfo */
+		SELECT
+			CONTRACT_NUM
+			, CUSTOMER_ID
+			, SUBSCRIBER_NO
+			, SUB_STATUS
+			, SUB_STATUS_DATE
+			, SUB_STATUS_RSN_CODE
+			, USER_SSN
+			, SUB_ADR_ZIP
+			, SUB_ADR_PRIMARY_LN
+			, SUB_ADR_SECONDARY_LN
+			, SUB_LINK_NAME
+			, MODEL_NAME
+			, MODEL_ID
+			, NCN
+			, NCN_GRADE
+			, IMSI
+			, ICC_ID
+			, G3_IND
+			, DEALER_CODE
+			, LST_COM_ACTV_DATE
+			, LST_DEV_CHG_DATE
+			, ITNET_BAL_YN
+			, IMEI
+			, SUB_STATUS_LAST_ACTV_CD
+			, SLS_CMPN_CD
+			, INTM_SRL_NO
+			, WIBRO_IMEI
+			, WIBRO_MAC_ID
+			, USIM_FXD_ID
+			, CNTR_USE_CD
+			, SVC_CNTR_NO
+			, REAL_USE_CUST_NO
+			, SRL_IF_ID
+			, UNPD_IND_CD
+			, MNP_IND_CD
+			, INDV_ENTR_NO
+			, INDV_ENTR_NM
+			, EVNT_CD
+			, EVNT_TRTM_NO
+			, EVNT_TRTM_DT
+			, SCAN_ID
+			, ON_OFF_TYPE
+			, DOBYYYYMMDD
+			, GENDER
+			, BAN
+			, WIFI_MAC_ID
+			, OPEN_AGNT_CD
+			, PPPO
+			, REG_DTTM
+		FROM
+			MSP_JUO_SUB_INFO
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+
+	<!-- 이미 CAN_MSP_JUO_SUB_INFO 등록되어 있는지 확인 -->
+	<select id="getCanMspJuoSubInfoCnt" parameterType="String" resultType="int">
+		/* canCustTransferSchduleMapper.getCanMspJuoSubInfoCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_JUO_SUB_INFO
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- CAN_MSP_JUO_SUB_INFO 등록 -->
+	<insert id="insertCanMspJuoSubInfo" parameterType="String">
+		/* canCustTransferSchduleMapper.insertMspJuoSubInfo */
+		INSERT INTO CAN_MSP_JUO_SUB_INFO 
+			SELECT * 
+			FROM 
+				MSP_JUO_SUB_INFO
+			WHERE 
+				CONTRACT_NUM = #{contractNum}
+
+	</insert>
+	
+	<!-- MSP_JUO_SUB_INFO 삭제 -->
+	<delete id="deleteMspJuoSubInfo" parameterType="String">
+    	/* canCustTransferSchduleMapper.deleteMspJuoSubInfo */
+    	DELETE FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = #{contractNum}
+    </delete>
+
+	
+	<!-- MSP_JUO_SUB_INFO_HIST 테이블 작업 -->
+	<!-- 이관대상 MSP_JUO_SUB_INFO_HIST 정보 가져오기 -->
+	<select id="getMspJuoSubInfoHist" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* canCustTransferSchduleMapper.getMspJuoSubInfoHist */
+		SELECT
+			CONTRACT_NUM
+			, CUSTOMER_ID
+			, SUBSCRIBER_NO
+			, SUB_STATUS
+			, SUB_STATUS_DATE
+			, SUB_STATUS_RSN_CODE
+			, USER_SSN
+			, SUB_ADR_ZIP
+			, SUB_ADR_PRIMARY_LN
+			, SUB_ADR_SECONDARY_LN
+			, SUB_LINK_NAME
+			, MODEL_NAME
+			, MODEL_ID
+			, NCN
+			, NCN_GRADE
+			, IMSI
+			, ICC_ID
+			, G3_IND
+			, DEALER_CODE
+			, LST_COM_ACTV_DATE
+			, LST_DEV_CHG_DATE
+			, ITNET_BAL_YN
+			, IMEI
+			, SUB_STATUS_LAST_ACTV_CD
+			, SLS_CMPN_CD
+			, INTM_SRL_NO
+			, WIBRO_IMEI
+			, WIBRO_MAC_ID
+			, USIM_FXD_ID
+			, CNTR_USE_CD
+			, SVC_CNTR_NO
+			, REAL_USE_CUST_NO
+			, SRL_IF_ID
+			, UNPD_IND_CD
+			, MNP_IND_CD
+			, INDV_ENTR_NO
+			, INDV_ENTR_NM
+			, EVNT_CD
+			, EVNT_TRTM_NO
+			, EVNT_TRTM_DT
+			, SOC
+			, ON_OFF_TYPE
+			, DOBYYYYMMDD
+			, GENDER
+			, EVNT_CHANGE_DATE
+			, WIFI_MAC_ID
+			, BAN
+			, OPEN_AGNT_CD
+			, PPPO
+		FROM
+			MSP_JUO_SUB_INFO_HIST
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+
+	<!-- 이미 MSP_JUO_SUB_INFO_HIST 등록되어 있는지 확인 -->
+	<select id="getMspJuoSubInfoHistCnt" parameterType="String" resultType="int">
+		/* canCustTransferSchduleMapper.getMspJuoSubInfoHistCnt */
+		SELECT
+			count(*) as cnt 
+		FROM
+			CAN_MSP_JUO_SUB_INFO_HIST
+		WHERE
+			CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- CAN_MSP_JUO_SUB_INFO_HIST 등록 -->
+	<insert id="insertCanMspJuoSubInfoHist" parameterType="String">
+		/* canCustTransferSchduleMapper.insertMspJuoSubInfoHist */
+		INSERT INTO CAN_MSP_JUO_SUB_INFO_HIST 
+			SELECT * 
+			FROM 
+				MSP_JUO_SUB_INFO_HIST
+			WHERE 
+				CONTRACT_NUM = #{contractNum}
+
+	</insert>
+	
+	<!-- MSP_JUO_SUB_INFO_HIST 삭제 -->
+	<delete id="deleteMspJuoSubInfoHist" parameterType="String">
+    	/* canCustTransferSchduleMapper.deleteMspJuoSubInfoHist */
+    	DELETE FROM MSP_JUO_SUB_INFO_HIST WHERE CONTRACT_NUM = #{contractNum}
+    </delete>
+	
+	<!-- MSP_CAN_CUST_TRNS_RSLT 등록 -->
+	<insert id="insertMspCanCustTrnsRslt" parameterType="Map">
+		/* canCustTransferSchduleMapper.insertMspCanCustTrnsRslt */
+		INSERT INTO MSP_CAN_CUST_TRNS_RSLT (
+			WORK_DT
+			, SERVICE_TYPE
+			, OPEN_TYPE
+			, TRNS_CNT
+			, REGST_ID
+			, REGST_DTTM
+		) VALUES (
+			TO_CHAR(SYSDATE, 'YYYYMMDD')
+			, #{serviceType}
+			, #{openType}
+			, #{trnsCnt}
+			, 'SYSTEM'
+			, SYSDATE
+		)
+
+	</insert>
+
+	
+</mapper>

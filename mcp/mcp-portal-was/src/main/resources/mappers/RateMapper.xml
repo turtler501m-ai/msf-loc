@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="RateMapper">
+
+
+    <select id="selectRateList" resultType="com.ktmmobile.mcp.rate.dto.RateDTO" parameterType="com.ktmmobile.mcp.rate.dto.RateDTO">
+	    	SELECT 
+	    		CD_GROUP_ID1,
+	    		RATE_TITLE,
+	    		RATE_CONTENT,
+	    		RATE_MOBILE_CONTENT,
+	    		CRET_ID,
+	    		CRET_DT,
+	    		AMD_ID,
+	    		AMD_DT
+	    	FROM NMCP_RATE_BAS
+	    	WHERE 1=1
+	    	<if test='cdGroupId1 != ""  and cdGroupId1 != null and cdGroupId1 != "00"' >
+	            AND CD_GROUP_ID1 = #{cdGroupId1}
+	        </if>
+	        ORDER BY CD_GROUP_ID1 ASC
+	</select>
+    <insert id="insertRate" parameterType="com.ktmmobile.mcp.rate.dto.RateDTO">
+    	INSERT INTO NMCP_RATE_BAS (
+		   CD_GROUP_ID1, RATE_CONTENT, RATE_TITLE, 
+		   CRET_ID, CRET_DT,
+		   RATE_MOBILE_CONTENT
+		   ) 
+		VALUES ( 
+			#{cdGroupId1},
+		 	#{rateContent},
+		 	#{rateTitle},
+		 	#{cretId},
+		 	SYSDATE,
+		 	#{rateMobileContent}
+		 )
+    </insert>
+    
+    <select id="selectRate" resultType="com.ktmmobile.mcp.rate.dto.RateDTO" parameterType="com.ktmmobile.mcp.rate.dto.RateDTO">
+    	SELECT 
+    		CD_GROUP_ID1,
+    		RATE_TITLE,
+    		RATE_CONTENT,
+    		CRET_ID,
+    		CRET_DT,
+    		AMD_ID,
+    		AMD_DT,
+    		RATE_MOBILE_CONTENT
+    	 FROM NMCP_RATE_BAS WHERE CD_GROUP_ID1 = #{seq}
+    </select>
+    
+    <delete id="deletRate" parameterType="com.ktmmobile.mcp.rate.dto.RateDTO">
+    	DELETE FROM NMCP_RATE_BAS WHERE CD_GROUP_ID1 = #{seq}
+    </delete>
+    
+    <update id="updateRate" parameterType="com.ktmmobile.mcp.rate.dto.RateDTO">
+    	UPDATE NMCP_RATE_BAS
+    	SET RATE_TITLE = #{rateTitle},
+    		RATE_CONTENT = #{rateContent},
+    		AMD_ID = #{amdId},
+    		AMD_DT = SYSDATE,
+    		RATE_MOBILE_CONTENT = #{rateMobileContent}
+    	WHERE CD_GROUP_ID1 = #{seq}	
+    </update>
+    <select id="getDetail"  resultType="com.ktmmobile.mcp.rate.dto.RateDTO" parameterType="com.ktmmobile.mcp.rate.dto.RateDTO">
+		SELECT CONT_SEQ FROM NMCP_CONT_RATE_ADDITION  WHERE SOC_CODE = #{socCode} AND ROWNUM=1 
+    </select>
+   </mapper>

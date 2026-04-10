@@ -1,0 +1,627 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.ptnr.ptnrmgmt.mapper.PtnrCalcMapper">
+	<!-- 제주항공포인트지급내역 -->
+	<select id="getPtnrCalcJejuList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrCalcMapper.getPtnrCalcJejuList */
+		SELECT  A.BILL_YM
+		        , B.CUSTOMER_ID
+		        , A.MEMBER_CI
+		        , SUM(C.REQ_POINT) AS REQ_POINT
+		        , SUM(DECODE(A.RESULT_DTL_CD, '0000', C.REQ_POINT, 0)) AS CAL_POINT
+		        , A.RESULT_DTL_CD
+		        , (SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID) AS CUS_NM
+		        , (SELECT   LISTAGG(X.CONTRACT_NUM, ',') WITHIN GROUP(ORDER BY X.CONTRACT_NUM)
+		           FROM     MSP_JUO_SUB_INFO X
+		           WHERE    X.CUSTOMER_ID = B.CUSTOMER_ID
+		           AND      EXISTS (SELECT 1 FROM MSP_PARTNER_POINT_MST WHERE PARTNER_ID = C.PARTNER_ID AND CONTRACT_NUM = X.CONTRACT_NUM) 
+		           GROUP BY X.CUSTOMER_ID) AS CONTRACT_NUM
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0200' AND ETC1 = C.PARTNER_ID AND ETC2 = NVL(A.RESULT_DTL_CD, 'W')) AS RESULT_CD
+		FROM    MSP_PARTNER_JEJUAIR_01 A
+		        , MSP_JUO_CUS_INFO B
+		        , MSP_PARTNER_POINT_MST C
+		        , MSP_JUO_SUB_INFO D
+		WHERE   A.MEMBER_CI = B.SELF_CSTMR_CI
+		AND     B.CUSTOMER_ID = C.CUSTOMER_ID
+		AND     C.PARTNER_ID = 'jejuair'
+		AND     C.CONTRACT_NUM = D.CONTRACT_NUM
+		<choose >
+			<when test="subscriberNo != null and subscriberNo != ''">
+			/* 전화번호조회 */
+			AND D.SUBSCRIBER_NO = #{subscriberNo, jdbcType=VARCHAR}
+			</when>
+			<otherwise>
+			/* 연동월조회 */
+			AND A.BILL_YM = #{searchYm, jdbcType=VARCHAR}
+			AND TO_CHAR(C.PAY_DTTM, 'YYYYMM') = A.BILL_YM
+			</otherwise>
+		</choose>
+		<if test="resultCd != null and resultCd != ''">
+			AND NVL(A.RESULT_DTL_CD, 'W') = (SELECT ETC2 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0200' AND ETC1 = 'jejuair' AND CD_VAL = #{resultCd, jdbcType=VARCHAR})
+		</if>
+		GROUP BY A.BILL_YM, A.MEMBER_CI, A.RESULT_DTL_CD, B.CUSTOMER_ID, C.PARTNER_ID
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 제주항공포인트지급내역 합계 -->
+	<select id="getPtnrCalcJejuListSum" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrCalcMapper.getPtnrCalcJejuListSum */
+		SELECT  A.BILL_YM
+		        , SUM(C.REQ_POINT) AS REQ_POINT_SUM
+		        , SUM(DECODE(A.RESULT_DTL_CD, '0000', C.REQ_POINT, 0)) AS CAL_POINT_SUM
+		FROM    MSP_PARTNER_JEJUAIR_01 A
+		        , MSP_JUO_CUS_INFO B
+		        , MSP_PARTNER_POINT_MST C
+		        , MSP_JUO_SUB_INFO D
+		WHERE   A.MEMBER_CI = B.SELF_CSTMR_CI
+		AND     B.CUSTOMER_ID = C.CUSTOMER_ID
+		AND     C.PARTNER_ID = 'jejuair'
+		AND     C.CONTRACT_NUM = D.CONTRACT_NUM
+		<choose >
+			<when test="subscriberNo != null and subscriberNo != ''">
+			/* 전화번호조회 */
+			AND D.SUBSCRIBER_NO = #{subscriberNo, jdbcType=VARCHAR}			
+			</when>
+			<otherwise>
+			/* 연동월조회 */
+			AND A.BILL_YM = #{searchYm, jdbcType=VARCHAR}
+			AND TO_CHAR(C.PAY_DTTM, 'YYYYMM') = A.BILL_YM			
+			</otherwise>
+		</choose>
+		<if test="resultCd != null and resultCd != ''">
+			AND NVL(A.RESULT_DTL_CD, 'W') = (SELECT ETC2 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0200' AND ETC1 = 'jejuair' AND CD_VAL = #{resultCd, jdbcType=VARCHAR})
+		</if>
+		GROUP BY A.BILL_YM
+	</select>
+	 
+	<!-- 기프티쇼포인트지급내역 -->
+	<select id="getPtnrCalcGiftiList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrCalcMapper.getPtnrCalcGiftiList */
+		SELECT  A.LINK_YM
+				, A.USG_YM
+				, B.SUB_LINK_NAME AS CUS_NM
+				, A.POINT AS REQ_POINT
+				, DECODE(A.RESULT_DTL_CD, '1000', A.POINT * 0.95, 0) AS CAL_POINT
+				, DECODE(A.RESULT_DTL_CD, '1000', '지급성공', DECODE(A.RESULT_DTL_CD, NULL, '지급대기', '지급실패')) AS RESULT_CD
+		  FROM  MSP_PARTNER_GIFTI_01 A
+				, MSP_JUO_SUB_INFO B
+		 WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+ 		<choose>
+			<when test="subscriberNo != null and subscriberNo != ''">
+			AND  B.SUBSCRIBER_NO = #{subscriberNo, jdbcType=VARCHAR}	
+			</when>
+			<otherwise>
+			AND  A.LINK_YM = #{searchYm, jdbcType=VARCHAR}		
+			</otherwise>
+		</choose>
+		<if test="resultCd != null and resultCd != ''">
+			AND  DECODE(A.RESULT_DTL_CD, '1000', 'Y', DECODE(A.RESULT_DTL_CD, NULL, 'W', 'N')) = #{resultCd, jdbcType=VARCHAR}
+		</if>
+		ORDER  BY
+			A.LINK_YM DESC
+			, A.USG_YM DESC
+			, B.SUB_LINK_NAME ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	
+	<!-- 기프티쇼포인트지급내역 합계 -->
+	<select id="getPtnrCalcGiftiListSum" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrCalcMapper.getPtnrCalcGiftiListSum */
+        SELECT SUM(REQ_POINT) AS REQ_POINT_SUM
+               , SUM(CAL_POINT) AS CAL_POINT_SUM
+          FROM (
+				SELECT  A.LINK_YM
+						, A.USG_YM
+						, B.SUB_LINK_NAME AS CUS_NM
+						, A.POINT AS REQ_POINT
+						, DECODE(A.RESULT_DTL_CD, '1000', A.POINT * 0.95, 0) AS CAL_POINT
+				, DECODE(A.RESULT_DTL_CD, '1000', '지급성공', DECODE(A.RESULT_DTL_CD, NULL, '지급대기', '지급실패')) AS RESULT_CD
+				  FROM  MSP_PARTNER_GIFTI_01 A
+						, MSP_JUO_SUB_INFO B
+				 WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+		 		<choose>
+					<when test="subscriberNo != null and subscriberNo != ''">
+					AND  B.SUBSCRIBER_NO = #{subscriberNo, jdbcType=VARCHAR}	
+					</when>
+					<otherwise>
+					AND  A.LINK_YM = #{searchYm, jdbcType=VARCHAR}		
+					</otherwise>
+				</choose>
+				<if test="resultCd != null and resultCd != ''">
+					AND  DECODE(A.RESULT_DTL_CD, '1000', 'Y', DECODE(A.RESULT_DTL_CD, NULL, 'W', 'N')) = #{resultCd, jdbcType=VARCHAR}
+				</if>
+				ORDER  BY
+					A.LINK_YM DESC
+					, A.USG_YM DESC
+					, B.SUB_LINK_NAME ASC
+        		)
+
+	</select>	
+	 
+	<!-- 티머니포인트지급내역 -->
+	<select id="getPtnrCalcTmoneyList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrCalcMapper.getPtnrCalcTmoneyList */
+		SELECT  A.LINK_YM
+			  , A.BILL_YM
+			  , B.SUB_LINK_NAME AS CUS_NM
+			  , A.POINT AS REQ_POINT
+			  , DECODE(A.RESULT_DTL_CD, '00', A.POINT, 0) AS CAL_POINT
+			  , (SELECT CD_DSC
+	               FROM CMN_GRP_CD_MST
+	              WHERE GRP_ID = 'CMN0200'
+	                AND ETC1 = 'tmoney'
+	                AND ETC2 = NVL(A.RESULT_DTL_CD, 'W')) AS RESULT_CD
+		  FROM  MSP_PARTNER_TMONEY_01 A
+			  , MSP_JUO_SUB_INFO B
+		 WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+		<choose>
+			<when test="subscriberNo != null and subscriberNo != ''">
+			AND  B.SUBSCRIBER_NO = #{subscriberNo, jdbcType=VARCHAR}
+			</when>
+			<otherwise>
+			AND  A.LINK_YM = #{searchYm, jdbcType=VARCHAR}
+			</otherwise>
+		</choose>
+		<if test="resultCd != null and resultCd != ''">
+		   AND  NVL(A.RESULT_DTL_CD, 'W') = (SELECT ETC2 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0200' AND ETC1 = 'tmoney' AND CD_VAL = #{resultCd, jdbcType=VARCHAR})
+		</if>
+		ORDER  BY
+			A.LINK_YM DESC
+			, A.BILL_YM DESC
+			, B.SUB_LINK_NAME ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />	
+	</select>
+	
+	<!-- 티머니포인트지급내역 합계 -->
+	<select id="getPtnrCalcTmoneyListSum" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrCalcMapper.getPtnrCalcTmoneyListSum */
+        SELECT SUM(REQ_POINT) AS REQ_POINT_SUM
+               , SUM(CAL_POINT) AS CAL_POINT_SUM
+          FROM (
+				SELECT  A.LINK_YM
+					  , A.BILL_YM
+					  , B.SUB_LINK_NAME AS CUS_NM
+					  , A.POINT AS REQ_POINT
+					  , DECODE(A.RESULT_DTL_CD, '00', A.POINT, 0) AS CAL_POINT
+					  , (SELECT CD_DSC
+			               FROM CMN_GRP_CD_MST
+			              WHERE GRP_ID = 'CMN0200'
+			                AND ETC1 = 'tmoney'
+			                AND ETC2 = NVL(A.RESULT_DTL_CD, 'W')) AS RESULT_CD
+				  FROM  MSP_PARTNER_TMONEY_01 A
+					  , MSP_JUO_SUB_INFO B
+				 WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+				<choose>
+					<when test="subscriberNo != null and subscriberNo != ''">
+					AND  B.SUBSCRIBER_NO = #{subscriberNo, jdbcType=VARCHAR}
+					</when>
+					<otherwise>
+					AND  A.LINK_YM = #{searchYm, jdbcType=VARCHAR}
+					</otherwise>
+				</choose>
+				<if test="resultCd != null and resultCd != ''">
+				   AND  NVL(A.RESULT_DTL_CD, 'W') = (SELECT ETC2 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0200' AND ETC1 = 'tmoney' AND CD_VAL = #{resultCd, jdbcType=VARCHAR})
+				</if>
+				ORDER  BY
+					A.LINK_YM DESC
+					, A.BILL_YM DESC
+					, B.SUB_LINK_NAME ASC
+        		)
+
+	</select>	
+	
+	<!-- 구글PLAY지급내역 -->
+	<select id="getPtnrCalcGooglePlayList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrCalcMapper.getPtnrCalcGooglePlayList */
+		SELECT  SUBSCRIBER_NO
+		      , CUS_NM
+		      , CONTRACT_NUM
+		      , REGST_DT
+		      , LINK_YM
+		      , SVC_TYPE_NM
+		      , SVC_NM
+		      , FN_GET_CODENM('MSP00016', DC_CD) AS DC_CD_NM
+		      , BILL_YM
+		      , REQ_POINT
+		      , CAL_POINT
+		      , RESULT_CD
+		      , DEAL_NUM
+		FROM  (
+				SELECT  B.SUBSCRIBER_NO
+					  , B.SUB_LINK_NAME AS CUS_NM
+					  , A.CONTRACT_NUM
+					  , TO_CHAR(A.REGST_DTTM -1,'YYYYMMDD') REGST_DT
+				      , A.LINK_YM
+				      , FN_GET_CODENM('MSP00015', A.SVC_TYPE) AS SVC_TYPE_NM
+				      , CASE WHEN A.SVC_TYPE = '1' THEN (SELECT RATE_NM FROM MSP_RATE_MST AA
+				                                         WHERE AA.RATE_CD = A.SVC_CD)
+				             WHEN A.SVC_TYPE = '2' THEN (SELECT PRMT_NM FROM MSP_PARTNER_PRMT_MST AA
+				                                         WHERE AA.PRMT_ID = A.SVC_CD)
+				             ELSE ''
+				        END SVC_NM
+				      , CASE WHEN A.SVC_TYPE = '1' THEN (SELECT DC_CD FROM MSP_PARTNER_ADD_SVC_MST AA
+				                                         WHERE AA.ADD_SVC_CD = A.SVC_CD
+				                                         AND   ROWNUM = 1)
+				        ELSE ''
+				        END DC_CD
+					  , A.BILL_YM
+					  , A.POINT AS REQ_POINT
+					  , DECODE(A.RESULT_DTL_CD, '00', A.POINT, 0) AS CAL_POINT
+					  , (SELECT CD_DSC
+			               FROM CMN_GRP_CD_MST
+			              WHERE GRP_ID = 'CMN0200'
+			                AND ETC1 = 'googleplay'
+			                AND ETC2 = NVL(A.RESULT_DTL_CD, 'W')) AS RESULT_CD
+			          , A.DEAL_NUM
+				  FROM  MSP_PARTNER_GOOGLEPLAY_01 A
+					  , MSP_JUO_SUB_INFO B
+				 WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+				   AND  A.LINK_YM BETWEEN #{fromSearchYm} AND #{toSearchYm}
+				<if test="svcType != null and svcType != ''">
+				   AND  A.SVC_TYPE = #{svcType}
+				</if>
+				<if test="searchCd != null and searchCd != ''">
+					<choose>
+						<when test='searchCd == "10"'>
+							AND A.CONTRACT_NUM = #{searchVal}
+						</when>
+						<when test='searchCd == "20"'>
+							AND B.SUB_LINK_NAME LIKE #{searchVal} || '%'
+						</when>
+						<when test='searchCd == "30"'>
+							AND B.SUBSCRIBER_NO = #{searchVal}
+						</when>
+					</choose>
+				</if>
+				<if test="resultCd != null and resultCd != ''">
+				   AND  NVL(A.RESULT_DTL_CD, 'W') = (SELECT ETC2 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0200' AND ETC1 = 'googleplay' AND CD_VAL = #{resultCd, jdbcType=VARCHAR})
+				</if>
+			  ) AAA
+	    WHERE 1=1
+		<if test="dcCd != null and dcCd != ''">
+		   AND  AAA.DC_CD = #{dcCd}
+		</if>
+	    
+		ORDER  BY
+			AAA.LINK_YM DESC
+			, AAA.BILL_YM DESC
+			, AAA.CUS_NM ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />	
+	</select>
+	
+	<!-- 구글PLAY지급내역 합계 -->
+	<select id="getPtnrCalcGooglePlayListSum" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrCalcMapper.getPtnrCalcGooglePlayListSum */
+        SELECT SUM(REQ_POINT) AS REQ_POINT_SUM
+               , SUM(CAL_POINT) AS CAL_POINT_SUM
+          FROM (
+				SELECT  SUBSCRIBER_NO
+				      , CUS_NM
+				      , CONTRACT_NUM
+				      , REGST_DT
+				      , LINK_YM
+				      , SVC_TYPE_NM
+				      , SVC_NM
+				      , FN_GET_CODENM('MSP00016', DC_CD) AS DC_CD_NM
+				      , BILL_YM
+				      , REQ_POINT
+				      , CAL_POINT
+				      , RESULT_CD
+				FROM  (
+						SELECT  B.SUBSCRIBER_NO
+							  , B.SUB_LINK_NAME AS CUS_NM
+							  , A.CONTRACT_NUM
+							  , TO_CHAR(A.REGST_DTTM -1,'YYYYMMDD') REGST_DT
+						      , A.LINK_YM
+						      , FN_GET_CODENM('MSP00015', A.SVC_TYPE) AS SVC_TYPE_NM
+						      , CASE WHEN A.SVC_TYPE = '1' THEN (SELECT RATE_NM FROM MSP_RATE_MST AA
+						                                         WHERE AA.RATE_CD = A.SVC_CD)
+						        ELSE ''
+						        END SVC_NM
+						      , CASE WHEN A.SVC_TYPE = '1' THEN (SELECT DC_CD FROM MSP_PARTNER_ADD_SVC_MST AA
+						                                         WHERE AA.ADD_SVC_CD = A.SVC_CD
+						                                         AND   ROWNUM = 1)
+						        ELSE ''
+						        END DC_CD
+							  , A.BILL_YM
+							  , A.POINT AS REQ_POINT
+							  , DECODE(A.RESULT_DTL_CD, '00', A.POINT, 0) AS CAL_POINT
+							  , (SELECT CD_DSC
+					               FROM CMN_GRP_CD_MST
+					              WHERE GRP_ID = 'CMN0200'
+					                AND ETC1 = 'googleplay'
+					                AND ETC2 = NVL(A.RESULT_DTL_CD, 'W')) AS RESULT_CD
+						  FROM  MSP_PARTNER_GOOGLEPLAY_01 A
+							  , MSP_JUO_SUB_INFO B
+						 WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+						   AND  A.LINK_YM BETWEEN #{fromSearchYm} AND #{toSearchYm}
+						<if test="svcType != null and svcType != ''">
+						   AND  A.SVC_TYPE = #{svcType}
+						</if>
+						<if test="searchCd != null and searchCd != ''">
+							<choose>
+								<when test='searchCd == "10"'>
+									AND A.CONTRACT_NUM = #{searchVal}
+								</when>
+								<when test='searchCd == "20"'>
+									AND B.SUB_LINK_NAME LIKE #{searchVal} || '%'
+								</when>
+								<when test='searchCd == "30"'>
+									AND B.SUBSCRIBER_NO = #{searchVal}
+								</when>
+							</choose>
+						</if>
+						<if test="resultCd != null and resultCd != ''">
+						   AND  NVL(A.RESULT_DTL_CD, 'W') = (SELECT ETC2 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0200' AND ETC1 = 'googleplay' AND CD_VAL = #{resultCd, jdbcType=VARCHAR})
+						</if>
+					  ) AAA
+			    WHERE 1=1
+				<if test="dcCd != null and dcCd != ''">
+				   AND  AAA.DC_CD = #{dcCd}
+				</if>
+			    
+				ORDER  BY
+					AAA.LINK_YM DESC
+					, AAA.BILL_YM DESC
+					, AAA.CUS_NM ASC
+        		)
+
+	</select>	
+	
+	<!-- 구글PLAY지급내역 Excel Download-->
+	<select id="getPtnrCalcGooglePlayListEx" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrCalcMapper.getPtnrCalcGooglePlayListEx */
+		SELECT  SUBSCRIBER_NO
+		      , CUS_NM
+		      , CONTRACT_NUM
+		      , REGST_DT
+		      , LINK_YM
+		      , SVC_TYPE_NM
+		      , SVC_NM
+		      , FN_GET_CODENM('MSP00016', DC_CD) AS DC_CD_NM
+		      , BILL_YM
+		      , REQ_POINT
+		      , CAL_POINT
+		      , RESULT_CD
+		      , DEAL_NUM
+		FROM  (
+				SELECT  B.SUBSCRIBER_NO
+					  , B.SUB_LINK_NAME AS CUS_NM
+					  , A.CONTRACT_NUM
+					  , TO_CHAR(A.REGST_DTTM -1,'YYYYMMDD') REGST_DT
+				      , A.LINK_YM
+				      , FN_GET_CODENM('MSP00015', A.SVC_TYPE) AS SVC_TYPE_NM
+				      , CASE WHEN A.SVC_TYPE = '1' THEN (SELECT RATE_NM FROM MSP_RATE_MST AA
+				                                         WHERE AA.RATE_CD = A.SVC_CD)
+				             WHEN A.SVC_TYPE = '2' THEN (SELECT PRMT_NM FROM MSP_PARTNER_PRMT_MST AA
+				                                         WHERE AA.PRMT_ID = A.SVC_CD)
+				             ELSE ''
+				        END SVC_NM
+				      , CASE WHEN A.SVC_TYPE = '1' THEN (SELECT DC_CD FROM MSP_PARTNER_ADD_SVC_MST AA
+				                                         WHERE AA.ADD_SVC_CD = A.SVC_CD
+				                                         AND   ROWNUM = 1)
+				        ELSE ''
+				        END DC_CD
+					  , A.BILL_YM
+					  , A.POINT AS REQ_POINT
+					  , DECODE(A.RESULT_DTL_CD, '00', A.POINT, 0) AS CAL_POINT
+					  , (SELECT CD_DSC
+			               FROM CMN_GRP_CD_MST
+			              WHERE GRP_ID = 'CMN0200'
+			                AND ETC1 = 'googleplay'
+			                AND ETC2 = NVL(A.RESULT_DTL_CD, 'W')) AS RESULT_CD
+			          , A.DEAL_NUM
+				  FROM  MSP_PARTNER_GOOGLEPLAY_01 A
+					  , MSP_JUO_SUB_INFO B
+				 WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+				   AND  A.LINK_YM BETWEEN #{fromSearchYm} AND #{toSearchYm}
+				<if test="svcType != null and svcType != ''">
+				   AND  A.SVC_TYPE = #{svcType}
+				</if>
+				<if test="searchCd != null and searchCd != ''">
+					<choose>
+						<when test='searchCd == "10"'>
+							AND A.CONTRACT_NUM = #{searchVal}
+						</when>
+						<when test='searchCd == "20"'>
+							AND B.SUB_LINK_NAME LIKE #{searchVal} || '%'
+						</when>
+						<when test='searchCd == "30"'>
+							AND B.SUBSCRIBER_NO = #{searchVal}
+						</when>
+					</choose>
+				</if>
+				<if test="resultCd != null and resultCd != ''">
+				   AND  NVL(A.RESULT_DTL_CD, 'W') = (SELECT ETC2 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0200' AND ETC1 = 'googleplay' AND CD_VAL = #{resultCd, jdbcType=VARCHAR})
+				</if>
+			  ) AAA
+	    WHERE 1=1
+		<if test="dcCd != null and dcCd != ''">
+		   AND  AAA.DC_CD = #{dcCd}
+		</if>
+	    
+		ORDER  BY
+			AAA.LINK_YM DESC
+			, AAA.BILL_YM DESC
+			, AAA.CUS_NM ASC
+	</select>
+	
+	<!-- 롯데멤버스포인트지급내역 -->
+	<select id="getPtnrCalcLpointList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrCalcMapper.getPtnrCalcLpointList */
+		SELECT
+			A.LINK_YM
+			, A.BILL_YM
+			, B.CUSTOMER_LINK_NAME AS CUST_NM
+			, A.REQ_POINT
+			, DECODE(NVL(A.RES_CD, 'R'), '00', '지급성공', 'R', '지급대기', '지급실패') AS RESULT_CD
+			, A.RES_MSG
+		FROM
+			MSP_PARTNER_LPOINT_01 A
+			, MSP_JUO_CUS_INFO B
+		WHERE  A.CUSTOMER_ID = B.CUSTOMER_ID
+		<choose>
+			<when test="custNm != null and custNm != ''">
+			AND  B.CUSTOMER_LINK_NAME LIKE '%'||#{custNm, jdbcType=VARCHAR}||'%'
+			</when>
+			<otherwise>
+			AND  A.LINK_YM = #{searchYm, jdbcType=VARCHAR}
+			</otherwise>
+		</choose>
+		<if test="resultCd != null and resultCd != ''">
+			AND  DECODE(NVL(A.RES_CD, 'R'), '00', 'Y', 'R', 'W', 'N') = #{resultCd, jdbcType=VARCHAR}
+		</if>
+		ORDER  BY
+			A.LINK_YM DESC
+			, A.BILL_YM DESC
+			, B.CUSTOMER_LINK_NAME ASC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 롯데멤버스포인트지급내역 합계 -->
+	<select id="getPtnrCalcLpointListSum" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrCalcMapper.getPtnrCalcLpointListSum */
+        SELECT SUM(REQ_POINT) AS REQ_POINT_SUM
+          FROM (
+				SELECT
+					A.LINK_YM
+					, A.BILL_YM
+					, B.CUSTOMER_LINK_NAME AS CUST_NM
+					, A.REQ_POINT
+					, DECODE(NVL(A.RES_CD, 'R'), '00', '지급성공', 'R', '지급대기', '지급실패') AS RESULT_CD
+					, A.RES_MSG
+				FROM
+					MSP_PARTNER_LPOINT_01 A
+					, MSP_JUO_CUS_INFO B
+				WHERE  A.CUSTOMER_ID = B.CUSTOMER_ID
+				<choose>
+					<when test="custNm != null and custNm != ''">
+					AND  B.CUSTOMER_LINK_NAME LIKE '%'||#{custNm, jdbcType=VARCHAR}||'%'
+					</when>
+					<otherwise>
+					AND  A.LINK_YM = #{searchYm, jdbcType=VARCHAR}
+					</otherwise>
+				</choose>
+				<if test="resultCd != null and resultCd != ''">
+				AND  DECODE(NVL(A.RES_CD, 'R'), '00', 'Y', 'R', 'W', 'N') = #{resultCd, jdbcType=VARCHAR}
+				</if>
+				ORDER  BY
+					A.LINK_YM DESC
+					, A.BILL_YM DESC
+					, B.CUSTOMER_LINK_NAME ASC
+        		)
+		
+	</select>	
+	
+	<!-- 롯데멤버스정산내역 -->
+	<select id="getPtnrCalcLpointSttlList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		/* PtnrCalcMapper.getPtnrCalcLpointSttlList */
+		SELECT  SUM(A.REQ_POINT) AS TOT_REQ_POINT
+		        , TRUNC(SUM(A.REQ_POINT) * 0.1) AS ACML_CMSN
+		        , TRUNC(TRUNC(SUM(A.REQ_POINT) * 0.1) * 0.1) AS ACML_CMSN_VAT
+		        , TRUNC(SUM(A.REQ_POINT) * 0.1) + TRUNC(TRUNC(SUM(A.REQ_POINT) * 0.1) * 0.1) AS TOT_CMSN
+		        , SUM(A.REQ_POINT) + TRUNC(SUM(A.REQ_POINT) * 0.1) + TRUNC(TRUNC(SUM(A.REQ_POINT) * 0.1) * 0.1) AS STTL_AMNT
+		FROM    MSP_PARTNER_LPOINT_01 A
+		WHERE   1 = 1
+		AND     A.LINK_YM = #{searchYm, jdbcType=VARCHAR}
+		AND     A.RES_CD = '00'
+		GROUP BY A.LINK_YM
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+
+	<!-- 롯데멤버스포인트지급내역 엑셀-->
+	<select id="getPtnrCalcLpointListEx" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrCalcMapper.getPtnrCalcLpointList */
+		SELECT
+			A.LINK_YM
+			, A.BILL_YM
+			, B.CUSTOMER_LINK_NAME AS CUST_NM
+			, A.REQ_POINT
+			, DECODE(NVL(A.RES_CD, 'R'), '00', '지급성공', 'R', '지급대기', '지급실패') AS RESULT_CD
+			, A.RES_MSG
+		FROM
+			MSP_PARTNER_LPOINT_01 A
+			, MSP_JUO_CUS_INFO B
+		WHERE  A.CUSTOMER_ID = B.CUSTOMER_ID
+		<choose>
+			<when test="custNm != null and custNm != ''">
+			AND  B.CUSTOMER_LINK_NAME LIKE '%'||#{custNm, jdbcType=VARCHAR}||'%'
+			</when>
+			<otherwise>
+			AND  A.LINK_YM = #{searchYm, jdbcType=VARCHAR}
+			</otherwise>
+		</choose>
+		<if test="resultCd != null and resultCd != ''">
+			AND  DECODE(NVL(A.RES_CD, 'R'), '00', 'Y', 'R', 'W', 'N') = #{resultCd, jdbcType=VARCHAR}
+		</if>
+		ORDER  BY
+			A.LINK_YM DESC
+			, A.BILL_YM DESC
+			, B.CUSTOMER_LINK_NAME ASC
+		
+	</select>	
+   
+   <sql id="getPtnrCalcMrAsst">
+      SELECT
+               A.IF_YM
+             , D.CONTRACT_NUM
+             , D.SUB_LINK_NAME
+             , D.SUBSCRIBER_NO
+             , DECODE(C.INSR_TMNT_DT, NULL, '가입', '해지') AS INSR_STAT_NM
+             , A.INSR_JOIN_DT
+             , C.INSR_TMNT_DT
+             , B.KTM_AD_FEE
+             , DECODE(F.PAY_CL_CD, 'PO', '후불', '선불') AS SERVICE_TYPE_NM
+             , F.DATA_TYPE
+         FROM  MSP_MIRAE_ASSET_IF A
+             , MSP_MIRAE_ASSET_IF B
+             , MSP_MIRAE_ASSET_IF C
+             , MSP_JUO_SUB_INFO   D
+             , MSP_REQUEST_DTL    E
+             , MSP_RATE_MST       F
+         WHERE A.TRADE_CD = 'BH3012'
+         AND   A.KTM_CUST_YN = '1'
+         AND   A.MA_KEY = B.MA_KEY(+)
+         AND   B.TRADE_CD(+) = 'BH3013'
+         AND   A.MA_KEY = C.MA_KEY(+)
+         AND   C.TRADE_CD(+) = 'BH3021'
+         AND   A.KTM_CNTR_NO = D.CONTRACT_NUM
+         AND   D.CONTRACT_NUM = E.CONTRACT_NUM
+         AND   E.LST_RATE_CD = F.RATE_CD
+         <choose>
+            <when test="subscriberNo != null and subscriberNo != ''">
+            AND  D.SUBSCRIBER_NO = #{subscriberNo, jdbcType=VARCHAR}
+            </when>
+            <otherwise>
+            AND   A.IF_YM BETWEEN #{fromSearchYm, jdbcType=VARCHAR} AND #{toSearchYm, jdbcType=VARCHAR}
+            </otherwise>
+         </choose>
+         <if test="insrStatCd != null and insrStatCd != ''">
+         AND  DECODE(NVL(C.INSR_TMNT_DT, 'M1000'), 'M1000', 'M1000', 'M1001') = #{insrStatCd, jdbcType=VARCHAR}
+      </if>
+      ORDER BY INSR_STAT_NM, A.IF_YM DESC, D.SUB_LINK_NAME
+   </sql>
+   
+   <!-- 미래에셋가입자정보조회 -->
+   <select id="getPtnrCalcMrAsstList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      <include refid="com.ktis.msp.cmn.include.paging-start" />
+      /* PtnrCalcMapper.getPtnrCalcMrAsstList */
+      <include refid="getPtnrCalcMrAsst" />
+      <include refid="com.ktis.msp.cmn.include.paging-end" />
+   </select>
+   
+   <!-- 미래에셋가입자정보조회 엑셀 다운로드용 -->
+   <select id="getPtnrCalcMrAsstListByExcel" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrCalcVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      /* PtnrCalcMapper.getPtnrCalcMrAsstListByExcel */
+      <include refid="getPtnrCalcMrAsst" />
+   </select>
+   
+</mapper>

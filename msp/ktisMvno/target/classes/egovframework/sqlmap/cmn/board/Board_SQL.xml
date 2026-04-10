@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.board.mapper.BoardMapper">
+	<resultMap id="FormInfoResultMap"  type="java.util.HashMap" >
+		<result property="xml" column="xml"  jdbcType="CLOB" javaType="java.lang.String" />
+	</resultMap>
+
+	<select id="hqAuth" parameterType="java.util.HashMap" resultType="String">
+		SELECT ATTC_SCTN_CD
+		 FROM CMN_USR_MST
+		WHERE USR_ID = #{SESSION_USER_ID}
+	
+	</select>
+	
+	<select id="getNoticeId" resultType="String">
+		SELECT CMN_NOTICE_SEQ.NEXTVAL FROM DUAL	
+	</select>
+	
+	<select id="noticeList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+			SELECT 
+			       A.NOTICE_ID ,
+			       A.TITLE ,
+			       A.CONTENTS ,
+			       A.DELETE_YN ,
+			       A.POST_STRT_DT ,
+			       A.POST_END_DT ,
+			       A.REGST_ID ,
+			       TO_CHAR(A.REGST_DTTM, 'YYYY-MM-DD HH24:MI:SS') REGST_DTTM ,
+			       A.RVISN_ID ,
+			       TO_CHAR(A.RVISN_DTTM, 'YYYY-MM-DD HH24:MI:SS') RVISN_DTTM ,
+			       B.TYPE_CD ,
+			       A.ORGN ,
+			       A.ORGN10 ,
+			       A.ORGN20 ,
+			       A.ORGN40 ,
+			       A.REGST_ORGN_NM ,
+			       A.REGST_USR_NM ,
+			       DECODE( ( (SELECT COUNT(*)
+			                        FROM   ORG_FILE_MGMT_MST
+			                        WHERE  ORGN_ID = A.NOTICE_ID
+			                        AND    ATT_SCTN = 'NTC') ), 0, 0, 1) FILE_YN
+			  FROM   CMN_NOTICE_MST A ,
+			       (SELECT TYPE_CD
+			        FROM   ORG_ORGN_INFO_MST
+			        WHERE  ORGN_ID = #{SESSION_USER_ORGN_ID} AND ROWNUM = 1) B
+			 WHERE 1=1
+				<![CDATA[  AND A.POST_STRT_DT <= TO_CHAR(SYSDATE, 'YYYYMMDD') ]]>
+				<![CDATA[  AND A.POST_END_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD') ]]>
+					AND A.DELETE_YN = 'N'
+				<if test="SESSION_USER_ORGN_TYPE_CD != '10' and SESSION_TYPE_DTL_CD1 == 'SU'">
+					AND A.ORGN40 = '1'
+				</if>
+				
+				<if test="SESSION_USER_ORGN_TYPE_CD != '10' and SESSION_TYPE_DTL_CD1 != 'SU'">
+					AND A.ORGN20 = '1'
+				</if>				
+				<if test="TITLE != null and TITLE != '' ">
+					AND UPPER(A.TITLE) LIKE '%' || UPPER(#{TITLE}) || '%'
+				</if>
+				<if test="REGST_USR_NM != null and REGST_USR_NM != '' ">
+					AND UPPER(A.REGST_USR_NM) LIKE '%' || UPPER(#{REGST_USR_NM}) || '%'
+				</if>  
+				<if test="REGST_ORGN_NM != null and REGST_ORGN_NM != '' ">
+					AND UPPER(A.REGST_ORGN_NM) LIKE '%' || UPPER(#{REGST_ORGN_NM} )|| '%'
+				</if>  
+				<if test=" SRCH_STRT_DT != null and SRCH_STRT_DT != '' ">
+				<![CDATA[
+					AND A.POST_STRT_DT >= TO_CHAR(TO_DATE(#{SRCH_STRT_DT,jdbcType=VARCHAR}, 'YYYYMMDD'), 'YYYYMMDD')
+				]]>
+				</if>  
+				<if test="SRCH_END_DT != null and SRCH_END_DT != '' ">
+				<![CDATA[
+					AND A.POST_STRT_DT <= TO_CHAR(TO_DATE(#{SRCH_END_DT,jdbcType=VARCHAR}, 'YYYYMMDD'), 'YYYYMMDD')
+				]]> 
+				</if>
+				ORDER BY TO_NUMBER(A.NOTICE_ID) DESC
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<insert  id="noticeInsert"  parameterType="java.util.HashMap"  >
+		INSERT INTO CMN_NOTICE_MST 
+		(
+			NOTICE_ID
+			,TITLE
+			,CONTENTS
+			,DELETE_YN
+			,POST_STRT_DT
+			,POST_END_DT
+			,REGST_ID
+			,REGST_DTTM
+			,ORGN
+			,ORGN10
+			,ORGN20
+			,ORGN40
+			,REGST_ORGN_NM
+			,REGST_USR_NM
+		)
+		VALUES
+		(
+			#{NOTICE_ID}
+			,#{TITLE}
+			,#{CONTENTS}
+			,NVL( #{DELETE_YN}, 'N')
+			,#{POST_STRT_DT}
+			,#{POST_END_DT}
+			,#{SESSION_USER_ID }
+			,SYSDATE
+			,NVL( #{ORGN}, 0)
+			,NVL( #{ORGN10}, 0)
+			,NVL( #{ORGN20}, 0)
+			,NVL( #{ORGN40}, 0)
+			,( SELECT A.ORGN_NM 
+			  FROM ORG_ORGN_INFO_MST A
+								    ,CMN_USR_MST B
+			WHERE 1=1
+			   AND A.ORGN_ID = B.ORGN_ID
+			   AND B.USR_ID = #{SESSION_USER_ID}
+			  )
+			,(SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = #{SESSION_USER_ID})
+		)
+	</insert>
+	
+	<update id="noticeUpdate"  parameterType="java.util.HashMap"  >
+		UPDATE CMN_NOTICE_MST
+		SET 
+			TITLE				=  #{TITLE}
+			,CONTENTS		= #{CONTENTS}
+			,DELETE_YN		= NVL( #{DELETE_YN}, 'N')
+			,POST_STRT_DT  = #{POST_STRT_DT}
+			,POST_END_DT   = #{POST_END_DT}
+			,RVISN_ID			= #{SESSION_USER_ID}
+			,RVISN_DTTM	= SYSDATE
+			,ORGN			= NVL( #{ORGN}, 0)
+			,ORGN10			= NVL( #{ORGN10}, 0)
+			,ORGN20			= NVL( #{ORGN20}, 0)
+			,ORGN40			= NVL( #{ORGN40}, 0)
+			,RVISN_ORGN_NM = ( SELECT A.ORGN_NM 
+										FROM ORG_ORGN_INFO_MST A ,CMN_USR_MST B WHERE 1=1
+										   AND A.ORGN_ID = B.ORGN_ID
+										   AND B.USR_ID = #{SESSION_USER_ID}
+										)
+			,RVISN_USR_NM = (SELECT USR_NM FROM CMN_USR_MST WHERE USR_ID = #{SESSION_USER_ID})
+		WHERE NOTICE_ID = #{NOTICE_ID}
+	</update>
+	
+	<update id="noticeDelete"  parameterType="java.util.HashMap"  >
+		UPDATE CMN_NOTICE_MST
+		SET 
+			DELETE_YN			= 'Y'
+		WHERE NOTICE_ID = #{NOTICE_ID}
+	</update>
+	
+	<select id="getFile1" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* cmn.board.mapper.getFile */
+	             ATT_ROUT    /* 파일경로 */
+	           , FILE_NM    /* 파일명 */
+	           , FILE_ID    /* 파일ID */
+		FROM ORG_FILE_MGMT_MST
+	   WHERE ORGN_ID = #{NOTICE_ID, jdbcType=VARCHAR}
+	   ORDER BY REG_DTTM
+	</select>
+	
+	<select id="getNoticeFile" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* cmn.board.mapper.getFile */
+		          ATT_ROUT      /* 파일경로 */
+		        , FILE_NM       /* 파일명 */
+		        , FILE_ID       /* 파일ID */
+		  FROM    ORG_FILE_MGMT_MST OFMM
+		        , CMN_NOTICE_MST CNM
+		 WHERE  CNM.NOTICE_ID = OFMM.ORGN_ID
+		   AND  OFMM.ATT_SCTN = 'NTC'
+		   AND  CNM.DELETE_YN = 'N'
+		   AND  SYSDATE BETWEEN TO_DATE(CNM.POST_STRT_DT, 'YYYYMMDD') AND TO_DATE(CNM.POST_END_DT, 'YYYYMMDD')
+		   AND	OFMM.ORGN_ID = #{NOTICE_ID, jdbcType=VARCHAR}
+		 ORDER BY OFMM.REG_DTTM
+	</select>
+	
+	<select id="getBoardFile" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT	/* cmn.board.mapper.getBoardFile */
+		          ATT_ROUT      /* 파일경로 */
+		        , FILE_NM       /* 파일명 */
+		        , FILE_ID       /* 파일ID */
+		  FROM    ORG_FILE_MGMT_MST OFMM
+		        , CMN_BOARD CB
+		 WHERE  CB.SRL_NUM = OFMM.ORGN_ID
+		   AND  OFMM.ATT_SCTN = 'NTC'
+		   AND  CB.BOARD_CD = 'B10'
+		   AND  CB.DEL_YN = 'N'
+		   AND  SYSDATE BETWEEN TO_DATE(CB.POST_STRT_DT, 'YYYYMMDD') AND TO_DATE(CB.POST_END_DT, 'YYYYMMDD')
+		   AND	OFMM.ORGN_ID = #{NOTICE_ID, jdbcType=VARCHAR}
+	     ORDER 	BY OFMM.REG_DTTM
+	</select>
+	
+	<delete id="deleteFile" parameterType="String">
+		DELETE /*cmn.board.mapper..deleteFile */
+		  FROM ORG_FILE_MGMT_MST
+		 WHERE FILE_ID = #{fileId, jdbcType=VARCHAR}	 
+	</delete>	
+	
+	<delete id="deleteNotice" parameterType="java.util.HashMap">
+		DELETE /*cmn.board.mapper..deleteFile */
+		  FROM CMN_NOTICE_MST
+		 WHERE NOTICE_ID = #{NOTICE_ID}	 
+	</delete>	
+	
+	<update id="updateFile1" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload1_s_1}	
+	</update> 
+		
+	<update id="updateFile2" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload1_s_2}	
+	</update>
+	
+	<update id="updateFile3" parameterType="com.ktis.msp.org.common.vo.FileInfoVO">
+		UPDATE /* OrgCommonMapper.updateFile */
+			   ORG_FILE_MGMT_MST
+		   SET ORGN_ID = #{orgnId, jdbcType=VARCHAR}
+		 WHERE FILE_ID = #{file_upload2_s_0}	
+	</update>
+	
+	<!-- 사용자권한체크 -->
+	<select id="getUserAuth" parameterType="com.ktis.msp.cmn.board.vo.BoardVO" resultType="String">
+		/* boardMapper.getUserAuth */
+		SELECT 
+		CASE 
+		WHEN A.USER_AUTH = 'N' THEN (SELECT DECODE(ORGN_ID , #{orgnId} , 'Y' , 'N')
+		       FROM CMN_USR_MST
+		       WHERE USR_ID = #{sessionUserId})
+		WHEN   A.USER_AUTH = 'Y'  THEN 'Y'
+		END  AS USER_AUTH
+		FROM (SELECT  ( CASE WHEN INSTR(CD_DSC, #{sessionUserId}) > 0 THEN 'Y' ELSE 'N' END ) AS USER_AUTH
+					  FROM    CMN_GRP_CD_MST
+					WHERE   GRP_ID = 'CMN0057'
+					AND     CD_VAL = #{boardCd}
+					) A
+	</select>
+	
+	<insert id="insertBoardMgmt" parameterType="com.ktis.msp.cmn.board.vo.BoardVO">
+		/* boardMapper.insertBoardMgmt */
+		INSERT INTO CMN_BOARD (
+		    BOARD_CD
+		    , SRL_NUM
+		    , TITLE
+		    , CNTT
+		    , DEL_YN
+		    , POST_STRT_DT
+		    , POST_END_DT
+		    , ORGN_TP_CD1
+		    , ORGN_TP_CD2
+		    , ORGN_TP_CD3
+		    , ORGN_TP_CD4
+		    , ORGN_TP_CD5
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		) VALUES (
+		    #{boardCd, jdbcType=VARCHAR}
+		    , #{srlNum, jdbcType=INTEGER}
+		    , #{title, jdbcType=VARCHAR}
+		    , #{cntt, jdbcType=VARCHAR}
+		    , 'N'
+		    , #{postStrtDt, jdbcType=VARCHAR}
+		    , #{postEndDt, jdbcType=VARCHAR}
+		    , #{orgnTpCd1, jdbcType=VARCHAR}
+		    , #{orgnTpCd2, jdbcType=VARCHAR}
+		    , #{orgnTpCd3, jdbcType=VARCHAR}
+		    , #{orgnTpCd4, jdbcType=VARCHAR}
+		    , #{orgnTpCd5, jdbcType=VARCHAR}
+		    , #{sessionUserId, jdbcType=VARCHAR}
+		    , SYSDATE
+		    , #{sessionUserId, jdbcType=VARCHAR}
+		    , SYSDATE
+		)
+	</insert>
+	
+	<update id="updateBoardMgmt" parameterType="com.ktis.msp.cmn.board.vo.BoardVO">
+		/* boardMapper.updateBoardMgmt */
+		UPDATE  CMN_BOARD
+		SET     TITLE = #{title, jdbcType=VARCHAR}
+		        , CNTT = #{cntt, jdbcType=VARCHAR}
+		        , POST_STRT_DT = #{postStrtDt, jdbcType=VARCHAR}
+		        , POST_END_DT = #{postEndDt, jdbcType=VARCHAR}
+		        , ORGN_TP_CD1 = #{orgnTpCd1, jdbcType=VARCHAR}
+		        , ORGN_TP_CD2 = #{orgnTpCd2, jdbcType=VARCHAR}
+		        , ORGN_TP_CD3 = #{orgnTpCd3, jdbcType=VARCHAR}
+		        , ORGN_TP_CD4 = #{orgnTpCd4, jdbcType=VARCHAR}
+		        , ORGN_TP_CD5 = #{orgnTpCd5, jdbcType=VARCHAR}
+		        , RVISN_ID = #{sessionUserId, jdbcType=VARCHAR}
+		        , RVISN_DTTM = SYSDATE
+		WHERE   BOARD_CD = #{boardCd, jdbcType=VARCHAR}
+		AND     SRL_NUM = #{srlNum, jdbcType=INTEGER}
+	</update>
+	
+	<delete id="deleteBoardMgmt" parameterType="com.ktis.msp.cmn.board.vo.BoardVO">
+		/* boardMapper.deleteBoardMgmt */
+		UPDATE  CMN_BOARD
+		SET     DEL_YN = 'Y'
+		WHERE   BOARD_CD = #{boardCd, jdbcType=VARCHAR}
+		AND     SRL_NUM = #{srlNum, jdbcType=INTEGER}
+	</delete>
+	
+	<select id="getBoardList" parameterType="com.ktis.msp.cmn.board.vo.BoardVO"
+		resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* boardMapper.getBoardList */
+		
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		SELECT  A.BOARD_CD
+		        , A.SRL_NUM
+		        , A.TITLE
+		        , A.CNTT
+		        , A.POST_STRT_DT
+		        , A.POST_END_DT
+		        , A.ORGN_TP_CD1
+		        , A.ORGN_TP_CD2
+		        , A.ORGN_TP_CD3
+		        , A.ORGN_TP_CD4
+		        , A.ORGN_TP_CD5
+		        , FN_GET_USRNM(A.REGST_ID) AS REGST_NM
+		        , TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS') REGST_DTTM
+		        , FN_GET_USRNM(A.RVISN_ID) AS RVISN_NM
+		        , TO_CHAR(A.RVISN_DTTM, 'YYYYMMDDHH24MISS') RVISN_DTTM
+		        , DECODE( ( SELECT COUNT(*) FROM ORG_FILE_MGMT_MST WHERE ORGN_ID = TO_CHAR(A.SRL_NUM) AND ATT_SCTN = 'NTC' ), 0, 0, 1 ) AS FILE_YN
+		        , A.REGST_ID as REG_ID
+		        ,(SELECT ORGN_ID FROM CMN_USR_MST WHERE USR_ID = A.REGST_ID) AS REG_ORGN_ID
+		FROM    CMN_BOARD A
+		WHERE   A.BOARD_CD  = #{boardCd}
+		AND     A.DEL_YN    = 'N'
+		AND     #{stdrDt}   BETWEEN A.POST_STRT_DT AND A.POST_END_DT
+		<if test='userAuth == null or userAuth == "N"'>
+		AND     ( A.ORGN_TP_CD1 = '1' 
+		          OR CASE
+		                WHEN #{sessionUserOrgnTypeCd} = '10' THEN DECODE( #{sessionUserOrgnId}, 'A30040999', A.ORGN_TP_CD3, A.ORGN_TP_CD2 )
+		                WHEN #{sessionUserOrgnTypeCd} = '20' THEN 
+		                    ( SELECT DECODE(TYPE_CD, 'SU', A.ORGN_TP_CD5, A.ORGN_TP_CD4) FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = #{sessionUserOrgnId} )
+		                ELSE '0'
+		             END = '1' )
+		</if>
+		<if test='userAuth == "Y"'>
+		AND     ( A.ORGN_TP_CD1 = '1' 
+		          OR CASE
+		                WHEN #{sessionUserOrgnId} = 'A30040999' THEN A.ORGN_TP_CD3
+		                ELSE '1'
+		             END = '1' )
+		</if>
+		<if test="searchType != null and searchType != ''">
+			<choose>
+				<when test='searchType == "10"'>
+					AND UPPER(A.TITLE) LIKE '%' || UPPER(#{searchVal}) || '%'
+				</when>
+				<when test='searchType == "20"'>
+					AND UPPER(A.CNTT) LIKE '%' || UPPER(#{searchVal}) || '%'
+				</when>
+				<when test='searchType == "30"'>
+					AND ( UPPER(A.TITLE) LIKE '%' || UPPER(#{searchVal}) || '%' OR UPPER(A.CNTT) LIKE '%' || UPPER(#{searchVal}) || '%' )
+				</when>
+			</choose>
+		</if>
+		
+		ORDER BY A.POST_STRT_DT DESC, A.SRL_NUM DESC
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+    <select id="getFileExtList" parameterType="java.util.HashMap" resultType="int">
+    	/* PayInfoMapper.getFileExtList */
+    	SELECT COUNT(1)
+		  FROM CMN_GRP_MST A
+		       , CMN_GRP_CD_MST B
+		 WHERE 1=1
+		   AND A.GRP_ID = B.GRP_ID
+		   AND A.USG_YN = 'Y'
+		   AND B.USG_YN = 'Y'
+		   AND A.GRP_ID = 'CMN0232'
+		   AND B.CD_VAL = UPPER(#{ext, jdbcType=VARCHAR})
+    </select>
+    
+    <select id="checkNoticeAuth" parameterType="String" resultType="String">
+    	/* BoardMapper.checkNoticeAuth */
+    	SELECT REGST_ID
+    	FROM CMN_NOTICE_MST
+    	WHERE NOTICE_ID = #{noticeId, jdbcType=VARCHAR}
+    </select>
+    
+    <!-- 게시물 등록자 조직 가져오기 -->
+	<select id="getRegOrg" parameterType="com.ktis.msp.cmn.board.vo.BoardVO" resultType="String">
+		/* boardMapper.getRegOrg */
+		SELECT  
+		DECODE(ORGN_ID , #{orgnId} , 'Y' , 'N') as vocYn
+		FROM 
+		CMN_USR_MST
+		WHERE 
+		USR_ID = #{regId}
+	</select>
+	
+	  <!-- 게시물등록자와 로그인사용자조직 비교 -->
+	<select id="getUpdateAuth" parameterType="com.ktis.msp.cmn.board.vo.BoardVO" resultType="String">
+		/* boardMapper.getUpdateAuth */
+		SELECT  
+		DECODE(ORGN_ID , #{orgnId} , 'Y' , 'N') as UpdateAuth
+		FROM 
+		CMN_USR_MST
+		WHERE 
+		USR_ID = #{sessionUserId}
+	</select>
+    
+</mapper>

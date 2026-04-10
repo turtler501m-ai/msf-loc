@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.rcp.rcpMgmt.mapper.PointRecoveryMapper">
+ 
+ 
+ 	<!-- 고객정보조회 select -->
+ 	<select id="selectCustPointTxn"  parameterType="String" resultType="com.ktis.msp.rcp.rcpMgmt.vo.PointTxnVO" >
+		/* PointRecovery_SQL.selectCustPointTxn */
+		SELECT a.SVC_CNTR_NO 			AS svcCntrNo    /* 서비스계약번호 */
+	        ,b.POINT_CUST_SEQ 			AS pointCustSeq 
+			,b.POINT_DIV_CD 			AS pointDivCd
+			,b.POINT_TRT_CD 			AS pointTrtCd
+			,b.POINT_GIVE_BASE_SEQ 		AS pointGiveBaseSeq
+			,b.POINT 					AS point
+			,a.TOT_REMAIN_POINT 		AS totRemainPoint
+			,b.POINT_TXN_RSN_CD 		AS pointTxnRsnCd
+			,b.POINT_TXN_DTL_RSN_DESC 	AS pointTxnDtlRsnDesc
+			,b.POINT_ALL_GIVE_SEQ 		AS pointAllGiveSeq
+			,b.USER_POINT_TRT_SEQ 		AS userPointTrtSeq
+			,b.REQUEST_KEY 				AS requestKey
+			,b.POINT_TRT_DT 			AS pointTrtCd
+			,b.POINT_TRT_MEMO 			AS pointTrtMemo
+	     FROM NMCP_CUST_POINT_GIVE_BASE_BAS@DL_MCP a, NMCP_CUST_POINT_TXN@DL_MCP b
+	    WHERE a.POINT_CUST_SEQ  = b.POINT_CUST_SEQ
+	      AND b.POINT_TRT_CD  = 'U'
+	      AND b.REQUEST_KEY = #{requestKey} 
+	      AND NOT EXISTS ( SELECT 1 FROM NMCP_CUST_POINT_TXN@DL_MCP F   /* 이미 원복된 row있을 경우 제외 */
+		                    WHERE F.POINT_TRT_CD  = 'S'
+		                      AND F.REQUEST_KEY = b.REQUEST_KEY
+		                  ) 
+   </select>		
+
+
+	<!-- 고객포인트지급기준기본 update -->
+	<update id="updateCustPointGiveBaseBas" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.PointTxnVO">
+		/* PointRecovery_SQL.updateCustPointGiveBaseBas */
+		UPDATE NMCP_CUST_POINT_GIVE_BASE_BAS@DL_MCP
+		SET  TOT_ACU_POINT = TOT_ACU_POINT + #{point}
+            ,TOT_REMAIN_POINT = TOT_REMAIN_POINT + #{point}
+			,POINT_SUM_BASE_DATE = TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+			,AMD_IP = #{cretIp}
+			,AMD_DT = SYSDATE
+			,AMD_ID = #{cretId}
+		WHERE SVC_CNTR_NO = #{svcCntrNo}
+	</update>
+	
+	<insert id="insertCustPointTxn" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.PointTxnVO"  useGeneratedKeys="true" keyProperty="pointTxnSeq">
+		/* PointRecovery_SQL.insertCustPointTxn */
+		<selectKey keyProperty="pointTxnSeq" resultType="int" order="BEFORE">
+		    select SQ_POINT_TXN_SEQ.NEXTVAL@DL_MCP FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_CUST_POINT_TXN@DL_MCP
+		(
+			POINT_TXN_SEQ
+			,POINT_CUST_SEQ
+			,POINT_DIV_CD
+			,POINT_TRT_CD
+			,POINT_GIVE_BASE_SEQ
+			,POINT
+			,TOT_REMAIN_POINT
+			,POINT_USE_POSBL_ST_DATE
+			,POINT_USE_POSBL_END_DATE
+			,POINT_TXN_RSN_CD
+			,POINT_TXN_DTL_RSN_DESC
+			,POINT_ALL_GIVE_SEQ
+			,USER_POINT_TRT_SEQ
+			,REQUEST_KEY
+			,POINT_TRT_DT
+			,POINT_TRT_MEMO
+			,CRET_IP
+			,CRET_DT
+			,CRET_ID
+			,AMD_IP
+			,AMD_DT
+			,AMD_ID
+		)
+		VALUES
+		(
+			#{pointTxnSeq}
+			,#{pointCustSeq}
+			,#{pointDivCd}
+			,'S'
+			,#{pointGiveBaseSeq}
+			,#{point}
+			, (SELECT TOT_REMAIN_POINT FROM NMCP_CUST_POINT_GIVE_BASE_BAS@DL_MCP WHERE SVC_CNTR_NO = #{svcCntrNo})
+			,to_char(SYSDATE,'yyyymmddhh24miss')
+			,to_char(add_months(SYSDATE,12),'yyyymmddhh24miss')
+			,#{pointTxnRsnCd}
+			,#{pointTxnDtlRsnDesc} ||' 구매취소에 따른 포인트 재적립'
+			,#{pointAllGiveSeq}
+			,#{userPointTrtSeq}
+			,#{requestKey}
+			,SYSDATE
+			,#{pointTrtMemo}
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+		)
+	</insert>
+	
+	<insert id="insertCustPointAcuTxnDtl" parameterType="com.ktis.msp.rcp.rcpMgmt.vo.PointTxnVO" >
+		/* PointRecovery_SQL.insertCustPointAcuTxnDtl */
+		<selectKey keyProperty="pointTxnSeq" resultType="int" order="BEFORE">
+			SELECT SQ_POINT_TXN_SEQ.CURRVAL@DL_MCP FROM DUAL
+		</selectKey>
+		INSERT INTO NMCP_CUST_POINT_ACU_TXN_DTL@DL_MCP
+		(
+			POINT_TXN_SEQ
+			,REMAIN_POINT
+			,CRET_IP
+			,CRET_DT
+			,CRET_ID
+			,AMD_IP
+			,AMD_DT
+			,AMD_ID
+		)
+		VALUES
+		(
+			#{pointTxnSeq}
+			,#{point}
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+			,#{cretIp}
+			,SYSDATE
+			,#{cretId}
+		) 
+	</insert>
+	
+	
+	<select id="selectUsePointAmt"  parameterType="String" resultType="com.ktis.msp.rcp.rcpMgmt.vo.PointTxnVO" >
+		/* PointRecovery_SQL.selectUsePointAmt */
+		SELECT NVL(POINT,0) AS POINT
+		FROM NMCP_CUST_POINT_TXN@DL_MCP
+		WHERE POINT_TRT_CD  = 'U'
+		  AND REQUEST_KEY = #{requestKey}
+		  AND ROWNUM = 1
+	</select>
+
+	<select id="selectUsePointAmtOpenMgmtListDtl"  parameterType="String" resultType="com.ktis.msp.rcp.rcpMgmt.vo.PointTxnVO" >
+		/* PointRecovery_SQL.selectUsePointAmtOpenMgmtListDtl */
+		  SELECT POI.POINT AS POINT
+		    FROM  MSP_JUO_SUB_INFO SUB
+        		 ,MSP_REQUEST REQ
+        		 ,NMCP_CUST_POINT_TXN@DL_MCP POI
+           WHERE SUB.PPPO = 'PO'
+		     AND SUB.CONTRACT_NUM = REQ.CONTRACT_NUM(+)
+		     AND REQ.REQUEST_KEY = POI.REQUEST_KEY
+		     AND SUB.CONTRACT_NUM = #{contractNum}
+			 AND POI.POINT_TRT_CD = 'U'
+			 AND ROWNUM = 1
+	</select>
+
+</mapper>
+	

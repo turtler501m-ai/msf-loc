@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.bank.mapper.BankMapper">
+	
+	<select id="selectAccessToken" parameterType="com.ktmmobile.mcp.bank.dto.McpAccessTokenDto" resultType="com.ktmmobile.mcp.bank.dto.McpAccessTokenDto">
+		SELECT ACCESS_TOKEN as accessToken
+		     , REMOVE_YN as removeYn
+		     , CLIENT_ID as clientId
+		     , CLIENT_SECRET as clientSecret
+		FROM MCP_ACCESS_TOKEN
+		WHERE CLIENT_ID = #{clientId}
+		AND   CLIENT_SECRET = #{clientSecret}
+
+    </select>
+
+	<delete id="deleteAccessToken" parameterType="com.ktmmobile.mcp.bank.dto.McpAccessTokenDto">
+		DELETE MCP_ACCESS_TOKEN
+		WHERE CLIENT_ID = #{clientId}
+		AND   CLIENT_SECRET = #{clientSecret}
+	</delete>
+
+	<update id="insertAccessToken" parameterType="com.ktmmobile.mcp.bank.dto.McpAccessTokenDto">
+		INSERT INTO MCP_ACCESS_TOKEN(
+		      ISSUE_DATE
+		    , CLIENT_ID
+		    , CLIENT_SECRET
+		    , ACCESS_TOKEN
+		    , REMOVE_YN
+		    , SYS_RDATE
+		    , SYS_UDATE
+		    , USERID
+		    , UPDATE_USERID
+		) VALUES (
+			  TO_CHAR(SYSDATE,'YYYYMMDD')
+			, #{clientId}
+			, #{clientSecret}
+			, #{accessToken}
+			, 'N'
+			, SYSDATE
+			, SYSDATE
+			, 'SYSTEM'
+			, 'SYSTEM'
+		)
+
+	</update>
+
+	<select id="selectAccessTokenWithTime" parameterType="com.ktmmobile.mcp.bank.dto.McpAccessTokenDto" resultType="com.ktmmobile.mcp.bank.dto.McpAccessTokenDto">
+		SELECT
+		    ACCESS_TOKEN as accessToken
+		   ,REMOVE_YN as removeYn
+		   ,CLIENT_ID as clientId
+		   ,CLIENT_SECRET as clientSecret
+		FROM MCP_ACCESS_TOKEN
+		WHERE CLIENT_ID = #{clientId}
+		AND   CLIENT_SECRET = #{clientSecret}
+		AND SYS_RDATE <![CDATA[>=]]> (SYSDATE - (55 / (24 * 60)))
+	</select>
+
+</mapper>

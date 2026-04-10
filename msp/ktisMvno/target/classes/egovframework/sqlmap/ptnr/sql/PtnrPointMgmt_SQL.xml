@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.ptnr.ptnrmgmt.mapper.PtnrPointMgmtMapper">
+	
+	<!-- 제휴포인트관리 목록 (동부화재가 아닐때) -->
+	<sql id="PartnerPointList_20181105">
+		SELECT PNT.CONTRACT_NUM,
+		       PNT.SVC_CNTR_NO,
+		       PNT.CUSTOMER_ID AS CUST_ID,
+		       CUS.CUSTOMER_LINK_NAME AS CUST_NM,
+		       PNT.USG_YM,
+		       PNT.PAY_YM,
+		       PNT.PARTNER_ID AS PTNR_ID,
+		       PNT.RATE_CD,
+		       RAT.RATE_NM,
+		       CASE WHEN FN_GET_MDL_CHK(PNT.CONTRACT_NUM) = 'Y' THEN FN_GET_CODENM('CMN0060' ,'PT01') ELSE FN_GET_CODENM('CMN0060' ,'PT02') END AS POINT_TYPE,
+		       PNT.USG_DT_CNT,
+		       PNT.REQ_POINT,
+		       PNT.FULL_PAY_YN,
+		       PNT.PAY_RESULT,
+		       PNT.PAY_POINT,
+		       PNT.CAL_POINT,
+		       PNT.ADJ_POINT,
+		       PNT.SEND_FLAG,
+		       PNT.BILL_YM,
+		       PNT.PAY_DTTM
+		FROM   (
+		        SELECT CONTRACT_NUM,
+		               SVC_CNTR_NO,
+		               USG_YM,
+		               CASE WHEN SEND_FLAG = 'R' AND PAY_RESULT IN ('X', 'F') THEN TO_CHAR(SYSDATE, 'YYYYMM')
+		                    WHEN PAY_RESULT ='B' THEN TO_CHAR(ADD_MONTHS(TO_DATE(BILL_YM, 'YYYYMM'), 1), 'YYYYMM')
+		                    ELSE TO_CHAR(PAY_DTTM, 'YYYYMM')
+		               END AS PAY_YM,
+		               PARTNER_ID,
+		               RATE_CD,
+		               USG_DT_CNT,
+		               CAL_POINT,
+		               ADJ_POINT,
+		               REQ_POINT,
+		               FN_GET_CODENM('PTNR10002' , FULL_PAY_YN) AS FULL_PAY_YN,
+		               FN_GET_CODENM('CMN0066' ,PAY_RESULT) AS PAY_RESULT,
+		               NVL(PAY_POINT,0) AS PAY_POINT,
+		               SEND_FLAG,
+		               BILL_YM,
+		               PAY_DTTM,
+		               CUSTOMER_ID
+		        FROM   MSP_PARTNER_POINT_MST A
+		        WHERE  A.PARTNER_ID = #{ptnrId, jdbcType=VARCHAR}
+		        AND    CASE WHEN SEND_FLAG = 'R' AND PAY_RESULT IN ('X', 'F') THEN TO_CHAR(SYSDATE, 'YYYYMM')
+		                    WHEN PAY_RESULT ='B' THEN TO_CHAR(ADD_MONTHS(TO_DATE(BILL_YM, 'YYYYMM'), 1), 'YYYYMM')
+		                    ELSE TO_CHAR(PAY_DTTM, 'YYYYMM')
+		               END = #{billYm, jdbcType=VARCHAR}
+			<if test="fullPayYn != null and fullPayYn != ''">
+				AND    A.FULL_PAY_YN = #{fullPayYn, jdbcType=VARCHAR}
+			</if>
+			<if test='sendFlag == "R"'>
+				AND    A.SEND_FLAG = #{sendFlag, jdbcType=VARCHAR}
+			</if>
+			<if test='sendFlag == "Z"'>
+				AND    A.SEND_FLAG <![CDATA[ <> ]]> 'R'
+			</if>
+			<if test="payResult != null and payResult != ''">
+				AND    A.PAY_RESULT = #{payResult, jdbcType=VARCHAR}
+			</if>
+		       ) PNT,
+		       MSP_RATE_MST RAT,
+		       MSP_JUO_CUS_INFO CUS,
+		       MSP_JUO_SUB_INFO SUB
+		WHERE  PNT.RATE_CD = RAT.RATE_CD
+		AND    PNT.CUSTOMER_ID = CUS.CUSTOMER_ID
+		AND    PNT.CONTRACT_NUM = SUB.CONTRACT_NUM
+		<if test="rateNm != null and rateNm != ''">
+			AND  RAT.RATE_NM LIKE '%'||#{rateNm, jdbcType=VARCHAR}||'%'
+		</if>
+		<choose>
+			<when test='searchCd == "10"'>
+				AND  PNT.CONTRACT_NUM = #{searchVal, jdbcType=VARCHAR}
+			</when>
+			<when test='searchCd == "20"'>
+				AND  PNT.SVC_CNTR_NO = #{searchVal, jdbcType=VARCHAR}
+			</when>
+			<when test='searchCd == "30"'>
+				AND  SUB.SUBSCRIBER_NO = #{searchVal, jdbcType=VARCHAR}
+			</when>
+		</choose>
+		ORDER BY PNT.SVC_CNTR_NO, PNT.BILL_YM DESC, PNT.PARTNER_ID, RAT.RATE_NM
+	</sql>
+	
+	<!-- 제휴포인트관리 동부화재와 분리된 것을 하나로 합침 -->
+	<sql id="PartnerPointList">
+		WITH TT AS (
+		    SELECT  A.PARTNER_ID
+		            , A.CONTRACT_NUM
+		            , A.SVC_CNTR_NO
+		            , A.CUSTOMER_ID
+		            , (SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = A.CUSTOMER_ID) AS CUST_NM
+		            , A.USG_YM
+		            , A.BILL_YM
+		            <if test='partnerId != "dongbu"'>
+						, CASE WHEN SEND_FLAG = 'R' AND PAY_RESULT IN ('X', 'F') THEN TO_CHAR(SYSDATE, 'YYYYMM')
+						       WHEN PAY_RESULT ='B' THEN TO_CHAR(ADD_MONTHS(TO_DATE(BILL_YM, 'YYYYMM'), 1), 'YYYYMM')
+					           ELSE TO_CHAR(PAY_DTTM, 'YYYYMM')
+						END
+		            </if>
+					<if test='partnerId == "dongbu"'>
+						, TO_CHAR(ADD_MONTHS(TO_DATE(BILL_YM, 'YYYYMM'), 1), 'YYYYMM')
+					</if>
+					AS PAY_YM
+		            , A.RATE_CD
+	                , CASE WHEN (SELECT '1' FROM MSP_RATE_MST
+					             WHERE RATE_CD = A.RATE_CD) = '1' THEN '1'
+					       WHEN (SELECT '2' FROM MSP_PARTNER_PRMT_MST
+					             WHERE PRMT_ID = A.RATE_CD) = '2' THEN '2'
+					  ELSE '0'
+					  END AS SVC_TYPE
+		            , CASE WHEN FN_GET_MDL_CHK(A.CONTRACT_NUM) = 'Y' THEN FN_GET_CODENM('CMN0060' ,'PT01') 
+		                   ELSE FN_GET_CODENM('CMN0060' ,'PT02') END AS POINT_TYPE
+		            , A.USG_DT_CNT
+		            , A.FULL_PAY_YN
+		            , A.CAL_POINT
+		            , A.ADJ_POINT
+		            , A.REQ_POINT
+		            , NVL(PAY_POINT, 0) AS PAY_POINT
+		            , A.SEND_FLAG
+		            , A.PAY_RESULT
+		            , A.INSR_CD
+		            , A.PAY_DTTM
+		            , B.SUBSCRIBER_NO
+		            , B.SUB_STATUS
+		            , B.LST_COM_ACTV_DATE AS OPEN_DT
+		    FROM    MSP_PARTNER_POINT_MST A
+		            , MSP_JUO_SUB_INFO B
+		    WHERE   1 = 1
+		    AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		    AND     A.PARTNER_ID = #{partnerId}
+			<if test='partnerId != "dongbu" and partnerId != "googleplay"'>
+				<![CDATA[
+				AND A.BILL_YM <= TO_CHAR(ADD_MONTHS(TO_DATE(#{billYm}, 'YYYYMM'), -1), 'YYYYMM')
+				]]>
+			</if>
+			<if test='partnerId == "dongbu" '>
+				AND TO_CHAR(ADD_MONTHS(TO_DATE(BILL_YM, 'YYYYMM'), 1), 'YYYYMM') = #{billYm}
+			</if>
+		)
+		SELECT  A.PARTNER_ID
+		        , A.CONTRACT_NUM
+		        , A.SVC_CNTR_NO
+		        , A.CUSTOMER_ID AS CUST_ID
+		        , A.CUST_NM
+		        , A.USG_YM
+		        , A.BILL_YM
+		        , A.PAY_YM
+		        , A.RATE_CD
+                , CASE WHEN SVC_TYPE = '1' THEN (SELECT RATE_NM FROM MSP_RATE_MST
+                                                 WHERE  RATE_CD = A.RATE_CD
+                                                  )
+                       WHEN SVC_TYPE = '2' THEN (SELECT PRMT_NM FROM MSP_PARTNER_PRMT_MST
+                                                 WHERE  PRMT_ID = A.RATE_CD)
+                  ELSE ''
+                  END AS RATE_NM
+		        , ( CASE WHEN A.PARTNER_ID IN ('jejuair', 'gifti', 'tmoney', 'googleplay') THEN DECODE(FN_GET_MDL_CHK(A.CONTRACT_NUM), 'Y', FN_GET_CODENM('CMN0060' ,'PT01'), FN_GET_CODENM('CMN0060' ,'PT02'))
+		                 ELSE FN_GET_CODENM('CMN0060' ,'PT03') END ) POINT_TYPE
+		        , A.USG_DT_CNT
+		        , ( CASE WHEN A.PARTNER_ID = 'dongbu' THEN DECODE(A.FULL_PAY_YN, 'N', 0, A.CAL_POINT)
+		                 ELSE A.CAL_POINT END ) AS CAL_POINT
+		        , A.ADJ_POINT
+		        , A.REQ_POINT
+		        , A.PAY_POINT
+		        , A.SEND_FLAG
+		        , FN_GET_CODENM('PTNR10002' , A.FULL_PAY_YN) AS FULL_PAY_YN
+		        , FN_GET_CODENM('CMN0066', A.PAY_RESULT) AS PAY_RESULT
+		        , FN_GET_CODENM('CMN0065' , DECODE(A.PAY_RESULT, 'X', 'R', 'Z')) AS PTNR_TRGT
+		        , A.PAY_DTTM
+		        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS
+		        , FN_GET_AGE('X', A.CONTRACT_NUM) AS CUST_AGE
+		        , A.OPEN_DT
+		        , FN_GET_CODENM('CMN0246', A.INSR_CD) AS INSR_NM
+		        , ( SELECT MAX(SUBSTR(T.STRT_DTTM, 1, 8)) 
+		            FROM   MSP_INSR_MEMBER_MST T
+		            WHERE  T.CONTRACT_NUM = A.CONTRACT_NUM 
+		            AND    A.USG_YM BETWEEN SUBSTR(T.STRT_DTTM, 1, 6) AND SUBSTR(T.END_DTTM, 1, 6)
+		            GROUP BY CONTRACT_NUM
+		        ) AS JOIN_DT	/* 요금제가입일 */
+		        , SUM(REQ_POINT) OVER() AS REQ_POINT_SUM
+		        , SUM(PAY_POINT) OVER() AS PAY_POINT_SUM
+		FROM    TT A
+		WHERE   A.PAY_YM = #{billYm}
+		<if test="fullPayYn != null and fullPayYn != '' and partnerId != 'googleplay' ">
+			AND A.FULL_PAY_YN = #{fullPayYn, jdbcType=VARCHAR}
+		</if>
+		<if test="payResult != null and payResult != ''">
+			AND A.PAY_RESULT = #{payResult, jdbcType=VARCHAR}
+		</if>
+		<if test="rateNm != null and rateNm != ''">
+			AND CASE WHEN SVC_TYPE = '1' THEN (SELECT RATE_NM FROM MSP_RATE_MST
+                                               WHERE  RATE_CD = A.RATE_CD
+                                              )
+                     WHEN SVC_TYPE = '2' THEN (SELECT PRMT_NM FROM MSP_PARTNER_PRMT_MST
+                                               WHERE  PRMT_ID = A.RATE_CD
+                                              )
+                ELSE ''
+                END LIKE '%'||#{rateNm, jdbcType=VARCHAR}||'%'
+		</if>
+		<choose>
+			<when test='sendFlag == "R"'>
+				AND A.SEND_FLAG = #{sendFlag, jdbcType=VARCHAR}
+			</when>
+			<when test='sendFlag == "Z"'>
+				AND A.SEND_FLAG <![CDATA[ <> ]]> 'R'
+			</when>
+		</choose>
+		<choose>
+			<when test='searchCd == "10"'>
+				AND  A.CONTRACT_NUM = #{searchVal, jdbcType=VARCHAR}
+			</when>
+			<when test='searchCd == "20"'>
+				AND  A.CUST_NM LIKE #{searchVal, jdbcType=VARCHAR} || '%'
+			</when>
+			<when test='searchCd == "30"'>
+				AND  A.SUBSCRIBER_NO = #{searchVal, jdbcType=VARCHAR}
+			</when>
+		</choose>
+		ORDER BY A.SVC_CNTR_NO, A.USG_YM DESC
+	</sql>
+	
+	<!-- 제휴포인트조회 -->
+	<select id="getPartnerPointList" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrPointMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrPointMgmtMapper.getPartnerPointList */
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		
+		<include refid="PartnerPointList" />
+		
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+	
+	<!-- 제휴포인트엑셀다운로드 -->
+	<select id="getPartnerPointListExcel" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrPointMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrPointMgmtMapper.getPartnerPointListExcel */
+		
+		<include refid="PartnerPointList" />
+		
+	</select>
+	
+	<!-- 제휴요금사용이력조회 -->
+	<select id="getPtnrRateUsgHstInfo" parameterType="com.ktis.msp.ptnr.ptnrmgmt.vo.PtnrPointMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* PtnrPointMgmtMapper.getPtnrRateUsgHstInfo */
+		SELECT  FN_GET_CODENM('CMN0073', PNT.PARTNER_ID) AS PARTNER_NM
+			  , PNT.BILL_YM
+			  , PNT.USG_YM
+			  , PNT.CONTRACT_NUM
+			  , PNT.SVC_CNTR_NO
+			  , PNT.RATE_CD
+			  , RAT.RATE_NM
+			  , FN_GET_CODENM('MSP0003',USG.SUB_STATUS) AS SUB_STATUS
+			  , USG.RATE_CD
+			  , USG.STRT_DT
+			  , USG.END_DT
+			  , USG.USG_DT_CNT
+			  , USG.USG_AMNT
+			  , FN_GET_CODENM('CMN0246', PNT.INSR_CD) AS INSR_NM
+		  FROM  (SELECT A.PARTNER_ID
+		               ,A.BILL_YM
+		               ,CASE WHEN A.PARTNER_ID = 'googleplay' THEN TO_CHAR(ADD_MONTHS(TO_DATE(A.USG_YM,'YYYYMM'),-1),'YYYYMM') 
+		                     ELSE A.USG_YM
+		                END USG_YM
+		               ,A.CONTRACT_NUM
+		               ,A.SVC_CNTR_NO
+		               ,CASE WHEN (SELECT '1' FROM MSP_RATE_MST B
+		                           WHERE B.RATE_CD = A.RATE_CD) = '1' THEN A.RATE_CD
+		                     WHEN (SELECT '2' FROM MSP_PARTNER_PRMT_MST C
+		                           WHERE C.PRMT_ID = A.RATE_CD) = '2' THEN (SELECT RATE_CD FROM MSP_PARTNER_PRMT_MST D
+		                                                                    WHERE D.PRMT_ID = A.RATE_CD)
+		                END RATE_CD
+		               ,A.INSR_CD   
+		          FROM  MSP_PARTNER_POINT_MST A
+		         WHERE  A.RATE_CD = #{rateCd, jdbcType=VARCHAR}
+		        ) PNT
+			  , MSP_RATE_MST RAT
+			  , MSP_CNTR_USG_INFO USG
+		 WHERE  PNT.RATE_CD = RAT.RATE_CD
+		   AND  PNT.USG_YM = USG.USG_YM
+		   AND  PNT.CONTRACT_NUM = USG.CONTRACT_NUM
+		   AND  PNT.SVC_CNTR_NO = USG.SVC_CNTR_NO
+		   AND  PNT.RATE_CD = USG.RATE_CD
+		   AND  PNT.BILL_YM = #{billYm, jdbcType=VARCHAR}
+		   AND  PNT.SVC_CNTR_NO = #{svcCntrNo, jdbcType=VARCHAR}
+		 ORDER  BY USG.END_DT DESC
+	</select>
+		
+</mapper>

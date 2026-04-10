@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.appform_d.adapter.repository.mybatis.msp.mapper.JuoSubInfoMapper">
+
+  <resultMap id="juoSubInfoMap" type="com.ktmmobile.msf.domains.form.form.appform_d.domain.entity.JuoSubInfo">
+    <result property="contractNum" column="CONTRACT_NUM" />
+    <result property="customerSsn" column="USER_SSN" />
+    <result property="customerLinkName" column="CUSTOMER_LINK_NAME" />
+    <result property="subscriberNo" column="SUBSCRIBER_NO" />
+    <result property="subStatus" column="SUB_STATUS" />
+    <result property="lstComActvDate" column="LST_COM_ACTV_DATE" />
+    <result property="iccId" column="ICC_ID" />
+    <result property="lglAgntSsn" column="LGL_AGNT_SSN" />
+    <result property="enggInfo" column="ENGG_INFO" />
+    <result property="histYn" column="HIST_YN" />
+    <result property="dvcChgDt" column="DVC_CHG_DT" />
+    <result property="dvcEnggMnthCnt" column="DVC_ENGG_MNTH_CNT" />
+  </resultMap>
+
+  <!--<select id="selectKtmCustomer" resultType="com.ktmmobile.msf.apps.formapi.form.newchange.domain.entity.JuoSubInfo">-->
+  <select id="selectKtmCustomer" resultMap="juoSubInfoMap">
+    <![CDATA[
+        WITH CNTR AS (
+            SELECT
+                A.CONTRACT_NUM
+                , A.USER_SSN
+                , D.CUSTOMER_LINK_NAME
+                , A.SUBSCRIBER_NO
+                , A.SUB_STATUS
+                , A.LST_COM_ACTV_DATE
+                , A.ICC_ID
+                , A.LGL_AGNT_SSN
+                , ( -- 기변이력이 2건 이상인 경우 처리를 위하여 MAX 사용
+                SELECT MAX(ENGG_INFO) FROM (
+                    SELECT  DISTINCT
+                            MAX(DECODE(X.GRNT_INSR_MNGM_NO, 'none', SUBSTR(X.APP_START_DD, 1, 8), SUBSTR(X.GRNT_INSR_MNGM_NO, 1, 8))
+                            || NVL(X.ENGG_MNTH_CNT, '0')) OVER (PARTITION BY X.CONTRACT_NUM) AS ENGG_INFO
+                    FROM    MSP_JUO_ADD_INFO X
+                            , MSP_DVC_CHG_AGNT_HST Y
+                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                    AND     X.MODEL_CHN_CD = '01'
+                    AND     X.CONTRACT_NUM = Y.CONTRACT_NUM
+                    AND     X.EVNT_TRTM_NO = Y.EVNT_TRTM_NO
+                    AND     Y.APPL_END_DTTM LIKE '99991231%'
+                    AND     Y.EVNT_CD = 'C07'
+                    UNION
+                    -- 심플할인
+                    -- SIM_START_DT 최대 값을 구하고
+                    -- SIM_START_DT 최대 값에  대한 약정 개월...
+                    SELECT  SUBSTR(X.SIM_START_DT, 1, 8) || X.ENGG_MNTH_CNT
+                    FROM    MSP_JUO_ADD_INFO X
+                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                    AND     X.EVNT_CD = 'SIM'
+                    AND     X.GRNT_INSR_STAT_CD = 'A'
+                    AND     X.APP_END_DATE LIKE '99991231%'
+                    AND     X.SIM_START_DT = (
+                        SELECT MAX(X2.SIM_START_DT)
+                        FROM MSP_JUO_ADD_INFO X2
+                        WHERE X2.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                          AND     X2.EVNT_CD = 'SIM'
+                          AND     X2.GRNT_INSR_STAT_CD = 'A'
+                          AND     X2.APP_END_DATE LIKE '99991231%'
+                        GROUP BY X2.CONTRACT_NUM
+                    )
+                    UNION
+                    -- 기변개발전 우수기변 대상
+                    SELECT  DECODE(X.GRNT_INSR_MNGM_NO, 'none', MIN(SUBSTR(X.APP_START_DD, 1, 8)), SUBSTR(X.GRNT_INSR_MNGM_NO, 1, 8)) ||
+                            MAX(X.ENGG_MNTH_CNT)
+                    FROM    MSP_JUO_ADD_INFO X
+                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                    AND     X.EVNT_CD IN ('UPD','UAD')
+                    AND     X.MODEL_CHN_CD = '01'
+                    AND     NOT EXISTS ( SELECT 1 FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = X.CONTRACT_NUM AND APPL_END_DTTM LIKE '99991231%' )
+                    GROUP BY X.GRNT_INSR_MNGM_NO, X.CONTRACT_NUM
+                    UNION
+                    -- 일반적인 경우
+                    SELECT  DISTINCT
+                            X.LST_COM_ACTV_DATE ||
+                            NVL(Y.ENGG_MNTH_CNT, '0')
+                    FROM    MSP_JUO_SUB_INFO X
+                            , MSP_JUO_ADD_INFO Y
+                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                    AND     X.CONTRACT_NUM = Y.CONTRACT_NUM
+                    AND     Y.MODEL_CHN_CD <> '01'
+                    AND     Y.ENGG_MNTH_CNT IS NOT NULL
+                    AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = Y.CONTRACT_NUM AND EVNT_CD = 'SIM' AND GRNT_INSR_STAT_CD = 'A' AND APP_END_DATE LIKE '99991231%' )
+                    AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = Y.CONTRACT_NUM AND EVNT_CD IN ('UPD', 'UAD') AND MODEL_CHN_CD = '01' )
+                    AND     NOT EXISTS ( SELECT 1 FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = X.CONTRACT_NUM AND APPL_END_DTTM LIKE '99991231%' )
+                   )
+                ) AS ENGG_INFO
+                , DECODE(B.CONTRACT_NUM, NULL, 'N', 'Y') AS HIST_YN
+                , DECODE(B.CONTRACT_NUM, NULL, '', SUBSTR(MAX(B.APPL_STRT_DTTM) OVER(PARTITION BY B.APPL_STRT_DTTM), 1, 8)) AS DVC_CHG_DT
+                , C.ENGG_MNTH_CNT AS DVC_ENGG_MNTH_CNT
+            FROM    MSP_JUO_SUB_INFO A
+                    , MSP_DVC_CHG_AGNT_HST B
+                    , MSP_JUO_ADD_INFO C
+                    , MSP_JUO_CUS_INFO D
+            WHERE   A.SUB_STATUS <> 'C'
+            AND     A.PPPO = 'PO'
+            AND     A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+            AND     B.REQUEST_KEY(+) IS NOT NULL
+            AND     ( B.APPL_END_DTTM(+) LIKE '99991231%'
+                      OR TO_DATE(SUBSTR(B.APPL_END_DTTM(+), 1, 8), 'YYYYMMDD') - TO_DATE(SUBSTR(B.APPL_STRT_DTTM(+), 1, 8), 'YYYYMMDD') >= 15 )
+            AND     B.CONTRACT_NUM = C.CONTRACT_NUM(+)
+            AND     B.EVNT_TRTM_NO = C.EVNT_TRTM_NO(+)
+            AND     A.CUSTOMER_ID = D.CUSTOMER_ID
+            AND     REPLACE(D.CUSTOMER_LINK_NAME,' ') = UPPER(TRIM(#{customerLinkName}))
+            AND     A.SUBSCRIBER_NO = #{subscriberNo}
+            ORDER BY B.APPL_STRT_DTTM DESC
+        )
+        SELECT  A.CONTRACT_NUM  CONTRACT_NUM              -- 가입계약번호
+                , A.USER_SSN  CUSTOMER_SSN                -- 주민등록번호
+                , A.CUSTOMER_LINK_NAME  CUSTOMER_LINK_NAME     -- 고객이름
+                , A.SUBSCRIBER_NO  SUBSCRIBER_NO         -- 전화번호_이전CTN
+                , A.LGL_AGNT_SSN
+                , CASE
+                    WHEN A.HIST_YN = 'Y' AND SYSDATE - TO_DATE(A.DVC_CHG_DT, 'YYYYMMDD') < 15 THEN 'N'
+                    WHEN ADD_MONTHS(TO_DATE(SUBSTR(A.ENGG_INFO,1,8), 'YYYYMMDD'), TO_NUMBER(NVL(SUBSTR(A.ENGG_INFO, 9,2), 0))) - SYSDATE > TO_NUMBER(B.CD_VAL) THEN 'E'
+                    ELSE 'Y'
+                  END AS DVC_CHG_YN
+        FROM    CNTR A
+                , CMN_GRP_CD_MST B
+        WHERE   B.GRP_ID = 'RCP0028'
+        AND     B.ETC1 = '10'
+        AND     ROWNUM = 1
+      ]]>
+  </select>
+
+</mapper>

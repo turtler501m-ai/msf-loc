@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.org.rqstmgmt.mapper.RqstMgmtMapper">
+	<select id="selectRqstMgmtList" parameterType="com.ktis.msp.org.rqstmgmt.vo.RqstMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	   <include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT /* RqstMgmtMapper.selectRqstMgmtList */
+	             A.SLS_CMPN_CD    /* 판매회사코드 */
+	           , A.BILL_ACNT_NO    /* 청구계정번호 */
+	           , (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = A.SVC_CNTR_NO) AS CONTRACT_NUM /* 계약번호 */
+	           , A.SVC_CNTR_NO    /* 서비스계약번호 */
+	           , TO_CHAR(TO_DATE(A.BILL_YM, 'YYYYMM'), 'YYYY-MM') AS  BILL_YM   /* 청구월 */
+	           , A.DUEDAT_DATE    /* 납기일자 */
+	           , A.APLY_DATE    /* 적용일자 */
+	           , A.BLPYM_DATE    /* 실수납일자 */
+	           , A.PYMN_CD    /* 수납코드 */
+		       ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CLS0029' AND CD_VAL = A.PYMN_CD) as PYMN_NM 
+	           , A.BILL_ITEM_CD    /* 청구항목코드 */
+	           , A.ITEM_CD_NM    /* 청구항목코드명 */
+	           , A.PYMN_MTHD_CD    /* 수납방법코드 */
+	           , A.PYMN_MTHD_NM    /* 수납방법명 */
+	           , A.PYMN_DTL_MTHD_CD    /* 수납세부방법코드 */
+	           , A.PYMN_DTL_MTHD_NM    /* 수납세부방법명 */
+	           , A.PYMN_AGNC_ID    /* 수납대리점ID */
+	           , A.ADJS_RSN_CD    /* 조정사유코드 */
+	           , A.ADJS_RSN_NM    /* 조정사유명 */
+	           , A.BILL_RFLC_IND_CD    /* 청구반영구분코드 */
+		       ,(SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CLS0031' AND CD_VAL = A.BILL_RFLC_IND_CD) as BILL_RFLC_IND_NM
+	           , A.PYMN_AMNT    /* 청구/수납 금액 */
+	           , A.VAT_AMNT    /* 부가세 */
+		FROM CLS_BILL_PYMN_DATA A
+	   WHERE 1=1
+        <if test="slsCmpnCd != null and slsCmpnCd != ''">		
+		 AND UPPER(A.SLS_CMPN_CD) LIKE UPPER(#{slsCmpnCd})||'%'
+        </if>	
+        <if test="pymnCd == 'ERR'">		
+		 AND A.BILL_YM IS NULL
+        </if>
+        <if test="pymnCd != null and pymnCd != '' and pymnCd != 'ERR'">
+		 AND A.PYMN_CD =  #{pymnCd} AND A.BILL_YM =  #{billYm}
+        </if>	        
+        <choose>
+			<when test='svcCntrNoYn != null and svcCntrNoYn == "Y"'>
+				AND A.SVC_CNTR_NO IN (SELECT DISTINCT SVC_CNTR_NO FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO IS NOT NULL AND CONTRACT_NUM = #{contractNum})
+			</when>
+			<otherwise>
+				AND	A.SVC_CNTR_NO = #{contractNum}
+			</otherwise>
+		</choose>
+        <if test="billAcntNo != null and billAcntNo != ''">		
+		 AND A.BILL_ACNT_NO =  #{billAcntNo}
+        </if>	
+<!--         ORDER BY A.BILL_ACNT_NO -->
+        <include refid="com.ktis.msp.cmn.include.paging-end" />   			
+	</select>
+
+	<select id="selectRqstMgmtListEx" parameterType="com.ktis.msp.org.rqstmgmt.vo.RqstMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* RqstMgmtMapper.selectRqstMgmtListEx */
+	             NVL(A.SLS_CMPN_CD, ' ') AS SLS_CMPN_CD    /* 판매회사코드 */
+	           , NVL(A.BILL_ACNT_NO , ' ') AS BILL_ACNT_NO   /* 청구계정번호 */
+	           , NVL(A.SVC_CNTR_NO, ' ') AS SVC_CNTR_NO    /* 서비스계약번호 */
+	           , NVL(TO_CHAR(TO_DATE(A.BILL_YM, 'YYYYMM'), 'YYYY-MM'), ' ') AS  BILL_YM   /* 청구월 */
+	           , NVL(TO_CHAR(TO_DATE(A.DUEDAT_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'), ' ') AS DUEDAT_DATE    /* 납기일자 */
+	           , NVL(TO_CHAR(TO_DATE(A.APLY_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'), ' ') AS APLY_DATE    /* 적용일자 */
+	           , NVL(TO_CHAR(TO_DATE(A.BLPYM_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'), ' ') AS BLPYM_DATE    /* 실수납일자 */
+	           , NVL(A.PYMN_CD, ' ') AS PYMN_CD    /* 수납코드 */
+	           , NVL((SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CLS0029' AND CD_VAL = A.PYMN_CD), ' ') AS PYMN_NM 
+	           , NVL(A.BILL_ITEM_CD, ' ') AS BILL_ITEM_CD    /* 청구항목코드 */
+	           , NVL(A.ITEM_CD_NM, ' ') AS ITEM_CD_NM    /* 청구항목코드명 */
+	           , NVL(A.PYMN_MTHD_CD, ' ') AS PYMN_MTHD_CD    /* 수납방법코드 */
+	           , NVL(A.PYMN_MTHD_NM  , ' ') AS PYMN_MTHD_NM  /* 수납방법명 */
+	           , NVL(A.PYMN_DTL_MTHD_CD, ' ') AS PYMN_DTL_MTHD_CD    /* 수납세부방법코드 */
+	           , NVL(A.PYMN_DTL_MTHD_NM, ' ') AS PYMN_DTL_MTHD_NM    /* 수납세부방법명 */
+	           , NVL(A.PYMN_AGNC_ID, ' ') AS PYMN_AGNC_ID    /* 수납대리점ID */
+	           , NVL(A.ADJS_RSN_CD, ' ') AS ADJS_RSN_CD   /* 조정사유코드 */
+	           , NVL(A.ADJS_RSN_NM, ' ') AS ADJS_RSN_NM    /* 조정사유명 */
+	           , NVL(A.BILL_RFLC_IND_CD, ' ') AS  BILL_RFLC_IND_CD   /* 청구반영구분코드 */
+	           , NVL((SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CLS0031' AND CD_VAL = A.BILL_RFLC_IND_CD), ' ') AS BILL_RFLC_IND_NM
+	           , NVL(A.PYMN_AMNT, 0) AS PYMN_AMNT    /* 청구/수납 금액 */
+	           , NVL(A.VAT_AMNT, 0) AS VAT_AMNT    /* 부가세 */
+		FROM CLS_BILL_PYMN_DATA A
+	   WHERE 1=1
+        <if test="slsCmpnCd != null and slsCmpnCd != ''">		
+		 AND UPPER(A.SLS_CMPN_CD) LIKE UPPER(#{slsCmpnCd})||'%'
+        </if>	
+        <if test="pymnCd == 'ERR'">		
+		 AND A.BILL_YM IS NULL
+        </if>
+        <if test="pymnCd != null and pymnCd != '' and pymnCd != 'ERR'">
+		 AND A.PYMN_CD =  #{pymnCd} AND A.BILL_YM =  #{billYm}
+        </if>
+        <choose>
+			<when test='svcCntrNoYn != null and svcCntrNoYn == "Y"'>
+				AND A.SVC_CNTR_NO IN (SELECT DISTINCT SVC_CNTR_NO FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO IS NOT NULL AND CONTRACT_NUM = #{contractNum})
+			</when>
+			<otherwise>
+				AND	A.SVC_CNTR_NO = #{contractNum}
+			</otherwise>
+		</choose>
+        <if test="billAcntNo != null and billAcntNo != ''">		
+		 AND A.BILL_ACNT_NO =  #{billAcntNo}
+        </if>	
+<!--         ORDER BY A.BILL_ACNT_NO     -->
+	</select>	
+	
+	<!-- 계약번호로 서비스계약번호 추출 -->
+	<select id="getpSvcCntrNo" parameterType="String" resultType="String">
+		SELECT LISTAGG(SVC_CNTR_NO,''',''') WITHIN GROUP (ORDER BY ROWNUM)
+		  FROM (SELECT DISTINCT SVC_CNTR_NO 
+		  		  FROM MSP_JUO_SUB_INFO_HIST 
+		  		 WHERE CONTRACT_NUM = #{contractNum})
+	</select>
+	
+	
+	<!-- 	번호이동 조회 쿼리 -->
+	<select id="getMnpList" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+		SELECT 
+				A.INFO_TYPE_CD, --업무구분  CMN0038
+				B.CD_DSC INFO_TYPE,  -- 업무구분
+				A.MNP_DATE, --번호이동일자
+				A.MNP_TYPE_CD, --번호이동구분  CMN0039
+				C.CD_DSC MNP_TYPE, --번호이동구분
+				A.CMNC_CMPN_CD, --통신회사코드
+				A.STTS_YM, --정산월
+				A.MNP_CNT, --정산건수
+				A.MNP_AMNT, --정산금액
+				A.PAY_GARNT_DATE, --지불보증지급일자
+				A.CRDT_CARD_CMSN_AMNT, --신용카드수수료금액
+				A.HNDSET_BILL_AMNT --단말기금액
+		FROM 
+				CLS_MNP_DATA A,
+				CMN_GRP_CD_MST B,  -- 업무구분
+				CMN_GRP_CD_MST C  -- 번호이동구분
+		WHERE 1=1
+			AND A.INFO_TYPE_CD = B.CD_VAL(+)
+			AND B.GRP_ID(+) = 'CMN0038'
+			AND A.MNP_TYPE_CD = C.CD_VAL(+)
+			AND C.GRP_ID(+) = 'CMN0039'
+			AND MNP_DATE >= #{searchStartDt, jdbcType=VARCHAR}  
+			AND #{searchEndDt, jdbcType=VARCHAR} >= MNP_DATE 
+		<if test=" mnpTypeCd != null and mnpTypeCd != '' " >
+			AND MNP_TYPE_CD = #{mnpTypeCd} 
+		</if>
+		<if test=" infoTypeCd != null and infoTypeCd != '' " >
+			AND INFO_TYPE_CD = #{infoTypeCd} 
+		</if>
+		 ORDER BY MNP_DATE, CMNC_CMPN_CD, MNP_TYPE_CD, INFO_TYPE_CD
+		<include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>		
+	
+	<!--  엑셀용 번호이동 조회 쿼리 -->
+	<select id="getMnpListEx" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT 
+				NVL( A.INFO_TYPE_CD, ' ') INFO_TYPE_CD, --업무구분  CMN0038
+				NVL( B.CD_DSC, ' ') INFO_TYPE,  -- 업무구분
+				NVL( A.MNP_DATE, ' ') MNP_DATE, --번호이동일자
+				NVL( A.MNP_TYPE_CD, ' ') MNP_TYPE_CD, --번호이동구분  CMN0039
+				NVL( C.CD_DSC, ' ') MNP_TYPE, --번호이동구분
+				NVL( A.CMNC_CMPN_CD, ' ') CMNC_CMPN_CD, --통신회사코드
+				NVL( A.STTS_YM, ' ') STTS_YM, --정산월
+				NVL( A.MNP_CNT, 0) MNP_CNT, --정산건수
+				NVL( A.MNP_AMNT, 0) MNP_AMNT, --정산금액
+				NVL( A.PAY_GARNT_DATE, ' ') PAY_GARNT_DATE, --지불보증지급일자
+				NVL( A.CRDT_CARD_CMSN_AMNT, 0) CRDT_CARD_CMSN_AMNT, --신용카드수수료금액
+				NVL( A.HNDSET_BILL_AMNT, 0) HNDSET_BILL_AMNT --단말기금액
+		FROM 
+				CLS_MNP_DATA A,
+				CMN_GRP_CD_MST B,  -- 업무구분
+				CMN_GRP_CD_MST C  -- 번호이동구분
+		WHERE 1=1
+			AND A.INFO_TYPE_CD = B.CD_VAL(+)
+			AND B.GRP_ID(+) = 'CMN0038'
+			AND A.MNP_TYPE_CD = C.CD_VAL(+)
+			AND C.GRP_ID(+) = 'CMN0039'
+			AND MNP_DATE >= #{searchStartDt, jdbcType=VARCHAR}  
+			AND #{searchEndDt, jdbcType=VARCHAR} >= MNP_DATE 
+		<if test=" mnpTypeCd != null and mnpTypeCd != '' " >
+			AND MNP_TYPE_CD = #{mnpTypeCd} 
+		</if>
+		<if test=" infoTypeCd != null and infoTypeCd != '' " >
+			AND INFO_TYPE_CD = #{infoTypeCd} 
+		</if>
+		 ORDER BY MNP_DATE, CMNC_CMPN_CD, MNP_TYPE_CD, INFO_TYPE_CD
+	</select>
+	
+	<select id="selectRqstMgmtDetailList" parameterType="com.ktis.msp.org.rqstmgmt.vo.RqstMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      <include refid="com.ktis.msp.cmn.include.paging-start" />
+         SELECT /* RqstMgmtMapper.selectRqstMgmtDetailList */
+              A.PBLS_DATE                                                  /* 작성일자 */
+            , A.BIZR_RGST_NO                                               /* 등록번호 */
+            , A.BILL_ACNT_NO                                               /* 청구계정(BAN) */
+            , A.SO_CD                                                      /* 판매자코드 */
+            , DECODE(A.GUBUN_CODE,'01','온라인'
+                                 ,'81','선불'
+                                 ,'82','후불'
+                                 ,NVL(A.GUBUN_CODE, ' ')) AS GUBUN_CODE    /* 서비스구분 01:온라인,81:선불,82후불 */
+            , DECODE(A.ESERO_TYPE,'01','일반'
+                                 ,'02','영세율'
+                                 ,NVL(A.ESERO_TYPE, ' ')) AS ESERO_TYPE    /* 전자(세금)계산서종류 01:일반,02:영세율 */
+            , A.TLPH_NO                                                    /* 대표번호 */
+            , NVL(A.SPLY_PRIC_AMT,0) AS SPLY_PRIC_AMT                      /* 공급가액 */
+            , NVL(A.VAT_AMT,0) AS VAT_AMT                                  /* 세액 */
+            , NVL(A.VNDR_NM, ' ') AS VNDR_NM
+            , NVL(A.RPRS_PRSN_NM, ' ') AS RPRS_PRSN_NM
+         FROM CLS_BILL_DTL_DATA A
+         WHERE 1=1
+         <if test="gubunCode != null and gubunCode != ''">     
+            AND A.GUBUN_CODE = #{gubunCode}
+         </if>
+         <if test="eseroType != null and eseroType != ''">     
+            AND A.ESERO_TYPE = #{eseroType}
+         </if>
+         <if test="pblsDate != null and pblsDate != ''">
+            AND TO_DATE(A.PBLS_DATE, 'YYYYMMDD') BETWEEN TO_DATE(#{pblsDate, jdbcType=VARCHAR}, 'YYYYMM') AND ADD_MONTHS(TO_DATE(#{pblsDate, jdbcType=VARCHAR}, 'YYYYMM'), 1)-1/(24*60*60)
+         </if>
+         ORDER BY A.PBLS_DATE
+      <include refid="com.ktis.msp.cmn.include.paging-end" />
+   </select>
+   
+   <select id="selectRqstMgmtDetailListEx" parameterType="com.ktis.msp.org.rqstmgmt.vo.RqstMgmtVo" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+      SELECT /* RqstMgmtMapper.selectRqstMgmtDetailListEx */
+           NVL(TO_CHAR(TO_DATE(A.PBLS_DATE, 'YYYYMMDD'), 'YYYY-MM-DD'), ' ')  AS PBLS_DATE /* 작성일자 */
+         , NVL(A.BIZR_RGST_NO, ' ') AS BIZR_RGST_NO                      /* 판매회사코드  */
+         , NVL(A.BILL_ACNT_NO, ' ') AS BILL_ACNT_NO                      /* 판매회사코드  */
+         , NVL(A.SO_CD, ' ') AS SO_CD                                    /* 판매회사코드  */
+         , DECODE(A.GUBUN_CODE,'01','온라인'
+                              ,'81','선불'
+                              ,'82','후불'
+                              ,NVL(A.GUBUN_CODE, ' ')) AS GUBUN_CODE     /* 서비스구분 */
+         , DECODE(A.ESERO_TYPE,'01','일반'
+                              ,'02','영세율'
+                              ,NVL(A.ESERO_TYPE, ' ')) AS ESERO_TYPE     /* 전자(세금)계산서종류 */
+         , NVL(A.TLPH_NO, ' ') AS TLPH_NO                                /* 판매회사코드  */
+         , NVL(A.SPLY_PRIC_AMT,0) AS SPLY_PRIC_AMT                       /* 공급가액 */
+         , NVL(A.VAT_AMT,0) AS VAT_AMT                                   /* 세액 */
+          , NVL(A.VNDR_NM, ' ') AS VNDR_NM
+          , NVL(A.RPRS_PRSN_NM, ' ') AS RPRS_PRSN_NM
+      FROM CLS_BILL_DTL_DATA A
+      WHERE 1=1
+      <if test="gubunCode != null and gubunCode != ''">     
+         AND A.GUBUN_CODE = #{gubunCode}
+      </if>
+      <if test="eseroType != null and eseroType != ''">     
+         AND A.ESERO_TYPE = #{eseroType}
+      </if>
+      <if test="pblsDate != null and pblsDate != ''">
+         AND TO_DATE(A.PBLS_DATE, 'YYYYMMDD') BETWEEN TO_DATE(#{pblsDate, jdbcType=VARCHAR}, 'YYYYMM') AND ADD_MONTHS(TO_DATE(#{pblsDate, jdbcType=VARCHAR}, 'YYYYMM'), 1)-1/(24*60*60)
+      </if>
+      ORDER BY A.PBLS_DATE
+   </select>
+
+</mapper>

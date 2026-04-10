@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.common.mapper.CommonMapper">
+
+    <select id="selectMspRateMst" parameterType="java.lang.String" resultType="com.ktmmobile.mcp.common.dto.MspRateMstDto">
+        <!--  -->
+        SELECT
+            RATE_CD
+            ,APPL_END_DT
+            ,APPL_STRT_DT
+            ,RATE_NM
+            ,RATE_GRP_CD
+            ,PAY_CL_CD
+            ,RATE_TYPE
+            ,DATA_TYPE
+            ,BASE_AMT
+            ,FREE_CALL_CL_CD
+            ,FREE_CALL_CNT
+            ,NW_IN_CALL_CNT
+            ,NW_OUT_CALL_CNT
+            ,FREE_SMS_CNT
+            ,FREE_DATA_CNT
+            ,RMK
+            ,REGST_ID
+            ,REGST_DTTM
+            ,RVISN_ID
+            ,RVISN_DTTM
+            ,ONLINE_TYPE_CD
+            ,AL_FLAG
+            ,SERVICE_TYPE
+            ,CMNT
+            ,STTC_YN
+            ,ONLINE_CAN_YN
+            ,CAN_CMNT
+            ,ONLINE_CAN_DAY
+        FROM MSP_RATE_MST@dl_msp
+        WHERE RATE_CD = #{rateCd}
+    </select>
+
+    <select id="selectMspSmsTemplateMst" parameterType="java.lang.Integer" resultType="com.ktmmobile.mcp.common.dto.MspSmsTemplateMstDto">
+        <!--  -->
+        SELECT TEMPLATE_ID
+            ,TEMPLATE_NM
+            ,TEMPLATE_DSC
+            ,MGMT_ORGN_ID
+            ,MSG_TYPE
+            ,CALLBACK
+            ,TEXT
+            ,REGST_ID
+            ,REGST_DTTM
+            ,RVISN_ID
+            ,RVISN_DTTM
+            ,EXPIRE_HOUR
+            ,SUBJECT
+            ,WORK_TYPE
+            ,RETRY
+            ,K_TEMPLATE_CODE
+        FROM MSP_SMS_TEMPLATE_MST@dl_msp
+        WHERE
+          TEMPLATE_ID = #{templateId}
+    </select>
+
+    <insert id="insertMspCommDatPrvTxn" parameterType="com.ktmmobile.mcp.common.dto.MspCommDatPrvTxnDto">
+        <!--  -->
+        <selectKey keyProperty="apySeq" resultType="Integer" order="BEFORE">
+            SELECT SQ_COMM_DAT_PRV_SEQ.NEXTVAL@DL_MSP FROM DUAL
+        </selectKey>
+        INSERT INTO MSP_COMM_DAT_PRV_TXN@DL_MSP (
+             APY_SEQ                  --신청일련번호
+            , APY_ID                   --신청자ID
+            , APY_DT                   --신청일시
+            , APY_NM                   --신청자이름
+            , BTHDAY                   --생년월일 (YYYYMMDD)
+            , GENDER                   --성별 (1:남, 2:여)
+            , SBSC_PRDT_CD             --가입상품 (01:모바일)
+            , CNTC_TEL_NO              --연락처번호
+            , TGT_SVC_NO               --대상서비스번호
+            , RECP_EMAIL               --수령이메일
+            , CONF_SBST01_YN           --요청기간
+            , CONF_SBST02_YN           --제공일자
+            , CONF_SBST03_YN           --요청사유
+            , CONF_SBST04_YN           --제공내역
+            , MYSLF_ATHN_CI            --본인인증CI
+        ) VALUES (
+             #{apySeq, jdbcType=NUMERIC}
+            , #{apyId}
+            , SYSDATE
+            , #{apyNm}
+            , #{bthday}
+            , #{gender}
+            , #{sbscPrdtCd}
+            , #{cntcTelNo}
+            , #{tgtSvcNo}
+            , #{recpEmail}
+            , #{confSbst01Yn}
+            , #{confSbst02Yn}
+            , #{confSbst03Yn}
+            , #{confSbst04Yn}
+            , #{myslfAthnCi}
+        )
+    </insert>
+
+    <select id="selectPhoneIndexing" resultType="com.ktmmobile.mcp.common.dto.SearchDto">
+        SELECT
+            'phone' SEARCH_TYPE
+           , A.PROD_ID                --상품아이디
+           , A.PROD_CTG_ID            --상품분류아이디 (lte,3g)
+           , CASE WHEN A.PROD_CTG_ID = '03' THEN '3G'
+                  WHEN A.PROD_CTG_ID = '04' THEN 'LTE'
+                  WHEN A.PROD_CTG_ID = '08' THEN '5G'
+                  ELSE 'LTE'
+             END AS PROD_CTG_NAME     --상품(색인)
+           , A.PROD_NM                --상품명(색인)
+           , A.MAKR_CD                --제조사코드
+           , A.RPRS_PRDT_ID           --대표모델ID
+           , A.SHOW_YN                --노출여부
+           , A.SALE_YN                --판매여부
+           , A.OFW_DATE               --출고일자
+           , A.LIST_SHOW_TEXT         --목록노출텍스트(색인)
+           , A.LIST_SHOW_OPTN         --목록노출옵션(색인)
+           , A.APD_DESC_1             --추가설명1(색인)
+           , A.APD_DESC_2             --추가설명2(색인)
+           , A.APD_DESC_3             --추가설명3(색인)
+           , A.STCK_TYPE_TOP          --스티커노출(상)
+           , A.STCK_TYPE_TAIL         --스티커노출(하)
+           , A.SNTY_PROD_DESC         --단말기상품설명(색인)
+           , A.SNTY_NET               --단말기네트워크(색인)
+           , A.SNTY_DISP              --단말기디스플레이(색인)
+           , A.SNTY_SIZE              --단말기크기(색인)
+           , A.SNTY_WEIGHT            --단말기무게(색인)
+           , A.SNTY_MEMR              --단말기메모리(색인)
+           , A.SNTY_BTRY              --단말기배터리(색인)
+           , A.SNTY_OS                --단말기OS(색인)
+           , A.SNTY_WAIT_TIME         --단말기대기시간(색인)
+           , A.SNTY_CAM               --단말기카메라(색인)
+           , A.SNTY_VIDE_TLK          --단말기영상통화(색인)
+           , A.SNTY_PROD_NM           --단말기명(색인)
+           , A.SNTY_REL_MONTH         --출시월(색인)
+           , A.SNTY_COLOR             --단말기색상(색인)
+           , A.SNTY_MAKER             --단말기제조사/브랜드명(색인)
+           , A.SNTY_MODEL_ID          --단말기모델번호(색인)
+           , B.MNFCT_NM               --제조사명(색인)
+           , B.ZIPCD
+           , B.ADDR                   --(색인)
+           , B.DTL_ADDR               --(색인)
+           , B.TELNUM                 --(색인)
+           , B.EMAIL                  --(색인)
+           , A.MAKR_NM                --제조사명 중고폰에서만사용
+           , A.SHAND_YN               -- 중고폰여부
+           , A.INVENTORY_AMT          --중고폰 재고수량
+           , A.SALE_PRICE             --중고폰 판매가격
+           , A.PROD_GRADE             --종고폰 등급(색인)
+           , A.SHAND_TYPE             --중고폰분류값(중고폰,외산폰)
+           , CASE WHEN A.SHAND_TYPE = '01' THEN '중고폰'
+                  WHEN A.SHAND_TYPE = '02' THEN '외산폰'
+                  ELSE '중고폰'
+             END AS SHAND_TYPE_NAME     --중고폰분류(색인)
+           , A.RECOMMEND_RATE         --추천요금제
+           , A.USED_WARRANTY          --중고폰 워런티(색인)
+           , CASE WHEN A.USED_WARRANTY = '01' THEN '중고폰'
+                  WHEN A.USED_WARRANTY = '02' THEN '외산폰'
+                  ELSE '신폰'
+             END AS USED_WARRANTY_NAME --중고폰 워런티(색인)
+           , IMG.SNTY_COLOR_CD        --색상코드
+           , IMG.IMG_TYPE_CD          --이미지유형구분(앞,뒤..)
+           , IMG.IMG_PATH             --이미지경로
+           , SNTY.HNDSET_MODEL_ID     --단말기모델ID
+           , SNTY.HNDSET_MODEL_NM     --단말기모델명(색인)
+           , A.SHOW_ODRG
+         FROM NMCP_PROD_BAS A
+         LEFT OUTER JOIN ORG_MNFCT_MST@DL_MSP B
+                      ON A.MAKR_CD = B.MNFCT_ID
+         LEFT OUTER JOIN NMCP_SNTY_PROD_BAS SNTY
+                      ON A.PROD_ID  = SNTY.PROD_ID
+                     AND SNTY.RPRS_PRDT_YN = 'Y' -- 대표
+         LEFT OUTER JOIN ( SELECT PROD_ID, SNTY_COLOR_CD, IMG_TYPE_CD, IMG_PATH
+                             FROM ( SELECT PROD_ID, SNTY_COLOR_CD, IMG_TYPE_CD, IMG_PATH, RANK() OVER (PARTITION BY PROD_ID ORDER BY IMG_TYPE_CD) RNK
+                                      FROM NMCP_PROD_IMG_DTL
+                                  )
+                            WHERE RNK = 1
+                         ) IMG
+                      ON A.PROD_ID = IMG.PROD_ID
+                     AND SNTY.PROD_ID = IMG.PROD_ID
+                     AND SNTY.ATRIB_VAL_CD_1 = IMG.SNTY_COLOR_CD
+                     AND SNTY.HNDSET_MODEL_ID IS NOT NULL
+        WHERE A.SHOW_YN ='Y'
+          AND A.SALE_YN ='Y'
+          AND A.DEL_YN = 'N'
+          AND A.RPRS_PRDT_ID IS NOT NULL
+        ORDER BY A.SHOW_ODRG
+    </select>
+
+</mapper>

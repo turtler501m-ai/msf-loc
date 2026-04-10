@@ -1,0 +1,151 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ko" lang="ko">
+<head>
+<title>iframe sample</title>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
+<meta name="keywords" content="" />
+<meta name="description" content="" />
+
+<!-- Library -->
+<link rel="stylesheet" type="text/css" href="../lib/dhtmlx/codebase/dhtmlx.css"/>
+<link rel="stylesheet" type="text/css" href="../css/mvno.css"/>
+<script src="../lib/jquery/jquery-1.9.1.js"></script>
+<script src="../lib/dhtmlx/codebase/dhtmlx.js"></script>
+<script src="../js/mvno.js"></script>
+<!-- //Library  -->
+
+</head>
+
+<body>
+
+	<!-- 화면 배치 -->
+	<div id="FORM1"></div>
+
+	<!-- Script -->
+	<script type="text/javascript">
+
+		var DHX = {
+             FORM1 : {
+				 items :  [
+
+					{type:"settings", position:"label-left", labelAlign:"left", labelWidth:55, blockOffset:0}
+
+					//매출/결산
+					,{type: "fieldset", label: "매출/결산", inputWidth:270, list:[{type:"settings", labelWidth:120}
+
+						,{type:"block", list:[{type:"settings", position:"label-left"}
+								,{type: "checkbox", name: "", value: "", label: "KTIS항목여부", required: true}
+								,{type:"newcolumn"}
+								,{type: "label", label: "예", labelWidth:20}
+						]}
+						,{type:"block", list:[{type:"settings", position:"label-left"}
+								,{type: "checkbox", name: "", value: "", label: "매출항목사용여부", required: true}
+								,{type:"newcolumn"}
+								,{type: "label", label: "예", labelWidth:20}
+						]}
+
+						,{type:"select", label:"매출유형코드", width:100, required: true, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+
+						,{type:"block", list:[{type:"settings", position:"label-left"}
+								,{type: "checkbox", name: "", value: "", label: "결산처리여부"}
+								,{type:"newcolumn"}
+								,{type: "label", label: "예", labelWidth:20}
+						]}
+
+						,{type:"select", label:"결산항목코드", width:100, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+					]}
+
+					//입금/상계
+					,{type:"newcolumn"}
+					,{type: "fieldset", label: "입금/상계", inputWidth:270, offsetLeft:20, list:[{type:"settings", labelWidth:120, inputWidth:100}
+						,{type:"select", label:"입금처리기준코드", required: true, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"input", label:"입금처리우선순위", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"input", label:"입금처리기준일수", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"select", label:"상계처리기준코드", required: true, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						,{type:"input", label:"상계처리우선순위", options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+					]}
+
+					//기타
+					,{type:"newcolumn"}
+					,{type: "fieldset", label: "입금/상계", inputWidth:270, offsetLeft:20, list:[{type:"settings", labelWidth:120, position:"label-right"}
+
+						,{type:"block", list:[{type:"settings", position:"label-left"}
+								,{type: "checkbox", name: "", value: "", label: "여신적용여부", required: true}
+								,{type:"newcolumn"}
+								,{type: "label", label: "예", labelWidth:20}
+						]}
+						,{type:"block", list:[{type:"settings", position:"label-left"}
+								,{type: "checkbox", name: "", value: "", label: "대리점수납여부", required: true}
+								,{type:"newcolumn"}
+								,{type: "label", label: "예", labelWidth:20}
+						]}
+						,{type:"block", list:[{type:"settings", position:"label-left"}
+								,{type: "checkbox", name: "", value: "", label: "조정가능여부", required: true}
+								,{type:"newcolumn"}
+								,{type: "label", label: "예", labelWidth:20}
+						]}
+						,{type:"block", list:[{type:"settings", position:"label-left"}
+								,{type: "checkbox", name: "", value: "", label: "부가세부과여부"}
+								,{type:"newcolumn"}
+								,{type: "label", label: "예", labelWidth:20}
+						]}
+						,{type:"block", list:[{type:"settings", position:"label-left"}
+								,{type: "checkbox", name: "", value: "", label: "수수료대상여부"}
+								,{type:"newcolumn"}
+								,{type: "label", label: "예", labelWidth:20}
+						]}
+					]}
+
+					//할인할증율정보
+					,{type:"newcolumn"}
+					,{type: "fieldset", label: "할인할증율정보", inputWidth:910, list:[{type:"settings", labelWidth:60}
+
+						,{type:"block", list:[
+							{type:"input", label:"조직ID", width:100}
+							,{type:"newcolumn"}
+							,{type:"button", value:"검색"}
+							,{type:"newcolumn"}
+							,{type:"input", width:100}
+							,{type:"newcolumn"}
+							,{type:"select", label:"구분", width:100, offsetLeft:60, options:[{value:"1", text:"항목1", selected:true},{value:"2", text:"항목2"}]}
+						]}
+
+						,{type:"block", list:[
+							{type:"calendar", label:"적용기간", width:100}
+							,{type:"newcolumn"}
+							,{type:"calendar", label:"~", labelAlign:"center", labelWidth:10, offsetLeft:5, width:100}
+							,{type:"newcolumn"}
+							,{type:"input", label:"비율", width:100, offsetLeft:95}
+						]}
+
+						,{type:"newcolumn"}
+						,{type: "input", label: "비고", inputWidth:800, rows: 6, value: "입력란"}
+						]}
+
+					],
+					buttons : {
+						left : {
+							btn1 : { label : "버튼1" },
+							btn2 : { label : "버튼2" }
+						},
+						right : {
+							btnAddRow : { label : "AddRow" },
+							btnDeleteRow : { label : "DeleteRow"}
+						}
+					}
+
+
+			 }
+		};
+
+        var PAGE = {
+			onOpen : function() {
+				mvno.ui.createForm("FORM1");
+			}
+		}
+	</script>
+
+	<script src="../js/mvno_footer.js"></script>
+
+</body>
+</html>

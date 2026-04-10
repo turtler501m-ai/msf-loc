@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/*=================================================
+ * KT Copyright
+ =================================================*/
+-->
+<taglib version="2.0" xmlns="http://java.sun.com/xml/ns/j2ee"
+                      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee web-jsptaglibrary_2_0.xsd">
+    <tlib-version>1.0</tlib-version>
+    <short-name>nmcp</short-name>
+    <uri>nmcp.tag</uri>
+
+
+    <tag>
+        <description>
+             페이징 Tag 사용
+        </description>
+        <name>pageInfo</name>
+        <tag-class>com.ktmmobile.mcp.common.tag.PageInfoTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <description>
+                pageInfoBean : pageInfoBean내용전달
+            </description>
+            <name>pageInfoBean</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>
+                function : javascript 호출 변수
+            </description>
+            <name>function</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+
+    <function>
+        <name>getServerInfo</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>java.lang.String getServerInfo()</function-signature>
+    </function>
+
+    <function>
+        <name>getCookieRoleMenuList</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>java.util.List getRoleMenuList(java.lang.String,java.lang.String)</function-signature>
+    </function>
+
+    <function>
+        <name>hasMenuAuthWire</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>boolean hasMenuAuthWire()</function-signature>
+    </function>
+
+    <!-- 현재 날짜 -->
+    <function>
+        <name>getDateToCurrent</name>
+        <function-class>com.ktmmobile.mcp.common.util.DateTimeUtil</function-class>
+        <function-signature>java.util.Date getDateToCurrent(int)</function-signature>
+    </function>
+
+
+    <!-- 현재 날짜 -->
+    <function>
+        <name>chcekToAfterDate</name>
+        <function-class>com.ktmmobile.mcp.common.util.DateTimeUtil</function-class>
+        <function-signature>boolean chcekToAfterDate(java.util.Date)</function-signature>
+    </function>
+
+
+    <!-- 특정 개월(month)을  더한 시각 -->
+    <function>
+        <name>addMonths</name>
+        <function-class>com.ktmmobile.mcp.common.util.DateTimeUtil</function-class>
+        <function-signature>java.lang.String addMonths(java.lang.String,int,java.lang.String)</function-signature>
+    </function>
+
+    <!-- 현재월 마지막 일자 -->
+    <function>
+        <name>getLastDayOfThisMonth</name>
+        <function-class>com.ktmmobile.mcp.common.util.DateTimeUtil</function-class>
+        <function-signature>java.util.Date getLastDayOfThisMonth()</function-signature>
+    </function>
+
+    <!-- 공통 코드 조회 -->
+    <function>
+        <name>getCodeList</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>java.util.List getCodeList(java.lang.String)</function-signature>
+    </function>
+
+    <!-- 공통 코드명 조회 -->
+    <function>
+        <name>getCodeNm</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>com.java.lang.String getCodeNm(java.lang.String,java.lang.String)</function-signature>
+    </function>
+
+
+    <!-- 공통 코드명 조회 -->
+    <function>
+        <name>getCodeNmDto</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>com.ktmmobile.mcp.common.dto.db.NmcpCdDtlDto getCodeNmDto(java.lang.String,java.lang.String)</function-signature>
+    </function>
+
+    <!-- 공통 코드명 조회 -->
+    <function>
+        <name>getFtranPrice</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>com.java.lang.String getFtranPrice()</function-signature>
+    </function>
+
+    <!-- 상세코드설명 조회 -->
+    <function>
+        <name>getCodeDesc</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>com.java.lang.String getCodeDesc(java.lang.String,java.lang.String)</function-signature>
+    </function>
+
+    <!-- 상세 코드명으로 공통코드 상세 조회  -->
+    <function>
+        <name>getCodeByDtlCdNm</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>com.ktmmobile.mcp.common.dto.db.NmcpCdDtlDto getCodeByDtlCdNm(java.lang.String,java.lang.String)</function-signature>
+    </function>
+
+    <function>
+        <name>isContainsTrick</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>boolean isContainsTrick(java.lang.String)</function-signature>
+    </function>
+
+    <!-- 이름 마스킹 -->
+    <function>
+        <name>getMaskedName</name>
+        <function-class>com.ktmmobile.mcp.common.util.MaskingUtil</function-class>
+        <function-signature>java.lang.String getMaskedName(java.lang.String)
+        </function-signature>
+    </function>
+
+    <!-- 주소 마스킹 -->
+    <function>
+        <name>getMaskedByAddressNew2</name>
+        <function-class>com.ktmmobile.mcp.common.util.MaskingUtil</function-class>
+        <function-signature>java.lang.String getMaskedByAddressNew2(java.lang.String)
+        </function-signature>
+    </function>
+
+     <!-- 이메일 마스킹 -->
+    <function>
+        <name>getMaskedEmail2</name>
+        <function-class>com.ktmmobile.mcp.common.util.MaskingUtil</function-class>
+        <function-signature>java.lang.String getMaskedEmail2(java.lang.String)
+        </function-signature>
+    </function>
+
+     <!-- 전화번호 마스킹 -->
+    <function>
+        <name>getMaskedTelNo</name>
+        <function-class>com.ktmmobile.mcp.common.util.MaskingUtil</function-class>
+        <function-signature>java.lang.String getMaskedTelNo(java.lang.String)
+        </function-signature>
+    </function>
+
+     <!-- 아이디 마스킹 -->
+    <function>
+        <name>getMaskedId</name>
+        <function-class>com.ktmmobile.mcp.common.util.MaskingUtil</function-class>
+        <function-signature>java.lang.String getMaskedId(java.lang.String)
+        </function-signature>
+    </function>
+
+    <!-- html Entity숫자 ==>문자 -->
+    <function>
+        <name>unescapeXml</name>
+        <function-class>org.apache.commons.lang3.StringEscapeUtils</function-class>
+        <function-signature>java.lang.String unescapeXml(java.lang.String)</function-signature>
+    </function>
+
+    <function>
+        <name>getMobileFullNum</name>
+        <function-class>com.ktmmobile.mcp.common.util.StringUtil</function-class>
+        <function-signature>java.lang.String getMobileFullNum(java.lang.String)</function-signature>
+    </function>
+    <!--  원단위 절삭 -->
+    <function>
+        <name>cutNearestWon</name>
+        <function-class>com.ktmmobile.mcp.common.util.StringUtil</function-class>
+        <function-signature>java.lang.String cutNearestWon(java.lang.String)</function-signature>
+    </function>
+
+    <!--  원단위 절삭 -->
+    <function>
+        <name>getRandomInt</name>
+        <function-class>com.ktmmobile.mcp.common.util.StringUtil</function-class>
+        <function-signature>int getRandomInt(int)</function-signature>
+    </function>
+
+    <!--  html 변환 -->
+    <function>
+        <name>convertHtmlchars</name>
+        <function-class>com.ktmmobile.mcp.common.util.ParseHtmlTagUtil</function-class>
+        <function-signature>java.lang.String convertHtmlchars(java.lang.String)</function-signature>
+    </function>
+
+    <!-- hasLoginUserSessionBean 세션  -->
+    <function>
+        <name>hasLoginUserSessionBean</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>boolean hasLoginUserSessionBean()</function-signature>
+    </function>
+
+
+    <function>
+        <name>hasIgnoredScriptSession</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>boolean hasIgnoredScriptSession()</function-signature>
+    </function>
+
+
+    <function>
+        <name>getCurrentMenuInfo</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>com.ktmmobile.mcp.common.dto.WorkNotiDto getCurrentMenuUrl())</function-signature>
+    </function>
+
+    <function>
+        <name>getCurrentMenuName</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>java.lang.String getCurrentMenuName()</function-signature>
+    </function>
+
+    <function>
+        <name>getTestLoginSession</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>java.lang.String getTestLoginSession()</function-signature>
+    </function>
+
+    <function>
+        <name>getTestLoginIdSession</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>java.lang.String getTestLoginIdSession()</function-signature>
+    </function>
+
+    <function>
+        <name>getMenuList</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>java.util.List getMenuList(java.lang.String)</function-signature>
+    </function>
+
+    <function>
+        <name>getMobileMenuList</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>java.util.List getMobileMenuList(java.lang.String,java.lang.String,java.lang.String)</function-signature>
+    </function>
+
+    <function>
+        <name>getMenuDepthList</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>java.util.List getMenuDepthList(java.lang.String, int)</function-signature>
+    </function>
+
+    <function>
+        <name>getBannerList</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>com.java.util.List getBannerList(java.lang.String)</function-signature>
+    </function>
+
+    <function>
+        <name>getPropertiesVal</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>java.lang.String getPropertiesVal(java.lang.String)</function-signature>
+    </function>
+
+    <function>
+        <name>getPlatFormCd</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>java.lang.String getPlatFormCd()</function-signature>
+    </function>
+
+    <function>
+        <name>getPhoneOs</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>java.lang.String getPhoneOs()</function-signature>
+    </function>
+
+    <function>
+        <name>NVL</name>
+        <function-class>com.ktmmobile.mcp.common.util.StringUtil</function-class>
+        <function-signature>java.lang.String NVL(java.lang.String , java.lang.String)</function-signature>
+    </function>
+
+    <function>
+        <name>addComma</name>
+        <function-class>com.ktmmobile.mcp.common.util.StringUtil</function-class>
+        <function-signature>java.lang.String addComma(java.lang.String)</function-signature>
+    </function>
+
+    <!-- js ver -->
+    <function>
+        <name>getJsver</name>
+        <function-class>com.ktmmobile.mcp.common.util.DateTimeUtil</function-class>
+        <function-signature>java.lang.Ingeger getJsver()</function-signature>
+    </function>
+
+    <function>
+        <name>getGnbMenuCode</name>
+        <function-class>com.ktmmobile.mcp.common.util.SessionUtils</function-class>
+        <function-signature>java.lang.String getGnbMenuCode()</function-signature>
+    </function>
+
+    <function>
+        <name>getPhoneOsVerForOcr</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>java.lang.String getPhoneOsVerForOcr()</function-signature>
+    </function>
+
+    <function>
+        <name>getMenuInfoList</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>com.java.util.List getMenuInfoList()</function-signature>
+    </function>
+
+    <function>
+        <name>getSimpleAuthList</name>
+        <function-class>com.ktmmobile.mcp.common.util.NmcpServiceUtils</function-class>
+        <function-signature>java.util.List getSimpleAuthList(java.lang.String, java.lang.String)</function-signature>
+    </function>
+
+</taglib>

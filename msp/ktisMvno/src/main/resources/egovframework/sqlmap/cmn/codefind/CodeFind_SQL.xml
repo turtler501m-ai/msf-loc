@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.cmn.codefind.mapper.CodeFindMapper">
+
+<!-- 	====================================================  -->	
+<!-- 	모든 조직의 목록 가져올 경우 사용 -->
+<!-- 	====================================================  -->	
+	<select id="orgOrgnInfoMst" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.codefind.orgOrgnInfoMst =========*/	    
+				SELECT 
+					    rownum sort_no           
+						,ORGN_ID                  
+						,ORGN_NM                  
+						,TYPE_CD                  
+						,ORGN_LVL_CD               
+				FROM ORG_ORGN_INFO_MST  a
+				<![CDATA[
+				]]>
+				
+	</select>
+
+<!-- 	====================================================  -->	
+<!-- 	모든 조직의 목록, 조직 이름 계층적으로 indent         -->
+<!-- 	====================================================  -->	
+	<select id="orgOrgnInfoMstIndent" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.codefind.orgOrgnInfoMstIndent =========*/	    
+		SELECT /* ROWNUM SORT_NO           
+		        , */ ORGN_ID                              VALUE  
+		        ,replace(RPAD('_', 4*(LEVEL - 1)),' ','_') || ORGN_NM   LABEL   
+		        ,replace(RPAD('_', 4*(LEVEL - 1)),' ','_') || ORGN_NM   TEXT               
+		      /*  ,TYPE_CD                  
+		        ,ORGN_LVL_CD 
+		        , LEVEL         */      
+		FROM 
+		     ORG_ORGN_INFO_MST B
+		START WITH  '1' =  B.ORGN_ID
+		CONNECT BY B.HGHR_ORGN_CD = PRIOR B.ORGN_ID
+		ORDER SIBLINGS BY   ORGN_ID   
+	</select>
+	
+<!-- 	====================================================  -->	
+<!-- 	로그인 사용자가 관할하는 조직의 목록 가져올 경우 사용 -->
+<!-- 	====================================================  -->	
+	<select id="orgOrgnInfoMstByUserManage" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.codefind.orgOrgnInfoMstByUserManage =========*/	 	    
+		<include refid="com.ktis.msp.cmn.include.paging-start" />
+				SELECT rownum sort_no           
+						, A.USR_ID
+						, ORGN_ID                       VALUE
+						,ORGN_NM                        LABEL           
+						,ORGN_NM                        TEXT           
+						,TYPE_CD                  
+						,ORGN_LVL_CD               
+				FROM ( SELECT * FROM CMN_USR_MST A WHERE  A.USR_ID =  #{SESSION_USER_ID, jdbcType=VARCHAR} ) A, /* 'ID0005' */
+				     ORG_ORGN_INFO_MST B
+				START WITH  A.MNGR_RULE =  B.ORGN_ID
+				CONNECT BY B.HGHR_ORGN_CD = PRIOR B.ORGN_ID
+				ORDER BY ORGN_LVL_CD				
+        <include refid="com.ktis.msp.cmn.include.paging-end" />
+	</select>
+
+<!-- 	====================================================  -->	
+<!-- 	메뉴 목록 -->
+<!-- 	====================================================  -->	
+	<select id="cmnMenuMst" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.codefind.cmnMenuMst =========*/		    
+<!-- 		    SELECT -->
+<!-- 		            '-1' VALUE -->
+<!-- 		            ,'전체' LABEL -->
+<!-- 		    FROM DUAL -->
+<!-- 		    UNION ALL         -->
+	        SELECT  
+	                MENU_ID                                                 VALUE  
+	                ,replace(RPAD('_', 4*(LEVEL - 1)),' ','_') || MENU_NM   LABEL   
+	                ,replace(RPAD('_', 4*(LEVEL - 1)),' ','_') || MENU_NM   TEXT
+	        FROM 
+	             CMN_MENU_MST B
+	        WHERE 1=1
+	        <if test="usgYn != null and usgYn  != ''">
+            AND   USG_YN = #{usgYn}
+            </if>
+	        START WITH  '1' =  B.MENU_LVL
+	        CONNECT BY B.HGHR_MENU_ID = PRIOR B.MENU_ID
+	        ORDER SIBLINGS BY    1 + B.ALGN_SEQ            			
+
+	</select>
+
+<!-- 	====================================================  -->
+<!-- 삭제	 -->
+<!-- 	우편번호 목록 -->
+<!-- 	====================================================  -->	
+<!-- 	<select id="zipCdMstList" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap"> -->
+
+<!-- 				SELECT  -->
+<!-- 				            SEQ -->
+<!-- 				          , ZIPCD -->
+<!-- 				          , CITY -->
+<!-- 				          , DST -->
+<!-- 				          , TOWN -->
+<!-- 				          , RI_NM -->
+<!-- 				          , APT_BLD_NM -->
+<!-- 				          , STRT_ST_ADDR -->
+<!-- 				          , END_ST_ADDR -->
+<!-- 				          , ADDR -->
+<!-- 				          , REGST_ID -->
+<!-- 				          , REGST_DTTM -->
+<!-- 				          , RVISN_ID -->
+<!-- 				          , RVISN_DTTM -->
+<!-- 				FROM CMN_ZIP_CD_MST       			 -->
+<!-- 				WHERE 1 = 1  -->
+<!-- 	        <if test="searchZipCd != null and searchZipCd  != ''">	 -->
+<!-- 				AND A.ZIPCD  like  '%' || #{searchZipCd} || '%'  -->
+<!-- 	        </if> -->
+<!-- 	        <if test="searchAddr != null and searchAddr  != ''">	 -->
+<!-- 				AND  -->
+<!-- 				(    AND A.CITY          like  '%' || #{searchAddr} || '%'  -->
+<!-- 				  or AND A.DST           like  '%' || #{searchAddr} || '%' -->
+<!-- 				  or AND A.TOWN          like  '%' || #{searchAddr} || '%' -->
+<!-- 				  or AND A.RI_NM         like  '%' || #{searchAddr} || '%' -->
+<!-- 				  or AND A.APT_BLD_NM  l like  '%' || #{searchAddr} || '%' -->
+<!-- 				  or AND A.STRT_ST_ADDR  like  '%' || #{searchAddr} || '%' -->
+<!-- 				  or AND A.END_ST_ADDR   like  '%' || #{searchAddr} || '%' -->
+<!-- 				  or AND A.ADDR          like  '%' || #{searchAddr} || '%' -->
+
+<!-- 				)    -->
+<!-- 	        </if> -->
+	        	        
+<!-- 	</select> -->
+	
+</mapper>
