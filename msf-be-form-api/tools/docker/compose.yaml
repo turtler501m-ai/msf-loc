@@ -1,0 +1,49 @@
+name: smartform
+
+services:
+  smartform-postgres:
+    image: postgres:16.9
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_DB: smartform
+      POSTGRES_USER: temp
+      POSTGRES_PASSWORD: temp1234
+    volumes:
+      - ./data/postgres-data:/var/lib/postgresql/data
+      - ./init/postgres:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  msp-oracle:
+    image: gvenzl/oracle-free:23-slim
+    ports:
+      - "11521:1521"
+    environment:
+      ORACLE_PASSWORD: oracle
+      APP_USER: MSP_MNG
+      APP_USER_PASSWORD: temp1234
+    volumes:
+      - ./data/oracle-data:/opt/oracle/oradata
+      - ./init/oracle:/container-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'SELECT 1 FROM dual;' | sqlplus -s MSP_MNG/temp1234@localhost:1521/FREEPDB1"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+      start_period: 30s
+
+  smartform-redis:
+    image: redis:8
+    ports:
+      - "16379:6379"
+    volumes:
+      - ./data/redis-data:/data
+      - ../redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  oracle-data:
+  redis-data:

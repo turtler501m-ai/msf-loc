@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ktmmobile.msf.external.mybatis.mapper.CommonMapper">
+	<resultMap id="simpleAuditingRowMapper" type="vo.data.com.ktmmobile.msf.commons.auditing.SimpleAuditing">
+		<result property="registeredDate" column="reg_dttm" />
+		<result property="modifiedDate" column="mod_dttm" />
+	</resultMap>
+
+	<resultMap id="auditingRowMapper" type="vo.data.com.ktmmobile.msf.commons.auditing.Auditing">
+		<result property="registeredDate" column="reg_dttm" />
+		<result property="modifiedDate" column="mod_dttm" />
+
+		<association property="registerer" javaType="vo.data.com.ktmmobile.msf.commons.auditing.Auditing$AuditTrail">
+			<constructor>
+				<arg column="regManager_key" javaType="Integer" />
+				<arg column="regManager_id" javaType="String" />
+				<arg column="regManager_nm" javaType="String" />
+				<arg column="regMember_key" javaType="Integer" />
+				<arg column="regMember_id" javaType="String" />
+				<arg column="regMemberInfo_family_nm" javaType="String" />
+				<arg column="regMemberInfo_given_nm" javaType="String" />
+				<arg column="reg_id" javaType="String" />
+			</constructor>
+		</association>
+
+		<association property="modifier" javaType="vo.data.com.ktmmobile.msf.commons.auditing.Auditing$AuditTrail">
+			<constructor>
+				<arg column="modManager_key" javaType="Integer" />
+				<arg column="modManager_id" javaType="String" />
+				<arg column="modManager_nm" javaType="String" />
+				<arg column="modMember_key" javaType="Integer" />
+				<arg column="modMember_id" javaType="String" />
+				<arg column="modMemberInfo_family_nm" javaType="String" />
+				<arg column="modMemberInfo_given_nm" javaType="String" />
+				<arg column="mod_id" javaType="String" />
+			</constructor>
+		</association>
+	</resultMap>
+
+	<sql id="selectAuditColumn">
+		${regManangerAlias}
+		.
+		manager_key
+		AS ${regManangerAlias}_key,
+		${regManangerAlias}
+		.
+		manager_id
+		AS
+		${
+		regManangerAlias
+		}
+		_id,
+		${regManangerAlias}
+		.
+		manager_nm
+		AS
+		${
+		regManangerAlias
+		}
+		_nm,
+		${regMemberAlias}
+		.
+		member_key
+		AS
+		${
+		regMemberAlias
+		}
+		_key,
+		${regMemberAlias}
+		.
+		member_id
+		AS
+		${
+		regMemberAlias
+		}
+		_id,
+		${regMemberInfoAlias}
+		.
+		family_nm
+		AS
+		${
+		regMemberInfoAlias
+		}
+		_family_nm,
+		${regMemberInfoAlias}
+		.
+		given_nm
+		AS
+		${
+		regMemberInfoAlias
+		}
+		_given_nm,
+		${auditTable}
+		.
+		reg_id,
+		${auditTable}
+		.
+		reg_dttm,
+		${modManangerAlias}
+		.
+		manager_key
+		AS
+		${
+		modManangerAlias
+		}
+		_key,
+		${modManangerAlias}
+		.
+		manager_id
+		AS
+		${
+		modManangerAlias
+		}
+		_id,
+		${modManangerAlias}
+		.
+		manager_nm
+		AS
+		${
+		modManangerAlias
+		}
+		_nm,
+		${modMemberAlias}
+		.
+		member_key
+		AS
+		${
+		modMemberAlias
+		}
+		_key,
+		${modMemberAlias}
+		.
+		member_id
+		AS
+		${
+		modMemberAlias
+		}
+		_id,
+		${modMemberInfoAlias}
+		.
+		family_nm
+		AS
+		${
+		modMemberInfoAlias
+		}
+		_family_nm,
+		${modMemberInfoAlias}
+		.
+		given_nm
+		AS
+		${
+		modMemberInfoAlias
+		}
+		_given_nm,
+		${auditTable}
+		.
+		mod_id,
+		${auditTable}
+		.
+		mod_dttm
+	</sql>
+
+	<sql id="joiningAuditTable">
+		LEFT JOIN tb_manager AS
+		${regManangerAlias}
+		ON
+		(
+		SUBSTRING_INDEX
+		(
+		${auditTable}
+		.
+		reg_id,
+		'|',
+		1
+		)
+		=
+		'BO'
+		AND
+		${regManangerAlias}
+		.
+		manager_key
+		=
+		CAST
+		(
+		SUBSTRING_INDEX
+		(
+		${auditTable}
+		.
+		reg_id,
+		'|',
+		-
+		1
+		)
+		AS
+		UNSIGNED
+		)
+		)
+		LEFT
+		JOIN
+		tb_manager
+		AS
+		${modManangerAlias}
+		ON
+		(
+		SUBSTRING_INDEX
+		(
+		${auditTable}
+		.
+		mod_id,
+		'|',
+		1
+		)
+		=
+		'BO'
+		AND
+		${modManangerAlias}
+		.
+		manager_key
+		=
+		CAST
+		(
+		SUBSTRING_INDEX
+		(
+		${auditTable}
+		.
+		mod_id,
+		'|',
+		-
+		1
+		)
+		AS
+		UNSIGNED
+		)
+		)
+		LEFT
+		JOIN
+		tb_member
+		AS
+		${regMemberAlias}
+		ON
+		(
+		SUBSTRING_INDEX
+		(
+		${auditTable}
+		.
+		reg_id,
+		'|',
+		1
+		)
+		=
+		'FO'
+		AND
+		${regMemberAlias}
+		.
+		member_key
+		=
+		CAST
+		(
+		SUBSTRING_INDEX
+		(
+		${auditTable}
+		.
+		reg_id,
+		'|',
+		-
+		1
+		)
+		AS
+		UNSIGNED
+		)
+		)
+		LEFT
+		JOIN
+		tb_member_info_log
+		AS
+		${regMemberInfoAlias}
+		ON
+		${regMemberInfoAlias}
+		.
+		log_key
+		=
+		${regMemberAlias}
+		.
+		status_lkey
+		LEFT
+		JOIN
+		tb_member
+		AS
+		${modMemberAlias}
+		ON
+		(
+		SUBSTRING_INDEX
+		(
+		${auditTable}
+		.
+		mod_id,
+		'|',
+		1
+		)
+		=
+		'FO'
+		AND
+		${modMemberAlias}
+		.
+		member_key
+		=
+		CAST
+		(
+		SUBSTRING_INDEX
+		(
+		${auditTable}
+		.
+		mod_id,
+		'|',
+		-
+		1
+		)
+		AS
+		UNSIGNED
+		)
+		)
+		LEFT
+		JOIN
+		tb_member_info_log
+		AS
+		${modMemberInfoAlias}
+		ON
+		${modMemberInfoAlias}
+		.
+		log_key
+		=
+		${modMemberAlias}
+		.
+		status_lkey
+	</sql>
+
+
+	<sql id="existsMultilingualEquals">
+		EXISTS (SELECT 1
+		FROM tb_multilingual
+		WHERE target_key =
+		${targetKeyField}
+		AND
+		target_ckey
+		=
+		${targetTypeKey}
+		AND
+		desc_ckey
+		=
+		${descriptionTypeKey}
+		AND
+		short_cont
+		=
+		${content}
+		)
+	</sql>
+
+	<sql id="existsMultilingualStartsWith">
+		EXISTS (SELECT 1
+		FROM tb_multilingual
+		WHERE target_key =
+		${targetKeyField}
+		AND
+		target_ckey
+		=
+		${targetTypeKey}
+		AND
+		desc_ckey
+		=
+		${descriptionTypeKey}
+		AND
+		short_cont
+		LIKE
+		CONCAT
+		(
+		${content},
+		'%'
+		)
+		)
+	</sql>
+
+	<sql id="existsMultilingualContains">
+		EXISTS (SELECT 1
+		FROM tb_multilingual
+		WHERE target_key =
+		${targetKeyField}
+		AND
+		target_ckey
+		=
+		${targetTypeKey}
+		AND
+		desc_ckey
+		=
+		${descriptionTypeKey}
+		AND
+		short_cont
+		LIKE
+		CONCAT
+		(
+		'%',
+		${content},
+		'%'
+		)
+		)
+	</sql>
+</mapper>

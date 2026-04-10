@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="CertMapper">
+
+	<!--<insert id="insertCert" parameterType="com.ktmmobile.mcp.cert.dto.CertDto" >
+        <selectKey keyProperty="rtnCrtSeq" resultType="java.lang.Long" order="BEFORE">
+        	<choose>
+                 <when test="crtSeq != 0 and crtSeq != -1">
+                    SELECT #{crtSeq} FROM DUAL
+                 </when>
+                 <otherwise>
+                 	SELECT SQ_CRT.NEXTVAL FROM DUAL
+                 </otherwise>
+            </choose>
+        </selectKey>
+        INSERT INTO NMCP_CRT_VLD_DTL ( /*CertMapper.insertCert*/
+        	CRT_SEQ,
+					STEP,
+					SUB_STEP,
+					REGST_DT,
+					AUTH_TYPE,
+					MODU_TYPE,
+					COMP_TYPE,
+					STEP_END_YN,
+					VERI_RSLT,
+					REFERER,
+					NAME,
+					BIRTH_DATE,
+					MOBILE_NO,
+					CONN_INFO,
+					REQUEST_KEY,
+					CONTRACT_NUM,
+					REQ_USIM_SN,
+					REQ_BANK,
+					REQ_ACCOUNT_NUMBER,
+					UPLOAD_PHONE_SRL_NO,
+					REQ_SEQ,
+					RES_SEQ,
+					NC_TYPE,
+					DUP_INFO,
+					CRT_ETC,
+					RIP,
+					REGST_ID,
+					REGST_DTTM,
+					URL_TYPE,
+					REQ_CARD_COMPANY,
+					REQ_CARD_NO,
+					CRDT_CARD_TERM_DAY
+        ) VALUES (
+            #{rtnCrtSeq}, 
+            (SELECT	CASE WHEN EXISTS (SELECT 1 FROM NMCP_CRT_VLD_DTL WHERE CRT_SEQ = #{rtnCrtSeq} AND URL_TYPE = #{urlType}) THEN
+						(SELECT MAX(STEP) FROM NMCP_CRT_VLD_DTL WHERE CRT_SEQ = #{rtnCrtSeq} AND URL_TYPE = #{urlType})
+						ELSE (SELECT NVL(MAX(STEP), 0) + 1  FROM NMCP_CRT_VLD_DTL WHERE CRT_SEQ = #{rtnCrtSeq})	END FROM DUAL),
+            (SELECT NVL(MAX(SUB_STEP), 0) + 1 FROM NMCP_CRT_VLD_DTL WHERE CRT_SEQ = #{rtnCrtSeq} AND URL_TYPE = #{urlType}),
+            TO_CHAR(SYSDATE, 'YYYYMMDD'),
+            #{authType},
+            #{moduType},
+            #{compType},
+            #{stepEndYn},
+            #{veriRslt},
+            #{cReferer},            
+            #{name},            
+            #{birthDate},
+            #{mobileNo}, 
+            #{connInfo},
+            #{requestKey},
+            #{contractNum},
+            #{reqUsimSn},
+            #{reqBank},
+            #{reqAccountNumber},
+            #{uploadPhoneSrlNo},
+            #{reqSeq},
+            #{resSeq},
+            #{ncType},
+            #{dupInfo},
+            #{crtEtc},
+            #{rip},
+           	#{regstId},
+            SYSDATE,
+			#{urlType},
+			#{reqCardCompany},
+			#{reqCardNo},
+			#{crdtCardTermDay}
+        )        
+    </insert>-->
+    
+    <!--<select id="getStepCnt" parameterType="java.lang.Long" resultType="int">
+    	SELECT  /*CertMapper.getStepCnt*/
+    		COUNT(DISTINCT STEP) AS CNT
+    	FROM NMCP_CRT_VLD_DTL
+			WHERE 1 = 1
+			AND CRT_SEQ = #{crtSeq}
+			AND VERI_RSLT NOT IN ('N', 'X')
+	</select>-->
+	    
+    <!--<select id="getCompareList" parameterType="com.ktmmobile.mcp.cert.dto.CertDto" resultType="com.ktmmobile.mcp.cert.dto.CertDto">
+    	SELECT    /*CertMapper.getCompareList*/
+    		CRT_SEQ,
+				STEP,
+				REGST_DT,
+				AUTH_TYPE,
+				MODU_TYPE,
+				COMP_TYPE,
+				STEP_END_YN,
+				VERI_RSLT,
+				REFERER,
+				NAME,
+				BIRTH_DATE,
+				MOBILE_NO,
+				CONN_INFO,
+				REQUEST_KEY,
+				CONTRACT_NUM,
+				REQ_USIM_SN,
+				REQ_BANK,
+				REQ_ACCOUNT_NUMBER,
+				UPLOAD_PHONE_SRL_NO,
+				REQ_SEQ,
+				RES_SEQ,
+				NC_TYPE,
+				DUP_INFO,
+				CRT_ETC,
+				RIP,
+				REGST_ID,
+				REGST_DTTM,
+				RVISN_ID,
+				RVISN_DTTM,
+				REQ_CARD_COMPANY,
+				REQ_CARD_NO,
+				CRDT_CARD_TERM_DAY
+    	FROM NMCP_CRT_VLD_DTL
+    	WHERE 1 = 1
+    		AND CRT_SEQ = #{crtSeq}
+			  AND VERI_RSLT NOT IN ('N', 'X')
+			<if test="ncType != null and ncType != ''">
+				AND NC_TYPE = #{ncType}
+			</if>
+    </select>-->
+    
+	<!--<select id="getContractNumByUserId" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT  /*CertMapper.getContractNumByUserId*/
+		    SVC_CNTR_NO AS CONTRACT_NUM 
+		FROM MCP_USER_CNTR_MNG
+		WHERE USERID = #{userId}
+	</select>-->
+	
+	<!--<delete id="deleteCert" parameterType="com.ktmmobile.mcp.cert.dto.CertDto">
+        DELETE NMCP_CRT_VLD_DTL  /*CertMapper.deleteCert*/
+        WHERE 1 = 1
+       		AND CRT_SEQ = #{crtSeq}
+       		AND MODU_TYPE = #{moduType}
+					<if test= 'ncType != null and ncType != ""'>
+					AND NC_TYPE = #{ncType}
+					</if>
+    </delete>-->
+    
+    <!--<select id="getDataEsimSeq" parameterType="java.lang.Long" resultType="int">
+		SELECT  /*CertMapper.getDataEsimSeq*/
+		    COUNT(CRT_SEQ) AS CNT
+		FROM NMCP_CRT_VLD_DTL
+		WHERE 1 = 1
+			AND CRT_SEQ = #{crtSeq}  
+			AND UPLOAD_PHONE_SRL_NO IS NOT NULL
+	</select>-->
+	
+	<!--<update id="updateEsimSeq" parameterType="com.ktmmobile.mcp.cert.dto.CertDto" >
+		UPDATE NMCP_CRT_VLD_DTL SET /*CertMapper.updateEsimSeq*/
+		    UPLOAD_PHONE_SRL_NO = #{uploadPhoneSrlNo},
+		    RVISN_ID = #{rvisnId},
+		    RVISN_DTTM = SYSDATE
+		WHERE 1 = 1
+		    AND CRT_SEQ = #{crtSeq} 
+		    AND UPLOAD_PHONE_SRL_NO IS NOT NULL
+	</update>-->
+
+	<!--<delete id="delStepInfo" parameterType="com.ktmmobile.mcp.cert.dto.CertDto">
+			DELETE NMCP_CRT_VLD_DTL  /*CertMapper.delStepInfo*/
+			WHERE 1 = 1
+				AND CRT_SEQ = #{crtSeq}
+				AND STEP >= #{step}
+  </delete>-->
+    	      
+	<!--<update id="updateNicePin" parameterType="com.ktmmobile.mcp.cert.dto.CertDto" >
+		UPDATE NMCP_CRT_VLD_DTL SET /*CertMapper.updateNicePin*/
+		    NAME = #{name},
+		    BIRTH_DATE = #{birthDate},
+		    CONN_INFO = #{connInfo},
+		    NC_TYPE = #{ncType},
+		    RVISN_ID = #{rvisnId},
+		    RVISN_DTTM = SYSDATE
+		WHERE 1 = 1
+		  AND CRT_SEQ = #{crtSeq}
+		  AND COMP_TYPE = 'E'
+			AND MODU_TYPE = 'nicePin'
+	</update>-->
+
+	<!--<update id="updateCrtReferer" parameterType="com.ktmmobile.mcp.cert.dto.CertDto" >
+		UPDATE NMCP_CRT_VLD_DTL SET /*CertMapper.updateCrtReferer*/
+		    REFERER = #{cReferer},
+		    RVISN_ID = #{rvisnId},
+		    RVISN_DTTM = SYSDATE
+		WHERE CRT_SEQ = #{crtSeq}
+	</update>
+
+	<!--<select id="getModuTypeStepCnt" parameterType="com.ktmmobile.mcp.cert.dto.CertDto" resultType="int">
+		SELECT  /*CertMapper.getModuTypeStepCnt*/
+		    COUNT(DISTINCT STEP) CNT
+		FROM NMCP_CRT_VLD_DTL
+		WHERE 1 = 1
+			AND CRT_SEQ = #{crtSeq}
+			AND MODU_TYPE = #{moduType}
+			AND COMP_TYPE IN ('E', 'C')
+			<if test= 'ncType != null and ncType != ""'>
+			AND NC_TYPE = #{ncType}
+			</if>
+	</select>-->
+
+	<!--<select id="getCertReferer" parameterType="java.lang.Long" resultType="java.lang.String">
+		/*CertMapper.getCertReferer*/
+		SELECT REFERER
+		FROM NMCP_CRT_VLD_DTL
+		WHERE CRT_SEQ = #{crtSeq}
+		AND STEP = 1
+		AND ROWNUM = 1
+	</select>-->
+
+	<!--<select id="getDataMobileNo" parameterType="java.lang.Long" resultType="java.lang.Integer">
+		/*CertMapper.getDataMobileNo*/
+		SELECT COUNT(CRT_SEQ)
+		FROM NMCP_CRT_VLD_DTL
+		WHERE CRT_SEQ = #{crtSeq}
+		 AND COMP_TYPE = 'E'
+		 AND MOBILE_NO IS NOT NULL
+	</select>-->
+
+	<!--<update id="updateMobileNo" parameterType="com.ktmmobile.mcp.cert.dto.CertDto">
+		/*CertMapper.updateMobileNo*/
+		UPDATE NMCP_CRT_VLD_DTL
+		SET MOBILE_NO = #{mobileNo},
+				RVISN_ID = #{rvisnId},
+				RVISN_DTTM = SYSDATE
+		WHERE CRT_SEQ = #{crtSeq}
+		 AND COMP_TYPE = 'E'
+		 AND MOBILE_NO IS NOT NULL
+	</update>-->
+
+</mapper>

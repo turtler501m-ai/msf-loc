@@ -1,0 +1,71 @@
+@startuml
+title [JWT 인증 플로우]
+
+autonumber "(#)"
+skinparam actorStyle hollow
+
+actor Client
+participant "FORM-API\nADMIN-API" as API
+database "Redis" as Redis
+
+|||
+
+== API 요청 (기본) ==
+
+Client -> Client: 메모리에서 AccessToken 조회
+Client -> API: API 요청\nAuthorization: Bearer {AccessToken}
+
+API -> API: AccessToken 서명 검증 및 만료 확인
+opt#gold #F3CFEE JWT 서명 검증 실패 또는 만료 시
+API --> Client: 토큰 위조 또는 만료 응답 (401 Unauthorized)
+end opt
+|||
+
+API -> Redis: AccessToken:{jti} 조회 (Whitelist 확인)
+opt#gold #F3CFEE AccessToken 조회 결과 없음
+'API <-- Redis: AccessToken 없음
+API --> Client: 토큰 만료 응답 (401 Unauthorized)
+end opt
+|||
+
+API -> API: API 로직 수행
+Client <-- API: API 처리 결과 응답 (200 OK)
+|||
+
+
+
+== API 요청 (AccessToken 만료 시) ==
+
+Client -> API: API 요청\nAuthorization: Bearer {AccessToken}
+API -> API: JWT 확인
+API --> Client: 토큰 만료 응답 (401 Unauthorized)
+|||
+
+Client -> API: POST /auth/token:refresh\n{RefreshToken}: 쿠키로 전달
+API -> API: RefreshToken 서명 검증 및 만료 확인
+
+opt#gold #F3CFEE RefreshToken 서명 검증 실패 또는 만료 시
+API --> Client: 토큰 위조 또는 만료 응답 (401 Unauthorized)
+Client -> Client: 로그인 페이지로 이동
+end opt
+|||
+
+API -> Redis: RefreshToken:{userid} 조회 (Whitelist 확인)
+opt#gold #F3CFEE RefreshToken 조회 결과 없음
+'API <-- Redis: AccessToken 없음
+API --> Client: 토큰 만료 응답 (401 Unauthorized)
+Client -> Client: 로그인 페이지로 이동
+end opt
+|||
+
+API -> API: {New AccessToken}, {New RefreshToken} 생성
+
+API -> Redis: {New AccessToken} 저장\nAccessToken:{jti}
+API -> Redis: {New RefreshToken} 저장\nRefreshToken:{userId}
+
+Client <-- API: {New AccessToken} + {New RefreshToken} 반환
+
+Client -> API: API 재요청\nAuthorization: Bearer {New AccessToken}
+|||
+
+@enduml

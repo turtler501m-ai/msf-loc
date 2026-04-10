@@ -1,0 +1,36 @@
+#==================================================
+#
+# SmartForm BE Template Application
+#
+#==================================================
+
+#--------------------
+# Server
+#--------------------
+server:
+  port: 8080
+
+
+
+#--------------------
+# Spring
+#--------------------
+spring:
+  profiles:
+    active: local
+  config:
+    import:
+      - optional:classpath:application-private.yaml  # 개인용 설정 파일
+
+  application:
+    name: FORM-API
+    name-abbr: FRM
+
+
+
+#--------------------
+# Actuator
+#--------------------
+management:
+  server:
+    port: ${server.port}

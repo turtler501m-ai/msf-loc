@@ -1,0 +1,22 @@
+@startuml
+title [JWT 인증 플로우]
+
+autonumber "(#)"
+skinparam actorStyle hollow
+
+actor Client
+participant "FORM-API\nADMIN-API" as API
+database "Redis" as Redis
+|||
+
+== Logout ==
+
+Client -> API: POST /auth:logout
+
+API -> Redis: AccessToken:{jti} 삭제
+API -> Redis: RefreshToken:{userId} 삭제
+
+Client <-- API: Logout 완료
+|||
+
+@enduml

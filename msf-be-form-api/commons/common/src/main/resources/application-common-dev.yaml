@@ -1,0 +1,37 @@
+#### Spring
+spring:
+  #### DataSource
+  datasource:
+    groups:
+      ## 스마트서식지
+      smartform:
+        reader:
+          url: jdbc:postgresql://
+        writer:
+          url: jdbc:postgresql://
+
+      ## M전산
+      msp:
+        standalone:
+          url: jdbc:postgresql://
+
+  #### Spring Data
+  data:
+    #### Redis
+    redis:
+      host:
+      port: 6379
+
+
+
+#### Logging
+logging:
+  level:
+    com.ktmmobile.msf: debug
+    jdbc:
+      sqlonly: off
+      sqltiming: debug
+      resultsettable: debug
+      audit: off
+      resultset: off
+      connection: off

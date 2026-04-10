@@ -1,0 +1,131 @@
+#### Spring
+spring:
+  #### Basic
+  base-package: com.ktmmobile.msf
+  lifecycle.timeout-per-shutdown-phase: 1m
+
+  #### DataSource
+  datasource:
+    groups:
+      ## 스마트서식지
+      smartform:
+        type: ROUTING
+        writer:
+          url: jdbc:postgresql://
+          username: ${SMARTFORM_DB_USERNAME}
+          password: ${SMARTFORM_DB_PASSWORD}
+          hikari:
+            maximum-pool-size: 20
+        reader:
+          url: jdbc:postgresql://
+          username: ${SMARTFORM_DB_USERNAME}
+          password: ${SMARTFORM_DB_PASSWORD}
+          read-only: true
+          hikari:
+            maximum-pool-size: 30
+
+      ## M전산
+      msp:
+        type: STANDALONE
+        standalone:
+          url: jdbc:postgresql://
+          username: ${MSP_DB_USERNAME}
+          password: ${MSP_DB_PASSWORD}
+          read-only: true
+          hikari:
+            maximum-pool-size: 20
+            max-lifetime: 300000
+
+    hikari:
+      connection-timeout: 2700
+      validation-timeout: 1000
+      keepalive-time: 30000
+      max-lifetime: 60000
+      leak-detection-threshold: 59000
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 500
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+
+  #### Spring Data
+  data:
+    #### Redis
+    redis:
+      host:
+      port: 6379
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
+      timeout: 500ms
+      connect-timeout: 200ms
+      lettuce:
+        shutdown-timeout: 500ms
+        cluster:
+          refresh:
+            period: 60s
+            dynamic-refresh-sources: true
+            adaptive: false
+
+  #### TaskExecutor
+  task:
+    #### @Scheduled
+    scheduling:
+      pool.size: 5
+      thread-name-prefix: scheduling-
+      shutdown:
+        await-termination: true
+        await-termination-period: 1m
+
+    #### @Async
+    execution:
+      pool:
+        core-size: 20
+        max-size: 50
+        queue-capacity: 100
+      thread-name-prefix: async-
+      shutdown:
+        await-termination: true
+        await-termination-period: 1m
+
+  #### Servlet Multipart Handling
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+  #### Docker
+  docker:
+    compose:
+      enabled: false
+
+
+
+#### Internal Service
+internal-service:
+  services:
+    admin:
+      url: http://smartform-admin:8080
+    batch:
+      url: http://smartform-batch:8080
+
+
+
+#### External Service
+external-service:
+  services:
+    m-platform:
+      url: https://m-platform.kt.com
+
+
+#### Scheduling
+scheduling:
+  enabled: true
+
+
+
+#### Logging
+logging:
+  pattern:
+    correlation: "[%X{traceId}-%X{spanId}][%X{clientId}] "
+  level:
+    com.ktmmobile.msf: info

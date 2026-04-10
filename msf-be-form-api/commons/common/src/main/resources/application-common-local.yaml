@@ -1,0 +1,92 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration
+      - org.springframework.boot.data.redis.autoconfigure.DataRedisRepositoriesAutoConfiguration
+
+  #### DataSource
+  datasource:
+    groups:
+      ## 스마트서식지
+      smartform:
+        writer:
+          url: jdbc:postgresql://211.184.227.24:45432/msf_core?currentSchema=smartform
+          username: ENC(thA33IuMOECiHqyms2uS27np3TgktbegPCUdj3EjldM9A/tbNFHJ/JBpYzML2hZw)
+          password: ENC(hzVv7kRZCnauKm5MKtE3u4VJ18ZChTgxfxwfTD+xWxbzIeQcgLaXHZoXyRYV4FqaAlti+hnUPvmSyRuvWvFIdw==)
+          hikari:
+            maximum-pool-size: 6
+        reader:
+          url: ${spring.datasource.groups.smartform.writer.url}
+          username: ${spring.datasource.groups.smartform.writer.username}
+          password: ${spring.datasource.groups.smartform.writer.password}
+          hikari:
+            maximum-pool-size: 6
+
+      ## M전산
+      msp:
+        standalone:
+          url: jdbc:oracle:thin:@10.220.71.231:2521:MSPDEV
+          username: ENC(wEFQiRtDlU3uKddGAg/7dB94KeYcusJz8jhYLqaa+NMNeiIsU6uaCfBw39RWrPtW)
+          password: ENC(LPbBY5knhFrbtRuJOQRNap5ms+S+uE7id2NhBTspqOaqIVbATF+k1LbdH2wYOtni)
+          hikari:
+            maximum-pool-size: 6
+            idle-timeout: 290000
+
+    hikari:
+      minimum-idle: 3
+      idle-timeout: 59000
+
+
+  #### Spring Data
+  data:
+    #### Redis
+    redis:
+      enabled: false
+      host:
+      port: 6379
+      username: ENC(...)
+      password: ENC(...)
+
+  docker:
+    compose:
+      enabled: false
+      file: tools/docker/compose.yaml
+      lifecycle-management: start_only
+
+management:
+  health:
+    redis:
+      enabled: false
+
+
+#### Internal Service
+internal-service:
+  services:
+    admin:
+      url: http://localhost:8180
+    batch:
+      url: http://localhost:8280
+
+
+
+
+#### Logging
+logging:
+  pattern:
+    correlation: "[%X{clientId}] "
+  level:
+    com.ktmmobile.msf: debug
+    jdbc:
+      sqlonly: off
+      sqltiming: debug
+      resultsettable: debug
+      audit: off
+      resultset: off
+      connection: off
+
+
+
+#### Jasypt
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}

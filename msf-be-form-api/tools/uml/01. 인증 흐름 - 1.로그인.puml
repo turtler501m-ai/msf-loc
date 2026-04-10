@@ -1,0 +1,25 @@
+@startuml
+title [JWT 인증 플로우]
+
+autonumber "(#)"
+skinparam actorStyle hollow
+
+actor Client
+participant "FORM-API\nADMIN-API" as API
+database "Redis" as Redis
+|||
+
+== 로그인 ==
+
+Client -> API: POST /auth:login\n(userid, password)
+API -> API: 사용자 인증
+API -> API: AccessToken, RefreshToken 생성
+
+API -> Redis: AccessToken 저장\nAccessToken:{jti}
+API -> Redis: RefreshToken 저장\nRefreshToken:{userId}
+
+Client <-- API: {AccessToken} + {RefreshToken} 반환\nAccessToken:응답 바디, RefreshToken:쿠키
+Client -> Client: AccessToken을 메모리에 저장
+|||
+
+@enduml
