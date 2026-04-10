@@ -103,7 +103,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 
 const emit = defineEmits(['complete'])
@@ -140,13 +140,6 @@ const save = async () => {
 }
 
 defineExpose({ save })
-
-// 마운트 시 X18 자동 조회
-onMounted(async () => {
-  if (!product.remainChargeLoaded) {
-    await onClickRemainCharge()
-  }
-})
 </script>
 
 <style scoped></style>

@@ -396,6 +396,8 @@ const data = async (code /* 임시저장 코드 */) => {
 
 const save = async () => {
   if (isComplete.value !== 'true') return false
+  // 다음 단계 진입 전 X18 잔여요금 조회
+  await terminationStore.apiGetRemainCharge()
   return true
 }
 
