@@ -2,7 +2,8 @@ package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
 import java.util.Map;
 
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpUsimPukVO;
+// TOBESKIP: 사용하지 않는 기능에서 쓰던 타입 import는 참고용으로 주석 보존한다.
+// import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.CustRequestDto;
 
 /**
@@ -40,7 +41,8 @@ public interface MsfCustRequestService {
      * @return: boolean
      * </pre>
      */
-	public boolean insertCustRequestCallList(CustRequestDto custRequestDto);
+	// TOBESKIP: 통화내역 열람 서비스 시그니처는 삭제하지 않고 주석으로 보존한다.
+	// public boolean insertCustRequestCallList(CustRequestDto custRequestDto);
 	
 	/**
      * <pre>
@@ -49,7 +51,8 @@ public interface MsfCustRequestService {
      * @return: boolean
      * </pre>
      */
-	public boolean insertCustRequestJoinForm(CustRequestDto custReuqestDto);
+	// TOBESKIP: 가입신청서 출력 서비스 시그니처는 삭제하지 않고 주석으로 보존한다.
+	// public boolean insertCustRequestJoinForm(CustRequestDto custReuqestDto);
 	
 	/**
      * <pre>
@@ -58,7 +61,8 @@ public interface MsfCustRequestService {
      * @return: MpUsimPukVO
      * </pre>
      */
- 	public MpUsimPukVO getUsimPukByMP(String ncn, String ctn, String custId); 
+	// TOBESKIP: USIM PUK 조회 서비스 시그니처는 삭제하지 않고 주석으로 보존한다.
+ 	// public MpUsimPukVO getUsimPukByMP(String ncn, String ctn, String custId); 
 
 	/**
 	 * @Description : 안심보험가입 여부 조회(API호출)

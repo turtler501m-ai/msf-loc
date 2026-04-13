@@ -295,7 +295,8 @@ public class MsfFarPricePlanController {
      * @return
      */
 
-    @RequestMapping(value = {"/mypage/regServicePop.do", "/m/mypage/regServicePop.do"})
+    // TOBESKIP: 부가서비스 팝업 화면은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = {"/mypage/regServicePop.do", "/m/mypage/regServicePop.do"})
     public String doRegServicePop(
         HttpServletRequest request, Model model,
         @RequestParam(value = "contractNum", required = true) String contractNum,
@@ -848,7 +849,8 @@ public class MsfFarPricePlanController {
      * @return
      */
 
-    @RequestMapping(value = {"/mypage/farPriceCtgTab1Ajax.do", "/m/mypage/farPriceCtgTab1Ajax.do"})
+    // TOBESKIP: 카테고리 1 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = {"/mypage/farPriceCtgTab1Ajax.do", "/m/mypage/farPriceCtgTab1Ajax.do"})
     @ResponseBody
     public MapWrapper farPriceCtgTab1Ajax(HttpServletRequest request, HttpServletResponse response) {
         MapWrapper mapWrapper = farPricePlanService.getCtgMapWrapper();
@@ -868,7 +870,8 @@ public class MsfFarPricePlanController {
      * @throws SocketTimeoutException
      */
 
-    @RequestMapping(value = {"/mypage/farPriceCtgTab2Ajax.do", "/m/mypage/farPriceCtgTab2Ajax.do"})
+    // TOBESKIP: 카테고리 2 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = {"/mypage/farPriceCtgTab2Ajax.do", "/m/mypage/farPriceCtgTab2Ajax.do"})
     @ResponseBody
     public HashMap<String, Object> getFarPricePlanListAjax2(
         HttpServletRequest request, Model model,
@@ -904,7 +907,8 @@ public class MsfFarPricePlanController {
      * @throws SocketTimeoutException
      */
 
-    @RequestMapping(value = {"/mypage/farPriceCtgTab3Ajax.do", "/m/mypage/farPriceCtgTab3Ajax.do"})
+    // TOBESKIP: 카테고리 3 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = {"/mypage/farPriceCtgTab3Ajax.do", "/m/mypage/farPriceCtgTab3Ajax.do"})
     @ResponseBody
     public HashMap<String, Object> getFarPricePlanListAjax3(
         HttpServletRequest request, Model model,
@@ -944,7 +948,8 @@ public class MsfFarPricePlanController {
      * @throws JAXBException
      */
 
-    @RequestMapping(value = {"/mypage/farPriceContent.do", "/m/mypage/farPriceContent.do"})
+    // TOBESKIP: 상세 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = {"/mypage/farPriceContent.do", "/m/mypage/farPriceContent.do"})
     @ResponseBody
     public HashMap<String, Object> farPriceContent(
         HttpServletRequest request, HttpServletResponse response,

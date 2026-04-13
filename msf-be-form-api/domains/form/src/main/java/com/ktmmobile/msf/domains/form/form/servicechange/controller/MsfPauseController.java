@@ -798,7 +798,8 @@ public class MsfPauseController {
     /**
      * 일시정지이력조회 ajax
      */
-    @RequestMapping(value = {"/mypage/suspenPosHisPop.do", "/m/mypage/suspenPosHisPop.do"})
+    // TOBESKIP: 일시정지 이력 팝업은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = {"/mypage/suspenPosHisPop.do", "/m/mypage/suspenPosHisPop.do"})
     public String suspenPosHisPop(HttpServletRequest request, Model model,@RequestParam(value = "strNcn", required=false, defaultValue="") String strNcn)  {
 
 

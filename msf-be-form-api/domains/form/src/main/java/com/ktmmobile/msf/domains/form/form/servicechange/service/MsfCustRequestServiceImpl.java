@@ -1,24 +1,26 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
-import java.net.SocketTimeoutException;
+// TOBESKIP: 사용하지 않는 기능에서 쓰던 import는 참고용으로 주석 보존한다.
+// import java.net.SocketTimeoutException;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpUsimPukVO;
+// import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
+// import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dao.CustRequestDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.CustRequestDto;
 
 @Service("custRequestService")
 public class MsfCustRequestServiceImpl implements MsfCustRequestService {
 
-    private static final Logger logger = LoggerFactory.getLogger(MsfCustRequestServiceImpl.class);
+    // TOBESKIP: 사용하지 않는 기능에서 쓰던 logger는 참고용으로 주석 보존한다.
+    // private static final Logger logger = LoggerFactory.getLogger(MsfCustRequestServiceImpl.class);
 
     @Value("${SERVER_NAME}")
     private String serverName;
@@ -28,9 +30,10 @@ public class MsfCustRequestServiceImpl implements MsfCustRequestService {
 
     @Autowired
     private CustRequestDao custRequestDao;
-    
-    @Autowired
-    private MsfMplatFormService mPlatFormService;
+
+    // TOBESKIP: 사용하지 않는 기능에서 쓰던 M플랫폼 연동 서비스는 참고용으로 주석 보존한다.
+    // @Autowired
+    // private MsfMplatFormService mPlatFormService;
     
 	@Override
 	public long getCustRequestSeq() {
@@ -42,6 +45,8 @@ public class MsfCustRequestServiceImpl implements MsfCustRequestService {
 		return custRequestDao.insertCustRequestMst(custReuqestDto);
 	}
     
+    // TOBESKIP: 통화내역 열람, 가입신청서 출력, USIM PUK 구현은 삭제하지 않고 주석으로 보존한다.
+    /*
     @Override
     public boolean insertCustRequestCallList(CustRequestDto custReuqestDto) {
     	return custRequestDao.insertCustRequestCallList(custReuqestDto);
@@ -67,6 +72,7 @@ public class MsfCustRequestServiceImpl implements MsfCustRequestService {
  		}
  		return vo;
  	}
+    */
 
 	@SuppressWarnings("unchecked")
 	@Override

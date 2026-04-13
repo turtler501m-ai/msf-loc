@@ -167,7 +167,8 @@ public class MsfCustRequestController {
      * @param Model
      * @return string(pageUrl)
      */
-    @RequestMapping(value= {"/m/mypage/reqJoinForm.do","/mypage/reqJoinForm.do"})
+    // TOBESKIP: 가입신청서 화면은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value= {"/m/mypage/reqJoinForm.do","/mypage/reqJoinForm.do"})
     public String reqJoinForm(HttpServletRequest request ,@ModelAttribute("searchVO") MyPageSearchDto searchVO, Model model) {
 
         String jspPageName = "/portal/mypage/reqJoinForm";
@@ -228,7 +229,8 @@ public class MsfCustRequestController {
      * @param Model
      * @return string(pageUrl)
      */
-    @RequestMapping(value= {"/m/mypage/reqUsimPuk.do","/mypage/reqUsimPuk.do"})
+    // TOBESKIP: USIM PUK 화면은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value= {"/m/mypage/reqUsimPuk.do","/mypage/reqUsimPuk.do"})
     public String reqUsimPuk(HttpServletRequest request ,@ModelAttribute("searchVO") MyPageSearchDto searchVO, Model model) {
 
         String jspPageName = "/portal/mypage/reqUsimPuk";
@@ -457,6 +459,13 @@ public class MsfCustRequestController {
     public Map<String, Object> custRequestAjax(CustRequestDto custRequestDto) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+        // TOBESKIP: 보험 신청 처리는 유지하고, 사용하지 않는 요청 타입만 차단한다.
+        // TOBESKIP: 제외한 분기 로직은 아래 주석 블록으로 보존한다.
+        if (!"IS".equals(custRequestDto.getReqType())) {
+            rtnMap.put("RESULT_MSG", "지원하지 않는 요청 유형입니다.");
+            rtnMap.put("RESULT_CODE", "FAIL_UNSUPPORTED");
+            return rtnMap;
+        }
 
         // ================ STEP START ================
         // 1. 본인인증 세션 확인
@@ -562,7 +571,8 @@ public class MsfCustRequestController {
         boolean isInsertReqTable = false;
 
         //CL : 통화내역열람신청
-        if("CL".equals(custRequestDto.getReqType())) {
+        // TOBESKIP: 통화내역 열람 분기는 사용하지 않아 주석으로 보존한다.
+        /* if("CL".equals(custRequestDto.getReqType())) {
             //starDate, endDate . 제거
             if(StringUtil.isNotNull(custRequestDto.getStartDate()) && StringUtil.isNotNull(custRequestDto.getEndDate())) {
                 String reqStartDate = custRequestDto.getStartDate();
@@ -584,11 +594,12 @@ public class MsfCustRequestController {
             }
         }
         //NC : 명의변경 신청(이것은 컨트롤러가 따로 있음)
-        else if("NC".equals(custRequestDto.getReqType())) {
+        */ if("NC".equals(custRequestDto.getReqType())) {
             isInsertReqTable = true;
         }
         //JF : 가입신청서 출력요청
-        else if("JF".equals(custRequestDto.getReqType())) {
+        // TOBESKIP: 가입신청서 출력, USIM PUK 분기는 사용하지 않아 주석으로 보존한다.
+        /* else if("JF".equals(custRequestDto.getReqType())) {
             try {
                 //NMCP_CUST_REQUEST_JOIN_FORM insert
                 isInsertReqTable = custRequestService.insertCustRequestJoinForm(custRequestDto);
@@ -625,7 +636,7 @@ public class MsfCustRequestController {
             isInsertReqTable = true;
         }
         //IS : 휴대폰안심보험 가입 신청
-        else if("IS".equals(custRequestDto.getReqType())) {
+        */ else if("IS".equals(custRequestDto.getReqType())) {
             try {
                 //NMCP_CUST_REQUEST_INSR insert
                 isInsertReqTable = custRequestService.insertCustRequestInsr(custRequestDto);
@@ -644,7 +655,8 @@ public class MsfCustRequestController {
 
         //4. 통화내역열람신청(CL), 안심보험가입(IS)은 서식지 생성을 해준다.
         //통화내역열람신청
-        if("CL".equals(custRequestDto.getReqType())) {
+        // TOBESKIP: 통화내역 열람 스캔 전송은 사용하지 않아 주석으로 보존한다.
+        /* if("CL".equals(custRequestDto.getReqType())) {
             try {
                 //SCAN 서버에 서식지 데이터 생성 및 전송
                 custRequestScanService.prodSendScan(custRequestDto.getCustReqSeq(), custRequestDto.getCretId(), "CL");
@@ -682,7 +694,7 @@ public class MsfCustRequestController {
                 logger.error(e.getMessage());
             }
         //안심보험가입신청
-        }else if("IS".equals(custRequestDto.getReqType())) {
+        */ if("IS".equals(custRequestDto.getReqType())) {
 
             try {
 
