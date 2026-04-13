@@ -134,5 +134,6 @@ public interface MsfMyCombinationSvc {
 
     public Map<String, Object> getCombChkInfo(AuthSmsDto prntDto, AuthSmsDto childDto, String prcsMdlInd, String childCobun);
 
+    // TOBESKIP: KT 결합 신청 처리 — URL 차단으로 진입 불가. 인터페이스-구현체 일치 유지를 위해 시그니처는 보존한다.
     public Map<String, Object> regCombineKt(String prcsMdlInd);
 }

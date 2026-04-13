@@ -126,7 +126,9 @@ public class MsfCombineController {
      * @author papier
      * @Date : 2022.11.11
      */
-    @RequestMapping(value = "/content/combineWireless_old.do")
+    // TOBESKIP: KT 무선 결합 화면은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/combineWireless_old.do")
+    @Deprecated
     public String combineWireless(
         HttpServletRequest request, Model model
         , @ModelAttribute("searchVO") MyPageSearchDto searchVO
@@ -202,8 +204,10 @@ public class MsfCombineController {
      *
      *
      */
-    @RequestMapping(
-        value = {"/content/combineWirelessComplete.do", "/m/content/combineWirelessComplete.do", "/content/combineKtComplete.do", "/m/content/combineKtComplete.do"})
+    // TOBESKIP: KT 무선 결합 완료 화면은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(
+    //     value = {"/content/combineWirelessComplete.do", "/m/content/combineWirelessComplete.do", "/content/combineKtComplete.do", "/m/content/combineKtComplete.do"})
+    @Deprecated
     public String combineWirelessComplete(Model model, @ModelAttribute McpReqCombineDto reqCombine) {
         if (StringUtils.isBlank(reqCombine.getReqSeq())) {
             throw new McpCommonException(ExceptionMsgConstant.INVALID_PARAMATER_EXCEPTION);
@@ -477,52 +481,52 @@ public class MsfCombineController {
     //    }
 
 
-    //    /**
-    //     * @param :
-    //     * @return :
-    //     * @Description : 인증한 전화 번호 추출
-    //     * @Author : power
-    //     * @Create Date : 2022. 11. 11
-    //     */
-    //    @RequestMapping(value = "/content/getNoLoginRateInfoAjax.do")
-    //    @ResponseBody
-    //    public Map<String, Object> certPhoneInfo(AuthSmsDto authSmsDto) {
-    //
-    //        AuthSmsDto rtnDto = SessionUtils.getAuthSmsBean(authSmsDto);
-    //
-    //        if (rtnDto == null) {
-    //            throw new McpCommonJsonException("0001", ExceptionMsgConstant.NO_FAIL_SESSION_EXCEPTION);
-    //        }
-    //
-    //        // 현재 요금제 조회
-    //        // 서비스계약번호
-    //        McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(rtnDto.getSvcCntrNo());
-    //
-    //        if (mcpUserCntrMngDto == null || StringUtils.isBlank(mcpUserCntrMngDto.getSoc())) {
-    //            throw new McpCommonJsonException("0002", "요금제 정보 조회 실패");
-    //        }
-    //
-    //        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-    //        rtnDto.setRateCd(mcpUserCntrMngDto.getSoc());
-    //        rtnDto.setRateNm(mcpUserCntrMngDto.getRateNm());
-    //        rtnDto.setUnSSn(mcpUserCntrMngDto.getUnUserSSn());  //주민 번호 설정
-    //        //요금제 정보 저장후 다시 session 저정
-    //        rtnDto.setMenu(authSmsDto.getMenu());
-    //        //rtnDto.setCustId(mcpUserCntrMngDto.getCustId());
-    //
-    //        SessionUtils.setAuthSmsSession(rtnDto);
-    //
-    //        AuthSmsDto rtnDto2 = new AuthSmsDto();
-    //        rtnDto2.setSvcCntrNo(rtnDto.getSvcCntrNo());
-    //        rtnDto2.setRateCd(mcpUserCntrMngDto.getSoc());
-    //        rtnDto2.setRateNm(mcpUserCntrMngDto.getRateNm());
-    //        rtnDto2.setCtn(StringMakerUtil.getPhoneNum(rtnDto.getCtn()));
-    //        rtnDto2.setSubLinkName(StringMakerUtil.getName(rtnDto.getSubLinkName()));
-    //
-    //        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-    //        rtnMap.put("DATA_OBJ", rtnDto2);
-    //        return rtnMap;
-    //    }
+        /**
+         * @param :
+         * @return :
+         * @Description : 인증한 전화 번호 추출
+         * @Author : power
+         * @Create Date : 2022. 11. 11
+         */
+        @RequestMapping(value = "/content/getNoLoginRateInfoAjax.do")
+        @ResponseBody
+        public Map<String, Object> certPhoneInfo(AuthSmsDto authSmsDto) {
+
+            AuthSmsDto rtnDto = SessionUtils.getAuthSmsBean(authSmsDto);
+
+            if (rtnDto == null) {
+                throw new McpCommonJsonException("0001", ExceptionMsgConstant.NO_FAIL_SESSION_EXCEPTION);
+            }
+
+            // 현재 요금제 조회
+            // 서비스계약번호
+            McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(rtnDto.getSvcCntrNo());
+
+            if (mcpUserCntrMngDto == null || StringUtils.isBlank(mcpUserCntrMngDto.getSoc())) {
+                throw new McpCommonJsonException("0002", "요금제 정보 조회 실패");
+            }
+
+            HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+            rtnDto.setRateCd(mcpUserCntrMngDto.getSoc());
+            rtnDto.setRateNm(mcpUserCntrMngDto.getRateNm());
+            rtnDto.setUnSSn(mcpUserCntrMngDto.getUnUserSSn());  //주민 번호 설정
+            //요금제 정보 저장후 다시 session 저정
+            rtnDto.setMenu(authSmsDto.getMenu());
+            //rtnDto.setCustId(mcpUserCntrMngDto.getCustId());
+
+            SessionUtils.setAuthSmsSession(rtnDto);
+
+            AuthSmsDto rtnDto2 = new AuthSmsDto();
+            rtnDto2.setSvcCntrNo(rtnDto.getSvcCntrNo());
+            rtnDto2.setRateCd(mcpUserCntrMngDto.getSoc());
+            rtnDto2.setRateNm(mcpUserCntrMngDto.getRateNm());
+            rtnDto2.setCtn(StringMakerUtil.getPhoneNum(rtnDto.getCtn()));
+            rtnDto2.setSubLinkName(StringMakerUtil.getName(rtnDto.getSubLinkName()));
+
+            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+            rtnMap.put("DATA_OBJ", rtnDto2);
+            return rtnMap;
+        }
 
     /**
      * @param :
@@ -531,8 +535,9 @@ public class MsfCombineController {
      * @Author : power
      * @Create Date : 2022. 11. 14
      */
-    @RequestMapping(value = "/content/checkCombineAjax.do")
-    @ResponseBody
+    // TOBESKIP: KT 결합 대상 여부 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/checkCombineAjax.do")
+    @Deprecated
     public Map<String, Object> checkCombine(AuthSmsDto authSmsDto, MyPageSearchDto searchVO) {
 
         AuthSmsDto rtnDto = SessionUtils.getAuthSmsBean(authSmsDto);
@@ -595,7 +600,9 @@ public class MsfCombineController {
      * @Create Date : 2022. 11. 14
      * @RequestParam(required = false, defaultValue = "") String prcsMdlInd
      */
-    @RequestMapping(value = "/content/childCertifyAjax.do")
+    // TOBESKIP: KT 결합 자회선 인증 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/childCertifyAjax.do")
+    @Deprecated
     @ResponseBody
     public Map<String, Object> childCertify(
         AuthSmsDto authSmsDto, McpUserCntrMngDto userCntrMngDto
@@ -952,7 +959,9 @@ public class MsfCombineController {
      * @Author :
      * @Create Date : 2025. 04. 29
      */
-    @RequestMapping(value = "/content/mineRegCombineKtAjax.do")
+    // TOBESKIP: KT 결합 본인명의 사전체크 및 신청 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/mineRegCombineKtAjax.do")
+    @Deprecated
     @ResponseBody
     public Map<String, Object> childKtCertify(
         AuthSmsDto authSmsDto
@@ -1027,7 +1036,9 @@ public class MsfCombineController {
      * @Author : power
      * @Create Date : 2022. 11. 14
      */
-    @RequestMapping(value = "/content/childCertifyKtAjax.do")
+    // TOBESKIP: KT 결합 자회선 KT 인증 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/childCertifyKtAjax.do")
+    @Deprecated
     @ResponseBody
     public Map<String, Object> childCertifyKt(
         AuthSmsDto authSmsDto
@@ -1177,7 +1188,9 @@ public class MsfCombineController {
      * @Author : power
      * @Create Date : 2022. 11. 14
      */
-    @RequestMapping(value = "/content/childCertifyMoreAjax.do")
+    // TOBESKIP: KT 결합 자회선 추가 인증 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/childCertifyMoreAjax.do")
+    @Deprecated
     @ResponseBody
     public Map<String, Object> childCertifyMore() {
         AuthSmsDto childAutSms = new AuthSmsDto();
@@ -1210,7 +1223,9 @@ public class MsfCombineController {
      * @Author : power
      * @Create Date : 2022. 11. 14
      */
-    @RequestMapping(value = "/content/childVerifyAjax.do")
+    // TOBESKIP: KT 결합 자회선 본인인증 확인 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/childVerifyAjax.do")
+    @Deprecated
     @ResponseBody
     public Map<String, Object> childVerifyAjax(AuthSmsDto authInput) {
 
@@ -1286,7 +1301,9 @@ public class MsfCombineController {
      * @Author : power
      * @Create Date : 2022. 11. 14
      */
-    @RequestMapping(value = "/content/regCombineAjax.do")
+    // TOBESKIP: KT 결합 신청 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/regCombineAjax.do")
+    @Deprecated
     @ResponseBody
     public Map<String, Object> regCombine(@RequestParam(required = false, defaultValue = "") String prcsMdlInd) {
 
@@ -1609,7 +1626,9 @@ public class MsfCombineController {
      * @Author : power
      * @Create Date : 2022. 11. 14
      */
-    @RequestMapping(value = "/content/regCombineKtAjax.do")
+    // TOBESKIP: KT 결합 KT 신청 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/regCombineKtAjax.do")
+    @Deprecated
     @ResponseBody
     public Map<String, Object> regCombineKt(@RequestParam(required = false, defaultValue = "") String prcsMdlInd) {
         Map<String, Object> regCombineMap = myCombinationSvc.regCombineKt(prcsMdlInd);
@@ -1624,7 +1643,9 @@ public class MsfCombineController {
      * @Author : power
      * @Create Date : 2022. 11. 14
      */
-    @RequestMapping(value = "/content/getCombiSvcListAjax.do")
+    // TOBESKIP: 결합 가능 서비스 목록 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/getCombiSvcListAjax.do")
+    @Deprecated
     @ResponseBody
     public Map<String, Object> getCombiSvcList(
         MyPageSearchDto searchVO
@@ -1869,7 +1890,9 @@ public class MsfCombineController {
      * @Author : 박성훈
      * @Date : 2023.10.12
      */
-    @RequestMapping(value = {"/content/ktDcInfo.do", "/m/content/ktDcInfo.do"})
+    // TOBESKIP: KT/eSIM Watch 할인 정보 화면은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = {"/content/ktDcInfo.do", "/m/content/ktDcInfo.do"})
+    @Deprecated
     public String eSimWatchInfo(Model model) {
 
         if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
@@ -2263,7 +2286,9 @@ public class MsfCombineController {
      * @Author :
      * @Create
      */
-    @RequestMapping(value = "/content/getCombineSoloTypeAjax.do")
+    // TOBESKIP: 아무나SOLO 결합 타입 조회 Ajax(H1 5002-05 제외)는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/content/getCombineSoloTypeAjax.do")
+    @Deprecated
     @ResponseBody
     public Map<String, Object> combineSoloType(@RequestParam(value = "rateCd") String rateCd) {
 

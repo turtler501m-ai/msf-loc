@@ -966,6 +966,7 @@ public class MsfMyShareDataController {
      */
     // TOBESKIP: 사전 체크 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = { "/content/preOpenCheckAjax.do", "/m/content/preOpenCheckAjax.do" })
+    @Deprecated
     @ResponseBody
     public JsonReturnDto domyCntrListAjax(HttpServletRequest request, Model model
             , @ModelAttribute("searchVO") MyPageSearchDto searchVO

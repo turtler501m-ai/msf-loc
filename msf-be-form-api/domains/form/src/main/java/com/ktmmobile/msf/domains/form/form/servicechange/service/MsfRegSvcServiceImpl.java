@@ -415,6 +415,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
     // [ASIS] 기존 메서드 — TOBE 전환 완료로 주석 처리 (삭제 금지)
     // =====================================================
 
+    // TOBESKIP: 구 ASIS X20 시그니처는 DTO 기반 addSvcList로 대체되어 주석으로만 보존한다.
     // [ASIS] X20 사용 → selectAddSvcInfoDto()로 대체
     // X20: 이용중인 부가서비스 SOC 목록만 반환 (단순)
     // X97: SOC + 이력 + 상세정보 포함 반환 (확장)
@@ -424,6 +425,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
     //     ... (X20 호출)
     // }
 
+    // TOBESKIP: 구 ASIS X21 시그니처는 TOBE regSvcChg(AdditionApplyReqDto)로 대체되어 주석으로만 보존한다.
     // [ASIS] X21 사용 → regSvcChg()로 대체
     // X21: 단건 부가서비스 신청
     // Y25: 상품변경처리(multi) — 복수 SOC 처리 지원
@@ -433,6 +435,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
     //     res = mPlatFormService.regSvcChg(ncn, ctn, custId, soc, ftrNewParam); // X21
     // }
 
+    // TOBESKIP: 구 ASIS X97/세션 의존 시그니처는 TOBE myAddSvcList(MyAddSvcListReqDto)로 대체되어 주석으로만 보존한다.
     // [ASIS] X97 사용, MyPageSearchDto(세션) 의존 → selectMyAddSvcList()로 대체
     // lstComActvDate(최초 공통 활성 일자) 기반 onlineCanDay 블로킹 처리 포함
     // TOBE에서는 단순화 (lstComActvDate 미사용)
@@ -441,6 +444,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
     // @Override
     // public MpAddSvcInfoParamDto selectmyAddSvcList(String ncn, String ctn, String custId, String lstComActvDate) { ... }
 
+    // TOBESKIP: 구 ASIS Map 반환 시그니처는 TOBE AdditionApplyResVO 기반 해지 처리로 대체되어 주석으로만 보존한다.
     // [ASIS] Map 반환, MyPageSearchDto(세션) 의존 → moscRegSvcCanChg()로 대체
     // Map<String,Object>에 "RESULT_CODE"("S"/"E"), "message" 키로 결과 반환
     // TOBE에서 AdditionApplyResVO(success, message)로 교체
@@ -451,6 +455,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
     // public Map<String, Object> moscRegSvcCanChgSeq(MyPageSearchDto searchVO, String rateAdsvcCd, String prodHstSeq)
     //         throws SocketTimeoutException { ... }
 
+    // TOBESKIP: 구 ASIS 공개 유틸 시그니처는 TOBE private helper로 흡수되어 주석으로만 보존한다.
     // [ASIS] 인터페이스 공개 메서드 → TOBE에서 private 내부 메서드로 이동
     // (외부에서 직접 호출하지 않으므로 인터페이스 노출 불필요)
     // @Override public void getMpSocListByDiv(...) { ... }

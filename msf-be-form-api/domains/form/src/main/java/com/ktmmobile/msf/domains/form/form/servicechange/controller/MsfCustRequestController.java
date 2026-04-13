@@ -93,7 +93,8 @@ public class MsfCustRequestController {
      * @param Model
      * @return string(pageUrl)
      */
-    @RequestMapping(value = {"/mypage/reqCallList.do", "/m/mypage/reqCallList.do"}  )
+    // TOBESKIP: 통화내역 열람 화면은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = {"/mypage/reqCallList.do", "/m/mypage/reqCallList.do"}  )
     public String reSpnsrPlcyDc(ModelMap model , HttpServletRequest request
             , @ModelAttribute("searchVO") MyPageSearchDto searchVO){
 
@@ -169,6 +170,7 @@ public class MsfCustRequestController {
      */
     // TOBESKIP: 가입신청서 화면은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value= {"/m/mypage/reqJoinForm.do","/mypage/reqJoinForm.do"})
+    @Deprecated
     public String reqJoinForm(HttpServletRequest request ,@ModelAttribute("searchVO") MyPageSearchDto searchVO, Model model) {
 
         String jspPageName = "/portal/mypage/reqJoinForm";
@@ -231,6 +233,7 @@ public class MsfCustRequestController {
      */
     // TOBESKIP: USIM PUK 화면은 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value= {"/m/mypage/reqUsimPuk.do","/mypage/reqUsimPuk.do"})
+    @Deprecated
     public String reqUsimPuk(HttpServletRequest request ,@ModelAttribute("searchVO") MyPageSearchDto searchVO, Model model) {
 
         String jspPageName = "/portal/mypage/reqUsimPuk";
@@ -809,7 +812,8 @@ public class MsfCustRequestController {
      * 화면에서 본인인증 시 로그인한 고객의 이름과 생년월일로 비교하기 위해 세선값을 가져감
      * @return Map
     */
-    @RequestMapping(value = "/mypage/getUserInfoAjax.do")
+    // TOBESKIP: 사용자 정보 조회 Ajax는 연결 화면 근거가 없어 URL 매핑만 막고 원본 로직은 보존한다.
+    // @RequestMapping(value = "/mypage/getUserInfoAjax.do")
     @ResponseBody
     public Map<String, Object> getUserInfoAjax() {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
