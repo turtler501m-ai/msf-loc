@@ -3,6 +3,7 @@ package com.ktmmobile.msf.domains.form.form.termination.dao;
 import java.util.List;
 
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationInsertDto;
 
 public interface CancelConsultDao {
 
@@ -13,5 +14,9 @@ public interface CancelConsultDao {
     int insertCancelConsult(CancelConsultDto cancelConsultDto);
 
     List<CancelConsultDto> selectCancelConsultList(CancelConsultDto cancelConsultDto);
+
+    Long nextRequestKey();
+
+    int insertRequestCancel(TerminationInsertDto dto);
 
 }

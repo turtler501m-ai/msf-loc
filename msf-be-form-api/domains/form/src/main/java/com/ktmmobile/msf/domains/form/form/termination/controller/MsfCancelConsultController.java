@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,6 +30,8 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeResVO;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
 import com.ktmmobile.msf.domains.form.form.termination.service.MsfCancelConsultSvc;
 import org.springframework.web.bind.annotation.RequestBody;
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
@@ -67,6 +70,9 @@ public class MsfCancelConsultController {
 
     @Autowired
     private IpStatisticService ipstatisticService;
+
+    @Value("${api.interface.server}")
+    private String apiInterfaceServer;
 
     /*
      * 해지 상담 신청 페이지
@@ -351,7 +357,12 @@ public class MsfCancelConsultController {
             return errVO;
         }
 
-        // 2. 세션에서 userId 조회
+        // 2. LOCAL 테스트용 — 세션 없이 ctn/custId가 넘어오면 그대로 사용
+        if ("LOCAL".equals(apiInterfaceServer) && StringUtils.isNotBlank(reqDto.getCtn()) && StringUtils.isNotBlank(reqDto.getCustId())) {
+            return msfCancelConsultSvc.getRemainCharge(reqDto);
+        }
+
+        // 3. 세션에서 userId 조회
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
             errVO.setSuccess(false);
@@ -359,7 +370,7 @@ public class MsfCancelConsultController {
             return errVO;
         }
 
-        // 3. 계약 목록에서 ncn에 해당하는 ctn·custId 조회 (getRealTimePriceAjax.do 방식)
+        // 4. 계약 목록에서 ncn에 해당하는 ctn·custId 조회 (getRealTimePriceAjax.do 방식)
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         McpUserCntrMngDto cntrInfo = null;
         if (cntrList != null && !cntrList.isEmpty()) {
@@ -374,13 +385,13 @@ public class MsfCancelConsultController {
             return errVO;
         }
 
-        // 4. 세션에서 조회한 ctn·custId 세팅
+        // 5. 세션에서 조회한 ctn·custId 세팅
         reqDto.setCtn(cntrInfo.getCntrMobileNo());
         reqDto.setCustId(cntrInfo.getCustId());
 
         logger.info("X18 잔여요금 조회 요청: ncn={}, ctn={}", reqDto.getNcn(), reqDto.getCtn());
 
-        // 5. MsfMyinfoService.farRealtimePayInfo() 호출 (getRealTimePriceAjax.do 동일 경로)
+        // 6. MsfMyinfoService.farRealtimePayInfo() 호출 (getRealTimePriceAjax.do 동일 경로)
         RemainChargeResVO resVO = new RemainChargeResVO();
         try {
             MpFarRealtimePayInfoVO mpVO = msfMyinfoService.farRealtimePayInfo(
@@ -416,6 +427,12 @@ public class MsfCancelConsultController {
             resVO.setMessage("X18 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
         return resVO;
+    }
+
+    @RequestMapping(value = "/api/v1/cancel/apply")
+    @ResponseBody
+    public TerminationApplyResVO apply(@RequestBody TerminationApplyReqDto reqDto) {
+        return msfCancelConsultSvc.apply(reqDto);
     }
 
     private ResponseSuccessDto getMessageBox(){

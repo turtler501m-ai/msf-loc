@@ -25,6 +25,7 @@ msf/.merge/
 # ===========================
 node_modules/
 bash.exe.stackdump
+tools
 
 # ===========================
 # IDE / Editor

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationInsertDto;
 
 @Repository
 public class CancelConsultDaoImpl implements CancelConsultDao {
@@ -35,6 +36,16 @@ public class CancelConsultDaoImpl implements CancelConsultDao {
     @Override
     public List<CancelConsultDto> selectCancelConsultList(CancelConsultDto cancelConsultDto) {
         return sqlSessionTemplate.selectList("CancelConsultMapper.selectCancelConsultList",cancelConsultDto);
+    }
+
+    @Override
+    public Long nextRequestKey() {
+        return sqlSessionTemplate.selectOne("CancelConsultMapper.nextRequestKey");
+    }
+
+    @Override
+    public int insertRequestCancel(TerminationInsertDto dto) {
+        return sqlSessionTemplate.insert("CancelConsultMapper.insertRequestCancel", dto);
     }
 
 }
