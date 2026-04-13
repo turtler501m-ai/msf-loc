@@ -58,3 +58,5 @@ desktop.ini
 .env
 .env.local
 .env.*.local
+/.claude/settings.json
+/.claude/statusline-command.sh

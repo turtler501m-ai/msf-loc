@@ -7,6 +7,7 @@ trigger: ASIS 파일을 TOBE로 변환·이관하는 작업 시 항상 참조.
 # ASIS → TOBE 변환 스킬
 
 > 기준 문서: `.doc/12.MSF_백엔드_패키지구조_변경계획.md`
+> 현행화: 2026-04-11 (실제 코드베이스 패키지 구조 반영)
 
 ---
 
@@ -18,37 +19,40 @@ trigger: ASIS 파일을 TOBE로 변환·이관하는 작업 시 항상 참조.
 
 | ASIS (mcp) | TOBE (msf) | 폴더 | Java 패키지 |
 |------------|------------|------|------------|
-| `mcp/order` + `mcp/phone` + `mcp/usim` | `msf/form/common` | `form/common/` | `form.common` |
-| `mcp/appform` | `msf/form/newchange` | `form/newchange/` | `form.newchange` |
-| `mcp/content` + `mcp/mypage`(서비스변경) | `msf/form/servicechange` | `form/servicechange/` | `form.servicechange` |
-| `mcp/mypage`(명의변경) | `msf/form/ownerchange` | `form/ownerchange/` | `form.ownerchange` |
-| `mcp/mypage`(해지) | `msf/form/termination` | `form/termination/` | `form.termination` |
+| `mcp/order` + `mcp/phone` + `mcp/usim` | `form/common` | `form/common/` | `com.ktmmobile.msf.domains.form.form.common` |
+| `mcp/appform` | `form/newchange` | `form/newchange/` | `com.ktmmobile.msf.domains.form.form.newchange` |
+| `mcp/content` + `mcp/mypage`(서비스변경) | `form/servicechange` | `form/servicechange/` | `com.ktmmobile.msf.domains.form.form.servicechange` |
+| `mcp/mypage`(명의변경) | `form/ownerchange` | `form/ownerchange/` | `com.ktmmobile.msf.domains.form.form.ownerchange` |
+| `mcp/mypage`(해지) | `form/termination` | `form/termination/` | `com.ktmmobile.msf.domains.form.form.termination` |
 
 ### 1-3. import 변환표
 
 | ASIS import | TOBE import |
 |-------------|-------------|
-| `com.ktmmobile.mcp.content.*` | `com.ktmmobile.msf.form.servicechange.*` |
-| `com.ktmmobile.mcp.mypage.*` | `com.ktmmobile.msf.form.servicechange.*` (또는 ownerchange/termination) |
-| `com.ktmmobile.mcp.appform.*` | `com.ktmmobile.msf.form.newchange.*` |
-| `com.ktmmobile.mcp.common.*` | `com.ktmmobile.msf.common.*` |
+| `com.ktmmobile.mcp.content.*` | `com.ktmmobile.msf.domains.form.form.servicechange.*` |
+| `com.ktmmobile.mcp.mypage.*` | `com.ktmmobile.msf.domains.form.form.servicechange.*` (또는 ownerchange/termination) |
+| `com.ktmmobile.mcp.appform.*` | `com.ktmmobile.msf.domains.form.form.newchange.*` |
+| `com.ktmmobile.mcp.common.*` | `com.ktmmobile.msf.domains.form.common.*` |
+| `com.ktmmobile.mcp.cert.*` | `com.ktmmobile.msf.domains.form.system.cert.*` |
 
 
 ---
 
 ## 2. 네이밍 규칙
 
-### 2-1. `Msf` 접두사 — Controller·Service에만 적용
+### ~~2-1. `Msf` 접두사 — Controller·Service에만 적용~~ (비활성)
 
-```
+<!--
 MsfXxxController.java       ← REST 컨트롤러 (@RestController)
 MsfXxxSvc.java              ← 서비스 인터페이스
 MsfXxxSvcImpl.java          ← 서비스 구현체 (@Service)
-```
 
-- **DAO / Mapper / DTO** 는 Msf 접두사 불필요
-- ASIS `@Controller` → TOBE `@RestController` 로 교체
-- ASIS 메서드에 `Model`, `HttpSession`, `@RequestMapping` → TOBE `@PostMapping` / `@GetMapping` + `@RequestBody` 로 교체
+- DAO / Mapper / DTO 는 Msf 접두사 불필요
+- ASIS @Controller → TOBE @RestController 로 교체
+- ASIS 메서드에 Model, HttpSession, @RequestMapping → TOBE @PostMapping / @GetMapping + @RequestBody 로 교체
+-->
+
+> **[비활성]** Msf 접두사 규칙 적용 보류 — 현재 ASIS 원본 클래스명 유지 방식으로 개발 중
 
 ### 2-2. ASIS↔TOBE 함수명 일치 원칙 (수정내역 추적 용이)
 
@@ -103,18 +107,29 @@ PUT / PATCH / DELETE **사용 금지**
 package com.ktmmobile.mcp.content.service;
 
 // TOBE
-package com.ktmmobile.msf.form.servicechange.service;
+package com.ktmmobile.msf.domains.form.form.servicechange.service;
+```
+
+```java
+// ASIS
+package com.ktmmobile.mcp.mypage.service;  // 해지 관련
+
+// TOBE
+package com.ktmmobile.msf.domains.form.form.termination.service;
 ```
 
 ### Step 3 — import 일괄 교체
 
 ```
-com.ktmmobile.mcp.  →  com.ktmmobile.msf.
-mcp/content/        →  form/servicechange/
-mcp/mypage/         →  form/servicechange/ (또는 ownerchange/termination)
+com.ktmmobile.mcp.content.   →  com.ktmmobile.msf.domains.form.form.servicechange.
+com.ktmmobile.mcp.mypage.    →  com.ktmmobile.msf.domains.form.form.servicechange.
+                                (또는 ownerchange. / termination. — 업무 맥락에 따라)
+com.ktmmobile.mcp.appform.   →  com.ktmmobile.msf.domains.form.form.newchange.
+com.ktmmobile.mcp.common.    →  com.ktmmobile.msf.domains.form.common.
+com.ktmmobile.mcp.cert.      →  com.ktmmobile.msf.domains.form.system.cert.
 ```
 
-미이관 패키지(ktds.crypto, nl.captcha 등) import는 해당 스텁 클래스 참조 또는 pom.xml exclude 처리.
+미이관 패키지(ktds.crypto, nl.captcha 등) import는 해당 스텁 클래스 참조 또는 빌드 exclude 처리.
 
 ### Step 5 — MVC → REST 전환 (Controller)
 
@@ -131,10 +146,15 @@ mcp/mypage/         →  form/servicechange/ (또는 ownerchange/termination)
 
 | 분류 | 배치 위치 |
 |------|----------|
-| 업무 Mapper (`@Mapper` 인터페이스) | `form/{업무}/mapper/` |
-| XML 매퍼 | `resources/mapper/form/{업무}/` |
+| DaoImpl (SqlSession 주입) | `form/{업무}/dao/XxxDaoImpl.java` |
+| XML 매퍼 | `form/{업무}/mapper/XxxMapper.xml` (Java 소스 폴더 내) |
 
-새 `@Mapper` 생성 시 반드시 `MsfApplication.java` `@MapperScan`에 패키지 추가.
+XML namespace 예:
+```xml
+<mapper namespace="com.ktmmobile.msf.domains.form.form.termination.mapper.CancelConsultMapper">
+```
+
+새 `@Mapper` 인터페이스 도입 시 반드시 `FormApiApplication.java` `@MapperScan`에 패키지 추가.
 
 ---
 

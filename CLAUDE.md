@@ -22,30 +22,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `msf-pre/` | msf-api 초기 프로토타입 (구 패키지 구조: formComm/formSvcChg/formOwnChg/formSvcCncl, 참조용) |
 
 
-기존 파일에 추가해야해  그리고 신규로 파일생성시 꼭 확인요청 하도록 해줘
-ASIS 로직을 그냥 삭제하지 말고 주석처리해
-ASIS는 아래 문서 주요 참조로 개발해야해
- - Z01.MCP_폴더구조_분석.md
- - Z11.DS-08-ITO소스분析_서비스변경.md
 
+## 개발 원칙
 
+- **기존 파일에 추가**하는 방식으로 개발. 신규 파일 생성 시 반드시 사용자에게 확인 요청.
+- ASIS 로직은 삭제 금지 — 반드시 주석 처리: `// [ASIS] {기능 설명} — {제외 이유}`
+- ASIS 주요 참조 문서: `.doc/asis/Z01.MCP_폴더구조_분석.md`, `.doc/asis/Z11.DS-08-ITO소스분析_서비스변경.md`
 
+## 기본 URL 액션 경로
 
-기본 액션 경로 (URL 마지막에 액션을 의미하는 경로)
-상세 조회: /list
-목록 조회: /get
-등록: /register
-수정: /modify
-삭제: /remove
+| 동작 | 경로 접미사 |
+|------|------------|
+| 목록 조회 | `/list` |
+| 상세 조회 | `/get` |
+| 등록 | `/register` |
+| 수정 | `/modify` |
+| 삭제 | `/remove` |
 
+## 도메인 레이어 구조 (각 업무 도메인 공통)
+
+```
 ├── controller        # 컨트롤러 클래스
 ├── dto               # DTO
 ├── repository        # 리포지토리 인터페이스
-│   ├── msp           #   ├── M포털 Oracle 데이터소스 (XxxMapper)
-│   └── smartform     #   └── 스마트서식지 PostgreSQL 데이터소스 (XxxMapper)
+│   ├── msp           #   M포탈 Oracle 데이터소스 (XxxMapper)
+│   └── smartform     #   스마트서식지 PostgreSQL 데이터소스 (XxxMapper)
 └── service           # 서비스 클래스
+```
 
-ASIS 참조시 
 
 
 ## 중요 참조문서로 설계 개발시에 반드시 참조할것
@@ -93,9 +97,8 @@ ASIS 참조시
 ## TOBE 개발시 반드시 참고
 
 - 접두사 `Msf` 컨트롤러·서비스명 변경 (현재 완료)
-- ASIS 로직 처리 원칙 섹션 추가:
-  - TOBE 무관 로직은 **삭제 금지**, 반드시 주석 처리
-  - 주석 형식: `// [ASIS] {기능 설명} — {제외 이유}`
+- TOBE 무관 ASIS 로직은 **삭제 금지**, 반드시 주석 처리
+- 주석 형식: `// [ASIS] {기능 설명} — {제외 이유}`
 
 
 
@@ -132,6 +135,14 @@ npm run dev      # port 7080, VITE_MSF_API_URL → localhost:8080
 npm run build
 npm run lint     # oxlint + eslint (--fix)
 npm run format   # prettier
+```
+
+### 테스트
+
+```bash
+cd msf-be-form-api
+./gradlew test                     # 전체 테스트
+./gradlew :commons:common:test     # 모듈별 테스트
 ```
 
 ---
@@ -192,28 +203,15 @@ MyBatis: `XxxDaoImpl.java`에서 `SqlSession` 주입 방식 사용.
 
 ### HTTP 메서드 규칙
 
-백엔드 API는 **GET / POST 두 가지만 사용**한다. PUT / PATCH / DELETE 사용 금지.
+백엔드 API는  POST 만 사용**한다. PUT / PATCH / DELETE 사용 금지.
 
 | 메서드 | 용도 |
 |--------|------|
-| `GET`  | 단순 조회 (파라미터가 없거나 path variable만 사용) |
 | `POST` | 조회·저장·변경·삭제 등 나머지 모든 처리 |
 
 ---
 
 ## 프론트엔드 아키텍처 (msf-form-web — 현행 개발 대상)
-
-### 실행 명령어
-
-```bash
-cd msf-form-web
-npm install
-npm run dev        # port 7080, LOC 모드 (VITE_MSF_API_URL=http://localhost:8080)
-npm run dev:loc    # 동일
-npm run build
-npm run lint       # oxlint + eslint (--fix)
-npm run format     # prettier
-```
 
 ### 컴포넌트 구조 (`src/components/`)
 
@@ -234,6 +232,7 @@ npm run format     # prettier
 | `msf_menu` | 메뉴/네비게이션 |
 | `msf_step` | 스텝 진행 관리 |
 | `msf_newchange` | 신규가입·변경 폼 데이터 |
+| `msf_termination` | 서비스해지 폼 데이터 |
 | `msf_user` | 사용자 세션 |
 
 ### 기술 스택
@@ -299,8 +298,9 @@ req.write(body); req.end();
 
 ```bash
 taskkill //F //IM java.exe          # java 프로세스 종료
-cd msf/msf-api && mvn -DskipTests package
-java -jar target/mform-api-0.1.0-SNAPSHOT.jar
+cd msf-be-form-api && ./gradlew :app-boot:bootRun
+# 또는
+java -jar app-boot/build/libs/app-boot-1.0.0.jar
 ```
 
 ### 4. ASIS → TOBE DB 테이블명 변환 규칙
