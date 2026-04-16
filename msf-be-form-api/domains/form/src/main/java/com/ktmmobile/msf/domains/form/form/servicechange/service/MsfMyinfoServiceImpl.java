@@ -255,9 +255,17 @@ public class MsfMyinfoServiceImpl implements MsfMyinfoService {
      public MpFarRealtimePayInfoVO farRealtimePayInfo(String ncn, String ctn, String custId) {
 
          MpFarRealtimePayInfoVO mpFarRealtimePayInfoVO = null;
+         logger.debug("X18 farRealtimePayInfo request. ncn={}, ctn={}, custId={}", ncn, ctn, custId);
 
          try {
              mpFarRealtimePayInfoVO = mPlatFormService.farRealtimePayInfo( ncn,  ctn,  custId);
+             int listSize = mpFarRealtimePayInfoVO != null && mpFarRealtimePayInfoVO.getList() != null ? mpFarRealtimePayInfoVO.getList().size() : 0;
+             logger.debug("X18 farRealtimePayInfo response. null={}, sumAmt={}, searchDay={}, searchTime={}, listSize={}",
+                 mpFarRealtimePayInfoVO == null,
+                 mpFarRealtimePayInfoVO == null ? null : mpFarRealtimePayInfoVO.getSumAmt(),
+                 mpFarRealtimePayInfoVO == null ? null : mpFarRealtimePayInfoVO.getSearchDay(),
+                 mpFarRealtimePayInfoVO == null ? null : mpFarRealtimePayInfoVO.getSearchTime(),
+                 listSize);
          } catch (SelfServiceException e) {
             logger.info("Exception e : {}", e.getMessage());
         }  catch(Exception e) {

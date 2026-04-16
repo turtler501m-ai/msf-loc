@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import com.ktmmobile.msf.domains.form.form.servicechange.dao.MyCombinationDao;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.MyCombinationDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpReqCombineDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyCombinationReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyCombinationResDto;

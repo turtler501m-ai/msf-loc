@@ -167,6 +167,7 @@ public class MsfChargeServiceImpl implements MsfChargeService {
 	@Override
 	public MpFarRealtimePayInfoVO farRealtimePayInfo(String ncn, String ctn, String custId) throws ParseException {
 		MpFarRealtimePayInfoVO vo  = null;
+		logger.debug("X18 farRealtimePayInfo request. ncn={}, ctn={}, custId={}", ncn, ctn, custId);
 
 		try {
 			//x18 실시간요금조회
@@ -193,6 +194,9 @@ public class MsfChargeServiceImpl implements MsfChargeService {
 			yyyyMmDd = formatter.format(yyyyMmDdDate);
 			mmDd = formatter.format(mmDdDate);
 			vo.setSearchTime(yyyyMmDd + " ~ " +  mmDd);
+			int listSize = vo.getList() == null ? 0 : vo.getList().size();
+			logger.debug("X18 farRealtimePayInfo response. success={}, searchDay={}, searchTime={}, sumAmt={}, listSize={}",
+				vo.isSuccess(), vo.getSearchDay(), vo.getSearchTime(), vo.getSumAmt(), listSize);
 
 		 } catch (SelfServiceException e) {
 			logger.error("X18 Exception e : {}", e.getMessage());

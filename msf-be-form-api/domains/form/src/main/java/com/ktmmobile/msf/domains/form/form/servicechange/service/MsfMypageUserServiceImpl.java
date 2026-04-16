@@ -36,7 +36,7 @@ import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.JuoSubInfoDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dao.MypageUserDao;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.MypageUserDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AgreeDto;
 
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;

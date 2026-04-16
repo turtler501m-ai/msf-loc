@@ -27,10 +27,10 @@ import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.service.NiceLogSvc;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.form.newchange.dao.AppformDao;
-import com.ktmmobile.msf.domains.form.form.ownerchange.dao.MyNameChgDao;
+import com.ktmmobile.msf.domains.form.form.ownerchange.repository.MyNameChgDao;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.MyNameChgReqDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dao.CustRequestDao;
-import com.ktmmobile.msf.domains.form.form.servicechange.dao.MypageDao;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.CustRequestDao;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.MypageDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMyinfoService;
 

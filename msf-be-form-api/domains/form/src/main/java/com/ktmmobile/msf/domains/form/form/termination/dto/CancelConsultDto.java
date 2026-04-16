@@ -219,6 +219,12 @@ public class CancelConsultDto implements Serializable {
         /** requestView 위약금 블록 데이터 (X54·X16·mspAddInfo) */
         private TerminationSettlementDto settlement;
 
+        // 위약금/정산요금/상환기간/금액 — settlement 에서 꺼낸 단일 항목
+        private String penaltyFee;      // 위약금 (trmnForecBprmsAmt)
+        private String settlementFee;   // 정산요금 (rtrnAmtAndChageDcAmt)
+        private String remainPeriod;    // 상환기간 (잔여 할부개월, remainMonth)
+        private String remainAmount;    // 금액 (잔여 할부금액, remainPay)
+
         public static class FareItem {
             private String gubun;    // 요금 항목명
             private String payment;  // 요금 금액
@@ -243,6 +249,15 @@ public class CancelConsultDto implements Serializable {
         public void setItems(java.util.List<FareItem> items) { this.items = items; }
         public TerminationSettlementDto getSettlement() { return settlement; }
         public void setSettlement(TerminationSettlementDto settlement) { this.settlement = settlement; }
+
+        public String getPenaltyFee() { return penaltyFee; }
+        public void setPenaltyFee(String penaltyFee) { this.penaltyFee = penaltyFee; }
+        public String getSettlementFee() { return settlementFee; }
+        public void setSettlementFee(String settlementFee) { this.settlementFee = settlementFee; }
+        public String getRemainPeriod() { return remainPeriod; }
+        public void setRemainPeriod(String remainPeriod) { this.remainPeriod = remainPeriod; }
+        public String getRemainAmount() { return remainAmount; }
+        public void setRemainAmount(String remainAmount) { this.remainAmount = remainAmount; }
     }
 
     /**

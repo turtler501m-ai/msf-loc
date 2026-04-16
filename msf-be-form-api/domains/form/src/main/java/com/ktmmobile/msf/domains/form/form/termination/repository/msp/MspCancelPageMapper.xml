@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="MspCancelPageMapper">
+    <select id="selectPrePayment" parameterType="java.lang.String" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            MSP_JUO_FEATURE_INFO A,
+            MSP_RATE_MST B
+        WHERE
+            A.CONTRACT_NUM = #{contractNum}
+          AND A.SERVICE_TYPE = 'P'
+          AND A.EXPIRATION_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+          AND A.SOC = B.RATE_CD
+          AND B.PAY_CL_CD = 'PP'
+    </select>
+</mapper>
+

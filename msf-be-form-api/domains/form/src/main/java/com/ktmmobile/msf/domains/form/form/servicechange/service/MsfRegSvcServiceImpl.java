@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import com.ktmmobile.msf.domains.form.form.servicechange.dao.RegSvcDao;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.RegSvcDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionAvailableResVO;

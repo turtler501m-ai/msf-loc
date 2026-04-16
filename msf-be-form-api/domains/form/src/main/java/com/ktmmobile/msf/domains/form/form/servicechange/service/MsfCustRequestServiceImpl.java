@@ -13,7 +13,7 @@ import org.springframework.web.client.RestTemplate;
 
 // import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 // import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpUsimPukVO;
-import com.ktmmobile.msf.domains.form.form.servicechange.dao.CustRequestDao;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.CustRequestDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.CustRequestDto;
 
 @Service("custRequestService")

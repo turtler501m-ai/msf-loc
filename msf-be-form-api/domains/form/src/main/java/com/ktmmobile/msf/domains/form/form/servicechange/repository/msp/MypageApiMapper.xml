@@ -1,0 +1,1791 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.mcp.mypage.mapper.MypageMapper">
+
+    <resultMap id="farPricePlanListMap" type="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpFarPriceDto" >
+        <result property="prvRateGrpCd" column="PRV_RATE_GRP_CD"></result>
+        <result property="prvRateGrpNm" column="PRV_RATE_GRP_NM"></result>
+        <result property="prvRateGrpTypeCd" column="PRV_RATE_GRP_TYPE_CD"></result>
+        <result property="prvRateGrpTypeNm" column="PRV_RATE_GRP_TYPE_NM"></result>
+        <result property="prvRateCd" column="PRV_RATE_CD"></result>
+        <result property="prvRateNm" column="PRV_RATE_NM"></result>
+        <result property="prvPtrnRateYn" column="PRV_PTRN_RATE_YN"></result>
+        <result property="prvPayClCd" column="PRV_PAY_CL_CD"></result>
+        <result property="prvDataType" column="PRV_DATA_TYPE"></result>
+        <result property="prvRateType" column="PRV_RATE_TYPE"></result>
+        <result property="prvRmk" column="PRV_RMK"></result>
+        <result property="prvBaseAmt" column="PRV_BASE_AMT"></result>
+        <result property="prvApplStrtDt" column="PRV_APPL_STRT_DT"></result>
+        <result property="prvApplEndDt" column="PRV_APPL_END_DT"></result>
+        <result property="nxtRateGrpNm" column="NXT_RATE_GRP_CD"></result>
+        <result property="nxtRateGrpNm" column="NXT_RATE_GRP_NM"></result>
+        <result property="nxtRateGrpTypeCd" column="NXT_RATE_GRP_TYPE_CD"></result>
+        <result property="nxtRateGrpTypeNm" column="NXT_RATE_GRP_TYPE_NM"></result>
+        <result property="nxtRateCd" column="NXT_RATE_CD"></result>
+        <result property="nxtRateNm" column="NXT_RATE_NM"></result>
+        <result property="nxtPtrnRateYn" column="NXT_PTRN_RATE_YN"></result>
+        <result property="nxtPayClCd" column="NXT_PAY_CL_CD"></result>
+        <result property="nxtDataType" column="NXT_DATA_TYPE"></result>
+        <result property="nxtRateType" column="NXT_RATE_TYPE"></result>
+        <result property="nxtRmk" column="NXT_RMK"></result>
+        <result property="nxtBaseAmt" column="NXT_BASE_AMT"></result>
+        <result property="nxtApplStrtDt" column="NXT_APPL_STRT_DT"></result>
+        <result property="nxtApplEndDt" column="NXT_APPL_END_DT"></result>
+        <result property="baseVatAmt" column="BASE_VAT_AMT"></result>
+        <association property="promotionDcAmt"  javaType="int" column="rateCd=NXT_RATE_CD" select="getPromotionDcAmt" />
+    </resultMap>
+
+
+    <select id="selectCntrList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+        SELECT
+        A.USERID
+        , A.CNTR_MOBILE_NO
+        , A.SYS_RDATE
+        , B.SVC_CNTR_NO
+        , B.CONTRACT_NUM
+        , A.REP_NO
+        , B.CUSTOMER_ID AS CUST_ID
+        , B.MODEL_NAME
+        , B.MODEL_ID
+        , B.SUB_STATUS
+        , A.CNTR_MOBILE_NO AS unSvcNo
+        , B.USER_SSN AS unUserSSn
+        , (SELECT CUSTOMER_TYPE FROM MSP_JUO_CUS_INFO@DL_MSP WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS CSTMR_TYPE
+        , (SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO@DL_MSP WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS userName
+        , B.OPEN_AGNT_CD
+        , B.LST_COM_ACTV_DATE
+        , B.PPPO
+        FROM MCP_USER_CNTR_MNG A, MSP_JUO_SUB_INFO@DL_MSP B
+        WHERE UPPER(A.USERID) = UPPER(#{userId})
+        AND A.SVC_CNTR_NO = B.CONTRACT_NUM
+        <if test="customerId != null and customerId != ''">
+            AND A.CUSTOMER_ID = #{customerId}
+        </if>
+        AND B.SUB_STATUS <![CDATA[<>]]> 'C'
+        ORDER BY A.REP_NO ASC
+    </select>
+
+    <select id="selectCntrMngList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    SELECT
+        CNTR_MOBILE_NO
+        ,T1.SVC_CNTR_NO
+        ,T1.CUSTOMER_ID
+        ,T2.SUBSCRIBER_NO
+        ,T2.CUSTOMER_ID AS CUST_ID
+        ,T2.CONTRACT_NUM
+    FROM MCP_USER_CNTR_MNG T1
+    LEFT OUTER JOIN (
+        SELECT
+            SUBSCRIBER_NO
+            ,CUSTOMER_ID
+            ,CONTRACT_NUM
+        FROM MSP_JUO_SUB_INFO@DL_MSP
+        WHERE  SUB_STATUS <![CDATA[<>]]> 'C'
+    ) T2 ON
+    T1.SVC_CNTR_NO = T2.CONTRACT_NUM
+    WHERE UPPER(T1.USERID) = UPPER(#{userId})
+    </select>
+
+
+    <select id="selectCustomerType" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT
+            CUSTOMER_TYPE
+        FROM MSP_JUO_CUS_INFO@DL_MSP
+        WHERE CUSTOMER_ID = #{custId}
+    </select>
+    <select id="selectSocDesc" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+        SELECT
+        AA.USERID
+        , AA.CNTR_MOBILE_NO
+        , AA.SVC_CNTR_NO
+        , AA.SOC
+        , AA.ENGG_MNTH_CNT
+        , AA.RATE_NM
+        , AA.BASE_AMT
+        , AA.RMK
+        , AA.MODEL_NAME
+        , AA.DOBYYYYMMDD
+        <!--, AA.USER_SSN-->
+        , AA.INTM_SRL_NO
+        , AA.INTM_SRL_NO AS UN_INTM_SRL_NO
+        , AA.MODEL_ID
+        , NVL(AA.DC_AMT, 0) DC_AMT, POINT_ID
+        , AA.SUB_LINK_NAME
+        , AA.USER_SSN AS unUserSSn
+        , AA.CUSTOMER_ID AS CUST_ID
+        , AA.REMIND_YN
+        , AA.REMIND_PROD_TYPE
+        FROM
+        (
+        SELECT
+        A.USERID, A.CNTR_MOBILE_NO, D.SVC_CNTR_NO, D.CONTRACT_NUM
+        , B.SOC
+        , NVL((SELECT ENGG_MNTH_CNT
+        FROM (SELECT ENGG_MNTH_CNT , ROW_NUMBER() OVER (ORDER BY EVNT_TRTM_DT DESC) AS RNUM
+        FROM MSP_JUO_ADD_INFO@DL_MSP
+        WHERE CONTRACT_NUM = #{svcCntrNo}
+        AND ENGG_MNTH_CNT IS NOT NULL
+        AND APP_END_DATE > TO_CHAR (SYSDATE, 'YYYYMMDDHH24MISS')
+        )WHERE RNUM = 1
+        ), 0) AS ENGG_MNTH_CNT
+        , C.RATE_NM, C.BASE_AMT, C.RMK, C.REMIND_YN, C.REMIND_PROD_TYPE
+        , D.MODEL_NAME
+        , D.DOBYYYYMMDD
+        <!--   , D.USER_SSN -->
+        , D.INTM_SRL_NO
+        , D.MODEL_ID
+        , '' AS POINT_ID
+        , 0 AS DC_AMT
+        , D.SUB_LINK_NAME
+        , D.USER_SSN
+        , D.CUSTOMER_ID
+        FROM
+        MCP_USER_CNTR_MNG A
+        , MSP_JUO_FEATURE_INFO@DL_MSP B
+        , MSP_RATE_MST@DL_MSP C
+        , MSP_JUO_SUB_INFO@DL_MSP D
+        WHERE 1=1
+        AND B.CONTRACT_NUM = #{svcCntrNo}
+        AND B.CONTRACT_NUM = A.SVC_CNTR_NO(+)
+        AND B.SERVICE_TYPE = 'P'
+        AND B.EXPIRATION_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+        AND B.SOC = C.RATE_CD
+        AND D.CONTRACT_NUM = B.CONTRACT_NUM
+        ) AA
+    </select>
+
+    <select id="selectMspAddInfo" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto">
+        SELECT CONTRACT_NUM --계약번호
+             , DVC_OFW_AMNT --단말출고가
+             , INST_ORGIN_AMNT --할부원금
+             , INST_MNTH_CNT --할부개월수
+             , ENGG_MNTH_CNT --약정개월수
+             , MODEL_NAME	--단말기 모델 이름
+             , MODEL_ID		--단말기 모델 ID
+        FROM(
+                SELECT CONTRACT_NUM --계약번호
+                     , DVC_OFW_AMNT --단말출고가
+                     , INST_ORGIN_AMNT --할부원금
+                     , INST_MNTH_CNT --할부개월수
+                     , ENGG_MNTH_CNT --약정개월수
+                     , MODEL_NAME	--단말기 모델 이름
+                     , MODEL_ID		--단말기 모델 ID
+                     , ROW_NUMBER() OVER (ORDER BY EVNT_TRTM_DT DESC) AS RNUM
+                FROM MSP_JUO_ADD_INFO@DL_MSP
+                WHERE CONTRACT_NUM = #{svcCntrNo}
+                  AND APP_END_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            ) WHERE RNUM = 1
+    </select>
+
+    <select id="selectUserMultiLine"  parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.mplatform.vo.UserVO">
+        SELECT SUBSTR(A.CNTR_MOBILE_NO,0,3)||'-'||DECODE(LENGTH(A.CNTR_MOBILE_NO),11,SUBSTR(A.CNTR_MOBILE_NO,4,4),SUBSTR(A.CNTR_MOBILE_NO,5,3))
+            ||'-'||SUBSTR(A.CNTR_MOBILE_NO,-4,4) AS MOBILE_NO
+             , MODEL_NAME
+             , REP_NO
+             , ROW_NUMBER() OVER (ORDER BY REP_NO, CNTR_MOBILE_NO) AS NO
+         , A.CNTR_MOBILE_NO AS PHONE1
+         , B.CONTRACT_NUM
+        FROM MCP_USER_CNTR_MNG A
+                , MSP_JUO_SUB_INFO@DL_MSP B
+        WHERE B.CONTRACT_NUM=A.SVC_CNTR_NO
+          AND UPPER(A.USERID) = UPPER(#{userId})
+          AND A.CUSTOMER_ID = #{customerId}
+        ORDER BY REP_NO
+    </select>
+
+    <select id="selectContractNum" parameterType="java.util.Map" resultType="java.lang.String">
+        SELECT CONTRACT_NUM, SUBSCRIBER_NO AS MOBILE_NO
+        FROM MSP_JUO_SUB_INFO@DL_MSP
+        WHERE SUB_STATUS <![CDATA[<>]]> 'C'
+          AND SUBSCRIBER_NO= TRIM(#{mobileNo})
+          AND UPPER(REPLACE(SUB_LINK_NAME,' ','')) = UPPER(REPLACE(#{name},' ',''))
+    </select>
+
+
+    <select id="selectContractObj" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+        CONTRACT_NUM
+        , SVC_CNTR_NO
+        , T1.SUBSCRIBER_NO
+        , T1.USER_SSN
+        , T1.SUB_LINK_NAME
+        , T2.BL_BILLING_METHOD
+        , T2.BAN
+        , T2.BAN_ADR_ZIP
+        , T2.BAN_ADR_PRIMARY_LN
+        , T2.BAN_ADR_SECONDARY_LN
+        , T1.CUSTOMER_ID
+        , T1.SUB_STATUS
+        , T3.CUSTOMER_TYPE
+        FROM
+        MSP_JUO_SUB_INFO@DL_MSP T1
+        , MSP_JUO_BAN_INFO@DL_MSP T2
+        , MSP_JUO_CUS_INFO@DL_MSP T3
+        WHERE 1=1
+        AND T1.BAN = T2.BAN
+        AND T1.CUSTOMER_ID = T3.CUSTOMER_ID
+        AND SUB_STATUS <![CDATA[<>]]> 'C'
+        <if test="mobileNo != null and mobileNo != ''">
+            AND SUBSCRIBER_NO= TRIM(#{mobileNo})
+        </if>
+        <if test="name != null and name != ''">
+            AND UPPER(REPLACE(SUB_LINK_NAME,' ','')) = UPPER(REPLACE(#{name},' ',''))
+        </if>
+        <if test="contractNum != null and contractNum != ''">
+            AND CONTRACT_NUM = #{contractNum}
+        </if>
+        <if test="customerId != null and customerId != ''">
+            AND T1.CUSTOMER_ID = #{customerId}
+        </if>
+
+    </select>
+
+    <select id="selectPPSList" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.db.MspPpsRcgTesDto">
+        SELECT /* Mypage.selectPPSList 충전 내역조회 테이블   */
+            TES_SEQ
+             , REQ_TYPE
+             , CONTRACT_NUM
+             , RECHARGE_AGENT
+             , RECHARGE
+             , RET_CODE
+             , RET_MSG
+             , RCG_SEQ
+             , O_AMOUNT
+             , O_TES_CHARGE_MAX
+             , O_TES_BASER
+             , O_TES_CHGR
+             , O_TES_MAGICR
+             , O_TES_FSMSR
+             , O_TES_VIDEOR
+             , O_TES_IPVASR
+             , O_TES_IPMAXR
+             , O_TES_SMSM
+             , O_TES_DATAPLUSV
+             , RECHARGE_IP
+             , REQ_DATE
+             , ADMIN_ID
+        FROM PPS_RCG_TES@DL_MSP
+        WHERE 1=1
+          AND CONTRACT_NUM = #{contractNum}
+          AND REQ_TYPE = 'ARS_TES_CHARGE'
+        ORDER BY REQ_DATE DESC
+    </select>
+
+    <select id="selectRegService" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpRegServiceDto">
+        SELECT A.SERVICE_TYPE --서비스유형
+             , A.RATE_CD --요금제코드
+             , A.APPL_END_DT --적용종료일자
+             , A.APPL_STRT_DT --적용시작일자
+             , A.RATE_NM --요금제명
+             , A.RATE_GRP_CD --요금제그룹코드
+             , A.PAY_CL_CD --선후불구분
+             , A.RATE_TYPE --요금제유형( ORG0008 )
+             , A.DATA_TYPE --데이터유형( ORG0018 )
+             , A.BASE_AMT --기본료
+             , A.FREE_CALL_CL_CD --망내외무료통화구분
+             , A.FREE_CALL_CNT --무료통화건수
+             , A.NW_IN_CALL_CNT --망내무료통화건수
+             , A.NW_OUT_CALL_CNT --망외무료통화건수
+             , A.FREE_SMS_CNT --무료문자건수
+             , A.FREE_DATA_CNT --무료데이터건수
+             , A.RMK --비고
+             , A.REGST_ID --등록자ID
+             , A.REGST_DTTM --등록일시
+             , A.RVISN_ID --수정자ID
+             , A.RVISN_DTTM --수정일시
+             , A.ONLINE_TYPE_CD --온라인유형코드
+             , A.AL_FLAG --알요금제 구분자
+             , B.SVC_REL_TP --가입유형 :c 가능: b 필수 (자동가입): d 가입불가
+        FROM MSP_RATE_MST@DL_MSP A
+           , (SELECT RATE_CD,ADD_SVC_CD,SERVICE_TYPE, SVC_REL_TP
+              FROM MSP_PROD_REL_MST@DL_MSP
+              WHERE RATE_CD = (SELECT SOC
+                               FROM MSP_JUO_FEATURE_INFO@DL_MSP
+                               WHERE CONTRACT_NUM = #{ncn}
+                                 AND APP_END_DATE = '99991231000000'
+                                 AND EXPIRATION_DATE = '99991231000000'
+                                 AND SERVICE_TYPE = 'P'
+              )
+                AND SERVICE_TYPE = 'P'
+                AND SVC_REL_TP <![CDATA[<>]]> 'D'
+        ) B
+        WHERE A.SERVICE_TYPE= 'R'
+          AND A.APPL_END_DT = '99991231'
+          AND A.RATE_CD = B.ADD_SVC_CD
+          AND NOT EXISTS(SELECT RATE_CD
+                         FROM(SELECT DISTINCT RATE_CD
+                              FROM MSP_PROD_REL_MST@DL_MSP
+                              WHERE RATE_CD IN (SELECT DISTINCT SOC
+                                                FROM MSP_JUO_FEATURE_INFO@DL_MSP
+                                                WHERE CONTRACT_NUM = #{ncn}
+                                                  AND APP_END_DATE = '99991231000000'
+                                                  AND EXPIRATION_DATE = '99991231000000'
+                                                  AND SERVICE_TYPE = 'R'
+                              )
+                                AND SERVICE_TYPE = 'R'
+                             ) BB
+                         WHERE A.RATE_CD = BB.RATE_CD
+            )
+        ORDER BY A.BASE_AMT DESC, A.APPL_STRT_DT DESC
+    </select>
+
+    <select id="selectFarPricePlan" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpFarPriceDto">
+        SELECT A.RATE_CD AS PRV_RATE_CD  --요금제코드
+             , A.RATE_NM AS PRV_RATE_GRP_NM--요금제명
+             , A.BASE_AMT AS PRV_BASE_AMT--기본료
+             , A.RMK AS PRV_RMK--비고
+             , B.APP_START_DD --적용일시
+             , NVL(A.BASE_AMT,0)+(NVL(A.BASE_AMT,0)*0.1) AS BASE_VAT_AMT
+        FROM MSP_RATE_MST@DL_MSP A
+           , (SELECT *
+              FROM MSP_JUO_FEATURE_INFO@DL_MSP
+              WHERE CONTRACT_NUM = #{ncn}
+                AND APP_END_DATE = '99991231000000'
+                AND EXPIRATION_DATE = '99991231000000'
+                AND SERVICE_TYPE = 'P'
+        ) B
+        WHERE A.RATE_CD = B.SOC
+          AND a.SERVICE_TYPE = 'P'
+          AND ROWNUM = 1
+    </select>
+
+    <select id="selectFarPricePlanList" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpFarPriceDto">
+        SELECT
+            PRV_RATE_GRP_CD
+             , PRV_RATE_GRP_NM
+             , PRV_RATE_GRP_TYPE_CD
+             , PRV_RATE_GRP_TYPE_NM
+             , PRV_RATE_CD
+             , PRV_RATE_NM
+             , PRV_PTRN_RATE_YN
+             , PRV_PAY_CL_CD
+             , PRV_DATA_TYPE
+             , PRV_RATE_TYPE
+             , PRV_RMK
+             , PRV_BASE_AMT
+             , PRV_APPL_STRT_DT
+             , PRV_APPL_END_DT
+             , NXT_RATE_GRP_CD
+             , NXT_RATE_GRP_NM
+             , NXT_RATE_GRP_TYPE_CD
+             , NXT_RATE_GRP_TYPE_NM
+             , NXT_RATE_CD
+             , NXT_RATE_NM
+             , NXT_PTRN_RATE_YN
+             , NXT_PAY_CL_CD
+             , NXT_DATA_TYPE
+             , NXT_RATE_TYPE
+             , NXT_RMK
+             , NXT_BASE_AMT
+             , NXT_APPL_STRT_DT
+             , NXT_APPL_END_DT
+             , NVL(NXT_BASE_AMT,0)+(NVL(NXT_BASE_AMT,0)*0.1) AS BASE_VAT_AMT
+        FROM VW_GROUP_BY_RATE_INFO@DL_MSP
+        WHERE PRV_RATE_CD =  #{rateCd}
+          AND NXT_APPL_END_DT = '99991231'
+        ORDER BY NXT_BASE_AMT DESC
+    </select>
+
+
+    <select id="getPromotionDcAmt" resultType="java.lang.Integer" parameterType="com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleSubsdMstDto">
+        SELECT NVL(SUM(RANTAL),0) FROM (
+                                           SELECT
+                                               CEIL(-RANTAL * 1.1) AS RANTAL
+                                           FROM
+                                               VW_CHRG_PRMT_DTL@DL_MSP A
+                                              , MCP_ADDITION B
+                                           WHERE 1=1
+                                             AND A.ADDITION_KEY = B.ADDITION_KEY
+                                             AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A.STRT_DT AND A.END_DT
+                                             AND A.ORGN_ID = '1100011741'  --접점코드_직영온라인 수정12323
+                                             AND A.REQ_BUY_TYPE IN('UU','AL')  -- 유심
+                                             AND A.ENGG_CNT_0 = 'Y' --무약정
+                                             AND A.MNP_YN = 'Y'
+                                             AND A.RATE_CD = #{rateCd} --요금제코드
+                                             AND A.ON_OFF_TYPE = '0' --온라인오프라인구분 (온라인 )
+                                             AND A.USG_YN = 'Y'
+                                       )
+    </select>
+
+    <select id="getPromotionDcSumAmt" resultType="int" parameterType="java.lang.String">
+        SELECT NVL(SUM(RANTAL),0) FROM (
+                                           SELECT
+                                               CEIL(-RANTAL * 1.1) AS RANTAL
+                                           FROM
+                                               VW_CHRG_PRMT_DTL@DL_MSP A
+                                              , MCP_ADDITION B
+                                           WHERE 1=1
+                                             AND A.ADDITION_KEY = B.ADDITION_KEY
+                                             AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A.STRT_DT AND A.END_DT
+                                             AND A.ORGN_ID = '1100011741'  --접점코드_직영온라인 수정12323
+                                             AND A.REQ_BUY_TYPE IN('UU','AL')  -- 유심
+                                             AND A.ENGG_CNT_0 = 'Y' --무약정
+                                             AND A.MNP_YN = 'Y'
+                                             AND A.RATE_CD = #{rateCd}   --요금제코드
+                                             AND A.ON_OFF_TYPE = '0' --온라인오프라인구분 (온라인 )
+                                             AND A.USG_YN = 'Y'
+                                       )
+    </select>
+
+
+    <select id="getRateInfo" resultType="com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleSubsdMstDto" parameterType="java.lang.String">
+        SELECT /*MypageMapper.getPayMnthChargeAmt 월납부 통신요금  = 기본요금 - 할인요금 */
+            BASE_AMT
+             , RATE_CD
+             , RATE_NM
+             , (
+            SELECT
+                NVL(SUM(CEIL(-RANTAL * 1.1)),0) AS RANTAL
+            FROM
+                VW_CHRG_PRMT_DTL@DL_MSP T1
+               , MCP_ADDITION T2
+            WHERE 1=1
+              AND T1.ADDITION_KEY = T2.ADDITION_KEY
+              AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN T1.STRT_DT AND T1.END_DT
+              AND T1.ORGN_ID = '1100011741'  --접점코드_직영온라인 수정12323
+              AND T1.REQ_BUY_TYPE IN('UU','AL')  -- 유심
+              AND T1.ENGG_CNT_0 = 'Y' --무약정
+              AND T1.MNP_YN = 'Y'
+              AND T1.RATE_CD = A.RATE_CD
+              AND T1.ON_OFF_TYPE = '0' --온라인오프라인구분 (온라인 )
+              AND T1.USG_YN = 'Y'
+        ) AS PROMOTION_DC_AMT
+        FROM
+            MSP_RATE_MST@DL_MSP A
+        WHERE
+            A.RATE_CD = #{rateCd}
+          AND a.SERVICE_TYPE = 'P'
+          AND ROWNUM = 1
+    </select>
+
+    <select id="getRateInfoListByPromotionDate" resultType="com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleSubsdMstDto" parameterType="java.lang.String">
+        SELECT /*MypageMapper.getRateInfoListByPromotionDate 월납부 통신요금  = 기본요금 - 할인요금 */
+            BASE_AMT
+             , RATE_CD
+             , RATE_NM
+             , (
+            SELECT
+                NVL(SUM(ROUND(-RANTAL * 1.1, -1)),0) AS RANTAL
+            FROM
+                VW_CHRG_PRMT_DTL@DL_MSP T1
+               , MCP_ADDITION T2
+            WHERE 1=1
+              AND T1.ADDITION_KEY = T2.ADDITION_KEY
+              AND #{promotionDate} BETWEEN T1.STRT_DT AND T1.END_DT
+              AND T1.ORGN_ID = '1100011741'  --접점코드_직영온라인 수정12323
+              AND T1.REQ_BUY_TYPE IN('UU','AL')  -- 유심
+              AND T1.ENGG_CNT_0 = 'Y' --무약정
+              AND T1.MNP_YN = 'Y'
+              AND T1.RATE_CD = A.RATE_CD
+              AND T1.ON_OFF_TYPE = '0' --온라인오프라인구분 (온라인 )
+              AND T1.USG_YN = 'Y'
+        ) AS PROMOTION_DC_AMT
+        FROM
+            MSP_RATE_MST@DL_MSP A
+        WHERE a.SERVICE_TYPE = 'P'
+    </select>
+
+    <select id="selectFarPricePlanListCount" parameterType="java.lang.String" resultType="int">
+        SELECT COUNT(*)
+        FROM VW_GROUP_BY_RATE_INFO@DL_MSP
+        WHERE PRV_RATE_CD =  #{rateCd}
+          AND NXT_APPL_END_DT = '99991231'
+    </select>
+
+    <select id="selectFarPriceAddInfo" parameterType="java.util.Map" resultType="java.lang.String">
+        SELECT APP_START_DD
+        FROM( SELECT SUBSTR(APP_START_DD,0,6) AS APP_START_DD , ROW_NUMBER() OVER (ORDER BY DECODE(SOC,#{soc},SUBSTR(APP_START_DD,0,6)+1,SUBSTR(APP_START_DD,0,6)) DESC) AS RNUM
+              FROM MSP_JUO_FEATURE_INFO@DL_MSP
+              WHERE SERVICE_TYPE='P'
+                AND CONTRACT_NUM= #{cntrNo}
+                AND APP_END_DATE = '99991231000000'
+            )WHERE RNUM=1
+    </select>
+
+    <select id="selectJehuList" parameterType="java.util.Map" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.JehuDto">
+        SELECT
+            A.PARTNER_ID,
+            A.PARTNER_NM,
+            A.BILL_YM,
+            A.SVC_CNTR_NO,
+            CASE WHEN A.FULL_PAY_YN = 'N' THEN 0
+                 WHEN A.RESULT_DTL_CD != '0000' then 0
+                 ELSE A.POINT
+                END AS PAY_POINT,
+            DECODE(A.FULL_PAY_YN,'Y','완납','미납') AS FULL_PAY_YN,
+            (SELECT CD_DSC
+             FROM   CMN_GRP_CD_MST@DL_MSP
+             WHERE  GRP_ID = 'CMN0200'
+               AND    ETC1 = A.PARTNER_ID
+               AND    ETC2 = A.RESULT_DTL_CD) AS RESULT_DTL_CD
+        FROM   (SELECT
+                    A.PARTNER_ID,
+                    E.PARTNER_NM,
+                    A.BILL_YM,
+                    A.SVC_CNTR_NO,
+                    SUM(A.CAL_POINT) AS POINT,
+                    A.FULL_PAY_YN,
+                    A.RESULT_DTL_CD
+                FROM   MSP_PARTNER_POINT_MST@DL_MSP A ,
+                       MSP_PARTNER_MST@DL_MSP E
+                WHERE  A.PARTNER_ID = E.PARTNER_ID
+                  AND    A.CONTRACT_NUM = #{contractNum}
+                  AND    A.BILL_YM||'15' <![CDATA[<]]> TO_CHAR(ADD_MONTHS(SYSDATE,-1),'YYYYMMDD')
+                  AND    A.SEND_FLAG != 'B'
+                GROUP BY  A.PARTNER_ID, E.PARTNER_NM, A.BILL_YM, A.SVC_CNTR_NO, A.FULL_PAY_YN, A.RESULT_DTL_CD
+               ) A
+        ORDER BY  A.BILL_YM DESC, A.PARTNER_ID DESC, A.SVC_CNTR_NO DESC
+    </select>
+
+    <select id="selectJehuListCount" parameterType="java.util.Map" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM   (SELECT A.PARTNER_ID,
+                       E.PARTNER_NM,
+                       A.BILL_YM,
+                       A.SVC_CNTR_NO,
+                       SUM(A.CAL_POINT) AS CAL_POINT,
+                       A.FULL_PAY_YN,
+                       A.RESULT_DTL_CD
+                FROM   MSP_PARTNER_POINT_MST@DL_MSP A ,
+                       MSP_PARTNER_MST@DL_MSP E
+                WHERE  A.PARTNER_ID = E.PARTNER_ID
+                  AND    A.CONTRACT_NUM = #{contractNum}
+                  AND    A.BILL_YM||'15' <![CDATA[<]]> TO_CHAR(ADD_MONTHS(SYSDATE,-1),'YYYYMMDD')
+                  AND    A.SEND_FLAG != 'B'
+                GROUP BY  A.PARTNER_ID, E.PARTNER_NM, A.BILL_YM, A.SVC_CNTR_NO, A.FULL_PAY_YN, A.RESULT_DTL_CD
+               ) A
+        ORDER BY  A.BILL_YM DESC, A.PARTNER_ID DESC, A.SVC_CNTR_NO DESC
+    </select>
+
+
+
+    <select id="selectMspMrktAgrYn" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            NVL(AGR_YN ,'N') AS AGR_YN,
+            TO_CHAR(REGST_DTTM, 'YYYY.MM.DD') AS REGST_DTTM,
+            TO_CHAR(RVISN_DTTM, 'YYYY.MM.DD') AS RVISN_DTTM
+        FROM
+            MCP_USER_CNTR_MNG A,
+            MSP_MRKT_AGR_MGMT@DL_MSP B
+        WHERE
+            A.SVC_CNTR_NO = #{contractNum}
+          AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN B.STRT_DTTM(+) AND B.END_DTTM(+)
+          AND A.SVC_CNTR_NO=B.CONTRACT_NUM(+)
+          AND ROWNUM=1
+    </select>
+
+    <select id="callMspMrktAgr" statementType="CALLABLE" parameterType="java.util.HashMap">
+        {CALL P_MSP_MRKT_AGR@DL_MSP(#{ctn}, #{mrktAgr}, #{personalInfoCollectAgree}, #{othersTrnsAgree}, #{othersTrnsKtAgree}, #{othersAdReceiveAgree}, 'MCP', #{userId})}
+    </select>
+
+    <select id="selectPrePayment" parameterType="java.lang.String" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            MSP_JUO_FEATURE_INFO@DL_MSP A,
+            MSP_RATE_MST@DL_MSP B
+        WHERE
+            A.CONTRACT_NUM = #{contractNum}
+          AND A.SERVICE_TYPE = 'P'
+          AND A.EXPIRATION_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+          AND A.SOC = B.RATE_CD
+          AND B.PAY_CL_CD = 'PP'
+    </select>
+
+    <select id="selectCommendStateList" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.CommendStateDto">
+        SELECT
+            LST_COM_ACTV_DATE
+             ,'ALL' AS reqBuyType
+             ,COMMEND_ID
+             ,COUNT(1) AS sumCount
+        FROM
+            (
+                SELECT
+                    COMMEND_ID
+                     , T2.CONTRACT_NUM
+                     , SUBSTR(LST_COM_ACTV_DATE, 0, 6) AS LST_COM_ACTV_DATE
+                FROM
+                    MCP_REQUEST_COMMEND T1
+                   , MCP_REQUEST T2
+                   , MSP_JUO_SUB_INFO@DL_MSP T3
+                WHERE 1=1
+                  AND T1.REQUEST_KEY = T2.REQUEST_KEY
+                  AND T2.CONTRACT_NUM = T3.CONTRACT_NUM
+                  AND COMMEND_ID = #{commendId}
+                  AND T1.SYS_RDATE > TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE,-2),'yyyy-mm') || '-01' , 'yyyy-mm-dd')
+                  AND T2.CONTRACT_NUM IS NOT NULL
+                  AND T3.SUB_STATUS <![CDATA[<>]]>  'C'
+            )
+        GROUP BY LST_COM_ACTV_DATE,COMMEND_ID
+    </select>
+
+    <select id="selectCommendAllStateList" parameterType="java.util.Map" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.CommendStateDto">
+        SELECT
+            LST_COM_ACTV_DATE
+             ,'ALL' AS reqBuyType
+             ,COMMEND_ID
+             ,COUNT(1) AS sumCount
+        FROM
+            (
+                SELECT
+                    COMMEND_ID
+                     , T2.CONTRACT_NUM
+                     , SUBSTR(LST_COM_ACTV_DATE, 0, 6) AS LST_COM_ACTV_DATE
+                FROM
+                    MCP_REQUEST_COMMEND T1
+                   , MCP_REQUEST T2
+                   , MSP_JUO_SUB_INFO@DL_MSP T3
+                WHERE 1=1
+                  AND T1.REQUEST_KEY = T2.REQUEST_KEY
+                  AND T2.CONTRACT_NUM = T3.CONTRACT_NUM
+                  AND COMMEND_ID = #{commendId}
+                  AND T1.SYS_RDATE > TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE,-2),'yyyy-mm') || '-01' , 'yyyy-mm-dd')
+                  AND T2.CONTRACT_NUM IS NOT NULL
+                  AND T3.SUB_STATUS <![CDATA[<>]]>  'C'
+            )
+        GROUP BY LST_COM_ACTV_DATE,COMMEND_ID
+        UNION
+        SELECT
+            LST_COM_ACTV_DATE
+             ,'INTER' AS reqBuyType
+             ,#{internetId} as COMMEND_ID
+             ,COUNT(1) AS sumCount
+        FROM (
+                 SELECT
+                     TO_CHAR(TO_DATE(OPEN_DT, 'YYYY-MM-DD'),'YYYYMM') AS LST_COM_ACTV_DATE
+                      , SVC_CNTR_ID
+                 FROM MDS_INET_INFO@DL_MSP
+                 WHERE 1=1
+                   AND STATUS = '사용중'
+                   AND INTERNET_ID = #{internetId}
+                   AND TO_DATE(OPEN_DT , 'yyyy-mm-dd') > TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE,-2),'yyyy-mm') || '-01' , 'yyyy-mm-dd')
+             )
+        GROUP BY LST_COM_ACTV_DATE
+        ORDER BY LST_COM_ACTV_DATE
+    </select>
+
+
+
+    <select id="getFriendInvitationList" parameterType="java.util.Map"  resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.CommendStateDto">
+        SELECT
+            DISTINCT
+            COMMEND_ID
+            , REQ_BUY_TYPE
+            , T2.CONTRACT_NUM
+            , LST_COM_ACTV_DATE
+        FROM
+            MCP_REQUEST_COMMEND T1
+            , MCP_REQUEST T2
+            , MCP_REQUEST_CSTMR T4
+            , MSP_JUO_SUB_INFO@DL_MSP T3
+            , (
+                SELECT DECODE(S1.CSTMR_TYPE,'FN',S2.CSTMR_FOREIGNER_RRN, S2.CSTMR_NATIVE_RRN) AS CSTMR_NATIVE_RRN_DE
+                FROM MCP_REQUEST S1 ,  MCP_REQUEST_CSTMR S2
+                WHERE   1=1
+                AND S1.REQUEST_KEY = S2.REQUEST_KEY
+                AND S1.CONTRACT_NUM = (SELECT CONTRACT_NUM FROM MCP_COMMEND_ID_MNG WHERE COMMEND_ID = #{commendId})
+                AND ROWNUM = 1
+            ) T5
+        WHERE 1=1
+            AND T1.REQUEST_KEY = T2.REQUEST_KEY
+            AND T1.REQUEST_KEY = T4.REQUEST_KEY
+            AND T2.CONTRACT_NUM = T3.CONTRACT_NUM
+            AND COMMEND_ID = #{commendId}
+            AND TO_DATE(LST_COM_ACTV_DATE, 'YYYYMMDD') >= TO_DATE(#{lstComActvDate}, 'YYYYMMDDHH24MISS')
+            AND T2.CONTRACT_NUM IS NOT NULL
+            AND T3.SUB_STATUS <![CDATA[<>]]>  'C'
+            AND DECODE(T2.CSTMR_TYPE,'FN',T4.CSTMR_FOREIGNER_RRN, T4.CSTMR_NATIVE_RRN)  <![CDATA[<>]]>  T5.CSTMR_NATIVE_RRN_DE             -- 동일 사용자 제외
+            AND NOT EXISTS (
+                SELECT 1 FROM NMCP_CD_DTL
+                WHERE 1= 1
+                    AND CD_GROUP_ID = 'FqcInviteExceptionPlanList'
+                    AND DTL_CD = (
+                        SELECT SOC
+                        FROM MSP_JUO_FEATURE_INFO@DL_MSP
+                        WHERE 1=1
+                            AND CONTRACT_NUM = T2.CONTRACT_NUM
+                            AND APP_END_DATE = '99991231000000'
+                            AND EXPIRATION_DATE = '99991231000000'
+                        AND SERVICE_TYPE = 'P' AND ROWNUM =1
+                    )
+            )   -- 공통 코드[FqcInviteExceptionPlanList 프리퀀시 친구초대 예외 요금제 리스트 ]  없는 요금제만.. 인정
+
+    </select>
+
+
+
+    <select id="selectSvcCntrNo" parameterType="java.util.Map" resultType="java.lang.String">
+        SELECT
+            SVC_CNTR_NO
+        FROM MSP_JUO_SUB_INFO@DL_MSP
+        WHERE 1=1
+          AND SUB_STATUS <![CDATA[<>]]> 'C'
+          AND SUBSCRIBER_NO= TRIM(#{mobileNo})
+          AND UPPER(REPLACE(SUB_LINK_NAME,' ','')) = UPPER(REPLACE(#{name},' ',''))
+    </select>
+
+    <select id="selectSocDescNoLogin" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+        SELECT
+
+            AA.SVC_CNTR_NO
+             , AA.SOC
+             , AA.ENGG_MNTH_CNT
+             , AA.RATE_NM
+             , AA.BASE_AMT
+             , AA.RMK
+             , AA.MODEL_NAME
+             , AA.DOBYYYYMMDD
+             , AA.INTM_SRL_NO
+             , AA.MODEL_ID
+             , NVL(AA.DC_AMT, 0) DC_AMT
+             , POINT_ID
+             , AA.SUB_LINK_NAME
+        FROM
+            (
+                SELECT
+                    D.SVC_CNTR_NO
+                     , D.CONTRACT_NUM
+                     , B.SOC
+                     , NVL((SELECT ENGG_MNTH_CNT
+                            FROM (SELECT ENGG_MNTH_CNT , ROW_NUMBER() OVER (ORDER BY EVNT_TRTM_DT DESC) AS RNUM
+                                  FROM MSP_JUO_ADD_INFO@DL_MSP
+                                  WHERE CONTRACT_NUM = #{svcCntrNo}
+                                    AND ENGG_MNTH_CNT IS NOT NULL
+                                    AND APP_END_DATE > TO_CHAR (SYSDATE, 'YYYYMMDDHH24MISS')
+                                 )WHERE RNUM = 1
+                           ), 0) AS ENGG_MNTH_CNT
+                     , C.RATE_NM
+                     , C.BASE_AMT
+                     , C.RMK
+                     , D.MODEL_NAME
+                     , D.DOBYYYYMMDD
+                     , D.USER_SSN
+                     , D.INTM_SRL_NO
+                     , D.MODEL_ID
+                     , '' AS POINT_ID
+                     , 0 AS DC_AMT
+                     , D.SUB_LINK_NAME
+                FROM
+                    MSP_JUO_FEATURE_INFO@DL_MSP B
+                   , MSP_RATE_MST@DL_MSP C
+                   , MSP_JUO_SUB_INFO@DL_MSP D
+                WHERE 1=1
+                  AND D.SVC_CNTR_NO = #{svcCntrNo}
+                  AND D.CONTRACT_NUM = B.CONTRACT_NUM
+                  AND B.SERVICE_TYPE = 'P'
+                  AND B.EXPIRATION_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+                  AND B.SOC = C.RATE_CD
+
+            ) AA
+    </select>
+
+    <select id="selectCntrListNoLogin" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+        SELECT /*Mypage.selectCntrListNoLogin 계약 현행화 정보  */
+        A.SVC_CNTR_NO
+        , A.CONTRACT_NUM
+        , A.CUSTOMER_ID AS CUST_ID
+        , A.MODEL_NAME
+        , A.MODEL_ID
+        , A.SUBSCRIBER_NO AS CNTR_MOBILE_NO
+        , A.SUB_STATUS
+        , A.DOBYYYYMMDD
+        , A.SUB_LINK_NAME AS USER_NAME
+        , A.USER_SSN AS unUserSSn
+        , A.LST_COM_ACTV_DATE
+        , B.CUSTOMER_ID
+        , B.CUSTOMER_TYPE
+        , A.PPPO
+        FROM MSP_JUO_SUB_INFO@DL_MSP A, MSP_JUO_CUS_INFO@DL_MSP B
+        WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
+        <if test="svcCntrNo != null and svcCntrNo != ''">
+            AND A.SVC_CNTR_NO = #{svcCntrNo}
+        </if>
+        <if test="cntrMobileNo != null and cntrMobileNo != ''">
+            AND A.SUBSCRIBER_NO= TRIM(#{cntrMobileNo})
+        </if>
+        <if test="subLinkName != null and subLinkName != ''">
+            AND UPPER(REPLACE(A.SUB_LINK_NAME,' ','')) = UPPER(REPLACE(#{subLinkName},' ',''))
+        </if>
+        AND SUB_STATUS <![CDATA[<>]]> 'C'
+    </select>
+
+    <select id="selectJuoFeature" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.JuoFeatureDto" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.JuoFeatureDto">
+        <!--
+            Description: 부가 서비스 존재 여부
+            3개월 이내 결합이력이 존재하여 결합이 불가합니다
+            intAddMonths  : 3개월 이내
+        -->
+        SELECT
+        EXPIRATION_DATE
+        FROM MSP_JUO_FEATURE_INFO@DL_MSP
+        WHERE
+        CONTRACT_NUM = #{contractNum}
+        AND SOC = #{soc}
+        AND SYSDATE BETWEEN TO_DATE(EFFECTIVE_DATE, 'YYYYMMDDHH24MISS') AND ADD_MONTHS(TO_DATE(EXPIRATION_DATE, 'YYYYMMDDHH24MISS'),#{intAddMonths})
+        AND ROWNUM = 1
+    </select>
+
+    <!-- userId 기준 마케팅 수신 동의 여부 히스토리 저장 프로시져 호출(신규가입시) -->
+    <select id="callMcpMrktAgrNew" statementType="CALLABLE" parameterType="java.util.HashMap">
+        {CALL P_MCP_MRKT_AGR_NEW(#{userId},#{emailAgrYn},#{smsAgrYn})}
+    </select>
+
+    <!-- userId 기준 마케팅 수신 동의 여부 히스토리 저장 프로시져 호출 -->
+    <select id="callMcpMrktAgr" statementType="CALLABLE" parameterType="java.util.HashMap">
+        {CALL P_MCP_MRKT_AGR(#{userId},#{emailAgrYn},#{smsAgrYn})}
+    </select>
+
+    <!-- 금융제휴상품요금제 변경 서식지 이미지 합본 프로시져 -->
+    <select id="callMcpRateChgImg" statementType="CALLABLE" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpRateChgDto" resultType="java.util.Map">
+        {CALL P_MCP_RATE_CHG(#{chgSeq}, #{contractNum})}
+    </select>
+
+    <select id="getChannelInfo" parameterType="string" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto">
+        SELECT  /*Mypage.getChannelInfo 개통 채널정보   */
+            SUB.OPEN_AGNT_CD AS AGENT_CD
+             , CMN.CD_DSC AS AGENT_NM
+             , CMN.ETC1 AS CHANNEL_CD
+             , CMN.ETC2 AS CHANNEL_NM
+        FROM
+            MSP_JUO_SUB_INFO@DL_MSP SUB
+           , CMN_GRP_CD_MST@DL_MSP CMN
+        WHERE
+            SUB.OPEN_AGNT_CD = CMN.CD_VAL
+          AND CMN.GRP_ID = 'RCP9031'
+          AND CMN.USG_YN = 'Y'
+          AND SUB.CONTRACT_NUM = #{contractNum}
+    </select>
+
+    <select id="getCloseSubList" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto" parameterType="string" >
+        SELECT /*Mypage.getCloseSubList 해지 해야할 부가 서비스 리스트  */
+            CMN.CD_DSC AS SOC_NM
+             , FEA.SOC AS SOC_CODE
+        FROM
+            MSP_JUO_FEATURE_INFO@DL_MSP FEA
+           , CMN_GRP_CD_MST@DL_MSP CMN
+           , MSP_JUO_SUB_INFO@DL_MSP SUB
+        WHERE 1=1
+          AND FEA.CONTRACT_NUM = SUB.CONTRACT_NUM
+          AND FEA.SOC = CMN.CD_VAL
+          AND CMN.GRP_ID = 'RCP9030'
+          AND CMN.USG_YN = 'Y'
+          AND EXPIRATION_DATE >= TO_CHAR(SYSDATE , 'YYYYMMDDHH24MISS')
+          AND SUB.CONTRACT_NUM=  #{contractNum}
+          AND SUB.SUB_STATUS = 'A'
+        ORDER BY SOC
+    </select>
+
+    <select id="countFarPricePlanList" resultType="int">
+        SELECT COUNT(*)
+        FROM VW_GROUP_BY_RATE_INFO@DL_MSP
+        WHERE PRV_RATE_CD =  #{rateCd}
+          AND NXT_APPL_END_DT = '99991231'
+    </select>
+
+    <update id="insertSocfailProcMst" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpServiceAlterTraceDto">
+        MERGE INTO  MSP_SOCFAIL_PROC_MST@DL_MSP
+        USING   DUAL
+        ON      (CONTRACT_NUM = #{contractNum} AND PRCS_MDL_IND = #{prcsMdlInd})
+        WHEN MATCHED THEN
+            UPDATE SET
+                SYS_RDATE = SYSDATE
+            WHEN NOT MATCHED THEN
+                INSERT (
+                    CONTRACT_NUM             --계약번호
+                    , PRCS_MDL_IND             --처리 모듈 구분
+                    , A_SOC_CODE               --이전 코드 값
+                    , T_SOC_CODE               --이후 코드 값
+                    , A_SOC_AMNT               --변경전 요금제 할인 월정액
+                    , T_SOC_AMNT               --변경후 요금제 할인 월정액
+                    , SUCC_YN                  --성공여부  ==> 성공시 : Y , 실패시 : N
+                    , CHG_TYPE                 --(즉시 : I , 예약 : R)
+                    , SYS_RDATE                --등록일시
+                    , PROC_MEMO                --처리메모
+                    , PROC_YN                  --처리여부
+                    , PROC_ID                  --처리자
+                    <if test="procDate != null ">
+                    , PROC_DATE                --처리날짜
+                    </if>
+                ) VALUES (
+                    #{contractNum}
+                    , #{prcsMdlInd}
+                    , #{aSocCode}
+                    , #{tSocCode}
+                    , #{aSocAmnt}
+                    , #{tSocAmnt}
+                    , #{succYn}
+                    , #{chgType}
+                    , SYSDATE
+                    , #{procMemo}
+                    , #{procYn}
+                    , #{procId}
+                    <if test="procDate != null ">
+                    , #{procDate}
+                    </if>
+                )
+    </update>
+
+    <select id="getromotionDcList" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto" parameterType="string">
+        SELECT /*Mypage.getromotionDcList 가입 해야할 부가 서비스 리스트  */
+            DISTINCT
+            B.SOC AS SOC_CODE
+             , ADDITION_NAME AS SOC_NM
+             , RANTAL AS SOC_PRICE
+             , A.PRMT_ID
+        FROM
+            VW_CHRG_PRMT_DTL@DL_MSP A
+           , MCP_ADDITION B
+        WHERE 1=1
+          AND A.ADDITION_KEY = B.ADDITION_KEY
+          AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A.STRT_DT AND A.END_DT
+          AND A.ORGN_ID = '1100011741'  --접점코드_직영온라인
+          AND A.REQ_BUY_TYPE IN('UU','AL')  -- 유심
+          AND A.ENGG_CNT_0 = 'Y' --무약정
+          AND A.MNP_YN = 'Y'
+          AND A.RATE_CD = #{rateCd} --요금제코드
+          AND A.ON_OFF_TYPE = '0' --온라인오프라인구분 (온라인 )
+          AND A.USG_YN = 'Y'
+    </select>
+
+    <select id="getEnggInfo" parameterType="string" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto">
+        SELECT /*Mypage.getEnggInfo 약정정보   */
+            <![CDATA[
+            CONTRACT_NUM -- 계약번호
+             , SUBSCRIBER_NO -- 전화번호
+             , APP_END_DATE  -- 약정종료일자  appEndDate
+             , CASE
+                   WHEN APP_END_DATE  < TO_CHAR(SYSDATE , 'YYYYMMDD') THEN 'N'
+                   WHEN APP_END_DATE  >= TO_CHAR(SYSDATE , 'YYYYMMDD') THEN 'Y'
+                   WHEN APP_END_DATE IS NULL THEN  'N'
+            END  AS ENGG_YN -- 약정여부
+             ]]>
+        FROM (
+                 SELECT
+                     CONTRACT_NUM
+                      ,SUBSCRIBER_NO
+                      ,ENGG_END_DT AS APP_END_DATE
+                 FROM VW_CNTR_ENGG_SELF@DL_MSP
+                 WHERE CONTRACT_NUM = #{contractNum}
+             )
+    </select>
+    <select id="getJuoFeature" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.JuoFeatureDto" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.JuoFeatureDto">
+        <!--
+            Description: 부가 서비스 존재 여부
+            3개월 이내 결합이력이 존재하여 결합이 불가합니다
+            intAddMonths  : 3개월 이내
+        -->
+        SELECT
+        EXPIRATION_DATE
+        FROM MSP_JUO_FEATURE_INFO@DL_MSP
+        WHERE
+        CONTRACT_NUM = #{contractNum}
+        AND SOC = #{soc}
+        AND SYSDATE BETWEEN TO_DATE(EFFECTIVE_DATE, 'YYYYMMDDHH24MISS') AND ADD_MONTHS(TO_DATE(EXPIRATION_DATE, 'YYYYMMDDHH24MISS'),#{intAddMonths})
+        AND ROWNUM = 1
+    </select>
+
+
+
+
+
+
+
+
+
+    <!-- My 사은품 목록 -->
+    <select id="getCustList" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT
+            RPMT.PRMT_TEXT AS PRMT_NM
+             , GIFT.PRDT_NM
+             , TO_CHAR(REQ.REGST_DTTM,'YYYY.MM.DD') AS REGST_DTTM
+        FROM
+            MSP_GIFT_PRMT_RESULT@DL_MSP REQ
+                INNER JOIN MSP_GIFT_PRDT@DL_MSP GIFT
+                           ON REQ.PRDT_ID = GIFT.PRDT_ID
+                --AND USE_YN = 'Y'
+                LEFT OUTER JOIN MSP_GIFT_PRMT@DL_MSP RPMT
+                                ON RPMT.PRMT_ID = REQ.PRMT_ID
+        WHERE
+            REQ.CONTRACT_NUM = #{contractNum}
+        ORDER BY  REQ.REGST_DTTM DESC
+    </select>
+    <!-- My 사은품 목록 수 -->
+    <select id="getCustListCount" parameterType="java.util.Map"  resultType="int">
+        SELECT
+            count(*)
+        FROM
+            MSP_GIFT_PRMT_RESULT@DL_MSP REQ
+                INNER JOIN MSP_GIFT_PRDT@DL_MSP GIFT
+                           ON REQ.PRDT_ID = GIFT.PRDT_ID
+                --AND USE_YN = 'Y'
+                LEFT OUTER JOIN MSP_GIFT_PRMT@DL_MSP RPMT
+                                ON RPMT.PRMT_ID = REQ.PRMT_ID
+        WHERE
+            REQ.CONTRACT_NUM = #{contractNum}
+    </select>
+
+    <!-- 회원가입시 회선 정보 조회 -->
+    <select id="selectJuoSubInfo" parameterType="java.util.Map" resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.JuoSubInfoDto">
+        SELECT
+            T2.SUB_LINK_NAME AS CUSTOMER_LINK_NAME
+             , T2.SUBSCRIBER_NO
+             , T2.USER_SSN AS CUSTOMER_SSN
+             , T2.GENDER
+             , T2.CONTRACT_NUM
+             , T2.CUSTOMER_ID
+             , T1.CUSTOMER_TYPE
+             , T1.LEGAL_CI
+        FROM MSP_JUO_CUS_INFO@DL_MSP T1
+           , MSP_JUO_SUB_INFO@DL_MSP T2
+        WHERE T1.CUSTOMER_ID = T2.CUSTOMER_ID
+          AND T2.SUB_STATUS <![CDATA[<>]]> 'C'
+          AND T2.SUBSCRIBER_NO= TRIM(#{mobileNo})
+          AND UPPER(REPLACE(T2.SUB_LINK_NAME,' ','')) = UPPER(REPLACE(#{name},' ',''))
+    </select>
+
+    <!-- 청구계정 번호 조회 -->
+    <select id="selectBanSel" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT BAN  FROM MSP_JUO_SUB_INFO@DL_MSP WHERE CONTRACT_NUM =#{contractNum}
+    </select>
+
+    <select id="billWayReSend" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.BillWayChgDto">
+        SELECT
+            SUB.CONTRACT_NUM
+             , SUB.SUBSCRIBER_NO AS MOBILE_NO
+             , SUB.SUB_LINK_NAME AS SUB_LINK_NM
+             , CASE WHEN DTL.CSTMR_TYPE = 'JP' OR DTL.CSTMR_TYPE = 'PP' THEN ''
+                    ELSE SUBSTR(REPLACE(CRYPTO_AES256.DEC_AES@DL_MSP(SUB.USER_SSN), '-', ''), 7, 1)
+            END AS GENDER
+             , CASE WHEN DTL.CSTMR_TYPE = 'JP' OR DTL.CSTMR_TYPE = 'PP' THEN 0
+                    ELSE FN_GET_AGE_JAVA@DL_MSP(CRYPTO_AES256.DEC_AES@DL_MSP(SUB.USER_SSN))
+            END AS AGE
+             , SUB.LST_COM_ACTV_DATE
+             , SUB.OPEN_AGNT_CD
+             , DTL.ON_OFF_TYPE
+             , CASE WHEN MSD.REQ_USIM_SN IS NOT NULL THEN '직영온라인'
+                    ELSE PUM.ORGN_ID
+            END AS ORG_ID
+        FROM  MSP_JUO_SUB_INFO@DL_MSP SUB
+           , MSP_REQUEST_DTL@DL_MSP DTL
+           , MCP_REQUEST_SELF_DLVRY MSD
+           , MSP_PARTNER_USIM_MST@DL_MSP PUM
+        WHERE SUB.CONTRACT_NUM = DTL.CONTRACT_NUM
+          AND   SUB.ICC_ID = MSD.REQ_USIM_SN(+)
+          AND   DTL.FST_USIM_NO = PUM.USIM_NO(+)
+          AND   SUB.CONTRACT_NUM = #{contractNum}
+          AND ROWNUM = 1
+
+    </select>
+
+    <!-- 유심변경 결과 확인 -->
+    <select id="usimChgChk" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM MCP_SELF_USIM_CHG
+        WHERE PRGR_STAT_CD = #{eventCd}
+          AND MVNO_ORD_NO = #{mvnoOrdNo}
+          AND RSLT_CD = #{rsltCd}
+    </select>
+
+    <!-- 현재요금제정보 가져오기 (명의변경) -->
+    <select id="selectCntrListNmChg" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+        /*Mypage.selectCntrListNmChg 현재요금제정보 가져오기 (명의변경) */
+        SELECT
+        A.USERID
+        , A.CNTR_MOBILE_NO
+        , A.SYS_RDATE
+        , B.SVC_CNTR_NO
+        , B.CONTRACT_NUM
+        , A.REP_NO
+        , B.CUSTOMER_ID AS CUST_ID
+        , B.MODEL_NAME
+        , B.MODEL_ID
+        , B.SUB_STATUS
+        , A.CNTR_MOBILE_NO AS unSvcNo
+        , B.USER_SSN AS unUserSSn
+        , C.CSTMR_TYPE
+        , (SELECT CUSTOMER_TYPE FROM MSP_JUO_CUS_INFO@DL_MSP WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS CUSTOMER_TYPE
+        , (SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO@DL_MSP WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS userName
+        , B.OPEN_AGNT_CD
+        , C.LST_RATE_CD AS SOC
+        , C.LST_RATE_NM AS SOC_NM
+        , NVL((SELECT FREE_DATA_CNT FROM MSP_RATE_MST@DL_MSP WHERE RATE_CD = C.LST_RATE_CD),'0') AS FREE_DATA_CNT
+        , NVL((SELECT FREE_CALL_CNT FROM MSP_RATE_MST@DL_MSP WHERE RATE_CD = C.LST_RATE_CD),'0') AS FREE_CALL_CNT
+        , NVL((SELECT FREE_SMS_CNT FROM MSP_RATE_MST@DL_MSP WHERE RATE_CD = C.LST_RATE_CD),'0') AS FREE_SMS_CNT
+        , B.ON_OFF_TYPE
+        , D.COL_DELINQ_STATUS
+        , D.BAN_ADR_ZIP
+        , D.BAN_ADR_PRIMARY_LN
+        , D.BAN_ADR_SECONDARY_LN
+        FROM MCP_USER_CNTR_MNG A
+        , MSP_JUO_SUB_INFO@DL_MSP B
+        , MSP_REQUEST_DTL@DL_MSP C
+        , MSP_JUO_BAN_INFO@DL_MSP D
+        WHERE UPPER(A.USERID) = UPPER(#{userId})
+        AND A.SVC_CNTR_NO = B.CONTRACT_NUM
+        AND A.SVC_CNTR_NO = C.CONTRACT_NUM(+)
+        AND B.BAN = D.BAN(+)
+        AND B.SUB_STATUS <![CDATA[<>]]> 'C'
+        <if test="customerId != null and customerId != ''">
+            AND A.CUSTOMER_ID = #{customerId}
+        </if>
+        <if test="contractNum != null and contractNum != ''">
+            AND B.CONTRACT_NUM = #{contractNum}
+        </if>
+        ORDER BY A.REP_NO ASC
+    </select>
+
+    <!-- 통신자료 제공내역 요청리스트 가져오기 -->
+    <select id="pvcCommDataList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.db.MspCommDatPrvTxnDto">
+        /*Mypage.pvcCommDataList 통신자료 제공내역 요청리스트 가져오기 */
+        SELECT ROW_NUMBER() OVER(ORDER BY AA.APY_SEQ DESC) AS RNUM
+                , AA.APY_SEQ
+             , AA.APY_DT         --신청일시
+             , AA.RESULT_YN		--처리결과
+             , AA.IS_INVST_PROC  --제공여부
+        FROM    (
+                    SELECT  A.APY_SEQ
+                         , TO_CHAR(A.APY_DT, 'YYYY.MM.DD') AS APY_DT
+                         , DECODE(A.RESULT_YN, 'Y', '처리', 'N', '미처리', '조회 중') AS RESULT_YN
+                         , DECODE((SELECT COUNT(*) FROM MSP_INVST_REQ_MST@DL_MSP B, MSP_JUO_CUS_INFO@DL_MSP C
+                                   WHERE REPLACE(A.TGT_SVC_NO, '-', '') = B.SUBSCRIBER_NO
+                                     AND A.MYSLF_ATHN_CI = C.SELF_CSTMR_CI
+                                     AND B.CUSTOMER_ID = C.CUSTOMER_ID
+                                     AND REQ_TYPE = '10'
+                                  ), 0, 'N', 'Y') AS IS_INVST_PROC
+                    FROM	MSP_COMM_DAT_PRV_TXN@DL_MSP A
+                    WHERE   TO_CHAR(A.PROC_DT, 'YYYYMMDD') BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+                      AND     A.CONTRACT_NUM = #{contractNum}
+
+                    UNION ALL
+
+                    SELECT  A.APY_SEQ
+                         , TO_CHAR(A.APY_DT, 'YYYY.MM.DD') AS APY_DT
+                         , '조회 중' AS RESULT_YN
+                         , '' AS IS_INVST_PROC
+                    FROM	MSP_COMM_DAT_PRV_TXN@DL_MSP A
+                    WHERE   A.PROC_DT IS NULL
+                      AND     A.CONTRACT_NUM = #{contractNum}
+                ) AA
+    </select>
+
+    <!-- 통신자료 제공내역 신청 insert -->
+    <update id="insertPrvCommData" parameterType="java.util.HashMap">
+        /*Mypage.insertPrvCommData 통신자료 제공내역 신청 insert */
+        INSERT INTO MSP_COMM_DAT_PRV_TXN@DL_MSP (
+                                                  APY_SEQ				--신청일련번호
+                                                , APY_NM			--신청자이름
+                                                , BTHDAY			--생년월일 (YYYYMMDD)
+                                                , GENDER			--성별 (1:남, 2:여)
+                                                , SBSC_PRDT_CD		--가입상품 (01:모바일)
+                                                , CNTC_TEL_NO		--연락처번호
+                                                , TGT_SVC_NO		--대상서비스번호
+                                                , RECP_EMAIL		--수령이메일
+                                                , CONF_SBST01_YN	--요청기간
+                                                , CONF_SBST02_YN	--제공일자
+                                                , CONF_SBST03_YN	--요청사유
+                                                , CONF_SBST04_YN	--제공내역
+                                                , MYSLF_ATHN_CI		--본인인증CI
+                                                , APY_ID			--신청자ID
+                                                , APY_DT			--신청일시
+                                                , RESULT_YN			--처리결과
+                                                , CONTRACT_NUM
+        )
+        SELECT  SQ_COMM_DAT_PRV_SEQ.NEXTVAL@DL_MSP
+             , B.CUSTOMER_LINK_NAME
+             , CASE
+                   WHEN SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.USER_SSN),7,1) IN ('1','2','5','6') THEN '19' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.USER_SSN),1,6)
+                   ELSE '20' || SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.USER_SSN),1,6)
+            END
+             , SUBSTR(CRYPTO_AES256.DEC_AES@DL_MSP(A.USER_SSN),7,1)
+             , '01'
+             , SUBSTR(A.SUBSCRIBER_NO,1,3) || '-' || SUBSTR(A.SUBSCRIBER_NO,4,4) || '-' || SUBSTR(A.SUBSCRIBER_NO,8,4)
+             , A.SUBSCRIBER_NO
+             , ''
+             , 'Y'
+             , 'Y'
+             , 'Y'
+             , 'Y'
+             , B.SELF_CSTMR_CI
+             , #{apyId}
+             , SYSDATE
+             , ''
+             , #{contractNum}
+        FROM    MSP_JUO_SUB_INFO@DL_MSP A
+           , MSP_JUO_CUS_INFO@DL_MSP B
+        WHERE   A.CUSTOMER_ID = B.CUSTOMER_ID
+          AND     A.CONTRACT_NUM = #{contractNum}
+    </update>
+
+    <!-- 통신자료 제공내역상세 출력정보 가져오기 -->
+    <select id="pvcCommDataDtlList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.db.MspCommDatPrvTxnDto">
+        /*Mypage.pvcCommDataDtlList 통신자료 제공내역상세 출력정보 가져오기 */
+        SELECT  (SELECT APY_NM FROM MSP_COMM_DAT_PRV_TXN@DL_MSP WHERE APY_SEQ = #{apySeq}) AS APY_NM
+             , (SELECT BTHDAY FROM MSP_COMM_DAT_PRV_TXN@DL_MSP WHERE APY_SEQ = #{apySeq}) AS BTHDAY
+             , (SELECT TO_CHAR(APY_DT, 'YYYY.MM.DD') FROM MSP_COMM_DAT_PRV_TXN@DL_MSP WHERE APY_SEQ = #{apySeq}) AS APY_DT
+             , (SELECT TGT_SVC_NO FROM MSP_COMM_DAT_PRV_TXN@DL_MSP WHERE APY_SEQ = #{apySeq}) AS TGT_SVC_NO
+             , (SELECT CNTC_TEL_NO FROM MSP_COMM_DAT_PRV_TXN@DL_MSP WHERE APY_SEQ = #{apySeq}) AS CNTC_TEL_NO
+             , (SELECT DECODE(SBSC_PRDT_CD,'01','모바일','') FROM MSP_COMM_DAT_PRV_TXN@DL_MSP WHERE APY_SEQ = #{apySeq}) AS SBSC_PRDT_CD
+             , A.PROC_DT
+             , A.INVST_NM
+             , DECODE(A.REQ_TYPE,'10','이용자확인','') AS REQ_RSN
+             , A.CSTMR_NM
+             , A.SUBSCRIBER_NO
+             , CRYPTO_AES256.DEC_AES@DL_MSP(A.USER_SSN) AS USER_SSN
+             , A.OPEN_DT
+             , A.SUB_STATUS
+             , A.TMNT_DT
+             , A.CSTMR_ADDR
+             , A.REQ_DTTM    ---- 요청일자
+        FROM    MSP_INVST_REQ_MST@DL_MSP A
+        WHERE   A.CONTRACT_NUM = #{contractNum}
+        ORDER BY REGST_DTTM DESC
+    </select>
+
+    <!-- 고객이 가입한 모든 회선정보를 가져온다. -->
+    <select id="selectOwnPhoNumList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+        /*Mypage.selectOwnPhoNumList */
+        SELECT
+            T2.SUB_LINK_NAME AS CUSTOMER_LINK_NAME
+             , SUBSTR(T2.SUBSCRIBER_NO,1,3) || '-' || SUBSTR(T2.SUBSCRIBER_NO,4,4) || '-' || SUBSTR(T2.SUBSCRIBER_NO,8,4)  AS CNTR_MOBILE_NO
+             , SUBSTR(T2.LST_COM_ACTV_DATE,1,4) || '.' || SUBSTR(T2.LST_COM_ACTV_DATE,5,2) || '.' || SUBSTR(T2.LST_COM_ACTV_DATE,7,2) AS LST_COM_ACTV_DATE
+        FROM (
+            SELECT CUSTOMER_ID
+            FROM   MSP_JUO_CUS_INFO@DL_MSP
+            WHERE  CUSTOMER_SSN = CRYPTO_AES256.ENC_AES@DL_MSP(#{cstmrNativeRrn})
+              AND    CUSTOMER_LINK_NAME = #{cstmrName}
+        ) T1
+           , MSP_JUO_SUB_INFO@DL_MSP T2
+        WHERE T1.CUSTOMER_ID = T2.CUSTOMER_ID
+          AND T2.SUB_STATUS <![CDATA[<>]]> 'C'
+        ORDER BY T2.LST_COM_ACTV_DATE ASC
+    </select>
+
+    <!-- 가입번호 조회이력을 저장한다. -->
+    <update id="insertOwnPhoNumChkHst" parameterType="java.util.HashMap">
+        /*Mypage.insertOwnPhoNumChkHst */
+        INSERT INTO NMCP_OWN_PHO_NUM_HST (
+            HST_SEQ
+            , CSTMR_NAME
+            , CSTMR_NATIVE_RRN
+            , CSTMR_TYPE
+            , ONLINE_AUTH_TYPE
+            , ONLINE_AUTH_INFO
+            , SYS_RDATE
+        )
+        SELECT  NMCP_OWN_PHO_NUM_HST_SEQ.NEXTVAL
+             , A.CUSTOMER_LINK_NAME
+             , A.CUSTOMER_SSN
+             , A.CUSTOMER_TYPE
+             , #{onlineAuthType}
+             , #{onlineAuthInfo}
+             , SYSDATE
+        FROM (
+            SELECT
+                CUSTOMER_ID
+               ,CUSTOMER_LINK_NAME
+               ,CUSTOMER_SSN
+               ,CUSTOMER_TYPE
+               ,RANK() OVER(PARTITION BY CUSTOMER_SSN, CUSTOMER_LINK_NAME ORDER BY EVNT_TRTM_DT DESC) CNT
+            FROM MSP_JUO_CUS_INFO@DL_MSP ) A
+        WHERE A.CUSTOMER_SSN = CRYPTO_AES256.ENC_AES@DL_MSP(#{cstmrNativeRrn})
+          AND A.CUSTOMER_LINK_NAME = #{cstmrName}
+          AND A.CNT = 1
+    </update>
+
+    <!-- 안심보험가입여부조회 20221004-wooki -->
+    <select id="getInsrInfo" parameterType="java.lang.String" resultType="java.util.Map">
+        /*MypageMapper.getInsrInfo 안심보험가입여부조회 */
+        SELECT
+            A.CONTRACT_NUM,
+            A.REQ_BUY_TYPE,
+            B.INSR_STAT_CD,
+            C.INSR_PROD_CD AS ORDER_EXIST,
+            D.CONTRACT_NUM AS REQUEST_EXIST
+        FROM
+            MSP_REQUEST_DTL@DL_MSP A,
+            MSP_INTM_INSR_MEMBER@DL_MSP B,
+            (SELECT CONTRACT_NUM, INSR_PROD_CD FROM MSP_INTM_INSR_ORDER@DL_MSP WHERE 1 = 1
+                AND CONTRACT_NUM = #{CONTRACTNUM} AND IF_TRGT_CD NOT IN ('C', 'F')
+                AND TO_DATE(STRT_DTTM, 'YYYYMMDDHH24MISS') <![CDATA[>]]> TRUNC(SYSDATE)
+                AND ROWNUM = 1) C,
+            (SELECT CONTRACT_NUM FROM NMCP_CUST_REQUEST_MST WHERE 1 = 1
+                AND REQ_TYPE = 'IS'
+                AND CONTRACT_NUM = #{CONTRACTNUM}
+                AND TO_CHAR(SYS_RDATE, 'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE - 1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+                AND ROWNUM = 1) D
+        WHERE 1 = 1
+            AND A.CONTRACT_NUM = #{CONTRACTNUM}
+              AND A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+              AND A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+              AND A.CONTRACT_NUM = D.CONTRACT_NUM(+)
+              AND (B.INSR_STAT_CD <![CDATA[<>]]> 2 OR B.INSR_STAT_CD IS NULL)
+    </select>
+
+    <!-- 안심보험정보조회(by insrCd) 20221020-wooki -->
+    <select id="getInsrInfoByCd" parameterType="java.lang.String" resultType="java.util.Map">
+        /*MypageMapper.getInsrInfoByCd 안심보험정보조회(by insrCd) */
+        SELECT
+            RATE_CD INSR_CD,
+            RATE_NM INSR_NAME,
+            TO_CHAR(BASE_AMT, 'FM999,999,999') AS INSR_PRICE
+        FROM MSP_RATE_MST@DL_MSP
+        WHERE 1 = 1
+          AND RATE_CD = #{insrCd}
+    </select>
+
+    <!-- 안심보험 가입신청 내역 조회(서식지만들기용)(wooki 2022.10.12) -->
+    <select id="getReqInsrData" parameterType="java.lang.Long"  resultType="java.util.Map">
+        /*Mypage.getReqInsrData 안심보험 가입신청 내역 조회(서식지만들기용) */
+        SELECT * FROM (
+                          SELECT
+                              A.REQ_TYPE,
+                              A.CONTRACT_NUM,
+                              A.CSTMR_NAME,
+                              A.CSTMR_NATIVE_RRN,
+                              A.ONLINE_AUTH_INFO AS INSR_AUTH_INFO,
+                              TO_CHAR(A.SYS_RDATE, 'YYYY') AS REQ_IN_DAY_YYYY,
+                              TO_CHAR(A.SYS_RDATE, 'MM') AS REQ_IN_DAY_MM,
+                              TO_CHAR(A.SYS_RDATE, 'DD') AS REQ_IN_DAY_DD,
+                              B.INSR_PROD_CD
+                          FROM NMCP_CUST_REQUEST_MST A, MSP_INTM_INSR_ORDER@DL_MSP B
+                          WHERE 1 = 1
+                            AND A.REQ_TYPE = 'IS'
+                            AND A.CUST_REQ_SEQ = #{custRequestSeq}
+                            AND A.CONTRACT_NUM = B.CONTRACT_NUM
+                            AND B.IF_TRGT_CD = 'Y'
+                            AND TO_CHAR(A.SYS_RDATE, 'YYYYMMDD') = TO_CHAR(B.REGST_DTTM, 'YYYYMMDD')
+                          ORDER BY B.REGST_DTTM
+                      ) WHERE ROWNUM = 1
+    </select>
+
+    <!-- MSP_JUO_SUB_INFO에서 orgSacnId 조회(wooki 2022.10.20) -->
+    <select id="getOrgScanId" parameterType="java.lang.String" resultType="java.lang.String">
+        /*Mypage.getOrgScanId MSP_JUO_SUB_INFO에서 orgSacnId 조회 */
+        SELECT SCAN_ID
+        FROM MSP_JUO_SUB_INFO@DL_MSP
+        WHERE CONTRACT_NUM = #{contractNum}
+    </select>
+
+    <!-- 계약번호로 자급제 보상서비스 가입 상태 조회 hsy(2023.03.02) -->
+    <select id="selectRwdInfoByCntrNum" parameterType="java.lang.String" resultType="java.util.Map">
+        WITH RWD_ORDER AS (
+            SELECT RWD_SEQ, RWD_PROD_CD, CONTRACT_NUM, IF_TRGT_CD, VRFY_RSLT_CD
+            FROM (SELECT RWD_SEQ, RWD_PROD_CD, CONTRACT_NUM, IF_TRGT_CD, VRFY_RSLT_CD
+                  FROM MSP_RWD_ORDER@DL_MSP
+                  WHERE CONTRACT_NUM=#{contractNum}
+                  ORDER BY REGST_DTTM DESC)
+            WHERE ROWNUM=1
+        )
+        SELECT
+               RD.CONTRACT_NUM
+             , RD.REQ_BUY_TYPE
+             , RO.IF_TRGT_CD
+             , RO.VRFY_RSLT_CD
+             , NVL(RM.RWD_SEQ, 0) AS RWD_SEQ
+             , NVL2(RM.RWD_SEQ, RM.RWD_PROD_CD, RO.RWD_PROD_CD) AS RWD_PROD_CD
+             , RM.RWD_STAT_CD
+             , RM.CAN_RSLT_CD
+             , RM.END_DTTM
+        FROM MSP_REQUEST_DTL@DL_MSP RD
+           , RWD_ORDER RO
+           , MSP_RWD_MEMBER@DL_MSP RM
+        WHERE RD.CONTRACT_NUM= #{contractNum}
+          AND RD.CONTRACT_NUM = RO.CONTRACT_NUM(+)
+          AND RO.RWD_SEQ = RM.RWD_SEQ(+)
+    </select>
+
+    <!-- 자급제 보상서비스 리스트 조회 hsy(2023.03.02)-->
+    <select id="selectRwdProdList"  parameterType="java.lang.String"  resultType="java.util.Map">
+        SELECT DISTINCT
+            A.RWD_PROD_CD
+          , A.RWD_PRD
+          , B.CD_DSC AS RWD_PROD_NM
+          , B.ETC5
+        FROM
+            MSP_RWD_MST@DL_MSP A
+          , CMN_GRP_CD_MST@DL_MSP B
+        WHERE B.GRP_ID= 'CMN0258'
+        AND A.RWD_PROD_CD = B.CD_VAL
+        AND A.USE_YN = 'Y'
+        <choose>
+            <when test="rwdProdCd == null and rwdProdCd == ''">
+                AND 1=0
+            </when>
+            <when test="rwdProdCd == 'ALL'">
+                AND 1=1
+            </when>
+            <otherwise>
+                AND A.RWD_PROD_CD = #{rwdProdCd}
+            </otherwise>
+        </choose>
+        ORDER BY B.ETC5
+    </select>
+
+    <!-- 계약번호로 mcp 신청정보 조회 hsy(2023.02.28)-->
+    <select id="selectMcpRequestInfoByCntrNum" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT A.CONTRACT_NUM
+             , B.REQUEST_KEY
+             , B.RES_NO
+             , B.CSTMR_TYPE
+             , B.REQ_BUY_TYPE
+        FROM MSP_JUO_SUB_INFO@DL_MSP A
+           , MCP_REQUEST B
+        WHERE A.CONTRACT_NUM = #{contractNum}
+        AND A.CONTRACT_NUM= B.CONTRACT_NUM(+)
+        ORDER BY B.SYS_RDATE DESC, B.REQUEST_KEY DESC
+    </select>
+
+    <!-- 자급제 보상서비스 주문 insert hsy(2023.02.28)-->
+    <insert id="insertRwdOrder" parameterType="java.util.Map">
+        <selectKey keyProperty="rwdSeq" resultType="Long" order="BEFORE">
+            SELECT TO_NUMBER(TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(RWD_SEQ.NEXTVAL@DL_MSP, '0000')))  FROM DUAL
+        </selectKey>
+        INSERT INTO MSP_RWD_ORDER@DL_MSP (
+             RWD_SEQ
+           , RWD_PROD_CD
+           , RES_NO
+           <if test="requestKey != 0">
+           , REQUEST_KEY
+           </if>
+           , CONTRACT_NUM
+           , IF_TRGT_CD
+           , CHN_CD
+           , IMEI
+           , BUY_PRIC
+           , FILE_ID
+           , FILE_EXT
+           , FILE_DIR
+           , REGST_ID
+           , REGST_DTTM
+           , IMEI_TWO
+           , RWD_AUTH_INFO
+        ) VALUES (
+             #{rwdSeq}
+           , #{rwdProdCd}
+           , #{resNo}
+           <if test="requestKey != 0">
+           , #{requestKey}
+           </if>
+           , #{contractNum}
+           , #{ifTrgtCd}
+           , #{chnCd}
+           , #{imei}
+           , #{buyPric}
+           , #{fileId}
+           , UPPER(#{fileExt})
+           , #{fileDir}
+           , #{regstId}
+           , SYSDATE
+           , #{imeiTwo}
+           , #{rwdAuthInfo}
+        )
+    </insert>
+
+    <!-- 자급제 보상서비스 가입 시 해당 imei 사용가능 여부 체크(2023.03.10)-->
+    <select id="checkImeiForRwd" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT COUNT(RWD_SEQ) AS CNT
+        FROM MSP_RWD_MEMBER@DL_MSP RM
+        WHERE (RM.RWD_STAT_CD = '1' OR RM.RWD_STAT_CD = '0' OR CAN_RSLT_CD= 'EXP')
+        <choose>
+            <when test="imei != null and imei != '' and imeiTwo != null and imeiTwo != ''">
+                AND (RM.IMEI= #{imei} OR RM.IMEI_TWO= #{imei} OR RM.IMEI= #{imeiTwo} OR RM.IMEI_TWO=#{imeiTwo})
+            </when>
+            <when test="imei != null and imei != ''">
+                AND (RM.IMEI= #{imei} OR RM.IMEI_TWO= #{imei})
+            </when>
+            <when test="imeiTwo != null and imeiTwo != ''">
+                AND (RM.IMEI= #{imeiTwo} OR RM.IMEI_TWO= #{imeiTwo})
+            </when>
+        </choose>
+    </select>
+
+    <!-- 자급제 보상서비스 파일명 추출 (2023.03.13)-->
+    <select id="selectRwdNewFileNm" resultType="java.lang.String">
+        SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_MSP_RWD_01.NEXTVAL@DL_MSP, '000000')) AS FILE_NM_SEQ
+        FROM DUAL
+    </select>
+
+    <!-- 자급제 보상서비스 서식지 정보 조회 -->
+    <select id="getRwdOrderData" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT
+            A.RWD_PROD_CD,
+            A.RWD_AUTH_INFO,
+            A.CONTRACT_NUM,
+            SUBSTR(B.SUBSCRIBER_NO, 1, 3) || '-' || SUBSTR(B.SUBSCRIBER_NO, 4, 4)|| '-' || SUBSTR(B.SUBSCRIBER_NO, 8, 4) AS RWD_MOBILE_NO,
+            B.USER_SSN AS CSTMR_NATIVE_RRN,
+            NVL(C.CUSTOMER_LINK_NAME,B.SUB_LINK_NAME) AS CSTMR_NAME,
+            TO_CHAR(A.REGST_DTTM, 'YYYY') AS REQUEST_YEAR,
+            TO_CHAR(A.REGST_DTTM, 'MM') AS REQUEST_MONTH,
+            TO_CHAR(A.REGST_DTTM, 'DD') AS REQUEST_DAY,
+            'Y' AS CLAUSE_RWD_REG_FLAG,
+            'Y' AS CLAUSE_RWD_PAYMENT_FLAG,
+            'Y' AS CLAUSE_RWD_RATING_FLAG,
+            'Y' AS CLAUSE_RWD_USE_FLAG,
+            'Y' AS CLAUSE_RWD_PRIVACY_INFO_FLAG,
+            'Y' AS CLAUSE_RWD_TRUST_FLAG
+        FROM MSP_RWD_ORDER@DL_MSP A,
+             MSP_JUO_SUB_INFO@DL_MSP B,
+             MSP_JUO_CUS_INFO@DL_MSP C
+        WHERE A.CONTRACT_NUM=B.CONTRACT_NUM
+          AND B.CUSTOMER_ID=C.CUSTOMER_ID
+          AND A.RWD_SEQ=#{rwdSeq}
+    </select>
+
+    <!--RES_NO로 자급제 보상서비스 신청 상태 조회-->
+    <select id="selectRwdInfoByResNo" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT COUNT(RWD_SEQ) AS CNT
+        FROM MSP_RWD_ORDER@DL_MSP
+        WHERE RES_NO= #{resNo}
+        AND IF_TRGT_CD != 'C'
+        <if test="requestKey != 0">
+            AND REQUEST_KEY = #{requestKey}
+        </if>
+    </select>
+
+    <!-- 자급제 보상서비스 주문 update -->
+    <update id="updateRwdOrder" parameterType="java.util.Map">
+        UPDATE MSP_RWD_ORDER@DL_MSP
+        SET
+             RWD_PROD_CD= #{rwdProdCd}
+            ,RES_NO= #{resNo}
+            <if test="requestKey != 0">
+            ,REQUEST_KEY= #{requestKey}
+            </if>
+            ,CONTRACT_NUM= #{contractNum}
+            ,IF_TRGT_CD = #{ifTrgtCd}
+            ,CHN_CD = #{chnCd}
+            ,IMEI = #{imei}
+            ,BUY_PRIC =  #{buyPric}
+            ,FILE_ID = #{fileId}
+            ,FILE_EXT = UPPER(#{fileExt})
+            ,FILE_DIR = #{fileDir}
+            ,REGST_ID = #{regstId}
+            ,REGST_DTTM = SYSDATE
+            ,IMEI_TWO = #{imeiTwo}
+            ,RWD_AUTH_INFO = #{rwdAuthInfo}
+        WHERE RWD_SEQ= #{rwdSeq}
+    </update>
+
+    <select id="getRwdOrderSeq" resultType="java.lang.Long">
+        SELECT RWD_SEQ
+        FROM (
+            SELECT
+                ROW_NUMBER() OVER (ORDER BY REGST_DTTM DESC) AS ROW_NUM,
+                RWD_SEQ
+            FROM MSP_RWD_ORDER@DL_MSP
+            WHERE RES_NO= #{resNo}
+            <if test="requestKey != 0">
+            AND REQUEST_KEY = #{requestKey}
+            </if>
+        )
+        WHERE ROW_NUM = 1
+    </select>
+
+    <select id="selectMspMrktAgrTime" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.AgreeDto">
+        SELECT
+            AGR_YN,
+            PERSONAL_INFO_COLLECT_AGREE,
+            OTHERS_TRNS_AGREE,
+            OTHERS_TRNS_KT_AGREE,
+            OTHERS_AD_RECEIVE_AGREE,
+            TO_CHAR(MRKT_RVISN_DTTM, 'YYYY.MM.DD') as agrYnTime,
+            TO_CHAR(PERSONAL_INFO_RVISN_DTTM, 'YYYY.MM.DD') as personalInfoCollectAgreeTime,
+            TO_CHAR(OTHERS_TRNS_RVISN_DTTM, 'YYYY.MM.DD') as othersTrnsAgreeTime,
+            TO_CHAR(OTHERS_TRNS_KT_RVISN_DTTM, 'YYYY.MM.DD') as othersTrnsKtAgreeTime,
+            TO_CHAR(OTHERS_AD_RECEIVE_RVISN_DTTM, 'YYYY.MM.DD') as othersAdReceiveAgreeTime
+        FROM MSP_MRKT_AGR_MGMT@DL_MSP
+        WHERE CONTRACT_NUM = #{contractNum}
+          AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN STRT_DTTM AND END_DTTM
+          AND ROWNUM = 1
+    </select>
+
+    <!-- cusInfo 이름, 생년월일 조회 -->
+    <select id="getUserCusInfo" parameterType="java.lang.String" resultType="java.util.Map">
+        SELECT CUSTOMER_LINK_NAME AS SUB_LINK_NAME , CUSTOMER_SSN AS USER_SSN
+        FROM MSP_JUO_CUS_INFO@DL_MSP
+        WHERE CUSTOMER_ID = #{customerId}
+    </select>
+
+    <!-- 2023.11.10 wooki -->
+    <insert id="insertDisApd" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+        <selectKey keyProperty="apdSeq" resultType="String" order="BEFORE">
+            SELECT 'AD' || TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_DIS_AD.NEXTVAL@DL_MSP, '000000')) FROM DUAL
+        </selectKey>
+        INSERT INTO MSP_DIS_APD@DL_MSP
+        (
+            APD_SEQ,
+            REGST_DT,
+            PROC_YN,
+            CONTRACT_NUM,
+            <if test='prmtId != null and prmtId != ""'>
+            PRMT_ID,
+            </if>
+            CHNL_CD,
+            EVNT_CD,
+            ENGG_MNTH_CNT,
+            OPEN_AGNT_CD,
+            PRMT_AGNT_CD,
+            RATE_CD,
+            ON_OFF_TYPE,
+            OPER_TYPE,
+            REQ_BUY_TYPE,
+            REGST_ID,
+            REGST_DTTM
+        )
+        SELECT
+            #{apdSeq},
+            TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') AS REGST_DT,
+            'N' AS PROC_YN,
+            CONTRACT_NUM,
+            <if test='prmtId != null and prmtId != ""'>
+            #{prmtId} AS PRMT_ID,
+            </if>
+            '01' AS CHNL_CD,
+            'SCH' AS EVNT_CD,
+            '00' AS ENGG_MNTH_CNT,
+            OPEN_AGNT_CD,
+            '1100011741' AS PRMT_AGNT_CD,
+            #{socCode} AS RATE_CD,
+            '0' AS ON_OFF_TYPE,
+            'MNP3' AS OPER_TYPE,
+            'UU' AS REQ_BUY_TYPE,
+            'MCP' AS REGST_ID,
+            SYSDATE AS REGST_DTTM
+        FROM MSP_JUO_SUB_INFO@DL_MSP
+        WHERE CONTRACT_NUM = #{contractNum}
+    </insert>
+
+    <!-- 2024.01.19 개발팀 김동혁 -->
+    <select id="getChrgPrmtIdSocChg" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT DISTINCT(PRMT_ID) /* MypageMapper.getChrgPrmtIdSocChg 요금제 변경 온라인 프로모션ID 조회 */
+          FROM VW_CHRG_PRMT_DTL@DL_MSP
+         WHERE TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN STRT_DT AND END_DT
+           AND ORGN_ID = '1100011741'  --접점코드_직영온라인
+           AND REQ_BUY_TYPE IN('UU','AL')  -- 유심
+           AND ENGG_CNT_0 = 'Y' --무약정
+           AND MNP_YN = 'Y'
+           AND ON_OFF_TYPE = '0' --온라인오프라인구분 (온라인 )
+           AND USG_YN = 'Y'
+           AND RATE_CD = #{rateCd}
+           AND ROWNUM = 1
+    </select>
+
+    <!-- 주민번호,이름,연락처로 계약번호 조회 -->
+    <select id="selectConSsnObj" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+        CONTRACT_NUM
+        , SVC_CNTR_NO
+        , T1.SUBSCRIBER_NO
+        , T1.USER_SSN
+        , T1.SUB_LINK_NAME
+        , T2.BL_BILLING_METHOD
+        , T2.BAN
+        , T1.CUSTOMER_ID
+        , T1.SUB_STATUS
+        , T3.CUSTOMER_TYPE
+        FROM
+        MSP_JUO_SUB_INFO@DL_MSP T1
+        , MSP_JUO_BAN_INFO@DL_MSP T2
+        , MSP_JUO_CUS_INFO@DL_MSP T3
+        WHERE 1=1
+        AND T1.BAN = T2.BAN
+        AND T1.CUSTOMER_ID = T3.CUSTOMER_ID
+        AND SUB_STATUS <![CDATA[<>]]> 'C'
+        <if test="mobileNo != null and mobileNo != ''">
+            AND SUBSCRIBER_NO= TRIM(#{mobileNo})
+        </if>
+        <if test="name != null and name != ''">
+            AND UPPER(REPLACE(SUB_LINK_NAME,' ','')) = UPPER(REPLACE(#{name},' ',''))
+        </if>
+        <if test="userSsn != null and userSsn != ''">
+            AND USER_SSN = CRYPTO_AES256.ENC_AES@DL_MSP(#{userSsn})
+        </if>
+
+    </select>
+
+    <!-- 가족관계 법정대리인 조회 -->
+    <select id="selectMinorAgentInfo" parameterType="String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.ChildInfoDto">
+        SELECT /* MypageMapper.selectMinorAgentInfo */
+            MEM.FAM_SEQ,
+            MEM.SEQ,
+            SUB.SVC_CNTR_NO AS MINOR_AGENT_SVC_CNTR_NO,
+            MEM.MEM_TYPE,
+            MEM.CHILD_TYPE,
+            MEM.USE_YN,
+            MEM.STRT_DTTM,
+            MEM.END_DTTM
+        FROM MSP_FAM_REL_MST@DL_MSP MST,
+             MSP_FAM_REL_MEM@DL_MSP MEM,
+             MSP_JUO_SUB_INFO@DL_MSP SUB
+        WHERE SUB.SVC_CNTR_NO = #{minorAgentSvcCntrNo}
+          AND MST.FAM_SEQ = MEM.FAM_SEQ
+          AND MEM.SVC_CNTR_NO = SUB.SVC_CNTR_NO
+          AND MEM.MEM_TYPE = '10'
+          AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN MST.STRT_DTTM AND MST.END_DTTM
+          AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN MEM.STRT_DTTM AND MEM.END_DTTM
+          AND SUB.SUB_STATUS <![CDATA[<>]]> 'C'
+          AND MST.USE_YN = 'Y'
+          AND MEM.USE_YN = 'Y'
+    </select>
+
+    <!-- 가족관계 자녀 회선 목록 조회 -->
+    <select id="selectChildCntrList" parameterType="String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.ChildInfoDto">
+        SELECT /* MypageMapper.selectChildCntrList */
+            MST.FAM_SEQ,
+            SEQ,
+            SUB.SVC_CNTR_NO,
+            SUB.CONTRACT_NUM,
+            SUB.CUSTOMER_ID,
+            SUB.SUB_LINK_NAME AS NAME,
+            SUB.SUBSCRIBER_NO AS MOBILE_NO,
+            MEM.MEM_TYPE,
+            MEM.CHILD_TYPE,
+            MEM.USE_YN
+        FROM MSP_FAM_REL_MST@DL_MSP MST,
+             MSP_FAM_REL_MEM@DL_MSP MEM,
+             MSP_JUO_SUB_INFO@DL_MSP SUB
+        WHERE MST.FAM_SEQ = #{famSeq}
+          AND MST.FAM_SEQ = MEM.FAM_SEQ
+          AND MEM.SVC_CNTR_NO = SUB.SVC_CNTR_NO
+          AND SUB.SUB_STATUS <![CDATA[<>]]> 'C'
+          AND MEM.MEM_TYPE = '20'
+          AND MST.USE_YN = 'Y'
+          AND MEM.USE_YN = 'Y'
+          AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN MST.STRT_DTTM AND MST.END_DTTM
+          AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN MEM.STRT_DTTM AND MEM.END_DTTM
+          ORDER BY SEQ
+    </select>
+
+    <!-- 가족관계 자녀 회선 조회 -->
+    <select id="selectChildCntr" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.ChildInfoDto" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.ChildInfoDto">
+        SELECT /* MypageMapper.selectChildCntr */
+            SUB.SVC_CNTR_NO,
+            SUB.CONTRACT_NUM,
+            SUB.SUB_LINK_NAME AS NAME,
+            SUB.CUSTOMER_ID,
+            SUB.SUBSCRIBER_NO AS MOBILE_NO,
+            MEM.MEM_TYPE
+        FROM MSP_FAM_REL_MST@DL_MSP MST,
+             MSP_FAM_REL_MEM@DL_MSP MEM,
+             MSP_JUO_SUB_INFO@DL_MSP SUB
+        WHERE 1=1
+          AND MST.FAM_SEQ = ( SELECT A.FAM_SEQ
+                              FROM MSP_FAM_REL_MEM@DL_MSP A
+                              WHERE A.SVC_CNTR_NO = #{minorAgentSvcCntrNo}
+                                AND A.USE_YN = 'Y'
+                                AND A.MEM_TYPE = '10'
+                                AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN A.STRT_DTTM AND A.END_DTTM )
+          AND MST.FAM_SEQ = MEM.FAM_SEQ
+          AND MEM.SVC_CNTR_NO = #{svcCntrNo}
+          AND MEM.SVC_CNTR_NO = SUB.SVC_CNTR_NO
+          AND MST.USE_YN = 'Y'
+          AND MEM.USE_YN = 'Y'
+          AND MEM.MEM_TYPE = '20'
+          AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN MST.STRT_DTTM AND MST.END_DTTM
+          AND TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN MEM.STRT_DTTM AND MEM.END_DTTM
+          AND SUB.SUB_STATUS <![CDATA[<>]]> 'C'
+    </select>
+
+
+</mapper>

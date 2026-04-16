@@ -503,13 +503,18 @@ public class MsfMplatFormService {
     public MpFarRealtimePayInfoVO farRealtimePayInfo(String ncn, String ctn, String custId) throws SelfServiceException, SocketTimeoutException {
         MpFarRealtimePayInfoVO vo = new MpFarRealtimePayInfoVO();
         HashMap<String, String> param = getParamMap(ncn, ctn, custId, "X18");
+        logger.debug("X18 farRealtimePayInfo callService start. ncn={}, ctn={}, custId={}, serverLocation={}",
+            ncn, ctn, custId, serverLocation);
 
-        if ("LOCAL".equals(serverLocation) || (serverLocation != null && serverLocation.startsWith("LOCAL"))) {
-            getVo(18, vo);
+        //if ("LOCAL".equals(serverLocation) || (serverLocation != null && serverLocation.startsWith("LOCAL"))) {
+        //    getVo(18, vo);
             //mplatFormServerAdapter.callService(param, vo);
-        } else {
+        //} else {
             mplatFormServerAdapter.callService(param, vo);
-        }
+        //}
+        int listSize = vo.getList() == null ? 0 : vo.getList().size();
+        logger.debug("X18 farRealtimePayInfo callService done. success={}, searchDay={}, searchTime={}, sumAmt={}, listSize={}",
+            vo.isSuccess(), vo.getSearchDay(), vo.getSearchTime(), vo.getSumAmt(), listSize);
 
         return vo;
     }

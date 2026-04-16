@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ktmmobile.msf.domains.form.form.servicechange.dao.MPayViewDao;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.MPayViewDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MPayViewDto;
 
 

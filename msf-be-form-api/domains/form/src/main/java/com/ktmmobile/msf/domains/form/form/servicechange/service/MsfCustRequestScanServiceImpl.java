@@ -39,7 +39,7 @@ import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.newchange.dao.AppformDao;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.MyNameChgReqDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dao.CustRequestDao;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.CustRequestDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.CustRequestDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto;
 

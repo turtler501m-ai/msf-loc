@@ -1,6 +1,5 @@
 package com.ktmmobile.msf.domains.form.form.termination.controller;
 
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -9,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,21 +19,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfCustRequestScanService;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMaskingSvc;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMyinfoService;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO;
-import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto;
-import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeReqDto;
-import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeResVO;
-import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
-import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
-import com.ktmmobile.msf.domains.form.form.termination.service.MsfCancelConsultSvc;
-import org.springframework.web.bind.annotation.RequestBody;
+
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.NiceResDto;
 import com.ktmmobile.msf.domains.form.common.dto.ResponseSuccessDto;
@@ -45,6 +31,16 @@ import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfCustRequestScanService;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMaskingSvc;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto;
+import com.ktmmobile.msf.domains.form.form.termination.service.MsfCancelConsultSvc;
+
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
 
 @Controller
 public class MsfCancelConsultController {
@@ -58,9 +54,6 @@ public class MsfCancelConsultController {
 
     @Autowired
     private MsfCancelConsultSvc msfCancelConsultSvc;
-
-    @Autowired
-    private MsfMyinfoService msfMyinfoService;
 
     @Autowired
     private MsfCustRequestScanService custRequestScanService;
@@ -338,102 +331,6 @@ public class MsfCancelConsultController {
         return rtnMap ;
     }
 
-
-    /**
-     * X18 — 잔여요금·위약금 실시간 조회
-     * POST /api/v1/cancel/remain-charge
-     *
-     * [TOBE] ncn만 프론트에서 수신, ctn·custId는 세션 계약 목록에서 조회 (getRealTimePriceAjax.do 방식 동일)
-     */
-    @RequestMapping(value = "/api/v1/cancel/remain-charge")
-    @ResponseBody
-    public RemainChargeResVO getRemainCharge(@RequestBody RemainChargeReqDto reqDto) {
-        RemainChargeResVO errVO = new RemainChargeResVO();
-
-        // 1. ncn 필수 검증
-        if (StringUtils.isBlank(reqDto.getNcn())) {
-            errVO.setSuccess(false);
-            errVO.setMessage("계약번호(ncn)는 필수입니다.");
-            return errVO;
-        }
-
-        // 2. LOCAL 테스트용 — 세션 없이 ctn/custId가 넘어오면 그대로 사용
-        if ("LOCAL".equals(apiInterfaceServer) && StringUtils.isNotBlank(reqDto.getCtn()) && StringUtils.isNotBlank(reqDto.getCustId())) {
-            return msfCancelConsultSvc.getRemainCharge(reqDto);
-        }
-
-        // 3. 세션에서 userId 조회
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            errVO.setSuccess(false);
-            errVO.setMessage("세션 정보가 없습니다.");
-            return errVO;
-        }
-
-        // 4. 계약 목록에서 ncn에 해당하는 ctn·custId 조회 (getRealTimePriceAjax.do 방식)
-        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
-        McpUserCntrMngDto cntrInfo = null;
-        if (cntrList != null && !cntrList.isEmpty()) {
-            cntrInfo = cntrList.stream()
-                .filter(item -> reqDto.getNcn().equals(item.getSvcCntrNo()))
-                .findFirst().orElse(null);
-        }
-
-        if (cntrInfo == null) {
-            errVO.setSuccess(false);
-            errVO.setMessage("계약 정보를 찾을 수 없습니다.");
-            return errVO;
-        }
-
-        // 5. 세션에서 조회한 ctn·custId 세팅
-        reqDto.setCtn(cntrInfo.getCntrMobileNo());
-        reqDto.setCustId(cntrInfo.getCustId());
-
-        logger.info("X18 잔여요금 조회 요청: ncn={}, ctn={}", reqDto.getNcn(), reqDto.getCtn());
-
-        // 6. MsfMyinfoService.farRealtimePayInfo() 호출 (getRealTimePriceAjax.do 동일 경로)
-        RemainChargeResVO resVO = new RemainChargeResVO();
-        try {
-            MpFarRealtimePayInfoVO mpVO = msfMyinfoService.farRealtimePayInfo(
-                reqDto.getNcn(), reqDto.getCtn(), reqDto.getCustId());
-
-            if (mpVO == null) {
-                resVO.setSuccess(false);
-                resVO.setMessage("X18 응답이 없습니다.");
-                return resVO;
-            }
-
-            // MpFarRealtimePayInfoVO → RemainChargeResVO 매핑
-            resVO.setSuccess(true);
-            resVO.setSearchDay(mpVO.getSearchDay());
-            resVO.setSearchTime(mpVO.getSearchTime());
-            resVO.setSumAmt(mpVO.getSumAmt());
-
-            if (mpVO.getList() != null) {
-                java.util.List<RemainChargeResVO.FareItem> items = new java.util.ArrayList<>();
-                for (MpFarRealtimePayInfoVO.RealFareVO src : mpVO.getList()) {
-                    RemainChargeResVO.FareItem item = new RemainChargeResVO.FareItem();
-                    item.setGubun(src.getGubun());
-                    item.setPayment(src.getPayment());
-                    items.add(item);
-                }
-                resVO.setItems(items);
-            }
-
-            logger.info("X18 잔여요금 조회 완료: sumAmt={}", resVO.getSumAmt());
-        } catch (Exception e) {
-            logger.error("X18 잔여요금 조회 오류: ncn={}, error={}", reqDto.getNcn(), e.getMessage(), e);
-            resVO.setSuccess(false);
-            resVO.setMessage("X18 조회 중 오류가 발생했습니다: " + e.getMessage());
-        }
-        return resVO;
-    }
-
-    @RequestMapping(value = "/api/v1/cancel/apply")
-    @ResponseBody
-    public TerminationApplyResVO apply(@RequestBody TerminationApplyReqDto reqDto) {
-        return msfCancelConsultSvc.apply(reqDto);
-    }
 
     private ResponseSuccessDto getMessageBox(){
         ResponseSuccessDto mbox = new ResponseSuccessDto();
