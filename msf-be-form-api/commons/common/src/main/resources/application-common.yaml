@@ -11,15 +11,15 @@ spring:
       smartform:
         type: ROUTING
         writer:
-          url: jdbc:postgresql://
-          username: ${SMARTFORM_DB_USERNAME}
-          password: ${SMARTFORM_DB_PASSWORD}
+          url: ${SMARTFORM_WRITER_DB_URL}
+          username: ${SMARTFORM_WRITER_DB_USERNAME}
+          password: ${SMARTFORM_WRITER_DB_PASSWORD}
           hikari:
             maximum-pool-size: 20
         reader:
-          url: jdbc:postgresql://
-          username: ${SMARTFORM_DB_USERNAME}
-          password: ${SMARTFORM_DB_PASSWORD}
+          url: ${SMARTFORM_READER_DB_URL}
+          username: ${SMARTFORM_READER_DB_USERNAME}
+          password: ${SMARTFORM_READER_DB_PASSWORD}
           read-only: true
           hikari:
             maximum-pool-size: 30
@@ -28,7 +28,7 @@ spring:
       msp:
         type: STANDALONE
         standalone:
-          url: jdbc:postgresql://
+          url: ${MSP_DB_URL}
           username: ${MSP_DB_USERNAME}
           password: ${MSP_DB_PASSWORD}
           read-only: true
@@ -92,11 +92,6 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-
-  #### Docker
-  docker:
-    compose:
-      enabled: false
 
 
 

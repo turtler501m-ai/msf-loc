@@ -105,11 +105,26 @@ onMounted(() => {
  * @returns {Promise<boolean>} 성공 true / 실패 false
  */
 const save = async () => {
-  if (isComplete.value !== 'true') return false
-  return await terminationStore.apiCompleteApplication()
+  console.debug('[TerminationAgreement.save] called', {
+    isComplete: isComplete.value,
+    agreeCheck1: agreement.agreeCheck1,
+    agreeCheck2: agreement.agreeCheck2,
+    agreeCheck3: agreement.agreeCheck3,
+  })
+
+  if (isComplete.value !== 'true') {
+    console.warn('[TerminationAgreement.save] blocked by test flag', { isComplete: isComplete.value })
+    return false
+  }
+
+  const result = await terminationStore.apiCompleteApplication()
+  console.debug('[TerminationAgreement.save] apiCompleteApplication result', { result })
+  return result
 }
 
-defineExpose({ save })
+const getCompleteErrorMessage = () => terminationStore.getCompleteErrorMessage()
+
+defineExpose({ save, getCompleteErrorMessage })
 </script>
 
 <style scoped></style>

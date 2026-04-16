@@ -34,7 +34,7 @@ tasks.processResources {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs.add("-parameters")
+    options.compilerArgs.addAll(listOf("-parameters", "-Xlint:-unchecked", "-Xlint:-deprecation"))
 }
 
 tasks.test {

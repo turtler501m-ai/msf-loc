@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.commoncode.adapter.repository.mybatis.smartform.mapper.SmartFormCommonCodeMapper">
+
+  <select id="selectList" resultType="com.ktmmobile.msf.domains.commoncode.domain.entity.CommonCode">
+    SELECT
+      cd_group_id AS groupId,
+      dtl_cd AS code,
+      dtl_cd_nm AS codeName,
+      use_yn AS useYn,
+      dtl_cd_abbr_nm AS "detail.abbrName",
+      dtl_cd_desc AS "detail.description",
+      up_grp_cd AS "detail.upperGroupId",
+      sort_odrg AS "detail.sortOrder",
+      expnsn_str_val1 AS "detail.etcValue1",
+      expnsn_str_val2 AS "detail.etcValue2",
+      expnsn_str_val3 AS "detail.etcValue3",
+      file_path_nm AS "detail.filePathName",
+      pstng_start_date AS "detail.startDate",
+      pstng_end_date AS "detail.endDate"
+    FROM msf_cd_dtl
+    ORDER BY cd_group_id, sort_odrg, dtl_cd
+  </select>
+
+</mapper>

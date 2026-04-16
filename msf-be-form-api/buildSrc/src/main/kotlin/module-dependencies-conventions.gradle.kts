@@ -8,10 +8,6 @@ if (project.path == ":app-boot") {
             ?.mapNotNull { it?.toString() }
             ?.toSet()
             ?: emptySet()
-        val excludedExternals = (extensions.extraProperties.properties["externalModuleExcludes"] as? Set<*>)
-            ?.mapNotNull { it?.toString() }
-            ?.toSet()
-            ?: emptySet()
 
         val commonProjects = rootProject.subprojects
             .filter { it.path.startsWith(":commons:") }
@@ -23,15 +19,9 @@ if (project.path == ":app-boot") {
             .filter { it.buildFile.exists() }
             .filterNot { excludedDomains.contains(it.name) || excludedDomains.contains(it.path) }
 
-        val externalProjects = rootProject.subprojects
-            .filter { it.path.startsWith(":external:") }
-            .filter { it.buildFile.exists() }
-            .filterNot { excludedExternals.contains(it.name) || excludedExternals.contains(it.path) }
-
         dependencies {
             commonProjects.forEach { add("implementation", project(it.path)) }
             domainProjects.forEach { add("implementation", project(it.path)) }
-            externalProjects.forEach { add("implementation", project(it.path)) }
         }
     }
 }

@@ -23,7 +23,7 @@ spring:
       - optional:classpath:application-private.yaml  # 개인용 설정 파일
 
   application:
-    name: FORM-API
+    name: form-api
     name-abbr: FRM
 
 

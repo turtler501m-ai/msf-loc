@@ -2,10 +2,22 @@ plugins {
     id("spring-library-conventions")
 }
 
+sourceSets {
+    main {
+        java {
+            exclude("**/form/appform_d/**")
+        }
+    }
+}
+
+tasks.processResources {
+    exclude("**/form/appform_d/**")
+}
+
 dependencies {
     implementation(project(":commons:common"))
-    implementation(project(":external:websecurity"))
-    implementation(project(":external:mybatis"))
+    implementation(project(":commons:websecurity"))
+    implementation(project(":commons:mybatis"))
 
     //local 구동을 위한 임시 추가
     implementation("org.apache.commons:commons-lang3:3.12.0")

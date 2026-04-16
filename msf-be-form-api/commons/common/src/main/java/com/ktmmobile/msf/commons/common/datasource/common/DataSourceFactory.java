@@ -2,6 +2,9 @@ package com.ktmmobile.msf.commons.common.datasource.common;
 
 import javax.sql.DataSource;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.AccessLevel;
@@ -15,6 +18,8 @@ import com.ktmmobile.msf.commons.common.datasource.common.property.DataSourceIte
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class DataSourceFactory {
+
+    private static final List<HikariDataSource> CREATED_DATA_SOURCES = new CopyOnWriteArrayList<>();
 
     public static DataSource create(
         String groupName,
@@ -32,8 +37,13 @@ public class DataSourceFactory {
         hikariConfig.setReadOnly(itemProperties.readOnly());
         hikariConfig.setPoolName(poolName);
         HikariDataSource dataSource = new HikariDataSource(hikariConfig);
+        CREATED_DATA_SOURCES.add(dataSource);
         logHikariConfig(poolName, hikariConfig);
         return dataSource;
+    }
+
+    public static List<HikariDataSource> getCreatedDataSources() {
+        return List.copyOf(CREATED_DATA_SOURCES);
     }
 
     private static void logHikariConfig(String poolName, HikariConfig hikariConfig) {

@@ -11,4 +11,4 @@ fun includeSubModules(parent: String) {
 }
 
 include("app-boot")
-listOf("commons", "domains", "external").forEach(::includeSubModules)
+listOf("commons", "domains").forEach(::includeSubModules)

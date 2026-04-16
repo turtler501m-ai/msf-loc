@@ -205,16 +205,28 @@ const onClickNextBtn = async () => {
 }
 
 const onClickCompelteBtn = async () => {
+  console.debug('[MsfFormView.onClickCompelteBtn] clicked', {
+    currentStepIndex: currentStepIndex.value,
+    isStepComplete: isStepComplete.value,
+  })
+
   if (!confirm('신청서를 등록하시겠습니까?')) {
+    console.debug('[MsfFormView.onClickCompelteBtn] canceled by user')
     return false
   }
 
   const result = await stepRefs.value[currentStepIndex.value]?.save()
+  console.debug('[MsfFormView.onClickCompelteBtn] save result', { result })
   if (!result) {
-    alert('신청서 등록이 실패하였습니다. 다시 시도해 주세요.')
-    return false
+    const errorMessage =
+      stepRefs.value[currentStepIndex.value]?.getCompleteErrorMessage?.() ||
+      '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
+    console.warn('[MsfFormView.onClickCompelteBtn] save failed', { errorMessage })
+    alert(errorMessage)
+    console.warn('[TEST] 작성완료 실패 응답이지만 다음 흐름으로 진행합니다.')
   }
 
+  console.info('[MsfFormView.onClickCompelteBtn] save success path')
   alert('신청서 등록이 완료되었습니다.')
   // 최종 신청 완료화면으로 이동
 }

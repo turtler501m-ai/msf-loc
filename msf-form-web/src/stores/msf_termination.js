@@ -4,11 +4,12 @@ import { api } from '@/libs/api/msf.api'
 
 export const useMsfFormTerminationStore = defineStore('msf_form_termination', () => {
   const applicationKey = ref('TEMP_' + Math.random().toString(36).substring(7))
+  const completeErrorMessage = ref('')
 
   // Step 1: Customer Info
   const customer = ref({
     /* 고객 유형 */
-    customerType: '',     // 고객유형 (NA:내국인, MI:미성년자, FO:외국인, FM:외국인미성년자, CO:법인, PB:공공기관)
+    customerType: 'NA',     // 고객유형 (NA:내국인, MI:미성년자, FO:외국인, FM:외국인미성년자, CO:법인, PB:공공기관)
     visitCustomer: '',    // 방문고객 (self:본인/대표, agent:대리인)
     /* 신분증 확인 */
     idCardScan: '',       // 신분증 스캔 종류
@@ -49,13 +50,15 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     afterTel1: '',        // 연락 전화번호 앞
     afterTel2: '',        // 연락 전화번호 중
     afterTel3: '',        // 연락 전화번호 뒤
-    postMethod: '',       // 해지 후 연락 수단 (mail:우편, email:이메일)
+    postMethod: 'E',       // 해지 후 연락 수단 (mail:우편, email:이메일)
     /* 가입유형 선택 */
     openingDate: '',      // 개통일자
     agencyName: '',       // 대리점
+    agentCd: 'MSF_FORM',  // DB 저장용 AGENT_CD 기본값
+    managerCd: 'MSF_FORM', // DB 저장용 MANAGER_CD 기본값
     /* 연동 키 값 */
-    ncn: 'TEST_NCN_001',  // [TEST] 계약번호 (운영 시 X01 조회값으로 대체)
-    custId: 'TEST_CUST_001', // [TEST] 고객ID (운영 시 X01 조회값으로 대체)
+    ncn: 'TESTNCN001',  // [TEST] 계약번호 (운영 시 X01 조회값으로 대체)
+    custId: 'TESTCUST001', // [TEST] 고객ID (운영 시 X01 조회값으로 대체)
   })
 
   // Step 2: Product (해지 정산)
@@ -94,21 +97,23 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     console.log('[X18] 잔여요금 조회 요청', { ncn })
     try {
       // ctn·custId는 백엔드에서 세션 계약 목록으로 조회 — ncn만 전송
-      const { data } = await api.post('/api/v1/cancel/remain-charge', { ncn })
+      const { data } = await api.post('/remainCharge/list', { ncn })
       console.log('[X18] 잔여요금 조회 응답', data)
       if (data?.success) {
         product.value.usageFee = data.sumAmt || ''
         product.value.remainChargeItems = data.items || []
         product.value.remainChargeLoaded = true
-        // 항목별 위약금 세팅 (gubun이 '위약금'인 항목)
-        const penaltyItem = data.items?.find((item) => item.gubun?.includes('위약금'))
-        if (penaltyItem) {
-          product.value.penaltyFee = penaltyItem.payment || ''
-        }
+        // 단일 항목 세팅 (백엔드 RemainChargeResVO 직접 필드)
+        product.value.penaltyFee = data.penaltyFee || ''
+        product.value.finalAmount = data.settlementFee || ''
+        product.value.remainPeriod = data.remainPeriod || ''
+        product.value.remainAmount = data.remainAmount || ''
         console.log('[X18] product 세팅 완료', {
           usageFee: product.value.usageFee,
           penaltyFee: product.value.penaltyFee,
-          items: product.value.remainChargeItems,
+          finalAmount: product.value.finalAmount,
+          remainPeriod: product.value.remainPeriod,
+          remainAmount: product.value.remainAmount,
         })
       } else {
         console.warn('[X18] 조회 실패 - success=false', data?.message)
@@ -153,13 +158,36 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
         product: product.value,
         agreement: agreement.value,
       }
-      await api.post(`/api/msf/formTermination/${applicationKey.value}/complete`, payload)
-      return true
+      console.debug('[apiCompleteApplication] request', {
+        applicationKey: applicationKey.value,
+        ncn: payload?.customer?.ncn,
+        customerType: payload?.customer?.customerType,
+        isActive: payload?.product?.isActive,
+      })
+      const { data } = await api.post(`/api/msf/formTermination/${applicationKey.value}/complete`, payload)
+      console.debug('[apiCompleteApplication] response', data)
+      if (data?.success) {
+        completeErrorMessage.value = ''
+        console.info('[apiCompleteApplication] success', { applicationNo: data?.applicationNo })
+        return true
+      }
+      completeErrorMessage.value = data?.message || '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
+      console.warn('Completion rejected', data)
+      return false
     } catch (e) {
-      console.error('Completion failed', e)
+      completeErrorMessage.value =
+        e?.response?.data?.message || '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
+      console.error('[apiCompleteApplication] exception', {
+        message: e?.message,
+        status: e?.response?.status,
+        response: e?.response?.data,
+      })
       return false
     }
   }
+
+  const getCompleteErrorMessage = () =>
+    completeErrorMessage.value || '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
 
   return {
     applicationKey,
@@ -167,6 +195,8 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     product,
     agreement,
     authFlags,
+    completeErrorMessage,
+    getCompleteErrorMessage,
     resetStep,
     apiGetRemainCharge,
     apiCompleteApplication,

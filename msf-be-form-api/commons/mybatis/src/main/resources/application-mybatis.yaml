@@ -1,0 +1,58 @@
+## Common Profile
+mybatis:
+  datasource:
+    smartform:
+      mapper-scan-packages:
+        - com.ktmmobile.msf.domains.**.adapter.repository.mybatis.smartform.mapper
+        - com.ktmmobile.msf.domains.**.repository.smartform
+      mapper-locations:
+        - classpath*:com/ktmmobile/msf/commons/mybatis/mapper/*.xml  # CommonMapper
+        - classpath*:com/ktmmobile/msf/domains/**/adapter/repository/mybatis/smartform/mapper/*.xml
+        - classpath*:com/ktmmobile/msf/domains/**/repository/smartform/*.xml
+    msp:
+      mapper-scan-packages:
+        - com.ktmmobile.msf.domains.**.adapter.repository.mybatis.msp.mapper
+        - com.ktmmobile.msf.domains.**.repository.msp
+      mapper-locations:
+        - classpath*:com/ktmmobile/msf/commons/mybatis/mapper/*.xml  # CommonMapper
+        - classpath*:com/ktmmobile/msf/domains/**/adapter/repository/mybatis/msp/mapper/*.xml
+        - classpath*:com/ktmmobile/msf/domains/**/repository/msp/*.xml
+  type-handlers-packages:
+    - com.ktmmobile.msf.commons.mybatis.typehandler.global
+    - com.ktmmobile.msf.domains.**.adapter.repository.mybatis.msp.typehandler
+    - com.ktmmobile.msf.domains.**.adapter.repository.mybatis.smartform.typehandler
+  type-aliases-packages:
+    - com.ktmmobile.msf.domains.**.domain
+    - com.ktmmobile.msf.domains.**.dto
+
+  query-id:
+    enabled: true
+    prefix: ${spring.application.name}
+
+
+
+---
+## LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+
+
+---
+## PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+
+
+---
+## STG Profile
+spring:
+  config.activate.on-profile: stg
+
+
+
+---
+## DEV Profile
+spring:
+  config.activate.on-profile: dev

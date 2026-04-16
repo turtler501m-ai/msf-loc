@@ -2,18 +2,6 @@
 spring:
   #### DataSource
   datasource:
-    groups:
-      ## 스마트서식지
-      smartform:
-        reader:
-          url: jdbc:postgresql://
-        writer:
-          url: jdbc:postgresql://
-
-      ## M전산
-      msp:
-        standalone:
-          url: jdbc:postgresql://
 
   #### Spring Data
   data:

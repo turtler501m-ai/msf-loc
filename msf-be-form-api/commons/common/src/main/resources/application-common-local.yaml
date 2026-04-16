@@ -10,7 +10,7 @@ spring:
       ## 스마트서식지
       smartform:
         writer:
-          url: jdbc:postgresql://211.184.227.24:45432/msf_core?currentSchema=smartform
+          url: jdbc:log4jdbc:postgresql://211.184.227.24:45432/msf_core?currentSchema=smartform
           username: ENC(thA33IuMOECiHqyms2uS27np3TgktbegPCUdj3EjldM9A/tbNFHJ/JBpYzML2hZw)
           password: ENC(hzVv7kRZCnauKm5MKtE3u4VJ18ZChTgxfxwfTD+xWxbzIeQcgLaXHZoXyRYV4FqaAlti+hnUPvmSyRuvWvFIdw==)
           hikari:
@@ -25,7 +25,7 @@ spring:
       ## M전산
       msp:
         standalone:
-          url: jdbc:oracle:thin:@10.220.71.231:2521:MSPDEV
+          url: jdbc:log4jdbc:oracle:thin:@10.220.71.231:2521:MSPDEV
           username: ENC(wEFQiRtDlU3uKddGAg/7dB94KeYcusJz8jhYLqaa+NMNeiIsU6uaCfBw39RWrPtW)
           password: ENC(LPbBY5knhFrbtRuJOQRNap5ms+S+uE7id2NhBTspqOaqIVbATF+k1LbdH2wYOtni)
           hikari:
@@ -33,6 +33,7 @@ spring:
             idle-timeout: 290000
 
     hikari:
+      driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
       minimum-idle: 3
       idle-timeout: 59000
 
@@ -46,12 +47,6 @@ spring:
       port: 6379
       username: ENC(...)
       password: ENC(...)
-
-  docker:
-    compose:
-      enabled: false
-      file: tools/docker/compose.yaml
-      lifecycle-management: start_only
 
 management:
   health:
@@ -74,11 +69,14 @@ internal-service:
 logging:
   pattern:
     correlation: "[%X{clientId}] "
+  on-ready:
+    jdbc:
+      sqltiming: debug
   level:
     com.ktmmobile.msf: debug
     jdbc:
       sqlonly: off
-      sqltiming: debug
+      sqltiming: off
       resultsettable: debug
       audit: off
       resultset: off
