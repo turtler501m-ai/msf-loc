@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Spring Boot 기본 프로퍼티 (CONSOLE_LOG_PATTERN 등) 로드 -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!--
+        jdbc.resultsettable 100줄 초과 시 잘라내는 ConsoleAppender.
+        TurboFilter(재귀) 대신 PatternLayout 서브클래스(TruncatingTurboFilter)로 처리.
+    -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="com.ktmmobile.msf.appboot.logging.TruncatingTurboFilter">
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <maxLines>200</maxLines>
+        </layout>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>
