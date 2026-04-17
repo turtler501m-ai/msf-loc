@@ -25,5 +25,36 @@
         )
         WHERE RNUM = 1
     </select>
+
+  <select id="selectCntrList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    SELECT
+    A.USERID
+    , A.CNTR_MOBILE_NO
+    , A.SYS_RDATE
+    , B.SVC_CNTR_NO
+    , B.CONTRACT_NUM
+    , A.REP_NO
+    , B.CUSTOMER_ID AS CUST_ID
+    , B.MODEL_NAME
+    , B.MODEL_ID
+    , B.SUB_STATUS
+    , A.CNTR_MOBILE_NO AS unSvcNo
+    , B.USER_SSN AS unUserSSn
+    , (SELECT CUSTOMER_TYPE FROM MSP_JUO_CUS_INFO@DL_MSP WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS CSTMR_TYPE
+    , (SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO@DL_MSP WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS userName
+    , B.OPEN_AGNT_CD
+    , B.LST_COM_ACTV_DATE
+    , B.PPPO
+    FROM MCP_USER_CNTR_MNG@DL_MCP A, MSP_JUO_SUB_INFO B
+    WHERE UPPER(A.USERID) = UPPER(#{userId})
+    AND A.SVC_CNTR_NO = B.CONTRACT_NUM
+    <if test="customerId != null and customerId != ''">
+      AND A.CUSTOMER_ID = #{customerId}
+    </if>
+    AND B.SUB_STATUS <![CDATA[<>]]> 'C'
+    ORDER BY A.REP_NO ASC
+  </select>
+
 </mapper>
+
 
