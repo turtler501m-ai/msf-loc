@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.appform_d.adapter.repository.mybatis.smartform.mapper.SmartCdMapper">
+
+  <select id="selectList" resultType="com.ktmmobile.msf.domains.form.form.appform_d.domain.entity.SmartCd">
+    SELECT
+    cd_group_id
+    , dtl_cd
+    , dtl_cd_nm
+    , use_yn
+    FROM MSF_CD_DTL
+    <where>
+      <if test='@org.springframework.util.StringUtils@hasText(cdGroupId)'>
+        AND CD_GROUP_ID LIKE CONCAT(#{cdGroupId}, '%')
+      </if>
+      <if test='@org.springframework.util.StringUtils@hasText(useYn)'>
+        AND USE_YN LIKE CONCAT(#{useYn}, '%')
+      </if>
+    </where>
+    order by sort_odrg
+  </select>
+
+</mapper>
+

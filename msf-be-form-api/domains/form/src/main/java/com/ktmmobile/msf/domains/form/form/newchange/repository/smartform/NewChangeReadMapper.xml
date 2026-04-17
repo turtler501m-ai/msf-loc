@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper">
+
+  <resultMap id="requestMap" type="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeStepDto">
+    <collection property="step1Dto"></collection>
+    <collection property="step2Dto"></collection>
+    <collection property="step3Dto"></collection>
+  </resultMap>
+
+  <select id="generateSmartResNo" resultType="java.lang.String">
+    <!--SELECT NEXTVAL('SQ_REQUEST_RES_NO_KEY')-->
+    SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_REQUEST_RES_NO_KEY')::TEXT, 5, '0'))
+  </select>
+
+  <select id="generateSmartRequestKey" resultType="java.lang.Long">
+    <!--SELECT NEXTVAL('SQ_REQUEST_KEY')-->
+    SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_REQUEST_KEY')::TEXT, 5, '0'))
+  </select>
+
+  <select id="getSmartCustRequestSeq" resultType="java.lang.Long">
+    <!--SELECT NEXTVAL('SQ_NFL_CHG_TRNS_SEQ')-->
+    SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_NFL_CHG_TRNS_SEQ')::TEXT, 5, '0'))
+  </select>
+
+  <select id="selectNewChangeInfo" resultMap="requestMap">
+    /* 신규변경 작성내용 조회 */
+    SELECT
+    A.*
+    FROM MSF_REQUEST_TEMP A, MSF_REQUEST_AGENT_TEMP B, MSF_REQUEST_CSTMR_TEMP C, MSF_REQUEST_SALE_TEMP D, MSF_REQUEST_BILL_REQ_TEMP E
+    WHERE A.REQUEST_KEY = B.REQUEST_KEY
+    AND A.REQUEST_KEY = C.REQUEST_KEY
+    AND A.REQUEST_KEY = D.REQUEST_KEY
+    AND A.REQUEST_KEY = E.REQUEST_KEY
+    AND A.REQUEST_KEY=#{requestKey}
+    AND C.FORM_TYPE_CD =#{formTypeCd}
+  </select>
+
+  <!--<select id="selectMsfRequestInfo" parameterType="integer"-->
+  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestDto">-->
+  <!--  SELECT-->
+  <!--  REQUEST_KEY-->
+  <!--  FROM MSF_REQUEST-->
+  <!--  WHERE REQUEST_KEY = #{requestKey}-->
+  <!--</select>-->
+
+  <!--<select id="selectMsfRequestAgentInfo" parameterType="integer"-->
+  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo.MsfRequestAgentVo">-->
+  <!--  SELECT-->
+  <!--  REQUEST_KEY-->
+  <!--  FROM MSF_REQUEST_AGENT-->
+  <!--  WHERE REQUEST_KEY = #{requestKey}-->
+  <!--</select>-->
+
+  <!--<select id="selectMsfRequestCstmrInfo" parameterType="integer"-->
+  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestCstmrDto">-->
+  <!--  SELECT-->
+  <!--  REQUEST_KEY-->
+  <!--  FROM MSF_REQUEST_CSTMR-->
+  <!--  WHERE REQUEST_KEY = #{requestKey}-->
+  <!--</select>-->
+
+  <!--<select id="selectMsfRequestSaleInfo" parameterType="integer"-->
+  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestSaleDto">-->
+  <!--  SELECT-->
+  <!--  REQUEST_KEY-->
+  <!--  FROM MSF_REQUEST_SALE-->
+  <!--  WHERE REQUEST_KEY = #{requestKey}-->
+  <!--</select>-->
+
+  <!--<select id="selectMsfRequestBillReqInfo" parameterType="integer"-->
+  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestBillReqDto">-->
+  <!--  SELECT-->
+  <!--  REQUEST_KEY-->
+  <!--  FROM MSF_REQUEST_BILL_REQ-->
+  <!--  WHERE REQUEST_KEY = #{requestKey}-->
+  <!--</select>-->
+
+
+</mapper>

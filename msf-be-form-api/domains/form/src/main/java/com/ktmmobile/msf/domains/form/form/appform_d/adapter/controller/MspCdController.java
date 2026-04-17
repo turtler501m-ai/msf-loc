@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
+import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.form.form.appform_d.application.dto.MspCdCondition;
 import com.ktmmobile.msf.domains.form.form.appform_d.application.dto.MspCdResponse;
 import com.ktmmobile.msf.domains.form.form.appform_d.application.port.in.MspCdReader;
-import com.ktmmobile.msf.external.websecurity.web.dto.response.CommonResponse;
-import com.ktmmobile.msf.external.websecurity.web.util.response.ResponseUtils;
 
 @RestController
 @RequiredArgsConstructor

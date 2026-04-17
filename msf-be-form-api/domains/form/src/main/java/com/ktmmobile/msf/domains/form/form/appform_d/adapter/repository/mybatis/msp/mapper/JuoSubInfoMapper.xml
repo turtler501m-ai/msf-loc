@@ -4,23 +4,17 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.form.form.appform_d.adapter.repository.mybatis.msp.mapper.JuoSubInfoMapper">
 
-  <resultMap id="juoSubInfoMap" type="com.ktmmobile.msf.domains.form.form.appform_d.domain.entity.JuoSubInfo">
-    <result property="contractNum" column="CONTRACT_NUM" />
-    <result property="customerSsn" column="USER_SSN" />
-    <result property="customerLinkName" column="CUSTOMER_LINK_NAME" />
-    <result property="subscriberNo" column="SUBSCRIBER_NO" />
-    <result property="subStatus" column="SUB_STATUS" />
-    <result property="lstComActvDate" column="LST_COM_ACTV_DATE" />
-    <result property="iccId" column="ICC_ID" />
-    <result property="lglAgntSsn" column="LGL_AGNT_SSN" />
-    <result property="enggInfo" column="ENGG_INFO" />
-    <result property="histYn" column="HIST_YN" />
-    <result property="dvcChgDt" column="DVC_CHG_DT" />
-    <result property="dvcEnggMnthCnt" column="DVC_ENGG_MNTH_CNT" />
-  </resultMap>
+  <!--<resultMap id="juoSubInfoMap" type="com.ktmmobile.msf.domains.form.form.appform_d.domain.entity.JuoSubInfo">-->
+  <!--  <result property="contractNum" column="CONTRACT_NUM" />-->
+  <!--  <result property="customerSsn" column="USER_SSN" />-->
+  <!--  <result property="customerLinkName" column="CUSTOMER_LINK_NAME" />-->
+  <!--  <result property="subscriberNo" column="SUBSCRIBER_NO" />-->
+  <!--  <result property="lglAgntSsn" column="LGL_AGNT_SSN" />-->
+  <!--  <result property="dvcChgYn" column="DVC_CHG_YN" />-->
+  <!--</resultMap>-->
 
-  <!--<select id="selectKtmCustomer" resultType="com.ktmmobile.msf.apps.formapi.form.newchange.domain.entity.JuoSubInfo">-->
-  <select id="selectKtmCustomer" resultMap="juoSubInfoMap">
+  <select id="selectKtmCustomer" resultType="com.ktmmobile.msf.domains.form.form.appform_d.domain.entity.JuoSubInfo">
+    <!--<select id="selectKtmCustomer" resultMap="juoSubInfoMap">-->
     <![CDATA[
         WITH CNTR AS (
             SELECT
