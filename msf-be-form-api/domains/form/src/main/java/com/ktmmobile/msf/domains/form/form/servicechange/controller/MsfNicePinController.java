@@ -10,10 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.NiceLogDto;
@@ -29,7 +28,7 @@ import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUC
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
 
-@Controller
+@RestController
 public class MsfNicePinController {
 
     private static Logger logger = LoggerFactory.getLogger(MsfNicePinController.class);
@@ -55,7 +54,6 @@ public class MsfNicePinController {
      * @return
      */
     @RequestMapping(value = "/auth/getNicePinCiAjax.do")
-    @ResponseBody
     public Map<String, String> getNicePinCi(
         HttpServletRequest request, NiceLogDto niceLogDto
         , @RequestParam(value = "contractNum", required = false) String contractNum

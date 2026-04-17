@@ -14,14 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.MyNameChgReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
@@ -39,7 +38,7 @@ import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 
-@Controller
+@RestController
 public class MsfMypageController {
 
     private static final Logger logger = LoggerFactory.getLogger(MsfMypageController.class);
@@ -57,26 +56,19 @@ public class MsfMypageController {
     @Autowired
     private MsfCustRequestScanService custRequestScanService;
 
-    /**
-     * MCP 휴대폰 회선관리 리스트를 가지고 온다.
-     * @param userId
-     * @return List<McpUserCntrMngDto>
-     */
     @RequestMapping(value = "/mypage/cntrList", method = {RequestMethod.POST,RequestMethod.GET})
     public List<McpUserCntrMngDto> cntrList(@RequestBody String userId) {
-
         List<McpUserCntrMngDto> cntrList = null;
         try {
-            // Database 에서 조회함.
             cntrList = msfMypageSvc.selectCntrList(userId);
         } catch(DataAccessException e){
             throw new McpCommonJsonException(DB_EXCEPTION);
-        }  catch(Exception e) {
+        } catch(Exception e) {
             throw new McpCommonJsonException(COMMON_EXCEPTION);
         }
         return cntrList;
     }
-//
+
 //	/**
 //	 * MCP 휴대폰 회선관리 리스트를 가지고 온다. ajax
 //	 * @param userId
@@ -131,7 +123,6 @@ public class MsfMypageController {
      */
 
     @RequestMapping(value = { "/mypage/socDescAjax.do", "/m/mypage/socDescAjax.do" })
-    @ResponseBody
     public HashMap<String, Object> doSocDescAjax(HttpServletRequest request, Model model,
             @RequestParam(value = "contractNum", required = true) String contractNum) {
 
@@ -283,7 +274,6 @@ public class MsfMypageController {
      * @return MspJuoAddInfoDto
      */
     @RequestMapping(value = "/mypage/checkAuthUser.do")
-    @ResponseBody
     public Map<String,String> checkAuthUser(@RequestParam(value= "name") String name,
                                             @RequestParam(value= "paramR1") String paramR1,
                                             @RequestParam(value= "paramR2") String paramR2) {
@@ -297,7 +287,6 @@ public class MsfMypageController {
      * @return
      */
     @RequestMapping(value = "/mypage/sendSyntheticScanAjax.do")
-    @ResponseBody
     public Map<String, Object> sendSyntheticScan(MyNameChgReqDto myNameChgReqDto) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();

@@ -19,13 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
@@ -54,7 +53,7 @@ import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 
-@Controller
+@RestController
 public class MsfPauseController {
 
     private static Logger logger = LoggerFactory.getLogger(MsfPauseController.class);
@@ -187,7 +186,6 @@ public class MsfPauseController {
      * 일시정지가능여부 조회 ajax
      */
     @RequestMapping("/mypage/getSuspenPosInfoAjax.do")
-    @ResponseBody
     public Map<String, Object> getSuspenPosInfoAjax(@RequestParam(value = "strNcn", required=false, defaultValue="") String strNcn)  {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
@@ -359,7 +357,6 @@ public class MsfPauseController {
 
     // 일시정지 신청
     @RequestMapping(value="/mypage/suspenChgAjax.do")
-    @ResponseBody
     public Map<String,Object> suspenChgAjax(HttpServletRequest request, ModelMap model,HttpSession session,
             @ModelAttribute("searchVO") MyPageSearchDto searchVO,
             String reasonCode, String cpEndDt, String cpStartDt, String cpPwdInsert,String userMemo)  {
@@ -675,7 +672,6 @@ public class MsfPauseController {
      * 일신정지 해지 신청 ajax
      */
     @RequestMapping(value="/mypage/suspenCnlChgInAjax.do")
-    @ResponseBody
     public Map<String, Object> suspenCnlChgInAjax( HttpServletRequest request, ModelMap model,HttpSession session,
             @RequestParam(value = "strNcn", required=false, defaultValue="") String strNcn
             , @RequestParam(value = "cpPwdInsert", required=false, defaultValue="") String cpPwdInsert ) {
@@ -938,7 +934,6 @@ public class MsfPauseController {
      * 분실신고가능여부 조회 ajax
      */
     @RequestMapping(value="/mypage/pcsLostInfoAjax.do")
-    @ResponseBody
     public Map<String,Object> pcsLostInfoAjax(HttpServletRequest request, ModelMap model, @ModelAttribute("searchVO") MyPageSearchDto searchVO)  {
 
         String message = "";
@@ -1061,7 +1056,6 @@ public class MsfPauseController {
      * 분실신고 신청 ajax
      */
     @RequestMapping(value="/mypage/pcsLostChgAjax.do")
-    @ResponseBody
     public Map<String,Object> pcsLostChgAjax(HttpServletRequest request, ModelMap model, @ModelAttribute("searchVO") MyPageSearchDto searchVO,
             String loseType, String guideYn, String cntcTlphNo, String loseCont, String loseLocation, String strPwdInsert )  {
 
@@ -1219,7 +1213,6 @@ public class MsfPauseController {
      * 분실신고 신청 ajax
      */
     @RequestMapping(value="/mypage/pcsLostCnlChgAjax.do")
-    @ResponseBody
     public Map<String,Object> pcsLostCnlChgAjax(HttpServletRequest request, ModelMap model, @ModelAttribute("searchVO") MyPageSearchDto searchVO,
             String strPwdNumInsert)  {
 

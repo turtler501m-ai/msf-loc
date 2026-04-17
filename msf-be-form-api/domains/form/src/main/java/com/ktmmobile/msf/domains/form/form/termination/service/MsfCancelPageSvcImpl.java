@@ -6,10 +6,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.domains.form.common.repository.McpApiClient;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonBillingInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonDetailInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO;
@@ -42,8 +42,9 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     @Autowired
     private MsfChangPageSvc msfChangPageSvc;
 
-    @Value("${api.interface.server}")
-    private String apiInterfaceServer;
+    @Autowired
+    private McpApiClient mcpApiClient;
+
     @Override
     public RemainChargeResVO getRemainCharge(RemainChargeReqDto reqDto) {
         // AS-IS reference: getRealTimePriceAjax -> X18 real-time remain charge
@@ -155,8 +156,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
 
     /**
      * AS-IS(MyOllehController requestView 위약금 블록) 분리 함수.
-     * SRM18062741675 기준으로 X54/X16/mspAddInfo 흐름을 MsfMypageSvc 로직으로 조회한다.
-     * 현재 getRemainCharge 에서는 호출하지 않는다.
+     * SRM18062741675 기준으로 X54/X16/mspAddInfo 흐름
      */
     private TerminationSettlementDto getTerminationSettlement(RemainChargeReqDto reqDto) {
         // SRM18062741675 / AS-IS(MyOllehController requestView 위약금 블록) 이관
@@ -235,8 +235,12 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
 
                 try {
                     // 할부원금 조회(MSP_JUO_ADD_INFO)
+                    // [ASIS] MyOllehController.requestView() — mcp-api REST 직접 호출
+                    //   RestTemplate restTemplate = new RestTemplate();
+                    //   mspJuoAddInfoDto = restTemplate.postForObject(apiInterfaceServer + "/mypage/mspAddInfo", searchVO.getNcn(), MspJuoAddInfoDto.class);
+                    // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패 시 MspApiDirectRepository(mcpSqlSession)로 자동 전환
                     logger.debug("[getTerminationSettlement] mspAddInfo request: ncn={}", safe(ncn));
-                    MspJuoAddInfoDto mspJuoAddInfoDto = msfChangPageSvc.selectMspAddInfo(ncn);
+                    MspJuoAddInfoDto mspJuoAddInfoDto = mcpApiClient.post("/mypage/mspAddInfo", ncn, MspJuoAddInfoDto.class);
                     logger.debug("[getTerminationSettlement] mspAddInfo response: ncn={}, hasBody={}",
                         safe(ncn), mspJuoAddInfoDto != null);
                     if (mspJuoAddInfoDto != null) {
@@ -258,19 +262,22 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     }
 
     /**
-     * 선불 요금제 사용 여부 조회 (AS-IS /mypage/prePayment 내부 DB 조회 이관)
+     * 선불 요금제 사용 여부 조회 (AS-IS /mypage/prePayment MCP-API 연계구현 )
      * @param contractNum 계약번호
      * @return 선불 요금제 여부
      */
     private boolean isPrePayment(String contractNum) {
-        try {
-            //ASIS MypageMapper  selectPrePayment
-            int count = cancelPageRepository.selectPrePayment(contractNum);
-            return count >= 1;
-        } catch (Exception e) {
-            logger.warn("[isPrePayment] error: ncn={}", safe(contractNum), e);
-            return false;
-        }
+        logger.debug("[isPrePayment] call: contractNum={}", safe(contractNum));
+
+        // [ASIS] MypageController.prePayment() — mcp-api REST 직접 호출 후 MSP DB 조회
+        //   POST /mypage/prePayment  →  mypageMapper.selectPrePayment(contractNum)
+        //   RestTemplate restTemplate = new RestTemplate();
+        //   int cnt = restTemplate.postForObject(apiInterfaceServer + "/mypage/prePayment", contractNum, int.class);
+        // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패(TEST) MspApiDirectRepository(mcpSqlSession)로 자동 전환
+        int cnt = mcpApiClient.post("/mypage/prePayment", contractNum, int.class);
+
+        logger.debug("[isPrePayment] result: cnt={}", cnt);
+        return cnt >= 1;
     }
 
     @Override
@@ -286,8 +293,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             logger.warn("[apply] validation failed: ncn={}, reason={}",
                 reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
                 validationMessage);
-            //TEST_SKIP
-            return TerminationApplyResVO.fail(validationMessage);
+            //TEST_SKIP  return TerminationApplyResVO.fail(validationMessage);
         }
 
         String managerCd = safe(reqDto.getCustomer().getManagerCd());
@@ -542,7 +548,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     }
 
     private boolean isLocal() {
-        return apiInterfaceServer != null && apiInterfaceServer.startsWith("LOCAL");
+        return mcpApiClient.isLocal();
     }
 
     private static boolean isBlank(String value) {

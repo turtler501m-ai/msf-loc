@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="ChangPageApiMapper">
+<mapper namespace="ChangPageMapper">
     <select id="selectMspAddInfo" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto">
         SELECT CONTRACT_NUM
              , DVC_OFW_AMNT
@@ -53,6 +53,36 @@
     </if>
     AND B.SUB_STATUS <![CDATA[<>]]> 'C'
     ORDER BY A.REP_NO ASC
+  </select>
+
+  <select id="selectCntrListNoLogin" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    SELECT
+    A.SVC_CNTR_NO
+    , A.CONTRACT_NUM
+    , A.CUSTOMER_ID AS CUST_ID
+    , A.MODEL_NAME
+    , A.MODEL_ID
+    , A.SUBSCRIBER_NO AS CNTR_MOBILE_NO
+    , A.SUB_STATUS
+    , A.DOBYYYYMMDD
+    , A.SUB_LINK_NAME AS USER_NAME
+    , A.USER_SSN AS unUserSSn
+    , A.LST_COM_ACTV_DATE
+    , B.CUSTOMER_ID
+    , B.CUSTOMER_TYPE
+    , A.PPPO
+    FROM MSP_JUO_SUB_INFO A, MSP_JUO_CUS_INFO B
+    WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
+    <if test="svcCntrNo != null and svcCntrNo != ''">
+      AND A.SVC_CNTR_NO = #{svcCntrNo}
+    </if>
+    <if test="cntrMobileNo != null and cntrMobileNo != ''">
+      AND A.SUBSCRIBER_NO= TRIM(#{cntrMobileNo})
+    </if>
+    <if test="subLinkName != null and subLinkName != ''">
+      AND UPPER(REPLACE(A.SUB_LINK_NAME,' ','')) = UPPER(REPLACE(#{subLinkName},' ',''))
+    </if>
+    AND SUB_STATUS <![CDATA[<>]]> 'C'
   </select>
 
 </mapper>

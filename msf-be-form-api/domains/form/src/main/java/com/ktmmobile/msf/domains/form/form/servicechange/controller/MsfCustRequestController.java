@@ -2,6 +2,8 @@ package com.ktmmobile.msf.domains.form.form.servicechange.controller;
 
 import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NICE_CERT_EXCEPTION_INSR;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,12 +21,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestClientException;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.CustRequestDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
@@ -41,6 +42,7 @@ import com.ktmmobile.msf.domains.form.common.dto.NiceResDto;
 import com.ktmmobile.msf.domains.form.common.dto.ResponseSuccessDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
 import com.ktmmobile.msf.domains.form.common.dto.db.MspSmsTemplateMstDto;
+import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
@@ -52,7 +54,7 @@ import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 
-@Controller
+@RestController
 public class MsfCustRequestController {
 
     private static final Logger logger = LoggerFactory.getLogger(MsfCustRequestController.class);
@@ -294,32 +296,19 @@ public class MsfCustRequestController {
      * @return string(pageUrl)
      */
     @RequestMapping(value= {"/m/mypage/reqInsr.do","/mypage/reqInsr.do"})
-    public String reqInsr(HttpServletRequest request, @ModelAttribute("searchVO") MyPageSearchDto searchVO, Model model) {
+    public Map<String, Object> reqInsr(HttpServletRequest request, @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
-        String jspPageName = "/portal/mypage/reqInsr";
-        String thisPageName ="/mypage/reqInsr.do";
-        if("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            jspPageName = "/mobile/mypage/reqInsr";
-            thisPageName ="/m/mypage/reqInsr.do";
-        }
-
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();  //중복요청 체크
-        checkOverlapDto.setRedirectUrl(thisPageName);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
+        if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) {
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
+        }
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if(!chk){
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
         /**************** 계약번호로 안심보험 가입정보 조회하여 보험타입 구하기 start  ***************************/
@@ -429,7 +418,7 @@ public class MsfCustRequestController {
 
         // 마스킹해제
         if(SessionUtils.getMaskingSession() > 0 ) {
-            model.addAttribute("maskingSession", "Y");
+            rtnMap.put("maskingSession", "Y");
             MaskingDto maskingDto = new MaskingDto();
 
             long maskingRelSeq = SessionUtils.getMaskingSession();
@@ -443,11 +432,11 @@ public class MsfCustRequestController {
             maskingSvc.insertMaskingReleaseHist(maskingDto);
         }
 
-        model.addAttribute("searchVO", searchVO);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("insrType", insrViewType);
-
-        return jspPageName;
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("insrType", insrViewType);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
 
@@ -458,7 +447,6 @@ public class MsfCustRequestController {
      * @return Map<String, Object>
      */
     @RequestMapping(value = "/mypage/custRequestAjax.do")
-    @ResponseBody
     public Map<String, Object> custRequestAjax(CustRequestDto custRequestDto) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
@@ -814,7 +802,6 @@ public class MsfCustRequestController {
     */
     // TOBESKIP: 사용자 정보 조회 Ajax는 연결 화면 근거가 없어 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/mypage/getUserInfoAjax.do")
-    @ResponseBody
     public Map<String, Object> getUserInfoAjax() {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
         UserSessionDto userSession = SessionUtils.getUserCookieBean();

@@ -18,12 +18,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.ResponseSuccessDto;
@@ -83,7 +82,7 @@ import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgCo
  * 마이페이지 > 요금제/부가서비스 > 요금제 변경
  */
 
-@Controller
+@RestController
 public class MsfFarPricePlanController {
 
     private static final Logger logger = LoggerFactory.getLogger(MsfFarPricePlanController.class);
@@ -135,16 +134,11 @@ public class MsfFarPricePlanController {
      */
 
     @RequestMapping(value = {"/mypage/farPricePlanView.do", "/m/mypage/farPricePlanView.do"})
-    public String doFarPricePlanView(
-        HttpServletRequest request, Model model,
+    public Map<String, Object> doFarPricePlanView(
+        HttpServletRequest request,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO
     ) {
-
-        String returnUrl = "/portal/mypage/farPricePlanView";
-
-        if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            returnUrl = "/mobile/mypage/farPricePlanView";
-        }
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
@@ -154,9 +148,7 @@ public class MsfFarPricePlanController {
 
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSessionDto);
         if (!chk) {
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
         // 요금제 정보
@@ -184,7 +176,7 @@ public class MsfFarPricePlanController {
 
         // 마스킹해제
         if (SessionUtils.getMaskingSession() > 0) {
-            model.addAttribute("maskingSession", "Y");
+            rtnMap.put("maskingSession", "Y");
             MaskingDto maskingDto = new MaskingDto();
 
             long maskingRelSeq = SessionUtils.getMaskingSession();
@@ -198,12 +190,12 @@ public class MsfFarPricePlanController {
             maskingSvc.insertMaskingReleaseHist(maskingDto);
         }
 
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("searchVO", searchVO);
-        model.addAttribute("isPriceChange", "TRUE");
-        model.addAttribute("mcpFarPriceDto", mcpFarPriceDto);
-
-        return returnUrl;
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("isPriceChange", "TRUE");
+        rtnMap.put("mcpFarPriceDto", mcpFarPriceDto);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
 
     }
 
@@ -219,7 +211,6 @@ public class MsfFarPricePlanController {
      */
 
     @RequestMapping(value = {"/mypage/myRateResvViewAjax.do", "/m/mypage/myRateResvViewAjax.do"})
-    @ResponseBody
     public HashMap<String, Object> doMyRateResvViewAjax(
         HttpServletRequest request, Model model,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO,
@@ -386,7 +377,6 @@ public class MsfFarPricePlanController {
      */
 
     @RequestMapping(value = {"/mypage/chgRateInfoViewAjax.do", " /m/mypage/chgRateInfoViewAjax.do"})
-    @ResponseBody
     public HashMap<String, Object> chgRateInfoViewAjax(
         HttpServletRequest request, Model model,
         @ModelAttribute("mcpFarPriceDto") McpFarPriceDto mcpFarPriceDto
@@ -422,7 +412,6 @@ public class MsfFarPricePlanController {
      * @throws SocketTimeoutException
      */
     @RequestMapping(value = {"/mypage/farPricePlanResChgAjax.do", "/m/mypage/farPricePlanResChgAjax.do"})
-    @ResponseBody
     public HashMap<String, Object> farPricePlanResChgAjax(
         HttpServletRequest request, Model model
         , @RequestParam(value = "contractNum", required = false) String contractNum
@@ -522,7 +511,6 @@ public class MsfFarPricePlanController {
      */
 
     @RequestMapping(value = "/batch/resChangeAddPrdAjax.do")
-    @ResponseBody
     public String resChangeAddPrd(McpIpStatisticDto ipStatistic, @RequestParam(required = false, defaultValue = "9") String modPara)
         throws InterruptedException {
 
@@ -691,7 +679,6 @@ public class MsfFarPricePlanController {
      */
 
     @RequestMapping(value = {"/mypage/farPricePlanChgAjax.do", "/m/mypage/farPricePlanChgAjax.do"})
-    @ResponseBody
     public Map<String, Object> proPriceChg(
         @ModelAttribute MyPageSearchDto searchVO, @RequestParam String toSocCode,
         @ModelAttribute McpServiceAlterTraceDto paraAlterTrace
@@ -801,7 +788,6 @@ public class MsfFarPricePlanController {
      */
 
     @RequestMapping(value = {"/mypage/deleteMyRateResvAjax.do", "/m/mypage/deleteMyRateResvAjax.do"})
-    @ResponseBody
     public HashMap<String, Object> deleteMyRateResvAjax(
         HttpServletRequest request, Model model,
         @ModelAttribute MyPageSearchDto searchVO,
@@ -853,7 +839,6 @@ public class MsfFarPricePlanController {
     // TOBESKIP: 카테고리 1 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = {"/mypage/farPriceCtgTab1Ajax.do", "/m/mypage/farPriceCtgTab1Ajax.do"})
     @Deprecated
-    @ResponseBody
     public MapWrapper farPriceCtgTab1Ajax(HttpServletRequest request, HttpServletResponse response) {
         MapWrapper mapWrapper = farPricePlanService.getCtgMapWrapper();
         return mapWrapper;
@@ -875,7 +860,6 @@ public class MsfFarPricePlanController {
     // TOBESKIP: 카테고리 2 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = {"/mypage/farPriceCtgTab2Ajax.do", "/m/mypage/farPriceCtgTab2Ajax.do"})
     @Deprecated
-    @ResponseBody
     public HashMap<String, Object> getFarPricePlanListAjax2(
         HttpServletRequest request, Model model,
         @ModelAttribute("rateAdsvcCtgBasDTO") RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO,
@@ -913,7 +897,6 @@ public class MsfFarPricePlanController {
     // TOBESKIP: 카테고리 3 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = {"/mypage/farPriceCtgTab3Ajax.do", "/m/mypage/farPriceCtgTab3Ajax.do"})
     @Deprecated
-    @ResponseBody
     public HashMap<String, Object> getFarPricePlanListAjax3(
         HttpServletRequest request, Model model,
         @ModelAttribute("rateAdsvcCtgBasDTO") RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO,
@@ -955,7 +938,6 @@ public class MsfFarPricePlanController {
     // TOBESKIP: 상세 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = {"/mypage/farPriceContent.do", "/m/mypage/farPriceContent.do"})
     @Deprecated
-    @ResponseBody
     public HashMap<String, Object> farPriceContent(
         HttpServletRequest request, HttpServletResponse response,
         @ModelAttribute RateAdsvcCtgBasDTO rateAdsvcCtgBasDTO,
@@ -980,7 +962,6 @@ public class MsfFarPricePlanController {
      */
 
     @RequestMapping(value = {"/mypage/possibleStateCheckAjax.do", "/m/mypage/possibleStateCheckAjax.do"})
-    @ResponseBody
     public Map<String, Object> possibleStateCheck(@ModelAttribute MyPageSearchDto searchVO) throws ParseException {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
@@ -1212,7 +1193,6 @@ public class MsfFarPricePlanController {
      * @throws SocketTimeoutException
      */
 
-    @ResponseBody
     @RequestMapping("/mypage/checkOtpAndReg.do")
     public Map<String, Object> checkOtpAndRegAjax(
         @ModelAttribute("searchVO") MyPageSearchDto searchVO,

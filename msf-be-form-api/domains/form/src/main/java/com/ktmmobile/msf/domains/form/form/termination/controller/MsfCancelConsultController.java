@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,11 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.NiceResDto;
@@ -42,7 +39,7 @@ import com.ktmmobile.msf.domains.form.form.termination.service.MsfCancelConsultS
 
 import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
 
-@Controller
+@RestController
 public class MsfCancelConsultController {
     private static Logger logger = LoggerFactory.getLogger(MsfCancelConsultController.class);
 
@@ -67,108 +64,14 @@ public class MsfCancelConsultController {
     @Value("${api.interface.server}")
     private String apiInterfaceServer;
 
-    /*
-     * 해지 상담 신청 페이지
-     */
-    @RequestMapping(value = {"/mypage/cancelConsult.do", "/m/mypage/cancelConsult.do"})
-    public String cancelConsult(Model model, HttpServletRequest request, @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
-
-        String jspPageName = "/portal/mypage/cancelConsult";
-        String thisPageName ="/mypage/cancelConsult.do";
-
-        if("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            jspPageName = "/mobile/mypage/cancelConsult";
-            thisPageName ="/m/mypage/cancelConsult.do";
-        }
-
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();  //중복요청 체크
-        checkOverlapDto.setRedirectUrl(thisPageName);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
-
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if(userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
-        }
-
-        List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
-
-        boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
-        }
-
-        CancelConsultDto cancelConsultDto = new CancelConsultDto();
-        cancelConsultDto.setRegstId(userSession.getUserId());
-        List<CancelConsultDto> cancelConsultList = msfCancelConsultSvc.selectCancelConsultList(cancelConsultDto);
-
-        //주민번호 앞자리
-        String birthday = userSession.getBirthday().substring(2,8);
-
-        //주민번호 뒷자리 첫 번째 숫자
-        String gender = cntrList.get(0).getUnUserSSn().substring(6,7);
-
-        //현재 날짜
-        String today = new SimpleDateFormat("yyyyMMdd", Locale.KOREA).format(new Date());
-
-        //만 나이 계산
-        int age = NmcpServiceUtils.getBirthDateToAmericanAge(userSession.getBirthday().substring(0, 8), today);
-
-        //미성년자 여부
-        boolean underAge = age < 19;
-
-        //마스킹해제
-        if(SessionUtils.getMaskingSession() > 0 ) {
-            model.addAttribute("maskingSession", "Y");
-
-            //마스킹 해제되어야 하는 데이터 세팅
-            searchVO.setUserName(userSession.getName());
-
-            //이력 insert
-            MaskingDto maskingDto = new MaskingDto();
-
-            long maskingRelSeq = SessionUtils.getMaskingSession();
-            maskingDto.setMaskingReleaseSeq(maskingRelSeq);
-            maskingDto.setUnmaskingInfo("이름,휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
-            maskingDto.setAccessUrl(request.getRequestURI());
-            maskingDto.setUserId(userSession.getUserId());
-            maskingDto.setCretId(userSession.getUserId());
-            maskingDto.setAmdId(userSession.getUserId());
-            maskingSvc.insertMaskingReleaseHist(maskingDto);
-
-        }else{
-            searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
-
-            if (cancelConsultList != null && !cancelConsultList.isEmpty()) {
-                for (CancelConsultDto item : cancelConsultList) {
-                    item.setCstmrName(StringMakerUtil.getName(item.getCstmrName()));
-                    item.setCancelMobileNo(StringMakerUtil.getPhoneNum(item.getCancelMobileNo()));
-                }
-            }
-        }
-
-        model.addAttribute("searchVO", searchVO);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("birthday", birthday);
-        model.addAttribute("gender", gender);
-        model.addAttribute("underAge", underAge);
-        model.addAttribute("cancelConsultList", cancelConsultList);
-
-        return jspPageName;
-    }
+    // [ASIS] 해지 상담 신청 JSP 화면 렌더링 — TOBE는 Vue SPA 구조로 서버 사이드 View 렌더링 불필요
+    // @RequestMapping(value = {"/mypage/cancelConsult.do", "/m/mypage/cancelConsult.do"})
+    // public String cancelConsult(Model model, HttpServletRequest request, @ModelAttribute("searchVO") MyPageSearchDto searchVO) { ... }
 
     /*
      * 해지 상담 신청
      */
     @RequestMapping(value = "/mypage/cancelConsultAjax.do")
-    @ResponseBody
     public Map<String,Object> cancelConsultAjax(@ModelAttribute CancelConsultDto cancelConsultDto , HttpSession session)  {
 
         Map<String,Object> rtnMap = new HashMap<String,Object>();

@@ -32,11 +32,21 @@ spring:
             maximum-pool-size: 6
             idle-timeout: 290000
 
+      ## MCP (레거시 M포탈)
+      mcp:
+        standalone:
+          url: jdbc:log4jdbc:oracle:thin:@10.220.71.231:1521:MCPDEVRN
+          username: MCP_WAS
+          password: "ktmm0601!!"
+          hikari:
+            maximum-pool-size: 6
+            idle-timeout: 290000
+
     hikari:
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
       minimum-idle: 3
       idle-timeout: 59000
-
+      keepalive-time: 20000
 
   #### Spring Data
   data:
@@ -47,6 +57,11 @@ spring:
       port: 6379
       username: ENC(...)
       password: ENC(...)
+
+api:
+  interface:
+    server: http://localhost:9380
+    use-mcp: true   # true: mcp-api 호출 (연결실패 시 MSP fallback), false: MSP 직접 조회
 
 management:
   health:

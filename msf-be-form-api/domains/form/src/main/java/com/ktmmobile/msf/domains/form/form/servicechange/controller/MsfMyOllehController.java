@@ -20,13 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
 import com.ktmmobile.msf.domains.form.common.dto.AuthSmsDto;
@@ -102,7 +101,7 @@ import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgCo
  *
  *
  */
-@Controller
+@RestController
 public class MsfMyOllehController {
 
     private static Logger logger = LoggerFactory.getLogger(MsfMyOllehController.class);
@@ -166,32 +165,23 @@ public class MsfMyOllehController {
      * 가입정보조회
      */
     @RequestMapping("/mypage/requestView.do")
-    public String requestView(
-        HttpServletRequest request, ModelMap model,
+    public Map<String, Object> requestView(
+        HttpServletRequest request,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO
     ) {
+        HashMap<String, Object> rtnMap = new HashMap<>();
         // [ASIS] PageInfoBean pageInfoBean — 미구현, 기본값(pageNo=1, recordCount=10) 직접 사용
 
-        //중복요청 체크
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        checkOverlapDto.setRedirectUrl("/mypage/requestView.do");
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         UserSessionDto userSession = (UserSessionDto) request.getSession().getAttribute(SessionUtils.USER_SESSION);
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if (!chk) {
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
         MpMonthPayMentDto monthPay = null;
@@ -214,11 +204,7 @@ public class MsfMyOllehController {
             //현재 요금제 조회
             McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
             if (mcpUserCntrMngDto == null) {
-                ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
-                responseSuccessDto.setSuccessMsg("해당 사용자의 요금제 데이터가 없습니다.");
-                responseSuccessDto.setRedirectUrl("/main.do");
-                model.addAttribute("responseSuccessDto", responseSuccessDto);
-                return "/common/successRedirect";
+                throw new McpCommonException("해당 사용자의 요금제 데이터가 없습니다.");
             }
 
             if (!perMyktfInfo.isSuccess()
@@ -252,7 +238,7 @@ public class MsfMyOllehController {
                 || !billInfo.isSuccess()) {//mPlatFormService에서 response massage is null.로들어오는 경우 exception 처리
                 throw new McpCommonException(COMMON_EXCEPTION, "/main.do");
             }
-            model.addAttribute("billInfo", billInfo);
+            rtnMap.put("billInfo", billInfo);
             if (StringUtil.isNotEmpty(billInfo.getResultMessage())) {
                 throw new SelfServiceException(billInfo.getResultMessage());
             }
@@ -290,7 +276,7 @@ public class MsfMyOllehController {
                 searchVO.getContractNum(),
                 int.class); // msfMypageSvc.selectJehuListCnt
             //---- API 호출 E ----//
-            model.addAttribute("jehuTotalCount", total);
+            rtnMap.put("jehuTotalCount", total);
 
 
             int skipResult = (1 - 1) * 10;    //셀렉트 하지 않고 뛰어넘을 만큼의 rownum // [ASIS] PageInfoBean 기본값 사용
@@ -314,18 +300,18 @@ public class MsfMyOllehController {
                 }
             }
 
-            model.addAttribute("monthPay", monthPay);
-            //model.addAttribute("detailInfo", detailInfo);
-            model.addAttribute("changeInfo", changeInfo);
-            //model.addAttribute("emailBillReqInfo", emailBillReqInfo);
-            model.addAttribute("moscBilEmailInfo", moscBilEmailInfo);
-            model.addAttribute("bilPrintInfo", bilPrintInfo);
-            model.addAttribute("mcpUserCntrMngDto", mcpUserCntrMngDto);
-            //model.addAttribute("modelSaleInfo", modelSaleInfo);
-            model.addAttribute("nmcpProdImgDtlDto", nmcpProdImgDtlDto);
-            model.addAttribute("perMyktfInfo", perMyktfInfo);
-            model.addAttribute("getAddSvcInfo", getAddSvcInfo);
-            model.addAttribute("jehuList", jehuList);
+            rtnMap.put("monthPay", monthPay);
+            //rtnMap.put("detailInfo", detailInfo);
+            rtnMap.put("changeInfo", changeInfo);
+            //rtnMap.put("emailBillReqInfo", emailBillReqInfo);
+            rtnMap.put("moscBilEmailInfo", moscBilEmailInfo);
+            rtnMap.put("bilPrintInfo", bilPrintInfo);
+            rtnMap.put("mcpUserCntrMngDto", mcpUserCntrMngDto);
+            //rtnMap.put("modelSaleInfo", modelSaleInfo);
+            rtnMap.put("nmcpProdImgDtlDto", nmcpProdImgDtlDto);
+            rtnMap.put("perMyktfInfo", perMyktfInfo);
+            rtnMap.put("getAddSvcInfo", getAddSvcInfo);
+            rtnMap.put("jehuList", jehuList);
 
         } catch (SelfServiceException e) {
             logger.error("========================" + e.getMessage());
@@ -387,11 +373,11 @@ public class MsfMyOllehController {
                     //---- API 호출 E ----//
                 }
                 //스폰서 조회
-                model.addAttribute("moscSpnsrItgInfo", moscSpnsrItgInfo);
+                rtnMap.put("moscSpnsrItgInfo", moscSpnsrItgInfo);
                 //잔여 할부금 조회
-                model.addAttribute("farMonDetailInfoDto", farMonDetailInfoDto);
+                rtnMap.put("farMonDetailInfoDto", farMonDetailInfoDto);
                 //할부 원금 조회
-                model.addAttribute("mspJuoAddInfoDto", mspJuoAddInfoDto);
+                rtnMap.put("mspJuoAddInfoDto", mspJuoAddInfoDto);
             }
         } catch (SelfServiceException e) {
             logger.error("위약금 조회 오류 SelfServiceException :: " + e.getMessage());
@@ -402,35 +388,35 @@ public class MsfMyOllehController {
         }
         //SRM18062741675_고객포탈 마이페이지 내 위약금 정보 표현 요청 -E-
 
-        model.addAttribute("cntrList", cntrList);
+        rtnMap.put("cntrList", cntrList);
         searchVO.setCtn(StringMakerUtil.getPhoneNum(searchVO.getCtn()));
-        model.addAttribute("searchVO", searchVO);
+        rtnMap.put("searchVO", searchVO);
 
         //조회시 로그남김
         //주석 처리 20160421 인터셉터 전체 셋팅
         //ipstatisticService.insertIpStat(request);
 
-        return "mypage/RequestView";
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
      * 가입정보인쇄
      */
     @RequestMapping("/mypage/requestViewPrint.do")
-    public String requestViewPrint(
-        HttpServletRequest request, ModelMap model,
+    public Map<String, Object> requestViewPrint(
+        HttpServletRequest request,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO
     ) {
+        HashMap<String, Object> rtnMap = new HashMap<>();
         UserSessionDto userSession = (UserSessionDto) request.getSession().getAttribute(SessionUtils.USER_SESSION);
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if (!chk) {
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
         try {
             searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
@@ -441,11 +427,7 @@ public class MsfMyOllehController {
             //현재 요금제 조회
             McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
             if (mcpUserCntrMngDto == null) {
-                ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
-                responseSuccessDto.setSuccessMsg("해당 사용자의 요금제 데이터가 없습니다.");
-                responseSuccessDto.setRedirectUrl("/main.do");
-                model.addAttribute("responseSuccessDto", responseSuccessDto);
-                return "/common/successRedirect";
+                throw new McpCommonException("해당 사용자의 요금제 데이터가 없습니다.");
             }
 
             //단말기정보
@@ -479,30 +461,31 @@ public class MsfMyOllehController {
             }
             String today = DateTimeUtil.getFormatString("yyyy년 M월 d일");
 
-            model.addAttribute("today", today);
-            model.addAttribute("mcpUserCntrMngDto", mcpUserCntrMngDto);
-            model.addAttribute("mspJuoAddInfoDto", mspJuoAddInfoDto);
-            model.addAttribute("perMyktfInfo", perMyktfInfo);
-            model.addAttribute("getAddSvcInfo", getAddSvcInfo);
-            model.addAttribute("changeInfo", changeInfo);
-            //model.addAttribute("emailBillReqInfo", emailBillReqInfo);
-            model.addAttribute("moscBilEmailInfo", moscBilEmailInfo);
-            model.addAttribute("bilPrintInfo", bilPrintInfo);
+            rtnMap.put("today", today);
+            rtnMap.put("mcpUserCntrMngDto", mcpUserCntrMngDto);
+            rtnMap.put("mspJuoAddInfoDto", mspJuoAddInfoDto);
+            rtnMap.put("perMyktfInfo", perMyktfInfo);
+            rtnMap.put("getAddSvcInfo", getAddSvcInfo);
+            rtnMap.put("changeInfo", changeInfo);
+            //rtnMap.put("emailBillReqInfo", emailBillReqInfo);
+            rtnMap.put("moscBilEmailInfo", moscBilEmailInfo);
+            rtnMap.put("bilPrintInfo", bilPrintInfo);
         } catch (SelfServiceException e) {
             searchVO.setMessage(getErrMsg(e.getMessage()));
         } catch (Exception e) {
             logger.error(e.getMessage());
             searchVO.setMessage("잠시 후 다시 이용해 주세요.");
         }
-        model.addAttribute("cntrList", cntrList);
+        rtnMap.put("cntrList", cntrList);
         searchVO.setCtn(StringMakerUtil.getPhoneNum(searchVO.getCtn()));
-        model.addAttribute("searchVO", searchVO);
+        rtnMap.put("searchVO", searchVO);
 
         //조회시 로그남김
         //주석 처리 20160421 인터셉터 전체 셋팅(21일현재 주석)
         //ipstatisticService.insertIpStat(request);
 
-        return "mypage/RequestViewPrint";
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
 
@@ -510,7 +493,8 @@ public class MsfMyOllehController {
      * 번호변경 신청/조회 step1
      */
     @RequestMapping("/mypage/numberView01.do")
-    public String numberView(HttpServletRequest request, ModelMap model, @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+    public Map<String, Object> numberView(HttpServletRequest request, @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         //번호변경 가능한 시간은 평일 오전10시~오후8시까지 가능합니다. (주말 공휴일은 변경불가)
         int nowHour = DateTimeUtil.getHour();
@@ -518,27 +502,17 @@ public class MsfMyOllehController {
             throw new McpCommonException(NUMBER_CHANGE_TIME_EXCEPTION);
         }
 
-        //중복요청 체크
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        checkOverlapDto.setRedirectUrl("/mypage/numberView01.do");
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
 
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if (!chk) {
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
         String ncn = searchVO.getNcn();
@@ -548,7 +522,7 @@ public class MsfMyOllehController {
 
         // 마스킹해제
         if (SessionUtils.getMaskingSession() > 0) {
-            model.addAttribute("maskingSession", "Y");
+            rtnMap.put("maskingSession", "Y");
 
             MaskingDto maskingDto = new MaskingDto();
 
@@ -589,18 +563,20 @@ public class MsfMyOllehController {
 
         //선불 요금제 여부 조회
         boolean prePaymentFlag = mypageUserService.selectPrePayment(contractNum);
-        model.addAttribute("searchVO", searchVO);
-        model.addAttribute("phoneNum", ctn);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("prePaymentFlag", prePaymentFlag);
-        return "/portal/mypage/NumberView01";
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("phoneNum", ctn);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("prePaymentFlag", prePaymentFlag);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
      * 번호변경 신청/조회 step2
      */
     @RequestMapping("/mypage/numberView02.do")
-    public String numberViewStep2(HttpServletRequest request, ModelMap model, @ModelAttribute("searchVO") MyPageSearchDto searchVO, String mCode) {
+    public Map<String, Object> numberViewStep2(HttpServletRequest request, @ModelAttribute("searchVO") MyPageSearchDto searchVO, String mCode) {
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         //번호변경 가능한 시간은 평일 오전10시~오후8시까지 가능합니다. (주말 공휴일은 변경불가)
         int nowHour = DateTimeUtil.getHour();
@@ -608,27 +584,17 @@ public class MsfMyOllehController {
             throw new McpCommonException(NUMBER_CHANGE_TIME_EXCEPTION);
         }
 
-        //중복요청 체크
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        checkOverlapDto.setRedirectUrl("/mypage/numberView02.do");
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
 
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if (!chk) {
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
         String ncn = searchVO.getNcn();
@@ -652,12 +618,8 @@ public class MsfMyOllehController {
         authSmsDto.setCheck(true);
         SessionUtils.checkAuthSmsSession(authSmsDto);
 
-        if (!authSmsDto.isResult()) {// 인증안된경우 redirect
-            ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
-            responseSuccessDto.setRedirectUrl("/mypage/numberView01.do");
-            responseSuccessDto.setSuccessMsg(authSmsDto.getMessage());
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+        if (!authSmsDto.isResult()) {// 인증안된경우
+            throw new McpCommonException(authSmsDto.getMessage(), "/mypage/numberView01.do");
         }
 
         //번호변경이 가능한 수 조회.. ......
@@ -680,15 +642,14 @@ public class MsfMyOllehController {
         mcpRetvRststnDto = msfMypageSvc.retvRstrtn(map);//번호 목록조회 여부 select
         searchCnt = mcpRetvRststnDto.getTmscnt();
 
-        model.addAttribute("searchCnt", searchCnt);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("maskCtn", StringMakerUtil.getPhoneNum(ctn));
-        model.addAttribute("ncn", ncn);
-        model.addAttribute("ctn", ctn);
-
-
-        model.addAttribute("searchVO", searchVO);
-        return "/portal/mypage/NumberView02";
+        rtnMap.put("searchCnt", searchCnt);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("maskCtn", StringMakerUtil.getPhoneNum(ctn));
+        rtnMap.put("ncn", ncn);
+        rtnMap.put("ctn", ctn);
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     //    /**
@@ -726,37 +687,41 @@ public class MsfMyOllehController {
      * 일시정지 신청/조회
      */
     @RequestMapping("/mypage/stopView01.do")
-    public String stopView01(HttpServletRequest request, ModelMap model) {
+    public Map<String, Object> stopView01(HttpServletRequest request) {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
-        return "mypage/StopView01";
+        HashMap<String, Object> rtnMap = new HashMap<>();
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
      * 분실신고 신청/해제
      */
     @RequestMapping("/mypage/lossView01.do")
-    public String lossView01(HttpServletRequest request, ModelMap model) {
+    public Map<String, Object> lossView01(HttpServletRequest request) {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
-        return "mypage/LossView01";
+        HashMap<String, Object> rtnMap = new HashMap<>();
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
      * 우편명세서 재발행
      */
     @RequestMapping("/mypage/sendReqAddr.do")
-    public @ResponseBody String sendReqAddr(
-        HttpServletRequest request, ModelMap model,
+    public String sendReqAddr(
+        HttpServletRequest request,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO
     ) {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
@@ -777,8 +742,8 @@ public class MsfMyOllehController {
      * 우편명세서 주소변경
      */
     @RequestMapping("/mypage/modReqAddr.do")
-    public @ResponseBody String modReqAddr(
-        HttpServletRequest request, ModelMap model,
+    public String modReqAddr(
+        HttpServletRequest request,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO,
         @RequestParam(value = "addrZip") String addrZip,
         @RequestParam(value = "adrPrimaryLn") String adrPrimaryLn,
@@ -786,7 +751,7 @@ public class MsfMyOllehController {
     ) {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
@@ -806,14 +771,14 @@ public class MsfMyOllehController {
      * 이메일 명세서 재발행
      */
     @RequestMapping("/mypage/sendReqEmail.do")
-    public @ResponseBody String sendReqEmail(
-        HttpServletRequest request, ModelMap model,
+    public String sendReqEmail(
+        HttpServletRequest request,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO,
         @RequestParam(value = "email") String email
     ) {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
@@ -840,7 +805,6 @@ public class MsfMyOllehController {
      * 이메일 명세서 신청/변경/해지 ajax
      */
     @RequestMapping("/mypage/bilEmailChgAjax.do")
-    @ResponseBody
     public JsonReturnDto bilEmailChgAjax(
         HttpServletRequest request, ModelMap model,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO,
@@ -900,7 +864,7 @@ public class MsfMyOllehController {
      * 일시정지가능여부 조회 ajax
      */
     @RequestMapping("/mypage/suspenPosInfoAjax.do")
-    public @ResponseBody JsonReturnDto suspenPosInfoAjax(
+    public JsonReturnDto suspenPosInfoAjax(
         HttpServletRequest request, ModelMap model,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO
     ) {
@@ -949,7 +913,6 @@ public class MsfMyOllehController {
      * 번호목록 조회 ajax
      */
     @RequestMapping(value = "/mypage/numChgeListAjax.do")
-    @ResponseBody
     public Map<String, Object> numChgeListAjax(HttpServletRequest request, @ModelAttribute("searchVO") MyPageSearchDto searchVO, String chkCtn) {
 
         Map<String, Object> resultMap = new HashMap<String, Object>();
@@ -1062,7 +1025,6 @@ public class MsfMyOllehController {
      * 번호변경 ajax
      */
     @RequestMapping(value = "/mypage/numChgeChgAjax.do")
-    @ResponseBody
     public Map<String, Object> numChgeChgAjax(
         HttpServletRequest request, ModelMap model, @ModelAttribute("searchVO") MyPageSearchDto searchVO,
         String resvHkCtn, String resvHkSCtn, String resvHkMarketGubun
@@ -1162,7 +1124,6 @@ public class MsfMyOllehController {
      * </pre>
      */
     @RequestMapping(value = "/mypage/sendCertSmsAjax.do")
-    @ResponseBody
     public JsonReturnDto sendCertSmsAjax(
         HttpServletRequest request,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO, String mCode
@@ -1219,7 +1180,6 @@ public class MsfMyOllehController {
      * </pre>
      */
     @RequestMapping(value = "/mypage/checkCertSmsAjax.do")
-    @ResponseBody
     public JsonReturnDto checkCertSmsAjax(
         @ModelAttribute("searchVO") MyPageSearchDto searchVO
         , String checkValue
@@ -1268,7 +1228,7 @@ public class MsfMyOllehController {
      * e-mail 청구서 변경(X04)
      */
     @RequestMapping("/mypage/modReqEmail.do")
-    public @ResponseBody JsonReturnDto modReqEmail(
+    public JsonReturnDto modReqEmail(
         HttpServletRequest request, ModelMap model,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO,
         String email,
@@ -1344,7 +1304,7 @@ public class MsfMyOllehController {
      * 우편청구서 변경(X04, X02)
      */
     @RequestMapping("/mypage/modReqAddress.do")
-    public @ResponseBody JsonReturnDto modReqAddress(
+    public JsonReturnDto modReqAddress(
         HttpServletRequest request, ModelMap model,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO,
         String email, String zip, String addr1, String addr2
@@ -1407,15 +1367,16 @@ public class MsfMyOllehController {
         return result;
     }
 
-    private ResponseSuccessDto getMessageBox() {
-        ResponseSuccessDto mbox = new ResponseSuccessDto();
-        mbox.setRedirectUrl("/mypage/updateForm.do");
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            mbox.setRedirectUrl("/m/mypage/updateForm.do");
-        }
-        mbox.setSuccessMsg("정회원 인증 후 이용하실 수 있습니다.");
-        return mbox;
-    }
+    // [ASIS] getMessageBox() — TOBE: throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION) 으로 대체
+    // private ResponseSuccessDto getMessageBox() {
+    //     ResponseSuccessDto mbox = new ResponseSuccessDto();
+    //     mbox.setRedirectUrl("/mypage/updateForm.do");
+    //     if ("Y".equals(NmcpServiceUtils.isMobile())) {
+    //         mbox.setRedirectUrl("/m/mypage/updateForm.do");
+    //     }
+    //     mbox.setSuccessMsg("정회원 인증 후 이용하실 수 있습니다.");
+    //     return mbox;
+    // }
 
 
     private String getErrCd(String msg) {
@@ -1440,8 +1401,8 @@ public class MsfMyOllehController {
      * 테스트 세션 설정
      */
     @RequestMapping("/getSession.do")
-    public @ResponseBody String getSessionModi(
-        HttpServletRequest request, HttpServletResponse response, ModelMap model,
+    public String getSessionModi(
+        HttpServletRequest request, HttpServletResponse response,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO, String id, String opt
     ) {
         if (opt == null) {
@@ -1518,20 +1479,13 @@ public class MsfMyOllehController {
 
 
     @RequestMapping(value = {"/mypage/suspenCnlComplete.do", "/m/mypage/suspenCnlComplete.do"})
-    public String suspenCnlComplete(
-        ModelMap model
-        , String custNcn
+    public Map<String, Object> suspenCnlComplete(
+        String custNcn
         , String subStatusDate
         , String sndarvStatCd
         , @PathVariable("proModule") String proModule
     ) {
-
-        String rtnString = "/mypage/suspenCnlComplete";
-        String errString = "/mypage/suspendView01.do";
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            rtnString = "/mobile/mypage/suspenCnlComplete";
-            errString = "/m/mypage/suspendView01.do";
-        }
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
@@ -1541,8 +1495,8 @@ public class MsfMyOllehController {
             throw new McpCommonException(F_BIND_EXCEPTION);
         }
 
-        if (custNcn.equals("")) {
-            return "redirect:" + errString;
+        if (custNcn == null || custNcn.equals("")) {
+            throw new McpCommonException(INVALID_REFERER_EXCEPTION);
         }
 
         String custCtn = "";
@@ -1553,12 +1507,13 @@ public class MsfMyOllehController {
             }
         }
 
-        model.addAttribute("custNcn", custNcn);
-        model.addAttribute("userName", userSession.getName());
-        model.addAttribute("mobileFull", StringUtil.getMobileFullNum(custCtn));
-        model.addAttribute("subStatusDate", subStatusDate);
-        model.addAttribute("sndarvStatCd", sndarvStatCd);
-        return rtnString;
+        rtnMap.put("custNcn", custNcn);
+        rtnMap.put("userName", userSession.getName());
+        rtnMap.put("mobileFull", StringUtil.getMobileFullNum(custCtn));
+        rtnMap.put("subStatusDate", subStatusDate);
+        rtnMap.put("sndarvStatCd", sndarvStatCd);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
@@ -1571,50 +1526,32 @@ public class MsfMyOllehController {
      * @return
      */
     @RequestMapping(value = {"/mypage/reSpnsrPlcyDc.do", "/m/mypage/reSpnsrPlcyDc.do"})
-    public String reSpnsrPlcyDc(
-        ModelMap model, HttpServletRequest request
+    public Map<String, Object> reSpnsrPlcyDc(
+        HttpServletRequest request
         , @ModelAttribute("searchVO") MyPageSearchDto searchVO
     ) {
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
-
-        String jspPageName = "/portal/mypage/reSpnsrPlcyDc.form";
-        String thisPageName = "/mypage/reSpnsrPlcyDc.do";
-        if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            jspPageName = "/mobile/mypage/reSpnsrPlcyDc.form";
-            thisPageName = "/m/mypage/reSpnsrPlcyDc.do";
-        }
-
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();  //중복요청 체크
-        checkOverlapDto.setRedirectUrl(thisPageName);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
-
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if (!chk) {
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
         //현재 요금제 조회
         McpUserCntrMngDto mcpUserCntrMngDto = msfMypageSvc.selectSocDesc(searchVO.getContractNum());
 
-
-        model.addAttribute("phoneNum", searchVO.getCtn());
+        rtnMap.put("phoneNum", searchVO.getCtn());
 
         // 마스킹해제
         if (SessionUtils.getMaskingSession() > 0) {
-            model.addAttribute("maskingSession", "Y");
+            rtnMap.put("maskingSession", "Y");
             searchVO.setUserName(userSession.getName());
             String[] nums = StringUtil.getMobileNum(searchVO.getCtn());
             String telNo = nums[0] + "-" + nums[1] + "-" + nums[2];
@@ -1629,18 +1566,16 @@ public class MsfMyOllehController {
             maskingDto.setCretId(userSession.getUserId());
             maskingDto.setAmdId(userSession.getUserId());
             maskingSvc.insertMaskingReleaseHist(maskingDto);
-
-
         } else {
             searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
             searchVO.setCtn(StringMakerUtil.getPhoneNum(searchVO.getCtn()));
         }
 
-        model.addAttribute("mcpUserCntrMngDto", mcpUserCntrMngDto);
-        model.addAttribute("searchVO", searchVO);
-        model.addAttribute("cntrList", cntrList);
-
-        return jspPageName;
+        rtnMap.put("mcpUserCntrMngDto", mcpUserCntrMngDto);
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
@@ -1653,42 +1588,26 @@ public class MsfMyOllehController {
      * @return
      */
     @RequestMapping(value = {"/mypage/reSpnsrPlcyDcComplete.do", "/m/mypage/reSpnsrPlcyDcComplete.do"})
-    public String reSpnsrPlcyDcComplete(
-        ModelMap model
-        , @ModelAttribute("searchVO") MyPageSearchDto searchVO
+    public Map<String, Object> reSpnsrPlcyDcComplete(
+        @ModelAttribute("searchVO") MyPageSearchDto searchVO
         , String engtPerd
     ) {
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         if (searchVO.getNcn() == null || StringUtils.isEmpty(searchVO.getNcn())) {
             throw new McpCommonException(INVALID_REFERER_EXCEPTION);
         }
 
-        String jspPageName = "/portal/mypage/reSpnsrPlcyDc.complete";
-        String thisPageName = "/mypage/reSpnsrPlcyDcComplete.do";
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            jspPageName = "/mobile/mypage/reSpnsrPlcyDc.complete";
-            thisPageName = "/m/mypage/reSpnsrPlcyDcComplete.do";
-        }
-
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();  //중복요청 체크
-        checkOverlapDto.setRedirectUrl(thisPageName);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if (!chk) {
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
         //현재 요금제 조회
@@ -1702,8 +1621,8 @@ public class MsfMyOllehController {
             BigDecimal addRate = new BigDecimal("1.1");              //부가가치세율
             int dcSuprtAmtVat = dcSuprtAmt.multiply(addRate).setScale(0, RoundingMode.UP).intValue();
 
-            model.addAttribute("moscSdsInfo", moscSdsInfo);
-            model.addAttribute("dcSuprtAmtVat", dcSuprtAmtVat);
+            rtnMap.put("moscSdsInfo", moscSdsInfo);
+            rtnMap.put("dcSuprtAmtVat", dcSuprtAmtVat);
 
         } catch (SelfServiceException e) {
             logger.error("위약금 조회 오류 SelfServiceException :: " + e.getMessage());
@@ -1724,12 +1643,12 @@ public class MsfMyOllehController {
         // pushSendDto.setMsgArr(arg);
         // appPushSvc.immediatelyPushSend(pushSendDto);
 
-        model.addAttribute("mcpUserCntrMngDto", mcpUserCntrMngDto);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("searchVO", searchVO);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("engtPerd", engtPerd);
-        return jspPageName;
+        rtnMap.put("mcpUserCntrMngDto", mcpUserCntrMngDto);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("engtPerd", engtPerd);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
@@ -1740,7 +1659,6 @@ public class MsfMyOllehController {
      * @return
      */
     @RequestMapping(value = "/mypage/moscSdsSvcPreChkAjax.do")
-    @ResponseBody
     public Map<String, Object> moscSdsSvcPreChk(@ModelAttribute("searchVO") MyPageSearchDto myPageSearchDto) {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
@@ -1804,7 +1722,6 @@ public class MsfMyOllehController {
      * @return
      */
     @RequestMapping(value = "/mypage/moscSdsSvcChgAjax.do")
-    @ResponseBody
     public Map<String, Object> moscSdsSvcChgAjax(
         @ModelAttribute("searchVO") MyPageSearchDto myPageSearchDto
         , McpRequestAgrmDto mcpRequestAgrm
@@ -1902,7 +1819,6 @@ public class MsfMyOllehController {
      * @return
      */
     @RequestMapping(value = "/mypage/getReSpnsrPriceInfoAjax.do")
-    @ResponseBody
     public Map<String, Object> getReSpnsrPriceInfoAjax(
         @ModelAttribute("searchVO") MyPageSearchDto myPageSearchDto
         , String rateSoc
@@ -1982,44 +1898,28 @@ public class MsfMyOllehController {
      * @return
      */
     @RequestMapping(value = {"/mypage/moscSdsSvcRegView.do", "/m/mypage/moscSdsSvcRegView.do"})
-    public String moscSdsSvcRegView(
+    public Map<String, Object> moscSdsSvcRegView(
         HttpServletRequest request,
-        ModelMap model,
         @ModelAttribute("searchVO") MyPageSearchDto searchVO,
         String engtPerd
     ) {
-
-        String returnUrl = "/portal/mypage/moscSdsSvcRegView";
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            returnUrl = "/mobile/mypage/moscSdsSvcRegView";
-        }
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         if (engtPerd == null || StringUtils.isEmpty(engtPerd)) {
             throw new McpCommonException(INVALID_REFERER_EXCEPTION);
         }
 
-        //중복요청 체크
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        checkOverlapDto.setRedirectUrl("/mypage/moscSdsSvcRegView.do");
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirectsuccessRedirect";
-        }
-
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
 
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if (!chk) {
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
         // ============ STEP START ============
@@ -2029,17 +1929,14 @@ public class MsfMyOllehController {
         Map<String, String> vldReslt = certService.vdlCertInfo("D", certKey, certValue);
 
         if (!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
-            String redirectUrl = "/mypage/reSpnsrPlcyDc.do";
-            if ("Y".equals(NmcpServiceUtils.isMobile())) {
-                redirectUrl = "/m/mypage/reSpnsrPlcyDc.do";
-            }
-            throw new McpCommonException(vldReslt.get("RESULT_DESC"), redirectUrl);
+            throw new McpCommonException(vldReslt.get("RESULT_DESC"), "/mypage/reSpnsrPlcyDc.do");
         }
         // ============ STEP END ============
 
         List<NmcpCdDtlDto> presentList = NmcpServiceUtils.getCodeList(com.ktmmobile.msf.domains.form.common.constants.Constants.GROUP_CODE_PRESENT_CODE);
-        model.addAttribute("presentList", presentList);
-        return returnUrl;
+        rtnMap.put("presentList", presentList);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
 

@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.controller;
 
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.TIME_OVERLAP_EXCEPTION;
@@ -15,13 +16,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
@@ -53,7 +52,7 @@ import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 
 
-@Controller
+@RestController
 public class MsfChargeController {
 
     private static final Logger logger = LoggerFactory.getLogger(MsfChargeController.class);
@@ -84,57 +83,41 @@ public class MsfChargeController {
      */
 
     @RequestMapping(value = {"/mypage/chargeView01.do"})
-    public String doChargeView01(HttpServletRequest request, Model model,
-              @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+    public Map<String, Object> doChargeView01(HttpServletRequest request,
+            @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
 
-        String returnUrl = "";
-        String redirectUrl = "";
+        // [ASIS] JSP 페이지명 및 플랫폼 분기 반환 — TOBE: REST JSON 응답으로 전환
+        // String returnUrl = ...
+        // String redirectUrl = ...
 
-        if("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-                 returnUrl = "/mobile/mypage/chargeView01";
-                 redirectUrl = "/m/mypage/chargeView01.do";
-        }else {
-               returnUrl = "/portal/mypage/chargeView01";
-               redirectUrl = "/mypage/chargeView01.do";
-        }
-
-        //중복요청 체크
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        checkOverlapDto.setRedirectUrl(redirectUrl);
-        checkOverlapDto.setSuccessMsg(TIME_OVERLAP_EXCEPTION);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
+        // [ASIS] 중복요청 체크 후 successRedirect JSP 반환 — TOBE: REST 환경에서 불필요하여 제외
+        // ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
+        // if (SessionUtils.overlapRequestCheck(checkOverlapDto)) { return "/common/successRedirect"; }
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
-        if ( userSession != null ) { // 취약성 306
+        if (userSession != null) {
             cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+        if (!chk) {
+            // [ASIS] ResponseSuccessDto → successRedirect JSP 반환 — TOBE: 예외로 전환
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
+
         MpFarMonDetailInfoDto detailInfo = null;
-
         //x15
-        MpFarMonBillingInfoDto billInfo = null ;
-
+        MpFarMonBillingInfoDto billInfo = null;
         try {
             billInfo = chargeService.farMonBillingInfoDto(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId(), DateTimeUtil.getFormatString("yyyyMM"));
         } catch (SelfServiceException e) {
             logger.error("Exception e : {}", e.getMessage());
-        }  catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Exception e : {}", e.getMessage());
         }
 
-        if(billInfo==null ){
-            logger.error("chargeView01 billInfo NULL USERID##="+userSession.getUserId());
+        if (billInfo == null) {
+            logger.error("chargeView01 billInfo NULL USERID##=" + userSession.getUserId());
             throw new McpCommonException(COMMON_EXCEPTION);
         }
 
@@ -144,50 +127,41 @@ public class MsfChargeController {
          * KOS 변경 사항 수정
          * 인자값 BillSeqNo 이 BillMonth
          */
-
         String billMonth = searchVO.getBillMonth();
         MpMonthPayMentDto monthPay = null;
-
-        if(monthList != null && monthList.size() > 0){
-            if(StringUtil.isNotNull(billMonth)){
-                for( MpMonthPayMentDto item : monthList ){
-                    if(StringUtil.equals(item.getBillMonth(), billMonth)){
+        if (monthList != null && monthList.size() > 0) {
+            if (StringUtil.isNotNull(billMonth)) {
+                for (MpMonthPayMentDto item : monthList) {
+                    if (StringUtil.equals(item.getBillMonth(), billMonth)) {
                         monthPay = item;
                         break;
                     }
                 }
             }
-
-            if(monthPay == null){
+            if (monthPay == null) {
                 monthPay = monthList.get(0);
             }
         }
         //X16 월별요금조회 상세
-        if(monthPay != null){
-             try {
-                 detailInfo = chargeService.farMonDetailInfoDto(searchVO.getNcn()
-                         , searchVO.getCtn()
-                         , searchVO.getCustId()
-                         , monthPay.getBillSeqNo()
-                         , monthPay.getBillDueDateList()
-                         , monthPay.getBillMonth()
-                         , monthPay.getBillStartDate()
-                         , monthPay.getBillEndDate());
-             } catch (SelfServiceException e) {
-                 logger.error("Exception e : {}", e.getMessage());
-             }  catch (Exception e) {
-                 logger.error("Exception e : {}", e.getMessage());
-             }
+        if (monthPay != null) {
+            try {
+                detailInfo = chargeService.farMonDetailInfoDto(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId(),
+                        monthPay.getBillSeqNo(), monthPay.getBillDueDateList(), monthPay.getBillMonth(),
+                        monthPay.getBillStartDate(), monthPay.getBillEndDate());
+            } catch (SelfServiceException e) {
+                logger.error("Exception e : {}", e.getMessage());
+            } catch (Exception e) {
+                logger.error("Exception e : {}", e.getMessage());
+            }
         }
 
         // 마스킹해제
-        if(SessionUtils.getMaskingSession() > 0 ) {
-            model.addAttribute("maskingSession", "Y");
+        String maskingSession = "N";
+        if (SessionUtils.getMaskingSession() > 0) {
+            maskingSession = "Y";
             searchVO.setCtn(searchVO.getCtn());
             searchVO.setUserName(userSession.getName());
-
             MaskingDto maskingDto = new MaskingDto();
-
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
@@ -197,20 +171,20 @@ public class MsfChargeController {
             maskingDto.setCretId(userSession.getUserId());
             maskingDto.setAmdId(userSession.getUserId());
             maskingSvc.insertMaskingReleaseHist(maskingDto);
-
-        }else {
+        } else {
             searchVO.setCtn(StringMakerUtil.getPhoneNum(searchVO.getCtn()));
             searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
         }
 
-        model.addAttribute("billInfo", billInfo);
-        model.addAttribute("monthPay", monthPay);
-        model.addAttribute("detailInfo", detailInfo);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("searchVO", searchVO);
-
-        return returnUrl;
-
+        HashMap<String, Object> rtnMap = new HashMap<>();
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        rtnMap.put("billInfo", billInfo);
+        rtnMap.put("monthPay", monthPay);
+        rtnMap.put("detailInfo", detailInfo);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("maskingSession", maskingSession);
+        return rtnMap;
     }
 
     /**
@@ -223,57 +197,42 @@ public class MsfChargeController {
      * @return
      */
 
-    @RequestMapping(value = {"/m/mypage/chargeView01.do" })
-    public String doMoChargeView01(HttpServletRequest request, Model model, @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+    @RequestMapping(value = {"/m/mypage/chargeView01.do"})
+    public Map<String, Object> doMoChargeView01(HttpServletRequest request,
+            @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
 
-        String returnUrl = "";
-        String redirectUrl = "";
+        // [ASIS] JSP 페이지명 및 플랫폼 분기 반환 — TOBE: REST JSON 응답으로 전환
+        // String returnUrl = ...
+        // String redirectUrl = ...
 
-        if("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-                 returnUrl = "/mobile/mypage/chargeView01";
-                 redirectUrl = "/m/mypage/chargeView01.do";
-        }else {
-               returnUrl = "/portal/mypage/chargeView01";
-               redirectUrl = "/mypage/chargeView01.do";
-        }
+        // [ASIS] 중복요청 체크 후 successRedirect JSP 반환 — TOBE: REST 환경에서 불필요하여 제외
+        // ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
+        // if (SessionUtils.overlapRequestCheck(checkOverlapDto)) { return "/common/successRedirect"; }
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        //중복요청 체크
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        checkOverlapDto.setRedirectUrl(redirectUrl);
-        checkOverlapDto.setSuccessMsg(TIME_OVERLAP_EXCEPTION);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
-
         List<McpUserCntrMngDto> cntrList = null;
-        if (userSession != null) { // 취약성 309
+        if (userSession != null) {
             cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+        if (!chk) {
+            // [ASIS] ResponseSuccessDto → successRedirect JSP 반환 — TOBE: 예외로 전환
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
+
         MpFarMonDetailInfoDto detailInfo = null;
-
         //x15
-        MpFarMonBillingInfoDto billInfo = null ;
-
+        MpFarMonBillingInfoDto billInfo = null;
         try {
             billInfo = chargeService.farMonBillingInfoDto(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId(), DateTimeUtil.getFormatString("yyyyMM"));
         } catch (SelfServiceException e) {
             logger.error("Exception e : {}", e.getMessage());
-        }  catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Exception e : {}", e.getMessage());
         }
 
-        if(billInfo==null ){
-            logger.error("chargeView01 billInfo NULL USERID##="+userSession.getUserId());
+        if (billInfo == null) {
+            logger.error("chargeView01 billInfo NULL USERID##=" + userSession.getUserId());
             throw new McpCommonException(COMMON_EXCEPTION);
         }
 
@@ -283,69 +242,59 @@ public class MsfChargeController {
          * KOS 변경 사항 수정
          * 인자값 BillSeqNo 이 BillMonth
          */
-
         String billMonth = searchVO.getBillMonth();
         MpMonthPayMentDto monthPay = null;
-
-        if(monthList != null && monthList.size() > 0){
-            if(StringUtil.isNotNull(billMonth)){
-                for( MpMonthPayMentDto item : monthList ){
-                    if(StringUtil.equals(item.getBillMonth(), billMonth)){
+        if (monthList != null && monthList.size() > 0) {
+            if (StringUtil.isNotNull(billMonth)) {
+                for (MpMonthPayMentDto item : monthList) {
+                    if (StringUtil.equals(item.getBillMonth(), billMonth)) {
                         monthPay = item;
                         break;
                     }
                 }
             }
-
-            if(monthPay == null){
+            if (monthPay == null) {
                 monthPay = monthList.get(0);
             }
         }
         //X16 월별요금조회 상세
-        if(monthPay != null){
-             try {
-                 detailInfo = chargeService.farMonDetailInfoDto(searchVO.getNcn()
-                         , searchVO.getCtn()
-                         , searchVO.getCustId()
-                         , monthPay.getBillSeqNo()
-                         , monthPay.getBillDueDateList()
-                         , monthPay.getBillMonth()
-                         , monthPay.getBillStartDate()
-                         , monthPay.getBillEndDate());
-             } catch (SelfServiceException e) {
-                 logger.error("Exception e : {}", e.getMessage());
-             }  catch (Exception e) {
-                 logger.error("Exception e : {}", e.getMessage());
-             }
+        if (monthPay != null) {
+            try {
+                detailInfo = chargeService.farMonDetailInfoDto(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId(),
+                        monthPay.getBillSeqNo(), monthPay.getBillDueDateList(), monthPay.getBillMonth(),
+                        monthPay.getBillStartDate(), monthPay.getBillEndDate());
+            } catch (SelfServiceException e) {
+                logger.error("Exception e : {}", e.getMessage());
+            } catch (Exception e) {
+                logger.error("Exception e : {}", e.getMessage());
+            }
         }
 
         MpFarPaymentInfoVO vo = null;
         try {
-            vo = realTimePayService.farPaymentInfoList(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId(),"","");
-            if(!vo.isSuccess()){//mPlatFormService에서 response massage is null.로들어오는 경우 exception 처리
+            vo = realTimePayService.farPaymentInfoList(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId(), "", "");
+            if (!vo.isSuccess()) {
                 throw new McpCommonException(COMMON_EXCEPTION);
             }
         } catch (SelfServiceException e) {
             String strMsg = e.getMessage();
-            if ( strMsg.indexOf("ITL_SYS_E0001") > -1) {
+            if (strMsg.indexOf("ITL_SYS_E0001") > -1) {
                 strMsg = "조회 가능한 금액을 초과하였습니다.<br> 확인을 원하실 경우 고객센터(1899-5000)으로 문의 부탁드립니다.";
             }
             throw new McpCommonException(strMsg);
-        }  catch (Exception e) {
-
+        } catch (Exception e) {
             String strMsg = e.getMessage();
-            if ( strMsg.indexOf("ITL_SYS_E0001") > -1) {
+            if (strMsg.indexOf("ITL_SYS_E0001") > -1) {
                 strMsg = "조회 가능한 금액을 초과하였습니다.<br> 확인을 원하실 경우 고객센터(1899-5000)으로 문의 부탁드립니다.";
             }
             throw new McpCommonException(strMsg);
         }
 
         // 마스킹해제
-        if(SessionUtils.getMaskingSession() > 0 ) {
-            model.addAttribute("maskingSession", "Y");
-
+        String maskingSession = "N";
+        if (SessionUtils.getMaskingSession() > 0) {
+            maskingSession = "Y";
             MaskingDto maskingDto = new MaskingDto();
-
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
@@ -359,15 +308,17 @@ public class MsfChargeController {
 
         searchVO.setCtn(StringMakerUtil.getPhoneNum(searchVO.getCtn()));
         searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
-        model.addAttribute("billInfo", billInfo);
-        model.addAttribute("monthPay", monthPay);
-        model.addAttribute("detailInfo", detailInfo);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("searchVO", searchVO);
-        model.addAttribute("vo", vo);
 
-        return returnUrl;
-
+        HashMap<String, Object> rtnMap = new HashMap<>();
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        rtnMap.put("billInfo", billInfo);
+        rtnMap.put("monthPay", monthPay);
+        rtnMap.put("detailInfo", detailInfo);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("vo", vo);
+        rtnMap.put("maskingSession", maskingSession);
+        return rtnMap;
     }
 
 
@@ -381,7 +332,6 @@ public class MsfChargeController {
      * @return
      */
     @RequestMapping(value="/mypage/recentPaymentAjax.do")
-    @ResponseBody
     public Map<String,Object> recentPaymentAjax(HttpServletRequest request, @ModelAttribute("searchVO") MyPageSearchDto searchVO, @RequestParam(value = "ncn", required = true) String ncn1
             ,@RequestParam(value = "startDate", required = true) String startDate,@RequestParam(value = "endDate", required = true) String endDate)  {
 
@@ -517,37 +467,27 @@ public class MsfChargeController {
      * @throws SelfServiceException
      */
 
-    @RequestMapping(value = { "/mypage/chargeView03.do", "/m/mypage/chargeView03.do" })
-    public String chargeView03(HttpServletRequest request, Model model, @ModelAttribute("searchVO") MyPageSearchDto searchVO ) {
+    @RequestMapping(value = {"/mypage/chargeView03.do", "/m/mypage/chargeView03.do"})
+    public Map<String, Object> chargeView03(HttpServletRequest request,
+            @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
 
-        String returnUrl = "/portal/mypage/chargeView03";
-        String redirectUrl = "/mypage/chargeView03.do";
+        // [ASIS] JSP 페이지명 및 플랫폼 분기 반환 — TOBE: REST JSON 응답으로 전환
+        // String returnUrl = ...
+        // String redirectUrl = ...
 
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            returnUrl = "/mobile/mypage/chargeView03";
-            redirectUrl = "/m/mypage/chargeView03.do";
-        }
+        // [ASIS] 중복요청 체크 후 successRedirect JSP 반환 — TOBE: REST 환경에서 불필요하여 제외
+        // ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
+        // if (SessionUtils.overlapRequestCheck(checkOverlapDto)) { return "/common/successRedirect"; }
 
-        //중복요청 체크
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        checkOverlapDto.setRedirectUrl(redirectUrl);
-        checkOverlapDto.setSuccessMsg(TIME_OVERLAP_EXCEPTION);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
-        if (userSession != null) { // 취약성 297
+        if (userSession != null) {
             cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+        if (!chk) {
+            // [ASIS] ResponseSuccessDto → successRedirect JSP 반환 — TOBE: 예외로 전환
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
         String ncn = searchVO.getNcn();
@@ -556,9 +496,9 @@ public class MsfChargeController {
         String contractNum = searchVO.getContractNum();
         //요금제조회
         String rateNm = "";
-        McpUserCntrMngDto socMngDto = msfMypageSvc.selectSocDesc(contractNum); //요금제
-        if(socMngDto !=null) {
-            rateNm = StringUtil.NVL(socMngDto.getRateNm(),"-");
+        McpUserCntrMngDto socMngDto = msfMypageSvc.selectSocDesc(contractNum);
+        if (socMngDto != null) {
+            rateNm = StringUtil.NVL(socMngDto.getRateNm(), "-");
         }
         //x18 실시간 요금조회
         MpFarRealtimePayInfoVO mpFarRealtimePayInfoVO = null;
@@ -570,15 +510,15 @@ public class MsfChargeController {
         List<RealFareVO> realFareVOList = null;
         try {
             mpFarRealtimePayInfoVO = chargeService.farRealtimePayInfo(ncn, ctn, custId);
-            if(mpFarRealtimePayInfoVO != null) {
+            if (mpFarRealtimePayInfoVO != null) {
                 searchDay = mpFarRealtimePayInfoVO.getSearchDay();
-                useDay = searchDay.substring(6,8);
+                useDay = searchDay.substring(6, 8);
                 searchTime = mpFarRealtimePayInfoVO.getSearchTime();
                 sumAmt = StringUtil.addComma(mpFarRealtimePayInfoVO.getSumAmt());
                 realFareVOList = mpFarRealtimePayInfoVO.getList();
-                if(realFareVOList !=null && !realFareVOList.isEmpty()) {
-                    for(RealFareVO dto : realFareVOList) {
-                        String payment = StringUtil.NVL(dto.getPayment(),"0");
+                if (realFareVOList != null && !realFareVOList.isEmpty()) {
+                    for (RealFareVO dto : realFareVOList) {
+                        String payment = StringUtil.NVL(dto.getPayment(), "0");
                         payment = StringUtil.addComma(payment);
                         dto.setPayment(payment);
                     }
@@ -586,49 +526,44 @@ public class MsfChargeController {
             }
         } catch (SelfServiceException e) {
             logger.info("X18 ERROR");
-        }  catch (Exception e) {
+        } catch (Exception e) {
             logger.info("X18 ERROR");
         }
 
         try {
-            if(!"".equals(searchDay) && searchDay.length() >= 8) {
+            if (!"".equals(searchDay) && searchDay.length() >= 8) {
                 Calendar cal = Calendar.getInstance();
-                SimpleDateFormat formatter = new SimpleDateFormat ( "yyyyMMdd", Locale.KOREA );
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.KOREA);
                 formatter.parse(searchDay);
                 String yy = searchDay.substring(0, 4);
                 String mm = searchDay.substring(4, 6);
-                String day = searchDay.substring(6,8);
-
-                cal.set(Integer.parseInt(yy),Integer.parseInt(mm)-1, Integer.parseInt(day));
+                String day = searchDay.substring(6, 8);
+                cal.set(Integer.parseInt(yy), Integer.parseInt(mm) - 1, Integer.parseInt(day));
                 useTotalDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
             }
-        } catch(IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             logger.info("SimpleDateFormat ERROR");
-        } catch(Exception e) {
+        } catch (Exception e) {
             logger.info("SimpleDateFormat ERROR");
         }
 
         String grapWidth = "0";
-        double width = 0l;
         try {
-
             double dUseDay = Double.parseDouble(useDay);
-            double dUseTotalDay =  Double.valueOf(useTotalDay);
-            width =  (dUseDay/dUseTotalDay)*100;
+            double dUseTotalDay = Double.valueOf(useTotalDay);
+            double width = (dUseDay / dUseTotalDay) * 100;
             grapWidth = String.format("%.2f", width);
-
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             logger.info("NumberFormatException ERROR");
-        } catch(Exception e) {
+        } catch (Exception e) {
             logger.info("width ERROR");
         }
 
         // 마스킹해제
-        if(SessionUtils.getMaskingSession() > 0 ) {
-            model.addAttribute("maskingSession", "Y");
-
+        String maskingSession = "N";
+        if (SessionUtils.getMaskingSession() > 0) {
+            maskingSession = "Y";
             MaskingDto maskingDto = new MaskingDto();
-
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
@@ -640,18 +575,20 @@ public class MsfChargeController {
             maskingSvc.insertMaskingReleaseHist(maskingDto);
         }
 
-        model.addAttribute("grapWidth", grapWidth);
-        model.addAttribute("cntrList", cntrList);
-        model.addAttribute("searchVO", searchVO);
-        model.addAttribute("realFareVOList", realFareVOList);
-        model.addAttribute("useDay", useDay);
-        model.addAttribute("useTotalDay", useTotalDay);
-        model.addAttribute("searchDay", searchDay);
-        model.addAttribute("searchTime", searchTime);
-        model.addAttribute("rateNm", rateNm);
-        model.addAttribute("sumAmt", sumAmt);
-
-        return returnUrl;
+        HashMap<String, Object> rtnMap = new HashMap<>();
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        rtnMap.put("grapWidth", grapWidth);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("realFareVOList", realFareVOList);
+        rtnMap.put("useDay", useDay);
+        rtnMap.put("useTotalDay", useTotalDay);
+        rtnMap.put("searchDay", searchDay);
+        rtnMap.put("searchTime", searchTime);
+        rtnMap.put("rateNm", rateNm);
+        rtnMap.put("sumAmt", sumAmt);
+        rtnMap.put("maskingSession", maskingSession);
+        return rtnMap;
     }
 
     /**
@@ -667,7 +604,6 @@ public class MsfChargeController {
      */
 
     @RequestMapping(value = { "/mypage/chargeDetailItemAjax.do", "/m/mypage/chargeDetailItemAjax.do" })
-    @ResponseBody
     public JsonReturnDto chargeDetailItemAjax(HttpServletRequest request, ModelMap model,
             @ModelAttribute("searchVO") MyPageSearchDto searchVO, String billMonth, String messageLine)  {
 
@@ -715,65 +651,66 @@ public class MsfChargeController {
      */
 
     @RequestMapping("/mypage/chargeViewPrint.do")
-    public String chargeViewPrint(HttpServletRequest request, ModelMap model,
-            @ModelAttribute("searchVO") MyPageSearchDto searchVO)  {
+    public Map<String, Object> chargeViewPrint(HttpServletRequest request,
+            @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+
+        // [ASIS] JSP 페이지명 반환 — TOBE: REST JSON 응답으로 전환
+        // String returnUrl = "/portal/mypage/chargeViewPrint";
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
-        if (userSession != null) { // 취약성 293
+        if (userSession != null) {
             cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
-        String returnUrl = "/portal/mypage/chargeViewPrint";
-
-
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
-        }
-        MpFarMonBillingInfoDto billInfo = chargeService.farMonBillingInfoDto(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId(), DateTimeUtil.getFormatString("yyyyMM"));
-        if(!billInfo.isSuccess()){//mPlatFormService에서 response massage is null.로들어오는 경우 exception 처리
-            throw new McpCommonException(COMMON_EXCEPTION,"/main.do");
+        if (!chk) {
+            // [ASIS] ResponseSuccessDto → successRedirect JSP 반환 — TOBE: 예외로 전환
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
 
-        model.addAttribute("billInfo", billInfo);
+        MpFarMonBillingInfoDto billInfo = chargeService.farMonBillingInfoDto(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId(), DateTimeUtil.getFormatString("yyyyMM"));
+        if (!billInfo.isSuccess()) {
+            throw new McpCommonException(COMMON_EXCEPTION, "/main.do");
+        }
+
         List<MpMonthPayMentDto> monthList = billInfo.getMonthList();
         String billMonth = searchVO.getBillMonth();
-
         MpMonthPayMentDto monthPay = null;
         MpFarMonDetailInfoDto detailInfo = null;
 
-        if(monthList != null && monthList.size() > 0){
-            if(StringUtil.isNotNull(billMonth)){
-                for( MpMonthPayMentDto item : monthList ){
-                    if(StringUtil.equals(item.getBillMonth(), billMonth)){
+        if (monthList != null && monthList.size() > 0) {
+            if (StringUtil.isNotNull(billMonth)) {
+                for (MpMonthPayMentDto item : monthList) {
+                    if (StringUtil.equals(item.getBillMonth(), billMonth)) {
                         monthPay = item;
                         break;
                     }
                 }
-            }else{
+            } else {
                 monthPay = monthList.get(0);
             }
         }
 
-        if(monthPay != null){
+        if (monthPay != null) {
             detailInfo = chargeService.farMonDetailInfoDto(searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId(),
                     monthPay.getBillSeqNo(), monthPay.getBillDueDateList(), monthPay.getBillMonth(),
-                    monthPay.getBillStartDate(), monthPay.getBillEndDate() );
-
-            if(!detailInfo.isSuccess()){//mPlatFormService에서 response massage is null.로들어오는 경우 exception 처리
+                    monthPay.getBillStartDate(), monthPay.getBillEndDate());
+            if (!detailInfo.isSuccess()) {
                 throw new McpCommonException(COMMON_EXCEPTION);
             }
         }
-        searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
-        model.addAttribute("monthPay", monthPay);
-        model.addAttribute("detailInfo", detailInfo);
 
-        model.addAttribute("cntrList", cntrList);
+        searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
         searchVO.setCtn(StringMakerUtil.getPhoneNum(searchVO.getCtn()));
-        model.addAttribute("searchVO", searchVO);
-        return returnUrl;
+
+        HashMap<String, Object> rtnMap = new HashMap<>();
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        rtnMap.put("billInfo", billInfo);
+        rtnMap.put("monthPay", monthPay);
+        rtnMap.put("detailInfo", detailInfo);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("searchVO", searchVO);
+        return rtnMap;
     }
 
     /**
@@ -787,29 +724,28 @@ public class MsfChargeController {
      */
 
     @RequestMapping("/mypage/chargeMonPrint.do")
-    public String chargeMonPrint(HttpServletRequest request, @ModelAttribute("searchVO") MyPageSearchDto searchVO, Model model,@RequestParam(value = "ncn", required = true) String ncn1
-            ,@RequestParam(value = "startDate", required = true) String startDate,@RequestParam(value = "endDate", required = true) String endDate)  {
+    public Map<String, Object> chargeMonPrint(HttpServletRequest request,
+            @ModelAttribute("searchVO") MyPageSearchDto searchVO,
+            @RequestParam(value = "ncn", required = true) String ncn1,
+            @RequestParam(value = "startDate", required = true) String startDate,
+            @RequestParam(value = "endDate", required = true) String endDate) {
 
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+        // [ASIS] JSP 페이지명 반환 — TOBE: REST JSON 응답으로 전환
+        // String returnUrl = "/portal/mypage/chargeMonPrint";
 
-        String returnCode = "00";
-        String message = "";
         String ncn = ncn1;
         String custId = "";
         String ctn = "";
 
-        String returnUrl = "/portal/mypage/chargeMonPrint";
-
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = null;
-        if (userSession != null) { // 취약성 301
+        if (userSession != null) {
             cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         }
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+        if (!chk) {
+            // [ASIS] ResponseSuccessDto → successRedirect JSP 반환 — TOBE: 예외로 전환
+            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
         }
         custId = searchVO.getCustId();
         ctn = searchVO.getCtn();
@@ -820,55 +756,49 @@ public class MsfChargeController {
         authSmsDto.setMenu("chargePrint");
         authSmsDto.setCheck(true);
 
-//PNB_확인        SessionUtils.checkAuthSmsSession(authSmsDto);
-
-        if(!authSmsDto.isResult()) {
-            throw new McpCommonJsonException("01",authSmsDto.getMessage());
+        // [ASIS] SessionUtils.checkAuthSmsSession(authSmsDto); — PNB 확인 필요
+        if (!authSmsDto.isResult()) {
+            throw new McpCommonJsonException("01", authSmsDto.getMessage());
         }
-
-        //SMS 인증정보 초기화
-        //실행할때 마다 SMS 인증 처리
-//PNB_확인        SessionUtils.setAuthSmsSetNullSession(authSmsDto);
-
+        // [ASIS] SessionUtils.setAuthSmsSetNullSession(authSmsDto); — PNB 확인 필요
 
         MpFarPaymentInfoVO mpFarPaymentInfoVO = null;
         List<ItemPay> itemPay = null;
         try {
-            mpFarPaymentInfoVO = realTimePayService.farPaymentInfoList(ncn, ctn, custId,startDate,endDate);
-            if(mpFarPaymentInfoVO !=null && mpFarPaymentInfoVO.isSuccess()) {
+            mpFarPaymentInfoVO = realTimePayService.farPaymentInfoList(ncn, ctn, custId, startDate, endDate);
+            if (mpFarPaymentInfoVO != null && mpFarPaymentInfoVO.isSuccess()) {
                 itemPay = mpFarPaymentInfoVO.getItemPay();
-                if(itemPay !=null && !itemPay.isEmpty()) {
-                    for(ItemPay dto : itemPay) {
+                if (itemPay != null && !itemPay.isEmpty()) {
+                    for (ItemPay dto : itemPay) {
                         // 날짜포멧
-                        String payMentDate = StringUtil.NVL(dto.getPayMentDate(),"");
-                        if(!"".equals(payMentDate) && payMentDate.length() > 7) {
-                            payMentDate = payMentDate.substring(0,4)+"."+payMentDate.substring(4,6)+"."+payMentDate.substring(6,8);
+                        String payMentDate = StringUtil.NVL(dto.getPayMentDate(), "");
+                        if (!"".equals(payMentDate) && payMentDate.length() > 7) {
+                            payMentDate = payMentDate.substring(0, 4) + "." + payMentDate.substring(4, 6) + "." + payMentDate.substring(6, 8);
                             dto.setPayMentDate(payMentDate);
                         }
                         // 금액포멧
-                        String payMentMoney = StringUtil.NVL(dto.getPayMentMoney(),"0");
+                        String payMentMoney = StringUtil.NVL(dto.getPayMentMoney(), "0");
                         payMentMoney = StringUtil.addComma(payMentMoney);
                         dto.setPayMentMoney(payMentMoney);
                     }
                 }
-               }
-
+            }
         } catch (SelfServiceException e) {
-            logger.info("error:"+e.getMessage());
-        }  catch (Exception e) {
-            logger.info("error:"+e.getMessage());
+            logger.info("error:" + e.getMessage());
+        } catch (Exception e) {
+            logger.info("error:" + e.getMessage());
         }
-        model.addAttribute("itemPay", itemPay);
-        /*searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
-        searchVO.setCtn(StringMakerUtil.getPhoneNum(searchVO.getCtn()));*/
 
         String[] nums = StringUtil.getMobileNum(searchVO.getCtn());
-        String telNo= nums[0]+"-"+nums[1]+"-"+nums[2];
-
+        String telNo = nums[0] + "-" + nums[1] + "-" + nums[2];
         searchVO.setUserName(userSession.getName());
         searchVO.setCtn(telNo);
-        model.addAttribute("searchVO", searchVO);
-        return returnUrl;
+
+        HashMap<String, Object> rtnMap = new HashMap<>();
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        rtnMap.put("itemPay", itemPay);
+        rtnMap.put("searchVO", searchVO);
+        return rtnMap;
     }
 
     /**
@@ -948,17 +878,15 @@ public class MsfChargeController {
     }
 
 
-    private ResponseSuccessDto getMessageBox() {
-        ResponseSuccessDto mbox = new ResponseSuccessDto();
-        String url = "/mypage/updateForm.do";
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            url = "/m/mypage/updateForm.do";
-        }
-
-        mbox.setRedirectUrl(url);
-        mbox.setSuccessMsg(NOT_FULL_MEMBER_EXCEPTION);
-        return mbox;
-    }
+    // [ASIS] 정회원 미인증 시 successRedirect 메시지박스 반환 — TOBE: McpCommonException 예외로 전환하여 미사용
+    // private ResponseSuccessDto getMessageBox() {
+    //     ResponseSuccessDto mbox = new ResponseSuccessDto();
+    //     String url = "/mypage/updateForm.do";
+    //     if ("Y".equals(NmcpServiceUtils.isMobile())) { url = "/m/mypage/updateForm.do"; }
+    //     mbox.setRedirectUrl(url);
+    //     mbox.setSuccessMsg(NOT_FULL_MEMBER_EXCEPTION);
+    //     return mbox;
+    // }
 
     @Deprecated
     private String getErrMsg(String msg) {

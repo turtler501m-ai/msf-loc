@@ -18,12 +18,11 @@ import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RestController;
+// [ASIS] import org.springframework.ui.Model — TOBE: @RestController에서 Model 미사용
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 //import com.ktmmobile.msf.domains.form.form.newchange.service.AppformSvc;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
@@ -56,7 +55,7 @@ import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 
-@Controller
+@RestController
 public class MsfMyShareDataController {
 
     private static final Logger logger = LoggerFactory.getLogger(MsfMyShareDataController.class);
@@ -87,45 +86,35 @@ public class MsfMyShareDataController {
 
 //    @Autowired
 //    private FathService fathService;
-    
+
     /**
      * 쉐어링 (인증전)
      * @author bsj
      * @Date : 2021.12.30
      * @param request
-     * @param model
      * @return
      */
 
     @RequestMapping(value = { "/mySharingCntrInfo.do", "/m/mySharingCntrInfo.do" })
-    public String doMySharingCntrInfo(HttpServletRequest request, Model model) {
+    public Map<String, Object> doMySharingCntrInfo(HttpServletRequest request) {
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         // 데이터쉐어링 - 비로그인 세션 비워주기
         SessionUtils.saveNonmemberSharingInfo(null);
 
-        String returnUrl = "/portal/content/mySharingCntrInfo";
         String userRtnUrl = "/content/mySharingView.do";
-
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            returnUrl = "/mobile/content/mySharingCntrInfo";
-            userRtnUrl = "/m/content/mySharingView.do";
-        }
-
         if("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            returnUrl = "/mobile/content/mySharingCntrInfo";
             userRtnUrl = "/m/content/mySharingView.do";
-        }else {
-            returnUrl = "/portal/content/mySharingCntrInfo";
-            userRtnUrl = "/content/mySharingView.do";
         }
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
 
         if(userSession != null) {
-            return "redirect:"+userRtnUrl;
+            rtnMap.put("redirectUrl", userRtnUrl);
         }
 
-        return returnUrl;
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
@@ -133,7 +122,6 @@ public class MsfMyShareDataController {
      * @author bsj
      * @Date : 2021.12.30
      * @param request
-     * @param model
      * @param searchVO
      * @param menuType
      * @param phoneNum
@@ -142,11 +130,13 @@ public class MsfMyShareDataController {
      */
 
     @RequestMapping(value = { "/content/mySharingView.do", "/m/content/mySharingView.do" })
-    public String doMySharingView(HttpServletRequest request, Model model
+    public Map<String, Object> doMySharingView(HttpServletRequest request
             ,	@ModelAttribute("searchVO") MyPageSearchDto searchVO
             ,@RequestParam(value = "menuType", required = false) String menuType
             ,@RequestParam(value = "phoneNum", required = false) String phoneNum
             , HttpSession session) {
+
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         // ================= STEP START =================
         // step 초기화 및 메뉴명 세팅
@@ -154,31 +144,23 @@ public class MsfMyShareDataController {
         SessionUtils.setPageSession("dataSharing");
         // ================= STEP END =================
 
-        String returnUrl = "/portal/content/mySharingView";
+        // [ASIS] returnUrl "/portal/content/mySharingView" — TOBE 미사용
         String rtnUrl = "/mySharingCntrInfo.do";
         MyShareDataReqDto myShareDataReqDto = new MyShareDataReqDto();
 
         if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            returnUrl = "/mobile/content/mySharingView";
             rtnUrl = "/m/mySharingCntrInfo.do";
         }
 
-        //중복요청 체크
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        checkOverlapDto.setRedirectUrl(rtnUrl);
-        checkOverlapDto.setSuccessMsg(TIME_OVERLAP_EXCEPTION);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         AuthSmsDto authSmsDto = SessionUtils.getSmsSession(menuType);
         UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
 
         if(userSessionDto == null &&  authSmsDto  == null) {
-            return "redirect:"+rtnUrl;
+            rtnMap.put("redirectUrl", rtnUrl);
+            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+            return rtnMap;
         }
 
         String userType = ""; //외국인여부
@@ -205,7 +187,7 @@ public class MsfMyShareDataController {
                 userType = cntrList.getUnUserSSn().substring(6,7);
                 if("5".equals(userType) || "6".equals(userType)) {
                     userType = "Y";
-                    model.addAttribute("userType", userType);
+                    rtnMap.put("userType", userType);
                 }
 
             }
@@ -221,7 +203,7 @@ public class MsfMyShareDataController {
             myShareDataReqDto.setNcn(searchVO.getNcn());
             myShareDataReqDto.setCtn(searchVO.getCtn());
             myShareDataReqDto.setCrprCtn(searchVO.getCtn());
-            model.addAttribute("searchVO", searchVO);
+            rtnMap.put("searchVO", searchVO);
             session.setAttribute("userDivisionYn", "02");
 
             // ============ STEP START ============
@@ -239,20 +221,18 @@ public class MsfMyShareDataController {
             cntrList = msfMypageSvc.selectCntrList(userId);
 
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
-                ResponseSuccessDto responseSuccessDto = getMessageBox();
-                model.addAttribute("responseSuccessDto", responseSuccessDto);
-                return "/common/successRedirect";
+                throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
             }
 
             if("Y".equals(searchVO.getUserType())) {
-                model.addAttribute("userType", searchVO.getUserType());
+                rtnMap.put("userType", searchVO.getUserType());
             }
 
             myShareDataReqDto.setCustId(searchVO.getCustId());
             myShareDataReqDto.setNcn(searchVO.getNcn());
             myShareDataReqDto.setCtn(searchVO.getCtn());
             myShareDataReqDto.setCrprCtn(searchVO.getCtn());
-            model.addAttribute("cntrList", cntrList);
+            rtnMap.put("cntrList", cntrList);
 
         }
 
@@ -266,7 +246,7 @@ public class MsfMyShareDataController {
 
         if("G".equals(customerType) || "B".equals(customerType)) {
             customerType = "Y";
-            model.addAttribute("customerType", customerType); // 현재
+            rtnMap.put("customerType", customerType); // 현재
         }
 
         String resultCode = "";
@@ -323,7 +303,7 @@ public class MsfMyShareDataController {
 
         // 마스킹해제
         if(SessionUtils.getMaskingSession() > 0 ) {
-            model.addAttribute("maskingSession", "Y");
+            rtnMap.put("maskingSession", "Y");
 
             UserSessionDto userSession = SessionUtils.getUserCookieBean();
             MaskingDto maskingDto = new MaskingDto();
@@ -341,14 +321,14 @@ public class MsfMyShareDataController {
         }
 
 
-        model.addAttribute("changeYn", changeYn); // 청구계약
-        model.addAttribute("resultCode", resultCode); //
-        model.addAttribute("message", message); //
-        model.addAttribute("mcpUserCntrMngDto", mcpUserCntrMngDto); //
-        model.addAttribute("subStatusYn", subStatusYn); //
-        model.addAttribute("moscDataSharingResDto", moscDataSharingResDto); //
-        model.addAttribute("menuType", menuType); //
-        model.addAttribute("socChkYn", socChkYn); // 쉐어링 불가 요금제
+        rtnMap.put("changeYn", changeYn); // 청구계약
+        rtnMap.put("resultCode", resultCode); //
+        rtnMap.put("message", message); //
+        rtnMap.put("mcpUserCntrMngDto", mcpUserCntrMngDto); //
+        rtnMap.put("subStatusYn", subStatusYn); //
+        rtnMap.put("moscDataSharingResDto", moscDataSharingResDto); //
+        rtnMap.put("menuType", menuType); //
+        rtnMap.put("socChkYn", socChkYn); // 쉐어링 불가 요금제
 
 
         //테스트를 위한
@@ -357,20 +337,21 @@ public class MsfMyShareDataController {
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if ("LOCAL".equals(serverName) || "youngtomo".equals(userSession.getUserId()) ) {
 
-            model.addAttribute("changeYn", "N"); // 청구계약
-            model.addAttribute("resultCode", "N"); //
-            model.addAttribute("message", "N"); //
-            model.addAttribute("subStatusYn", "N"); //
-            model.addAttribute("socChkYn", "Y"); // 쉐어링 불가 요금제
+            rtnMap.put("changeYn", "N"); // 청구계약
+            rtnMap.put("resultCode", "N"); //
+            rtnMap.put("message", "N"); //
+            rtnMap.put("subStatusYn", "N"); //
+            rtnMap.put("socChkYn", "Y"); // 쉐어링 불가 요금제
         } else {
-            model.addAttribute("changeYn", changeYn); // 청구계약
-            model.addAttribute("resultCode", resultCode); //
-            model.addAttribute("message", message); //
-            model.addAttribute("subStatusYn", subStatusYn); //
-            model.addAttribute("socChkYn", socChkYn); // 쉐어링 불가 요금제
+            rtnMap.put("changeYn", changeYn); // 청구계약
+            rtnMap.put("resultCode", resultCode); //
+            rtnMap.put("message", message); //
+            rtnMap.put("subStatusYn", subStatusYn); //
+            rtnMap.put("socChkYn", socChkYn); // 쉐어링 불가 요금제
         }
         */
-        return returnUrl;
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
 
@@ -383,16 +364,17 @@ public class MsfMyShareDataController {
      */
 
     @RequestMapping(value = { "/content/dataSharingStep1.do", "/m/content/dataSharingStep1.do" })
-    public String dataSharingStep1() {
+    public Map<String, Object> dataSharingStep1() {
+
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         // 데이터쉐어링 - 비로그인 세션 비워주기
         SessionUtils.saveNonmemberSharingInfo(null);
 
-        String returnUrl = "/portal/content/dataSharingStep1";
+        // [ASIS] returnUrl "/portal/content/dataSharingStep1" — TOBE 미사용
         String userRtnUrl = "/content/dataSharingStep2.do";
 
         if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            returnUrl = "/mobile/content/dataSharingStep1";
             userRtnUrl = "/m/content/dataSharingStep2.do";
         }
 
@@ -400,10 +382,11 @@ public class MsfMyShareDataController {
         SessionUtils.saveDateSharingSession(null);
 
         if(userSession != null) {
-            return "redirect:"+userRtnUrl;
+            rtnMap.put("redirectUrl", userRtnUrl);
         }
 
-        return returnUrl;
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
@@ -411,7 +394,6 @@ public class MsfMyShareDataController {
      * @author bsj
      * @Date : 2021.12.30
      * @param request
-     * @param model
      * @param searchVO
      * @param menuType
      * @param phoneNum
@@ -419,11 +401,13 @@ public class MsfMyShareDataController {
      * @return
      */
     @RequestMapping(value = { "/content/dataSharingStep2.do", "/m/content/dataSharingStep2.do" })
-    public String dataSharingStep2(HttpServletRequest request, Model model
+    public Map<String, Object> dataSharingStep2(HttpServletRequest request
             , @ModelAttribute("searchVO") MyPageSearchDto searchVO
             , @RequestParam(value = "menuType", required = false) String menuType
             , @RequestParam(value = "phoneNum", required = false) String phoneNum
             , HttpSession session) {
+
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         // ================= STEP START =================
         // step 초기화 및 메뉴명 세팅
@@ -431,31 +415,23 @@ public class MsfMyShareDataController {
         SessionUtils.setPageSession("dataSharing");
         // ================= STEP END =================
 
-        String returnUrl = "/portal/content/dataSharingStep2";
+        // [ASIS] returnUrl "/portal/content/dataSharingStep2" — TOBE 미사용
         String rtnUrl = "/content/dataSharingStep1.do";
         MyShareDataReqDto myShareDataReqDto = new MyShareDataReqDto();
 
         if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            returnUrl = "/mobile/content/dataSharingStep2";
             rtnUrl = "/m/content/dataSharingStep1.do";
         }
 
-        //중복요청 체크
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        checkOverlapDto.setRedirectUrl(rtnUrl);
-        checkOverlapDto.setSuccessMsg(TIME_OVERLAP_EXCEPTION);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         AuthSmsDto authSmsDto = SessionUtils.getSmsSession(menuType);
         UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
 
         if(userSessionDto == null &&  authSmsDto  == null) {
-            return "redirect:"+rtnUrl;
+            rtnMap.put("redirectUrl", rtnUrl);
+            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+            return rtnMap;
         }
 
         String userType = ""; //외국인여부
@@ -495,7 +471,7 @@ public class MsfMyShareDataController {
                 if("5".equals(userType) || "6".equals(userType) || "7".equals(userType) || "8".equals(userType)) {
                     userType = "Y";
                     cstmrType =  "FN";
-                    model.addAttribute("userType", userType);
+                    rtnMap.put("userType", userType);
                 } else if (19 > age ) {
                     cstmrType =  "NM";
                 }
@@ -514,7 +490,7 @@ public class MsfMyShareDataController {
             myShareDataReqDto.setNcn(searchVO.getNcn());
             myShareDataReqDto.setCtn(searchVO.getCtn());
             myShareDataReqDto.setCrprCtn(searchVO.getCtn());
-            model.addAttribute("searchVO", searchVO);
+            rtnMap.put("searchVO", searchVO);
             session.setAttribute("userDivisionYn", "02");
 
             // ============ STEP START ============
@@ -532,13 +508,11 @@ public class MsfMyShareDataController {
             cntrList = msfMypageSvc.selectCntrList(userId);
 
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
-                ResponseSuccessDto responseSuccessDto = getMessageBox();
-                model.addAttribute("responseSuccessDto", responseSuccessDto);
-                return "/common/successRedirect";
+                throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
             }
 
             if("Y".equals(searchVO.getUserType())) {
-                model.addAttribute("userType", searchVO.getUserType());
+                rtnMap.put("userType", searchVO.getUserType());
             }
 
 
@@ -573,7 +547,7 @@ public class MsfMyShareDataController {
                 if("5".equals(userType) || "6".equals(userType) || "7".equals(userType) || "8".equals(userType)) {
                     userType = "Y";
                     cstmrType =  "FN";
-                    model.addAttribute("userType", userType);
+                    rtnMap.put("userType", userType);
                 } else if (19 > age ) {
                     cstmrType =  "NM";
                 }
@@ -584,7 +558,7 @@ public class MsfMyShareDataController {
             myShareDataReqDto.setNcn(searchVO.getNcn());
             myShareDataReqDto.setCtn(searchVO.getCtn());
             myShareDataReqDto.setCrprCtn(searchVO.getCtn());
-            model.addAttribute("cntrList", cntrList);
+            rtnMap.put("cntrList", cntrList);
         }
 
         // 현재 요금제 조회
@@ -597,7 +571,7 @@ public class MsfMyShareDataController {
 
         if("G".equals(customerType) || "B".equals(customerType)) {
             customerType = "Y";
-            model.addAttribute("customerType", customerType); // 현재
+            rtnMap.put("customerType", customerType); // 현재
         }
 
 
@@ -670,7 +644,7 @@ public class MsfMyShareDataController {
 
         // 마스킹해제
         if(SessionUtils.getMaskingSession() > 0 ) {
-            model.addAttribute("maskingSession", "Y");
+            rtnMap.put("maskingSession", "Y");
             UserSessionDto userSession = SessionUtils.getUserCookieBean();
             MaskingDto maskingDto = new MaskingDto();
 
@@ -687,19 +661,19 @@ public class MsfMyShareDataController {
 
 
 
-        model.addAttribute("isMacTime", isMacTime); //신규 셀프개통 가능 여부
-        model.addAttribute("cstmrType", cstmrType);
-        model.addAttribute("changeYn", changeYn); // 청구계약
-        model.addAttribute("resultCode", resultCode); //
-        model.addAttribute("message", message); //
-        model.addAttribute("mcpUserCntrMngDto", mcpUserCntrMngDto); //
-        model.addAttribute("subStatusYn", subStatusYn); //
-        model.addAttribute("moscDataSharingResDto", moscDataSharingResDto); //
-        model.addAttribute("menuType", menuType); //
-        model.addAttribute("socChkYn", socChkYn); // 쉐어링 불가 요금제
+        rtnMap.put("isMacTime", isMacTime); //신규 셀프개통 가능 여부
+        rtnMap.put("cstmrType", cstmrType);
+        rtnMap.put("changeYn", changeYn); // 청구계약
+        rtnMap.put("resultCode", resultCode); //
+        rtnMap.put("message", message); //
+        rtnMap.put("mcpUserCntrMngDto", mcpUserCntrMngDto); //
+        rtnMap.put("subStatusYn", subStatusYn); //
+        rtnMap.put("moscDataSharingResDto", moscDataSharingResDto); //
+        rtnMap.put("menuType", menuType); //
+        rtnMap.put("socChkYn", socChkYn); // 쉐어링 불가 요금제
 
-
-        return returnUrl;
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
 
@@ -709,33 +683,35 @@ public class MsfMyShareDataController {
      * @author bsj
      * @Date : 2021.12.30
      * @param request
-     * @param model
      * @param contractNum
      * @param searchVO
      * @param session
      * @return
      */
     @RequestMapping(value = { "/content/dataSharingStep3.do", "/m/content/dataSharingStep3.do" })
-    public String dataSharingStep3(HttpServletRequest request, Model model
+    public Map<String, Object> dataSharingStep3(HttpServletRequest request
             , @RequestParam(value = "contractNum", required = false) String contractNum
             , @RequestParam(value = "onOffType", required = false) String onOffType
             , @RequestParam(value = "cstmrType", required = true) String cstmrType
             , @ModelAttribute("searchVO") MyPageSearchDto searchVO
             ,HttpSession session)  {
 
+        HashMap<String, Object> rtnMap = new HashMap<>();
+
         String rtnUrl = "/content/dataSharingStep2.do";
-        String returnUrl = "/portal/content/dataSharingStep3";
+        // [ASIS] returnUrl "/portal/content/dataSharingStep3" — TOBE 미사용
         String stepErrReturnUrl = "/main.do";
         String userDivisionYn = (String) session.getAttribute("userDivisionYn");
 
         if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            returnUrl = "/mobile/content/dataSharingStep3";
             rtnUrl = "/m/content/dataSharingStep2.do";
             stepErrReturnUrl = "/m/main.do";
         }
 
         if(contractNum == null) {
-            return "redirect:"+rtnUrl;
+            rtnMap.put("redirectUrl", rtnUrl);
+            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+            return rtnMap;
         }
 
         MyShareDataReqDto myShareDataReqDto = new MyShareDataReqDto();
@@ -796,9 +772,7 @@ public class MsfMyShareDataController {
             List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
 
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
-                ResponseSuccessDto responseSuccessDto = getMessageBox();
-                model.addAttribute("responseSuccessDto", responseSuccessDto);
-                return "/common/successRedirect";
+                throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
             }
 
             String userSsn= null;
@@ -849,11 +823,12 @@ public class MsfMyShareDataController {
         logger.info("[WOO][WOO][WOO]MyShareDataReqDto==>" + ObjectUtils.convertObjectToString(myShareDataReqDto) );
         SessionUtils.saveDateSharingSession(myShareDataReqDto);
 
-        model.addAttribute("cstmrType", cstmrType);
-        model.addAttribute("contractNum", contractNum);
-        model.addAttribute("onOffType", onOffType);
-        model.addAttribute("myShareDataReqDto", myShareDataReqDto);
-        return returnUrl;
+        rtnMap.put("cstmrType", cstmrType);
+        rtnMap.put("contractNum", contractNum);
+        rtnMap.put("onOffType", onOffType);
+        rtnMap.put("myShareDataReqDto", myShareDataReqDto);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
 
@@ -863,28 +838,30 @@ public class MsfMyShareDataController {
      * @author bsj
      * @Date : 2021.12.30
      * @param request
-     * @param model
      * @param myShareDataReqDto
      * @param session
      * @return
      */
     @RequestMapping(value = { "/content/dataSharingStep4.do", "/m/content/dataSharingStep4.do" })
-    public String dataSharingStep4(HttpServletRequest request, Model model
+    public Map<String, Object> dataSharingStep4(HttpServletRequest request
             ,@ModelAttribute("myShareDataReqDto") MyShareDataReqDto myShareDataReqDto
             ,HttpSession session)  {
 
-        String returnUrl = "/portal/content/dataSharingStep4";
+        HashMap<String, Object> rtnMap = new HashMap<>();
+
+        // [ASIS] returnUrl "/portal/content/dataSharingStep4" — TOBE 미사용
         String rtnUrl = "/content/dataSharingStep2.do";
 
         if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            returnUrl = "/mobile/content/dataSharingStep4";
             rtnUrl = "/m/content/dataSharingStep2.do";
         }
 
         String rtnOpmdSvcNo = (String) session.getAttribute("opmdSvcNo");
 
         if(rtnOpmdSvcNo == null) {
-            return "redirect:"+rtnUrl;
+            rtnMap.put("redirectUrl", rtnUrl);
+            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+            return rtnMap;
         }
 
         MyShareDataResDto myShareDataResDto = new MyShareDataResDto();
@@ -898,7 +875,9 @@ public class MsfMyShareDataController {
         UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
 
         if(userSessionDto == null &&  nonMemberSess  == null) {
-            return "redirect:"+rtnUrl;
+            rtnMap.put("redirectUrl", rtnUrl);
+            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+            return rtnMap;
         }
 
         if(nonMemberSess != null) {
@@ -949,8 +928,9 @@ public class MsfMyShareDataController {
         myShareDataResDto.setOpmdSvcNo(StringMakerUtil.getPhoneNum(myShareDataReqDto.getOpmdSvcNo()));
         SessionUtils.saveNiceRes(null);
         session.removeAttribute("opmdSvcNo"); //저장완료후 삭제
-        model.addAttribute("myShareDataResDto", myShareDataResDto);
-        return returnUrl;
+        rtnMap.put("myShareDataResDto", myShareDataResDto);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
@@ -958,7 +938,6 @@ public class MsfMyShareDataController {
      * @author bsj
      * @Date : 2021.12.30
      * @param request
-     * @param model
      * @param searchVO
      * @param contractNum
      * @param session
@@ -967,8 +946,7 @@ public class MsfMyShareDataController {
     // TOBESKIP: 사전 체크 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = { "/content/preOpenCheckAjax.do", "/m/content/preOpenCheckAjax.do" })
     @Deprecated
-    @ResponseBody
-    public JsonReturnDto domyCntrListAjax(HttpServletRequest request, Model model
+    public JsonReturnDto domyCntrListAjax(HttpServletRequest request
             , @ModelAttribute("searchVO") MyPageSearchDto searchVO
             ,@RequestParam(value = "contractNum", required = false) String contractNum, HttpSession session) {
 
@@ -1060,31 +1038,33 @@ public class MsfMyShareDataController {
      * @author bsj
      * @Date : 2021.12.30
      * @param request
-     * @param model
      * @param contractNum
      * @param searchVO
      * @param session
      * @return
      */
     @RequestMapping(value = { "/content/reqSharingView.do", "/m/content/reqSharingView.do" })
-    public String dorReqSharingView(HttpServletRequest request, Model model
+    public Map<String, Object> dorReqSharingView(HttpServletRequest request
             ,@RequestParam(value = "contractNum", required = false) String contractNum
             , @ModelAttribute("searchVO") MyPageSearchDto searchVO
             ,HttpSession session)  {
-        
+
+        HashMap<String, Object> rtnMap = new HashMap<>();
+
         String rtnUrl = "/content/mySharingView.do";
-        String returnUrl = "/portal/content/reqSharingView";
+        // [ASIS] returnUrl "/portal/content/reqSharingView" — TOBE 미사용
         String stepErrReturnUrl = "/main.do";
         String userDivisionYn = (String) session.getAttribute("userDivisionYn");
 
         if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            returnUrl = "/mobile/content/reqSharingView";
             rtnUrl = "/m/content/mySharingView.do";
             stepErrReturnUrl = "/m/main.do";
         }
 
         if(contractNum == null) {
-            return "redirect:"+rtnUrl;
+            rtnMap.put("redirectUrl", rtnUrl);
+            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+            return rtnMap;
         }
 
         MyShareDataReqDto myShareDataReqDto = new MyShareDataReqDto();
@@ -1104,7 +1084,7 @@ public class MsfMyShareDataController {
 
         //안면인증 세션 초기화
 //PNB_확인        SessionUtils.initializeFathSession();
-        
+
         //비회원
         if(authSmsDto != null) {
             McpUserCntrMngDto userCntrMngDto = new McpUserCntrMngDto();
@@ -1148,9 +1128,7 @@ public class MsfMyShareDataController {
             List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSessionDto.getUserId());
 
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
-                ResponseSuccessDto responseSuccessDto = getMessageBox();
-                model.addAttribute("responseSuccessDto", responseSuccessDto);
-                return "/common/successRedirect";
+                throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
             }
 
             String userSsn= null;
@@ -1193,9 +1171,10 @@ public class MsfMyShareDataController {
         if(!"0000".equals(nicePinRtn.get("returnCode"))) throw new McpCommonException(nicePinRtn.get("returnMsg"), stepErrReturnUrl);
         // ============ STEP END ============
 
-        model.addAttribute("contractNum", contractNum);
-        model.addAttribute("myShareDataReqDto", myShareDataReqDto);
-        return returnUrl;
+        rtnMap.put("contractNum", contractNum);
+        rtnMap.put("myShareDataReqDto", myShareDataReqDto);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     /**
@@ -1203,14 +1182,12 @@ public class MsfMyShareDataController {
      * @author bsj
      * @Date : 2021.12.30
      * @param request
-     * @param model
      * @param myShareDataReqDto
      * @param session
      * @return
      */
     @RequestMapping(value = { "/content/insertOpenRequestAjax.do", "/m/content/insertOpenRequestAjax.do" })
-    @ResponseBody
-    public HashMap<String, Object> doinsertOpenRequestAjax(HttpServletRequest request, Model model,
+    public HashMap<String, Object> doinsertOpenRequestAjax(HttpServletRequest request,
                                                            @ModelAttribute("myShareDataReqDto") MyShareDataReqDto myShareDataReqDto
             , HttpSession session) {
 
@@ -1297,29 +1274,30 @@ public class MsfMyShareDataController {
      * @author bsj
      * @Date : 2021.12.30
      * @param request
-     * @param model
      * @param myShareDataReqDto
      * @param session
      * @return
      */
 
     @RequestMapping(value = { "/content/reqSharingCompleteView.do", "/m/content/reqSharingCompleteView.do" })
-    public String doReqSharingCompleteView(HttpServletRequest request, Model model
+    public Map<String, Object> doReqSharingCompleteView(HttpServletRequest request
             ,@ModelAttribute("myShareDataReqDto") MyShareDataReqDto myShareDataReqDto
             ,HttpSession session)  {
 
-        String returnUrl = "/portal/content/reqSharingCompleteView";
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
+        // [ASIS] returnUrl "/portal/content/reqSharingCompleteView" — TOBE 미사용
         String rtnUrl = "/content/mySharingView.do";
         if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            returnUrl = "/mobile/content/reqSharingCompleteView";
             rtnUrl = "/m/content/mySharingView.do";
         }
 
         String rtnOpmdSvcNo = (String) session.getAttribute("opmdSvcNo");
 
         if(rtnOpmdSvcNo == null) {
-            return "redirect:"+rtnUrl;
+            rtnMap.put("redirectUrl", rtnUrl);
+            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+            return rtnMap;
         }
 
         MyShareDataResDto myShareDataResDto = new MyShareDataResDto();
@@ -1333,7 +1311,9 @@ public class MsfMyShareDataController {
         UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
 
         if(userSessionDto == null &&  nonMemberSess  == null) {
-            return "redirect:"+rtnUrl;
+            rtnMap.put("redirectUrl", rtnUrl);
+            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+            return rtnMap;
         }
 
         if(nonMemberSess != null) {
@@ -1388,8 +1368,9 @@ public class MsfMyShareDataController {
         myShareDataResDto.setOpmdSvcNo(StringMakerUtil.getPhoneNum(myShareDataReqDto.getOpmdSvcNo()));
         SessionUtils.saveNiceRes(null);
         session.removeAttribute("opmdSvcNo"); //저장완료후 삭제
-        model.addAttribute("myShareDataResDto", myShareDataResDto);
-        return returnUrl;
+        rtnMap.put("myShareDataResDto", myShareDataResDto);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
     private boolean checkUserType(MyPageSearchDto searchVO, List<McpUserCntrMngDto> cntrList,
@@ -1461,17 +1442,17 @@ public class MsfMyShareDataController {
         return true;
     }
 
-    private ResponseSuccessDto getMessageBox() {
-        ResponseSuccessDto mbox = new ResponseSuccessDto();
-
-        String redirectUrl = "/mypage/updateForm.do";
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            redirectUrl = "/m/mypage/updateForm.do";
-        }
-        mbox.setRedirectUrl(redirectUrl);
-        mbox.setSuccessMsg("정회원 인증 후 이용하실 수 있습니다.");
-        return mbox;
-    }
+    // [ASIS] getMessageBox() — TOBE: throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION) 으로 대체
+    // private ResponseSuccessDto getMessageBox() {
+    //     ResponseSuccessDto mbox = new ResponseSuccessDto();
+    //     String redirectUrl = "/mypage/updateForm.do";
+    //     if ("Y".equals(NmcpServiceUtils.isMobile())) {
+    //         redirectUrl = "/m/mypage/updateForm.do";
+    //     }
+    //     mbox.setRedirectUrl(redirectUrl);
+    //     mbox.setSuccessMsg("정회원 인증 후 이용하실 수 있습니다.");
+    //     return mbox;
+    // }
 
 }
 

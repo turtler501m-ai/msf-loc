@@ -57,7 +57,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     agentCd: 'MSF_FORM',  // DB 저장용 AGENT_CD 기본값
     managerCd: 'MSF_FORM', // DB 저장용 MANAGER_CD 기본값
     /* 연동 키 값 */
-    ncn: 'TESTNCN001',  // [TEST] 계약번호 (운영 시 X01 조회값으로 대체)
+    ncn: '525550130',  // [TEST] 계약번호 (운영 시 X01 조회값으로 대체)
     custId: 'TESTCUST001', // [TEST] 고객ID (운영 시 X01 조회값으로 대체)
   })
 

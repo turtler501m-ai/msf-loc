@@ -9,11 +9,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.ktmmobile.msf.domains.form.common.dto.NiceResDto;
 import com.ktmmobile.msf.domains.form.common.dto.ResponseSuccessDto;
@@ -39,7 +38,7 @@ import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgCo
 
 //import com.ktmmobile.msf.domains.form.form.newchange.service.AppformSvc;
 
-@Controller
+@RestController
 public class MsfUsimSelfChgController {
 
     private static final Logger logger = LoggerFactory.getLogger(MsfUsimSelfChgController.class);
@@ -67,42 +66,29 @@ public class MsfUsimSelfChgController {
      * 설명 : 유심 셀프 변경 화면
      */
     @RequestMapping(value = {"/mypage/usimSelfChg.do", "/m/mypage/usimSelfChg.do"})
-    public String reSpnsrPlcyDc(
-        ModelMap model, HttpServletRequest request
+    public Map<String, Object> reSpnsrPlcyDc(
+        HttpServletRequest request
         , @ModelAttribute("searchVO") MyPageSearchDto searchVO
     ) {
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
-        String jspPageName = "/portal/mypage/usimSelfChg";
-        String thisPageName = "/mypage/usimSelfChg.do";
-        if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            jspPageName = "/mobile/mypage/usimSelfChg";
-            thisPageName = "/m/mypage/usimSelfChg.do";
-        }
-
-        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();  //중복요청 체크
-        checkOverlapDto.setRedirectUrl(thisPageName);
-
-        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-            model.addAttribute("responseSuccessDto", checkOverlapDto);
-            model.addAttribute("MyPageSearchDto", searchVO);
-            return "/common/successRedirect";
-        }
+        // [ASIS] overlapRequestCheck successRedirect — TOBE 미사용
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            return "redirect:/loginForm.do";
+            throw new com.ktmmobile.msf.domains.form.common.exception.McpCommonException(
+                com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION);
         }
         List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
         if (!chk) {
-            ResponseSuccessDto responseSuccessDto = getMessageBox();
-            model.addAttribute("responseSuccessDto", responseSuccessDto);
-            return "/common/successRedirect";
+            throw new com.ktmmobile.msf.domains.form.common.exception.McpCommonException(
+                com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION);
         }
 
         // 마스킹해제
         if (SessionUtils.getMaskingSession() > 0) {
-            model.addAttribute("maskingSession", "Y");
+            rtnMap.put("maskingSession", "Y");
 
             MaskingDto maskingDto = new MaskingDto();
 
@@ -118,12 +104,13 @@ public class MsfUsimSelfChgController {
         }
 
         searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
-        model.addAttribute("phoneNum", searchVO.getCtn());
-        model.addAttribute("custId", cntrList.get(0).getCustId());
+        rtnMap.put("phoneNum", searchVO.getCtn());
+        rtnMap.put("custId", cntrList.get(0).getCustId());
         searchVO.setCtn(StringMakerUtil.getPhoneNum(searchVO.getCtn()));
-        model.addAttribute("searchVO", searchVO);
-        model.addAttribute("cntrList", cntrList);
-        return jspPageName;
+        rtnMap.put("searchVO", searchVO);
+        rtnMap.put("cntrList", cntrList);
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
 
@@ -131,7 +118,6 @@ public class MsfUsimSelfChgController {
      * 설명     : 유심 변경
      */
     @RequestMapping(value = "/mypage/usimSelfChgAjax.do")
-    @ResponseBody
     public Map<String, Object> usimSelfChgAjax(OsstUc0ReqDto osstUc0ReqDto) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
@@ -238,7 +224,6 @@ public class MsfUsimSelfChgController {
      * 설명     : 유심변경 결과 확인
      */
     @RequestMapping(value = "/mypage/usimChgChkAjax.do")
-    @ResponseBody
     public Map<String, Object> usimChgChkAjax(OsstUc0ReqDto osstUc0ReqDto) {
 
         HashMap<String, Object> rtnMap = new HashMap<>();
@@ -250,15 +235,16 @@ public class MsfUsimSelfChgController {
     }
 
 
-    private ResponseSuccessDto getMessageBox() {
-        ResponseSuccessDto mbox = new ResponseSuccessDto();
-        mbox.setRedirectUrl("/mypage/updateForm.do");
-        if ("Y".equals(NmcpServiceUtils.isMobile())) {
-            mbox.setRedirectUrl("/m/mypage/updateForm.do");
-        }
-        mbox.setSuccessMsg("정회원 인증 후 이용하실 수 있습니다.");
-        return mbox;
-    }
+    // [ASIS] getMessageBox() — TOBE: throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION) 으로 대체
+    // private ResponseSuccessDto getMessageBox() {
+    //     ResponseSuccessDto mbox = new ResponseSuccessDto();
+    //     mbox.setRedirectUrl("/mypage/updateForm.do");
+    //     if ("Y".equals(NmcpServiceUtils.isMobile())) {
+    //         mbox.setRedirectUrl("/m/mypage/updateForm.do");
+    //     }
+    //     mbox.setSuccessMsg("정회원 인증 후 이용하실 수 있습니다.");
+    //     return mbox;
+    // }
 
 
 }

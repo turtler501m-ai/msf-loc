@@ -53,6 +53,14 @@ public class MyBatisCustomProperties extends MybatisProperties {
         return datasource.msp.mapperLocations;
     }
 
+    public List<String> mcpMapperScanPackages() {
+        return datasource.mcp.mapperScanPackages;
+    }
+
+    public List<String> mcpMapperLocations() {
+        return datasource.mcp.mapperLocations;
+    }
+
     @Getter
     @Setter
     public static class QueryId {
@@ -67,6 +75,7 @@ public class MyBatisCustomProperties extends MybatisProperties {
 
         private MapperSettings smartform = new MapperSettings();
         private MapperSettings msp = new MapperSettings();
+        private MapperSettings mcp = new MapperSettings();
     }
 
     @Getter

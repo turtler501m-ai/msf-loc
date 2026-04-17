@@ -5,22 +5,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfChangPageSvc;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeResVO;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
 import com.ktmmobile.msf.domains.form.form.termination.service.MsfCancelPageSvc;
 
-@Controller
+@RestController
 public class MsfCancelPageController {
     private static Logger logger = LoggerFactory.getLogger(MsfCancelPageController.class);
 
@@ -35,6 +34,7 @@ public class MsfCancelPageController {
 
     @Value("${api.interface.server}")
     private String apiInterfaceServer;
+    @Autowired private MsfChangPageSvc msfChangPageSvc;
 
     /**
      * X18 — 잔여요금·위약금 실시간 조회
@@ -45,7 +45,6 @@ public class MsfCancelPageController {
     // AS-IS reference: mcp/mcp-portal-was MyinfoController#getRealTimePriceAjax
     // flow: session user -> contract list(ncn match) -> ctn/custId -> X18(farRealtimePayInfo)
     @RequestMapping(value = "/remainCharge/list")
-    @ResponseBody
     public RemainChargeResVO getRemainCharge(@RequestBody RemainChargeReqDto reqDto) {
         logger.debug("[getRemainCharge][controller] request: reqNull={}, ncn={}, ctn={}, custIdPresent={}",
             reqDto == null,
@@ -79,8 +78,8 @@ public class MsfCancelPageController {
         //     //TEST_SKIP return errVO;
         // }
 
-        // 4. MP 연동 파라미터 조회 제외
-        //logger.debug("[getRemainCharge][controller] pass-validation: userId={}", userSession.getUserId());
+        //4. MP 연동 파라미터 조회 제외
+        // logger.debug("[getRemainCharge][controller] pass-validation: userId={}", userSession.getUserId());
         // List<McpUserCntrMngDto> cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
         // McpUserCntrMngDto cntrInfo = null;
         // if (cntrList != null && !cntrList.isEmpty()) {
@@ -88,14 +87,18 @@ public class MsfCancelPageController {
         //         .filter(item -> reqDto.getNcn().equals(item.getSvcCntrNo()))
         //         .findFirst().orElse(null);
         // }
-        //
-        // if (cntrInfo == null) {
-        //     errVO.setSuccess(false);
-        //     errVO.setMessage("계약 정보를 찾을 수 없습니다.");
-        //     return errVO;
-        // }
-        //reqDto.setCtn(cntrInfo.getCntrMobileNo());
-        //reqDto.setCustId(cntrInfo.getCustId());
+
+        //4. MP 연동 전화번호
+        logger.debug("[getRemainCharge][controller] selectCntrListNoLogin: ncn={}", reqDto.getNcn());
+        McpUserCntrMngDto cntrInfo = msfChangPageSvc.selectCntrListNoLogin(reqDto.getNcn());
+
+        if (cntrInfo == null) {
+            errVO.setSuccess(false);
+            errVO.setMessage("계약 정보를 찾을 수 없습니다.");
+            return errVO;
+        }
+        reqDto.setCtn(cntrInfo.getCntrMobileNo());
+        reqDto.setCustId(cntrInfo.getCustId());
 
         logger.info("X18 잔여요금 조회 요청: ncn={}, ctn={}", reqDto.getNcn(), reqDto.getCtn());
 
@@ -104,7 +107,6 @@ public class MsfCancelPageController {
 
 
     @PostMapping(value = "/api/msf/formTermination/{applicationKey}/complete")
-    @ResponseBody
     public TerminationApplyResVO complete(
         @PathVariable("applicationKey") String applicationKey,
         @RequestBody TerminationApplyReqDto reqDto

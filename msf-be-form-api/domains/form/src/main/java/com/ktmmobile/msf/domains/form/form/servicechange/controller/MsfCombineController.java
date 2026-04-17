@@ -17,12 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.AuthSmsDto;
@@ -74,7 +73,7 @@ import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgCo
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
 
-@Controller
+@RestController
 public class MsfCombineController {
 
     private static final Logger logger = LoggerFactory.getLogger(MsfCombineController.class);
@@ -489,7 +488,6 @@ public class MsfCombineController {
          * @Create Date : 2022. 11. 11
          */
         @RequestMapping(value = "/content/getNoLoginRateInfoAjax.do")
-        @ResponseBody
         public Map<String, Object> certPhoneInfo(AuthSmsDto authSmsDto) {
 
             AuthSmsDto rtnDto = SessionUtils.getAuthSmsBean(authSmsDto);
@@ -603,7 +601,6 @@ public class MsfCombineController {
     // TOBESKIP: KT 결합 자회선 인증 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/content/childCertifyAjax.do")
     @Deprecated
-    @ResponseBody
     public Map<String, Object> childCertify(
         AuthSmsDto authSmsDto, McpUserCntrMngDto userCntrMngDto
         , @RequestParam(required = false, defaultValue = "") String prcsMdlInd
@@ -962,7 +959,6 @@ public class MsfCombineController {
     // TOBESKIP: KT 결합 본인명의 사전체크 및 신청 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/content/mineRegCombineKtAjax.do")
     @Deprecated
-    @ResponseBody
     public Map<String, Object> childKtCertify(
         AuthSmsDto authSmsDto
         , @RequestParam(required = false, defaultValue = "") String prcsMdlInd
@@ -1039,7 +1035,6 @@ public class MsfCombineController {
     // TOBESKIP: KT 결합 자회선 KT 인증 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/content/childCertifyKtAjax.do")
     @Deprecated
-    @ResponseBody
     public Map<String, Object> childCertifyKt(
         AuthSmsDto authSmsDto
         , @RequestParam(required = false, defaultValue = "") String prcsMdlInd
@@ -1191,7 +1186,6 @@ public class MsfCombineController {
     // TOBESKIP: KT 결합 자회선 추가 인증 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/content/childCertifyMoreAjax.do")
     @Deprecated
-    @ResponseBody
     public Map<String, Object> childCertifyMore() {
         AuthSmsDto childAutSms = new AuthSmsDto();
 
@@ -1226,7 +1220,6 @@ public class MsfCombineController {
     // TOBESKIP: KT 결합 자회선 본인인증 확인 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/content/childVerifyAjax.do")
     @Deprecated
-    @ResponseBody
     public Map<String, Object> childVerifyAjax(AuthSmsDto authInput) {
 
 
@@ -1304,7 +1297,6 @@ public class MsfCombineController {
     // TOBESKIP: KT 결합 신청 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/content/regCombineAjax.do")
     @Deprecated
-    @ResponseBody
     public Map<String, Object> regCombine(@RequestParam(required = false, defaultValue = "") String prcsMdlInd) {
 
         AuthSmsDto pareSession = new AuthSmsDto();
@@ -1629,7 +1621,6 @@ public class MsfCombineController {
     // TOBESKIP: KT 결합 KT 신청 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/content/regCombineKtAjax.do")
     @Deprecated
-    @ResponseBody
     public Map<String, Object> regCombineKt(@RequestParam(required = false, defaultValue = "") String prcsMdlInd) {
         Map<String, Object> regCombineMap = myCombinationSvc.regCombineKt(prcsMdlInd);
         return regCombineMap;
@@ -1646,7 +1637,6 @@ public class MsfCombineController {
     // TOBESKIP: 결합 가능 서비스 목록 조회 Ajax는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/content/getCombiSvcListAjax.do")
     @Deprecated
-    @ResponseBody
     public Map<String, Object> getCombiSvcList(
         MyPageSearchDto searchVO
         , @RequestParam(required = false, defaultValue = "combine") String menuPara
@@ -1927,11 +1917,11 @@ public class MsfCombineController {
      * @Date : 2024.11.21
      */
     @RequestMapping(value = {"/content/combineSelf.do", "/m/content/combineSelf.do", "/content/combineWireless.do"})
-    public String combineSelf(
-        HttpServletRequest request, Model model
+    public Map<String, Object> combineSelf(
+        HttpServletRequest request
         , @ModelAttribute("searchVO") MyPageSearchDto searchVO
     ) {
-
+        HashMap<String, Object> rtnMap = new HashMap<>();
 
         // 전체스텝 초기화
         certService.delStepInfo(1);
@@ -1943,23 +1933,15 @@ public class MsfCombineController {
             List<McpUserCntrMngDto> cntrList = new ArrayList<McpUserCntrMngDto>();
             cntrList = msfMypageSvc.selectCntrList(userId);
             if (!this.checkUserType(searchVO, cntrList, userSessionDto)) {
-                ResponseSuccessDto responseSuccessDto = new ResponseSuccessDto();
-                String url = "/mypage/updateForm.do";
-                if ("Y".equals(NmcpServiceUtils.isMobile())) {
-                    url = "/m/mypage/updateForm.do";
-                }
-                responseSuccessDto.setRedirectUrl(url);
-                responseSuccessDto.setSuccessMsg(NOT_FULL_MEMBER_EXCEPTION);
-                model.addAttribute("responseSuccessDto", responseSuccessDto);
-                return "/common/successRedirect";
+                throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
             }
             searchVO.setMoCtn(cntrList.size());
-            model.addAttribute("cntrList", cntrList); // 현재 서비스계약번호
-            model.addAttribute("searchVO", searchVO);
+            rtnMap.put("cntrList", cntrList); // 현재 서비스계약번호
+            rtnMap.put("searchVO", searchVO);
 
             // 마스킹해제
             if (SessionUtils.getMaskingSession() > 0) {
-                model.addAttribute("maskingSession", "Y");
+                rtnMap.put("maskingSession", "Y");
                 UserSessionDto userSession = SessionUtils.getUserCookieBean();
                 MaskingDto maskingDto = new MaskingDto();
                 long maskingRelSeq = SessionUtils.getMaskingSession();
@@ -1974,13 +1956,9 @@ public class MsfCombineController {
             }
         }
 
-        model.addAttribute("menuType", "combineSelf");
-
-        if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-            return "/mobile/content/combineSelf";
-        } else {
-            return "/portal/content/combineSelf";
-        }
+        rtnMap.put("menuType", "combineSelf");
+        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+        return rtnMap;
     }
 
 
@@ -1992,7 +1970,6 @@ public class MsfCombineController {
      * @Create Date : 2022. 11. 14
      */
     @RequestMapping(value = "/content/checkCombineSelfAjax.do")
-    @ResponseBody
     public Map<String, Object> checkCombineSelf(AuthSmsDto authSmsDto, MyPageSearchDto searchVO) {
 
         AuthSmsDto rtnDto = SessionUtils.getAuthSmsBean(authSmsDto);
@@ -2153,7 +2130,6 @@ public class MsfCombineController {
      * @Create Date : 2022. 11. 12
      */
     @RequestMapping(value = "/content/regCombineSelfAjax.do")
-    @ResponseBody
     public Map<String, Object> regCombineSelf(AuthSmsDto authSmsDto, MyPageSearchDto searchVO) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
@@ -2289,7 +2265,6 @@ public class MsfCombineController {
     // TOBESKIP: 아무나SOLO 결합 타입 조회 Ajax(H1 5002-05 제외)는 사용하지 않아 URL 매핑만 막고 원본 로직은 보존한다.
     // @RequestMapping(value = "/content/getCombineSoloTypeAjax.do")
     @Deprecated
-    @ResponseBody
     public Map<String, Object> combineSoloType(@RequestParam(value = "rateCd") String rateCd) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();

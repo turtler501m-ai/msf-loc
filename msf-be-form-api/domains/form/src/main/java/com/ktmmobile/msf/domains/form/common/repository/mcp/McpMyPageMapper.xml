@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="McpMyPageMapper">
+
+    <!-- /mypage/prePayment — 선불 요금제 여부 조회 (MSP_JUO_FEATURE_INFO, MSP_RATE_MST) -->
+    <select id="selectPrePayment" parameterType="java.lang.String" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            MSP_JUO_FEATURE_INFO@DL_MSP A,
+            MSP_RATE_MST@DL_MSP B
+        WHERE
+            A.CONTRACT_NUM = #{contractNum}
+          AND A.SERVICE_TYPE = 'P'
+          AND A.EXPIRATION_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+          AND A.SOC = B.RATE_CD
+          AND B.PAY_CL_CD = 'PP'
+    </select>
+
+    <!-- /mypage/mspAddInfo — 할부원금 조회 (MSP_JUO_ADD_INFO) -->
+    <select id="selectMspAddInfo" parameterType="java.lang.String"
+            resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto">
+        SELECT CONTRACT_NUM
+             , DVC_OFW_AMNT
+             , INST_ORGIN_AMNT
+             , INST_MNTH_CNT
+             , ENGG_MNTH_CNT
+             , MODEL_NAME
+             , MODEL_ID
+        FROM (
+            SELECT CONTRACT_NUM
+                 , DVC_OFW_AMNT
+                 , INST_ORGIN_AMNT
+                 , INST_MNTH_CNT
+                 , ENGG_MNTH_CNT
+                 , MODEL_NAME
+                 , MODEL_ID
+                 , ROW_NUMBER() OVER (ORDER BY EVNT_TRTM_DT DESC) AS RNUM
+            FROM MSP_JUO_ADD_INFO@DL_MSP
+            WHERE CONTRACT_NUM = #{svcCntrNo}
+              AND APP_END_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+        )
+        WHERE RNUM = 1
+    </select>
+
+</mapper>
