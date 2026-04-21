@@ -1,20 +1,24 @@
 package com.ktmmobile.msf.domains.commoncode.application.dto;
 
-import com.ktmmobile.msf.domains.commoncode.domain.entity.CommonCode;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import com.ktmmobile.msf.commons.common.data.type.UseYn;
 
 public record CommonCodeItemResponse(
     String code,
-    String codeName,
-    String useYn,
+    String title,
+    UseYn useYn,
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     CommonCodeResponse.DetailResponse detail
 ) {
 
-    public static CommonCodeItemResponse of(CommonCode commonCode) {
+    public static CommonCodeItemResponse toResponse(CommonCodeData commonCode, boolean includeDetail) {
         return new CommonCodeItemResponse(
-            commonCode.getCode(),
-            commonCode.getCodeName(),
-            commonCode.getUseYn(),
-            CommonCodeResponse.DetailResponse.of(commonCode.getDetail())
+            commonCode.code(),
+            commonCode.title(),
+            commonCode.useYn(),
+            includeDetail ? CommonCodeResponse.DetailResponse.toResponse(commonCode.detail()) : null
         );
     }
 }

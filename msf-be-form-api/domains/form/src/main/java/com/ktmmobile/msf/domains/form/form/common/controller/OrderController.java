@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.domains.form.form.common.dto.OrderDto;
+import com.ktmmobile.msf.domains.form.common.dto.OrderDto;
 import com.ktmmobile.msf.domains.form.form.common.mapper.OrderMapper;
 
 @RestController

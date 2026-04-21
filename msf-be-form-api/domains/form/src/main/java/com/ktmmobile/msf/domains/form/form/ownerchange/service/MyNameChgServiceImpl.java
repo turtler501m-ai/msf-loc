@@ -31,7 +31,7 @@ import com.ktmmobile.msf.domains.form.form.ownerchange.repository.MyNameChgDao;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.MyNameChgReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.repository.CustRequestDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.repository.MypageDao;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMyinfoService;
 
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NICE_CERT_REQ_NULL_EXCEPTION;

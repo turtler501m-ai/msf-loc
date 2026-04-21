@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.repository.McpApiClient;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonBillingInfoDto;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonDetailInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonBillingInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonDetailInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMonthPayMentDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpMonthPayMentDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscSpnsrItgInfoInVO;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;

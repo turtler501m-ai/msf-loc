@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="McpSmsMapper">
+
+<!-- /sms/addKakaoNoti - API 설명 (INSERT(MSP) : SMS_SEQ.NEXTVAL, MSG_QUEUE) -->
+  <insert id="insertKakaoNoti" parameterType="com.ktmmobile.msf.domains.form.common.dto.ApiMapDto">
+    <!--  -->
+    <selectKey  keyProperty="SMS_SEQ" resultType="string" order="BEFORE">
+      SELECT SMS_SEQ.NEXTVAL FROM DUAL
+    </selectKey >
+    INSERT INTO /* /sms/addKakaoNoti : McpSmsMapper.insertKakaoNoti */
+    MSG_QUEUE (
+    MSEQ,
+    <if test="I_SUBJECT != null and I_SUBJECT != ''">
+      SUBJECT ,
+    </if>
+    MSG_TYPE,
+    DSTADDR,
+    CALLBACK,
+    TEXT,
+    EXPIRETIME,
+    REQUEST_TIME,
+    OPT_ID,
+    TEXT2,
+    K_TEMPLATE_CODE,
+    K_NEXT_TYPE,
+    SENDER_KEY
+    ) VALUES (
+    #{SMS_SEQ, jdbcType=NUMERIC},
+    <if test="I_SUBJECT != null and I_SUBJECT != ''">
+      #{I_SUBJECT},
+    </if>
+    #{I_MSG_TYPE},
+    #{I_CTN},
+    #{I_CALLBACK},
+    #{I_MSG},
+    7200,
+    SYSDATE,
+    'MCP',
+    #{I_MSG},
+    #{I_TEMPLATE_CD},
+    #{I_NEXT_TYPE},
+    #{I_SENDER_KEY}
+    )
+  </insert>
+
+
+  <!-- /sms/addNewSms - API 설명 (INSERT(MSP) : AM2X_SUBMIT_SEQ.NEXTVAL_SMS, AM2X_SUBMIT_SEQ.NEXTVAL, AM2X_SUBMIT_SMS, AM2X_SUBMIT) -->
+  <insert id="insertNewSms" parameterType="com.ktmmobile.msf.domains.form.common.dto.ApiMapDto">
+    <selectKey keyProperty="SMS_SEQ" resultType="string" order="BEFORE">
+      <choose>
+        <when test='IS_REAL == "Y"'>
+          SELECT AM2X_SUBMIT_SEQ.NEXTVAL_SMS FROM DUAL
+        </when>
+        <otherwise>
+          SELECT AM2X_SUBMIT_SEQ.NEXTVAL FROM DUAL
+        </otherwise>
+      </choose>
+    </selectKey>
+
+    INSERT INTO /* /sms/addNewSms : McpSmsMapper.insertNewSms */
+    <choose>
+      <when test='IS_REAL == "Y"'>
+        AM2X_SUBMIT_SMS
+      </when>
+      <otherwise>
+        AM2X_SUBMIT
+      </otherwise>
+    </choose> (
+    MSG_ID,
+    <if test='I_SUBJECT != null and I_SUBJECT != ""'>
+      SUBJECT ,
+    </if>
+    MSG_TYPE,
+    SCHEDULE_TIME,
+    SUBMIT_TIME,
+    MESSAGE,
+    CALLBACK_NUM,
+    RCPT_DATA,
+    K_ADFLAG,
+    RESERVED01,
+    RESERVED02,
+    RESERVED03
+    ) VALUES (
+    #{SMS_SEQ, jdbcType=NUMERIC},
+    <if test='I_SUBJECT != null and I_SUBJECT != ""'>
+      #{I_SUBJECT},
+    </if>
+    #{I_MSG_TYPE},
+    NVL(#{SCHEDULE_TIME}, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')),
+    TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+    #{I_MSG},
+    #{I_CALLBACK},
+    #{I_CTN},
+    'N',
+    'MCP',
+    #{RESERVED02},
+    #{RESERVED03}
+    )
+  </insert>
+
+
+  <!-- /sms/qStackNewCnt - API 설명 (INSERT(MSP) : AM2X_SUBMIT_LOG_SMS, AM2X_SUBMIT_LOG, AM2X_SUBMIT_SMS, AM2X_SUBMIT) -->
+  <select id="selectQstackNewCount" parameterType="com.ktmmobile.msf.domains.form.common.dto.AuthSmsDto" resultType="java.lang.Integer">
+    SELECT /* /sms/qStackNewCnt : McpSmsMapper.selectQstackNewCount */
+    COUNT(*)
+    FROM (
+    SELECT RCPT_DATA, SCHEDULE_TIME
+    <choose>
+      <when test='isReal == "Y"'>
+        FROM AM2X_SUBMIT_LOG_SMS
+      </when>
+      <otherwise>
+        FROM AM2X_SUBMIT_LOG
+      </otherwise>
+    </choose>
+    WHERE RCPT_DATA = #{phoneNum}
+    AND MSG_TYPE = 1
+    AND TO_DATE(SCHEDULE_TIME, 'YYYYMMDDHH24MISS') <![CDATA[>]]> SYSDATE - #{limitMin}/60/24
+
+    UNION ALL
+
+    SELECT RCPT_DATA, SCHEDULE_TIME
+    <choose>
+      <when test='isReal == "Y"'>
+        FROM AM2X_SUBMIT_SMS
+      </when>
+      <otherwise>
+        FROM AM2X_SUBMIT
+      </otherwise>
+    </choose>
+    WHERE RCPT_DATA = #{phoneNum}
+    AND MSG_TYPE = 1
+    AND TO_DATE(SCHEDULE_TIME, 'YYYYMMDDHH24MISS') <![CDATA[>]]> SYSDATE - #{limitMin}/60/24
+    )
+  </select>
+
+</mapper>

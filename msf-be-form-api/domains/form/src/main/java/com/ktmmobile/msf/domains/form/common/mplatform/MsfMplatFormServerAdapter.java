@@ -34,7 +34,6 @@ import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 public class MsfMplatFormServerAdapter {
 
     private static final Logger logger = LoggerFactory.getLogger(MsfMplatFormServerAdapter.class);
-    private static final boolean SKIP_EXTERNAL_CALL = true;
 
     @Value("${juice.url}")
     private String propertiesService;
@@ -52,16 +51,12 @@ public class MsfMplatFormServerAdapter {
     public boolean callService(HashMap<String,String> param, CommonXmlVO vo ,int timeout) throws SelfServiceException, SocketTimeoutException{
         boolean result = true;
         String responseXml = "";
-        String eventCd = StringUtil.NVL(param.get("appEventCd"), "");
         try {
 
             //엠플렛폼 로그 저장
             HashMap<String, String> pMplatform = this.saveMplateSvcLog(param);
-            logger.debug("[MPlatform][callService] param(beforeGetURL)={}", param);
-            logger.debug("[MPlatform][callService] pMplatform={}", pMplatform);
 
             String getURL = this.getURL(pMplatform);
-            logger.debug("[MPlatform][callService] getURL(encoded)={}", getURL);
 
             String callUrl = propertiesService;
 
@@ -69,24 +64,9 @@ public class MsfMplatFormServerAdapter {
             NameValuePair[] data = {
                 new NameValuePair("getURL", getURL)
             };
-            logger.info("[MPlatform][callService] start: eventCd={}, timeout={}, ncn={}, ctn={}, custId={}, userId={}, callUrl={}",
-                eventCd, timeout, pMplatform.get("ncn"), pMplatform.get("ctn"), pMplatform.get("custId"), pMplatform.get("userid"), callUrl);
-            if (SKIP_EXTERNAL_CALL) {
-                logger.warn("[MPlatform][callService] external call skipped: eventCd={}", eventCd);
-                if (vo != null) {
-                    vo.setResultCode(CommonXmlVO.RESULTCODE_SUCCESS);
-                    vo.setSuccess(true);
-                    vo.setSvcMsg("SKIPPED");
-                    vo.setResponseXml("<return><outDto></outDto></return>");
-                }
-                return true;
-            }
-
+            logger.info("*** M-PlatForm Connect Start ***");
             responseXml = HttpClientUtil.post(callUrl, data, "UTF-8",timeout);
-
-            logger.info("[MPlatform][callService] response: eventCd={}, xmlLength={}",
-                eventCd, responseXml == null ? 0 : responseXml.length());
-            logger.debug("[MPlatform][callService] responseXml: eventCd={}, xml={}", eventCd, responseXml);
+            logger.info("responseXml : " + responseXml);
 
             if (responseXml.isEmpty()) {
                 result = false;
@@ -99,17 +79,13 @@ public class MsfMplatFormServerAdapter {
             }
 
         } catch (SelfServiceException e) {
-            logger.error("[MPlatform][callService] SelfServiceException: eventCd={}, message={}", eventCd, e.getMessage(), e);
             throw e;
         } catch (SocketTimeoutException e){
-            logger.error("[MPlatform][callService] SocketTimeoutException: eventCd={}, timeout={}", eventCd, timeout, e);
             throw e;
         } catch (McpMplatFormException e){
-            logger.error("[MPlatform][callService] McpMplatFormException: eventCd={}, message={}", eventCd, e.getMessage(), e);
             throw e;
         }  catch (Exception e) {
             result = false;
-            logger.error("[MPlatform][callService] Exception: eventCd={}, message={}", eventCd, e.getMessage(), e);
         }
 
         return result;
@@ -119,16 +95,12 @@ public class MsfMplatFormServerAdapter {
     public boolean callServiceNe(HashMap<String,String> param, CommonXmlNoSelfServiceException vo ,int timeout) throws SelfServiceException, SocketTimeoutException{
         boolean result = true;
         String responseXml = "";
-        String eventCd = StringUtil.NVL(param.get("appEventCd"), "");
         try {
 
             //엠플렛폼 로그 저장
             HashMap<String, String> pMplatform = this.saveMplateSvcLog(param);
-            logger.debug("[MPlatform][callServiceNe] param(beforeGetURL)={}", param);
-            logger.debug("[MPlatform][callServiceNe] pMplatform={}", pMplatform);
 
             String getURL = this.getURL(pMplatform);
-            logger.debug("[MPlatform][callServiceNe] getURL(encoded)={}", getURL);
 
             String callUrl = propertiesService;
 
@@ -136,24 +108,9 @@ public class MsfMplatFormServerAdapter {
             NameValuePair[] data = {
                 new NameValuePair("getURL", getURL)
             };
-            logger.info("[MPlatform][callServiceNe] start: eventCd={}, timeout={}, ncn={}, ctn={}, custId={}, userId={}, callUrl={}",
-                eventCd, timeout, pMplatform.get("ncn"), pMplatform.get("ctn"), pMplatform.get("custId"), pMplatform.get("userid"), callUrl);
-            if (SKIP_EXTERNAL_CALL) {
-                logger.warn("[MPlatform][callServiceNe] external call skipped: eventCd={}", eventCd);
-                if (vo != null) {
-                    vo.setResultCode(CommonXmlNoSelfServiceException.RESULTCODE_SUCCESS);
-                    vo.setSuccess(true);
-                    vo.setSvcMsg("SKIPPED");
-                    vo.setResponseXml("<return><outDto></outDto></return>");
-                }
-                return true;
-            }
-
+            logger.info("*** M-PlatForm Connect Start ***");
             responseXml = HttpClientUtil.post(callUrl,data, "UTF-8",timeout);
-
-            logger.info("[MPlatform][callServiceNe] response: eventCd={}, xmlLength={}",
-                eventCd, responseXml == null ? 0 : responseXml.length());
-            logger.debug("[MPlatform][callServiceNe] responseXml: eventCd={}, xml={}", eventCd, responseXml);
+            logger.info("responseXml : " + responseXml);
 
             if (responseXml.isEmpty()) {
                 result = false;
@@ -166,14 +123,11 @@ public class MsfMplatFormServerAdapter {
             }
 
         } catch (SocketTimeoutException e){
-            logger.error("[MPlatform][callServiceNe] SocketTimeoutException: eventCd={}, timeout={}", eventCd, timeout, e);
             throw e;
         } catch (McpMplatFormException e){
-            logger.error("[MPlatform][callServiceNe] McpMplatFormException: eventCd={}, message={}", eventCd, e.getMessage(), e);
             throw e;
         }  catch (Exception e) {
             result = false;
-            logger.error("[MPlatform][callServiceNe] Exception: eventCd={}, message={}", eventCd, e.getMessage(), e);
         }
 
         return result;
@@ -234,5 +188,4 @@ public class MsfMplatFormServerAdapter {
         reMap.put("eventCd", eventCd);
         return restTemplate.postForObject(apiInterfaceServer + "/mPlatform/checkMpCallCount", reMap, Integer.class);
     }
-
 }

@@ -325,22 +325,22 @@
 
 
     <!--<insert id="insertUserEventTrace" parameterType="com.ktmmobile.mcp.common.dto.UserEventTraceDto">
-        <!--<selectKey keyProperty="uetSeq" resultType="Integer" order="BEFORE">
+        <selectKey keyProperty="uetSeq" resultType="Integer" order="BEFORE">
             SELECT SQ_EVENT_TRACE_SEQ.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO MCP_USER_EVENT_TRACE (
-               UET_SEQ                  --수행 일련번호
-             , PRCS_MDL_MAIN            --처리 모듈 대구분
-             , PRCS_MDL_MID             --처리 모듈 중구분
-             , PRCS_MDL_SUB             --처리 모듈 소소구분
-             , TRTM_RSLT_SMST           --처리 결과 내용
-             , PRCS_SBST                --처리 내용
-             , SYS_RDATE_DD             --등록일 YYYYMMDD
-             , RIP                      --등록아이피
-             , REGST_ID                 --등록자 ID
-             , REGST_DTTM               --등록일시
-             , RVISN_ID                 --수정자 ID
-             , RVISN_DTTM               --수정일시
+               UET_SEQ                  수행 일련번호
+             , PRCS_MDL_MAIN            처리 모듈 대구분
+             , PRCS_MDL_MID             처리 모듈 중구분
+             , PRCS_MDL_SUB             처리 모듈 소소구분
+             , TRTM_RSLT_SMST           처리 결과 내용
+             , PRCS_SBST                처리 내용
+             , SYS_RDATE_DD             등록일 YYYYMMDD
+             , RIP                      등록아이피
+             , REGST_ID                 등록자 ID
+             , REGST_DTTM               등록일시
+             , RVISN_ID                 수정자 ID
+             , RVISN_DTTM               수정일시
         ) VALUES (
                #{uetSeq}
              , #{prcsMdlMain}
@@ -360,13 +360,13 @@
 
     <!--<update id="updateUserEventTrace" parameterType="com.ktmmobile.mcp.common.dto.UserEventTraceDto" >
         UPDATE MCP_USER_EVENT_TRACE SET
-            RVISN_DTTM = SYSDATE                   --수정일시
-            , RVISN_ID = #{rvisnId}                --수정자 ID
+            RVISN_DTTM = SYSDATE                   수정일시
+            , RVISN_ID = #{rvisnId}                수정자 ID
             <if test="prcsMdlSub !=null and prcsMdlSub != ''" >
-                , PRCS_MDL_SUB = #{prcsMdlSub}     --처리 모듈 소소구분
+                , PRCS_MDL_SUB = #{prcsMdlSub}     처리 모듈 소소구분
             </if>
             <if test="dtlDesc !=null and dtlDesc != ''" >
-                , DTL_DESC = #{dtlDesc}             --설명
+                , DTL_DESC = #{dtlDesc}             설명
             </if>
         WHERE
             UET_SEQ = #{uetSeq}
@@ -391,7 +391,7 @@
             , REGST_DTTM
         FROM MCP_USER_EVENT_TRACE
         WHERE 1=1
-            AND PRCS_MDL_SUB NOT IN ('INIT','MemoChat')   -- 초기화 , 본인 창 공유 제외
+            AND PRCS_MDL_SUB NOT IN ('INIT','MemoChat')    초기화 , 본인 창 공유 제외
         <if test="regstId !=null and regstId != ''" >
             AND REGST_ID = #{regstId}
         </if>

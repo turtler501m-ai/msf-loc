@@ -1,0 +1,106 @@
+#### Common Profile
+spring:
+  http:
+    ## 공통 설정
+    clients:
+      connect-timeout: 2s
+      read-timeout: 5s
+
+    ## 연동 대상 서비스
+    ## internal-service, external-service 프로퍼티를 참조하도록 작성 (직접 작성 지양)
+    serviceclient:
+      ## 내부 서비스
+      form-api:
+        base-url: ${internal-service.services.form-api.base-url}
+        connect-timeout: 1s
+        read-timeout: 2s
+      admin-api:
+        base-url: ${internal-service.services.admin-api.base-url}
+        connect-timeout: 1s
+        read-timeout: 2s
+      batch:
+        base-url: ${internal-service.services.batch.base-url}
+        connect-timeout: 1s
+        read-timeout: 2s
+      eformsign:
+        base-url: ${internal-service.services.eformsign.base-url}
+        connect-timeout: 2s
+        read-timeout: 3s
+
+      ## 외부 서비스
+      m-platform:
+        base-url: ${external-service.services.m-platform.base-url}
+      msp-prx:
+        base-url: ${external-service.services.msp-prx.base-url}
+      msp-api:
+        base-url: ${external-service.services.msp-api.base-url}
+      msp-ext-api:
+        base-url: ${external-service.services.msp-ext-api.base-url}
+
+
+
+## HTTP Client
+http-client:
+  logging:
+    enabled: true
+
+    ## 헤더 로깅
+    ## include 값은 contains 매칭용 헤더명
+    ## 헤더명 뒤에 [size] 또는 [start:end] 지정 가능 (생략 시 값 전체 로깅)
+    header-names:
+      include:
+        - Content-Type
+        - Authorization[10] # 앞뒤 10글자만 로깅
+      exclude:
+        - x-content-type-options
+
+    ## 바디(JSON) 필드 마스킹
+    body-masked-fields:
+      include:
+        - secret
+        - token
+        - password
+        - passwd
+        - apiKey
+        - api-key
+      exclude: []
+
+    ## 바디(JSON) 필드 축약 로깅
+    ## 필드명 뒤에 [size] 또는 [start:end] 지정 가능 (생략 시 기본값 사용)
+    body-truncated-fields:
+      include:
+        - html
+        - message[100]
+      exclude: []
+    body-truncated-size: 50 # 기본값 == [50:50]
+
+
+
+
+## 내부 서비스
+## (연동하는 모든 내부 서비스 정보를 여기에서 관리)
+internal-service:
+  services:
+    form-api:
+      base-url: http://smartform-app:8080
+    admin-api:
+      base-url: http://smartform-app:8180
+    batch:
+      base-url: http://smartform-app:8280
+    eformsign:
+      base-url: http://eformsign-app:8080
+
+
+
+## 외부 서비스
+## (연동하는 모든 외부 서비스 정보를 여기에서 관리)
+external-service:
+  services: ## 환경별 설정
+    m-platform:
+      base-url: http://none
+    msp-prx:
+      base-url: http://none
+    msp-api:
+      base-url: http://none
+    msp-ext-api:
+      base-url: http://none

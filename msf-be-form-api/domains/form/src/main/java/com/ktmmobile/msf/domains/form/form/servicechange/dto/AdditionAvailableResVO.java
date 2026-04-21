@@ -1,6 +1,7 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
 import java.util.List;
+import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
 
 /**
  * 가입가능 부가서비스 목록 응답 VO

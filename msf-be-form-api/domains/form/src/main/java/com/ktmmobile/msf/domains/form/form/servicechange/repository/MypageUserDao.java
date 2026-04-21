@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AgreeDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.CodeVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.UserVO;
 

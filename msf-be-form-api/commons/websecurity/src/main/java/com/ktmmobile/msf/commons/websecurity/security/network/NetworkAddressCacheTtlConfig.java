@@ -14,7 +14,7 @@ public class NetworkAddressCacheTtlConfig implements ApplicationRunner {
         java.security.Security.setProperty("networkaddress.cache.ttl", "1");
         java.security.Security.setProperty("networkaddress.cache.negative.ttl", "3");
 
-        log.info("networkaddress.cache.ttl:{}, networkaddress.cache.negative.ttl:{}",
+        log.info("networkaddress.cache.ttl={}, networkaddress.cache.negative.ttl={}",
             java.security.Security.getProperty("networkaddress.cache.ttl"),
             java.security.Security.getProperty("networkaddress.cache.negative.ttl"));
     }

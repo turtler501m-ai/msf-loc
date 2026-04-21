@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.mcp.mypage.mapper.MypageMapper">
 
-    <resultMap id="farPricePlanListMap" type="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpFarPriceDto" >
+    <resultMap id="farPricePlanListMap" type="com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto" >
         <result property="prvRateGrpCd" column="PRV_RATE_GRP_CD"></result>
         <result property="prvRateGrpNm" column="PRV_RATE_GRP_NM"></result>
         <result property="prvRateGrpTypeCd" column="PRV_RATE_GRP_TYPE_CD"></result>
@@ -36,7 +36,7 @@
     </resultMap>
 
 
-    <select id="selectCntrList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    <select id="selectCntrList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
         SELECT
         A.USERID
         , A.CNTR_MOBILE_NO
@@ -65,7 +65,7 @@
         ORDER BY A.REP_NO ASC
     </select>
 
-    <select id="selectCntrMngList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    <select id="selectCntrMngList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
     SELECT
         CNTR_MOBILE_NO
         ,T1.SVC_CNTR_NO
@@ -93,7 +93,7 @@
         FROM MSP_JUO_CUS_INFO@DL_MSP
         WHERE CUSTOMER_ID = #{custId}
     </select>
-    <select id="selectSocDesc" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    <select id="selectSocDesc" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
         SELECT
         AA.USERID
         , AA.CNTR_MOBILE_NO
@@ -240,7 +240,7 @@
 
     </select>
 
-    <select id="selectPPSList" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.db.MspPpsRcgTesDto">
+    <select id="selectPPSList" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.MspPpsRcgTesDto">
         SELECT /* Mypage.selectPPSList 충전 내역조회 테이블   */
             TES_SEQ
              , REQ_TYPE
@@ -271,7 +271,7 @@
         ORDER BY REQ_DATE DESC
     </select>
 
-    <select id="selectRegService" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpRegServiceDto">
+    <select id="selectRegService" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto">
         SELECT A.SERVICE_TYPE --서비스유형
              , A.RATE_CD --요금제코드
              , A.APPL_END_DT --적용종료일자
@@ -329,7 +329,7 @@
         ORDER BY A.BASE_AMT DESC, A.APPL_STRT_DT DESC
     </select>
 
-    <select id="selectFarPricePlan" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpFarPriceDto">
+    <select id="selectFarPricePlan" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto">
         SELECT A.RATE_CD AS PRV_RATE_CD  --요금제코드
              , A.RATE_NM AS PRV_RATE_GRP_NM--요금제명
              , A.BASE_AMT AS PRV_BASE_AMT--기본료
@@ -349,7 +349,7 @@
           AND ROWNUM = 1
     </select>
 
-    <select id="selectFarPricePlanList" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpFarPriceDto">
+    <select id="selectFarPricePlanList" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto">
         SELECT
             PRV_RATE_GRP_CD
              , PRV_RATE_GRP_NM
@@ -387,7 +387,7 @@
     </select>
 
 
-    <select id="getPromotionDcAmt" resultType="java.lang.Integer" parameterType="com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleSubsdMstDto">
+    <select id="getPromotionDcAmt" resultType="java.lang.Integer" parameterType="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto">
         SELECT NVL(SUM(RANTAL),0) FROM (
                                            SELECT
                                                CEIL(-RANTAL * 1.1) AS RANTAL
@@ -428,7 +428,7 @@
     </select>
 
 
-    <select id="getRateInfo" resultType="com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleSubsdMstDto" parameterType="java.lang.String">
+    <select id="getRateInfo" resultType="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto" parameterType="java.lang.String">
         SELECT /*MypageMapper.getPayMnthChargeAmt 월납부 통신요금  = 기본요금 - 할인요금 */
             BASE_AMT
              , RATE_CD
@@ -458,7 +458,7 @@
           AND ROWNUM = 1
     </select>
 
-    <select id="getRateInfoListByPromotionDate" resultType="com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleSubsdMstDto" parameterType="java.lang.String">
+    <select id="getRateInfoListByPromotionDate" resultType="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto" parameterType="java.lang.String">
         SELECT /*MypageMapper.getRateInfoListByPromotionDate 월납부 통신요금  = 기본요금 - 할인요금 */
             BASE_AMT
              , RATE_CD
@@ -725,7 +725,7 @@
           AND UPPER(REPLACE(SUB_LINK_NAME,' ','')) = UPPER(REPLACE(#{name},' ',''))
     </select>
 
-    <select id="selectSocDescNoLogin" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    <select id="selectSocDescNoLogin" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
         SELECT
 
             AA.SVC_CNTR_NO
@@ -780,7 +780,7 @@
             ) AA
     </select>
 
-    <select id="selectCntrListNoLogin" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    <select id="selectCntrListNoLogin" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
         SELECT /*Mypage.selectCntrListNoLogin 계약 현행화 정보  */
         A.SVC_CNTR_NO
         , A.CONTRACT_NUM
@@ -857,7 +857,7 @@
           AND SUB.CONTRACT_NUM = #{contractNum}
     </select>
 
-    <select id="getCloseSubList" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto" parameterType="string" >
+    <select id="getCloseSubList" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto" parameterType="string" >
         SELECT /*Mypage.getCloseSubList 해지 해야할 부가 서비스 리스트  */
             CMN.CD_DSC AS SOC_NM
              , FEA.SOC AS SOC_CODE
@@ -883,7 +883,7 @@
           AND NXT_APPL_END_DT = '99991231'
     </select>
 
-    <update id="insertSocfailProcMst" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpServiceAlterTraceDto">
+    <update id="insertSocfailProcMst" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto">
         MERGE INTO  MSP_SOCFAIL_PROC_MST@DL_MSP
         USING   DUAL
         ON      (CONTRACT_NUM = #{contractNum} AND PRCS_MDL_IND = #{prcsMdlInd})
@@ -926,7 +926,7 @@
                 )
     </update>
 
-    <select id="getromotionDcList" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto" parameterType="string">
+    <select id="getromotionDcList" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto" parameterType="string">
         SELECT /*Mypage.getromotionDcList 가입 해야할 부가 서비스 리스트  */
             DISTINCT
             B.SOC AS SOC_CODE
@@ -1026,7 +1026,7 @@
     </select>
 
     <!-- 회원가입시 회선 정보 조회 -->
-    <select id="selectJuoSubInfo" parameterType="java.util.Map" resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.JuoSubInfoDto">
+    <select id="selectJuoSubInfo" parameterType="java.util.Map" resultType="com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto">
         SELECT
             T2.SUB_LINK_NAME AS CUSTOMER_LINK_NAME
              , T2.SUBSCRIBER_NO
@@ -1088,7 +1088,7 @@
     </select>
 
     <!-- 현재요금제정보 가져오기 (명의변경) -->
-    <select id="selectCntrListNmChg" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    <select id="selectCntrListNmChg" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
         /*Mypage.selectCntrListNmChg 현재요금제정보 가져오기 (명의변경) */
         SELECT
         A.USERID
@@ -1136,7 +1136,7 @@
     </select>
 
     <!-- 통신자료 제공내역 요청리스트 가져오기 -->
-    <select id="pvcCommDataList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.db.MspCommDatPrvTxnDto">
+    <select id="pvcCommDataList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.MspCommDatPrvTxnDto">
         /*Mypage.pvcCommDataList 통신자료 제공내역 요청리스트 가져오기 */
         SELECT ROW_NUMBER() OVER(ORDER BY AA.APY_SEQ DESC) AS RNUM
                 , AA.APY_SEQ
@@ -1218,7 +1218,7 @@
     </update>
 
     <!-- 통신자료 제공내역상세 출력정보 가져오기 -->
-    <select id="pvcCommDataDtlList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.db.MspCommDatPrvTxnDto">
+    <select id="pvcCommDataDtlList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.MspCommDatPrvTxnDto">
         /*Mypage.pvcCommDataDtlList 통신자료 제공내역상세 출력정보 가져오기 */
         SELECT  (SELECT APY_NM FROM MSP_COMM_DAT_PRV_TXN@DL_MSP WHERE APY_SEQ = #{apySeq}) AS APY_NM
              , (SELECT BTHDAY FROM MSP_COMM_DAT_PRV_TXN@DL_MSP WHERE APY_SEQ = #{apySeq}) AS BTHDAY
@@ -1243,7 +1243,7 @@
     </select>
 
     <!-- 고객이 가입한 모든 회선정보를 가져온다. -->
-    <select id="selectOwnPhoNumList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    <select id="selectOwnPhoNumList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
         /*Mypage.selectOwnPhoNumList */
         SELECT
             T2.SUB_LINK_NAME AS CUSTOMER_LINK_NAME
@@ -1608,7 +1608,7 @@
     </select>
 
     <!-- 2023.11.10 wooki -->
-    <insert id="insertDisApd" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+    <insert id="insertDisApd" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
         <selectKey keyProperty="apdSeq" resultType="String" order="BEFORE">
             SELECT 'AD' || TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_DIS_AD.NEXTVAL@DL_MSP, '000000')) FROM DUAL
         </selectKey>

@@ -1,9 +1,13 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpMrktHistDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestAgrmDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpMrktHistDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestAgrmDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.*;
+import com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.TerminationSettlementDto;
 
 import java.math.BigDecimal;

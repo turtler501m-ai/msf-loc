@@ -1,6 +1,6 @@
-## Common Profile
+#### Common Profile
 
-#### Server - Servlet Container
+## Server - Servlet Container
 server:
   port: 8080
   tomcat:
@@ -16,30 +16,36 @@ server:
 
 
 
-#### Spring
+## Spring
 spring:
 
-  #### Security
+  ## Security
   security:
     jwt:
       secret-key: ${SECURITY_JWT_SECRET_KEY}
       issuer: kt-Mmobile-SmartForm
 
-  #### Binding
+  ## Servlet Multipart Handling
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+  ## Binding
   binding:
     string-trim: true
     string-empty-as-null: false
 
 
 
-#### Logging
+## Logging
 logging:
   pattern:
     correlation: "[%X{traceId}-%X{spanId}][%X{memberId}] "
 
 
 
-#### Actuator
+## Actuator
 management:
   endpoints:
     web:
@@ -58,43 +64,20 @@ management:
 
 
 ---
-## LOCAL Profile
+#### PRD Profile
 spring:
-  config.activate.on-profile: local
-
-  #### Security
-  security:
-    jwt:
-      secret-key: ENC(peB8Z1gpdde6RFV2gPM4xmq+AamVsosvePPhuvJDdCtJNR2YHfgM5BUoCDwY7ZJkwe19LgNam8tD9J8LOoh51+kbQkN7K/BxjcxCzJQvrGU=)
+  config.activate.on-profile: prd
 
 ## Response Handling
 response-handling:
   exception:
-    className: true
-    message: true
-
-#### Actuator
-management:
-  server:
-    port: ${server.port}
-
-
-
----
-## DEV Profile
-spring:
-  config.activate.on-profile: dev
-
-## Response Handling
-response-handling:
-  exception:
-    className: true
+    className: false
     message: true
 
 
 
 ---
-## STG Profile
+#### STG Profile
 spring:
   config.activate.on-profile: stg
 
@@ -107,12 +90,35 @@ response-handling:
 
 
 ---
-## PRD Profile
+#### DEV Profile
 spring:
-  config.activate.on-profile: prd
+  config.activate.on-profile: dev
 
 ## Response Handling
 response-handling:
   exception:
-    className: false
+    className: true
     message: true
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+  ## Security
+  security:
+    jwt:
+      secret-key: ENC(peB8Z1gpdde6RFV2gPM4xmq+AamVsosvePPhuvJDdCtJNR2YHfgM5BUoCDwY7ZJkwe19LgNam8tD9J8LOoh51+kbQkN7K/BxjcxCzJQvrGU=)
+
+## Response Handling
+response-handling:
+  exception:
+    className: true
+    message: true
+
+## Actuator
+management:
+  server:
+    port: ${server.port}

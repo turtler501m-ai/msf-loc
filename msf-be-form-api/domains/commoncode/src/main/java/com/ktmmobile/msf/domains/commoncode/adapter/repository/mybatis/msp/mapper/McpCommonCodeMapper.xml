@@ -8,7 +8,7 @@
     SELECT
       cd_group_id AS groupId,
       dtl_cd AS code,
-      dtl_cd_nm AS codeName,
+      dtl_cd_nm AS title,
       use_yn AS useYn
     FROM NMCP_CD_DTL@DL_MCP
     ORDER BY cd_group_id, dtl_cd

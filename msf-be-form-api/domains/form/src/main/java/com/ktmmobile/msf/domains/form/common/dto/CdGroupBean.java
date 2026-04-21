@@ -3,8 +3,6 @@ package com.ktmmobile.msf.domains.form.common.dto;
 import java.io.Serializable;
 import java.util.List;
 
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpCdDtlDto;
-
 public class CdGroupBean implements Serializable {
     private static final long serialVersionUID = 1L;
     /** 코드그룹아이디 */

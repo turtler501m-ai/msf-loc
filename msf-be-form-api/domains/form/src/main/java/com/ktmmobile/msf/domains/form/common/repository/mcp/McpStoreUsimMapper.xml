@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="McpStoreUsimMapper">
+
+  <!-- /storeUsim/joinUsimPriceNew - USIM 가입비조회 (SELECT(MSP) : CMN_GRP_CD_MST) -->
+  <select id="selectJoinUsimPriceNew" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.UsimMspRateDto">
+        SELECT     /* /storeUsim/joinUsimPriceNew : McpStoreUsimMapper.selectJoinUsimPriceNew */
+                DECODE(ETC3,'Y',ETC4,ETC1) AS JOIN_PRICE
+                , DECODE(ETC3,'Y',ETC5,ETC2) AS USIM_PRICE
+        from     CMN_GRP_CD_MST
+        WHERE     GRP_ID = 'RCP0053'
+        AND     CD_VAL = #{gubun}
+        AND ROWNUM =1
+    </select>
+
+
+  <!-- /storeUsim/failUsim - 불량 유심 조회 (SELECT(MCP) : NMCP_FAIL_USIM@DL_MCP) -->
+  <select id="selectFailUsims" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT /* /storeUsim/failUsim : McpStoreUsimMapper.selectFailUsims */
+            COUNT(*)
+        FROM NMCP_FAIL_USIM@DL_MCP
+        WHERE 1=1
+          AND USIM_NO = #{iccId}
+    </select>
+
+
+  <!-- /storeUsim/updateFailUsim - API 설명 (UPDATE(MCP) : NMCP_FAIL_USIM@DL_MCP) -->
+  <update id="updateFailUsim" parameterType="com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto">
+        UPDATE /* /storeUsim/updateFailUsim : McpStoreUsimMapper.updateFailUsim */
+                        NMCP_FAIL_USIM@DL_MCP
+        SET AMD_DT = SYSDATE,
+            AMD_ID = #{customerId}
+        WHERE USIM_NO = #{iccId}
+    </update>
+
+
+  <!-- /storeUsim/usimDcamt - usim 상품 약정기간 없는 할인율 조회 (SELECT(MSP) : MSP_RATE_SPEC) -->
+  <select id="selectUsimDcamt" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.UsimMspRateDto">
+        SELECT /* /storeUsim/usimDcamt : McpStoreUsimMapper.selectUsimDcamt */
+                       DC_AMT
+        FROM MSP_RATE_SPEC F
+        WHERE RATE_CD =#{rateCd}
+        AND AGRM_TRM ='0'
+        AND ROWNUM =1
+        ORDER BY APPL_STRT_DTTM DESC
+    </select>
+
+</mapper>

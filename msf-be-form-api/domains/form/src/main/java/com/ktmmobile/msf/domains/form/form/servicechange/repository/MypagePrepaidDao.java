@@ -5,7 +5,7 @@ package com.ktmmobile.msf.domains.form.form.servicechange.repository;
 
 import java.util.List;
 
-import com.ktmmobile.msf.domains.form.common.dto.db.MspPpsRcgTesDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspPpsRcgTesDto;
 
 /**
  * @author ANT_FX700_02

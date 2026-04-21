@@ -9,7 +9,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import com.ktmmobile.msf.domains.form.common.dto.db.MspPpsRcgTesDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspPpsRcgTesDto;
 
 /**
  * @author ANT_FX700_02

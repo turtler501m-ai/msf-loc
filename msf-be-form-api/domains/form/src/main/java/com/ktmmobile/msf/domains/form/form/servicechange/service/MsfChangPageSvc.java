@@ -2,7 +2,7 @@ package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
 import java.util.List;
 
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
 
 public interface MsfChangPageSvc {

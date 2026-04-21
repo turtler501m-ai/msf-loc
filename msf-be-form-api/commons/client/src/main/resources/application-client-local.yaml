@@ -1,0 +1,25 @@
+## 내부 서비스
+internal-service:
+  services:
+    form-api:
+      base-url: http://localhost:8080
+    admin-api:
+      base-url: http://localhost:8180
+    batch:
+      base-url: http://localhost:8280
+    eformsign: ## 연동 불가
+      base-url: http://eformsign-none
+
+
+
+## 외부 서비스
+external-service:
+  services: ## 연동 불가
+    m-platform:
+      base-url: https://m-platform-none
+    msp-prx:
+      base-url: https://msp-prx-none
+    msp-api:
+      base-url: https://msp-api-none
+    msp-ext-api:
+      base-url: https://msp-ext-none

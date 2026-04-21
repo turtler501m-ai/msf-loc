@@ -6,7 +6,7 @@ import com.ktmmobile.msf.domains.form.form.newchange.dao.AppformDao;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.*;

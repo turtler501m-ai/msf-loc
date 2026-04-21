@@ -6,21 +6,21 @@ import java.util.Map;
 
 import com.ktmmobile.msf.domains.form.form.common.dto.UsimBasDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AcenDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AppformReqDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.IntmInsrRelDTO;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.domains.form.common.dto.AppformReqDto;
+import com.ktmmobile.msf.domains.form.common.dto.IntmInsrRelDTO;
+import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.McpRequestPayInfoDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.McpUploadPhoneInfoDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.OsstUc0ReqDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestAdditionDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestCstmrDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestDlvryDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestMoveDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestOsstDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestSaleinfoDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestSelfDlvryDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpAppFormMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestAdditionDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestCstmrDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestDlvryDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestMoveDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestSaleinfoDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestSelfDlvryDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpAppFormMstDto;
 
 /**
  * <pre>

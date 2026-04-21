@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import com.ktmmobile.msf.domains.form.common.dto.db.MspCommDatPrvTxnDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspCommDatPrvTxnDto;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 
 @Service

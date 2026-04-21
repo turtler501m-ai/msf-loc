@@ -1,8 +1,8 @@
 package com.ktmmobile.msf.domains.form.common.commCode.dao;
 
 import com.ktmmobile.msf.domains.form.common.commCode.dto.CommCodeInstDTO;
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpLinkInfoDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpLinkInfoDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;

@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.session.RowBounds;
 
 import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspNoticSupportMstDto;
-import com.ktmmobile.msf.domains.form.form.common.dto.OrderDto;
+import com.ktmmobile.msf.domains.form.common.dto.OrderDto;
 
 @Mapper
 public interface OrderMapper {

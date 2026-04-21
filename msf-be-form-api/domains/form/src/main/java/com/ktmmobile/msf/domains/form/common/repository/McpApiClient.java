@@ -10,8 +10,8 @@ import org.springframework.web.client.RestTemplate;
 /**
  * mcp-api 호출 공통 클라이언트.
  * application-common-xxx.yaml 설정으로 호출 방식을 전환한다.
- * api.interface.use-mcp : true  — mcp-api REST 호출. 연결 실패 시 MSP 직접 조회로 자동 전환(TEST)
- *                         false — mcp-api 호출 없이 MSP 직접 조회만 사용 (정책 변경 시)
+ * api.interface.use-mcp : true  — mcp-api REST 호출. 연결 실패 시 MCP 직접 조회로 자동 전환(TEST)
+ *                         false — mcp-api 호출 없이 MCP 직접 조회만 사용 (정책 변경 시)
  */
 
 @Component
@@ -25,10 +25,10 @@ public class McpApiClient {
     @Value("${api.interface.use-mcp:true}")
     private boolean useMcp;
 
-    private final MspApiDirectRepository mspApiDirectRepository;
+    private final McpApiDirectRepository mspApiDirectRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public McpApiClient(MspApiDirectRepository mspApiDirectRepository) {
+    public McpApiClient(McpApiDirectRepository mspApiDirectRepository) {
         this.mspApiDirectRepository = mspApiDirectRepository;
     }
 

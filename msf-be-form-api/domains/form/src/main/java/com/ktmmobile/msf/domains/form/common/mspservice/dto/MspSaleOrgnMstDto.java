@@ -3,6 +3,8 @@ package com.ktmmobile.msf.domains.form.common.mspservice.dto;
 import java.sql.Date;
 import java.io.Serializable;
 
+import com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto;
+
 
 /**
  * @Class Name : MspSaleOrgnMstDto

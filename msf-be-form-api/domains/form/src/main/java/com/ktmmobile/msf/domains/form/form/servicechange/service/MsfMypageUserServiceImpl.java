@@ -24,7 +24,7 @@ import org.springframework.web.client.RestTemplate;
 import com.ktmmobile.msf.domains.form.common.commCode.dao.CommCodeDAO;
 import com.ktmmobile.msf.domains.form.common.commCode.dto.CommCodeInstDTO;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpErropPageException;
 import com.ktmmobile.msf.domains.form.common.legacy.join.dto.JoinDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.CodeVO;
@@ -35,7 +35,7 @@ import com.ktmmobile.msf.domains.form.common.util.MaskingUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.repository.MypageUserDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AgreeDto;
 

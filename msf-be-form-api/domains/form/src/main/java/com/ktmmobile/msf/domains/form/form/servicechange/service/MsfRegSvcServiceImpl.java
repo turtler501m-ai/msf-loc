@@ -46,15 +46,15 @@ import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionAvailableResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionMyListResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionReqDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpRegServiceDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpAddSvcInfoParamDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoParamDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscRegSvcCanChgInVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSocVO;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 

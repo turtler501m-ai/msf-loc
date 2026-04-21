@@ -22,28 +22,23 @@
             SELECT SQ_HIST_SEQ.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO MCP_NICE_HIST (
-              NICE_HIST_SEQ            --PK
-            , REQ_SEQ                  --일련번호 기본키
-            , RES_SEQ                  --요청 일련번호
-            , AUTH_TYPE                 --요청 구분
-            , NAME                     --인증성명
-            , BIRTH_DATE               --인증생년월일
-            , GENDER                   --GENDER
-            , NATIONAL_INFO            --NATIONAL_INFO
-            , DUP_INFO                 --DUP_INFO
-            , CONN_INFO                --CONN_INFO
-            , PARAM_R1                 --파라메터 1
-            , PARAM_R2                 --파라메터 2
-            , PARAM_R3                 --파라메터 3
-            , END_YN                   --종료여부
-            , N_REFERER                --referer
-            , RIP                      --등록아이피
-            , SYS_RDATE_DT             --등록일
-            , SYS_RDATE                --등록일시
-            , RVISN_DTTM               --수정일
-            , COMPL_DTTM               --인증 완료시
-            , MOBILE_CO                -- 이동사구분(모바일 인증)
-            , MOBILE_NO                -- 휴대폰 번호(모바일 인증)
+              NICE_HIST_SEQ            - -PK
+            , REQ_SEQ                  - -?쇰젴踰덊샇 湲곕낯??            , RES_SEQ                  - -?붿껌 ?쇰젴踰덊샇
+            , AUTH_TYPE                 - -?붿껌 援щ텇
+            , NAME                     - -?몄쬆?깅챸
+            , BIRTH_DATE               - -?몄쬆?앸뀈?붿씪
+            , GENDER                   - -GENDER
+            , NATIONAL_INFO            - -NATIONAL_INFO
+            , DUP_INFO                 - -DUP_INFO
+            , CONN_INFO                - -CONN_INFO
+            , PARAM_R1                 - -?뚮씪硫뷀꽣 1
+            , PARAM_R2                 - -?뚮씪硫뷀꽣 2
+            , PARAM_R3                 - -?뚮씪硫뷀꽣 3
+            , END_YN                   - -醫낅즺?щ?
+            , N_REFERER                - -referer
+            , RIP                      - -?깅줉?꾩씠??            , SYS_RDATE_DT             - -?깅줉??            , SYS_RDATE                - -?깅줉?쇱떆
+            , RVISN_DTTM               - -?섏젙??            , COMPL_DTTM               - -?몄쬆 ?꾨즺??            , MOBILE_CO                - - ?대룞?ш뎄遺?紐⑤컮???몄쬆)
+            , MOBILE_NO                - - ?대???踰덊샇(紐⑤컮???몄쬆)
         ) VALUES (
             #{niceHistSeq}
             , #{reqSeq}
@@ -79,33 +74,31 @@
 
     <!--<update id="updateMcpNiceHist" parameterType="com.ktmmobile.mcp.common.dto.NiceLogDto" >
         UPDATE MCP_NICE_HIST SET
-             RVISN_DTTM = SYSDATE                                      --수정일
-            <if test="reqSeq != null and reqSeq != ''">
-               , REQ_SEQ = #{reqSeq}                                            --일련번호 기본키
-            </if>
+             RVISN_DTTM = SYSDATE                                      - -?섏젙??            <if test="reqSeq != null and reqSeq != ''">
+               , REQ_SEQ = #{reqSeq}                                            - -?쇰젴踰덊샇 湲곕낯??            </if>
             <if test="resSeq != null and resSeq != ''">
-               , RES_SEQ = #{resSeq}                                            --요청 일련번호
+               , RES_SEQ = #{resSeq}                                            - -?붿껌 ?쇰젴踰덊샇
             </if>
             <if test="authType != null and authType != ''">
-               , AUTH_TYPE = #{authType}                                          --요청 구분
+               , AUTH_TYPE = #{authType}                                          - -?붿껌 援щ텇
             </if>
             <if test="gender != null and gender != ''">
-              , GENDER = #{gender}                                             --GENDER
+              , GENDER = #{gender}                                             - -GENDER
             </if>
             <if test="nationalInfo != null and nationalInfo != ''">
-               , NATIONAL_INFO = #{nationalInfo}                                --NATIONAL_INFO
+               , NATIONAL_INFO = #{nationalInfo}                                - -NATIONAL_INFO
             </if>
              <if test="dupInfo != null and dupInfo != ''">
-               , DUP_INFO = #{dupInfo}                                          --DUP_INFO
+               , DUP_INFO = #{dupInfo}                                          - -DUP_INFO
             </if>
             <if test="connInfo != null and connInfo != ''">
-               , CONN_INFO = #{connInfo}                                        --CONN_INFO
+               , CONN_INFO = #{connInfo}                                        - -CONN_INFO
             </if>
             <if test="endYn != null and endYn != ''">
-                , END_YN = #{endYn}                                              --종료여부
+                , END_YN = #{endYn}                                              - -醫낅즺?щ?
             </if>
             <if test='complYn != null and complYn == "Y"'>
-                , COMPL_DTTM = SYSDATE                                           --인증 완료시간
+                , COMPL_DTTM = SYSDATE                                           - -?몄쬆 ?꾨즺?쒓컙
             </if>
             <if test="toName != null and toName != ''">
                 , NAME = #{toName}
@@ -131,7 +124,7 @@
             </if>
             <if test="birthDate != null and birthDate != ''">
                 AND BIRTH_DATE = #{birthDate}
-                AND END_YN = 'N' --활성화 상태만..
+                AND END_YN = 'N' - -?쒖꽦???곹깭留?.
             </if>
             <if test="paramR3 != null and paramR3 != '' and -1 == niceHistSeq">
                 AND PARAM_R3 = #{paramR3}
@@ -200,7 +193,7 @@
                 <if test="resSeq != null and resSeq != ''">
                     AND RES_SEQ = #{resSeq}
                 </if>
-                AND SYS_RDATE >= (SYSDATE-1/24) -- 1시간 전 DATA만 유효
+                AND SYS_RDATE >= (SYSDATE-1/24) - - 1?쒓컙 ??DATA留??좏슚
             ORDER BY SYS_RDATE DESC
         ) WHERE  ROWNUM =1
     </select>-->
@@ -211,35 +204,35 @@
             ,CONN_INFO
         FROM MCP_NICE_HIST
         WHERE NICE_HIST_SEQ = #{niceHistSeq}
-        AND SYS_RDATE <![CDATA[>=]]> (SYSDATE-30/24/60) -- 30분전 DATA만 유효
+        AND SYS_RDATE <![CDATA[>=]]> (SYSDATE-30/24/60) - - 30遺꾩쟾 DATA留??좏슚
     </select>-->
 
     <!--<select id="getMcpNiceHistTMP"  parameterType="com.ktmmobile.mcp.common.dto.NiceLogDto"  resultType="com.ktmmobile.mcp.common.dto.NiceLogDto">
-        select /*참고 */
+        select /*李멸퀬 */
             sysdate,
-                 (sysdate-1/24/60) "1분 전",
-                 (sysdate-1/24/30) "2분 전",
-                 (sysdate-1/24/12) "5분 전",
-                 (sysdate-1/24/6) "10분 전",
-                 (sysdate-1/144) "10분 전",
-                 (sysdate-30/1440) "30분 전",
-                 (sysdate-1/24) "1시간 전",
-                 trunc(sysdate-1) "1일 전",
-                 trunc(sysdate-7) "7일 전",
-                 trunc(sysdate-30) "30일 전",
-                 trunc(sysdate+1)-6/24 "6AM 전",
-                 trunc(sysdate+1)-2/24 "2PM 전"
+                 (sysdate-1/24/60) "1遺???,
+                 (sysdate-1/24/30) "2遺???,
+                 (sysdate-1/24/12) "5遺???,
+                 (sysdate-1/24/6) "10遺???,
+                 (sysdate-1/144) "10遺???,
+                 (sysdate-30/1440) "30遺???,
+                 (sysdate-1/24) "1?쒓컙 ??,
+                 trunc(sysdate-1) "1????,
+                 trunc(sysdate-7) "7????,
+                 trunc(sysdate-30) "30????,
+                 trunc(sysdate+1)-6/24 "6AM ??,
+                 trunc(sysdate+1)-2/24 "2PM ??
         from dual
     </select>-->
 
-    <!-- 셀프개통 신규 SMS 본인인증 정보 중복 체크 -->
+    <!-- ??꾧컻???좉퇋 SMS 蹂몄씤?몄쬆 ?뺣낫 以묐났 泥댄겕 -->
     <!--<select id="dupChkSelfSmsAuth" parameterType="com.ktmmobile.mcp.common.dto.NiceLogDto" resultType="int">
         SELECT COUNT(*)
           FROM NMCP_SELF_SMS_AUTH
          WHERE REQUEST_KEY = #{requestKey}
     </select>-->
 
-    <!-- 셀프개통 신규 SMS 본인인증 정보 -->
+    <!-- ??꾧컻???좉퇋 SMS 蹂몄씤?몄쬆 ?뺣낫 -->
     <!--<insert id="insertSelfSmsAuth" parameterType="com.ktmmobile.mcp.common.dto.NiceLogDto" >
         <selectKey keyProperty="selfSmsAuthSeq" resultType="Long" order="BEFORE">
             SELECT NMCP_SELF_SMS_AUTH_SEQ.NEXTVAL FROM DUAL
@@ -247,21 +240,21 @@
         INSERT INTO NMCP_SELF_SMS_AUTH (
               SELF_SMS_AUTH_SEQ        /*PK*/
             , REQUEST_KEY			   /*REQUEST_KEY*/
-            , REQ_SEQ                  /*일련번호 기본키*/
-            , RES_SEQ                  /*요청 일련번호*/
-            , AUTH_TYPE                /*요청 구분*/
-            , NAME                     /*인증성명*/
-            , BIRTH_DATE               /*인증생년월일*/
+            , REQ_SEQ                  /*?쇰젴踰덊샇 湲곕낯??/
+            , RES_SEQ                  /*?붿껌 ?쇰젴踰덊샇*/
+            , AUTH_TYPE                /*?붿껌 援щ텇*/
+            , NAME                     /*?몄쬆?깅챸*/
+            , BIRTH_DATE               /*?몄쬆?앸뀈?붿씪*/
             , GENDER                   /*GENDER*/
             , NATIONAL_INFO            /*NATIONAL_INFO*/
             , DUP_INFO                 /*DUP_INFO*/
             , CONN_INFO                /*CONN_INFO*/
             , PARAM_R3                 /*smsAuth*/
             , N_REFERER                /*referer*/
-            , RIP                      /*등록아이피*/
-            , MOBILE_NO                /*인증휴대폰번호*/
-            , MOBILE_CO                /*인증휴대폰통신사*/
-            , AUTH_TIME                /*인증시간*/
+            , RIP                      /*?깅줉?꾩씠??/
+            , MOBILE_NO                /*?몄쬆?대??곕쾲??/
+            , MOBILE_CO                /*?몄쬆?대??고넻?좎궗*/
+            , AUTH_TIME                /*?몄쬆?쒓컙*/
         ) VALUES (
             #{selfSmsAuthSeq}
             , #{requestKey}
@@ -295,19 +288,19 @@
             SELECT SQ_NICE_TRY_HIST_SEQ.NEXTVAL FROM DUAL
         </selectKey>
         INSERT INTO MCP_NICE_TRY_HIST (
-              NICE_TRY_HIST_SEQ       /*순번 (PK)*/
-            , REQ_SEQ                 /*요청 일련번호*/
-            , RES_SEQ                 /*응답 일련번호*/
-            , AUTH_TYPE               /*본인인증 유형 (N: 네이버인증서, A:패스인증서, T: 토스인증서)*/
-            , NAME                    /*인증성명*/
-            , BIRTH_DATE              /*인증 생년월일*/
+              NICE_TRY_HIST_SEQ       /*?쒕쾲 (PK)*/
+            , REQ_SEQ                 /*?붿껌 ?쇰젴踰덊샇*/
+            , RES_SEQ                 /*?묐떟 ?쇰젴踰덊샇*/
+            , AUTH_TYPE               /*蹂몄씤?몄쬆 ?좏삎 (N: ?ㅼ씠踰꾩씤利앹꽌, A:?⑥뒪?몄쬆?? T: ?좎뒪?몄쬆??*/
+            , NAME                    /*?몄쬆?깅챸*/
+            , BIRTH_DATE              /*?몄쬆 ?앸뀈?붿씪*/
             , CONN_INFO               /*CID*/
             , N_REFERER               /*REFERER*/
             , RIP                     /*IP*/
-            , SYS_RDATE_DT            /*생성일*/
-            , SYS_RDATE               /*인증 시작 일시*/
-            , SUCC_YN                 /*성공,실패여부*/
-            , FNL_SUCC_YN             /*최종 성공,실패 여부 (본인인증에 사용한 정보와 고객정보 일치 여부)*/
+            , SYS_RDATE_DT            /*?앹꽦??/
+            , SYS_RDATE               /*?몄쬆 ?쒖옉 ?쇱떆*/
+            , SUCC_YN                 /*?깃났,?ㅽ뙣?щ?*/
+            , FNL_SUCC_YN             /*理쒖쥌 ?깃났,?ㅽ뙣 ?щ? (蹂몄씤?몄쬆???ъ슜???뺣낫? 怨좉컼?뺣낫 ?쇱튂 ?щ?)*/
         ) VALUES (
               #{niceTryHistSeq}
             , #{reqSeq}
@@ -334,26 +327,26 @@
 
     <!--<select id="getMcpNiceTryHist"  parameterType="com.ktmmobile.mcp.common.dto.NiceTryLogDto"  resultType="com.ktmmobile.mcp.common.dto.NiceTryLogDto">
         SELECT
-            NICE_TRY_HIST_SEQ       /*순번 (PK)*/
-          , REQ_SEQ                 /*요청 일련번호*/
-          , RES_SEQ                 /*응답 일련번호*/
-          , AUTH_TYPE               /*본인인증 유형*/
-          , NAME                    /*인증성명*/
-          , BIRTH_DATE              /*인증 생년월일*/
+            NICE_TRY_HIST_SEQ       /*?쒕쾲 (PK)*/
+          , REQ_SEQ                 /*?붿껌 ?쇰젴踰덊샇*/
+          , RES_SEQ                 /*?묐떟 ?쇰젴踰덊샇*/
+          , AUTH_TYPE               /*蹂몄씤?몄쬆 ?좏삎*/
+          , NAME                    /*?몄쬆?깅챸*/
+          , BIRTH_DATE              /*?몄쬆 ?앸뀈?붿씪*/
           , CONN_INFO               /*CID*/
-          , N_REFERER               /*접속 URL*/
-          , RIP                     /*접속 IP*/
-          , SYS_RDATE_DT            /*생성일*/
-          , SYS_RDATE               /*인증 시작일시*/
-          , RVISN_DTTM              /*수정일시*/
-          , SUCC_YN                 /*성공,실패여부*/
-          , FNL_SUCC_YN             /*최종 성공,실패 여부 (본인인증에 사용한 정보와 고객정보 일치 여부)*/
+          , N_REFERER               /*?묒냽 URL*/
+          , RIP                     /*?묒냽 IP*/
+          , SYS_RDATE_DT            /*?앹꽦??/
+          , SYS_RDATE               /*?몄쬆 ?쒖옉?쇱떆*/
+          , RVISN_DTTM              /*?섏젙?쇱떆*/
+          , SUCC_YN                 /*?깃났,?ㅽ뙣?щ?*/
+          , FNL_SUCC_YN             /*理쒖쥌 ?깃났,?ㅽ뙣 ?щ? (蹂몄씤?몄쬆???ъ슜???뺣낫? 怨좉컼?뺣낫 ?쇱튂 ?щ?)*/
         FROM MCP_NICE_TRY_HIST
         WHERE 1=1
         AND SYS_RDATE_DT BETWEEN TO_CHAR(SYSDATE-1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
         AND REQ_SEQ = #{reqSeq}
         AND RES_SEQ = #{resSeq}
-        AND SYS_RDATE <![CDATA[>=]]> (SYSDATE-5/24/60) -- 5분전 DATA만 유효
+        AND SYS_RDATE <![CDATA[>=]]> (SYSDATE-5/24/60) - - 5遺꾩쟾 DATA留??좏슚
         AND ROWNUM = 1
     </select>-->
 
@@ -391,94 +384,79 @@
 
     <!--<select id="getMcpNiceHistWithReqSeq" parameterType="com.ktmmobile.mcp.common.dto.NiceLogDto" resultType="com.ktmmobile.mcp.common.dto.NiceLogDto">
         SELECT
-            NICE_HIST_SEQ            --PK
-            , REQ_SEQ                  --일련번호 기본키
-             , RES_SEQ                  --요청 일련번호
-             , AUTH_TYPE                 --요청 구분
-             , NAME                     --인증성명
-             , BIRTH_DATE               --인증생년월일
-             , GENDER                   --GENDER
-             , NATIONAL_INFO            --NATIONAL_INFO
-             , DUP_INFO                 --DUP_INFO
-             , CONN_INFO                --CONN_INFO
-             , PARAM_R1                 --파라메터 1
-             , PARAM_R2                 --파라메터 2
-             , PARAM_R3                 --파라메터 3
-             , END_YN                   --종료여부
-             , N_REFERER                --referer
-             , RIP                      --등록아이피
-             , SYS_RDATE_DT             --등록일
-             , SYS_RDATE                --등록일시
-             , RVISN_DTTM               --수정일
-             , COMPL_DTTM               --인증 완료시
-             , MOBILE_CO  as sMobileCo              -- 이동사구분(모바일 인증)
-             , MOBILE_NO  as sMobileNo              -- 휴대폰 번호(모바일 인증)
+            NICE_HIST_SEQ            - -PK
+            , REQ_SEQ                  - -?쇰젴踰덊샇 湲곕낯??             , RES_SEQ                  - -?붿껌 ?쇰젴踰덊샇
+             , AUTH_TYPE                 - -?붿껌 援щ텇
+             , NAME                     - -?몄쬆?깅챸
+             , BIRTH_DATE               - -?몄쬆?앸뀈?붿씪
+             , GENDER                   - -GENDER
+             , NATIONAL_INFO            - -NATIONAL_INFO
+             , DUP_INFO                 - -DUP_INFO
+             , CONN_INFO                - -CONN_INFO
+             , PARAM_R1                 - -?뚮씪硫뷀꽣 1
+             , PARAM_R2                 - -?뚮씪硫뷀꽣 2
+             , PARAM_R3                 - -?뚮씪硫뷀꽣 3
+             , END_YN                   - -醫낅즺?щ?
+             , N_REFERER                - -referer
+             , RIP                      - -?깅줉?꾩씠??             , SYS_RDATE_DT             - -?깅줉??             , SYS_RDATE                - -?깅줉?쇱떆
+             , RVISN_DTTM               - -?섏젙??             , COMPL_DTTM               - -?몄쬆 ?꾨즺??             , MOBILE_CO  as sMobileCo              - - ?대룞?ш뎄遺?紐⑤컮???몄쬆)
+             , MOBILE_NO  as sMobileNo              - - ?대???踰덊샇(紐⑤컮???몄쬆)
         FROM MCP_NICE_HIST
         WHERE 1=1
           AND SYS_RDATE_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
           AND REQ_SEQ = #{reqSeq}
           AND RES_SEQ = #{resSeq}
-          AND SYS_RDATE >= (SYSDATE-2/24/60) -- 2분전 DATA만 유효
+          AND SYS_RDATE >= (SYSDATE-2/24/60) - - 2遺꾩쟾 DATA留??좏슚
           AND ROWNUM =1
     </select>-->
 
     <!--<select id="getMcpNiceHistWithReqSeq2" parameterType="com.ktmmobile.mcp.common.dto.NiceLogDto" resultType="com.ktmmobile.mcp.common.dto.NiceLogDto">
         SELECT
-            NICE_HIST_SEQ            --PK
-             , REQ_SEQ                  --일련번호 기본키
-             , RES_SEQ                  --요청 일련번호
-             , AUTH_TYPE                 --요청 구분
-             , NAME                     --인증성명
-             , BIRTH_DATE               --인증생년월일
-             , GENDER                   --GENDER
-             , NATIONAL_INFO            --NATIONAL_INFO
-             , DUP_INFO                 --DUP_INFO
-             , CONN_INFO                --CONN_INFO
-             , PARAM_R1                 --파라메터 1
-             , PARAM_R2                 --파라메터 2
-             , PARAM_R3                 --파라메터 3
-             , END_YN                   --종료여부
-             , N_REFERER                --referer
-             , RIP                      --등록아이피
-             , SYS_RDATE_DT             --등록일
-             , SYS_RDATE                --등록일시
-             , RVISN_DTTM               --수정일
-             , COMPL_DTTM               --인증 완료시
-             , MOBILE_CO  as sMobileCo              -- 이동사구분(모바일 인증)
-             , MOBILE_NO  as sMobileNo              -- 휴대폰 번호(모바일 인증)
+            NICE_HIST_SEQ            - -PK
+             , REQ_SEQ                  - -?쇰젴踰덊샇 湲곕낯??             , RES_SEQ                  - -?붿껌 ?쇰젴踰덊샇
+             , AUTH_TYPE                 - -?붿껌 援щ텇
+             , NAME                     - -?몄쬆?깅챸
+             , BIRTH_DATE               - -?몄쬆?앸뀈?붿씪
+             , GENDER                   - -GENDER
+             , NATIONAL_INFO            - -NATIONAL_INFO
+             , DUP_INFO                 - -DUP_INFO
+             , CONN_INFO                - -CONN_INFO
+             , PARAM_R1                 - -?뚮씪硫뷀꽣 1
+             , PARAM_R2                 - -?뚮씪硫뷀꽣 2
+             , PARAM_R3                 - -?뚮씪硫뷀꽣 3
+             , END_YN                   - -醫낅즺?щ?
+             , N_REFERER                - -referer
+             , RIP                      - -?깅줉?꾩씠??             , SYS_RDATE_DT             - -?깅줉??             , SYS_RDATE                - -?깅줉?쇱떆
+             , RVISN_DTTM               - -?섏젙??             , COMPL_DTTM               - -?몄쬆 ?꾨즺??             , MOBILE_CO  as sMobileCo              - - ?대룞?ш뎄遺?紐⑤컮???몄쬆)
+             , MOBILE_NO  as sMobileNo              - - ?대???踰덊샇(紐⑤컮???몄쬆)
         FROM MCP_NICE_HIST
         WHERE 1=1
           AND SYS_RDATE_DT = TO_CHAR(SYSDATE-1, 'YYYYMMDD')
           AND REQ_SEQ = #{reqSeq}
           AND RES_SEQ = #{resSeq}
-          AND SYS_RDATE >= (SYSDATE-2/24/60) -- 2분전 DATA만 유효
+          AND SYS_RDATE >= (SYSDATE-2/24/60) - - 2遺꾩쟾 DATA留??좏슚
           AND ROWNUM =1
     </select>-->
 
     <!--<select id="getMcpNiceHistWithTime" parameterType="com.ktmmobile.mcp.common.dto.NiceLogDto" resultType="com.ktmmobile.mcp.common.dto.NiceLogDto">
         SELECT
-               NICE_HIST_SEQ            --PK
-             , REQ_SEQ                  --일련번호 기본키
-             , RES_SEQ                  --요청 일련번호
-             , AUTH_TYPE                 --요청 구분
-             , NAME                     --인증성명
-             , BIRTH_DATE               --인증생년월일
-             , GENDER                   --GENDER
-             , NATIONAL_INFO            --NATIONAL_INFO
-             , DUP_INFO                 --DUP_INFO
-             , CONN_INFO                --CONN_INFO
-             , PARAM_R1                 --파라메터 1
-             , PARAM_R2                 --파라메터 2
-             , PARAM_R3                 --파라메터 3
-             , END_YN                   --종료여부
-             , N_REFERER                --referer
-             , RIP                      --등록아이피
-             , SYS_RDATE_DT             --등록일
-             , SYS_RDATE                --등록일시
-             , RVISN_DTTM               --수정일
-             , COMPL_DTTM               --인증 완료시
-             , MOBILE_CO  as sMobileCo              -- 이동사구분(모바일 인증)
-             , MOBILE_NO  as sMobileNo              -- 휴대폰 번호(모바일 인증)
+               NICE_HIST_SEQ            - -PK
+             , REQ_SEQ                  - -?쇰젴踰덊샇 湲곕낯??             , RES_SEQ                  - -?붿껌 ?쇰젴踰덊샇
+             , AUTH_TYPE                 - -?붿껌 援щ텇
+             , NAME                     - -?몄쬆?깅챸
+             , BIRTH_DATE               - -?몄쬆?앸뀈?붿씪
+             , GENDER                   - -GENDER
+             , NATIONAL_INFO            - -NATIONAL_INFO
+             , DUP_INFO                 - -DUP_INFO
+             , CONN_INFO                - -CONN_INFO
+             , PARAM_R1                 - -?뚮씪硫뷀꽣 1
+             , PARAM_R2                 - -?뚮씪硫뷀꽣 2
+             , PARAM_R3                 - -?뚮씪硫뷀꽣 3
+             , END_YN                   - -醫낅즺?щ?
+             , N_REFERER                - -referer
+             , RIP                      - -?깅줉?꾩씠??             , SYS_RDATE_DT             - -?깅줉??             , SYS_RDATE                - -?깅줉?쇱떆
+             , RVISN_DTTM               - -?섏젙??             , COMPL_DTTM               - -?몄쬆 ?꾨즺??             , MOBILE_CO  as sMobileCo              - - ?대룞?ш뎄遺?紐⑤컮???몄쬆)
+             , MOBILE_NO  as sMobileNo              - - ?대???踰덊샇(紐⑤컮???몄쬆)
         FROM MCP_NICE_HIST
         WHERE 1=1
           AND SYS_RDATE_DT BETWEEN TO_CHAR(SYSDATE-1, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')

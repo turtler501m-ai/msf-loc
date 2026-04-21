@@ -46,8 +46,8 @@ public class MspMyBatisConfig extends MyBatisConfigSupport {
         return createSqlSessionFactory(dataSource, properties.mspMapperLocations());
     }
 
-    @Bean("sqlSession2")
-    public SqlSessionTemplate sqlSession2(
+    @Bean("mspSqlSession")
+    public SqlSessionTemplate mspSqlSession(
         @Qualifier(SQL_SESSION_FACTORY) SqlSessionFactory sqlSessionFactory
     ) {
         return new SqlSessionTemplate(sqlSessionFactory);

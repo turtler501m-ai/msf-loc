@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.CoupInfoDto;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpAddSvcInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarChangewayInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscBilEmailInfoInVO;

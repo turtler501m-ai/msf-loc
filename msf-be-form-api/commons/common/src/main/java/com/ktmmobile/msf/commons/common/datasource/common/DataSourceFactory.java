@@ -1,9 +1,8 @@
 package com.ktmmobile.msf.commons.common.datasource.common;
 
-import javax.sql.DataSource;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import javax.sql.DataSource;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -49,7 +48,7 @@ public class DataSourceFactory {
     private static void logHikariConfig(String poolName, HikariConfig hikariConfig) {
         int maximumPoolSize = hikariConfig.getMaximumPoolSize();
         int minimumIdle = hikariConfig.getMinimumIdle() == -1 ? maximumPoolSize : hikariConfig.getMinimumIdle();
-        log.info("{} - minSize:{}, maxSize:{}", poolName, minimumIdle, maximumPoolSize);
-        // log.info("{} - idleTimeout:{}", poolName, hikariConfig.getIdleTimeout());
+        log.info("{} - minSize={}, maxSize={}", poolName, minimumIdle, maximumPoolSize);
+        // log.info("{} - idleTimeout={}", poolName, hikariConfig.getIdleTimeout());
     }
 }

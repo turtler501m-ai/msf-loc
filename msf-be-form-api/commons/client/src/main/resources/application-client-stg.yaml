@@ -1,0 +1,11 @@
+## 외부 서비스
+external-service:
+  services:
+    m-platform:
+      base-url: https://m-platform-stg  # TODO: 수정
+    msp-prx:
+      base-url: https://msp-prx-stg  # TODO: 수정
+    msp-api:
+      base-url: https://msp-api-stg  # TODO: 수정
+    msp-ext-api:
+      base-url: https://msp-ext-stg  # TODO: 수정

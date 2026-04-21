@@ -7,7 +7,7 @@
         MCP_REQUEST
         SET
         RVISN_DTTM = SYSDATE
-        ,SYS_RDATE = SYSDATE  -- 개통요청 시점으로 등록 시간 변경
+        ,SYS_RDATE = SYSDATE  /* 개통요청 시점으로 등록 시간 변경 */
         <if test="reqModelName != null and reqModelName != ''">
             , REQ_MODEL_NAME = #{reqModelName}
         </if>
@@ -81,28 +81,28 @@
         SET
         RVISN_DTTM = SYSDATE
         <if test="cstmrMail != null and cstmrMail != ''">
-            , CSTMR_MAIL = #{cstmrMail}                                      --고객정보_메일
+            , CSTMR_MAIL = #{cstmrMail}                                      /* 고객정보_메일 */
         </if>
         <if test="cstmrMailReceiveFlag != null and cstmrMailReceiveFlag != ''">
-            , CSTMR_MAIL_RECEIVE_FLAG = #{cstmrMailReceiveFlag}              --고객정보_메일수신_여부
+            , CSTMR_MAIL_RECEIVE_FLAG = #{cstmrMailReceiveFlag}              /* 고객정보_메일수신_여부 */
         </if>
         <if test="cstmrPost != null and cstmrPost != ''">
-            , CSTMR_POST = #{cstmrPost}                                      --고객정보_우편번호
+            , CSTMR_POST = #{cstmrPost}                                      /* 고객정보_우편번호 */
         </if>
         <if test="cstmrAddr != null and cstmrAddr != ''">
-            , CSTMR_ADDR = #{cstmrAddr}                                      --고객정보_주소
+            , CSTMR_ADDR = #{cstmrAddr}                                      /* 고객정보_주소 */
         </if>
         <if test="cstmrAddrDtl != null and cstmrAddrDtl != ''">
-            , CSTMR_ADDR_DTL = #{cstmrAddrDtl}                               --고객정보_상세주소
+            , CSTMR_ADDR_DTL = #{cstmrAddrDtl}                               /* 고객정보_상세주소 */
         </if>
         <if test="cstmrBillSendCode != null and cstmrBillSendCode != ''">
-            , CSTMR_BILL_SEND_CODE = #{cstmrBillSendCode}                    --고객정보_명세서종류
+            , CSTMR_BILL_SEND_CODE = #{cstmrBillSendCode}                    /* 고객정보_명세서종류 */
         </if>
         <if test="recommendFlagCd != null and recommendFlagCd != ''">
-            , RECOMMEND_FLAG_CD = #{recommendFlagCd}                         --추천인 구분 코드 F001 01:추천 직원번호 02:제휴사 추천코드
+            , RECOMMEND_FLAG_CD = #{recommendFlagCd}                         /* 추천인 구분 코드 F001 01:추천 직원번호 02:제휴사 추천코드 */
         </if>
         <if test="recommendInfo != null and recommendInfo != ''">
-            , RECOMMEND_INFO = #{recommendInfo}                              --추천인정보
+            , RECOMMEND_INFO = #{recommendInfo}                              /* 추천인정보 */
         </if>
         WHERE
         REQUEST_KEY = #{requestKey}
@@ -168,13 +168,13 @@
         , MCP_CODE  B
         , NMCP_RATE_ADSVC_GDNC_PROD_REL T3
         WHERE
-        B.CODE_SYS = 'ADS' --코드그룹
+        B.CODE_SYS = 'ADS' /* 코드그룹 */
         AND A.SOC =  T3.RATE_ADSVC_CD(+)
         AND B.USE_YN = 'Y'
         AND B.CODE = A.CHARGE_FLAG
         AND A.CHARGE_FLAG  =  #{chargeFlag}
         AND A.ACT_FLAG = 'Y'
-        AND A.ADDITION_KEY <![CDATA[<> ]]>10 -- 010번호연결서비스
+        AND A.ADDITION_KEY <![CDATA[<> ]]>10 /* 010번호연결서비스 */
         <if test="osstYn != null and osstYn != ''">
             AND A.OSST_YN= #{osstYn}
         </if>
@@ -227,20 +227,20 @@
 
     <!--<insert id="insertMcpRequestOsst" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestOsstDto" >
         INSERT INTO MCP_REQUEST_OSST (
-               MVNO_ORD_NO              --MVNO오더번호(RES_NO)
-             , SEQ                      --일련번호
-             , OSST_ORD_NO              --OSST오더번호
-             , PRGR_STAT_CD             --진행상태코드
+               MVNO_ORD_NO              /* MVNO오더번호(RES_NO) */
+             , SEQ                      /* 일련번호 */
+             , OSST_ORD_NO              /* OSST오더번호 */
+             , PRGR_STAT_CD             /* 진행상태코드 */
              , RSLT_CD
-             , TLPH_NO_STAT_CD          --전화번호상태코드(NU1)
-             , ASGN_AGNC_ID             --할당대리점ID(NU1)
-             , TLPH_NO_OWN_CMPN_CD      --번호소유통신사업자코드(NU1)
-             , OPEN_SVC_IND_CD          --개통서비스구분코드(NU1)
-             , ENCD_TLPH_NO             --암호화전화번호(NU1)
-             , TLPH_NO                  --전화번호
-             , IF_TYPE                  --연동유형
+             , TLPH_NO_STAT_CD          /* 전화번호상태코드(NU1) */
+             , ASGN_AGNC_ID             /* 할당대리점ID(NU1) */
+             , TLPH_NO_OWN_CMPN_CD      /* 번호소유통신사업자코드(NU1) */
+             , OPEN_SVC_IND_CD          /* 개통서비스구분코드(NU1) */
+             , ENCD_TLPH_NO             /* 암호화전화번호(NU1) */
+             , TLPH_NO                  /* 전화번호 */
+             , IF_TYPE                  /* 연동유형 */
              , NSTEP_GLOBAL_ID
-             , REGST_DTTM               --등록일시
+             , REGST_DTTM               /* 등록일시 */
              , RSLT_DT
         ) VALUES (
             LPAD(#{mvnoOrdNo}, 14, '0')
@@ -269,7 +269,7 @@
         WHERE
             NSTEP_GLOBAL_ID = #{nstepGlobalId}
             AND PRGR_STAT_CD = #{prgrStatCd}
-            AND REGST_DTTM > SYSDATE-(1/12)  --2시간
+            AND REGST_DTTM > SYSDATE-(1/12)  /* 2시간 */
             AND MVNO_ORD_NO IS NULL
     </update>-->
 
@@ -381,36 +381,36 @@
     <!--<insert id="insertMcpRequest" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestDto" >
         INSERT /*AppformMapper.insertMcpRequest 서식지 정보 저장  */
         INTO MCP_REQUEST (
-                           REQUEST_KEY              --가입신청_키
-                         , MANAGER_CODE             --매니저_코드
-                         , AGENT_CODE               --대리점_코드
-                         , SERVICE_TYPE             --서비스구분
-                         , OPER_TYPE                --업무구분
-                         , CSTMR_TYPE               --고객구분
-                         , RES_CODE                 --예약등록_코드
-                         , RES_MSG                  --예약등록_메세지
-                         , RES_NO                   --예약등록_예약번호
-                         , CLAUSE_PRI_COLLECT_FLAG  --약관_개인정보_수집_동의
-                         , CLAUSE_PRI_OFFER_FLAG    --약관_개인정보_제공_동의
-                         , CLAUSE_ESS_COLLECT_FLAG  --약관_고유식별정보_수집이용제공_동의
-                         , CLAUSE_PRI_TRUST_FLAG    --약관_개인정보_위탁_동의
-                         , CLAUSE_PRI_AD_FLAG       --개인정보 처리 위탁 및 고객 혜택 제공을 위한 광고 수신 동의
-                         , CLAUSE_CONFIDENCE_FLAG   --약관_신용정보_이용_동의
-                         , CLAUSE_JEHU_FLAG         --제휴_서비스동의
-                         , ONLINE_AUTH_TYPE         --온라인_인증방식
-                         , ONLINE_AUTH_INFO         --온라인_인증정보
-                         , PSTATE                   --신청서_상태
-                         , REQUEST_STATE_CODE       --가입진행_코드
-                         , OPEN_NO                  --개통번호
-                         , FILE01                   --파일01
-                         , FILE01_MASK              --파일01_마스크
-                         , FAXYN                    --팩스사용여부
-                         , FAXNUM                   --팩스번호
-                         , SCAN_ID                  --스캐너아이디
-                         , ON_OFF_TYPE              --온라인오프라인구분
-                         , RIP                      --등록아이피
-                         , OPEN_REQ_DATE            --
-                         , SYS_RDATE                --등록일시
+                           REQUEST_KEY              /* 가입신청_키 */
+                         , MANAGER_CODE             /* 매니저_코드 */
+                         , AGENT_CODE               /* 대리점_코드 */
+                         , SERVICE_TYPE             /* 서비스구분 */
+                         , OPER_TYPE                /* 업무구분 */
+                         , CSTMR_TYPE               /* 고객구분 */
+                         , RES_CODE                 /* 예약등록_코드 */
+                         , RES_MSG                  /* 예약등록_메세지 */
+                         , RES_NO                   /* 예약등록_예약번호 */
+                         , CLAUSE_PRI_COLLECT_FLAG  /* 약관_개인정보_수집_동의 */
+                         , CLAUSE_PRI_OFFER_FLAG    /* 약관_개인정보_제공_동의 */
+                         , CLAUSE_ESS_COLLECT_FLAG  /* 약관_고유식별정보_수집이용제공_동의 */
+                         , CLAUSE_PRI_TRUST_FLAG    /* 약관_개인정보_위탁_동의 */
+                         , CLAUSE_PRI_AD_FLAG       /* 개인정보 처리 위탁 및 고객 혜택 제공을 위한 광고 수신 동의 */
+                         , CLAUSE_CONFIDENCE_FLAG   /* 약관_신용정보_이용_동의 */
+                         , CLAUSE_JEHU_FLAG         /* 제휴_서비스동의 */
+                         , ONLINE_AUTH_TYPE         /* 온라인_인증방식 */
+                         , ONLINE_AUTH_INFO         /* 온라인_인증정보 */
+                         , PSTATE                   /* 신청서_상태 */
+                         , REQUEST_STATE_CODE       /* 가입진행_코드 */
+                         , OPEN_NO                  /* 개통번호 */
+                         , FILE01                   /* 파일01 */
+                         , FILE01_MASK              /* 파일01_마스크 */
+                         , FAXYN                    /* 팩스사용여부 */
+                         , FAXNUM                   /* 팩스번호 */
+                         , SCAN_ID                  /* 스캐너아이디 */
+                         , ON_OFF_TYPE              /* 온라인오프라인구분 */
+                         , RIP                      /* 등록아이피 */
+                         , OPEN_REQ_DATE
+                         , SYS_RDATE                /* 등록일시 */
                          , REQ_WANT_NUMBER
                          , REQ_WANT_NUMBER2
                          , REQ_WANT_NUMBER3
@@ -423,67 +423,67 @@
                          , REQ_ADDITION
                          , SHOP_CD
                          , APP_FORM_YN
-                         , REQ_IN_DAY               --가입신청일
+                         , REQ_IN_DAY               /* 가입신청일 */
                          , CONTRACT_NUM
-                         , ETC_SPECIAL              --기타/특약사항
-                         , REQ_USIM_NAME            --USIM 모델명
-                         , PHONE_PAYMENT            --휴대폰결제 이용여부
-                         , REQ_ADDITION_PRICE       --부가서비스금액
-                         , CNTPNT_SHOP_ID           --채널점아이디_판매점코드
+                         , ETC_SPECIAL              /* 기타/특약사항 */
+                         , REQ_USIM_NAME            /* USIM 모델명 */
+                         , PHONE_PAYMENT            /* 휴대폰결제 이용여부 */
+                         , REQ_ADDITION_PRICE       /* 부가서비스금액 */
+                         , CNTPNT_SHOP_ID           /* 채널점아이디_판매점코드 */
                          , OPEN_MARKET_REFERER
-                         , NW_BLCK_AGRM_YN          --네트워크차단동의여부
-                         , APP_BLCK_AGRM_YN         --어플리케이션차단동의여부
-                         , APP_CD                   --APP구분코드
-                         , PROD_ID                  --상품아이디
-                         , BANNER_CD                --배너코드
-                         , CRET_ID                  --생성자아이디(로그인아이디)
-                         , SNTY_COLOR_CD            --색상코드
-                         , SNTY_CAPAC_CD            --단품용량코드
-                         , PROD_TYPE                -- 상품 분류 (일반 :01, 0원 상품 :02)
-                         , CLAUSE_RENTAL_SERVICE    --중고렌탈 프로그램 서비스 이용에 대한 동의서
-                         , CLAUSE_RENTAL_MODEL_CP   --단말배상금 안내사항
-                         , CLAUSE_RENTAL_MODEL_CP_PR --단말배상금(부분파손) 안내사항
-                         , CLAUSE_MPPS35_FLAG        --선불 M PPS 요금제_동의
-                         , CLAUSE_FINANCE_FLAG       --개인(신용)정보 처리 및 보험가입 동의서
-                         , PROMOTION_CD              --프로모션코드
-                         , INSR_CD                   --보험코드
-                         , CLAUSE_INSURANCE_FLAG     -- 단체보험동의
-                         , APP_FORM_XML_YN           -- 스캔 서버 연동 여부
-                         , PROD_NM                   --상품명(NMCP_PROD_BAS.PROD_NM)
-                         , INSR_PROD_CD              --단말보험코드
-                         , CLAUSE_INSR_PROD_FLAG     --단말보험가입동의
-                         , INSR_AUTH_INFO            --단말보험인증정보
-                         , RWD_PROD_CD               --자급제 보상 서비스 코드
-                         , CLAUSE_RWD_FLAG           --자급제 보상 서비스 동의
-                         , RWD_AUTH_INFO             --자급제 보상 서비스 인증 정보
-                         , CLAUSE_5G_COVERAGE_FLAG   -- 5g 커버리지 확인 및 가입 동의
-                         , KTM_REFERER               -- 최초유입경 인자값
-                         , USIM_KINDS_CD             -- 유심종류(RCP2035)
-                         , EID                       -- eSIM EID
-                         , IMEI1                     -- eSIM IMEI1
-                         , IMEI2                     -- eSIM IMEI2
-                         , UPLOAD_PHONE_SRL_NO       -- eSIM OCR 등록 FK
-                         , ESIM_PHONE_ID             -- eSIM phone id
-                         , PRNTS_CONTRACT_NO         -- 모회선 계약번호
-                         , PERSONAL_INFO_COLLECT_AGREE -- 고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의
-                         , OTHERS_TRNS_AGREE -- 혜택 제공을 위한 제3자 제공 동의 : M모바일
+                         , NW_BLCK_AGRM_YN          /* 네트워크차단동의여부 */
+                         , APP_BLCK_AGRM_YN         /* 어플리케이션차단동의여부 */
+                         , APP_CD                   /* APP구분코드 */
+                         , PROD_ID                  /* 상품아이디 */
+                         , BANNER_CD                /* 배너코드 */
+                         , CRET_ID                  /* 생성자아이디(로그인아이디) */
+                         , SNTY_COLOR_CD            /* 색상코드 */
+                         , SNTY_CAPAC_CD            /* 단품용량코드 */
+                         , PROD_TYPE                /* 상품 분류 (일반 :01, 0원 상품 :02) */
+                         , CLAUSE_RENTAL_SERVICE    /* 중고렌탈 프로그램 서비스 이용에 대한 동의서 */
+                         , CLAUSE_RENTAL_MODEL_CP   /* 단말배상금 안내사항 */
+                         , CLAUSE_RENTAL_MODEL_CP_PR /* 단말배상금(부분파손) 안내사항 */
+                         , CLAUSE_MPPS35_FLAG        /* 선불 M PPS 요금제_동의 */
+                         , CLAUSE_FINANCE_FLAG       /* 개인(신용)정보 처리 및 보험가입 동의서 */
+                         , PROMOTION_CD              /* 프로모션코드 */
+                         , INSR_CD                   /* 보험코드 */
+                         , CLAUSE_INSURANCE_FLAG     /* 단체보험동의 */
+                         , APP_FORM_XML_YN           /* 스캔 서버 연동 여부 */
+                         , PROD_NM                   /* 상품명(NMCP_PROD_BAS.PROD_NM) */
+                         , INSR_PROD_CD              /* 단말보험코드 */
+                         , CLAUSE_INSR_PROD_FLAG     /* 단말보험가입동의 */
+                         , INSR_AUTH_INFO            /* 단말보험인증정보 */
+                         , RWD_PROD_CD               /* 자급제 보상 서비스 코드 */
+                         , CLAUSE_RWD_FLAG           /* 자급제 보상 서비스 동의 */
+                         , RWD_AUTH_INFO             /* 자급제 보상 서비스 인증 정보 */
+                         , CLAUSE_5G_COVERAGE_FLAG   /* 5g 커버리지 확인 및 가입 동의 */
+                         , KTM_REFERER               /* 최초유입경 인자값 */
+                         , USIM_KINDS_CD             /* 유심종류(RCP2035) */
+                         , EID                       /* eSIM EID */
+                         , IMEI1                     /* eSIM IMEI1 */
+                         , IMEI2                     /* eSIM IMEI2 */
+                         , UPLOAD_PHONE_SRL_NO       /* eSIM OCR 등록 FK */
+                         , ESIM_PHONE_ID             /* eSIM phone id */
+                         , PRNTS_CONTRACT_NO         /* 모회선 계약번호 */
+                         , PERSONAL_INFO_COLLECT_AGREE /* 고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의 */
+                         , OTHERS_TRNS_AGREE /* 혜택 제공을 위한 제3자 제공 동의 : M모바일 */
                          , DIS_PRMT_ID
                          , CLAUSE_PARTNER_OFFER_FLAG
                          , JEHU_PROD_TYPE
                          , OPEN_MARKET_ID
                          , JEHU_PARTNER_TYPE
-                         , OTHERS_TRNS_KT_AGREE         --혜택 제공을 위한 제3자 제공 동의 : KT
-                         , OTHERS_AD_RECEIVE_AGREE      --제3자 제공관련 광고 수신 동의
+                         , OTHERS_TRNS_KT_AGREE         /* 혜택 제공을 위한 제3자 제공 동의 : KT */
+                         , OTHERS_AD_RECEIVE_AGREE      /* 제3자 제공관련 광고 수신 동의 */
                          , EVNT_CD_PRMT
-                         , FATH_TRG_YN                  --안면인증 대상여부
-                         , CLAUSE_FATH_FLAG             --안면인증 동의여부
-                         , FATH_TRANSAC_ID              --안면인증 트랜잭션ID
-                         , FATH_CMPLT_NTFY_DT           --안면인증 완료일시
+                         , FATH_TRG_YN                  /* 안면인증 대상여부 */
+                         , CLAUSE_FATH_FLAG             /* 안면인증 동의여부 */
+                         , FATH_TRANSAC_ID              /* 안면인증 트랜잭션ID */
+                         , FATH_CMPLT_NTFY_DT           /* 안면인증 완료일시 */
                          , CPNT_ID
-                         , KT_COUNSEL_AGREE             --인터넷가입 상담을 위한 개인정보 제3자 제공동의
-                         , COMBINE_SOLO_TYPE            --아무나SOLO 결합여부
-                         , COMBINE_SOLO_FLAG            --아무나SOLO 결합동의
-                         , INDV_LOCA_PRV_AGREE          --개인위치정보 제 3자 제공 동의
+                         , KT_COUNSEL_AGREE             /* 인터넷가입 상담을 위한 개인정보 제3자 제공동의 */
+                         , COMBINE_SOLO_TYPE            /* 아무나SOLO 결합여부 */
+                         , COMBINE_SOLO_FLAG            /* 아무나SOLO 결합동의 */
+                         , INDV_LOCA_PRV_AGREE          /* 개인위치정보 제 3자 제공 동의 */
         ) VALUES (
                      #{requestKey}
                  , #{managerCode}
@@ -594,36 +594,36 @@
     <!--<insert id="insertNmcpRequestApd" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestDto" >
         INSERT /*AppformMapper.insertNmcpRequestApd 자급제 서식지 정보 저장  */
         INTO NMCP_REQUEST_APD (
-                                REQUEST_KEY              --가입신청_키
-                              , MANAGER_CODE             --매니저_코드
-                              , AGENT_CODE               --대리점_코드
-                              , SERVICE_TYPE             --서비스구분
-                              , OPER_TYPE                --업무구분
-                              , CSTMR_TYPE               --고객구분
-                              , RES_CODE                 --예약등록_코드
-                              , RES_MSG                  --예약등록_메세지
-                              , RES_NO                   --예약등록_예약번호
-                              , CLAUSE_PRI_COLLECT_FLAG  --약관_개인정보_수집_동의
-                              , CLAUSE_PRI_OFFER_FLAG    --약관_개인정보_제공_동의
-                              , CLAUSE_ESS_COLLECT_FLAG  --약관_고유식별정보_수집이용제공_동의
-                              , CLAUSE_PRI_TRUST_FLAG    --약관_개인정보_위탁_동의
-                              , CLAUSE_PRI_AD_FLAG       --약관_개인정보_광고전송_동의
-                              , CLAUSE_CONFIDENCE_FLAG   --약관_신용정보_이용_동의
-                              , CLAUSE_JEHU_FLAG         --제휴_서비스동의
-                              , ONLINE_AUTH_TYPE         --온라인_인증방식
-                              , ONLINE_AUTH_INFO         --온라인_인증정보
-                              , PSTATE                   --신청서_상태
-                              , REQUEST_STATE_CODE       --가입진행_코드
-                              , OPEN_NO                  --개통번호
-                              , FILE01                   --파일01
-                              , FILE01_MASK              --파일01_마스크
-                              , FAXYN                    --팩스사용여부
-                              , FAXNUM                   --팩스번호
-                              , SCAN_ID                  --스캐너아이디
-                              , ON_OFF_TYPE              --온라인오프라인구분
-                              , RIP                      --등록아이피
-                              , OPEN_REQ_DATE            --
-                              , SYS_RDATE                --등록일시
+                                REQUEST_KEY              /* 가입신청_키 */
+                              , MANAGER_CODE             /* 매니저_코드 */
+                              , AGENT_CODE               /* 대리점_코드 */
+                              , SERVICE_TYPE             /* 서비스구분 */
+                              , OPER_TYPE                /* 업무구분 */
+                              , CSTMR_TYPE               /* 고객구분 */
+                              , RES_CODE                 /* 예약등록_코드 */
+                              , RES_MSG                  /* 예약등록_메세지 */
+                              , RES_NO                   /* 예약등록_예약번호 */
+                              , CLAUSE_PRI_COLLECT_FLAG  /* 약관_개인정보_수집_동의 */
+                              , CLAUSE_PRI_OFFER_FLAG    /* 약관_개인정보_제공_동의 */
+                              , CLAUSE_ESS_COLLECT_FLAG  /* 약관_고유식별정보_수집이용제공_동의 */
+                              , CLAUSE_PRI_TRUST_FLAG    /* 약관_개인정보_위탁_동의 */
+                              , CLAUSE_PRI_AD_FLAG       /* 약관_개인정보_광고전송_동의 */
+                              , CLAUSE_CONFIDENCE_FLAG   /* 약관_신용정보_이용_동의 */
+                              , CLAUSE_JEHU_FLAG         /* 제휴_서비스동의 */
+                              , ONLINE_AUTH_TYPE         /* 온라인_인증방식 */
+                              , ONLINE_AUTH_INFO         /* 온라인_인증정보 */
+                              , PSTATE                   /* 신청서_상태 */
+                              , REQUEST_STATE_CODE       /* 가입진행_코드 */
+                              , OPEN_NO                  /* 개통번호 */
+                              , FILE01                   /* 파일01 */
+                              , FILE01_MASK              /* 파일01_마스크 */
+                              , FAXYN                    /* 팩스사용여부 */
+                              , FAXNUM                   /* 팩스번호 */
+                              , SCAN_ID                  /* 스캐너아이디 */
+                              , ON_OFF_TYPE              /* 온라인오프라인구분 */
+                              , RIP                      /* 등록아이피 */
+                              , OPEN_REQ_DATE            /*
+                              , SYS_RDATE                /* 등록일시 */
                               , REQ_WANT_NUMBER
                               , REQ_WANT_NUMBER2
                               , REQ_WANT_NUMBER3
@@ -636,39 +636,39 @@
                               , REQ_ADDITION
                               , SHOP_CD
                               , APP_FORM_YN
-                              , REQ_IN_DAY               --가입신청일
+                              , REQ_IN_DAY               /* 가입신청일 */
                               , CONTRACT_NUM
-                              , ETC_SPECIAL              --기타/특약사항
-                              , REQ_USIM_NAME            --USIM 모델명
-                              , PHONE_PAYMENT            --휴대폰결제 이용여부
-                              , REQ_ADDITION_PRICE       --부가서비스금액
-                              , CNTPNT_SHOP_ID           --채널점아이디_판매점코드
+                              , ETC_SPECIAL              /* 기타/특약사항 */
+                              , REQ_USIM_NAME            /* USIM 모델명 */
+                              , PHONE_PAYMENT            /* 휴대폰결제 이용여부 */
+                              , REQ_ADDITION_PRICE       /* 부가서비스금액 */
+                              , CNTPNT_SHOP_ID           /* 채널점아이디_판매점코드 */
                               , OPEN_MARKET_REFERER
-                              , NW_BLCK_AGRM_YN          --네트워크차단동의여부
-                              , APP_BLCK_AGRM_YN         --어플리케이션차단동의여부
-                              , APP_CD                   --APP구분코드
-                              , PROD_ID                  --상품아이디
-                              , BANNER_CD                --배너코드
-                              , CRET_ID                  --생성자아이디(로그인아이디)
-                              , SNTY_COLOR_CD            --색상코드
-                              , SNTY_CAPAC_CD            --단품용량코드
-                              , PROD_TYPE                -- 상품 분류 (일반 :01, 0원 상품 :02)
-                              , CLAUSE_RENTAL_SERVICE    --중고렌탈 프로그램 서비스 이용에 대한 동의서
-                              , CLAUSE_RENTAL_MODEL_CP   --단말배상금 안내사항
-                              , CLAUSE_RENTAL_MODEL_CP_PR --단말배상금(부분파손) 안내사항
-                              , CLAUSE_MPPS35_FLAG        --선불 M PPS 요금제_동의
-                              , CLAUSE_FINANCE_FLAG        --개인(신용)정보 처리 및 보험가입 동의서
-                              , PROMOTION_CD               --프로모션코드
-                              , INSR_CD                    --보험코드
-                              , CLAUSE_INSURANCE_FLAG      -- 단체보험동의
-                              , APP_FORM_XML_YN            -- 스캔 서버 연동 여부
-                              , PROD_NM                    --상품명(NMCP_PROD_BAS.PROD_NM)
-                              , INSR_PROD_CD               --단말보험코드
-                              , CLAUSE_INSR_PROD_FLAG      --단말보험가입동의
-                              , INSR_AUTH_INFO             --단말보험인증정보
-                              , CLAUSE_5G_COVERAGE_FLAG    -- 5g 커버리지 확인 및 가입 동의
-                              , KTM_REFERER                -- 최초유입경 인자값
-                              , USIM_KINDS_CD              -- 유심종류(RCP2035)
+                              , NW_BLCK_AGRM_YN          /* 네트워크차단동의여부 */
+                              , APP_BLCK_AGRM_YN         /* 어플리케이션차단동의여부 */
+                              , APP_CD                   /* APP구분코드 */
+                              , PROD_ID                  /* 상품아이디 */
+                              , BANNER_CD                /* 배너코드 */
+                              , CRET_ID                  /* 생성자아이디(로그인아이디) */
+                              , SNTY_COLOR_CD            /* 색상코드 */
+                              , SNTY_CAPAC_CD            /* 단품용량코드 */
+                              , PROD_TYPE                /* 상품 분류 (일반 :01, 0원 상품 :02) */
+                              , CLAUSE_RENTAL_SERVICE    /* 중고렌탈 프로그램 서비스 이용에 대한 동의서 */
+                              , CLAUSE_RENTAL_MODEL_CP   /* 단말배상금 안내사항 */
+                              , CLAUSE_RENTAL_MODEL_CP_PR /* 단말배상금(부분파손) 안내사항 */
+                              , CLAUSE_MPPS35_FLAG        /* 선불 M PPS 요금제_동의 */
+                              , CLAUSE_FINANCE_FLAG        /* 개인(신용)정보 처리 및 보험가입 동의서 */
+                              , PROMOTION_CD               /* 프로모션코드 */
+                              , INSR_CD                    /* 보험코드 */
+                              , CLAUSE_INSURANCE_FLAG      /* 단체보험동의 */
+                              , APP_FORM_XML_YN            /* 스캔 서버 연동 여부 */
+                              , PROD_NM                    /* 상품명(NMCP_PROD_BAS.PROD_NM) */
+                              , INSR_PROD_CD               /* 단말보험코드 */
+                              , CLAUSE_INSR_PROD_FLAG      /* 단말보험가입동의 */
+                              , INSR_AUTH_INFO             /* 단말보험인증정보 */
+                              , CLAUSE_5G_COVERAGE_FLAG    /* 5g 커버리지 확인 및 가입 동의 */
+                              , KTM_REFERER                /* 최초유입경 인자값 */
+                              , USIM_KINDS_CD              /* 유심종류(RCP2035) */
         ) VALUES (
                      #{requestKey}
                  , #{managerCode}
@@ -765,54 +765,54 @@
 
     <!--<insert id="insertMcpRequestCstmr" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO MCP_REQUEST_CSTMR (
-                                        REQUEST_KEY              --가입신청_키
-                                      , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
-                                      , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
-                                      , CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
-                                      , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
-                                      , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
-                                      , CSTMR_PRIVATE_CNAME      --고객정보_개인사업자_상호명
-                                      , CSTMR_PRIVATE_NUMBER     --고객정보_개인사업자_사업자등록번호
-                                      , CSTMR_JURIDICAL_CNAME    --고객정보_법인사업자_법인명
-                                      , CSTMR_JURIDICAL_RRN      --고객정보_법인사업자_법인번호
-                                      , CSTMR_JURIDICAL_NUMBER   --고객정보_법인사업자_사업자등록번호
-                                      , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
-                                      , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
-                                      , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
-                                      , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
-                                      , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
-                                      , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
-                                      , CSTMR_POST               --고객정보_우편번호
-                                      , CSTMR_ADDR               --고객정보_주소
-                                      , CSTMR_ADDR_DTL           --고객정보_상세주소
-                                      , CSTMR_ADDR_BJD           --고객정보_법정동주소
-                                      , CSTMR_BILL_SEND_CODE     --고객정보_명세서종류
-                                      , CSTMR_MAIL               --고객정보_메일
-                                      , CSTMR_MAIL_RECEIVE_FLAG  --고객정보_메일수신_여부
-                                      , CSTMR_VISIT_TYPE         --고객정보_방문고객정보
-                                      , CSTMR_RECEIVE_TEL_FN     --고객정보_연락받을번호_앞자
-                                      , CSTMR_RECEIVE_TEL_NM     --고객정보_연락받을번호_중간자리
-                                      , CSTMR_RECEIVE_TEL_RN     --고객정보_연락받을번호_끝자리
-                                      , OTHERS_PAYMENT_AG        --고객정보_타인납부동의
-                                      , OTHERS_PAYMENT_NM        --고객정보_타인납부_고객명
-                                      , OTHERS_PAYMENT_RRN       --고객정보_타인납부_주민번호
-                                      , OTHERS_PAYMENT_RELATION  --고객정보_타인납부_명의자와의관계
-                                      , OTHERS_PAYMENT_RNM       --고객정보_타인납부_신청인
-                                      , SYS_RDATE                --등록일시
-                                      , CSTMR_NAME               --고객정보_고객명
-                                      , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
-                                      , SELF_INQRY_AGRM_YN       --본인인증조회동의
-                                      , SELF_CERT_TYPE           --본인인증유형
-                                      , SELF_ISSU_EXPR_DT        --발급/만료일자
-                                      , SELF_ISSU_NUM            --발급번호
-                                      , CSTMR_JEJU_ID            --제주항공ID
-                                      , SELF_CSTMR_CI            --본인인증한  CI 정보
-                                      , RECOMMEND_FLAG_CD        --추천인 구분 코드
-                                      , RECOMMEND_INFO           --추천인정보
-                                      , PRNTS_CTN                -- 모회선 전화번호
-                                      , FATH_MOBILE_FN           --안면인증정보_휴대폰번호_앞자리
-                                      , FATH_MOBILE_MN           --안면인증정보_휴대폰번호_중간자리
-                                      , FATH_MOBILE_RN           --안면인증정보_휴대폰번호_뒷자리
+                                        REQUEST_KEY              /* 가입신청_키 */
+                                      , CSTMR_FOREIGNER_NATION   /* 고객정보_외국인_국적 */
+                                      , CSTMR_FOREIGNER_PN       /* 고객정보_외국인_여권번호 */
+                                      , CSTMR_FOREIGNER_RRN      /* 고객정보_외국인_외국인등록번호 */
+                                      , CSTMR_FOREIGNER_SDATE    /* 고객정보_외국인_체류_시작날자 */
+                                      , CSTMR_FOREIGNER_EDATE    /* 고객정보_외국인_체류_종료날자 */
+                                      , CSTMR_PRIVATE_CNAME      /* 고객정보_개인사업자_상호명 */
+                                      , CSTMR_PRIVATE_NUMBER     /* 고객정보_개인사업자_사업자등록번호 */
+                                      , CSTMR_JURIDICAL_CNAME    /* 고객정보_법인사업자_법인명 */
+                                      , CSTMR_JURIDICAL_RRN      /* 고객정보_법인사업자_법인번호 */
+                                      , CSTMR_JURIDICAL_NUMBER   /* 고객정보_법인사업자_사업자등록번호 */
+                                      , CSTMR_TEL_FN             /* 고객정보_전화번호_앞자리 */
+                                      , CSTMR_TEL_MN             /* 고객정보_전화번호_가운데자리 */
+                                      , CSTMR_TEL_RN             /* 고객정보_전화번호_끝자리 */
+                                      , CSTMR_MOBILE_FN          /* 고객정보_휴대폰번호_앞자리 */
+                                      , CSTMR_MOBILE_MN          /* 고객정보_휴대폰번호_중간자리 */
+                                      , CSTMR_MOBILE_RN          /* 고객정보_휴대폰번호_끝자리 */
+                                      , CSTMR_POST               /* 고객정보_우편번호 */
+                                      , CSTMR_ADDR               /* 고객정보_주소 */
+                                      , CSTMR_ADDR_DTL           /* 고객정보_상세주소 */
+                                      , CSTMR_ADDR_BJD           /* 고객정보_법정동주소 */
+                                      , CSTMR_BILL_SEND_CODE     /* 고객정보_명세서종류 */
+                                      , CSTMR_MAIL               /* 고객정보_메일 */
+                                      , CSTMR_MAIL_RECEIVE_FLAG  /* 고객정보_메일수신_여부 */
+                                      , CSTMR_VISIT_TYPE         /* 고객정보_방문고객정보 */
+                                      , CSTMR_RECEIVE_TEL_FN     /* 고객정보_연락받을번호_앞자 */
+                                      , CSTMR_RECEIVE_TEL_NM     /* 고객정보_연락받을번호_중간자리 */
+                                      , CSTMR_RECEIVE_TEL_RN     /* 고객정보_연락받을번호_끝자리 */
+                                      , OTHERS_PAYMENT_AG        /* 고객정보_타인납부동의 */
+                                      , OTHERS_PAYMENT_NM        /* 고객정보_타인납부_고객명 */
+                                      , OTHERS_PAYMENT_RRN       /* 고객정보_타인납부_주민번호 */
+                                      , OTHERS_PAYMENT_RELATION  /* 고객정보_타인납부_명의자와의관계 */
+                                      , OTHERS_PAYMENT_RNM       /* 고객정보_타인납부_신청인 */
+                                      , SYS_RDATE                /* 등록일시 */
+                                      , CSTMR_NAME               /* 고객정보_고객명 */
+                                      , CSTMR_NATIVE_RRN         /* 고객정보_내국인_주민등록번호 */
+                                      , SELF_INQRY_AGRM_YN       /* 본인인증조회동의 */
+                                      , SELF_CERT_TYPE           /* 본인인증유형 */
+                                      , SELF_ISSU_EXPR_DT        /* 발급/만료일자 */
+                                      , SELF_ISSU_NUM            /* 발급번호 */
+                                      , CSTMR_JEJU_ID            /* 제주항공ID */
+                                      , SELF_CSTMR_CI            /* 본인인증한  CI 정보 */
+                                      , RECOMMEND_FLAG_CD        /* 추천인 구분 코드 */
+                                      , RECOMMEND_INFO           /* 추천인정보 */
+                                      , PRNTS_CTN                /* 모회선 전화번호 */
+                                      , FATH_MOBILE_FN           /* 안면인증정보_휴대폰번호_앞자리 */
+                                      , FATH_MOBILE_MN           /* 안면인증정보_휴대폰번호_중간자리 */
+                                      , FATH_MOBILE_RN           /* 안면인증정보_휴대폰번호_뒷자리 */
         ) VALUES (
                      #{requestKey}
                  , #{cstmrForeignerNation}
@@ -867,31 +867,31 @@
 
     <!--<insert id="insertMcpRequestAgent" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO MCP_REQUEST_AGENT (
-            REQUEST_KEY              --가입신청_키
-          , MINOR_AGENT_NAME         --미성년자_법정대리인_성명
-          , MINOR_AGENT_RRN          --미성년자_법정대리인_주민등록번호
-          , MINOR_AGENT_TEL_FN       --미성년자_법정대리인_연락처_앞자리
-          , MINOR_AGENT_TEL_MN       --미성년자_법정대리인_연락처_중간자리
-          , MINOR_AGENT_TEL_RN       --미성년자_법정대리인_끝자리
-          , MINOR_AGENT_RELATION     --미성년자_법정대리인_관계
-          , JRDCL_AGENT_NAME         --법인_대리인_성명
-          , JRDCL_AGENT_RRN          --법인_대리인_주민등록번호
-          , JRDCL_AGENT_TEL_FN       --법인_대리인_연락처_앞자리
-          , JRDCL_AGENT_TEL_MN       --법인_대리인_연락처_중간자리
-          , JRDCL_AGENT_TEL_RN       --법인_대리인_연락처_끝자리
-          , ENTRUST_REQ_NM           --법정대리인_위임하는분
-          , ENTRUST_RES_NM           --법정대리인_위임받는분
-          , ENTRUST_REQ_RELATION     --법정대리인_위임관계
-          , ENTRUST_RES_RRN          --법정대리인_위임_주민등록번호
-          , ENTRUST_RES_TEL_FN       --법정대리인_위임_전화번호_앞자리
-          , ENTRUST_RES_TEL_MN       --법정대리인_위임_전화번호_중간자리
-          , ENTRUST_RES_TEL_RN       --법정대리인_위임_전화번호_뒷자리
-          , SYS_RDATE                --등록일시
-          , MINOR_SELF_INQRY_AGRM_YN --본인인증조회동의
-          , MINOR_SELF_CERT_TYPE     --본인인증유형
-          , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
-          , MINOR_SELF_ISSU_NUM      --발급번호
-          , MINOR_AGENT_AGRM_YN       --법정 대리인 안내사항 및 동의
+            REQUEST_KEY              /* 가입신청_키 */
+          , MINOR_AGENT_NAME         /* 미성년자_법정대리인_성명 */
+          , MINOR_AGENT_RRN          /* 미성년자_법정대리인_주민등록번호 */
+          , MINOR_AGENT_TEL_FN       /* 미성년자_법정대리인_연락처_앞자리 */
+          , MINOR_AGENT_TEL_MN       /* 미성년자_법정대리인_연락처_중간자리 */
+          , MINOR_AGENT_TEL_RN       /* 미성년자_법정대리인_끝자리 */
+          , MINOR_AGENT_RELATION     /* 미성년자_법정대리인_관계 */
+          , JRDCL_AGENT_NAME         /* 법인_대리인_성명 */
+          , JRDCL_AGENT_RRN          /* 법인_대리인_주민등록번호 */
+          , JRDCL_AGENT_TEL_FN       /* 법인_대리인_연락처_앞자리 */
+          , JRDCL_AGENT_TEL_MN       /* 법인_대리인_연락처_중간자리 */
+          , JRDCL_AGENT_TEL_RN       /* 법인_대리인_연락처_끝자리 */
+          , ENTRUST_REQ_NM           /* 법정대리인_위임하는분 */
+          , ENTRUST_RES_NM           /* 법정대리인_위임받는분 */
+          , ENTRUST_REQ_RELATION     /* 법정대리인_위임관계 */
+          , ENTRUST_RES_RRN          /* 법정대리인_위임_주민등록번호 */
+          , ENTRUST_RES_TEL_FN       /* 법정대리인_위임_전화번호_앞자리 */
+          , ENTRUST_RES_TEL_MN       /* 법정대리인_위임_전화번호_중간자리 */
+          , ENTRUST_RES_TEL_RN       /* 법정대리인_위임_전화번호_뒷자리 */
+          , SYS_RDATE                /* 등록일시 */
+          , MINOR_SELF_INQRY_AGRM_YN /* 본인인증조회동의 */
+          , MINOR_SELF_CERT_TYPE     /* 본인인증유형 */
+          , MINOR_SELF_ISSU_EXPR_DT  /* 발급/만료일자 */
+          , MINOR_SELF_ISSU_NUM      /* 발급번호 */
+          , MINOR_AGENT_AGRM_YN       /* 법정 대리인 안내사항 및 동의 */
         ) VALUES (
                      #{requestKey}
                  , #{minorAgentName}
@@ -923,17 +923,17 @@
 
     <!--<insert id="insertMcpRequestMove" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO MCP_REQUEST_MOVE (
-                                       REQUEST_KEY              --가입신청_키
-                                     , MOVE_COMPANY             --번호이동정보_변경전통신사
-                                     , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
-                                     , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
-                                     , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
-                                     , MOVE_AUTH_TYPE           --번호이동정보_인증유형
-                                     , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
-                                     , MOVE_THISMONTH_PAY_TYPE  --번호이동정보_이달사용요금납부방법
-                                     , MOVE_ALLOTMENT_STAT      --번호이동정보_휴대폰_할부금상태
-                                     , MOVE_REFUND_AGREE_FLAG   --번호이동정보_미환급액요금상계동의_여부
-                                     , SYS_RDATE                --등록일시
+                                       REQUEST_KEY              /* 가입신청_키 */
+                                     , MOVE_COMPANY             /* 번호이동정보_변경전통신사 */
+                                     , MOVE_MOBILE_FN           /* 번호이동정보_이동할번호_앞자리 */
+                                     , MOVE_MOBILE_MN           /* 번호이동정보_이동할번호_중간자리 */
+                                     , MOVE_MOBILE_RN           /* 번호이동정보_이동할번호_끝자리 */
+                                     , MOVE_AUTH_TYPE           /* 번호이동정보_인증유형 */
+                                     , MOVE_AUTH_NUMBER         /* 번호이동정보_인증번호4자리 */
+                                     , MOVE_THISMONTH_PAY_TYPE  /* 번호이동정보_이달사용요금납부방법 */
+                                     , MOVE_ALLOTMENT_STAT      /* 번호이동정보_휴대폰_할부금상태 */
+                                     , MOVE_REFUND_AGREE_FLAG   /* 번호이동정보_미환급액요금상계동의_여부 */
+                                     , SYS_RDATE                /* 등록일시 */
                                      , REQ_GUIDE_FLAG
                                      , REQ_GUIDE_FN
                                      , REQ_GUIDE_RN
@@ -980,45 +980,45 @@
     <!--<insert id="insertMcpRequestSaleinfo" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO /*AppformMapper.insertMcpRequestSaleinfo 서식지 정보 저장  */
             MCP_REQUEST_SALEINFO (
-                                   SPRT_TP                  --지원금유형 (단말할인:KD , 요금할인:PM)
-                                 , MAX_DISCOUNT3            --추가지원금(MAX)
-                                 , DC_AMT                   --할인금액
-                                 , ADD_DC_AMT               --추가할인금액
-                                 , MODEL_ID                 -- 휴대폰 : 대표 모델ID  유심 :
-                                 , REQUEST_KEY              --가입신청_키
-                                 , MODEL_MONTHLY            --단말할부개월수
-                                 , MODEL_INSTALLMENT        --단말할부원금
-                                 , MODEL_SALE_POLICY_CODE   --판매 정책
-                                 , MODEL_PRICE_VAT          --단말출고가_부가세
-                                 , RECYCLE_YN               --중고여부
-                                 , MODEL_DISCOUNT1          --제조사장려금
-                                 , MODEL_DISCOUNT2          --공시지원금
-                                 , ENGG_MNTH_CNT            --약정개월수
-                                 , SOC_CODE                 --요금제코드
-                                 , USIM_PRICE_TYPE          --유심납부유형(B: 정기, I:즉납)
-                                 , JOIN_PRICE_TYPE          --가입비납부유형(B:정기, I:즉납)
-                                 , JOIN_PRICE               --
-                                 , USIM_PRICE               --유심판매가
-                                 , MODEL_PRICE              --단말출고가
-                                 , ADDTION_SERVICE          --부가서비스
-                                 , ADDTION_SERVICE_SUM      --부가서비스합계
-                                 , MODEL_DISCOUNT3          --대리점보조금
-                                 , USIM_PAY_MTHD_CD         --USIM비 납부방법(0 : 면제, 1:일시납, 2: 분납(3개월)
-                                 , JOIN_PAY_MTHD_CD         --가입비 납부방법(1: 면제 , 2: 일시납, 3 :3개월분납)
-                                 , REAL_MDL_INSTAMT         --실제단말할부원금(VAT포함)
-                                 , SETTL_WAY_CD             --결제수단코드  01 신용카드 , 02 실시간계좌이체
-                                 , SETTL_AMT                --결제금액
-                                 , OWN_PERSONAL_CODE        --개인 통관 고유 부호-외산 휴대폰
-                                 , RENTAL_BASE_AMT          --렌탈 기본료 금액
-                                 , RENTAL_BASE_DC_AMT       --렌탈 기본료 할인 금액
-                                 , RENTAL_MODEL_CP_AMT      --단말기 배상 금액
+                                   SPRT_TP                  /* 지원금유형 (단말할인:KD , 요금할인:PM) */
+                                 , MAX_DISCOUNT3            /* 추가지원금(MAX) */
+                                 , DC_AMT                   /* 할인금액 */
+                                 , ADD_DC_AMT               /* 추가할인금액 */
+                                 , MODEL_ID                 /* 휴대폰 : 대표 모델ID  유심 : */
+                                 , REQUEST_KEY              /* 가입신청_키 */
+                                 , MODEL_MONTHLY            /* 단말할부개월수 */
+                                 , MODEL_INSTALLMENT        /* 단말할부원금 */
+                                 , MODEL_SALE_POLICY_CODE   /* 판매 정책 */
+                                 , MODEL_PRICE_VAT          /* 단말출고가_부가세 */
+                                 , RECYCLE_YN               /* 중고여부 */
+                                 , MODEL_DISCOUNT1          /* 제조사장려금 */
+                                 , MODEL_DISCOUNT2          /* 공시지원금 */
+                                 , ENGG_MNTH_CNT            /* 약정개월수 */
+                                 , SOC_CODE                 /* 요금제코드 */
+                                 , USIM_PRICE_TYPE          /* 유심납부유형(B: 정기, I:즉납) */
+                                 , JOIN_PRICE_TYPE          /* 가입비납부유형(B:정기, I:즉납) */
+                                 , JOIN_PRICE               /*
+                                 , USIM_PRICE               /* 유심판매가 */
+                                 , MODEL_PRICE              /* 단말출고가 */
+                                 , ADDTION_SERVICE          /* 부가서비스 */
+                                 , ADDTION_SERVICE_SUM      /* 부가서비스합계 */
+                                 , MODEL_DISCOUNT3          /* 대리점보조금 */
+                                 , USIM_PAY_MTHD_CD         /* USIM비 납부방법(0 : 면제, 1:일시납, 2: 분납(3개월) */
+                                 , JOIN_PAY_MTHD_CD         /* 가입비 납부방법(1: 면제 , 2: 일시납, 3 :3개월분납) */
+                                 , REAL_MDL_INSTAMT         /* 실제단말할부원금(VAT포함) */
+                                 , SETTL_WAY_CD             /* 결제수단코드  01 신용카드 , 02 실시간계좌이체 */
+                                 , SETTL_AMT                /* 결제금액 */
+                                 , OWN_PERSONAL_CODE        /* 개인 통관 고유 부호-외산 휴대폰 */
+                                 , RENTAL_BASE_AMT          /* 렌탈 기본료 금액 */
+                                 , RENTAL_BASE_DC_AMT       /* 렌탈 기본료 할인 금액 */
+                                 , RENTAL_MODEL_CP_AMT      /* 단말기 배상 금액 */
                                  , SESPLS_YN
                                  , HNDSET_SALE_PRICE
                                  , USE_POINT
                                  , USE_POINT_SVC_CNTR_NO
                                  , CARD_DC_CD
                                  , CARD_DC_AMT
-                                 , CARD_DC_DIV_CD             -- 카드 할인 유형
+                                 , CARD_DC_DIV_CD             /* 카드 할인 유형 */
                                  , CARD_TOT_DC_AMT
                                  , SESPLS_PROD_ID
         ) VALUES (
@@ -1069,45 +1069,45 @@
     <!--<insert id="insertNmcpRequestApdSaleinfo" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO /*AppformMapper.insertNmcpRequestApdSaleinfo 서식지 정보 저장  */
             NMCP_REQUEST_APD_SALEINFO (
-                                        SPRT_TP                  --지원금유형 (단말할인:KD , 요금할인:PM)
-                                      , MAX_DISCOUNT3            --추가지원금(MAX)
-                                      , DC_AMT                   --할인금액
-                                      , ADD_DC_AMT               --추가할인금액
-                                      , MODEL_ID                 -- 휴대폰 : 대표 모델ID  유심 :
-                                      , REQUEST_KEY              --가입신청_키
-                                      , MODEL_MONTHLY            --단말할부개월수
-                                      , MODEL_INSTALLMENT        --단말할부원금
-                                      , MODEL_SALE_POLICY_CODE   --판매 정책
-                                      , MODEL_PRICE_VAT          --단말출고가_부가세
-                                      , RECYCLE_YN               --중고여부
-                                      , MODEL_DISCOUNT1          --제조사장려금
-                                      , MODEL_DISCOUNT2          --공시지원금
-                                      , ENGG_MNTH_CNT            --약정개월수
-                                      , SOC_CODE                 --요금제코드
-                                      , USIM_PRICE_TYPE          --유심납부유형(B: 정기, I:즉납)
-                                      , JOIN_PRICE_TYPE          --가입비납부유형(B:정기, I:즉납)
-                                      , JOIN_PRICE               --
-                                      , USIM_PRICE               --유심판매가
-                                      , MODEL_PRICE              --단말출고가
-                                      , ADDTION_SERVICE          --부가서비스
-                                      , ADDTION_SERVICE_SUM      --부가서비스합계
-                                      , MODEL_DISCOUNT3          --대리점보조금
-                                      , USIM_PAY_MTHD_CD         --USIM비 납부방법(0 : 면제, 1:일시납, 2: 분납(3개월)
-                                      , JOIN_PAY_MTHD_CD         --가입비 납부방법(1: 면제 , 2: 일시납, 3 :3개월분납)
-                                      , REAL_MDL_INSTAMT         --실제단말할부원금(VAT포함)
-                                      , SETTL_WAY_CD             --결제수단코드  01 신용카드 , 02 실시간계좌이체
-                                      , SETTL_AMT                --결제금액
-                                      , OWN_PERSONAL_CODE        --개인 통관 고유 부호-외산 휴대폰
-                                      , RENTAL_BASE_AMT          --렌탈 기본료 금액
-                                      , RENTAL_BASE_DC_AMT       --렌탈 기본료 할인 금액
-                                      , RENTAL_MODEL_CP_AMT      --단말기 배상 금액
+                                        SPRT_TP                  /* 지원금유형 (단말할인:KD , 요금할인:PM) */
+                                      , MAX_DISCOUNT3            /* 추가지원금(MAX) */
+                                      , DC_AMT                   /* 할인금액 */
+                                      , ADD_DC_AMT               /* 추가할인금액 */
+                                      , MODEL_ID                 /* 휴대폰 : 대표 모델ID  유심 : */
+                                      , REQUEST_KEY              /* 가입신청_키 */
+                                      , MODEL_MONTHLY            /* 단말할부개월수 */
+                                      , MODEL_INSTALLMENT        /* 단말할부원금 */
+                                      , MODEL_SALE_POLICY_CODE   /* 판매 정책 */
+                                      , MODEL_PRICE_VAT          /* 단말출고가_부가세 */
+                                      , RECYCLE_YN               /* 중고여부 */
+                                      , MODEL_DISCOUNT1          /* 제조사장려금 */
+                                      , MODEL_DISCOUNT2          /* 공시지원금 */
+                                      , ENGG_MNTH_CNT            /* 약정개월수 */
+                                      , SOC_CODE                 /* 요금제코드 */
+                                      , USIM_PRICE_TYPE          /* 유심납부유형(B: 정기, I:즉납) */
+                                      , JOIN_PRICE_TYPE          /* 가입비납부유형(B:정기, I:즉납) */
+                                      , JOIN_PRICE               /* */
+                                      , USIM_PRICE               /* 유심판매가 */
+                                      , MODEL_PRICE              /* 단말출고가 */
+                                      , ADDTION_SERVICE          /* 부가서비스 */
+                                      , ADDTION_SERVICE_SUM      /* 부가서비스합계 */
+                                      , MODEL_DISCOUNT3          /* 대리점보조금 */
+                                      , USIM_PAY_MTHD_CD         /* USIM비 납부방법(0 : 면제, 1:일시납, 2: 분납(3개월) */
+                                      , JOIN_PAY_MTHD_CD         /* 가입비 납부방법(1: 면제 , 2: 일시납, 3 :3개월분납) */
+                                      , REAL_MDL_INSTAMT         /* 실제단말할부원금(VAT포함) */
+                                      , SETTL_WAY_CD             /* 결제수단코드  01 신용카드 , 02 실시간계좌이체 */
+                                      , SETTL_AMT                /* 결제금액 */
+                                      , OWN_PERSONAL_CODE        /* 개인 통관 고유 부호-외산 휴대폰 */
+                                      , RENTAL_BASE_AMT          /* 렌탈 기본료 금액 */
+                                      , RENTAL_BASE_DC_AMT       /* 렌탈 기본료 할인 금액 */
+                                      , RENTAL_MODEL_CP_AMT      /* 단말기 배상 금액 */
                                       , SESPLS_YN
                                       , HNDSET_SALE_PRICE
                                       , USE_POINT
                                       , USE_POINT_SVC_CNTR_NO
                                       , CARD_DC_CD
                                       , CARD_DC_AMT
-                                      , CARD_DC_DIV_CD             -- 카드 할인 유형
+                                      , CARD_DC_DIV_CD             /* 카드 할인 유형 */
                                       , CARD_TOT_DC_AMT
                                       , SESPLS_PROD_ID
         ) VALUES (
@@ -1176,14 +1176,14 @@
 
     <!--<insert id="insertMcpRequestChange" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO MCP_REQUEST_CHANGE (
-                                         NAME_CHANGE_NM           --명의변경_고객명
-                                       , NAME_CHANGE_TEL_FN       --명의변경_전화번호_앞자리
-                                       , NAME_CHANGE_TEL_MN       --명의변경_전화번호_중간자리
-                                       , NAME_CHANGE_TEL_RN       --명의변경_전화번호_끝자리
-                                       , NAME_CHANGE_RRN          --명의변경_주민등록번호
-                                       , NAME_CHANGE_PINSTALLMENT --완납=P,승계=C
-                                       , REQUEST_KEY              --가입신청_키
-                                       , SYS_RDATE                --등록일시
+                                         NAME_CHANGE_NM           /* 명의변경_고객명 */
+                                       , NAME_CHANGE_TEL_FN       /* 명의변경_전화번호_앞자리 */
+                                       , NAME_CHANGE_TEL_MN       /* 명의변경_전화번호_중간자리 */
+                                       , NAME_CHANGE_TEL_RN       /* 명의변경_전화번호_끝자리 */
+                                       , NAME_CHANGE_RRN          /* 명의변경_주민등록번호 */
+                                       , NAME_CHANGE_PINSTALLMENT /* 완납=P,승계=C */
+                                       , REQUEST_KEY              /* 가입신청_키 */
+                                       , SYS_RDATE                /* 등록일시 */
         ) VALUES (
                      ''
                  , ''
@@ -1198,23 +1198,23 @@
 
     <!--<insert id="insertMcpRequestDlvry" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO MCP_REQUEST_DLVRY (
-                                        REQUEST_KEY              --가입신청_키
-                                      , DLVRY_NAME               --배송정보_이름
-                                      , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-                                      , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-                                      , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-                                      , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
-                                      , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
-                                      , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
-                                      , DLVRY_POST               --배송정보_우편번호
-                                      , DLVRY_ADDR               --배송정보_주소
-                                      , DLVRY_ADDR_DTL           --배송정보_상세주소
-                                      , DLVRY_ADDR_BJD           --배송정보_법정동주소
-                                      , DLVRY_MEMO               --배송정보_요청사항
-                                      , SYS_RDATE                --등록일시
-                                      , TB_CD                    --
-                                      , DLVRY_TYPE               --배송유형 [01 택배,  02 바로배송],
-                                      , SELF_DLVRY_IDX           --바로 배송 요청 table [일련번호 ]
+                                        REQUEST_KEY              /* 가입신청_키 */
+                                      , DLVRY_NAME               /* 배송정보_이름 */
+                                      , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+                                      , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+                                      , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+                                      , DLVRY_MOBILE_FN          /* 배송정보_휴대폰번호_앞자리 */
+                                      , DLVRY_MOBILE_MN          /* 배송정보_휴대폰번호_중간자리 */
+                                      , DLVRY_MOBILE_RN          /* 배송정보_휴대폰번호_뒷자리 */
+                                      , DLVRY_POST               /* 배송정보_우편번호 */
+                                      , DLVRY_ADDR               /* 배송정보_주소 */
+                                      , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+                                      , DLVRY_ADDR_BJD           /* 배송정보_법정동주소 */
+                                      , DLVRY_MEMO               /* 배송정보_요청사항 */
+                                      , SYS_RDATE                /* 등록일시 */
+                                      , TB_CD                    /* */
+                                      , DLVRY_TYPE              /*배송유형 [01 택배,  02 바로배송], */
+                                      , SELF_DLVRY_IDX           /* 바로 배송 요청 table [일련번호 ] */
         ) VALUES (
                      #{requestKey}
                  , #{dlvryName}
@@ -1239,23 +1239,23 @@
 
     <!--<insert id="insertNmcpRequestApdDlvry" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO NMCP_REQUEST_APD_DLVRY (
-                                             REQUEST_KEY              --가입신청_키
-                                           , DLVRY_NAME               --배송정보_이름
-                                           , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-                                           , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-                                           , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-                                           , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
-                                           , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
-                                           , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
-                                           , DLVRY_POST               --배송정보_우편번호
-                                           , DLVRY_ADDR               --배송정보_주소
-                                           , DLVRY_ADDR_DTL           --배송정보_상세주소
-                                           , DLVRY_ADDR_BJD           --배송정보_법정동주소
-                                           , DLVRY_MEMO               --배송정보_요청사항
-                                           , SYS_RDATE                --등록일시
-                                           , TB_CD                    --
-                                           , DLVRY_TYPE               --배송유형 [01 택배,  02 바로배송],
-                                           , SELF_DLVRY_IDX           --바로 배송 요청 table [일련번호 ]
+                                             REQUEST_KEY              /* 가입신청_키 */
+                                           , DLVRY_NAME               /* 배송정보_이름 */
+                                           , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+                                           , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+                                           , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+                                           , DLVRY_MOBILE_FN          /* 배송정보_휴대폰번호_앞자리 */
+                                           , DLVRY_MOBILE_MN          /* 배송정보_휴대폰번호_중간자리 */
+                                           , DLVRY_MOBILE_RN          /* 배송정보_휴대폰번호_뒷자리 */
+                                           , DLVRY_POST               /* 배송정보_우편번호 */
+                                           , DLVRY_ADDR               /* 배송정보_주소 */
+                                           , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+                                           , DLVRY_ADDR_BJD           /* 배송정보_법정동주소 */
+                                           , DLVRY_MEMO               /* 배송정보_요청사항 */
+                                           , SYS_RDATE                /* 등록일시 */
+                                           , TB_CD                    /* */
+                                           , DLVRY_TYPE              /*배송유형 [01 택배,  02 바로배송], */
+                                           , SELF_DLVRY_IDX           /* 바로 배송 요청 table [일련번호 ] */
         ) VALUES (
                      #{requestKey}
                  , #{dlvryName}
@@ -1280,25 +1280,25 @@
 
     <!--<insert id="insertMcpRequestReq" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO MCP_REQUEST_REQ (
-                                      REQUEST_KEY              --가입신청_키
-                                    , REQ_BANK                 --신청정보_계좌이체_은행
-                                    , REQ_ACCOUNT_NAME         --신청정보_계좌이체_예금주
-                                    , REQ_ACCOUNT_RRN          --신청정보_계좌이체_예금주_주민번호
-                                    , REQ_ACCOUNT_RELATION     --신청정보_계좌이체_예금주와관계
-                                    , REQ_ACCOUNT_NUMBER       --신청정보_계좌이체_계좌번호
-                                    , REQ_CARD_NAME            --신청정보_신용카드_명의자
-                                    , REQ_CARD_RRN             --신청정보_신용카드_명의자_주민번호
-                                    , REQ_CARD_COMPANY         --신청정보_신용카드_카드사
-                                    , REQ_CARD_NO              --신청정보_신용카드_번호
-                                    , REQ_CARD_YY              --신청정보_신용카드_유효년
-                                    , REQ_CARD_MM              --신청정보_신용카드_유효월
-                                    , REQ_WIRE_TYPE            --신청정보_무선데이터_이용_타입
-                                    , SYS_RDATE                --등록일시
-                                    , REQ_PAY_OTHER_FLAG       --신청정보_타인납부_여부
-                                    , REQ_PAY_OTHER_TEL_FN     --신청정보_타인납부_전화번호_앞자리
-                                    , REQ_PAY_OTHER_TEL_MN     --신청정보_타인납부_전화번호_중간자리
-                                    , REQ_PAY_OTHER_TEL_RN     --신청정보_타인납부_전화번호_끝자리
-                                    , PRNTS_BILL_NO            -- 모회선 청구번호
+                                      REQUEST_KEY              /* 가입신청_키 */
+                                    , REQ_BANK                 /* 신청정보_계좌이체_은행 */
+                                    , REQ_ACCOUNT_NAME         /* 신청정보_계좌이체_예금주 */
+                                    , REQ_ACCOUNT_RRN          /* 신청정보_계좌이체_예금주_주민번호 */
+                                    , REQ_ACCOUNT_RELATION     /* 신청정보_계좌이체_예금주와관계 */
+                                    , REQ_ACCOUNT_NUMBER       /* 신청정보_계좌이체_계좌번호 */
+                                    , REQ_CARD_NAME            /* 신청정보_신용카드_명의자 */
+                                    , REQ_CARD_RRN             /* 신청정보_신용카드_명의자_주민번호 */
+                                    , REQ_CARD_COMPANY         /* 신청정보_신용카드_카드사 */
+                                    , REQ_CARD_NO              /* 신청정보_신용카드_번호 */
+                                    , REQ_CARD_YY              /* 신청정보_신용카드_유효년 */
+                                    , REQ_CARD_MM              /* 신청정보_신용카드_유효월 */
+                                    , REQ_WIRE_TYPE            /* 신청정보_무선데이터_이용_타입 */
+                                    , SYS_RDATE                /* 등록일시 */
+                                    , REQ_PAY_OTHER_FLAG       /* 신청정보_타인납부_여부 */
+                                    , REQ_PAY_OTHER_TEL_FN     /* 신청정보_타인납부_전화번호_앞자리 */
+                                    , REQ_PAY_OTHER_TEL_MN     /* 신청정보_타인납부_전화번호_중간자리 */
+                                    , REQ_PAY_OTHER_TEL_RN     /* 신청정보_타인납부_전화번호_끝자리 */
+                                    , PRNTS_BILL_NO            /* 모회선 청구번호 */
         ) VALUES (
                      #{requestKey}
                  , #{reqBank}
@@ -1325,11 +1325,11 @@
     <!--<insert id="insertMcpRequestDvcChg" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO /*AppformMapper.insertMcpRequestDvcChg 가입신청_기변사유 저장  */
             MCP_REQUEST_DVC_CHG (
-                                  REQUEST_KEY            --가입신청키
-                                , DVC_CHG_TYPE         --기변유형(10: 단말, 20:USIM)
-                                , DVC_CHG_RSN_CD       --기변사유코드(10:일반, 20:불량)
-                                , DVC_CHG_RSN_DTL_CD   --기변상세사유코드
-                                , REGST_DTTM           --등록일시
+                                  REQUEST_KEY            /* 가입신청키 */
+                                , DVC_CHG_TYPE         /* 기변유형(10: 단말, 20:USIM) */
+                                , DVC_CHG_RSN_CD       /* 기변사유코드(10:일반, 20:불량) */
+                                , DVC_CHG_RSN_DTL_CD   /* 기변상세사유코드 */
+                                , REGST_DTTM           /* 등록일시 */
         ) VALUES (
                      #{requestKey}
                  , '10'
@@ -1357,21 +1357,21 @@
         <foreach item="item" collection="additionKeyList" open="(" separator="," close=")">
             #{item}
         </foreach>
-    </update>
+    </update>-->
 
     <!--<insert id="insertMcpRequestState" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO MCP_REQUEST_STATE (
-                                        REQUEST_STATE_KEY        --가입진행_키
-                                      , REQUEST_STATE_CODE       --가입진행_코드
-                                      , DLVRY_NO                 --송장번호
-                                      , OPEN_NO                  --개통번호
-                                      , MEMO                     --메모
-                                      , SYS_RDATE                --등록일시
-                                      , RIP                      --등록자아이피
-                                      , RID                      --등록자아이디
-                                      , VIEW_FLAG                --화면표시_여부
-                                      , RES_NO                   --예약번호
-                                      , REQUEST_KEY              --가입신청_키
+                                        REQUEST_STATE_KEY        /* 가입진행_키 */
+                                      , REQUEST_STATE_CODE       /* 가입진행_코드 */
+                                      , DLVRY_NO                 /* 송장번호 */
+                                      , OPEN_NO                  /* 개통번호 */
+                                      , MEMO                     /* 메모 */
+                                      , SYS_RDATE                /* 등록일시 */
+                                      , RIP                      /* 등록자아이피 */
+                                      , RID                      /* 등록자아이디 */
+                                      , VIEW_FLAG                /* 화면표시_여부 */
+                                      , RES_NO                   /* 예약번호 */
+                                      , REQUEST_KEY              /* 가입신청_키 */
                                       , TB_CD
         ) VALUES (
                      SQ_RCP_REQUEST_STATE_01.NEXTVAL
@@ -1391,17 +1391,17 @@
 
     <!--<insert id="insertNmcpRequestApdState" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO NMCP_REQUEST_APD_STATE (
-                                             REQUEST_STATE_KEY        --가입진행_키
-                                           , REQUEST_STATE_CODE       --가입진행_코드
-                                           , DLVRY_NO                 --송장번호
-                                           , OPEN_NO                  --개통번호
-                                           , MEMO                     --메모
-                                           , SYS_RDATE                --등록일시
-                                           , RIP                      --등록자아이피
-                                           , RID                      --등록자아이디
-                                           , VIEW_FLAG                --화면표시_여부
-                                           , RES_NO                   --예약번호
-                                           , REQUEST_KEY              --가입신청_키
+                                             REQUEST_STATE_KEY        /* 가입진행_키 */
+                                           , REQUEST_STATE_CODE       /* 가입진행_코드 */
+                                           , DLVRY_NO                 /* 송장번호 */
+                                           , OPEN_NO                  /* 개통번호 */
+                                           , MEMO                     /* 메모 */
+                                           , SYS_RDATE                /* 등록일시 */
+                                           , RIP                      /* 등록자아이피 */
+                                           , RID                      /* 등록자아이디 */
+                                           , VIEW_FLAG                /* 화면표시_여부 */
+                                           , RES_NO                   /* 예약번호 */
+                                           , REQUEST_KEY              /* 가입신청_키 */
                                            , TB_CD
         ) VALUES (
                      SQ_RCP_REQUEST_STATE_01.NEXTVAL
@@ -1667,12 +1667,10 @@
         </choose>
         ORDER BY T1.REQUEST_STATE_CODE DESC ,T1.SYS_RDATE
         ) WHERE  ROWNUM =1
-    </select>-->
-    <!--
-        계약번호 REQUEST_STATE_CODE 21(개통완료) 항상 있다.. 제일 상위에 (개발계에서 없음)
+        /*계약번호 REQUEST_STATE_CODE 21(개통완료) 항상 있다.. 제일 상위에 (개발계에서 없음)
         ORDER BY T1.REQUEST_STATE_CODE DESC ,T1.SYS_RDATE
-        AND REQUEST_STATE_CODE = '21'
-    -->
+        AND REQUEST_STATE_CODE = '21'*/
+    </select>-->
 
 
     <!--<select id="getCopyMcpRequest"  parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto"  resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
@@ -1691,64 +1689,64 @@
         , CLAUSE_RENTAL_MODEL_CP_PR
         , CLAUSE_RENTAL_SERVICE
         , CLAUSE_FINANCE_FLAG
-        , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
-        , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
-        , CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
-        , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
-        , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
-        , CSTMR_PRIVATE_CNAME      --고객정보_개인사업자_상호명
-        , CSTMR_PRIVATE_NUMBER     --고객정보_개인사업자_사업자등록번호
-        , CSTMR_JURIDICAL_CNAME    --고객정보_법인사업자_법인명
-        , CSTMR_JURIDICAL_RRN      --고객정보_법인사업자_법인번호
-        , CSTMR_JURIDICAL_NUMBER   --고객정보_법인사업자_사업자등록번호
-        , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
-        , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
-        , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
-        , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
-        , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
-        , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
-        , CSTMR_POST               --고객정보_우편번호
-        , CSTMR_ADDR               --고객정보_주소
-        , CSTMR_ADDR_DTL           --고객정보_상세주소
-        , CSTMR_ADDR_BJD           --고객정보_법정동주소
-        , CSTMR_BILL_SEND_CODE     --고객정보_명세서종류
-        , CSTMR_MAIL               --고객정보_메일
-        , CSTMR_MAIL_RECEIVE_FLAG  --고객정보_메일수신_여부
-        , CSTMR_VISIT_TYPE         --고객정보_방문고객정보
-        , CSTMR_RECEIVE_TEL_FN     --고객정보_연락받을번호_앞자
-        , CSTMR_RECEIVE_TEL_NM     --고객정보_연락받을번호_중간자리
-        , CSTMR_RECEIVE_TEL_RN     --고객정보_연락받을번호_끝자리
-        , OTHERS_PAYMENT_AG        --고객정보_타인납부동의
-        , OTHERS_PAYMENT_NM        --고객정보_타인납부_고객명
-        , OTHERS_PAYMENT_RRN       --고객정보_타인납부_주민번호
-        , OTHERS_PAYMENT_RELATION  --고객정보_타인납부_명의자와의관계
-        , OTHERS_PAYMENT_RNM       --고객정보_타인납부_신청인
-        , CSTMR_NAME               --고객정보_고객명
-        , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
-        , SELF_INQRY_AGRM_YN       --본인인증조회동의
-        , SELF_CERT_TYPE           --본인인증유형
-        , SELF_ISSU_EXPR_DT        --발급/만료일자
-        , SELF_ISSU_NUM            --발급번호
-        , REQ_BANK                 --신청정보_계좌이체_은행
-        , REQ_ACCOUNT_NAME         --신청정보_계좌이체_예금주
-        , REQ_ACCOUNT_RRN          --신청정보_계좌이체_예금주_주민번호
-        , REQ_ACCOUNT_RELATION     --신청정보_계좌이체_예금주와관계
-        , REQ_ACCOUNT_NUMBER       --신청정보_계좌이체_계좌번호
-        , REQ_CARD_NAME            --신청정보_신용카드_명의자
-        , REQ_CARD_RRN             --신청정보_신용카드_명의자_주민번호
-        , REQ_CARD_COMPANY         --신청정보_신용카드_카드사
-        , REQ_CARD_NO              --신청정보_신용카드_번호
-        , REQ_CARD_YY              --신청정보_신용카드_유효년
-        , REQ_CARD_MM              --신청정보_신용카드_유효월
-        , REQ_WIRE_TYPE            --신청정보_무선데이터_이용_타입
-        , MODEL_ID                 -- 휴대폰 : 대표 모델ID  유심 :
-        , MODEL_SALE_POLICY_CODE   --판매 정책
-        , MINOR_SELF_CERT_TYPE     --본인인증유형
-        , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
-        , MINOR_SELF_ISSU_NUM      --발급번호
-        , FATH_MOBILE_FN          --안면인증정보_휴대폰번호_앞자리
-        , FATH_MOBILE_FN          --안면인증정보_휴대폰번호_중간자리
-        , FATH_MOBILE_FN          --안면인증정보_휴대폰번호_끝자리
+        , CSTMR_FOREIGNER_NATION   /* 고객정보_외국인_국적 */
+        , CSTMR_FOREIGNER_PN       /* 고객정보_외국인_여권번호 */
+        , CSTMR_FOREIGNER_RRN      /* 고객정보_외국인_외국인등록번호 */
+        , CSTMR_FOREIGNER_SDATE    /* 고객정보_외국인_체류_시작날자 */
+        , CSTMR_FOREIGNER_EDATE    /* 고객정보_외국인_체류_종료날자 */
+        , CSTMR_PRIVATE_CNAME      /* 고객정보_개인사업자_상호명 */
+        , CSTMR_PRIVATE_NUMBER     /* 고객정보_개인사업자_사업자등록번호 */
+        , CSTMR_JURIDICAL_CNAME    /* 고객정보_법인사업자_법인명 */
+        , CSTMR_JURIDICAL_RRN      /* 고객정보_법인사업자_법인번호 */
+        , CSTMR_JURIDICAL_NUMBER   /* 고객정보_법인사업자_사업자등록번호 */
+        , CSTMR_TEL_FN             /* 고객정보_전화번호_앞자리 */
+        , CSTMR_TEL_MN             /* 고객정보_전화번호_가운데자리 */
+        , CSTMR_TEL_RN             /* 고객정보_전화번호_끝자리 */
+        , CSTMR_MOBILE_FN          /* 고객정보_휴대폰번호_앞자리 */
+        , CSTMR_MOBILE_MN          /* 고객정보_휴대폰번호_중간자리 */
+        , CSTMR_MOBILE_RN          /* 고객정보_휴대폰번호_끝자리 */
+        , CSTMR_POST               /* 고객정보_우편번호 */
+        , CSTMR_ADDR               /* 고객정보_주소 */
+        , CSTMR_ADDR_DTL           /* 고객정보_상세주소 */
+        , CSTMR_ADDR_BJD           /* 고객정보_법정동주소 */
+        , CSTMR_BILL_SEND_CODE     /* 고객정보_명세서종류 */
+        , CSTMR_MAIL               /* 고객정보_메일 */
+        , CSTMR_MAIL_RECEIVE_FLAG  /* 고객정보_메일수신_여부 */
+        , CSTMR_VISIT_TYPE         /* 고객정보_방문고객정보 */
+        , CSTMR_RECEIVE_TEL_FN     /* 고객정보_연락받을번호_앞자 */
+        , CSTMR_RECEIVE_TEL_NM     /* 고객정보_연락받을번호_중간자리 */
+        , CSTMR_RECEIVE_TEL_RN     /* 고객정보_연락받을번호_끝자리 */
+        , OTHERS_PAYMENT_AG        /* 고객정보_타인납부동의 */
+        , OTHERS_PAYMENT_NM        /* 고객정보_타인납부_고객명 */
+        , OTHERS_PAYMENT_RRN       /* 고객정보_타인납부_주민번호 */
+        , OTHERS_PAYMENT_RELATION  /* 고객정보_타인납부_명의자와의관계 */
+        , OTHERS_PAYMENT_RNM       /* 고객정보_타인납부_신청인 */
+        , CSTMR_NAME               /* 고객정보_고객명 */
+        , CSTMR_NATIVE_RRN         /* 고객정보_내국인_주민등록번호 */
+        , SELF_INQRY_AGRM_YN       /* 본인인증조회동의 */
+        , SELF_CERT_TYPE           /* 본인인증유형 */
+        , SELF_ISSU_EXPR_DT        /* 발급/만료일자 */
+        , SELF_ISSU_NUM            /* 발급번호 */
+        , REQ_BANK                 /* 신청정보_계좌이체_은행 */
+        , REQ_ACCOUNT_NAME         /* 신청정보_계좌이체_예금주 */
+        , REQ_ACCOUNT_RRN          /* 신청정보_계좌이체_예금주_주민번호 */
+        , REQ_ACCOUNT_RELATION     /* 신청정보_계좌이체_예금주와관계 */
+        , REQ_ACCOUNT_NUMBER       /* 신청정보_계좌이체_계좌번호 */
+        , REQ_CARD_NAME            /* 신청정보_신용카드_명의자 */
+        , REQ_CARD_RRN             /* 신청정보_신용카드_명의자_주민번호 */
+        , REQ_CARD_COMPANY         /* 신청정보_신용카드_카드사 */
+        , REQ_CARD_NO              /* 신청정보_신용카드_번호 */
+        , REQ_CARD_YY              /* 신청정보_신용카드_유효년 */
+        , REQ_CARD_MM              /* 신청정보_신용카드_유효월 */
+        , REQ_WIRE_TYPE            /* 신청정보_무선데이터_이용_타입 */
+        , MODEL_ID                 /* 휴대폰 : 대표 모델ID  유심 : */
+        , MODEL_SALE_POLICY_CODE   /* 판매 정책 */
+        , MINOR_SELF_CERT_TYPE     /* 본인인증유형 */
+        , MINOR_SELF_ISSU_EXPR_DT  /* 발급/만료일자 */
+        , MINOR_SELF_ISSU_NUM      /* 발급번호 */
+        , FATH_MOBILE_FN          /* 안면인증정보_휴대폰번호_앞자리 */
+        , FATH_MOBILE_FN          /* 안면인증정보_휴대폰번호_중간자리 */
+        , FATH_MOBILE_FN          /* 안면인증정보_휴대폰번호_끝자리 */
         FROM (
         SELECT
         REQ_PAY_TYPE
@@ -1765,65 +1763,65 @@
         , T1.CLAUSE_RENTAL_MODEL_CP_PR
         , T1.CLAUSE_RENTAL_SERVICE
         , T1.CLAUSE_FINANCE_FLAG
-        , T2.CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
-        , T2.CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
-        , T2.CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
-        , T2.CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
-        , T2.CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
-        , T2.CSTMR_PRIVATE_CNAME      --고객정보_개인사업자_상호명
-        , T2.CSTMR_PRIVATE_NUMBER     --고객정보_개인사업자_사업자등록번호
-        , T2.CSTMR_JURIDICAL_CNAME    --고객정보_법인사업자_법인명
-        , T2.CSTMR_JURIDICAL_RRN      --고객정보_법인사업자_법인번호
-        , T2.CSTMR_JURIDICAL_NUMBER   --고객정보_법인사업자_사업자등록번호
-        , T2.CSTMR_TEL_FN             --고객정보_전화번호_앞자리
-        , T2.CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
-        , T2.CSTMR_TEL_RN             --고객정보_전화번호_끝자리
-        , T2.CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
-        , T2.CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
-        , T2.CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
-        , T2.FATH_MOBILE_FN           --안면인증정보_휴대폰번호_앞자리
-        , T2.FATH_MOBILE_MN           --안면인증정보_휴대폰번호_중간자리
-        , T2.FATH_MOBILE_RN           --안면인증정보_휴대폰번호_끝자리
-        , T2.CSTMR_POST               --고객정보_우편번호
-        , T2.CSTMR_ADDR               --고객정보_주소
-        , T2.CSTMR_ADDR_DTL           --고객정보_상세주소
-        , T2.CSTMR_ADDR_BJD           --고객정보_법정동주소
-        , T2.CSTMR_BILL_SEND_CODE     --고객정보_명세서종류
-        , T2.CSTMR_MAIL               --고객정보_메일
-        , T2.CSTMR_MAIL_RECEIVE_FLAG  --고객정보_메일수신_여부
-        , T2.CSTMR_VISIT_TYPE         --고객정보_방문고객정보
-        , T2.CSTMR_RECEIVE_TEL_FN     --고객정보_연락받을번호_앞자
-        , T2.CSTMR_RECEIVE_TEL_NM     --고객정보_연락받을번호_중간자리
-        , T2.CSTMR_RECEIVE_TEL_RN     --고객정보_연락받을번호_끝자리
-        , T2.OTHERS_PAYMENT_AG        --고객정보_타인납부동의
-        , T2.OTHERS_PAYMENT_NM        --고객정보_타인납부_고객명
-        , T2.OTHERS_PAYMENT_RRN       --고객정보_타인납부_주민번호
-        , T2.OTHERS_PAYMENT_RELATION  --고객정보_타인납부_명의자와의관계
-        , T2.OTHERS_PAYMENT_RNM       --고객정보_타인납부_신청인
-        , T2.CSTMR_NAME               --고객정보_고객명
-        , T2.CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
-        , T2.SELF_INQRY_AGRM_YN       --본인인증조회동의
-        , T2.SELF_CERT_TYPE           --본인인증유형
-        , T2.SELF_ISSU_EXPR_DT        --발급/만료일자
-        , T2.SELF_ISSU_NUM            --발급번호
-        , T3.REQ_BANK                 --신청정보_계좌이체_은행
-        , T3.REQ_ACCOUNT_NAME         --신청정보_계좌이체_예금주
-        , T3.REQ_ACCOUNT_RRN          --신청정보_계좌이체_예금주_주민번호
-        , T3.REQ_ACCOUNT_RELATION     --신청정보_계좌이체_예금주와관계
-        , T3.REQ_ACCOUNT_NUMBER       --신청정보_계좌이체_계좌번호
-        , T3.REQ_CARD_NAME            --신청정보_신용카드_명의자
-        , T3.REQ_CARD_RRN             --신청정보_신용카드_명의자_주민번호
-        , T3.REQ_CARD_COMPANY         --신청정보_신용카드_카드사
-        , T3.REQ_CARD_NO              --신청정보_신용카드_번호
-        , T3.REQ_CARD_YY              --신청정보_신용카드_유효년
-        , T3.REQ_CARD_MM              --신청정보_신용카드_유효월
-        , T3.REQ_WIRE_TYPE            --신청정보_무선데이터_이용_타입
-        , T4.MODEL_ID                 -- 휴대폰 : 대표 모델ID  유심 :
-        , T4.MODEL_SALE_POLICY_CODE   --판매 정책
-        , T4.USIM_PAY_MTHD_CD         --USIM비 납부방법(0 : 면제, 1:일시납, 2: 분납(3개월)
-        , T5.MINOR_SELF_CERT_TYPE     --본인인증유형
-        , T5.MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
-        , T5.MINOR_SELF_ISSU_NUM      --발급번호
+        , T2.CSTMR_FOREIGNER_NATION   /* 고객정보_외국인_국적 */
+        , T2.CSTMR_FOREIGNER_PN       /* 고객정보_외국인_여권번호 */
+        , T2.CSTMR_FOREIGNER_RRN      /* 고객정보_외국인_외국인등록번호 */
+        , T2.CSTMR_FOREIGNER_SDATE    /* 고객정보_외국인_체류_시작날자 */
+        , T2.CSTMR_FOREIGNER_EDATE    /* 고객정보_외국인_체류_종료날자 */
+        , T2.CSTMR_PRIVATE_CNAME      /* 고객정보_개인사업자_상호명 */
+        , T2.CSTMR_PRIVATE_NUMBER     /* 고객정보_개인사업자_사업자등록번호 */
+        , T2.CSTMR_JURIDICAL_CNAME    /* 고객정보_법인사업자_법인명 */
+        , T2.CSTMR_JURIDICAL_RRN      /* 고객정보_법인사업자_법인번호 */
+        , T2.CSTMR_JURIDICAL_NUMBER   /* 고객정보_법인사업자_사업자등록번호 */
+        , T2.CSTMR_TEL_FN             /* 고객정보_전화번호_앞자리 */
+        , T2.CSTMR_TEL_MN             /* 고객정보_전화번호_가운데자리 */
+        , T2.CSTMR_TEL_RN             /* 고객정보_전화번호_끝자리 */
+        , T2.CSTMR_MOBILE_FN          /* 고객정보_휴대폰번호_앞자리 */
+        , T2.CSTMR_MOBILE_MN          /* 고객정보_휴대폰번호_중간자리 */
+        , T2.CSTMR_MOBILE_RN          /* 고객정보_휴대폰번호_끝자리 */
+        , T2.FATH_MOBILE_FN           /* 안면인증정보_휴대폰번호_앞자리 */
+        , T2.FATH_MOBILE_MN           /* 안면인증정보_휴대폰번호_중간자리 */
+        , T2.FATH_MOBILE_RN           /* 안면인증정보_휴대폰번호_끝자리 */
+        , T2.CSTMR_POST               /* 고객정보_우편번호 */
+        , T2.CSTMR_ADDR               /* 고객정보_주소 */
+        , T2.CSTMR_ADDR_DTL           /* 고객정보_상세주소 */
+        , T2.CSTMR_ADDR_BJD           /* 고객정보_법정동주소 */
+        , T2.CSTMR_BILL_SEND_CODE     /* 고객정보_명세서종류 */
+        , T2.CSTMR_MAIL               /* 고객정보_메일 */
+        , T2.CSTMR_MAIL_RECEIVE_FLAG  /* 고객정보_메일수신_여부 */
+        , T2.CSTMR_VISIT_TYPE         /* 고객정보_방문고객정보 */
+        , T2.CSTMR_RECEIVE_TEL_FN     /* 고객정보_연락받을번호_앞자 */
+        , T2.CSTMR_RECEIVE_TEL_NM     /* 고객정보_연락받을번호_중간자리 */
+        , T2.CSTMR_RECEIVE_TEL_RN     /* 고객정보_연락받을번호_끝자리 */
+        , T2.OTHERS_PAYMENT_AG        /* 고객정보_타인납부동의 */
+        , T2.OTHERS_PAYMENT_NM        /* 고객정보_타인납부_고객명 */
+        , T2.OTHERS_PAYMENT_RRN       /* 고객정보_타인납부_주민번호 */
+        , T2.OTHERS_PAYMENT_RELATION  /* 고객정보_타인납부_명의자와의관계 */
+        , T2.OTHERS_PAYMENT_RNM       /* 고객정보_타인납부_신청인 */
+        , T2.CSTMR_NAME               /* 고객정보_고객명 */
+        , T2.CSTMR_NATIVE_RRN         /* 고객정보_내국인_주민등록번호 */
+        , T2.SELF_INQRY_AGRM_YN       /* 본인인증조회동의 */
+        , T2.SELF_CERT_TYPE           /* 본인인증유형 */
+        , T2.SELF_ISSU_EXPR_DT        /* 발급/만료일자 */
+        , T2.SELF_ISSU_NUM            /* 발급번호 */
+        , T3.REQ_BANK                 /* 신청정보_계좌이체_은행 */
+        , T3.REQ_ACCOUNT_NAME         /* 신청정보_계좌이체_예금주 */
+        , T3.REQ_ACCOUNT_RRN          /* 신청정보_계좌이체_예금주_주민번호 */
+        , T3.REQ_ACCOUNT_RELATION     /* 신청정보_계좌이체_예금주와관계 */
+        , T3.REQ_ACCOUNT_NUMBER       /* 신청정보_계좌이체_계좌번호 */
+        , T3.REQ_CARD_NAME            /* 신청정보_신용카드_명의자 */
+        , T3.REQ_CARD_RRN             /* 신청정보_신용카드_명의자_주민번호 */
+        , T3.REQ_CARD_COMPANY         /* 신청정보_신용카드_카드사 */
+        , T3.REQ_CARD_NO              /* 신청정보_신용카드_번호 */
+        , T3.REQ_CARD_YY              /* 신청정보_신용카드_유효년 */
+        , T3.REQ_CARD_MM              /* 신청정보_신용카드_유효월 */
+        , T3.REQ_WIRE_TYPE            /* 신청정보_무선데이터_이용_타입 */
+        , T4.MODEL_ID                 /* 휴대폰 : 대표 모델ID  유심 : */
+        , T4.MODEL_SALE_POLICY_CODE   /* 판매 정책 */
+        , T4.USIM_PAY_MTHD_CD         /* USIM비 납부방법(0 : 면제, 1:일시납, 2: 분납(3개월) */
+        , T5.MINOR_SELF_CERT_TYPE     /* 본인인증유형 */
+        , T5.MINOR_SELF_ISSU_EXPR_DT  /* 발급/만료일자 */
+        , T5.MINOR_SELF_ISSU_NUM      /* 발급번호 */
         FROM
         MCP_REQUEST T1
         , MCP_REQUEST_CSTMR T2
@@ -1849,9 +1847,7 @@
     </select>-->
 
     <!--<update id="updateAppFormXmlYn" parameterType="java.lang.Long" >
-        <!--
             Description: 스캔 서버 연동 여부
-        -->
         UPDATE
         MCP_REQUEST
         SET
@@ -1870,9 +1866,7 @@
     </update>-->
 
     <!--<select id="getAppFormPointList" resultType="map">
-        <!--
             Description: 서식지 위치정보
-        -->
         SELECT
         COLUMN_NAME
         , METAROW
@@ -1888,9 +1882,7 @@
     </select>-->
 
     <!--<select id="getAppFormGroupPointList" parameterType="java.lang.String" resultType="map">
-        <!--
             Description: 서식지 위치정보
-        -->
         SELECT
         A.GROUP_CODE,
         B.PAGE_SEQ,
@@ -1993,36 +1985,36 @@
                     , MINOR_AGENT_AGRM_YN = #{minorAgentAgrmYn}
             WHEN NOT MATCHED THEN
                 INSERT (
-                        SELF_DLVRY_IDX           --일련번호 PK
-                    , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
-                    , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
-                    , CSTMR_NAME               --고객명
-                    , ONLINE_AUTH_TYPE         --인증방식
-                    , ONLINE_AUTH_INFO         --인증정보
-                    , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
-                    , DLVRY_NAME               --배송정보_이름
-                    , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-                    , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-                    , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-                    , DLVRY_POST               --배송정보_우편번호
-                    , DLVRY_ADDR               --배송정보_주소
-                    , DLVRY_ADDR_DTL           --배송정보_상세주소
-                    , DLVRY_MEMO               --고객 요청 사항
-                    , SELF_MEMO                --유심배송 메모
-                    , REQ_USIM_SN              --유심번호
-                    , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
-                    , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
-                    , DLVRY_NO                 --송장번호
-                    , TB_CD                    --택배사 코드    공통코드[ PERCEL]
-                    , CONTRACT_NUM             --계약번호
-                    , CRET_ID                  --생성자아이디(로그인아이디)
-                    , RVISN_ID                 --수정자ID
-                    , RVISN_DTTM               --수정 일시
-                    , SYS_RDATE                --등록일시
-                    , REQ_BUY_QNTY             --요청구매수량
-                    , USIM_UCOST               --유심단가
-                    , USIM_PRICE               --유심가격
-                    , DLVRY_TYPE               --배송타입
+                        SELF_DLVRY_IDX           /* 일련번호 PK */
+                    , USIM_PROD_ID             /* 유심코드 공통코드[usimProdInfo] */
+                    , USIM_PROD_DTL_ID         /* 유심코드상세 공통코드[usimProdDetailInfo] */
+                    , CSTMR_NAME               /* 고객명 */
+                    , ONLINE_AUTH_TYPE         /* 인증방식 */
+                    , ONLINE_AUTH_INFO         /* 인증정보 */
+                    , ONLINE_AUTH_DI           /* 중복가입 확인값 (DI_64 byte) */
+                    , DLVRY_NAME               /* 배송정보_이름 */
+                    , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+                    , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+                    , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+                    , DLVRY_POST               /* 배송정보_우편번호 */
+                    , DLVRY_ADDR               /* 배송정보_주소 */
+                    , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+                    , DLVRY_MEMO               /* 고객 요청 사항 */
+                    , SELF_MEMO                /* 유심배송 메모 */
+                    , REQ_USIM_SN              /* 유심번호 */
+                    , DLVRY_STATE_CODE         /* 진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료 */
+                    , SELF_STATE_CODE          /* 신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소 */
+                    , DLVRY_NO                 /* 송장번호 */
+                    , TB_CD                    /* 택배사 코드    공통코드[ PERCEL] */
+                    , CONTRACT_NUM             /* 계약번호 */
+                    , CRET_ID                  /* 생성자아이디(로그인아이디) */
+                    , RVISN_ID                 /* 수정자ID */
+                    , RVISN_DTTM               /* 수정 일시 */
+                    , SYS_RDATE                /* 등록일시 */
+                    , REQ_BUY_QNTY             /* 요청구매수량 */
+                    , USIM_UCOST               /* 유심단가 */
+                    , USIM_PRICE               /* 유심가격 */
+                    , DLVRY_TYPE               /* 배송타입 */
                     , MINOR_AGENT_NAME
                     , MINOR_ONLINE_AUTH_INFO
                     , MINOR_AGENT_AGRM_YN
@@ -2194,76 +2186,76 @@
 
     <!--<update id="insertMcpRequestSelfDlvry" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
         INSERT INTO MCP_REQUEST_SELF_DLVRY (
-                                             SELF_DLVRY_IDX           --일련번호 PK
-                                           , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
-                                           , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
-                                           , CSTMR_NAME               --고객명
-                                           , ONLINE_AUTH_TYPE         --인증방식
-                                           , ONLINE_AUTH_INFO         --인증정보
-                                           , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
-                                           , DLVRY_NAME               --배송정보_이름
-                                           , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-                                           , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-                                           , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-                                           , DLVRY_POST               --배송정보_우편번호
-                                           , DLVRY_ADDR               --배송정보_주소
-                                           , DLVRY_ADDR_DTL           --배송정보_상세주소
-                                           , DLVRY_MEMO               --고객 요청 사항
-                                           , SELF_MEMO                --유심배송 메모
-                                           , REQ_USIM_SN              --유심번호
-                                           , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
-                                           , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
-                                           , DLVRY_NO                 --송장번호
-                                           , TB_CD                    --택배사 코드    공통코드[ PERCEL]
-                                           , CONTRACT_NUM             --계약번호
-                                           , CRET_ID                  --생성자아이디(로그인아이디)
-                                           , RVISN_ID                 --수정자ID
-                                           , RVISN_DTTM               --수정 일시
-                                           , SYS_RDATE                --등록일시
-                                           , REQ_BUY_QNTY             --요청구매수량
-                                           , USIM_UCOST               --유심단가
-                                           , USIM_PRICE               --유심가격
-                                           , DLVRY_TYPE               --배송타입
-                                           , REQ_TYPE                 --요청유형 (01 일반(유심구매) 02 신청서요청)
-                                           , MINOR_AGENT_NAME         --미성년자_법정대리인_성명
-                                           , MINOR_ONLINE_AUTH_INFO   --미성년자_법정대리인_인증정보
-                                           , MINOR_AGENT_AGRM_YN      --미성년자_법정대리인_동의여부
+                                             SELF_DLVRY_IDX           /* 일련번호 PK */
+                                           , USIM_PROD_ID             /* 유심코드 공통코드[usimProdInfo] */
+                                           , USIM_PROD_DTL_ID         /* 유심코드상세 공통코드[usimProdDetailInfo] */
+                                           , CSTMR_NAME               /* 고객명 */
+                                           , ONLINE_AUTH_TYPE         /* 인증방식 */
+                                           , ONLINE_AUTH_INFO         /* 인증정보 */
+                                           , ONLINE_AUTH_DI           /* 중복가입 확인값 (DI_64 byte) */
+                                           , DLVRY_NAME               /* 배송정보_이름 */
+                                           , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+                                           , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+                                           , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+                                           , DLVRY_POST               /* 배송정보_우편번호 */
+                                           , DLVRY_ADDR               /* 배송정보_주소 */
+                                           , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+                                           , DLVRY_MEMO               /* 고객 요청 사항 */
+                                           , SELF_MEMO                /* 유심배송 메모 */
+                                           , REQ_USIM_SN              /* 유심번호 */
+                                           , DLVRY_STATE_CODE         /* 진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료 */
+                                           , SELF_STATE_CODE          /* 신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소 */
+                                           , DLVRY_NO                 /* 송장번호 */
+                                           , TB_CD                    /* 택배사 코드    공통코드[ PERCEL] */
+                                           , CONTRACT_NUM             /* 계약번호 */
+                                           , CRET_ID                  /* 생성자아이디(로그인아이디) */
+                                           , RVISN_ID                 /* 수정자ID */
+                                           , RVISN_DTTM               /* 수정 일시 */
+                                           , SYS_RDATE                /* 등록일시 */
+                                           , REQ_BUY_QNTY             /* 요청구매수량 */
+                                           , USIM_UCOST               /* 유심단가 */
+                                           , USIM_PRICE               /* 유심가격 */
+                                           , DLVRY_TYPE               /* 배송타입 */
+                                           , REQ_TYPE                 /* 요청유형 (01 일반(유심구매) 02 신청서요청) */
+                                           , MINOR_AGENT_NAME         /* 미성년자_법정대리인_성명 */
+                                           , MINOR_ONLINE_AUTH_INFO   /* 미성년자_법정대리인_인증정보 */
+                                           , MINOR_AGENT_AGRM_YN      /* 미성년자_법정대리인_동의여부 */
         )
         SELECT
-            SELF_DLVRY_IDX           --일련번호 PK
-             , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
-             , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
-             , CSTMR_NAME               --고객명
-             , ONLINE_AUTH_TYPE         --인증방식
-             , ONLINE_AUTH_INFO         --인증정보
-             , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
-             , DLVRY_NAME               --배송정보_이름
-             , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-             , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-             , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-             , DLVRY_POST               --배송정보_우편번호
-             , DLVRY_ADDR               --배송정보_주소
-             , DLVRY_ADDR_DTL           --배송정보_상세주소
-             , DLVRY_MEMO               --고객 요청 사항
-             , SELF_MEMO                --유심배송 메모
-             , REQ_USIM_SN              --유심번호
-             , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
-             , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
-             , DLVRY_NO                 --송장번호
-             , TB_CD                    --택배사 코드    공통코드[ PERCEL]
-             , CONTRACT_NUM             --계약번호
-             , CRET_ID                  --생성자아이디(로그인아이디)
-             , RVISN_ID                 --수정자ID
-             , RVISN_DTTM               --수정 일시
-             , SYS_RDATE                --등록일시
-             , REQ_BUY_QNTY             --요청구매수량
-             , USIM_UCOST               --유심단가
-             , USIM_PRICE               --유심가격
-             , DLVRY_TYPE               --배송타입
+            SELF_DLVRY_IDX           /* 일련번호 PK */
+             , USIM_PROD_ID             /* 유심코드 공통코드[usimProdInfo] */
+             , USIM_PROD_DTL_ID         /* 유심코드상세 공통코드[usimProdDetailInfo] */
+             , CSTMR_NAME               /* 고객명 */
+             , ONLINE_AUTH_TYPE         /* 인증방식 */
+             , ONLINE_AUTH_INFO         /* 인증정보 */
+             , ONLINE_AUTH_DI           /* 중복가입 확인값 (DI_64 byte) */
+             , DLVRY_NAME               /* 배송정보_이름 */
+             , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+             , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+             , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+             , DLVRY_POST               /* 배송정보_우편번호 */
+             , DLVRY_ADDR               /* 배송정보_주소 */
+             , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+             , DLVRY_MEMO               /* 고객 요청 사항 */
+             , SELF_MEMO                /* 유심배송 메모 */
+             , REQ_USIM_SN              /* 유심번호 */
+             , DLVRY_STATE_CODE         /* 진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료 */
+             , SELF_STATE_CODE          /* 신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소 */
+             , DLVRY_NO                 /* 송장번호 */
+             , TB_CD                    /* 택배사 코드    공통코드[ PERCEL] */
+             , CONTRACT_NUM             /* 계약번호 */
+             , CRET_ID                  /* 생성자아이디(로그인아이디) */
+             , RVISN_ID                 /* 수정자ID */
+             , RVISN_DTTM               /* 수정 일시 */
+             , SYS_RDATE                /* 등록일시 */
+             , REQ_BUY_QNTY             /* 요청구매수량 */
+             , USIM_UCOST               /* 유심단가 */
+             , USIM_PRICE               /* 유심가격 */
+             , DLVRY_TYPE               /* 배송타입 */
              , '01'
-             , MINOR_AGENT_NAME         --미성년자_법정대리인_성명
-             , MINOR_ONLINE_AUTH_INFO   --미성년자_법정대리인_인증정보
-             , MINOR_AGENT_AGRM_YN      --미성년자_법정대리인_동의여부
+             , MINOR_AGENT_NAME         /* 미성년자_법정대리인_성명 */
+             , MINOR_ONLINE_AUTH_INFO   /* 미성년자_법정대리인_인증정보 */
+             , MINOR_AGENT_AGRM_YN      /* 미성년자_법정대리인_동의여부 */
         FROM        MCP_REQUEST_SELF_DLVRY_HIST
         WHERE   SELF_DLVRY_IDX = #{selfDlvryIdx}
     </update>-->
@@ -2271,41 +2263,41 @@
 
     <!--<update id="insertRequestSelfDlvry" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
         INSERT INTO MCP_REQUEST_SELF_DLVRY (
-                                             SELF_DLVRY_IDX           --일련번호 PK
-                                           , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
-                                           , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
-                                           , CSTMR_NAME               --고객명
-                                           , ONLINE_AUTH_TYPE         --인증방식
-                                           , ONLINE_AUTH_INFO         --인증정보
-                                           , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
-                                           , DLVRY_NAME               --배송정보_이름
-                                           , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-                                           , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-                                           , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-                                           , DLVRY_POST               --배송정보_우편번호
-                                           , DLVRY_ADDR               --배송정보_주소
-                                           , DLVRY_ADDR_DTL           --배송정보_상세주소
-                                           , DLVRY_MEMO               --고객 요청 사항
-                                           , SELF_MEMO                --유심배송 메모
-                                           , REQ_USIM_SN              --유심번호
-                                           , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
-                                           , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
-                                           , DLVRY_NO                 --송장번호
-                                           , TB_CD                    --택배사 코드    공통코드[ PERCEL]
-                                           , CONTRACT_NUM             --계약번호
-                                           , CRET_ID                  --생성자아이디(로그인아이디)
-                                           , RVISN_ID                 --수정자ID
-                                           , RVISN_DTTM               --수정 일시
-                                           , SYS_RDATE                --등록일시
-                                           , REQ_BUY_QNTY             --요청구매수량
-                                           , USIM_UCOST               --유심단가
-                                           , USIM_PRICE               --유심가격
-                                           , DLVRY_TYPE               --배송유형(01:택배, 02:바로배송, 03:당일배송)
-                                           , REQ_TYPE                 --요청유형 (01 일반(유심구매) 02 신청서요청)
-                                           , REQUEST_KEY              --신청서 키값(일련번호)
-                                           , MINOR_AGENT_NAME         --미성년자_법정대리인_성명
-                                           , MINOR_ONLINE_AUTH_INFO   --미성년자_법정대리인_인증정보
-                                           , MINOR_AGENT_AGRM_YN      --미성년자_법정대리인_동의여부
+                                             SELF_DLVRY_IDX           /* 일련번호 PK */
+                                           , USIM_PROD_ID             /* 유심코드 공통코드[usimProdInfo] */
+                                           , USIM_PROD_DTL_ID         /* 유심코드상세 공통코드[usimProdDetailInfo] */
+                                           , CSTMR_NAME               /* 고객명 */
+                                           , ONLINE_AUTH_TYPE         /* 인증방식 */
+                                           , ONLINE_AUTH_INFO         /* 인증정보 */
+                                           , ONLINE_AUTH_DI           /* 중복가입 확인값 (DI_64 byte) */
+                                           , DLVRY_NAME               /* 배송정보_이름 */
+                                           , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+                                           , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+                                           , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+                                           , DLVRY_POST               /* 배송정보_우편번호 */
+                                           , DLVRY_ADDR               /* 배송정보_주소 */
+                                           , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+                                           , DLVRY_MEMO               /* 고객 요청 사항 */
+                                           , SELF_MEMO                /* 유심배송 메모 */
+                                           , REQ_USIM_SN              /* 유심번호 */
+                                           , DLVRY_STATE_CODE         /* 진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료 */
+                                           , SELF_STATE_CODE          /* 신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소 */
+                                           , DLVRY_NO                 /* 송장번호 */
+                                           , TB_CD                    /* 택배사 코드    공통코드[ PERCEL] */
+                                           , CONTRACT_NUM             /* 계약번호 */
+                                           , CRET_ID                  /* 생성자아이디(로그인아이디) */
+                                           , RVISN_ID                 /* 수정자ID */
+                                           , RVISN_DTTM               /* 수정 일시 */
+                                           , SYS_RDATE                /* 등록일시 */
+                                           , REQ_BUY_QNTY             /* 요청구매수량 */
+                                           , USIM_UCOST               /* 유심단가 */
+                                           , USIM_PRICE               /* 유심가격 */
+                                           , DLVRY_TYPE               /* 배송유형(01:택배, 02:바로배송, 03:당일배송) */
+                                           , REQ_TYPE                 /* 요청유형 (01 일반(유심구매) 02 신청서요청) */
+                                           , REQUEST_KEY              /* 신청서 키값(일련번호) */
+                                           , MINOR_AGENT_NAME         /* 미성년자_법정대리인_성명 */
+                                           , MINOR_ONLINE_AUTH_INFO   /* 미성년자_법정대리인_인증정보 */
+                                           , MINOR_AGENT_AGRM_YN      /* 미성년자_법정대리인_동의여부 */
         ) VALUES (
                      #{selfDlvryIdx}
                  , #{usimProdId}
@@ -2398,9 +2390,9 @@
             MCP_REQUEST T1
            , MCP_REQUEST_CSTMR  T2
         WHERE T1.REQUEST_KEY = T2.REQUEST_KEY
-          AND T1.OPER_TYPE = 'NAC3'                 -- 신규 서직지   AND CONTRACT_NUM IS NOT NULL              -- 개통한 신청서
-          AND T1.ON_OFF_TYPE  IN ('5','7','9')      -- 셀프개통 5 온라인(셀프개통)    7 모바일(셀프개통) 9 오프라인(셀프개통)
-          AND T1.SYS_RDATE > (SYSDATE-1/24/3)       -- 20분
+          AND T1.OPER_TYPE = 'NAC3'                 /* 신규 서직지   AND CONTRACT_NUM IS NOT NULL              개통한 신청서 */
+          AND T1.ON_OFF_TYPE  IN ('5','7','9')      /* 셀프개통 5 온라인(셀프개통)    7 모바일(셀프개통) 9 오프라인(셀프개통) */
+          AND T1.SYS_RDATE > (SYSDATE-1/24/3)       /* 20분 */
           AND T2.SELF_CSTMR_CI = #{selfCstmrCi}
           <if test="cstmrName != null and cstmrName != ''">
             AND T2.CSTMR_NAME = #{cstmrName}
@@ -2503,39 +2495,39 @@
                     , MINOR_AGENT_AGRM_YN = #{minorAgentAgrmYn}
             WHEN NOT MATCHED THEN
                 INSERT (
-                        SELF_DLVRY_IDX           --일련번호 PK
+                        SELF_DLVRY_IDX           /* 일련번호 PK */
                     , KT_ORD_ID
                     , BIZ_ORG_CD
                     , DELIVERY_ORDER_ID
                     , USIM_AMT
-                    , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
-                    , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
-                    , CSTMR_NAME               --고객명
-                    , ONLINE_AUTH_TYPE         --인증방식
-                    , ONLINE_AUTH_INFO         --인증정보
-                    , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
-                    , DLVRY_NAME               --배송정보_이름
-                    , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-                    , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-                    , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-                    , DLVRY_POST               --배송정보_우편번호
-                    , DLVRY_ADDR               --배송정보_주소
-                    , DLVRY_ADDR_DTL           --배송정보_상세주소
-                    , DLVRY_MEMO               --고객 요청 사항
-                    , SELF_MEMO                --유심배송 메모
-                    , REQ_USIM_SN              --유심번호
-                    , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
-                    , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
-                    , DLVRY_NO                 --송장번호
-                    , TB_CD                    --택배사 코드    공통코드[ PERCEL]
-                    , CONTRACT_NUM             --계약번호
+                    , USIM_PROD_ID             /* 유심코드 공통코드[usimProdInfo] */
+                    , USIM_PROD_DTL_ID         /* 유심코드상세 공통코드[usimProdDetailInfo] */
+                    , CSTMR_NAME               /* 고객명 */
+                    , ONLINE_AUTH_TYPE         /* 인증방식 */
+                    , ONLINE_AUTH_INFO         /* 인증정보 */
+                    , ONLINE_AUTH_DI           /* 중복가입 확인값 (DI_64 byte) */
+                    , DLVRY_NAME               /* 배송정보_이름 */
+                    , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+                    , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+                    , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+                    , DLVRY_POST               /* 배송정보_우편번호 */
+                    , DLVRY_ADDR               /* 배송정보_주소 */
+                    , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+                    , DLVRY_MEMO               /* 고객 요청 사항 */
+                    , SELF_MEMO                /* 유심배송 메모 */
+                    , REQ_USIM_SN              /* 유심번호 */
+                    , DLVRY_STATE_CODE         /* 진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료 */
+                    , SELF_STATE_CODE          /* 신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소 */
+                    , DLVRY_NO                 /* 송장번호 */
+                    , TB_CD                    /* 택배사 코드    공통코드[ PERCEL] */
+                    , CONTRACT_NUM             /* 계약번호 */
                     , SVC_RSLT_CD
                     , SVC_RSLT_MSG
                     , PAY_CD
-                    , CRET_ID                  --생성자아이디(로그인아이디)
-                    , RVISN_ID                 --수정자ID
-                    , RVISN_DTTM               --수정 일시
-                    , SYS_RDATE                --등록일시
+                    , CRET_ID                  /* 생성자아이디(로그인아이디) */
+                    , RVISN_ID                 /* 수정자ID */
+                    , RVISN_DTTM               /* 수정 일시 */
+                    , SYS_RDATE                /* 등록일시 */
                     , ACCEPT_TIME
                     , DLVRY_JIBUN_ADDR
                     , DLVRY_JIBUN_ADDR_DTL
@@ -2614,39 +2606,39 @@
 
     <!--<update id="insertMcpRequestNowDlvry" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestSelfDlvryDto" >
         INSERT INTO MCP_REQUEST_NOW_DLVRY (
-                                            SELF_DLVRY_IDX           --일련번호 PK
+                                            SELF_DLVRY_IDX           /* 일련번호 PK */
                                           , KT_ORD_ID
                                           , BIZ_ORG_CD
                                           , DELIVERY_ORDER_ID
                                           , USIM_AMT
-                                          , USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
-                                          , USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
-                                          , CSTMR_NAME               --고객명
-                                          , ONLINE_AUTH_TYPE         --인증방식
-                                          , ONLINE_AUTH_INFO         --인증정보
-                                          , ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
-                                          , DLVRY_NAME               --배송정보_이름
-                                          , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-                                          , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-                                          , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-                                          , DLVRY_POST               --배송정보_우편번호
-                                          , DLVRY_ADDR               --배송정보_주소
-                                          , DLVRY_ADDR_DTL           --배송정보_상세주소
-                                          , DLVRY_MEMO               --고객 요청 사항
-                                          , SELF_MEMO                --유심배송 메모
-                                          , REQ_USIM_SN              --유심번호
-                                          , DLVRY_STATE_CODE         --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
-                                          , SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
-                                          , DLVRY_NO                 --송장번호
-                                          , TB_CD                    --택배사 코드    공통코드[ PERCEL]
-                                          , CONTRACT_NUM             --계약번호
+                                          , USIM_PROD_ID             /* 유심코드 공통코드[usimProdInfo] */
+                                          , USIM_PROD_DTL_ID         /* 유심코드상세 공통코드[usimProdDetailInfo] */
+                                          , CSTMR_NAME               /* 고객명 */
+                                          , ONLINE_AUTH_TYPE         /* 인증방식 */
+                                          , ONLINE_AUTH_INFO         /* 인증정보 */
+                                          , ONLINE_AUTH_DI           /* 중복가입 확인값 (DI_64 byte) */
+                                          , DLVRY_NAME               /* 배송정보_이름 */
+                                          , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+                                          , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+                                          , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+                                          , DLVRY_POST               /* 배송정보_우편번호 */
+                                          , DLVRY_ADDR               /* 배송정보_주소 */
+                                          , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+                                          , DLVRY_MEMO               /* 고객 요청 사항 */
+                                          , SELF_MEMO                /* 유심배송 메모 */
+                                          , REQ_USIM_SN              /* 유심번호 */
+                                          , DLVRY_STATE_CODE         /* 진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료 */
+                                          , SELF_STATE_CODE          /* 신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소 */
+                                          , DLVRY_NO                 /* 송장번호 */
+                                          , TB_CD                    /* 택배사 코드    공통코드[ PERCEL] */
+                                          , CONTRACT_NUM             /* 계약번호 */
                                           , SVC_RSLT_CD
                                           , SVC_RSLT_MSG
                                           , PAY_CD
-                                          , CRET_ID                  --생성자아이디(로그인아이디)
-                                          , RVISN_ID                 --수정자ID
-                                          , RVISN_DTTM               --수정 일시
-                                          , SYS_RDATE                --등록일시
+                                          , CRET_ID                  /* 생성자아이디(로그인아이디) */
+                                          , RVISN_ID                 /* 수정자ID */
+                                          , RVISN_DTTM               /* 수정 일시 */
+                                          , SYS_RDATE                /* 등록일시 */
                                           , ACCEPT_TIME
                                           , DLVRY_JIBUN_ADDR
                                           , DLVRY_JIBUN_ADDR_DTL
@@ -2662,39 +2654,39 @@
                                           , MINOR_AGENT_AGRM_YN
         )
         SELECT
-               A.SELF_DLVRY_IDX           --일련번호 PK
+               A.SELF_DLVRY_IDX           /* 일련번호 PK */
              , #{ktOrdId}
              , #{bizOrgCd}
              , #{deliveryOrderId}
              , A.USIM_AMT
-             , A.USIM_PROD_ID             --유심코드 공통코드[usimProdInfo]
-             , A.USIM_PROD_DTL_ID         --유심코드상세 공통코드[usimProdDetailInfo]
-             , A.CSTMR_NAME               --고객명
-             , A.ONLINE_AUTH_TYPE         --인증방식
-             , A.ONLINE_AUTH_INFO         --인증정보
-             , A.ONLINE_AUTH_DI           --중복가입 확인값 (DI_64 byte)
-             , A.DLVRY_NAME               --배송정보_이름
-             , A.DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-             , A.DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-             , A.DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-             , A.DLVRY_POST               --배송정보_우편번호
-             , A.DLVRY_ADDR               --배송정보_주소
-             , A.DLVRY_ADDR_DTL           --배송정보_상세주소
-             , A.DLVRY_MEMO               --고객 요청 사항
-             , A.SELF_MEMO                --유심배송 메모
-             , A.REQ_USIM_SN              --유심번호
-             , #{dlvryStateCode}          --진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료
-             , A.SELF_STATE_CODE          --신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소
-             , A.DLVRY_NO                 --송장번호
-             , A.TB_CD                    --택배사 코드    공통코드[ PERCEL]
-             , A.CONTRACT_NUM             --계약번호
+             , A.USIM_PROD_ID             /* 유심코드 공통코드[usimProdInfo] */
+             , A.USIM_PROD_DTL_ID         /* 유심코드상세 공통코드[usimProdDetailInfo] */
+             , A.CSTMR_NAME               /* 고객명 */
+             , A.ONLINE_AUTH_TYPE         /* 인증방식 */
+             , A.ONLINE_AUTH_INFO         /* 인증정보 */
+             , A.ONLINE_AUTH_DI           /* 중복가입 확인값 (DI_64 byte) */
+             , A.DLVRY_NAME               /* 배송정보_이름 */
+             , A.DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+             , A.DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+             , A.DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+             , A.DLVRY_POST               /* 배송정보_우편번호 */
+             , A.DLVRY_ADDR               /* 배송정보_주소 */
+             , A.DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+             , A.DLVRY_MEMO               /* 고객 요청 사항 */
+             , A.SELF_MEMO                /* 유심배송 메모 */
+             , A.REQ_USIM_SN              /* 유심번호 */
+             , #{dlvryStateCode}          /* 진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료 */
+             , A.SELF_STATE_CODE          /* 신청상태 공통코드[sStateCode] 01 정상  , 02 관리자삭제 , 03 고객취소 */
+             , A.DLVRY_NO                 /* 송장번호 */
+             , A.TB_CD                    /* 택배사 코드    공통코드[ PERCEL] */
+             , A.CONTRACT_NUM             /* 계약번호 */
              , #{svcRsltCd}
              , #{svcRsltMsg}
              , '01'
-             , A.CRET_ID                  --생성자아이디(로그인아이디)
-             , A.RVISN_ID                 --수정자ID
-             , A.RVISN_DTTM               --수정 일시
-             , A.SYS_RDATE                --등록일시
+             , A.CRET_ID                  /* 생성자아이디(로그인아이디) */
+             , A.RVISN_ID                 /* 수정자ID */
+             , A.RVISN_DTTM               /* 수정 일시 */
+             , A.SYS_RDATE                /* 등록일시 */
              , A.ACCEPT_TIME
              , A.DLVRY_JIBUN_ADDR
              , A.DLVRY_JIBUN_ADDR_DTL
@@ -2839,9 +2831,9 @@
         <if test="reqUsimSn != null and reqUsimSn != ''">
             , REQ_USIM_SN = #{reqUsimSn}
             <choose>
-                <when test="dlvryType == '04'"> -- 04:유심미보유건(제휴유심보유)
+                <when test="dlvryType == '04'"> /* 04:유심미보유건(제휴유심보유) */
                     , REQUEST_STATE_CODE = '00'
-                    , REQ_IN_DAY = SYSDATE --신청서 날짜 유심등록 시점으로 UPDATE
+                    , REQ_IN_DAY = SYSDATE /* 신청서 날짜 유심등록 시점으로 UPDATE */
                 </when>
                 <otherwise>
                     , REQUEST_STATE_CODE  = '13'
@@ -3459,64 +3451,64 @@
                      , CSTMR_TYPE
                      , REQ_USIM_SN
                      , CLAUSE_MPPS35_FLAG
-                     , SOC_CODE                      --요금제코드
-                     , PRDT_SCTN_CD                --제품구분코드(LTE, 3G, 5G)
-                     , OPER_TYPE                   --업무구분
-                     , REQ_BUY_TYPE                --구매유형
+                     , SOC_CODE                      /* 요금제코드 */
+                     , PRDT_SCTN_CD                /* 제품구분코드(LTE, 3G, 5G) */
+                     , OPER_TYPE                   /* 업무구분 */
+                     , REQ_BUY_TYPE                /* 구매유형 */
                      , MODEL_ID
                      , MODEL_SALE_POLICY_CODE
                      , ON_OFF_TYPE
-                     , CSTMR_NAME               --고객정보_고객명
-                     , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
-                     , CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
-                     , CSTMR_POST               --고객정보_우편번호
-                     , CSTMR_ADDR               --고객정보_주소
-                     , CSTMR_ADDR_DTL           --고객정보_상세주소
-                     , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
-                     , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
-                     , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
-                     , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
-                     , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
-                     , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
-                     , CSTMR_MAIL               --고객정보_메일
+                     , CSTMR_NAME               /* 고객정보_고객명 */
+                     , CSTMR_NATIVE_RRN         /* 고객정보_내국인_주민등록번호 */
+                     , CSTMR_FOREIGNER_RRN      /* 고객정보_외국인_외국인등록번호 */
+                     , CSTMR_POST               /* 고객정보_우편번호 */
+                     , CSTMR_ADDR               /* 고객정보_주소 */
+                     , CSTMR_ADDR_DTL           /* 고객정보_상세주소 */
+                     , CSTMR_TEL_FN             /* 고객정보_전화번호_앞자리 */
+                     , CSTMR_TEL_MN             /* 고객정보_전화번호_가운데자리 */
+                     , CSTMR_TEL_RN             /* 고객정보_전화번호_끝자리 */
+                     , CSTMR_MOBILE_FN          /* 고객정보_휴대폰번호_앞자리 */
+                     , CSTMR_MOBILE_MN          /* 고객정보_휴대폰번호_중간자리 */
+                     , CSTMR_MOBILE_RN          /* 고객정보_휴대폰번호_끝자리 */
+                     , CSTMR_MAIL               /* 고객정보_메일 */
                      , SELF_CSTMR_CI
-                     , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
-                     , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
-                     , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
-                     , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
-                     , SELF_CERT_TYPE           --본인인증유형
-                     , SELF_ISSU_EXPR_DT        --발급/만료일자
-                     , SELF_ISSU_NUM            --발급번호
+                     , CSTMR_FOREIGNER_NATION   /* 고객정보_외국인_국적 */
+                     , CSTMR_FOREIGNER_PN       /* 고객정보_외국인_여권번호 */
+                     , CSTMR_FOREIGNER_SDATE    /* 고객정보_외국인_체류_시작날자 */
+                     , CSTMR_FOREIGNER_EDATE    /* 고객정보_외국인_체류_종료날자 */
+                     , SELF_CERT_TYPE           /* 본인인증유형 */
+                     , SELF_ISSU_EXPR_DT        /* 발급/만료일자 */
+                     , SELF_ISSU_NUM            /* 발급번호 */
                      , MINOR_AGENT_NAME
                      , MINOR_AGENT_RRN
                      , MINOR_AGENT_TEL_FN
                      , MINOR_AGENT_TEL_MN
                      , MINOR_AGENT_TEL_RN
                      , MINOR_AGENT_RELATION
-                     , MINOR_SELF_CERT_TYPE     --본인인증유형
-                     , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
-                     , MINOR_SELF_ISSU_NUM      --발급번호
-                     , CSTMR_JEJU_ID            -- 운전면호 구분driverSelfIssuNum1
-                     , DLVRY_NAME               --배송정보_이름
-                     , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-                     , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-                     , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-                     , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
-                     , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
-                     , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
-                     , DLVRY_POST               --배송정보_우편번호
-                     , DLVRY_ADDR               --배송정보_주소
-                     , DLVRY_ADDR_DTL           --배송정보_상세주소
-                     , DLVRY_MEMO               --배송정보_요청사항
+                     , MINOR_SELF_CERT_TYPE     /* 본인인증유형 */
+                     , MINOR_SELF_ISSU_EXPR_DT  /* 발급/만료일자 */
+                     , MINOR_SELF_ISSU_NUM      /* 발급번호 */
+                     , CSTMR_JEJU_ID            /* 운전면호 구분driverSelfIssuNum1 */
+                     , DLVRY_NAME               /* 배송정보_이름 */
+                     , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+                     , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+                     , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+                     , DLVRY_MOBILE_FN          /* 배송정보_휴대폰번호_앞자리 */
+                     , DLVRY_MOBILE_MN          /* 배송정보_휴대폰번호_중간자리 */
+                     , DLVRY_MOBILE_RN          /* 배송정보_휴대폰번호_뒷자리 */
+                     , DLVRY_POST               /* 배송정보_우편번호 */
+                     , DLVRY_ADDR               /* 배송정보_주소 */
+                     , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+                     , DLVRY_MEMO               /* 배송정보_요청사항 */
                      , REQ_WANT_NUMBER
                      , REQ_WANT_NUMBER2
                      , REQ_WANT_NUMBER3
-                     , MOVE_COMPANY             --번호이동정보_변경전통신사
-                     , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
-                     , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
-                     , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
-                     , MOVE_AUTH_TYPE           --번호이동정보_인증유형
-                     , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
+                     , MOVE_COMPANY             /* 번호이동정보_변경전통신사 */
+                     , MOVE_MOBILE_FN           /* 번호이동정보_이동할번호_앞자리 */
+                     , MOVE_MOBILE_MN           /* 번호이동정보_이동할번호_중간자리 */
+                     , MOVE_MOBILE_RN           /* 번호이동정보_이동할번호_끝자리 */
+                     , MOVE_AUTH_TYPE           /* 번호이동정보_인증유형 */
+                     , MOVE_AUTH_NUMBER         /* 번호이동정보_인증번호4자리 */
                      , RECOMMEND_FLAG_CD
                      , RECOMMEND_INFO
                      , INSR_PROD_CD
@@ -3530,8 +3522,8 @@
                      , REQ_CARD_YY
                      , REQ_CARD_MM
                      , T1.UPLOAD_PHONE_SRL_NO
-                     , T1.USIM_KINDS_CD              -- 유심종류(RCP2035)
-                     , T2.SETTL_WAY_CD               -- 결제수단코드
+                     , T1.USIM_KINDS_CD              /* 유심종류(RCP2035) */
+                     , T2.SETTL_WAY_CD               /* 결제수단코드 */
                      , ROW_NUMBER() OVER (ORDER BY T1.SYS_RDATE DESC) RNUM
                 FROM
                     NMCP_REQUEST_TEMP T1
@@ -3559,70 +3551,70 @@
              , T1.CRET_ID
              , CSTMR_TYPE
              , T1.REQ_USIM_SN
-             , CNTPNT_SHOP_ID              --채널점아이디_판매점코드
+             , CNTPNT_SHOP_ID              /* 채널점아이디_판매점코드 */
              , CLAUSE_MPPS35_FLAG
-             , SOC_CODE                      --요금제코드
-             , PRDT_SCTN_CD                --제품구분코드(LTE, 3G, 5G)
-             , OPER_TYPE                   --업무구분
-             , REQ_BUY_TYPE                --구매유형
+             , SOC_CODE                      /* 요금제코드 */
+             , PRDT_SCTN_CD                /* 제품구분코드(LTE, 3G, 5G) */
+             , OPER_TYPE                   /* 업무구분 */
+             , REQ_BUY_TYPE                /* 구매유형 */
              , T2.MODEL_ID
              , MODEL_SALE_POLICY_CODE
              , ON_OFF_TYPE
-             , CSTMR_NAME               --고객정보_고객명
-             , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
-             , CSTMR_FOREIGNER_RRN      --고객정보_외국인_외국인등록번호
-             , CSTMR_POST               --고객정보_우편번호
-             , CSTMR_ADDR               --고객정보_주소
-             , CSTMR_ADDR_DTL           --고객정보_상세주소
-             , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
-             , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
-             , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
-             , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
-             , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
-             , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
-             , CSTMR_MAIL               --고객정보_메일
+             , CSTMR_NAME               /* 고객정보_고객명 */
+             , CSTMR_NATIVE_RRN         /* 고객정보_내국인_주민등록번호 */
+             , CSTMR_FOREIGNER_RRN      /* 고객정보_외국인_외국인등록번호 */
+             , CSTMR_POST               /* 고객정보_우편번호 */
+             , CSTMR_ADDR               /* 고객정보_주소 */
+             , CSTMR_ADDR_DTL           /* 고객정보_상세주소 */
+             , CSTMR_TEL_FN             /* 고객정보_전화번호_앞자리 */
+             , CSTMR_TEL_MN             /* 고객정보_전화번호_가운데자리 */
+             , CSTMR_TEL_RN             /* 고객정보_전화번호_끝자리 */
+             , CSTMR_MOBILE_FN          /* 고객정보_휴대폰번호_앞자리 */
+             , CSTMR_MOBILE_MN          /* 고객정보_휴대폰번호_중간자리 */
+             , CSTMR_MOBILE_RN          /* 고객정보_휴대폰번호_끝자리 */
+             , CSTMR_MAIL               /* 고객정보_메일 */
              , SELF_CSTMR_CI
-             , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
-             , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
-             , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
-             , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
-             , SELF_CERT_TYPE           --본인인증유형
-             , SELF_ISSU_EXPR_DT        --발급/만료일자
-             , SELF_ISSU_NUM            --발급번호
+             , CSTMR_FOREIGNER_NATION   /* 고객정보_외국인_국적 */
+             , CSTMR_FOREIGNER_PN       /* 고객정보_외국인_여권번호 */
+             , CSTMR_FOREIGNER_SDATE    /* 고객정보_외국인_체류_시작날자 */
+             , CSTMR_FOREIGNER_EDATE    /* 고객정보_외국인_체류_종료날자 */
+             , SELF_CERT_TYPE           /* 본인인증유형 */
+             , SELF_ISSU_EXPR_DT        /* 발급/만료일자 */
+             , SELF_ISSU_NUM            /* 발급번호 */
              , MINOR_AGENT_NAME
              , MINOR_AGENT_RRN
              , MINOR_AGENT_TEL_FN
              , MINOR_AGENT_TEL_MN
              , MINOR_AGENT_TEL_RN
              , MINOR_AGENT_RELATION
-             , MINOR_SELF_CERT_TYPE     --본인인증유형
-             , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
-             , MINOR_SELF_ISSU_NUM      --발급번호
-             , CSTMR_JEJU_ID            -- 운전면호 구분driverSelfIssuNum1
-             , DLVRY_NAME               --배송정보_이름
-             , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-             , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-             , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-             , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
-             , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
-             , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
-             , DLVRY_POST               --배송정보_우편번호
-             , DLVRY_ADDR               --배송정보_주소
-             , DLVRY_ADDR_DTL           --배송정보_상세주소
-             , DLVRY_MEMO               --배송정보_요청사항
+             , MINOR_SELF_CERT_TYPE     /* 본인인증유형 */
+             , MINOR_SELF_ISSU_EXPR_DT  /* 발급/만료일자 */
+             , MINOR_SELF_ISSU_NUM      /* 발급번호 */
+             , CSTMR_JEJU_ID            /* 운전면호 구분driverSelfIssuNum1 */
+             , DLVRY_NAME               /* 배송정보_이름 */
+             , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+             , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+             , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+             , DLVRY_MOBILE_FN          /* 배송정보_휴대폰번호_앞자리 */
+             , DLVRY_MOBILE_MN          /* 배송정보_휴대폰번호_중간자리 */
+             , DLVRY_MOBILE_RN          /* 배송정보_휴대폰번호_뒷자리 */
+             , DLVRY_POST               /* 배송정보_우편번호 */
+             , DLVRY_ADDR               /* 배송정보_주소 */
+             , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+             , DLVRY_MEMO               /* 배송정보_요청사항 */
              , REQ_WANT_NUMBER
              , REQ_WANT_NUMBER2
              , REQ_WANT_NUMBER3
-             , MOVE_COMPANY             --번호이동정보_변경전통신사
-             , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
-             , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
-             , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
-             , MOVE_AUTH_TYPE           --번호이동정보_인증유형
-             , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
+             , MOVE_COMPANY             /* 번호이동정보_변경전통신사 */
+             , MOVE_MOBILE_FN           /* 번호이동정보_이동할번호_앞자리 */
+             , MOVE_MOBILE_MN           /* 번호이동정보_이동할번호_중간자리 */
+             , MOVE_MOBILE_RN           /* 번호이동정보_이동할번호_끝자리 */
+             , MOVE_AUTH_TYPE           /* 번호이동정보_인증유형 */
+             , MOVE_AUTH_NUMBER         /* 번호이동정보_인증번호4자리 */
              , RECOMMEND_FLAG_CD
              , RECOMMEND_INFO
              , INSR_PROD_CD
-             , RWD_PROD_CD              -- 자급제 보상 서비스 코드
+             , RWD_PROD_CD              /* 자급제 보상 서비스 코드 */
              , REQ_PAY_TYPE
              , CSTMR_BILL_SEND_CODE
              , REQ_BANK
@@ -3634,10 +3626,10 @@
              , ENGG_MNTH_CNT
              , PROD_ID
              , MODEL_MONTHLY
-             , SESPLS_YN          -- 자급제 여부
+             , SESPLS_YN          /* 자급제 여부 */
              , SESPLS_PROD_ID
              , T1.UPLOAD_PHONE_SRL_NO
-             , T1.USIM_KINDS_CD              -- 유심종류(RCP2035)
+             , T1.USIM_KINDS_CD              /* 유심종류(RCP2035) */
              , EID
              , IMEI1
              , IMEI2
@@ -3782,13 +3774,13 @@
             , CSTMR_JEJU_ID = #{cstmrJejuId}
         </if>
         <if test="recommendFlagCd != null and recommendFlagCd != ''">
-            , RECOMMEND_FLAG_CD = #{recommendFlagCd}                         --추천인 구분 코드 F001 01:추천 직원번호 02:제휴사 추천코드
+            , RECOMMEND_FLAG_CD = #{recommendFlagCd}                         /* 추천인 구분 코드 F001 01:추천 직원번호 02:제휴사 추천코드 */
         </if>
         <if test="recommendInfo != null and recommendInfo != ''">
-            , RECOMMEND_INFO = #{recommendInfo}                              --추천인정보
+            , RECOMMEND_INFO = #{recommendInfo}                              /* 추천인정보 */
         </if>
         <if test="cstmrBillSendCode != null and cstmrBillSendCode != ''">
-            , CSTMR_BILL_SEND_CODE = #{cstmrBillSendCode}                    --고객정보_명세서종류
+            , CSTMR_BILL_SEND_CODE = #{cstmrBillSendCode}                    /* 고객정보_명세서종류 */
         </if>
         WHEN NOT MATCHED THEN
         INSERT (
@@ -3807,14 +3799,14 @@
         , CSTMR_ADDR
         , CSTMR_ADDR_DTL
         , CSTMR_MAIL
-        , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
-        , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
-        , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
-        , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
-        , SELF_CERT_TYPE           --본인인증유형
-        , SELF_ISSU_EXPR_DT        --발급/만료일자
-        , SELF_ISSU_NUM            --발급번호
-        , CSTMR_JEJU_ID            -- 운전면허 지역
+        , CSTMR_FOREIGNER_NATION   /* 고객정보_외국인_국적 */
+        , CSTMR_FOREIGNER_PN       /* 고객정보_외국인_여권번호 */
+        , CSTMR_FOREIGNER_SDATE    /* 고객정보_외국인_체류_시작날자 */
+        , CSTMR_FOREIGNER_EDATE    /* 고객정보_외국인_체류_종료날자 */
+        , SELF_CERT_TYPE           /* 본인인증유형 */
+        , SELF_ISSU_EXPR_DT        /* 발급/만료일자 */
+        , SELF_ISSU_NUM            /* 발급번호 */
+        , CSTMR_JEJU_ID            /* 운전면허 지역 */
         , RECOMMEND_FLAG_CD
         , RECOMMEND_INFO
         , CSTMR_BILL_SEND_CODE
@@ -3895,9 +3887,9 @@
         , MINOR_AGENT_TEL_MN
         , MINOR_AGENT_TEL_RN
         , MINOR_AGENT_RELATION
-        , MINOR_SELF_CERT_TYPE     --본인인증유형
-        , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
-        , MINOR_SELF_ISSU_NUM      --발급번호
+        , MINOR_SELF_CERT_TYPE     /* 본인인증유형 */
+        , MINOR_SELF_ISSU_EXPR_DT  /* 발급/만료일자 */
+        , MINOR_SELF_ISSU_NUM      /* 발급번호 */
         , RVISN_DTTM
         , SYS_RDATE
         ) VALUES (
@@ -3961,20 +3953,20 @@
         </if>
         WHEN NOT MATCHED THEN
         INSERT  (
-        REQUEST_KEY              --가입신청_키
-        , DLVRY_NAME               --배송정보_이름
-        , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-        , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-        , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-        , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
-        , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
-        , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
-        , DLVRY_POST               --배송정보_우편번호
-        , DLVRY_ADDR               --배송정보_주소
-        , DLVRY_ADDR_DTL           --배송정보_상세주소
-        , DLVRY_MEMO               --배송정보_요청사항
-        , DLVRY_TYPE               --배송유형 [01 택배,  02 바로배송]
-        , SYS_RDATE                --등록일시
+        REQUEST_KEY              /* 가입신청_키 */
+        , DLVRY_NAME               /* 배송정보_이름 */
+        , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+        , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+        , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+        , DLVRY_MOBILE_FN          /* 배송정보_휴대폰번호_앞자리 */
+        , DLVRY_MOBILE_MN          /* 배송정보_휴대폰번호_중간자리 */
+        , DLVRY_MOBILE_RN          /* 배송정보_휴대폰번호_뒷자리 */
+        , DLVRY_POST               /* 배송정보_우편번호 */
+        , DLVRY_ADDR               /* 배송정보_주소 */
+        , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+        , DLVRY_MEMO               /* 배송정보_요청사항 */
+        , DLVRY_TYPE               /* 배송유형 [01 택배,  02 바로배송] */
+        , SYS_RDATE                /* 등록일시 */
         , RVISN_DTTM
         ) VALUES (
         #{requestKey}
@@ -4011,14 +4003,14 @@
                     , MOVE_AUTH_NUMBER = #{moveAuthNumber}
             WHEN NOT MATCHED THEN
                 INSERT  (
-                         REQUEST_KEY              --가입신청_키
-                    , MOVE_COMPANY             --번호이동정보_변경전통신사
-                    , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
-                    , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
-                    , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
-                    , MOVE_AUTH_TYPE           --번호이동정보_인증유형
-                    , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
-                    , SYS_RDATE                --등록일시
+                         REQUEST_KEY              /* 가입신청_키 */
+                    , MOVE_COMPANY             /* 번호이동정보_변경전통신사 */
+                    , MOVE_MOBILE_FN           /* 번호이동정보_이동할번호_앞자리 */
+                    , MOVE_MOBILE_MN           /* 번호이동정보_이동할번호_중간자리 */
+                    , MOVE_MOBILE_RN           /* 번호이동정보_이동할번호_끝자리 */
+                    , MOVE_AUTH_TYPE           /* 번호이동정보_인증유형 */
+                    , MOVE_AUTH_NUMBER         /* 번호이동정보_인증번호4자리 */
+                    , SYS_RDATE                /* 등록일시 */
                     , RVISN_DTTM
                     ) VALUES (
                                  #{requestKey}
@@ -4138,62 +4130,62 @@
              , CSTMR_TYPE
              , REQ_USIM_SN
              , CLAUSE_MPPS35_FLAG
-             , SOC_CODE                      --요금제코드
-             , OPER_TYPE                   --업무구분
-             , REQ_BUY_TYPE                --구매유형
+             , SOC_CODE                      /* 요금제코드 */
+             , OPER_TYPE                   /* 업무구분 */
+             , REQ_BUY_TYPE                /* 구매유형 */
              , MODEL_ID
              , MODEL_SALE_POLICY_CODE
              , ON_OFF_TYPE
-             , CSTMR_NAME               --고객정보_고객명
-             , CSTMR_NATIVE_RRN         --고객정보_내국인_주민등록번호
-             , CSTMR_POST               --고객정보_우편번호
-             , CSTMR_ADDR               --고객정보_주소
-             , CSTMR_ADDR_DTL           --고객정보_상세주소
-             , CSTMR_TEL_FN             --고객정보_전화번호_앞자리
-             , CSTMR_TEL_MN             --고객정보_전화번호_가운데자리
-             , CSTMR_TEL_RN             --고객정보_전화번호_끝자리
-             , CSTMR_MOBILE_FN          --고객정보_휴대폰번호_앞자리
-             , CSTMR_MOBILE_MN          --고객정보_휴대폰번호_중간자리
-             , CSTMR_MOBILE_RN          --고객정보_휴대폰번호_끝자리
-             , CSTMR_MAIL               --고객정보_메일
+             , CSTMR_NAME               /* 고객정보_고객명 */
+             , CSTMR_NATIVE_RRN         /* 고객정보_내국인_주민등록번호 */
+             , CSTMR_POST               /* 고객정보_우편번호 */
+             , CSTMR_ADDR               /* 고객정보_주소 */
+             , CSTMR_ADDR_DTL           /* 고객정보_상세주소 */
+             , CSTMR_TEL_FN             /* 고객정보_전화번호_앞자리 */
+             , CSTMR_TEL_MN             /* 고객정보_전화번호_가운데자리 */
+             , CSTMR_TEL_RN             /* 고객정보_전화번호_끝자리 */
+             , CSTMR_MOBILE_FN          /* 고객정보_휴대폰번호_앞자리 */
+             , CSTMR_MOBILE_MN          /* 고객정보_휴대폰번호_중간자리 */
+             , CSTMR_MOBILE_RN          /* 고객정보_휴대폰번호_끝자리 */
+             , CSTMR_MAIL               /* 고객정보_메일 */
              , SELF_CSTMR_CI
-             , CSTMR_FOREIGNER_NATION   --고객정보_외국인_국적
-             , CSTMR_FOREIGNER_PN       --고객정보_외국인_여권번호
-             , CSTMR_FOREIGNER_SDATE    --고객정보_외국인_체류_시작날자
-             , CSTMR_FOREIGNER_EDATE    --고객정보_외국인_체류_종료날자
-             , SELF_CERT_TYPE           --본인인증유형
-             , SELF_ISSU_EXPR_DT        --발급/만료일자
-             , SELF_ISSU_NUM            --발급번호
+             , CSTMR_FOREIGNER_NATION   /* 고객정보_외국인_국적 */
+             , CSTMR_FOREIGNER_PN       /* 고객정보_외국인_여권번호 */
+             , CSTMR_FOREIGNER_SDATE    /* 고객정보_외국인_체류_시작날자 */
+             , CSTMR_FOREIGNER_EDATE    /* 고객정보_외국인_체류_종료날자 */
+             , SELF_CERT_TYPE           /* 본인인증유형 */
+             , SELF_ISSU_EXPR_DT        /* 발급/만료일자 */
+             , SELF_ISSU_NUM            /* 발급번호 */
              , MINOR_AGENT_NAME
              , MINOR_AGENT_RRN
              , MINOR_AGENT_TEL_FN
              , MINOR_AGENT_TEL_MN
              , MINOR_AGENT_TEL_RN
              , MINOR_AGENT_RELATION
-             , MINOR_SELF_CERT_TYPE     --본인인증유형
-             , MINOR_SELF_ISSU_EXPR_DT  --발급/만료일자
-             , MINOR_SELF_ISSU_NUM      --발급번호
-             , CSTMR_JEJU_ID            -- 운전면호 구분driverSelfIssuNum1
-             , DLVRY_NAME               --배송정보_이름
-             , DLVRY_TEL_FN             --배송정보_전화번호_앞자리
-             , DLVRY_TEL_MN             --배송정보_전화번호_중간자리
-             , DLVRY_TEL_RN             --배송정보_전화번호_뒷자리
-             , DLVRY_MOBILE_FN          --배송정보_휴대폰번호_앞자리
-             , DLVRY_MOBILE_MN          --배송정보_휴대폰번호_중간자리
-             , DLVRY_MOBILE_RN          --배송정보_휴대폰번호_뒷자리
-             , DLVRY_POST               --배송정보_우편번호
-             , DLVRY_ADDR               --배송정보_주소
-             , DLVRY_ADDR_DTL           --배송정보_상세주소
-             , DLVRY_MEMO               --배송정보_요청사항
+             , MINOR_SELF_CERT_TYPE     /* 본인인증유형 */
+             , MINOR_SELF_ISSU_EXPR_DT  /* 발급/만료일자 */
+             , MINOR_SELF_ISSU_NUM      /* 발급번호 */
+             , CSTMR_JEJU_ID            /* 운전면호 구분driverSelfIssuNum1 */
+             , DLVRY_NAME               /* 배송정보_이름 */
+             , DLVRY_TEL_FN             /* 배송정보_전화번호_앞자리 */
+             , DLVRY_TEL_MN             /* 배송정보_전화번호_중간자리 */
+             , DLVRY_TEL_RN             /* 배송정보_전화번호_뒷자리 */
+             , DLVRY_MOBILE_FN          /* 배송정보_휴대폰번호_앞자리 */
+             , DLVRY_MOBILE_MN          /* 배송정보_휴대폰번호_중간자리 */
+             , DLVRY_MOBILE_RN          /* 배송정보_휴대폰번호_뒷자리 */
+             , DLVRY_POST               /* 배송정보_우편번호 */
+             , DLVRY_ADDR               /* 배송정보_주소 */
+             , DLVRY_ADDR_DTL           /* 배송정보_상세주소 */
+             , DLVRY_MEMO               /* 배송정보_요청사항 */
              , REQ_WANT_NUMBER
              , REQ_WANT_NUMBER2
              , REQ_WANT_NUMBER3
-             , MOVE_COMPANY             --번호이동정보_변경전통신사
-             , MOVE_MOBILE_FN           --번호이동정보_이동할번호_앞자리
-             , MOVE_MOBILE_MN           --번호이동정보_이동할번호_중간자리
-             , MOVE_MOBILE_RN           --번호이동정보_이동할번호_끝자리
-             , MOVE_AUTH_TYPE           --번호이동정보_인증유형
-             , MOVE_AUTH_NUMBER         --번호이동정보_인증번호4자리
+             , MOVE_COMPANY             /* 번호이동정보_변경전통신사 */
+             , MOVE_MOBILE_FN           /* 번호이동정보_이동할번호_앞자리 */
+             , MOVE_MOBILE_MN           /* 번호이동정보_이동할번호_중간자리 */
+             , MOVE_MOBILE_RN           /* 번호이동정보_이동할번호_끝자리 */
+             , MOVE_AUTH_TYPE           /* 번호이동정보_인증유형 */
+             , MOVE_AUTH_NUMBER         /* 번호이동정보_인증번호4자리 */
              , RECOMMEND_FLAG_CD
              , RECOMMEND_INFO
              , INSR_PROD_CD
@@ -4211,9 +4203,9 @@
              , REQ_CARD_MM
              , SESPLS_YN
              , CNTPNT_SHOP_ID
-             , USIM_KINDS_CD             -- 유심종류(RCP2035)
-             , PRNTS_CONTRACT_NO         -- 모회선 계약번호
-             , SETTL_AMT                 -- 결제금액
+             , USIM_KINDS_CD             /* 유심종류(RCP2035) */
+             , PRNTS_CONTRACT_NO         /* 모회선 계약번호 */
+             , SETTL_AMT                 /* 결제금액 */
              , MODEL_SALE_POLICY_CODE
         FROM
             MCP_REQUEST T1
@@ -4234,11 +4226,11 @@
     </select>-->
 
     <!--<select id="isOwnerCount" resultType="java.lang.Integer" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
-        <!--
+
             Description: 주문정보 사용자 검증
                     cretId  !=null : 로그인 회원 인증
                     otherwise : 비회원 인증 처리
-      -->
+
         SELECT
         COUNT(*)
         FROM
@@ -4283,9 +4275,10 @@
             )
     </insert>-->
 
-    <!--     AppformMapper."insertMcpSelfUsimChg" 유심셀프변경 등록  -->
+
     <!--<insert id="insertMcpSelfUsimChg" parameterType="com.ktmmobile.mcp.appform.dto.OsstUc0ReqDto">
-        <!--<selectKey keyProperty="mvnoOrdNo" resultType="java.lang.String" order="BEFORE">
+    /* 유심셀프변경 등록 */
+        <selectKey keyProperty="mvnoOrdNo" resultType="java.lang.String" order="BEFORE">
             SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || LPAD(SQ_MCP_SELF_USIM_CHG_KEY.NEXTVAL, 6, '0') FROM DUAL
         </selectKey>
         INSERT INTO MCP_SELF_USIM_CHG (
@@ -4362,12 +4355,12 @@
 
     <!--<insert id="insertMcpRequestKtInter" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO MCP_REQUEST_KT_INTER (
-               RES_NO                   --예약번호
-             , KT_INTER_SVC_NO          --kt 인터넷 ID
-             , RVISN_ID                 --수정자ID
-             , RVISN_DTTM               --수정 일시
-             , CRET_ID                  --생성자 아이디
-             , SYS_RDATE                --등록일시
+               RES_NO                   /* 예약번호 */
+             , KT_INTER_SVC_NO          /* kt 인터넷 ID */
+             , RVISN_ID                 /* 수정자ID */
+             , RVISN_DTTM               /* 수정 일시 */
+             , CRET_ID                  /* 생성자 아이디 */
+             , SYS_RDATE                /* 등록일시 */
         ) VALUES (
              #{resNo}
              , #{ktInterSvcNo}
@@ -4405,15 +4398,15 @@
 
     <!--<insert id="insertMcpRequestPayInfo" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
         INSERT INTO MCP_REQUEST_PAY_INFO (
-               REQUEST_KEY              --가입신청_키
-             , PAY_RST_CD               --결제상태 00 결제진행중(초기값), 01 정상(결제완료) , 02 결제취소(요청), 03 결제취소 완료 , 04 처리중(???)
-             , CRET_IP                  --등록아이피
-             , CRET_DT                  --등록일시
-             , CRET_DD                  --등록일자
-             , CRET_ID                  --등록 사용자 아이디
-             , AMD_IP                   --수정자 아이피
-             , AMD_DT                   --수정일자
-             , AMD_ID                   --수정자 아이디
+               REQUEST_KEY              /* 가입신청_키 */
+             , PAY_RST_CD               /* 결제상태 00 결제진행중(초기값), 01 정상(결제완료) , 02 결제취소(요청), 03 결제취소 완료 , 04 처리중(???) */
+             , CRET_IP                  /* 등록아이피 */
+             , CRET_DT                  /* 등록일시 */
+             , CRET_DD                  /* 등록일자 */
+             , CRET_ID                  /* 등록 사용자 아이디 */
+             , AMD_IP                   /* 수정자 아이피 */
+             , AMD_DT                   /* 수정일자 */
+             , AMD_ID                   /* 수정자 아이디 */
         ) VALUES (
                #{requestKey}
              , '00'
@@ -4511,16 +4504,18 @@
           AND B.MOVE_MOBILE_FN || B.MOVE_MOBILE_MN || B.MOVE_MOBILE_RN = #{movePhoneNum}
     </select>-->
 
-    <!-- 신청서 상세 존재 체크 -->
+    
     <!--<select id="chkMcpReqDtl" parameterType="java.lang.Long" resultType="int">
+    /*신청서 상세 존재 체크*/
         SELECT COUNT(*)
         FROM MCP_REQUEST_DTL
         WHERE REQUEST_KEY = #{requestKey}
     </select>-->
 
-    <!-- 신청서 상세 정보 조회 -->
+    
     <!--<select id="getMcpReqDtl" parameterType="java.lang.Long" resultType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
         /*AppformMapper.getMcpReqDtl*/
+        /*신청서 상세 정보 조회 */
         SELECT REQ.REQUEST_KEY
                , CSTMR_NAME
                , DECODE(TRIM(CST.CSTMR_MOBILE_FN) || TRIM(CST.CSTMR_MOBILE_MN) || TRIM(CST.CSTMR_MOBILE_RN), '', TRIM(CST.CSTMR_TEL_FN), TRIM(CST.CSTMR_MOBILE_FN)) AS CSTMR_MOBILE_FN
@@ -4562,9 +4557,8 @@
           AND  REQ.REQUEST_KEY = #{requestKey}
     </select>-->
 
-    <!-- 신청서 상세정보 현행화 -->
     <!--<update id="updateMcpReqDtl" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
-        /*AppformMapper.updateMcpReqDtl   */
+        /*AppformMapper.updateMcpReqDtl  신청서 상세정보 현행화 */
         UPDATE MCP_REQUEST_DTL
            SET CSTMR_NAME           = #{cstmrName}
                , CSTMR_MOBILE       = #{cstmrMobileFn} || #{cstmrMobileMn} || #{cstmrMobileRn}
@@ -4590,9 +4584,8 @@
          WHERE REQUEST_KEY 			= #{requestKey}
     </update>-->
 
-    <!-- 신청서 상세 정보 등록 -->
     <!--<insert id="insertMcpReqDtl" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto" >
-        /*AppformMapper.insertMcpReqDtl   */
+        /*AppformMapper.insertMcpReqDtl  신청서 상세 정보 등록 */
         INSERT INTO MCP_REQUEST_DTL (
                 REQUEST_KEY
                 , CSTMR_NAME
@@ -4650,7 +4643,7 @@
         WHERE  1 = 1
           AND  REQ.REQUEST_KEY = SAL.REQUEST_KEY
           AND  REQ.REQUEST_KEY = DLV.REQUEST_KEY
-          AND  DLV.DLVRY_TYPE = '04'    -- 04:유심미보유건(제휴유심보유)
+          AND  DLV.DLVRY_TYPE = '04'    /* 04:유심미보유건(제휴유심보유) */
           AND  EXISTS (SELECT 1 FROM NMCP_CD_DTL WHERE CD_GROUP_ID = 'JehuAgentList' AND DTL_CD = REQ.CNTPNT_SHOP_ID)
           AND  REQ.RES_NO = #{resNo}
     </select>-->
@@ -4675,7 +4668,7 @@
     </update>-->
 
     <!--<insert id="insertKtCounsel" parameterType="com.ktmmobile.mcp.appform.dto.AppformReqDto">
-        <!--<selectKey keyProperty="newCcrSeq" resultType="String" order="BEFORE">
+        <selectKey keyProperty="newCcrSeq" resultType="String" order="BEFORE">
             SELECT TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(SQ_KT_COUNSEL_REQ.NEXTVAL, '00000')) FROM DUAL
         </selectKey>
         INSERT INTO NMCP_KT_COUNSEL_REQ (

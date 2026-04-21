@@ -19,7 +19,7 @@ import static com.ktmmobile.msf.domains.form.form.common.constant.PhoneConstant.
 public class ProductInfoService {
 
     private final ProductInfoReadMapper productInfoReadMapper;
-    private final ProductSmartInfoReadMapper productCategoryMapper;
+    private final ProductSmartInfoReadMapper productSmartInfoReadMapper;
 
     //판매정책조회
     /*public List<MspSalePlcyMstInfoDto> getMspSalePlcyMstList(CommonSearchCondition condition) {
@@ -83,15 +83,9 @@ public class ProductInfoService {
         return data;
     }
 
-    //휴대폰 매장 재고 조회 (postgre)
-    public List<ProductCategoryDto> getPhoneInventoryList(ProductSearchCondition condition) {
-        List<ProductCategoryDto> data = productCategoryMapper.selectPhoneInventoryList(condition);
-        return data;
-    }
-
     //휴대폰 목록조회
     public List<PhoneInfoDto> getPhoneList(ProductSearchCondition condition) {
-        condition.setStorCd("V000000004"); //매장재고조회를 위한 것 (임시)
+        condition.setOrgnId("V000000004"); //@삭제필요@ >> 매장재고조회를 위한 임시값 설정
         List<ProductCategoryDto> productCategoryDto = this.getPhoneInventoryList(condition);
         condition.setListPhoneDto(productCategoryDto);
 
@@ -138,33 +132,6 @@ public class ProductInfoService {
         return data;
     }
 
-    //요금제,부가서비스,안심보험 카테고리 목록 조회
-    public List<ProductCategoryDto> getProductCategoryList(ProductSearchCondition condition) {
-        List<ProductCategoryDto> data = null;
-        String searchProductCategoryTypeCd = condition.getSearchProductCategoryTypeCd(); //카테고리 조회를 위한 타입 (P:요금제, R:부가서비스, ?:안심보험)
-        if (!StringUtils.hasText(searchProductCategoryTypeCd)) {
-            condition.setSearchProductCategoryTypeCd("P"); //요금제로 카테고리로 기본 설정
-        }
-        data = productCategoryMapper.selectProductCategoryList(condition);
-        return data;
-    }
-
-    //요금제,부가서비스,안심보험 카테고리 상세 조회
-    public List<ProductCategoryDto> getProductCategoryDetailList(ProductSearchCondition condition) {
-        List<ProductCategoryDto> data = null;
-        List<ProductCategoryDto> productCategoryList = this.getProductCategoryList(condition);
-        if (productCategoryList.size() > 0) {
-            ProductCategoryDto productCategoryDto = productCategoryList.stream()
-                    .findFirst()
-                    .orElse(null);
-
-            condition.setSearchProductCategoryId(productCategoryDto.getCtgCd());
-            data = productCategoryMapper.selectProductCategoryDetailList(condition);
-        }
-
-        return data;
-    }
-
     //공시지원금 조회
     public List<PhoneInfoDto> getMspOfficialNoticeSupport(ProductSearchCondition condition) {
         List<PhoneInfoDto> data = productInfoReadMapper.selectMspOfficialNoticeSupport(condition);
@@ -177,5 +144,50 @@ public class ProductInfoService {
         return data;
     }
 
+    //휴대폰 매장 재고 조회 (postgre)
+    public List<ProductCategoryDto> getPhoneInventoryList(ProductSearchCondition condition) {
+        List<ProductCategoryDto> data = productSmartInfoReadMapper.selectPhoneInventoryList(condition);
+        return data;
+    }
+
+    //요금제,부가서비스,안심보험 카테고리 목록 조회 (postgre)
+    public List<ProductCategoryDto> getProductCategoryList(ProductSearchCondition condition) {
+        List<ProductCategoryDto> data = null;
+        String prodCtgTypeCd = condition.getProdCtgTypeCd(); //카테고리 조회를 위한 타입 (P:요금제, R:부가서비스, ?:안심보험)
+        if (!StringUtils.hasText(prodCtgTypeCd)) {
+            condition.setProdCtgTypeCd("P"); //요금제로 카테고리로 기본 설정
+        }
+        data = productSmartInfoReadMapper.selectProductCategoryList(condition);
+        return data;
+    }
+
+    //요금제,부가서비스,안심보험 카테고리 상세 조회 (postgre)
+    public List<ProductCategoryDto> getProductCategoryDetailList(ProductSearchCondition condition) {
+        List<ProductCategoryDto> data = null;
+        //조회하려는 카테고리의 ProdCtgTypeCd(요금,부가서비스,안심보험) 및 ProdCtgId 가 넘어오지 않은 경우
+        //카테고리 목록을 조회하여 맨 처음꺼로 카테고리를 상세조회하도록 함
+        if (!StringUtils.hasText(condition.getProdCtgTypeCd()) && !StringUtils.hasText(condition.getProdCtgId())) {
+            List<ProductCategoryDto> productCategoryList = this.getProductCategoryList(condition);
+            if (!productCategoryList.isEmpty()) {
+                ProductCategoryDto productCategoryDto = productCategoryList.stream()
+                        .findFirst()
+                        .orElse(null);
+                condition.setProdCtgId(productCategoryDto.getCtgCd());
+            }
+        }
+        data = productSmartInfoReadMapper.selectProductCategoryDetailList(condition);
+        return data;
+
+//        List<ProductCategoryDto> productCategoryList = this.getProductCategoryList(condition);
+//        if (!productCategoryList.isEmpty()) {
+//            ProductCategoryDto productCategoryDto = productCategoryList.stream()
+//                    .findFirst()
+//                    .orElse(null);
+//
+//            condition.setProdCtgId(productCategoryDto.getCtgCd());
+//            data = productSmartInfoReadMapper.selectProductCategoryDetailList(condition);
+//        }
+//        return data;
+    }
 
 }

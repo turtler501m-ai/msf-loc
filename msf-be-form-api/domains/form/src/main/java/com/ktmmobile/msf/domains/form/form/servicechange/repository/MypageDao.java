@@ -7,12 +7,12 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpMrktHistDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.McpRequestAgrmDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpMrktHistDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestAgrmDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.BillWayChgDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpRateChgDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpRetvRststnDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpServiceAlterTraceDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.NmcpProdImgDtlDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.SuspenChgTmlDto;
 

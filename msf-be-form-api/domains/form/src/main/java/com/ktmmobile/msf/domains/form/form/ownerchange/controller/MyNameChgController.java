@@ -15,15 +15,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestClientException;
 import com.ktds.crypto.exception.CryptoException;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.MyNameChgReqDto;
 import com.ktmmobile.msf.domains.form.form.ownerchange.service.MyNameChgService;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfCustRequestScanService;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMaskingSvc;
@@ -33,7 +35,7 @@ import com.ktmmobile.msf.domains.form.system.cert.service.CertService;
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.ResponseSuccessDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
@@ -45,7 +47,7 @@ import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 //import com.ktmmobile.msf.domains.form.system.faceauth.service.FathService;
 
-@RestController
+@Controller
 public class MyNameChgController {
 
     private static final Logger logger = LoggerFactory.getLogger(MyNameChgController.class);
@@ -76,47 +78,46 @@ public class MyNameChgController {
 //    private FathService fathService;
 
     /**
-     * 설명 : 명의변경 화면 초기 데이터 조회
+     * 설명 : 명의변경 화면
      */
-    @RequestMapping(value = {"/mypage/myNameChg.do", "/m/mypage/myNameChg.do"})
-    public Map<String, Object> myNameChg(HttpServletRequest request,
-            @ModelAttribute("searchVO") MyPageSearchDto searchVO) {
+    @RequestMapping(value = {"/mypage/myNameChg.do", "/m/mypage/myNameChg.do"}  )
+    public String myNameChg(ModelMap model , HttpServletRequest request
+            , @ModelAttribute("searchVO") MyPageSearchDto searchVO){
+        //안면인증 세션 초기화
+//        SessionUtils.initializeFathSession();
 
-        // [ASIS] JSP 페이지명 및 PC/모바일 플랫폼 분기 반환 — TOBE: REST JSON 응답으로 전환
-        // String jspPageName = "/portal/mypage/myNameChg";
-        // String thisPageName = "/mypage/myNameChg.do";
-        // if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
-        //     jspPageName = "/mobile/mypage/myNameChg";
-        //     thisPageName = "/m/mypage/myNameChg.do";
-        // }
-
-        // [ASIS] 중복요청 체크 후 successRedirect JSP 반환 — TOBE: REST 환경에서 불필요하여 제외
-        // ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();
-        // checkOverlapDto.setRedirectUrl(thisPageName);
-        // if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
-        //     model.addAttribute("responseSuccessDto", checkOverlapDto);
-        //     model.addAttribute("MyPageSearchDto", searchVO);
-        //     return "/common/successRedirect";
-        // }
-
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
-            // [ASIS] return "redirect:/loginForm.do"; — TOBE: 세션 없음 예외로 전환
-            throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
+        String jspPageName = "/portal/mypage/myNameChg";
+        String thisPageName ="/mypage/myNameChg.do";
+        if("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
+            jspPageName = "/mobile/mypage/myNameChg";
+            thisPageName ="/m/mypage/myNameChg.do";
         }
 
+        ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();  //중복요청 체크
+        checkOverlapDto.setRedirectUrl(thisPageName);
+
+        if (SessionUtils.overlapRequestCheck(checkOverlapDto)) {
+            model.addAttribute("responseSuccessDto", checkOverlapDto);
+            model.addAttribute("MyPageSearchDto", searchVO);
+            return "/common/successRedirect";
+        }
+
+        UserSessionDto userSession = SessionUtils.getUserCookieBean();
+        if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
         List<McpUserCntrMngDto> cntrList = myNameChgService.selectCntrListNmChg(userSession.getUserId(), null);
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
-        if (!chk) {
-            // [ASIS] ResponseSuccessDto → successRedirect JSP 반환 — TOBE: 예외로 전환
-            throw new McpCommonException("정회원 인증 후 이용하실 수 있습니다.");
+        if(!chk){
+            ResponseSuccessDto responseSuccessDto = getMessageBox();
+            model.addAttribute("responseSuccessDto", responseSuccessDto);
+             return "/common/successRedirect";
         }
 
         // 마스킹해제
-        String maskingSession = "N";
-        if (SessionUtils.getMaskingSession() > 0) {
-            maskingSession = "Y";
+        if(SessionUtils.getMaskingSession() > 0 ) {
+            model.addAttribute("maskingSession", "Y");
+
             MaskingDto maskingDto = new MaskingDto();
+
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
@@ -128,29 +129,26 @@ public class MyNameChgController {
             maskingSvc.insertMaskingReleaseHist(maskingDto);
         }
 
+
         searchVO.setUserName(StringMakerUtil.getName(userSession.getName()));
-        String phoneNum = searchVO.getCtn();
-        String custId = cntrList.get(0).getCustId();
+        model.addAttribute("phoneNum", searchVO.getCtn());
+        model.addAttribute("custId", cntrList.get(0).getCustId());
         searchVO.setCtn(StringMakerUtil.getPhoneNum(searchVO.getCtn()));
+        model.addAttribute("searchVO", searchVO);
+        model.addAttribute("cntrList", cntrList);
 
         NmcpCdDtlDto jehuProdInfo = fCommonSvc.getJehuProdInfo(searchVO.getSoc());
+        model.addAttribute("jehuProdType", jehuProdInfo.getDtlCd());
+        model.addAttribute("jehuProdName", jehuProdInfo.getDtlCdNm());
 
-        HashMap<String, Object> rtnMap = new HashMap<>();
-        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-        rtnMap.put("phoneNum", phoneNum);
-        rtnMap.put("custId", custId);
-        rtnMap.put("searchVO", searchVO);
-        rtnMap.put("cntrList", cntrList);
-        rtnMap.put("jehuProdType", jehuProdInfo.getDtlCd());
-        rtnMap.put("jehuProdName", jehuProdInfo.getDtlCdNm());
-        rtnMap.put("maskingSession", maskingSession);
-        return rtnMap;
+        return jspPageName;
     }
 
     /**
      * 설명     : 명의변경 신청
      */
     @RequestMapping(value = "/mypage/myNameChgRequest.do")
+    @ResponseBody
     public Map<String, Object> myNameChgRequest(MyNameChgReqDto myNameChgReqDto) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
@@ -224,6 +222,7 @@ public class MyNameChgController {
      * 설명     : 양도인 신청가능여부 체크
      */
     @RequestMapping(value = "/mypage/grantorReqChk.do")
+    @ResponseBody
     public Map<String, Object> grantorReqChk(MyNameChgReqDto myNameChgReqDto) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
@@ -273,16 +272,15 @@ public class MyNameChgController {
 
 
 
-    // [ASIS] 정회원 미인증 시 successRedirect 메시지박스 반환 — TOBE: McpCommonException 예외로 전환하여 미사용
-    // private ResponseSuccessDto getMessageBox(){
-    //     ResponseSuccessDto mbox = new ResponseSuccessDto();
-    //     mbox.setRedirectUrl("/mypage/updateForm.do");
-    //     if("Y".equals(NmcpServiceUtils.isMobile())){
-    //         mbox.setRedirectUrl("/m/mypage/updateForm.do");
-    //     }
-    //     mbox.setSuccessMsg("정회원 인증 후 이용하실 수 있습니다.");
-    //     return mbox;
-    // }
+    private ResponseSuccessDto getMessageBox(){
+        ResponseSuccessDto mbox = new ResponseSuccessDto();
+        mbox.setRedirectUrl("/mypage/updateForm.do");
+        if("Y".equals(NmcpServiceUtils.isMobile())){
+            mbox.setRedirectUrl("/m/mypage/updateForm.do");
+        }
+        mbox.setSuccessMsg("정회원 인증 후 이용하실 수 있습니다.");
+        return mbox;
+    }
 
     /**
      * 설명  : 명의변경 신청 전, 사용자 입력값 비교 로직 추가
@@ -394,6 +392,7 @@ public class MyNameChgController {
     }
 
     @RequestMapping(value = "/mypage/nameChgChkTelNo.do")
+    @ResponseBody
     public Map<String, Object> nameChgChkTelNo(MyNameChgReqDto myNameChgReqDto) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
@@ -435,6 +434,7 @@ public class MyNameChgController {
      * 설명  : 입력한 회원 정보(이름,주민번호)와 회선정보가 일치하는지 체크
      * */
     @RequestMapping(value = "/mypage/userInfoChk.do")
+    @ResponseBody
     private Map<String, Object> userInfoChk(MyNameChgReqDto myNameChgReqDto) {
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();

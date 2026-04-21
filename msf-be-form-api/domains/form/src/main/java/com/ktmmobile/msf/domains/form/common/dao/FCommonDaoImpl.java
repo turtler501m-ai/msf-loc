@@ -4,19 +4,20 @@ import java.util.List;
 import java.util.Map;
 
 import com.ktmmobile.msf.domains.form.common.dto.*;
+import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import com.ktmmobile.msf.domains.form.common.dto.db.MspCommDatPrvTxnDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.MspSmsTemplateMstDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspCommDatPrvTxnDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSmsTemplateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 
 /**
  * @Class Name : CommonDaoImpl
@@ -26,13 +27,13 @@ import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspRateMstDto;
  * @Create Date :
  */
 @Repository
+@RequiredArgsConstructor
 public class FCommonDaoImpl implements FCommonDao {
 
-    @Autowired
-    private SqlSessionTemplate sqlSessionTemplate;
+    private final SqlSessionTemplate sqlSessionTemplate;
 
-    @Autowired
-    SqlSessionTemplate sqlSession2; //postgresql
+    @Qualifier("mspSqlSession")
+    private final SqlSessionTemplate mspSqlSession; //postgresql
 
     @Value("${api.interface.server}")
     private String apiInterfaceServer;
@@ -235,7 +236,7 @@ public class FCommonDaoImpl implements FCommonDao {
 
     @Override
     public int insertRecaptchaLog(Map<String, String> recaptchaLogMap) {
-        return sqlSession2.insert("EventBoardMapper.insertRecaptchaLog", recaptchaLogMap);
+        return mspSqlSession.insert("EventBoardMapper.insertRecaptchaLog", recaptchaLogMap);
     }
 
     @Override

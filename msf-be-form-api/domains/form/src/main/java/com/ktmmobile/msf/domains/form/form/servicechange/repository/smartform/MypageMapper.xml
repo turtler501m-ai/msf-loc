@@ -187,7 +187,7 @@
     </update>
 
 
-    <update id="updateUserCntrMng" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto" >
+    <update id="updateUserCntrMng" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto" >
         UPDATE MCP_USER_CNTR_MNG
         SET  SYS_UDATE = SYSDATE
             <if test="subscriberNo != null and subscriberNo != ''">
@@ -664,7 +664,7 @@
     </insert>
 
 
-    <insert id="insertMcpRequestArm" parameterType="com.ktmmobile.msf.domains.form.common.dto.db.McpRequestAgrmDto" >
+    <insert id="insertMcpRequestArm" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestAgrmDto" >
         INSERT INTO /*Mypage.insertMcpRequestArm 재약정 정보 저장  */
          MCP_REQUEST_AGRM (
               CONTRACT_NUM             --계약번호
@@ -768,7 +768,7 @@
         WHERE USER_ID = #{userId} AND SNS_CD = #{snsCd}
     </update>
 
-    <update id="insertServiceAlterTrace" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpServiceAlterTraceDto">
+    <update id="insertServiceAlterTrace" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto">
         INSERT INTO /*Mypage.insertServiceAlterTrace 서비스 변경 이력 저장  */
            MCP_SERVICE_ALTER_TRACE (
               NCN                      --New 계약번호
@@ -815,7 +815,7 @@
         )
     </update>
 
-    <select id="checkAllreadPlanchgCount" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpServiceAlterTraceDto"  resultType="java.lang.Integer">
+    <select id="checkAllreadPlanchgCount" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto"  resultType="java.lang.Integer">
         SELECT /*MypageMapper.checkAllreadPlanchgCount 최근 60분 내 요금제 변경 이력 확인 */
             COUNT(1)
         FROM MCP_SERVICE_ALTER_TRACE
@@ -877,7 +877,7 @@
     </insert>
 
     <!--    수정-->
-    <select id="selectExistingConsent" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.db.McpMrktHistDto">
+    <select id="selectExistingConsent" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.McpMrktHistDto">
         SELECT USERID,
                GUBUN,
                STRT_DTTM,
@@ -905,7 +905,7 @@
     </select>
 
 
-    <select id="getMrktHistInfo" parameterType="com.ktmmobile.msf.domains.form.common.dto.db.McpMrktHistDto" resultType="com.ktmmobile.msf.domains.form.common.dto.db.McpMrktHistDto">
+    <select id="getMrktHistInfo" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpMrktHistDto" resultType="com.ktmmobile.msf.domains.form.common.dto.McpMrktHistDto">
         SELECT STRT_DTTM FROM (
             SELECT STRT_DTTM FROM MCP_MRKT_HIST
             WHERE 1=1

@@ -1,16 +1,16 @@
 package com.ktmmobile.msf.domains.form.common.mspservice;
 
 import java.util.List;
-import com.ktmmobile.msf.domains.form.form.common.dto.PhoneMspDto;
+import com.ktmmobile.msf.domains.form.common.dto.PhoneMspDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.mspservice.dto.CmnGrpCdMst;
 import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspNoticSupportMstDto;
 import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspOrgDto;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspRateMstDto;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleAgrmMst;
+import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSaleAgrmMst;
 import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleDto;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSalePlcyMstDto;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleSubsdMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto;
 
 
 /**

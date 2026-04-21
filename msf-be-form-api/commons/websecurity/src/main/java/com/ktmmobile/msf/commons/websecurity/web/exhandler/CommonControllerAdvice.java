@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -64,6 +66,18 @@ public class CommonControllerAdvice {
         return ResponseUtils.badRequest(errors);
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<CommonResponse<Void>> httpMessageNotReadableException(HttpMessageNotReadableException e) {
+        Throwable cause = e.getMostSpecificCause();
+        if (cause instanceof DomainException domainEx) {
+            return ResponseUtils.badRequest(domainEx);
+        }
+        if (cause instanceof Exception ex && StringUtils.hasText(ex.getMessage())) {
+            return ResponseUtils.badRequest(ex);
+        }
+        return ResponseUtils.badRequest(e);
+    }
+
     //@ExceptionHandler(MissingServletRequestParameterException.class)
     // public ResponseEntity<CommonResponse<Void>> missingServletRequestParameterException(MissingServletRequestParameterException e) {
     //    return ResponseUtils.badRequest(List.of(BindErrorResponse.of(e)));
@@ -80,7 +94,7 @@ public class CommonControllerAdvice {
     }
 
     @ExceptionHandler(DomainException.class)
-    public ResponseEntity<CommonResponse<Void>> duplicateDataException(DomainException e) {
+    public ResponseEntity<CommonResponse<Void>> domainException(DomainException e) {
         CommonResponseType responseType = CommonResponseType.DOMAIN_ERROR;
         LogUtils.logException(log, e, responseType.message());
         return ResponseUtils.responseOf(responseType, e);

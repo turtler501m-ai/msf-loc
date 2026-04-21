@@ -5,7 +5,7 @@ package com.ktmmobile.msf.domains.form.form.ownerchange.service;
 
 import java.util.List;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.MyNameChgReqDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 
 /**
  * @author ANT_FX700_02

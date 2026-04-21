@@ -190,11 +190,11 @@
             AND A.RPRS_PRDT_ID = PD_SALE.PRDT_ID
             AND A.SALE_YN ='Y'
             AND A.MAKR_CD = B.MNFCT_ID
-            AND A.PROD_ID IN
+            <!--AND A.PROD_ID IN
                 <foreach item="phone" index="index" collection="listPhoneDto"
                          open="(" separator="," close=")">
                     #{phone.prodId}
-                </foreach>  <!--스마트가 관리하는 해당 대리점의 보유 단말의 PROD_ID 로 검색조건 추가-->
+                </foreach>-->  <!--스마트가 관리하는 해당 대리점의 보유 단말의 PROD_ID 로 검색조건 추가-->
             <if test="shandYn != null and shandYn != ''">
                 AND A.SHAND_YN = #{shandYn}
             </if>

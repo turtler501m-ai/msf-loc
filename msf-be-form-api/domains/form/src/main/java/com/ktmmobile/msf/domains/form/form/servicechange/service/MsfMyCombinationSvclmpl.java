@@ -20,7 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import com.ktmmobile.msf.domains.form.form.servicechange.repository.MyCombinationDao;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpReqCombineDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyCombinationReqDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyCombinationResDto;
+import com.ktmmobile.msf.domains.form.common.dto.MyCombinationResDto;
 import com.ktmmobile.msf.domains.form.system.cert.dto.CertDto;
 import com.ktmmobile.msf.domains.form.system.cert.service.CertService;
 import com.ktmmobile.msf.domains.form.common.dto.AuthSmsDto;

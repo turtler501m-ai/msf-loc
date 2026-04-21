@@ -202,7 +202,7 @@
 		WHERE CRT_SEQ = #{crtSeq}
 	</update>
 
-	<!--<select id="getModuTypeStepCnt" parameterType="com.ktmmobile.mcp.cert.dto.CertDto" resultType="int">
+	<!- -<select id="getModuTypeStepCnt" parameterType="com.ktmmobile.mcp.cert.dto.CertDto" resultType="int">
 		SELECT  /*CertMapper.getModuTypeStepCnt*/
 		    COUNT(DISTINCT STEP) CNT
 		FROM NMCP_CRT_VLD_DTL

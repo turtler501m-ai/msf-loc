@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="ChangPageMapper">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.servicechange.repository.msp.ChangPageMapper">
     <select id="selectMspAddInfo" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto">
         SELECT CONTRACT_NUM
              , DVC_OFW_AMNT
@@ -26,7 +26,7 @@
         WHERE RNUM = 1
     </select>
 
-  <select id="selectCntrList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+  <select id="selectCntrList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
     SELECT
     A.USERID
     , A.CNTR_MOBILE_NO
@@ -55,7 +55,7 @@
     ORDER BY A.REP_NO ASC
   </select>
 
-  <select id="selectCntrListNoLogin" parameterType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto" resultType="com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto">
+  <select id="selectCntrListNoLogin" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
     SELECT
     A.SVC_CNTR_NO
     , A.CONTRACT_NUM

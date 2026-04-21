@@ -1,0 +1,863 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="McpMspMapper">
+
+
+  <!-- /msp/rateByOrgnInfos - API 설명 (SELECT(MSP) : MSP_SALE_ORGN_MST, MSP_SALE_PLCY_MST, MSP_SALE_RATE_MST, MSP_RATE_MST) -->
+  <!-- SQL 메소드 변경 : listRateByOrgnInfos -> selectRateByOrgnInfos -->
+  <select id="selectRateByOrgnInfos" parameterType="com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto" resultType="com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto">
+        SELECT   /* /appform/rateByOrgnInfos : McpAppformMapper.selectRateByOrgnInfos */
+       DISTINCT
+       RATE_MST.RATE_CD,
+       RATE_MST.APPL_END_DT,
+       RATE_MST.APPL_STRT_DT,
+       RATE_MST.RATE_NM,
+       RATE_MST.RATE_GRP_CD,
+       RATE_MST.PAY_CL_CD,
+       RATE_MST.RATE_TYPE,
+       RATE_MST.DATA_TYPE,
+       RATE_MST.BASE_AMT,
+       RATE_MST.FREE_CALL_CL_CD,
+       RATE_MST.FREE_CALL_CNT,
+       RATE_MST.NW_IN_CALL_CNT,
+       RATE_MST.NW_OUT_CALL_CNT,
+       RATE_MST.FREE_SMS_CNT,
+       RATE_MST.FREE_DATA_CNT,
+       RATE_MST.RMK,
+       RATE_MST.ONLINE_TYPE_CD,
+       RATE_MST.AL_FLAG,
+       RATE_MST.CMNT,    -- 요금제혜택
+       RATE_MST.SERVICE_TYPE
+   FROM
+          MSP_SALE_ORGN_MST ORGN,
+       MSP_SALE_PLCY_MST PLCY,
+       MSP_SALE_RATE_MST RATE,
+       MSP_RATE_MST RATE_MST
+    WHERE
+       ORGN.ORGN_ID = #{orgnId}
+       AND TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN PLCY.SALE_STRT_DTTM AND PLCY.SALE_END_DTTM --판매기간 (필수)
+       AND PLCY.CNFM_YN = 'Y'
+       AND SPRT_TP = #{sprtTp}
+       AND PLCY.PLCY_SCTN_CD = #{plcySctnCd}
+       AND PLCY.PRDT_SCTN_CD = #{prdtSctnCd}
+       AND ORGN.SALE_PLCY_CD = PLCY.SALE_PLCY_CD
+       AND PLCY.SALE_PLCY_CD = RATE.SALE_PLCY_CD
+       AND RATE_MST.RATE_CD = RATE.RATE_CD
+       AND RATE_TYPE != '02'
+    ORDER BY RATE_MST.RATE_NM
+    </select>
+
+
+  <!-- /msp/mspSalePlcyInfoByOnlyOrgn - 판매정책정보를 조회 : 상품과 상관없이 기관별 조회 (SELECT(MSP) : MSP_SALE_PLCY_MST, MSP_SALE_ORGN_MST ORG) -->
+  <!-- SQL 메소드 변경 : findMspSalePlcyInfoByOnlyOrgn -> selectMspSalePlcyInfoByOnlyOrgn -->
+  <select id="selectMspSalePlcyInfoByOnlyOrgn" parameterType="com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto" resultType="com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto">
+    SELECT  /* /appform/mspSalePlcyInfoByOnlyOrgn : McpAppformMapper.selectMspSalePlcyInfoByOnlyOrgn 판매정책정보를 조회 : 상품과 상관없이 기관별 조회 */
+    PL.SALE_PLCY_CD ,                    --판매정책코드
+    PL.SALE_PLCY_NM,                    --판매정책명
+    PL.SALE_STRT_DTTM,                  --판매시작일시
+    PL.SALE_END_DTTM,                   --판매종료일시
+    PL.PLCY_TYPE_CD,                    --정책유형코드 M:오프라인, O:온라인
+    PL.ORGN_TYPE,                    --조직유형
+    PL.PLCY_SCTN_CD,                    --정책구분코드 01:단말, 02:USIM
+    PL.PRDT_SCTN_CD,                    --제품구분코   02:3G, 03:LTE
+    PL.APPL_SCTN_CD,                    --적용구분코드 O:개통일, R:접수일
+    PL.INST_RATE,                    --할부이자율
+    PL.NEW_YN,                    --신규여부
+    PL.MNP_YN,                    --번호이동여부
+    PL.HCN_YN,                    --일반 기변여부
+    PL.HDN_YN,                    --우수기변여부
+    PL.CNFM_YN,                    --확정여부
+    PL.CNFM_ID,                    --확정자ID
+    PL.CNFM_DTTM,                    --확정일시
+    PL.REGST_ID,                    --등록자ID
+    PL.REGST_DTTM,                    --등록일시
+    PL.RVISN_ID,                    --수정자ID
+    PL.RVISN_DTTM,                    --수정일시
+    PL.SPRT_TP,                    --지원금유형
+    ORG.ORGN_ID
+    FROM
+    MSP_SALE_PLCY_MST PL,
+    MSP_SALE_ORGN_MST ORG
+    WHERE
+    TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN PL.SALE_STRT_DTTM AND PL.SALE_END_DTTM --판매기간 (필수)
+    AND PL.CNFM_YN='Y'                    --결제 YN (필수)
+    AND PL.SALE_PLCY_CD = ORG.SALE_PLCY_CD
+    AND PL.PLCY_TYPE_CD = #{plcyTypeCd}   -- 오프라인:M , 직영온라인 : D
+    AND PL.PLCY_SCTN_CD = #{plcySctnCd}   -- 01:단말,02:유심
+    AND ORG.ORGN_ID     = #{orgnId}
+    <if test="prdtSctnCd != null and prdtSctnCd != ''">
+      AND PL.PRDT_SCTN_CD = #{prdtSctnCd}   -- LTE,3G
+    </if>
+    <if test="sprtTp != null and sprtTp != ''">
+      AND PL.SPRT_TP         = #{sprtTp}           -- KD:단말할인,PM:요금할인
+    </if>
+  </select>
+
+
+  <!-- /msp/lowPriceChargeInfoByProd - 최저가를 구하기 위한 해당 상품의 요금제 정보 1건 조회 (SELECT(MSP) : MSP_SALE_SUBSD_MST) -->
+  <!-- SQL 메소드 변경 : getLowPriceChargeInfoByProd -> selectLowPriceChargeInfoByProd -->
+  <select id="selectLowPriceChargeInfoByProd" resultMap="mspSaleSubsdMstMap" parameterType="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto">
+    SELECT /* /appform/lowPriceChargeInfoByProd : McpAppformMapper.selectLowPriceChargeInfoByProd 최저가를 구하기 위한 해당 상품의 요금제 정보 1건 조회 */
+    SALE_PLCY_CD
+    , RATE_CD_SU
+    , PRDT_ID
+    , OLD_YN
+    , AGRM_TRM
+    , OPER_TYPE
+    , ORGN_ID
+    , HNDST_AMT
+    , SUBSD_AMT
+    , INST_AMT
+    , INST_CMSN
+    , AGNCY_SUBSD_MAX
+    , AGNCY_SUBSD_AMT
+    , REGST_ID_SU
+    , REGST_DTTM_SU
+    , RVISN_ID_SU
+    , SPRT_TP
+    , DC_AMT
+    , ADD_DC_AMT
+    , RATE_CD_RA
+    , APPL_END_DT
+    , APPL_STRT_DT
+    , RATE_NM
+    , RATE_GRP_CD
+    , PAY_CL_CD
+    , RATE_TYPE
+    , DATA_TYPE
+    , BASE_AMT
+    , FREE_CALL_CL_CD
+    , FREE_CALL_CNT
+    , NW_IN_CALL_CNT
+    , NW_OUT_CALL_CNT
+    , FREE_SMS_CNT
+    , FREE_DATA_CNT
+    , REGST_ID
+    , REGST_DTTM
+    , RVISN_ID
+    , RVISN_DTTM
+    , ONLINE_TYPE_CD
+    , AL_FLAG
+    , CMNT
+    , SERVICE_TYPE
+    , PLCY_SCTN_CD
+    , ON_OFF_TYPE
+    FROM (
+    SELECT
+    SU.SALE_PLCY_CD,            --판매정책코드
+    SU.RATE_CD AS RATE_CD_SU,   --요금제코드
+    SU.PRDT_ID,                 --제품ID
+    SU.OLD_YN,                  --중고여부
+    SU.AGRM_TRM,                --약정기간
+    SU.OPER_TYPE,               --업무유형
+    SU.ORGN_ID,                 --조직ID
+    SU.HNDST_AMT,               --단말금액(VAT포함)
+    SU.SUBSD_AMT,               --공시지원금(VAT포함)
+    SU.INST_AMT,                --할부원금(VAT포함)
+    SU.INST_CMSN,               --할부수수료(VAT포함)
+    SU.AGNCY_SUBSD_MAX,         --대리점보조금MAX(VAT포함)
+    SU.AGNCY_SUBSD_AMT,         --대리점보조금(VAT포함)
+    SU.REGST_ID AS REGST_ID_SU,     --등록자ID
+    SU.REGST_DTTM AS REGST_DTTM_SU, --등록일시
+    SU.RVISN_ID AS RVISN_ID_SU,     --수정자ID
+    SU.RVISN_DTTM AS RVISN_DTTM_SU, --수정일시
+    SU.SPRT_TP,                 --지원금유형
+    SU.DC_AMT,                  --기본할인금액
+    SU.ADD_DC_AMT,               --추가할인금액
+    RA.RATE_CD AS RATE_CD_RA,    --요금제코드
+    RA.APPL_END_DT,              --적용종료일자
+    RA.APPL_STRT_DT,             --적용시작일자
+    RA.RATE_NM,                  --요금제명
+    RA.RATE_GRP_CD,              --요금제그룹코드
+    RA.PAY_CL_CD,                --선후불구분
+    RA.RATE_TYPE,                --요금제유형( ORG0008 )
+    RA.DATA_TYPE,                --데이터유형( ORG0018 )
+    RA.BASE_AMT,                 --기본료
+    RA.FREE_CALL_CL_CD,          --망내외무료통화구분
+    RA.FREE_CALL_CNT,            --무료통화건수
+    RA.NW_IN_CALL_CNT,           --망내무료통화건수
+    RA.NW_OUT_CALL_CNT,          --망외무료통화건수
+    RA.FREE_SMS_CNT,             --무료문자건수
+    RA.FREE_DATA_CNT,            --무료데이터건수
+    RA.REGST_ID,                 --등록자ID
+    RA.REGST_DTTM,               --등록일시
+    RA.RVISN_ID,                 --수정자ID
+    RA.RVISN_DTTM,               --수정일시
+    RA.ONLINE_TYPE_CD,           --온라인유형코드
+    RA.AL_FLAG,                  --알요금제 구분자
+    RA.CMNT,                    -- 요금제혜택
+    RA.SERVICE_TYPE              --서비스유형
+    , #{plcySctnCd}  AS PLCY_SCTN_CD --정책구분코드(01:단말,02:유심)
+    , #{onOffType}   AS ON_OFF_TYPE
+    FROM
+    MSP_SALE_SUBSD_MST SU
+    INNER JOIN
+    MSP_RATE_MST RA
+    ON
+    SU.RATE_CD = RA.RATE_CD
+    WHERE
+    1=1
+    AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN RA.APPL_STRT_DT AND RA.APPL_END_DT -- 요금제 기간
+    <if test="salePlcyCd != null and salePlcyCd != ''">
+      AND SALE_PLCY_CD  = #{salePlcyCd}   --정책코드 할인유형과 결합시 유니크
+    </if>
+    <if test="payClCd != null and payClCd != ''">
+      AND RA.PAY_CL_CD = #{payClCd}
+    </if>
+
+    <if test="orgnId != 'V000019481'">
+      AND PRDT_ID = #{prdtId}             --상품ID (자급제인 경우는 SKIP 처리)
+    </if>
+
+    AND OLD_YN  = #{oldYn}              --중고여부
+    AND ORGN_ID = #{orgnId}             --조직코드
+    <if test="operType != null and operType != ''">
+      AND OPER_TYPE = #{operType}      --가입유형
+    </if>
+    <if test="rateCd != null and rateCd != ''">
+      AND SU.RATE_CD = #{rateCd}      --요금제코드
+    </if>
+    <choose>
+      <when test='noArgmYn == "Y"'>
+        <if test="agrmTrm !=null and agrmTrm != ''">
+          AND AGRM_TRM = #{agrmTrm}
+        </if>
+      </when>
+      <otherwise>
+        <if test="agrmTrm !=null and agrmTrm != ''">
+          AND (AGRM_TRM = #{agrmTrm} or AGRM_TRM = '0')        -- 약정기간 무약정0은 기본적으로 조회한다.
+        </if>
+      </otherwise>
+    </choose>
+    ORDER BY INST_AMT ASC
+    )A
+    WHERE 1=1
+    AND ROWNUM =1
+  </select>
+
+
+  <resultMap id="mspSaleSubsdMstMap" type="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto" >
+    <result property="rateCd" column="RATE_CD_SU"></result>
+    <result property="plcySctnCd" column="PLCY_SCTN_CD"></result>
+    <result property="onOffType" column="ON_OFF_TYPE"></result>
+    <result property="salePlcyCd" column="SALE_PLCY_CD"></result>
+    <result property="prdtId" column="PRDT_ID"></result>
+    <result property="oldYn" column="OLD_YN"></result>
+    <result property="agrmTrm" column="AGRM_TRM"></result>
+    <result property="operType" column="OPER_TYPE"></result>
+    <result property="orgnId" column="ORGN_ID"></result>
+    <result property="hndstAmt" column="HNDST_AMT"></result>
+    <result property="subsdAmt" column="SUBSD_AMT"></result>
+    <result property="instAmt" column="INST_AMT"></result>
+    <result property="instCmsn" column="INST_CMSN"></result>
+    <result property="agncySubsdMax" column="AGNCY_SUBSD_MAX"></result>
+    <result property="agncySubsdAmt" column="AGNCY_SUBSD_AMT"></result>
+    <result property="regstId" column="REGST_ID_SU"></result>
+    <result property="regstDttm" column="REGST_DTTM_SU"></result>
+    <result property="rvisnId" column="RVISN_ID_SU"></result>
+    <result property="rvisnDttm" column="RVISN_DTTM_SU"></result>
+    <result property="sprtTp" column="SPRT_TP"></result>
+    <result property="baseAmt" column="BASE_AMT"></result>
+    <result property="dcAmt" column="DC_AMT"></result>
+    <result property="addDcAmt" column="ADD_DC_AMT"></result>
+    <result property="rateNm" column="RATE_NM"></result>
+    <result property="freeCallCnt" column="FREE_CALL_CNT"></result>
+    <result property="nwInCallCnt" column="NW_IN_CALL_CNT"></result>
+    <result property="nwOutCallCnt" column="NW_OUT_CALL_CNT"></result>
+    <result property="freeSmsCnt" column="FREE_SMS_CNT"></result>
+    <result property="freeDataCnt" column="FREE_DATA_CNT"></result>
+    <result property="cmnt" column="CMNT"></result>
+    <result property="paySort" column="PAY_SORT"></result>
+    <association property="mspRateMstDto" javaType="com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto">
+      <result property="rateCd" column="RATE_CD_RA"></result>
+      <result property="applEndDt" column="APPL_END_DT"></result>
+      <result property="applStrtDt" column="APPL_STRT_DT"></result>
+      <result property="rateNm" column="RATE_NM"></result>
+      <result property="rateGrpCd" column="RATE_GRP_CD"></result>
+      <result property="payClCd" column="PAY_CL_CD"></result>
+      <result property="rateType" column="RATE_TYPE"></result>
+      <result property="dataType" column="DATA_TYPE"></result>
+      <result property="baseAmt" column="BASE_AMT"></result>
+      <result property="freeCallClCd" column="FREE_CALL_CL_CD"></result>
+      <result property="freeCallCnt" column="FREE_CALL_CNT"></result>
+      <result property="nwInCallCnt" column="NW_IN_CALL_CNT"></result>
+      <result property="nwOutCallCnt" column="NW_OUT_CALL_CNT"></result>
+      <result property="freeSmsCnt" column="FREE_SMS_CNT"></result>
+      <result property="freeDataCnt" column="FREE_DATA_CNT"></result>
+      <result property="rmk" column="RMK"></result>
+      <result property="regstId" column="REGST_ID"></result>
+      <result property="regstDttm" column="REGST_DTTM"></result>
+      <result property="rvisnId" column="RVISN_ID"></result>
+      <result property="rvisnDttm" column="RVISN_DTTM"></result>
+      <result property="onlineTypeCd" column="ONLINE_TYPE_CD"></result>
+      <result property="alFlag" column="AL_FLAG"></result>
+      <result property="serviceType" column="SERVICE_TYPE"></result>
+    </association>
+    <discriminator javaType="java.lang.String" column="PLCY_SCTN_CD">
+      <case value="01" resultMap="mspSaleSubsdMstPromotionMap" />
+      <case value="02" resultMap="mspSaleSubsdMstPromotionMap" />
+    </discriminator>
+  </resultMap>
+
+
+  <!-- /msp/mspPhoneInfo - 단품모델ID로 핸드폰정보를 조회 (SELECT(MSP) : CMN_INTM_MDL) -->
+  <!-- SQL 메소드 변경 : findMspPhoneInfo -> selectMspPhoneInfo -->
+  <select id="selectMspPhoneInfo" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.PhoneMspDto">
+        SELECT /* /msp/mspPhoneInfo : McpMspMapper.selectMspPhoneInfo 단품모델ID로 핸드폰정보를 조회  */
+               A.PRDT_ID,
+               A.RPRS_PRDT_ID,
+               A.RPRS_YN,
+               A.PRDT_NM,
+               A.PRDT_CODE,
+               A.PRDT_TYPE_CD,
+               A.PRDT_IND_CD,
+               A.PRDT_COLR_CD,
+               A.MNFCT_ID,
+               A.PRDT_LNCH_DT,
+               A.PRDT_DT
+        FROM
+               CMN_INTM_MDL A
+        WHERE
+               A.PRDT_DT >= TO_CHAR(SYSDATE, 'YYYYMMDD')
+           AND A.PRDT_ID = #{prdtId}
+    </select>
+
+
+  <!-- /msp/mspSaleOrgnMst - 판매정책정보를 조회 (SELECT(MSP) : MSP_SALE_PLCY_MST, MSP_SALE_ORGN_MST, MSP_SALE_PRDT_MST) -->
+  <!-- SQL 메소드 변경 : findMspSaleOrgnMst -> selectMspSaleOrgnMst -->
+  <select id="selectMspSaleOrgnMst" parameterType="com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto" resultType="com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto">
+    SELECT /* /msp/mspSaleOrgnMst : McpMspMapper.selectMspSaleOrgnMst 판매정책정보를 조회  */
+    PL.SALE_PLCY_CD ,                    --판매정책코드
+    PL.SALE_PLCY_NM,                    --판매정책명
+    PL.SALE_STRT_DTTM,                  --판매시작일시
+    PL.SALE_END_DTTM,                   --판매종료일시
+    PL.PLCY_TYPE_CD,                    --정책유형코드 M:오프라인, O:온라인
+    PL.ORGN_TYPE,                    --조직유형
+    PL.PLCY_SCTN_CD,                    --정책구분코드 01:단말, 02:USIM
+    PL.PRDT_SCTN_CD,                    --제품구분코   02:3G, 03:LTE
+    PL.APPL_SCTN_CD,                    --적용구분코드 O:개통일, R:접수일
+    PL.INST_RATE,                    --할부이자율
+    PL.NEW_YN,                    --신규여부
+    PL.MNP_YN,                    --번호이동여부
+    PL.HCN_YN,                    --기변여부
+    PL.HDN_YN,                    --우수기변여부
+    PL.CNFM_YN,                    --확정여부
+    PL.CNFM_ID,                    --확정자ID
+    PL.CNFM_DTTM,                    --확정일시
+    PL.REGST_ID,                    --등록자ID
+    PL.REGST_DTTM,                    --등록일시
+    PL.RVISN_ID,                    --수정자ID
+    PL.RVISN_DTTM,                    --수정일시
+    PL.SPRT_TP,                    --지원금유형
+    ORG.ORGN_ID
+    FROM
+    MSP_SALE_PLCY_MST PL,
+    MSP_SALE_ORGN_MST ORG,
+    MSP_SALE_PRDT_MST PRDT
+    WHERE
+    TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN PL.SALE_STRT_DTTM AND PL.SALE_END_DTTM --판매기간 (필수)
+    AND PL.CNFM_YN='Y'                    --결제 YN (필수)
+    <if test="plcyTypeCd != null and plcyTypeCd != ''">
+      AND PL.PLCY_TYPE_CD = #{plcyTypeCd}   -- 온라인:O , 오프라인:M , 직영온라인 : D
+    </if>
+    <if test="prdtSctnCd != null and prdtSctnCd != ''">
+      AND PL.PRDT_SCTN_CD = #{prdtSctnCd}   -- LTE,3G
+    </if>
+    <if test="prdtSctnCd != null and prdtSctnCd != ''">
+      AND PL.PLCY_SCTN_CD = #{plcySctnCd}   -- 01:단말,02:유심
+    </if>
+
+    <if test="orgnId != 'V000019481'">
+      AND PRDT.PRDT_ID = #{prdtId}          -- 단말기ID (자급제인 경우는 SKIP 처리)
+    </if>
+
+    <if test="sprtTp != null and sprtTp != ''">
+      AND PL.SPRT_TP         = #{sprtTp}           -- KD:단말할인,PM:요금할인
+    </if>
+    <if test="orgnId != null and orgnId != ''">
+      AND ORG.ORGN_ID     = #{orgnId}
+    </if>
+    <if test="salePlcyNm != null and salePlcyNm != ''">
+      AND PL.SALE_PLCY_NM LIKE #{salePlcyNm}
+    </if>
+    <if test="salePlcyCd != null and salePlcyCd != ''">
+      AND PL.SALE_PLCY_CD = #{salePlcyCd}
+    </if>
+    AND PL.SALE_PLCY_CD = ORG.SALE_PLCY_CD
+    AND PL.SALE_PLCY_CD = PRDT.SALE_PLCY_CD
+    AND ORG.SALE_PLCY_cD = PRDT.SALE_PLCY_CD
+  </select>
+
+
+  <!-- /msp/mspSalePrdMst - 판매중인 상품정보를 조회 (SELECT(MSP) : MSP_SALE_PRDT_MST) -->
+  <!-- SQL 메소드 변경 : findMspSalePrdMst -> selectMspSalePrdMst -->
+  <select id="selectMspSalePrdMst" parameterType="com.ktmmobile.msf.domains.form.common.dto.MspSalePrdtMstDto" resultType="com.ktmmobile.msf.domains.form.common.dto.MspSalePrdtMstDto">
+    SELECT /* /msp/mspSalePrdMst : McpMspMapper.selectMspSalePrdMst 판매중인 상품정보를  조회  */
+    SALE_PLCY_CD,            --판매정책코드
+    PRDT_ID,                --제품ID
+    OLD_YN,                 --중고여부
+    NEW_CMSN_AMT,           --신규수수료
+    MNP_CMSN_AMT,           --MNP수수료
+    HCN_CMSN_AMT,           --기변수수료
+    REGST_ID,               --등록자ID
+    REGST_DTTM,             --등록일시
+    RVISN_ID,               --수정자ID
+    RVISN_DTTM              --수정일시
+    FROM
+    MSP_SALE_PRDT_MST
+    WHERE
+    SALE_PLCY_CD = #{salePlcyCd}
+
+    <if test="orgnId != 'V000019481'">
+      AND PRDT_ID = #{prdtId} -- (자급제인 경우는 SKIP 처리)
+    </if>
+    <if test="orgnId == 'V000019481'">
+      AND ROWNUM = 1 -- (자급제인 경우는 1개만 조회)
+    </if>
+  </select>
+
+
+  <!-- /msp/mspSaleAgrmMst - 해당정책코드에 해당하는 약정개월정보 리스트 조회 (SELECT(MSP) : MSP_SALE_AGRM_MST) -->
+  <!-- SQL 메소드 변경 : listMspSaleAgrmMst -> selectMspSaleAgrmMst -->
+  <select id="selectMspSaleAgrmMst" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.MspSaleAgrmMst">
+        SELECT /* /msp/mspSaleAgrmMst : McpMspMapper.selectMspSaleAgrmMst 해당정책코드에 해당하는 약정개월정보 리스트 조회 */
+            RA.SALE_PLCY_CD,
+            RA.AGRM_TRM,
+            RA.REGST_ID,
+            RA.REGST_DTTM,
+            RA.RVISN_ID,
+            RA.RVISN_DTTM,
+            ORG.INST_NOM
+        FROM
+            MSP_SALE_AGRM_MST RA,
+            ORG_INST_NOM_MST ORG
+        WHERE
+            RA.SALE_PLCY_CD = #{salePlcyCd}
+          AND ORG.SALE_PLCY_CD = RA.SALE_PLCY_CD
+          AND ORG.INST_NOM = RA.AGRM_TRM
+          AND ORG.INST_NOM != 0
+        ORDER BY INST_NOM
+    </select>
+
+
+  <!-- /msp/mspRateMst - 요금제 정보 리스트 조회 (SELECT(MSP) : MSP_RATE_MST) -->
+  <!-- SQL 메소드 변경 : getMspRateMst -> selectMspRateMst -->
+  <select id="selectMspRateMst" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto">
+     SELECT /* /msp/mspRateMst : McpMspMapper.selectMspRateMst 요금제 정보 리스트 조회   */
+        RA.RATE_CD,                    --요금제코드
+        RA.APPL_END_DT,                    --적용종료일자
+        RA.APPL_STRT_DT,                   --적용시작일자
+        RA.RATE_NM,                    --요금제명
+        RA.RATE_GRP_CD,                    --요금제그룹코드
+        RA.PAY_CL_CD,                    --선후불구분
+        RA.RATE_TYPE,                    --요금제유형( ORG0008 )
+        RA.DATA_TYPE,                    --데이터유형( ORG0018 )
+        RA.BASE_AMT,                    --기본료
+        RA.FREE_CALL_CL_CD,                --망내외무료통화구분
+        RA.FREE_CALL_CNT,                  --무료통화건수
+        RA.NW_IN_CALL_CNT,                 --망내무료통화건수
+        RA.NW_OUT_CALL_CNT,                --망외무료통화건수
+        RA.FREE_SMS_CNT,                   --무료문자건수
+        RA.FREE_DATA_CNT,                  --무료데이터건수
+        RA.RMK,                    --비고
+        RA.REGST_ID,                    --등록자ID
+        RA.REGST_DTTM,                    --등록일시
+        RA.RVISN_ID,                    --수정자ID
+        RA.RVISN_DTTM,                    --수정일시
+        RA.ONLINE_TYPE_CD,                 --온라인유형코드
+        RA.AL_FLAG,                    --알요금제 구분자
+        RA.SERVICE_TYPE,                   --서비스유형
+        RA.CMNT,                    --요금제혜택
+        RA.JEHU_PROD_TYPE                  --요금제제휴처
+        --, RA.STTC_YN
+        , RA.ONLINE_CAN_YN
+        , RA.CAN_CMNT
+     FROM
+        MSP_RATE_MST RA
+     WHERE RATE_CD = #{rateCd}
+     </select>
+
+
+  <!-- /msp/sellUsimMgmtOrgnId - API 설명 (SELECT(MSP) : MSP_PARTNER_USIM_MST) -->
+  <!-- SQL 메소드 변경 : sellUsimMgmtOrgnId -> selectSellUsimMgmtOrgnId -->
+  <select id="selectSellUsimMgmtOrgnId" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT /* /msp/sellUsimMgmtOrgnId : McpMspMapper.selectSellUsimMgmtOrgnId */
+            ORGN_ID
+        FROM MSP_PARTNER_USIM_MST
+        WHERE USIM_NO = #{searchUsimNo}
+     </select>
+
+
+  <!-- /msp/mspSalePlcyMst - API 설명 (SELECT(MSP) : MSP_SALE_PLCY_MST) -->
+  <!-- SQL 메소드 변경 : getMspSalePlcyMst -> selectMspSalePlcyMst -->
+  <select id="selectMspSalePlcyMst" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto">
+    SELECT /* /msp/mspSalePlcyMst : McpMspMapper.selectMspSalePlcyMst */
+            PL.SALE_PLCY_CD ,                    --판매정책코드
+            PL.SALE_PLCY_NM,                    --판매정책명
+            PL.SALE_STRT_DTTM,                  --판매시작일시
+            PL.SALE_END_DTTM,                   --판매종료일시
+            PL.PLCY_TYPE_CD,                    --정책유형코드 M:오프라인, O:온라인
+            PL.ORGN_TYPE,                    --조직유형
+            PL.PLCY_SCTN_CD,                    --정책구분코드 01:단말, 02:USIM
+            PL.PRDT_SCTN_CD,                    --제품구분코   02:3G, 03:LTE
+            PL.APPL_SCTN_CD,                    --적용구분코드 O:개통일, R:접수일
+            PL.INST_RATE,                    --할부이자율
+            PL.NEW_YN,                    --신규여부
+            PL.MNP_YN,                    --번호이동여부
+            PL.HCN_YN,                    --기변여부
+            PL.HDN_YN,                    --우수기변여부
+            PL.CNFM_YN,                    --확정여부
+            PL.CNFM_ID,                    --확정자ID
+            PL.CNFM_DTTM,                    --확정일시
+            PL.REGST_ID,                    --등록자ID
+            PL.REGST_DTTM,                    --등록일시
+            PL.RVISN_ID,                    --수정자ID
+            PL.RVISN_DTTM,                    --수정일시
+            PL.SPRT_TP                    --지원금유형
+       FROM
+               MSP_SALE_PLCY_MST PL
+       WHERE
+               PL.SALE_PLCY_CD = #{salePlcyCd}
+    </select>
+
+
+  <!-- /msp/mspSaleSubsdMstList - 최저가를 구하기 위한 해당 상품의 요금제 정보 리스트를 조회 (SELECT(MSP) : MSP_SALE_SUBSD_MST, MSP_RATE_MST) -->
+  <select id="selectMspSaleSubsdMstListForLowPrice" resultType="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto" parameterType="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto">
+    SELECT /* /msp/mspSaleSubsdMstList : Phone_Query.selectMspSaleSubsdMstListForLowPrice 최저가를 구하기 위한 해당 상품의 요금제 정보 리스트를 조회 */
+    HNDST_AMT,               --단말금액(VAT포함)
+    SUBSD_AMT,               --공시지원금(VAT포함)
+    INST_AMT,                --할부원금(VAT포함)
+    INST_CMSN,               --할부수수료(VAT포함)
+    AGNCY_SUBSD_MAX,         --대리점보조금MAX(VAT포함)
+    AGNCY_SUBSD_AMT,         --대리점보조금(VAT포함)
+    SPRT_TP,                 --지원금유형
+    BASE_AMT,                --기본료
+    DC_AMT,                  --기본할인금액
+    ADD_DC_AMT,               --추가할인금액
+    RATE_CD,
+    PRDT_ID ,
+    AGRM_TRM
+    FROM
+    MSP_SALE_SUBSD_MST
+    WHERE 1=1
+    <if test="salePlcyCd != null and salePlcyCd != ''">
+      AND SALE_PLCY_CD  = #{salePlcyCd}   --정책코드 할인유형과 결합시 유니크
+    </if>
+    <if test="prdtId != null and prdtId != ''">
+      AND PRDT_ID = #{prdtId}             --상품ID
+    </if>
+    <if test="orgnId != null and orgnId != ''">
+      AND ORGN_ID = #{orgnId}             --조직코드
+    </if>
+    AND OLD_YN  = #{oldYn}              --중고여부
+    <if test="operType != null and operType != ''">
+      AND OPER_TYPE = #{operType}      --가입유형
+    </if>
+    <if test="rateCd != null and rateCd != ''">
+      AND RATE_CD = #{rateCd}
+    </if>
+    <choose>
+      <when test='noArgmYn == "Y"'>
+        <if test="agrmTrm !=null and agrmTrm != ''">
+          AND AGRM_TRM = #{agrmTrm}                    -- 약정기간 무약정0은 기본적으로 조회한다.
+        </if>
+      </when>
+      <otherwise>
+        <if test="agrmTrm !=null and agrmTrm != ''">
+          AND (AGRM_TRM = #{agrmTrm} or AGRM_TRM = '0')        -- 약정기간 무약정0은 기본적으로 조회한다.
+        </if>
+      </otherwise>
+    </choose>
+  </select>
+
+
+  <!-- /msp/mspSaleSubsdMstList - 최저가를 구하기 위한 해당 상품의 요금제 정보 리스트를 조회 (SELECT(MSP) : MSP_SALE_SUBSD_MST, MSP_RATE_MST) -->
+  <select id="selectMspSaleSubsdMstListWithRateInfo" resultMap="mspSaleSubsdMstMap" parameterType="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto">
+    SELECT /* /msp/mspSaleSubsdMstList : McpMspMapper.selectMspSaleSubsdMstListWithRateInfo 최저가를 구하기 위한 해당 상품의 요금제 정보 리스트를 조회 */
+    SALE_PLCY_CD
+    , RATE_CD_SU
+    , PRDT_ID
+    , OLD_YN
+    , AGRM_TRM
+    , OPER_TYPE
+    , ORGN_ID
+    , HNDST_AMT
+    , SUBSD_AMT
+    , INST_AMT
+    , INST_CMSN
+    , AGNCY_SUBSD_MAX
+    , AGNCY_SUBSD_AMT
+    , REGST_ID_SU
+    , REGST_DTTM_SU
+    , RVISN_ID_SU
+    , SPRT_TP
+    , DC_AMT
+    , ADD_DC_AMT
+    , RATE_CD_RA
+    , APPL_END_DT
+    , APPL_STRT_DT
+    , RATE_NM
+    , RATE_GRP_CD
+    , PAY_CL_CD
+    , RATE_TYPE
+    , DATA_TYPE
+    , BASE_AMT
+    , FREE_CALL_CL_CD
+    , FREE_CALL_CNT
+    , NW_IN_CALL_CNT
+    , NW_OUT_CALL_CNT
+    , FREE_SMS_CNT
+    , FREE_DATA_CNT
+    <if test='forFrontFastYn == "C"'>
+      , RMK
+    </if>
+    , REGST_ID
+    , REGST_DTTM
+    , RVISN_ID
+    , RVISN_DTTM
+    , ONLINE_TYPE_CD
+    , AL_FLAG
+    , CMNT
+    , SERVICE_TYPE
+    , PLCY_SCTN_CD
+    , ON_OFF_TYPE
+    , PAY_SORT
+    FROM (
+    SELECT
+    SU.SALE_PLCY_CD,            --판매정책코드
+    SU.RATE_CD AS RATE_CD_SU,    --요금제코드
+    SU.PRDT_ID,                 --제품ID
+    SU.OLD_YN,                  --중고여부
+    SU.AGRM_TRM,                --약정기간
+    SU.OPER_TYPE,               --업무유형
+    SU.ORGN_ID,                 --조직ID
+    SU.HNDST_AMT,               --단말금액(VAT포함)
+    SU.SUBSD_AMT,               --공시지원금(VAT포함)
+    SU.INST_AMT,                --할부원금(VAT포함)
+    SU.INST_CMSN,               --할부수수료(VAT포함)
+    SU.AGNCY_SUBSD_MAX,         --대리점보조금MAX(VAT포함)
+    SU.AGNCY_SUBSD_AMT,         --대리점보조금(VAT포함)
+    SU.REGST_ID AS REGST_ID_SU,     --등록자ID
+    SU.REGST_DTTM AS REGST_DTTM_SU, --등록일시
+    SU.RVISN_ID AS RVISN_ID_SU,     --수정자ID
+    SU.RVISN_DTTM AS RVISN_DTTM_SU, --수정일시
+    SU.SPRT_TP,                 --지원금유형
+    SU.DC_AMT,                  --기본할인금액
+    SU.ADD_DC_AMT,               --추가할인금액
+    RA.RATE_CD AS RATE_CD_RA,     --요금제코드
+    RA.APPL_END_DT,              --적용종료일자
+    RA.APPL_STRT_DT,             --적용시작일자
+    RA.RATE_NM,                  --요금제명
+    RA.RATE_GRP_CD,              --요금제그룹코드
+    RA.PAY_CL_CD,                --선후불구분
+    RA.RATE_TYPE,                --요금제유형( ORG0008 )
+    RA.DATA_TYPE,                --데이터유형( ORG0018 )
+    RA.BASE_AMT,                 --기본료
+    RA.FREE_CALL_CL_CD,          --망내외무료통화구분
+    RA.FREE_CALL_CNT,            --무료통화건수
+    RA.NW_IN_CALL_CNT,           --망내무료통화건수
+    RA.NW_OUT_CALL_CNT,          --망외무료통화건수
+    RA.FREE_SMS_CNT,             --무료문자건수
+    RA.FREE_DATA_CNT,            --무료데이터건수
+    <if test='forFrontFastYn == "C"'>
+      RA.RMK,                   --비고
+    </if>
+    RA.REGST_ID,                 --등록자ID
+    RA.REGST_DTTM,               --등록일시
+    RA.RVISN_ID,                 --수정자ID
+    RA.RVISN_DTTM,               --수정일시
+    RA.ONLINE_TYPE_CD,           --온라인유형코드
+    RA.AL_FLAG,                  --알요금제 구분자
+    RA.CMNT,                    -- 요금제혜택
+    RA.SERVICE_TYPE ,             --서비스유형
+    #{plcySctnCd}  AS PLCY_SCTN_CD  ,--정책구분코드(01:단말,02:유심)
+    #{onOffType}   AS ON_OFF_TYPE ,
+    NVL(PAY_SORT,'9999') PAY_SORT  -- 관리자 정렬 기준
+    FROM
+    MSP_SALE_SUBSD_MST SU
+    , MSP_RATE_MST RA
+    , (
+    SELECT * FROM MCP_USIM_PROD_SORT
+    WHERE 1=1
+    <choose>
+      <when test="salePlcyCd != null and salePlcyCd != ''">
+        AND SALE_PLCY_CD  = #{salePlcyCd}
+      </when>
+      <otherwise>
+        AND 1 = 0
+      </otherwise>
+    </choose>
+    AND PRDT_ID = #{prdtId}
+    ) PR
+    WHERE
+    1=1
+    AND SU.RATE_CD = RA.RATE_CD
+    AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN RA.APPL_STRT_DT AND RA.APPL_END_DT -- 요금제 기간
+    AND RA.RATE_CD = PR.RATE_CD(+)
+    <if test="salePlcyCd != null and salePlcyCd != ''">
+      AND SU.SALE_PLCY_CD  = #{salePlcyCd}    --정책코드 할인유형과 결합시 유니크
+    </if>
+    <if test="payClCd != null and payClCd != ''">
+      AND RA.PAY_CL_CD = #{payClCd}
+    </if>
+    AND SU.PRDT_ID = #{prdtId}              --상품ID
+    AND OLD_YN  = #{oldYn}              --중고여부
+    AND ORGN_ID = #{orgnId}             --조직코드
+    <if test="operType != null and operType != ''">
+      AND OPER_TYPE = #{operType}      --가입유형
+    </if>
+    <if test="rateCd != null and rateCd != ''">
+      AND SU.RATE_CD = #{rateCd}      --요금제코드
+    </if>
+    <choose>
+      <when test='noArgmYn == "Y"'>
+        <if test="agrmTrm !=null and agrmTrm != ''">
+          AND AGRM_TRM = #{agrmTrm}
+        </if>
+      </when>
+      <otherwise>
+        <if test="agrmTrm !=null and agrmTrm != ''">
+          AND (AGRM_TRM = #{agrmTrm} or AGRM_TRM = '0')        -- 약정기간 무약정0은 기본적으로 조회한다.
+        </if>
+      </otherwise>
+    </choose>
+    <if test="designYn == null and designYn ==''">
+      AND NOT EXISTS (
+      SELECT DTL_CD FROM MCP_MNG.NMCP_CD_DTL@DL_MCP
+      WHERE CD_GROUP_ID = 'RATELIMIT'
+      AND EXPNSN_STR_VAL1 = '0'
+      AND EXPNSN_STR_VAL2 ='999'
+      AND EXPNSN_STR_VAL3 ='N'
+      AND DTL_CD =  SU.RATE_CD
+      )
+    </if>
+    )A
+    WHERE 1=1
+    <if test='noArgmYn != "Y" and agrmTrm !=null and agrmTrm != ""' >
+      AND (
+      (AGRM_TRM='0'AND RATE_TYPE='02')
+      OR (AGRM_TRM !='0' and RATE_TYPE='01')
+      OR RATE_TYPE='00'
+      )
+    </if>
+    ORDER BY RATE_NM
+  </select>
+
+
+  <resultMap type="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto" id="mspSaleSubsdMstPromotionMap" extends="mspSaleSubsdMstMap">
+    <association property="promotionDcAmt"  javaType="int" column="rateCd=RATE_CD_SU,orgnId=ORGN_ID,operType=OPER_TYPE,agrmTrm=AGRM_TRM,plcySctnCd=PLCY_SCTN_CD,onOffType=ON_OFF_TYPE}" select="getromotionDcAmt" />
+  </resultMap>
+
+
+  <!-- /msp/juoSubIngoCount - API 설명 (SELECT(MSP) : MSP_JUO_SUB_INFO) -->
+  <!-- SQL 메소드 변경 : juoSubIngoCount -> selectJuoSubIngoCount -->
+  <select id="selectJuoSubIngoCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+        <![CDATA[
+        SELECT /* /msp/juoSubIngoCount  : McpMspMapper.selectJuoSubIngoCount */
+            COUNT(*)
+        FROM MSP_JUO_SUB_INFO
+        WHERE SUBSCRIBER_NO = #{subscriberNo}
+            AND SUB_STATUS <> 'C'
+        ]]>
+     </select>
+
+
+  <!-- /msp/mspCombRateMapp - API 설명 (SELECT(MSP) : MSP_COMB_RATE_MAPP) -->
+  <select id="selectMspCombRateMapp" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.MyCombinationResDto">
+          SELECT /* /msp/mspCombRateMapp : McpMspMapper.selectMspCombRateMapp 결합요금제에 따른 부가서비스 코드조회   */
+                COMB.P_RATE_CD -- 요금제코드
+                , COMB.R_RATE_CD -- 부가서비스코드
+                ,(SELECT RATE_NM FROM MSP_RATE_MST WHERE SERVICE_TYPE='R' AND RATE_CD = COMB.R_RATE_CD) AS R_RATE_NM
+                ,(SELECT RATE_NM FROM MSP_RATE_MST WHERE SERVICE_TYPE='P' AND RATE_CD = #{pRateCd}) AS P_RATE_NM
+            FROM MSP_COMB_RATE_MAPP COMB
+            WHERE 1=1
+            AND COMB.P_RATE_CD = #{pRateCd}
+            AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN COMB.APP_START_DT AND COMB.APP_END_DT
+            AND ROWNUM =1
+    </select>
+
+
+  <!-- /msp/customerSsn - 계약번호의 주민번호 조회 (SELECT(MSP) : MSP_JUO_CUS_INFO, MSP_JUO_SUB_INFO) -->
+  <!-- SQL 메소드 변경 : getCustomerSsn -> selectCustomerSsn -->
+  <select id="getCustomerSsn" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT   /* /msp/customerSsn : McpMspMapper.selectCustomerSsn 계약번호의 주민번호 */
+            CUSTOMER_SSN
+        FROM
+            MSP_JUO_CUS_INFO T1
+            , MSP_JUO_SUB_INFO T2
+        WHERE
+            T1.CUSTOMER_ID = T2.CUSTOMER_ID
+            AND T1.CUSTOMER_TYPE = 'I'
+            AND T1.CUST_IDNT_NO_IND_CD IN ('01','05')
+        AND T2.CONTRACT_NUM = #{contractNum}
+     </select>
+
+
+  <!-- /msp/getromotionDcAmt - API 설명 (SELECT(MSP/MCP) : VW_CHRG_PRMT_DTL, MCP_ADDITION@DL_MCP) -->
+  <!-- SQL 메소드 변경 : getromotionDcAmt -> selectPromotionDcAmt -->
+  <select id="selectPromotionDcAmt" resultType="java.lang.Integer" parameterType="com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto">
+    SELECT  /* /msp/getromotionDcAmt : McpMspMapper.selectPromotionDcAmt */
+    NVL(SUM(RANTAL),0)
+    FROM (
+    SELECT
+    CEIL(-RANTAL * 1.1) AS RANTAL
+    FROM
+    VW_CHRG_PRMT_DTL A
+    , MCP_ADDITION@DL_MCP B
+    WHERE 1=1
+    AND A.ADDITION_KEY = B.ADDITION_KEY
+    AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN A.STRT_DT AND A.END_DT
+    AND A.ORGN_ID = #{orgnId} --접점코드
+    <choose>
+      <when test="plcySctnCd == '01'" >
+        AND   A.REQ_BUY_TYPE IN('MM','AL')
+      </when>
+      <when test="plcySctnCd == '02'" >
+        AND    A.REQ_BUY_TYPE IN('UU','AL')
+      </when>
+      <otherwise>
+        AND    1 = 0
+      </otherwise>
+    </choose>
+    <choose>
+      <when test="agrmTrm == 0" >
+        AND     A.ENGG_CNT_0 = 'Y'
+      </when>
+      <when test="agrmTrm == 12" >
+        AND     A.ENGG_CNT_12 = 'Y'
+      </when>
+      <when test="agrmTrm == 18" >
+        AND     A.ENGG_CNT_18 = 'Y'
+      </when>
+      <when test="agrmTrm == 24" >
+        AND     A.ENGG_CNT_24 = 'Y'
+      </when>
+      <when test="agrmTrm == 30" >
+        AND     A.ENGG_CNT_30 = 'Y'
+      </when>
+      <when test="agrmTrm == 36" >
+        AND     A.ENGG_CNT_36 = 'Y'
+      </when>
+      <otherwise>
+        AND    1 = 0
+      </otherwise>
+    </choose>
+    <choose>
+      <when test="operType == 'MNP3'" >
+        AND     A.MNP_YN = 'Y'
+      </when>
+      <when test="operType == 'NAC3'" >
+        AND     A.NAC_YN = 'Y'
+      </when>
+      <otherwise>
+        AND    1 = 0
+      </otherwise>
+    </choose>
+    AND     A.RATE_CD = #{rateCd} --요금제코드
+    AND     A.ON_OFF_TYPE = #{onOffType} --온라인오프라인구분
+    AND     A.USG_YN = 'Y'
+    )
+  </select>
+
+</mapper>

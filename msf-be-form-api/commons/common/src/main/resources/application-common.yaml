@@ -1,10 +1,10 @@
-#### Spring
+## Spring
 spring:
-  #### Basic
+  ## Basic
   base-package: com.ktmmobile.msf
   lifecycle.timeout-per-shutdown-phase: 1m
 
-  #### DataSource
+  ## DataSource
   datasource:
     groups:
       ## 스마트서식지
@@ -60,9 +60,9 @@ spring:
         prepStmtCacheSqlLimit: 2048
         useServerPrepStmts: true
 
-  #### Spring Data
+  ## Spring Data
   data:
-    #### Redis
+    ## Redis
     redis:
       host:
       port: 6379
@@ -78,9 +78,9 @@ spring:
             dynamic-refresh-sources: true
             adaptive: false
 
-  #### TaskExecutor
+  ## TaskExecutor
   task:
-    #### @Scheduled
+    ## @Scheduled
     scheduling:
       pool.size: 5
       thread-name-prefix: scheduling-
@@ -88,7 +88,7 @@ spring:
         await-termination: true
         await-termination-period: 1m
 
-    #### @Async
+    ## @Async
     execution:
       pool:
         core-size: 20
@@ -99,40 +99,68 @@ spring:
         await-termination: true
         await-termination-period: 1m
 
-  #### Servlet Multipart Handling
-  servlet:
-    multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
 
 
-
-#### Internal Service
-internal-service:
-  services:
-    admin:
-      url: http://smartform-admin:8080
-    batch:
-      url: http://smartform-batch:8080
-
-
-
-#### External Service
-external-service:
-  services:
-    m-platform:
-      url: https://m-platform.kt.com
-
-
-#### Scheduling
+## Scheduling
 scheduling:
   enabled: true
 
 
 
-#### Logging
+## Startup Load
+startup:
+  load:
+    exclude: []
+
+
+
+## Logging
 logging:
   pattern:
     correlation: "[%X{traceId}-%X{spanId}][%X{clientId}] "
   level:
     com.ktmmobile.msf: info
+
+
+
+---
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+logging:
+  on-ready:
+    jdbc:
+      sqltiming: debug
+  level:
+    com.ktmmobile.msf: debug
+    jdbc:
+      sqlonly: off
+      sqltiming: off
+      resultsettable: debug
+      audit: off
+      resultset: off
+      connection: off
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+## 별도 파일에 프로퍼티 정의: application-common-local.yaml

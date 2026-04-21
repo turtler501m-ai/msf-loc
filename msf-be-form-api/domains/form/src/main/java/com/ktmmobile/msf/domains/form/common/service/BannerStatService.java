@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.service;
 
-import com.ktmmobile.msf.domains.form.common.dto.db.BannAccessTxnDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannAccessTxnDto;
 
 /**
  * 배너 통계 서비스 인터페이스 스텁

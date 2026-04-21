@@ -15,6 +15,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import com.ktmmobile.msf.commons.common.exception.CommonException;
 import com.ktmmobile.msf.commons.common.exception.CustomErrorCode;
+import com.ktmmobile.msf.commons.common.exception.DomainException;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.BindErrorResponse;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponseType;
@@ -154,6 +155,9 @@ public class ResponseUtils {
     }
 
     private static String getResponseMessage(CommonResponseType type, Exception e) {
+        if (e instanceof DomainException domainEx) {
+            return domainEx.getMessage();
+        }
         if (responseHandlingProperties.exceptionEnabled()) {
             return getExceptionMessage(e);
         }

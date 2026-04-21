@@ -7,7 +7,7 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 import com.ktmmobile.msf.domains.form.form.common.dto.UsimMspPlcyDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.UsimMspOperTypeDto;
-import com.ktmmobile.msf.domains.form.form.common.dto.UsimMspRateDto;
+import com.ktmmobile.msf.domains.form.common.dto.UsimMspRateDto;
 
 /**
  * @Class Name : PhoneProdBasDto

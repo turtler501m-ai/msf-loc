@@ -1,17 +1,12 @@
 package com.ktmmobile.msf.domains.form.common.mplatform.vo;
 
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.jdom.Element;
 
-import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
-import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
-import com.ktmmobile.msf.domains.form.common.util.StringUtil;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpBkInfoDto;
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 
 public class MpSuspenPosHisVO extends CommonXmlVO{

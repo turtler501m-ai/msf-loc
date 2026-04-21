@@ -17,7 +17,7 @@ public enum CommonResponseType {
     METHOD_NOT_ALLOWED("0405", "해당 HTTP 메서드를 허용하지 않음", HttpStatus.METHOD_NOT_ALLOWED, StatusCodeRelated.RELATED),
     CONFLICT("0409", "충돌 발생", HttpStatus.CONFLICT, StatusCodeRelated.RELATED),
     UNSUPPORTED_MEDIA_TYPE("0415", "미디어 타입을 지원하지 않음", HttpStatus.UNSUPPORTED_MEDIA_TYPE, StatusCodeRelated.RELATED),
-    DOMAIN_ERROR("6000", "도메인 처리 오류", HttpStatus.INTERNAL_SERVER_ERROR, StatusCodeRelated.NOT_RELATED),
+    DOMAIN_ERROR("6000", "도메인 처리 오류", HttpStatus.BAD_REQUEST, StatusCodeRelated.NOT_RELATED),
     UNKNOWN_ERROR("9999", "알 수 없는 오류", HttpStatus.INTERNAL_SERVER_ERROR, StatusCodeRelated.RELATED);
 
     private final String code;

@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.domains.form.form.newchange.dto;
 
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 
 import org.apache.commons.lang.StringEscapeUtils;
 

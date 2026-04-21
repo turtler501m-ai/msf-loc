@@ -1,20 +1,19 @@
 package com.ktmmobile.msf.domains.form.form.newchange.service;
 
-import java.util.Optional;
-
+import com.ktmmobile.msf.commons.common.exception.NotFoundException;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoDto;
+import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommReadMapper;
+import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import com.ktmmobile.msf.commons.common.exception.NotFoundException;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommMapper;
-import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class FormCommService {
 
-    private final FormCommMapper formCommMapper;
+    private final FormCommReadMapper formCommReadMapper;
     private final NewChangeReadMapper newChangeReadMapper;
 
     //SQ_RCP_RES_NO_01 생성 ( MSF_REQUEST.RES_NO )
@@ -35,9 +34,10 @@ public class FormCommService {
         return newChangeReadMapper.getSmartCustRequestSeq(); //스마트에서 오픈전까지만 임시로 사용
     }
 
-    public AgentInfoDto getAgentInfo(String cntpntCd) {
-        return Optional.ofNullable(formCommMapper.selectAgentInfo(cntpntCd))
-            .orElseThrow(() -> new NotFoundException("조회하고자 하는 매장코드를 입력해주세요. cntpntCd:" + cntpntCd));
+    //사용자조직에 해당하는 대리점 조회
+    public AgentInfoDto getAgentInfo(String shopOrgnId) {
+        return Optional.ofNullable(formCommReadMapper.selectAgentInfo(shopOrgnId))
+                .orElseThrow(() -> new NotFoundException("조회하고자 하는 매장코드를 입력해주세요. shopOrgnId:" + shopOrgnId));
     }
 
 }

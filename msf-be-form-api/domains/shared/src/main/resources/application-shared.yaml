@@ -1,0 +1,55 @@
+#### Common Profile
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+address:
+  api:
+    url: 'http://www.juso.go.kr/addrlink/addrLinkApi.do'
+    key: 'U01TX0FVVEgyMDE2MDIyMzEwMTQ1MDA='
+    coord-key: 'U01TX0FVVEgyMDIxMDcyNzIwMTExMTExMTQ1OTg='
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+address:
+  api:
+    url: 'http://10.20.28.38:18810/app/search/addrSearchApi.do'
+    key: 'U01TX0FVVEgyMDE2MDIyMzEwMTQ1MDA='
+    coord-key: 'U01TX0FVVEgyMDIxMDcyNzIwMTExMTExMTQ1OTg='
+
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+address:
+  api:
+    url: 'http://10.20.28.38:18810/app/search/addrSearchApi.do'
+    key: 'U01TX0FVVEgyMDE2MDIyMzEwMTQ1MDA='
+    coord-key: 'U01TX0FVVEgyMDIxMDcyNzIwMTExMTExMTQ1OTg='
+
+
+
+---
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+address:
+  api:
+    url: 'http://10.20.28.87:18810/app/search/addrSearchApi.do'
+    key: 'U01TX0FVVEgyMDE2MDIyMzEwMTQ1MDA='
+    coord-key: 'U01TX0FVVEgyMDIxMDcyNzIwMTExMTExMTQ1OTg='
+
+

@@ -51,7 +51,6 @@ public class ProductSearchCondition {
     private List<ProductCategoryDto> listPhoneDto; //단말 목록
 
 
-    private String searchProductCategoryTypeCd;
-    private String searchProductCategoryId;
-    private String storCd; //매장코드 - 휴대폰 재고조회 파라메타 (추후 통일할 필요있음)
+    private String prodCtgTypeCd; //상품카테고리 구분 코드 ( 요금: P , 부가서비스: R , 안심보험: I)
+    //private String prodCtgId; //상품카테고리의 아이디
 }

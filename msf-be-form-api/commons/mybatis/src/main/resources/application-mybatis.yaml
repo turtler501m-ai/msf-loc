@@ -1,4 +1,4 @@
-## Common Profile
+#### Common Profile
 mybatis:
   datasource:
     smartform:
@@ -9,6 +9,7 @@ mybatis:
         - classpath*:com/ktmmobile/msf/commons/mybatis/mapper/*.xml  # CommonMapper
         - classpath*:com/ktmmobile/msf/domains/**/adapter/repository/mybatis/smartform/mapper/*.xml
         - classpath*:com/ktmmobile/msf/domains/**/repository/smartform/*.xml
+        - classpath*:com/ktmmobile/msf/domains/**/mapper/*.xml  # legacy mappers (FCommonDaoImpl 등)
     msp:
       mapper-scan-packages:
         - com.ktmmobile.msf.domains.**.adapter.repository.mybatis.msp.mapper
@@ -17,7 +18,7 @@ mybatis:
         - classpath*:com/ktmmobile/msf/commons/mybatis/mapper/*.xml  # CommonMapper
         - classpath*:com/ktmmobile/msf/domains/**/adapter/repository/mybatis/msp/mapper/*.xml
         - classpath*:com/ktmmobile/msf/domains/**/repository/msp/*.xml
-        - classpath*:com/ktmmobile/msf/domains/**/repository/mcp/*.xml
+        - classpath*:com/ktmmobile/msf/domains/**/mapper/*.xml  # legacy mappers (EventBoardMapper 등)
     mcp:
       mapper-scan-packages:
         - com.ktmmobile.msf.domains.**.repository.mcp
@@ -38,27 +39,27 @@ mybatis:
 
 
 ---
-## LOCAL Profile
-spring:
-  config.activate.on-profile: local
-
-
-
----
-## PRD Profile
+#### PRD Profile
 spring:
   config.activate.on-profile: prd
 
 
 
 ---
-## STG Profile
+#### STG Profile
 spring:
   config.activate.on-profile: stg
 
 
 
 ---
-## DEV Profile
+#### DEV Profile
 spring:
   config.activate.on-profile: dev
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local

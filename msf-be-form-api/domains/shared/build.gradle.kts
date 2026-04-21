@@ -7,4 +7,7 @@ dependencies {
     implementation(project(":commons:websecurity"))
     implementation(project(":commons:mybatis"))
     implementation(project(":commons:auditing"))
+    implementation(project(":commons:file"))
+
+    implementation(project(":domains:policy"))
 }

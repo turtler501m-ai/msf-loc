@@ -1,0 +1,78 @@
+#### Common Profile
+file:
+  object-storage:
+    endpoint: https://obj-e-1.ktcloud.com
+    region: standard
+    base-path: files
+    credentials:
+      access-key: ${OBJECT_STORAGE_ACCESS_KEY}
+      secret-key: ${OBJECT_STORAGE_SECRET_KEY}
+    bucket:  ## 환경별 설정
+    configurations:
+      max-connections: 200
+      connection-timeout: 5000
+      socket-timeout: 30000
+      api-call-timeout: 30000
+  local-filesystem:
+    base-path: /app_data/files
+
+  policy:
+    max-file-size: 10MB
+    allowed-extensions:
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - tif
+      - tiff
+    allowed-mime-types:
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/tiff
+
+
+
+---
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+file:
+  object-storage:
+    bucket: msf-storage-prd
+
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+file:
+  object-storage:
+    bucket: msf-storage-stg
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+file:
+  object-storage:
+    bucket: msf-storage-dev
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+file:
+  object-storage:
+    bucket: msf-storage-dev
+  local-filesystem:
+    base-path: c:/tmp/msf-files

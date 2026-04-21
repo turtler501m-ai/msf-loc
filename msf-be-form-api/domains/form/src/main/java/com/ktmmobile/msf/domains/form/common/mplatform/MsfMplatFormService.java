@@ -25,7 +25,7 @@ import com.ktmmobile.msf.domains.form.common.dto.MoscPymnReqDto;
 import com.ktmmobile.msf.domains.form.common.dto.MoscRemindSmsDto;
 import com.ktmmobile.msf.domains.form.common.dto.NowDlvryReqDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant;
@@ -61,8 +61,8 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscCombStatMgmtInfoOu
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscRetvIntmMdlSpecInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscRetvIntmOrrgInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscTrtOmdIntmVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpAddSvcInfoDto;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpAddSvcInfoParamDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoParamDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpBilEmailBillReqInfo;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpBilEmailChgVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpBilPrintInfoVO;
@@ -70,9 +70,9 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpCommonXmlVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpCustInfoAgreeVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarChangewayInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarChgWayChgVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonBillingInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonBillingInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonBillingInfoVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonDetailInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonDetailInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonDetailInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarPaymentInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
@@ -97,14 +97,14 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSuspenCnlPosInfoInVO
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSuspenPosHisVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSuspenPosInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSvcContIpinVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpTelTotalUseTimeDto;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpTelTotalUseTimeMobileDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpTelTotalUseTimeDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpTelTotalUseTimeMobileDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpTelTotalUseTimeMobileVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpTelTotalUseTimeVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpVoidTypeVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.PaymentInfoVO;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
@@ -112,8 +112,8 @@ import com.ktmmobile.msf.domains.form.common.util.ObjectUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.EsimDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.JuoSubInfoDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpServiceAlterTraceDto;
+import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
 
@@ -503,18 +503,13 @@ public class MsfMplatFormService {
     public MpFarRealtimePayInfoVO farRealtimePayInfo(String ncn, String ctn, String custId) throws SelfServiceException, SocketTimeoutException {
         MpFarRealtimePayInfoVO vo = new MpFarRealtimePayInfoVO();
         HashMap<String, String> param = getParamMap(ncn, ctn, custId, "X18");
-        logger.debug("X18 farRealtimePayInfo callService start. ncn={}, ctn={}, custId={}, serverLocation={}",
-            ncn, ctn, custId, serverLocation);
 
-        //if ("LOCAL".equals(serverLocation) || (serverLocation != null && serverLocation.startsWith("LOCAL"))) {
-        //    getVo(18, vo);
+        if ("LOCAL".equals(serverLocation)) {
+            getVo(18, vo);
             //mplatFormServerAdapter.callService(param, vo);
-        //} else {
+        } else {
             mplatFormServerAdapter.callService(param, vo);
-        //}
-        int listSize = vo.getList() == null ? 0 : vo.getList().size();
-        logger.debug("X18 farRealtimePayInfo callService done. success={}, searchDay={}, searchTime={}, sumAmt={}, listSize={}",
-            vo.isSuccess(), vo.getSearchDay(), vo.getSearchTime(), vo.getSumAmt(), listSize);
+        }
 
         return vo;
     }

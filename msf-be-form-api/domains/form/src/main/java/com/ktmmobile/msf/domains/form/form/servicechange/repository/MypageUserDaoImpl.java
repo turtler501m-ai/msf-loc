@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AgreeDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.CodeVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.UserVO;
 

@@ -12,19 +12,22 @@ import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.commoncode.application.dto.CommonCodesRequest;
 import com.ktmmobile.msf.domains.commoncode.application.dto.CommonCodesResponse;
-import com.ktmmobile.msf.domains.commoncode.application.port.in.GroupCommonCodeReader;
+import com.ktmmobile.msf.domains.commoncode.application.port.in.CommonCodeReader;
 
 @RestController
 @RequestMapping("/api/common-codes")
 @RequiredArgsConstructor
 public class CommonCodeController {
 
-    private final GroupCommonCodeReader groupCommonCodeReader;
+    private final CommonCodeReader commonCodeReader;
 
     @PostMapping("/list")
     public CommonResponse<CommonCodesResponse> getCommonCodeList(
         @RequestBody @Valid CommonCodesRequest request
     ) {
-        return ResponseUtils.ok(groupCommonCodeReader.getCommonCodes(request.groupIds()));
+        return ResponseUtils.ok(CommonCodesResponse.toResponse(
+            commonCodeReader.getCommonCodes(request),
+            request.shouldIncludeDetail()
+        ));
     }
 }

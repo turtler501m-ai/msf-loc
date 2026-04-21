@@ -15,11 +15,11 @@ import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscFarPriceResDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscWireUseTimeInfoRes;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.RegSvcChgRes;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpCommonXmlVO;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspSaleSubsdMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.FarPricePlanResDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MapWrapper;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpFarPriceDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpServiceAlterTraceDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.RateAdsvcCtgBasDTO;
 

@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.ktmmobile.msf.domains.form.common.dto.*;
-import com.ktmmobile.msf.domains.form.common.dto.db.MspCommDatPrvTxnDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.MspSmsTemplateMstDto;
-import com.ktmmobile.msf.domains.form.common.dto.db.NmcpCdDtlDto;
-import com.ktmmobile.msf.domains.form.common.mspservice.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspCommDatPrvTxnDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSmsTemplateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 
 
 /**

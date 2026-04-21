@@ -4,7 +4,7 @@ spring:
       - org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration
       - org.springframework.boot.data.redis.autoconfigure.DataRedisRepositoriesAutoConfiguration
 
-  #### DataSource
+  ## DataSource
   datasource:
     groups:
       ## 스마트서식지
@@ -34,6 +34,7 @@ spring:
 
       ## MCP (레거시 M포탈)
       mcp:
+        type: STANDALONE
         standalone:
           url: jdbc:log4jdbc:oracle:thin:@10.220.71.231:1521:MCPDEVRN
           username: MCP_WAS
@@ -48,9 +49,9 @@ spring:
       idle-timeout: 59000
       keepalive-time: 20000
 
-  #### Spring Data
+  ## Spring Data
   data:
-    #### Redis
+    ## Redis
     redis:
       enabled: false
       host:
@@ -61,7 +62,7 @@ spring:
 api:
   interface:
     server: http://localhost:9380
-    use-mcp: true   # true: mcp-api 호출 (연결실패 시 MSP fallback), false: MSP 직접 조회
+    use-mcp: false   # true: mcp-api 호출 (연결실패 시 MSP fallback), false: MSP 직접 조회
 
 management:
   health:
@@ -69,18 +70,8 @@ management:
       enabled: false
 
 
-#### Internal Service
-internal-service:
-  services:
-    admin:
-      url: http://localhost:8180
-    batch:
-      url: http://localhost:8280
 
-
-
-
-#### Logging
+## Logging
 logging:
   pattern:
     correlation: "[%X{clientId}] "
@@ -99,7 +90,7 @@ logging:
 
 
 
-#### Jasypt
+## Jasypt
 jasypt:
   encryptor:
     password: ${JASYPT_ENCRYPTOR_PASSWORD}

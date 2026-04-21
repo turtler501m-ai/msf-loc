@@ -18,7 +18,7 @@ import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.NiceLogDto;
 import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageUserService;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfNicePinService;

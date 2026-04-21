@@ -8,16 +8,13 @@
     SELECT
       cd_group_id AS groupId,
       dtl_cd AS code,
-      dtl_cd_nm AS codeName,
+      dtl_cd_nm AS title,
       use_yn AS useYn,
       dtl_cd_abbr_nm AS "detail.abbrName",
-      dtl_cd_desc AS "detail.description",
-      up_grp_cd AS "detail.upperGroupId",
       sort_odrg AS "detail.sortOrder",
       expnsn_str_val1 AS "detail.etcValue1",
       expnsn_str_val2 AS "detail.etcValue2",
       expnsn_str_val3 AS "detail.etcValue3",
-      file_path_nm AS "detail.filePathName",
       pstng_start_date AS "detail.startDate",
       pstng_end_date AS "detail.endDate"
     FROM msf_cd_dtl

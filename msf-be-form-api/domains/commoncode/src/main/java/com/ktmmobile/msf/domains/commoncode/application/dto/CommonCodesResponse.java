@@ -8,8 +8,6 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 
-import com.ktmmobile.msf.domains.commoncode.domain.entity.CommonCode;
-
 public class CommonCodesResponse extends AbstractMap<String, List<CommonCodeItemResponse>> {
 
     private final Map<String, List<CommonCodeItemResponse>> commonCodesByGroupId;
@@ -18,12 +16,19 @@ public class CommonCodesResponse extends AbstractMap<String, List<CommonCodeItem
         this.commonCodesByGroupId = Map.copyOf(commonCodesByGroupId);
     }
 
-    public static CommonCodesResponse from(Map<String, List<CommonCode>> commonCodesByGroupId) {
-        Map<String, List<CommonCodeItemResponse>> response = commonCodesByGroupId.entrySet()
+    public static CommonCodesResponse toResponse(
+        CommonCodeGroups commonCodeGroups,
+        boolean includeDetail
+    ) {
+        Map<String, List<CommonCodeItemResponse>> response = commonCodeGroups.values()
+            .entrySet()
             .stream()
             .collect(Collectors.toMap(
                 Map.Entry::getKey,
-                entry -> entry.getValue().stream().map(CommonCodeItemResponse::of).toList(),
+                entry -> entry.getValue()
+                    .stream()
+                    .map(commonCode -> CommonCodeItemResponse.toResponse(commonCode, includeDetail))
+                    .toList(),
                 (left, _) -> left,
                 LinkedHashMap::new
             ));

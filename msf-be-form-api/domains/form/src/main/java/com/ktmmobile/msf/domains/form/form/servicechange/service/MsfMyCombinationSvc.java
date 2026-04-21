@@ -7,7 +7,7 @@ import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.*;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpReqCombineDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyCombinationReqDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyCombinationResDto;
+import com.ktmmobile.msf.domains.form.common.dto.MyCombinationResDto;
 
 import java.net.SocketTimeoutException;
 import java.util.List;

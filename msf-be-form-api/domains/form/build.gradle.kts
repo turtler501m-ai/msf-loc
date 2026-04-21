@@ -18,8 +18,12 @@ dependencies {
     implementation(project(":commons:common"))
     implementation(project(":commons:websecurity"))
     implementation(project(":commons:mybatis"))
+    implementation(project(":commons:auditing"))
+
+    implementation(project(":domains:commoncode"))
 
     //local 구동을 위한 임시 추가
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.apache.commons:commons-lang3:3.12.0")
     implementation("commons-lang:commons-lang:2.6")
     implementation("jakarta.xml.bind:jakarta.xml.bind-api:3.0.1")

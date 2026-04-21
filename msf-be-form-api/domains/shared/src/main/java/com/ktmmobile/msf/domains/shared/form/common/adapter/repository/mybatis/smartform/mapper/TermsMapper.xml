@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.shared.form.common.adapter.repository.mybatis.smartform.mapper.TermsMapper">
+
+  <select id="selectTermsGroup" resultType="com.ktmmobile.msf.domains.shared.form.common.domain.entity.TermsGroup">
+    select cd_group_id
+         , cd_group_nm
+         , cd_group_desc
+         , expnsn_str_val1
+         , expnsn_str_val2
+         , expnsn_str_val3
+      from msf_cd_group_bas
+     where cd_group_id = #{groupCode}
+       and use_yn = 'Y'
+       and to_char(now(), 'YYYYMMDDHH24MISS') between pstng_start_date and pstng_end_date
+  </select>
+
+  <select id="selectListTerms" resultType="com.ktmmobile.msf.domains.shared.form.common.domain.entity.TermsItem">
+    select cd_group_id
+         , dtl_cd
+         , dtl_cd_nm
+         , dtl_cd_abbr_nm
+         , dtl_cd_desc
+         , up_grp_cd
+         , sort_odrg
+         , expnsn_str_val1
+         , expnsn_str_val2
+         , expnsn_str_val3
+         , file_path_nm
+      from msf_cd_dtl
+     where cd_group_id = #{groupCode}
+       and use_yn = 'Y'
+       and to_char(now(), 'YYYYMMDDHH24MISS') between pstng_start_date and pstng_end_date
+     order by sort_odrg, dtl_cd
+  </select>
+</mapper>

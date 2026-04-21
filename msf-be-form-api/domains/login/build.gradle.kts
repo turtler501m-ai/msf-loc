@@ -17,6 +17,8 @@ dependencies {
     implementation(project(":commons:mybatis"))
     implementation(project(":commons:auditing"))
 
+    implementation(project(":domains:policy"))
+
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.security:spring-security-oauth2-jose")
 }

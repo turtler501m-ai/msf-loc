@@ -2,8 +2,8 @@ package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
 import java.text.ParseException;
 
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonBillingInfoDto;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonDetailInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonBillingInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonDetailInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO;
 

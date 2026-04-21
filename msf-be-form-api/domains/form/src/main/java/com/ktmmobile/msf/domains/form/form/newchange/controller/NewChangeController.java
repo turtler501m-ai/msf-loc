@@ -1,23 +1,18 @@
 package com.ktmmobile.msf.domains.form.form.newchange.controller;
 
-import java.util.List;
+import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
+import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
+import com.ktmmobile.msf.domains.form.form.newchange.service.FormCommService;
+import com.ktmmobile.msf.domains.form.form.newchange.service.NewChangeService;
 import jakarta.validation.Valid;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
-import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.service.FormCommService;
-import com.ktmmobile.msf.domains.form.form.newchange.service.NewChangeService;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/form")
@@ -48,7 +43,7 @@ public class NewChangeController {
     //대리점정보 조회 (조건 : 매장코드)
     @PostMapping("/agent/list")
     public CommonResponse<AgentInfoDto> getAgentInfo(@RequestBody @Valid AgentInfoRequest request) {
-        return ResponseUtils.ok(formCommService.getAgentInfo(request.cntpntCd()));
+        return ResponseUtils.ok(formCommService.getAgentInfo(request.shopOrgnId()));
     }
 
     //신청서 진입

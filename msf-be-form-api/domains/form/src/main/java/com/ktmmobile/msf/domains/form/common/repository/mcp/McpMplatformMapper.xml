@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="McpMplatformMapper">
+
+  <!-- /mPlatform/checkMpCallCount - 당일 MP호출 수 (SELECT(MCP) : MCP_MPLATFORM_LOG@DL_MCP) -->
+  <select id="selectCheckMpCallCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        SELECT   /* /appform/checkMpCallCount : McpMplatformMapper.selectCheckMpCallCount 당일 MP호출 수 */
+            count(*)
+        FROM MCP_MPLATFORM_LOG@DL_MCP
+        WHERE 1=1
+          AND EVENT_CODE = #{eventCd, jdbcType=VARCHAR}
+          AND USER_ID = #{userId, jdbcType=VARCHAR}
+          AND SYS_DT = TO_CHAR(sysdate , 'YYYYMMDD')
+          AND ACCESS_URL IS NOT NULL
+    </select>
+
+</mapper>

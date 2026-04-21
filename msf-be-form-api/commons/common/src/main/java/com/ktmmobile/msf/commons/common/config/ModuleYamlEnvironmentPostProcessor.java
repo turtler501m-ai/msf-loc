@@ -27,7 +27,7 @@ public class ModuleYamlEnvironmentPostProcessor implements EnvironmentPostProces
 
         Set<String> activeProfiles = resolveActiveProfiles(environment);
         loadProfileModuleYaml(environment, resolver, loader, activeProfiles);
-        loadBaseModuleYaml(environment, resolver, loader);
+        loadBaseModuleYaml(environment, resolver, loader, activeProfiles);
     }
 
     private static Set<String> resolveActiveProfiles(ConfigurableEnvironment environment) {
@@ -50,7 +50,8 @@ public class ModuleYamlEnvironmentPostProcessor implements EnvironmentPostProces
     private static void loadBaseModuleYaml(
         ConfigurableEnvironment environment,
         ResourcePatternResolver resolver,
-        YamlPropertySourceLoader loader
+        YamlPropertySourceLoader loader,
+        Set<String> activeProfiles
     ) {
         String basePatternYaml = BASE_PATTERN_PREFIX + BASE_EXTENSION_YAML;
         String basePatternYml = BASE_PATTERN_PREFIX + BASE_EXTENSION_YML;
@@ -59,7 +60,7 @@ public class ModuleYamlEnvironmentPostProcessor implements EnvironmentPostProces
             if (fileName == null || isProfileSpecificFile(fileName)) {
                 continue;
             }
-            addYamlPropertySource(environment, loader, resource);
+            addYamlPropertySource(environment, loader, resource, activeProfiles);
         }
     }
 
@@ -73,7 +74,7 @@ public class ModuleYamlEnvironmentPostProcessor implements EnvironmentPostProces
             String profilePatternYaml = BASE_PATTERN_PREFIX + "-" + profile + BASE_EXTENSION_YAML;
             String profilePatternYml = BASE_PATTERN_PREFIX + "-" + profile + BASE_EXTENSION_YML;
             for (Resource resource: findResources(resolver, profilePatternYaml, profilePatternYml)) {
-                addYamlPropertySource(environment, loader, resource);
+                addYamlPropertySource(environment, loader, resource, activeProfiles);
             }
         }
     }
@@ -95,12 +96,18 @@ public class ModuleYamlEnvironmentPostProcessor implements EnvironmentPostProces
     private static void addYamlPropertySource(
         ConfigurableEnvironment environment,
         YamlPropertySourceLoader loader,
-        Resource resource
+        Resource resource,
+        Set<String> activeProfiles
     ) {
         String sourceNamePrefix = "moduleYaml:" + resource.getDescription();
         try {
             List<PropertySource<?>> sources = loader.load(sourceNamePrefix, resource);
-            for (PropertySource<?> source: sources) {
+            ListIterator<PropertySource<?>> iterator = sources.listIterator(sources.size());
+            while (iterator.hasPrevious()) {
+                PropertySource<?> source = iterator.previous();
+                if (!isActiveDocument(source, activeProfiles)) {
+                    continue;
+                }
                 if (environment.getPropertySources().contains(source.getName())) {
                     continue;
                 }
@@ -109,6 +116,27 @@ public class ModuleYamlEnvironmentPostProcessor implements EnvironmentPostProces
         } catch (IOException ignored) {
             // Ignore unreadable resources to avoid blocking startup.
         }
+    }
+
+    private static boolean isActiveDocument(PropertySource<?> source, Set<String> activeProfiles) {
+        Object rawProfiles = source.getProperty("spring.config.activate.on-profile");
+        if (rawProfiles == null) {
+            return true;
+        }
+
+        String configuredProfiles = rawProfiles.toString().trim();
+        if (configuredProfiles.isEmpty()) {
+            return true;
+        }
+
+        if (activeProfiles.isEmpty()) {
+            return false;
+        }
+
+        return Arrays.stream(configuredProfiles.split(","))
+            .map(String::trim)
+            .filter(profile -> !profile.isEmpty())
+            .anyMatch(activeProfiles::contains);
     }
 
     private static boolean isProfileSpecificFile(String fileName) {

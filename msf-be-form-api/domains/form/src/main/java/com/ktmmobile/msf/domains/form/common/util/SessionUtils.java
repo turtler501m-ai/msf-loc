@@ -25,9 +25,9 @@ import com.ktmmobile.msf.domains.form.common.dto.SiteMenuDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
 import com.ktmmobile.msf.domains.form.common.dto.WorkNotiDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscMvnoComInfo;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AppformReqDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.JuoSubInfoDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.AppformReqDto;
+import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyShareDataReqDto;
 
 public class SessionUtils {
