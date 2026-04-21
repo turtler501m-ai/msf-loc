@@ -6,8 +6,9 @@
         <MsfChip
           v-model="model.cstmrTypeCd"
           name="inp-customerType"
+          groupCode="CSTMR_TYPE_CD"
           :disabled="model.isVerified || model.isSaved"
-          :data="customerTypeCodes"
+          :data="[]"
         />
       </MsfFormGroup>
       <MsfFormGroup
@@ -32,14 +33,11 @@
 
 <script setup>
 import { defineModel, defineProps, watch, defineExpose } from 'vue'
-import { useCommonCode } from '@/libs/utils/comn.utils'
 
 const props = defineProps({
   title: { type: String, default: '고객 유형' },
 })
 const model = defineModel({ type: Object, required: true })
-
-const { codeList: customerTypeCodes } = useCommonCode('CSTMR_TYPE_CD', model, 'cstmrTypeCd', 'NA')
 
 watch(
   () => model.value.cstmrTypeCd,

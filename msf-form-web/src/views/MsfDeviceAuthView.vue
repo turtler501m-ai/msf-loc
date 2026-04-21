@@ -12,7 +12,8 @@
             <!-- 단말사용인증 -->
             <MsfStack vertical type="formgroups">
               <MsfDeviceAuthNumber
-                :name="formData.cstmrNm"
+                :userId="formData.userId"
+                :name="formData.userNm"
                 :phone="formData.userPhone"
                 @complete="(result) => (formData.complete = result)"
               />
@@ -35,7 +36,8 @@ import { showAlert } from '@/libs/utils/comp.utils'
 
 // 퍼블 샘플
 const formData = reactive({
-  cstmrNm: '홍길동', //이름
+  userId: 'test1234', //고객ID
+  userNm: '홍길동', //이름
   userPhone: '010-1234-5678', //전화번호
   complete: false,
 })

@@ -74,7 +74,7 @@
             ariaLabel="우편번호 입력"
             disabled
           />
-          <MsfButton variant="subtle" @click="isAddressModalOpen = true" :disabled="model.isSaved"
+          <MsfButton variant="subtle" @click="onClickSearchAddressBtn" :disabled="model.isSaved"
             >우편번호 찾기</MsfButton
           >
         </MsfStack>
@@ -129,12 +129,11 @@
     </MsfStack>
 
     <!-- 주소 검색 모달 -->
-    <MsfAddressSearchModal v-model="isAddressModalOpen" @confirm="onAddressConfirm" />
+    <MsfAddressSearchPop v-model="showAddressSearchPop" @confirm="onConfirmAddressSearchPop" />
   </div>
 </template>
 <script setup>
-import { ref, defineModel, defineProps, computed } from 'vue'
-import MsfAddressSearchModal from './popups/MsfAddressSearchModal.vue'
+import { defineModel, defineProps, ref } from 'vue'
 
 const props = defineProps({
   title: { type: String, default: '가입자 연락처' },
@@ -142,12 +141,14 @@ const props = defineProps({
 const model = defineModel({ type: Object, required: true })
 const rangeDatePickerValue = ref({ start: '', end: '' })
 
-const isAddressModalOpen = ref(false)
-
-const onAddressConfirm = (addressData) => {
-  model.value.zipNo = addressData.zipNo
-  model.value.address = addressData.roadAddr
-  model.value.detailAddress = addressData.detailAddr
+const showAddressSearchPop = ref(false)
+const onClickSearchAddressBtn = () => {
+  showAddressSearchPop.value = true
+}
+const onConfirmAddressSearchPop = (result) => {
+  model.value.zipNo = result.zipNo
+  model.value.address = result.address
+  model.value.detailAddress = result.detailAddress
 }
 
 const validate = () => {

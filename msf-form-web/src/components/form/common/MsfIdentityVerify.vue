@@ -6,8 +6,9 @@
         <MsfChip
           v-model="model.identityCertTypeCd"
           name="inp-idCardCertType"
+          groupCode="IDENTITY_CERT_TYPE_CD"
           :disabled="model.isVerified || model.isSaved"
-          :data="idCardCodes"
+          :data="[]"
         >
           <template #endSlot>
             <MsfButton
@@ -19,23 +20,24 @@
             </MsfButton>
           </template>
         </MsfChip>
-        <div class="ut-mt-16" v-if="model.identityCertTypeCd !== 'S'">
-          <MsfRadioGroup
-            name="inp-idCardType"
-            v-model="model.identityTypeCd"
-            :options="idCardScanCodes"
-            :disabled="model.isVerified || model.isSaved"
-          />
-        </div>
       </MsfFormGroup>
 
       <MsfFormGroup label="신분증 스캔" tag="div" required v-if="model.identityCertTypeCd !== 'S'">
         <MsfStack type="field">
+          <MsfSelect
+            v-model="model.identityTypeCd"
+            :groupCode="model.identityCertTypeCd === 'F' ? 'fathCertIdType' : 'IDENTITY_TYPE_CD'"
+            placeholder="신분증 선택"
+            title="신분증 선택"
+            :selectPop="true"
+            :disabled="model.isVerified || model.isSaved"
+            class="ut-w-300"
+          />
           <MsfButton
             variant="subtle"
-            :disabled="model.isVerified"
+            :disabled="model.isVerified || !model.identityTypeCd"
             @click="isIdCardScanModalOpen = true"
-            >스캔하기</MsfButton
+          >스캔하기</MsfButton
           >
         </MsfStack>
         <MsfStack type="field">
@@ -75,8 +77,8 @@
   </div>
 </template>
 <script setup>
-import { ref, defineModel, defineProps, computed } from 'vue'
-import { useCommonCode } from '@/libs/utils/comn.utils'
+import { ref, defineModel, defineProps, onMounted, watch } from 'vue'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import MsfIdCardListModal from './popups/MsfIdCardListModal.vue'
 import MsfMobileIdModal from './popups/MsfMobileIdModal.vue'
 import MsfFaceAuthModal from './popups/MsfFaceAuthModal.vue'
@@ -88,19 +90,30 @@ const props = defineProps({
 })
 const model = defineModel({ type: Object, required: true })
 
-const { codeList: idCardCodes } = useCommonCode(
-  'IDENTITY_CERT_TYPE_CD',
-  model,
-  'identityCertTypeCd',
-  'K',
-)
-const { codeList: idCardScanCodes } = useCommonCode('IDENTITY_TYPE_CD', model, 'identityTypeCd')
-const { codeList: licenseRegionCodes } = useCommonCode('LIC_REGION', model, 'identityIssuRegion')
-
+const licenseRegionCodes = ref([])
 const isIdCardListModalOpen = ref(false)
 const isMobileIdModalOpen = ref(false)
 const isFaceAuthModalOpen = ref(false)
 const isIdCardScanModalOpen = ref(false)
+
+// 인증 방식 변경 시 선택된 신분증 유형 초기화
+watch(
+  () => model.value.identityCertTypeCd,
+  () => {
+    if (!model.value.isSaved) {
+      model.value.identityTypeCd = ''
+    }
+  },
+)
+
+onMounted(async () => {
+  const list = await getCommonCodeList('LIC_REGION')
+  licenseRegionCodes.value = (list || []).map((item) => ({
+    ...item,
+    label: item.codeName || item.dtlCdNm || item.label || item.DTL_CD_NM,
+    value: item.code || item.dtlCd || item.value || item.DTL_CD,
+  }))
+})
 
 const handleAuthClick = () => {
   if (model.value.identityCertTypeCd === 'K') {

@@ -50,12 +50,17 @@ axios.interceptors.response.use(
   },
 )
 
-export const api = axios.create({
+const api = axios.create({
   baseURL: `${import.meta.env.VITE_MSF_API_URL}`,
 })
 
-export const post = (url, params) => {
-  return api.post(url, params, {
-    validateStatus: (status) => status >= 200 && status < 400,
-  })
+export const post = async (url, params) => {
+  return await api
+    .post(url, params, {
+      validateStatus: (status) => status >= 200 && status < 400,
+    })
+    .then((res) => res.data)
+    .catch((err) =>
+      err.response?.data ? err.response.data : { code: '9999', message: err.message },
+    )
 }

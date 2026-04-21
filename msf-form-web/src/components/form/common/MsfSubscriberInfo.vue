@@ -107,10 +107,7 @@
           <MsfSelect
             title="업종 선택"
             v-model="model.upjnCd"
-            :options="[
-              { label: '업종1', value: 'bizType1' },
-              { label: '업종2', value: 'bizType2' },
-            ]"
+            groupCode="UPJN_CD"
             placeholder="업종 선택"
             class="ut-w-300"
             :disabled="model.isSaved"

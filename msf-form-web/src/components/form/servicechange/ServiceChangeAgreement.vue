@@ -20,6 +20,8 @@
 </template>
 
 <script setup>
+import { useMsfFormSvcChgStore } from '@/stores/msf_serviceChange'
+import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 
 // 필수 항목 입력 완료여부 리턴
@@ -42,6 +44,9 @@ const save = async () => {
 }
 
 defineExpose({ save })
+
+const store = useMsfFormSvcChgStore()
+const { formData } = storeToRefs(store)
 </script>
 
 <style scoped></style>

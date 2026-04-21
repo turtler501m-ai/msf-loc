@@ -6,8 +6,9 @@
         <MsfChip
           v-model="model.productType"
           name="inp-product"
+          groupCode="REQ_BUY_TYPE_CD"
           :disabled="model.isVerified || model.isSaved"
-          :data="productCodes"
+          :data="[]"
         />
       </MsfFormGroup>
       <MsfFormGroup label="가입유형" tag="div" required>
@@ -22,8 +23,8 @@
   </div>
 </template>
 <script setup>
-import { defineModel, defineProps, computed, watch } from 'vue'
-import { useCommonCode } from '@/libs/utils/comn.utils'
+import { defineModel, defineProps, computed, watch, onMounted, ref } from 'vue'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
 
 const props = defineProps({
   title: { type: String, default: '가입유형 선택' },
@@ -31,9 +32,19 @@ const props = defineProps({
 })
 const model = defineModel({ type: Object, required: true })
 
-// 공통코드 호출 및 모델의 초기값이 비어있을 경우 자동 할당
-const { codeList: productCodes } = useCommonCode('REQ_BUY_TYPE_CD', model, 'productType', 'MM')
-const { codeList: joinTypeCodes } = useCommonCode('OPER_TYPE_CD', model, 'joinType', 'MNP3')
+const joinTypeCodes = ref([])
+
+onMounted(async () => {
+  const list = await getCommonCodeList('OPER_TYPE_CD')
+  joinTypeCodes.value = (list || []).map((item) => ({
+    ...item,
+    label: item.codeName || item.dtlCdNm || item.label || item.DTL_CD_NM,
+    value: item.code || item.dtlCd || item.value || item.DTL_CD,
+  }))
+  if (model.value && !model.value.joinType) {
+    model.value.joinType = 'MNP3'
+  }
+})
 
 // USIM 상품 선택 시 기기변경(HDN3) 옵션 제외
 const filteredJoinTypeCodes = computed(() => {

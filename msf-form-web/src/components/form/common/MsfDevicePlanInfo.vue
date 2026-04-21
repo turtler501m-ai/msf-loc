@@ -128,17 +128,27 @@
 
 <script setup>
 import { defineModel, defineProps, onMounted, ref, watch } from 'vue'
-import { useCommonCode, extractData } from '@/libs/utils/comn.utils'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import { post } from '@/libs/api/msf.api'
+
+/**
+ * API 응답에서 데이터(리스트) 추출
+ */
+const extractData = (res) => {
+  if (!res) return []
+  if (Array.isArray(res)) return res
+  if (res.code === '0000' && Array.isArray(res.data)) return res.data
+  if (Array.isArray(res.data)) return res.data
+  return []
+}
 
 const props = defineProps({
   title: { type: String, default: '휴대폰 및 요금제 정보' },
 })
 const model = defineModel({ type: Object, required: true })
 
-const { codeList: openTypeCdCodes } = useCommonCode('OPEN_TYPE_CD', model, 'openTypeCd', '99')
-
 // 옵션 상태 관리
+const openTypeCdCodes = ref([])
 const deviceOptions = ref([])
 const capacityOptions = ref([])
 const colorOptions = ref([])
@@ -349,8 +359,19 @@ watch(
   },
 )
 
-onMounted(() => {
+onMounted(async () => {
   fetchAgencies() // 대리점 조회
+
+  // 공통코드 조회: 개통 유형
+  const list = await getCommonCodeList('OPEN_TYPE_CD')
+  openTypeCdCodes.value = (list || []).map((item) => ({
+    ...item,
+    label: item.codeName || item.dtlCdNm || item.label || item.DTL_CD_NM,
+    value: item.code || item.dtlCd || item.value || item.DTL_CD,
+  }))
+  if (model.value && !model.value.openTypeCd) {
+    model.value.openTypeCd = '99'
+  }
 
   // 개통유형이 휴대폰(MM)일 때만 단말기 관련 API 호출
   if (model.value.productType === 'MM') {

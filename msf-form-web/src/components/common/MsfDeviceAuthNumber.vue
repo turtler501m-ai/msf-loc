@@ -42,6 +42,7 @@ import { post } from '@/libs/api/msf.api'
 const emit = defineEmits(['complete'])
 
 const props = defineProps({
+  userId: { type: String, required: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
   showDevice: { type: Boolean, default: false },
@@ -88,7 +89,7 @@ const { remaining, start, stop, reset } = useCountdown(countdown, {
 
 const onClickSendAuthNumber = async () => {
   const result = await post('/api/shared/common/sms/auth/send', {
-    userName: userName.value,
+    userId: props.userId,
     userPhone: userPhone.value,
     type: 'user-form-login',
   })

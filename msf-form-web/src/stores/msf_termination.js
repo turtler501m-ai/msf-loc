@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { api } from '@/libs/api/msf.api'
+import { post } from '@/libs/api/msf.api'
 
 export const useMsfFormTerminationStore = defineStore('msf_form_termination', () => {
   const applicationKey = ref('TEMP_' + Math.random().toString(36).substring(7))
@@ -97,7 +97,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     console.log('[X18] 잔여요금 조회 요청', { ncn })
     try {
       // ctn·custId는 백엔드에서 세션 계약 목록으로 조회 — ncn만 전송
-      const { data } = await api.post('/remainCharge/list', { ncn })
+      const data = await post('/remainCharge/list', { ncn })
       console.log('[X18] 잔여요금 조회 응답', data)
       if (data?.success) {
         product.value.usageFee = data.sumAmt || ''
@@ -164,7 +164,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
         customerType: payload?.customer?.customerType,
         isActive: payload?.product?.isActive,
       })
-      const { data } = await api.post(`/api/msf/formTermination/${applicationKey.value}/complete`, payload)
+      const data = await post(`/api/msf/formTermination/${applicationKey.value}/complete`, payload)
       console.debug('[apiCompleteApplication] response', data)
       if (data?.success) {
         completeErrorMessage.value = ''
