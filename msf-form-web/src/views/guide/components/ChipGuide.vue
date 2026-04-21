@@ -44,13 +44,18 @@ const componentConfig = {
     default: '[]',
     description: '체크박스 옵션 배열입니다.',
   },
+  groupCode: {
+    default: '',
+    description:
+      '공통코드 그룹코드 설정 시 해당 그룹코드로 공통코드 목록이 조회되어 옵션으로 사용됩니다. data props와 groupCode props를 함께 사용할 경우 data가 우선적으로 적용됩니다.',
+  },
 }
 
 // 2. 초기값 정의
 const componentState = {
   variant: undefined,
   multiple: false,
-  name: undefined,
+  name: '',
   data: [
     { value: 'all', label: '전체' },
     { value: 'chip1', label: '선택1' },
@@ -58,5 +63,6 @@ const componentState = {
     { value: 'chip3', label: '선택3' },
     { value: 'chip4', label: '선택4' },
   ],
+  groupCode: '',
 }
 </script>

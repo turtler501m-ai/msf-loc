@@ -14,8 +14,12 @@ import MsfDeviceAuthView from '@/views/MsfDeviceAuthView.vue'
 // 단말 사용 등록
 import MsfDeviceRegisterView from '@/views/MsfDeviceRegisterView.vue'
 
+// 설정
+import MsfSettingView from '@/views/MsfSettingView.vue'
 // 퍼블리싱 샘플
 import GuideView from '@/views/guide/GuideView.vue'
+import FormCommonGuideView from '@/views/guide/FormCommonGuideView.vue'
+import FormGuideView from '@/views/guide/FormGuideView.vue'
 import PubGuide from '@/views/guide/PubGuide.vue'
 import PubList from '@/views/guide/PubList.vue'
 import PubPage from '@/views/guide/PubPage.vue'
@@ -64,6 +68,11 @@ const router = createRouter({
       name: 'deviceRegist',
       component: MsfDeviceRegisterView, // 단말 사용 등록
     },
+    {
+      path: '/setting',
+      name: 'setting',
+      component: MsfSettingView, // 설정
+    },
     // ===== 퍼블리싱용 라우팅(실제화면에서 사용안함) ===== //
     {
       path: '/guide',
@@ -79,6 +88,16 @@ const router = createRouter({
       path: '/test',
       name: 'GuideTest',
       component: GuideView, // 퍼블리싱 테스트
+    },
+    {
+      path: '/form-common-guide',
+      name: 'FormCommonGuide',
+      component: FormCommonGuideView, // 퍼블리싱 공통 폼 가이드
+    },
+    {
+      path: '/form-guide',
+      name: 'FormGuideView',
+      component: FormGuideView, // 퍼블리싱 반복 폼 정리
     },
     {
       path: '/404',

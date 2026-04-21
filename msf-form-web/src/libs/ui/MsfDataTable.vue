@@ -1,14 +1,19 @@
 <template>
   <div
     class="msf-grid-container"
-    :class="{ 'is-hideHeader': props.hideHeader, 'is-setMaxHeight': !props.showPaging }"
+    :class="{
+      'is-hideHeader': props.hideHeader,
+      'is-hideCount': props.hideCount,
+      'is-setMaxHeight': !props.showPaging,
+    }"
   >
     <div v-if="!props.hideHeader" class="msf-grid-header">
       <div class="msf-grid-header-left">
         <slot name="header-left"></slot>
-        <span class="total-count">
-          <slot name="count-prepend"></slot> (총 <em>{{ totalNo }}</em
-          >건) <slot name="count-append"></slot>
+        <span class="total-count" v-if="!props.hideCount"
+          ><slot name="count-prepend"></slot> <span v-if="!props.hideParentheses">(</span>총
+          <em>{{ totalNo }}</em
+          >건<span v-if="!props.hideParentheses">)</span> <slot name="count-append"></slot>
         </span>
       </div>
       <div class="msf-grid-header-right">
@@ -27,7 +32,7 @@
         :class="{ 'is-single-check': props.showSingleCheck }"
         @grid-ready="onGridReady"
         @selection-changed="onSelectionChanged"
-        :domLayout="props.showPaging ? autoHeight : normal"
+        :domLayout="props.showPaging ? 'autoHeight' : 'normal'"
       />
       <MsfPagination
         v-if="showPaging"
@@ -87,11 +92,23 @@ const props = defineProps({
     type: Number,
     default: 10, //페이징모드의 기본값 10 || 페이징아닐때는 rows로 설정하여 최대 높이값지정하여 스크롤지정
   },
+  // 테이블 헤더 숨기기
   hideHeader: {
     type: Boolean,
     default: false,
   },
-  sbSize: { type: Number, default: 4 }, //스크롤바 사이즈
+  // 카운트영역 숨기기
+  hideCount: {
+    type: Boolean,
+    default: false,
+  },
+  //스크롤바 사이즈
+  sbSize: { type: Number, default: 4 },
+  // 카운트영역의 괄호삭제
+  hideParentheses: {
+    type: Boolean,
+    default: false,
+  },
   isSearch: {
     type: Boolean,
     default: false,
@@ -171,6 +188,12 @@ const gridOptions = reactive({
     minWidth: 60,
     maxWidth: 60,
   },
+  // 데이터 없는경우 디자인 설정
+  overlayNoRowsTemplate: `
+  <div class="ag-overlay-no-rows-wrapper">
+    <div class="nodata-wrap">검색 결과가 없습니다.</div>
+  </div>
+  `,
 })
 
 const searchInternal = () => {
@@ -178,9 +201,9 @@ const searchInternal = () => {
     gridApi.value.setGridOption('loading', true)
     post(props.url, { ...props.params, page: { pageNum: pageNo.value, rowSize: rowsNo.value } })
       .then((res) => {
-        totalNo.value = res.data.meta.page.totalCount
-        rowDatas.value = res.data.data
-        emits('success', res.data.data)
+        totalNo.value = res.meta.page.totalCount
+        rowDatas.value = res.data
+        emits('success', res.data)
         gridApi.value.setGridOption('loading', false)
       })
       .catch((err) => {

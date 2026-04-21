@@ -51,7 +51,7 @@ export const useMsfMenuStore = defineStore('msfMenu', {
             name: '간편 신청서',
             url: '/extra/simplerequest/SimpleRequestPage',
           },
-          { id: '0504', name: '로그인 설정', url: '/extra/mobileapp/MobileAppPage' },
+          // { id: '0504', name: '로그인 설정', url: '/extra/mobileapp/MobileAppPage' },
         ],
       },
     ],

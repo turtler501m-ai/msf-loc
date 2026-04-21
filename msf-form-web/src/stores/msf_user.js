@@ -26,6 +26,9 @@ export const useMsfUserStore = defineStore('msfUser', {
       if (this.userInfo) {
         return this.userInfo
       }
+      if (!this.token) {
+        this.loadUserInfo()
+      }
       const tokenInfo = parseUserToken(this.token)
       if (tokenInfo) {
         const { id, name, organization } = tokenInfo
@@ -40,10 +43,9 @@ export const useMsfUserStore = defineStore('msfUser', {
     loadUserInfo() {
       // FIXME: 실제 로그인 API 연동 시, userInfo는 API 응답에서 받아온 정보로 설정되어야 합니다.
       this.token =
-        'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MjMxMjAwNCIsImlkIjoiODIzMTIwMDQiLCJuYW1lIjoi7ZmN7ISx66-8Iiwib3JnYW5pemF0aW9uIjp7ImNvZGUiOiJTUFQ4MDUwIiwibmFtZSI6IuyKpOuniO2KuOyEnOyLneyngCDtlITroZzsoJ3tirjtjIAifSwiaWF0IjoxNzc1NjI5MTE3fQ.oGDN5LylCy98yzO6jdoDzGGFWDdKrtwsbAypfSM81CiWsllVn6dvCUEuTB-JSFZloQpe24orWm94VtRdzuFzPw'
+        'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJWMDAwMDAwNTgxIiwiaWQiOiJWMDAwMDAwNTgxIiwibmFtZSI6IuyCvO2MkF_rtInri7TrqqjrsJTsnbzsoJAiLCJvcmdhbml6YXRpb24iOnsiY29kZSI6IlZLSTAxODQiLCJuYW1lIjoi7IK87ISx7KCE7J6Q7YyQ66ekX03rqqjrsJTsnbwifSwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTg4MzEwMjJ9.TuWZNIiK2ukg9e9OCYn9_Y_mejuwNxY97VXjd5wC-rzUqUA8nt5Sd1ukQFlI8RZchrXsaejIjz6HVIlI7Qk_fQ'
       const { id, name, organization } = parseUserToken(this.token)
       this.userInfo = { id, name, organization }
-      console.log('store.userInfo:', this.userInfo)
     },
     /**
      * 사용자 정보 초기화 (로그아웃 등)

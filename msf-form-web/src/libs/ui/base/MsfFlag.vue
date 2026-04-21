@@ -2,6 +2,10 @@
 import { computed } from 'vue'
 
 const props = defineProps({
+  variant: {
+    type: String,
+    default: 'filled', // 'outlined' | 'filled'
+  },
   data: {
     type: [Object, Array, String, Number],
     required: true,
@@ -34,9 +38,9 @@ const flags = computed(() => (Array.isArray(props.data) ? props.data : [props.da
 const rootClasses = computed(() => [
   'flag-root',
   props.size,
+  `is-${props.variant}`,
   props.radius ? `radius-${props.radius}` : '',
   props.type !== 'block' ? props.type : '',
-  props.className,
 ])
 
 const getItemData = (item) => {
@@ -67,6 +71,9 @@ const getItemData = (item) => {
   --flag-min-width: #{rem(56px)};
   --flag-height: #{rem(24px)};
   --flag-font-size: var(--font-size-15);
+  --flag-text-color: var(--color-gray-600);
+  --flag-border-color: var(--color-gray-200);
+  --flag-bg-color: var(--color-gray-150);
 
   @include flex($display: inline-flex) {
     gap: rem(4px);
@@ -105,24 +112,37 @@ const getItemData = (item) => {
     font-weight: var(--font-weight-regular);
     height: var(--flag-height);
     line-height: var(--flag-height);
+    color: var(--flag-text-color);
+    background-color: var(--flag-bg-color);
+    border: var(--border-width-base) solid;
+    border-color: var(--flag-border-color);
 
     // 컬러 정의
     &.gray {
-      color: var(--color-gray-600);
-      background-color: var(--color-gray-150);
-      border: var(--border-width-base) solid var(--color-gray-200);
+      --flag-text-color: var(--color-gray-600);
+      --flag-bg-color: var(--color-gray-150);
+      --flag-border-color: var(--color-gray-200);
     }
     // 민트
     &.accent {
-      color: var(--color-white);
-      background-color: var(--color-accent2-base);
-      border: var(--border-width-base) solid var(--color-accent2-base);
+      --flag-text-color: var(--color-white);
+      --flag-bg-color: var(--color-accent2-base);
+      --flag-border-color: var(--color-accent2-base);
     }
     // 빨강
     &.accent2 {
-      color: var(--color-white);
-      background-color: var(--color-accent-base);
-      border: var(--border-width-base) solid var(--color-accent-base);
+      --flag-text-color: var(--color-white);
+      --flag-bg-color: var(--color-accent-base);
+      --flag-border-color: var(--color-accent-base);
+    }
+  }
+
+  // 아웃라인 스타일
+  &.is-outlined {
+    .flag-item {
+      --flag-text-color: var(--color-primary-base);
+      --flag-bg-color: var(--color-white);
+      --flag-border-color: var(--color-gray-400);
     }
   }
 }

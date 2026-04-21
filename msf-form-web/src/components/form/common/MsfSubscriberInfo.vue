@@ -3,57 +3,157 @@
     <MsfTitleArea title="가입자 정보" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="이름" required>
-        <MsfInput v-model="model.userName" placeholder="이름" class="ut-w-300" :readonly="model.idCard !== 'S'" />
+        <MsfInput
+          v-model="model.cstmrNm"
+          placeholder="이름"
+          class="ut-w-300"
+          :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+        />
       </MsfFormGroup>
-      <MsfFormGroup v-if="['NA', 'NM'].includes(model.customerType)" label="주민등록번호" required>
+      <MsfFormGroup v-if="['NA', 'NM'].includes(model.cstmrTypeCd)" label="주민등록번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="model.residentNo1" placeholder="앞 6자리" :readonly="model.idCard !== 'S'" />
+          <MsfNumberInput
+            v-model="model.cstmrNativeRrn1"
+            placeholder="앞 6자리"
+            maxlength="6"
+            :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="model.residentNo2" id="inp-residentNo2" placeholder="뒤 7자리" :readonly="model.idCard !== 'S'" />
+          <MsfNumberInput
+            v-model="model.cstmrNativeRrn2"
+            id="inp-residentNo2"
+            placeholder="뒤 7자리"
+            maxlength="7"
+            :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+          />
         </MsfStack>
       </MsfFormGroup>
-      <MsfFormGroup v-if="['FN', 'FM'].includes(model.customerType)" label="외국인등록번호" required>
+      <MsfFormGroup v-if="['FN', 'FM'].includes(model.cstmrTypeCd)" label="외국인등록번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="model.foreignerNo1" placeholder="앞 6자리" :readonly="model.idCard !== 'S'" />
+          <MsfNumberInput
+            v-model="model.cstmrForeignerRrn1"
+            placeholder="앞 6자리"
+            maxlength="6"
+            :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="model.foreignerNo2" id="inp-foreignerNo2" placeholder="뒤 7자리" :readonly="model.idCard !== 'S'" />
+          <MsfNumberInput
+            v-model="model.cstmrForeignerRrn2"
+            id="inp-foreignerNo2"
+            placeholder="뒤 7자리"
+            maxlength="7"
+            :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+          />
         </MsfStack>
       </MsfFormGroup>
-      <MsfFormGroup v-if="['JP', 'PU'].includes(model.customerType)" label="법인등록번호" required>
+      <MsfFormGroup v-if="['JP', 'GO'].includes(model.cstmrTypeCd)" label="법인등록번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="model.corpRegNo1" placeholder="앞 6자리" />
+          <MsfNumberInput
+            v-model="model.cstmrJuridicalRrn1"
+            placeholder="앞 6자리"
+            maxlength="6"
+            :readonly="model.isSaved"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="model.corpRegNo2" id="inp-corpRegNo2" placeholder="뒤 7자리" />
+          <MsfNumberInput
+            v-model="model.cstmrJuridicalRrn2"
+            id="inp-corpRegNo2"
+            placeholder="뒤 7자리"
+            maxlength="7"
+            :readonly="model.isSaved"
+          />
         </MsfStack>
       </MsfFormGroup>
-      <MsfFormGroup v-if="['NA', 'JP', 'PU'].includes(model.customerType)" label="사업자등록번호" helpText="※ 개인사업자인 경우만 입력" :required="['JP', 'PU'].includes(model.customerType)">
+      <MsfFormGroup
+        v-if="['NA', 'JP', 'GO'].includes(model.cstmrTypeCd)"
+        label="사업자등록번호"
+        :required="['JP', 'GO'].includes(model.cstmrTypeCd)"
+      >
         <MsfStack type="field">
-          <MsfInput v-model="model.bizNo1" placeholder="앞 3자리" />
+          <MsfNumberInput
+            v-model="model.cstmrJuridicalBizNo1"
+            placeholder="앞자리"
+            maxlength="3"
+            :readonly="model.isSaved"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="model.bizNo2" id="inp-bizNo2" placeholder="가운데 2자리" />
+          <MsfNumberInput
+            v-model="model.cstmrJuridicalBizNo2"
+            id="inp-bizNo2"
+            placeholder="가운데 2자리"
+            maxlength="2"
+            :readonly="model.isSaved"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="model.bizNo3" id="inp-bizNo3" placeholder="뒤 5자리" />
+          <MsfNumberInput
+            v-model="model.cstmrJuridicalBizNo3"
+            id="inp-bizNo3"
+            placeholder="뒤 5자리"
+            maxlength="5"
+            :readonly="model.isSaved"
+          />
         </MsfStack>
       </MsfFormGroup>
-      <MsfFormGroup v-if="['NA', 'JP', 'PU'].includes(model.customerType)" label="대표자명" :required="['JP', 'PU'].includes(model.customerType) || !!model.bizNo1">
-        <MsfInput v-model="model.repreName" placeholder="대표자명 입력" class="ut-w-300" />
+      <MsfFormGroup v-if="['JP', 'GO'].includes(model.cstmrTypeCd)" label="대표자명" required>
+        <MsfInput
+          v-model="model.cstmrJuridicalRepNm"
+          placeholder="대표자명 입력"
+          class="ut-w-300"
+          :readonly="model.isSaved"
+        />
       </MsfFormGroup>
-      <MsfFormGroup v-if="['NA', 'JP', 'PU'].includes(model.customerType)" label="업종/업태" :required="['JP', 'PU'].includes(model.customerType) || !!model.bizNo1">
+      <MsfFormGroup v-if="['JP', 'GO'].includes(model.cstmrTypeCd)" label="업종/업태" required>
         <MsfStack type="field" class="ut-w100p">
-          <MsfSelect title="업종 선택" v-model="model.bizType" :options="[{ label: '업종1', value: 'bizType1' }, { label: '업종2', value: 'bizType2' }]" placeholder="업종 선택" class="ut-w-300" />
-          <MsfInput v-model="model.bizItem" placeholder="업태 입력" class="ut-flex-1" />
+          <MsfSelect
+            title="업종 선택"
+            v-model="model.upjnCd"
+            :options="[
+              { label: '업종1', value: 'bizType1' },
+              { label: '업종2', value: 'bizType2' },
+            ]"
+            placeholder="업종 선택"
+            class="ut-w-300"
+            :disabled="model.isSaved"
+          />
+          <MsfInput
+            v-model="model.bcuSbst"
+            placeholder="업태 입력"
+            class="ut-flex-1"
+            :readonly="model.isSaved"
+          />
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup v-if="model.joinType === 'HDN3'" label="기기변경<br/>휴대폰번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="model.deviceChgTel1" placeholder="앞 3자리" readonly />
+          <MsfNumberInput v-model="model.deviceChgTel1" placeholder="앞자리" maxlength="3" />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="model.deviceChgTel2" id="inp-deviceChgTel2" placeholder="가운데 4자리" />
+          <MsfNumberInput
+            v-model="model.deviceChgTel2"
+            id="inp-deviceChgTel2"
+            placeholder="가운데 4자리"
+            maxlength="4"
+            :readonly="model.isSaved"
+          />
           <span class="unit-sep">-</span>
-          <MsfInput v-model="model.deviceChgTel3" id="inp-deviceChgTel3" placeholder="뒤 4자리" />
-          <MsfButton variant="toggle" v-if="deviceChgAuth.status.value === 'none'" disabled>인증</MsfButton>
-          <MsfButton variant="toggle" v-else-if="deviceChgAuth.status.value === 'ready'" @click="deviceChgAuth.verify()">인증</MsfButton>
-          <MsfButton variant="toggle" v-else-if="deviceChgAuth.status.value === 'verified'" active>인증 완료</MsfButton>
+          <MsfNumberInput
+            v-model="model.deviceChgTel3"
+            id="inp-deviceChgTel3"
+            placeholder="뒤 4자리"
+            maxlength="4"
+            :readonly="model.isSaved"
+          />
+          <MsfButton variant="toggle" v-if="deviceChgAuth.status.value === 'none'" disabled
+            >인증</MsfButton
+          >
+          <MsfButton
+            variant="toggle"
+            v-else-if="deviceChgAuth.status.value === 'ready'"
+            @click="handleDeviceChgVerify"
+            >인증</MsfButton
+          >
+          <MsfButton variant="toggle" v-else-if="deviceChgAuth.status.value === 'verified'" active
+            >인증 완료</MsfButton
+          >
         </MsfStack>
       </MsfFormGroup>
     </MsfStack>
@@ -63,23 +163,46 @@
 import { defineModel, defineProps } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
+import { post } from '@/libs/api/msf.api'
 
 const props = defineProps({
-  title: { type: String, default: '가입자 정보' }
+  title: { type: String, default: '가입자 정보' },
 })
 const model = defineModel({ type: Object, required: true })
 const store = useMsfFormNewChgStore()
 
 const deviceChgAuth = useAuthButton(
-  () => [model.value?.deviceChgTel2, model.value?.deviceChgTel3],
+  () => [model.value?.deviceChgTel1, model.value?.deviceChgTel2, model.value?.deviceChgTel3],
   // 스토어의 deviceChgTel 인증 상태를 관리할 수 있도록 플래그 전달
   {
-    get value() { return store.authFlags?.deviceChgTel || false },
+    get value() {
+      return store.authFlags?.deviceChgTel || false
+    },
     set value(v) {
       if (store.authFlags) {
         store.authFlags.deviceChgTel = v
       }
-    }
-  }
+    },
+  },
 )
+
+const handleDeviceChgVerify = async () => {
+  const phoneNo = `${model.value.deviceChgTel1}${model.value.deviceChgTel2}${model.value.deviceChgTel3}`
+  try {
+    const res = await post('/ktmmember/auth', { phoneNo })
+    console.log('기기변경 번호 인증 결과:', res)
+    // 인증 성공 시 useAuthButton의 상태를 수동으로 업데이트
+    deviceChgAuth.status.value = 'verified'
+    if (store.authFlags) store.authFlags.deviceChgTel = true
+  } catch (error) {
+    console.error('기기변경 번호 인증 실패:', error)
+    alert('기기변경 휴대폰 번호 인증에 실패했습니다.')
+  }
+}
+
+const validate = () => {
+  return true
+}
+
+defineExpose({ validate })
 </script>

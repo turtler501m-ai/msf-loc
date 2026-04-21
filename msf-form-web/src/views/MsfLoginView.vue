@@ -30,7 +30,7 @@
                 <MsfCheckbox v-model="formData.idSave" label="아이디 저장" blockPadding />
               </MsfFormGroup>
               <MsfButtonGroup gap="3">
-                <MsfButton variant="primary" block>로그인</MsfButton>
+                <MsfButton variant="primary" block @click="onClickLogin">로그인</MsfButton>
                 <MsfButton
                   variant="secondary"
                   prefixIcon="touchId"
@@ -47,10 +47,16 @@
               <div class="login-state-wrap">
                 <div class="use-state">
                   <p class="state-tit">사용 상태</p>
-                  <p class="state-info failed"><MsfIcon name="loginCheck" size="small" />미승인</p>
-                  <p class="state-info"><MsfIcon name="loginCheck" size="small" />승인</p>
+                  <p class="state-info failed" v-if="apvSttusCd != 'A'">
+                    <MsfIcon name="loginCheck" size="small" />미승인
+                  </p>
+                  <p class="state-info" v-if="apvSttusCd == 'A'">
+                    <MsfIcon name="loginCheck" size="small" />승인
+                  </p>
                 </div>
-                <MsfButton variant="subtle">승인철회</MsfButton>
+                <div v-if="apvSttusCd == 'A'">
+                  <MsfButton variant="subtle" @click="onClickModelRemove">승인철회</MsfButton>
+                </div>
               </div>
             </MsfStack>
             <!--// 로그인 -->
@@ -63,14 +69,75 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
+import { post } from '@/libs/api/msf.api'
+import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
 
-// 퍼블 샘플
+const apvSttusCd = ref(null)
+
 const formData = reactive({
   userId: '', //아이디
   userPw: '', //비밀번호
   idSave: false, //아이디 저장 여부
+  deviceId: 'Phone-A',
+  authType: 'PASSWORD',
 })
+
+onMounted(async () => {
+  // 앱에서 uuid 를 구해서 사용
+  const initData = {
+    uuid: '7878', // molo - 수정 필요
+  }
+  post('/api/app/login/init', initData)
+    .then((data) => {
+      console.log('init data:' + data.data.apvSttusCd)
+      apvSttusCd.value = data.data.apvSttusCd
+    })
+    .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
+})
+
+const onClickLogin = () => {
+  // 로그인 API 호출
+  console.log('formData:', formData)
+  if (!formData.userId) {
+    showAlert('아이디는 필수 입력 값입니다.')
+    return
+  }
+  if (!formData.userPw) {
+    showAlert('비밀번호는 필수 입력 값입니다.')
+    return
+  }
+  post('/api/login/login', formData)
+    .then((data) => {
+      console.log(data.code)
+      if (data.code == '0000') {
+        console.log('로그인 성공')
+      } else {
+        showAlert(data.message)
+      }
+    })
+    .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
+}
+
+const onClickModelRemove = () => {
+  const postData = {
+    uuid: '7878', // molo - 수정 필요
+  }
+  showConfirm('단말의 사용등록을 승인 철회하시겠습니까?', () => {
+    post('/api/app/model/remove', postData)
+      .then((data) => {
+        console.log(data.code)
+        if (data.code == '0000') {
+          showAlert('단말기 승인 철회가 완료되었습니다.')
+          window.location.reload()
+        } else {
+          showAlert('단말기 승인 철회가 실패하였습니다.\n 다시 시도해 주세요.')
+          // showAlert(data.message)
+        }
+      })
+      .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
+  })
+}
 </script>
 
 <style lang="scss" scoped></style>

@@ -3,7 +3,7 @@
     <h2 class="ut-blind">하단 메뉴</h2>
     <ul class="bottom-list">
       <MsfBottomNavItem v-for="menu in menuStore.menus" :key="menu.id" :item="menu" />
-      <MsfButton iconOnly="logout" class="logout-btn">로그아웃</MsfButton>
+      <li><MsfButton iconOnly="logout" class="logout-btn">로그아웃</MsfButton></li>
     </ul>
   </aside>
 </template>

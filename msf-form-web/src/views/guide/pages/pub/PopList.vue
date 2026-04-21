@@ -16,6 +16,7 @@
           <MsfButton @click="S101050102Open = true">비밀번호 입력 (S101050102)</MsfButton>
           <MsfButton @click="S101030106Open = true">부가서비스 추가/삭제 (S101030106)</MsfButton>
           <MsfButton @click="S101020106Open = true">주소검색 (S101020106)</MsfButton>
+          <MsfButton @click="S101020104Open = true">안면인증 (S101020104)</MsfButton>
         </MsfButtonGroup>
       </div>
       <div class="popup-list-items">
@@ -45,6 +46,7 @@
   <S102030104 v-model="S102030104Open" />
   <S102030105 v-model="S102030105Open" />
   <S102030102 v-model="S102030102Open" />
+  <S101020104 v-model="S101020104Open" />
 </template>
 
 <script setup>
@@ -64,6 +66,7 @@ import S102030103 from '@/views/guide/pages/pub/S102030103.vue'
 import S102030104 from '@/views/guide/pages/pub/S102030104.vue'
 import S102030105 from '@/views/guide/pages/pub/S102030105.vue'
 import S102030102 from '@/views/guide/pages/pub/S102030102.vue'
+import S101020104 from '@/views/guide/pages/pub/S101020104.vue'
 const S101020109Open = ref(false)
 const S101020110Open = ref(false)
 const S101020108Open = ref(false)
@@ -78,6 +81,7 @@ const S102030103Open = ref(false)
 const S102030104Open = ref(false)
 const S102030105Open = ref(false)
 const S102030102Open = ref(false)
+const S101020104Open = ref(false)
 </script>
 
 <style lang="scss" scoped>

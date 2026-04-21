@@ -2,24 +2,14 @@ plugins {
     id("spring-library-conventions")
 }
 
-sourceSets {
-    main {
-        java {
-            exclude("**/form/appform_d/**")
-        }
-    }
-}
-
-tasks.processResources {
-    exclude("**/form/appform_d/**")
-}
-
 dependencies {
     implementation(project(":commons:common"))
     implementation(project(":commons:websecurity"))
     implementation(project(":commons:mybatis"))
     implementation(project(":commons:auditing"))
+    implementation(project(":commons:file"))
 
+    implementation(project(":domains:policy"))
     implementation(project(":domains:commoncode"))
 
     //local 구동을 위한 임시 추가

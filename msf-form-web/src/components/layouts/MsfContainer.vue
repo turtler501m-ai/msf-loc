@@ -1,6 +1,7 @@
 <template>
   <div class="container-root">
     <div class="page-content">
+      <h2 class="ut-blind">메인 콘텐츠 영역</h2>
       <slot></slot>
     </div>
   </div>
@@ -20,9 +21,11 @@
     height: 100%;
     padding-inline: var(--layout-padding-x);
     padding-block: var(--layout-padding-y) var(--layout-padding-y2);
+    overflow: auto;
     // 스텝이있는경우 스텝 레이아웃 내부에서 패딩을 줄거다
     &:has(.step-wrapper-layout) {
       padding: 0;
+      overflow: unset;
     }
     &:has(.top-btns) {
       padding-top: 0px;

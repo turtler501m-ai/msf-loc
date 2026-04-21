@@ -11,7 +11,7 @@
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
-        <MsfButton variant="secondary">동의 후 닫기</MsfButton>
+        <MsfButton variant="primary">동의 후 닫기</MsfButton>
       </MsfButtonGroup>
     </template>
   </MsfDialog>

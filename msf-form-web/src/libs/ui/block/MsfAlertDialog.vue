@@ -74,9 +74,9 @@ onUnmounted(() => {
         <FocusTrap :isActive="isOpen" :autoFocus="true" :restoreFocus="false">
           <div class="alert-root" role="alertdialog" aria-modal="true">
             <div class="alert-message">
-              <h2 v-if="props.title" class="msg-title">{{ props.title }}</h2>
+              <h2 v-if="props.title" class="msg-title" v-html="props.title"></h2>
               <template v-if="typeof props.message === 'string'">
-                <div class="msg-content">{{ props.message }}</div>
+                <div class="msg-content" v-html="props.message"></div>
               </template>
               <component v-else :is="props.message" />
             </div>
@@ -122,6 +122,9 @@ onUnmounted(() => {
   min-height: rem(90px);
   padding-block: var(--spacing-x6);
   .msg-title {
+    /* \n 또는 소스상의 줄바꿈을 실제 줄바꿈으로 렌더링 */
+    white-space: pre-line;
+    word-break: break-all; /* 긴 단어도 영역 안에서 줄바꿈되도록 설정 */
     margin: 0;
     font-size: var(--font-size-20);
     font-weight: var(--font-weight-bold);

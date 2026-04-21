@@ -13,14 +13,12 @@
           <col v-for="(col, i) in columns" :key="i" :style="{ width: col.width || 'auto' }" />
         </template>
       </template>
-
       <template #thead>
         <slot v-if="$slots.thead" name="thead" />
         <tr v-else>
           <th v-for="(col, i) in columns" :key="i" scope="col">{{ col.label }}</th>
         </tr>
       </template>
-
       <template #tbody="{ items }">
         <slot v-if="$slots.tbody" name="tbody" :items="items" />
         <template v-else>
@@ -40,7 +38,6 @@
         </template>
       </template>
     </MsfTable>
-
     <div v-if="mode === 'paging' && data.length > 0" class="pagination-area">
       <MsfPagination
         v-model:page="currentPage"
@@ -49,11 +46,10 @@
         :page-size="10"
       />
     </div>
-
-    <div v-if="mode === 'more' && hasNextPage && data.length > 0" class="more-btn-area">
-      <button class="btn-more-ui" @click="handleMore">
+    <div v-if="mode === 'more' && hasNextPage && data.length > 0" class="more-btn-area ut-mt-16">
+      <MsfButton class="btn-more-ui" @click="handleMore" block>
         더보기 ({{ displayData.length }} / {{ data.length }})
-      </button>
+      </MsfButton>
     </div>
   </div>
 </template>
@@ -111,31 +107,19 @@ watch(
 
 <style lang="scss" scoped>
 .pagination-area {
-  display: flex;
-  justify-content: center;
-}
-
-.more-btn-area .btn-more-ui {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #e0e0e0;
-  background: #fff;
-  cursor: pointer;
-  border-radius: 4px;
-  font-weight: bold;
+  @include flex($h: center);
 }
 
 :deep(.is-clickable) {
   cursor: pointer;
   &:hover {
-    background-color: #f9f9f9;
+    background-color: var(--color-gray-25);
   }
 }
 
 :deep(.is-selected) {
   background-color: #e6f7ff !important;
   td {
-    font-weight: bold;
     color: #1890ff;
   }
 }

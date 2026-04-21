@@ -13,7 +13,7 @@
       :total="datas.length"
       show-single-check
       @selected="onSelected"
-      rows="5.6"
+      rows="5.2"
     >
       <template #count-prepend>스캔 목록</template>
     </MsfDataTable>

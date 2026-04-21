@@ -39,6 +39,11 @@ const componentConfig = {
     default: '[]',
     description: '체크박스 옵션 배열입니다.',
   },
+  groupCode: {
+    default: '',
+    description:
+      '공통코드 그룹코드 설정 시 해당 그룹코드로 공통코드 목록이 조회되어 옵션으로 사용됩니다. options props와 groupCode props를 함께 사용할 경우 options가 우선적으로 적용됩니다.',
+  },
   // size: ['small', 'medium', 'large']
 }
 
@@ -54,5 +59,6 @@ const componentState = {
     { value: 'check3', label: '체크박스3' },
     { value: 'check4', label: '체크박스4', disabled: true },
   ],
+  groupCode: '',
 }
 </script>

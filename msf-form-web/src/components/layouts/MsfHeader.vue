@@ -4,10 +4,12 @@
       <h1 class="logo"><img src="@/assets/images/logo.svg" alt="kt mobile" /></h1>
       <div class="side-wrap">
         <div class="user-info">
-          <p class="name"><span class="avatar"></span>홍길동</p>
+          <router-link to="/setting">
+            <p class="name"><span class="avatar"></span>{{ userInfo?.name }}</p>
+          </router-link>
           <ul class="infos">
-            <li>SPT8050</li>
-            <li>IT전략팀</li>
+            <li>{{ userInfo?.organization?.code }}</li>
+            <li>{{ userInfo?.organization?.name }}</li>
           </ul>
         </div>
       </div>
@@ -15,7 +17,16 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useMsfUserStore } from '@/stores/msf_user'
+
+const router = useRouter()
+const msfUserStore = useMsfUserStore()
+const userInfo = msfUserStore.getUserInfo()
+console.log(msfUserStore.getUserInfo())
+</script>
 
 <style lang="scss" scoped>
 .header-wrap {

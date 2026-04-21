@@ -17,14 +17,14 @@
             @open="handleModalOpen"
             @close="handleModalClose"
           >
-            <template #navBar> 상단고정 영역이 있다면 </template>
-            <p v-for="n in 100" :key="n">자유로운 내용</p>
-            <template #footer>
-              <MsfButtonGroup align="center">
-                <MsfButton variant="secondary">취소</MsfButton>
-                <MsfButton variant="primary">확인</MsfButton>
+            <template #navBar>
+              <MsfButtonGroup>
+                <MsfButton>버튼1</MsfButton>
+                <MsfButton variant="primary">버튼2</MsfButton>
               </MsfButtonGroup>
             </template>
+            <p>자유로운 내용</p>
+            <template #footer>하단 고정영역</template>
           </MsfDialog>
         </GuideSourceBox>
         <GuideSourceBox :source="selfSource" id="ex2">
@@ -46,45 +46,27 @@
             showClose
             @close="isPopinPopOpen = false"
           >
-            <template #navBar> 상단고정 영역이 있다면 </template>
-            <MsfButtonGroup>
-              <MsfButton @click="isInnerModal = true">팝업또연다</MsfButton>
-              <MsfButton
-                @click="
-                  showAlert({
-                    title: '인증번호 유효시간이 종료되었습니다.',
-                    message: `[인증번호 재발송] 버튼을 클릭하시면,\n인증번호가 재발송 됩니다.`,
-                    onConfirm: () => console.log('Confirm!'),
-                    showCancel: true,
-                    labelProps: { confirm: '삭제', cancel: '취소' },
-                    // onCancel: () => console.log('취소 눌림하고 닫힘'),
-                  })
-                "
-              >
-                알럿
-              </MsfButton>
-            </MsfButtonGroup>
-            <template #footer>
-              <MsfButtonGroup align="center">
-                <MsfButton variant="secondary">취소</MsfButton>
-                <MsfButton variant="primary">확인</MsfButton>
+            <template #navBar>
+              <MsfButtonGroup>
+                <MsfButton>버튼1</MsfButton>
+                <MsfButton variant="primary">버튼2</MsfButton>
               </MsfButtonGroup>
             </template>
+            <div class="">
+              <MsfButton @click="isInnerModal = true">팝업또연다</MsfButton>
+              <MsfButton @click="showAlert('처리가 완료되었습니다.')"> 알럿 </MsfButton>
+            </div>
+            <template #footer>하단 고정영역</template>
             <!-- 내부 Dialog -->
-            <MsfDialog
-              size="small"
-              :isOpen="isInnerModal"
-              title="이것은 내부팝업"
-              @close="isInnerModal = false"
-            >
-              <template #navBar> 상단고정 영역이 있다면 </template>
-              <p v-for="n in 100" :key="n">자유로운 내용</p>
-              <template #footer>
-                <MsfButtonGroup align="center">
-                  <MsfButton variant="secondary">취소</MsfButton>
-                  <MsfButton variant="primary">확인</MsfButton>
+            <MsfDialog :isOpen="isInnerModal" title="이것은 내부팝업" @close="isInnerModal = false">
+              <template #navBar>
+                <MsfButtonGroup>
+                  <MsfButton>버튼1</MsfButton>
+                  <MsfButton variant="primary">버튼2</MsfButton>
                 </MsfButtonGroup>
               </template>
+              <p>이것은 또 다른 팝업</p>
+              <template #footer>하단 고정영역</template>
             </MsfDialog>
           </MsfDialog>
         </GuideSourceBox>
@@ -97,10 +79,11 @@
 import { ref } from 'vue'
 import { GuideUnit, GuideSourceBox } from '@/views/guide/components'
 import selfSource from './DialogGuide.vue?raw'
-import { useAlert } from '@/hooks/useAlert'
+// import { useAlert } from '@/hooks/useAlert'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 // Alert 열기
-const { showAlert } = useAlert()
+// const { showAlert } = useAlert()
 
 // Dialog 파일 열기
 import DialogSample from '@/views/guide/components/DialogSample.vue'

@@ -16,8 +16,13 @@ val hexagonalDirectoryTemplate = listOf(
     "application/port/out",
     "application/service",
     "domain/code",
+    "domain/dto",
     "domain/entity",
     "domain/vo",
+    "support/config",
+    "support/exception",
+    "support/properties",
+    "support/util",
 )
 
 val legacyDirectoryTemplate = listOf(
@@ -99,7 +104,10 @@ fun registerGradleModuleTask(
             val moduleDir = baseDir.resolve(moduleName)
             val mainJavaDir = moduleDir.resolve("src/main/java/com/ktmmobile/msf/$packageRoot/$moduleName")
             val testJavaDir = moduleDir.resolve("src/test/java/com/ktmmobile/msf/$packageRoot/$moduleName")
+            val mainResourcesDir = moduleDir.resolve("src/main/resources")
             val buildFile = moduleDir.resolve("build.gradle.kts")
+            val gitKeepFile = mainJavaDir.resolve(".gitKeep")
+            val applicationYamlFile = mainResourcesDir.resolve("application-$moduleName.yaml")
             val buildFileContent = """
                 plugins {
                     id("spring-library-conventions")
@@ -108,10 +116,41 @@ fun registerGradleModuleTask(
                 dependencies {
                 }
             """.trimIndent() + System.lineSeparator()
+            val applicationYamlContent = """
+                #### Common Profile
+
+
+
+                ---
+                #### PRD Profile
+                spring:
+                  config.activate.on-profile: prd
+
+
+
+                ---
+                #### STG Profile
+                spring:
+                  config.activate.on-profile: stg
+
+
+
+                ---
+                #### DEV Profile
+                spring:
+                  config.activate.on-profile: dev
+
+
+
+                ---
+                #### LOCAL Profile
+                spring:
+                  config.activate.on-profile: local
+            """.trimIndent() + System.lineSeparator()
 
             val createdPaths = linkedSetOf<String>()
 
-            listOf(baseDir, moduleDir, mainJavaDir, testJavaDir).forEach { dir ->
+            listOf(baseDir, moduleDir, mainJavaDir, testJavaDir, mainResourcesDir).forEach { dir ->
                 dir.mkdirs()
                 createdPaths.add(dir.normalize().path)
             }
@@ -123,11 +162,37 @@ fun registerGradleModuleTask(
                 throw InvalidUserDataException("build.gradle.kts path is a directory: ${buildFile.normalize().path}")
             }
 
+            if (!gitKeepFile.exists()) {
+                gitKeepFile.writeText("")
+                createdPaths.add(gitKeepFile.normalize().path)
+            } else if (gitKeepFile.isDirectory) {
+                throw InvalidUserDataException(".gitKeep path is a directory: ${gitKeepFile.normalize().path}")
+            }
+
+            if (!applicationYamlFile.exists()) {
+                applicationYamlFile.writeText(applicationYamlContent)
+                createdPaths.add(applicationYamlFile.normalize().path)
+            } else if (applicationYamlFile.isDirectory) {
+                throw InvalidUserDataException("application yaml path is a directory: ${applicationYamlFile.normalize().path}")
+            }
+
             println("Created module resources:")
             createdPaths.forEach { println(" - $it") }
-            if (buildFile.exists() && buildFile.normalize().path !in createdPaths) {
-                println("Existing file kept:")
-                println(" - ${buildFile.normalize().path}")
+            val keptPaths = buildList {
+                if (buildFile.exists() && buildFile.normalize().path !in createdPaths) {
+                    add(buildFile.normalize().path)
+                }
+                if (gitKeepFile.exists() && gitKeepFile.normalize().path !in createdPaths) {
+                    add(gitKeepFile.normalize().path)
+                }
+                if (applicationYamlFile.exists() && applicationYamlFile.normalize().path !in createdPaths) {
+                    add(applicationYamlFile.normalize().path)
+                }
+            }
+
+            if (keptPaths.isNotEmpty()) {
+                println("Existing files kept:")
+                keptPaths.forEach { println(" - $it") }
             }
         }
     }

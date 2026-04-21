@@ -48,7 +48,7 @@
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
-        <MsfButton @click="onClose">취소</MsfButton>
+        <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
         <MsfButton variant="primary">확인</MsfButton>
       </MsfButtonGroup>
     </template>

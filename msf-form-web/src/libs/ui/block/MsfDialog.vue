@@ -224,7 +224,7 @@ onUnmounted(() => {
     @include flex($v: center, $h: space-between) {
       gap: rem(16px);
     }
-    padding-bottom: rem(12px);
+    padding-bottom: rem(14px); // 하단간격 보더포함 총 (16px - 2px)
     border-bottom: rem(2px) solid var(--color-foreground);
   }
   .header {
@@ -296,5 +296,8 @@ onUnmounted(() => {
 .close-btn {
   height: auto;
   padding: 0;
+  width: rem(40px);
+  height: rem(40px);
+  border-radius: 0;
 }
 </style>

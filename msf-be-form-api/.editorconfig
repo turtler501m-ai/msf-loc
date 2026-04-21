@@ -1,11 +1,7 @@
 root = true
 
-[*.{java,kt,kts,xml,yml,yaml,properties,md,sql,txt,gradle}]
+[*]
 charset = utf-8
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
-
-[*.{bat,cmd,ps1}]
-charset = utf-8
-end_of_line = crlf

@@ -12,155 +12,12 @@
       </router-link>
     </MsfButtonGroup>
     <div class="guide-item">
-      <div>
-        <h3 class="ut-mb-10">1. 스크롤형 (5개씩 페이징, 5줄 높이 고정)</h3>
-        <MsfTableList
-          :data="tableData"
-          :columns="tableColumns"
-          mode="paging"
-          :row-view="5"
-          :height="5"
-          @row-click="onRowClick"
-        >
-          <template #colgroup>
-            <col width="80px" />
-            <col />
-            <col width="120px" />
-            <col width="100px" />
-          </template>
-
-          <template #thead>
-            <tr>
-              <th>번호</th>
-              <th>제목</th>
-              <th>등록일</th>
-              <th>관리</th>
-            </tr>
-          </template>
-
-          <template #tbody="{ items }">
-            <tr
-              v-for="item in items"
-              :key="item.id"
-              :class="{ 'is-selected': selectedId === item.id }"
-              @click="onRowClick(item)"
-            >
-              <td>{{ item.id }}</td>
-              <td class="ut-al">{{ item.title }}</td>
-              <td>{{ item.date }}</td>
-              <td>
-                <Button size="small" @click.stop="handleDelete(item)"> 삭제 </Button>
-              </td>
-            </tr>
-          </template>
-        </MsfTableList>
-      </div>
-
-      <h3 class="ut-mb-10">1. 스크롤형 (10개씩 페이징, 5줄 높이 고정)</h3>
-      <MsfTableList
-        :data="tableData"
-        :columns="tableColumns"
-        mode="paging"
-        :row-view="10"
-        :height="5"
-        :selected-id="selectedId"
-        rowClick
-        @row-click="onRowClick"
-      />
-      <br /><br />
-      <h3 class="ut-mb-10">2. 확장형 (더보기 연결)</h3>
-      <MsfTableList
-        :data="tableData"
-        :columns="tableColumns"
-        mode="more"
-        :row-view="4"
-        :selected-id="selectedId"
-        rowClick
-        @row-click="onRowClick"
-      />
-      <br />
-      <div v-if="selectedItem" class="selected-info-box ut-mt-20">
-        <p class="info-label">선택된 항목 정보:</p>
-        <div class="info-content">
-          <span class="id">ID: {{ selectedItem.id }}</span>
-          <span class="title">제목: {{ selectedItem.title }}</span>
-          <span class="date">날짜: {{ selectedItem.date }}</span>
-        </div>
-      </div>
-      <div v-else class="selected-info-box is-empty">
-        <p>항목을 선택해 주세요.</p>
-      </div>
-    </div>
-    <div class="guide-item">
-      <MsfTable customCaption="이것을 나타냅니다.">
-        <template #colgroup>
-          <col style="width: 150px" />
-          <col style="width: 300px" />
-          <col />
-        </template>
-        <template #tbody>
-          <tr v-for="(item, index) in list" :key="index">
-            <th scope="row">{{ item.title }}</th>
-            <td>
-              <Input v-model="item.detail" placeholder="상세 내용" />
-            </td>
-            <td>
-              <Textarea v-model="item.memo"></Textarea>
-            </td>
-          </tr>
-        </template>
-      </MsfTable>
-      <br />
-      <MsfTable>
-        <template #colgroup>
-          <col style="width: 150px" />
-          <col style="width: 300px" />
-          <col />
-        </template>
-        <template #tbody>
-          <tr v-for="(item, index) in list" :key="index">
-            <th scope="row">{{ item.title }}</th>
-            <td>
-              <Input v-model="item.detail" placeholder="상세 내용 입력" />
-            </td>
-            <td>
-              <Textarea v-model="item.memo"></Textarea>
-            </td>
-          </tr>
-        </template>
-      </MsfTable>
-      <br />
-      <MsfTable>
-        <template #colgroup>
-          <col style="width: 150px" />
-          <col style="width: 300px" />
-          <col />
-          <col style="width: 100px" />
-        </template>
-        <template #thead>
-          <tr>
-            <th>항목명</th>
-            <th>상세 정보</th>
-            <th>기타 메모</th>
-            <th>작업</th>
-          </tr>
-        </template>
-        <template #tbody>
-          <tr v-for="(item, index) in list" :key="index">
-            <th scope="row">{{ item.title }}</th>
-            <td>
-              <Input v-model="item.detail" class="form-control" placeholder="상세 내용 입력" />
-            </td>
-            <td>
-              <Textarea v-model="item.memo" class="form-control"></Textarea>
-            </td>
-            <td style="text-align: center">
-              <button @click="remove(index)" class="btn btn-danger">삭제</button>
-            </td>
-          </tr>
-        </template>
-      </MsfTable>
-      <br />
+      <MsfButtonGroup align="left">
+        <MsfButton @click="handleLoadingTest">로딩 (MsfLoadingComp) 5초간 띄우기</MsfButton>
+        <MsfButton @click="handleShowAlert">알림창 (Alert)</MsfButton>
+        <MsfButton @click="handleConfirmAlert">확인창 (Confirm)</MsfButton>
+      </MsfButtonGroup>
+      <MsfLoadingComp v-if="isLoading" />
     </div>
     <div class="guide-item">
       <MsfCollapse>
@@ -381,38 +238,6 @@
           placeholder="유형"
         />
       </MsfFormGroup>
-    </div>
-    <div class="guide-item">
-      <MsfButtonGroup align="left">
-        <MsfButton @click="handleSimpleAlert">기본 알럿</MsfButton>
-        <MsfButton @click="handleConfirmAlert">확인 알럿</MsfButton>
-        <MsfButton
-          @click="
-            showAlert({
-              title: '인증번호 유효시간이 종료되었습니다.',
-              message: `[인증번호 재발송] 버튼을 클릭하시면,\n인증번호가 재발송 됩니다.`,
-              onConfirm: () => console.log('삭제 확정!'),
-              showCancel: true,
-              labelProps: { confirm: '삭제', cancel: '취소' },
-              // onCancel: () => console.log('취소 눌림하고 닫힐거임!'),
-            })
-          "
-        >
-          삭제 알럿 직접 호출
-        </MsfButton>
-        <MsfButton
-          @click="
-            showAlert(
-              `고객 정보와 휴대폰번호가 일치하지 않습니다.\n휴대폰번호를 다시 확인해 주세요.`,
-              `[인증번호 재발송] 버튼을 클릭하시면,\n인증번호가 재발송 됩니다.`,
-              () => console.log('확인'),
-              true,
-            )
-          "
-        >
-          간단 호출
-        </MsfButton>
-      </MsfButtonGroup>
     </div>
     <div class="guide-item">
       <MsfButtonGroup align="left">
@@ -694,6 +519,158 @@
         />
       </MsfStack>
     </div>
+    <!-- 스크롤 테이블 필요시 사용 -->
+    <div class="guide-item">
+      <div>
+        <h3 class="ut-mb-10">1. 스크롤형 (5개씩 페이징, 5줄 높이 고정)</h3>
+        <MsfTableList
+          :data="tableData"
+          :columns="tableColumns"
+          mode="paging"
+          :row-view="5"
+          :height="5"
+          @row-click="onRowClick"
+        >
+          <template #colgroup>
+            <col width="80px" />
+            <col />
+            <col width="120px" />
+            <col width="100px" />
+          </template>
+
+          <template #thead>
+            <tr>
+              <th>번호</th>
+              <th>제목</th>
+              <th>등록일</th>
+              <th>관리</th>
+            </tr>
+          </template>
+
+          <template #tbody="{ items }">
+            <tr
+              v-for="item in items"
+              :key="item.id"
+              :class="{ 'is-selected': selectedId === item.id }"
+              @click="onRowClick(item)"
+            >
+              <td>{{ item.id }}</td>
+              <td class="ut-al">{{ item.title }}</td>
+              <td>{{ item.date }}</td>
+              <td>
+                <Button size="small" @click.stop="handleDelete(item)"> 삭제 </Button>
+              </td>
+            </tr>
+          </template>
+        </MsfTableList>
+      </div>
+
+      <h3 class="ut-mb-10">1. 스크롤형 (10개씩 페이징, 5줄 높이 고정)</h3>
+      <MsfTableList
+        :data="tableData"
+        :columns="tableColumns"
+        mode="paging"
+        :row-view="10"
+        :height="5"
+        :selected-id="selectedId"
+        rowClick
+        @row-click="onRowClick"
+      />
+      <br /><br />
+      <h3 class="ut-mb-10">2. 확장형 (더보기 연결)</h3>
+      <MsfTableList
+        :data="tableData"
+        :columns="tableColumns"
+        mode="more"
+        :row-view="4"
+        :selected-id="selectedId"
+        rowClick
+        @row-click="onRowClick"
+      />
+      <br />
+      <div v-if="selectedItem" class="selected-info-box ut-mt-20">
+        <p class="info-label">선택된 항목 정보:</p>
+        <div class="info-content">
+          <span class="id">ID: {{ selectedItem.id }}</span>
+          <span class="title">제목: {{ selectedItem.title }}</span>
+          <span class="date">날짜: {{ selectedItem.date }}</span>
+        </div>
+      </div>
+      <div v-else class="selected-info-box is-empty">
+        <p>항목을 선택해 주세요.</p>
+      </div>
+    </div>
+    <div class="guide-item">
+      <MsfTable customCaption="이것을 나타냅니다.">
+        <template #colgroup>
+          <col style="width: 150px" />
+          <col style="width: 300px" />
+          <col />
+        </template>
+        <template #tbody>
+          <tr v-for="(item, index) in list" :key="index">
+            <th scope="row">{{ item.title }}</th>
+            <td>
+              <Input v-model="item.detail" placeholder="상세 내용" />
+            </td>
+            <td>
+              <Textarea v-model="item.memo"></Textarea>
+            </td>
+          </tr>
+        </template>
+      </MsfTable>
+      <br />
+      <MsfTable>
+        <template #colgroup>
+          <col style="width: 150px" />
+          <col style="width: 300px" />
+          <col />
+        </template>
+        <template #tbody>
+          <tr v-for="(item, index) in list" :key="index">
+            <th scope="row">{{ item.title }}</th>
+            <td>
+              <Input v-model="item.detail" placeholder="상세 내용 입력" />
+            </td>
+            <td>
+              <Textarea v-model="item.memo"></Textarea>
+            </td>
+          </tr>
+        </template>
+      </MsfTable>
+      <br />
+      <MsfTable>
+        <template #colgroup>
+          <col style="width: 150px" />
+          <col style="width: 300px" />
+          <col />
+          <col style="width: 100px" />
+        </template>
+        <template #thead>
+          <tr>
+            <th>항목명</th>
+            <th>상세 정보</th>
+            <th>기타 메모</th>
+            <th>작업</th>
+          </tr>
+        </template>
+        <template #tbody>
+          <tr v-for="(item, index) in list" :key="index">
+            <th scope="row">{{ item.title }}</th>
+            <td>
+              <Input v-model="item.detail" class="form-control" placeholder="상세 내용 입력" />
+            </td>
+            <td>
+              <Textarea v-model="item.memo" class="form-control"></Textarea>
+            </td>
+            <td style="text-align: center">
+              <button @click="remove(index)" class="btn btn-danger">삭제</button>
+            </td>
+          </tr>
+        </template>
+      </MsfTable>
+      <br />
+    </div>
     <!-------------- 팝업 --------------->
     <!-- 기본모달 -->
     <MsfDialog
@@ -802,7 +779,6 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useAlert } from '@/hooks/useAlert'
 
 // Dialog 직접 열기
 import DialogSample from '@/views/guide/components/DialogSample.vue'
@@ -853,21 +829,35 @@ const deliveryMethod2 = ref('option4')
 // select
 const selectedCity = ref('') // 선택값 (value)만 담깁니다.
 
-// alert
-const { showAlert } = useAlert()
+// alert(개발에서 정의하신 유틸로 사용)
+import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
+// Alert 샘플 함수
+const handleSampleAlert = () => {
+  console.log('처리가 완료되었습니다.')
+}
 /** 1. 단순 메시지만 띄울 때 */
-const handleSimpleAlert = () => {
-  showAlert('처리가 완료되었습니다.')
+const handleShowAlert = () => {
+  showAlert('[표시할 메세지 (필수)]', handleSampleAlert, '[표시할 하위 메세지]')
 }
 /** 2. 제목과 확인/취소가 필요한 경우 */
 const handleConfirmAlert = () => {
-  showAlert({
-    title: '인증번호 유효시간이 종료되었습니다.',
-    message: `[인증번호 재발송] 버튼을 클릭하시면,\n인증번호가 재발송 됩니다.`,
-    onConfirm: () => console.log('확인 클릭'),
-    showCancel: true,
-    labelProps: { confirm: '확인', cancel: '취소' },
-  })
+  showConfirm(
+    '[표시할 메세지 (필수)]\n줄바꿈입니다.',
+    handleSampleAlert,
+    '[표시할 하위 메세지]<br/>줄바꿈입니다.',
+    handleSampleAlert,
+  )
+}
+
+// 로딩관련
+const isLoading = ref(false)
+const handleLoadingTest = () => {
+  isLoading.value = true
+
+  // 실제 API 호출 대신 5초 뒤에 로딩을 종료하는 예시
+  setTimeout(() => {
+    isLoading.value = false
+  }, 5000)
 }
 
 //  다이알로그

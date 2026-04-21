@@ -12,35 +12,45 @@
       @exit="closePopover"
     >
       <div
-        ref="popoverRef"
-        class="popover-root"
-        v-bind="$attrs"
-        :style="{
-          width: props.width,
-          maxHeight: props.maxHeight,
-          /* 위치 계산이 완료되기 전까지는 숨겨서 0,0 지점에 잠깐 나타나는 '깜빡임' 방지 */
-          visibility: isPositioned ? 'visible' : 'hidden',
-        }"
-        @click.stop
+        :class="['popover-wrapper', { 'has-overlay': props.hasOverlay }]"
+        @click="handleOverlayClick"
       >
-        <div class="popover-header">
-          <div class="header-inner">
-            <div v-if="props.title" class="header">
-              <h2 class="title">{{ props.title }}</h2>
+        <div
+          ref="popoverRef"
+          class="popover-root"
+          v-bind="$attrs"
+          :style="{
+            width: props.width,
+            maxHeight: props.maxHeight,
+            /* 위치 계산이 완료되기 전까지는 숨겨서 0,0 지점에 잠깐 나타나는 '깜빡임' 방지 */
+            visibility: isPositioned ? 'visible' : 'hidden',
+          }"
+          @click.stop
+        >
+          <div class="popover-header">
+            <div class="header-inner">
+              <div v-if="props.title" class="header">
+                <h2 class="title">{{ props.title }}</h2>
+              </div>
+              <MsfButton
+                v-if="showCloseBtn"
+                variant="ghost"
+                iconOnly="close"
+                class="popover-close-button"
+                @click="closePopover"
+              >
+                닫기
+              </MsfButton>
             </div>
-            <MsfButton
-              v-if="showCloseBtn"
-              variant="ghost"
-              iconOnly="close"
-              class="popover-close-button"
-              @click="closePopover"
-            >
-              닫기
-            </MsfButton>
           </div>
-        </div>
-        <div class="popover-content">
+          <!-- <div class="popover-content">
           <MsfCustomScroll class="popover-scrollbar">
+            <div class="popover-inner">
+              <slot></slot>
+            </div>
+          </MsfCustomScroll>
+        </div> -->
+          <MsfCustomScroll class="popover-content popover-scrollbar">
             <div class="popover-inner">
               <slot></slot>
             </div>
@@ -67,6 +77,8 @@ const props = defineProps({
   width: { type: String, default: '460px' }, // 팝업 너비
   maxHeight: { type: String, default: '' }, // 팝업 최대 높이 (내부 스크롤 발생 조건)
   showCloseBtn: { type: Boolean, default: true }, // 우측 상단 X 버튼 표시 여부
+  hasOverlay: { type: Boolean, default: true }, // 배경 차단 레이어 여부 설정
+  overlayClose: { type: Boolean, default: false }, // 오버레이 클릭 시 닫기 허용 여부
 })
 
 const emit = defineEmits(['update:isOpen', 'stateChange'])
@@ -227,6 +239,14 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll, { capture: true })
   window.removeEventListener('keydown', handleEscape)
 })
+
+// 오버레이 클릭 핸들러
+const handleOverlayClick = () => {
+  // 오버레이 클릭 시 닫기가 허용된 경우에만 닫음 (닫기 버튼 전용이면 무시)
+  if (props.overlayClose) {
+    closePopover()
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -243,11 +263,20 @@ onUnmounted(() => {
   background-color: var(--color-background);
   border-radius: var(--border-radius-l);
   box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.1);
-  min-width: rem(120px);
-  height: rem(663px);
   border: var(--border-width-base) solid var(--color-primary-base);
   margin: 0;
   padding-bottom: var(--popover-inner-padding);
+  min-width: rem(120px);
+  min-height: rem(540px); // 디자인가이드상 높이
+  height: auto;
+
+  // 추가_MsfCustomScrollbar 관련 스타일 추가
+  overflow: hidden;
+  display: flex; // 내부 MsfCustomScrollbar가 높이를 꽉 채우도록 flex 설정
+  flex-direction: column;
+  // 최대 높이 제한
+  max-height: 70vh;
+  overflow: hidden; // 부모의 기본 스크롤은 막고 커스텀만 사용
 
   .popover-header {
     flex-shrink: 0;
@@ -276,12 +305,31 @@ onUnmounted(() => {
   }
   // 팝오버 컨텐츠
   .popover-content {
-    flex: 1;
+    // flex: 1;
+    // overflow-y: auto;
+    flex: 1 1 auto;
     overflow-y: auto;
+    min-height: 0;
     .popover-inner {
       height: 100%;
       padding-inline: var(--popover-inner-padding);
     }
+  }
+}
+
+/* 배경 차단 및 오버레이 스타일 */
+.popover-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  pointer-events: auto;
+
+  // hasOverlay가 true일 때만 가림막
+  &.has-overlay {
+    background-color: transparent;
   }
 }
 </style>

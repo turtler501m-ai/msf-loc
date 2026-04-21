@@ -1,7 +1,7 @@
 <template>
   <div :class="rootClasses" role="radiogroup">
     <MsfRadio
-      v-for="option in options"
+      v-for="option in optionList"
       :key="option.value"
       :model-value="props.modelValue"
       :value="option.value"
@@ -15,7 +15,9 @@
 </template>
 
 <script setup>
-import { computed, useId } from 'vue'
+import { computed, onBeforeMount, ref, useId, watch } from 'vue'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { isEmpty } from '@/libs/utils/string.utils'
 
 const props = defineProps({
   /** 현재 선택된 값 */
@@ -39,10 +41,13 @@ const props = defineProps({
   error: Boolean,
   /** 그룹 전체 비활성화 */
   disabled: Boolean,
+  groupCode: { type: String, default: '' },
 })
 
 // 이벤트 등록
 const emit = defineEmits(['update:modelValue', 'change'])
+
+const optionList = ref(props.options)
 
 const handleUpdate = (val) => {
   emit('update:modelValue', val)
@@ -58,6 +63,40 @@ const rootClasses = computed(() => [
     'is-error': props.error,
   },
 ])
+
+const getOptionsByGroupCode = (groupCode) => {
+  if (props.options?.length > 0) return props.options
+  if (isEmpty(groupCode)) return []
+  getCommonCodeList(groupCode).then((list) => {
+    console.log('list:', list)
+    optionList.value = list.map((item) => ({ value: item.code, label: item.title }))
+  })
+}
+
+watch(
+  () => props.options,
+  (newOptions) => {
+    if (newOptions?.length > 0) {
+      optionList.value = newOptions
+    } else {
+      getOptionsByGroupCode(props.groupCode)
+    }
+  },
+  { immediate: true, deep: true },
+)
+watch(
+  () => props.groupCode,
+  (newGroupCode) => {
+    if (isEmpty(newGroupCode)) return
+
+    getOptionsByGroupCode(newGroupCode)
+  },
+  { immediate: true },
+)
+
+onBeforeMount(() => {
+  getOptionsByGroupCode(props.groupCode)
+})
 </script>
 
 <style lang="scss" scoped>

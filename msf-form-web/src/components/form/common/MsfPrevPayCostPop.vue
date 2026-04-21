@@ -11,37 +11,37 @@
         <div class="cost-item">
           <dl class="cost-title">
             <dt>월 단말요금</dt>
-            <dd>0 원</dd>
+            <dd>{{ formatCurrency(deviceMonthlyCost) }} 원</dd>
           </dl>
           <ul class="cost-infos">
             <li>
               <dl>
                 <dt>단말기 출고가</dt>
-                <dd>499,400 원</dd>
+                <dd>{{ formatCurrency(deviceTotalCost) }} 원</dd>
               </dl>
             </li>
             <li>
               <dl>
                 <dt>공통지원금</dt>
-                <dd class="ut-color-accent">- 499,400 원</dd>
+                <dd class="ut-color-accent">- {{ formatCurrency(commonDiscount) }} 원</dd>
               </dl>
             </li>
             <li>
               <dl>
                 <dt>추가지원금</dt>
-                <dd class="ut-color-accent">- 0 원</dd>
+                <dd class="ut-color-accent">- {{ formatCurrency(extraDiscount) }} 원</dd>
               </dl>
             </li>
             <li>
               <dl>
                 <dt>할부원금</dt>
-                <dd>0 원</dd>
+                <dd>{{ formatCurrency(installmentPrincipal) }} 원</dd>
               </dl>
             </li>
             <li>
               <dl>
                 <dt>총할부수수료</dt>
-                <dd>0 원</dd>
+                <dd>{{ formatCurrency(installmentFee) }} 원</dd>
               </dl>
             </li>
           </ul>
@@ -49,19 +49,19 @@
         <div class="cost-item">
           <dl class="cost-title">
             <dt>월 통신요금</dt>
-            <dd>21,000 원</dd>
+            <dd>{{ formatCurrency(planMonthlyCost) }} 원</dd>
           </dl>
           <ul class="cost-infos">
             <li>
               <dl>
                 <dt>기본요금</dt>
-                <dd>21,000 원</dd>
+                <dd>{{ formatCurrency(planBaseCost) }} 원</dd>
               </dl>
             </li>
             <li>
               <dl>
                 <dt>프로모션 할인</dt>
-                <dd class="ut-color-accent">0 원</dd>
+                <dd class="ut-color-accent">- {{ formatCurrency(planDiscount) }} 원</dd>
               </dl>
             </li>
           </ul>
@@ -69,7 +69,7 @@
         <div class="cost-item">
           <dl class="cost-title">
             <dt>기타요금</dt>
-            <dd>0 원</dd>
+            <dd>{{ formatCurrency(etcTotalCost) }} 원</dd>
           </dl>
           <ul class="cost-infos">
             <li>
@@ -110,9 +110,9 @@
       <div class="cost-total">
         <dl>
           <dt>월 납부금액(부가세 포함)</dt>
-          <dd class="ut-color-point">21,000 원</dd>
+          <dd class="ut-color-point">{{ formatCurrency(totalMonthlyCost) }} 원</dd>
         </dl>
-        <span class="cost-desc">5G / 번호이동 / 요금제명</span>
+        <span class="cost-desc">5G / {{ getJoinTypeName(joinType) }} / {{ planName }}</span>
       </div>
       <!-- // cost-total -->
     </div>
@@ -137,11 +137,46 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
+  planName: { type: String, default: '' },
+  joinType: { type: String, default: 'MNP3' },
+  deviceTotalCost: { type: Number, default: 0 },
+  commonDiscount: { type: Number, default: 0 },
+  extraDiscount: { type: Number, default: 0 },
+  installmentPrincipal: { type: Number, default: 0 },
+  installmentFee: { type: Number, default: 0 },
+  deviceMonthlyCost: { type: Number, default: 0 },
+  planBaseCost: { type: Number, default: 0 },
+  planDiscount: { type: Number, default: 0 },
+  planMonthlyCost: { type: Number, default: 0 },
+  etcTotalCost: { type: Number, default: 0 },
 })
 
 const emit = defineEmits(['update:isOpen', 'triggerClick', 'close'])
+
+// 가입유형 이름 매핑
+const getJoinTypeName = (type) => {
+  const map = {
+    MNP3: '번호이동',
+    NAC3: '신규가입',
+    HDN3: '기기변경',
+  }
+  return map[type] || '번호이동'
+}
+
+// 금액 포맷팅 (콤마 추가)
+const formatCurrency = (value) => {
+  if (!value) return '0'
+  return value.toLocaleString('ko-KR')
+}
+
+// 총 월 납부금액 계산
+const totalMonthlyCost = computed(() => {
+  return props.deviceMonthlyCost + props.planMonthlyCost
+})
 
 //  닫기 이벤트
 const onClose = (value) => {

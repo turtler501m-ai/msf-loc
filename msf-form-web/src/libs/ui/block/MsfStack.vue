@@ -100,5 +100,27 @@ const rootClasses = computed(() => [
   &.gap-3 {
     gap: rem(16px);
   }
+
+  // 내부 최초 너비 고정값 지정
+  :deep([class^='input-root']) {
+    flex: 0 0 auto;
+    width: var(--formgroup-inner-inline-width);
+  }
+  :deep([class^='select-root']) {
+    flex: 0 0 auto;
+    width: rem(300px);
+  }
+  // 폼그룹 내부에 체크박스,라디오 의 기본높이 레이블과 맞춰서 지정
+  :deep([class^='checkbox-group-root']),
+  :deep([class^='radio-group-root']) {
+    row-gap: 0;
+    column-gap: rem(24px);
+  }
+  :deep([class^='checkbox-root']),
+  :deep([class^='radio-root']) {
+    min-height: var(--form-group-min-height);
+    /* 전체 높이에서 글자 높이를 뺀 절반 */
+    padding-top: calc((var(--form-group-min-height) - 1em) / 2);
+  }
 }
 </style>

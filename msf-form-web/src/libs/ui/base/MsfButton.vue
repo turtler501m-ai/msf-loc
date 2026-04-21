@@ -70,6 +70,8 @@ const props = defineProps({
   disabled: Boolean,
   /** 활성화 여부 */
   active: Boolean,
+  /** 최소너비 해제 */
+  noMinWidth: Boolean,
 })
 
 // 이벤트 등록
@@ -86,6 +88,7 @@ const rootClasses = computed(() => [
     'btn-disabled': props.disabled,
     'btn-iconOnly': props.iconOnly,
     'is-active': props.active,
+    'no-min-width': props.noMinWidth,
   },
 ])
 
@@ -118,6 +121,9 @@ const handleClick = (event) => {
   padding: var(--spacing-x1) var(--spacing-x4);
   // min-width: fit-content;
   min-width: rem(120px);
+  &.no-min-width {
+    min-width: rem(80px); //최소 넓이로 지정된 값으로 지정
+  }
   height: rem(56px);
   font-size: var(--font-size-18);
   line-height: var(--line-height-fit);
@@ -176,6 +182,9 @@ const handleClick = (event) => {
   }
   &:active {
     background-color: var(--color-primary-press);
+  }
+  &.no-min-width {
+    font-weight: var(--font-weight-medium);
   }
 }
 .btn-secondary {

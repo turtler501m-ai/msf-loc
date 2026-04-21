@@ -1,9 +1,17 @@
-@use '@/assets/styles/abstracts' as *;
+//_roots.scss에서 한번 컴파일
+@use '@/assets/styles/abstracts/functions' as *;
+@use '@/assets/styles/abstracts/tokens' as *;
+@use '@/assets/styles/abstracts/icons' as *;
+@use '@/assets/styles/abstracts/mixins' as *;
 
 /* Root */
 
 :root {
   @include generate-cssVars($tokens);
+  // icons.scss에서 사용할 아이콘 변수에 담기
+  // : MsfIcon 외에 다른데서 사용시 불필요한 icons.scss임포트 제거를 위함
+  --icon-checkbox-set: #{icon('checkbox')}; // MsfCheckbox: default
+  --icon-checkbox-set2: #{icon('check2')}; // MsfCheckbox outline
 
   --sat: env(safe-area-inset-top);
   --sar: env(safe-area-inset-right);

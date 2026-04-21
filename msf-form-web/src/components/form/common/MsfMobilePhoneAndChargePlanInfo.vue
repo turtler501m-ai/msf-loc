@@ -1,31 +1,31 @@
 <script setup>
-import {reactive} from "vue";
+import { reactive } from 'vue'
 
 const formData = reactive({
   birth6Value: '',
   /* 가입유형 선택 */
-  product: 'product1', //상품
+  productType: 'product1', //상품
   joinType: 'joinType1', //가입유형
   /* 고객 유형 */
-  customerType: 'customerType1', //고객유형
+  cstmrTypeCd: 'customerType1', //고객유형
   /* 신분증 확인 */
-  idCard: 'idCard1', //신분증
-  idCardScan: '', //신분증 스캔
-  licenseRegion: 'licenseRegion1', //면허 지역
+  identityCertTypeCd: 'idCard1', //신분증
+  identityTypeCd: '', //신분증 스캔
+  identityIssuRegion: 'licenseRegion1', //면허 지역
   /* 가입자 정보 */
-  userName: '', //이름
-  residentNo1: '', //주민등록번호1
-  residentNo2: '', //주민등록번호2
-  foreignerNo1: '', //외국인등록번호1
-  foreignerNo2: '', //외국인등록번호2
-  corpRegNo1: '', //법인등록번호1
-  corpRegNo2: '', //법인등록번호2
-  bizNo1: '', //사업자등록번호1
-  bizNo2: '', //사업자등록번호2
-  bizNo3: '', //사업자등록번호3
-  repreName: '', //대표자명
-  bizType: '', //업종
-  bizItem: '', //업태
+  cstmrNm: '', //이름
+  cstmrNativeRrn1: '', //주민등록번호1
+  cstmrNativeRrn2: '', //주민등록번호2
+  cstmrForeignerRrn1: '', //외국인등록번호1
+  cstmrForeignerRrn2: '', //외국인등록번호2
+  cstmrJuridicalRrn1: '', //법인등록번호1
+  cstmrJuridicalRrn2: '', //법인등록번호2
+  cstmrJuridicalBizNo1: '', //사업자등록번호1
+  cstmrJuridicalBizNo2: '', //사업자등록번호2
+  cstmrJuridicalBizNo3: '', //사업자등록번호3
+  cstmrJuridicalRepNm: '', //대표자명
+  upjnCd: '', //업종
+  bcuSbst: '', //업태
   deviceChgTel1: '010', //기기변경 휴대폰번호1
   deviceChgTel2: '', //기기변경 휴대폰번호2
   deviceChgTel3: '', //기기변경 휴대폰번호3
@@ -46,13 +46,13 @@ const formData = reactive({
   userBirthDate: '', //생년월일
   userGender: '', //성별
   /** 대리인 위임정보 */
-  agentName: '', //위임받은 고객 이름
+  minorAgentNm: '', //위임받은 고객 이름
   agentBirthDate: '', //생년월일
   agentGender: '', //성별
-  agentRelation: '', //신청인과의 관계
-  agentPhone1: '', //연락처1
-  agentPhone2: '', //연락처2
-  agentPhone3: '', //연락처3
+  minorAgentRelTypeCd: '', //신청인과의 관계
+  minorAgentTelFnNo: '', //연락처1
+  minorAgentTelMnNo: '', //연락처2
+  minorAgentTelRnNo: '', //연락처3
   /* 가입자 연락처 */
   mobileNo1: '010', //휴대폰번호1
   mobileNo2: '', //휴대폰번호2
@@ -88,12 +88,12 @@ const formData = reactive({
   <MsfStack vertical type="formgroups">
     <MsfFormGroup label="개통 유형" tag="div" required>
       <MsfChip
-        v-model="formData.openingType"
-        name="inp-openingType"
+        v-model="formData.openTypeCd"
+        name="inp-openTypeCd"
         :data="[
-            { value: 'openingType1', label: '휴대폰' },
-            { value: 'openingType2', label: 'eSIM' },
-          ]"
+          { value: 'openingType1', label: '휴대폰' },
+          { value: 'openingType2', label: 'eSIM' },
+        ]"
       />
     </MsfFormGroup>
     <MsfFormGroup label="휴대폰" tag="div" required>
@@ -101,9 +101,9 @@ const formData = reactive({
         title="휴대폰"
         v-model="formData.deviceModel"
         :options="[
-            { label: '갤럭시 A36', value: 'deviceModel1' },
-            { label: '갤럭시 A366', value: 'deviceModel2' },
-          ]"
+          { label: '갤럭시 A36', value: 'deviceModel1' },
+          { label: '갤럭시 A366', value: 'deviceModel2' },
+        ]"
         class="ut-w-300"
       />
     </MsfFormGroup>
@@ -112,9 +112,9 @@ const formData = reactive({
         title="용량"
         v-model="formData.capacity"
         :options="[
-            { label: '64GB', value: 'capacity1' },
-            { label: '128GB', value: 'capacity2' },
-          ]"
+          { label: '64GB', value: 'capacity1' },
+          { label: '128GB', value: 'capacity2' },
+        ]"
         class="ut-w-300"
       />
     </MsfFormGroup>
@@ -123,9 +123,9 @@ const formData = reactive({
         title="색상"
         v-model="formData.color"
         :options="[
-            { label: '화이트', value: 'color1' },
-            { label: '블랙', value: 'color2' },
-          ]"
+          { label: '화이트', value: 'color1' },
+          { label: '블랙', value: 'color2' },
+        ]"
         class="ut-w-300"
       />
     </MsfFormGroup>
@@ -134,11 +134,11 @@ const formData = reactive({
         v-model="formData.contractPeriod"
         name="inp-contractPeriod"
         :data="[
-            { value: 'contractPeriod1', label: '무약정' },
-            { value: 'contractPeriod2', label: '24개월' },
-            { value: 'contractPeriod3', label: '30개월' },
-            { value: 'contractPeriod4', label: '36개월' },
-          ]"
+          { value: 'contractPeriod1', label: '무약정' },
+          { value: 'contractPeriod2', label: '24개월' },
+          { value: 'contractPeriod3', label: '30개월' },
+          { value: 'contractPeriod4', label: '36개월' },
+        ]"
       />
     </MsfFormGroup>
     <MsfFormGroup label="단말기 할부기간" tag="div" required>
@@ -146,9 +146,9 @@ const formData = reactive({
         v-model="formData.installmentMonth"
         name="inp-installmentMonth"
         :data="[
-            { value: 'installmentMonth1', label: '0개월(없음)' },
-            { value: 'installmentMonth2', label: '24개월' },
-          ]"
+          { value: 'installmentMonth1', label: '0개월(없음)' },
+          { value: 'installmentMonth2', label: '24개월' },
+        ]"
       />
     </MsfFormGroup>
     <MsfFormGroup label="할인유형" tag="div" required>
@@ -156,11 +156,11 @@ const formData = reactive({
         v-model="formData.discountType"
         name="inp-discountType"
         :data="[
-            { value: 'discountType1', label: '단말 할인' },
-            { value: 'discountType2', label: '알뜰스폰서(약정지원금)' },
-            { value: 'discountType3', label: '알뜰스폰서(요금할인)' },
-            { value: 'discountType4', label: '심플할인' },
-          ]"
+          { value: 'discountType1', label: '단말 할인' },
+          { value: 'discountType2', label: '알뜰스폰서(약정지원금)' },
+          { value: 'discountType3', label: '알뜰스폰서(요금할인)' },
+          { value: 'discountType4', label: '심플할인' },
+        ]"
       />
     </MsfFormGroup>
     <MsfFormGroup label="요금제" tag="div" required>
@@ -168,9 +168,9 @@ const formData = reactive({
         title="요금제"
         v-model="formData.planName1"
         :options="[
-            { label: '추천 요금제1', value: 'planName1-1' },
-            { label: '추천 요금제2', value: 'planName1-2' },
-          ]"
+          { label: '추천 요금제1', value: 'planName1-1' },
+          { label: '추천 요금제2', value: 'planName1-2' },
+        ]"
         class="ut-w100p"
         placeholder="추천 요금제"
       />
@@ -178,17 +178,17 @@ const formData = reactive({
         title="요금제"
         v-model="formData.planName2"
         :options="[
-            {
-              label:
-                '5G 단말 (2GB/200분) / 데이터 2GB(+보답프로그램 50GB(6개월)) | 음성 200분 | 문자 100건1',
-              value: 'planName2-1',
-            },
-            {
-              label:
-                '5G 단말 (2GB/200분) / 데이터 2GB(+보답프로그램 50GB(6개월)) | 음성 200분 | 문자 100건2',
-              value: 'planName2-2',
-            },
-          ]"
+          {
+            label:
+              '5G 단말 (2GB/200분) / 데이터 2GB(+보답프로그램 50GB(6개월)) | 음성 200분 | 문자 100건1',
+            value: 'planName2-1',
+          },
+          {
+            label:
+              '5G 단말 (2GB/200분) / 데이터 2GB(+보답프로그램 50GB(6개월)) | 음성 200분 | 문자 100건2',
+            value: 'planName2-2',
+          },
+        ]"
         class="ut-w100p"
       />
     </MsfFormGroup>
@@ -197,9 +197,9 @@ const formData = reactive({
         title="대리점 선택"
         v-model="formData.agency"
         :options="[
-            { label: '대리점1', value: 'agency1' },
-            { label: '대리점2', value: 'agency2' },
-          ]"
+          { label: '대리점1', value: 'agency1' },
+          { label: '대리점2', value: 'agency2' },
+        ]"
         class="ut-w-300"
         placeholder="대리점 선택"
       />
@@ -208,6 +208,4 @@ const formData = reactive({
   <!-- // 휴대폰 및 요금제 정보 -->
 </template>
 
-<style scoped lang="scss">
-
-</style>
+<style scoped lang="scss"></style>

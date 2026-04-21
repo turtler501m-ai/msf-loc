@@ -65,6 +65,8 @@ const iconClasses = computed(() => [
 <style lang="scss">
 @use 'sass:map';
 @use 'sass:list';
+// MsfIcon에서만 임포트하여 사용하고 다른곳에서 사용시 _root.scss에서 등록해서 사용권장
+@use '@/assets/styles/abstracts/icons' as *;
 
 /* 1. 기본 루트 스타일 */
 .msf-icon {

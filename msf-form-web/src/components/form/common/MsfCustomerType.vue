@@ -3,16 +3,56 @@
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="고객 유형" tag="div" required>
-        <MsfChip v-model="model.customerType" name="inp-customerType" :disabled="model.isVerified" :data="[{ value: 'NA', label: '내국인' }, { value: 'NM', label: '미성년자(19세 미만)' }, { value: 'FN', label: '외국인(Foreigner)' }, { value: 'FM', label: '외국인(Foreigner) 미성년자' }, { value: 'JP', label: '법인' }, { value: 'PU', label: '공공기관' }]" />
+        <MsfChip
+          v-model="model.cstmrTypeCd"
+          name="inp-customerType"
+          :disabled="model.isVerified || model.isSaved"
+          :data="customerTypeCodes"
+        />
+      </MsfFormGroup>
+      <MsfFormGroup
+        v-if="['JP', 'GO'].includes(model.cstmrTypeCd)"
+        label="방문 유형"
+        tag="div"
+        required
+      >
+        <MsfChip
+          v-model="model.cstmrVisitTypeCd"
+          name="inp-visitType"
+          :disabled="model.isVerified || model.isSaved"
+          :data="[
+            { value: 'V1', label: '직접방문' },
+            { value: 'V2', label: '대리인' },
+          ]"
+        />
       </MsfFormGroup>
     </MsfStack>
   </div>
 </template>
+
 <script setup>
-import { defineModel, defineProps } from 'vue'
+import { defineModel, defineProps, watch, defineExpose } from 'vue'
+import { useCommonCode } from '@/libs/utils/comn.utils'
 
 const props = defineProps({
-  title: { type: String, default: '고객 유형' }
+  title: { type: String, default: '고객 유형' },
 })
 const model = defineModel({ type: Object, required: true })
+
+const { codeList: customerTypeCodes } = useCommonCode('CSTMR_TYPE_CD', model, 'cstmrTypeCd', 'NA')
+
+watch(
+  () => model.value.cstmrTypeCd,
+  (newVal) => {
+    if (!['JP', 'GO'].includes(newVal)) {
+      model.value.cstmrVisitTypeCd = ''
+    }
+  },
+)
+
+const validate = () => {
+  return true
+}
+
+defineExpose({ validate })
 </script>

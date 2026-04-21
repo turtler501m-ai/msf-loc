@@ -9,16 +9,16 @@ export function useAuthButton(dependenciesCallback, externalAuthFlag) {
     (newVals) => {
       // 모든 의존성 값이 유효한지 체크 (undefined, null, 빈 문자열 방지)
       const isReady = newVals.every(
-        (val) => val !== undefined && val !== null && String(val).trim().length > 0
+        (val) => val !== undefined && val !== null && String(val).trim().length > 0,
       )
-      
+
       // 의존성 값이 하나라도 바뀌면 인증 상태 강제 초기화 (재인증 요구)
       status.value = isReady ? 'ready' : 'none'
       if (externalAuthFlag) {
         externalAuthFlag.value = false
       }
     },
-    { deep: true, immediate: true }
+    { deep: true, immediate: true },
   )
 
   const send = () => {

@@ -10,7 +10,7 @@
 import { defineModel, defineProps } from 'vue'
 
 const props = defineProps({
-  title: { type: String, default: '메모' }
+  title: { type: String, default: '메모' },
 })
 const model = defineModel({ type: Object, required: true })
 </script>

@@ -33,7 +33,7 @@ const props = defineProps({
   // 타이틀 레벨 (기본: 1) - 폰트사이즈 14px(1), 16px(2)
   level: {
     type: String,
-    default: '1',
+    default: '2',
     validator: (v) => ['1', '2'].includes(v),
   },
   // 상단 여백 (현재 0(0), 1(16px), 2(24px), 3(32px) 사용중)

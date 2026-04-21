@@ -5,11 +5,16 @@
         <MsfCheckbox
           :variant="props.type"
           :model-value="modelValue"
-          :label="label"
+          :label="name"
           @update:model-value="handleUpdateModel"
         >
           <template #label-prepend>
-            <em v-if="required" class="required-mark" aria-label="필수 항목">[필수]</em>
+            <em
+              v-if="required === 'Y' || required === '2'"
+              class="required-mark"
+              aria-label="필수 항목"
+              >[필수]</em
+            >
             <em v-else class="optional-mark" aria-label="선택 항목">[선택]</em>
           </template>
         </MsfCheckbox>
@@ -34,25 +39,20 @@
         </MsfButton>
       </div>
     </div>
-    <MsfDialog
-      :is-open="showDialog"
-      :title="props.popTitle || label"
-      show-close
-      @close="showDialog = false"
-    >
+    <MsfDialog :is-open="showDialog" :title="name" show-close @close="showDialog = false">
       <div class="terms-content">
         <template v-if="Array.isArray(content)">
           <ul class="text-list">
-            <li v-for="(text, i) in content" :key="i">{{ text }}</li>
+            <li v-for="(text, i) in content" :key="i" v-html="text"></li>
           </ul>
         </template>
         <template v-else>
-          <div class="plain-text">{{ content }}</div>
+          <div class="plain-text" v-html="content"></div>
         </template>
       </div>
       <template #footer>
         <MsfButtonGroup align="center">
-          <MsfButton variant="primary" class="confirm-btn" @click="showDialog = false">
+          <MsfButton variant="primary" class="confirm-btn" @click="onClickConfirmBtn()">
             동의 후 닫기
           </MsfButton>
         </MsfButtonGroup>
@@ -60,7 +60,7 @@
     </MsfDialog>
 
     <transition name="expand">
-      <div v-show="isExpanded && children?.length" class="child-group-container">
+      <div v-show="isExpanded && children?.length > 0" class="child-group-container">
         <div class="child-group-inner">
           <MsfAgreementItem
             v-for="(child, idx) in children"
@@ -68,7 +68,7 @@
             v-model="child.checked"
             v-bind="child"
             :only-required="onlyRequired"
-            @change="emit('change')"
+            @change="(checked) => emit('change', checked)"
           />
         </div>
       </div>
@@ -83,8 +83,9 @@ defineOptions({ name: 'AgreementItem' })
 
 const props = defineProps({
   modelValue: Boolean, // 체크박스 선택 여부
-  label: String, // 약관 제목 텍스트
-  required: Boolean, // 필수 동의 여부 (true: 필수 / false: 선택)
+  code: String,
+  name: String, // 약관 제목 텍스트
+  required: String, // 필수 동의 여부 (true: 필수 / false: 선택)
   content: [String, Array], // 상세보기 팝업 내용 (문자열 또는 배열)
   children: Array, // 하위 약관 항목 리스트
   onlyRequired: {
@@ -97,7 +98,6 @@ const props = defineProps({
     default: 'lined', // 기본값
     validator: (value) => ['default', 'lined'].includes(value),
   },
-  popTitle: String,
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -118,9 +118,11 @@ watch(
   (newChildren) => {
     if (!newChildren?.length) return
 
-    let isTargetAllChecked = false
+    let isTargetAllChecked
     if (props.onlyRequired) {
-      const requiredItems = newChildren.filter((child) => child.required)
+      const requiredItems = newChildren.filter(
+        (child) => child.required === 'Y' || child.required === '2',
+      )
       isTargetAllChecked =
         requiredItems.length > 0 ? requiredItems.every((child) => child.checked) : props.modelValue
     } else {
@@ -129,7 +131,7 @@ watch(
 
     if (isTargetAllChecked !== props.modelValue) {
       emit('update:modelValue', isTargetAllChecked)
-      emit('change')
+      emit('change', isTargetAllChecked)
     }
   },
   { deep: true },
@@ -138,13 +140,19 @@ watch(
 //  본인 체크박스 조작 시 (부모 체크 시 자식들 일괄 체크)
 const handleUpdateModel = (value) => {
   emit('update:modelValue', value)
-  emit('change')
+  emit('change', value)
 
   if (props.children?.length) {
     props.children.forEach((child) => {
       child.checked = value
     })
   }
+}
+
+const onClickConfirmBtn = () => {
+  emit('update:modelValue', true)
+  emit('change', true)
+  showDialog.value = false
 }
 </script>
 

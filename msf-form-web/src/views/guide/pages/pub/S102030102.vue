@@ -20,24 +20,27 @@
       <ul class="block-list">
         <li v-for="n in 20" :key="n">
           <MsfStack type="field">
-            <MsfInput
+            <MsfNumberInput
               v-model="formData.numberValue1"
               placeholder="앞자리"
-              ariaLabel="수산차단 번호 앞자리"
+              ariaLabel="수신차단 번호 앞자리"
+              maxlength="3"
               class="ut-w-140"
             />
             <span class="unit-sep">-</span>
-            <MsfInput
+            <MsfNumberInput
               v-model="formData.numberValue2"
               placeholder="중간 자리"
-              ariaLabel="수산차단 번호 중간 자리"
+              ariaLabel="수신차단 번호 중간 자리"
+              maxlength="4"
               class="ut-w-140"
             />
             <span class="unit-sep">-</span>
-            <MsfInput
+            <MsfNumberInput
               v-model="formData.numberValue3"
               placeholder="뒷 자리"
-              ariaLabel="수산차단 번호 뒷 자리"
+              ariaLabel="수신차단 번호 뒷 자리"
+              maxlength="4"
               class="ut-w-140"
             />
           </MsfStack>

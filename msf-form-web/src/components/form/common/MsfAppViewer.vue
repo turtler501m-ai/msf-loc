@@ -1,15 +1,25 @@
 <!-- 작성완료 : 신청서 열람 박스영역 -->
 <template>
-  <MsfBox variant="outline" margin="0" class="application-box">
-    <div class="box-title">
-      <img src="@/assets/images/applyOpenIcon.svg" alt="신청서 열람 아이콘" />
-      <em class="tit">신청서 열람</em>
-    </div>
-    <MsfButton variant="subtle">신청서 열람</MsfButton>
-  </MsfBox>
+  <div>
+    <MsfBox variant="outline" margin="0" class="application-box">
+      <div class="box-title">
+        <img src="@/assets/images/applyOpenIcon.svg" alt="신청서 열람 아이콘" />
+        <em class="tit">신청서 열람</em>
+      </div>
+      <MsfButton variant="subtle" @click="isModalOpen = true">신청서 열람</MsfButton>
+    </MsfBox>
+
+    <!-- 신청서 열람 모달 -->
+    <MsfAppViewerModal v-model="isModalOpen" />
+  </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { ref } from 'vue'
+import MsfAppViewerModal from './popups/MsfAppViewerModal.vue'
+
+const isModalOpen = ref(false)
+</script>
 
 <style lang="scss" scoped>
 .application-box {

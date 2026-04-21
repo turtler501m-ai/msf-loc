@@ -1,6 +1,7 @@
 import { defineAsyncComponent, markRaw } from 'vue'
 import MsfErrorComp from '@/components/layouts/MsfErrorComp.vue'
 import MsfLoadingComp from '@/components/layouts/MsfLoadingComp.vue'
+import { useMsfAlertStore } from '@/stores/msf_alert'
 
 /**
  * 일반 라우팅 컴포넌트 반환
@@ -65,4 +66,27 @@ export const getExtraComponent = (pathes) => {
     )
   }
   return MsfErrorComp
+}
+
+/**
+ * 알림창 (Alert) 표시
+ *
+ * @param {string} message 표시할 메세지 (필수)
+ * @param {Function} onConfirm 확인 버튼 클릭 콜백함수
+ * @param {string} subMessage 하위에 표시할 메세지
+ */
+export const showAlert = (message, onConfirm, subMessage) => {
+  useMsfAlertStore().openAlert(message, onConfirm, subMessage)
+}
+
+/**
+ * 확인창 (Confirm) 표시
+ *
+ * @param {string} message 표시할 메세지 (필수)
+ * @param {Function} onConfirm 확인 버튼 클릭 콜백함수
+ * @param {string} subMessage 하위에 표시할 메세지
+ * @param {Function} onCancel 취소 버튼 클릭 콜백함수
+ */
+export const showConfirm = (message, onConfirm, subMessage, onCancel) => {
+  useMsfAlertStore().openConfirm(message, onConfirm, subMessage, onCancel)
 }

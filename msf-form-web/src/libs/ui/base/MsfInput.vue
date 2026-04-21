@@ -102,7 +102,11 @@ const rootClasses = computed(() => [
 ])
 
 const onInput = (event) => {
-  value.value = event.target.value
+  const newValue = event.target.value
+  value.value = newValue
+
+  emit('update:modelValue', newValue)
+  emit('input', event)
 }
 
 // 입력값 초기화
@@ -146,12 +150,6 @@ watch(
     if (newVal !== value.value) {
       value.value = newVal
     }
-  },
-)
-watch(
-  () => value.value,
-  (newVal) => {
-    emit('update:modelValue', newVal)
   },
 )
 

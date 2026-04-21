@@ -6,7 +6,7 @@
     :class="rootClasses"
   >
     <div :class="['container', { gridColumns: columns !== 'auto' }]" :style="containerStyle">
-      <div v-for="(item, i) in data" :key="item.value" class="chip-item">
+      <div v-for="(item, i) in dataList" :key="item.value" class="chip-item">
         <div :class="['chip', item.className]">
           <input
             v-bind="inputAttrs"
@@ -35,7 +35,9 @@
 </template>
 
 <script setup>
-import { computed, useId, useAttrs } from 'vue'
+import { computed, onBeforeMount, ref, useId, useAttrs, watch } from 'vue'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { isEmpty } from '@/libs/utils/string.utils'
 
 // 부모(root)에 바로 상속되지 않도록 설정
 defineOptions({ inheritAttrs: false })
@@ -89,10 +91,13 @@ const props = defineProps({
     default: 'auto',
   },
   readonly: { type: Boolean, default: false },
+  groupCode: { type: String, default: '' },
 })
 
 // 이벤트 등록
 const emit = defineEmits(['update:modelValue', 'change'])
+
+const dataList = ref(props.data)
 
 // 아이디 자동 생성
 const baseId = useId()
@@ -148,6 +153,38 @@ const containerStyle = computed(() => {
     return { '--chip-grid-columns': props.columns }
   }
   return {}
+})
+
+const getDatasByGroupCode = (groupCode) => {
+  if (props.data?.length > 0) return props.data
+  if (isEmpty(groupCode)) return []
+  getCommonCodeList(groupCode).then((list) => {
+    dataList.value = list.map((item) => ({ value: item.code, label: item.title }))
+  })
+}
+
+watch(
+  () => props.data,
+  (newData) => {
+    if (newData?.length > 0) {
+      dataList.value = newData
+    } else {
+      getDatasByGroupCode(props.groupCode)
+    }
+  },
+  { immediate: true, deep: true },
+)
+watch(
+  () => props.groupCode,
+  (newGroupCode) => {
+    if (isEmpty(newGroupCode)) return
+    getDatasByGroupCode(newGroupCode)
+  },
+  { immediate: true },
+)
+
+onBeforeMount(() => {
+  getDatasByGroupCode(props.groupCode)
 })
 </script>
 

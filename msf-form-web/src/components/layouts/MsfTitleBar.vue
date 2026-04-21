@@ -1,8 +1,8 @@
 <template>
   <div class="title-area">
-    <h2 class="page-title">
+    <h3 class="page-title">
       <slot name="title">{{ title || $route.meta.title }}</slot>
-    </h2>
+    </h3>
     <div class="title-side">
       <div class="action-slot">
         <slot name="actions"></slot>

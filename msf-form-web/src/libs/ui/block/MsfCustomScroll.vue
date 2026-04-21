@@ -185,6 +185,8 @@ defineExpose({ scrollTo: (opt) => contentRef.value?.scrollTo(opt), update: updat
     <div
       v-show="hasVScroll"
       class="cs-bar is-vertical"
+      role="scrollbar"
+      tabindex="0"
       :class="{
         'is-active': isScrolling || isDragging,
         'is-always-show': props.alwaysShow,
@@ -227,6 +229,17 @@ $sc-side-gap: v-bind('SIDE_GAP + "px"'); // 시작점(위에 script에서 수정
   overflow: hidden;
   overscroll-behavior: none;
 
+  display: flex; // 내부 요소 배치를 위해 무조건 필요
+  flex-direction: column;
+  // 핵심: 부모가 Flex라면 1을 가져가고, 아니면 무시됨
+  flex: 1;
+  // height는 props로 받은 값을 넣되, 100%가 기본이면 부모 높이를 따라감
+  height: v-bind('props.height');
+  width: v-bind('props.width');
+  min-height: 0; // 스크롤 발생을 위한 절대 법칙
+  position: relative;
+  overflow: hidden;
+
   .cs-content {
     width: 100%;
     height: 100%;
@@ -234,6 +247,10 @@ $sc-side-gap: v-bind('SIDE_GAP + "px"'); // 시작점(위에 script에서 수정
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     -ms-overflow-style: none;
+
+    flex: 1; // wrapper 안에서 남은 공간을 다 써야 스크롤이 생김
+    min-height: 0; // content 자체가 부모보다 커지는 걸 막음
+    overflow: auto; // 실제 스크롤 발생 지점
 
     &::-webkit-scrollbar {
       display: none;

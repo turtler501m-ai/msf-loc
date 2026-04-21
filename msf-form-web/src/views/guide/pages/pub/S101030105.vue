@@ -25,6 +25,10 @@
       ]"
       grid
     />
+    <!-- 데이터 없는 경우 추가_20260415 -->
+    <div class="nodata-wrap">
+      희망번호에 해당하는 신규 번호가 없습니다.<br />다른 번호로 다시 조회해 주세요.
+    </div>
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>

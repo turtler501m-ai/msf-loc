@@ -4,54 +4,154 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="번호이동 할<br/>전화번호" required>
         <MsfStack type="field">
-          <MsfSelect title="통신사 선택" v-model="model.carrier" :options="[{ label: '통신사1', value: 'agency1' }, { label: '통신사2', value: 'agency2' }]" class="ut-w-300" placeholder="통신사 선택" />
-          <MsfInput v-model="model.transferPhone" placeholder="휴대폰 번호 ‘-’ 없이 입력" class="ut-w-300" />
+          <MsfSelect
+            title="통신사 선택"
+            v-model="model.moveCompanyCd"
+            :options="[
+              { label: '통신사1', value: 'agency1' },
+              { label: '통신사2', value: 'agency2' },
+            ]"
+            class="ut-w-300"
+            placeholder="통신사 선택"
+            :disabled="customerModel.isSaved"
+          />
+          <MsfStack type="field">
+            <MsfNumberInput
+              v-model="model.moveMobileNo1"
+              placeholder="앞자리"
+              maxlength="3"
+              :readonly="customerModel.isSaved"
+            />
+            <span class="unit-sep">-</span>
+            <MsfNumberInput
+              v-model="model.moveMobileNo2"
+              placeholder="가운데 4자리"
+              maxlength="4"
+              :readonly="customerModel.isSaved"
+            />
+            <span class="unit-sep">-</span>
+            <MsfNumberInput
+              v-model="model.moveMobileNo3"
+              placeholder="뒤 4자리"
+              maxlength="4"
+              :readonly="customerModel.isSaved"
+            />
+          </MsfStack>
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="번호이동 인증" tag="div" required>
         <MsfStack type="field">
-          <MsfChip v-model="model.transferAuth" name="inp-transferAuth" :data="[{ value: 'transferAuth1', label: '휴대폰 일련번호' }, { value: 'transferAuth2', label: '요금납부 계좌번호' }, { value: 'transferAuth3', label: '요금납부 신용카드' }, { value: 'transferAuth4', label: '지로' }]" />
+          <MsfChip
+            v-model="model.moveAuthTypeCd"
+            name="inp-transferAuth"
+            :data="[
+              { value: 'transferAuth1', label: '휴대폰 일련번호 뒤 4자리' },
+              { value: 'transferAuth2', label: '계좌번호 뒤 4자리' },
+              { value: 'transferAuth3', label: '신용카드 뒤 4자리' },
+            ]"
+            :disabled="customerModel.isSaved"
+          />
         </MsfStack>
-        <MsfStack type="field">
-          <MsfInput v-model="model.transferAuthNum" placeholder="휴대폰 일련번호 뒤 4자리" class="ut-w-300" />
-          <MsfButton variant="subtle">번호이동 사전동의</MsfButton>
+        <MsfStack type="field" v-if="model.moveAuthTypeCd">
+          <MsfInput
+            v-model="model.moveAuthNo"
+            :placeholder="authInputPlaceholder"
+            class="ut-w-300"
+          />
+          <MsfButton variant="subtle" @click="handlePreAuth">번호이동 사전동의</MsfButton>
         </MsfStack>
-        <MsfInput v-model="model.transferBankNum" placeholder="요금납부 계좌번호 뒤 4자리" class="ut-w-300" />
-        <MsfInput v-model="model.transferCardNum" placeholder="요금납부 신용카드 뒤 4자리" class="ut-w-300" />
       </MsfFormGroup>
       <MsfFormGroup label="이번달 사용요금" tag="div" required>
-        <MsfCheckbox v-model="model.currentMonthFee" label="다음달 요금 합산 납부 (※ 번호이동 수수료 800원)" />
+        <MsfCheckbox
+          v-model="model.moveThismonthPayTypeCd"
+          label="다음달 요금 합산 납부 (※ 번호이동 수수료 800원)"
+          :disabled="customerModel.isSaved"
+        />
       </MsfFormGroup>
       <MsfFormGroup label="휴대폰 할부금" tag="div" required>
-        <MsfCheckboxGroup v-model="model.deviceInstallment" :options="[{ value: 'deviceInstallment1', label: '완납' }, { value: 'deviceInstallment2', label: '지속(이전 통신회사에 납부)' }]" />
+        <MsfCheckboxGroup
+          v-model="model.moveAllotmentSttusCd"
+          :options="[
+            { value: 'deviceInstallment1', label: '완납' },
+            { value: 'deviceInstallment2', label: '지속(이전 통신회사에 납부)' },
+          ]"
+          :disabled="customerModel.isSaved"
+        />
       </MsfFormGroup>
       <MsfFormGroup label="미환급금<br/>요금상계(후불)" tag="div" required>
-        <MsfCheckboxGroup v-model="model.offsetAmt" :options="[{ value: 'offsetAmt1', label: '동의' }, { value: 'offsetAmt2', label: '미동의' }]" />
+        <MsfCheckboxGroup
+          v-model="model.moveRefundAgreeYn"
+          :options="[
+            { value: 'offsetAmt1', label: '동의' },
+            { value: 'offsetAmt2', label: '미동의' },
+          ]"
+          :disabled="customerModel.isSaved"
+        />
       </MsfFormGroup>
     </MsfStack>
+
+    <!-- 번호이동 사전동의 실패 모달 -->
+    <MsfMnpAuthFailModal v-model="isFailModalOpen" />
   </div>
 </template>
 <script setup>
-import { defineModel, defineProps } from 'vue'
+import { ref, defineModel, defineProps, computed } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
+import MsfMnpAuthFailModal from './popups/MsfMnpAuthFailModal.vue'
 
 const props = defineProps({
-  title: { type: String, default: '번호이동 할 전화번호' }
+  title: { type: String, default: '번호이동 할 전화번호' },
 })
 const model = defineModel('modelValue', { type: Object, required: true })
 const customerModel = defineModel('customerData', { type: Object, required: true })
 const store = useMsfFormNewChgStore()
 
+const isFailModalOpen = ref(false)
+
+const authInputPlaceholder = computed(() => {
+  switch (model.value?.moveAuthTypeCd) {
+    case 'transferAuth1':
+      return '휴대폰 일련번호 뒤 4자리'
+    case 'transferAuth2':
+      return '계좌번호 뒤 4자리'
+    case 'transferAuth3':
+      return '신용카드 뒤 4자리'
+    default:
+      return '번호이동 인증 정보 입력'
+  }
+})
+
+const handlePreAuth = () => {
+  // TODO: 사전동의 API 연동. 성공 시 authFlag 업데이트 처리 샘플
+  if (store.authFlags) store.authFlags.moveAuthTypeCd = true
+
+  // 실패 상황일 경우 모달 띄우기 (테스트용)
+  // isFailModalOpen.value = true
+}
+
 const transferAuthBtn = useAuthButton(
-  () => [model.value?.transferAuth, model.value?.transferAuthNum, model.value?.transferBankNum, model.value?.transferCardNum],
+  () => [
+    model.value?.transferAuth,
+    model.value?.transferAuthNum,
+    model.value?.transferBankNum,
+    model.value?.transferCardNum,
+  ],
   {
-    get value() { return store.authFlags?.transferAuth || false },
+    get value() {
+      return store.authFlags?.transferAuth || false
+    },
     set value(v) {
       if (store.authFlags) {
-        store.authFlags.transferAuth = v
+        store.authFlags.moveAuthTypeCd = v
       }
-    }
-  }
+    },
+  },
 )
+
+const validate = () => {
+  return true
+}
+
+defineExpose({ validate })
 </script>

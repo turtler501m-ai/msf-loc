@@ -157,6 +157,7 @@ onMounted(updateColumnNames)
       th {
         border-top: var(--border-width-base) solid var(--tbl-body-border-color);
         border-bottom: none;
+        text-align: left;
       }
     }
 
@@ -186,6 +187,7 @@ onMounted(updateColumnNames)
         border-right: none;
       }
       color: var(--color-gray-600);
+      line-height: var(--line-height-heading);
     }
     :deep(tbody tr) {
       &:first-child {

@@ -37,6 +37,9 @@ out/
 ### VS Code ###
 .vscode/
 
+### Etc. ###
+.DS_Store
+
 ### Project ###
 application*-private.yaml
 tools/docker/data

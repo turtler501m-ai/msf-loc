@@ -59,7 +59,7 @@
     >
       <ul class="pop-list" role="listbox">
         <li
-          v-for="(option, index) in options"
+          v-for="(option, index) in optionList"
           :key="option.value"
           role="option"
           :tabindex="option.disabled ? -1 : 0"
@@ -90,6 +90,7 @@ import {
   ref,
   computed,
   useId,
+  onBeforeMount,
   onMounted,
   onUnmounted,
   watch,
@@ -97,6 +98,8 @@ import {
   nextTick,
   useAttrs,
 } from 'vue'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { isEmpty } from '@/libs/utils/string.utils'
 
 // 속성에 접근
 const attrs = useAttrs()
@@ -130,10 +133,13 @@ const props = defineProps({
   selectPop: { type: Boolean, default: true }, // 팝업 모드 활성화 여부
   title: { type: String, default: '선택' }, // 팝업 상단 타이틀
   inline: Boolean, // 인라인 스타일 여부
+  groupCode: { type: String, default: '' }, // 공통코드 그룹코드
 })
 
 // 부모에게 전달할 이벤트
 const emit = defineEmits(['update:modelValue', 'change'])
+
+const optionList = ref(props.options)
 
 // [ID & 접근성] FormGroup과의 연결
 const injectedId = inject('form-group-id', null)
@@ -147,7 +153,7 @@ const activeIndex = ref(-1)
 
 const selectedLabel = computed(() => {
   // props.modelValue를 직접 참조
-  const option = props.options.find((opt) => opt.value === props.modelValue)
+  const option = optionList.value.find((opt) => opt.value === props.modelValue)
   return option ? option.label : props.placeholder
 })
 
@@ -189,7 +195,7 @@ const onKeyDown = (e) => {
     case 'ArrowDown':
       e.preventDefault()
       if (!isOpen.value) isOpen.value = true
-      activeIndex.value = Math.min(activeIndex.value + 1, props.options.length - 1)
+      activeIndex.value = Math.min(activeIndex.value + 1, optionList.value.length - 1)
       break
     case 'ArrowUp':
       e.preventDefault()
@@ -218,6 +224,40 @@ const handleClickOutside = (event) => {
     isOpen.value = false
   }
 }
+
+const getOptionsByGroupCode = (groupCode) => {
+  if (props.options?.length > 0) return props.options
+  if (isEmpty(groupCode)) return []
+  getCommonCodeList(groupCode).then((list) => {
+    console.log('list:', list)
+    optionList.value = list.map((item) => ({ value: item.code, label: item.title }))
+  })
+}
+
+watch(
+  () => props.options,
+  (newOptions) => {
+    if (newOptions?.length > 0) {
+      optionList.value = newOptions
+    } else {
+      getOptionsByGroupCode(props.groupCode)
+    }
+  },
+  { immediate: true, deep: true },
+)
+watch(
+  () => props.groupCode,
+  (newGroupCode) => {
+    if (isEmpty(newGroupCode)) return
+
+    getOptionsByGroupCode(newGroupCode)
+  },
+  { immediate: true },
+)
+
+onBeforeMount(() => {
+  getOptionsByGroupCode(props.groupCode)
+})
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)

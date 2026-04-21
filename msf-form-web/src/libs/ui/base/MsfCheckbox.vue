@@ -131,7 +131,8 @@ const rootClasses = computed(() => [
   --checkbox-label-gap: var(--spacing-x2); // checkbox 아이콘과 라벨 사이의 간격
   --checkbox-border-color: var(--color-gray-400); // checkbox 기본 보더 컬러
   --checkbox-background-color: transparent; // checkbox 기본 배경 컬러
-  --checkbox-icon: #{icon('checkbox')};
+  // --checkbox-icon: #{icon('checkbox')};
+  --checkbox-icon: var(--icon-checkbox-set);
   --checkbox-icon-color: var(--color-gray-500);
   --checkbox-icon-position: 50% 0;
 
@@ -216,7 +217,8 @@ const rootClasses = computed(() => [
   &.is-lined {
     --checkbox-width: #{rem(18px)};
     --checkbox-height: #{rem(18px)};
-    --checkbox-icon: #{icon('check2')};
+    // --checkbox-icon: #{icon('check2')};
+    --checkbox-icon: var(--icon-checkbox-set2);
     --checkbox-border-color: transparent;
     --checkbox-background-color: transparent;
     --checkbox-border-radius: 0;

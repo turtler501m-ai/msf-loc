@@ -113,8 +113,11 @@ watch(
     <div class="guideContainer">
       <div class="guideInner">
         <div class="guideContent">
-          <div v-if="selectedNav === 'common'" class="guideNotice">
-            <p>공지</p>
+          <div class="guideNotice">
+            <p>- [2026-04-17] 서비스변경 - 데이터쉐어링 안내문구 추가, 요금제 변경 동의 영역추가</p>
+            <p class="ut-weight-bold">- [2026-04-17] 신규/변경 - 안면인증 팝업 (S101020104) 추가</p>
+            <p>- [2026-04-17] 신규/변경 - 신규번호 검색 팝업 (S101030105) 데이터 없는 경우 추가</p>
+            <p class="ut-color-point">- [2026-04-17] '이메일주소' 영역 필수표시 삭제 (설계수정)</p>
           </div>
 
           <p class="completionRate">진행률: {{ getCompletionRate(selectedNav) }}</p>

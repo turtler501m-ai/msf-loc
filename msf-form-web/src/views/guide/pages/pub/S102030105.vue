@@ -78,8 +78,8 @@ const onClose = () => {
 
 // 테이블 샘플
 const colDefs = ref([
-  { field: 'make', flex: 1 },
-  { field: 'model', width: 212, cellStyle: { textAlign: 'right' } },
+  { headerName: '요금항목명', field: 'make', flex: 1 },
+  { headerName: '사용금액', field: 'model', width: 212, cellStyle: { textAlign: 'right' } },
 ])
 const datas = ref([
   { make: 'Tesla', model: 'Model Y', price: 64950 },

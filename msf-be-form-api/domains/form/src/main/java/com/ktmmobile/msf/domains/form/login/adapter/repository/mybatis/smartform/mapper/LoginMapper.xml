@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ktmmobile.msf.domains.form.login.adapter.repository.mybatis.smartform.mapper.LoginMapper">
+
+  <insert id="insertUserHistory">
+    INSERT INTO msf_user_hst (
+      user_id, cret_ip, cret_dt, cret_id, amd_ip, amd_dt, amd_id,
+      user_nm, pwd, agent_cd, shop_cd, mobile_no, ip, email_adr,
+      email_receive_yn, use_sttus_cd, access_limit_yn,
+      access_limit_dt, login_chk_cnt, chg_dt
+    )
+    SELECT
+      user_id, cret_ip, cret_dt, cret_id, amd_ip, amd_dt, amd_id,
+      user_nm, pwd, COALESCE(agent_cd, 'NONE'),
+      shop_cd, mobile_no, ip, email_adr,
+      email_receive_yn, user_sttus_cd, access_limit_yn,
+      access_limit_dt, login_chk_cnt, chg_dt
+    FROM msf_user_info
+    WHERE user_id = #{userId}
+  </insert>
+
+  <update id="updateLoginFail">
+    <selectKey keyProperty="failCnt" resultType="Integer" order="AFTER">
+      SELECT login_chk_cnt as "failCnt"
+      FROM msf_user_info
+      WHERE user_id = #{userId}
+    </selectKey>
+    update msf_user_info
+    set login_chk_cnt = login_chk_cnt + 1,
+    <if test="userSttusCd != null and userSttusCd != ''">
+      user_sttus_cd = #{userSttusCd},
+      access_limit_yn = 'Y',
+      access_limit_dt = now(),
+      chg_dt = now(),
+    </if>
+    <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.updateModifiedAuditSet" />
+    where 1=1
+    and user_id = #{userId}
+  </update>
+
+  <update id="updateLoginSucc">
+    update msf_user_info
+    set chg_dt = now(),
+      login_chk_cnt = 0,
+    <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.updateModifiedAuditSet" />
+    where 1=1
+    and user_id = #{userId}
+  </update>
+
+  <update id="updateBioLoginSucc">
+    update msf_usr_app_info
+    set last_access_dt = now(),
+    <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.updateModifiedAuditSet" />
+    where 1=1
+    and uuid = #{uuid}
+    -- and user_id = #{userId}
+  </update>
+
+  <select id="selectUserInfo" resultType="com.ktmmobile.msf.domains.form.login.application.dto.LoginResponse">
+    select user_id
+      , user_nm
+      , agent_cd
+      , shop_cd
+      , mobile_no
+      , ip
+      , user_sttus_cd
+      , access_limit_yn
+      , COALESCE(login_chk_cnt, 0) + 1 as login_chk_cnt
+      , pwd
+    from msf_user_info
+    where 1=1
+    and user_id = #{userId}
+  </select>
+
+  <select id="selectUserAppInfo" resultType="com.ktmmobile.msf.domains.form.login.application.dto.LoginResponse">
+    select a.user_id
+      , user_nm
+      , agent_cd
+      , shop_cd
+      , mobile_no
+      , ip
+      , user_sttus_cd
+      , access_limit_yn
+    from msf_user_info a
+      , msf_usr_app_info b
+    where 1=1
+    and a.user_id = b.user_id
+    and b.uuid = #{uuid}
+  </select>
+
+</mapper>

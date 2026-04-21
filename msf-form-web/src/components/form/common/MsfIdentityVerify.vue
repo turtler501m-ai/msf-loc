@@ -3,31 +3,138 @@
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="신분증" tag="div" required>
-        <MsfChip v-model="model.idCard" name="inp-idCard" :disabled="model.isVerified" :data="[{ value: 'K', label: '신분증 목록 조회' }, { value: 'M', label: '모바일 신분증' }, { value: 'F', label: '안면 인증' }, { value: 'S', label: '인증 예외' }]">
-          <template #endSlot><MsfButton variant="subtle" :disabled="model.isVerified" @click="model.isVerified = true">조회/인증</MsfButton></template>
+        <MsfChip
+          v-model="model.identityCertTypeCd"
+          name="inp-idCardCertType"
+          :disabled="model.isVerified || model.isSaved"
+          :data="idCardCodes"
+        >
+          <template #endSlot>
+            <MsfButton
+              variant="subtle"
+              :disabled="model.isVerified || model.identityCertTypeCd === 'S'"
+              @click="handleAuthClick"
+            >
+              조회/인증
+            </MsfButton>
+          </template>
         </MsfChip>
+        <div class="ut-mt-16" v-if="model.identityCertTypeCd !== 'S'">
+          <MsfRadioGroup
+            name="inp-idCardType"
+            v-model="model.identityTypeCd"
+            :options="idCardScanCodes"
+            :disabled="model.isVerified || model.isSaved"
+          />
+        </div>
       </MsfFormGroup>
-      <MsfFormGroup label="신분증 스캔" tag="div" required>
+
+      <MsfFormGroup label="신분증 스캔" tag="div" required v-if="model.identityCertTypeCd !== 'S'">
         <MsfStack type="field">
-          <MsfSelect title="신분증 스캔" v-model="model.idCardScan" :disabled="model.isVerified" :options="[{ label: '주민등록증', value: 'idCardScan1' }, { label: '운전면허증', value: 'idCardScan2' }, { label: '국내여권', value: 'idCardScan3' }, { label: '외국인등록증', value: 'idCardScan4' }, { label: '영주증', value: 'idCardScan5' }, { label: '국내거소신고증', value: 'idCardScan6' }, { label: '국가보훈증', value: 'idCardScan7' }]" class="ut-w-300" />
-          <MsfButton variant="subtle" :disabled="model.isVerified">스캔하기</MsfButton>
+          <MsfButton
+            variant="subtle"
+            :disabled="model.isVerified"
+            @click="isIdCardScanModalOpen = true"
+            >스캔하기</MsfButton
+          >
         </MsfStack>
         <MsfStack type="field">
-          <MsfDateInput v-model="datePickerValue" readonly />
-          <MsfSelect title="면허지역" v-model="model.licenseRegion" :options="[{ label: '면허지역1', value: 'licenseRegion1' }, { label: '면허지역2', value: 'licenseRegion2' }]" placeholder="면허지역" class="ut-w-200" disabled />
-          <MsfNumberInput v-model="licenseNumber" maxlength="15" placeholder="면허번호" class="ut-w-240" readonly />
+          <MsfDateInput
+            v-model="model.identityIssuDate"
+            :readonly="true"
+            :disabled="model.isSaved"
+          />
+          <MsfSelect
+            title="면허지역"
+            v-model="model.identityIssuRegion"
+            :options="licenseRegionCodes"
+            placeholder="면허지역"
+            class="ut-w-200"
+            disabled
+          />
+          <MsfNumberInput
+            v-model="model.driveLicnsNo"
+            maxlength="15"
+            placeholder="면허번호"
+            class="ut-w-240"
+            :readonly="true"
+            :disabled="model.isSaved"
+          />
         </MsfStack>
       </MsfFormGroup>
     </MsfStack>
+
+    <!-- 신분증 목록 조회 모달 -->
+    <MsfIdCardListModal v-model="isIdCardListModalOpen" @confirm="onIdCardSelect" />
+    <!-- 모바일 신분증 인증 모달 -->
+    <MsfMobileIdModal v-model="isMobileIdModalOpen" @confirm="onMobileIdConfirm" />
+    <!-- 안면 인증 모달 -->
+    <MsfFaceAuthModal v-model="isFaceAuthModalOpen" @confirm="onFaceAuthConfirm" />
+    <!-- 신분증 스캔 모달 -->
+    <MsfIdCardScanModal v-model="isIdCardScanModalOpen" @confirm="onIdCardScanConfirm" />
   </div>
 </template>
 <script setup>
-import { ref, defineModel, defineProps } from 'vue'
+import { ref, defineModel, defineProps, computed } from 'vue'
+import { useCommonCode } from '@/libs/utils/comn.utils'
+import MsfIdCardListModal from './popups/MsfIdCardListModal.vue'
+import MsfMobileIdModal from './popups/MsfMobileIdModal.vue'
+import MsfFaceAuthModal from './popups/MsfFaceAuthModal.vue'
+import MsfIdCardScanModal from './popups/MsfIdCardScanModal.vue'
 
 const props = defineProps({
-  title: { type: String, default: '신분증 확인' }
+  title: { type: String, default: '신분증 확인' },
+  authFlags: { type: Object, default: () => ({}) },
 })
 const model = defineModel({ type: Object, required: true })
-const datePickerValue = ref()
-const licenseNumber = ref()
+
+const { codeList: idCardCodes } = useCommonCode(
+  'IDENTITY_CERT_TYPE_CD',
+  model,
+  'identityCertTypeCd',
+  'K',
+)
+const { codeList: idCardScanCodes } = useCommonCode('IDENTITY_TYPE_CD', model, 'identityTypeCd')
+const { codeList: licenseRegionCodes } = useCommonCode('LIC_REGION', model, 'identityIssuRegion')
+
+const isIdCardListModalOpen = ref(false)
+const isMobileIdModalOpen = ref(false)
+const isFaceAuthModalOpen = ref(false)
+const isIdCardScanModalOpen = ref(false)
+
+const handleAuthClick = () => {
+  if (model.value.identityCertTypeCd === 'K') {
+    isIdCardListModalOpen.value = true
+  } else if (model.value.identityCertTypeCd === 'M') {
+    isMobileIdModalOpen.value = true
+  } else if (model.value.identityCertTypeCd === 'F') {
+    isFaceAuthModalOpen.value = true
+  }
+}
+
+const onIdCardSelect = (selected) => {
+  console.log('선택된 신분증 목록:', selected)
+  model.value.isVerified = true
+}
+
+const onMobileIdConfirm = () => {
+  console.log('모바일 신분증 인증 완료')
+  model.value.isVerified = true
+}
+
+const onFaceAuthConfirm = () => {
+  console.log('안면 인증 완료')
+  model.value.isVerified = true
+}
+
+const onIdCardScanConfirm = (file) => {
+  console.log('신분증 스캔 파일:', file)
+  model.value.isVerified = true
+}
+
+const validate = () => {
+  return true
+}
+
+defineExpose({ validate })
 </script>

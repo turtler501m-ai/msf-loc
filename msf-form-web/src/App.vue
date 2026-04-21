@@ -29,9 +29,12 @@
 
 <script setup>
 import { RouterView } from 'vue-router'
-import { useAlertProvider } from '@/hooks/useAlert'
-// showAlert 기능을 하위 컴포넌트들에 전파(provide)
-const { alerts, removeAlert } = useAlertProvider()
+// import { useAlertProvider } from '@/hooks/useAlert'
+// // showAlert 기능을 하위 컴포넌트들에 전파(provide)
+// const { alerts, removeAlert } = useAlertProvider()
+
+import { useMsfAlertStore } from './stores/msf_alert'
+const { alerts, removeAlert } = useMsfAlertStore()
 </script>
 
 <style scoped></style>

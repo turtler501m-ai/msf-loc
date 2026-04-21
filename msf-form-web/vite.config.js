@@ -31,7 +31,7 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     server: {
-      port: 7080,
+      port: 7085,
       host: '0.0.0.0',
       // proxy: {
       //   '/api': {

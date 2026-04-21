@@ -5,7 +5,7 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="신분증" tag="div" required>
         <MsfChip
-          v-model="model.idCard"
+          v-model="model.identityCertTypeCd"
           name="inp-idCard"
           :data="[
             { value: 'K', label: '신분증 목록 조회' },
@@ -24,7 +24,7 @@
         <MsfStack type="field">
           <MsfSelect
             title="신분증 스캔"
-            v-model="model.idCardScan"
+            v-model="model.identityTypeCd"
             :options="[
               { label: '주민등록증', value: 'idCardScan1' },
               { label: '운전면허증', value: 'idCardScan2' },
@@ -42,7 +42,7 @@
           <MsfDateInput v-model="datePickerValue" />
           <MsfSelect
             title="면허지역"
-            v-model="model.licenseRegion"
+            v-model="model.identityIssuRegion"
             :options="[
               { label: '면허지역1', value: 'licenseRegion1' },
               { label: '면허지역2', value: 'licenseRegion2' },
