@@ -19,11 +19,6 @@ mybatis:
         - classpath*:com/ktmmobile/msf/domains/**/adapter/repository/mybatis/msp/mapper/*.xml
         - classpath*:com/ktmmobile/msf/domains/**/repository/msp/*.xml
         - classpath*:com/ktmmobile/msf/domains/**/mapper/*.xml  # legacy mappers (EventBoardMapper 등)
-    mcp:
-      mapper-scan-packages:
-        - com.ktmmobile.msf.domains.**.repository.mcp
-      mapper-locations:
-        - classpath*:com/ktmmobile/msf/domains/**/repository/mcp/*.xml
   type-handlers-packages:
     - com.ktmmobile.msf.commons.mybatis.typehandler.global
     - com.ktmmobile.msf.domains.**.adapter.repository.mybatis.msp.typehandler

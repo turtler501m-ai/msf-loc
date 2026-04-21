@@ -238,7 +238,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
                     // [ASIS] MyOllehController.requestView() — mcp-api REST 직접 호출
                     //   RestTemplate restTemplate = new RestTemplate();
                     //   mspJuoAddInfoDto = restTemplate.postForObject(apiInterfaceServer + "/mypage/mspAddInfo", searchVO.getNcn(), MspJuoAddInfoDto.class);
-                    // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패 시 MspApiDirectRepository(mcpSqlSession)로 자동 전환
+                    // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패 시 MspApiDirectRepository(mspSqlSession)로 자동 전환
                     logger.debug("[getTerminationSettlement] mspAddInfo request: ncn={}", safe(ncn));
                     MspJuoAddInfoDto mspJuoAddInfoDto = mcpApiClient.post("/mypage/mspAddInfo", ncn, MspJuoAddInfoDto.class);
                     logger.debug("[getTerminationSettlement] mspAddInfo response: ncn={}, hasBody={}",
@@ -273,7 +273,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         //   POST /mypage/prePayment  →  mypageMapper.selectPrePayment(contractNum)
         //   RestTemplate restTemplate = new RestTemplate();
         //   int cnt = restTemplate.postForObject(apiInterfaceServer + "/mypage/prePayment", contractNum, int.class);
-        // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패(TEST) MspApiDirectRepository(mcpSqlSession)로 자동 전환
+        // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패(TEST) MspApiDirectRepository(mspSqlSession)로 자동 전환
         int cnt = mcpApiClient.post("/mypage/prePayment", contractNum, int.class);
 
         logger.debug("[isPrePayment] result: cnt={}", cnt);

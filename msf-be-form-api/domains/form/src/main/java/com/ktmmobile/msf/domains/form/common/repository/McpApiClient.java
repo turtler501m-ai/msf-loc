@@ -25,10 +25,10 @@ public class McpApiClient {
     @Value("${api.interface.use-mcp:true}")
     private boolean useMcp;
 
-    private final McpApiDirectRepository mspApiDirectRepository;
+    private final MspApiDirectRepository mspApiDirectRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public McpApiClient(McpApiDirectRepository mspApiDirectRepository) {
+    public McpApiClient(MspApiDirectRepository mspApiDirectRepository) {
         this.mspApiDirectRepository = mspApiDirectRepository;
     }
 
@@ -42,19 +42,19 @@ public class McpApiClient {
 
     public <T> T post(String path, Object request, Class<T> responseType) {
         if (!useMcp) {
-            logger.debug("[McpApiClient] use-mcp=false, MSP 직접 조회: {}", path);
+            logger.debug("[MspApiClient] use-mcp=false, MSP 직접 조회: {}", path);
             return mspApiDirectRepository.query(path, request, responseType);
         }
 
         String url = baseUrl + path;
-        logger.debug("[McpApiClient] POST {}", url);
+        logger.debug("[MspApiClient] POST {}", url);
         try {
             T response = restTemplate.postForObject(url, request, responseType);
-            logger.debug("[McpApiClient] POST {} OK", url);
+            logger.debug("[MspApiClient] POST {} OK", url);
             return response;
         } catch (ResourceAccessException e) {
-            logger.warn("[McpApiClient] POST {} 연결 실패", url);
-            logger.warn("[McpApiClient] MSP 직접 조회 실행: {}",e.getMessage());
+            logger.warn("[MspApiClient] POST {} 연결 실패", url);
+            logger.warn("[MspApiClient] MSP 직접 조회 실행: {}",e.getMessage());
             return mspApiDirectRepository.query(path, request, responseType);
         }
     }

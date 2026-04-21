@@ -282,7 +282,7 @@
 
   <!-- /phone/nmcpProdBas - 핸드폰 상품관리 상세 조회 (SELECT(MSP/MCP) : CMN_HNDST_AMT, CMN_MNFCT_AMT CMN, NMCP_PROD_BAS@DL_MCP, ORG_MNFCT_MST) -->
   <!-- SQL 메소드 변경 : findNmcpProdBas -> selectNmcpProdBas -->
-  <select id="selectNmcpProdBas" parameterType="com.ktmmobile.msf.domains.form.common.dto.PhoneProdBasDto"  resultMap="findPhoneMapForCollection">
+  <select id="selectNmcpProdBas" parameterType="com.ktmmobile.msf.domains.form.common.dto.PhoneProdBasDto"  resultType="com.ktmmobile.msf.domains.form.common.dto.PhoneProdBasDto">
         SELECT /* /phone/nmcpProdBas : McpPhoneMapper.selectNmcpProdBas 핸드폰 상품관리 상세 조회 */
             A.PROD_ID,                 --상품아이디
             A.PROD_ID as prodId,       -- 상품 아이디

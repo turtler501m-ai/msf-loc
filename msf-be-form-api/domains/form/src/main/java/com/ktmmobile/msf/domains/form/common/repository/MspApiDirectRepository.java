@@ -38,19 +38,19 @@ import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUC
 /**
  * MCP DB 직접 조회 DAO.
  *
- * McpApiClient 내부에서 경로(path) 기반으로 자동 호출된다.
+ * MspApiClient 내부에서 경로(path) 기반으로 자동 호출된다.
  * (mcp-api 연결 실패 또는 use-mcp=false 정책 전환 시)
  *
  */
 
 @Repository
-public class McpApiDirectRepository {
+public class MspApiDirectRepository {
 
-    private static final Logger logger = LoggerFactory.getLogger(McpApiDirectRepository.class);
+    private static final Logger logger = LoggerFactory.getLogger(MspApiDirectRepository.class);
 
     @Autowired
-    @Qualifier("mcpSqlSession")
-    private SqlSessionTemplate mcpSession;
+    @Qualifier("mspSqlSession")
+    private SqlSessionTemplate mspSession;
 
     /**
      * 경로(path) 기반으로 MSP 직접 조회를 실행한다.
@@ -64,7 +64,7 @@ public class McpApiDirectRepository {
     @SuppressWarnings("unchecked")
     public <T> T query(String path, Object request, Class<T> responseType) {
 
-        logger.debug("[McpApiDirectRepository] query: path={}, request={}", path, request);
+        logger.debug("[MspApiDirectRepository] query: path={}, request={}", path, request);
 
         switch (path) {
             // [MSP/MCP] appformMapper.selectMarketRequest -- @RequestMapping("/appform/marketRequest") -- SELECT(MSP) -- ITO API 사용
@@ -302,7 +302,7 @@ public class McpApiDirectRepository {
             case "/storeUsim/usimDcamt":
                 return (T) selectUsimDcamt((String) request);
             default:
-                logger.warn("[McpApiDirectRepository] 직접 조회 미구현 경로: {}", path);
+                logger.warn("[MspApiDirectRepository] 직접 조회 미구현 경로: {}", path);
                 return null;
         }
 
@@ -317,9 +317,9 @@ public class McpApiDirectRepository {
 
     /** 오픈마켓 (외부서식지) -/appform/marketRequest */
     private AppformReqDto selectMarketRequest(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] selectMarketRequest: appformReqDto={}", appformReqDto);
-        AppformReqDto result = mcpSession.selectOne("McpAppformMapper.selectMarketRequest", appformReqDto);
-        logger.debug("[McpApiDirectRepository] selectMarketRequest: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMarketRequest: appformReqDto={}", appformReqDto);
+        AppformReqDto result = mspSession.selectOne("McpAppformMapper.selectMarketRequest", appformReqDto);
+        logger.debug("[MspApiDirectRepository] selectMarketRequest: result={}", result);
         return result;
     }
 
@@ -328,9 +328,9 @@ public class McpApiDirectRepository {
 
     /** 할부개월 -/appform/modelMonthlyList */
     private List<AppformReqDto> selectModelMonthlyList(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] selectModelMonthlyList: appformReqDto={}", appformReqDto);
-        List<AppformReqDto> result = mcpSession.selectList("McpAppformMapper.selectModelMonthlyList", appformReqDto);
-        logger.debug("[McpApiDirectRepository] selectModelMonthlyList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectModelMonthlyList: appformReqDto={}", appformReqDto);
+        List<AppformReqDto> result = mspSession.selectList("McpAppformMapper.selectModelMonthlyList", appformReqDto);
+        logger.debug("[MspApiDirectRepository] selectModelMonthlyList: result={}", result);
         return result;
     }
 
@@ -339,9 +339,9 @@ public class McpApiDirectRepository {
 
     /** 약정 -/appform/monthlyListMarket */
     private List<AppformReqDto> selectMonthlyListMarket(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] selectMonthlyListMarket: appformReqDto={}", appformReqDto);
-        List<AppformReqDto> result = mcpSession.selectList("McpAppformMapper.selectMonthlyListMarket", appformReqDto);
-        logger.debug("[McpApiDirectRepository] selectMonthlyListMarket: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMonthlyListMarket: appformReqDto={}", appformReqDto);
+        List<AppformReqDto> result = mspSession.selectList("McpAppformMapper.selectMonthlyListMarket", appformReqDto);
+        logger.debug("[MspApiDirectRepository] selectMonthlyListMarket: result={}", result);
         return result;
     }
 
@@ -350,9 +350,9 @@ public class McpApiDirectRepository {
 
     /** 약정 -/appform/prdtColorList */
     private List<AppformReqDto> selectPrdtColorList(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] selectPrdtColorList: appformReqDto={}", appformReqDto);
-        List<AppformReqDto> result = mcpSession.selectList("McpAppformMapper.selectPrdtColorList", appformReqDto);
-        logger.debug("[McpApiDirectRepository] selectPrdtColorList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectPrdtColorList: appformReqDto={}", appformReqDto);
+        List<AppformReqDto> result = mspSession.selectList("McpAppformMapper.selectPrdtColorList", appformReqDto);
+        logger.debug("[MspApiDirectRepository] selectPrdtColorList: result={}", result);
         return result;
     }
 
@@ -361,9 +361,9 @@ public class McpApiDirectRepository {
 
     /** 대리점 코드 -/appform/agentInfoOjb */
     private Map<String, String> selectAgentCode(String cntpntShopId) {
-        logger.debug("[McpApiDirectRepository] selectAgentCode: cntpntShopId={}", cntpntShopId);
-        Map<String, String> result = mcpSession.selectMap("McpAppformMapper.selectAgentCode", cntpntShopId);
-        logger.debug("[McpApiDirectRepository] selectAgentCode: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectAgentCode: cntpntShopId={}", cntpntShopId);
+        Map<String, String> result = mspSession.selectMap("McpAppformMapper.selectAgentCode", cntpntShopId);
+        logger.debug("[MspApiDirectRepository] selectAgentCode: result={}", result);
         return result;
     }
 
@@ -372,9 +372,9 @@ public class McpApiDirectRepository {
 
     /** 기기변경 고객정보 확인 일반기변 , 우수기변 -/appform/selRMemberAjax */
     private JuoSubInfoDto selectSelRMemberAjax(JuoSubInfoDto juoSubInfoDto) {
-        logger.debug("[McpApiDirectRepository] selectSelRMemberAjax: juoSubInfoDto={}", juoSubInfoDto);
-        JuoSubInfoDto result = mcpSession.selectOne("McpAppformMapper.selectSelRMemberAjax", juoSubInfoDto);
-        logger.debug("[McpApiDirectRepository] selectSelRMemberAjax: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectSelRMemberAjax: juoSubInfoDto={}", juoSubInfoDto);
+        JuoSubInfoDto result = mspSession.selectOne("McpAppformMapper.selectSelRMemberAjax", juoSubInfoDto);
+        logger.debug("[MspApiDirectRepository] selectSelRMemberAjax: result={}", result);
         return result;
     }
 
@@ -383,9 +383,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/appform/checkValidUsimNo */
     private Integer checkValidUsimNo(String usimNo) {
-        logger.debug("[McpApiDirectRepository] checkValidUsimNo: usimNo={}", usimNo);
-        Integer result = mcpSession.selectOne("McpAppformMapper.checkValidUsimNo", usimNo);
-        logger.debug("[McpApiDirectRepository] checkValidUsimNo: result={}", result);
+        logger.debug("[MspApiDirectRepository] checkValidUsimNo: usimNo={}", usimNo);
+        Integer result = mspSession.selectOne("McpAppformMapper.checkValidUsimNo", usimNo);
+        logger.debug("[MspApiDirectRepository] checkValidUsimNo: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -393,9 +393,9 @@ public class McpApiDirectRepository {
 
     /** 분실파손 보험 조회 -/appform/selectInsrProdList */
     private List<IntmInsrRelDTO> selectInsrProdList(IntmInsrRelDTO intmInsrRelDTO) {
-        logger.debug("[McpApiDirectRepository] selectInsrProdList: intmInsrRelDTO={}", intmInsrRelDTO);
-        List<IntmInsrRelDTO> result = mcpSession.selectList("McpAppformMapper.selectInsrProdList", intmInsrRelDTO);
-        logger.debug("[McpApiDirectRepository] selectInsrProdList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectInsrProdList: intmInsrRelDTO={}", intmInsrRelDTO);
+        List<IntmInsrRelDTO> result = mspSession.selectList("McpAppformMapper.selectInsrProdList", intmInsrRelDTO);
+        logger.debug("[MspApiDirectRepository] selectInsrProdList: result={}", result);
         return result;
     }
 
@@ -404,9 +404,9 @@ public class McpApiDirectRepository {
 
     /** 고객CI정보에 대한 개통  정보 추출 [다회선 제한 기능] -/appform/limitForm */
     private AppformReqDto selectLimitForm(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] selectLimitForm: appformReqDto={}", appformReqDto);
-        AppformReqDto result = mcpSession.selectOne("McpAppformMapper.selectLimitForm", appformReqDto);
-        logger.debug("[McpApiDirectRepository] selectLimitForm: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectLimitForm: appformReqDto={}", appformReqDto);
+        AppformReqDto result = mspSession.selectOne("McpAppformMapper.selectLimitForm", appformReqDto);
+        logger.debug("[MspApiDirectRepository] selectLimitForm: result={}", result);
         return result;
     }
 
@@ -415,9 +415,9 @@ public class McpApiDirectRepository {
 
     /** 동일명의 회선 90일 이내에에 개통/개통취소 이력이 10회 -/appform/checkLimitOpenFormCount */
     private Integer checkLimitOpenFormCount(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] checkLimitOpenFormCount: appformReqDto={}", appformReqDto);
-        Integer result = mcpSession.selectOne("McpAppformMapper.checkLimitOpenFormCount", appformReqDto);
-        logger.debug("[McpApiDirectRepository] checkLimitOpenFormCount: result={}", result);
+        logger.debug("[MspApiDirectRepository] checkLimitOpenFormCount: appformReqDto={}", appformReqDto);
+        Integer result = mspSession.selectOne("McpAppformMapper.checkLimitOpenFormCount", appformReqDto);
+        logger.debug("[MspApiDirectRepository] checkLimitOpenFormCount: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -427,19 +427,19 @@ public class McpApiDirectRepository {
 
     /** 가입유형 찾아오기 -/appform/getDisPrmtId */
     private String selectDisPrmtId(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] selectDisPrmtId: appformReqDto={}", appformReqDto);
-        String slsTp = mcpSession.selectOne("McpAppformMapper.selectDisPrmtSlsTp", appformReqDto);
-        logger.debug("[McpApiDirectRepository] selectDisPrmtId: slsTp={}", slsTp);
+        logger.debug("[MspApiDirectRepository] selectDisPrmtId: appformReqDto={}", appformReqDto);
+        String slsTp = mspSession.selectOne("McpAppformMapper.selectDisPrmtSlsTp", appformReqDto);
+        logger.debug("[MspApiDirectRepository] selectDisPrmtId: slsTp={}", slsTp);
         appformReqDto.setSlsTp(slsTp);
 
         // 오프라인 평생할인 프로모션 ID 조회
-        List<String> prmtIdList = mcpSession.selectList("McpAppformMapper.selectDisPrmtId", appformReqDto);
+        List<String> prmtIdList = mspSession.selectList("McpAppformMapper.selectDisPrmtId", appformReqDto);
         if (prmtIdList == null || prmtIdList.isEmpty()) {
             //MM일때 프로모션 ID가 없다면, 프로모션 ID 한번 더 조회
             if ((!"".equals(appformReqDto.getModelId()) || appformReqDto.getModelId() != null) && "MM".equals(appformReqDto.getReqBuyType())) {
                 String modelId = appformReqDto.getModelId();
                 appformReqDto.setModelId(null);
-                prmtIdList = mcpSession.selectList("McpAppformMapper.selectDisPrmtId", appformReqDto);
+                prmtIdList = mspSession.selectList("McpAppformMapper.selectDisPrmtId", appformReqDto);
                 appformReqDto.setModelId(modelId);
             }
         }
@@ -447,7 +447,7 @@ public class McpApiDirectRepository {
         if (prmtIdList != null && prmtIdList.size() != 0) {
             result = prmtIdList.getFirst();
         }
-        logger.debug("[McpApiDirectRepository] selectDisPrmtId: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectDisPrmtId: result={}", result);
         return result;
     }
 
@@ -456,9 +456,9 @@ public class McpApiDirectRepository {
 
     /** 서식지 관련 MSP 코드 조회 -/appform/mspPrdtCode */
     private com.ktmmobile.msf.domains.form.common.dto.McpRequestDto selectMspPrdtCode(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] selectMspPrdtCode: appformReqDto={}", appformReqDto);
-        com.ktmmobile.msf.domains.form.common.dto.McpRequestDto result = mcpSession.selectOne("McpAppformMapper.selectMspPrdtCode", appformReqDto);
-        logger.debug("[McpApiDirectRepository] selectMspPrdtCode: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspPrdtCode: appformReqDto={}", appformReqDto);
+        com.ktmmobile.msf.domains.form.common.dto.McpRequestDto result = mspSession.selectOne("McpAppformMapper.selectMspPrdtCode", appformReqDto);
+        logger.debug("[MspApiDirectRepository] selectMspPrdtCode: result={}", result);
         return result;
     }
 
@@ -467,9 +467,9 @@ public class McpApiDirectRepository {
 
     /** 부가서비스 프로모션 등록 -/appform/mcpRequestAdditionPromotion */
     private Integer insertMcpRequestAdditionPromotion(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] insertMcpRequestAdditionPromotion: appformReqDto={}", appformReqDto);
-        Integer result = mcpSession.insert("McpAppformMapper.insertMcpRequestAdditionPromotion", appformReqDto);
-        logger.debug("[McpApiDirectRepository] insertMcpRequestAdditionPromotion: result={}", result);
+        logger.debug("[MspApiDirectRepository] insertMcpRequestAdditionPromotion: appformReqDto={}", appformReqDto);
+        Integer result = mspSession.insert("McpAppformMapper.insertMcpRequestAdditionPromotion", appformReqDto);
+        logger.debug("[MspApiDirectRepository] insertMcpRequestAdditionPromotion: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -478,9 +478,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/appform/existsAbuseImei */
     private boolean existsAbuseImei(String imei) {
-        logger.debug("[McpApiDirectRepository] existsAbuseImei: imei={}", imei);
-        boolean result = mcpSession.selectOne("McpAppformMapper.existsAbuseImei", imei);
-        logger.debug("[McpApiDirectRepository] existsAbuseImei: result={}", result);
+        logger.debug("[MspApiDirectRepository] existsAbuseImei: imei={}", imei);
+        boolean result = mspSession.selectOne("McpAppformMapper.existsAbuseImei", imei);
+        logger.debug("[MspApiDirectRepository] existsAbuseImei: result={}", result);
         return result;
     }
 
@@ -490,9 +490,9 @@ public class McpApiDirectRepository {
 
     /** (대리점)안면인증 가능 접점ID조회 -/appform/getCpntId */
     private String selectCpntId(String cntpntShopId) {
-        logger.debug("[McpApiDirectRepository] selectCpntId: cntpntShopId={}", cntpntShopId);
-        String result = mcpSession.selectOne("McpAppformMapper.selectCpntId", cntpntShopId);
-        logger.debug("[McpApiDirectRepository] selectCpntId: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectCpntId: cntpntShopId={}", cntpntShopId);
+        String result = mspSession.selectOne("McpAppformMapper.selectCpntId", cntpntShopId);
+        logger.debug("[MspApiDirectRepository] selectCpntId: result={}", result);
         return result;
     }
 
@@ -501,9 +501,9 @@ public class McpApiDirectRepository {
 
     /** 요금조회 -/appform/requestJoinDataByRjoinKeyNew */
     private Map<String, String> selectRequestJoinDataByRjoinKeyNew(long requestKey) {
-        logger.debug("[McpApiDirectRepository] selectRequestJoinDataByRjoinKeyNew: requestKey={}", requestKey);
-        Map<String, Object> result = mcpSession.selectOne("McpAppformMapper.selectRequestJoinDataByRjoinKeyNew", requestKey);
-        logger.debug("[McpApiDirectRepository] selectRequestJoinDataByRjoinKeyNew: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectRequestJoinDataByRjoinKeyNew: requestKey={}", requestKey);
+        Map<String, Object> result = mspSession.selectOne("McpAppformMapper.selectRequestJoinDataByRjoinKeyNew", requestKey);
+        logger.debug("[MspApiDirectRepository] selectRequestJoinDataByRjoinKeyNew: result={}", result);
 
         if (result == null) {
             return null;
@@ -521,13 +521,13 @@ public class McpApiDirectRepository {
 
     /** (셀프개통) 직영 프로모션 아이디 가져오기 -/appform/getChrgPrmtId */
     private String selectChrgPrmtId(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] selectChrgPrmtId: appformReqDto={}", appformReqDto);
-        List<String> prmtIdList = mcpSession.selectList("McpAppformMapper.selectChrgPrmtId", appformReqDto);
+        logger.debug("[MspApiDirectRepository] selectChrgPrmtId: appformReqDto={}", appformReqDto);
+        List<String> prmtIdList = mspSession.selectList("McpAppformMapper.selectChrgPrmtId", appformReqDto);
         String result = "";
         if (prmtIdList != null && prmtIdList.size() != 0) {
             result = prmtIdList.get(0);
         }
-        logger.debug("[McpApiDirectRepository] selectChrgPrmtId: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectChrgPrmtId: result={}", result);
         return result;
     }
 
@@ -536,9 +536,9 @@ public class McpApiDirectRepository {
 
     /** 평생할인 프로모션 기적용 테이블 INSERT -/appform/insertDisPrmtApd */
     private Integer insertDisPrmtApd(AppformReqDto appformReqDto) {
-        logger.debug("[McpApiDirectRepository] insertDisPrmtApd: appformReqDto={}", appformReqDto);
-        Integer result = mcpSession.insert("McpAppformMapper.insertDisPrmtApd", appformReqDto);
-        logger.debug("[McpApiDirectRepository] insertDisPrmtApd: result={}", result);
+        logger.debug("[MspApiDirectRepository] insertDisPrmtApd: appformReqDto={}", appformReqDto);
+        Integer result = mspSession.insert("McpAppformMapper.insertDisPrmtApd", appformReqDto);
+        logger.debug("[MspApiDirectRepository] insertDisPrmtApd: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -547,10 +547,10 @@ public class McpApiDirectRepository {
 
     /** API설명 -/common/mspSmsTemplateMst */
     private com.ktmmobile.msf.domains.form.common.dto.MspSmsTemplateMstDto selectMspSmsTemplateMst(int templateId) {
-        logger.debug("[McpApiDirectRepository] selectMspSmsTemplateMst: templateId={}", templateId);
-        com.ktmmobile.msf.domains.form.common.dto.MspSmsTemplateMstDto result = mcpSession.selectOne("McpCommonMapper.selectMspSmsTemplateMst",
+        logger.debug("[MspApiDirectRepository] selectMspSmsTemplateMst: templateId={}", templateId);
+        com.ktmmobile.msf.domains.form.common.dto.MspSmsTemplateMstDto result = mspSession.selectOne("McpCommonMapper.selectMspSmsTemplateMst",
             templateId);
-        logger.debug("[McpApiDirectRepository] selectMspSmsTemplateMst: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspSmsTemplateMst: result={}", result);
         return result;
     }
 
@@ -559,9 +559,9 @@ public class McpApiDirectRepository {
 
     /** 당일 MP호출 수 -/mPlatform/checkMpCallCount */
     private Integer selectCheckMpCallCount(Map<String, String> paramMap) {
-        logger.debug("[McpApiDirectRepository] selectCheckMpCallCount: paramMap={}", paramMap);
-        Integer result = mcpSession.selectOne("McpMplatformMapper.selectCheckMpCallCount", paramMap);
-        logger.debug("[McpApiDirectRepository] selectCheckMpCallCount: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectCheckMpCallCount: paramMap={}", paramMap);
+        Integer result = mspSession.selectOne("McpMplatformMapper.selectCheckMpCallCount", paramMap);
+        logger.debug("[MspApiDirectRepository] selectCheckMpCallCount: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -571,9 +571,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/msp/rateByOrgnInfos */
     private List<MspRateMstDto> selectRateByOrgnInfos(MspSalePlcyMstDto mspSalePlcyMstDto) {
-        logger.debug("[McpApiDirectRepository] selectRateByOrgnInfos: mspSalePlcyMstDto={}", mspSalePlcyMstDto);
-        List<MspRateMstDto> result = mcpSession.selectList("McpMspMapper.selectRateByOrgnInfos", mspSalePlcyMstDto);
-        logger.debug("[McpApiDirectRepository] selectRateByOrgnInfos: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectRateByOrgnInfos: mspSalePlcyMstDto={}", mspSalePlcyMstDto);
+        List<MspRateMstDto> result = mspSession.selectList("McpMspMapper.selectRateByOrgnInfos", mspSalePlcyMstDto);
+        logger.debug("[MspApiDirectRepository] selectRateByOrgnInfos: result={}", result);
         return result;
     }
 
@@ -583,9 +583,9 @@ public class McpApiDirectRepository {
 
     /** 판매정책정보를 조회 : 상품과 상관없이 기관별 조회 -/msp/mspSalePlcyInfoByOnlyOrgn */
     private List<MspSalePlcyMstDto> selectMspSalePlcyInfoByOnlyOrgn(MspSalePlcyMstDto mspSalePlcyMstDto) {
-        logger.debug("[McpApiDirectRepository] selectMspSalePlcyInfoByOnlyOrgn: mspSalePlcyMstDto={}", mspSalePlcyMstDto);
-        List<MspSalePlcyMstDto> result = mcpSession.selectList("McpMspMapper.selectMspSalePlcyInfoByOnlyOrgn", mspSalePlcyMstDto);
-        logger.debug("[McpApiDirectRepository] selectMspSalePlcyInfoByOnlyOrgn: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspSalePlcyInfoByOnlyOrgn: mspSalePlcyMstDto={}", mspSalePlcyMstDto);
+        List<MspSalePlcyMstDto> result = mspSession.selectList("McpMspMapper.selectMspSalePlcyInfoByOnlyOrgn", mspSalePlcyMstDto);
+        logger.debug("[MspApiDirectRepository] selectMspSalePlcyInfoByOnlyOrgn: result={}", result);
         return result;
     }
 
@@ -595,9 +595,9 @@ public class McpApiDirectRepository {
 
     /** 최저가를 구하기 위한 해당 상품의 요금제 정보 1건 조회 -/msp/lowPriceChargeInfoByProd */
     private MspSaleSubsdMstDto selectLowPriceChargeInfoByProd(MspSaleSubsdMstDto mspSaleSubsdMstDto) {
-        logger.debug("[McpApiDirectRepository] selectLowPriceChargeInfoByProd: mspSaleSubsdMstDto={}", mspSaleSubsdMstDto);
-        MspSaleSubsdMstDto result = mcpSession.selectOne("McpMspMapper.selectLowPriceChargeInfoByProd", mspSaleSubsdMstDto);
-        logger.debug("[McpApiDirectRepository] selectLowPriceChargeInfoByProd: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectLowPriceChargeInfoByProd: mspSaleSubsdMstDto={}", mspSaleSubsdMstDto);
+        MspSaleSubsdMstDto result = mspSession.selectOne("McpMspMapper.selectLowPriceChargeInfoByProd", mspSaleSubsdMstDto);
+        logger.debug("[MspApiDirectRepository] selectLowPriceChargeInfoByProd: result={}", result);
         return result;
     }
 
@@ -607,9 +607,9 @@ public class McpApiDirectRepository {
 
     /** 단품모델ID로 핸드폰정보를 조회 -/msp/mspPhoneInfo */
     private com.ktmmobile.msf.domains.form.common.dto.PhoneMspDto selectMspPhoneInfo(String prdtId) {
-        logger.debug("[McpApiDirectRepository] selectMspPhoneInfo: prdtId={}", prdtId);
-        com.ktmmobile.msf.domains.form.common.dto.PhoneMspDto result = mcpSession.selectOne("McpMspMapper.selectMspPhoneInfo", prdtId);
-        logger.debug("[McpApiDirectRepository] selectMspPhoneInfo: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspPhoneInfo: prdtId={}", prdtId);
+        com.ktmmobile.msf.domains.form.common.dto.PhoneMspDto result = mspSession.selectOne("McpMspMapper.selectMspPhoneInfo", prdtId);
+        logger.debug("[MspApiDirectRepository] selectMspPhoneInfo: result={}", result);
         return result;
     }
 
@@ -619,9 +619,9 @@ public class McpApiDirectRepository {
 
     /** 판매정책정보를 조회 -/msp/mspSaleOrgnMst */
     private List<MspSalePlcyMstDto> selectMspSaleOrgnMst(MspSalePlcyMstDto mspSalePlcyMstDto) {
-        logger.debug("[McpApiDirectRepository] selectMspSaleOrgnMst: mspSalePlcyMstDto={}", mspSalePlcyMstDto);
-        List<MspSalePlcyMstDto> result = mcpSession.selectList("McpMspMapper.selectMspSaleOrgnMst", mspSalePlcyMstDto);
-        logger.debug("[McpApiDirectRepository] selectMspSaleOrgnMst: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspSaleOrgnMst: mspSalePlcyMstDto={}", mspSalePlcyMstDto);
+        List<MspSalePlcyMstDto> result = mspSession.selectList("McpMspMapper.selectMspSaleOrgnMst", mspSalePlcyMstDto);
+        logger.debug("[MspApiDirectRepository] selectMspSaleOrgnMst: result={}", result);
         return result;
     }
 
@@ -631,9 +631,9 @@ public class McpApiDirectRepository {
 
     /** 판매중인 상품정보를 조회 -/msp/mspSalePrdMst */
     private MspSalePrdtMstDto selectMspSalePrdMst(MspSalePrdtMstDto mspSalePrdtMstDto) {
-        logger.debug("[McpApiDirectRepository] selectMspSalePrdMst: mspSalePrdtMstDto={}", mspSalePrdtMstDto);
-        MspSalePrdtMstDto result = mcpSession.selectOne("McpMspMapper.selectMspSalePrdMst", mspSalePrdtMstDto);
-        logger.debug("[McpApiDirectRepository] selectMspSalePrdMst: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspSalePrdMst: mspSalePrdtMstDto={}", mspSalePrdtMstDto);
+        MspSalePrdtMstDto result = mspSession.selectOne("McpMspMapper.selectMspSalePrdMst", mspSalePrdtMstDto);
+        logger.debug("[MspApiDirectRepository] selectMspSalePrdMst: result={}", result);
         return result;
     }
 
@@ -643,10 +643,10 @@ public class McpApiDirectRepository {
 
     /** 해당정책코드에 해당하는 약정개월정보 리스트 조회 -/msp/mspSaleAgrmMst */
     private List<com.ktmmobile.msf.domains.form.common.dto.MspSaleAgrmMst> selectMspSaleAgrmMst(String salePlcyCd) {
-        logger.debug("[McpApiDirectRepository] selectMspSaleAgrmMst: salePlcyCd={}", salePlcyCd);
-        List<com.ktmmobile.msf.domains.form.common.dto.MspSaleAgrmMst> result = mcpSession.selectList("McpMspMapper.selectMspSaleAgrmMst",
+        logger.debug("[MspApiDirectRepository] selectMspSaleAgrmMst: salePlcyCd={}", salePlcyCd);
+        List<com.ktmmobile.msf.domains.form.common.dto.MspSaleAgrmMst> result = mspSession.selectList("McpMspMapper.selectMspSaleAgrmMst",
             salePlcyCd);
-        logger.debug("[McpApiDirectRepository] selectMspSaleAgrmMst: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspSaleAgrmMst: result={}", result);
         return result;
     }
 
@@ -657,9 +657,9 @@ public class McpApiDirectRepository {
 
     /** 요금제 정보 리스트 조회 -/msp/mspRateMst */
     private MspRateMstDto selectMspRateMst(String rateCd) {
-        logger.debug("[McpApiDirectRepository] selectMspRateMst: rateCd={}", rateCd);
-        MspRateMstDto result = mcpSession.selectOne("McpMspMapper.selectMspRateMst", rateCd);
-        logger.debug("[McpApiDirectRepository] selectMspRateMst: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspRateMst: rateCd={}", rateCd);
+        MspRateMstDto result = mspSession.selectOne("McpMspMapper.selectMspRateMst", rateCd);
+        logger.debug("[MspApiDirectRepository] selectMspRateMst: result={}", result);
         return result;
     }
 
@@ -669,9 +669,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/msp/sellUsimMgmtOrgnId */
     private String selectSellUsimMgmtOrgnId(String searchUsimNo) {
-        logger.debug("[McpApiDirectRepository] selectSellUsimMgmtOrgnId: searchUsimNo={}", searchUsimNo);
-        String result = mcpSession.selectOne("McpMspMapper.selectSellUsimMgmtOrgnId", searchUsimNo);
-        logger.debug("[McpApiDirectRepository] selectSellUsimMgmtOrgnId: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectSellUsimMgmtOrgnId: searchUsimNo={}", searchUsimNo);
+        String result = mspSession.selectOne("McpMspMapper.selectSellUsimMgmtOrgnId", searchUsimNo);
+        logger.debug("[MspApiDirectRepository] selectSellUsimMgmtOrgnId: result={}", result);
         return result;
     }
 
@@ -681,9 +681,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/msp/mspSalePlcyMst */
     private MspSalePlcyMstDto selectMspSalePlcyMst(String salePlcyCd) {
-        logger.debug("[McpApiDirectRepository] selectMspSalePlcyMst: salePlcyCd={}", salePlcyCd);
-        MspSalePlcyMstDto result = mcpSession.selectOne("McpMspMapper.selectMspSalePlcyMst", salePlcyCd);
-        logger.debug("[McpApiDirectRepository] selectMspSalePlcyMst: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspSalePlcyMst: salePlcyCd={}", salePlcyCd);
+        MspSalePlcyMstDto result = mspSession.selectOne("McpMspMapper.selectMspSalePlcyMst", salePlcyCd);
+        logger.debug("[MspApiDirectRepository] selectMspSalePlcyMst: result={}", result);
         return result;
     }
 
@@ -692,14 +692,14 @@ public class McpApiDirectRepository {
 
     /** 최저가를 구하기 위한 해당 상품의 요금제 정보 리스트를 조회 -/msp/mspSaleSubsdMstList */
     private List<MspSaleSubsdMstDto> selectSaleSubsdMstList(MspSaleSubsdMstDto mspSaleSubsdMstDto) {
-        logger.debug("[McpApiDirectRepository] selectSaleSubsdMstList: mspSaleSubsdMstDto={}", mspSaleSubsdMstDto);
+        logger.debug("[MspApiDirectRepository] selectSaleSubsdMstList: mspSaleSubsdMstDto={}", mspSaleSubsdMstDto);
         List<MspSaleSubsdMstDto> result = null;
         if ("Y".equals(mspSaleSubsdMstDto.getForFrontFastYn())) {
-            result = mcpSession.selectList("McpMspMapper.selectMspSaleSubsdMstListForLowPrice", mspSaleSubsdMstDto);
+            result = mspSession.selectList("McpMspMapper.selectMspSaleSubsdMstListForLowPrice", mspSaleSubsdMstDto);
         } else {
-            result = mcpSession.selectList("McpMspMapper.selectMspSaleSubsdMstListWithRateInfo", mspSaleSubsdMstDto);
+            result = mspSession.selectList("McpMspMapper.selectMspSaleSubsdMstListWithRateInfo", mspSaleSubsdMstDto);
         }
-        logger.debug("[McpApiDirectRepository] selectSaleSubsdMstList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectSaleSubsdMstList: result={}", result);
         return result;
     }
 
@@ -709,9 +709,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/msp/juoSubIngoCount */
     private Integer selectJuoSubIngoCount(String subscriberNo) {
-        logger.debug("[McpApiDirectRepository] selectJuoSubIngoCount: subscriberNo={}", subscriberNo);
-        Integer result = mcpSession.selectOne("McpMspMapper.selectJuoSubIngoCount", subscriberNo);
-        logger.debug("[McpApiDirectRepository] selectJuoSubIngoCount: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectJuoSubIngoCount: subscriberNo={}", subscriberNo);
+        Integer result = mspSession.selectOne("McpMspMapper.selectJuoSubIngoCount", subscriberNo);
+        logger.debug("[MspApiDirectRepository] selectJuoSubIngoCount: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -720,9 +720,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/msp/mspCombRateMapp */
     private com.ktmmobile.msf.domains.form.common.dto.MyCombinationResDto selectMspCombRateMapp(String pRateCd) {
-        logger.debug("[McpApiDirectRepository] selectMspCombRateMapp: pRateCd={}", pRateCd);
-        com.ktmmobile.msf.domains.form.common.dto.MyCombinationResDto result = mcpSession.selectOne("McpMspMapper.selectMspCombRateMapp", pRateCd);
-        logger.debug("[McpApiDirectRepository] selectMspCombRateMapp: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspCombRateMapp: pRateCd={}", pRateCd);
+        com.ktmmobile.msf.domains.form.common.dto.MyCombinationResDto result = mspSession.selectOne("McpMspMapper.selectMspCombRateMapp", pRateCd);
+        logger.debug("[MspApiDirectRepository] selectMspCombRateMapp: result={}", result);
         return result;
     }
 
@@ -732,9 +732,9 @@ public class McpApiDirectRepository {
 
     /** 계약번호의 주민번호 조회 -/msp/customerSsn */
     private String selectCustomerSsn(String contractNum) {
-        logger.debug("[McpApiDirectRepository] selectCustomerSsn: contractNum={}", contractNum);
-        String result = mcpSession.selectOne("McpMspMapper.selectCustomerSsn", contractNum);
-        logger.debug("[McpApiDirectRepository] selectCustomerSsn: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectCustomerSsn: contractNum={}", contractNum);
+        String result = mspSession.selectOne("McpMspMapper.selectCustomerSsn", contractNum);
+        logger.debug("[MspApiDirectRepository] selectCustomerSsn: result={}", result);
         return result;
     }
 
@@ -744,9 +744,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/msp/getromotionDcAmt */
     private Integer selectPromotionDcAmt(MspSaleSubsdMstDto mspSaleSubsdMstDto) {
-        logger.debug("[McpApiDirectRepository] selectPromotionDcAmt: mspSaleSubsdMstDto={}", mspSaleSubsdMstDto);
-        Integer result = mcpSession.selectOne("McpMspMapper.selectPromotionDcAmt", mspSaleSubsdMstDto);
-        logger.debug("[McpApiDirectRepository] selectPromotionDcAmt: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectPromotionDcAmt: mspSaleSubsdMstDto={}", mspSaleSubsdMstDto);
+        Integer result = mspSession.selectOne("McpMspMapper.selectPromotionDcAmt", mspSaleSubsdMstDto);
+        logger.debug("[MspApiDirectRepository] selectPromotionDcAmt: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -756,9 +756,9 @@ public class McpApiDirectRepository {
 
     /** 할부원금 조회 -/mypage/mspAddInfo */
     private MspJuoAddInfoDto selectMspAddInfo(String svcCntrNo) {
-        logger.debug("[McpApiDirectRepository] selectMspAddInfo: svcCntrNo={}", svcCntrNo);
-        MspJuoAddInfoDto result = mcpSession.selectOne("McpMypageMapper.selectMspAddInfo", svcCntrNo);
-        logger.debug("[McpApiDirectRepository] selectMspAddInfo: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectMspAddInfo: svcCntrNo={}", svcCntrNo);
+        MspJuoAddInfoDto result = mspSession.selectOne("McpMyPageMapper.selectMspAddInfo", svcCntrNo);
+        logger.debug("[MspApiDirectRepository] selectMspAddInfo: result={}", result);
         return result;
     }
 
@@ -767,12 +767,12 @@ public class McpApiDirectRepository {
 
     /** 자급제 보상서비스 주문 -/mypage/insertRwdOrder */
     private HashMap<String, String> insertRwdOrder(RwdOrderDto rwdOrderDto) {
-        logger.debug("[McpApiDirectRepository] insertRwdOrder: rwdOrderDto={}", rwdOrderDto);
+        logger.debug("[MspApiDirectRepository] insertRwdOrder: rwdOrderDto={}", rwdOrderDto);
         HashMap<String, String> rtnMap = new HashMap<>();
 
         try {
-            int result = mcpSession.insert("McpMypageMapper.insertRwdOrder", rwdOrderDto);
-            logger.debug("[McpApiDirectRepository] insertRwdOrder: result={}", result);
+            int result = mspSession.insert("McpMyPageMapper.insertRwdOrder", rwdOrderDto);
+            logger.debug("[MspApiDirectRepository] insertRwdOrder: result={}", result);
             if (result == 1) {
                 rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
                 rtnMap.put("RESULT_MSG", "자급제 보상서비스 신청이 완료되었습니다.");
@@ -795,9 +795,9 @@ public class McpApiDirectRepository {
 
     /** MSP_JUO_SUB_INFO에서 orgSacnId 조회 -/mypage/getOrgScanId */
     private String selectOrgScanId(String contractNum) {
-        logger.debug("[McpApiDirectRepository] selectOrgScanId: contractNum={}", contractNum);
-        String result = mcpSession.selectOne("McpMypageMapper.selectOrgScanId", contractNum);
-        logger.debug("[McpApiDirectRepository] selectOrgScanId: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectOrgScanId: contractNum={}", contractNum);
+        String result = mspSession.selectOne("McpMyPageMapper.selectOrgScanId", contractNum);
+        logger.debug("[MspApiDirectRepository] selectOrgScanId: result={}", result);
         return result;
     }
 
@@ -806,9 +806,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/cntrList */
     private List<McpUserCntrMngDto> selectCntrList(HashMap<String, String> paramMap) {
-        logger.debug("[McpApiDirectRepository] selectCntrList: paramMap={}", paramMap);
-        List<McpUserCntrMngDto> result = mcpSession.selectList("McpMypageMapper.selectCntrList", paramMap);
-        logger.debug("[McpApiDirectRepository] selectCntrList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectCntrList: paramMap={}", paramMap);
+        List<McpUserCntrMngDto> result = mspSession.selectList("McpMyPageMapper.selectCntrList", paramMap);
+        logger.debug("[MspApiDirectRepository] selectCntrList: result={}", result);
         return result;
     }
 
@@ -817,9 +817,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/selectContractObj */
     private Map<String, String> selectContractObj(HashMap<String, String> paramMap) {
-        logger.debug("[McpApiDirectRepository] selectContractObj: paramMap={}", paramMap);
-        Map<String, String> result = mcpSession.selectMap("McpMypageMapper.selectContractObj", String.valueOf(paramMap));
-        logger.debug("[McpApiDirectRepository] selectContractObj: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectContractObj: paramMap={}", paramMap);
+        Map<String, String> result = mspSession.selectMap("McpMyPageMapper.selectContractObj", String.valueOf(paramMap));
+        logger.debug("[MspApiDirectRepository] selectContractObj: result={}", result);
         return result;
     }
 
@@ -828,9 +828,9 @@ public class McpApiDirectRepository {
 
     /** 회원가입시 회선 정보 조회 -/mypage/juoSubInfo */
     private JuoSubInfoDto selectJuoSubInfo(HashMap<String, String> paramMap) {
-        logger.debug("[McpApiDirectRepository] selectJuoSubInfo: paramMap={}", paramMap);
-        JuoSubInfoDto result = mcpSession.selectOne("McpMypageMapper.selectJuoSubInfo", paramMap);
-        logger.debug("[McpApiDirectRepository] selectJuoSubInfo: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectJuoSubInfo: paramMap={}", paramMap);
+        JuoSubInfoDto result = mspSession.selectOne("McpMyPageMapper.selectJuoSubInfo", paramMap);
+        logger.debug("[MspApiDirectRepository] selectJuoSubInfo: result={}", result);
         return result;
     }
 
@@ -840,9 +840,9 @@ public class McpApiDirectRepository {
 
     /** 개통 채널정보 -/mypage/channelInfo */
     private MspJuoAddInfoDto selectChannelInfo(String contractNum) {
-        logger.debug("[McpApiDirectRepository] selectChannelInfo: contractNum={}", contractNum);
-        MspJuoAddInfoDto result = mcpSession.selectOne("McpMypageMapper.selectChannelInfo", contractNum);
-        logger.debug("[McpApiDirectRepository] selectChannelInfo: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectChannelInfo: contractNum={}", contractNum);
+        MspJuoAddInfoDto result = mspSession.selectOne("McpMyPageMapper.selectChannelInfo", contractNum);
+        logger.debug("[MspApiDirectRepository] selectChannelInfo: result={}", result);
         return result;
     }
 
@@ -851,9 +851,9 @@ public class McpApiDirectRepository {
 
     /** 현재요금제정보 가져오기 (명의변경) -/mypage/cntrListNmChg */
     private List<McpUserCntrMngDto> selectCntrListNmChg(HashMap<String, String> paramMap) {
-        logger.debug("[McpApiDirectRepository] selectCntrListNmChg: paramMap={}", paramMap);
-        List<McpUserCntrMngDto> result = mcpSession.selectList("McpMypageMapper.selectCntrListNmChg", paramMap);
-        logger.debug("[McpApiDirectRepository] selectCntrListNmChg: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectCntrListNmChg: paramMap={}", paramMap);
+        List<McpUserCntrMngDto> result = mspSession.selectList("McpMyPageMapper.selectCntrListNmChg", paramMap);
+        logger.debug("[MspApiDirectRepository] selectCntrListNmChg: result={}", result);
         return result;
     }
 
@@ -862,9 +862,9 @@ public class McpApiDirectRepository {
 
     /** 계약 현행화 정보 -/mypage/cntrListNoLogin */
     private McpUserCntrMngDto selectCntrListNoLogin(McpUserCntrMngDto mcpUserCntrMngDto) {
-        logger.debug("[McpApiDirectRepository] selectCntrListNoLogin: mcpUserCntrMngDto={}", mcpUserCntrMngDto);
-        McpUserCntrMngDto result = mcpSession.selectOne("McpMypageMapper.selectCntrListNoLogin", mcpUserCntrMngDto);
-        logger.debug("[McpApiDirectRepository] selectCntrListNoLogin: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectCntrListNoLogin: mcpUserCntrMngDto={}", mcpUserCntrMngDto);
+        McpUserCntrMngDto result = mspSession.selectOne("McpMyPageMapper.selectCntrListNoLogin", mcpUserCntrMngDto);
+        logger.debug("[MspApiDirectRepository] selectCntrListNoLogin: result={}", result);
         return result;
     }
 
@@ -873,9 +873,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/socDesc */
     private McpUserCntrMngDto selectSocDesc(String svcCntrNo) {
-        logger.debug("[McpApiDirectRepository] selectSocDesc: svcCntrNo={}", svcCntrNo);
-        McpUserCntrMngDto result = mcpSession.selectOne("McpMypageMapper.selectSocDesc", svcCntrNo);
-        logger.debug("[McpApiDirectRepository] selectSocDesc: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectSocDesc: svcCntrNo={}", svcCntrNo);
+        McpUserCntrMngDto result = mspSession.selectOne("McpMyPageMapper.selectSocDesc", svcCntrNo);
+        logger.debug("[MspApiDirectRepository] selectSocDesc: result={}", result);
         return result;
     }
 
@@ -884,9 +884,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/customerType */
     private String selectCustomerType(String custId) {
-        logger.debug("[McpApiDirectRepository] selectCustomerType: custId={}", custId);
-        String result = mcpSession.selectOne("McpMypageMapper.selectCustomerType", custId);
-        logger.debug("[McpApiDirectRepository] selectCustomerType: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectCustomerType: custId={}", custId);
+        String result = mspSession.selectOne("McpMyPageMapper.selectCustomerType", custId);
+        logger.debug("[MspApiDirectRepository] selectCustomerType: result={}", result);
         return result;
     }
 
@@ -895,9 +895,9 @@ public class McpApiDirectRepository {
 
     /** 청구계정 번호 조회 -/mypage/selectBanSel */
     private String selectBanSel(String contractNum) {
-        logger.debug("[McpApiDirectRepository] selectBanSel: contractNum={}", contractNum);
-        String result = mcpSession.selectOne("McpMypageMapper.selectBanSel", contractNum);
-        logger.debug("[McpApiDirectRepository] selectBanSel: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectBanSel: contractNum={}", contractNum);
+        String result = mspSession.selectOne("McpMyPageMapper.selectBanSel", contractNum);
+        logger.debug("[MspApiDirectRepository] selectBanSel: result={}", result);
         return result;
     }
 
@@ -906,9 +906,9 @@ public class McpApiDirectRepository {
 
     /** 주민번호,이름,연락처로 계약번호 조회 -/mypage/selectConSsnObj */
     private Map<String, String> selectConSsnObj(HashMap<String, String> paramMap) {
-        logger.debug("[McpApiDirectRepository] selectConSsnObj: paramMap={}", paramMap);
-        Map<String, Object> result = mcpSession.selectOne("McpMypageMapper.selectConSsnObj", paramMap);
-        logger.debug("[McpApiDirectRepository] selectConSsnObj: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectConSsnObj: paramMap={}", paramMap);
+        Map<String, Object> result = mspSession.selectOne("McpMyPageMapper.selectConSsnObj", paramMap);
+        logger.debug("[MspApiDirectRepository] selectConSsnObj: result={}", result);
         if (result == null) return null;
         Map<String, String> strResult = new HashMap<String, String>();
         for (Map.Entry<String, Object> entry : result.entrySet()) {
@@ -922,9 +922,9 @@ public class McpApiDirectRepository {
 
     /** 선불 요금제 사용 여부 조회 -/mypage/prePayment */
     private Integer selectPrePayment(String contractNum) {
-        logger.debug("[McpApiDirectRepository] selectPrePayment: contractNum={}", contractNum);
-        Integer result = mcpSession.selectOne("McpMypageMapper.selectPrePayment", contractNum);
-        logger.debug("[McpApiDirectRepository] selectPrePayment: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectPrePayment: contractNum={}", contractNum);
+        Integer result = mspSession.selectOne("McpMyPageMapper.selectPrePayment", contractNum);
+        logger.debug("[MspApiDirectRepository] selectPrePayment: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -934,9 +934,9 @@ public class McpApiDirectRepository {
 
     /** 안심보험가입여부조회 -/mypage/getInsrInfo */
     private Map<String, String> selectInsrInfo(String contractNum) {
-        logger.debug("[McpApiDirectRepository] selectInsrInfo: contractNum={}", contractNum);
-        Map<String, String> result = mcpSession.selectMap("McpMypageMapper.selectInsrInfo", contractNum);
-        logger.debug("[McpApiDirectRepository] selectInsrInfo: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectInsrInfo: contractNum={}", contractNum);
+        Map<String, String> result = mspSession.selectMap("McpMyPageMapper.selectInsrInfo", contractNum);
+        logger.debug("[MspApiDirectRepository] selectInsrInfo: result={}", result);
         return result;
     }
 
@@ -946,9 +946,9 @@ public class McpApiDirectRepository {
 
     /** 안심보험정보조회(by insrCd) -/mypage/getInsrInfoByCd */
     private Map<String, String> selectInsrInfoByCd(String insrCd) {
-        logger.debug("[McpApiDirectRepository] selectInsrInfoByCd: insrCd={}", insrCd);
-        Map<String, String> result = mcpSession.selectMap("McpMypageMapper.selectInsrInfoByCd", insrCd);
-        logger.debug("[McpApiDirectRepository] selectInsrInfoByCd: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectInsrInfoByCd: insrCd={}", insrCd);
+        Map<String, String> result = mspSession.selectMap("McpMyPageMapper.selectInsrInfoByCd", insrCd);
+        logger.debug("[MspApiDirectRepository] selectInsrInfoByCd: result={}", result);
         return result;
     }
 
@@ -957,9 +957,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/farPricePlan */
     private McpFarPriceDto selectFarPricePlan(String ncn) {
-        logger.debug("[McpApiDirectRepository] selectFarPricePlan: ncn={}", ncn);
-        McpFarPriceDto result = mcpSession.selectOne("McpMypageMapper.selectFarPricePlan", ncn);
-        logger.debug("[McpApiDirectRepository] selectFarPricePlan: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectFarPricePlan: ncn={}", ncn);
+        McpFarPriceDto result = mspSession.selectOne("McpMyPageMapper.selectFarPricePlan", ncn);
+        logger.debug("[MspApiDirectRepository] selectFarPricePlan: result={}", result);
         return result;
     }
 
@@ -969,9 +969,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/countFarPricePlanList */
     private Integer selectFarPricePlanListCount(String rateCd) {
-        logger.debug("[McpApiDirectRepository] selectFarPricePlanListCount: rateCd={}", rateCd);
-        Integer result = mcpSession.selectOne("McpMypageMapper.selectFarPricePlanListCount", rateCd);
-        logger.debug("[McpApiDirectRepository] selectFarPricePlanListCount: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectFarPricePlanListCount: rateCd={}", rateCd);
+        Integer result = mspSession.selectOne("McpMyPageMapper.selectFarPricePlanListCount", rateCd);
+        logger.debug("[MspApiDirectRepository] selectFarPricePlanListCount: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -980,9 +980,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/farPricePlanList */
     private List<McpFarPriceDto> selectFarPricePlanList(String rateCd) {
-        logger.debug("[McpApiDirectRepository] selectFarPricePlanList: rateCd={}", rateCd);
-        List<McpFarPriceDto> result = mcpSession.selectList("McpMypageMapper.selectFarPricePlanList", rateCd);
-        logger.debug("[McpApiDirectRepository] selectFarPricePlanList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectFarPricePlanList: rateCd={}", rateCd);
+        List<McpFarPriceDto> result = mspSession.selectList("McpMyPageMapper.selectFarPricePlanList", rateCd);
+        logger.debug("[MspApiDirectRepository] selectFarPricePlanList: result={}", result);
         return result;
     }
 
@@ -992,9 +992,9 @@ public class McpApiDirectRepository {
 
     /** 약정정보 -/mypage/enggInfo1 */
     private MspJuoAddInfoDto selectEnggInfo(String contractNum) {
-        logger.debug("[McpApiDirectRepository] selectEnggInfo: contractNum={}", contractNum);
-        MspJuoAddInfoDto result = mcpSession.selectOne("McpMypageMapper.selectEnggInfo", contractNum);
-        logger.debug("[McpApiDirectRepository] selectEnggInfo: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectEnggInfo: contractNum={}", contractNum);
+        MspJuoAddInfoDto result = mspSession.selectOne("McpMyPageMapper.selectEnggInfo", contractNum);
+        logger.debug("[MspApiDirectRepository] selectEnggInfo: result={}", result);
         return result;
     }
 
@@ -1003,9 +1003,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/farPriceAddInfo */
     private String selectFarPriceAddInfo(Map<String, String> paramMap) {
-        logger.debug("[McpApiDirectRepository] selectFarPriceAddInfo: paramMap={}", paramMap);
-        String result = mcpSession.selectOne("McpMypageMapper.selectFarPriceAddInfo", paramMap);
-        logger.debug("[McpApiDirectRepository] selectFarPriceAddInfo: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectFarPriceAddInfo: paramMap={}", paramMap);
+        String result = mspSession.selectOne("McpMyPageMapper.selectFarPriceAddInfo", paramMap);
+        logger.debug("[MspApiDirectRepository] selectFarPriceAddInfo: result={}", result);
         return result;
     }
 
@@ -1015,9 +1015,9 @@ public class McpApiDirectRepository {
 
     /** 해지 해야할 부가 서비스 리스트 -/mypage/closeSubList */
     private List<McpUserCntrMngDto> selectCloseSubList(String contractNum) {
-        logger.debug("[McpApiDirectRepository] selectCloseSubList: contractNum={}", contractNum);
-        List<McpUserCntrMngDto> result = mcpSession.selectList("McpMypageMapper.selectCloseSubList", contractNum);
-        logger.debug("[McpApiDirectRepository] selectCloseSubList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectCloseSubList: contractNum={}", contractNum);
+        List<McpUserCntrMngDto> result = mspSession.selectList("McpMyPageMapper.selectCloseSubList", contractNum);
+        logger.debug("[MspApiDirectRepository] selectCloseSubList: result={}", result);
         return result;
     }
 
@@ -1026,9 +1026,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/insertSocfailProcMst */
     private boolean insertSocfailProcMst(McpServiceAlterTraceDto mcpServiceAlterTraceDto) {
-        logger.debug("[McpApiDirectRepository] insertSocfailProcMst: mcpServiceAlterTraceDto={}", mcpServiceAlterTraceDto);
-        Integer result = mcpSession.insert("McpMypageMapper.insertSocfailProcMst", mcpServiceAlterTraceDto);
-        logger.debug("[McpApiDirectRepository] insertSocfailProcMst: result={}", result);
+        logger.debug("[MspApiDirectRepository] insertSocfailProcMst: mcpServiceAlterTraceDto={}", mcpServiceAlterTraceDto);
+        Integer result = mspSession.insert("McpMyPageMapper.insertSocfailProcMst", mcpServiceAlterTraceDto);
+        logger.debug("[MspApiDirectRepository] insertSocfailProcMst: result={}", result);
         return result != null && result > 0;
     }
 
@@ -1038,9 +1038,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/getChrgPrmtIdSocChg */
     private String selectChrgPrmtIdSocChg(String rateCd) {
-        logger.debug("[McpApiDirectRepository] selectChrgPrmtIdSocChg: rateCd={}", rateCd);
-        String result = mcpSession.selectOne("McpMypageMapper.selectChrgPrmtIdSocChg", rateCd);
-        logger.debug("[McpApiDirectRepository] selectChrgPrmtIdSocChg: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectChrgPrmtIdSocChg: rateCd={}", rateCd);
+        String result = mspSession.selectOne("McpMyPageMapper.selectChrgPrmtIdSocChg", rateCd);
+        logger.debug("[MspApiDirectRepository] selectChrgPrmtIdSocChg: result={}", result);
         return result;
     }
 
@@ -1049,9 +1049,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/insertDisApd */
     private Integer insertDisApd(McpUserCntrMngDto mcpUserCntrMngDto) {
-        logger.debug("[McpApiDirectRepository] insertDisApd: mcpUserCntrMngDto={}", mcpUserCntrMngDto);
-        Integer result = mcpSession.insert("McpMypageMapper.insertDisApd", mcpUserCntrMngDto);
-        logger.debug("[McpApiDirectRepository] insertDisApd: result={}", result);
+        logger.debug("[MspApiDirectRepository] insertDisApd: mcpUserCntrMngDto={}", mcpUserCntrMngDto);
+        Integer result = mspSession.insert("McpMyPageMapper.insertDisApd", mcpUserCntrMngDto);
+        logger.debug("[MspApiDirectRepository] insertDisApd: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -1061,9 +1061,9 @@ public class McpApiDirectRepository {
 
     /** 가입 해야할 부가 서비스 리스트 -/mypage/romotionDcList */
     private List<McpUserCntrMngDto> selectPromotionDcList(String rateCd) {
-        logger.debug("[McpApiDirectRepository] selectPromotionDcList: rateCd={}", rateCd);
-        List<McpUserCntrMngDto> result = mcpSession.selectList("McpMypageMapper.selectPromotionDcList", rateCd);
-        logger.debug("[McpApiDirectRepository] selectPromotionDcList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectPromotionDcList: rateCd={}", rateCd);
+        List<McpUserCntrMngDto> result = mspSession.selectList("McpMyPageMapper.selectPromotionDcList", rateCd);
+        logger.debug("[MspApiDirectRepository] selectPromotionDcList: result={}", result);
         return result;
     }
 
@@ -1073,9 +1073,9 @@ public class McpApiDirectRepository {
 
     /** 월납부 통신요금  = 기본요금 - 할인요금 -/mypage/getRateInfo */
     private MspSaleSubsdMstDto selectRateInfo(String rateCd) {
-        logger.debug("[McpApiDirectRepository] selectRateInfo: rateCd={}", rateCd);
-        MspSaleSubsdMstDto result = mcpSession.selectOne("McpMypageMapper.selectRateInfo", rateCd);
-        logger.debug("[McpApiDirectRepository] selectRateInfo: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectRateInfo: rateCd={}", rateCd);
+        MspSaleSubsdMstDto result = mspSession.selectOne("McpMyPageMapper.selectRateInfo", rateCd);
+        logger.debug("[MspApiDirectRepository] selectRateInfo: result={}", result);
         return result;
     }
 
@@ -1084,9 +1084,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/mypage/regService */
     private List<McpRegServiceDto> selectRegService(String ncn) {
-        logger.debug("[McpApiDirectRepository] selectRegService:  ncn={}", ncn);
-        List<McpRegServiceDto> result = mcpSession.selectList("McpMypageMapper.selectRegService", ncn);
-        logger.debug("[McpApiDirectRepository] selectRegService: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectRegService:  ncn={}", ncn);
+        List<McpRegServiceDto> result = mspSession.selectList("McpMyPageMapper.selectRegService", ncn);
+        logger.debug("[MspApiDirectRepository] selectRegService: result={}", result);
         return result;
     }
 
@@ -1095,9 +1095,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/order/selectOrderGroupListCount */
     private Integer selectOrderGroupListCount(OrderDto orderDto) {
-        logger.debug("[McpApiDirectRepository] selectOrderGroupListCount: orderDto={}", orderDto);
-        Integer result = mcpSession.selectOne("McpOrderMapper.selectOrderGroupListCount", orderDto);
-        logger.debug("[McpApiDirectRepository] selectOrderGroupListCount: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectOrderGroupListCount: orderDto={}", orderDto);
+        Integer result = mspSession.selectOne("McpOrderMapper.selectOrderGroupListCount", orderDto);
+        logger.debug("[MspApiDirectRepository] selectOrderGroupListCount: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -1106,9 +1106,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/order/selectOrderGroupList */
     private List<OrderDto> selectOrderGroupList(OrderDto orderDto) {
-        logger.debug("[McpApiDirectRepository] selectOrderGroupList: orderDto={}", orderDto);
-        List<OrderDto> result = mcpSession.selectList("McpOrderMapper.selectOrderGroupList", orderDto);
-        logger.debug("[McpApiDirectRepository] selectOrderGroupList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectOrderGroupList: orderDto={}", orderDto);
+        List<OrderDto> result = mspSession.selectList("McpOrderMapper.selectOrderGroupList", orderDto);
+        logger.debug("[MspApiDirectRepository] selectOrderGroupList: result={}", result);
         return result;
     }
 
@@ -1117,9 +1117,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/order/selectOrderTempListCount */
     private Integer selectOrderTempListCount(OrderDto orderDto) {
-        logger.debug("[McpApiDirectRepository] selectOrderTempListCount: orderDto={}", orderDto);
-        Integer result = mcpSession.selectOne("McpOrderMapper.selectOrderTempListCount", orderDto);
-        logger.debug("[McpApiDirectRepository] selectOrderTempListCount: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectOrderTempListCount: orderDto={}", orderDto);
+        Integer result = mspSession.selectOne("McpOrderMapper.selectOrderTempListCount", orderDto);
+        logger.debug("[MspApiDirectRepository] selectOrderTempListCount: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -1128,9 +1128,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/order/selectOrderTempPageList */
     private List<OrderDto> selectOrderTempList(OrderDto orderDto) {
-        logger.debug("[McpApiDirectRepository] selectOrderTempList: orderDto={}", orderDto);
-        List<OrderDto> result = mcpSession.selectList("McpOrderMapper.selectOrderTempList", orderDto);
-        logger.debug("[McpApiDirectRepository] selectOrderTempList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectOrderTempList: orderDto={}", orderDto);
+        List<OrderDto> result = mspSession.selectList("McpOrderMapper.selectOrderTempList", orderDto);
+        logger.debug("[MspApiDirectRepository] selectOrderTempList: result={}", result);
         return result;
     }
 
@@ -1141,17 +1141,17 @@ public class McpApiDirectRepository {
 
     /** 상품리스트 조회 -/phone/phoneProdBasForFrontOneQuery */
     private List<PhoneProdBasDto> selectPhoneProdBas(CommonSearchDto commonSearchDto) {
-        logger.debug("[McpApiDirectRepository] selectPhoneProdBas: commonSearchDto={}", commonSearchDto);
+        logger.debug("[MspApiDirectRepository] selectPhoneProdBas: commonSearchDto={}", commonSearchDto);
         List<PhoneProdBasDto> result = null;
         String sesplsYn = commonSearchDto.getSesplsYn();
         if ("Y".equals(sesplsYn)) {
             // 자급제인 경우
-            result = mcpSession.selectList("McpPhoneMapper.selectPhoneProdBas2", commonSearchDto);
+            result = mspSession.selectList("McpPhoneMapper.selectPhoneProdBas2", commonSearchDto);
         } else {
             // 휴대폰, 중고폰인 경우
-            result = mcpSession.selectList("McpPhoneMapper.selectPhoneProdBas", commonSearchDto);
+            result = mspSession.selectList("McpPhoneMapper.selectPhoneProdBas", commonSearchDto);
         }
-        logger.debug("[McpApiDirectRepository] selectPhoneProdBas: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectPhoneProdBas: result={}", result);
         return result;
     }
 
@@ -1160,9 +1160,9 @@ public class McpApiDirectRepository {
 
     /** 핸드폰 상품관리 상세 조회 -/phone/nmcpProdBas */
     private PhoneProdBasDto selectNmcpProdBas(CommonSearchDto commonSearchDto) {
-        logger.debug("[McpApiDirectRepository] selectNmcpProdBas: commonSearchDto={}", commonSearchDto);
-        PhoneProdBasDto result = mcpSession.selectOne("McpPhoneMapper.selectNmcpProdBas", commonSearchDto);
-        logger.debug("[McpApiDirectRepository] selectNmcpProdBas: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectNmcpProdBas: commonSearchDto={}", commonSearchDto);
+        PhoneProdBasDto result = mspSession.selectOne("McpPhoneMapper.selectNmcpProdBas", commonSearchDto);
+        logger.debug("[MspApiDirectRepository] selectNmcpProdBas: result={}", result);
         return result;
     }
 
@@ -1172,9 +1172,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/prepia/rateList */
     private List<MspSaleSubsdMstDto> selectRateList(Map<String, String> paramMap) {
-        logger.debug("[McpApiDirectRepository] selectRateList: paramMap={}", paramMap);
-        List<MspSaleSubsdMstDto> result = mcpSession.selectList("McpPrepiaMapper.selectRateList", paramMap);
-        logger.debug("[McpApiDirectRepository] selectRateList: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectRateList: paramMap={}", paramMap);
+        List<MspSaleSubsdMstDto> result = mspSession.selectList("McpPrepiaMapper.selectRateList", paramMap);
+        logger.debug("[MspApiDirectRepository] selectRateList: result={}", result);
         return result;
     }
 
@@ -1183,7 +1183,7 @@ public class McpApiDirectRepository {
 
     /** API설명 -/sms/addKakaoNoti */
     private Integer insertKakaoNoti(ApiMapDto apiMapDto) {
-        logger.debug("[McpApiDirectRepository] insertKakaoNoti: apiMapDto={}", apiMapDto);
+        logger.debug("[MspApiDirectRepository] insertKakaoNoti: apiMapDto={}", apiMapDto);
         Integer result = 0;
         if ("LOCAL".equals(NmcpServiceUtils.getPropertiesVal("SERVER_NAME"))) {
             try {
@@ -1194,8 +1194,8 @@ public class McpApiDirectRepository {
                 e1.printStackTrace();
             }
         }
-        result = mcpSession.insert("McpSmsMapper.insertKakaoNoti", apiMapDto);
-        logger.debug("[McpApiDirectRepository] insertKakaoNoti: result={}", result);
+        result = mspSession.insert("McpSmsMapper.insertKakaoNoti", apiMapDto);
+        logger.debug("[MspApiDirectRepository] insertKakaoNoti: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -1204,7 +1204,7 @@ public class McpApiDirectRepository {
 
     /** API설명 -/sms/addNewSms */
     private Integer insertNewSms(ApiMapDto apiMapDto) {
-        logger.debug("[McpApiDirectRepository] insertNewSms: apiMapDto={}", apiMapDto);
+        logger.debug("[MspApiDirectRepository] insertNewSms: apiMapDto={}", apiMapDto);
         Integer result = 0;
         if ("LOCAL".equals(NmcpServiceUtils.getPropertiesVal("SERVER_NAME"))) {
             try {
@@ -1215,8 +1215,8 @@ public class McpApiDirectRepository {
                 logger.error("addNewSms error : {}", e1.getMessage());
             }
         }
-        result = mcpSession.insert("McpSmsMapper.insertNewSms", apiMapDto);
-        logger.debug("[McpApiDirectRepository] insertNewSms: result={}", result);
+        result = mspSession.insert("McpSmsMapper.insertNewSms", apiMapDto);
+        logger.debug("[MspApiDirectRepository] insertNewSms: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -1225,9 +1225,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/sms/qStackNewCnt */
     private Integer selectQstackNewCount(AuthSmsDto authSmsDto) {
-        logger.debug("[McpApiDirectRepository] selectQstackNewCount: authSmsDto={}", authSmsDto);
-        Integer result = mcpSession.selectOne("McpSmsMapper.selectQstackNewCount", authSmsDto);
-        logger.debug("[McpApiDirectRepository] selectQstackNewCount: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectQstackNewCount: authSmsDto={}", authSmsDto);
+        Integer result = mspSession.selectOne("McpSmsMapper.selectQstackNewCount", authSmsDto);
+        logger.debug("[MspApiDirectRepository] selectQstackNewCount: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -1236,9 +1236,9 @@ public class McpApiDirectRepository {
 
     /** USIM 가입비조회 -/storeUsim/joinUsimPriceNew */
     private List<UsimMspRateDto> selectJoinUsimPriceNew(String gubun) {
-        logger.debug("[McpApiDirectRepository] selectJoinUsimPriceNew: gubun={}", gubun);
-        List<UsimMspRateDto> result = mcpSession.selectList("McpStoreUsimMapper.selectJoinUsimPriceNew", gubun);
-        logger.debug("[McpApiDirectRepository] selectJoinUsimPriceNew: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectJoinUsimPriceNew: gubun={}", gubun);
+        List<UsimMspRateDto> result = mspSession.selectList("McpStoreUsimMapper.selectJoinUsimPriceNew", gubun);
+        logger.debug("[MspApiDirectRepository] selectJoinUsimPriceNew: result={}", result);
         return result;
     }
 
@@ -1247,9 +1247,9 @@ public class McpApiDirectRepository {
 
     /** 불량 유심 조회 -/storeUsim/failUsim */
     private Integer selectFailUsims(String iccId) {
-        logger.debug("[McpApiDirectRepository] selectFailUsims: iccId={}", iccId);
-        Integer result = mcpSession.selectOne("McpStoreUsimMapper.selectFailUsims", iccId);
-        logger.debug("[McpApiDirectRepository] selectFailUsims: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectFailUsims: iccId={}", iccId);
+        Integer result = mspSession.selectOne("McpStoreUsimMapper.selectFailUsims", iccId);
+        logger.debug("[MspApiDirectRepository] selectFailUsims: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -1258,9 +1258,9 @@ public class McpApiDirectRepository {
 
     /** API설명 -/storeUsim/updateFailUsim */
     private Integer updateFailUsim(JuoSubInfoDto juoSubInfoDto) {
-        logger.debug("[McpApiDirectRepository] updateFailUsim: juoSubInfoDto={}", juoSubInfoDto);
-        Integer result = mcpSession.update("McpStoreUsimMapper.updateFailUsim", juoSubInfoDto);
-        logger.debug("[McpApiDirectRepository] updateFailUsim: result={}", result);
+        logger.debug("[MspApiDirectRepository] updateFailUsim: juoSubInfoDto={}", juoSubInfoDto);
+        Integer result = mspSession.update("McpStoreUsimMapper.updateFailUsim", juoSubInfoDto);
+        logger.debug("[MspApiDirectRepository] updateFailUsim: result={}", result);
         return result != null ? result : 0;
     }
 
@@ -1269,9 +1269,9 @@ public class McpApiDirectRepository {
 
     /** usim 상품 약정기간 없는 할인율 조회 -/storeUsim/usimDcamt */
     private UsimMspRateDto selectUsimDcamt(String rateCd) {
-        logger.debug("[McpApiDirectRepository] selectUsimDcamt: rateCd={}", rateCd);
-        UsimMspRateDto result = mcpSession.selectOne("McpStoreUsimMapper.selectUsimDcamt", rateCd);
-        logger.debug("[McpApiDirectRepository] selectUsimDcamt: result={}", result);
+        logger.debug("[MspApiDirectRepository] selectUsimDcamt: rateCd={}", rateCd);
+        UsimMspRateDto result = mspSession.selectOne("McpStoreUsimMapper.selectUsimDcamt", rateCd);
+        logger.debug("[MspApiDirectRepository] selectUsimDcamt: result={}", result);
         return result;
     }
 
