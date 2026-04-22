@@ -51,16 +51,19 @@ public class EnvironmentUtils {
         return getLocalProfile().getCode();
     }
 
-    public static boolean isLocalProfile() {
-        EnvironmentProfile activeProfile = getActiveProfile();
-        return activeProfile.isLocal();
+    public static boolean isLocal() {
+        return getActiveProfile().isLocal();
     }
 
-    public static boolean isDevelopmentProfile() {
+    public static boolean isDevelopment() {
         return getActiveProfile().isDevelopment();
     }
 
-    public static boolean isProductionProfile() {
+    public static boolean isStaging() {
+        return getActiveProfile().isStaging();
+    }
+
+    public static boolean isProduction() {
         return getActiveProfile().isProduction();
     }
 

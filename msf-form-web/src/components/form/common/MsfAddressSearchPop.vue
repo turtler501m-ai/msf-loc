@@ -154,8 +154,9 @@
 </template>
 
 <script setup>
-import { post } from '@/libs/api/msf.api'
 import { ref } from 'vue'
+import { post } from '@/libs/api/msf.api'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({ modelValue: Boolean })
 const emit = defineEmits(['update:modelValue', 'confirm', 'open', 'close'])
@@ -239,6 +240,11 @@ const onChangePage = async () => {
     countPerPage: countPerPage.value,
     keyword: searchQuery.value,
   })
+
+  if (resData?.code !== '0000') {
+    showAlert(resData?.message || '주소 검색 중 오류가 발생했습니다.')
+    return
+  }
 
   isSearchPerformed.value = true
   step.value = 'list'

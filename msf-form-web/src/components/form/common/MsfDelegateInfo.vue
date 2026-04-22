@@ -72,6 +72,11 @@ const props = defineProps({
 const model = defineModel({ type: Object, required: true })
 
 const validate = () => {
+  if (!model.value.minorAgentNm) return false
+  if (!model.value.agentBirthDate || !model.value.agentGender) return false
+  if (!model.value.minorAgentRelTypeCd) return false
+  if (!model.value.minorAgentTelFnNo || !model.value.minorAgentTelMnNo || !model.value.minorAgentTelRnNo)
+    return false
   return true
 }
 

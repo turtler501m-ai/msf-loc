@@ -13,4 +13,7 @@ public record TermsItem(
     String expnsnStrVal3,
     String filePathNm
 ) {
+    public static TermsItem toEmpty() {
+        return new TermsItem("", "", "", "", "", "", 0, "", "", "", "");
+    }
 }

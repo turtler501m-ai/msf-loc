@@ -1,5 +1,7 @@
 package com.ktmmobile.msf.domains.commoncode.application.dto;
 
+import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeData;
+
 public record SimpleCommonCode(
     String code,
     String title

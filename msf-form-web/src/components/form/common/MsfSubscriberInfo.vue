@@ -120,7 +120,13 @@
           />
         </MsfStack>
       </MsfFormGroup>
-      <MsfFormGroup v-if="model.joinType === 'HDN3'" label="기기변경<br/>휴대폰번호" required>
+      <MsfFormGroup
+        v-if="
+          model.joinType === 'HDN3' || model.formType === 'SVC' || model.formType === 'TERMINATION'
+        "
+        :label="phoneLabel"
+        required
+      >
         <MsfStack type="field">
           <MsfNumberInput v-model="model.deviceChgTel1" placeholder="앞자리" maxlength="3" />
           <span class="unit-sep">-</span>
@@ -160,13 +166,17 @@
 import { defineModel, defineProps } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
+import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 import { post } from '@/libs/api/msf.api'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({
   title: { type: String, default: '가입자 정보' },
+  phoneLabel: { tpye: String, default: '기기변경<br/>휴대폰번호' },
 })
 const model = defineModel({ type: Object, required: true })
 const store = useMsfFormNewChgStore()
+const terminationStore = useMsfFormTerminationStore()
 
 const deviceChgAuth = useAuthButton(
   () => [model.value?.deviceChgTel1, model.value?.deviceChgTel2, model.value?.deviceChgTel3],
@@ -185,19 +195,85 @@ const deviceChgAuth = useAuthButton(
 
 const handleDeviceChgVerify = async () => {
   const phoneNo = `${model.value.deviceChgTel1}${model.value.deviceChgTel2}${model.value.deviceChgTel3}`
+  const customerLinkName = (model.value.cstmrNm || '').trim()
+  console.log('[Auth] request input', {
+    formType: model.value.formType,
+    cstmrNm: model.value.cstmrNm,
+    deviceChgTel1: model.value.deviceChgTel1,
+    deviceChgTel2: model.value.deviceChgTel2,
+    deviceChgTel3: model.value.deviceChgTel3,
+    phoneNo,
+  })
+  console.log('[Auth] termination verify input', { phoneNo, customerLinkName })
   try {
-    const res = await post('/ktmmember/auth', { phoneNo })
+    const res = await post('/api/form/ktmmember/auth', {
+      subscriberNo: phoneNo,
+      customerLinkName,
+    })
     console.log('기기변경 번호 인증 결과:', res)
-    // 인증 성공 시 useAuthButton의 상태를 수동으로 업데이트
+    console.log('[Auth] response raw', res)
+    const contractNum = res?.data?.contractNum || res?.data?.contract_num || res?.data?.ncn
+    if (res?.code !== '0000') {
+      console.warn('[Auth] failed response', {
+        code: res?.code,
+        message: res?.message,
+        contractNum,
+      })
+      showAlert(res?.message || '휴대폰번호 인증이 실패했습니다.')
+      return
+    }
+    if (!contractNum) {
+      console.warn('[Auth] no contract number', { code: res?.code, message: res?.message, data: res?.data })
+      showAlert('인증은 완료되었지만 조회된 계약번호가 없습니다.')
+      return
+    }
+    model.value.contractNum = contractNum
+    if (model.value.formType === 'TERMINATION') {
+      terminationStore.setTerminationContract(contractNum, 'MsfSubscriberInfo')
+      model.value.ncn = contractNum
+    }
+    console.log('[Auth] mapped result', {
+      contractNum: model.value.contractNum,
+      ncn: model.value.ncn,
+      formType: model.value.formType,
+    })
+    showAlert('휴대폰번호 인증이 완료되었습니다.')
     deviceChgAuth.status.value = 'verified'
     if (store.authFlags) store.authFlags.deviceChgTel = true
   } catch (error) {
     console.error('기기변경 번호 인증 실패:', error)
-    alert('기기변경 휴대폰 번호 인증에 실패했습니다.')
+    showAlert('기기변경 휴대폰 번호 인증에 실패했습니다.')
   }
 }
 
 const validate = () => {
+  if (!model.value.cstmrNm) return false
+  if (['NA', 'NM'].includes(model.value.cstmrTypeCd)) {
+    if (!model.value.cstmrNativeRrn1 || !model.value.cstmrNativeRrn2) return false
+  }
+  if (['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
+    if (!model.value.cstmrForeignerRrn1 || !model.value.cstmrForeignerRrn2) return false
+  }
+  if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
+    if (!model.value.cstmrJuridicalRrn1 || !model.value.cstmrJuridicalRrn2) return false
+    if (
+      !model.value.cstmrJuridicalBizNo1 ||
+      !model.value.cstmrJuridicalBizNo2 ||
+      !model.value.cstmrJuridicalBizNo3
+    )
+      return false
+    if (!model.value.cstmrJuridicalRepNm) return false
+    if (!model.value.upjnCd || !model.value.bcuSbst) return false
+  }
+  if (
+    model.value.joinType === 'HDN3' ||
+    model.value.formType === 'SVC' ||
+    model.value.formType === 'TERMINATION'
+  ) {
+    if (!model.value.deviceChgTel1 || !model.value.deviceChgTel2 || !model.value.deviceChgTel3)
+      return false
+    if (!store.authFlags?.deviceChgTel) return false
+  }
   return true
 }
 

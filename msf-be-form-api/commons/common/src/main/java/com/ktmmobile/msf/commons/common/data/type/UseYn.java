@@ -1,7 +1,6 @@
 package com.ktmmobile.msf.commons.common.data.type;
 
-import java.util.Locale;
-
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -33,18 +32,8 @@ public enum UseYn implements CommonEnum {
         return this != UNDEFINED;
     }
 
+    @JsonCreator
     public static UseYn valueOfCode(String code) {
-        if (code == null) {
-            return UNDEFINED;
-        }
-
-        String normalizedCode = code.trim().toUpperCase(Locale.ROOT);
-        for (UseYn value: values()) {
-            if (value.getCode().equals(normalizedCode)) {
-                return value;
-            }
-        }
-
-        return UNDEFINED;
+        return CommonEnum.valueOfCode(UseYn.class, code, UNDEFINED);
     }
 }

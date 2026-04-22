@@ -35,62 +35,12 @@
           :disabled="model.isSaved"
         />
       </MsfFormGroup>
-      <MsfFormGroup label="연락처(휴대폰)" required>
-        <MsfStack type="field">
-          <MsfNumberInput
-            v-model="model.repPhone1"
-            placeholder="앞자리"
-            maxlength="3"
-            ariaLabel="연락처(휴대폰) 앞자리"
-          />
-          <span class="unit-sep">-</span>
-          <MsfNumberInput
-            v-model="model.repPhone2"
-            id="inp-repPhone2"
-            placeholder="가운데 4자리"
-            maxlength="4"
-            ariaLabel="연락처(휴대폰) 가운데 4자리"
-            :readonly="model.isSaved"
-          />
-          <span class="unit-sep">-</span>
-          <MsfNumberInput
-            v-model="model.repPhone3"
-            id="inp-repPhone3"
-            placeholder="뒤 4자리"
-            maxlength="4"
-            ariaLabel="연락처(휴대폰) 뒤 4자리"
-            :readonly="model.isSaved"
-          />
-          <MsfButton variant="toggle" v-if="repPhoneAuth.status.value === 'none'" disabled
-            >인증번호 발송</MsfButton
-          >
-          <MsfButton
-            variant="toggle"
-            v-else-if="repPhoneAuth.status.value === 'ready'"
-            @click="repPhoneAuth.send()"
-            >인증번호 발송</MsfButton
-          >
-          <MsfButton
-            variant="toggle"
-            v-else-if="repPhoneAuth.status.value === 'sent'"
-            @click="repPhoneAuth.send()"
-            >인증번호 재발송</MsfButton
-          >
-          <MsfButton variant="toggle" v-else-if="repPhoneAuth.status.value === 'verified'" active
-            >인증 완료</MsfButton
-          >
-        </MsfStack>
-        <MsfStack type="field" v-if="repPhoneAuth.status.value === 'sent'">
-          <MsfNumberInput
-            v-model="model.repPhoneAuth"
-            id="inp-repPhoneAuth"
-            placeholder="인증번호 입력"
-            maxlength="6"
-          />
-          <span class="remain-time">남은시간 <em>02:33</em></span>
-          <MsfButton variant="toggle" @click="repPhoneAuth.verify()">인증번호 확인</MsfButton>
-        </MsfStack>
-      </MsfFormGroup>
+      <MsfMobileAuthNumber
+        v-model:phone1="model.repPhone1"
+        v-model:phone2="model.repPhone2"
+        v-model:phone3="model.repPhone3"
+        @complete="onComplete"
+      />
     </MsfStack>
     <MsfTitleArea :title="agreementTitle" />
     <MsfAgreementItem
@@ -106,7 +56,6 @@
 </template>
 <script setup>
 import { defineModel, defineProps, computed } from 'vue'
-import { useAuthButton } from '@/hooks/useAuthButton'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 
 const props = defineProps({
@@ -152,21 +101,18 @@ const combinedNo2 = computed({
   },
 })
 
-const repPhoneAuth = useAuthButton(
-  () => [model.value?.repPhone1, model.value?.repPhone2, model.value?.repPhone3],
-  {
-    get value() {
-      return store.authFlags?.repPhone || false
-    },
-    set value(v) {
-      if (store.authFlags) {
-        store.authFlags.repPhone = v
-      }
-    },
-  },
-)
+const onComplete = (result) => {
+  if (store.authFlags) {
+    store.authFlags.repPhone = result
+  }
+}
 
 const validate = () => {
+  if (!model.value.repName) return false
+  if (!combinedNo1.value || !combinedNo2.value) return false
+  if (!model.value.repRelation) return false
+  if (!store.authFlags?.repPhone) return false
+  if (!model.value.repAgree) return false
   return true
 }
 

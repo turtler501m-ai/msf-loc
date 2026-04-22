@@ -38,8 +38,8 @@ onMounted(async () => {
   const list = await getCommonCodeList('OPER_TYPE_CD')
   joinTypeCodes.value = (list || []).map((item) => ({
     ...item,
-    label: item.codeName || item.dtlCdNm || item.label || item.DTL_CD_NM,
-    value: item.code || item.dtlCd || item.value || item.DTL_CD,
+    label: item.title,
+    value: item.code,
   }))
   if (model.value && !model.value.joinType) {
     model.value.joinType = 'MNP3'
@@ -66,6 +66,7 @@ watch(
 )
 
 const validate = () => {
+  if (!model.value.productType || !model.value.joinType) return false
   return true
 }
 

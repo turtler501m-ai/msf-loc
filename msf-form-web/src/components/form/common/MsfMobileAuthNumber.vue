@@ -16,9 +16,9 @@
         @click="onClickSendAuthNumber()"
         >인증번호 발송</MsfButton
       >
-      <MsfButton variant="toggle" v-else-if="status === 'sent'" @click="onClickSendAuthNumber()"
-        >인증번호 재발송</MsfButton
-      >
+      <MsfButton variant="toggle" v-else-if="status === 'sent'" @click="onClickSendAuthNumber()">
+        인증번호 재발송
+      </MsfButton>
       <MsfButton variant="toggle" v-else-if="status === 'verified'" active>인증 완료</MsfButton>
     </MsfStack>
     <MsfStack type="field" class="mt-2" v-if="status === 'sent'">
@@ -43,22 +43,34 @@
 
 <script setup>
 import { computed, ref, shallowRef, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useCountdown } from '@vueuse/core'
-import { getLoginId } from '@/libs/utils/auth.utils'
 import { showAlert } from '@/libs/utils/comp.utils'
 import { post } from '@/libs/api/msf.api'
+
+const route = useRoute()
 
 const phone1Model = defineModel('phone1', { type: String, default: '010' })
 const phone2Model = defineModel('phone2', { type: String, default: '' })
 const phone3Model = defineModel('phone3', { type: String, default: '' })
 
 const props = defineProps({
+  formType: {
+    type: String,
+    required: true,
+    validator: (v) =>
+      [
+        'form-newchange-legalagent',
+        'form-servicechange-legalagent',
+        'form-ownerchange-legalagent',
+        'form-termination-legalagent',
+      ].includes(v),
+  },
   label: { type: String, default: '연락처(휴대폰)' },
 })
 
 const emit = defineEmits(['complete'])
 
-const userId = ref(getLoginId())
 const phone = ref({
   phone1: !phone1Model.value ? '010' : phone1Model,
   phone2: phone2Model.value,
@@ -67,6 +79,7 @@ const phone = ref({
 const authNumber = ref('')
 const status = ref('none')
 const valid = ref(false)
+const sendedKey = ref('')
 
 const isDisabledSendBtn = computed(() => status.value === 'none')
 const isDisabledConfirmBtn = computed(() => authNumber.value?.length !== 6)
@@ -89,15 +102,16 @@ const { remaining, start, stop, reset } = useCountdown(countdown, {
 })
 
 const onClickSendAuthNumber = async () => {
-  const result = await post('/api/shared/common/sms/form/send', {
-    userId: userId.value,
-    ...phone.value,
-    type: 'form-request',
+  const result = await post('/api/shared/common/sms/otp/send', {
+    phone: phone.value.phone1 + phone.value.phone2 + phone.value.phone3,
+    type: props.formType,
+    path: route.path,
   })
   if (result?.code !== '0000') {
     showAlert('[인증번호 발송] 버튼을 클릭하시면,\n인증번호가 등록된 휴대폰으로 발송됩니다.')
     return false
   }
+  sendedKey.value = result.data
   authNumber.value = ''
   status.value = 'sent'
   reset(countTime)
@@ -105,10 +119,11 @@ const onClickSendAuthNumber = async () => {
 }
 
 const onClickVerifyAuthNumber = async () => {
-  const result = await post('/api/shared/common/sms/form/verify', {
-    userId: userId.value,
-    authNumber: authNumber.value,
-    ...phone.value,
+  const result = await post('/api/shared/common/sms/otp/verify', {
+    value: authNumber.value,
+    type: props.formType,
+    path: route.path,
+    token: sendedKey.value,
   })
   if (result?.code !== '0000') {
     showAlert(result.message)
@@ -119,7 +134,6 @@ const onClickVerifyAuthNumber = async () => {
 }
 
 const onVerifyPhoneInput = (result) => {
-  console.log('onVerifyPhoneInput:', result)
   valid.value = result
   if (!valid.value) {
     status.value = 'none'

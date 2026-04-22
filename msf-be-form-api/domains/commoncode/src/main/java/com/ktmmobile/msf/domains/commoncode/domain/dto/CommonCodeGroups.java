@@ -1,10 +1,12 @@
-package com.ktmmobile.msf.domains.commoncode.application.dto;
+package com.ktmmobile.msf.domains.commoncode.domain.dto;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import com.ktmmobile.msf.domains.commoncode.application.dto.SimpleCommonCode;
 
 public record CommonCodeGroups(
     Map<String, List<CommonCodeData>> values

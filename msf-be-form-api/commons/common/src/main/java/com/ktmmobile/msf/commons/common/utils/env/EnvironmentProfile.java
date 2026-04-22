@@ -34,27 +34,27 @@ public enum EnvironmentProfile {
         return LOCAL;
     }
 
-    public static boolean isDevelopment(String profile) {
-        return getDevelopment().getCode().equals(profile);
+    public static EnvironmentProfile getDevelopment() {
+        return DEVELOPMENT;
+    }
+
+    public static EnvironmentProfile getStaging() {
+        return STAGING;
+    }
+
+    public static EnvironmentProfile getProduction() {
+        return PRODUCTION;
     }
 
     public boolean isDevelopment() {
         return this == getDevelopment();
     }
 
-    public static EnvironmentProfile getDevelopment() {
-        return DEVELOPMENT;
-    }
-
-    public static boolean isProduction(String profile) {
-        return getProduction().getCode().equals(profile);
+    public boolean isStaging() {
+        return this == getStaging();
     }
 
     public boolean isProduction() {
         return this == getProduction();
-    }
-
-    public static EnvironmentProfile getProduction() {
-        return PRODUCTION;
     }
 }

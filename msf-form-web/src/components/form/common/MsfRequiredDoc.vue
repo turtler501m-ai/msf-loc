@@ -68,6 +68,7 @@ const onConfirm = ({ completedDocs, isAllUploaded }) => {
 
 // 외부(부모)에서 호출할 수 있는 유효성 검사 함수
 const validate = () => {
+  if (hasRequiredDocs.value && !props.authFlags?.requiredDocs) return false
   return true
 }
 

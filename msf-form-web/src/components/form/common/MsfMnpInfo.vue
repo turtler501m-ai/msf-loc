@@ -150,6 +150,16 @@ const transferAuthBtn = useAuthButton(
 )
 
 const validate = () => {
+  if (customerModel.value.joinType === 'MNP3') {
+    if (!model.value.moveCompanyCd) return false
+    if (!model.value.moveMobileNo1 || !model.value.moveMobileNo2 || !model.value.moveMobileNo3)
+      return false
+    if (!model.value.moveAuthTypeCd || !model.value.moveAuthNo) return false
+    if (!store.authFlags?.moveAuthTypeCd) return false
+    if (!model.value.moveThismonthPayTypeCd) return false
+    if (!model.value.moveAllotmentSttusCd) return false
+    if (!model.value.moveRefundAgreeYn) return false
+  }
   return true
 }
 

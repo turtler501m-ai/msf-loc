@@ -1,5 +1,18 @@
 <script setup>
+import { watch } from 'vue'
+
 const formData = defineModel({ type: Object, required: true })
+
+watch(
+  () => formData.value?.agencyName,
+  (agencyName) => {
+    if (!agencyName) return
+    if (!formData.value.managerNm) formData.value.managerNm = agencyName
+    if (!formData.value.agentNm) formData.value.agentNm = agencyName
+    if (!formData.value.cpntNm) formData.value.cpntNm = agencyName
+    if (!formData.value.cntpntShopNm) formData.value.cntpntShopNm = agencyName
+  },
+)
 </script>
 <template>
   <MsfTitleArea title="가입유형 선택" />

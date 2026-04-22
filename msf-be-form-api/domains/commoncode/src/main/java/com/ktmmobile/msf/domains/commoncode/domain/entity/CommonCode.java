@@ -15,6 +15,7 @@ public class CommonCode {
     private UseYn useYn = UseYn.UNDEFINED;
     private Detail detail;
 
+
     @Getter
     @NoArgsConstructor
     public static class Detail {

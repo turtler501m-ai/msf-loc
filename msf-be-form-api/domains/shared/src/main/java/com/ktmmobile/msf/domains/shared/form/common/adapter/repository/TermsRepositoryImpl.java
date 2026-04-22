@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.domains.shared.form.common.adapter.repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,14 @@ public class TermsRepositoryImpl implements TermsRepository {
     }
 
     @Override public List<TermsContent> getListTermsContent(List<TermsItem> itemList) {
+        // ORACLE에서 CLOB이 포함된 데이터 조회 시,
+        // UNION ALL이 없는 한 ROW 데이터를 조회할 경우,
+        // 오류가 발생하는 것을 방지하기 위해 조회가 되지 않는 빈 Item 추가한 다음 쿼리 실행
+        if (itemList.size() == 1) {
+            List<TermsItem> list = new ArrayList<>(itemList);
+            list.add(TermsItem.toEmpty());
+            return mcpTermsMapper.selectListTermsContent(list);
+        }
         return mcpTermsMapper.selectListTermsContent(itemList);
     }
 }

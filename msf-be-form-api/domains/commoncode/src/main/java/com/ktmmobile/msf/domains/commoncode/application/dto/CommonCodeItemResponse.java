@@ -3,6 +3,7 @@ package com.ktmmobile.msf.domains.commoncode.application.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import com.ktmmobile.msf.commons.common.data.type.UseYn;
+import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeData;
 
 public record CommonCodeItemResponse(
     String code,

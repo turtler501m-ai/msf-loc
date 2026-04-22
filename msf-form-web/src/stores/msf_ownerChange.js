@@ -26,6 +26,7 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
       tr_transferorPhone1: '010', //명의변경 휴대폰번호1
       tr_transferorPhone2: '', //명의변경 휴대폰번호2
       tr_transferorPhone3: '', //명의변경 휴대폰번호3
+      isTrCustomer: true,
     },
     /** 고객(실사용자) 정보 */
     cstmrNm: '', //실사용자이름

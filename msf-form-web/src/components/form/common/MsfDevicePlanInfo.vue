@@ -366,8 +366,8 @@ onMounted(async () => {
   const list = await getCommonCodeList('OPEN_TYPE_CD')
   openTypeCdCodes.value = (list || []).map((item) => ({
     ...item,
-    label: item.codeName || item.dtlCdNm || item.label || item.DTL_CD_NM,
-    value: item.code || item.dtlCd || item.value || item.DTL_CD,
+    label: item.title,
+    value: item.code,
   }))
   if (model.value && !model.value.openTypeCd) {
     model.value.openTypeCd = '99'
@@ -386,6 +386,22 @@ onMounted(async () => {
 })
 
 const validate = () => {
+  if (model.value.productType === 'MM') {
+    if (!model.value.openTypeCd) return false
+    if (model.value.openTypeCd === '99') {
+      if (
+        !model.value.deviceModel ||
+        !model.value.capacity ||
+        !model.value.color ||
+        !model.value.contractPeriod ||
+        !model.value.installmentMonth ||
+        !model.value.discountType
+      )
+        return false
+    }
+  }
+  if (!model.value.planName1 || !model.value.planName2) return false
+  if (!model.value.agency) return false
   return true
 }
 

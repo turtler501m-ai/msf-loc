@@ -2,7 +2,7 @@
   <div>
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
-      <MsfFormGroup label="신분증" tag="div" required>
+      <MsfFormGroup label="신분증" tag="div" required v-if="!model.isTrCustomer">
         <MsfChip
           v-model="model.identityCertTypeCd"
           name="inp-idCardCertType"
@@ -63,6 +63,15 @@
             :disabled="model.isSaved"
           />
         </MsfStack>
+      </MsfFormGroup>
+
+      <MsfFormGroup label="Self Issue No">
+        <MsfInput
+          v-model="model.selfIssuNo"
+          placeholder="Self Issue No"
+          class="ut-w-300"
+          :readonly="model.isSaved"
+        />
       </MsfFormGroup>
     </MsfStack>
 
@@ -146,7 +155,7 @@ const onIdCardScanConfirm = (file) => {
 }
 
 const validate = () => {
-  return true
+  return model.value.isVerified
 }
 
 defineExpose({ validate })

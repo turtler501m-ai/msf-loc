@@ -77,6 +77,10 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
     combinedService: '', //결합서비스
     loseLock: '', //일시/분실정지
     joinInfoChange: '', //가입정보 변경
+    /* 요금제 변경 관련 */
+    planName1: '',
+    planName2: '',
+    changeDate: '',
   })
 
   return {

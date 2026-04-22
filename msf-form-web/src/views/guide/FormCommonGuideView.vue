@@ -6,6 +6,7 @@
         v-model:phone1="phoneData.phone1"
         v-model:phone2="phoneData.phone2"
         v-model:phone3="phoneData.phone3"
+        form-type="form-newchange-legalagent"
         @complete="onComplete"
       />
       <span>

@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.domains.commoncode.application.dto;
+package com.ktmmobile.msf.domains.commoncode.domain.dto;
 
 import java.util.List;
 import java.util.Optional;

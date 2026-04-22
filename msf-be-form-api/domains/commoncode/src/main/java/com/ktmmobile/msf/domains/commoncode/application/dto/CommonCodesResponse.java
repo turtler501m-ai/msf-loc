@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 
+import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeGroups;
+
 public class CommonCodesResponse extends AbstractMap<String, List<CommonCodeItemResponse>> {
 
     private final Map<String, List<CommonCodeItemResponse>> commonCodesByGroupId;

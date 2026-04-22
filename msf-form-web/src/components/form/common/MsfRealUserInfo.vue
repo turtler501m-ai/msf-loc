@@ -42,6 +42,8 @@ const props = defineProps({
 const model = defineModel({ type: Object, required: true })
 
 const validate = () => {
+  if (!model.value.realUserName) return false
+  if (!model.value.userBirthDate || !model.value.userGender) return false
   return true
 }
 

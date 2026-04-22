@@ -21,6 +21,7 @@ import {
   TableGuide,
   SearchBoxGuide,
   ClassGuide,
+  FileButtonGuide,
 } from './components'
 
 const route = useRoute()
@@ -30,6 +31,7 @@ const router = useRouter()
 const guideTabs = {
   button: { name: 'Button', component: markRaw(ButtonGuide) },
   buttonGroup: { name: 'ButtonGroup', component: markRaw(ButtonGroupGuide) },
+  FileButton: { name: 'FileButton', component: markRaw(FileButtonGuide) },
   icon: { name: 'Icon', component: markRaw(IconGuide) },
   input: { name: 'input', component: markRaw(InputGuide) },
   textarea: { name: 'Textarea', component: markRaw(TextareaGuide) },

@@ -19,14 +19,19 @@ public class TerminationApplyReqDto {
     private String amdDt;
     private String amdId;
     private String managerCd;
+    private String managerNm;
     private String agentCd;
+    private String agentNm;
     private String shopCd;
     private String shopNm;
     private String realShopNm;
     private String cpntId;
+    private String cpntNm;
     private String cntpntShopCd;
+    private String cntpntShopNm;
     private String operTypeCd;
     private String cstmrTypeCd;
+    private String identityCertTypeCd;
     private String cstmrNm;
     private String cancelMobileNo;
     private String receiveMobileNo;
@@ -37,6 +42,7 @@ public class TerminationApplyReqDto {
     private String identityIssuDate;
     private String identityIssuRegion;
     private String driveLicnsNo;
+    private String selfIssuNo;
     private String receiveWayCd;
     private String cancelUseCompanyCd;
     private Long payAmt;
@@ -51,6 +57,7 @@ public class TerminationApplyReqDto {
     private String regDate;
     private String regstId;
     private String regDt;
+    private String procDt;
     private String procCd;
     private String recYn;
     private String resCd;
@@ -149,12 +156,28 @@ public class TerminationApplyReqDto {
         this.managerCd = managerCd;
     }
 
+    public String getManagerNm() {
+        return managerNm;
+    }
+
+    public void setManagerNm(String managerNm) {
+        this.managerNm = managerNm;
+    }
+
     public String getAgentCd() {
         return agentCd;
     }
 
     public void setAgentCd(String agentCd) {
         this.agentCd = agentCd;
+    }
+
+    public String getAgentNm() {
+        return agentNm;
+    }
+
+    public void setAgentNm(String agentNm) {
+        this.agentNm = agentNm;
     }
 
     public String getShopCd() {
@@ -189,12 +212,28 @@ public class TerminationApplyReqDto {
         this.cpntId = cpntId;
     }
 
+    public String getCpntNm() {
+        return cpntNm;
+    }
+
+    public void setCpntNm(String cpntNm) {
+        this.cpntNm = cpntNm;
+    }
+
     public String getCntpntShopCd() {
         return cntpntShopCd;
     }
 
     public void setCntpntShopCd(String cntpntShopCd) {
         this.cntpntShopCd = cntpntShopCd;
+    }
+
+    public String getCntpntShopNm() {
+        return cntpntShopNm;
+    }
+
+    public void setCntpntShopNm(String cntpntShopNm) {
+        this.cntpntShopNm = cntpntShopNm;
     }
 
     public String getOperTypeCd() {
@@ -211,6 +250,14 @@ public class TerminationApplyReqDto {
 
     public void setCstmrTypeCd(String cstmrTypeCd) {
         this.cstmrTypeCd = cstmrTypeCd;
+    }
+
+    public String getIdentityCertTypeCd() {
+        return identityCertTypeCd;
+    }
+
+    public void setIdentityCertTypeCd(String identityCertTypeCd) {
+        this.identityCertTypeCd = identityCertTypeCd;
     }
 
     public String getCancelMobileNo() {
@@ -291,6 +338,14 @@ public class TerminationApplyReqDto {
 
     public void setDriveLicnsNo(String driveLicnsNo) {
         this.driveLicnsNo = driveLicnsNo;
+    }
+
+    public String getSelfIssuNo() {
+        return selfIssuNo;
+    }
+
+    public void setSelfIssuNo(String selfIssuNo) {
+        this.selfIssuNo = selfIssuNo;
     }
 
     public String getReceiveWayCd() {
@@ -405,6 +460,14 @@ public class TerminationApplyReqDto {
         this.regDt = regDt;
     }
 
+    public String getProcDt() {
+        return procDt;
+    }
+
+    public void setProcDt(String procDt) {
+        this.procDt = procDt;
+    }
+
     public String getProcCd() {
         return procCd;
     }
@@ -480,10 +543,18 @@ public class TerminationApplyReqDto {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Customer {
         private String managerCd;
+        private String managerNm;
         private String agentCd;
+        private String agentNm;
         private String customerType;
+        private String identityCertTypeCd;
+        private String identityTypeCd;
+        private String identityIssuDate;
+        private String identityIssuRegion;
+        private String driveLicnsNo;
         private String userName;
         private String userBirthDate;
+        private String selfIssuNo;
         private String cancelPhone1;
         private String cancelPhone2;
         private String cancelPhone3;
@@ -492,6 +563,10 @@ public class TerminationApplyReqDto {
         private String afterTel3;
         private String postMethod;
         private String agencyName;
+        private String cpntId;
+        private String cpntNm;
+        private String cntpntShopCd;
+        private String cntpntShopNm;
         private String ncn;
         private String custId;
 
@@ -503,6 +578,14 @@ public class TerminationApplyReqDto {
             this.managerCd = managerCd;
         }
 
+        public String getManagerNm() {
+            return managerNm;
+        }
+
+        public void setManagerNm(String managerNm) {
+            this.managerNm = managerNm;
+        }
+
         public String getAgentCd() {
             return agentCd;
         }
@@ -511,12 +594,60 @@ public class TerminationApplyReqDto {
             this.agentCd = agentCd;
         }
 
+        public String getAgentNm() {
+            return agentNm;
+        }
+
+        public void setAgentNm(String agentNm) {
+            this.agentNm = agentNm;
+        }
+
         public String getCustomerType() {
             return customerType;
         }
 
         public void setCustomerType(String customerType) {
             this.customerType = customerType;
+        }
+
+        public String getIdentityCertTypeCd() {
+            return identityCertTypeCd;
+        }
+
+        public void setIdentityCertTypeCd(String identityCertTypeCd) {
+            this.identityCertTypeCd = identityCertTypeCd;
+        }
+
+        public String getIdentityTypeCd() {
+            return identityTypeCd;
+        }
+
+        public void setIdentityTypeCd(String identityTypeCd) {
+            this.identityTypeCd = identityTypeCd;
+        }
+
+        public String getIdentityIssuDate() {
+            return identityIssuDate;
+        }
+
+        public void setIdentityIssuDate(String identityIssuDate) {
+            this.identityIssuDate = identityIssuDate;
+        }
+
+        public String getIdentityIssuRegion() {
+            return identityIssuRegion;
+        }
+
+        public void setIdentityIssuRegion(String identityIssuRegion) {
+            this.identityIssuRegion = identityIssuRegion;
+        }
+
+        public String getDriveLicnsNo() {
+            return driveLicnsNo;
+        }
+
+        public void setDriveLicnsNo(String driveLicnsNo) {
+            this.driveLicnsNo = driveLicnsNo;
         }
 
         public String getUserName() {
@@ -533,6 +664,14 @@ public class TerminationApplyReqDto {
 
         public void setUserBirthDate(String userBirthDate) {
             this.userBirthDate = userBirthDate;
+        }
+
+        public String getSelfIssuNo() {
+            return selfIssuNo;
+        }
+
+        public void setSelfIssuNo(String selfIssuNo) {
+            this.selfIssuNo = selfIssuNo;
         }
 
         public String getCancelPhone1() {
@@ -597,6 +736,38 @@ public class TerminationApplyReqDto {
 
         public void setAgencyName(String agencyName) {
             this.agencyName = agencyName;
+        }
+
+        public String getCpntId() {
+            return cpntId;
+        }
+
+        public void setCpntId(String cpntId) {
+            this.cpntId = cpntId;
+        }
+
+        public String getCpntNm() {
+            return cpntNm;
+        }
+
+        public void setCpntNm(String cpntNm) {
+            this.cpntNm = cpntNm;
+        }
+
+        public String getCntpntShopCd() {
+            return cntpntShopCd;
+        }
+
+        public void setCntpntShopCd(String cntpntShopCd) {
+            this.cntpntShopCd = cntpntShopCd;
+        }
+
+        public String getCntpntShopNm() {
+            return cntpntShopNm;
+        }
+
+        public void setCntpntShopNm(String cntpntShopNm) {
+            this.cntpntShopNm = cntpntShopNm;
         }
 
         public String getNcn() {

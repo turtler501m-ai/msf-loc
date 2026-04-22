@@ -49,6 +49,10 @@ watch(
 )
 
 const validate = () => {
+  if (!model.value.cstmrTypeCd) return false
+  if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
+    if (!model.value.cstmrVisitTypeCd) return false
+  }
   return true
 }
 

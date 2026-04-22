@@ -1,25 +1,21 @@
 package com.ktmmobile.msf.domains.shared.form.common.application.service;
 
-import java.time.Duration;
 import java.util.Objects;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClient;
 
+import com.ktmmobile.msf.commons.client.support.exception.ClientException;
+import com.ktmmobile.msf.commons.client.support.properties.ExternalServiceProperties;
 import com.ktmmobile.msf.commons.common.exception.SimpleDomainException;
-import com.ktmmobile.msf.domains.shared.form.common.support.properties.AddressApiProperties;
+import com.ktmmobile.msf.domains.shared.form.common.adapter.client.httpclient.JusoHttpClient;
+import com.ktmmobile.msf.domains.shared.form.common.application.dto.JusoExternalRequest;
+import com.ktmmobile.msf.domains.shared.form.common.application.dto.JusoHttpClientResponse;
 import com.ktmmobile.msf.domains.shared.form.common.application.dto.SearchAddressCondition;
 import com.ktmmobile.msf.domains.shared.form.common.application.dto.SearchAddressResponse;
 import com.ktmmobile.msf.domains.shared.form.common.application.port.in.AddressReader;
-import com.ktmmobile.msf.domains.shared.form.common.domain.entity.SearchAddressResult;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,42 +23,28 @@ import com.ktmmobile.msf.domains.shared.form.common.domain.entity.SearchAddressR
 @Service
 public class SearchAddressService implements AddressReader {
 
-    private final AddressApiProperties addressApiProperties;
+    private final JusoHttpClient jusoHttpClient;
+    private final ExternalServiceProperties externalServiceProperties;
 
     @Override public SearchAddressResponse getListAddress(SearchAddressCondition condition) {
         String encodedKeyword = resetKeyword(condition.keyword());
 
-        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory();
-        factory.setReadTimeout(Duration.ofSeconds(30));    // socket.timeout (responseTimeout)에 해당
+        String apiKey = externalServiceProperties.service("juso").property("api-key");
 
-        RestClient restClient = RestClient.builder()
-            .requestFactory(factory)
-            .baseUrl(addressApiProperties.url())
-            .build();
+        JusoExternalRequest request = JusoExternalRequest.of(apiKey, encodedKeyword, condition.currentPage(), condition.countPerPage());
 
-        // Form 데이터 구성을 위한 MultiValueMap (form serialize 방식 대응)
-        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-        formData.add("confmKey", addressApiProperties.key());
-        formData.add("currentPage", String.valueOf(condition.currentPage()));
-        formData.add("countPerPage", String.valueOf(condition.countPerPage()));
-        formData.add("keyword", encodedKeyword);
-        formData.add("resultType", "json");
-
-        SearchAddressResult result = restClient.post()
-            .contentType(MediaType.APPLICATION_FORM_URLENCODED) // form serialize 설정
-            .body(formData)
-            .retrieve() // 응답 추출 시작
-            .onStatus(HttpStatusCode::isError, (request, response) -> {
-                throw new SimpleDomainException("주소 검색을 실패 하였습니다.: " + response.getStatusCode());
-            })
-            .body(SearchAddressResult.class);
-
-        SearchAddressResult.Common common = Objects.requireNonNull(result).results().common();
-        if (!"0".equals(common.errorCode())) {
-            throw new SimpleDomainException(common.errorMessage());
+        JusoHttpClientResponse response;
+        try {
+            response = jusoHttpClient.getJusoExternal(apiKey, condition.currentPage(), condition.countPerPage(), encodedKeyword, "json");
+        } catch (ClientException e) {
+            throw new SimpleDomainException("주소 검색을 실패 하였습니다.", e);
         }
 
-        return SearchAddressResponse.of(Objects.requireNonNull(result));
+        if (!"0".equals(response.results().common().errorCode())) {
+            throw new SimpleDomainException(response.results().common().errorMessage());
+        }
+
+        return SearchAddressResponse.of(Objects.requireNonNull(response.results()));
     }
 
     private String resetKeyword(String keyword) {

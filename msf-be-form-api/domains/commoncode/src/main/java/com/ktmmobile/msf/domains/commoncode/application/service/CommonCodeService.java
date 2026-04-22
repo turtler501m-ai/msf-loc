@@ -8,10 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ktmmobile.msf.domains.commoncode.application.dto.CommonCodeData;
-import com.ktmmobile.msf.domains.commoncode.application.dto.CommonCodeGroups;
 import com.ktmmobile.msf.domains.commoncode.application.dto.CommonCodesRequest;
 import com.ktmmobile.msf.domains.commoncode.application.port.in.CommonCodeReader;
+import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeData;
+import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeGroups;
 
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

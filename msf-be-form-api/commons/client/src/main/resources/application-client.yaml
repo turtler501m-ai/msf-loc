@@ -26,6 +26,10 @@ spring:
         base-url: ${internal-service.services.eformsign.base-url}
         connect-timeout: 2s
         read-timeout: 3s
+      koi-ocr:
+        base-url: ${internal-service.services.koi-ocr.base-url}
+        connect-timeout: 2s
+        read-timeout: 3s
 
       ## 외부 서비스
       m-platform:
@@ -36,6 +40,10 @@ spring:
         base-url: ${external-service.services.msp-api.base-url}
       msp-ext-api:
         base-url: ${external-service.services.msp-ext-api.base-url}
+      juso:
+        base-url: ${external-service.services.juso.base-url}
+        connect-timeout: 30s
+        read-timeout: 30s
 
 
 
@@ -81,13 +89,13 @@ http-client:
 ## (연동하는 모든 내부 서비스 정보를 여기에서 관리)
 internal-service:
   services:
-    form-api:
+    form-api: ## FORM-API
       base-url: http://smartform-app:8080
-    admin-api:
+    admin-api: ## ADMIN-API
       base-url: http://smartform-app:8180
-    batch:
+    batch: ## BATCH
       base-url: http://smartform-app:8280
-    eformsign:
+    eformsign: ## eFormSign
       base-url: http://eformsign-app:8080
 
 
@@ -96,11 +104,18 @@ internal-service:
 ## (연동하는 모든 외부 서비스 정보를 여기에서 관리)
 external-service:
   services: ## 환경별 설정
-    m-platform:
+    m-platform: ## M-Platform
       base-url: http://none
-    msp-prx:
+    msp-prx: ## MSP PRX
       base-url: http://none
-    msp-api:
+    msp-api: ## MSP API
       base-url: http://none
-    msp-ext-api:
+    msp-ext-api: ## MSP EXT-API
       base-url: http://none
+    koi-ocr: ## KOI-OCR
+      base-url: http://none
+    juso: ## 주소 검색
+      base-url: https://business.juso.go.kr
+      properties:
+        api-key: ${JUSO_API_KEY}
+        coord-api-key: ${JUSO_COORD_API_KEY}

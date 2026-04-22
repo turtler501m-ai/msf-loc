@@ -52,7 +52,8 @@ commons:common
 - `app-boot/src/main/resources/application.yaml` — 서버 포트, 기본 프로파일(`local`)
 - `app-boot/src/main/resources/application-private.yaml` — 개인 DB 접속 정보 (git 제외)
 - 각 모듈의 `application-{module}.yaml`은 `ModuleYamlEnvironmentPostProcessor`가 자동 로드
-- DB: `localhost:5432/msf` (user: postgres / pw: `application-private.yaml` 참조)
+- DB (local): `localhost:5432/msf` (user: postgres / pw: `application-private.yaml` 참조)
+- DB (DEV): `jdbc:postgresql://211.184.227.24:45432/msf_core` (user: smartform_dev / pw: dev!!12form)
 
 ## 도메인 패키지 (domains/form)
 

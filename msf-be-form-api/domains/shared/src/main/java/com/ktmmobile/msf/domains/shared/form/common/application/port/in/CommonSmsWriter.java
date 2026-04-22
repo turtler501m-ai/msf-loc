@@ -1,15 +1,12 @@
 package com.ktmmobile.msf.domains.shared.form.common.application.port.in;
 
-import com.ktmmobile.msf.domains.shared.form.common.application.dto.AuthSmsRequest;
 import com.ktmmobile.msf.domains.shared.form.common.application.dto.CommonSmsRequest;
 
 public interface CommonSmsWriter {
 
-    Boolean sendAuthSms(AuthSmsRequest authSmsRequest);
+    Boolean sendSms(CommonSmsRequest request);
 
-    Boolean verifyAuthSms(AuthSmsRequest authSmsRequest);
+    String sendOtpSms(CommonSmsRequest request);
 
-    Boolean sendFormSms(CommonSmsRequest request);
-
-    Boolean verifyFormSms(CommonSmsRequest request);
+    Boolean verifyOtpSms(CommonSmsRequest request);
 }

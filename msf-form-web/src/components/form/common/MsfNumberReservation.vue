@@ -94,6 +94,9 @@ const reserveAuthBtn = useAuthButton(
 )
 
 const validate = () => {
+  if (customerModel.value.joinType === 'NAC3') {
+    if (!model.value.wishNo) return false
+  }
   return true
 }
 

@@ -24,7 +24,6 @@
                  , MODEL_ID
                  , ROW_NUMBER() OVER (ORDER BY EVNT_TRTM_DT DESC) AS RNUM
             FROM MSP_JUO_ADD_INFO
-                 MSP_JUO_ADD_INFO@DL_MCP
             WHERE CONTRACT_NUM = #{svcCntrNo}
               AND APP_END_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
         )

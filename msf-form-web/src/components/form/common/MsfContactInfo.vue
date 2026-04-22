@@ -152,6 +152,13 @@ const onConfirmAddressSearchPop = (result) => {
 }
 
 const validate = () => {
+  if (!model.value.mobileNo1 || !model.value.mobileNo2 || !model.value.mobileNo3) return false
+  if (!model.value.emailAddr1 || !model.value.emailAddr2) return false
+  if (!model.value.zipNo || !model.value.address || !model.value.detailAddress) return false
+  if (['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
+    if (!model.value.country || !model.value.visaType) return false
+    if (!rangeDatePickerValue.value.start || !rangeDatePickerValue.value.end) return false
+  }
   return true
 }
 

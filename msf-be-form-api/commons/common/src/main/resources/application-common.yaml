@@ -36,17 +36,6 @@ spring:
             maximum-pool-size: 20
             max-lifetime: 300000
 
-      ## MCP (레거시 M포탈)
-      mcp:
-        type: STANDALONE
-        standalone:
-          url: ${MCP_DB_URL}
-          username: ${MCP_DB_USERNAME}
-          password: ${MCP_DB_PASSWORD}
-          read-only: true
-          hikari:
-            maximum-pool-size: 20
-            max-lifetime: 300000
 
     hikari:
       connection-timeout: 2700

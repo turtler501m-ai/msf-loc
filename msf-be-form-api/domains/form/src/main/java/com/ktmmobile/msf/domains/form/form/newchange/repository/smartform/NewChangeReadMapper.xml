@@ -4,10 +4,10 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper">
 
-  <resultMap id="requestMap" type="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeStepDto">
-    <collection property="step1Dto"></collection>
-    <collection property="step2Dto"></collection>
-    <collection property="step3Dto"></collection>
+  <resultMap id="newChangeResultMap" type="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeStepDto">
+    <collection property="step1Dto" />
+    <collection property="step2Dto" />
+    <collection property="step3Dto" />
   </resultMap>
 
   <select id="generateSmartResNo" resultType="java.lang.String">
@@ -16,8 +16,8 @@
   </select>
 
   <select id="generateSmartRequestKey" resultType="java.lang.Long">
-    <!--SELECT NEXTVAL('SQ_REQUEST_KEY')-->
-    SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_REQUEST_KEY')::TEXT, 5, '0'))
+    SELECT NEXTVAL('SQ_REQUEST_KEY')
+<!--    SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_REQUEST_KEY')::TEXT, 5, '0'))-->
   </select>
 
   <select id="getSmartCustRequestSeq" resultType="java.lang.Long">
@@ -25,57 +25,285 @@
     SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_NFL_CHG_TRNS_SEQ')::TEXT, 5, '0'))
   </select>
 
-  <select id="selectNewChangeInfo" resultMap="requestMap">
-    /* 신규변경 작성내용 조회 */
-    SELECT
-    A.*
-    FROM MSF_REQUEST_TEMP A, MSF_REQUEST_AGENT_TEMP B, MSF_REQUEST_CSTMR_TEMP C, MSF_REQUEST_SALE_TEMP D, MSF_REQUEST_BILL_REQ_TEMP E
-    WHERE A.REQUEST_KEY = B.REQUEST_KEY
-    AND A.REQUEST_KEY = C.REQUEST_KEY
-    AND A.REQUEST_KEY = D.REQUEST_KEY
-    AND A.REQUEST_KEY = E.REQUEST_KEY
-    AND A.REQUEST_KEY=#{requestKey}
-    AND C.FORM_TYPE_CD =#{formTypeCd}
+
+  <select id="selectMsfRequestInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+          resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestVo">
+        /** MSF_REQUEST 단건 조회 **/
+        SELECT
+            A.REQ_BUY_TYPE_CD
+          , A.OPEN_TYPE_CD
+          , A.SERVICE_TYPE_CD
+          , A.OPER_TYPE_CD
+          , A.CSTMR_TYPE_CD
+          , A.TMP_STEP_CD
+          , A.IDENTITY_CERT_TYPE_CD
+          , A.KNOTE_IDENTITY_SCAN_CSTMR_NM
+          , A.KNOTE_IDENTITY_ESS_NO
+          , A.KNOTE_IDENTITY_TYPE_CD
+          , A.KNOTE_IDENTITY_SCAN_DT
+          , A.KNOTE_SCAN_ID
+          , A.SCAN_ID
+          , A.FATH_TRG_YN
+          , A.FATH_TRG_IDENTITY_CERT_TYPE_CD
+          , A.FATH_TRANSAC_ID
+          , A.FATH_CMPLT_NTFY_DATE
+          , A.FATH_TEL_NO
+          , A.FATH_MOBILE_FN_NO
+          , A.FATH_MOBILE_MN_NO
+          , A.FATH_MOBILE_RN_NO
+          , A.AUTH_INFO
+          , A.IDENTITY_TYPE_CD
+          , A.IDENTITY_ISSU_DATE
+          , A.IDENTITY_ISSU_REGION
+          , A.DRIVE_LICNS_NO
+          , A.OPEN_NO
+          , A.CONTRACT_NUM
+          , A.PROD_TYPE_CD
+          , A.PROD_ID
+          , A.PROD_NM
+          , A.REQ_PHONE_SN
+          , A.REQ_MODEL_NM
+          , A.SNTY_CAPAC_CD
+          , A.SNTY_COLOR_CD
+          , A.REQ_MODEL_COLOR
+          , A.SHOP_USM_ID
+          , A.USIM_KINDS_CD
+          , A.REQ_USIM_SN
+          , A.REQ_USIM_NM
+          , A.EID
+          , A.IMEI1
+          , A.IMEI2
+          , A.ESIM_PHONE_ID
+          , A.UPLOAD_PHONE_SRL_NO
+          , A.REQ_WANT_FN_NO
+          , A.REQ_WANT_MN_NO
+          , A.REQ_WANT_RN_NO
+          , A.INSR_CD
+          , A.INSR_PROD_CD
+          , A.CLAUSE_INSURANCE_YN
+          , A.CLAUSE_INSR_PROD_YN
+          , A.INSR_AUTH_INFO
+          , A.PRNTS_CONTRACT_NUM
+          , A.PRNTS_MOBILE_NO
+          , A.JEHU_PARTNER_TYPE_CD
+          , A.JEHU_PROD_TYPE_CD
+          , A.REQ_ADDITION_LIST_NM
+          , A.REQ_ADDITION_PRICE
+          , A.PHONE_PAYMENT_YN
+          , A.ON_OFF_TYPE_CD
+          , A.SO_CD
+          , A.OPEN_REQ_DT
+          , A.REQ_IN_DAY
+          , A.CLAUSE_PRI_COLLECT_YN
+          , A.CLAUSE_PRI_OFFER_YN
+          , A.CLAUSE_ESS_COLLECT_YN
+          , A.CLAUSE_PRI_TRUST_YN
+          , A.CLAUSE_PRI_AD_YN
+          , A.CLAUSE_CONFIDENCE_YN
+          , A.CLAUSE_FATH_YN
+          , A.NW_BLCK_AGRM_YN
+          , A.APP_BLCK_AGRM_YN
+          , A.BLCK_APP_DIV_CD
+          , A.SO_TRNS_AGRM_YN
+          , A.CLAUSE_JEHU_YN
+          , A.CLAUSE_RENTAL_MODEL_CP_YN
+          , A.CLAUSE_RENTAL_MODEL_CP_PR_YN
+          , A.CLAUSE_RENTAL_SERVICE_YN
+          , A.CLAUSE_MPPS35_YN
+          , A.CLAUSE_FINANCE_YN
+          , A.CLAUSE_5G_COVERAGE_YN
+          , A.PERSONAL_INFO_COLLECT_AGREE_YN
+          , A.OTHERS_TRNS_AGREE_YN
+          , A.CLAUSE_SENSI_COLLECT_YN
+          , A.CLAUSE_SENSI_OFFER_YN
+          , A.CLAUSE_PARTNER_OFFER_YN
+          , A.OTHERS_TRNS_KT_AGREE_YN
+          , A.OTHERS_AD_RECEIVE_AGREE_YN
+          , A.KT_COUNSEL_AGREE_YN
+          , A.COMBINE_SOLO_TYPE_YN
+          , A.COMBINE_SOLO_YN
+          , A.ETC_SPECIAL_SBST
+          , A.MEMO
+          , A.REC_YN
+          , A.RES_CD
+          , A.RES_MSG
+          , A.RES_NO
+          , A.PROC_DT
+          , A.PROC_CD
+          , A.PRO_STTUS_CD
+          , A.SBSC_PRO_CD
+          , A.APP_FORM_YN
+          , A.APP_FORM_XML_YN
+          , A.FILE_NM
+          , A.FILE_MASK_NM
+          , A.FAX_YN
+          , A.FAX_NO
+        FROM MSF_REQUEST_TEMP A
+        WHERE A.REQUEST_KEY = #{requestKey}
   </select>
 
-  <!--<select id="selectMsfRequestInfo" parameterType="integer"-->
-  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestDto">-->
-  <!--  SELECT-->
-  <!--  REQUEST_KEY-->
-  <!--  FROM MSF_REQUEST-->
-  <!--  WHERE REQUEST_KEY = #{requestKey}-->
-  <!--</select>-->
+    <select id="selectMsfRequestCstmrInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+            resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo">
+        /** MSF_REQUEST_CSTMR 단건 조회 **/
+        SELECT
+            FORM_TYPE_CD
+            , CSTMR_NM
+            , CSTMR_NATIVE_RRN
+            , CSTMR_NATIVE_BIRTH
+            , CSTMR_PRIVATE_CNAME
+            , CSTMR_PRIVATE_BIZ_NO
+            , CSTMR_FOREIGNER_RRN
+            , CSTMR_FOREIGNER_BIRTH
+            , CSTMR_FOREIGNER_PN
+            , CSTMR_FOREIGNER_COUNTRY_CD
+            , CSTMR_FOREIGNER_NATION
+            , CSTMR_FOREIGNER_VISA_NO
+            , CSTMR_FOREIGNER_VDATE_START_DATE
+            , CSTMR_FOREIGNER_VDATE_END_DATE
+            , CSTMR_JURIDICAL_CNAME
+            , CSTMR_JURIDICAL_RRN
+            , CSTMR_JURIDICAL_BIZ_NO
+            , CSTMR_JURIDICAL_REP_NM
+            , UPJN_CD
+            , BCU_SBST
+            , CSTMR_JURIDICAL_USER_NM
+            , CSTMR_JURIDICAL_BIRTH
+            , CSTMR_VISIT_TYPE_CD
+            , CSTMR_TEL_FN_NO
+            , CSTMR_TEL_MN_NO
+            , CSTMR_TEL_RN_NO
+            , CSTMR_MOBILE_FN_NO
+            , CSTMR_MOBILE_MN_NO
+            , CSTMR_MOBILE_RN_NO
+            , CSTMR_ZIPCD
+            , CSTMR_ADR
+            , CSTMR_ADR_DTL
+            , CSTMR_ADR_BJD
+            , CSTMR_EMAIL_ADR
+            , CSTMR_EMAIL_RECEIVE_YN
+            , CSTMR_RECEIVE_TEL_FN_NO
+            , CSTMR_RECEIVE_TEL_NM_NO
+            , CSTMR_RECEIVE_TEL_RN_NO
+        FROM MSF_REQUEST_CSTMR_TEMP
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>
 
-  <!--<select id="selectMsfRequestAgentInfo" parameterType="integer"-->
-  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo.MsfRequestAgentVo">-->
-  <!--  SELECT-->
-  <!--  REQUEST_KEY-->
-  <!--  FROM MSF_REQUEST_AGENT-->
-  <!--  WHERE REQUEST_KEY = #{requestKey}-->
-  <!--</select>-->
+    <select id="selectMsfRequestAgentInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+            resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo">
+        /** MSF_REQUEST_AGENT 단건 조회 **/
+        SELECT
+            FORM_TYPE_CD
+            , MINOR_AGENT_NM
+            , MINOR_AGENT_RRN
+            , MINOR_AGENT_REL_TYPE_CD
+            , MINOR_AGENT_TEL_FN_NO
+            , MINOR_AGENT_TEL_MN_NO
+            , MINOR_AGENT_TEL_RN_NO
+            , MINOR_AGENT_AGRM_YN
+            , MINOR_AGENT_SELF_INQRY_AGRM_YN
+            , MINOR_AGENT_SELF_CERT_TYPE_CD
+            , MINOR_AGENT_CI_INFO
+            , MINOR_AGENT_SELF_ISSU_EXPR_DATE
+            , MINOR_AGENT_SELF_ISSU_NO
+            , JRDCL_AGENT_NM
+            , JRDCL_AGENT_RRN
+            , JRDCL_AGENT_TEL_FN_NO
+            , JRDCL_AGENT_TEL_MN_NO
+            , JRDCL_AGENT_TEL_RN_NO
+        FROM MSF_REQUEST_AGENT_TEMP
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>
 
-  <!--<select id="selectMsfRequestCstmrInfo" parameterType="integer"-->
-  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestCstmrDto">-->
-  <!--  SELECT-->
-  <!--  REQUEST_KEY-->
-  <!--  FROM MSF_REQUEST_CSTMR-->
-  <!--  WHERE REQUEST_KEY = #{requestKey}-->
-  <!--</select>-->
+    <select id="selectMsfRequestSaleInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+            resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo">
+        /** MSF_REQUEST_SALE 단건조회 **/
+        SELECT
+            FORM_TYPE_CD
+            , MODEL_ID
+            , MODEL_MONTHLY
+            , MODEL_INSTAMT
+            , MODEL_SALE_POLICY_CD
+            , MODEL_PRICE_VAT
+            , MODEL_DISCOUNT1
+            , MODEL_SPRT
+            , MODEL_PRICE
+            , MODEL_DISCOUNT3
+            , REAL_MDL_INSTAMT
+            , HNDSET_SALE_PRICE
+            , SPRT_TYPE_CD
+            , DC_AMT
+            , MAX_APD_SPRT
+            , ADD_DC_AMT
+            , ENGG_MNTH_CNT
+            , RECYCLE_YN
+            , USIM_PRICE_TYPE_CD
+            , USIM_PRICE
+            , USIM_PAY_MTHD_CD
+            , SESPLS_YN
+            , JOIN_PRICE_TYPE_CD
+            , JOIN_PAY_MTHD_CD
+            , JOIN_PRICE
+            , SOC_CODE
+            , SOC_NM
+            , SOC_BASE_CHRG_AMT
+        FROM MSF_REQUEST_SALE_TEMP
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>
 
-  <!--<select id="selectMsfRequestSaleInfo" parameterType="integer"-->
-  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestSaleDto">-->
-  <!--  SELECT-->
-  <!--  REQUEST_KEY-->
-  <!--  FROM MSF_REQUEST_SALE-->
-  <!--  WHERE REQUEST_KEY = #{requestKey}-->
-  <!--</select>-->
+    <select id="selectMsfRequestBillReqInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+            resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo">
+        /** MSF_REQUEST_BILL_REQ 단건조회 **/
+        SELECT
+            FORM_TYPE_CD
+            , REQ_PAY_TYPE_CD
+            , REQ_BANK_CD
+            , REQ_ACCOUNT_NM
+            , REQ_ACCOUNT_RRN
+            , REQ_ACCOUNT_REL_TYPE_CD
+            , REQ_ACCOUNT_NO
+            , REQ_CARD_NM
+            , REQ_CARD_RRN
+            , REQ_CARD_COMPANY_CD
+            , REQ_CARD_NO
+            , REQ_CARD_YY
+            , REQ_CARD_MM
+            , REQ_WIRE_TYPE_CD
+            , OTHERS_PAYMENT_YN
+            , OTHERS_PAYMENT_TEL_FN_NO
+            , OTHERS_PAYMENT_TEL_MN_NO
+            , OTHERS_PAYMENT_TEL_RN_NO
+            , OTHERS_PAYMENT_NM
+            , OTHERS_PAYMENT_RRN
+            , OTHERS_PAYMENT_REL_TYPE_CD
+            , OTHERS_PAYMENT_REQ_NM
+            , PRNTS_BILL_NO
+            , CSTMR_BILL_SEND_TYPE_CD
+            , CSTMR_EMAIL_ADR
+        FROM MSF_REQUEST_BILL_REQ_TEMP
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>
 
-  <!--<select id="selectMsfRequestBillReqInfo" parameterType="integer"-->
-  <!--        resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestBillReqDto">-->
-  <!--  SELECT-->
-  <!--  REQUEST_KEY-->
-  <!--  FROM MSF_REQUEST_BILL_REQ-->
-  <!--  WHERE REQUEST_KEY = #{requestKey}-->
+    <!-- /** MSF_REQUEST_ADDITION 부가서비스 조회 **/ -->
+
+  <!--<select id="selectNewChangeInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+            resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoDto">-->
+  <!--<select id="selectNewChangeInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+          resultMap="newChangeResultMap">-->
+    <!--/* 신규변경 작성내용 조회 */
+    SELECT
+      A.REQ_BUY_TYPE_CD
+      , A.OPEN_TYPE_CD
+      , A.SERVICE_TYPE_CD
+      , A.OPER_TYPE_CD
+      , A.CSTMR_TYPE_CD
+      , A.TMP_STEP_CD
+    FROM MSF_REQUEST_TEMP A, MSF_REQUEST_AGENT_TEMP B, MSF_REQUEST_CSTMR_TEMP C, MSF_REQUEST_SALE_TEMP D, MSF_REQUEST_BILL_REQ_TEMP E
+    WHERE A.REQUEST_KEY = B.REQUEST_KEY
+        AND A.REQUEST_KEY = C.REQUEST_KEY
+        AND C.REQUEST_KEY = D.REQUEST_KEY
+        AND D.REQUEST_KEY = E.REQUEST_KEY
+        AND A.REQUEST_KEY = #{requestKey}
+        AND C.FORM_TYPE_CD = #{formTypeCd}-->
   <!--</select>-->
 
 

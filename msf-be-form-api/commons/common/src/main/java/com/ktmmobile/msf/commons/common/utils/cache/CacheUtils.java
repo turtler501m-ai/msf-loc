@@ -46,7 +46,7 @@ public class CacheUtils {
 
     public static String getCachePrefix() {
         String appName = springCustomProperties.applicationNameAbbreviated();
-        if (EnvironmentUtils.isLocalProfile()) {
+        if (EnvironmentUtils.isLocal()) {
             return appName + "::" + EnvironmentUtils.getLocalProfileCode() + ":";
         }
         return appName + "::";

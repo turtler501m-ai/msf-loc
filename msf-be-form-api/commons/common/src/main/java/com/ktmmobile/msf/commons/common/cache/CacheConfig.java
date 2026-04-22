@@ -6,13 +6,13 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.support.NoOpCacheManager;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -70,7 +70,7 @@ public class CacheConfig implements CachingConfigurer {
 
     private String getPrefixCacheName() {
         String prefixCacheName = springCustomProperties.applicationNameAbbreviated() + "::";
-        if (EnvironmentUtils.isLocalProfile()) {
+        if (EnvironmentUtils.isLocal()) {
             return EnvironmentUtils.getLocalProfile() + ":" + prefixCacheName;
         }
         return prefixCacheName;
