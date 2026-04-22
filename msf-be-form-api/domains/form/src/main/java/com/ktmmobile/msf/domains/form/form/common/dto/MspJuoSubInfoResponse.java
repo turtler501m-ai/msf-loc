@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class JuoSubInfoResponse {
+public class MspJuoSubInfoResponse {
     String contractNum;
     String customerSsn;
     String customerLinkName;

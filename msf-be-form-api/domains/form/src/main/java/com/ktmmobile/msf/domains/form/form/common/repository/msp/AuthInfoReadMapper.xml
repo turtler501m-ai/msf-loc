@@ -5,8 +5,8 @@
 <mapper namespace="com.ktmmobile.msf.domains.form.form.common.repository.msp.AuthInfoReadMapper">
 
     <select id="selectKtmCustomer"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.JuoSubInfoCondition"
-            resultType="com.ktmmobile.msf.domains.form.form.common.dto.JuoSubInfoResponse">
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoCondition"
+            resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoResponse">
         <![CDATA[
         WITH CNTR AS (
             SELECT
@@ -112,5 +112,57 @@
         AND     B.ETC1 = '10'
         AND     ROWNUM = 1
       ]]>
+    </select>
+
+    <select id="verifyBillInfo"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoCondition"
+            resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoResponse">
+        /** 통합청구 청구계정ID 조회 **/
+        SELECT BAN, CUSTOMER_ID, COL_DELINQ_STATUS, MARKET_GUBUN, BL_BILLING_METHOD, BANK_ACCT_HOLDER_ID, BAN_LINK_NAME, CONTRACT_NUM, EVNT_TRTM_DT
+            FROM (SELECT A.BAN, A.CUSTOMER_ID, A.COL_DELINQ_STATUS, A.MARKET_GUBUN, A.BL_BILLING_METHOD, A.BANK_ACCT_HOLDER_ID, A.BAN_LINK_NAME, B.CONTRACT_NUM, A.EVNT_TRTM_DT
+                    FROM (SELECT BAN, CUSTOMER_ID, COL_DELINQ_STATUS, MARKET_GUBUN, BL_BILLING_METHOD, BL_SPCL_BAN_CODE, BANK_ACCT_HOLDER_ID, BAN_LINK_NAME, EVNT_TRTM_DT
+                            FROM MSP_JUO_BAN_INFO
+                            WHERE 1=1
+                            AND BL_BILLING_METHOD != 'R' -- 지로 제외
+                            AND COL_DELINQ_STATUS != 'D' -- 미납 제외
+                            AND MARKET_GUBUN = 'KIS'
+                            -- 파라미터 : 청구계정ID
+                            AND BAN = #{ban}
+                        ) A
+                        INNER JOIN (SELECT CONTRACT_NUM, BAN, CUSTOMER_ID FROM MSP_JUO_BAN_MAPP_INFO
+                                    WHERE (APP_END_DATE = '99991231000000' OR APP_END_DATE = '99991231235959')
+                        ) B
+                        ON B.BAN = A.BAN
+                        AND B.CUSTOMER_ID = A.CUSTOMER_ID
+                        INNER JOIN (SELECT CUSTOMER_ID, CUSTOMER_TYPE, CUSTOMER_SSN, DRIVR_LICNS_NO, TAX_ID, CUSTOMER_LINK_NAME, CUST_IDNT_NO_IND_CD
+                                    FROM MSP_JUO_CUS_INFO
+                                    WHERE 1=1
+                                    -- 파라미터 : 식별번호
+                                    <choose>
+                                        <when test='customerType.equals("B")'>
+                                            <!-- CUSTOMER_SSN: 사업자번호(암호문), DRIVR_LICNS_NO: 법인번호(평문), TAX_ID: 사업자번호(평문) -->
+                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                            OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                            OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
+                                        </when>
+                                        <when test='customerType.equals("G")'><!-- 공공 -->
+                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                            OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                            OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
+                                        </when>
+                                        <otherwise><!-- 내국인성인, 내국인미성년자, 외국인성인, 외국인미성년자 -->
+                                            <!-- CUSTOMER_SSN: 식별번호(암호문), DRIVR_LICNS_NO: 개발기준데이타없음, TAX_ID: 사업자번호(평문) -->
+                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                            OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                            OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
+                                        </otherwise>
+                                    </choose>
+                                    -- 파라미터 : 고객명
+                                    AND CUSTOMER_LINK_NAME = #{customerLinkName}
+                        ) C
+                        ON C.CUSTOMER_ID = B.CUSTOMER_ID
+                    ORDER BY A.EVNT_TRTM_DT DESC
+            ) BAN
+        WHERE ROWNUM = 1
     </select>
 </mapper>

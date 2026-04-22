@@ -1,22 +1,23 @@
 package com.ktmmobile.msf.domains.form.form.newchange.repository.smartform;
 
+import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.vo.*;
 import org.apache.ibatis.annotations.Mapper;
 
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
-
-
+@AutoAuditing
 @Mapper
 public interface NewChangeWriteMapper {
 
-    void insertMsfRequest(NewChangeInfoRequest request);
+    void insertMsfRequest(MsfRequestVo msfRequestVo);
 
-    void insertMsfRequestAgent(NewChangeInfoRequest request);
+    void insertMsfRequestAgent(MsfRequestAgentVo msfRequestAgentVo);
 
-    void insertMsfRequestCstmr(NewChangeInfoRequest request);
+    void insertMsfRequestCstmr(MsfRequestCstmrVo msfRequestCstmrVo);
 
-    void insertMsfRequestSale(NewChangeInfoRequest request);
+    void insertMsfRequestSale(MsfRequestSaleVo msfRequestSaleVo);
 
-    void insertMsfRequestBillReq(NewChangeInfoRequest request);
+    void insertMsfRequestBillReq(MsfRequestBillReqVo msfRequestBillReqVo);
 
     void updateMsfRequest(NewChangeInfoRequest request);
 

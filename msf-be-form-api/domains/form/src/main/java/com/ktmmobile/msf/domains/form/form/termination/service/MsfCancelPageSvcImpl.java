@@ -17,7 +17,6 @@ import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpMonthPayMentDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscSpnsrItgInfoInVO;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
-import com.ktmmobile.msf.domains.form.form.newchange.service.FormCommService;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfChangPageSvc;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeReqDto;
@@ -26,6 +25,7 @@ import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.Term
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
 import com.ktmmobile.msf.domains.form.form.termination.repository.CancelPageRepositoryImpl;
+
 
 @Service
 public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
@@ -45,19 +45,16 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     @Autowired
     private McpApiClient mcpApiClient;
 
-    @Autowired
-    private FormCommService formCommService;
-
     @Override
     public RemainChargeResVO getRemainCharge(RemainChargeReqDto reqDto) {
         // AS-IS reference: getRealTimePriceAjax -> X18 real-time remain charge
         logger.debug("[getRemainCharge] start: ncn={}, ctn={}, custIdPresent={}",
-                safe(reqDto.getNcn()), maskPhone(reqDto.getCtn()), !isBlank(reqDto.getCustId()));
+            safe(reqDto.getNcn()), maskPhone(reqDto.getCtn()), !isBlank(reqDto.getCustId()));
 
         RemainChargeResVO resVO = new RemainChargeResVO();
         try {
             MpFarRealtimePayInfoVO mpVO = msfMplatFormService.farRealtimePayInfo(
-                    reqDto.getNcn(), reqDto.getCtn(), reqDto.getCustId());
+                reqDto.getNcn(), reqDto.getCtn(), reqDto.getCustId());
 
             if (mpVO == null) {
                 resVO.setSuccess(false);
@@ -84,7 +81,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             }
             resVO.setItems(items);
             logger.info("[getRemainCharge] X18 success: ncn={}, itemCount={}, sumAmt={}",
-                    safe(reqDto.getNcn()), items.size(), safe(resVO.getSumAmt()));
+                safe(reqDto.getNcn()), items.size(), safe(resVO.getSumAmt()));
 
             // 화면 응답 포함: AS-IS requestView 위약금 블록(X54/X16/mspAddInfo)
             // AS-IS(requestView 위약금 블록) 결과를 화면 응답(settlement)에 포함
@@ -112,7 +109,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         return resVO;
     }
 
-    // TEST_SKIP 연동전 테스트용도
+    //TEST_SKIP 연동전 테스트용도
     private void applyMockAmountData(RemainChargeResVO resVO) {
         if (resVO == null) {
             return;
@@ -151,8 +148,8 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         if (resVO == null || settlement == null) {
             return;
         }
-        resVO.setPenaltyFee(settlement.getTrmnForecBprmsAmt()); // 위약금
-        resVO.setSettlementFee(settlement.getRtrnAmtAndChageDcAmt()); // 정산요금
+        resVO.setPenaltyFee(settlement.getTrmnForecBprmsAmt());          // 위약금
+        resVO.setSettlementFee(settlement.getRtrnAmtAndChageDcAmt());    // 정산요금
         resVO.setRemainPeriod(String.valueOf(settlement.getRemainMonth())); // 상환기간(개월)
         resVO.setRemainAmount(String.valueOf(settlement.getRemainPay())); // 금액(잔여할부)
     }
@@ -187,14 +184,10 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             }
 
             // AS-IS와 동일하게 null 값은 "0"으로 보정
-            if (StringUtil.isEmpty(moscSpnsrItgInfo.getChageDcAmt()))
-                moscSpnsrItgInfo.setChageDcAmt("0");
-            if (StringUtil.isEmpty(moscSpnsrItgInfo.getTrmnForecBprmsAmt()))
-                moscSpnsrItgInfo.setTrmnForecBprmsAmt("0");
-            if (StringUtil.isEmpty(moscSpnsrItgInfo.getRtrnAmtAndChageDcAmt()))
-                moscSpnsrItgInfo.setRtrnAmtAndChageDcAmt("0");
-            if (StringUtil.isEmpty(moscSpnsrItgInfo.getChageDcAmtSuprtRtrnAmt()))
-                moscSpnsrItgInfo.setChageDcAmtSuprtRtrnAmt("0");
+            if (StringUtil.isEmpty(moscSpnsrItgInfo.getChageDcAmt())) moscSpnsrItgInfo.setChageDcAmt("0");
+            if (StringUtil.isEmpty(moscSpnsrItgInfo.getTrmnForecBprmsAmt())) moscSpnsrItgInfo.setTrmnForecBprmsAmt("0");
+            if (StringUtil.isEmpty(moscSpnsrItgInfo.getRtrnAmtAndChageDcAmt())) moscSpnsrItgInfo.setRtrnAmtAndChageDcAmt("0");
+            if (StringUtil.isEmpty(moscSpnsrItgInfo.getChageDcAmtSuprtRtrnAmt())) moscSpnsrItgInfo.setChageDcAmtSuprtRtrnAmt("0");
 
             // X54 응답값을 settlement DTO로 매핑
             settlement.setSaleEngtNm(moscSpnsrItgInfo.getSaleEngtNm());
@@ -210,70 +203,66 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             settlement.setEngtRmndDate(moscSpnsrItgInfo.getEngtRmndDate());
 
             // 3) saleEngtNm 존재 시에만 잔여 할부금(X16), 할부원금(mspAddInfo) 조회
-            // TEST_SKIP if (StringUtil.isNotBlank(moscSpnsrItgInfo.getSaleEngtNm())) {
-            try {
-                // X16 조회를 위한 최신 청구월 정보 조회(X15)
-                logger.debug("[getTerminationSettlement_X15 farMonBillingInfoDto request: ncn={}", safe(ncn));
-                MpFarMonBillingInfoDto billInfo = msfMplatFormService.farMonBillingInfoDto(
+            //TEST_SKIP if (StringUtil.isNotBlank(moscSpnsrItgInfo.getSaleEngtNm())) {
+                try {
+                    // X16 조회를 위한 최신 청구월 정보 조회(X15)
+                    logger.debug("[getTerminationSettlement_X15 farMonBillingInfoDto request: ncn={}", safe(ncn));
+                    MpFarMonBillingInfoDto billInfo = msfMplatFormService.farMonBillingInfoDto(
                         ncn, ctn, custId, DateTimeUtil.getFormatString("yyyyMM"));
 
-                if (billInfo != null && billInfo.getMonthList() != null && !billInfo.getMonthList().isEmpty()) {
-                    MpMonthPayMentDto monthPay = billInfo.getMonthList().get(0);
-                    // 요금조회 상세(X16) - 잔여 할부금
-                    MpFarMonDetailInfoDto farMonDetailInfoDto = msfMplatFormService.farMonDetailInfoDto(
+                    if (billInfo != null && billInfo.getMonthList() != null && !billInfo.getMonthList().isEmpty()) {
+                        MpMonthPayMentDto monthPay = billInfo.getMonthList().get(0);
+                        // 요금조회 상세(X16) - 잔여 할부금
+                        MpFarMonDetailInfoDto farMonDetailInfoDto = msfMplatFormService.farMonDetailInfoDto(
                             ncn, ctn, custId,
                             monthPay.getBillSeqNo(),
                             monthPay.getBillDueDateList(),
                             monthPay.getBillMonth(),
                             monthPay.getBillStartDate(),
                             monthPay.getBillEndDate());
-                    if (farMonDetailInfoDto != null) {
-                        if (StringUtil.isEmpty(farMonDetailInfoDto.getInstallmentAmt())) {
-                            farMonDetailInfoDto.setInstallmentAmt("0");
+                        if (farMonDetailInfoDto != null) {
+                            if (StringUtil.isEmpty(farMonDetailInfoDto.getInstallmentAmt())) {
+                                farMonDetailInfoDto.setInstallmentAmt("0");
+                            }
+                            settlement.setInstallmentAmt(farMonDetailInfoDto.getInstallmentAmt());
+                            settlement.setTotalNoOfInstall(farMonDetailInfoDto.getTotalNoOfInstall());
+                            settlement.setInstallmentYN(farMonDetailInfoDto.getInstallmentYN());
                         }
-                        settlement.setInstallmentAmt(farMonDetailInfoDto.getInstallmentAmt());
-                        settlement.setTotalNoOfInstall(farMonDetailInfoDto.getTotalNoOfInstall());
-                        settlement.setInstallmentYN(farMonDetailInfoDto.getInstallmentYN());
                     }
+                } catch (Exception e) {
+                    logger.warn("[getTerminationSettlement] X16 error: ncn={}", safe(ncn), e);
                 }
-            } catch (Exception e) {
-                logger.warn("[getTerminationSettlement] X16 error: ncn={}", safe(ncn), e);
-            }
 
-            try {
-                // 할부원금 조회(MSP_JUO_ADD_INFO)
-                // [ASIS] MyOllehController.requestView() — mcp-api REST 직접 호출
-                // RestTemplate restTemplate = new RestTemplate();
-                // mspJuoAddInfoDto = restTemplate.postForObject(apiInterfaceServer +
-                // "/mypage/mspAddInfo", searchVO.getNcn(), MspJuoAddInfoDto.class);
-                // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패 시
-                // MspApiDirectRepository(mspSqlSession)로 자동 전환
-                logger.debug("[getTerminationSettlement] mspAddInfo request: ncn={}", safe(ncn));
-                MspJuoAddInfoDto mspJuoAddInfoDto = mcpApiClient.post("/mypage/mspAddInfo", ncn,
-                        MspJuoAddInfoDto.class);
-                logger.debug("[getTerminationSettlement] mspAddInfo response: ncn={}, hasBody={}",
+                try {
+                    // 할부원금 조회(MSP_JUO_ADD_INFO)
+                    // [ASIS] MyOllehController.requestView() — mcp-api REST 직접 호출
+                    //   RestTemplate restTemplate = new RestTemplate();
+                    //   mspJuoAddInfoDto = restTemplate.postForObject(apiInterfaceServer + "/mypage/mspAddInfo", searchVO.getNcn(), MspJuoAddInfoDto.class);
+                    // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패 시 MspApiDirectRepository(mspSqlSession)로 자동 전환
+                    logger.debug("[getTerminationSettlement] mspAddInfo request: ncn={}", safe(ncn));
+                    MspJuoAddInfoDto mspJuoAddInfoDto = mcpApiClient.post("/mypage/mspAddInfo", ncn, MspJuoAddInfoDto.class);
+                    logger.debug("[getTerminationSettlement] mspAddInfo response: ncn={}, hasBody={}",
                         safe(ncn), mspJuoAddInfoDto != null);
-                if (mspJuoAddInfoDto != null) {
-                    settlement.setInstOrginAmnt(mspJuoAddInfoDto.getInstOrginAmnt());
-                    settlement.setInstMnthCnt(mspJuoAddInfoDto.getInstMnthCnt());
-                    settlement.setRemainPay(mspJuoAddInfoDto.getRemainPay());
-                    settlement.setRemainMonth(mspJuoAddInfoDto.getRemainMonth());
-                    settlement.setModelName(mspJuoAddInfoDto.getModelName());
+                    if (mspJuoAddInfoDto != null) {
+                        settlement.setInstOrginAmnt(mspJuoAddInfoDto.getInstOrginAmnt());
+                        settlement.setInstMnthCnt(mspJuoAddInfoDto.getInstMnthCnt());
+                        settlement.setRemainPay(mspJuoAddInfoDto.getRemainPay());
+                        settlement.setRemainMonth(mspJuoAddInfoDto.getRemainMonth());
+                        settlement.setModelName(mspJuoAddInfoDto.getModelName());
+                    }
+                } catch (Exception e) {
+                    logger.warn("[getTerminationSettlement] mspAddInfo error: ncn={}", safe(ncn), e);
                 }
-            } catch (Exception e) {
-                logger.warn("[getTerminationSettlement] mspAddInfo error: ncn={}", safe(ncn), e);
-            }
-            // }
+            //}
         } catch (Exception e) {
             logger.warn("[getTerminationSettlement] error: ncn={}, ctn={}",
-                    safe(reqDto.getNcn()), safe(reqDto.getCtn()), e);
+                safe(reqDto.getNcn()), safe(reqDto.getCtn()), e);
         }
         return settlement;
     }
 
     /**
      * 선불 요금제 사용 여부 조회 (AS-IS /mypage/prePayment MCP-API 연계구현 )
-     * 
      * @param contractNum 계약번호
      * @return 선불 요금제 여부
      */
@@ -281,12 +270,10 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         logger.debug("[isPrePayment] call: contractNum={}", safe(contractNum));
 
         // [ASIS] MypageController.prePayment() — mcp-api REST 직접 호출 후 MSP DB 조회
-        // POST /mypage/prePayment → mypageMapper.selectPrePayment(contractNum)
-        // RestTemplate restTemplate = new RestTemplate();
-        // int cnt = restTemplate.postForObject(apiInterfaceServer +
-        // "/mypage/prePayment", contractNum, int.class);
-        // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패(TEST)
-        // MspApiDirectRepository(mspSqlSession)로 자동 전환
+        //   POST /mypage/prePayment  →  mypageMapper.selectPrePayment(contractNum)
+        //   RestTemplate restTemplate = new RestTemplate();
+        //   int cnt = restTemplate.postForObject(apiInterfaceServer + "/mypage/prePayment", contractNum, int.class);
+        // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패(TEST) MspApiDirectRepository(mspSqlSession)로 자동 전환
         int cnt = mcpApiClient.post("/mypage/prePayment", contractNum, int.class);
 
         logger.debug("[isPrePayment] result: cnt={}", cnt);
@@ -296,110 +283,87 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     @Override
     public TerminationApplyResVO apply(TerminationApplyReqDto reqDto) {
         logger.info("[apply] start: ncn={}, customerType={}, postMethod={}, isActive={}",
-                reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
-                reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getCustomerType()) : "",
-                reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getPostMethod()) : "",
-                reqDto != null && reqDto.getProduct() != null ? safe(reqDto.getProduct().getIsActive()) : "");
+            reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
+            reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getCustomerType()) : "",
+            reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getPostMethod()) : "",
+            reqDto != null && reqDto.getProduct() != null ? safe(reqDto.getProduct().getIsActive()) : "");
 
         String validationMessage = validateApplyRequest(reqDto);
         if (!isBlank(validationMessage)) {
             logger.warn("[apply] validation failed: ncn={}, reason={}",
-                    reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
-                    validationMessage);
-            // TEST_SKIP return TerminationApplyResVO.fail(validationMessage);
+                reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
+                validationMessage);
+            //TEST_SKIP  return TerminationApplyResVO.fail(validationMessage);
         }
 
         String managerCd = safe(reqDto.getCustomer().getManagerCd());
         String agentCd = safe(reqDto.getCustomer().getAgentCd());
         if (isBlank(agentCd)) {
             logger.error("[apply] fail: agentCd is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            // TEST_SKIP return TerminationApplyResVO.fail("agentCd is required");
+            //TEST_SKIP return TerminationApplyResVO.fail("agentCd is required");
         }
         if (isBlank(managerCd)) {
             logger.error("[apply] fail: managerCd is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            // TEST_SKIP return TerminationApplyResVO.fail("managerCd is required");
+            //TEST_SKIP return TerminationApplyResVO.fail("managerCd is required");
         }
         String cstmrTypeCd = normalizeCustomerType(reqDto.getCustomer().getCustomerType());
         if (isBlank(cstmrTypeCd)) {
             logger.error("[apply] fail: customerType is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            // TEST_SKIP return TerminationApplyResVO.fail("customerType is required");
+            //TEST_SKIP return TerminationApplyResVO.fail("customerType is required");
         }
-        String receiveWayCd = normalizeReceiveWay(reqDto.getCustomer().getPostMethod());
+        String receiveWayCd = reqDto.getCustomer().getPostMethod();
         if (isBlank(receiveWayCd)) {
             logger.error("[apply] fail: postMethod is invalid, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            // TEST_SKIP return TerminationApplyResVO.fail("postMethod is required");
-        }
-        String cancelUseCompanyCd = normalizeUseType(reqDto.getProduct().getIsActive());
-        if (isBlank(cancelUseCompanyCd)) {
-            logger.error("[apply] fail: isActive is invalid, ncn={}, isActive={}",
-                    safe(reqDto.getCustomer().getNcn()), safe(reqDto.getProduct().getIsActive()));
-            // TEST_SKIP return TerminationApplyResVO.fail("isActive is required");
+            //TEST_SKIP return TerminationApplyResVO.fail("postMethod is required");
         }
 
         String cancelMobileNo = joinPhone(
-                reqDto.getCustomer().getCancelPhone1(),
-                reqDto.getCustomer().getCancelPhone2(),
-                reqDto.getCustomer().getCancelPhone3());
+            reqDto.getCustomer().getCancelPhone1(),
+            reqDto.getCustomer().getCancelPhone2(),
+            reqDto.getCustomer().getCancelPhone3()
+        );
         String receiveMobileNo = joinPhone(
-                reqDto.getCustomer().getAfterTel1(),
-                reqDto.getCustomer().getAfterTel2(),
-                reqDto.getCustomer().getAfterTel3());
+            reqDto.getCustomer().getAfterTel1(),
+            reqDto.getCustomer().getAfterTel2(),
+            reqDto.getCustomer().getAfterTel3()
+        );
 
         if (isBlank(cancelMobileNo)) {
             logger.warn("[apply] fail: cancelMobileNo is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            // TEST return TerminationApplyResVO.fail("해지 대상 전화번호를 입력해 주세요.");
+            //TEST return TerminationApplyResVO.fail("해지 대상 전화번호를 입력해 주세요.");
         }
         if (isBlank(receiveMobileNo)) {
             logger.warn("[apply] fail: receiveMobileNo is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            // TEST return TerminationApplyResVO.fail("해지 후 연락처를 입력해 주세요.");
+            //TEST return TerminationApplyResVO.fail("해지 후 연락처를 입력해 주세요.");
         }
         logger.debug("[apply] contact normalized: ncn={}, cancelMobileNo={}, receiveMobileNo={}",
-                safe(reqDto.getCustomer().getNcn()), maskPhone(cancelMobileNo), maskPhone(receiveMobileNo));
+            safe(reqDto.getCustomer().getNcn()), maskPhone(cancelMobileNo), maskPhone(receiveMobileNo));
 
         if (isLocal()) {
             logger.info("[apply] LOCAL mode shortcut: ncn={}", safe(reqDto.getCustomer().getNcn()));
-            // TEST return TerminationApplyResVO.ok("LOCAL-CANCEL-" +
-            // System.currentTimeMillis());
+            //TEST return TerminationApplyResVO.ok("LOCAL-CANCEL-" + System.currentTimeMillis());
         }
 
         try {
-            long requestKey = formCommService.generateRequestKey();
-            if (requestKey <= 0L) {
+            Long requestKey = cancelPageRepository.nextRequestKey();
+            if (requestKey == null) {
                 logger.error("[apply] request key generation failed: ncn={}", safe(reqDto.getCustomer().getNcn()));
                 return TerminationApplyResVO.fail("요청 번호 발급에 실패했습니다.");
             }
-            logger.debug("[apply] request key generated: requestKey={}, ncn={}", requestKey,
-                    safe(reqDto.getCustomer().getNcn()));
+            logger.debug("[apply] request key generated: requestKey={}, ncn={}", requestKey, safe(reqDto.getCustomer().getNcn()));
 
             TerminationApplyReqDto dto = reqDto;
             dto.setRequestKey(requestKey);
             dto.setManagerCd(managerCd);
-            dto.setManagerNm(safe(reqDto.getCustomer().getManagerNm()));
             dto.setAgentCd(agentCd);
-            dto.setAgentNm(safe(reqDto.getCustomer().getAgentNm()));
             dto.setOperTypeCd("CC");
             dto.setCstmrTypeCd(cstmrTypeCd);
-            dto.setIdentityCertTypeCd(safe(reqDto.getCustomer().getIdentityCertTypeCd()));
             dto.setCancelMobileNo(cancelMobileNo);
             dto.setContractNum(reqDto.getCustomer().getNcn());
             dto.setCstmrNm(reqDto.getCustomer().getUserName());
             dto.setReceiveMobileNo(receiveMobileNo);
             dto.setReceiveWayCd(receiveWayCd);
-            dto.setCancelUseCompanyCd(cancelUseCompanyCd);
-            dto.setShopCd(safe(reqDto.getCustomer().getAgencyName()));
-            dto.setShopNm(safe(reqDto.getCustomer().getAgencyName()));
-            dto.setRealShopNm(safe(reqDto.getCustomer().getAgencyName()));
-            dto.setCpntId(safe(reqDto.getCustomer().getCpntId()));
-            dto.setCntpntShopCd(safe(reqDto.getCustomer().getCntpntShopCd()));
-            dto.setScanId(safe(dto.getScanId()));
-            dto.setAuthInfo(safe(dto.getAuthInfo()));
-            dto.setIdentityTypeCd(safe(reqDto.getCustomer().getIdentityTypeCd()));
-            dto.setIdentityIssuDate(safe(reqDto.getCustomer().getIdentityIssuDate()));
-            dto.setIdentityIssuRegion(safe(reqDto.getCustomer().getIdentityIssuRegion()));
-            dto.setSelfIssuNo(safe(reqDto.getCustomer().getSelfIssuNo()));
-            dto.setDriveLicnsNo(safe(reqDto.getCustomer().getDriveLicnsNo()));
-            dto.setCpntNm(safe(reqDto.getCustomer().getCpntNm()));
-            dto.setCntpntShopNm(safe(reqDto.getCustomer().getCntpntShopNm()));
+            dto.setCancelUseCompanyCd(normalizeUseType(reqDto.getProduct().getIsActive()));
             dto.setPayAmt(parseLong(reqDto.getProduct().getUsageFee()));
             dto.setPnltAmt(parseLong(reqDto.getProduct().getPenaltyFee()));
             dto.setLastSumAmt(parseLong(reqDto.getProduct().getFinalAmount()));
@@ -408,15 +372,10 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             dto.setBenefitAgreeYn(toYn(reqDto.getAgreement().isAgreeCheck1()));
             dto.setClauseCntrDelYn(toYn(reqDto.getAgreement().isAgreeCheck2()));
             dto.setEtcAgreeYn(toYn(reqDto.getAgreement().isAgreeCheck3()));
-            dto.setMemo(safe(reqDto.getProduct().getMemo()));
+            dto.setMemo(reqDto.getProduct().getMemo());
             dto.setRecYn("N");
-            dto.setResCd(safe(dto.getResCd()));
-            dto.setResMsg(safe(dto.getResMsg()));
-            dto.setResNo(safe(dto.getResNo()));
             dto.setAppFormYn("N");
             dto.setAppFormXmlYn("N");
-            dto.setFileNm(safe(dto.getFileNm()));
-            dto.setFileMaskNm(safe(dto.getFileMaskNm()));
             dto.setRegstId("MSF_FORM");
             dto.setProcCd("RC");
             dto.setCretId("MSF_FORM");
@@ -424,23 +383,20 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             dto.setCretIp("127.0.0.1");
             dto.setAmdIp("127.0.0.1");
 
-            logger.debug(
-                    "[apply] insert payload ready: requestKey={}, ncn={}, customerTypeCd={}, receiveWayCd={}, cancelUseCompanyCd={}, payAmt={}, pnltAmt={}, lastSumAmt={}",
-                    requestKey, safe(dto.getContractNum()), safe(dto.getCstmrTypeCd()), safe(dto.getReceiveWayCd()),
-                    safe(dto.getCancelUseCompanyCd()), dto.getPayAmt(), dto.getPnltAmt(), dto.getLastSumAmt());
+            logger.debug("[apply] insert payload ready: requestKey={}, ncn={}, customerTypeCd={}, receiveWayCd={}, cancelUseCompanyCd={}, payAmt={}, pnltAmt={}, lastSumAmt={}",
+                requestKey, safe(dto.getContractNum()), safe(dto.getCstmrTypeCd()), safe(dto.getReceiveWayCd()),
+                safe(dto.getCancelUseCompanyCd()), dto.getPayAmt(), dto.getPnltAmt(), dto.getLastSumAmt());
 
             int inserted = cancelPageRepository.insertRequestCancel(dto);
             if (inserted <= 0) {
-                logger.error("[apply] insert failed: requestKey={}, ncn={}, inserted={}", requestKey,
-                        safe(dto.getContractNum()), inserted);
+                logger.error("[apply] insert failed: requestKey={}, ncn={}, inserted={}", requestKey, safe(dto.getContractNum()), inserted);
                 return TerminationApplyResVO.fail("서비스해지 요청 저장에 실패했습니다.");
             }
 
             logger.info("[apply] success: requestKey={}, ncn={}", requestKey, safe(dto.getContractNum()));
             return TerminationApplyResVO.ok(String.valueOf(requestKey));
         } catch (Exception e) {
-            logger.error("[apply] exception: ncn={}",
-                    reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "", e);
+            logger.error("[apply] exception: ncn={}", reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "", e);
             return TerminationApplyResVO.fail("서비스해지 요청 처리 중 오류가 발생했습니다.");
         }
     }
@@ -453,12 +409,12 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         String customerStepError = validateCustomerStep(reqDto.getCustomer());
         if (!isBlank(customerStepError)) {
             logger.debug("[validateApplyRequest] customer step invalid: {}", customerStepError);
-            // TEST_SKIP return customerStepError;
+            //TEST_SKIP return customerStepError;
         }
         String productStepError = validateProductStep(reqDto.getProduct());
         if (!isBlank(productStepError)) {
             logger.debug("[validateApplyRequest] product step invalid: {}", productStepError);
-            // TEST_SKIP return productStepError;
+            //TEST_SKIP return productStepError;
         }
         String agreementStepError = validateAgreementStep(reqDto.getAgreement());
         if (!isBlank(agreementStepError)) {
@@ -494,8 +450,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             return "계약번호(ncn)는 9자리 숫자여야 합니다.";
         }
 
-        String cancelMobileNo = joinPhone(customer.getCancelPhone1(), customer.getCancelPhone2(),
-                customer.getCancelPhone3());
+        String cancelMobileNo = joinPhone(customer.getCancelPhone1(), customer.getCancelPhone2(), customer.getCancelPhone3());
         if (isBlank(cancelMobileNo)) {
             return "해지 대상 전화번호를 입력해 주세요.";
         }
@@ -657,17 +612,12 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
 
     private static String normalizeUseType(String isActive) {
         return switch (safe(isActive)) {
-            case "isActive1" -> "KTM";
-            case "isActive2" -> "KT";
-            case "isActive3" -> "SKT";
-            case "isActive4" -> "LGT";
-            case "isActive5" -> "ETC";
             case "MM" -> "KTM";
             case "KT" -> "KT";
             case "SK" -> "SKT";
             case "LG" -> "LGT";
             case "ETC" -> "ETC";
-            default -> null;
+            default -> isActive;
         };
     }
 

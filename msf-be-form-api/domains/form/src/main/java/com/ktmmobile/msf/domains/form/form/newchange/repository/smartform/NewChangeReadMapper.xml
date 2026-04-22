@@ -4,11 +4,11 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper">
 
-  <resultMap id="newChangeResultMap" type="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeStepDto">
+  <!--<resultMap id="newChangeResultMap" type="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeStepDto">
     <collection property="step1Dto" />
     <collection property="step2Dto" />
     <collection property="step3Dto" />
-  </resultMap>
+  </resultMap>-->
 
   <select id="generateSmartResNo" resultType="java.lang.String">
     <!--SELECT NEXTVAL('SQ_REQUEST_RES_NO_KEY')-->

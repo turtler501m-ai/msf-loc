@@ -83,12 +83,12 @@ public class HttpClientConfig {
             commonHttpClientInterceptors.orderedStream()
                 .forEach(clientBuilder::requestInterceptor);
 
-            commonGroupHttpClientInterceptorFactories.orderedStream()
-                .map(factory -> factory.create(group.name()))
-                .forEach(clientBuilder::requestInterceptor);
-
             groupHttpClientInterceptors.orderedStream()
                 .filter(interceptor -> interceptor.supports(group.name()))
+                .forEach(clientBuilder::requestInterceptor);
+
+            commonGroupHttpClientInterceptorFactories.orderedStream()
+                .map(factory -> factory.create(group.name()))
                 .forEach(clientBuilder::requestInterceptor);
         });
     }

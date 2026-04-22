@@ -1,5 +1,7 @@
 package com.ktmmobile.msf.domains.form.form.newchange.repository.smartform;
 
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition;
+import com.ktmmobile.msf.domains.form.form.newchange.vo.*;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
@@ -11,16 +13,17 @@ public interface NewChangeReadMapper {
 
     long getSmartCustRequestSeq();
 
+    //NewChangeInfoDto selectNewChangeInfo(NewChangeInfoCondition request);
 
-    //MsfRequestDto selectMsfRequestInfo(Integer requestKey);
+    MsfRequestVo selectMsfRequestInfo(NewChangeInfoCondition condition);
 
-    //MsfRequestAgentVo selectMsfRequestAgentInfo(Integer requestKey);
+    MsfRequestCstmrVo selectMsfRequestCstmrInfo(NewChangeInfoCondition condition);
 
-    //MsfRequestCstmrDto selectMsfRequestCstmrInfo(Integer requestKey);
+    MsfRequestAgentVo selectMsfRequestAgentInfo(NewChangeInfoCondition condition);
 
-    //MsfRequestSaleDto selectMsfRequestSaleInfo(Integer requestKey);
+    MsfRequestSaleVo selectMsfRequestSaleInfo(NewChangeInfoCondition condition);
 
-    //MsfRequestBillReqDto selectMsfRequestBillReqInfo(Integer requestKey);
+    MsfRequestBillReqVo selectMsfRequestBillReqInfo(NewChangeInfoCondition condition);
 
 
 }

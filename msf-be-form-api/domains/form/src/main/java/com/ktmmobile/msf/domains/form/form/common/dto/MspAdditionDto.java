@@ -7,9 +7,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class JuoSubInfoCondition {
-
-    private String subscriberNo;
-    private String customerSsn;
-    private String customerLinkName;
+public class MspAdditionDto {
+    private String rateCd;
+    private String rateNm;
+    private String baseAmt;
 }

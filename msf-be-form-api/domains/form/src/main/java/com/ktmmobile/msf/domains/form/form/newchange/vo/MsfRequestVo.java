@@ -77,7 +77,8 @@ public class MsfRequestVo {
     String prntsMobileNo;
     String jehuPartnerTypeCd;
     String jehuProdTypeCd;
-    String reqAdditionListNm;
+    //String reqAdditionListNm;
+    String reqAdditionListNm[];
     String reqAdditionPrice;
     String phonePaymentYn;
     String onOffTypeCd;
@@ -118,6 +119,8 @@ public class MsfRequestVo {
     String resCd;
     String resMsg;
     String resNo;
+    String procDt;
+    String procCd;
     String proSttusCd;
     String sbscProCd;
     String appFormYn;

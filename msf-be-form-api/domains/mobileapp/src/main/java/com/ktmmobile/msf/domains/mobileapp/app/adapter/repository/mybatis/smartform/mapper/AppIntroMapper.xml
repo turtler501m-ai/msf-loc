@@ -43,27 +43,21 @@
 
   <delete id="removeUserApp-molo">
     update msf_usr_app_info
-    set apv_sttus_cd = 'C',
-      <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.updateModifiedAuditSet" />
+    set apv_sttus_cd = 'C'
     where 1=1
 		and uuid = #{uuid}
   </delete>
 
   <insert id="registUserApp">
     INSERT INTO msf_usr_app_info
-    (uuid, mac_adr, user_id, os_cd, "version", app_os_ver, app_nm, last_access_dt, auto_login_yn, bio_login_yn, apv_sttus_cd,
-    <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.insertAuditColumns" />
-    )
+    (uuid, mac_adr, user_id, os_cd, "version", app_os_ver, app_nm, last_access_dt, auto_login_yn, bio_login_yn, apv_sttus_cd)
     VALUES
-    (#{uuid}, #{madAdr}, #{userId}, #{osCd}, #{version}, #{appOsVer}, #{appNm}, now(), #{autoLoginYn}, #{bioLoginYn}, 'A',
-    <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.insertAuditValues" />
-    )
+    (#{uuid}, #{madAdr}, #{userId}, #{osCd}, #{version}, #{appOsVer}, #{appNm}, now(), #{autoLoginYn}, #{bioLoginYn}, 'A')
   </insert>
 
   <update id="updateBioSetting">
     update msf_usr_app_info
-    set bio_login_yn = #{bioLoginYn},
-    <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.updateModifiedAuditSet" />
+    set bio_login_yn = #{bioLoginYn}
     where 1=1
     and uuid = #{uuid}
   </update>

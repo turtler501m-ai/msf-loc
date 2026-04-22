@@ -1,15 +1,12 @@
 package com.ktmmobile.msf.domains.form.form.newchange.field;
 
+import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.vo.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestVo;
-
+@AutoAuditing
 @Mapper
 public interface NewChangeFieldMapper {
 

@@ -65,7 +65,7 @@
     PRNTS_MOBILE_NO,
     JEHU_PARTNER_TYPE_CD,
     JEHU_PROD_TYPE_CD,
-    REQ_ADDITION_LIST_NM,
+    <!--REQ_ADDITION_LIST_NM,-->
     REQ_ADDITION_PRICE,
     PHONE_PAYMENT_YN,
     ON_OFF_TYPE_CD,
@@ -166,11 +166,12 @@
     , #{uploadPhoneSrlNo}
     , #{reqWantFnNo}
     , #{reqWantMnNo}
-    , #{reqWantRnNo},#{prntsContractNum}
+    , #{reqWantRnNo}
+    , #{prntsContractNum}
     , #{prntsMobileNo}
     , #{jehuPartnerTypeCd}
     , #{jehuProdTypeCd}
-    , #{reqAdditionListNm}
+    <!--, #{reqAdditionListNm}-->
     , #{reqAdditionPrice}
     , #{phonePaymentYn}
     , #{onOffTypeCd}
@@ -468,33 +469,232 @@
   <update id="updateMsfRequest" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestVo">
     UPDATE MSF_REQUEST_TEMP
     SET
-    MANAGER_CD='M0002'
-    WHERE REQUEST_KEY = #{requestKey}
-  </update>
-  <update id="updateMsfRequestAgent" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo">
-    UPDATE MSF_REQUEST_AGENT_TEMP
-    SET
-    MINOR_AGENT_AGRM_YN='Y'
-    WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
-  </update>
-  <update id="updateMsfRequestCstmr" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo">
-    UPDATE MSF_REQUEST_CSTMR_TEMP
-    SET
-    CSTMR_RECEIVE_TEL_FN_NO='010'
-    WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
-  </update>
-  <update id="updateMsfRequestSale" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo">
-    UPDATE MSF_REQUEST_SALE_TEMP
-    SET
-    MODEL_ID='K7777777'
-    WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
-  </update>
-  <update id="updateMsfRequestBillReq" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo">
-    UPDATE MSF_REQUEST_BILL_REQ_TEMP
-    SET
-    REQ_PAY_TYPE_CD='C'
-    WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
-  </update>
+        REQ_BUY_TYPE_CD=#{reqBuyTypeCd}
+        , OPEN_TYPE_CD=#{openTypeCd}
+      , SCAN_ID=#{scanId}
+      , FATH_TRG_YN=#{fathTrgYn}
+      , FATH_TRG_IDENTITY_CERT_TYPE_CD=#{fathTrgIdentityCertTypeCd}
+      , FATH_TRANSAC_ID=#{fathTransacId}
+      , FATH_CMPLT_NTFY_DATE=#{fathCmpltNtfyDate}
+      , FATH_TEL_NO=#{fathTelNo}
+      , FATH_MOBILE_FN_NO=#{fathMobileFnNo}
+      , FATH_MOBILE_MN_NO=#{fathMobileMnNo}
+      , FATH_MOBILE_RN_NO=#{fathMobileRnNo}
+      , AUTH_INFO=#{authInfo}
+      , IDENTITY_TYPE_CD=#{identityTypeCd}
+      , IDENTITY_ISSU_DATE=#{identityIssuDate}
+      , IDENTITY_ISSU_REGION=#{identityIssuRegion}
+      , DRIVE_LICNS_NO=#{driveLicnsNo}
+      <!--, OPEN_NO=#{openNo} -->
+      , CONTRACT_NUM=#{contractNum}
+      , PROD_TYPE_CD=#{prodTypeCd}
+      , PROD_ID=#{prodId}
+      , PROD_NM=#{prodNm}
+      , REQ_PHONE_SN=#{reqPhoneSn}
+      , REQ_MODEL_NM=#{reqModelNm}
+      , SNTY_CAPAC_CD=#{sntyCapacCd}
+      , SNTY_COLOR_CD=#{sntyColorCd}
+      , REQ_MODEL_COLOR=#{reqModelColor}
+      , SHOP_USM_ID=#{shopUsmId}
+      , USIM_KINDS_CD=#{usimKindsCd}
+      , REQ_USIM_SN=#{reqUsimSn}
+      , REQ_USIM_NM=#{reqUsimNm}
+      , EID=#{eid}
+      , IMEI1=#{imei1}
+      , IMEI2=#{imei2}
+      , ESIM_PHONE_ID=#{esimPhoneId}
+      , UPLOAD_PHONE_SRL_NO=#{uploadPhoneSrlNo}
+      , REQ_WANT_FN_NO=#{reqWantFnNo}
+      , REQ_WANT_MN_NO=#{reqWantMnNo}
+      , REQ_WANT_RN_NO=#{reqWantRnNo}
+      , INSR_CD=#{insrCd}
+      , INSR_PROD_CD=#{insrProdCd}
+      , CLAUSE_INSURANCE_YN=COALESCE(#{clauseInsuranceYn},'N')
+      , CLAUSE_INSR_PROD_YN=COALESCE(#{clauseInsrProdYn},'N')
+      , INSR_AUTH_INFO=#{insrAuthInfo}
+      , PRNTS_CONTRACT_NUM=#{prntsContractNum}
+      , PRNTS_MOBILE_NO=#{prntsMobileNo}
+      , JEHU_PARTNER_TYPE_CD=#{jehuPartnerTypeCd}
+      , JEHU_PROD_TYPE_CD=#{jehuProdTypeCd}
+      <!--, REQ_ADDITION_LIST_NM=#{reqAdditionListNm}-->
+      , REQ_ADDITION_PRICE=#{reqAdditionPrice}
+      , PHONE_PAYMENT_YN=COALESCE(#{phonePaymentYn},'N')
+      <!-- , ON_OFF_TYPE_CD=#{onOffTypeCd}-->
+      , SO_CD=#{soCd}
+      <!-- , OPEN_REQ_DT=#{openReqDt}-->
+      , REQ_IN_DAY=#{reqInDay}
+      , CLAUSE_PRI_COLLECT_YN=COALESCE(#{clausePriCollectYn},'N')
+      , CLAUSE_PRI_OFFER_YN=COALESCE(#{clausePriOfferYn},'N')
+      , CLAUSE_ESS_COLLECT_YN=COALESCE(#{clauseEssCollectYn},'N')
+      , CLAUSE_PRI_TRUST_YN=COALESCE(#{clausePriTrustYn},'N')
+      , CLAUSE_PRI_AD_YN=COALESCE(#{clausePriAdYn},'N')
+      , CLAUSE_CONFIDENCE_YN=COALESCE(#{clauseConfidenceYn},'N')
+      , CLAUSE_FATH_YN=COALESCE(#{clauseFathYn},'N')
+      , NW_BLCK_AGRM_YN=COALESCE(#{nwBlckAgrmYn},'N')
+      , APP_BLCK_AGRM_YN=COALESCE(#{appBlckAgrmYn},'N')
+      , BLCK_APP_DIV_CD=#{blckAppDivCd}
+      , SO_TRNS_AGRM_YN=COALESCE(#{soTrnsAgrmYn},'N')
+      , CLAUSE_JEHU_YN=COALESCE(#{clauseJehuYn},'N')
+      , CLAUSE_RENTAL_MODEL_CP_YN=COALESCE(#{clauseRentalModelCpYn},'N')
+      , CLAUSE_RENTAL_MODEL_CP_PR_YN=COALESCE(#{clauseRentalModelCpPrYn},'N')
+      , CLAUSE_RENTAL_SERVICE_YN=COALESCE(#{clauseRentalServiceYn},'N')
+      , CLAUSE_MPPS35_YN=COALESCE(#{clauseMpps35Yn},'N')
+      , CLAUSE_FINANCE_YN=COALESCE(#{clauseFinanceYn},'N')
+      , CLAUSE_5G_COVERAGE_YN=COALESCE(#{clause5gCoverageYn},'N')
+      , PERSONAL_INFO_COLLECT_AGREE_YN=COALESCE(#{personalInfoCollectAgreeYn},'N')
+      , OTHERS_TRNS_AGREE_YN=COALESCE(#{othersTrnsAgreeYn},'N')
+      , CLAUSE_SENSI_COLLECT_YN=COALESCE(#{clauseSensiCollectYn},'N')
+      , CLAUSE_SENSI_OFFER_YN=COALESCE(#{clauseSensiOfferYn},'N')
+      , CLAUSE_PARTNER_OFFER_YN=COALESCE(#{clausePartnerOfferYn},'N')
+      , OTHERS_TRNS_KT_AGREE_YN=COALESCE(#{othersTrnsKtAgreeYn},'N')
+      , OTHERS_AD_RECEIVE_AGREE_YN=COALESCE(#{othersAdReceiveAgreeYn},'N')
+      , KT_COUNSEL_AGREE_YN=COALESCE(#{ktCounselAgreeYn},'N')
+      , COMBINE_SOLO_TYPE_YN=COALESCE(#{combineSoloTypeYn},'N')
+      , COMBINE_SOLO_YN=COALESCE(#{combineSoloYn},'N')
+      , ETC_SPECIAL_SBST=#{etcSpecialSbst}
+      , MEMO=#{memo}
+      <!--, REC_YN=#{recYn}-->
+      , RES_CD=#{resCd}
+      , RES_MSG=#{resMsg}
+      , RES_NO=#{resNo}
+      , PROC_DT=#{procDt}
+      , PROC_CD=#{procCd}
+      , PRO_STTUS_CD=#{proSttusCd}
+      , SBSC_PRO_CD=#{sbscProCd}
+      , APP_FORM_YN=#{appFormYn}
+      , APP_FORM_XML_YN=#{appFormXmlYn}
+      <!--, FILE_NM=#{fileNm}-->
+      <!--, FILE_MASK_NM=#{fileMaskNm}-->
+      <!--, FAX_NO=#{faxNo} -->
+      <!--, FAX_YN=#{faxYn} -->
+        , TMP_STEP_CD=#{tmpStepCd}
+  WHERE REQUEST_KEY = #{requestKey}
+</update>
+<update id="updateMsfRequestAgent" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo">
+UPDATE MSF_REQUEST_AGENT_TEMP
+SET
+    MINOR_AGENT_NM=#{minorAgentNm}
+    , MINOR_AGENT_RRN=#{minorAgentRrn}
+    , MINOR_AGENT_REL_TYPE_CD=#{minorAgentRelTypeCd}
+    , MINOR_AGENT_TEL_FN_NO=#{minorAgentTelFnNo}
+    , MINOR_AGENT_TEL_MN_NO=#{minorAgentTelMnNo}
+    , MINOR_AGENT_TEL_RN_NO=#{minorAgentTelRnNo}
+    , MINOR_AGENT_AGRM_YN=#{minorAgentAgrmYn}
+    , MINOR_AGENT_SELF_INQRY_AGRM_YN=#{minorAgentSelfInqryAgrmYn}
+    , MINOR_AGENT_SELF_CERT_TYPE_CD=#{minorAgentSelfCertTypeCd}
+    , MINOR_AGENT_CI_INFO=#{minorAgentCiInfo}
+    , MINOR_AGENT_SELF_ISSU_EXPR_DATE=#{minorAgentSelfIssuExprDate}
+    , MINOR_AGENT_SELF_ISSU_NO=#{minorAgentSelfIssuNo}
+    , JRDCL_AGENT_NM=#{jrdclAgentNm}
+    , JRDCL_AGENT_RRN=#{jrdclAgentRrn}
+    , JRDCL_AGENT_TEL_FN_NO=#{jrdclAgentTelFnNo}
+    , JRDCL_AGENT_TEL_MN_NO=#{jrdclAgentTelMnNo}
+    , JRDCL_AGENT_TEL_RN_NO=#{jrdclAgentTelRnNo}
+WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
+</update>
+<update id="updateMsfRequestCstmr" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo">
+UPDATE MSF_REQUEST_CSTMR_TEMP
+SET
+    CSTMR_NM=#{cstmrNm}
+    , CSTMR_NATIVE_RRN=#{cstmrNativeRrn}
+    , CSTMR_NATIVE_BIRTH=#{cstmrNativeBirth}
+    , CSTMR_PRIVATE_CNAME=#{cstmrPrivateCname}
+    , CSTMR_PRIVATE_BIZ_NO=#{cstmrPrivateBizNo}
+    , CSTMR_FOREIGNER_RRN=#{cstmrForeignerRrn}
+    , CSTMR_FOREIGNER_BIRTH=#{cstmrForeignerBirth}
+    , CSTMR_FOREIGNER_PN=#{cstmrForeignerPn}
+    , CSTMR_FOREIGNER_COUNTRY_CD=#{cstmrForeignerCountryCd}
+    , CSTMR_FOREIGNER_NATION=#{cstmrForeignerNation}
+    , CSTMR_FOREIGNER_VISA_NO=#{cstmrForeignerVisaNo}
+    , CSTMR_FOREIGNER_VDATE_START_DATE=#{cstmrForeignerVdateStartDate}
+    , CSTMR_FOREIGNER_VDATE_END_DATE=#{cstmrForeignerVdateEndDate}
+    , CSTMR_JURIDICAL_CNAME=#{cstmrJuridicalCname}
+    , CSTMR_JURIDICAL_RRN=#{cstmrJuridicalRrn}
+    , CSTMR_JURIDICAL_BIZ_NO=#{cstmrJuridicalBizNo}
+    , CSTMR_JURIDICAL_REP_NM=#{cstmrJuridicalRepNm}
+    , UPJN_CD=#{upjnCd}
+    , BCU_SBST=#{bcuSbst}
+    , CSTMR_JURIDICAL_USER_NM=#{cstmrJuridicalUserNm}
+    , CSTMR_JURIDICAL_BIRTH=#{cstmrJuridicalBirth}
+    , CSTMR_VISIT_TYPE_CD=#{cstmrVisitTypeCd}
+    , CSTMR_TEL_FN_NO=#{cstmrTelFnNo}
+    , CSTMR_TEL_MN_NO=#{cstmrTelMnNo}
+    , CSTMR_TEL_RN_NO=#{cstmrTelRnNo}
+    , CSTMR_MOBILE_FN_NO=#{cstmrMobileFnNo}
+    , CSTMR_MOBILE_MN_NO=#{cstmrMobileMnNo}
+    , CSTMR_MOBILE_RN_NO=#{cstmrMobileRnNo}
+    , CSTMR_ZIPCD=#{cstmrZipcd}
+    , CSTMR_ADR=#{cstmrAdr}
+    , CSTMR_ADR_DTL=#{cstmrAdrDtl}
+    , CSTMR_ADR_BJD=#{cstmrAdrBjd}
+    , CSTMR_EMAIL_ADR=#{cstmrEmailAdr}
+    , CSTMR_EMAIL_RECEIVE_YN=#{cstmrEmailReceiveYn}
+    , CSTMR_RECEIVE_TEL_FN_NO=#{cstmrReceiveTelFnNo}
+    , CSTMR_RECEIVE_TEL_NM_NO=#{cstmrReceiveTelNmNo}
+    , CSTMR_RECEIVE_TEL_RN_NO=#{cstmrReceiveTelRnNo}
+WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
+</update>
+<update id="updateMsfRequestSale" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo">
+UPDATE MSF_REQUEST_SALE_TEMP
+SET
+    MODEL_ID=#{modelId}
+    , MODEL_MONTHLY=#{modelMonthly}
+    , MODEL_INSTAMT=#{modelInstamt}
+    , MODEL_SALE_POLICY_CD=#{modelSalePolicyCd}
+    , MODEL_PRICE_VAT=#{modelPriceVat}
+    , MODEL_DISCOUNT1=#{modelDiscount1}
+    , MODEL_SPRT=#{modelSprt}
+    , MODEL_PRICE=#{modelPrice}
+    , MODEL_DISCOUNT3=#{modelDiscount3}
+    , REAL_MDL_INSTAMT=#{realMdlInstamt}
+    , HNDSET_SALE_PRICE=#{hndsetSalePrice}
+    , SPRT_TYPE_CD=#{sprtTypeCd}
+    , DC_AMT=#{dcAmt}
+    , MAX_APD_SPRT=#{maxApdSprt}
+    , ADD_DC_AMT=#{addDcAmt}
+    , ENGG_MNTH_CNT=#{enggMnthCnt}
+    , RECYCLE_YN=#{recycleYn}
+    , USIM_PRICE_TYPE_CD=#{usimPriceTypeCd}
+    , USIM_PRICE=#{usimPrice}
+    , USIM_PAY_MTHD_CD=#{usimPayMthdCd}
+    , SESPLS_YN=#{sesplsYn}
+    , JOIN_PRICE_TYPE_CD=#{joinPriceTypeCd}
+    , JOIN_PAY_MTHD_CD=#{joinPayMthdCd}
+    , JOIN_PRICE=#{joinPrice}
+    , SOC_CODE=#{socCode}
+    , SOC_NM=#{socNm}
+    , SOC_BASE_CHRG_AMT=#{socBaseChrgAmt}
+WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
+</update>
+<update id="updateMsfRequestBillReq" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo">
+UPDATE MSF_REQUEST_BILL_REQ_TEMP
+SET
+    REQ_PAY_TYPE_CD=#{reqPayTypeCd}
+    , REQ_BANK_CD=#{reqBankCd}
+    , REQ_ACCOUNT_NM=#{reqAccountNm}
+    , REQ_ACCOUNT_RRN=#{reqAccountRrn}
+    , REQ_ACCOUNT_REL_TYPE_CD=#{reqAccountRelTypeCd}
+    , REQ_ACCOUNT_NO=#{reqAccountNo}
+    , REQ_CARD_NM=#{reqCardNm}
+    , REQ_CARD_RRN=#{reqCardRrn}
+    , REQ_CARD_COMPANY_CD=#{reqCardCompanyCd}
+    , REQ_CARD_NO=#{reqCardNo}
+    , REQ_CARD_YY=#{reqCardYy}
+    , REQ_CARD_MM=#{reqCardMm}
+    , REQ_WIRE_TYPE_CD=#{reqWireTypeCd}
+    , OTHERS_PAYMENT_YN=#{othersPaymentYn}
+    , OTHERS_PAYMENT_TEL_FN_NO=#{othersPaymentTelFnNo}
+    , OTHERS_PAYMENT_TEL_MN_NO=#{othersPaymentTelMnNo}
+    , OTHERS_PAYMENT_TEL_RN_NO=#{othersPaymentTelRnNo}
+    , OTHERS_PAYMENT_NM=#{othersPaymentNm}
+    , OTHERS_PAYMENT_RRN=#{othersPaymentRrn}
+    , OTHERS_PAYMENT_REL_TYPE_CD=#{othersPaymentRelTypeCd}
+    , OTHERS_PAYMENT_REQ_NM=#{othersPaymentReqNm}
+    , PRNTS_BILL_NO=#{prntsBillNo}
+    , CSTMR_BILL_SEND_TYPE_CD=#{cstmrBillSendTypeCd}
+    , CSTMR_EMAIL_ADR=#{cstmrEmailAdr}
+WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
+</update>
 
 
 </mapper>

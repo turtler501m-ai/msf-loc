@@ -7,6 +7,8 @@ import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.session.Configuration;
 import org.springframework.util.StringUtils;
 
+import com.ktmmobile.msf.commons.mybatis.annotation.MapperQueryId;
+
 class QueryIdGenerationBoundSql extends BoundSql {
 
     private static final String ID_DELIMITER = ".";

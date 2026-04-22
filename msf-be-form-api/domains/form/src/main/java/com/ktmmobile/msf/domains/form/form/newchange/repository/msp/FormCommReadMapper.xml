@@ -25,6 +25,7 @@
   </select>
 
   <select id="selectAgentInfo" parameterType="string" resultMap="AgentInfoResultMap">
+    /** 매장코드에 매칭된 대리점조회  **/
     SELECT
         KT_ORG_ID /* KT조직ID */
         , ORGN_ID /* 조직 ID */

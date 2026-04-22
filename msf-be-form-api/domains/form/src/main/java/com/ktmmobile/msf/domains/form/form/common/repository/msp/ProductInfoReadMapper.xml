@@ -397,39 +397,20 @@
         ORDER BY B.PRDT_IND_CD DESC , B.PRDT_NM, A.RATE_NM
     </select>
 
-    <select id="selectJehuInfoList"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
-            resultType="com.ktmmobile.msf.domains.form.form.common.dto.RateInfoDto">
-        /* 제휴요금제 정보 조회 MspMapper.getMspRatemst */
-        SELECT
-            RA.RATE_CD, --요금제코드
-            RA.APPL_END_DT, --적용종료일자
-            RA.APPL_STRT_DT, --적용시작일자
-            RA.RATE_NM, --요금제명
-            RA.RATE_GRP_CD, --요금제그룹코드
-            RA.PAY_CL_CD, --선후불구분
-            RA.RATE_TYPE, --요금제유형( ORG0008 )
-            RA.DATA_TYPE, --데이터유형( ORG0018 )
-            RA.BASE_AMT, --기본료
-            RA.FREE_CALL_CL_CD, --망내외무료통화구분
-            RA.FREE_CALL_CNT, --무료통화건수
-            RA.NW_IN_CALL_CNT, --망내무료통화건수
-            RA.NW_OUT_CALL_CNT, --망외무료통화건수
-            RA.FREE_SMS_CNT, --무료문자건수
-            RA.FREE_DATA_CNT, --무료데이터건수
-            RA.RMK, --비고
-            RA.REGST_ID, --등록자ID
-            RA.REGST_DTTM, --등록일시
-            RA.RVISN_ID, --수정자ID
-            RA.RVISN_DTTM, --수정일시
-            RA.ONLINE_TYPE_CD, --온라인유형코드
-            RA.AL_FLAG, --알요금제 구분자
-            RA.SERVICE_TYPE, --서비스유형
-            RA.CMNT, --요금제혜택
-            RA.JEHU_PROD_TYPE --요금제제휴처
-        FROM MSP_RATE_MST RA
-        WHERE RATE_CD = #{rateCd}
+    <select id="selectMsfAdditionList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MsfRequestAdditionRequest"
+            resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspAdditionDto">
+        /** 부가서비스 상세 정보 조회 **/
+        SELECT A.RATE_CD, A.RATE_NM, A.BASE_AMT
+        FROM  MSP_RATE_MST A LEFT JOIN MSP_SALE_RATE_MST B ON A.RATE_CD = B.RATE_CD
+        WHERE 1=1
+            AND A.SERVICE_TYPE = 'R' AND B.SALE_PLCY_CD IS NULL  <!--부가서비스 구분코드 R 과 판매정책 없는 항목으로 조회해야함.-->
+            AND A.RATE_CD IN
+                <foreach item="addRate" index="index" collection="listProductCategoryDto"
+                         open="(" separator="," close=")">
+                    #{addRate.prodId}
+                </foreach>
     </select>
+
 
 
 </mapper>

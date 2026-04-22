@@ -9,172 +9,244 @@ import lombok.Setter;
 @NoArgsConstructor
 public class NewChangeInfoRequest {
 
-    String managerCd; //필수값
-    String agentCd; //필수값
-    String fathTrgYn; //필수값
-    String phonePaymentYn; //필수값
-    String onOffTypeCd; //ON_OFF_TYPE_CD
-    String clauseConfidenceYn; //추가했음
-    String nwBlckAgrmYn; //추가했음
-    String appBlckAgrmYn; //추가했음
-    String soTrnsAgrmYn; //추가했음
-    String clauseJehuYn; //추가
-    String clauseRentalModelCpYn; //추가
-    String clauseRentalModelCpPrYn; //추가
-    String clauseRentalServiceYn; //추가
-    String clauseMpps35Yn; //추가
-    String clauseFinanceYn; //추가
-    String clause5gCoverageYn; //추가
-    String personalInfoCollectAgreeYn; //추가
-    String othersTrnsAgreeYn; //추가
-    String clauseSensiCollectYn;
-    String clauseSensiOfferYn;
-    String clausePartnerOfferYn;
-    String othersTrnsKtAgreeYn;
-    String othersAdReceiveAgreeYn;
-    String ktCounselAgreeYn;
-    String combineSoloTypeYn;
-    String combineSoloYn;
-    String recYn;
-    String proSttusCd;
-    String sbscProCd;
-    String appFormYn;
-    String appFormXmlYn;
-    String faxYn;
-    String minorAgentAgrmYn;
-    String minorAgentSelfInqryAgrmYn;
-    String cstmrEmailReceiveYn;
-    String recycleYn;
-    String sesplsYn;
-    String othersPaymentYn;
-
     //boolean isSaved; //고객스텝 저장 완료 여부
     //boolean isVerified; //인증 완료 여부
+    //String moveAllotmentSttusCd[]; //
+    String reqAdditionListNm[]; //MSF_REQUEST
+    //String addtionId[];
+
     String tmpStepCd; //임시저장단계
-    String formTypeCd; //신청서유형 : 1-신규/변경
-    Long requestKey; //신청서일련번호
-    String reqBuyTypeCd; //REQ_BUY_TYPE_CD - MM
-    String serviceTypeCd; //SERVICE_TYPE_CD - PO
-    String operTypeCd; //OPER_TYPE_CD - MNP3
-    String openTypeCd; //OPEN_TYPE_CD - 핸드폰(99), eSIM(09) >> 단말 및 요금 정보
-    String cstmrTypeCd; //CSTMR_TYPE_CD - NA 기본값
-    String identityCertTypeCd; //K
-    String identityTypeCd;
-    String identityIssuRegion; //licenseRegion1
-    String cstmrVisitTypeCd; //V1
-    String cstmrNm; //고객명
-    String cstmrNativeRrn1; //내국인 주민번호 앞자리
-    String cstmrNativeRrn2; //내국인 주민번호 뒷자리
-    String cstmrForeignerRrn1; //외국인 등록번호 앞자리
-    String cstmrForeignerRrn2; //외국인 등록번호 뒷자리
-    String cstmrJuridicalRrn1;
-    String cstmrJuridicalRrn2;
-    String cstmrJuridicalBizNo1;
-    String cstmrJuridicalBizNo2;
-    String cstmrJuridicalBizNo3;
+    String openTypeCd;
+
+    Long requestKey;
+    String addDcAmt;
+    String agentCd;
+    String agentNm;
+    String amdDt;
+    String amdId;
+    String amdIp;
+    String appBlckAgrmYn;
+    String appFormXmlYn;
+    String appFormYn;
+    String authInfo;
+    String bcuSbst;
+    String blckAppDivCd;
+    String clause5gCoverageYn;
+    String clauseConfidenceYn;
+    String clauseEssCollectYn;
+    String clauseFathYn;
+    String clauseFinanceYn;
+    String clauseInsrProdYn;
+    String clauseInsuranceYn;
+    String clauseJehuYn;
+    String clauseMpps35Yn;
+    String clausePartnerOfferYn;
+    String clausePriAdYn;
+    String clausePriCollectYn;
+    String clausePriOfferYn;
+    String clausePriTrustYn;
+    String clauseRentalModelCpPrYn;
+    String clauseRentalModelCpYn;
+    String clauseRentalServiceYn;
+    String clauseSensiCollectYn;
+    String clauseSensiOfferYn;
+    String cntpntShopCd;
+    String cntpntShopNm;
+    String combineSoloTypeYn;
+    String combineSoloYn;
+    String contractNum;
+    String cpntId;
+    String cpntNm;
+    String cretDt;
+    String cretId;
+    String cretIp;
+    String cstmrAdr;
+    String cstmrAdrBjd;
+    String cstmrAdrDtl;
+    String cstmrBillSendTypeCd;
+    String cstmrEmailAdr;
+    String cstmrEmailReceiveYn;
+    String cstmrForeignerBirth;
+    String cstmrForeignerCountryCd;
+    String cstmrForeignerNation;
+    String cstmrForeignerPn;
+    String cstmrForeignerRrn;
+    String cstmrForeignerVdateEndDate;
+    String cstmrForeignerVdateStartDate;
+    String cstmrForeignerVisaNo;
+    String cstmrJuridicalBirth;
+    String cstmrJuridicalBizNo;
+    String cstmrJuridicalCname;
     String cstmrJuridicalRepNm;
-    String upjnCd; //업종?
-    String bcuSbst; //업태?
-    String deviceChgTel1; //연락처 앞자리
-    String deviceChgTel2; //연락처 중간자리
-    String deviceChgTel3; //연락처 마지막자리
-    String repName;
-    String repRegistrationNo1;
-    String repRegistrationNo2;
-    String repForeignerNo1;
-    String repForeignerNo2;
-    String repRelation; //
-    String repPhone1;
-    String repPhone2;
-    String repPhone3;
-    String repPhoneAuth;
-    String repAgree;
-    String realUserName;
-    String userBirthDate;
-    String userGender; //성별
+    String cstmrJuridicalRrn;
+    String cstmrJuridicalUserNm;
+    String cstmrMobileFnNo;
+    String cstmrMobileMnNo;
+    String cstmrMobileRnNo;
+    String cstmrNativeBirth;
+    String cstmrNativeRrn;
+    String cstmrNm;
+    String cstmrPrivateBizNo;
+    String cstmrPrivateCname;
+    String cstmrReceiveTelFnNo;
+    String cstmrReceiveTelNmNo;
+    String cstmrReceiveTelRnNo;
+    String cstmrTelFnNo;
+    String cstmrTelMnNo;
+    String cstmrTelRnNo;
+    String cstmrTypeCd;
+    String cstmrVisitTypeCd;
+    String cstmrZipcd;
+    String dcAmt;
+    String driveLicnsNo;
+    String eid;
+    String enggMnthCnt;
+    String esimPhoneId;
+    String etcSpecialSbst;
+    String fathCmpltNtfyDate;
+    String fathMobileFnNo;
+    String fathMobileMnNo;
+    String fathMobileRnNo;
+    String fathTelNo;
+    String fathTransacId;
+    String fathTrgIdentityCertTypeCd;
+    String fathTrgYn;
+    String faxNo;
+    String faxYn;
+    String fileMaskNm;
+    String fileNm;
+    String formTypeCd;
+    String hndsetSalePrice;
+    String identityCertTypeCd;
+    String identityIssuDate;
+    String identityIssuRegion;
+    String identityTypeCd;
+    String imei1;
+    String imei2;
+    String insrAuthInfo;
+    String insrCd;
+    String insrProdCd;
+    String jehuPartnerTypeCd;
+    String jehuProdTypeCd;
+    String joinPayMthdCd;
+    String joinPrice;
+    String joinPriceTypeCd;
+    String jrdclAgentNm;
+    String jrdclAgentRrn;
+    String jrdclAgentTelFnNo;
+    String jrdclAgentTelMnNo;
+    String jrdclAgentTelRnNo;
+    String knoteIdentityEssNo;
+    String knoteIdentityScanCstmrNm;
+    String knoteIdentityScanDt;
+    String knoteIdentityTypeCd;
+    String knoteScanId;
+    String ktCounselAgreeYn;
+    String managerCd;
+    String managerNm;
+    String maxApdSprt;
+    String memo;
+    String minorAgentAgrmYn;
+    String minorAgentCiInfo;
     String minorAgentNm;
-    String agentBirthDate;
-    String agentGender; //대리인 성별
     String minorAgentRelTypeCd;
+    String minorAgentRrn;
+    String minorAgentSelfCertTypeCd;
+    String minorAgentSelfInqryAgrmYn;
+    String minorAgentSelfIssuExprDate;
+    String minorAgentSelfIssuNo;
     String minorAgentTelFnNo;
     String minorAgentTelMnNo;
     String minorAgentTelRnNo;
-    String mobileNo1;
-    String mobileNo2;
-    String mobileNo3;
-    String telNo1;
-    String telNo2;
-    String telNo3;
-    String emailAddr1;
-    String emailAddr2;
-    String address1;
-    String address2;
-    String address3;
-    String country;
-    String stayPeriod;
-    String visaType;
-    String deviceModel;
-    String capacity;
-    String color;
-    String contractPeriod;
-    String installmentMonth;
-    String discountType;
-    String planName1;
-    String planName2;
-    String agency;
-    String hasSim;
-    String usimKindsCd;
-    String reqUsimSn;
-    String simPurchaseMethod;
+    String modelDiscount1;
+    String modelDiscount3;
+    String modelId;
+    String modelInstamt;
+    String modelMonthly;
+    String modelPrice;
+    String modelPriceVat;
+    String modelSalePolicyCd;
+    String modelSprt;
+    String nwBlckAgrmYn;
+    String onOffTypeCd;
+    String openNo;
+    String openReqDt;
+    String operTypeCd;
+    String othersAdReceiveAgreeYn;
+    String othersPaymentNm;
+    String othersPaymentRelTypeCd;
+    String othersPaymentReqNm;
+    String othersPaymentRrn;
+    String othersPaymentTelFnNo;
+    String othersPaymentTelMnNo;
+    String othersPaymentTelRnNo;
+    String othersPaymentYn;
+    String othersTrnsAgreeYn;
+    String othersTrnsKtAgreeYn;
+    String personalInfoCollectAgreeYn;
+    String phonePaymentYn;
+    String prntsBillNo;
+    String prntsContractNum;
+    String prntsMobileNo;
+    String prodId;
     String prodNm;
-    String eid;
-    String imei1;
-    String imei2;
-    String imei;
-    String moveCompanyCd;
-    String moveMobileNo;
-    String moveAuthTypeCd;
-    String moveAuthNo;
-    String transferBankNum;
-    String transferCardNum;
-    boolean moveThismonthPayTypeCd; //false
-    //String moveAllotmentSttusCd[]; //
-    String moveRefundAgreeYn; //배열?
+    String procDt;
+    String procCd;
+    String prodTypeCd;
+    String proSttusCd;
+    String realMdlInstamt;
+    String realShopNm;
+    String recycleYn;
+    String recYn;
+    String reqAccountNm;
+    String reqAccountNo;
+    String reqAccountRelTypeCd;
+    String reqAccountRrn;
+    //String reqAdditionListNm;
+    String reqAdditionPrice;
+    String reqBankCd;
+    String reqBuyTypeCd;
+    String reqCardCompanyCd;
+    String reqCardMm;
+    String reqCardNm;
+    String reqCardNo;
+    String reqCardRrn;
+    String reqCardYy;
+    String reqInDay;
+    String reqModelColor;
+    String reqModelNm;
+    String reqPayTypeCd;
+    String reqPhoneSn;
+    String reqUsimNm;
+    String reqUsimSn;
     String reqWantFnNo;
     String reqWantMnNo;
     String reqWantRnNo;
-    String wishNo;
-    //String reqAdditionListNm[];
-    //String addtionId[];
-    String clauseInsuranceYn;
-    String recCat1;
-    String recCat2;
-    String cstmrBillSendTypeCd;
-    String reqPayTypeCd;
-    String autoPayerType;
-    String reqBankCd;
-    String reqAccountNo;
-    String reqAccountNm;
-    String reqAccountRrn;
-    String reqAccountRelTypeCd;
-    boolean isAutoAgree;
-    String cardPayerType;
-    String reqCardCompanyCd;
-    String reqCardNo;
-    String reqCardMm;
-    String reqCardYy;
-    String reqCardNm;
-    String reqCardRrn;
-    String cardRelation;
-    String combId;
-    boolean combAgree;
-    String memo;
-    String clausePriCollectYn;
-    String clausePriOfferYn;
-    String clauseEssCollectYn;
-    String clausePriTrustYn;
-    String clausePriAdYn;
-    String clauseConfidenceConfidenceYn;
-    String clauseFathYn;
+    String reqWireTypeCd;
+    String resCd;
+    String resMsg;
+    String resNo;
+    String sbscProCd;
+    String scanId;
+    String serviceTypeCd;
+    String sesplsYn;
+    String shopCd;
+    String shopNm;
+    String shopUsmId;
+    String sntyCapacCd;
+    String sntyColorCd;
+    String socBaseChrgAmt;
+    String socCode;
+    String soCd;
+    String socNm;
+    String soTrnsAgrmYn;
+    String sprtTypeCd;
+    String upjnCd;
+    String uploadPhoneSrlNo;
+    String usimKindsCd;
+    String usimPayMthdCd;
+    String usimPrice;
+    String usimPriceTypeCd;
+
 
 }

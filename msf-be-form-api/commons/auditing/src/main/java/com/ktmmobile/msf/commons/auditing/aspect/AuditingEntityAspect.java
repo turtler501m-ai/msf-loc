@@ -32,7 +32,6 @@ public class AuditingEntityAspect {
     /**
      * MyBatis 매퍼는 MyBatis 인터셉터를 이용해서 Auditing 파라미터를 자동 전달하도록 구현했으므로
      * AuditingEntityAspect가 동작할 필요가 없습니다.
-     * @see com.ktmmobile.msf.commons.mybatis.interceptor.WithAuditingParameterInterceptor
      */
     @Pointcut("@within(org.apache.ibatis.annotations.Mapper)")
     private void myBatisMapperAnnotation() { }

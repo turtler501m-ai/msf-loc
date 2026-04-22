@@ -27,7 +27,7 @@ import com.ktmmobile.msf.commons.auditing.utils.AuditingUtils;
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Auditing {
+public @interface AuditingModifier {
 
     /**
      * Auditing Modifier 자동 적용을 활성화할지 여부

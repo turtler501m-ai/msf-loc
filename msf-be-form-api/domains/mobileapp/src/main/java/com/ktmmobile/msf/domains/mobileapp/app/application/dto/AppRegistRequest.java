@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import com.ktmmobile.msf.commons.auditing.data.vo.Auditing;
 
 @Data
 @NoArgsConstructor
@@ -22,5 +21,4 @@ public class AppRegistRequest {
     private String autoLoginYn;
     private String bioLoginYn;
 
-    private Auditing auditing;
 }

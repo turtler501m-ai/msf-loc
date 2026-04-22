@@ -58,7 +58,7 @@ public class ProductController {
 
     //휴대폰 매장 재고 조회 (postgre)
     @PostMapping("/phone/inventory/list")
-    public CommonResponse<List<ProductCategoryDto>> getPhoneInventoryList(@RequestBody @Valid ProductSearchCondition condition) {
+    public CommonResponse<List<ProductCategoryDto>> getPhoneInventoryList(@RequestBody @Valid PhoneSerialCondition condition) {
         return ResponseUtils.ok(productInfoService.getPhoneInventoryList(condition));
     }
 
@@ -74,7 +74,7 @@ public class ProductController {
         return ResponseUtils.ok(productInfoService.getProductCategoryList(condition));
     }
 
-    //요금제 카테고리 상세 조회
+    //요금제/부가서비스/안심보험 카테고리 상세 조회
     @PostMapping("/rate/categorydetail/list")
     public CommonResponse<List<ProductCategoryDto>> getProductCategoryDetailList(@RequestBody @Valid ProductSearchCondition condition) {
         return ResponseUtils.ok(productInfoService.getProductCategoryDetailList(condition));
@@ -86,27 +86,26 @@ public class ProductController {
         return ResponseUtils.ok(productInfoService.getRateList(condition));
     }
 
-    //공시지원금 조회 (출고가, 판매가 포함)
+    //공시지원금 조회 (출고가, 판매가 포함) >> 아직 안함.
     @PostMapping("/phone/subsdamt")
     public CommonResponse<List<PhoneInfoDto>> getMspOfficialNoticeSupport(@RequestBody @Valid ProductSearchCondition condition) {
         return ResponseUtils.ok(productInfoService.getMspOfficialNoticeSupport(condition));
     }
 
-    //제휴요금제 정보 조회 (요금제 목록 조회에는 distinct 가 있어서 일단 따로~)
-    @PostMapping("/rate/jehuinfo/list")
-    public CommonResponse<List<RateInfoDto>> getJehuInfoList(@RequestBody @Valid ProductSearchCondition condition) {
-        return ResponseUtils.ok(productInfoService.getJehuInfoList(condition));
+    //부가서비스 목록 조회 - 신규가입 및 번호이동
+    //고객포탈 : /appform/getMcpAdditionListAjax.do
+    @PostMapping("/addition/list")
+    public CommonResponse<List<MsfRequestAdditionResponse>> getAdditionList(@RequestBody @Valid MsfRequestAdditionRequest condition) {
+        return ResponseUtils.ok(productInfoService.getAdditionList(condition));
     }
-
-    //부가서비스 목록 조회
-    //@PostMapping("/addition/list")
     // S101030106 신규/변경 신청서 > 부가서비스 추가/삭제
     // 부가서비스 목록 조회시 스마트신청서 제공 대상만 세팅하도록 해주세요.
+    // >> 서비스변경? 현재 조회되는 내용이 없음.
+    // >> 기존 가입자의 경우 가입중 부가서비스 조회해서... 처리.
     // -- 스마트신청서 제공 대상만 세팅
     // AND RATE_CD IN (SELECT DTL_CD FROM smartform.MSF_CD_DTL
     //     WHERE CD_GROUP_ID = 'SVCCHG_RATE_CD'
     //     AND USE_YN = 'Y'
     //     AND TO_CHAR(NOW(),'yyyymmddhh24miss') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE
-    //                  )
 
 }

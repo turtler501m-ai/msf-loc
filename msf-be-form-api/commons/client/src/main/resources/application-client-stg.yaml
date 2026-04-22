@@ -1,11 +1,13 @@
 ## 외부 서비스
 external-service:
   services:
-    m-platform:
+    m-platform: ## M-Platform
       base-url: https://m-platform-stg  # TODO: 수정
-    msp-prx:
+    msp-prx: ## MSP PRX
       base-url: https://msp-prx-stg  # TODO: 수정
-    msp-api:
+    msp-api: ## MSP API
       base-url: https://msp-api-stg  # TODO: 수정
-    msp-ext-api:
+    msp-ext-api: ## MSP EXT-API
       base-url: https://msp-ext-stg  # TODO: 수정
+    juso: ## 주소 검색
+      base-url: https://business.juso.go.kr

@@ -9,13 +9,13 @@ import com.ktmmobile.msf.commons.auditing.utils.AuditingUtils;
 
 /**
  * @see AuditingEntityAspect
- * @see Auditing
+ * @see AuditingModifier
  */
 public class AuditingHandler {
 
     private final MethodSignature signature;
-    private final AuditingProxy methodAuditing;
-    private final AuditingProxy typeAuditing;
+    private final AuditingModifierProxy methodAuditing;
+    private final AuditingModifierProxy typeAuditing;
 
     @Getter
     private final boolean auditingDisabled;
@@ -30,15 +30,15 @@ public class AuditingHandler {
         this.auditingDisabled = cacheAuditingDisabled();
     }
 
-    private AuditingProxy cacheMethodAuditingAnnotation() {
-        Auditing auditing = signature.getMethod().getAnnotation(Auditing.class);
-        return new AuditingProxy(auditing);
+    private AuditingModifierProxy cacheMethodAuditingAnnotation() {
+        AuditingModifier auditingModifier = signature.getMethod().getAnnotation(AuditingModifier.class);
+        return new AuditingModifierProxy(auditingModifier);
     }
 
-    private AuditingProxy cacheTypeAuditingAnnotation() {
+    private AuditingModifierProxy cacheTypeAuditingAnnotation() {
         Class<?> declaringClass = signature.getMethod().getDeclaringClass();
-        Auditing auditing = declaringClass.getAnnotation(Auditing.class);
-        return new AuditingProxy(auditing);
+        AuditingModifier auditingModifier = declaringClass.getAnnotation(AuditingModifier.class);
+        return new AuditingModifierProxy(auditingModifier);
     }
 
     /**
@@ -92,7 +92,7 @@ public class AuditingHandler {
      * 이때 Custom Modifier를 지정하지 않으면 <code>IllegalArgumentException</code>이 발생합니다.
      * <code>@Auditing(forceApply = false)</code>인 경우, Custom Modifier보다 인증 객체 값이 우선 적용됩니다.</pre>
      */
-    private String getModifierOf(AuditingProxy auditing) {
+    private String getModifierOf(AuditingModifierProxy auditing) {
         if (auditing.isEmpty() || !auditing.enabled()) {
             return null;
         }
@@ -115,7 +115,7 @@ public class AuditingHandler {
      * <pre>
      * <code>@Auditing</code>의 <code>modifier()</code>보다 <code>predefinedModifier()</code> 속성이 우선 적용됩니다.</pre>
      */
-    private String getCustomModifierOf(AuditingProxy auditing) {
+    private String getCustomModifierOf(AuditingModifierProxy auditing) {
         if (auditing.predefinedModifier().isValid()) {
             return auditing.predefinedModifier().getCode();
         }

@@ -7,7 +7,5 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class NewChangeStep3Dto {
-
-    
+public class MsfRequestCstmrDto {
 }

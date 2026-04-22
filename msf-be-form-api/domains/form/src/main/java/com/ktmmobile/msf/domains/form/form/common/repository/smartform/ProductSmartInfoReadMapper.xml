@@ -44,17 +44,32 @@
         AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')-->
     </select>
 
-    <select id="selectPhoneInventoryList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+    <select id="selectPhoneInventoryList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialCondition"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.ProductCategoryDto">
         /* 휴대폰 매장 재고 조회 */
         SELECT PROD_ID
         FROM MSF_PROD_STOR_INVENTORY_TXN
         WHERE 1=1
-            AND USE_YN='Y'
-            AND STOR_CD=#{orgnId}
+            AND USE_YN = 'Y'
+            AND STOR_CD = #{orgnId}
             AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
         GROUP BY PROD_ID
     </select>
+
+    <select id="selectPhoneInventory" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialCondition"
+            resultType="String">
+        /* 휴대폰 일련번호 조회 시 매장재고조회 */
+        SELECT IMEI
+        FROM MSF_PROD_STOR_INVENTORY_TXN
+        WHERE 1=1
+            AND USE_YN = 'Y'
+            AND STOR_CD = #{orgnId}
+            AND PROD_SN = #{prodSn}
+            AND PROD_ID = #{prodId}
+            AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+            AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+    </select>
+
 
 </mapper>

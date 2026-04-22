@@ -1,23 +1,16 @@
 package com.ktmmobile.msf.domains.form.form.newchange.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.ktmmobile.msf.domains.form.form.newchange.dto.MsfNewChangeInfoDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.field.NewChangeFieldMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeWriteMapper;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestVo;
+import com.ktmmobile.msf.domains.form.form.newchange.vo.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -28,30 +21,104 @@ public class NewChangeService {
     private final NewChangeWriteMapper newChangeWriteMapper;
 
     //신청서 조회
-    public List<NewChangeInfoDto> getNewChangeInfo(NewChangeInfoCondition condition) {
-        List<NewChangeInfoDto> newChangeInfoDtoList = new ArrayList<>();
-        NewChangeInfoDto newChangeInfoDto = new NewChangeInfoDto();
+    //public List<MsfNewChangeInfoDto> getNewChangeInfo(NewChangeInfoCondition condition) {
+    public MsfNewChangeInfoDto getNewChangeInfo(NewChangeInfoCondition condition) {
+        //List<MsfNewChangeInfoDto> msfNewchangeInfoDtoList = new ArrayList<>();
+        //MsfNewChangeInfoDto msfNewchangeInfoDto = new MsfNewChangeInfoDto();
+        MsfNewChangeInfoDto msfNewchangeInfoDto = new MsfNewChangeInfoDto();
+
         //Constant 처리필요함.
-        newChangeInfoDto.setFormTypeCd("1"); //신청서유형 : 1-신규/변경
+        /*newChangeInfoDto.setFormTypeCd("1"); //신청서유형 : 1-신규/변경
         newChangeInfoDto.setServiceTypeCd("PO"); //후불 (고정)
         newChangeInfoDto.setReqBuyTypeCd("MM"); //상품 (핸드폰)
         newChangeInfoDto.setOperTypeCd("MNP3"); //가입유형 (번호이동)
         newChangeInfoDto.setCstmrType("NA"); //고객유형
-        newChangeInfoDto.setIdentityCertTypeCd("K"); //신분증확인방법
+        newChangeInfoDto.setIdentityCertTypeCd("K"); //신분증확인방법*/
 
-        newChangeInfoDtoList.add(newChangeInfoDto);
+        //newChangeInfoDtoList.add(newChangeInfoDto);
 
-        if (condition.getRequestKey() > 0) {
-            // = this.getMsfRequestInfo(requestKey);
+
+        String msfRequestKey = "";
+        String formTypeCd = "";
+        Integer requestKey;
+        MsfRequestVo msfRequestVo = new MsfRequestVo();
+        MsfRequestCstmrVo msfRequestCstmrVo = new MsfRequestCstmrVo();
+        MsfRequestAgentVo msfRequestAgentVo = new MsfRequestAgentVo();
+        MsfRequestSaleVo msfRequestSaleVo = new MsfRequestSaleVo();
+        MsfRequestBillReqVo msfRequestBillReqVo = new MsfRequestBillReqVo();
+
+        if (StringUtils.hasText(condition.getMsfRequestKey())) {
+            msfRequestKey = condition.getMsfRequestKey();
+            condition.setRequestKey(Long.parseLong(msfRequestKey));
+
+            msfRequestVo = this.getMsfRequestInfo(condition); //MSF_REQUEST
+            msfRequestCstmrVo = this.getMsfRequestCstmrInfo(condition); //MSF_REQUEST_CSTMR
+            msfRequestAgentVo = this.getMsfRequestAgentInfo(condition); //MSF_REQUEST_AGENT
+            msfRequestSaleVo = this.getMsfRequestSaleInfo(condition); //MSF_REQUEST_SALE
+            msfRequestBillReqVo = this.getMsfRequestBillReqInfo(condition); //MSF_REQUEST_BILL_REQ
         }
 
-        return newChangeInfoDtoList;
+        //ModelMapper modelMapper = new ModelMapper();
+        //msfNewchangeInfoDtoList.add(msfRequestDto);
+        msfNewchangeInfoDto.setMsfRequestVo(msfRequestVo);
+        msfNewchangeInfoDto.setMsfRequestCstmrVo(msfRequestCstmrVo);
+        msfNewchangeInfoDto.setMsfRequestAgentVo(msfRequestAgentVo);
+        //msfNewchangeInfoDto.add(msfNewchangeInfoDto);
+
+        return msfNewchangeInfoDto;
     }
+
+    //MSF_REQUEST 조회
+    public MsfRequestVo getMsfRequestInfo(NewChangeInfoCondition condition) {
+        return newChangeReadMapper.selectMsfRequestInfo(condition);
+    }
+
+    //MSF_REQUEST_CSTMR 조회
+    public MsfRequestCstmrVo getMsfRequestCstmrInfo(NewChangeInfoCondition condition) {
+        return newChangeReadMapper.selectMsfRequestCstmrInfo(condition);
+    }
+    /*public MsfRequestCstmrDto getMsfRequestCstmrInfo(Integer requestKey) {
+        return Optional.ofNullable(newchangeInfoMapper.selectMsfRequestCstmrInfo(requestKey))
+                .orElseThrow(() -> new NotFoundException("SmartForm 신청서 정보가 없습니다. requestKey:" + requestKey));
+    }*/
+
+    //MSF_REQUEST_AGENT 조회
+    public MsfRequestAgentVo getMsfRequestAgentInfo(NewChangeInfoCondition condition) {
+        return newChangeReadMapper.selectMsfRequestAgentInfo(condition);
+    }
+    /*public MsfRequestAgentDto getMsfRequestAgentInfo(Integer requestKey) {
+        return Optional.ofNullable(newchangeInfoMapper.selectMsfRequestAgentInfo(requestKey))
+                .orElseThrow(() -> new NotFoundException("SmartForm 신청서 정보가 없습니다. requestKey:" + requestKey));
+    }*/
+
+    //MSF_REQUEST_SALE 조회
+    public MsfRequestSaleVo getMsfRequestSaleInfo(NewChangeInfoCondition condition) {
+        return newChangeReadMapper.selectMsfRequestSaleInfo(condition);
+    }
+    /*public MsfRequestSaleDto getMsfRequestSaleInfo(Integer requestKey) {
+        return Optional.ofNullable(newchangeInfoMapper.selectMsfRequestSaleInfo(requestKey))
+                .orElseThrow(() -> new NotFoundException("SmartForm 신청서 정보가 없습니다. requestKey:" + requestKey));
+    }*/
+
+    //MSF_REQUEST_BILL_REQ 조회
+    public MsfRequestBillReqVo getMsfRequestBillReqInfo(NewChangeInfoCondition condition) {
+        return newChangeReadMapper.selectMsfRequestBillReqInfo(condition);
+    }
+    /*public MsfRequestBillReqDto getMsfRequestBillReqInfo(Integer requestKey) {
+        return Optional.ofNullable(newchangeInfoMapper.selectMsfRequestBillReqInfo(requestKey))
+                .orElseThrow(() -> new NotFoundException("SmartForm 신청서 정보가 없습니다. requestKey:" + requestKey));
+    }*/
 
     //신청서 저장
     @Transactional
     public String saveAppformInfo(NewChangeInfoRequest request) {
         long requestKey = 0;
+
+        if (request.getRequestKey() == null) {
+            //INSERT
+            requestKey = formCommService.generateRequestKey(); //신청서번호 생성 테스트
+            request.setRequestKey(requestKey);
+        }
 
         MsfRequestVo msfRequestVo = NewChangeFieldMapper.INSTANCE.toMsfRequestVo(request);
         MsfRequestAgentVo msfRequestAgentVo = NewChangeFieldMapper.INSTANCE.toMsfRequestAgentVo(request);
@@ -59,16 +126,13 @@ public class NewChangeService {
         MsfRequestSaleVo msfRequestSaleVo = NewChangeFieldMapper.INSTANCE.toMsfRequestSaleVo(request);
         MsfRequestBillReqVo msfRequestBillReqVo = NewChangeFieldMapper.INSTANCE.toMsfRequestBillReqVo(request);
 
-        if (request.getRequestKey() == null) {
-            //INSERT
-            requestKey = formCommService.generateRequestKey(); //신청서번호 생성 테스트
-            request.setRequestKey(requestKey);
-
-            newChangeWriteMapper.insertMsfRequest(request); //MSF_REQUEST
-            newChangeWriteMapper.insertMsfRequestAgent(request); //MSF_REQUEST_AGENT
-            newChangeWriteMapper.insertMsfRequestCstmr(request); //MSF_REQUEST_CSTMR
-            newChangeWriteMapper.insertMsfRequestSale(request); //MSF_REQUEST_SALE
-            newChangeWriteMapper.insertMsfRequestBillReq(request); //MSF_REQUEST_BILL_REQ
+        //if (!StringUtils.hasText(request.getRequestKey().toString())) {
+        if (requestKey > 0) {
+            newChangeWriteMapper.insertMsfRequest(msfRequestVo); //MSF_REQUEST
+            newChangeWriteMapper.insertMsfRequestAgent(msfRequestAgentVo); //MSF_REQUEST_AGENT
+            newChangeWriteMapper.insertMsfRequestCstmr(msfRequestCstmrVo); //MSF_REQUEST_CSTMR
+            newChangeWriteMapper.insertMsfRequestSale(msfRequestSaleVo); //MSF_REQUEST_SALE
+            newChangeWriteMapper.insertMsfRequestBillReq(msfRequestBillReqVo); //MSF_REQUEST_BILL_REQ
         } else {
             //UPDATE
             request.setRequestKey(request.getRequestKey());
@@ -235,34 +299,5 @@ public class NewChangeService {
     //     return distinctList;
     // }
 
-    //MSF_REQUEST 조회
-    // public MsfRequestDto getMsfRequestInfo(Integer requestKey) {
-    //     return Optional.ofNullable(appformInfoMapper.selectMsfRequestInfo(requestKey))
-    //         .orElseThrow(() -> new NotFoundException("SmartForm 신청서 정보가 없습니다. requestKey:" + requestKey));
-    // }
-
-    //MSF_REQUEST_AGENT 조회
-    // public MsfRequestAgentDto getMsfRequestAgentInfo(Integer requestKey) {
-    //     return Optional.ofNullable(appformInfoMapper.selectMsfRequestAgentInfo(requestKey))
-    //         .orElseThrow(() -> new NotFoundException("SmartForm 신청서 정보가 없습니다. requestKey:" + requestKey));
-    // }
-
-    //MSF_REQUEST_CSTMR 조회
-    // public MsfRequestCstmrDto getMsfRequestCstmrInfo(Integer requestKey) {
-    //     return Optional.ofNullable(appformInfoMapper.selectMsfRequestCstmrInfo(requestKey))
-    //         .orElseThrow(() -> new NotFoundException("SmartForm 신청서 정보가 없습니다. requestKey:" + requestKey));
-    // }
-
-    //MSF_REQUEST_SALE 조회
-    // public MsfRequestSaleDto getMsfRequestSaleInfo(Integer requestKey) {
-    //     return Optional.ofNullable(appformInfoMapper.selectMsfRequestSaleInfo(requestKey))
-    //         .orElseThrow(() -> new NotFoundException("SmartForm 신청서 정보가 없습니다. requestKey:" + requestKey));
-    // }
-
-    //MSF_REQUEST_BILL_REQ 조회
-    // public MsfRequestBillReqDto getMsfRequestBillReqInfo(Integer requestKey) {
-    //     return Optional.ofNullable(appformInfoMapper.selectMsfRequestBillReqInfo(requestKey))
-    //         .orElseThrow(() -> new NotFoundException("SmartForm 신청서 정보가 없습니다. requestKey:" + requestKey));
-    // }
 
 }

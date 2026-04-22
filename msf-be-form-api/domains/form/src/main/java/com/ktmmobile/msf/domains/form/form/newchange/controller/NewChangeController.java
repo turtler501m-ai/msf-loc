@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/form")
 @RequiredArgsConstructor
@@ -48,9 +46,12 @@ public class NewChangeController {
 
     //신청서 진입
     @PostMapping("/newchange/get")
-    public CommonResponse<List<NewChangeInfoDto>> getNewChangeInfo(@RequestBody @Valid NewChangeInfoCondition condition) {
+    public CommonResponse<MsfNewChangeInfoDto> getNewChangeInfo(@RequestBody @Valid NewChangeInfoCondition condition) {
         return ResponseUtils.ok(newChangeService.getNewChangeInfo(condition));
     }
+    /*public CommonResponse<List<MsfNewChangeInfoDto>> getNewChangeInfo(@RequestBody @Valid NewChangeInfoCondition condition) {
+        return ResponseUtils.ok(newChangeService.getNewChangeInfo(condition));
+    }*/
 
     //신청서 저장 - 임시저장
     @PostMapping("/newchange/save")

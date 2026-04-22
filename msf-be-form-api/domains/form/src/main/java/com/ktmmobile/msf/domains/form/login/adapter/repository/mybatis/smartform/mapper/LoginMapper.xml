@@ -29,14 +29,14 @@
       WHERE user_id = #{userId}
     </selectKey>
     update msf_user_info
-    set login_chk_cnt = login_chk_cnt + 1,
+    set
     <if test="userSttusCd != null and userSttusCd != ''">
       user_sttus_cd = #{userSttusCd},
       access_limit_yn = 'Y',
       access_limit_dt = now(),
       chg_dt = now(),
     </if>
-    <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.updateModifiedAuditSet" />
+      login_chk_cnt = login_chk_cnt + 1
     where 1=1
     and user_id = #{userId}
   </update>
@@ -44,16 +44,14 @@
   <update id="updateLoginSucc">
     update msf_user_info
     set chg_dt = now(),
-      login_chk_cnt = 0,
-    <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.updateModifiedAuditSet" />
+      login_chk_cnt = 0
     where 1=1
     and user_id = #{userId}
   </update>
 
   <update id="updateBioLoginSucc">
     update msf_usr_app_info
-    set last_access_dt = now(),
-    <include refid="com.ktmmobile.msf.commons.mybatis.mapper.CommonMapper.updateModifiedAuditSet" />
+    set last_access_dt = now()
     where 1=1
     and uuid = #{uuid}
     -- and user_id = #{userId}

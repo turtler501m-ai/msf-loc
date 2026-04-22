@@ -10,8 +10,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.ktmmobile.msf.commons.mybatis.interceptor.AutoAuditingInterceptor;
 import com.ktmmobile.msf.commons.mybatis.interceptor.QueryIdGenerationInterceptor;
-import com.ktmmobile.msf.commons.mybatis.interceptor.WithAuditingParameterInterceptor;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,14 +22,14 @@ public class MyBatisCommonConfig {
     private final MyBatisCustomProperties properties;
 
     @Bean
-    public Interceptor withAuditingParameterInterceptor() {
-        return new WithAuditingParameterInterceptor();
-    }
-
-    @Bean
     @ConditionalOnProperty(prefix = MybatisProperties.MYBATIS_PREFIX, name = "query-id.enabled", havingValue = "true")
     public Interceptor queryIdGenerationInterceptor() {
         log.info(">>> 쿼리ID 주석 자동 적용 활성화");
         return new QueryIdGenerationInterceptor(properties.queryIdPrefix());
+    }
+
+    @Bean
+    public Interceptor autoAuditingInterceptor() {
+        return new AutoAuditingInterceptor();
     }
 }
