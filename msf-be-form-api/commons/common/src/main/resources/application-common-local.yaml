@@ -32,17 +32,6 @@ spring:
             maximum-pool-size: 6
             idle-timeout: 290000
 
-      ## MCP (레거시 M포탈)
-      mcp:
-        type: STANDALONE
-        standalone:
-          url: jdbc:log4jdbc:oracle:thin:@10.220.71.231:1521:MCPDEVRN
-          username: MCP_WAS
-          password: "ktmm0601!!"
-          hikari:
-            maximum-pool-size: 6
-            idle-timeout: 290000
-
     hikari:
       driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
       minimum-idle: 3

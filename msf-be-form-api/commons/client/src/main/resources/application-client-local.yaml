@@ -1,13 +1,13 @@
 ## 내부 서비스
 internal-service:
   services:
-    form-api:
+    form-api: ## FORM-API
       base-url: http://localhost:8080
-    admin-api:
+    admin-api: ## ADMIN-API
       base-url: http://localhost:8180
-    batch:
+    batch: ## BATCH
       base-url: http://localhost:8280
-    eformsign: ## 연동 불가
+    eformsign: ## eFormSign
       base-url: http://eformsign-none
 
 
@@ -15,11 +15,16 @@ internal-service:
 ## 외부 서비스
 external-service:
   services: ## 연동 불가
-    m-platform:
+    m-platform: ## M-Platform
       base-url: https://m-platform-none
-    msp-prx:
+    msp-prx: ## MSP PRX
       base-url: https://msp-prx-none
-    msp-api:
+    msp-api: ## MSP API
       base-url: https://msp-api-none
-    msp-ext-api:
+    msp-ext-api: ## MSP EXT-API
       base-url: https://msp-ext-none
+    juso: ## 주소 검색
+      base-url: https://business.juso.go.kr
+      properties:
+        api-key: ENC(zClLBzYLx8hs0+6Qs1XrFJU7oVnaHxcyAWz5mmFg9fwOrEBesSpPunPjlLaGIuYI+EeMQ590MDqPGb8enps+qKW5+uKhxmD3pZDCpAe/JwQ=)
+        coord-api-key: ENC(lL2k/kadYrZ88Yo46pp5OcD0ia8J6lek6QqJ83A897D80gVkeuZk4kjBrxfhaxJU+S+ATvu7N28HiPddbe/YV+G/LOHdcCyoWFDzU20K4os=)

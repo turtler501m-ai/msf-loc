@@ -2,6 +2,11 @@
 # Backend (msf/msf-api)
 # ===========================
 msf/msf-api/target/
+
+# ===========================
+# Legacy (mcp)
+# ===========================
+mcp/mcp-api/target/
 msf/msf-api/.mvn/wrapper/maven-wrapper.jar
 msf/msf-api/*.log
 
