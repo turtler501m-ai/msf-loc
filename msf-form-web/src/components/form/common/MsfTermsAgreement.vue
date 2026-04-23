@@ -11,7 +11,7 @@
           v-model="model.termsAgreed"
           :description="description"
           :required="required"
-          @checked="(result) => console.log('result:', result)"
+          @checked="handleChecked"
         />
       </MsfFormGroup>
     </MsfStack>
@@ -30,25 +30,52 @@ const props = defineProps({
 
 const model = defineModel({ type: Object, required: true })
 const agreementRef = ref(null)
+const lastCheckedResult = ref([])
+
+// 필수 여부 확인 유틸
+const isRequiredField = (val) => val === true || val === '2' || val === 'Y'
+// 체크 여부 확인 유틸
+const isCheckedField = (val) => val === true || val === 'Y'
+
+const handleChecked = (result) => {
+  lastCheckedResult.value = result
+}
 
 // termsData의 checked 값이 변경될 때, model.termsAgreed 동기화
 watch(
   () => props.termsData,
   (newTermsData) => {
-    if (newTermsData) {
-      // 약관 데이터가 제공되면, 해당 데이터의 checked 상태를 model에 반영
-      // TODO: 중첩된 children 구조까지 처리하는 로직이 필요할 수 있음
-      // 현재는 가장 상위 level의 checked만 반영
-      const allChecked = newTermsData.every((term) => term.checked)
-      model.value.termsAgreed = allChecked
+    if (newTermsData && newTermsData.length > 0) {
+      // 필수 항목이 모두 체크되었는지 확인하여 model.termsAgreed 업데이트
+      const allRequiredChecked = newTermsData.every((term) => {
+        if (isRequiredField(term.required)) {
+          return isCheckedField(term.checked)
+        }
+        return true
+      })
+      model.value.termsAgreed = allRequiredChecked
+      lastCheckedResult.value = newTermsData
     }
   },
   { deep: true, immediate: true },
 )
 
 const validate = () => {
-  if (props.required && !model.value.termsAgreed) return false
-  return true
+  const targetData = lastCheckedResult.value.length > 0 ? lastCheckedResult.value : props.termsData
+
+  if (!targetData || targetData.length === 0) {
+    return !props.required
+  }
+
+  // 필수 조건(true, '2' 또는 'Y')인 row는 'Y' 또는 true 여야 함
+  const isValid = targetData.every((term) => {
+    if (isRequiredField(term.required)) {
+      return isCheckedField(term.checked)
+    }
+    return true
+  })
+
+  return isValid
 }
 
 defineExpose({ validate })

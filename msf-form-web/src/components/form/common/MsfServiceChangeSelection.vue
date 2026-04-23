@@ -10,9 +10,10 @@ const agencyOptions = ref([])
 const fetchAgencies = async () => {
   try {
     const res = await post('/api/form/agent/list', { shopOrgnId: 'V000001083' })
-    const { data } = res
+    const data = res.data || res
+    const list = Array.isArray(data) ? data : (data && typeof data === 'object' ? [data] : [])
 
-    agencyOptions.value = [data].map((item) => ({
+    agencyOptions.value = list.map((item) => ({
       label: item.orgnNm || item.cntpntNm || '대리점명 없음',
       value: item.ktOrgId || item.shopOrgnId || '',
     }))

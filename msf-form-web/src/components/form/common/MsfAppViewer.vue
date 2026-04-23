@@ -3,7 +3,7 @@
   <div>
     <MsfBox variant="outline" margin="0" class="application-box">
       <div class="box-title">
-        <img src="@/assets/images/applyOpenIcon.svg" alt="신청서 열람 아이콘" />
+        <img src="@/assets/images/applyopenIcon.svg" alt="신청서 열람 아이콘" />
         <em class="tit">신청서 열람</em>
       </div>
       <MsfButton variant="subtle" @click="isModalOpen = true">신청서 열람</MsfButton>

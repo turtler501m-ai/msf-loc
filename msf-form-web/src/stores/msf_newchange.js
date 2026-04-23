@@ -517,9 +517,11 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
 
       const res = await post('/api/form/newchange/save', payload)
 
-      // 1. 서버에서 새로 발급하거나 확정된 applicationKey가 오면 갱신
-      if (res && res.applicationKey) {
-        applicationKey.value = res.applicationKey
+      // 1. 서버에서 새로 발급하거나 확정된 requestkey가 오면 갱신
+      const newKey = res?.data?.requestkey || res?.requestkey || res?.applicationKey
+      if (newKey) {
+        applicationKey.value = newKey
+        console.log('>>> Updated applicationKey (requestkey):', newKey)
       }
 
       // 2. 저장이 성공하면 현재 값(Current)을 임시저장 값(Draft)으로 즉시 동기화

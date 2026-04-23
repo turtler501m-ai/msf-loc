@@ -195,7 +195,7 @@
             <MsfButton
               variant="toggle"
               v-else-if="combAuth.status.value === 'ready'"
-              @click="combAuth.verify()"
+              @click="handleCombVerify"
               >청구계정 체크</MsfButton
             >
             <MsfButton variant="toggle" v-else-if="combAuth.status.value === 'verified'" active
@@ -216,9 +216,11 @@
 <script setup>
 import { defineModel, defineProps, computed } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
+import { post } from '@/libs/api/msf.api'
 
 const props = defineProps({
   title: { type: String, default: '납부 정보' },
+  customerData: { type: Object, default: () => ({}) },
   authFlags: { type: Object, default: () => ({}) },
 })
 const model = defineModel({ type: Object, required: true })
@@ -255,6 +257,33 @@ const combAuth = useAuthButton(() => [model.value?.combId], {
     }
   },
 })
+
+const handleCombVerify = async () => {
+  const customer = props.customerData || {}
+  const payload = {
+    cstmrTypeCd: customer.cstmrTypeCd || 'NA',
+    ban: model.value.combId,
+    customerSsn:
+      customer.cstmrNativeRrn1 + customer.cstmrNativeRrn2 ||
+      customer.cstmrForeignerRrn1 + customer.cstmrForeignerRrn2 ||
+      customer.cstmrJuridicalRrn1 + customer.cstmrJuridicalRrn2 ||
+      '',
+    customerLinkName: customer.cstmrNm,
+  }
+
+  try {
+    const res = await post('/api/form/verifyBillInfo', payload)
+    if (res && res.code === '0000') {
+      combAuth.verify()
+      alert('청구계정 확인이 완료되었습니다.')
+    } else {
+      alert(res.message || '청구계정 확인에 실패했습니다.')
+    }
+  } catch (error) {
+    console.error('Verify bill info error:', error)
+    alert('청구계정 확인 중 오류가 발생했습니다.')
+  }
+}
 
 const validate = () => {
   if (!model.value.cstmrBillSendTypeCd) return false

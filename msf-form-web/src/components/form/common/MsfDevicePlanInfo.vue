@@ -137,8 +137,10 @@ import { post } from '@/libs/api/msf.api'
 const extractData = (res) => {
   if (!res) return []
   if (Array.isArray(res)) return res
-  if (res.code === '0000' && Array.isArray(res.data)) return res.data
-  if (Array.isArray(res.data)) return res.data
+  if (res.data) {
+    if (Array.isArray(res.data)) return res.data
+    return [res.data]
+  }
   return []
 }
 
@@ -223,6 +225,10 @@ const fetchContractPeriods = async () => {
       label: item.agrmTrmLabel || `${item.agrmTrm}개월`,
       value: item.agrmTrm,
     }))
+    // 자동 선택
+    if (contractPeriodOptions.value.length > 0 && !model.value.contractPeriod) {
+      model.value.contractPeriod = contractPeriodOptions.value[0].value
+    }
   } catch (e) {
     console.error('Failed to fetch contract periods:', e)
   }
@@ -238,26 +244,34 @@ const fetchInstallmentMonths = async () => {
       label: item.modelMonthly ? `${item.modelMonthly}개월` : '일시불(없음)',
       value: item.modelMonthly,
     }))
+    // 자동 선택
+    if (installmentMonthOptions.value.length > 0 && (model.value.installmentMonth === undefined || model.value.installmentMonth === null || model.value.installmentMonth === '')) {
+      model.value.installmentMonth = installmentMonthOptions.value[0].value
+    }
   } catch (e) {
     console.error('Failed to fetch installment months:', e)
   }
 }
 
 // 6. 할인유형 조회 (판매정책)
-const fetchDiscountTypes = async () => {
+const fetchDiscountTypes = async (prdtId) => {
   try {
     const res = await post('/api/form/phone/saletype/list', {
       plcyTypeCd: 'N',
       plcySctnCd: '01',
       orgnId: '1100033726',
-      prdtId: 'K7020692',
+      prdtId: prdtId || 'K7020692',
       salePlcyCd: 'N2022011018381',
       prdtSctnCd: '',
     })
     discountTypeOptions.value = extractData(res).map((item) => ({
-      label: item.salePlcyNm || '할인유형',
-      value: item.salePlcyCd,
+      label: item.sprtNm || '할인유형',
+      value: item.sprtTp,
     }))
+    // 자동 선택
+    if (discountTypeOptions.value.length > 0 && !model.value.discountType) {
+      model.value.discountType = discountTypeOptions.value[0].value
+    }
   } catch (e) {
     console.error('Failed to fetch discount types:', e)
   }
@@ -330,20 +344,23 @@ watch(
   },
 )
 
-// 단말기가 변경될 때 하위 의존성(용량, 색상) 다시 불러오기
+// 단말기가 변경될 때 하위 의존성(용량, 색상, 할인유형) 다시 불러오기
 watch(
   () => model.value.deviceModel,
   (newVal) => {
     if (!model.value.isSaved) {
       model.value.capacity = ''
       model.value.color = ''
+      model.value.discountType = ''
     }
     if (newVal) {
       fetchCapacities(newVal)
       fetchColors(newVal)
+      fetchDiscountTypes(newVal)
     } else {
       capacityOptions.value = []
       colorOptions.value = []
+      discountTypeOptions.value = []
     }
   },
 )
@@ -378,7 +395,7 @@ onMounted(async () => {
     fetchDevices()
     fetchContractPeriods()
     fetchInstallmentMonths()
-    fetchDiscountTypes()
+    fetchDiscountTypes(model.value.deviceModel)
   }
 
   fetchPlanCategories()
@@ -386,22 +403,56 @@ onMounted(async () => {
 })
 
 const validate = () => {
-  if (model.value.productType === 'MM') {
-    if (!model.value.openTypeCd) return false
-    if (model.value.openTypeCd === '99') {
-      if (
-        !model.value.deviceModel ||
-        !model.value.capacity ||
-        !model.value.color ||
-        !model.value.contractPeriod ||
-        !model.value.installmentMonth ||
-        !model.value.discountType
-      )
+  const m = model.value
+  console.log('>>> Validating MsfDevicePlanInfo:', m)
+
+  if (m.productType === 'MM') {
+    if (!m.openTypeCd) {
+      console.warn('Validation failed: openTypeCd is missing')
+      return false
+    }
+    if (m.openTypeCd === '99') {
+      if (!m.deviceModel) {
+        console.warn('Validation failed: deviceModel is missing')
         return false
+      }
+      if (!m.capacity) {
+        console.warn('Validation failed: capacity is missing')
+        return false
+      }
+      if (!m.color) {
+        console.warn('Validation failed: color is missing')
+        return false
+      }
+      if (!m.contractPeriod) {
+        console.warn('Validation failed: contractPeriod is missing')
+        return false
+      }
+      // installmentMonth는 0일 수도 있으므로 명시적으로 체크
+      if (m.installmentMonth === undefined || m.installmentMonth === null || m.installmentMonth === '') {
+        console.warn('Validation failed: installmentMonth is missing')
+        return false
+      }
+      if (!m.discountType) {
+        console.warn('Validation failed: discountType is missing')
+        return false
+      }
     }
   }
-  if (!model.value.planName1 || !model.value.planName2) return false
-  if (!model.value.agency) return false
+
+  if (!m.planName1) {
+    console.warn('Validation failed: planName1 is missing')
+    return false
+  }
+  if (!m.planName2) {
+    console.warn('Validation failed: planName2 is missing')
+    return false
+  }
+  if (!m.agency) {
+    console.warn('Validation failed: agency is missing')
+    return false
+  }
+
   return true
 }
 
