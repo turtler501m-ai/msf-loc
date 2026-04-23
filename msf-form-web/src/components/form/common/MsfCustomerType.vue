@@ -12,7 +12,7 @@
         />
       </MsfFormGroup>
       <MsfFormGroup
-        v-if="['JP', 'GO'].includes(model.cstmrTypeCd)"
+        v-if="visitTypeRequired"
         label="방문 유형"
         tag="div"
         required
@@ -32,17 +32,21 @@
 </template>
 
 <script setup>
-import { defineModel, defineProps, watch, defineExpose } from 'vue'
+import { computed, defineModel, defineProps, watch, defineExpose } from 'vue'
 
 const props = defineProps({
   title: { type: String, default: '고객 유형' },
+  visitTypeCodes: { type: Array, default: () => ['JP', 'GO'] },
 })
+
 const model = defineModel({ type: Object, required: true })
+
+const visitTypeRequired = computed(() => props.visitTypeCodes.includes(model.value.cstmrTypeCd))
 
 watch(
   () => model.value.cstmrTypeCd,
   (newVal) => {
-    if (!['JP', 'GO'].includes(newVal)) {
+    if (!props.visitTypeCodes.includes(newVal)) {
       model.value.cstmrVisitTypeCd = ''
     }
   },
@@ -50,9 +54,7 @@ watch(
 
 const validate = () => {
   if (!model.value.cstmrTypeCd) return false
-  if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
-    if (!model.value.cstmrVisitTypeCd) return false
-  }
+  if (visitTypeRequired.value && !model.value.cstmrVisitTypeCd) return false
   return true
 }
 

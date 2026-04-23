@@ -1,6 +1,10 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, computed, defineModel } from 'vue'
 
+// 외부에서 v-model 전달 시 해당 모델 우선 사용
+const model = defineModel({ type: Object, required: false, default: null })
+
+// 기존 공통컴포넌트 내부 상태 유지
 const formData = reactive({
   /* SIM정보_상품(휴대폰) */
   hasSim: '', //SIM보유
@@ -68,11 +72,27 @@ const formData = reactive({
   /* 메모 */
   memo: '', //메모
 })
+
+const memoValue = computed({
+  get() {
+    if (model.value && typeof model.value === 'object') {
+      return model.value.memo || ''
+    }
+    return formData.memo
+  },
+  set(v) {
+    if (model.value && typeof model.value === 'object') {
+      model.value.memo = v
+      return
+    }
+    formData.memo = v
+  },
+})
 </script>
 
 <template>
   <MsfTitleArea title="메모" />
   <MsfFormGroup label="메모" tag="div">
-    <MsfTextarea v-model="formData.memo" placeholder="메모 입력" />
+    <MsfTextarea v-model="memoValue" placeholder="메모 입력" />
   </MsfFormGroup>
 </template>

@@ -174,8 +174,12 @@ const onFaceAuthConfirm = () => {
   model.value.isVerified = true
 }
 
-const onIdCardScanConfirm = (file) => {
-  console.log('신분증 스캔 파일:', file)
+const onIdCardScanConfirm = (data) => {
+  console.log('신분증 스캔 파일:', data)
+  if (data) {
+    model.value.identityIssuDate = data.identityIssuDate
+    // 만약 API에서 다른 정보(면허지역, 면허번호 등)도 온다면 여기서 추가로 세팅할 수 있습니다.
+  }
   model.value.isScanVerified = true
 }
 

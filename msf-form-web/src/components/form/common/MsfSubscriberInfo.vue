@@ -1,6 +1,6 @@
 <template>
   <div>
-    <MsfTitleArea title="가입자 정보" />
+    <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="이름" required>
         <MsfInput
@@ -10,6 +10,7 @@
           :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
         />
       </MsfFormGroup>
+
       <MsfFormGroup v-if="['NA', 'NM'].includes(model.cstmrTypeCd)" label="주민등록번호" required>
         <MsfStack type="field">
           <MsfNumberInput
@@ -28,6 +29,7 @@
           />
         </MsfStack>
       </MsfFormGroup>
+
       <MsfFormGroup v-if="['FN', 'FM'].includes(model.cstmrTypeCd)" label="외국인등록번호" required>
         <MsfStack type="field">
           <MsfNumberInput
@@ -46,6 +48,7 @@
           />
         </MsfStack>
       </MsfFormGroup>
+
       <MsfFormGroup v-if="['JP', 'GO'].includes(model.cstmrTypeCd)" label="법인등록번호" required>
         <MsfStack type="field">
           <MsfNumberInput
@@ -64,6 +67,7 @@
           />
         </MsfStack>
       </MsfFormGroup>
+
       <MsfFormGroup
         v-if="['NA', 'JP', 'GO'].includes(model.cstmrTypeCd)"
         label="사업자등록번호"
@@ -72,7 +76,7 @@
         <MsfStack type="field">
           <MsfNumberInput
             v-model="model.cstmrJuridicalBizNo1"
-            placeholder="앞자리"
+            placeholder="앞 3자리"
             maxlength="3"
             :readonly="model.isSaved"
           />
@@ -94,6 +98,7 @@
           />
         </MsfStack>
       </MsfFormGroup>
+
       <MsfFormGroup v-if="['JP', 'GO'].includes(model.cstmrTypeCd)" label="대표자명" required>
         <MsfInput
           v-model="model.cstmrJuridicalRepNm"
@@ -102,6 +107,7 @@
           :readonly="model.isSaved"
         />
       </MsfFormGroup>
+
       <MsfFormGroup v-if="['JP', 'GO'].includes(model.cstmrTypeCd)" label="업종/업태" required>
         <MsfStack type="field" class="ut-w100p">
           <MsfSelect
@@ -120,10 +126,9 @@
           />
         </MsfStack>
       </MsfFormGroup>
+
       <MsfFormGroup
-        v-if="
-          model.joinType === 'HDN3' || model.formType === 'SVC' || model.formType === 'TERMINATION'
-        "
+        v-if="model.joinType === 'HDN3' || model.formType === 'SVC' || model.formType === 'TERMINATION'"
         :label="phoneLabel"
         required
       >
@@ -145,25 +150,25 @@
             maxlength="4"
             :readonly="model.isSaved"
           />
-          <MsfButton variant="toggle" v-if="deviceChgAuth.status.value === 'none'" disabled
-            >인증</MsfButton
-          >
+          <MsfButton variant="toggle" v-if="deviceChgAuth.status.value === 'none'" disabled>인증</MsfButton>
           <MsfButton
             variant="toggle"
             v-else-if="deviceChgAuth.status.value === 'ready'"
             @click="handleDeviceChgVerify"
-            >인증</MsfButton
           >
-          <MsfButton variant="toggle" v-else-if="deviceChgAuth.status.value === 'verified'" active
-            >인증 완료</MsfButton
-          >
+            인증
+          </MsfButton>
+          <MsfButton variant="toggle" v-else-if="deviceChgAuth.status.value === 'verified'" active>
+            인증 완료
+          </MsfButton>
         </MsfStack>
       </MsfFormGroup>
     </MsfStack>
   </div>
 </template>
+
 <script setup>
-import { defineModel, defineProps } from 'vue'
+import { computed, defineExpose, defineModel, defineProps } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
@@ -172,23 +177,35 @@ import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({
   title: { type: String, default: '가입자 정보' },
-  phoneLabel: { tpye: String, default: '기기변경<br/>휴대폰번호' },
+  phoneLabel: { type: String, default: '해지 휴대폰번호' },
 })
+
 const model = defineModel({ type: Object, required: true })
 const store = useMsfFormNewChgStore()
 const terminationStore = useMsfFormTerminationStore()
+const isTerminationForm = computed(() => model.value?.formType === 'TERMINATION')
+
+const resolveAuthFlag = () => {
+  if (isTerminationForm.value) return terminationStore.authFlags?.cancelPhone || false
+  return store.authFlags?.deviceChgTel || false
+}
+
+const updateAuthFlag = (v) => {
+  if (isTerminationForm.value) {
+    if (terminationStore.authFlags) terminationStore.authFlags.cancelPhone = v
+    return
+  }
+  if (store.authFlags) store.authFlags.deviceChgTel = v
+}
 
 const deviceChgAuth = useAuthButton(
   () => [model.value?.deviceChgTel1, model.value?.deviceChgTel2, model.value?.deviceChgTel3],
-  // 스토어의 deviceChgTel 인증 상태를 관리할 수 있도록 플래그 전달
   {
     get value() {
-      return store.authFlags?.deviceChgTel || false
+      return resolveAuthFlag()
     },
     set value(v) {
-      if (store.authFlags) {
-        store.authFlags.deviceChgTel = v
-      }
+      updateAuthFlag(v)
     },
   },
 )
@@ -204,76 +221,77 @@ const handleDeviceChgVerify = async () => {
     deviceChgTel3: model.value.deviceChgTel3,
     phoneNo,
   })
-  console.log('[Auth] termination verify input', { phoneNo, customerLinkName })
   try {
     const res = await post('/api/form/ktmmember/auth', {
       subscriberNo: phoneNo,
       customerLinkName,
     })
-    console.log('기기변경 번호 인증 결과:', res)
     console.log('[Auth] response raw', res)
     const contractNum = res?.data?.contractNum || res?.data?.contract_num || res?.data?.ncn
+    const lstComActvDate =
+      res?.data?.lstComActvDate || res?.data?.lst_com_actv_date || res?.data?.initActivationDate || ''
+
     if (res?.code !== '0000') {
-      console.warn('[Auth] failed response', {
-        code: res?.code,
-        message: res?.message,
-        contractNum,
-      })
-      showAlert(res?.message || '휴대폰번호 인증이 실패했습니다.')
+      console.warn('[Auth] failed response', { code: res?.code, message: res?.message, contractNum })
+      showAlert(res?.message || '휴대폰번호 인증에 실패했습니다.')
       return
     }
+
     if (!contractNum) {
-      console.warn('[Auth] no contract number', { code: res?.code, message: res?.message, data: res?.data })
-      showAlert('인증은 완료되었지만 조회된 계약번호가 없습니다.')
+      console.warn('[Auth] failed response', { code: res?.code, message: res?.message, contractNum })
+      showAlert('조회 실패: 계약번호를 확인할 수 없습니다.')
       return
     }
+
     model.value.contractNum = contractNum
-    if (model.value.formType === 'TERMINATION') {
+    model.value.lstComActvDate = lstComActvDate
+    if (isTerminationForm.value) {
       terminationStore.setTerminationContract(contractNum, 'MsfSubscriberInfo')
       model.value.ncn = contractNum
     }
+
     console.log('[Auth] mapped result', {
       contractNum: model.value.contractNum,
       ncn: model.value.ncn,
+      lstComActvDate: model.value.lstComActvDate,
       formType: model.value.formType,
     })
     showAlert('휴대폰번호 인증이 완료되었습니다.')
     deviceChgAuth.status.value = 'verified'
-    if (store.authFlags) store.authFlags.deviceChgTel = true
+    updateAuthFlag(true)
   } catch (error) {
-    console.error('기기변경 번호 인증 실패:', error)
-    showAlert('기기변경 휴대폰 번호 인증에 실패했습니다.')
+    console.error('[Auth] verify failed', error)
+    showAlert('휴대폰번호 인증에 실패했습니다.')
   }
 }
 
 const validate = () => {
   if (!model.value.cstmrNm) return false
+
   if (['NA', 'NM'].includes(model.value.cstmrTypeCd)) {
     if (!model.value.cstmrNativeRrn1 || !model.value.cstmrNativeRrn2) return false
   }
+
   if (['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
     if (!model.value.cstmrForeignerRrn1 || !model.value.cstmrForeignerRrn2) return false
   }
+
   if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
     if (!model.value.cstmrJuridicalRrn1 || !model.value.cstmrJuridicalRrn2) return false
     if (
       !model.value.cstmrJuridicalBizNo1 ||
       !model.value.cstmrJuridicalBizNo2 ||
       !model.value.cstmrJuridicalBizNo3
-    )
-      return false
+    ) return false
     if (!model.value.cstmrJuridicalRepNm) return false
     if (!model.value.upjnCd || !model.value.bcuSbst) return false
   }
-  if (
-    model.value.joinType === 'HDN3' ||
-    model.value.formType === 'SVC' ||
-    model.value.formType === 'TERMINATION'
-  ) {
-    if (!model.value.deviceChgTel1 || !model.value.deviceChgTel2 || !model.value.deviceChgTel3)
-      return false
-    if (!store.authFlags?.deviceChgTel) return false
+
+  if (model.value.joinType === 'HDN3' || model.value.formType === 'SVC' || model.value.formType === 'TERMINATION') {
+    if (!model.value.deviceChgTel1 || !model.value.deviceChgTel2 || !model.value.deviceChgTel3) return false
+    if (!resolveAuthFlag()) return false
   }
+
   return true
 }
 

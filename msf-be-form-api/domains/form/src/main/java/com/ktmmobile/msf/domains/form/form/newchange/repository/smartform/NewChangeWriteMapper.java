@@ -9,24 +9,24 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface NewChangeWriteMapper {
 
-    void insertMsfRequest(MsfRequestVo msfRequestVo);
+    void insertMsfRequestTemp(MsfRequestVo msfRequestVo);
 
-    void insertMsfRequestAgent(MsfRequestAgentVo msfRequestAgentVo);
+    void insertMsfRequestAgentTemp(MsfRequestAgentVo msfRequestAgentVo);
 
-    void insertMsfRequestCstmr(MsfRequestCstmrVo msfRequestCstmrVo);
+    void insertMsfRequestCstmrTemp(MsfRequestCstmrVo msfRequestCstmrVo);
 
-    void insertMsfRequestSale(MsfRequestSaleVo msfRequestSaleVo);
+    void insertMsfRequestSaleTemp(MsfRequestSaleVo msfRequestSaleVo);
 
-    void insertMsfRequestBillReq(MsfRequestBillReqVo msfRequestBillReqVo);
+    void insertMsfRequestBillReqTemp(MsfRequestBillReqVo msfRequestBillReqVo);
 
-    void updateMsfRequest(NewChangeInfoRequest request);
+    void updateMsfRequestTemp(NewChangeInfoRequest request);
 
-    void updateMsfRequestAgent(NewChangeInfoRequest request);
+    void updateMsfRequestAgentTemp(NewChangeInfoRequest request);
 
-    void updateMsfRequestCstmr(NewChangeInfoRequest request);
+    void updateMsfRequestCstmrTemp(NewChangeInfoRequest request);
 
-    void updateMsfRequestSale(NewChangeInfoRequest request);
+    void updateMsfRequestSaleTemp(NewChangeInfoRequest request);
 
-    void updateMsfRequestBillReq(NewChangeInfoRequest request);
+    void updateMsfRequestBillReqTemp(NewChangeInfoRequest request);
 
 }

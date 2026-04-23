@@ -1,0 +1,30 @@
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.shared.form.common.terms.adapter.repository.mybatis.msp.mapper.McpTermsMapper">
+
+    <select id="selectListTermsContent" resultType="com.ktmmobile.msf.domains.shared.form.common.terms.domain.entity.TermsContent">
+      SELECT CD_GROUP_ID1 AS expnsn_str_val1
+           , CD_GROUP_ID2 AS expnsn_str_val2
+           , DOC_VER
+           , DOC_CONTENT
+        FROM
+      <foreach collection="list" item="item" index="index" open="(" close=")" separator=" union all ">
+      SELECT CD_GROUP_ID1
+           , CD_GROUP_ID2
+           , DOC_VER
+           , DOC_CONTENT
+        FROM NMCP_FORM_DTL@DL_MCP
+       WHERE CD_GROUP_ID1 = #{item.expnsnStrVal1}
+         AND CD_GROUP_ID2 = #{item.expnsnStrVal2}
+         AND USE_YN = 'Y'
+         AND doc_ver = (
+                        SELECT max(doc_ver)
+                          FROM NMCP_FORM_DTL@DL_MCP
+                         WHERE CD_GROUP_ID1 = #{item.expnsnStrVal1}
+                           AND CD_GROUP_ID2 = #{item.expnsnStrVal2}
+                           AND USE_YN = 'Y'
+                       )
+      </foreach>
+    </select>
+</mapper>

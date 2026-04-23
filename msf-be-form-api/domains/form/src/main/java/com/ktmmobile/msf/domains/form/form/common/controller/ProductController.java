@@ -92,12 +92,13 @@ public class ProductController {
         return ResponseUtils.ok(productInfoService.getMspOfficialNoticeSupport(condition));
     }
 
-    //부가서비스 목록 조회 - 신규가입 및 번호이동
+    //부가서비스 목록 조회 - 신규가입 및 번호이동 // 기기변경은 가입중 부가서비스 조회해서 합치기
     //고객포탈 : /appform/getMcpAdditionListAjax.do
     @PostMapping("/addition/list")
     public CommonResponse<List<MsfRequestAdditionResponse>> getAdditionList(@RequestBody @Valid MsfRequestAdditionRequest condition) {
         return ResponseUtils.ok(productInfoService.getAdditionList(condition));
     }
+
     // S101030106 신규/변경 신청서 > 부가서비스 추가/삭제
     // 부가서비스 목록 조회시 스마트신청서 제공 대상만 세팅하도록 해주세요.
     // >> 서비스변경? 현재 조회되는 내용이 없음.

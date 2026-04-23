@@ -59,3 +59,19 @@ export const getCommonCodeList = async (groupIds, includeDetail = false, include
   }
   return isArray ? res.data : res.data?.[groupIds] || []
 }
+
+/**
+ * 이용약관 항목 조회
+ *
+ * @param {String} agreementId
+ * @returns {Object} agreementId에 해당하는 이용약관 내용
+ */
+export const getTermsAgreementItem = async (agreementId) => {
+  const res = await post('/api/shared/form/common/terms/list', {
+    groupCode: agreementId,
+  })
+  if (res.code !== '0000') {
+    return []
+  }
+  return res.data?.codes || []
+}

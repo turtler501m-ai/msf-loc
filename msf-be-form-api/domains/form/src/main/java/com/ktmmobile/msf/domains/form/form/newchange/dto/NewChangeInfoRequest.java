@@ -153,8 +153,6 @@ public class NewChangeInfoRequest {
     String minorAgentRrn;
     String minorAgentSelfCertTypeCd;
     String minorAgentSelfInqryAgrmYn;
-    String minorAgentSelfIssuExprDate;
-    String minorAgentSelfIssuNo;
     String minorAgentTelFnNo;
     String minorAgentTelMnNo;
     String minorAgentTelRnNo;

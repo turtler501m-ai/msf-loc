@@ -27,8 +27,6 @@ public class MsfRequestAgentVo {
     String minorAgentSelfInqryAgrmYn;
     String minorAgentSelfCertTypeCd;
     String minorAgentCiInfo;
-    String minorAgentSelfIssuExprDate;
-    String minorAgentSelfIssuNo;
     String jrdclAgentNm;
     String jrdclAgentRrn;
     String jrdclAgentTelFnNo;

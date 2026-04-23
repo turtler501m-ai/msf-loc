@@ -128,19 +128,19 @@ public class NewChangeService {
 
         //if (!StringUtils.hasText(request.getRequestKey().toString())) {
         if (requestKey > 0) {
-            newChangeWriteMapper.insertMsfRequest(msfRequestVo); //MSF_REQUEST
-            newChangeWriteMapper.insertMsfRequestAgent(msfRequestAgentVo); //MSF_REQUEST_AGENT
-            newChangeWriteMapper.insertMsfRequestCstmr(msfRequestCstmrVo); //MSF_REQUEST_CSTMR
-            newChangeWriteMapper.insertMsfRequestSale(msfRequestSaleVo); //MSF_REQUEST_SALE
-            newChangeWriteMapper.insertMsfRequestBillReq(msfRequestBillReqVo); //MSF_REQUEST_BILL_REQ
+            newChangeWriteMapper.insertMsfRequestTemp(msfRequestVo); //MSF_REQUEST
+            newChangeWriteMapper.insertMsfRequestAgentTemp(msfRequestAgentVo); //MSF_REQUEST_AGENT
+            newChangeWriteMapper.insertMsfRequestCstmrTemp(msfRequestCstmrVo); //MSF_REQUEST_CSTMR
+            newChangeWriteMapper.insertMsfRequestSaleTemp(msfRequestSaleVo); //MSF_REQUEST_SALE
+            newChangeWriteMapper.insertMsfRequestBillReqTemp(msfRequestBillReqVo); //MSF_REQUEST_BILL_REQ
         } else {
             //UPDATE
             request.setRequestKey(request.getRequestKey());
-            newChangeWriteMapper.updateMsfRequest(request);
-            newChangeWriteMapper.updateMsfRequestAgent(request);
-            newChangeWriteMapper.updateMsfRequestCstmr(request);
-            newChangeWriteMapper.updateMsfRequestSale(request);
-            newChangeWriteMapper.updateMsfRequestBillReq(request);
+            newChangeWriteMapper.updateMsfRequestTemp(request);
+            newChangeWriteMapper.updateMsfRequestAgentTemp(request);
+            newChangeWriteMapper.updateMsfRequestCstmrTemp(request);
+            newChangeWriteMapper.updateMsfRequestSaleTemp(request);
+            newChangeWriteMapper.updateMsfRequestBillReqTemp(request);
         }
 
         return Long.toString(requestKey);

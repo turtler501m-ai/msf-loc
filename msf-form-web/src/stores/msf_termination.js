@@ -1,85 +1,115 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { post } from '@/libs/api/msf.api'
+
+const DEFAULT_ERROR_MESSAGE = '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
 
 export const useMsfFormTerminationStore = defineStore('msf_form_termination', () => {
   const applicationKey = ref('TEMP_' + Math.random().toString(36).substring(7))
   const completeErrorMessage = ref('')
 
-  // Step 1: Customer Info
-  const customer = ref({
+  // formData 단일 소스
+  // - 화면 공통 컴포넌트 바인딩
+  // - API 전송 전 customer/product/agreement 구조로 매핑
+  const formData = reactive({
     /* 고객 유형 */
-    customerType: 'NA',     // 고객유형 (NA:내국인, MI:미성년자, FO:외국인, FM:외국인미성년자, CO:법인, PB:공공기관)
-    visitCustomer: '',    // 방문고객 (self:본인/대표, agent:대리인)
+    cstmrType: '',
+    cstmrTypeCd: 'NA', // 고객유형
+    visitCustomer: '',
+    cstmrVisitTypeCd: '', // 방문고객 유형
+
     /* 신분증 확인 */
-    idCardScan: '',       // 신분증 스캔 종류
-    licenseRegion: '',    // 면허지역 (운전면허증 선택 시)
-    licenseNumber: '',    // 면허번호
-    licenseExpireDate: '',// 면허 만료일
+    identityCertTypeCd: '', // 신분증 인증유형
+    identityIssuDate: '', // 발급일자
+    driveLicnsNo: '', // 운전면허번호
+    selfIssuNo: '', // 자필서명/자체발급번호
+    identityTypeCd: '', // 신분증 타입
+    identityIssuRegion: '', // 발급지역
+    isVerified: false, // 본인확인 완료 여부
+    isSaved: false, // 임시저장 여부
+
     /* 가입자 정보 */
-    userName: '',         // 이름
-    userBirthDate: '',    // 생년월일 (YYYYMMDD)
-    userGender: '',       // 성별
-    corpRegNo1: '',       // 법인등록번호 앞
-    corpRegNo2: '',       // 법인등록번호 뒤
-    bizNo1: '',           // 사업자등록번호1
-    bizNo2: '',           // 사업자등록번호2
-    bizNo3: '',           // 사업자등록번호3
-    repreName: '',        // 대표자명
-    cancelPhone1: '010',  // [TEST] 해지 휴대폰번호 앞 (운영 시 X01 조회값으로 대체)
-    cancelPhone2: '1234', // [TEST] 해지 휴대폰번호 중
-    cancelPhone3: '5678', // [TEST] 해지 휴대폰번호 뒤
-    /* 법정대리인 정보 (미성년자) */
-    repName: '',          // 법정대리인 이름
-    repBirthDate: '',     // 법정대리인 생년월일
-    repRelation: '',      // 신청인과의 관계
-    repPhone1: '',        // 법정대리인 연락처 앞
-    repPhone2: '',        // 법정대리인 연락처 중
-    repPhone3: '',        // 법정대리인 연락처 뒤
-    repPhoneAuth: '',     // 인증번호 입력
-    repAgree: false,      // 법정대리인 안내사항 동의
+    cstmrNm: '전용식', // 이름
+    userBirthDate: '', // 생년월일(YYYYMMDD)
+    userGender: '', // 성별
+    cstmrNativeRrn1: '', // 내국인 주민번호 앞
+    cstmrNativeRrn2: '', // 내국인 주민번호 뒤
+    cstmrForeignerRrn1: '', // 외국인등록번호 앞
+    cstmrForeignerRrn2: '', // 외국인등록번호 뒤
+    cstmrJuridicalRrn1: '', // 법인등록번호 앞
+    cstmrJuridicalRrn2: '', // 법인등록번호 뒤
+    cstmrJuridicalBizNo1: '', // 사업자번호 1
+    cstmrJuridicalBizNo2: '', // 사업자번호 2
+    cstmrJuridicalBizNo3: '', // 사업자번호 3
+    cstmrJuridicalRepNm: '', // 대표자명
+    upjnCd: '', // 업종코드
+    bcuSbst: '', // 업태
+
+    /* 해지 휴대폰 인증 */
+    deviceChgTel1: '010',
+    deviceChgTel2: '5358',
+    deviceChgTel3: '6069',
+    cancelPhoneAuth: '', // 인증번호
+    contractNum: '525550130', // 인증 응답 계약번호
+    lstComActvDate: '', // 개통일자
+    formType: 'TERMINATION',
+
+    /* 법정대리인 정보 */
+    repName: '',
+    repRegistrationNo1: '',
+    repRegistrationNo2: '',
+    repRelation: '',
+    repPhone1: '',
+    repPhone2: '',
+    repPhone3: '',
+    repPhoneAuth: '',
+    repAgree: false,
+
     /* 대리인 위임정보 */
-    agentName: '',        // 위임받은 고객 이름
-    agentBirthDate: '',   // 생년월일
-    agentGender: '',      // 성별
-    agentRelation: '',    // 신청인과의 관계
-    agentPhone1: '',      // 연락처 앞
-    agentPhone2: '',      // 연락처 중
-    agentPhone3: '',      // 연락처 뒤
+    minorAgentNm: '',
+    agentBirthDate: '',
+    agentGender: '',
+    minorAgentRelTypeCd: '',
+    minorAgentTelFnNo: '',
+    minorAgentTelMnNo: '',
+    minorAgentTelRnNo: '',
+
     /* 해지 후 연락처 */
-    afterTel1: '',        // 연락 전화번호 앞
-    afterTel2: '',        // 연락 전화번호 중
-    afterTel3: '',        // 연락 전화번호 뒤
-    postMethod: 'E',       // 해지 후 연락 수단 (mail:우편, email:이메일)
-    /* 가입유형 선택 */
-    openingDate: '',      // 개통일자
-    agencyName: '',       // 대리점
-    agentCd: 'MSF_FORM',  // DB 저장용 AGENT_CD 기본값
-    managerCd: 'MSF_FORM', // DB 저장용 MANAGER_CD 기본값
-    /* 연동 키 값 */
-    ncn: '525550130',  // [TEST] 계약번호 (운영 시 X01 조회값으로 대체)
-    custId: 'TESTCUST001', // [TEST] 고객ID (운영 시 X01 조회값으로 대체)
-  })
+    afterTel1: '',
+    afterTel2: '',
+    afterTel3: '',
+    postMethod: 'postMethod2', // 해지 후 연락 수단
 
-  // Step 2: Product (해지 정산)
-  const product = ref({
-    /* 해지 신청 */
-    isActive: '',         // 사용여부 (kt M mobile 재사용 / kt 재사용 / skt 사용 / lgt 사용 / 기타)
-    /* 해지 정산 (X18 자동 조회 후 세팅) */
-    usageFee: '',         // 사용요금 (원)
-    penaltyFee: '',       // 위약금 (원)
-    finalAmount: '',      // 최종 정산요금 (원)
-    remainPeriod: '',     // 잔여분할상환 기간 (개월)
-    remainAmount: '',     // 잔여분할상환 금액 (원)
-    /* X18 원본 응답 보관 */
-    remainChargeLoaded: false,  // X18 조회 완료 여부
-    remainChargeItems: [],      // X18 요금 항목 리스트
-    /* 메모 */
+    /* 가입유형/매장 정보 */
+    agencyName: '',
+    managerNm: '',
+    agentNm: '',
+    cpntId: '',
+    cpntNm: '',
+    cntpntShopCd: '',
+    cntpntShopNm: '',
+
+    /* 해지 정산 */
+    isActive: '', // 사용여부
+    usageFee: '', // 사용요금
+    penaltyFee: '', // 위약금
+    finalAmount: '', // 최종 정산요금
+    remainPeriod: '', // 잔여분할상환 기간
+    remainAmount: '', // 잔여분할상환 금액
     memo: '',
-  })
+    uploadedDocs: [],
 
-  // Step 3: Agreements
-  const agreement = ref({
+    /* 연동키/기본코드 */
+    agentCd: '',
+    managerCd: '',
+    ncn: '525550130',
+    custId: 'TESTCUST001',
+
+    /* X18 조회 원본 */
+    remainChargeLoaded: false,
+    remainChargeItems: [],
+
+    /* 동의 */
     agreeCheck1: false,
     agreeCheck2: false,
     agreeCheck3: false,
@@ -87,77 +117,179 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
 
   // 인증 버튼 완료 여부 플래그
   const authFlags = ref({
-    cancelPhone: false,   // 해지 휴대폰 인증
-    repPhone: false,      // 법정대리인 휴대폰 인증
+    cancelPhone: false, // 해지 휴대폰 인증
+    repPhone: false, // 법정대리인 휴대폰 인증
   })
 
-  // # X18 잔여요금·위약금 실시간 조회
+  // 인증 응답의 계약번호를 해지 스토어 키(formData.ncn/contractNum)에 매핑
+  const setTerminationContract = (contractNum, source = 'unknown') => {
+    if (!contractNum) return false
+    formData.contractNum = contractNum
+    formData.ncn = contractNum
+    sessionStorage.setItem('terminationContractNum', contractNum)
+    console.log('[TerminationStore] contract mapped', { source, contractNum })
+    return true
+  }
+
+  // ncn 확보
+  // 우선순위:
+  // 1) formData.ncn
+  // 2) formData.contractNum
+  // 3) sessionStorage 캐시
+  // 4) 인증 API 재호출
+  const ensureTerminationNcn = async () => {
+    if (formData.ncn) return formData.ncn
+    if (formData.contractNum) {
+      setTerminationContract(formData.contractNum, 'formData.contractNum')
+      return formData.ncn
+    }
+
+    const cachedContractNum = sessionStorage.getItem('terminationContractNum')
+    if (cachedContractNum) {
+      setTerminationContract(cachedContractNum, 'sessionStorage')
+      return formData.ncn
+    }
+
+    const subscriberNo = `${formData.deviceChgTel1 || ''}${formData.deviceChgTel2 || ''}${formData.deviceChgTel3 || ''}`
+    const customerLinkName = (formData.cstmrNm || '').trim()
+    if (!subscriberNo || !customerLinkName) return ''
+
+    try {
+      const authResult = await post('/api/form/ktmmember/auth', { subscriberNo, customerLinkName })
+      const contractNum =
+        authResult?.data?.contractNum || authResult?.data?.contract_num || authResult?.data?.ncn
+      const lstComActvDate =
+        authResult?.data?.lstComActvDate ||
+        authResult?.data?.lst_com_actv_date ||
+        authResult?.data?.initActivationDate ||
+        ''
+      if (authResult?.code === '0000' && contractNum) {
+        setTerminationContract(contractNum, 'auth-api')
+        formData.lstComActvDate = lstComActvDate
+        return formData.ncn
+      }
+      return ''
+    } catch (e) {
+      console.error('[TerminationStore] auth failed', e)
+      return ''
+    }
+  }
+
+  // X18 잔여요금·위약금 실시간 조회
   const apiGetRemainCharge = async () => {
-    const ncn = customer.value.ncn
+    const ncn = formData.ncn || formData.contractNum
     console.log('[X18] 잔여요금 조회 요청', { ncn })
     try {
-      // ctn·custId는 백엔드에서 세션 계약 목록으로 조회 — ncn만 전송
+      // ctn·custId는 백엔드에서 세션 계약 목록으로 조회, ncn만 전송
       const data = await post('/remainCharge/list', { ncn })
       console.log('[X18] 잔여요금 조회 응답', data)
       if (data?.success) {
-        product.value.usageFee = data.sumAmt || ''
-        product.value.remainChargeItems = data.items || []
-        product.value.remainChargeLoaded = true
-        // 단일 항목 세팅 (백엔드 RemainChargeResVO 직접 필드)
-        product.value.penaltyFee = data.penaltyFee || ''
-        product.value.finalAmount = data.settlementFee || ''
-        product.value.remainPeriod = data.remainPeriod || ''
-        product.value.remainAmount = data.remainAmount || ''
-        console.log('[X18] product 세팅 완료', {
-          usageFee: product.value.usageFee,
-          penaltyFee: product.value.penaltyFee,
-          finalAmount: product.value.finalAmount,
-          remainPeriod: product.value.remainPeriod,
-          remainAmount: product.value.remainAmount,
-        })
+        formData.usageFee = data.sumAmt || ''
+        formData.remainChargeItems = data.items || []
+        formData.remainChargeLoaded = true
+        formData.penaltyFee = data.penaltyFee || ''
+        formData.finalAmount = data.settlementFee || ''
+        formData.remainPeriod = data.remainPeriod || ''
+        formData.remainAmount = data.remainAmount
+        formData.lstComActvDate = data.lstComActvDate || data.initActivationDate || formData.lstComActvDate
       } else {
         console.warn('[X18] 조회 실패 - success=false', data?.message)
       }
       return data
     } catch (e) {
       console.error('[X18] 잔여요금 조회 실패 (네트워크/서버 오류)', e)
-      product.value.remainChargeLoaded = false
+      formData.remainChargeLoaded = false
       return null
     }
   }
 
-  // # 초기화
+  // 단계별 초기화
   const resetStep = (step) => {
     if (step === 1) {
       applicationKey.value = ''
-      // TODO: customer 데이터만 초기값으로 리셋
-    } else if (step === 2) {
-      product.value.usageFee = ''
-      product.value.penaltyFee = ''
-      product.value.finalAmount = ''
-      product.value.remainPeriod = ''
-      product.value.remainAmount = ''
-      product.value.remainChargeLoaded = false
-      product.value.remainChargeItems = []
+      return
+    }
+
+    if (step === 2) {
+      formData.usageFee = ''
+      formData.penaltyFee = ''
+      formData.finalAmount = ''
+      formData.remainPeriod = ''
+      formData.remainAmount = ''
+      formData.remainChargeLoaded = false
+      formData.remainChargeItems = []
+      formData.memo = ''
       authFlags.value.cancelPhone = false
       authFlags.value.repPhone = false
-    } else if (step === 3) {
-      agreement.value.agreeCheck1 = false
-      agreement.value.agreeCheck2 = false
-      agreement.value.agreeCheck3 = false
+      return
+    }
+
+    if (step === 3) {
+      formData.agreeCheck1 = false
+      formData.agreeCheck2 = false
+      formData.agreeCheck3 = false
     }
   }
 
+  const normalizeReceiveWayCd = (value) => {
+    const normalized = (value || '').trim()
+    if (normalized === 'postMethod1' || normalized.toUpperCase() === 'P' || normalized.toLowerCase() === 'mail') return 'P'
+    if (normalized === 'postMethod2' || normalized.toUpperCase() === 'E' || normalized.toLowerCase() === 'email') return 'E'
+    return ''
+  }
 
+  // 백엔드 요청 스키마(customer/product/agreement) 매핑
+  const buildCompletePayload = () => ({
+    receiveWayCd: normalizeReceiveWayCd(formData.postMethod),
+    customer: {
+      managerCd: formData.managerCd,
+      managerNm: formData.managerNm,
+      agentCd: formData.agentCd,
+      agentNm: formData.agentNm,
+      customerType: formData.cstmrTypeCd || formData.cstmrType,
+      identityCertTypeCd: formData.identityCertTypeCd,
+      identityTypeCd: formData.identityTypeCd,
+      identityIssuDate: formData.identityIssuDate,
+      identityIssuRegion: formData.identityIssuRegion,
+      driveLicnsNo: formData.driveLicnsNo,
+      selfIssuNo: formData.selfIssuNo,
+      userName: formData.cstmrNm,
+      userBirthDate: formData.userBirthDate,
+      cancelPhone1: formData.deviceChgTel1,
+      cancelPhone2: formData.deviceChgTel2,
+      cancelPhone3: formData.deviceChgTel3,
+      afterTel1: formData.afterTel1,
+      afterTel2: formData.afterTel2,
+      afterTel3: formData.afterTel3,
+      postMethod: formData.postMethod,
+      agencyName: formData.agencyName,
+      cpntId: formData.cpntId,
+      cpntNm: formData.cpntNm,
+      cntpntShopCd: formData.cntpntShopCd,
+      cntpntShopNm: formData.cntpntShopNm,
+      ncn: formData.ncn || formData.contractNum,
+      custId: formData.custId,
+    },
+    product: {
+      isActive: formData.isActive,
+      usageFee: formData.usageFee,
+      penaltyFee: formData.penaltyFee,
+      finalAmount: formData.finalAmount,
+      remainPeriod: formData.remainPeriod,
+      remainAmount: formData.remainAmount,
+      memo: formData.memo,
+    },
+    agreement: {
+      agreeCheck1: !!formData.agreeCheck1,
+      agreeCheck2: !!formData.agreeCheck2,
+      agreeCheck3: !!formData.agreeCheck3,
+    },
+  })
 
-  // # 작성완료 API
+  // 작성완료 API
   const apiCompleteApplication = async () => {
     try {
-      const payload = {
-        customer: customer.value,
-        product: product.value,
-        agreement: agreement.value,
-      }
+      const payload = buildCompletePayload()
       console.debug('[apiCompleteApplication] request', {
         applicationKey: applicationKey.value,
         ncn: payload?.customer?.ncn,
@@ -171,12 +303,11 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
         console.info('[apiCompleteApplication] success', { applicationNo: data?.applicationNo })
         return true
       }
-      completeErrorMessage.value = data?.message || '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
-      console.warn('Completion rejected', data)
+      completeErrorMessage.value = data?.message || DEFAULT_ERROR_MESSAGE
+      console.warn('[apiCompleteApplication] failed response', data)
       return false
     } catch (e) {
-      completeErrorMessage.value =
-        e?.response?.data?.message || '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
+      completeErrorMessage.value = e?.response?.data?.message || DEFAULT_ERROR_MESSAGE
       console.error('[apiCompleteApplication] exception', {
         message: e?.message,
         status: e?.response?.status,
@@ -186,17 +317,16 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     }
   }
 
-  const getCompleteErrorMessage = () =>
-    completeErrorMessage.value || '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
+  const getCompleteErrorMessage = () => completeErrorMessage.value || DEFAULT_ERROR_MESSAGE
 
   return {
     applicationKey,
-    customer,
-    product,
-    agreement,
+    formData,
     authFlags,
     completeErrorMessage,
     getCompleteErrorMessage,
+    setTerminationContract,
+    ensureTerminationNcn,
     resetStep,
     apiGetRemainCharge,
     apiCompleteApplication,

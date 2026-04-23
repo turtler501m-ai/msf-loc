@@ -217,6 +217,8 @@ public class CancelConsultDto implements Serializable {
         private java.util.List<FareItem> items;
 
         /** requestView 위약금 블록 데이터 (X54·X16·mspAddInfo) */
+        private String initActivationDate; // 개통일자(lst_com_actv_date)
+        private String lstComActvDate; // 최초개통일자(lst_com_actv_date)
         private TerminationSettlementDto settlement;
 
         // 위약금/정산요금/상환기간/금액 — settlement 에서 꺼낸 단일 항목
@@ -245,6 +247,10 @@ public class CancelConsultDto implements Serializable {
         public void setSearchTime(String searchTime) { this.searchTime = searchTime; }
         public String getSumAmt() { return sumAmt; }
         public void setSumAmt(String sumAmt) { this.sumAmt = sumAmt; }
+        public String getInitActivationDate() { return initActivationDate; }
+        public void setInitActivationDate(String initActivationDate) { this.initActivationDate = initActivationDate; }
+        public String getLstComActvDate() { return lstComActvDate; }
+        public void setLstComActvDate(String lstComActvDate) { this.lstComActvDate = lstComActvDate; }
         public java.util.List<FareItem> getItems() { return items; }
         public void setItems(java.util.List<FareItem> items) { this.items = items; }
         public TerminationSettlementDto getSettlement() { return settlement; }

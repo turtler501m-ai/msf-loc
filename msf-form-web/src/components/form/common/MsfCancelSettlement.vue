@@ -1,9 +1,27 @@
 <script setup>
+import { ref } from 'vue'
+import { useMsfFormTerminationStore } from '@/stores/msf_termination'
+
 const formData = defineModel({ type: Object, required: true })
+
+const terminationStore = useMsfFormTerminationStore()
+const isLoadingCharge = ref(false)
+
+const onClickRemainCharge = async () => {
+  isLoadingCharge.value = true
+  await terminationStore.apiGetRemainCharge()
+  isLoadingCharge.value = false
+}
 </script>
 <template>
-  <MsfTitleArea title="해지 정산" />
-    <MsfStack vertical type="formgroups">
+  <MsfTitleArea title="해지 정산">
+    <template #right>
+      <MsfButton variant="subtle" :disabled="isLoadingCharge" @click="onClickRemainCharge">
+        {{ isLoadingCharge ? '조회 중..' : '잔여요금 조회' }}
+      </MsfButton>
+    </template>
+  </MsfTitleArea>
+  <MsfStack vertical type="formgroups">
       <MsfFormGroup label="사용요금" required>
         <MsfStack type="field">
           <MsfInput

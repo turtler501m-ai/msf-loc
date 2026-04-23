@@ -4,7 +4,7 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeWriteMapper">
 
-  <insert id="insertMsfRequest" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestVo">
+  <insert id="insertMsfRequestTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestVo">
     INSERT INTO MSF_REQUEST_TEMP
     (REQUEST_KEY,
     TMP_STEP_CD,
@@ -223,7 +223,7 @@
     )
   </insert>
 
-  <insert id="insertMsfRequestAgent" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo">
+  <insert id="insertMsfRequestAgentTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo">
     INSERT INTO MSF_REQUEST_AGENT_TEMP
     (REQUEST_KEY
     , FORM_TYPE_CD
@@ -237,8 +237,6 @@
     , MINOR_AGENT_SELF_INQRY_AGRM_YN
     , MINOR_AGENT_SELF_CERT_TYPE_CD
     , MINOR_AGENT_CI_INFO
-    , MINOR_AGENT_SELF_ISSU_EXPR_DATE
-    , MINOR_AGENT_SELF_ISSU_NO
     , JRDCL_AGENT_NM
     , JRDCL_AGENT_RRN
     , JRDCL_AGENT_TEL_FN_NO
@@ -256,8 +254,6 @@
     , #{minorAgentSelfInqryAgrmYn}
     , #{minorAgentSelfCertTypeCd}
     , #{minorAgentCiInfo}
-    , #{minorAgentSelfIssuExprDate}
-    , #{minorAgentSelfIssuNo}
     , #{jrdclAgentNm}
     , #{jrdclAgentRrn}
     , #{jrdclAgentTelFnNo}
@@ -265,7 +261,7 @@
     , #{jrdclAgentTelRnNo})
   </insert>
 
-  <insert id="insertMsfRequestCstmr" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo">
+  <insert id="insertMsfRequestCstmrTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo">
     INSERT INTO SMARTFORM.MSF_REQUEST_CSTMR_TEMP
     (REQUEST_KEY
     , FORM_TYPE_CD
@@ -347,7 +343,7 @@
     , #{cstmrReceiveTelRnNo})
   </insert>
 
-  <insert id="insertMsfRequestSale" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo">
+  <insert id="insertMsfRequestSaleTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo">
     INSERT INTO SMARTFORM.MSF_REQUEST_SALE_TEMP
     (REQUEST_KEY
     , FORM_TYPE_CD
@@ -409,7 +405,7 @@
     , #{socBaseChrgAmt})
   </insert>
 
-  <insert id="insertMsfRequestBillReq" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo">
+  <insert id="insertMsfRequestBillReqTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo">
     INSERT INTO SMARTFORM.MSF_REQUEST_BILL_REQ_TEMP
     (REQUEST_KEY
     , FORM_TYPE_CD
@@ -466,7 +462,7 @@
   </insert>
 
 
-  <update id="updateMsfRequest" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestVo">
+  <update id="updateMsfRequestTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestVo">
     UPDATE MSF_REQUEST_TEMP
     SET
         REQ_BUY_TYPE_CD=#{reqBuyTypeCd}
@@ -570,7 +566,7 @@
         , TMP_STEP_CD=#{tmpStepCd}
   WHERE REQUEST_KEY = #{requestKey}
 </update>
-<update id="updateMsfRequestAgent" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo">
+<update id="updateMsfRequestAgentTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo">
 UPDATE MSF_REQUEST_AGENT_TEMP
 SET
     MINOR_AGENT_NM=#{minorAgentNm}
@@ -583,8 +579,6 @@ SET
     , MINOR_AGENT_SELF_INQRY_AGRM_YN=#{minorAgentSelfInqryAgrmYn}
     , MINOR_AGENT_SELF_CERT_TYPE_CD=#{minorAgentSelfCertTypeCd}
     , MINOR_AGENT_CI_INFO=#{minorAgentCiInfo}
-    , MINOR_AGENT_SELF_ISSU_EXPR_DATE=#{minorAgentSelfIssuExprDate}
-    , MINOR_AGENT_SELF_ISSU_NO=#{minorAgentSelfIssuNo}
     , JRDCL_AGENT_NM=#{jrdclAgentNm}
     , JRDCL_AGENT_RRN=#{jrdclAgentRrn}
     , JRDCL_AGENT_TEL_FN_NO=#{jrdclAgentTelFnNo}
@@ -592,7 +586,7 @@ SET
     , JRDCL_AGENT_TEL_RN_NO=#{jrdclAgentTelRnNo}
 WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
 </update>
-<update id="updateMsfRequestCstmr" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo">
+<update id="updateMsfRequestCstmrTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo">
 UPDATE MSF_REQUEST_CSTMR_TEMP
 SET
     CSTMR_NM=#{cstmrNm}
@@ -634,7 +628,7 @@ SET
     , CSTMR_RECEIVE_TEL_RN_NO=#{cstmrReceiveTelRnNo}
 WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
 </update>
-<update id="updateMsfRequestSale" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo">
+<update id="updateMsfRequestSaleTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo">
 UPDATE MSF_REQUEST_SALE_TEMP
 SET
     MODEL_ID=#{modelId}
@@ -666,7 +660,7 @@ SET
     , SOC_BASE_CHRG_AMT=#{socBaseChrgAmt}
 WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
 </update>
-<update id="updateMsfRequestBillReq" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo">
+<update id="updateMsfRequestBillReqTemp" parameterType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo">
 UPDATE MSF_REQUEST_BILL_REQ_TEMP
 SET
     REQ_PAY_TYPE_CD=#{reqPayTypeCd}

@@ -46,24 +46,25 @@
     <MsfAgreementItem
       type="default"
       v-model="model.repAgree"
-      label="본인은 안내사항을 확인하였습니다"
-      required
+      name="본인은 안내사항을 확인하였습니다"
+      :required="termsItem?.required"
       :popTitle="agreementTitle"
-      content="법정대리인 안내사항 확인 및 동의 내용"
+      :content="termsItem?.content"
       :disabled="model.isSaved"
     />
   </div>
 </template>
 <script setup>
-import { defineModel, defineProps, computed } from 'vue'
+import { ref, defineModel, defineProps, computed, onBeforeMount } from 'vue'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
-
+import { getTermsAgreementItem } from '@/libs/utils/comn.utils'
 const props = defineProps({
   title: { type: String, default: '법정대리인 정보' },
   agreementTitle: { type: String, default: '법정대리인 안내사항 확인 및 동의' },
 })
 const model = defineModel({ type: Object, required: true })
 const store = useMsfFormNewChgStore()
+const termsItem = ref(null)
 
 const combinedNo1 = computed({
   get() {
@@ -117,4 +118,13 @@ const validate = () => {
 }
 
 defineExpose({ validate })
+
+onBeforeMount(async () => {
+  const data = await getTermsAgreementItem('CLAUSE_MINOR_AGENT')
+  if (!data || data.length === 0) {
+    termsItem.value = null
+    return
+  }
+  termsItem.value = data[0]
+})
 </script>

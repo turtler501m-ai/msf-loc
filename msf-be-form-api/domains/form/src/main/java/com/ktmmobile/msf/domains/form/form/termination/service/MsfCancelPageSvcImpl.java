@@ -297,7 +297,9 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         }
 
         String managerCd = safe(reqDto.getCustomer().getManagerCd());
+        String managerNm = safe(reqDto.getCustomer().getManagerNm());
         String agentCd = safe(reqDto.getCustomer().getAgentCd());
+        String agentNm = safe(reqDto.getCustomer().getAgentNm());
         if (isBlank(agentCd)) {
             logger.error("[apply] fail: agentCd is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
             //TEST_SKIP return TerminationApplyResVO.fail("agentCd is required");
@@ -311,7 +313,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             logger.error("[apply] fail: customerType is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
             //TEST_SKIP return TerminationApplyResVO.fail("customerType is required");
         }
-        String receiveWayCd = reqDto.getCustomer().getPostMethod();
+        String receiveWayCd = normalizeReceiveWay(reqDto.getCustomer().getPostMethod());
         if (isBlank(receiveWayCd)) {
             logger.error("[apply] fail: postMethod is invalid, ncn={}", safe(reqDto.getCustomer().getNcn()));
             //TEST_SKIP return TerminationApplyResVO.fail("postMethod is required");
@@ -355,7 +357,16 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             TerminationApplyReqDto dto = reqDto;
             dto.setRequestKey(requestKey);
             dto.setManagerCd(managerCd);
+            dto.setManagerNm(managerNm);
             dto.setAgentCd(agentCd);
+            dto.setAgentNm(agentNm);
+            dto.setShopCd(agentCd);
+            dto.setShopNm(agentNm);
+            dto.setRealShopNm(agentNm);
+            dto.setCpntId(safe(reqDto.getCustomer().getCpntId()));
+            dto.setCpntNm(safe(reqDto.getCustomer().getCpntNm()));
+            dto.setCntpntShopCd(safe(reqDto.getCustomer().getCntpntShopCd()));
+            dto.setCntpntShopNm(safe(reqDto.getCustomer().getCntpntShopNm()));
             dto.setOperTypeCd("CC");
             dto.setCstmrTypeCd(cstmrTypeCd);
             dto.setCancelMobileNo(cancelMobileNo);

@@ -3,7 +3,7 @@
     <MsfProductJoinType ref="productJoinTypeRef" v-model="formData" :authFlags="store.authFlags" />
     <MsfCustomerType ref="customerTypeRef" v-model="formData" :authFlags="store.authFlags" />
     <MsfIdentityVerify ref="identityVerifyRef" v-model="formData" :authFlags="store.authFlags" />
-    <MsfSubscriberInfo ref="subscriberInfoRef" v-model="formData" :authFlags="store.authFlags" />
+    <MsfSubscriberInfo ref="subscriberInfoRef" v-model="formData" :authFlags="store.authFlags" phoneLabel="기기변경<br/>휴대폰번호" />
     <MsfLegalAgentInfo ref="legalAgentInfoRef" v-model="formData" :authFlags="store.authFlags" />
     <MsfRealUserInfo
       ref="realUserInfoRef"
@@ -381,10 +381,19 @@ const checkRequiredFields = () => {
   return isReady
 }
 
+let debounceTimer = null
+const checkRequiredFieldsDebounced = () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    checkRequiredFields()
+    debounceTimer = null
+  }, 100)
+}
+
 watch(
   () => [formData, productData, store.authFlags],
   () => {
-    checkRequiredFields()
+    checkRequiredFieldsDebounced()
   },
   { deep: true },
 )
@@ -397,7 +406,7 @@ onMounted(async () => {
     value: item.code,
   }))
 
-  checkRequiredFields()
+  // checkRequiredFields() // watch에서 초기 실행되거나 데이터 변경 시 처리됨
   store.validateCustomer = validate
 })
 

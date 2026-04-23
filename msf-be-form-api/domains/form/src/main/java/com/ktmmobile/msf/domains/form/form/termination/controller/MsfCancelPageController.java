@@ -11,35 +11,45 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
+import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.service.FormCommService;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfChangPageSvc;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeResVO;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
 import com.ktmmobile.msf.domains.form.form.termination.service.MsfCancelPageSvc;
+import jakarta.validation.Valid;
 
 @RestController
 public class MsfCancelPageController {
     private static Logger logger = LoggerFactory.getLogger(MsfCancelPageController.class);
 
-    // @Autowired
-    // private MsfMypageSvc msfMypageSvc;
-
     @Autowired
     private MsfCancelPageSvc msfCancelPageSvc;
-
-//    @Autowired
-//    private CertService certService;
+    @Autowired
+    private FormCommService formCommService;
 
     @Value("${api.interface.server}")
     private String apiInterfaceServer;
-    @Autowired private MsfChangPageSvc msfChangPageSvc;
+    @Autowired
+    private MsfChangPageSvc msfChangPageSvc;
 
     /**
-     * X18 — 잔여요금·위약금 실시간 조회
+     * 해지화면 대리점 목록 조회
+     */
+    @PostMapping("/api/msf/formTermination/agent/list")
+    public CommonResponse<AgentInfoDto> getTerminationAgentInfo(@RequestBody @Valid AgentInfoRequest request) {
+        return ResponseUtils.ok(formCommService.getAgentInfo(request.shopOrgnId()));
+    }
+
+    /**
+     * X18 잔여요금·위약금 실시간 조회
      * POST /remainCharge/list
-     *
      * [TOBE] ncn만 프론트에서 수신, ctn·custId는 세션 계약 목록에서 조회 (getRealTimePriceAjax.do 방식 동일)
      */
     // AS-IS reference: mcp/mcp-portal-was MyinfoController#getRealTimePriceAjax
@@ -68,10 +78,12 @@ public class MsfCancelPageController {
             //TEST_SKIP return errVO;
         }
 
+
         // 3. 세션에서 userId 조회
         // UserSessionDto userSession = SessionUtils.getUserCookieBean();
         // if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
         //     logger.debug("[getRemainCharge][controller] early-return: invalid session. sessionNull={}, userId={}",
+
         //         userSession == null, userSession == null ? "" : userSession.getUserId());
         //     errVO.setSuccess(false);
         //     errVO.setMessage("세션 정보가 없습니다.");
@@ -101,10 +113,8 @@ public class MsfCancelPageController {
         reqDto.setCustId(cntrInfo.getCustId());
 
         logger.info("X18 잔여요금 조회 요청: ncn={}, ctn={}", reqDto.getNcn(), reqDto.getCtn());
-
         return msfCancelPageSvc.getRemainCharge(reqDto);
     }
-
 
     @PostMapping(value = "/api/msf/formTermination/{applicationKey}/complete")
     public TerminationApplyResVO complete(

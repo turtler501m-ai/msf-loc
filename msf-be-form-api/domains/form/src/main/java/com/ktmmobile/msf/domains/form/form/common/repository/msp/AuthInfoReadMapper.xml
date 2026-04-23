@@ -106,6 +106,7 @@
                     WHEN ADD_MONTHS(TO_DATE(SUBSTR(A.ENGG_INFO,1,8), 'YYYYMMDD'), TO_NUMBER(NVL(SUBSTR(A.ENGG_INFO, 9,2), 0))) - SYSDATE > TO_NUMBER(B.CD_VAL) THEN 'E'
                     ELSE 'Y'
                   END AS DVC_CHG_YN
+                , LST_COM_ACTV_DATE  /* 개통일자 추가 20260423 */
         FROM    CNTR A
                 , CMN_GRP_CD_MST B
         WHERE   B.GRP_ID = 'RCP0028'

@@ -31,16 +31,6 @@
       </ul>
     </div>
 
-    <!-- 숨겨진 파일 입력 (카메라 호출용) -->
-    <input
-      type="file"
-      ref="fileInput"
-      accept="image/*"
-      capture="environment"
-      style="display: none"
-      @change="handleFileChange"
-    />
-
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
@@ -53,6 +43,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { post } from '@/libs/api/msf.api.js'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -60,7 +51,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
 
-const fileInput = ref(null)
 const docFile = ref(null)
 const previewUrl = ref(null)
 
@@ -77,33 +67,15 @@ const onClose = () => {
 }
 
 // 촬영 버튼 클릭 시 카메라(파일 입력) 호출
-const openCamera = () => {
-  if (fileInput.value) {
-    fileInput.value.click()
-  }
-}
-
-// 파일(사진) 선택 시 처리
-const handleFileChange = (event) => {
-  const file = event.target.files[0]
-  if (file) {
-    docFile.value = file
-
-    // 미리보기 URL 생성 (기존 URL이 있으면 해제)
-    if (previewUrl.value) {
-      URL.revokeObjectURL(previewUrl.value)
-    }
-    previewUrl.value = URL.createObjectURL(file)
-  }
-  // 입력 필드 초기화 (같은 파일 재선택 가능하게 함)
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
+const openCamera = async () => {
+  docFile.value = await post('/api/shared/common/document/scan')
+  emit('confirm', docFile.value?.data)
+  onClose()
 }
 
 const onConfirm = () => {
   // 촬영된 파일 전송
-  emit('confirm', docFile.value)
+  emit('confirm', docFile.value?.data)
   onClose()
 }
 </script>
