@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!-- Published by JAX-WS RI at http://jax-ws.dev.java.net. RI's version is JAX-WS RI 2.1.5-JEUS 6.0.0.5-1013. --><ws:definitions xmlns:tns="uri://nstep.igw.common" xmlns:ws="http://schemas.xmlsoap.org/wsdl/" xmlns:ns0="uri://nstep.igw.common" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" name="WSI_CJH_NSTEP_SEND_5177" targetNamespace="uri://nstep.igw.common">
+  <ws:types>
+  <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="uri://nstep.igw.common" elementFormDefault="qualified" attributeFormDefault="qualified">
+    <xs:complexType name="DIO_CJH_NSTEP_SEND_5177Type">
+        <xs:sequence>
+            <xs:element name="SVC_STATUS" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="ERR_MSG" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="DII_CJH_NSTEP_SEND_5177Type">
+        <xs:sequence>
+            <xs:element name="SRL_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CUST_IDNT_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CUST_IDNT_NO_IND_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="PRDC_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="HNDSET_MDL_ID" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="IND_TYPE_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CUST_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CUST_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INHB_RGST_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CUST_DTL_TYPE_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CRPR_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CUST_TYPE_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="WLFR_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="WRLN_TLPH_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="TLPH_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="EML_ADRS_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="EML_BILL_AGRE_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BILL_ADRS_DONG_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BILL_ADRS_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BILL_ADRS_ZIP_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BLPYM_MTHD_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BLPYM_BANK_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BLPYM_BNKACN_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BLPYM_CUST_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BLPYM_CUST_INHB_RGST_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CRDT_CARD_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="EFCT_YM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="SBSCST_TYPE_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="HNDSET_BILL_TYPE_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="USIM_BILL_TYPE_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CUST_FVRT_1_TLPH_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CUST_FVRT_2_TLPH_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="NOW_SBSC_TLCM_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="NOW_CUST_TLPH_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="ATHN_ITEM_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="ATHN_TRTM_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_BANK_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_BANK_BNKACN_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_BLPYM_CUST_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_BANK_INHB_RGST_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="MSN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="ICC_ID" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="APLY_TRTM_STAT_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="AGNC_ID" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="APLSHT_CNCL_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="APLSHT_RGST_DATE" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="SVC_CNTR_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INDV_INFO_INER_PRCUSE_AGRE_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INDV_INFO_EXTR_PRVD_AGRE_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="ADVR_RCV_AGRE_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="SPCL_SLS_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INDV_INFO_CPRT_PRVD_AGRE_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CNTPNT_SHOP_ID" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="AGNT_INHB_RGST_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="AGNT_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="AGNT_WRKJOB_IND_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="AGNT_ZIP_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="AGNT_ADRS_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="AGNT_MNT_ADRS_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="AGNT_HOUS_TLPH_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="AGNT_PRTTLP_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BIND_SVC_IND_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="SNGL_SVC_IND_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INGR_1_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INGR_2_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INGR_CD_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="REAL_USER_INHB_RGST_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="REAL_USER_NM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="FEE_DSCN_AGRE_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_STLM_MTHD_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_STLM_CARD_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_STLM_INHB_RGST_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_STLM_EXPR_MM" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_STLM_INST_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="YET_BILL_STLM_INST_TMSCNT" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="SALORG_ID" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="MEMO_SBST" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BIZR_RGST_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="RQSSHT_DSPT_TYPE_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="ENCR_PRSN_ID" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="SUPOT_PRSN_ID" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="TRMN_YET_RPYM_AMT_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CYBR_RQSSHT_SECUR_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="USIM_PYMN_MTHD_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="USIM_UNIQ_OPEN_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="OLH_CLUB_SCOR" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INFO_ADVR_USE_AGRE_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INFO_ADVR_RCV_AGRE_YN" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="BOND_PRSR_FEE_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CLCR_TLPH_NO" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CLCR_ID" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="CAR_MKNG_AGNT_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="SLS_CMPN_CD" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="ENGG_MNTH_CNT" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="INST_MNTH_CNT" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="HNDSET_DSCN_1_AMNT" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+            <xs:element name="HNDSET_DSCN_2_AMNT" maxOccurs="1" minOccurs="1" type="xs:string"></xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="in_op_ON_CJH_IN_SERVER_5177_Input" type="tns:DII_CJH_NSTEP_SEND_5177Type"></xs:element>
+    <xs:element name="in_op_ON_CJH_IN_SERVER_5177_Output" type="tns:DIO_CJH_NSTEP_SEND_5177Type"></xs:element>
+    <xs:element name="in_op_ON_CJH_IN_SERVER_5177_Fault0" type="tns:DIO_CJH_NSTEP_SEND_5177Type"></xs:element>
+</xs:schema></ws:types>
+  <ws:message name="in_op_ON_CJH_IN_SERVER_5177_Input">
+    <ws:part name="in_op_ON_CJH_IN_SERVER_5177_Input" element="tns:in_op_ON_CJH_IN_SERVER_5177_Input">
+    </ws:part>
+  </ws:message>
+  <ws:message name="in_op_ON_CJH_IN_SERVER_5177_Output">
+    <ws:part name="in_op_ON_CJH_IN_SERVER_5177_Output" element="tns:in_op_ON_CJH_IN_SERVER_5177_Output">
+    </ws:part>
+  </ws:message>
+  <ws:message name="in_op_ON_CJH_IN_SERVER_5177_Fault0">
+    <ws:part name="in_op_ON_CJH_IN_SERVER_5177_Fault0" element="tns:in_op_ON_CJH_IN_SERVER_5177_Fault0">
+    </ws:part>
+  </ws:message>
+  <ws:portType name="WSI_CJH_NSTEP_SEND_5177PortType">
+    <ws:operation name="in_op_ON_CJH_IN_SERVER_5177">
+      <ws:input message="tns:in_op_ON_CJH_IN_SERVER_5177_Input">
+    </ws:input>
+      <ws:output message="tns:in_op_ON_CJH_IN_SERVER_5177_Output">
+    </ws:output>
+      <ws:fault name="SystemError" message="tns:in_op_ON_CJH_IN_SERVER_5177_Fault0">
+    </ws:fault>
+    </ws:operation>
+  </ws:portType>
+  <ws:binding name="WSI_CJH_NSTEP_SEND_5177Binding" type="tns:WSI_CJH_NSTEP_SEND_5177PortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"></soap:binding>
+    <ws:operation name="in_op_ON_CJH_IN_SERVER_5177">
+      <soap:operation soapAction="uri://nstep.igw.commonin_op_ON_CJH_IN_SERVER_5177" style="document"></soap:operation>
+      <ws:input>
+        <soap:body use="literal"></soap:body>
+      </ws:input>
+      <ws:output>
+        <soap:body use="literal"></soap:body>
+      </ws:output>
+      <ws:fault name="SystemError">
+        <soap:fault name="SystemError" use="literal"></soap:fault>
+      </ws:fault>
+    </ws:operation>
+  </ws:binding>
+  <ws:service name="WSI_CJH_NSTEP_SEND_5177Service">
+    <ws:port name="WSI_CJH_NSTEP_SEND_5177Port" binding="tns:WSI_CJH_NSTEP_SEND_5177Binding">
+      <soap:address location="http://203.229.169.88:8810/cjh/nstep_send_5177"></soap:address>
+    </ws:port>
+  </ws:service>
+</ws:definitions>

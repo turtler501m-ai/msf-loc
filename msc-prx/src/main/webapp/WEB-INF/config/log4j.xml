@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+		<param name="Target" value="System.out" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="[ [PRX-LOG] [%5p] [%c{1}.%M():%L] - %m%n" />
+		</layout>
+	</appender>
+
+	<logger name="com.ktis">
+	    <level value="debug" />
+	</logger>
+
+	<logger name="org.apache.ibatis">
+	    <level value="debug" />
+	</logger>
+
+	<logger name="org.slf4j">
+	    <level value="debug" />
+	</logger>
+
+	<logger name="org.springframework">
+	    <level value="info" />
+	</logger>
+
+	<root>
+		<priority value="info" />
+		<appender-ref ref="stdout" />
+	</root>
+
+</log4j:configuration>

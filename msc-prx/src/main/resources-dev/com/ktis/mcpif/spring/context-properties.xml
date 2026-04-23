@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
+    <bean name="propertiesService"
+        class="egovframework.rte.fdl.property.impl.EgovPropertyServiceImpl"
+        destroy-method="destroy">
+
+        <property name="properties">
+            <map>
+                <!-- defaultSiteId 값 변경금지 -->
+                <entry key="defaultSiteId" value="default" />
+                <!-- <entry key="nStep.url" value="http://203.229.169.88:8810/cjh/nstep_send_5177?wsdl" /> -->
+                <entry key="nStep.url" value="http://10.20.28.38:8811/cjh/nstep_send_5177" />
+                <entry key="nStep.real.yn" value="N" />
+
+                <!-- mPlatForm 연동 관련 -->
+                <entry key="mPlatForm.url" value="https://10.20.28.38:7007/MPONLINE/webservices/" />
+                <entry key="mPlatForm.osst.url" value="https://10.20.28.38:7007/MPONLINE/webservices/" />
+
+                <entry key="clntIp" value="10.221.45.1" />
+                <entry key="clntUsrId" value="kisconsumer1" />
+                <entry key="clntUsrPw" value="welcome1" />
+                <entry key="appEntrPrsnId" value="KIS" />
+                <entry key="appAgncCd" value="AA00364" />
+                <entry key="appNstepUserId" value="91225330" />
+                <entry key="maxTime" value="300" />
+
+                <entry key="api.interface.server" value="http://10.21.28.57:28080" />
+
+                <!--  카카오 관련  -->
+                <entry key="kakao.url" value="https://test-apigates-pub.dozn.co.kr"/>
+                <entry key="kakao.apiKey" value="7d8419ffa95a82b20614aba64072187d"/>
+                <entry key="kakao.sectKey" value="1al6nLWTQ59dQTiWRQnx5Tn4Ci+ns02qJrtnbKiM4r8="/>
+                <entry key="kakao.iv" value="LGzrSKS0D4D2JBchcOjDpg=="/>
+
+            </map>
+        </property>
+    </bean>
+</beans>
