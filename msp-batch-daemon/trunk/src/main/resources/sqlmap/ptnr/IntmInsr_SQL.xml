@@ -1,0 +1,1094 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.ptnr.ptnrmgmt.mapper.IntmInsrMapper">
+	
+	<!-- 단말보험 부가서비스 가입해지조회 -->
+	<select id="getIntmInsrTrgtList"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrTrgtList */
+		SELECT  DISTINCT
+		        JSI.CONTRACT_NUM        AS contractNum
+		        , CASE WHEN TO_DATE(JFI.EXPIRATION_DATE, 'YYYYMMDDHH24MISS') > SYSDATE THEN 'I'
+		               ELSE 'C'
+		          END                   AS workCd
+		        , JFI.SOC               AS insrProdCd
+		        , IIM.INSR_TYPE_CD		AS insrTypeCd
+		        , JFI.EFFECTIVE_DATE    AS strtDttm
+		        , JFI.EXPIRATION_DATE   AS endDttm
+		        , JFI.EVNT_TRTM_DT      AS reqinday
+                , CASE WHEN REQ.ON_OFF_TYPE IN ('0', '3', '5', '7') THEN '2'
+		               WHEN REQ.ON_OFF_TYPE = '1' THEN '1'
+		               ELSE '3'
+		          END                   AS chnCd        /* 가입채널(1:대리점, 2:온라인, 3:고객센터) */
+                , DECODE(DCA.CONTRACT_NUM, NULL, REQ.REQ_BUY_TYPE, 'MM')    AS reqBuyType
+                , JSI.LST_COM_ACTV_DATE AS openDt
+		        , SUBSTR(MAX(DCA.APPL_STRT_DTTM) OVER(PARTITION BY DCA.CONTRACT_NUM), 0, 8) AS dvcChgDt
+                , CASE WHEN REQ.ON_OFF_TYPE IN ('0', '3', '5', '7') AND REQ.INSR_AUTH_INFO IS NULL THEN 'N'
+                 	   ELSE 'Y'
+		          END                   AS clauseFlag
+		FROM    CMN_GRP_CD_MST GCM
+		        , MSP_INTM_INSR_MST IIM
+		        , MSP_JUO_FEATURE_INFO JFI
+		        , MSP_JUO_SUB_INFO JSI
+		        , MSP_DVC_CHG_AGNT_HST DCA
+		        , (SELECT CONTRACT_NUM,
+                          ON_OFF_TYPE,
+                          REQ_BUY_TYPE,
+                          INSR_AUTH_INFO
+                   FROM   (SELECT CONTRACT_NUM,
+                                  ON_OFF_TYPE,
+                                  REQ_BUY_TYPE,
+                                  INSR_AUTH_INFO,
+                                  RANK() OVER(PARTITION BY CONTRACT_NUM ORDER BY REQ_IN_DAY DESC) AA
+                           FROM   MCP_REQUEST@DL_MCP
+                           WHERE  REQUEST_STATE_CODE = '21'
+                          )
+                   WHERE  AA = 1
+                  ) REQ
+		WHERE   GCM.GRP_ID = 'CMN0247'
+		AND     GCM.CD_VAL = IIM.INSR_PROD_CD
+		AND     GCM.CD_VAL = JFI.SOC
+		AND     JFI.EVNT_TRTM_DT >= TO_CHAR(SYSDATE - 6/60/24, 'YYYYMMDDHH24MISS')
+		AND     JFI.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND     JSI.CONTRACT_NUM = DCA.CONTRACT_NUM(+)
+		AND     DCA.REQUEST_KEY(+) IS NOT NULL
+		AND     DCA.APPL_END_DTTM(+) >= TO_CHAR(TRUNC(SYSDATE - 1), 'YYYYMMDDHH24MISS')
+		AND     JSI.CONTRACT_NUM = REQ.CONTRACT_NUM
+	</select>
+	
+	<!-- 단말보험 부가서비스 가입해지조회(일일) -->
+	<select id="getIntmInsrTrgtListDaily"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrTrgtListDaily */
+		SELECT  DISTINCT
+		        IIR.CONTRACT_NUM        AS contractNum
+		        , IIR.WORK_CD           AS workCd
+		        , IIR.INSR_PROD_CD      AS insrProdCd
+		        , IIR.INSR_TYPE_CD		AS insrTypeCd
+		        , IIR.STRT_DTTM         AS strtDttm
+		        , IIR.END_DTTM          AS endDttm
+		        , IIR.REQ_IN_DAY        AS reqInDay
+		        , CASE
+		            WHEN (SELECT COUNT(*) FROM NMCP_CUST_REQUEST_MST@DL_MCP WHERE 1 = 1 AND REQ_TYPE = 'IS' 
+		                    AND CONTRACT_NUM = IIR.CONTRACT_NUM AND TO_CHAR(SYS_RDATE, 'YYYYMMDD') = SUBSTR(IIR.REQ_IN_DAY, 0, 8)) > 0 THEN '4' 
+		            WHEN REQ.ON_OFF_TYPE IN ('0', '3', '5', '7') THEN '2'
+		            WHEN REQ.ON_OFF_TYPE = '1' THEN '1'
+		            ELSE '3'
+		          END                   AS chnCd        /* 가입채널(1:대리점, 2:온라인, 3:고객센터) */
+		        , DECODE(DCA.CONTRACT_NUM, NULL, REQ.REQ_BUY_TYPE, 'MM')    AS reqBuyType
+		        , JSI.LST_COM_ACTV_DATE AS openDt
+		        , SUBSTR(MAX(DCA.APPL_STRT_DTTM) OVER(PARTITION BY DCA.CONTRACT_NUM), 0, 8) AS dvcChgDt
+		        , CASE WHEN REQ.ON_OFF_TYPE IN ('0', '3', '5', '7') AND REQ.INSR_AUTH_INFO IS NULL THEN 'N'
+		               ELSE 'Y'
+		          END                   AS clauseFlag
+		FROM    MSP_INTM_INSR_READY IIR
+		        , MSP_JUO_SUB_INFO JSI
+		        , MSP_DVC_CHG_AGNT_HST DCA
+		        , (SELECT CONTRACT_NUM,
+		                  ON_OFF_TYPE,
+		                  REQ_BUY_TYPE,
+		                  INSR_AUTH_INFO
+		           FROM   (SELECT CONTRACT_NUM,
+		                          ON_OFF_TYPE,
+		                          REQ_BUY_TYPE,
+		                          INSR_AUTH_INFO,
+		                          RANK() OVER(PARTITION BY CONTRACT_NUM ORDER BY REQ_IN_DAY DESC) AA
+		                   FROM   MCP_REQUEST@DL_MCP
+		                   WHERE  REQUEST_STATE_CODE = '21'
+		                  )
+		           WHERE  AA = 1
+		          ) REQ
+		WHERE   IIR.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND     IIR.CONTRACT_NUM = DCA.CONTRACT_NUM(+)
+		AND     DCA.REQUEST_KEY(+) IS NOT NULL
+		AND     DCA.APPL_END_DTTM(+) >= TO_CHAR(TRUNC(SYSDATE - 1), 'YYYYMMDDHH24MISS')
+		AND     IIR.CONTRACT_NUM = REQ.CONTRACT_NUM
+		AND     IIR.PROC_CD = 'N'
+		AND     NOT EXISTS
+		        ( 
+		            SELECT  1
+		            FROM    MSP_INTM_INSR_ORDER
+		            WHERE   CONTRACT_NUM = IIR.CONTRACT_NUM
+		            AND     INSR_PROD_CD = IIR.INSR_PROD_CD
+		            AND     STRT_DTTM = IIR.STRT_DTTM
+		            AND     END_DTTM = IIR.END_DTTM
+		        )
+	</select>
+	
+	<!-- 보험가입 오더정보 조회 -->
+	<select id="getIntmInsrOrder"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrOrder */
+		SELECT  CONTRACT_NUM    AS contractNum
+		        , INSR_PROD_CD  AS insrProdCd
+		        , INSR_STAT_CD  AS insrStatCd
+		        , MODEL_ID      AS modelId
+		        , INTM_SRL_NO   AS intmSrlNo
+		FROM    MSP_INTM_INSR_ORDER
+		WHERE   CONTRACT_NUM = #{contractNum}
+		AND     INSR_PROD_CD = #{insrProdCd}
+		AND     STRT_DTTM = #{strtDttm}
+		AND     END_DTTM = #{endDttm}
+	</select>
+	
+	<!-- 개통 단말 조회 -->
+	<select id="getOpenModelInfo"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getOpenModelInfo */
+		SELECT  TRIM(SUBSTR(FST_MODEL_INFO, 1, 20))     AS modelId
+		        , TRIM(SUBSTR(FST_MODEL_INFO, 21, 30))  AS modelNm
+		        , TRIM(SUBSTR(FST_MODEL_INFO, 51, 30))  AS intmSrlNo
+		FROM    MSP_REQUEST_DTL
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- 기기변경 단말 조회 -->
+	<select id="getDvcChgModelInfo"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getDvcChgModelInfo */
+		SELECT A.MODEL_NM AS modelNm ,
+		       A.MODEL_ID AS modelId ,
+		       A.INTM_SRL_NO AS intmSrlNo
+		FROM   (SELECT MODEL_NM,
+		               MODEL_ID,
+		               INTM_SRL_NO,
+		               RANK() OVER(PARTITION BY CONTRACT_NUM
+		                ORDER BY APPL_STRT_DTTM DESC) RANK
+		        FROM   MSP_DVC_CHG_AGNT_HST
+		        WHERE  CONTRACT_NUM = #{contractNum}
+		        AND    REQUEST_KEY IS NOT NULL
+		        AND    APPL_END_DTTM >= TO_CHAR(TRUNC(SYSDATE - 1), 'YYYYMMDDHH24MISS') ) A
+		WHERE  RANK = 1
+	</select>
+	
+	<!-- 오더정보생성 -->
+	<insert id="insertIntmInsrOrder"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.insertIntmInsrOrder */
+		INSERT INTO MSP_INTM_INSR_ORDER (
+		    CONTRACT_NUM
+		    , INSR_PROD_CD
+		    , STRT_DTTM
+		    , END_DTTM
+		    , IF_TRGT_CD
+		    , INSR_STAT_CD
+		    , CHN_CD
+		    , INSR_EVNT_CD
+		    , REQ_BUY_TYPE
+		    , OPEN_DT
+		    , DVC_CHG_DT
+		    , MODEL_NM
+		    , MODEL_ID
+		    , INTM_SRL_NO
+		    , IMG_CHK_YN
+		    , VRFY_RSLT_CD
+		    , CLAUSE_FLAG
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		    , REQ_IN_DAY
+		) VALUES (
+		    #{contractNum, jdbcType=VARCHAR}
+		    , #{insrProdCd, jdbcType=VARCHAR}
+		    , #{strtDttm, jdbcType=VARCHAR}
+		    , #{endDttm, jdbcType=VARCHAR}
+		    , #{ifTrgtCd, jdbcType=VARCHAR}
+		    , #{insrStatCd, jdbcType=VARCHAR}
+		    , #{chnCd, jdbcType=VARCHAR}
+		    , #{insrEvntCd, jdbcType=VARCHAR}
+		    , #{reqBuyType, jdbcType=VARCHAR}
+		    , #{openDt, jdbcType=VARCHAR}
+		    , #{dvcChgDt, jdbcType=VARCHAR}
+		    , #{modelNm, jdbcType=VARCHAR}
+		    , #{modelId, jdbcType=VARCHAR}
+		    , #{intmSrlNo, jdbcType=VARCHAR}
+		    , #{imgChkYn, jdbcType=VARCHAR}
+		    , #{vrfyRsltCd, jdbcType=VARCHAR}
+		    , #{clauseFlag, jdbcType=VARCHAR}
+		    , 'BATCH'
+		    , SYSDATE
+		    , 'BATCH'
+		    , SYSDATE
+		    , #{reqInDay, jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<!-- 보험가입정보조회 -->
+	<select id="getIntmInsrMember"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrMember */
+		SELECT  INSR_MEMBER_NUM
+				, (	
+					SELECT	CD_DSC
+					FROM   	CMN_GRP_CD_MST
+					WHERE  	GRP_ID = 'CMN0247'
+					AND    	CD_VAL = INSR_PROD_CD
+				) AS INSR_PROD_NM
+		FROM    MSP_INTM_INSR_MEMBER
+		WHERE   CONTRACT_NUM = #{contractNum}
+		AND     INSR_PROD_CD = #{insrProdCd}
+		AND     END_DTTM >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		AND		ROWNUM = 1
+	</select>
+	
+	<!-- 보험가입 오더정보에서 삭제 상태로 변경 -->
+	<update id="deleteIntmInsrOrder"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.deleteIntmInsrOrder */
+		UPDATE 	MSP_INTM_INSR_ORDER
+		SET    	END_DTTM = #{endDttm}
+			   	, IF_TRGT_CD = (CASE WHEN IF_TRGT_CD IN ('Y','N') THEN 'C' ELSE IF_TRGT_CD END)
+		       	, RVISN_ID = 'BATCH'
+		       	, RVISN_DTTM = SYSDATE
+		WHERE  	CONTRACT_NUM = #{contractNum}
+		AND    	INSR_PROD_CD = #{insrProdCd}
+		AND	   	STRT_DTTM = #{strtDttm}
+		AND		TO_DATE(END_DTTM, 'YYYYMMDDHH24MISS') >= TRUNC(SYSDATE)
+		AND    	IF_TRGT_CD != 'S'
+		AND		NOT EXISTS 
+				(
+					SELECT 	1
+					FROM	MSP_JUO_FEATURE_INFO
+					WHERE	CONTRACT_NUM = #{contractNum}
+					AND		SOC = #{insrProdCd}
+					AND		EFFECTIVE_DATE = #{strtDttm}
+					AND		TO_DATE(EXPIRATION_DATE,'YYYYMMDDHH24MISS') >= TRUNC(SYSDATE)
+				)
+	</update>
+	
+	<!-- 보험가입 오더정보에서 전송완료 상태로 변경 -->
+	<update id="completeIntmInsrOrder"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.completeIntmInsrOrder */
+		UPDATE MSP_INTM_INSR_ORDER
+		SET    IF_TRGT_CD = 'S'
+		       , RVISN_ID = 'BATCH'
+		       , RVISN_DTTM = SYSDATE
+		WHERE  CONTRACT_NUM = #{contractNum}
+		AND    INSR_PROD_CD = #{insrProdCd}
+		AND    STRT_DTTM = #{strtDttm}
+		AND    IF_TRGT_CD = 'Y'
+	</update>
+	
+	<!-- 부가서비스 해지 대상자 등록 -->
+	<insert id="insertIntmInsrCanInfoOvr">
+		/* intmInsrMapper.insertIntmInsrCanInfoOvr */
+		INSERT INTO MSP_INTM_INSR_CAN_INFO (
+				INSR_CAN_NUM
+                , CONTRACT_NUM
+                , INSR_PROD_CD
+                , STRT_DTTM
+                , END_DTTM
+                , NCN
+                , CTN
+                , CUST_ID
+                , CAN_RSLT_CD
+                , REGST_ID
+                , REGST_DTTM
+		)
+		SELECT
+		        INSR_CAN_NUM_SEQ.NEXTVAL
+		        , IIO.CONTRACT_NUM
+		        , IIO.INSR_PROD_CD
+		        , IIO.STRT_DTTM
+		        , IIO.END_DTTM
+		        , JSI.SVC_CNTR_NO
+		        , JSI.SUBSCRIBER_NO
+		        , JSI.CUSTOMER_ID
+		        , 'OVR'
+		        , 'BATCH'
+		        , SYSDATE
+		FROM    MSP_INTM_INSR_ORDER IIO
+		        , MSP_JUO_SUB_INFO JSI
+		WHERE   IIO.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND     IIO.IF_TRGT_CD = 'N'
+		AND     IIO.INSR_STAT_CD = '1'
+		AND     TRUNC(SYSDATE) > TRUNC(TO_DATE(IIO.REQ_IN_DAY, 'YYYYMMDDHH24MISS')) + 6
+	</insert>
+	
+	<!-- 잔액한도소진 해지 대상자 등록 -->
+	<insert id="insertIntmInsrCanInfoLtl">
+		/* intmInsrMapper.insertIntmInsrCanInfoLtl */
+		INSERT INTO MSP_INTM_INSR_CAN_INFO (
+				INSR_CAN_NUM
+                , CONTRACT_NUM
+                , INSR_PROD_CD
+                , STRT_DTTM
+                , END_DTTM
+                , NCN
+                , CTN
+                , CUST_ID
+                , CAN_RSLT_CD
+                , REGST_ID
+                , REGST_DTTM
+		)
+        SELECT  INSR_CAN_NUM_SEQ.NEXTVAL
+                , IIM.CONTRACT_NUM
+                , IIM.INSR_PROD_CD
+                , IIM.STRT_DTTM
+                , IIM.END_DTTM
+                , JSI.SVC_CNTR_NO
+                , JSI.SUBSCRIBER_NO
+                , JSI.CUSTOMER_ID
+                , IIM.CAN_RSLT_CD
+                , 'BATCH'
+                , SYSDATE
+        FROM    MSP_INTM_INSR_MEMBER IIM
+                , MSP_JUO_SUB_INFO JSI
+        WHERE   IIM.CONTRACT_NUM = JSI.CONTRACT_NUM
+        AND     IIM.INSR_STAT_CD = '0'
+        AND     IIM.CAN_RSLT_CD = 'LTL'
+        AND     IIM.END_DTTM >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+        AND     NOT EXISTS ( SELECT 1 FROM MSP_INTM_INSR_CAN_INFO WHERE CONTRACT_NUM = IIM.CONTRACT_NUM AND INSR_PROD_CD = IIM.INSR_PROD_CD AND STRT_DTTM = IIM.STRT_DTTM)
+	</insert>
+	
+	<!-- 단말보험 부가서비스 해지자조회 -->
+	<select id="getIntmInsrCanInfoList"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrCanInfoList */
+		SELECT	INSR_CAN_NUM AS SEQ_NUM
+				, CONTRACT_NUM
+				, INSR_PROD_CD
+				, (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0247' AND CD_VAL = INSR_PROD_CD) AS INSR_PROD_NM
+				, NCN
+				, CTN
+				, CUST_ID
+				, CAN_RSLT_CD
+		FROM 	MSP_INTM_INSR_CAN_INFO
+		WHERE	PROC_YN = 'N'
+	</select>
+	
+	<!-- 단말보험 부가서비스 해지 완료 처리 -->
+	<update id="completeIntmInsrCanInfo"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.completeIntmInsrCanInfo */
+		UPDATE	MSP_INTM_INSR_CAN_INFO
+		SET		PROC_YN = 'Y'
+				, PROC_DT = SYSDATE			
+				, RSLT_CD = #{rsltCd}
+				<if test="rsltMsg != null and rsltMsg != ''">
+				, RSLT_MSG = #{rsltMsg}
+				</if>
+		WHERE	INSR_CAN_NUM = #{seqNum}
+	</update>
+	
+	<!-- 보험가입 오더정보에서 만료 상태로 일괄변경 -->
+	<update id="expireIntmInsrOrder">
+		/* intmInsrMapper.expireIntmInsrOrder */
+		UPDATE  MSP_INTM_INSR_ORDER
+		SET    IF_TRGT_CD = 'F'
+		       , RVISN_ID = 'BATCH'
+		       , RVISN_DTTM = SYSDATE
+		WHERE  IF_TRGT_CD = 'N'
+		AND    INSR_STAT_CD = '1'
+		AND    TRUNC(SYSDATE) > TRUNC(TO_DATE(REQ_IN_DAY, 'YYYYMMDDHH24MISS')) + 6
+	</update>
+	
+	<!-- 단말보험 기간만료 해지자조회 -->
+	<select id="getExpireIntmInsrMemberList"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getExpireIntmInsrMemberList */
+		SELECT  MEM.INSR_MEMBER_NUM AS INSR_MEMBER_NUM
+		        , MEM.INSR_PROD_CD AS INSR_PROD_CD 
+		        , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0247' AND CD_VAL = MEM.INSR_PROD_CD) AS INSR_PROD_NM
+		        , MEM.CTN AS CTN
+		        , MEM.CONTRACT_NUM AS CONTRACT_NUM
+		FROM    MSP_INTM_INSR_MEMBER MEM
+		        , MSP_INTM_INSR_MST MST
+		WHERE   MEM.INSR_PROD_CD = MST.INSR_PROD_CD
+		AND     INSR_STAT_CD = '1'
+		AND     TRUNC(ADD_MONTHS(TO_DATE(MEM.STRT_DTTM, 'YYYYMMDDHH24MISS'), MST.INSR_ENGG_CNT)) = TRUNC(TO_DATE(MEM.END_DTTM, 'YYYYMMDDHH24MISS'))
+		AND     TRUNC(SYSDATE) >= TO_DATE(END_DTTM, 'YYYYMMDDHH24MISS') 
+	</select>
+				
+	<!-- 단말보험 해지자조회 -->
+	<select id="getIntmInsrDeleteTrgtList"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrDeleteTrgtList */
+		SELECT  IIM.INSR_MEMBER_NUM AS INSR_MEMBER_NUM
+				, JFI.EXPIRATION_DATE AS END_DTTM
+		FROM    MSP_INTM_INSR_MEMBER IIM
+		        , MSP_JUO_FEATURE_INFO JFI
+		WHERE   IIM.CONTRACT_NUM = JFI.CONTRACT_NUM
+		AND     IIM.STRT_DTTM = JFI.EFFECTIVE_DATE
+		AND     IIM.INSR_PROD_CD = JFI.SOC
+		AND		IIM.INSR_STAT_CD != '2'
+		AND     IIM.END_DTTM >= TO_CHAR(TRUNC(SYSDATE), 'YYYYMMDDHH24MISS')
+		AND     TO_CHAR(TRUNC(SYSDATE), 'YYYYMMDDHH24MISS') > JFI.EXPIRATION_DATE 
+		AND     JFI.EXPIRATION_DATE BETWEEN TO_CHAR(TRUNC(SYSDATE-1), 'YYYYMMDDHH24MISS') AND TO_CHAR(TRUNC(SYSDATE)-1/24/60/60, 'YYYYMMDDHH24MISS')
+		--AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = JFI.CONTRACT_NUM AND SOC = JFI.SOC AND EXPIRATION_DATE >= TO_CHAR(TRUNC(SYSDATE), 'YYYYMMDDHH24MISS') )
+		AND		NOT EXISTS 
+				(
+					SELECT 	1
+					FROM	MSP_JUO_FEATURE_INFO
+					WHERE	CONTRACT_NUM = JFI.CONTRACT_NUM
+					AND		SOC = JFI.SOC
+					AND		EFFECTIVE_DATE = JFI.EFFECTIVE_DATE
+					AND		TO_DATE(EXPIRATION_DATE,'YYYYMMDDHH24MISS') >= TRUNC(SYSDATE)
+				)
+	</select>
+	
+	<!-- 단말보험 가입자 해지 상태로 변경 -->
+	<update id="deleteIntmInsrMember"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.deleteIntmInsrMember */
+		UPDATE  MSP_INTM_INSR_MEMBER
+		SET     INSR_STAT_CD = '2'
+				<choose>
+		        	<when test='canRsltCd != null and canRsltCd != "" and canRsltCd == "EXP"'>
+						, CAN_RSLT_CD = 'EXP'
+		       		</when>
+			      	<otherwise>
+			      		, END_DTTM = #{endDttm}
+		        		, CAN_RSLT_CD = DECODE(INSR_STAT_CD, '1', 'REQ', CAN_RSLT_CD)
+			      	</otherwise>
+		   		</choose>
+		        , RVISN_ID = 'BATCH'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   INSR_MEMBER_NUM = #{insrMemberNum}
+		AND		INSR_STAT_CD IN ('0','1')
+	</update>
+	
+	<!-- 연동정보생성 -->
+	<insert id="insertIntmInsrIfOut"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.insertIntmInsrIfOut */
+		INSERT INTO MSP_INTM_INSR_IF_OUT (
+				INSR_OUT_NUM
+				, INSR_MEMBER_NUM
+				, CONTRACT_NUM
+				, INSR_PROD_CD
+				, STRT_DTTM
+				, END_DTTM
+				, INSR_STAT_CD
+				, CHN_CD
+				, INSR_EVNT_CD
+				, OPEN_DT
+				, INSR_CMPN_CD
+				, CTN
+				, CUST_NM
+				, BIRTH_DT
+				, BAN_ADDR
+				, MINOR_AGENT_NAME
+				, MODEL_NM
+				, INTM_SRL_NO
+				, OLD_YN
+				, PRDT_LNCH_DT
+				, OUT_UNIT_PRIC
+				, CLAUSE_FLAG
+				, REGST_ID
+				, REGST_DTTM
+		)
+		SELECT
+		        INSR_OUT_NUM_SEQ.NEXTVAL
+		        , IIM.INSR_MEMBER_NUM
+		        , IIM.CONTRACT_NUM
+		        , IIM.INSR_PROD_CD
+		        , IIM.STRT_DTTM
+		        , IIM.END_DTTM
+		        , #{insrStatCd}
+		        , IIM.CHN_CD
+		        , DECODE(IIM.INSR_STAT_CD, '1', IIM.INSR_EVNT_CD, '2', '0')
+		        , IIM.OPEN_DT
+		        , 'D'
+		        , IIM.CTN
+		        , IIM.CUST_NM
+		        , IIM.BIRTH_DT
+		        , BAN.BAN_ADR_PRIMARY_LN
+		        , DTL.MINOR_AGENT_NAME
+		        , IIM.MODEL_NM
+		        , IIM.INTM_SRL_NO
+		        , IIM.OLD_YN
+		        , IIM.PRDT_LNCH_DT
+		        , IIM.OUT_UNIT_PRIC
+		        , IIM.CLAUSE_FLAG
+		        , 'BATCH'
+		        , SYSDATE
+		FROM    MSP_INTM_INSR_MEMBER IIM
+		        , MSP_JUO_SUB_INFO JSI
+		        , MSP_REQUEST_DTL DTL
+		        , MSP_JUO_BAN_INFO BAN
+		WHERE   IIM.INSR_MEMBER_NUM = #{insrMemberNum}
+		AND     IIM.CONTRACT_NUM = DTL.CONTRACT_NUM
+		AND		IIM.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND     JSI.BAN = BAN.BAN
+	</insert>
+		
+	<!-- 명의변경 대상조회 -->
+	<select id="getIntmInsrMcnTrgtList"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrMcnTrgtList */
+		SELECT  DISTINCT
+		        IIM.INSR_MEMBER_NUM AS INSR_MEMBER_NUM
+		        , JSH.SUB_LINK_NAME AS CUST_NM
+		        , JSH.SUBSCRIBER_NO AS CTN
+		        , CASE WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSH.USER_SSN), 7, 1) IN ('1', '2', '5', '6') THEN '19'
+		               WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSH.USER_SSN), 7, 1) IN ('3', '4', '7', '8') THEN '20'
+		               ELSE '18'
+		          END || SUBSTR(CRYPTO_AES256.DEC_AES(JSH.USER_SSN), 1, 6) AS BIRTH_DT
+		FROM    MSP_INTM_INSR_MEMBER IIM
+		        , MSP_JUO_SUB_INFO_HIST JSH
+		WHERE   IIM.CONTRACT_NUM = JSH.CONTRACT_NUM
+		AND     JSH.EVNT_CHANGE_DATE BETWEEN TO_CHAR(TRUNC(SYSDATE-1), 'YYYYMMDDHH24MISS') AND TO_CHAR(TRUNC(SYSDATE)-1/24/60/60, 'YYYYMMDDHH24MISS')
+		AND     JSH.EVNT_CD IN ( 'MCN' )
+		AND     IIM.END_DTTM >= TO_CHAR(TRUNC(SYSDATE), 'YYYYMMDDHH24MISS')
+		AND     IIM.INSR_STAT_CD = '1'
+	</select>
+	
+	<!-- 개인정보수정대상 조회 -->
+	<select id="getIntmInsrChgTrgtList"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrChgTrgtList */
+		SELECT  IIM.INSR_MEMBER_NUM AS INSR_MEMBER_NUM
+		        , SUB_LINK_NAME AS CUST_NM
+		        , SUBSCRIBER_NO AS CTN
+		        , CASE WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 7, 1) IN ('1', '2', '5', '6') THEN '19'
+		               WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 7, 1) IN ('3', '4', '7', '8') THEN '20'
+		               ELSE '18'
+		          END || SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 1, 6) AS BIRTH_DT
+		FROM    MSP_INTM_INSR_MEMBER IIM
+		        , MSP_JUO_SUB_INFO JSI
+		WHERE   IIM.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND   	IIM.INSR_STAT_CD = '1'
+		AND   	IIM.END_DTTM >= TO_CHAR(TRUNC(SYSDATE), 'YYYYMMDDHH24MISS')
+		MINUS
+		SELECT  INSR_MEMBER_NUM
+		        , CUST_NM
+		        , CTN
+		        , BIRTH_DT
+		FROM    MSP_INTM_INSR_MEMBER
+		WHERE   INSR_STAT_CD = '1'
+		AND		END_DTTM >= TO_CHAR(TRUNC(SYSDATE), 'YYYYMMDDHH24MISS')
+	</select>
+	
+	<!-- 단말보험 가입자 개인정보 현행화 -->
+	<update id="updateIntmInsrMember"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.updateIntmInsrMember */
+		UPDATE  MSP_INTM_INSR_MEMBER
+		SET     CUST_NM = #{custNm}
+		        , CTN = #{ctn}
+		        , BIRTH_DT = #{birthDt}
+		        , RVISN_ID = 'BATCH'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   INSR_MEMBER_NUM = #{insrMemberNum}
+	</update>
+	
+	<select id="getIntmInsrJoinTrgtList"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		SELECT  IIO.CONTRACT_NUM
+		        , IIO.INSR_PROD_CD
+		        , IIO.STRT_DTTM
+		        , IIO.END_DTTM
+		        , IIO.INSR_STAT_CD
+		        , IIO.CHN_CD
+		        , IIO.INSR_EVNT_CD
+		        , DECODE(IIO.INSR_EVNT_CD, '2', IIO.DVC_CHG_DT, IIO.OPEN_DT) AS OPEN_DT
+		        , JSI.SUBSCRIBER_NO AS CTN
+		        , JSI.SUB_LINK_NAME AS CUST_NM
+		        , CASE WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 7, 1) IN ('1', '2', '5', '6') THEN '19'
+		               WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 7, 1) IN ('3', '4', '7', '8') THEN '20'
+		               ELSE '18'
+		          END || SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 1, 6) AS BIRTH_DT
+		        , IIO.MODEL_NM
+		        , IIO.MODEL_ID
+		        , IIO.INTM_SRL_NO
+		        , DECODE(IIM.INSR_TYPE_CD, '01', 'N', 'Y') AS OLD_YN
+		        , DECODE(IIM.INSR_TYPE_CD, '01', CIM.PRDT_LNCH_DT, '') AS PRDT_LNCH_DT
+		        , DECODE(IIM.INSR_TYPE_CD, '01', NVL((SELECT TO_CHAR(OUT_UNIT_PRIC) FROM CMN_HNDST_AMT WHERE IIO.MODEL_ID = RPRS_PRDT_ID AND IIO.STRT_DTTM BETWEEN UNIT_PRIC_APPL_DTTM AND UNIT_PRIC_EXPR_DTTM),''), '') AS OUT_UNIT_PRIC
+		        , IIM.CMPN_LMT_AMT
+		        , IIO.CLAUSE_FLAG
+		        , IIM.INSR_TYPE_CD
+		        , (SELECT ETC2 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0247' AND CD_VAL = IIO.INSR_PROD_CD) AS TEMPLATE_ID
+		        , IIO.REQ_IN_DAY
+		FROM    MSP_INTM_INSR_ORDER IIO
+		        , MSP_INTM_INSR_MST IIM
+		        , MSP_JUO_SUB_INFO JSI
+		        , CMN_INTM_MDL CIM
+		WHERE   IIO.IF_TRGT_CD = 'Y'
+		AND     IIO.INSR_PROD_CD = IIM.INSR_PROD_CD
+		AND     IIO.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND     IIO.MODEL_ID = CIM.RPRS_PRDT_ID(+)
+		AND     CIM.RPRS_YN(+) = 'Y'
+	</select>
+	
+	<select id="getIntmInsrMemberSeq" resultType="String">
+		SELECT INSR_MEMBER_NUM_SEQ.NEXTVAL AS INSR_MEMBER_NUM
+		FROM   DUAL
+	</select>
+		
+	<!-- 단말보험 가입정보 생성 -->
+	<insert id="insertIntmInsrMember"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.insertIntmInsrMember */
+		INSERT INTO MSP_INTM_INSR_MEMBER (
+		    INSR_MEMBER_NUM
+		    , CONTRACT_NUM
+		    , INSR_PROD_CD
+		    , STRT_DTTM
+		    , END_DTTM
+            , INSR_STAT_CD
+            , CHN_CD
+		    , INSR_EVNT_CD
+		    , OPEN_DT
+            , CTN
+            , CUST_NM
+            , BIRTH_DT
+		    , MODEL_NM
+		    , MODEL_ID
+		    , INTM_SRL_NO
+            , OLD_YN
+            , PRDT_LNCH_DT
+            , OUT_UNIT_PRIC
+            , RMN_CMPN_AMT
+            , CLAUSE_FLAG
+		    , REGST_ID
+		    , REGST_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		    , REQ_IN_DAY
+		) VALUES (
+			#{insrMemberNum, jdbcType=VARCHAR}
+		    , #{contractNum, jdbcType=VARCHAR}
+		    , #{insrProdCd, jdbcType=VARCHAR}
+		    , #{strtDttm, jdbcType=VARCHAR}
+		    , #{endDttm, jdbcType=VARCHAR}
+		    , #{insrStatCd, jdbcType=VARCHAR}
+		    , #{chnCd, jdbcType=VARCHAR}
+		    , #{insrEvntCd, jdbcType=VARCHAR}
+		    , #{openDt, jdbcType=VARCHAR}
+            , #{ctn, jdbcType=VARCHAR}
+            , #{custNm, jdbcType=VARCHAR}
+            , #{birthDt, jdbcType=VARCHAR}
+		    , #{modelNm, jdbcType=VARCHAR}
+		    , #{modelId, jdbcType=VARCHAR}
+		    , #{intmSrlNo, jdbcType=VARCHAR}
+            , #{oldYn, jdbcType=VARCHAR}
+            , #{prdtLnchDt, jdbcType=VARCHAR}
+            , #{outUnitPric, jdbcType=VARCHAR}
+            , #{rmnCmpnAmt, jdbcType=VARCHAR}
+		    , #{clauseFlag, jdbcType=VARCHAR}
+		    , 'BATCH'
+		    , SYSDATE
+		    , 'BATCH'
+		    , SYSDATE
+		    , #{reqInDay, jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<!-- 연동정보생성 -->
+	<select id="getIntmInsrIfOut" 
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrIfOut */
+		SELECT	INSR_OUT_NUM AS SEQ_NUM
+				, CONTRACT_NUM
+		        , INSR_PROD_CD
+		        , OPEN_DT
+		        , DECODE(INSR_STAT_CD, '2', END_DTTM, STRT_DTTM) AS STRT_DTTM
+		        , INSR_STAT_CD
+		        , CTN
+		        , CUST_NM
+		        , BIRTH_DT
+		        , MINOR_AGENT_NAME
+		        , MODEL_NM
+		        , INTM_SRL_NO
+		        , BAN_ADDR
+		        , INSR_CMPN_CD
+		        , INSR_EVNT_CD
+		        , OLD_YN
+		        , PRDT_LNCH_DT
+		        , OUT_UNIT_PRIC
+		        , CLAUSE_FLAG
+		        , CHN_CD
+		        , CUST_TYPE
+		FROM    MSP_INTM_INSR_IF_OUT
+		WHERE   PROC_YN = 'N'
+	</select>
+	
+	<!-- DB연동 가입자 정보 조회 -->
+	<select id="getIntmInsrIfOutDB" 
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrIfOutDB */
+		SELECT	INSR_OUT_NUM AS SEQ_NUM
+				, CONTRACT_NUM
+		        , INSR_PROD_CD
+		        , OPEN_DT
+		        , STRT_DTTM
+		        , INSR_STAT_CD
+		        , CTN
+		        , CUST_NM
+		        , BIRTH_DT
+		        , MINOR_AGENT_NAME
+		        , MODEL_NM
+		        , INTM_SRL_NO
+		        , BAN_ADDR
+		        , INSR_CMPN_CD
+		        , INSR_EVNT_CD
+		        , OLD_YN
+		        , PRDT_LNCH_DT
+		        , OUT_UNIT_PRIC
+		        , CLAUSE_FLAG
+		        , CHN_CD
+		        , CUST_TYPE
+		FROM    MSP_INTM_INSR_IF_OUT
+		WHERE   PROC_YN = 'N'
+		AND		INSR_STAT_CD = '1'
+	</select>
+
+	<!-- 연동완료처리 -->
+	<update id="updateIntmInsrIfOut"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.updateIntmInsrIfOut */
+		UPDATE  MSP_INTM_INSR_IF_OUT
+		SET     PROC_YN = 'Y'
+		        , PROC_DT = SYSDATE
+		WHERE   INSR_OUT_NUM = #{seqNum}
+	</update>
+	
+	<select id="getIntmInsrCmpnSeq" resultType="String">
+		SELECT INSR_CMPN_NUM_SEQ.NEXTVAL AS INSR_CMPN_NUM
+		FROM   DUAL
+	</select>
+	
+	<!-- 단말보험보상연동정보 저장 -->
+	<insert id="insertIntmInsrCmpnMstIf"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.insertIntmInsrCmpnMstIf */
+		INSERT INTO MSP_INTM_INSR_CMPN_MST_IF (
+		    INSR_CMPN_NUM
+		    , IF_DT
+		    , IF_CD
+		    , INSR_MNGM_NO
+		    , CONTRACT_NUM
+		    , INSR_CMPN_CD
+		    , ACDNT_NO
+		    , CUST_NM
+		    , CTN
+		    , OPEN_DT
+		    , JOIN_DT
+		    , INSR_PROD_CD
+		    , ACDNT_REG_DT
+		    , ACDNT_DT
+		    , CMPN_CNFM_DT
+		    , MODEL_NM
+		    , INTM_SRL_NO
+		    , OUT_UNIT_PRIC
+		    , ACDNT_TP
+		    , CMPN_LMT_AMT
+		    , CMPN_ACML_AMT
+		    , RMN_CMPN_AMT
+		    , RCPT_AMT
+		    , CUST_BRDN_AMT
+		    , REAL_CMPN_AMT
+		    , RMN_CMPN_LMT_AMT
+		    , BANK_NM
+		    , ACNT_NO
+		    , DPST_NM
+		    , CMPN_MODEL_NM
+			, CMPN_MODEL_COLOR
+			, CMPN_CTN
+			, OVER_AMT
+			, USIM_AMT
+			, PAY_TYPE
+		    , REGST_ID
+		    , REGST_DTTM
+		) VALUES (
+		    #{insrCmpnNum, jdbcType=VARCHAR}
+		    , TO_CHAR(SYSDATE, 'YYYYMMDD')
+		    , #{ifCd, jdbcType=VARCHAR}
+		    , #{insrMngmNo, jdbcType=VARCHAR}
+		    , #{contractNum, jdbcType=VARCHAR}
+		    , #{insrCmpnCd, jdbcType=VARCHAR}
+		    , #{acdntNo, jdbcType=VARCHAR}
+		    , #{custNm, jdbcType=VARCHAR}
+		    , #{ctn, jdbcType=VARCHAR}
+		    , #{openDt, jdbcType=VARCHAR}
+		    , #{joinDt, jdbcType=VARCHAR}
+		    , #{insrProdCd, jdbcType=VARCHAR}
+		    , #{acdntRegDt, jdbcType=VARCHAR}
+		    , #{acdntDt, jdbcType=VARCHAR}
+		    , #{cmpnCnfmDt, jdbcType=VARCHAR}
+		    , #{modelNm, jdbcType=VARCHAR}
+		    , #{intmSrlNo, jdbcType=VARCHAR}
+		    , #{outUnitPric, jdbcType=VARCHAR}
+		    , #{acdntTp, jdbcType=VARCHAR}
+		    , #{cmpnLmtAmt, jdbcType=VARCHAR}
+		    , #{cmpnAcmlAmt, jdbcType=VARCHAR}
+		    , #{rmnCmpnAmt, jdbcType=VARCHAR}
+		    , #{rcptAmt, jdbcType=VARCHAR}
+		    , #{custBrdnAmt, jdbcType=VARCHAR}
+		    , #{realCmpnAmt, jdbcType=VARCHAR}
+		    , #{rmnCmpnLmtAmt, jdbcType=VARCHAR}
+		    , #{bankNm, jdbcType=VARCHAR}
+		    , CRYPTO_AES256.ENC_AES(#{acntNo, jdbcType=VARCHAR})
+		    , #{dpstNm, jdbcType=VARCHAR}
+		    , #{cmpnModelNm, jdbcType=VARCHAR}
+		    , #{cmpnModelColor, jdbcType=VARCHAR}
+		    , #{cmpnCtn, jdbcType=VARCHAR}
+		    , #{overAmt, jdbcType=VARCHAR}
+			, #{usimAmt, jdbcType=VARCHAR}
+			, #{payType, jdbcType=VARCHAR}
+		    , 'BATCH'
+		    , SYSDATE
+		)
+	</insert>
+	
+	<!-- 단말보험보상연동정보 반영 -->
+	<update id="updateIntmInsrCmpnMember"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.updateIntmInsrCmpnMember */
+		UPDATE  MSP_INTM_INSR_MEMBER
+		SET     INSR_MNGM_NO = #{insrMngmNo}
+		        <choose>
+		        	<when test='ifCd == "A"'>
+		        		, RMN_CMPN_AMT = #{rmnCmpnAmt}
+		        		, INSR_STAT_CD = '0'
+						, CAN_RSLT_CD = 'TOL'
+		       		</when>
+			      	<otherwise>
+			      		, RMN_CMPN_AMT = #{rmnCmpnLmtAmt}
+			      		<if test='ltlYn != null and ltlYn == "Y"'>
+			      			, INSR_STAT_CD = '0'
+			      			, CAN_RSLT_CD = 'LTL'
+			      		</if>
+			      	</otherwise>
+		   		</choose>
+		        , RVISN_ID = 'BATCH'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   CONTRACT_NUM = #{contractNum}
+		AND     INSR_PROD_CD = #{insrProdCd}
+		AND		INSR_STAT_CD = '1'
+		AND     END_DTTM >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+	</update>
+	
+	<!-- 단말보험전손처리정보 저장-->
+	<insert id="insertIntmInsrCmpnDtl"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.insertIntmInsrCmpnDtl */
+		INSERT INTO MSP_INTM_INSR_CMPN_DTL (
+		    INSR_CMPN_NUM
+			, INSR_MEMBER_NUM
+			, CMPN_CTN
+			, PAY_TYPE
+			, PAY_AMT
+			, PAY_YN
+			, VAC_BANK_CD
+			, VAC_ID
+			, REGST_ID        
+			, REGST_DTTM
+		) VALUES (
+		    #{insrCmpnNum, jdbcType=VARCHAR}
+		    , #{insrMemberNum, jdbcType=VARCHAR}
+		    , #{cmpnCtn, jdbcType=VARCHAR}
+		    , #{payType, jdbcType=VARCHAR}
+		    , #{payAmt, jdbcType=VARCHAR}
+		    , 'N'
+		    , #{vacBankCd, jdbcType=VARCHAR}
+		    , CRYPTO_AES256.ENC_AES(#{vacId, jdbcType=VARCHAR})
+		    , 'BATCH'
+		    , SYSDATE
+		)
+	</insert>
+	
+	<!-- 단말보험가입 신청내역 조회(연동) -->
+	<select id="getIntmInsrOrderList"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrOrderList */
+		SELECT  DECODE(IIO.INSR_EVNT_CD, '2', IIO.DVC_CHG_DT, IIO.OPEN_DT) AS OPEN_DT
+		        , IIO.STRT_DTTM
+		        , JSI.SUBSCRIBER_NO AS CTN
+		        , JSI.SUB_LINK_NAME AS CUST_NM
+		        , CASE WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 7, 1) IN ('1', '2', '5', '6') THEN '19'
+		               WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 7, 1) IN ('3', '4', '7', '8') THEN '20'
+		               ELSE '18'
+		          END || SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 1, 6) AS BIRTH_DT
+		        , DTL.MINOR_AGENT_NAME AS MINOR_AGENT_NAME
+		        , IIO.MODEL_NM AS MODEL_NM
+		        , IIO.INTM_SRL_NO AS INTM_SRL_NO
+		        , BAN.BAN_ADR_PRIMARY_LN AS BAN_ADDR
+		        , IIO.INSR_PROD_CD AS INSR_PROD_CD
+		        , 'D' AS INSR_CMPN_CD
+		        , IIO.INSR_EVNT_CD AS INSR_EVNT_CD
+		        , IIO.CONTRACT_NUM AS CONTRACT_NUM
+		        , IIO.CHN_CD AS CHN_CD
+		FROM    MSP_INTM_INSR_ORDER IIO
+		        , MSP_JUO_SUB_INFO JSI
+		        , MSP_REQUEST_DTL DTL
+		        , MSP_JUO_BAN_INFO BAN
+		WHERE   TRUNC(IIO.REGST_DTTM) = TRUNC(SYSDATE)
+		AND     IIO.IF_TRGT_CD = 'N'
+		AND     IIO.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND     IIO.CONTRACT_NUM = DTL.CONTRACT_NUM
+		AND     JSI.BAN = BAN.BAN
+	</select>
+	
+	<!-- 단말보험가입 부적격내역 조회(연동) -->
+	<select id="getIntmInsrOrderFailList"
+		resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		SELECT  JSI.SUBSCRIBER_NO AS CTN
+		        , JSI.SUB_LINK_NAME AS CUST_NM
+		        , CASE WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 7, 1) IN ('1', '2', '5', '6') THEN '19'
+		               WHEN SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 7, 1) IN ('3', '4', '7', '8') THEN '20'
+		               ELSE '18'
+		          END || SUBSTR(CRYPTO_AES256.DEC_AES(JSI.USER_SSN), 1, 6) AS BIRTH_DT
+		        , DTL.MINOR_AGENT_NAME AS MINOR_AGENT_NAME
+		        , IIO.CONTRACT_NUM AS CONTRACT_NUM
+		        , DECODE(IIO.VRFY_RSLT_CD, 'SNOK', TO_CHAR(SND_VRFY_DTTM, 'YYYYMMDDHH24MISS'), END_DTTM) AS FAIL_DT
+		        , NVL((	SELECT CAN_RSLT_CD
+			    		FROM   MSP_INTM_INSR_CAN_INFO
+			            WHERE  CONTRACT_NUM = IIO.CONTRACT_NUM
+			            AND    STRT_DTTM = IIO.STRT_DTTM
+			            AND    TRUNC(PROC_DT) = TRUNC(SYSDATE-1)), 'REQ') AS CAN_RSLT_CD
+		FROM    MSP_INTM_INSR_ORDER IIO
+		        , MSP_JUO_SUB_INFO JSI
+		        , MSP_REQUEST_DTL DTL
+		WHERE   TRUNC(TO_DATE(IIO.END_DTTM,'YYYYMMDDHH24MISS')) = TRUNC(SYSDATE-1)
+		AND     IIO.IF_TRGT_CD IN ('F','C')
+		AND     IIO.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND     IIO.CONTRACT_NUM = DTL.CONTRACT_NUM
+	</select>
+
+	<!-- 단말보험 부가서비스 해지자 조회(재처리) -->
+	<select id="getIntmInsrCanRetryList"
+			resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.getIntmInsrCanRetryList */
+		SELECT	INSR_CAN_NUM AS SEQ_NUM
+			 , CONTRACT_NUM
+			 , INSR_PROD_CD
+			 , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0247' AND CD_VAL = INSR_PROD_CD) AS INSR_PROD_NM
+			 , NCN
+			 , CTN
+			 , CUST_ID
+			 , CAN_RSLT_CD
+		FROM 	MSP_INTM_INSR_CAN_INFO_TEMP
+		WHERE	PROC_YN = 'N'
+	</select>
+
+	<!-- 단말보험 부가서비스 해지 임시 재처리 완료 -->
+	<update id="completeIntmInsrCanRetry"
+			parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.completeIntmInsrCanRetry */
+		UPDATE	MSP_INTM_INSR_CAN_INFO_TEMP
+		SET		PROC_YN = 'Y'
+		, PROC_DT = SYSDATE
+		, RSLT_CD = #{rsltCd}
+		<if test="rsltMsg != null and rsltMsg != ''">
+			, RSLT_MSG = #{rsltMsg}
+		</if>
+		WHERE	INSR_CAN_NUM = #{seqNum}
+	</update>
+	
+	<!-- 단말보험 부가서비스 처리 대상자 생성 -->
+	<insert id="insertIntmInsrReady">
+		/* intmInsrMapper.insertIntmInsrReady */
+		INSERT INTO MSP_INTM_INSR_READY (
+				CONTRACT_NUM
+                , INSR_PROD_CD
+                , STRT_DTTM
+                , END_DTTM
+                , REQ_IN_DAY
+                , INSR_TYPE_CD
+                , WORK_CD
+                , PROC_CD
+                , REGST_DTTM
+		)
+		SELECT	DISTINCT
+		        JSI.CONTRACT_NUM
+		        , JFI.SOC
+		        , JFI.EFFECTIVE_DATE
+		        , JFI.EXPIRATION_DATE
+		        , JFI.EVNT_TRTM_DT
+		        , IIM.INSR_TYPE_CD
+		        , CASE WHEN TO_DATE(JFI.EXPIRATION_DATE, 'YYYYMMDDHH24MISS') > TRUNC(SYSDATE) THEN 'I' ELSE 'C' END
+		        , 'N'
+		        , SYSDATE
+		FROM    CMN_GRP_CD_MST GCM
+		        , MSP_INTM_INSR_MST IIM
+		        , MSP_JUO_FEATURE_INFO JFI
+		        , MSP_JUO_SUB_INFO JSI
+		WHERE   GCM.GRP_ID = 'CMN0247'
+		AND     GCM.CD_VAL = IIM.INSR_PROD_CD
+		AND     GCM.CD_VAL = JFI.SOC
+		AND     ((TO_DATE(JFI.EVNT_TRTM_DT, 'YYYYMMDDHH24MISS') BETWEEN TRUNC(SYSDATE - 1) AND TRUNC(SYSDATE)-1/24/60/60 AND TO_DATE(JFI.EXPIRATION_DATE, 'YYYYMMDDHH24MISS') > TRUNC(SYSDATE))
+		        OR TO_DATE(JFI.EXPIRATION_DATE, 'YYYYMMDDHH24MISS') BETWEEN TRUNC(SYSDATE - 1) AND TRUNC(SYSDATE)-1/24/60/60)
+		AND     JFI.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND     NOT EXISTS
+		        ( 
+		            SELECT  1
+		            FROM    MSP_INTM_INSR_ORDER
+		            WHERE   CONTRACT_NUM = JFI.CONTRACT_NUM
+		            AND     INSR_PROD_CD = JFI.SOC
+		            AND     STRT_DTTM = JFI.EFFECTIVE_DATE
+		            AND     END_DTTM = JFI.EXPIRATION_DATE
+		        )
+	</insert>
+	
+	<!-- 단말보험 부가서비스 처리 대상자 가입 및 해지 완료 -->
+	<update id="updateIntmInsrReady"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.updateIntmInsrReady */
+		UPDATE 	MSP_INTM_INSR_READY
+		SET		PROC_CD = 'Y'
+				, PROC_DT = SYSDATE
+		WHERE	PROC_CD = 'N'
+		AND		WORK_CD = #{workCd, jdbcType=VARCHAR}
+		AND		CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+		AND		INSR_PROD_CD = #{insrProdCd, jdbcType=VARCHAR}
+		AND		STRT_DTTM = #{strtDttm, jdbcType=VARCHAR}
+		AND		END_DTTM = #{endDttm, jdbcType=VARCHAR}
+		AND		REQ_IN_DAY = #{reqInDay, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 단말보험 부가서비스 처리 대상자 기간만료(+3일) 해지 처리 요청 -->
+	<insert id="insertIntmInsrCanInfoReady">
+		/* intmInsrMapper.insertIntmInsrCanInfoReady */
+		INSERT INTO MSP_INTM_INSR_CAN_INFO (
+				INSR_CAN_NUM
+                , CONTRACT_NUM
+                , INSR_PROD_CD
+                , STRT_DTTM
+                , END_DTTM
+                , NCN
+                , CTN
+                , CUST_ID
+                , CAN_RSLT_CD
+                , REGST_ID
+                , REGST_DTTM
+		)
+		SELECT
+		        INSR_CAN_NUM_SEQ.NEXTVAL
+		        , IIR.CONTRACT_NUM
+		        , IIR.INSR_PROD_CD
+		        , IIR.STRT_DTTM
+		        , IIR.END_DTTM
+		        , JSI.SVC_CNTR_NO
+		        , JSI.SUBSCRIBER_NO
+		        , JSI.CUSTOMER_ID
+		        , 'RDY'
+		        , 'BATCH'
+		        , SYSDATE
+		FROM    MSP_INTM_INSR_READY IIR
+		        , MSP_JUO_SUB_INFO JSI
+		WHERE   IIR.CONTRACT_NUM = JSI.CONTRACT_NUM
+		AND     IIR.PROC_CD = 'N'
+		AND     TRUNC(SYSDATE) > TRUNC(IIR.REGST_DTTM) + 3
+		AND     TO_DATE(IIR.END_DTTM, 'YYYYMMDDHH24MISS') > SYSDATE
+	</insert>
+	
+	<!-- 단말보험 부가서비스 처리 대상자 기간만료(+3일) 해지 처리 요청 완료 -->
+	<update id="updateIntmInsrReadyExp"
+		parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.IntmInsrVO">
+		/* intmInsrMapper.updateIntmInsrReadyExp */
+		UPDATE 	MSP_INTM_INSR_READY
+		SET		PROC_CD = 'C'
+				, PROC_DT = SYSDATE
+		WHERE	PROC_CD = 'N'
+		AND		TRUNC(SYSDATE) > TRUNC(REGST_DTTM) + 3
+	</update>
+	
+</mapper>

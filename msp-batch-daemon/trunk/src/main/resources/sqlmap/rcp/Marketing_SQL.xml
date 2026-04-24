@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.mrktmgmt.mapper.MarketingMapper">
+	
+	<!-- Marketing 동의 발송대상(과거) -->
+	<!-- 기존 발송시간대 새벽으로 넘어감으로 수정 -->
+	<select id="getMarketingSendTarget_20260317" resultType="com.ktis.msp.batch.job.rcp.mrktmgmt.vo.MarketingVO">
+		/* MarketingMapper.getMarketingSendTarget_20260317 */
+		SELECT SEND.SEND_DIVISION
+		      ,SEND.CONTRACT_NUM
+		      ,SEND.USERID
+		      ,SEND.TEMPLATE_ID
+		      ,SEND.MOBILE_NO
+		      ,SEND.STRT_DTTM
+		      ,SUBSTR(SEND.STRT_DTTM, 1, 4) || '-' || SUBSTR(SEND.STRT_DTTM, 5, 2) || '-' || SUBSTR(SEND.STRT_DTTM, 7, 2) AS AGR_DT
+		      ,TM.MSG_TYPE
+		      ,TM.CALLBACK AS SEND_NUMBER
+		      ,TM.SUBJECT
+		      ,TM.TEXT AS SEND_MESSAGE
+		      ,TM.EXPIRE_HOUR * 60 * 60 AS EXPIRE_TIME
+		      ,COUNT(1) OVER() AS TOTAL_COUNT
+		      ,ROWNUM AS RN
+		      ,TO_CHAR(TO_DATE(TO_CHAR(SYSDATE, 'YYYYMMDD') || '100000', 'YYYYMMDDHH24MISS') + ((1/24/60) * TRUNC((ROWNUM - 1) / 100) * 10), 'YYYYMMDDHH24MISS') AS REQUEST_TIME
+		FROM  (
+				-- 홈페이지 발송대상
+				SELECT 'MCP' AS SEND_DIVISION
+				      ,'' AS CONTRACT_NUM
+				      ,A.USERID
+				      ,2 AS TEMPLATE_ID
+				      ,B.MOBILE_NO
+				      ,A.STRT_DTTM AS STRT_DTTM
+				FROM   (SELECT USERID
+						      ,MIN(STRT_DTTM) AS STRT_DTTM
+						FROM   MCP_MRKT_HIST@DL_MCP
+						WHERE  AGR_YN ='Y'
+						AND	  GUBUN = '04'
+						AND    TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') BETWEEN STRT_DTTM AND END_DTTM
+						GROUP BY USERID
+						) A , MCP_USER@DL_MCP B
+				WHERE  A.USERID = B.USERID
+				AND    B.STATUS <![CDATA[ <> ]]> '3'
+				AND    B.AUTH_CODE = 'USER_ROLE'				
+				AND    EXTRACT(MONTH FROM TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS')) = EXTRACT(MONTH FROM ADD_MONTHS(SYSDATE, 1))
+				AND    EXTRACT(YEAR FROM TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS')) != EXTRACT(YEAR FROM ADD_MONTHS(SYSDATE, 1))
+				AND    MOD(EXTRACT(YEAR FROM TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS')), 2) = MOD(EXTRACT(YEAR FROM ADD_MONTHS(SYSDATE, 1)), 2)
+				
+				UNION ALL
+				
+				-- M전산 발송대상
+				SELECT 'MSP' AS SEND_DIVISION
+				      ,A.CONTRACT_NUM AS CONTRACT_NUM
+				      ,'' AS USERID
+				      ,1 AS TEMPLATE_ID
+				      ,B.SUBSCRIBER_NO AS MOBILE_NO
+				      ,A.STRT_DTTM
+				FROM   MSP_MRKT_AGR_MGMT A, MSP_JUO_SUB_INFO B
+				WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+				AND    B.SUB_STATUS <![CDATA[ <> ]]> 'C'
+				AND    A.AGR_YN = 'Y'
+				AND    TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN A.STRT_DTTM AND A.END_DTTM
+				AND    EXTRACT(MONTH FROM TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS')) = EXTRACT(MONTH FROM ADD_MONTHS(SYSDATE, 1))
+				AND    EXTRACT(YEAR FROM TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS')) != EXTRACT(YEAR FROM ADD_MONTHS(SYSDATE, 1))
+				AND    MOD(EXTRACT(YEAR FROM TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS')), 2) = MOD(EXTRACT(YEAR FROM ADD_MONTHS(SYSDATE, 1)), 2)
+			  ) SEND, MSP_SMS_TEMPLATE_MST TM
+		WHERE  SEND.TEMPLATE_ID = TM.TEMPLATE_ID
+		AND    SEND.MOBILE_NO LIKE '010%'
+		AND    LENGTH(SEND.MOBILE_NO) = 11
+	</select>
+
+	<!-- Marketing 동의 발송대상 -->
+	<select id="getMarketingSendTarget" resultType="com.ktis.msp.batch.job.rcp.mrktmgmt.vo.MarketingVO">
+		/* MarketingMapper.getMarketingSendTarget */
+		SELECT SEND.SEND_DIVISION
+		      ,SEND.CONTRACT_NUM
+		      ,SEND.USERID
+		      ,SEND.TEMPLATE_ID
+		      ,SEND.MOBILE_NO
+		      ,SEND.STRT_DTTM
+		      ,SUBSTR(SEND.STRT_DTTM, 1, 4) || '-' || SUBSTR(SEND.STRT_DTTM, 5, 2) || '-' || SUBSTR(SEND.STRT_DTTM, 7, 2) AS AGR_DT
+		      ,TM.MSG_TYPE
+		      ,TM.CALLBACK AS SEND_NUMBER
+		      ,TM.SUBJECT
+		      ,TM.TEXT AS SEND_MESSAGE
+		      ,TM.EXPIRE_HOUR * 60 * 60 AS EXPIRE_TIME
+		      ,COUNT(1) OVER() AS TOTAL_COUNT
+		      ,ROWNUM AS RN
+		      ,TO_CHAR(TO_DATE(TO_CHAR(SYSDATE,'YYYYMMDD') || '093000','YYYYMMDDHH24MISS') + (TRUNC((ROWNUM - 1) / 10000) * (1/24)), 'YYYYMMDDHH24MISS') AS REQUEST_TIME
+		FROM  (
+				SELECT 'MSP' AS SEND_DIVISION
+				      ,A.CONTRACT_NUM AS CONTRACT_NUM
+				      ,'' AS USERID
+				      ,1 AS TEMPLATE_ID
+				      ,B.SUBSCRIBER_NO AS MOBILE_NO
+				      ,A.STRT_DTTM
+				FROM   MSP_MRKT_AGR_MGMT A, MSP_JUO_SUB_INFO B
+				WHERE  A.CONTRACT_NUM = B.CONTRACT_NUM
+				AND    B.SUB_STATUS <![CDATA[ <> ]]> 'C'
+				AND    A.AGR_YN = 'Y'
+				AND    TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN A.STRT_DTTM AND A.END_DTTM
+				AND    EXTRACT(MONTH FROM TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS')) = EXTRACT(MONTH FROM ADD_MONTHS(SYSDATE, 1))
+				AND    EXTRACT(YEAR FROM TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS')) != EXTRACT(YEAR FROM ADD_MONTHS(SYSDATE, 1))
+				AND    MOD(EXTRACT(YEAR FROM TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS')), 2) = MOD(EXTRACT(YEAR FROM ADD_MONTHS(SYSDATE, 1)), 2)
+			  ) SEND, MSP_SMS_TEMPLATE_MST TM
+		WHERE  SEND.TEMPLATE_ID = TM.TEMPLATE_ID
+		AND    SEND.MOBILE_NO LIKE '010%'
+		AND    LENGTH(SEND.MOBILE_NO) = 11
+	</select>
+	
+	<!-- SMS재발송대상조회 -->
+	<select id="getMarketingReSendTarget" resultType="com.ktis.msp.batch.job.rcp.mrktmgmt.vo.MarketingVO">
+		/* MarketingMapper.getMarketingReSendTarget */
+		SELECT  A.SEND_SEQ
+			      , A.RCPT_DATA
+			      , A.CALLBACK_NUM
+			      , A.MSG_TYPE
+			      , A.SUBJECT
+			      , A.MESSAGE
+			      , A.RESERVED01
+			      , A.RESERVED02
+			      , A.RESERVED03
+			      <!-- , TO_CHAR(TO_DATE(TO_CHAR(SYSDATE, 'YYYYMMDD') || '100000', 'YYYYMMDDHH24MISS') + ((1/24/60) * TRUNC((ROWNUM - 1) / 100) * 10), 'YYYYMMDDHH24MISS') AS scheduleTime -->
+			      , TO_CHAR(TO_DATE(TO_CHAR(SYSDATE,'YYYYMMDD') || '093000','YYYYMMDDHH24MISS') + (TRUNC((ROWNUM - 1) / 5000) * (1/24)), 'YYYYMMDDHH24MISS') AS scheduleTime
+		FROM    (
+		    SELECT  A.SEND_SEQ
+		            , B.RCPT_DATA
+				    , B.CALLBACK_NUM
+				    , B.MSG_TYPE
+				    , B.SUBJECT
+				    , B.MESSAGE
+		            , B.RESERVED01
+				    , B.RESERVED02
+				    , B.RESERVED03
+		    FROM    MSP_SMS_SEND_MST A
+		            , AM2X_SUBMIT B
+		    WHERE   A.SEND_REQ_DTTM LIKE TO_CHAR(SYSDATE - 1, 'YYYYMMDD') || '%'
+		    AND     A.MSEQ = B.MSG_ID
+		    AND		A.TEMPLATE_ID = '1'
+		    AND		B.MSG_TYPE_SECOND = '2'
+		    UNION ALL
+		    SELECT  A.SEND_SEQ
+		            , B.RCPT_DATA
+				    , B.CALLBACK_NUM
+				    , B.MSG_TYPE
+				    , B.SUBJECT
+				    , B.MESSAGE
+		            , B.RESERVED01
+				    , B.RESERVED02
+				    , B.RESERVED03
+		    FROM    MSP_SMS_SEND_MST A
+		            , AM2X_SUBMIT_LOG B
+		    WHERE   A.SEND_REQ_DTTM LIKE TO_CHAR(SYSDATE - 1, 'YYYYMMDD') || '%'
+		    AND     A.MSEQ = B.MSG_ID
+		    AND     NOT (B.RESULT = '0' OR (B.KKO_RESULT IS NOT NULL AND B.KKO_RESULT = '0'))
+		    AND		A.TEMPLATE_ID = '1'
+		    AND		B.MSG_TYPE_SECOND = '2'
+		) A
+	</select>
+	
+	<update id="updateSmsSendMst" parameterType="com.ktis.msp.batch.job.rcp.mrktmgmt.vo.MarketingVO">
+		/* MarketingMapper.updateSmsSendMst */
+		UPDATE  MSP_SMS_SEND_MST
+		SET     SEND_CNT = SEND_CNT + 1
+		        , MSEQ = #{msgId}
+		        , SEND_REQ_DTTM = #{scheduleTime}
+		        , RVISN_ID = #{reqId}
+		        , RVISN_DTTM = SYSDATE
+		WHERE   SEND_SEQ = #{sendSeq}
+	</update>
+</mapper>

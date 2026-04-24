@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
+	
+	
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+		<property name="driverClassName" value="${mvno.oracle.jdbc.driver}" />
+		<property name="url" value="${mvno.oracle.url}" />
+		<property name="username" value="${mvno.oracle.user}" />
+		<property name="password" value="${mvno.oracle.password}" />
+		
+		<property name="maxActive" value="${mvno.oracle.jdbc.maxActive}"/>
+		
+		<property name="defaultAutoCommit" value="false" />
+		
+		<property name="validationQuery" value="select 1 from dual"/> 
+		<property name="testWhileIdle" value="true"/> 
+		<property name="timeBetweenEvictionRunsMillis" value="7200000"/>
+	</bean>
+	
+</beans>

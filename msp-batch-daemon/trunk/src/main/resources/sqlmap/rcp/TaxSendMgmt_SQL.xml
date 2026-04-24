@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.taxmgmt.mapper.TaxMgmtMapper">
+	
+	<!-- 제세공과금 발송 대상자 list -->
+	<select id="selectTaxSendList" resultType="hashMap">
+		/* taxMgmtMapper.selectTaxSendList */
+			SELECT
+				TAX_NO
+				,KAKAO_YN
+				,SEND_CNT
+				,AGENT_YN
+			FROM MSP_TAX_SMS_LIST A
+			WHERE TO_CHAR(TO_DATE(REQUEST_TIME, 'YYYYMMDDHH24MISS'),'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+			AND TAX_USG_YN = 'R'
+			ORDER BY REQUEST_TIME ASC
+	</select>
+	
+	<!-- AM2X_SUBMIT 에 등록 With Template -->
+	<insert id="insertTaxMsgQueue" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO">
+		/* taxMgmtMapper.insertTaxMsgQueue */
+		INSERT INTO AM2X_SUBMIT (
+			   MSG_ID			    /* Sequence		*/
+			, MSG_TYPE		    /* 1:SMS 3:MMS	*/
+			, RCPT_DATA		    /* 수신자 번호	*/
+			, CALLBACK_NUM		    /* 발신자 번호	*/
+			, SUBJECT		    /* 제목 		*/
+			, MESSAGE			    /* 전송메시지	*/
+			, SCHEDULE_TIME	    /* 발송요청시간	*/
+			, SUBMIT_TIME			/* 등록시간	*/
+			, RESERVED01			/* MSP	*/
+			, RESERVED02			/* SMS TEMPLATE ID	*/
+			, RESERVED03			/* 발송자,발송화면	*/
+		)
+        SELECT 
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			, '2'
+			, B.TEL_NO
+			, A.TAX_SEND_CTN
+			, A.TAX_TITLE
+			, A.TAX_TEXT
+			, A.REQUEST_TIME
+            , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , 'BATCH'
+            , A.TAX_TMP_ID
+            , 'TaxMgmtSchedule'
+        FROM MSP_TAX_SMS_LIST A
+        		, MSP_TAX_SMS_SEND_LIST B
+        WHERE A.TAX_NO = B.TAX_NO
+        AND TO_CHAR(TO_DATE(A.REQUEST_TIME, 'YYYYMMDDHH24MISS'),'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		AND A.TAX_USG_YN = 'R'
+		AND A.KAKAO_YN = 'N'
+		AND A.TAX_NO = #{taxNo}
+	</insert>
+
+	<!-- AM2X_SUBMIT 에 등록 With Template -->
+	<insert id="insertKakaoTaxMsgQueue" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO">
+		/* taxMgmtMapper.insertKakaoTaxMsgQueue */
+		INSERT INTO AM2X_SUBMIT (
+			  MSG_ID			    /* Sequence		*/
+			, MSG_TYPE		    /* 1=SMS 2=LMS 3=MMS 6=A_KAKAO */
+			, FAIL_SEND			/* 실패시 재 발송 여부(카카오 실패일 경우 발송)*/
+			, RCPT_DATA		    /* 수신자 번호	*/
+			, CALLBACK_NUM		    /* 발신자 번호	*/
+			, SUBJECT		    /* 제목 		*/
+			, MESSAGE			    /* 전송메시지	*/
+			, SCHEDULE_TIME	    /* 발송요청시간	*/
+			, SUBMIT_TIME			/* 등록시간	*/
+			, RESERVED01			/* BATCH  */
+			, RESERVED02			/* SMS TEMPLATE ID	*/
+			, RESERVED03			/* 발송자,발송화면	*/
+			, K_MESSAGE           /* 카카오 실패 시 대체발송 메세지 */
+			, K_TMPLCODE	 /* 카카오 알림톡 템플릿 코드 */
+			, MSG_TYPE_SECOND     /* 카카오 실패 시 대체발송 메세지 타입 1=SMS 2=LMS 3=MMS */
+			, K_SENDERKEY      /* 카카오 발신프로필키 */
+		)
+		SELECT 
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			, '6'
+			, 'Y'
+			, B.TEL_NO
+			, A.TAX_SEND_CTN
+			, A.TAX_TITLE
+			, A.TAX_TEXT
+			, A.REQUEST_TIME
+            , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , 'BATCH'
+            , A.TAX_TMP_ID
+            , 'TaxMgmtSchedule'
+			, A.TAX_TEXT
+	        , (SELECT NVL(K_TEMPLATE_CODE , '') FROM MSP_SMS_TEMPLATE_MST WHERE TEMPLATE_ID = A.TAX_TMP_ID)
+	        ,  #{msgTypeSecond}
+	        ,  #{kSenderkey}
+        FROM MSP_TAX_SMS_LIST A
+        		, MSP_TAX_SMS_SEND_LIST B
+        WHERE A.TAX_NO = B.TAX_NO
+        AND TO_CHAR(TO_DATE(A.REQUEST_TIME, 'YYYYMMDDHH24MISS'),'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		AND A.TAX_USG_YN = 'R'
+		AND A.KAKAO_YN = 'Y'
+		AND A.TAX_NO = #{taxNo}
+	</insert>
+
+	<!-- (법정대리인)AM2X_SUBMIT 에 등록 With Template -->
+	<insert id="insertAgentMsgQueue" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO">
+		/* taxMgmtMapper.insertAgentMsgQueue */
+		INSERT INTO AM2X_SUBMIT (
+			   MSG_ID			    /* Sequence		*/
+			, MSG_TYPE		    /* 1:SMS 3:MMS	*/
+			, RCPT_DATA		    /* 수신자 번호	*/
+			, CALLBACK_NUM		    /* 발신자 번호	*/
+			, SUBJECT		    /* 제목 		*/
+			, MESSAGE			    /* 전송메시지	*/
+			, SCHEDULE_TIME	    /* 발송요청시간	*/
+			, SUBMIT_TIME			/* 등록시간	*/
+			, RESERVED01			/* MSP	*/
+			, RESERVED02			/* SMS TEMPLATE ID	*/
+			, RESERVED03			/* 발송자,발송화면	*/
+		)
+        SELECT 
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			, '2'
+			, B.AGENT_TEL_NUM
+			, A.TAX_SEND_CTN
+			, A.TAX_TITLE
+			, A.AGENT_TEXT
+			, A.REQUEST_TIME
+            , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , 'BATCH'
+            , A.AGENT_TMP_ID
+            , 'TaxMgmtSchedule'
+        FROM MSP_TAX_SMS_LIST A
+        		, MSP_TAX_SMS_SEND_LIST B
+        WHERE A.TAX_NO = B.TAX_NO
+        AND TO_CHAR(TO_DATE(A.REQUEST_TIME, 'YYYYMMDDHH24MISS'),'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		AND A.TAX_USG_YN = 'R'
+		AND A.KAKAO_YN = 'N'
+		AND A.TAX_NO = #{taxNo}
+		AND B.AGENT_TEL_NUM IS NOT NULL
+	</insert>
+
+	<!-- (법정대리인)AM2X_SUBMIT 에 등록 With Template -->
+	<insert id="insertKakaoAgentMsgQueue" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO">
+		/* taxMgmtMapper.insertKakaoAgentMsgQueue */
+		INSERT INTO AM2X_SUBMIT (
+			  MSG_ID			    /* Sequence		*/
+			, MSG_TYPE		    /* 1=SMS 2=LMS 3=MMS 6=A_KAKAO */
+			, FAIL_SEND			/* 실패시 재 발송 여부(카카오 실패일 경우 발송)*/
+			, RCPT_DATA		    /* 수신자 번호	*/
+			, CALLBACK_NUM		    /* 발신자 번호	*/
+			, SUBJECT		    /* 제목 		*/
+			, MESSAGE			    /* 전송메시지	*/
+			, SCHEDULE_TIME	    /* 발송요청시간	*/
+			, SUBMIT_TIME			/* 등록시간	*/
+			, RESERVED01			/* BATCH  */
+			, RESERVED02			/* SMS TEMPLATE ID	*/
+			, RESERVED03			/* 발송자,발송화면	*/
+			, K_MESSAGE           /* 카카오 실패 시 대체발송 메세지 */
+			, K_TMPLCODE	 /* 카카오 알림톡 템플릿 코드 */
+			, MSG_TYPE_SECOND     /* 카카오 실패 시 대체발송 메세지 타입 1=SMS 2=LMS 3=MMS */
+			, K_SENDERKEY      /* 카카오 발신프로필키 */
+		)
+		SELECT 
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			, '6'
+			, 'Y'
+			, B.AGENT_TEL_NUM
+			, A.TAX_SEND_CTN
+			, A.TAX_TITLE
+			, A.AGENT_TEXT
+			, A.REQUEST_TIME
+            , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , 'BATCH'
+            , A.AGENT_TMP_ID
+            , 'TaxMgmtSchedule'
+			, A.AGENT_TEXT
+	        , (SELECT NVL(K_TEMPLATE_CODE , '') FROM MSP_SMS_TEMPLATE_MST WHERE TEMPLATE_ID = A.AGENT_TMP_ID)
+	        ,  #{msgTypeSecond}
+	        ,  #{kSenderkey}
+        FROM MSP_TAX_SMS_LIST A
+        		, MSP_TAX_SMS_SEND_LIST B
+        WHERE A.TAX_NO = B.TAX_NO
+        AND TO_CHAR(TO_DATE(A.REQUEST_TIME, 'YYYYMMDDHH24MISS'),'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		AND A.TAX_USG_YN = 'R'
+		AND A.KAKAO_YN = 'Y'
+		AND A.TAX_NO = #{taxNo}
+		AND B.AGENT_TEL_NUM IS NOT NULL
+	</insert>
+		
+	<update id="updateTaxSendList" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO">
+		/* taxMgmtMapper.updateTaxSendList */
+		UPDATE MSP_TAX_SMS_LIST
+		   SET TAX_USG_YN = #{taxUsgYn} 
+		       , RVISN_ID = 'BATCH'
+		       , RVISN_DTTM = SYSDATE
+		 WHERE TAX_NO = #{taxNo}
+	</update>
+
+	<select id="selectDelTaxData" resultType="hashMap">
+		/* taxMgmtMapper.selectDelTaxData */
+		SELECT 
+			COUNT(*) AS CNT
+			,A.TAX_NO
+		FROM MSP_TAX_SMS_SEND_LIST A
+		WHERE TAX_NO IN (
+		    SELECT B.TAX_NO
+		    FROM MSP_TAX_SMS_LIST B
+		    WHERE TRUNC(SYSDATE, 'MM') > TO_DATE(B.REQUEST_TIME, 'YYYYMMDDHH24MISS')
+		)
+		GROUP BY A.TAX_NO
+	</select>
+	
+	<delete id="deleteTaxSendData">
+		/* taxMgmtMapper.deleteTaxSendData */
+		DELETE FROM MSP_TAX_SMS_SEND_LIST
+		WHERE TAX_NO IN (
+			SELECT 
+				A.TAX_NO
+			FROM MSP_TAX_SMS_SEND_LIST A
+			WHERE TAX_NO IN (
+			    SELECT B.TAX_NO
+			    FROM MSP_TAX_SMS_LIST B
+			    WHERE TRUNC(SYSDATE, 'MM') > TO_DATE(B.REQUEST_TIME, 'YYYYMMDDHH24MISS') 
+			)
+			GROUP BY A.TAX_NO
+		)
+	</delete>
+	
+	<select id="selectAgentCnt" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO" resultType="int">
+		/* taxMgmtMapper.selectAgentCnt */
+		SELECT 
+			COUNT(*) 
+		FROM MSP_TAX_SMS_SEND_LIST 
+		WHERE TAX_NO = #{taxNo}
+		<if test='reSendYn != null and reSendYn != "" and reSendYn == "Y"'>
+			AND TAX_RECV_TIME IS NULL
+		</if>
+		AND AGENT_TEL_NUM IS NOT NULL
+	</select>
+	
+	<!-- 제세공과금 재발송 대상자 list -->
+	<select id="selectTaxReSendList" resultType="hashMap">
+		/* taxMgmtMapper.selectTaxReSendList */
+			SELECT
+			    A.TAX_NO
+			    ,A.KAKAO_YN
+			    ,COUNT(B.TAX_NO) AS RESEND_CNT
+			FROM MSP_TAX_SMS_LIST A, MSP_TAX_SMS_SEND_LIST B
+			WHERE 1=1
+			AND A.TAX_NO = B.TAX_NO
+			AND	(
+				        TO_CHAR(TO_DATE(A.REQUEST_TIME, 'YYYYMMDDHH24MISS') + 2, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+						OR
+				        TO_CHAR(TO_DATE(A.REQUEST_TIME, 'YYYYMMDDHH24MISS') + 4, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+						)
+			AND A.TAX_USG_YN = 'S'
+			AND B.TAX_RECV_TIME IS NULL
+			GROUP BY A.TAX_NO,A.KAKAO_YN,A.REQUEST_TIME
+			ORDER BY A.REQUEST_TIME
+	</select>
+	
+	<!-- AM2X_SUBMIT 에 등록 With Template -->
+	<insert id="insertTaxReMsgQueue" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO">
+		/* taxMgmtMapper.insertTaxReMsgQueue */
+		INSERT INTO AM2X_SUBMIT (
+			   MSG_ID			    /* Sequence		*/
+			, MSG_TYPE		    /* 1:SMS 3:MMS	*/
+			, RCPT_DATA		    /* 수신자 번호	*/
+			, CALLBACK_NUM		    /* 발신자 번호	*/
+			, SUBJECT		    /* 제목 		*/
+			, MESSAGE			    /* 전송메시지	*/
+			, SCHEDULE_TIME	    /* 발송요청시간	*/
+			, SUBMIT_TIME			/* 등록시간	*/
+			, RESERVED01			/* MSP	*/
+			, RESERVED02			/* SMS TEMPLATE ID	*/
+			, RESERVED03			/* 발송자,발송화면	*/
+		)
+        SELECT 
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			, '2'
+			, B.TEL_NO
+			, A.TAX_SEND_CTN
+			, A.TAX_TITLE
+			, A.TAX_TEXT
+			, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , 'BATCH'
+            , A.TAX_TMP_ID
+            , 'TaxReMgmtSchedule'
+        FROM MSP_TAX_SMS_LIST A
+        		, MSP_TAX_SMS_SEND_LIST B
+        WHERE A.TAX_NO = B.TAX_NO
+		AND A.TAX_USG_YN = 'S'
+		AND A.KAKAO_YN = 'N'
+		AND B.TAX_RECV_TIME IS NULL
+		AND A.TAX_NO = #{taxNo}
+	</insert>
+
+	<!-- AM2X_SUBMIT 에 등록 With Template -->
+	<insert id="insertKakaoTaxReMsgQueue" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO">
+		/* taxMgmtMapper.insertKakaoTaxReMsgQueue */
+		INSERT INTO AM2X_SUBMIT (
+			  MSG_ID			    /* Sequence		*/
+			, MSG_TYPE		    /* 1=SMS 2=LMS 3=MMS 6=A_KAKAO */
+			, FAIL_SEND			/* 실패시 재 발송 여부(카카오 실패일 경우 발송)*/
+			, RCPT_DATA		    /* 수신자 번호	*/
+			, CALLBACK_NUM		    /* 발신자 번호	*/
+			, SUBJECT		    /* 제목 		*/
+			, MESSAGE			    /* 전송메시지	*/
+			, SCHEDULE_TIME	    /* 발송요청시간	*/
+			, SUBMIT_TIME			/* 등록시간	*/
+			, RESERVED01			/* BATCH  */
+			, RESERVED02			/* SMS TEMPLATE ID	*/
+			, RESERVED03			/* 발송자,발송화면	*/
+			, K_MESSAGE           /* 카카오 실패 시 대체발송 메세지 */
+			, K_TMPLCODE	 /* 카카오 알림톡 템플릿 코드 */
+			, MSG_TYPE_SECOND     /* 카카오 실패 시 대체발송 메세지 타입 1=SMS 2=LMS 3=MMS */
+			, K_SENDERKEY      /* 카카오 발신프로필키 */
+		)
+		SELECT 
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			, '6'
+			, 'Y'
+			, B.TEL_NO
+			, A.TAX_SEND_CTN
+			, A.TAX_TITLE
+			, A.TAX_TEXT
+			, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , 'BATCH'
+            , A.TAX_TMP_ID
+            , 'TaxReMgmtSchedule'
+			, A.TAX_TEXT
+	        , (SELECT NVL(K_TEMPLATE_CODE , '') FROM MSP_SMS_TEMPLATE_MST WHERE TEMPLATE_ID = A.TAX_TMP_ID)
+	        ,  #{msgTypeSecond}
+	        ,  #{kSenderkey}
+        FROM MSP_TAX_SMS_LIST A
+        		, MSP_TAX_SMS_SEND_LIST B
+        WHERE A.TAX_NO = B.TAX_NO
+        AND A.TAX_USG_YN = 'S'
+		AND A.KAKAO_YN = 'Y'
+		AND B.TAX_RECV_TIME IS NULL
+		AND A.TAX_NO = #{taxNo}
+	</insert>
+
+	<!-- (법정대리인)AM2X_SUBMIT 에 등록 With Template -->
+	<insert id="insertAgentReMsgQueue" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO">
+		/* taxMgmtMapper.insertAgentReMsgQueue */
+		INSERT INTO AM2X_SUBMIT (
+			   MSG_ID			    /* Sequence		*/
+			, MSG_TYPE		    /* 1:SMS 3:MMS	*/
+			, RCPT_DATA		    /* 수신자 번호	*/
+			, CALLBACK_NUM		    /* 발신자 번호	*/
+			, SUBJECT		    /* 제목 		*/
+			, MESSAGE			    /* 전송메시지	*/
+			, SCHEDULE_TIME	    /* 발송요청시간	*/
+			, SUBMIT_TIME			/* 등록시간	*/
+			, RESERVED01			/* MSP	*/
+			, RESERVED02			/* SMS TEMPLATE ID	*/
+			, RESERVED03			/* 발송자,발송화면	*/
+		)
+        SELECT 
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			, '2'
+			, B.AGENT_TEL_NUM
+			, A.TAX_SEND_CTN
+			, A.TAX_TITLE
+			, A.AGENT_TEXT
+			, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , 'BATCH'
+            , A.AGENT_TMP_ID
+            , 'TaxReMgmtSchedule'
+        FROM MSP_TAX_SMS_LIST A
+        		, MSP_TAX_SMS_SEND_LIST B
+        WHERE A.TAX_NO = B.TAX_NO
+		AND A.TAX_USG_YN = 'S'
+		AND A.KAKAO_YN = 'N'
+		AND B.TAX_RECV_TIME IS NULL
+		AND A.TAX_NO = #{taxNo}
+		AND B.AGENT_TEL_NUM IS NOT NULL
+	</insert>
+
+	<!-- (법정대리인)AM2X_SUBMIT 에 등록 With Template -->
+	<insert id="insertKakaoAgentReMsgQueue" parameterType="com.ktis.msp.batch.manager.vo.KtSmsCommonVO">
+		/* taxMgmtMapper.insertKakaoAgentReMsgQueue */
+		INSERT INTO AM2X_SUBMIT (
+			  MSG_ID			    /* Sequence		*/
+			, MSG_TYPE		    /* 1=SMS 2=LMS 3=MMS 6=A_KAKAO */
+			, FAIL_SEND			/* 실패시 재 발송 여부(카카오 실패일 경우 발송)*/
+			, RCPT_DATA		    /* 수신자 번호	*/
+			, CALLBACK_NUM		    /* 발신자 번호	*/
+			, SUBJECT		    /* 제목 		*/
+			, MESSAGE			    /* 전송메시지	*/
+			, SCHEDULE_TIME	    /* 발송요청시간	*/
+			, SUBMIT_TIME			/* 등록시간	*/
+			, RESERVED01			/* BATCH  */
+			, RESERVED02			/* SMS TEMPLATE ID	*/
+			, RESERVED03			/* 발송자,발송화면	*/
+			, K_MESSAGE           /* 카카오 실패 시 대체발송 메세지 */
+			, K_TMPLCODE	 /* 카카오 알림톡 템플릿 코드 */
+			, MSG_TYPE_SECOND     /* 카카오 실패 시 대체발송 메세지 타입 1=SMS 2=LMS 3=MMS */
+			, K_SENDERKEY      /* 카카오 발신프로필키 */
+		)
+		SELECT 
+			AM2X_SUBMIT_SEQ.NEXTVAL
+			, '6'
+			, 'Y'
+			, B.AGENT_TEL_NUM
+			, A.TAX_SEND_CTN
+			, A.TAX_TITLE
+			, A.AGENT_TEXT
+			, TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+            , 'BATCH'
+            , A.AGENT_TMP_ID
+            , 'TaxReMgmtSchedule'
+			, A.AGENT_TEXT
+	        , (SELECT NVL(K_TEMPLATE_CODE , '') FROM MSP_SMS_TEMPLATE_MST WHERE TEMPLATE_ID = A.AGENT_TMP_ID)
+	        ,  #{msgTypeSecond}
+	        ,  #{kSenderkey}
+        FROM MSP_TAX_SMS_LIST A
+        		, MSP_TAX_SMS_SEND_LIST B
+        WHERE A.TAX_NO = B.TAX_NO
+        AND A.TAX_USG_YN = 'S'
+		AND A.KAKAO_YN = 'Y'
+		AND B.TAX_RECV_TIME IS NULL
+		AND A.TAX_NO = #{taxNo}
+		AND B.AGENT_TEL_NUM IS NOT NULL
+	</insert>
+</mapper>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rsk.unpaybondmgmt.mapper.UnpayBondMgmtMapper">
+	
+	<select id="getUnpayBondDtlListEx" parameterType="com.ktis.msp.batch.job.rsk.unpaybondmgmt.vo.UnpayBondMgmtVO" 
+									resultType="egovframework.rte.psl.dataaccess.util.EgovMap" >
+		/* UnpayBondMgmtMapper.getUnpayBondDtlListEx */
+		SELECT  A.CRT_YM
+		        , TO_CHAR(TO_DATE(A.CRT_YM, 'YYYYMM'), 'YYYY-MM') AS CRT_YM_EX
+		        , A.BILL_YM
+		        , TO_CHAR(TO_DATE(A.BILL_YM, 'YYYYMM'), 'YYYY-MM') AS BILL_YM_EX
+		        , A.USG_YM
+		        , TO_CHAR(TO_DATE(A.USG_YM, 'YYYYMM'), 'YYYY-MM') AS USG_YM_EX
+		        , A.SVC_CNTR_NO
+		        , A.CONTRACT_NUM
+		        , FN_GET_SALE_ITMNM (A.BILL_ITEM_CD) AS SALE_ITM_NM
+		        , B.SUB_STATUS
+		        , FN_GET_CODENM ('MSP0003', B.SUB_STATUS) AS STATUS_NM
+		        , B.SUB_LINK_NAME
+		        , B.SUBSCRIBER_NO
+		        , DECODE(A.OPEN_AGNT_CD, NULL, '1100011741', 'K000001', '1100011741', 'AA00364', '1100011741', '1100005928', '1100011741', A.OPEN_AGNT_CD) AS OPEN_AGNT_CD
+		        , FN_GET_ORGNM(DECODE(A.OPEN_AGNT_CD, NULL, '1100011741', 'K000001', '1100011741', 'AA00364', '1100011741', '1100005928', '1100011741', A.OPEN_AGNT_CD)) AS OPEN_AGNT_NM
+		        , A.INV_AMNT
+		        , A.INV_VAT
+		        , A.ADJ_A_AMNT
+		        , A.ADJ_A_VAT
+		        , A.ADJ_B_AMNT
+		        , A.ADJ_B_VAT
+		        , A.ADJ_C_AMNT
+		        , A.ADJ_C_VAT
+		        , A.ADJ_D_AMNT
+		        , A.ADJ_D_VAT
+		        , A.ADJ_E_AMNT
+		        , A.ADJ_E_VAT
+		        , A.ADJ_F_AMNT
+		        , A.ADJ_F_VAT
+		        , A.ADJ_G_AMNT
+		        , A.ADJ_G_VAT
+		        , A.ADJ_H_AMNT
+		        , A.ADJ_H_VAT
+		        , A.ADJ_AMNT
+		        , A.ADJ_VAT
+		        , A.ADJ_AMNT + ADJ_VAT AS TOT_ADJ_AMNT
+		        , A.INV_AMNT + A.INV_VAT - (A.ADJ_AMNT + A.ADJ_VAT) AS TOT_INV_AMNT
+		        , A.PYM_AMNT
+		        , A.PYM_VAT
+		        , A.PYM_AMNT + A.PYM_VAT AS TOT_PYM_AMNT
+		        , A.UNPD_AMNT
+		        , A.UNPD_VAT
+		        , A.UNPD_AMNT + A.UNPD_VAT AS TOT_UNPD_AMNT
+		        , A.DUEDAT_DATE
+		        , TO_CHAR(TO_DATE(A.DUEDAT_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') AS DUEDAT_DATE_EX
+		        , A.BLPYM_DATE
+		        , TO_CHAR(TO_DATE(A.BLPYM_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') AS BLPYM_DATE_EX
+		        , CASE
+		            WHEN A.DUEDAT_DATE <![CDATA[ < ]]> A.BLPYM_DATE THEN TRUNC(MONTHS_BETWEEN(TO_DATE(NVL(A.BLPYM_DATE, TO_CHAR(SYSDATE, 'YYYYMMDD')), 'YYYYMMDD'), TO_DATE (A.DUEDAT_DATE, 'YYYYMMDD')))
+		            ELSE 0
+		        END AS UNPD_MNTH_CNT
+		        , FN_GET_CODENM ('CLS0045', A.PYMN_MTHD_CD) AS PYMN_MTHD_NM
+		FROM    MSP_UNPD_BOND_DTL A
+		        , MSP_JUO_SUB_INFO B
+		WHERE   A.CRT_YM = #{stdrYm}
+		AND     A.BILL_YM BETWEEN #{strtYm} AND #{endYm}
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+		<if test="unpdYn != null and unpdYn != '' and unpdYn == 1">
+			AND ( A.UNPD_AMNT + A.UNPD_VAT ) <![CDATA[ > ]]> 0
+		</if>
+		<if test="searchType != null and searchType != ''">
+			<if test="searchType == '10'">
+				AND A.CONTRACT_NUM = #{searchVal}
+			</if>
+			<if test="searchType == '20'">
+				AND B.SUB_LINK_NAME LIKE '%' || #{searchVal} || '%'
+			</if>
+			<if test="searchType == '30'">
+				AND B.SUBSCRIBER_NO = #{searchVal}
+			</if>
+		</if>
+		ORDER BY A.BILL_YM, A.BILL_ITEM_CD
+	</select>
+	
+	<!-- 미납채권자료생성 -->
+	<insert id="callUnpdBondSttc" statementType="CALLABLE">
+		/* SchdMgmtMapper.callUnpdBondSttc */
+		{ CALL P_UNPD_BOND_STTC }
+	</insert>
+</mapper>

@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.ktis.msp.batch.job.ptnr.ptnrmgmt.mapper.DongbuInsrMapper">
+
+	<!-- 가입대상조회 -->
+	<select id="getRegInsrMemberList" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* isnrMapper.getRegInsrMemberList */
+		<![CDATA[
+		/* 전일 생활안심요금제 개통고객 */
+		SELECT  DISTINCT
+		        A.CONTRACT_NUM
+		        , A.SVC_CNTR_NO
+		        , B.SOC AS RATE_CD
+		        , (CASE WHEN FN_GET_AGE('X', A.CONTRACT_NUM) < 15 THEN 'A1'
+		                WHEN FN_GET_AGE('X', A.CONTRACT_NUM) >= 70 THEN 'A2'
+		                ELSE 'A0'
+		           END) AS INSR_CD
+		        , 'A' AS STAT_CD 
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_JUO_FEATURE_INFO B
+		WHERE   A.PPPO = 'PO'
+		AND     A.SUB_STATUS = 'A'
+		AND     A.LST_COM_ACTV_DATE = TO_CHAR(SYSDATE - #{dayCnt}, 'YYYYMMDD')
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.SERVICE_TYPE = 'P'
+		AND     B.SOC IN (SELECT RATE_CD FROM MSP_PARTNER_RATE_MST WHERE PARTNER_ID = 'dongbu')
+		AND     B.EXPIRATION_DATE = (SELECT MAX(EXPIRATION_DATE) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = B.CONTRACT_NUM AND SERVICE_TYPE = B.SERVICE_TYPE AND SOC = B.SOC)
+		UNION
+		/* 전일 생활안심요금제로 변경한 고객 */
+		SELECT  DISTINCT
+		        A.CONTRACT_NUM
+		        , A.SVC_CNTR_NO
+		        , B.SOC AS RATE_CD
+		        , (CASE WHEN FN_GET_AGE('X', A.CONTRACT_NUM) < 15 THEN 'A1'
+		                WHEN FN_GET_AGE('X', A.CONTRACT_NUM) >= 70 THEN 'A2'
+		                ELSE 'A0'
+		           END) AS INSR_CD
+		        , 'A' AS STAT_CD
+		FROM    MSP_JUO_FEATURE_INFO B
+		        , MSP_JUO_SUB_INFO A
+		WHERE   B.SOC IN (SELECT RATE_CD FROM MSP_PARTNER_RATE_MST WHERE PARTNER_ID = 'dongbu')
+		AND     SUBSTR(B.EFFECTIVE_DATE, 1, 8) = TO_CHAR(SYSDATE - #{dayCnt}, 'YYYYMMDD')
+		AND     B.EXPIRATION_DATE = (SELECT MAX(EXPIRATION_DATE) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = B.CONTRACT_NUM AND SERVICE_TYPE = B.SERVICE_TYPE AND SOC = B.SOC)
+		AND     B.CONTRACT_NUM = A.CONTRACT_NUM
+		AND     A.SUB_STATUS = 'A'
+		AND     A.LST_COM_ACTV_DATE < TO_CHAR(SYSDATE - #{dayCnt}, 'YYYYMMDD')
+		UNION
+		/* 전일 명의변경, 정지복구 고객 중 생활안심요금제 이용고객 */
+		SELECT  DISTINCT
+		        B.CONTRACT_NUM
+		        , B.SVC_CNTR_NO
+		        , C.SOC AS RATE_CD
+		        , (CASE WHEN FN_GET_AGE('X', A.CONTRACT_NUM) < 15 THEN 'A1'
+		                WHEN FN_GET_AGE('X', A.CONTRACT_NUM) >= 70 THEN 'A2'
+		                ELSE 'A0'
+		           END) AS INSR_CD
+		        , 'A' AS STAT_CD
+		FROM    MSP_JUO_SUB_INFO_HIST A
+		        , MSP_JUO_SUB_INFO B
+		        , MSP_JUO_FEATURE_INFO C
+		WHERE   A.EVNT_CD IN ('MCN', 'RSP')
+		AND     A.EVNT_CD = A.SUB_STATUS_LAST_ACTV_CD
+		AND     SUBSTR(A.EVNT_CHANGE_DATE, 1, 8) = TO_CHAR(SYSDATE - #{dayCnt}, 'YYYYMMDD')
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.SUB_STATUS = 'A'
+		AND     DECODE(A.EVNT_CD, 'MCN', DECODE(B.CONTRACT_NUM, B.SVC_CNTR_NO, 'N', 'Y'), 'Y') = 'Y' 
+		AND     B.CONTRACT_NUM = C.CONTRACT_NUM
+		AND     C.SOC IN (SELECT RATE_CD FROM MSP_PARTNER_RATE_MST WHERE PARTNER_ID = 'dongbu')
+		AND     C.SERVICE_TYPE = 'P'
+		AND     C.EXPIRATION_DATE = (SELECT MAX(EXPIRATION_DATE) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = C.CONTRACT_NUM AND SERVICE_TYPE = C.SERVICE_TYPE AND SOC = C.SOC)
+		UNION
+		/* 전일 개통고객 중 단체보험 신청고객 */
+		SELECT  DISTINCT
+		        A.CONTRACT_NUM
+		        , A.SVC_CNTR_NO
+		        , C.SOC AS RATE_CD
+		        , B.INSR_CD
+		        , 'A' AS STAT_CD
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_REQUEST B
+		        , MSP_JUO_FEATURE_INFO C
+		WHERE   A.PPPO = 'PO'
+		AND     A.SUB_STATUS = 'A'
+		AND     A.LST_COM_ACTV_DATE = TO_CHAR(SYSDATE - #{dayCnt}, 'YYYYMMDD')
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.INSR_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0246' AND ETC2 = 'Y')
+		AND     B.CLAUSE_INSURANCE_FLAG = 'Y'
+		AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+		AND     C.SERVICE_TYPE = 'P'
+		AND     C.EXPIRATION_DATE = (SELECT MAX(EXPIRATION_DATE) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = C.CONTRACT_NUM AND SERVICE_TYPE = C.SERVICE_TYPE)
+		AND     NOT EXISTS (SELECT 1 FROM MSP_CHG_RCPT_MST WHERE CONTRACT_NUM = A.CONTRACT_NUM AND TSK_TP = 'INS' AND REGST_DTTM > A.REG_DTTM) 
+		UNION
+		/* 전일 변경신청고객 중 단체보험변경 및 동의서 등록고객 */
+		SELECT  DISTINCT
+		        A.CONTRACT_NUM
+		        , B.SVC_CNTR_NO
+		        , D.SOC AS RATE_CD
+		        , A.INSR_CD
+		        , 'A' AS STAT_CD
+		FROM    MSP_CHG_RCPT_MST A
+		        , MSP_JUO_SUB_INFO B
+		        , EMV_SCAN_FILE@DL_MCP C
+		        , MSP_JUO_FEATURE_INFO D
+		WHERE   A.TSK_TP = 'INS'
+		AND     A.INSR_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0246' AND ETC2 = 'Y')
+		AND     A.SCAN_ID IS NOT NULL
+		AND     A.CLAUSE_INSURANCE_FLAG = 'Y'
+		AND     NOT EXISTS (SELECT 1 FROM MSP_CHG_RCPT_MST WHERE CONTRACT_NUM = A.CONTRACT_NUM AND TSK_TP = 'INC' AND TRUNC(REGST_DTTM) >= TRUNC(A.REGST_DTTM))
+		AND     TO_CHAR(A.REGST_DTTM, 'YYYYMMDD') = TO_CHAR(SYSDATE - #{dayCnt}, 'YYYYMMDD')
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.SCAN_ID = C.SCAN_ID
+		AND     C.DOC_ID = 'E0021'
+		AND     C.USE_YN = 'Y'
+		AND     TRUNC(C.RGST_DT) = TRUNC(A.REGST_DTTM)
+		AND     B.CONTRACT_NUM = D.CONTRACT_NUM
+		AND     D.SERVICE_TYPE = 'P'
+		AND     D.EXPIRATION_DATE = (SELECT MAX(EXPIRATION_DATE) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = D.CONTRACT_NUM AND SERVICE_TYPE = D.SERVICE_TYPE)
+		]]>
+	</select>
+
+	<!-- 해지대상조회 -->
+	<select id="getCanInsrMemberList" parameterType="int" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* isnrMapper.getCanInsrMemberList */
+		/* 전일 정지고객 조회 */
+		<![CDATA[
+		/* 전일 해지고객 조회 */
+		SELECT  A.CONTRACT_NUM
+		        , B.INSR_CD
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_INSR_MEMBER_MST B
+		WHERE   A.PPPO = 'PO'
+		AND     A.SUB_STATUS = 'C'
+		AND     SUBSTR(A.SUB_STATUS_DATE, 1, 8) = TO_CHAR(SYSDATE - #{dayCnt}, 'YYYYMMDD')
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.STAT_CD = 'A'
+		AND     B.END_DTTM >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		/* 전일 명의변경 조회 */
+		UNION
+		SELECT  A.CONTRACT_NUM
+		        , C.INSR_CD
+		FROM    MSP_JUO_SUB_INFO_HIST A
+		        , MSP_JUO_SUB_INFO B
+		        , MSP_INSR_MEMBER_MST C
+		WHERE   A.EVNT_CD = 'MCN'
+		AND     SUBSTR(A.EVNT_CHANGE_DATE, 1, 8) = TO_CHAR(SYSDATE - #{dayCnt}, 'YYYYMMDD')
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.CONTRACT_NUM <> B.SVC_CNTR_NO
+		AND     B.SUB_STATUS = 'A'
+		AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+		AND     C.STAT_CD = 'A'
+		AND     C.END_DTTM >= TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+		/* 단체보험 변경시 이전 보험 해지 */
+		UNION
+		SELECT  A.CONTRACT_NUM
+		        , D.INSR_CD
+		FROM    MSP_CHG_RCPT_MST A
+		        , MSP_JUO_SUB_INFO B
+		        , EMV_SCAN_FILE@DL_MCP C
+		        , MSP_INSR_MEMBER_MST D
+		WHERE   A.TSK_TP = 'INS'
+		AND     A.INSR_CD IS NOT NULL
+		AND     A.CLAUSE_INSURANCE_FLAG = 'Y'
+		AND     TRUNC(A.REGST_DTTM) = TRUNC(SYSDATE - #{dayCnt})
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.SUB_STATUS = 'A'
+		AND     B.SCAN_ID = C.SCAN_ID
+		AND     C.USE_YN = 'Y'
+		AND     C.DOC_ID = 'E0021'
+		AND     TRUNC(C.RGST_DT) = TRUNC(A.REGST_DTTM)
+		AND     A.CONTRACT_NUM = D.CONTRACT_NUM
+		AND     D.STAT_CD = 'A'
+		AND     D.INSR_CD IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0246' AND ETC2 = 'Y')
+		]]>
+	</select>
+
+	<!-- 보험가입자체크 -->
+	<select id="getExistInsrMember" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.DongbuPointVO" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.DongbuPointVO">
+		/* isnrMapper.getExistInsrMember */
+		SELECT  A.CONTRACT_NUM AS contractNum
+		        , A.SVC_CNTR_NO AS svcCntrNo
+		        , A.END_DTTM AS endDttm
+		        , A.STAT_CD AS statCd
+		        , A.INSR_CD AS insrCd
+		FROM    MSP_INSR_MEMBER_MST A
+		WHERE   A.END_DTTM >= TO_CHAR(SYSDATE, 'YYYYMMDD') || '000000'
+		<if test="contractNum != null and contractNum != ''">
+			AND A.CONTRACT_NUM = #{contractNum}
+		</if>
+		<if test="svcCntrNo != null and svcCntrNo != ''">
+			AND A.SVC_CNTR_NO = #{svcCntrNo}
+		</if>
+		<if test="insrCd != null and insrCd != ''">
+			AND A.INSR_CD = #{insrCd}
+		</if>
+	</select>
+
+	<!-- 보험가입자생성 -->
+	<insert id="insertInsrMemberMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.DongbuPointVO">
+		/* isnrMapper.insertInsrMemberMst */
+		INSERT INTO MSP_INSR_MEMBER_MST (
+		        CONTRACT_NUM
+		        , END_DTTM
+		        , STRT_DTTM
+		        , SVC_CNTR_NO
+		        , CUSTOMER_ID
+		        , RATE_CD
+		        , STAT_CD
+		        , AGE
+		        , BIRTH_DT
+		        , MINOR_AGENT_NM
+		        , MINOR_AGENT_TEL
+		        , INSR_CD
+		        , REGST_DTTM
+		        , RVISN_DTTM
+		)
+		SELECT  A.CONTRACT_NUM
+		        , '99991231235959' AS END_DTTM
+		        , TO_CHAR(SYSDATE - 1, 'YYYYMMDD') || '000000' AS STRT_DTTM
+		        , A.SVC_CNTR_NO
+		        , A.CUSTOMER_ID
+		        , #{rateCd, jdbcType=VARCHAR} AS RATE_CD
+		        , 'A' AS STAT_CD
+		        , C.AGE
+		        , C.BIRTH_DT
+		        , B.MINOR_AGENT_NAME
+		        , B.MINOR_AGENT_TEL
+		        , #{insrCd, jdbcType=VARCHAR} AS INSR_CD
+		        , SYSDATE AS REGST_DTTM
+		        , SYSDATE AS RVISN_DTTM
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_REQUEST_DTL B
+		        , ( SELECT  CONTRACT_NUM
+		                    , FN_GET_AGE('X', CONTRACT_NUM) AS AGE
+		                    , (CASE WHEN SUBSTR(CRYPTO_AES256.DEC_AES(USER_SSN), 7, 1) IN ('1','2','5','6') THEN '19'
+		                            WHEN SUBSTR(CRYPTO_AES256.DEC_AES(USER_SSN), 7, 1) IN ('3','4','7','8') THEN '20'
+		                            ELSE '18' END) || SUBSTR(CRYPTO_AES256.DEC_AES(USER_SSN), 1, 6) AS BIRTH_DT
+		            FROM    MSP_JUO_SUB_INFO
+		            WHERE   CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+		        ) C
+		WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+		AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+		AND     A.CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+	</insert>
+
+	<!-- 보험가입자해지 -->
+	<update id="updateCanInsrMember" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.DongbuPointVO">
+		/* isnrMapper.updateCanInsrMember */
+		UPDATE  MSP_INSR_MEMBER_MST
+		SET     STAT_CD = 'C'
+		        , END_DTTM = TO_CHAR(SYSDATE - 1, 'YYYYMMDD') || '235959'
+		        , RMK = #{refVal, jdbcType=VARCHAR}
+		        , RVISN_DTTM = SYSDATE
+		WHERE   CONTRACT_NUM = #{contractNum, jdbcType=VARCHAR}
+		AND     STAT_CD = 'A'
+		<if test="insrCd != null and insrCd != ''">
+			AND INSR_CD = #{insrCd, jdbcType=VARCHAR}
+		</if>
+	</update>
+
+	<!-- 연동이력생성 -->
+	<insert id="insertPartnerDongbu01">
+		/* isnrMapper.insertPartnerDongbu01 */
+		INSERT INTO MSP_PARTNER_DONGBU_01 (
+		        SEND_DT
+		        , CONTRACT_NUM
+		        , CUST_NM
+		        , CTN
+		        , MINOR_AGENT_NM
+		        , MINOR_AGENT_TEL
+		        , SUB_STATUS
+		        , JOIN_DT
+		        , CHANGE_DT
+		        , EFCT_STRT_DT
+		        , RATE_CD
+		        , RATE_NM
+		        , OPEN_AGNT_CD
+		        , OPEN_AGNT_NM
+		        , PYMN_YN
+		        , INSR_CD
+		        , EFCT_END_DT
+		        , BIRTH_DT
+		)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMMDD') AS SEND_DT
+		        , A.CONTRACT_NUM
+		        , B.SUB_LINK_NAME AS CUST_NM
+		        , B.SUBSCRIBER_NO AS CTN
+		        , A.MINOR_AGENT_NM
+		        , A.MINOR_AGENT_TEL
+		        , A.STAT_CD
+		        , SUBSTR(A.STRT_DTTM, 1, 8) AS JOIN_DT
+		        , DECODE(A.STAT_CD, 'A', '', SUBSTR(A.END_DTTM, 1, 8)) AS CHANGE_DT
+		        , TO_CHAR(TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS') + 1, 'YYYYMMDD') AS EFCT_STRT_DT
+		        , A.RATE_CD
+		        , DECODE(A.RATE_CD, NULL, '', FN_GET_RATENM(A.RATE_CD)) AS RATE_NM
+		        , B.OPEN_AGNT_CD
+		        , FN_GET_ORGNM(B.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+		        /* 수납정보가 없는 최초 가입자에 한하여 수납(Y) 적용, 정산시에는 펜딩(P) 적용 */
+		        , CASE WHEN A.STAT_CD = 'A' THEN
+		                    CASE WHEN NOT EXISTS (SELECT 1 FROM CLS_BILL_PYMN_DATA WHERE SVC_CNTR_NO = B.SVC_CNTR_NO AND BILL_RFLC_IND_CD = 'B') THEN 'P'
+		                         WHEN C.CONTRACT_NUM IS NOT NULL AND C.INV_AMT - C.PYM_AMT > 0 THEN 'N' 
+		                         ELSE 'Y'
+		                    END
+		               ELSE 'N'
+		          END AS PYMN_YN
+		        , A.INSR_CD
+		        , DECODE(A.STAT_CD, 'C', SUBSTR(END_DTTM, 1, 8), '') AS EFCT_END_DT
+		        , A.BIRTH_DT
+		FROM    MSP_INSR_MEMBER_MST A
+		        , MSP_JUO_SUB_INFO B
+		        , MSP_PARTNER_POINT_MST C
+		WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+		/* 누적전송을 위햇서 MAX 사용 */
+		AND     A.END_DTTM = (SELECT MAX(END_DTTM) FROM MSP_INSR_MEMBER_MST WHERE CONTRACT_NUM = A.CONTRACT_NUM AND INSR_CD = A.INSR_CD)
+		AND     A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+		AND     A.SVC_CNTR_NO = C.SVC_CNTR_NO(+)
+		AND     A.INSR_CD = C.INSR_CD(+)
+		AND     C.PARTNER_ID(+) = 'dongbu'
+		AND     C.BILL_YM(+) = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM')
+	</insert>
+
+	<!-- 연동대상조회 -->
+	<select id="getInsrMemberSendList" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* isnrMapper.getInsrMemberSendList */
+		SELECT  CUST_NM
+		        , CONTRACT_NUM
+		        , CTN
+		        , MINOR_AGENT_NM
+		        , MINOR_AGENT_TEL
+		        , SUB_STATUS
+		        , JOIN_DT
+		        , CHANGE_DT
+		        , EFCT_STRT_DT
+		        , RATE_NM
+		        , OPEN_AGNT_NM
+		        , PYMN_YN
+		        , BIRTH_DT
+		        , EFCT_END_DT
+		        , INSR_CD
+		FROM    MSP_PARTNER_DONGBU_01
+		WHERE   SEND_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		ORDER BY CONTRACT_NUM
+	</select>
+
+	<delete id="deletePartnerDongbu01">
+		/* isnrMapper.deletePartnerDongbu01 */
+		DELETE  FROM MSP_PARTNER_DONGBU_01 
+		WHERE   SEND_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+	</delete>
+
+	<delete id="deletePointFile" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		DELETE  FROM MSP_PARTNER_POINT_FILE
+		WHERE   PARTNER_ID = #{partnerId}
+		AND     FILE_NM = #{fileNm}
+	</delete>
+	
+</mapper>

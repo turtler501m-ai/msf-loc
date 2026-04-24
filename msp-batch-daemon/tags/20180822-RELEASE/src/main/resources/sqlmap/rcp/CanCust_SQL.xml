@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.cancustmgmt.mapper.CanCustMapper">
+	
+	<!-- 해지자조회엑셀다운로드 -->
+	<select id="selectCanCustListExcel" parameterType="com.ktis.msp.batch.job.rcp.cancustmgmt.vo.CanCustVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT /* CanCustMapper.selectCanCustListExcel */
+		         A.CONTRACT_NUM											AS CONTRACT_NUM		/* 계약번호 */
+		       , (SELECT CD_DSC 
+		            FROM CMN_GRP_CD_MST 
+		           WHERE GRP_ID = 'RCP9004' 
+		             AND  CD_VAL = B.REQ_BUY_TYPE) 						AS REQ_BUY_TYPE_NM		/* 구매유형 */
+		       , B.FST_RATE_NM											AS FST_RATE_NM		/* 최초요금제명 */
+		       , B.SALE_PLCY_CD 										AS SALE_PLCY_CD
+			   , B.SALE_PLCY_NM											AS SALE_PLCY_NM		/* 판매정책 */
+		       , NVL(TRIM(SUBSTR(FST_MODEL_INFO, 21,30)), A.MODEL_NAME) AS FST_MODEL_NM		/* 최초개통단말 */
+			   , (SELECT CD_DSC 
+			        FROM CMN_GRP_CD_MST 
+			       WHERE GRP_ID = 'MSP0003' 
+			         AND CD_VAL = A.SUB_STATUS) 						AS SUB_STATUS_NM		/* 상태  */
+                  , CASE WHEN A.SUB_STATUS = 'C' THEN
+	                CASE
+	                    WHEN TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD') = 0 THEN '당일개통취소'
+	                    WHEN TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD')  <![CDATA[ <  ]]>  15 THEN '14일이내해지'
+	                    WHEN TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD')  <![CDATA[ <  ]]>  90 THEN '90일이내해지'
+	                    ELSE '일반해지'
+	                END
+	             ELSE ''  END 											AS CAN_RSN			/* 해지사유 */
+			   , DECODE(A.ON_OFF_TYPE, '1', '오프라인', '온라인') 		AS ON_OFF_TYPE_NM		/* 모집경로 */
+			   , (SELECT ORGN_NM FROM ORG_ORGN_INFO_MST WHERE ORGN_ID = A.OPEN_AGNT_CD) AS AGENT_NM	/*대리점명  */
+			   , TO_CHAR(TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') AS OPEN_DT /* 개통일자 */
+			   , TO_CHAR(TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1,8), 'YYYYMMDD'), 'YYYY-MM-DD') AS CAN_DT /* 해지일자 */
+		       , CASE 
+		           WHEN SUBSTR(B.SIM_INFO, 36, 1) IN ('A', 'R') THEN (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0058' AND CD_VAL = SUBSTR(B.SIM_INFO, 1, 2)) 
+		           ELSE (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0058' AND CD_VAL = SUBSTR(B.INST_INFO, 1, 2)) 
+		         END													AS SPRT_TP_NM			/* 할인유형 */
+		  FROM MSP_JUO_SUB_INFO A, MSP_REQUEST_DTL B
+		 WHERE 1 = 1
+    	<if test="searchStartDt != null and searchStartDt != '' and searchEndDt != null and searchEndDt != '' ">
+    		AND A.SUB_STATUS_DATE <![CDATA[>=]]>  #{searchStartDt} || '000000' 
+    		AND A.SUB_STATUS_DATE <![CDATA[<=]]>  #{searchEndDt} || '235959'
+    	</if>
+		   AND A.SUB_STATUS = 'C'
+		   AND A.PPPO = 'PO'
+		   AND A.CONTRACT_NUM = B.CONTRACT_NUM
+		<if test="searchGbn != null and searchGbn != ''"><!-- 검색구분 -->
+			<if test='searchGbn == "1"'><!-- 고객명 -->
+				AND A.SUB_LINK_NAME LIKE '%' || #{searchName} || '%'
+			</if>
+			<if test='searchGbn == "2"'><!-- 계약번호 -->
+				AND (A.CONTRACT_NUM = #{searchName}
+     				OR A.CONTRACT_NUM = (SELECT DISTINCT CONTRACT_NUM FROM MSP_JUO_SUB_INFO_HIST WHERE SVC_CNTR_NO = #{searchName}))
+			</if>
+			<if test='searchGbn == "3"'><!-- 휴대폰번호 -->
+				AND A.SUBSCRIBER_NO = #{searchName}
+			</if>
+		</if>
+		<if test="cntpntShopId != null and cntpntShopId != ''">
+			AND A.OPEN_AGNT_CD = #{cntpntShopId}
+		</if>
+		ORDER BY A.SUB_STATUS_DATE
+    </select>    
+</mapper>

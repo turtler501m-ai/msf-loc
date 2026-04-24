@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.portoutmgmt.mapper.PortOutMgmtMapper">
+	
+	<!-- 대리점 연동 -->
+	<insert id="callPMdsPortOutInfo" statementType="CALLABLE" parameterType="java.util.HashMap">
+		/* portOutMgmtMapper.callPMdsPortOutInfo */
+		{ CALL P_MDS_PORTOUT_INFO(
+						#{i_DATE, mode=IN, jdbcType=VARCHAR}
+						, #{O_CODE, mode=OUT, jdbcType=VARCHAR}
+						, #{O_MSG, mode=OUT, jdbcType=VARCHAR}
+						, #{O_CNT, mode=OUT, jdbcType=VARCHAR}
+					) }
+	</insert>
+	
+</mapper>

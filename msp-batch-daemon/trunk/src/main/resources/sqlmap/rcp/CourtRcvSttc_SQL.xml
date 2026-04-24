@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.courtmgmt.mapper.CourtRcvSttcMapper">
+	<delete id="deleteCrSttc">
+		DELETE
+		FROM   MSP_COURT_RCV_STTC
+		WHERE  REGST_DT = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+	</delete>
+
+	<select id="insertCrSttc" resultType="Integer">
+		/* CourtRcvSttcMapper.insertCrSttc */
+		INSERT INTO MSP_COURT_RCV_STTC (
+		            REGST_DT,	TOTAL,      TOTAL_RG,   SUM_RG,     LC_RG,
+		            NC_RG,		CC_RG,      RP_RG,		DP_RG,		ETC_RG,
+		            SUM_RG_END,	IMM_RG_END, DC_RG_END,  TOTAL_BR,	SUM_BR,
+		            BR_BR,		ETC_BR,		SUM_BR_END,	IMM_BR_END, DC_BR_END,
+		            TOTAL_ENT,	SUM_ENT,   SUM_ENT_END, REGST_ID,	REGST_DTTM,
+		            RVISN_ID, 	RVISN_DTTM
+		)
+		WITH CR_STTC AS (
+		    SELECT  STTC.CR_SEQ,
+		            STTC.TP_JINH,
+		            RSV.CR_TP,
+		            RSV.END_YN
+		      FROM  (SELECT  MAX(TP_JINH) AS TP_JINH,
+		                     CR_SEQ
+		               FROM  (  SELECT  RCIV.CR_SEQ,
+		                                RCIV.STAN_DTTM,
+		                                RCIV.TP_JINH
+		                          FROM  MSP_COURT_RCV_RCIV RCIV,
+		                                (  SELECT MAX(STAN_DTTM) AS STAN_DT,
+		                                          CR_SEQ
+		                                     FROM MSP_COURT_RCV_RCIV
+		                                 GROUP BY CR_SEQ) STAN
+		                         WHERE  RCIV.STAN_DTTM = STAN.STAN_DT
+		                           AND  RCIV.CR_SEQ = STAN.CR_SEQ) JINH
+		                      GROUP BY  CR_SEQ) STTC,
+		            MSP_COURT_RCV RSV
+		     WHERE  STTC.CR_SEQ = RSV.CR_SEQ(+)
+		)
+		SELECT  TO_CHAR(SYSDATE - 1, 'YYYYMMDD') AS REGST_DT,
+				LC_RG.CNT + NC_RG.CNT + CC_RG.CNT + RP_RG.CNT + DP_RG.CNT + ETC_RG.CNT + IMM_RG_END.CNT + DC_RG_END.CNT + BR_BR.CNT + ETC_BR.CNT + IMM_BR_END.CNT + DC_BR_END.CNT + SUM_ENT.CNT + SUM_ENT_END.CNT AS TOTAL,
+		        LC_RG.CNT + NC_RG.CNT + CC_RG.CNT + RP_RG.CNT + DP_RG.CNT + ETC_RG.CNT + IMM_RG_END.CNT + DC_RG_END.CNT AS TOTAL_RG,
+		        LC_RG.CNT + NC_RG.CNT + CC_RG.CNT + RP_RG.CNT + DP_RG.CNT + ETC_RG.CNT AS SUM_RG,
+		        LC_RG.CNT AS LC_RG,
+		        NC_RG.CNT AS NC_RG,
+		        CC_RG.CNT AS CC_RG,
+		        RP_RG.CNT AS RP_RG,
+		        DP_RG.CNT AS DP_RG,
+		        ETC_RG.CNT AS ETC_RG,
+		        IMM_RG_END.CNT + DC_RG_END.CNT AS SUM_RG_END,
+		        IMM_RG_END.CNT AS IMM_RG_END,
+		        DC_RG_END.CNT AS DC_RG_END,
+		        BR_BR.CNT + ETC_BR.CNT + IMM_BR_END.CNT + DC_BR_END.CNT AS TOTAL_BR,
+		        BR_BR.CNT + ETC_BR.CNT AS SUM_BR,
+		        BR_BR.CNT AS BR_BR,
+		        ETC_BR.CNT AS ETC_BR,
+		        IMM_BR_END.CNT + DC_BR_END.CNT AS SUM_BR_END,
+		        IMM_BR_END.CNT AS IMM_BR_END,
+		        DC_BR_END.CNT AS DC_BR_END,
+		        SUM_ENT.CNT + SUM_ENT_END.CNT AS TOTAL_ENT,
+		        SUM_ENT.CNT AS SUM_ENT,
+		        SUM_ENT_END.CNT AS SUM_ENT_END,
+		        'BATCH',
+		        SYSDATE,
+		        'BATCH',
+		        SYSDATE
+		FROM    (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '1'
+		            AND CR_STTC.TP_JINH = '01') LC_RG,
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '1'
+		            AND CR_STTC.TP_JINH = '02') NC_RG,
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '1'
+		            AND CR_STTC.TP_JINH = '03') CC_RG,
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '1'
+		            AND CR_STTC.TP_JINH = '04') RP_RG,
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '1'
+		            AND CR_STTC.TP_JINH = '05') DP_RG,
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '1'
+		            AND CR_STTC.TP_JINH = '06') ETC_RG,         
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '1'
+		            AND CR_STTC.TP_JINH = '07') IMM_RG_END,            
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '1'
+		            AND CR_STTC.TP_JINH = '08') DC_RG_END,            
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '2'
+		            AND CR_STTC.TP_JINH = '01') BR_BR,
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '2'
+		            AND CR_STTC.TP_JINH = '02') ETC_BR,
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '2'
+		            AND CR_STTC.TP_JINH = '03') IMM_BR_END,       
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '2'
+		            AND CR_STTC.TP_JINH = '04') DC_BR_END,   
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '3'
+		            AND CR_STTC.TP_JINH = '01') SUM_ENT,               
+		        (SELECT COUNT(*) AS CNT
+		           FROM CR_STTC
+		          WHERE CR_STTC.CR_TP = '3'
+		            AND CR_STTC.TP_JINH = '02') SUM_ENT_END
+	</select>
+</mapper>

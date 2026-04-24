@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.rcpmgmt.mapper.RcpMgmtPayFullMapper">
+	
+	<!-- 신청관리(일시납) 엑셀다운 -->
+	<select id="selectRcpPayFullListExcel" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpListVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* rcpMgmtMapper.selectRcpPayFullListExcel */
+			SELECT
+			    PAY.REQUEST_KEY																				/* 주문번호 */                
+			    , A.RES_NO																						/* 예약번호 */
+			    , A.REQ_BUY_TYPE                                                    
+			    , FN_GET_CODENM('RCP9004', A.REQ_BUY_TYPE) AS REQ_BUY_NM					/* 구매유형 */
+			    , A.OPER_TYPE                                                       
+			    , FN_GET_CODENM('CMN0049', A.OPER_TYPE) AS OPER_NAME							/* 업무구분 */
+			    , A.REQUEST_STATE_CODE																	/* 진행상태코드 */
+			    , FN_GET_CODENM('RCP0006', A.REQUEST_STATE_CODE) REQUEST_STATE_NAME	/* 진행상태 */
+			    , FN_GET_CODENM('RCP0005', A.PSTATE) AS PSTATE									/* 신청취소OR신청상태*/
+			    , TO_CHAR(A.REQ_IN_DAY, 'YYYY-MM-DD HH24:MI:SS') REQ_IN_DT					/* 신청일자 */    
+			    , A.ON_OFF_TYPE																				/* 모집경로코드 */
+			    , FN_GET_CODENM('RCP0007', NVL(A.ON_OFF_TYPE, '0')) ON_OFF_NM       		/* 모집경로 */
+			    , DECODE(A.REQ_BUY_TYPE, 'MM', MDL.RPRS_PRDT_ID, '') AS PRDT_ID     			/* 제품ID */
+			    , DECODE(A.REQ_BUY_TYPE, 'MM', MDL.PRDT_CODE, '') AS PRDT_CODE				/* 단말모델명 */
+			    , DECODE(A.REQ_BUY_TYPE, 'MM', MDL.PRDT_NM, '') AS MODEL_NAME			/* 단말명 */
+			    , DECODE(A.REQ_BUY_TYPE, 'MM', NVL(FN_GET_CODENM ('CMN0044', MDL.PRDT_COLR_CD), A.REQ_MODEL_COLOR), '') AS REQ_MODEL_COLOR  /* 단말색상 */
+			    , A.REQ_PHONE_SN																				/* 단말일련번호 */
+			    , USIM.PRDT_CODE AS USIM_ID																/* 유심제품명 */    
+			    , USIM.PRDT_NM AS USIM_NAME															/* 유심모델 */
+			    , FN_GET_CODENM('RCP2035', A.USIM_KINDS_CD) AS USIM_KINDS_NM				/* 유심종류 */
+			    , A.REQ_USIM_SN																				/* 유심일련번호 */
+			    , CASE
+			        WHEN MSD.REQ_USIM_SN IS NOT NULL THEN '직영온라인' 
+			        ELSE FN_GET_ORGNM(PUM.ORGN_ID)
+			    END AS USIM_ORG_NM																		/*유심접점*/
+			    , A.MEMO AS REQUEST_MEMO																/* 메모 */
+			    , C.SOC_CODE																					/* 가입요금제코드 */
+			    , FN_GET_RATENM(C.SOC_CODE) AS SOC_NAME											/* 가입요금제 */    
+			    , B.CSTMR_NAME																				/* 고객명 */
+			    , B.CSTMR_TEL_FN																				/* 전화번호 앞자리 */ 
+			    , B.CSTMR_TEL_MN																				/* 전화번호 중간자리 */ 
+			    , B.CSTMR_TEL_RN																				/* 전화번호 뒷자리 */ 
+			    , B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN AS CSTMR_TEL			/* 전화번호 */ 
+			    , B.CSTMR_MOBILE_FN																			/* 휴대폰번호 앞자리 */ 
+			    , B.CSTMR_MOBILE_MN																		/* 휴대폰번호 중간자리 */ 
+			    , B.CSTMR_MOBILE_RN																		/* 휴대폰번호 뒷자리 */ 
+			    , B.CSTMR_MOBILE_FN || B.CSTMR_MOBILE_MN || B.CSTMR_MOBILE_RN AS CSTMR_MOBILE	/* 휴대폰번호 */ 
+			    , B.CSTMR_POST																				/* 우편번호 */
+			    , B.CSTMR_ADDR																				/* 주소 */
+			    , B.CSTMR_ADDR_DTL																			/* 상세주소 */ 
+			    , D.DLVRY_NAME																				/* 배송정보 이름 */
+			    , D.DLVRY_TEL_FN																				/* 배송정보 전화번호 앞자리 */ 
+			    , D.DLVRY_TEL_MN																				/* 배송정보 전화번호 중간자리 */
+			    , D.DLVRY_TEL_RN 																				/* 배송정보 전화번호 뒷자리 */
+			    , D.DLVRY_TEL_FN || D.DLVRY_TEL_MN || D.DLVRY_TEL_RN AS DLVRY_TEL			/* 배송정보 전화번호 */ 
+			    , D.DLVRY_MOBILE_FN																			/* 배송정보 휴대폰번호 앞자리 */
+			    , D.DLVRY_MOBILE_MN																		/* 배송정보 휴대폰번호 중간자리 */ 
+			    , D.DLVRY_MOBILE_RN																			/* 배송정보 휴대폰번호 뒷자리 */ 
+			    , D.DLVRY_MOBILE_FN || D.DLVRY_MOBILE_MN || D.DLVRY_MOBILE_RN AS DLVRY_MOBILE	/* 배송정보 휴대폰번호 */ 
+			    , D.DLVRY_POST																					/* 배송정보 우편번호 */ 
+			    , D.DLVRY_ADDR																				/* 배송정보 주소 */
+			    , D.DLVRY_ADDR_DTL																			/* 배송정보 상세주소 */
+			    , D.DLVRY_ADDR || ' ' || D.DLVRY_ADDR_DTL AS FULL_DLVRY_ADDR					/* 배송정보 전체주소 */
+			    , D.DLVRY_MEMO																				/* 배송정보 요청사항 */
+			    , E.TB_CD																							/* 택배사 */ 
+			    , E.DLVRY_NO																					/* 송장번호 */ 
+			    , TO_CHAR(NVL(C.ENGG_MNTH_CNT, 0))  AS AGRM_TRM								/* 약정개월수 */
+			    , NVL(C.MODEL_MONTHLY, 0)   AS INST_NOM											/* 할부개월수 */
+			    , NVL(C.MODEL_PRICE, 0) + NVL(C.MODEL_PRICE_VAT, 0)	AS HNDST_AMT		/* 출고가 */
+			    , C.MODEL_DISCOUNT2 AS MODEL_DISCOUNT2											/* 공시지원금 */
+			    , C.MODEL_DISCOUNT3 AS MODEL_DISCOUNT3											/* 추가지원금 */
+			    , C.MODEL_INSTALLMENT    AS MODEL_INSTALLMENT										/* 할부원금 */
+			    , FN_GET_USRNM(PAY.AMD_ID) AS AMD_NM												/* 수정자*/
+			    , TO_CHAR(PAY.AMD_DT,'YYYY-MM-DD HH24:MI:SS') AS AMD_DT					/* 수정일시*/
+			    , PAY.PAY_RST_CD																				/* 결제상태*/
+			    , FN_GET_CODENM('RCP9027', PAY.PAY_RST_CD) AS PAY_RST_NM					/* 결제상태*/
+			    , PAY.CNCL_FAIL_RSN																			/* 결제취소 실패사유*/
+			    , FN_GET_USRNM(PAY.CNCL_ID) AS CNCL_NM											/* 결제취소자*/
+			    , TO_CHAR(PAY.CNCL_DT,'YYYY-MM-DD') AS CNCL_DT									/* 결제취소일시*/
+			FROM MCP_REQUEST_PAY_INFO@DL_MCP PAY
+			    , MCP_REQUEST@DL_MCP A
+			    , MCP_REQUEST_CSTMR@DL_MCP B
+			    , MCP_REQUEST_SALEINFO@DL_MCP C
+			    , MCP_REQUEST_DLVRY@DL_MCP D
+			    , MCP_REQUEST_STATE@DL_MCP E
+			    , CMN_INTM_MDL MDL
+			    , CMN_INTM_MDL USIM
+			    , NMCP_USIM_BUY_TXN@DL_MCP MSD
+			    , MSP_PARTNER_USIM_MST PUM
+			WHERE   1 = 1
+			AND     PAY.REQUEST_KEY       = A.REQUEST_KEY
+			AND     PAY.REQUEST_KEY       = B.REQUEST_KEY
+			AND     PAY.REQUEST_KEY       = C.REQUEST_KEY
+			AND     PAY.REQUEST_KEY       = D.REQUEST_KEY
+			AND     PAY.REQUEST_KEY       = E.REQUEST_KEY
+			AND     C.MODEL_ID          = MDL.PRDT_ID(+)
+			AND     A.REQ_USIM_NAME     = USIM.PRDT_CODE(+)
+			AND     A.REQ_USIM_SN       = MSD.REQ_USIM_SN(+)
+			AND     A.REQ_USIM_SN       = PUM.USIM_NO(+)
+			<if test='searchStartDt != null and searchStartDt != "" and searchEndDt != null and searchEndDt != "" '>
+				AND A.REQ_IN_DAY BETWEEN TO_DATE(#{searchStartDt},'YYYYMMDD') AND TO_DATE(#{searchEndDt},'YYYYMMDD') + 1	/*신청일자*/
+			</if>
+			<if test='searchVal != null and searchVal != "" and pSearchGbn =="1"'>
+				AND B.CSTMR_NAME LIKE #{searchVal} || '%' /*검색구분-고객명(pSearchGbn=1로 구분)*/
+			</if>
+			<if test='searchVal != null and searchVal != "" and pSearchGbn == "2"'>
+				AND A.CONTRACT_NUM = #{searchVal} /*검색구분-계약번호(pSearchGbn=2로 구분)*/				    
+			</if>
+			<if test='searchVal != null and searchVal != "" and pSearchGbn == "3"'>
+				AND (B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN = TRANSLATE(#{searchVal},'1234567890-','1234567890') 
+					OR B.CSTMR_TEL_FN || B.CSTMR_TEL_MN || B.CSTMR_TEL_RN = TRANSLATE(#{searchVal},'1234567890-','1234567890')) /*검색구분-연락처(searchGbn=3로 구분)*/
+			</if>
+			<if test='searchVal != null and searchVal != "" and pSearchGbn == "4"'>
+				AND A.REQ_PHONE_SN = #{searchVal} /*검색구분-단말기일련번호(pSearchGbn=4로 구분)*/
+			</if>
+			<if test='searchVal != null and searchVal != "" and pSearchGbn == "5"'>
+				AND A.RES_NO = #{searchVal}/*검색구분-예약번호(pSearchGbn=5로 구분)*/
+			</if>
+			<if test='searchVal != null and searchVal != "" and pSearchGbn == "6"'>
+				AND C.SOC_CODE IN ( SELECT RATE_CD FROM MSP_RATE_MST WHERE SERVICE_TYPE = 'P' AND RATE_NM LIKE UPPER(#{searchVal}) || '%' )/*검색구분-요금제(pSearchGbn=6로 구분)*/
+			</if>
+			<if test='searchVal != null and searchVal != "" and pSearchGbn == "7"'>
+				AND DECODE(A.REQ_BUY_TYPE, 'MM', MDL.PRDT_CODE, '') LIKE #{searchVal} || '%'/*검색구분-단말모델명(pSearchGbn=7로 구분)*/
+			</if>
+			<if test='searchVal != null and searchVal != "" and pSearchGbn == "8"'>
+				AND PAY.REQUEST_KEY = #{searchVal}/*검색구분-주문번호(pSearchGbn=8로 구분)*/
+			</if>
+			<if test='pRequestStateCode != null and pRequestStateCode != ""'>
+				AND A.REQUEST_STATE_CODE = #{pRequestStateCode}
+			</if>
+			<if test='payRstCd != null and payRstCd != ""'>
+				AND PAY.PAY_RST_CD = #{payRstCd}
+			</if>
+			<if test='pPstate != null and pPstate != ""'>
+				AND A.PSTATE = #{pPstate}
+			</if>
+			<if test='operType != null and operType != ""'>
+				AND A.OPER_TYPE = #{operType}
+			</if>
+			ORDER BY PAY.REQUEST_KEY DESC
+	</select>
+
+	<!-- 서비스계약번호로 계약번호 추출 -->
+	<select id="getpContractNum" parameterType="String" resultType="String">
+		 SELECT DISTINCT CONTRACT_NUM 
+		   FROM MSP_JUO_SUB_INFO_HIST 
+		  WHERE SVC_CNTR_NO = #{searchVal}
+	</select>
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.cantransfermgmt.mapper.CanPpImgTransferMapper">
+
+	<!-- 해지후 180일 경과 선불고객 조회 2018-08-13-->
+	<select id="getTmntPpImgList" parameterType="int" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		/* transferMapper.getTmntPpImgList */
+		<![CDATA[
+		SELECT  A.CONTRACT_NUM                as contractNum
+				   , A.SVC_CNTR_NO                   as svcCntrNo
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_JUO_CUS_INFO B
+		WHERE   A.SUB_STATUS = 'C'
+		AND     A.PPPO = 'PP'
+		AND     TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') < SYSDATE - #{stdrCnt}
+		AND     A.CUSTOMER_ID = B.CUSTOMER_ID
+		AND     NOT EXISTS (SELECT  1 FROM MSP_JUO_SUB_INFO
+		                    WHERE   CUSTOMER_ID = A.CUSTOMER_ID
+		                    AND     CONTRACT_NUM <> A.CONTRACT_NUM
+		                    AND     (SUB_STATUS <> 'C'
+		                             OR (SUB_STATUS = 'C' AND TO_DATE(SUBSTR(SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') > SYSDATE - #{stdrCnt})))
+		AND     NOT EXISTS (SELECT 1 FROM PPS_CUSTOMER_IMAGE@DL_CAN WHERE CONTRACT_NUM = A.CONTRACT_NUM) /* 이미 이관된 정보 제외 */
+		AND     ROWNUM <= 1000
+		]]>
+	</select>
+		
+	<!--계약번호조회 -->
+	<select id="getContractNum" parameterType="String" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		/* transferMapper.getContractNum */
+		SELECT  CONTRACT_NUM as contractNum
+		FROM    MSP_JUO_SUB_INFO
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!--선불 서식지 MSP_CAN 이관 -->
+	<insert id="insertCanPpImg" parameterType="String">
+		/* transferMapper.insertCanPpImg */
+		INSERT INTO PPS_CUSTOMER_IMAGE@DL_CAN (
+		        IMG_SEQ,
+		        CONTRACT_NUM,
+		        IMG_GUBUN,
+		        IMG_FILE,
+		        IMG_PATH,
+		        STATUS,
+		        MEMO,
+		        REC_ID,
+		        REC_DT,
+		        ENC_FLAG
+		)
+		SELECT
+		       IMG_SEQ,
+		        CONTRACT_NUM,
+		        IMG_GUBUN,
+		        IMG_FILE,
+		        IMG_PATH,
+		        STATUS,
+		        MEMO,
+		        REC_ID,
+		        REC_DT,
+		        ENC_FLAG
+		FROM    PPS_CUSTOMER_IMAGE A
+		WHERE   CONTRACT_NUM = #{contractNum}
+		AND     NOT EXISTS ( SELECT 1 FROM PPS_CUSTOMER_IMAGE@DL_CAN WHERE IMG_SEQ = A.IMG_SEQ )
+	</insert>
+</mapper> 

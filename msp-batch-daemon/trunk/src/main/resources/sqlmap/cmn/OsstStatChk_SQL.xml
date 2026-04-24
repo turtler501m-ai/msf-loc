@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cmn.smsmgmt.mapper.OsstStatChkMapper">
+		
+	<select id="getErrCdList" resultType="map">
+		/* OsstStatChkMapper.getErrCdList */
+		SELECT  AA.ERR_CD
+		        , AA.ERR_CNT
+		  FROM  CMN_GRP_MST A
+		        , CMN_GRP_CD_MST B
+		        , (
+		            SELECT  RSLT_CD AS ERR_CD
+		                    , COUNT(*) AS ERR_CNT
+		              FROM  MCP_REQUEST_OSST@DL_MCP
+		             WHERE  RSLT_CD NOT IN ('0000', 'N')
+		               AND  REGST_DTTM BETWEEN TRUNC(SYSDATE-1/24,'HH') AND TRUNC(SYSDATE,'HH')
+		             GROUP BY RSLT_CD
+		        ) AA
+		 WHERE  A.GRP_ID = B.GRP_ID
+		   AND  A.GRP_ID = 'MON0001'
+		   AND  A.USG_YN = 'Y'
+		   AND  B.USG_YN = 'Y'
+		   AND  AA.ERR_CD = B.CD_VAL
+		   AND  AA.ERR_CNT > TO_NUMBER(B.CD_DSC)
+	</select>
+	
+	<select id="getErrMsg" parameterType="String" resultType="String">
+		/* OsstStatChkMapper.getErrMsg */
+		SELECT RSLT_MSG ERR_MSG
+		  FROM (
+		        SELECT RSLT_MSG, COUNT(*) CNT
+		          FROM MCP_REQUEST_OSST@DL_MCP
+		         WHERE REGST_DTTM BETWEEN TRUNC(SYSDATE-1/24,'HH') AND TRUNC(SYSDATE,'HH')
+		           AND RSLT_CD = #{errCd}
+		         GROUP BY RSLT_MSG
+		         ORDER BY COUNT(*) DESC
+		       )
+		 WHERE ROWNUM = 1
+	</select>
+	
+	<select id="getSendTargetInfo" resultType="String">
+		/* OsstStatChkMapper.getSendTargetInfo */
+		SELECT B.CD_VAL
+		  FROM CMN_GRP_MST A
+		       , CMN_GRP_CD_MST B
+		 WHERE A.GRP_ID = B.GRP_ID
+		   AND A.USG_YN = 'Y'
+		   AND B.USG_YN = 'Y'
+		   AND A.GRP_ID = 'MON0000'
+	</select>
+
+</mapper>

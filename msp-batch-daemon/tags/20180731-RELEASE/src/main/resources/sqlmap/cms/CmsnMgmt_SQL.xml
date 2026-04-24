@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cms.cmsnMgmt.mapper.CmsnMgmtMapper">
+	
+	<!-- 수수료일정산 엑셀 다운로드 -->
+	<select id="getCmsnDailyMgmtListExcel" parameterType="com.ktis.msp.batch.job.cms.cmsnMgmt.vo.CmsnMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		WITH OPEN_PLCY AS (
+		    SELECT  A.CONTRACT_NUM
+		            , A.SUB_LINK_NAME AS CUST_NM
+		            , A.SUBSCRIBER_NO AS SVC_TEL_NUM
+		            , A.SUB_STATUS
+		            , A.LST_COM_ACTV_DATE AS OPEN_DT
+		            , TO_CHAR(A.REG_DTTM, 'YYYYMMDDHH24MISS') AS OPEN_DTTM
+		            , DECODE(A.SUB_STATUS, 'C', SUBSTR(A.SUB_STATUS_DATE, 1, 8), '') AS TMNT_DT
+		            , TO_CHAR(B.REQ_IN_DAY, 'YYYYMMDD') AS REQ_DT
+		            , B.OPER_TYPE
+		            , C.MODEL_SALE_POLICY_CODE AS REQ_SALE_PLCY_CD
+		            , FN_GET_SALECD(A.CONTRACT_NUM, C.MODEL_SALE_POLICY_CODE) AS SALE_PLCY_CD
+		            , NVL(B.CNTPNT_SHOP_ID, A.OPEN_AGNT_CD) AS AGNT_CD
+		            , C.MODEL_ID AS PRDT_ID
+		            , C.RECYCLE_YN AS OLD_YN
+		            , C.SOC_CODE AS RATE_CD
+		            , C.ENGG_MNTH_CNT AS AGRM_TRM
+		            , NVL(C.MODEL_DISCOUNT3, 0) AS AGNCY_SUBSD
+		    FROM    MSP_JUO_SUB_INFO A
+		            , MSP_REQUEST B
+		            , MSP_REQUEST_SALEINFO C
+		    WHERE   A.PPPO  = 'PO'
+		    AND     A.LST_COM_ACTV_DATE BETWEEN #{strtDt} AND #{endDt}
+		    AND     A.CONTRACT_NUM  = B.CONTRACT_NUM(+)
+		    AND     B.REQUEST_KEY   = C.REQUEST_KEY(+)
+		)
+		SELECT  A.CONTRACT_NUM
+		        , A.CUST_NM
+		        , A.SVC_TEL_NUM
+		        , A.SUB_STATUS
+		        , FN_GET_CODENM('MSP0003', A.SUB_STATUS) AS SUB_STATUS_NM
+		        , A.OPEN_DT
+		        , A.OPEN_DTTM
+		        , A.TMNT_DT
+		        , A.REQ_DT
+		        , A.REQ_SALE_PLCY_CD
+		        , (SELECT SALE_PLCY_NM FROM MSP_SALE_PLCY_MST WHERE SALE_PLCY_CD = A.REQ_SALE_PLCY_CD) AS REQ_SALE_PLCY_NM
+		        , A.SALE_PLCY_CD
+		        , B.SALE_PLCY_NM
+		        , A.AGNT_CD
+		        , A.PRDT_ID
+		        , (SELECT PRDT_CODE FROM CMN_INTM_MDL WHERE PRDT_ID = A.PRDT_ID) AS PRDT_CODE
+		        , A.OLD_YN
+		        , FN_GET_CODENM('ORG0011', A.OLD_YN) AS OLD_YN_NM
+		        , A.RATE_CD
+		        , (SELECT DISTINCT RATE_NM FROM MSP_RATE_MST WHERE RATE_CD = A.RATE_CD AND SERVICE_TYPE = 'P') AS RATE_NM
+		        , A.OPER_TYPE
+		        , FN_GET_CODENM('CMN0049', A.OPER_TYPE) AS OPER_TYPE_NM
+		        , A.AGRM_TRM
+		        , FN_GET_ORGNM(A.AGNT_CD) AS AGNT_NM
+		        , DECODE(A.SUB_STATUS, 'C', 0, DECODE(A.OPER_TYPE, 'NAC3', E.NEW_CMSN_AMT, 'MNP3', E.MNP_CMSN_AMT, 'HCN3', E.HCN_CMSN_AMT, 'HDN3', E.HDN_CMSN_AMT, 0)) AS SALE_CMSN_AMT
+		        , NVL(DECODE(A.SUB_STATUS, 'C', 0, H.CMSN_AMT), FN_GET_ARPU(A.SALE_PLCY_CD, A.PRDT_ID, A.RATE_CD)) AS ARPU_CMSN_AMT
+		        , I.SUBSD_AMT
+		        , I.AGNCY_SUBSD_AMT
+		        , A.AGNCY_SUBSD
+		        , B.SPRT_TP
+		        , FN_GET_CODENM('CMN0058', B.SPRT_TP) AS SPRT_TP_NM
+		FROM    OPEN_PLCY A
+		        , MSP_SALE_PLCY_MST B
+		        , MSP_SALE_ORGN_MST C
+		        , MSP_SALE_RATE_MST D
+		        , MSP_SALE_PRDT_MST E
+		        , MSP_SALE_OPER_MST F
+		        , MSP_SALE_AGRM_MST G
+		        , MSP_SALE_ARPU_MST H
+		        , MSP_SALE_SUBSD_MST I
+		WHERE   A.SALE_PLCY_CD  = B.SALE_PLCY_CD
+		AND     A.SALE_PLCY_CD  = C.SALE_PLCY_CD
+		AND     A.AGNT_CD       = C.ORGN_ID
+		AND     A.SALE_PLCY_CD  = D.SALE_PLCY_CD
+		AND     A.RATE_CD       = D.RATE_CD
+		AND     A.SALE_PLCY_CD  = E.SALE_PLCY_CD
+		AND     A.PRDT_ID       = E.PRDT_ID
+		AND     A.OLD_YN        = E.OLD_YN
+		AND     A.SALE_PLCY_CD  = F.SALE_PLCY_CD
+		AND     A.OPER_TYPE     = F.OPER_TYPE
+		AND     A.SALE_PLCY_CD  = G.SALE_PLCY_CD
+		AND     A.AGRM_TRM      = G.AGRM_TRM
+		AND     A.SALE_PLCY_CD  = H.SALE_PLCY_CD(+)
+		AND     A.RATE_CD       = H.RATE_CD(+)
+		AND     A.PRDT_ID       = H.PRDT_ID(+)
+		AND     A.OLD_YN        = H.OLD_YN(+)
+		AND     A.SALE_PLCY_CD  = I.SALE_PLCY_CD(+)
+		AND     A.RATE_CD       = I.RATE_CD(+)
+		AND     A.PRDT_ID       = I.PRDT_ID(+)
+		AND     A.OLD_YN        = I.OLD_YN(+)
+		AND     A.AGRM_TRM      = I.AGRM_TRM(+)
+		AND     A.OPER_TYPE     = I.OPER_TYPE(+)
+		AND     A.AGNT_CD       = I.ORGN_ID(+)
+		<if test="searchVal != null and searchVal != ''">
+			<choose>
+				<when test='searchType == "contractNum"'>
+					AND A.CONTRACT_NUM = #{searchVal}
+				</when>
+				<when test='searchType == "custNm"'>
+					AND A.CUST_NM LIKE '%' || #{searchVal} || '%'
+				</when>
+				<when test='searchType == "svcTelNum"'>
+					AND A.SVC_TEL_NUM = #{searchVal}
+				</when>
+			</choose>
+		</if>
+		<if test="subStatus != null and subStatus != ''">
+			AND A.SUB_STATUS = #{subStatus}
+		</if>
+	</select>
+	
+	<!-- Grade관리수수료 엑셀 다운로드 -->
+	<select id="getGrdCmsnPrvdListExcel" parameterType="com.ktis.msp.batch.job.cms.cmsnMgmt.vo.CmsnMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT  A.AGNCY_CD
+			        , ORG.ORGN_NM AS AGNCY_NM
+			        , A.CMSN_CD
+			        , PLCY.CMSN_PLCY_NM
+			        , A.SRVC_CNTR_NUM
+			        , FN_GET_CODENM('ORG0019', A.TYPE_DTL_CD1) AS TYPE_DTL_NM1
+			        , FN_GET_CODENM('ORG0020', A.TYPE_DTL_CD2) AS TYPE_DTL_NM2
+			        , FN_GET_CODENM('ORG0043', A.TYPE_DTL_CD3) AS TYPE_DTL_NM3
+			        , FN_GET_CODENM('CMS0001', A.CMSN_CD) AS CMSN_NM
+			        , A.APPL_STRT_DT
+			        , A.APPL_END_DT
+			        , FN_GET_CODENM('MSP0003', NVL(C.SBSCRB_STAT, 'C')) AS SBSCRB_STAT
+			        , TRGT.MGMT_CNT
+			        , A.CMSN_RATE_AMT
+			        , DECODE(NVL(C.SBSCRB_STAT, 'C'), 'A', '지급', '미지급') AS PRVD_YN
+			        , NVL(C.PYMN_AMNT, 0) AS PYMN_AMNT
+			        , NVL(B.LAST_CMSN, 0) AS LAST_CMSN
+			FROM    CMS_GRD_MGNT_INFO A
+			        , CMS_PRVD_TRGT_CMSN_INFO B
+			        , CMS_TRGT_INFO C
+			        , ORG_ORGN_INFO_MST ORG
+			        , CMS_CMSN_PLCY_INFO PLCY
+			        , CMS_GRD_TRGT_INFO TRGT
+			WHERE   A.SRVC_CNTR_NUM	= B.SRVC_CNTR_NUM(+)
+			AND     B.PRVD_MON(+)	= #{searchDate}
+			AND     B.CMSN_CD(+)	= '15'
+			AND     A.SRVC_CNTR_NUM = C.CONTRACT_NUM(+)
+			AND     C.STDR_MON(+)	= #{searchDate}
+			AND     A.AGNCY_CD		= ORG.ORGN_ID
+			AND     A.CMSN_PLCY_INFO_SRL_NUM = PLCY.CMSN_PLCY_INFO_SRL_NUM
+			AND     A.AGNCY_CD		= TRGT.AGNCY_CD
+			AND     TRGT.STDR_MON	= #{searchDate}
+			
+			<if test="hghrOrgnCd != null and hghrOrgnCd !=''">
+ 				AND A.AGNCY_CD IN (SELECT  ORGN_ID
+		      					FROM ORG_ORGN_INFO_MST
+		      					WHERE TYPE_DTL_CD = 'Y'
+		      					AND  ORGN_LVL_CD = '10'
+		      					START WITH ORGN_ID = #{hghrOrgnCd, jdbcType=VARCHAR}
+		      					CONNECT BY NOCYCLE PRIOR ORGN_ID = HGHR_ORGN_CD)
+ 			</if>
+ 			<if test="prvdYn != null and prvdYn !=''">
+ 				AND DECODE(NVL(C.SBSCRB_STAT, 'C'), 'A', 'Y', 'N') = #{prvdYn}
+ 			</if>
+ 			ORDER BY A.SRVC_CNTR_NUM
+	</select>
+	
+	<!-- 대리점수수료상세내역 엑셀 다운로드 -->
+	<select id="getCmsnPrvdListExcel" parameterType="com.ktis.msp.batch.job.cms.cmsnMgmt.vo.CmsnMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT  DISTINCT FN_GET_ORGNM(A.AGNCY_CD) AS SALE_STORE_NM, 
+					A.AGNCY_CD,
+			        A.CMSN_CD, 
+			        C.CD_DSC CMSN_NM,
+			        A.CMSN_PLCY_INFO_SRL_NUM, 
+			        DECODE(B.CMSN_PLCY_NM, NULL, D.SALE_PLCY_NM, B.CMSN_PLCY_NM ) AS CMSN_PLCY_NM,
+			        A.SRVC_CNTR_NUM,
+			        SUM(A.CMSN) OVER(PARTITION BY A.SRVC_CNTR_NUM, A.AGNCY_CD, A.CMSN_CD, A.CMSN_PLCY_INFO_SRL_NUM) AS CMSN,
+	                SUM(A.ADJ_AMT) OVER(PARTITION BY A.SRVC_CNTR_NUM, A.AGNCY_CD, A.CMSN_CD, A.CMSN_PLCY_INFO_SRL_NUM) AS ADJ_AMT,
+	                SUM(A.CLWBCK_AMT) OVER(PARTITION BY A.SRVC_CNTR_NUM, A.AGNCY_CD, A.CMSN_CD, A.CMSN_PLCY_INFO_SRL_NUM) AS CLWBCK_AMT,
+	                SUM(A.CMSN) OVER(PARTITION BY A.SRVC_CNTR_NUM, A.AGNCY_CD, A.CMSN_CD, A.CMSN_PLCY_INFO_SRL_NUM) +
+	                SUM(A.ADJ_AMT) OVER(PARTITION BY A.SRVC_CNTR_NUM, A.AGNCY_CD, A.CMSN_CD, A.CMSN_PLCY_INFO_SRL_NUM) -
+	                SUM(A.CLWBCK_AMT) OVER(PARTITION BY A.SRVC_CNTR_NUM, A.AGNCY_CD, A.CMSN_CD, A.CMSN_PLCY_INFO_SRL_NUM) AS LAST_CMSN,
+			        MAX(A.RSN) KEEP(DENSE_RANK LAST ORDER BY A.REG_DTTM ) OVER(PARTITION BY A.SRVC_CNTR_NUM, A.AGNCY_CD, A.CMSN_CD) AS RSN
+			FROM (
+				SELECT A.AGNCY_CD,
+				       A.CMSN_CD,
+				       A.CMSN_PLCY_INFO_SRL_NUM,
+				       A.SRVC_CNTR_NUM,
+				       A.CMSN,
+				       0 AS ADJ_AMT,
+				       0 AS CLWBCK_AMT,
+				       '' RSN,
+		               TO_DATE('19990101000000','YYYYMMDDHH24MISS') REG_DTTM
+				FROM   CMS_CMSN_CALC_INFO A,
+				       CMS_PRVD_TRGT_CLS_MST B
+				WHERE  A.CALC_MON = B.PRVD_MON
+				AND    A.CMSN_CD = B.CMSN_CD
+				AND    B.LAST_YN = 'Y'
+			    AND    B.CLOSE_YN = 'Y'
+				<if test="sCmsnCd != null and sCmsnCd !=''">
+					AND A.CMSN_CD = #{sCmsnCd, jdbcType=VARCHAR}
+				</if>
+				<if test="sHghrOrgnCd != null and sHghrOrgnCd !=''">
+					AND A.AGNCY_CD = #{sHghrOrgnCd, jdbcType=VARCHAR}
+				</if>
+				<if test="sSrvcCntrNum != null and sSrvcCntrNum !=''">
+					AND A.SRVC_CNTR_NUM = #{sSrvcCntrNum, jdbcType=VARCHAR} 
+				</if>
+				<if test="sPrvdMon != null and sPrvdMon !=''">
+					AND A.CALC_MON = #{sPrvdMon, jdbcType=VARCHAR} 
+				</if>
+				UNION ALL
+				SELECT A.AGNCY_CD,
+				       A.CMSN_CD,
+				       A.CMSN_PLCY_INFO_SRL_NUM,
+				       A.SRVC_CNTR_NUM,
+				       0 AS CMSN,
+				       A.ADJ_AMT,
+				       A.CLWBCK_AMT,
+				       A.RSN,
+                       A.REGST_DTTM AS REG_DTTM
+				FROM   CMS_PRVD_TRGT_ADJ_CLWBCK_HST A,
+				       CMS_PRVD_TRGT_CLS_MST B
+				WHERE  A.PRVD_MON = B.PRVD_MON
+				AND    A.CMSN_CD = B.CMSN_CD
+				and    A.REGST_DTTM <![CDATA[<=]]> B.CLOSE_DTTM
+				AND    B.LAST_YN = 'Y'
+			    AND    B.CLOSE_YN = 'Y'
+				<if test="sCmsnCd != null and sCmsnCd !=''">
+					AND A.CMSN_CD = #{sCmsnCd, jdbcType=VARCHAR}
+				</if>
+				<if test="sHghrOrgnCd != null and sHghrOrgnCd !=''">
+					AND  A.AGNCY_CD = #{sHghrOrgnCd, jdbcType=VARCHAR}
+				</if>
+				<if test="sSrvcCntrNum != null and sSrvcCntrNum !=''">
+					AND A.SRVC_CNTR_NUM = #{sSrvcCntrNum, jdbcType=VARCHAR} 
+				</if>
+				<if test="sPrvdMon != null and sPrvdMon !=''">
+					AND A.PRVD_MON = #{sPrvdMon, jdbcType=VARCHAR} 
+				</if>
+			) A,
+			CMS_CMSN_PLCY_INFO B,
+			CMN_GRP_CD_MST C,
+			MSP_SALE_PLCY_MST D
+			WHERE C.GRP_ID = 'CMS0001'
+			AND    A.CMSN_CD = C.CD_VAL
+			AND    A.CMSN_PLCY_INFO_SRL_NUM = B.CMSN_PLCY_INFO_SRL_NUM(+)
+			AND    A.CMSN_PLCY_INFO_SRL_NUM = D.SALE_PLCY_CD(+)
+			<if test="sCmsnPlcyInfoSrlNum != null and sCmsnPlcyInfoSrlNum !=''">
+				AND DECODE(B.CMSN_PLCY_NM, NULL, D.SALE_PLCY_NM, B.CMSN_PLCY_NM ) LIKE #{sCmsnPlcyInfoSrlNum, jdbcType=VARCHAR} ||'%' 
+			</if>
+			ORDER BY SALE_STORE_NM, C.CD_DSC, DECODE(B.CMSN_PLCY_NM, NULL, D.SALE_PLCY_NM, B.CMSN_PLCY_NM ), A.SRVC_CNTR_NUM NULLS FIRST
+	</select>
+	
+	<!-- 판매_ARPU수수료내역 엑셀 다운로드 -->
+	<select id="getCalcCrebasisListExcel" parameterType="com.ktis.msp.batch.job.cms.cmsnMgmt.vo.CmsnMgmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* CmsnMgmtMapper.getCalcCrebasisListExcel */
+		SELECT   
+		         (SELECT ORGN_NM
+		            FROM ORG_ORGN_INFO_MST
+		           WHERE ORGN_ID = A.AGNCY_CD) AS SALE_STORE_NM , --대리점
+		         A.CONTRACT_NUM , --계약번호
+		         A.STDR_MON ,  --기준월
+		         A.TELNUM ,   --전화번호
+		         (SELECT CD_DSC 
+		           FROM CMN_GRP_CD_MST 
+		           WHERE GRP_ID = 'MSP0003' 
+		             AND CD_VAL = A.SBSCRB_STAT) AS SBSCRB_STAT_NM , --가입상태
+		         (SELECT CD_DSC 
+		           FROM CMN_GRP_CD_MST 
+		           WHERE GRP_ID = 'CMS0017' 
+		             AND CD_VAL = A.SBSCRB_TYPE) AS SBSCRB_TYPE_NM , --가입유형
+		         (SELECT ORGN_NM
+		            FROM ORG_ORGN_INFO_MST
+		           WHERE ORGN_ID = A.OPEN_AGNT_CD) AS OPEN_AGNT_NM , --개통대리점    
+		         A.OPEN_DT ,   --개통일자
+		         A.TMNT_DT ,   --만료일자
+		         CASE WHEN A.OPEN_DT = A.HNDST_CHNG_DT THEN '' ELSE A.HNDST_CHNG_DT END AS HNDST_CHNG_DT,   --기변일자
+		         A.HNDST_ID ,    --모델ID
+		         A.HNDST_SRL_NUM ,   --모델일련번호
+		         A.REQ_RCPT_DATE ,   --신청서접수일자
+		         (SELECT SALE_PLCY_NM 
+		            FROM MSP_SALE_PLCY_MST  
+		           WHERE SALE_PLCY_CD = A.SALE_PLCY_ID) AS SALE_PLCY_NM,    --판매정책명
+		         NVL((SELECT RATE_NM 
+		                FROM MSP_RATE_MST 
+		               WHERE RATE_CD = A.F_CHRG_PLAN_CD), A.F_CHRG_PLAN_CD) AS F_CHRG_PLAN_NM , --개통요금제
+		         (SELECT RATE_GRP_CD 
+		                FROM MSP_RATE_MST 
+		               WHERE RATE_CD = A.F_CHRG_PLAN_CD) AS F_RATE_GRP_CD,--개통요금제그룹      
+		         NVL((SELECT RATE_NM 
+		            FROM MSP_RATE_MST 
+		           WHERE RATE_CD = A.C_CHRG_PLAN_CD), A.C_CHRG_PLAN_CD) AS C_CHRG_PLAN_NM , --현재요금제
+		         (SELECT RATE_GRP_CD 
+		            FROM MSP_RATE_MST 
+		           WHERE RATE_CD = A.C_CHRG_PLAN_CD) AS C_RATE_GRP_CD,--현재요금제그룹
+		         A.AGRM_NOM_CNT ,   --약정개월수
+		         A.DUTY_USG_CNT ,   -- 의무사용일수 
+		         A.SBSCRB_DT_CNT ,  --가입일수
+		         A.PUS_DT_NUM ,     --일시정지일수
+		         ( A.SBSCRB_DT_CNT - A.PUS_DT_NUM ) AS USG_DT ,  --실제사용일수
+		         NVL(B.SALE_CMS,0) AS SALE_AMNT, --판매수수료
+		         NVL(B.ARPU_CMS,0) AS ARPU_AMNT, --ARPU수수료
+		         A.SALE_STRT_DTTM,  --판매시작일시
+		         A.SALE_END_DTTM,    --판매종료일시
+		         CASE WHEN C.SUB_STATUS = 'C' THEN SUBSTR(C.SUB_STATUS_DATE,0,8) END AS CAN_DT, --해지일자
+		                CASE WHEN C.SUB_STATUS = 'C' THEN
+		            CASE
+		                WHEN TO_DATE(SUBSTR(C.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(C.LST_COM_ACTV_DATE, 'YYYYMMDD') = 0 THEN '당일개통취소'
+		                WHEN TO_DATE(SUBSTR(C.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(C.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ < ]]> 15 THEN '14일이내해지'
+		                WHEN TO_DATE(SUBSTR(C.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(C.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ < ]]> 90 THEN '90일이내해지'
+		                ELSE '일반해지'
+		            END
+		         ELSE ''  END AS BCK_TRGT, --환수사유        
+		         (SELECT PRDT_CODE 
+		            FROM CMN_INTM_MDL
+		           WHERE PRDT_ID = A.HNDST_ID) AS PRDT_CODE --모델명
+		FROM     CMS_TRGT_INFO A ,
+		         ( SELECT CONTRACT_NUM, SUM(SALE_CMS) AS SALE_CMS, SUM(ARPU_CMS) AS ARPU_CMS
+		             FROM (
+		                    SELECT A.CONTRACT_NUM,
+		                           DECODE(B.CMSN_CD, '30', B.CMSN) AS SALE_CMS,
+		                           DECODE(B.CMSN_CD, '31', B.CMSN) AS ARPU_CMS
+		                      FROM CMS_TRGT_INFO A, CMS_CMSN_CALC_INFO B
+		                     WHERE A.OPEN_DT BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(#{sStdrMon, jdbcType=VARCHAR}, 'YYYYMM'), - 1), 'YYYYMM') || '01' AND TO_CHAR(ADD_MONTHS(TO_DATE(#{sStdrMon, jdbcType=VARCHAR}, 'YYYYMM'), - 1),'YYYYMM') || '31' 
+		                       AND A.AGNCY_CD = B.AGNCY_CD
+		                       AND A.SRVC_CNTR_NUM = B.SRVC_CNTR_NUM
+							   <if test="sSrvcCntrNum != null and sSrvcCntrNum !=''">
+							   AND    A.CONTRACT_NUM = #{sSrvcCntrNum, jdbcType=VARCHAR}
+						       </if>
+						       <if test="sHghrOrgnCd != null and sHghrOrgnCd !=''">
+							   AND A.AGNCY_CD  = #{sHghrOrgnCd, jdbcType=VARCHAR}
+						       </if>
+		                       AND  B.CMSN_CD IN ('30','31'))
+		             GROUP BY CONTRACT_NUM ) B,
+		         MSP_JUO_SUB_INFO C
+		WHERE   1 = 1
+		AND     A.STDR_MON = #{sStdrMon, jdbcType=VARCHAR}
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+		<if test="sSrvcCntrNum != null and sSrvcCntrNum !=''">
+		AND     A.CONTRACT_NUM = #{sSrvcCntrNum, jdbcType=VARCHAR}
+        </if>
+        <if test="sHghrOrgnCd != null and sHghrOrgnCd !=''">
+		AND A.AGNCY_CD  = #{sHghrOrgnCd, jdbcType=VARCHAR}
+        </if>
+		ORDER BY  BCK_TRGT,SALE_STORE_NM, A.HNDST_CHNG_DT DESC
+    </select>
+	
+	
+</mapper>

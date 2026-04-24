@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rntl.rntlMgmt.mapper.RntlMgmtMapper">
+	
+	<!-- 무료렌탈정산내역생성 -->
+	<insert id="callFreeRntlCalcInfo" statementType="CALLABLE" parameterType="java.util.HashMap">
+		/* rntlMgmtMapper.callFreeRntlCalcInfo */
+		{ CALL P_RENTAL_FREE_CALC_INFO(
+						#{O_CODE, mode=OUT, jdbcType=VARCHAR}
+						, #{O_MSG, mode=OUT, jdbcType=VARCHAR}
+				) }
+	</insert>
+	
+</mapper>

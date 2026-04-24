@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.dis.dismgmt.mapper.DisTrgFnlMapper">
+
+    <!-- 평생할인 정책 적용 대상 상태 변경 -->
+    <update id="updateDisTrgMst" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisVO">
+        /*DisTrgFnlMapper.updateDisTrgMst*/
+        UPDATE MSP_DIS_TRG_MST
+        SET PROC_YN = #{procYn}, PROC_ID = 'BATCH2', PROC_DTTM = SYSDATE
+        WHERE 1=1
+        AND REGST_DT BETWEEN #{strDt} AND #{endDt}
+        <if test='procYn == "T"'>
+            AND PROC_YN= 'N'
+        </if>
+        <if test='procYn != "T"'>
+            AND PROC_YN= 'T'
+        </if>
+    </update>
+
+    <!-- MSP_DIS_APD 계약번호 UPDATE (OP0 응답 받은 후 OP2 응답 확인 전 APD 테이블에 INSERT: RVISN_DTTM IS NULL 조건 필요)-->
+    <update id="updateDisApdCntrNum" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisVO">
+        /*DisTrgFnlMapper.updateDisApdCntrNum*/
+        UPDATE MSP_DIS_APD A
+        SET CONTRACT_NUM = (SELECT SVC_CNTR_NO FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = LPAD(A.RES_NO, 14, '0') AND PRGR_STAT_CD = 'OP2' AND RSLT_CD = '0000')
+           ,RVISN_ID= 'BATCH2'
+           ,RVISN_DTTM= SYSDATE
+        WHERE A.REGST_DT BETWEEN #{strDt} || '000000' AND #{endDt} || '235959'
+          AND A.CONTRACT_NUM IS NULL
+          AND A.RVISN_DTTM IS NULL
+    </update>
+
+    <!-- 가입대상 상세이력 초기 INSERT -->
+    <update id="insertDisTrgFnlInfo" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisVO">
+        /*DisTrgFnlMapper.insertDisTrgFnlInfo*/
+        INSERT INTO MSP_DIS_TRG_FNL_INF
+            (TRG_FNL_INF_SEQ, REGST_DT, PROC_YN, CONTRACT_NUM, EVNT_CD, EVNT_TRTM_NO, EVNT_TRTM_DT, EFFECTIVE_DATE, REGST_ID, REGST_DTTM)
+        SELECT
+             'TI' || TO_CHAR(SYSDATE,'YYYYMMDD') || TRIM(TO_CHAR(SQ_DIS_TI.NEXTVAL, '000000'))
+            ,REGST_DT
+            ,PROC_YN
+            ,CONTRACT_NUM
+            ,EVNT_CD
+            ,EVNT_TRTM_NO
+            ,EVNT_TRTM_DT
+            ,EFFECTIVE_DATE
+            ,REGST_ID
+            ,REGST_DTTM
+        FROM
+        (
+            SELECT
+                TO_CHAR(SYSDATE,'YYYYMMDD') AS REGST_DT
+               ,'N' AS PROC_YN
+               ,CONTRACT_NUM
+               ,EVNT_CD
+               ,EVNT_TRTM_NO
+               ,EVNT_TRTM_DT
+               ,EFFECTIVE_DATE
+               ,'BATCH2' AS REGST_ID
+               ,SYSDATE AS REGST_DTTM
+            FROM MSP_DIS_TRG_MST
+            WHERE REGST_DT BETWEEN #{strDt} AND #{endDt}
+              AND PROC_YN = 'T'
+            ORDER BY EFFECTIVE_DATE
+        )
+    </update>
+
+    <!-- 평생할인 부가서비스 가입 대상 상세 이력 통합 UPDATE -->
+    <!--포탈 셀프요금제 변경의 APD 등록일시 REGST_DT는 전문의 EFFECTIVE_DATE보다 항상 큼-->
+    <update id="updateDisTrgFnlInfo" parameterType="java.util.HashMap">
+        /*DisTrgFnlMapper.updateDisTrgFnlInfo*/
+        UPDATE MSP_DIS_TRG_FNL_INF A
+        SET  PROC_YN = 'T'
+            ,PROC_ID = 'BATCH2'
+            ,PROC_DTTM = SYSDATE
+            ,RSLT_CD = #{rsltCd}
+            ,PRCS_SBST = #{prcsSbst}
+        WHERE REGST_DT = TO_CHAR(SYSDATE,'YYYYMMDD')
+        	AND PROC_YN = 'N'
+        <choose>
+            <when test="rsltCd == '0001'">
+                AND 'A' != (SELECT SUB_STATUS FROM MSP_JUO_SUB_INFO WHERE A.CONTRACT_NUM = CONTRACT_NUM)
+            </when>
+            <when test="rsltCd == '0002'">
+            	AND A.EVNT_CD = 'SCH'
+                AND A.EFFECTIVE_DATE <![CDATA[ < ]]> (SELECT MAX(REGST_DT) FROM MSP_DIS_APD WHERE CONTRACT_NUM = A.CONTRACT_NUM AND EVNT_CD = 'SCH')
+            </when>
+            <when test="rsltCd == '0003'">     
+                AND A.EVNT_CD = 'NAC'
+                AND 0 <![CDATA[ < ]]> (SELECT COUNT(CONTRACT_NUM) FROM MSP_DIS_APD WHERE CONTRACT_NUM = A.CONTRACT_NUM AND EVNT_CD = 'NAC')
+            </when>
+            <when test="rsltCd == '0004'">
+                AND A.EFFECTIVE_DATE <![CDATA[ <= ]]> (SELECT MAX(EFFECTIVE_DATE) FROM MSP_DIS_TRG_FNL_INF WHERE CONTRACT_NUM = A.CONTRACT_NUM AND TRG_FNL_INF_SEQ != A.TRG_FNL_INF_SEQ)
+            </when>
+            <when test="rsltCd == '0005'">
+                AND A.EVNT_CD = 'SIM'
+                AND 'E' = (SELECT SUBSTR(SIM_INFO,36,1) FROM MSP_REQUEST_DTL WHERE CONTRACT_NUM = A.CONTRACT_NUM)
+            </when>
+            <when test="rsltCd == '0006'">
+                AND A.EVNT_CD = 'C07'
+                AND '99991231000000' != (SELECT APPL_END_DTTM
+                                         FROM MSP_DVC_CHG_AGNT_HST
+                                         WHERE CONTRACT_NUM = A.CONTRACT_NUM
+                                         AND APPL_STRT_DTTM = (SELECT MAX(APPL_STRT_DTTM) FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = A.CONTRACT_NUM)
+                                         AND ROWNUM = 1)
+            </when>
+            <otherwise>
+                AND 1=0
+            </otherwise>
+        </choose>
+    </update>
+
+    <!-- 프로모션 조건 조회 -->
+    <select id="getProcDisTrgFnlInfo" resultType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisTrgFnlVO">
+        /*DisTrgFnlMapper.getProcDisTrgFnlInfo*/
+        SELECT
+            V.TRG_FNL_INF_SEQ                              /*FNL_INF 시퀀스*/
+           ,V.CONTRACT_NUM                                 /*계약번호*/
+           ,V.EVNT_CD                                      /*업무구분*/
+           ,V.EVNT_TRTM_NO                                 /*이벤트 처리번호*/
+           ,V.EVNT_TRTM_DT                                 /*전문발생일시*/
+           ,V.EFFECTIVE_DATE                               /*이벤트적용일시*/
+           ,V.RATE_CD                                      /*요금제*/
+           ,V.MODEL_ID                                     /*단말모델아이디*/
+           ,V.MODEL_NM                                     /*단말모델명*/
+           ,V.SLS_NO                                       /*특별판매코드*/
+           ,(CASE WHEN (V.SIM_YN='Y' OR V.EVNT_CD='SIM') THEN 'UU2' ELSE V.SLS_TP END) AS SLS_TP /* 가입유형 */
+           ,(CASE WHEN (V.SIM_YN='Y' OR V.EVNT_CD='SIM') THEN V.SIM_ENGG_MNTH_CNT ELSE V.ENGG_MNTH_CNT END) AS ENGG_MNTH_CNT /*약정개월수*/
+           ,V.OPEN_AGNT_CD                                 /*최초대리점*/
+           ,(CASE V.EVNT_CD WHEN 'C07' THEN V.AGNT_CD ELSE V.OPEN_AGNT_CD END) AS PRMT_AGNT_CD /*프로모션 적용 대리점*/
+        FROM
+        (
+            WITH ADD_INFO AS(
+                SELECT CONTRACT_NUM, SLS_NO, ENGG_MNTH_CNT
+                FROM
+                (
+                    SELECT
+                        ROW_NUMBER() OVER (PARTITION BY B.CONTRACT_NUM ORDER BY B.APP_START_DD DESC) AS RNK
+                       ,A.CONTRACT_NUM
+                       ,B.SLS_NO
+                       ,(CASE WHEN (B.SLS_NO IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0092' AND ETC1 = 'MM2') AND B.ENGG_MNTH_CNT IS NULL AND B.INST_MNTH_CNT IS NOT NULL) THEN SUBSTR(B.INST_MNTH_CNT, 2) ELSE B.ENGG_MNTH_CNT END) AS ENGG_MNTH_CNT
+                    FROM MSP_DIS_TRG_FNL_INF A, MSP_JUO_ADD_INFO B
+                    WHERE A.CONTRACT_NUM= B.CONTRACT_NUM
+                      AND A.REGST_DT = TO_CHAR(SYSDATE,'YYYYMMDD')
+                      AND A.PROC_YN = 'N'
+                      AND B.SLS_NO IS NOT NULL
+                      AND B.EVNT_CD != 'SIM' /*전문유형이 SIM인 경우 ENGG_MNTH_CNT에 SIM약정이 들어가므로 SIM이벤트 제외처리*/
+                )
+                WHERE RNK=1
+            ),
+            MODEL_INFO AS(
+                SELECT CONTRACT_NUM, MODEL_ID, MODEL_NM
+                FROM
+                    (
+                        SELECT
+                            ROW_NUMBER() OVER (PARTITION BY B.CONTRACT_NUM ORDER BY B.EVNT_TRTM_DT DESC) AS RNK
+                            ,A.CONTRACT_NUM
+                            ,B.MODEL_ID
+                            ,B.MODEL_NM
+                        FROM MSP_DIS_TRG_FNL_INF A, MSP_JUO_MODEL_INFO B
+                        WHERE A.CONTRACT_NUM= B.CONTRACT_NUM
+                          AND A.REGST_DT = TO_CHAR(SYSDATE,'YYYYMMDD')
+                          AND A.PROC_YN = 'N'
+                          AND B.APP_END_DATE= '99991231000000'
+                          AND B.MODEL_TYPE= 'D1'
+                    )
+                WHERE RNK=1
+            )
+            SELECT
+                  A.TRG_FNL_INF_SEQ
+                 ,A.CONTRACT_NUM
+                 ,A.EVNT_CD
+                 ,A.EVNT_TRTM_NO
+                 ,A.EVNT_TRTM_DT
+                 ,A.EFFECTIVE_DATE
+                 ,B.OPEN_AGNT_CD  /*최초대리점*/
+                 ,B.LST_RATE_CD AS RATE_CD
+                 ,C.MODEL_ID
+                 ,C.MODEL_NM
+                 ,D.AGNT_CD /*기변대리점*/
+                 ,E.SLS_NO
+                 ,E.ENGG_MNTH_CNT AS ENGG_MNTH_CNT
+                 ,(SELECT ETC1 FROM CMN_GRP_CD_MST WHERE GRP_ID= 'CMN0092' AND CD_VAL= E.SLS_NO AND USG_YN='Y') AS SLS_TP
+                 ,(CASE WHEN SUBSTR(B.SIM_INFO,36,1) != 'E' AND SUBSTR(B.SIM_INFO,28,8) <![CDATA[ > ]]> TO_CHAR(SYSDATE,'YYYYMMDD') THEN 'Y' ELSE 'N' END) AS SIM_YN
+                 ,SUBSTR(B.SIM_INFO,4,2) AS SIM_ENGG_MNTH_CNT
+            FROM MSP_DIS_TRG_FNL_INF A
+                ,MSP_REQUEST_DTL B
+                ,MODEL_INFO C
+                ,MSP_DVC_CHG_AGNT_HST D
+                ,ADD_INFO E
+            WHERE A.CONTRACT_NUM= B.CONTRACT_NUM(+)
+              AND A.CONTRACT_NUM = C.CONTRACT_NUM(+)
+              AND A.CONTRACT_NUM= D.CONTRACT_NUM(+)
+              AND A.CONTRACT_NUM= E.CONTRACT_NUM(+)
+              AND A.REGST_DT = TO_CHAR(SYSDATE,'YYYYMMDD')
+              AND A.PROC_YN = 'N'
+              AND A.EVNT_TRTM_NO= D.EVNT_TRTM_NO(+)
+              AND A.EVNT_CD= D.EVNT_CD(+)
+        ) V
+    </select>
+
+    <!-- 유효한 약정기간 카운트 -->
+    <select id="checkEnggDt" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisTrgFnlVO" resultType="int">
+        /*DisTrgFnlMapper.checkEnggDt*/
+        SELECT COUNT(CONTRACT_NUM) FROM 
+        <choose>
+            <when test="slsTp == 'MM2'">
+	        	(SELECT 
+	        		CONTRACT_NUM, 
+				    TO_CHAR(ADD_MONTHS(TO_DATE(MAX(APP_START_DD), 'YYYYMMDDHH24MISS'), #{enggMnthCnt}) - 1, 'YYYYMMDD') ENGG_END_DT
+				FROM MSP_JUO_ADD_INFO 
+				WHERE 1 = 1
+				    AND CONTRACT_NUM = #{contractNum}
+				    AND EVNT_CD = #{evntCd}
+				    AND EVNT_TRTM_DT = #{evntTrtmDt}
+				GROUP BY CONTRACT_NUM)
+        	</when>
+        	<otherwise>
+        		VW_CNTR_ENGG_SELF
+        	</otherwise>
+       	</choose>
+        WHERE 1 = 1
+        	AND CONTRACT_NUM = #{contractNum}
+          	AND ENGG_END_DT <![CDATA[ > ]]> #{baseDate}
+    </select>
+
+    <!-- 특정일자를 기준으로, 해당 일자 이후의 기처리 이력 조회 -->
+    <select id="compareDateWithApd" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisTrgFnlVO" resultType="int">
+        /*DisTrgFnlMapper.compareDateWithApd*/
+        SELECT COUNT(CONTRACT_NUM)
+        FROM MSP_DIS_APD
+        WHERE CONTRACT_NUM = #{contractNum}
+          AND REGST_DT <![CDATA[ >= ]]> #{effectiveDate}
+    </select>
+
+    <!-- MSP_DIS_TRG_FNL_INF 개별 UPDATE -->
+    <update id="updateEachDisTrgFnlInfo" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisTrgFnlVO">
+        /*DisTrgFnlMapper.updateEachDisTrgFnlInfo*/
+        UPDATE MSP_DIS_TRG_FNL_INF
+        SET  PROC_YN= 'T'
+            ,PROC_ID= 'BATCH2'
+            ,PROC_DTTM= SYSDATE
+            ,RSLT_CD= #{rsltCd}
+            ,PRCS_SBST= #{prcsSbst}
+            <if test='prmtId != null and prmtId != ""'>
+            ,PRMT_ID= #{prmtId}
+            </if>
+            <if test='openAgntCd != null and openAgntCd != ""'>
+            ,OPEN_AGNT_CD= #{openAgntCd}
+            </if>
+            <if test='prmtAgntCd != null and prmtAgntCd != ""'>
+            ,PRMT_AGNT_CD= #{prmtAgntCd}
+            </if>
+            <if test='enggMnthCnt != null and enggMnthCnt != ""'>
+            ,ENGG_MNTH_CNT= #{enggMnthCnt}
+            </if>
+            <if test='rateCd != null and rateCd != ""'>
+            ,RATE_CD= #{rateCd}
+            </if>
+            <if test='slsNo != null and slsNo != ""'>
+            ,SLS_NO= #{slsNo}
+            </if>
+            <if test='slsTp != null and slsTp != ""'>
+            ,SLS_TP= #{slsTp}
+            </if>
+            <if test='modelId != null and modelId != ""'>
+            ,MODEL_ID= #{modelId}
+            </if>
+            <if test='modelNm != null and modelNm != ""'>
+            ,MODEL_NM= #{modelNm}
+            </if>
+        WHERE TRG_FNL_INF_SEQ = #{trgFnlInfSeq}
+    </update>
+
+    <!-- 조건에 맞는 프로모션 조회 -->
+    <select id="findDisPrmtId" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisTrgFnlVO" resultType="String">
+        /*DisTrgFnlMapper.findDisPrmtId*/
+        SELECT DISTINCT PRMT_ID
+        FROM VW_DIS_PRMT_DTL
+        WHERE USG_YN= 'Y'
+          AND EVNT_CD= #{evntCd}
+          AND ORGN_ID= #{prmtAgntCd}
+          AND RATE_CD= #{rateCd}
+          AND SLS_TP= #{slsTp}
+          AND ENGG_SRL LIKE '%' || #{enggMnthCnt} || '%'
+          AND (#{effectiveDate} BETWEEN STRT_DTTM AND END_DTTM)
+          AND TO_CHAR(ORGN_REGST_DTTM,'YYYYMMDDHH24MISS') <![CDATA[ <= ]]> #{effectiveDate}
+        <choose>
+            <when test="modelId != null and modelId != '' and (slsTp=='MM1' or slsTp=='MM2') ">
+                AND (INTM_YN= 'Y' AND MODEL_ID= #{modelId})
+            </when>
+            <otherwise>
+                AND INTM_YN= 'N'
+            </otherwise>
+          </choose>
+    </select>
+
+    <!-- 부가서비스 중복 검사 (프로모션 부가서비스를 가지고 있는지 확인) -->
+    <!-- 프로모션 부가서비스(RCP2042)에서 ETC5가 DIS인 부가서비스가 검사 대상 -->
+    <select id="checkDuplicateSoc" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisTrgFnlVO" resultType="int">
+        /*DisTrgFnlMapper.checkDuplicateSoc*/
+        SELECT COUNT(CONTRACT_NUM)
+        FROM MSP_JUO_FEATURE_INFO A, CMN_GRP_CD_MST B
+        WHERE A.SOC = B.CD_VAL
+        AND A.CONTRACT_NUM= #{contractNum}
+        AND B.GRP_ID = 'RCP2042'
+        AND B.ETC5 = 'DIS'      
+        AND A.SERVICE_TYPE= 'R'  
+        AND A.APP_END_DATE= '99991231000000'
+        AND A.EXPIRATION_DATE <![CDATA[ >= ]]> TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+    </select>
+
+    <!-- 평생할인 부가서비스 가입 대상 최종(MSP_DIS_TRG_FNL) INSERT -->
+    <insert id="insertDisTrgFnl" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisTrgFnlVO">
+        /*DisTrgFnlMapper.insertDisTrgFnl*/
+        <selectKey keyProperty="trgFnlSeq" order="BEFORE" resultType="String">
+            SELECT 'TF' || TO_CHAR(SYSDATE,'YYYYMMDD') || TRIM(TO_CHAR(SQ_DIS_TF.NEXTVAL, '000000')) AS trgFnlSeq FROM DUAL
+        </selectKey>
+        INSERT INTO MSP_DIS_TRG_FNL
+            (TRG_FNL_SEQ,TRG_FNL_INF_SEQ,REGST_DT,PROC_YN,CONTRACT_NUM,PRMT_ID,EVNT_CD,EVNT_TRTM_NO,EVNT_TRTM_DT,EFFECTIVE_DATE,REGST_ID,REGST_DTTM)
+        VALUES
+            (
+               #{trgFnlSeq}
+              ,#{trgFnlInfSeq}
+              ,TO_CHAR(SYSDATE, 'YYYYMMDD')
+              ,'N'
+              ,#{contractNum}
+              ,#{prmtId}
+              ,#{evntCd}
+              ,#{evntTrtmNo}
+              ,#{evntTrtmDt}
+              ,#{effectiveDate}
+              ,'BATCH2'
+              ,SYSDATE
+            )
+    </insert>
+
+    <!-- 평생할인 부가서비스 가입 배치 호출 (CMN_BATCH_REQUEST INSERT) -->
+    <insert id="insertBatchRequest" parameterType="com.ktis.msp.batch.job.dis.dismgmt.vo.DisTrgFnlVO">
+        /* btchMgmtMapper.insertBatchRequest */
+        INSERT INTO CMN_BATCH_REQUEST
+            (BATCH_JOB_ID, BATCH_REQ_ID, REQ_DTTM, EXEC_YN, EXEC_PARAM, EXEC_TYPE_CD, REG_ID, REG_DTTM, RVISN_ID, RVISN_DTTM)
+        VALUES
+            (
+             #{batchId}
+             ,BATCH_JOB_SEQ.nextVal
+             ,TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+             ,'N'
+             ,#{execParam}
+             ,'SCHE'
+             ,'BATCH2'
+             ,SYSDATE
+             ,'BATCH2'
+             ,SYSDATE
+            )
+    </insert>
+
+</mapper>

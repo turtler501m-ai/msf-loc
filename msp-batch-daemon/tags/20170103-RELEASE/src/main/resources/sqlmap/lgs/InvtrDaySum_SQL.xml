@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.lgs.lgsbatchmgmt.mapper.InvtrDaySumMapper">
+	
+	<!-- Day 재고마스터 생성 -->
+	<insert id="createTodayInvtrDayMst" parameterType="com.ktis.msp.batch.job.lgs.lgsbatchmgmt.vo.LgsDayBatchVo">
+		INSERT /* InvtrDaySumMapper.createTodayInvtrDayMst */
+		  INTO LGS_INVTR_DAY_MST
+		(
+			  ORGN_ID    			/* 조직ID */
+			, STD_DT					/* 기준일자 */
+			, PRDT_ID    			/* 제품ID */
+			, OLD_YN    				/* 중고여부 */
+			, GOOD_STRG_INVTR_QNTY   /* 양품창고재고수량 */
+			, NG_STRG_INVTR_QNTY    	/* 불량창고재고수량 */
+			, IN_DUE_QNTY    		/* 입고예정수량 */
+			, OUT_RSV_QNTY    		/* 출고예약수량 */
+			, REGST_ID    			/* 등록자ID */
+			, REG_DTTM    			/* 등록일시 */
+		)
+		SELECT  INV.ORGN_ID
+			  , TO_CHAR(SYSDATE, 'YYYYMMDD')
+			  , INV.PRDT_ID
+			  , INV.OLD_YN
+			  , INV.GOOD_STRG_INVTR_QNTY
+			  , INV.NG_STRG_INVTR_QNTY
+			  , INV.IN_DUE_QNTY
+			  , INV.OUT_RSV_QNTY
+			  , 'BATCH'
+			  , SYSDATE
+		  FROM  LGS_INVTR_DAY_MST INV
+			  , CMN_INTM_MDL MDL
+			  , ORG_ORGN_INFO_MST ORG
+		 WHERE  INV.PRDT_ID = MDL.PRDT_ID
+		   AND  MDL.PRDT_TYPE_CD = '01'
+		   AND  INV.ORGN_ID = ORG.ORGN_ID
+		   AND  ORG.TYPE_CD = '20'
+		   AND  ( INV.GOOD_STRG_INVTR_QNTY + INV.NG_STRG_INVTR_QNTY + INV.IN_DUE_QNTY + INV.OUT_RSV_QNTY ) > 0
+		   AND  INV.STD_DT = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+		 UNION
+		SELECT  INV.ORGN_ID
+			  , TO_CHAR(SYSDATE, 'YYYYMMDD')
+			  , INV.PRDT_ID
+			  , INV.OLD_YN
+			  , INV.GOOD_STRG_INVTR_QNTY
+			  , INV.NG_STRG_INVTR_QNTY
+			  , INV.IN_DUE_QNTY
+			  , INV.OUT_RSV_QNTY
+			  , 'BATCH'
+			  , SYSDATE
+		  FROM  LGS_INVTR_DAY_MST INV
+			  , CMN_INTM_MDL MDL
+			  , CMN_GRP_CD_MST GRP
+		 WHERE  INV.PRDT_ID = MDL.PRDT_ID
+		   AND  INV.ORGN_ID = GRP.CD_VAL
+		   AND  GRP.GRP_ID = 'LGS4005'
+		   AND  ( INV.GOOD_STRG_INVTR_QNTY + INV.NG_STRG_INVTR_QNTY + INV.IN_DUE_QNTY + INV.OUT_RSV_QNTY ) > 0
+		   AND INV.STD_DT = TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+	</insert>
+	
+</mapper>

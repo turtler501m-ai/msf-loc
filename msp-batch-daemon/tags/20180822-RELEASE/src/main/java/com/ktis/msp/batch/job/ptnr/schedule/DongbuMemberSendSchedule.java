@@ -1,0 +1,76 @@
+package com.ktis.msp.batch.job.ptnr.schedule;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import com.ktis.msp.base.BaseSchedule;
+import com.ktis.msp.base.exception.MvnoServiceException;
+import com.ktis.msp.batch.job.ptnr.PointConstants;
+import com.ktis.msp.batch.job.ptnr.ptnrmgmt.service.PartnerPointSettleService;
+import com.ktis.msp.batch.job.ptnr.ptnrmgmt.service.PointFileFTPService;
+import com.ktis.msp.batch.manager.common.BatchConstants;
+import com.ktis.msp.batch.manager.vo.BatchCommonVO;
+
+/**
+ * 동부화재 정산전송 스케줄러
+ */
+
+@Component
+public class DongbuMemberSendSchedule extends BaseSchedule {
+	
+	/**
+	 * 
+	 */
+	@Autowired
+	private PartnerPointSettleService pointService;
+	
+	@Autowired
+	private PointFileFTPService ftpService;
+	
+	/**
+	 * Upload Job 실행
+	 * @throws MvnoServiceException 
+	 * @throws Exception
+	 */
+	@Scheduled(cron="${dongbuMemberSendSchedule}")
+	public void schedule() throws MvnoServiceException {
+		
+		BatchCommonVO batchCommonVO = new BatchCommonVO();
+		this.execute(batchCommonVO);
+		
+	}
+	
+	
+	/**
+	 * 
+	 */
+	@Override
+	public String execute(BatchCommonVO batchCommonVO) throws MvnoServiceException {
+		
+		String result = BatchConstants.BATCH_RESULT_OK;
+		try {
+			batchStart(batchCommonVO);
+			
+			// ========== BATCH MAIN ==================
+			LOGGER.info("--- 동부화재 -- 보험료정산파일 저장 및 업로드 시작 ---");
+			
+			// 동부화재 정산보험료 파일 저장
+			pointService.savePointFile(PointConstants.STR_DONGBU);
+			
+			// 저장된 파일 업로드
+			ftpService.uploadPointFile(PointConstants.STR_DONGBU,"");
+			// ========== BATCH MAIN ==================
+			
+			batchEnd(batchCommonVO);
+		} catch (MvnoServiceException e) {
+			result = BatchConstants.BATCH_RESULT_NOK;
+			batchError(batchCommonVO, e);
+		}
+		
+		return result;
+	}
+	
+	
+}
+

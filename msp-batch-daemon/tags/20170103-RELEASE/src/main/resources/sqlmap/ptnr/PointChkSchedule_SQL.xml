@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.ptnr.ptnrmgmt.mapper.PointChkScheduleMapper">
+	
+	<!-- 제휴사 사용량 계산 프로시저 호출 -->
+	<insert id="callUsgPoint" statementType="CALLABLE" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		/** pointChkScheduleMapper.callUsgPoint */
+		{ CALL P_PARTNER_USG_POINT(TO_CHAR(ADD_MONTHS(SYSDATE,-1), 'YYYYMM')) }
+	</insert>
+	
+	<!-- 제주항공 제휴 포인트 정산 프로시저 호출 -->
+	<insert id="callPointJeju" statementType="CALLABLE" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		/** pointChkScheduleMapper.callPointJeju */
+		{ CALL P_PARTNER_JEJUAIR(TO_CHAR(ADD_MONTHS(SYSDATE,-1), 'YYYYMM'), 'JEJUAIR') }
+	</insert>
+	
+	<!-- 제주항공 포인트 정산 내역 가져오기 -->
+	<select id="getJejuPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.JejuairPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* pointChkScheduleMapper.getJejuPointList */
+		SELECT 
+				A.SELF_CSTMR_CI AS MEMBER_CI
+				, SUM(C.REQ_POINT) AS POINT
+				, C.PARTNER_ID
+				, SUM(NVL(C.REQ_POINT,0)) * 10 AS AMOUNT
+		FROM 	  MSP_JUO_CUS_INFO A
+				, MSP_JUO_SUB_INFO B
+				, MSP_PARTNER_POINT_MST C
+		WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
+        AND   B.SVC_CNTR_NO = C.SVC_CNTR_NO
+        AND   C.SEND_FLAG = 'R'
+		AND   C.FULL_PAY_YN = 'Y'
+        AND   C.PAY_RESULT IN ('X', 'F')
+		AND   C.PARTNER_ID = #{partnerId}
+		AND   A.SELF_CSTMR_CI IS NOT NULL
+		GROUP BY A.SELF_CSTMR_CI, C.PARTNER_ID
+	</select>
+	
+	<!-- 제주항공 포인트 정산 내역 INSERT -->
+	<insert id="insertJejuPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.JejuairPointVO" >
+		/* pointChkScheduleMapper.insertJejuPointList */
+		INSERT INTO MSP_PARTNER_JEJUAIR_01 
+				(BILL_YM
+				, MEMBER_CI
+				, POINT
+				, REGST_ID
+				, REGST_DTTM)
+		SELECT 
+				TO_CHAR(SYSDATE, 'YYYYMM') AS BILL_YM
+				, A.SELF_CSTMR_CI AS MEMBER_CI
+				, SUM(C.REQ_POINT) AS POINT
+				, 'POINT'
+				, SYSDATE
+		FROM 	  MSP_JUO_CUS_INFO A
+				, MSP_JUO_SUB_INFO B
+				, MSP_PARTNER_POINT_MST C
+		WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
+        AND   B.SVC_CNTR_NO = C.SVC_CNTR_NO
+        AND   C.SEND_FLAG = 'R'
+		AND   C.FULL_PAY_YN = 'Y'
+        AND   C.PAY_RESULT IN ('X', 'F')
+		AND   C.PARTNER_ID = #{partnerId}
+		AND   A.SELF_CSTMR_CI IS NOT NULL
+		GROUP BY A.SELF_CSTMR_CI, C.PARTNER_ID
+	</insert>
+	
+	<!-- 엠하우스 포인트 정산 내역 가져오기 -->
+	<select id="getGiftiPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GiftiPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* pointChkScheduleMapper.getGiftiPointList */
+		SELECT 
+				CONTRACT_NUM
+				, CTN
+				, POINT
+				, USG_YM
+		FROM (
+				SELECT 
+						A.CONTRACT_NUM
+						, B.SUBSCRIBER_NO AS CTN
+						, SUM(A.REQ_POINT) AS POINT
+						, A.USG_YM
+				FROM 	
+						  MSP_PARTNER_POINT_MST A
+						, MSP_JUO_SUB_INFO B
+				WHERE  A.SEND_FLAG = 'R'
+				AND    A.FULL_PAY_YN = 'Y'
+				AND    A.PAY_RESULT IN ('X', 'F')
+				AND    A.PARTNER_ID = #{partnerId}
+				AND    A.CONTRACT_NUM = B.CONTRACT_NUM
+				GROUP BY A.CONTRACT_NUM, B.SUBSCRIBER_NO, A.USG_YM
+				)
+		WHERE 
+				POINT > 0 
+	</select>
+	
+	<!-- 엠하우스 포인트 정산 내역 INSERT -->
+	<insert id="insertGiftiPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GiftiPointVO" >
+		/* pointChkScheduleMapper.insertGiftiPointList */
+		INSERT INTO MSP_PARTNER_GIFTI_01 
+				(LINK_YM
+				, USG_YM
+				, CONTRACT_NUM
+				, CTN
+				, POINT
+				, REGST_ID
+				, REGST_DTTM)
+		SELECT 
+				TO_CHAR(SYSDATE, 'YYYYMM') AS LINK_YM
+				, USG_YM
+				, CONTRACT_NUM
+				, CTN
+				, POINT
+				, 'POINT'
+				, SYSDATE
+		FROM (
+				SELECT 
+						A.USG_YM
+						, A.CONTRACT_NUM
+						, B.SUBSCRIBER_NO AS CTN
+						, SUM(A.REQ_POINT) AS POINT
+				FROM 	
+						MSP_PARTNER_POINT_MST A
+						, MSP_JUO_SUB_INFO B
+				WHERE A.SEND_FLAG = 'R'
+				AND   A.FULL_PAY_YN = 'Y'
+				AND   A.PAY_RESULT IN ('X', 'F')
+				AND   A.PARTNER_ID = #{partnerId}
+				AND   A.CONTRACT_NUM = B.CONTRACT_NUM
+				GROUP BY A.CONTRACT_NUM, B.SUBSCRIBER_NO, A.USG_YM
+				)
+		WHERE 
+				POINT > 0 
+	</insert>
+	
+	<!-- 티머니 포인트 정산 내역 가져오기 -->
+	<select id="getTmoneyPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.TmoneyPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* pointChkScheduleMapper.getTmoneyPointList */
+		SELECT 
+				CONTRACT_NUM
+				, UICC
+				, CTN
+				, POINT
+				, BILL_YM
+		FROM (
+				SELECT 
+						A.CONTRACT_NUM
+						, B.ICC_ID AS UICC
+						, B.SUBSCRIBER_NO AS CTN
+						, SUM(A.REQ_POINT) AS POINT
+						, A.BILL_YM
+				FROM 	
+						MSP_PARTNER_POINT_MST A
+						, MSP_JUO_SUB_INFO B
+				WHERE A.SEND_FLAG = 'R'
+				AND   A.FULL_PAY_YN = 'Y'
+				AND   A.PAY_RESULT IN ('X', 'F')
+				AND   A.PARTNER_ID = #{partnerId}
+				AND   A.CONTRACT_NUM = B.CONTRACT_NUM
+				GROUP BY A.CONTRACT_NUM, A.BILL_YM, B.SUBSCRIBER_NO, B.ICC_ID
+				)
+		WHERE 
+				POINT > 0 
+	</select>
+	
+	<!-- 티머니 포인트 정산 내역 INSERT -->
+	<insert id="insertTmoneyPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.TmoneyPointVO" >
+		/* pointChkScheduleMapper.insertTmoneyPointList */
+		INSERT INTO MSP_PARTNER_TMONEY_01 
+				(LINK_YM
+				, CONTRACT_NUM
+				, UICC
+				, CTN
+				, POINT
+				, BILL_YM
+				, REGST_ID
+				, REGST_DTTM)
+		SELECT 
+				TO_CHAR(SYSDATE, 'YYYYMM') AS BILL_YM
+				, CONTRACT_NUM
+				, UICC
+				, CTN
+				, POINT
+				, BILL_YM
+				, 'POINT'
+				, SYSDATE
+		FROM (
+				SELECT 
+						A.CONTRACT_NUM
+						, B.ICC_ID AS UICC
+						, B.SUBSCRIBER_NO AS CTN
+						, SUM(A.REQ_POINT) AS POINT
+						, A.BILL_YM
+				FROM 	
+						MSP_PARTNER_POINT_MST A
+						, MSP_JUO_SUB_INFO B
+				WHERE A.SEND_FLAG = 'R'
+				AND   A.FULL_PAY_YN = 'Y'
+				AND   A.PAY_RESULT IN ('X', 'F')
+				AND   A.PARTNER_ID = #{partnerId}
+				AND   A.CONTRACT_NUM = B.CONTRACT_NUM
+				GROUP BY A.CONTRACT_NUM, A.BILL_YM, B.SUBSCRIBER_NO, B.ICC_ID
+				)
+		WHERE 
+				POINT > 0 
+	</insert>
+	
+	<!-- 제주항공 포인트 지급결과 업데이트. -->
+	<update id="updateJejuPointMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.JejuairPointVO">
+		/** pointChkScheduleMapper.updateJejuPointMst */
+		UPDATE 
+				MSP_PARTNER_POINT_MST A
+		SET 
+				PAY_RESULT = #{payResult}
+				, RESULT_DTL_CD = #{responseCode}
+				, PAY_DTTM = SYSDATE
+				, RVISN_ID = 'POINT'
+				, RVISN_DTTM = SYSDATE
+				<if test='payResult == "S" '>
+					, PAY_POINT = REQ_POINT
+				</if>
+		WHERE A.SEND_FLAG = 'R'
+		AND   A.FULL_PAY_YN = 'Y'
+		AND   A.PAY_RESULT <![CDATA[<>]]> 'S'
+		AND   A.PARTNER_ID = #{partnerId}
+		AND   A.SVC_CNTR_NO IN (SELECT D.SVC_CNTR_NO 
+								FROM   MSP_PARTNER_POINT_MST B, MSP_JUO_CUS_INFO C, MSP_JUO_SUB_INFO D
+								WHERE  C.CUSTOMER_ID = D.CUSTOMER_ID 
+								AND    B.SVC_CNTR_NO = D.SVC_CNTR_NO 
+								AND    B.PARTNER_ID = #{partnerId} 
+								AND    C.SELF_CSTMR_CI = #{memberCi})
+	</update>
+	
+	<!-- 제주항공 포인트 연동내역 결과 업데이트. -->
+	<update id="updatePartnerJejuair" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.JejuairPointVO">
+		/** pointChkScheduleMapper.updatePartnerJejuair */
+		UPDATE 
+				MSP_PARTNER_JEJUAIR_01
+		SET 
+				RESULT_DTL_CD = #{responseCode}
+				, RVISN_ID = 'POINT'
+				, RVISN_DTTM = SYSDATE
+		WHERE BILL_YM = #{billYm}
+		AND   MEMBER_CI = #{memberCi}
+	</update>
+	
+	<!-- 엠하우스 포인트 지급결과 업데이트. -->
+	<update id="updateGiftiPointMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GiftiPointVO">
+		/** pointChkScheduleMapper.updateGiftiPointMst */
+		UPDATE 
+				MSP_PARTNER_POINT_MST A
+		SET 
+				PAY_RESULT = #{payResult}
+				, RESULT_DTL_CD = #{responseCode}
+				, PAY_DTTM = SYSDATE
+				, RVISN_ID = 'POINT'
+				, RVISN_DTTM = SYSDATE
+				<if test='payResult == "S" '>
+					, PAY_POINT = REQ_POINT
+				</if>
+		WHERE A.SEND_FLAG = 'R'
+		AND   A.FULL_PAY_YN = 'Y'
+		AND   A.PAY_RESULT <![CDATA[<>]]> 'S'
+		AND   A.PARTNER_ID = #{partnerId}
+		AND   A.CONTRACT_NUM = #{contractNum}
+	</update>
+	
+	<!-- 엠하우스 포인트 연동내역 결과 업데이트. -->
+	<update id="updatePartnerGifti" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GiftiPointVO">
+		/** pointChkScheduleMapper.updatePartnerGifti */
+		UPDATE 
+				MSP_PARTNER_GIFTI_01
+		SET 
+				RESULT_DTL_CD = #{responseCode}
+				, RVISN_ID = 'POINT'
+				, RVISN_DTTM = SYSDATE
+		WHERE  LINK_YM = #{linkYm}
+		AND    USG_YM = #{usgYm}
+		AND    CONTRACT_NUM = #{contractNum}
+		AND    CTN = #{ctn}
+	</update>
+	
+	<!-- 티머니 포인트 지급결과 업데이트. -->
+	<update id="updateTmoneyPointMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.TmoneyPointVO">
+		/** pointChkScheduleMapper.updateTmoneyPointMst */
+		UPDATE 
+				MSP_PARTNER_POINT_MST A
+		SET 
+				PAY_RESULT = #{payResult}
+				, RESULT_DTL_CD = #{responseCode}
+				, PAY_DTTM = SYSDATE
+				, RVISN_ID = 'POINT'
+				, RVISN_DTTM = SYSDATE
+				<if test='payResult == "S" '>
+					, PAY_POINT = REQ_POINT
+				</if>
+		WHERE A.SEND_FLAG = 'R'
+		AND   A.FULL_PAY_YN = 'Y'
+		AND   A.PAY_RESULT <![CDATA[<>]]> 'S'
+		AND   A.PARTNER_ID = #{partnerId}
+		AND   A.PARTNER_ID = #{partnerId}
+		AND   A.CONTRACT_NUM = #{contractNum}
+		AND   A.BILL_YM = #{billYm}
+	</update>
+	
+	<!-- 티머니 포인트 연동내역 결과 업데이트. -->
+	<update id="updatePartnerTmoney" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.TmoneyPointVO">
+		/** pointChkScheduleMapper.updatePartnerTmoney */
+		UPDATE 
+				MSP_PARTNER_TMONEY_01
+		SET 
+				RESULT_DTL_CD = #{responseCode}
+				, RVISN_ID = 'POINT'
+				, RVISN_DTTM = SYSDATE
+		WHERE LINK_YM = #{linkYm}
+		AND   UICC = #{uicc}
+		AND   BILL_YM = #{billYm}
+	</update>
+	
+	<!-- 제휴사 업로드할 파일 생성 결과 -->
+	<insert id="insertPointFile" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		/** pointChkScheduleMapper.insertPointFile */
+		 INSERT INTO MSP_PARTNER_POINT_FILE
+		 		(
+		 			PARTNER_ID
+		 			, FILE_NM
+		 			, LOCAL_UP_DIR
+		 			, LOCAL_DOWN_DIR
+		 			, HOST_UP_DIR
+		 			, HOST_DOWN_DIR
+		 			, SEND_FLAG
+		 			, SEND_RESULT
+		 			, REGST_ID
+		 			, REGST_DTTM
+		 		) 
+		 		VALUES
+		 		(
+		 			#{partnerId}
+		 			, #{fileNm}
+		 			, #{localUpDir}
+		 			, #{localDownDir}
+		 			, #{hostUpDir}
+		 			, #{hostDownDir}
+		 			, 'R'
+		 			, 'R'
+		 			, 'POINT'
+		 			, SYSDATE
+		 		)
+	</insert>
+	
+	<!-- 제휴사 파일 업로드 결과 업데이트 -->
+	<update id="updatePointFileUp" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		UPDATE	/* pointChkScheduleMapper.updatePointFileUp */
+				MSP_PARTNER_POINT_FILE
+		SET
+				SEND_FLAG = #{sendFlag}
+				, REGST_ID = 'POINT'
+				, REGST_DTTM = SYSDATE
+		WHERE 	PARTNER_ID = #{partnerId}
+		AND     FILE_NM = #{fileNm}
+	</update>
+	
+	<!-- 제휴사 파일 다운로드 결과 업데이트 -->
+	<update id="updatePointFileDown" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		UPDATE	/* pointChkScheduleMapper.updatePointFileDown */
+				MSP_PARTNER_POINT_FILE
+		SET
+				SEND_RESULT = #{sendResult}
+				, RVISN_ID = 'POINT'
+				, RVISN_DTTM = SYSDATE
+		WHERE 	PARTNER_ID = #{partnerId}
+		AND     FILE_NM = #{fileNm}
+	</update>
+	
+	<!-- 제휴사 정산파일 업로드 리스트 가져오기 -->
+	<select id="getPointFileUpList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* pointChkScheduleMapper.getPointFileUpList */
+		SELECT
+				PARTNER_ID
+				, FILE_NM
+				, LOCAL_UP_DIR
+				, HOST_UP_DIR
+		FROM
+				MSP_PARTNER_POINT_FILE
+		WHERE SEND_FLAG <![CDATA[<>]]> 'S'
+		<if test='partnerId != null and partnerId != "" '>
+			AND PARTNER_ID = #{partnerId}
+		</if>
+		<if test='fileNm != null and fileNm != "" '>
+			AND FILE_NM = #{fileNm}
+		</if>
+	</select>
+	
+	<!-- 제휴사 지급결과파일 다운로드 리스트 가져오기 -->
+	<select id="getPointFileDownList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* pointChkScheduleMapper.getPointFileDownList */
+		SELECT
+				PARTNER_ID
+				, FILE_NM
+				, LOCAL_DOWN_DIR
+				, HOST_DOWN_DIR
+		FROM
+				MSP_PARTNER_POINT_FILE
+		WHERE   SEND_FLAG = 'S'
+		AND     SEND_RESULT IN ('R', 'F')
+		<if test='partnerId != null and partnerId != "" '>
+			AND PARTNER_ID = #{partnerId}
+		</if>
+		<if test='fileNm != null and fileNm != "" '>
+			AND FILE_NM = #{fileNm}
+		</if>
+	</select>
+	
+	<!-- 제휴사 지급결과 읽어야할 파일 리스트 가져오기 -->
+	<select id="getPointFileReadList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* pointChkScheduleMapper.getPointFileReadList */
+		SELECT
+				PARTNER_ID
+				, FILE_NM
+				, LOCAL_DOWN_DIR
+		FROM
+				MSP_PARTNER_POINT_FILE
+		WHERE   SEND_FLAG = 'S'
+		AND     SEND_RESULT = 'D'
+		<if test='partnerId != null and partnerId != "" '>
+			AND PARTNER_ID = #{partnerId}
+		</if>
+		<if test='fileNm != null and fileNm != "" '>
+			AND FILE_NM = #{fileNm}
+		</if>
+	</select>
+	
+	<!-- 제휴사 인터페이스 정보 가져오기 -->
+	<select id="getPartnerSubList" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* pointChkScheduleMapper.getPartnerSubList */
+		SELECT
+				IF_NO
+				, UP_DIR
+				, DOWN_DIR
+		FROM
+				MSP_PARTNER_SUB
+		WHERE   IF_NO = #{ifNo}
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cmn.smsmgmt.mapper.SmsBackupMapper">
+	
+	<insert id="insertSmsBackup">
+	/* SmsBackupMapper.insertSmsBackup */
+	INSERT INTO AM2X_SUBMIT_LOG_BACKUP
+	(
+		MSG_ID
+		,SUBJECT
+		,MSG_TYPE
+		,MSG_TYPE_SECOND
+		,MSG_TYPE_THIRD
+		,STATUS
+		,SCHEDULE_TIME
+		,SUBMIT_TIME
+		,MESSAGE
+		,CALLBACK_NUM
+		,RCPT_DATA
+		,FILE_COUNT
+		,FILE_NAME1
+		,FILE_NAME2
+		,FILE_NAME3
+		,CDR_ID
+		,RESULT
+		,RCS_RESULT
+		,KKO_RESULT
+		,RESULT_DESC
+		,DELIVER_TIME
+		,REPORT_RECV_TIME
+		,TELCOINFO
+		,FAIL_SEND
+		,K_TMPLCODE
+		,K_MESSAGE
+		,K_BUTTON
+		,K_ADFLAG
+		,K_SENDERKEY
+		,R_MESSAGEBASEID
+		,R_BODY
+		,R_BUTTON
+		,R_HEADER
+		,R_FOOTER
+		,R_COPYALLOWED
+		,R_QUERYID
+		,RESERVED01
+		,RESERVED02
+		,RESERVED03
+		,KISA_ORIG_CODE
+		,R_AGENCYID
+		,R_AGENCYKEY
+		,R_BRANDKEY
+		,R_CDR_ID
+		,REGST_DTTM
+	)
+	SELECT 
+		MSG_ID
+		,SUBJECT
+		,MSG_TYPE
+		,MSG_TYPE_SECOND
+		,MSG_TYPE_THIRD
+		,STATUS
+		,SCHEDULE_TIME
+		,SUBMIT_TIME
+		,MESSAGE
+		,CALLBACK_NUM
+		,RCPT_DATA
+		,FILE_COUNT
+		,FILE_NAME1
+		,FILE_NAME2
+		,FILE_NAME3
+		,CDR_ID
+		,RESULT
+		,RCS_RESULT
+		,KKO_RESULT
+		,RESULT_DESC
+		,DELIVER_TIME
+		,REPORT_RECV_TIME
+		,TELCOINFO
+		,FAIL_SEND
+		,K_TMPLCODE
+		,K_MESSAGE
+		,K_BUTTON
+		,K_ADFLAG
+		,K_SENDERKEY
+		,R_MESSAGEBASEID
+		,R_BODY
+		,R_BUTTON
+		,R_HEADER
+		,R_FOOTER
+		,R_COPYALLOWED
+		,R_QUERYID
+		,RESERVED01
+		,RESERVED02
+		,RESERVED03
+		,KISA_ORIG_CODE
+		,R_AGENCYID
+		,R_AGENCYKEY
+		,R_BRANDKEY
+		,R_CDR_ID
+		,SYSDATE 
+	FROM AM2X_SUBMIT_LOG A
+	WHERE SCHEDULE_TIME <![CDATA[<=]]> TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE), -6), 'YYYYMMDD') || '235959'
+	</insert>
+	
+	<delete id='deleteSmsBackupData'>
+	/* SmsBackupMapper.deleteSmsBackupData */
+	DELETE FROM AM2X_SUBMIT_LOG
+	WHERE SCHEDULE_TIME <![CDATA[<=]]> TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE), -6), 'YYYYMMDD') || '235959'
+	</delete>
+	
+	<delete id='deleteSmsResend'>
+	/* SmsBackupMapper.deleteSmsResend */
+	DELETE FROM MSP_SMS_RESEND_MST
+	WHERE SEND_REQ_DTTM <![CDATA[<=]]> TO_CHAR(ADD_MONTHS(TRUNC(SYSDATE), -6), 'YYYYMMDD') || '235959'
+	</delete>
+	
+</mapper>

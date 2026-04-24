@@ -1,0 +1,461 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ktis.msp.batch.job.fdh.iif.mapper.FdhTransmitMapper">
+	<!-- 계약정보현행화 1차 -->
+	<select id="getFdhInf001" resultType="String">
+		/* FdhTransmitMapper.getFdhInf001 */
+		SELECT NVL(SUB.CONTRACT_NUM, '')
+		       || '|' || NVL(SUB.CUSTOMER_ID, '')
+		       || '|' || NVL(SUB.SUB_STATUS, '')
+		       || '|' || NVL(SUB.SUB_STATUS_DATE, '')
+		       || '|' || NVL(SUB.SUB_STATUS_RSN_CODE, '')
+		       || '|' || NVL(SUB.MODEL_NAME, '')
+		       || '|' || NVL(SUB.MODEL_ID, '')
+		       || '|' || NVL(SUB.NCN, '')
+		       || '|' || NVL(SUB.NCN_GRADE, '')
+		       || '|' || NVL(SUB.IMSI, '')
+		       || '|' || NVL(SUB.ICC_ID, '')
+		       || '|' || NVL(SUB.G3_IND, '')
+		       || '|' || NVL(SUB.DEALER_CODE, '')
+		       || '|' || NVL(SUB.LST_COM_ACTV_DATE, '')
+		       || '|' || NVL(SUB.LST_DEV_CHG_DATE, '')
+		       || '|' || NVL(SUB.ITNET_BAL_YN, '')
+		       || '|' || NVL(SUB.IMEI, '')
+		       || '|' || NVL(SUB.SUB_STATUS_LAST_ACTV_CD, '')
+		       || '|' || NVL(SUB.SLS_CMPN_CD, '')
+		       || '|' || NVL(SUB.INTM_SRL_NO, '')
+		       || '|' || NVL(SUB.WIBRO_IMEI, '')
+		       || '|' || NVL(SUB.WIBRO_MAC_ID, '')
+		       || '|' || NVL(SUB.USIM_FXD_ID, '')
+		       || '|' || NVL(SUB.CNTR_USE_CD, '')
+		       || '|' || NVL(SUB.SVC_CNTR_NO, '')
+		       || '|' || NVL(SUB.REAL_USE_CUST_NO, '')
+		       || '|' || NVL(SUB.SRL_IF_ID, '')
+		       || '|' || NVL(SUB.UNPD_IND_CD, '')
+		       || '|' || NVL(SUB.MNP_IND_CD, '')
+		       || '|' || NVL(SUB.INDV_ENTR_NO, '')
+		       || '|' || NVL(SUB.INDV_ENTR_NM, '')
+		       || '|' || NVL(SUB.EVNT_CD, '')
+		       || '|' || NVL(SUB.EVNT_TRTM_NO, '')
+		       || '|' || NVL(SUB.EVNT_TRTM_DT, '')
+		       || '|' || NVL(SUB.SCAN_ID, '')
+		       || '|' || NVL(SUB.ON_OFF_TYPE, '')
+		       || '|' || NVL(SUB.DOBYYYYMMDD, '')
+		       || '|' || NVL(SUB.BAN, '')
+		       || '|' || NVL(SUB.WIFI_MAC_ID, '')
+		       || '|' || NVL(SUB.OPEN_AGNT_CD, '')
+		       || '|' || NVL(SUB.PPPO, '')
+		       || '|' || NVL(SUB.PROD_TYPE, '')
+		       AS STR_VAL
+		FROM   MSP_JUO_SUB_INFO SUB
+		WHERE  1 = 1
+		AND    SUB.PPPO = 'PO'
+		AND    SUB.EVNT_TRTM_DT <![CDATA[ >= ]]> TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM') || '01000000'
+		
+	</select>
+	
+	<!-- 계약현행화이력 -->
+	<select id="getFdhInf002" resultType="String">
+		/* FdhTransmitMapper.getFdhInf002 */
+		SELECT NVL(CONTRACT_NUM, '')
+		       || '|' || NVL(CUSTOMER_ID, '')
+		       || '|' || NVL(SUB_STATUS, '')
+		       || '|' || NVL(SUB_STATUS_DATE, '')
+		       || '|' || NVL(SUB_STATUS_RSN_CODE, '')
+		       || '|' || NVL(MODEL_NAME, '')
+		       || '|' || NVL(MODEL_ID, '')
+		       || '|' || NVL(NCN, '')
+		       || '|' || NVL(NCN_GRADE, '')
+		       || '|' || NVL(IMSI, '')
+		       || '|' || NVL(ICC_ID, '')
+		       || '|' || NVL(G3_IND, '')
+		       || '|' || NVL(DEALER_CODE, '')
+		       || '|' || NVL(LST_COM_ACTV_DATE, '')
+		       || '|' || NVL(LST_DEV_CHG_DATE, '')
+		       || '|' || NVL(ITNET_BAL_YN, '')
+		       || '|' || NVL(IMEI, '')
+		       || '|' || NVL(SUB_STATUS_LAST_ACTV_CD, '')
+		       || '|' || NVL(SLS_CMPN_CD, '')
+		       || '|' || NVL(INTM_SRL_NO, '')
+		       || '|' || NVL(WIBRO_IMEI, '')
+		       || '|' || NVL(WIBRO_MAC_ID, '')
+		       || '|' || NVL(USIM_FXD_ID, '')
+		       || '|' || NVL(CNTR_USE_CD, '')
+		       || '|' || NVL(SVC_CNTR_NO, '')
+		       || '|' || NVL(REAL_USE_CUST_NO, '')
+		       || '|' || NVL(SRL_IF_ID, '')
+		       || '|' || NVL(UNPD_IND_CD, '')
+		       || '|' || NVL(MNP_IND_CD, '')
+		       || '|' || NVL(INDV_ENTR_NO, '')
+		       || '|' || NVL(INDV_ENTR_NM, '')
+		       || '|' || NVL(EVNT_CD, '')
+		       || '|' || NVL(EVNT_TRTM_NO, '')
+		       || '|' || NVL(EVNT_TRTM_DT, '')
+		       || '|' || NVL(SOC, '')
+		       || '|' || NVL(ON_OFF_TYPE, '')
+		       || '|' || NVL(DOBYYYYMMDD, '')
+		       || '|' || NVL(EVNT_CHANGE_DATE, '')
+		       || '|' || NVL(WIFI_MAC_ID, '')
+		       || '|' || NVL(BAN, '')
+		       || '|' || NVL(OPEN_AGNT_CD, '')
+		       || '|' || NVL(PPPO, '')
+			   AS STR_VAL
+		FROM   MSP_JUO_SUB_INFO_HIST
+		WHERE  1=1
+		AND    EVNT_TRTM_DT <![CDATA[ >= ]]> TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM') || '01000000'
+		
+	</select>
+	
+	<!-- 상품현행화정보 -->
+	<select id="getFdhInf003" resultType="String">
+		/* FdhTransmitMapper.getFdhInf003 */
+		SELECT NVL(CONTRACT_NUM, '')
+		       || '|' || NVL(SOC, '')
+		       || '|' || NVL(APP_END_DATE, '')
+		       || '|' || NVL(FEATURE_CODE, '')
+		       || '|' || NVL(SERVICE_TYPE, '')
+		       || '|' || NVL(EFFECTIVE_DATE, '')
+		       || '|' || NVL(EXPIRATION_DATE, '')
+		       || '|' || NVL(SOC_CCR_DISPLAY_IND, '')
+		       || '|' || NVL(INBH_ID, '')
+		       || '|' || NVL(DEALER_CODE, '')
+		       || '|' || NVL(EVNT_CD, '')
+		       || '|' || NVL(EVNT_TRTM_NO, '')
+		       || '|' || NVL(EVNT_TRTM_DT, '')
+		       || '|' || NVL(APP_START_DD, '')
+		       AS STR_VAL
+		FROM   MSP_JUO_FEATURE_INFO
+		WHERE  1=1
+		AND    EVNT_TRTM_DT <![CDATA[ >= ]]> TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM') || '01000000'
+		
+	</select>
+	
+	<!-- 상품현행화정보 -->
+	<select id="getFdhInf004" resultType="String">
+		/* FdhTransmitMapper.getFdhInf004 */
+		SELECT NVL(CONTRACT_NUM, '')
+		       || '|' || NVL(MODEL_TYPE, '')
+		       || '|' || NVL(APP_END_DATE, '')
+		       || '|' || NVL(EVNT_TRTM_DT, '')
+		       || '|' || NVL(DEALER_CODE, '')
+		       || '|' || NVL(EVNT_CD, '')
+		       || '|' || NVL(EVNT_TRTM_NO, '')
+		       || '|' || NVL(MODEL_ID, '')
+		       || '|' || NVL(MODEL_NM, '')
+		       || '|' || NVL(INTM_SRL_NO, '')
+		       || '|' || NVL(EVNT_STR, '')
+			   AS STR_VAL
+		FROM   MSP_JUO_MODEL_INFO
+		WHERE  1=1
+		AND    EVNT_TRTM_DT <![CDATA[ >= ]]> TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM') || '01000000'
+		
+	</select>
+	
+	<!-- MVNO추가정보 -->
+	<select id="getFdhInf005" resultType="String">
+		/* FdhTransmitMapper.getFdhInf005 */
+		SELECT NVL(CONTRACT_NUM, '')
+		       || '|' || NVL(SALORG_CD, '')
+		       || '|' || NVL(OPEN_SHOP_CD, '')
+		       || '|' || NVL(TRRM_SHOP_CD, '')
+		       || '|' || NVL(CNTPNT_CD, '')
+		       || '|' || NVL(SLS_PRSN_ID, '')
+		       || '|' || NVL(TRTM_PRSN_ID, '')
+		       || '|' || NVL(ENCR_PRSN_ID, '')
+		       || '|' || NVL(SLS_NO, '')
+		       || '|' || NVL(DVC_OFW_AMNT, '')
+		       || '|' || NVL(INST_ORGIN_AMNT, '')
+		       || '|' || NVL(INST_MNTH_CNT, '')
+		       || '|' || NVL(EVNT_CD, '')
+		       || '|' || NVL(EVNT_TRTM_NO, '')
+		       || '|' || NVL(EVNT_TRTM_DT, '')
+		       || '|' || NVL(APP_START_DD, '')
+		       || '|' || NVL(APP_END_DATE, '')
+		       || '|' || NVL(MODEL_NAME, '')
+		       || '|' || NVL(MODEL_ID, '')
+		       || '|' || NVL(ENGG_MNTH_CNT, '')
+		       || '|' || NVL(SVC_CNTR_NO, '')
+		       || '|' || NVL(GRNT_INSR_MNGM_NO, '')
+		       || '|' || NVL(MODEL_CHN_CD, '')
+		       || '|' || NVL(BL_DC_TYPE, '')
+		       || '|' || NVL(GRNT_INSR_STAT_CD, '')
+		       || '|' || NVL(SIM_START_DT, '')
+		       || '|' || NVL(SIM_END_DT, '')
+		       || '|' || NVL(SIM_ID, '')
+		       || '|' || NVL(REG_DTTM, '')
+		       || '|' || NVL(SBSCST_IMPS_EXMP_AMNT, '')
+		       || '|' || NVL(AGNC_SUPOT_DSCN_AMNT, '')
+		       || '|' || NVL(USIM_AMNT, '')
+		       || '|' || NVL(KD_SUPOT_DSCN_AMNT, '')
+		       AS STR_VAL
+		FROM   MSP_JUO_ADD_INFO
+		WHERE  1=1
+		AND    EVNT_TRTM_DT <![CDATA[ >= ]]> TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM') || '01000000'
+		
+	</select>
+	
+	<!-- 요금제 -->
+	<select id="getFdhInf006" resultType="String">
+		/* FdhTransmitMapper.getFdhInf006 */
+		SELECT NVL(RATE_CD, '')
+		       || '|' || NVL(APPL_END_DT, '')
+		       || '|' || NVL(APPL_STRT_DT, '')
+		       || '|' || NVL(RATE_NM, '')
+		       || '|' || NVL(RATE_GRP_CD, '')
+		       || '|' || NVL(PAY_CL_CD, '')
+		       || '|' || NVL(RATE_TYPE, '')
+		       || '|' || NVL(DATA_TYPE, '')
+		       || '|' || NVL(BASE_AMT, '')
+		       || '|' || NVL(FREE_CALL_CL_CD, '')
+		       || '|' || NVL(FREE_CALL_CNT, '')
+		       || '|' || NVL(NW_IN_CALL_CNT, '')
+		       || '|' || NVL(NW_OUT_CALL_CNT, '')
+		       || '|' || NVL(FREE_SMS_CNT, '')
+		       || '|' || NVL(FREE_DATA_CNT, '')
+		       || '|' || NVL(ONLINE_TYPE_CD, '')
+		       || '|' || NVL(AL_FLAG, '')
+		       || '|' || NVL(SERVICE_TYPE, '')
+		       AS STR_VAL
+		FROM   MSP_RATE_MST
+	</select>
+	
+	<!-- 요금제스펙 -->
+	<select id="getFdhInf007" resultType="String">
+		/* FdhTransmitMapper.getFdhInf007 */
+		SELECT NVL(RATE_CD, '')
+		       || '|' || NVL(AGRM_TRM, '')
+		       || '|' || NVL(DC_AMT, '')
+		       || '|' || NVL(SPRT_TP, '')
+		       || '|' || NVL(APPL_END_DTTM, '')
+		       || '|' || NVL(APPL_STRT_DTTM, '')
+			   AS STR_VAL
+		FROM   MSP_RATE_SPEC
+	</select>
+	
+	<!-- 조직 -->
+	<select id="getFdhInf008" resultType="String">
+		/* FdhTransmitMapper.getFdhInf008 */
+		SELECT NVL(ORGN_ID, '')
+		       || '|' || NVL(ORGN_NM, '')
+		       || '|' || NVL(KT_ORG_ID, '')
+		       || '|' || NVL(HGHR_ORGN_CD, '')
+		       || '|' || NVL(ORGN_STAT_CD, '')
+		       || '|' || NVL(ORGN_GRD, '')
+		       || '|' || NVL(TYPE_CD, '')
+		       || '|' || NVL(TYPE_DTL_CD, '')
+		       || '|' || NVL(TYPE_DTL_CD1, '')
+		       || '|' || NVL(TYPE_DTL_CD2, '')
+		       || '|' || NVL(TYPE_DTL_CD3, '')
+		       || '|' || NVL(ORGN_LVL_CD, '')
+		       || '|' || NVL(OPEN_CRDT_LOAN_YN, '')
+		       || '|' || NVL(OPEN_CRDT_LOAN_STRT_DT, '')
+		       || '|' || NVL(APPL_STRT_DT, '')
+		       || '|' || NVL(APPL_CMPLT_DT, '')
+		       || '|' || NVL(TAXBILL_YN, '')
+		       || '|' || NVL(CMSN_PRVD_YN, '')
+		       || '|' || NVL(HNDST_INVTR_YN, '')
+		       || '|' || NVL(CLOSE_YN, '')
+		       || '|' || NVL(LOGIS_CNTER_YN, '')
+		       || '|' || NVL(HNDST_ORD_YN, '')
+		       || '|' || NVL(BIZ_TYPE_CD, '')
+		       || '|' || NVL(BIZ_REG_NUM, '')
+		       || '|' || NVL(CORP_REG_NUM, '')
+		       || '|' || NVL(BIZ_CAT, '')
+		       || '|' || NVL(BIZ_CON, '')
+		       || '|' || NVL(RESPN_PRSN_ID, '')
+		       || '|' || NVL(RESPN_PRSN_NUM, '')
+		       || '|' || NVL(RESPN_PRSN_MBLPHN, '')
+		       || '|' || NVL(RESPN_PRSN_EMAIL, '')
+		       || '|' || NVL(TMNT_DT, '')
+		       || '|' || NVL(RESPN_PRSN_NM, '')
+		       || '|' || NVL(SPECIAL_YN, '')
+		       || '|' || NVL(USE_YN, '')
+		       || '|' || NVL(OLD_KT_ORG_ID, '')
+		       || '|' || NVL(OLD_ORGN_ID, '')
+		       AS STR_VAL
+		FROM   ORG_ORGN_INFO_MST
+		WHERE  1=1
+		AND    TYPE_CD = '20' /* 대리점 */
+		AND    TYPE_DTL_CD1 = 'CS' /* 위탁대리점 */
+	</select>
+	
+	<!-- 제품관리 -->
+	<select id="getFdhInf009" resultType="String">
+		/* FdhTransmitMapper.getFdhInf009 */
+		SELECT NVL(PRDT_ID, '')
+		       || '|' || NVL(RPRS_PRDT_ID, '')
+		       || '|' || NVL(RPRS_YN, '')
+		       || '|' || NVL(PRDT_NM, '')
+		       || '|' || NVL(PRDT_CODE, '')
+		       || '|' || NVL(PRDT_TYPE_CD, '')
+		       || '|' || NVL(PRDT_IND_CD, '')
+		       || '|' || NVL(PRDT_COLR_CD, '')
+		       || '|' || NVL(MNFCT_ID, '')
+		       || '|' || NVL(PRDT_LNCH_DT, '')
+		       || '|' || NVL(PRDT_DT, '')
+		       AS STR_VAL
+		FROM CMN_INTM_MDL
+	</select>
+	
+	<!-- 모델단가 -->
+	<select id="getFdhInf010" resultType="String">
+		/* FdhTransmitMapper.getFdhInf010 */
+		SELECT NVL(RPRS_PRDT_ID, '')
+		       || '|' || NVL(OLD_YN, '')
+		       || '|' || NVL(UNIT_PRIC_EXPR_DTTM, '')
+		       || '|' || NVL(UNIT_PRIC_APPL_DTTM, '')
+		       || '|' || NVL(OUT_UNIT_PRIC, '')
+		       || '|' || NVL(MNFCT_GRANT, '')
+		       || '|' || NVL(REMRK, '')
+		       AS STR_VAL
+		FROM CMN_HNDST_AMT
+	</select>
+	
+	<!-- 계약정보현행화 2차 -->
+	<select id="getFdhInf011" resultType="String">
+		/* FdhTransmitMapper.getFdhInf011 */
+		SELECT NVL(SUB.CONTRACT_NUM, '')
+		       || '|' || NVL(CUSTOMER_ID, '')
+		       || '|' || NVL(SUB_STATUS, '')
+		       || '|' || NVL(SUB_STATUS_DATE, '')
+		       || '|' || NVL(SUB_STATUS_RSN_CODE, '')
+		       || '|' || NVL(MODEL_NAME, '')
+		       || '|' || NVL(MODEL_ID, '')
+		       || '|' || NVL(NCN, '')
+		       || '|' || NVL(NCN_GRADE, '')
+		       || '|' || NVL(IMSI, '')
+		       || '|' || NVL(ICC_ID, '')
+		       || '|' || NVL(G3_IND, '')
+		       || '|' || NVL(DEALER_CODE, '')
+		       || '|' || NVL(LST_COM_ACTV_DATE, '')
+		       || '|' || NVL(LST_DEV_CHG_DATE, '')
+		       || '|' || NVL(ITNET_BAL_YN, '')
+		       || '|' || NVL(IMEI, '')
+		       || '|' || NVL(SUB_STATUS_LAST_ACTV_CD, '')
+		       || '|' || NVL(SLS_CMPN_CD, '')
+		       || '|' || NVL(INTM_SRL_NO, '')
+		       || '|' || NVL(WIBRO_IMEI, '')
+		       || '|' || NVL(WIBRO_MAC_ID, '')
+		       || '|' || NVL(USIM_FXD_ID, '')
+		       || '|' || NVL(CNTR_USE_CD, '')
+		       || '|' || NVL(SVC_CNTR_NO, '')
+		       || '|' || NVL(REAL_USE_CUST_NO, '')
+		       || '|' || NVL(SRL_IF_ID, '')
+		       || '|' || NVL(UNPD_IND_CD, '')
+		       || '|' || NVL(MNP_IND_CD, '')
+		       || '|' || NVL(INDV_ENTR_NO, '')
+		       || '|' || NVL(INDV_ENTR_NM, '')
+		       || '|' || NVL(EVNT_CD, '')
+		       || '|' || NVL(EVNT_TRTM_NO, '')
+		       || '|' || NVL(EVNT_TRTM_DT, '')
+		       || '|' || NVL(ON_OFF_TYPE, '')
+		       || '|' || NVL(DOBYYYYMMDD, '')
+		       || '|' || NVL(BAN, '')
+		       || '|' || NVL(WIFI_MAC_ID, '')
+		       || '|' || NVL(OPEN_AGNT_CD, '')
+		       || '|' || NVL(PPPO, '')
+			   AS STR_VAL
+		FROM   MSP_JUO_SUB_INFO SUB
+		WHERE  1 = 1
+		AND    SUB.PPPO = 'PO'
+      AND    SUB.EVNT_TRTM_DT <![CDATA[ >= ]]> TO_CHAR(SYSDATE, 'YYYYMM') || '01000000'
+      
+	</select>
+	
+	<!-- 조직이력 -->
+	<select id="getFdhInf012" resultType="String">
+		/* FdhTransmitMapper.getFdhInf012 */
+		SELECT NVL(MCLUB_YN, '')
+		       || '|' || NVL(HNDST_ORD_YN, '')
+		       || '|' || NVL(CLOSE_YN, '')
+		       || '|' || NVL(LOGIS_CNTER_YN, '')
+		       || '|' || NVL(BIZ_TYPE_CD, '')
+		       || '|' || NVL(BIZ_REG_NUM, '')
+		       || '|' || NVL(CORP_REG_NUM, '')
+		       || '|' || NVL(BIZ_CAT, '')
+		       || '|' || NVL(BIZ_CON, '')
+		       || '|' || NVL(RPRSEN_NM, '')
+		       || '|' || NVL(RPRSEN_RRNUM, '')
+		       || '|' || NVL(TELNUM, '')
+		       || '|' || NVL(FAX, '')
+		       || '|' || NVL(EMAIL, '')
+		       || '|' || NVL(ZIPCD, '')
+		       || '|' || NVL(ADDR1, '')
+		       || '|' || NVL(ADDR2, '')
+		       || '|' || NVL(RESPN_PRSN_ID, '')
+		       || '|' || NVL(RESPN_PRSN_NUM, '')
+		       || '|' || NVL(RESPN_PRSN_MBLPHN, '')
+		       || '|' || NVL(RESPN_PRSN_EMAIL, '')
+		       || '|' || NVL(RESPN_PRSN_NM, '')
+		       || '|' || NVL(TMNT_DT, '')
+		       || '|' || NVL(TO_CHAR(REG_DTTM, 'YYYYMMDDHH24MISS'), '')
+		       || '|' || NVL(TO_CHAR(RVISN_DTTM, 'YYYYMMDDHH24MISS'), '')
+		       || '|' || NVL(HST_SEQ, '')
+		       || '|' || NVL(ORGN_ID, '')
+		       || '|' || NVL(ORGN_NM, '')
+		       || '|' || NVL(HGHR_ORGN_CD, '')
+		       || '|' || NVL(KT_ORG_ID, '')
+		       || '|' || NVL(ORGN_STAT_CD, '')
+		       || '|' || NVL(ORGN_GRD, '')
+		       || '|' || NVL(TYPE_CD, '')
+		       || '|' || NVL(TYPE_DTL_CD, '')
+		       || '|' || NVL(ORGN_LVL_CD, '')
+		       || '|' || NVL(TYPE_DTL_CD1, '')
+		       || '|' || NVL(TYPE_DTL_CD2, '')
+		       || '|' || NVL(TYPE_DTL_CD3, '')
+		       || '|' || NVL(APPL_STRT_DT, '')
+		       || '|' || NVL(APPL_CMPLT_DT, '')
+		       || '|' || NVL(OPEN_CRDT_LOAN_YN, '')
+		       || '|' || NVL(OPEN_CRDT_LOAN_STRT_DT, '')
+		       || '|' || NVL(TAXBILL_YN, '')
+		       || '|' || NVL(CMSN_PRVD_YN, '')
+		       || '|' || NVL(HNDST_INVTR_YN, '')
+		       AS STR_VAL
+		FROM   ORG_ORGN_INFO_HST
+		WHERE  1=1
+		AND    TYPE_CD = '20' /* 대리점 */
+		AND    TYPE_DTL_CD1 = 'CS' /* 위탁대리점 */
+		
+	</select>
+	
+	<!-- 판매정책정보 -->
+   <select id="getFdhInf013" resultType="String">
+      /* FdhTransmitMapper.getFdhInf013 */
+      SELECT NVL(A.PLCY_ID, '')
+		       || '|' || NVL(A.SLS_NO, '')
+		       || '|' || NVL(A.SLS_NM, '')
+		       || '|' || NVL(A.PLCY_TYPE, '')
+		       || '|' || NVL(B.DC_TYPE, '')
+		       || '|' || NVL(E.CD_DSC, '')
+		       || '|' || NVL(C.ENGG_CNT, '')
+		       || '|' || NVL(D.INST_CNT, '')
+		FROM   MSP_KT_PLCY_MST A,
+		       MSP_KT_PLCY_DISCOUNT B,
+		       MSP_KT_PLCY_ENGG C,
+		       MSP_KT_PLCY_INST D,
+		       CMN_GRP_CD_MST E
+		WHERE  A.PLCY_ID = B.PLCY_ID
+		AND    A.SLS_NO = B.SLS_NO
+		AND    A.PLCY_ID = C.PLCY_ID
+		AND    A.SLS_NO = C.SLS_NO
+		AND    A.PLCY_ID = D.PLCY_ID
+		AND    A.SLS_NO = D.SLS_NO
+		AND    B.DC_TYPE = E.CD_VAL
+		AND    E.GRP_ID = 'CMN0074'
+		ORDER BY A.SLS_NO, A.SLS_NM, A.PLCY_TYPE, A.PPPO, B.DC_TYPE, C.ENGG_CNT, D.INST_CNT
+		
+   </select>
+   
+   <!-- 계약해지정보 -->
+   <select id="getFdhInf014" resultType="String">
+      /* FdhTransmitMapper.getFdhInf014 */
+      SELECT NVL(CONTRACT_NUM, '')
+             || '|' || NVL(CAN_DATE, '')
+      FROM   CLS_CAN_DATA
+     WHERE  CAN_DATE <![CDATA[ >= ]]> TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM') || '01000000'
+      
+   </select>
+   
+	
+</mapper>

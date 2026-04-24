@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cmn.cmnmgmt.mapper.JuiceOnlineChkMapper">
+		
+	<select id="getJuiceOnlineCnt" resultType="int">
+		/* JuiceOnlineChkMapper.getJuiceOnlineCnt */
+		SELECT  COUNT(*)
+		  FROM  MSP_JUO_SUB_INFO_HIST
+		 WHERE  TO_DATE(EVNT_CHANGE_DATE, 'YYYYMMDDHH24MISS') BETWEEN TRUNC(SYSDATE-2/24, 'HH') AND TRUNC(SYSDATE, 'HH')
+	</select>
+	
+	<select id="getSendTargetInfo" resultType="String">
+		/* JuiceOnlineChkMapper.getSendTargetInfo */
+		SELECT B.CD_VAL
+		  FROM CMN_GRP_MST A
+		       , CMN_GRP_CD_MST B
+		 WHERE A.GRP_ID = B.GRP_ID
+		   AND A.USG_YN = 'Y'
+		   AND B.USG_YN = 'Y'
+		   AND A.GRP_ID = 'MON0000'
+		   AND B.ETC1 = 'Y'
+	</select>
+
+</mapper>

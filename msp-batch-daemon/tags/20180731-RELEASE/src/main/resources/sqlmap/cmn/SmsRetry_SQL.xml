@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cmn.smsmgmt.mapper.SmsRetryMapper">
+	
+	<!-- SMS 재발송 대상 (재발송 횟수에 따라 MSG_QUEUE 에 EXPIRETIME이 지나 남아있는 것 + MSG_RESULT 에 RESULT NOT IN ('100', '201') 인것.) -->
+	<select id="getSmsRetryList" resultType="com.ktis.msp.batch.manager.vo.SmsCommonVO">
+		/* SmsRetryMapper.getSmsRetryList */
+		SELECT  A.SEND_SEQ
+		      , A.DSTADDR     AS mobileNo
+		      , A.CALLBACK    AS sendNumber
+		      , A.MSG_TYPE    AS msgType
+		      , A.SUBJECT     AS subject
+		      , A.TEXT        AS sendMessage
+		      , A.EXPIRETIME  AS expireTime
+		      , A.TEMPLATE_ID AS templateId
+		      , TO_CHAR(SYSDATE + (5/24/60) + ((1/24/60) * TRUNC((ROWNUM - 1) / 100) * 10), 'YYYYMMDDHH24MISS') AS requestTime
+		      , COUNT(1) OVER() AS totalCount
+		      , ROWNUM AS RN
+		FROM   (
+				SELECT  A.SEND_SEQ
+				      , B.DSTADDR
+				      , B.CALLBACK
+				      , B.MSG_TYPE
+				      , B.SUBJECT
+				      , B.TEXT
+				      , B.EXPIRETIME
+				      , A.TEMPLATE_ID
+				      , A.SEND_CNT
+				FROM    MSP_SMS_SEND_MST A
+				      , MSG_QUEUE B
+				WHERE   A.MSEQ = B.MSEQ
+				AND     SYSDATE <![CDATA[ > ]]> B.REQUEST_TIME + (B.EXPIRETIME / 60 / 60 / 24) 
+				
+				UNION
+				
+				SELECT  A.SEND_SEQ
+				      , B.DSTADDR
+				      , B.CALLBACK
+				      , B.MSG_TYPE
+				      , B.SUBJECT
+				      , B.TEXT
+				      , B.EXPIRETIME
+				      , A.TEMPLATE_ID
+				      , A.SEND_CNT
+				FROM    MSP_SMS_SEND_MST A
+				      , MSG_RESULT B
+				WHERE   A.MSEQ = B.MSEQ
+				AND     B.RESULT NOT IN ('100', '201')
+			   ) A , MSP_SMS_TEMPLATE_MST B
+		WHERE   A.TEMPLATE_ID = B.TEMPLATE_ID
+		AND     A.SEND_CNT <![CDATA[ <= ]]> B.RETRY
+	</select>
+	
+</mapper>

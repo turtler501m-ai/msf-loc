@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.org.orgmgmt.mapper.AcenCnsltCanMapper">
+
+  <!--A'Cen 일배치 상담이력 이관 주기 조회-->
+  <select id="getAcenCnsltTransferDate" parameterType="java.lang.String" resultType="java.lang.String">
+    /*AcenCnsltCanMapper.getAcenCnsltTransferDate*/
+    SELECT ETC1
+    FROM CMN_GRP_CD_MST
+    WHERE GRP_ID = 'DEV0003'
+      AND USG_YN = 'Y'
+      AND CD_VAL = #{cdVal}
+  </select>
+
+  <!--A'Cen 일배치 상담이력 이관 대상 조회-->
+  <select id="getAcenCnsltMstList" parameterType="java.lang.Integer" resultType="java.lang.Long">
+    /*AcenCnsltCanMapper.getAcenCnsltMstList*/
+    SELECT A.CNSLT_SEQ
+    FROM NMCP_ACEN_CNSLT_MST@DL_MCP A
+    WHERE TRUNC(A.RVISN_DTTM) BETWEEN TRUNC(SYSDATE) - #{stdrDay}-7 AND TRUNC(SYSDATE) - #{stdrDay}-1
+    AND A.PROC_YN = 'Y'
+    AND A.CNSLT_SEQ NOT IN (SELECT CNSLT_SEQ FROM NMCP_ACEN_CNSLT_MST@DL_CAN WHERE CNSLT_SEQ = A.CNSLT_SEQ)
+  </select>
+
+  <!--A'Cen 일배치 상담이력 이관 대상 단건 조회-->
+  <select id="getAcenCnsltMst" parameterType="java.lang.Long" resultType="com.ktis.msp.batch.job.org.orgmgmt.vo.AcenCnsltMstCanVO">
+    /*AcenCnsltCanMapper.getAcenCnsltMst*/
+    SELECT
+      CNSLT_SEQ, TALK_YM, TO_CHAR(TALK_DT, 'YYYYMMDDHH24MISS') AS TALK_DT, CUSTOMER_NO, CONTRACT_NUM,
+      CNSLT_ID, CNSLT_MID, TALK_TEL_NO, TALK_TYPE, TO_CHAR(TALK_STRT_DTTM, 'YYYYMMDDHH24MISS') AS TALK_STRT_DTTM,
+      TO_CHAR(TALK_END_DTTM, 'YYYYMMDDHH24MISS') AS TALK_END_DTTM, TALK_TOTAL_TIME, ACW_TOTAL_TIME, TALK_RESULT_CODE, CNSLT_TYPE_FIR_NM,
+      CNSLT_TYPE_SEC_NM, CNSLT_TYPE_THI_NM, CNSLT_TYPE_DTL_NM, FN_GET_ACEN_CNSLT_CONTENT@DL_MCP(#{cnsltSeq}, 1, 1000) AS CNSLT_CONTENT,
+      TALK_NM, PROC_YN, TO_CHAR(REGST_DTTM, 'YYYYMMDDHH24MISS') AS REGST_DTTM, TO_CHAR(RVISN_DTTM, 'YYYYMMDDHH24MISS') AS RVISN_DTTM
+    FROM NMCP_ACEN_CNSLT_MST@DL_MCP
+    WHERE CNSLT_SEQ = #{cnsltSeq}
+  </select>
+
+  <!--A'Cen 일배치 상담이력 NMCP_ACEN_CNSLT_MST 이관-->
+  <insert id="insertAcenCnsltMstCan" parameterType="com.ktis.msp.batch.job.org.orgmgmt.vo.AcenCnsltMstCanVO">
+		/*AcenCnsltCanMapper.insertAcenCnsltMstCan*/
+		INSERT INTO NMCP_ACEN_CNSLT_MST@DL_CAN (
+		  CNSLT_SEQ, TALK_YM, TALK_DT, CUSTOMER_NO, CONTRACT_NUM,
+      CNSLT_ID, CNSLT_MID, TALK_TEL_NO, TALK_TYPE, TALK_STRT_DTTM,
+      TALK_END_DTTM, TALK_TOTAL_TIME, ACW_TOTAL_TIME, TALK_RESULT_CODE, CNSLT_TYPE_FIR_NM,
+      CNSLT_TYPE_SEC_NM, CNSLT_TYPE_THI_NM, CNSLT_TYPE_DTL_NM, CNSLT_CONTENT, TALK_NM,
+      PROC_YN, REGST_DTTM, RVISN_DTTM, TRANSFER_DTTM
+		)VALUES(
+      #{cnsltSeq}, #{talkYm}, TO_DATE(#{talkDt},'YYYYMMDDHH24MISS'), #{customerNo}, #{contractNum},
+      #{cnsltId}, #{cnsltMid}, #{talkTelNo}, #{talkType}, TO_DATE(#{talkStrtDttm},'YYYYMMDDHH24MISS'),
+      TO_DATE(#{talkEndDttm},'YYYYMMDDHH24MISS'), #{talkTotalTime}, #{acwTotalTime}, #{talkResultCode}, #{cnsltTypeFirNm},
+      #{cnsltTypeSecNm}, #{cnsltTypeThiNm}, #{cnsltTypeDtlNm}, #{cnsltContent}, #{talkNm},
+      #{procYn}, TO_DATE(#{regstDttm},'YYYYMMDDHH24MISS'), TO_DATE(#{rvisnDttm},'YYYYMMDDHH24MISS'), SYSDATE
+    )
+	</insert>
+
+	<update id="updateAcenCnsltMst" parameterType="java.lang.Long">
+		/*AcenCnsltCanMapper.updateAcenCnsltMst*/
+		UPDATE NMCP_ACEN_CNSLT_MST@DL_MCP
+		SET TALK_TEL_NO = NVL2(TALK_TEL_NO, '00000000000', NULL)
+           ,TALK_NM = NVL2(TALK_NM, '이관고객', NULL)
+		WHERE CNSLT_SEQ = #{cnsltSeq}
+	</update>
+
+  <!--A'Cen 일배치 상담이력 NMCP_ACEN_CNSLT_DTL 이관-->
+  <insert id="insertAcenCnsltDtl" parameterType="java.lang.Long">
+		/*AcenCnsltCanMapper.insertAcenCnsltDtl*/
+		INSERT INTO NMCP_ACEN_CNSLT_DTL@DL_CAN (
+		  CNSLT_SEQ, CONTRACT_NUM, DATA_TYPE, AGE, BIRTH_DT,
+          GENDER, OPEN_AGNT_CD, SUB_STATUS, LST_COM_ACTV_DATE, CANCEL_DATE,
+          STOP_DATE, OPER_TYPE, REQ_BUY_TYPE, FST_USIM_ORG_ID, USIM_ORG_ID,
+          RATE_CD, MRKT_AGREE_YN, USIM_TYPE, REGST_DTTM, RVISN_DTTM, TRANSFER_DTTM
+		)
+		SELECT
+		  CNSLT_SEQ, CONTRACT_NUM, DATA_TYPE, AGE, BIRTH_DT,
+          GENDER, OPEN_AGNT_CD, SUB_STATUS, LST_COM_ACTV_DATE, CANCEL_DATE,
+          STOP_DATE, OPER_TYPE, REQ_BUY_TYPE, FST_USIM_ORG_ID, USIM_ORG_ID,
+          RATE_CD, MRKT_AGREE_YN, USIM_TYPE, REGST_DTTM, RVISN_DTTM, SYSDATE
+		FROM NMCP_ACEN_CNSLT_DTL@DL_MCP A
+		WHERE CNSLT_SEQ = #{cnsltSeq}
+		AND NOT EXISTS (SELECT 1 FROM NMCP_ACEN_CNSLT_DTL@DL_CAN WHERE CNSLT_SEQ = A.CNSLT_SEQ)
+	</insert>
+
+	<update id="updateAcenCnsltDtl" parameterType="java.lang.Long">
+		/*AcenCnsltCanMapper.updateAcenCnsltDtl*/
+		UPDATE  NMCP_ACEN_CNSLT_DTL@DL_MCP
+		SET AGE = ''
+		  ,BIRTH_DT = ''
+          ,GENDER = ''
+		WHERE CNSLT_SEQ = #{cnsltSeq}
+	</update>
+
+  <!--A'Cen 일배치 상담이력 삭제 대상 조회-->
+  <select id="getAcenCnsltMstCanList" parameterType="java.lang.Integer" resultType="java.lang.Long">
+    /*AcenCnsltCanMapper.getAcenCnsltMstCanList*/
+    SELECT CNSLT_SEQ
+    FROM NMCP_ACEN_CNSLT_MST@DL_CAN
+    WHERE RVISN_DTTM <![CDATA[<]]> TRUNC(SYSDATE) - #{stdrDay}
+  </select>
+
+  <!--A'Cen 일배치 상담이력 NMCP_ACEN_CNSLT_MST@DL_CAN 삭제-->
+	<delete id="deleteAcenCnsltMstCan" parameterType="java.lang.Long">
+		/*AcenCnsltCanMapper.deleteAcenCnsltMstCan*/
+		DELETE FROM NMCP_ACEN_CNSLT_MST@DL_CAN WHERE CNSLT_SEQ = #{cnsltReq}
+	</delete>
+
+  <delete id="deleteAcenCnsltMstMcp" parameterType="java.lang.Long">
+		/*AcenCnsltCanMapper.deleteAcenCnsltMstMcp*/
+		DELETE FROM NMCP_ACEN_CNSLT_MST@DL_MCP WHERE CNSLT_SEQ = #{cnsltReq}
+	</delete>
+
+  <!--A'Cen 일배치 상담이력 NMCP_ACEN_CNSLT_DTL@DL_CAN 삭제-->
+	<delete id="deleteAcenCnsltDtlCan" parameterType="java.lang.Long">
+		/*AcenCnsltCanMapper.deleteAcenCnsltDtlCan*/
+		DELETE FROM NMCP_ACEN_CNSLT_DTL@DL_CAN WHERE CNSLT_SEQ = #{cnsltReq}
+	</delete>
+
+  <delete id="deleteAcenCnsltDtlMcp" parameterType="java.lang.Long">
+		/*AcenCnsltCanMapper.deleteAcenCnsltDtlMcp*/
+		DELETE FROM NMCP_ACEN_CNSLT_DTL@DL_MCP WHERE CNSLT_SEQ = #{cnsltReq}
+	</delete>
+
+</mapper>

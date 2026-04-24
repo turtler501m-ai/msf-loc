@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.cantransfermgmt.mapper.McpLogTransferMapper">
+	
+	<!-- 대상월 조회 -->
+	<select id="getTrgtYm" parameterType="Integer" resultType="String">
+		/* mcpLogMapper.getTrgtYm */
+		SELECT  TO_CHAR(ADD_MONTHS(SYSDATE, #{diff}), 'YYYYMM') AS trgtYm
+		FROM    DUAL
+	</select>
+	
+	<!-- MCP 로그 CAN 으로 이관 -->
+	<insert id="insertMcpLogTransfer" parameterType="String">
+		/* mcpLogMapper.insertMcpLogTransfer */
+		INSERT INTO MCP_ACCESS_TRACE@DL_CAN (
+		        PRCS_MDL_IND
+		        , PRCS_SBST
+		        , TRTM_RSLT_SMST
+		        , ACCESS_IP
+		        , PARAMETER
+		        , ACCESS_URL
+		        , USER_ID
+		        , EXPNSN_STR_VAL1
+		        , SYS_DT
+		        , SYS_RDATE
+		        , LOGIN_DIV_CD
+		        , LOGIN_SEQ
+		        , PLATFORM_CD
+		        , MENU_SEQ
+		        , URL_SEQ
+		)
+		SELECT  PRCS_MDL_IND
+		        , PRCS_SBST
+		        , TRTM_RSLT_SMST
+		        , ACCESS_IP
+		        , PARAMETER
+		        , ACCESS_URL
+		        , USER_ID
+		        , EXPNSN_STR_VAL1
+		        , SYS_DT
+		        , SYS_RDATE
+		        , LOGIN_DIV_CD
+		        , LOGIN_SEQ
+		        , PLATFORM_CD
+		        , MENU_SEQ
+		        , URL_SEQ
+		FROM    MCP_ACCESS_TRACE@DL_MCP
+		WHERE   SYS_DT LIKE #{trgtYm} || '%'
+	</insert>
+	
+	<!-- MCP DB 에서 로그 삭제 -->
+	<delete id="deleteMcpLogTransfer" parameterType="String">
+		/* mcpLogMapper.deleteMcpLogTransfer */
+		DELETE
+		FROM    MCP_ACCESS_TRACE@DL_MCP
+		WHERE   SYS_DT LIKE #{trgtYm} || '%'
+	</delete>
+	
+	<!-- CAN DB 에서 로그 삭제 -->
+	<delete id="deleteCanMcpLog" parameterType="String">
+		/* mcpLogMapper.deleteCanMcpLog */
+		DELETE
+		FROM    MCP_ACCESS_TRACE@DL_CAN
+		WHERE   SYS_DT LIKE #{trgtYm} || '%'
+	</delete>
+</mapper> 

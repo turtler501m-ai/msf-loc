@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.manager.common.masking.MaskingMapper">
+
+	
+	<select id="selectList" parameterType="java.util.HashMap" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+	/* ====== cmn.masking.selectList =========*/
+	    SELECT  A.CNT
+		       ,DECODE(A.MSK_AUTH_YN, 'Y','Y','1','Y','N')  MSK_AUTH_YN
+		       ,'' || B.MSK_ID         MSK_ID
+		       ,'' || C.MSK_GRP_ID     MSK_GRP_ID
+		       ,'' || C.MSK_LNTH       MSK_LNTH
+		       ,'' || C.MSK_LOC        MSK_LOC
+		       ,'' || C.MSK_STRT_LOC MSK_STRT_LOC
+		FROM ( SELECT COUNT(1) CNT,  MAX(MSK_AUTH_YN )  MSK_AUTH_YN
+		        FROM  CMN_USR_MST 
+		        WHERE USR_ID =  #{userId}
+		     ) A,
+		     CMN_MSK_DTL B,
+		     CMN_MSK_GRP C
+		WHERE B.MSK_GRP_ID = C.MSK_GRP_ID
+	</select>
+	
+	<select id="selectListNotEgovMap" parameterType="java.util.HashMap" resultType="com.ktis.msp.batch.manager.common.masking.MaskingVO">
+	/* ====== cmn.masking.selectList =========*/
+	    SELECT  A.CNT
+		       ,DECODE(A.MSK_AUTH_YN, 'Y','Y','1','Y','N')  mskAuthYn
+		       ,'' || B.MSK_ID         mskId
+		       ,'' || C.MSK_GRP_ID     mskGrpId
+		       ,'' || C.MSK_LNTH       mskLnth
+		       ,'' || C.MSK_LOC        mskLoc
+		       ,'' || C.MSK_STRT_LOC mskStrtLoc
+		FROM ( SELECT COUNT(1) CNT,  MAX(MSK_AUTH_YN )  MSK_AUTH_YN
+		        FROM  CMN_USR_MST 
+		        WHERE USR_ID =  #{SESSION_USER_ID }
+		     ) A,
+		     CMN_MSK_DTL B,
+		     CMN_MSK_GRP C
+		WHERE 1 =1 
+		  AND B.MSK_GRP_ID = C.MSK_GRP_ID
+  	</select>
+	
+</mapper>

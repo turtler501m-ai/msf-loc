@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cls.clsacntclosemgmt.mapper.ClsAcntCloseMgmtMapper">
+	
+	<!-- 결산마감상태조회 -->
+	<select id="getClsAcntCloseStat" parameterType="map" resultType="String">
+        /* clsAcntCloseMgmtMapper.getClsAcntCloseStat */
+        SELECT
+            CLOSE_STAT_CD
+        FROM
+            CLS_ACNT_CLOSE_INFO A
+        WHERE
+            CLS_ACNT_YM = #{CLS_ACNT_YM, jdbcType=VARCHAR}
+            AND CLS_ACNT_DUTY_CD = #{CLS_ACNT_DUTY_CD, jdbcType=VARCHAR}
+            AND SRL_NUM = #{SRL_NUM, jdbcType=NUMERIC}
+	</select>
+	
+	<!-- 결산마감정보merge -->
+	<insert id="saveClsAcntCloseMerge" parameterType="map">
+        /* clsAcntCloseMgmtMapper.saveClsAcntCloseMerge */
+        MERGE INTO CLS_ACNT_CLOSE_INFO
+        USING DUAL
+        ON
+            (CLS_ACNT_YM = #{CLS_ACNT_YM, jdbcType=VARCHAR} AND CLS_ACNT_DUTY_CD = #{CLS_ACNT_DUTY_CD, jdbcType=VARCHAR} AND SRL_NUM = #{SRL_NUM, jdbcType=NUMERIC})
+        WHEN MATCHED THEN
+            UPDATE SET 
+                CLOSE_STAT_CD = #{CLOSE_STAT_CD, jdbcType=VARCHAR}
+                , CLS_ACNT_CLOSE_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+                , RVISN_ID = #{USER_ID, jdbcType=VARCHAR}
+                , RVISN_DTTM = SYSDATE
+        WHEN NOT MATCHED THEN
+            INSERT
+            (
+                CLS_ACNT_YM
+                , CLS_ACNT_DUTY_CD
+                , SRL_NUM
+                , CLS_ACNT_CLOSE_DT
+                , APPL_STRT_DT
+                , APPL_END_DT
+                , CLOSE_STAT_CD
+                , RMK
+                , SLP_TRNSM_DTTM
+                , REGST_ID
+                , REG_DTTM
+                , RVISN_ID
+                , RVISN_DTTM
+            ) VALUES (
+                #{CLS_ACNT_YM, jdbcType=VARCHAR}
+                , #{CLS_ACNT_DUTY_CD, jdbcType=VARCHAR}
+                , 1
+                , TO_CHAR(SYSDATE, 'YYYYMMDD')
+                , #{CLS_ACNT_YM, jdbcType=VARCHAR} || '01'
+                , DECODE(#{CLS_ACNT_YM, jdbcType=VARCHAR}, '000000', '99991231', 
+                        TO_CHAR(LAST_DAY(TO_DATE(#{CLS_ACNT_YM, jdbcType=VARCHAR}, 'YYYYMM')), 'YYYYMMDD'))
+                , #{CLOSE_STAT_CD, jdbcType=VARCHAR}
+                , #{RMK, jdbcType=VARCHAR}
+                , #{SLP_TRNSM_DTTM, jdbcType=VARCHAR}
+                , #{USER_ID, jdbcType=VARCHAR}
+                , SYSDATE
+                , #{USER_ID, jdbcType=VARCHAR}
+                , SYSDATE
+            )
+	</insert>
+	
+	<!-- 매출수불미반영정보 조회 -->
+	<select id="getSaleRecvnpayInfoCheck" parameterType="map" resultType="int">
+		<![CDATA[
+        /* clsAcntCloseMgmtMapper.getSaleRecvnpayInfoCheck */
+        SELECT
+            COUNT(*)
+        FROM
+            CLS_SALE_INFO A
+        WHERE
+            A.SALE_DT LIKE #{WORK_YM, jdbcType=VARCHAR} || '%'
+            AND SALE_RECVNPAY_ISSU_YN <> 'Y'
+		]]>
+	</select>
+	
+	<!-- 매출이월에 의한 매출수불정보 저장 -->
+	<update id="insertCarryOverSaleRecvnpayInfo" parameterType="map">
+        /* clsAcntCloseMgmtMapper.insertCarryOverSaleRecvnpayInfo */
+        INSERT INTO CLS_SALE_RECVNPAY_INFO
+        (
+			SALE_YM
+			, ORGN_ID
+			, SALE_ITM_CD
+			, PREV_MON_BAL
+			, SALE_ACML_AMT
+			, CLS_ACNT_PROC_AMT
+			, DPST_PROC_AMT
+			, REGST_ID
+			, REG_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+        )
+        SELECT
+			#{SALE_YM, jdbcType=VARCHAR} AS SALE_YM
+			, NVL(A.ORGN_ID, X.ORGN_ID) AS ORGN_ID
+		    , NVL(A.SALE_ITM_CD, X.SALE_ITM_CD) AS SALE_ITM_CD
+		    , NVL(A.PREV_MON_BAL, 0) + NVL(A.SALE_ACML_AMT, 0) - NVL(A.CLS_ACNT_PROC_AMT, 0) - NVL(A.DPST_PROC_AMT, 0) AS PREV_MON_BAL
+		    , 0 AS SALE_ACML_AMT
+		    , 0 AS CLS_ACNT_PROC_AMT
+		    , 0 AS DPST_PROC_AMT
+			, #{USER_ID, jdbcType=VARCHAR}
+			, SYSDATE
+			, #{USER_ID, jdbcType=VARCHAR}
+			, SYSDATE
+        FROM
+			CLS_SALE_RECVNPAY_INFO A
+			,(  SELECT
+		            A.ORGN_ID
+		            , B.SALE_ITM_CD
+		        FROM
+		            ORG_ORGN_INFO_MST A
+		            , CLS_SALE_ITM_INFO B
+		        WHERE
+		            A.TYPE_CD = '20'    /* 대리점 */
+		            AND A.ORGN_STAT_CD = '4'    /* 가동 */
+		            AND B.SALE_ITM_YN = 'Y'
+		        GROUP BY A.ORGN_ID, B.SALE_ITM_CD
+		    ) X
+        WHERE
+        	A.ORGN_ID(+) = X.ORGN_ID
+        	AND A.SALE_ITM_CD(+) = X.SALE_ITM_CD
+        	AND A.SALE_YM(+) = #{WORK_YM, jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 매출정보 결산대상처리여부 변경 -->
+	<update id="updateSaleInfoClsAcntProcYn" parameterType="map">
+        /* clsAcntCloseMgmtMapper.updateSaleInfoClsAcntProcYn */
+        UPDATE CLS_SALE_INFO
+        SET
+            RVISN_ID = #{USER_ID, jdbcType=VARCHAR}
+            , RVISN_DTTM = SYSDATE
+            , CLS_ACNT_PROC_YN = 'Y'
+            , CLS_ACNT_PROC_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+            , CLS_ACNT_YM = #{CLS_ACNT_YM, jdbcType=VARCHAR}
+        WHERE
+        	(SALE_DT LIKE #{CLS_ACNT_YM, jdbcType=VARCHAR} || '%' AND CLS_ACNT_STDR_CD IN ('20', '21', '30', '31', '40', '41'))
+            	OR (SALE_DT LIKE TO_CHAR(ADD_MONTHS(TO_DATE(#{CLS_ACNT_YM, jdbcType=VARCHAR}, 'YYYYMM'), 1), 'YYYYMM') || '%' AND CLS_ACNT_STDR_CD IN ('10', '11'))
+           	AND SALE_STAT_CD = '30'		/* 매출확정 */
+	</update>
+	
+	<!-- 결산상세등록 -->
+	<insert id="insertClsAcntDltList" parameterType="map">
+		<![CDATA[
+        /* clsAcntCloseMgmtMapper.insertClsAcntDltList */
+        INSERT INTO CLS_ACNT_DTL
+		(
+		    CLS_ACNT_YM
+		    , ORGN_ID
+		    , SALE_ITM_CD
+		    , CLS_ACNT_STDR_CD
+		    , CLS_ACNT_ITM_CD
+		    , CLS_ACNT_TRGT_AMT
+		    , CLS_ACNT_PROC_AMT
+		    , DPST_PROC_AMT
+		    , REGST_ID
+		    , REG_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT
+		    #{CLS_ACNT_YM, jdbcType=VARCHAR}
+		    , A.ORGN_ID
+		    , A.SALE_ITM_CD
+		    , A.CLS_ACNT_STDR_CD
+		    , B.CLS_ACNT_ITM_CD
+		    , SUM(NVL(A.SALE_AMT, 0) + NVL(A.VAT, 0)) AS CLS_ACNT_TRGT_AMT
+		    , SUM(NVL(C.CLS_ACNT_PROC_AMT, 0)) AS CLS_ACNT_PROC_AMT
+		    , SUM(NVL(A.DPST_PROC_AMT, 0) - NVL(C.CLS_ACNT_PROC_AMT, 0)) AS DPST_PROC_AMT
+		    , #{USER_ID, jdbcType=VARCHAR}
+		    , SYSDATE
+		    , #{USER_ID, jdbcType=VARCHAR}
+		    , SYSDATE
+		FROM
+		    CLS_SALE_INFO A
+		    , CLS_SALE_ITM_INFO B
+		    , ( /* 가결산 입금상계금액/(-)매출 상계 */
+		        SELECT
+		            A.STOF_SALE_DT AS SALE_DT
+		            , A.ORGN_ID AS ORGN_ID
+		            , A.STOF_SALE_ITM_CD AS SALE_ITM_CD
+		            , A.STOF_SALE_SRL_NUM AS SALE_SRL_NUM
+		            , SUM(NVL(A.STOF_AMT, 0)) AS CLS_ACNT_PROC_AMT
+		        FROM
+		            CLS_STOF_INFO A
+		        WHERE
+		            A.STOF_SALE_DT LIKE #{CLS_ACNT_YM, jdbcType=VARCHAR} || '%'
+		            AND A.STOF_OCCR_SCTN_CD IN ('44')
+		        GROUP BY A.STOF_SALE_DT
+		                , A.ORGN_ID
+		                , A.STOF_SALE_ITM_CD
+		                , A.STOF_SALE_SRL_NUM
+		        
+		        HAVING SUM(A.STOF_AMT) <> 0
+		        
+		    ) C
+		WHERE
+		    A.CLS_ACNT_YM = #{CLS_ACNT_YM, jdbcType=VARCHAR}
+		    AND A.SALE_STAT_CD = '30'
+		    AND A.SALE_ITM_CD = B.SALE_ITM_CD
+		    AND B.CLS_ACNT_PROC_YN = 'Y'	/* 결산처리여부 */
+		    AND A.SALE_DT = C.SALE_DT(+)
+		    AND A.ORGN_ID = C.ORGN_ID(+)
+		    AND A.SALE_ITM_CD = C.SALE_ITM_CD(+)
+		    AND A.SALE_SRL_NUM = C.SALE_SRL_NUM(+)
+		GROUP BY A.ORGN_ID
+		        , A.SALE_ITM_CD
+		        , A.CLS_ACNT_STDR_CD
+		        , B.CLS_ACNT_ITM_CD
+		]]>
+	</insert>
+	
+	<!-- 결산정보생성 -->
+	<select id="insertClsAcntInfoBatch" parameterType="map">
+        /* clsAcntCloseMgmtMapper.insertClsAcntInfoBatch */
+        INSERT INTO CLS_ACNT_INFO
+		(
+		    CLS_ACNT_YM
+		    , ORGN_ID
+		    , CLS_ACNT_ITM_CD
+		    , CLS_ACNT_TRGT_DT
+		    , CLS_ACNT_TRGT_AMT
+		    , CLS_ACNT_PROC_AMT
+		    , DPST_PROC_AMT
+		    , CLS_ACNT_STAT_CD
+		    , REGST_ID
+		    , REG_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT
+		    A.CLS_ACNT_YM
+		    , A.ORGN_ID
+		    , A.CLS_ACNT_ITM_CD
+		    , TO_CHAR(SYSDATE, 'YYYYMMDD')
+		    , SUM(NVL(A.CLS_ACNT_TRGT_AMT, 0)) AS CLS_ACNT_TRGT_AMT
+		    , SUM(NVL(A.CLS_ACNT_PROC_AMT, 0)) AS CLS_ACNT_PROC_AMT
+		    , SUM(NVL(A.DPST_PROC_AMT, 0)) AS DPST_PROC_AMT
+		    , '10' AS CLS_ACTN_STAT_CD
+		    , #{USER_ID, jdbcType=VARCHAR}
+		    , SYSDATE
+		    , #{USER_ID, jdbcType=VARCHAR}
+		    , SYSDATE
+		FROM
+		    CLS_ACNT_DTL A
+		    , CLS_SALE_ITM_INFO B
+		WHERE
+		    A.CLS_ACNT_YM = #{CLS_ACNT_YM, jdbcType=VARCHAR}
+		    AND A.SALE_ITM_CD = B.SALE_ITM_CD
+		    AND B.CLS_ACNT_PROC_YN = 'Y'		/* 결산처리대상여부 */
+		GROUP BY A.CLS_ACNT_YM
+		        , A.ORGN_ID
+		        , A.CLS_ACNT_ITM_CD
+	</select>
+	
+	<!-- 매출년월 조회 -->
+	<select id="getSaleYm" parameterType="map" resultType="String">
+    	/* clsAcntCloseMgmtMapper.getSaleYm */
+    	SELECT TO_CHAR(ADD_MONTHS(TO_DATE(#{WORK_YM, jdbcType=VARCHAR}, 'YYYYMM'), 1), 'YYYYMM') FROM DUAL
+	</select>
+	
+	
+</mapper>

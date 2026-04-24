@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.combmgmt.mapper.CombMgmtMapper">
+		
+	<update id="setResultCdN">
+		/* CombMgmtMapper.setResultCdN */
+		UPDATE  MCP_REQ_COMBINE@DL_MCP 
+		   SET  RSLT_CD = 'N'
+		        , RVISN_ID = 'SYSTEM'
+		        , RVISN_DTTM = SYSDATE 
+		 WHERE  RSLT_CD = 'R' 
+		   AND  SYS_DT = TO_CHAR(SYSDATE - 6,'YYYYMMDD')
+	</update>
+	
+	<update id="setResultCdC">
+		/* CombMgmtMapper.setResultCdC */
+		UPDATE  MCP_REQ_COMBINE@DL_MCP 
+		   SET  RSLT_CD = 'C'
+		        , RVISN_ID = 'SYSTEM'
+		        , RVISN_DTTM = SYSDATE 
+		 WHERE  RSLT_CD IN ('N', 'B')
+		   AND  TRUNC(RVISN_DTTM) = TRUNC(SYSDATE - 3)
+	</update>
+	
+</mapper>

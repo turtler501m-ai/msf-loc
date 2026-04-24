@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cmn.usrobjhst.mapper.UserObjHstMapper">
+				   
+	<select id="selectUserObject" resultType="int">
+	    SELECT COUNT(*)
+	      FROM USER_OBJECTS A
+	     WHERE TO_CHAR(A.LAST_DDL_TIME,'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE-7,'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD')
+	</select>
+					   
+	<insert id="insertUserObjectHst">
+		INSERT INTO CMN_USER_OBJECT_HST
+		(
+		    SELECT A.OBJECT_NAME
+		    	   , 'MSP_WAS'
+		           , A.OBJECT_ID
+		           , A.OBJECT_TYPE
+		           , A.CREATED
+		           , A.LAST_DDL_TIME
+		           , B.LINE
+		           , B.TEXT
+		           , 'BATCH'
+		           , SYSDATE
+		           , 'BATCH'
+		           , SYSDATE
+		      FROM USER_OBJECTS A
+		           , USER_SOURCE B
+		     WHERE A.OBJECT_NAME = B.NAME
+		       AND TO_CHAR(A.LAST_DDL_TIME,'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE-7,'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD')
+		)
+	</insert>
+	
+</mapper>

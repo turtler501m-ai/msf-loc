@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.org.prmtmgmt.mapper.EventCodePrmtMapper">
+
+	<select id="getEventCodePrmtListExcel" parameterType="com.ktis.msp.batch.job.org.prmtmgmt.vo.EventCodePrmtVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* EventCodePrmtMapper.getEventCodePrmtListExcel */
+        SELECT DISTINCT DTL.EVNT_CD_PRMT AS evntCd
+            , DTL.EVNT_CD_NM AS evntNm
+            , SUB.CONTRACT_NUM AS contractNum
+            , SUB.SUB_LINK_NAME AS subLinkName
+            , SUB.SUBSCRIBER_NO AS subscriberNo
+            , DTL.FST_RATE_CD AS fstRateCd
+            , DTL.FST_RATE_NM AS fstRateNm
+            , DTL.LST_RATE_CD AS lstRateCd
+            , DTL.LST_RATE_NM AS lstRateNm
+            , FN_GET_ORGNM(SUB.OPEN_AGNT_CD) AS openAgntNm
+            , DTL.OPER_TYPE_NM AS operTypeNm
+            , DTL.REQ_BUY_TYPE_NM AS reqBuyTypeNm
+            , TO_CHAR(TO_DATE(DTL.REQ_IN_DAY,'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS reqInDay
+            , TO_CHAR(TO_DATE(SUB.LST_COM_ACTV_DATE,'YYYYMMDD'), 'YYYY-MM-DD') AS lstComActvDate
+            , TO_CHAR(TO_DATE(DECODE(SUB.SUB_STATUS,'C',SUBSTR(SUB.SUB_STATUS_DATE,1,8),''),'YYYYMMDD'), 'YYYY-MM-DD') AS canDt
+            , TO_CHAR(TO_DATE(DECODE(SUB.SUB_STATUS,'S',SUBSTR(SUB.SUB_STATUS_DATE,1,8),''),'YYYYMMDD'), 'YYYY-MM-DD') AS stopDt
+            , CASE
+                WHEN MSD.REQ_USIM_SN IS NOT NULL THEN '직영온라인'
+                ELSE FN_GET_ORGNM(PUM.ORGN_ID)
+            END AS usimOrgNm /*유심접점*/
+            , CASE
+                WHEN DTL.CSTMR_TYPE = 'JP' THEN '법인'
+                ELSE SUBSTR(CRYPTO_AES256.DEC_AES(SUB.USER_SSN), 7, 1)
+            END AS cstmrGender   /*성별*/
+            , SUBSTR(CRYPTO_AES256.DEC_AES(SUB.USER_SSN), 1, 6) AS birthDt  /*생년월일*/
+            , FN_GET_AGE_JAVA(CRYPTO_AES256.DEC_AES(SUB.USER_SSN)) AS custAge /*나이*/
+            , FN_GET_CODENM('MSP0003', SUB.SUB_STATUS) AS subStatusNm /*상태*/
+            , DTL.MOVE_COMPANY_NM AS moveCompanyNm   /*이동전 통신사*/
+            , DTL.RECOMMEND_INFO AS recommendInfo
+            , SUB.LST_COM_ACTV_DATE AS lstComActvDate
+        FROM   MSP_JUO_SUB_INFO SUB
+            , MSP_REQUEST_DTL DTL
+            , MCP_REQUEST@DL_MCP REQ
+            , NMCP_USIM_BUY_TXN@DL_MCP MSD
+            , MSP_PARTNER_USIM_MST PUM
+        WHERE  SUB.CONTRACT_NUM = DTL.CONTRACT_NUM
+            AND SUB.CONTRACT_NUM = REQ.CONTRACT_NUM
+            AND REQ.REQ_USIM_SN = MSD.REQ_USIM_SN(+)
+            AND REQ.REQ_USIM_SN = PUM.USIM_NO(+)
+            AND DTL.EVNT_CD_PRMT IS NOT NULL
+            <if test="srchStrtDt != null and srchStrtDt != '' and srchEndDt != null and srchEndDt != ''">
+                AND SUB.LST_COM_ACTV_DATE BETWEEN #{srchStrtDt} AND #{srchEndDt}
+            </if>
+            <if test="srchEventCd != null and srchEventCd != ''">
+                AND DTL.EVNT_CD_PRMT = #{srchEventCd}
+            </if>
+        ORDER BY SUB.LST_COM_ACTV_DATE DESC
+	</select>
+</mapper>

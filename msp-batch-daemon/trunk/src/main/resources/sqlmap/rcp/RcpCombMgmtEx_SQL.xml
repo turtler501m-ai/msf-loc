@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.rcpmgmt.mapper.RcpCombMgmtMapper">
+	
+	<!-- 신청관리 (결합서비스) 엑셀다운 -->
+	<select id="selectRcpCombListExcel" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpCombMgmtListVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		SELECT 
+				A.REQ_SEQ
+				, A.COMB_TYPE_CD
+				, FN_GET_CODENM('RCP9036' , A.COMB_TYPE_CD) AS COMB_TYPE_NM
+				, A.M_CTN AS TEL1
+				, (SELECT TO_CHAR(TO_DATE(LST_COM_ACTV_DATE , 'YYYY-MM-DD') , 'YYYY-MM-DD') FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = A.M_SVC_CNTR_NO) AS M_OPEN_DT
+				, A.M_CUST_NM AS CSTMR_NAME
+				, SUBSTR(A.M_CUST_BIRTH , -6) AS M_CUST_BIRTH
+				, A.M_SEX_CD
+				, DECODE(A.M_SEX_CD , '01' , '남' , '02' , '여', '03', '법인') AS M_SEX_NM 
+				, A.M_SVC_CNTR_NO
+				, A.M_RATE_CD
+				, A.M_RATE_NM
+				, A.M_RATE_ADSVC_CD
+				, A.M_RATE_ADSVC_NM
+				, (SELECT BAN_ADR_PRIMARY_LN FROM MSP_JUO_BAN_INFO WHERE BAN = B1.BAN) AS M_ADDR
+				, A.COMB_SVC_NO AS TEL2
+				, (SELECT TO_CHAR(TO_DATE(LST_COM_ACTV_DATE , 'YYYY-MM-DD') , 'YYYY-MM-DD') FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = A.COMB_SVC_CNTR_NO) AS COMB_OPEN_DT
+				, A.COMB_SVC_CNTR_NO
+				, A.COMB_CUST_NM AS CSTMR_NAME2 
+				, SUBSTR(A.COMB_BIRTH , -6 ) AS COMB_BIRTH
+				, A.COMB_SEX_CD
+				, DECODE(A.COMB_SEX_CD , '01' , '남' , '02' , '여', '03', '법인') AS COMB_SEX_NM 
+				, FN_GET_CODENM('RCP9038' , A.COMB_TYPE_CD) AS COMB_DTL_TYPE_NM
+				, A.COMB_SOC_CD
+				, A.COMB_SOC_NM
+				, A.COMB_RATE_ADSVC_CD
+				, A.COMB_RATE_ADSVC_NM
+				, A.COMB_TGT_TYPE_CD
+				, (SELECT BAN_ADR_PRIMARY_LN FROM MSP_JUO_BAN_INFO WHERE BAN = B2.BAN) AS COMB_ADDR
+				, FN_GET_CODENM('RCP9039' , A.COMB_TGT_TYPE_CD) AS COMB_TGT_TYPE_NM
+				, A.RSLT_CD
+				, FN_GET_CODENM('RCP9037' , A.RSLT_CD) AS RSLT_NM
+				, A.RSLT_MEMO
+				, A.SYS_DT
+				, A.REG_DT
+				, A.RVISN_ID
+				, A.RVISN_DTTM
+                , B1.OPEN_AGNT_CD AS M_OPEN_AGNT_CD
+                , FN_GET_ORGNM(B1.OPEN_AGNT_CD) AS M_OPEN_AGNT_NM
+                , B2.OPEN_AGNT_CD AS COMB_OPEN_AGNT_CD
+                , FN_GET_ORGNM(B2.OPEN_AGNT_CD) AS COMB_OPEN_AGNT_NM
+                , D1.BF_SAUPJA_NM AS MOVE_COMPANY_NM
+                , D2.BF_SAUPJA_NM AS COMB_MOVE_COMPANY_NM
+				, NVL2(A.REQUEST_KEY, '온라인신청서', '') AS REQUEST_METHOD
+			FROM MCP_REQ_COMBINE@DL_MCP A, MSP_JUO_SUB_INFO B1, MSP_JUO_SUB_INFO B2, MDS_PORTIN_INFO D1 , MDS_PORTIN_INFO D2
+			WHERE A.M_SVC_CNTR_NO = B1.CONTRACT_NUM(+)
+            AND A.COMB_SVC_CNTR_NO = B2.CONTRACT_NUM(+)
+            AND A.M_SVC_CNTR_NO = D1.SVC_CNTR_NO(+)
+            AND A.COMB_SVC_CNTR_NO = D2.SVC_CNTR_NO(+)
+			AND A.SYS_DT BETWEEN #{strtDt}  AND #{endDt}
+			<if test="searchVal != null and searchVal != ''">
+				<choose>
+					<when test='searchCd == "01"'>
+						AND A.M_RATE_ADSVC_NM LIKE '%' || #{searchVal} || '%'
+					</when>
+					<when test='searchCd == "02"'>
+						AND A.M_RATE_NM LIKE  '%' || #{searchVal} || '%'
+					</when>
+					<when test='searchCd == "03"'>
+						AND A.M_RATE_CD LIKE  '%' || #{searchVal} || '%'
+					</when>
+					<when test='searchCd == "04"'>
+						AND A.M_CTN LIKE '%' || #{searchVal} || '%'
+					</when>
+					<when test='searchCd == "05"'>
+						AND A.M_CUST_NM LIKE '%' || #{searchVal} || '%'
+					</when>
+				</choose>
+			</if>  
+			<if test="combTypeCd != null and combTypeCd != ''"> <!-- 결합유형 -->
+				AND A.COMB_TYPE_CD = #{combTypeCd}
+			</if>
+			<if test="rsltCd != null and rsltCd != ''"> <!-- 승인상태 -->
+				AND A.RSLT_CD = #{rsltCd}
+			</if>
+			ORDER BY A.REG_DT DESC
+	</select>	
+</mapper>

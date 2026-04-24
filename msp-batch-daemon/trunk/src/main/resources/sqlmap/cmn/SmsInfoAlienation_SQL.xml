@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cmn.smsmgmt.mapper.SmsInfoAlienationMapper">
+	
+	<!-- 정보소외계층 발송 대상자 list -->
+	<select id="selectInfoAnSendList" resultType="hashMap">
+		/* smsInfoAlienationMapper.selectInfoAnSendList */
+			SELECT
+				C.CONTRACT_NUM
+				,C.SMS_IN_CTN
+				,C.MODEL_NAME
+				,C.FST_RATE_NM
+				,C.INST_INFO_A
+				,C.INST_INFO_B
+				,C.INST_INFO_C
+				,C.OPEN_AGNT_NM
+				,C.SCHEDULE_TIME
+			FROM 	
+				(
+				SELECT
+					A.CONTRACT_NUM
+					, CASE
+						WHEN FN_GET_AGE_JAVA(CRYPTO_AES256.DEC_AES(A.USER_SSN)) <![CDATA[>]]> 0 
+								AND FN_GET_AGE_JAVA(CRYPTO_AES256.DEC_AES(A.USER_SSN)) <![CDATA[<]]> 19 THEN LGL_AGNT_NO
+						ELSE SUBSCRIBER_NO
+					END AS SMS_IN_CTN
+					, A.MODEL_NAME 																	<!-- 모델명 -->
+					, B.FST_RATE_NM 																	<!-- 최초요금제 -->
+					, NVL(TO_NUMBER(SUBSTR(B.INST_INFO, 26, 3)),0) AS INST_INFO_A		<!-- 약정개월수 -->
+					, NVL(TO_NUMBER(SUBSTR(B.INST_INFO, 13, 10)),0) AS INST_INFO_B	<!-- 할부원금 -->
+					, NVL(TO_NUMBER(SUBSTR(B.INST_INFO, 23, 3)),0) AS INST_INFO_C		<!-- 할부개월수 -->
+					, FN_GET_ORGNM(A.OPEN_AGNT_CD) AS OPEN_AGNT_NM 				<!-- 대리점 -->
+					, TO_CHAR(TO_DATE(TO_CHAR(SYSDATE,'YYYYMMDD') || '093000','YYYYMMDDHH24MISS') + (TRUNC((ROWNUM - 1) / 10000) * (1/24)), 'YYYYMMDDHH24MISS') AS SCHEDULE_TIME
+				FROM MSP_JUO_SUB_INFO A
+						,MSP_REQUEST_DTL B
+				WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+				AND A.SUB_STATUS = 'A'
+				AND B.CSTMR_TYPE <![CDATA[<>]]> 'JP'
+				AND SUBSTR(A.LST_COM_ACTV_DATE,1,6) = TO_CHAR(ADD_MONTHS(SYSDATE, -1),'YYYYMM')
+				<!-- 미성년자, 외국인, 만80세 이상 대상자 추출 -->
+				AND ((FN_GET_AGE_JAVA(CRYPTO_AES256.DEC_AES(A.USER_SSN)) <![CDATA[>]]> 0 AND  FN_GET_AGE_JAVA(CRYPTO_AES256.DEC_AES(A.USER_SSN)) <![CDATA[<]]> 19)
+				OR (FN_GET_AGE_JAVA(CRYPTO_AES256.DEC_AES(A.USER_SSN)) <![CDATA[>=]]> 80)
+				OR (B.CSTMR_TYPE = 'FN'))
+				) C
+			WHERE 1=1
+			AND SMS_IN_CTN IS NOT NULL
+			AND REGEXP_LIKE(SMS_IN_CTN, '^010-?[0-9]{4}-?[0-9]{4}$')
+	</select>
+	
+</mapper>

@@ -1,0 +1,1115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.rcpmgmt.mapper.TossMgmtMapper">
+
+	<!-- 신청정보 미생성 Toss 개통정보 조회 -->
+	<select id="selectNonTossRcpList" resultType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.selectNonTossRcpList */
+		SELECT MJ.CONTRACT_NUM,
+		       MJ.SCAN_ID,
+		       MJ.ON_OFF_TYPE,
+		       MJ.OPEN_AGNT_CD,
+		       MD.RES_NO,
+		       NVL(MD.REQ_BUY_TYPE, 'UU') AS REQ_BUY_TYPE,
+		       NVL(MD.REQ_BUY_TYPE_NM, '유심단독구매') AS REQ_BUY_TYPE_NM,
+		       MD.OPER_TYPE_NM,
+		       MD.MOVE_COMPANY,
+		       MD.MOVE_COMPANY_NM,
+		       MD.SALE_PLCY_CD,
+		       MD.SALE_PLCY_NM,
+		       MD.OPEN_MARKET_REFERER,
+		       MD.RECOMMEND_FLAG_CD,
+		       MD.RECOMMEND_FLAG_NM,
+		       MD.RECOMMEND_INFO,
+		       MD.REC_YN,
+		       MD.SHOP_CD,
+		       MD.SHOP_NM,
+		       MD.MINOR_AGENT_NAME,
+		       MD.MINOR_AGENT_RELATION,
+		       MD.MINOR_AGENT_REL_NM,
+		       MD.MINOR_AGENT_TEL,
+		       MD.APP_CD,
+		       MD.APP_NM,
+		       MD.JOIN_PAY_MTHD_CD,
+		       MD.JOIN_PAY_MTHD_NM,
+		       MD.JOIN_PRICE,
+		       MD.USIM_PAY_MTHD_CD,
+		       MD.USIM_PAY_MTHD_NM,
+		       MD.USIM_PRICE,
+		       MD.RENTAL_BASE_AMT,
+		       MD.RENTAL_BASE_DC_AMT,
+		       MD.RENTAL_MODEL_CP_AMT,
+		       MD.REQUEST_KEY,
+		       '21' AS REQUEST_STATE_CODE,
+		       MD.SHOP_USM_ID,
+		       MD.REG_DTTM,
+		       MJ.PROD_TYPE,
+		       MD.PROD_TYPE_NM,
+		       MD.REQ_USIM_NAME,
+		       MD.FST_RATE_CD,
+		       MD.FST_RATE_NM,
+		       MD.LST_RATE_CD,
+		       MD.LST_RATE_NM,
+		       MD.FST_MODEL_INFO,
+		       MD.INST_INFO,
+		       MD.SIM_INFO,
+		       MD.OTA_DATE,
+		       MD.CATCH_CALL,
+		       MD.DVC_CHG_CNT,
+		       MD.DVC_CHG_INFO,
+		       MD.CATCH_CALL_CAN,
+		       MD.PROMOTION_CD,
+		       MD.REAL_SHOP_NM,
+		       MJ.PPPO AS SERVICE_TYPE,
+		       '00' AS PSTATE,
+		       MJ.SUB_LINK_NAME AS CSTMR_NAME,
+		       MD.FST_RATE_CD AS SOC_CODE,
+		       MJ.OPEN_AGNT_CD AS CNTPNT_SHOP_ID,
+		       MD.OPEN_AGNT_CD AS AGENT_CODE,
+		       SUBSTR(CRYPTO_AES256.DEC_AES(MJ.USER_SSN),0,6) AS CSTMR_NATIVE_RRN1,
+		       SUBSTR(CRYPTO_AES256.DEC_AES(MJ.USER_SSN),7) AS CSTMR_NATIVE_RRN2,
+		       CASE WHEN LENGTH(MJ.SUBSCRIBER_NO) = 10 OR LENGTH(MJ.SUBSCRIBER_NO) = 11 THEN SUBSTR(MJ.SUBSCRIBER_NO, 0, 3) END CSTMR_TEL_FN,
+		       CASE WHEN LENGTH(MJ.SUBSCRIBER_NO) = 10 THEN SUBSTR(MJ.SUBSCRIBER_NO, 4, 3) WHEN LENGTH(MJ.SUBSCRIBER_NO) = 11 THEN SUBSTR(MJ.SUBSCRIBER_NO, 4, 4) END CSTMR_TEL_MN,
+		       CASE WHEN LENGTH(MJ.SUBSCRIBER_NO) = 10 OR LENGTH(MJ.SUBSCRIBER_NO) = 11 THEN SUBSTR(MJ.SUBSCRIBER_NO, -4) END CSTMR_TEL_RN,
+		       MJ.ICC_ID AS REQ_USIM_SN,
+		       MB.BL_BILLING_METHOD AS REQ_PAY_TYPE,
+		       '12,29,30,31' AS ADDITION_KEY,
+		       '발신번호표시,스팸차단서비스,정보제공사업자번호차단,통합사서함' AS ADDITION_NAME,
+		       '0' AS ADDITION_PRICE,
+		       'N' AS USIM_PRICE_TYPE,
+		       'P' AS JOIN_PRICE_TYPE,
+		       MT.TOSS_ORDER_SEQ, 
+		       MT.NICE_CERT_KEY, 				/* CI값 */
+		       MT.TR_TIME AS REQ_IN_DAY, 		/* 개통요청일시 */
+		       MT.ODER_TYPE_CD AS OPER_TYPE, 	/* 가입유형 신규개통 NAC, 무선번호이동 MNP */
+		       DECODE(MT.MYSL_ATHN_TYPE_CD,'01','C','02','X','03','T','') AS ONLINE_AUTH_TYPE, /* 인증유형 신용카드 01, 범용인증서 02, toss인증서 03 */
+		       MT.RQSSHT_PPRFRM_CD AS CSTMR_BILL_SEND_CODE, /* 명세서유형 우편 LX, 이메일 CB, 모바일MMS MB */
+		       MD.CSTMR_TYPE, 					/* TOSS 고객구분 - 내국인 */
+			   (SELECT CASE WHEN JEHU_PROD_TYPE IS NOT NULL THEN 'Y' ELSE 'N' END FROM MSP_RATE_MST WHERE RATE_CD = MD.FST_RATE_CD) AS CLAUSE_JEHU_FLAG,	/* 요금제애 제휴처 제공 동의 */
+			   (SELECT JEHU_PROD_TYPE FROM MSP_RATE_MST WHERE RATE_CD = MD.FST_RATE_CD) AS JEHU_PROD_TYPE,													/* 요금제애 따른 제휴처 */
+			   NVL((SELECT 'Y' FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID = 'PartnerTerm' AND DTL_CD = MD.OPEN_AGNT_CD),'N') AS CLAUSE_PARTNER_OFFER_FLAG	/* 제휴사 제공 동의 */
+		  FROM MSP_JUO_SUB_INFO MJ,
+		       MSP_REQUEST_DTL MD,
+		       MDS_TOSS_ORDER MT,
+		       MSP_JUO_BAN_INFO MB
+		 WHERE 1=1
+		   AND MJ.CONTRACT_NUM = MD.CONTRACT_NUM
+		   AND MJ.SUBSCRIBER_NO = MT.REQ_TEL_NO
+		   AND MJ.BAN = MB.BAN(+)
+		   AND MJ.ON_OFF_TYPE = 't'
+		   AND MT.NICE_CERT_KEY IS NOT NULL
+		   AND MT.STATUS = '09' /* 진행상태 완료 */
+		   AND MT.RCP_CR_YN = 'N'
+		   AND SUBSTR(MT.TR_TIME, 1, 8) = TO_CHAR(SYSDATE-1, 'YYYYMMDD')
+	</select>
+	
+	<select id="maxRequestkey" resultType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.maxRequestkey */
+		SELECT
+			SQ_RCP_REQUEST_KEY_01.NEXTVAL@dl_mcp  AS requestkey,
+			SQ_RCP_RES_NO_01.NEXTVAL@dl_mcp AS resNo
+		FROM DUAL
+	</select>
+	
+	<!-- 신청서등록 -->
+	<insert id="insertRcpRequest" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpRequest */
+		INSERT INTO MCP_REQUEST@DL_MCP
+		(
+			REQUEST_KEY, MANAGER_CODE, AGENT_CODE,
+			SERVICE_TYPE, OPER_TYPE, CSTMR_TYPE,
+			RES_CODE, RES_MSG, RES_NO,
+			CLAUSE_PRI_COLLECT_FLAG, CLAUSE_PRI_OFFER_FLAG, CLAUSE_ESS_COLLECT_FLAG,
+			CLAUSE_PRI_TRUST_FLAG, CLAUSE_PRI_AD_FLAG, CLAUSE_CONFIDENCE_FLAG,
+			ONLINE_AUTH_TYPE, ONLINE_AUTH_INFO, PSTATE,
+			REQUEST_STATE_CODE, OPEN_NO, FILE01,
+			FILE01_MASK, FAXYN, FAXNUM,
+			SCAN_ID, ON_OFF_TYPE, RIP,
+			SYS_RDATE, REQ_WANT_NUMBER, REQ_WANT_NUMBER2,
+			REQ_WANT_NUMBER3, REQ_BUY_TYPE, REQ_MODEL_NAME,
+			REQ_MODEL_COLOR, REQ_PHONE_SN, REQ_USIM_SN,
+			REQ_PAY_TYPE, REQ_ADDITION, SHOP_CD,
+			REQ_IN_DAY, PHONE_PAYMENT, REQ_ADDITION_PRICE,
+			SPC_CODE, CNTPNT_SHOP_ID,SHOP_USM_ID, 
+			MEMO, NW_BLCK_AGRM_YN, APP_BLCK_AGRM_YN,
+			REQ_USIM_NAME, APP_CD,
+			SHOP_NM ,PROD_TYPE, CONTRACT_NUM, 
+			CLAUSE_FINANCE_FLAG, CLAUSE_RENTAL_MODEL_CP, CLAUSE_RENTAL_MODEL_CP_PR, 
+			CLAUSE_RENTAL_SERVICE, RVISN_ID, RVISN_DTTM, 
+			PROMOTION_CD, REAL_SHOP_NM, USIM_KINDS_CD
+			/* SRM18072675707, 단체보험 추가 */
+			, INSR_CD, CLAUSE_INSURANCE_FLAG
+			/* 단말보험 */
+			, INSR_PROD_CD, CLAUSE_INSR_PROD_FLAG
+			/* 2025-03-04 요금제에 따른 제휴처 제공 동의, 제휴사 제공 동의 추가 */
+			, CLAUSE_JEHU_FLAG, JEHU_PROD_TYPE, CLAUSE_PARTNER_OFFER_FLAG
+		)
+		VALUES
+		(
+			DECODE(#{requestKey },          'null', '',#{requestKey }),
+			DECODE(#{managerCode },         'null', '',#{managerCode }),
+			DECODE(#{agentCode },           'null', '',#{agentCode }),
+			DECODE(#{serviceType },         'null', '',#{serviceType }),
+			DECODE(#{operType },            'null', '',#{operType }),
+			DECODE(#{cstmrType },           'null', '',#{cstmrType }),
+			DECODE(#{resCode },             'null', '',#{resCode }),
+			DECODE(#{resMsg },              'null', '',#{resMsg }),
+			DECODE(#{resNo },               'null', '',#{resNo }),
+			DECODE(#{clausePriCollectFlag },'0', 'N',#{clausePriCollectFlag }),
+			DECODE(#{clausePriOfferFlag },  '0', 'N',#{clausePriOfferFlag }),
+			DECODE(#{clauseEssCollectFlag },'0', 'N',#{clauseEssCollectFlag }),
+			DECODE(#{clausePriTrustFlag },  '0', 'N',#{clausePriTrustFlag }),
+			DECODE(#{clausePriAdFlag },     '0', 'N',#{clausePriAdFlag }),
+			DECODE(#{clauseConfidenceFlag },'0', 'N',#{clauseConfidenceFlag }),
+			DECODE(#{onlineAuthType },      'null', '',#{onlineAuthType }),
+			DECODE(#{onlineAuthInfo },      'null', '',#{onlineAuthInfo }),
+			DECODE(#{pstate },              'null', '',#{pstate }),
+			DECODE(#{requestStateCode },    'null', '',#{requestStateCode }),
+			DECODE(#{openNo },              'null', '',#{openNo }),
+			DECODE(#{file01 },              'null', '',#{file01 }),
+			DECODE(#{file01Mask },          'null', '',#{file01Mask }),
+			DECODE(#{faxyn },               'null', '',#{faxyn }),
+			DECODE(#{faxnum },              'null', '',#{faxnum }),
+			DECODE(#{scanId },              'null', '',#{scanId }),
+			DECODE(#{onOffType },           'null', '',#{onOffType }),
+			DECODE(#{rip },                 'null', '',#{rip }),
+			SYSDATE,
+			DECODE(#{reqWantNumber },       'null', '',#{reqWantNumber }),
+			DECODE(#{reqWantNumber2 },      'null', '',#{reqWantNumber2 }),
+			DECODE(#{reqWantNumber3 },      'null', '',#{reqWantNumber3 }),
+			DECODE(#{reqBuyType },          'null', '',#{reqBuyType }),
+			DECODE(#{reqModelName },        'null', '',#{reqModelName }),
+			DECODE(#{reqModelColor },       'null', '',#{reqModelColor }),
+			DECODE(#{reqPhoneSn },          'null', '',#{reqPhoneSn }),
+			DECODE(#{reqUsimSn },           'null', '',#{reqUsimSn }),
+			DECODE(#{reqPayType },          'null', '',#{reqPayType }),
+			DECODE(#{additionName },        'null', '',#{additionName }),
+			(SELECT COMPANY_ID FROM EMV_SCAN_MST@DL_MCP WHERE SCAN_ID = #{scanId}),
+			DECODE(#{reqInDay },        'null', SYSDATE-1, TO_DATE(#{reqInDay }, 'YYYYMMDDHH24MISS')),
+			DECODE(#{phonePayment },        'null', '',#{phonePayment }),
+			DECODE(#{additionPrice },       'null', '',#{additionPrice }),
+			DECODE(#{spcCode },             'null', '',#{spcCode }),
+			DECODE(#{cntpntShopId},         'null', '',#{cntpntShopId}),
+			DECODE(#{shopUsmId},            'null', '',#{shopUsmId}),
+			DECODE(#{requestMemo},          'null', '',#{requestMemo}),
+			DECODE(#{nwBlckAgrmYn}, 		'0', 'N', #{nwBlckAgrmYn}),
+			DECODE(#{appBlckAgrmYn}, 		'0', 'N', #{appBlckAgrmYn}),
+			DECODE(#{reqUsimName}, 			'null', '', #{reqUsimName}),
+			#{appCd},
+			DECODE(#{shopNm}, 			    'null', '', DECODE((TRANSLATE(#{shopNm}, '/', '')), NULL, '', #{shopNm})),
+			DECODE(#{prodType}, 	    'null', '', #{prodType})
+			, #{contractNum}
+			, DECODE(#{clauseFinanceFlag},	'0', 'N', #{clauseFinanceFlag})
+			, DECODE(#{clauseRentalModelCp},	'0', 'N', #{clauseRentalModelCp})
+			, DECODE(#{clauseRentalModelCpPr},	'0', 'N', #{clauseRentalModelCpPr})
+			, DECODE(#{clauseRentalService},	'0', 'N', #{clauseRentalService})
+			, #{sessionUserId}
+			, SYSDATE
+			, #{promotionCd}
+			, #{realShopNm}
+			, #{usimKindsCd}
+			, #{insrCd}
+			, DECODE(#{clauseInsuranceFlag},    '0', 'N', #{clauseInsuranceFlag})
+			, #{insrProdCd}
+			, DECODE(#{clauseInsrProdFlag},     '0', 'N', #{clauseInsrProdFlag})
+			, DECODE(#{clauseJehuFlag},         '0', 'N',#{clauseJehuFlag})
+			, #{jehuProdType}
+			, DECODE(#{clausePartnerOfferFlag}, '0', 'N',#{clausePartnerOfferFlag})
+		)
+	</insert>
+	
+	<!-- 고객정보등록 -->
+	<insert id="insertRcpCustomer" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpCustomer */
+		INSERT INTO MCP_REQUEST_CSTMR@DL_MCP (
+				REQUEST_KEY, CSTMR_FOREIGNER_NATION, CSTMR_FOREIGNER_PN,
+				CSTMR_FOREIGNER_RRN, CSTMR_FOREIGNER_SDATE, CSTMR_FOREIGNER_EDATE,
+				CSTMR_PRIVATE_CNAME, CSTMR_PRIVATE_NUMBER, CSTMR_JURIDICAL_CNAME,
+				CSTMR_JURIDICAL_RRN, CSTMR_JURIDICAL_NUMBER, CSTMR_TEL_FN,
+				CSTMR_TEL_MN, CSTMR_TEL_RN, CSTMR_MOBILE_FN,
+				CSTMR_MOBILE_MN, CSTMR_MOBILE_RN, CSTMR_POST,
+				CSTMR_ADDR, CSTMR_ADDR_DTL, CSTMR_ADDR_BJD,
+				CSTMR_BILL_SEND_CODE, CSTMR_MAIL, CSTMR_MAIL_RECEIVE_FLAG,
+				CSTMR_VISIT_TYPE, CSTMR_RECEIVE_TEL_FN, CSTMR_RECEIVE_TEL_NM,
+				CSTMR_RECEIVE_TEL_RN, OTHERS_PAYMENT_AG, OTHERS_PAYMENT_NM,
+				OTHERS_PAYMENT_RRN, OTHERS_PAYMENT_RELATION, OTHERS_PAYMENT_RNM,
+				SYS_RDATE, CSTMR_NAME, CSTMR_NATIVE_RRN,
+				CSTMR_FOREIGNER_DOD, CSTMR_FOREIGNER_BIRTH, SELF_INQRY_AGRM_YN, 
+				SELF_CERT_TYPE, SELF_ISSU_EXPR_DT, SELF_ISSU_NUM, 
+				CSTMR_JEJU_ID, RVISN_ID, RVISN_DTTM)
+		VALUES (
+				DECODE(#{requestKey },            'null', '', #{requestKey }),
+				DECODE(#{cstmrForeignerNation },  'null', '', #{cstmrForeignerNation }),
+				DECODE(#{cstmrForeignerPn },      'null', '', #{cstmrForeignerPn }),
+				DECODE(#{cstmrForeignerRrn },     'null', '', #{cstmrForeignerRrn }),
+				DECODE(#{cstmrForeignerSdate },   'null', '', #{cstmrForeignerSdate }),
+				DECODE(#{cstmrForeignerEdate },   'null', '', #{cstmrForeignerEdate }),
+				DECODE(#{cstmrPrivateCname },     'null', '', #{cstmrPrivateCname }),
+				DECODE(#{cstmrPrivateNumber },    'null', '', #{cstmrPrivateNumber }),
+				DECODE(#{cstmrJuridicalCname },   'null', '', #{cstmrJuridicalCname }),
+				DECODE(#{cstmrJuridicalRrn },     'null', '', #{cstmrJuridicalRrn }),
+				DECODE(#{cstmrJuridicalNumber },  'null', '', #{cstmrJuridicalNumber }),
+				DECODE(#{cstmrTelFn },            'null', '', #{cstmrTelFn }),
+				DECODE(#{cstmrTelMn },            'null', '', #{cstmrTelMn }),
+				DECODE(#{cstmrTelRn },            'null', '', #{cstmrTelRn }),
+				DECODE(#{cstmrMobileFn },         'null', '', #{cstmrMobileFn }),
+				DECODE(#{cstmrMobileMn },         'null', '', #{cstmrMobileMn }),
+				DECODE(#{cstmrMobileRn },         'null', '', #{cstmrMobileRn }),
+				translate(#{cstmrPost},'1234567890-','1234567890'),
+				DECODE(#{cstmrAddr },             'null', '', #{cstmrAddr }),
+				DECODE(#{cstmrAddrDtl },          'null', '', #{cstmrAddrDtl }),
+				DECODE(#{cstmrAddrBjd },          'null', '', #{cstmrAddrBjd }),
+				DECODE(#{cstmrBillSendCode },     'null', '', #{cstmrBillSendCode }),
+				DECODE(#{cstmrMail },             'null', '', #{cstmrMail }),
+				DECODE(#{cstmrMailReceiveFlag },  'null', '', #{cstmrMailReceiveFlag }),
+				DECODE(#{cstmrVisitType },        'null', '', #{cstmrVisitType }),
+				DECODE(#{cstmrReceiveTelFn },     'null', '', #{cstmrReceiveTelFn }),
+				DECODE(#{cstmrReceiveTelNm },     'null', '', #{cstmrReceiveTelNm }),
+				DECODE(#{cstmrReceiveTelRn },     'null', '', #{cstmrReceiveTelRn }),
+				DECODE(#{othersPaymentAg },       'null', '', #{othersPaymentAg }),
+				DECODE(#{othersPaymentNm },       'null', '', #{othersPaymentNm }),
+				DECODE(#{othersPaymentRrn },      'null', '', #{othersPaymentRrn }),
+				DECODE(#{othersPaymentRelation }, 'null', '', #{othersPaymentRelation }),
+				DECODE(#{othersPaymentRnm },      'null', '', #{othersPaymentRnm }),
+				SYSDATE,
+				DECODE(#{cstmrName },             'null', '', #{cstmrName }),
+				DECODE(#{cstmrNativeRrn },        'null', '', #{cstmrNativeRrn }),
+				DECODE(#{cstmrForeignerDod },     'null', '', #{cstmrForeignerDod }),
+				DECODE(#{cstmrForeignerBirth},    'null', '', #{cstmrForeignerBirth}),
+				DECODE(#{selfInqryAgrmYn},        'null', '', #{selfInqryAgrmYn}),
+				DECODE(#{selfCertType},           'null', '', #{selfCertType}),
+				DECODE(#{selfIssuExprDt},         'null', '', #{selfIssuExprDt}),
+				DECODE(#{selfIssuNum},            'null', '', #{selfIssuNum}),
+				DECODE(#{cstmrJejuId},            'null', '', #{cstmrJejuId}), 
+				#{sessionUserId}, 
+				SYSDATE
+		)
+	</insert>
+	
+	<!-- 판매정보 -->
+	<insert id="insertRcpSale" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+  		/* tossMgmtMapper.insertRcpSale */
+		INSERT INTO MCP_REQUEST_SALEINFO@DL_MCP 
+		(
+			MODEL_ID, REQUEST_KEY, MODEL_MONTHLY,
+			MODEL_INSTALLMENT, MODEL_SALE_POLICY_CODE, RECYCLE_YN,
+			MODEL_DISCOUNT1, MODEL_DISCOUNT2, MODEL_DISCOUNT3, 
+			SOC_CODE, USIM_PRICE_TYPE, JOIN_PRICE_TYPE, 
+			JOIN_PRICE, USIM_PRICE, MODEL_PRICE, 
+			ENGG_MNTH_CNT, MODEL_PRICE_VAT, USIM_PAY_MTHD_CD,
+			JOIN_PAY_MTHD_CD, REAL_MDL_INSTAMT, SPRT_TP, 
+			MAX_DISCOUNT3, DC_AMT, ADD_DC_AMT, 
+			RENTAL_BASE_AMT, RENTAL_BASE_DC_AMT, RENTAL_MODEL_CP_AMT,
+			RVISN_ID, RVISN_DTTM
+		)
+		VALUES 
+		(
+			DECODE(#{modelId},           'null', '', #{modelId}),
+			DECODE(#{requestKey },       'null', '', #{requestKey }),
+			DECODE(#{instNom },          'null', '', #{instNom }),
+			NVL(DECODE(#{modelInstallment }, 'null', '', #{modelInstallment }), 0),
+			DECODE(#{salePlcyCd },       'null', '', #{salePlcyCd }),
+			DECODE(#{recycleYn},         'null', '', #{recycleYn}),
+			DECODE(#{modelDiscount1 },   'null', '', #{modelDiscount1 }),
+			DECODE(#{modelDiscount2 },   'null', '', #{modelDiscount2 }),
+			DECODE(#{modelDiscount3 },   'null', '', #{modelDiscount3 }),
+			DECODE(#{socCode },          'null', '', #{socCode }),
+			DECODE(#{usimPriceType },    'null', '', #{usimPriceType }),
+			DECODE(#{joinPriceType },    'null', '', #{joinPriceType }),
+			DECODE(#{joinPrice },        'null', '', #{joinPrice }),
+			DECODE(#{usimPrice },        'null', '', #{usimPrice }),
+			DECODE(#{modelPrice },       'null', '', #{modelPrice }),
+			DECODE(#{agrmTrm },          'null', '', #{agrmTrm }),
+			TRUNC(DECODE(#{modelPriceVat},     'null', '', #{modelPriceVat})),
+			DECODE(#{usimPayMthdCd}, 'null', '',#{usimPayMthdCd}),
+			DECODE(#{joinPayMthdCd}, 'null', '',#{joinPayMthdCd}),
+			NVL(DECODE(#{realMdlInstamt}, 'null', '',#{realMdlInstamt}), 0),
+			DECODE(#{sprtTp}, 'null', '', #{sprtTp}),
+			DECODE(#{maxDiscount3}, 'null', '', #{maxDiscount3}),
+			DECODE(#{dcAmt}, 'null', '', #{dcAmt}),
+			DECODE(#{addDcAmt}, 'null', '', #{addDcAmt}),
+			DECODE(#{rentalBaseAmt}, 'null', '', #{rentalBaseAmt}),
+			DECODE(#{rentalBaseDcAmt}, 'null', '', #{rentalBaseDcAmt}),
+			DECODE(#{rentalModelCpAmt}, 'null', '', #{rentalModelCpAmt}), 
+			#{sessionUserId}, 
+			SYSDATE
+		)	
+	</insert>
+	
+	<insert id="insertRcpDelivery" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpDelivery */
+		INSERT INTO MCP_REQUEST_DLVRY@DL_MCP
+		(
+			REQUEST_KEY, DLVRY_NAME, DLVRY_TEL_FN,
+			DLVRY_TEL_MN, DLVRY_TEL_RN, DLVRY_MOBILE_FN,
+			DLVRY_MOBILE_MN, DLVRY_MOBILE_RN, DLVRY_POST,
+			DLVRY_ADDR, DLVRY_ADDR_DTL, DLVRY_ADDR_BJD,
+			DLVRY_MEMO, SYS_RDATE, TB_CD, 
+			RVISN_ID, RVISN_DTTM)
+		VALUES (
+			DECODE(#{requestKey },    'null', '', #{requestKey }),
+			DECODE(#{dlvryName },     'null', '', #{dlvryName }),
+			DECODE(#{dlvryTelFn },    'null', '', #{dlvryTelFn }),
+			DECODE(#{dlvryTelMn },    'null', '', #{dlvryTelMn }),
+			DECODE(#{dlvryTelRn },    'null', '', #{dlvryTelRn }),
+			DECODE(#{dlvryMobileFn }, 'null', '', #{dlvryMobileFn }),
+			DECODE(#{dlvryMobileMn }, 'null', '', #{dlvryMobileMn }),
+			DECODE(#{dlvryMobileRn }, 'null', '', #{dlvryMobileRn }),
+			translate(#{dlvryPost},'1234567890-','1234567890'),
+			DECODE(#{dlvryAddr },     'null', '', #{dlvryAddr }),
+			DECODE(#{dlvryAddrDtl },  'null', '', #{dlvryAddrDtl }),
+			DECODE(#{dlvryAddrBjd },  'null', '', #{dlvryAddrBjd }),
+			DECODE(#{dlvryMemo },     'null', '', #{dlvryMemo }),
+			SYSDATE,
+			DECODE(#{tbCd},            'null', '', #{tbCd}), 
+			#{sessionUserId}, 
+			SYSDATE
+		)
+	</insert>
+	
+	<insert id="insertRcpReq" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpReq */
+		INSERT INTO MCP_REQUEST_REQ@DL_MCP
+		(
+			REQUEST_KEY, REQ_BANK, REQ_ACCOUNT_NAME,
+			REQ_ACCOUNT_RRN, REQ_ACCOUNT_RELATION, REQ_ACCOUNT_NUMBER,
+			REQ_CARD_NAME, REQ_CARD_RRN, REQ_CARD_COMPANY,
+			REQ_CARD_NO, REQ_CARD_YY, REQ_CARD_MM,
+			REQ_WIRE_TYPE, SYS_RDATE, REQ_PAY_OTHER_FLAG,
+			REQ_PAY_OTHER_TEL_FN, REQ_PAY_OTHER_TEL_MN, REQ_PAY_OTHER_TEL_RN, 
+			RVISN_ID, 
+			RVISN_DTTM
+		)
+		VALUES (
+			DECODE(#{requestKey},        'null', '', #{requestKey}),
+			DECODE(#{reqBank},           'null', '', #{reqBank}),
+			DECODE(#{reqAccountName},    'null', '', #{reqAccountName}),
+			DECODE(#{reqAccountRrn},     'null', '', #{reqAccountRrn}),
+			DECODE(#{reqAccountRelation},'null', '', #{reqAccountRelation}),
+			DECODE(#{reqAccountNumber},  'null', '', #{reqAccountNumber}),
+			DECODE(#{reqCardName},       'null', '', #{reqCardName}),
+			DECODE(#{reqCardRrn},        'null', '', #{reqCardRrn}),
+			DECODE(#{reqCardCompany},    'null', '', #{reqCardCompany}),
+			DECODE(#{reqCardNo},         'null', '', #{reqCardNo}),
+			DECODE(#{reqCardYy},         'null', '', #{reqCardYy}),
+			DECODE(#{reqCardMm},         'null', '', #{reqCardMm}),
+			DECODE(#{reqWireType},       'null', '', #{reqWireType}),
+			SYSDATE,
+			DECODE(#{reqPayOtherFlag}, '0', 'N', #{reqPayOtherFlag}),
+			DECODE(#{reqPayOtherTelFn},  'null', '', #{reqPayOtherTelFn}),
+			DECODE(#{reqPayOtherTelMn},  'null', '', #{reqPayOtherTelMn}),
+			DECODE(#{reqPayOtherTelRn},   'null', '', #{reqPayOtherTelRn}), 
+			#{sessionUserId}, 
+			SYSDATE
+		)
+	</insert>
+	
+	<insert id="insertRcpMove" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpMove */
+		INSERT INTO MCP_REQUEST_MOVE@DL_MCP
+		(
+			REQUEST_KEY, MOVE_COMPANY, MOVE_MOBILE_FN,
+			MOVE_MOBILE_MN, MOVE_MOBILE_RN, MOVE_AUTH_TYPE,
+			MOVE_AUTH_NUMBER, MOVE_THISMONTH_PAY_TYPE, MOVE_ALLOTMENT_STAT,
+			MOVE_REFUND_AGREE_FLAG, SYS_RDATE, REQ_GUIDE_FLAG,
+			REQ_GUIDE_FN, REQ_GUIDE_RN, REQ_GUIDE_MN, 
+			RVISN_ID, RVISN_DTTM
+		)
+		VALUES (
+			DECODE(#{requestKey},           'null','',#{requestKey}),
+			DECODE(#{moveCompany},          'null','',#{moveCompany}),
+			DECODE(#{moveMobileFn},         'null','',#{moveMobileFn}),
+			DECODE(#{moveMobileMn},         'null','',#{moveMobileMn}),
+			DECODE(#{moveMobileRn},         'null','',#{moveMobileRn}),
+			DECODE(#{moveAuthType},         'null','',#{moveAuthType}),
+			DECODE(#{moveAuthNumber},       'null','',#{moveAuthNumber}),
+			DECODE(#{moveThismonthPayType}, 'null','',#{moveThismonthPayType}),
+			DECODE(#{moveAllotmentStat},    'null','',#{moveAllotmentStat}),
+			DECODE(#{moveRefundAgreeFlag},  'null','',#{moveRefundAgreeFlag}),
+			SYSDATE,
+			DECODE(#{reqGuideFlag}, '0', 'N', #{reqGuideFlag}),
+			DECODE(#{reqGuideFn},           'null','',#{reqGuideFn}),
+			DECODE(#{reqGuideRn},           'null','',#{reqGuideRn}),
+			DECODE(#{reqGuideMn},            'null','',#{reqGuideMn}), 
+			#{sessionUserId}, 
+			SYSDATE
+		)
+	</insert>
+	
+	<insert id="insertRcpPay" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpPay */
+		INSERT INTO MCP_REQUEST_PAYMENT@DL_MCP
+		(
+			REQUEST_KEY, REQ_AC_TYPE, REQ_AC01_BALANCE,
+			REQ_AC02_DAY, REQ_AC01_AMOUNT, REQ_AC02_AMOUNT,
+			SYS_RDATE, RVISN_ID, RVISN_DTTM
+		)
+		VALUES (
+			DECODE(#{requestKey },    'null', '', #{requestKey }),
+			DECODE(#{reqAcType },     'null', '', #{reqAcType }),
+			DECODE(#{reqAc01Balance },'null', '', #{reqAc01Balance }),
+			DECODE(#{reqAc02Day },    'null', '', #{reqAc02Day }),
+			DECODE(#{reqAc01Amount }, 'null', '', #{reqAcAmount }),
+			DECODE(#{reqAc02Amount }, 'null', '', #{reqAcAmount }),
+			SYSDATE, 
+			#{sessionUserId}, 
+			SYSDATE
+		 )
+	</insert>
+	
+	<insert id="insertRcpAgent" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpAgent */
+		INSERT INTO MCP_REQUEST_AGENT@DL_MCP
+		(
+			REQUEST_KEY, MINOR_AGENT_NAME, MINOR_AGENT_RRN,
+			MINOR_AGENT_TEL_FN, MINOR_AGENT_TEL_MN, MINOR_AGENT_TEL_RN,
+			MINOR_AGENT_RELATION, JRDCL_AGENT_NAME, JRDCL_AGENT_RRN,
+			JRDCL_AGENT_TEL_FN, JRDCL_AGENT_TEL_MN, JRDCL_AGENT_TEL_RN,
+			ENTRUST_REQ_NM, ENTRUST_RES_NM, ENTRUST_REQ_RELATION,
+			ENTRUST_RES_RRN, ENTRUST_RES_TEL_FN, ENTRUST_RES_TEL_MN,
+			ENTRUST_RES_TEL_RN, SYS_RDATE, MINOR_SELF_INQRY_AGRM_YN, 
+			MINOR_SELF_CERT_TYPE, MINOR_SELF_ISSU_EXPR_DT, MINOR_SELF_ISSU_NUM, 
+			RVISN_ID, RVISN_DTTM
+		)
+		VALUES (
+			DECODE(#{requestKey},         'null', '', #{requestKey}),
+			DECODE(#{minorAgentName},     'null', '', #{minorAgentName}),
+			DECODE(#{minorAgentRrn},      'null', '', #{minorAgentRrn}),
+			DECODE(#{minorAgentTelFn},    'null', '', #{minorAgentTelFn}),
+			DECODE(#{minorAgentTelMn},    'null', '', #{minorAgentTelMn}),
+			DECODE(#{minorAgentTelRn},    'null', '', #{minorAgentTelRn}),
+			DECODE(#{minorAgentRelation}, 'null', '', #{minorAgentRelation}),
+			DECODE(#{jrdclAgentName},     'null', '', #{jrdclAgentName}),
+			DECODE(#{jrdclAgentRrn},      'null', '', #{jrdclAgentRrn}),
+			DECODE(#{jrdclAgentTelFn},    'null', '', #{jrdclAgentTelFn}),
+			DECODE(#{jrdclAgentTelMn},    'null', '', #{jrdclAgentTelMn}),
+			DECODE(#{jrdclAgentTelRn},    'null', '', #{jrdclAgentTelRn}),
+			DECODE(#{entrustReqNm},       'null', '', #{entrustReqNm}),
+			DECODE(#{entrustResNm},       'null', '', #{entrustResNm}),
+			DECODE(#{entrustReqRelation}, 'null', '', #{entrustReqRelation}),
+			DECODE(#{entrustResRrn},      'null', '', #{entrustResRrn}),
+			DECODE(#{entrustResTelFn},    'null', '', #{entrustResTelFn}),
+			DECODE(#{entrustResTelMn},    'null', '', #{entrustResTelMn}),
+			DECODE(#{entrustResTelRn},    'null', '', #{entrustResTelRn}),
+			SYSDATE,
+			DECODE(#{minorSelfInqryAgrmYn}, 'null', '', #{minorSelfInqryAgrmYn}),
+			DECODE(#{minorSelfCertType},    'null', '', #{minorSelfCertType}),
+			DECODE(#{minorSelfIssuExprDt},  'null', '', #{minorSelfIssuExprDt}),
+			DECODE(#{minorSelfIssuNum},     'null', '', #{minorSelfIssuNum}), 
+			#{sessionUserId}, 
+			SYSDATE
+		)
+	</insert>
+	
+	<select id="getStateKey" resultType="int">
+		/* tossMgmtMapper.setMcpRequestDlvryLinkus */ 
+		SELECT SQ_RCP_REQUEST_STATE_01.NEXTVAL@dl_mcp requestStateKey 
+		  FROM DUAL 
+	</select>
+	
+	<insert id="insertRcpState" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpState */
+		INSERT INTO MCP_REQUEST_STATE@DL_MCP
+		(
+			REQUEST_STATE_KEY, REQUEST_STATE_CODE, DLVRY_NO,
+			OPEN_NO, MEMO, SYS_RDATE,
+			RIP, RID, VIEW_FLAG,
+			RES_NO, REQUEST_KEY, TB_CD, 
+			RVISN_ID, RVISN_DTTM
+		)
+		VALUES (
+			#{statusKey},
+			DECODE(#{requestStateCode}, 'null', '', #{requestStateCode}),
+			DECODE(#{dlvryNo},          'null', '', #{dlvryNo}),
+			DECODE(#{openNo},           'null', '', #{openNo}),
+			DECODE(#{memo},             'null', '', #{memo}),
+			SYSDATE,
+			DECODE(#{rip},              'null', '', #{rip}),
+			DECODE(#{rid},              'null', '', #{rid}),
+			'Y',
+			DECODE(#{resNo},            'null', '', #{resNo}),
+			DECODE(#{requestKey},       'null', '', #{requestKey}),
+			DECODE(#{tbCd},              'null', '', #{tbCd}), 
+			#{sessionUserId}, 
+			SYSDATE
+		)
+	</insert>
+	
+	<insert id="insertRcpChange" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpChange */
+		INSERT INTO MCP_REQUEST_CHANGE@DL_MCP
+		(
+			NAME_CHANGE_NM, NAME_CHANGE_TEL_FN, NAME_CHANGE_TEL_MN,
+			NAME_CHANGE_TEL_RN, NAME_CHANGE_RRN, NAME_CHANGE_PINSTALLMENT,
+			REQUEST_KEY, SYS_RDATE, RVISN_ID, 
+			RVISN_DTTM
+		)
+		VALUES (
+			DECODE(#{nameChangeNm},           'null', '', #{nameChangeNm}),
+			DECODE(#{nameChangeTelFn},        'null', '', #{nameChangeTelFn}),
+			DECODE(#{nameChangeTelMn},        'null', '', #{nameChangeTelMn}),
+			DECODE(#{nameChangeTelRn},        'null', '', #{nameChangeTelRn}),
+			DECODE(#{nameChangeRrn},          'null', '', #{nameChangeRrn}),
+			DECODE(#{nameChangePinstallment}, 'null', '', #{nameChangePinstallment}),
+			DECODE(#{requestKey},             'null', '', #{requestKey}),
+			SYSDATE, 
+			#{sessionUserId}, 
+			SYSDATE
+		)
+	</insert>
+	
+	<insert id="insertRcpDvcChg" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpDvcChg */
+		INSERT INTO MCP_REQUEST_DVC_CHG@DL_MCP
+		(
+			REQUEST_KEY, DVC_CHG_TYPE, DVC_CHG_RSN_CD, 
+			DVC_CHG_RSN_DTL_CD, REGST_DTTM, RVISN_ID, 
+			RVISN_DTTM
+		)
+		VALUES (
+			#{requestKey},
+			DECODE(#{dvcChgType}, 'null', '', #{dvcChgType}),
+			DECODE(#{dvcChgRsnCd}, 'null', '', #{dvcChgRsnCd}),
+			DECODE(#{dvcChgRsnDtlCd}, 'null', '', #{dvcChgRsnDtlCd}),
+			SYSDATE, 
+			#{sessionUserId}, 
+			SYSDATE
+		)
+	</insert>
+	
+	<delete id="deleteRcpAddition" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.deleteRcpAddition */
+		DELETE FROM MCP_REQUEST_ADDITION@DL_MCP
+		WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+	
+	<insert id="insertRcpAddition" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.insertRcpAddition */
+		INSERT INTO MCP_REQUEST_ADDITION@DL_MCP ( REQUEST_KEY, ADDITION_KEY, ADDITION_NAME, RANTAL )
+		SELECT #{requestKey} REQUEST_KEY,
+			ADDITION_KEY,
+			(SELECT ADDITION_NAME FROM MCP_ADDITION@DL_MCP WHERE ADDITION_KEY = A.ADDITION_KEY),
+			NVL((SELECT RANTAL FROM MCP_ADDITION@DL_MCP WHERE ADDITION_KEY = A.ADDITION_KEY), 0) RANTAL
+		FROM(
+		   SELECT	SUBSTR (
+					  ADDITION_KEY,
+					  DECODE (LEVEL,
+							  1, 1,
+								INSTR (ADDITION_KEY,
+									   ',',
+									   1,
+									   LEVEL - 1)
+							  + LENGTH (',')),
+						DECODE (
+						   LEVEL,
+							 LENGTH (ADDITION_KEY)
+						   - LENGTH (REPLACE (ADDITION_KEY, ',', ''))
+						   + 1, LENGTH (ADDITION_KEY) + LENGTH (','),
+						   INSTR (ADDITION_KEY,
+								  ',',
+								  1,
+								  LEVEL))
+					  - DECODE (LEVEL,
+								1, 1,
+								  INSTR (ADDITION_KEY,
+										 ',',
+										 1,
+										 LEVEL - 1)
+								+ LENGTH (',')))
+					  AS ADDITION_KEY
+			  FROM (
+						SELECT  #{additionKey} ADDITION_KEY
+						FROM DUAL)
+		CONNECT BY LEVEL
+						<![CDATA[<=]]>
+						LENGTH (ADDITION_KEY)
+					  - LENGTH (REPLACE (ADDITION_KEY, ',', ''))
+					  + 1
+		) A
+	</insert>
+	
+	<select id="getAppFormData" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.ScanVO" resultType="map">
+		/* tossMgmtMapper.getAppFormData */
+		<![CDATA[
+		SELECT  CASE WHEN MAINDATA.MODEL_MONTHLY_SUB = 1 then 0
+		             WHEN MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT) <= 0 then 0
+		             ELSE TRUNC((MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT))*0.059/12*POWER((1+0.059/12), MODEL_MONTHLY)/(POWER((1+0.059/12), MODEL_MONTHLY)-1),0) - TRUNC(((MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT))/MODEL_MONTHLY),0)
+		        END AS MODEL_MM_CHARGE,
+		        CASE WHEN INST_AMT <= 0 THEN 0
+		             ELSE DECODE(MAINDATA.MODEL_MONTHLY_SUB, 1, 0,
+		                        ROUND( (INST_AMT + ( TRUNC(INST_AMT * 0.059 / 12 * VAL_POW / (VAL_POW-1),0) * MODEL_MONTHLY_SUB - INST_AMT)
+		                               ) / MODEL_MONTHLY_SUB
+		                             ,0)
+		                  )
+		        END AS MODEL_MM_PAYMENT, /*핸드폰 월 납부액  단말요금 : (할부원금+총할부수수료)/할부개월수 */
+		        CASE WHEN MAINDATA.MODEL_MONTHLY_SUB = 1 THEN 0
+		             WHEN MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT) <= 0 THEN 0
+		             ELSE DECODE(MAINDATA.MODEL_MONTHLY_SUB, 1, 0, TRUNC((MODEL_PRICE-(MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT))/ MAINDATA.MODEL_MONTHLY_SUB) )
+		        END AS REAL_MM_MONEY, /* 월 할부금 */
+		        CASE WHEN INST_AMT > 0 THEN
+		                DECODE(MAINDATA.MODEL_MONTHLY_SUB, 1, MAINDATA.TEL_MM_PATMENT,
+		                        ROUND(
+		                              (  INST_AMT + ( TRUNC(INST_AMT * 0.059 / 12 * VAL_POW / (VAL_POW-1),0) * MODEL_MONTHLY_SUB - INST_AMT )
+		                              ) / MODEL_MONTHLY_SUB
+		                         ,0) + MAINDATA.TEL_MM_PATMENT
+		                )
+		            ELSE MAINDATA.TEL_MM_PATMENT
+		        END AS BASIC_MM_PAYMENT,
+		        MAINDATA.OPEN_DISCOUNT + MAINDATA.ADD_DISCOUNT AS CONTRACT_SUPPORT,
+		        MODEL_MONTHLY,
+		        '4' AS PAGE4DEFAULT,
+		        MAINDATA.*,
+		        'C' AS ONLINE_AUTH_TYPE
+		FROM    (
+		    SELECT  REQUEST_KEY,
+		            MODEL_PRICE-(NVL(MODEL_DISCOUNT1, 0) + NVL(MODEL_DISCOUNT2, 0)  + NVL(MODEL_DISCOUNT3, 0)) AS INST_AMT ,  -- 할부원금
+		            POWER((1+0.059/12), MODEL_MONTHLY_SUB) AS VAL_POW , -- 년 수수년 계산
+		            CASE WHEN SPRT_TP = 'KD' THEN '0'
+		                 WHEN SPRT_TP = 'PM' THEN '2'
+		                 WHEN REQ_BUY_TYPE = 'UU' AND ENGG_MNTH_CNT > 1 THEN '1'
+		            ELSE '' END DISCOUNTPR,
+		            MODEL_PRICE ,
+		            PROD_TYPE ,
+		            /* GREATEST(NVL( (MODEL_PRICE ) - NVL(MODEL_DISCOUNT1, 0) - NVL(MODEL_DISCOUNT2, 0) - NVL(MODEL_DISCOUNT3, 0), 0),0) AS MODEL_INSTALLMENT, */
+		            DECODE(
+		              PROD_TYPE,'02','0',
+		                        '01',GREATEST(NVL( (MODEL_PRICE ) - NVL(MODEL_DISCOUNT1, 0) - NVL(MODEL_DISCOUNT2, 0) - NVL(MODEL_DISCOUNT3, 0), 0),0),
+		                        NULL,GREATEST(NVL( (MODEL_PRICE ) - NVL(MODEL_DISCOUNT1, 0) - NVL(MODEL_DISCOUNT2, 0) - NVL(MODEL_DISCOUNT3, 0), 0),0)
+		            ) AS MODEL_INSTALLMENT,
+		            NVL(MODEL_DISCOUNT1, 0) + NVL(MODEL_DISCOUNT2, 0) AS OPEN_DISCOUNT,
+		            NVL(MODEL_DISCOUNT3, 0) AS ADD_DISCOUNT,
+		            0 AS MODEL_DISCOUNT,
+		            NVL(INST_INTRATE, 0.25 ) AS INST_INTRATE,
+		            MODEL_MONTHLY_SUB,
+		            RES_NO,
+		            OPER_TYPE,
+		            CSTMR_TYPE_ORG,
+		            CSTMR_TYPE,
+		            ETC_SPECIAL,
+		            REQ_USIM_NAME,
+		            REQ_USIM_SN,
+		            PHONE_PAYMENT,
+		            REQ_IN_DAY_YYYY,
+		            REQ_IN_DAY_MM,
+		            REQ_IN_DAY_DD,
+		            REQ_ADDITION,
+		            REQ_ADDITION_PRICE,
+		            USIM_PRICE_TYPE,
+		            USIM_PRICE,
+		            JOIN_PRICE_TYPE,
+		            CSTMR_NAME,
+		            CSTMR_NATIVE_RRN,
+		            CSTMR_FOREIGNER_RRN,
+		            CSTMR_FOREIGNER_NATION,
+		            CSTMR_FOREIGNER_PN,
+		            CSTMR_RECEIVE_TEL_FN,
+		            CSTMR_BILL_SEND_CODE,
+		            CSTMR_MAIL,
+		            CSTMR_FOREIGNER_SDATE_YYYY,
+		            CSTMR_FOREIGNER_SDATE_MM,
+		            CSTMR_FOREIGNER_SDATE_DD,
+		            CSTMR_FOREIGNER_EDATE_YYYY,
+		            CSTMR_FOREIGNER_EDATE_MM,
+		            CSTMR_FOREIGNER_EDATE_DD,
+		            CSTMR_ADDR,
+		            CSTMR_ADDR_BJD,
+		            CSTMR_PRIVATE_NUMBER,
+		            CSTMR_JURIDICAL_NUMBER,
+		            CSTMR_JURIDICAL_RRN,
+		            REQ_PAY_TYPE,
+		            REQ_BANK,
+		            REQ_ACCOUNT_NUMBER,
+		            REQ_CARD_YY,
+		            REQ_CARD_MM,
+		            REQ_ACCOUNT_NAME,
+		            REQ_ACCOUNT_RELATION,
+		            REQ_WANT_NUMBER,
+		            REQ_WANT_NUMBER2,
+		            REQ_WANT_NUMBER3,
+		            REQ_WIRE_TYPE,
+		            REQ_AC01_BALANCE,
+		            REQ_AC01_AMOUNT,
+		            REQ_AC02_DAY,
+		            REQ_AC02_AMOUNT,
+		            REQ_GUIDE,
+		            REQ_GUIDE_FN,
+		            REQ_GUIDE_MN,
+		            REQ_GUIDE_RN,
+		            MOVE_MOBILE_FN,
+		            MOVE_AUTH_TYPE,
+		            MOVE_AUTH_NUMBER_1,
+		            MOVE_AUTH_NUMBER_2,
+		            MOVE_AUTH_NUMBER_3,
+		            MOVE_AUTH_NUMBER_4,
+		            MOVE_THISMONTH_PAY_TYPE,
+		            MOVE_ALLOTMENT_STAT,
+		            MOVE_REFUND_AGREE_FLAG,
+		            MOVE_COMPANY,
+		            MOVE_COMPANY_MVNO,
+		            TRUNC (MONTHLY_FEE * 1.1, -1) AS MONTHLY_FEE,
+		            DISCOUNT_PRICE,
+		            RATE_NAME,
+		            TEL_MM_PATMENT,
+		            REQ_CARD_COMPANY,
+		            REQ_CARD_NO,
+		            PAGE3DEFAULT,
+		            AGENT_CODE,
+		            NAME_CHANGE_NM,
+		            NAME_CHANGE_TEL_FN,
+		            NAME_CHANGE_RRN,
+		            NAME_CHANGE_PINSTALLMENT,
+		            MINOR_AGENT_NAME,
+		            MINOR_AGENT_RELATION,
+		            MINOR_AGENT_RRN,
+		            MINOR_AGENT_TEL_FN,
+		            ENTRUST_REQ_NM,
+		            ENTRUST_RES_NM,
+		            ENTRUST_REQ_RELATION,
+		            ENTRUST_RES_RRN,
+		            ENTRUST_RES_TEL_FN,
+		            SERVICE_TYPE,
+		            REQ_PAY_OTHER_FLAG,
+		            REQ_CARD_NAME,
+		            CLAUSE_PRI_AD_FLAG,
+		            REQ_BUY_TYPE,
+					DECODE(REQ_BUY_TYPE,'MM','P',DECODE(USIM_KINDS_CD,'09','E','U')) AS USIM_KINDS_CD,  -- USIM, eSIM , 단말기 구분
+		            REQ_MODEL_NAME,
+		            (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0044' AND CD_VAL = REQ_MODEL_COLOR) AS REQ_MODEL_COLOR,
+		            CASE WHEN TO_NUMBER(MODEL_MONTHLY_SUB) <= 1 THEN 'R'
+		                 WHEN TO_NUMBER(MODEL_MONTHLY_SUB) > 1 THEN 'P'
+		                 ELSE 'S'
+		            END AS MODEL_MONTHLY_TYPE,
+		            OTHERS_PAYMENT_RRN,
+		            OTHERS_PAYMENT_AG,
+		            OTHERS_PAYMENT_NM,
+		            OTHERS_PAYMENT_RELATION,
+		            SOC_CODE,
+		            CNTPNT_SHOP_ID,
+		            MODEL_SALE_POLICY_CODE,
+		            ENGG_MNTH_CNT,
+		            NW_BLCK_AGRM_YN,
+		            APP_BLCK_AGRM_YN,
+		            CLAUSE_JEHU_FLAG,
+		            APP_CD,
+		            APP_CD_NAME,ETC_DISCOUNT,
+		            MODEL_MONTHLY,
+		            NVL(CLAUSE_RENTAL_MODEL_CP,'N')AS CLAUSE_RENTAL_MODEL_CP,      --단말배상금 안내사항 동의여부
+		            NVL(CLAUSE_RENTAL_MODEL_CP_PR,'N')AS CLAUSE_RENTAL_MODEL_CP_PR,   --단말배상금(부분파손) 안내사항 동의여부
+		            NVL(CLAUSE_RENTAL_SERVICE,'N')AS CLAUSE_RENTAL_SERVICE,        --중고렌탈 프로그램 서비스 이용에 대한 동의서 동의여부
+		            CLAUSE_MPPS35_FLAG,		--선불요금제 MPPS35 제약사항 동의 여부
+		            CLAUSE_FINANCE_FLAG,		--동부화재 제휴 요금제 약관 동의 여부
+					NVL(CLAUSE_5G_COVERAGE_FLAG,'N' ) AS CLAUSE_5G_COVERAGE_FLAG,        	--5g 커버리지 확인 및 가입 동의
+					NVL(PERSONAL_INFO_COLLECT_AGREE,'N') AS PERSONAL_INFO_COLLECT_AGREE,	--개인정보 수집이용 동의(혜택)
+					NVL(OTHERS_TRNS_AGREE,'N') AS OTHERS_TRNS_AGREE,        				--제 3자 제공 동의
+					NVL(CLAUSE_PARTNER_OFFER_FLAG,'N') AS CLAUSE_PARTNER_OFFER_FLAG, 		--개인정보 제3자 제공 동의(제휴사)
+					OPEN_MARKET_REFERER,													--제휴사
+					JEHU_PROD_TYPE															--제휴처(제휴요금제)
+		    FROM    (
+		            SELECT  A.*,
+		                    TRUNC( ( (NVL(b.DC_AMT,0)  ) + NVL(b.ADD_DC_AMT,0)) * 1.1  , 0) AS DISCOUNT_PRICE,
+		                    TRUNC(A.MONTHLY_FEE * 1.1 - ( ((NVL(b.DC_AMT,0)) + NVL(b.ADD_DC_AMT,0))  * 1.1), -1) AS TEL_MM_PATMENT
+		            FROM    (
+		                    SELECT  MQ.REQUEST_KEY,
+		                            OSPM.INST_RATE AS INST_INTRATE,
+		                            MQ.ONLINE_AUTH_INFO AS RES_NO,
+		                            MRS.SOC_CODE,
+		                            MQ.CNTPNT_SHOP_ID,
+		                            MRS.MODEL_SALE_POLICY_CODE,
+		                            DECODE(MQ.PROD_TYPE,'01',MRS.MODEL_PRICE + MRS.MODEL_PRICE_VAT,NULL,MRS.MODEL_PRICE + MRS.MODEL_PRICE_VAT,'02',MRS.RENTAL_MODEL_CP_AMT) AS MODEL_PRICE,
+		                            MQ.PROD_TYPE,
+		                            MRS.MODEL_DISCOUNT1,
+		                            MRS.MODEL_DISCOUNT2,
+		                            MRS.MODEL_DISCOUNT3,
+		                            CASE WHEN OOIM.ORGN_NM IS NOT NULL THEN OOIM.ORGN_NM
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100011741' THEN 'M모바일(직영온라인)'
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100011744' THEN 'M모바일(사내특판)'
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100011745' THEN '총판((주)프리피아)'
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100005928' THEN 'M모바일(직영온라인)'
+		                                 WHEN MQ.CNTPNT_SHOP_ID = '1100013265' THEN '홈쇼핑'
+		                                 ELSE '온라인'
+		                            END AS AGENT_CODE,
+		                            MQ.OPER_TYPE,
+		                            CSTMR_TYPE AS CSTMR_TYPE_ORG,
+		                            DECODE(CSTMR_TYPE , 'NM','NA','FN','NE',CSTMR_TYPE) AS CSTMR_TYPE,
+		                            MQ.ETC_SPECIAL,
+		                            MQ.REQ_USIM_NAME,
+		                            TO_CHAR (MQ.REQ_USIM_SN) AS REQ_USIM_SN,
+		                            PHONE_PAYMENT,
+		                            SUBSTR (TO_CHAR (MQ.REQ_IN_DAY, 'YYYYMMDD'), 1, 4) AS REQ_IN_DAY_YYYY,
+		                            SUBSTR (TO_CHAR (MQ.REQ_IN_DAY, 'YYYYMMDD'), 5, 2) AS REQ_IN_DAY_MM,
+		                            SUBSTR (TO_CHAR (MQ.REQ_IN_DAY, 'YYYYMMDD'), 7, 2) AS REQ_IN_DAY_DD,
+		                            DECODE (NVL (MRS.MODEL_MONTHLY, 0), '0', '1', MRS.MODEL_MONTHLY) AS MODEL_MONTHLY_SUB,  /**  할부 개월수  **/
+		                            MODEL_MONTHLY,
+		                            MQ.REQ_ADDITION,
+		                            TO_CHAR (MQ.REQ_ADDITION_PRICE) AS REQ_ADDITION_PRICE,
+		                            MRS.USIM_PRICE_TYPE,
+		                            TO_CHAR (MRS.USIM_PRICE) AS USIM_PRICE,
+		                            MRS.JOIN_PRICE_TYPE,
+		                            MRC.CSTMR_NAME, /**substr(MRC.CSTMR_NATIVE_RRN,1,6) AS CSTMR_NATIVE_RRN, **/
+		                            CSTMR_NATIVE_RRN,
+		                            MRC.CSTMR_FOREIGNER_RRN,
+		                            MRC.CSTMR_FOREIGNER_NATION,
+		                            MRC.CSTMR_FOREIGNER_PN,
+		                            MRC.CSTMR_TEL_FN || '-' || MRC.CSTMR_TEL_MN || '-' || MRC.CSTMR_TEL_RN || ',' ||
+		                                MRC.CSTMR_MOBILE_FN || '-' || MRC.CSTMR_MOBILE_MN || '-' || MRC.CSTMR_MOBILE_RN AS CSTMR_RECEIVE_TEL_FN,
+		                            MRC.CSTMR_BILL_SEND_CODE,
+		                            MRC.CSTMR_MAIL,
+		                            SUBSTR (MRC.CSTMR_FOREIGNER_SDATE, 1, 4) AS CSTMR_FOREIGNER_SDATE_YYYY,
+		                            SUBSTR (MRC.CSTMR_FOREIGNER_SDATE, 5, 2) AS CSTMR_FOREIGNER_SDATE_MM,
+		                            SUBSTR (MRC.CSTMR_FOREIGNER_SDATE, 7, 2) AS CSTMR_FOREIGNER_SDATE_DD,
+		                            SUBSTR (MRC.CSTMR_FOREIGNER_EDATE, 1, 4) AS CSTMR_FOREIGNER_EDATE_YYYY,
+		                            SUBSTR (MRC.CSTMR_FOREIGNER_EDATE, 5, 2) AS CSTMR_FOREIGNER_EDATE_MM,
+		                            SUBSTR (MRC.CSTMR_FOREIGNER_EDATE, 7, 2) AS CSTMR_FOREIGNER_EDATE_DD,
+		                            MRC.CSTMR_ADDR || '  ' || MRC.CSTMR_ADDR_DTL AS CSTMR_ADDR,
+		                            MRC.CSTMR_ADDR_BJD,
+		                            MRC.OTHERS_PAYMENT_RNM,
+		                            MRC.CSTMR_PRIVATE_NUMBER,
+		                            MRC.CSTMR_JURIDICAL_NUMBER,
+		                            MRC.CSTMR_JURIDICAL_RRN,
+		                            MCENB.CODE_NAME AS REQ_BANK,
+		                            MRR.REQ_ACCOUNT_NUMBER,
+		                            MRR.REQ_CARD_YY,
+		                            REQ_CARD_MM,
+		                            MRR.REQ_ACCOUNT_NAME,
+		                            MRR.REQ_ACCOUNT_RELATION,
+		                            MRR.REQ_CARD_COMPANY,
+		                            MRR.REQ_CARD_NO,
+		                            MQ.REQ_WANT_NUMBER,
+		                            MQ.REQ_WANT_NUMBER2,
+		                            MQ.REQ_WANT_NUMBER3,
+		                            MRR.REQ_WIRE_TYPE,
+		                            MQ.REQ_PAY_TYPE,
+		                            TO_CHAR (MRP.REQ_AC01_BALANCE) AS REQ_AC01_BALANCE,
+		                            TO_CHAR (MRP.REQ_AC01_AMOUNT) AS REQ_AC01_AMOUNT,
+		                            MRP.REQ_AC02_DAY,
+		                            TO_CHAR (MRP.REQ_AC02_AMOUNT) AS REQ_AC02_AMOUNT,
+		                            CASE WHEN(MRM.REQ_GUIDE_MN IS NOT NULL ) THEN MRM.REQ_GUIDE_FN||'-'||MRM.REQ_GUIDE_MN||'-'||MRM.REQ_GUIDE_RN
+		                                 ELSE ''
+		                            END AS REQ_GUIDE,
+		                            MRM.REQ_GUIDE_FN,
+		                            MRM.REQ_GUIDE_MN,
+		                            MRM.REQ_GUIDE_RN,
+		                            DECODE (MRM.MOVE_MOBILE_MN, NULL, NULL, MRM.MOVE_MOBILE_FN || '-' || MRM.MOVE_MOBILE_MN || '-' || MRM.MOVE_MOBILE_RN) AS MOVE_MOBILE_FN,
+		                            MRM.MOVE_AUTH_TYPE,
+		                            SUBSTR (MRM.MOVE_AUTH_NUMBER, 1, 1) AS MOVE_AUTH_NUMBER_1,
+		                            SUBSTR (MRM.MOVE_AUTH_NUMBER, 2, 1) AS MOVE_AUTH_NUMBER_2,
+		                            SUBSTR (MRM.MOVE_AUTH_NUMBER, 3, 1) AS MOVE_AUTH_NUMBER_3,
+		                            SUBSTR (MRM.MOVE_AUTH_NUMBER, 4, 1) AS MOVE_AUTH_NUMBER_4,
+		                            MRM.MOVE_THISMONTH_PAY_TYPE,
+		                            MRM.MOVE_ALLOTMENT_STAT,
+		                            MRM.MOVE_REFUND_AGREE_FLAG,
+									CASE
+										WHEN MRM.MOVE_COMPANY IN ('SKT', 'LGT', 'KTF') THEN MRM.MOVE_COMPANY
+										WHEN MRM.MOVE_COMPANY IS NOT NULL THEN 'MVNO'
+										ELSE ''
+									END AS MOVE_COMPANY,
+									CASE
+										WHEN MRM.MOVE_COMPANY IN ('SKT', 'LGT', 'KTF') THEN ''
+										ELSE MC.CODE_NAME
+									END AS MOVE_COMPANY_MVNO,
+		                            MR.BASE_AMT AS MONTHLY_FEE,
+		                            MR.RATE_NM AS RATE_NAME,
+		                            '3' AS PAGE3DEFAULT,
+		                            MRCG.NAME_CHANGE_NM,
+		                            DECODE (MRCG.NAME_CHANGE_TEL_MN, NULL, NULL, MRCG.NAME_CHANGE_TEL_FN || '-' || MRCG.NAME_CHANGE_TEL_MN || '-' || MRCG.NAME_CHANGE_TEL_RN) AS NAME_CHANGE_TEL_FN,
+		                            MRCG.NAME_CHANGE_RRN,
+		                            MRCG.NAME_CHANGE_PINSTALLMENT,
+		                            MRA.MINOR_AGENT_NAME,
+		                            MCMINOR.CODE_NAME AS MINOR_AGENT_RELATION,
+		                            MRA.MINOR_AGENT_RRN,
+		                            DECODE(MRA.MINOR_AGENT_TEL_FN, NULL, NULL, MRA.MINOR_AGENT_TEL_FN || '-' || MRA.MINOR_AGENT_TEL_MN || '-' || MRA.MINOR_AGENT_TEL_RN) AS MINOR_AGENT_TEL_FN,
+		                            MRA.ENTRUST_REQ_NM,
+		                            MRA.ENTRUST_RES_NM,
+		                            MCENT.CODE_NAME AS ENTRUST_REQ_RELATION,
+		                            MRR.REQ_CARD_NAME,
+		                            MRA.ENTRUST_RES_RRN,
+		                            MQ.SERVICE_TYPE,
+		                            MQ.CLAUSE_PRI_AD_FLAG,
+		                            MQ.REQ_BUY_TYPE,
+									MQ.USIM_KINDS_CD,
+		                            MQ.REQ_MODEL_NAME,
+		                            MQ.REQ_MODEL_COLOR,
+		                            DECODE ( MRA.ENTRUST_RES_TEL_FN, NULL, NULL, MRA.ENTRUST_RES_TEL_FN || '-' || MRA.ENTRUST_RES_TEL_MN || '-' || MRA.ENTRUST_RES_TEL_RN) AS ENTRUST_RES_TEL_FN,
+		                            MRR.REQ_PAY_OTHER_FLAG,
+		                            CASE WHEN REQ_PAY_TYPE = 'C' THEN REQ_CARD_RRN
+		                                 WHEN REQ_PAY_TYPE = 'D' THEN REQ_ACCOUNT_RRN
+		                                 ELSE CSTMR_NATIVE_RRN
+		                            END AS OTHERS_PAYMENT_RRN,
+		                            CASE WHEN MINOR_AGENT_NAME IS NOT NULL OR (REQ_PAY_TYPE = 'C' AND REQ_PAY_OTHER_FLAG = 'Y') OR (REQ_PAY_TYPE = 'D' AND REQ_PAY_OTHER_FLAG = 'Y') THEN 'Y'
+		                                 ELSE 'N'
+		                            END AS OTHERS_PAYMENT_AG,
+		                            CASE WHEN REQ_PAY_TYPE = 'C' THEN REQ_CARD_NAME
+		                                 WHEN REQ_PAY_TYPE = 'D' THEN REQ_ACCOUNT_NAME
+		                                 ELSE CSTMR_NAME
+		                            END AS OTHERS_PAYMENT_NM,
+		                            /* NVL(MCMINOR.CODE_NAME, '본인') AS OTHERS_PAYMENT_RELATION, */
+		                            MCMINOR.CODE_NAME AS OTHERS_PAYMENT_RELATION,
+		                            NVL( MRS.ENGG_MNTH_CNT, 0 ) AS ENGG_MNTH_CNT,
+		                            MQ.NW_BLCK_AGRM_YN,
+		                            MQ.APP_BLCK_AGRM_YN,
+		                            MQ.CLAUSE_JEHU_FLAG,
+		                            DECODE(MQ.APP_CD,'1','1','3','3',null,'' ,'','','0')AS APP_CD,
+		                            (SELECT CODE_NAME FROM MCP_CODE@DL_MCP WHERE CODE_SYS = 'CHA' AND CODE = MQ.APP_CD) AS APP_CD_NAME,
+		                            '0'AS ETC_DISCOUNT,
+		                            MRS.SPRT_TP, /* 지원금 유형 */
+		                            MRS.MODEL_ID,
+		                            MR.RATE_CD,
+		                            OSPM.SALE_PLCY_CD,
+		                            MQ.CLAUSE_RENTAL_MODEL_CP,      --단말배상금 안내사항 동의여부
+		                            MQ.CLAUSE_RENTAL_MODEL_CP_PR,   --단말배상금(부분파손) 안내사항 동의여부
+		                            MQ.CLAUSE_RENTAL_SERVICE,       --중고렌탈 프로그램 서비스 이용에 대한 동의서 동의여부
+		                            MQ.CLAUSE_MPPS35_FLAG,          --선불요금제 MPPS35 제약사항 동의 여부
+		                            MQ.CLAUSE_FINANCE_FLAG,         --동부화재 제휴 요금제 약관 동의 여부
+									MQ.CLAUSE_5G_COVERAGE_FLAG, 	--5g 커버리지 확인 및 가입 동의
+									MQ.PERSONAL_INFO_COLLECT_AGREE, --개인정보 수집이용 동의(혜택)
+									MQ.OTHERS_TRNS_AGREE, 			--제 3자 제공 동의
+									MQ.CLAUSE_PARTNER_OFFER_FLAG,	--개인정보 제3자 제공 동의(제휴사)
+									MQ.OPEN_MARKET_REFERER,			--제휴사
+									MQ.JEHU_PROD_TYPE				--제휴처(제휴요금제)
+		                    FROM    MCP_REQUEST@DL_MCP MQ,
+		                            MCP_REQUEST_CSTMR@DL_MCP MRC,
+		                            MCP_REQUEST_REQ@DL_MCP MRR,
+		                            MCP_REQUEST_PAYMENT@DL_MCP MRP,
+		                            MCP_REQUEST_MOVE@DL_MCP MRM,
+		                            MCP_REQUEST_SALEINFO@DL_MCP MRS,
+		                            MCP_CODE@DL_MCP MC,
+		                            MCP_REQUEST_CHANGE@DL_MCP MRCG,
+		                            MCP_REQUEST_AGENT@DL_MCP MRA,
+		                            MCP_CODE@DL_MCP MCMINOR,
+		                            MCP_CODE@DL_MCP MCENT,
+		                            MCP_CODE@DL_MCP MCENB,
+		                            MSP_RATE_MST MR,
+		                            ORG_ORGN_INFO_MST OOIM,
+		                            MSP_SALE_PLCY_MST OSPM
+		                    WHERE   MQ.REQUEST_KEY = #{requestKey}
+		                    AND     MRC.REQUEST_KEY = MQ.REQUEST_KEY
+		                    AND     MRC.REQUEST_KEY = MRR.REQUEST_KEY(+)
+		                    AND     MRC.REQUEST_KEY = MRP.REQUEST_KEY(+)
+		                    AND     MRC.REQUEST_KEY = MRS.REQUEST_KEY
+		                    AND     MRC.REQUEST_KEY = MRM.REQUEST_KEY(+)
+		                    AND     MRC.REQUEST_KEY = MRCG.REQUEST_KEY(+)
+		                    AND     MRC.REQUEST_KEY = MRA.REQUEST_KEY(+)
+		                    AND     MC.CODE_SYS(+) = 'NSC'
+		                    AND     MC.CODE(+) = MRM.MOVE_COMPANY
+		                    AND     MRS.SOC_CODE = MR.RATE_CD
+		                    AND     MCMINOR.CODE_SYS(+) = 'AGR'
+		                    AND     MCMINOR.CODE(+) = MRA.MINOR_AGENT_RELATION
+		                    AND     MCENT.CODE_SYS(+) = 'AGR'
+		                    AND     MCENT.CODE(+) = MRA.ENTRUST_REQ_RELATION
+		                    AND     MCENB.CODE_SYS(+) = 'BNK'
+		                    AND     MCENB.CODE(+) = MRR.REQ_BANK
+		                    AND     MQ.CNTPNT_SHOP_ID = OOIM.ORGN_ID(+)
+		                    AND     MRS.MODEL_SALE_POLICY_CODE =  OSPM.SALE_PLCY_CD(+)
+		            )A,
+		            MSP_SALE_SUBSD_MST B
+		    WHERE   A.SALE_PLCY_CD = B.SALE_PLCY_CD(+)
+		    AND     A.SOC_CODE = B.RATE_CD(+)
+		    AND     A.MODEL_ID = B.PRDT_ID(+)
+		    AND     A.ENGG_MNTH_CNT = B.AGRM_TRM(+)
+		    AND     A.CNTPNT_SHOP_ID = B.ORGN_ID(+)
+		    AND     A.OPER_TYPE = B.OPER_TYPE(+)) APPDATA
+		) MAINDATA
+		]]>
+	</select>
+	
+	<update id="updateAppFormXmlYn" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.ScanVO">
+		/* tossMgmtMapper.updateAppFormXmlYn */
+		UPDATE  MCP_REQUEST@DL_MCP
+		SET     APP_FORM_XML_YN = 'Y',
+				RVISN_ID = #{userId},
+				RVISN_DTTM = SYSDATE 
+		WHERE   REQUEST_KEY = #{requestKey}
+	</update>
+	
+	<select id="getAppFormPointGroupList" parameterType="String" resultType="map">
+		/* tossMgmtMapper.getAppFormPointGroupList */
+		SELECT
+		    A.GROUP_CODE,
+		    B.PAGE_SEQ,
+		    C.PAGE_CODE,
+		    C.COLUMN_NAME,
+		    C.METAROW,
+		    C.METALINE,
+		    C.CODEDATA,
+		    C.CODEDATA_YN,
+		    C.DELETECOLUMNYN
+		FROM
+		    NMCP_APP_GROUP_MST@DL_MCP A,
+		    NMCP_APP_GROUP_INFO@DL_MCP B,
+		    NMCP_APP_FORM_INFO@DL_MCP C
+		WHERE
+			A.STATUS = 'A'
+		    AND A.GROUP_CODE = #{groupCode}
+		    AND A.GROUP_CODE = B.GROUP_CODE
+		    AND B.STATUS = 'A'
+		    AND B.PAGE_CODE = C.PAGE_CODE
+		ORDER BY B.PAGE_SEQ, C.APP_KEY
+	</select>
+	
+	<select id="getMcpCodeList" parameterType="String" resultType="map">
+		/* tossMgmtMapper.getMcpCodeList */
+		SELECT  A.CD_GROUP_ID
+		        , B.DTL_CD
+		        , COUNT(1) OVER() AS TOTAL_CNT
+		FROM    NMCP_CD_GROUP_BAS@DL_MCP A
+		        , NMCP_CD_DTL@DL_MCP B
+		WHERE   A.CD_GROUP_ID = B.CD_GROUP_ID
+		AND     A.CD_GROUP_ID = #{groupId}
+		AND     A.USE_YN = 'Y' 
+		/* M포털 리뉴얼로  유효기간 조건 추가 */
+		AND     (B.PSTNG_START_DATE IS NULL
+				 OR B.PSTNG_END_DATE IS NULL
+				 OR SYSDATE BETWEEN TO_DATE(B.PSTNG_START_DATE, 'YYYYMMDDHH24MISS') AND TO_DATE(B.PSTNG_END_DATE, 'YYYYMMDDHH24MISS'))
+		AND     (A.PSTNG_START_DATE IS NULL
+				 OR A.PSTNG_END_DATE IS NULL
+				 OR SYSDATE BETWEEN TO_DATE(A.PSTNG_START_DATE, 'YYYYMMDDHH24MISS') AND TO_DATE(A.PSTNG_END_DATE, 'YYYYMMDDHH24MISS'))
+	</select>
+	
+	<select id="getAppFormUserData" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.ScanVO"  resultType="map">
+		/* tossMgmtMapper.getAppFormUserData */
+		SELECT  MRC.CSTMR_NAME
+		        , MQ.RES_NO
+		        , MQ.AGENT_CODE
+		        , MQ.CNTPNT_SHOP_ID
+		FROM    MCP_REQUEST@DL_MCP MQ
+		        , MCP_REQUEST_CSTMR@DL_MCP MRC
+		WHERE   MQ.REQUEST_KEY = #{requestKey}
+		AND     MQ.REQUEST_KEY = MRC.REQUEST_KEY
+	</select>
+	
+	<update id="updateTossRcpCrYn" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.updateTossRcpCrYn */
+		UPDATE  MDS_TOSS_ORDER
+		SET     RCP_CR_YN = 'Y' 
+		WHERE   TOSS_ORDER_SEQ = #{tossOrderSeq}
+	</update>
+	
+	<update id="updateTossJueSubInfo" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.updateTossJueSubInfo */
+		UPDATE  MSP_JUO_SUB_INFO
+		SET     SCAN_ID = #{scanId}
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</update>
+	
+	<update id="updateTossRequestDtl" parameterType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.RcpDetailVO">
+		/* tossMgmtMapper.updateTossRequestDtl */
+		UPDATE  MSP_REQUEST_DTL
+		SET     SCAN_ID = #{scanId},
+		        REQUEST_KEY = #{requestKey},
+		        OPER_TYPE = 'NAC3',
+		        OPER_TYPE_NM = '신규개통',
+		        RES_NO = #{resNo},
+		        REQ_BUY_TYPE = 'UU',
+		        REQ_BUY_TYPE_NM = '유심단독구매',
+		        REQ_IN_DAY = #{reqInDay},
+				RVISN_DTTM = SYSDATE
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</update>
+	
+	<select id="selectScanId" resultType="String">
+		/* tossMgmtMapper.selectScanId */
+	    SELECT SCAN_ID
+	      FROM MCP_REQUEST@DL_MCP
+	     WHERE REQUEST_KEY = #{requestKey}
+	</select>
+</mapper>

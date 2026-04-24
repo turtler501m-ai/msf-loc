@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cmn.smsmgmt.mapper.SmsNotSendChkMapper">
+	
+	<select id="selectSmsNotSend" resultType="int">
+		/* SmsNotSendChkMapper.selectSmsNotSend */
+		SELECT 
+			COUNT(*) 
+		FROM AM2X_SUBMIT 
+		WHERE	STATUS = 0 
+		AND		LENGTH(RCPT_DATA) <![CDATA[<>]]> 11
+	</select>
+	
+	<insert id='insertSmsNotSendBackup'>
+		/* SmsNotSendChkMapper.insertSmsNotSendBackup */
+		INSERT INTO AM2X_SUBMIT_BACKUP
+		(
+			MSG_ID
+			,SUBJECT
+			,MSG_TYPE
+			,MSG_TYPE_SECOND
+			,MSG_TYPE_THIRD
+			,STATUS
+			,SCHEDULE_TIME
+			,SUBMIT_TIME
+			,MESSAGE
+			,CALLBACK_NUM
+			,RCPT_DATA
+			,FILE_COUNT
+			,FILE_NAME1
+			,FILE_NAME2
+			,FILE_NAME3
+			,CDR_ID
+			,RESULT
+			,RCS_RESULT
+			,KKO_RESULT
+			,RESULT_DESC
+			,DELIVER_TIME
+			,REPORT_RECV_TIME
+			,TELCOINFO
+			,FAIL_SEND
+			,K_TMPLCODE
+			,K_MESSAGE
+			,K_BUTTON
+			,K_ADFLAG
+			,K_SENDERKEY
+			,R_MESSAGEBASEID
+			,R_BODY
+			,R_BUTTON
+			,R_HEADER
+			,R_FOOTER
+			,R_COPYALLOWED
+			,R_QUERYID
+			,RESERVED01
+			,RESERVED02
+			,RESERVED03
+			,KISA_ORIG_CODE
+			,R_AGENCYID
+			,R_AGENCYKEY
+			,R_BRANDKEY
+			,R_CDR_ID
+			,REGST_DTTM
+		) 
+		SELECT
+			MSG_ID
+			,SUBJECT
+			,MSG_TYPE
+			,MSG_TYPE_SECOND
+			,MSG_TYPE_THIRD
+			,STATUS
+			,SCHEDULE_TIME
+			,SUBMIT_TIME
+			,MESSAGE
+			,CALLBACK_NUM
+			,RCPT_DATA
+			,FILE_COUNT
+			,FILE_NAME1
+			,FILE_NAME2
+			,FILE_NAME3
+			,CDR_ID
+			,RESULT
+			,RCS_RESULT
+			,KKO_RESULT
+			,RESULT_DESC
+			,DELIVER_TIME
+			,REPORT_RECV_TIME
+			,TELCOINFO
+			,FAIL_SEND
+			,K_TMPLCODE
+			,K_MESSAGE
+			,K_BUTTON
+			,K_ADFLAG
+			,K_SENDERKEY
+			,R_MESSAGEBASEID
+			,R_BODY
+			,R_BUTTON
+			,R_HEADER
+			,R_FOOTER
+			,R_COPYALLOWED
+			,R_QUERYID
+			,RESERVED01
+			,RESERVED02
+			,RESERVED03
+			,KISA_ORIG_CODE
+			,R_AGENCYID
+			,R_AGENCYKEY
+			,R_BRANDKEY
+			,R_CDR_ID
+			,SYSDATE
+		FROM AM2X_SUBMIT
+		WHERE	STATUS = 0 
+		AND		LENGTH(RCPT_DATA) <![CDATA[<>]]> 11
+	</insert>
+	
+	<delete id='deleteSmsNotSend' >
+		/* SmsNotSendChkMapper.deleteSmsNotSend */
+		DELETE FROM AM2X_SUBMIT
+		WHERE	STATUS = 0 
+		AND		LENGTH(RCPT_DATA) <![CDATA[<>]]> 11
+	</delete>
+	
+	<select id="getSendTargetInfo" resultType="String">
+		/* JuiceOnlineChkMapper.getSendTargetInfo */
+		SELECT B.CD_VAL
+		  FROM CMN_GRP_MST A
+		       , CMN_GRP_CD_MST B
+		 WHERE A.GRP_ID = B.GRP_ID
+		   AND A.USG_YN = 'Y'
+		   AND B.USG_YN = 'Y'
+		   AND A.GRP_ID = 'MON0000'
+		   AND B.ETC1 = 'Y'
+	</select>
+</mapper>

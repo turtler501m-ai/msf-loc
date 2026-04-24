@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.org.usercanmgmt.mapper.UserCanMgmtMapper">
+	
+	<!-- 해지자 저장 -->
+	<insert id="userInfoInsService" parameterType="String">
+		/* userCanMgmtMapper.userInfoInsService */
+		INSERT INTO MCP_USER@DL_CAN
+		      (USERID, PASSWORD, NAME,
+		       AUTH_CODE, PIN, EMAIL,
+		       POST, ADDRESS, ADDRESS_DTL,
+		       MOBILE_NO, CONTACT_NO, BIRTHDAY,
+		       GENDER, SYS_RDATE, SYS_UDATE,
+		       SYS_LDATE, LOGIN_COUNT, STATUS,
+		       CUST_NUM, AUTH_KEY, USER_DIVISION,
+		       EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE)
+		SELECT USERID, PASSWORD, NAME,
+		       AUTH_CODE, PIN, EMAIL,
+		       POST, ADDRESS, ADDRESS_DTL,
+		       MOBILE_NO, CONTACT_NO, BIRTHDAY,
+		       GENDER, SYS_RDATE, SYS_UDATE,
+		       SYS_LDATE, LOGIN_COUNT, STATUS,
+		       CUST_NUM, AUTH_KEY, USER_DIVISION,
+		       EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE
+		  FROM MCP_USER@DL_MCP A
+		 WHERE A.STATUS = '1'
+		   AND A.AUTH_CODE = 'USER_ROLE'
+		   AND A.USER_DIVISION = '00'
+		   <![CDATA[AND TO_DATE(A.SYS_LDATE, 'YYYY-MM-DD') < TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -12),'YYYYMMDD'), 'YYYY-MM-DD')]]> 
+		   AND NOT EXISTS ( SELECT 1 FROM MCP_USER@DL_CAN WHERE USERID = A.USERID)
+	</insert>
+	
+	<!-- 해지자 삭제 -->
+	<delete id="userInfoDelService" parameterType="String">
+		DELETE /* userCanMgmtMapper.userInfoDelService */
+		  FROM MCP_USER@DL_MCP A
+		 WHERE A.STATUS = '1'
+		   AND A.AUTH_CODE = 'USER_ROLE'
+		   AND A.USER_DIVISION = '00'
+		   <![CDATA[AND TO_DATE(A.SYS_LDATE, 'YYYY-MM-DD') < TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -12),'YYYYMMDD'), 'YYYY-MM-DD')]]> 
+	</delete>
+	
+	<!-- 해지자 정보 Update -->
+	<update id="userInfoUpdService" parameterType="String">
+		UPDATE /* userCanMgmtMapper.userInfoUpdService */
+		       CMN_WEBUSER_CAN_MST
+		   SET   NAME = '삭제'
+		       , MOBILE_NO = ''
+		       , FIRST_LOGIN_DT = ''
+		       , LAST_LOGIN_DT = ''
+		       , EMAIL = ''
+		       , ZIPCD = ''
+		       , ADDRESS = ''
+		       , ADDRESS_DTL = ''
+		       , RVISN_ID = 'SYSTEM'
+		       , RVISN_DTTM = SYSDATE
+		 WHERE USERID IN (
+							SELECT USERID
+							  FROM MCP_USER@DL_MCP A
+							 WHERE A.STATUS = '1'
+							   AND A.AUTH_CODE = 'USER_ROLE'
+							   AND A.USER_DIVISION = '00'
+							   <![CDATA[AND TO_DATE(A.SYS_LDATE, 'YYYY-MM-DD') < TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -12),'YYYYMMDD'), 'YYYY-MM-DD'))]]> 
+	</update>
+	
+</mapper>

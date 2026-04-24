@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rsk.retention.mapper.RskRetentionMapper">
+	
+	<!-- 해지후재가입정보생성 -->
+	<insert id="callRetentionProc" statementType="CALLABLE" parameterType="java.util.HashMap">
+		/* rskMapper.callDvcChgTrgtProc */
+		{ CALL MSP_REENTRANCE_PRGM(TO_CHAR(SYSDATE -1, 'YYYYMMDD'), TO_CHAR(SYSDATE -1, 'YYYYMMDD')) }
+	</insert>
+	
+</mapper>

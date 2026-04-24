@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd" >
+
+<properties>
+
+	<!-- 약관발송대상자관리_일일 ( 매일 3시 10분 ) 2018년 -->
+	<entry key="termsSendSchedule">0 10 3 1-31 2-12 ?</entry>
+	<!-- 2019년도 부터는 아래 설정으로 변경하여 사용바랍니다. -->
+	<!-- 약관발송대상자관리_일일 ( 매일 3시 10분 ) 2019년~ -->
+	<!-- <entry key="termsSendSchedule">0 10 3 * * ?</entry> -->
+
+	<!-- 약관발송대상자 LMS발송 ( 매일 10시부터 11시 이전까지 매 15초마다 실행 ) -->
+	<entry key="termsLmsSendSchedule">0/15 0-59 10 * * ?</entry>
+
+	<!-- 약관발송대상자 LMS발송결과확인_일일 ( 매일 5시 20분 ) -->
+	<entry key="termsLmsSendRslSchedule">0 20 5 * * ?</entry>
+
+	<!-- 일반회원해지자 LMS발송 ( 매월 1일 10시부터 11시 이전까지 매 15초마다 실행 ) -->
+	<entry key="webUsrCanLmsSchedule">0/15 0-59 10 1 * ?</entry>
+
+	<!-- 일반회원해지자 LMS발송결과확인_일일 ( 매월 2일 5시 10분 ) -->
+	<entry key="webUsrCanLmsRslSchedule">0 10 5 2 * ?</entry>
+
+	<!-- SAMPLE 스케줄러 (5분마다. *는 5분마다 매초에 실행함.) -->
+	<entry key="sampleSchedule">0 0/5 * * * *</entry>
+
+	<!-- 온라인배치확인 1시간만다 체크 -->
+	<entry key="juicefailOnlineChkSchedule">0 0 0/1 * * ?</entry>
+
+	<!-- 고객 Start -->
+	<!-- 일반회원해지자관리_일일 ( 매월 1일 6시 ) -->
+	<entry key="webUsrCanMailSchedule">0 0 6 1 * ?</entry>
+
+	<!-- 일반회원해지자삭제_일일 ( 매일 6시 20분 ) -->
+	<entry key="webUsrCanDelSchedule">0 20 6 * * ?</entry>
+
+	<!-- 청소년유해물차단 SMS_일일 ( 매일 7시 ) -->
+	<entry key="ythBlckSmsSchedule">0 0 7 * * ?</entry>
+	<!-- 고객 End -->
+
+	<!-- 청구수납회계자료생성_일일 ( 매월 6일 5시 ) -->
+	<entry key="acntDataSttcSchedule">0 0 5 6 * ?</entry>
+
+	<!-- 미납채권생성스케줄러 ( 매월 6일 6시 ) -->
+	<entry key="unpdBondSttcSchedule">0 0 6 6 * ?</entry>
+	<!-- 결산 End -->
+
+	<!-- 통계 Start -->
+	<!-- 사용량집계_일일 ( 매월 20일 3시 ) -->
+	<entry key="usgAmntSttcSchedule">0 0 3 20 * ?</entry>
+
+	<!-- 청구수납집계_일일 ( 매월 20일 3시 20분 실행 ) -->
+	<entry key="invAmntSttcSchedule">0 20 3 20 * ?</entry>
+
+	<!-- 일마감집계_일일 ( 매일 0시 1분 실행 ) -->
+	<entry key="dailyCloseSttcSchedule">0 1 0 * * ?</entry>
+
+	<!-- 영업실적집계 ( 매일 14,17,20,23시 59분 ) -->
+	<entry key="saleRsltSttcSchedule">0 59 14,17,20,23 * * ?</entry>
+
+	<!-- 계약별요금제사용일수집계_일일 ( 매일 23시 55분 ) -->
+	<entry key="cntrUsgDtSttcSchedule">0 55 23 * * ?</entry>
+	<!-- 통계 End -->
+
+	<!-- 단말유동화 start -->
+	<!-- 채권정보생성스케줄러_일일 ( 매월 9일 1시 ) -->
+	<entry key="bondSchedule">0 0 1 9 * ?</entry>
+
+	<!-- 기준 start -->
+	<!-- 대리점/판매점 사용자 정지상태_일일 ( 매일 3시 ) -->
+	<entry key="userStatusScheduler">0 0 3 * * ?</entry>
+	<!-- 사용자 삭제상태_일일 ( 매일 3시 20분 ) -->
+	<entry key="userDelStatusScheduler">0 20 3 * * ?</entry>
+	<!-- 기준 end -->
+
+	<!-- PTNR start -->
+	<!-- 포인트정산스케줄러_일일 ( 매월 1일 6시 ) -->
+	<entry key="partnerUsgPointSchedule">0 0 6 1 * ?</entry>
+
+	<!-- 제휴사 포인트 청구/수납 확인 스케줄러_일일 ( 매월 6일 6시 ) -->
+	<entry key="partnerPointPymnSchedule">0 0 6 6 * ?</entry>
+
+	<!-- 제주항공 포인트 전송_일일 ( 매월 15일 4시 ) -->
+	<entry key="pointSendJejuairSchedule">0 0 4 15 * ?</entry>
+
+	<!-- 기프티쇼 정산전송 스케줄러_일일 ( 매월 15일 5시 ) -->
+	<entry key="pointSendGiftiSchedule">0 0 5 15 * ?</entry>
+
+	<!-- 티머니 정산전송 스케줄러_일일 ( 매월 15일 6시 ) -->
+	<entry key="pointSendTmoneySchedule">0 0 6 15 * ?</entry>
+
+	<!-- 제주항공 결과 다운로드_일일 ( 매월 20일 4시 ) -->
+	<entry key="pointResultJejuairSchedule">0 0 4 20 * ?</entry>
+
+	<!-- 기프티쇼 정산결과확인 다운로드 스케줄러_일일 ( 매월 20일 5시 ) -->
+	<entry key="pointResultGiftiSchedule">0 0 5 20 * ?</entry>
+
+	<!-- 티머니 정산결과확인 스케줄러_일일 ( 매월 20일 6시 ) -->
+	<entry key="pointResultTmoneySchedule">0 0 6 20 * ?</entry>
+
+	<!-- 동부화재SMS발송_수시 ( 매일 10분마다 ) -->
+	<entry key="dongbuSmsSendSchedule">0 0/10 * * * ?</entry>
+
+	<!-- 동부화재가입자정보연동_일일 ( 매일 0시 5분 파일 생성 및 업로드 ) -->
+	<entry key="dongbuMemberSendSchedule">0 5 0 * * ?</entry>
+
+	<!-- 무료렌탈정산_일일 ( 매월 1일 8시 ) -->
+	<entry key="rntlMgmtSchedule">0 0 8 1 * ?</entry>
+
+	<!-- PTNR end -->
+
+	<!-- 배치 요청 스케줄러 -->
+	<entry key="requestSchedule">*/5 * * * * *</entry>
+
+	<!-- 기변대상생성_일일 ( 매일 4시 ) -->
+	<entry key="dvcChgTrgtProcSchedule">0 0 4 * * ?</entry>
+
+	<!-- IFRS/FDH START -->
+	<!-- 계약정보현행화 1차 IFRS/FDH 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf001Schedule">0 0 4 2 * ?</entry>
+	<entry key="fdhInf001Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 계약현행화이력정보 IFRS/FDH 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf002Schedule">0 0 4 2 * ?</entry>
+	<entry key="fdhInf002Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 상품현행화정보 IFRS/FDH 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf003Schedule">0 0 4 2 * ?</entry>
+	<entry key="fdhInf003Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 단말현행화정보 IFRS/FDH 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf004Schedule">0 0 4 2 * ?</entry>
+	<entry key="fdhInf004Schedule">0 0 4 2 * ?</entry>
+
+	<!-- MVNO추가정보 IFRS/FDH 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf005Schedule">0 0 4 2 * ?</entry>
+	<entry key="fdhInf005Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 요금제 IFRS/FDH 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf006Schedule">0 0 4 2 * ?</entry>
+	<entry key="fdhInf006Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 요금제스펙 IFRS/FDH 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf007Schedule">0 0 4 2 * ?</entry>
+	<entry key="fdhInf007Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 계약정보현행화 2차 IFRS 연동 ( 매월 15일 4시 ) -->
+	<entry key="ifrsInf008Schedule">0 0 4 15 * ?</entry>
+	<entry key="fdhInf011Schedule">0 0 4 15 * ?</entry>
+
+	<!-- 조직정보 IFRS/FDH 연동 ( 매주 월요일 4시 ) -->
+	<entry key="ifrsInf010Schedule">0 0 4 1 * ?</entry>
+	<entry key="fdhInf008Schedule">0 0 4 1 * ?</entry>
+	
+	<!-- 조직정보이력 FDH 연동 ( 매주 월요일 4시 ) -->
+	<entry key="fdhInf012Schedule">0 0 4 1 * ?</entry>
+
+	<!-- 제품기기정보 IFRS 연동 ( 매월 1일 4시 ) -->
+	<entry key="ifrsInf011Schedule">0 0 4 1 * ?</entry>
+
+	<!-- 제품관리 IFRS/FDH 연동 ( 매월 1일 4시 ) -->
+	<entry key="ifrsInf012Schedule">0 0 4 1 * ?</entry>
+	<entry key="fdhInf009Schedule">0 0 4 1 * ?</entry>
+
+	<!-- 청구수납자료 IFRS 연동 ( 매월 5일 4시 ) -->
+	<entry key="ifrsInf013Schedule">0 0 4 5 * ?</entry>
+
+	<!-- 단말기단가 IFRS/FDH 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf014Schedule">0 0 4 2 * ?</entry>
+	<entry key="fdhInf010Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 공시지원금 IFRS 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf015Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 신청정보 IFRS 연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf016Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 기기변경정보 IFRS연동 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf017Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- 판매정책정보 FDH연동 ( 매월 2일 4시 ) -->
+	<entry key="fdhInf013Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- 계약해지정보 FDH연동 ( 매월 2일 4시 ) -->
+	<entry key="fdhInf014Schedule">0 0 4 2 * ?</entry>
+
+	<!-- IFRS END -->
+
+	<!-- 개통고객LMS발송_수시 ( 매일 매 5분마다 ) -->
+	<entry key="openCstmrLmsSchedule">0 3/5 10-21 * * ?</entry>
+
+	<!-- 해지후재가입정보생성_일일 ( 매일 2시 10분 ) -->
+	<entry key="retentionProcSchedule">0 10 2 * * ?</entry>
+
+	<!-- 마케팅동의 고지 ( 매월 5일 5시 ) -->
+	<entry key="marketingSchedule">0 0 5 5 * ?</entry>
+
+	<!-- 마케팅동의공지 재발송_일일 ( 매월 6~9일 5시 ) -->
+	<entry key="marketingReSchedule">0 0 5 6-9 * ?</entry>
+
+	<!-- 직권해지연동_수시 ( 매일 02시~03시 매 분 ) -->
+	<entry key="cancelSchedule">0 0/1 2 * * ?</entry>
+
+	<!-- SMS재발송_수시 ( 매일 8~21시 매 2시간마다 ) -->
+	<entry key="smsRetrySchedule">0 0 8-21/2 * * ?</entry>
+
+	<!-- 서식지파일삭제 ( 매일 1시 30분 ) -->
+	<!-- <entry key="scanFileDelSchedule">0 30 1 * * ?</entry> -->
+
+	<!-- 전일 생성 엑셀 파일 삭제_일일 ( 매일 1시 00분 ) -->
+	<entry key="oldExcelDownFileClearSchedule">0 0 1 * * ?</entry>
+
+	<!-- 해지고객 분리 START -->
+	<!-- 신청후미개통고객삭제_일일 (신청일기준 D+365) -->
+	<entry key="rcpCustNotOpenSchedule">0 5 6 * * ?</entry>
+
+	<!-- 해지고객정보이관_일일 (해지일기준 D+180) -->
+	<entry key="tmntCustTransferSchedule">0 10 6 * * ?</entry>
+
+	<!-- 통신자료제공내역삭제_일일 (처리일기준 D+365) -->
+	<entry key="commDataPrvdSchedule">0 15 6 * * ?</entry>
+
+	<!-- 가입사실확인내역삭제_일일 (처리일기준 D+365) -->
+	<entry key="invstReqSchedule">0 20 6 * * ?</entry>
+
+	<!-- 해지고객정보삭제_일일 (이관일기준 D+1645) -->
+	<entry key="tmntCustDeleteSchedule">0 25 6 * * ?</entry>
+	<!-- 해지고객 분리 END -->
+
+	<!-- 2017-11-22, 롯데멤버스 정산 요청 -->
+	<!-- 롯데멤버스 정산요청 스케줄러_일일 ( 매월 15일 3시 ) -->
+	<entry key="pointSendLPointSchedule">0 0 3 15 * ?</entry>
+
+	<!-- 롯데멤버스 정산결과 스케즐러_일일 ( 매월 16일 5시 ) -->
+	<entry key="pointResultLPointSchedule">0 0 5 16 * ?</entry>
+
+	<!-- 개통 지연 대상 LMS발송_일일 ( 매일 7시 00분 ) -->
+	<entry key="delayOpenInfoLmsSchedule">0 0 7 * * ?</entry>
+	
+	<!--청구항목별정산자료 스케줄러_일일 ( 매월 5일,20일 3시 ) -->
+	<entry key="tmpBillPymnDataSchedule">0 0 3 5,20 * ?</entry>
+	
+	<!--DB USER OBJECT 변경이력 INSERT ( 매주 월요일 3시 30분 ) -->
+	<entry key="userObjHstSchedule">0 30 3 * * MON</entry>
+	
+	<!-- 약정만료전 고객사전고지 -->
+	<!-- 매일 8시 수행 -->
+	<entry key="enggCloseNotiSchedule">0 0 8 * * ?</entry>
+	
+	<!-- 개통간소화 개통후처리(신청정보 및 계약현행화 업데이트) -->
+	<!-- 8시부터 22시까지 매 5분마다 수행 -->
+	<entry key="mplatformOpenRequestSchedule">0 */5 8-22 * * ?</entry>
+	
+	<!-- 미개통 신청정보 삭제 -->
+	<!-- 매일 22시 수행 -->
+	<entry key="mplatformOpenFailDelSchedule">0 0 22 * * ?</entry>
+	
+	<!-- M유통 조직정보 연동 -->
+	<!-- 매일 오전 8시 -->
+	<entry key="orgAgenCnptDataSchedule">0 0 8 * * ?</entry>
+	
+	<!-- 유선판매 상담내용 개인정보 삭제 -->
+	<!-- 매일 0시 -->
+	<entry key="wireCnslCustInfoSchedule">0 0 0 * * ?</entry>
+	
+</properties>

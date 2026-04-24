@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.custmgmt.mapper.CustMgmtMapper">
+	
+	<!-- 미성년자 SMS 발송대상 목록 -->
+	<select id="getMinorSmsTrgtList" resultType="hashMap">
+		/* CustScheduleMapper.getMinorSmsTrgtList */
+		SELECT  A.CONTRACT_NUM
+		        , A.SUBSCRIBER_NO   	AS SVC_TEL_NO
+		        , A.SUB_LINK_NAME   	AS CUST_NM
+		        , C.MINOR_AGENT_NAME    AS AGENT_NM
+		        , C.MINOR_AGENT_TEL_FN || C.MINOR_AGENT_TEL_MN || C.MINOR_AGENT_TEL_RN AS AGENT_TEL_NO
+		        , TO_CHAR(SYSDATE, 'YYYYMMDD') || '100000' AS REQUEST_TIME
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_REQUEST B
+		        , MSP_REQUEST_AGENT C
+		WHERE   A.SUB_STATUS            = 'A'
+		AND     A.CONTRACT_NUM          = B.CONTRACT_NUM
+		AND     B.REQUEST_KEY           = C.REQUEST_KEY
+		AND     C.MINOR_AGENT_RELATION  IS NOT NULL
+		AND     C.MINOR_AGENT_RELATION	!= '-1'
+		AND		19 > FN_GET_AGE('A', A.CONTRACT_NUM)
+		AND		A.LST_COM_ACTV_DATE     >= '20150416'
+		AND	    A.LST_COM_ACTV_DATE		= TO_CHAR(SYSDATE - 1, 'YYYYMMDD')
+		AND     C.MINOR_AGENT_TEL_FN = '010'
+	    AND		LENGTH(C.MINOR_AGENT_TEL_FN || C.MINOR_AGENT_TEL_MN || C.MINOR_AGENT_TEL_RN) = 11
+	</select>
+	
+	<!-- 당월 말일인지 체크 -->
+	<select id="getLastDayCheck" resultType="String">
+		/* CustScheduleMapper.getLastDayCheck */
+		SELECT  DECODE(TRUNC(LAST_DAY(SYSDATE)), TRUNC(SYSDATE), 'Y', 'N') AS lastDayYn 
+		FROM    DUAL
+	</select>
+	
+	<!-- 약정만료전 고객고지 -->
+	<select id="getEnggCloseNotiList" parameterType="String" resultType="java.util.Map">
+		/* CustScheduleMapper.getEnggCloseNotiList */
+		SELECT  SUBSCRIBER_NO
+		        , TO_CHAR(SYSDATE, 'YYYYMMDD') || '090000' AS REQUEST_TIME
+		FROM    VW_CNTR_ENGG_INFO 
+		WHERE   SUB_STATUS = 'A'
+		AND     ENGG_END_DT = TO_CHAR((SYSDATE+28), 'YYYYMMDD')
+		
+		<!-- 
+		<choose>
+			<when test='_parameter != null and "Y".equals(_parameter)'>
+				AND     ENGG_END_DT BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'YYYYMMDD') AND TO_CHAR(LAST_DAY(ADD_MONTHS(SYSDATE, 1)), 'YYYYMMDD')
+			</when>
+			<otherwise>
+				AND     ENGG_END_DT = TO_CHAR(ADD_MONTHS(SYSDATE, 1), 'YYYYMMDD')
+			</otherwise>
+		</choose>
+		 -->
+		 		
+	</select> 
+	
+	<!-- 약정만료 1일전 고객고지 -->
+	<select id="getEnggDayCloseNotiList" parameterType="String" resultType="java.util.Map">
+		/* CustScheduleMapper.getEnggDayCloseNotiList */
+		SELECT  SUBSCRIBER_NO
+		        , TO_CHAR(SYSDATE, 'YYYYMMDD') || '090000' AS REQUEST_TIME
+		FROM    VW_CNTR_ENGG_INFO 
+		WHERE   SUB_STATUS = 'A'
+		AND     ENGG_END_DT = TO_CHAR((SYSDATE+1), 'YYYYMMDD')
+	</select> 
+	
+	
+	<!-- 약정만료후 30일 , 60일 , 90일 , 120일 , 180일 재약정 고객 고지 -->
+	<select id="getEnggExtendNotiList" parameterType="String" resultType="java.util.Map">
+		/* CustScheduleMapper.getEnggExtendNotiList */
+			SELECT 
+			        SUBSCRIBER_NO,
+       				TO_CHAR(SYSDATE, 'YYYYMMDD') || '090000' AS REQUEST_TIME ,
+			        SOC_INFO
+			FROM   VW_CNTR_ENGG_EXTD
+			WHERE  SUB_STATUS = 'A'
+				 AND    ((ENGG_END_DT = TO_CHAR((SYSDATE-30), 'YYYYMMDD'))
+			        or     (ENGG_END_DT = TO_CHAR((SYSDATE-60), 'YYYYMMDD'))
+			        or     (ENGG_END_DT = TO_CHAR((SYSDATE-90), 'YYYYMMDD'))
+			        or     (ENGG_END_DT = TO_CHAR((SYSDATE-120), 'YYYYMMDD'))
+			        or     (ENGG_END_DT = TO_CHAR((SYSDATE-150), 'YYYYMMDD'))
+			        or     (ENGG_END_DT = TO_CHAR((SYSDATE-180), 'YYYYMMDD')))
+	</select> 
+	
+	<!-- 약정만료 후 리텐션 고지 -->
+	<select id="getRetentionNotiList" resultType="java.util.Map">
+		/* CustScheduleMapper.getRetentionNotiList */
+		SELECT  DISTINCT SUBSCRIBER_NO
+		FROM    (
+		            SELECT  JUO.CONTRACT_NUM
+		                    , JUO.SUBSCRIBER_NO
+		                    , JUO.LST_COM_ACTV_DATE
+		                    , JUO.SUB_STATUS
+		                    , REQ.LST_RATE_NM
+		                    , NVL(DVC.ENGG_MNTH_CNT, BL.ENGG_MNTH_CNT) AS ENGG_MNTH_CNT
+		                    , NVL(DVC.ENGG_START_DT, BL.ENGG_START_DT) AS ENGG_START_DT
+		                    , NVL(DVC.ENGG_END_DT, BL.ENGG_END_DT) AS ENGG_END_DT
+		                    , TO_CHAR(TO_DATE(SUBSTR(REQ.SIM_INFO, 20, 8), 'YYYYMMDD'), 'YYYY-MM-DD')                    AS SIM_STRT_DT
+		                    , FN_GET_CODENM('MSP0010', SUBSTR(REQ.SIM_INFO, 36, 1))                                      AS SIM_STAT_NM
+		                    , TO_NUMBER(SUBSTR(REQ.SIM_INFO, 3, 3))                                                      AS SIM_ENGG_CNT
+		                    , TO_CHAR(TO_DATE(SUBSTR(REQ.SIM_INFO, 28, 8), 'YYYYMMDD'), 'YYYY-MM-DD')                    AS SIM_END_DT
+		                    , CASE 
+		                        WHEN REQ.SIM_INFO IS NOT NULL AND SUBSTR(REQ.SIM_INFO, 28, 8) > NVL(DVC.ENGG_END_DT, BL.ENGG_END_DT) 
+		                        THEN SUBSTR(REQ.SIM_INFO, 28, 8)
+		                        ELSE NVL(DVC.ENGG_END_DT, BL.ENGG_END_DT)
+		                      END AS END_DT
+		            FROM    MSP_JUO_SUB_INFO JUO 
+		                    , MSP_REQUEST_DTL REQ
+		                    /* 심플할인 요금제 */
+		                    , (
+		                        SELECT  DISTINCT A.RATE_CD
+		                        FROM    MSP_RATE_MST A
+		                                , MSP_RATE_SPEC B
+		                        WHERE A.RATE_CD = B.RATE_CD
+		                        AND   A.DATA_TYPE = 'LTE'
+		                        AND   B.SPRT_TP = 'SM'
+		                        AND   B.DC_AMT > 0
+		                        AND   SYSDATE BETWEEN TO_DATE(B.APPL_STRT_DTTM, 'YYYYMMDDHH24MISS') AND TO_DATE(B.APPL_END_DTTM, 'YYYYMMDDHH24MISS')
+		                        AND   SYSDATE BETWEEN TO_DATE(A.APPL_STRT_DT, 'YYYYMMDD') AND TO_DATE(A.APPL_END_DT, 'YYYYMMDD')
+		                      ) SIM
+		                    /* 할인적용된 경우 */
+		                    , (
+		                        SELECT  A.CONTRACT_NUM
+		                                , MIN(B.ENGG_MNTH_CNT) AS ENGG_MNTH_CNT
+		                                , SUBSTR(MIN(B.APP_START_DD), 1, 8) AS ENGG_START_DT
+		                                , TO_CHAR(ADD_MONTHS(TO_DATE(MIN(B.APP_START_DD), 'YYYYMMDDHH24MISS'), MIN(B.ENGG_MNTH_CNT)) - 1, 'YYYYMMDD') AS ENGG_END_DT
+		                        FROM    MSP_JUO_SUB_INFO A
+		                                , MSP_JUO_ADD_INFO B
+		                        WHERE   A.PPPO = 'PO'
+		                        AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		                        AND     B.BL_DC_TYPE = 'KD'
+		                        GROUP BY A.CONTRACT_NUM 
+		                      ) BL 
+		                    /* 기기변경이력 */
+		                    , (
+		                        SELECT  A.CONTRACT_NUM
+		                                , NVL(B.ENGG_MNTH_CNT, 0) AS ENGG_MNTH_CNT
+		                                , SUBSTR(B.APP_START_DD, 1, 8) AS ENGG_START_DT
+		                                , TO_CHAR(ADD_MONTHS(TO_DATE(B.APP_START_DD, 'YYYYMMDDHH24MISS'), NVL(B.ENGG_MNTH_CNT, 0)) - 1, 'YYYYMMDD') AS ENGG_END_DT
+		                        FROM    MSP_JUO_SUB_INFO A
+		                                , MSP_JUO_ADD_INFO B
+		                                , MSP_DVC_CHG_AGNT_HST C
+		                        WHERE   A.PPPO = 'PO'
+		                        AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		                        AND     B.BL_DC_TYPE = 'KD'
+		                        AND     B.CONTRACT_NUM = C.CONTRACT_NUM
+		                        AND     B.EVNT_TRTM_NO = C.EVNT_TRTM_NO
+		                        AND     C.REQUEST_KEY = (SELECT MAX(REQUEST_KEY) FROM MSP_DVC_CHG_AGNT_HST WHERE  CONTRACT_NUM = C.CONTRACT_NUM) 
+		                      ) DVC
+		            WHERE   JUO.CONTRACT_NUM = BL.CONTRACT_NUM
+		            AND     JUO.CONTRACT_NUM = DVC.CONTRACT_NUM(+)
+		            AND     JUO.CONTRACT_NUM = REQ.CONTRACT_NUM
+		            AND     SIM.RATE_CD IN REQ.LST_RATE_CD
+		            AND     JUO.SUB_STATUS = 'A'
+		            AND     FN_GET_AGE_JAVA(CRYPTO_AES256.DEC_AES(JUO.USER_SSN)) >= 20
+		        )
+		WHERE   (TO_DATE(END_DT, 'YYYYMMDD') = TRUNC(SYSDATE)-1
+		OR      TO_DATE(END_DT, 'YYYYMMDD') = TRUNC(SYSDATE)-31
+		OR      TO_DATE(END_DT, 'YYYYMMDD') = TRUNC(SYSDATE)-61
+		OR      TO_DATE(END_DT, 'YYYYMMDD') = TRUNC(SYSDATE)-91
+		OR      TO_DATE(END_DT, 'YYYYMMDD') = TRUNC(SYSDATE)-121
+		OR      TO_DATE(END_DT, 'YYYYMMDD') = TRUNC(SYSDATE)-151)
+	</select>
+	
+</mapper>

@@ -1,0 +1,1498 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.ptnr.ptnrmgmt.mapper.PartnerPointSettleMapper">
+	
+	<!-- 제휴사 사용량 계산 프로시저 호출 -->
+	<insert id="callPartnerUsgPoint" statementType="CALLABLE" parameterType="java.util.HashMap">
+		/** partnerPointSettleMapper.callPartnerUsgPoint */
+		{ CALL P_PARTNER_USG_POINT( #{USG_YM, mode=IN, jdbcType=VARCHAR}
+									, #{O_CODE, mode=OUT, jdbcType=VARCHAR}
+									, #{O_MSG, mode=OUT, jdbcType=VARCHAR}
+				) }
+	</insert>
+	
+	<!-- 제휴사 사용량 계산 프로시저 호출 -->
+	<insert id="callPartnerUsgPointDaily" statementType="CALLABLE" parameterType="java.util.HashMap">
+		/** partnerPointSettleMapper.callPartnerUsgPointDaily */
+		{ CALL P_PARTNER_USG_POINT_DAILY( #{USG_YM, mode=IN, jdbcType=VARCHAR}
+									    , #{O_CODE, mode=OUT, jdbcType=VARCHAR}
+									    , #{O_MSG, mode=OUT, jdbcType=VARCHAR}
+				) }
+	</insert>
+	
+	<!-- 제휴사 포인트 수납체크 호출 -->
+	<insert id="callPartnerPointPymnCheck" statementType="CALLABLE" parameterType="java.util.HashMap">
+		/** partnerPointSettleMapper.callPartnerPointPymnCheck */
+		{ CALL P_PARTNER_POINT_PYMN_CHECK( #{BILL_YM, mode=IN, jdbcType=VARCHAR}
+									, #{O_CODE, mode=OUT, jdbcType=VARCHAR}
+									, #{O_MSG, mode=OUT, jdbcType=VARCHAR}
+		
+				) }
+	</insert>
+	
+	<!-- 제주항공 포인트 정산 내역 가져오기 -->
+	<select id="getJejuPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.JejuairPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getJejuPointList */
+		SELECT  A.PARTNER_ID
+		        , B.SELF_CSTMR_CI AS MEMBER_CI
+		        , SUM(NVL(A.REQ_POINT, 0)) AS POINT
+		        , SUM(NVL(A.REQ_POINT, 0)) AS AMOUNT
+		FROM    MSP_PARTNER_POINT_MST A
+		        , MSP_JUO_CUS_INFO B
+		WHERE   A.PARTNER_ID = #{partnerId}
+		AND     A.SEND_FLAG = 'R'
+		AND     A.FULL_PAY_YN = 'Y'
+		AND     A.PAY_RESULT IN ('X','F')
+		AND     A.CUSTOMER_ID = B.CUSTOMER_ID
+		AND     B.SELF_CSTMR_CI IS NOT NULL
+		GROUP BY A.PARTNER_ID, B.SELF_CSTMR_CI
+	</select>
+	
+	<!-- 제주항공 포인트 정산 내역 INSERT -->
+	<insert id="insertJejuPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.JejuairPointVO" >
+		/* partnerPointSettleMapper.insertJejuPointList */
+		INSERT INTO MSP_PARTNER_JEJUAIR_01 
+		        (BILL_YM
+		        , MEMBER_CI
+		        , POINT
+		        , REGST_ID
+		        , REGST_DTTM)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM')
+		        , B.SELF_CSTMR_CI AS MEMBER_CI
+		        , SUM(NVL(A.REQ_POINT, 0)) AS AMOUNT
+		        , 'POINT'
+		        , SYSDATE
+		FROM    MSP_PARTNER_POINT_MST A
+		        , MSP_JUO_CUS_INFO B
+		WHERE   A.PARTNER_ID = #{partnerId}
+		AND     A.SEND_FLAG = 'R'
+		AND     A.FULL_PAY_YN = 'Y'
+		AND     A.PAY_RESULT IN ('X','F')
+		AND     A.CUSTOMER_ID = B.CUSTOMER_ID
+		AND     B.SELF_CSTMR_CI IS NOT NULL
+		GROUP BY A.PARTNER_ID, B.SELF_CSTMR_CI
+	</insert>
+	
+	<!-- 엠하우스 포인트 정산 내역 가져오기 -->
+	<select id="getGiftiPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GiftiPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getGiftiPointList */
+		SELECT  CONTRACT_NUM
+		        , CTN
+		        , POINT
+		        , USG_YM
+		FROM (  SELECT  A.CONTRACT_NUM
+		                , B.SUBSCRIBER_NO AS CTN
+		                , SUM(A.REQ_POINT) AS POINT
+		                , A.USG_YM
+		        FROM    MSP_PARTNER_POINT_MST A
+		                , MSP_JUO_SUB_INFO B
+		        WHERE  A.SEND_FLAG = 'R'
+		        AND    A.FULL_PAY_YN = 'Y'
+		        AND    A.PAY_RESULT IN ('X', 'F')
+		        AND    A.PARTNER_ID = #{partnerId}
+		        AND    A.CONTRACT_NUM = B.CONTRACT_NUM
+		        GROUP BY A.CONTRACT_NUM, B.SUBSCRIBER_NO, A.USG_YM
+		     )
+		WHERE   POINT > 0 
+	</select>
+	
+	<!-- 엠하우스 포인트 정산 내역 INSERT -->
+	<insert id="insertGiftiPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GiftiPointVO" >
+		/* partnerPointSettleMapper.insertGiftiPointList */
+		INSERT INTO MSP_PARTNER_GIFTI_01
+		        (LINK_YM
+		        , USG_YM
+		        , CONTRACT_NUM
+		        , CTN
+		        , POINT
+		        , REGST_ID
+		        , REGST_DTTM)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM') AS LINK_YM
+		        , USG_YM
+		        , CONTRACT_NUM
+		        , CTN
+		        , POINT
+		        , 'POINT'
+		        , SYSDATE
+		FROM (  SELECT  A.USG_YM
+		                , A.CONTRACT_NUM
+		                , B.SUBSCRIBER_NO AS CTN
+		                , SUM(A.REQ_POINT) AS POINT
+		        FROM 	MSP_PARTNER_POINT_MST A
+		                , MSP_JUO_SUB_INFO B
+		        WHERE   A.SEND_FLAG = 'R'
+		        AND     A.FULL_PAY_YN = 'Y'
+		        AND     A.PAY_RESULT IN ('X', 'F')
+		        AND     A.PARTNER_ID = #{partnerId}
+		        AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		        GROUP BY A.CONTRACT_NUM, B.SUBSCRIBER_NO, A.USG_YM
+		     )
+		WHERE   POINT > 0
+	</insert>
+	
+	<!-- 티머니 포인트 정산 내역 가져오기 -->
+	<select id="getTmoneyPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.TmoneyPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getTmoneyPointList */
+		SELECT  CONTRACT_NUM
+		        , UICC
+		        , CTN
+		        , POINT
+		        , BILL_YM
+		FROM (  SELECT  A.CONTRACT_NUM
+		                , B.ICC_ID AS UICC
+		                , B.SUBSCRIBER_NO AS CTN
+		                , SUM(A.REQ_POINT) AS POINT
+		                , A.BILL_YM
+		        FROM    MSP_PARTNER_POINT_MST A
+		                , MSP_JUO_SUB_INFO B
+		        WHERE   A.SEND_FLAG = 'R'
+		        AND     A.FULL_PAY_YN = 'Y'
+		        AND     A.PAY_RESULT IN ('X', 'F')
+		        AND     A.PARTNER_ID = #{partnerId}
+		        AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		        GROUP BY A.CONTRACT_NUM, A.BILL_YM, B.SUBSCRIBER_NO, B.ICC_ID
+		     )
+		WHERE   POINT > 0
+	</select>
+	
+	<!-- 티머니 포인트 정산 내역 INSERT -->
+	<insert id="insertTmoneyPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.TmoneyPointVO" >
+		/* partnerPointSettleMapper.insertTmoneyPointList */
+		INSERT INTO MSP_PARTNER_TMONEY_01
+		        (LINK_YM
+		        , CONTRACT_NUM
+		        , UICC
+		        , CTN
+		        , POINT
+		        , BILL_YM
+		        , REGST_ID
+		        , REGST_DTTM)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM') AS BILL_YM
+		        , CONTRACT_NUM
+		        , UICC
+		        , CTN
+		        , POINT
+		        , BILL_YM
+		        , 'POINT'
+		        , SYSDATE
+		FROM (  SELECT  A.CONTRACT_NUM
+		                , B.ICC_ID AS UICC
+		                , B.SUBSCRIBER_NO AS CTN
+		                , SUM(A.REQ_POINT) AS POINT
+		                , A.BILL_YM
+		        FROM    MSP_PARTNER_POINT_MST A
+		                , MSP_JUO_SUB_INFO B
+		        WHERE   A.SEND_FLAG = 'R'
+		        AND     A.FULL_PAY_YN = 'Y'
+		        AND     A.PAY_RESULT IN ('X', 'F')
+		        AND     A.PARTNER_ID = #{partnerId}
+		        AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		        GROUP BY A.CONTRACT_NUM, A.BILL_YM, B.SUBSCRIBER_NO, B.ICC_ID
+		     )
+		WHERE   POINT > 0
+	</insert>
+	
+	<!-- 구글Play 포인트 정산 내역 가져오기 -->
+	<select id="getGooglePlayPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GooglePlayPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getGooglePlayPointList */
+		SELECT  CONTRACT_NUM
+		        , UICC
+		        , CTN
+		        , SVC_TYPE
+		        , SVC_CD
+		        , POINT
+		        , BILL_YM
+		        , TO_CHAR(SYSDATE, 'YYYYMM') LINK_YM
+		FROM (  SELECT  A.CONTRACT_NUM
+		              , B.ICC_ID AS UICC
+		              , B.SUBSCRIBER_NO AS CTN
+		              , CASE WHEN (SELECT '1' FROM MSP_PARTNER_ADD_SVC_MST
+						           WHERE PARTNER_ID = #{partnerId}
+						           AND   ADD_SVC_CD = A.RATE_CD
+						           AND   ROWNUM = 1
+						           ) = '1' THEN '1'
+						     WHEN (SELECT '2' FROM MSP_PARTNER_PRMT_MST
+						           WHERE PARTNER_ID = #{partnerId}
+						           AND   PRMT_ID = A.RATE_CD
+						           AND   ROWNUM = 1
+						           ) = '2' THEN '2'
+						ELSE '0'
+						END AS SVC_TYPE
+		              , A.RATE_CD AS SVC_CD
+		              , SUM(A.REQ_POINT) AS POINT
+		              , A.BILL_YM
+		        FROM    MSP_PARTNER_POINT_MST A
+		              , MSP_JUO_SUB_INFO B
+		        WHERE   A.SEND_FLAG = 'R'
+		        /* AND     A.FULL_PAY_YN = 'Y' */
+		        AND     A.PAY_RESULT IN ('X', 'F') 
+		        AND     A.PARTNER_ID = #{partnerId}
+		        AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		        GROUP BY A.CONTRACT_NUM, A.BILL_YM, B.SUBSCRIBER_NO, B.ICC_ID, A.RATE_CD
+            ) B
+        WHERE
+            POINT > 0
+	</select>
+	
+	<!-- 구글Play 포인트 정산 내역 INSERT -->
+	<insert id="insertGooglePlayPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GooglePlayPointVO" >
+		/* partnerPointSettleMapper.insertGooglePlayPointList */
+		INSERT INTO MSP_PARTNER_GOOGLEPLAY_01
+		        (LINK_YM
+		        , CONTRACT_NUM
+		        , UICC
+		        , CTN
+		        , SVC_TYPE
+		        , SVC_CD
+		        , POINT
+		        , BILL_YM
+		        , REGST_ID
+		        , REGST_DTTM)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM') AS LINK_YM
+		        , CONTRACT_NUM
+		        , UICC
+		        , CTN
+		        , SVC_TYPE
+		        , SVC_CD
+		        , POINT
+		        , BILL_YM
+		        , 'POINT'
+		        , SYSDATE
+		FROM (  SELECT  A.CONTRACT_NUM
+		              , B.ICC_ID AS UICC
+		              , B.SUBSCRIBER_NO AS CTN
+		              , CASE WHEN (SELECT '1' FROM MSP_PARTNER_ADD_SVC_MST
+						           WHERE PARTNER_ID = #{partnerId}
+						           AND   ADD_SVC_CD = A.RATE_CD
+						           AND   ROWNUM = 1
+						           ) = '1' THEN '1'
+						     WHEN (SELECT '2' FROM MSP_PARTNER_PRMT_MST
+						           WHERE PARTNER_ID = #{partnerId}
+						           AND   PRMT_ID = A.RATE_CD
+						           AND   ROWNUM = 1
+						           ) = '2' THEN '2'
+						ELSE '0'
+						END AS SVC_TYPE
+		              , A.RATE_CD AS SVC_CD
+		              , SUM(A.REQ_POINT) AS POINT
+		              , A.BILL_YM
+		        FROM    MSP_PARTNER_POINT_MST A
+		              , MSP_JUO_SUB_INFO B
+		        WHERE   A.SEND_FLAG = 'R'
+		        /* AND     A.FULL_PAY_YN = 'Y' */
+		        AND     A.PAY_RESULT IN ('X', 'F')
+		        AND     A.PARTNER_ID = #{partnerId}
+		        AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		        GROUP BY A.CONTRACT_NUM, A.BILL_YM, B.SUBSCRIBER_NO, B.ICC_ID, A.RATE_CD
+            ) B
+        WHERE
+            POINT > 0
+        AND NOT EXISTS ( SELECT 1 FROM MSP_PARTNER_GOOGLEPLAY_01 A
+                           WHERE A.LINK_YM = TO_CHAR(SYSDATE, 'YYYYMM')
+                           AND   A.CONTRACT_NUM = B.CONTRACT_NUM
+                           AND   A.UICC = B.UICC
+                           AND   A.CTN = B.CTN
+                           AND   A.SVC_TYPE = B.SVC_TYPE
+                           AND   A.SVC_CD = B.SVC_CD
+                           AND   A.BILL_YM = B.BILL_YM
+                           )
+	</insert>
+	
+	<!-- 제주항공 포인트 지급결과 업데이트. -->
+	<update id="updateJejuPointMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.JejuairPointVO">
+		/** partnerPointSettleMapper.updateJejuPointMst */
+		<![CDATA[
+		UPDATE  MSP_PARTNER_POINT_MST A
+		SET     PAY_RESULT = #{payResult}
+		        , RESULT_DTL_CD = #{responseCode}
+		        , PAY_POINT = DECODE(#{payResult}, 'S', REQ_POINT, PAY_POINT)
+		        , PAY_DTTM = SYSDATE
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   A.SEND_FLAG = 'R'
+		AND     A.FULL_PAY_YN = 'Y'
+		AND     A.PAY_RESULT <> 'S'
+		AND     A.PARTNER_ID = #{partnerId}
+		AND     A.BILL_YM <=  #{billYm}
+		AND     A.CUSTOMER_ID IN (SELECT CUSTOMER_ID FROM MSP_JUO_CUS_INFO WHERE SELF_CSTMR_CI = #{memberCi} )
+		]]>
+	</update>
+	
+	<!-- 제주항공 포인트 연동내역 결과 업데이트. -->
+	<update id="updatePartnerJejuair" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.JejuairPointVO">
+		/** partnerPointSettleMapper.updatePartnerJejuair */
+		UPDATE  MSP_PARTNER_JEJUAIR_01
+		SET     RESULT_DTL_CD = #{responseCode}
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   BILL_YM = #{billYm}
+		AND     MEMBER_CI = #{memberCi}
+	</update>
+	
+	<!-- 엠하우스 포인트 지급결과 업데이트. -->
+	<update id="updateGiftiPointMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GiftiPointVO">
+		/** partnerPointSettleMapper.updateGiftiPointMst */
+		<![CDATA[
+		UPDATE  MSP_PARTNER_POINT_MST A
+		SET     PAY_RESULT = #{payResult}
+		        , RESULT_DTL_CD = #{responseCode}
+		        , PAY_POINT = DECODE(#{payResult}, 'S', REQ_POINT, PAY_POINT)
+		        , PAY_DTTM = SYSDATE
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   A.SEND_FLAG = 'R'
+		AND     A.FULL_PAY_YN = 'Y'
+		AND     A.PAY_RESULT <> 'S'
+		AND     A.PARTNER_ID = #{partnerId}
+		AND     A.CONTRACT_NUM = #{contractNum}
+		AND		A.USG_YM = #{usgYm}
+		]]>
+	</update>
+	
+	<!-- 엠하우스 포인트 연동내역 결과 업데이트. -->
+	<update id="updatePartnerGifti" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GiftiPointVO">
+		/** partnerPointSettleMapper.updatePartnerGifti */
+		UPDATE  MSP_PARTNER_GIFTI_01
+		SET     RESULT_DTL_CD = #{responseCode}
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   LINK_YM = #{linkYm}
+		AND     USG_YM = #{usgYm}
+		AND     CONTRACT_NUM = #{contractNum}
+		AND     CTN = #{ctn}
+	</update>
+	
+	<!-- 티머니 포인트 지급결과 업데이트. -->
+	<update id="updateTmoneyPointMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.TmoneyPointVO">
+		/** partnerPointSettleMapper.updateTmoneyPointMst */
+		<![CDATA[
+		UPDATE  MSP_PARTNER_POINT_MST A
+		SET     PAY_RESULT = #{payResult}
+		        , RESULT_DTL_CD = #{responseCode}
+		        , PAY_POINT = DECODE(#{payResult}, 'S', REQ_POINT, PAY_POINT)
+		        , PAY_DTTM = SYSDATE
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   A.SEND_FLAG = 'R'
+		AND     A.FULL_PAY_YN = 'Y'
+		AND     A.PAY_RESULT <> 'S'
+		AND     A.PARTNER_ID = #{partnerId}
+		AND     A.CONTRACT_NUM = #{contractNum}
+		AND     A.BILL_YM = #{billYm}
+		]]>
+	</update>
+	
+	<!-- 티머니 포인트 연동내역 결과 업데이트. -->
+	<update id="updatePartnerTmoney" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.TmoneyPointVO">
+		/** partnerPointSettleMapper.updatePartnerTmoney */
+		UPDATE  MSP_PARTNER_TMONEY_01
+		SET     RESULT_DTL_CD = #{responseCode}
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   LINK_YM = #{linkYm}
+		AND     UICC = #{uicc}
+		AND     BILL_YM = #{billYm}
+	</update>
+	
+	<!-- 구글Play 포인트 지급결과 업데이트. -->
+	<update id="updateGooglePlayPointMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GooglePlayPointVO">
+		/** partnerPointSettleMapper.updateGooglePlayPointMst */
+		<![CDATA[
+		UPDATE  MSP_PARTNER_POINT_MST A
+		SET     PAY_RESULT = #{payResult}
+		        , RESULT_DTL_CD = #{responseCode}
+		        , PAY_POINT = DECODE(#{payResult}, 'S', REQ_POINT, PAY_POINT)
+		        , PAY_DTTM = SYSDATE
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   A.SEND_FLAG = 'R'
+		/* AND     A.FULL_PAY_YN = 'Y' */
+		AND     A.PAY_RESULT <> 'S'
+		AND     A.PARTNER_ID = #{partnerId}
+		AND     A.CONTRACT_NUM = #{contractNum}
+		AND     A.BILL_YM = #{billYm}
+		AND     A.RATE_CD = #{svcCd}
+		]]>
+	</update>
+	
+	<!-- 구글Play 포인트 연동내역 결과 업데이트. -->
+	<update id="updatePartnerGooglePlay" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.GooglePlayPointVO">
+		/** partnerPointSettleMapper.updatePartnerGooglePlay */
+		UPDATE  MSP_PARTNER_GOOGLEPLAY_01
+		SET     RESULT_DTL_CD = #{responseCode}
+		        , DEAL_NUM = #{dealNum}
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   LINK_YM = #{linkYm}
+		AND     CONTRACT_NUM = #{contractNum}
+		AND     UICC = #{uicc}
+		AND     CTN = #{ctn}
+		AND     SVC_TYPE = #{svcType}
+		AND     SVC_CD = #{svcCd}
+		AND     BILL_YM = #{billYm}
+	</update>
+	
+	<!-- 제휴사 업로드할 파일 생성 결과 -->
+	<insert id="insertPointFile" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		/** partnerPointSettleMapper.insertPointFile */
+		MERGE INTO MSP_PARTNER_POINT_FILE T
+		USING ( SELECT
+		        #{partnerId}              PARTNER_ID
+		        , #{fileNm}               FILE_NM
+		        , #{localUpDir}           LOCAL_UP_DIR
+		        , #{localDownDir}         LOCAL_DOWN_DIR
+		        , #{hostUpDir}            HOST_UP_DIR
+		        , #{hostDownDir}          HOST_DOWN_DIR
+		        , NVL(#{sendFlag},'R')    SEND_FLAG
+		        , NVL(#{sendResult},'R')  SEND_RESULT
+		        , 'POINT'                 REGST_ID
+		   FROM DUAL
+		   ) D
+		ON (T.PARTNER_ID = D.PARTNER_ID
+		    AND T.FILE_NM = D.FILE_NM
+		    )
+		WHEN MATCHED THEN
+		UPDATE SET
+		    SEND_FLAG = D.SEND_FLAG
+		   ,SEND_RESULT = D.SEND_RESULT
+		   ,REGST_DTTM = SYSDATE
+		WHEN NOT MATCHED THEN
+		INSERT 
+		    (
+		        PARTNER_ID
+		        , FILE_NM
+		        , LOCAL_UP_DIR
+		        , LOCAL_DOWN_DIR
+		        , HOST_UP_DIR
+		        , HOST_DOWN_DIR
+		        , SEND_FLAG
+		        , SEND_RESULT
+		        , REGST_ID
+		        , REGST_DTTM
+		    ) 
+		VALUES
+         	(
+		        D.PARTNER_ID
+		        , D.FILE_NM
+		        , D.LOCAL_UP_DIR
+		        , D.LOCAL_DOWN_DIR
+		        , D.HOST_UP_DIR
+		        , D.HOST_DOWN_DIR
+		        , D.SEND_FLAG
+		        , D.SEND_RESULT
+		        , D.REGST_ID
+		        , SYSDATE
+		    ) 
+	</insert>
+	
+	<!-- 제휴사 파일 업로드 결과 업데이트 -->
+	<update id="updatePointFileUp" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		/* partnerPointSettleMapper.updatePointFileUp */
+		UPDATE  MSP_PARTNER_POINT_FILE
+		SET     SEND_FLAG = #{sendFlag}
+		        , REGST_ID = 'POINT'
+		        , REGST_DTTM = SYSDATE
+		WHERE   PARTNER_ID = #{partnerId}
+		AND     FILE_NM = #{fileNm}
+	</update>
+	
+	<!-- 제휴사 파일 다운로드 결과 업데이트 -->
+	<update id="updatePointFileDown" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		/* partnerPointSettleMapper.updatePointFileDown */
+		UPDATE  MSP_PARTNER_POINT_FILE
+		SET     SEND_RESULT = #{sendResult}
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE   PARTNER_ID = #{partnerId}
+		AND     FILE_NM = DECODE(#{partnerId}, 'lpoint', REPLACE(#{fileNm}, 'O941', 'O940'), 'lpointP', REPLACE(#{fileNm}, 'O941', 'O940'), #{fileNm})
+	</update>
+	
+	<!-- 제휴사 정산파일 업로드 리스트 가져오기 -->
+	<select id="getPointFileUpList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getPointFileUpList */
+		SELECT  A.PARTNER_ID
+		        , A.FILE_NM
+		        , A.LOCAL_UP_DIR
+		        , A.HOST_UP_DIR
+		FROM    MSP_PARTNER_POINT_FILE A
+		WHERE   A.SEND_FLAG <![CDATA[<>]]> 'S'
+		<if test='partnerId != null and partnerId != "" '>
+			AND PARTNER_ID = #{partnerId}
+		</if>
+		<if test='fileNm != null and fileNm != "" '>
+			AND FILE_NM LIKE #{fileNm} || '%'
+		</if>
+	</select>
+	
+	<!-- 제휴사 지급결과파일 다운로드 리스트 가져오기 -->
+	<select id="getPointFileDownList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getPointFileDownList */
+		SELECT  A.PARTNER_ID
+		        , DECODE(A.PARTNER_ID, 'lpoint', REPLACE(A.FILE_NM, 'O940', 'O941'), 'lpointP', REPLACE(A.FILE_NM, 'O940', 'O941'), A.FILE_NM) AS FILE_NM 
+		        , A.LOCAL_DOWN_DIR
+		        , A.HOST_DOWN_DIR
+		FROM    MSP_PARTNER_POINT_FILE A
+		WHERE   SEND_FLAG = 'S'
+		AND     SEND_RESULT IN ('R', 'F')
+		<if test='partnerId != null and partnerId != "" '>
+			AND A.PARTNER_ID = #{partnerId}
+		</if>
+		<if test='fileNm != null and fileNm != "" '>
+			AND A.FILE_NM = #{fileNm}
+		</if>
+	</select>
+	
+	<!-- 제휴사 지급결과 읽어야할 파일 리스트 가져오기 -->
+	<select id="getPointFileReadList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getPointFileReadList */
+		SELECT  A.PARTNER_ID
+		        , DECODE(A.PARTNER_ID, 'lpoint', REPLACE(A.FILE_NM, 'O940', 'O941'), 'lpointP', REPLACE(A.FILE_NM, 'O940', 'O941'), A.FILE_NM) AS FILE_NM
+		        , A.LOCAL_DOWN_DIR
+		FROM    MSP_PARTNER_POINT_FILE A
+		WHERE   A.SEND_FLAG = 'S'
+		AND     A.SEND_RESULT = 'D'
+		<if test='partnerId != null and partnerId != "" '>
+			AND A.PARTNER_ID = #{partnerId}
+		</if>
+		<if test='fileNm != null and fileNm != "" '>
+			AND A.FILE_NM = #{fileNm}
+		</if>
+	</select>
+	
+	<!-- 제휴사 인터페이스 정보 가져오기 -->
+	<select id="getPartnerSubList" parameterType="String" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getPartnerSubList */
+		SELECT  IF_NO
+		        , UP_DIR
+		        , DOWN_DIR
+		FROM    MSP_PARTNER_SUB
+		WHERE   IF_NO = #{ifNo}
+	</select>
+	
+	<!-- <select id="checkInsrMemberMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.DongbuPointVO" resultType="Integer">
+		/* partnerPointSettleMapper.checkInsrMemberMst */
+		SELECT  COUNT(1)
+		FROM    MSP_INSR_MEMBER_MST
+		WHERE   CONTRACT_NUM = #{contractNum}
+		AND     TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') BETWEEN STRT_DTTM AND END_DTTM
+	</select> -->
+	
+	<!-- 보험가입자연동이력생성 -->
+	<!-- <select id="selectPartnerDongbuHist" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.DongbuPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.selectPartnerDongbuHist */
+		<![CDATA[
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMMDD') AS SEND_DT
+		        , A.CONTRACT_NUM
+		        , B.SUB_LINK_NAME AS CUST_NM
+		        , B.SUBSCRIBER_NO AS CTN
+		        , A.MINOR_AGENT_NM
+		        , A.MINOR_AGENT_TEL
+		        , B.SUB_STATUS
+		        , SUBSTR(A.STRT_DTTM, 1, 8) AS JOIN_DT
+		        , DECODE(A.STAT_CD, 'A', '', SUBSTR(A.END_DTTM, 1, 8)) AS CHANGE_DT
+		        , TO_CHAR(TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS') + 1, 'YYYYMMDD') AS EFCT_STRT_DT
+		        , A.RATE_CD
+		        , FN_GET_RATENM(A.RATE_CD) AS RATE_NM
+		        , B.OPEN_AGNT_CD
+		        , FN_GET_ORGNM(B.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+		        /* 수납정보가 없는 최초 가입자에 한하여 수납(Y) 적용, 정산시에는 펜딩(P) 적용 */
+		        , (CASE WHEN NOT EXISTS (SELECT 1 FROM CLS_BILL_PYMN_DATA WHERE SVC_CNTR_NO = B.SVC_CNTR_NO AND BILL_RFLC_IND_CD = 'B') THEN 'P'
+		                WHEN FN_GET_UNPD_AMNT(A.CONTRACT_NUM) > 0 THEN 'N'
+		                ELSE 'Y'
+		           END) AS PYMN_YN
+		FROM    MSP_INSR_MEMBER_MST A
+		        , MSP_JUO_SUB_INFO B
+		WHERE   A.END_DTTM = (SELECT MAX(END_DTTM) FROM MSP_INSR_MEMBER_MST WHERE CONTRACT_NUM = A.CONTRACT_NUM)
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		]]>
+	</select> -->
+	
+	<!-- 보험가입자연동이력생성 -->
+	<!-- <insert id="insertPartnerDongbuHist" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.DongbuPointVO">
+		/* partnerPointSettleMapper.insertPartnerDongbuHist */
+		<![CDATA[
+		INSERT INTO MSP_PARTNER_DONGBU_01 (
+		    SEND_DT
+		    , CONTRACT_NUM
+		    , CUST_NM
+		    , CTN
+		    , MINOR_AGENT_NM
+		    , MINOR_AGENT_TEL
+		    , SUB_STATUS
+		    , JOIN_DT
+		    , CHANGE_DT
+		    , EFCT_STRT_DT
+		    , RATE_CD
+		    , RATE_NM
+		    , OPEN_AGNT_CD
+		    , OPEN_AGNT_NM
+		    , PYMN_YN
+		)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMMDD') AS SEND_DT
+		        , A.CONTRACT_NUM
+		        , B.SUB_LINK_NAME AS CUST_NM
+		        , B.SUBSCRIBER_NO AS CTN
+		        , A.MINOR_AGENT_NM
+		        , A.MINOR_AGENT_TEL
+		        , B.SUB_STATUS
+		        , SUBSTR(A.STRT_DTTM, 1, 8) AS JOIN_DT
+		        , DECODE(A.STAT_CD, 'A', '', SUBSTR(A.END_DTTM, 1, 8)) AS CHANGE_DT
+		        , TO_CHAR(TO_DATE(A.STRT_DTTM, 'YYYYMMDDHH24MISS') + 1, 'YYYYMMDD') AS EFCT_STRT_DT
+		        , A.RATE_CD
+		        , FN_GET_RATENM(A.RATE_CD) AS RATE_NM
+		        , B.OPEN_AGNT_CD
+		        , FN_GET_ORGNM(B.OPEN_AGNT_CD) AS OPEN_AGNT_NM
+		        /* 수납정보가 없는 최초 가입자에 한하여 수납(Y) 적용, 정산시에는 펜딩(P) 적용 */
+		        , (CASE WHEN NOT EXISTS (SELECT 1 FROM CLS_BILL_PYMN_DATA WHERE SVC_CNTR_NO = B.SVC_CNTR_NO AND BILL_RFLC_IND_CD = 'B') THEN 'P'
+		                WHEN FN_GET_UNPD_AMNT(A.CONTRACT_NUM) > 0 THEN 'N'
+		                ELSE 'Y'
+		           END) AS PYMN_YN
+		FROM    MSP_INSR_MEMBER_MST A
+		        , MSP_JUO_SUB_INFO B
+		WHERE   A.END_DTTM = (SELECT MAX(END_DTTM) FROM MSP_INSR_MEMBER_MST WHERE CONTRACT_NUM = A.CONTRACT_NUM)
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		]]>
+	</insert> -->
+	
+	<!-- 보험가입자 연동정보 조회 -->
+	<!-- <select id="getInsrMemberMstList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.DongbuPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getInsrMemberMstList */
+		SELECT  A.CUST_NM
+		        , A.CTN
+		        , NVL(A.MINOR_AGENT_NM, ' ') AS MINOR_AGENT_NM
+		        , NVL(A.MINOR_AGENT_TEL, ' ') AS MINOR_AGENT_TEL
+		        , A.SUB_STATUS
+		        , A.JOIN_DT
+		        , NVL(A.CHANGE_DT, ' ') AS CHANGE_DT
+		        , A.EFCT_STRT_DT
+		        , A.RATE_NM
+		        , A.OPEN_AGNT_NM
+		        , A.PYMN_YN
+		        , B.BIRTH_DT
+		FROM    MSP_PARTNER_DONGBU_01 A
+		        , MSP_INSR_MEMBER_MST B
+		WHERE   A.SEND_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM
+		AND     B.END_DTTM = (SELECT MAX(END_DTTM) FROM MSP_INSR_MEMBER_MST WHERE CONTRACT_NUM = B.CONTRACT_NUM)
+	</select> -->
+	
+	<!-- 파일연동이력삭제 -->
+	<delete id="deletePointFile" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.PointFileVO">
+		/* partnerPointSettleMapper.deletePointFile */
+		DELETE FROM MSP_PARTNER_POINT_FILE
+		WHERE  PARTNER_ID = #{partnerId, jdbcType=VARCHAR}
+		AND    FILE_NM = #{fileNm, jdbcType=VARCHAR}
+	</delete>
+	
+	<!-- 2017-11-16 롯데멤버스 추가 -->
+	<!-- 롯데멤버스 요청포인트 조회 -->
+	<select id="getLPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.LPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper.getLPointList */
+		SELECT  A.PARTNER_ID
+		        , A.BILL_YM
+		        , A.CUSTOMER_ID
+		        , B.SELF_CSTMR_CI
+		        , SUM(A.REQ_POINT) AS REQ_POINT
+		FROM    MSP_PARTNER_POINT_MST A
+		        , MSP_JUO_CUS_INFO B
+		WHERE   A.PARTNER_ID = #{partnerId}
+		AND     A.SEND_FLAG = 'R'
+		AND     A.FULL_PAY_YN = 'Y'
+		AND     A.PAY_RESULT IN ('X', 'F')
+		AND     A.CUSTOMER_ID = B.CUSTOMER_ID
+		AND     B.SELF_CSTMR_CI IS NOT NULL
+		GROUP BY A.PARTNER_ID, A.BILL_YM, A.CUSTOMER_ID, B.SELF_CSTMR_CI
+	</select>
+	
+	<select id="getLPointPrmList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.LPointVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+		/* partnerPointSettleMapper."getLPointPrmList" */
+		<!-- SELECT  BPD.BILL_YM
+                , JSI.CUSTOMER_ID
+                , JCI.SELF_CSTMR_CI
+                , SUM(  
+                        CASE    
+                            WHEN BPD.PYMN_CD IN ('INV', 'ADJR') THEN NVL(BPD.PYMN_AMNT, 0) + NVL(BPD.VAT_AMNT, 0)
+                            WHEN BPD.PYMN_CD IN ('ADJ') THEN (NVL(BPD.PYMN_AMNT, 0) + NVL(BPD.VAT_AMNT, 0)) * -1
+                            ELSE 0
+                        END) AS INV_AMNT
+        FROM    CLS_BILL_PYMN_DATA BPD
+                , MSP_JUO_SUB_INFO JSI
+                , MSP_JUO_CUS_INFO JCI
+        WHERE   BPD.SVC_CNTR_NO = JSI.SVC_CNTR_NO
+        AND     JSI.CUSTOMER_ID = JCI.CUSTOMER_ID
+        AND     JSI.CONTRACT_NUM NOT IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0067')
+        AND     BPD.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE,-1), 'YYYYMM')
+        AND     JSI.LST_COM_ACTV_DATE BETWEEN '20200801' AND '20200831'
+        AND     JSI.OPEN_AGNT_CD = 'NZA0000178'
+        GROUP BY BPD.BILL_YM, JSI.CUSTOMER_ID, JCI.SELF_CSTMR_CI -->
+        
+        SELECT  BPD.BILL_YM
+		        , JSI.CUSTOMER_ID
+		        , JCI.SELF_CSTMR_CI
+		        , SUM(  
+		                CASE    
+		                    WHEN BPD.PYMN_CD IN ('INV', 'ADJR') THEN NVL(BPD.PYMN_AMNT, 0) + NVL(BPD.VAT_AMNT, 0)
+		                    WHEN BPD.PYMN_CD IN ('ADJ') THEN (NVL(BPD.PYMN_AMNT, 0) + NVL(BPD.VAT_AMNT, 0)) * -1
+		                    ELSE 0
+		                END) AS INV_AMNT
+		FROM    CLS_BILL_PYMN_DATA BPD
+		        , MSP_JUO_SUB_INFO JSI
+		        , MSP_JUO_CUS_INFO JCI
+		        , MSP_PARTNER_USIM_MST PUM
+		        , MSP_REQUEST_DTL DTL
+		        , MSP_RATE_MST MRM
+		WHERE   BPD.SVC_CNTR_NO = JSI.SVC_CNTR_NO
+		AND     JSI.CUSTOMER_ID = JCI.CUSTOMER_ID
+		AND     JSI.CONTRACT_NUM = DTL.CONTRACT_NUM
+		AND     JSI.CONTRACT_NUM NOT IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0067')
+		AND     JSI.SUB_STATUS != 'C'
+		AND     BPD.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM')
+		AND     JSI.LST_COM_ACTV_DATE BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')||'01' AND TO_CHAR(LAST_DAY(ADD_MONTHS(SYSDATE, -2)), 'YYYYMMDD')
+		AND     PUM.ORGN_ID IN ('V000017488','V000014815','V000001444','NZA0000240') -- 대상유심접점
+		AND     DTL.FST_USIM_NO = PUM.USIM_NO
+		AND     JCI.SELF_CSTMR_CI IS NOT NULL
+		AND     MRM.RATE_TYPE IN ('00','02')
+		AND     MRM.SERVICE_TYPE = 'P'
+		AND     MRM.PAY_CL_CD = 'PO'
+		AND     MRM.RATE_CD NOT IN ('KISOPMDSB','KISSTD350','KISSTD700','KISOC2GBA','KISOC2GBB','KISOC9GBA','KISOC9GBB','KISLTE45M')
+		AND     DTL.FST_RATE_CD = MRM.RATE_CD
+		GROUP BY BPD.BILL_YM, JSI.CUSTOMER_ID, JCI.SELF_CSTMR_CI
+	</select>
+	
+	<insert id="insertLPointList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.LPointVO">
+		/* partnerPointSettleMapper.insertLPointList */
+		INSERT INTO MSP_PARTNER_LPOINT_01 (
+		    LINK_YM
+		    , BILL_YM
+		    , CUSTOMER_ID
+		    , CI
+		    , REQ_POINT
+		    , INV_AMT
+		    , REGST_ID
+		    , REGST_DTTM
+		)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM') AS LINK_YM
+		        , A.BILL_YM
+		        , A.CUSTOMER_ID
+		        , B.SELF_CSTMR_CI
+		        , SUM(A.REQ_POINT) AS REQ_POINT
+		        , SUM(A.INV_AMT) AS INV_AMT
+		        , 'POINT'
+		        , SYSDATE
+		FROM    MSP_PARTNER_POINT_MST A
+		        , MSP_JUO_CUS_INFO B
+		WHERE   A.PARTNER_ID = #{partnerId}
+		AND     A.SEND_FLAG = 'R'
+		AND     A.FULL_PAY_YN = 'Y'
+		AND     A.PAY_RESULT IN ('X', 'F')
+		AND     A.CUSTOMER_ID = B.CUSTOMER_ID
+		AND     B.SELF_CSTMR_CI IS NOT NULL
+		GROUP BY A.PARTNER_ID, A.BILL_YM, A.CUSTOMER_ID, B.SELF_CSTMR_CI
+	</insert>
+	
+	<insert id="insertLPointPrmList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.LPointVO">
+		/* partnerPointSettleMapper.insertLPointPrmList */
+		<!-- INSERT INTO MSP_PARTNER_LPOINT_02 (
+		    LINK_YM
+		    , BILL_YM
+		    , CUSTOMER_ID
+		    , CI
+		    , REQ_POINT
+		    , INV_AMT
+		    , REGST_ID
+		    , REGST_DTTM
+		)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM') AS LINK_YM
+		        , A.BILL_YM
+		        , A.CUSTOMER_ID
+		        , A.SELF_CSTMR_CI
+		        , '10000'
+		        , A.INV_AMNT
+		        , 'POINT'
+		        , SYSDATE
+		FROM    (
+		            SELECT  BPD.BILL_YM
+		                    , JSI.CUSTOMER_ID
+		                    , JCI.SELF_CSTMR_CI
+		                    , SUM(  
+		                            CASE    
+		                                WHEN BPD.PYMN_CD IN ('INV', 'ADJR') THEN NVL(BPD.PYMN_AMNT, 0) + NVL(BPD.VAT_AMNT, 0)
+		                                WHEN BPD.PYMN_CD IN ('ADJ') THEN (NVL(BPD.PYMN_AMNT, 0) + NVL(BPD.VAT_AMNT, 0)) * -1
+		                                ELSE 0
+		                            END) AS INV_AMNT
+		            FROM    CLS_BILL_PYMN_DATA BPD
+		                    , MSP_JUO_SUB_INFO JSI
+		                    , MSP_JUO_CUS_INFO JCI
+		            WHERE   BPD.SVC_CNTR_NO = JSI.SVC_CNTR_NO
+		            AND     JSI.CUSTOMER_ID = JCI.CUSTOMER_ID
+		            AND     JSI.CONTRACT_NUM NOT IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0067')
+		            AND     BPD.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE,-1), 'YYYYMM')
+		            AND     JSI.LST_COM_ACTV_DATE BETWEEN '20200801' AND '20200831'
+		            AND     JSI.OPEN_AGNT_CD = 'NZA0000178'
+		            GROUP BY BPD.BILL_YM, JSI.CUSTOMER_ID, JCI.SELF_CSTMR_CI
+		        ) A -->
+		INSERT INTO MSP_PARTNER_LPOINT_02 (
+		        LINK_YM
+		        , BILL_YM
+		        , CUSTOMER_ID
+		        , CI
+		        , REQ_POINT
+		        , INV_AMT
+		        , REGST_ID
+		        , REGST_DTTM
+		)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM') AS LINK_YM
+		        , A.BILL_YM
+		        , A.CUSTOMER_ID
+		        , A.SELF_CSTMR_CI
+		        , '2000'
+		        , A.INV_AMNT
+		        , 'POINT'
+		        , SYSDATE
+		FROM    (
+		            SELECT  BPD.BILL_YM
+		                    , JSI.CUSTOMER_ID
+		                    , JCI.SELF_CSTMR_CI
+		                    , SUM(  
+		                            CASE    
+		                                WHEN BPD.PYMN_CD IN ('INV', 'ADJR') THEN NVL(BPD.PYMN_AMNT, 0) + NVL(BPD.VAT_AMNT, 0)
+		                                WHEN BPD.PYMN_CD IN ('ADJ') THEN (NVL(BPD.PYMN_AMNT, 0) + NVL(BPD.VAT_AMNT, 0)) * -1
+		                                ELSE 0
+		                            END) AS INV_AMNT
+		            FROM    CLS_BILL_PYMN_DATA BPD
+		                    , MSP_JUO_SUB_INFO JSI
+		                    , MSP_JUO_CUS_INFO JCI
+		                    , MSP_PARTNER_USIM_MST PUM
+		                    , MSP_REQUEST_DTL DTL
+		                    , MSP_RATE_MST MRM
+		            WHERE   BPD.SVC_CNTR_NO = JSI.SVC_CNTR_NO
+		            AND     JSI.CUSTOMER_ID = JCI.CUSTOMER_ID
+		            AND     JSI.CONTRACT_NUM = DTL.CONTRACT_NUM
+		            AND     JSI.CONTRACT_NUM NOT IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0067')
+		            AND     JSI.SUB_STATUS != 'C'
+		            AND     BPD.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYYMM')
+		            AND     JSI.LST_COM_ACTV_DATE BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE, -2), 'YYYYMM')||'01' AND TO_CHAR(LAST_DAY(ADD_MONTHS(SYSDATE, -2)), 'YYYYMMDD') -- 개통일 기준
+		            AND     PUM.ORGN_ID IN ('V000017488','V000014815','V000001444','NZA0000240') -- 대상유심접점
+		            AND     DTL.FST_USIM_NO = PUM.USIM_NO
+		            AND     JCI.SELF_CSTMR_CI IS NOT NULL
+		            AND     MRM.RATE_TYPE IN ('00','02')
+		            AND     MRM.SERVICE_TYPE = 'P'
+		            AND     MRM.PAY_CL_CD = 'PO'
+		            AND     MRM.RATE_CD NOT IN ('KISOPMDSB','KISSTD350','KISSTD700','KISOC2GBA','KISOC2GBB','KISOC9GBA','KISOC9GBB','KISLTE45M')
+		            AND     DTL.FST_RATE_CD = MRM.RATE_CD
+		            GROUP BY BPD.BILL_YM, JSI.CUSTOMER_ID, JCI.SELF_CSTMR_CI
+		        ) A
+
+	</insert>
+	
+	<!-- 롯데멤버스 연동내역 생성 -->
+	<insert id="insertLpointInterface" parameterType="String">
+		/* partnerPointSettleMapper.insertLpointInterface */
+		INSERT INTO MSP_LPOINT_INTERFACE (
+			LINK_YM
+			, DATA_01
+			, DATA_02
+			, DATA_03
+			, DATA_04
+			, DATA_05
+			, DATA_06
+			, DATA_07
+			, DATA_08
+			, DATA_09
+			, DATA_10
+			, DATA_11
+			, DATA_12
+			, DATA_13
+			, DATA_14
+			, DATA_15
+			, DATA_16
+			, DATA_17
+			, DATA_18
+			, DATA_19
+			, DATA_20
+			, DATA_21
+			, DATA_22
+			, DATA_23
+			, DATA_24
+			, DATA_25
+			, DATA_26
+			, DATA_27
+			, DATA_28
+			, DATA_29
+			, DATA_30
+			, DATA_31
+			, DATA_32
+			, DATA_33
+			, DATA_34
+			, DATA_35
+			, DATA_36
+			, DATA_37
+			, DATA_38
+			, DATA_39
+			, DATA_40
+			, DATA_41
+			, DATA_42
+			, DATA_43
+			, DATA_44
+			, DATA_45
+			, DATA_46
+			, DATA_47
+			, DATA_48
+			, DATA_49
+			, DATA_50
+			, DATA_51
+			, DATA_52
+			, DATA_53
+			, DATA_54
+			, DATA_55
+			, DATA_56
+			, DATA_57
+			, DATA_58
+			, DATA_59
+			, DATA_60
+			, DATA_61
+			, DATA_62
+			, DATA_63
+			, DATA_64
+			, DATA_65
+			, DATA_66
+			, DATA_67
+			, DATA_68
+			, DATA_69
+			, DATA_70
+			, DATA_71
+			, DATA_72
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM')
+		        , 'BD'                         /* 01.자료구분 */
+		        , '6'                          /* 02.승인요청방식 */
+		        , ' '                          /* 03.고객식별구분코드 */
+		        , RPAD(' ', 37, ' ')           /* 04.카드번호 */
+		        , RPAD(' ', 20, ' ')           /* 05.고객식별값 */
+		        , RPAD(#{partnerId}, 10, ' ')  /* 06.제휴가맹점번호 */
+		        , RPAD(A.CUSTOMER_ID, 19, ' ') /* 07.제휴사승인번호, 거래일기준 고유 번호, M모바일 고객ID */
+		        , TO_CHAR(SYSDATE, 'YYYYMMDD') /* 08.거래일자 */
+		        , TO_CHAR(SYSDATE, 'HH24MISS') /* 09.거래시간 */
+		        , '10'                         /* 10.거래구분 */
+		        , '100'                        /* 11.거래사유 */
+		        , '1'                          /* 12.적립구분 */
+		        , '9'                          /* 13.거래요청방식구분코드 */
+		        , '2'                          /* 14.포인트적립구분코드 */
+		        --, LPAD(0, 12, 0)               /* 15.총매출금액 */
+		        , LPAD(SUM(A.INV_AMT), 12, 0)  /* 15.청구금액 */
+		        , LPAD(0, 12, 0)               /* 16.포인트대상금액 */
+		        , LPAD(0, 12, 0)               /* 17.현금매출금액 */
+		        -- , LPAD(0, 12, 0)               /* 18.신용카드매출금액 */
+		        , LPAD(SUM(A.INV_AMT), 12, 0)  /* 18.신용카드매출금액 */
+		        , LPAD(0, 12, 0)               /* 19.상품권매출금액 */
+		        , LPAD(0, 12, 0)               /* 20.포인트매출금액 */
+		        , LPAD(0, 12, 0)               /* 21.기타매출금액 */
+		        , LPAD(SUM(A.REQ_POINT), 9, 0) /* 22.총생성포인트 */
+		        , LPAD(0, 9, 0)                /* 23.금회생성포인트(현금) */
+		        , LPAD(0, 9, 0)                /* 24.금회생성포인트(카드) */
+		        , LPAD(0, 9, 0)                /* 25.금회생성포인트(상품권) */
+		        , LPAD(0, 9, 0)                /* 26.금회생성포인트(포인트) */
+		        , LPAD(SUM(A.REQ_POINT), 9, 0) /* 27.금회생성포인트(기타) */
+		        , LPAD(' ', 4, ' ')            /* 28.쿠폰번호 */
+		        , ' '                          /* 29.반품구분 */
+		        , ' '                          /* 30.원거래정보유무 */
+		        , ' '                          /* 31.원거래정보구분 */
+		        , RPAD(' ', 19, ' ')           /* 32.원거래승인번호 */
+		        , RPAD(' ', 8, ' ')            /* 33.원거래일자 */
+		        , RPAD(' ', 40, ' ')           /* 34.거래요청정보 */
+		        , RPAD(' ', 20, ' ')           /* 35.결제카드번호1 */
+		        , RPAD(' ', 12, ' ')           /* 36.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 37.결제카드번호2 */
+		        , RPAD(' ', 12, ' ')           /* 38.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 39.결제카드번호3 */
+		        , RPAD(' ', 12, ' ')           /* 40.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 41.결제카드번호4 */
+		        , RPAD(' ', 12, ' ')           /* 42.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 43.결제카드번호5 */
+		        , RPAD(' ', 12, ' ')           /* 44.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 45.결제카드번호6 */
+		        , RPAD(' ', 12, ' ')           /* 46.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 47.결제카드번호7 */
+		        , RPAD(' ', 12, ' ')           /* 48.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 49.결제카드번호8 */
+		        , RPAD(' ', 12, ' ')           /* 50.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 51.결제카드번호9 */
+		        , RPAD(' ', 12, ' ')           /* 52.결제카드별매출금액 */
+		        , RPAD(' ', 10, ' ')           /* 53.이벤트코드1 */
+		        , RPAD(' ', 100, ' ')          /* 54.이벤트명 */
+		        , RPAD(' ', 12, ' ')           /* 55.이벤트매출금액 */
+		        , RPAD(' ', 9, ' ')            /* 56.이벤트생성포인트 */
+		        , RPAD(' ', 2, ' ')            /* 57.유효기간 */
+		        , RPAD(' ', 10, ' ')           /* 58.이벤트코드2 */
+		        , RPAD(' ', 100, ' ')          /* 59.이벤트명 */
+		        , RPAD(' ', 12, ' ')           /* 60.이벤트매출금액 */
+		        , RPAD(' ', 9, ' ')            /* 61.이벤트생성포인트 */
+		        , RPAD(' ', 2, ' ')            /* 62.유효기간 */
+		        , RPAD(' ', 10, ' ')           /* 63.엘포인트고객번호 */
+		        , RPAD(' ', 9, ' ')            /* 64.엘포인트승인번호 */
+		        , RPAD(' ', 8, ' ')            /* 65.엘포인트승인일자 */
+		        , RPAD(' ', 6, ' ')            /* 66.엘포인트승인시간 */
+		        , RPAD(' ', 9, ' ')            /* 67.생성포인트 */
+		        , RPAD(' ', 9, ' ')            /* 68.이벤트포인트 */
+		        , RPAD(' ', 2, ' ')            /* 69.응답코드 */
+		        , RPAD(' ', 64, ' ')           /* 70.응답메세지 */
+		        , RPAD(A.CI, 88, ' ')          /* 71.CI */
+		        , RPAD(' ', 12, ' ')           /* 72.FILLER */
+		        , 'BATCH'
+		        , SYSDATE
+		        , 'BATCH'
+		        , SYSDATE
+		FROM    MSP_PARTNER_LPOINT_01 A
+		WHERE   LINK_YM = TO_CHAR(SYSDATE, 'YYYYMM')
+		GROUP BY CUSTOMER_ID, CI
+	</insert>
+	
+	<!-- 롯데멤버스 프로모션 연동내역 생성 -->
+	<insert id="insertLpointPrmInterface" parameterType="String">
+		/* partnerPointSettleMapper.insertLpointPrmInterface */
+		INSERT INTO MSP_LPOINT_PRM_INTERFACE (
+			LINK_YM
+			, DATA_01
+			, DATA_02
+			, DATA_03
+			, DATA_04
+			, DATA_05
+			, DATA_06
+			, DATA_07
+			, DATA_08
+			, DATA_09
+			, DATA_10
+			, DATA_11
+			, DATA_12
+			, DATA_13
+			, DATA_14
+			, DATA_15
+			, DATA_16
+			, DATA_17
+			, DATA_18
+			, DATA_19
+			, DATA_20
+			, DATA_21
+			, DATA_22
+			, DATA_23
+			, DATA_24
+			, DATA_25
+			, DATA_26
+			, DATA_27
+			, DATA_28
+			, DATA_29
+			, DATA_30
+			, DATA_31
+			, DATA_32
+			, DATA_33
+			, DATA_34
+			, DATA_35
+			, DATA_36
+			, DATA_37
+			, DATA_38
+			, DATA_39
+			, DATA_40
+			, DATA_41
+			, DATA_42
+			, DATA_43
+			, DATA_44
+			, DATA_45
+			, DATA_46
+			, DATA_47
+			, DATA_48
+			, DATA_49
+			, DATA_50
+			, DATA_51
+			, DATA_52
+			, DATA_53
+			, DATA_54
+			, DATA_55
+			, DATA_56
+			, DATA_57
+			, DATA_58
+			, DATA_59
+			, DATA_60
+			, DATA_61
+			, DATA_62
+			, DATA_63
+			, DATA_64
+			, DATA_65
+			, DATA_66
+			, DATA_67
+			, DATA_68
+			, DATA_69
+			, DATA_70
+			, DATA_71
+			, DATA_72
+			, REGST_ID
+			, REGST_DTTM
+			, RVISN_ID
+			, RVISN_DTTM
+		)
+		SELECT  TO_CHAR(SYSDATE, 'YYYYMM')
+		        , 'BD'                         /* 01.자료구분 */
+		        , '6'                          /* 02.승인요청방식 */
+		        , ' '                          /* 03.고객식별구분코드 */
+		        , RPAD(' ', 37, ' ')           /* 04.카드번호 */
+		        , RPAD(' ', 20, ' ')           /* 05.고객식별값 */
+		        , RPAD(#{partnerId}, 10, ' ')  /* 06.제휴가맹점번호 */
+		        , RPAD(A.CUSTOMER_ID, 19, ' ') /* 07.제휴사승인번호, 거래일기준 고유 번호, M모바일 고객ID */
+		        , TO_CHAR(SYSDATE, 'YYYYMMDD') /* 08.거래일자 */
+		        , TO_CHAR(SYSDATE, 'HH24MISS') /* 09.거래시간 */
+		        , '10'                         /* 10.거래구분 */
+		        , '100'                        /* 11.거래사유 */
+		        , '1'                          /* 12.적립구분 */
+		        , '9'                          /* 13.거래요청방식구분코드 */
+		        , '2'                          /* 14.포인트적립구분코드 */
+		        --, LPAD(0, 12, 0)               /* 15.총매출금액 */
+		        , LPAD(SUM(A.INV_AMT), 12, 0)  /* 15.청구금액 */
+		        , LPAD(0, 12, 0)               /* 16.포인트대상금액 */
+		        , LPAD(0, 12, 0)               /* 17.현금매출금액 */
+		        -- , LPAD(0, 12, 0)               /* 18.신용카드매출금액 */
+		        , LPAD(SUM(A.INV_AMT), 12, 0)  /* 18.신용카드매출금액 */
+		        , LPAD(0, 12, 0)               /* 19.상품권매출금액 */
+		        , LPAD(0, 12, 0)               /* 20.포인트매출금액 */
+		        , LPAD(0, 12, 0)               /* 21.기타매출금액 */
+		        , LPAD(SUM(A.REQ_POINT), 9, 0) /* 22.총생성포인트 */
+		        , LPAD(0, 9, 0)                /* 23.금회생성포인트(현금) */
+		        , LPAD(0, 9, 0)                /* 24.금회생성포인트(카드) */
+		        , LPAD(0, 9, 0)                /* 25.금회생성포인트(상품권) */
+		        , LPAD(0, 9, 0)                /* 26.금회생성포인트(포인트) */
+		        , LPAD(SUM(A.REQ_POINT), 9, 0) /* 27.금회생성포인트(기타) */
+		        , LPAD(' ', 4, ' ')            /* 28.쿠폰번호 */
+		        , ' '                          /* 29.반품구분 */
+		        , ' '                          /* 30.원거래정보유무 */
+		        , ' '                          /* 31.원거래정보구분 */
+		        , RPAD(' ', 19, ' ')           /* 32.원거래승인번호 */
+		        , RPAD(' ', 8, ' ')            /* 33.원거래일자 */
+		        , RPAD(' ', 40, ' ')           /* 34.거래요청정보 */
+		        , RPAD(' ', 20, ' ')           /* 35.결제카드번호1 */
+		        , RPAD(' ', 12, ' ')           /* 36.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 37.결제카드번호2 */
+		        , RPAD(' ', 12, ' ')           /* 38.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 39.결제카드번호3 */
+		        , RPAD(' ', 12, ' ')           /* 40.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 41.결제카드번호4 */
+		        , RPAD(' ', 12, ' ')           /* 42.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 43.결제카드번호5 */
+		        , RPAD(' ', 12, ' ')           /* 44.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 45.결제카드번호6 */
+		        , RPAD(' ', 12, ' ')           /* 46.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 47.결제카드번호7 */
+		        , RPAD(' ', 12, ' ')           /* 48.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 49.결제카드번호8 */
+		        , RPAD(' ', 12, ' ')           /* 50.결제카드별매출금액 */
+		        , RPAD(' ', 20, ' ')           /* 51.결제카드번호9 */
+		        , RPAD(' ', 12, ' ')           /* 52.결제카드별매출금액 */
+		        , RPAD(' ', 10, ' ')           /* 53.이벤트코드1 */
+		        , RPAD(' ', 100, ' ')          /* 54.이벤트명 */
+		        , RPAD(' ', 12, ' ')           /* 55.이벤트매출금액 */
+		        , RPAD(' ', 9, ' ')            /* 56.이벤트생성포인트 */
+		        , RPAD(' ', 2, ' ')            /* 57.유효기간 */
+		        , RPAD(' ', 10, ' ')           /* 58.이벤트코드2 */
+		        , RPAD(' ', 100, ' ')          /* 59.이벤트명 */
+		        , RPAD(' ', 12, ' ')           /* 60.이벤트매출금액 */
+		        , RPAD(' ', 9, ' ')            /* 61.이벤트생성포인트 */
+		        , RPAD(' ', 2, ' ')            /* 62.유효기간 */
+		        , RPAD(' ', 10, ' ')           /* 63.엘포인트고객번호 */
+		        , RPAD(' ', 9, ' ')            /* 64.엘포인트승인번호 */
+		        , RPAD(' ', 8, ' ')            /* 65.엘포인트승인일자 */
+		        , RPAD(' ', 6, ' ')            /* 66.엘포인트승인시간 */
+		        , RPAD(' ', 9, ' ')            /* 67.생성포인트 */
+		        , RPAD(' ', 9, ' ')            /* 68.이벤트포인트 */
+		        , RPAD(' ', 2, ' ')            /* 69.응답코드 */
+		        , RPAD(' ', 64, ' ')           /* 70.응답메세지 */
+		        , RPAD(A.CI, 88, ' ')          /* 71.CI */
+		        , RPAD(' ', 12, ' ')           /* 72.FILLER */
+		        , 'BATCH'
+		        , SYSDATE
+		        , 'BATCH'
+		        , SYSDATE
+		FROM    MSP_PARTNER_LPOINT_02 A
+		WHERE   LINK_YM = TO_CHAR(SYSDATE, 'YYYYMM')
+		GROUP BY CUSTOMER_ID, CI
+	</insert>
+	
+	<!-- 전문HEADER -->
+	<select id="getLPointReqHeader" resultType="Map">
+		/* partnerPointSettleMapper.getLPointReqHeader */
+		SELECT  'BH'                                /* 01.자료구분 */
+		        || TO_CHAR(SYSDATE, 'YYYYMMDD')     /* 02.작업일자 */
+		        || 'O940'                           /* 03.전문번호 */
+		        || RPAD('O620', 4, ' ')             /* 04.기관코드 */
+		        || RPAD(' ', 1077, ' ')             /* 05.FILLER */
+		        AS HEADER_STR
+		FROM    DUAL
+	</select>
+	
+	<!-- 전문BODY -->
+	<select id="getLPointReqBody" resultType="Map">
+		/* partnerPointSettleMapper.getLPointReqBody */
+		SELECT  A.DATA_01           /* 01.자료구분 */
+		        || A.DATA_02        /* 02.승인요청방식 */
+		        || A.DATA_03        /* 03.고객식별구분코드 */
+		        || A.DATA_04        /* 04.카드번호 */
+		        || A.DATA_05        /* 05.고객식별값 */
+		        || A.DATA_06        /* 06.제휴가맹점번호 */
+		        || A.DATA_07        /* 07.제휴사승인번호, 거래일기준 고유 번호, M모바일 고객ID */
+		        || A.DATA_08        /* 08.거래일자 */
+		        || A.DATA_09        /* 09.거래시간 */
+		        || A.DATA_10        /* 10.거래구분 */
+		        || A.DATA_11        /* 11.거래사유 */
+		        || A.DATA_12        /* 12.적립구분 */
+		        || A.DATA_13        /* 13.거래요청방식구분코드 */
+		        || A.DATA_14        /* 14.포인트적립구분코드 */
+		        || A.DATA_15        /* 15.청구금액 */
+		        || A.DATA_16        /* 16.포인트대상금액 */
+		        || A.DATA_17        /* 17.현금매출금액 */
+		        || A.DATA_18        /* 18.신용카드매출금액 */
+		        || A.DATA_19        /* 19.상품권매출금액 */
+		        || A.DATA_20        /* 20.포인트매출금액 */
+		        || A.DATA_21        /* 21.기타매출금액 */
+		        || A.DATA_22        /* 22.총생성포인트 */
+		        || A.DATA_23        /* 23.금회생성포인트(현금) */
+		        || A.DATA_24        /* 24.금회생성포인트(카드) */
+		        || A.DATA_25        /* 25.금회생성포인트(상품권) */
+		        || A.DATA_26        /* 26.금회생성포인트(포인트) */
+		        || A.DATA_27        /* 27.금회생성포인트(기타) */
+		        || A.DATA_28        /* 28.쿠폰번호 */
+		        || A.DATA_29        /* 29.반품구분 */
+		        || A.DATA_30        /* 30.원거래정보유무 */
+		        || A.DATA_31        /* 31.원거래정보구분 */
+		        || A.DATA_32        /* 32.원거래승인번호 */
+		        || A.DATA_33        /* 33.원거래일자 */
+		        || A.DATA_34        /* 34.거래요청정보 */
+		        || A.DATA_35        /* 35.결제카드번호1 */
+		        || A.DATA_36        /* 36.결제카드별매출금액 */
+		        || A.DATA_37        /* 37.결제카드번호2 */
+		        || A.DATA_38        /* 38.결제카드별매출금액 */
+		        || A.DATA_39        /* 39.결제카드번호3 */
+		        || A.DATA_40        /* 40.결제카드별매출금액 */
+		        || A.DATA_41        /* 41.결제카드번호4 */
+		        || A.DATA_42        /* 42.결제카드별매출금액 */
+		        || A.DATA_43        /* 43.결제카드번호5 */
+		        || A.DATA_44        /* 44.결제카드별매출금액 */
+		        || A.DATA_45        /* 45.결제카드번호6 */
+		        || A.DATA_46        /* 46.결제카드별매출금액 */
+		        || A.DATA_47        /* 47.결제카드번호7 */
+		        || A.DATA_48        /* 48.결제카드별매출금액 */
+		        || A.DATA_49        /* 49.결제카드번호8 */
+		        || A.DATA_50        /* 50.결제카드별매출금액 */
+		        || A.DATA_51        /* 51.결제카드번호9 */
+		        || A.DATA_52        /* 52.결제카드별매출금액 */
+		        || A.DATA_53        /* 53.이벤트코드1 */
+		        || A.DATA_54        /* 54.이벤트명 */
+		        || A.DATA_55        /* 55.이벤트매출금액 */
+		        || A.DATA_56        /* 56.이벤트생성포인트 */
+		        || A.DATA_57        /* 57.유효기간 */
+		        || A.DATA_58        /* 58.이벤트코드2 */
+		        || A.DATA_59        /* 59.이벤트명 */
+		        || A.DATA_60        /* 60.이벤트매출금액 */
+		        || A.DATA_61        /* 61.이벤트생성포인트 */
+		        || A.DATA_62        /* 62.유효기간 */
+		        || A.DATA_63        /* 63.엘포인트고객번호 */
+		        || A.DATA_64        /* 64.엘포인트승인번호 */
+		        || A.DATA_65        /* 65.엘포인트승인일자 */
+		        || A.DATA_66        /* 66.엘포인트승인시간 */
+		        || A.DATA_67        /* 67.생성포인트 */
+		        || A.DATA_68        /* 68.이벤트포인트 */
+		        || A.DATA_69        /* 69.응답코드 */
+		        || A.DATA_70        /* 70.응답메세지 */
+		        || A.DATA_71        /* 71.CI */
+		        || A.DATA_72        /* 72.FILLER */
+		        AS BODY_STR
+		FROM    MSP_LPOINT_INTERFACE A
+		WHERE   A.LINK_YM = TO_CHAR(SYSDATE, 'YYYYMM')
+	</select>
+	
+	<!-- 전문BODY -->
+	<select id="getLPointPrmReqBody" resultType="Map">
+		/* partnerPointSettleMapper.getLPointPrmReqBody */
+		SELECT  A.DATA_01           /* 01.자료구분 */
+		        || A.DATA_02        /* 02.승인요청방식 */
+		        || A.DATA_03        /* 03.고객식별구분코드 */
+		        || A.DATA_04        /* 04.카드번호 */
+		        || A.DATA_05        /* 05.고객식별값 */
+		        || A.DATA_06        /* 06.제휴가맹점번호 */
+		        || A.DATA_07        /* 07.제휴사승인번호, 거래일기준 고유 번호, M모바일 고객ID */
+		        || A.DATA_08        /* 08.거래일자 */
+		        || A.DATA_09        /* 09.거래시간 */
+		        || A.DATA_10        /* 10.거래구분 */
+		        || A.DATA_11        /* 11.거래사유 */
+		        || A.DATA_12        /* 12.적립구분 */
+		        || A.DATA_13        /* 13.거래요청방식구분코드 */
+		        || A.DATA_14        /* 14.포인트적립구분코드 */
+		        || A.DATA_15        /* 15.청구금액 */
+		        || A.DATA_16        /* 16.포인트대상금액 */
+		        || A.DATA_17        /* 17.현금매출금액 */
+		        || A.DATA_18        /* 18.신용카드매출금액 */
+		        || A.DATA_19        /* 19.상품권매출금액 */
+		        || A.DATA_20        /* 20.포인트매출금액 */
+		        || A.DATA_21        /* 21.기타매출금액 */
+		        || A.DATA_22        /* 22.총생성포인트 */
+		        || A.DATA_23        /* 23.금회생성포인트(현금) */
+		        || A.DATA_24        /* 24.금회생성포인트(카드) */
+		        || A.DATA_25        /* 25.금회생성포인트(상품권) */
+		        || A.DATA_26        /* 26.금회생성포인트(포인트) */
+		        || A.DATA_27        /* 27.금회생성포인트(기타) */
+		        || A.DATA_28        /* 28.쿠폰번호 */
+		        || A.DATA_29        /* 29.반품구분 */
+		        || A.DATA_30        /* 30.원거래정보유무 */
+		        || A.DATA_31        /* 31.원거래정보구분 */
+		        || A.DATA_32        /* 32.원거래승인번호 */
+		        || A.DATA_33        /* 33.원거래일자 */
+		        || A.DATA_34        /* 34.거래요청정보 */
+		        || A.DATA_35        /* 35.결제카드번호1 */
+		        || A.DATA_36        /* 36.결제카드별매출금액 */
+		        || A.DATA_37        /* 37.결제카드번호2 */
+		        || A.DATA_38        /* 38.결제카드별매출금액 */
+		        || A.DATA_39        /* 39.결제카드번호3 */
+		        || A.DATA_40        /* 40.결제카드별매출금액 */
+		        || A.DATA_41        /* 41.결제카드번호4 */
+		        || A.DATA_42        /* 42.결제카드별매출금액 */
+		        || A.DATA_43        /* 43.결제카드번호5 */
+		        || A.DATA_44        /* 44.결제카드별매출금액 */
+		        || A.DATA_45        /* 45.결제카드번호6 */
+		        || A.DATA_46        /* 46.결제카드별매출금액 */
+		        || A.DATA_47        /* 47.결제카드번호7 */
+		        || A.DATA_48        /* 48.결제카드별매출금액 */
+		        || A.DATA_49        /* 49.결제카드번호8 */
+		        || A.DATA_50        /* 50.결제카드별매출금액 */
+		        || A.DATA_51        /* 51.결제카드번호9 */
+		        || A.DATA_52        /* 52.결제카드별매출금액 */
+		        || A.DATA_53        /* 53.이벤트코드1 */
+		        || A.DATA_54        /* 54.이벤트명 */
+		        || A.DATA_55        /* 55.이벤트매출금액 */
+		        || A.DATA_56        /* 56.이벤트생성포인트 */
+		        || A.DATA_57        /* 57.유효기간 */
+		        || A.DATA_58        /* 58.이벤트코드2 */
+		        || A.DATA_59        /* 59.이벤트명 */
+		        || A.DATA_60        /* 60.이벤트매출금액 */
+		        || A.DATA_61        /* 61.이벤트생성포인트 */
+		        || A.DATA_62        /* 62.유효기간 */
+		        || A.DATA_63        /* 63.엘포인트고객번호 */
+		        || A.DATA_64        /* 64.엘포인트승인번호 */
+		        || A.DATA_65        /* 65.엘포인트승인일자 */
+		        || A.DATA_66        /* 66.엘포인트승인시간 */
+		        || A.DATA_67        /* 67.생성포인트 */
+		        || A.DATA_68        /* 68.이벤트포인트 */
+		        || A.DATA_69        /* 69.응답코드 */
+		        || A.DATA_70        /* 70.응답메세지 */
+		        || A.DATA_71        /* 71.CI */
+		        || A.DATA_72        /* 72.FILLER */
+		        AS BODY_STR
+		FROM    MSP_LPOINT_PRM_INTERFACE A
+		WHERE   A.LINK_YM = TO_CHAR(SYSDATE, 'YYYYMM')
+	</select>
+	
+	<!-- 전문TRAILER -->
+	<select id="getLPointReqTrailer" resultType="Map">
+		/* partnerPointSettleMapper.getLPointReqTrailer */
+		SELECT  'BT'                                                /* 01.자료구분 */
+		        || LPAD(NVL((SELECT DISTINCT COUNT(1) OVER() FROM MSP_PARTNER_LPOINT_01
+		                     WHERE LINK_YM = TO_CHAR(SYSDATE, 'YYYYMM')
+		                     GROUP BY CUSTOMER_ID, CI), 0), 9, 0)   /* 02.자료건수 */
+		        || RPAD(' ', 1084, ' ')                             /* 03.FILLER */
+		        AS TRAILER_STR
+		FROM    DUAL
+	</select>
+	
+	<select id="getLPointPrmReqTrailer" resultType="Map">
+		/* partnerPointSettleMapper.getLPointPrmReqTrailer */
+		SELECT  'BT'                                                /* 01.자료구분 */
+		        || LPAD(NVL((SELECT DISTINCT COUNT(1) OVER() FROM MSP_PARTNER_LPOINT_02
+		                     WHERE LINK_YM = TO_CHAR(SYSDATE, 'YYYYMM')
+		                     GROUP BY CUSTOMER_ID, CI), 0), 9, 0)   /* 02.자료건수 */
+		        || RPAD(' ', 1084, ' ')                             /* 03.FILLER */
+		        AS TRAILER_STR
+		FROM    DUAL
+	</select>
+	
+	<update id="updateLPointInterface" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.LPointVO">
+		/* partnerPointSettleMapper.updateLPointInterface */
+		UPDATE  MSP_LPOINT_INTERFACE
+		SET     RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		        , DATA_63 = #{resCustNo, jdbcType=VARCHAR}
+		        , DATA_64 = #{resAprvNo, jdbcType=VARCHAR}
+		        , DATA_65 = #{resAprvDt, jdbcType=VARCHAR}
+		        , DATA_66 = #{resAprvTm, jdbcType=VARCHAR}
+		        , DATA_67 = #{resAprvPoint, jdbcType=VARCHAR}
+		        , DATA_68 = #{resEvntPoint, jdbcType=VARCHAR}
+		        , DATA_69 = #{resCd, jdbcType=VARCHAR}
+		        , DATA_70 = #{resMsg, jdbcType=VARCHAR}
+		WHERE   LINK_YM = #{linkYm, jdbcType=VARCHAR}
+		AND     TRIM(DATA_07) = #{customerId, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateLPointPrmInterface" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.LPointVO">
+		/* partnerPointSettleMapper.updateLPointPrmInterface */
+		UPDATE  MSP_LPOINT_PRM_INTERFACE
+		SET     RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		        , DATA_63 = #{resCustNo, jdbcType=VARCHAR}
+		        , DATA_64 = #{resAprvNo, jdbcType=VARCHAR}
+		        , DATA_65 = #{resAprvDt, jdbcType=VARCHAR}
+		        , DATA_66 = #{resAprvTm, jdbcType=VARCHAR}
+		        , DATA_67 = #{resAprvPoint, jdbcType=VARCHAR}
+		        , DATA_68 = #{resEvntPoint, jdbcType=VARCHAR}
+		        , DATA_69 = #{resCd, jdbcType=VARCHAR}
+		        , DATA_70 = #{resMsg, jdbcType=VARCHAR}
+		WHERE   LINK_YM = #{linkYm, jdbcType=VARCHAR}
+		AND     TRIM(DATA_07) = #{customerId, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updatePartnerLPoint" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.LPointVO">
+		/* partnerPointSettleMapper.updatePartnerLPoint */
+		UPDATE  MSP_PARTNER_LPOINT_01
+		SET     RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		        , RES_CUST_NO = #{resCustNo, jdbcType=VARCHAR}
+		        , RES_APRV_NO = #{resAprvNo, jdbcType=VARCHAR}
+		        , RES_APRV_DT = #{resAprvDt, jdbcType=VARCHAR}
+		        , RES_CD = #{resCd, jdbcType=VARCHAR}
+		        , RES_MSG = #{resMsg, jdbcType=VARCHAR}
+		        , RES_APRV_POINT = #{resAprvPoint, jdbcType=VARCHAR}
+		WHERE   LINK_YM = #{linkYm, jdbcType=VARCHAR}
+		AND     CUSTOMER_ID = #{customerId, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updatePartnerLPointPrm" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.LPointVO">
+		/* partnerPointSettleMapper.updatePartnerLPoint */
+		UPDATE  MSP_PARTNER_LPOINT_02
+		SET     RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		        , RES_CUST_NO = #{resCustNo, jdbcType=VARCHAR}
+		        , RES_APRV_NO = #{resAprvNo, jdbcType=VARCHAR}
+		        , RES_APRV_DT = #{resAprvDt, jdbcType=VARCHAR}
+		        , RES_CD = #{resCd, jdbcType=VARCHAR}
+		        , RES_MSG = #{resMsg, jdbcType=VARCHAR}
+		        , RES_APRV_POINT = #{resAprvPoint, jdbcType=VARCHAR}
+		WHERE   LINK_YM = #{linkYm, jdbcType=VARCHAR}
+		AND     CUSTOMER_ID = #{customerId, jdbcType=VARCHAR}
+	</update>
+	
+	<update id="updateLPointPointMst" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.LPointVO">
+		/* partnerPointSettleMapper.updateLPointPointMst */
+		<![CDATA[
+		UPDATE  MSP_PARTNER_POINT_MST A
+		SET     PAY_RESULT = #{payResult, jdbcType=VARCHAR}
+		        , RESULT_DTL_CD = #{resCd, jdbcType=VARCHAR}
+		        , PAY_POINT = DECODE(#{payResult}, 'S', REQ_POINT, PAY_POINT)
+		        , PAY_DTTM = SYSDATE
+		        , RVISN_ID = 'POINT'
+		        , RVISN_DTTM = SYSDATE
+		WHERE A.SEND_FLAG = 'R'
+		AND   A.FULL_PAY_YN = 'Y'
+		AND   A.PARTNER_ID = #{partnerId, jdbcType=VARCHAR}
+		AND   A.CUSTOMER_ID = #{customerId, jdbcType=VARCHAR}
+		AND   A.PAY_RESULT <> 'S'
+		AND   A.BILL_YM < #{linkYm, jdbcType=VARCHAR}
+		]]>
+	</update>
+	
+</mapper>

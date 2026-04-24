@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.org.termssendmgmt.mapper.TermsSendMgmtMapper">
+	
+	<insert id="insertTermsSendTrgt">
+		/* termsSendMgmtMapper.insertTermsSendTrgt */
+		INSERT INTO CMN_TERMS_SEND_MST
+			(
+				SEQ_NUM
+				, TRGT_YM
+				, TYPE_CD
+				, CONTRACT_NUM
+				, MOBILE_NO
+				, NAME
+				, EMAIL
+				, SUB_STAT
+				, OPEN_DT
+				, TMNT_DT
+				, RESULT_YN
+				, REGST_ID
+				, REGST_DTTM
+				, RVISN_ID
+				, RVISN_DTTM)
+		 SELECT  TO_CHAR(SYSDATE,'YYMM')||SQ_MAIL_TERM_SEND.NEXTVAL
+				, TO_CHAR(SYSDATE, 'YYYYMM') AS TRGT_YM
+				, TYPE_CD
+				, CONTRCT_NUM
+				, CTN
+				, NAME
+				, EMAIL
+				, SUB_STATUS
+				, OPEN_DT
+				, TMNT_DT
+				, 'N' AS RESULT_YN
+				, 'BATCH' AS REGST_ID
+				,  SYSDATE AS REGST_DTTM
+				,  'BATCH' AS RVISN_ID
+				,  SYSDATE AS RVISN_DTTM
+		FROM (
+				SELECT    'WEB' AS TYPE_CD
+						, B.SVC_CNTR_NO AS CONTRCT_NUM
+						, B.CNTR_MOBILE_NO AS CTN
+						, A.NAME
+						, A.EMAIL
+						, C.SUB_STATUS
+						, C.LST_COM_ACTV_DATE AS OPEN_DT
+						, DECODE(C.SUB_STATUS, 'C' , SUBSTR(C.SUB_STATUS_DATE, 1 , 8), '') AS TMNT_DT
+				FROM    MCP_USER@DL_MCP A
+						, MCP_USER_CNTR_MNG@DL_MCP B
+						, MSP_JUO_SUB_INFO C
+				WHERE   TO_CHAR(A.SYS_RDATE,'MM') = TO_CHAR(SYSDATE, 'MM')
+				AND     TO_CHAR(A.SYS_RDATE,'YYYY') != TO_CHAR(SYSDATE, 'YYYY')
+				AND     REVOCATION_DATE IS NULL
+				AND     A.USERID = B.USERID(+)
+				AND     A.STATUS != '3'
+				AND     B.SVC_CNTR_NO = C.CONTRACT_NUM (+)
+				UNION ALL
+				SELECT    'REQ' AS CD
+						, A.CONTRACT_NUM
+						, C.SUBSCRIBER_NO AS CTN
+						, B.CSTMR_NAME
+						, B.CSTMR_MAIL
+						, C.SUB_STATUS
+						, C.LST_COM_ACTV_DATE AS OPEN_DT
+						, DECODE(C.SUB_STATUS, 'C' , SUBSTR(C.SUB_STATUS_DATE, 1 , 8), '') AS TMNT_DT
+				FROM    MCP_REQUEST@DL_MCP A
+						, MCP_REQUEST_CSTMR@DL_MCP B
+						, MSP_JUO_SUB_INFO C
+				WHERE   TO_CHAR(A.REQ_IN_DAY,'MM') = TO_CHAR(SYSDATE, 'MM')
+				AND     TO_CHAR(A.REQ_IN_DAY,'YYYY') != TO_CHAR(SYSDATE, 'YYYY')
+				AND     A.REQUEST_KEY = B.REQUEST_KEY
+				AND     A.CONTRACT_NUM = C.CONTRACT_NUM
+		)
+	</insert>
+	
+</mapper>

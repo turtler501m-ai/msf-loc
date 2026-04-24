@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.ptnr.ptnrmgmt.mapper.MiraeAssetMapper">
+
+   <!-- 미래에셋제휴 연동 정보 생성 -->
+   <insert id="regMspMiraeAssetIf" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.MiraeAssetVO">
+      /** miraeAssetMapper.regMspMiraeAssetIf */
+      INSERT INTO MSP_MIRAE_ASSET_IF
+          (
+               IF_YM
+               , TRADE_CD
+               , MA_KEY
+               , CUST_NM
+               , CI
+               , INSR_FEE
+               , INSR_JOIN_DT
+               , INSR_TMNT_DT
+               , INSR_NM
+               , INSR_CD
+               , KTM_CUST_YN
+               , KTM_OPEN_DT
+               , KTM_CNTR_NO
+               , KTM_AD_FEE
+               , REGST_DTTM
+          ) VALUES (
+              #{ifYm}
+              , #{tradeCd}
+              , #{maKey}
+              , #{custNm}
+              , #{ci}
+              , #{insrFee}
+              , #{insrJoinDt}
+              , #{insrTmntDt}
+              , #{insrNm}
+              , #{insrCd}
+              , #{ktmCustYn}
+              , #{ktmOpenDt}
+              , #{ktmCntrNo}
+              , #{ktmAdFee}
+              , SYSDATE
+          )
+   </insert>
+   
+   <!-- 미래에셋제휴 연동 정보 조회 -->
+   <select id="getMspMiraeAssetIfList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.MiraeAssetVO" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.MiraeAssetVO">
+      /* miraeAssetMapper.getMspMiraeAssetIfList */
+      SELECT
+              A.IF_YM
+            , A.MA_KEY
+            , A.CUST_NM
+            , A.CI
+            , A.INSR_FEE
+            , A.INSR_JOIN_DT
+            , A.INSR_NM
+            , A.INSR_CD
+      FROM  MSP_MIRAE_ASSET_IF A
+      WHERE A.IF_YM = #{ifYm}
+      AND   A.TRADE_CD = #{tradeCd}
+   </select>
+   
+   <!-- KTM 계약 정보 조회 -->
+   <select id="getMspJuoCntrByInfo" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.MiraeAssetVO" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.MiraeAssetVO">
+      /* miraeAssetMapper.getMspJuoCntrByInfo */
+      SELECT 
+              DECODE(MIN(A.CUSTOMER_ID), NULL, 0, 1) AS KTM_CUST_YN
+            , MIN(B.LST_COM_ACTV_DATE) AS KTM_OPEN_DT
+            , MIN(B.CONTRACT_NUM) AS KTM_CNTR_NO
+      FROM
+              MSP_JUO_CUS_INFO A
+            , MSP_JUO_SUB_INFO B
+      WHERE 1=1
+      AND   A.SELF_CSTMR_CI = #{ci}
+      AND   A.CUSTOMER_ID = B.CUSTOMER_ID
+      AND   B.SUB_STATUS IN ('A' , 'S')
+   </select>
+   
+   <!-- 미래에셋제휴 연동 정보 삭제 -->
+   <delete id="delMspMiraeAssetIf" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.MiraeAssetVO">
+      /* miraeAssetMapper.delMspMiraeAssetIf */
+      DELETE FROM MSP_MIRAE_ASSET_IF
+      WHERE  IF_YM = #{ifYm}
+      AND    TRADE_CD = #{tradeCd}
+   </delete>
+   
+</mapper>

@@ -1,0 +1,2565 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.cantransfermgmt.mapper.CanTransferMapper">
+
+	<!-- 신청후 미개통고객 조회, 일 처리량 제한 -->
+	<select id="getRcpCustNotOpenList" parameterType="int" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		/*transferMapper.getRcpCustNotOpenList*/
+		<![CDATA[
+		SELECT  A.REQUEST_KEY                               AS requestKey
+		        , A.SCAN_ID                                 AS scanId
+		        , A.RES_NO                                  AS resNo
+		        , TO_CHAR(A.REQ_IN_DAY, 'YYYYMMDDHH24MISS') AS reqInDay
+		        , CASE
+					WHEN	PSTATE = '20'
+						 	AND NOT EXISTS (SELECT 1 FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_SSN = TRIM(B.CSTMR_NATIVE_RRN))
+						 	AND NOT EXISTS (SELECT 1 FROM MCP_REQUEST@DL_MCP WHERE SCAN_ID = A.SCAN_ID AND REQUEST_STATE_CODE = '21')
+							THEN 'Y'
+					ELSE 'N'
+				END                                       AS delYn
+		FROM    MCP_REQUEST@DL_MCP A
+		        , MCP_REQUEST_CSTMR@DL_MCP B
+		WHERE   A.REQUEST_KEY = B.REQUEST_KEY
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST WHERE REQUEST_KEY = A.REQUEST_KEY )
+		AND     A.CONTRACT_NUM IS NULL
+		AND     A.REQ_IN_DAY < SYSDATE - #{stdrCnt}
+		AND     ROWNUM <= 10000
+		]]>
+	</select>
+	
+	<select id="isOpenScanId" parameterType="String" resultType="String">
+		/*transferMapper.isOpenScanId*/
+		SELECT	DECODE(COUNT(REQUEST_KEY), 0, 'N', 'Y')
+		FROM	MSP_REQUEST
+		WHERE	REQUEST_STATE_CODE = '21'
+		AND		SCAN_ID = #{scanId}
+	</select>
+
+	<insert id="insertMcpRequest" parameterType="String">
+		/*transferMapper.insertMcpRequest*/
+		INSERT INTO MCP_REQUEST@DL_CAN (
+		        REQUEST_KEY, MANAGER_CODE, AGENT_CODE,
+		        SERVICE_TYPE, OPER_TYPE, CSTMR_TYPE,
+		        RES_CODE, RES_MSG, RES_NO,
+		        CLAUSE_PRI_COLLECT_FLAG, CLAUSE_PRI_OFFER_FLAG, CLAUSE_ESS_COLLECT_FLAG,
+		        CLAUSE_PRI_TRUST_FLAG, CLAUSE_PRI_AD_FLAG, CLAUSE_CONFIDENCE_FLAG,
+		        ONLINE_AUTH_TYPE, ONLINE_AUTH_INFO, PSTATE,
+		        REQUEST_STATE_CODE, OPEN_NO, FILE01,
+		        FILE01_MASK, FAXYN, FAXNUM,
+		        SCAN_ID, ON_OFF_TYPE, RIP,
+		        OPEN_REQ_DATE, SYS_RDATE, REQ_WANT_NUMBER,
+		        REQ_WANT_NUMBER2, REQ_WANT_NUMBER3, REQ_BUY_TYPE,
+		        REQ_MODEL_NAME, REQ_MODEL_COLOR, REQ_PHONE_SN,
+		        REQ_USIM_SN, REQ_PAY_TYPE, REQ_ADDITION,
+		        SHOP_CD, APP_FORM_YN, REQ_IN_DAY,
+		        CONTRACT_NUM, ETC_SPECIAL, REQ_USIM_NAME,
+		        PHONE_PAYMENT, REQ_ADDITION_PRICE, APP_FORM_XML_YN,
+		        SPC_CODE, CNTPNT_SHOP_ID, SHOP_USM_ID,
+		        MEMO, REC_YN, OPEN_MARKET_REFERER,
+		        SO_CD, NW_BLCK_AGRM_YN, APP_BLCK_AGRM_YN,
+		        APP_CD, SO_TRNS_AGRM_YN, CLAUSE_JEHU_FLAG,
+		        SHOP_NM, PROD_ID, CRET_ID,
+		        BANNER_CD, SNTY_COLOR_CD, SNTY_CAPAC_CD,
+		        PROD_TYPE, CLAUSE_RENTAL_MODEL_CP, CLAUSE_RENTAL_MODEL_CP_PR,
+		        CLAUSE_RENTAL_SERVICE, CLAUSE_MPPS35_FLAG, CLAUSE_FINANCE_FLAG,
+		        TRANSFER_DTTM, REAL_SHOP_NM, USIM_KINDS_CD
+		)
+		SELECT
+		        REQUEST_KEY, MANAGER_CODE, AGENT_CODE,
+		        SERVICE_TYPE, OPER_TYPE, CSTMR_TYPE,
+		        RES_CODE, RES_MSG, RES_NO,
+		        CLAUSE_PRI_COLLECT_FLAG, CLAUSE_PRI_OFFER_FLAG, CLAUSE_ESS_COLLECT_FLAG,
+		        CLAUSE_PRI_TRUST_FLAG, CLAUSE_PRI_AD_FLAG, CLAUSE_CONFIDENCE_FLAG,
+		        ONLINE_AUTH_TYPE, ONLINE_AUTH_INFO, PSTATE,
+		        REQUEST_STATE_CODE, OPEN_NO, FILE01,
+		        FILE01_MASK, FAXYN, FAXNUM,
+		        SCAN_ID, ON_OFF_TYPE, RIP,
+		        OPEN_REQ_DATE, SYS_RDATE, REQ_WANT_NUMBER,
+		        REQ_WANT_NUMBER2, REQ_WANT_NUMBER3, REQ_BUY_TYPE,
+		        REQ_MODEL_NAME, REQ_MODEL_COLOR, REQ_PHONE_SN,
+		        REQ_USIM_SN, REQ_PAY_TYPE, REQ_ADDITION,
+		        SHOP_CD, APP_FORM_YN, REQ_IN_DAY,
+		        CONTRACT_NUM, ETC_SPECIAL, REQ_USIM_NAME,
+		        PHONE_PAYMENT, REQ_ADDITION_PRICE, APP_FORM_XML_YN,
+		        SPC_CODE, CNTPNT_SHOP_ID, SHOP_USM_ID,
+		        MEMO, REC_YN, OPEN_MARKET_REFERER,
+		        SO_CD, NW_BLCK_AGRM_YN, APP_BLCK_AGRM_YN,
+		        APP_CD, SO_TRNS_AGRM_YN, CLAUSE_JEHU_FLAG,
+		        SHOP_NM, PROD_ID, CRET_ID,
+		        BANNER_CD, SNTY_COLOR_CD, SNTY_CAPAC_CD,
+		        PROD_TYPE, CLAUSE_RENTAL_MODEL_CP, CLAUSE_RENTAL_MODEL_CP_PR,
+		        CLAUSE_RENTAL_SERVICE, CLAUSE_MPPS35_FLAG, CLAUSE_FINANCE_FLAG,
+		        SYSDATE, REAL_SHOP_NM, USIM_KINDS_CD
+		FROM    MCP_REQUEST@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestAddition" parameterType="String">
+		/*transferMapper.insertMcpRequest*/
+		INSERT INTO MCP_REQUEST_ADDITION@DL_CAN (
+		        REQUEST_KEY, ADDITION_KEY, ADDITION_NAME, RANTAL
+		)
+		SELECT
+		        REQUEST_KEY, ADDITION_KEY, ADDITION_NAME, RANTAL
+		FROM    MCP_REQUEST_ADDITION@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestAgent" parameterType="String">
+		/*transferMapper.insertMcpRequestAgent*/
+		INSERT INTO MCP_REQUEST_AGENT@DL_CAN (
+		        REQUEST_KEY, MINOR_AGENT_NAME, MINOR_AGENT_RRN,
+		        MINOR_AGENT_TEL_FN, MINOR_AGENT_TEL_MN, MINOR_AGENT_TEL_RN,
+		        MINOR_AGENT_RELATION, JRDCL_AGENT_NAME, JRDCL_AGENT_RRN,
+		        JRDCL_AGENT_TEL_FN, JRDCL_AGENT_TEL_MN, JRDCL_AGENT_TEL_RN,
+		        ENTRUST_REQ_NM, ENTRUST_RES_NM, ENTRUST_REQ_RELATION,
+		        ENTRUST_RES_RRN, ENTRUST_RES_TEL_FN, ENTRUST_RES_TEL_MN,
+		        ENTRUST_RES_TEL_RN, SYS_RDATE, MINOR_SELF_INQRY_AGRM_YN,
+		        MINOR_SELF_CERT_TYPE, MINOR_SELF_ISSU_EXPR_DT, MINOR_SELF_ISSU_NUM
+		)
+		SELECT
+		        REQUEST_KEY, MINOR_AGENT_NAME, MINOR_AGENT_RRN,
+		        MINOR_AGENT_TEL_FN, MINOR_AGENT_TEL_MN, MINOR_AGENT_TEL_RN,
+		        MINOR_AGENT_RELATION, JRDCL_AGENT_NAME, JRDCL_AGENT_RRN,
+		        JRDCL_AGENT_TEL_FN, JRDCL_AGENT_TEL_MN, JRDCL_AGENT_TEL_RN,
+		        ENTRUST_REQ_NM, ENTRUST_RES_NM, ENTRUST_REQ_RELATION,
+		        ENTRUST_RES_RRN, ENTRUST_RES_TEL_FN, ENTRUST_RES_TEL_MN,
+		        ENTRUST_RES_TEL_RN, SYS_RDATE, MINOR_SELF_INQRY_AGRM_YN,
+		        MINOR_SELF_CERT_TYPE, MINOR_SELF_ISSU_EXPR_DT, MINOR_SELF_ISSU_NUM
+		FROM    MCP_REQUEST_AGENT@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestChange" parameterType="String">
+		/*transferMapper.insertMcpRequestChange*/
+		INSERT INTO MCP_REQUEST_CHANGE@DL_CAN (
+		        NAME_CHANGE_NM, NAME_CHANGE_TEL_FN, NAME_CHANGE_TEL_MN,
+		        NAME_CHANGE_TEL_RN, NAME_CHANGE_RRN, NAME_CHANGE_PINSTALLMENT,
+		        REQUEST_KEY, SYS_RDATE
+		)
+		SELECT
+		        NAME_CHANGE_NM, NAME_CHANGE_TEL_FN, NAME_CHANGE_TEL_MN,
+		        NAME_CHANGE_TEL_RN, NAME_CHANGE_RRN, NAME_CHANGE_PINSTALLMENT,
+		        REQUEST_KEY, SYS_RDATE
+		FROM    MCP_REQUEST_CHANGE@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestClause" parameterType="String">
+		/*transferMapper.insertMcpRequestClause*/
+		INSERT INTO MCP_REQUEST_CLAUSE@DL_CAN (
+		        REQUEST_KEY, CD_GROUP_ID2, DOC_VER, SYS_RDATE
+		)
+		SELECT
+		        REQUEST_KEY, CD_GROUP_ID2, DOC_VER, SYS_RDATE
+		FROM    MCP_REQUEST_CLAUSE@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestCstmr" parameterType="String">
+		/*transferMapper.insertMcpRequestCstmr*/
+		INSERT INTO MCP_REQUEST_CSTMR@DL_CAN (
+		        REQUEST_KEY, CSTMR_FOREIGNER_NATION, CSTMR_FOREIGNER_PN,
+		        CSTMR_FOREIGNER_RRN, CSTMR_FOREIGNER_SDATE, CSTMR_FOREIGNER_EDATE,
+		        CSTMR_PRIVATE_CNAME, CSTMR_PRIVATE_NUMBER, CSTMR_JURIDICAL_CNAME,
+		        CSTMR_JURIDICAL_RRN, CSTMR_JURIDICAL_NUMBER, CSTMR_TEL_FN,
+		        CSTMR_TEL_MN, CSTMR_TEL_RN, CSTMR_MOBILE_FN,
+		        CSTMR_MOBILE_MN, CSTMR_MOBILE_RN, CSTMR_POST,
+		        CSTMR_ADDR, CSTMR_ADDR_DTL, CSTMR_ADDR_BJD,
+		        CSTMR_BILL_SEND_CODE, CSTMR_MAIL, CSTMR_MAIL_RECEIVE_FLAG,
+		        CSTMR_VISIT_TYPE, CSTMR_RECEIVE_TEL_FN, CSTMR_RECEIVE_TEL_NM,
+		        CSTMR_RECEIVE_TEL_RN, OTHERS_PAYMENT_AG, OTHERS_PAYMENT_NM,
+		        OTHERS_PAYMENT_RRN, OTHERS_PAYMENT_RELATION, OTHERS_PAYMENT_RNM,
+		        SYS_RDATE, CSTMR_NAME, CSTMR_NATIVE_RRN,
+		        CSTMR_FOREIGNER_DOD, CSTMR_FOREIGNER_BIRTH, SELF_INQRY_AGRM_YN,
+		        SELF_CERT_TYPE, SELF_ISSU_EXPR_DT, SELF_ISSU_NUM,
+		        CSTMR_JEJU_ID, SELF_CSTMR_CI, RECOMMEND_FLAG_CD,
+		        RECOMMEND_INFO
+		)
+		SELECT
+		        REQUEST_KEY, CSTMR_FOREIGNER_NATION, CSTMR_FOREIGNER_PN,
+		        CSTMR_FOREIGNER_RRN, CSTMR_FOREIGNER_SDATE, CSTMR_FOREIGNER_EDATE,
+		        CSTMR_PRIVATE_CNAME, CSTMR_PRIVATE_NUMBER, CSTMR_JURIDICAL_CNAME,
+		        CSTMR_JURIDICAL_RRN, CSTMR_JURIDICAL_NUMBER, CSTMR_TEL_FN,
+		        CSTMR_TEL_MN, CSTMR_TEL_RN, CSTMR_MOBILE_FN,
+		        CSTMR_MOBILE_MN, CSTMR_MOBILE_RN, CSTMR_POST,
+		        CSTMR_ADDR, CSTMR_ADDR_DTL, CSTMR_ADDR_BJD,
+		        CSTMR_BILL_SEND_CODE, CSTMR_MAIL, CSTMR_MAIL_RECEIVE_FLAG,
+		        CSTMR_VISIT_TYPE, CSTMR_RECEIVE_TEL_FN, CSTMR_RECEIVE_TEL_NM,
+		        CSTMR_RECEIVE_TEL_RN, OTHERS_PAYMENT_AG, OTHERS_PAYMENT_NM,
+		        OTHERS_PAYMENT_RRN, OTHERS_PAYMENT_RELATION, OTHERS_PAYMENT_RNM,
+		        SYS_RDATE, CSTMR_NAME, CSTMR_NATIVE_RRN,
+		        CSTMR_FOREIGNER_DOD, CSTMR_FOREIGNER_BIRTH, SELF_INQRY_AGRM_YN,
+		        SELF_CERT_TYPE, SELF_ISSU_EXPR_DT, SELF_ISSU_NUM,
+		        CSTMR_JEJU_ID, SELF_CSTMR_CI, RECOMMEND_FLAG_CD,
+		        RECOMMEND_INFO
+		FROM    MCP_REQUEST_CSTMR@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestDlvry" parameterType="String">
+		/*transferMapper.insertMcpRequestDlvry*/
+		INSERT INTO MCP_REQUEST_DLVRY@DL_CAN (
+		        REQUEST_KEY, DLVRY_NAME, DLVRY_TEL_FN,
+		        DLVRY_TEL_MN, DLVRY_TEL_RN, DLVRY_MOBILE_FN,
+		        DLVRY_MOBILE_MN, DLVRY_MOBILE_RN, DLVRY_POST,
+		        DLVRY_ADDR, DLVRY_ADDR_DTL, DLVRY_ADDR_BJD,
+		        DLVRY_MEMO, SYS_RDATE, TB_CD
+		)
+		SELECT
+		        REQUEST_KEY, DLVRY_NAME, DLVRY_TEL_FN,
+		        DLVRY_TEL_MN, DLVRY_TEL_RN, DLVRY_MOBILE_FN,
+		        DLVRY_MOBILE_MN, DLVRY_MOBILE_RN, DLVRY_POST,
+		        DLVRY_ADDR, DLVRY_ADDR_DTL, DLVRY_ADDR_BJD,
+		        DLVRY_MEMO, SYS_RDATE, TB_CD
+		FROM    MCP_REQUEST_DLVRY@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestDvcChg" parameterType="String">
+		/*transferMapper.insertMcpRequestDvcChg*/
+		INSERT INTO MCP_REQUEST_DVC_CHG@DL_CAN (
+		        REQUEST_KEY, DVC_CHG_TYPE, DVC_CHG_RSN_CD,
+		        DVC_CHG_RSN_DTL_CD, REGST_DTTM
+		)
+		SELECT
+		        REQUEST_KEY, DVC_CHG_TYPE, DVC_CHG_RSN_CD,
+		        DVC_CHG_RSN_DTL_CD, REGST_DTTM
+		FROM    MCP_REQUEST_DVC_CHG@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestMove" parameterType="String">
+		/*transferMapper.insertMcpRequestMove*/
+		INSERT INTO MCP_REQUEST_MOVE@DL_CAN (
+		        REQUEST_KEY, MOVE_COMPANY, MOVE_MOBILE_FN,
+		        MOVE_MOBILE_MN, MOVE_MOBILE_RN, MOVE_AUTH_TYPE,
+		        MOVE_AUTH_NUMBER, MOVE_THISMONTH_PAY_TYPE, MOVE_ALLOTMENT_STAT,
+		        MOVE_REFUND_AGREE_FLAG, SYS_RDATE, REQ_GUIDE_FLAG,
+		        REQ_GUIDE_FN, REQ_GUIDE_RN, REQ_GUIDE_MN
+		)
+		SELECT
+		        REQUEST_KEY, MOVE_COMPANY, MOVE_MOBILE_FN,
+		        MOVE_MOBILE_MN, MOVE_MOBILE_RN, MOVE_AUTH_TYPE,
+		        MOVE_AUTH_NUMBER, MOVE_THISMONTH_PAY_TYPE, MOVE_ALLOTMENT_STAT,
+		        MOVE_REFUND_AGREE_FLAG, SYS_RDATE, REQ_GUIDE_FLAG,
+		        REQ_GUIDE_FN, REQ_GUIDE_RN, REQ_GUIDE_MN
+		FROM    MCP_REQUEST_MOVE@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestPayment" parameterType="String">
+		/*transferMapper.insertMcpRequestPayment*/
+		INSERT INTO MCP_REQUEST_PAYMENT@DL_CAN (
+		        REQUEST_KEY, REQ_AC_TYPE, REQ_AC01_BALANCE,
+		        REQ_AC02_DAY, REQ_AC01_AMOUNT, REQ_AC02_AMOUNT,
+		        SYS_RDATE
+		)
+		SELECT
+		        REQUEST_KEY, REQ_AC_TYPE, REQ_AC01_BALANCE,
+		        REQ_AC02_DAY, REQ_AC01_AMOUNT, REQ_AC02_AMOUNT,
+		        SYS_RDATE
+		FROM    MCP_REQUEST_PAYMENT@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestReq" parameterType="String">
+		/*transferMapper.insertMcpRequestReq*/
+		INSERT INTO MCP_REQUEST_REQ@DL_CAN (
+		        REQUEST_KEY, REQ_BANK, REQ_ACCOUNT_NAME,
+		        REQ_ACCOUNT_RRN, REQ_ACCOUNT_RELATION, REQ_ACCOUNT_NUMBER,
+		        REQ_CARD_NAME, REQ_CARD_RRN, REQ_CARD_COMPANY,
+		        REQ_CARD_NO, REQ_CARD_YY, REQ_CARD_MM,
+		        REQ_WIRE_TYPE, SYS_RDATE, REQ_PAY_OTHER_FLAG,
+		        REQ_PAY_OTHER_TEL_FN, REQ_PAY_OTHER_TEL_MN, REQ_PAY_OTHER_TEL_RN
+		)
+		SELECT
+		        REQUEST_KEY, REQ_BANK, REQ_ACCOUNT_NAME,
+		        REQ_ACCOUNT_RRN, REQ_ACCOUNT_RELATION, REQ_ACCOUNT_NUMBER,
+		        REQ_CARD_NAME, REQ_CARD_RRN, REQ_CARD_COMPANY,
+		        REQ_CARD_NO, REQ_CARD_YY, REQ_CARD_MM,
+		        REQ_WIRE_TYPE, SYS_RDATE, REQ_PAY_OTHER_FLAG,
+		        REQ_PAY_OTHER_TEL_FN, REQ_PAY_OTHER_TEL_MN, REQ_PAY_OTHER_TEL_RN
+		FROM    MCP_REQUEST_REQ@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestSaleinfo" parameterType="String">
+		/*transferMapper.insertMcpRequestSaleinfo*/
+		INSERT INTO MCP_REQUEST_SALEINFO@DL_CAN (
+		        MODEL_ID, REQUEST_KEY, MODEL_MONTHLY,
+		        MODEL_INSTALLMENT, MODEL_SALE_POLICY_CODE, MODEL_PRICE_VAT,
+		        RECYCLE_YN, MODEL_DISCOUNT1, MODEL_DISCOUNT2,
+		        ENGG_MNTH_CNT, SOC_CODE, USIM_PRICE_TYPE,
+		        JOIN_PRICE_TYPE, JOIN_PRICE, USIM_PRICE,
+		        MODEL_PRICE, ADDTION_SERVICE, ADDTION_SERVICE_SUM,
+		        MODEL_DISCOUNT3, USIM_PAY_MTHD_CD, JOIN_PAY_MTHD_CD,
+		        REAL_MDL_INSTAMT, SPRT_TP, MAX_DISCOUNT3,
+		        DC_AMT, ADD_DC_AMT, SETTL_WAY_CD,
+		        SETTL_AMT, SETTL_APV_NO, SETTL_TRA_NO,
+		        OWN_PERSONAL_CODE, RENTAL_BASE_AMT, RENTAL_BASE_DC_AMT,
+		        RENTAL_MODEL_CP_AMT
+		)
+		SELECT
+		        MODEL_ID, REQUEST_KEY, MODEL_MONTHLY,
+		        MODEL_INSTALLMENT, MODEL_SALE_POLICY_CODE, MODEL_PRICE_VAT,
+		        RECYCLE_YN, MODEL_DISCOUNT1, MODEL_DISCOUNT2,
+		        ENGG_MNTH_CNT, SOC_CODE, USIM_PRICE_TYPE,
+		        JOIN_PRICE_TYPE, JOIN_PRICE, USIM_PRICE,
+		        MODEL_PRICE, ADDTION_SERVICE, ADDTION_SERVICE_SUM,
+		        MODEL_DISCOUNT3, USIM_PAY_MTHD_CD, JOIN_PAY_MTHD_CD,
+		        REAL_MDL_INSTAMT, SPRT_TP, MAX_DISCOUNT3,
+		        DC_AMT, ADD_DC_AMT, SETTL_WAY_CD,
+		        SETTL_AMT, SETTL_APV_NO, SETTL_TRA_NO,
+		        OWN_PERSONAL_CODE, RENTAL_BASE_AMT, RENTAL_BASE_DC_AMT,
+		        RENTAL_MODEL_CP_AMT
+		FROM    MCP_REQUEST_SALEINFO@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<insert id="insertMcpRequestState" parameterType="String">
+		/*transferMapper.insertMcpRequestState*/
+		INSERT INTO MCP_REQUEST_STATE@DL_CAN (
+		        REQUEST_STATE_KEY, REQUEST_STATE_CODE, DLVRY_NO,
+		        OPEN_NO, MEMO, SYS_RDATE,
+		        RIP, RID, VIEW_FLAG,
+		        RES_NO, REQUEST_KEY, TB_CD
+		)
+		SELECT
+		        REQUEST_STATE_KEY, REQUEST_STATE_CODE, DLVRY_NO,
+		        OPEN_NO, MEMO, SYS_RDATE,
+		        RIP, RID, VIEW_FLAG,
+		        RES_NO, REQUEST_KEY, TB_CD
+		FROM    MCP_REQUEST_STATE@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<!-- MCP 신청정보 삭제 -->
+	<delete id="deleteMcpRequest" parameterType="String">
+		DELETE FROM MCP_REQUEST@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestAddition" parameterType="String">
+		DELETE FROM MCP_REQUEST_ADDITION@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestAgent" parameterType="String">
+		DELETE FROM MCP_REQUEST_AGENT@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestChange" parameterType="String">
+		DELETE FROM MCP_REQUEST_CHANGE@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestClause" parameterType="String">
+		DELETE FROM MCP_REQUEST_CLAUSE@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestCstmr" parameterType="String">
+		DELETE FROM MCP_REQUEST_CSTMR@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestDlvry" parameterType="String">
+		DELETE FROM MCP_REQUEST_DLVRY@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestDvcChg" parameterType="String">
+		DELETE FROM MCP_REQUEST_DVC_CHG@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestMove" parameterType="String">
+		DELETE FROM MCP_REQUEST_MOVE@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestPayment" parameterType="String">
+		DELETE FROM MCP_REQUEST_PAYMENT@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestReq" parameterType="String">
+		DELETE FROM MCP_REQUEST_REQ@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestSaleinfo" parameterType="String">
+		DELETE FROM MCP_REQUEST_SALEINFO@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMcpRequestState" parameterType="String">
+		DELETE FROM MCP_REQUEST_STATE@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<!-- 서식지파일 조회 -->
+	<select id="getScanFileList" parameterType="String" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		SELECT  A.ORIGIN_DIR AS fileInfo
+		FROM    EMV_SCAN_FILE@DL_MCP A
+		WHERE   A.SCAN_ID = #{scanId}
+	</select>
+
+	<!-- 서식지이관 -->
+	<insert id="insertEmvScanMst" parameterType="String">
+		/*transferMapper.insertEmvScanMst*/
+		INSERT INTO EMV_SCAN_MST@DL_CAN (
+		        SCAN_ID, WORK_ID, AGENCY_ID,
+		        COMPANY_ID, CUST_NM, C_MEMO,
+		        SCAN_FILE_CNT, DOC_TITLE, DOC_STATUS,
+		        DEL_REASON, USE_YN, RGST_DT,
+		        RGST_PRSN_ID, MDFY_DT, MDFY_PRSN_ID,
+		        ONLINE_YN, PROC_PRSN_ID, PROC_DTTM,
+		        PROC_STAT_CD
+		)
+		SELECT
+		        SCAN_ID, WORK_ID, AGENCY_ID,
+		        COMPANY_ID, CUST_NM, C_MEMO,
+		        SCAN_FILE_CNT, DOC_TITLE, DOC_STATUS,
+		        DEL_REASON, USE_YN, RGST_DT,
+		        RGST_PRSN_ID, MDFY_DT, MDFY_PRSN_ID,
+		        ONLINE_YN, PROC_PRSN_ID, PROC_DTTM,
+		        PROC_STAT_CD
+		FROM    EMV_SCAN_MST@DL_MCP A
+		WHERE   SCAN_ID = #{scanId}
+		AND     NOT EXISTS ( SELECT 1 FROM EMV_SCAN_MST@DL_CAN WHERE SCAN_ID = A.SCAN_ID )
+	</insert>
+	<!-- MCP서식지정보변경 -->
+	<update id="updateEmvScanMst" parameterType="String">
+		/*transferMapper.updateEmvScanMst*/
+		UPDATE    EMV_SCAN_MST@DL_MCP A
+		SET     CUST_NM = '이관고객'
+		       ,DOC_TITLE = REPLACE(DOC_TITLE,CUST_NM,'이관고객')
+		WHERE   SCAN_ID = #{scanId}
+		
+	</update>
+	<!-- MSP서식지정보변경 -->
+	<update id="updateMspScanMst" parameterType="String">
+		/*transferMapper.updateMspScanMst*/
+		UPDATE    EMV_SCAN_MST A
+		SET     CUST_NM = '이관고객'
+		       ,DOC_TITLE = REPLACE(DOC_TITLE,CUST_NM,'이관고객')
+		WHERE   SCAN_ID = #{scanId}
+		
+	</update>
+
+	<insert id="insertEmvScanFile" parameterType="String">
+		/*transferMapper.insertEmvScanFile*/
+		INSERT INTO EMV_SCAN_FILE@DL_CAN (
+		        FILE_ID, SCAN_ID, FILE_NUMBER,
+		        FILE_SIZE, FILE_EXT, DOC_ID,
+		        MAIN_DOC_CD, USE_YN, ORIGIN_DIR,
+		        SAVE_DIR, RGST_DT, RGST_PRSN_ID,
+		        MDFY_DT, MDFY_PRSN_ID, BANK_CD,
+		        BANK_CD_NO, CONTRACT_NUM
+		)
+		SELECT
+		        FILE_ID, SCAN_ID, FILE_NUMBER,
+		        FILE_SIZE, FILE_EXT, DOC_ID,
+		        MAIN_DOC_CD, USE_YN, ORIGIN_DIR,
+		        SAVE_DIR, RGST_DT, RGST_PRSN_ID,
+		        MDFY_DT, MDFY_PRSN_ID, BANK_CD,
+		        BANK_CD_NO, CONTRACT_NUM
+		FROM    EMV_SCAN_FILE@DL_MCP A
+		WHERE   SCAN_ID = #{scanId}
+		AND     NOT EXISTS ( SELECT 1 FROM EMV_SCAN_FILE@DL_CAN WHERE SCAN_ID = A.SCAN_ID )
+	</insert>
+
+	<!-- 서식지 삭제 -->
+	<delete id="deleteEmvScanMst" parameterType="String">
+		/*transferMapper.deleteEmvScanMst*/
+		DELETE FROM EMV_SCAN_MST@DL_MCP WHERE SCAN_ID = #{scanId}
+	</delete>
+
+	<delete id="deleteEmvScanFile" parameterType="String">
+		/*transferMapper.deleteEmvScanFile*/
+		DELETE FROM EMV_SCAN_FILE@DL_MCP WHERE SCAN_ID = #{scanId}
+	</delete>
+
+	<delete id="deleteMspScanMst" parameterType="String">
+		/*transferMapper.deleteMspScanMst*/
+		DELETE FROM EMV_SCAN_MST WHERE SCAN_ID = #{scanId}
+	</delete>
+
+	<delete id="deleteMspScanFile" parameterType="String">
+		/*transferMapper.deleteMspScanFile*/
+		DELETE FROM EMV_SCAN_FILE WHERE SCAN_ID = #{scanId}
+	</delete>
+
+	<delete id="deleteCanScanMst" parameterType="String">
+		/*transferMapper.deleteCanScanMst*/
+		DELETE FROM EMV_SCAN_MST@DL_CAN WHERE SCAN_ID = #{scanId}
+	</delete>
+
+	<delete id="deleteCanScanFile" parameterType="String">
+		/*transferMapper.deleteCanScanFile*/
+		DELETE FROM EMV_SCAN_FILE@DL_CAN WHERE SCAN_ID = #{scanId}
+	</delete>
+
+	<!-- 해지후 180일 경과고객 조회(별도 유지계약이 있는 경우 제외), 일 처리량 제한
+		2017-11-28, 동일고객 다른 계약이 해지된 지 180일 미만인 경우 이관되지 않도록 조건 추가
+		2019-04-11, 이관대상 고객 조회 시 미납금액이 없는 고객만 조회하도록 조건 추가
+		2019-07-12, 미납금액 조회 조건 제거
+		2020-03-02, 동일고객 다른 계약이 해지된 지 180일 미만인 경우 이관되지 않도록 조건 추가 <= 제거
+	-->
+	<select id="getTmntCntrList" parameterType="map" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+	/*transferMapper.getTmntCntrList*/
+	<![CDATA[
+	SELECT  CONTRACT_NUM AS contractNum
+	        , CUSTOMER_ID AS customerId
+	        , BAN AS ban
+	        , SVC_CNTR_NO AS svcCntrNo
+	        , SUBSCRIBER_NO AS subscriberNo
+	FROM    MSP_JUO_SUB_INFO
+	WHERE   SUB_STATUS = 'C'
+	AND     TO_DATE(SUBSTR(SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') = TRUNC(SYSDATE) - #{stdrCnt}
+	AND     TRNS_YN IS NULL
+	AND     ROWNUM <= #{targetCnt}
+	UNION ALL
+	SELECT  CONTRACT_NUM AS contractNum
+	        , CUSTOMER_ID AS customerId
+	        , BAN AS ban
+	        , SVC_CNTR_NO AS svcCntrNo
+	        , SUBSCRIBER_NO AS subscriberNo
+	FROM    MSP_JUO_SUB_INFO
+	WHERE   SUB_STATUS = 'C'
+	AND     TO_DATE(SUBSTR(SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') < TRUNC(SYSDATE) - #{stdrCnt}
+	AND     TRNS_YN IS NULL 
+	AND     ROWNUM <= (SELECT ETC1 FROM CMN_GRP_CD_MST WHERE GRP_ID = 'DEV0003' AND CD_VAL = 'CAN_TRANS_CNT') - #{targetCnt}
+	]]>
+	</select>
+	
+	<select id="getTmntCntrListCnt" parameterType="map" resultType="int">
+		/*transferMapper.getTmntCntrListCnt*/
+		<![CDATA[
+		SELECT  COUNT(*)
+		FROM    MSP_JUO_SUB_INFO
+		WHERE   SUB_STATUS = 'C'
+		AND     TO_DATE(SUBSTR(SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') = TRUNC(SYSDATE) - #{stdrCnt}
+		AND     TRNS_YN IS NULL
+		AND     ROWNUM <= 120
+		]]>
+	</select>
+
+	<select id="getUnpayAmtCheck" parameterType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		/*transferMapper.getUnpayAmtCheck*/
+		SELECT  A.BILL_YM as billYm
+		        , A.UNPAY_AMNT as unpayAmnt
+		        , A.EQIST_PYMN_AMNT as equistPymnAmnt
+		        , ( SELECT   SUM(MAX(INST_ORGIN_AMNT))
+		            FROM     MSP_JUO_ADD_INFO
+		            WHERE    CONTRACT_NUM = #{contractNum}
+		            AND      MODEL_CHN_CD IN ('39', '01')
+		            AND      NVL(INST_ORGIN_AMNT, 0) > 0
+		            GROUP BY GRNT_INSR_MNGM_NO
+		        )  AS instOrignAmnt
+		FROM
+		(   SELECT  SUM(DECODE(A.PYMN_CD, 'INV', ( A.PYMN_AMNT + A.VAT_AMNT )           /*청구*/
+		                                , 'ADJ', ( A.PYMN_AMNT + A.VAT_AMNT )*-1        /*조정*/
+		                                , 'ADJR', ( A.PYMN_AMNT + A.VAT_AMNT )          /*조정취소*/
+		                                , 'PYM', ( A.PYMN_AMNT + A.VAT_AMNT )*-1        /*수납*/
+		                                , 'BCK', ( A.PYMN_AMNT + A.VAT_AMNT )           /*수납취소*/
+		                                , 'RFNR', ( A.PYMN_AMNT + A.VAT_AMNT )*-1       /*환불취소*/
+		                                , 'RFN', ( A.PYMN_AMNT + A.VAT_AMNT )           /*환불*/
+		                                , 'FNTT', ( A.PYMN_AMNT + A.VAT_AMNT )*-1       /*자금이전*/
+		                                , 'FNTF', ( A.PYMN_AMNT + A.VAT_AMNT )          /*자금이전취소*/
+		                )) AS UNPAY_AMNT
+		            , MAX(BILL_YM) AS BILL_YM
+		            , SUM(CASE WHEN A.BILL_ITEM_CD IN ('EQIST','EQISV') AND PYMN_CD IN ('PYM', 'ADJ') THEN PYMN_AMNT ELSE 0 END) AS EQIST_PYMN_AMNT
+		    FROM    CLS_BILL_PYMN_DATA A
+		    WHERE   A.SVC_CNTR_NO = #{svcCntrNo}
+		) A
+	</select>
+
+	<select id="getRequestKey" parameterType="String" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		/*transferMapper.getRequestKey*/
+		SELECT  REQUEST_KEY as requestKey
+		        , SCAN_ID   as scanId
+		FROM    MSP_REQUEST
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<select id="getMcpRequestKey" parameterType="String" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		/*transferMapper.getRequestKey*/
+		SELECT  REQUEST_KEY as requestKey
+		        , SCAN_ID   as scanId
+		FROM    MCP_REQUEST@DL_MCP
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<select id="getCanRequestKey" parameterType="String" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		/*transferMapper.getRequestKey*/
+		SELECT  REQUEST_KEY as requestKey
+		        , SCAN_ID   as scanId
+		FROM    MCP_REQUEST@DL_CAN
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</select>
+	
+	<!-- 다회선 계약 유무 체크 -->
+	<select id="getOtherCntrExist" parameterType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO" resultType="int">
+		/*transferMapper.getOtherCntrExist*/
+		SELECT  COUNT(1) 
+		FROM	MSP_JUO_SUB_INFO
+		WHERE   CUSTOMER_ID = #{customerId}
+		AND     CONTRACT_NUM != #{contractNum}
+		AND     (SUB_STATUS != 'C'
+		         OR (SUB_STATUS = 'C' AND TO_DATE(SUBSTR(SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') > SYSDATE - #{tmntCustDt}))
+	</select>
+
+	<!-- MSP 이관 -->
+	<insert id="insertMspRequest" parameterType="String">
+		/*transferMapper.insertMspRequest*/
+		INSERT INTO MSP_REQUEST@DL_CAN (
+		        REQUEST_KEY, CONTRACT_NUM, SCAN_ID,
+		        RES_NO, AGENT_CODE, MANAGER_CODE,
+		        SERVICE_TYPE, OPER_TYPE, CSTMR_TYPE,
+		        RES_CODE, RES_MSG, CLAUSE_PRI_COLLECT_FLAG,
+		        CLAUSE_PRI_OFFER_FLAG, CLAUSE_ESS_COLLECT_FLAG, CLAUSE_PRI_TRUST_FLAG,
+		        CLAUSE_PRI_AD_FLAG, CLAUSE_CONFIDENCE_FLAG, ONLINE_AUTH_TYPE,
+		        ONLINE_AUTH_INFO, PSTATE, REQUEST_STATE_CODE,
+		        OPEN_NO, FILE01, FILE01_MASK,
+		        FAXYN, FAXNUM, REQ_WANT_NUMBER,
+		        REQ_WANT_NUMBER2, REQ_WANT_NUMBER3, REQ_BUY_TYPE,
+		        REQ_MODEL_NAME, REQ_MODEL_COLOR, REQ_PHONE_SN,
+		        REQ_USIM_SN, REQ_PAY_TYPE, REQ_ADDITION,
+		        ON_OFF_TYPE, SHOP_CD, RIP,
+		        SYS_RDATE, APP_FORM_YN, REQ_IN_DAY,
+		        APP_FORM_XML_YN, OPEN_REQ_DATE, ETC_SPECIAL,
+		        PHONE_PAYMENT, REQ_ADDITION_PRICE, REQ_USIM_NAME,
+		        SPC_CODE, CNTPNT_SHOP_ID, SHOP_USM_ID,
+		        MEMO, REC_YN, OPEN_MARKET_REFERER,
+		        SO_CD, NW_BLCK_AGRM_YN, APP_BLCK_AGRM_YN,
+		        APP_CD, CLAUSE_JEHU_FLAG, SHOP_NM,
+		        PROD_ID, CRET_ID, BANNER_CD,
+		        SNTY_COLOR_CD, SNTY_CAPAC_CD, PROD_TYPE,
+		        CLAUSE_RENTAL_MODEL_CP, CLAUSE_RENTAL_MODEL_CP_PR, CLAUSE_RENTAL_SERVICE,
+		        CLAUSE_MPPS35_FLAG, CLAUSE_FINANCE_FLAG,
+		        TRANSFER_DTTM, REAL_SHOP_NM, USIM_KINDS_CD
+		)
+		SELECT
+		        REQUEST_KEY, CONTRACT_NUM, SCAN_ID,
+		        RES_NO, AGENT_CODE, MANAGER_CODE,
+		        SERVICE_TYPE, OPER_TYPE, CSTMR_TYPE,
+		        RES_CODE, RES_MSG, CLAUSE_PRI_COLLECT_FLAG,
+		        CLAUSE_PRI_OFFER_FLAG, CLAUSE_ESS_COLLECT_FLAG, CLAUSE_PRI_TRUST_FLAG,
+		        CLAUSE_PRI_AD_FLAG, CLAUSE_CONFIDENCE_FLAG, ONLINE_AUTH_TYPE,
+		        ONLINE_AUTH_INFO, PSTATE, REQUEST_STATE_CODE,
+		        OPEN_NO, FILE01, FILE01_MASK,
+		        FAXYN, FAXNUM, REQ_WANT_NUMBER,
+		        REQ_WANT_NUMBER2, REQ_WANT_NUMBER3, REQ_BUY_TYPE,
+		        REQ_MODEL_NAME, REQ_MODEL_COLOR, REQ_PHONE_SN,
+		        REQ_USIM_SN, REQ_PAY_TYPE, REQ_ADDITION,
+		        ON_OFF_TYPE, SHOP_CD, RIP,
+		        SYS_RDATE, APP_FORM_YN, REQ_IN_DAY,
+		        APP_FORM_XML_YN, OPEN_REQ_DATE, ETC_SPECIAL,
+		        PHONE_PAYMENT, REQ_ADDITION_PRICE, REQ_USIM_NAME,
+		        SPC_CODE, CNTPNT_SHOP_ID, SHOP_USM_ID,
+		        MEMO, REC_YN, OPEN_MARKET_REFERER,
+		        SO_CD, NW_BLCK_AGRM_YN, APP_BLCK_AGRM_YN,
+		        APP_CD, CLAUSE_JEHU_FLAG, SHOP_NM,
+		        PROD_ID, CRET_ID, BANNER_CD,
+		        SNTY_COLOR_CD, SNTY_CAPAC_CD, PROD_TYPE,
+		        CLAUSE_RENTAL_MODEL_CP, CLAUSE_RENTAL_MODEL_CP_PR, CLAUSE_RENTAL_SERVICE,
+		        CLAUSE_MPPS35_FLAG, CLAUSE_FINANCE_FLAG,
+		        SYSDATE, REAL_SHOP_NM, USIM_KINDS_CD
+		FROM    MSP_REQUEST A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+	
+	<insert id="insertMspRequest2" parameterType="String">
+		/*transferMapper.insertMspRequest*/
+		INSERT INTO MSP_REQUEST@DL_CAN (
+		        REQUEST_KEY, CONTRACT_NUM, SCAN_ID,
+		        RES_NO, AGENT_CODE, MANAGER_CODE,
+		        SERVICE_TYPE, OPER_TYPE, CSTMR_TYPE,
+		        RES_CODE, RES_MSG, CLAUSE_PRI_COLLECT_FLAG,
+		        CLAUSE_PRI_OFFER_FLAG, CLAUSE_ESS_COLLECT_FLAG, CLAUSE_PRI_TRUST_FLAG,
+		        CLAUSE_PRI_AD_FLAG, CLAUSE_CONFIDENCE_FLAG, ONLINE_AUTH_TYPE,
+		        ONLINE_AUTH_INFO, PSTATE, REQUEST_STATE_CODE,
+		        OPEN_NO, FILE01, FILE01_MASK,
+		        FAXYN, FAXNUM, REQ_WANT_NUMBER,
+		        REQ_WANT_NUMBER2, REQ_WANT_NUMBER3, REQ_BUY_TYPE,
+		        REQ_MODEL_NAME, REQ_MODEL_COLOR, REQ_PHONE_SN,
+		        REQ_USIM_SN, REQ_PAY_TYPE, REQ_ADDITION,
+		        ON_OFF_TYPE, SHOP_CD, RIP,
+		        SYS_RDATE, APP_FORM_YN, REQ_IN_DAY,
+		        APP_FORM_XML_YN, OPEN_REQ_DATE, ETC_SPECIAL,
+		        PHONE_PAYMENT, REQ_ADDITION_PRICE, REQ_USIM_NAME,
+		        SPC_CODE, CNTPNT_SHOP_ID, SHOP_USM_ID,
+		        MEMO, REC_YN, OPEN_MARKET_REFERER,
+		        SO_CD, NW_BLCK_AGRM_YN, APP_BLCK_AGRM_YN,
+		        APP_CD, CLAUSE_JEHU_FLAG, SHOP_NM,
+		        PROD_ID, CRET_ID, BANNER_CD,
+		        SNTY_COLOR_CD, SNTY_CAPAC_CD, PROD_TYPE,
+		        CLAUSE_RENTAL_MODEL_CP, CLAUSE_RENTAL_MODEL_CP_PR, CLAUSE_RENTAL_SERVICE,
+		        CLAUSE_MPPS35_FLAG, CLAUSE_FINANCE_FLAG,
+		        TRANSFER_DTTM, REAL_SHOP_NM, USIM_KINDS_CD
+		)
+		SELECT
+		        REQUEST_KEY, CONTRACT_NUM, SCAN_ID,
+		        RES_NO, AGENT_CODE, MANAGER_CODE,
+		        SERVICE_TYPE, OPER_TYPE, CSTMR_TYPE,
+		        RES_CODE, RES_MSG, CLAUSE_PRI_COLLECT_FLAG,
+		        CLAUSE_PRI_OFFER_FLAG, CLAUSE_ESS_COLLECT_FLAG, CLAUSE_PRI_TRUST_FLAG,
+		        CLAUSE_PRI_AD_FLAG, CLAUSE_CONFIDENCE_FLAG, ONLINE_AUTH_TYPE,
+		        ONLINE_AUTH_INFO, PSTATE, REQUEST_STATE_CODE,
+		        OPEN_NO, FILE01, FILE01_MASK,
+		        FAXYN, FAXNUM, REQ_WANT_NUMBER,
+		        REQ_WANT_NUMBER2, REQ_WANT_NUMBER3, REQ_BUY_TYPE,
+		        REQ_MODEL_NAME, REQ_MODEL_COLOR, REQ_PHONE_SN,
+		        REQ_USIM_SN, REQ_PAY_TYPE, REQ_ADDITION,
+		        ON_OFF_TYPE, SHOP_CD, RIP,
+		        SYS_RDATE, APP_FORM_YN, REQ_IN_DAY,
+		        APP_FORM_XML_YN, OPEN_REQ_DATE, ETC_SPECIAL,
+		        PHONE_PAYMENT, REQ_ADDITION_PRICE, REQ_USIM_NAME,
+		        SPC_CODE, CNTPNT_SHOP_ID, SHOP_USM_ID,
+		        MEMO, REC_YN, OPEN_MARKET_REFERER,
+		        SO_CD, NW_BLCK_AGRM_YN, APP_BLCK_AGRM_YN,
+		        APP_CD, CLAUSE_JEHU_FLAG, SHOP_NM,
+		        PROD_ID, CRET_ID, BANNER_CD,
+		        SNTY_COLOR_CD, SNTY_CAPAC_CD, PROD_TYPE,
+		        CLAUSE_RENTAL_MODEL_CP, CLAUSE_RENTAL_MODEL_CP_PR, CLAUSE_RENTAL_SERVICE,
+		        CLAUSE_MPPS35_FLAG, CLAUSE_FINANCE_FLAG,
+		        SYSDATE, REAL_SHOP_NM, USIM_KINDS_CD
+		FROM    MCP_REQUEST@DL_MCP A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestAddition" parameterType="String">
+		/*transferMapper.insertMspRequestAddition*/
+		INSERT INTO MSP_REQUEST_ADDITION@DL_CAN (
+		        REQUEST_KEY, ADDITION_KEY, ADDITION_NAME, RANTAL
+		)
+		SELECT
+		        REQUEST_KEY, ADDITION_KEY, ADDITION_NAME, RANTAL
+		FROM    MSP_REQUEST_ADDITION A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestAgent" parameterType="String">
+		/*transferMapper.insertMspRequestAgent*/
+		INSERT INTO MSP_REQUEST_AGENT@DL_CAN (
+		        REQUEST_KEY, MINOR_AGENT_NAME, MINOR_AGENT_RRN,
+		        MINOR_AGENT_TEL_FN, MINOR_AGENT_TEL_MN, MINOR_AGENT_TEL_RN,
+		        MINOR_AGENT_RELATION, JRDCL_AGENT_NAME, JRDCL_AGENT_RRN,
+		        JRDCL_AGENT_TEL_FN, JRDCL_AGENT_TEL_MN, JRDCL_AGENT_TEL_RN,
+		        ENTRUST_REQ_NM, ENTRUST_RES_NM, ENTRUST_REQ_RELATION,
+		        ENTRUST_RES_RRN, ENTRUST_RES_TEL_FN, ENTRUST_RES_TEL_MN,
+		        ENTRUST_RES_TEL_RN, SYS_RDATE, APP_INST_YN,
+		        INST_CNFM_ID, INST_CNFM_DTTM
+		)
+		SELECT
+		        REQUEST_KEY, MINOR_AGENT_NAME, MINOR_AGENT_RRN,
+		        MINOR_AGENT_TEL_FN, MINOR_AGENT_TEL_MN, MINOR_AGENT_TEL_RN,
+		        MINOR_AGENT_RELATION, JRDCL_AGENT_NAME, JRDCL_AGENT_RRN,
+		        JRDCL_AGENT_TEL_FN, JRDCL_AGENT_TEL_MN, JRDCL_AGENT_TEL_RN,
+		        ENTRUST_REQ_NM, ENTRUST_RES_NM, ENTRUST_REQ_RELATION,
+		        ENTRUST_RES_RRN, ENTRUST_RES_TEL_FN, ENTRUST_RES_TEL_MN,
+		        ENTRUST_RES_TEL_RN, SYS_RDATE, APP_INST_YN,
+		        INST_CNFM_ID, INST_CNFM_DTTM
+		FROM    MSP_REQUEST_AGENT A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestChange" parameterType="String">
+		/*transferMapper.insertMspRequestChange*/
+		INSERT INTO MSP_REQUEST_CHANGE@DL_CAN (
+		        REQUEST_KEY, NAME_CHANGE_NM, NAME_CHANGE_TEL_FN,
+		        NAME_CHANGE_TEL_MN, NAME_CHANGE_TEL_RN, NAME_CHANGE_RRN,
+		        NAME_CHANGE_PINSTALLMENT, SYS_RDATE
+		)
+		SELECT
+		        REQUEST_KEY, NAME_CHANGE_NM, NAME_CHANGE_TEL_FN,
+		        NAME_CHANGE_TEL_MN, NAME_CHANGE_TEL_RN, NAME_CHANGE_RRN,
+		        NAME_CHANGE_PINSTALLMENT, SYS_RDATE
+		FROM    MSP_REQUEST_CHANGE A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestCstmr" parameterType="String">
+		/*transferMapper.insertMspRequestCstmr*/
+		INSERT INTO MSP_REQUEST_CSTMR@DL_CAN (
+		        REQUEST_KEY, CSTMR_NAME, CSTMR_NATIVE_RRN,
+		        CSTMR_FOREIGNER_NATION, CSTMR_FOREIGNER_PN, CSTMR_FOREIGNER_SDATE,
+		        CSTMR_FOREIGNER_EDATE, CSTMR_FOREIGNER_RRN, CSTMR_PRIVATE_CNAME,
+		        CSTMR_JURIDICAL_CNAME, CSTMR_PRIVATE_NUMBER, CSTMR_JURIDICAL_RRN,
+		        CSTMR_JURIDICAL_NUMBER, CSTMR_TEL_FN, CSTMR_TEL_MN,
+		        CSTMR_TEL_RN, CSTMR_MOBILE_FN, CSTMR_MOBILE_MN,
+		        CSTMR_MOBILE_RN, CSTMR_POST, CSTMR_ADDR,
+		        CSTMR_ADDR_BJD, CSTMR_ADDR_DTL, CSTMR_BILL_SEND_CODE,
+		        CSTMR_MAIL_RECEIVE_FLAG, CSTMR_MAIL, CSTMR_VISIT_TYPE,
+		        CSTMR_RECEIVE_TEL_FN, CSTMR_RECEIVE_TEL_NM, CSTMR_RECEIVE_TEL_RN,
+		        OTHERS_PAYMENT_AG, OTHERS_PAYMENT_NM, OTHERS_PAYMENT_RRN,
+		        OTHERS_PAYMENT_RELATION, OTHERS_PAYMENT_RNM, SYS_RDATE,
+		        CSTMR_FOREIGNER_DOD, CSTMR_FOREIGNER_BIRTH, CSTMR_JEJU_ID,
+		        SELF_CSTMR_CI, RECOMMEND_FLAG_CD, RECOMMEND_INFO
+		)
+		SELECT
+		        REQUEST_KEY, CSTMR_NAME, CSTMR_NATIVE_RRN,
+		        CSTMR_FOREIGNER_NATION, CSTMR_FOREIGNER_PN, CSTMR_FOREIGNER_SDATE,
+		        CSTMR_FOREIGNER_EDATE, CSTMR_FOREIGNER_RRN, CSTMR_PRIVATE_CNAME,
+		        CSTMR_JURIDICAL_CNAME, CSTMR_PRIVATE_NUMBER, CSTMR_JURIDICAL_RRN,
+		        CSTMR_JURIDICAL_NUMBER, CSTMR_TEL_FN, CSTMR_TEL_MN,
+		        CSTMR_TEL_RN, CSTMR_MOBILE_FN, CSTMR_MOBILE_MN,
+		        CSTMR_MOBILE_RN, CSTMR_POST, CSTMR_ADDR,
+		        CSTMR_ADDR_BJD, CSTMR_ADDR_DTL, CSTMR_BILL_SEND_CODE,
+		        CSTMR_MAIL_RECEIVE_FLAG, CSTMR_MAIL, CSTMR_VISIT_TYPE,
+		        CSTMR_RECEIVE_TEL_FN, CSTMR_RECEIVE_TEL_NM, CSTMR_RECEIVE_TEL_RN,
+		        OTHERS_PAYMENT_AG, OTHERS_PAYMENT_NM, OTHERS_PAYMENT_RRN,
+		        OTHERS_PAYMENT_RELATION, OTHERS_PAYMENT_RNM, SYS_RDATE,
+		        CSTMR_FOREIGNER_DOD, CSTMR_FOREIGNER_BIRTH, CSTMR_JEJU_ID,
+		        SELF_CSTMR_CI, RECOMMEND_FLAG_CD, RECOMMEND_INFO
+		FROM    MSP_REQUEST_CSTMR A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestDlvry" parameterType="String">
+		/*transferMapper.insertMspRequestDlvry*/
+		INSERT INTO MSP_REQUEST_DLVRY@DL_CAN (
+		        REQUEST_KEY, DLVRY_NAME, DLVRY_TEL_FN,
+		        DLVRY_TEL_MN, DLVRY_TEL_RN, DLVRY_MOBILE_FN,
+		        DLVRY_MOBILE_MN, DLVRY_MOBILE_RN, DLVRY_POST,
+		        DLVRY_ADDR, DLVRY_ADDR_BJD, DLVRY_ADDR_DTL,
+		        DLVRY_MEMO, SYS_RDATE, TB_CD
+		)
+		SELECT
+		        REQUEST_KEY, DLVRY_NAME, DLVRY_TEL_FN,
+		        DLVRY_TEL_MN, DLVRY_TEL_RN, DLVRY_MOBILE_FN,
+		        DLVRY_MOBILE_MN, DLVRY_MOBILE_RN, DLVRY_POST,
+		        DLVRY_ADDR, DLVRY_ADDR_BJD, DLVRY_ADDR_DTL,
+		        DLVRY_MEMO, SYS_RDATE, TB_CD
+		FROM    MSP_REQUEST_DLVRY A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestDtl" parameterType="String">
+		/*transferMapper.insertMspRequestDtl*/
+		INSERT INTO MSP_REQUEST_DTL@DL_CAN (
+		        CONTRACT_NUM, SCAN_ID, ON_OFF_TYPE,
+		        OPEN_AGNT_CD, RES_NO, REQ_BUY_TYPE,
+		        REQ_BUY_TYPE_NM, OPER_TYPE, OPER_TYPE_NM,
+		        MOVE_COMPANY, MOVE_COMPANY_NM, SALE_PLCY_CD,
+		        SALE_PLCY_NM, OPEN_MARKET_REFERER, RECOMMEND_FLAG_CD,
+		        RECOMMEND_FLAG_NM, RECOMMEND_INFO, REC_YN,
+		        SHOP_CD, SHOP_NM, REQ_IN_DAY,
+		        MINOR_AGENT_NAME, MINOR_AGENT_RELATION, MINOR_AGENT_REL_NM,
+		        MINOR_AGENT_TEL, APP_CD, APP_NM,
+		        JOIN_PAY_MTHD_CD, JOIN_PAY_MTHD_NM, JOIN_PRICE,
+		        USIM_PAY_MTHD_CD, USIM_PAY_MTHD_NM, USIM_PRICE,
+		        RENTAL_BASE_AMT, RENTAL_BASE_DC_AMT, RENTAL_MODEL_CP_AMT,
+		        CSTMR_TYPE, REQUEST_KEY, REQ_PAY_TYPE,
+		        REQUEST_STATE_CODE, SHOP_USM_ID, REG_DTTM,
+		        PROD_TYPE, PROD_TYPE_NM, REQ_USIM_NAME,
+		        FST_RATE_CD, FST_RATE_NM, LST_RATE_CD,
+		        LST_RATE_NM, FST_MODEL_INFO, INST_INFO,
+		        SIM_INFO, OTA_DATE, CATCH_CALL,
+		        DVC_CHG_CNT, DVC_CHG_INFO, REAL_SHOP_NM
+		)
+		SELECT
+		        CONTRACT_NUM, SCAN_ID, ON_OFF_TYPE,
+		        OPEN_AGNT_CD, RES_NO, REQ_BUY_TYPE,
+		        REQ_BUY_TYPE_NM, OPER_TYPE, OPER_TYPE_NM,
+		        MOVE_COMPANY, MOVE_COMPANY_NM, SALE_PLCY_CD,
+		        SALE_PLCY_NM, OPEN_MARKET_REFERER, RECOMMEND_FLAG_CD,
+		        RECOMMEND_FLAG_NM, RECOMMEND_INFO, REC_YN,
+		        SHOP_CD, SHOP_NM, REQ_IN_DAY,
+		        MINOR_AGENT_NAME, MINOR_AGENT_RELATION, MINOR_AGENT_REL_NM,
+		        MINOR_AGENT_TEL, APP_CD, APP_NM,
+		        JOIN_PAY_MTHD_CD, JOIN_PAY_MTHD_NM, JOIN_PRICE,
+		        USIM_PAY_MTHD_CD, USIM_PAY_MTHD_NM, USIM_PRICE,
+		        RENTAL_BASE_AMT, RENTAL_BASE_DC_AMT, RENTAL_MODEL_CP_AMT,
+		        CSTMR_TYPE, REQUEST_KEY, REQ_PAY_TYPE,
+		        REQUEST_STATE_CODE, SHOP_USM_ID, REG_DTTM,
+		        PROD_TYPE, PROD_TYPE_NM, REQ_USIM_NAME,
+		        FST_RATE_CD, FST_RATE_NM, LST_RATE_CD,
+		        LST_RATE_NM, FST_MODEL_INFO, INST_INFO,
+		        SIM_INFO, OTA_DATE, CATCH_CALL,
+		        DVC_CHG_CNT, DVC_CHG_INFO, REAL_SHOP_NM
+		FROM    MSP_REQUEST_DTL A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestDvcChg" parameterType="String">
+		/*transferMapper.insertMspRequestDvcChg*/
+		INSERT INTO MSP_REQUEST_DVC_CHG@DL_CAN (
+		        REQUEST_KEY, DVC_CHG_TYPE, DVC_CHG_RSN_CD,
+		        DVC_CHG_RSN_DTL_CD, REGST_DTTM
+		)
+		SELECT
+		        REQUEST_KEY, DVC_CHG_TYPE, DVC_CHG_RSN_CD,
+		        DVC_CHG_RSN_DTL_CD, REGST_DTTM
+		FROM    MSP_REQUEST_DVC_CHG A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestMove" parameterType="String">
+		/*transferMapper.insertMspRequestMove*/
+		INSERT INTO MSP_REQUEST_MOVE@DL_CAN (
+		        REQUEST_KEY, MOVE_COMPANY, MOVE_MOBILE_FN,
+		        MOVE_MOBILE_MN, MOVE_MOBILE_RN, MOVE_AUTH_NUMBER,
+		        MOVE_AUTH_TYPE, MOVE_THISMONTH_PAY_TYPE, MOVE_ALLOTMENT_STAT,
+		        REQ_GUIDE_FLAG, REQ_GUIDE_FN, REQ_GUIDE_RN,
+		        REQ_GUIDE_MN, MOVE_REFUND_AGREE_FLAG, SYS_RDATE
+		)
+		SELECT
+		        REQUEST_KEY, MOVE_COMPANY, MOVE_MOBILE_FN,
+		        MOVE_MOBILE_MN, MOVE_MOBILE_RN, MOVE_AUTH_NUMBER,
+		        MOVE_AUTH_TYPE, MOVE_THISMONTH_PAY_TYPE, MOVE_ALLOTMENT_STAT,
+		        REQ_GUIDE_FLAG, REQ_GUIDE_FN, REQ_GUIDE_RN,
+		        REQ_GUIDE_MN, MOVE_REFUND_AGREE_FLAG, SYS_RDATE
+		FROM    MSP_REQUEST_MOVE A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestPayment" parameterType="String">
+		/*transferMapper.insertMspRequestPayment*/
+		INSERT INTO MSP_REQUEST_PAYMENT@DL_CAN (
+		        REQUEST_KEY, REQ_AC_TYPE, REQ_AC01_BALANCE,
+		        REQ_AC02_DAY, REQ_AC01_AMOUNT, REQ_AC02_AMOUNT,
+		        SYS_RDATE
+		)
+		SELECT
+		        REQUEST_KEY, REQ_AC_TYPE, REQ_AC01_BALANCE,
+		        REQ_AC02_DAY, REQ_AC01_AMOUNT, REQ_AC02_AMOUNT,
+		        SYS_RDATE
+		FROM    MSP_REQUEST_PAYMENT A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestReq" parameterType="String">
+		/*transferMapper.insertMspRequestReq*/
+		INSERT INTO MSP_REQUEST_REQ@DL_CAN (
+		        REQUEST_KEY, REQ_BANK, REQ_ACCOUNT_NAME,
+		        REQ_ACCOUNT_RRN, REQ_ACCOUNT_RELATION, REQ_ACCOUNT_NUMBER,
+		        REQ_CARD_NAME, REQ_CARD_RRN, REQ_CARD_COMPANY,
+		        REQ_CARD_NO, REQ_CARD_YY, REQ_CARD_MM,
+		        REQ_WIRE_TYPE, SYS_RDATE, REQ_PAY_OTHER_FLAG,
+		        REQ_PAY_OTHER_TEL_FN, REQ_PAY_OTHER_TEL_MN, REQ_PAY_OTHER_TEL_RN
+		)
+		SELECT
+		        REQUEST_KEY, REQ_BANK, REQ_ACCOUNT_NAME,
+		        REQ_ACCOUNT_RRN, REQ_ACCOUNT_RELATION, REQ_ACCOUNT_NUMBER,
+		        REQ_CARD_NAME, REQ_CARD_RRN, REQ_CARD_COMPANY,
+		        REQ_CARD_NO, REQ_CARD_YY, REQ_CARD_MM,
+		        REQ_WIRE_TYPE, SYS_RDATE, REQ_PAY_OTHER_FLAG,
+		        REQ_PAY_OTHER_TEL_FN, REQ_PAY_OTHER_TEL_MN, REQ_PAY_OTHER_TEL_RN
+		FROM    MSP_REQUEST_REQ A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestSaleinfo" parameterType="String">
+		/*transferMapper.insertMspRequestSaleinfo*/
+		INSERT INTO MSP_REQUEST_SALEINFO@DL_CAN (
+		        MODEL_ID, REQUEST_KEY, MODEL_MONTHLY,
+		        MODEL_INSTALLMENT, MODEL_SALE_POLICY_CODE, RECYCLE_YN,
+		        MODEL_DISCOUNT1, MODEL_DISCOUNT2, SOC_CODE,
+		        USIM_PRICE_TYPE, JOIN_PRICE_TYPE, JOIN_PRICE,
+		        USIM_PRICE, MODEL_PRICE, MODEL_PRICE_VAT,
+		        ENGG_MNTH_CNT, ADDTION_SERVICE, ADDTION_SERVICE_SUM,
+		        MODEL_DISCOUNT3, USIM_PAY_MTHD_CD, JOIN_PAY_MTHD_CD,
+		        REAL_MDL_INSTAMT, SPRT_TP, MAX_DISCOUNT3,
+		        DC_AMT, ADD_DC_AMT, SETTL_WAY_CD,
+		        SETTL_AMT, SETTL_APV_NO, SETTL_TRA_NO,
+		        OWN_PERSONAL_CODE, RENTAL_BASE_AMT, RENTAL_BASE_DC_AMT,
+		        RENTAL_MODEL_CP_AMT
+		)
+		SELECT
+		        MODEL_ID, REQUEST_KEY, MODEL_MONTHLY,
+		        MODEL_INSTALLMENT, MODEL_SALE_POLICY_CODE, RECYCLE_YN,
+		        MODEL_DISCOUNT1, MODEL_DISCOUNT2, SOC_CODE,
+		        USIM_PRICE_TYPE, JOIN_PRICE_TYPE, JOIN_PRICE,
+		        USIM_PRICE, MODEL_PRICE, MODEL_PRICE_VAT,
+		        ENGG_MNTH_CNT, ADDTION_SERVICE, ADDTION_SERVICE_SUM,
+		        MODEL_DISCOUNT3, USIM_PAY_MTHD_CD, JOIN_PAY_MTHD_CD,
+		        REAL_MDL_INSTAMT, SPRT_TP, MAX_DISCOUNT3,
+		        DC_AMT, ADD_DC_AMT, SETTL_WAY_CD,
+		        SETTL_AMT, SETTL_APV_NO, SETTL_TRA_NO,
+		        OWN_PERSONAL_CODE, RENTAL_BASE_AMT, RENTAL_BASE_DC_AMT,
+		        RENTAL_MODEL_CP_AMT
+		FROM    MSP_REQUEST_SALEINFO A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<insert id="insertMspRequestState" parameterType="String">
+		/*transferMapper.insertMspRequestState*/
+		INSERT INTO MSP_REQUEST_STATE@DL_CAN (
+		        REQUEST_STATE_KEY, REQUEST_KEY, REQUEST_STATE_CODE,
+		        RES_NO, DLVRY_NO, OPEN_NO,
+		        MEMO, VIEW_FLAG, RID,
+		        RIP, SYS_RDATE, TB_CD
+		)
+		SELECT
+		        REQUEST_STATE_KEY, REQUEST_KEY, REQUEST_STATE_CODE,
+		        RES_NO, DLVRY_NO, OPEN_NO,
+		        MEMO, VIEW_FLAG, RID,
+		        RIP, SYS_RDATE, TB_CD
+		FROM    MSP_REQUEST_STATE A
+		WHERE   REQUEST_KEY = #{requestKey}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = A.REQUEST_KEY )
+	</insert>
+
+	<!-- MSP_JUO_SUB_INFO 이관 -->
+	<insert id="insertMspJuoSubInfo" parameterType="String">
+		/*transferMapper.insertMspJuoSubInfo*/
+		INSERT INTO MSP_JUO_SUB_INFO@DL_CAN (
+		        CONTRACT_NUM, CUSTOMER_ID, SUBSCRIBER_NO,
+		        SUB_STATUS, SUB_STATUS_DATE, SUB_STATUS_RSN_CODE,
+		        USER_SSN, SUB_ADR_ZIP, SUB_ADR_PRIMARY_LN,
+		        SUB_ADR_SECONDARY_LN, SUB_LINK_NAME, MODEL_NAME,
+		        MODEL_ID, NCN, NCN_GRADE,
+		        IMSI, ICC_ID, G3_IND,
+		        DEALER_CODE, LST_COM_ACTV_DATE, LST_DEV_CHG_DATE,
+		        ITNET_BAL_YN, IMEI, SUB_STATUS_LAST_ACTV_CD,
+		        SLS_CMPN_CD, INTM_SRL_NO, WIBRO_IMEI,
+		        WIBRO_MAC_ID, USIM_FXD_ID, CNTR_USE_CD,
+		        SVC_CNTR_NO, REAL_USE_CUST_NO, SRL_IF_ID,
+		        UNPD_IND_CD, MNP_IND_CD, INDV_ENTR_NO,
+		        INDV_ENTR_NM, EVNT_CD, EVNT_TRTM_NO,
+		        EVNT_TRTM_DT, SCAN_ID, ON_OFF_TYPE,
+		        DOBYYYYMMDD, GENDER, BAN,
+		        WIFI_MAC_ID, OPEN_AGNT_CD, PPPO,
+		        REG_DTTM, PROD_TYPE, SNDARV_STAT_CD,
+		        LGL_AGNT_CUST_NO, AUX_LGL_AGNT_CUST_NO, TRANSFER_DTTM,
+				LGL_AGNT_SSN, AUX_LGL_AGNT_SSN, LGL_AGNT_NM,
+		        LGL_AGNT_NO
+		)
+		SELECT
+		        CONTRACT_NUM, CUSTOMER_ID, SUBSCRIBER_NO,
+		        SUB_STATUS, SUB_STATUS_DATE, SUB_STATUS_RSN_CODE,
+		        USER_SSN, SUB_ADR_ZIP, SUB_ADR_PRIMARY_LN,
+		        SUB_ADR_SECONDARY_LN, SUB_LINK_NAME, MODEL_NAME,
+		        MODEL_ID, NCN, NCN_GRADE,
+		        IMSI, ICC_ID, G3_IND,
+		        DEALER_CODE, LST_COM_ACTV_DATE, LST_DEV_CHG_DATE,
+		        ITNET_BAL_YN, IMEI, SUB_STATUS_LAST_ACTV_CD,
+		        SLS_CMPN_CD, INTM_SRL_NO, WIBRO_IMEI,
+		        WIBRO_MAC_ID, USIM_FXD_ID, CNTR_USE_CD,
+		        SVC_CNTR_NO, REAL_USE_CUST_NO, SRL_IF_ID,
+		        UNPD_IND_CD, MNP_IND_CD, INDV_ENTR_NO,
+		        INDV_ENTR_NM, EVNT_CD, EVNT_TRTM_NO,
+		        EVNT_TRTM_DT, SCAN_ID, ON_OFF_TYPE,
+		        DOBYYYYMMDD, GENDER, BAN,
+		        WIFI_MAC_ID, OPEN_AGNT_CD, PPPO,
+		        REG_DTTM, PROD_TYPE, SNDARV_STAT_CD,
+		        LGL_AGNT_CUST_NO, AUX_LGL_AGNT_CUST_NO, SYSDATE,
+				LGL_AGNT_SSN, AUX_LGL_AGNT_SSN, LGL_AGNT_NM,
+				LGL_AGNT_NO
+		FROM    MSP_JUO_SUB_INFO A
+		WHERE   CONTRACT_NUM = #{contractNum}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_SUB_INFO@DL_CAN WHERE CONTRACT_NUM = A.CONTRACT_NUM )
+	</insert>
+
+	<insert id="insertMspJuoSubInfoHist" parameterType="String">
+		/*transferMapper.insertMspJuoSubInfoHist*/
+		INSERT INTO MSP_JUO_SUB_INFO_HIST@DL_CAN (
+		        CONTRACT_NUM, CUSTOMER_ID, SUBSCRIBER_NO,
+		        SUB_STATUS, SUB_STATUS_DATE, SUB_STATUS_RSN_CODE,
+		        USER_SSN, SUB_ADR_ZIP, SUB_ADR_PRIMARY_LN,
+		        SUB_ADR_SECONDARY_LN, SUB_LINK_NAME, MODEL_NAME,
+		        MODEL_ID, NCN, NCN_GRADE,
+		        IMSI, ICC_ID, G3_IND,
+		        DEALER_CODE, LST_COM_ACTV_DATE, LST_DEV_CHG_DATE,
+		        ITNET_BAL_YN, IMEI, SUB_STATUS_LAST_ACTV_CD,
+		        SLS_CMPN_CD, INTM_SRL_NO, WIBRO_IMEI,
+		        WIBRO_MAC_ID, USIM_FXD_ID, CNTR_USE_CD,
+		        SVC_CNTR_NO, REAL_USE_CUST_NO, SRL_IF_ID,
+		        UNPD_IND_CD, MNP_IND_CD, INDV_ENTR_NO,
+		        INDV_ENTR_NM, EVNT_CD, EVNT_TRTM_NO,
+		        EVNT_TRTM_DT, SOC, ON_OFF_TYPE,
+		        DOBYYYYMMDD, GENDER, EVNT_CHANGE_DATE,
+		        WIFI_MAC_ID, BAN, OPEN_AGNT_CD,
+		        PPPO, SNDARV_STAT_CD, LGL_AGNT_CUST_NO,
+		        AUX_LGL_AGNT_CUST_NO, LGL_AGNT_SSN, AUX_LGL_AGNT_SSN,
+		        LGL_AGNT_NM, LGL_AGNT_NO
+		)
+		SELECT
+		        CONTRACT_NUM, CUSTOMER_ID, SUBSCRIBER_NO,
+		        SUB_STATUS, SUB_STATUS_DATE, SUB_STATUS_RSN_CODE,
+		        USER_SSN, SUB_ADR_ZIP, SUB_ADR_PRIMARY_LN,
+		        SUB_ADR_SECONDARY_LN, SUB_LINK_NAME, MODEL_NAME,
+		        MODEL_ID, NCN, NCN_GRADE,
+		        IMSI, ICC_ID, G3_IND,
+		        DEALER_CODE, LST_COM_ACTV_DATE, LST_DEV_CHG_DATE,
+		        ITNET_BAL_YN, IMEI, SUB_STATUS_LAST_ACTV_CD,
+		        SLS_CMPN_CD, INTM_SRL_NO, WIBRO_IMEI,
+		        WIBRO_MAC_ID, USIM_FXD_ID, CNTR_USE_CD,
+		        SVC_CNTR_NO, REAL_USE_CUST_NO, SRL_IF_ID,
+		        UNPD_IND_CD, MNP_IND_CD, INDV_ENTR_NO,
+		        INDV_ENTR_NM, EVNT_CD, EVNT_TRTM_NO,
+		        EVNT_TRTM_DT, SOC, ON_OFF_TYPE,
+		        DOBYYYYMMDD, GENDER, EVNT_CHANGE_DATE,
+		        WIFI_MAC_ID, BAN, OPEN_AGNT_CD,
+		        PPPO, SNDARV_STAT_CD, LGL_AGNT_CUST_NO,
+		        AUX_LGL_AGNT_CUST_NO, LGL_AGNT_SSN, AUX_LGL_AGNT_SSN,
+				LGL_AGNT_NM, LGL_AGNT_NO
+		FROM    MSP_JUO_SUB_INFO_HIST A
+		WHERE   CONTRACT_NUM = #{contractNum}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_SUB_INFO_HIST@DL_CAN WHERE CONTRACT_NUM = A.CONTRACT_NUM )
+	</insert>
+
+	<!-- MSP_JUO_CUS_INFO 이관 -->
+	<insert id="insertMspJuoCusInfo" parameterType="String">
+		/*transferMapper.insertMspJuoCusInfo*/
+		INSERT INTO MSP_JUO_CUS_INFO@DL_CAN (
+		        CUSTOMER_ID, CUSTOMER_TYPE, CUSTOMER_SSN,
+		        DRIVR_LICNS_NO, TAX_ID, CUSTOMER_ADR_ZIP,
+		        CUSTOMER_ADR_PRIMARY_LN, CUSTOMER_ADR_SECONDARY_LN, CUSTOMER_LINK_NAME,
+		        OCCUPATION_CODE, CUST_IDNT_NO_IND_CD, EVNT_CD,
+		        EVNT_TRTM_NO, EVNT_TRTM_DT, REVOCATION_TYPE,
+		        SELF_CSTMR_CI, PREV_CUSTOMER_SSN, PREV_CUSTOMER_NAME
+		)
+		SELECT
+		        CUSTOMER_ID, CUSTOMER_TYPE, CUSTOMER_SSN,
+		        DRIVR_LICNS_NO, TAX_ID, CUSTOMER_ADR_ZIP,
+		        CUSTOMER_ADR_PRIMARY_LN, CUSTOMER_ADR_SECONDARY_LN, CUSTOMER_LINK_NAME,
+		        OCCUPATION_CODE, CUST_IDNT_NO_IND_CD, EVNT_CD,
+		        EVNT_TRTM_NO, EVNT_TRTM_DT, REVOCATION_TYPE,
+		        SELF_CSTMR_CI, PREV_CUSTOMER_SSN, PREV_CUSTOMER_NAME
+		FROM    MSP_JUO_CUS_INFO A
+		WHERE   CUSTOMER_ID = #{customerId}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_CUS_INFO@DL_CAN WHERE CUSTOMER_ID = A.CUSTOMER_ID )
+	</insert>
+
+	<insert id="insertMspJuoCusInfoHist" parameterType="String">
+		/*transferMapper.insertMspJuoCusInfoHist*/
+		INSERT INTO MSP_JUO_CUS_INFO_HIST@DL_CAN (
+		        CUSTOMER_ID, CUSTOMER_TYPE, CUSTOMER_SSN,
+		        DRIVR_LICNS_NO, TAX_ID, CUSTOMER_ADR_ZIP,
+		        CUSTOMER_ADR_PRIMARY_LN, CUSTOMER_ADR_SECONDARY_LN, CUSTOMER_LINK_NAME,
+		        OCCUPATION_CODE, CUST_IDNT_NO_IND_CD, EVNT_CD,
+		        EVNT_TRTM_NO, EVNT_TRTM_DT, REVOCATION_TYPE,
+		        EVNT_CHANGE_DATE, PREV_CUSTOMER_SSN, PREV_CUSTOMER_NAME
+		)
+		SELECT
+		        CUSTOMER_ID, CUSTOMER_TYPE, CUSTOMER_SSN,
+		        DRIVR_LICNS_NO, TAX_ID, CUSTOMER_ADR_ZIP,
+		        CUSTOMER_ADR_PRIMARY_LN, CUSTOMER_ADR_SECONDARY_LN, CUSTOMER_LINK_NAME,
+		        OCCUPATION_CODE, CUST_IDNT_NO_IND_CD, EVNT_CD,
+		        EVNT_TRTM_NO, EVNT_TRTM_DT, REVOCATION_TYPE,
+		        EVNT_CHANGE_DATE, PREV_CUSTOMER_SSN, PREV_CUSTOMER_NAME
+		FROM    MSP_JUO_CUS_INFO_HIST A
+		WHERE   CUSTOMER_ID = #{customerId}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_CUS_INFO_HIST@DL_CAN WHERE CUSTOMER_ID = A.CUSTOMER_ID )
+	</insert>
+
+	<!-- <insert id="insertMspJuoAddInfo" parameterType="String">
+		/*transferMapper.insertMspJuoAddInfo*/
+		INSERT INTO MSP_JUO_ADD_INFO@DL_CAN (
+		        CONTRACT_NUM, SALORG_CD, OPEN_SHOP_CD,
+		        TRRM_SHOP_CD, CNTPNT_CD, SLS_PRSN_ID,
+		        TRTM_PRSN_ID, ENCR_PRSN_ID, SLS_NO,
+		        DVC_OFW_AMNT, INST_ORGIN_AMNT, INST_MNTH_CNT,
+		        EVNT_CD, EVNT_TRTM_NO, EVNT_TRTM_DT,
+		        APP_START_DD, APP_END_DATE, MODEL_NAME,
+		        MODEL_ID, ENGG_MNTH_CNT, SVC_CNTR_NO,
+		        GRNT_INSR_MNGM_NO, MODEL_CHN_CD, BL_DC_TYPE,
+		        GRNT_INSR_STAT_CD, SIM_START_DT, SIM_END_DT,
+		        SIM_ID, REG_DTTM, SBSCST_IMPS_EXMP_AMNT,
+		        USIM_AMNT, AGNC_SUPOT_DSCN_AMNT
+		)
+		SELECT
+		        CONTRACT_NUM, SALORG_CD, OPEN_SHOP_CD,
+		        TRRM_SHOP_CD, CNTPNT_CD, SLS_PRSN_ID,
+		        TRTM_PRSN_ID, ENCR_PRSN_ID, SLS_NO,
+		        DVC_OFW_AMNT, INST_ORGIN_AMNT, INST_MNTH_CNT,
+		        EVNT_CD, EVNT_TRTM_NO, EVNT_TRTM_DT,
+		        APP_START_DD, APP_END_DATE, MODEL_NAME,
+		        MODEL_ID, ENGG_MNTH_CNT, SVC_CNTR_NO,
+		        GRNT_INSR_MNGM_NO, MODEL_CHN_CD, BL_DC_TYPE,
+		        GRNT_INSR_STAT_CD, SIM_START_DT, SIM_END_DT,
+		        SIM_ID, REG_DTTM, SBSCST_IMPS_EXMP_AMNT,
+		        USIM_AMNT, AGNC_SUPOT_DSCN_AMNT
+		FROM    MSP_JUO_ADD_INFO
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</insert> -->
+		
+	<!-- 납부계정 체크 -->
+	<select id="getBanOtherCntrExist" parameterType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO" resultType="int">
+		/*transferMapper.getBanOtherCntrExist*/
+		<![CDATA[
+		SELECT  COUNT(1) 
+		FROM	MSP_JUO_SUB_INFO
+		WHERE   BAN = #{ban}
+		AND     CONTRACT_NUM != #{contractNum}
+		AND     (SUB_STATUS != 'C'
+		         OR (SUB_STATUS = 'C' AND TO_DATE(SUBSTR(SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') > SYSDATE - #{tmntCustDt}))
+		]]>
+	</select>
+
+	<!-- MSP_JUO_BAN_INFO 이관 -->
+	<insert id="insertMspJuoBanInfo" parameterType="String">
+		/*transferMapper.insertMspJuoBanInfo*/
+		INSERT INTO MSP_JUO_BAN_INFO@DL_CAN (
+		        BAN, CUSTOMER_ID, COL_DELINQ_STATUS,
+		        MARKET_GUBUN, BL_BILLING_METHOD, BL_SPCL_BAN_CODE,
+		        BANK_ACCT_HOLDER_ID, BAN_ADR_ZIP, BAN_ADR_PRIMARY_LN,
+		        BAN_ADR_SECONDARY_LN, BAN_LINK_NAME, EVNT_CD,
+		        EVNT_TRTM_NO, EVNT_TRTM_DT
+		)
+		SELECT
+		        BAN, CUSTOMER_ID, COL_DELINQ_STATUS,
+		        MARKET_GUBUN, BL_BILLING_METHOD, BL_SPCL_BAN_CODE,
+		        BANK_ACCT_HOLDER_ID, BAN_ADR_ZIP, BAN_ADR_PRIMARY_LN,
+		        BAN_ADR_SECONDARY_LN, BAN_LINK_NAME, EVNT_CD,
+		        EVNT_TRTM_NO, EVNT_TRTM_DT
+		FROM    MSP_JUO_BAN_INFO A
+		WHERE   BAN = #{ban}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_BAN_INFO@DL_CAN WHERE BAN = A.BAN )
+	</insert>
+
+	<insert id="insertMspJuoBanInfoHist" parameterType="String">
+		/*transferMapper.insertMspJuoBanInfoHist*/
+		INSERT INTO MSP_JUO_BAN_INFO_HIST@DL_CAN (
+		        BAN, EVNT_CHANGE_DATE, EVNT_TRTM_DT,
+		        CUSTOMER_ID, COL_DELINQ_STATUS, MARKET_GUBUN,
+		        BL_BILLING_METHOD, BL_SPCL_BAN_CODE, BANK_ACCT_HOLDER_ID,
+		        BAN_ADR_ZIP, BAN_ADR_PRIMARY_LN, BAN_ADR_SECONDARY_LN,
+		        BAN_LINK_NAME, EVNT_CD, EVNT_TRTM_NO
+		)
+		SELECT
+		        BAN, EVNT_CHANGE_DATE, EVNT_TRTM_DT,
+		        CUSTOMER_ID, COL_DELINQ_STATUS, MARKET_GUBUN,
+		        BL_BILLING_METHOD, BL_SPCL_BAN_CODE, BANK_ACCT_HOLDER_ID,
+		        BAN_ADR_ZIP, BAN_ADR_PRIMARY_LN, BAN_ADR_SECONDARY_LN,
+		        BAN_LINK_NAME, EVNT_CD, EVNT_TRTM_NO
+		FROM    MSP_JUO_BAN_INFO_HIST A
+		WHERE   BAN = #{ban}
+		AND     NOT EXISTS ( SELECT 1 FROM MSP_JUO_BAN_INFO_HIST@DL_CAN WHERE BAN = A.BAN )
+	</insert>
+
+	<!-- MSP 신청정보 변경 -->
+	<update id="updateMspRequestAgent" parameterType="String">
+		/*tranferMapper.updateMspRequestAgent*/
+		UPDATE  MSP_REQUEST_AGENT
+		SET     MINOR_AGENT_NAME     = CASE WHEN MINOR_AGENT_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , MINOR_AGENT_RRN    = CASE WHEN MINOR_AGENT_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(MINOR_AGENT_RRN), 1, 7) || '******') ELSE '' END
+		        , MINOR_AGENT_TEL_FN = CASE WHEN MINOR_AGENT_TEL_FN IS NOT NULL THEN '000' ELSE '' END
+		        , MINOR_AGENT_TEL_MN = CASE WHEN MINOR_AGENT_TEL_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , MINOR_AGENT_TEL_RN = CASE WHEN MINOR_AGENT_TEL_RN IS NOT NULL THEN '0000' ELSE '' END
+		        
+		        , JRDCL_AGENT_NAME   = CASE WHEN JRDCL_AGENT_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , JRDCL_AGENT_RRN    = CASE WHEN JRDCL_AGENT_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(JRDCL_AGENT_RRN), 1, 7) || '******') ELSE '' END
+		        , JRDCL_AGENT_TEL_FN = CASE WHEN JRDCL_AGENT_TEL_FN IS NOT NULL THEN '000' ELSE '' END
+		        , JRDCL_AGENT_TEL_MN = CASE WHEN JRDCL_AGENT_TEL_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , JRDCL_AGENT_TEL_RN = CASE WHEN JRDCL_AGENT_TEL_RN IS NOT NULL THEN '0000' ELSE '' END
+		        
+		        , ENTRUST_REQ_NM     = CASE WHEN ENTRUST_REQ_NM IS NOT NULL THEN '이관고객' ELSE '' END
+		        , ENTRUST_RES_NM     = CASE WHEN ENTRUST_RES_NM IS NOT NULL THEN '이관고객' ELSE '' END
+		        , ENTRUST_RES_RRN    = CASE WHEN ENTRUST_RES_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(ENTRUST_RES_RRN), 1, 7) || '******') ELSE '' END
+		        , ENTRUST_RES_TEL_FN = CASE WHEN ENTRUST_RES_TEL_FN IS NOT NULL THEN '000' ELSE '' END
+		        , ENTRUST_RES_TEL_MN = CASE WHEN ENTRUST_RES_TEL_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , ENTRUST_RES_TEL_RN = CASE WHEN ENTRUST_RES_TEL_RN IS NOT NULL THEN '0000' ELSE '' END
+		        
+		WHERE   REQUEST_KEY = #{requestKey}
+	</update>
+
+	<update id="updateMspRequestChange" parameterType="String">
+		/*tranferMapper.updateMspRequestChange*/
+		UPDATE  MSP_REQUEST_CHANGE
+		SET     NAME_CHANGE_NM       = CASE WHEN NAME_CHANGE_NM IS NOT NULL THEN '이관고객' ELSE '' END
+		        , NAME_CHANGE_TEL_FN = CASE WHEN NAME_CHANGE_TEL_FN IS NOT NULL THEN '000' ELSE '' END
+		        , NAME_CHANGE_TEL_MN = CASE WHEN NAME_CHANGE_TEL_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , NAME_CHANGE_TEL_RN = CASE WHEN NAME_CHANGE_TEL_RN IS NOT NULL THEN '0000' ELSE '' END
+		        
+		        , NAME_CHANGE_RRN    = CASE WHEN NAME_CHANGE_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(NAME_CHANGE_RRN), 1, 7) || '******') ELSE '' END
+		        
+		WHERE   REQUEST_KEY = #{requestKey}
+	</update>
+
+	<update id="updateMspRequestCstmr" parameterType="String">
+		/*tranferMapper.updateMspRequestCstmr*/
+		UPDATE  MSP_REQUEST_CSTMR
+		SET     CSTMR_NAME              = CASE WHEN CSTMR_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , CSTMR_NATIVE_RRN      = CASE WHEN CSTMR_NATIVE_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(CSTMR_NATIVE_RRN), 1, 7) || '******') ELSE '' END
+        		, CSTMR_FOREIGNER_PN    = ''
+		        , CSTMR_FOREIGNER_RRN   = CASE WHEN CSTMR_FOREIGNER_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(CSTMR_FOREIGNER_RRN), 1, 7) || '******') ELSE '' END
+		        , CSTMR_PRIVATE_CNAME   = CASE WHEN CSTMR_PRIVATE_CNAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , CSTMR_JURIDICAL_CNAME = CASE WHEN CSTMR_JURIDICAL_CNAME IS NOT NULL THEN '이관고객' ELSE '' END
+        		, CSTMR_PRIVATE_NUMBER  = ''
+		        , CSTMR_JURIDICAL_RRN   = CASE WHEN CSTMR_JURIDICAL_RRN IS NOT NULL THEN SUBSTR(CSTMR_JURIDICAL_RRN, 1, 7) || '******' ELSE '' END
+        		, CSTMR_JURIDICAL_NUMBER = ''
+		        , CSTMR_TEL_FN          = CASE WHEN CSTMR_TEL_FN IS NOT NULL THEN '000' ELSE '' END
+		        , CSTMR_TEL_MN          = CASE WHEN CSTMR_TEL_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , CSTMR_TEL_RN          = CASE WHEN CSTMR_TEL_RN IS NOT NULL THEN '0000' ELSE '' END
+		        
+		        , CSTMR_MOBILE_FN       = CASE WHEN CSTMR_MOBILE_FN IS NOT NULL THEN '000' ELSE '' END
+		        , CSTMR_MOBILE_MN       = CASE WHEN CSTMR_MOBILE_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , CSTMR_MOBILE_RN       = CASE WHEN CSTMR_MOBILE_RN IS NOT NULL THEN '0000' ELSE '' END
+		        
+		        , CSTMR_ADDR            = SUBSTR(CSTMR_ADDR,1,15)
+		        , CSTMR_ADDR_DTL        = ''
+		        
+		        , CSTMR_MAIL            = ''
+		        , CSTMR_RECEIVE_TEL_FN  = CASE WHEN CSTMR_RECEIVE_TEL_FN IS NOT NULL THEN '000' ELSE '' END
+		        , CSTMR_RECEIVE_TEL_NM  = CASE WHEN CSTMR_RECEIVE_TEL_NM IS NOT NULL THEN '0000' ELSE '' END
+		        , CSTMR_RECEIVE_TEL_RN  = CASE WHEN CSTMR_RECEIVE_TEL_RN IS NOT NULL THEN '0000' ELSE '' END
+
+		        , OTHERS_PAYMENT_NM     = CASE WHEN OTHERS_PAYMENT_NM IS NOT NULL THEN '이관고객' ELSE '' END
+		        , OTHERS_PAYMENT_RRN    = CASE WHEN OTHERS_PAYMENT_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(OTHERS_PAYMENT_RRN), 1, 7) || '******') ELSE '' END
+		        , OTHERS_PAYMENT_RNM    = CASE WHEN OTHERS_PAYMENT_NM IS NOT NULL THEN '이관고객' ELSE '' END
+		WHERE   REQUEST_KEY = #{requestKey}
+	</update>
+
+	<update id="updateMspRequestDlvry" parameterType="String">
+		/*tranferMapper.updateMspRequestDlvry*/
+		UPDATE  MSP_REQUEST_DLVRY
+		SET     DLVRY_NAME         = CASE WHEN DLVRY_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , DLVRY_TEL_FN     = CASE WHEN DLVRY_TEL_FN IS NOT NULL THEN '000' ELSE '' END
+		        , DLVRY_TEL_MN     = CASE WHEN DLVRY_TEL_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , DLVRY_TEL_RN     = CASE WHEN DLVRY_TEL_RN IS NOT NULL THEN '0000' ELSE '' END
+
+		        , DLVRY_MOBILE_FN  = CASE WHEN DLVRY_MOBILE_FN IS NOT NULL THEN '000' ELSE '' END
+		        , DLVRY_MOBILE_MN  = CASE WHEN DLVRY_MOBILE_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , DLVRY_MOBILE_RN  = CASE WHEN DLVRY_MOBILE_RN IS NOT NULL THEN '0000' ELSE '' END
+
+		        , DLVRY_ADDR = SUBSTR(DLVRY_ADDR,1,15)
+		        , DLVRY_ADDR_DTL   = ''
+		WHERE   REQUEST_KEY = #{requestKey}
+	</update>
+
+	<update id="updateMspRequestDtl" parameterType="String">
+		/*tranferMapper.updateMspRequestDtl*/
+		UPDATE  MSP_REQUEST_DTL
+		SET     MINOR_AGENT_NAME  = CASE WHEN MINOR_AGENT_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , MINOR_AGENT_TEL = CASE WHEN MINOR_AGENT_TEL IS NOT NULL THEN '00000000000' ELSE '' END
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</update>
+
+	<update id="updateMspRequestMove" parameterType="String">
+		/*tranferMapper.updateMspRequestMove*/
+		UPDATE  MSP_REQUEST_MOVE
+		SET      MOVE_MOBILE_FN   = CASE WHEN MOVE_MOBILE_FN IS NOT NULL THEN '000' ELSE '' END
+		        , MOVE_MOBILE_MN  = CASE WHEN MOVE_MOBILE_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , MOVE_MOBILE_RN  = CASE WHEN MOVE_MOBILE_RN IS NOT NULL THEN '0000' ELSE '' END
+
+		        , REQ_GUIDE_FN    = CASE WHEN REQ_GUIDE_FN IS NOT NULL THEN '000' ELSE '' END
+		        , REQ_GUIDE_RN    = CASE WHEN REQ_GUIDE_RN IS NOT NULL THEN '0000' ELSE '' END
+		        , REQ_GUIDE_MN    = CASE WHEN REQ_GUIDE_MN IS NOT NULL THEN '0000' ELSE '' END
+		WHERE   REQUEST_KEY = #{requestKey}
+	</update>
+
+	<update id="updateMspRequestReq" parameterType="String">
+		/*tranferMapper.updateMspRequestReq*/
+		UPDATE  MSP_REQUEST_REQ
+		SET     REQ_ACCOUNT_NAME       = CASE WHEN REQ_ACCOUNT_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , REQ_ACCOUNT_RRN      = CASE WHEN REQ_ACCOUNT_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(REQ_ACCOUNT_RRN), 1, 7) || '******') ELSE '' END
+		        , REQ_ACCOUNT_NUMBER   = ''
+		        , REQ_CARD_NAME        = CASE WHEN REQ_CARD_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , REQ_CARD_RRN         = CASE WHEN REQ_CARD_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(REQ_CARD_RRN), 1, 7) || '******') ELSE '' END
+		        , REQ_CARD_NO          = ''
+		        
+		        , REQ_PAY_OTHER_TEL_FN = CASE WHEN REQ_PAY_OTHER_TEL_FN IS NOT NULL THEN '000' ELSE '' END
+		        , REQ_PAY_OTHER_TEL_MN = CASE WHEN REQ_PAY_OTHER_TEL_MN IS NOT NULL THEN '0000' ELSE '' END
+		        , REQ_PAY_OTHER_TEL_RN = CASE WHEN REQ_PAY_OTHER_TEL_RN IS NOT NULL THEN '0000' ELSE '' END
+		        
+		WHERE   REQUEST_KEY = #{requestKey}
+	</update>
+
+	<update id="updateMspJuoSubInfo" parameterType="String">
+		/*tranferMapper.updateMspJuoSubInfo*/
+		UPDATE  MSP_JUO_SUB_INFO
+		SET     SUBSCRIBER_NO          = '00000000000'
+                , USER_SSN             = CASE WHEN USER_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(USER_SSN), 1, 7) || '******') ELSE '' END
+		        , SUB_ADR_PRIMARY_LN   = SUBSTR(SUB_ADR_PRIMARY_LN,1,15)
+		        , SUB_ADR_SECONDARY_LN = ''
+		        , SUB_LINK_NAME        = CASE WHEN SUB_LINK_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+			    , LGL_AGNT_SSN         = CASE WHEN LGL_AGNT_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(LGL_AGNT_SSN), 1, 7) || '******') ELSE '' END
+			    , AUX_LGL_AGNT_SSN     = CASE WHEN AUX_LGL_AGNT_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(AUX_LGL_AGNT_SSN), 1, 7) || '******') ELSE '' END
+			    , LGL_AGNT_NM          = CASE WHEN LGL_AGNT_NM IS NOT NULL THEN '이관고객' ELSE '' END
+			    , LGL_AGNT_NO          = '00000000000'
+		        , TRNS_YN              = 'Y'
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</update>
+
+	<update id="updateMspJuoSubInfoHist" parameterType="String">
+		/*tranferMapper.updateMspJuoSubInfoHist*/
+		UPDATE  MSP_JUO_SUB_INFO_HIST
+		SET     SUBSCRIBER_NO          = '00000000000'
+                , USER_SSN             = CASE WHEN USER_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(USER_SSN), 1, 7) || '******') ELSE '' END
+		        , SUB_ADR_PRIMARY_LN   = SUBSTR(SUB_ADR_PRIMARY_LN,1,15)
+		        , SUB_ADR_SECONDARY_LN = ''
+		        , SUB_LINK_NAME        = CASE WHEN SUB_LINK_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+			    , LGL_AGNT_SSN         = CASE WHEN LGL_AGNT_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(LGL_AGNT_SSN), 1, 7) || '******') ELSE '' END
+			    , AUX_LGL_AGNT_SSN     = CASE WHEN AUX_LGL_AGNT_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(AUX_LGL_AGNT_SSN), 1, 7) || '******') ELSE '' END
+			    , LGL_AGNT_NM          = CASE WHEN LGL_AGNT_NM IS NOT NULL THEN '이관고객' ELSE '' END
+			    , LGL_AGNT_NO          = '00000000000'
+		WHERE   CONTRACT_NUM = #{contractNum}
+	</update>
+
+	<update id="updateMspJuoCusInfo" parameterType="String">
+		/*tranferMapper.updateMspJuoCusInfo*/
+		UPDATE  MSP_JUO_CUS_INFO
+		SET     CUSTOMER_SSN                = CASE WHEN CUSTOMER_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(CUSTOMER_SSN), 1, 7) || '******') ELSE '' END
+		        , DRIVR_LICNS_NO            = ''
+		        , TAX_ID                    = ''
+		        , CUSTOMER_ADR_PRIMARY_LN   = SUBSTR(CUSTOMER_ADR_PRIMARY_LN,1,15)
+		        , CUSTOMER_ADR_SECONDARY_LN = ''
+		        , CUSTOMER_LINK_NAME        = CASE WHEN CUSTOMER_LINK_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , PREV_CUSTOMER_SSN         = CASE WHEN PREV_CUSTOMER_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(PREV_CUSTOMER_SSN), 1, 7) || '******') ELSE '' END
+		        , PREV_CUSTOMER_NAME        = CASE WHEN PREV_CUSTOMER_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		WHERE   CUSTOMER_ID = #{customerId}
+	</update>
+
+	<update id="updateMspJuoCusInfoHist" parameterType="String">
+		/*tranferMapper.updateMspJuoCusInfoHist*/
+		UPDATE  MSP_JUO_CUS_INFO_HIST
+		SET     CUSTOMER_SSN                = CASE WHEN CUSTOMER_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(CUSTOMER_SSN), 1, 7) || '******') ELSE '' END
+		        , DRIVR_LICNS_NO            = ''
+		        , TAX_ID                    = ''
+		        , CUSTOMER_ADR_PRIMARY_LN   = SUBSTR(CUSTOMER_ADR_PRIMARY_LN,1,15)
+		        , CUSTOMER_ADR_SECONDARY_LN = ''
+		        , CUSTOMER_LINK_NAME        = CASE WHEN CUSTOMER_LINK_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		        , PREV_CUSTOMER_SSN         = CASE WHEN PREV_CUSTOMER_SSN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(PREV_CUSTOMER_SSN), 1, 7) || '******') ELSE '' END
+		        , PREV_CUSTOMER_NAME        = CASE WHEN PREV_CUSTOMER_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		WHERE   CUSTOMER_ID = #{customerId}
+	</update>
+
+	<update id="updateMspJuoBanInfo" parameterType="String">
+		/*tranferMapper.updateMspJuoBanInfo*/
+		UPDATE  MSP_JUO_BAN_INFO
+		SET     BANK_ACCT_HOLDER_ID      = CASE WHEN BANK_ACCT_HOLDER_ID IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(BANK_ACCT_HOLDER_ID), 1, 7) || '******') ELSE '' END
+                ,BAN_ADR_PRIMARY_LN     = SUBSTR(BAN_ADR_PRIMARY_LN,1,15)
+		        , BAN_ADR_SECONDARY_LN = ''
+		        , BAN_LINK_NAME        = CASE WHEN BAN_LINK_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+
+		WHERE   BAN = #{ban}
+	</update>
+
+	<update id="updateMspJuoBanInfoHist" parameterType="String">
+		/*tranferMapper.updateMspJuoBanInfoHist*/
+		UPDATE  MSP_JUO_BAN_INFO_HIST
+		SET     BANK_ACCT_HOLDER_ID      = CASE WHEN BANK_ACCT_HOLDER_ID IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(BANK_ACCT_HOLDER_ID), 1, 7) || '******') ELSE '' END
+		        , BAN_ADR_PRIMARY_LN     = SUBSTR(BAN_ADR_PRIMARY_LN,1,15)
+		        , BAN_ADR_SECONDARY_LN = ''
+		        , BAN_LINK_NAME        = CASE WHEN BAN_LINK_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+		WHERE   BAN = #{ban}
+	</update>
+
+	<!-- 이관후 삭제대상 조회 -->
+	<select id="getTmntCustDataList" parameterType="int" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		/*transferMapper.getTmntCustDataList*/
+		<![CDATA[
+		SELECT  A.CONTRACT_NUM  as contractNum
+		        , A.CUSTOMER_ID as customerId
+		        , A.BAN         as ban
+		        , A.SVC_CNTR_NO as svcCntrNo
+		        , A.SUBSCRIBER_NO as subscriberNo
+		FROM    MSP_JUO_SUB_INFO@DL_CAN A
+		WHERE   TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') < SYSDATE - #{stdrCnt}
+		]]>
+	</select>
+
+	<!-- MSP 신청정보 삭제 -->
+	<delete id="deleteMspRequest" parameterType="String">
+		/*transferMapper.deleteMspRequest*/
+		DELETE FROM MSP_REQUEST WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestAddition" parameterType="String">
+		/*transferMapper.deleteMspRequestAddition*/
+		DELETE FROM MSP_REQUEST_ADDITION WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestAgent" parameterType="String">
+		/*transferMapper.deleteMspRequestAgent*/
+		DELETE FROM MSP_REQUEST_AGENT WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestChange" parameterType="String">
+		/*transferMapper.deleteMspRequestChange*/
+		DELETE FROM MSP_REQUEST_CHANGE WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestCstmr" parameterType="String">
+		/*transferMapper.deleteMspRequestCstmr*/
+		DELETE FROM MSP_REQUEST_CSTMR WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestDlvry" parameterType="String">
+		/*transferMapper.deleteMspRequestDlvry*/
+		DELETE FROM MSP_REQUEST_DLVRY WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestDvcChg" parameterType="String">
+		/*transferMapper.deleteMspRequestDvcChg*/
+		DELETE FROM MSP_REQUEST_DVC_CHG WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestMove" parameterType="String">
+		/*transferMapper.deleteMspRequestMove*/
+		DELETE FROM MSP_REQUEST_MOVE WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestPayment" parameterType="String">
+		/*transferMapper.deleteMspRequestPayment*/
+		DELETE FROM MSP_REQUEST_PAYMENT WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestReq" parameterType="String">
+		/*transferMapper.deleteMspRequestReq*/
+		DELETE FROM MSP_REQUEST_REQ WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestSaleinfo" parameterType="String">
+		/*transferMapper.deleteMspRequestSaleInfo*/
+		DELETE FROM MSP_REQUEST_SALEINFO WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestState" parameterType="String">
+		/*transferMapper.deleteMspRequestState*/
+		DELETE FROM MSP_REQUEST_STATE WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteMspRequestDtl" parameterType="String">
+		/*transferMapper.deleteMspRequestDtl*/
+		DELETE FROM MSP_REQUEST_DTL WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<!-- CAN 신청정보 삭제 -->
+	<delete id="deleteCanRequest" parameterType="String">
+		/*transferMapper.deleteCanRequest*/
+		DELETE FROM MSP_REQUEST@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestAddition" parameterType="String">
+		/*transferMapper.deleteCanRequestAddition*/
+		DELETE FROM MSP_REQUEST_ADDITION@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestAgent" parameterType="String">
+		/*transferMapper.deleteCanRequestAgent*/
+		DELETE FROM MSP_REQUEST_AGENT@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestChange" parameterType="String">
+		/*transferMapper.deleteCanRequestChange*/
+		DELETE FROM MSP_REQUEST_CHANGE@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestClause" parameterType="String">
+		/*transferMapper.deleteCanRequestClause*/
+		DELETE FROM MSP_REQUEST_CLAUSE@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestCstmr" parameterType="String">
+		/*transferMapper.deleteCanRequestCstmr*/
+		DELETE FROM MSP_REQUEST_CSTMR@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestDlvry" parameterType="String">
+		/*transferMapper.deleteCanRequestDlvry*/
+		DELETE FROM MSP_REQUEST_DLVRY@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestDvcChg" parameterType="String">
+		/*transferMapper.deleteCanRequestDvcChg*/
+		DELETE FROM MSP_REQUEST_DVC_CHG@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestMove" parameterType="String">
+		/*transferMapper.deleteCanRequestMove*/
+		DELETE FROM MSP_REQUEST_MOVE@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestPayment" parameterType="String">
+		/*transferMapper.deleteCanRequestPayment*/
+		DELETE FROM MSP_REQUEST_PAYMENT@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestReq" parameterType="String">
+		/*transferMapper.deleteCanRequestReq*/
+		DELETE FROM MSP_REQUEST_REQ@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestSaleinfo" parameterType="String">
+		/*transferMapper.deleteCanRequestSaleInfo*/
+		DELETE FROM MSP_REQUEST_SALEINFO@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestState" parameterType="String">
+		/*transferMapper.deleteCanRequestState*/
+		DELETE FROM MSP_REQUEST_STATE@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<delete id="deleteCanRequestDtl" parameterType="String">
+		/*transferMapper.deleteCanRequestDtl*/
+		DELETE FROM MSP_REQUEST_DTL@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<!-- MSP_JUO_SUB_INFO 삭제 -->
+	<delete id="deleteMspJuoSubInfo" parameterType="String">
+		/*transferMapper.deleteMspJuoSubInfo*/
+		DELETE FROM MSP_JUO_SUB_INFO WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<delete id="deleteMspJuoSubInfoHist" parameterType="String">
+		/*transferMapper.deleteMspJuoSubInfoHist*/
+		DELETE FROM MSP_JUO_SUB_INFO_HIST WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<!-- MSP_JUO_CUS_INFO 삭제 -->
+	<delete id="deleteMspJuoCusInfo" parameterType="String">
+		/*transferMapper.deleteMspJuoCusInfo*/
+		DELETE FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = #{customerId}
+	</delete>
+
+	<delete id="deleteMspJuoCusInfoHist" parameterType="String">
+		/*transferMapper.deleteMspJuoCusInfoHist*/
+		DELETE FROM MSP_JUO_CUS_INFO_HIST WHERE CUSTOMER_ID = #{customerId}
+	</delete>
+
+	<!-- MSP_JUO_BAN_INFO 삭제 -->
+	<delete id="deleteMspJuoBanInfo" parameterType="String">
+		/*transferMapper.deleteMspJuoBanInfo*/
+		DELETE FROM MSP_JUO_BAN_INFO WHERE BAN = #{ban}
+	</delete>
+
+	<delete id="deleteMspJuoBanInfoHist" parameterType="String">
+		/*transferMapper.deleteMspJuoBanInfoHist*/
+		DELETE FROM MSP_JUO_BAN_INFO_HIST WHERE BAN = #{ban}
+	</delete>
+
+	<!-- MSP_JUO_SUB_INFO@DL_CAN 삭제 -->
+	<delete id="deleteCanJuoSubInfo" parameterType="String">
+		/*transferMapper.deleteCanJuoSubInfo*/
+		DELETE FROM MSP_JUO_SUB_INFO@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<delete id="deleteCanJuoSubInfoHist" parameterType="String">
+		/*transferMapper.deleteCanJuoSubInfoHist*/
+		DELETE FROM MSP_JUO_SUB_INFO_HIST@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<!-- MSP_JUO_CUS_INFO@DL_CAN 삭제 -->
+	<delete id="deleteCanJuoCusInfo" parameterType="String">
+		/*transferMapper.deleteCanJuoCusInfo*/
+		DELETE FROM MSP_JUO_CUS_INFO@DL_CAN WHERE CUSTOMER_ID = #{customerId}
+	</delete>
+
+	<delete id="deleteCanJuoCusInfoHist" parameterType="String">
+		/*transferMapper.deleteCanJuoCusInfoHist*/
+		DELETE FROM MSP_JUO_CUS_INFO_HIST@DL_CAN WHERE CUSTOMER_ID = #{customerId}
+	</delete>
+
+	<!-- MSP_JUO_BAN_INFO@DL_CAN 삭제 -->
+	<delete id="deleteCanJuoBanInfo" parameterType="String">
+		/*transferMapper.deleteMspJuoBanInfo*/
+		DELETE FROM MSP_JUO_BAN_INFO@DL_CAN WHERE BAN = #{ban}
+	</delete>
+
+	<delete id="deleteCanJuoBanInfoHist" parameterType="String">
+		/*transferMapper.deleteCanJuoBanInfoHist*/
+		DELETE FROM MSP_JUO_BAN_INFO_HIST@DL_CAN WHERE BAN = #{ban}
+	</delete>
+
+	<!-- 통신자료제공내역삭제 -->
+	<delete id="deleteCommDatPrvTxn" parameterType="int">
+		/*transferMapper.deleteCommDatPrvTxn*/
+		<![CDATA[
+		DELETE FROM MSP_COMM_DAT_PRV_TXN WHERE APY_DT < SYSDATE - #{stdrCnt}
+		]]>
+	</delete>
+
+	<!-- 가입사실확인삭제 -->
+	<delete id="deleteInvstReqMst" parameterType="int">
+		/*transferMapper.deleteInvstReqMst*/
+		<![CDATA[
+		DELETE FROM MSP_INVST_REQ_MST WHERE TO_DATE(PROC_DT, 'YYYYMMDD') < SYSDATE - #{stdrCnt}
+		]]>
+	</delete>
+
+		<!--해지이력테이블 삭제 -->
+	<delete id="deleteMspReentranceMst" parameterType="String">
+		/*transferMapper.deleteMspReentranceMst*/
+		<![CDATA[
+		 DELETE FROM MSP_REENTRANCE_MST a
+		 where a.contract_num =  #{contractNum}
+		]]>
+	</delete>
+
+	<!-- 판매유심 해지 후 180일 지난 고객 조회 -->
+	<select id="selectSellUsimTransferList" resultType="com.ktis.msp.batch.job.cmn.sellusim.vo.SellUsimVO">
+		/*transferMapper.selectSellUsimTransferList*/
+		SELECT SELL_USIM_KEY AS sellUsimKey
+		  FROM MCP_SELL_USIM@DL_MCP
+		 WHERE VDATE_END IS NOT NULL
+		   AND VDATE_END <![CDATA[ < ]]> TO_CHAR(SYSDATE - #{stdrCnt}, 'YYYYMMDD')
+		   AND ROWNUM <![CDATA[ <= ]]> 10000
+	</select>
+
+	<!-- 판매유심 해지 후 180일 지난 고객 이관 -->
+	<insert id="insertMcpSellUsim" parameterType="String">
+		/*transferMapper.insertMcpSellUsim*/
+		INSERT INTO MCP_SELL_USIM@DL_CAN(
+				SELL_USIM_KEY, USIM_NO, FRGNR_NAME, FRGNR_RN, FILE_NAME, FILE_MASK,
+				RIP, SYS_RDATE, PSTATE, FRGNR_PN, UIP, SYS_UDATE, MOBILE_FN, MOBILE_MN,
+				MOBILE_RN, MAIL, VDATE_START, VDATE_END, LANG_TYPE, SSTATE, AGENT_ID,
+				ETC_FILE_NAME, ETC_FILE_MASK, FILE_ENC_FLAG, RCG_AUTO_AMT, END_USR_ID,
+				END_DT, CONTRACT_NUM, RCG_SEQ, REMARK, DEL_YN, DEL_DTTM)
+		SELECT
+				SELL_USIM_KEY, USIM_NO, FRGNR_NAME, FRGNR_RN, FILE_NAME, FILE_MASK,
+				RIP, SYS_RDATE, PSTATE, FRGNR_PN, UIP, SYS_UDATE, MOBILE_FN, MOBILE_MN,
+				MOBILE_RN, MAIL, VDATE_START, VDATE_END, LANG_TYPE, SSTATE, AGENT_ID,
+				ETC_FILE_NAME, ETC_FILE_MASK, FILE_ENC_FLAG, RCG_AUTO_AMT, END_USR_ID,
+				END_DT, CONTRACT_NUM, RCG_SEQ, REMARK, DEL_YN, DEL_DTTM
+		  FROM MCP_SELL_USIM@DL_MCP
+		 WHERE SELL_USIM_KEY = #{sellUsimKey}
+	</insert>
+
+	<!-- 판매유심 해지 후 180일 지난 고객 삭제 -->
+	<delete id="deleteMcpSellUsim" parameterType="String">
+		/*transferMapper.deleteMcpSellUsim*/
+		DELETE FROM MCP_SELL_USIM@DL_MCP
+		 WHERE SELL_USIM_KEY = #{sellUsimKey}
+	</delete>
+
+	<!-- 판매유심 해지 후 1645일 지난 고객 증 MSP_CAN 으로 이관된 데이터 최종삭제 -->
+	<delete id="deleteCanMcpSellUsim" parameterType="int">
+		/*transferMapper.deleteCanMcpSellUsim*/
+		DELETE FROM MCP_SELL_USIM@DL_CAN
+		 WHERE VDATE_END <![CDATA[ < ]]> TO_CHAR(SYSDATE - #{stdrCnt}, 'YYYYMMDD')
+	</delete>
+	
+	<!-- 홈페이지 고객정보 삭제 -->
+	<delete id="deleteMcpUser">
+		/*transferMapper.deleteMcpUser*/
+		DELETE FROM MCP_USER@DL_CAN
+         WHERE STATUS = '1'
+           AND AUTH_CODE = 'USER_ROLE'
+           AND USER_DIVISION = '00'
+           AND TO_DATE(SYS_LDATE, 'YYYY-MM-DD') <![CDATA[ < ]]> TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -72),'YYYYMMDD'), 'YYYY-MM-DD')
+	</delete>
+	
+	<insert id="insertMcpRecUser">
+		/*transferMapper.insertMcpRecUser*/
+		INSERT INTO MCP_REC_USER@DL_CAN
+			   (USERID, PASSWORD, NAME,
+			    AUTH_CODE, PIN, EMAIL,
+			    POST, ADDRESS, ADDRESS_DTL,
+			    MOBILE_NO, CONTACT_NO, BIRTHDAY,
+			    GENDER, SYS_RDATE, SYS_UDATE,
+			    SYS_LDATE, LOGIN_COUNT, STATUS,
+			    CUST_NUM, AUTH_KEY, USER_DIVISION,
+			    EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE,
+			    WITHD_CODE,WITHD_DESC)
+		SELECT	USERID, PASSWORD, NAME,
+			    AUTH_CODE, PIN, EMAIL,
+			    POST, ADDRESS, ADDRESS_DTL,
+			    MOBILE_NO, CONTACT_NO, BIRTHDAY,
+			    GENDER, SYS_RDATE, SYS_UDATE,
+			    SYS_LDATE, LOGIN_COUNT, STATUS,
+			    CUST_NUM, AUTH_KEY, USER_DIVISION,
+			    EMAIL_CODE, ADDRESS_BJD, REVOCATION_DATE,
+			    WITHD_CODE,WITHD_DESC
+		  FROM	MCP_REC_USER@DL_MCP A
+		 WHERE	1=1
+		   AND	A.REVOCATION_DATE <![CDATA[ < ]]> TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -6),'YYYYMMDD'), 'YYYY-MM-DD')
+		   AND	NOT EXISTS ( SELECT 1 FROM MCP_REC_USER@DL_CAN WHERE USERID = A.USERID)
+	</insert>
+	
+	<delete id="deleteMcpRecUser">
+		/*transferMapper.deleteMcpRecUser*/
+        DELETE FROM MCP_REC_USER@DL_MCP
+         WHERE 1=1
+           AND REVOCATION_DATE <![CDATA[ < ]]> TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -6),'YYYYMMDD'), 'YYYY-MM-DD')
+	</delete>
+	
+	<delete id="deleteMcpRecUserCan">
+		/*transferMapper.deleteMcpRecUserCan*/
+		DELETE FROM MCP_REC_USER@DL_CAN
+         WHERE 1=1
+           AND REVOCATION_DATE <![CDATA[ < ]]> TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -60),'YYYYMMDD'), 'YYYY-MM-DD')
+	</delete>
+	
+	<!-- 단말보험해지자 가입정보 마스킹 처리 -->
+	<update id="updateIntmInsrMember">
+		/*transferMapper.updateIntmInsrMember*/
+		UPDATE 	MSP_INTM_INSR_MEMBER
+		   SET 	CTN = '00000000000',
+		       	CUST_NM = '해지고객'
+		 WHERE 	INSR_STAT_CD = '2'
+		   AND	CTN != '00000000000'
+		   AND 	TRUNC(SYSDATE) - #{stdrCnt} > TRUNC(TO_DATE(END_DTTM, 'YYYYMMDDHH24MISS'))
+	</update>
+	<!-- 단말보험해지자 연동정보 마스킹 처리 -->
+	<update id="updateIntmInsrIfOut">
+		/*transferMapper.updateIntmInsrIfOut*/
+		UPDATE 	MSP_INTM_INSR_IF_OUT
+		   SET 	CTN = '00000000000',
+		       	CUST_NM = '해지고객',
+		       	BAN_ADDR = NULL,
+		       	MINOR_AGENT_NAME = NULL
+		 WHERE 	INSR_MEMBER_NUM IN (
+					SELECT	INSR_MEMBER_NUM
+					  FROM	MSP_INTM_INSR_MEMBER
+					 WHERE	INSR_STAT_CD = '2'
+					   AND	CTN != '00000000000'
+					   AND	TRUNC(SYSDATE) - #{stdrCnt} > TRUNC(TO_DATE(END_DTTM, 'YYYYMMDDHH24MISS'))
+				)
+	</update>
+	<!-- 단말보험해지자 보상정보 마스킹 처리 -->
+	<update id="updateIntmInsrCmpnMstIf">
+		/*transferMapper.updateIntmInsrCmpnMstIf*/
+		UPDATE 	MSP_INTM_INSR_CMPN_MST_IF
+		   SET 	CTN = '00000000000',
+		       	CUST_NM = '해지고객'
+		 WHERE 	INSR_MNGM_NO IN (
+					SELECT	INSR_MNGM_NO
+					  FROM	MSP_INTM_INSR_MEMBER
+					 WHERE	INSR_STAT_CD = '2'
+					   AND	CTN != '00000000000'
+					   AND	TRUNC(SYSDATE) - #{stdrCnt} > TRUNC(TO_DATE(END_DTTM, 'YYYYMMDDHH24MISS'))
+				)
+	</update>
+	<!-- 20220110 추가 -->
+	<!-- 서식지파일정보 조회 -->
+	<select id="getScanFileInfoList" parameterType="String" resultType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		SELECT  A.ORIGIN_DIR AS fileInfo , A.FILE_ID AS fileId , A.SCAN_ID AS scanId
+		FROM    EMV_SCAN_FILE@DL_MCP A
+		WHERE   A.SCAN_ID = #{scanId}
+	</select>
+		<update id="updateCanEmvScanFile" parameterType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		UPDATE  EMV_SCAN_FILE@DL_CAN
+		SET     ORIGIN_DIR = #{tobeFileInfo}
+		WHERE  SCAN_ID = #{scanId}
+		    AND   FILE_ID = #{fileId}
+	</update>
+		<update id="updateMcpEmvScanFile" parameterType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		UPDATE  EMV_SCAN_FILE@DL_MCP
+		SET     ORIGIN_DIR = #{tobeFileInfo}
+		WHERE  SCAN_ID = #{scanId}
+		    AND   FILE_ID = #{fileId}
+	</update>
+		<update id="updateMspEmvScanFile" parameterType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO">
+		UPDATE  EMV_SCAN_FILE
+		SET     ORIGIN_DIR = #{tobeFileInfo}
+		WHERE  SCAN_ID = #{scanId}
+		    AND   FILE_ID = #{fileId}
+	</update>
+	
+		<!-- 중복스캔 조회 -->
+	<select id="getOtherScanExist" parameterType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO" resultType="int">
+		/*transferMapper.getOtherScanExist*/
+		SELECT  COUNT(1) 
+		FROM	MSP_JUO_SUB_INFO
+		WHERE   SCAN_ID = #{scanId}
+		AND     CONTRACT_NUM != #{contractNum}
+		AND     (SUB_STATUS != 'C'
+		         OR (SUB_STATUS = 'C' AND TO_DATE(SUBSTR(SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') > SYSDATE - #{tmntCustDt}))
+	</select>
+
+	<!--명의도용주장 IP 설정 고객 데이터 Mst 삭제 -->
+	<delete id="deleteReuseRipMstData" parameterType="int" >
+		/*transferMapper.deleteReuseRipMstData*/				
+		DELETE FROM MSP_REUSE_IP_MST
+		WHERE CONTRACT_NUM IN(
+			SELECT  CONTRACT_NUM 
+			FROM    MSP_JUO_SUB_INFO
+			WHERE   SUB_STATUS = 'C'			
+			<![CDATA[
+			AND     TO_DATE(SUBSTR(SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') <= TRUNC(SYSDATE) - #{tmntCustDt}
+			]]>
+		)
+	</delete>
+		
+	<!--명의도용주장 IP 설정 고객 데이터 Hist 삭제 -->
+	<delete id="deleteReuseRipHistData" parameterType="int" >
+		/*transferMapper.deleteReuseRipHistData*/				
+		DELETE FROM MSP_REUSE_IP_HIST
+		WHERE CONTRACT_NUM IN(
+			SELECT  CONTRACT_NUM 
+			FROM    MSP_JUO_SUB_INFO
+			WHERE   SUB_STATUS = 'C'			
+			<![CDATA[
+			AND     TO_DATE(SUBSTR(SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') <= TRUNC(SYSDATE) - #{tmntCustDt}
+			]]>
+		)
+	</delete>
+	
+	<!-- 010셀프개통대상 신청정보 이관 -->
+	<insert id="insertMcpSelfSmsAuth" parameterType="String">
+		/*transferMapper.insertMcpSelfSmsAuth*/
+		INSERT INTO NMCP_SELF_SMS_AUTH@DL_CAN (
+			   SELF_SMS_AUTH_SEQ, REQUEST_KEY, REQ_SEQ, RES_SEQ, AUTH_TYPE 
+		       , NAME, BIRTH_DATE, GENDER, NATIONAL_INFO
+		       , DUP_INFO, CONN_INFO, PARAM_R3, N_REFERER, RIP
+		       , MOBILE_NO, MOBILE_CO, AUTH_TIME, HPC_STAT, FST_HPC_RST
+		       , FST_HPC_RMK, FST_HPC_USR_ID, FST_HPC_DTTM, SND_HPC_RST, SND_HPC_RMK
+		       , SND_HPC_USR_ID, SND_HPC_DTTM, THD_HPC_RST, THD_HPC_RMK, THD_HPC_USR_ID 
+		       , THD_HPC_DTTM, HPC_RST, RVISN_ID, RVISN_DTTM, SYS_RDATE
+		)
+		SELECT SELF_SMS_AUTH_SEQ, REQUEST_KEY, REQ_SEQ, RES_SEQ, AUTH_TYPE 
+		       , NAME, BIRTH_DATE, GENDER, NATIONAL_INFO
+		       , DUP_INFO, CONN_INFO, PARAM_R3, N_REFERER, RIP
+		       , MOBILE_NO, MOBILE_CO, AUTH_TIME, HPC_STAT, FST_HPC_RST
+		       , FST_HPC_RMK, FST_HPC_USR_ID, FST_HPC_DTTM, SND_HPC_RST, SND_HPC_RMK
+		       , SND_HPC_USR_ID, SND_HPC_DTTM, THD_HPC_RST, THD_HPC_RMK, THD_HPC_USR_ID 
+		       , THD_HPC_DTTM, HPC_RST, RVISN_ID, RVISN_DTTM, SYS_RDATE
+		  FROM NMCP_SELF_SMS_AUTH@DL_MCP
+		 WHERE REQUEST_KEY = #{requestKey}
+	</insert>
+	<update id="updateMcpSelfSmsAuth" parameterType="String">
+		/*tranferMapper.updateMcpSelfSmsAuth*/
+		UPDATE NMCP_SELF_SMS_AUTH@DL_MCP
+		   SET NAME     	= '이관고객'
+		       , MOBILE_NO 	= '00000000000'
+		       , BIRTH_DATE = ''
+		       , CONN_INFO 	= ''
+		       , RIP 		= ''
+		 WHERE REQUEST_KEY 	= #{requestKey}
+	</update>
+
+	<!-- TOSS 가입자 오더정보 이관 -->
+	<insert id="insertMdsTossOrder" parameterType="String">
+		/*transferMapper.insertMdsTossOrder*/
+		INSERT INTO MDS_TOSS_ORDER@DL_CAN (
+               TOSS_ORDER_SEQ, FILE_NM, MVNO_ORDER_NO, OSST_ORDER_NO, TR_TIME 
+               , TRNO, REQ_TEL_NO, NICE_CERT_KEY, ODER_TYPE_CD, MNP_STATUS
+               , STATUS, CUST_TYPE, MYSL_ATHN_TYPE_CD, CNTPNT_CD, EML_ADRS_NM
+               , RQSSHT_PPRFRM_CD, BCHNG_NP_COMM_CMPN_CD, ATHN_ITEM_CD, ATHN_SBST, BLPYM_MTHD_CD 
+               , CRDT_CARD_EXPR_DATE, CRDT_CARD_KIND_CD, BANK_CD, BLPYM_MTHD_IDNT_NO, REGST_DTTM 
+               , RCP_CR_YN
+		)
+		SELECT TOSS_ORDER_SEQ, FILE_NM, MVNO_ORDER_NO, OSST_ORDER_NO, TR_TIME 
+               , TRNO, REQ_TEL_NO, NICE_CERT_KEY, ODER_TYPE_CD, MNP_STATUS
+               , STATUS, CUST_TYPE, MYSL_ATHN_TYPE_CD, CNTPNT_CD, EML_ADRS_NM
+               , RQSSHT_PPRFRM_CD, BCHNG_NP_COMM_CMPN_CD, ATHN_ITEM_CD, ATHN_SBST, BLPYM_MTHD_CD 
+               , CRDT_CARD_EXPR_DATE, CRDT_CARD_KIND_CD, BANK_CD, BLPYM_MTHD_IDNT_NO, REGST_DTTM 
+               , RCP_CR_YN
+		  FROM MDS_TOSS_ORDER A
+		 WHERE REQ_TEL_NO = #{subscriberNo}
+           AND RCP_CR_YN = 'Y'
+           AND NOT EXISTS ( SELECT 1 FROM MDS_TOSS_ORDER@DL_CAN WHERE TOSS_ORDER_SEQ = A.TOSS_ORDER_SEQ )
+	</insert>
+	<update id="updateMdsTossOrder" parameterType="String">	
+		/*tranferMapper.updateMdsTossOrder*/
+		UPDATE MDS_TOSS_ORDER
+		   SET REQ_TEL_NO 	        = '00000000000'
+		       , NICE_CERT_KEY      = ''
+		       , EML_ADRS_NM 	    = ''
+		       , BLPYM_MTHD_IDNT_NO = ''
+		 WHERE REQ_TEL_NO = #{subscriberNo}
+           AND RCP_CR_YN = 'Y'
+	</update>
+	
+	<!-- OSST 가입자 오더정보 이관 -->
+	<insert id="insertMdsOsstOrder" parameterType="String">
+		/*transferMapper.insertMdsOsstOrder*/
+		INSERT INTO MDS_OSST_ORDER@DL_CAN (
+               OSST_ORDER_SEQ, FILE_NM, MVNO_ORDER_NO, OSST_ORDER_NO, TR_TIME 
+               , TRNO, REQ_TEL_NO, NICE_CERT_KEY, ODER_TYPE_CD, MNP_STATUS
+               , STATUS, CUST_TYPE, MYSL_ATHN_TYPE_CD, CNTPNT_CD, EML_ADRS_NM
+               , RQSSHT_PPRFRM_CD, BCHNG_NP_COMM_CMPN_CD, ATHN_ITEM_CD, ATHN_SBST, BLPYM_MTHD_CD 
+               , CRDT_CARD_EXPR_DATE, CRDT_CARD_KIND_CD, BANK_CD, BLPYM_MTHD_IDNT_NO, CHANNEL_CD 
+               , ACCESS_IND_CD, BILL_ACC_ID, RCP_CR_YN, SIM_DIV_CD, MOTLI_RQSSHT_PPRFRM_CD 
+               , MOTLI_SVC_NO, WATCH_TYPE_CD, CLNT_IP
+		)
+		SELECT OSST_ORDER_SEQ, FILE_NM, MVNO_ORDER_NO, OSST_ORDER_NO, TR_TIME 
+               , TRNO, REQ_TEL_NO, NICE_CERT_KEY, ODER_TYPE_CD, MNP_STATUS
+               , STATUS, CUST_TYPE, MYSL_ATHN_TYPE_CD, CNTPNT_CD, EML_ADRS_NM
+               , RQSSHT_PPRFRM_CD, BCHNG_NP_COMM_CMPN_CD, ATHN_ITEM_CD, ATHN_SBST, BLPYM_MTHD_CD 
+               , CRDT_CARD_EXPR_DATE, CRDT_CARD_KIND_CD, BANK_CD, BLPYM_MTHD_IDNT_NO, CHANNEL_CD 
+               , ACCESS_IND_CD, BILL_ACC_ID, RCP_CR_YN, SIM_DIV_CD, MOTLI_RQSSHT_PPRFRM_CD 
+               , MOTLI_SVC_NO, WATCH_TYPE_CD, CLNT_IP
+		  FROM MDS_OSST_ORDER A
+		 WHERE REQ_TEL_NO = #{subscriberNo}
+           AND RCP_CR_YN = 'Y'
+           AND NOT EXISTS ( SELECT 1 FROM MDS_OSST_ORDER@DL_CAN WHERE OSST_ORDER_SEQ = A.OSST_ORDER_SEQ )
+	</insert>
+	<update id="updateMdsOsstOrder" parameterType="String">	
+		/*tranferMapper.updateMdsOsstOrder*/
+		UPDATE MDS_OSST_ORDER
+		   SET REQ_TEL_NO 	        = '00000000000'
+		       , NICE_CERT_KEY      = ''
+		       , EML_ADRS_NM 	    = ''
+		       , BLPYM_MTHD_IDNT_NO = ''
+		       , MOTLI_SVC_NO		= '00000000000'
+		       , CLNT_IP			= ''
+		 WHERE REQ_TEL_NO = #{subscriberNo}
+           AND RCP_CR_YN = 'Y'
+	</update>
+	
+	<!-- 신한요금제 데이터쿠폰 대상자 정보 이관 -->
+	<insert id="insertMdsShinhanProdSbsc" parameterType="String">
+		/*transferMapper.insertMdsShinhanProdSbsc*/
+		INSERT INTO MDS_SHINHAN_PROD_SBSC@DL_CAN (
+			   SHINHAN_PROD_SEQ, FILE_NM, REC_TYPE, SHINHAN_PROD_NO, CI
+			   , SVC_CNTR_NO, RATE_CD, RATE_NM, RATE_REGST_DTTM, SUBSCRIBER_NO 
+			   , MEMO
+		)
+		SELECT SHINHAN_PROD_SEQ, FILE_NM, REC_TYPE, SHINHAN_PROD_NO, CI
+			   , SVC_CNTR_NO, RATE_CD, RATE_NM, RATE_REGST_DTTM, SUBSCRIBER_NO 
+			   , MEMO
+		  FROM MDS_SHINHAN_PROD_SBSC
+		 WHERE SVC_CNTR_NO = #{svcCntrNo}
+	</insert>
+	<update id="updateMdsShinhanProdSbsc" parameterType="String">	
+		/*tranferMapper.updateMdsShinhanProdSbsc*/
+		UPDATE MDS_SHINHAN_PROD_SBSC
+		   SET SUBSCRIBER_NO 	= '00000000000'
+		       , CI      		= ''
+		 WHERE SVC_CNTR_NO = #{svcCntrNo}
+	</update>
+	
+	<!-- 3G 유지가입자 현황 고객정보 치환 -->
+	<update id="updateMspDaily3gSub" parameterType="String">	
+		/*tranferMapper.updateMspDaily3gSub*/
+		UPDATE MSP_DAILY_3G_SUB
+		   SET BIRTH_DT 	= ''
+		 WHERE CONTRACT_NUM = #{contractNum}
+	</update>
+	
+	<!-- 보상서비스 가입자목록 고객정보 치환 -->
+	<update id="updateMspRwdInfoOut" parameterType="String">	
+		/*tranferMapper.updateMspRwdInfoOut */
+		UPDATE MSP_RWD_INFO_OUT
+		   SET BIRTH_DT 	= ''
+		 WHERE CONTRACT_NUM = #{contractNum}
+	</update>
+	<update id="updateMspRwdMember" parameterType="String">	
+		/*tranferMapper.updateMspRwdMember */
+		UPDATE MSP_RWD_MEMBER
+		   SET BIRTH_DT 	= ''
+		 WHERE CONTRACT_NUM = #{contractNum}
+	</update>
+
+	<!-- 010셀프개통대상 신청정보 삭제 -->
+	<delete id="deleteMcpSelfSmsAuth" parameterType="String">
+		DELETE FROM NMCP_SELF_SMS_AUTH@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+	<delete id="deleteCanSelfSmsAuth" parameterType="String">
+		DELETE FROM NMCP_SELF_SMS_AUTH@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+	
+	<!-- TOSS 가입자 오더정보 삭제 -->
+	<delete id="deleteMdsTossOrder" parameterType="String">
+		DELETE FROM MDS_TOSS_ORDER WHERE REQ_TEL_NO = #{subscriberNo} AND RCP_CR_YN = 'Y'
+	</delete>
+	<delete id="deleteCanTossOrder" parameterType="String">
+		DELETE FROM MDS_TOSS_ORDER@DL_CAN WHERE REQ_TEL_NO = #{subscriberNo} AND RCP_CR_YN = 'Y'
+	</delete>
+	
+	<!-- OSST 가입자 오더정보 삭제 -->
+	<delete id="deleteMdsOsstOrder" parameterType="String">
+		DELETE FROM MDS_OSST_ORDER WHERE REQ_TEL_NO = #{subscriberNo} AND RCP_CR_YN = 'Y'
+	</delete>
+	<delete id="deleteCanOsstOrder" parameterType="String">
+		DELETE FROM MDS_OSST_ORDER@DL_CAN WHERE REQ_TEL_NO = #{subscriberNo} AND RCP_CR_YN = 'Y'
+	</delete>
+	
+	<!-- 신한요금제 데이터쿠폰 대상자 정보 삭제 -->
+	<delete id="deleteMdsShinhanProdSbsc" parameterType="String">
+		DELETE FROM MDS_SHINHAN_PROD_SBSC WHERE SVC_CNTR_NO = #{svcCntrNo}
+	</delete>
+	<delete id="deleteCanShinhanProdSbsc" parameterType="String">
+		DELETE FROM MDS_SHINHAN_PROD_SBSC@DL_CAN WHERE SVC_CNTR_NO = #{svcCntrNo}
+	</delete>
+	
+	<!-- 예약상담 고객 정보 삭제 -->
+	<delete id="deleteMspCsResCstmr" parameterType="String">
+		DELETE FROM MSP_CS_RES_CSTMR WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	
+	<!-- 3G 유지가입자 현황 삭제 -->
+	<delete id="deleteMspDaily3gSub" parameterType="String">
+		DELETE FROM MSP_DAILY_3G_SUB WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	
+	<!-- 보상서비스 가입자목록 삭제 -->
+	<delete id="deleteMspRwdInfoOut" parameterType="String">
+		DELETE FROM MSP_RWD_INFO_OUT WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteMspRwdMember" parameterType="String">
+		DELETE FROM MSP_RWD_MEMBER WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+		
+	<!-- 마케팅수신동의 내역 해지후 5년 경과 고객데이터 삭제 -->
+	<delete id="deleteMarketingSendTargetdata" parameterType="String">
+		/*transferMapper.deleteMarketingSendTargetdata*/				
+		DELETE FROM MSP_MRKT_AGR_MGMT WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	
+	<!-- 단말 보험 가입자 정보 이관 -->
+	<insert id="insertCanIntmInsrIfOut" parameterType="String">
+		/*transferMapper.insertCanIntmInsrIfOut*/
+		INSERT INTO MSP_INTM_INSR_IF_OUT@DL_CAN (
+		       	INSR_OUT_NUM, INSR_MEMBER_NUM, CONTRACT_NUM, INSR_PROD_CD, STRT_DTTM,
+		       	END_DTTM, INSR_STAT_CD, CHN_CD, INSR_EVNT_CD, OPEN_DT,
+		       	INSR_CMPN_CD, CTN,CUST_NM, BIRTH_DT, BAN_ADDR, MINOR_AGENT_NAME, 
+		       	MODEL_NM, INTM_SRL_NO, OLD_YN, PRDT_LNCH_DT, OUT_UNIT_PRIC, 
+		       	CLAUSE_FLAG, CUST_TYPE, REGST_ID, REGST_DTTM, PROC_YN, 
+		       	PROC_DT
+		)
+		SELECT 	INSR_OUT_NUM, INSR_MEMBER_NUM, CONTRACT_NUM, INSR_PROD_CD, STRT_DTTM,
+		       	END_DTTM, INSR_STAT_CD, CHN_CD, INSR_EVNT_CD, OPEN_DT,
+		       	INSR_CMPN_CD, CTN,CUST_NM, BIRTH_DT, BAN_ADDR, MINOR_AGENT_NAME, 
+		       	MODEL_NM, INTM_SRL_NO, OLD_YN, PRDT_LNCH_DT, OUT_UNIT_PRIC, 
+		       	CLAUSE_FLAG, CUST_TYPE, REGST_ID, REGST_DTTM, PROC_YN, 
+		       	PROC_DT
+		  FROM 	MSP_INTM_INSR_IF_OUT
+		 WHERE 	CONTRACT_NUM = #{contractNum}
+	</insert>
+	<insert id="insertCanIntmInsrCmpnMstIf" parameterType="String">
+		/*transferMapper.insertCanIntmInsrCmpnMstIf*/
+		INSERT INTO MSP_INTM_INSR_CMPN_MST_IF@DL_CAN (
+		       	INSR_CMPN_NUM, IF_DT, IF_CD, INSR_MNGM_NO, CONTRACT_NUM, 
+		       	INSR_CMPN_CD, ACDNT_NO, CUST_NM, CTN, OPEN_DT, 
+		       	JOIN_DT, INSR_PROD_CD, ACDNT_REG_DT, ACDNT_DT, CMPN_CNFM_DT, 
+		       	MODEL_NM, INTM_SRL_NO, OUT_UNIT_PRIC, ACDNT_TP, CMPN_LMT_AMT,
+		       	CMPN_ACML_AMT, RMN_CMPN_AMT, RCPT_AMT, CUST_BRDN_AMT, REAL_CMPN_AMT, 
+		       	RMN_CMPN_LMT_AMT, BANK_NM, ACNT_NO, DPST_NM, CMPN_MODEL_NM, 
+		       	CMPN_MODEL_COLOR, CMPN_CTN, OVER_AMT, USIM_AMT, PAY_TYPE, 
+		       	REGST_ID, REGST_DTTM
+		)
+		SELECT 	INSR_CMPN_NUM, IF_DT, IF_CD, INSR_MNGM_NO, CONTRACT_NUM, 
+		       	INSR_CMPN_CD, ACDNT_NO, CUST_NM, CTN, OPEN_DT, 
+		       	JOIN_DT, INSR_PROD_CD, ACDNT_REG_DT, ACDNT_DT, CMPN_CNFM_DT, 
+		       	MODEL_NM, INTM_SRL_NO, OUT_UNIT_PRIC, ACDNT_TP, CMPN_LMT_AMT,
+		       	CMPN_ACML_AMT, RMN_CMPN_AMT, RCPT_AMT, CUST_BRDN_AMT, REAL_CMPN_AMT, 
+		      	RMN_CMPN_LMT_AMT, BANK_NM, ACNT_NO, DPST_NM, CMPN_MODEL_NM, 
+		       	CMPN_MODEL_COLOR, CMPN_CTN, OVER_AMT, USIM_AMT, PAY_TYPE, 
+		       	REGST_ID, REGST_DTTM
+		  FROM 	MSP_INTM_INSR_CMPN_MST_IF
+		 WHERE 	CONTRACT_NUM = #{contractNum}
+	</insert>
+	<insert id="insertCanIntmInsrOrder" parameterType="String">
+		/*transferMapper.insertCanIntmInsrOrder*/
+		INSERT INTO MSP_INTM_INSR_ORDER@DL_CAN (
+				CONTRACT_NUM, INSR_PROD_CD, STRT_DTTM, END_DTTM, IF_TRGT_CD, 
+				INSR_STAT_CD, CHN_CD, INSR_EVNT_CD, REQ_BUY_TYPE, DVC_CHG_DT, 
+				OPEN_DT, MODEL_NM, MODEL_ID, INTM_SRL_NO, CLAUSE_FLAG, 
+				IMG_CHK_YN, VRFY_RSLT_CD, FST_VRFY_DTTM, FST_VRFY_ID, SND_VRFY_DTTM, 
+				SND_VRFY_ID, RMK, REGST_ID, REGST_DTTM, RVISN_ID, 
+				RVISN_DTTM, REQ_IN_DAY
+		)
+		SELECT	CONTRACT_NUM, INSR_PROD_CD, STRT_DTTM, END_DTTM, IF_TRGT_CD, 
+				INSR_STAT_CD, CHN_CD, INSR_EVNT_CD, REQ_BUY_TYPE, DVC_CHG_DT, 
+				OPEN_DT, MODEL_NM, MODEL_ID, INTM_SRL_NO, CLAUSE_FLAG, 
+				IMG_CHK_YN, VRFY_RSLT_CD, FST_VRFY_DTTM, FST_VRFY_ID, SND_VRFY_DTTM, 
+				SND_VRFY_ID, RMK, REGST_ID, REGST_DTTM, RVISN_ID, 
+				RVISN_DTTM, REQ_IN_DAY
+		  FROM 	MSP_INTM_INSR_ORDER
+		 WHERE 	CONTRACT_NUM = #{contractNum}
+	</insert>
+	<insert id="insertCanIntmInsrMember" parameterType="String">
+		/*transferMapper.insertCanIntmInsrMember*/
+		INSERT INTO MSP_INTM_INSR_MEMBER@DL_CAN (
+				INSR_MEMBER_NUM, CONTRACT_NUM, INSR_PROD_CD, STRT_DTTM, END_DTTM, 
+				INSR_STAT_CD, CHN_CD, INSR_EVNT_CD, OPEN_DT, CTN, 
+				CUST_NM, BIRTH_DT, MODEL_NM, MODEL_ID, INTM_SRL_NO, 
+				OLD_YN, PRDT_LNCH_DT, OUT_UNIT_PRIC, INSR_MNGM_NO, RMN_CMPN_AMT, 
+				CLAUSE_FLAG, CAN_RSLT_CD, REGST_ID, REGST_DTTM, RVISN_ID, 
+				RVISN_DTTM, REQ_IN_DAY
+		)
+		SELECT	INSR_MEMBER_NUM, CONTRACT_NUM, INSR_PROD_CD, STRT_DTTM, END_DTTM, 
+				INSR_STAT_CD, CHN_CD, INSR_EVNT_CD, OPEN_DT, CTN, 
+				CUST_NM, BIRTH_DT, MODEL_NM, MODEL_ID, INTM_SRL_NO, 
+				OLD_YN, PRDT_LNCH_DT, OUT_UNIT_PRIC, INSR_MNGM_NO, RMN_CMPN_AMT, 
+				CLAUSE_FLAG, CAN_RSLT_CD, REGST_ID, REGST_DTTM, RVISN_ID, 
+				RVISN_DTTM, REQ_IN_DAY
+		  FROM 	MSP_INTM_INSR_MEMBER
+		 WHERE 	CONTRACT_NUM = #{contractNum}
+	</insert>
+	<insert id="insertCanIntmInsrCmpnDtl" parameterType="String">
+		/*transferMapper.insertCanIntmInsrCmpnDtl*/
+		INSERT INTO MSP_INTM_INSR_CMPN_DTL@DL_CAN (
+				INSR_CMPN_NUM, INSR_MEMBER_NUM, CMPN_CTN, PAY_TYPE, PAY_AMT, 
+				PAY_YN, PAY_DTTM, VAC_BANK_CD, VAC_ID, RES_NO, 
+				REGST_ID, REGST_DTTM, RVISN_ID, RVISN_DTTM
+		)
+		SELECT	INSR_CMPN_NUM, INSR_MEMBER_NUM, CMPN_CTN, PAY_TYPE, PAY_AMT, 
+				PAY_YN, PAY_DTTM, VAC_BANK_CD, VAC_ID, RES_NO, 
+				REGST_ID, REGST_DTTM, RVISN_ID, RVISN_DTTM
+		  FROM 	MSP_INTM_INSR_CMPN_DTL
+		 WHERE 	INSR_MEMBER_NUM IN (
+		        SELECT	INSR_MEMBER_NUM 
+		          FROM	MSP_INTM_INSR_MEMBER 
+		         WHERE	CONTRACT_NUM = #{contractNum}
+		       )
+	</insert>
+	<insert id="insertCanIntmInsrCanInfo" parameterType="String">
+		/*transferMapper.insertCanIntmInsrCanInfo*/
+		INSERT INTO MSP_INTM_INSR_CAN_INFO@DL_CAN (
+				INSR_CAN_NUM, CONTRACT_NUM, INSR_PROD_CD, STRT_DTTM, END_DTTM, 
+				NCN, CTN, CUST_ID, CAN_RSLT_CD, RSLT_CD, 
+				RSLT_MSG, REGST_ID, REGST_DTTM, PROC_YN, PROC_DT
+		)
+		SELECT	INSR_CAN_NUM, CONTRACT_NUM, INSR_PROD_CD, STRT_DTTM, END_DTTM, 
+				NCN, CTN, CUST_ID, CAN_RSLT_CD, RSLT_CD, 
+				RSLT_MSG, REGST_ID, REGST_DTTM, PROC_YN, PROC_DT
+		  FROM 	MSP_INTM_INSR_CAN_INFO
+		 WHERE 	CONTRACT_NUM = #{contractNum}
+	</insert>
+	
+	<!-- 단말 보험 가입자 정보 치환 -->
+	<update id="updateMspIntmInsrIfOut" parameterType="String">
+		/*transferMapper.updateMspIntmInsrIfOut*/
+		UPDATE  MSP_INTM_INSR_IF_OUT
+		   SET  CTN = '00000000000'
+		        , CUST_NM = '이관고객'
+		        , MINOR_AGENT_NAME = DECODE(MINOR_AGENT_NAME, NULL, NULL, '이관고객')
+		 WHERE  CONTRACT_NUM = #{contractNum}
+	</update>
+	<update id="updateMspIntmInsrCmpnMstIf" parameterType="String">
+		/*transferMapper.updateMspIntmInsrCmpnMstIf*/
+		UPDATE  MSP_INTM_INSR_CMPN_MST_IF
+		   SET  CTN = '00000000000'
+		        , CUST_NM = '이관고객'
+		        , ACNT_NO = LPAD('*',LENGTH(ACNT_NO),'*')
+		        , DPST_NM = DECODE(DPST_NM, NULL, NULL, '이관고객')
+		        , CMPN_CTN = DECODE(CMPN_CTN, NULL, NULL, '00000000000')
+		 WHERE  CONTRACT_NUM = #{contractNum}
+	</update>
+	<update id="updateMspIntmInsrCanInfo" parameterType="String">
+		/*transferMapper.updateMspIntmInsrCanInfo*/
+		UPDATE  MSP_INTM_INSR_CAN_INFO
+		   SET  CTN = '00000000000'
+		 WHERE  CONTRACT_NUM = #{contractNum}
+	</update>
+	<update id="updateMspIntmInsrCmpnDtl" parameterType="String">
+		/*transferMapper.updateMspIntmInsrCmpnDtl*/
+		UPDATE  MSP_INTM_INSR_CMPN_DTL
+		   SET  CMPN_CTN = '00000000000'
+		   		, VAC_ID = LPAD('*',LENGTH(VAC_ID),'*')
+ 		 WHERE  INSR_MEMBER_NUM IN (
+		            SELECT  INSR_MEMBER_NUM 
+		              FROM  MSP_INTM_INSR_MEMBER 
+		             WHERE  CONTRACT_NUM = #{contractNum}
+        		)
+	</update>
+	<update id="updateMspIntmInsrMember" parameterType="String">
+		/*transferMapper.updateMspIntmInsrMember*/
+		UPDATE  MSP_INTM_INSR_MEMBER
+		   SET  CTN = '00000000000'
+		   		, CUST_NM = '이관고객'
+		 WHERE  CONTRACT_NUM = #{contractNum}
+	</update>
+
+	<!-- 단말 보험 가입자 정보 삭제 -->
+	<delete id="deleteMspIntmInsrIfOut" parameterType="String">
+		/*transferMapper.deleteMspIntmInsrIfOut*/
+		DELETE FROM MSP_INTM_INSR_IF_OUT WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteMspIntmInsrCmpnMstIf" parameterType="String">
+		/*transferMapper.deleteMspIntmInsrCmpnMstIf*/
+		DELETE FROM MSP_INTM_INSR_CMPN_MST_IF WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteMspIntmInsrCanInfo" parameterType="String">
+		/*transferMapper.deleteMspIntmInsrCanInfo*/
+		DELETE FROM MSP_INTM_INSR_CAN_INFO WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteMspIntmInsrCmpnDtl" parameterType="String">
+		/*transferMapper.deleteMspIntmInsrCmpnDtl*/
+		DELETE FROM MSP_INTM_INSR_CMPN_DTL WHERE INSR_MEMBER_NUM IN (
+	            SELECT  INSR_MEMBER_NUM 
+	              FROM  MSP_INTM_INSR_MEMBER 
+	             WHERE  CONTRACT_NUM = #{contractNum}
+      		)
+	</delete>
+	<delete id="deleteMspIntmInsrMember" parameterType="String">
+		/*transferMapper.deleteMspIntmInsrMember*/
+		DELETE FROM MSP_INTM_INSR_MEMBER WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteMspIntmInsrOrder" parameterType="String">
+		/*transferMapper.deleteMspIntmInsrOrder*/
+		DELETE FROM MSP_INTM_INSR_ORDER WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteMspIntmInsrReady" parameterType="String">
+		/*transferMapper.deleteMspIntmInsrReady*/
+		DELETE FROM MSP_INTM_INSR_READY WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	
+	<!-- CAN 단말 보험 가입자 정보 삭제 -->
+	<delete id="deleteCanIntmInsrIfOut" parameterType="String">
+		/*transferMapper.deleteCanIntmInsrIfOut*/
+		DELETE FROM MSP_INTM_INSR_IF_OUT@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteCanIntmInsrCmpnMstIf" parameterType="String">
+		/*transferMapper.deleteCanIntmInsrCmpnMstIf*/
+		DELETE FROM MSP_INTM_INSR_CMPN_MST_IF@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteCanIntmInsrCanInfo" parameterType="String">
+		/*transferMapper.deleteCanIntmInsrCanInfo*/
+		DELETE FROM MSP_INTM_INSR_CAN_INFO@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteCanIntmInsrCmpnDtl" parameterType="String">
+		/*transferMapper.deleteCanIntmInsrCmpnDtl*/
+		DELETE FROM MSP_INTM_INSR_CMPN_DTL@DL_CAN WHERE INSR_MEMBER_NUM IN (
+	            SELECT  INSR_MEMBER_NUM 
+	              FROM  MSP_INTM_INSR_MEMBER@DL_CAN 
+	             WHERE  CONTRACT_NUM = #{contractNum}
+      		)
+	</delete>
+	<delete id="deleteCanIntmInsrMember" parameterType="String">
+		/*transferMapper.deleteCanIntmInsrMember*/
+		DELETE FROM MSP_INTM_INSR_MEMBER@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	<delete id="deleteCanIntmInsrOrder" parameterType="String">
+		/*transferMapper.deleteCanIntmInsrOrder*/
+		DELETE FROM MSP_INTM_INSR_ORDER@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+	
+	<!-- 바로배송유심관리 데이터 정보 삭제 -->
+	<delete id="deleteMspDirDlvryUsimMst" parameterType="String">
+		/*transferMapper.deleteMspDirDlvryUsimMst*/
+		DELETE FROM MSP_DIR_DLVRY_USIM_MST WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<select id="getTmntCustProcStopYn" parameterType="java.util.Map" resultType="String">
+		/*transferMapper.getTmntCntrTransStopYn*/
+		SELECT 
+				CASE
+					WHEN (
+							SELECT TRUNC((SYSDATE - TO_DATE(MAX(STRT_DTTM), 'YYYYMMDDHH24MISS'))*24*60)
+		        			FROM   CMN_BATCH_EXEC_HST
+		        			WHERE  STAT_CD = 'ING'
+		        			AND    EXEC_TYPE_CD = 'SCHE'
+							<choose>
+								<when test='cdVal == "CAN_TRANS_STOP"'>
+									AND	   BATCH_JOB_ID = 'BATCH00100'
+								    AND    TO_DATE(STRT_DTTM, 'YYYYMMDDHH24MISS') > SYSDATE - 3/24) > ETC1 THEN 'Y'
+								</when>
+								<when test='cdVal == "CAN_DELETE_STOP"'>
+									AND	   BATCH_JOB_ID = 'BATCH00103'
+								    AND    TO_DATE(STRT_DTTM, 'YYYYMMDDHH24MISS') > SYSDATE - 1) > ETC1 THEN 'Y'
+								</when>
+							</choose>
+					ELSE USG_YN
+				END
+		FROM	CMN_GRP_CD_MST
+		WHERE	GRP_ID = 'DEV0003'
+		AND		CD_VAL = #{cdVal}
+	</select>
+
+	<!--MCP_REQUEST_DTL@DL_CAN 생성-->
+	<insert id="insertMcpRequestDtlCan" parameterType="String">
+		/*transferMapper.insertMcpRequestDtlCan*/
+		INSERT INTO MCP_REQUEST_DTL@DL_CAN  (
+											 REQUEST_KEY, CSTMR_NAME, CSTMR_MOBILE, BIRTH_DT
+											,CSTMR_GENDER_STR ,SOC_CODE ,MOVE_COMPANY ,MOVE_MOBILE
+											,MODEL_ID ,SPRT_TP ,CSTMR_ADDR ,CSTMR_ADDR_DTL
+											,CSTMR_TEL ,DLVRY_TYPE ,DLVRY_ADDR ,DLVRY_ADDR_DTL
+											,DLVRY_POST ,DLVRY_MOBILE ,DLVRY_MEMO ,RECOMMEND_FLAG_CD ,RECOMMEND_INFO
+		)
+		SELECT
+			REQUEST_KEY, CSTMR_NAME, CSTMR_MOBILE, BIRTH_DT
+			 ,CSTMR_GENDER_STR ,SOC_CODE ,MOVE_COMPANY ,MOVE_MOBILE
+			 ,MODEL_ID ,SPRT_TP ,CSTMR_ADDR ,CSTMR_ADDR_DTL
+			 ,CSTMR_TEL ,DLVRY_TYPE ,DLVRY_ADDR ,DLVRY_ADDR_DTL
+			 ,DLVRY_POST ,DLVRY_MOBILE ,DLVRY_MEMO ,RECOMMEND_FLAG_CD ,RECOMMEND_INFO
+		FROM	MCP_REQUEST_DTL@DL_MCP
+		WHERE   REQUEST_KEY = #{requestKey}
+	</insert>
+
+	<!--MCP_REQUEST_DTL@DL_MCP 삭제-->
+	<delete id="deleteMcpRequestDtl" parameterType="String">
+		DELETE FROM MCP_REQUEST_DTL@DL_MCP WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+	<!--MCP_REQUEST_DTL@DL_CAN 삭제-->
+	<delete id="deleteMcpRequestDtlCan" parameterType="String">
+		DELETE FROM MCP_REQUEST_DTL@DL_CAN WHERE REQUEST_KEY = #{requestKey}
+	</delete>
+
+	<!-- 택배 유심구매고객 이관 대상 조회-->
+	<select id="getUsimDlvryDlvryIdx" parameterType="java.util.Map" resultType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.UsimDlvryCanVO">
+		/*transferMapper.getUsimDlvryDlvryIdx*/
+		SELECT
+		   SELF_DLVRY_IDX
+		  ,CASE WHEN CSTMR_NATIVE_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(CSTMR_NATIVE_RRN), 1, 7) || '******')
+		        ELSE NULL END AS CSTMR_NATIVE_RRN
+		FROM MCP_REQUEST_SELF_DLVRY@DL_MCP
+		WHERE 1 = 1
+		<choose>
+			<when test="cdType == '01'">
+				AND REQUEST_KEY = #{cdVal}
+			</when>
+			<otherwise>
+				AND CONTRACT_NUM = #{cdVal}
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 바로배송 유심구매고객 이관 대상 조회-->
+	<select id="getUsimDlvryNowDlvryIdx" parameterType="java.util.Map" resultType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.UsimDlvryCanVO">
+		/*transferMapper.getUsimDlvryNowDlvryIdx*/
+		SELECT
+		   SELF_DLVRY_IDX
+		  ,CASE WHEN CSTMR_NATIVE_RRN IS NOT NULL THEN CRYPTO_AES256.ENC_AES(SUBSTR(CRYPTO_AES256.DEC_AES(CSTMR_NATIVE_RRN), 1, 7) || '******')
+		        ELSE NULL END AS CSTMR_NATIVE_RRN
+		FROM MCP_REQUEST_NOW_DLVRY@DL_MCP
+		WHERE 1 = 1
+		<choose>
+			<when test="cdType == '01'">
+				AND REQUEST_KEY = #{cdVal}
+			</when>
+			<otherwise>
+				AND CONTRACT_NUM = #{cdVal}
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 택배 유심구매고객 삭제 대상 조회-->
+	<select id="getUsimDlvryCanDlvryIdx" parameterType="java.util.Map" resultType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.UsimDlvryCanVO">
+		/*transferMapper.getUsimDlvryCanDlvryIdx*/
+		SELECT SELF_DLVRY_IDX
+		FROM MCP_REQUEST_SELF_DLVRY@DL_CAN
+		WHERE 1 = 1
+		<choose>
+			<when test="cdType == '01'">
+				AND REQUEST_KEY = #{cdVal}
+			</when>
+			<otherwise>
+				AND CONTRACT_NUM = #{cdVal}
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 바로배송 유심구매고객 삭제 대상 조회-->
+	<select id="getUsimDlvryCanNowDlvryIdx" parameterType="java.util.Map" resultType="com.ktis.msp.batch.job.rcp.rcpmgmt.vo.UsimDlvryCanVO">
+		/*transferMapper.getUsimDlvryCanNowDlvryIdx*/
+		SELECT SELF_DLVRY_IDX
+		FROM MCP_REQUEST_NOW_DLVRY@DL_CAN
+		WHERE 1 = 1
+		<choose>
+			<when test="cdType == '01'">
+				AND REQUEST_KEY = #{cdVal}
+			</when>
+			<otherwise>
+				AND CONTRACT_NUM = #{cdVal}
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- NMCP_FREE_USIM_REQ_MST@DL_MCP 이관 -->
+	<insert id="insertNmcpFreeUsimReqMst" parameterType="String">
+		/*transferMapper.insertMspJuoCusInfo*/
+		INSERT INTO NMCP_FREE_USIM_REQ_MST@DL_CAN (
+			SEQ, CUSTOMER_ID, CHNL_CD, REQ_QNTY,
+			DLVRY_NAME, DLVRY_TEL_FN, DLVRY_TEL_MN,
+			DLVRY_TEL_RN, DLVRY_POST, DLVRY_ADDR,
+			DLVRY_ADDR_DTL, DLVRY_MEMO, AGRM_YN,
+			ONLINE_AUTH_INFO, TB_CD, DLVRY_NO,
+			STATUS, PROC_YN, PROC_MEMO,
+			PROC_DTTM, REQ_IN_DAY, CRET_ID,
+			CRET_DTTM, AMD_ID, AMD_DTTM,
+			TRNS_YN
+		)
+		SELECT
+			SEQ, CUSTOMER_ID, CHNL_CD, REQ_QNTY,
+			DLVRY_NAME, DLVRY_TEL_FN, DLVRY_TEL_MN,
+			DLVRY_TEL_RN, DLVRY_POST, DLVRY_ADDR,
+			DLVRY_ADDR_DTL, DLVRY_MEMO, AGRM_YN,
+			ONLINE_AUTH_INFO, TB_CD, DLVRY_NO,
+			STATUS, PROC_YN, PROC_MEMO,
+			PROC_DTTM, REQ_IN_DAY, CRET_ID,
+			CRET_DTTM, AMD_ID, AMD_DTTM,
+			TRNS_YN
+		FROM    NMCP_FREE_USIM_REQ_MST@DL_MCP A
+		WHERE   CUSTOMER_ID = #{customerId}
+		  AND     NOT EXISTS ( SELECT 1 FROM NMCP_FREE_USIM_REQ_MST@DL_CAN WHERE CUSTOMER_ID = A.CUSTOMER_ID )
+	</insert>
+
+	<update id="updateNmcpFreeUsimReqMst" parameterType="String">
+		/*tranferMapper.updateNmcpFreeUsimReqMst*/
+		UPDATE  NMCP_FREE_USIM_REQ_MST@DL_MCP
+		SET		DLVRY_NAME = CASE WHEN DLVRY_NAME IS NOT NULL THEN '이관고객' ELSE '' END
+			  , DLVRY_TEL_FN     = CASE WHEN DLVRY_TEL_FN IS NOT NULL THEN '000' ELSE '' END
+			  , DLVRY_TEL_MN     = CASE WHEN DLVRY_TEL_MN IS NOT NULL THEN '0000' ELSE '' END
+			  , DLVRY_TEL_RN     = CASE WHEN DLVRY_TEL_RN IS NOT NULL THEN '0000' ELSE '' END
+			  ,	DLVRY_ADDR = SUBSTR(DLVRY_ADDR,1,15)
+		      , DLVRY_ADDR_DTL   = ''
+			  , TRNS_YN = 'Y'
+		WHERE   CUSTOMER_ID = #{customerId}
+	</update>
+
+
+	<delete id="deleteMcpNmcpFreeUsimReqMst" parameterType="String">
+		/*transferMapper.deleteMcpNmcpFreeUsimReqMst*/
+		DELETE FROM NMCP_FREE_USIM_REQ_MST@DL_MCP WHERE CUSTOMER_ID = #{customerId}
+	</delete>
+
+	<delete id="deleteMcpNmcpFreeUsimReqDtl" parameterType="String">
+		/*transferMapper.deleteMcpNmcpFreeUsimReqDtl*/
+		DELETE FROM NMCP_FREE_USIM_REQ_DTL@DL_MCP WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<delete id="deleteCanNmcpFreeUsimReqMst" parameterType="String">
+		/*transferMapper.deleteCanNmcpFreeUsimReqMst*/
+		DELETE FROM NMCP_FREE_USIM_REQ_MST@DL_CAN WHERE CUSTOMER_ID = #{customerId}
+	</delete>
+
+	<insert id="insertCanGiftVocMgmt" parameterType="String">
+		/*transferMapper.insertCanGiftVocMgmt*/
+		INSERT INTO MSP_GIFT_VOC_MGMT@DL_CAN (
+			 GIFT_VOC_SEQ, CONTRACT_NUM, CUST_NM, PROM_NM, GIFT_TYPE
+			 , GIFT_AMT, VOC_STAT, VOC_CTN, DIVISN, RMK
+			 , VOC_MNG_ORGN, VOC_TYPE, VOC_REQ_DT, USER_ID, RECOMM_ID
+			 , RECOMM_CONTRACT_NUM, EXTNL_ORGN_REF_YN, VOC_DESC, REGST_DTTM, REGST_ID
+			 , RVISN_DTTM, RVISN_ID, ANS_PROC_DTTM, ANS_PROC_ID, ANS_RMK
+			 , ANS_PAY_RSN, ANS_PAY_ITEM, ANS_PAY_AMT, ANS_PAY_PLAN_MON, ANS_STAT
+		)
+		SELECT GIFT_VOC_SEQ, CONTRACT_NUM, CUST_NM, PROM_NM, GIFT_TYPE
+			   , GIFT_AMT, VOC_STAT, VOC_CTN, DIVISN, RMK
+			   , VOC_MNG_ORGN, VOC_TYPE, VOC_REQ_DT, USER_ID, RECOMM_ID
+			   , RECOMM_CONTRACT_NUM, EXTNL_ORGN_REF_YN, VOC_DESC, REGST_DTTM, REGST_ID
+			   , RVISN_DTTM, RVISN_ID, ANS_PROC_DTTM, ANS_PROC_ID, ANS_RMK
+			   , ANS_PAY_RSN, ANS_PAY_ITEM, ANS_PAY_AMT, ANS_PAY_PLAN_MON, ANS_STAT
+		FROM MSP_GIFT_VOC_MGMT
+		WHERE CONTRACT_NUM = #{contractNum}
+	</insert>
+
+	<insert id="insertCanGiftPayStat" parameterType="String">
+		/*transferMapper.insertCanGiftPayStat*/
+		INSERT INTO MSP_GIFT_PAY_STAT@DL_CAN (
+			 GIFT_PAY_STAT_SEQ, PAY_MON, CONTRACT_NUM, CUST_NM, CTN
+			 , TAX_RPLY_YN, PROM_NM, GIFT_TYPE, GIFT_AMT, REGST_DTTM
+			 , REGST_ID
+		)
+		SELECT GIFT_PAY_STAT_SEQ, PAY_MON, CONTRACT_NUM, CUST_NM, CTN
+			   , TAX_RPLY_YN, PROM_NM, GIFT_TYPE, GIFT_AMT, REGST_DTTM
+			   , REGST_ID
+		FROM MSP_GIFT_PAY_STAT
+		WHERE CONTRACT_NUM = #{contractNum}
+	</insert>
+
+	<delete id="deleteMspGiftVocMgmt" parameterType="String">
+		/*transferMapper.deleteMspGiftVocMgmt*/
+		DELETE FROM MSP_GIFT_VOC_MGMT WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<delete id="deleteMspGiftPayStat" parameterType="String">
+		/*transferMapper.deleteMspGiftPayStat*/
+		DELETE FROM MSP_GIFT_PAY_STAT WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<delete id="deleteCanGiftVocMgmt" parameterType="String">
+		/*transferMapper.deleteCanGiftVocMgmt*/
+		DELETE FROM MSP_GIFT_VOC_MGMT@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<delete id="deleteCanGiftPayStat" parameterType="String">
+		/*transferMapper.deleteCanGiftPayStat*/
+		DELETE FROM MSP_GIFT_PAY_STAT@DL_CAN WHERE CONTRACT_NUM = #{contractNum}
+	</delete>
+
+	<!-- 신청정보(유심교체) 다회선 신청유무 체크 -->
+	<select id="getOtherUsimChgExist" parameterType="com.ktis.msp.batch.job.rcp.cantransfermgmt.vo.CanTransferVO" resultType="int">
+		/*transferMapper.getOtherUsimChgExist*/
+		SELECT  COUNT(1)
+		FROM	NMCP_FREE_USIM_REQ_MST@DL_MCP MST
+			   ,NMCP_FREE_USIM_REQ_DTL@DL_MCP DTL
+			   ,MSP_JUO_SUB_INFO SUB
+		WHERE 	MST.SEQ = DTL.SEQ
+		  AND   DTL.CONTRACT_NUM = SUB.CONTRACT_NUM
+		  AND   MST.CUSTOMER_ID = #{customerId}
+		  AND   DTL.CONTRACT_NUM != #{contractNum}
+		  AND   NVL(SUB.TRNS_YN, 'N') != 'Y'
+	</select>
+</mapper>

@@ -1,0 +1,832 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.ptnr.ptnrmgmt.mapper.RwdMapper">
+	
+	<!-- 오더정보생성 -->
+	<insert id="insertRwdMember">
+		/*RwdMapper.insertRwdMember*/
+		INSERT INTO MSP_RWD_INFO_OUT
+		    (   RWD_INFO_OUT_SEQ
+		      , RWD_SEQ
+		      , RES_NO
+		      , REQUEST_KEY
+		      , CONTRACT_NUM
+		      , INFO_OUT_TYPE
+		      , RWD_PROD_CD
+		      , RWD_PROD_NM
+		      , RWD_PRIC
+		      , RWD_PRD
+		      , OPEN_DT
+		      , DVC_CHG_DT
+		      , REQ_DTTM
+		      , RWD_STAT_CD
+		      , CUST_TYPE
+		      , BIRTH_DT
+		      , REQ_BUY_TYPE
+		      , MODEL_ID
+		      , MODEL_NM
+		      , INTM_SRL_NO
+		      , IMEI
+		      , IMEI_TWO
+		      , PRDT_LNCH_DT
+		      , OUT_UNIT_PRIC
+		      , BUY_PRIC
+		      , CHN_CD
+		      , FILE_ID
+		      , FILE_DIR
+		      , FILE_EXT
+		      , REGST_DTTM
+		      , PROC_YN
+		      , PROC_DT
+		     )
+         SELECT RWD_INFO_OUT_SEQ.NEXTVAL, RWD_SEQ, RES_NO, REQUEST_KEY, CONTRACT_NUM, 
+                INFO_OUT_TYPE, RWD_PROD_CD, RWD_PROD_NM, BASE_AMT, RWD_PRD, 
+                LST_COM_ACTV_DATE, DVC_CHG_DT, REQ_DTTM, RWD_STAT_CD, CSTMR_TYPE, 
+                BIRTH_DT, REQ_BUY_TYPE, MODEL_ID, MODEL_NAME, INTM_SRL_NO, 
+                IMEI, IMEI_TWO, PRDT_LNCH_DT, OUT_UNIT_PRIC, BUY_PRIC, 
+                CHN_CD, FILE_ID, FILE_DIR, FILE_EXT, REGST_DTTM, 
+                PROC_YN, PROC_DT
+         FROM   (
+                SELECT  DISTINCT A.RWD_SEQ
+                        , C.RES_NO
+                        , C.REQUEST_KEY
+                        , B.CONTRACT_NUM
+                        , '1' AS INFO_OUT_TYPE
+                        , A.RWD_PROD_CD
+                        , FN_GET_RATENM(A.RWD_PROD_CD) AS RWD_PROD_NM
+                        , E.BASE_AMT
+                        , D.RWD_PRD
+                        , B.LST_COM_ACTV_DATE
+                        , SUBSTR(MAX(F.APPL_STRT_DTTM) OVER(PARTITION BY F.CONTRACT_NUM), 0, 8) AS DVC_CHG_DT
+                        , TO_CHAR(A.REGST_DTTM, 'YYYYMMDD') AS REQ_DTTM
+                        , '0' AS RWD_STAT_CD
+                        , C.CSTMR_TYPE
+                        , CASE WHEN SUBSTR(CRYPTO_AES256.DEC_AES(B.USER_SSN), 7, 1) IN ('1', '2', '5', '6') THEN '19'
+                               WHEN SUBSTR(CRYPTO_AES256.DEC_AES(B.USER_SSN), 7, 1) IN ('3', '4', '7', '8') THEN '20'
+                               ELSE '18'
+                          END || SUBSTR(CRYPTO_AES256.DEC_AES(B.USER_SSN), 1, 6) AS BIRTH_DT
+                        , C.REQ_BUY_TYPE
+                        , B.MODEL_ID
+                        , B.MODEL_NAME
+                        , B.INTM_SRL_NO
+                        , A.IMEI
+                        , A.IMEI_TWO
+                        , (SELECT PRDT_LNCH_DT FROM CMN_INTM_MDL WHERE RPRS_PRDT_ID = B.MODEL_ID AND RPRS_YN = 'Y') AS PRDT_LNCH_DT
+                        , (SELECT TO_CHAR(OUT_UNIT_PRIC) FROM CMN_HNDST_AMT WHERE B.MODEL_ID = RPRS_PRDT_ID AND TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS') BETWEEN UNIT_PRIC_APPL_DTTM AND UNIT_PRIC_EXPR_DTTM) AS OUT_UNIT_PRIC
+                        , A.BUY_PRIC
+                        , A.CHN_CD
+                        , A.FILE_ID
+                        , A.FILE_DIR
+                        , A.FILE_EXT
+                        , TO_CHAR(SYSDATE, 'YYYYMMDD') AS REGST_DTTM
+                        , 'N' AS PROC_YN
+                        , TO_CHAR(SYSDATE, 'YYYYMMDD') AS PROC_DT
+                  FROM  MSP_RWD_ORDER A
+                        , MSP_JUO_SUB_INFO B
+                        , MSP_REQUEST_DTL C
+                        , MSP_RWD_MST D
+                        , MSP_RATE_MST E
+                        , MSP_DVC_CHG_AGNT_HST F
+                 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+                   AND A.CONTRACT_NUM = C.CONTRACT_NUM
+                   AND A.RWD_PROD_CD = D.RWD_PROD_CD
+                   AND A.RWD_PROD_CD = E.RATE_CD
+                   AND A.CONTRACT_NUM = F.CONTRACT_NUM(+)
+                   AND F.REQUEST_KEY(+) IS NOT NULL
+                   AND F.APPL_END_DTTM(+) >= TO_CHAR(TRUNC(SYSDATE - 1), 'YYYYMMDDHH24MISS')
+                   AND TO_CHAR(A.REGST_DTTM, 'YYYYMMDDHH24MISS') BETWEEN TO_CHAR(SYSDATE-7, 'YYYYMMDD' ) || '000000' AND TO_CHAR(SYSDATE-1, 'YYYYMMDD' ) || '235959'
+                   AND A.IF_TRGT_CD = 'Y'
+                   AND NOT EXISTS ( SELECT 1 FROM MSP_RWD_MEMBER WHERE CONTRACT_NUM = B.CONTRACT_NUM AND RWD_PROD_CD = A.RWD_PROD_CD AND IMEI = A.IMEI AND RWD_STAT_CD IN ('0', '1'))
+                   AND A.FILE_DIR IS NOT NULL -- 구매영수증 체크
+               )
+	</insert>
+
+	<!-- 오더정보생성 -->
+	<insert id="insertRwdImg">
+		/*RwdMapper.insertRwdImg*/
+		INSERT INTO MSP_RWD_FILE_OUT (
+			  	  RWD_FILE_OUT_SEQ
+				, RWD_SEQ
+				, FILE_ID
+				, FILE_DIR
+				, FILE_EXT
+				, REGST_DTTM
+				, PROC_YN
+				, PROC_DT
+				)
+		SELECT RWD_FILE_OUT_SEQ.NEXTVAL 
+		       , A.RWD_SEQ
+		       , A.FILE_ID
+		       , A.FILE_DIR
+		       , A.FILE_EXT
+		       , TO_CHAR(SYSDATE, 'YYYYMMDD')
+		       , 'N'
+		       , TO_CHAR(SYSDATE, 'YYYYMMDD')
+		  FROM MSP_RWD_ORDER A, MSP_RWD_INFO_OUT B
+		 WHERE A.RWD_SEQ = B.RWD_SEQ
+		   AND B.PROC_YN = 'N'
+		   AND B.PROC_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		   AND NOT EXISTS (SELECT 1 FROM MSP_RWD_FILE_OUT WHERE RWD_SEQ = A.RWD_SEQ)
+	</insert>
+	
+	<!-- 위니아에이드 부가서비스 가입정보 파일 생성 -->
+	<select id="getRwdIfOut" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.getRwdIfOut*/
+		SELECT	  A.RWD_INFO_OUT_SEQ
+		        , A.RWD_SEQ
+		        , NVL(A.RES_NO, ' ') AS RES_NO
+		        , NVL(A.REQUEST_KEY, 0) AS REQUEST_KEY
+		        , NVL(A.CONTRACT_NUM, ' ') AS CONTRACT_NUM
+		        , NVL(A.INFO_OUT_TYPE, ' ') AS INFO_OUT_TYPE
+		        , NVL(A.RWD_PROD_CD, ' ') AS RWD_PROD_CD
+		        , NVL(A.RWD_PROD_NM, ' ') AS RWD_PROD_NM
+		        , NVL(A.RWD_PRIC, 0) AS RWD_PRIC
+		        , NVL(A.RWD_PRD, ' ') AS RWD_PRD
+		        , NVL(A.OPEN_DT, ' ') AS OPEN_DT
+		        , NVL(A.DVC_CHG_DT, ' ') AS DVC_CHG_DT
+		        , NVL(A.REQ_DTTM, ' ') AS REQ_DTTM
+		        , NVL(A.CAN_DTTM, ' ') AS CAN_DTTM
+		        , NVL(A.STRT_DTTM, ' ') AS STRT_DTTM
+		        , NVL(A.END_DTTM, ' ') AS END_DTTM
+		        , NVL(A.RWD_STAT_CD, ' ') AS RWD_STAT_CD
+		        , NVL(B.SUBSCRIBER_NO, ' ') AS CTN
+		        , NVL(A.CUST_TYPE, ' ') AS CUST_TYPE
+		        , NVL(B.SUB_LINK_NAME, ' ') AS CUST_NM
+		        , NVL(A.BIRTH_DT, ' ') AS BIRTH_DT
+		        , NVL(A.REQ_BUY_TYPE, ' ') AS REQ_BUY_TYPE
+		        , NVL(A.MODEL_ID, ' ') AS MODEL_ID
+		        , NVL(A.MODEL_NM, ' ') AS MODEL_NM
+		        , NVL(A.INTM_SRL_NO, ' ') AS INTM_SRL_NO
+		        , NVL(A.IMEI, ' ') AS IMEI
+		        , NVL(A.IMEI_TWO, ' ') AS IMEI_TWO
+		        , NVL(C.BAN_ADR_PRIMARY_LN || C.BAN_ADR_SECONDARY_LN, ' ') AS BAN_ADDR
+		        , NVL(A.PRDT_LNCH_DT, ' ') AS PRDT_LNCH_DT
+		        , NVL(A.OUT_UNIT_PRIC, 0) AS OUT_UNIT_PRIC
+		        , NVL(A.BUY_PRIC, 0) AS BUY_PRIC
+		        , NVL(A.CHN_CD, ' ') AS CHN_CD
+		        , NVL(A.CAN_RSLT_CD, ' ') AS CAN_RSLT_CD
+		        , NVL(A.FILE_ID, ' ') AS FILE_ID
+		        , NVL(A.FILE_DIR, ' ') AS FILE_DIR
+		        , NVL(A.FILE_EXT, ' ') AS FILE_EXT
+		        , NVL(A.REGST_DTTM, ' ') AS REGST_DTTM
+		        , NVL(A.PROC_YN, ' ') AS PROC_YN
+		        , NVL(A.PROC_DT, ' ') AS PROC_DT
+		        , ' ' AS IF_TRGT_CD
+		        , ' ' AS OPEN_AGENT_CD
+		        , ' ' AS OPEN_AGENT
+		 FROM   MSP_RWD_INFO_OUT A, MSP_JUO_SUB_INFO B, MSP_JUO_BAN_INFO C
+		WHERE   A.CONTRACT_NUM = B.CONTRACT_NUM
+		  AND   B.BAN = C.BAN
+		  AND   A.PROC_YN = 'N'
+		  AND	A.RWD_STAT_CD IN ('0')
+		  AND	A.REQ_DTTM BETWEEN TO_CHAR(SYSDATE -7, 'YYYYMMDD') AND TO_CHAR(SYSDATE -1, 'YYYYMMDD')
+	</select>
+	
+	<!-- 이미지 파일 업로드 리스트 조회 -->
+	<select id="getImageFileUpList" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.getImageFileUpList*/
+		SELECT	  RWD_FILE_OUT_SEQ
+		        , RWD_SEQ
+		        , FILE_ID
+		        , FILE_DIR
+		        , FILE_EXT
+		        , REGST_DTTM
+		        , PROC_YN
+		        , PROC_DT
+		        , (SELECT HOST_UP_DIR FROM MSP_PARTNER_POINT_FILE WHERE PARTNER_ID = 'winiaaid' AND ROWNUM = 1) AS HOST_UP_DIR
+                , (SELECT SUB.SUBSCRIBER_NO
+                     FROM MSP_JUO_SUB_INFO SUB
+                          , MSP_RWD_ORDER RWD
+                    WHERE SUB.CONTRACT_NUM = RWD.CONTRACT_NUM
+                      AND RWD.RWD_SEQ = FOUT.RWD_SEQ) AS CTN
+                , (SELECT RATE.RATE_NM
+			         FROM MSP_RWD_ORDER RWD
+			                , MSP_RATE_MST RATE
+			        WHERE  RWD.RWD_PROD_CD = RATE.RATE_CD
+			        AND RWD_SEQ = FOUT.RWD_SEQ) AS RWD_PROD_NM 
+		FROM    MSP_RWD_FILE_OUT FOUT
+		WHERE   PROC_YN = 'N'
+		AND		PROC_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+	</select>
+
+	<!-- 이미지 파일 처리 -->
+	<update id="uptImageFileUpList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.uptImageFileUpList*/
+		UPDATE MSP_RWD_FILE_OUT
+		   SET PROC_YN = #{procYn}
+		       , PROC_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		 WHERE RWD_FILE_OUT_SEQ = #{rwdFileOutSeq}
+	</update>
+	
+	<!-- 처리상태 업데이트(MSP_RWD_INFO_OUT) -->
+	<update id="uptRwdOutUpList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.uptRwdOutUpList*/
+		UPDATE MSP_RWD_INFO_OUT
+		   SET PROC_YN = #{procYn}
+		       , PROC_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		 WHERE RWD_SEQ = #{rwdSeq}
+	</update>
+	
+	<!-- 연동상태 업데이트(MSP_RWD_ORDER) -->
+	<update id="uptRwdUpList" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.uptRwdUpList*/
+		UPDATE MSP_RWD_ORDER
+		   SET IF_TRGT_CD = 'S'
+		       , VRFY_RSLT_CD = 'Z'
+		   	   , RVISN_ID = 'BATCH_REQ'
+		   	   , RVISN_DTTM = SYSDATE
+		 WHERE RWD_SEQ = #{rwdSeq}
+	</update>
+	
+	<!-- 보상서비스 가입신청서 처리 결과 -->
+	<update id="updateResult" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.updateResult*/
+		UPDATE MSP_RWD_ORDER
+		   SET VRFY_RSLT_CD = trim(#{vrfyRsltCd})
+		   	   , VRFY_DTTM = trim(#{vrfyDttm})
+		   	   , VRFY_ID = trim(#{vrfyId})
+		   	   , RMK = trim(#{rmk})
+		   	   , RVISN_ID = 'BATCH_RES'
+		   	   , RVISN_DTTM = SYSDATE
+		 WHERE RWD_SEQ = #{rwdSeq}
+	</update>
+	
+	<!-- 위니아에서 수정한 단말기구입가 update -->
+	<update id="updateBuyPric" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.updateBuyPric*/
+		UPDATE MSP_RWD_INFO_OUT
+		   SET BUY_PRIC = trim(#{buyPric})
+		 WHERE RWD_SEQ = #{rwdSeq}
+	</update>
+
+	<!-- 보상서비스 부가서비스 가입자 정보 생성 -->
+	<insert id="insertRwdSub">
+		/*RwdMapper.insertRwdSub*/
+        INSERT INTO MSP_RWD_MEMBER
+            (  RWD_SEQ
+             , RWD_PROD_CD
+             , RES_NO
+             , REQUEST_KEY
+             , CONTRACT_NUM
+             , REQ_DTTM
+             , RWD_STAT_CD
+             , CHN_CD
+             , DVC_CHG_DT
+             , OPEN_DT
+             , BIRTH_DT
+             , MODEL_NM
+             , MODEL_ID
+             , INTM_SRL_NO
+             , IMEI
+             , IMEI_TWO
+             , PRDT_LNCH_DT
+             , OUT_UNIT_PRIC
+             , BUY_PRIC
+             , FILE_ID
+             , FILE_EXT
+             , FILE_DIR
+             , CAN_RSLT_CD
+             , REGST_ID
+             , REGST_DTTM
+             , RVISN_ID
+             , RVISN_DTTM
+            )
+        SELECT   B.RWD_SEQ
+               , B.RWD_PROD_CD
+               , B.RES_NO
+               , B.REQUEST_KEY
+               , B.CONTRACT_NUM
+               , TO_CHAR(A.RVISN_DTTM, 'YYYYMMDD')
+               , '0'
+               , B.CHN_CD
+               , B.DVC_CHG_DT
+               , B.OPEN_DT 
+               , B.BIRTH_DT
+               , B.MODEL_NM
+               , B.MODEL_ID
+               , B.INTM_SRL_NO
+               , B.IMEI
+               , B.IMEI_TWO
+               , B.PRDT_LNCH_DT
+               , B.OUT_UNIT_PRIC
+               , B.BUY_PRIC
+               , B.FILE_ID
+               , B.FILE_EXT
+               , B.FILE_DIR
+               , B.CAN_RSLT_CD
+               , 'BATCH'
+               , SYSDATE
+               , 'BATCH'
+               , SYSDATE
+          FROM   MSP_RWD_ORDER  A
+		       , MSP_RWD_INFO_OUT B
+		WHERE A.RWD_SEQ = B.RWD_SEQ
+          AND A.VRFY_RSLT_CD = 'Y'
+          AND TO_CHAR(A.RVISN_DTTM, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		  AND NOT EXISTS (SELECT 1 FROM MSP_RWD_MEMBER WHERE RWD_SEQ = A.RWD_SEQ)
+	</insert>
+   
+	<select id="selectRwdOrder" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.selectRwdOrder*/
+        SELECT   A.RWD_SEQ
+               , B.CONTRACT_NUM
+               , A.RWD_PROD_CD
+               , (SELECT CD_DSC FROM CMN_GRP_CD_MST WHERE GRP_ID = 'CMN0258' AND CD_VAL = A.RWD_PROD_CD) AS RWD_PROD_NM
+               , B.SVC_CNTR_NO AS NCN
+               , B.SUBSCRIBER_NO AS CTN
+               , B.CUSTOMER_ID AS CUST_ID
+          FROM MSP_RWD_MEMBER A, MSP_JUO_SUB_INFO B
+		 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		   AND A.REQ_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		   AND A.RWD_STAT_CD = '0' -- 0:처리중, 1:가입, 2:해지
+		   AND (A.RSLT_CD IS NULL OR A.RSLT_CD != '0000')
+   </select>
+
+	<!-- 보상서비스 부가서비스 연동 정보 업데이트 -->
+	<update id="updateRwdAddSvc" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.updateRwdAddSvc*/
+		UPDATE MSP_RWD_MEMBER
+		   SET RSLT_CD = #{rsltCd}
+		       , RSLT_MSG = #{rsltMsg}
+		       , RVISN_ID = 'BATCH_ADD'
+		       , RVISN_DTTM = SYSDATE
+		 WHERE CONTRACT_NUM = #{contractNum}
+		   AND RWD_STAT_CD = '0'
+		   AND STRT_DTTM IS NULL
+		   AND CAN_RSLT_CD IS NULL
+	</update>
+
+	<select id="selectAddSub" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.selectAddSub*/
+		SELECT   A.RWD_SEQ
+		       , B.EFFECTIVE_DATE AS EFFECTIVE_DATE
+		       , B.EXPIRATION_DATE AS EXPIRATION_DATE
+		  FROM MSP_RWD_MEMBER A, MSP_JUO_FEATURE_INFO B
+		 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		   AND A.RWD_PROD_CD = B.SOC
+		   AND A.RSLT_CD = '0000'
+		   AND B.EFFECTIVE_DATE <![CDATA[<]]>  B.EXPIRATION_DATE
+		   AND A.STRT_DTTM IS NULL
+   </select>
+   
+	<select id="selectAddCan" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.selectAddCan*/
+		SELECT   A.RWD_SEQ
+		       , B.EFFECTIVE_DATE AS EFFECTIVE_DATE
+		       , B.EXPIRATION_DATE AS EXPIRATION_DATE
+		  FROM MSP_RWD_MEMBER A, MSP_JUO_FEATURE_INFO B
+		 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		   AND A.RWD_PROD_CD = B.SOC
+		   AND A.RWD_STAT_CD != '2'	 	   
+		   AND B.EXPIRATION_DATE BETWEEN TO_CHAR(SYSDATE-7, 'YYYYMMDD' ) || '000000' AND TO_CHAR(SYSDATE-1, 'YYYYMMDD' ) || '235959'
+   </select>
+   
+<!-- 2023-09-12 부가서비스 변경대상 찾는 로직 제외
+	<select id="selectAddChg" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.selectAddChg*/
+		SELECT   A.RWD_SEQ
+		       , B.EFFECTIVE_DATE AS EFFECTIVE_DATE
+		       , B.EXPIRATION_DATE AS EXPIRATION_DATE
+		  FROM MSP_RWD_MEMBER A, MSP_JUO_FEATURE_INFO B
+		 WHERE A.CONTRACT_NUM = B.CONTRACT_NUM
+		   AND A.RWD_PROD_CD != B.SOC
+		   AND SUBSTR(B.EFFECTIVE_DATE, 1,8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+   </select>
+-->
+   
+	<!-- 보상서비스 부가서비스 연동 정보 업데이트 -->
+	<update id="updateRwdSvc" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.updateRwdSvc*/
+		UPDATE MSP_RWD_INFO_OUT
+		   SET STRT_DTTM = SUBSTR(#{effectiveDate}, 1,8)
+		       , END_DTTM = SUBSTR(#{expirationDate}, 1,8)
+		       <if test="canDttm != null and canDttm != ''">
+		       , CAN_DTTM = SUBSTR(#{canDttm}, 1,8)
+		       </if>
+		       , INFO_OUT_TYPE = #{infoOutType}
+		       , RWD_STAT_CD = #{rwdStatCd}
+		       , RSLT_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		 WHERE RWD_SEQ = #{rwdSeq}
+	</update>
+	
+	<!-- 보상서비스 부가서비스 연동 정보 업데이트 -->
+	<update id="updateMemberStat" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.updateMemberStat*/
+		UPDATE MSP_RWD_MEMBER
+		   SET STRT_DTTM = #{effectiveDate}
+		       , END_DTTM = #{expirationDate}
+		       , RWD_STAT_CD = #{rwdStatCd}
+		       , RVISN_ID = 'BATCH_SUC'
+		       , RVISN_DTTM = SYSDATE
+		 WHERE RWD_SEQ = #{rwdSeq}
+	</update>
+	
+	<!-- 위니아에이드 부가서비스 가입/해지/변경 파일 생성 -->
+	<select id="getRwdIfOutAdd" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.getRwdIfOutAdd*/
+		SELECT	  A.RWD_SEQ
+		        , NVL(A.RES_NO, ' ') AS RES_NO
+		        , NVL(A.REQUEST_KEY, 0) AS REQUEST_KEY
+		        , NVL(A.CONTRACT_NUM, ' ') AS CONTRACT_NUM
+		        , NVL(A.RWD_PROD_CD, ' ') AS RWD_PROD_CD
+		        , NVL(A.RWD_PROD_NM, ' ') AS RWD_PROD_NM
+		        , NVL(A.RWD_PRIC, 0) AS RWD_PRIC
+		        , NVL(A.RWD_PRD, ' ') AS RWD_PRD
+		        , NVL(A.OPEN_DT, ' ') AS OPEN_DT
+		        , NVL(A.DVC_CHG_DT, ' ') AS DVC_CHG_DT
+		        , NVL(A.REQ_DTTM, ' ') AS REQ_DTTM
+		        , NVL(A.CAN_DTTM, ' ') AS CAN_DTTM
+		        , NVL(A.STRT_DTTM, ' ') AS STRT_DTTM
+		        , NVL(A.END_DTTM, ' ') AS END_DTTM
+		        , NVL(A.RWD_STAT_CD, ' ') AS RWD_STAT_CD
+		        , NVL(B.SUBSCRIBER_NO, ' ') AS CTN
+		        , NVL(A.CUST_TYPE, ' ') AS CUST_TYPE
+		        , NVL(B.SUB_LINK_NAME, ' ') AS CUST_NM
+		        , NVL(A.BIRTH_DT, ' ') AS BIRTH_DT
+		        , NVL(A.REQ_BUY_TYPE, ' ') AS REQ_BUY_TYPE
+		        , NVL(A.MODEL_ID, ' ') AS MODEL_ID
+		        , NVL(A.MODEL_NM, ' ') AS MODEL_NM
+		        , NVL(A.INTM_SRL_NO, ' ') AS INTM_SRL_NO
+		        , NVL(A.IMEI, ' ') AS IMEI
+		        , NVL(C.BAN_ADR_PRIMARY_LN || C.BAN_ADR_SECONDARY_LN, ' ') AS BAN_ADDR
+		        , NVL(A.PRDT_LNCH_DT, ' ') AS PRDT_LNCH_DT
+		        , NVL(A.OUT_UNIT_PRIC, 0) AS OUT_UNIT_PRIC
+		        , NVL(A.BUY_PRIC, 0) AS BUY_PRIC
+		        , NVL(A.CHN_CD, ' ') AS CHN_CD
+		        , NVL(A.CAN_RSLT_CD, ' ') AS CAN_RSLT_CD
+		FROM    MSP_RWD_INFO_OUT A, MSP_JUO_SUB_INFO B, MSP_JUO_BAN_INFO C
+	    WHERE   A.CONTRACT_NUM = B. CONTRACT_NUM
+	      AND   B.BAN = C.BAN
+	      AND   A.RSLT_DT = TO_CHAR(SYSDATE, 'YYYYMMDD')
+	</select>
+	
+	<!-- 부가서비스 청구/수납 자료 생성 -->
+	<insert id="insertRwdBillPymn" >
+		/*RwdMapper.insertRwdBillPymn*/
+		INSERT INTO MSP_RWD_BILL_OUT
+		   (   RWD_BILL_OUT_SEQ
+		     , RWD_SEQ
+		     , BILL_YM
+		     , BLPYM_DATE
+		     , CONTRACT_NUM
+		     , OPEN_DT
+		     , STRT_DTTM
+		     , END_DTTM
+		     , BILL_ACNT_NO
+		     , BILL_ITEM_CD
+		     , ITEM_CD_NM
+		     , PYMN_CD
+		     , PYMN_AMNT
+		     , VAT_AMNT
+		     , PYMN_MTHD_CD
+		     , PYMN_MTHD_NM
+		     , ADJS_RSN_CD
+		     , ADJS_RSN_NM
+		     , REGST_DTTM
+		     , PROC_YN
+		    )
+		SELECT RWD_BILL_OUT_SEQ.NEXTVAL
+		       , B.RWD_SEQ
+		       , A.BILL_YM
+		       , A.BLPYM_DATE
+		       , A.SVC_CNTR_NO
+		       , B.OPEN_DT
+		       , B.STRT_DTTM
+		       , B.END_DTTM
+		       , A.BILL_ACNT_NO
+		       , A.BILL_ITEM_CD
+		       , A.ITEM_CD_NM
+		       , A.PYMN_CD
+		       , A.PYMN_AMNT
+		       , A.VAT_AMNT
+		       , A.PYMN_MTHD_CD
+		       , A.PYMN_MTHD_NM
+		       , A.ADJS_RSN_CD
+		       , A.ADJS_RSN_NM
+		       , TO_CHAR(SYSDATE, 'YYYYMMDD')
+		       , 'N'
+		  FROM CLS_BILL_PYMN_DATA A, MSP_RWD_MEMBER B
+		 WHERE A.BILL_YM = TO_CHAR(ADD_MONTHS(SYSDATE,-1), 'YYYYMM')
+		   AND A.SVC_CNTR_NO = B.CONTRACT_NUM
+		   AND A.BILL_ITEM_CD IN ('DRKIP','DRKIQ','DRKIR')
+	</insert>
+	
+	<!-- 위니아에이드 부가서비스 청구/수납 정보 생성 -->
+	<select id="getBillPymn" resultType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdVO">
+		/*RwdMapper.getBillPymn*/
+		SELECT	  RWD_SEQ
+		        , NVL(BILL_YM, ' ') AS BILL_YM
+		        , NVL(BLPYM_DATE, ' ') AS BLPYM_DATE
+		        , NVL(CONTRACT_NUM, ' ') AS CONTRACT_NUM
+		        , NVL(OPEN_DT, ' ') AS OPEN_DT
+		        , SUBSTR(STRT_DTTM, 1, 8) AS STRT_DTTM
+		        , SUBSTR(END_DTTM, 1, 8) AS END_DTTM
+		        , NVL(BILL_ACNT_NO, ' ') AS BILL_ACNT_NO
+		        , NVL(BILL_ITEM_CD, ' ') AS BILL_ITEM_CD
+		        , NVL(ITEM_CD_NM, ' ') AS ITEM_CD_NM
+		        , NVL(PYMN_CD, ' ') AS PYMN_CD
+		        , NVL(PYMN_AMNT, 0) AS PYMN_AMNT
+		        , NVL(VAT_AMNT, 0) AS VAT_AMNT
+		        , NVL(PYMN_MTHD_CD, ' ') AS PYMN_MTHD_CD
+		        , NVL(PYMN_MTHD_NM, ' ') AS PYMN_MTHD_NM
+		        , NVL(ADJS_RSN_CD, ' ') AS ADJS_RSN_CD
+		        , NVL(ADJS_RSN_NM, ' ') AS ADJS_RSN_NM
+		FROM    MSP_RWD_BILL_OUT
+		WHERE   PROC_YN = 'N'
+		  AND	REGST_DTTM = TO_CHAR(SYSDATE, 'YYYYMMDD')
+	</select>
+	
+	<!-- 권리실행 접수현황 데이터 등록 -->
+	<insert id="insertRwdCmpnRes" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO">
+		/*RwdMapper.insertRwdCmpnRes*/
+		INSERT INTO MSP_RWD_CMPN_IN (
+			RWD_CMPN_IN_SEQ
+			, RWD_SEQ
+			, RWD_CMPN_SEQ
+			, CMPN_CT
+			, CMPN_DT
+			, CMPN_ID
+			, CMPN_STAT_CD
+			, REGST_DTTM
+			, PROC_DT
+			, PROC_YN
+		) VALUES (
+			RWD_CMPN_IN_SEQ.NEXTVAL
+			, #{rwdSeq}
+			, #{rwdCmpnSeq}
+			, #{cmpnCt}
+			, #{cmpnDt}
+			, #{cmpnId}
+			, #{cmpnStatCd}
+			, SYSDATE
+			, TO_CHAR(SYSDATE, 'YYYYMMDD')
+			, 'N'
+		)
+	</insert>
+	
+	<!-- 권리실행 접수현황 원장 테이블 건수 조회 -->
+	<select id="selectRwdCmpnRes" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO" resultType="int">
+		/*RwdMapper.selectRwdCmpnRes*/
+		SELECT COUNT(1)
+		  FROM MSP_RWD_CMPN
+		 WHERE RWD_SEQ = #{rwdSeq}
+		   AND RWD_CMPN_SEQ = #{rwdCmpnSeq}
+	</select>
+	
+	<!-- 권리실행 접수현황 원장 테이블 update -->
+	<update id="uptRwdCmpnRes" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO">
+		/*RwdMapper.uptIRwdCmpnRes*/
+		UPDATE MSP_RWD_CMPN
+		   SET CMPN_CT = #{cmpnCt}
+		       , CMPN_DT = #{cmpnDt}
+		       , CMPN_ID = #{cmpnId}
+		       , CMPN_STAT_CD = #{cmpnStatCd}
+		       , RVISN_DTTM = SYSDATE
+		 WHERE RWD_SEQ = #{rwdSeq}
+		   AND RWD_CMPN_SEQ = #{rwdCmpnSeq}
+	</update>
+	
+	<!-- 권리실행 접수현황 원장 테이블 insert -->
+	<insert id="intRwdCmpnRes" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO">
+		/*RwdMapper.intIRwdCmpnRes*/
+		INSERT INTO MSP_RWD_CMPN
+		   (   RWD_SEQ
+		     , RWD_CMPN_SEQ
+		     , CMPN_CT
+		     , CMPN_DT
+		     , CMPN_ID
+		     , CMPN_STAT_CD
+		     , REGST_DTTM
+		     , RVISN_DTTM
+		    )
+		VALUES (
+			   #{rwdSeq}
+			 , #{rwdCmpnSeq}
+			 , #{cmpnCt}
+			 , #{cmpnDt}
+			 , #{cmpnId}
+			 , #{cmpnStatCd}
+			 , SYSDATE
+			 , SYSDATE
+		)
+	</insert>
+	
+	<!-- 보상처리현황 데이터 등록 -->
+	<insert id="insertRwdCmpnProc" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO">
+		/*RwdMapper.insertRwdCmpnProc*/
+		INSERT INTO MSP_RWD_CMPN_IN (
+			RWD_CMPN_IN_SEQ
+			, RWD_SEQ
+			, RWD_CMPN_SEQ
+			, CMPN_CT
+			, CMPN_DT
+			, CMPN_ID
+			, CMPN_STAT_CD
+			, CT_IN_DT
+			, CT_IN_ID
+			, CT_OUT_DT
+			, CT_OUT_ID
+			, BUY_PRIC
+			, RWD_RT
+			, FTR_PRIC
+			, OST_PRIC
+			, ASR_PRIC
+			, OST_RESN
+			, CNFM_LV
+			, CNFM_DT
+			, CNFM_ID
+			, PAY_PLAN_DTTM
+			, OB_DT
+			, OB_ID
+			, RETN_DT
+			, RETN_ID
+			, RETN_IV
+			, REGST_DTTM
+			, PROC_DT
+			, PROC_YN
+		) VALUES (
+			RWD_CMPN_IN_SEQ.NEXTVAL
+			, #{rwdSeq}
+			, #{rwdCmpnSeq}
+			, #{cmpnCt}
+			, #{cmpnDt}
+			, #{cmpnId}
+			, #{cmpnStatCd}
+			, #{ctInDt}
+			, #{ctInId}
+			, #{ctOutDt}
+			, #{ctOutId}
+			, #{buyPric}
+			, #{rwdRt}
+			, #{ftrPric}
+			, #{ostPric}
+			, #{asrPric}
+			, #{ostResn}
+			, #{cnfmLv}
+			, #{cnfmDt}
+			, #{cnfmId}
+			, #{payPlanDttm}
+			, #{obDt}
+			, #{obId}
+			, #{retnDt}
+			, #{retnId}
+			, #{retnIv}
+			, SYSDATE
+			, TO_CHAR(SYSDATE, 'YYYYMMDD')
+			, 'N'
+		)
+	</insert>
+	
+	<!-- 보상처리현황 원장 테이블 update -->
+	<update id="uptRwdCmpnProc" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO">
+		/*RwdMapper.uptRwdCmpnProc*/
+		UPDATE MSP_RWD_CMPN
+		   SET CMPN_CT = #{cmpnCt}
+		       , CMPN_DT = #{cmpnDt}
+		       , CMPN_ID = #{cmpnId}
+		       , CMPN_STAT_CD = #{cmpnStatCd}
+		       , CT_IN_DT = #{ctInDt}
+		       , CT_IN_ID = #{ctInId}
+		       , CT_OUT_DT = #{ctOutDt}
+		       , CT_OUT_ID = #{ctOutId}
+		       , BUY_PRIC = #{buyPric}
+		       , RWD_RT = #{rwdRt}
+		       , FTR_PRIC = #{ftrPric}
+		       , OST_PRIC = #{ostPric}
+		       , ASR_PRIC = #{asrPric}
+		       , OST_RESN = #{ostResn}
+		       , CNFM_LV = #{cnfmLv}
+		       , CNFM_DT = #{cnfmDt}
+		       , CNFM_ID = #{cnfmId}
+		       , PAY_PLAN_DTTM = #{payPlanDttm}
+		       , OB_DT = #{obDt}
+		       , OB_ID = #{obId}
+		       , RETN_DT = #{retnDt}
+		       , RETN_ID = #{retnId}
+		       , RETN_IV = #{retnIv}
+		       , RVISN_DTTM = SYSDATE
+		 WHERE RWD_SEQ = #{rwdSeq}
+		   AND RWD_CMPN_SEQ = #{rwdCmpnSeq}
+	</update>
+	
+	<!-- 보상처리현황 원장 테이블 insert -->
+	<insert id="intRwdCmpnProc" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO">
+		/*RwdMapper.intRwdCmpnProc*/
+		INSERT INTO MSP_RWD_CMPN
+		   (   RWD_SEQ
+		     , RWD_CMPN_SEQ
+		     , CMPN_CT
+		     , CMPN_DT
+		     , CMPN_ID
+		     , CMPN_STAT_CD
+		     , CT_IN_DT
+		     , CT_IN_ID
+		     , CT_OUT_DT
+		     , CT_OUT_ID
+		     , BUY_PRIC
+		     , RWD_RT
+		     , FTR_PRIC
+		     , OST_PRIC
+		     , ASR_PRIC
+		     , OST_RESN
+		     , CNFM_LV
+		     , CNFM_DT
+		     , CNFM_ID
+		     , PAY_PLAN_DTTM
+		     , OB_DT
+		     , OB_ID
+		     , RETN_DT
+		     , RETN_ID
+		     , RETN_IV
+		     , REGST_DTTM
+		     , RVISN_DTTM
+		    )
+		VALUES (
+			   #{rwdSeq}
+			 , #{rwdCmpnSeq}
+			 , #{cmpnCt}
+			 , #{cmpnDt}
+			 , #{cmpnId}
+			 , #{cmpnStatCd}
+			 , #{ctInDt}
+			 , #{ctInId}
+			 , #{ctOutDt}
+			 , #{ctOutId}
+			 , #{buyPric}
+			 , #{rwdRt}
+			 , #{ftrPric}
+			 , #{ostPric}
+			 , #{asrPric}
+			 , #{ostResn}
+			 , #{cnfmLv}
+			 , #{cnfmDt}
+			 , #{cnfmId}
+			 , #{payPlanDttm}
+			 , #{obDt}
+			 , #{obId}
+			 , #{retnDt}
+			 , #{retnId}
+			 , #{retnIv}
+			 , SYSDATE
+			 , SYSDATE
+		)
+	</insert>
+	
+	<!-- 보상지급현황 데이터 등록 -->
+	<insert id="insertRwdCmpnPay" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO">
+		/*RwdMapper.insertRwdCmpnPay*/
+		INSERT INTO MSP_RWD_CMPN_IN (
+			RWD_CMPN_IN_SEQ
+			, RWD_SEQ
+			, RWD_CMPN_SEQ
+			, PAY_DTTM
+			, REAL_CMPN_AMT
+			, REGST_DTTM
+			, PROC_DT
+			, PROC_YN
+		    )
+		VALUES (
+			RWD_CMPN_IN_SEQ.NEXTVAL
+			, #{rwdSeq}
+			, #{rwdCmpnSeq}
+			, #{payDttm}
+			, #{realCmpnAmt}
+			, SYSDATE
+			, TO_CHAR(SYSDATE, 'YYYYMMDD')
+			, 'N'
+		)
+	</insert>
+	
+	<!-- 보상처리현황 원장 테이블 update -->
+	<update id="uptRwdCmpnPay" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO">
+		/*RwdMapper.uptRwdCmpnPay*/
+		UPDATE MSP_RWD_CMPN
+		   SET PAY_DTTM = #{payDttm}
+		       , REAL_CMPN_AMT = #{realCmpnAmt}
+		       , RVISN_DTTM = SYSDATE
+		 WHERE RWD_SEQ = #{rwdSeq}
+		   AND RWD_CMPN_SEQ = #{rwdCmpnSeq}
+	</update>
+	
+	<!-- 보상처리현황 원장 테이블 insert -->
+	<insert id="intRwdCmpnPay" parameterType="com.ktis.msp.batch.job.ptnr.ptnrmgmt.vo.RwdCmpnVO">
+		/*RwdMapper.intRwdCmpnPay*/
+		INSERT INTO MSP_RWD_CMPN
+		   (   RWD_SEQ
+		     , RWD_CMPN_SEQ
+		     , PAY_DTTM
+		     , REAL_CMPN_AMT
+		     , REGST_DTTM
+		     , RVISN_DTTM
+		    )
+		VALUES (
+			   #{rwdSeq}
+			 , #{rwdCmpnSeq}
+			 , #{payDttm}
+			 , #{realCmpnAmt}
+			 , SYSDATE
+			 , SYSDATE
+		)
+	</insert>
+	
+</mapper>

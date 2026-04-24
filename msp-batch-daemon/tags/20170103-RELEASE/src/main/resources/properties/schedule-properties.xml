@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd" >
+
+<properties>
+	
+	<!-- SAMPLE 스케줄러 (5분마다. *는 5분마다 매초에 실행함.) -->
+	<entry key="sampleSchedule">0 0/5 * * * *</entry>
+	
+	<!-- 물류 Start -->
+	<!-- Logics Team : Create  to  The Invtr Day Mst ,Create to The  Invtr Day Cnt    -->
+	<entry key="lgsInvtrDaySumSchedule">0 0/10 2 * * ?</entry>
+	
+	<!-- 타사단말 일재고 생성 -->
+	<entry key="lgsOtherInvtrDaySumSchedule">0 0/10 2 * * ?</entry>
+	
+	<!-- Logics Team : NSTEP I/F -->
+	<entry key="lgsNstepIfSchedule">0 0/5 8-22 * * ?</entry>
+	<!-- 물류 End -->
+
+	<!-- 고객 Start -->
+	<!-- 웹회원메일발송 -->
+	<entry key="webUsrCanMailSchedule">0 0 6 1 * ?</entry>
+
+	<!-- 웹회원삭제 --><!-- 웹일반회원해지처리 -->
+	<entry key="webUsrCanDelSchedule">0 20 6 * * ?</entry>
+
+	<!-- 청소년유해매체차단동의 SMS 발송 -->
+	<entry key="ythBlckSmsSchedule">0 0 7 * * ?</entry>
+	<!-- 고객 End -->
+
+	<!-- 결산 Start -->
+	<!-- 대리점여신초기화 -->
+	<entry key="crdtLoanInitSchedule">0 10 0 * * ?</entry>
+
+	<!-- 결산대상생성 -->
+	<entry key="clsAcntTrgtSchedule">0 0 4 15 * ?</entry>
+
+	<!-- 개통여신부활 -->
+	<entry key="openCrdtLoanRvlSchedule">0 20 0 * * ?</entry>
+
+	<!-- 수수료매입 -->
+	<entry key="cmsnPrchSchedule">0 30 2 15 * ?</entry>
+
+	<!-- 할부채권매입 -->
+	<entry key="instBondPrchSchedule">0 0 2 15 * ?</entry>
+
+	<!-- 매출이월(매월 1일 1시 20분 실행) -->
+	<entry key="saleCarryOverSchedule">0 20 1 1 * ?</entry>
+
+	<!-- 연체가산금(매월 15일 2시 실행) -->
+	<entry key="delayAddAmtSchedule">0 0 2 15 * ?</entry>
+
+	<!-- 재고보상(매일 1시 30분 실행) -->
+	<entry key="stckCmpstSchedule">0 30 1 * * ?</entry>
+
+	<!-- 유심수납금액 여신반영(1시 10분 실행) -->
+	<entry key="crdtLoanUsimRvlSchedule">0 10 1 * * ?</entry>
+	
+	<!-- 청구수납회계자료생성 (매월 6일 5시) -->
+	<entry key="acntDataSttcSchedule">0 0 5 6 * ?</entry>
+	
+	<!-- 미납채권생성스케줄러 (매월 6일 6시 실행) -->
+	<entry key="unpdBondSttcSchedule">0 0 6 6 * ?</entry>
+	<!-- 결산 End -->
+
+	<!-- 통계 Start -->
+	<!-- 사용량 집계(매월 20일 3시 실행) -->
+	<entry key="usgAmntSttcSchedule">0 0 3 20 * ?</entry>
+
+	<!-- 청구수납 집계(매월 20일 3시 20분 실행) -->
+	<entry key="invAmntSttcSchedule">0 20 3 20 * ?</entry>
+
+	<!-- 일마감집계(매일 0시 1분 실행) -->
+	<entry key="dailyCloseSttcSchedule">0 1 0 * * ?</entry>
+
+	<!-- 영업실적 -->
+	<entry key="saleRsltSttcSchedule">0 59 14,17,20,23 * * ?</entry>
+
+	<!-- 계약별 요금제 사용일수 집계 -->
+	<entry key="cntrUsgDtSttcSchedule">0 55 23 * * ?</entry>
+	<!-- 통계 End -->
+
+	<!-- 단말유동화 start -->
+	<!-- 채권정보생성스케줄러 -->
+	<entry key="bondSchedule">0 0 1 7 * ?</entry>
+	<entry key="bondInstSchedule">0 0 1 20 * ?</entry>
+	<!-- 단말유동화 end -->
+	
+	<!-- 기준 start -->
+	<!-- 대리점/판매점 사용자 정지상태 -->
+	<entry key="userStatusScheduler">0 0 3 * * ?</entry>
+	<!-- 기준 end -->
+	
+	<!-- PTNR start -->
+	<!-- 포인트정산스케줄러 -->
+	<entry key="pointChkSchedule">0 0 6 1 * ?</entry>
+
+	<!-- 제주항공 포인트 정산 스케줄러 -->
+	<entry key="pointPayChkSchedule">0 0 6 6 * ?</entry>
+	
+	<!-- 제주항공 정산전송 업로드 스케줄러 -->
+	<entry key="pointSendJejuairSchedule">0 0 4 15 * ?</entry>
+	
+	<!-- 기프티쇼 정산전송 스케줄러 -->
+	<entry key="pointSendGiftiSchedule">0 0 5 15 * ?</entry>
+	
+	<!-- 티머니 정산전송 스케줄러 -->
+	<entry key="pointSendTmoneySchedule">0 0 6 15 * ?</entry>
+	
+	<!-- 정산결과확인 다운로드 (제주항공) 스케줄러 -->
+	<entry key="pointResultJejuairSchedule">0 0 4 20 * ?</entry>
+	
+	<!-- 정산결과확인 다운로드 (기프티쇼) 스케줄러 -->
+	<entry key="pointResultGiftiSchedule">0 0 5 20 * ?</entry>
+	
+	<!-- 정산결과확인 다운로드 (티머니) 스케줄러 -->
+	<entry key="pointResultTmoneySchedule">0 0 6 20 * ?</entry>
+	
+	<!-- PTNR end -->
+	
+	<!-- 약관발송대상자 -->
+	<entry key="termsSendSchedule">0 10 3 1 * ?</entry>
+	
+	<!-- 배치 요청 스케줄러 -->
+	<entry key="requestSchedule">*/5 * * * * *</entry>
+	
+	<!-- 기변대상추출 ( 매일 4시 ) -->
+	<entry key="dvcChgTrgtProcSchedule">0 0 4 * * ?</entry>
+	
+	<!-- IFRS START -->
+	<!-- 계약정보현행화 1차 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf001Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- 계약현행화이력정보 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf002Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- 상품현행화정보 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf003Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- 단말현행화정보 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf004Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- MVNO추가정보 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf005Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- 요금제 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf006Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- 요금제스펙 ( 매월 2일 4시 ) -->
+	<entry key="ifrsInf007Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- 계약정보현행화 2차 ( 매월 15일 4시 ) -->
+	<entry key="ifrsInf008Schedule">0 0 4 15 * ?</entry>
+	
+	<!-- 수수료집계 ( 매월 10일 4시 ) -->
+	<entry key="ifrsInf009Schedule">0 0 4 10 * ?</entry>
+	
+	<!-- 조직정보 ( 매주 월요일 4시 ) -->
+	<entry key="ifrsInf010Schedule">0 0 4 ? * MON</entry>
+	
+	<!-- 제품기기정보 ( 매월 1일 4시 ) -->
+	<entry key="ifrsInf011Schedule">0 0 4 1 * ?</entry>
+	
+	<!-- 제품관리 ( 매월 1일 4시 ) -->
+	<entry key="ifrsInf012Schedule">0 0 4 1 * ?</entry>
+	
+	<!-- 청구수납자료( 매월 5일 4시 ) -->
+	<entry key="ifrsInf013Schedule">0 0 4 5 * ?</entry>
+
+	<!-- 단말기단가( 매월 2일 4시 ) -->
+	<entry key="ifrsInf014Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 공시지원금( 매월 2일 4시 ) -->
+	<entry key="ifrsInf015Schedule">0 0 4 2 * ?</entry>
+
+	<!-- 신청정보( 매월 2일 4시 ) -->
+	<entry key="ifrsInf016Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- 기변정보( 매월 2일 4시 ) -->
+	<entry key="ifrsInf017Schedule">0 0 4 2 * ?</entry>
+	
+	<!-- IFRS END -->
+	
+	<!-- 개통고객 LMS 발송( 5분마다 ) -->
+	<entry key="openCstmrLmsSchedule">0 3/8 10-21 * * ?</entry>
+	
+	<!-- 해지후재가입정보생성( 매일 2시 10분 ) -->
+	<entry key="retentionProcSchedule">0 10 2 * * ?</entry>
+	
+	<!-- 마케팅동의 고지 SMS 1차 발송( 매월 5일 5시 ) -->
+	<entry key="marketingSchedule">0 0 5 5 * ?</entry>
+	
+	<!-- 마케팅동의 고지 SMS 재발송  -->
+	<entry key="marketingReSchedule">0 0 5 6-9 * ?</entry>
+	
+</properties>

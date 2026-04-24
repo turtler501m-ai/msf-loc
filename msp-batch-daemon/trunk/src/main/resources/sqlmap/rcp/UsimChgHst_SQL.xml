@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rcp.statsmgmt.mapper.UsimChgHstMapper">
+
+	<!-- 유심 변경 대상 조회 -->
+	<select id="selectUsimChgList" resultType="String">
+		/* usimChgHstMapper.selectUsimChgList */
+	    SELECT  DISTINCT CONTRACT_NUM
+    	FROM  	MSP_JUO_SUB_INFO_HIST
+   		WHERE	ICC_ID IS NOT NULL 
+     	AND  	EVNT_CHANGE_DATE BETWEEN TO_CHAR(SYSDATE-1,'YYYYMMDD') || '000000' AND TO_CHAR(SYSDATE-1,'YYYYMMDD') || '235959'
+	</select>
+	
+	<!-- 유심 변경 이력 생성 -->
+	<insert id="insertUsimChgHst" parameterType="String">
+		/* usimChgHstMapper.insertUsimChgHst */
+		INSERT INTO MSP_USIM_CHG_HST
+	    	SELECT  DISTINCT
+	        		CONTRACT_NUM,
+	                EVNT_CHANGE_DATE,
+	                USIM_MODNM,
+	                USIM_MODID, 
+	                ICC_ID,
+	                SYSDATE
+			  FROM         
+					(
+						SELECT
+								CONTRACT_NUM,
+								EVNT_CHANGE_DATE,
+								USIM_MODNM,
+								USIM_MODID, 
+								ICC_ID,
+								LAG(ICC_ID) OVER (PARTITION BY CONTRACT_NUM ORDER BY EVNT_CHANGE_DATE) AS PREV_ICC_ID
+                          FROM 	MSP_JUO_SUB_INFO_HIST
+                         WHERE 	ICC_ID IS NOT NULL 
+                           AND 	CONTRACT_NUM = #{contractNum}
+					) 
+			 WHERE	ICC_ID != PREV_ICC_ID 
+			   AND	EVNT_CHANGE_DATE BETWEEN TO_CHAR(SYSDATE-1,'YYYYMMDD') || '000000' AND TO_CHAR(SYSDATE-1,'YYYYMMDD') || '235959'
+			 ORDER BY EVNT_CHANGE_DATE ASC
+	</insert>
+	
+	<select id="getUsimChgHstExcel" parameterType="com.ktis.msp.batch.job.rcp.statsmgmt.vo.UsimChgHstListVO" resultType="egovframework.rte.psl.dataaccess.util.EgovMap">
+  		/* StatsMgmtMapper.getUsimChgHstExcel */
+  		SELECT	USIM_CHG_DATE
+  				, CONTRACT_NUM
+  				, SVC_CNTR_NO
+  				, USIM_MODNM
+  				, USIM_NO
+  				, SUB_STATUS_NM
+  				, LST_COM_ACTV_DATE
+  				, CHG_TYPE
+  				, MAX(HDN_YN) AS HDN_YN
+  		FROM	(  		
+			 		SELECT  TO_CHAR(TO_DATE(USIM.CHG_DTTM, 'YYYYMMDDHH24MISS'), 'YYYY-MM-DD HH24:MI:SS') AS USIM_CHG_DATE
+					        , USIM.CONTRACT_NUM AS CONTRACT_NUM
+					        , SUB.SVC_CNTR_NO AS SVC_CNTR_NO
+					        , USIM.USIM_MODNM AS USIM_MODNM
+					        , USIM.USIM_NO AS USIM_NO
+					        , FN_GET_CODENM('MSP0003', SUB.SUB_STATUS) AS SUB_STATUS_NM
+							, TO_CHAR(TO_DATE(SUB.LST_COM_ACTV_DATE, 'YYYYMMDD'), 'YYYY-MM-DD') AS LST_COM_ACTV_DATE
+							, FN_GET_CODENM('MSP0005',HST.EVNT_CD) AS CHG_TYPE
+							, DECODE(CHG.CONTRACT_NUM, NULL, '', 'Y') AS HDN_YN
+					FROM    MSP_USIM_CHG_HST USIM
+					        , MSP_JUO_SUB_INFO SUB
+					        , MSP_JUO_SUB_INFO_HIST HST
+			        		, (SELECT CONTRACT_NUM, EVNT_TRTM_NO FROM MSP_DVC_CHG_AGNT_HST WHERE REQUEST_KEY IS NOT NULL) CHG
+					WHERE   USIM.CONTRACT_NUM = SUB.CONTRACT_NUM
+					AND     CHG_DTTM > '20251104235959' /* 25년 11월 4일까지 이력을 기준 데이터로 사용 */
+					AND     USIM.CONTRACT_NUM = HST.CONTRACT_NUM
+					AND     USIM.CHG_DTTM = HST.EVNT_CHANGE_DATE
+					AND     USIM.USIM_NO = HST.ICC_ID
+					AND     HST.CONTRACT_NUM = CHG.CONTRACT_NUM(+)
+					AND     HST.EVNT_TRTM_NO = CHG.EVNT_TRTM_NO(+)
+					<if test='srchStrtDt != null and srchStrtDt != "" and srchEndDt != null and srchEndDt != "" '>
+						AND		USIM.CHG_DTTM BETWEEN #{srchStrtDt} || '000000' AND #{srchEndDt} || '235959'
+					</if>
+					<if test="searchGbn != null and searchGbn != ''">
+							<if test='searchGbn == "1"'>
+								AND     USIM.CONTRACT_NUM = #{searchName}
+							</if>
+							<if test='searchGbn == "2"'>
+								AND     SUB.SVC_CNTR_NO = #{searchName}
+							</if>
+					</if>
+				)
+		GROUP BY USIM_CHG_DATE,CONTRACT_NUM,SVC_CNTR_NO,USIM_MODNM,USIM_NO,SUB_STATUS_NM,LST_COM_ACTV_DATE,CHG_TYPE
+		ORDER BY USIM_CHG_DATE DESC
+	</select>
+	
+</mapper>

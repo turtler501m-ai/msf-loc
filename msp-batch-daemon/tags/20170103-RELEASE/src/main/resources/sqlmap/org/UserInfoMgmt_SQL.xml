@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.org.userinfomgmt.mapper.UserInfoMgmtMapper">
+	
+	<insert id="userInfoMgmtService" parameterType="String">
+		INSERT INTO CMN_WEBUSER_CAN_MST /** userInfoMgmtMapper.userInfoMgmtService */
+		       ( USERID, NAME, MOBILE_NO, FIRST_LOGIN_DT, LAST_LOGIN_DT
+		       , EMAIL, ZIPCD, ADDRESS, ADDRESS_DTL, RESULT_YN
+		       , REGST_ID, REGST_DTTM, RVISN_ID, RVISN_DTTM )
+		SELECT A.USERID, A.NAME, A.MOBILE_NO, TO_CHAR(A.SYS_RDATE, 'YYYYMMDD'), TO_CHAR(TO_DATE(A.SYS_LDATE, 'YYYY-MM-DD'), 'YYYYMMDD')
+			 , A.EMAIL, A.POST, A.ADDRESS, A.ADDRESS_DTL, 'N' 
+			 , 'SYSTEM', SYSDATE, 'SYSTEM', SYSDATE 
+		  FROM MCP_USER@DL_MCP A
+		 WHERE A.STATUS = '1'
+		   AND A.AUTH_CODE = 'USER_ROLE'
+		   AND A.USER_DIVISION = '00'
+		   <![CDATA[ AND TO_DATE(A.SYS_LDATE, 'YYYY-MM-DD') BETWEEN TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE , -11), 'YYYYMMDD'), 'YYYYMMDD') AND  TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE -1, -10), 'YYYYMMDD'), 'YYYYMMDD')]]> 
+		   AND NOT EXISTS ( SELECT 1 
+		                      FROM CMN_WEBUSER_CAN_MST
+		                     WHERE USERID = A.USERID)
+	</insert>
+	
+</mapper>

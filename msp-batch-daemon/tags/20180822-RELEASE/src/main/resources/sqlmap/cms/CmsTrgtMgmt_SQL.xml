@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cms.cmsbatchmgmt.mapper.CmsTrgtMgmtMapper">
+	
+	<!-- 수수료집계정보생성 -->
+	<insert id="callCmsTrgtInfoProc" statementType="CALLABLE" parameterType="java.lang.String">
+		/* cmsTrgtMgmtMapper.callCmsTrgtInfoProc */
+		{ CALL P_CMS_NEW_BASE_INFO(#{yyyyMM}) }
+	</insert>
+	
+</mapper>

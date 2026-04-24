@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.cls.prchmgmt.mapper.PrchMgmtMapper">
+	
+	<!-- 수수료매입정보 등록(select~insert) -->
+	<update id="insertCmsnPrchInfo" parameterType="map">
+        /* prchMgmtMapper.insertCmsnPrchInfo */
+        INSERT INTO CLS_CMSN_PRCH_INFO
+        (
+            PRCH_YM
+            , ORGN_ID
+            , CMSN_AMT
+            , CMSN_VAT
+            , PRCH_STAT_CD
+            , TAXBILL_ISSU_YN
+            , CMSN_PRVD_YN
+            , REGST_ID
+            , REG_DTTM
+            , RVISN_ID
+            , RVISN_DTTM
+        )
+        SELECT
+            A.PRCH_YM
+            , A.ORGN_ID
+            , SUM(NVL(A.CMSN_AMT, 0)) AS CMSN_AMT
+            , SUM(NVL(A.CMSN_VAT, 0)) AS CMSN_VAT
+            , '10'									/* 등록 */
+            , 'N'
+            , 'N'
+            , #{USER_ID, jdbcType=VARCHAR}
+            , SYSDATE
+            , #{USER_ID, jdbcType=VARCHAR}
+            , SYSDATE
+        FROM
+            CLS_CMSN_PRCH_DTL A
+        WHERE
+            A.PRCH_YM = #{PRCH_YM, jdbcType=VARCHAR}
+        GROUP BY A.PRCH_YM, A.ORGN_ID
+	</update>
+	
+	<!-- 할부채권매입상세등록(배치) -->
+	<insert id="insertInstBondPrchDtlBatch" parameterType="map">
+		/* prchMgmtMapper.insertInstBondPrchDtlBatch */
+		INSERT INTO CLS_INST_BOND_PRCH_DTL (
+		    PRCH_YM
+		    , ORGN_ID
+		    , PRCH_SRL_NUM
+		    , INST_OCCR_SCTN_CD
+		    , INST_AMT
+		    , INST_VAT
+		    , SPT_AMT
+		    , SPT_VAT
+		    , AGNCY_AMT
+		    , AGNCY_VAT
+		    , PRCH_INST_AMT
+		    , PRCH_INST_VAT
+		    , SRVC_CNTR_NUM
+		    , OPEN_DT
+		    , TMNT_DT
+		    , PRDT_ID
+		    , PRDT_SRL_NUM
+		    , REGST_ID
+		    , REG_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT  #{CLS_ACNT_YM} 
+		        , A.OPEN_AGNT_CD
+		        , SQ_CLS_PRCH_01.NEXTVAL
+		        , '10' AS INST_OCCR_SCTN_CD
+		        , ROUND(B.INST_ORGIN_AMNT / 1.1) AS INST_AMT
+		        , B.INST_ORGIN_AMNT - ROUND(B.INST_ORGIN_AMNT / 1.1) AS INST_VAT
+		        , ROUND(G.SUBSD_AMT / 1.1) AS SUBSD_AMT
+		        , G.SUBSD_AMT - ROUND(G.SUBSD_AMT / 1.1) AS SUBSD_VAT
+		        , ROUND(G.AGNCY_SUBSD_AMT / 1.1) AS AGNCY_SUBSD_AMT
+		        , G.AGNCY_SUBSD_AMT - ROUND(G.AGNCY_SUBSD_AMT / 1.1) AS AGNCY_SUBSD_VAT
+		        , ROUND(B.INST_ORGIN_AMNT / 1.1) AS INST_AMT
+		        , B.INST_ORGIN_AMNT - ROUND(B.INST_ORGIN_AMNT / 1.1) AS INST_VAT
+		        , A.CONTRACT_NUM
+		        , A.LST_COM_ACTV_DATE AS OPEN_DT
+		        , DECODE(A.SUB_STATUS, 'C', SUBSTR(A.SUB_STATUS_DATE, 1, 8), '') AS TMNT_DT
+		        , B.MODEL_ID
+		        , C.INTM_SRL_NO
+		        , 'BATCH'
+		        , SYSDATE
+		        , 'BATCH'
+		        , SYSDATE
+		FROM    MSP_JUO_SUB_INFO A
+		        , MSP_JUO_ADD_INFO B
+		        , MSP_JUO_MODEL_INFO C
+		        , LGS_PRDT_SRL_MST D
+		        , MSP_JUO_FEATURE_INFO E
+		        , CMS_TRGT_INFO F
+		        , MSP_SALE_SUBSD_MST G
+		WHERE   A.LST_COM_ACTV_DATE LIKE #{CLS_ACNT_YM} || '%'
+		AND     A.PPPO = 'PO'
+		AND     'Y' = ( CASE WHEN A.SUB_STATUS = 'C' AND TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ >= '15' ]]> THEN 'Y'
+		                     WHEN A.SUB_STATUS <![CDATA[ <> ]]> 'C' THEN 'Y'
+		                     ELSE 'N'
+		                END )
+		AND     A.CONTRACT_NUM  = B.CONTRACT_NUM
+		AND     B.INST_ORGIN_AMNT IS NOT NULL
+		AND     B.EVNT_TRTM_DT  = ( SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_ADD_INFO WHERE CONTRACT_NUM = B.CONTRACT_NUM )
+		AND     A.CONTRACT_NUM  = C.CONTRACT_NUM
+		AND     C.EVNT_TRTM_DT  = ( SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_MODEL_INFO WHERE CONTRACT_NUM = B.CONTRACT_NUM )
+		AND     C.MODEL_ID      = D.RPRS_PRDT_ID
+		AND     C.INTM_SRL_NO   = D.PRDT_SRL_NUM
+		AND     A.CONTRACT_NUM  = E.CONTRACT_NUM
+		AND     E.SERVICE_TYPE  = 'P'
+		AND     E.EVNT_TRTM_DT  = ( SELECT MIN(EVNT_TRTM_DT) FROM MSP_JUO_FEATURE_INFO WHERE CONTRACT_NUM = A.CONTRACT_NUM AND SERVICE_TYPE = 'P' )
+		AND     F.STDR_MON      = TO_CHAR(ADD_MONTHS(TO_DATE(#{CLS_ACNT_YM}, 'YYYYMM'), 1), 'YYYYMM')
+		AND     F.CONTRACT_NUM  = A.CONTRACT_NUM 
+		AND     F.SALE_PLCY_ID  = G.SALE_PLCY_CD
+		AND     G.RATE_CD       = E.SOC
+		AND     G.PRDT_ID       = C.MODEL_ID
+		AND     G.OLD_YN        = D.OLD_YN
+		AND     G.OPER_TYPE     = DECODE(A.MNP_IND_CD, '1', 'MNP3', 'NAC3')
+		AND     G.AGRM_TRM      = B.ENGG_MNTH_CNT
+		AND     G.ORGN_ID       = A.OPEN_AGNT_CD
+	</insert>
+	
+	<!-- 할부매입정보등록 -->
+	<insert id="insertInstBondPrchInfo" parameterType="map">
+        /* prchMgmtMapper.insertInstBondPrchInfo */
+        INSERT INTO CLS_INST_BOND_PRCH_INFO
+		(
+		    PRCH_YM
+		    , ORGN_ID
+		    , INST_CNT
+		    , INST_AMT
+		    , INST_VAT
+		    , INST_INT_AMT
+		    , INST_INT_VAT
+		    , SPT_AMT
+		    , SPT_VAT
+		    , AGNCY_AMT
+		    , AGNCY_VAT
+		    , PRCH_INST_AMT
+		    , PRCH_INST_VAT
+		    , PRCH_INST_INT_VAT
+		    , CLS_ACNT_PROC_AMT
+		    , CASH_PRVD_AMT
+		    , PRCH_STAT_CD
+		    , PRVD_YN
+		    , REGST_ID
+		    , REG_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT
+		    A.PRCH_YM
+		    , A.ORGN_ID
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', 1, -1)) AS INST_CNT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.INST_AMT, A.INST_AMT * -1)) AS INST_AMT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.INST_VAT, A.INST_VAT * -1)) AS INST_VAT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.INST_INT_AMT, A.INST_INT_AMT * -1)) AS INST_INT_AMT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.INST_INT_VAT, A.INST_INT_VAT * -1)) AS INST_INT_VAT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.SPT_AMT, A.SPT_AMT * -1)) AS SPT_AMT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.SPT_VAT, A.SPT_VAT * -1)) AS SPT_VAT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.AGNCY_AMT, A.AGNCY_AMT * -1)) AS AGNCY_AMT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.AGNCY_VAT, A.AGNCY_VAT * -1)) AS AGNCY_VAT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.PRCH_INST_AMT, A.PRCH_INST_AMT * -1)) AS PRCH_INST_AMT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.PRCH_INST_VAT, A.PRCH_INST_VAT * -1)) AS PRCH_INST_VAT
+		    , SUM(DECODE(A.INST_OCCR_SCTN_CD, '10', A.PRCH_INST_INT_VAT, A.PRCH_INST_INT_VAT * -1)) AS PRCH_INST_INT_VAT
+		    , 0 AS CLS_ACTN_PROC_AMT
+		    , 0 AS CASH_PRVD_AMT
+		    , '10' AS PRCH_STAT_CD
+		    , 'N' AS CMSN_PRVD_YN
+		    , #{USER_ID, jdbcType=VARCHAR}
+		    , SYSDATE
+		    , #{USER_ID, jdbcType=VARCHAR}
+		    , SYSDATE
+		FROM
+		    CLS_INST_BOND_PRCH_DTL A
+		WHERE
+		    A.PRCH_YM = #{CLS_ACNT_YM, jdbcType=VARCHAR}
+		GROUP BY A.PRCH_YM, A.ORGN_ID
+	</insert>
+	
+	<!-- 수수료매입정보 삭제 -->
+	<select id="deleteCmsnPrchInfo" parameterType="map">
+    	/* prchMgmtMapper.deleteCmsnPrchInfo */
+    	DELETE FROM CLS_CMSN_PRCH_INFO
+    	WHERE
+    		PRCH_YM = #{PRCH_YM, jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 할부채권상세내역 생성(해지) -->
+	<insert id="insertInstBondPrchDtlTmntBatch" parameterType="map">
+    	/* prchMgmtMapper.insertInstBondPrchDtlTmntBatch */
+    	INSERT INTO CLS_INST_BOND_PRCH_DTL
+		(
+		    PRCH_YM
+		    , ORGN_ID
+		    , PRCH_SRL_NUM
+		    , INST_OCCR_SCTN_CD
+		    , INST_AMT
+		    , INST_VAT
+		    , INST_INT_AMT
+		    , INST_INT_VAT
+		    , SPT_AMT
+		    , SPT_VAT
+		    , AGNCY_AMT
+		    , AGNCY_VAT
+		    , PRCH_INST_AMT
+		    , PRCH_INST_VAT
+		    , PRCH_INST_INT_VAT
+		    , SRVC_CNTR_NUM
+		    , OPEN_DT
+		    , TMNT_DT
+		    , PRDT_ID
+		    , PRDT_SRL_NUM
+		    , REGST_ID
+		    , REG_DTTM
+		    , RVISN_ID
+		    , RVISN_DTTM
+		)
+		SELECT
+			#{CLS_ACNT_YM} AS PRCH_YM
+		    , A.OPEN_AGNT_CD AS ORGN_ID
+		    , SQ_CLS_PRCH_01.NEXTVAL
+		    , '20' AS INST_OCCR_SCNT_CD		/* 해지 */
+		    , B.INST_AMT					/* 할부원금 */
+		    , B.INST_VAT					/* 할부원금부가세 */
+		    , B.INST_INT_AMT				/* 할부수수료 */
+		    , B.INST_INT_VAT				/* 할부수수료부가세 */
+		    , B.SPT_AMT						/* 공시지원금 */
+		    , B.SPT_VAT						/* 공시지원금부가세 */
+		    , B.AGNCY_AMT					/* 대리점보조금 */
+		    , B.AGNCY_VAT					/* 대리점보조금부가세 */
+		    , B.PRCH_INST_AMT				/* 매입할부원금 */
+		    , B.PRCH_INST_VAT				/* 매입할부원금부가세 */
+		    , B.PRCH_INST_INT_VAT			/* 매입할부수수료부가세 */
+		    , B.SRVC_CNTR_NUM				/* 계약번호 */
+		    , B.OPEN_DT						/* 개통일자 */
+		    , SUBSTR(A.SUB_STATUS_DATE, 1, 8) AS TMNT_DT	/* 해지일자 */
+		    , B.PRDT_ID						/* 제품ID */
+		    , B.PRDT_SRL_NUM				/* 제품일련번호 */
+		    , #{USER_ID}
+		    , SYSDATE
+		    , #{USER_ID}
+		    , SYSDATE
+		FROM
+			MSP_JUO_SUB_INFO A
+		    , CLS_INST_BOND_PRCH_DTL B
+		WHERE
+			A.LST_COM_ACTV_DATE LIKE TO_CHAR(ADD_MONTHS(TO_DATE(#{CLS_ACNT_YM}, 'YYYYMM'), -1), 'YYYYMM') || '%'
+		    AND A.PPPO = 'PO'
+		    AND A.SUB_STATUS = 'C'
+		    AND A.SUB_STATUS_DATE LIKE #{CLS_ACNT_YM} || '%'
+		    /* 전월개통 당월해지 기간이 14일 이내인 경우 */
+		    AND TO_DATE(SUBSTR(A.SUB_STATUS_DATE, 1, 8), 'YYYYMMDD') - TO_DATE(A.LST_COM_ACTV_DATE, 'YYYYMMDD') <![CDATA[ < ]]> 15
+		    AND A.CONTRACT_NUM = B.SRVC_CNTR_NUM
+	</insert>
+	
+</mapper>

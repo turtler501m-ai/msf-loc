@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktis.msp.batch.job.rsk.unpaybondmgmt.mapper.UnpayBondMgmtMapper">
+	
+	<select id="getUnpayBondDtlListEx" parameterType="com.ktis.msp.batch.job.rsk.unpaybondmgmt.vo.UnpayBondMgmtVO" 
+									resultType="egovframework.rte.psl.dataaccess.util.EgovMap" >
+		/* UnpayBondMgmtMapper.getUnpayBondDtlListEx */
+		SELECT  TO_CHAR(TO_DATE(A.STDR_YM, 'YYYYMM'), 'YYYY-MM') AS STDR_YM_EX
+		        , TO_CHAR(TO_DATE(A.USG_YM, 'YYYYMM'), 'YYYY-MM') AS USG_YM_EX
+		        , TO_CHAR(TO_DATE(A.BILL_YM, 'YYYYMM'), 'YYYY-MM') AS BILL_YM_EX
+		        , FN_GET_SALE_ITMNM(A.BILL_ITEM_CD) AS SALE_ITM_NM
+		        , SUM(NVL(A.INV_AMNT,0)) AS INV_AMNT
+		        , SUM(NVL(A.INV_VAT ,0)) AS INV_VAT
+		        , SUM(NVL(A.ADJ_A_AMNT,0)) AS ADJ_A_AMNT
+		        , SUM(NVL(A.ADJ_A_VAT,0)) AS ADJ_A_VAT
+		        , SUM(NVL(A.ADJ_B_AMNT,0)) AS ADJ_B_AMNT
+		        , SUM(NVL(A.ADJ_B_VAT ,0)) AS ADJ_B_VAT
+		        , SUM(NVL(A.ADJ_C_AMNT,0)) AS ADJ_C_AMNT
+		        , SUM(NVL(A.ADJ_C_VAT ,0)) AS ADJ_C_VAT
+		        , SUM(NVL(A.ADJ_D_AMNT,0)) AS ADJ_D_AMNT
+		        , SUM(NVL(A.ADJ_D_VAT ,0)) AS ADJ_D_VAT
+		        , SUM(NVL(A.ADJ_E_AMNT,0)) AS ADJ_E_AMNT
+		        , SUM(NVL(A.ADJ_E_VAT ,0)) AS ADJ_E_VAT
+		        , SUM(NVL(A.ADJ_F_AMNT,0)) AS ADJ_F_AMNT
+		        , SUM(NVL(A.ADJ_F_VAT ,0)) AS ADJ_F_VAT
+		        , SUM(NVL(A.ADJ_G_AMNT,0)) AS ADJ_G_AMNT
+		        , SUM(NVL(A.ADJ_G_VAT ,0)) AS ADJ_G_VAT
+		        , SUM(NVL(A.ADJ_H_AMNT,0)) AS ADJ_H_AMNT
+		        , SUM(NVL(A.ADJ_H_VAT ,0)) AS ADJ_H_VAT
+		        , SUM(NVL(A.ADJ_AMNT,0)) AS ADJ_AMNT
+		        , SUM(NVL(A.ADJ_VAT ,0)) AS ADJ_VAT
+		        , SUM(NVL(A.ADJ_AMNT,0) + NVL(ADJ_VAT,0)) AS TOT_ADJ_AMNT
+		        , SUM(NVL(A.INV_AMNT,0) + NVL(A.INV_VAT,0) - (NVL(A.ADJ_AMNT,0) + NVL(A.ADJ_VAT,0))) AS TOT_INV_AMNT
+		        , SUM(NVL(A.PYM_AMNT,0)) AS PYM_AMNT
+		        , SUM(NVL(A.PYM_VAT ,0)) AS PYM_VAT
+		        , SUM(NVL(A.PYM_AMNT,0) + NVL(A.PYM_VAT,0)) AS TOT_PYM_AMNT
+		        , SUM(NVL(A.UNPD_AMNT,0)) AS UNPD_AMNT
+		        , SUM(NVL(A.UNPD_VAT ,0)) AS UNPD_VAT
+		        , SUM(NVL(A.UNPD_AMNT,0) + NVL(A.UNPD_VAT,0)) AS TOT_UNPD_AMNT
+		        , A.SVC_CNTR_NO
+		        , MAX(A.CONTRACT_NUM) AS CONTRACT_NUM
+		        , TO_CHAR(TO_DATE(MIN(A.DUEDAT_DATE), 'YYYYMMDD'), 'YYYY-MM-DD') AS DUEDAT_DATE_EX
+		        , TO_CHAR(TO_DATE(MAX(A.BLPYM_DATE), 'YYYYMMDD'), 'YYYY-MM-DD') AS BLPYM_DATE_EX
+		        , FN_GET_CODENM ('CLS0045', MAX(A.PYMN_MTHD_CD)) AS PYMN_MTHD_NM
+		        , FN_GET_CODENM ('MSP0003', MIN(B.SUB_STATUS)) AS STATUS_NM
+		        , MIN(B.SUB_LINK_NAME) AS SUB_LINK_NAME
+		        , FN_GET_ORGNM(DECODE(B.OPEN_AGNT_CD, NULL, '1100011741', 'K000001', '1100011741', 'AA00364', '1100011741', '1100005928', '1100011741', B.OPEN_AGNT_CD)) AS OPEN_AGNT_NM
+		        , CASE
+		            WHEN MIN(A.DUEDAT_DATE) <![CDATA[ < ]]> MAX(A.BLPYM_DATE) THEN TRUNC(MONTHS_BETWEEN(TO_DATE(NVL(MAX(A.BLPYM_DATE), TO_CHAR(SYSDATE, 'YYYYMMDD')), 'YYYYMMDD'), TO_DATE(MIN(A.DUEDAT_DATE), 'YYYYMMDD')))
+		            ELSE 0
+		        END AS UNPD_MNTH_CNT
+		FROM    MSP_UNPD_BOND_MST A
+		        , MSP_JUO_SUB_INFO B
+		WHERE   A.STDR_YM = #{stdrYm}
+		AND     A.BILL_YM BETWEEN #{strtYm} AND #{endYm}
+		AND     A.CONTRACT_NUM = B.CONTRACT_NUM(+)
+		GROUP BY A.STDR_YM, A.USG_YM, A.BILL_YM, A.BILL_ITEM_CD, A.SVC_CNTR_NO, B.OPEN_AGNT_CD
+		ORDER BY A.BILL_YM, A.SVC_CNTR_NO, A.BILL_ITEM_CD
+	</select>
+	
+	<!-- 미납채권자료생성 -->
+	<insert id="callUnpdBondSttc" statementType="CALLABLE">
+		/* SchdMgmtMapper.callUnpdBondSttc */
+		{ CALL P_UNPD_BOND_STTC }
+	</insert>
+	
+</mapper>
