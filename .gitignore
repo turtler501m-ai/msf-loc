@@ -24,6 +24,8 @@ msf/msf-web/*.local
 .merge/
 msf/.merge/
 .doc/.backup/
+msp-batch-daemon/
+msc-prx/
 
 # ===========================
 # 빌드/스크립트 임시 파일
@@ -41,6 +43,8 @@ msf/.idea/
 *.iws
 *.ipr
 .vscode/
+!msf-form-web/.vscode/
+!msf-form-web/.vscode/settings.json
 *.swp
 *.swo
 
