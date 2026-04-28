@@ -108,6 +108,44 @@ public class MsfMplatFormOsstWebServerAdapter {
 					selfStringBuffer.append("  </soap:Body>");
 					selfStringBuffer.append("</soap:Envelope>");
 					responseXml = selfStringBuffer.toString();
+				}else if ("EP0".equals(appEventCd)) {
+
+					StringBuffer selfStringBuffer = new StringBuffer();
+					selfStringBuffer.append("<soap:Envelope xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>");
+					selfStringBuffer.append("  <soap:Body>");
+					selfStringBuffer.append("    <ns2:osstCanPrcResponse xmlns:ns2='http://osst.so.itl.mvno.kt.com/'>");
+					selfStringBuffer.append("      <return>");
+					selfStringBuffer.append("        <bizHeader>");
+					selfStringBuffer.append("          <appEntrPrsnId>KIS</appEntrPrsnId>");
+					selfStringBuffer.append("          <appAgncCd>AA00364</appAgncCd>");
+					selfStringBuffer.append("          <appEventCd>EP0</appEventCd>");
+					selfStringBuffer.append("          <appSendDateTime>20260427140500</appSendDateTime>");
+					selfStringBuffer.append("          <appRecvDateTime>20260427140500</appRecvDateTime>");
+					selfStringBuffer.append("          <appLgDateTime>20260427140500</appLgDateTime>");
+					selfStringBuffer.append("          <appNstepUserId>DEVTEST</appNstepUserId>");
+					selfStringBuffer.append("          <appOrderId/>");
+					selfStringBuffer.append("        </bizHeader>");
+					selfStringBuffer.append("        <commHeader>");
+					selfStringBuffer.append("          <globalNo>DEV_EP0_000001</globalNo>");
+					selfStringBuffer.append("          <encYn/>");
+					selfStringBuffer.append("          <responseType>N</responseType>");
+					selfStringBuffer.append("          <responseCode/>");
+					selfStringBuffer.append("          <responseLogcd/>");
+					selfStringBuffer.append("          <responseTitle/>");
+					selfStringBuffer.append("          <responseBasic/>");
+					selfStringBuffer.append("          <langCode/>");
+					selfStringBuffer.append("          <filler/>");
+					selfStringBuffer.append("        </commHeader>");
+					selfStringBuffer.append("        <outDto>");
+					selfStringBuffer.append("          <osstOrdNo>20260427000001</osstOrdNo>");
+					selfStringBuffer.append("          <rslt>S</rslt>");
+					selfStringBuffer.append("          <rsltMsg>SUCCESS</rsltMsg>");
+					selfStringBuffer.append("        </outDto>");
+					selfStringBuffer.append("      </return>");
+					selfStringBuffer.append("    </ns2:osstCanPrcResponse>");
+					selfStringBuffer.append("  </soap:Body>");
+					selfStringBuffer.append("</soap:Envelope>");
+					responseXml = selfStringBuffer.toString();
 				}else{
 					vo.setSuccess(true);
 					result = true;

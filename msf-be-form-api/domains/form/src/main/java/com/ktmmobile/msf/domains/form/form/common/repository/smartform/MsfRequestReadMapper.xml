@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.common.repository.smartform.MsfRequestReadMapper">
+
+    <select id="selectMcpCancelRequest"
+            parameterType="java.lang.Long"
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.McpCancelRequestVo">
+        SELECT
+            T1.REQUEST_KEY AS CUST_REQ_SEQ
+            , T1.CRET_IP AS RIP
+            , T1.AMD_DT AS RVISN_DTTM
+            , T1.AMD_ID AS RVISN_ID
+            , T1.CANCEL_MOBILE_NO AS CANCEL_MOBILE_NO
+            , T1.CONTRACT_NUM AS CONTRACT_NUM
+            , NULL AS ONLINE_AUTH_TYPE
+            , T1.AUTH_INFO AS ONLINE_AUTH_INFO
+            , T2.CSTMR_NM AS CSTMR_NAME
+            , T2.CSTMR_RECEIVE_TEL_FN_NO || T2.CSTMR_RECEIVE_TEL_NM_NO || T2.CSTMR_RECEIVE_TEL_RN_NO AS RECEIVE_MOBILE_NO
+            , T1.BENEFIT_AGREE_YN AS BENEFIT_AGREE_FLAG
+            , T1.CLAUSE_CNTR_DEL_YN AS CLAUSE_CNTR_DEL_FLAG
+            , T1.ETC_AGREE_YN AS ETC_AGREE_FLAG
+            , NULL AS SURVEY1_CD
+            , NULL AS SURVEY1_TEXT
+            , NULL AS SURVEY2_CD
+            , NULL AS SURVEY2_TEXT
+            , NULL AS SURVEY_SCORE
+            , NULL AS SURVEY_SUGGESTION
+            , T1.MEMO AS MEMO
+            , T1.REG_DATE AS SYS_RDATE_DD
+            , T1.REGST_ID AS REGST_ID
+            , T1.REG_DT AS REGST_DTTM
+            , T1.PROC_CD AS PROC_CD
+            , T1.SCAN_ID AS SCAN_ID
+        FROM MSF_REQUEST_CANCEL T1
+        INNER JOIN MSF_REQUEST_CSTMR T2
+            ON T2.REQUEST_KEY = T1.REQUEST_KEY
+        WHERE 1 = 1
+          AND T1.REQUEST_KEY = #{requestKey}
+          AND T2.REQUEST_KEY = #{requestKey}
+    </select>
+</mapper>

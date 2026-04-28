@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.common.repository.msp.McpRequestWriteMapper">
+
+    <insert id="insertMcpCancelRequest"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpCancelRequestVo">
+        INSERT INTO MCP_CANCEL_REQUEST@DL_MCP
+        (
+            CUST_REQ_SEQ
+            , RIP
+            , RVISN_DTTM
+            , RVISN_ID
+            , CANCEL_MOBILE_NO
+            , CONTRACT_NUM
+            , ONLINE_AUTH_TYPE
+            , ONLINE_AUTH_INFO
+            , CSTMR_NAME
+            , RECEIVE_MOBILE_NO
+            , BENEFIT_AGREE_FLAG
+            , CLAUSE_CNTR_DEL_FLAG
+            , ETC_AGREE_FLAG
+            , SURVEY1_CD
+            , SURVEY1_TEXT
+            , SURVEY2_CD
+            , SURVEY2_TEXT
+            , SURVEY_SCORE
+            , SURVEY_SUGGESTION
+            , MEMO
+            , SYS_RDATE_DD
+            , REGST_ID
+            , REGST_DTTM
+            , PROC_CD
+            , SCAN_ID
+        )
+        VALUES
+        (
+            #{custReqSeq, jdbcType=NUMERIC}
+            , #{rip, jdbcType=VARCHAR}
+            , TO_DATE(#{rvisnDttm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS')
+            , #{rvisnId, jdbcType=VARCHAR}
+            , #{cancelMobileNo, jdbcType=VARCHAR}
+            , #{contractNum, jdbcType=VARCHAR}
+            , #{onlineAuthType, jdbcType=VARCHAR}
+            , #{onlineAuthInfo, jdbcType=VARCHAR}
+            , #{cstmrName, jdbcType=VARCHAR}
+            , #{receiveMobileNo, jdbcType=VARCHAR}
+            , #{benefitAgreeFlag, jdbcType=VARCHAR}
+            , #{clauseCntrDelFlag, jdbcType=VARCHAR}
+            , #{etcAgreeFlag, jdbcType=VARCHAR}
+            , #{survey1Cd, jdbcType=VARCHAR}
+            , #{survey1Text, jdbcType=VARCHAR}
+            , #{survey2Cd, jdbcType=VARCHAR}
+            , #{survey2Text, jdbcType=VARCHAR}
+            , #{surveyScore, jdbcType=VARCHAR}
+            , #{surveySuggestion, jdbcType=VARCHAR}
+            , #{memo, jdbcType=VARCHAR}
+            , #{sysRdateDd, jdbcType=VARCHAR}
+            , #{regstId, jdbcType=VARCHAR}
+            , TO_DATE(#{regstDttm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS')
+            , #{procCd, jdbcType=VARCHAR}
+            , #{scanId, jdbcType=VARCHAR}
+        )
+    </insert>
+</mapper>

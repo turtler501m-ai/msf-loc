@@ -42,16 +42,19 @@ export const useMsfMenuStore = defineStore('msfMenu', {
         id: '05',
         name: '부가기능',
         url: '/extra',
-        iconName: 'tempStorage',
+        iconName: 'ManagePage', //PNB 테스트용 추가
         children: [
           { id: '0501', name: '임시저장', url: '/extra/tempsave/TempSavePage' },
           { id: '0502', name: '접수완료 신청서', url: '/extra/receipt/ReceiptPage' },
           {
             id: '0503',
             name: '간편 신청서',
-            url: '/extra/simplerequest/SimpleRequestPage',
+            url: '/extra/simplerequest/SimpleRequestPage', //PNB 테스트용 추가
           },
-          // { id: '0504', name: '로그인 설정', url: '/extra/mobileapp/MobileAppPage' },
+          ...(['loc', 'dev'].includes(import.meta.env.MODE)
+            ? [{ id: '0509', name: '신청서 관리(개발)', url: '/extra/receipt/ManageDevPage' }]
+            : []),
+          // { id: '0505', name: '로그인 설정', url: '/extra/mobileapp/MobileAppPage' },
         ],
       },
     ],

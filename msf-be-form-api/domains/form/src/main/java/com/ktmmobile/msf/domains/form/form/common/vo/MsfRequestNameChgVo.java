@@ -1,0 +1,99 @@
+package com.ktmmobile.msf.domains.form.form.common.vo;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+public class MsfRequestNameChgVo {
+
+    Long requestKey;
+    String cretIp;
+    String cretDt;
+    String cretId;
+    String amdIp;
+    String amdDt;
+    String amdId;
+    String managerCd;
+    String managerNm;
+    String agentCd;
+    String agentNm;
+    String shopCd;
+    String shopNm;
+    String realShopNm;
+    String cpntId;
+    String cpntNm;
+    String cntpntShopCd;
+    String cntpntShopNm;
+    String operTypeCd;
+    String cstmrTypeCd;
+    String mcnResNo;
+    String identityCertTypeCd;
+    String knoteIdentityScanCstmrNm;
+    String knoteIdentityEssNo;
+    String knoteIdentityTypeCd;
+    String knoteIdentityScanDt;
+    String knoteScanId;
+    String fathTrgYn;
+    String fathTrgIdentityCertTypeCd;
+    String fathTransacId;
+    String fathCmpltNtfyDate;
+    String fathTelNo;
+    String fathMobileFnNo;
+    String fathMobileMnNo;
+    String fathMobileRnNo;
+    String authInfo;
+    String identityTypeCd;
+    String identityIssuDate;
+    String identityIssuRegion;
+    String selfIssuNo;
+    String driveLicnsNo;
+    String reqInfoChgYn;
+    String soc;
+    String socNm;
+    Long socBaseChrgAmt;
+    String jehuProdTypeCd;
+    String usimSuccYn;
+    String usimSn;
+    String iccId;
+    String eid;
+    String imei1;
+    String imei2;
+    String esimPhoneId;
+    Long uploadPhoneSrlNo;
+    String remainPayDivCd;
+    String clauseCntrDelYn;
+    String clausePriCollectYn;
+    String clausePriOfferYn;
+    String clauseEssCollectYn;
+    String clauseConfidenceYn;
+    String clausePriAdYn;
+    String clauseJehuYn;
+    String clauseFinanceYn;
+    String personalInfoCollectAgreeYn;
+    String othersTrnsAgreeYn;
+    String othersTrnsKtAgreeYn;
+    String othersAdReceiveAgreeYn;
+    String clauseFathYn;
+    String mcnStatRsnCd;
+    String memo;
+    String regDate;
+    String regstId;
+    String regDt;
+    String procDt;
+    String procCd;
+    String mcnStateCd;
+    String rcvCustNo;
+    String rcvBillAcntNo;
+    String recYn;
+    String resCd;
+    String resMsg;
+    String scanId;
+    String appFormYn;
+    String appFormXmlYn;
+    String fileNm;
+    String fileMaskNm;
+
+}

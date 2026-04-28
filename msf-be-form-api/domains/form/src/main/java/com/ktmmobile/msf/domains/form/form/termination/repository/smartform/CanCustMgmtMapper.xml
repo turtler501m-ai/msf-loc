@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ktmmobile.msf.domains.form.form.termination.repository.smartform.CanCustMgmtMapper">
+
+    <!-- 신청서 전체 UNION ALL (신규/변경·서비스변경·명의변경·서비스해지) -->
+    <sql id="appFormUnion">
+        SELECT
+            R.REQUEST_KEY
+           ,R.CRET_DT
+           ,'1'                AS FORM_TYPE_CD
+           ,R.OPER_TYPE_CD
+           ,R.PRO_STTUS_CD     AS PROC_CD
+           ,C.CSTMR_NM
+           ,COALESCE(NULLIF(C.CSTMR_NATIVE_BIRTH,''), NULLIF(C.CSTMR_FOREIGNER_BIRTH,''), NULLIF(C.CSTMR_JURIDICAL_BIRTH,'')) AS CSTMR_BIRTH
+           ,R.CSTMR_TYPE_CD
+           ,R.IDENTITY_CERT_TYPE_CD
+           ,R.AGENT_CD
+           ,NULL               AS AGENT_NM
+           ,R.SHOP_CD
+           ,R.SHOP_NM
+           ,R.MANAGER_CD       AS MANAGER_NM
+           ,NULL               AS REGST_ID
+           ,R.AMD_ID
+           ,R.MEMO
+           ,R.CONTRACT_NUM
+           ,NULL               AS CANCEL_MOBILE_NO
+           ,R.RES_CD
+           ,R.RES_MSG
+           ,R.RES_NO
+        FROM MSF_REQUEST R
+        LEFT JOIN MSF_REQUEST_CSTMR C ON R.REQUEST_KEY = C.REQUEST_KEY
+        UNION ALL
+        SELECT
+            S.REQUEST_KEY
+           ,S.CRET_DT
+           ,'2'                AS FORM_TYPE_CD
+           ,NULL               AS OPER_TYPE_CD
+           ,S.PROC_CD
+           ,C.CSTMR_NM
+           ,COALESCE(NULLIF(C.CSTMR_NATIVE_BIRTH,''), NULLIF(C.CSTMR_FOREIGNER_BIRTH,''), NULLIF(C.CSTMR_JURIDICAL_BIRTH,'')) AS CSTMR_BIRTH
+           ,S.CSTMR_TYPE_CD
+           ,NULL               AS IDENTITY_CERT_TYPE_CD
+           ,S.AGENT_CD
+           ,NULL               AS AGENT_NM
+           ,S.SHOP_CD
+           ,S.SHOP_NM
+           ,S.MANAGER_CD       AS MANAGER_NM
+           ,S.REGST_ID
+           ,S.AMD_ID
+           ,S.MEMO
+           ,NULL               AS CONTRACT_NUM
+           ,S.CHG_MOBILE_NO    AS CANCEL_MOBILE_NO
+           ,S.RES_CD
+           ,S.RES_MSG
+           ,S.RES_NO
+        FROM MSF_REQUEST_SVC_CHG S
+        LEFT JOIN MSF_REQUEST_CSTMR C ON S.REQUEST_KEY = C.REQUEST_KEY
+        UNION ALL
+        SELECT
+            N.REQUEST_KEY
+           ,N.CRET_DT
+           ,'3'                AS FORM_TYPE_CD
+           ,N.OPER_TYPE_CD
+           ,N.PROC_CD
+           ,'' CSTMR_NM
+           ,COALESCE(NULLIF(C.CSTMR_NATIVE_BIRTH,''), NULLIF(C.CSTMR_FOREIGNER_BIRTH,''), NULLIF(C.CSTMR_JURIDICAL_BIRTH,'')) AS CSTMR_BIRTH
+           ,N.CSTMR_TYPE_CD
+           ,N.IDENTITY_CERT_TYPE_CD
+           ,N.AGENT_CD
+           ,NULL               AS AGENT_NM
+           ,N.SHOP_CD
+           ,N.SHOP_NM
+           ,N.MANAGER_CD       AS MANAGER_NM
+           ,N.REGST_ID
+           ,N.AMD_ID
+           ,N.MEMO
+           ,NULL               AS CONTRACT_NUM
+           ,NULL               AS CANCEL_MOBILE_NO
+           ,N.RES_CD
+           ,N.RES_MSG
+           ,'' RES_NO
+        FROM MSF_REQUEST_NAME_CHG N
+        LEFT JOIN MSF_REQUEST_CSTMR C ON N.REQUEST_KEY = C.REQUEST_KEY
+        UNION ALL
+        SELECT
+            RC.REQUEST_KEY
+           ,RC.CRET_DT
+           ,'4'                AS FORM_TYPE_CD
+           ,RC.OPER_TYPE_CD
+           ,RC.PROC_CD
+           ,C.CSTMR_NM
+           ,COALESCE(NULLIF(C.CSTMR_NATIVE_BIRTH,''), NULLIF(C.CSTMR_FOREIGNER_BIRTH,''), NULLIF(C.CSTMR_JURIDICAL_BIRTH,'')) AS CSTMR_BIRTH
+           ,RC.CSTMR_TYPE_CD
+           ,RC.IDENTITY_CERT_TYPE_CD
+           ,RC.AGENT_CD
+           ,RC.AGENT_NM
+           ,RC.SHOP_CD
+           ,RC.SHOP_NM
+           ,RC.MANAGER_NM
+           ,RC.REGST_ID
+           ,RC.AMD_ID
+           ,RC.MEMO
+           ,RC.CONTRACT_NUM
+           ,RC.CANCEL_MOBILE_NO
+           ,RC.RES_CD
+           ,RC.RES_MSG
+           ,RC.RES_NO
+        FROM MSF_REQUEST_CANCEL RC
+        LEFT JOIN MSF_REQUEST_CSTMR C ON RC.REQUEST_KEY = C.REQUEST_KEY
+    </sql>
+
+    <!-- 신청서 목록 건수 조회 -->
+    <select id="selectAppFormListCount"
+            parameterType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ListReqDto"
+            resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM (
+            <include refid="appFormUnion"/>
+        ) T
+        WHERE 1 = 1
+        <if test="formTypeCd != null and formTypeCd != ''">
+            AND T.FORM_TYPE_CD = #{formTypeCd}
+        </if>
+        <if test="procCd != null and procCd != ''">
+            AND T.PROC_CD = #{procCd}
+        </if>
+        <choose>
+            <when test="searchGbn != null and searchGbn != '' and searchName != null and searchName != ''">
+                <choose>
+                    <when test="searchGbn == 'CONTRACT_NUM'">AND T.CONTRACT_NUM = #{searchName}</when>
+                    <when test="searchGbn == 'CANCEL_MOBILE_NO'">AND T.CANCEL_MOBILE_NO = #{searchName}</when>
+                    <when test="searchGbn == 'CSTMR_NM'">AND T.CSTMR_NM LIKE '%' || #{searchName} || '%'</when>
+                </choose>
+            </when>
+            <otherwise>
+                <if test="startDt != null and startDt != ''">
+                    AND TO_CHAR(T.CRET_DT, 'YYYYMMDD') &gt;= #{startDt}
+                </if>
+                <if test="endDt != null and endDt != ''">
+                    AND TO_CHAR(T.CRET_DT, 'YYYYMMDD') &lt;= #{endDt}
+                </if>
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 신청서 목록 조회 — ASIS: CanCustMgmt_SQL.xml selectCanCslListInfo -->
+    <select id="selectAppFormList"
+            parameterType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ListReqDto"
+            resultType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$DetailDto">
+        SELECT
+            T.REQUEST_KEY,
+            TO_CHAR(T.CRET_DT, 'YYYY-MM-DD HH24:MI:SS') AS CRET_DT,
+            T.FORM_TYPE_CD,
+            T.OPER_TYPE_CD,
+            T.PROC_CD,
+            T.CSTMR_NM,
+            T.CSTMR_BIRTH,
+            T.CSTMR_TYPE_CD,
+            T.IDENTITY_CERT_TYPE_CD,
+            T.AGENT_CD,
+            T.AGENT_NM,
+            T.SHOP_CD,
+            T.SHOP_NM,
+            T.MANAGER_NM,
+            T.REGST_ID,
+            T.AMD_ID,
+            T.MEMO,
+            T.CONTRACT_NUM,
+            T.CANCEL_MOBILE_NO,
+            T.RES_CD,
+            T.RES_MSG,
+            T.RES_NO
+        FROM (
+            <include refid="appFormUnion"/>
+        ) T
+        WHERE 1 = 1
+        <if test="formTypeCd != null and formTypeCd != ''">
+            AND T.FORM_TYPE_CD = #{formTypeCd}
+        </if>
+        <if test="procCd != null and procCd != ''">
+            AND T.PROC_CD = #{procCd}
+        </if>
+        <choose>
+            <when test="searchGbn != null and searchGbn != '' and searchName != null and searchName != ''">
+                <choose>
+                    <when test="searchGbn == 'CONTRACT_NUM'">AND T.CONTRACT_NUM = #{searchName}</when>
+                    <when test="searchGbn == 'CANCEL_MOBILE_NO'">AND T.CANCEL_MOBILE_NO = #{searchName}</when>
+                    <when test="searchGbn == 'CSTMR_NM'">AND T.CSTMR_NM LIKE '%' || #{searchName} || '%'</when>
+                </choose>
+            </when>
+            <otherwise>
+                <if test="startDt != null and startDt != ''">
+                    AND TO_CHAR(T.CRET_DT, 'YYYYMMDD') &gt;= #{startDt}
+                </if>
+                <if test="endDt != null and endDt != ''">
+                    AND TO_CHAR(T.CRET_DT, 'YYYYMMDD') &lt;= #{endDt}
+                </if>
+            </otherwise>
+        </choose>
+        ORDER BY T.CRET_DT DESC
+        <if test="page != null and page.rowSize != null and page.rowSize &gt; 0">
+            LIMIT #{page.rowSize}
+            OFFSET (#{page.pageNum} - 1) * #{page.rowSize}
+        </if>
+    </select>
+
+    <!-- 관리자 해지신청 상세 조회 -->
+    <select id="selectCanCustDetail"
+            parameterType="java.lang.Long"
+            resultType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$DetailDto">
+        SELECT
+            RC.REQUEST_KEY,
+            RC.CONTRACT_NUM,
+            RC.CANCEL_MOBILE_NO,
+            NULLIF(
+                COALESCE(C.CSTMR_RECEIVE_TEL_FN_NO, '') ||
+                COALESCE(C.CSTMR_RECEIVE_TEL_NM_NO, '') ||
+                COALESCE(C.CSTMR_RECEIVE_TEL_RN_NO, ''),
+                ''
+            ) AS RECEIVE_MOBILE_NO,
+            C.CSTMR_NM,
+            RC.CSTMR_TYPE_CD,
+            RC.OPER_TYPE_CD,
+            RC.IDENTITY_CERT_TYPE_CD,
+            RC.AGENT_CD,
+            RC.SHOP_CD,
+            RC.SHOP_NM,
+            COALESCE(NULLIF(C.CSTMR_NATIVE_BIRTH, ''), NULLIF(C.CSTMR_FOREIGNER_BIRTH, ''), NULLIF(C.CSTMR_JURIDICAL_BIRTH, '')) AS CSTMR_BIRTH,
+            CASE
+                WHEN RC.OPER_TYPE_CD IN ('CC', 'CANCEL', 'TERMINATION') THEN '서비스해지'
+                WHEN RC.OPER_TYPE_CD IN ('N', 'NEW', 'NEW_JOIN', 'N01', 'NCHG') THEN '신규/변경(휴대폰 / 신규가입)'
+                WHEN RC.OPER_TYPE_CD IN ('M', 'MNP', 'M01', 'NUM_MOVE') THEN '신규/변경(휴대폰 / 번호이동)'
+                WHEN RC.OPER_TYPE_CD IN ('C', 'CHG', 'C01', 'DEVICE_CHG') THEN '신규/변경(휴대폰 / 기기변경)'
+                WHEN RC.OPER_TYPE_CD IN ('U', 'USIM', 'USIM_NEW', 'U01') THEN '신규/변경(USIM / 신규가입)'
+                ELSE COALESCE(RC.OPER_TYPE_CD, '-')
+            END AS APPLY_TYPE_LABEL,
+            CASE
+                WHEN RC.CSTMR_TYPE_CD IN ('I', 'N', 'NATIVE') THEN '내국인'
+                WHEN RC.CSTMR_TYPE_CD IN ('NM', 'M', 'MINOR') THEN '미성년자(19세 미만)'
+                WHEN RC.CSTMR_TYPE_CD IN ('F', 'FOR', 'FOREIGN') THEN '외국인(Foreigner)'
+                WHEN RC.CSTMR_TYPE_CD IN ('E', 'EXCEPTION') THEN '인증 예외'
+                ELSE COALESCE(RC.CSTMR_TYPE_CD, '-')
+            END AS CSTMR_TYPE_LABEL,
+            CASE
+                WHEN RC.IDENTITY_CERT_TYPE_CD IN ('KNOTE', 'K-NOTE', 'KNOTE_ID', 'KN') THEN 'K-NOTE인증'
+                WHEN RC.IDENTITY_CERT_TYPE_CD IN ('FATH', 'FACE', 'FACE_AUTH') THEN '안면인증'
+                WHEN RC.IDENTITY_CERT_TYPE_CD IN ('MOBILE', 'PASS', 'NICE', 'SMS') THEN '모바일인증'
+                WHEN RC.IDENTITY_CERT_TYPE_CD IN ('E', 'EXCEPTION') THEN '인증 예외'
+                ELSE COALESCE(RC.IDENTITY_CERT_TYPE_CD, '-')
+            END AS AUTH_LABEL,
+            RC.PROC_CD,
+            CASE
+                WHEN RC.PROC_CD = 'RC' THEN '접수완료'
+                WHEN RC.PROC_CD = 'RQ' THEN '처리요청'
+                WHEN RC.PROC_CD = 'CP' THEN '처리완료'
+                WHEN RC.PROC_CD = 'BK' THEN '반려'
+                ELSE COALESCE(RC.PROC_CD, '-')
+            END AS PROC_CD_LABEL,
+            TO_CHAR(RC.PROC_DT, 'YYYY-MM-DD HH24:MI:SS') AS PROC_DT,
+            TO_CHAR(RC.CRET_DT, 'YYYY-MM-DD HH24:MI:SS') AS CRET_DT,
+            TO_CHAR(RC.AMD_DT,  'YYYY-MM-DD HH24:MI:SS') AS AMD_DT,
+            RC.AMD_ID,
+            RC.MEMO,
+            RC.MANAGER_NM,
+            RC.AGENT_NM,
+            RC.PAY_AMT,
+            RC.PNLT_AMT,
+            RC.LAST_SUM_AMT,
+            RC.RES_CD,
+            RC.RES_MSG,
+            RC.RES_NO
+        FROM MSF_REQUEST_CANCEL RC
+        LEFT JOIN MSF_REQUEST_CSTMR C ON RC.REQUEST_KEY = C.REQUEST_KEY
+        WHERE RC.REQUEST_KEY = #{requestKey}
+    </select>
+
+    <!-- 처리 가능 여부 확인 — PROC_CD 조회 -->
+    <!-- ASIS: getCustStatus → PROC_CD='CP' 이면 이미 처리완료 -->
+    <select id="selectProcCd"
+            parameterType="java.lang.Long"
+            resultType="java.lang.String">
+        SELECT PROC_CD
+        FROM MSF_REQUEST_CANCEL
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>
+
+    <!-- PROC_CD 변경 UPDATE — 접수완료(CP)/완료취소(RC) 공통 사용 -->
+    <update id="updateCanCustProcCd"
+            parameterType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ProcessReqDto">
+        UPDATE MSF_REQUEST_CANCEL
+        SET
+            PROC_CD = #{procCd},
+            RES_CD  = #{resCd},
+            RES_MSG = #{resMsg},
+            RES_NO  = #{resNo},
+            MEMO    = #{memo},
+            AMD_ID  = #{amdId},
+            AMD_DT  = NOW()
+        WHERE REQUEST_KEY = #{requestKey}
+          AND PROC_CD != #{procCd}
+    </update>
+
+</mapper>

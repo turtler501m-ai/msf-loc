@@ -303,7 +303,38 @@ cd msf-be-form-api && ./gradlew :app-boot:bootRun
 java -jar app-boot/build/libs/app-boot-1.0.0.jar
 ```
 
-### 4. ASIS → TOBE DB 테이블명 변환 규칙
+### 4. DEV DB 직접 조회 — Node.js pg 사용
+
+DEV PostgreSQL에 직접 쿼리할 때 사용 (`npm install pg` 최초 1회 필요).
+
+```
+Host:     211.184.227.24
+Port:     45432
+Database: msf_core
+Schema:   smartform
+User:     smartform_dev
+Password: dev!!12form
+```
+
+```js
+const { Client } = require('pg');
+const client = new Client({
+  host: '211.184.227.24', port: 45432, database: 'msf_core',
+  user: 'smartform_dev', password: 'dev!!12form', ssl: false
+});
+client.connect()
+  .then(() => client.query(`SELECT * FROM smartform.msf_request_cancel LIMIT 5`))
+  .then(res => { console.log(JSON.stringify(res.rows, null, 2)); return client.end(); })
+  .catch(err => { console.error('ERR:', err.message); process.exit(1); });
+```
+
+PowerShell에서 실행 시 스크립트를 파일로 저장 후 실행:
+```powershell
+$script | Out-File -Encoding utf8 "$env:TEMP\dbquery.js"
+node "$env:TEMP\dbquery.js"
+```
+
+### 5. ASIS → TOBE DB 테이블명 변환 규칙
 
 ASIS Mapper SQL 포팅 시 테이블 출처에 따라 처리 방법이 다르다.
 

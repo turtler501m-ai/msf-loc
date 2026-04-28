@@ -1,6 +1,5 @@
 package com.ktmmobile.msf.domains.form.form.termination.repository;
 
-import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.repository.msp.MspCancelPageMapper;
 import com.ktmmobile.msf.domains.form.form.termination.repository.smartform.CancelPageMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +14,6 @@ public class CancelPageRepositoryImpl {
 
     public Long nextRequestKey() {
         return cancelPageMapper.nextRequestKey();
-    }
-
-    public int insertRequestCancel(TerminationApplyReqDto dto) {
-        return cancelPageMapper.insertRequestCancel(dto);
     }
 
     public int selectPrePayment(String contractNum) {

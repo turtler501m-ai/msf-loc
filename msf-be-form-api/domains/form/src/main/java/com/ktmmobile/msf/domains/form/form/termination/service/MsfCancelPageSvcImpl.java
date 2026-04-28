@@ -22,6 +22,10 @@ import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfChangPageSvc
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeResVO;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.TerminationSettlementDto;
+import com.ktmmobile.msf.domains.form.form.common.repository.McpRequestRepositoryImpl;
+import com.ktmmobile.msf.domains.form.form.common.repository.MsfRequestRepositoryImpl;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCancelVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
 import com.ktmmobile.msf.domains.form.form.termination.repository.CancelPageRepositoryImpl;
@@ -34,6 +38,12 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
 
     @Autowired
     private CancelPageRepositoryImpl cancelPageRepository;
+
+    @Autowired
+    private MsfRequestRepositoryImpl msfRequestRepository;
+
+    @Autowired
+    private McpRequestRepositoryImpl mcpRequestRepository;
 
     @Autowired
     private MsfMplatFormService msfMplatFormService;
@@ -354,57 +364,92 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             }
             logger.debug("[apply] request key generated: requestKey={}, ncn={}", requestKey, safe(reqDto.getCustomer().getNcn()));
 
-            TerminationApplyReqDto dto = reqDto;
-            dto.setRequestKey(requestKey);
-            dto.setManagerCd(managerCd);
-            dto.setManagerNm(managerNm);
-            dto.setAgentCd(agentCd);
-            dto.setAgentNm(agentNm);
-            dto.setShopCd(agentCd);
-            dto.setShopNm(agentNm);
-            dto.setRealShopNm(agentNm);
-            dto.setCpntId(safe(reqDto.getCustomer().getCpntId()));
-            dto.setCpntNm(safe(reqDto.getCustomer().getCpntNm()));
-            dto.setCntpntShopCd(safe(reqDto.getCustomer().getCntpntShopCd()));
-            dto.setCntpntShopNm(safe(reqDto.getCustomer().getCntpntShopNm()));
-            dto.setOperTypeCd("CC");
-            dto.setCstmrTypeCd(cstmrTypeCd);
-            dto.setCancelMobileNo(cancelMobileNo);
-            dto.setContractNum(reqDto.getCustomer().getNcn());
-            dto.setCstmrNm(reqDto.getCustomer().getUserName());
-            dto.setReceiveMobileNo(receiveMobileNo);
-            dto.setReceiveWayCd(receiveWayCd);
-            dto.setCancelUseCompanyCd(normalizeUseType(reqDto.getProduct().getIsActive()));
-            dto.setPayAmt(parseLong(reqDto.getProduct().getUsageFee()));
-            dto.setPnltAmt(parseLong(reqDto.getProduct().getPenaltyFee()));
-            dto.setLastSumAmt(parseLong(reqDto.getProduct().getFinalAmount()));
-            dto.setInstamtMnthCnt(parseInteger(reqDto.getProduct().getRemainPeriod()));
-            dto.setInstamtMnthAmt(parseLong(reqDto.getProduct().getRemainAmount()));
-            dto.setBenefitAgreeYn(toYn(reqDto.getAgreement().isAgreeCheck1()));
-            dto.setClauseCntrDelYn(toYn(reqDto.getAgreement().isAgreeCheck2()));
-            dto.setEtcAgreeYn(toYn(reqDto.getAgreement().isAgreeCheck3()));
-            dto.setMemo(reqDto.getProduct().getMemo());
-            dto.setRecYn("N");
-            dto.setAppFormYn("N");
-            dto.setAppFormXmlYn("N");
-            dto.setRegstId("MSF_FORM");
-            dto.setProcCd("RC");
-            dto.setCretId("MSF_FORM");
-            dto.setAmdId("MSF_FORM");
-            dto.setCretIp("127.0.0.1");
-            dto.setAmdIp("127.0.0.1");
+            MsfRequestCancelVo vo = new MsfRequestCancelVo();
+            vo.setRequestKey(requestKey);
+            vo.setManagerCd(managerCd);
+            vo.setManagerNm(managerNm);
+            vo.setAgentCd(agentCd);
+            vo.setAgentNm(agentNm);
+            vo.setShopCd(agentCd);
+            vo.setShopNm(agentNm);
+            vo.setRealShopNm(agentNm);
+            vo.setCpntId(safe(reqDto.getCustomer().getCpntId()));
+            vo.setCpntNm(safe(reqDto.getCustomer().getCpntNm()));
+            vo.setCntpntShopCd(safe(reqDto.getCustomer().getCntpntShopCd()));
+            vo.setCntpntShopNm(safe(reqDto.getCustomer().getCntpntShopNm()));
+            vo.setOperTypeCd("CC");
+            vo.setCstmrTypeCd(cstmrTypeCd);
+            vo.setCancelMobileNo(cancelMobileNo);
+            vo.setContractNum(reqDto.getCustomer().getNcn());
+            vo.setReceiveWayCd(receiveWayCd);
+            vo.setCancelUseCompanyCd(normalizeUseType(reqDto.getProduct().getIsActive()));
+            vo.setPayAmt(parseLong(reqDto.getProduct().getUsageFee()));
+            vo.setPnltAmt(parseLong(reqDto.getProduct().getPenaltyFee()));
+            vo.setLastSumAmt(parseLong(reqDto.getProduct().getFinalAmount()));
+            Integer instamtMnthCnt = parseInteger(reqDto.getProduct().getRemainPeriod());
+            vo.setInstamtMnthCnt(instamtMnthCnt != null ? String.valueOf(instamtMnthCnt) : null);
+            vo.setInstamtMnthAmt(parseLong(reqDto.getProduct().getRemainAmount()));
+            vo.setBenefitAgreeYn(toYn(reqDto.getAgreement().isAgreeCheck1()));
+            vo.setClauseCntrDelYn(toYn(reqDto.getAgreement().isAgreeCheck2()));
+            vo.setEtcAgreeYn(toYn(reqDto.getAgreement().isAgreeCheck3()));
+            vo.setMemo(reqDto.getProduct().getMemo());
+            vo.setRecYn("N");
+            vo.setAppFormYn("N");
+            vo.setAppFormXmlYn("N");
+            vo.setRegstId("MSF_FORM");
+            vo.setProcCd("RC");
+            vo.setCretId("MSF_FORM");
+            vo.setAmdId("MSF_FORM");
+            vo.setCretIp("127.0.0.1");
+            vo.setAmdIp("127.0.0.1");
 
             logger.debug("[apply] insert payload ready: requestKey={}, ncn={}, customerTypeCd={}, receiveWayCd={}, cancelUseCompanyCd={}, payAmt={}, pnltAmt={}, lastSumAmt={}",
-                requestKey, safe(dto.getContractNum()), safe(dto.getCstmrTypeCd()), safe(dto.getReceiveWayCd()),
-                safe(dto.getCancelUseCompanyCd()), dto.getPayAmt(), dto.getPnltAmt(), dto.getLastSumAmt());
+                requestKey, safe(vo.getContractNum()), safe(vo.getCstmrTypeCd()), safe(vo.getReceiveWayCd()),
+                safe(vo.getCancelUseCompanyCd()), vo.getPayAmt(), vo.getPnltAmt(), vo.getLastSumAmt());
 
-            int inserted = cancelPageRepository.insertRequestCancel(dto);
+            int inserted = msfRequestRepository.insertMsfRequestCancel(vo);
             if (inserted <= 0) {
-                logger.error("[apply] insert failed: requestKey={}, ncn={}, inserted={}", requestKey, safe(dto.getContractNum()), inserted);
+                logger.error("[apply] insert failed: requestKey={}, ncn={}, inserted={}", requestKey, safe(vo.getContractNum()), inserted);
                 return TerminationApplyResVO.fail("서비스해지 요청 저장에 실패했습니다.");
             }
 
-            logger.info("[apply] success: requestKey={}, ncn={}", requestKey, safe(dto.getContractNum()));
+            MsfRequestCstmrVo cstmrVo = new MsfRequestCstmrVo();
+            initializeRequestCstmrDefaults(cstmrVo);
+            cstmrVo.setRequestKey(requestKey);
+            cstmrVo.setFormTypeCd("4");
+            cstmrVo.setCretId("MSF_FORM");
+            cstmrVo.setCretIp("127.0.0.1");
+            cstmrVo.setAmdId("MSF_FORM");
+            cstmrVo.setAmdIp("127.0.0.1");
+            cstmrVo.setCstmrNm(safe(reqDto.getCustomer().getUserName()));
+            
+            if ("NA".equals(cstmrTypeCd) || "MI".equals(cstmrTypeCd)) {
+                cstmrVo.setCstmrNativeBirth(safe(reqDto.getCustomer().getUserBirthDate()));
+            } else if ("FO".equals(cstmrTypeCd) || "FM".equals(cstmrTypeCd)) {
+                cstmrVo.setCstmrForeignerBirth(safe(reqDto.getCustomer().getUserBirthDate()));
+            } else if ("CO".equals(cstmrTypeCd) || "PB".equals(cstmrTypeCd)) {
+                cstmrVo.setCstmrJuridicalBirth(safe(reqDto.getCustomer().getUserBirthDate()));
+            }
+
+            cstmrVo.setCstmrMobileFnNo(safe(reqDto.getCustomer().getCancelPhone1()));
+            cstmrVo.setCstmrMobileMnNo(safe(reqDto.getCustomer().getCancelPhone2()));
+            cstmrVo.setCstmrMobileRnNo(safe(reqDto.getCustomer().getCancelPhone3()));
+            cstmrVo.setCstmrReceiveTelFnNo(safe(reqDto.getCustomer().getAfterTel1()));
+            cstmrVo.setCstmrReceiveTelNmNo(safe(reqDto.getCustomer().getAfterTel2()));
+            cstmrVo.setCstmrReceiveTelRnNo(safe(reqDto.getCustomer().getAfterTel3()));
+
+            int cstmrInserted = msfRequestRepository.insertMsfRequestCstmr(cstmrVo);
+            if (cstmrInserted <= 0) {
+                logger.error("[apply] insert cstmr failed: requestKey={}", requestKey);
+            }
+
+            int mcpInserted = mcpRequestRepository.insertMcpCancelRequest(requestKey);
+            if (mcpInserted <= 0) {
+                logger.error("[apply] insert MCP cancel request failed: requestKey={}", requestKey);
+                return TerminationApplyResVO.fail("M포탈 데이터 저장에 실패했습니다.");
+            }
+
+            logger.info("[apply] success: requestKey={}, ncn={}", requestKey, safe(vo.getContractNum()));
             return TerminationApplyResVO.ok(String.valueOf(requestKey));
         } catch (Exception e) {
             logger.error("[apply] exception: ncn={}", reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "", e);
@@ -662,6 +707,47 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             return customer.getManagerCd();
         }
         return resolveAgentCd(customer);
+    }
+
+    private static void initializeRequestCstmrDefaults(MsfRequestCstmrVo cstmrVo) {
+        cstmrVo.setCstmrNativeRrn("");
+        cstmrVo.setCstmrNativeBirth("");
+        cstmrVo.setCstmrNativeGenderCd("");
+        cstmrVo.setCstmrPrivateCname("");
+        cstmrVo.setCstmrPrivateBizNo("");
+        cstmrVo.setCstmrForeignerRrn("");
+        cstmrVo.setCstmrForeignerBirth("");
+        cstmrVo.setCstmrForeignerGenderCd("");
+        cstmrVo.setCstmrForeignerPn("");
+        cstmrVo.setCstmrForeignerCountryCd("");
+        cstmrVo.setCstmrForeignerNation("");
+        cstmrVo.setCstmrForeignerVisaNo("");
+        cstmrVo.setCstmrForeignerVdateStartDate("");
+        cstmrVo.setCstmrForeignerVdateEndDate("");
+        cstmrVo.setCstmrJuridicalCname("");
+        cstmrVo.setCstmrJuridicalRrn("");
+        cstmrVo.setCstmrJuridicalBizNo("");
+        cstmrVo.setCstmrJuridicalRepNm("");
+        cstmrVo.setUpjnCd("");
+        cstmrVo.setBcuSbst("");
+        cstmrVo.setCstmrJuridicalUserNm("");
+        cstmrVo.setCstmrJuridicalBirth("");
+        cstmrVo.setCstmrVisitTypeCd("");
+        cstmrVo.setCstmrTelFnNo("");
+        cstmrVo.setCstmrTelMnNo("");
+        cstmrVo.setCstmrTelRnNo("");
+        cstmrVo.setCstmrMobileFnNo("");
+        cstmrVo.setCstmrMobileMnNo("");
+        cstmrVo.setCstmrMobileRnNo("");
+        cstmrVo.setCstmrZipcd("");
+        cstmrVo.setCstmrAdr("");
+        cstmrVo.setCstmrAdrDtl("");
+        cstmrVo.setCstmrAdrBjd("");
+        cstmrVo.setCstmrEmailAdr("");
+        cstmrVo.setCstmrEmailReceiveYn("N");
+        cstmrVo.setCstmrReceiveTelFnNo("");
+        cstmrVo.setCstmrReceiveTelNmNo("");
+        cstmrVo.setCstmrReceiveTelRnNo("");
     }
 
     private static String toYn(boolean value) {
