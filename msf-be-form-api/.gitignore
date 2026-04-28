@@ -44,3 +44,6 @@ out/
 application*-private.yaml
 tools/docker/data
 /AGENTS.md
+.gradle-user-home/
+bootrun-check.err
+bootrun-check.out
