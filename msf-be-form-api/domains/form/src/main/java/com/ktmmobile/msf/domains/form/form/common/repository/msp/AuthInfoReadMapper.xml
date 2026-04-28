@@ -25,7 +25,8 @@
                             || NVL(X.ENGG_MNTH_CNT, '0')) OVER (PARTITION BY X.CONTRACT_NUM) AS ENGG_INFO
                     FROM    MSP_JUO_ADD_INFO X
                             , MSP_DVC_CHG_AGNT_HST Y
-                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
+                                                WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
                     AND     X.MODEL_CHN_CD = '01'
                     AND     X.CONTRACT_NUM = Y.CONTRACT_NUM
                     AND     X.EVNT_TRTM_NO = Y.EVNT_TRTM_NO
@@ -37,14 +38,16 @@
                     -- SIM_START_DT 최대 값에  대한 약정 개월...
                     SELECT  SUBSTR(X.SIM_START_DT, 1, 8) || X.ENGG_MNTH_CNT
                     FROM    MSP_JUO_ADD_INFO X
-                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
+                                                WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
                     AND     X.EVNT_CD = 'SIM'
                     AND     X.GRNT_INSR_STAT_CD = 'A'
                     AND     X.APP_END_DATE LIKE '99991231%'
                     AND     X.SIM_START_DT = (
                         SELECT MAX(X2.SIM_START_DT)
                         FROM MSP_JUO_ADD_INFO X2
-                        WHERE X2.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                        WHERE X2.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
+                                                    WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
                           AND     X2.EVNT_CD = 'SIM'
                           AND     X2.GRNT_INSR_STAT_CD = 'A'
                           AND     X2.APP_END_DATE LIKE '99991231%'
@@ -55,7 +58,8 @@
                     SELECT  DECODE(X.GRNT_INSR_MNGM_NO, 'none', MIN(SUBSTR(X.APP_START_DD, 1, 8)), SUBSTR(X.GRNT_INSR_MNGM_NO, 1, 8)) ||
                             MAX(X.ENGG_MNTH_CNT)
                     FROM    MSP_JUO_ADD_INFO X
-                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
+                                                WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
                     AND     X.EVNT_CD IN ('UPD','UAD')
                     AND     X.MODEL_CHN_CD = '01'
                     AND     NOT EXISTS ( SELECT 1 FROM MSP_DVC_CHG_AGNT_HST WHERE CONTRACT_NUM = X.CONTRACT_NUM AND APPL_END_DTTM LIKE '99991231%' )
@@ -67,7 +71,8 @@
                             NVL(Y.ENGG_MNTH_CNT, '0')
                     FROM    MSP_JUO_SUB_INFO X
                             , MSP_JUO_ADD_INFO Y
-                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
+                    WHERE   X.CONTRACT_NUM = (SELECT MAX(CONTRACT_NUM) FROM MSP_JUO_SUB_INFO
+                                                WHERE SUBSCRIBER_NO = #{subscriberNo} AND PPPO = 'PO' AND SUB_STATUS <> 'C')
                     AND     X.CONTRACT_NUM = Y.CONTRACT_NUM
                     AND     Y.MODEL_CHN_CD <> '01'
                     AND     Y.ENGG_MNTH_CNT IS NOT NULL
@@ -138,28 +143,33 @@
                         INNER JOIN (SELECT CUSTOMER_ID, CUSTOMER_TYPE, CUSTOMER_SSN, DRIVR_LICNS_NO, TAX_ID, CUSTOMER_LINK_NAME, CUST_IDNT_NO_IND_CD
                                     FROM MSP_JUO_CUS_INFO
                                     WHERE 1=1
-                                    -- 파라미터 : 식별번호
-                                    <choose>
-                                        <when test='customerType.equals("B")'>
-                                            <!-- CUSTOMER_SSN: 사업자번호(암호문), DRIVR_LICNS_NO: 법인번호(평문), TAX_ID: 사업자번호(평문) -->
-                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                            OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                            OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
-                                        </when>
-                                        <when test='customerType.equals("G")'><!-- 공공 -->
-                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                            OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                            OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
-                                        </when>
-                                        <otherwise><!-- 내국인성인, 내국인미성년자, 외국인성인, 외국인미성년자 -->
-                                            <!-- CUSTOMER_SSN: 식별번호(암호문), DRIVR_LICNS_NO: 개발기준데이타없음, TAX_ID: 사업자번호(평문) -->
-                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                            OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
-                                            OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
-                                        </otherwise>
-                                    </choose>
-                                    -- 파라미터 : 고객명
+                                    <!--파라미터 : 고객명-->
                                     AND CUSTOMER_LINK_NAME = #{customerLinkName}
+                                    <!--파라미터 : 식별번호-->
+                                    AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                                OR DRIVR_LICNS_NO = #{customerSsn}
+                                                OR TAX_ID = #{customerSsn})
+                                    <!--파라미터 : 고객구분별 식별번호-->
+                                    <!--AND CUSTOMER_TYPE = #{customerType}-->
+                                    <!--<choose>
+                                        <when test='customerType.equals("B")'>
+                                            &lt;!&ndash; CUSTOMER_SSN: 사업자번호(암호문), DRIVR_LICNS_NO: 법인번호(평문), TAX_ID: 사업자번호(평문) &ndash;&gt;
+                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                                    OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                                    OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
+                                        </when>
+                                        <when test='customerType.equals("G")'>&lt;!&ndash; 공공 &ndash;&gt;
+                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                                    OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                                    OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
+                                        </when>
+                                        <otherwise>&lt;!&ndash; 내국인성인, 내국인미성년자, 외국인성인, 외국인미성년자 &ndash;&gt;
+                                            &lt;!&ndash; CUSTOMER_SSN: 식별번호(암호문), DRIVR_LICNS_NO: 개발기준데이타없음, TAX_ID: 사업자번호(평문) &ndash;&gt;
+                                            AND (CUSTOMER_SSN = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                                    OR DRIVR_LICNS_NO = CRYPTO_AES256.ENC_AES(#{customerSsn})
+                                                    OR TAX_ID = CRYPTO_AES256.ENC_AES(#{customerSsn}))
+                                        </otherwise>
+                                    </choose>-->
                         ) C
                         ON C.CUSTOMER_ID = B.CUSTOMER_ID
                     ORDER BY A.EVNT_TRTM_DT DESC

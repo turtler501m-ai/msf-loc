@@ -106,7 +106,7 @@ const rootClasses = computed(() => [
   --radio-inset: var(--radio-inset-top) 0 0 0;
   --radio-label-gap: var(--spacing-x2);
   --radio-border-color: var(--color-gray-400);
-  --radio-background-color: transparent;
+  --radio-background-color: var(--color-white);
 
   position: relative;
   display: inline-flex;

@@ -16,7 +16,7 @@ import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.service.FormCommService;
+import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfChangPageSvc;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.RemainChargeResVO;

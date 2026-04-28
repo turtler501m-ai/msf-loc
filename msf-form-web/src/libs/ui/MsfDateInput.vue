@@ -1,7 +1,7 @@
 <template>
-  <div class="date-input-root">
+  <div :class="rootClasses" v-bind="rootAttrs">
     <VueDatePicker
-      v-bind="$attrs"
+      v-bind="inputAttrs"
       :model-value="parsedDate"
       :auto-apply="!centered"
       :centered="centered"
@@ -46,7 +46,7 @@
 </template>
 
 <script setup>
-import { computed, onUnmounted } from 'vue'
+import { computed, onUnmounted, useAttrs } from 'vue'
 import { VueDatePicker, WeekStart } from '@vuepic/vue-datepicker'
 import { ko } from 'date-fns/locale'
 import { formatDate } from '@/libs/utils/date.utils'
@@ -71,9 +71,31 @@ onUnmounted(() => {
   }
 })
 
-defineOptions({
-  inheritAttrs: false,
+// 속성에 접근
+const attrs = useAttrs()
+// 부모(root)에 바로 상속되지 않도록 설정
+defineOptions({ inheritAttrs: false })
+
+// root에 부여할 속성
+const rootAttrs = computed(() => ({
+  class: attrs.class,
+  style: attrs.style,
+}))
+// input에 부여할 속성
+const inputAttrs = computed(() => {
+  const rest = { ...attrs }
+  delete rest.class
+  delete rest.style
+  return rest
 })
+
+// 스타일 클래스
+const rootClasses = computed(() => [
+  'date-input-root',
+  {
+    'is-error': props.error,
+  },
+])
 
 const props = defineProps({
   modelValue: String,
@@ -84,6 +106,8 @@ const props = defineProps({
   },
   /** placeholder */
   placeholder: { type: String, default: '발급 일자 (YYYY.MM.DD)' },
+  /** 에러 */
+  error: Boolean,
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -146,7 +170,7 @@ const onDatePickerSelect = (selectedDate /*, maskRef*/) => {
     left: auto;
     width: var(--dp-input-side-icon-size);
     height: var(--dp-input-side-icon-size);
-    color: var(--color-gray-600);
+    color: var(--color-gray-900);
     & i {
       vertical-align: top;
     }
@@ -161,6 +185,11 @@ const onDatePickerSelect = (selectedDate /*, maskRef*/) => {
   }
   :deep(.dp__menu_inner) {
     padding: rem(16px);
+  }
+  &.is-error {
+    &:deep(.dp__input) {
+      border: 2px solid var(--color-accent1-base) !important;
+    }
   }
 }
 </style>

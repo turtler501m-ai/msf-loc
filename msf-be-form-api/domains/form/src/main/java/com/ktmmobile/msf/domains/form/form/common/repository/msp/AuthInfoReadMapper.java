@@ -12,6 +12,6 @@ public interface AuthInfoReadMapper {
     //KTM모바일 고객인증
     MspJuoSubInfoResponse selectKtmCustomer(MspJuoSubInfoCondition condition);
 
-    //KTM모바일 고객인증
+    //청구계정아이디조회
     MspJuoBanInfoResponse verifyBillInfo(MspJuoBanInfoCondition condition);
 }

@@ -36,6 +36,12 @@ console.log(msfUserStore.getUserInfo())
   border-bottom: var(--border-width-base) solid var(--color-gray-75);
   flex-shrink: 0;
   padding-inline: var(--spacing-x6);
+  // 헤더높이(50px) + 디바이스 상단 노치 영역(safe-area) 처리
+  @include safe-area(top, 50px, height);
+  @include safe-area(top, 0px, padding);
+  @include safe-area(left, 24px, padding);
+  @include safe-area(right, 24px, padding);
+
   .header-inner {
     position: relative;
     max-width: var(--layout-max-width);
@@ -79,6 +85,7 @@ console.log(msfUserStore.getUserInfo())
             background-image: url('@/assets/images/userAvatar.svg');
             background-position: left center;
             background-size: 100%;
+            background-repeat: no-repeat;
           }
         }
         ul.infos {

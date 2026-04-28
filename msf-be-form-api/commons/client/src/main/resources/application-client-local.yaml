@@ -9,6 +9,10 @@ internal-service:
       base-url: http://localhost:8280
     eformsign: ## eFormSign
       base-url: http://eformsign-none
+      properties:
+        member-id: temp-local-member-id
+        api-key: temp-local-api-key
+        private-key: temp-local-private-key
 
 
 

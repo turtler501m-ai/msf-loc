@@ -290,7 +290,7 @@
     </MsfStack>
     <!-- // 가입자 연락처 -->
     <!-- 서비스 변경 선택_type01 -->
-    <MsfTitleArea title="서비스 변경 선택_type01__디자인미확정" />
+    <MsfTitleArea title="서비스 변경 선택_type01__디자인 결정완료__20260421" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="서비스 선택" tag="div" required>
         <MsfStack vertical>
@@ -343,7 +343,7 @@
     </MsfStack>
     <!-- // 서비스 변경 선택_type01 -->
     <!-- 서비스 변경 선택_type02 -->
-    <MsfTitleArea title="서비스 변경 선택_type02__디자인미확정" />
+    <MsfTitleArea title="서비스 변경 선택_type02__추후활용 가능성 있음" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="요금제/부가<br/>서비스" tag="div">
         <MsfChip
@@ -489,11 +489,11 @@ const formData = reactive({
   address1: '', //주소1
   address2: '', //주소2
   address3: '', //주소3
-  /** 서비스 변경 선택_type01__디자인미확정 */
+  /** 서비스 변경 선택_type01__디자인결정 */
   allCheck: '', //전체 선택
   serviceSelect: '', //서비스선택
   agency: '', //대리점
-  /** 서비스 변경 선택_type02__디자인미확정 */
+  /** 서비스 변경 선택_type02__추후활용 가능성 있음 */
   addonService: '', //요금제/부가 서비스
   combinedService: '', //결합서비스
   loseLock: '', //일시/분실정지

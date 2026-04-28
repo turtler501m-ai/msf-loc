@@ -27,6 +27,11 @@
       padding: 0;
       overflow: unset;
     }
+    // 메인의 경우 레이아웃 내부에서 패딩
+    &:has(.main-layout) {
+      padding: 0;
+      overflow: unset;
+    }
     &:has(.top-btns) {
       padding-top: 0px;
     }

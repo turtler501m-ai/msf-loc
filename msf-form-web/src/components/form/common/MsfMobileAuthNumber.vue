@@ -58,13 +58,7 @@ const props = defineProps({
   formType: {
     type: String,
     required: true,
-    validator: (v) =>
-      [
-        'form-newchange-legalagent',
-        'form-servicechange-legalagent',
-        'form-ownerchange-legalagent',
-        'form-termination-legalagent',
-      ].includes(v),
+    validator: (v) => ['F-1-VDP', 'F-2-VDP', 'F-3-VDP', 'F-4-VDP'].includes(v),
   },
   label: { type: String, default: '연락처(휴대폰)' },
 })

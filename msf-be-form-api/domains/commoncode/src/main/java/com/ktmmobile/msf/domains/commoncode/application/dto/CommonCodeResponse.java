@@ -27,6 +27,7 @@ public record CommonCodeResponse(
 
     public record DetailResponse(
         String abbrName,
+        String description,
         String etcValue1,
         String etcValue2,
         String etcValue3,
@@ -36,17 +37,22 @@ public record CommonCodeResponse(
 
         static DetailResponse toResponse(CommonCodeData.Detail detail) {
             if (detail == null) {
-                return null;
+                return empty();
             }
 
             return new DetailResponse(
                 detail.abbrName(),
+                detail.description(),
                 detail.etcValue1(),
                 detail.etcValue2(),
                 detail.etcValue3(),
                 detail.startDate(),
                 detail.endDate()
             );
+        }
+
+        private static DetailResponse empty() {
+            return new DetailResponse(null, null, null, null, null, null, null);
         }
     }
 }

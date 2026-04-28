@@ -129,7 +129,12 @@
               <div class="zip">{{ selectedAddress?.zipNo }}</div>
               <div class="row">
                 <span class="tag road">도로명</span>
-                <p>{{ selectedAddress?.roadAddress1 }}</p>
+                <p>
+                  {{
+                    selectedAddress?.roadAddress1 +
+                    (selectedAddress?.roadAddress2 ? ' ' + selectedAddress?.roadAddress2 : '')
+                  }}
+                </p>
               </div>
             </div>
             <div class="detail-input">
@@ -147,7 +152,13 @@
     <!-- // 주소검색 -->
     <template #footer v-if="step === 'detail'">
       <MsfButtonGroup>
-        <MsfButton variant="primary" class="btn-confirm" @click="onConfirm">주소 입력</MsfButton>
+        <MsfButton
+          variant="primary"
+          class="btn-confirm"
+          :disabled="!detailAddress.trim()"
+          @click="onConfirm"
+          >주소 입력</MsfButton
+        >
       </MsfButtonGroup>
     </template>
   </MsfDialog>
@@ -255,21 +266,19 @@ const onChangePage = async () => {
 
 const goToDetail = (item) => {
   selectedAddress.value = item
-  detailAddress.value = item.roadAddress2 + ' '
+  detailAddress.value = ''
   step.value = 'detail'
 }
 
 const onConfirm = () => {
-  // 1. 전달할 데이터 객체 생성
+  // 전달할 데이터 객체 생성
   const finalAddressData = {
     zipNo: selectedAddress.value.zipNo,
     address: selectedAddress.value.roadAddress1,
-    detailAddress: detailAddress.value, // 사용자가 직접 입력한 상세 주소
+    detailAddress: selectedAddress.value.roadAddress2 + ' ' + detailAddress.value, // 사용자가 직접 입력한 상세 주소
   }
-  // 2. 콘솔에 출력 (디버깅용)
-  console.log('입력된 주소 내역:', finalAddressData)
 
-  // 3. 부모 컴포넌트로 데이터 전송 및 팝업 닫기
+  // 부모 컴포넌트로 데이터 전송 및 팝업 닫기
   emit('confirm', finalAddressData)
   onClose()
 }

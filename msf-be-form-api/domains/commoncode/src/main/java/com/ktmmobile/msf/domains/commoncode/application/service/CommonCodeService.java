@@ -24,8 +24,7 @@ public class CommonCodeService implements CommonCodeReader {
     public CommonCodeGroups getCommonCodes(CommonCodesRequest request) {
         Map<String, List<CommonCodeData>> commonCodeGroups = new LinkedHashMap<>();
         commonCodeCacheStore.getCommonCodes(request.groupIds(), request.shouldIncludeAll())
-            .forEach((groupId, commonCodes) -> commonCodeGroups.put(
-                groupId,
+            .forEach((groupId, commonCodes) -> commonCodeGroups.put(groupId,
                 commonCodes.stream()
                     .map(CommonCodeData::from)
                     .toList()

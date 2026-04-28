@@ -22,7 +22,7 @@ public class McpApiClient {
     @Value("${api.interface.server}")
     private String baseUrl;
 
-    @Value("${api.interface.use-mcp:true}")
+    @Value("${api.interface.use-mcp}")
     private boolean useMcp;
 
     private final MspApiDirectRepository mspApiDirectRepository;
@@ -54,7 +54,7 @@ public class McpApiClient {
             return response;
         } catch (ResourceAccessException e) {
             logger.warn("[MspApiClient] POST {} 연결 실패", url);
-            logger.warn("[MspApiClient] MSP 직접 조회 실행: {}",e.getMessage());
+            logger.warn("[MspApiClient] MSP 직접 조회 실행: {}", e.getMessage());
             return mspApiDirectRepository.query(path, request, responseType);
         }
     }

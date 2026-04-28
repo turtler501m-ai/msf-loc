@@ -2,13 +2,13 @@
   <MsfDialog
     v-bind="$attrs"
     :is-open="modelValue"
-    title="(신)로밍 하루종일 ON"
+    title="부가서비스명"
     @open="emit('open')"
     @close="onClose"
     size="medium"
   >
     <!-- 팝업 내용 -->
-    <MsfTitleArea title="이용기간 설정(한국시간 기준)" level="3" noline>
+    <MsfTitleArea title="이용기간 설정(한국시간 기준)" level="2" color="black" noline bold>
       <template #content>
         <MsfTextList
           :items="['신청한 시간부터 24시간 동안 적용']"
@@ -18,7 +18,6 @@
         />
       </template>
     </MsfTitleArea>
-
     <MsfStack type="field" vertical>
       <MsfDateRange
         v-model:from="rangeDatePickerValue.start"
@@ -27,10 +26,10 @@
       />
       <MsfSelect
         title="시작 시간 선택"
-        v-model="formData.country"
+        v-model="formData.timeSelect"
         :options="[
-          { label: '시작 시간 선택1', value: 'nation1' },
-          { label: '시작 시간 선택2', value: 'nation2' },
+          { label: '시작 시간 선택1', value: 'time1' },
+          { label: '시작 시간 선택2', value: 'time2' },
         ]"
         placeholder="시작 시간 선택"
         class="ut-w100p"
@@ -73,8 +72,9 @@ const onClose = () => {
 
 // vue-datepicker
 const rangeDatePickerValue = ref({ start: '', end: '' })
+// 퍼블샘플
 const formData = reactive({
-  agreeCheck1: false,
+  timeSelect: '',
 })
 </script>
 

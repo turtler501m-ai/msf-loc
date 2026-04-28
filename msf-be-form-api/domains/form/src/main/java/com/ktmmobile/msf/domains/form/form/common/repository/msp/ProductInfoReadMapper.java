@@ -9,31 +9,31 @@ import java.util.List;
 public interface ProductInfoReadMapper {
 
     //판매정책조회
-    List<MspSalePlcyMstInfoDto> selectMspSalePlcyMstList(ProductSearchCondition condition);
+    List<MspSalePlcyMstInfoDto> selectMspSalePlcyMstList(ProductInfoRequest condition);
 
     //할인유형조회
-    List<MspSalePlcyMstInfoDto> selectSaleTypeList(ProductSearchCondition condition);
+    List<MspSalePlcyMstInfoDto> selectSaleTypeList(ProductInfoRequest condition);
 
     //요금 약정기간조회
-    List<MspSaleAgrmMstInfoDto> selectMspSaleAgrmMstList(ProductSearchCondition condition);
+    List<MspSaleAgrmMstInfoDto> selectMspSaleAgrmMstList(ProductInfoRequest condition);
 
     //휴대폰 할부기간조회
-    List<PhoneInfoDto> selectModelMonthlyList(ProductSearchCondition condition);
+    List<PhoneInfoDto> selectModelMonthlyList(ProductInfoRequest condition);
 
     //휴대폰 색상목록조회
-    List<PhoneInfoDto> selectPrdtColorList(ProductSearchCondition condition);
+    List<PhoneInfoDto> selectPrdtColorList(ProductInfoRequest condition);
 
     //휴대폰 용량목록조회
-    List<PhoneInfoDto> selectPrdtCapacityList(ProductSearchCondition condition);
+    List<PhoneInfoDto> selectPrdtCapacityList(ProductInfoRequest condition);
 
     //휴대폰 목록 조회
-    List<PhoneInfoDto> selectPhoneList(ProductSearchCondition condition);
+    List<PhoneInfoDto> selectPhoneList(ProductInfoRequest condition);
 
     //요금제 목록 조회
-    List<RateInfoDto> selectRateList(ProductSearchCondition condition);
+    List<RateInfoDto> selectRateList(ProductInfoRequest condition);
 
     //공시지원금 조회
-    List<PhoneInfoDto> selectMspOfficialNoticeSupport(ProductSearchCondition condition);
+    List<PhoneInfoDto> selectMspOfficialNoticeSupport(ProductInfoRequest condition);
     // List<RateInfoDto> listMspOfficialNoticeSupport(CommonSearchCondition condition);
 
     //부가서비스 상세조회

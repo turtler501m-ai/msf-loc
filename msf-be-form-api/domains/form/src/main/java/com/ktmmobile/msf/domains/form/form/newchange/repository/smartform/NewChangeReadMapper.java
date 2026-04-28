@@ -1,7 +1,7 @@
 package com.ktmmobile.msf.domains.form.form.newchange.repository.smartform;
 
+import com.ktmmobile.msf.domains.form.form.common.vo.*;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.*;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

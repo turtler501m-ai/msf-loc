@@ -6,7 +6,7 @@
         <img src="@/assets/images/applyopenIcon.svg" alt="신청서 열람 아이콘" />
         <em class="tit">신청서 열람</em>
       </div>
-      <MsfButton variant="subtle" @click="isModalOpen = true">신청서 열람</MsfButton>
+      <MsfButton variant="subtle" @click="onClikViewBtn">신청서 열람</MsfButton>
     </MsfBox>
 
     <!-- 신청서 열람 모달 -->
@@ -18,7 +18,16 @@
 import { ref } from 'vue'
 import MsfAppViewerModal from './popups/MsfAppViewerModal.vue'
 
+const props = defineProps({
+  formKey: { type: String, required: true },
+  formType: { type: String, required: true },
+})
+
 const isModalOpen = ref(false)
+
+const onClikViewBtn = () => {
+  isModalOpen.value = true
+}
 </script>
 
 <style lang="scss" scoped>

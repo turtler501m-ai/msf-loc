@@ -38,7 +38,7 @@
         (
             #{custReqSeq, jdbcType=NUMERIC}
             , #{rip, jdbcType=VARCHAR}
-            , TO_DATE(#{rvisnDttm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS')
+            , CAST(TO_TIMESTAMP(#{rvisnDttm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS.FF6') AS DATE)
             , #{rvisnId, jdbcType=VARCHAR}
             , #{cancelMobileNo, jdbcType=VARCHAR}
             , #{contractNum, jdbcType=VARCHAR}
@@ -58,9 +58,125 @@
             , #{memo, jdbcType=VARCHAR}
             , #{sysRdateDd, jdbcType=VARCHAR}
             , #{regstId, jdbcType=VARCHAR}
-            , TO_DATE(#{regstDttm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS')
+            , CAST(TO_TIMESTAMP(#{regstDttm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS.FF6') AS DATE)
             , #{procCd, jdbcType=VARCHAR}
             , #{scanId, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <insert id="insertMcpRequestCstmr"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestCstmrVo">
+        INSERT INTO MCP_REQUEST_CSTMR@DL_MCP
+        (
+            REQUEST_KEY
+            , SYS_RDATE
+            , RVISN_DTTM
+            , RVISN_ID
+            , CSTMR_NAME
+            , CSTMR_NATIVE_RRN
+            , CSTMR_PRIVATE_CNAME
+            , CSTMR_PRIVATE_NUMBER
+            , CSTMR_FOREIGNER_RRN
+            , CSTMR_FOREIGNER_BIRTH
+            , CSTMR_FOREIGNER_PN
+            , CSTMR_FOREIGNER_NATION
+            , VISA_CD
+            , CSTMR_FOREIGNER_SDATE
+            , CSTMR_FOREIGNER_EDATE
+            , CSTMR_FOREIGNER_DOD
+            , CSTMR_JURIDICAL_CNAME
+            , CSTMR_JURIDICAL_RRN
+            , CSTMR_JURIDICAL_NUMBER
+            , CSTMR_VISIT_TYPE
+            , FATH_MOBILE_FN
+            , FATH_MOBILE_MN
+            , FATH_MOBILE_RN
+            , SELF_INQRY_AGRM_YN
+            , SELF_CERT_TYPE
+            , SELF_CSTMR_CI
+            , SELF_ISSU_EXPR_DT
+            , SELF_ISSU_NUM
+            , CSTMR_TEL_FN
+            , CSTMR_TEL_MN
+            , CSTMR_TEL_RN
+            , CSTMR_MOBILE_FN
+            , CSTMR_MOBILE_MN
+            , CSTMR_MOBILE_RN
+            , CSTMR_POST
+            , CSTMR_ADDR
+            , CSTMR_ADDR_DTL
+            , CSTMR_ADDR_BJD
+            , CSTMR_BILL_SEND_CODE
+            , CSTMR_MAIL
+            , CSTMR_MAIL_RECEIVE_FLAG
+            , CSTMR_RECEIVE_TEL_FN
+            , CSTMR_RECEIVE_TEL_NM
+            , CSTMR_RECEIVE_TEL_RN
+            , OTHERS_PAYMENT_AG
+            , OTHERS_PAYMENT_NM
+            , OTHERS_PAYMENT_RRN
+            , OTHERS_PAYMENT_RELATION
+            , OTHERS_PAYMENT_RNM
+            , PRNTS_CTN
+            , CSTMR_JEJU_ID
+            , RECOMMEND_FLAG_CD
+            , RECOMMEND_INFO
+        )
+        VALUES
+        (
+            #{requestKey, jdbcType=NUMERIC}
+            , CAST(TO_TIMESTAMP(#{sysRdate, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS.FF6') AS DATE)
+            , CAST(TO_TIMESTAMP(#{rvisnDttm, jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS.FF6') AS DATE)
+            , #{rvisnId, jdbcType=VARCHAR}
+            , #{cstmrName, jdbcType=VARCHAR}
+            , #{cstmrNativeRrn, jdbcType=VARCHAR}
+            , #{cstmrPrivateCname, jdbcType=VARCHAR}
+            , #{cstmrPrivateNumber, jdbcType=VARCHAR}
+            , #{cstmrForeignerRrn, jdbcType=VARCHAR}
+            , #{cstmrForeignerBirth, jdbcType=VARCHAR}
+            , #{cstmrForeignerPn, jdbcType=VARCHAR}
+            , #{cstmrForeignerNation, jdbcType=VARCHAR}
+            , #{visaCd, jdbcType=VARCHAR}
+            , #{cstmrForeignerSdate, jdbcType=VARCHAR}
+            , #{cstmrForeignerEdate, jdbcType=VARCHAR}
+            , #{cstmrForeignerDod, jdbcType=VARCHAR}
+            , #{cstmrJuridicalCname, jdbcType=VARCHAR}
+            , #{cstmrJuridicalRrn, jdbcType=VARCHAR}
+            , #{cstmrJuridicalNumber, jdbcType=VARCHAR}
+            , #{cstmrVisitType, jdbcType=VARCHAR}
+            , #{fathMobileFn, jdbcType=VARCHAR}
+            , #{fathMobileMn, jdbcType=VARCHAR}
+            , #{fathMobileRn, jdbcType=VARCHAR}
+            , #{selfInqryAgrmYn, jdbcType=VARCHAR}
+            , #{selfCertType, jdbcType=VARCHAR}
+            , #{selfCstmrCi, jdbcType=VARCHAR}
+            , #{selfIssuExprDt, jdbcType=VARCHAR}
+            , #{selfIssuNum, jdbcType=VARCHAR}
+            , #{cstmrTelFn, jdbcType=VARCHAR}
+            , #{cstmrTelMn, jdbcType=VARCHAR}
+            , #{cstmrTelRn, jdbcType=VARCHAR}
+            , #{cstmrMobileFn, jdbcType=VARCHAR}
+            , #{cstmrMobileMn, jdbcType=VARCHAR}
+            , #{cstmrMobileRn, jdbcType=VARCHAR}
+            , #{cstmrPost, jdbcType=VARCHAR}
+            , #{cstmrAddr, jdbcType=VARCHAR}
+            , #{cstmrAddrDtl, jdbcType=VARCHAR}
+            , #{cstmrAddrBjd, jdbcType=VARCHAR}
+            , #{cstmrBillSendCode, jdbcType=VARCHAR}
+            , #{cstmrMail, jdbcType=VARCHAR}
+            , #{cstmrMailReceiveFlag, jdbcType=VARCHAR}
+            , #{cstmrReceiveTelFn, jdbcType=VARCHAR}
+            , #{cstmrReceiveTelNm, jdbcType=VARCHAR}
+            , #{cstmrReceiveTelRn, jdbcType=VARCHAR}
+            , #{othersPaymentAg, jdbcType=VARCHAR}
+            , #{othersPaymentNm, jdbcType=VARCHAR}
+            , #{othersPaymentRrn, jdbcType=VARCHAR}
+            , #{othersPaymentRelation, jdbcType=VARCHAR}
+            , #{othersPaymentRnm, jdbcType=VARCHAR}
+            , #{prntsCtn, jdbcType=VARCHAR}
+            , #{cstmrJejuId, jdbcType=VARCHAR}
+            , #{recommendFlagCd, jdbcType=VARCHAR}
+            , #{recommendInfo, jdbcType=VARCHAR}
         )
     </insert>
 </mapper>

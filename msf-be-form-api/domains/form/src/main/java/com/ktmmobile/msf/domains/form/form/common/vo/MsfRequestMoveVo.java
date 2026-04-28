@@ -11,12 +11,6 @@ public class MsfRequestMoveVo {
 
     Long requestKey;
     String formTypeCd;
-    String cretIp;
-    String regDt;
-    String cretId;
-    String amdIp;
-    String amdId;
-    String amdDt;
     String moveCompanyCd;
     String moveMobileFnNo;
     String moveMobileMnNo;

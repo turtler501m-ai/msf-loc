@@ -11,12 +11,6 @@ public class MsfRequestCstmrVo {
 
     Long requestKey;
     String formTypeCd;
-    String cretIp;
-    String cretDt;
-    String cretId;
-    String amdIp;
-    String amdDt;
-    String amdId;
     String cstmrNm;
     String cstmrNativeRrn;
     String cstmrNativeBirth;

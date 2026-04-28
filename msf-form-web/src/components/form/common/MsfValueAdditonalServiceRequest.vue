@@ -1,72 +1,41 @@
 <script setup>
-import { reactive } from 'vue'
+import { ref, onMounted, defineModel } from 'vue'
+import { post } from '@/libs/api/msf.api'
 
-const formData = reactive({
-  /* SIM정보_상품(휴대폰) */
-  hasSim: '', //SIM보유
-  usimKindsCd: '', //USIM 선택
-  reqUsimSn: '', //USIM 번호
-  simPurchaseMethod: '', //USIM 구매 방식
-  prodNm: '', //휴대폰 모델병
-  eid: '', //EID
-  imei1: '', //IMEI1
-  imei2: '', //IMEI2
-  /* 휴대폰 정보_상품 (휴대폰) */
-  imei: '', //IMEI
-  /* 번호이동 할 전화번호 */
-  moveCompanyCd: '', //통신사 선택
-  moveMobileNo: '', //번호이동 할 전화번호
-  moveAuthTypeCd: '', //번호이동 인증
-  moveAuthNo: '', //번호이동 인증 : 일련번호4자리
-  transferBankNum: '', //번호이동 인증 : 계좌번호4자리
-  transferCardNum: '', //번호이동 인증 : 신용카드4자리
-  moveThismonthPayTypeCd: false, //이번달 사용요금
-  moveAllotmentSttusCd: [], //휴대폰 할부금
-  moveRefundAgreeYn: [], //미환급금 요금상계(후불)
-  /* 신규가입 번호 예약 */
-  reqWantFnNo: '', //번호예약 앞 3자리
-  reqWantMnNo: '', //번호예약 가운데 4자리
-  reqWantRnNo: '', //번호예약 뒤 4자리
-  wishNo: '', //희망 신규번호
-  /* 부가서비스 신청 */
-  //무료부가서비스
-  reqAdditionListNm: [
-    'freeVas1',
-    'freeVas2',
-    'freeVas3',
-    'freeVas4',
-    'freeVas5',
-    'freeVas6',
-    'freeVas7',
-    'freeVas8',
-  ],
-  addtionId: ['paidVas1'], //유료부가서비스
-  /* 안심 보험 */
-  clauseInsuranceYn: '', //가입여부
-  recCat1: '', //추천 카테고리1
-  recCat2: '', //추천 카테고리2
-  /* 납부 정보 */
-  cstmrBillSendTypeCd: '', //수신유형
-  reqPayTypeCd: '', //납부방법
-  autoPayerType: '', //자동이체-납부자유형
-  reqBankCd: '', //자동이체-은행선택
-  reqAccountNo: '', //자동이체-계좌번호입력
-  reqAccountNm: '', //자동이체-납부고객명
-  reqAccountRrn: '', //자동이체-생년월일(8자리) 임력
-  reqAccountRelTypeCd: '', //자동이체-관계
-  isAutoAgree: false, //자동이체-동의
-  cardPayerType: '', //신용카드-납부자유형
-  reqCardCompanyCd: '', //신용카드-카드사선택
-  reqCardNo: '', //신용카드-카드번호입력
-  reqCardMm: '', //신용카드-유효기간(MM)
-  reqCardYy: '', //신용카드-유효기간(YY)
-  reqCardNm: '', //신용카드-납부고객명
-  reqCardRrn: '', //신용카드-생년월일
-  cardRelation: '', //신용카드-관계
-  combId: '', //통합청구-청구계정ID
-  combAgree: false, //통합청구-동의
-  /* 메모 */
-  memo: '', //메모
+const model = defineModel({ type: Object, required: true })
+
+const freeVasOptions = ref([])
+const paidVasOptions = ref([])
+
+const fetchVasList = async () => {
+  try {
+    // 유료 부가서비스 조회 (RRATESVC)
+    const resPaid = await post('/api/form/addition/list', { prodCtgId: 'RRATESVC' })
+    const paidList = resPaid.data?.[0]?.paidAddition || []
+    paidVasOptions.value = paidList.map((v) => ({
+      label: `${v.rateNm} (${Number(v.baseAmt).toLocaleString()}원)`,
+      value: v.rateCd,
+    }))
+
+    // 무료 부가서비스 조회 (RFREESVC)
+    const resFree = await post('/api/form/addition/list', { prodCtgId: 'RFREESVC' })
+    const freeList = resFree.data?.[0]?.freeAddition || []
+    freeVasOptions.value = freeList.map((v) => ({
+      label: v.rateNm,
+      value: v.rateCd,
+    }))
+
+    // 무료 부가서비스 목록의 모든 값을 초기값으로 설정 (전체 선택 상태)
+    if (!model.value.reqAdditionListNm || model.value.reqAdditionListNm.length === 0) {
+      model.value.reqAdditionListNm = freeVasOptions.value.map((v) => v.value)
+    }
+  } catch (error) {
+    console.error('부가서비스 조회 실패:', error)
+  }
+}
+
+onMounted(() => {
+  fetchVasList()
 })
 </script>
 
@@ -76,31 +45,15 @@ const formData = reactive({
   <MsfStack vertical type="formgroups">
     <MsfFormGroup label="무료부가서비스" tag="div">
       <MsfChip
-        v-model="formData.reqAdditionListNm"
+        v-model="model.reqAdditionListNm"
         name="inp-freeVas"
-        :data="[
-          { value: 'freeVas1', label: '무선데이터 차단' },
-          { value: 'freeVas2', label: '국제전화발신제한' },
-          { value: 'freeVas3', label: '익명호수신거부' },
-          { value: 'freeVas4', label: '네트워크유해차단' },
-          { value: 'freeVas5', label: '데이터로밍완전차단' },
-          { value: 'freeVas6', label: '링투유알리미' },
-          { value: 'freeVas7', label: '무선데이터 차단' },
-          { value: 'freeVas8', label: '국제전화발신제한' },
-        ]"
+        :data="freeVasOptions"
         multiple
         readonly
       />
     </MsfFormGroup>
     <MsfFormGroup label="유료부가서비스" tag="div">
-      <MsfCheckboxGroup
-        v-model="formData.addtionId"
-        :options="[
-          { value: 'paidVas1', label: '링투유 990 원' },
-          { value: 'paidVas2', label: '캐치콜 550 원' },
-          { value: 'paidVas3', label: '(신)로밍 하루종일 ON 2,200 원/1일' },
-        ]"
-      />
+      <MsfCheckboxGroup v-model="model.addtionId" :options="paidVasOptions" />
     </MsfFormGroup>
   </MsfStack>
   <!-- // 부가서비스 신청 -->

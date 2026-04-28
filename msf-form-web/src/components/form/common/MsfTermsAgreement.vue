@@ -7,7 +7,7 @@
         <MsfAgreementGroup
           policy="CLAUSE_FORM_01"
           ref="agreementRef"
-          :showTerms="props.termsData"
+          :specTerms="props.specTerms"
           v-model="model.termsAgreed"
           :description="description"
           :required="required"
@@ -25,7 +25,14 @@ const props = defineProps({
   title: { type: String, default: '약관 동의' },
   description: { type: String, default: '' },
   required: { type: Boolean, default: false },
-  termsData: { type: Array, default: () => [] }, // 동적으로 약관 데이터를 받을 prop
+  specTerms: {
+    type: Array,
+    default: () => [
+      // FIXME: termsData를 통해 받아오는 약관 코드 목록의 구조 변경 및 로직 변경 필요. 현재는 단순히 code만 전달받는 형태로 가정하고 있음. (예시 데이터)
+      { code: 'CLAUSE_MOVE_01' },
+      { code: 'CLAUSE_PARTNER_01', specType: '02', specCode: 'MI', specName: '(주)밀리의 서재' },
+    ],
+  }, // 동적으로 약관 데이터를 받을 prop
 })
 
 const model = defineModel({ type: Object, required: true })

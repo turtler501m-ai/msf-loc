@@ -417,10 +417,6 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             initializeRequestCstmrDefaults(cstmrVo);
             cstmrVo.setRequestKey(requestKey);
             cstmrVo.setFormTypeCd("4");
-            cstmrVo.setCretId("MSF_FORM");
-            cstmrVo.setCretIp("127.0.0.1");
-            cstmrVo.setAmdId("MSF_FORM");
-            cstmrVo.setAmdIp("127.0.0.1");
             cstmrVo.setCstmrNm(safe(reqDto.getCustomer().getUserName()));
             
             if ("NA".equals(cstmrTypeCd) || "MI".equals(cstmrTypeCd)) {
@@ -441,6 +437,12 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             int cstmrInserted = msfRequestRepository.insertMsfRequestCstmr(cstmrVo);
             if (cstmrInserted <= 0) {
                 logger.error("[apply] insert cstmr failed: requestKey={}", requestKey);
+            }
+
+            int mcpCstmrInserted = mcpRequestRepository.insertMcpRequestCstmr(requestKey);
+            if (mcpCstmrInserted <= 0) {
+                logger.error("[apply] insert MCP request cstmr failed: requestKey={}", requestKey);
+                return TerminationApplyResVO.fail("M포탈 고객정보 저장에 실패했습니다.");
             }
 
             int mcpInserted = mcpRequestRepository.insertMcpCancelRequest(requestKey);

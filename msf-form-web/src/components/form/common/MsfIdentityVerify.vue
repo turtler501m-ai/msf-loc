@@ -104,7 +104,6 @@ watch(
     if (!model.value.isSaved) {
       model.value.identityTypeCd = ''
       model.value.isVerified = false
-      model.value.isScanVerified = false
     }
   },
 )

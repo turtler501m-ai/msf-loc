@@ -1,14 +1,14 @@
 package com.ktmmobile.msf.domains.form.form.newchange.repository.smartform;
 
 import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.vo.*;
+import com.ktmmobile.msf.domains.form.form.common.vo.*;
 import org.apache.ibatis.annotations.Mapper;
 
 @AutoAuditing
 @Mapper
 public interface NewChangeWriteMapper {
 
+    //INSERT
     void insertMsfRequestTemp(MsfRequestVo msfRequestVo);
 
     void insertMsfRequestAgentTemp(MsfRequestAgentVo msfRequestAgentVo);
@@ -19,14 +19,29 @@ public interface NewChangeWriteMapper {
 
     void insertMsfRequestBillReqTemp(MsfRequestBillReqVo msfRequestBillReqVo);
 
-    void updateMsfRequestTemp(NewChangeInfoRequest request);
+    @AutoAuditing(false)
+    void insertMsfRequestMoveTemp(MsfRequestMoveVo msfRequestMoveVo);
 
-    void updateMsfRequestAgentTemp(NewChangeInfoRequest request);
+    //UPDATE
+    void updateMsfRequestTemp(MsfRequestVo msfRequestVo);
 
-    void updateMsfRequestCstmrTemp(NewChangeInfoRequest request);
+    void updateMsfRequestAgentTemp(MsfRequestAgentVo msfRequestAgentVo);
 
-    void updateMsfRequestSaleTemp(NewChangeInfoRequest request);
+    void updateMsfRequestCstmrTemp(MsfRequestCstmrVo msfRequestCstmrVo);
 
-    void updateMsfRequestBillReqTemp(NewChangeInfoRequest request);
+    void updateMsfRequestSaleTemp(MsfRequestSaleVo msfRequestSaleVo);
+
+    void updateMsfRequestBillReqTemp(MsfRequestBillReqVo msfRequestBillReqVo);
+
+    @AutoAuditing(false)
+    void updateMsfRequestMoveTemp(MsfRequestMoveVo msfRequestMoveVo);
+
+
+    //void updateMsfRequestTemp(NewChangeInfoRequest request);
+    //void updateMsfRequestAgentTemp(NewChangeInfoRequest request);
+    //void updateMsfRequestCstmrTemp(NewChangeInfoRequest request);
+    //void updateMsfRequestSaleTemp(NewChangeInfoRequest request);
+    //void updateMsfRequestBillReqTemp(NewChangeInfoRequest request);
+    //void updateMsfRequestMoveTemp(NewChangeInfoRequest request);
 
 }

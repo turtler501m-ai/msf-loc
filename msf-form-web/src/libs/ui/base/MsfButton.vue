@@ -35,7 +35,7 @@ export const BTN_VARIANTS = [
   'detail',
   'toggle',
 ]
-export const BTN_SIZE = ['small', 'medium', 'large']
+export const BTN_SIZE = ['x-small', 'small', 'medium', 'large']
 </script>
 
 <script setup>
@@ -97,6 +97,7 @@ const ICON_SIZE_MAP = {
   large: 'large',
   medium: 'large',
   small: 'large',
+  xsmall: 'small',
 }
 const mappedIconSize = computed(() => {
   return ICON_SIZE_MAP[props.size] || 'small'
@@ -159,6 +160,14 @@ const handleClick = (event) => {
 .btn-size-small {
   height: rem(52px);
   font-weight: var(--font-weight-medium);
+}
+.btn-size-xsmall {
+  width: auto;
+  height: rem(24px) !important;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular) !important;
+  padding-inline: rem(8px);
+  border-radius: rem(4px);
 }
 
 // rounded

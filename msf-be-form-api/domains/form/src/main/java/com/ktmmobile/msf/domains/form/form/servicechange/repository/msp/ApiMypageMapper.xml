@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.ktmmobile.mcp.mypage.mapper.MypageMapper">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.servicechange.repository.msp.ApiMypageMapper">
 
     <resultMap id="farPricePlanListMap" type="com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto" >
         <result property="prvRateGrpCd" column="PRV_RATE_GRP_CD"></result>

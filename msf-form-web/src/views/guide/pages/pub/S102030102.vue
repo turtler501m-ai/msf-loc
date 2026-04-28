@@ -95,30 +95,4 @@ const formData = reactive({
 })
 </script>
 
-<style lang="scss" scoped>
-// 차단리스트
-.block-list-wrap {
-  .block-list {
-    @include flex($d: column) {
-      gap: rem(8px);
-    }
-    & > li {
-      @include flex($h: space-between, $v: center) {
-        gap: rem(8px);
-      }
-      padding: rem(16px);
-      background-color: var(--color-gray-25);
-      // border: var(--border-width-base) solid var(--color-gray-100);
-      box-shadow: inset 0 0 0 1px var(--color-gray-100);
-      border-radius: var(--border-radius-base);
-      .side {
-        flex-shrink: 0;
-        flex-grow: 0;
-        button {
-          color: var(--color-gray-400);
-        }
-      }
-    }
-  }
-}
-</style>
+<style lang="scss" scoped></style>

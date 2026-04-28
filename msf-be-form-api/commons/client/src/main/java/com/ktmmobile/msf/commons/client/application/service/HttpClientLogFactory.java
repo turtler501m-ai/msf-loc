@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -167,7 +168,7 @@ public class HttpClientLogFactory {
         return prefix
             + (hasMaskedMiddle ? "..." : "")
             + suffix
-            + " (length=" + valueLength + ")";
+            + "(length=" + valueLength + ")";
     }
 
     private String toText(HttpHeaders headers, byte[] body) {
@@ -187,6 +188,10 @@ public class HttpClientLogFactory {
             return maskJsonBody(bodyText);
         }
 
+        if (contentType != null && contentType.isCompatibleWith(MediaType.APPLICATION_FORM_URLENCODED)) {
+            return maskFormUrlEncodedBody(bodyText, charset);
+        }
+
         return bodyText;
     }
 
@@ -202,6 +207,21 @@ public class HttpClientLogFactory {
         } catch (JsonProcessingException _) {
             return bodyText;
         }
+    }
+
+    private String maskFormUrlEncodedBody(String bodyText, Charset charset) {
+        if ((bodyMaskedIncludes.isEmpty() && bodyTruncatedIncludes.isEmpty()) || bodyText.isBlank()) {
+            return bodyText;
+        }
+
+        List<FormField> formFields = parseFormUrlEncodedBody(bodyText, charset);
+        if (formFields.isEmpty()) {
+            return bodyText;
+        }
+
+        return formFields.stream()
+            .map(formField -> formField.key() + "=" + nullSafe(maskFormFieldValue(formField.key(), formField.value())))
+            .collect(java.util.stream.Collectors.joining("&"));
     }
 
     private void maskJsonNode(JsonNode node) {
@@ -239,6 +259,19 @@ public class HttpClientLogFactory {
 
     private void maskArrayNode(ArrayNode arrayNode) {
         arrayNode.forEach(this::maskJsonNode);
+    }
+
+    private String maskFormFieldValue(String fieldName, String value) {
+        if (shouldMaskBodyField(fieldName)) {
+            return maskBodyValue(value);
+        }
+
+        BodyTruncateRule bodyTruncateRule = findBodyTruncateRule(fieldName);
+        if (bodyTruncateRule != null) {
+            return truncateBodyValue(value, bodyTruncateRule);
+        }
+
+        return value;
     }
 
     private boolean shouldMaskBodyField(String fieldName) {
@@ -302,7 +335,7 @@ public class HttpClientLogFactory {
             return value;
         }
 
-        return "****** (length=" + value.length() + ")";
+        return "******(length=" + value.length() + ")";
     }
 
     private String truncateBodyValue(String value, BodyTruncateRule bodyTruncateRule) {
@@ -318,7 +351,41 @@ public class HttpClientLogFactory {
 
         String prefix = value.substring(0, Math.min(prefixLength, value.length()));
         String suffix = value.substring(Math.max(prefix.length(), value.length() - suffixLength));
-        return prefix + "..." + suffix + " (length=" + value.length() + ")";
+        return prefix + "..." + suffix + "(length=" + value.length() + ")";
+    }
+
+    private List<FormField> parseFormUrlEncodedBody(String bodyText, Charset charset) {
+        List<FormField> formFields = new ArrayList<>();
+        String[] pairs = bodyText.split("&");
+        for (String pair : pairs) {
+            if (pair == null || pair.isEmpty()) {
+                continue;
+            }
+
+            int separatorIndex = pair.indexOf('=');
+            String encodedKey = separatorIndex >= 0 ? pair.substring(0, separatorIndex) : pair;
+            String encodedValue = separatorIndex >= 0 ? pair.substring(separatorIndex + 1) : "";
+
+            formFields.add(new FormField(
+                decodeFormComponent(encodedKey, charset),
+                decodeFormComponent(encodedValue, charset)
+            ));
+        }
+        return formFields;
+    }
+
+    private String decodeFormComponent(String value, Charset charset) {
+        return URLDecoder.decode(value, charset);
+    }
+
+    private record FormField(
+        String key,
+        String value
+    ) {
+    }
+
+    private String nullSafe(String value) {
+        return value == null ? "" : value;
     }
 
     private record HeaderLogRule(

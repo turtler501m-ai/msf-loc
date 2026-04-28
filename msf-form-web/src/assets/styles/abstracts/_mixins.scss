@@ -292,3 +292,37 @@ $border-width-base: 1px;
   }
   @content;
 }
+
+// $type: padding(기본), margin, height, top, bottom, left, right
+// $dir: top, bottom, left, right
+// $base: 디자인 가이드 수치
+@mixin safe-area($dir: bottom, $base: 0px, $type: padding) {
+  // 1. 방향(top, bottom...)에 따라 CSS 변수명(--sat, --sab...) 결정
+  $suffix: '';
+  @if $dir == top {
+    $suffix: 't';
+  } @else if $dir == bottom {
+    $suffix: 'b';
+  } @else if $dir == left {
+    $suffix: 'l';
+  } @else if $dir == right {
+    $suffix: 'r';
+  }
+
+  $env-var: var(--sa#{$suffix}); // 실제 기기에서 전달받을 Safe Area 변수 (예: var(--sat))
+
+  // 2. 전달받은 $type에 따라 스타일 생성
+  @if $type == height {
+    // 높이 계산: 기본 높이 + 세이프 영역
+    height: calc(#{$base} + #{$env-var});
+  } @else if $type == width {
+    // 너비 계산: 기본 너비 + 세이프 영역
+    width: calc(#{$base} + #{$env-var});
+  } @else if $type == $dir {
+    // 위치 직접 지정 (예: top: 0px)일 때
+    #{$dir}: calc(#{$base} + #{$env-var});
+  } @else {
+    // 속성 조합 (예: padding-top, margin-bottom)
+    #{$type}-#{$dir}: calc(#{$base} + #{$env-var});
+  }
+}

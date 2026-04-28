@@ -2,7 +2,8 @@
   Step이 있는 경우 화면의 레이아웃
 -->
 <template>
-  <div class="step-wrapper-layout">
+  <MsfButton variant="text" @click="onClickTempCompleteBtn">접수 완료</MsfButton>
+  <div v-if="!isComplete" class="step-wrapper-layout">
     <!-- 왼쪽 스텝 표현 -->
     <MsfStepIndicator :currentStep="currentStepIndex" />
     <!-- 스텝 컨텐츠 -->
@@ -70,6 +71,7 @@
       </div>
     </MsfCustomScroll>
   </div>
+  <MsfRequestComplete v-else :form-type="formType" :form-data="formData" />
 </template>
 
 <script setup>
@@ -85,7 +87,8 @@ import {
   nextTick,
 } from 'vue'
 import { useRoute } from 'vue-router'
-import { getFormComponent } from '@/libs/utils/comp.utils'
+import { getFormTypeCode } from '@/libs/utils/comn.utils'
+import { getFormComponent, showAlert, showConfirm } from '@/libs/utils/comp.utils'
 import { useMsfMenuStore } from '@/stores/msf_menu'
 import { useMsfStepStore } from '@/stores/msf_step'
 import { mainScrollRef } from '@/hooks/useGlobalScroll'
@@ -111,6 +114,10 @@ const allSteps = ref([])
 // [추가] 자식 컴포넌트 접근용 배열 및 취합용 데이터 객체
 const stepRefs = ref([])
 
+const isComplete = ref(false)
+const formType = ref('') // 신청서 유형 (신규, 번호이동, 기변 등)
+const formData = ref({}) // 신청서 데이터 (각 스텝에서 입력한 내용들을 최종적으로 취합할 객체)
+
 // 2. 상태 관리
 const currentStepIndex = ref(0) // 현재 진행 중인 스텝 인덱스
 const isCurrentStepComp = ref(stepStore.steps[route.params?.domain]) // '현재' 스텝의 유효성 통과 여부
@@ -131,6 +138,8 @@ const isStepComplete = computed(() =>
 )
 
 const initAllSteps = async () => {
+  isComplete.value = false
+  formData.value = {}
   allSteps.value = stepStore.steps[route.params?.domain].map((v) => ({
     component: shallowRef(getFormComponent(route.params?.domain, v)),
   }))
@@ -188,7 +197,7 @@ const onClickPrevPayCostBtn = () => {
 }
 
 const onClickClearBtn = async () => {
-  if (confirm('모두 초기화됩니다. 계속할까요?')) {
+  showConfirm('모두 초기화됩니다. 계속할까요?', async () => {
     if (stepRefs.value[currentStepIndex.value]?.reset) {
       await stepRefs.value[currentStepIndex.value].reset()
     } else if (stepRefs.value[0]?.reset) {
@@ -196,7 +205,7 @@ const onClickClearBtn = async () => {
     }
 
     initAllSteps()
-  }
+  })
 }
 
 const onClickNextBtn = async () => {
@@ -211,18 +220,30 @@ const onClickNextBtn = async () => {
 }
 
 const onClickCompelteBtn = async () => {
-  if (!confirm('신청서를 등록하시겠습니까?')) {
-    return false
-  }
+  showConfirm('신청서를 등록하시겠습니까?', async () => {
+    // result 형식: { name: '홍길동', phone: '010-1234-5678', formKey: 'some-key' }
+    const result = await stepRefs.value[currentStepIndex.value]?.save()
+    if (!result) {
+      showAlert('신청서 등록이 실패하였습니다. 다시 시도해 주세요.')
+      return false
+    }
 
-  const result = await stepRefs.value[currentStepIndex.value]?.save()
-  if (!result) {
-    alert('신청서 등록이 실패하였습니다. 다시 시도해 주세요.')
-    return false
-  }
+    showAlert('신청서 등록이 완료되었습니다.', () => {
+      // 최종 신청 완료화면으로 이동
+      formData.value = { type: getFormTypeCode(route.path), ...result }
+      isComplete.value = true
+    })
+  })
+}
 
-  alert('신청서 등록이 완료되었습니다.')
-  // 최종 신청 완료화면으로 이동
+const onClickTempCompleteBtn = () => {
+  formData.value = {
+    type: getFormTypeCode(route.path),
+    name: '홍길동',
+    phone: '010-1234-5678',
+    formKey: '1111',
+  }
+  isComplete.value = true
 }
 
 onBeforeMount(async () => {

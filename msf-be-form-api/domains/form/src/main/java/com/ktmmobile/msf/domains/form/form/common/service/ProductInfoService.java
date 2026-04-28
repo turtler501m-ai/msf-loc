@@ -1,15 +1,22 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
+import com.ktmmobile.msf.domains.form.common.code.CategoryType;
+import com.ktmmobile.msf.domains.form.common.dto.IntmInsrRelDTO;
+import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
+import com.ktmmobile.msf.domains.form.common.repository.McpApiClient;
 import com.ktmmobile.msf.domains.form.form.common.dto.*;
 import com.ktmmobile.msf.domains.form.form.common.repository.msp.ProductInfoReadMapper;
 import com.ktmmobile.msf.domains.form.form.common.repository.smartform.ProductSmartInfoReadMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,8 +26,11 @@ import static com.ktmmobile.msf.domains.form.form.common.constant.PhoneConstant.
 @RequiredArgsConstructor
 public class ProductInfoService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProductInfoService.class);
+    private final McpApiClient mcpApiClient;
     private final ProductInfoReadMapper productInfoReadMapper;
     private final ProductSmartInfoReadMapper productSmartInfoReadMapper;
+    private final AuthInfoService authInfoService;
 
     //판매정책조회
     /*public List<MspSalePlcyMstInfoDto> getMspSalePlcyMstList(CommonSearchCondition condition) {
@@ -28,7 +38,7 @@ public class ProductInfoService {
         return data;
     }*/
     //판매정책조회 (PRDT_ID 값 k코드가 있으면 판매정책 하나가 조회됨)
-    public List<MspSalePlcyMstInfoDto> getMspSalePlcyMstList(ProductSearchCondition condition) {
+    public List<MspSalePlcyMstInfoDto> getMspSalePlcyMstList(ProductInfoRequest condition) {
         List<MspSalePlcyMstInfoDto> mspSalePlcyInfo = productInfoReadMapper.selectMspSalePlcyMstList(condition);
         List<MspSalePlcyMstInfoDto> distinctList = new ArrayList<>(
                 mspSalePlcyInfo.stream()
@@ -43,7 +53,7 @@ public class ProductInfoService {
     }
 
     //할인유형조회
-    public List<MspSalePlcyMstInfoDto> getSaleTypeList(ProductSearchCondition condition) {
+    public List<MspSalePlcyMstInfoDto> getSaleTypeList(ProductInfoRequest condition) {
         List<MspSalePlcyMstInfoDto> salePlcyInfo = productInfoReadMapper.selectSaleTypeList(condition);
         return salePlcyInfo;
 //        List<MspSalePlcyMstInfoDto> mspSalePlcyInfo = productInfoMapper.selectMspSalePlcyMstList(condition);
@@ -61,38 +71,38 @@ public class ProductInfoService {
     }
 
     //요금 약정기간 조회
-    public List<MspSaleAgrmMstInfoDto> getMspSaleAgrmMstList(ProductSearchCondition condition) {
+    public List<MspSaleAgrmMstInfoDto> getMspSaleAgrmMstList(ProductInfoRequest condition) {
         List<MspSaleAgrmMstInfoDto> data = productInfoReadMapper.selectMspSaleAgrmMstList(condition);
         return data;
     }
 
     //휴대폰 할부기간 조회
-    public List<PhoneInfoDto> getModelMonthlyList(ProductSearchCondition condition) {
+    public List<PhoneInfoDto> getModelMonthlyList(ProductInfoRequest condition) {
         List<PhoneInfoDto> data = productInfoReadMapper.selectModelMonthlyList(condition);
         return data;
     }
 
     //휴대폰 색상 목록 조회
-    public List<PhoneInfoDto> getPrdtColorList(ProductSearchCondition condition) {
+    public List<PhoneInfoDto> getPrdtColorList(ProductInfoRequest condition) {
         List<PhoneInfoDto> data = productInfoReadMapper.selectPrdtColorList(condition);
         return data;
     }
 
     //휴대폰 용량 목록 조회
-    public List<PhoneInfoDto> getPrdtCapacityList(ProductSearchCondition condition) {
+    public List<PhoneInfoDto> getPrdtCapacityList(ProductInfoRequest condition) {
         List<PhoneInfoDto> data = productInfoReadMapper.selectPrdtCapacityList(condition);
         return data;
     }
 
     //휴대폰 목록조회
-    public List<PhoneInfoDto> getPhoneList(ProductSearchCondition condition) {
+    public List<PhoneInfoDto> getPhoneList(ProductInfoRequest condition) {
         condition.setOrgnId("V000000004"); //@삭제필요@ >> 매장재고조회를 위한 임시값 설정
         PhoneSerialCondition phoneSerialCondition = new PhoneSerialCondition();
         phoneSerialCondition.setOrgnId(condition.getOrgnId());
         phoneSerialCondition.setProdId(condition.getProdId());
         phoneSerialCondition.setProdSn(condition.getProdSn());
-        List<ProductCategoryDto> productCategoryDto = this.getPhoneInventoryList(phoneSerialCondition);
-        condition.setListPhoneDto(productCategoryDto);
+        List<CategoryInfoDto> categoryInfoDto = this.getPhoneInventoryList(phoneSerialCondition);
+        condition.setListPhoneDto(categoryInfoDto);
 
         //휴대폰 목록조회는 판매정책조회하여 조건절에 추가필요.
         condition.setPlcyTypeCd("N"); //CMN0050 정책유형코드 : W >> condition.setPlcyTypeCd(OFFLINE_FOR_MSP);
@@ -106,15 +116,17 @@ public class ProductInfoService {
         condition.setListMspSaleDto(listMspSaleDto);
 
         List<PhoneInfoDto> data = null;
-        if (!listMspSaleDto.isEmpty() && !productCategoryDto.isEmpty()) {
+        if (!listMspSaleDto.isEmpty() && !categoryInfoDto.isEmpty()) {
             data = productInfoReadMapper.selectPhoneList(condition);
         }
         return data;
     }
 
     //요금제 목록조회
-    public List<RateInfoDto> getRateList(ProductSearchCondition condition) {
-        List<ProductCategoryDto> listRateDto = getProductCategoryDetailList(condition); //선택된 카테고리로 조회된 요금제 목록
+    public List<RateInfoDto> getRateList(ProductInfoRequest condition) {
+        CategoryRelRequest productCategoryProdRequest = new CategoryRelRequest();
+        productCategoryProdRequest.setProdCtgTypeCd(condition.getProdCtgTypeCd());
+        List<CategoryInfoDto> listRateDto = this.getCategoryDetailList(productCategoryProdRequest); //선택된 카테고리로 조회된 요금제 목록
         condition.setListRateDto(listRateDto);
         String reqBuyTypeCd = condition.getReqBuyTypeCd();
         if ("UU".equals(reqBuyTypeCd)) { //유심상품을 선택
@@ -138,14 +150,14 @@ public class ProductInfoService {
     }
 
     //공시지원금 조회
-    public List<PhoneInfoDto> getMspOfficialNoticeSupport(ProductSearchCondition condition) {
+    public List<PhoneInfoDto> getMspOfficialNoticeSupport(ProductInfoRequest condition) {
         List<PhoneInfoDto> data = productInfoReadMapper.selectMspOfficialNoticeSupport(condition);
         return data;
     }
 
     //휴대폰 매장 재고 조회 (postgre)
-    public List<ProductCategoryDto> getPhoneInventoryList(@Valid PhoneSerialCondition condition) {
-        List<ProductCategoryDto> data = productSmartInfoReadMapper.selectPhoneInventoryList(condition);
+    public List<CategoryInfoDto> getPhoneInventoryList(@Valid PhoneSerialCondition condition) {
+        List<CategoryInfoDto> data = productSmartInfoReadMapper.selectPhoneInventoryList(condition);
         return data;
     }
 
@@ -156,130 +168,144 @@ public class ProductInfoService {
     }
 
     //요금제,부가서비스,안심보험 카테고리 목록 조회 (postgre)
-    public List<ProductCategoryDto> getProductCategoryList(ProductSearchCondition condition) {
-        List<ProductCategoryDto> data = null;
-        String prodCtgTypeCd = condition.getProdCtgTypeCd(); //카테고리 조회를 위한 타입 (P:요금제, R:부가서비스, ?:안심보험)
-        if (!StringUtils.hasText(prodCtgTypeCd)) {
-            condition.setProdCtgTypeCd("P"); //요금제로 카테고리로 기본 설정
-        }
+    public List<CategoryInfoDto> getCategoryList(CategoryMstRequest condition) {
+        List<CategoryInfoDto> data = null;
+        CategoryType prodCtgTypeCd = condition.getProdCtgTypeCd(); //카테고리 조회를 위한 타입 (P:요금제, R:부가서비스, I:안심보험)
+        condition.setProdCtgTypeCd(prodCtgTypeCd);
         data = productSmartInfoReadMapper.selectProductCategoryList(condition);
         return data;
+
+        //String prodCtgTypeCd = condition.getProdCtgTypeCd(); //카테고리 조회를 위한 타입 (P:요금제, R:부가서비스, ?:안심보험)
+        /*if (!StringUtils.hasText(prodCtgTypeCd)) {
+            condition.setProdCtgTypeCd("P"); //요금제로 카테고리로 기본 설정
+        }*/
     }
 
     //요금제,부가서비스,안심보험 카테고리 상세 조회 (postgre)
-    public List<ProductCategoryDto> getProductCategoryDetailList(ProductSearchCondition condition) {
-        List<ProductCategoryDto> data = null;
-        //조회하려는 카테고리의 ProdCtgTypeCd(요금,부가서비스,안심보험) 및 ProdCtgId 가 넘어오지 않은 경우
-        //카테고리 목록을 조회하여 맨 처음꺼로 카테고리를 상세조회하도록 함
-        if (!StringUtils.hasText(condition.getProdCtgTypeCd()) && !StringUtils.hasText(condition.getProdCtgId())) {
-            List<ProductCategoryDto> productCategoryList = this.getProductCategoryList(condition);
-            if (!productCategoryList.isEmpty()) {
-                ProductCategoryDto productCategoryDto = productCategoryList.stream()
-                        .findFirst()
-                        .orElse(null);
-                condition.setProdCtgId(productCategoryDto.getCtgCd());
-            }
-        }
+    public List<CategoryInfoDto> getCategoryDetailList(CategoryRelRequest condition) {
+        List<CategoryInfoDto> data = null;
+        //prodCtgTypeCd : 카테고리 구분코드 (P,R,I)
+        //prodCtgId : 카테고리 상세코드 (prodCtgTypeCd 에 따른 상세코드)
         data = productSmartInfoReadMapper.selectProductCategoryDetailList(condition);
         return data;
     }
 
-    //부가서비스 목록 조회
-    //서비스변경에서도 선택한 카테고리 값을 받아서 조회하는 걸로 처리
-    //신규/변경의 경우 카테고리 코드를 프론트에서 받아오는 형태로 변경예정
-    //기기변경의 경우 가입중 부가서비스 조회해서 합치는 것 처리필요
+    //부가서비스 목록 조회 (신규/변경의 신규가입 및 번호이동 그리고 서비스변경)
     public List<MsfRequestAdditionResponse> getAdditionList(MsfRequestAdditionRequest condition) {
-        String operTypeCd = condition.getOperTypeCd(); //업무구분코드 NAC3(신규가입), MNP3(번호이동), HDN3(기기변경)
-        String prodCtgId = condition.getProdCtgId(); //프론트에서 전달되는 부가서비스 카테고리의 아이디
         List<MsfRequestAdditionResponse> msfRequestAdditionResponseList = new ArrayList<>();
         List<MspAdditionDto> mspAdditionDtoList = new ArrayList<>();
 
-        //스마트 관리자에 설정된 부가서비스 목록 조회
-        ProductSearchCondition productSearchCondition = new ProductSearchCondition();
-        productSearchCondition.setProdCtgTypeCd("R"); //R:부가서비스
+        MsfRequestAdditionResponse msfRequestAdditionResponse = new MsfRequestAdditionResponse();
+        msfRequestAdditionResponse.setFreeAddition(new ArrayList<>());
+        msfRequestAdditionResponse.setPaidAddition(new ArrayList<>());
 
-        if (StringUtils.hasText(prodCtgId)) {
-            MsfRequestAdditionResponse msfRequestAdditionResponse = new MsfRequestAdditionResponse();
-            msfRequestAdditionResponse.setFreeAddition(new ArrayList<>());
-            msfRequestAdditionResponse.setPaidAddition(new ArrayList<>());
-            //스마트 관리자에서 카테고리로 상품조회
-            productSearchCondition.setProdCtgId(prodCtgId);
-            List<ProductCategoryDto> productCategoryProdList = this.getProductCategoryDetailList(productSearchCondition);
+        List<String> prodCtgIdList = condition.getCategoryMstRequest().getProdCtgId();
+        //List<CategoryType> prodCtgIdList = condition.getCategoryMstRequest().getProdCtgId();
+        List<CategoryInfoDto> categoryInfoDtoListAll = new ArrayList<CategoryInfoDto>();
+        CategoryRelRequest categoryRelRequest = new CategoryRelRequest();
 
-            //조회된 상품목록을 List 에 담기
-            if (!productCategoryProdList.isEmpty()) {
-                //M전산에서 조회하기
-                condition.setListProductCategoryDto(productCategoryProdList); //스마트에서 조회한 상품목록을 파라미터로 전달
-                mspAdditionDtoList = this.getMsfAdditionList(condition);
-                msfRequestAdditionResponse.setAdditionCtgCd(prodCtgId); //리턴할 부가서비스 목록의 카테고리 항목 세팅
-                mspAdditionDtoList.forEach(mspAdditionDto -> {
-                    if (Integer.parseInt(mspAdditionDto.getBaseAmt()) == 0) {
-                        msfRequestAdditionResponse.getFreeAddition().add(mspAdditionDto);
-                    } else {
-                        msfRequestAdditionResponse.getPaidAddition().add(mspAdditionDto);
-                    }
-                });
-                msfRequestAdditionResponseList.add(msfRequestAdditionResponse);
+        //요청한 부가서비스 그룹코드로
+        //스마트 관리자에 설정된 부가서비스 상품 목록 조회해오기
+        prodCtgIdList.forEach(id -> {
+            categoryRelRequest.setProdCtgTypeCd("R"); //R:부가서비스
+            categoryRelRequest.setProdCtgId(id);
+            List<CategoryInfoDto> categoryInfoDtoList = this.getCategoryDetailList(categoryRelRequest);
+            categoryInfoDtoListAll.addAll(categoryInfoDtoList);
+        });
 
-                //기기변경인 경우 가입중 부가서비스 목록 조회 ( mcp-api : /mypage/regService )
-                /*List<MspAdditionDto> mspAdditionDtoRegList = new ArrayList<>();
-                if ("HDN3".equals(operTypeCd)) {
-                    mspAdditionDtoRegList.get(0).setRateCd("SMARTBREK");
-                    mspAdditionDtoRegList.get(0).setRateNm("휴대폰안심보험 스마트파손형");
-                    mspAdditionDtoRegList.get(0).setBaseAmt("1300");
-                    mspAdditionDtoRegList.get(1).setRateCd("KISSTDSAL");
-                    mspAdditionDtoRegList.get(1).setRateNm("M 기본료할인 6개월");
-                    mspAdditionDtoRegList.get(1).setBaseAmt("-2000");
-                }*/
-            }
+        //조회된 상품목록을 List 에 담기
+        if (!categoryInfoDtoListAll.isEmpty()) {
+            //M전산에서 조회하기
+            condition.setProductCategoryInfoDtoList(categoryInfoDtoListAll);
+            mspAdditionDtoList = this.getMsfAdditionList(condition);
+            msfRequestAdditionResponse.setFreeAndPaid(mspAdditionDtoList);
+            msfRequestAdditionResponseList.add(msfRequestAdditionResponse);
         }
         return msfRequestAdditionResponseList;
     }
 
-    //신규/변경에서 부가서비스 목록 조회 시 스마트 상품카테고리의 부가서비스 유료/무료 항목을 가져오도록 조회함. (2026.04.22)
-    /*public List<MsfRequestAdditionResponse> getAdditionList(MsfRequestAdditionRequest condition) {
-        //String formTypeCd = condition.getFormTypeCd(); //신규변경 : 1, 서비스변경 : 2?
+    //부가서비스 목록 조회 (기기변경의 가입중 부가서비스 목록조회)
+    public List<MsfRequestAdditionResponse> getActiveAdditionList(MspJuoSubInfoCondition request) {
+        //고객구분, 고객식별번호, 핸드폰번호로 고객조회해서 고식별번호와 핸드폰번호로
+        //고객명과 핸드폰번호로 기기변경 조회서비스 호출하여 고객아이디 조회
+        MspJuoSubInfoResponse customerInfoResponse = authInfoService.getJuoSubInfo(request);
+        String ncn = customerInfoResponse.getContractNum();
+
+        //기기변경인 경우 가입중 부가서비스 목록 조회 ( mcp-api : /mypage/regService ) //계약번호 필요
+        List<McpRegServiceDto> regServiceList = mcpApiClient.post(
+                "/mypage/regService",
+                ncn,
+                List.class
+        );
+
         List<MsfRequestAdditionResponse> msfRequestAdditionResponseList = new ArrayList<>();
+        MsfRequestAdditionRequest condition = new MsfRequestAdditionRequest(); //
+        List<MspAdditionDto> mspAdditionDtoList = new ArrayList<>();
 
-        //스마트 관리자에 설정된 부가서비스 목록 조회
-        ProductSearchCondition productSearchCondition = new ProductSearchCondition();
-        productSearchCondition.setProdCtgTypeCd("R"); //R:부가서비스
-        List<ProductCategoryDto> productCategoryList = this.getProductCategoryList(productSearchCondition);
-        if (!productCategoryList.isEmpty()) {
-            productCategoryList.forEach(productCategoryDto -> {
-                List<MspAdditionDto> mspAdditionDtoList = new ArrayList<>();
-                MsfRequestAdditionResponse msfRequestAdditionResponse = new MsfRequestAdditionResponse();
-                msfRequestAdditionResponse.setFreeAddition(new ArrayList<>());
-                msfRequestAdditionResponse.setPaidAddition(new ArrayList<>());
-                //스마트 관리자에서 카테고리로 상품조회
-                productSearchCondition.setProdCtgId(productCategoryDto.getCtgCd());
-                List<ProductCategoryDto> productCategoryProdList = this.getProductCategoryDetailList(productSearchCondition);
+        MsfRequestAdditionResponse msfRequestAdditionResponse = new MsfRequestAdditionResponse();
+        msfRequestAdditionResponse.setFreeAddition(new ArrayList<>()); //무료부가서비스 return
+        msfRequestAdditionResponse.setPaidAddition(new ArrayList<>()); //유료부가서비스 return
 
-                //조회된 상품목록을 List 에 담기
-                if (!productCategoryProdList.isEmpty()) {
-                    //M전산에서 조회하기
-                    condition.setListProductCategoryDto(productCategoryProdList); //스마트에서 조회한 상품목록을 파라미터로 전달
-                    mspAdditionDtoList = this.getMsfAdditionList(condition);
-                    msfRequestAdditionResponse.setAdditionCtgCd(productCategoryDto.getCtgCd()); //리턴할 부가서비스 목록의 카테고리 항목 세팅
-                    mspAdditionDtoList.forEach(mspAdditionDto -> {
-                        if (Integer.parseInt(mspAdditionDto.getBaseAmt()) == 0) {
-                            msfRequestAdditionResponse.getFreeAddition().add(mspAdditionDto);
-                        } else {
-                            msfRequestAdditionResponse.getPaidAddition().add(mspAdditionDto);
-                        }
-                    });
-                    msfRequestAdditionResponseList.add(msfRequestAdditionResponse);
+        List<CategoryInfoDto> categoryInfoDtoList = regServiceList.stream()
+                .map(mcpDto -> {
+                    CategoryInfoDto categoryDto = new CategoryInfoDto();
+                    categoryDto.setProdId(mcpDto.getRateCd());
+                    return categoryDto;
+                })
+                .collect(Collectors.toList());
 
-                }
-            });
+        if (!categoryInfoDtoList.isEmpty()) {
+            //M전산에서 조회하기
+            condition.setProductCategoryInfoDtoList(categoryInfoDtoList);
+            mspAdditionDtoList = this.getMsfAdditionList(condition);
+            msfRequestAdditionResponse.setFreeAndPaid(mspAdditionDtoList);
         }
+
+        msfRequestAdditionResponseList.add(msfRequestAdditionResponse);
+
         return msfRequestAdditionResponseList;
-    }*/
+    }
 
     //M전산 테이블에서 부가서비스 상세 정보 조회하기
     public List<MspAdditionDto> getMsfAdditionList(MsfRequestAdditionRequest condition) {
         List<MspAdditionDto> data = productInfoReadMapper.selectMsfAdditionList(condition);
         return data;
+    }
+
+    //안심보험 목록 조회
+    public List<IntmInsrRelDTO> getInsrProdList(InsrProdRequest request) {
+        /*{
+            "intmInsrRelDTO": {
+            "reqBuyType": "MM", -- MM : 단말, UU : 유심
+            "rprsPrdtId":"K7001165" -- 선택한 단말코드 (유심인 경우 해당없음)
+        },
+            "prodCtgId": "I000001" -- 스마트에 등록된 안심보험 카테고리 목록 중 선택한 하나의 값을 보냄
+        }*/
+        //1. M전산에서 안심보험 목록 조회
+        List<IntmInsrRelDTO> insrProdList = mcpApiClient.post(
+                "/appform/selectInsrProdList",
+                request.getIntmInsrRelDTO(),
+                List.class
+        );
+
+        //2. 스마트에서 요금제/부가서비스/안심보험 목록 관리 테이블에서 조회
+        CategoryRelRequest categoryRelRequest = new CategoryRelRequest();
+        categoryRelRequest.setProdCtgTypeCd("I"); //I:안심보험 카테고리
+        categoryRelRequest.setProdCtgId(request.getProdCtgId());
+        List<CategoryInfoDto> categoryInfoDtoList = this.getCategoryDetailList(categoryRelRequest);
+
+        //3. 스마트에 등록된 안심보험 목록 기준으로 추출
+        Set<String> validIds = categoryInfoDtoList.stream()
+                .map(CategoryInfoDto::getProdId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        //4. M전산에서 조회한 안심보험 목록이 스마트에 등록된 안심보험 목록에 포함된 것만 INSR_PROD_CD 기준으로 필터링 처리
+        List<IntmInsrRelDTO> filteredList = insrProdList.stream()
+                .filter(insr -> validIds.contains(insr.getInsrProdCd()))
+                .collect(Collectors.toList());
+
+        return filteredList;
     }
 
 }

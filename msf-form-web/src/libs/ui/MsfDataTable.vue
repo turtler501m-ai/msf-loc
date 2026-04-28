@@ -32,7 +32,6 @@
         :class="{ 'is-single-check': props.showSingleCheck }"
         @grid-ready="onGridReady"
         @selection-changed="onSelectionChanged"
-        @row-double-clicked="onRowDoubleClicked"
         :domLayout="props.showPaging ? 'autoHeight' : 'normal'"
       />
       <MsfPagination
@@ -116,7 +115,7 @@ const props = defineProps({
   },
 })
 
-const emits = defineEmits(['success', 'failed', 'selected', 'movePage', 'row-double-click'])
+const emits = defineEmits(['success', 'failed', 'selected', 'movePage'])
 
 const localeText = ref(AG_GRID_LOCALE_KR)
 const singleOptions = ref({
@@ -227,10 +226,6 @@ const onSelectionChanged = () => {
     selectedData.value = gridApi.value.getSelectedRows()[0]
   }
   emits('selected', selectedData.value)
-}
-
-const onRowDoubleClicked = (params) => {
-  emits('row-double-click', params?.data)
 }
 
 watch(

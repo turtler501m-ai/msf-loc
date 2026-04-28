@@ -50,10 +50,6 @@ import { isEmpty } from '@/libs/utils/string.utils'
 const props = defineProps({
   policy: { type: String, required: true }, // policy: 불러올 약관 세트의 키(샘플)
   onlyRequired: { type: Boolean, default: false }, // 필수 항목만 모두 체크되었을 때 전체동의로 간주할지 여부
-  showTerms: {
-    type: Array,
-    default: () => [],
-  },
   required: Boolean, // 필수 동의 여부 (true: 필수 / false: 선택)
   checkboxLabel: {
     type: String, // 체크박스 레이블 설정 필요시 사용
@@ -63,6 +59,10 @@ const props = defineProps({
     type: String, // 안내 문구 설정 필요시 사용
     default: '※ 고객님의 편의를 위한 모든 약관(선택약관 포함)에 일괄동의 하시겠습니까?',
   },
+  specTerms: {
+    type: Array,
+    default: () => [], // 약관 코드별로 별도의 설명 문구를 전달받는 경우 { [code]: '설명 문구' }
+  },
 })
 
 const emit = defineEmits(['checked'])
@@ -70,20 +70,30 @@ const emit = defineEmits(['checked'])
 const isAllExpanded = ref(false)
 const internalTerms = ref([])
 
+const hasSpecTerms = (item) => {
+  console.log(
+    'hasSpecTerms:',
+    item.code,
+    ':',
+    props.specTerms?.some((t) => t.code === item?.code),
+  )
+  return props.specTerms?.some((t) => t.code === item?.code)
+}
+
 // pocliy 에서 불러올 약관들(컴퍼넌트 내부에 지정)
 const loadTermsData = async () => {
-  const result = await post('/api/shared/form/common/terms/list', { groupCode: props.policy })
-  const codes =
-    result.data?.codes?.filter(
-      (v) => !v.commonStatus || (v.commonStatus && props.showTerms.includes(v.code)),
-    ) || []
+  const result = await post('/api/shared/form/common/terms/list', {
+    groupCode: props.policy,
+    specTermsList: props.specTerms,
+  })
+  const codes = result.data?.codes?.filter((v) => !v.commonStatus || hasSpecTerms(v)) || []
 
   const tree = []
   for (const item of codes) {
     if (!isEmpty(item.parentCode)) {
       continue
     }
-    if (item.commonStatus && !props.showTerms.includes(item.code)) {
+    if (item.commonStatus && !hasSpecTerms(item)) {
       continue
     }
     tree.push({ ...item, children: [], checked: false })
@@ -92,7 +102,7 @@ const loadTermsData = async () => {
     if (isEmpty(item.parentCode)) {
       continue
     }
-    if (item.commonStatus && !props.showTerms.includes(item.code)) {
+    if (item.commonStatus && !hasSpecTerms(item)) {
       continue
     }
     const parent = tree.find((v) => v.code === item.parentCode)
@@ -100,57 +110,6 @@ const loadTermsData = async () => {
   }
 
   internalTerms.value = tree
-
-  // const TERMS_DATABASE = {
-  //   join: [
-  //     {
-  //       code: 'term-1',
-  //       name: '서비스 이용약관',
-  //       required: 'Y',
-  //       commonStatus: true,
-  //       checked: false,
-  //       content: '서비스 이용약관 상세 내용입니다.',
-  //     },
-  //     {
-  //       code: 'term-2',
-  //       name: '개인정보 수집 및 이용',
-  //       required: 'Y',
-  //       commonStatus: false,
-  //       checked: false,
-  //       children: [
-  //         {
-  //           name: '수집항목: 연락처, 이메일1',
-  //           required: 'Y',
-  //           commonStatus: false,
-  //           checked: false,
-  //           content: '수집항목: 연락처, 이메일1 상세 내용입니다.',
-  //         },
-  //         {
-  //           name: '수집항목: 연락처, 이메일2',
-  //           required: 'N',
-  //           commonStatus: false,
-  //           checked: false,
-  //           content: '수집항목: 연락처, 이메일2 상세 내용입니다.',
-  //         },
-  //       ],
-  //     },
-  //     {
-  //       code: 'term-3',
-  //       name: '마케팅 정보 수신 동의',
-  //       required: 'N',
-  //       commonStatus: false,
-  //       checked: false,
-  //       content: '마케팅 정보 수신 동의 상세 내용입니다.',
-  //     },
-  //   ],
-  //   marketing: [
-  //     { code: 'm-1', name: '이메일 수신 동의', required: 'N', commonStatus: false, checked: false },
-  //     { code: 'm-2', name: 'SMS 수신 동의', required: 'N', commonStatus: false, checked: false },
-  //   ],
-  // }
-
-  // // 복사를 통해 원본 데이터와 분리하여 상태 관리
-  // internalTerms.value = JSON.parse(JSON.stringify(TERMS_DATABASE[props.policy] || []))
 }
 
 onMounted(loadTermsData)

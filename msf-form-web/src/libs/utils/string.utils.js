@@ -29,6 +29,31 @@ export const formatCurrency = (num) => {
 }
 
 /**
+ * 이름 마스킹
+ * - 홍길동 -> 홍길*
+ * @param {string} str
+ * @returns
+ */
+export const maskingName = (str) => {
+  if (isEmpty(str)) return ''
+
+  return str.replace(/(?<=^.{2,})./gu, '*')
+}
+
+/**
+ * 휴대폰 번호 마스킹
+ * - 010-1234-5678 -> 010-12**-**78
+ *
+ * @param {string} str
+ * @returns
+ */
+export const maskingMobile = (str) => {
+  if (isEmpty(str)) return ''
+
+  return str.replace(/(?<=^.{6,7}|^.{9,10})\d/g, '*')
+}
+
+/**
  * 휴대폰 번호 정합성 체크
  * - 체크할 값 형식: 00000000000 또는 000-0000-0000
  * - null 체크 포함 여부가 true이면 str 값이 null일 경우 false를 반환하고, false이면 str 값이 null이어도 true로 반환한다.

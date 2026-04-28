@@ -8,25 +8,37 @@ public class IntmInsrRelDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** 보험상품코드 */
+    /**
+     * 보험상품코드
+     */
     String insrProdCd;
 
-    /** 단말ID */
+    /**
+     * 단말ID
+     */
     String rprsPrdtId;
 
-    /** 보험상품명 */
+    /**
+     * 보험상품명
+     */
     String insrProdNm;
 
-    /** 구매유형 단말
+    /**
+     * 구매유형 단말
      * 구매:MM
      * USIM(유심)단독 구매:UU
-     * */
+     *
+     */
     private String reqBuyType = REQ_BUY_TYPE_PHONE;
 
-    /** 보상한도금액 */
+    /**
+     * 보상한도금액
+     */
     int cmpnLmtAmt;
 
-    /** 보험약정기간 */
+    /**
+     * 보험약정기간
+     */
     int insrEnggCnt;
 
 

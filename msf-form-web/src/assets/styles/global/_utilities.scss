@@ -181,6 +181,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+// 한줄처리
+.ut-nowrap {
+  white-space: nowrap !important;
+}
 // symbol(입력요소 사이의 기호 표시)
 .ut-symbol {
   @include flex(flex, center, center);
@@ -292,6 +296,19 @@
 // 링크 텍스트
 .link-txt {
   text-decoration: underline;
+}
+
+// 목록 좌상단 카운트 스타일
+.list-total-count {
+  margin-block: rem(24px) rem(16px);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-fit);
+  color: var(--color-gray-600);
+  & > em {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-accent1-base);
+  }
 }
 
 // 중간에 넣는 분리 텍스트영역
@@ -541,7 +558,7 @@ hr.ut-line {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: rem(1px);
+  height: 1px;
   background-color: var(--color-gray-100);
   margin-block: rem(8px);
   border-width: 0;

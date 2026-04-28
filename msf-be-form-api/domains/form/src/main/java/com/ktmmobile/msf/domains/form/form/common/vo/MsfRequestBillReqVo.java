@@ -11,12 +11,6 @@ public class MsfRequestBillReqVo {
 
     Long requestKey;
     String formTypeCd;
-    String cretIp;
-    String cretDt;
-    String cretId;
-    String amdIp;
-    String amdId;
-    String amdDt;
     String reqPayTypeCd;
     String reqBankCd;
     String reqAccountNm;

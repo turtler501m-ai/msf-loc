@@ -11,12 +11,6 @@ public class MsfRequestSaleVo {
 
     Long requestKey;
     String formTypeCd;
-    String cretIp;
-    String cretDt;
-    String cretId;
-    String amdIp;
-    String amdId;
-    String amdDt;
     String modelId;
     String modelMonthly;
     Long modelInstamt;

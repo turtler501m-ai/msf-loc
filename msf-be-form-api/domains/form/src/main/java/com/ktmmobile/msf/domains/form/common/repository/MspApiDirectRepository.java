@@ -909,9 +909,11 @@ public class MspApiDirectRepository {
         logger.debug("[MspApiDirectRepository] selectConSsnObj: paramMap={}", paramMap);
         Map<String, Object> result = mspSession.selectOne("McpMyPageMapper.selectConSsnObj", paramMap);
         logger.debug("[MspApiDirectRepository] selectConSsnObj: result={}", result);
-        if (result == null) return null;
+        if (result == null) {
+            return null;
+        }
         Map<String, String> strResult = new HashMap<String, String>();
-        for (Map.Entry<String, Object> entry : result.entrySet()) {
+        for (Map.Entry<String, Object> entry: result.entrySet()) {
             strResult.put(entry.getKey(), String.valueOf(entry.getValue()));
         }
         return strResult;

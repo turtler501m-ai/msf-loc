@@ -23,7 +23,7 @@
     <!-- 고객(양도고객) 신분증 확인 -->
     <MsfTitleArea title="고객(양도고객) 신분증 확인" />
     <MsfStack vertical type="formgroups">
-      <MsfFormGroup label="신분증" tag="div" required>
+      <!-- <MsfFormGroup label="신분증" tag="div" required>
         <MsfChip
           v-model="formData.tr_idCardScan"
           name="inp-tr_idCardScan"
@@ -38,7 +38,7 @@
             <MsfButton variant="subtle">조회/인증</MsfButton>
           </template>
         </MsfChip>
-      </MsfFormGroup>
+      </MsfFormGroup> -->
       <!-- 신분증 스캔 -->
       <MsfFormGroup label="신분증 스캔" tag="div" required>
         <MsfStack type="field">

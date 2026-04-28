@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.ktmmobile.msf.domains.shared.form.common.ocr.application.dto.IdDocumentResponse;
+import com.ktmmobile.msf.domains.shared.form.common.ocr.application.dto.document.IdDocumentResponse;
 import com.ktmmobile.msf.domains.shared.form.common.ocr.application.port.in.DocumentReader;
 
 @Slf4j

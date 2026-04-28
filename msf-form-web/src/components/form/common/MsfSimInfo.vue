@@ -1,85 +1,69 @@
 <script setup>
-import { reactive } from 'vue'
+import { ref, defineModel, defineProps } from 'vue'
+import { useAuthButton } from '@/hooks/useAuthButton'
+import { post } from '@/libs/api/msf.api'
+import MsfEsimScanModal from './popups/MsfEsimScanModal.vue'
+
+const props = defineProps({
+  customerData: { type: Object, default: () => ({}) },
+  authFlags: { type: Object, default: () => ({}) },
+})
 
 const formData = defineModel({ type: Object, required: true })
+const isEsimScanModalOpen = ref(false)
 
-// const formData = reactive({
-//   /* SIM정보_상품(휴대폰) */
-//   hasSim: '', //SIM보유
-//   usimKindsCd: '', //USIM 선택
-//   reqUsimSn: '', //USIM 번호
-//   simPurchaseMethod: '', //USIM 구매 방식
-//   prodNm: '', //휴대폰 모델병
-//   eid: '', //EID
-//   imei1: '', //IMEI1
-//   imei2: '', //IMEI2
-//   /* 휴대폰 정보_상품 (휴대폰) */
-//   imei: '', //IMEI
-//   /* 번호이동 할 전화번호 */
-//   moveCompanyCd: '', //통신사 선택
-//   moveMobileNo: '', //번호이동 할 전화번호
-//   moveAuthTypeCd: '', //번호이동 인증
-//   moveAuthNo: '', //번호이동 인증 : 일련번호4자리
-//   transferBankNum: '', //번호이동 인증 : 계좌번호4자리
-//   transferCardNum: '', //번호이동 인증 : 신용카드4자리
-//   moveThismonthPayTypeCd: false, //이번달 사용요금
-//   moveAllotmentSttusCd: [], //휴대폰 할부금
-//   moveRefundAgreeYn: [], //미환급금 요금상계(후불)
-//   /* 신규가입 번호 예약 */
-//   reqWantFnNo: '', //번호예약 앞 3자리
-//   reqWantMnNo: '', //번호예약 가운데 4자리
-//   reqWantRnNo: '', //번호예약 뒤 4자리
-//   wishNo: '', //희망 신규번호
-//   /* 부가서비스 신청 */
-//   //무료부가서비스
-//   reqAdditionListNm: [
-//     'freeVas1',
-//     'freeVas2',
-//     'freeVas3',
-//     'freeVas4',
-//     'freeVas5',
-//     'freeVas6',
-//     'freeVas7',
-//     'freeVas8',
-//   ],
-//   addtionId: ['paidVas1'], //유료부가서비스
-//   /* 안심 보험 */
-//   clauseInsuranceYn: '', //가입여부
-//   recCat1: '', //추천 카테고리1
-//   recCat2: '', //추천 카테고리2
-//   /* 납부 정보 */
-//   cstmrBillSendTypeCd: '', //수신유형
-//   reqPayTypeCd: '', //납부방법
-//   autoPayerType: '', //자동이체-납부자유형
-//   reqBankCd: '', //자동이체-은행선택
-//   reqAccountNo: '', //자동이체-계좌번호입력
-//   reqAccountNm: '', //자동이체-납부고객명
-//   reqAccountRrn: '', //자동이체-생년월일(8자리) 임력
-//   reqAccountRelTypeCd: '', //자동이체-관계
-//   isAutoAgree: false, //자동이체-동의
-//   cardPayerType: '', //신용카드-납부자유형
-//   reqCardCompanyCd: '', //신용카드-카드사선택
-//   reqCardNo: '', //신용카드-카드번호입력
-//   reqCardMm: '', //신용카드-유효기간(MM)
-//   reqCardYy: '', //신용카드-유효기간(YY)
-//   reqCardNm: '', //신용카드-납부고객명
-//   reqCardRrn: '', //신용카드-생년월일
-//   cardRelation: '', //신용카드-관계
-//   combId: '', //통합청구-청구계정ID
-//   combAgree: false, //통합청구-동의
-//   /* 메모 */
-//   memo: '', //메모
-// })
+const simAuth = useAuthButton(() => [formData.value?.reqUsimSn], {
+  get value() {
+    return props.authFlags?.reqUsimSn || false
+  },
+  set value(v) {
+    if (props.authFlags) {
+      props.authFlags.reqUsimSn = v
+    }
+  },
+})
+
+const handleSimVerify = async () => {
+  const isEsim = formData.value.hasSim === 'hasSim3'
+  const url = isEsim ? '/api/form/verifyEsimInfo' : '/api/form/verifyUsimInfo'
+  const payload = {
+    iccId: formData.value.reqUsimSn,
+  }
+
+  try {
+    const res = await post(url, payload)
+    if (res && res.code === '0000') {
+      simAuth.verify()
+      alert('SIM 유효성 체크가 완료되었습니다.')
+    } else {
+      alert(res.message || 'SIM 유효성 체크에 실패했습니다.')
+    }
+  } catch (error) {
+    console.error('Verify SIM info error:', error)
+    alert('SIM 유효성 체크 중 오류가 발생했습니다.')
+  }
+}
+
+const onEsimScanConfirm = (data) => {
+  console.log('eSIM 스캔 결과:', data)
+  if (data) {
+    formData.value.prodNm = data.prodNm || formData.value.prodNm
+    formData.value.eid = data.eid || formData.value.eid
+    formData.value.imei1 = data.imei1 || formData.value.imei1
+    formData.value.imei2 = data.imei2 || formData.value.imei2
+    formData.value.reqUsimSn = data.iccId || formData.value.reqUsimSn
+    if (props.authFlags) {
+      props.authFlags.imei = true
+    }
+  }
+}
 
 const validate = () => {
   if (!formData.value?.hasSim) return false
-  if (!formData.value?.usimKindsCd) return false
+  if (formData.value?.hasSim !== 'hasSim3' && !formData.value?.usimKindsCd) return false
   if (!formData.value?.reqUsimSn) return false
+  if (!props.authFlags?.reqUsimSn) return false
   if (!formData.value?.simPurchaseMethod) return false
-  if (!formData.value?.prodNm) return false
-  if (!formData.value?.eid) return false
-  if (!formData.value?.imei1) return false
-  if (!formData.value?.imei2) return false
   return true
 }
 
@@ -101,7 +85,7 @@ defineExpose({ validate })
         ]"
       />
     </MsfFormGroup>
-    <MsfFormGroup label="USIM 선택" tag="div" required>
+    <MsfFormGroup label="USIM 선택" tag="div" required v-if="formData.hasSim !== 'hasSim3'">
       <MsfChip
         v-model="formData.usimKindsCd"
         name="inp-simType"
@@ -111,16 +95,32 @@ defineExpose({ validate })
         ]"
       />
     </MsfFormGroup>
-    <MsfFormGroup label="USIM 번호" required>
+    <MsfFormGroup :label="formData.hasSim === 'hasSim3' ? 'eSIM 번호' : 'USIM 번호'" required>
       <MsfStack type="field">
-        <MsfInput v-model="formData.reqUsimSn" placeholder="USIM 번호 19자리" class="ut-w-300" />
-        <MsfButton variant="subtle">스캔하기</MsfButton>
-        <MsfButton variant="toggle" disabled>USIM 번호 유효성 체크</MsfButton>
-        <MsfButton variant="toggle">USIM 번호 유효성 체크</MsfButton>
-        <MsfButton variant="toggle" active>USIM 번호 유효성 체크</MsfButton>
+        <MsfInput
+          v-model="formData.reqUsimSn"
+          :placeholder="formData.hasSim === 'hasSim3' ? 'eSIM 번호 19자리' : 'USIM 번호 19자리'"
+          maxlength="19"
+          class="ut-w-300"
+          :readonly="formData.hasSim === 'hasSim3'"
+        />
+        <MsfButton variant="subtle" @click="isEsimScanModalOpen = true">스캔하기</MsfButton>
+        <MsfButton variant="toggle" v-if="simAuth.status.value === 'none'" disabled>
+          유효성 체크
+        </MsfButton>
+        <MsfButton
+          variant="toggle"
+          v-else-if="simAuth.status.value === 'ready'"
+          @click="handleSimVerify"
+        >
+          유효성 체크
+        </MsfButton>
+        <MsfButton variant="toggle" v-else-if="simAuth.status.value === 'verified'" active>
+          유효성 체크 완료
+        </MsfButton>
       </MsfStack>
     </MsfFormGroup>
-    <MsfFormGroup label="USIM 구매 방식" tag="div" required>
+    <MsfFormGroup label="USIM 구매 방식" tag="div" required v-if="formData.hasSim === 'hasSim2'">
       <MsfChip
         v-model="formData.simPurchaseMethod"
         name="inp-simPurchaseMethod"
@@ -130,7 +130,7 @@ defineExpose({ validate })
         ]"
       />
     </MsfFormGroup>
-    <MsfFormGroup label="휴대폰 정보" required>
+    <MsfFormGroup label="휴대폰 정보" required v-if="formData.hasSim === 'hasSim3'">
       <MsfInput v-model="formData.prodNm" placeholder="휴대폰 모델명" class="ut-w-300" disabled />
       <MsfInput
         v-model="formData.eid"
@@ -155,10 +155,12 @@ defineExpose({ validate })
           disabled
         />
       </MsfStack>
-      <MsfButton variant="toggle">이미지 등록</MsfButton>
-      <MsfButton variant="toggle" active>이미지 등록 완료</MsfButton>
+      <MsfButton variant="toggle" v-if="!authFlags?.imei" @click="isEsimScanModalOpen = true">이미지 등록</MsfButton>
+      <MsfButton variant="toggle" v-else active @click="authFlags.imei = false">이미지 등록 완료</MsfButton>
     </MsfFormGroup>
   </MsfStack>
+
+  <MsfEsimScanModal v-model="isEsimScanModalOpen" @confirm="onEsimScanConfirm" />
   <!-- // SIM정보_상품(휴대폰) -->
 </template>
 

@@ -84,7 +84,7 @@ public class CommonCodeCacheStore implements StartupLoadTask {
 
         Map<String, List<CommonCode>> commonCodesByGroupId = new LinkedHashMap<>();
         for (CommonCode commonCode: loadedCommonCodes) {
-            commonCodesByGroupId.computeIfAbsent(commonCode.getGroupId(), key -> new ArrayList<>())
+            commonCodesByGroupId.computeIfAbsent(commonCode.getGroupId(), _ -> new ArrayList<>())
                 .add(commonCode);
         }
 

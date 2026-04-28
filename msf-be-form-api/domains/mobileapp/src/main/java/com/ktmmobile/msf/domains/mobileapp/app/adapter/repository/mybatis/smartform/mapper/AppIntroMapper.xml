@@ -50,9 +50,9 @@
 
   <insert id="registUserApp">
     INSERT INTO msf_usr_app_info
-    (uuid, mac_adr, user_id, os_cd, "version", app_os_ver, app_nm, last_access_dt, auto_login_yn, bio_login_yn, apv_sttus_cd)
+    (uuid, mac_adr, user_id, apv_sttus_cd, os_cd, "version", app_os_ver, app_nm, last_access_dt, auto_login_yn, bio_login_yn)
     VALUES
-    (#{uuid}, #{madAdr}, #{userId}, #{osCd}, #{version}, #{appOsVer}, #{appNm}, now(), #{autoLoginYn}, #{bioLoginYn}, 'A')
+    (#{uuid}, #{madAdr}, #{userId}, #{apvSttusCd},  #{osCd}, #{version}, #{appOsVer}, #{appNm}, now(), #{autoLoginYn}, #{bioLoginYn} )
   </insert>
 
   <update id="updateBioSetting">

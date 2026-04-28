@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommWriteMapper">
+
+    <insert id="insertAbuseImeiHist" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.AbuseImeiHistDto">
+        INSERT INTO NMCP_ABUSE_IMEI_HIST (
+        HIST_SEQ
+        , IMEI
+        , ACCESS_IP
+        , USER_ID
+        , SYS_DT
+        , SYS_RDATE
+        ) VALUES (
+        SQ_ABUSE_IMEI_HIST.NEXTVAL
+        , #{imei}
+        , #{accessIp}
+        , #{userId}
+        , TO_CHAR(SYSDATE, 'YYYYMMDD')
+        , SYSDATE
+        )
+    </insert>
+</mapper>

@@ -21,6 +21,6 @@ dependencies {
     implementation("commons-httpclient:commons-httpclient:3.1")
     implementation("com.google.code.gson:gson:2.9.0")
     implementation("org.apache.commons:commons-dbcp2:2.9.0")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
     runtimeOnly("com.sun.xml.bind:jaxb-impl:3.0.2")
 }

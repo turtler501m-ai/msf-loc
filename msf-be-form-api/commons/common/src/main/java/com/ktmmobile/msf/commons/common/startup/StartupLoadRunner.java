@@ -4,22 +4,20 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class StartupLoadRunner implements ApplicationRunner {
+public class StartupLoadRunner implements SmartInitializingSingleton {
 
     private final List<StartupLoadTask> startupLoadTasks;
     private final StartupLoadProperties startupLoadProperties;
 
     @Override
-    public void run(@NonNull ApplicationArguments args) {
+    public void afterSingletonsInstantiated() {
         startupLoadTasks.stream()
             .sorted(AnnotationAwareOrderComparator.INSTANCE)
             .forEach(this::runTask);

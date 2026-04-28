@@ -1,15 +1,17 @@
 package com.ktmmobile.msf.domains.form.common.mplatform.vo;
 
+import com.ktmmobile.msf.domains.form.common.util.XmlParse;
+import org.jdom.Element;
+
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jdom.Element;
-
-import com.ktmmobile.msf.domains.form.common.util.XmlParse;
-
-public class MPhoneNoListXmlVO extends CommonXmlVO{
+/**
+ * 희망번호 조회 요청에 의한 응답 시 사용하는 VO 입니다.
+ **/
+public class MPhoneNoListXmlVO extends CommonXmlVO {
 
     private List<MPhoneNoVo> list;
 
@@ -17,7 +19,7 @@ public class MPhoneNoListXmlVO extends CommonXmlVO{
     public void parse() throws UnsupportedEncodingException, ParseException {
         List<Element> itemList = XmlParse.getChildElementList(this.body, "svcNoList");
         list = new ArrayList<MPhoneNoVo>();
-        for(Element item : itemList){
+        for (Element item : itemList) {
             MPhoneNoVo vo = new MPhoneNoVo();
             vo.setAsgnAgncId(XmlParse.getChildValue(item, "asgnAgncId"));
             vo.setEncdTlphNo(XmlParse.getChildValue(item, "encdTlphNo"));
@@ -43,8 +45,6 @@ public class MPhoneNoListXmlVO extends CommonXmlVO{
     public void setList(List<MPhoneNoVo> list) {
         this.list = list;
     }
-
-
 
 
 }

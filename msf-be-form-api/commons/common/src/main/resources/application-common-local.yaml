@@ -47,7 +47,6 @@ spring:
       enabled: false
       host:
       port: 6379
-      username: ENC(...)
       password: ENC(...)
 
 api:
@@ -66,9 +65,6 @@ management:
 logging:
   pattern:
     correlation: "[%X{clientId}] "
-  on-ready:
-    jdbc:
-      sqltiming: debug
   level:
     com.ktmmobile.msf: debug
     jdbc:

@@ -10,12 +10,6 @@ import lombok.Setter;
 public class MsfRequestVo {
 
     Long requestKey;
-    String cretIp;
-    String cretDt;
-    String cretId;
-    String amdIp;
-    String amdDt;
-    String amdId;
     String managerCd;
     String managerNm;
     String agentCd;
@@ -107,7 +101,7 @@ public class MsfRequestVo {
     String clauseRentalServiceYn;
     String clauseMpps35Yn;
     String clauseFinanceYn;
-    String clause5GCoverageYn;
+    String clause5gCoverageYn = "N";
     String personalInfoCollectAgreeYn;
     String othersTrnsAgreeYn;
     String clauseSensiCollectYn;

@@ -41,6 +41,7 @@ public record CommonCodeData(
 
     public record Detail(
         String abbrName,
+        String description,
         String etcValue1,
         String etcValue2,
         String etcValue3,
@@ -55,6 +56,7 @@ public record CommonCodeData(
 
             return new Detail(
                 detail.getAbbrName(),
+                detail.getDescription(),
                 detail.getEtcValue1(),
                 detail.getEtcValue2(),
                 detail.getEtcValue3(),

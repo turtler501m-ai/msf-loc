@@ -232,8 +232,14 @@ $shadow-color: rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   background: #fff;
   box-shadow: 0 1px 2px 0 $shadow-color;
+  max-height: rem(120px);
+  overflow-y: auto;
+  @include scrollbar();
   p {
     margin: 0.25rem 0;
+    &:first-child {
+      margin-top: 0;
+    }
   }
   ul {
     list-style: disc;

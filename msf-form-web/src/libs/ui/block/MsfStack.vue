@@ -100,6 +100,9 @@ const rootClasses = computed(() => [
   &.gap-3 {
     gap: rem(16px);
   }
+  &.gap-4 {
+    gap: rem(24px);
+  }
 
   // 내부 최초 너비 고정값 지정
   :deep([class^='input-root']) {

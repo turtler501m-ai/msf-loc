@@ -26,6 +26,10 @@ const props = defineProps({
     type: [String, Number],
     default: 1,
   },
+  /** 배경컬러 지정시 */
+  bgColor: {
+    type: String, // 'gray' | 'gray2' |'white'
+  },
 })
 
 const rootClasses = computed(() => [
@@ -34,6 +38,7 @@ const rootClasses = computed(() => [
   props.align,
   `ut-p-${props.padding}`,
   `mt-${props.margin}`,
+  props.bgColor && `bg-${props.bgColor}`,
 ])
 </script>
 
@@ -88,6 +93,17 @@ const rootClasses = computed(() => [
   }
   &:where(p) {
     margin-top: 0;
+  }
+
+  // Background Color
+  &.bg-gray {
+    background-color: var(--color-gray-25);
+  }
+  &.bg-gray2 {
+    background-color: var(--color-gray-50);
+  }
+  &.bg-white {
+    background-color: var(--color-background);
   }
 }
 </style>

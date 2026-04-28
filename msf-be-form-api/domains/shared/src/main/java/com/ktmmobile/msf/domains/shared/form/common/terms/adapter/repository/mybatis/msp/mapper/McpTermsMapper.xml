@@ -15,15 +15,27 @@
            , DOC_VER
            , DOC_CONTENT
         FROM NMCP_FORM_DTL@DL_MCP
-       WHERE CD_GROUP_ID1 = #{item.expnsnStrVal1}
-         AND CD_GROUP_ID2 = #{item.expnsnStrVal2}
+       WHERE CD_GROUP_ID1 = #{item.contentGroupCode}
+         AND CD_GROUP_ID2 = #{item.contentItemCode}
          AND USE_YN = 'Y'
+        <if test="@org.springframework.util.StringUtils@hasText(item.specType)">
+         AND DOC_TYPE = #{item.specType}
+        </if>
+        <if test="@org.springframework.util.StringUtils@hasText(item.specCode)">
+         AND EXPNSN_STR_VAL = #{item.specCode}
+        </if>
          AND doc_ver = (
                         SELECT max(doc_ver)
                           FROM NMCP_FORM_DTL@DL_MCP
-                         WHERE CD_GROUP_ID1 = #{item.expnsnStrVal1}
-                           AND CD_GROUP_ID2 = #{item.expnsnStrVal2}
+                         WHERE CD_GROUP_ID1 = #{item.contentGroupCode}
+                           AND CD_GROUP_ID2 = #{item.contentItemCode}
                            AND USE_YN = 'Y'
+        <if test="@org.springframework.util.StringUtils@hasText(item.specType)">
+                           AND DOC_TYPE = #{item.specType}
+        </if>
+        <if test="@org.springframework.util.StringUtils@hasText(item.specCode)">
+                           AND EXPNSN_STR_VAL = #{item.specCode}
+        </if>
                        )
       </foreach>
     </select>

@@ -40,6 +40,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import { useMsfStepStore } from '@/stores/msf_step.js'
+import { post } from '@/libs/api/msf.api'
 
 const props = defineProps({
   prevStepValidate: { type: Function, default: () => true },
@@ -123,6 +124,22 @@ const save = async () => {
     console.error('Product step validation failed')
     return false
   }
+
+  // 개통전 사전체크 수행
+  try {
+    const checkRes = await post('/api/form/newchange/reqPreOpenCheck', {
+      customer: store.customer,
+      product: store.product,
+    })
+    if (checkRes.code !== '0000') {
+      alert(checkRes.message || '개통전 사전체크에 실패했습니다.')
+      return false
+    }
+  } catch (error) {
+    console.error('Pre-open check error:', error)
+    return false
+  }
+
   return await store.apiSaveDraft(2)
 }
 

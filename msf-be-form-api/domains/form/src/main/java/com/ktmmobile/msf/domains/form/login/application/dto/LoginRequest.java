@@ -11,6 +11,7 @@ public class LoginRequest {
     private String userId;
     @NotBlank(message = "비밀번호는 필수 입력 값입니다.")
     private String userPw;    // 일반 로그인용
+    @NotBlank(groups={OnSelect.class}, message = "단말기 고유 ID는 필수 입력 값입니다.")
     private String uuid;    // 단말 인증용
     @NotBlank(message = "인증방식은 필수 입력 값입니다.")
     private String authType;    // "PASSWORD", "BIOPASS" 등

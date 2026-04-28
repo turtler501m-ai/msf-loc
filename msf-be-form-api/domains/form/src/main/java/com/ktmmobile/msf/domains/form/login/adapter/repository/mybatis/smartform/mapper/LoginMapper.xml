@@ -9,15 +9,15 @@
     INSERT INTO msf_user_hst (
       user_id, cret_ip, cret_dt, cret_id, amd_ip, amd_dt, amd_id,
       user_nm, pwd, agent_cd, shop_cd, mobile_no, ip, email_adr,
-      email_receive_yn, use_sttus_cd, access_limit_yn,
-      access_limit_dt, login_chk_cnt, chg_dt
+      email_receive_yn, user_sttus_cd, access_limit_yn,
+      access_limit_dt, login_chk_cnt, pwd_chg_yn, pwd_chg_dt, chg_dt
     )
     SELECT
       user_id, cret_ip, cret_dt, cret_id, amd_ip, amd_dt, amd_id,
       user_nm, pwd, COALESCE(agent_cd, 'NONE'),
       shop_cd, mobile_no, ip, email_adr,
       email_receive_yn, user_sttus_cd, access_limit_yn,
-      access_limit_dt, login_chk_cnt, chg_dt
+      access_limit_dt, login_chk_cnt, pwd_chg_yn, pwd_chg_dt, chg_dt
     FROM msf_user_info
     WHERE user_id = #{userId}
   </insert>
@@ -54,7 +54,6 @@
     set last_access_dt = now()
     where 1=1
     and uuid = #{uuid}
-    -- and user_id = #{userId}
   </update>
 
   <select id="selectUserInfo" resultType="com.ktmmobile.msf.domains.form.login.application.dto.LoginResponse">

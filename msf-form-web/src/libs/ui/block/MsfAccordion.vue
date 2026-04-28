@@ -22,7 +22,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-  /** 디자인 변형 (default, faq, board 등) */
+  /** 디자인 변형 (default, board 등) */
   variant: {
     type: String,
     default: 'default',
@@ -122,7 +122,7 @@ watch(
       internalOpenItems.value = [newVal]
     }
   },
-  { immediate: true }, // 초기 렌더링 시에도 실행 (init 대체)
+  { immediate: true }, // 초기 렌더링 시에도 실행
 )
 </script>
 
@@ -147,9 +147,12 @@ watch(
             {{ item.label }}
           </slot>
         </component>
-
         <span class="arrow-wrapper" aria-hidden="true">
-          <span class="arrow-icon"></span>
+          <MsfIcon name="arrowUp" v-if="currentOpenItems.includes(getIdentity(item, idx))" />
+          <MsfIcon name="arrowDown" v-if="!currentOpenItems.includes(getIdentity(item, idx))" />
+          <span class="ut-blind">{{
+            currentOpenItems.includes(getIdentity(item, idx)) ? '닫기 아이콘' : '열기 아이콘'
+          }}</span>
         </span>
       </button>
       <div
@@ -176,7 +179,7 @@ watch(
 <style lang="scss" scoped>
 $acc-transition-speed: 0.3s;
 $acc-ease: cubic-bezier(0.4, 0, 0.2, 1);
-$acc-border-color: #eee;
+$acc-border-color: var(--color-gray-75);
 
 .accordion-root {
   --acc-px: #{rem(20px)};
@@ -184,13 +187,15 @@ $acc-border-color: #eee;
   --acc-font-main: #{rem(16px)};
   --acc-font-sub: #{rem(16px)};
   --acc-icon-size: #{rem(24px)};
+  --acc-content-px: #{rem(24px)};
+  --acc-content-py: #{rem(24px)};
 
   width: 100%;
-  border-top: 1px solid $acc-border-color;
+  border-top: var(--border-width-base) solid $acc-border-color;
 
   .accordion-item {
     background-color: #fff;
-    border-bottom: 1px solid $acc-border-color;
+    border-bottom: var(--border-width-base) solid $acc-border-color;
     transition: background-color $acc-transition-speed;
 
     &.is-active {
@@ -207,9 +212,7 @@ $acc-border-color: #eee;
     }
   }
   .accordion-control {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    @include flex($v: center, $h: space-between);
     width: 100%;
     min-height: rem(56px);
     padding: var(--acc-py) var(--acc-px);
@@ -217,24 +220,21 @@ $acc-border-color: #eee;
     border: none;
     cursor: pointer;
     font-size: var(--acc-font-main);
-    color: #333;
+    color: var(--color-gray-900);
     transition: background-color 0.2s;
     outline: none;
     &:focus-visible {
-      background-color: #f8faff;
-      box-shadow: inset 0 0 0 2px #007aff;
+      box-shadow: inset 0 0 0 1px var(--color-gray-900);
     }
     .label {
       flex: 1;
       text-align: left;
       margin-right: rem(12px);
-      line-height: 1.4;
-      font-weight: inherit;
+      line-height: var(--line-height-heading);
+      font-weight: var(--font-weight-medium);
     }
     .arrow-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      @include flex($v: center, $h: center);
       width: var(--acc-icon-size);
       height: var(--acc-icon-size);
       flex-shrink: 0;
@@ -266,29 +266,26 @@ $acc-border-color: #eee;
   .accordion-content {
     padding: 0 var(--acc-px) var(--acc-py);
     font-size: var(--acc-font-sub);
-    color: #666;
-    line-height: 1.6;
+    line-height: var(--line-height-heading);
     white-space: pre-wrap;
     word-break: break-all;
   }
 }
 
 /* --- Variants --- */
-.accordion-root.faq {
-  border-top-width: 2px;
-  border-top-color: #333;
-  .accordion-control {
-    font-weight: 700;
-  }
-}
 .accordion-root.board {
   border-top: none;
   .accordion-item {
-    margin-bottom: rem(8px);
-    border: 1px solid $acc-border-color;
-    border-radius: rem(8px);
-    &.is-active {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    .accordion-control {
+      padding-inline: 0;
+    }
+    .accordion-container {
+      padding: 0;
+      background-color: var(--color-gray-25);
+      .accordion-content {
+        padding: var(--acc-content-px) var(--acc-content-py);
+        border-top: var(--border-width-base) solid $acc-border-color;
+      }
     }
   }
 }

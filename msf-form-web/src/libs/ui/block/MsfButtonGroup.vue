@@ -95,6 +95,9 @@ const rootClasses = computed(() => [
   &.gap-3 {
     gap: rem(16px);
   }
+  &.gap-4 {
+    gap: rem(4px);
+  }
 
   // Margin Top
   &.mt-0 {

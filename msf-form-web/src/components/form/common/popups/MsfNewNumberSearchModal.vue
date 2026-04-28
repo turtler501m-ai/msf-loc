@@ -3,33 +3,29 @@
     v-bind="$attrs"
     :is-open="modelValue"
     title="신규번호 검색"
-    @open="emit('open')"
+    @open="onOpen"
     @close="onClose"
   >
     <!-- 팝업 내용 -->
     <p class="ut-text-desc">번호를 선택해 주세요.</p>
-    <MsfRadioGroup
-      name="number-select"
-      v-model="numberSelect"
-      :options="[
-        { value: 'select1', label: '010-1234-5671' },
-        { value: 'select2', label: '010-1234-5672' },
-        { value: 'select3', label: '010-1234-5673' },
-        { value: 'select4', label: '010-1234-5674' },
-        { value: 'select5', label: '010-1234-5675' },
-        { value: 'select6', label: '010-1234-5676' },
-        { value: 'select7', label: '010-1234-5677' },
-        { value: 'select8', label: '010-1234-5678' },
-        { value: 'select9', label: '010-1234-5679' },
-        { value: 'select10', label: '010-1234-5670' },
-      ]"
-      grid
-    />
+    <div v-if="loading" class="ut-flex ut-justify-center ut-py-20">
+      <MsfLoadingComp />
+    </div>
+    <template v-else>
+      <MsfRadioGroup
+        v-if="numberOptions.length > 0"
+        name="number-select"
+        v-model="numberSelect"
+        :options="numberOptions"
+        grid
+      />
+      <p v-else class="ut-text-center ut-py-20 ut-text-gray-400">조회된 번호가 없습니다.</p>
+    </template>
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
         <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
-        <MsfButton variant="primary" @click="onConfirm">확인</MsfButton>
+        <MsfButton variant="primary" @click="onConfirm" :disabled="!numberSelect">확인</MsfButton>
       </MsfButtonGroup>
     </template>
   </MsfDialog>
@@ -37,15 +33,47 @@
 
 <script setup>
 import { ref } from 'vue'
+import { post } from '@/libs/api/msf.api'
 
 const props = defineProps({
   modelValue: Boolean,
+  searchParams: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
 
 // 신규번호 선택항목
-const numberSelect = ref('select1')
+const numberSelect = ref('')
+const numberOptions = ref([])
+const loading = ref(false)
+
+const onOpen = async () => {
+  emit('open')
+  await fetchNumbers()
+}
+
+const fetchNumbers = async () => {
+  loading.value = true
+  try {
+    const res = await post('/api/form/newchange/searchNumber', props.searchParams)
+    if (res && res.code === '0000') {
+      const list = res.data || []
+      numberOptions.value = list.map((num) => ({
+        value: num,
+        label: num,
+      }))
+      if (numberOptions.value.length > 0) {
+        numberSelect.value = numberOptions.value[0].value
+      }
+    } else {
+      alert(res.message || '번호 조회에 실패했습니다.')
+    }
+  } catch (error) {
+    console.error('Search number error:', error)
+  } finally {
+    loading.value = false
+  }
+}
 
 // 닫힘 이벤트
 const onClose = () => {

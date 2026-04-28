@@ -54,9 +54,8 @@ spring:
   data:
     ## Redis
     redis:
-      host:
+      host: ${REDIS_HOST}
       port: 6379
-      username: ${REDIS_USERNAME}
       password: ${REDIS_PASSWORD}
       timeout: 500ms
       connect-timeout: 200ms
@@ -133,9 +132,6 @@ spring:
   config.activate.on-profile: dev
 
 logging:
-  on-ready:
-    jdbc:
-      sqltiming: debug
   level:
     com.ktmmobile.msf: debug
     jdbc:

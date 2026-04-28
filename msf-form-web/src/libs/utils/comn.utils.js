@@ -75,3 +75,11 @@ export const getTermsAgreementItem = async (agreementId) => {
   }
   return res.data?.codes || []
 }
+
+export const getFormTypeCode = (routePath) => {
+  if (routePath.includes('/form/newchange')) return '1'
+  if (routePath.includes('/form/servicechange')) return '2'
+  if (routePath.includes('/form/ownerchange')) return '3'
+  if (routePath.includes('/form/termination')) return '4'
+  return ''
+}

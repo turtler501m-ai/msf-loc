@@ -27,7 +27,7 @@
 
 
   <select id="selectMsfRequestInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
-          resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestVo">
+          resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo">
         /** MSF_REQUEST 단건 조회 **/
         SELECT
             A.REQ_BUY_TYPE_CD
@@ -143,7 +143,7 @@
   </select>
 
     <select id="selectMsfRequestCstmrInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
-            resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestCstmrVo">
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo">
         /** MSF_REQUEST_CSTMR 단건 조회 **/
         SELECT
             FORM_TYPE_CD
@@ -189,7 +189,7 @@
     </select>
 
     <select id="selectMsfRequestAgentInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
-            resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestAgentVo">
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo">
         /** MSF_REQUEST_AGENT 단건 조회 **/
         SELECT
             FORM_TYPE_CD
@@ -203,8 +203,6 @@
             , MINOR_AGENT_SELF_INQRY_AGRM_YN
             , MINOR_AGENT_SELF_CERT_TYPE_CD
             , MINOR_AGENT_CI_INFO
-            , MINOR_AGENT_SELF_ISSU_EXPR_DATE
-            , MINOR_AGENT_SELF_ISSU_NO
             , JRDCL_AGENT_NM
             , JRDCL_AGENT_RRN
             , JRDCL_AGENT_TEL_FN_NO
@@ -215,7 +213,7 @@
     </select>
 
     <select id="selectMsfRequestSaleInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
-            resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestSaleVo">
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo">
         /** MSF_REQUEST_SALE 단건조회 **/
         SELECT
             FORM_TYPE_CD
@@ -251,7 +249,7 @@
     </select>
 
     <select id="selectMsfRequestBillReqInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
-            resultType="com.ktmmobile.msf.domains.form.form.newchange.vo.MsfRequestBillReqVo">
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo">
         /** MSF_REQUEST_BILL_REQ 단건조회 **/
         SELECT
             FORM_TYPE_CD

@@ -20,7 +20,10 @@
       <MsfTextarea placeholder="안내 녹취 스크립트" class="ut-mt-8" />
     </MsfCollapse>
     <MsfTitleArea title="신청서" level="2" noline />
-    <div class="img-area" style="height: 468px">신청서 이미지</div>
+    <div class="img-area" style="height: 468px">
+      <!-- 신청서 이미지 -->
+      <img src="@/assets/images/dummy/@sample_form.png" alt="신청서 이미지" />
+    </div>
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
@@ -50,5 +53,6 @@ const onClose = () => {
 <style lang="scss" scoped>
 .img-area {
   background-color: var(--color-gray-75); //임시(불필요시삭제)
+  //border: 1px solid var(--color-gray-150); // 이미지 자체에 보더가 없을떄 주석을 푸세요!
 }
 </style>

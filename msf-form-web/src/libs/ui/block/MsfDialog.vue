@@ -218,6 +218,8 @@ onUnmounted(() => {
   }
 }
 .header-wrap {
+  flex-shrink: 0;
+  flex-grow: 0;
   padding-inline: var(--dialog-inner-padding);
   margin-bottom: var(--dialog-inner-padding);
   .header-inner {

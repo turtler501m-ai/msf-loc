@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.shared.common.sms.adapter.repository.mybatis.smartform.mapper.SmsMapper">
+
+  <select id="selectUserPhone" parameterType="string" resultType="string">
+    select mobile_no
+      from user_id = #{value}
+     where user_sttus_cd = 'A'
+  </select>
+</mapper>

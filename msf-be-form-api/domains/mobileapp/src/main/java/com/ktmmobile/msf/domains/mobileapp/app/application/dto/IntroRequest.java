@@ -6,9 +6,9 @@ import lombok.Data;
 
 @Data
 public class IntroRequest {
-    @NotBlank(message = "OS는 필수 입력 값입니다.")
+    @NotBlank(groups = {OnSelect.class}, message = "OS는 필수 입력 값입니다.")
     private String os;
-    @NotBlank(message = "Version은 필수 입력 값입니다.")
+    @NotBlank(groups = {OnSelect.class}, message = "Version은 필수 입력 값입니다.")
     private String version;
     private String uuid;
 }

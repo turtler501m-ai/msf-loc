@@ -13,6 +13,8 @@ import MsfLoginView from '@/views/MsfLoginView.vue'
 import MsfDeviceAuthView from '@/views/MsfDeviceAuthView.vue'
 // 단말 사용 등록
 import MsfDeviceRegisterView from '@/views/MsfDeviceRegisterView.vue'
+// 비밀번호 변경
+import MsfPwChangeView from '@/views/MsfPwChangeView.vue'
 // 설정
 import MsfSettingView from '@/views/MsfSettingView.vue'
 
@@ -72,6 +74,11 @@ const router = createRouter({
       path: '/deviceRegist',
       name: 'deviceRegist',
       component: MsfDeviceRegisterView, // 단말 사용 등록
+    },
+    {
+      path: '/passwordChange',
+      name: 'passwordChange',
+      component: MsfPwChangeView, // 비밀번호 변경
     },
     // ===== 퍼블리싱용 라우팅(실제화면에서 사용안함) ===== //
     {

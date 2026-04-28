@@ -29,11 +29,15 @@ public enum UseYn implements CommonEnum {
 
     @Override
     public boolean isValid() {
-        return this != UNDEFINED;
+        return this != getInvalidValue();
+    }
+
+    public static UseYn getInvalidValue() {
+        return UNDEFINED;
     }
 
     @JsonCreator
     public static UseYn valueOfCode(String code) {
-        return CommonEnum.valueOfCode(UseYn.class, code, UNDEFINED);
+        return CommonEnum.valueOfCode(UseYn.class, code, getInvalidValue());
     }
 }

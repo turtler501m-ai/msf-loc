@@ -21,7 +21,13 @@ const menuStore = useMsfMenuStore()
   height: rem(64px);
   background-color: var(--color-primary-base);
   padding-inline: rem(24px);
+  // 하단바높이(64px) + 디바이스 홈바 영역(safe-area) 처리
+  @include safe-area(bottom, rem(64px), height);
+  @include safe-area(bottom, 0px, padding);
+  @include safe-area(left, 24px, padding);
+  @include safe-area(right, 24px, padding);
 }
+
 .bottom-list {
   @include flex($v: center) {
     gap: rem(16px);

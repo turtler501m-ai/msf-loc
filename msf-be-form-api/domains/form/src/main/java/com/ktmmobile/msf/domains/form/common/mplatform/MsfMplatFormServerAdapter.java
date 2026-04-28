@@ -1,12 +1,16 @@
 package com.ktmmobile.msf.domains.form.common.mplatform;
 
-import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
-import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlNoSelfServiceException;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlVO;
-import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
-import com.ktmmobile.msf.domains.form.common.util.HttpClientUtil;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.SocketTimeoutException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import jakarta.servlet.http.HttpServletRequest;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.httpclient.NameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +21,12 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.io.UnsupportedEncodingException;
-import java.net.SocketTimeoutException;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
+import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlNoSelfServiceException;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlVO;
+import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
+import com.ktmmobile.msf.domains.form.common.util.HttpClientUtil;
 
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.MPLATFORM_RESPONEXML_EMPTY_EXCEPTION;
 
@@ -58,7 +62,7 @@ public class MsfMplatFormServerAdapter {
 
             //CommonHttpClient client = new CommonHttpClient(callUrl);
             NameValuePair[] data = {
-                    new NameValuePair("getURL", getURL)
+                new NameValuePair("getURL", getURL)
             };
             logger.info("*** M-PlatForm Connect Start ***");
             logger.info("*** callUrl *** " + callUrl);
@@ -89,8 +93,46 @@ public class MsfMplatFormServerAdapter {
         return result;
     }
 
+    public <T> T callService2(HashMap<String, String> param, Class<T> clazz)
+        throws SelfServiceException, IOException {
+        XmlMapper mapper = new XmlMapper();
+        JsonNode root = mapper.readTree(callService2(param, 30000).getBytes());
+        JsonNode outDtoNode = root.findValue("outDto");
 
-    public boolean callServiceNe(HashMap<String, String> param, CommonXmlNoSelfServiceException vo, int timeout) throws SelfServiceException, SocketTimeoutException {
+        return mapper.treeToValue(outDtoNode, clazz);
+    }
+
+    public String callService2(HashMap<String, String> param, int timeout)
+        throws SelfServiceException, SocketTimeoutException {
+        boolean result = true;
+        String responseXml = "";
+
+        //엠플렛폼 로그 저장
+        HashMap<String, String> pMplatform = this.saveMplateSvcLog(param);
+
+        String getURL = this.getURL(pMplatform);
+
+        String callUrl = propertiesService;
+
+        //CommonHttpClient client = new CommonHttpClient(callUrl);
+        NameValuePair[] data = {
+            new NameValuePair("getURL", getURL)
+        };
+        logger.info("*** M-PlatForm Connect Start ***");
+        responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
+        logger.info("responseXml : " + responseXml);
+
+        if (responseXml.isEmpty()) {
+            throw new McpMplatFormException(MPLATFORM_RESPONEXML_EMPTY_EXCEPTION);
+        }
+
+        XmlMapper xmlMapper = new XmlMapper();
+        return responseXml;
+    }
+
+
+    public boolean callServiceNe(HashMap<String, String> param, CommonXmlNoSelfServiceException vo, int timeout)
+        throws SelfServiceException, SocketTimeoutException {
         boolean result = true;
         String responseXml = "";
         try {
@@ -104,7 +146,7 @@ public class MsfMplatFormServerAdapter {
 
             //CommonHttpClient client = new CommonHttpClient(callUrl);
             NameValuePair[] data = {
-                    new NameValuePair("getURL", getURL)
+                new NameValuePair("getURL", getURL)
             };
             logger.info("*** M-PlatForm Connect Start ***");
             responseXml = HttpClientUtil.post(callUrl, data, "UTF-8", timeout);
@@ -135,7 +177,7 @@ public class MsfMplatFormServerAdapter {
     private String getURL(HashMap<String, String> param) {
         String result = "";
         Set<String> keySet = param.keySet();
-        for (String key : keySet) {
+        for (String key: keySet) {
             if (!result.equals("")) {
                 result = result.concat("&");
             }

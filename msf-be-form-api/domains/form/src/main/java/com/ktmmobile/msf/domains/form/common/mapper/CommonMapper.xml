@@ -149,8 +149,8 @@
     </insert>-->
 
 
-    <!--<insert id="insertIpStatAdmin" parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto">
-        INSERT INTO MCP_ADMIN_ACCESS_TRACE (
+    <insert id="insertIpStatAdmin" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto">
+        INSERT INTO MCP_ADMIN_ACCESS_TRACE@DL_MCP (
             PARAMETER,
             ACCESS_IP,
             SYS_DT,
@@ -171,7 +171,7 @@
                      SUBSTRB(#{prcsSbst},0,1000),
                      #{trtmRsltSmst}
                  )
-    </insert>-->
+    </insert>
 
     <!--<select id="getAdminAccessTrace"  parameterType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto"  resultType="com.ktmmobile.mcp.common.dto.McpIpStatisticDto">
         SELECT /* CommonMapper.getAdminAccessTrace */

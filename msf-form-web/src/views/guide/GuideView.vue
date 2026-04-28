@@ -12,6 +12,24 @@
       </router-link>
     </MsfButtonGroup>
     <div class="guide-item">
+      <!-- 
+        // 체크박스 returnData 사용 예시
+        const isReturnData = ref('N')
+      -->
+      <p>
+        ※ MsfCheckbox - :returndata 추가 (부모가 전달하는 { true: 'Y', false: 'N' } 객체를 받음)
+      </p>
+      <MsfCheckbox
+        v-model="isReturnData"
+        :returndata="{ true: 'Y', false: 'N' }"
+        label="체크박스 변경"
+      />
+      <div class="ut-mt-4">
+        <p>상태: {{ isReturnData === 'Y' ? '동의함' : '동의 안 함' }}</p>
+        <p>디버깅용 현재값: {{ isReturnData }}</p>
+      </div>
+    </div>
+    <div class="guide-item">
       <MsfButtonGroup align="left">
         <MsfButton @click="handleLoadingTest">로딩 (MsfLoadingComp) 5초간 띄우기</MsfButton>
         <MsfButton @click="handleShowAlert">알림창 (Alert)</MsfButton>
@@ -809,6 +827,9 @@ if (!email.value.includes('@')) {
 // 시간
 const timeValue = ref()
 const timeWithSecondsValue = ref()
+
+// 체크박스 returnData 사용예시
+const isReturnData = ref('N')
 
 // 체크박스
 const isAgreed = ref(false)

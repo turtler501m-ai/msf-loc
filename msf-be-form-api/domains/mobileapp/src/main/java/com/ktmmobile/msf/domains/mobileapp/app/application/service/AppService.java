@@ -63,6 +63,7 @@ public class AppService implements AppIntroReader {
         // 로그인 세션에서 adminId 가져옴
         request.setUserId("V000000003");  // molo - 수정 필요
         request.setAppNm("스마트서식지");
+        request.setApvSttusCd("A");
         request.setAutoLoginYn("Y");
         request.setBioLoginYn("N");
         return repository.registUserApp(request);

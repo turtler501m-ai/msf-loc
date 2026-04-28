@@ -7,9 +7,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import lombok.EqualsAndHashCode;
 
 import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeGroups;
 
+@EqualsAndHashCode(callSuper = false)
 public class CommonCodesResponse extends AbstractMap<String, List<CommonCodeItemResponse>> {
 
     private final Map<String, List<CommonCodeItemResponse>> commonCodesByGroupId;

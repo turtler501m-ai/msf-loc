@@ -5,7 +5,7 @@
 <mapper namespace="com.ktmmobile.msf.domains.form.form.common.repository.msp.ProductInfoReadMapper">
 
     <select id="selectMspSaleAgrmMstList"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspSaleAgrmMstInfoDto">
         /* 요금제 약정기간 조회 : 해당정책코드에 해당하는 약정개월정보(무약정 포함) 리스트 조회 */
         SELECT
@@ -21,7 +21,7 @@
     </select>
 
     <select id="selectModelMonthlyList"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto">
         /* 휴대폰 할부개월 조회 : AppformMapper.selectModelMonthlyList */
         SELECT
@@ -32,7 +32,7 @@
     </select>
 
     <select id="selectMspSalePlcyMstList"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspSalePlcyMstInfoDto">
         /* 판매정책조회 : MspMapper.findMspSaleOrgnMst */
         SELECT
@@ -91,7 +91,7 @@
     </select>
 
     <select id="selectSaleTypeList"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspSalePlcyMstInfoDto">
         /* 할인유형조회 */
         SELECT DISTINCT
@@ -116,7 +116,7 @@
             </if>
     </select>
 
-    <select id="selectPhoneList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+    <select id="selectPhoneList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto">
         /* 휴대폰 목록 조회 PhoneMapper.listPhoneProdBasForFrontOneQuery */
         SELECT
@@ -226,7 +226,7 @@
     </select>
 
     <select id="selectPrdtColorList"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto">
         /* 핸드폰 색상 목록 조회 AppformMapper.selectPrdtColorList */
         SELECT
@@ -244,7 +244,7 @@
     </select>
 
     <select id="selectPrdtCapacityList"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto">
         /* 휴대폰 용량 목록 조회 PhoneMapper.triggerSelectProdBasImgDtlList */
         SELECT
@@ -260,7 +260,7 @@
         GROUP BY A.PROD_ID,A.ATRIB_VAL_CD_2,A.ATRIB_VAL_NM_2
     </select>
 
-    <select id="selectRateList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+    <select id="selectRateList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.RateInfoDto">
         /* 요금제 목록 조회 MspMapper.listRateByOrgnInfos */
         SELECT DISTINCT
@@ -322,7 +322,7 @@
     </select>
 
     <select id="selectMspOfficialNoticeSupport"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductSearchCondition"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto">
         /* 공시지원금 조회 : MspMapper.listMspOfficialNoticeSupport */
         SELECT
@@ -405,7 +405,7 @@
         WHERE 1=1
             AND A.SERVICE_TYPE = 'R' AND B.SALE_PLCY_CD IS NULL  <!--부가서비스 구분코드 R 과 판매정책 없는 항목으로 조회해야함.-->
             AND A.RATE_CD IN
-                <foreach item="addRate" index="index" collection="listProductCategoryDto"
+                <foreach item="addRate" index="index" collection="productCategoryInfoDtoList"
                          open="(" separator="," close=")">
                     #{addRate.prodId}
                 </foreach>

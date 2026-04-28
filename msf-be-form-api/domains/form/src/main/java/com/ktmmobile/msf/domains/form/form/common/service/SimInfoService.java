@@ -1,7 +1,9 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
+import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormServerAdapter;
+import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscInqrUsimUsePsblOutDTO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscBfacChkOmdIntmVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscRetvIntmMdlSpecInfoVO;
@@ -10,6 +12,7 @@ import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoCondition;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialCondition;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.EsimDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -17,36 +20,41 @@ import org.springframework.util.StringUtils;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class SimInfoService {
 
+    private final MsfMplatFormService msfMplatFormService;
+
     private final MsfMplatFormServerAdapter msfMplatFormServerAdapter;
     private final ProductInfoService productInfoService;
+    private final FormCommService formCommService;
+
 
     //휴대폰 일련번호 유효성체크
     //public Map<String, Object> verifyPhoneSerialNumberInfo(ProductSearchCondition condition) {
     public Map<String, Object> verifyPhoneSerialNumberInfo(PhoneSerialCondition condition) {
-        //1. 단말 재고조회 ( 휴대폰목록조회에서 사용하는 것과 같은걸 사용. 추후 분리여부 검토필요)
-        //     단말목록조회에서는 로그인사용자의 매장 보유 재고 단말코드를 가져와서 단말목록조회 조건절에 추가하여 사용
-        //     휴대폰 일련번호 유효성체크에서 매장재고 조회는 조건절이 추가됨 (휴대폰코드와 휴대폰일련번호)으로 쿼리를 분리하거나 해야하나?
-        //parameter 1 - 로그인세션의 매장코드?(stor_cd) 대리점코드?(agent_cd) >> 현재는 매장코드로 조회함.
-        //parameter 2 - 입력값 : prodId (선택한 휴대폰 상품코드 (고객포탈 관리코드) )
-        //parameter 3 - 입력값 : prodSn (휴대폰일련번호)
-
-        String imei = productInfoService.getPhoneInventory(condition);
-        System.out.println("imei: " + imei);
-        //단말재고관리 테이블의 IMEI 가 하나만 들어가 있음. 맞나???? 두개 있어야하는게 아닌지???
         // rtnCode "0000" 정상
         // rtnCode "0100" 재고없음
         // rtnCode "0200" 부정사용주장 단말이다
         // rtnCode "0300" 기기원부조회 실패
+
         Map<String, Object> rtnMap = new HashMap<>();
         String rtnCode = "0000";
         String rtnMessage = "사용 가능한 휴대폰 일련번호 입니다.";
+
+        //1. 단말 재고조회 ( 휴대폰목록조회에서 사용하는 것과 같은걸 사용. 추후 분리여부 검토필요)
+        //   스마트 단말관리자에서 매장코드(STOR_CD), 단말일련번호(PROD_SN), 단말코드(PROD_ID)로 IMEI 추출
+        //   단말목록조회에서는 로그인사용자의 매장 보유 재고 단말코드를 가져와서 단말목록조회 조건절에 추가하여 사용
+        //   휴대폰 일련번호 유효성체크에서 매장재고 조회는 조건절이 추가됨 (휴대폰코드와 휴대폰일련번호)으로 쿼리를 분리하거나 해야하나?
+        //   @ IMEI 는 USIM 용 하나만 리턴하게 하는지 확인필요함.
+        //parameter 1 - 로그인세션의 매장코드?(stor_cd) 대리점코드?(agent_cd) >> 현재는 매장코드로 조회함.
+        //parameter 2 - 입력값 : prodId (선택한 휴대폰 상품코드 (고객포탈 관리코드) )
+        //parameter 3 - 입력값 : prodSn (휴대폰일련번호)
+        String imei = productInfoService.getPhoneInventory(condition);
+        System.out.println("imei: " + imei);
 
         if (!StringUtils.hasText(imei)) {
             rtnCode = "0100";
@@ -54,17 +62,45 @@ public class SimInfoService {
         }
 
         //2. 부정사용주장 단말확인
-        boolean isValidImei = checkAbuseImeiList(Arrays.asList(imei, ""));
-        if (isValidImei) {
+        /*List<IntmInsrRelDTO> insrProdList = mcpApiClient.post(
+                "/appform/selectInsrProdList",
+                request.getIntmInsrRelDTO(),
+                List.class
+        );*/
+        boolean isValidImei = formCommService.checkAbuseImeiList(Arrays.asList(imei, ""));
+        if (isValidImei) { // true 일때 부정사용단말이다.
             rtnCode = "0200";
             rtnMessage = "유효하지 않은 휴대폰 일련번호 입니다."; //부정사용주장 단말이다
         }
 
         //3. 기기원부조회 (Y13)
+        String indCd = "2"; // 1:단말모델ID,단말일련번호 조회 , 2:IMEI 조회 , 5:단말모델ID, 실물일련번호
+        // >> indCd 값  constant 처리필요함.
+        MoscRetvIntmOrrgInfoVO moscRetvIntmOrrgInfoVO = new MoscRetvIntmOrrgInfoVO();
+        try {
+            System.out.println("indCd: " + indCd);
+            System.out.println("imei: " + imei);
+            moscRetvIntmOrrgInfoVO = msfMplatFormService.moscRetvIntmOrrgInfo(indCd, imei);
+            System.out.println("moscRetvIntmOrrgInfoVO: " + moscRetvIntmOrrgInfoVO);
+            if (moscRetvIntmOrrgInfoVO == null || !moscRetvIntmOrrgInfoVO.isSuccess()) {
+                //rtnCode = "0300";
+                //rtnMessage = "유효하지 않은 휴대폰 일련번호 입니다.";
+                // >> 지금은 해당서비스 호출되지 않아 항상 0300 이 전달되므로 주석처리함.
+                //returnCode = StringUtil.NVL(moscRetvIntmOrrgInfoVO.getResultCode(), "");
+                //returnMsg = moscRetvIntmOrrgInfoVO.getSvcMsg();
+            }
+        } catch (SelfServiceException e) {
+            //logger.info("SelfServiceException 13");
+            //returnCode = moscRetvIntmOrrgInfoVO.getResultCode();
+            //returnMsg = moscRetvIntmOrrgInfoVO.getSvcMsg();
+        } catch (Exception e) {
+            //logger.info("Exception 13");
+            //returnCode = moscRetvIntmOrrgInfoVO.getResultCode();
+            //returnMsg = moscRetvIntmOrrgInfoVO.getSvcMsg();
+        }
+
         //String indCd, String imei, int uploadPhoneSrlNo, String code, String eid
         //EsimSvcImpl.getY13(String indCd, String imei, int uploadPhoneSrlNo, String code, String eid)
-        //rtnCode = "0300";
-        //rtnCode = "유효하지 않은 휴대폰 일련번호 입니다.";
 
         rtnMap.put("rtnCode", rtnCode);
         rtnMap.put("rtnMessage", rtnMessage);
@@ -74,24 +110,29 @@ public class SimInfoService {
     //USIM 정보 유효성체크
     //고객포탈 URI : /msp/moscIntmMgmtAjax.do
     public Map<String, Object> verifyUsimInfo(MspJuoSubInfoCondition condition) {
+        // rtnCode "0000" 정상
+        // rtnCode "0100" 유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.
+        // rtnCode "0200" 유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.
+        // rtnCode "0300" 유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.
+
         Map<String, Object> rtnMap = new HashMap<>();
-        String rtnCode = "";
-        String rtnMessage = "";
+        String rtnCode = "0000";
+        String rtnMessage = "사용 가능한 USIM 입니다.";
         String orgnId = ""; //유심의 접점코드(ORGN_ID)를 조회?
 
         //유심 재고조회는 관리자에서 안보임. 추후 있다면 추가필요함.
         //1. 불량유심 사용제한
         int failUsimCnt = 0;
-        failUsimCnt = this.getFailUsims(condition.getIccId());
+        failUsimCnt = formCommService.getFailUsims(condition.getIccId());
         if (failUsimCnt > 0) { //불량유심 사용제한에 포함된 경우 사용자정보 업데이트 - 스마트에도 필요한지 검토필요함.
-            this.setFailUsims(condition.getIccId());
+            formCommService.setFailUsims(condition.getIccId());
             rtnCode = "0100";
             rtnMessage = "유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.";
         }
 
         //2. 명의도용 추가피해 방지를 위한 유심재사용 확인
         int checkValidUsimCount = 0;
-        checkValidUsimCount = this.checkValidUsimNo(condition.getIccId());
+        checkValidUsimCount = formCommService.checkValidUsimNo(condition.getIccId());
         if (checkValidUsimCount > 0) {
             rtnCode = "0200";
             rtnMessage = "유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.";
@@ -100,9 +141,14 @@ public class SimInfoService {
         //3. USIM 유효성체크 (X85)
         MoscInqrUsimUsePsblOutDTO moscInqrUsimUsePsblOutDTO = new MoscInqrUsimUsePsblOutDTO();
         if (failUsimCnt == 0 && checkValidUsimCount == 0) {
+            System.out.println("failUsimCnt : ========== " + failUsimCnt);
+            System.out.println("checkValidUsimCount : ========== " + checkValidUsimCount);
             try {
-                moscInqrUsimUsePsblOutDTO = this.moscIntmMgmtSO(condition);
+                JuoSubInfoDto juoSubInfoDto = new JuoSubInfoDto();
+                juoSubInfoDto.setIccId(condition.getIccId());
+                moscInqrUsimUsePsblOutDTO = msfMplatFormService.moscIntmMgmtSO(juoSubInfoDto);
             } catch (SocketTimeoutException e) {
+                System.out.println("moscInqrUsimUsePsblOutDTO : " + moscInqrUsimUsePsblOutDTO.toString());
             }
 
             if (moscInqrUsimUsePsblOutDTO == null) {
@@ -111,7 +157,7 @@ public class SimInfoService {
             } else {
                 if ("Y".equals(moscInqrUsimUsePsblOutDTO.getPsblYn())) {
                     //USIM 접점코드(ORGN_ID) 조회
-                    orgnId = this.getUsimOrgnId(condition.getIccId());
+                    orgnId = formCommService.getUsimOrgnId(condition.getIccId());
 
                     rtnCode = "0000";
                     rtnMessage = "사용 가능한 USIM 번호 입니다.";
@@ -141,13 +187,15 @@ public class SimInfoService {
         String imei1 = esimDto.getImei1();
         String imei2 = esimDto.getImei2();
 
-        if (this.checkAbuseImeiList(Arrays.asList(imei1, imei2))) {
+        //부정사용주장 단말 확인
+        if (formCommService.checkAbuseImeiList(Arrays.asList(imei1, imei2))) {
             EsimDto abuseResDto = new EsimDto();
             abuseResDto.setResultCode("9901");
             rtnMap.put("resDto", abuseResDto);
             return rtnMap;
         }
 
+        //업로드된 단말정보 확인
         int uploadPhoneSrlNo = this.msfUploadPhoneInfo(eid, imei1, imei2);
         esimDto.setUploadPhoneSrlNo(uploadPhoneSrlNo);
         resDto = this.eSimChk(esimDto);
@@ -159,92 +207,8 @@ public class SimInfoService {
 
 
     //--------------------------- [USIM] 여기서부터는 공통으로 빼야할 사항으로 보임 START ------------------------------
-    //불량유심 사용제한 확인
-    public int getFailUsims(String iccId) {
-        //apiInterfaceServer + "/storeUsim/failUsim" >> parameter :: iccId
-        //건수를 받음.
-        return 0;
-    }
-
-    //불량유심 사용제한한 사용자 업데이트 (스마트에도 해당이 되려나? 사용자는 실제 가입하려는 사람이 아니라 판매자인데..)
-    public void setFailUsims(String iccId) {
-        //apiInterfaceServer + "/storeUsim/updateFailUsim" >> parameter :: iccId
-        //건수를 받음.
-    }
-
-    //명의도용 추가피해 방지를 위한 유심재사용 확인
-    public int checkValidUsimNo(String iccId) {
-        int vaildUsimCnt = 0;
-        //apiInterfaceServer + "//appform/checkValidUsimNo" >> parameter :: iccId
-        //건수를 받음.
-        return vaildUsimCnt;
-    }
-
-    //USIM 접점코드 조회
-    public String getUsimOrgnId(String iccId) {
-        String orgnId = "";
-        //apiInterfaceServer + "/msp/sellUsimMgmtOrgnId" >> parameter :: iccId
-        //건수를 받음.
-        return orgnId;
-    }
-
-    //USIM 정보 유효성체크 - MplatFormService 로 이동해야함.
-    public MoscInqrUsimUsePsblOutDTO moscIntmMgmtSO(MspJuoSubInfoCondition condition) throws SocketTimeoutException {
-        //public MoscInqrUsimUsePsblOutDTO moscIntmMgmtSO(JuoSubInfoDto condition) throws SocketTimeoutException {
-        MoscInqrUsimUsePsblOutDTO moscInqrUsimUsePsblOutDTO = new MoscInqrUsimUsePsblOutDTO();
-
-        HashMap<String, String> param = new HashMap<String, String>();
-        String iccId = StringUtil.NVL(condition.getIccId(), "");
-        param.put("appEventCd", "X85");
-        param.put("iccid", iccId);
-
-        msfMplatFormServerAdapter.callService(param, moscInqrUsimUsePsblOutDTO, 30000);
-        return moscInqrUsimUsePsblOutDTO;
-    }
-
     //--------------------------- [USIM] 여기서부터는 공통으로 빼야할 사항으로 보임 END ------------------------------
     //--------------------------- [eSIM] 여기서부터는 공통으로 빼야할 사항으로 보임 START ------------------------------
-    //부정사용주장 단말 확인 (메인 메소드) - imei 갯수만큼 돌겠지요. 해봤자 2개니까~~ 최대 2회
-    public boolean checkAbuseImeiList(List<String> imeis) {
-        boolean isAbuse = false;
-
-        for (String imei : imeis) {
-            if (StringUtils.isEmpty(imei)) {
-                continue;
-            }
-
-            isAbuse = this.existsAbuseImei(imei);
-            if (isAbuse) {
-                this.saveAbuseImeiHist(imei);
-                break;
-            }
-        }
-        return isAbuse;
-    }
-
-    //부정사용주장 단말 조회
-    private boolean existsAbuseImei(String imei) {
-        boolean exits = false;
-        //apiInterfaceServer + "/appform/existsAbuseImei" >> parameter :: iccId
-        return exits;
-    }
-
-    //부정사용주장 단말일 경우 NMCP_ABUSE_IMEI_HIST 이력저장 >> 해야겠죠??
-    private void saveAbuseImeiHist(String imei) {
-        //스마트 로그인한 사용자 아이디로 저장필요
-        /*String userId = "";
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if (userSession != null) {
-            userId = userSession.getUserId();
-        }*/
-
-        /*AbuseImeiHistDto abuseImeiHistDto = new AbuseImeiHistDto();
-        abuseImeiHistDto.setImei(imei);
-        abuseImeiHistDto.setAccessIp(ipstatisticService.getClientIp());
-        abuseImeiHistDto.setUserId(userId);
-        esimDao.insertAbuseImeiHist(abuseImeiHistDto);*/
-    }
-
     //Y13 - MplatFormService 로 이동해야함.
     //Y12 - MplatFormService 로 이동해야함.
     //Y14 - MplatFormService 로 이동해야함.
@@ -255,7 +219,6 @@ public class SimInfoService {
     }
 
     private int msfUploadPhoneInfo(String eid, String imei1, String imei2, String prntsContractNo) {
-
         int uploadPhoneSrlNo = 0;
         /*HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         McpUploadPhoneInfoDto mcpUploadPhoneInfoDto = new McpUploadPhoneInfoDto();
@@ -288,6 +251,7 @@ public class SimInfoService {
         return uploadPhoneSrlNo;
     }
 
+    //eSIM 유효성체크
     public EsimDto eSimChk(EsimDto reqDto) {
         EsimDto resDto = new EsimDto();
         try {
@@ -611,6 +575,35 @@ public class SimInfoService {
         }
 
         return resDto;
+    }
+
+    //eSIM DATA 정보 설정
+    public void fnSetDataOfeSim(NewChangeInfoRequest request) {
+
+        /*if (!"09".equals(request.getUsimKindsCd())) {
+            return;
+        }*/
+
+        //핸드폰정보가 업로드된 파일 일련번호
+        /*if (Integer.parseInt(request.getUploadPhoneSrlNo()) < 1) {
+            //throw new McpCommonJsonException("3001", PHONE_EID_NULL_EXCEPTION);
+        }*/
+        //핸드폰정보가 업로드된 파일 일련번호로 확인
+        //McpUploadPhoneInfoDto uploadEPhone = appformSvc.getUploadPhoneInfo(request.getUploadPhoneSrlNo());
+        //데이타가 없으면 안돼! 처리.
+        /*if (uploadEPhone == null || StringUtils.isBlank(uploadEPhone.getEid())) {
+            throw new McpCommonJsonException("3001", PHONE_EID_NULL_EXCEPTION);
+        }*/
+        //데이타가 있으면 아래와 같이 처리 (고객포탈의 watch 부분은 삭제)
+        /*if (StringUtils.isBlank(uploadEPhone.getPrntsContractNo())) {
+            //일반 eSIM
+            //eSIM 정보 설정
+            request.setEid(uploadEPhone.getEid());
+            request.setImei1(uploadEPhone.getImei1());
+            request.setImei2(uploadEPhone.getImei2());
+            request.setReqPhoneSn(uploadEPhone.getReqPhoneSn());
+            request.setEsimPhoneId(uploadEPhone.getModelId());
+        }*/
     }
     //--------------------------- [eSIM] 여기서부터는 공통으로 빼야할 사항으로 보임 END ------------------------------
 

@@ -12,7 +12,7 @@ public class CommonCode {
     private String groupId;
     private String code;
     private String title;
-    private UseYn useYn = UseYn.UNDEFINED;
+    private UseYn useYn = UseYn.getInvalidValue();
     private Detail detail;
 
 
@@ -21,6 +21,7 @@ public class CommonCode {
     public static class Detail {
 
         private String abbrName;
+        private String description;
         private int sortOrder;
         private String etcValue1;
         private String etcValue2;

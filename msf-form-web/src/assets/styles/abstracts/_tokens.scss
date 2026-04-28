@@ -240,6 +240,8 @@ $tokens: (
     // base: -0.25px,
     base: -0.05em,
     // -5%(design)를 em으로 변환한 값
+    narrow: -0.07em,
+    // 좁은간격 자간
   ),
   border-width: (
     base: 1px,

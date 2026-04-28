@@ -13,10 +13,11 @@
   --icon-checkbox-set: #{icon('checkbox')}; // MsfCheckbox: default
   --icon-checkbox-set2: #{icon('check2')}; // MsfCheckbox outline
 
-  --sat: env(safe-area-inset-top);
-  --sar: env(safe-area-inset-right);
-  --sab: env(safe-area-inset-bottom);
-  --sal: env(safe-area-inset-left);
+  /* 노치(상단) 및 홈 바(하단) 영역 확보 (미지원 브라우저 대비 기본값 0px 설정) */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 
   --layout-max-width: 100%; // 레이아웃 최대 넓이
   --layout-header-height: #{rem(50px)};

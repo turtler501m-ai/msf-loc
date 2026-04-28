@@ -109,9 +109,12 @@
     , B.OPEN_AGNT_CD
     , B.LST_COM_ACTV_DATE
     , B.PPPO
-    FROM MCP_USER_CNTR_MNG A, MSP_JUO_SUB_INFO B
+    FROM MCP_USER_CNTR_MNG@DL_MCP A, MSP_JUO_SUB_INFO B
     WHERE UPPER(A.USERID) = UPPER(#{userId})
     AND A.SVC_CNTR_NO = B.CONTRACT_NUM
+    <if test="@org.springframework.util.StringUtils@hasText(cntrMobileNo)">
+      AND A.CNTR_MOBILE_NO = #{cntrMobileNo}
+    </if>
     <if test="customerId != null and customerId != ''">
       AND A.CUSTOMER_ID = #{customerId}
     </if>

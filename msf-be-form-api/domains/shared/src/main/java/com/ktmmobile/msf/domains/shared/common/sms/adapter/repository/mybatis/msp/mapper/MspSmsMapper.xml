@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.shared.common.sms.adapter.repository.mybatis.msp.mapper.MspSmsMapper">
+
+  <insert id="insertSmsData" parameterType="com.ktmmobile.msf.domains.shared.common.sms.application.dto.MspSmsData">
+    INSERT INTO AM2X_SUBMIT (
+      MSG_ID,
+    <if test="@org.springframework.util.StringUtils@hasText(subject)">
+      SUBJECT,
+    </if>
+      MSG_TYPE,
+      SCHEDULE_TIME,
+      SUBMIT_TIME,
+      MESSAGE,
+      CALLBACK_NUM,
+      RCPT_DATA,
+      K_ADFLAG,
+      RESERVED01,
+      RESERVED02,
+      RESERVED03
+    ) VALUES (
+      AM2X_SUBMIT_SEQ.NEXTVAL,
+    <if test="@org.springframework.util.StringUtils@hasText(subject)">
+      #{subject},
+    </if>
+      #{msgType},
+      TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+      TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'),
+      #{message},
+      #{callbackNum},
+      #{rcptData},
+      #{kAdflag},
+      #{reserved01},
+      #{reserved02},
+      #{reserved03}
+    )
+  </insert>
+</mapper>

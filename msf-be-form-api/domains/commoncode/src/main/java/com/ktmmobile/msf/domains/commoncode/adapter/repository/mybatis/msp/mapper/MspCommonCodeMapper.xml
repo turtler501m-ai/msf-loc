@@ -9,7 +9,10 @@
       GRP_ID AS groupId,
       CD_VAL AS code,
       CD_DSC AS title,
-      USG_YN AS useYn
+      USG_YN AS useYn,
+      ETC1 AS "detail.etcValue1",
+      ETC2 AS "detail.etcValue2",
+      ETC3 AS "detail.etcValue3"
     FROM CMN_GRP_CD_MST
     ORDER BY GRP_ID, CD_VAL
   </select>

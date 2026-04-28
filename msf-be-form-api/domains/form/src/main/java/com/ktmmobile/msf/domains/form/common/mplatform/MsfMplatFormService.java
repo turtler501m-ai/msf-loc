@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.domains.form.common.mplatform;
 
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.text.ParseException;
 import java.util.Collections;
@@ -10,6 +11,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +22,16 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
+import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto;
 import com.ktmmobile.msf.domains.form.common.dto.MoscCombChkReqDto;
 import com.ktmmobile.msf.domains.form.common.dto.MoscCombReqDto;
 import com.ktmmobile.msf.domains.form.common.dto.MoscPymnReqDto;
 import com.ktmmobile.msf.domains.form.common.dto.MoscRemindSmsDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.dto.NowDlvryReqDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant;
@@ -47,6 +53,12 @@ import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscOtpSvcInfoRes;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscSimplePaySmsRes;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscSubMstCombChgRes;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscWireUseTimeInfoRes;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoParamDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonBillingInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonDetailInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpTelTotalUseTimeDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpTelTotalUseTimeMobileDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpVirtualAccountNoListDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.NowDlvryResDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.RegSvcChgRes;
@@ -61,8 +73,6 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscCombStatMgmtInfoOu
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscRetvIntmMdlSpecInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscRetvIntmOrrgInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscTrtOmdIntmVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoDto;
-import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoParamDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpBilEmailBillReqInfo;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpBilEmailChgVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpBilPrintInfoVO;
@@ -70,9 +80,7 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpCommonXmlVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpCustInfoAgreeVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarChangewayInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarChgWayChgVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonBillingInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonBillingInfoVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonDetailInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarMonDetailInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarPaymentInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarPriceInfoDetailItemVO;
@@ -97,14 +105,11 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSuspenCnlPosInfoInVO
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSuspenPosHisVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSuspenPosInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSvcContIpinVO;
-import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpTelTotalUseTimeDto;
-import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpTelTotalUseTimeMobileDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpTelTotalUseTimeMobileVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpTelTotalUseTimeVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpVoidTypeVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.PaymentInfoVO;
-import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
@@ -112,8 +117,6 @@ import com.ktmmobile.msf.domains.form.common.util.ObjectUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.EsimDto;
-import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
 
@@ -500,7 +503,8 @@ public class MsfMplatFormService {
      * @return
      * @throws
      */
-    public MpFarRealtimePayInfoVO farRealtimePayInfo(String ncn, String ctn, String custId) throws SelfServiceException, SocketTimeoutException {
+    public MpFarRealtimePayInfoVO farRealtimePayInfo(String ncn, String ctn, String custId)
+        throws SelfServiceException, SocketTimeoutException {
         MpFarRealtimePayInfoVO vo = new MpFarRealtimePayInfoVO();
         HashMap<String, String> param = getParamMap(ncn, ctn, custId, "X18");
 
@@ -512,6 +516,25 @@ public class MsfMplatFormService {
         }
 
         return vo;
+    }
+
+    /**
+     * test sehyun mplatform용
+     *
+     * @param String ncn : 사용자 서비스 계약번호 9자리 [-]제외
+     * @param String ctn : 사용자 전화번호 11자리 (10자리의 경우 앞에 0 추가)
+     * @return
+     * @throws
+     */
+    public <T> T commonMplatform(HashMap<String, String> param, String eventCd, Class<T> clazz)
+        throws SelfServiceException, IOException {
+
+        if ("LOCAL".equals(serverLocation)) {
+            return getVo2(eventCd, clazz);
+            //mplatFormServerAdapter.callService(param, vo);
+        } else {
+            return mplatFormServerAdapter.callService2(param, clazz);
+        }
     }
 
     /**
@@ -4507,6 +4530,160 @@ public class MsfMplatFormService {
         //////////////////////////////////
 
         return result;
+    }
+
+    private <T> T getVo2(String eventCd, Class<T> clazz) throws IOException {
+        //////////////////////////////////
+        StringBuilder responseXml = new StringBuilder();
+
+        responseXml.append(
+            "<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><ns2:moscPerInfoResponse xmlns:ns2=\"http://selfcare.so.itl.mvno.kt.com/\">");
+
+        switch (eventCd) {
+            case "Y02":
+                responseXml.append("<return>\n" +
+                    "\t<outDto>\n" +
+                    "\t   <efctStDt>20200814</efctStDt>\n" +
+                    "\t   <famtTarifAmt>9091</famtTarifAmt>\n" +
+                    "\t   <prodId>PL204T391</prodId>\n" +
+                    "\t   <prodNm>응급안전 안심요금제</prodNm>\n" +
+                    "\t</outDto>\n" +
+                    " </return>");
+                break;
+            case "Y04":
+                responseXml.append("<return>\n" +
+                    "            <outDto>\n" +
+                    "               <bthdayDate>19930714000000</bthdayDate>\n" +
+                    "               <contPurpCd>R</contPurpCd>\n" +
+                    "               <custNm>정교뎌</custNm>\n" +
+                    "               <custPtclTypeCd>N1</custPtclTypeCd>\n" +
+                    "               <custTypeCd>1</custTypeCd>\n" +
+                    "               <intmModelId>K7001100</intmModelId>\n" +
+                    "               <intmModelNm>PTA-VOLTE</intmModelNm>\n" +
+                    "               <intmSeq>355398095327777</intmSeq>\n" +
+                    "               <resultCd>00</resultCd>\n" +
+                    "            </outDto>\n" +
+                    "         </return>");
+                break;
+            case "X01"://가입정보조회------
+                responseXml.append(
+                    "<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X01</appEventCd><appSendDateTime>20160112153248</appSendDateTime><appRecvDateTime>20160112153246</appRecvDateTime><appLgDateTime>20160112153246</appLgDateTime><appNstepUserId>91060728</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9106072820160112153243531</globalNo><encYn></encYn><responseType>N</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><addr>인천 옹진군 영흥면 선재로34번길 141 </addr><email>bluemoor9521@naver.com</email><homeTel>01075116741</homeTel><initActivationDate>20140807163028</initActivationDate></outDto></return>");
+                break;
+            case "X18"://실시간요금조회------
+                //			responseXml.append("response massage is null.");//비정상
+                responseXml.append(
+                    "<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X18</appEventCd><appSendDateTime>20160112161906</appSendDateTime><appRecvDateTime>20160112161905</appRecvDateTime><appLgDateTime>20160112161905</appLgDateTime><appNstepUserId>91060728</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9106072820160112161901518</globalNo><encYn></encYn><responseType>N</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><amntDto><gubun>월정액</gubun><payMent>6387</payMent></amntDto><amntDto><gubun>부가세</gubun><payMent>638</payMent></amntDto><amntDto><gubun>원단위절사금액</gubun><payMent>-5</payMent></amntDto><amntDto><gubun>당월요금계</gubun><payMent>7025</payMent></amntDto><searchDay>20160112</searchDay><searchTime>0101~0112</searchTime></outDto></return>");
+                break;
+            case "X20":
+                responseXml.append(
+                    "<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X20</appEventCd><appSendDateTime>20160406161559</appSendDateTime><appRecvDateTime>20160406161557</appRecvDateTime><appLgDateTime>20160406161557</appLgDateTime><appNstepUserId>91060728</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9106072820160406161556269</globalNo><encYn></encYn><responseType>N</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><outDto><effectiveDate>20160328134219</effectiveDate><soc>DTPLSU100</soc><socDescription>데이터플러스 m(결합) 100M</socDescription><socRateValue>5,000 WON</socRateValue></outDto><outDto><effectiveDate>20160328134233</effectiveDate><soc>DTPLSU500</soc><socDescription>데이터플러스 m(결합) 500M</socDescription><socRateValue>10,000 WON</socRateValue></outDto><outDto><effectiveDate>20160323030009</effectiveDate><soc>RCC1</soc><socDescription>통화가능알리미</socDescription><socRateValue>500 WON</socRateValue></outDto><outDto><effectiveDate>20160323094134</effectiveDate><soc>INTLIST</soc><socDescription>국제통화내역통보</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>NESPFMCD3</soc><socDescription>olleh WiFi싱글(무료)</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>VLTEAUTSV</soc><socDescription>HD 보이스</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>PSVTAUTSV</soc><socDescription>HD 영상통화</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328135921</effectiveDate><soc>WIFISGLM4</soc><socDescription>WiFi 싱글 할인M6</socDescription><socRateValue>-6,000 WON</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>WVMS</soc><socDescription>통합사서함</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328134206</effectiveDate><soc>DTPLSU02G</soc><socDescription>데이터플러스 m(결합) 2G</socDescription><socRateValue>20,000 WON</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>NOSPAM3</soc><socDescription>정보제공사업자번호차단</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328135241</effectiveDate><soc>RCC1R</soc><socDescription>통화가능알리미 거부</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328135427</effectiveDate><soc>SMS26N</soc><socDescription>신메시지매니저</socDescription><socRateValue>900 WON</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>SMSB</soc><socDescription>SMS(문자서비스) 기본제공</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328135627</effectiveDate><soc>USEBILSMS</soc><socDescription>이용요금내역알리미</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160322224830</effectiveDate><soc>CYBDANGNT</soc><socDescription>정보보호알림이(일반)</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160323040140</effectiveDate><soc>ITC</soc><socDescription>국제전화 발신제한</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160323025931</effectiveDate><soc>LOC119</soc><socDescription>119 긴급구조 위치제공</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160323134617</effectiveDate><soc>MMCISS</soc><socDescription>쇼미</socDescription><socRateValue>900 WON</socRateValue></outDto><outDto><effectiveDate>20160323134748</effectiveDate><soc>NOIPCRVE</soc><socDescription>음성로밍 완전 차단</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160323134455</effectiveDate><soc>RCC2</soc><socDescription>통화요구알리미</socDescription><socRateValue>500 WON</socRateValue></outDto><outDto><effectiveDate>20160323040102</effectiveDate><soc>CNIRDO</soc><socDescription>익명호수신거부</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328134003</effectiveDate><soc>CNIRS</soc><socDescription>발신번호표시제한</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>MPAYBLOCK</soc><socDescription>휴대폰결제 이용거부</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>SPMFILTER</soc><socDescription>스팸차단서비스</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160322224737</effectiveDate><soc>WFSMSNDSP</soc><socDescription>웹 및 국외발신 미표시 서비스</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328135909</effectiveDate><soc>WIFISGLM3</soc><socDescription>WiFi 싱글 M3</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160325200008</effectiveDate><soc>XRINGSMS</soc><socDescription>링투유알리미</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>CLIPF</soc><socDescription>발신번호표시무료</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328134153</effectiveDate><soc>DTPLSU01G</soc><socDescription>데이터플러스 m(결합) 1G</socDescription><socRateValue>15,000 WON</socRateValue></outDto><outDto><effectiveDate>20160323065520</effectiveDate><soc>NOIPCRDT</soc><socDescription>데이터로밍 완전 차단</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328135150</effectiveDate><soc>PPINFO</soc><socDescription>요금납부알림서비스</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>SMARTNMON</soc><socDescription>스마트폰(종량)-일반</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160328135933</effectiveDate><soc>WIRELESSC</soc><socDescription>무선데이터차단서비스</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>AIPNESPOT</soc><socDescription>WiFi 인증서비스</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160323065714</effectiveDate><soc>CATCHCALL</soc><socDescription>캐치콜서비스</socDescription><socRateValue>500 WON</socRateValue></outDto><outDto><effectiveDate>20160323025938</effectiveDate><soc>DPCBLC060</soc><socDescription>060발신차단서비스(무료)</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160208150750</effectiveDate><soc>LTECERTID</soc><socDescription>LTE_인증상품</socDescription><socRateValue>Free</socRateValue></outDto><outDto><effectiveDate>20160323135150</effectiveDate><soc>XRING</soc><socDescription>링투유</socDescription><socRateValue>900 WON</socRateValue></outDto></outDto></return>");
+                break;
+            case "X83"://회선 사용기간조회
+                responseXml.append("<return>");
+                responseXml.append("    <bizHeader>");
+                responseXml.append("        <appEntrPrsnId>KIS</appEntrPrsnId>");
+                responseXml.append("        <appAgncCd>AA00364</appAgncCd>");
+                responseXml.append("        <appEventCd>X83</appEventCd>");
+                responseXml.append("        <appSendDateTime>20211103155502</appSendDateTime>");
+                responseXml.append("        <appRecvDateTime>20211103155458</appRecvDateTime>");
+                responseXml.append("        <appLgDateTime>20211103155458</appLgDateTime>");
+                responseXml.append("        <appNstepUserId>91225330</appNstepUserId>");
+                responseXml.append("        <appOrderId></appOrderId>");
+                responseXml.append("    </bizHeader>");
+                responseXml.append("    <commHeader>");
+                responseXml.append("        <globalNo>9122533020211103155029878</globalNo>");
+                responseXml.append("        <encYn></encYn>");
+                responseXml.append("        <responseType>N</responseType>");
+                responseXml.append("        <responseCode></responseCode>");
+                responseXml.append("        <responseLogcd></responseLogcd>");
+                responseXml.append("        <responseTitle></responseTitle>");
+                responseXml.append("        <responseBasic></responseBasic>");
+                responseXml.append("        <langCode></langCode>");
+                responseXml.append("        <filler></filler>");
+                responseXml.append("    </commHeader>");
+                responseXml.append("    <outDto>");
+                responseXml.append("        <longUseAdjDayNum>0</longUseAdjDayNum>");
+                responseXml.append("        <realUseDayNum>2089</realUseDayNum>");
+                responseXml.append("        <svcContSbscDt>20160208150750</svcContSbscDt>");
+                responseXml.append("        <totStopDayNum>6</totStopDayNum>");
+                responseXml.append("        <totUseDayNum>2095</totUseDayNum>");
+                responseXml.append("    </outDto>");
+                responseXml.append("  </return>");
+                break;
+            case "X88": //요금상품예약변경(X88)
+                //responseXml.append("<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X88</appEventCd><appSendDateTime>20220406191431</appSendDateTime><appRecvDateTime>20220406191429</appRecvDateTime><appLgDateTime>20220406191429</appLgDateTime><appNstepUserId>91225330</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9122533020220406191429656</globalNo><encYn></encYn><responseType>N</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><message><rsltCd>Y</rsltCd><ruleId>100001842</ruleId><ruleMsgSbst>요금제 변경시 자동해지 되는 부가상품입니다. &#xD;- M 요금할인 5000(VAT포함)&#xD;(http--0.0.0.0-7006-4)  - M 요금할인 3000(VAT포함)</ruleMsgSbst></message><rsltYn>Y</rsltYn></outDto></return>");
+                //  responseXml.append("<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X88</appEventCd><appSendDateTime>20220406181627</appSendDateTime><appRecvDateTime>20220406181625</appRecvDateTime><appLgDateTime>20220406181625</appLgDateTime><appNstepUserId>91225330</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9122533020220406181626460</globalNo><encYn></encYn><responseType>N</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><message><rsltCd>N</rsltCd><ruleId>100000413</ruleId><ruleMsgSbst>고객님은요금제 예약한 고객이므로 예약 취소후 처리하십시요.</ruleMsgSbst></message><message><rsltCd>Y</rsltCd><ruleId>100001842</ruleId><ruleMsgSbst>요금제 변경 시 자동해지 되는 부가상품입니다. &#xD;- M 요금할인 5000(VAT포함)&#xD; - M 요금할인 3000(VAT포함)</ruleMsgSbst></message><rsltYn>N</rsltYn></outDto></return>");
+                //responseXml.append("<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X88</appEventCd><appSendDateTime>20220406125323</appSendDateTime><appRecvDateTime>20220406125316</appRecvDateTime><appLgDateTime>20220406125316</appLgDateTime><appNstepUserId>91225330</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9122533020220406124901628</globalNo><encYn></encYn><responseType>N</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><message><rsltCd>N</rsltCd><ruleId>MSG_100999998_1</ruleId><ruleMsgSbst>현재 선택한 요금제에서는 가입할 수 없는 부가서비스[USIM 10GB 할인프로모션]입니다.</ruleMsgSbst></message><message><rsltCd>N</rsltCd><ruleId>MSG_100999998_1</ruleId><ruleMsgSbst>현재 선택한 요금제에서는 가입할 수 없는 부가서비스[LTE 데이터 추가제공 100GB(12개월)]입니다.</ruleMsgSbst></message><rsltYn>N</rsltYn></outDto></return>");
+                // responseXml.append("<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X88</appEventCd><appSendDateTime>20220310093349</appSendDateTime><appRecvDateTime>20220310093336</appRecvDateTime><appLgDateTime>20220310093336</appLgDateTime><appNstepUserId>91225330</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9122533020220310093010331</globalNo><encYn></encYn><responseType>N</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><message><rsltCd>Y</rsltCd><ruleId>100001136</ruleId><ruleMsgSbst>고객 문의 후 희망하면, 무선데이터차단서비스를 해지해주시기 바랍니다.</ruleMsgSbst></message><rsltYn>Y</rsltYn></outDto></return>");
+                responseXml.append("			<return>");
+                responseXml.append("				<bizHeader>");
+                responseXml.append("					<appEntrPrsnId>KIS</appEntrPrsnId>");
+                responseXml.append("					<appAgncCd>AA00364</appAgncCd>");
+                responseXml.append("					<appEventCd>X88</appEventCd>");
+                responseXml.append("					<appSendDateTime>20220530134033</appSendDateTime>");
+                responseXml.append("					<appRecvDateTime>20220530134031</appRecvDateTime>");
+                responseXml.append("					<appLgDateTime>20220530134031</appLgDateTime>");
+                responseXml.append("					<appNstepUserId>91225330</appNstepUserId>");
+                responseXml.append("					<appOrderId></appOrderId>");
+                responseXml.append("				</bizHeader>");
+                responseXml.append("				<commHeader>");
+                responseXml.append("					<globalNo>9122533020220530134054060</globalNo>");
+                responseXml.append("					<encYn></encYn>");
+                responseXml.append("					<responseType>N</responseType>");
+                responseXml.append("					<responseCode></responseCode>");
+                responseXml.append("					<responseLogcd></responseLogcd>");
+                responseXml.append("					<responseTitle></responseTitle>");
+                responseXml.append("					<responseBasic></responseBasic>");
+                responseXml.append("					<langCode></langCode>");
+                responseXml.append("					<filler></filler>");
+                responseXml.append("				</commHeader>");
+                responseXml.append("				<outDto>");
+                responseXml.append("					<message>");
+                responseXml.append("						<rsltCd>N</rsltCd>");
+                responseXml.append("						<ruleId>MSG_100999998_1</ruleId>");
+                responseXml.append("						<ruleMsgSbst>현재 선택한 요금제에서는 가입할 수 없는 부가서비스[LTE 데이터 추가제공 6GB]입니다.</ruleMsgSbst>");
+                responseXml.append("					</message>");
+                responseXml.append("					<rsltYn>N</rsltYn>");
+                responseXml.append("				</outDto>");
+                responseXml.append("			</return>");
+                break;
+            case "X89": //요금상품예약변경조회(X89)
+                responseXml.append(
+                    "<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X89</appEventCd><appSendDateTime>20220308175501</appSendDateTime><appRecvDateTime>20220308175459</appRecvDateTime><appLgDateTime>20220308175459</appLgDateTime><appNstepUserId>91225330</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9122533020220308175136057</globalNo><encYn></encYn><responseType>E</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><aplyDate>20220308170741</aplyDate><basicAmt>25000</basicAmt><efctStDate>20220401000001</efctStDate><prdcCd>PL208J932</prdcCd><prdcNm>모두다 맘껏 안심 2.5G+</prdcNm></outDto></return>");
+                // responseXml.append("<return><bizHeader><appEntrPrsnId>KIS</appEntrPrsnId><appAgncCd>AA00364</appAgncCd><appEventCd>X88</appEventCd><appSendDateTime>20220308171155</appSendDateTime><appRecvDateTime>20220308171142</appRecvDateTime><appLgDateTime>20220308171142</appLgDateTime><appNstepUserId>91225330</appNstepUserId><appOrderId></appOrderId></bizHeader><commHeader><globalNo>9122533020220308170818766</globalNo><encYn></encYn><responseType>N</responseType><responseCode></responseCode><responseLogcd></responseLogcd><responseTitle></responseTitle><responseBasic></responseBasic><langCode></langCode><filler></filler></commHeader><outDto><message><rsltCd>N</rsltCd><ruleId>100000413</ruleId><ruleMsgSbst>고객님은요금제 예약한 고객이므로 예약 취소후 처리하십시요.</ruleMsgSbst></message><message><rsltCd>Y</rsltCd><ruleId>100001136</ruleId><ruleMsgSbst>고객 문의 후 희망하면, 무선데이터차단서비스를 해지해주시기 바랍니다.</ruleMsgSbst></message><rsltYn>N</rsltYn></outDto></return>");
+                break;
+            case "X90": //요금상품예약변경취소(X90)
+                responseXml.append("<return>");
+                responseXml.append("    <bizHeader>");
+                responseXml.append("        <appEntrPrsnId>KIS</appEntrPrsnId>");
+                responseXml.append("        <appAgncCd>AA00364</appAgncCd>");
+                responseXml.append("        <appEventCd>X89</appEventCd>");
+                responseXml.append("        <appSendDateTime>20210902150015</appSendDateTime>");
+                responseXml.append("        <appRecvDateTime>20210902145952</appRecvDateTime>");
+                responseXml.append("        <appLgDateTime>20210902145952</appLgDateTime>");
+                responseXml.append("        <appNstepUserId>82023154</appNstepUserId>");
+                responseXml.append("        <appOrderId/>");
+                responseXml.append("    </bizHeader>");
+                responseXml.append("    <commHeader>");
+                responseXml.append("        <globalNo>912788510902000000000001</globalNo>");
+                responseXml.append("        <encYn/>");
+                responseXml.append("        <responseType>N</responseType>");
+                responseXml.append("        <responseBasic>요금제 예약 이력이 존재하지 않습니다.</responseBasic>\n");
+                responseXml.append("    </commHeader>");
+                responseXml.append("</return>");
+                break;
+            default:
+                logger.debug("Default MsfMplatFormService.java");
+        }
+
+        responseXml.append("</ns2:moscPerInfoResponse></soap:Body></soap:Envelope>");
+        //////////////////////////////////
+
+        XmlMapper mapper = new XmlMapper();
+        JsonNode root = mapper.readTree(responseXml.toString().getBytes());
+        JsonNode outDtoNode = root.findValue("outDto");
+
+        return mapper.treeToValue(outDtoNode, clazz);
     }
 
 

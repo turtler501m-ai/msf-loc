@@ -2,6 +2,7 @@ package com.ktmmobile.msf.domains.shared.form.common.terms.application.service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.ktmmobile.msf.domains.shared.form.common.terms.application.dto.TermsCondition;
+import com.ktmmobile.msf.domains.shared.form.common.terms.application.dto.TermsContentRequest;
 import com.ktmmobile.msf.domains.shared.form.common.terms.application.dto.TermsGroupResponse;
 import com.ktmmobile.msf.domains.shared.form.common.terms.application.dto.TermsItemResponse;
 import com.ktmmobile.msf.domains.shared.form.common.terms.application.port.in.TermsReader;
@@ -34,9 +36,29 @@ public class TermsService implements TermsReader {
         }
         List<TermsItem> termsList = termsRepository.getListTerms(condition);
 
-        List<TermsItemResponse> codes = termsList.stream().map(TermsItemResponse::of).toList();
+        List<TermsItemResponse> codes = termsList.stream().map(t -> TermsItemResponse.of(t, condition.specTermsList())).toList();
 
-        List<TermsContent> contentList = termsRepository.getListTermsContent(termsList.stream().filter(item -> StringUtils.hasText(item.expnsnStrVal1()) && StringUtils.hasText(item.expnsnStrVal2())).toList());
+        log.info("===================================================");
+        log.info("codes: {}", codes);
+        log.info("===================================================");
+
+        List<TermsContentRequest> termsContentRequests = termsList.stream().filter(item -> StringUtils.hasText(item.expnsnStrVal1()) && StringUtils.hasText(item.expnsnStrVal2())).map(
+            v -> {
+                if (condition.specTermsList() == null || condition.specTermsList().isEmpty()) {
+                    return TermsContentRequest.of(v, null);
+                } else {
+                    Optional<TermsCondition.SpecTerms> specRequest = condition.specTermsList().stream().filter(spec -> spec.code().equals(v.dtlCd()))
+                        .findFirst();
+                    return specRequest.map(specTerms -> TermsContentRequest.of(v, specTerms)).orElseGet(() -> TermsContentRequest.of(v, null));
+                }
+            }
+        ).toList();
+
+        log.info("===================================================");
+        log.info("termsContentRequests: {}", termsContentRequests);
+        log.info("===================================================");
+
+        List<TermsContent> contentList = termsRepository.getListTermsContent(termsContentRequests);
 
         codes = codes.stream().map(item -> {
             TermsContent content = contentList.stream().filter(cont -> Objects.equals(cont.expnsnStrVal1(), item.termsGroupCd()) && Objects.equals(

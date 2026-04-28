@@ -44,7 +44,7 @@ const inputAttrs = computed(() => {
 })
 
 const props = defineProps({
-  modelValue: { type: [Boolean, Array], default: false },
+  modelValue: { type: [Boolean, Array, String, Number], default: false },
   variant: {
     type: String,
     default: 'default',
@@ -63,6 +63,8 @@ const props = defineProps({
   error: Boolean,
   hideLabel: Boolean,
   blockPadding: { type: Boolean, default: false },
+  // 부모가 전달하는 { true: 'Y', false: 'N' } 객체를 받음
+  returndata: Object,
 })
 
 // 이벤트 등록
@@ -76,7 +78,8 @@ const isChecked = computed(() => {
   if (Array.isArray(props.modelValue)) {
     return props.modelValue.includes(props.value)
   }
-  return props.modelValue
+  // 부모의 modelValue가 returndata.true 값('Y')과 일치하는지 확인
+  return props.modelValue === props.returndata?.true
 })
 
 // 체크박스 상태값 업데이트 핸들러
@@ -94,7 +97,8 @@ const handleChange = (event) => {
     }
   } else {
     // 2. 단일 선택(불리언)일 때
-    nextValue = checked
+    // 체크 시 'Y', 해제 시 'N'을 방출
+    nextValue = props.returndata ? props.returndata[checked] : checked
   }
 
   emit('update:modelValue', nextValue)
@@ -130,7 +134,7 @@ const rootClasses = computed(() => [
   --checkbox-inset: var(--checkbox-inset-top) 0 0 0;
   --checkbox-label-gap: var(--spacing-x2); // checkbox 아이콘과 라벨 사이의 간격
   --checkbox-border-color: var(--color-gray-400); // checkbox 기본 보더 컬러
-  --checkbox-background-color: transparent; // checkbox 기본 배경 컬러
+  --checkbox-background-color: var(--color-white); // checkbox 기본 배경 컬러
   // --checkbox-icon: #{icon('checkbox')};
   --checkbox-icon: var(--icon-checkbox-set);
   --checkbox-icon-color: var(--color-gray-500);

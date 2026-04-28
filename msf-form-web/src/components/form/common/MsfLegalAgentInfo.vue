@@ -26,19 +26,17 @@
         <MsfSelect
           title="신청인과의 관계"
           v-model="model.repRelation"
-          :options="[
-            { label: '관계1', value: 'nation1' },
-            { label: '관계2', value: 'nation2' },
-          ]"
+          groupCode="AGR"
           placeholder="선택"
           class="ut-w-300"
           :disabled="model.isSaved"
         />
       </MsfFormGroup>
       <MsfMobileAuthNumber
-        v-model:phone1="model.repPhone1"
-        v-model:phone2="model.repPhone2"
-        v-model:phone3="model.repPhone3"
+        v-model:phone1="phoneData.phone1"
+        v-model:phone2="phoneData.phone2"
+        v-model:phone3="phoneData.phone3"
+        form-type="form-newchange-legalagent"
         @complete="onComplete"
       />
     </MsfStack>
@@ -65,6 +63,21 @@ const props = defineProps({
 const model = defineModel({ type: Object, required: true })
 const store = useMsfFormNewChgStore()
 const termsItem = ref(null)
+
+const phoneData = computed({
+  get() {
+    return {
+      phone1: model.value.repPhone1,
+      phone2: model.value.repPhone2,
+      phone3: model.value.repPhone3,
+    }
+  },
+  set(val) {
+    model.value.repPhone1 = val.phone1
+    model.value.repPhone2 = val.phone2
+    model.value.repPhone3 = val.phone3
+  },
+})
 
 const combinedNo1 = computed({
   get() {

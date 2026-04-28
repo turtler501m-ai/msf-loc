@@ -9,16 +9,16 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class AppRegistRequest {
-    @NotBlank(message = "uuid는 필수 입력 값입니다.")
+    @NotBlank(groups = {OnCreate.class, OnModify.class}, message = "uuid는 필수 입력 값입니다.")
     private String uuid;
     private String madAdr;
-    // @NotBlank(message = "userId는 필수 입력 값입니다.")
+    @NotBlank(groups = {OnCreate.class}, message = "userId는 필수 입력 값입니다.")
     private String userId;
+    private String apvSttusCd;
     private String osCd;
     private String version;
     private String appOsVer;
     private String appNm;
     private String autoLoginYn;
     private String bioLoginYn;
-
 }

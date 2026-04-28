@@ -11,12 +11,6 @@ public class MsfRequestAgentVo {
 
     Long requestKey;
     String formTypeCd;
-    String cretIp;
-    String cretDt;
-    String cretId;
-    String amdIp;
-    String amdDt;
-    String amdId;
     String minorAgentNm;
     String minorAgentRrn;
     String minorAgentBirth;

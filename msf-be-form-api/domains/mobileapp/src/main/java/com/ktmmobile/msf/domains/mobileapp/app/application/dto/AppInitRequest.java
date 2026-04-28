@@ -6,6 +6,6 @@ import lombok.Data;
 
 @Data
 public class AppInitRequest {
-    @NotBlank(message = "uuid는 필수 입력 값입니다.")
+    @NotBlank(groups = {OnSelect.class, OnDelete.class},message = "uuid는 필수 입력 값입니다.")
     private String uuid;
 }

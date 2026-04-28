@@ -62,7 +62,7 @@ http-client:
       exclude:
         - x-content-type-options
 
-    ## 바디(JSON) 필드 마스킹
+    ## 바디(JSON, form-urlencoded) 필드 마스킹
     body-masked-fields:
       include:
         - secret
@@ -71,9 +71,10 @@ http-client:
         - passwd
         - apiKey
         - api-key
+        - confmKey  # 주소 검색 API Key
       exclude: []
 
-    ## 바디(JSON) 필드 축약 로깅
+    ## 바디(JSON, form-urlencoded) 필드 축약
     ## 필드명 뒤에 [size] 또는 [start:end] 지정 가능 (생략 시 기본값 사용)
     body-truncated-fields:
       include:
@@ -97,6 +98,10 @@ internal-service:
       base-url: http://smartform-app:8280
     eformsign: ## eFormSign
       base-url: http://eformsign-app:8080
+      properties:
+        member-id: ${EFORMSIGN_MEMBER_ID}
+        api-key: ${EFORMSIGN_API_KEY}
+        private-key: ${EFORMSIGN_PRIVATE_KEY}
 
 
 

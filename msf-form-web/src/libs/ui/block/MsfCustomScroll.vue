@@ -6,6 +6,7 @@ const props = defineProps({
   height: { type: String, default: '100%' },
   width: { type: String, default: '100%' },
   alwaysShow: { type: Boolean, default: true }, // 항상 보일지 여부
+  useLock: { type: Boolean, default: false }, // 잠금 여부 속성 추가
 })
 
 const contentRef = ref(null)
@@ -23,6 +24,9 @@ let resizeObserver = null
 let ticking = false
 let startOffset = 0
 let currentAxis = null
+
+// touch 이벤트 옵션
+const touchOptions = { passive: false }
 
 const GAP = 2 // 스크롤바 교차점 겹침 방지 (ex: 클릭 영역 + 여유 2px)
 const SIDE_GAP = 0 // 위/왼쪽 시작 지점 여백
@@ -80,16 +84,18 @@ const startDrag = (e, axis) => {
 
   document.addEventListener('mousemove', onDragging)
   document.addEventListener('mouseup', stopDrag)
-  // 터치 이벤트 추가
-  document.addEventListener('touchmove', onDragging, { passive: false })
+  document.addEventListener('touchmove', onDragging, touchOptions)
   document.addEventListener('touchend', stopDrag)
-
   document.body.style.userSelect = 'none'
 }
 
 const onDragging = (e) => {
   if (!isDragging.value) return
-  if (e.cancelable) e.preventDefault() // 터치 시 화면 꿀렁임 방지
+
+  // 드래그 중일 때만 막기
+  if (e.cancelable && isDragging.value) {
+    e.preventDefault()
+  }
 
   const clientY = e.touches ? e.touches[0].clientY : e.clientY
   const clientX = e.touches ? e.touches[0].clientX : e.clientX
@@ -117,7 +123,7 @@ const stopDrag = () => {
   isDragging.value = false
   document.removeEventListener('mousemove', onDragging)
   document.removeEventListener('mouseup', stopDrag)
-  document.removeEventListener('touchmove', onDragging) // 추가
+  document.removeEventListener('touchmove', onDragging, touchOptions)
   document.removeEventListener('touchend', stopDrag) // 추가
   document.body.style.userSelect = ''
   scrollTimeout = setTimeout(() => {
@@ -176,14 +182,14 @@ defineExpose({ scrollTo: (opt) => contentRef.value?.scrollTo(opt), update: updat
 
 <template>
   <div class="cs-wrapper" :style="{ height: props.height, width: props.width }">
-    <div ref="contentRef" class="cs-content">
+    <div ref="contentRef" class="cs-content" :class="{ 'is-locked': props.useLock }">
       <div ref="contentInnerRef" class="cs-content-inner">
         <slot></slot>
       </div>
     </div>
     <!-- 세로 스크롤바 -->
     <div
-      v-show="hasVScroll"
+      v-show="hasVScroll && !props.useLock"
       class="cs-bar is-vertical"
       role="scrollbar"
       tabindex="0"
@@ -241,6 +247,7 @@ $sc-side-gap: v-bind('SIDE_GAP + "px"'); // 시작점(위에 script에서 수정
   overflow: hidden;
 
   .cs-content {
+    overscroll-behavior: contain;
     width: 100%;
     height: 100%;
     overflow: auto;
@@ -257,6 +264,12 @@ $sc-side-gap: v-bind('SIDE_GAP + "px"'); // 시작점(위에 script에서 수정
       width: 0;
       height: 0;
     }
+
+    &.is-locked {
+      overflow: hidden !important; /* 물리적으로 스크롤 차단 */
+      // touch-action: none; /* 모바일 터치 방지 */
+      touch-action: pan-x pan-y;
+    }
   }
 
   .cs-bar {
@@ -265,6 +278,7 @@ $sc-side-gap: v-bind('SIDE_GAP + "px"'); // 시작점(위에 script에서 수정
     opacity: 0; // 기본은 숨김
     transition: opacity 0.2s;
     background: transparent;
+    touch-action: none; /* 스크롤바 자체는 터치 제스처 개입 막기 */
     -webkit-tap-highlight-color: transparent;
 
     // always-show prop이 true일 때 항상 보이게 함
