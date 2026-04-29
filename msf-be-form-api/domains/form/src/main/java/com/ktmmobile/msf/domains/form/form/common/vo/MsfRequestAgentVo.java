@@ -10,7 +10,6 @@ import lombok.Setter;
 public class MsfRequestAgentVo {
 
     Long requestKey;
-    String formTypeCd;
     String minorAgentNm;
     String minorAgentRrn;
     String minorAgentBirth;

@@ -10,7 +10,6 @@ import lombok.Setter;
 public class MsfRequestClauseVo {
 
     Long requestKey;
-    String formTypeCd;
     String cdGroupId;
     String cretIp;
     String cretDt;

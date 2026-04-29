@@ -3,7 +3,7 @@ package com.ktmmobile.msf.domains.form.form.common.repository.smartform;
 import com.ktmmobile.msf.domains.form.form.common.dto.CategoryInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.CategoryMstRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.CategoryRelRequest;
-import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialCondition;
+import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -19,9 +19,9 @@ public interface ProductSmartInfoReadMapper {
 
     //휴대폰 매장 재고 조회 : return >> prod_id 목록
     //List<PhoneInfoDto> selectPhoneInventoryList(ProductSearchCondition condition);
-    List<CategoryInfoDto> selectPhoneInventoryList(PhoneSerialCondition condition);
+    List<CategoryInfoDto> selectPhoneInventoryList(PhoneSerialRequest condition);
 
     //휴대폰 매장재고 단건 조회 : return >> imei
-    String selectPhoneInventory(PhoneSerialCondition condition);
+    String selectPhoneInventory(PhoneSerialRequest condition);
 
 }

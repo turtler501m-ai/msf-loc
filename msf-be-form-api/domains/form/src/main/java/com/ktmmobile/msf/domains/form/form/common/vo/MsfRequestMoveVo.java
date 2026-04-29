@@ -10,7 +10,6 @@ import lombok.Setter;
 public class MsfRequestMoveVo {
 
     Long requestKey;
-    String formTypeCd;
     String moveCompanyCd;
     String moveMobileFnNo;
     String moveMobileMnNo;

@@ -59,6 +59,7 @@ import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonDetailInfoDto
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscSpnsrItgInfoInVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpMonthPayMentDto;
 import com.ktmmobile.msf.domains.form.common.mspservice.dao.MspDao;
+import com.ktmmobile.msf.domains.form.common.repository.MspApiDirectRepository;
 import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
 import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
@@ -66,7 +67,7 @@ import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
-import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.TerminationSettlementDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationSettlementDto;
 import com.ktds.crypto.exception.CryptoException;
 
 @Service
@@ -101,6 +102,9 @@ public class MsfMypageSvcImpl implements MsfMypageSvc {
     @Lazy
     @Autowired
     MsfMplatFormService mPlatFormService;
+
+    @Autowired
+    MspApiDirectRepository mspApiDirectRepository;
 
     /*
     @Autowired
@@ -166,8 +170,7 @@ public class MsfMypageSvcImpl implements MsfMypageSvc {
 
     @Override
     public McpUserCntrMngDto selectSocDesc(String svcCntrNo) {
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.postForObject(apiInterfaceServer + "/mypage/socDesc", svcCntrNo, McpUserCntrMngDto.class);
+        return mspApiDirectRepository.query("/mypage/socDesc", svcCntrNo, McpUserCntrMngDto.class);
     }
 
     @Override
@@ -216,8 +219,7 @@ public class MsfMypageSvcImpl implements MsfMypageSvc {
         if (StringUtils.isBlank(ncn)) {
             throw new McpCommonException(F_BIND_EXCEPTION);
         }
-        RestTemplate restTemplate = new RestTemplate();
-        return restTemplate.postForObject(apiInterfaceServer + "/mypage/farPricePlan", ncn, McpFarPriceDto.class);
+        return mspApiDirectRepository.query("/mypage/farPricePlan", ncn, McpFarPriceDto.class);
     }
 
     @Override

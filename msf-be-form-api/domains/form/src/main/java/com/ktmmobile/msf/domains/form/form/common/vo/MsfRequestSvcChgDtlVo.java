@@ -18,15 +18,11 @@ public class MsfRequestSvcChgDtlVo {
     String amdDt;
     String amdId;
     String svcTgtCd;
-    String svcChgTypeCd;
     String procTypeCd;
     String socCd;
     String socNm;
-    String prodId;
-    String prodNm;
     String addtionInfo;
     Long prodAmt;
-    String releasePwd;
     String insrCd;
     String clauseInsuranceYn;
     String clauseInsrProdYn;

@@ -1,6 +1,8 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
 import com.ktmmobile.msf.commons.common.exception.NotFoundException;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormOsstServerAdapter;
@@ -222,6 +224,49 @@ public class FormCommService {
         //건수를 받음.
     }
 
+    //MCP_REQUEST_OSST 조회
+    //as-is : appformSvc.requestOsstCount(mcpRequestOsstDto);
+    public int getMcpRequestOsstCount(McpRequestOsstDto mcpRequestOsstDto) {
+        return formCommReadMapper.selectOsstCount(mcpRequestOsstDto);
+    }
+
+    //MCP_REQUEST_OSST INSERT
+    public boolean setMcpRequestOsst(McpRequestOsstDto mcpRequestOsstDto) {
+        return formCommWriteMapper.insertMcpRequestOsst(mcpRequestOsstDto);
+    }
+
+    //MCP_REQUEST INSERT & UPDATE
+    public boolean mergeMcpRequest(McpRequestDto request) {
+        return formCommWriteMapper.mergeMcpRequest(request);
+    }
+
+    //MP호출 : 신규가입 희망번호 목록 조회
+    public MPhoneNoListXmlVO getPhoneNoList(String resNo, String eventCd) throws SelfServiceException, SocketTimeoutException {
+        MPhoneNoListXmlVO mPhoneNoListXmlVO = new MPhoneNoListXmlVO();
+        HashMap<String, String> param = new HashMap<String, String>();
+        param.put("appEventCd", eventCd);
+        param.put("resNo", resNo);
+        mplatFormOsstServerAdapter.callService(param, mPhoneNoListXmlVO, 100000);
+        return mPhoneNoListXmlVO;
+    }
+
+    //MP호출 : 신규가입 희망번호 예약 또는 취소
+    public MSimpleOsstXmlVO sendOsstService(String resNo, String eventCd, String gubun) throws SelfServiceException, SocketTimeoutException {
+        MSimpleOsstXmlVO simpleOsstXmlVO = new MSimpleOsstXmlVO();
+        HashMap<String, String> param = new HashMap<String, String>();
+        param.put("appEventCd", eventCd);
+        param.put("resNo", resNo);
+        param.put("gubun", gubun);
+        mplatFormOsstServerAdapter.callService(param, simpleOsstXmlVO, 100000);
+        return simpleOsstXmlVO;
+    }
+
+
+    //MCP_REQUEST 업데이트
+    //as-is : appformSvc.updateMcpRequest(mcpRequestDto)
+    /*public boolean setMcpRequest(McpRequestDto request) {
+
+    }*/
 
     //개통사전체크
     public Map<String, Object> reqPreOpenCheck(NewChangeInfoRequest request) {

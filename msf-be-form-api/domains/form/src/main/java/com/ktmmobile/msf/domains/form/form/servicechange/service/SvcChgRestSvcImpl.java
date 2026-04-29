@@ -7,7 +7,6 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
@@ -63,9 +62,9 @@ public class SvcChgRestSvcImpl implements SvcChgRestSvc {
     private final IpStatisticService ipStatisticService;
     private final FCommonSvc fCommonSvc;
 
-//    @Value("${test.userId}")
+    //    @Value("${test.userId}")
     private String userId;
-//    @Value("${test.cntrMobileNo}")
+    //    @Value("${test.cntrMobileNo}")
     private String cntrMobileNo;
 
     // 요금제 목록 조회
@@ -552,8 +551,8 @@ public class SvcChgRestSvcImpl implements SvcChgRestSvc {
     // 가입중인 요금제 조회(Y02)
     @Override public ChargePlanResponse selectActiveChargePlan(ChargePlanRequest request) {
         HashMap<String, String> mapData = new HashMap<>();
-        mapData.put("userId", userId);
-        mapData.put("cntrMobileNo", cntrMobileNo);
+        mapData.put("userId", request.getUserId());
+        mapData.put("cntrMobileNo", request.getCtn());
 
         // 계약 정보 조회
         List<McpUserCntrMngDto> cntrList = mcpApiClient.post("/mypage/cntrList", mapData, List.class);

@@ -10,16 +10,19 @@ import lombok.Setter;
 public class MsfRequestAdditionVo {
 
     Long requestKey;
-    String formTypeCd;
-    String additionId; //MCP 키가 없는경우 부가서비스 아이디
+    String additionId;
     String cretIp;
     String cretDt;
     String cretId;
     String amdIp;
     String amdDt;
     String amdId;
-    Long additionKey; //MCP 키가 있는경우 부가서비스 키
+    Long additionKey;
     String additionNm;
+    String svcChgTypeCd;
+    String prodId;
+    String prodNm;
+    String addtionInfo;
     Long rantal;
     String procYn;
 

@@ -255,26 +255,30 @@ public class AutoAuditingInterceptor implements Interceptor {
 
         private int findTopLevelKeyword(String sql, String keyword) {
             int depth = 0;
-            String upperSql = sql.toUpperCase();
             int keywordLen = keyword.length();
+            int lastKeywordStart = sql.length() - keywordLen;
+
             for (int i = 0; i < sql.length(); i++) {
                 char c = sql.charAt(i);
                 if (c == '(') {
                     depth++;
                 } else if (c == ')') {
                     depth--;
-                } else if (depth == 0 && i <= sql.length() - (keywordLen + 2)) {
-                    // Check if current position starts with keyword surrounded by whitespace or at start/end
-                    if (upperSql.substring(i).startsWith(keyword)) {
-                        boolean beforeOk = (i == 0 || Character.isWhitespace(sql.charAt(i - 1)));
-                        boolean afterOk = (i + keywordLen == sql.length() || Character.isWhitespace(sql.charAt(i + keywordLen)));
-                        if (beforeOk && afterOk) {
-                            return i;
-                        }
-                    }
+                }
+
+                boolean topLevelKeywordStart = depth == 0 && i <= lastKeywordStart;
+                if (topLevelKeywordStart && sql.regionMatches(true, i, keyword, 0, keywordLen) && isKeywordBoundary(sql, i, keywordLen)) {
+                    return i;
                 }
             }
             return -1;
+        }
+
+        private boolean isKeywordBoundary(String sql, int start, int keywordLen) {
+            int end = start + keywordLen;
+            boolean beforeOk = start == 0 || Character.isWhitespace(sql.charAt(start - 1));
+            boolean afterOk = end == sql.length() || Character.isWhitespace(sql.charAt(end));
+            return beforeOk && afterOk;
         }
 
         private AuditingEntity getAuditEntity() {

@@ -59,7 +59,7 @@ public class ProductController {
 
     //휴대폰 매장 재고 조회 (postgre)
     @PostMapping("/phone/inventory/list")
-    public CommonResponse<List<CategoryInfoDto>> getPhoneInventoryList(@RequestBody @Valid PhoneSerialCondition condition) {
+    public CommonResponse<List<CategoryInfoDto>> getPhoneInventoryList(@RequestBody @Valid PhoneSerialRequest condition) {
         return ResponseUtils.ok(productInfoService.getPhoneInventoryList(condition));
     }
 
@@ -90,7 +90,7 @@ public class ProductController {
 
     //부가서비스 목록 조회 - 기기변경 신청서의 가입중 부가서비스목록 조회
     @PostMapping("/activeaddition/list")
-    public CommonResponse<List<MsfRequestAdditionResponse>> getActiveAdditionList(@RequestBody @Valid MspJuoSubInfoCondition condition) {
+    public CommonResponse<List<MsfRequestAdditionResponse>> getActiveAdditionList(@RequestBody @Valid MspJuoSubInfoRequest condition) {
         return ResponseUtils.ok(productInfoService.getActiveAdditionList(condition));
     }
 

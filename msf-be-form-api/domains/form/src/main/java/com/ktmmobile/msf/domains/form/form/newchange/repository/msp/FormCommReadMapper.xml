@@ -43,4 +43,17 @@
         AND ORGN_LVL_CD = '10' -- /* CMN0006 - 1 : 본사, 2 : 사업부, 3 : 지원부, 4 : 파트, 5 : 영업, 10 : 대리점, 20 : 판매점 */
   </select>
 
+    <select id="selectOsstCount" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto"
+            resultType="java.lang.Integer">
+        SELECT /*AppformMapper.requestOsstCount  */
+        COUNT(1)
+        FROM MCP_REQUEST_OSST@DL_MCP T1
+        WHERE 1=1
+        AND T1.MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')
+        AND T1.PRGR_STAT_CD = #{prgrStatCd}
+        <if test="rsltCd != null and rsltCd != ''">
+            AND T1.RSLT_CD  = #{rsltCd}
+        </if>
+    </select>
+
 </mapper>

@@ -9,9 +9,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum OperType implements CommonEnum {
-    NAC3("NAC3", "신규가입"),
-    MNP3("MNP3", "번호이동"),
-    HDN3("HDN3", "기기변경"),
+    NEW_ACTIVATION("NAC3", "신규가입"),
+    MOBILE_NUMBER_PORTABILITY("MNP3", "번호이동"),
+    HANDSET_CHANGE("HDN3", "기기변경"),
 
     @Deprecated
     UNDEFINED(CommonEnumConstant.UNDEFINED_CODE, "Invalid OperType");

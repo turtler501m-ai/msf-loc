@@ -109,6 +109,14 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     remainChargeLoaded: false,
     remainChargeItems: [],
 
+    /* 가입정보 조회(getMyinfoView) 결과 */
+    prvRateGrpNm: '',       // 현재 요금제명
+    initActivationDate: '', // 개통일자
+    addr: '',               // 주소
+    remindBlckYn: '',       // 해지 제한 여부
+    payData: null,          // 납부방법
+    billData: null,         // 명세서
+
     /* 동의 */
     agreeCheck1: false,
     agreeCheck2: false,
@@ -172,6 +180,37 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     } catch (e) {
       console.error('[TerminationStore] auth failed', e)
       return ''
+    }
+  }
+
+  // X01 가입정보 조회 (핸드폰 인증 완료 후 호출)
+  const apiGetMyinfoView = async () => {
+    const ncn = formData.ncn || formData.contractNum
+    const ctn = `${formData.deviceChgTel1 || ''}${formData.deviceChgTel2 || ''}${formData.deviceChgTel3 || ''}`
+    console.log('[MyinfoView] 가입정보 조회 요청', { ncn, ctn })
+    try {
+      const data = await post('/api/msf/formTermination/myinfo/view', {
+        ncn,
+        ctn,
+        contractNum: ncn,
+        custId: formData.custId || '',
+      })
+      console.log('[MyinfoView] 가입정보 조회 응답', data)
+      if (data) {
+        if (data.prvRateGrpNm !== undefined) formData.prvRateGrpNm = data.prvRateGrpNm || ''
+        if (data.initActivationDate && data.initActivationDate !== '-') {
+          formData.initActivationDate = data.initActivationDate
+          formData.lstComActvDate = data.initActivationDate
+        }
+        if (data.addr && data.addr !== '-') formData.addr = data.addr
+        if (data.remindBlckYn !== undefined) formData.remindBlckYn = data.remindBlckYn || ''
+        if (data.payData !== undefined) formData.payData = data.payData
+        if (data.billData !== undefined) formData.billData = data.billData
+      }
+      return data
+    } catch (e) {
+      console.warn('[MyinfoView] 가입정보 조회 실패 (무시하고 진행)', e?.message)
+      return null
     }
   }
 
@@ -328,6 +367,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     setTerminationContract,
     ensureTerminationNcn,
     resetStep,
+    apiGetMyinfoView,
     apiGetRemainCharge,
     apiCompleteApplication,
   }

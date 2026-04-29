@@ -226,7 +226,6 @@
   <insert id="insertMsfRequestAgentTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo">
     INSERT INTO MSF_REQUEST_AGENT_TEMP
     (REQUEST_KEY
-    , FORM_TYPE_CD
     , MINOR_AGENT_NM
     , MINOR_AGENT_RRN
     , MINOR_AGENT_REL_TYPE_CD
@@ -243,7 +242,6 @@
     , JRDCL_AGENT_TEL_MN_NO
     , JRDCL_AGENT_TEL_RN_NO)
     VALUES(#{requestKey}
-    , #{formTypeCd}
     , #{minorAgentNm}
     , #{minorAgentRrn}
     , #{minorAgentRelTypeCd}
@@ -264,7 +262,6 @@
   <insert id="insertMsfRequestCstmrTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo">
     INSERT INTO SMARTFORM.MSF_REQUEST_CSTMR_TEMP
     (REQUEST_KEY
-    , FORM_TYPE_CD
     , CSTMR_NM
     , CSTMR_NATIVE_RRN
     , CSTMR_NATIVE_BIRTH
@@ -303,7 +300,6 @@
     , CSTMR_RECEIVE_TEL_NM_NO
     , CSTMR_RECEIVE_TEL_RN_NO)
     VALUES(#{requestKey}
-    , #{formTypeCd}
     , #{cstmrNm}
     , #{cstmrNativeRrn}
     , #{cstmrNativeBirth}
@@ -346,7 +342,6 @@
   <insert id="insertMsfRequestSaleTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo">
     INSERT INTO SMARTFORM.MSF_REQUEST_SALE_TEMP
     (REQUEST_KEY
-    , FORM_TYPE_CD
     , MODEL_ID
     , MODEL_MONTHLY
     , MODEL_INSTAMT
@@ -375,7 +370,6 @@
     , SOC_NM
     , SOC_BASE_CHRG_AMT)
     VALUES(#{requestKey}
-    , #{formTypeCd}
     , #{modelId}
     , #{modelMonthly}
     , #{modelInstamt}
@@ -408,7 +402,6 @@
   <insert id="insertMsfRequestBillReqTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo">
     INSERT INTO SMARTFORM.MSF_REQUEST_BILL_REQ_TEMP
     (REQUEST_KEY
-    , FORM_TYPE_CD
     , REQ_PAY_TYPE_CD
     , REQ_BANK_CD
     , REQ_ACCOUNT_NM
@@ -434,7 +427,6 @@
     , CSTMR_BILL_SEND_TYPE_CD
     , CSTMR_EMAIL_ADR)
     VALUES(#{requestKey}
-    , #{formTypeCd}
     , #{reqPayTypeCd}
     , #{reqBankCd}
     , #{reqAccountNm}
@@ -464,7 +456,6 @@
   <insert id="insertMsfRequestMoveTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo">
     INSERT INTO MSF_REQUEST_MOVE_TEMP
     (REQUEST_KEY
-    , FORM_TYPE_CD
     , MOVE_COMPANY_CD
     , MOVE_MOBILE_FN_NO
     , MOVE_MOBILE_MN_NO
@@ -482,7 +473,6 @@
     , OSST_PAY_TYPE_CD
     , MOVE_PENALTY)
     VALUES(#{requestKey}
-    , #{formTypeCd}
     , #{moveCompanyCd}
     , #{moveMobileFnNo}
     , #{moveMobileMnNo}
@@ -623,7 +613,7 @@ SET
     , JRDCL_AGENT_TEL_FN_NO=#{jrdclAgentTelFnNo}
     , JRDCL_AGENT_TEL_MN_NO=#{jrdclAgentTelMnNo}
     , JRDCL_AGENT_TEL_RN_NO=#{jrdclAgentTelRnNo}
-WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
+WHERE REQUEST_KEY = #{requestKey}
 </update>
 <update id="updateMsfRequestCstmrTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo">
 UPDATE MSF_REQUEST_CSTMR_TEMP
@@ -665,7 +655,7 @@ SET
     , CSTMR_RECEIVE_TEL_FN_NO=#{cstmrReceiveTelFnNo}
     , CSTMR_RECEIVE_TEL_NM_NO=#{cstmrReceiveTelNmNo}
     , CSTMR_RECEIVE_TEL_RN_NO=#{cstmrReceiveTelRnNo}
-WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
+WHERE REQUEST_KEY = #{requestKey}
 </update>
 <update id="updateMsfRequestSaleTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo">
 UPDATE MSF_REQUEST_SALE_TEMP
@@ -697,7 +687,7 @@ SET
     , SOC_CODE=#{socCode}
     , SOC_NM=#{socNm}
     , SOC_BASE_CHRG_AMT=#{socBaseChrgAmt}
-WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
+WHERE REQUEST_KEY = #{requestKey}
 </update>
 <update id="updateMsfRequestBillReqTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo">
 UPDATE MSF_REQUEST_BILL_REQ_TEMP
@@ -726,7 +716,7 @@ SET
     , PRNTS_BILL_NO=#{prntsBillNo}
     , CSTMR_BILL_SEND_TYPE_CD=#{cstmrBillSendTypeCd}
     , CSTMR_EMAIL_ADR=#{cstmrEmailAdr}
-WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
+WHERE REQUEST_KEY = #{requestKey}
 </update>
 
 <update id="updateMsfRequestMoveTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo">
@@ -748,20 +738,18 @@ WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
         , OSST_PAY_DATE=#{osstPayDate}
         , OSST_PAY_TYPE_CD=#{osstPayTypeCd}
         , MOVE_PENALTY=COALESCE(#{movePenalty},0)
-    WHERE REQUEST_KEY = #{requestKey} AND FORM_TYPE_CD = #{formTypeCd}
+    WHERE REQUEST_KEY = #{requestKey}
 </update>
 
 <!-- 부가서비스 저장 -->
 <insert id="insertAdditionInfoList" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo">
     <!--INSERT INTO SMARTFORM.MSF_REQUEST_ADDITION_TEMP
     (REQUEST_KEY
-    , FORM_TYPE_CD
     , ADDITION_ID
     , ADDITION_NM
     , RANTAL)
     VALUES(
     #{requestKey}
-    , #{formTypeCd}
     <foreach collection="additionInfoList" item="item" separator=",">
         (#{item.additionId}, #{item.additionNm}, #{item.rantal})
     </foreach>

@@ -10,4 +10,5 @@ public class OwnerChangeValidationRequest {
     private String ncn;
     private String ctn;
     private String custId;
+    private String userNm;
 }

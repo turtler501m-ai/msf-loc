@@ -4,10 +4,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 신규/변경 신청서 insert 및 update request parameter 정의
+ * 2026.04.
+ */
+
 @Getter
 @Setter
 @NoArgsConstructor
 public class NewChangeInfoRequest {
+
     String tmpStepCd; //임시저장 단계
 
     Long requestKey;
@@ -139,7 +145,6 @@ public class NewChangeInfoRequest {
     String faxNo;
 
     //MSF_REQUEST_CSTMR
-    String formTypeCd;
     String cstmrNm;
     String cstmrNativeRrn;
     String cstmrNativeBirth;

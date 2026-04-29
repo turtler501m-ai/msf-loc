@@ -4,12 +4,6 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper">
 
-  <!--<resultMap id="newChangeResultMap" type="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeStepDto">
-    <collection property="step1Dto" />
-    <collection property="step2Dto" />
-    <collection property="step3Dto" />
-  </resultMap>-->
-
   <select id="generateSmartResNo" resultType="java.lang.String">
     <!--SELECT NEXTVAL('SQ_REQUEST_RES_NO_KEY')-->
     SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_REQUEST_RES_NO_KEY')::TEXT, 5, '0'))
@@ -26,7 +20,7 @@
   </select>
 
 
-  <select id="selectMsfRequestInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+  <select id="selectMsfRequestInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
           resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo">
         /** MSF_REQUEST 단건 조회 **/
         SELECT
@@ -142,12 +136,11 @@
         WHERE A.REQUEST_KEY = #{requestKey}
   </select>
 
-    <select id="selectMsfRequestCstmrInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+    <select id="selectMsfRequestCstmrInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo">
         /** MSF_REQUEST_CSTMR 단건 조회 **/
         SELECT
-            FORM_TYPE_CD
-            , CSTMR_NM
+              CSTMR_NM
             , CSTMR_NATIVE_RRN
             , CSTMR_NATIVE_BIRTH
             , CSTMR_PRIVATE_CNAME
@@ -188,12 +181,11 @@
         WHERE REQUEST_KEY = #{requestKey}
     </select>
 
-    <select id="selectMsfRequestAgentInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+    <select id="selectMsfRequestAgentInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo">
         /** MSF_REQUEST_AGENT 단건 조회 **/
         SELECT
-            FORM_TYPE_CD
-            , MINOR_AGENT_NM
+              MINOR_AGENT_NM
             , MINOR_AGENT_RRN
             , MINOR_AGENT_REL_TYPE_CD
             , MINOR_AGENT_TEL_FN_NO
@@ -212,12 +204,11 @@
         WHERE REQUEST_KEY = #{requestKey}
     </select>
 
-    <select id="selectMsfRequestSaleInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+    <select id="selectMsfRequestSaleInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo">
         /** MSF_REQUEST_SALE 단건조회 **/
         SELECT
-            FORM_TYPE_CD
-            , MODEL_ID
+              MODEL_ID
             , MODEL_MONTHLY
             , MODEL_INSTAMT
             , MODEL_SALE_POLICY_CD
@@ -248,12 +239,11 @@
         WHERE REQUEST_KEY = #{requestKey}
     </select>
 
-    <select id="selectMsfRequestBillReqInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
+    <select id="selectMsfRequestBillReqInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo">
         /** MSF_REQUEST_BILL_REQ 단건조회 **/
         SELECT
-            FORM_TYPE_CD
-            , REQ_PAY_TYPE_CD
+              REQ_PAY_TYPE_CD
             , REQ_BANK_CD
             , REQ_ACCOUNT_NM
             , REQ_ACCOUNT_RRN
@@ -283,26 +273,7 @@
 
     <!-- /** MSF_REQUEST_ADDITION 부가서비스 조회 **/ -->
 
-  <!--<select id="selectNewChangeInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
-            resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoDto">-->
-  <!--<select id="selectNewChangeInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition"
-          resultMap="newChangeResultMap">-->
-    <!--/* 신규변경 작성내용 조회 */
-    SELECT
-      A.REQ_BUY_TYPE_CD
-      , A.OPEN_TYPE_CD
-      , A.SERVICE_TYPE_CD
-      , A.OPER_TYPE_CD
-      , A.CSTMR_TYPE_CD
-      , A.TMP_STEP_CD
-    FROM MSF_REQUEST_TEMP A, MSF_REQUEST_AGENT_TEMP B, MSF_REQUEST_CSTMR_TEMP C, MSF_REQUEST_SALE_TEMP D, MSF_REQUEST_BILL_REQ_TEMP E
-    WHERE A.REQUEST_KEY = B.REQUEST_KEY
-        AND A.REQUEST_KEY = C.REQUEST_KEY
-        AND C.REQUEST_KEY = D.REQUEST_KEY
-        AND D.REQUEST_KEY = E.REQUEST_KEY
-        AND A.REQUEST_KEY = #{requestKey}
-        AND C.FORM_TYPE_CD = #{formTypeCd}-->
-  <!--</select>-->
+
 
 
 </mapper>

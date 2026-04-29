@@ -9,6 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MsfRequestVo {
 
+    String tmpStepCd;
     Long requestKey;
     String managerCd;
     String managerNm;

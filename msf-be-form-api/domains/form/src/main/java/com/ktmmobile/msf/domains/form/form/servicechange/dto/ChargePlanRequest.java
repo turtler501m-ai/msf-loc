@@ -8,6 +8,7 @@ public class ChargePlanRequest {
     private String userType;
     private String userDivisionYn;
     private String userName;
+    private String userId;
     private String ncn;
     private String ctn;
     private String billSeqNo; //청구일련번호

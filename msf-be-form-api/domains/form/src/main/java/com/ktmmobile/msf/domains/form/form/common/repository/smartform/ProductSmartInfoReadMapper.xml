@@ -10,67 +10,79 @@
         SELECT CTG_CD, CTG_NM
         FROM MSF_RATE_ADSVC_CTG_BAS A
         WHERE 1=1
-            AND A.RATE_ADSVC_DIV_CD=#{prodCtgTypeCd}
-            AND A.USE_YN='Y'
+            <if test="prodCtgTypeCd != null">
+                AND A.RATE_ADSVC_DIV_CD = #{prodCtgTypeCd}
+            </if>
+            AND A.USE_YN = 'Y'
             AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
         ORDER BY A.SORT_ODRG
     </select>
 
-    <select id="selectProductCategoryDetailList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.CategoryMstRequest"
+    <select id="selectProductCategoryDetailList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.CategoryRelRequest"
           resultType="com.ktmmobile.msf.domains.form.form.common.dto.CategoryInfoDto">
-    /* 요금제/부가서비스/안심보험 등의 카테고리 상세 조회 */
-    SELECT DISTINCT B.PROD_ID
-    FROM MSF_RATE_ADSVC_CTG_PROD_REL B
-    WHERE 1=1
-        AND CTG_CD in (
-            SELECT CTG_CD
-            FROM MSF_RATE_ADSVC_CTG_BAS A
-            WHERE A.RATE_ADSVC_DIV_CD=#{prodCtgTypeCd}
-            AND A.USE_YN='Y'
-            AND A.CTG_CD=#{prodCtgId}
+        /* 요금제/부가서비스/안심보험 등의 카테고리 상세 조회 */
+        SELECT DISTINCT B.PROD_ID
+        FROM MSF_RATE_ADSVC_CTG_PROD_REL B
+        WHERE 1=1
+            AND CTG_CD in (
+                SELECT CTG_CD
+                FROM MSF_RATE_ADSVC_CTG_BAS A
+                WHERE 1=1
+                <if test="prodCtgTypeCd != null">
+                    AND A.RATE_ADSVC_DIV_CD = #{prodCtgTypeCd}
+                </if>
+                <if test="prodCtgId != null and prodCtgId != ''">
+                    AND A.CTG_CD = #{prodCtgId}
+                </if>
+                AND A.USE_YN = 'Y'
+                AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+                AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+            )
+            AND USE_YN = 'Y'
             AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
-        )
-        AND USE_YN='Y'
-        AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
-        AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
-        <if test='prodCtgTypeCd == "R"'><!-- 부가서비스 조회일 경우에만 공통코드에서 등록된 정보인지 확인함 -->
-        AND PROD_ID IN (SELECT DTL_CD FROM MSF_CD_DTL
-                        WHERE CD_GROUP_ID = 'SVCCHG_RATE_CD'
-                            AND USE_YN = 'Y'
-                            AND TO_CHAR(NOW(),'yyyymmddhh24miss') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE )
-        </if>
-        <if test='prodCtgTypeCd == "I"'><!-- 안심보험 목록 조회 -->
-        </if>
+            <if test='prodCtgTypeCd != null and prodCtgTypeCd.name() == "R"'><!-- 부가서비스 조회일 경우에만 공통코드에서 등록된 정보인지 확인함 -->
+                AND PROD_ID IN (SELECT DTL_CD FROM MSF_CD_DTL
+                                WHERE CD_GROUP_ID = 'SVCCHG_RATE_CD'
+                                    AND USE_YN = 'Y'
+                                    AND TO_CHAR(NOW(),'yyyymmddhh24miss') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE )
+            </if>
     </select>
 
-    <select id="selectPhoneInventoryList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialCondition"
+    <select id="selectPhoneInventoryList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.CategoryInfoDto">
         /* 휴대폰 매장 재고 조회 */
         SELECT PROD_ID
         FROM MSF_PROD_STOR_INVENTORY_TXN
         WHERE 1=1
             AND USE_YN = 'Y'
-            AND STOR_CD = #{orgnId}
+            <if test="orgnId != null and orgnId != ''">
+                AND STOR_CD = #{orgnId}
+            </if>
             AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
         GROUP BY PROD_ID
     </select>
 
-    <select id="selectPhoneInventory" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialCondition"
+    <select id="selectPhoneInventory" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest"
             resultType="String">
         /* 휴대폰 일련번호 조회 시 매장재고조회 */
         SELECT IMEI
         FROM MSF_PROD_STOR_INVENTORY_TXN
         WHERE 1=1
             AND USE_YN = 'Y'
-            AND STOR_CD = #{orgnId}
-            AND PROD_SN = #{prodSn}
-            AND PROD_ID = #{prodId}
+            <if test="orgnId != null and orgnId != ''">
+                AND STOR_CD = #{orgnId}
+            </if>
+            <if test="prodSn != null and prodSn != ''">
+                AND PROD_SN = #{prodSn}
+            </if>
+            <if test="prodId != null and prodId != ''">
+                AND PROD_ID = #{prodId}
+            </if>
             AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
     </select>
-
 
 </mapper>

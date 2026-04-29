@@ -8,6 +8,21 @@ import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.Proces
 
 public interface MsfCanCustMgmtSvc {
 
+    /** 관리자 목록 조회 요청을 처리한다. */
+    ListResDto list(ListReqDto req);
+
+    /** 관리자 상세 조회 요청을 처리한다. */
+    DetailDto get(ProcessReqDto req);
+
+    /** 처리 가능 여부를 확인한다. */
+    ProcessResVO statusCheck(ProcessReqDto req);
+
+    /** 처리완료 요청을 검증한 뒤 EP0 처리로 위임한다. */
+    ProcessResVO complete(ProcessReqDto req);
+
+    /** 완료취소 요청을 검증한 뒤 상태 되돌림 처리로 위임한다. */
+    ProcessResVO revert(ProcessReqDto req);
+
     /** 신청서 목록 조회 (신규/변경·서비스변경·명의변경·서비스해지 통합) */
     ListResDto selectAppFormList(ListReqDto req);
 

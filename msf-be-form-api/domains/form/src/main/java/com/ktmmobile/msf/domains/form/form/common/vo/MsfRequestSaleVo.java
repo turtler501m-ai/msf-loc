@@ -10,7 +10,6 @@ import lombok.Setter;
 public class MsfRequestSaleVo {
 
     Long requestKey;
-    String formTypeCd;
     String modelId;
     String modelMonthly;
     Long modelInstamt;

@@ -58,7 +58,7 @@ class QueryIdGenerationBoundSql extends BoundSql {
         try {
             String className = getPackageClassNameOnly();
             clazz = Class.forName(className);
-        } catch (Exception e) {
+        } catch (Exception _) {
             return QueryIdDecorator.of(defaultQueryIdPrefix, "");
         }
 

@@ -55,7 +55,7 @@ public class CompactLocalDateTimeTypeHandler extends BaseTypeHandler<LocalDateTi
         String trimmedValue = value.trim();
         try {
             return LocalDateTime.parse(trimmedValue, COMPACT_FORMAT);
-        } catch (DateTimeParseException compactException) {
+        } catch (DateTimeParseException _) {
             try {
                 return LocalDateTime.parse(trimmedValue, DASHED_FORMAT);
             } catch (DateTimeParseException dashedException) {

@@ -4,6 +4,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 신규/변경 신청서 select response parameter 정의
+ * 2026.04.
+ */
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -133,7 +138,6 @@ public class NewChangeInfoResponse {
     String faxNo;
 
     //MSF_REQUEST_CSTMR
-    String formTypeCd;
     String cstmrNm;
     String cstmrNativeRrn;
     String cstmrNativeBirth;

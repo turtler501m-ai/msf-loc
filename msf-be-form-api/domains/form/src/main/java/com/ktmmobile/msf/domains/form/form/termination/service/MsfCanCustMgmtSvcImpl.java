@@ -36,6 +36,61 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
     private MsfMplatFormOsstWebServerAdapter mplatFormOsstWebServerAdapter;
 
     @Override
+    public ListResDto list(ListReqDto req) {
+        logger.info("[admin/cancel/list] procCd={}, formTypeCd={}, searchGbn={}, searchName={}, startDt={}, endDt={}",
+            req.getProcCd(), req.getFormTypeCd(), req.getSearchGbn(), req.getSearchName(), req.getStartDt(), req.getEndDt());
+        return selectAppFormList(req);
+    }
+
+    @Override
+    public DetailDto get(ProcessReqDto req) {
+        logger.info("[admin/cancel/get] requestKey={}", req.getRequestKey());
+        if (req.getRequestKey() == null) {
+            return null;
+        }
+        return selectCanCustDetail(req.getRequestKey());
+    }
+
+    @Override
+    public ProcessResVO statusCheck(ProcessReqDto req) {
+        logger.info("[admin/cancel/status/check] requestKey={}", req.getRequestKey());
+        if (req.getRequestKey() == null) {
+            return ProcessResVO.fail("신청번호(requestKey)가 없습니다.");
+        }
+
+        DetailDto detail = selectCanCustDetail(req.getRequestKey());
+        if (detail == null) {
+            return ProcessResVO.fail("해지신청 건을 찾을 수 없습니다.");
+        }
+        if ("CP".equals(detail.getProcCd())) {
+            return ProcessResVO.fail("이미 처리완료된 건입니다.");
+        }
+        return ProcessResVO.ok(null);
+    }
+
+    @Override
+    public ProcessResVO complete(ProcessReqDto req) {
+        logger.info("[admin/cancel/complete] requestKey={}, itgOderWhyCd={}, aftmnIncInCd={}, apyRelTypeCd={}, custTchMediCd={}",
+            req.getRequestKey(), req.getItgOderWhyCd(), req.getAftmnIncInCd(),
+            req.getApyRelTypeCd(), req.getCustTchMediCd());
+
+        ProcessResVO validationError = validateCompleteRequest(req);
+        if (validationError != null) {
+            return validationError;
+        }
+        return processComplete(req);
+    }
+
+    @Override
+    public ProcessResVO revert(ProcessReqDto req) {
+        logger.info("[admin/cancel/revert] requestKey={}", req.getRequestKey());
+        if (req.getRequestKey() == null) {
+            return ProcessResVO.fail("신청번호(requestKey)가 없습니다.");
+        }
+        return processRevert(req.getRequestKey());
+    }
+
+    @Override
     public ListResDto selectAppFormList(ListReqDto req) {
         PageReqDto pageReq = req.getPage();
         if (pageReq == null) {
@@ -65,6 +120,25 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
         meta.setPage(pageMeta);
         response.setMeta(meta);
         return response;
+    }
+
+    private ProcessResVO validateCompleteRequest(ProcessReqDto req) {
+        if (req.getRequestKey() == null) {
+            return ProcessResVO.fail("신청번호(requestKey)가 없습니다.");
+        }
+        if (StringUtils.isBlank(req.getItgOderWhyCd())) {
+            return ProcessResVO.fail("해지사유코드(itgOderWhyCd)가 없습니다.");
+        }
+        if (StringUtils.isBlank(req.getAftmnIncInCd())) {
+            return ProcessResVO.fail("해지후성향코드(aftmnIncInCd)가 없습니다.");
+        }
+        if (StringUtils.isBlank(req.getApyRelTypeCd())) {
+            return ProcessResVO.fail("고객접촉매체코드(apyRelTypeCd)가 없습니다.");
+        }
+        if (StringUtils.isBlank(req.getCustTchMediCd())) {
+            return ProcessResVO.fail("신청관계유형코드(custTchMediCd)가 없습니다.");
+        }
+        return null;
     }
 
     @Override

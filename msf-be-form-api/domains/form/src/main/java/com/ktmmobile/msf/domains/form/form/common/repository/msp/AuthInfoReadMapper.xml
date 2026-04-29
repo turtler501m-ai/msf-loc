@@ -5,7 +5,7 @@
 <mapper namespace="com.ktmmobile.msf.domains.form.form.common.repository.msp.AuthInfoReadMapper">
 
     <select id="selectKtmCustomer"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoCondition"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoResponse">
         <![CDATA[
         WITH CNTR AS (
@@ -121,7 +121,7 @@
     </select>
 
     <select id="verifyBillInfo"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoCondition"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoResponse">
         /** 통합청구 청구계정ID 조회 **/
         SELECT BAN, CUSTOMER_ID, COL_DELINQ_STATUS, MARKET_GUBUN, BL_BILLING_METHOD, BANK_ACCT_HOLDER_ID, BAN_LINK_NAME, CONTRACT_NUM, EVNT_TRTM_DT
@@ -150,7 +150,7 @@
                                                 OR DRIVR_LICNS_NO = #{customerSsn}
                                                 OR TAX_ID = #{customerSsn})
                                     <!--파라미터 : 고객구분별 식별번호-->
-                                    <!--AND CUSTOMER_TYPE = #{customerType}-->
+                                    <!--AND CUSTOMER_TYPE = #{cstmrTypeCd.customerType}-->
                                     <!--<choose>
                                         <when test='customerType.equals("B")'>
                                             &lt;!&ndash; CUSTOMER_SSN: 사업자번호(암호문), DRIVR_LICNS_NO: 법인번호(평문), TAX_ID: 사업자번호(평문) &ndash;&gt;

@@ -8,7 +8,7 @@ import com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpServiceAlterTraceDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.domains.form.form.termination.dto.CancelConsultDto.TerminationSettlementDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationSettlementDto;
 
 import java.math.BigDecimal;
 import java.util.HashMap;

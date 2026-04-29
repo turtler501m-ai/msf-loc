@@ -21,4 +21,72 @@
         , SYSDATE
         )
     </insert>
+
+    <insert id="mergeMcpRequest" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestDto" >
+        MERGE INTO MCP_REQUEST@DL_MCP
+        USING DUAL
+            ON (REQUEST_KEY = #{requestKey})
+            WHEN MATCHED THEN
+        UPDATE SET
+            REQ_WANT_NUMBER = #{reqWantNumber}
+            WHEN NOT MATCHED THEN
+                INSERT    (
+                    REQUEST_KEY,
+                    MANAGER_CODE,
+                    AGENT_CODE,
+                    SERVICE_TYPE,
+                    OPER_TYPE,
+                    CSTMR_TYPE,
+                    PSTATE,
+                    ON_OFF_TYPE,
+                    REQ_WANT_NUMBER
+                )
+                VALUES    (
+                     #{requestKey}
+                    ,#{managerCode}
+                    ,#{agentCode}
+                    ,#{serviceType}
+                    ,#{operType}
+                    ,#{cstmrType}
+                    ,#{pstate}
+                    ,#{onOffType}
+                    ,#{reqWantNumber}
+                )
+    </insert>
+
+    <insert id="insertMcpRequestOsst" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto" >
+        INSERT INTO MCP_REQUEST_OSST@DL_MCP (
+            MVNO_ORD_NO              --MVNO오더번호(RES_NO)
+            , SEQ                      --일련번호
+            , OSST_ORD_NO              --OSST오더번호
+            , PRGR_STAT_CD             --진행상태코드
+            , RSLT_CD
+            , TLPH_NO_STAT_CD          --전화번호상태코드(NU1)
+            , ASGN_AGNC_ID             --할당대리점ID(NU1)
+            , TLPH_NO_OWN_CMPN_CD      --번호소유통신사업자코드(NU1)
+            , OPEN_SVC_IND_CD          --개통서비스구분코드(NU1)
+            , ENCD_TLPH_NO             --암호화전화번호(NU1)
+            , TLPH_NO                  --전화번호
+            , IF_TYPE                  --연동유형
+            , NSTEP_GLOBAL_ID
+            , REGST_DTTM               --등록일시
+            , RSLT_DT
+            ) VALUES (
+            LPAD(#{mvnoOrdNo}, 14, '0')
+            , NVL((SELECT MAX(SEQ+1) FROM MCP_REQUEST_OSST@DL_MCP WHERE MVNO_ORD_NO = LPAD(#{mvnoOrdNo}, 14, '0')), 1)
+            , #{osstOrdNo}
+            , #{prgrStatCd}
+            , #{rsltCd}
+            , #{tlphNoStatCd}
+            , #{asgnAgncId}
+            , #{tlphNoOwnCmpnCd}
+            , #{openSvcIndCd}
+            , #{encdTlphNo}
+            , #{tlphNo}
+            , NVL(#{ifType}, 'WEB')
+            , #{nstepGlobalId}
+            , SYSDATE
+            , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+        )
+    </insert>
 </mapper>

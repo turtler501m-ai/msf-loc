@@ -2,9 +2,9 @@ package com.ktmmobile.msf.commons.mybatis.config;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
-
 import javax.sql.DataSource;
 
 import org.apache.ibatis.plugin.Interceptor;
@@ -15,6 +15,8 @@ import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+
+import com.ktmmobile.msf.commons.mybatis.typehandler.DefaultEnumTypeHandler;
 
 abstract class MyBatisConfigSupport {
 
@@ -59,6 +61,7 @@ abstract class MyBatisConfigSupport {
         Configuration configuration = new Configuration();
         configuration.setMapUnderscoreToCamelCase(true);
         configuration.setAutoMappingBehavior(AutoMappingBehavior.FULL);
+        configuration.setDefaultEnumTypeHandler(DefaultEnumTypeHandler.class);
         Properties variables = new Properties();
         variables.setProperty("org.apache.ibatis.parsing.PropertyParser.enable-default-value", "true");
         configuration.setVariables(variables);
@@ -69,9 +72,7 @@ abstract class MyBatisConfigSupport {
         List<Resource> resources = new ArrayList<>();
         for (String pattern: mapperLocationPatterns) {
             Resource[] matchedResources = RESOURCE_RESOLVER.getResources(pattern);
-            for (Resource resource: matchedResources) {
-                resources.add(resource);
-            }
+            Collections.addAll(resources, matchedResources);
         }
         return resources.toArray(Resource[]::new);
     }

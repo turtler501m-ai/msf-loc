@@ -248,6 +248,7 @@ const handleDeviceChgVerify = async () => {
     if (isTerminationForm.value) {
       terminationStore.setTerminationContract(contractNum, 'MsfSubscriberInfo')
       model.value.ncn = contractNum
+      terminationStore.apiGetMyinfoView()
     }
 
     console.log('[Auth] mapped result', {

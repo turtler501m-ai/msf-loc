@@ -9,8 +9,8 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscBfacChkOmdIntmVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscRetvIntmMdlSpecInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscRetvIntmOrrgInfoVO;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
-import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoCondition;
-import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialCondition;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.EsimDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class SimInfoService {
 
     //휴대폰 일련번호 유효성체크
     //public Map<String, Object> verifyPhoneSerialNumberInfo(ProductSearchCondition condition) {
-    public Map<String, Object> verifyPhoneSerialNumberInfo(PhoneSerialCondition condition) {
+    public Map<String, Object> verifyPhoneSerialNumberInfo(PhoneSerialRequest condition) {
         // rtnCode "0000" 정상
         // rtnCode "0100" 재고없음
         // rtnCode "0200" 부정사용주장 단말이다
@@ -109,7 +109,7 @@ public class SimInfoService {
 
     //USIM 정보 유효성체크
     //고객포탈 URI : /msp/moscIntmMgmtAjax.do
-    public Map<String, Object> verifyUsimInfo(MspJuoSubInfoCondition condition) {
+    public Map<String, Object> verifyUsimInfo(MspJuoSubInfoRequest condition) {
         // rtnCode "0000" 정상
         // rtnCode "0100" 유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.
         // rtnCode "0200" 유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.

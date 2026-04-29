@@ -123,7 +123,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo">
         INSERT INTO MSF_REQUEST_CSTMR (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             CRET_IP,
             CRET_DT,
             CRET_ID,
@@ -171,7 +170,6 @@
             CSTMR_RECEIVE_TEL_RN_NO
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             '127.0.0.1',
             NOW(),
             'MSF_FORM',
@@ -225,7 +223,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo">
         INSERT INTO MSF_REQUEST_AGENT (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             CRET_IP,
             CRET_DT,
             CRET_ID,
@@ -252,7 +249,6 @@
             JRDCL_AGENT_TEL_RN_NO
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             #{cretIp},
             NOW(),
             #{cretId},
@@ -285,7 +281,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo">
         INSERT INTO MSF_REQUEST_ADDITION (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             ADDITION_ID,
             CRET_IP,
             CRET_DT,
@@ -295,11 +290,14 @@
             AMD_ID,
             ADDITION_KEY,
             ADDITION_NM,
+            SVC_CHG_TYPE_CD,
+            PROD_ID,
+            PROD_NM,
+            ADDTION_INFO,
             RANTAL,
             PROC_YN
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             #{additionId},
             #{cretIp},
             NOW(),
@@ -309,6 +307,10 @@
             #{amdId},
             #{additionKey},
             #{additionNm},
+            #{svcChgTypeCd},
+            #{prodId},
+            #{prodNm},
+            #{addtionInfo},
             #{rantal},
             #{procYn}
         )
@@ -319,7 +321,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo">
         INSERT INTO MSF_REQUEST_BILL_REQ (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             CRET_IP,
             CRET_DT,
             CRET_ID,
@@ -353,7 +354,6 @@
             CSTMR_EMAIL_ADR
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             #{cretIp},
             NOW(),
             #{cretId},
@@ -392,7 +392,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestClauseVo">
         INSERT INTO MSF_REQUEST_CLAUSE (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             CD_GROUP_ID,
             CRET_IP,
             CRET_DT,
@@ -403,7 +402,6 @@
             VERSION
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             #{cdGroupId},
             #{cretIp},
             NOW(),
@@ -420,7 +418,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDocVo">
         INSERT INTO MSF_REQUEST_DOC (
             REQUEST_DOC_SEQ,
-            FORM_TYPE_CD,
             REQUEST_KEY,
             CRET_IP,
             CRET_DT,
@@ -433,7 +430,6 @@
             FILE_NM
         ) VALUES (
             #{requestDocSeq},
-            #{formTypeCd},
             #{requestKey},
             #{cretIp},
             NOW(),
@@ -452,7 +448,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDvcChgVo">
         INSERT INTO MSF_REQUEST_DVC_CHG (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             CRET_IP,
             REG_DT,
             CRET_ID,
@@ -465,7 +460,6 @@
             INSTAMT_PAY_MTHD_CD
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             #{cretIp},
             NOW(),
             #{cretId},
@@ -484,7 +478,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestJoinFormVo">
         INSERT INTO MSF_REQUEST_JOIN_FORM (
             REQUEST_RECV_SEQ,
-            FORM_TYPE_CD,
             REQUEST_KEY,
             CRET_IP,
             CRET_DT,
@@ -503,7 +496,6 @@
             ETC_MEMO
         ) VALUES (
             #{requestRecvSeq},
-            #{formTypeCd},
             #{requestKey},
             #{cretIp},
             NOW(),
@@ -528,7 +520,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo">
         INSERT INTO MSF_REQUEST_MOVE (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             CRET_IP,
             REG_DT,
             CRET_ID,
@@ -553,7 +544,6 @@
             MOVE_PENALTY
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             #{cretIp},
             NOW(),
             #{cretId},
@@ -583,7 +573,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMstVo">
         INSERT INTO MSF_REQUEST_MST (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             CRET_IP,
             CRET_DT,
             CRET_ID,
@@ -599,7 +588,6 @@
             ETC_MOBILE_NO
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             #{cretIp},
             NOW(),
             #{cretId},
@@ -914,7 +902,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestRecVo">
         INSERT INTO MSF_REQUEST_REC (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             CRET_IP,
             CRET_DT,
             CRET_ID,
@@ -925,7 +912,6 @@
             REC_FILE_NM
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             #{cretIp},
             NOW(),
             #{cretId},
@@ -941,7 +927,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo">
         INSERT INTO MSF_REQUEST_SALE (
             REQUEST_KEY,
-            FORM_TYPE_CD,
             CRET_IP,
             CRET_DT,
             CRET_ID,
@@ -977,7 +962,6 @@
             SOC_BASE_CHRG_AMT
         ) VALUES (
             #{requestKey},
-            #{formTypeCd},
             #{cretIp},
             NOW(),
             #{cretId},
@@ -1019,7 +1003,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo">
         INSERT INTO MSF_REQUEST_STATE (
             REQUEST_STATE_KEY,
-            FORM_TYPE_CD,
             CRET_IP,
             CRET_DT,
             CRET_ID,
@@ -1034,7 +1017,6 @@
             VIEW_YN
         ) VALUES (
             #{requestStateKey},
-            #{formTypeCd},
             #{cretIp},
             NOW(),
             #{cretId},
@@ -1063,15 +1045,11 @@
             AMD_DT,
             AMD_ID,
             SVC_TGT_CD,
-            SVC_CHG_TYPE_CD,
             PROC_TYPE_CD,
             SOC_CD,
             SOC_NM,
-            PROD_ID,
-            PROD_NM,
             ADDTION_INFO,
             PROD_AMT,
-            RELEASE_PWD,
             INSR_CD,
             CLAUSE_INSURANCE_YN,
             CLAUSE_INSR_PROD_YN,
@@ -1113,15 +1091,11 @@
             NOW(),
             #{amdId},
             #{svcTgtCd},
-            #{svcChgTypeCd},
             #{procTypeCd},
             #{socCd},
             #{socNm},
-            #{prodId},
-            #{prodNm},
             #{addtionInfo},
             #{prodAmt},
-            #{releasePwd},
             #{insrCd},
             #{clauseInsuranceYn},
             #{clauseInsrProdYn},

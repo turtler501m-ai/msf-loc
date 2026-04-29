@@ -2,8 +2,8 @@ package com.ktmmobile.msf.domains.form.form.common.controller;
 
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
-import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoCondition;
-import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialCondition;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
 import com.ktmmobile.msf.domains.form.form.common.service.SimInfoService;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.EsimDto;
 import jakarta.validation.Valid;
@@ -24,14 +24,14 @@ public class SimController {
 
     //휴대폰 일련번호 유효성체크 - Y13
     @PostMapping("/verifyPhoneSerialNumberInfo")
-    public CommonResponse<Map<String, Object>> verifyPhoneSerialNumberInfo(@RequestBody @Valid PhoneSerialCondition condition) {
+    public CommonResponse<Map<String, Object>> verifyPhoneSerialNumberInfo(@RequestBody @Valid PhoneSerialRequest condition) {
         return ResponseUtils.ok(simInfoService.verifyPhoneSerialNumberInfo(condition));
     }
 
     //USIM 정보 유효성체크 - X85
     @PostMapping("/verifyUsimInfo")
     //public CommonResponse<MoscInqrUsimUsePsblOutDTO> verifyUsimInfo(@RequestBody @Valid MspJuoSubInfoCondition condition) throws SocketTimeoutException {
-    public CommonResponse<Map<String, Object>> verifyUsimInfo(@RequestBody @Valid MspJuoSubInfoCondition condition) {
+    public CommonResponse<Map<String, Object>> verifyUsimInfo(@RequestBody @Valid MspJuoSubInfoRequest condition) {
         return ResponseUtils.ok(simInfoService.verifyUsimInfo(condition));
     }
 

@@ -53,7 +53,7 @@ public class NewChangeController {
 
     //신청서 진입
     @PostMapping("/newchange/get")
-    public CommonResponse<NewChangeInfoResponse> getNewChangeInfo(@RequestBody @Valid NewChangeInfoCondition condition) {
+    public CommonResponse<NewChangeInfoResponse> getNewChangeInfo(@RequestBody @Valid NewChangeRequest condition) {
         return ResponseUtils.ok(newChangeService.getNewChangeRequestInfo(condition));
     }
 
@@ -74,38 +74,44 @@ public class NewChangeController {
 
 
     //신규가입 희망번호 조회 (NU1)
-    @RequestMapping(value = "/newchange/searchNumber")
-    public CommonResponse<Map<String, Object>> getSearchNumber(NewChangeInfoRequest request) {
+    //@RequestMapping(value = "/appform/searchNumberAjax.do")
+    @PostMapping(value = "/newchange/searchNumber")
+    public CommonResponse<Map<String, Object>> getSearchNumber(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(choiceNumberService.getSearchNumber(request));
     }
 
     //신규가입 희망번호 예약 (NU2)
-    @RequestMapping(value = "/newchange/reserveNumber")
-    public CommonResponse<Map<String, Object>> setChoiseNumber(NewChangeInfoRequest request) {
+    //@RequestMapping(value = "/appform/setNumberAjax.do")
+    @PostMapping(value = "/newchange/reserveNumber")
+    public CommonResponse<Map<String, Object>> setChoiseNumber(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(choiceNumberService.setChoiseNumber(request));
     }
 
     //신규가입 희망번호 취소 (NU2)
-    @RequestMapping(value = "/newchange/cancelNumber")
-    public CommonResponse<Map<String, Object>> cancelNumber(NewChangeInfoRequest request) {
+    //@RequestMapping(value = "/appform/cancelNumberAjax.do")
+    @PostMapping(value = "/newchange/cancelNumber")
+    public CommonResponse<Map<String, Object>> cancelNumber(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(choiceNumberService.cancelChoiseNumber(request));
     }
 
     //번호이동 사전동의 (NP1)
-    @RequestMapping(value = "/newchange/reqNpPreCheck")
-    public CommonResponse<Map<String, Object>> requestNpPreCheck(OsstReqDto request) {
+    //@RequestMapping(value = "/appform/reqNpPreCheckAjax.do")
+    @PostMapping(value = "/newchange/reqNpPreCheck")
+    public CommonResponse<Map<String, Object>> requestNpPreCheck(@RequestBody @Valid MnpOsstRequest request) {
         return ResponseUtils.ok(numberPortableService.requestNpPreCheck(request));
     }
 
     //번호이동 사전동의 결과조회 (NP3)
-    @RequestMapping(value = "/newchange/reqNpAgree")
-    public CommonResponse<Map<String, Object>> requestNpAgree(OsstReqDto request) {
+    //@RequestMapping(value = "/appform/reqNpAgreeAjax.do")
+    @PostMapping(value = "/newchange/reqNpAgree")
+    public CommonResponse<Map<String, Object>> requestNpAgree(@RequestBody @Valid MnpOsstRequest request) {
         return ResponseUtils.ok(numberPortableService.requestNpAgree(request));
     }
 
     //번호이동 납부주장 (NP2)
-    @RequestMapping(value = "/newchange/reqPayOpn")
-    public CommonResponse<Map<String, Object>> requestPayOpn(NewChangeInfoRequest request) {
+    //@RequestMapping(value = "/appform/reqPayOpnAjax.do")
+    @PostMapping(value = "/newchange/reqPayOpn")
+    public CommonResponse<Map<String, Object>> requestPayOpn(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(numberPortableService.requestPayOpn(request));
     }
 
@@ -113,10 +119,13 @@ public class NewChangeController {
     //개통사전체크 (신규가입/번호이동)
     //parameter :: 계좌점유키값(reqUniqId), globalNoNp1(번호이동사전동의), globalNoNp3(번호이동사전동의결과)
     //appformReqDto 파라미터 검토필요 >> MsfRequestDto 로 변경하고 위 파라미터는 Dto 에 추가하든지 해야할듯함. 추후!!!
-    @RequestMapping(value = "/newchange/reqPreOpenCheck")
-    public CommonResponse<Map<String, Object>> reqPreOpenCheck(NewChangeInfoRequest request) {
+    @PostMapping(value = "/newchange/reqPreOpenCheck")
+    public CommonResponse<Map<String, Object>> reqPreOpenCheck(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(formCommService.reqPreOpenCheck(request));
     }
+
+    //2026.04.29
+    //번호이동 사전동의
 
     //2026.04 마지막주 할일
     //usim, esim, 휴대폰일련번호 유효성 정리
@@ -126,7 +135,6 @@ public class NewChangeController {
 
     //부가서비스 msf_request_addition 저장 mapstruct
     //부가서비스 msf_request 저장
-    //신청서 진입 시 response 한꺼번에 모아서 보내기
 
     //AuthController
     // >> KTM 고객인증

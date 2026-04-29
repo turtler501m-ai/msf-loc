@@ -10,7 +10,6 @@ import lombok.Setter;
 public class MsfRequestDocVo {
 
     Long requestDocSeq;
-    String formTypeCd;
     Long requestKey;
     String fileTypeCd;
     String filePathNm;

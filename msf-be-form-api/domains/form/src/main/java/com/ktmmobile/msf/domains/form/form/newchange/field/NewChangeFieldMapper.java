@@ -9,12 +9,20 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
+/**
+ * 신규/변경 신청서
+ * insert/update : from NewChangeInfoRequest to 신규/변경 VO
+ * select        : from resultType 신규/변경 VO to NewChangeInfoResponse
+ * 2026.04.
+ */
+
 @AutoAuditing
 @Mapper
 public interface NewChangeFieldMapper {
 
     NewChangeFieldMapper INSTANCE = Mappers.getMapper(NewChangeFieldMapper.class);
 
+    //신청서 SELECT
     @Mapping(target = ".", source = "msfRequestVo")
     @Mapping(target = ".", source = "msfRequestCstmrVo")
     @Mapping(target = ".", source = "msfRequestAgentVo")
@@ -22,20 +30,26 @@ public interface NewChangeFieldMapper {
     @Mapping(target = ".", source = "msfRequestBillReqVo")
     @Mapping(target = ".", source = "msfRequestMoveVo")
     @Mapping(target = "requestKey", source = "msfRequestVo.requestKey")
-    @Mapping(target = "formTypeCd", source = "msfRequestCstmrVo.formTypeCd")
     @Mapping(target = "cstmrEmailAdr", source = "msfRequestCstmrVo.cstmrEmailAdr")
     NewChangeInfoResponse toNewChangeInfoResponse(MsfNewChangeInfoDto dto);
 
+    //신청서 저장 (INSERT / UPDATE)
+    //NewChangeInfoRequest ~> MSF_REQUEST
     MsfRequestVo toMsfRequestVo(NewChangeInfoRequest request); //MSF_REQUEST
 
-    MsfRequestAgentVo toMsfRequestAgentVo(NewChangeInfoRequest request); //MSF_REQUEST
-
+    //NewChangeInfoRequest ~> MSF_REQUEST_CSTMR
     MsfRequestCstmrVo toMsfRequestCstmrVo(NewChangeInfoRequest request); //MSF_REQUEST
 
+    //NewChangeInfoRequest ~> MSF_REQUEST_AGENT
+    MsfRequestAgentVo toMsfRequestAgentVo(NewChangeInfoRequest request); //MSF_REQUEST
+
+    //NewChangeInfoRequest ~> MSF_REQUEST_SALE
     MsfRequestSaleVo toMsfRequestSaleVo(NewChangeInfoRequest request); //MSF_REQUEST
 
+    //NewChangeInfoRequest ~> MSF_REQUEST_BILL_REQ
     MsfRequestBillReqVo toMsfRequestBillReqVo(NewChangeInfoRequest request); //MSF_REQUEST
 
+    //NewChangeInfoRequest ~> MSF_REQUEST_BILL_MOVE
     MsfRequestMoveVo toMsfRequestMoveVo(NewChangeInfoRequest request); //MSF_REQUEST
 
     MsfRequestAdditionVo toMsfRequestAdditionVo(NewChangeInfoRequest request);

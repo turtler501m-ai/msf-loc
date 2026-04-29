@@ -1,8 +1,8 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlVO;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.MnpOsstRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.OsstReqDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +19,30 @@ public class NumberPortableService {
     /**
      * 번호이동 사전동의 요청 : NP1
      **/
-    public Map<String, Object> requestNpPreCheck(OsstReqDto osstReqDto) {
+    public Map<String, Object> requestNpPreCheck(MnpOsstRequest osstReqDto) {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+
+        //parameter ( MnpOsstRequest )
+        //NpTlphNo              : [암호화] 번호이동 전화번호 >> 01098761234
+        //BchngNpCommCmpnCd     : 변경전번호이동사업자코드 >> SKT
+        //slsCmpnCd             : 판매회사코드
+        //CustTypeCd            : 고객유형코드
+        //indvBizrYn	        : 개인사업자 여부 ( Y / N ) >> 기본값 N
+        //custIdntNoIndCd	    : 고객식별번호구분코드 :: RCP2006 >> 01
+        //custIdntNo	        : [암호화] 고객식별번호 >> 6601011234567
+        //crprNo	            : 법인번호
+        //custNm	            : [암호화] 고객명 >> 홍길동
+        //RCP2006	01	주민등록증
+        //RCP2006	02	운전면허증
+        //RCP2006	03	장애인등록증
+        //RCP2006	04	국가유공자증
+        //RCP2006	05	여권(외국인)
+        //RCP2006	06	외국인등록증
+        //RCP2006	07	국내거소신고증
+
+        //신분증 확인여부는 공통으로 인터셉터(?)로 처리? 해야겠지요.
+        //parameter 유효성체크
+
 
         //1-3. 본인인증 확인
         // 스마트는 신분증 확인여부 체크????
@@ -168,7 +190,7 @@ public class NumberPortableService {
     /**
      * 번호이동 사전동의 결과조회 : NP3
      **/
-    public Map<String, Object> requestNpAgree(OsstReqDto osstReqDto) {
+    public Map<String, Object> requestNpAgree(MnpOsstRequest osstReqDto) {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
         //1-3. 본인인증 확인

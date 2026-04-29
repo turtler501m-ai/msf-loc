@@ -3,9 +3,9 @@ package com.ktmmobile.msf.domains.form.form.newchange.service;
 import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
 import com.ktmmobile.msf.domains.form.form.common.vo.*;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.MsfNewChangeInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoCondition;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.field.NewChangeFieldMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeWriteMapper;
@@ -29,32 +29,32 @@ public class NewChangeService {
     //private final FormType formType;
 
     //MSF_REQUEST 조회
-    public MsfRequestVo getMsfRequestInfo(NewChangeInfoCondition condition) {
+    public MsfRequestVo getMsfRequestInfo(NewChangeRequest condition) {
         return newChangeReadMapper.selectMsfRequestInfo(condition);
     }
 
     //MSF_REQUEST_CSTMR 조회
-    public MsfRequestCstmrVo getMsfRequestCstmrInfo(NewChangeInfoCondition condition) {
+    public MsfRequestCstmrVo getMsfRequestCstmrInfo(NewChangeRequest condition) {
         return newChangeReadMapper.selectMsfRequestCstmrInfo(condition);
     }
 
     //MSF_REQUEST_AGENT 조회
-    public MsfRequestAgentVo getMsfRequestAgentInfo(NewChangeInfoCondition condition) {
+    public MsfRequestAgentVo getMsfRequestAgentInfo(NewChangeRequest condition) {
         return newChangeReadMapper.selectMsfRequestAgentInfo(condition);
     }
 
     //MSF_REQUEST_SALE 조회
-    public MsfRequestSaleVo getMsfRequestSaleInfo(NewChangeInfoCondition condition) {
+    public MsfRequestSaleVo getMsfRequestSaleInfo(NewChangeRequest condition) {
         return newChangeReadMapper.selectMsfRequestSaleInfo(condition);
     }
 
     //MSF_REQUEST_BILL_REQ 조회
-    public MsfRequestBillReqVo getMsfRequestBillReqInfo(NewChangeInfoCondition condition) {
+    public MsfRequestBillReqVo getMsfRequestBillReqInfo(NewChangeRequest condition) {
         return newChangeReadMapper.selectMsfRequestBillReqInfo(condition);
     }
 
     //신청서 조회
-    public MsfNewChangeInfoDto getNewChangeInfo(NewChangeInfoCondition condition) {
+    public MsfNewChangeInfoDto getNewChangeInfo(NewChangeRequest condition) {
         MsfNewChangeInfoDto msfNewchangeInfoDto = new MsfNewChangeInfoDto();
 
         String msfRequestKey = "";
@@ -90,7 +90,7 @@ public class NewChangeService {
     }
 
     //신청서 상세 조회 (NewChangeInfoRequest 형태로 반환)
-    public NewChangeInfoResponse getNewChangeRequestInfo(NewChangeInfoCondition condition) {
+    public NewChangeInfoResponse getNewChangeRequestInfo(NewChangeRequest condition) {
         MsfNewChangeInfoDto msfNewChangeInfoDto = this.getNewChangeInfo(condition);
         return NewChangeFieldMapper.INSTANCE.toNewChangeInfoResponse(msfNewChangeInfoDto);
     }
@@ -100,6 +100,10 @@ public class NewChangeService {
     public String saveAppformInfo(NewChangeInfoRequest request) {
         long requestKey = 0;
 
+        //신청서 유효성체크 start
+        //신청서 유효성체크 end
+
+        //신청서 저장 start
         //신청서번호 생성
         if (request.getRequestKey() == null) {
             requestKey = formCommService.generateRequestKey();
@@ -113,13 +117,6 @@ public class NewChangeService {
         MsfRequestBillReqVo msfRequestBillReqVo = NewChangeFieldMapper.INSTANCE.toMsfRequestBillReqVo(request);
         MsfRequestMoveVo msfRequestMoveVo = NewChangeFieldMapper.INSTANCE.toMsfRequestMoveVo(request);
         //부가서비스
-
-
-
-        //신규/변경
-        /*if (!formType.isNewChange(request.getFormTypeCd())) {
-            //return false;
-        }*/
 
         if (requestKey != 0) {
             //INSERT
@@ -139,9 +136,11 @@ public class NewChangeService {
             newChangeWriteMapper.updateMsfRequestBillReqTemp(msfRequestBillReqVo);
             newChangeWriteMapper.updateMsfRequestMoveTemp(msfRequestMoveVo);
         }
+        //신청서 저장 end
 
         return Long.toString(requestKey);
     }
+
 
     /**
      * 번호이동 사전체크 일 건수 제한

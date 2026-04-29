@@ -10,7 +10,6 @@ import lombok.Setter;
 public class MsfRequestDvcChgVo {
 
     Long requestKey;
-    String formTypeCd;
     String cretIp;
     String regDt;
     String cretId;

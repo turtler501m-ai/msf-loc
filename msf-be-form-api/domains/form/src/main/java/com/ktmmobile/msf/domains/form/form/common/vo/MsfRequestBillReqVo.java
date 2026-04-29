@@ -10,7 +10,6 @@ import lombok.Setter;
 public class MsfRequestBillReqVo {
 
     Long requestKey;
-    String formTypeCd;
     String reqPayTypeCd;
     String reqBankCd;
     String reqAccountNm;

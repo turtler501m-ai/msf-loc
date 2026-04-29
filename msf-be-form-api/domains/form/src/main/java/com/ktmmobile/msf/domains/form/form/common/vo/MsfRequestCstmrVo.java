@@ -10,7 +10,6 @@ import lombok.Setter;
 public class MsfRequestCstmrVo {
 
     Long requestKey;
-    String formTypeCd;
     String cstmrNm;
     String cstmrNativeRrn;
     String cstmrNativeBirth;

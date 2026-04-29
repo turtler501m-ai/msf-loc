@@ -10,7 +10,6 @@ import lombok.Setter;
 public class MsfRequestJoinFormVo {
 
     Long requestRecvSeq;
-    String formTypeCd;
     Long requestKey;
     String cretIp;
     String cretDt;

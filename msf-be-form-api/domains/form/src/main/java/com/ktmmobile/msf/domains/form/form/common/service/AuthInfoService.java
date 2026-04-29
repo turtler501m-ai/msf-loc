@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
-import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoCondition;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoResponse;
 import com.ktmmobile.msf.domains.form.form.common.repository.msp.AuthInfoReadMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ public class AuthInfoService {
     private final AuthInfoReadMapper authInfoReadMapper;
 
     //KTM모바일 고객인증
-    public MspJuoSubInfoResponse getJuoSubInfo(MspJuoSubInfoCondition condition) {
+    public MspJuoSubInfoResponse getJuoSubInfo(MspJuoSubInfoRequest condition) {
         MspJuoSubInfoResponse data = authInfoReadMapper.selectKtmCustomer(condition);
         return data;
     }

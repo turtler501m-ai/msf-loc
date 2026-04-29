@@ -16,7 +16,10 @@
             RA.RVISN_ID,
             RA.RVISN_DTTM
         FROM MSP_SALE_AGRM_MST RA
-        WHERE RA.SALE_PLCY_CD = #{salePlcyCd}
+        WHERE 1=1
+        <if test="salePlcyCd != null and salePlcyCd != ''">
+            AND RA.SALE_PLCY_CD = #{salePlcyCd}
+        </if>
         ORDER BY RA.AGRM_TRM
     </select>
 
@@ -25,9 +28,12 @@
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto">
         /* 휴대폰 할부개월 조회 : AppformMapper.selectModelMonthlyList */
         SELECT
-        INST_NOM AS MODEL_MONTHLY
+            INST_NOM AS MODEL_MONTHLY
         FROM ORG_INST_NOM_MST
-        WHERE SALE_PLCY_CD = #{modelSalePolicyCode}
+        WHERE 1=1
+        <if test="modelSalePolicyCode != null and modelSalePolicyCode != ''">
+            AND SALE_PLCY_CD = #{modelSalePolicyCode}
+        </if>
         GROUP BY INST_NOM
     </select>
 
@@ -70,9 +76,15 @@
             AND PL.SALE_PLCY_CD = PRDT.SALE_PLCY_CD
             AND ORG.SALE_PLCY_cD = PRDT.SALE_PLCY_CD
             AND TO_CHAR(SYSDATE,'yyyymmddhh24miss') BETWEEN PL.SALE_STRT_DTTM AND PL.SALE_END_DTTM --판매기간 (필수)
-            AND PL.PLCY_TYPE_CD = #{plcyTypeCd} -- 온라인:O , 오프라인:M , 직영온라인 : D
-            AND PL.PLCY_SCTN_CD = #{plcySctnCd} -- 01:단말,02:유심
-            AND ORG.ORGN_ID = #{orgnId} -- 조직코드
+            <if test="plcyTypeCd != null and plcyTypeCd != ''">
+                AND PL.PLCY_TYPE_CD = #{plcyTypeCd} -- 온라인:O , 오프라인:M , 직영온라인 : D
+            </if>
+            <if test="reqBuyTypeCd != null">
+                AND PL.PLCY_SCTN_CD = #{reqBuyTypeCd.rateType} -- 01:단말,02:유심
+            </if>
+            <if test="orgnId != null and orgnId != ''">
+                AND ORG.ORGN_ID = #{orgnId} -- 조직코드
+            </if>
             <if test="prdtSctnCd != null and prdtSctnCd != ''">
                 AND PL.PRDT_SCTN_CD = #{prdtSctnCd} -- LTE,3G
             </if>
@@ -106,11 +118,21 @@
             AND PL.SALE_PLCY_CD = PRDT.SALE_PLCY_CD
             AND ORG.SALE_PLCY_cD = PRDT.SALE_PLCY_CD
             AND TO_CHAR(SYSDATE,'yyyymmddhh24miss') BETWEEN PL.SALE_STRT_DTTM AND PL.SALE_END_DTTM --판매기간 (필수)
-            AND PL.PLCY_TYPE_CD = #{plcyTypeCd} -- 온라인:O , 오프라인:M , 직영온라인 : D
-            AND PL.PLCY_SCTN_CD = #{plcySctnCd} -- 01:단말,02:유심
-            AND ORG.ORGN_ID = #{orgnId} -- 조직코드
-            AND PRDT.PRDT_ID = #{prdtId} -- 단말기ID (자급제인 경우는 SKIP 처리)
-            AND PL.SALE_PLCY_CD = #{salePlcyCd}
+            <if test="plcyTypeCd != null and plcyTypeCd != ''">
+                AND PL.PLCY_TYPE_CD = #{plcyTypeCd} -- 온라인:O , 오프라인:M , 직영온라인 : D
+            </if>
+            <if test="reqBuyTypeCd != null">
+                AND PL.PLCY_SCTN_CD = #{reqBuyTypeCd.rateType} -- 01:단말,02:유심
+            </if>
+            <if test="orgnId != null and orgnId != ''">
+                AND ORG.ORGN_ID = #{orgnId} -- 조직코드
+            </if>
+            <if test="prdtId != null and prdtId != ''">
+                AND PRDT.PRDT_ID = #{prdtId} -- 단말기ID (자급제인 경우는 SKIP 처리)
+            </if>
+            <if test="salePlcyCd != null and salePlcyCd != ''">
+                AND PL.SALE_PLCY_CD = #{salePlcyCd}
+            </if>
             <if test="prdtSctnCd != null and prdtSctnCd != ''">
                 AND PL.PRDT_SCTN_CD = #{prdtSctnCd} -- LTE,3G
             </if>
@@ -147,7 +169,7 @@
             NVL(A.OFW_DATE,'') as ORDER_CRET_DT,
             PD_SALE.SALE_PLCY_CD, --정책코드
             NVL(SESPLS_YN,'N') AS SESPLS_YN,--자급제여부 구분(Y,N)
-            A.REP_RATE AS , --대표요금제 코드
+            A.REP_RATE AS REP_RATE, --대표요금제 코드
             A.AGRM_TRM_BASE -- 약정유형
             ,(
                 SELECT LISTAGG(SNTY.ATRIB_VAL_CD_1, ',') WITHIN GROUP(ORDER BY SNTY.PROD_ID)
@@ -177,12 +199,14 @@
                 SELECT PRDT_ID, MAX(SALE_PLCY_CD) AS SALE_PLCY_CD
                 FROM
                 MSP_SALE_PRDT_MST
-                WHERE
-                SALE_PLCY_CD IN
-                    <foreach item="prdt" index="index" collection="listMspSaleDto"
-                             open="(" separator="," close=")">
-                        #{prdt.salePlcyCd}
-                    </foreach>
+                WHERE 1=1
+                <if test="listMspSaleDto != null and listMspSaleDto.size() > 0">
+                    AND SALE_PLCY_CD IN
+                        <foreach item="prdt" index="index" collection="listMspSaleDto"
+                                 open="(" separator="," close=")">
+                            #{prdt.salePlcyCd}
+                        </foreach>
+                </if>
                 GROUP BY PRDT_ID
             ) PD_SALE
         WHERE
@@ -232,15 +256,17 @@
         SELECT
             A.PRDT_COLR_CD AS MODEL_COLOR_CD
             ,B.CD_DSC AS MODEL_COLOR_NM
-            ,PRDT_ID
-            ,PRDT_NM
+            ,A.PRDT_ID
+            ,A.PRDT_NM
         FROM
             CMN_INTM_MDL A
             , CMN_GRP_CD_MST B
         WHERE A.RPRS_YN = 'N'
             AND A.PRDT_COLR_CD = B.CD_VAL
-            AND A.RPRS_PRDT_ID = #{rprsPrdtId}
             AND B.GRP_ID = 'CMN0044'
+            <if test="rprsPrdtId != null and rprsPrdtId != ''">
+                AND A.RPRS_PRDT_ID = #{rprsPrdtId}
+            </if>
     </select>
 
     <select id="selectPrdtCapacityList"
@@ -254,9 +280,12 @@
         FROM
             NMCP_SNTY_PROD_BAS@DL_MCP A
             , NMCP_PROD_ATRIB_VAL_DTL@DL_MCP B
-        WHERE PROD_ID = #{prodId}
+        WHERE 1=1
             AND A.ATRIB_VAL_CD_2 = A.ATRIB_VAL_CD_2
             AND B.ATRIB_CD='P0'
+            <if test="prodId != null and prodId != ''">
+                AND A.PROD_ID = #{prodId}
+            </if>
         GROUP BY A.PROD_ID,A.ATRIB_VAL_CD_2,A.ATRIB_VAL_NM_2
     </select>
 
@@ -298,26 +327,31 @@
             AND PLCY.SALE_PLCY_CD = RATE.SALE_PLCY_CD
             AND RATE_MST.RATE_CD = RATE.RATE_CD
             AND TO_CHAR(SYSDATE,'yyyymmddhh24miss') BETWEEN PLCY.SALE_STRT_DTTM AND PLCY.SALE_END_DTTM /* 판매기간 */
-            AND RATE_MST.PAY_CL_CD = #{payClCd} -- 후불
-            AND RATE_MST.SERVICE_TYPE = #{serviceType} -- 요금제유형
+            <if test="payClCd != null and payClCd != ''">
+                AND RATE_MST.PAY_CL_CD = #{payClCd} -- 후불
+            </if>
+            <if test="serviceType != null and serviceType != ''">
+                AND RATE_MST.SERVICE_TYPE = #{serviceType} -- 요금제유형
+            </if>
             AND RATE_MST.RATE_CD IN ('PL241F504') -- 요금제코드
-            <!--AND RATE_MST.RATE_CD in
-                <foreach item="rate" index="index" collection="listRateDto"
-                         open="(" separator="," close=")">
-                    #{rate.prodId}
-                </foreach>-->
-            AND ORGN.ORGN_ID = #{orgnId} /* 조직코드 */
-            AND PLCY.PLCY_SCTN_CD = #{plcySctnCd} /* 정책유형코드 */
-            AND ORGN.SALE_PLCY_CD = #{salePlcyCd} /* 판매정책코드 */
-            AND RATE_TYPE = #{rateType} /* 요금제유형 : 01(휴대폰), 02(유심) */
-            <!--AND RATE_TYPE != '02'--> -- 02 아닌게 데이타가...흠
+            <if test="orgnId != null and orgnId != ''">
+                AND ORGN.ORGN_ID = #{orgnId} /* 조직코드 */
+            </if>
+            <if test="reqBuyTypeCd != null">
+                AND PLCY.PLCY_SCTN_CD = #{reqBuyTypeCd.rateType} /* 정책유형코드 */
+            </if>
+            <if test="salePlcyCd != null and salePlcyCd != ''">
+                AND ORGN.SALE_PLCY_CD = #{salePlcyCd} /* 판매정책코드 */
+            </if>
+            <if test="reqBuyTypeCd != null">
+                AND RATE_MST.RATE_TYPE = #{reqBuyTypeCd.rateType} /* 요금제유형 : 01(휴대폰), 02(유심) */
+            </if>
             <if test="sprtTp != null and sprtTp != ''">
-                AND SPRT_TP = #{sprtTp} /* 할인유형 */
+                AND PLCY.SPRT_TP = #{sprtTp} /* 할인유형 */
             </if>
             <if test="prdtSctnCd != null and prdtSctnCd != ''">
                 AND PLCY.PRDT_SCTN_CD = #{prdtSctnCd}   -- 02:LTE, 03:3G
             </if>
-
         ORDER BY RATE_MST.RATE_NM
     </select>
 
@@ -369,7 +403,7 @@
             AND B.PRDT_DT > to_char(sysdate, 'yyyymmdd')
             AND A.RATE_CD NOT IN (SELECT CD_VAL FROM CMN_GRP_CD_MST WHERE GRP_ID = 'RCP9019' AND USG_YN = 'Y')
             <choose>
-                <when test="prdtIndCd !=null and prdtIndCd != ''">
+                <when test="prdtIndCd != null and prdtIndCd != ''">
                     <if test="prdtIndCd == '45'">
                         AND B.PRDT_IND_CD in ('45', '08')
                     </if>
@@ -392,8 +426,12 @@
                     AND A.DATA_TYPE = DECODE(B.PRDT_IND_CD,'45', '5G', '08', '5G')
                 </otherwise>
             </choose>
-            AND A.RATE_CD = #{rateCd} -- 요금제
-            AND D.RPRS_PRDT_ID = #{rprsPrdtId} -- 핸드폰 대표단말코드
+            <if test="rateCd != null and rateCd != ''">
+                AND A.RATE_CD = #{rateCd} -- 요금제
+            </if>
+            <if test="rprsPrdtId != null and rprsPrdtId != ''">
+                AND D.RPRS_PRDT_ID = #{rprsPrdtId} -- 핸드폰 대표단말코드
+            </if>
         ORDER BY B.PRDT_IND_CD DESC , B.PRDT_NM, A.RATE_NM
     </select>
 
@@ -404,13 +442,13 @@
         FROM  MSP_RATE_MST A LEFT JOIN MSP_SALE_RATE_MST B ON A.RATE_CD = B.RATE_CD
         WHERE 1=1
             AND A.SERVICE_TYPE = 'R' AND B.SALE_PLCY_CD IS NULL  <!--부가서비스 구분코드 R 과 판매정책 없는 항목으로 조회해야함.-->
-            AND A.RATE_CD IN
+            <if test="productCategoryInfoDtoList != null and productCategoryInfoDtoList.size() > 0">
+                AND A.RATE_CD IN
                 <foreach item="addRate" index="index" collection="productCategoryInfoDtoList"
                          open="(" separator="," close=")">
                     #{addRate.prodId}
                 </foreach>
+            </if>
     </select>
-
-
 
 </mapper>

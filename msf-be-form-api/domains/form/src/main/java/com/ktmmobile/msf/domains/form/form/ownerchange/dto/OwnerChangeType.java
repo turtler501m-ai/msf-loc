@@ -12,6 +12,8 @@ public enum OwnerChangeType {
     DIFF_BIZ_NO("03", "판매 사업자 코드가 다름"),
     EMPTY("09", "조회 결과가 없음"),
     REAL_USE_DAY_ERROR("10", "실사용기간 90일 이전"),
+    STATUS_STOP("11", "정지 회선인 경우"),
+    NON_PAY("12", "미납 회선인 경우"),
     ERROR("99", "에러");
 
     private final String code;
