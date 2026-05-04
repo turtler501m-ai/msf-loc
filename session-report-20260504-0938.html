@@ -1,0 +1,4880 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>claude usage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* anthropic / claude-code palette */
+    --ivory: #FAF9F5;
+    --term-bg: #1a1918;
+    --term-fg: #d1cfc5;
+    --titlebar: #252321;
+    --outline: rgba(255,255,255,0.08);
+    --hover: rgba(255,255,255,0.035);
+    --clay: #D97757;
+    --dim: rgb(136,136,136);
+    --subtle: rgb(80,80,80);
+    --green: rgb(78,186,101);
+    --red: rgb(255,107,128);
+    --blue: rgb(177,185,249);
+    --yellow: rgb(255,193,7);
+    --mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, Monaco, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--ivory); }
+  body {
+    margin: 0; padding: 48px 24px 80px;
+    font: 13px/1.55 var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--term-fg);
+  }
+
+  /* ——— terminal window chrome ——— */
+  .term {
+    max-width: 1180px; margin: 0 auto;
+    background: var(--term-bg);
+    border-radius: 8px;
+    outline: 1px solid var(--outline);
+    box-shadow: 0 20px 60px rgba(20,20,19,0.22);
+  }
+  .titlebar {
+    background: var(--titlebar);
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid var(--outline);
+    padding: 11px 14px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .titlebar .dot { width: 11px; height: 11px; border-radius: 50%; background: #3a3836; }
+  .titlebar .path { margin-left: 14px; color: var(--dim); font-size: 11px; }
+  .term-body { padding: 22px 30px 30px; }
+
+  /* ——— command + hero ——— */
+  .cmd { color: var(--dim); margin-bottom: 6px; }
+  .cmd .prompt { color: var(--clay); }
+  .cmd .flag { color: var(--blue); }
+  #meta-line { color: var(--subtle); font-size: 11px; }
+
+  #hero { margin: 14px 0 6px; }
+  #hero-total { font-size: 56px; font-weight: 700; line-height: 1; }
+  #hero-total .unit { color: var(--clay); }
+  #hero-total .label { font-size: 18px; font-weight: 400; color: var(--dim); margin-left: 8px; }
+  #hero-split { color: var(--dim); margin-top: 8px; }
+  #hero-split b { color: var(--term-fg); font-weight: 500; }
+  #hero-split .ok { color: var(--green); }
+  #hero-split .warn { color: var(--yellow); }
+
+  /* ——— sections ——— */
+  section { margin-top: 26px; }
+  .hr { color: var(--subtle); overflow: hidden; white-space: nowrap;
+        user-select: none; margin-bottom: 8px; }
+  .hr::after { content: '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────'; }
+  h2 { all: unset; display: block; color: var(--clay); font-weight: 500; }
+  h2::before { content: '▸ '; }
+  h2 .hint { color: var(--subtle); font-size: 11px; font-weight: 400; margin-left: 10px; }
+  .section-body { margin-top: 10px; }
+
+  /* ——— overall stat grid ——— */
+  #overall-grid { display: grid; gap: 4px 28px;
+                  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .stat { padding: 4px 0; }
+  .stat .label { font-size: 11px; color: var(--dim); }
+  .stat .val { font-size: 20px; font-weight: 500; }
+  .stat .detail { font-size: 11px; color: var(--subtle); }
+
+  /* ——— takeaways ——— */
+  .take { display: grid; grid-template-columns: 9ch 1fr; gap: 18px;
+          padding: 6px 0; align-items: baseline; }
+  .take .fig { text-align: right; font-weight: 700; font-size: 15px; }
+  .take .txt { color: var(--dim); }
+  .take .txt b { color: var(--term-fg); font-weight: 500; }
+  .take.bad  .fig { color: var(--red); }
+  .take.good .fig { color: var(--green); }
+  .take.info .fig { color: var(--blue); }
+
+  /* ——— callouts (recommendations) ——— */
+  .callout { padding: 6px 0 6px 14px; border-left: 2px solid var(--subtle);
+             color: var(--dim); margin: 6px 0; }
+  .callout b, .callout code { color: var(--term-fg); }
+
+  /* ——— day pills + session gantt ——— */
+  .days { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .dpill { flex: 1; min-width: 84px; max-width: 140px; background: none;
+           border: 1px solid var(--subtle); border-radius: 4px;
+           padding: 9px 6px; font: inherit; color: var(--dim);
+           cursor: pointer; text-align: center; }
+  .dpill:hover { border-color: var(--dim); background: var(--hover); }
+  .dpill .dow { font-size: 10px; color: var(--subtle); display: block; }
+  .dpill .date { font-size: 11px; color: var(--term-fg); font-weight: 500;
+                 display: block; margin: 2px 0 4px; }
+  .dpill .pct { font-size: 16px; font-weight: 700; color: var(--term-fg); display: block; }
+  .dpill .ns { font-size: 10px; color: var(--subtle); display: block; margin-top: 2px; }
+  .dpill.heaviest .pct { color: var(--clay); }
+  .dpill.sel { border-color: var(--clay); background: rgba(217,119,87,0.10); }
+  .gantt-hd { display: flex; justify-content: space-between; align-items: baseline;
+              margin-bottom: 6px; }
+  .gantt-hd .day { color: var(--term-fg); font-weight: 500; }
+  .gantt-hd .stats { font-size: 11px; color: var(--dim); }
+  .gantt-hd .stats b { color: var(--clay); }
+  .gantt { position: relative; border-top: 1px solid var(--outline);
+           border-bottom: 1px solid var(--outline); min-height: 32px; }
+  .lane { position: relative; height: 16px;
+          border-bottom: 1px dashed rgba(255,255,255,0.04); }
+  .seg { position: absolute; top: 2px; height: 12px; border-radius: 2px;
+         opacity: .85; cursor: crosshair; }
+  .seg:hover { opacity: 1; outline: 1px solid var(--term-fg); z-index: 2; }
+  .gantt-rule { position: absolute; top: 0; bottom: 0; width: 0;
+                border-left: 1px dashed var(--subtle); opacity: .4;
+                pointer-events: none; }
+  .gantt-axis { display: flex; justify-content: space-between;
+                font-size: 10px; color: var(--subtle); padding: 4px 0; }
+  .gantt-leg { font-size: 10px; color: var(--subtle); margin-top: 8px;
+               display: flex; gap: 14px; flex-wrap: wrap; }
+  .gantt-leg .sw { display: inline-block; width: 14px; height: 10px;
+                   border-radius: 2px; vertical-align: middle; margin-right: 4px; }
+
+  /* ——— block-char bars ——— */
+  .bar { display: grid; grid-template-columns: 26ch 1fr 8ch; gap: 14px;
+         padding: 2px 0; align-items: center; }
+  .bar .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar .blocks { color: var(--clay); white-space: pre; overflow: hidden; }
+  .bar .blocks .empty { color: var(--subtle); }
+  .bar .pct { text-align: right; color: var(--dim); }
+  .bar:hover .name { color: var(--clay); }
+
+  /* ——— drill-down lists (top prompts, cache breaks) ——— */
+  .drill details { border-top: 1px solid var(--outline); }
+  .drill details:last-of-type { border-bottom: 1px solid var(--outline); }
+  .drill summary { list-style: none; cursor: pointer;
+    display: grid; grid-template-columns: 8ch 1fr; gap: 16px;
+    padding: 9px 4px; align-items: baseline; }
+  .drill summary::-webkit-details-marker { display: none; }
+  .drill summary:hover { background: var(--hover); }
+  .drill .amt { font-weight: 700; text-align: right; color: var(--clay); }
+  .drill .desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .drill .meta { grid-column: 2; font-size: 11px; color: var(--subtle); }
+  .drill details[open] summary .desc { white-space: normal; }
+  .drill .body { padding: 4px 4px 14px calc(8ch + 20px); font-size: 12px; color: var(--dim); }
+
+  /* ——— transcript context (±2 user msgs) — light inset for legibility ——— */
+  .ctx { margin: 8px 0 12px; padding: 10px 14px;
+         background: #F0EEE6; color: #1a1918;
+         border-radius: 6px; font-size: 12px; }
+  .ctx-msg { padding: 4px 0; white-space: pre-wrap; }
+  .ctx-msg .who { color: #87867F; font-size: 11px; }
+  .ctx-msg .ts { color: #87867F; font-size: 10px; margin-left: 8px; }
+  .ctx-msg.here { margin: 2px -14px; padding: 6px 11px 6px 14px;
+                  border-left: 3px solid var(--clay);
+                  background: rgba(217,119,87,0.10); }
+  .ctx-msg.here .who { color: var(--clay); font-weight: 500; }
+  .ctx-gap { color: #87867F; font-size: 11px; padding: 3px 0 3px 7ch; }
+  .ctx-gap::before { content: '⟨ '; }
+  .ctx-gap::after  { content: ' ⟩'; }
+  .ctx-break { margin: 2px -14px; padding: 8px 11px 8px 14px;
+               border-left: 3px solid #BD5E6D;
+               background: rgba(189,94,109,0.12); color: #A63244; }
+  .ctx-break b { color: #1a1918; margin-right: 6px; }
+
+  .more-btn { display: block; width: 100%; margin-top: 10px; padding: 9px;
+              background: none; border: 1px dashed var(--subtle); cursor: pointer;
+              font: 500 11px/1 var(--mono); letter-spacing: 0.06em;
+              color: var(--dim); }
+  .more-btn:hover { border-color: var(--dim); color: var(--term-fg); }
+
+  /* ——— tables ——— */
+  .scroll { max-height: 440px; overflow: auto;
+            border-top: 1px solid var(--outline); border-bottom: 1px solid var(--outline); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 6px 10px; }
+  td { border-top: 1px solid rgba(255,255,255,0.04); }
+  th { position: sticky; top: 0; background: var(--term-bg); z-index: 1;
+       font-weight: 500; font-size: 11px; color: var(--subtle);
+       cursor: pointer; user-select: none;
+       border-bottom: 1px solid var(--outline); }
+  th:hover { color: var(--dim); }
+  th.sorted { color: var(--clay); }
+  th.sorted::after { content: ' ↓'; }
+  th.sorted.asc::after { content: ' ↑'; }
+  td.num, th.num { text-align: right; }
+  tbody tr:hover td { background: var(--hover); }
+
+  footer { margin-top: 28px; color: var(--subtle); font-size: 11px;
+           display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  code { color: var(--blue); }
+  a { color: var(--clay); }
+  ::selection { background: var(--clay); color: var(--term-bg); }
+
+  @media (max-width: 760px) {
+    body { padding: 20px 12px 48px; }
+    .term-body { padding: 16px 16px 24px; }
+    #hero-total { font-size: 40px; }
+    .bar { grid-template-columns: 14ch 1fr 7ch; gap: 8px; }
+    .drill summary { grid-template-columns: 6ch 1fr; }
+    .drill .body { padding-left: 12px; }
+    .take { grid-template-columns: 7ch 1fr; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="term">
+  <div class="titlebar">
+    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+    <span class="path" id="title-path">~/.claude — session-report</span>
+  </div>
+  <div class="term-body">
+
+    <div class="cmd"><span class="prompt">&gt;</span> claude usage <span id="cmd-flags"></span></div>
+    <div id="meta-line">loading…</div>
+
+    <div id="hero">
+      <div id="hero-total">—</div>
+      <div id="hero-split"></div>
+    </div>
+
+    <!-- ====================================================================
+         FINDINGS — agent fills this. 3–5 one-line takeaways. Use .bad for
+         waste/anomalies, .good for healthy signals, .info for neutral.
+         ==================================================================== -->
+    <section>
+      <div class="hr"></div>
+      <h2>findings</h2>
+      <div class="section-body" id="takeaways">
+        <!-- AGENT: anomalies -->
+        <div class="take bad"><div class="fig">56.7%</div><div class="txt"><b>msf-be-form-api</b> 프로젝트가 주간 토큰의 56.7%(27.1M/47.9M)를 소비 — 4세션에서 276 API 호출</div></div>
+        <div class="take bad"><div class="fig">7.8%</div><div class="txt">단일 프롬프트 <b>"KOS 연계 후처리 분석 추가"</b>가 3.71M 토큰(7.8%) 소비 — 49 API 호출 + 1 서브에이전트</div></div>
+        <div class="take bad"><div class="fig">1.02M</div><div class="txt"><b>Explore 서브에이전트</b>가 호출당 평균 1.02M 토큰 소비 — 3회 호출로 3.06M 토큰(6.4%) 사용</div></div>
+        <div class="take good"><div class="fig">96.8%</div><div class="txt"><b>전체 캐시 히트율</b> 96.8% — 45.99M 토큰이 캐시에서 읽혀 비용 효율 우수</div></div>
+        <div class="take info"><div class="fig">1회</div><div class="txt"><b>캐시 브레이크</b> 1건: "나머지 VO 밑에 있는 것들 모두 추가해줘" 프롬프트에서 108K 비캐시 토큰 발생</div></div>
+        <!-- /AGENT -->
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         Everything below renders automatically from #report-data.
+         ==================================================================== -->
+    <section>
+      <div class="hr"></div>
+      <h2>summary</h2>
+      <div class="section-body" id="overall-grid"></div>
+    </section>
+
+    <section>
+      <div class="hr"></div>
+      <h2>tokens by project<span class="hint">share of total</span></h2>
+      <div class="section-body" id="project-bars"></div>
+    </section>
+
+    <section id="timeline-section">
+      <div class="hr"></div>
+      <h2>session timeline by day<span class="hint">click a day · ←/→ to navigate</span></h2>
+      <div class="section-body">
+        <div class="days" id="day-pills"></div>
+        <div class="gantt-hd">
+          <span class="day" id="g-day">—</span>
+          <span class="stats" id="g-stats"></span>
+        </div>
+        <div class="gantt-axis"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div>
+        <div class="gantt" id="gantt"></div>
+        <div class="gantt-leg" id="gantt-leg"></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="hr"></div>
+      <h2>most expensive prompts<span class="hint">click to expand context</span></h2>
+      <div class="section-body drill" id="top-prompts"></div>
+    </section>
+
+    <section>
+      <div class="hr"></div>
+      <h2>cache breaks<span class="hint">&gt;100k uncached · click for context</span></h2>
+      <div class="section-body drill" id="cache-breaks"></div>
+    </section>
+
+    <section>
+      <div class="hr"></div>
+      <h2>projects</h2>
+      <div class="section-body scroll"><table id="tbl-projects"></table></div>
+    </section>
+
+    <section>
+      <div class="hr"></div>
+      <h2>subagent types</h2>
+      <div class="section-body scroll"><table id="tbl-subagents"></table></div>
+    </section>
+
+    <section>
+      <div class="hr"></div>
+      <h2>skills &amp; slash commands</h2>
+      <div class="section-body scroll"><table id="tbl-skills"></table></div>
+    </section>
+
+    <section>
+      <div class="hr"></div>
+      <h2>recommendations</h2>
+      <div class="section-body">
+        <!-- AGENT: optimizations -->
+        <div class="callout"><b>Explore 서브에이전트 범위 축소:</b> "KOS 연계 후처리 분석" 등 대용량 분석 프롬프트는 Explore 서브에이전트를 1회 호출당 1M+ 토큰을 소비합니다. 분석 범위를 특정 파일/패키지로 좁혀 지정하거나, 순차적으로 작은 단위로 나눠 질의하면 서브에이전트 비용을 절반 이하로 줄일 수 있습니다.</div>
+        <div class="callout"><b>캐시 브레이크 방지:</b> "나머지 VO 밑에 있는 것들 모두 추가해줘" 패턴처럼 많은 파일을 한 번에 요청하면 컨텍스트가 100K를 초과해 캐시가 깨집니다. VO 추가 작업은 도메인/패키지 단위로 나눠 요청하세요.</div>
+        <div class="callout"><b>msf-be-form-api 세션 분리:</b> 해당 프로젝트 4세션이 전체의 56.7%를 차지합니다. 세션당 집중 작업 범위를 한 도메인(예: termination 또는 servicechange)으로 한정하면 컨텍스트 재사용률이 높아집니다.</div>
+        <!-- /AGENT -->
+      </div>
+    </section>
+
+    <footer>
+      <span id="foot-gen"></span>
+      <span id="foot-stats"></span>
+    </footer>
+
+  </div>
+</div>
+
+<!-- ========================================================================
+     DATA — agent replaces the {} below with the full --json output.
+     ======================================================================== -->
+<script id="report-data" type="application/json">{
+  "root": "C:\\Users\\bok\\.claude\\projects",
+  "generated_at": "2026-05-04T00:37:54.551Z",
+  "overall": {
+    "sessions": 14,
+    "api_calls": 556,
+    "input_tokens": {
+      "uncached": 7635,
+      "cache_create": 1535342,
+      "cache_read": 45991444,
+      "total": 47534421,
+      "pct_cached": 96.8
+    },
+    "output_tokens": 328894,
+    "human_messages": 105,
+    "hours": {
+      "wall_clock": 31.4,
+      "active": 3.3
+    },
+    "cache_breaks_over_100k": 1,
+    "subagent": {
+      "calls": 4,
+      "total_tokens": 3132673,
+      "avg_tokens_per_call": 783168
+    },
+    "skill_invocations": {
+      "exit": 3,
+      "clear": 3,
+      "plugin": 2,
+      "reload-plugins": 1,
+      "session-report:session-report": 2,
+      "ktm-smartform": 1
+    },
+    "span": {
+      "from": "2026-04-27T01:08:52.684Z",
+      "to": "2026-05-04T00:37:50.480Z"
+    }
+  },
+  "cache_breaks": [
+    {
+      "ts": "2026-04-27T07:48:43.283Z",
+      "session": "be9831fb-671d-48a6-b693-a7224492bb45",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "uncached": 108013,
+      "total": 121934,
+      "kind": "main",
+      "context": [
+        {
+          "text": "MsfRequestCstmrVo 도 매퍼. xml RepositoryImpl 추가해줘 DB를 직접 조회해서 참고해",
+          "ts": "2026-04-27T07:42:52.892Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "MsfRequestAgentVo 도 추가",
+          "ts": "2026-04-27T07:46:35.268Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "나머지 VO 밑에 있는 것들 모두 추가해줘",
+          "ts": "2026-04-27T07:48:00.932Z",
+          "calls": 7,
+          "here": true
+        }
+      ]
+    }
+  ],
+  "by_project": {
+    "C--MSF-GIT-workspace": {
+      "sessions": 4,
+      "api_calls": 44,
+      "input_tokens": {
+        "uncached": 1030,
+        "cache_create": 43282,
+        "cache_read": 1288840,
+        "total": 1333152,
+        "pct_cached": 96.7
+      },
+      "output_tokens": 11776,
+      "human_messages": 20,
+      "hours": {
+        "wall_clock": 2,
+        "active": 0.3
+      },
+      "cache_breaks_over_100k": 0,
+      "subagent": {
+        "calls": 0,
+        "total_tokens": 0,
+        "avg_tokens_per_call": 0
+      },
+      "skill_invocations": {
+        "exit": 2
+      },
+      "span": {
+        "from": "2026-04-27T23:52:18.478Z",
+        "to": "2026-04-29T23:55:52.080Z"
+      }
+    },
+    "C--MSF-LOC-workspace": {
+      "sessions": 6,
+      "api_calls": 236,
+      "input_tokens": {
+        "uncached": 1876,
+        "cache_create": 773357,
+        "cache_read": 18499880,
+        "total": 19275113,
+        "pct_cached": 96
+      },
+      "output_tokens": 117395,
+      "human_messages": 40,
+      "hours": {
+        "wall_clock": 23.2,
+        "active": 1
+      },
+      "cache_breaks_over_100k": 0,
+      "subagent": {
+        "calls": 3,
+        "total_tokens": 2911343,
+        "avg_tokens_per_call": 970448
+      },
+      "skill_invocations": {
+        "clear": 1,
+        "exit": 1,
+        "plugin": 2,
+        "reload-plugins": 1,
+        "session-report:session-report": 2
+      },
+      "span": {
+        "from": "2026-04-28T02:07:17.711Z",
+        "to": "2026-05-04T00:37:50.480Z"
+      }
+    },
+    "C--MSF-LOC-workspace-msf-be-form-api": {
+      "sessions": 4,
+      "api_calls": 276,
+      "input_tokens": {
+        "uncached": 4729,
+        "cache_create": 718703,
+        "cache_read": 26202724,
+        "total": 26926156,
+        "pct_cached": 97.3
+      },
+      "output_tokens": 199723,
+      "human_messages": 45,
+      "hours": {
+        "wall_clock": 6.1,
+        "active": 2
+      },
+      "cache_breaks_over_100k": 1,
+      "subagent": {
+        "calls": 1,
+        "total_tokens": 221330,
+        "avg_tokens_per_call": 221330
+      },
+      "skill_invocations": {
+        "clear": 2,
+        "ktm-smartform": 1
+      },
+      "span": {
+        "from": "2026-04-27T01:08:52.684Z",
+        "to": "2026-04-27T23:47:29.821Z"
+      }
+    }
+  },
+  "by_subagent_type": {
+    "Explore": {
+      "sessions": 2,
+      "api_calls": 51,
+      "input_tokens": {
+        "uncached": 2030,
+        "cache_create": 267174,
+        "cache_read": 2764129,
+        "total": 3033333,
+        "pct_cached": 91.1
+      },
+      "output_tokens": 24484,
+      "human_messages": 0,
+      "hours": {
+        "wall_clock": 0.1,
+        "active": 0.1
+      },
+      "cache_breaks_over_100k": 0,
+      "subagent": {
+        "calls": 3,
+        "total_tokens": 3057817,
+        "avg_tokens_per_call": 1019272
+      },
+      "skill_invocations": {},
+      "span": {
+        "from": "2026-04-27T01:50:06.225Z",
+        "to": "2026-04-29T06:37:54.206Z"
+      }
+    },
+    "claude-code-guide": {
+      "sessions": 1,
+      "api_calls": 5,
+      "input_tokens": {
+        "uncached": 27,
+        "cache_create": 16325,
+        "cache_read": 57196,
+        "total": 73548,
+        "pct_cached": 77.8
+      },
+      "output_tokens": 1308,
+      "human_messages": 0,
+      "hours": {
+        "wall_clock": 0,
+        "active": 0
+      },
+      "cache_breaks_over_100k": 0,
+      "subagent": {
+        "calls": 1,
+        "total_tokens": 74856,
+        "avg_tokens_per_call": 74856
+      },
+      "skill_invocations": {},
+      "span": {
+        "from": "2026-04-28T02:18:30.458Z",
+        "to": "2026-04-28T02:18:50.743Z"
+      }
+    }
+  },
+  "by_skill": {
+    "session-report:session-report": {
+      "sessions": 0,
+      "api_calls": 2,
+      "input_tokens": {
+        "uncached": 4,
+        "cache_create": 3710,
+        "cache_read": 55726,
+        "total": 59440,
+        "pct_cached": 93.8
+      },
+      "output_tokens": 488,
+      "human_messages": 0,
+      "hours": {
+        "wall_clock": 0,
+        "active": 0
+      },
+      "cache_breaks_over_100k": 0,
+      "subagent": {
+        "calls": 0,
+        "total_tokens": 0,
+        "avg_tokens_per_call": 0
+      },
+      "skill_invocations": {},
+      "span": null
+    },
+    "ktm-smartform": {
+      "sessions": 0,
+      "api_calls": 20,
+      "input_tokens": {
+        "uncached": 23,
+        "cache_create": 45075,
+        "cache_read": 897515,
+        "total": 942613,
+        "pct_cached": 95.2
+      },
+      "output_tokens": 7670,
+      "human_messages": 0,
+      "hours": {
+        "wall_clock": 0,
+        "active": 0
+      },
+      "cache_breaks_over_100k": 0,
+      "subagent": {
+        "calls": 0,
+        "total_tokens": 0,
+        "avg_tokens_per_call": 0
+      },
+      "skill_invocations": {},
+      "span": null
+    }
+  },
+  "top_prompts": [
+    {
+      "ts": "2026-04-29T06:35:15.524Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "신규 스마트 서식지관련 개통/명의변경/해지 관련 KOS 연계 후처리 분석을 추가해줘",
+      "api_calls": 49,
+      "subagent_calls": 1,
+      "total_tokens": 3711553,
+      "input": {
+        "uncached": 107,
+        "cache_create": 162696,
+        "cache_read": 3510984
+      },
+      "output": 37766,
+      "context": [
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:28:20.161Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "msp-batch-daemon 폴더를 분석해서 doc 밑에 54번 문서로 작성해줘",
+          "ts": "2026-04-29T06:29:03.560Z",
+          "calls": 22,
+          "here": false
+        },
+        {
+          "text": "신규 스마트 서식지관련 개통/명의변경/해지 관련 KOS 연계 후처리 분석을 추가해줘",
+          "ts": "2026-04-29T06:35:15.524Z",
+          "calls": 49,
+          "here": true
+        },
+        {
+          "text": "MplatformOpenService.java 좀더 분석해줘",
+          "ts": "2026-04-29T06:55:45.654Z",
+          "calls": 10,
+          "here": false
+        },
+        {
+          "text": "문서에 추가",
+          "ts": "2026-04-29T06:58:18.584Z",
+          "calls": 5,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T06:02:30.569Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "selectCanCustList 목록 조회를 신청서목록조회로 이름을 변경하고 신규/명의변경/서비스변경 UNION ALL 로 쿼리 추가해줘",
+      "api_calls": 24,
+      "subagent_calls": 0,
+      "total_tokens": 2855566,
+      "input": {
+        "uncached": 26,
+        "cache_create": 38662,
+        "cache_read": 2793457
+      },
+      "output": 23421,
+      "context": [
+        {
+          "text": "진행해줘",
+          "ts": "2026-04-27T05:54:11.366Z",
+          "calls": 12,
+          "here": false
+        },
+        {
+          "text": "updateCanCustRevert updateCanCustComplete 하나로 합쳐줘",
+          "ts": "2026-04-27T05:56:50.270Z",
+          "calls": 9,
+          "here": false
+        },
+        {
+          "text": "selectCanCustList 목록 조회를 신청서목록조회로 이름을 변경하고 신규/명의변경/서비스변경 UNION ALL 로 쿼리 추가해줘",
+          "ts": "2026-04-27T06:02:30.569Z",
+          "calls": 24,
+          "here": true
+        },
+        {
+          "text": "분리하지마",
+          "ts": "2026-04-27T06:09:36.383Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "appFormUnion , 를 맨 앞으로",
+          "ts": "2026-04-27T06:13:40.631Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T01:15:16.124Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "신청서관리탭의 그리드 항목에 맞게 백인드를 다시 개발해줘 조회부터",
+      "api_calls": 15,
+      "subagent_calls": 0,
+      "total_tokens": 1940750,
+      "input": {
+        "uncached": 3954,
+        "cache_create": 24951,
+        "cache_read": 1898825
+      },
+      "output": 13020,
+      "context": [
+        {
+          "text": "신청서관리탭이 ManageDevPage.vue 로컬,개발에만 나타날수 있도록 수정해줘",
+          "ts": "2026-04-27T01:08:52.684Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "신청서관리탭의 그리드 항목에 맞게 백인드를 다시 개발해줘 조회부터",
+          "ts": "2026-04-27T01:15:16.124Z",
+          "calls": 15,
+          "here": true
+        },
+        {
+          "text": "조회조건의 신청서 구분은 공통코드 FORM_TYPE_CD 로 변경해줘 다른쪽에 처리하는 방식과 동일하게 수정해줘",
+          "ts": "2026-04-27T01:35:26.125Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "동일하게 처리상태 PROC_STTUS_CD 도 변경해줘",
+          "ts": "2026-04-27T01:38:56.886Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T09:30:56.098Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "2026-04-28 18:30:33.603 INFO c.k.m.c.websecurity.web.filter.RequestLogFilter : 93 : [POST][/mypage/farPricePlan][null] Request 2026-04-28 18:30:33.618 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 org.springfr…",
+      "api_calls": 12,
+      "subagent_calls": 0,
+      "total_tokens": 1915671,
+      "input": {
+        "uncached": 14,
+        "cache_create": 22128,
+        "cache_read": 1886761
+      },
+      "output": 6768,
+      "context": [
+        {
+          "text": "2026-04-28 18:21:16.943 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException at com.ktmmobile.msf.domains.form.form.termination.service.MsfCancel…",
+          "ts": "2026-04-28T09:21:51.899Z",
+          "calls": 11,
+          "here": false
+        },
+        {
+          "text": "2026-04-28 18:25:09.481 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 org.springframework.web.servlet.resource.NoResourceFoundException: No static resource mypage/farPricePlan for request '/mypage/farPricePlan…",
+          "ts": "2026-04-28T09:25:31.213Z",
+          "calls": 13,
+          "here": false
+        },
+        {
+          "text": "2026-04-28 18:30:33.603 INFO c.k.m.c.websecurity.web.filter.RequestLogFilter : 93 : [POST][/mypage/farPricePlan][null] Request 2026-04-28 18:30:33.618 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 org.springfr…",
+          "ts": "2026-04-28T09:30:56.098Z",
+          "calls": 12,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T02:27:19.157Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "selectCanCustList 쿼리를 수정했어 여기에 변수명과 화면 매핑들도 정리해줘",
+      "api_calls": 13,
+      "subagent_calls": 0,
+      "total_tokens": 1890646,
+      "input": {
+        "uncached": 15,
+        "cache_create": 21230,
+        "cache_read": 1855948
+      },
+      "output": 13453,
+      "context": [
+        {
+          "text": "FORM_TYPE_CD 는 공통코드를 이용해 조회쿼리에 UNION ALL 테이블 추가해야해 변수 추가해주고 화면/백앤드 맞춰줘",
+          "ts": "2026-04-27T02:06:47.528Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "selectCanCustList 화면 그리드 순서에 맞게 수정해줘 CASE 명 추가한것 은 제거",
+          "ts": "2026-04-27T02:11:55.508Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "selectCanCustList 쿼리를 수정했어 여기에 변수명과 화면 매핑들도 정리해줘",
+          "ts": "2026-04-27T02:27:19.157Z",
+          "calls": 13,
+          "here": true
+        },
+        {
+          "text": "화면 그리드 신청서구분항목 formtypecd + opertypecd 명",
+          "ts": "2026-04-27T02:35:00.707Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "처리상태 명이 표시 될수 있도록 화면 수정해줘",
+          "ts": "2026-04-27T02:37:04.570Z",
+          "calls": 4,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T09:25:31.213Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "2026-04-28 18:25:09.481 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 org.springframework.web.servlet.resource.NoResourceFoundException: No static resource mypage/farPricePlan for request '/mypage/farPricePlan…",
+      "api_calls": 13,
+      "subagent_calls": 0,
+      "total_tokens": 1741589,
+      "input": {
+        "uncached": 15,
+        "cache_create": 24483,
+        "cache_read": 1710457
+      },
+      "output": 6634,
+      "context": [
+        {
+          "text": "TerminationCustomer.vue 핸드폰인증후 가입정보조회 getMyinfoView 연결해줘",
+          "ts": "2026-04-28T09:05:31.267Z",
+          "calls": 15,
+          "here": false
+        },
+        {
+          "text": "2026-04-28 18:21:16.943 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException at com.ktmmobile.msf.domains.form.form.termination.service.MsfCancel…",
+          "ts": "2026-04-28T09:21:51.899Z",
+          "calls": 11,
+          "here": false
+        },
+        {
+          "text": "2026-04-28 18:25:09.481 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 org.springframework.web.servlet.resource.NoResourceFoundException: No static resource mypage/farPricePlan for request '/mypage/farPricePlan…",
+          "ts": "2026-04-28T09:25:31.213Z",
+          "calls": 13,
+          "here": true
+        },
+        {
+          "text": "2026-04-28 18:30:33.603 INFO c.k.m.c.websecurity.web.filter.RequestLogFilter : 93 : [POST][/mypage/farPricePlan][null] Request 2026-04-28 18:30:33.618 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 org.springfr…",
+          "ts": "2026-04-28T09:30:56.098Z",
+          "calls": 12,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T07:00:25.951Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "TmntPpImgTransferSchedule.java 분석해서 문서에 추가",
+      "api_calls": 12,
+      "subagent_calls": 0,
+      "total_tokens": 1704958,
+      "input": {
+        "uncached": 14,
+        "cache_create": 15809,
+        "cache_read": 1684663
+      },
+      "output": 4472,
+      "context": [
+        {
+          "text": "MplatformOpenService.java 좀더 분석해줘",
+          "ts": "2026-04-29T06:55:45.654Z",
+          "calls": 10,
+          "here": false
+        },
+        {
+          "text": "문서에 추가",
+          "ts": "2026-04-29T06:58:18.584Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "TmntPpImgTransferSchedule.java 분석해서 문서에 추가",
+          "ts": "2026-04-29T07:00:25.951Z",
+          "calls": 12,
+          "here": true
+        },
+        {
+          "text": "해지(EP0) 후처리 관련 정리해서 문서추가해줘",
+          "ts": "2026-04-29T07:02:51.995Z",
+          "calls": 14,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T01:58:26.803Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "그리드의 신청서구분, 처리상태가 한글명으로 표시",
+      "api_calls": 18,
+      "subagent_calls": 0,
+      "total_tokens": 1563947,
+      "input": {
+        "uncached": 20,
+        "cache_create": 34216,
+        "cache_read": 1510247
+      },
+      "output": 19464,
+      "context": [
+        {
+          "text": "msf.api.js:59 POST http://localhost:8085/api/msf/admin/cancel/list 500 (Internal Server Error)",
+          "ts": "2026-04-27T01:41:58.421Z",
+          "calls": 15,
+          "here": false
+        },
+        {
+          "text": "FormMapperConfig.java 문제가 아니야 다시 확인해줘",
+          "ts": "2026-04-27T01:49:53.815Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "그리드의 신청서구분, 처리상태가 한글명으로 표시",
+          "ts": "2026-04-27T01:58:26.803Z",
+          "calls": 18,
+          "here": true
+        },
+        {
+          "text": "FORM_TYPE_CD 는 공통코드를 이용해 조회쿼리에 UNION ALL 테이블 추가해야해 변수 추가해주고 화면/백앤드 맞춰줘",
+          "ts": "2026-04-27T02:06:47.528Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "selectCanCustList 화면 그리드 순서에 맞게 수정해줘 CASE 명 추가한것 은 제거",
+          "ts": "2026-04-27T02:11:55.508Z",
+          "calls": 6,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T07:02:51.995Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "해지(EP0) 후처리 관련 정리해서 문서추가해줘",
+      "api_calls": 14,
+      "subagent_calls": 0,
+      "total_tokens": 1446448,
+      "input": {
+        "uncached": 18,
+        "cache_create": 46856,
+        "cache_read": 1392474
+      },
+      "output": 7100,
+      "context": [
+        {
+          "text": "문서에 추가",
+          "ts": "2026-04-29T06:58:18.584Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "TmntPpImgTransferSchedule.java 분석해서 문서에 추가",
+          "ts": "2026-04-29T07:00:25.951Z",
+          "calls": 12,
+          "here": false
+        },
+        {
+          "text": "해지(EP0) 후처리 관련 정리해서 문서추가해줘",
+          "ts": "2026-04-29T07:02:51.995Z",
+          "calls": 14,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T09:05:31.267Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "TerminationCustomer.vue 핸드폰인증후 가입정보조회 getMyinfoView 연결해줘",
+      "api_calls": 15,
+      "subagent_calls": 0,
+      "total_tokens": 1357491,
+      "input": {
+        "uncached": 17,
+        "cache_create": 86905,
+        "cache_read": 1263365
+      },
+      "output": 7204,
+      "context": [
+        {
+          "text": "push",
+          "ts": "2026-04-28T02:48:57.651Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "현재 로컬 깃 계정을 알려줘",
+          "ts": "2026-04-28T03:06:11.615Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "TerminationCustomer.vue 핸드폰인증후 가입정보조회 getMyinfoView 연결해줘",
+          "ts": "2026-04-28T09:05:31.267Z",
+          "calls": 15,
+          "here": true
+        },
+        {
+          "text": "2026-04-28 18:21:16.943 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException at com.ktmmobile.msf.domains.form.form.termination.service.MsfCancel…",
+          "ts": "2026-04-28T09:21:51.899Z",
+          "calls": 11,
+          "here": false
+        },
+        {
+          "text": "2026-04-28 18:25:09.481 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 org.springframework.web.servlet.resource.NoResourceFoundException: No static resource mypage/farPricePlan for request '/mypage/farPricePlan…",
+          "ts": "2026-04-28T09:25:31.213Z",
+          "calls": 13,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T02:38:38.643Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "하드코딩이 아니라 공통코드로 받은 걸 출력",
+      "api_calls": 8,
+      "subagent_calls": 0,
+      "total_tokens": 1300232,
+      "input": {
+        "uncached": 10,
+        "cache_create": 9211,
+        "cache_read": 1284862
+      },
+      "output": 6149,
+      "context": [
+        {
+          "text": "처리상태 명이 표시 될수 있도록 화면 수정해줘",
+          "ts": "2026-04-27T02:37:04.570Z",
+          "calls": 4,
+          "here": false
+        },
+        {
+          "text": "고객유형도 코드가 아니라 명",
+          "ts": "2026-04-27T02:38:04.404Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "하드코딩이 아니라 공통코드로 받은 걸 출력",
+          "ts": "2026-04-27T02:38:38.643Z",
+          "calls": 8,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T06:29:03.560Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "msp-batch-daemon 폴더를 분석해서 doc 밑에 54번 문서로 작성해줘",
+      "api_calls": 22,
+      "subagent_calls": 1,
+      "total_tokens": 1278025,
+      "input": {
+        "uncached": 1521,
+        "cache_create": 143925,
+        "cache_read": 1116394
+      },
+      "output": 16185,
+      "context": [
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:27:56.947Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:28:20.161Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "msp-batch-daemon 폴더를 분석해서 doc 밑에 54번 문서로 작성해줘",
+          "ts": "2026-04-29T06:29:03.560Z",
+          "calls": 22,
+          "here": true
+        },
+        {
+          "text": "신규 스마트 서식지관련 개통/명의변경/해지 관련 KOS 연계 후처리 분석을 추가해줘",
+          "ts": "2026-04-29T06:35:15.524Z",
+          "calls": 49,
+          "here": false
+        },
+        {
+          "text": "MplatformOpenService.java 좀더 분석해줘",
+          "ts": "2026-04-29T06:55:45.654Z",
+          "calls": 10,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T09:21:51.899Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "2026-04-28 18:21:16.943 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException at com.ktmmobile.msf.domains.form.form.termination.service.MsfCancel…",
+      "api_calls": 11,
+      "subagent_calls": 0,
+      "total_tokens": 1243534,
+      "input": {
+        "uncached": 12,
+        "cache_create": 16644,
+        "cache_read": 1222075
+      },
+      "output": 4803,
+      "context": [
+        {
+          "text": "현재 로컬 깃 계정을 알려줘",
+          "ts": "2026-04-28T03:06:11.615Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "TerminationCustomer.vue 핸드폰인증후 가입정보조회 getMyinfoView 연결해줘",
+          "ts": "2026-04-28T09:05:31.267Z",
+          "calls": 15,
+          "here": false
+        },
+        {
+          "text": "2026-04-28 18:21:16.943 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException at com.ktmmobile.msf.domains.form.form.termination.service.MsfCancel…",
+          "ts": "2026-04-28T09:21:51.899Z",
+          "calls": 11,
+          "here": true
+        },
+        {
+          "text": "2026-04-28 18:25:09.481 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 org.springframework.web.servlet.resource.NoResourceFoundException: No static resource mypage/farPricePlan for request '/mypage/farPricePlan…",
+          "ts": "2026-04-28T09:25:31.213Z",
+          "calls": 13,
+          "here": false
+        },
+        {
+          "text": "2026-04-28 18:30:33.603 INFO c.k.m.c.websecurity.web.filter.RequestLogFilter : 93 : [POST][/mypage/farPricePlan][null] Request 2026-04-28 18:30:33.618 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 org.springfr…",
+          "ts": "2026-04-28T09:30:56.098Z",
+          "calls": 12,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T01:41:58.421Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "msf.api.js:59 POST http://localhost:8085/api/msf/admin/cancel/list 500 (Internal Server Error)",
+      "api_calls": 15,
+      "subagent_calls": 0,
+      "total_tokens": 1222836,
+      "input": {
+        "uncached": 21,
+        "cache_create": 102180,
+        "cache_read": 1111210
+      },
+      "output": 9425,
+      "context": [
+        {
+          "text": "동일하게 처리상태 PROC_STTUS_CD 도 변경해줘",
+          "ts": "2026-04-27T01:38:56.886Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "변수명들도 같이 맞춰줘 정리해줘",
+          "ts": "2026-04-27T01:40:20.720Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "msf.api.js:59 POST http://localhost:8085/api/msf/admin/cancel/list 500 (Internal Server Error)",
+          "ts": "2026-04-27T01:41:58.421Z",
+          "calls": 15,
+          "here": true
+        },
+        {
+          "text": "FormMapperConfig.java 문제가 아니야 다시 확인해줘",
+          "ts": "2026-04-27T01:49:53.815Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "그리드의 신청서구분, 처리상태가 한글명으로 표시",
+          "ts": "2026-04-27T01:58:26.803Z",
+          "calls": 18,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T01:35:26.125Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "조회조건의 신청서 구분은 공통코드 FORM_TYPE_CD 로 변경해줘 다른쪽에 처리하는 방식과 동일하게 수정해줘",
+      "api_calls": 8,
+      "subagent_calls": 0,
+      "total_tokens": 1199378,
+      "input": {
+        "uncached": 10,
+        "cache_create": 19234,
+        "cache_read": 1177649
+      },
+      "output": 2485,
+      "context": [
+        {
+          "text": "신청서관리탭이 ManageDevPage.vue 로컬,개발에만 나타날수 있도록 수정해줘",
+          "ts": "2026-04-27T01:08:52.684Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "신청서관리탭의 그리드 항목에 맞게 백인드를 다시 개발해줘 조회부터",
+          "ts": "2026-04-27T01:15:16.124Z",
+          "calls": 15,
+          "here": false
+        },
+        {
+          "text": "조회조건의 신청서 구분은 공통코드 FORM_TYPE_CD 로 변경해줘 다른쪽에 처리하는 방식과 동일하게 수정해줘",
+          "ts": "2026-04-27T01:35:26.125Z",
+          "calls": 8,
+          "here": true
+        },
+        {
+          "text": "동일하게 처리상태 PROC_STTUS_CD 도 변경해줘",
+          "ts": "2026-04-27T01:38:56.886Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "변수명들도 같이 맞춰줘 정리해줘",
+          "ts": "2026-04-27T01:40:20.720Z",
+          "calls": 5,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T06:55:45.654Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "MplatformOpenService.java 좀더 분석해줘",
+      "api_calls": 10,
+      "subagent_calls": 0,
+      "total_tokens": 1166808,
+      "input": {
+        "uncached": 12,
+        "cache_create": 16431,
+        "cache_read": 1145250
+      },
+      "output": 5115,
+      "context": [
+        {
+          "text": "msp-batch-daemon 폴더를 분석해서 doc 밑에 54번 문서로 작성해줘",
+          "ts": "2026-04-29T06:29:03.560Z",
+          "calls": 22,
+          "here": false
+        },
+        {
+          "text": "신규 스마트 서식지관련 개통/명의변경/해지 관련 KOS 연계 후처리 분석을 추가해줘",
+          "ts": "2026-04-29T06:35:15.524Z",
+          "calls": 49,
+          "here": false
+        },
+        {
+          "text": "MplatformOpenService.java 좀더 분석해줘",
+          "ts": "2026-04-29T06:55:45.654Z",
+          "calls": 10,
+          "here": true
+        },
+        {
+          "text": "문서에 추가",
+          "ts": "2026-04-29T06:58:18.584Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "TmntPpImgTransferSchedule.java 분석해서 문서에 추가",
+          "ts": "2026-04-29T07:00:25.951Z",
+          "calls": 12,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T05:54:11.366Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "진행해줘",
+      "api_calls": 12,
+      "subagent_calls": 0,
+      "total_tokens": 1059928,
+      "input": {
+        "uncached": 14,
+        "cache_create": 17658,
+        "cache_read": 1038093
+      },
+      "output": 4163,
+      "context": [
+        {
+          "text": "접수완료 처리되었습니다 메시지 후 팝업이 닫기고 재조회 되어야 해",
+          "ts": "2026-04-27T05:47:18.173Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "접수완료버튼 우측에 완료취소 버튼 추가하고 접수상태(RC) 로 수정 하도록 수정해줘",
+          "ts": "2026-04-27T05:52:50.955Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "진행해줘",
+          "ts": "2026-04-27T05:54:11.366Z",
+          "calls": 12,
+          "here": true
+        },
+        {
+          "text": "updateCanCustRevert updateCanCustComplete 하나로 합쳐줘",
+          "ts": "2026-04-27T05:56:50.270Z",
+          "calls": 9,
+          "here": false
+        },
+        {
+          "text": "selectCanCustList 목록 조회를 신청서목록조회로 이름을 변경하고 신규/명의변경/서비스변경 UNION ALL 로 쿼리 추가해줘",
+          "ts": "2026-04-27T06:02:30.569Z",
+          "calls": 24,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T07:25:18.196Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "be9831fb-671d-48a6-b693-a7224492bb45",
+      "text": "MsfRequestCancelVo 를 사용해서 insertMsfRequestCancel 기능을 구현 >> repository.smartform.MsfRequestWriteXXXXX 매퍼와 xml을 만들어줘",
+      "api_calls": 20,
+      "subagent_calls": 0,
+      "total_tokens": 950283,
+      "input": {
+        "uncached": 23,
+        "cache_create": 45075,
+        "cache_read": 897515
+      },
+      "output": 7670,
+      "context": [
+        {
+          "text": "/clear",
+          "ts": "2026-04-27T07:25:15.073Z",
+          "calls": 0,
+          "here": false
+        },
+        {
+          "text": "MsfRequestCancelVo 를 사용해서 insertMsfRequestCancel 기능을 구현 >> repository.smartform.MsfRequestWriteXXXXX 매퍼와 xml을 만들어줘",
+          "ts": "2026-04-27T07:25:18.196Z",
+          "calls": 20,
+          "here": true
+        },
+        {
+          "text": "C:\\MSF-LOC\\workspace\\msf-be-form-api\\domains\\form\\src\\main\\java\\com\\ktmmobile\\msf\\domains\\form\\form\\common\\repository\\smartform\\ 여기에 만들어야해",
+          "ts": "2026-04-27T07:28:23.207Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "기존 해지 신청서 저장 매퍼를 MsfRequestWriteMapper 로 수정해줘",
+          "ts": "2026-04-27T07:30:18.843Z",
+          "calls": 9,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T05:56:50.270Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "updateCanCustRevert updateCanCustComplete 하나로 합쳐줘",
+      "api_calls": 9,
+      "subagent_calls": 0,
+      "total_tokens": 874155,
+      "input": {
+        "uncached": 11,
+        "cache_create": 7656,
+        "cache_read": 860694
+      },
+      "output": 5794,
+      "context": [
+        {
+          "text": "접수완료버튼 우측에 완료취소 버튼 추가하고 접수상태(RC) 로 수정 하도록 수정해줘",
+          "ts": "2026-04-27T05:52:50.955Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "진행해줘",
+          "ts": "2026-04-27T05:54:11.366Z",
+          "calls": 12,
+          "here": false
+        },
+        {
+          "text": "updateCanCustRevert updateCanCustComplete 하나로 합쳐줘",
+          "ts": "2026-04-27T05:56:50.270Z",
+          "calls": 9,
+          "here": true
+        },
+        {
+          "text": "selectCanCustList 목록 조회를 신청서목록조회로 이름을 변경하고 신규/명의변경/서비스변경 UNION ALL 로 쿼리 추가해줘",
+          "ts": "2026-04-27T06:02:30.569Z",
+          "calls": 24,
+          "here": false
+        },
+        {
+          "text": "분리하지마",
+          "ts": "2026-04-27T06:09:36.383Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T01:08:52.684Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "신청서관리탭이 ManageDevPage.vue 로컬,개발에만 나타날수 있도록 수정해줘",
+      "api_calls": 8,
+      "subagent_calls": 0,
+      "total_tokens": 858255,
+      "input": {
+        "uncached": 10,
+        "cache_create": 7127,
+        "cache_read": 849435
+      },
+      "output": 1683,
+      "context": [
+        {
+          "text": "신청서관리탭이 ManageDevPage.vue 로컬,개발에만 나타날수 있도록 수정해줘",
+          "ts": "2026-04-27T01:08:52.684Z",
+          "calls": 8,
+          "here": true
+        },
+        {
+          "text": "신청서관리탭의 그리드 항목에 맞게 백인드를 다시 개발해줘 조회부터",
+          "ts": "2026-04-27T01:15:16.124Z",
+          "calls": 15,
+          "here": false
+        },
+        {
+          "text": "조회조건의 신청서 구분은 공통코드 FORM_TYPE_CD 로 변경해줘 다른쪽에 처리하는 방식과 동일하게 수정해줘",
+          "ts": "2026-04-27T01:35:26.125Z",
+          "calls": 8,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T07:48:00.932Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "be9831fb-671d-48a6-b693-a7224492bb45",
+      "text": "나머지 VO 밑에 있는 것들 모두 추가해줘",
+      "api_calls": 7,
+      "subagent_calls": 0,
+      "total_tokens": 818834,
+      "input": {
+        "uncached": 8,
+        "cache_create": 142251,
+        "cache_read": 657191
+      },
+      "output": 19384,
+      "context": [
+        {
+          "text": "MsfRequestCstmrVo 도 매퍼. xml RepositoryImpl 추가해줘 DB를 직접 조회해서 참고해",
+          "ts": "2026-04-27T07:42:52.892Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "MsfRequestAgentVo 도 추가",
+          "ts": "2026-04-27T07:46:35.268Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "나머지 VO 밑에 있는 것들 모두 추가해줘",
+          "ts": "2026-04-27T07:48:00.932Z",
+          "calls": 7,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T01:40:20.720Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "변수명들도 같이 맞춰줘 정리해줘",
+      "api_calls": 5,
+      "subagent_calls": 0,
+      "total_tokens": 805609,
+      "input": {
+        "uncached": 7,
+        "cache_create": 5833,
+        "cache_read": 796860
+      },
+      "output": 2909,
+      "context": [
+        {
+          "text": "조회조건의 신청서 구분은 공통코드 FORM_TYPE_CD 로 변경해줘 다른쪽에 처리하는 방식과 동일하게 수정해줘",
+          "ts": "2026-04-27T01:35:26.125Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "동일하게 처리상태 PROC_STTUS_CD 도 변경해줘",
+          "ts": "2026-04-27T01:38:56.886Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "변수명들도 같이 맞춰줘 정리해줘",
+          "ts": "2026-04-27T01:40:20.720Z",
+          "calls": 5,
+          "here": true
+        },
+        {
+          "text": "msf.api.js:59 POST http://localhost:8085/api/msf/admin/cancel/list 500 (Internal Server Error)",
+          "ts": "2026-04-27T01:41:58.421Z",
+          "calls": 15,
+          "here": false
+        },
+        {
+          "text": "FormMapperConfig.java 문제가 아니야 다시 확인해줘",
+          "ts": "2026-04-27T01:49:53.815Z",
+          "calls": 7,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T02:11:55.508Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "selectCanCustList 화면 그리드 순서에 맞게 수정해줘 CASE 명 추가한것 은 제거",
+      "api_calls": 6,
+      "subagent_calls": 0,
+      "total_tokens": 760333,
+      "input": {
+        "uncached": 8,
+        "cache_create": 17435,
+        "cache_read": 726329
+      },
+      "output": 16561,
+      "context": [
+        {
+          "text": "그리드의 신청서구분, 처리상태가 한글명으로 표시",
+          "ts": "2026-04-27T01:58:26.803Z",
+          "calls": 18,
+          "here": false
+        },
+        {
+          "text": "FORM_TYPE_CD 는 공통코드를 이용해 조회쿼리에 UNION ALL 테이블 추가해야해 변수 추가해주고 화면/백앤드 맞춰줘",
+          "ts": "2026-04-27T02:06:47.528Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "selectCanCustList 화면 그리드 순서에 맞게 수정해줘 CASE 명 추가한것 은 제거",
+          "ts": "2026-04-27T02:11:55.508Z",
+          "calls": 6,
+          "here": true
+        },
+        {
+          "text": "selectCanCustList 쿼리를 수정했어 여기에 변수명과 화면 매핑들도 정리해줘",
+          "ts": "2026-04-27T02:27:19.157Z",
+          "calls": 13,
+          "here": false
+        },
+        {
+          "text": "화면 그리드 신청서구분항목 formtypecd + opertypecd 명",
+          "ts": "2026-04-27T02:35:00.707Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T07:37:38.796Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "be9831fb-671d-48a6-b693-a7224492bb45",
+      "text": "CancelPageRepositoryImpl.java 여기에 주입하는게 아니라 common.repository 에 MsfRequestRepositoryImpl 을 만들어서 적용해줘",
+      "api_calls": 8,
+      "subagent_calls": 0,
+      "total_tokens": 744952,
+      "input": {
+        "uncached": 10,
+        "cache_create": 5645,
+        "cache_read": 736319
+      },
+      "output": 2978,
+      "context": [
+        {
+          "text": "C:\\MSF-LOC\\workspace\\msf-be-form-api\\domains\\form\\src\\main\\java\\com\\ktmmobile\\msf\\domains\\form\\form\\common\\repository\\smartform\\ 여기에 만들어야해",
+          "ts": "2026-04-27T07:28:23.207Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "기존 해지 신청서 저장 매퍼를 MsfRequestWriteMapper 로 수정해줘",
+          "ts": "2026-04-27T07:30:18.843Z",
+          "calls": 9,
+          "here": false
+        },
+        {
+          "text": "CancelPageRepositoryImpl.java 여기에 주입하는게 아니라 common.repository 에 MsfRequestRepositoryImpl 을 만들어서 적용해줘",
+          "ts": "2026-04-27T07:37:38.796Z",
+          "calls": 8,
+          "here": true
+        },
+        {
+          "text": "MsfRequestCstmrVo 도 매퍼. xml RepositoryImpl 추가해줘 DB를 직접 조회해서 참고해",
+          "ts": "2026-04-27T07:42:52.892Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "MsfRequestAgentVo 도 추가",
+          "ts": "2026-04-27T07:46:35.268Z",
+          "calls": 5,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T07:30:18.843Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "be9831fb-671d-48a6-b693-a7224492bb45",
+      "text": "기존 해지 신청서 저장 매퍼를 MsfRequestWriteMapper 로 수정해줘",
+      "api_calls": 9,
+      "subagent_calls": 0,
+      "total_tokens": 734404,
+      "input": {
+        "uncached": 11,
+        "cache_create": 30121,
+        "cache_read": 695613
+      },
+      "output": 8659,
+      "context": [
+        {
+          "text": "MsfRequestCancelVo 를 사용해서 insertMsfRequestCancel 기능을 구현 >> repository.smartform.MsfRequestWriteXXXXX 매퍼와 xml을 만들어줘",
+          "ts": "2026-04-27T07:25:18.196Z",
+          "calls": 20,
+          "here": false
+        },
+        {
+          "text": "C:\\MSF-LOC\\workspace\\msf-be-form-api\\domains\\form\\src\\main\\java\\com\\ktmmobile\\msf\\domains\\form\\form\\common\\repository\\smartform\\ 여기에 만들어야해",
+          "ts": "2026-04-27T07:28:23.207Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "기존 해지 신청서 저장 매퍼를 MsfRequestWriteMapper 로 수정해줘",
+          "ts": "2026-04-27T07:30:18.843Z",
+          "calls": 9,
+          "here": true
+        },
+        {
+          "text": "CancelPageRepositoryImpl.java 여기에 주입하는게 아니라 common.repository 에 MsfRequestRepositoryImpl 을 만들어서 적용해줘",
+          "ts": "2026-04-27T07:37:38.796Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "MsfRequestCstmrVo 도 매퍼. xml RepositoryImpl 추가해줘 DB를 직접 조회해서 참고해",
+          "ts": "2026-04-27T07:42:52.892Z",
+          "calls": 7,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T07:42:52.892Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "be9831fb-671d-48a6-b693-a7224492bb45",
+      "text": "MsfRequestCstmrVo 도 매퍼. xml RepositoryImpl 추가해줘 DB를 직접 조회해서 참고해",
+      "api_calls": 7,
+      "subagent_calls": 0,
+      "total_tokens": 701329,
+      "input": {
+        "uncached": 9,
+        "cache_create": 9288,
+        "cache_read": 686961
+      },
+      "output": 5071,
+      "context": [
+        {
+          "text": "기존 해지 신청서 저장 매퍼를 MsfRequestWriteMapper 로 수정해줘",
+          "ts": "2026-04-27T07:30:18.843Z",
+          "calls": 9,
+          "here": false
+        },
+        {
+          "text": "CancelPageRepositoryImpl.java 여기에 주입하는게 아니라 common.repository 에 MsfRequestRepositoryImpl 을 만들어서 적용해줘",
+          "ts": "2026-04-27T07:37:38.796Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "MsfRequestCstmrVo 도 매퍼. xml RepositoryImpl 추가해줘 DB를 직접 조회해서 참고해",
+          "ts": "2026-04-27T07:42:52.892Z",
+          "calls": 7,
+          "here": true
+        },
+        {
+          "text": "MsfRequestAgentVo 도 추가",
+          "ts": "2026-04-27T07:46:35.268Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "나머지 VO 밑에 있는 것들 모두 추가해줘",
+          "ts": "2026-04-27T07:48:00.932Z",
+          "calls": 7,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T06:58:18.584Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "문서에 추가",
+      "api_calls": 5,
+      "subagent_calls": 0,
+      "total_tokens": 646660,
+      "input": {
+        "uncached": 7,
+        "cache_create": 12869,
+        "cache_read": 629537
+      },
+      "output": 4247,
+      "context": [
+        {
+          "text": "신규 스마트 서식지관련 개통/명의변경/해지 관련 KOS 연계 후처리 분석을 추가해줘",
+          "ts": "2026-04-29T06:35:15.524Z",
+          "calls": 49,
+          "here": false
+        },
+        {
+          "text": "MplatformOpenService.java 좀더 분석해줘",
+          "ts": "2026-04-29T06:55:45.654Z",
+          "calls": 10,
+          "here": false
+        },
+        {
+          "text": "문서에 추가",
+          "ts": "2026-04-29T06:58:18.584Z",
+          "calls": 5,
+          "here": true
+        },
+        {
+          "text": "TmntPpImgTransferSchedule.java 분석해서 문서에 추가",
+          "ts": "2026-04-29T07:00:25.951Z",
+          "calls": 12,
+          "here": false
+        },
+        {
+          "text": "해지(EP0) 후처리 관련 정리해서 문서추가해줘",
+          "ts": "2026-04-29T07:02:51.995Z",
+          "calls": 14,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T02:37:04.570Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "처리상태 명이 표시 될수 있도록 화면 수정해줘",
+      "api_calls": 4,
+      "subagent_calls": 0,
+      "total_tokens": 620007,
+      "input": {
+        "uncached": 6,
+        "cache_create": 1545,
+        "cache_read": 617506
+      },
+      "output": 950,
+      "context": [
+        {
+          "text": "selectCanCustList 쿼리를 수정했어 여기에 변수명과 화면 매핑들도 정리해줘",
+          "ts": "2026-04-27T02:27:19.157Z",
+          "calls": 13,
+          "here": false
+        },
+        {
+          "text": "화면 그리드 신청서구분항목 formtypecd + opertypecd 명",
+          "ts": "2026-04-27T02:35:00.707Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "처리상태 명이 표시 될수 있도록 화면 수정해줘",
+          "ts": "2026-04-27T02:37:04.570Z",
+          "calls": 4,
+          "here": true
+        },
+        {
+          "text": "고객유형도 코드가 아니라 명",
+          "ts": "2026-04-27T02:38:04.404Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "하드코딩이 아니라 공통코드로 받은 걸 출력",
+          "ts": "2026-04-27T02:38:38.643Z",
+          "calls": 8,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T02:46:17.781Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "commit/push",
+      "api_calls": 9,
+      "subagent_calls": 0,
+      "total_tokens": 556704,
+      "input": {
+        "uncached": 11,
+        "cache_create": 24569,
+        "cache_read": 529217
+      },
+      "output": 2907,
+      "context": [
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:08:30.196Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "클로드 hud 설정이라는게 뭐야?",
+          "ts": "2026-04-28T02:18:21.253Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:46:17.781Z",
+          "calls": 9,
+          "here": true
+        },
+        {
+          "text": "현재 남아 있는 것은 깃 제외",
+          "ts": "2026-04-28T02:48:09.167Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "commit",
+          "ts": "2026-04-28T02:48:42.678Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T07:46:35.268Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "be9831fb-671d-48a6-b693-a7224492bb45",
+      "text": "MsfRequestAgentVo 도 추가",
+      "api_calls": 5,
+      "subagent_calls": 0,
+      "total_tokens": 538659,
+      "input": {
+        "uncached": 7,
+        "cache_create": 5367,
+        "cache_read": 530457
+      },
+      "output": 2828,
+      "context": [
+        {
+          "text": "CancelPageRepositoryImpl.java 여기에 주입하는게 아니라 common.repository 에 MsfRequestRepositoryImpl 을 만들어서 적용해줘",
+          "ts": "2026-04-27T07:37:38.796Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "MsfRequestCstmrVo 도 매퍼. xml RepositoryImpl 추가해줘 DB를 직접 조회해서 참고해",
+          "ts": "2026-04-27T07:42:52.892Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "MsfRequestAgentVo 도 추가",
+          "ts": "2026-04-27T07:46:35.268Z",
+          "calls": 5,
+          "here": true
+        },
+        {
+          "text": "나머지 VO 밑에 있는 것들 모두 추가해줘",
+          "ts": "2026-04-27T07:48:00.932Z",
+          "calls": 7,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T02:38:04.404Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "고객유형도 코드가 아니라 명",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 468981,
+      "input": {
+        "uncached": 5,
+        "cache_create": 1096,
+        "cache_read": 466938
+      },
+      "output": 942,
+      "context": [
+        {
+          "text": "화면 그리드 신청서구분항목 formtypecd + opertypecd 명",
+          "ts": "2026-04-27T02:35:00.707Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "처리상태 명이 표시 될수 있도록 화면 수정해줘",
+          "ts": "2026-04-27T02:37:04.570Z",
+          "calls": 4,
+          "here": false
+        },
+        {
+          "text": "고객유형도 코드가 아니라 명",
+          "ts": "2026-04-27T02:38:04.404Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "하드코딩이 아니라 공통코드로 받은 걸 출력",
+          "ts": "2026-04-27T02:38:38.643Z",
+          "calls": 8,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T02:35:00.707Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "화면 그리드 신청서구분항목 formtypecd + opertypecd 명",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 460638,
+      "input": {
+        "uncached": 5,
+        "cache_create": 4686,
+        "cache_read": 455327
+      },
+      "output": 620,
+      "context": [
+        {
+          "text": "selectCanCustList 화면 그리드 순서에 맞게 수정해줘 CASE 명 추가한것 은 제거",
+          "ts": "2026-04-27T02:11:55.508Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "selectCanCustList 쿼리를 수정했어 여기에 변수명과 화면 매핑들도 정리해줘",
+          "ts": "2026-04-27T02:27:19.157Z",
+          "calls": 13,
+          "here": false
+        },
+        {
+          "text": "화면 그리드 신청서구분항목 formtypecd + opertypecd 명",
+          "ts": "2026-04-27T02:35:00.707Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "처리상태 명이 표시 될수 있도록 화면 수정해줘",
+          "ts": "2026-04-27T02:37:04.570Z",
+          "calls": 4,
+          "here": false
+        },
+        {
+          "text": "고객유형도 코드가 아니라 명",
+          "ts": "2026-04-27T02:38:04.404Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T06:14:32.628Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "각 조회 컬럼 맨뒤에 있는 걸 맨 앞으로 ,R.CRET_DT 처럼",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 440213,
+      "input": {
+        "uncached": 5,
+        "cache_create": 5343,
+        "cache_read": 431425
+      },
+      "output": 3440,
+      "context": [
+        {
+          "text": "분리하지마",
+          "ts": "2026-04-27T06:09:36.383Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "appFormUnion , 를 맨 앞으로",
+          "ts": "2026-04-27T06:13:40.631Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "각 조회 컬럼 맨뒤에 있는 걸 맨 앞으로 ,R.CRET_DT 처럼",
+          "ts": "2026-04-27T06:14:32.628Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "sfRequestCancelVo 를 사용해서 insertMsfRequestCancel 기능을 구현 >> repository.smartform.MsfRequestWriteXXXXX 매퍼와 xml을 만들어줘",
+          "ts": "2026-04-27T07:24:53.160Z",
+          "calls": 0,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T06:09:36.383Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "분리하지마",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 423371,
+      "input": {
+        "uncached": 5,
+        "cache_create": 4853,
+        "cache_read": 415777
+      },
+      "output": 2736,
+      "context": [
+        {
+          "text": "updateCanCustRevert updateCanCustComplete 하나로 합쳐줘",
+          "ts": "2026-04-27T05:56:50.270Z",
+          "calls": 9,
+          "here": false
+        },
+        {
+          "text": "selectCanCustList 목록 조회를 신청서목록조회로 이름을 변경하고 신규/명의변경/서비스변경 UNION ALL 로 쿼리 추가해줘",
+          "ts": "2026-04-27T06:02:30.569Z",
+          "calls": 24,
+          "here": false
+        },
+        {
+          "text": "분리하지마",
+          "ts": "2026-04-27T06:09:36.383Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "appFormUnion , 를 맨 앞으로",
+          "ts": "2026-04-27T06:13:40.631Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "각 조회 컬럼 맨뒤에 있는 걸 맨 앞으로 ,R.CRET_DT 처럼",
+          "ts": "2026-04-27T06:14:32.628Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T01:02:33.754Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "getTerminationAgentInfo 중요로그 추가해줘",
+      "api_calls": 12,
+      "subagent_calls": 0,
+      "total_tokens": 388753,
+      "input": {
+        "uncached": 14,
+        "cache_create": 20768,
+        "cache_read": 365943
+      },
+      "output": 2028,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-28T23:40:18.710Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "getTerminationAgentInfo 중요로그 추가해줘",
+          "ts": "2026-04-29T01:02:33.754Z",
+          "calls": 12,
+          "here": true
+        },
+        {
+          "text": "getMyinfoView 로그 추가",
+          "ts": "2026-04-29T01:06:31.131Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "깃 로컬계정을 알려줘",
+          "ts": "2026-04-29T04:27:44.304Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T02:48:09.167Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "현재 남아 있는 것은 깃 제외",
+      "api_calls": 5,
+      "subagent_calls": 0,
+      "total_tokens": 370449,
+      "input": {
+        "uncached": 7,
+        "cache_create": 2854,
+        "cache_read": 367021
+      },
+      "output": 567,
+      "context": [
+        {
+          "text": "클로드 hud 설정이라는게 뭐야?",
+          "ts": "2026-04-28T02:18:21.253Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:46:17.781Z",
+          "calls": 9,
+          "here": false
+        },
+        {
+          "text": "현재 남아 있는 것은 깃 제외",
+          "ts": "2026-04-28T02:48:09.167Z",
+          "calls": 5,
+          "here": true
+        },
+        {
+          "text": "commit",
+          "ts": "2026-04-28T02:48:42.678Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-28T02:48:57.651Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T05:47:18.173Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "접수완료 처리되었습니다 메시지 후 팝업이 닫기고 재조회 되어야 해",
+      "api_calls": 5,
+      "subagent_calls": 0,
+      "total_tokens": 353281,
+      "input": {
+        "uncached": 7,
+        "cache_create": 1815,
+        "cache_read": 350696
+      },
+      "output": 763,
+      "context": [
+        {
+          "text": "ManageDevPage.vue:151 Uncaught (in promise) ReferenceError: Cannot access 'searchForm' before initialization at searchForm.procCd (ManageDevPage.vue:151:20) at callWithErrorHandling (runtime-core.esm-bundler.js:199:33) at callWithAsyncEr…",
+          "ts": "2026-04-27T05:42:45.759Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "처리상태에 그냥 코드 RC 로 보이는데",
+          "ts": "2026-04-27T05:44:36.916Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "접수완료 처리되었습니다 메시지 후 팝업이 닫기고 재조회 되어야 해",
+          "ts": "2026-04-27T05:47:18.173Z",
+          "calls": 5,
+          "here": true
+        },
+        {
+          "text": "접수완료버튼 우측에 완료취소 버튼 추가하고 접수상태(RC) 로 수정 하도록 수정해줘",
+          "ts": "2026-04-27T05:52:50.955Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "진행해줘",
+          "ts": "2026-04-27T05:54:11.366Z",
+          "calls": 12,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T05:42:45.759Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "ManageDevPage.vue:151 Uncaught (in promise) ReferenceError: Cannot access 'searchForm' before initialization at searchForm.procCd (ManageDevPage.vue:151:20) at callWithErrorHandling (runtime-core.esm-bundler.js:199:33) at callWithAsyncEr…",
+      "api_calls": 5,
+      "subagent_calls": 0,
+      "total_tokens": 335523,
+      "input": {
+        "uncached": 7,
+        "cache_create": 2776,
+        "cache_read": 331780
+      },
+      "output": 960,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T05:37:51.711Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "신청서 관리 탭의 상태코드 가 신청서 구분에 따라 달라지는데 서비스해지 일경우 처리결과(접수:RC,처리중:RQ,완료:CP,취소:BK) 로 하드코딩 되어 있어",
+          "ts": "2026-04-27T05:39:50.253Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "ManageDevPage.vue:151 Uncaught (in promise) ReferenceError: Cannot access 'searchForm' before initialization at searchForm.procCd (ManageDevPage.vue:151:20) at callWithErrorHandling (runtime-core.esm-bundler.js:199:33) at callWithAsyncEr…",
+          "ts": "2026-04-27T05:42:45.759Z",
+          "calls": 5,
+          "here": true
+        },
+        {
+          "text": "처리상태에 그냥 코드 RC 로 보이는데",
+          "ts": "2026-04-27T05:44:36.916Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "접수완료 처리되었습니다 메시지 후 팝업이 닫기고 재조회 되어야 해",
+          "ts": "2026-04-27T05:47:18.173Z",
+          "calls": 5,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T04:58:12.255Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "msp-batch-daemon 폴더관련 commit",
+      "api_calls": 6,
+      "subagent_calls": 0,
+      "total_tokens": 323138,
+      "input": {
+        "uncached": 8,
+        "cache_create": 3735,
+        "cache_read": 318456
+      },
+      "output": 939,
+      "context": [
+        {
+          "text": "msp-batch-daemon 폴더 깃 제외 해줘",
+          "ts": "2026-04-27T04:55:13.176Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "msc-prx 폴더도 깃 제외",
+          "ts": "2026-04-27T04:56:55.417Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "msp-batch-daemon 폴더관련 commit",
+          "ts": "2026-04-27T04:58:12.255Z",
+          "calls": 6,
+          "here": true
+        },
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T05:37:51.711Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "신청서 관리 탭의 상태코드 가 신청서 구분에 따라 달라지는데 서비스해지 일경우 처리결과(접수:RC,처리중:RQ,완료:CP,취소:BK) 로 하드코딩 되어 있어",
+          "ts": "2026-04-27T05:39:50.253Z",
+          "calls": 5,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T01:38:56.886Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "동일하게 처리상태 PROC_STTUS_CD 도 변경해줘",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 314513,
+      "input": {
+        "uncached": 4,
+        "cache_create": 4426,
+        "cache_read": 309121
+      },
+      "output": 962,
+      "context": [
+        {
+          "text": "신청서관리탭의 그리드 항목에 맞게 백인드를 다시 개발해줘 조회부터",
+          "ts": "2026-04-27T01:15:16.124Z",
+          "calls": 15,
+          "here": false
+        },
+        {
+          "text": "조회조건의 신청서 구분은 공통코드 FORM_TYPE_CD 로 변경해줘 다른쪽에 처리하는 방식과 동일하게 수정해줘",
+          "ts": "2026-04-27T01:35:26.125Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "동일하게 처리상태 PROC_STTUS_CD 도 변경해줘",
+          "ts": "2026-04-27T01:38:56.886Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "변수명들도 같이 맞춰줘 정리해줘",
+          "ts": "2026-04-27T01:40:20.720Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "msf.api.js:59 POST http://localhost:8085/api/msf/admin/cancel/list 500 (Internal Server Error)",
+          "ts": "2026-04-27T01:41:58.421Z",
+          "calls": 15,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T01:06:31.131Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "getMyinfoView 로그 추가",
+      "api_calls": 8,
+      "subagent_calls": 0,
+      "total_tokens": 311879,
+      "input": {
+        "uncached": 10,
+        "cache_create": 5953,
+        "cache_read": 303108
+      },
+      "output": 2808,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-28T23:40:18.710Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "getTerminationAgentInfo 중요로그 추가해줘",
+          "ts": "2026-04-29T01:02:33.754Z",
+          "calls": 12,
+          "here": false
+        },
+        {
+          "text": "getMyinfoView 로그 추가",
+          "ts": "2026-04-29T01:06:31.131Z",
+          "calls": 8,
+          "here": true
+        },
+        {
+          "text": "깃 로컬계정을 알려줘",
+          "ts": "2026-04-29T04:27:44.304Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:27:56.947Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T05:39:50.253Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "신청서 관리 탭의 상태코드 가 신청서 구분에 따라 달라지는데 서비스해지 일경우 처리결과(접수:RC,처리중:RQ,완료:CP,취소:BK) 로 하드코딩 되어 있어",
+      "api_calls": 5,
+      "subagent_calls": 0,
+      "total_tokens": 304989,
+      "input": {
+        "uncached": 7,
+        "cache_create": 9449,
+        "cache_read": 292061
+      },
+      "output": 3472,
+      "context": [
+        {
+          "text": "msp-batch-daemon 폴더관련 commit",
+          "ts": "2026-04-27T04:58:12.255Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T05:37:51.711Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "신청서 관리 탭의 상태코드 가 신청서 구분에 따라 달라지는데 서비스해지 일경우 처리결과(접수:RC,처리중:RQ,완료:CP,취소:BK) 로 하드코딩 되어 있어",
+          "ts": "2026-04-27T05:39:50.253Z",
+          "calls": 5,
+          "here": true
+        },
+        {
+          "text": "ManageDevPage.vue:151 Uncaught (in promise) ReferenceError: Cannot access 'searchForm' before initialization at searchForm.procCd (ManageDevPage.vue:151:20) at callWithErrorHandling (runtime-core.esm-bundler.js:199:33) at callWithAsyncEr…",
+          "ts": "2026-04-27T05:42:45.759Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "처리상태에 그냥 코드 RC 로 보이는데",
+          "ts": "2026-04-27T05:44:36.916Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T07:28:23.207Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "be9831fb-671d-48a6-b693-a7224492bb45",
+      "text": "C:\\MSF-LOC\\workspace\\msf-be-form-api\\domains\\form\\src\\main\\java\\com\\ktmmobile\\msf\\domains\\form\\form\\common\\repository\\smartform\\ 여기에 만들어야해",
+      "api_calls": 5,
+      "subagent_calls": 0,
+      "total_tokens": 293911,
+      "input": {
+        "uncached": 7,
+        "cache_create": 3216,
+        "cache_read": 288672
+      },
+      "output": 2016,
+      "context": [
+        {
+          "text": "/clear",
+          "ts": "2026-04-27T07:25:15.073Z",
+          "calls": 0,
+          "here": false
+        },
+        {
+          "text": "MsfRequestCancelVo 를 사용해서 insertMsfRequestCancel 기능을 구현 >> repository.smartform.MsfRequestWriteXXXXX 매퍼와 xml을 만들어줘",
+          "ts": "2026-04-27T07:25:18.196Z",
+          "calls": 20,
+          "here": false
+        },
+        {
+          "text": "C:\\MSF-LOC\\workspace\\msf-be-form-api\\domains\\form\\src\\main\\java\\com\\ktmmobile\\msf\\domains\\form\\form\\common\\repository\\smartform\\ 여기에 만들어야해",
+          "ts": "2026-04-27T07:28:23.207Z",
+          "calls": 5,
+          "here": true
+        },
+        {
+          "text": "기존 해지 신청서 저장 매퍼를 MsfRequestWriteMapper 로 수정해줘",
+          "ts": "2026-04-27T07:30:18.843Z",
+          "calls": 9,
+          "here": false
+        },
+        {
+          "text": "CancelPageRepositoryImpl.java 여기에 주입하는게 아니라 common.repository 에 MsfRequestRepositoryImpl 을 만들어서 적용해줘",
+          "ts": "2026-04-27T07:37:38.796Z",
+          "calls": 8,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T01:49:53.815Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "FormMapperConfig.java 문제가 아니야 다시 확인해줘",
+      "api_calls": 7,
+      "subagent_calls": 1,
+      "total_tokens": 287118,
+      "input": {
+        "uncached": 437,
+        "cache_create": 54382,
+        "cache_read": 227498
+      },
+      "output": 4801,
+      "context": [
+        {
+          "text": "변수명들도 같이 맞춰줘 정리해줘",
+          "ts": "2026-04-27T01:40:20.720Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "msf.api.js:59 POST http://localhost:8085/api/msf/admin/cancel/list 500 (Internal Server Error)",
+          "ts": "2026-04-27T01:41:58.421Z",
+          "calls": 15,
+          "here": false
+        },
+        {
+          "text": "FormMapperConfig.java 문제가 아니야 다시 확인해줘",
+          "ts": "2026-04-27T01:49:53.815Z",
+          "calls": 7,
+          "here": true
+        },
+        {
+          "text": "그리드의 신청서구분, 처리상태가 한글명으로 표시",
+          "ts": "2026-04-27T01:58:26.803Z",
+          "calls": 18,
+          "here": false
+        },
+        {
+          "text": "FORM_TYPE_CD 는 공통코드를 이용해 조회쿼리에 UNION ALL 테이블 추가해야해 변수 추가해주고 화면/백앤드 맞춰줘",
+          "ts": "2026-04-27T02:06:47.528Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T06:13:40.631Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "appFormUnion , 를 맨 앞으로",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 285892,
+      "input": {
+        "uncached": 4,
+        "cache_create": 561,
+        "cache_read": 285085
+      },
+      "output": 242,
+      "context": [
+        {
+          "text": "selectCanCustList 목록 조회를 신청서목록조회로 이름을 변경하고 신규/명의변경/서비스변경 UNION ALL 로 쿼리 추가해줘",
+          "ts": "2026-04-27T06:02:30.569Z",
+          "calls": 24,
+          "here": false
+        },
+        {
+          "text": "분리하지마",
+          "ts": "2026-04-27T06:09:36.383Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "appFormUnion , 를 맨 앞으로",
+          "ts": "2026-04-27T06:13:40.631Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "각 조회 컬럼 맨뒤에 있는 걸 맨 앞으로 ,R.CRET_DT 처럼",
+          "ts": "2026-04-27T06:14:32.628Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "sfRequestCancelVo 를 사용해서 insertMsfRequestCancel 기능을 구현 >> repository.smartform.MsfRequestWriteXXXXX 매퍼와 xml을 만들어줘",
+          "ts": "2026-04-27T07:24:53.160Z",
+          "calls": 0,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:34:00.519Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "fb0b24d1-e0dd-41ea-8d94-9e6e98d178ba",
+      "text": "인텔리제이에서 올렸는데 셋팅을 봐야할것 같아",
+      "api_calls": 8,
+      "subagent_calls": 0,
+      "total_tokens": 250102,
+      "input": {
+        "uncached": 10,
+        "cache_create": 3350,
+        "cache_read": 244107
+      },
+      "output": 2635,
+      "context": [
+        {
+          "text": "깃 user.name 은?",
+          "ts": "2026-04-28T00:31:41.495Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "깃에 올린 form-web 의 user 명에 박노복 이라고 만 있지?",
+          "ts": "2026-04-28T00:32:23.955Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "인텔리제이에서 올렸는데 셋팅을 봐야할것 같아",
+          "ts": "2026-04-28T00:34:00.519Z",
+          "calls": 8,
+          "here": true
+        },
+        {
+          "text": "서비스해지 신청서관리(개발) loc적용 5 분 전 에 박노복 님이 커밋했습니다. 이렇게 되어 있어",
+          "ts": "2026-04-28T00:36:27.500Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "응",
+          "ts": "2026-04-28T00:37:30.012Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T02:06:47.528Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+      "text": "FORM_TYPE_CD 는 공통코드를 이용해 조회쿼리에 UNION ALL 테이블 추가해야해 변수 추가해주고 화면/백앤드 맞춰줘",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 213623,
+      "input": {
+        "uncached": 4,
+        "cache_create": 3922,
+        "cache_read": 205364
+      },
+      "output": 4333,
+      "context": [
+        {
+          "text": "FormMapperConfig.java 문제가 아니야 다시 확인해줘",
+          "ts": "2026-04-27T01:49:53.815Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "그리드의 신청서구분, 처리상태가 한글명으로 표시",
+          "ts": "2026-04-27T01:58:26.803Z",
+          "calls": 18,
+          "here": false
+        },
+        {
+          "text": "FORM_TYPE_CD 는 공통코드를 이용해 조회쿼리에 UNION ALL 테이블 추가해야해 변수 추가해주고 화면/백앤드 맞춰줘",
+          "ts": "2026-04-27T02:06:47.528Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "selectCanCustList 화면 그리드 순서에 맞게 수정해줘 CASE 명 추가한것 은 제거",
+          "ts": "2026-04-27T02:11:55.508Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "selectCanCustList 쿼리를 수정했어 여기에 변수명과 화면 매핑들도 정리해줘",
+          "ts": "2026-04-27T02:27:19.157Z",
+          "calls": 13,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T04:49:57.418Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "신청서 관리 상세보기 팝업의 닫기 버튼 확인",
+      "api_calls": 6,
+      "subagent_calls": 0,
+      "total_tokens": 212568,
+      "input": {
+        "uncached": 8,
+        "cache_create": 29212,
+        "cache_read": 180351
+      },
+      "output": 2997,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T03:19:04.794Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "신청서 관리 상세보기 팝업의 닫기 버튼 확인",
+          "ts": "2026-04-27T04:49:57.418Z",
+          "calls": 6,
+          "here": true
+        },
+        {
+          "text": "버튼모양?",
+          "ts": "2026-04-27T04:52:03.650Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "접수완료와 같은 스타일",
+          "ts": "2026-04-27T04:53:37.645Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:36:27.500Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "fb0b24d1-e0dd-41ea-8d94-9e6e98d178ba",
+      "text": "서비스해지 신청서관리(개발) loc적용 5 분 전 에 박노복 님이 커밋했습니다. 이렇게 되어 있어",
+      "api_calls": 6,
+      "subagent_calls": 0,
+      "total_tokens": 210182,
+      "input": {
+        "uncached": 8,
+        "cache_create": 3431,
+        "cache_read": 205352
+      },
+      "output": 1391,
+      "context": [
+        {
+          "text": "깃에 올린 form-web 의 user 명에 박노복 이라고 만 있지?",
+          "ts": "2026-04-28T00:32:23.955Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "인텔리제이에서 올렸는데 셋팅을 봐야할것 같아",
+          "ts": "2026-04-28T00:34:00.519Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "서비스해지 신청서관리(개발) loc적용 5 분 전 에 박노복 님이 커밋했습니다. 이렇게 되어 있어",
+          "ts": "2026-04-28T00:36:27.500Z",
+          "calls": 6,
+          "here": true
+        },
+        {
+          "text": "응",
+          "ts": "2026-04-28T00:37:30.012Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "/exit",
+          "ts": "2026-04-28T01:59:56.772Z",
+          "calls": 0,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T05:44:36.916Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "처리상태에 그냥 코드 RC 로 보이는데",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 207579,
+      "input": {
+        "uncached": 5,
+        "cache_create": 1679,
+        "cache_read": 204680
+      },
+      "output": 1215,
+      "context": [
+        {
+          "text": "신청서 관리 탭의 상태코드 가 신청서 구분에 따라 달라지는데 서비스해지 일경우 처리결과(접수:RC,처리중:RQ,완료:CP,취소:BK) 로 하드코딩 되어 있어",
+          "ts": "2026-04-27T05:39:50.253Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "ManageDevPage.vue:151 Uncaught (in promise) ReferenceError: Cannot access 'searchForm' before initialization at searchForm.procCd (ManageDevPage.vue:151:20) at callWithErrorHandling (runtime-core.esm-bundler.js:199:33) at callWithAsyncEr…",
+          "ts": "2026-04-27T05:42:45.759Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "처리상태에 그냥 코드 RC 로 보이는데",
+          "ts": "2026-04-27T05:44:36.916Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "접수완료 처리되었습니다 메시지 후 팝업이 닫기고 재조회 되어야 해",
+          "ts": "2026-04-27T05:47:18.173Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "접수완료버튼 우측에 완료취소 버튼 추가하고 접수상태(RC) 로 수정 하도록 수정해줘",
+          "ts": "2026-04-27T05:52:50.955Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T02:08:30.196Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "commit/push",
+      "api_calls": 5,
+      "subagent_calls": 0,
+      "total_tokens": 207219,
+      "input": {
+        "uncached": 7,
+        "cache_create": 18302,
+        "cache_read": 185237
+      },
+      "output": 3673,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-28T02:07:17.711Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "git 계정을 알려줘",
+          "ts": "2026-04-28T02:07:43.165Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:08:30.196Z",
+          "calls": 5,
+          "here": true
+        },
+        {
+          "text": "클로드 hud 설정이라는게 뭐야?",
+          "ts": "2026-04-28T02:18:21.253Z",
+          "calls": 7,
+          "here": false
+        },
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:46:17.781Z",
+          "calls": 9,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T02:18:21.253Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "클로드 hud 설정이라는게 뭐야?",
+      "api_calls": 7,
+      "subagent_calls": 1,
+      "total_tokens": 169646,
+      "input": {
+        "uncached": 31,
+        "cache_create": 17870,
+        "cache_read": 149584
+      },
+      "output": 2161,
+      "context": [
+        {
+          "text": "git 계정을 알려줘",
+          "ts": "2026-04-28T02:07:43.165Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:08:30.196Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "클로드 hud 설정이라는게 뭐야?",
+          "ts": "2026-04-28T02:18:21.253Z",
+          "calls": 7,
+          "here": true
+        },
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:46:17.781Z",
+          "calls": 9,
+          "here": false
+        },
+        {
+          "text": "현재 남아 있는 것은 깃 제외",
+          "ts": "2026-04-28T02:48:09.167Z",
+          "calls": 5,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T04:55:13.176Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "msp-batch-daemon 폴더 깃 제외 해줘",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 152966,
+      "input": {
+        "uncached": 5,
+        "cache_create": 1727,
+        "cache_read": 150792
+      },
+      "output": 442,
+      "context": [
+        {
+          "text": "버튼모양?",
+          "ts": "2026-04-27T04:52:03.650Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "접수완료와 같은 스타일",
+          "ts": "2026-04-27T04:53:37.645Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "msp-batch-daemon 폴더 깃 제외 해줘",
+          "ts": "2026-04-27T04:55:13.176Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "msc-prx 폴더도 깃 제외",
+          "ts": "2026-04-27T04:56:55.417Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "msp-batch-daemon 폴더관련 commit",
+          "ts": "2026-04-27T04:58:12.255Z",
+          "calls": 6,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T03:06:11.615Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "현재 로컬 깃 계정을 알려줘",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 151937,
+      "input": {
+        "uncached": 4,
+        "cache_create": 173,
+        "cache_read": 151510
+      },
+      "output": 250,
+      "context": [
+        {
+          "text": "commit",
+          "ts": "2026-04-28T02:48:42.678Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-28T02:48:57.651Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "현재 로컬 깃 계정을 알려줘",
+          "ts": "2026-04-28T03:06:11.615Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "TerminationCustomer.vue 핸드폰인증후 가입정보조회 getMyinfoView 연결해줘",
+          "ts": "2026-04-28T09:05:31.267Z",
+          "calls": 15,
+          "here": false
+        },
+        {
+          "text": "2026-04-28 18:21:16.943 ERROR c.k.m.c.w.web.exhandler.CommonControllerAdvice : 105 : 알 수 없는 오류 발생 com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException at com.ktmmobile.msf.domains.form.form.termination.service.MsfCancel…",
+          "ts": "2026-04-28T09:21:51.899Z",
+          "calls": 11,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T02:48:57.651Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "push",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 151442,
+      "input": {
+        "uncached": 4,
+        "cache_create": 177,
+        "cache_read": 151171
+      },
+      "output": 90,
+      "context": [
+        {
+          "text": "현재 남아 있는 것은 깃 제외",
+          "ts": "2026-04-28T02:48:09.167Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "commit",
+          "ts": "2026-04-28T02:48:42.678Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-28T02:48:57.651Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "현재 로컬 깃 계정을 알려줘",
+          "ts": "2026-04-28T03:06:11.615Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "TerminationCustomer.vue 핸드폰인증후 가입정보조회 getMyinfoView 연결해줘",
+          "ts": "2026-04-28T09:05:31.267Z",
+          "calls": 15,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T02:48:42.678Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "commit",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 151006,
+      "input": {
+        "uncached": 4,
+        "cache_create": 449,
+        "cache_read": 150330
+      },
+      "output": 223,
+      "context": [
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:46:17.781Z",
+          "calls": 9,
+          "here": false
+        },
+        {
+          "text": "현재 남아 있는 것은 깃 제외",
+          "ts": "2026-04-28T02:48:09.167Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "commit",
+          "ts": "2026-04-28T02:48:42.678Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-28T02:48:57.651Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "현재 로컬 깃 계정을 알려줘",
+          "ts": "2026-04-28T03:06:11.615Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T04:28:20.161Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "push",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 150349,
+      "input": {
+        "uncached": 5,
+        "cache_create": 1500,
+        "cache_read": 148424
+      },
+      "output": 420,
+      "context": [
+        {
+          "text": "깃 로컬계정을 알려줘",
+          "ts": "2026-04-29T04:27:44.304Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:27:56.947Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:28:20.161Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "msp-batch-daemon 폴더를 분석해서 doc 밑에 54번 문서로 작성해줘",
+          "ts": "2026-04-29T06:29:03.560Z",
+          "calls": 22,
+          "here": false
+        },
+        {
+          "text": "신규 스마트 서식지관련 개통/명의변경/해지 관련 KOS 연계 후처리 분석을 추가해줘",
+          "ts": "2026-04-29T06:35:15.524Z",
+          "calls": 49,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T05:52:50.955Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "접수완료버튼 우측에 완료취소 버튼 추가하고 접수상태(RC) 로 수정 하도록 수정해줘",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 145731,
+      "input": {
+        "uncached": 4,
+        "cache_create": 2454,
+        "cache_read": 142583
+      },
+      "output": 690,
+      "context": [
+        {
+          "text": "처리상태에 그냥 코드 RC 로 보이는데",
+          "ts": "2026-04-27T05:44:36.916Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "접수완료 처리되었습니다 메시지 후 팝업이 닫기고 재조회 되어야 해",
+          "ts": "2026-04-27T05:47:18.173Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "접수완료버튼 우측에 완료취소 버튼 추가하고 접수상태(RC) 로 수정 하도록 수정해줘",
+          "ts": "2026-04-27T05:52:50.955Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "진행해줘",
+          "ts": "2026-04-27T05:54:11.366Z",
+          "calls": 12,
+          "here": false
+        },
+        {
+          "text": "updateCanCustRevert updateCanCustComplete 하나로 합쳐줘",
+          "ts": "2026-04-27T05:56:50.270Z",
+          "calls": 9,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T04:52:03.650Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "버튼모양?",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 144029,
+      "input": {
+        "uncached": 5,
+        "cache_create": 6670,
+        "cache_read": 135925
+      },
+      "output": 1429,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T03:19:04.794Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "신청서 관리 상세보기 팝업의 닫기 버튼 확인",
+          "ts": "2026-04-27T04:49:57.418Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "버튼모양?",
+          "ts": "2026-04-27T04:52:03.650Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "접수완료와 같은 스타일",
+          "ts": "2026-04-27T04:53:37.645Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "msp-batch-daemon 폴더 깃 제외 해줘",
+          "ts": "2026-04-27T04:55:13.176Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:18:29.244Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "dd18fbf3-9e71-4ff2-9f94-2e4a5350266b",
+      "text": "...(['loc', 'dev'].includes(import.meta.env.MODE) 저 값 설정되어 있는곳을 찾아줘",
+      "api_calls": 4,
+      "subagent_calls": 0,
+      "total_tokens": 134638,
+      "input": {
+        "uncached": 793,
+        "cache_create": 1507,
+        "cache_read": 131466
+      },
+      "output": 872,
+      "context": [
+        {
+          "text": "32 incomming commits 라고 나온는데",
+          "ts": "2026-04-27T23:58:27.501Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "check remonte incomming ... 이거야",
+          "ts": "2026-04-28T00:02:05.625Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "...(['loc', 'dev'].includes(import.meta.env.MODE) 저 값 설정되어 있는곳을 찾아줘",
+          "ts": "2026-04-28T00:18:29.244Z",
+          "calls": 4,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:23:30.709Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "fb0b24d1-e0dd-41ea-8d94-9e6e98d178ba",
+      "text": "...(['loc', 'dev'].includes(import.meta.env.MODE) 환경변수 셋팅된데 찾아줘",
+      "api_calls": 4,
+      "subagent_calls": 0,
+      "total_tokens": 107325,
+      "input": {
+        "uncached": 173,
+        "cache_create": 1698,
+        "cache_read": 104614
+      },
+      "output": 840,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-28T00:23:12.337Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "...(['loc', 'dev'].includes(import.meta.env.MODE) 환경변수 셋팅된데 찾아줘",
+          "ts": "2026-04-28T00:23:30.709Z",
+          "calls": 4,
+          "here": true
+        },
+        {
+          "text": "깃계정을 알려줘",
+          "ts": "2026-04-28T00:31:15.617Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "깃 user.name 은?",
+          "ts": "2026-04-28T00:31:41.495Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T04:56:55.417Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "msc-prx 폴더도 깃 제외",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 103341,
+      "input": {
+        "uncached": 4,
+        "cache_create": 443,
+        "cache_read": 102750
+      },
+      "output": 144,
+      "context": [
+        {
+          "text": "접수완료와 같은 스타일",
+          "ts": "2026-04-27T04:53:37.645Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "msp-batch-daemon 폴더 깃 제외 해줘",
+          "ts": "2026-04-27T04:55:13.176Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "msc-prx 폴더도 깃 제외",
+          "ts": "2026-04-27T04:56:55.417Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "msp-batch-daemon 폴더관련 commit",
+          "ts": "2026-04-27T04:58:12.255Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T05:37:51.711Z",
+          "calls": 1,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T04:53:37.645Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "접수완료와 같은 스타일",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 100409,
+      "input": {
+        "uncached": 4,
+        "cache_create": 964,
+        "cache_read": 99003
+      },
+      "output": 438,
+      "context": [
+        {
+          "text": "신청서 관리 상세보기 팝업의 닫기 버튼 확인",
+          "ts": "2026-04-27T04:49:57.418Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "버튼모양?",
+          "ts": "2026-04-27T04:52:03.650Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "접수완료와 같은 스타일",
+          "ts": "2026-04-27T04:53:37.645Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "msp-batch-daemon 폴더 깃 제외 해줘",
+          "ts": "2026-04-27T04:55:13.176Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "msc-prx 폴더도 깃 제외",
+          "ts": "2026-04-27T04:56:55.417Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T04:27:56.947Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "push",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 93797,
+      "input": {
+        "uncached": 4,
+        "cache_create": 4504,
+        "cache_read": 88822
+      },
+      "output": 467,
+      "context": [
+        {
+          "text": "getMyinfoView 로그 추가",
+          "ts": "2026-04-29T01:06:31.131Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "깃 로컬계정을 알려줘",
+          "ts": "2026-04-29T04:27:44.304Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:27:56.947Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:28:20.161Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "msp-batch-daemon 폴더를 분석해서 doc 밑에 54번 문서로 작성해줘",
+          "ts": "2026-04-29T06:29:03.560Z",
+          "calls": 22,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T23:58:27.501Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "dd18fbf3-9e71-4ff2-9f94-2e4a5350266b",
+      "text": "32 incomming commits 라고 나온는데",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 89780,
+      "input": {
+        "uncached": 5,
+        "cache_create": 2094,
+        "cache_read": 86449
+      },
+      "output": 1232,
+      "context": [
+        {
+          "text": "깃 상태를 확인해줘",
+          "ts": "2026-04-27T23:54:59.878Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "모두",
+          "ts": "2026-04-27T23:55:20.963Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "32 incomming commits 라고 나온는데",
+          "ts": "2026-04-27T23:58:27.501Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "check remonte incomming ... 이거야",
+          "ts": "2026-04-28T00:02:05.625Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "...(['loc', 'dev'].includes(import.meta.env.MODE) 저 값 설정되어 있는곳을 찾아줘",
+          "ts": "2026-04-28T00:18:29.244Z",
+          "calls": 4,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T04:27:44.304Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "깃 로컬계정을 알려줘",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 88687,
+      "input": {
+        "uncached": 4,
+        "cache_create": 30441,
+        "cache_read": 58103
+      },
+      "output": 139,
+      "context": [
+        {
+          "text": "getTerminationAgentInfo 중요로그 추가해줘",
+          "ts": "2026-04-29T01:02:33.754Z",
+          "calls": 12,
+          "here": false
+        },
+        {
+          "text": "getMyinfoView 로그 추가",
+          "ts": "2026-04-29T01:06:31.131Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "깃 로컬계정을 알려줘",
+          "ts": "2026-04-29T04:27:44.304Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:27:56.947Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "push",
+          "ts": "2026-04-29T04:28:20.161Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T23:55:20.963Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "dd18fbf3-9e71-4ff2-9f94-2e4a5350266b",
+      "text": "모두",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 84294,
+      "input": {
+        "uncached": 5,
+        "cache_create": 1513,
+        "cache_read": 81789
+      },
+      "output": 987,
+      "context": [
+        {
+          "text": "인텔리제이를 쓰는데 왼쪽위 브랜치에 pull 받았는데도 파란색 다운받을께 있다고 나오는데",
+          "ts": "2026-04-27T23:53:29.871Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "깃 상태를 확인해줘",
+          "ts": "2026-04-27T23:54:59.878Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "모두",
+          "ts": "2026-04-27T23:55:20.963Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "32 incomming commits 라고 나온는데",
+          "ts": "2026-04-27T23:58:27.501Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "check remonte incomming ... 이거야",
+          "ts": "2026-04-28T00:02:05.625Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-30T04:26:23.847Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "5f7766dd-2d9f-425b-9eb8-1e07433aa79d",
+      "text": "파워쉘에서 동작가능하도록 쉘을 만들어줘 codex-a --dangerously-bypass-approvals-and-sandbox",
+      "api_calls": 3,
+      "subagent_calls": 0,
+      "total_tokens": 82220,
+      "input": {
+        "uncached": 5,
+        "cache_create": 13472,
+        "cache_read": 68251
+      },
+      "output": 492,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-30T00:22:33.412Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "파워쉘에서 동작가능하도록 쉘을 만들어줘 codex-a --dangerously-bypass-approvals-and-sandbox",
+          "ts": "2026-04-30T04:26:23.847Z",
+          "calls": 3,
+          "here": true
+        },
+        {
+          "text": "안녕",
+          "ts": "2026-04-30T08:02:50.484Z",
+          "calls": 1,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:37:30.012Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "fb0b24d1-e0dd-41ea-8d94-9e6e98d178ba",
+      "text": "응",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 72682,
+      "input": {
+        "uncached": 4,
+        "cache_create": 413,
+        "cache_read": 72053
+      },
+      "output": 212,
+      "context": [
+        {
+          "text": "인텔리제이에서 올렸는데 셋팅을 봐야할것 같아",
+          "ts": "2026-04-28T00:34:00.519Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "서비스해지 신청서관리(개발) loc적용 5 분 전 에 박노복 님이 커밋했습니다. 이렇게 되어 있어",
+          "ts": "2026-04-28T00:36:27.500Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "응",
+          "ts": "2026-04-28T00:37:30.012Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "/exit",
+          "ts": "2026-04-28T01:59:56.772Z",
+          "calls": 0,
+          "here": false
+        },
+        {
+          "text": "See ya!",
+          "ts": "2026-04-28T01:59:56.772Z",
+          "calls": 0,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:02:05.625Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "dd18fbf3-9e71-4ff2-9f94-2e4a5350266b",
+      "text": "check remonte incomming ... 이거야",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 64905,
+      "input": {
+        "uncached": 4,
+        "cache_create": 1934,
+        "cache_read": 61258
+      },
+      "output": 1709,
+      "context": [
+        {
+          "text": "모두",
+          "ts": "2026-04-27T23:55:20.963Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "32 incomming commits 라고 나온는데",
+          "ts": "2026-04-27T23:58:27.501Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "check remonte incomming ... 이거야",
+          "ts": "2026-04-28T00:02:05.625Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "...(['loc', 'dev'].includes(import.meta.env.MODE) 저 값 설정되어 있는곳을 찾아줘",
+          "ts": "2026-04-28T00:18:29.244Z",
+          "calls": 4,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-04T00:37:40.824Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "cac90e91-c302-433b-9af0-755e3753865d",
+      "text": "/session-report:session-report",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 59928,
+      "input": {
+        "uncached": 4,
+        "cache_create": 3710,
+        "cache_read": 55726
+      },
+      "output": 488,
+      "context": [
+        {
+          "text": "/plugin",
+          "ts": "2026-05-04T00:37:36.232Z",
+          "calls": 0,
+          "here": false
+        },
+        {
+          "text": "(no content)",
+          "ts": "2026-05-04T00:37:36.232Z",
+          "calls": 0,
+          "here": false
+        },
+        {
+          "text": "/session-report:session-report",
+          "ts": "2026-05-04T00:37:40.824Z",
+          "calls": 2,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:32:23.955Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "fb0b24d1-e0dd-41ea-8d94-9e6e98d178ba",
+      "text": "깃에 올린 form-web 의 user 명에 박노복 이라고 만 있지?",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 58645,
+      "input": {
+        "uncached": 4,
+        "cache_create": 624,
+        "cache_read": 57670
+      },
+      "output": 347,
+      "context": [
+        {
+          "text": "깃계정을 알려줘",
+          "ts": "2026-04-28T00:31:15.617Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "깃 user.name 은?",
+          "ts": "2026-04-28T00:31:41.495Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "깃에 올린 form-web 의 user 명에 박노복 이라고 만 있지?",
+          "ts": "2026-04-28T00:32:23.955Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "인텔리제이에서 올렸는데 셋팅을 봐야할것 같아",
+          "ts": "2026-04-28T00:34:00.519Z",
+          "calls": 8,
+          "here": false
+        },
+        {
+          "text": "서비스해지 신청서관리(개발) loc적용 5 분 전 에 박노복 님이 커밋했습니다. 이렇게 되어 있어",
+          "ts": "2026-04-28T00:36:27.500Z",
+          "calls": 6,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:31:41.495Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "fb0b24d1-e0dd-41ea-8d94-9e6e98d178ba",
+      "text": "깃 user.name 은?",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 57718,
+      "input": {
+        "uncached": 4,
+        "cache_create": 352,
+        "cache_read": 57153
+      },
+      "output": 209,
+      "context": [
+        {
+          "text": "...(['loc', 'dev'].includes(import.meta.env.MODE) 환경변수 셋팅된데 찾아줘",
+          "ts": "2026-04-28T00:23:30.709Z",
+          "calls": 4,
+          "here": false
+        },
+        {
+          "text": "깃계정을 알려줘",
+          "ts": "2026-04-28T00:31:15.617Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "깃 user.name 은?",
+          "ts": "2026-04-28T00:31:41.495Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "깃에 올린 form-web 의 user 명에 박노복 이라고 만 있지?",
+          "ts": "2026-04-28T00:32:23.955Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "인텔리제이에서 올렸는데 셋팅을 봐야할것 같아",
+          "ts": "2026-04-28T00:34:00.519Z",
+          "calls": 8,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:31:15.617Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "fb0b24d1-e0dd-41ea-8d94-9e6e98d178ba",
+      "text": "깃계정을 알려줘",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 56237,
+      "input": {
+        "uncached": 4,
+        "cache_create": 1383,
+        "cache_read": 54539
+      },
+      "output": 311,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-28T00:23:12.337Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "...(['loc', 'dev'].includes(import.meta.env.MODE) 환경변수 셋팅된데 찾아줘",
+          "ts": "2026-04-28T00:23:30.709Z",
+          "calls": 4,
+          "here": false
+        },
+        {
+          "text": "깃계정을 알려줘",
+          "ts": "2026-04-28T00:31:15.617Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "깃 user.name 은?",
+          "ts": "2026-04-28T00:31:41.495Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "깃에 올린 form-web 의 user 명에 박노복 이라고 만 있지?",
+          "ts": "2026-04-28T00:32:23.955Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T02:07:43.165Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "git 계정을 알려줘",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 55705,
+      "input": {
+        "uncached": 4,
+        "cache_create": 213,
+        "cache_read": 55325
+      },
+      "output": 163,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-28T02:07:17.711Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "git 계정을 알려줘",
+          "ts": "2026-04-28T02:07:43.165Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:08:30.196Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "클로드 hud 설정이라는게 뭐야?",
+          "ts": "2026-04-28T02:18:21.253Z",
+          "calls": 7,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T05:37:51.711Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 55533,
+      "input": {
+        "uncached": 3,
+        "cache_create": 78,
+        "cache_read": 55427
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "msc-prx 폴더도 깃 제외",
+          "ts": "2026-04-27T04:56:55.417Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "msp-batch-daemon 폴더관련 commit",
+          "ts": "2026-04-27T04:58:12.255Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T05:37:51.711Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "신청서 관리 탭의 상태코드 가 신청서 구분에 따라 달라지는데 서비스해지 일경우 처리결과(접수:RC,처리중:RQ,완료:CP,취소:BK) 로 하드코딩 되어 있어",
+          "ts": "2026-04-27T05:39:50.253Z",
+          "calls": 5,
+          "here": false
+        },
+        {
+          "text": "ManageDevPage.vue:151 Uncaught (in promise) ReferenceError: Cannot access 'searchForm' before initialization at searchForm.procCd (ManageDevPage.vue:151:20) at callWithErrorHandling (runtime-core.esm-bundler.js:199:33) at callWithAsyncEr…",
+          "ts": "2026-04-27T05:42:45.759Z",
+          "calls": 5,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T23:54:59.878Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "dd18fbf3-9e71-4ff2-9f94-2e4a5350266b",
+      "text": "깃 상태를 확인해줘",
+      "api_calls": 2,
+      "subagent_calls": 0,
+      "total_tokens": 53828,
+      "input": {
+        "uncached": 4,
+        "cache_create": 811,
+        "cache_read": 52630
+      },
+      "output": 383,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T23:52:39.099Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "인텔리제이를 쓰는데 왼쪽위 브랜치에 pull 받았는데도 파란색 다운받을께 있다고 나오는데",
+          "ts": "2026-04-27T23:53:29.871Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "깃 상태를 확인해줘",
+          "ts": "2026-04-27T23:54:59.878Z",
+          "calls": 2,
+          "here": true
+        },
+        {
+          "text": "모두",
+          "ts": "2026-04-27T23:55:20.963Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "32 incomming commits 라고 나온는데",
+          "ts": "2026-04-27T23:58:27.501Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T23:47:23.252Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "c82d499a-60f4-42e4-9d7d-89e643738d94",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 29344,
+      "input": {
+        "uncached": 3,
+        "cache_create": 15395,
+        "cache_read": 13921
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "/clear",
+          "ts": "2026-04-27T23:47:18.338Z",
+          "calls": 0,
+          "here": false
+        },
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T23:47:23.252Z",
+          "calls": 1,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T03:19:04.794Z",
+      "project": "C--MSF-LOC-workspace-msf-be-form-api",
+      "session": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 29085,
+      "input": {
+        "uncached": 3,
+        "cache_create": 15136,
+        "cache_read": 13921
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T03:19:04.794Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "신청서 관리 상세보기 팝업의 닫기 버튼 확인",
+          "ts": "2026-04-27T04:49:57.418Z",
+          "calls": 6,
+          "here": false
+        },
+        {
+          "text": "버튼모양?",
+          "ts": "2026-04-27T04:52:03.650Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T02:07:17.711Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 27686,
+      "input": {
+        "uncached": 3,
+        "cache_create": 13674,
+        "cache_read": 13955
+      },
+      "output": 54,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-28T02:07:17.711Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "git 계정을 알려줘",
+          "ts": "2026-04-28T02:07:43.165Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "commit/push",
+          "ts": "2026-04-28T02:08:30.196Z",
+          "calls": 5,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-30T08:02:50.484Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "5f7766dd-2d9f-425b-9eb8-1e07433aa79d",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 27610,
+      "input": {
+        "uncached": 3,
+        "cache_create": 13627,
+        "cache_read": 13955
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-30T00:22:33.412Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "파워쉘에서 동작가능하도록 쉘을 만들어줘 codex-a --dangerously-bypass-approvals-and-sandbox",
+          "ts": "2026-04-30T04:26:23.847Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "안녕",
+          "ts": "2026-04-30T08:02:50.484Z",
+          "calls": 1,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T23:40:18.710Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 27533,
+      "input": {
+        "uncached": 3,
+        "cache_create": 13550,
+        "cache_read": 13955
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-28T23:40:18.710Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "getTerminationAgentInfo 중요로그 추가해줘",
+          "ts": "2026-04-29T01:02:33.754Z",
+          "calls": 12,
+          "here": false
+        },
+        {
+          "text": "getMyinfoView 로그 추가",
+          "ts": "2026-04-29T01:06:31.131Z",
+          "calls": 8,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T23:55:03.370Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "90c0485b-0eb5-44c8-a7e2-4aa76fe5a941",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 27098,
+      "input": {
+        "uncached": 3,
+        "cache_create": 13094,
+        "cache_read": 13955
+      },
+      "output": 46,
+      "context": [
+        {
+          "text": "/clear",
+          "ts": "2026-04-29T23:55:01.507Z",
+          "calls": 0,
+          "here": false
+        },
+        {
+          "text": "안녕",
+          "ts": "2026-04-29T23:55:03.370Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "/exit",
+          "ts": "2026-04-30T00:18:39.443Z",
+          "calls": 0,
+          "here": false
+        },
+        {
+          "text": "Bye!",
+          "ts": "2026-04-30T00:18:39.443Z",
+          "calls": 0,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-30T00:22:33.412Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "5f7766dd-2d9f-425b-9eb8-1e07433aa79d",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 26973,
+      "input": {
+        "uncached": 3,
+        "cache_create": 12990,
+        "cache_read": 13955
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-30T00:22:33.412Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "파워쉘에서 동작가능하도록 쉘을 만들어줘 codex-a --dangerously-bypass-approvals-and-sandbox",
+          "ts": "2026-04-30T04:26:23.847Z",
+          "calls": 3,
+          "here": false
+        },
+        {
+          "text": "안녕",
+          "ts": "2026-04-30T08:02:50.484Z",
+          "calls": 1,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T23:53:29.871Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "dd18fbf3-9e71-4ff2-9f94-2e4a5350266b",
+      "text": "인텔리제이를 쓰는데 왼쪽위 브랜치에 pull 받았는데도 파란색 다운받을께 있다고 나오는데",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 26593,
+      "input": {
+        "uncached": 3,
+        "cache_create": 82,
+        "cache_read": 25942
+      },
+      "output": 566,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T23:52:39.099Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "인텔리제이를 쓰는데 왼쪽위 브랜치에 pull 받았는데도 파란색 다운받을께 있다고 나오는데",
+          "ts": "2026-04-27T23:53:29.871Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "깃 상태를 확인해줘",
+          "ts": "2026-04-27T23:54:59.878Z",
+          "calls": 2,
+          "here": false
+        },
+        {
+          "text": "모두",
+          "ts": "2026-04-27T23:55:20.963Z",
+          "calls": 3,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-03T23:59:04.133Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "21a82064-3f44-42a3-8206-c1e97053c88e",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 26575,
+      "input": {
+        "uncached": 3,
+        "cache_create": 12721,
+        "cache_read": 13826
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-05-03T23:59:04.133Z",
+          "calls": 1,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-05-04T00:29:08.136Z",
+      "project": "C--MSF-LOC-workspace",
+      "session": "cac90e91-c302-433b-9af0-755e3753865d",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 26575,
+      "input": {
+        "uncached": 3,
+        "cache_create": 0,
+        "cache_read": 26547
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-05-04T00:29:08.136Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "/plugin",
+          "ts": "2026-05-04T00:37:08.829Z",
+          "calls": 0,
+          "here": false
+        },
+        {
+          "text": "✓ Installed session-report. Run /reload-plugins to apply.",
+          "ts": "2026-05-04T00:37:08.829Z",
+          "calls": 0,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-29T23:55:49.200Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "b079dca0-22bb-417c-8f9f-371d0078c55a",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 26059,
+      "input": {
+        "uncached": 3,
+        "cache_create": 12069,
+        "cache_read": 13955
+      },
+      "output": 32,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-29T23:55:49.200Z",
+          "calls": 1,
+          "here": true
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-27T23:52:39.099Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "dd18fbf3-9e71-4ff2-9f94-2e4a5350266b",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 25970,
+      "input": {
+        "uncached": 3,
+        "cache_create": 12021,
+        "cache_read": 13921
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-27T23:52:39.099Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "인텔리제이를 쓰는데 왼쪽위 브랜치에 pull 받았는데도 파란색 다운받을께 있다고 나오는데",
+          "ts": "2026-04-27T23:53:29.871Z",
+          "calls": 1,
+          "here": false
+        },
+        {
+          "text": "깃 상태를 확인해줘",
+          "ts": "2026-04-27T23:54:59.878Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    },
+    {
+      "ts": "2026-04-28T00:23:12.337Z",
+      "project": "C--MSF-GIT-workspace",
+      "session": "fb0b24d1-e0dd-41ea-8d94-9e6e98d178ba",
+      "text": "안녕",
+      "api_calls": 1,
+      "subagent_calls": 0,
+      "total_tokens": 25970,
+      "input": {
+        "uncached": 3,
+        "cache_create": 0,
+        "cache_read": 25942
+      },
+      "output": 25,
+      "context": [
+        {
+          "text": "안녕",
+          "ts": "2026-04-28T00:23:12.337Z",
+          "calls": 1,
+          "here": true
+        },
+        {
+          "text": "...(['loc', 'dev'].includes(import.meta.env.MODE) 환경변수 셋팅된데 찾아줘",
+          "ts": "2026-04-28T00:23:30.709Z",
+          "calls": 4,
+          "here": false
+        },
+        {
+          "text": "깃계정을 알려줘",
+          "ts": "2026-04-28T00:31:15.617Z",
+          "calls": 2,
+          "here": false
+        }
+      ]
+    }
+  ],
+  "by_day": [
+    {
+      "date": "2026-04-27",
+      "dow": "Mon",
+      "tokens": 27096535,
+      "sessions": [
+        {
+          "id": "74b5e3ea-7e58-4de4-b292-e482233171a8",
+          "project": "C--MSF-LOC-workspace-msf-be-form-api",
+          "tokens": 13906866,
+          "start_min": 609,
+          "end_min": 701
+        },
+        {
+          "id": "9eddae92-e33f-4ade-95a3-744b9036ceff",
+          "project": "C--MSF-LOC-workspace-msf-be-form-api",
+          "tokens": 8407297,
+          "start_min": 739,
+          "end_min": 985
+        },
+        {
+          "id": "be9831fb-671d-48a6-b693-a7224492bb45",
+          "project": "C--MSF-LOC-workspace-msf-be-form-api",
+          "tokens": 4782372,
+          "start_min": 985,
+          "end_min": 1013
+        }
+      ],
+      "peak": 2,
+      "peak_at_min": 980
+    },
+    {
+      "date": "2026-04-28",
+      "dow": "Tue",
+      "tokens": 9448292,
+      "sessions": [
+        {
+          "id": "c82d499a-60f4-42e4-9d7d-89e643738d94",
+          "project": "C--MSF-LOC-workspace-msf-be-form-api",
+          "tokens": 29344,
+          "start_min": 527,
+          "end_min": 527
+        },
+        {
+          "id": "dd18fbf3-9e71-4ff2-9f94-2e4a5350266b",
+          "project": "C--MSF-GIT-workspace",
+          "tokens": 480008,
+          "start_min": 533,
+          "end_min": 559
+        },
+        {
+          "id": "fb0b24d1-e0dd-41ea-8d94-9e6e98d178ba",
+          "project": "C--MSF-GIT-workspace",
+          "tokens": 838861,
+          "start_min": 563,
+          "end_min": 660
+        },
+        {
+          "id": "10565f23-ee6d-40e3-aee1-b6d9402b18fa",
+          "project": "C--MSF-LOC-workspace",
+          "tokens": 8100079,
+          "start_min": 667,
+          "end_min": 1113
+        }
+      ],
+      "peak": 1,
+      "peak_at_min": 520
+    },
+    {
+      "date": "2026-04-29",
+      "dow": "Wed",
+      "tokens": 11015450,
+      "sessions": [
+        {
+          "id": "99ad49c0-3bb6-4e8b-9cde-5718006395e7",
+          "project": "C--MSF-LOC-workspace",
+          "tokens": 11015450,
+          "start_min": 520,
+          "end_min": 967
+        }
+      ],
+      "peak": 1,
+      "peak_at_min": 520
+    },
+    {
+      "date": "2026-04-30",
+      "dow": "Thu",
+      "tokens": 189960,
+      "sessions": [
+        {
+          "id": "90c0485b-0eb5-44c8-a7e2-4aa76fe5a941",
+          "project": "C--MSF-LOC-workspace",
+          "tokens": 27098,
+          "start_min": 535,
+          "end_min": 559
+        },
+        {
+          "id": "b079dca0-22bb-417c-8f9f-371d0078c55a",
+          "project": "C--MSF-GIT-workspace",
+          "tokens": 26059,
+          "start_min": 536,
+          "end_min": 536
+        },
+        {
+          "id": "5f7766dd-2d9f-425b-9eb8-1e07433aa79d",
+          "project": "C--MSF-LOC-workspace",
+          "tokens": 136803,
+          "start_min": 563,
+          "end_min": 1023
+        }
+      ],
+      "peak": 2,
+      "peak_at_min": 530
+    },
+    {
+      "date": "2026-05-04",
+      "dow": "Mon",
+      "tokens": 113078,
+      "sessions": [
+        {
+          "id": "21a82064-3f44-42a3-8206-c1e97053c88e",
+          "project": "C--MSF-LOC-workspace",
+          "tokens": 26575,
+          "start_min": 539,
+          "end_min": 541
+        },
+        {
+          "id": "cac90e91-c302-433b-9af0-755e3753865d",
+          "project": "C--MSF-LOC-workspace",
+          "tokens": 86503,
+          "start_min": 569,
+          "end_min": 578
+        }
+      ],
+      "peak": 1,
+      "peak_at_min": 530
+    }
+  ]
+}
+</script>
+
+<script>
+(function() {
+  const DATA = JSON.parse(document.getElementById('report-data').textContent || '{}');
+  const $ = id => document.getElementById(id);
+  const fmt = n => n>=1e9 ? (n/1e9).toFixed(2)+'B' : n>=1e6 ? (n/1e6).toFixed(2)+'M'
+              : n>=1e3 ? (n/1e3).toFixed(1)+'k' : String(n);
+  const pct = (a,b) => b>0 ? ((100*a/b).toFixed(1)+'%') : '—';
+  const esc = s => String(s).replace(/[&<>"]/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const short = p => String(p||'').replace(/^-Users-[^-]+-/,'').replace(/^code-/,'');
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const niceDate = iso => { const d = new Date(iso); return isNaN(d) ? '' :
+    `${MON[d.getMonth()]} ${d.getDate()} · ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+
+  if (!DATA.overall) { $('meta-line').textContent = 'no data — embed JSON in #report-data.'; return; }
+
+  // header + hero
+  const o = DATA.overall, it = o.input_tokens;
+  const GRAND = it.total + o.output_tokens;
+  const share = n => GRAND>0 ? (100*n/GRAND).toFixed(1)+'%' : '—';
+  const span = o.span;
+  $('cmd-flags').innerHTML = DATA.since
+    ? `<span class="flag">--since</span> ${esc(DATA.since)}` : '';
+  $('meta-line').textContent =
+    (span ? `${span.from.slice(0,10)} → ${span.to.slice(0,10)}` : '') +
+    ` · ${DATA.root || ''}`;
+  $('foot-gen').textContent = `generated ${DATA.generated_at?.slice(0,16).replace('T',' ') || ''}`;
+  $('foot-stats').textContent =
+    `${o.sessions} sessions · ${o.api_calls} api calls · ${o.human_messages} prompts`;
+
+  const num = fmt(GRAND), m = num.match(/^([\d.]+)([A-Za-z]*)$/);
+  $('hero-total').innerHTML =
+    `${m?m[1]:num}<span class="unit">${m?m[2]:''}</span><span class="label">tokens</span>`;
+  const cacheCls = it.pct_cached>=85 ? 'ok' : 'warn';
+  $('hero-split').innerHTML =
+    `<b>${fmt(it.total)}</b> input <span class="${cacheCls}">(${it.pct_cached}% cache-read)</span> · `+
+    `<b>${fmt(o.output_tokens)}</b> output · all figures below are % of this total`;
+
+  // overall stat grid
+  $('overall-grid').innerHTML = [
+    ['sessions', o.sessions],
+    ['api calls', o.api_calls],
+    ['human msgs', o.human_messages],
+    ['active hours', o.hours.active, `${o.hours.wall_clock} wall-clock`],
+    ['cache breaks', o.cache_breaks_over_100k, '>100k uncached'],
+    ['subagent calls', o.subagent.calls, `avg ${fmt(o.subagent.avg_tokens_per_call)}`],
+  ].map(([l,v,d]) =>
+    `<div class="stat"><div class="label">${l}</div>`+
+    `<div class="val">${typeof v==='number'&&v>=1e4?fmt(v):v}</div>`+
+    (d?`<div class="detail">${d}</div>`:'')+`</div>`).join('');
+
+  // session timeline by day
+  (function() {
+    const days = (DATA.by_day||[]).slice(-14);
+    if (!days.length) { $('timeline-section').style.display='none'; return; }
+    const PCOL = ['rgb(177,185,249)','rgb(78,186,101)','#D97757','rgb(255,193,7)',
+                  'rgb(255,107,128)','#9b8cff','#6ec1d6','#c792ea'];
+    const dayTotal = days.reduce((a,d)=>a+d.tokens,0) || 1;
+    const tokMax = Math.max(...days.map(d=>d.tokens));
+    const projects = [...new Set(days.flatMap(d=>d.sessions.map(s=>s.project)))];
+    const colorOf = p => PCOL[projects.indexOf(p)%PCOL.length];
+    const hhmm = m => (m>=1440?`+${Math.floor(m/1440)}d `:'') +
+      `${String(Math.floor(m/60)%24).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+    const md = iso => { const [,mo,da]=iso.split('-'); return `${MON[+mo-1]} ${+da}`; };
+    let sel = days.findIndex(d=>d.tokens===tokMax);
+
+    function pills() {
+      $('day-pills').innerHTML = days.map((d,i)=>
+        `<button class="dpill${d.tokens===tokMax?' heaviest':''}${i===sel?' sel':''}" data-i="${i}">`+
+        `<span class="dow">${esc(d.dow)}</span>`+
+        `<span class="date">${esc(md(d.date))}</span>`+
+        `<span class="pct">${(100*d.tokens/dayTotal).toFixed(1)}%</span>`+
+        `<span class="ns">${d.sessions.length} sess</span></button>`
+      ).join('');
+      $('day-pills').querySelectorAll('.dpill').forEach(el=>
+        el.onclick=()=>{sel=+el.dataset.i;pills();gantt();});
+    }
+    function gantt() {
+      const d = days[sel], DAY = 1440;
+      $('g-day').textContent = `${d.dow} ${md(d.date)}`;
+      $('g-stats').innerHTML = `${d.sessions.length} sessions · ${fmt(d.tokens)} tokens`+
+        ` · peak <b>${d.peak}</b> concurrent at <b>${hhmm(d.peak_at_min)}</b>`;
+      const lanes = [];
+      for (const s of d.sessions) {
+        let placed = false;
+        for (const L of lanes) if (L[L.length-1].end_min <= s.start_min) { L.push(s); placed=true; break; }
+        if (!placed) lanes.push([s]);
+      }
+      let h = '';
+      for (let t=0;t<=24;t+=6) h += `<div class="gantt-rule" style="left:${100*t/24}%"></div>`;
+      h += lanes.map(L=>`<div class="lane">${L.map(s=>{
+        const end = Math.min(s.end_min, DAY);
+        const w = Math.max(0.15, 100*(end-s.start_min)/DAY);
+        const tip = `folder: ${short(s.project)}\n`+
+          `${hhmm(s.start_min)}–${hhmm(s.end_min)} · ${fmt(s.tokens)} tokens\n`+
+          `session ${s.id}`;
+        return `<span class="seg" style="left:${100*s.start_min/DAY}%;width:${w}%;`+
+          `background:${colorOf(s.project)}" title="${esc(tip)}"></span>`;
+      }).join('')}</div>`).join('');
+      $('gantt').innerHTML = h || '<div class="callout">no sessions</div>';
+    }
+    document.addEventListener('keydown',e=>{
+      if (e.key==='ArrowRight'&&sel<days.length-1){sel++;pills();gantt();e.preventDefault();}
+      if (e.key==='ArrowLeft'&&sel>0){sel--;pills();gantt();e.preventDefault();}
+    });
+    $('gantt-leg').innerHTML = projects.slice(0,12).map(p=>
+      `<span><span class="sw" style="background:${colorOf(p)}"></span>${esc(short(p))}</span>`).join('');
+    pills(); gantt();
+  })();
+
+  // block-char project bars
+  (function() {
+    const W = 48;
+    const rows = Object.entries(DATA.by_project||{})
+      .map(([k,v]) => [k, v.input_tokens.total + v.output_tokens])
+      .sort((a,b)=>b[1]-a[1]).slice(0,15);
+    const max = rows[0]?.[1] || 1;
+    $('project-bars').innerHTML = rows.map(([k,v]) => {
+      const n = Math.max(1, Math.round(W*v/max));
+      return `<div class="bar"><span class="name" title="${esc(k)} — ${fmt(v)}">${esc(short(k))}</span>`+
+        `<span class="blocks">${'█'.repeat(n)}<span class="empty">${'░'.repeat(W-n)}</span></span>`+
+        `<span class="pct">${share(v)}</span></div>`;
+    }).join('');
+  })();
+
+  // ±2 user-message transcript context
+  function renderContext(ctx, mark) {
+    if (!ctx || !ctx.length) return '<div class="ctx-gap">no transcript context available</div>';
+    let h = '<div class="ctx">';
+    ctx.forEach((m, i) => {
+      const who = m.here ? '&gt; user' : '  user';
+      h += `<div class="ctx-msg${m.here?' here':''}">`+
+           `<span class="who">${who}</span>  ${esc(m.text||'(non-text)')}`+
+           `<span class="ts">${niceDate(m.ts)}</span></div>`;
+      if (m.here && mark) h += mark;
+      if (i < ctx.length-1 || m.here)
+        h += `<div class="ctx-gap">${m.calls} api call${m.calls===1?'':'s'}</div>`;
+    });
+    return h + '</div>';
+  }
+
+  // expandable drill-down list with "show N more" toggle
+  function drillList(hostId, items, rowFn, empty) {
+    const SHOW = 5;
+    const host = $(hostId);
+    if (!items.length) { host.innerHTML = `<div class="callout">${empty}</div>`; return; }
+    const head = items.slice(0,SHOW).map(rowFn).join('');
+    const rest = items.slice(SHOW).map(rowFn).join('');
+    host.innerHTML = head + (rest
+      ? `<div hidden>${rest}</div><button class="more-btn">show ${items.length-SHOW} more</button>`
+      : '');
+    const btn = host.querySelector('.more-btn');
+    if (btn) btn.onclick = () => {
+      const r = btn.previousElementSibling; r.hidden = !r.hidden;
+      btn.textContent = r.hidden ? `show ${items.length-SHOW} more` : 'show less';
+    };
+  }
+
+  drillList('top-prompts', (DATA.top_prompts||[]).slice(0,100), p => {
+    const inTot = p.input.uncached+p.input.cache_create+p.input.cache_read;
+    return `<details><summary>`+
+      `<span class="amt">${share(p.total_tokens)}</span>`+
+      `<span class="desc">${esc(p.text)}</span>`+
+      `<span class="meta">${niceDate(p.ts)} · ${esc(short(p.project))} · ${p.api_calls} calls`+
+        (p.subagent_calls?` · ${p.subagent_calls} subagents`:'')+
+        ` · ${pct(p.input.cache_read,inTot)} cached</span>`+
+      `</summary><div class="body">`+
+      renderContext(p.context)+
+      `<div>session <code>${esc(p.session)}</code></div>`+
+      `<div>in: uncached ${fmt(p.input.uncached)} · cache-create ${fmt(p.input.cache_create)} · `+
+      `cache-read ${fmt(p.input.cache_read)} · out ${fmt(p.output)}</div>`+
+      `</div></details>`;
+  }, 'No prompts in range.');
+
+  drillList('cache-breaks', (DATA.cache_breaks||[]).slice(0,100), b =>
+    `<details><summary>`+
+    `<span class="amt">${fmt(b.uncached)}</span>`+
+    `<span class="desc">${esc(short(b.project))} · `+
+      `${b.kind==='subagent'?esc(b.agentType||'subagent'):'main'}</span>`+
+    `<span class="meta">${niceDate(b.ts)} · ${pct(b.uncached,b.total)} of ${fmt(b.total)} uncached</span>`+
+    `</summary><div class="body">`+
+    renderContext(b.context,
+      `<div class="ctx-break"><b>${fmt(b.uncached)}</b> uncached `+
+      `(${pct(b.uncached,b.total)} of ${fmt(b.total)}) — cache break here</div>`)+
+    `<div>session <code>${esc(b.session)}</code></div>`+
+    `</div></details>`,
+  'No cache breaks over threshold.');
+
+  // sortable table
+  function table(el, cols, rows) {
+    let sortIdx = cols.findIndex(c=>c.sort), asc = false;
+    function render() {
+      const sorted = rows.slice().sort((a,b)=>{
+        const va=a[sortIdx], vb=b[sortIdx];
+        return (asc?1:-1)*(typeof va==='number' ? va-vb : String(va).localeCompare(String(vb)));
+      });
+      el.innerHTML = `<thead><tr>${cols.map((c,i)=>
+        `<th class="${c.num?'num':''} ${i===sortIdx?'sorted'+(asc?' asc':''):''}" data-i="${i}">${c.h}</th>`
+      ).join('')}</tr></thead><tbody>${sorted.map(r=>
+        `<tr>${r.map((v,i)=>`<td class="${cols[i].num?'num':''}">${
+          cols[i].fmt?cols[i].fmt(v):esc(v)}</td>`).join('')}</tr>`
+      ).join('')}</tbody>`;
+      el.querySelectorAll('th').forEach(th=>th.onclick=()=>{
+        const i=+th.dataset.i; if(i===sortIdx)asc=!asc; else{sortIdx=i;asc=false;} render();
+      });
+    }
+    render();
+  }
+
+  function statRows(obj) {
+    return Object.entries(obj||{}).map(([k,v])=>[
+      short(k), GRAND>0 ? 100*(v.input_tokens.total+v.output_tokens)/GRAND : 0,
+      v.sessions, v.api_calls, v.human_messages,
+      v.input_tokens.total, v.input_tokens.pct_cached, v.output_tokens,
+      v.hours.active, v.cache_breaks_over_100k,
+      v.subagent.calls, v.subagent.avg_tokens_per_call,
+    ]);
+  }
+  const statCols = [
+    {h:'name'},{h:'% total',num:1,sort:1,fmt:v=>v.toFixed(1)+'%'},
+    {h:'sess',num:1},{h:'calls',num:1},{h:'msgs',num:1},
+    {h:'input',num:1,fmt:fmt},{h:'%cached',num:1,fmt:v=>v+'%'},
+    {h:'output',num:1,fmt:fmt},{h:'active h',num:1},{h:'breaks',num:1},
+    {h:'subagents',num:1},{h:'avg sub tok',num:1,fmt:fmt},
+  ];
+  table($('tbl-projects'), statCols, statRows(DATA.by_project));
+  table($('tbl-subagents'), statCols, statRows(DATA.by_subagent_type));
+  table($('tbl-skills'), statCols, statRows(DATA.by_skill));
+})();
+</script>
+</body>
+</html>
+
