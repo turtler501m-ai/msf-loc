@@ -1,6 +1,9 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
+import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
+import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormServerAdapter;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
@@ -8,14 +11,23 @@ import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscInqrUsimUsePsblOu
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscBfacChkOmdIntmVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscRetvIntmMdlSpecInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MoscRetvIntmOrrgInfoVO;
+import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
+import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
+import com.ktmmobile.msf.domains.form.form.common.dto.EsimRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.EsimResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.EsimDto;
+import com.ktmmobile.msf.domains.form.form.common.repository.smartform.MsfWriteMapper;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfUploadPhoneInfoVo;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
@@ -26,24 +38,32 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SimInfoService {
 
-    private final MsfMplatFormService msfMplatFormService;
-
     private final MsfMplatFormServerAdapter msfMplatFormServerAdapter;
+    private final MsfMplatFormService msfMplatFormService;
+    private final IpStatisticService ipstatisticService;
+
     private final ProductInfoService productInfoService;
     private final FormCommService formCommService;
 
+    private final MsfWriteMapper msfWriteMapper;
 
-    //휴대폰 일련번호 유효성체크
+
+    /**
+     * 휴대폰 일련번호 유효성체크
+     *
+     * @param condition
+     * @return
+     */
     //public Map<String, Object> verifyPhoneSerialNumberInfo(ProductSearchCondition condition) {
-    public Map<String, Object> verifyPhoneSerialNumberInfo(PhoneSerialRequest condition) {
-        // rtnCode "0000" 정상
-        // rtnCode "0100" 재고없음
-        // rtnCode "0200" 부정사용주장 단말이다
-        // rtnCode "0300" 기기원부조회 실패
+    public FormResponse<Map<String, Object>> verifyPhoneSerialNumberInfo(PhoneSerialRequest condition) {
+        // resultCode "0000" 정상
+        // resultCode "2000" 재고없음
+        // resultCode "3000" 부정사용주장 단말이다
+        // resultCode "1000" 기기원부조회 실패
 
         Map<String, Object> rtnMap = new HashMap<>();
-        String rtnCode = "0000";
-        String rtnMessage = "사용 가능한 휴대폰 일련번호 입니다.";
+        String resultCode = "0000";
+        String resultMessage = "사용 가능한 휴대폰 일련번호 입니다.";
 
         //1. 단말 재고조회 ( 휴대폰목록조회에서 사용하는 것과 같은걸 사용. 추후 분리여부 검토필요)
         //   스마트 단말관리자에서 매장코드(STOR_CD), 단말일련번호(PROD_SN), 단말코드(PROD_ID)로 IMEI 추출
@@ -57,85 +77,105 @@ public class SimInfoService {
         System.out.println("imei: " + imei);
 
         if (!StringUtils.hasText(imei)) {
-            rtnCode = "0100";
-            rtnCode = "유효하지 않은 휴대폰 일련번호 입니다.";
+            rtnMap.put("RESULT_CODE", ResponseMessage.VALID_PHONE_SERIAL_MISS);
+            rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_PHONE_SERIAL_MISS.getMessage());
         }
 
         //2. 부정사용주장 단말확인
-        /*List<IntmInsrRelDTO> insrProdList = mcpApiClient.post(
-                "/appform/selectInsrProdList",
-                request.getIntmInsrRelDTO(),
-                List.class
-        );*/
         boolean isValidImei = formCommService.checkAbuseImeiList(Arrays.asList(imei, ""));
         if (isValidImei) { // true 일때 부정사용단말이다.
-            rtnCode = "0200";
-            rtnMessage = "유효하지 않은 휴대폰 일련번호 입니다."; //부정사용주장 단말이다
+            rtnMap.put("RESULT_CODE", ResponseMessage.VALID_PHONE_SERIAL_ABUSE);
+            rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_PHONE_SERIAL_ABUSE.getMessage());
         }
+        //비정상
+        /*{
+            "orgnId": "V000001105",
+                "prodSn": "R3CR412D000", //359130335333144
+                "prodId": "4993"
+        }*/
+        //정상
+        /*{
+            "orgnId": "V000001105",
+                "prodSn": "R3CR412D001", // 359130335333143
+                "prodId": "4994"
+        }*/
 
         //3. 기기원부조회 (Y13)
         String indCd = "2"; // 1:단말모델ID,단말일련번호 조회 , 2:IMEI 조회 , 5:단말모델ID, 실물일련번호
-        // >> indCd 값  constant 처리필요함.
+        // >> indCd 값  constant 또는 enum 처리필요함.
         MoscRetvIntmOrrgInfoVO moscRetvIntmOrrgInfoVO = new MoscRetvIntmOrrgInfoVO();
         try {
-            System.out.println("indCd: " + indCd);
-            System.out.println("imei: " + imei);
             moscRetvIntmOrrgInfoVO = msfMplatFormService.moscRetvIntmOrrgInfo(indCd, imei);
-            System.out.println("moscRetvIntmOrrgInfoVO: " + moscRetvIntmOrrgInfoVO);
             if (moscRetvIntmOrrgInfoVO == null || !moscRetvIntmOrrgInfoVO.isSuccess()) {
-                //rtnCode = "0300";
-                //rtnMessage = "유효하지 않은 휴대폰 일련번호 입니다.";
-                // >> 지금은 해당서비스 호출되지 않아 항상 0300 이 전달되므로 주석처리함.
+                rtnMap.put("RESULT_CODE", ResponseMessage.VALID_PHONE_SERIAL_FAIL);
+                rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_PHONE_SERIAL_FAIL.getMessage());
                 //returnCode = StringUtil.NVL(moscRetvIntmOrrgInfoVO.getResultCode(), "");
                 //returnMsg = moscRetvIntmOrrgInfoVO.getSvcMsg();
             }
         } catch (SelfServiceException e) {
             //logger.info("SelfServiceException 13");
-            //returnCode = moscRetvIntmOrrgInfoVO.getResultCode();
-            //returnMsg = moscRetvIntmOrrgInfoVO.getSvcMsg();
+            //resultCode = moscRetvIntmOrrgInfoVO.getResultCode();
+            //resultMessage = moscRetvIntmOrrgInfoVO.getSvcMsg();
         } catch (Exception e) {
             //logger.info("Exception 13");
-            //returnCode = moscRetvIntmOrrgInfoVO.getResultCode();
-            //returnMsg = moscRetvIntmOrrgInfoVO.getSvcMsg();
+            //resultCode = moscRetvIntmOrrgInfoVO.getResultCode();
+            //resultMessage = moscRetvIntmOrrgInfoVO.getSvcMsg();
         }
 
         //String indCd, String imei, int uploadPhoneSrlNo, String code, String eid
         //EsimSvcImpl.getY13(String indCd, String imei, int uploadPhoneSrlNo, String code, String eid)
 
-        rtnMap.put("rtnCode", rtnCode);
-        rtnMap.put("rtnMessage", rtnMessage);
-        return rtnMap;
+        rtnMap.put("RESULT_CODE", ResponseMessage.VALID_PHONE_SERIAL_SUCCESS);
+        rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_PHONE_SERIAL_SUCCESS.getMessage());
+        //return rtnMap;
+
+        return FormResponse.of(ResponseMessage.VALID_PHONE_SERIAL_SUCCESS);
+        //return FormResponse.of(ResponseMessage.VALID_PHONE_SERIAL_SUCCESS, rtnMap);
     }
 
-    //USIM 정보 유효성체크
+    /**
+     * USIM 정보 유효성체크
+     *
+     * @param request
+     * @return
+     */
+    //
     //고객포탈 URI : /msp/moscIntmMgmtAjax.do
-    public Map<String, Object> verifyUsimInfo(MspJuoSubInfoRequest condition) {
+    public FormResponse<Map<String, Object>> verifyUsimInfo(MspJuoSubInfoRequest request) {
+        //1. 불량유심 사용 제한
+        //2. 명의도용 추가피해 방지를 위한 유심재사용 확인
+        //3. USIM 유효성체크 (X85)
+
         // rtnCode "0000" 정상
         // rtnCode "0100" 유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.
         // rtnCode "0200" 유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.
         // rtnCode "0300" 유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.
 
         Map<String, Object> rtnMap = new HashMap<>();
-        String rtnCode = "0000";
-        String rtnMessage = "사용 가능한 USIM 입니다.";
         String orgnId = ""; //유심의 접점코드(ORGN_ID)를 조회?
 
         //유심 재고조회는 관리자에서 안보임. 추후 있다면 추가필요함.
         //1. 불량유심 사용제한
         int failUsimCnt = 0;
-        failUsimCnt = formCommService.getFailUsims(condition.getIccId());
+        failUsimCnt = formCommService.getFailUsims(request.getIccId());
         if (failUsimCnt > 0) { //불량유심 사용제한에 포함된 경우 사용자정보 업데이트 - 스마트에도 필요한지 검토필요함.
-            formCommService.setFailUsims(condition.getIccId());
-            rtnCode = "0100";
-            rtnMessage = "유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.";
+            formCommService.setFailUsims(request.getIccId());
+            //rtnMap.put("RESULT_CODE", ResponseMessage.VALID_USIM_FAIL);
+            //rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_USIM_FAIL.getMessage());
+            //rtnCode = "0100";
+            //rtnMessage = "유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.";
+            return FormResponse.of(ResponseMessage.VALID_USIM_FAIL, rtnMap);
         }
 
         //2. 명의도용 추가피해 방지를 위한 유심재사용 확인
         int checkValidUsimCount = 0;
-        checkValidUsimCount = formCommService.checkValidUsimNo(condition.getIccId());
+        checkValidUsimCount = formCommService.checkValidUsimNo(request.getIccId());
         if (checkValidUsimCount > 0) {
-            rtnCode = "0200";
-            rtnMessage = "유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.";
+            //rtnMap.put("RESULT_CODE", ResponseMessage.VALID_USIM_FAIL);
+            //rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_USIM_FAIL.getMessage());
+            //rtnCode = "0200";
+            //rtnMessage = "유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.";
+            return FormResponse.of(ResponseMessage.VALID_USIM_FAIL, rtnMap);
         }
 
         //3. USIM 유효성체크 (X85)
@@ -145,83 +185,103 @@ public class SimInfoService {
             System.out.println("checkValidUsimCount : ========== " + checkValidUsimCount);
             try {
                 JuoSubInfoDto juoSubInfoDto = new JuoSubInfoDto();
-                juoSubInfoDto.setIccId(condition.getIccId());
+                juoSubInfoDto.setIccId(request.getIccId());
                 moscInqrUsimUsePsblOutDTO = msfMplatFormService.moscIntmMgmtSO(juoSubInfoDto);
             } catch (SocketTimeoutException e) {
                 System.out.println("moscInqrUsimUsePsblOutDTO : " + moscInqrUsimUsePsblOutDTO.toString());
             }
 
             if (moscInqrUsimUsePsblOutDTO == null) {
-                rtnCode = "0300";
-                rtnMessage = "유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.";
+                //rtnMap.put("RESULT_CODE", ResponseMessage.VALID_USIM_FAIL);
+                //rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_USIM_FAIL.getMessage());
+                return FormResponse.of(ResponseMessage.VALID_USIM_FAIL, rtnMap);
+                //rtnCode = "0300";
+                //rtnMessage = "유효하지 않은 USIM 번호 입니다. \n사용 불가한 USIM 입니다. \n새 USIM을 구매하여 재 시도 바랍니다.";
             } else {
                 if ("Y".equals(moscInqrUsimUsePsblOutDTO.getPsblYn())) {
                     //USIM 접점코드(ORGN_ID) 조회
-                    orgnId = formCommService.getUsimOrgnId(condition.getIccId());
+                    orgnId = formCommService.getUsimOrgnId(request.getIccId());
 
-                    rtnCode = "0000";
-                    rtnMessage = "사용 가능한 USIM 번호 입니다.";
+                    rtnMap.put("RESULT_CODE", ResponseMessage.VALID_USIM_SUCCESS);
+                    rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_USIM_SUCCESS.getMessage());
+                    rtnMap.put("USIM_ORGN_ID", orgnId);
                 }
-                //잠시 밖으로 둠. prx 연결하면 삭제할 것
-                //orgnId = "V000001105";
-                //rtnCode = "0000";
-                //rtnMessage = "사용 가능한 USIM 번호 입니다.";
             }
         }
 
-        rtnMap.put("rtnCode", rtnCode);
-        rtnMap.put("rtnMessage", rtnMessage);
+        //@ 삭제필요!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! PRX 실제 연동전까지만~
+        //rtnMap.put("RESULT_CODE", ResponseMessage.VALID_USIM_SUCCESS);
+        //rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_USIM_SUCCESS.getMessage());
         rtnMap.put("USIM_ORGN_ID", orgnId);
-        return rtnMap;
+        //return rtnMap;
+        return FormResponse.of(ResponseMessage.VALID_USIM_SUCCESS, rtnMap);
     }
 
-    //eSIM 정보 유효성체크
-    //public Map<String, Object> verifyEsimInfo(ProductSearchCondition condition) {
-    public Map<String, Object> verifyEsimInfo(EsimDto esimDto) {
-        Map<String, Object> rtnMap = new HashMap<>();
-        String rtnCode = "";
-        String rtnMessage = "";
+    /**
+     * eSIM 정보 유효성체크
+     *
+     * @param
+     * @return
+     */
+    public FormResponse<EsimResponse> verifyEsimInfo(EsimRequest request) {
+        //1. 입력값 확인 : 휴대폰 모델명, eid, imei1, imei2
+        //2. 휴대폰 모델명으로 판매점 재고 유효성체크???
+        //3. 부정사용주장 단말 확인
+        //4. 단말정보 업로드
+        //5. eSIM 유효성체크
 
-        EsimDto resDto = new EsimDto();
-        String eid = esimDto.getEid();
-        String imei1 = esimDto.getImei1();
-        String imei2 = esimDto.getImei2();
+        EsimResponse responseDto = new EsimResponse();
 
-        //부정사용주장 단말 확인
-        if (formCommService.checkAbuseImeiList(Arrays.asList(imei1, imei2))) {
-            EsimDto abuseResDto = new EsimDto();
-            abuseResDto.setResultCode("9901");
-            rtnMap.put("resDto", abuseResDto);
-            return rtnMap;
+        //1. 입력값 확인 : eid, imei1, imei2 는 Request 에서 @NotBlank 로 유효성체크
+        String eid = request.getEid();
+        String imei1 = request.getImei1();
+        String imei2 = request.getImei2();
+        String phoneModelId = request.getPhoneModelId();
+
+        //2. 판매점 재고 확인
+        PhoneSerialRequest phoneSerialRequest = new PhoneSerialRequest();
+        phoneSerialRequest.setOrgnId("V000001105"); //변경필요 :: 세션에서 가져와야함.
+        phoneSerialRequest.setProdId(phoneModelId);
+        String responseImei = productInfoService.getPhoneInventory(phoneSerialRequest);
+        //imei 가 필요하진 않지만 핸드폰 일련번호 유효성체크에서 사용하는 걸 그대로 사용
+        //imie1과 imie2 를 받아오는데 새로운 쿼리와 서비스를 만들어야 하려나
+
+        if (!StringUtils.hasText(responseImei)) {
+            return FormResponse.of(ResponseMessage.VALID_ESIM_OUTOFSTOCK, responseDto);
         }
 
-        //업로드된 단말정보 확인
-        int uploadPhoneSrlNo = this.msfUploadPhoneInfo(eid, imei1, imei2);
-        esimDto.setUploadPhoneSrlNo(uploadPhoneSrlNo);
-        resDto = this.eSimChk(esimDto);
-        resDto.setUploadPhoneSrlNo(uploadPhoneSrlNo);
+        //3. 부정사용주장 단말 확인
+        boolean isValidImei = formCommService.checkAbuseImeiList(Arrays.asList(imei1, imei2));
+        if (isValidImei) { // true 일때 부정사용단말이다.
+            return FormResponse.of(ResponseMessage.VALID_ESIM_ABUSE, responseDto);
+        }
 
-        rtnMap.put("resDto", resDto);
-        return rtnMap;
+        //4. 단말정보 업로드
+        int uploadPhoneSrlNo = this.msfUploadPhoneInfo(eid, imei1, imei2);
+        if (uploadPhoneSrlNo <= 0) {
+            return FormResponse.of(ResponseMessage.VALID_ESIM_UPLOAD_FAIL, responseDto);
+        }
+        responseDto.setUploadPhoneSrlNo(uploadPhoneSrlNo);
+
+        //5. 업로드 정보로 eSIM 유효성체크
+        responseDto = this.eSimChk(request);
+
+        return FormResponse.of(ResponseMessage.VALID_ESIM_SUCCESS, responseDto);
     }
 
-
-    //--------------------------- [USIM] 여기서부터는 공통으로 빼야할 사항으로 보임 START ------------------------------
-    //--------------------------- [USIM] 여기서부터는 공통으로 빼야할 사항으로 보임 END ------------------------------
     //--------------------------- [eSIM] 여기서부터는 공통으로 빼야할 사항으로 보임 START ------------------------------
     //Y13 - MplatFormService 로 이동해야함.
     //Y12 - MplatFormService 로 이동해야함.
     //Y14 - MplatFormService 로 이동해야함.
     //Y15 - MplatFormService 로 이동해야함.
 
+    //핸드폰정보 업로드
+    //prntsContractNo : 모회선 계약번호은 eSIM Watch
+    //private int msfUploadPhoneInfo(String eid, String imei1, String imei2, String prntsContractNo) {
     private int msfUploadPhoneInfo(String eid, String imei1, String imei2) {
-        return msfUploadPhoneInfo(eid, imei1, imei2, "");
-    }
-
-    private int msfUploadPhoneInfo(String eid, String imei1, String imei2, String prntsContractNo) {
         int uploadPhoneSrlNo = 0;
-        /*HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        McpUploadPhoneInfoDto mcpUploadPhoneInfoDto = new McpUploadPhoneInfoDto();
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+        MsfUploadPhoneInfoVo msfUploadPhoneInfoVo = new MsfUploadPhoneInfoVo();
 
         try {
             String userId = "";
@@ -231,29 +291,29 @@ public class SimInfoService {
                 userId = userSession.getUserId();
             }
 
-            mcpUploadPhoneInfoDto.setReqModelName("");
-            mcpUploadPhoneInfoDto.setModelId("");
-            mcpUploadPhoneInfoDto.setReqPhoneSn("");
-            mcpUploadPhoneInfoDto.setReqUsimSn("");
-            mcpUploadPhoneInfoDto.setEid(eid);
-            mcpUploadPhoneInfoDto.setImei1(imei1);
-            mcpUploadPhoneInfoDto.setImei2(imei2);
-            mcpUploadPhoneInfoDto.setUploadPhoneImg("");
-            mcpUploadPhoneInfoDto.setAccessIp(accessIp);
-            mcpUploadPhoneInfoDto.setUserId(userId);
-            mcpUploadPhoneInfoDto.setPrntsContractNo(prntsContractNo);
-            uploadPhoneSrlNo = eSimSvc.insertMcpUploadPhoneInfoDto(mcpUploadPhoneInfoDto);//테스트 입니다...
+            msfUploadPhoneInfoVo.setReqModelNm("");
+            msfUploadPhoneInfoVo.setModelId("");
+            msfUploadPhoneInfoVo.setReqPhoneSn("");
+            //msfUploadPhoneInfoVo.setReqUsimSn("");
+            msfUploadPhoneInfoVo.setEid(eid);
+            msfUploadPhoneInfoVo.setImei1(imei1);
+            msfUploadPhoneInfoVo.setImei2(imei2);
+            msfUploadPhoneInfoVo.setUploadPhoneImgNm("");
+            msfUploadPhoneInfoVo.setAccessIp(accessIp);
+            msfUploadPhoneInfoVo.setUserId(userId);
+            msfUploadPhoneInfoVo.setPrntsContractNum("");
+            uploadPhoneSrlNo = msfWriteMapper.insertMsfUploadPhoneInfo(msfUploadPhoneInfoVo);
 
         } catch (DataAccessException e) {
         } catch (Exception e) {
-        }*/
+        }
 
         return uploadPhoneSrlNo;
     }
 
     //eSIM 유효성체크
-    public EsimDto eSimChk(EsimDto reqDto) {
-        EsimDto resDto = new EsimDto();
+    public EsimResponse eSimChk(EsimRequest reqDto) {
+        EsimResponse resDto = new EsimResponse();
         try {
             String indCd = "";
             String imei1 = reqDto.getImei1();

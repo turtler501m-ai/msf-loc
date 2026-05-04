@@ -24,23 +24,43 @@ public class AuthenticationUtils {
         return getFormUserDetails().getUser();
     }
 
+    public static String getAgentCode() {
+        return getFormUser().getAgentCode();
+    }
+
+    public static String getShopCode() {
+        return getFormUser().getShopCode();
+    }
+
     public static AdminUser getAdminUser() {
         return getAdminUserDetails().getUser();
     }
 
     public static FormUserDetails getFormUserDetails() {
-        return (FormUserDetails) getUserDetails();
+        MsfUserDetails userDetails = getUserDetails();
+        if (userDetails instanceof FormUserDetails formUserDetails) {
+            return formUserDetails;
+        }
+        throw new AuthenticationCredentialsNotFoundException("FORM 사용자 인증 객체가 아닙니다.");
     }
 
     public static AdminUserDetails getAdminUserDetails() {
-        return (AdminUserDetails) getUserDetails();
+        MsfUserDetails userDetails = getUserDetails();
+        if (userDetails instanceof AdminUserDetails adminUserDetails) {
+            return adminUserDetails;
+        }
+        throw new AuthenticationCredentialsNotFoundException("ADMIN 사용자 인증 객체가 아닙니다.");
     }
 
     private static MsfUserDetails getUserDetails() {
         Authentication authentication = SecurityContextHolder.getContextHolderStrategy().getContext().getAuthentication();
-        if (authentication != null) {
-            return (MsfUserDetails) authentication.getPrincipal();
+        if (authentication == null) {
+            throw new AuthenticationCredentialsNotFoundException("인증 객체를 조회할 수 없습니다.");
         }
-        throw new AuthenticationCredentialsNotFoundException("인증 객체를 조회할 수 없습니다.");
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof MsfUserDetails userDetails) {
+            return userDetails;
+        }
+        throw new AuthenticationCredentialsNotFoundException("인증 사용자 정보를 조회할 수 없습니다.");
     }
 }

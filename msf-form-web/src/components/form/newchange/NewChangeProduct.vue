@@ -88,7 +88,36 @@ const validate = () => {
 }
 
 const checkRequiredFields = () => {
-  const isReady = validate()
+  const pending = []
+
+  const check = (refObj, label) => {
+    if (refObj.value && typeof refObj.value.validate === 'function') {
+      if (!refObj.value.validate()) {
+        pending.push(label)
+        return false
+      }
+    }
+    return true
+  }
+
+  // 각 섹션별 유효성 검사 및 누락 항목 수집
+  check(simInfoRef, '유심 정보')
+  check(mnpInfoRef, '번호이동 정보')
+  check(numberReservationRef, '희망번호 정보')
+  check(deviceSerialNumberRef, '단말기 일련번호')
+  check(vasInfoRef, '부가서비스')
+  check(insuranceInfoRef, '보험 정보')
+  check(billingInfoRef, '납부 정보')
+  check(memoInfoRef, '메모 정보')
+
+  const isReady = pending.length === 0
+
+  if (!isReady) {
+    console.log('%c[미입력 항목]:', 'color: #ff4d4f; font-weight: bold;', pending.join(', '))
+  } else {
+    console.log('%c[모든 입력 완료!]', 'color: #52c41a; font-weight: bold;')
+  }
+
   isComplete.value = isReady
   emit('complete', isReady)
   return isReady
@@ -100,7 +129,7 @@ const handleForcePrev = () => {
 }
 
 watch(
-  () => formData,
+  () => [formData, store.authFlags],
   () => {
     checkRequiredFields()
   },
@@ -132,7 +161,6 @@ const save = async () => {
       product: store.product,
     })
     if (checkRes.code !== '0000') {
-      alert(checkRes.message || '개통전 사전체크에 실패했습니다.')
       return false
     }
   } catch (error) {
@@ -146,4 +174,12 @@ const save = async () => {
 defineExpose({ save, validate, reset: store.resetAll })
 </script>
 
-<style scoped></style>
+<style lang="scss" scoped>
+.page-step-panel {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  min-height: min-content;
+  flex-shrink: 0;
+}
+</style>

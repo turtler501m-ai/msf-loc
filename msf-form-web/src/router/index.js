@@ -63,6 +63,7 @@ const router = createRouter({
     {
       path: '/login',
       name: 'Login',
+      meta: { skipAuth: true },
       component: MsfLoginView, // 로그인
     },
     {
@@ -84,36 +85,43 @@ const router = createRouter({
     {
       path: '/guide',
       name: 'Guide',
+      meta: { skipAuth: true },
       component: PubGuide, // 퍼블리싱 가이드 (작성중)
     },
     {
       path: '/publishing',
       name: 'PubList',
+      meta: { skipAuth: true },
       component: PubList, // 퍼블리싱 목록
     },
     {
       path: '/test',
       name: 'GuideTest',
+      meta: { skipAuth: true },
       component: GuideView, // 퍼블리싱 테스트
     },
     {
       path: '/form-common-guide',
       name: 'FormCommonGuide',
+      meta: { skipAuth: true },
       component: FormCommonGuideView, // 퍼블리싱 테스트
     },
     {
       path: '/form-guide',
       name: 'FormGuideView',
+      meta: { skipAuth: true },
       component: FormGuideView, // 퍼블리싱 반복 폼 정리
     },
     {
       path: '/404',
       name: 'not-found-explicit',
+      meta: { skipAuth: true },
       component: MsfNotFoundView, // 404 컴포넌트
     },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
+      meta: { skipAuth: true },
       component: MsfNotFoundView, // 404 컴포넌트
     },
   ],

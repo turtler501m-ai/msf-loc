@@ -3,19 +3,11 @@ plugins {
     id("module-dependencies-conventions")
 }
 
-tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    enabled = false
-}
-
-tasks.named<Jar>("jar") {
-    enabled = true
-}
-
 dependencies {
     implementation(project(":commons:common"))
-    implementation(project(":commons:websecurity"))
     implementation(project(":commons:mybatis"))
-    implementation(project(":commons:auditing"))
+    implementation(project(":commons:websecurity"))
+    implementation(project(":commons:login-core"))
 
     implementation(project(":domains:policy"))
 

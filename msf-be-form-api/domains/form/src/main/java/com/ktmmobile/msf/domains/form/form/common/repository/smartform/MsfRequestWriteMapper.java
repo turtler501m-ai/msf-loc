@@ -14,7 +14,6 @@ import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestJoinFormVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMstVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameChgVo;
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameTrnsVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestRecVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo;
@@ -47,9 +46,9 @@ public interface MsfRequestWriteMapper {
 
     int insertMsfRequestMst(MsfRequestMstVo vo);
 
-    int insertMsfRequestNameChg(MsfRequestNameChgVo vo);
+    int insertMsfRequestNameChg(MsfRequestNameChgVo.TrCustomerInfo vo);
 
-    int insertMsfRequestNameTrns(MsfRequestNameTrnsVo vo);
+    int insertMsfRequestNameTrns(MsfRequestNameChgVo.TeCustomerInfo vo);
 
     int insertMsfRequestRec(MsfRequestRecVo vo);
 
@@ -62,4 +61,5 @@ public interface MsfRequestWriteMapper {
     int insertMsfRequestSvcChg(MsfRequestSvcChgVo vo);
 
     int insertMsfRequest(MsfRequestVo vo);
+
 }

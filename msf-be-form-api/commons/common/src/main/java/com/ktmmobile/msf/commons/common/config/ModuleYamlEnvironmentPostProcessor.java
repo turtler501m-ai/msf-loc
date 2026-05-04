@@ -18,6 +18,7 @@ public class ModuleYamlEnvironmentPostProcessor implements EnvironmentPostProces
     private static final String BASE_PATTERN_PREFIX = "classpath*:application-*";
     private static final String BASE_EXTENSION_YAML = ".yaml";
     private static final String BASE_EXTENSION_YML = ".yml";
+    private static final Set<String> PROFILE_SUFFIXES = Set.of("local", "dev", "stg", "prd");
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
@@ -149,8 +150,12 @@ public class ModuleYamlEnvironmentPostProcessor implements EnvironmentPostProces
             return false;
         }
 
-        String token = normalized.substring(prefix.length());
-        return token.contains("-");
+        int lastDashIndex = normalized.lastIndexOf('-');
+        if (lastDashIndex < prefix.length()) {
+            return false;
+        }
+        String suffix = normalized.substring(lastDashIndex + 1);
+        return PROFILE_SUFFIXES.contains(suffix);
     }
 
     @Override

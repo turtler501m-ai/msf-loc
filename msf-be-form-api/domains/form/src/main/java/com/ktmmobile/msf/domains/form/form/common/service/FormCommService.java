@@ -1,6 +1,5 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
-import com.ktmmobile.msf.commons.common.exception.NotFoundException;
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
@@ -9,10 +8,7 @@ import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormOsstServerAda
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MPhoneNoListXmlVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlVO;
 import com.ktmmobile.msf.domains.form.common.repository.McpApiClient;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AbuseImeiHistDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.OsstReqDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommWriteMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
@@ -24,7 +20,6 @@ import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -57,10 +52,12 @@ public class FormCommService {
         return newChangeReadMapper.getSmartCustRequestSeq(); //스마트에서 오픈전까지만 임시로 사용
     }
 
-    //사용자조직에 해당하는 대리점 조회
-    public AgentInfoDto getAgentInfo(String shopOrgnId) {
-        return Optional.ofNullable(formCommReadMapper.selectAgentInfo(shopOrgnId))
-                .orElseThrow(() -> new NotFoundException("조회하고자 하는 매장코드를 입력해주세요. shopOrgnId:" + shopOrgnId));
+    /**
+     * 사용자조직에 해당하는 대리점 조회
+     */
+    public AgentInfoResponse getAgentList(AgentInfoRequest request) {
+        AgentInfoResponse responseDto = formCommReadMapper.selectAgentInfo(request);
+        return responseDto;
     }
 
     /**
@@ -149,6 +146,7 @@ public class FormCommService {
         AbuseImeiHistDto abuseImeiHistDto = new AbuseImeiHistDto();
         abuseImeiHistDto.setImei(imei);
         //abuseImeiHistDto.setAccessIp(ipstatisticService.getClientIp()); //ipstatisticService 를 공통으로 처리할 필요가 있음. 에러발생으로 주석처리
+        abuseImeiHistDto.setAccessIp("192.168.0.1");
         abuseImeiHistDto.setUserId(userId);
         formCommWriteMapper.insertAbuseImeiHist(abuseImeiHistDto);
 

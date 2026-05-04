@@ -1,23 +1,39 @@
 <template>
   <div>
-    <MsfTitleArea :title="title" />
+    <MsfTitleArea :title="computedTitle" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="이름" required>
         <MsfInput
+          id="inp-cstmrNm"
           v-model="model.cstmrNm"
           placeholder="이름"
           class="ut-w-300"
-          :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+          :readonly="(model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')) && !isEditable"
         />
       </MsfFormGroup>
 
-      <MsfFormGroup v-if="['NA', 'NM'].includes(model.cstmrTypeCd)" label="주민등록번호" required>
+      <MsfFormGroup v-if="model.formType === 'TERMINATION'" label="생년월일" required>
+        <MsfNumberInput
+          id="inp-userBirthDate"
+          v-model="model.userBirthDate"
+          placeholder="생년월일 8자리 (예: 19901231)"
+          maxlength="8"
+          class="ut-w-300"
+          :readonly="isTerminationVerified"
+        />
+      </MsfFormGroup>
+
+      <MsfFormGroup
+        v-if="['NA', 'NM'].includes(model.cstmrTypeCd) && !model.isTrCustomer && model.formType !== 'TERMINATION'"
+        label="주민등록번호"
+        required
+      >
         <MsfStack type="field">
           <MsfNumberInput
             v-model="model.cstmrNativeRrn1"
             placeholder="앞 6자리"
             maxlength="6"
-            :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+            :readonly="model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
@@ -25,7 +41,27 @@
             id="inp-residentNo2"
             placeholder="뒤 7자리"
             maxlength="7"
-            :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+            :readonly="model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')"
+          />
+        </MsfStack>
+      </MsfFormGroup>
+
+      <MsfFormGroup v-if="model.isTrCustomer" label="생년월일" required>
+        <MsfStack type="field">
+          <MsfBirthdayInput
+            v-model="model.userBirthDate"
+            length="8"
+            class="ut-w-300"
+            placeholder="8자리(YYYYMMDD)"
+          />
+          <MsfRadioGroup
+            :name="`${name}-user-gender`"
+            v-model="model.userGender"
+            :options="[
+              { value: 'M', label: '남' },
+              { value: 'F', label: '여' },
+            ]"
+            class="ut-ml-16"
           />
         </MsfStack>
       </MsfFormGroup>
@@ -36,7 +72,7 @@
             v-model="model.cstmrForeignerRrn1"
             placeholder="앞 6자리"
             maxlength="6"
-            :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+            :readonly="model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
@@ -44,7 +80,7 @@
             id="inp-foreignerNo2"
             placeholder="뒤 7자리"
             maxlength="7"
-            :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+            :readonly="model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')"
           />
         </MsfStack>
       </MsfFormGroup>
@@ -69,7 +105,7 @@
       </MsfFormGroup>
 
       <MsfFormGroup
-        v-if="['NA', 'JP', 'GO'].includes(model.cstmrTypeCd)"
+        v-if="['NA', 'JP', 'GO'].includes(model.cstmrTypeCd) && model.formType !== 'OWN' && model.formType !== 'TERMINATION'"
         label="사업자등록번호"
         :required="['JP', 'GO'].includes(model.cstmrTypeCd)"
       >
@@ -128,19 +164,30 @@
       </MsfFormGroup>
 
       <MsfFormGroup
-        v-if="model.joinType === 'HDN3' || model.formType === 'SVC' || model.formType === 'TERMINATION'"
+        v-if="
+          model.joinType === 'HDN3' ||
+          model.formType === 'SVC' ||
+          model.formType === 'TERMINATION' ||
+          model.isTrCustomer
+        "
         :label="phoneLabel"
         required
       >
         <MsfStack type="field">
-          <MsfNumberInput v-model="model.deviceChgTel1" placeholder="앞자리" maxlength="3" />
+          <MsfNumberInput
+            id="inp-deviceChgTel1"
+            v-model="model.deviceChgTel1"
+            placeholder="앞자리"
+            maxlength="3"
+            :readonly="isTerminationVerified"
+          />
           <span class="unit-sep">-</span>
           <MsfNumberInput
             v-model="model.deviceChgTel2"
             id="inp-deviceChgTel2"
             placeholder="가운데 4자리"
             maxlength="4"
-            :readonly="model.isSaved"
+            :readonly="model.isSaved || isTerminationVerified"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
@@ -148,13 +195,15 @@
             id="inp-deviceChgTel3"
             placeholder="뒤 4자리"
             maxlength="4"
-            :readonly="model.isSaved"
+            :readonly="model.isSaved || isTerminationVerified"
           />
-          <MsfButton variant="toggle" v-if="deviceChgAuth.status.value === 'none'" disabled>인증</MsfButton>
+          <MsfButton variant="toggle" v-if="deviceChgAuth.status.value === 'none'" disabled
+            >인증</MsfButton
+          >
           <MsfButton
             variant="toggle"
             v-else-if="deviceChgAuth.status.value === 'ready'"
-            @click="handleDeviceChgVerify"
+            @click="preHandleDeviceChgVerify"
           >
             인증
           </MsfButton>
@@ -178,12 +227,25 @@ import { showAlert } from '@/libs/utils/comp.utils'
 const props = defineProps({
   title: { type: String, default: '가입자 정보' },
   phoneLabel: { type: String, default: '해지 휴대폰번호' },
+  name: { type: String, default: 'base' },
+  preCheckFunc: { type: Function, default: null },
+  isEditable: { type: Boolean, default: false },
 })
 
 const model = defineModel({ type: Object, required: true })
 const store = useMsfFormNewChgStore()
 const terminationStore = useMsfFormTerminationStore()
 const isTerminationForm = computed(() => model.value?.formType === 'TERMINATION')
+const formTypeArr = ['TERMINATION', 'OWN', 'SVC']
+
+const isMinor = computed(() => ['NM', 'FM'].includes(model.value.cstmrTypeCd))
+
+const computedTitle = computed(() => {
+  if (props.title === '가입자 정보' && isMinor.value) {
+    return '가입자 정보(미성년자)'
+  }
+  return props.title
+})
 
 const resolveAuthFlag = () => {
   if (isTerminationForm.value) return terminationStore.authFlags?.cancelPhone || false
@@ -199,7 +261,9 @@ const updateAuthFlag = (v) => {
 }
 
 const deviceChgAuth = useAuthButton(
-  () => [model.value?.deviceChgTel1, model.value?.deviceChgTel2, model.value?.deviceChgTel3],
+  () => isTerminationForm.value
+    ? [model.value?.cstmrNm, model.value?.userBirthDate, model.value?.deviceChgTel1, model.value?.deviceChgTel2, model.value?.deviceChgTel3]
+    : [model.value?.deviceChgTel1, model.value?.deviceChgTel2, model.value?.deviceChgTel3],
   {
     get value() {
       return resolveAuthFlag()
@@ -210,9 +274,34 @@ const deviceChgAuth = useAuthButton(
   },
 )
 
+const isTerminationVerified = computed(() => isTerminationForm.value && deviceChgAuth.status.value === 'verified')
+
+const preHandleDeviceChgVerify = async () => {
+  if (props.preCheckFunc) {
+    const ctn = `${model.value.deviceChgTel1}${model.value.deviceChgTel2}${model.value.deviceChgTel3}`
+    const userNm = model.value.cstmrNm
+    const isSuccess = await props.preCheckFunc({ ctn, userNm })
+
+    if (isSuccess) {
+      showAlert('휴대폰번호 인증이 완료되었습니다.')
+      deviceChgAuth.status.value = 'verified'
+      updateAuthFlag(true)
+    }
+  } else {
+    handleDeviceChgVerify()
+  }
+}
+
 const handleDeviceChgVerify = async () => {
   const phoneNo = `${model.value.deviceChgTel1}${model.value.deviceChgTel2}${model.value.deviceChgTel3}`
   const customerLinkName = (model.value.cstmrNm || '').trim()
+  if (isTerminationForm.value) {
+    console.log('[서비스해지][휴대폰인증] 요청 시작', {
+      phoneNo,
+      customerLinkName,
+      formType: model.value.formType,
+    })
+  }
   console.log('[Auth] request input', {
     formType: model.value.formType,
     cstmrNm: model.value.cstmrNm,
@@ -226,20 +315,27 @@ const handleDeviceChgVerify = async () => {
       subscriberNo: phoneNo,
       customerLinkName,
     })
+    if (isTerminationForm.value) {
+      console.log('[서비스해지][휴대폰인증] 응답 수신', {
+        code: res?.code,
+        message: res?.message,
+        data: res?.data,
+      })
+    }
     console.log('[Auth] response raw', res)
     const contractNum = res?.data?.contractNum || res?.data?.contract_num || res?.data?.ncn
     const lstComActvDate =
       res?.data?.lstComActvDate || res?.data?.lst_com_actv_date || res?.data?.initActivationDate || ''
 
-    if (res?.code !== '0000') {
+    if (res?.code !== '0000' || !contractNum) {
+      if (isTerminationForm.value) {
+        console.warn('[서비스해지][휴대폰인증] 응답 실패', {
+          code: res?.code,
+          message: res?.message,
+          contractNum,
+        })
+      }
       console.warn('[Auth] failed response', { code: res?.code, message: res?.message, contractNum })
-      showAlert(res?.message || '휴대폰번호 인증에 실패했습니다.')
-      return
-    }
-
-    if (!contractNum) {
-      console.warn('[Auth] failed response', { code: res?.code, message: res?.message, contractNum })
-      showAlert('조회 실패: 계약번호를 확인할 수 없습니다.')
       return
     }
 
@@ -248,6 +344,17 @@ const handleDeviceChgVerify = async () => {
     if (isTerminationForm.value) {
       terminationStore.setTerminationContract(contractNum, 'MsfSubscriberInfo')
       model.value.ncn = contractNum
+      console.log('[서비스해지][휴대폰인증][계약정보]', {
+        contractNum,
+        ncn: model.value.ncn,
+        lstComActvDate,
+      })
+      console.log('[서비스해지][휴대폰인증] 화면 데이터 반영 결과', {
+        contractNum: model.value.contractNum,
+        ncn: model.value.ncn,
+        lstComActvDate: model.value.lstComActvDate,
+      })
+      console.log('[서비스해지][휴대폰인증] 가입정보조회 호출')
       terminationStore.apiGetMyinfoView()
     }
 
@@ -261,8 +368,13 @@ const handleDeviceChgVerify = async () => {
     deviceChgAuth.status.value = 'verified'
     updateAuthFlag(true)
   } catch (error) {
+    if (isTerminationForm.value) {
+      console.error('[서비스해지][휴대폰인증] 예외 발생', {
+        message: error?.message,
+        response: error?.response?.data,
+      })
+    }
     console.error('[Auth] verify failed', error)
-    showAlert('휴대폰번호 인증에 실패했습니다.')
   }
 }
 
@@ -270,11 +382,20 @@ const validate = () => {
   if (!model.value.cstmrNm) return false
 
   if (['NA', 'NM'].includes(model.value.cstmrTypeCd)) {
-    if (!model.value.cstmrNativeRrn1 || !model.value.cstmrNativeRrn2) return false
+    if (model.value.isTrCustomer && (!model.value.userBirthDate || !model.value.userGender))
+      return false
+    if (!model.value.isTrCustomer && (!model.value.cstmrNativeRrn1 || !model.value.cstmrNativeRrn2))
+      return false
   }
 
   if (['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
-    if (!model.value.cstmrForeignerRrn1 || !model.value.cstmrForeignerRrn2) return false
+    if (model.value.isTrCustomer && (!model.value.userBirthDate || !model.value.userGender))
+      return false
+    if (
+      !model.value.isTrCustomer &&
+      (!model.value.cstmrForeignerRrn1 || !model.value.cstmrForeignerRrn2)
+    )
+      return false
   }
 
   if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
@@ -288,8 +409,14 @@ const validate = () => {
     if (!model.value.upjnCd || !model.value.bcuSbst) return false
   }
 
-  if (model.value.joinType === 'HDN3' || model.value.formType === 'SVC' || model.value.formType === 'TERMINATION') {
-    if (!model.value.deviceChgTel1 || !model.value.deviceChgTel2 || !model.value.deviceChgTel3) return false
+  if (
+    model.value.joinType === 'HDN3' ||
+    model.value.formType === 'SVC' ||
+    model.value.formType === 'TERMINATION' ||
+    model.value.isTrCustomer
+  ) {
+    if (!model.value.deviceChgTel1 || !model.value.deviceChgTel2 || !model.value.deviceChgTel3)
+      return false
     if (!resolveAuthFlag()) return false
   }
 

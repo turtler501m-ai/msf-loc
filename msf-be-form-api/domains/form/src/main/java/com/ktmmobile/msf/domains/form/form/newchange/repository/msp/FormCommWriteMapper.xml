@@ -5,7 +5,7 @@
 <mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommWriteMapper">
 
     <insert id="insertAbuseImeiHist" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.AbuseImeiHistDto">
-        INSERT INTO NMCP_ABUSE_IMEI_HIST (
+        INSERT INTO NMCP_ABUSE_IMEI_HIST@DL_MCP (
         HIST_SEQ
         , IMEI
         , ACCESS_IP
@@ -13,7 +13,7 @@
         , SYS_DT
         , SYS_RDATE
         ) VALUES (
-        SQ_ABUSE_IMEI_HIST.NEXTVAL
+        SQ_ABUSE_IMEI_HIST.NEXTVAL@DL_MCP
         , #{imei}
         , #{accessIp}
         , #{userId}

@@ -49,6 +49,10 @@ public class ProductInfoService {
                         .values()
         );
         return distinctList;
+        /*if (mspSalePlcyInfo.size() == 0 || distinctList.size() == 0) {
+            return FormResponse.of(ResponseMessage.NO_DATA);
+        }*/
+        // return FormResponse.of(ResponseMessage.SUCCESS, distinctList);
     }
 
     //할인유형조회
@@ -88,31 +92,17 @@ public class ProductInfoService {
     }
 
     //휴대폰 용량 목록 조회
-    public List<PhoneInfoDto> getPrdtCapacityList(ProductInfoRequest condition) {
-        List<PhoneInfoDto> data = productInfoReadMapper.selectPrdtCapacityList(condition);
+    public List<PhoneInfoDto> getPrdtCapacityList(ProductInfoRequest request) {
+        List<PhoneInfoDto> data = productInfoReadMapper.selectPrdtCapacityList(request);
         return data;
     }
 
     //휴대폰 목록조회
     public List<PhoneInfoDto> getPhoneList(ProductInfoRequest request) {
-        //@@ 삭제해야함.
-        /*PhoneSerialRequest phoneSerialRequest = new PhoneSerialRequest();
-        phoneSerialRequest.setOrgnId(condition.getOrgnId());
-        phoneSerialRequest.setProdId(condition.getProdId());
-        phoneSerialRequest.setProdSn(condition.getProdSn());
-        List<CategoryInfoDto> categoryInfoDto = this.getPhoneInventoryList(phoneSerialRequest);
-        condition.setListPhoneDto(categoryInfoDto);*/
-
-        //@@ 판매정책조회를 위한 데이타셋 임시 - 휴대폰 목록조회는 판매정책조회하여 조건절에 추가필요.
-        //condition.setPlcyTypeCd("N"); //CMN0050 정책유형코드 : W >> condition.setPlcyTypeCd(OFFLINE_FOR_MSP);
-        //condition.setPlcySctnCd(PHONE_FOR_MSP); //상품 : 핸드폰
-        //condition.setOrgnId("1100014062"); //로그인한 사용자의 조직코드는 대리점으로 할듯    대리점? 판매점?
-        //condition.setPrdtSctnCd("");
-        //condition.setSprtTp("");//할인유형
-
         //1. 조직코드로 단말재고 확인
         PhoneSerialRequest phoneSerialRequest = new PhoneSerialRequest();
-        phoneSerialRequest.setOrgnId(request.getOrgnId());
+        //phoneSerialRequest.setOrgnId(request.getOrgnId()); //@@변경필수@@ - 세션정보로 매장코드 변경
+        phoneSerialRequest.setOrgnId("1100014062"); //@@변경필수@@ - 세션정보로 매장코드 변경
         List<CategoryInfoDto> categoryInfoDto = this.getPhoneInventoryList(phoneSerialRequest);
         request.setListPhoneDto(categoryInfoDto);
 
@@ -138,24 +128,23 @@ public class ProductInfoService {
         }
 
         return data;
+        //return FormResponse.of(ResponseMessage.SUCCESS, data);
     }
 
     //요금제 목록조회
-    public List<RateInfoDto> getRateList(ProductInfoRequest condition) {
+    public List<RateInfoDto> getRateList(ProductInfoRequest request) {
         CategoryRelRequest productCategoryProdRequest = new CategoryRelRequest();
-        productCategoryProdRequest.setProdCtgTypeCd(condition.getProdCtgTypeCd());
-        List<CategoryInfoDto> listRateDto = this.getCategoryDetailList(productCategoryProdRequest); //선택된 카테고리로 조회된 요금제 목록
-        condition.setListRateDto(listRateDto);
+        productCategoryProdRequest.setProdCtgTypeCd(request.getProdCtgTypeCd());
 
-        //임시 조건데이타 설정
-        condition.setPayClCd("PO"); //PAY_CL_CD : 후불
-        condition.setServiceType("P"); //SERVICE_TYPE : 구분(요금제:P)
-        condition.setOrgnId("1100011741"); //조직코드
-        condition.setSalePlcyCd("D2026030508145"); //판매정책코드
-        condition.setSprtTp(""); //할인유형
-        condition.setSprtTp(""); //할인유형
-        //condition.setRateType(reqBuyTypeCd); //CMN0047 >> 01 : 단말요금제 / 02 : USIM요금제
-        List<RateInfoDto> data = productInfoReadMapper.selectRateList(condition);
+        //1. 선택된 카테고리로 요금제 목록 조회
+        List<CategoryInfoDto> listRateDto = this.getCategoryDetailList(productCategoryProdRequest);
+
+        //1. 결과로 선택된 카테고리로 조회된 요금제 목록 세팅
+        request.setListRateDto(listRateDto);
+
+        //2. 선택된 카테고리에 맞는 요금제를 조건절로 추가하여 M전산에서 요금제 목록 조회
+        List<RateInfoDto> data = productInfoReadMapper.selectRateList(request);
+
         return data;
     }
 
@@ -216,12 +205,14 @@ public class ProductInfoService {
 
         //요청한 부가서비스 그룹코드로
         //스마트 관리자에 설정된 부가서비스 상품 목록 조회해오기
-        prodCtgIdList.forEach(id -> {
-            categoryRelRequest.setProdCtgTypeCd("R"); //R:부가서비스
-            categoryRelRequest.setProdCtgId(id);
-            List<CategoryInfoDto> categoryInfoDtoList = this.getCategoryDetailList(categoryRelRequest);
-            categoryInfoDtoListAll.addAll(categoryInfoDtoList);
-        });
+        if (!ObjectUtils.isEmpty(prodCtgIdList)) {
+            prodCtgIdList.forEach(id -> {
+                categoryRelRequest.setProdCtgTypeCd("R"); //R:부가서비스
+                categoryRelRequest.setProdCtgId(id);
+                List<CategoryInfoDto> categoryInfoDtoList = this.getCategoryDetailList(categoryRelRequest);
+                categoryInfoDtoListAll.addAll(categoryInfoDtoList);
+            });
+        }
 
         //조회된 상품목록을 List 에 담기
         if (!categoryInfoDtoListAll.isEmpty()) {
@@ -284,13 +275,6 @@ public class ProductInfoService {
 
     //안심보험 목록 조회
     public List<IntmInsrRelDTO> getInsrProdList(InsrProdRequest request) {
-        /*{
-            "intmInsrRelDTO": {
-            "reqBuyType": "MM", -- MM : 단말, UU : 유심
-            "rprsPrdtId":"K7001165" -- 선택한 단말코드 (유심인 경우 해당없음)
-        },
-            "prodCtgId": "I000001" -- 스마트에 등록된 안심보험 카테고리 목록 중 선택한 하나의 값을 보냄
-        }*/
         //1. M전산에서 안심보험 목록 조회
         List<IntmInsrRelDTO> insrProdList = mcpApiClient.post(
                 "/appform/selectInsrProdList",
@@ -304,16 +288,19 @@ public class ProductInfoService {
         categoryRelRequest.setProdCtgId(request.getProdCtgId());
         List<CategoryInfoDto> categoryInfoDtoList = this.getCategoryDetailList(categoryRelRequest);
 
-        //3. 스마트에 등록된 안심보험 목록 기준으로 추출
-        Set<String> validIds = categoryInfoDtoList.stream()
-                .map(CategoryInfoDto::getProdId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        List<IntmInsrRelDTO> filteredList = new ArrayList<>();
+        if (!ObjectUtils.isEmpty(categoryInfoDtoList)) {
+            //3. 스마트에 등록된 안심보험 목록 기준으로 추출
+            Set<String> validIds = categoryInfoDtoList.stream()
+                    .map(CategoryInfoDto::getProdId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
 
-        //4. M전산에서 조회한 안심보험 목록이 스마트에 등록된 안심보험 목록에 포함된 것만 INSR_PROD_CD 기준으로 필터링 처리
-        List<IntmInsrRelDTO> filteredList = insrProdList.stream()
-                .filter(insr -> validIds.contains(insr.getInsrProdCd()))
-                .collect(Collectors.toList());
+            //4. M전산에서 조회한 안심보험 목록이 스마트에 등록된 안심보험 목록에 포함된 것만 INSR_PROD_CD 기준으로 필터링 처리
+            filteredList = insrProdList.stream()
+                    .filter(insr -> validIds.contains(insr.getInsrProdCd()))
+                    .collect(Collectors.toList());
+        }
 
         return filteredList;
     }

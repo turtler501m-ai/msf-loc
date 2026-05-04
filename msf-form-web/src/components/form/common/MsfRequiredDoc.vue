@@ -18,40 +18,61 @@ import MsfRequiredDocModal from './popups/MsfRequiredDocModal.vue'
 
 const props = defineProps({
   title: { type: String, default: '구비서류' },
-  authFlags: { type: Object, default: () => ({}) },
+  authFlags: { type: Object, default: () => null },
 })
 const model = defineModel({ type: Object, required: true })
+const isAllUploadedModel = defineModel('isAllUploaded', { type: Boolean, default: false })
 
+const emit = defineEmits(['change'])
 const isModalOpen = ref(false)
 
-const hasRequiredDocs = computed(() => {
-  if (!model.value) return false
-
+// 현재 조건에 따라 필요한 구비서류 명칭 목록 반환
+const getRequiredDocNames = () => {
+  if (!model.value) return []
   const { cstmrTypeCd, cstmrVisitTypeCd, minorAgentNm, repRelation } = model.value
+  const list = []
 
-  // 외국인 및 외국인 미성년자
-  if (['FN', 'FM'].includes(cstmrTypeCd)) return true
-  // 미성년자
-  if (['NM', 'FM'].includes(cstmrTypeCd)) return true
+  // 1. 외국인
+  if (['FN', 'FM'].includes(cstmrTypeCd)) list.push('외국인등록증/거소신고증')
+  // 2. 미성년자
+  if (['NM', 'FM'].includes(cstmrTypeCd)) list.push('가족관계증명서')
 
-  // 사업자등록번호 입력
   const hasBizNo =
     (model.value.cstmrJuridicalBizNo1 &&
       model.value.cstmrJuridicalBizNo2 &&
       model.value.cstmrJuridicalBizNo3) ||
     (model.value.tr_bizNo1 && model.value.tr_bizNo2 && model.value.tr_bizNo3) ||
-    (model.value.te_bizNo1 && model.value.te_bizNo2 && model.value.te_bizNo3)
+    (model.value.te_bizNo1 && model.value.te_bizNo2 && model.value.te_bizNo3) ||
+    (model.value.tr_customer?.cstmrJuridicalBizNo1) ||
+    (model.value.te_customer?.cstmrJuridicalBizNo1)
 
-  // 개인사업자/법인/관공서 또는 사업자등록번호 입력
-  if (['PP', 'JP', 'GO'].includes(cstmrTypeCd) || hasBizNo) return true
+  // 3. 사업자
+  if (['PP', 'JP', 'GO'].includes(cstmrTypeCd) || hasBizNo) list.push('사업자등록증')
+  // 4. 법인
+  if (['JP', 'GO'].includes(cstmrTypeCd)) list.push('법인인감증명서')
 
-  // 대리인 방문 시
-  if (cstmrVisitTypeCd === 'V2') return true
+  // 5. 대리인 방문
+  if (
+    cstmrVisitTypeCd === 'V2' ||
+    model.value.tr_customer?.cstmrVisitTypeCd === 'V2' ||
+    model.value.te_customer?.cstmrVisitTypeCd === 'V2'
+  ) {
+    list.push('대리인 신분증')
+    if (['JP', 'GO'].includes(cstmrTypeCd)) {
+      list.push('위임장', '대리인 재직증명서')
+    }
+  }
 
-  // 미성년자(법정대리인) 케이스 - 가입자 정보 등에 법정대리인 정보가 있을 때
-  if (!['NM', 'FM'].includes(cstmrTypeCd) && (minorAgentNm || repRelation)) return true
+  // 6. 법정대리인 케이스
+  if (!['NM', 'FM'].includes(cstmrTypeCd) && (minorAgentNm || repRelation)) {
+    if (!list.includes('가족관계증명서')) list.push('가족관계증명서')
+  }
 
-  return false
+  return [...new Set(list)] // 중복 제거
+}
+
+const hasRequiredDocs = computed(() => {
+  return getRequiredDocNames().length > 0
 })
 
 const onConfirm = ({ completedDocs, isAllUploaded }) => {
@@ -59,6 +80,9 @@ const onConfirm = ({ completedDocs, isAllUploaded }) => {
   if (props.authFlags) {
     props.authFlags.requiredDocs = isAllUploaded
   }
+
+  isAllUploadedModel.value = isAllUploaded
+  emit('change', isAllUploaded)
 
   // 업로드된 파일 정보를 모델에 저장 (필요 시)
   model.value.uploadedDocs = completedDocs
@@ -68,9 +92,11 @@ const onConfirm = ({ completedDocs, isAllUploaded }) => {
 
 // 외부(부모)에서 호출할 수 있는 유효성 검사 함수
 const validate = () => {
-  if (hasRequiredDocs.value && !props.authFlags?.requiredDocs) return false
+  if (hasRequiredDocs.value) {
+    return props.authFlags ? props.authFlags.requiredDocs === true : isAllUploadedModel.value === true
+  }
   return true
 }
 
-defineExpose({ validate })
+defineExpose({ validate, getRequiredDocNames })
 </script>

@@ -6,24 +6,16 @@
         <MsfChip
           v-model="model.cstmrBillSendTypeCd"
           name="inp-stmtType"
-          :data="[
-            { value: 'stmtType1', label: '모바일 명세서' },
-            { value: 'stmtType2', label: '이메일 명세서' },
-            { value: 'stmtType3', label: '우편 명세서' },
-          ]"
+          groupCode="STRE"
         />
       </MsfFormGroup>
       <MsfFormGroup label="요금 납부 방법" tag="div" required>
         <MsfChip
           v-model="model.reqPayTypeCd"
           name="inp-payMtd"
-          :data="[
-            { value: 'payMtd1', label: '자동이체' },
-            { value: 'payMtd2', label: '신용카드' },
-            { value: 'payMtd3', label: '통합청구' },
-          ]"
+          groupCode="PAYM"
         />
-        <template v-if="model.reqPayTypeCd === 'payMtd1'">
+        <template v-if="['01', 'payMtd1', 'AA', 'D'].includes(model.reqPayTypeCd)">
           <hr class="ut-line" />
           <MsfStack type="field" class="ut-w100p">
             <MsfChip
@@ -39,10 +31,7 @@
             <MsfSelect
               title="은행 선택"
               v-model="model.reqBankCd"
-              :options="[
-                { label: '은행 선택1', value: 'autoBankCode1' },
-                { label: '은행 선택2', value: 'autoBankCode2' },
-              ]"
+              groupCode="BNK"
               placeholder="은행 선택"
               class="ut-w-300"
             />
@@ -58,14 +47,14 @@
             <MsfButton
               variant="toggle"
               v-else-if="autoAcctAuth.status.value === 'ready'"
-              @click="autoAcctAuth.verify()"
+              @click="handleAccountVerify"
               >계좌번호 유효성 체크</MsfButton
             >
             <MsfButton variant="toggle" v-else-if="autoAcctAuth.status.value === 'verified'" active
               >계좌번호 유효성 체크 완료</MsfButton
             >
           </MsfStack>
-          <MsfStack type="field">
+          <MsfStack type="field" v-if="model.autoPayerType === 'autoPayerType2'">
             <MsfInput
               v-model="model.reqAccountNm"
               id="inp-autoPayerName"
@@ -81,10 +70,7 @@
             <MsfSelect
               title="관계"
               v-model="model.reqAccountRelTypeCd"
-              :options="[
-                { label: '가족 선택1', value: 'autoRelation1' },
-                { label: '가족 선택2', value: 'autoRelation2' },
-              ]"
+              groupCode="AGR"
               placeholder="관계"
             />
           </MsfStack>
@@ -95,7 +81,7 @@
             class="ut-mt-8"
           />
         </template>
-        <template v-if="model.reqPayTypeCd === 'payMtd2'">
+        <template v-if="['02', 'payMtd2', 'C'].includes(model.reqPayTypeCd)">
           <hr class="ut-line" />
           <MsfStack type="field" class="ut-w100p">
             <MsfChip
@@ -111,10 +97,7 @@
             <MsfSelect
               title="카드사 선택"
               v-model="model.reqCardCompanyCd"
-              :options="[
-                { label: '카드사 선택1', value: 'cardCorp1' },
-                { label: '카드사 선택2', value: 'cardCorp2' },
-              ]"
+              groupCode="CRD"
               placeholder="카드사 선택"
               class="ut-w-300"
             />
@@ -130,7 +113,7 @@
             <MsfButton
               variant="toggle"
               v-else-if="cardAuth.status.value === 'ready'"
-              @click="cardAuth.verify()"
+              @click="handleCardVerify"
               >신용카드 유효성 체크</MsfButton
             >
             <MsfButton variant="toggle" v-else-if="cardAuth.status.value === 'verified'" active
@@ -142,8 +125,18 @@
               title="유효기간(MM) 선택"
               v-model="model.reqCardMm"
               :options="[
-                { label: '유효기간(MM)', value: 'cardExpMm1' },
-                { label: '유효기간(YY)', value: 'cardExpMm2' },
+                { label: '01', value: '01' },
+                { label: '02', value: '02' },
+                { label: '03', value: '03' },
+                { label: '04', value: '04' },
+                { label: '05', value: '05' },
+                { label: '06', value: '06' },
+                { label: '07', value: '07' },
+                { label: '08', value: '08' },
+                { label: '09', value: '09' },
+                { label: '10', value: '10' },
+                { label: '11', value: '11' },
+                { label: '12', value: '12' },
               ]"
               placeholder="MM"
             />
@@ -151,13 +144,22 @@
               title="유효기간(YY) 선택"
               v-model="model.reqCardYy"
               :options="[
-                { label: '유효기간(YY)', value: 'cardExpYy1' },
-                { label: '유효기간(YY)', value: 'cardExpYy2' },
+                { label: '2024', value: '24' },
+                { label: '2025', value: '25' },
+                { label: '2026', value: '26' },
+                { label: '2027', value: '27' },
+                { label: '2028', value: '28' },
+                { label: '2029', value: '29' },
+                { label: '2030', value: '30' },
+                { label: '2031', value: '31' },
+                { label: '2032', value: '32' },
+                { label: '2033', value: '33' },
+                { label: '2034', value: '34' },
               ]"
               placeholder="YY"
             />
           </MsfStack>
-          <MsfStack type="field">
+          <MsfStack type="field" v-if="model.cardPayerType === 'cardPayerType2'">
             <MsfInput
               v-model="model.reqCardNm"
               id="inp-cardPayerName"
@@ -173,15 +175,12 @@
             <MsfSelect
               title="관계"
               v-model="model.cardRelation"
-              :options="[
-                { label: '관계1', value: 'cardRelation1' },
-                { label: '관계2', value: 'cardRelation2' },
-              ]"
+              groupCode="AGR"
               placeholder="관계"
             />
           </MsfStack>
         </template>
-        <template v-if="model.reqPayTypeCd === 'payMtd3'">
+        <template v-if="['03', 'payMtd3'].includes(model.reqPayTypeCd)">
           <MsfStack type="field">
             <MsfInput
               v-model="model.combId"
@@ -225,7 +224,57 @@ const props = defineProps({
 })
 const model = defineModel({ type: Object, required: true })
 
-const autoAcctAuth = useAuthButton(() => [model.value?.autoBankCode, model.value?.autoAcctNo], {
+import { watch } from 'vue'
+watch(() => model.value.reqPayTypeCd, (val) => {
+  console.log('>>> [MsfBillingInfo] reqPayTypeCd changed:', val)
+}, { immediate: true })
+
+const handleAccountVerify = async () => {
+  const payload = {
+    strGbn: '1',
+    svcGbn: '2',
+    service: '2',
+    svcCls: '1',
+    name: model.value.autoPayerType === 'autoPayerType1' ? props.customerData.cstmrNm : model.value.reqAccountNm,
+    resId: (model.value.autoPayerType === 'autoPayerType1' ? props.customerData.cstmrNativeRrn1 : model.value.reqAccountRrn).substring(0, 6),
+    bankCode: model.value.reqBankCd,
+    accountNo: model.value.reqAccountNo,
+    inqRsn: '90',
+  }
+
+  try {
+    const res = await post('/api/form/accountCheck', payload)
+    if (res && res.code === '0000') {
+      autoAcctAuth.verify()
+      alert('계좌번호 유효성 체크가 완료되었습니다.')
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const handleCardVerify = async () => {
+  const payload = {
+    crdtCardNo: model.value.reqCardNo,
+    crdtCardTermYear: model.value.reqCardYy,
+    crdtCardTermMonth: model.value.reqCardMm,
+    custNm: model.value.cardPayerType === 'cardPayerType1' ? props.customerData.cstmrNm : model.value.reqCardNm,
+    brthDate: model.value.cardPayerType === 'cardPayerType1' ? props.customerData.cstmrNativeBirth : model.value.reqCardRrn,
+    ncType: '',
+  }
+
+  try {
+    const res = await post('/api/form/crdtCardAthnInfo', payload)
+    if (res && res.code === '0000') {
+      cardAuth.verify()
+      alert('신용카드 유효성 체크가 완료되었습니다.')
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const autoAcctAuth = useAuthButton(() => [model.value?.reqBankCd, model.value?.reqAccountNo], {
   get value() {
     return props.authFlags?.autoAcct || false
   },
@@ -236,9 +285,9 @@ const autoAcctAuth = useAuthButton(() => [model.value?.autoBankCode, model.value
   },
 })
 
-const cardAuth = useAuthButton(() => [model.value?.cardCorp, model.value?.cardNo], {
+const cardAuth = useAuthButton(() => [model.value?.reqCardCompanyCd, model.value?.reqCardNo], {
   get value() {
-    return props.authFlags?.cardNo || false
+    return props.authFlags?.reqCardNo || false
   },
   set value(v) {
     if (props.authFlags) {
@@ -276,12 +325,9 @@ const handleCombVerify = async () => {
     if (res && res.code === '0000') {
       combAuth.verify()
       alert('청구계정 확인이 완료되었습니다.')
-    } else {
-      alert(res.message || '청구계정 확인에 실패했습니다.')
     }
   } catch (error) {
     console.error('Verify bill info error:', error)
-    alert('청구계정 확인 중 오류가 발생했습니다.')
   }
 }
 
@@ -289,26 +335,27 @@ const validate = () => {
   if (!model.value.cstmrBillSendTypeCd) return false
   if (!model.value.reqPayTypeCd) return false
 
-  if (model.value.reqPayTypeCd === 'payMtd1') {
+  if (['01', 'payMtd1', 'AA', 'D'].includes(model.value.reqPayTypeCd)) {
     if (!model.value.autoPayerType || !model.value.reqBankCd || !model.value.reqAccountNo)
       return false
     if (!props.authFlags?.autoAcct) return false
-    if (!model.value.reqAccountNm || !model.value.reqAccountRrn || !model.value.reqAccountRelTypeCd)
-      return false
+    // 타인납부인 경우만 체크
+    if (model.value.autoPayerType === 'autoPayerType2') {
+      if (!model.value.reqAccountNm || !model.value.reqAccountRrn || !model.value.reqAccountRelTypeCd)
+        return false
+    }
     if (!model.value.isAutoAgree) return false
-  } else if (model.value.reqPayTypeCd === 'payMtd2') {
+  } else if (['02', 'payMtd2', 'C'].includes(model.value.reqPayTypeCd)) {
     if (!model.value.cardPayerType || !model.value.reqCardCompanyCd || !model.value.reqCardNo)
       return false
     if (!props.authFlags?.cardNo && !props.authFlags?.reqCardNo) return false
-    if (
-      !model.value.reqCardMm ||
-      !model.value.reqCardYy ||
-      !model.value.reqCardNm ||
-      !model.value.reqCardRrn ||
-      !model.value.cardRelation
-    )
-      return false
-  } else if (model.value.reqPayTypeCd === 'payMtd3') {
+    if (!model.value.reqCardMm || !model.value.reqCardYy) return false
+    // 타인납부인 경우만 체크
+    if (model.value.cardPayerType === 'cardPayerType2') {
+      if (!model.value.reqCardNm || !model.value.reqCardRrn || !model.value.cardRelation)
+        return false
+    }
+  } else if (['03', 'payMtd3'].includes(model.value.reqPayTypeCd)) {
     if (!model.value.combId) return false
     if (!props.authFlags?.combId) return false
     if (!model.value.combAgree) return false

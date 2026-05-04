@@ -6,12 +6,6 @@
       v-if="formData.serviceSelect?.includes('serviceSelect1')"
     />
     <!-- // 무선데이터차단 서비스 -->
-    <!-- 정보료 상한금액 설정/변경 -->
-    <MsfInfoChargeLimit
-      v-model="formData"
-      v-if="formData.serviceSelect?.includes('serviceSelect2')"
-    />
-    <!-- // 정보료 상한금액 설정/변경 -->
     <!-- 부가서비스 신청/변경 -->
     <MsfValueAdditonalServiceReqChg
       v-model="formData"

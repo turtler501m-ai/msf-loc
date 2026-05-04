@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
 import com.ktmmobile.msf.domains.form.login.application.dto.LoginRequest;
 import com.ktmmobile.msf.domains.form.login.application.dto.LoginResponse;
+import com.ktmmobile.msf.domains.form.login.application.dto.PassChangeRequest;
 
 @Mapper
 @AutoAuditing
@@ -18,7 +19,10 @@ public interface LoginMapper {
 
     Integer updateLoginSucc(LoginRequest request);
 
-    Integer insertUserHistory(LoginRequest request);
+    @AutoAuditing(false)
+    Integer insertUserHistory(String userId);
 
     Integer updateBioLoginSucc(LoginRequest request);
+
+    Integer updateUserPass(PassChangeRequest request);
 }

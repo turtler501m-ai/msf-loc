@@ -4,7 +4,10 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.shared.common.sms.adapter.repository.mybatis.msp.mapper.MspSmsMapper">
 
-  <insert id="insertSmsData" parameterType="com.ktmmobile.msf.domains.shared.common.sms.application.dto.MspSmsData">
+  <insert id="insertSmsData" parameterType="com.ktmmobile.msf.domains.shared.common.sms.domain.entity.MspSmsData">
+    <selectKey keyProperty="msgId" resultType="long" order="BEFORE">
+      SELECT AM2X_SUBMIT_SEQ.NEXTVAL FROM DUAL
+    </selectKey>
     INSERT INTO AM2X_SUBMIT (
       MSG_ID,
     <if test="@org.springframework.util.StringUtils@hasText(subject)">
@@ -21,7 +24,7 @@
       RESERVED02,
       RESERVED03
     ) VALUES (
-      AM2X_SUBMIT_SEQ.NEXTVAL,
+      #{msgId},
     <if test="@org.springframework.util.StringUtils@hasText(subject)">
       #{subject},
     </if>

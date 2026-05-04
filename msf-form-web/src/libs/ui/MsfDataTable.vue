@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch, reactive } from 'vue'
+import { ref, watch, reactive } from 'vue'
 import { themeAlpine } from 'ag-grid-community'
 import { AG_GRID_LOCALE_KR } from './ag-grid.locale.kr'
 import { AgGridVue } from 'ag-grid-vue3'
@@ -217,6 +217,9 @@ const searchInternal = () => {
 const onGridReady = (params) => {
   gridApi.value = params.api
   columnApi.value = params.columnApi
+  if (props.isSearch) {
+    searchInternal()
+  }
 }
 
 const onSelectionChanged = () => {
@@ -264,12 +267,6 @@ watch(
     emits('movePage', newVal)
   },
 )
-
-onMounted(() => {
-  if (props.isSearch) {
-    searchInternal()
-  }
-})
 
 const search = () => {
   if (pageNo.value === 1) {

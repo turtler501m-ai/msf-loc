@@ -2,7 +2,7 @@ package com.ktmmobile.msf.domains.shared.common.sms.adapter.repository.mybatis.m
 
 import org.apache.ibatis.annotations.Mapper;
 
-import com.ktmmobile.msf.domains.shared.common.sms.application.dto.MspSmsData;
+import com.ktmmobile.msf.domains.shared.common.sms.domain.entity.MspSmsData;
 
 @Mapper
 public interface MspSmsMapper {

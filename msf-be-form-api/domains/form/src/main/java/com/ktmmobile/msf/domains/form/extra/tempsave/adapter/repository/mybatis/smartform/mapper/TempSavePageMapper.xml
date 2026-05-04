@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.extra.tempsave.adapter.repository.mybatis.smartform.mapper.TempSavePageMapper">
+
+  <sql id="deviceCondition">
+    <!--<if test='startDate != null and startDate != ""'>-->
+    <!--  <![CDATA[-->
+    <!--      and a.cret_dt >= #{startDate}::timestamp-->
+    <!--  ]]>-->
+    <!--</if>-->
+  </sql>
+
+  <select id="countTempSaveList" resultType="java.lang.Integer">
+    select count(1)
+    from msf_usr_app_info a
+    left join msf_user_info b on a.user_id = b.user_id
+    where 1=1
+  </select>
+
+  <select id="selectTempSaveList" resultType="com.ktmmobile.msf.domains.form.extra.tempsave.domain.vo.TempSaveVo">
+    select ROW_NUMBER() OVER (ORDER BY a.cret_dt DESC) AS row_num
+    , b.agent_cd
+    , b.agent_cd as agentNm
+    , b.shop_cd
+    , b.shop_cd as shopNm
+    , b.user_id
+    , b.user_sttus_cd
+    , b.user_nm
+    , a.mac_adr
+    , a.uuid
+    , a.cret_dt
+    from msf_usr_app_info a
+    left join msf_user_info b on a.user_id = b.user_id
+    where 1=1
+    order by a.cret_dt desc
+    <if test='page.pageEnabled'>
+      LIMIT #{page.rowSize} OFFSET #{page.offset}
+    </if>
+  </select>
+
+</mapper>

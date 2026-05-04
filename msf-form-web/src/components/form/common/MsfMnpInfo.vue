@@ -7,10 +7,8 @@
           <MsfSelect
             title="통신사 선택"
             v-model="model.moveCompanyCd"
-            :options="[
-              { label: '통신사1', value: 'agency1' },
-              { label: '통신사2', value: 'agency2' },
-            ]"
+            groupCode="NSC"
+            withDetail
             class="ut-w-300"
             placeholder="통신사 선택"
           />
@@ -40,11 +38,8 @@
           <MsfChip
             v-model="model.moveAuthTypeCd"
             name="inp-transferAuth"
-            :data="[
-              { value: 'transferAuth1', label: '휴대폰 일련번호 뒤 4자리' },
-              { value: 'transferAuth2', label: '계좌번호 뒤 4자리' },
-              { value: 'transferAuth3', label: '신용카드 뒤 4자리' },
-            ]"
+            groupCode="PTC"
+            :data="[]"
           />
         </MsfStack>
         <MsfStack type="field" v-if="model.moveAuthTypeCd">
@@ -74,8 +69,8 @@
         <MsfCheckboxGroup
           v-model="model.moveAllotmentSttusCd"
           :options="[
-            { value: 'deviceInstallment1', label: '완납' },
-            { value: 'deviceInstallment2', label: '지속(이전 통신회사에 납부)' },
+            { value: '01', label: '완납' },
+            { value: '02', label: '지속(이전 통신회사에 납부)' },
           ]"
         />
       </MsfFormGroup>
@@ -83,8 +78,8 @@
         <MsfCheckboxGroup
           v-model="model.moveRefundAgreeYn"
           :options="[
-            { value: 'offsetAmt1', label: '동의' },
-            { value: 'offsetAmt2', label: '미동의' },
+            { value: 'Y', label: '동의' },
+            { value: 'N', label: '미동의' },
           ]"
         />
       </MsfFormGroup>
@@ -95,11 +90,12 @@
   </div>
 </template>
 <script setup>
-import { ref, defineModel, defineProps, computed } from 'vue'
+import { ref, defineModel, defineProps, computed, onMounted } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import MsfMnpAuthFailModal from './popups/MsfMnpAuthFailModal.vue'
 import { post } from '@/libs/api/msf.api'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
 
 const props = defineProps({
   title: { type: String, default: '번호이동 할 전화번호' },
@@ -137,7 +133,6 @@ const handlePreAuth = async () => {
       alert('번호이동 사전동의 요청이 완료되었습니다. 고객님의 휴대폰으로 발송된 문자의 URL을 확인해주세요.')
       if (store.authFlags) store.authFlags.moveAuthTypeCd = true
     } else {
-      alert(res.message || '사전동의 요청에 실패했습니다.')
       isFailModalOpen.value = true
     }
   } catch (error) {
@@ -153,8 +148,6 @@ const handleCheckAgree = async () => {
     const res = await post('/api/form/newchange/reqNpAgree', payload)
     if (res && res.code === '0000') {
       alert('번호이동 사전동의 확인이 완료되었습니다.')
-    } else {
-      alert(res.message || '사전동의 확인에 실패했습니다.')
     }
   } catch (error) {
     console.error('Check agree error:', error)
@@ -169,8 +162,6 @@ const handlePayOpn = async () => {
     const res = await post('/api/form/newchange/reqPayOpn', payload)
     if (res && res.code === '0000') {
       alert('납부주장 처리가 완료되었습니다.')
-    } else {
-      alert(res.message || '납부주장 처리에 실패했습니다.')
     }
   } catch (error) {
     console.error('PayOpn error:', error)
@@ -195,6 +186,13 @@ const transferAuthBtn = useAuthButton(
     },
   },
 )
+
+onMounted(async () => {
+  // 사전인증 예외 통신사 목록 조회
+  getCommonCodeList('NpNscException').then((list) => {
+    console.log('>>> 사전인증 예외 통신사 (NpNscException):', list)
+  })
+})
 
 const validate = () => {
   if (customerModel.value.joinType === 'MNP3') {

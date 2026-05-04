@@ -7,7 +7,7 @@ const formData = reactive({
   usimKindsCd: '', //USIM 선택
   reqUsimSn: '', //USIM 번호
   simPurchaseMethod: '', //USIM 구매 방식
-  prodNm: '', //휴대폰 모델병
+  prodNm: '', //휴대폰 모델명
   eid: '', //EID
   imei1: '', //IMEI1
   imei2: '', //IMEI2
@@ -63,10 +63,9 @@ const formData = reactive({
   reqCardNm: '', //신용카드-납부고객명
   reqCardRrn: '', //신용카드-생년월일
   cardRelation: '', //신용카드-관계
+  othersPaymentAgrYn: 'N', //타인납부-동의
   combId: '', //통합청구-청구계정ID
   combAgree: false, //통합청구-동의
-  /* 메모 */
-  memo: '', //메모
 })
 
 const validate = () => {
@@ -75,19 +74,25 @@ const validate = () => {
 
   if (formData.reqPayTypeCd === 'payMtd1') {
     if (!formData.autoPayerType || !formData.reqBankCd || !formData.reqAccountNo) return false
-    if (!formData.reqAccountNm || !formData.reqAccountRrn || !formData.reqAccountRelTypeCd)
-      return false
+    if (formData.autoPayerType === 'autoPayerType2') {
+      if (!formData.reqAccountNm || !formData.reqAccountRrn || !formData.reqAccountRelTypeCd)
+        return false
+      if (formData.othersPaymentAgrYn !== 'Y') return false
+    }
     if (!formData.isAutoAgree) return false
   } else if (formData.reqPayTypeCd === 'payMtd2') {
     if (!formData.cardPayerType || !formData.reqCardCompanyCd || !formData.reqCardNo) return false
-    if (
-      !formData.reqCardMm ||
-      !formData.reqCardYy ||
-      !formData.reqCardNm ||
-      !formData.reqCardRrn ||
-      !formData.cardRelation
-    )
-      return false
+    if (formData.cardPayerType === 'cardPayerType2') {
+      if (
+        !formData.reqCardMm ||
+        !formData.reqCardYy ||
+        !formData.reqCardNm ||
+        !formData.reqCardRrn ||
+        !formData.cardRelation
+      )
+        return false
+      if (formData.othersPaymentAgrYn !== 'Y') return false
+    }
   } else if (formData.reqPayTypeCd === 'payMtd3') {
     if (!formData.combId) return false
     if (!formData.combAgree) return false
@@ -125,160 +130,199 @@ defineExpose({ validate })
         ]"
       />
       <!-- 자동이체 -->
-      <hr class="ut-line" />
-      <MsfStack type="field" class="ut-w100p">
-        <MsfChip
-          v-model="formData.autoPayerType"
-          name="inp-autoPayerType"
-          :data="[
-            { value: 'autoPayerType1', label: '본인납부' },
-            { value: 'autoPayerType2', label: '타인납부' },
-          ]"
+      <template v-if="formData.reqPayTypeCd === 'payMtd1'">
+        <hr class="ut-line" />
+        <MsfStack type="field" class="ut-w100p">
+          <MsfChip
+            v-model="formData.autoPayerType"
+            name="inp-autoPayerType"
+            :data="[
+              { value: 'autoPayerType1', label: '본인납부' },
+              { value: 'autoPayerType2', label: '타인납부' },
+            ]"
+          />
+        </MsfStack>
+        <MsfStack type="field">
+          <MsfSelect
+            title="은행 선택"
+            v-model="formData.reqBankCd"
+            :options="[
+              { label: '은행 선택1', value: 'autoBankCode1' },
+              { label: '은행 선택2', value: 'autoBankCode2' },
+            ]"
+            placeholder="은행 선택"
+            class="ut-w-300"
+          />
+          <MsfNumberInput
+            v-model="formData.reqAccountNo"
+            id="inp-autoAcctNo"
+            placeholder="계좌번호 입력"
+            class="ut-w-200"
+          />
+          <MsfButton variant="toggle">계좌번호 유효성 체크</MsfButton>
+          <MsfButton variant="toggle" active>계좌번호 유효성 체크 완료</MsfButton>
+        </MsfStack>
+        <MsfStack type="field" v-if="formData.autoPayerType === 'autoPayerType2'">
+          <MsfInput
+            v-model="formData.reqAccountNm"
+            id="inp-autoPayerName"
+            placeholder="납부 고객명"
+            class="ut-w-300"
+          />
+          <MsfBirthdayInput
+            v-model="formData.reqAccountRrn"
+            id="inp-autoPayerBirth"
+            length="8"
+            class="ut-w-200"
+          />
+          <MsfSelect
+            title="관계"
+            v-model="formData.reqAccountRelTypeCd"
+            :options="[
+              { label: '관계 선택1', value: 'autoRelation1' },
+              { label: '관계 선택2', value: 'autoRelation2' },
+            ]"
+            placeholder="관계"
+          />
+        </MsfStack>
+        <MsfCheckbox
+          v-if="formData.autoPayerType === 'autoPayerType2'"
+          v-model="formData.othersPaymentAgrYn"
+          true-value="Y"
+          false-value="N"
+          label="본인(예금주 또는 가입고객)은 납부해야 할 요금에 대해 위 계좌(카드)에서 지정된 출금(결제)일에 인출(결제)되는 것에 동의합니다."
+          :invalid="formData.othersPaymentAgrYn !== 'Y'"
+          class="ut-mt-8"
         />
-      </MsfStack>
-      <MsfStack type="field">
-        <MsfSelect
-          title="은행 선택"
-          v-model="formData.reqBankCd"
-          :options="[
-            { label: '은행 선택1', value: 'autoBankCode1' },
-            { label: '은행 선택2', value: 'autoBankCode2' },
-          ]"
-          placeholder="은행 선택"
-          class="ut-w-300"
+        <MsfCheckbox
+          v-model="formData.isAutoAgree"
+          label="본인(가입고객)은 위 기재한 계좌에서 요금이 자동 인출되는 것에 동의합니다."
+          :invalid="!formData.isAutoAgree"
+          class="ut-mt-8"
         />
-        <MsfNumberInput
-          v-model="formData.reqAccountNo"
-          id="inp-autoAcctNo"
-          placeholder="계좌번호 입력"
-          class="ut-w-200"
-        />
-        <MsfButton variant="toggle">계좌번호 유효성 체크</MsfButton>
-        <MsfButton variant="toggle" active>계좌번호 유효성 체크 완료</MsfButton>
-      </MsfStack>
-      <MsfStack type="field">
-        <MsfInput
-          v-model="formData.reqAccountNm"
-          id="inp-autoPayerName"
-          placeholder="납부 고객명"
-          class="ut-w-300"
-        />
-        <MsfBirthdayInput
-          v-model="formData.reqAccountRrn"
-          id="inp-autoPayerBirth"
-          length="8"
-          class="ut-w-200"
-        />
-        <MsfSelect
-          title="관계"
-          v-model="formData.reqAccountRelTypeCd"
-          :options="[
-            { label: '가족 선택1', value: 'autoRelation1' },
-            { label: '가족 선택2', value: 'autoRelation2' },
-          ]"
-          placeholder="관계"
-        />
-      </MsfStack>
-      <MsfCheckbox
-        v-model="formData.isAutoAgree"
-        label="본인(예금주 또는 가입고객)은 납부해야 할 요금에 대해 위 계좌(카드)에서 지정된 출금(결제)일에 인출(결제)되는 것에 동의합니다."
-        :invalid="!formData.isAutoAgree"
-        class="ut-mt-8"
-      />
+      </template>
       <!-- // 자동이체 -->
       <!-- 신용카드 -->
-      <hr class="ut-line" />
-      <MsfStack type="field" class="ut-w100p">
-        <MsfChip
-          v-model="formData.cardPayerType"
-          name="inp-cardPayerType"
-          :data="[
-            { value: 'cardPayerType1', label: '본인납부' },
-            { value: 'cardPayerType2', label: '타인납부' },
-          ]"
+      <template v-if="formData.reqPayTypeCd === 'payMtd2'">
+        <hr class="ut-line" />
+        <MsfStack type="field" class="ut-w100p">
+          <MsfChip
+            v-model="formData.cardPayerType"
+            name="inp-cardPayerType"
+            :data="[
+              { value: 'cardPayerType1', label: '본인납부' },
+              { value: 'cardPayerType2', label: '타인납부' },
+            ]"
+          />
+        </MsfStack>
+        <MsfStack type="field">
+          <MsfSelect
+            title="카드사 선택"
+            v-model="formData.reqCardCompanyCd"
+            :options="[
+              { label: '카드사 선택1', value: 'cardCorp1' },
+              { label: '카드사 선택2', value: 'cardCorp2' },
+            ]"
+            placeholder="카드사 선택"
+            class="ut-w-300"
+          />
+          <MsfNumberInput
+            v-model="formData.reqCardNo"
+            id="inp-cardNo"
+            placeholder="카드번호 입력"
+            class="ut-w-200"
+          />
+          <MsfButton variant="toggle">신용카드 유효성 체크</MsfButton>
+          <MsfButton variant="toggle" active>신용카드 유효성 체크 완료</MsfButton>
+        </MsfStack>
+        <MsfStack type="field">
+          <MsfSelect
+            title="유효기간(MM) 선택"
+            v-model="formData.reqCardMm"
+            :options="[
+              { label: '01', value: '01' },
+              { label: '02', value: '02' },
+              { label: '03', value: '03' },
+              { label: '04', value: '04' },
+              { label: '05', value: '05' },
+              { label: '06', value: '06' },
+              { label: '07', value: '07' },
+              { label: '08', value: '08' },
+              { label: '09', value: '09' },
+              { label: '10', value: '10' },
+              { label: '11', value: '11' },
+              { label: '12', value: '12' },
+            ]"
+            placeholder="MM"
+          />
+          <MsfSelect
+            title="유효기간(YY) 선택"
+            v-model="formData.reqCardYy"
+            :options="[
+              { label: '2024', value: '24' },
+              { label: '2025', value: '25' },
+              { label: '2026', value: '26' },
+              { label: '2027', value: '27' },
+              { label: '2028', value: '28' },
+              { label: '2029', value: '29' },
+              { label: '2030', value: '30' },
+            ]"
+            placeholder="YY"
+          />
+        </MsfStack>
+        <MsfStack type="field" v-if="formData.cardPayerType === 'cardPayerType2'">
+          <MsfInput
+            v-model="formData.reqCardNm"
+            id="inp-cardPayerName"
+            placeholder="납부 고객명"
+            class="ut-w-300"
+          />
+          <MsfBirthdayInput
+            v-model="formData.reqCardRrn"
+            id="inp-cardPayerBirth"
+            length="8"
+            class="ut-w-200"
+          />
+          <MsfSelect
+            title="관계"
+            v-model="formData.cardRelation"
+            :options="[
+              { label: '관계1', value: 'cardRelation1' },
+              { label: '관계2', value: 'cardRelation2' },
+            ]"
+            placeholder="관계"
+          />
+        </MsfStack>
+        <MsfCheckbox
+          v-if="formData.cardPayerType === 'cardPayerType2'"
+          v-model="formData.othersPaymentAgrYn"
+          true-value="Y"
+          false-value="N"
+          label="본인(예금주 또는 가입고객)은 납부해야 할 요금에 대해 위 계좌(카드)에서 지정된 출금(결제)일에 인출(결제)되는 것에 동의합니다."
+          :invalid="formData.othersPaymentAgrYn !== 'Y'"
+          class="ut-mt-8"
         />
-      </MsfStack>
-      <MsfStack type="field">
-        <MsfSelect
-          title="카드사 선택"
-          v-model="formData.reqCardCompanyCd"
-          :options="[
-            { label: '카드사 선택1', value: 'cardCorp1' },
-            { label: '카드사 선택2', value: 'cardCorp2' },
-          ]"
-          placeholder="카드사 선택"
-          class="ut-w-300"
-        />
-        <MsfNumberInput
-          v-model="formData.reqCardNo"
-          id="inp-cardNo"
-          placeholder="카드번호 입력"
-          class="ut-w-200"
-        />
-        <MsfButton variant="toggle">신용카드 유효성 체크</MsfButton>
-        <MsfButton variant="toggle" active>신용카드 유효성 체크 완료</MsfButton>
-      </MsfStack>
-      <MsfStack type="field">
-        <MsfSelect
-          title="유효기간(MM) 선택"
-          v-model="formData.reqCardMm"
-          :options="[
-            { label: '유효기간(MM)', value: 'cardExpMm1' },
-            { label: '유효기간(YY)', value: 'cardExpMm2' },
-          ]"
-          placeholder="MM"
-        />
-        <MsfSelect
-          title="유효기간(YY) 선택"
-          v-model="formData.reqCardYy"
-          :options="[
-            { label: '유효기간(YY)', value: 'cardExpYy1' },
-            { label: '유효기간(YY)', value: 'cardExpYy2' },
-          ]"
-          placeholder="YY"
-        />
-      </MsfStack>
-      <MsfStack type="field">
-        <MsfInput
-          v-model="formData.reqCardNm"
-          id="inp-cardPayerName"
-          placeholder="납부 고객명"
-          class="ut-w-300"
-        />
-        <MsfBirthdayInput
-          v-model="formData.reqCardRrn"
-          id="inp-cardPayerBirth"
-          length="8"
-          class="ut-w-200"
-        />
-        <MsfSelect
-          title="관계"
-          v-model="formData.cardRelation"
-          :options="[
-            { label: '관계1', value: 'cardRelation1' },
-            { label: '관계2', value: 'cardRelation2' },
-          ]"
-          placeholder="관계"
-        />
-      </MsfStack>
+      </template>
       <!-- // 신용카드 -->
       <!-- 통합청구 -->
-      <MsfStack type="field">
-        <MsfInput
-          v-model="formData.combId"
-          id="inp-combId"
-          placeholder="청구계정ID 입력"
-          class="ut-w-300"
+      <template v-if="formData.reqPayTypeCd === 'payMtd3'">
+        <MsfStack type="field">
+          <MsfInput
+            v-model="formData.combId"
+            id="inp-combId"
+            placeholder="청구계정ID 입력"
+            class="ut-w-300"
+          />
+          <MsfButton variant="toggle">청구계정 체크</MsfButton>
+          <MsfButton variant="toggle" active>청구계정 체크 완료</MsfButton>
+        </MsfStack>
+        <MsfCheckbox
+          v-model="formData.combAgree"
+          label="본인은 신청한 회선과 통합하여 요금이 청구되는 것에 동의합니다."
+          :invalid="!formData.combAgree"
+          class="ut-mt-8"
         />
-        <MsfButton variant="toggle">청구계정 체크</MsfButton>
-        <MsfButton variant="toggle" active>청구계정 체크 완료</MsfButton>
-      </MsfStack>
-      <MsfCheckbox
-        v-model="formData.combAgree"
-        label="본인은 신청한 회선과 통합하여 요금이 청구되는 것에 동의합니다."
-        :invalid="!formData.combAgree"
-        class="ut-mt-8"
-      />
+      </template>
       <!-- // 통합청구 -->
     </MsfFormGroup>
   </MsfStack>

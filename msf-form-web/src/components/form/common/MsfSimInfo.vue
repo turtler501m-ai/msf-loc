@@ -1,7 +1,8 @@
 <script setup>
-import { ref, defineModel, defineProps } from 'vue'
+import { ref, defineModel, defineProps, onMounted } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { post } from '@/libs/api/msf.api'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import MsfEsimScanModal from './popups/MsfEsimScanModal.vue'
 
 const props = defineProps({
@@ -11,6 +12,13 @@ const props = defineProps({
 
 const formData = defineModel({ type: Object, required: true })
 const isEsimScanModalOpen = ref(false)
+
+onMounted(async () => {
+  // 약관(유심구매) 공통코드 조회
+  getCommonCodeList('TERMSELF').then((list) => {
+    console.log('>>> 약관(유심구매) (TERMSELF):', list)
+  })
+})
 
 const simAuth = useAuthButton(() => [formData.value?.reqUsimSn], {
   get value() {
@@ -26,25 +34,34 @@ const simAuth = useAuthButton(() => [formData.value?.reqUsimSn], {
 const handleSimVerify = async () => {
   const isEsim = formData.value.hasSim === 'hasSim3'
   const url = isEsim ? '/api/form/verifyEsimInfo' : '/api/form/verifyUsimInfo'
-  const payload = {
-    iccId: formData.value.reqUsimSn,
-  }
+  
+  const payload = isEsim 
+    ? {
+        eid: formData.value.eid,
+        imei1: formData.value.imei1,
+        imei2: formData.value.imei2,
+      }
+    : {
+        iccId: formData.value.reqUsimSn,
+      }
 
   try {
     const res = await post(url, payload)
-    if (res && res.code === '0000') {
+    // eSIM은 RESULT_CODE로 체크, 일반 USIM은 code로 체크 (호환성 유지)
+    const success = isEsim 
+      ? (res && res.RESULT_CODE === '0000')
+      : (res && res.code === '0000')
+
+    if (success) {
       simAuth.verify()
       alert('SIM 유효성 체크가 완료되었습니다.')
-    } else {
-      alert(res.message || 'SIM 유효성 체크에 실패했습니다.')
     }
   } catch (error) {
     console.error('Verify SIM info error:', error)
-    alert('SIM 유효성 체크 중 오류가 발생했습니다.')
   }
 }
 
-const onEsimScanConfirm = (data) => {
+const onEsimScanConfirm = async (data) => {
   console.log('eSIM 스캔 결과:', data)
   if (data) {
     formData.value.prodNm = data.prodNm || formData.value.prodNm
@@ -52,18 +69,46 @@ const onEsimScanConfirm = (data) => {
     formData.value.imei1 = data.imei1 || formData.value.imei1
     formData.value.imei2 = data.imei2 || formData.value.imei2
     formData.value.reqUsimSn = data.iccId || formData.value.reqUsimSn
-    if (props.authFlags) {
-      props.authFlags.imei = true
+
+    // 1. API 검증 수행
+    const payload = {
+      eid: formData.value.eid,
+      imei1: formData.value.imei1,
+      imei2: formData.value.imei2,
+    }
+
+    try {
+      const res = await post('/api/form/verifyEsimInfo', payload)
+      if (res && res.RESULT_CODE === '0000') {
+        // 2. 정상일 때만 등록 완료 처리 및 수정 불가 상태로 전환
+        if (props.authFlags) {
+          props.authFlags.esimImei = true
+        }
+        alert('eSIM 정보가 정상적으로 등록되었습니다.')
+      }
+    } catch (error) {
+      console.error('eSIM Verify error:', error)
     }
   }
 }
 
 const validate = () => {
   if (!formData.value?.hasSim) return false
-  if (formData.value?.hasSim !== 'hasSim3' && !formData.value?.usimKindsCd) return false
-  if (!formData.value?.reqUsimSn) return false
-  if (!props.authFlags?.reqUsimSn) return false
-  if (!formData.value?.simPurchaseMethod) return false
+
+  // 1. eSIM인 경우 (hasSim3)
+  if (formData.value.hasSim === 'hasSim3') {
+    // 모델명, EID, IMEI1 등 정보 입력 여부 및 인증 완료 여부 확인
+    if (!formData.value.prodNm || !formData.value.eid || !formData.value.imei1) return false
+    if (!props.authFlags?.esimImei) return false
+  } else {
+    // 2. USIM 보유(hasSim1) 또는 USIM 구매(hasSim2)인 경우
+    if (!formData.value.usimKindsCd) return false
+    if (!formData.value.reqUsimSn) return false
+
+    // USIM 구매 시에만 구매 방식 체크
+    if (formData.value.hasSim === 'hasSim2' && !formData.value.simPurchaseMethod) return false
+  }
+
   return true
 }
 
@@ -95,16 +140,15 @@ defineExpose({ validate })
         ]"
       />
     </MsfFormGroup>
-    <MsfFormGroup :label="formData.hasSim === 'hasSim3' ? 'eSIM 번호' : 'USIM 번호'" required>
+    <MsfFormGroup label="USIM 번호" required v-if="formData.hasSim !== 'hasSim3'">
       <MsfStack type="field">
         <MsfInput
           v-model="formData.reqUsimSn"
-          :placeholder="formData.hasSim === 'hasSim3' ? 'eSIM 번호 19자리' : 'USIM 번호 19자리'"
+          placeholder="USIM 번호 19자리"
           maxlength="19"
           class="ut-w-300"
-          :readonly="formData.hasSim === 'hasSim3'"
         />
-        <MsfButton variant="subtle" @click="isEsimScanModalOpen = true">스캔하기</MsfButton>
+        <MsfButton variant="subtle">스캔하기</MsfButton>
         <MsfButton variant="toggle" v-if="simAuth.status.value === 'none'" disabled>
           유효성 체크
         </MsfButton>
@@ -155,12 +199,21 @@ defineExpose({ validate })
           disabled
         />
       </MsfStack>
-      <MsfButton variant="toggle" v-if="!authFlags?.imei" @click="isEsimScanModalOpen = true">이미지 등록</MsfButton>
-      <MsfButton variant="toggle" v-else active @click="authFlags.imei = false">이미지 등록 완료</MsfButton>
+      <MsfButton
+        variant="toggle"
+        v-if="!authFlags?.esimImei"
+        @click="isEsimScanModalOpen = true"
+        >이미지 등록</MsfButton
+      >
+      <MsfButton variant="toggle" v-else active disabled>이미지 등록 완료</MsfButton>
     </MsfFormGroup>
   </MsfStack>
 
-  <MsfEsimScanModal v-model="isEsimScanModalOpen" @confirm="onEsimScanConfirm" />
+  <MsfEsimScanModal
+    v-model="isEsimScanModalOpen"
+    :readonly="authFlags?.esimImei"
+    @confirm="onEsimScanConfirm"
+  />
   <!-- // SIM정보_상품(휴대폰) -->
 </template>
 

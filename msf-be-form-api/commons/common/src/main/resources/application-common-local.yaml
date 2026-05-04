@@ -1,9 +1,4 @@
 spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration
-      - org.springframework.boot.data.redis.autoconfigure.DataRedisRepositoriesAutoConfiguration
-
   ## DataSource
   datasource:
     groups:
@@ -44,10 +39,10 @@ spring:
   data:
     ## Redis
     redis:
-      enabled: false
-      host:
-      port: 6379
-      password: ENC(...)
+      enabled: true
+      host: 211.184.184.30
+      port: 46579
+      password: ENC(r+Nby5IIIBQWUocgfadxFQQ1sGJCruM/FTqI3me4dw+XYkev0d+8/3Mfu8oqmjMaqrAHcxH+TXDurF9G8tF/GwH7bs/ES4joQFzDMnGUc1A=)
 
 api:
   interface:

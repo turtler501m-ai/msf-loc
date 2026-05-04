@@ -42,7 +42,7 @@
             AND USE_YN = 'Y'
             AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
-            <if test='prodCtgTypeCd != null and prodCtgTypeCd.name() == "R"'><!-- 부가서비스 조회일 경우에만 공통코드에서 등록된 정보인지 확인함 -->
+            <if test='"R".equals(prodCtgTypeCd)'><!-- 부가서비스 조회일 경우에만 공통코드에서 등록된 정보인지 확인함 -->
                 AND PROD_ID IN (SELECT DTL_CD FROM MSF_CD_DTL
                                 WHERE CD_GROUP_ID = 'SVCCHG_RATE_CD'
                                     AND USE_YN = 'Y'
@@ -60,6 +60,10 @@
             <if test="orgnId != null and orgnId != ''">
                 AND STOR_CD = #{orgnId}
             </if>
+            <if test="prodId != null and prodId != ''">
+                AND PROD_ID = #{prodId}
+                <!--AND PROD_ID = #{phoneModelId}-->
+            </if>
             AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
         GROUP BY PROD_ID
@@ -72,6 +76,7 @@
         FROM MSF_PROD_STOR_INVENTORY_TXN
         WHERE 1=1
             AND USE_YN = 'Y'
+            AND IMEI IS NOT NULL
             <if test="orgnId != null and orgnId != ''">
                 AND STOR_CD = #{orgnId}
             </if>

@@ -5,6 +5,8 @@ export const useMsfUserStore = defineStore('msfUser', {
   state: () => ({
     token: null,
     userInfo: null,
+    deviceInfo: null,
+    userData: null,
   }),
   getters: {
     /**
@@ -38,6 +40,15 @@ export const useMsfUserStore = defineStore('msfUser', {
       return null
     },
     /**
+     * 인증 완료한 사용자 정보 저장
+     *
+     * @param {Object} data
+     */
+    setUserTokenInfo(data) {
+      this.userInfo = data?.userInfo
+      this.token = data?.accessToken
+    },
+    /**
      * 사용자 정보 조회
      */
     loadUserInfo() {
@@ -53,6 +64,24 @@ export const useMsfUserStore = defineStore('msfUser', {
     clearUserInfo() {
       this.userInfo = null
       this.token = null
+    },
+    setDeviceInfo(deviceInfo) {
+      this.deviceInfo = deviceInfo
+    },
+    getDeviceInfo() {
+      return this.deviceInfo
+    },
+    clearDeviceInfo() {
+      this.deviceInfo = null
+    },
+    setUserData(userData) {
+      this.userData = userData
+    },
+    getUserData() {
+      return this.userData
+    },
+    clearUserData() {
+      this.userData = null
     },
   },
 })

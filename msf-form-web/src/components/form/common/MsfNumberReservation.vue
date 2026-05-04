@@ -86,18 +86,18 @@ const searchParams = computed(() => ({
   reqWantRnNo: model.value.reqWantRnNo,
 }))
 
-const onNumberConfirm = async (number) => {
+const onNumberConfirm = async (data) => {
   try {
-    const res = await post('/api/form/newchange/reserveNumber', {
-      wishNo: number,
-      ...searchParams.value,
-    })
+    const number = typeof data === 'object' ? data.tlphNo : data
+    const payload = typeof data === 'object' 
+      ? { ...data, requestKey: store.applicationKey || '278', resNo: '2999999' }
+      : { tlphNo: data, requestKey: store.applicationKey || '278', resNo: '2999999' }
+    
+    const res = await post('/api/form/newchange/reserveNumber', payload)
     if (res && res.code === '0000') {
       model.value.wishNo = number
       reserveAuthBtn.verify()
       alert('번호 예약이 완료되었습니다.')
-    } else {
-      alert(res.message || '번호 예약에 실패했습니다.')
     }
   } catch (error) {
     console.error('Reserve number error:', error)
@@ -108,15 +108,15 @@ const handleCancelNumber = async () => {
   if (!confirm('예약된 번호를 취소하시겠습니까?')) return
 
   try {
-    const res = await post('/api/form/newchange/cancelNumber', {
-      wishNo: model.value.wishNo,
-    })
+    const payload = {
+      resNo: '2999999',
+      requestKey: store.applicationKey || '278',
+    }
+    const res = await post('/api/form/newchange/cancelNumber', payload)
     if (res && res.code === '0000') {
       model.value.wishNo = ''
       reserveAuthBtn.reset()
       alert('번호 예약이 취소되었습니다.')
-    } else {
-      alert(res.message || '번호 예약 취소에 실패했습니다.')
     }
   } catch (error) {
     console.error('Cancel number error:', error)

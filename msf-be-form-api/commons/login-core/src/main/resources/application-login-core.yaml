@@ -1,0 +1,52 @@
+#### Common Profile
+login-core:
+  failure:
+    max-count: 3
+  two-factor:
+    challenge-time-to-live: 3m
+    session-time-to-live: 10m
+  biometric:
+    challenge-time-to-live: 3m
+  token:
+    access-time-to-live: 10m
+    refresh-time-to-live: 2h
+  user-info-cache:
+    time-to-live: 10m
+    stale-time-to-live: 10m
+    lock-time-to-live: 3s
+    lock-wait-time: 1s
+    lock-retry-interval: 100ms
+  cookie:
+    refresh-token-name: RefreshToken
+    same-site: Strict
+    path: /
+    secure: true
+
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local
+
+login-core:
+  token:
+    access-time-to-live: 3h
+    refresh-time-to-live: 6h
+  cookie:
+    same-site: None
+    secure: false

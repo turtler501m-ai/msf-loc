@@ -1,10 +1,10 @@
 <template>
   <MsfFormGroup label="<em class='login-label'>이름</em>" vertical>
-    <MsfInput variant="underline" v-model="displayUserName" class="ut-w100p" disabled />
+    <MsfInput variant="underline" v-model="userName" class="ut-w100p" disabled />
   </MsfFormGroup>
   <MsfFormGroup label="<em class='login-label'>전화번호</em>" vertical>
     <MsfStack type="field" class="ut-w100p">
-      <MsfInput variant="underline" v-model="displayUserPhone" class="ut-flex-1" disabled />
+      <MsfInput variant="underline" v-model="userPhone" class="ut-flex-1" disabled />
       <MsfButton variant="toggle" :disabled="isDisabledSendBtn" @click="onClickSendAuthNumber()">{{
         status === 'sent' ? '인증번호 재발송' : '인증번호 발송'
       }}</MsfButton>
@@ -37,12 +37,13 @@ import { computed, onBeforeMount, onBeforeUpdate, ref, shallowRef, watch } from 
 import { useRoute } from 'vue-router'
 import { useCountdown } from '@vueuse/core'
 import { showAlert } from '@/libs/utils/comp.utils'
-import { isEmpty, validateMobile, maskingMobile } from '@/libs/utils/string.utils'
+import { isEmpty } from '@/libs/utils/string.utils'
 import { post } from '@/libs/api/msf.api'
 
 const route = useRoute()
 
 const props = defineProps({
+  loginKey: { type: String, required: true },
   name: { type: String, required: true },
   phone: { type: String, required: true },
   showDevice: { type: Boolean, default: false },
@@ -50,6 +51,7 @@ const props = defineProps({
 
 const emit = defineEmits(['complete'])
 
+const loginKey = ref(props.loginKey)
 const userName = ref(props.name)
 const userPhone = ref(props.phone)
 const authNumber = ref('')
@@ -58,18 +60,6 @@ const sendedKey = ref('')
 
 const isDisabledSendBtn = computed(() => status.value === 'none')
 const isDisabledConfirmBtn = computed(() => authNumber.value?.length !== 6)
-
-const displayUserName = computed(() => {
-  if (isEmpty(userName.value)) return ''
-  const length = userName.value.length
-  return length <= 3
-    ? userName.value.replace(/.$/u, '*')
-    : userName.value.substring(0, 2) + '*'.repeat(length - 2)
-})
-
-const displayUserPhone = computed(() => {
-  return maskingMobile(userPhone.value)
-})
 
 const countdownFormat = computed(
   () =>
@@ -92,6 +82,7 @@ const onClickSendAuthNumber = async () => {
   const result = await post('/api/shared/common/sms/otp/send', {
     type: 'F-0-OTP',
     path: route.path,
+    token: loginKey.value,
   })
   if (result?.code !== '0000') {
     showAlert('[인증번호 발송] 버튼을 클릭하시면,\n인증번호가 등록된 휴대폰으로 발송됩니다.')
@@ -120,6 +111,24 @@ const onClickVerifyAuthNumber = async () => {
 }
 
 watch(
+  () => props.loginKey,
+  (newVal) => {
+    loginKey.value = newVal
+  },
+  { immediate: true },
+)
+watch(
+  () => props.name,
+  (newVal) => {
+    if (!newVal) {
+      userName.value = ''
+    } else {
+      userName.value = newVal
+    }
+  },
+  { immediate: true },
+)
+watch(
   () => props.phone,
   (newVal) => {
     if (!newVal) {
@@ -127,7 +136,7 @@ watch(
     } else {
       userPhone.value = newVal
     }
-    if (validateMobile(userPhone.value)) {
+    if (!isEmpty(userPhone.value)) {
       status.value = 'ready'
     }
   },
@@ -143,12 +152,12 @@ watch(
 )
 
 onBeforeMount(() => {
-  if (validateMobile(props.phone)) {
+  if (!isEmpty(props.phone)) {
     status.value = 'ready'
   }
 })
 onBeforeUpdate(() => {
-  if (status.value === 'none' && validateMobile(props.phone)) {
+  if (status.value === 'none' && !isEmpty(props.phone)) {
     status.value = 'ready'
   }
 })

@@ -31,6 +31,7 @@
               </MsfFormGroup>
               <MsfButtonGroup gap="3">
                 <MsfButton variant="primary" block @click="onClickLogin">로그인</MsfButton>
+                <MsfButton variant="primary" block @click="goMain">메인으로 이동</MsfButton>
                 <MsfButton
                   variant="secondary"
                   prefixIcon="touchId"
@@ -71,9 +72,13 @@
 <script setup>
 import { reactive, ref, onMounted } from 'vue'
 import { post } from '@/libs/api/msf.api'
+import { useRouter } from 'vue-router'
+import { useMsfUserStore } from '@/stores/msf_user'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
 
 const apvSttusCd = ref(null)
+const router = useRouter()
+const msfUserStore = useMsfUserStore()
 
 const formData = reactive({
   userId: '', //아이디
@@ -81,17 +86,21 @@ const formData = reactive({
   idSave: false, //아이디 저장 여부
   deviceId: 'Phone-A',
   authType: 'PASSWORD',
+  uuid: '82311994',
+  // uuid: '7878', // molo - 수정 필요
 })
 
 onMounted(async () => {
   // 앱에서 uuid 를 구해서 사용
   const initData = {
-    uuid: '7878', // molo - 수정 필요
+    uuid: '82311994',
+    // uuid: '7878', // molo - 수정 필요
   }
   post('/api/app/login/init', initData)
     .then((data) => {
       console.log('init data:' + data.data.apvSttusCd)
       apvSttusCd.value = data.data.apvSttusCd
+      msfUserStore.setDeviceInfo(data.data)
     })
     .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
 })
@@ -112,6 +121,14 @@ const onClickLogin = () => {
       console.log(data.code)
       if (data.code == '0000') {
         console.log('로그인 성공')
+        msfUserStore.setUserData(data.data)
+        if (msfUserStore.userData.pwdChgYn === 'Y') {
+          showAlert('비밀번호 변경이 필요합니다.\n비밀번호 변경 화면으로 이동합니다.', () => {
+            router.push('/passwordChange')
+          })
+          return
+        }
+        router.push('/deviceAuth')
       } else {
         showAlert(data.message)
       }
@@ -121,7 +138,8 @@ const onClickLogin = () => {
 
 const onClickModelRemove = () => {
   const postData = {
-    uuid: '7878', // molo - 수정 필요
+    uuid: '82311994',
+    // uuid: '7878', // molo - 수정 필요
   }
   showConfirm('단말의 사용등록을 승인 철회하시겠습니까?', () => {
     post('/api/app/model/remove', postData)
@@ -137,6 +155,10 @@ const onClickModelRemove = () => {
       })
       .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
   })
+}
+
+const goMain = () => {
+  router.push('/')
 }
 </script>
 

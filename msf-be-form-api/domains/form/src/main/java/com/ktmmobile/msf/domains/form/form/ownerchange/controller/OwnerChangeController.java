@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameChgVo;
+import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeSaveResponse;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeValidationRequest;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeValidationResponse;
 import com.ktmmobile.msf.domains.form.form.ownerchange.service.OwnerChgRestSvc;
@@ -23,5 +25,11 @@ public class OwnerChangeController {
     @PostMapping("/owner-change/validate")
     public CommonResponse<OwnerChangeValidationResponse> ownerChangeValidation(@RequestBody OwnerChangeValidationRequest request) {
         return ResponseUtils.ok(ownerChgRestSvc.ownerChangeValidation(request));
+    }
+
+    // 명의변경 작성완료 데이터 저장 (사전체크만?)
+    @PostMapping("/owner-change/form/save")
+    public CommonResponse<OwnerChangeSaveResponse> ownerChangeFormSave(@RequestBody MsfRequestNameChgVo request) {
+        return ResponseUtils.ok(ownerChgRestSvc.ownerChangeFormSave(request));
     }
 }

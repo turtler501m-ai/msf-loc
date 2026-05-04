@@ -1,7 +1,8 @@
 package com.ktmmobile.msf.domains.form.form.newchange.repository.msp;
 
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
@@ -13,7 +14,7 @@ public interface FormCommReadMapper {
 
     long getCustRequestSeq();
 
-    AgentInfoDto selectAgentInfo(String cntpntCd);
+    AgentInfoResponse selectAgentInfo(AgentInfoRequest request);
 
     int selectOsstCount(McpRequestOsstDto request);
 

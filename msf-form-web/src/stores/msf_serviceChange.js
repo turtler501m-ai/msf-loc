@@ -57,7 +57,6 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
     serviceSelect: [], // 서비스선택
     serviceList: [
       { value: 'serviceSelect1', label: '무선데이터차단 서비스' },
-      { value: 'serviceSelect2', label: '정보료 상한금액 설정/변경', checked: true },
       { value: 'serviceSelect3', label: '부가서비스 신청/변경' },
       { value: 'serviceSelect4', label: '요금제 변경', notConcurrentChange: true },
       { value: 'serviceSelect5', label: '번호변경', notConcurrentChange: true },

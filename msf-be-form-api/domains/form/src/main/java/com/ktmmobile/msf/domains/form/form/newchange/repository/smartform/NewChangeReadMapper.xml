@@ -25,6 +25,7 @@
         /** MSF_REQUEST 단건 조회 **/
         SELECT
             A.REQ_BUY_TYPE_CD
+          , A.REQUEST_KEY
           , A.OPEN_TYPE_CD
           , A.SERVICE_TYPE_CD
           , A.OPER_TYPE_CD
@@ -270,6 +271,41 @@
         FROM MSF_REQUEST_BILL_REQ_TEMP
         WHERE REQUEST_KEY = #{requestKey}
     </select>
+
+    <select id="selectMsfRequestMoveInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo">
+        SELECT REQUEST_KEY
+        , MOVE_COMPANY_CD
+        , MOVE_MOBILE_FN_NO
+        , MOVE_MOBILE_MN_NO
+        , MOVE_MOBILE_RN_NO
+        , MOVE_AUTH_TYPE_CD
+        , MOVE_AUTH_NO
+        , MOVE_THISMONTH_PAY_TYPE_CD
+        , MOVE_ALLOTMENT_STTUS_CD
+        , MOVE_REFUND_AGREE_YN
+        , REQ_GUIDE_YN
+        , REQ_GUIDE_FN_NO
+        , REQ_GUIDE_RN_NO
+        , REQ_GUIDE_MN_NO
+        , OSST_PAY_DATE
+        , OSST_PAY_TYPE_CD
+        , MOVE_PENALTY
+        FROM MSF_REQUEST_MOVE_TEMP
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>
+
+    <select id="selectMsfRequestDvcChgInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDvcChgVo">
+        SELECT REQUEST_KEY
+        , DVC_CHG_TYPE_CD
+        , DVC_CHG_RSN_CD
+        , DVC_CHG_RSN_DTL_CD
+        , INSTAMT_PAY_MTHD_CD
+        FROM MSF_REQUEST_DVC_CHG_TEMP
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>
+
 
     <!-- /** MSF_REQUEST_ADDITION 부가서비스 조회 **/ -->
 

@@ -219,14 +219,15 @@
                          open="(" separator="," close=")">
                     #{phone.prodId}
                 </foreach>-->  <!--스마트가 관리하는 해당 대리점의 보유 단말의 PROD_ID 로 검색조건 추가-->
-            <if test="shandYn != null and shandYn != ''">
+        AND SNTY.RPRS_PRDT_YN = 'Y' <!-- 대표단말여부 -->
+        <if test="shandYn != null and shandYn != ''">
                 AND A.SHAND_YN = #{shandYn}
             </if>
             AND A.PROD_ID = SNTY.PROD_ID
             <if test="prodCtgId != null and prodCtgId != ''">
                 AND A.PROD_CTG_ID = #{prodCtgId}
             </if>
-            AND SNTY.RPRS_PRDT_YN = 'Y'
+
             <if test="makrCd != null and makrCd != ''">
                 AND A.MAKR_CD = #{makrCd}
             </if>

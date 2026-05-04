@@ -42,14 +42,16 @@
 </template>
 
 <script setup>
-import { computed, ref, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCountdown } from '@vueuse/core'
 import { showAlert } from '@/libs/utils/comp.utils'
 import { post } from '@/libs/api/msf.api'
+import { validateMobile } from '@/libs/utils/string.utils'
 
 const route = useRoute()
 
+const nameModel = defineModel('name', { type: String, default: '' })
 const phone1Model = defineModel('phone1', { type: String, default: '010' })
 const phone2Model = defineModel('phone2', { type: String, default: '' })
 const phone3Model = defineModel('phone3', { type: String, default: '' })
@@ -58,7 +60,7 @@ const props = defineProps({
   formType: {
     type: String,
     required: true,
-    validator: (v) => ['F-1-VDP', 'F-2-VDP', 'F-3-VDP', 'F-4-VDP'].includes(v),
+    // validator: (v) => ['F-1-VDP', 'F-2-VDP', 'F-3-VDP', 'F-4-VDP'].includes(v),
   },
   label: { type: String, default: '연락처(휴대폰)' },
 })
@@ -66,7 +68,7 @@ const props = defineProps({
 const emit = defineEmits(['complete'])
 
 const phone = ref({
-  phone1: !phone1Model.value ? '010' : phone1Model,
+  phone1: phone1Model.value || '010',
   phone2: phone2Model.value,
   phone3: phone3Model.value,
 })
@@ -74,6 +76,15 @@ const authNumber = ref('')
 const status = ref('none')
 const valid = ref(false)
 const sendedKey = ref('')
+
+onMounted(() => {
+  // 초기 로드 시 (임시저장 데이터 등) 번호가 이미 있다면 유효성 체크하여 버튼 활성화
+  const fullPhone = `${phone.value.phone1}-${phone.value.phone2}-${phone.value.phone3}`
+  if (validateMobile(fullPhone)) {
+    valid.value = true
+    status.value = 'ready'
+  }
+})
 
 const isDisabledSendBtn = computed(() => status.value === 'none')
 const isDisabledConfirmBtn = computed(() => authNumber.value?.length !== 6)
@@ -97,12 +108,12 @@ const { remaining, start, stop, reset } = useCountdown(countdown, {
 
 const onClickSendAuthNumber = async () => {
   const result = await post('/api/shared/common/sms/otp/send', {
+    name: nameModel.value || '홍길동',
     phone: phone.value.phone1 + phone.value.phone2 + phone.value.phone3,
     type: props.formType,
     path: route.path,
   })
   if (result?.code !== '0000') {
-    showAlert('[인증번호 발송] 버튼을 클릭하시면,\n인증번호가 등록된 휴대폰으로 발송됩니다.')
     return false
   }
   sendedKey.value = result.data
@@ -120,7 +131,6 @@ const onClickVerifyAuthNumber = async () => {
     token: sendedKey.value,
   })
   if (result?.code !== '0000') {
-    showAlert(result.message)
     return false
   }
   stop()

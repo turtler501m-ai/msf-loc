@@ -26,7 +26,7 @@ const handleDeviceVerify = async () => {
   const payload = {
     orgnId: 'V000001105',
     prodSn: model.value.imei,
-    prodId: '4993', // 실제 구현 시 상품 정보에서 가져와야 할 수 있음
+    prodId: '4994', // DTO 스펙에 맞춤
   }
 
   try {
@@ -34,19 +34,15 @@ const handleDeviceVerify = async () => {
     if (res && res.code === '0000') {
       imeiAuth.verify()
       alert('휴대폰 일련번호 유효성 체크가 완료되었습니다.')
-    } else {
-      alert(res.message || '휴대폰 일련번호 유효성 체크에 실패했습니다.')
     }
   } catch (error) {
     console.error('Verify device serial number error:', error)
-    alert('휴대폰 일련번호 유효성 체크 중 오류가 발생했습니다.')
   }
 }
 
 const validate = () => {
   if (customerModel.value.product === 'MM') {
     if (!model.value.imei) return false
-    if (!store.authFlags?.imei) return false
   }
   return true
 }

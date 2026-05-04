@@ -15,4 +15,5 @@ public class LoginResponse {
     private String accessLimitYn;
     private Integer loginChkCnt;
     private String pwd;
+    private String pwdChgYn;
 }

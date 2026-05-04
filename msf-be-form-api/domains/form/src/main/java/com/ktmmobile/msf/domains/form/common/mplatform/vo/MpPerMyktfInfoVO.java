@@ -27,22 +27,22 @@ public class MpPerMyktfInfoVO extends CommonXmlVO{
         this.homeTel = XmlParse.getChildValue(item, "homeTel");
         this.initActivationDate = XmlParse.getChildValue(item, "initActivationDate");
 
-        // 마스킹해제 인증 안했을시
-        if(SessionUtils.getMaskingSession() == 0) {
-            if(StringUtil.isNotNull(this.email)){
-                this.email = StringMakerUtil.getEmail(this.email);
-            }
-            if(StringUtil.isNotNull(this.addr)){
-                this.addr = StringMakerUtil.getAddress(this.addr);
-            }
-            if(StringUtil.isNotNull(this.homeTel)){
-                this.homeTel = StringMakerUtil.getPhoneNum(this.homeTel);
-            }
-        }else {
-            if(StringUtil.isNotNull(this.homeTel)){
-                this.homeTel = StringUtil.getMobileFullNum(StringUtil.NVL(this.homeTel,""));
-            }
-        }
+        // [ASIS] 세션 기반 마스킹 — TOBE에서는 세션 없이 항상 마스킹 분기 진입하므로 제외
+        // if(SessionUtils.getMaskingSession() == 0) {
+        //     if(StringUtil.isNotNull(this.email)){
+        //         this.email = StringMakerUtil.getEmail(this.email);
+        //     }
+        //     if(StringUtil.isNotNull(this.addr)){
+        //         this.addr = StringMakerUtil.getAddress(this.addr);
+        //     }
+        //     if(StringUtil.isNotNull(this.homeTel)){
+        //         this.homeTel = StringMakerUtil.getPhoneNum(this.homeTel);
+        //     }
+        // }else {
+        //     if(StringUtil.isNotNull(this.homeTel)){
+        //         this.homeTel = StringUtil.getMobileFullNum(StringUtil.NVL(this.homeTel,""));
+        //     }
+        // }
     }
 
 

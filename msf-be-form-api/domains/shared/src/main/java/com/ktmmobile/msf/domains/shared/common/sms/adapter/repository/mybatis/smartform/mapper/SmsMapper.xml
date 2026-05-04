@@ -9,4 +9,102 @@
       from user_id = #{value}
      where user_sttus_cd = 'A'
   </select>
+
+  <insert id="insertMsfCrtVldDtl" parameterType="com.ktmmobile.msf.domains.shared.common.sms.domain.entity.IdVerifValidationDetail">
+    <selectKey keyProperty="crtVldDtlSeq" resultType="long" order="BEFORE">
+      <choose>
+        <when test="crtVldDtlSeq != null and crtVldDtlSeq gt 0">
+          select #{crtVldDtlSeq}
+        </when>
+        <otherwise>
+          select nextval('sq_crt_vld_dtl_seq'::regclass)
+        </otherwise>
+      </choose>
+    </selectKey>
+    insert into msf_crt_vld_dtl (
+      crt_vld_dtl_seq,
+      step,
+      sub_step,
+      reg_date,
+      auth_type_cd,
+      modu_type_cd,
+      comp_type_cd,
+      step_end_yn,
+      veri_rslt_sbst,
+      referer,
+      auth_nm,
+      auth_birth,
+      mobile_no,
+      ci,
+      request_key,
+      contract_num,
+      req_usim_sn,
+      req_bank_cd,
+      req_account_no,
+      upload_phone_srl_no,
+      req_seq,
+      res_seq,
+      nc_type_cd,
+      di,
+      crt_etc,
+      rip,
+      url_type_cd,
+      req_card_company_cd,
+      req_card_no,
+      crdt_card_period
+    ) values (
+      #{crtVldDtlSeq},
+      case when exists (
+                        select 1
+                          from msf_crt_vld_dtl
+                         where crt_vld_dtl_seq = #{crtVldDtlSeq}
+                           and url_type_cd = #{urlTypeCd}
+                       )
+           then (
+                 select max(step)
+                   from msf_crt_vld_dtl
+                  where crt_vld_dtl_seq = #{crtVldDtlSeq}
+                    and url_type_cd = #{urlTypeCd}
+                )
+           else (
+                 select coalesce(max(step), 0) + 1
+                   from msf_crt_vld_dtl
+                  where crt_vld_dtl_seq = #{crtVldDtlSeq}
+                )
+       end,
+      (
+       select coalesce(max(sub_step), 0) + 1
+         from msf_crt_vld_dtl
+        where crt_vld_dtl_seq = #{crtVldDtlSeq}
+          and url_type_cd = #{urlTypeCd}
+      ),
+      to_char(now(), 'YYYYMMDD'),
+      #{authTypeCd},
+      #{moduTypeCd},
+      #{compTypeCd},
+      #{stepEndYn},
+      #{veriRsltSbst},
+      #{referer},
+      #{authNm},
+      #{authBirth},
+      #{mobileNo},
+      #{ci},
+      #{requestKey},
+      #{contractNum},
+      #{reqUsimSn},
+      #{reqBankCd},
+      #{reqAccountNo},
+      #{uploadPhoneSrlNo},
+      #{reqSeq},
+      #{resSeq},
+      #{ncTypeCd},
+      #{di},
+      #{crtEtc},
+      #{rip},
+      #{urlTypeCd},
+      #{reqCardCompanyCd},
+      #{reqCardNo},
+      #{crdtCardPeriod}
+    )
+  </insert>
 </mapper>

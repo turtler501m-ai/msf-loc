@@ -3,6 +3,7 @@
     <div class="guide-item">
       <h3 class="ut-mb-10">1. 휴대폰 인증번호 발송 및 검증</h3>
       <MsfMobileAuthNumber
+        v-model:name="name"
         v-model:phone1="phoneData.phone1"
         v-model:phone2="phoneData.phone2"
         v-model:phone3="phoneData.phone3"
@@ -51,6 +52,7 @@
 import { onMounted, ref } from 'vue'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 
+const name = ref('홍길동')
 const phoneData = ref({ phone1: '', phone2: '', phone3: '' })
 const verified = ref(false)
 const onComplete = (result) => {

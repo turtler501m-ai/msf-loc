@@ -27,6 +27,11 @@ public enum UseYn implements CommonEnum {
         return this == NO;
     }
 
+    @JsonCreator
+    public static UseYn valueOfCode(String code) {
+        return CommonEnum.valueOfCode(UseYn.class, code, getInvalidValue());
+    }
+
     @Override
     public boolean isValid() {
         return this != getInvalidValue();
@@ -34,10 +39,5 @@ public enum UseYn implements CommonEnum {
 
     public static UseYn getInvalidValue() {
         return UNDEFINED;
-    }
-
-    @JsonCreator
-    public static UseYn valueOfCode(String code) {
-        return CommonEnum.valueOfCode(UseYn.class, code, getInvalidValue());
     }
 }

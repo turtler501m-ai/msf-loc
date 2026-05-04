@@ -1,10 +1,10 @@
 <template>
   <div class="page-step-panel">
     <!-- SIM 정보 -->
-    <MsfSIMInfo v-model="formData" title="SIM 정보" />
+    <MsfProductSimInfo v-model="formData.usimInfo" :authFlags="store.authFlags" />
     <!-- // SIM 정보 -->
     <!-- 납부 정보 -->
-    <MsfPaymentInfo v-model="formData" />
+    <MsfPaymentInfo v-model="formData" :authFlags="store.authFlags" />
     <!-- // 납부 정보 -->
     <!-- 메모 -->
     <MsfMemo v-model="formData" />
@@ -29,6 +29,7 @@
 import { useMsfFormOwnChgStore } from '@/stores/msf_ownerChange'
 import { ref, watch } from 'vue'
 import MsfMemo from '../common/MsfMemo.vue'
+import { storeToRefs } from 'pinia'
 
 // 필수 항목 입력 완료여부 리턴
 const emit = defineEmits(['complete'])
@@ -52,7 +53,8 @@ const save = async () => {
 defineExpose({ save })
 
 // 퍼블 샘플
-const formData = useMsfFormOwnChgStore()
+const store = useMsfFormOwnChgStore()
+const { formData } = storeToRefs(store)
 // const formData = reactive({
 //   /* USIM 정보 */
 //   hasSim: '', //SIM보유

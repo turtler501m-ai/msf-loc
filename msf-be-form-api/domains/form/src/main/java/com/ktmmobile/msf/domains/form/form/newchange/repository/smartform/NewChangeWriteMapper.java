@@ -19,8 +19,9 @@ public interface NewChangeWriteMapper {
 
     void insertMsfRequestBillReqTemp(MsfRequestBillReqVo msfRequestBillReqVo);
 
-    @AutoAuditing(false)
     void insertMsfRequestMoveTemp(MsfRequestMoveVo msfRequestMoveVo);
+
+    void insertMsfRequestDvcChgTemp(MsfRequestDvcChgVo msfRequestMoveVo);
 
     //UPDATE
     void updateMsfRequestTemp(MsfRequestVo msfRequestVo);
@@ -33,9 +34,9 @@ public interface NewChangeWriteMapper {
 
     void updateMsfRequestBillReqTemp(MsfRequestBillReqVo msfRequestBillReqVo);
 
-    @AutoAuditing(false)
     void updateMsfRequestMoveTemp(MsfRequestMoveVo msfRequestMoveVo);
 
+    void updateMsfRequestDvcChgTemp(MsfRequestDvcChgVo msfRequestDvcChgVo);
 
     //void updateMsfRequestTemp(NewChangeInfoRequest request);
     //void updateMsfRequestAgentTemp(NewChangeInfoRequest request);

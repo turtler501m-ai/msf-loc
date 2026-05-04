@@ -1,6 +1,7 @@
 import axios from 'axios'
 // import { useRouter } from 'vue-router'
 import { useMsfUserStore } from '@/stores/msf_user'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 axios.defaults.headers['Content-Type'] = 'application/json'
 axios.defaults.headers['Accept'] = 'application/json'
@@ -54,13 +55,34 @@ const api = axios.create({
   baseURL: `${import.meta.env.VITE_MSF_API_URL}`,
 })
 
-export const post = async (url, params) => {
+export const post = async (url, params, options = {}) => {
+  const { silent = false } = options
+
   return await api
     .post(url, params, {
       validateStatus: (status) => status >= 200 && status < 400,
     })
-    .then((res) => res.data)
-    .catch((err) =>
-      err.response?.data ? err.response.data : { code: '9999', message: err.message },
-    )
+    .then((res) => {
+      const resData = res.data
+
+      // 1. 백엔드 시스템 에러 체크
+      if (resData.code !== '0000') {
+        if (!silent) showAlert(resData.message || '시스템 오류가 발생했습니다.')
+        return resData
+      }
+
+      // 2. 비즈니스 에러 체크 (resCode가 존재하고 '0000'이 아닌 경우)
+      if (resData.data?.resCode && resData.data.resCode !== '0000') {
+        if (!silent) showAlert(resData.data.resMessage || '업무 처리 중 오류가 발생했습니다.')
+      }
+
+      return resData
+    })
+    .catch((err) => {
+      const errorData = err.response?.data
+        ? err.response.data
+        : { code: '9999', message: err.message }
+      if (!silent) showAlert(errorData.message || '네트워크 오류가 발생했습니다.')
+      return errorData
+    })
 }

@@ -1,13 +1,15 @@
 package com.ktmmobile.msf.commons.common.data.type;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnum;
 import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnumConstant;
 
 @Getter
 @RequiredArgsConstructor
-public enum UserType {
+public enum UserType implements CommonEnum {
     FORM_USER("USER", "F", "일반 사용자"),
     ADMIN_USER("ADMIN", "A", "관리자"),
 
@@ -27,13 +29,9 @@ public enum UserType {
         return this == ADMIN_USER;
     }
 
+    @JsonCreator
     public static UserType valueOfCode(String code) {
-        for (UserType value: values()) {
-            if (value.getCode().equals(code)) {
-                return value;
-            }
-        }
-        return getInvalidValue();
+        return CommonEnum.valueOfCode(UserType.class, code, getInvalidValue());
     }
 
     public static UserType valueOfSimpleCode(String simpleCode) {
@@ -45,11 +43,12 @@ public enum UserType {
         return getInvalidValue();
     }
 
-    public static UserType getInvalidValue() {
-        return UNDEFINED;
-    }
-
+    @Override
     public boolean isValid() {
         return this != getInvalidValue();
+    }
+
+    public static UserType getInvalidValue() {
+        return UNDEFINED;
     }
 }

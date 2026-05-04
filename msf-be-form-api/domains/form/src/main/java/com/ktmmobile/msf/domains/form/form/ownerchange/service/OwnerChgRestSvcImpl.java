@@ -6,12 +6,16 @@ import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.repository.McpApiClient;
+import com.ktmmobile.msf.domains.form.form.common.repository.MsfRequestRepositoryImpl;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameChgVo;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeJoinInfoResponse;
+import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeSaveResponse;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeType;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeValidationRequest;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeValidationResponse;
@@ -22,6 +26,7 @@ import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeWireUseTim
 public class OwnerChgRestSvcImpl implements OwnerChgRestSvc {
 
     private final MsfMplatFormService msfMplatFormService;
+    private final MsfRequestRepositoryImpl msfRequestRepository;
     private final ObjectMapper objectMapper;
     private final McpApiClient mcpApiClient;
 
@@ -104,5 +109,14 @@ public class OwnerChgRestSvcImpl implements OwnerChgRestSvc {
 
         return OwnerChangeValidationResponse.builder().resultCd(OwnerChangeType.SUCCESS.getCode()).message(OwnerChangeType.SUCCESS.getMessage())
             .response(ownerChangeJoinInfoResponse).build();
+    }
+
+    @Transactional
+    @Override public OwnerChangeSaveResponse ownerChangeFormSave(MsfRequestNameChgVo request) {
+
+        int result = msfRequestRepository.insertMsfRequestNameChg(request);
+        int result2 = msfRequestRepository.insertMsfRequestNameTrns(request);
+
+        return null;
     }
 }

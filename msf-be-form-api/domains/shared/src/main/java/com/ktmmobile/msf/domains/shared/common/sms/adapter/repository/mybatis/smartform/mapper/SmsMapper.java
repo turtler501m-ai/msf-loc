@@ -2,8 +2,14 @@ package com.ktmmobile.msf.domains.shared.common.sms.adapter.repository.mybatis.s
 
 import org.apache.ibatis.annotations.Mapper;
 
+import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
+import com.ktmmobile.msf.domains.shared.common.sms.domain.entity.IdVerifValidationDetail;
+
+@AutoAuditing
 @Mapper
 public interface SmsMapper {
 
     String selectUserPhone(String userId);
+
+    Integer insertMsfCrtVldDtl(IdVerifValidationDetail idVerifValidationDetail);
 }

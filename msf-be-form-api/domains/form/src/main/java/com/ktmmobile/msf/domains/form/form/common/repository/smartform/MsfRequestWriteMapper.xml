@@ -604,8 +604,7 @@
         )
     </insert>
 
-    <insert id="insertMsfRequestNameChg"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameChgVo">
+    <insert id="insertMsfRequestNameChg">
         INSERT INTO MSF_REQUEST_NAME_CHG (
             REQUEST_KEY,
             CRET_IP,
@@ -783,8 +782,7 @@
         )
     </insert>
 
-    <insert id="insertMsfRequestNameTrns"
-            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameTrnsVo">
+    <insert id="insertMsfRequestNameTrns">
         INSERT INTO MSF_REQUEST_NAME_TRNS (
             REQUEST_KEY,
             NFL_CHG_TRNS_SEQ,
@@ -1467,5 +1465,4 @@
             #{faxNo}
         )
     </insert>
-
 </mapper>

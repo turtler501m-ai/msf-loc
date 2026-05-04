@@ -89,7 +89,7 @@
       >
         <MsfChip
           v-model="model.discountType"
-          :data="discountTypeOptions"
+          :data="refinedDiscountTypeOptions"
           :disabled="model.isSaved"
           name="inp-discountType"
         />
@@ -127,7 +127,7 @@
 </template>
 
 <script setup>
-import { defineModel, defineProps, onMounted, ref, watch } from 'vue'
+import { computed, defineModel, defineProps, onMounted, ref, watch } from 'vue'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import { post } from '@/libs/api/msf.api'
 
@@ -157,7 +157,27 @@ const colorOptions = ref([])
 const contractPeriodOptions = ref([])
 const installmentMonthOptions = ref([])
 const discountTypeOptions = ref([])
+const allDiscountTypeCodes = ref([]) // 공통코드 F002 전체 목록
+
 const planCategoryOptions = ref([])
+
+// 최종적으로 화면에 뿌려질 칩 데이터 (가공됨)
+const refinedDiscountTypeOptions = computed(() => {
+  if (allDiscountTypeCodes.value.length === 0) return discountTypeOptions.value
+
+  const availableIds = discountTypeOptions.value.map((opt) => opt.value)
+
+  const refined = allDiscountTypeCodes.value.map((opt) => ({
+    ...opt,
+    disabled: !availableIds.includes(opt.value),
+  }))
+
+  // 정렬: 가능한 것 먼저, disabled는 뒤로
+  return refined.sort((a, b) => {
+    if (a.disabled === b.disabled) return 0
+    return a.disabled ? 1 : -1
+  })
+})
 const planOptions = ref([])
 const agencyOptions = ref([])
 
@@ -168,14 +188,19 @@ const fetchDevices = async () => {
       prodCtgId: '',
       makrCd: '',
       shandType: '',
+      orgnId: '1100014062', // 매장재고조회를 위한 대리점 코드 임시값
       reqBuyTypeCd: model.value.productType || 'MM',
     })
-    deviceOptions.value = extractData(res).map((item) => ({
+    const list = extractData(res)
+    deviceOptions.value = list.map((item) => ({
       label: item.prodNm || item.rprsPrdtNm || '이름없음',
       value: item.prodId || item.rprsPrdtId || item.prdtId,
+      rprsPrdtId: item.rprsPrdtId, // 할인유형 조회를 위해 원본 ID 유지
     }))
+    return list
   } catch (e) {
     console.error('Failed to fetch devices:', e)
+    return []
   }
 }
 
@@ -183,35 +208,45 @@ const fetchDevices = async () => {
 const fetchCapacities = async (prodId) => {
   if (!prodId) {
     capacityOptions.value = []
-    return
+    return []
   }
   try {
-    // 요청하신 임시값 "2525" 사용 (필요시 prodId로 대체 가능)
-    const res = await post('/api/form/phone/capacity/list', { prodId: '2525' })
-    capacityOptions.value = extractData(res).map((item) => ({
+    const res = await post('/api/form/phone/capacity/list', { prodId })
+    const list = extractData(res).map((item) => ({
       label: item.modelCapacityNm || item.ctgNm || '용량정보 없음',
       value: item.modelCapacityCd || item.ctgCd || item.prdtId,
     }))
+    capacityOptions.value = list
+    return list
   } catch (e) {
     console.error('Failed to fetch capacities:', e)
+    return []
   }
 }
 
 // 3. 색상 목록 조회
-const fetchColors = async (prodId) => {
+const fetchColors = async (prodId, capacityCd) => {
   if (!prodId) {
     colorOptions.value = []
-    return
+    return []
   }
   try {
-    // 요청하신 임시값 "K7031527" 사용
-    const res = await post('/api/form/phone/color/list', { rprsPrdtId: 'K7031527' })
-    colorOptions.value = extractData(res).map((item) => ({
+    const selectedDevice = deviceOptions.value.find((opt) => opt.value === prodId)
+    const rprsPrdtId = selectedDevice?.rprsPrdtId || prodId
+
+    const res = await post('/api/form/phone/color/list', {
+      rprsPrdtId,
+      modelCapacityCd: capacityCd,
+    })
+    const list = extractData(res).map((item) => ({
       label: item.modelColorNm || item.ctgNm || '색상정보 없음',
       value: item.modelColorCd || item.ctgCd || item.prdtId,
     }))
+    colorOptions.value = list
+    return list
   } catch (e) {
     console.error('Failed to fetch colors:', e)
+    return []
   }
 }
 
@@ -254,23 +289,32 @@ const fetchInstallmentMonths = async () => {
 }
 
 // 6. 할인유형 조회 (판매정책)
-const fetchDiscountTypes = async (prdtId) => {
+const fetchDiscountTypes = async () => {
+  const selectedDevice = deviceOptions.value.find((opt) => opt.value === model.value.deviceModel)
+  const rprsPrdtId = selectedDevice?.rprsPrdtId || 'K7025076' // 선택된 단말의 rprsPrdtId 사용
+
   try {
     const res = await post('/api/form/phone/saletype/list', {
       plcyTypeCd: 'N',
       plcySctnCd: '01',
-      orgnId: '1100033726',
-      prdtId: prdtId || 'K7020692',
+      orgnId: '1100014062',
+      prdtId: rprsPrdtId,
       salePlcyCd: 'N2022011018381',
       prdtSctnCd: '',
+      reqBuyTypeCd: model.value.productType || 'MM',
     })
-    discountTypeOptions.value = extractData(res).map((item) => ({
+    const availableList = extractData(res).map((item) => ({
       label: item.sprtNm || '할인유형',
       value: item.sprtTp,
     }))
-    // 자동 선택
-    if (discountTypeOptions.value.length > 0 && !model.value.discountType) {
-      model.value.discountType = discountTypeOptions.value[0].value
+    discountTypeOptions.value = availableList
+
+    // 자동 선택: 사용 가능한 목록 중 첫 번째 항목을 기본값으로 설정 (현재 선택값이 유효하지 않은 경우에만)
+    if (availableList.length > 0) {
+      const isCurrentValid = availableList.some((opt) => opt.value === model.value.discountType)
+      if (!isCurrentValid) {
+        model.value.discountType = availableList[0].value
+      }
     }
   } catch (e) {
     console.error('Failed to fetch discount types:', e)
@@ -281,11 +325,11 @@ const fetchDiscountTypes = async (prdtId) => {
 const fetchPlanCategories = async () => {
   try {
     const res = await post('/api/form/rate/category/list', {
-      searchProductCategoryTypeCd: 'P',
+      prodCtgTypeCd: 'P',
     })
     planCategoryOptions.value = extractData(res).map((item) => ({
-      label: item.ctgNm,
-      value: item.ctgCd,
+      label: item.prodCtgNm || item.ctgNm,
+      value: item.prodCtgId || item.ctgCd,
     }))
   } catch (e) {
     console.error('Failed to fetch plan categories:', e)
@@ -344,23 +388,39 @@ watch(
   },
 )
 
-// 단말기가 변경될 때 하위 의존성(용량, 색상, 할인유형) 다시 불러오기
+// 단말기가 변경될 때 하위 의존성(용량, 할인유형) 다시 불러오기
 watch(
   () => model.value.deviceModel,
-  (newVal) => {
-    if (!model.value.isSaved) {
+  async (newVal, oldVal) => {
+    // 불러오기 상황(oldVal이 없고 newVal이 있는 경우 등)을 고려하여 초기화 로직 분리
+    if (oldVal && newVal !== oldVal && !model.value.isSaved) {
       model.value.capacity = ''
       model.value.color = ''
       model.value.discountType = ''
     }
+
     if (newVal) {
-      fetchCapacities(newVal)
-      fetchColors(newVal)
-      fetchDiscountTypes(newVal)
+      await fetchCapacities(newVal)
+      fetchDiscountTypes()
     } else {
       capacityOptions.value = []
       colorOptions.value = []
       discountTypeOptions.value = []
+    }
+  },
+)
+
+// 용량이 변경될 때 색상 목록 다시 불러오기
+watch(
+  () => model.value.capacity,
+  async (newVal, oldVal) => {
+    if (oldVal && newVal !== oldVal && !model.value.isSaved) {
+      model.value.color = ''
+    }
+    if (newVal && model.value.deviceModel) {
+      await fetchColors(model.value.deviceModel, newVal)
+    } else {
+      colorOptions.value = []
     }
   },
 )
@@ -386,16 +446,48 @@ onMounted(async () => {
     label: item.title,
     value: item.code,
   }))
+  // 공통코드 조회: 할인유형 전체 목록
+  const discountCodes = await getCommonCodeList('F002')
+  allDiscountTypeCodes.value = (discountCodes || []).map((item) => ({
+    label: item.title,
+    value: item.code,
+  }))
+
   if (model.value && !model.value.openTypeCd) {
     model.value.openTypeCd = '99'
   }
 
   // 개통유형이 휴대폰(MM)일 때만 단말기 관련 API 호출
   if (model.value.productType === 'MM') {
-    fetchDevices()
+    // 임시저장 데이터에서 복원할 값들 백업
+    const savedModel = model.value.deviceModel
+    const savedCapacity = model.value.capacity
+    const savedColor = model.value.color
+
+    await fetchDevices()
     fetchContractPeriods()
     fetchInstallmentMonths()
-    fetchDiscountTypes(model.value.deviceModel)
+
+    // 순차적 복구 로직
+    if (savedModel) {
+      // 1. 단말기 모델 세팅
+      model.value.deviceModel = savedModel
+      // 2. 용량 목록 로드 대기
+      await fetchCapacities(savedModel)
+      
+      if (savedCapacity) {
+        // 3. 용량 코드 세팅
+        model.value.capacity = savedCapacity
+        // 4. 색상 목록 로드 대기
+        await fetchColors(savedModel, savedCapacity)
+        
+        if (savedColor) {
+          // 5. 색상 코드 세팅
+          model.value.color = savedColor
+        }
+      }
+    }
+    fetchDiscountTypes()
   }
 
   fetchPlanCategories()

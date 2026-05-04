@@ -253,7 +253,6 @@ const onChangePage = async () => {
   })
 
   if (resData?.code !== '0000') {
-    showAlert(resData?.message || '주소 검색 중 오류가 발생했습니다.')
     return
   }
 

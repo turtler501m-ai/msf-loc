@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ktmmobile.msf.commons.common.exception.SimpleDomainException;
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitRequest;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitResponse;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppRegistRequest;
@@ -29,6 +30,20 @@ public class AppService implements AppIntroReader {
 
     @Transactional(readOnly = true)
     public IntroResponse intro(IntroRequest request) {
+        // 앱최소버전
+        double reqAppOsVer = Double.parseDouble(request.getAppOsVer());
+        if(request.getOs().equals("A")) {
+            if(!(reqAppOsVer > 12.0)) {
+                throw new SimpleDomainException("Android 12 이상에 설치가 가능합니다.");
+            }
+        } else if(request.getOs().equals("I")) {
+            if(!(reqAppOsVer > 12.0)) {
+                throw new SimpleDomainException("iOS 15 이상에 설치가 가능합니다.");
+            }
+        } else {
+            throw new SimpleDomainException("설치 가능한 OS가 아닙니다.");
+        }
+
         IntroResponse res = repository.getIntro(request);
         if(res != null) {
             double reqVer = Double.parseDouble(request.getVersion());
@@ -60,12 +75,17 @@ public class AppService implements AppIntroReader {
 
     @Transactional
     public Integer registModel(AppRegistRequest request) {
-        // 로그인 세션에서 adminId 가져옴
-        request.setUserId("V000000003");  // molo - 수정 필요
+        Integer retInt = 0;
+        UsrAppInfoVo vo = repository.getUserApp(request.getUuid());
+
+        request.setUserId(AuthenticationUtils.getUser().getId());
         request.setAppNm("스마트서식지");
         request.setApvSttusCd("A");
         request.setAutoLoginYn("Y");
         request.setBioLoginYn("N");
+        if(vo != null) {
+            return repository.modifyBioSetting(request);
+        }
         return repository.registUserApp(request);
     }
 

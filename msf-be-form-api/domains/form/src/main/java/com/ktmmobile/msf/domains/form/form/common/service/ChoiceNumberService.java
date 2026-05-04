@@ -1,20 +1,23 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
+import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
-import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
-import com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MPhoneNoListXmlVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlVO;
+import com.ktmmobile.msf.domains.form.form.common.dto.ChoiceNumberRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.ChoiceNumberResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -39,12 +42,14 @@ public class ChoiceNumberService {
      * MCP_REQUEST_OSST 는 호출전 REQUEST INSERT, 호출후 RESPONSE INSERT
      **/
     //public Map<String, Object> searchNumber(McpRequestDto mcpRequestDto) {
-    public Map<String, Object> getSearchNumber(NewChangeInfoRequest request) {
+    public FormResponse<ChoiceNumberResponse> getSearchNumber(ChoiceNumberRequest request) {
         //Parameter 정보
         //resNo
         //requestKey
         //reqWantFnNo, reqWantMnNo , reqWantRnNo
         //화면에서 입력한 희망번호 4자리는 어디에 저장되는지 확인필요
+
+        ChoiceNumberResponse choiceNumberResponse = new ChoiceNumberResponse();
 
         System.out.println("request.getRequestKey() ======================== " + request.getRequestKey());
         System.out.println("request.getReqWantFnNo() ======================== " + request.getReqWantFnNo());
@@ -54,7 +59,7 @@ public class ChoiceNumberService {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
         //0. 기존 local 영역은 일단 삭제함.
-        //1. 개통사전체크요청 확인
+        //1. 개통사전체크요청 확인 : 사전체크할 때 OSST  테이블에 저장
         // sessAppformReqDto = SessionUtils.getAppformSession(); //-----> 스마트신청서 : 세션을 프레임웍에 맞춰서 교체해야함
         // if (sessAppformReqDto == null) {
         //      throw new McpCommonJsonException("0003", ExceptionMsgConstant.F_BIND_EXCEPTION);
@@ -73,9 +78,9 @@ public class ChoiceNumberService {
         mcpRequestOsstVo.setMvnoOrdNo(request.getResNo());
         mcpRequestOsstVo.setPrgrStatCd(Constants.EVENT_CODE_SEARCH_NUMBER);
         int tryCount = formCommService.getMcpRequestOsstCount(mcpRequestOsstVo);
-        System.out.println("tryCount ======================== " + tryCount);
         if (tryCount > 24) { //24건보다 많으면 안됨.
-            throw new McpCommonJsonException("0004", ExceptionMsgConstant.OVER_LIMIT_EXCEPTION);
+            //throw new McpCommonJsonException("0004", OVER_LIMIT_EXCEPTION);
+            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_OVER_LIMIT, choiceNumberResponse);
         }
 
         //3. MCP_REQUEST MERGE (희망번호 저장)
@@ -107,7 +112,8 @@ public class ChoiceNumberService {
         //mcpRequestDto.setReqWantNumber2(request.getReqWantMnNo());
         //mcpRequestDto.setReqWantNumber3(request.getReqWantRnNo());
         if (!formCommService.mergeMcpRequest(mcpRequestDto)) { //
-            throw new McpCommonJsonException("0004", ExceptionMsgConstant.DB_EXCEPTION);
+            //throw new McpCommonJsonException("0004", DB_EXCEPTION);
+            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_OVER_LIMIT, choiceNumberResponse);
         }
 
         //4. MP호출
@@ -148,11 +154,36 @@ public class ChoiceNumberService {
             //MCP_REQUEST_OSST 조회해와서 MSF_REQUEST_OSST 에 추가
         }
 
-        //@@ prx 오픈전까지 강제 성공처리
+        //@@ prx 오픈전까지 강제 성공처리 @@삭제필요!!!!
         rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
-        //rtnMap.put("RESULT_OBJ_LIST", mPhoneNoListXmlVO.getList());
 
-        return rtnMap;
+        List<MarketInfo> marketList = List.of(
+                new MarketInfo("KTF", "01025679878", "010-2567-9878", "kGBQFD/q0YBTCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01097839878", "010-9783-9878", "H9tDkJ36z9JTCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01027069878", "010-2706-9878", "seZbgXBQKS9TCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01029149878", "010-2914-9878", "i6LgwCy3xeVTCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01029699878", "010-2969-9878", "DAjv7I6wyc5TCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01033949878", "010-3394-9878", "+W1l/smHQ4hTCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01042099878", "010-4209-9878", "3JG5FtGdDQFTCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01042679878", "010-4267-9878", "QwV/WGoneHRTCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01042699878", "010-4269-9878", "MVO48rc6Qm5TCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01043759878", "010-4375-9878", "VAhJwziDq71TCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01051479878", "010-5147-9878", "/AJOp4tu75ZTCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01065039878", "010-6503-9878", "PXO0EzqBeB9TCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01066819878", "010-6681-9878", "dIXUuSLYre9TCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01074669878", "010-7466-9878", "Bpu2TFJP0SpTCuaJvb6rgw=="),
+                new MarketInfo("KTF", "01026139878", "010-2613-9878", "jcps9Xo34jFTCuaJvb6rgw==")
+        );
+
+        //rtnMap.put("RESULT_OBJ_LIST", marketList);
+        //rtnMap.put("RESULT_OBJ_LIST", mPhoneNoListXmlVO.getList());
+        //return rtnMap;
+
+        //MPhoneNoListXmlVO mPhoneNoListXmlVO = new MPhoneNoListXmlVO();
+        //choiceNumberResponse.setMPhoneNoList(mPhoneNoListXmlVO.getList());
+        //choiceNumberResponse.setMPhoneNoList(marketList);
+        choiceNumberResponse.setMarketList(marketList);
+        return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_SUCCESS, choiceNumberResponse);
     }
 
 
@@ -294,6 +325,32 @@ public class ChoiceNumberService {
         rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
         return rtnMap;
     }
+
+    /*{
+        "returnCode": "00",
+            "message": "",
+            "list": [
+            {
+                "marketGubun": "KTF",
+                    "orignCtn": "01025679878",
+                    "ctn": "010-2567-9878",
+                    "sctn": "kGBQFD/q0YBTCuaJvb6rgw=="
+            },
+            {
+                "marketGubun": "KTF",
+                    "orignCtn": "01074669878",
+                    "ctn": "010-7466-9878",
+                    "sctn": "Bpu2TFJP0SpTCuaJvb6rgw=="
+            },
+            {
+                "marketGubun": "KTF",
+                    "orignCtn": "01026139878",
+                    "ctn": "010-2613-9878",
+                    "sctn": "jcps9Xo34jFTCuaJvb6rgw=="
+            }
+        ],
+        "searchCnt": 3
+    }*/
 
 
 }

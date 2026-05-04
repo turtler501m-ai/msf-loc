@@ -36,6 +36,7 @@ const props = defineProps({
 })
 
 const model = defineModel({ type: Object, required: true })
+const emit = defineEmits(['checked'])
 const agreementRef = ref(null)
 const lastCheckedResult = ref([])
 
@@ -46,6 +47,23 @@ const isCheckedField = (val) => val === true || val === 'Y'
 
 const handleChecked = (result) => {
   lastCheckedResult.value = result
+
+  // result가 있으면 (약관 동의 이벤트 등) model 객체에 값 반영
+  if (result && Array.isArray(result)) {
+    result.forEach((item) => {
+      const code = item.code
+      // 만약 model 객체에 해당 code와 일치하는 키가 있다면 값 업데이트
+      if (Object.prototype.hasOwnProperty.call(model.value, code)) {
+        if (typeof model.value[code] === 'boolean') {
+          model.value[code] = item.checked
+        } else {
+          model.value[code] = item.checked ? 'Y' : 'N'
+        }
+      }
+    })
+  }
+
+  emit('checked', result)
 }
 
 // termsData의 checked 값이 변경될 때, model.termsAgreed 동기화

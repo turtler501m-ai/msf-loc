@@ -25,5 +25,9 @@ public interface NewChangeReadMapper {
 
     MsfRequestBillReqVo selectMsfRequestBillReqInfo(NewChangeRequest condition);
 
+    MsfRequestMoveVo selectMsfRequestMoveInfo(NewChangeRequest condition);
+
+    MsfRequestDvcChgVo selectMsfRequestDvcChgInfo(NewChangeRequest condition);
+
 
 }

@@ -60,12 +60,13 @@
     </template>
   </MsfDataTable>
 
-  <MsfDialog :is-open="detailOpen" title="상세보기" @close="detailOpen = false">
+  <MsfDialog :is-open="detailOpen" title="상세보기" @close="closeDetail">
     <template #default>
       <MsfButtonGroup class="popup-top-buttons">
+        <MsfButton variant="subtle" @click="onClickCancelCheck">해지확인</MsfButton>
         <MsfButton variant="subtle" @click="onClickReceiptComplete">접수완료</MsfButton>
         <MsfButton variant="subtle" @click="onClickRevert">완료취소</MsfButton>
-        <MsfButton variant="subtle" @click="detailOpen = false">닫기</MsfButton>
+        <MsfButton variant="subtle" @click="closeDetail">닫기</MsfButton>
       </MsfButtonGroup>
 
       <MsfStack vertical class="detail-wrap">
@@ -195,7 +196,46 @@ const COMPLETE_DEFAULT_CODES = {
   smsRcvYn: 'Y',
 }
 
+function summarizeSearchForm() {
+  return {
+    procCd: searchForm.procCd || null,
+    formTypeCd: searchForm.applyTypeCd || null,
+    searchGbn: searchForm.searchGbn || null,
+    hasSearchName: !!searchForm.searchName,
+    startDt: searchForm.startDt || null,
+    endDt: searchForm.endDt || null,
+    pageNum: page.value,
+    rowSize: rows.value,
+  }
+}
+
+function summarizeRow(row) {
+  if (!row) return null
+  return {
+    requestKey: row.requestKey || null,
+    applyNo: row.applyNo || null,
+    procCd: row.procCd || null,
+    procCdLabel: row.procCdLabel || '',
+    formTypeCd: row.formTypeCd || row.applyTypeCd || null,
+    applyTypeLabel: row.applyTypeLabel || '',
+    cstmrNm: row.cstmrNm || '',
+  }
+}
+
+function summarizeListResponse(res) {
+  return {
+    hasData: Array.isArray(res?.data),
+    dataCount: Array.isArray(res?.data) ? res.data.length : 0,
+    totalCount: Number(res?.meta?.page?.totalCount || 0),
+    message: res?.message || '',
+  }
+}
+
 function onMovePage(nextPage) {
+  console.log('[신청서관리][목록조회] 페이지 이동', {
+    currentPage: page.value,
+    nextPage,
+  })
   page.value = nextPage
   fetchList()
 }
@@ -257,33 +297,51 @@ function mapRow(row) {
 }
 
 async function fetchList() {
+  const payload = {
+    procCd: searchForm.procCd || null,
+    formTypeCd: searchForm.applyTypeCd || null,
+    searchGbn: searchForm.searchGbn || null,
+    searchName: searchForm.searchName || null,
+    startDt: searchForm.startDt || null,
+    endDt: searchForm.endDt || null,
+    page: { pageNum: page.value, rowSize: rows.value },
+  }
+  console.log('[신청서관리][목록조회] 요청 시작', summarizeSearchForm())
   try {
-    const res = await msfPost('/api/msf/admin/cancel/list', {
-      procCd: searchForm.procCd || null,
-      formTypeCd: searchForm.applyTypeCd || null,
-      searchGbn: searchForm.searchGbn || null,
-      searchName: searchForm.searchName || null,
-      startDt: searchForm.startDt || null,
-      endDt: searchForm.endDt || null,
-      page: { pageNum: page.value, rowSize: rows.value },
-    })
+    const res = await msfPost('/api/msf/admin/cancel/list', payload)
+    console.log('[신청서관리][목록조회] 응답 수신', summarizeListResponse(res))
     if (!Array.isArray(res?.data)) {
       tableData.value = []
       totalCount.value = 0
+      console.warn('[신청서관리][목록조회] 응답 실패', {
+        message: res?.message,
+        response: res,
+      })
       alertStore.openAlert(res?.message || '조회에 실패했습니다.')
       return
     }
     tableData.value = res.data.map(mapRow)
     totalCount.value = Number(res?.meta?.page?.totalCount || 0)
     selectedRow.value = null
+    console.log('[신청서관리][목록조회] 화면 데이터 반영 결과', {
+      rowCount: tableData.value.length,
+      totalCount: totalCount.value,
+      page: page.value,
+      selectedRow: selectedRow.value,
+    })
   } catch (e) {
     tableData.value = []
     totalCount.value = 0
+    console.error('[신청서관리][목록조회] 예외 발생', {
+      message: e?.message,
+      response: e?.response?.data,
+    })
     alertStore.openAlert('조회에 실패했습니다.')
   }
 }
 
 function onSearch() {
+  console.log('[신청서관리][목록조회] 조회 버튼 클릭', summarizeSearchForm())
   page.value = 1
   fetchList()
 }
@@ -291,71 +349,117 @@ function onSearch() {
 function onSelected(row) {
   if (!row) {
     selectedRow.value = null
+    console.log('[신청서관리][목록선택] 선택 해제')
     return
   }
   selectedRow.value = row
+  console.log('[신청서관리][목록선택] 화면 데이터 반영 결과', summarizeRow(row))
 
   const key = normalizeRequestKey(row?.requestKey ?? row?.applyNo)
   const now = Date.now()
   if (key && lastClick.value.key === key && now - lastClick.value.at < 450) {
+    console.log('[신청서관리][상세팝업] 더블클릭 감지', { requestKey: key })
     openDetail(row)
   }
   lastClick.value = { key, at: now }
 }
 
 async function fetchDetail(requestKey) {
-  const res = await msfPost('/api/msf/admin/cancel/get', { requestKey })
+  const payload = { requestKey }
+  console.log('[신청서관리][상세조회] 요청 시작', payload)
+  const res = await msfPost('/api/msf/admin/cancel/get', payload)
+  console.log('[신청서관리][상세조회] 응답 수신', res)
   return mapRow(res || {})
 }
 
 async function openDetail(row = selectedRow.value) {
   const requestKey = normalizeRequestKey(row?.requestKey ?? row?.applyNo)
   if (!requestKey) {
+    console.warn('[신청서관리][상세팝업] 진행 중단', { reason: 'requestKey missing', row: summarizeRow(row) })
     alertStore.openAlert('선택된 행이 없습니다.')
     return
   }
+  console.log('[신청서관리][상세팝업] 열기 요청', { requestKey, row: summarizeRow(row) })
   try {
     detail.value = await fetchDetail(requestKey)
     detailOpen.value = true
+    console.log('[신청서관리][상세팝업] 화면 데이터 반영 결과', {
+      detailOpen: detailOpen.value,
+      detail: summarizeRow(detail.value),
+    })
   } catch (e) {
+    console.error('[신청서관리][상세팝업] 예외 발생', {
+      requestKey,
+      message: e?.message,
+      response: e?.response?.data,
+    })
     alertStore.openAlert('상세 조회에 실패했습니다.')
   }
 }
 
 function onRowDoubleClick(row) {
+  console.log('[신청서관리][상세팝업] 행 더블클릭', summarizeRow(row))
   selectedRow.value = row
   openDetail(row)
+}
+
+function closeDetail() {
+  console.log('[신청서관리][상세팝업] 닫기', {
+    requestKey: detail.value?.requestKey || detail.value?.applyNo || null,
+  })
+  detailOpen.value = false
 }
 
 async function onClickReceiptComplete() {
   const requestKey = normalizeRequestKey(detail.value?.requestKey ?? detail.value?.applyNo)
   if (!requestKey) {
+    console.warn('[신청서관리][접수완료] 진행 중단', { reason: 'requestKey missing' })
     alertStore.openAlert('선택된 행이 없습니다.')
     return
   }
+  console.log('[신청서관리][접수완료] 요청 시작', { requestKey })
   try {
     const statusRes = await msfPost('/api/msf/admin/cancel/status/check', { requestKey })
+    console.log('[신청서관리][접수완료][상태확인] 응답 수신', statusRes)
     if (!statusRes?.success) {
+      console.warn('[신청서관리][접수완료][상태확인] 응답 실패', statusRes)
       alertStore.openAlert(statusRes?.message || '접수완료 처리 가능 상태가 아닙니다.')
       return
     }
 
-    const res = await msfPost('/api/msf/admin/cancel/complete', {
+    const payload = {
       requestKey,
       ...COMPLETE_DEFAULT_CODES,
       memo: detail.value?.memo || '',
+    }
+    console.log('[신청서관리][접수완료][처리] 요청 시작', {
+      requestKey: payload.requestKey,
+      memo: payload.memo,
     })
+    const res = await msfPost('/api/msf/admin/cancel/complete', payload)
+    console.log('[신청서관리][접수완료][처리] 응답 수신', res)
 
     if (!res?.success) {
+      console.warn('[신청서관리][접수완료][처리] 응답 실패', res)
       alertStore.openAlert(res?.message || '접수완료 처리에 실패했습니다.')
       return
     }
 
+    console.log('[신청서관리][접수완료] 화면 데이터 반영 결과', {
+      requestKey,
+      detailOpen: false,
+      refreshList: true,
+    })
     alertStore.openAlert('접수완료 처리되었습니다.', () => {
       detailOpen.value = false
       fetchList()
     })
   } catch (e) {
+    console.error('[신청서관리][접수완료] 예외 발생', {
+      requestKey,
+      message: e?.message,
+      response: e?.response?.data,
+    })
     alertStore.openAlert('접수완료 처리에 실패했습니다.')
   }
 }
@@ -363,21 +467,36 @@ async function onClickReceiptComplete() {
 async function onClickRevert() {
   const requestKey = normalizeRequestKey(detail.value?.requestKey ?? detail.value?.applyNo)
   if (!requestKey) {
+    console.warn('[신청서관리][완료취소] 진행 중단', { reason: 'requestKey missing' })
     alertStore.openAlert('선택된 행이 없습니다.')
     return
   }
+  console.log('[신청서관리][완료취소] 확인 팝업 열기', { requestKey })
   alertStore.openConfirm('완료취소 처리하시겠습니까?', async () => {
     try {
+      console.log('[신청서관리][완료취소] 요청 시작', { requestKey })
       const res = await msfPost('/api/msf/admin/cancel/revert', { requestKey })
+      console.log('[신청서관리][완료취소] 응답 수신', res)
       if (!res?.success) {
+        console.warn('[신청서관리][완료취소] 응답 실패', res)
         alertStore.openAlert(res?.message || '완료취소 처리에 실패했습니다.')
         return
       }
+      console.log('[신청서관리][완료취소] 화면 데이터 반영 결과', {
+        requestKey,
+        detailOpen: false,
+        refreshList: true,
+      })
       alertStore.openAlert('완료취소 처리되었습니다.', () => {
         detailOpen.value = false
         fetchList()
       })
     } catch (e) {
+      console.error('[신청서관리][완료취소] 예외 발생', {
+        requestKey,
+        message: e?.message,
+        response: e?.response?.data,
+      })
       alertStore.openAlert('완료취소 처리에 실패했습니다.')
     }
   })
@@ -385,15 +504,26 @@ async function onClickRevert() {
 
 async function onClickCancelCheck() {
   const requestKey = normalizeRequestKey(detail.value?.requestKey ?? detail.value?.applyNo)
-  if (!requestKey) return
+  if (!requestKey) {
+    console.warn('[신청서관리][해지확인] 진행 중단', { reason: 'requestKey missing' })
+    return
+  }
+  console.log('[신청서관리][해지확인] 요청 시작', { requestKey })
   try {
     const res = await msfPost('/api/msf/admin/cancel/status/check', { requestKey })
+    console.log('[신청서관리][해지확인] 응답 수신', res)
     if (res?.success) {
       alertStore.openAlert('해지확인: 정상')
       return
     }
+    console.warn('[신청서관리][해지확인] 응답 실패', res)
     alertStore.openAlert(res?.message || '해지확인에 실패했습니다.')
   } catch (e) {
+    console.error('[신청서관리][해지확인] 예외 발생', {
+      requestKey,
+      message: e?.message,
+      response: e?.response?.data,
+    })
     alertStore.openAlert('해지확인에 실패했습니다.')
   }
 }

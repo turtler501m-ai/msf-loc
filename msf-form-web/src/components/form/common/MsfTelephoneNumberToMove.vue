@@ -7,7 +7,7 @@ const formData = reactive({
   usimKindsCd: '', //USIM 선택
   reqUsimSn: '', //USIM 번호
   simPurchaseMethod: '', //USIM 구매 방식
-  prodNm: '', //휴대폰 모델병
+  prodNm: '', //휴대폰 모델명
   eid: '', //EID
   imei1: '', //IMEI1
   imei2: '', //IMEI2

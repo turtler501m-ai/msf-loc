@@ -25,6 +25,7 @@ const onClickRemainCharge = async () => {
       <MsfFormGroup label="사용요금" required>
         <MsfStack type="field">
           <MsfInput
+            id="inp-usageFee"
             v-model="formData.usageFee"
             placeholder="금액을 입력하세요."
             align="right"
@@ -37,6 +38,7 @@ const onClickRemainCharge = async () => {
       <MsfFormGroup label="위약금" required>
         <MsfStack type="field">
           <MsfInput
+            id="inp-penaltyFee"
             v-model="formData.penaltyFee"
             placeholder="금액을 입력하세요."
             align="right"
@@ -49,6 +51,7 @@ const onClickRemainCharge = async () => {
       <MsfFormGroup label="최종 정산요금" required>
         <MsfStack type="field">
           <MsfInput
+            id="inp-finalAmount"
             v-model="formData.finalAmount"
             placeholder="금액을 입력하세요."
             align="right"

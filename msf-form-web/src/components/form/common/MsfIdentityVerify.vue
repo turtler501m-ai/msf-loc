@@ -1,8 +1,8 @@
 <template>
   <div>
-    <MsfTitleArea :title="title" />
+    <MsfTitleArea :title="computedTitle" />
     <MsfStack vertical type="formgroups">
-      <MsfFormGroup label="신분증" tag="div" required>
+      <MsfFormGroup label="신분증" tag="div" required v-if="model.serviceType !== 'TR_CUSTOMER'">
         <MsfChip
           v-model="model.identityCertTypeCd"
           name="inp-idCardCertType"
@@ -37,7 +37,7 @@
             variant="subtle"
             :disabled="model.isScanVerified || model.isSaved || !model.identityTypeCd"
             @click="isIdCardScanModalOpen = true"
-          >스캔하기</MsfButton
+            >스캔하기</MsfButton
           >
         </MsfStack>
         <MsfStack type="field">
@@ -77,7 +77,7 @@
   </div>
 </template>
 <script setup>
-import { ref, defineModel, defineProps, onMounted, watch } from 'vue'
+import { ref, defineModel, defineProps, onMounted, watch, computed } from 'vue'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import MsfIdCardListModal from './popups/MsfIdCardListModal.vue'
 import MsfMobileIdModal from './popups/MsfMobileIdModal.vue'
@@ -97,6 +97,15 @@ const isMobileIdModalOpen = ref(false)
 const isFaceAuthModalOpen = ref(false)
 const isIdCardScanModalOpen = ref(false)
 
+const isMinor = computed(() => ['NM', 'FM'].includes(model.value.cstmrTypeCd))
+
+const computedTitle = computed(() => {
+  if (props.title === '신분증 확인' && isMinor.value) {
+    return '신분증 확인(법정대리인)'
+  }
+  return props.title
+})
+
 // 인증 방식 변경 시 상태 초기화
 watch(
   () => model.value.identityCertTypeCd,
@@ -104,14 +113,32 @@ watch(
     if (!model.value.isSaved) {
       model.value.identityTypeCd = ''
       model.value.isVerified = false
+
+      if (isMinor.value) {
+        // 미성년자인 경우: 법정대리인 정보 초기화
+        model.value.repName = ''
+        model.value.repRegistrationNo1 = ''
+        model.value.repRegistrationNo2 = ''
+        model.value.repForeignerNo1 = ''
+        model.value.repForeignerNo2 = ''
+        model.value.minorAgentNm = ''
+        model.value.minorAgentRelTypeCd = ''
+        model.value.minorAgentTelFnNo = ''
+        model.value.minorAgentTelMnNo = ''
+        model.value.minorAgentTelRnNo = ''
+        model.value.repRelation = ''
+        model.value.repAgree = false
+        if (props.authFlags) props.authFlags.repPhone = false
+      }
     }
   },
 )
 
 onMounted(async () => {
-  const [licRegion, fathCert] = await Promise.all([
+  const [licRegion, fathCert, fathPolicy] = await Promise.all([
     getCommonCodeList('LIC_REGION'),
     getCommonCodeList('fathCertIdType'),
+    getCommonCodeList('fathCertPolicy'),
   ])
   licenseRegionCodes.value = (licRegion || []).map((item) => ({
     ...item,
@@ -119,6 +146,7 @@ onMounted(async () => {
     value: item.code,
   }))
   fathCertIdTypeCodes.value = (fathCert || []).map((item) => item.code)
+  console.log('>>> 안면인증 관련 정책 (fathCertPolicy):', fathPolicy)
 })
 
 const handleAuthClick = () => {
@@ -134,16 +162,26 @@ const handleAuthClick = () => {
 const onIdCardSelect = (selected) => {
   console.log('선택된 신분증 목록:', selected)
   if (selected) {
-    // 가입자 이름 세팅
-    if (selected.cstmrNm) model.value.cstmrNm = selected.cstmrNm
-
-    // 고객 유형에 따른 주민/외국인 등록번호 세팅
-    if (['NA', 'NM'].includes(model.value.cstmrTypeCd)) {
-      if (selected.rrn1) model.value.cstmrNativeRrn1 = selected.rrn1
-      if (selected.rrn2) model.value.cstmrNativeRrn2 = selected.rrn2
-    } else if (['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
-      if (selected.rrn1) model.value.cstmrForeignerRrn1 = selected.rrn1
-      if (selected.rrn2) model.value.cstmrForeignerRrn2 = selected.rrn2
+    if (isMinor.value) {
+      // 미성년자인 경우 법정대리인 필드에 저장
+      if (selected.cstmrNm) model.value.repName = selected.cstmrNm
+      if (model.value.cstmrTypeCd === 'NM') {
+        if (selected.rrn1) model.value.repRegistrationNo1 = selected.rrn1
+        if (selected.rrn2) model.value.repRegistrationNo2 = selected.rrn2
+      } else if (model.value.cstmrTypeCd === 'FM') {
+        if (selected.rrn1) model.value.repForeignerNo1 = selected.rrn1
+        if (selected.rrn2) model.value.repForeignerNo2 = selected.rrn2
+      }
+    } else {
+      // 일반 고객인 경우 가입자 필드에 저장
+      if (selected.cstmrNm) model.value.cstmrNm = selected.cstmrNm
+      if (['NA', 'NM'].includes(model.value.cstmrTypeCd)) {
+        if (selected.rrn1) model.value.cstmrNativeRrn1 = selected.rrn1
+        if (selected.rrn2) model.value.cstmrNativeRrn2 = selected.rrn2
+      } else if (['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
+        if (selected.rrn1) model.value.cstmrForeignerRrn1 = selected.rrn1
+        if (selected.rrn2) model.value.cstmrForeignerRrn2 = selected.rrn2
+      }
     }
 
     // 신분증 유형 세팅
@@ -177,17 +215,19 @@ const onIdCardScanConfirm = (data) => {
   console.log('신분증 스캔 파일:', data)
   if (data) {
     model.value.identityIssuDate = data.identityIssuDate
-    // 만약 API에서 다른 정보(면허지역, 면허번호 등)도 온다면 여기서 추가로 세팅할 수 있습니다.
   }
   model.value.isScanVerified = true
 }
 
 const validate = () => {
-  const needsAuth = !model.value.isTrCustomer && model.value.identityCertTypeCd !== 'S'
-  const needsScan = model.value.identityCertTypeCd !== 'S'
+  // 인증예외(S)인 경우 무조건 통과
+  if (model.value.identityCertTypeCd === 'S') return true
 
+  const needsAuth = !model.value.isTrCustomer
   if (needsAuth && !model.value.isVerified) return false
-  if (needsScan && !model.value.isScanVerified) return false
+
+  // 신분증 스캔이 필수인 경우 체크 (인증예외 S가 아닌 모든 경우)
+  if (!model.value.isScanVerified) return false
 
   return true
 }

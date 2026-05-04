@@ -1,0 +1,42 @@
+#### Common Profile
+login-core:
+  policy:
+    ## 스프링 빈(bean) 이름 기준, 로그인 정책에 적용할 화이트리스트
+    completion:
+      - userStatusLoginCompletionPolicy
+      - passwordLoginCompletionPolicy
+      - deviceAuthLoginCompletionPolicy
+    failure:
+      - loginFailureLimitPolicy
+    required-action:
+      - passwordChangeRequiredActionPolicy
+      - smsLoginTwoFactorPolicy
+      - formDeviceAuthRequiredActionPolicy
+
+
+
+---
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local

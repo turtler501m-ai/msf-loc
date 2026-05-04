@@ -29,6 +29,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 import { storeToRefs } from 'pinia'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const emit = defineEmits(['complete'])
 
@@ -44,8 +45,8 @@ const isComplete = computed(() => {
   )
 })
 
-// [TEST] 화면 테스트용 오버라이드: '' 으로 초기화
-const isCompleteOverride = ref('true')
+// [TEST] 화면 테스트용 오버라이드: ''이면 해지 정산 입력값 기준으로 판단
+const isCompleteOverride = ref('')
 
 const isCompleteEffective = computed(() => {
   if (isCompleteOverride.value === 'true') return true
@@ -65,12 +66,44 @@ onMounted(() => {
   emit('complete', isCompleteEffective.value)
 })
 
-const save = async () => {
-  if (!isCompleteEffective.value) return false
+const focusField = (target) => {
+  setTimeout(() => {
+    const element = target.startsWith('#')
+      ? document.querySelector(target)
+      : document.getElementById(target) || document.querySelector(target)
+    element?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    element?.focus()
+  }, 0)
+}
+
+const validateWithAlert = () => {
+  const f = formData.value
+  if (!f.isActive) {
+    showAlert('사용여부를 선택해 주세요.', () => focusField('input[name="inp-isActive"]'))
+    return false
+  }
+  if (!f.usageFee) {
+    showAlert('사용요금을 입력해 주세요.', () => focusField('inp-usageFee'))
+    return false
+  }
+  if (!f.penaltyFee) {
+    showAlert('위약금을 입력해 주세요.', () => focusField('inp-penaltyFee'))
+    return false
+  }
+  if (!f.finalAmount) {
+    showAlert('최종 정산요금을 입력해 주세요.', () => focusField('inp-finalAmount'))
+    return false
+  }
   return true
 }
 
-defineExpose({ save })
+const save = async () => {
+  if (isCompleteOverride.value === 'false') return false
+  if (!validateWithAlert()) return false
+  return true
+}
+
+defineExpose({ save, validateWithAlert })
 </script>
 
 <style scoped></style>

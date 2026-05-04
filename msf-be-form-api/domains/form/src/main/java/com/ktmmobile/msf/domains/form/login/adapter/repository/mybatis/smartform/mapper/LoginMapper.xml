@@ -30,21 +30,22 @@
     </selectKey>
     update msf_user_info
     set
-    <if test="userSttusCd != null and userSttusCd != ''">
-      user_sttus_cd = #{userSttusCd},
-      access_limit_yn = 'Y',
-      access_limit_dt = now(),
-      chg_dt = now(),
-    </if>
       login_chk_cnt = login_chk_cnt + 1
+    <if test="userSttusCd != null and userSttusCd != ''">
+      , user_sttus_cd = #{userSttusCd}
+      , access_limit_yn = 'Y'
+      , pwd_chg_yn = 'N'
+      , access_limit_dt = now()
+      , chg_dt = now()
+    </if>
     where 1=1
     and user_id = #{userId}
   </update>
 
   <update id="updateLoginSucc">
     update msf_user_info
-    set chg_dt = now(),
-      login_chk_cnt = 0
+    set chg_dt = now()
+      , login_chk_cnt = 0
     where 1=1
     and user_id = #{userId}
   </update>
@@ -54,6 +55,15 @@
     set last_access_dt = now()
     where 1=1
     and uuid = #{uuid}
+  </update>
+
+  <update id="updateUserPass">
+    update msf_user_info
+    set pwd = #{newPassword}
+       , pwd_chg_dt = now()
+       , pwd_chg_yn = 'Y'
+    where 1=1
+    and user_id = #{userId}
   </update>
 
   <select id="selectUserInfo" resultType="com.ktmmobile.msf.domains.form.login.application.dto.LoginResponse">
@@ -67,6 +77,7 @@
       , access_limit_yn
       , COALESCE(login_chk_cnt, 0) + 1 as login_chk_cnt
       , pwd
+      , case when pwd_chg_dt <![CDATA[<]]> now() - interval '3 months' then 'Y' else 'N' end as pwdChgYn
     from msf_user_info
     where 1=1
     and user_id = #{userId}
@@ -81,6 +92,7 @@
       , ip
       , user_sttus_cd
       , access_limit_yn
+      , case when pwd_chg_dt <![CDATA[<]]> now() - interval '3 months' then 'Y' else 'N' end as pwdChgYn
     from msf_user_info a
       , msf_usr_app_info b
     where 1=1

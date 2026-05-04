@@ -1,11 +1,10 @@
 package com.ktmmobile.msf.domains.form.form.newchange.service;
 
+import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
 import com.ktmmobile.msf.domains.form.form.common.vo.*;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.MsfNewChangeInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoResponse;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
 import com.ktmmobile.msf.domains.form.form.newchange.field.NewChangeFieldMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeWriteMapper;
@@ -53,93 +52,89 @@ public class NewChangeService {
         return newChangeReadMapper.selectMsfRequestBillReqInfo(condition);
     }
 
+    //MSF_REQUEST_MOVE 조회
+    public MsfRequestMoveVo getMsfRequestMoveInfo(NewChangeRequest condition) {
+        return newChangeReadMapper.selectMsfRequestMoveInfo(condition);
+    }
+
+    //MSF_REQUEST_DVC_CHG 조회
+    public MsfRequestDvcChgVo getMsfRequestDvcChgInfo(NewChangeRequest condition) {
+        return newChangeReadMapper.selectMsfRequestDvcChgInfo(condition);
+    }
+
     //신청서 조회
-    public MsfNewChangeInfoDto getNewChangeInfo(NewChangeRequest condition) {
-        MsfNewChangeInfoDto msfNewchangeInfoDto = new MsfNewChangeInfoDto();
+    public MsfRequestRecord getNewChangeInfo(NewChangeRequest condition) {
 
-        String msfRequestKey = "";
-        String formTypeCd = "";
-        Integer requestKey;
-        MsfRequestVo msfRequestVo = new MsfRequestVo();
-        MsfRequestCstmrVo msfRequestCstmrVo = new MsfRequestCstmrVo();
-        MsfRequestAgentVo msfRequestAgentVo = new MsfRequestAgentVo();
-        MsfRequestSaleVo msfRequestSaleVo = new MsfRequestSaleVo();
-        MsfRequestBillReqVo msfRequestBillReqVo = new MsfRequestBillReqVo();
-
-        if (StringUtils.hasText(condition.getMsfRequestKey())) {
-            msfRequestKey = condition.getMsfRequestKey();
-            condition.setRequestKey(Long.parseLong(msfRequestKey));
-
-            msfRequestVo = this.getMsfRequestInfo(condition); //MSF_REQUEST
-            msfRequestCstmrVo = this.getMsfRequestCstmrInfo(condition); //MSF_REQUEST_CSTMR
-            msfRequestAgentVo = this.getMsfRequestAgentInfo(condition); //MSF_REQUEST_AGENT
-            msfRequestSaleVo = this.getMsfRequestSaleInfo(condition); //MSF_REQUEST_SALE
-            msfRequestBillReqVo = this.getMsfRequestBillReqInfo(condition); //MSF_REQUEST_BILL_REQ
-
-
-        }
-
-        //ModelMapper modelMapper = new ModelMapper();
-        //msfNewchangeInfoDtoList.add(msfRequestDto);
-        msfNewchangeInfoDto.setMsfRequestVo(msfRequestVo);
-        msfNewchangeInfoDto.setMsfRequestCstmrVo(msfRequestCstmrVo);
-        msfNewchangeInfoDto.setMsfRequestAgentVo(msfRequestAgentVo);
-        //msfNewchangeInfoDto.add(msfNewchangeInfoDto);
-
-        return msfNewchangeInfoDto;
+        return new MsfRequestRecord(
+                this.getMsfRequestInfo(condition), //MSF_REQUEST
+                this.getMsfRequestAgentInfo(condition), //MSF_REQUEST_CSTMR
+                this.getMsfRequestCstmrInfo(condition), //MSF_REQUEST_AGENT
+                this.getMsfRequestSaleInfo(condition), //MSF_REQUEST_SALE
+                this.getMsfRequestBillReqInfo(condition), //MSF_REQUEST_BILL_REQ
+                this.getMsfRequestMoveInfo(condition), //MSF_REQUEST_MOVE
+                this.getMsfRequestDvcChgInfo(condition) //MSF_REQUEST_DVC_CHG
+        );
     }
 
     //신청서 상세 조회 (NewChangeInfoRequest 형태로 반환)
     public NewChangeInfoResponse getNewChangeRequestInfo(NewChangeRequest condition) {
-        MsfNewChangeInfoDto msfNewChangeInfoDto = this.getNewChangeInfo(condition);
-        return NewChangeFieldMapper.INSTANCE.toNewChangeInfoResponse(msfNewChangeInfoDto);
+        MsfRequestRecord msfRequestRecord = this.getNewChangeInfo(condition);
+        return NewChangeFieldMapper.INSTANCE.toNewChangeInfoResponse(msfRequestRecord);
     }
 
     //신청서 저장
     @Transactional
-    public String saveAppformInfo(NewChangeInfoRequest request) {
-        long requestKey = 0;
-
-        //신청서 유효성체크 start
-        //신청서 유효성체크 end
+    public FormResponse<NewChangeResponse> saveAppformInfo(NewChangeInfoRequest request) {
 
         //신청서 저장 start
-        //신청서번호 생성
+
+
+        //기기변경사유 - 변환처리
+        //부가서비스 - 변환처리
+
+        //신청서 유효성체크 start
+        //단말/요금제로 예상금액 재계산~~~ 데이터저장
+        //
+        //신청서 유효성체크 end
+
+
+
         if (request.getRequestKey() == null) {
-            requestKey = formCommService.generateRequestKey();
-            request.setRequestKey(requestKey);
-        }
 
-        MsfRequestVo msfRequestVo = NewChangeFieldMapper.INSTANCE.toMsfRequestVo(request);
-        MsfRequestAgentVo msfRequestAgentVo = NewChangeFieldMapper.INSTANCE.toMsfRequestAgentVo(request);
-        MsfRequestCstmrVo msfRequestCstmrVo = NewChangeFieldMapper.INSTANCE.toMsfRequestCstmrVo(request);
-        MsfRequestSaleVo msfRequestSaleVo = NewChangeFieldMapper.INSTANCE.toMsfRequestSaleVo(request);
-        MsfRequestBillReqVo msfRequestBillReqVo = NewChangeFieldMapper.INSTANCE.toMsfRequestBillReqVo(request);
-        MsfRequestMoveVo msfRequestMoveVo = NewChangeFieldMapper.INSTANCE.toMsfRequestMoveVo(request);
-        //부가서비스
+            //신청서번호 생성
+            request.setRequestKey(formCommService.generateRequestKey());
 
-        if (requestKey != 0) {
+            MsfRequestRecord record = MsfRequestRecord.requestToRecord(request);
+
             //INSERT
-            newChangeWriteMapper.insertMsfRequestTemp(msfRequestVo); //MSF_REQUEST
-            newChangeWriteMapper.insertMsfRequestAgentTemp(msfRequestAgentVo); //MSF_REQUEST_AGENT
-            newChangeWriteMapper.insertMsfRequestCstmrTemp(msfRequestCstmrVo); //MSF_REQUEST_CSTMR
-            newChangeWriteMapper.insertMsfRequestSaleTemp(msfRequestSaleVo); //MSF_REQUEST_SALE
-            newChangeWriteMapper.insertMsfRequestBillReqTemp(msfRequestBillReqVo); //MSF_REQUEST_BILL_REQ
-            newChangeWriteMapper.insertMsfRequestMoveTemp(msfRequestMoveVo);
+            newChangeWriteMapper.insertMsfRequestTemp(record.msfRequestVo()); //MSF_REQUEST
+            newChangeWriteMapper.insertMsfRequestAgentTemp(record.msfRequestAgentVo()); //MSF_REQUEST_AGENT
+            newChangeWriteMapper.insertMsfRequestCstmrTemp(record.msfRequestCstmrVo()); //MSF_REQUEST_CSTMR
+            newChangeWriteMapper.insertMsfRequestSaleTemp(record.msfRequestSaleVo()); //MSF_REQUEST_SALE
+            newChangeWriteMapper.insertMsfRequestBillReqTemp(record.msfRequestBillReqVo()); //MSF_REQUEST_BILL_REQ
+            newChangeWriteMapper.insertMsfRequestMoveTemp(record.msfRequestMoveVo());
+            newChangeWriteMapper.insertMsfRequestDvcChgTemp(record.msfRequestDvcChgVo());
         } else {
+            MsfRequestRecord record = MsfRequestRecord.requestToRecord(request);
             //UPDATE
-            request.setRequestKey(request.getRequestKey());
-            newChangeWriteMapper.updateMsfRequestTemp(msfRequestVo);
-            newChangeWriteMapper.updateMsfRequestAgentTemp(msfRequestAgentVo);
-            newChangeWriteMapper.updateMsfRequestCstmrTemp(msfRequestCstmrVo);
-            newChangeWriteMapper.updateMsfRequestSaleTemp(msfRequestSaleVo);
-            newChangeWriteMapper.updateMsfRequestBillReqTemp(msfRequestBillReqVo);
-            newChangeWriteMapper.updateMsfRequestMoveTemp(msfRequestMoveVo);
+            newChangeWriteMapper.updateMsfRequestTemp(record.msfRequestVo());
+            newChangeWriteMapper.updateMsfRequestAgentTemp(record.msfRequestAgentVo());
+            newChangeWriteMapper.updateMsfRequestCstmrTemp(record.msfRequestCstmrVo());
+            newChangeWriteMapper.updateMsfRequestSaleTemp(record.msfRequestSaleVo());
+            newChangeWriteMapper.updateMsfRequestBillReqTemp(record.msfRequestBillReqVo());
+            newChangeWriteMapper.updateMsfRequestMoveTemp(record.msfRequestMoveVo());
+            newChangeWriteMapper.updateMsfRequestDvcChgTemp(record.msfRequestDvcChgVo());
         }
         //신청서 저장 end
 
-        return Long.toString(requestKey);
+        //return Long.toString(requestKey);
+        //return FormResponse.of(ResponseMessage.SUCCESS, Long.toString(requestKey));
+
+        NewChangeResponse response = new NewChangeResponse();
+        response.setRequestKey(request.getRequestKey());
+        return FormResponse.of(ResponseMessage.SUCCESS, response);
     }
+
 
 
     /**

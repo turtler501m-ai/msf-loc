@@ -37,7 +37,7 @@
                 >단말 사용 등록</MsfButton
               >
               <MsfButtonGroup>
-                <MsfButton variant="subtle">로그인 화면으로 이동</MsfButton>
+                <MsfButton variant="subtle" @click="goLogin">로그인 화면으로 이동</MsfButton>
               </MsfButtonGroup>
             </MsfStack>
             <!--// 단말사용등록 -->
@@ -53,18 +53,32 @@
 import { reactive, onMounted } from 'vue'
 import { post } from '@/libs/api/msf.api'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
+import { useRouter } from 'vue-router'
+import { useMsfUserStore } from '@/stores/msf_user'
+
+const router = useRouter()
+const msfUserStore = useMsfUserStore()
 
 const formData = reactive({
-  userNm: '홍길동', //이름
-  localIp: '111.111.111.111', //아이피
-  uuid: '7878', //단말 고유 ID  // molo - 수정 필요
-  deptName: 'IT전략팀', //부서
-  osCd: 'A',
-  version: '1.0',
-  appOsVer: '1.1.1',
+  userNm: '', //이름
+  localIp: '', //아이피
+  uuid: '82311994', //단말 고유 ID  // molo - 수정 필요
+  deptName: 'IT전략팀', //부서 // molo - 수정 필요
+  osCd: 'A', // molo - 수정 필요
+  version: '1.0', // molo - 수정 필요
+  appOsVer: '1.1.1', // molo - 수정 필요
 })
 
-onMounted(async () => {})
+onMounted(async () => {
+  if (!msfUserStore.userData) {
+    showAlert('로그인이 필요합니다.\n로그인 화면으로 이동합니다.', () => {
+      router.push('/login')
+    })
+  } else {
+    formData.userNm = msfUserStore.userData.userNm
+    formData.localIp = msfUserStore.userData.ip
+  }
+})
 
 const onClickModelRegist = () => {
   console.log('formData:', formData)
@@ -81,11 +95,14 @@ const onClickModelRegist = () => {
           window.location.reload()
         } else {
           showAlert('단말 사용 등록이 실패하였습니다.\n 다시 시도해 주세요.')
-          // showAlert(data.message)
         }
       })
       .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
   })
+}
+
+const goLogin = () => {
+  router.push('/login')
 }
 </script>
 

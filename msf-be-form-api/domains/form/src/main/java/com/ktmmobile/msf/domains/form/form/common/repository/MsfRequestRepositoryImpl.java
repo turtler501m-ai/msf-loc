@@ -1,5 +1,8 @@
 package com.ktmmobile.msf.domains.form.form.common.repository;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
 import com.ktmmobile.msf.domains.form.form.common.repository.smartform.MsfRequestWriteMapper;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
@@ -13,15 +16,12 @@ import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestJoinFormVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMstVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameChgVo;
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameTrnsVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestRecVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgDtlVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
@@ -74,11 +74,11 @@ public class MsfRequestRepositoryImpl {
     }
 
     public int insertMsfRequestNameChg(MsfRequestNameChgVo vo) {
-        return msfRequestWriteMapper.insertMsfRequestNameChg(vo);
+        return msfRequestWriteMapper.insertMsfRequestNameChg(vo.getTrCustomerInfo());
     }
 
-    public int insertMsfRequestNameTrns(MsfRequestNameTrnsVo vo) {
-        return msfRequestWriteMapper.insertMsfRequestNameTrns(vo);
+    public int insertMsfRequestNameTrns(MsfRequestNameChgVo vo) {
+        return msfRequestWriteMapper.insertMsfRequestNameTrns(vo.getTeCustomerInfo());
     }
 
     public int insertMsfRequestRec(MsfRequestRecVo vo) {
@@ -104,4 +104,5 @@ public class MsfRequestRepositoryImpl {
     public int insertMsfRequest(MsfRequestVo vo) {
         return msfRequestWriteMapper.insertMsfRequest(vo);
     }
+
 }

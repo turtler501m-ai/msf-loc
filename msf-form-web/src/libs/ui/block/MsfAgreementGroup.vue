@@ -65,6 +65,7 @@ const props = defineProps({
   },
 })
 
+const model = defineModel({ type: Boolean })
 const emit = defineEmits(['checked'])
 
 const isAllExpanded = ref(false)
@@ -138,7 +139,17 @@ const generateResult = (data) => {
 watch(
   () => internalTerms.value,
   (newVal) => {
-    emit('checked', generateResult(newVal))
+    const result = generateResult(newVal)
+    emit('checked', result)
+
+    // isAllChecked 상태를 모델에 반영
+    const targetItems = props.onlyRequired
+      ? newVal.filter((item) => item.required === 'Y' || item.required === '2')
+      : newVal
+    const allChecked = targetItems.length > 0 && targetItems.every((item) => item.checked)
+    if (model.value !== allChecked) {
+      model.value = allChecked
+    }
   },
   {
     immediate: true,
@@ -188,6 +199,16 @@ const isAllChecked = computed({
     })
   },
 })
+
+// 외부에서 모델값이 변경될 때 (전체 체크박스 동기화)
+watch(
+  () => model.value,
+  (newVal) => {
+    if (newVal !== isAllChecked.value) {
+      isAllChecked.value = newVal
+    }
+  },
+)
 
 // 아코디언 토글 클릭 이벤트
 const onClickAllCheckWrapper = (e) => {

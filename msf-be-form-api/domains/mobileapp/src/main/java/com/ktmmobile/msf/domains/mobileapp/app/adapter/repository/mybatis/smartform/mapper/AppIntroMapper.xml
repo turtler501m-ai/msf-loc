@@ -58,6 +58,15 @@
   <update id="updateBioSetting">
     update msf_usr_app_info
     set bio_login_yn = #{bioLoginYn}
+    <if test='appNm != null and appNm != ""'>
+      , app_nm = #{appNm}
+    </if>
+    <if test='apvSttusCd != null and apvSttusCd != ""'>
+      , apv_sttus_cd = #{apvSttusCd}
+    </if>
+    <if test='autoLoginYn != null and autoLoginYn != ""'>
+      , auto_login_yn = #{autoLoginYn}
+    </if>
     where 1=1
     and uuid = #{uuid}
   </update>

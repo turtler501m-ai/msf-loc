@@ -115,7 +115,7 @@
     <if test="@org.springframework.util.StringUtils@hasText(cntrMobileNo)">
       AND A.CNTR_MOBILE_NO = #{cntrMobileNo}
     </if>
-    <if test="customerId != null and customerId != ''">
+    <if test="@org.springframework.util.StringUtils@hasText(customerId)">
       AND A.CUSTOMER_ID = #{customerId}
     </if>
     AND B.SUB_STATUS <![CDATA[<>]]> 'C'
@@ -234,7 +234,7 @@
     , MSP_JUO_SUB_INFO B
     , MSP_REQUEST_DTL C
     , MSP_JUO_BAN_INFO D
-    WHERE UPPER(A.USERID) = UPPER(#{userId})
+    WHERE UPPER(B.SUB_LINK_NAME) = UPPER(#{userNm})
     AND A.SVC_CNTR_NO = B.CONTRACT_NUM
     AND A.SVC_CNTR_NO = C.CONTRACT_NUM(+)
     AND B.BAN = D.BAN(+)
@@ -244,6 +244,9 @@
     </if>
     <if test="contractNum != null and contractNum != ''">
       AND B.CONTRACT_NUM = #{contractNum}
+    </if>
+    <if test="@org.springframework.util.StringUtils@hasText(ctn)">
+      AND A.CNTR_MOBILE_NO = #{ctn}
     </if>
     ORDER BY A.REP_NO ASC
   </select>

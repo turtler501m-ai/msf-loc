@@ -57,22 +57,28 @@ public class ProductController {
         return ResponseUtils.ok(productInfoService.getPrdtCapacityList(condition));
     }
 
-    //휴대폰 매장 재고 조회 (postgre)
+    /**
+     * 휴대폰 매장 재고 조회 (postgre)
+     */
     @PostMapping("/phone/inventory/list")
     public CommonResponse<List<CategoryInfoDto>> getPhoneInventoryList(@RequestBody @Valid PhoneSerialRequest condition) {
         return ResponseUtils.ok(productInfoService.getPhoneInventoryList(condition));
     }
 
-    //휴대폰 목록 조회
+    /**
+     * 휴대폰 목록 조회
+     */
     @PostMapping("/phone/list")
-    public CommonResponse<List<PhoneInfoDto>> getPhoneList(@RequestBody @Valid ProductInfoRequest condition) {
-        return ResponseUtils.ok(productInfoService.getPhoneList(condition));
+    public CommonResponse<List<PhoneInfoDto>> getPhoneList(@RequestBody @Valid ProductInfoRequest request) {
+        return ResponseUtils.ok(productInfoService.getPhoneList(request));
     }
 
-    //요금제 목록 조회
+    /**
+     * 요금제 목록 조회
+     */
     @PostMapping("/rate/list")
-    public CommonResponse<List<RateInfoDto>> getRateList(@RequestBody @Valid ProductInfoRequest condition) {
-        return ResponseUtils.ok(productInfoService.getRateList(condition));
+    public CommonResponse<List<RateInfoDto>> getRateList(@RequestBody @Valid ProductInfoRequest request) {
+        return ResponseUtils.ok(productInfoService.getRateList(request));
     }
 
     //공시지원금 조회 (출고가, 판매가 포함) >> 아직 안함.

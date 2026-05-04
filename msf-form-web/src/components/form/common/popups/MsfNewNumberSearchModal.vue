@@ -34,6 +34,7 @@
 <script setup>
 import { ref } from 'vue'
 import { post } from '@/libs/api/msf.api'
+import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -41,6 +42,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
+const store = useMsfFormNewChgStore()
 
 // 신규번호 선택항목
 const numberSelect = ref('')
@@ -55,18 +57,22 @@ const onOpen = async () => {
 const fetchNumbers = async () => {
   loading.value = true
   try {
-    const res = await post('/api/form/newchange/searchNumber', props.searchParams)
+    const payload = {
+      resNo: '2999999',
+      reqWantFnNo: props.searchParams.reqWantRnNo, // 뒤 4자리로 검색
+      requestKey: store.applicationKey || '278',
+    }
+    const res = await post('/api/form/newchange/searchNumber', payload)
     if (res && res.code === '0000') {
       const list = res.data || []
       numberOptions.value = list.map((num) => ({
-        value: num,
-        label: num,
+        value: typeof num === 'object' ? num.tlphNo : num,
+        label: typeof num === 'object' ? num.tlphNo : num,
+        raw: num
       }))
       if (numberOptions.value.length > 0) {
         numberSelect.value = numberOptions.value[0].value
       }
-    } else {
-      alert(res.message || '번호 조회에 실패했습니다.')
     }
   } catch (error) {
     console.error('Search number error:', error)
@@ -84,7 +90,8 @@ const onClose = () => {
 }
 
 const onConfirm = () => {
-  emit('confirm', numberSelect.value)
+  const selected = numberOptions.value.find(opt => opt.value === numberSelect.value)
+  emit('confirm', selected?.raw || numberSelect.value)
   onClose()
 }
 </script>

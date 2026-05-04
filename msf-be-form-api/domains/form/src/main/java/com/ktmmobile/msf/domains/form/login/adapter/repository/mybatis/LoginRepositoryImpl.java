@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import com.ktmmobile.msf.domains.form.login.adapter.repository.mybatis.smartform.mapper.LoginMapper;
 import com.ktmmobile.msf.domains.form.login.application.dto.LoginRequest;
 import com.ktmmobile.msf.domains.form.login.application.dto.LoginResponse;
+import com.ktmmobile.msf.domains.form.login.application.dto.PassChangeRequest;
 import com.ktmmobile.msf.domains.form.login.application.port.out.LoginRepository;
 
 @RequiredArgsConstructor
@@ -32,12 +33,16 @@ public class LoginRepositoryImpl implements LoginRepository {
         return loginMapper.updateLoginSucc(request);
     }
 
-    @Override public Integer insertUserHistory(LoginRequest request) {
-        return loginMapper.insertUserHistory(request);
+    @Override public Integer insertUserHistory(String userId) {
+        return loginMapper.insertUserHistory(userId);
     }
 
     @Override public Integer updateBioLoginSucc(LoginRequest request) {
         return loginMapper.updateBioLoginSucc(request);
+    }
+
+    @Override public Integer modifyPass(PassChangeRequest request) {
+        return loginMapper.updateUserPass(request);
     }
 
 }

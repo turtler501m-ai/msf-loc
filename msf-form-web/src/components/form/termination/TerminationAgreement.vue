@@ -17,6 +17,7 @@
             bottomDivider
           />
           <MsfCheckbox
+            id="termination-benefit-agree"
             v-model="formData.agreeCheck1"
             label="본인또는 대리인은 위의 사항을 확인하였고, 케이티모바일에서 제공한 혜택 소멸에 동의합니다."
           />
@@ -44,40 +45,80 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 import { storeToRefs } from 'pinia'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const emit = defineEmits(['complete'])
 
-// [TEST] 화면 테스트용 : 개발/검증 완료 시 '' 로 초기화
-const isComplete = ref('true')
+const terminationStore = useMsfFormTerminationStore()
+const { formData } = storeToRefs(terminationStore)
+
+// [TEST] 화면 테스트용: ''이면 동의 정보 입력값 기준으로 판단
+const isComplete = ref('')
+
+const isCompleteEffective = computed(() => {
+  if (isComplete.value === 'true') return true
+  if (isComplete.value === 'false') return false
+  return !!formData.value.agreeCheck1
+})
 
 watch(
-  () => isComplete.value,
+  isCompleteEffective,
   (newVal) => {
-    emit('complete', newVal ? true : false)
+    emit('complete', newVal)
   },
   { immediate: true },
 )
 
 onMounted(() => {
-  emit('complete', isComplete.value ? true : false)
+  emit('complete', isCompleteEffective.value)
 })
 
-const terminationStore = useMsfFormTerminationStore()
-const { formData } = storeToRefs(terminationStore)
+const validate = () => !!formData.value.agreeCheck1
+
+const focusField = (id) => {
+  setTimeout(() => {
+    document.getElementById(id)?.focus()
+  }, 0)
+}
+
+const validateWithAlert = () => {
+  if (!formData.value.agreeCheck1) {
+    showAlert('혜택 환수 안내사항 동의가 필요합니다.', () =>
+      focusField('termination-benefit-agree'),
+    )
+    return false
+  }
+  return true
+}
 
 const save = async () => {
-  if (isComplete.value !== 'true') return false
+  console.log('[서비스해지][동의정보저장] 요청 시작', {
+    isComplete: isComplete.value,
+    agreeCheck1: formData.value.agreeCheck1,
+    agreeCheck2: formData.value.agreeCheck2,
+    agreeCheck3: formData.value.agreeCheck3,
+  })
+  if (isComplete.value === 'false') {
+    console.warn('[서비스해지][동의정보저장] 진행 중단', { reason: 'agreement incomplete' })
+    return false
+  }
+  if (!validateWithAlert()) {
+    console.warn('[서비스해지][동의정보저장] 진행 중단', { reason: 'agreement incomplete' })
+    return false
+  }
+  formData.value.agreeCheck2 = formData.value.agreeCheck1
+  console.log('[서비스해지][동의정보저장] 신청완료 호출')
   const result = await terminationStore.apiCompleteApplication()
-  console.debug('[TerminationAgreement.save] apiCompleteApplication result', { result })
+  console.log('[서비스해지][동의정보저장] 화면 데이터 반영 결과', { result })
   return result
 }
 
 const getCompleteErrorMessage = () => terminationStore.getCompleteErrorMessage()
 
-defineExpose({ save, getCompleteErrorMessage })
+defineExpose({ save, validate, validateWithAlert, getCompleteErrorMessage })
 </script>
 
 <style scoped></style>

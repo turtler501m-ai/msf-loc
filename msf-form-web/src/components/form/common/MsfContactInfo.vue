@@ -25,11 +25,13 @@
       </MsfFormGroup>
       <MsfFormGroup label="전화번호">
         <MsfStack type="field">
-          <MsfNumberInput
+          <MsfSelect
+            title="지역번호"
             v-model="model.telNo1"
-            placeholder="지역번호"
-            maxlength="3"
-            :readonly="model.isSaved"
+            groupCode="TEL"
+            placeholder="선택"
+            class="ut-w-200"
+            :disabled="model.isSaved"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
@@ -51,17 +53,9 @@
       </MsfFormGroup>
       <MsfFormGroup label="이메일주소" required>
         <MsfStack type="field">
-          <MsfInput
-            v-model="model.emailAddr1"
-            placeholder="이메일 아이디"
-            :readonly="model.isSaved"
-          />
-          <span>@</span>
-          <MsfInput
-            v-model="model.emailAddr2"
-            id="inp-emailAddr2"
-            placeholder="이메일 도메인"
-            class="ut-w-300"
+          <MsfEmailInput
+            v-model:emailId="model.emailAddr1"
+            v-model:emailDomain="model.emailAddr2"
             :readonly="model.isSaved"
           />
         </MsfStack>

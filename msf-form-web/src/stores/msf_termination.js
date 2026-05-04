@@ -30,7 +30,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
 
     /* 가입자 정보 */
     cstmrNm: '전용식', // 이름
-    userBirthDate: '', // 생년월일(YYYYMMDD)
+    userBirthDate: '19800101', // 생년월일(YYYYMMDD)
     userGender: '', // 성별
     cstmrNativeRrn1: '', // 내국인 주민번호 앞
     cstmrNativeRrn2: '', // 내국인 주민번호 뒤
@@ -194,7 +194,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
         ctn,
         contractNum: ncn,
         custId: formData.custId || '',
-      })
+      }, { silent: true })
       console.log('[MyinfoView] 가입정보 조회 응답', data)
       if (data) {
         if (data.prvRateGrpNm !== undefined) formData.prvRateGrpNm = data.prvRateGrpNm || ''
@@ -203,6 +203,17 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
           formData.lstComActvDate = data.initActivationDate
         }
         if (data.addr && data.addr !== '-') formData.addr = data.addr
+        // homeTel 있으면 해지 후 연락처, 없으면 해지 휴대폰번호를 해지 후 연락처로 셋팅
+        const rawTel = (data.homeTel || '').replace(/\D/g, '')
+        if (rawTel) {
+          formData.afterTel1 = rawTel.substring(0, 3)
+          formData.afterTel2 = rawTel.substring(3, rawTel.length - 4)
+          formData.afterTel3 = rawTel.substring(rawTel.length - 4)
+        } else {
+          formData.afterTel1 = formData.deviceChgTel1 || ''
+          formData.afterTel2 = formData.deviceChgTel2 || ''
+          formData.afterTel3 = formData.deviceChgTel3 || ''
+        }
         if (data.remindBlckYn !== undefined) formData.remindBlckYn = data.remindBlckYn || ''
         if (data.payData !== undefined) formData.payData = data.payData
         if (data.billData !== undefined) formData.billData = data.billData

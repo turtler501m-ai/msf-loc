@@ -2,7 +2,7 @@ package com.ktmmobile.msf.domains.form.form.newchange.field;
 
 import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
 import com.ktmmobile.msf.domains.form.form.common.vo.*;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.MsfNewChangeInfoDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestRecord;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoResponse;
 import org.mapstruct.Mapper;
@@ -31,7 +31,7 @@ public interface NewChangeFieldMapper {
     @Mapping(target = ".", source = "msfRequestMoveVo")
     @Mapping(target = "requestKey", source = "msfRequestVo.requestKey")
     @Mapping(target = "cstmrEmailAdr", source = "msfRequestCstmrVo.cstmrEmailAdr")
-    NewChangeInfoResponse toNewChangeInfoResponse(MsfNewChangeInfoDto dto);
+    NewChangeInfoResponse toNewChangeInfoResponse(MsfRequestRecord record);
 
     //신청서 저장 (INSERT / UPDATE)
     //NewChangeInfoRequest ~> MSF_REQUEST
@@ -49,8 +49,11 @@ public interface NewChangeFieldMapper {
     //NewChangeInfoRequest ~> MSF_REQUEST_BILL_REQ
     MsfRequestBillReqVo toMsfRequestBillReqVo(NewChangeInfoRequest request); //MSF_REQUEST
 
-    //NewChangeInfoRequest ~> MSF_REQUEST_BILL_MOVE
+    //NewChangeInfoRequest ~> MSF_REQUEST_MOVE_TEMP
     MsfRequestMoveVo toMsfRequestMoveVo(NewChangeInfoRequest request); //MSF_REQUEST
+
+    //NewChangeInfoRequest ~> MSF_REQUEST_DVC_CHG_TEMP
+    MsfRequestDvcChgVo toMsfRequestDvcChgVo(NewChangeInfoRequest request); //MSF_REQUEST
 
     MsfRequestAdditionVo toMsfRequestAdditionVo(NewChangeInfoRequest request);
 

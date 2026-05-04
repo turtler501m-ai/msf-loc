@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.common.repository.smartform.MsfWriteMapper">
+    <insert id="insertMsfUploadPhoneInfo" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfUploadPhoneInfoVo">
+        INSERT INTO MSF_UPLOAD_PHONE_INFO
+        (
+            UPLOAD_PHONE_SRL_NO
+            ,CRET_IP
+            ,CRET_DT
+            ,CRET_ID
+            ,EID
+            ,IMEI1
+            ,IMEI2
+            ,REQ_MODEL_NM
+            ,MODEL_ID
+            ,REQ_PHONE_SN
+            ,UPLOAD_PHONE_IMG_NM
+        )
+        VALUES
+        (
+            (SELECT MAX(UPLOAD_PHONE_SRL_NO)+1 FROM MSF_UPLOAD_PHONE_INFO)
+            ,'127.0.0.1'
+            ,now()
+            ,'82311998'
+            ,#{eid}
+            ,#{imei1}
+            ,#{imei2}
+            ,#{reqModelNm}
+            ,#{modelId}
+            ,#{reqPhoneSn}
+            ,#{uploadPhoneImgNm}
+        )
+    </insert>
+</mapper>

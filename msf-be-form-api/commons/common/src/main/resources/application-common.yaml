@@ -54,10 +54,10 @@ spring:
   data:
     ## Redis
     redis:
-      host: ${REDIS_HOST}
-      port: 6379
-      password: ${REDIS_PASSWORD}
-      timeout: 500ms
+      host: ${REDIS_HOST:}
+      port: ${REDIS_PORT:}
+      password: ${REDIS_PASSWORD:}
+      timeout: 300ms
       connect-timeout: 200ms
       lettuce:
         shutdown-timeout: 500ms
@@ -116,6 +116,10 @@ logging:
 #### PRD Profile
 spring:
   config.activate.on-profile: prd
+  data:
+    redis:
+      masterreplica:
+        nodes: ${REDIS_HOSTS}  # 끝에 S 주의
 
 
 

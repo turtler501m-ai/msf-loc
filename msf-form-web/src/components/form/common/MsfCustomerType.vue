@@ -5,21 +5,16 @@
       <MsfFormGroup label="고객 유형" tag="div" required>
         <MsfChip
           v-model="model.cstmrTypeCd"
-          name="inp-customerType"
+          :name="`${name}-inp-customerType`"
           groupCode="CSTMR_TYPE_CD"
           :disabled="model.isVerified || model.isSaved"
           :data="[]"
         />
       </MsfFormGroup>
-      <MsfFormGroup
-        v-if="visitTypeRequired"
-        label="방문 유형"
-        tag="div"
-        required
-      >
+      <MsfFormGroup v-if="visitTypeRequired" label="방문 유형" tag="div" required>
         <MsfChip
           v-model="model.cstmrVisitTypeCd"
-          name="inp-visitType"
+          :name="`${name}-inp-visitType`"
           :disabled="model.isVerified || model.isSaved"
           :data="[
             { value: 'V1', label: '직접방문' },
@@ -36,6 +31,7 @@ import { computed, defineModel, defineProps, watch, defineExpose } from 'vue'
 
 const props = defineProps({
   title: { type: String, default: '고객 유형' },
+  name: { type: String, default: 'base' },
   visitTypeCodes: { type: Array, default: () => ['JP', 'GO'] },
 })
 

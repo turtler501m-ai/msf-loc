@@ -85,12 +85,14 @@ import {
   shallowRef,
   watch,
   nextTick,
+  onBeforeUnmount,
 } from 'vue'
 import { useRoute } from 'vue-router'
 import { getFormTypeCode } from '@/libs/utils/comn.utils'
 import { getFormComponent, showAlert, showConfirm } from '@/libs/utils/comp.utils'
 import { useMsfMenuStore } from '@/stores/msf_menu'
 import { useMsfStepStore } from '@/stores/msf_step'
+import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import { mainScrollRef } from '@/hooks/useGlobalScroll'
 
 const route = useRoute()
@@ -100,13 +102,43 @@ const stepStore = useMsfStepStore()
 const domain = ref(route.params?.domain)
 const tempCode = ref()
 
-// 도메인타이틀 정의
-const domainTitle = computed(() => {
-  return menuStore.getParentMenu(`/form/${route.params?.domain}`)?.name || ''
+// 도메인에 따른 스토어 인스턴스 반환 및 초기화 유틸
+const resetCurrentStore = () => {
+  console.log(`[MsfFormView] Resetting form and step stores`)
+  if (route.params?.domain === 'newchange') {
+    useMsfFormNewChgStore().resetAll()
+  }
+
+  // 스텝 스토어도 초기화 (현재 도메인 기준으로 초기 상태 세팅)
+  if (route.params?.domain) {
+    stepStore.initSteps(route.params.domain)
+  }
+}
+
+// 뷰의 모든 로컬 상태를 초기화하는 함수
+const resetViewState = () => {
+  currentStepIndex.value = 0
+  allSteps.value = []
+  stepRefs.value = []
+  isCurrentStepComp.value = []
+  formData.value = {}
+  isComplete.value = false
+  tempCode.value = null
+  console.log(`[MsfFormView] View state reset completed`)
+}
+
+onBeforeUnmount(() => {
+  resetCurrentStore()
+  resetViewState()
 })
 
 // 페이지 이동 여부를 체크하는 플래그
 const isRouteChange = ref(false)
+
+// 도메인타이틀 정의
+const domainTitle = computed(() => {
+  return menuStore.getParentMenu(`/form/${route.params?.domain}`)?.name || ''
+})
 
 // 1. 전체 스텝 정의 (shallowRef를 써야 성능 이슈가 없습니다)
 const allSteps = ref([])
@@ -131,11 +163,27 @@ const isLastStep = computed(
 const showPrevPayCostBtn = computed(() => route.params?.domain === 'newchange')
 const showClearBtn = computed(() => route.params?.domain === 'newchange')
 
-const isStepComplete = computed(() =>
-  isCurrentStepComp.value.find((v, i) => i <= currentStepIndex.value && v === false) === false
-    ? false
-    : true,
-)
+const isStepComplete = computed(() => {
+  // 도메인이 newchange일 때만 특수한 계층적 유효성 검사 적용
+  if (route.params?.domain === 'newchange') {
+    const customerValid = isCurrentStepComp.value[0] || false
+    const productValid = isCurrentStepComp.value[1] || false
+    const agreementValid = isCurrentStepComp.value[2] || false
+
+    if (currentStepIndex.value === 0) {
+      return customerValid
+    } else if (currentStepIndex.value === 1) {
+      return customerValid && productValid
+    } else if (currentStepIndex.value === 2) {
+      // Agreement 단계에서는 기본적으로 Customer, Product, Agreement(체크박스)가 모두 완료되어야 함
+      // (작성완료 버튼 활성화 기준)
+      return customerValid && productValid && agreementValid
+    }
+  }
+
+  // 기본 로직: 현재 스텝까지 모두 true여야 함
+  return isCurrentStepComp.value.slice(0, currentStepIndex.value + 1).every((v) => v === true)
+})
 
 const initAllSteps = async () => {
   isComplete.value = false
@@ -150,37 +198,30 @@ const initAllSteps = async () => {
 
 const initRouterParams = async () => {
   /*
-      router 전달 방식
+      router 전달 방식: history state 사용
       router.push({
-        path: '/step/formNewChg',
+        path: '/form/newchange',
         state: {
-          code: 'xxxxxx',
+          requestkey: 'xxxxxx',
         }
       })
    */
-  // 💡 핵심: 라우터(useRoute)가 아니라, 브라우저의 기본 window 객체에서 꺼냅니다.
-  // Vue Router가 전달한 state는 history.state 안에 고스란히 들어있습니다.
   const historyState = window.history.state
-  if (historyState && historyState.code) {
-    tempCode.value = historyState.code
+  if (historyState) {
+    // requestkey를 우선적으로 확인하고, 하위 호환을 위해 code도 확인합니다.
+    tempCode.value = historyState.requestkey || historyState.code
   }
 
-  if (!tempCode.value) {
-    return
-  }
+  // 첫 번째 스텝 컴포넌트의 data(initForm)를 호출하여 스토어 초기화 (tempCode가 없으면 기본값으로 초기화됨)
+  if (stepRefs.value[0]?.data) {
+    const result = await stepRefs.value[0].data(tempCode.value)
 
-  // 임시저장 내역에서 넘어왔을 경우에 초기 설정할 내용 (입력 중이거나 입력 완료한 다음 Step까지 표시 로직) 로직 추가 필요
-  if (!stepRefs.value[currentStepIndex.value]?.data) {
-    return
+    if (result && result !== '0') {
+      const index = Math.max(0, parseInt(result) - 1)
+      currentStepIndex.value = index
+      isCurrentStepComp.value = allSteps.value.map((_, i) => i <= index) || []
+    }
   }
-  const result = await stepRefs.value[currentStepIndex.value]?.data(tempCode.value)
-  if (!result || result === '0') {
-    return
-  }
-
-  const index = parseInt(result)
-  currentStepIndex.value = index
-  isCurrentStepComp.value = allSteps.value.map((_, i) => i <= index) || []
 }
 
 // 3. 자식으로부터 유효성 상태를 전달받는 함수
@@ -209,33 +250,59 @@ const onClickClearBtn = async () => {
 }
 
 const onClickNextBtn = async () => {
+  console.log(`[MsfFormView] Attempting to move to next step from index: ${currentStepIndex.value}`)
   const result = await stepRefs.value[currentStepIndex.value]?.save()
+  console.log(`[MsfFormView] Step save result:`, result)
+
   if (!result) {
+    console.warn(`[MsfFormView] Step save failed or returned false. Aborting step change.`)
     return
   }
 
   // 다음 스텝으로 넘어가고, 새로운 스텝은 아직 검증 전이므로 버튼을 다시 비활성화합니다.
   currentStepIndex.value++
+  console.log(`[MsfFormView] Incremented currentStepIndex to: ${currentStepIndex.value}`)
   isCurrentStepComp.value[currentStepIndex.value] = false
 }
 
 const onClickCompelteBtn = async () => {
   showConfirm('신청서를 등록하시겠습니까?', async () => {
-    // result 형식: { name: '홍길동', phone: '010-1234-5678', formKey: 'some-key' }
-    const result = await stepRefs.value[currentStepIndex.value]?.save()
-    if (!result) {
-      showAlert('신청서 등록이 실패하였습니다. 다시 시도해 주세요.')
-      return false
+    if (stepRefs.value[currentStepIndex.value]?.validateWithAlert) {
+      const valid = await stepRefs.value[currentStepIndex.value].validateWithAlert()
+      if (!valid) {
+        return
+      }
+    }
+
+    // 1. 서버 저장 수행 (Agreement.vue의 save 호출)
+    const success = await stepRefs.value[currentStepIndex.value]?.save()
+
+    if (!success) {
+      const errorMessage =
+        stepRefs.value[currentStepIndex.value]?.getCompleteErrorMessage?.() ||
+        '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
+      showAlert(errorMessage)
+      return
+    }
+
+    // 2. 완료 화면에 표시할 데이터 세팅 (스토어의 실제 데이터 사용)
+    const store = useMsfFormNewChgStore()
+    formData.value = {
+      type: getFormTypeCode(route.path),
+      name: store.customer.cstmrNm,
+      phone: `${store.customer.mobileNo1}-${store.customer.mobileNo2}-${store.customer.mobileNo3}`,
+      formKey: store.applicationKey,
     }
 
     showAlert('신청서 등록이 완료되었습니다.', () => {
-      // 최종 신청 완료화면으로 이동
-      formData.value = { type: getFormTypeCode(route.path), ...result }
+      // 3. 화면 전환
       isComplete.value = true
+
+      // 4. 작성 완료 후 스토어 및 뷰 상태 초기화
+      resetCurrentStore()
     })
   })
 }
-
 const onClickTempCompleteBtn = () => {
   formData.value = {
     type: getFormTypeCode(route.path),
@@ -259,6 +326,9 @@ onBeforeUpdate(async () => {
     return
   }
 
+  resetCurrentStore() // 이전 도메인 스토어 리셋
+  resetViewState() // 뷰 로컬 상태 리셋
+
   isRouteChange.value = true // 페이지 이동 중임을 표시
   domain.value = route.params?.domain
   await initAllSteps()
@@ -272,6 +342,15 @@ onUpdated(async () => {
 })
 
 // 해당하는 스텝의 컨텐츠 상단으로 스크롤 이동시킴
+watch(
+  () => stepStore.activeIndex,
+  (newIndex) => {
+    currentStepIndex.value = newIndex
+    // 강제 이동 시 이전 스텝들도 완료된 것으로 처리 (필요시)
+    isCurrentStepComp.value = allSteps.value.map((_, i) => i <= newIndex)
+  },
+)
+
 watch(currentStepIndex, async (newIndex) => {
   // 페이지 이동(도메인 변경)에 의한 인덱스 변화라면 스크롤 로직 실행 안 함
   if (isRouteChange.value) {
@@ -280,33 +359,6 @@ watch(currentStepIndex, async (newIndex) => {
   }
 
   await nextTick()
-
-  // 실제 스텝 이동 시에만 실행되는 로직
-  setTimeout(() => {
-    const stepComponent = stepRefs.value[newIndex]
-    if (!stepComponent) return
-
-    const targetEl = stepComponent.$el?.querySelector('.page-step-panel') || stepComponent.$el
-    const container = document.querySelector('.step-content-wrap')
-
-    if (container && targetEl) {
-      const containerRect = container.getBoundingClientRect()
-      const targetRect = targetEl.getBoundingClientRect()
-
-      // 좌표 계산 최적화 (상대 좌표 + 현재 스크롤 위치)
-      const scrollTarget = container.scrollTop + (targetRect.top - containerRect.top) - 40
-
-      // MsfCustomScroll 또는 일반 div 처리
-      const scrollHandler = mainScrollRef.value?.scrollTo ? mainScrollRef.value : container
-
-      scrollHandler.scrollTo({
-        top: scrollTarget,
-        behavior: 'smooth',
-      })
-
-      console.log(`${newIndex}번 스텝으로 사용자 유도 스크롤 완료`)
-    }
-  }, 100)
 })
 </script>
 

@@ -491,6 +491,23 @@
     , COALESCE(#{movePenalty},0))
   </insert>
 
+  <insert id="insertMsfRequestDvcChgTemp"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDvcChgVo">
+    INSERT INTO MSF_REQUEST_DVC_CHG_TEMP (
+        REQUEST_KEY,
+        DVC_CHG_TYPE_CD,
+        DVC_CHG_RSN_CD,
+        DVC_CHG_RSN_DTL_CD,
+        INSTAMT_PAY_MTHD_CD
+    ) VALUES (
+        #{requestKey},
+        #{dvcChgTypeCd},
+        #{dvcChgRsnCd},
+        #{dvcChgRsnDtlCd},
+        #{instamtPayMthdCd}
+    )
+  </insert>
+
   <update id="updateMsfRequestTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo">
     UPDATE MSF_REQUEST_TEMP
     SET
@@ -738,6 +755,16 @@ WHERE REQUEST_KEY = #{requestKey}
         , OSST_PAY_DATE=#{osstPayDate}
         , OSST_PAY_TYPE_CD=#{osstPayTypeCd}
         , MOVE_PENALTY=COALESCE(#{movePenalty},0)
+    WHERE REQUEST_KEY = #{requestKey}
+</update>
+
+<update id="updateMsfRequestDvcChgTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDvcChgVo">
+    UPDATE MSF_REQUEST_DVC_CHG_TEMP
+    SET
+          DVC_CHG_TYPE_CD=#{dvcChgTypeCd}
+        , DVC_CHG_RSN_CD=#{dvcChgRsnCd}
+        , DVC_CHG_RSN_DTL_CD=#{dvcChgRsnDtlCd}
+        , INSTAMT_PAY_MTHD_CD=#{instamtPayMthdCd}
     WHERE REQUEST_KEY = #{requestKey}
 </update>
 

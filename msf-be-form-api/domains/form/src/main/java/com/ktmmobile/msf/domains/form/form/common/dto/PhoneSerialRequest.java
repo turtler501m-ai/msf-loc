@@ -13,4 +13,5 @@ public class PhoneSerialRequest {
     private String orgnId;
     private String prodId;
     private String prodSn;
+    private String phoneModelId;
 }

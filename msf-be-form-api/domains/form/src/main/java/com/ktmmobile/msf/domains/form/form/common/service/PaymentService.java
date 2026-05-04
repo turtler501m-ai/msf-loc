@@ -4,17 +4,31 @@ import com.ktmmobile.msf.domains.commoncode.application.dto.CommonCodesRequest;
 import com.ktmmobile.msf.domains.commoncode.application.port.in.CommonCodeReader;
 import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeData;
 import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeGroups;
+import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
+import com.ktmmobile.msf.domains.form.common.dto.NiceLogDto;
+import com.ktmmobile.msf.domains.form.common.dto.NiceResDto;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
+import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscCrdtCardAthnInDto;
+import com.ktmmobile.msf.domains.form.common.service.NiceCertifySvc;
+import com.ktmmobile.msf.domains.form.common.service.NiceLogSvc;
+import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
 import com.ktmmobile.msf.domains.form.form.common.dto.CrdtCardAuthRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoResponse;
+import com.ktmmobile.msf.domains.form.form.common.dto.NiceAccountRequest;
 import com.ktmmobile.msf.domains.form.form.common.repository.msp.AuthInfoReadMapper;
+import com.ktmmobile.msf.domains.form.system.cert.dto.CertDto;
+import com.ktmmobile.msf.domains.form.system.cert.service.CertService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.net.SocketTimeoutException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +43,9 @@ public class PaymentService {
     private final AuthInfoReadMapper authInfoReadMapper;
     private final MsfMplatFormService msfMplatFormService;
     private final CommonCodeReader commonCodeReader;
+    private final NiceCertifySvc niceCertifySvc;
+    private final NiceLogSvc nicelog;
+    private final CertService certService;
 
     // @Value("${ext.url}")
     // private String extUrl;
@@ -36,29 +53,32 @@ public class PaymentService {
     // @Value("${NICE_UID_PASSWORD}")
     // private String niceUidPassword;
 
-    //청구계정아이디 조회
-    public MspJuoBanInfoResponse verifyBillInfo(MspJuoBanInfoRequest condition) {
-        //String cstmrTypeCd = condition.getCstmrTypeCd(); //parameter : "I"(내국인성인, 내국인미성년자, 외국인, 외국인미성년자)
-        //CustomerType cstmrType; //customerType enum 변환
-        //condition.setCustomerType(condition.getCstmrTypeCd().getCode()); //NA, FA
-        MspJuoBanInfoResponse data = authInfoReadMapper.verifyBillInfo(condition);
-        return data;
 
-        /*String cstmrTypeCd = condition.getCstmrTypeCd(); //parameter : "I"(내국인성인, 내국인미성년자, 외국인, 외국인미성년자)
-        CustomerType customerType = CustomerType.valueOf(cstmrTypeCd); //customerType enum 변환
-        if (CustomerType.JP.equals(cstmrTypeCd)) {
-            cstmrTypeCd = "B"; //법인
-        } else if (CustomerType.GO.equals(cstmrTypeCd)) {
-            cstmrTypeCd = "G"; //공공기관
+    /**
+     * 청구계정아이디 조회
+     *
+     * @param : 고객유형(cstmrTypeCd), 고객명(customerLinkName), 고객식별번호(customerSsn), 청구번호(ban)
+     * @return : MspJuoBanInfoResponse : 납부방법(blBillingMethod), 고객아이디(customerId), 계약번호(contractNum), 청구번호(ban)
+     */
+    public FormResponse<MspJuoBanInfoResponse> verifyBillInfo(MspJuoBanInfoRequest request) {
+        MspJuoBanInfoResponse data = authInfoReadMapper.verifyBillInfo(request);
+        if (data == null) {
+            return FormResponse.of(ResponseMessage.VALID_BAN_FAIL);
         }
-        condition.setCustomerType(cstmrTypeCd);
-        MspJuoBanInfoResponse data = authInfoReadMapper.verifyBillInfo(condition);
-        return data;*/
+        return FormResponse.of(ResponseMessage.VALID_BAN_SUCCESS, data);
     }
 
-    //신용카드 인증 (X91)
-    public Map<String, Object> crdtCardAthnInfo(CrdtCardAuthRequest request) {
+    //
+
+    /**
+     * 신용카드 인증 (X91)
+     *
+     * @param : 카드번호(crdtCardNo), 카드유효기간(crdtCardTermDay), 카드소유자명(custNm), 카드소유자 생년월일(brthDate), ??(ncType)
+     * @return
+     */
+    public FormResponse<Map<String, Object>> crdtCardAthnInfo(CrdtCardAuthRequest request) {
         Map<String, Object> rtnMap = new HashMap<>();
+
         //parameter
         //crdtCardNo : 카드번호
         //crdtCardTermDay : 카드유효기간
@@ -72,44 +92,27 @@ public class PaymentService {
         String crdtCardKindCd = ""; //카드사 코드 (리턴으로 받음)
         String crdtCardKindNm = ""; //카드사명 (리턴받은걸로 공통코드에서 찾음)
 
-        System.out.println("crdtCardNo : " + crdtCardNo);
-        System.out.println("crdtCardTermDay : " + crdtCardTermDay);
-        System.out.println("brthDate : " + brthDate);
-        System.out.println("custNm : " + custNm);
-        System.out.println("====================================================================");
-
-        //입력값 민감정보 복호화? 암호화는 하지도 않는데?
+        //고객포탈 기준으로 민감정보 (생년월일, 카드번호) 암호화하지 않고 보냄. 하단의 복호화가 안됨.
         /*try {
             crdtCardNo = EncryptUtil.ace256Dec(crdtCardNo); //카드번호
             brthDate = EncryptUtil.ace256Dec(brthDate); //생년월일
         } catch (CryptoException e) {
-            System.out.println("CryptoException ======================== " + e.getMessage());
-            crdtCardNo = "";
             brthDate = "";
         }*/
-
-        System.out.println("crdtCardNo : " + crdtCardNo);
-        System.out.println("crdtCardTermDay : " + crdtCardTermDay);
-        System.out.println("brthDate : " + brthDate);
-        System.out.println("custNm : " + custNm);
+        //고객포탈은 신용카드번호 인증 시 "최초 요금 납부등록은<br/> 가입자 본인 명의의 카드/계좌로만 가능합니다.<br/>재 확인 후 시도 바랍니다." 라는 메세지가 있음.
+        //고객포탈은 신용카드번호 인증 시 서비스 연동이력 저장은 없음. M플랫폼으로 이동 시에는 저장이 있겠으나 고객포탈 자체로 이력저장은 보이지 않음.
+        //하지만, 스마트는 서비스 연동이력 및 시스템 로그? 가 저장되어야 할 것 같음.
 
         //신용카드번호 인증 조회 호출
         MoscCrdtCardAthnInDto moscCrdtCardAthnIn = null;
         try {
             //X91 MP호출
             moscCrdtCardAthnIn = msfMplatFormService.moscCrdtCardAthnInfo(crdtCardNo, crdtCardTermDay, brthDate, custNm);
-            System.out.println("moscCrdtCardAthnIn.getTrtResult =================================== " + moscCrdtCardAthnIn.getTrtResult());
             if (moscCrdtCardAthnIn.getTrtResult() != null && moscCrdtCardAthnIn.isSuccess()) {
                 //if (moscCrdtCardAthnIn.isSuccess()) {
                 if ("Y".equals(moscCrdtCardAthnIn.getTrtResult())) {
                     crdtCardKindCd = moscCrdtCardAthnIn.getCrdtCardKindCd();
                     crdtCardKindNm = "";
-
-                    //서비스 연동이력 확인하여 저장
-                    String globalNo = "99999999999999999999";
-                    String trtMsg = "";
-                    //String crdtCardKindCd = "";
-                    String crdtCardNm = "";
 
                     /*rtnMap.put("GLOBAL_NO", moscCrdtCardAthnIn.getGlobalNo());
                     rtnMap.put("TRT_MSG", moscCrdtCardAthnIn.getTrtMsg());
@@ -128,7 +131,6 @@ public class PaymentService {
                             }
                         }
                     }
-                    System.out.println("crdtCardKindNm >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> : " + crdtCardKindNm);
 
                     //카드사명이 있는 경우에만 로그에 쌓아?
                     if (!"".equals(crdtCardKindNm)) {
@@ -202,87 +204,101 @@ public class PaymentService {
         }
 
         //@@ prx 오픈전까지 강제 성공처리
-        rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
-        rtnMap.put("CRDT_CARD_CODE_NM", crdtCardKindNm);
-        rtnMap.put("ALTER_MSG", "신용카드 유효성 체크에 성공하였습니다.");
+        //rtnMap.put("RESULT_CODE", ResponseMessage.VALID_CREDIT_SUCCESS);
+        //rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_CREDIT_SUCCESS.getMessage());
+        //rtnMap.put("ALTER_MSG", "신용카드 유효성 체크에 성공하였습니다.");
 
-        return rtnMap;
+        rtnMap.put("CRDT_CARD_CODE_NM", crdtCardKindNm); //카드사명 넘겨아하나. 확인필요.
+
+        return FormResponse.of(ResponseMessage.VALID_CREDIT_SUCCESS);
+        //return FormResponse.of(ResponseMessage.VALID_CREDIT_SUCCESS, rtnMap);
     }
 
     //계좌번호인증
-    /*public Map<String, Object> accountCheck(MspJuoSubInfoCondition condition) {
-        //JuoSubInfoResponse data = authInfoReadMapper.selectKtmCustomer(condition);
-
+    public FormResponse<Map<String, Object>> accountCheck(NiceAccountRequest niceAccountRequest, HttpServletRequest request) {
+        String result = null;
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-        Random numGen = null;
-        try {
-            numGen = SecureRandom.getInstance("SHA1PRNG");
-        } catch (NoSuchAlgorithmException e) {
-            throw new McpCommonException("NoSuchAlgorithmException");
-        }
 
-        String result = "";
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd", java.util.Locale.KOREA);
-        String strOrderNo = sdf.format(new java.util.Date()) + (Math.round(numGen.nextDouble() * 10000000000L) + ""); //주문번호 : 매 요청마다 중복되지 않도록 유의
+        /* 확인용도 주석 처리 */
+        //strGbn                   : 1:개인, 2:사업자
+        //private String svcGbn    ; //업무구분(전문참조) >> 5: 소유주 확인, 2: 예금주명 확인, 4: 계좌 유효성 확인
+        //private String service   ; //서비스구분 >> 1: 소유주 확인, 2: 예금주명 확인, 3: 계좌 유효성 확인
+        //private String svcCls    ; //내-외국인구분 ???
+        //name                     : 계좌소유주명
+        //private String resId     ; //주민번호(사업자 번호,법인번호)
+        //private String bankCode  ; //은행코드(전문참조)
+        //private String accountNo ; //계좌번호
+        //inqRsn                   : 조회사유 - 10:회원가입 20:기존회원가입 30:성인인증 40:비회원확인 90:기타사유
 
-        CommonHttpClient client = new CommonHttpClient(extUrl + "/rlnmCheck.do");
-        NameValuePair[] data = {
-            new NameValuePair("niceUid", Constants.NICE_UID),
-            new NameValuePair("svcPwd", niceUidPassword),
-            new NameValuePair("service", "3"),  //서비스구분 1=계좌소유주확인 2=계좌성명확인 3=계좌유효성확인
-            new NameValuePair("strGbn", "1"),  // 1 : 개인, 2: 사업자
-            //new NameValuePair("strResId", condition.getResId()), //주민번호(사업자 번호,법인번호)
-            //new NameValuePair("strNm", StringUtil.substringByBytes(niceResDto.getName(), 0, 60)), //계좌소유주명
-            //new NameValuePair("strBankCode", niceResDto.getBankCode()), //은행코드(전문참조)
-            //new NameValuePair("strAccountNo", niceResDto.getAccountNo()), //계좌번호
-            //new NameValuePair("svcGbn", niceResDto.getSvcGbn()),   //업무구분(전문참조)
-            //new NameValuePair("strOrderNo", strOrderNo),
-            //new NameValuePair("svc_cls", niceResDto.getSvcCls()),  //내-외국인구분
-            new NameValuePair("inq_rsn", "10") // 조회사유 - 10:회원가입 20:기존회원가입 30:성인인증 40:비회원확인 90:기타사유
-        };
-        try {
-            result = client.postUtf8(data);
-            //result = client.post(data, "UTF-8");
-        } catch (SocketTimeoutException e) {
-            throw new McpCommonException("SocketTimeoutException");
-        }
-
-        //data:"service=3&svcGbn=4&strBankCode=" + $('#reqBankTmp').val() + "&strAccountNo=" +  $('#reqAccountNumberTmp').val() + "&USERNM=" + $('#reqAccountNameTmp').val(),
-
-       *//*
-        * 확인용도 주석 처리
-        private String service   ; //서비스구분 1=계좌소유주확인 2=계좌성명확인 3=계좌유효성확인
-        private String resId     ; //주민번호(사업자 번호,법인번호)
-        private String bankCode  ; //은행코드(전문참조)
-        private String accountNo ; //계좌번호
-        private String svcGbn    ; //업무구분(전문참조)
-        private String svcCls    ; //내-외국인구분
-
-        service 서비스구분 1: 소유주 확인, 2: 예금주명 확인, 3: 계좌 유효성 확인
-        svcGbn 업무구분 5: 소유주 확인, 2: 예금주명 확인, 4: 계좌 유효성 확인
-        *//*
+        //Request DTO 를 NiceResDto 에서 NiceAccountRequest 로 변경하도록 처리예정 (추후 협의필요)
+        NiceResDto niceResDto = new NiceResDto();
+        BeanUtils.copyProperties(niceResDto, niceAccountRequest);
+        result = niceCertifySvc.checkNiceAccount(niceResDto);
 
         String[] results = result.split("\\|");
 
-        // NiceLogDto nicelogDto = new NiceLogDto();
-        // nicelogDto.setnReferer(request.getHeader("referer"));
-        // nicelogDto.setnAuthType("A");
-        //
-        // if (results != null && results.length > 0 && "0000".equals(results[1])) {
-        //     //인증성공
-        //     //나이스 로그 기록
-        //     nicelogDto.setnResult("O");
-        //     newChangeService.insertNiceLog(request, niceResDto, nicelogDto);
-        //     rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
-        //
-        // } else {
-        //     //인증실패
-        //     //나이스 로그 기록 : 나이스 에로코드가있을때만 로그에 넣는다
-        //     nicelogDto.setnResult("X");
-        //     newChangeService.insertNiceLog(request, niceResDto, nicelogDto);
-        //     rtnMap.put("RESULT_CODE", "0001");
-        // }
+        NiceLogDto nicelogDto = new NiceLogDto();
+        nicelogDto.setnReferer(request.getHeader("referer"));
+        nicelogDto.setnAuthType("A");
 
-        return null;
-    }*/
+        //if (results != null && results.length > 0 && "0000".equals(results[1])) {
+        if (results != null && results.length > 1 && "0000".equals(results[1])) {
+            //인증성공
+            //나이스 로그 기록 20160403
+            nicelogDto.setnResult("O");
+            nicelog.insert(request, niceResDto, nicelogDto);
+            rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
+
+            // ============ STEP START ============
+            Map<String, String> resultMap = certService.isAuthStepApplyUrl(request);
+            if ("Y".equals(resultMap.get("isAuthStep"))) {
+
+                String ncType = "";
+                if (request.getParameter("ncType") != null) ncType = request.getParameter("ncType");
+
+                // account인증 이력 존재여부 확인
+                if (0 < certService.getModuTypeStepCnt("account", ncType)) {
+                    // 계좌인증 관련 스텝 초기화
+                    CertDto certDto = new CertDto();
+                    certDto.setModuType("account");
+                    certDto.setCompType("G");
+                    certDto.setNcType(ncType);
+                    certService.getCertInfo(certDto);
+                }
+
+                // 인증종류, 대리인구분, 계좌번호, 은행코드, 이름
+                String[] certKey = {"urlType", "moduType", "ncType", "reqAccountNumber", "reqBank", "name"};
+                String[] certValue = {"chkAccount", "account", ncType, EncryptUtil.ace256Enc(niceResDto.getAccountNo()), niceResDto.getBankCode(), niceResDto.getName()};
+
+                // service가 3인 경우 이름 필수x
+                if ("3".equals(niceResDto.getService())) {
+                    certKey = Arrays.copyOfRange(certKey, 0, 5);
+                    certService.vdlCertInfo("C", certKey, certValue);
+                } else {
+                    certService.vdlCertInfo("C", certKey, certValue);
+
+                    // 인증종류, 대리인구분, 이름
+                    certKey = new String[]{"urlType", "moduType", "ncType", "name"};
+                    certValue = new String[]{"compAccount", "account", ncType, niceResDto.getName()};
+
+                    Map<String, String> vldReslt = certService.vdlCertInfo("D", certKey, certValue);
+                    if (!Constants.AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
+                        throw new McpCommonJsonException("STEP01", vldReslt.get("RESULT_DESC"));
+                    }
+                }
+            }
+            // ============ STEP END ============
+
+        } else {
+            //인증실패
+            //나이스 로그 기록 20160403 나이스 에로코드가있을때만 로그에 넣는다
+            nicelogDto.setnResult("X");
+            nicelog.insert(request, niceResDto, nicelogDto);
+        }
+
+        rtnMap.put("RESULT_CODE", ResponseMessage.VALID_ACCOUNT_SUCCESS);
+        rtnMap.put("RESULT_MESSAGE", ResponseMessage.VALID_ACCOUNT_SUCCESS.getMessage());
+
+        return FormResponse.of(ResponseMessage.VALID_ACCOUNT_SUCCESS);
+    }
 }

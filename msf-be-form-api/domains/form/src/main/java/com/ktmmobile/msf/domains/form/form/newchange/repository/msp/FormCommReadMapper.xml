@@ -4,13 +4,13 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommReadMapper">
 
-  <resultMap id="AgentInfoResultMap" type="com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoDto">
+  <!--<resultMap id="AgentInfoResultMap" type="com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse">
     <constructor>
       <arg column="KT_ORG_ID" javaType="java.lang.String" />
       <arg column="ORGN_ID" javaType="java.lang.String" />
       <arg column="ORGN_NM" javaType="java.lang.String" />
     </constructor>
-  </resultMap>
+  </resultMap>-->
 
   <select id="generateResNo" resultType="java.lang.String">
     SELECT MCP_MNG.SQ_RCP_RES_NO_01.NEXTVAL@DL_MCP FROM DUAL
@@ -24,7 +24,9 @@
     SELECT TO_NUMBER(TO_CHAR(SYSDATE, 'YYYYMMDD') || TRIM(TO_CHAR(MCP_MNG.NMCP_CUST_REQUEST_SEQ.NEXTVAL@DL_MCP, '00000'))) FROM DUAL
   </select>
 
-  <select id="selectAgentInfo" parameterType="string" resultMap="AgentInfoResultMap">
+  <!--<select id="selectAgentInfo" parameterType="string" resultMap="AgentInfoResultMap">-->
+    <select id="selectAgentInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest"
+            resultType="com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse">
     /** 매장코드에 매칭된 대리점조회  **/
     SELECT
         KT_ORG_ID /* KT조직ID */

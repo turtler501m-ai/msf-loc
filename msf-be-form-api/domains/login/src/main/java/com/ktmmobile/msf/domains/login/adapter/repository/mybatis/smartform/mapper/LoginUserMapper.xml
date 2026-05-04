@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.login.adapter.repository.mybatis.smartform.mapper.LoginUserMapper">
+
+  <select id="selectFormByUserId" resultType="com.ktmmobile.msf.domains.login.adapter.repository.mybatis.smartform.mapper.row.FormLoginUserRow">
+    SELECT
+      user_id,
+      pwd,
+      user_sttus_cd,
+      access_limit_yn,
+      login_chk_cnt,
+      pwd_chg_yn,
+      pwd_chg_dt
+    FROM msf_user_info
+    WHERE user_id = #{userId}
+  </select>
+
+  <select id="selectFormByDeviceUuid" resultType="com.ktmmobile.msf.domains.login.adapter.repository.mybatis.smartform.mapper.row.FormLoginUserRow">
+    SELECT
+      msf_user_info.user_id,
+      msf_user_info.pwd,
+      msf_user_info.user_sttus_cd,
+      msf_user_info.access_limit_yn,
+      msf_user_info.login_chk_cnt,
+      msf_user_info.pwd_chg_yn,
+      msf_user_info.pwd_chg_dt
+    FROM msf_user_info
+    INNER JOIN msf_usr_app_info
+      ON msf_user_info.user_id = msf_usr_app_info.user_id
+    WHERE msf_usr_app_info.uuid = #{deviceUuid}
+      AND msf_usr_app_info.apv_sttus_cd = 'A'
+  </select>
+
+  <select id="selectFormUserInfoByUserId" resultType="com.ktmmobile.msf.domains.login.adapter.repository.mybatis.smartform.mapper.row.FormLoginUserInfoRow">
+    SELECT
+      user_id,
+      user_nm,
+      mobile_no,
+      agent_cd,
+      shop_cd,
+      (
+        SELECT apv_sttus_cd
+        FROM msf_usr_app_info
+        WHERE msf_usr_app_info.user_id = msf_user_info.user_id
+        ORDER BY last_access_dt DESC NULLS LAST
+        LIMIT 1
+      ) AS apv_sttus_cd
+    FROM msf_user_info
+    WHERE user_id = #{userId}
+  </select>
+
+  <select id="selectFormUserInfoByUserIdAndDeviceUuid" resultType="com.ktmmobile.msf.domains.login.adapter.repository.mybatis.smartform.mapper.row.FormLoginUserInfoRow">
+    SELECT
+      msf_user_info.user_id,
+      msf_user_info.user_nm,
+      msf_user_info.mobile_no,
+      msf_user_info.agent_cd,
+      msf_user_info.shop_cd,
+      msf_usr_app_info.apv_sttus_cd
+    FROM msf_user_info
+    LEFT JOIN msf_usr_app_info
+      ON msf_user_info.user_id = msf_usr_app_info.user_id
+      AND msf_usr_app_info.uuid = #{deviceUuid}
+    WHERE msf_user_info.user_id = #{userId}
+  </select>
+
+  <insert id="insertFormUserHistory">
+    INSERT INTO msf_user_hst (
+      user_id, user_nm, pwd, agent_cd, shop_cd, mobile_no, ip, email_adr,
+      email_receive_yn, user_sttus_cd, access_limit_yn,
+      access_limit_dt, login_chk_cnt, pwd_chg_yn, pwd_chg_dt, chg_dt
+    )
+    SELECT
+      user_id, user_nm, pwd, COALESCE(agent_cd, 'NONE'),
+      shop_cd, mobile_no, ip, email_adr,
+      email_receive_yn, user_sttus_cd, access_limit_yn,
+      access_limit_dt, login_chk_cnt, pwd_chg_yn, pwd_chg_dt, chg_dt
+    FROM msf_user_info
+    WHERE user_id = #{userId}
+  </insert>
+
+  <update id="updateFormLoginSuccess">
+    UPDATE msf_user_info
+    SET chg_dt = now(),
+      login_chk_cnt = 0
+    WHERE user_id = #{userId}
+  </update>
+
+  <update id="updateFormLoginFailure">
+    UPDATE msf_user_info
+    SET
+    <if test="@org.springframework.util.StringUtils@hasText(userStatusCode)">
+      user_sttus_cd = #{userStatusCode},
+      access_limit_yn = 'Y',
+      access_limit_dt = now(),
+      chg_dt = now(),
+    </if>
+      login_chk_cnt = login_chk_cnt + 1
+    WHERE user_id = #{userId}
+  </update>
+
+  <update id="updateFormDeviceLoginSuccess">
+    UPDATE msf_usr_app_info
+    SET last_access_dt = now()
+    WHERE uuid = #{deviceUuid}
+  </update>
+
+  <update id="updateFormPassword">
+    UPDATE msf_user_info
+    SET pwd = #{encodedPassword},
+      pwd_chg_dt = now(),
+      pwd_chg_yn = 'Y'
+    WHERE user_id = #{userId}
+  </update>
+
+</mapper>

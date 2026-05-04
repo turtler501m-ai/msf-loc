@@ -2,9 +2,12 @@ package com.ktmmobile.msf.domains.form.form.newchange.controller;
 
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
+import com.ktmmobile.msf.domains.form.form.common.dto.*;
 import com.ktmmobile.msf.domains.form.form.common.service.ChoiceNumberService;
 import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
 import com.ktmmobile.msf.domains.form.form.common.service.NumberPortableService;
+import com.ktmmobile.msf.domains.form.form.common.service.SimInfoService;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
 import com.ktmmobile.msf.domains.form.form.newchange.service.NewChangeService;
 import jakarta.validation.Valid;
@@ -25,6 +28,7 @@ public class NewChangeController {
     private final ChoiceNumberService choiceNumberService; //신규가입 희망번호 조회/예약/취소
     private final NumberPortableService numberPortableService; //번호이동 사전동의 서비스
     private final NewChangeService newChangeService; //신규/변경
+    private final SimInfoService simInfoService; //
 
     //generateRequestKey - 추후 생성을 호출하지는 않을 것이므로 삭제해야함.
     @PostMapping("/generateRequestKey")
@@ -47,8 +51,8 @@ public class NewChangeController {
 
     //대리점정보 조회 (조건 : 매장코드)
     @PostMapping("/agent/list")
-    public CommonResponse<AgentInfoDto> getAgentInfo(@RequestBody @Valid AgentInfoRequest request) {
-        return ResponseUtils.ok(formCommService.getAgentInfo(request.shopOrgnId()));
+    public CommonResponse<AgentInfoResponse> getAgentList(@RequestBody @Valid AgentInfoRequest request) {
+        return ResponseUtils.ok(formCommService.getAgentList(request));
     }
 
     //신청서 진입
@@ -59,10 +63,11 @@ public class NewChangeController {
 
     //신청서 저장 - 임시저장
     @PostMapping("/newchange/save")
-    public CommonResponse<String> registerForm(@RequestBody @Valid NewChangeInfoRequest request) {
-        String rtnRequestKey = "";
-        rtnRequestKey = newChangeService.saveAppformInfo(request);
-        return ResponseUtils.ok(rtnRequestKey);
+    public CommonResponse<FormResponse<NewChangeResponse>> registerForm(@RequestBody @Valid NewChangeInfoRequest request) {
+        //String rtnRequestKey = "";
+        //rtnRequestKey = newChangeService.saveAppformInfo(request);
+        //return ResponseUtils.ok(rtnRequestKey);
+        return ResponseUtils.ok(newChangeService.saveAppformInfo(request));
     }
 
 
@@ -73,10 +78,30 @@ public class NewChangeController {
     //@PostMapping("/newchange/complete")
 
 
+    //휴대폰 일련번호 유효성체크 - Y13
+    @PostMapping("/verifyPhoneSerialNumberInfo")
+    public CommonResponse<FormResponse<Map<String, Object>>> verifyPhoneSerialNumberInfo(@RequestBody @Valid PhoneSerialRequest condition) {
+        return ResponseUtils.ok(simInfoService.verifyPhoneSerialNumberInfo(condition));
+    }
+
+    //USIM 정보 유효성체크 - X85
+    @PostMapping("/verifyUsimInfo")
+    //public CommonResponse<MoscInqrUsimUsePsblOutDTO> verifyUsimInfo(@RequestBody @Valid MspJuoSubInfoCondition condition) throws SocketTimeoutException {
+    public CommonResponse<FormResponse<Map<String, Object>>> verifyUsimInfo(@RequestBody @Valid MspJuoSubInfoRequest condition) {
+        return ResponseUtils.ok(simInfoService.verifyUsimInfo(condition));
+    }
+
+    //eSIM 정보 유효성체크 - Y13, Y12, Y14, Y15
+    //@RequestMapping(value = {"/appForm/eSimChkAjax.do", "/m/appForm/eSimChkAjax.do"})
+    @PostMapping("/verifyEsimInfo")
+    public CommonResponse<FormResponse<EsimResponse>> verifyEsimInfo(@RequestBody @Valid EsimRequest request) {
+        return ResponseUtils.ok(simInfoService.verifyEsimInfo(request));
+    }
+
     //신규가입 희망번호 조회 (NU1)
     //@RequestMapping(value = "/appform/searchNumberAjax.do")
     @PostMapping(value = "/newchange/searchNumber")
-    public CommonResponse<Map<String, Object>> getSearchNumber(@RequestBody @Valid NewChangeInfoRequest request) {
+    public CommonResponse<FormResponse<ChoiceNumberResponse>> getSearchNumber(@RequestBody @Valid ChoiceNumberRequest request) {
         return ResponseUtils.ok(choiceNumberService.getSearchNumber(request));
     }
 
@@ -124,14 +149,18 @@ public class NewChangeController {
         return ResponseUtils.ok(formCommService.reqPreOpenCheck(request));
     }
 
-    //2026.04.29
-    //번호이동 사전동의
+    //2026.04.30
+    //신용카드인증 실패
+    //청구계정아이디조회 실패
+    //계좌인증 실패
+    //USIM 유효성체크 성공/실패
+    //eSIM 유효성체크 성공/실패
 
-    //2026.04 마지막주 할일
-    //usim, esim, 휴대폰일련번호 유효성 정리
-    //신용카드, 계좌인증, 청구계정에 유효성 정리
-    //신용카드인증 , 번호이동 , 희망번호 prx 호출전까지 붙이기
+    //번호이동 사전동의 :
+    //신규가입 희망번호 :
     //신청서 저장의 유효성체크 정리할 것
+    //공시지원금 조회
+    //단말 및 요금제 조회 request 정리
 
     //부가서비스 msf_request_addition 저장 mapstruct
     //부가서비스 msf_request 저장

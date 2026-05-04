@@ -98,7 +98,7 @@ import {
   nextTick,
   useAttrs,
 } from 'vue'
-import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { getCommonCodeListWithDetail } from '@/libs/utils/comn.utils'
 import { isEmpty } from '@/libs/utils/string.utils'
 
 // 속성에 접근
@@ -134,6 +134,7 @@ const props = defineProps({
   title: { type: String, default: '선택' }, // 팝업 상단 타이틀
   inline: Boolean, // 인라인 스타일 여부
   groupCode: { type: String, default: '' }, // 공통코드 그룹코드
+  isFull: { type: Boolean, default: false }, // 전체 라인 스타일 여부
 })
 
 // 부모에게 전달할 이벤트
@@ -177,8 +178,8 @@ const toggleSelect = () => {
 
 const handleSelect = (option) => {
   if (option.disabled) return
-  emit('update:modelValue', option.value)
-  emit('change', option.value)
+  emit('update:modelValue', props.isFull ? option : option.value)
+  emit('change', props.isFull ? option : option.value)
   isOpen.value = false
 
   // 팝업 모드일 때는 포커스 복구가 Dialog 내부 FocusTrap에 의해 처리됨
@@ -228,9 +229,8 @@ const handleClickOutside = (event) => {
 const getOptionsByGroupCode = (groupCode) => {
   if (props.options?.length > 0) return props.options
   if (isEmpty(groupCode)) return []
-  getCommonCodeList(groupCode).then((list) => {
-    console.log('list:', list)
-    optionList.value = list.map((item) => ({ value: item.code, label: item.title }))
+  getCommonCodeListWithDetail(groupCode).then((list) => {
+    optionList.value = list.map((item) => ({ value: item.code, label: item.title, ...item }))
   })
 }
 
