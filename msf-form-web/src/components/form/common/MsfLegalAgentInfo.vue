@@ -4,6 +4,7 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="이름" required>
         <MsfInput
+          id="inp-repName"
           v-model="model.repName"
           placeholder="이름"
           class="ut-w-300"
@@ -13,6 +14,7 @@
       <MsfFormGroup label="주민등록번호/<br/>외국인등록번호" required>
         <MsfStack type="field">
           <MsfNumberInput
+            id="inp-combinedNo1"
             v-model="combinedNo1"
             placeholder="앞 6자리"
             maxlength="6"
@@ -22,6 +24,7 @@
           <MsfNumberInput
             v-model="combinedNo2"
             id="inp-combinedNo2"
+            type="password"
             placeholder="뒤 7자리"
             maxlength="7"
             :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
@@ -30,6 +33,7 @@
       </MsfFormGroup>
       <MsfFormGroup label="신청인과의 관계" tag="div" required>
         <MsfSelect
+          id="inp-repRelation"
           title="신청인과의 관계"
           v-model="model.minorAgentRelTypeCd"
           groupCode="AGR"
@@ -38,14 +42,16 @@
           :disabled="model.isSaved"
         />
       </MsfFormGroup>
-      <MsfMobileAuthNumber
-        v-model:name="model.repName"
-        v-model:phone1="phoneData.phone1"
-        v-model:phone2="phoneData.phone2"
-        v-model:phone3="phoneData.phone3"
-        form-type="F-1-VDP"
-        @complete="onComplete"
-      />
+      <div id="inp-repPhone">
+        <MsfMobileAuthNumber
+          v-model:name="model.repName"
+          v-model:phone1="phoneData.phone1"
+          v-model:phone2="phoneData.phone2"
+          v-model:phone3="phoneData.phone3"
+          form-type="F-1-VDP"
+          @complete="onComplete"
+        />
+      </div>
     </MsfStack>
     <MsfTitleArea :title="agreementTitle" />
     <MsfAgreementItem

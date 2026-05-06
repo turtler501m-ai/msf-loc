@@ -1,7 +1,7 @@
 package com.ktmmobile.msf.commons.logincore.domain.dto;
 
-public record LoginTwoFactorVerifyResult(
+public record LoginTwoFactorCompletionResult(
     String loginSessionId,
-    boolean verified
+    boolean completed
 ) {
 }

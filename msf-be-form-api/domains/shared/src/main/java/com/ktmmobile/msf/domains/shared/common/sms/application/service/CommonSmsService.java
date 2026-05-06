@@ -14,13 +14,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.ktmmobile.msf.commons.common.data.entity.user.MsfUser;
 import com.ktmmobile.msf.commons.common.exception.InvalidValueException;
 import com.ktmmobile.msf.commons.common.exception.SimpleDomainException;
 import com.ktmmobile.msf.commons.common.service.port.CacheService;
-import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
+import com.ktmmobile.msf.commons.common.utils.env.EnvironmentUtils;
+import com.ktmmobile.msf.commons.logincore.application.port.in.LoginSessionFlowProcessor;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorStatus;
 import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.shared.common.sms.application.dto.CommonSmsRequest;
+import com.ktmmobile.msf.domains.shared.common.sms.application.dto.CommonSmsResponse;
 import com.ktmmobile.msf.domains.shared.common.sms.application.port.in.CommonSmsWriter;
 import com.ktmmobile.msf.domains.shared.common.sms.application.port.out.SmsRepository;
 import com.ktmmobile.msf.domains.shared.common.sms.domain.code.CommonSmsType;
@@ -37,6 +40,7 @@ public class CommonSmsService implements CommonSmsWriter {
 
     private final SmsRepository smsRepository;
     private final CacheService<SmsSendedOtpData> cacheService;
+    private final LoginSessionFlowProcessor loginSessionFlowProcessor;
 
     /**
      * 일반 SMS 발송
@@ -106,20 +110,26 @@ public class CommonSmsService implements CommonSmsWriter {
      */
     @Override
     @Transactional
-    public String sendOtpSms(CommonSmsRequest request) {
+    public CommonSmsResponse sendOtpSms(CommonSmsRequest request) {
         if (
             !StringUtils.hasText(request.path())
         ) {
-            throw new InvalidValueException("잘못된 접근입니다.: " + request.path());
+            throw new SimpleDomainException("잘못된 접근입니다.: " + request.path());
         }
 
         // 스마트서식지 신규/변경, 서비스변경, 명의변경, 서비스해지에서 사용하는 발송 요청인 경우에
         // 휴대폰번호가 반드시 필요
         if (request.type().getCode().matches("^F-[1234]-.*") && (!StringUtils.hasText(request.phone()) || !StringUtils.hasText(request.name()))) {
-            throw new InvalidValueException("잘못된 접근입니다.: " + request.type().getCode() + ", " + request.phone() + ", " + request.name());
+            throw new SimpleDomainException("잘못된 접근입니다.: " + request.type().getCode());
         }
         if (CommonSmsType.F_0_OTP.equals(request.type()) && !StringUtils.hasText(request.token())) {
-            throw new InvalidValueException("잘못된 접근입니다.: " + request.type().getCode() + ", " + request.token());
+            throw new SimpleDomainException("잘못된 접근입니다.: " + request.type().getCode());
+        }
+        if (CommonSmsType.F_0_OTP.equals(request.type())) {
+            LoginTwoFactorStatus status = loginSessionFlowProcessor.getTwoFactorStatus(request.token());
+            if (!status.sessionExists()) {
+                throw new SimpleDomainException("인증 진행을 처음부터 다시 시작하세요.: " + request.type().getCode());
+            }
         }
 
         String phoneNumber = request.phone();
@@ -127,10 +137,10 @@ public class CommonSmsService implements CommonSmsWriter {
         String userName = request.name();
         if (!StringUtils.hasText(phoneNumber)) {
             // 로그인 사용자 토큰을 통한 사용자 정보 중 휴대폰번호 추출
-            MsfUser user = AuthenticationUtils.getUser();
-            phoneNumber = smsRepository.getUserPhone(user.getId());
-            userId = user.getId();
-            userName = user.getName();
+            LoginSessionUser user = loginSessionFlowProcessor.getSessionUser(request.token());
+            userId = user.userId();
+            userName = user.userName();
+            phoneNumber = user.phoneNumber();
         }
         phoneNumber = phoneNumber.replace("[^0-9]", "");
 
@@ -180,7 +190,10 @@ public class CommonSmsService implements CommonSmsWriter {
             .build();
         cacheService.setValue(savedKey, sendedData, Duration.ofMinutes(3));
 
-        return savedKey;
+        if (!EnvironmentUtils.isProduction()) {
+            return CommonSmsResponse.of(savedKey, authNumber);
+        }
+        return CommonSmsResponse.of(savedKey);
     }
 
     /**
@@ -197,15 +210,18 @@ public class CommonSmsService implements CommonSmsWriter {
             !StringUtils.hasText(request.token()) ||
             !StringUtils.hasText(request.value())
         ) {
-            throw new InvalidValueException("잘못된 접근입니다.");
+            throw new SimpleDomainException("잘못된 접근입니다.");
         }
 
         // 1. token을 통한 Redis 데이터 조회
         SmsSendedOtpData sendedData = cacheService.getValue(request.token());
+        if (sendedData == null) {
+            throw new SimpleDomainException("잘못된 접근입니다.");
+        }
 
         // 2. 인증 번호 추출 및 value 값 비교
         if (!request.value().equals(sendedData.getValue())) {
-            throw new InvalidValueException("입력한 인증번호가 일치하지 않습니다.");
+            return false;
         }
 
         // 3. MSF_CRT_VLD_DTL 테이블 등록
@@ -227,6 +243,10 @@ public class CommonSmsService implements CommonSmsWriter {
 
         smsRepository.registerMsfCrtVldDtl(idVerifValidationDetail);
 
+        if (CommonSmsType.F_0_OTP.equals(request.type())) {
+            loginSessionFlowProcessor.completeTwoFactor(sendedData.getToken());
+        }
+
         return true;
     }
 
@@ -244,23 +264,23 @@ public class CommonSmsService implements CommonSmsWriter {
          * 테이블:
          *   - AM2X_SUBMIT
          * SMS 발송 데이터
-         * MSG_ID:
-         *   - AM2X_SUBMIT_SEQ.NEXTVAL
-         * MSG_TYPE:
-         *   - 1 (SMS)
-         *   - 2 (LMS)
-         * SUBJECT:
-         *   - MSG_TYPE = 1: NULL
-         *   - MSG_TYPE = 2: [제목]
-         * SCHEDULE_TIME: TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
-         * SUBMIT_TIME: TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
-         * MESSGAE: [메세지]
-         * CALLBACK_NUM: 18995000 (콜센터 대표번호)
-         * RCPT_DATA: [휴대폰번호]
-         * K_ADFLAG: 'N'
-         * RESERVED01: 'MSF'
-         * RESERVED02: [사용구분값]
-         * RESERVED03: [사용자ID]
+         *   MSG_ID:
+         *     - AM2X_SUBMIT_SEQ.NEXTVAL
+         *   MSG_TYPE:
+         *     - 1 (SMS)
+         *     - 2 (LMS)
+         *   SUBJECT:
+         *     - MSG_TYPE = 1: NULL
+         *     - MSG_TYPE = 2: [제목]
+         *   SCHEDULE_TIME: TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+         *   SUBMIT_TIME: TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
+         *   MESSGAE: [메세지]
+         *   CALLBACK_NUM: 18995000 (콜센터 대표번호)
+         *   RCPT_DATA: [휴대폰번호]
+         *   K_ADFLAG: 'N'
+         *   RESERVED01: 'MSF'
+         *   RESERVED02: [사용구분값]
+         *   RESERVED03: [사용자ID]
          */
         MspSmsData data = MspSmsData.builder()
             .msgType(1)

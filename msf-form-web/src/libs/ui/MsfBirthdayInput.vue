@@ -8,12 +8,14 @@
     inputmode="numeric"
     class="msf-birthday-input-value"
     @input="onInput"
+    @blur="onBlur"
   />
 </template>
 
 <script setup>
 import { computed, useId, inject } from 'vue'
-import { validateDateInput } from '@/libs/utils/date.utils'
+import { validateDateInput, validateDate, validateSDate } from '@/libs/utils/date.utils'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 // ID 설정
 const injectedId = inject('form-group-id', null)
@@ -52,10 +54,33 @@ const onInput = (e) => {
   const sanitizedValue = e.target.value.replace(/[^0-9]/g, '')
   e.target.value = sanitizedValue
 
-  if (!validateDateInput(e.target.value, props.length)) {
+  if (!validateDateInput(sanitizedValue, props.length)) {
     e.target.value = sanitizedValue.substring(0, sanitizedValue.length - 1)
   }
   emit('update:modelValue', e.target.value)
+}
+
+const onBlur = (e) => {
+  const val = e.target.value.replace(/[^0-9]/g, '')
+  const len = Number(props.length)
+
+  if (val.length > 0) {
+    let isValid = false
+    if (val.length === len) {
+      isValid = len === 8 ? validateDate(val) : validateSDate(val)
+    }
+
+    if (!isValid) {
+      showAlert('유효한 생년월일이 아닙니다.')
+      e.target.value = ''
+      model.value = ''
+      emit('update:modelValue', '')
+    } else if (e.target.value !== val) {
+      e.target.value = val
+      model.value = val
+      emit('update:modelValue', val)
+    }
+  }
 }
 </script>
 

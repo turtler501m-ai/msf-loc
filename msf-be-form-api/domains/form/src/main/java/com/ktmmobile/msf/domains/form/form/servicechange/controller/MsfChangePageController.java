@@ -2,19 +2,23 @@ package com.ktmmobile.msf.domains.form.form.servicechange.controller;
 
 
 import java.util.List;
+import java.util.Map;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
-import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfChangPageSvc;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfCustRequestScanService;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMaskingSvc;
@@ -67,6 +71,17 @@ public class MsfChangePageController {
         return cntrListNoLogin;
     }
 
+
+    /**
+     * 서비스변경 화면에서 사용할 가입정보 데이터를 조회한다.
+     */
+    @PostMapping(value = "/api/msf/formServiceChange/changinfo/view")
+    public Map<String, Object> getChangInfoView(
+            HttpServletRequest request,
+            @RequestBody MyPageSearchDto searchVO
+    ) {
+        return msfChangPageSvc.getChangInfoView(request, searchVO);
+    }
 
     /**
      * MCP 휴대폰 회선관리 리스트를 가지고 온다.

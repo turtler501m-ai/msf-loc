@@ -4,17 +4,27 @@
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="휴대폰번호" required helpText="※ 신청서 발송 요청시 추가로 발송">
         <MsfStack type="field">
-          <MsfNumberInput v-model="model.mobileNo1" placeholder="앞자리" maxlength="3" />
+          <MsfNumberInput
+            ref="mobileNo1Ref"
+            id="inp-mobileNo1"
+            v-model="model.mobileNo1"
+            placeholder="앞자리"
+            maxlength="3"
+            @maxlength="mobileNo2Ref?.focus()"
+          />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="mobileNo2Ref"
             v-model="model.mobileNo2"
             id="inp-mobileNo2"
             placeholder="가운데 4자리"
             maxlength="4"
             :readonly="model.isSaved"
+            @maxlength="mobileNo3Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="mobileNo3Ref"
             v-model="model.mobileNo3"
             id="inp-mobileNo3"
             placeholder="뒤 4자리"
@@ -35,14 +45,17 @@
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="telNo2Ref"
             v-model="model.telNo2"
             id="inp-telNo2"
             placeholder="가운데 4자리"
             maxlength="4"
             :readonly="model.isSaved"
+            @maxlength="telNo3Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="telNo3Ref"
             v-model="model.telNo3"
             id="inp-telNo3"
             placeholder="뒤 4자리"
@@ -52,7 +65,7 @@
         </MsfStack>
       </MsfFormGroup>
       <MsfFormGroup label="이메일주소" required>
-        <MsfStack type="field">
+        <MsfStack id="inp-emailAddr" type="field">
           <MsfEmailInput
             v-model:emailId="model.emailAddr1"
             v-model:emailDomain="model.emailAddr2"
@@ -81,6 +94,7 @@
         />
         <MsfInput
           v-model="model.detailAddress"
+          id="inp-detailAddress"
           placeholder="상세주소"
           ariaLabel="상세주소 입력"
           class="ut-w100p"
@@ -134,6 +148,12 @@ const props = defineProps({
 })
 const model = defineModel({ type: Object, required: true })
 const rangeDatePickerValue = ref({ start: '', end: '' })
+
+const mobileNo1Ref = ref(null)
+const mobileNo2Ref = ref(null)
+const mobileNo3Ref = ref(null)
+const telNo2Ref = ref(null)
+const telNo3Ref = ref(null)
 
 const showAddressSearchPop = ref(false)
 const onClickSearchAddressBtn = () => {

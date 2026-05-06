@@ -22,10 +22,12 @@ export const isEmpty = (str) => {
  * @returns
  */
 export const formatCurrency = (num) => {
-  if (isNull(num)) {
-    return null
+  if (isEmpty(num)) {
+    return ''
   }
-  return String(num).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+  const str = String(num).replace('[^0-9.]', '')
+  const number = Number(str)
+  return number.toLocaleString()
 }
 
 /**

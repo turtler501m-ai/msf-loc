@@ -75,7 +75,6 @@
 
 <script setup>
 import { ref, reactive, watch, computed, nextTick } from 'vue'
-import { NOTICE_DATA } from '@/views/guide/mock'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -88,13 +87,121 @@ const emit = defineEmits(['update:modelValue', 'open', 'close'])
 const openedItems = ref([]) // 아코디언 열림 상태
 const currentPage = ref(1) // 현재 페이지
 const itemsPerPage = ref(10) // 한 페이지당 보여줄 개수
+const NOTICE_DATA = ref([
+  {
+    id: 'notice-01',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내1',
+    content: `공지사항 내용을 표시합니다1`,
+    isNew: true, //New 플래그 표시
+  },
+  {
+    id: 'notice-02',
+    field: '정책',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내2',
+    content: `공지사항 내용을 표시합니다2`,
+  },
+  {
+    id: 'notice-03',
+    field: '도움말',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내3',
+    content: `공지사항 내용을 표시합니다3`,
+  },
+  {
+    id: 'notice-04',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내4',
+    content: `공지사항 내용을 표시합니다4`,
+  },
+  {
+    id: 'notice-05',
+    field: '도움말',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내5',
+    content: `공지사항 내용을 표시합니다5`,
+  },
+  {
+    id: 'notice-06',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내6',
+    content: `공지사항 내용을 표시합니다6`,
+  },
+  {
+    id: 'notice-07',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내7',
+    content: `공지사항 내용을 표시합니다7`,
+  },
+  {
+    id: 'notice-08',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내8',
+    content: `공지사항 내용을 표시합니다8`,
+  },
+  {
+    id: 'notice-09',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내9',
+    content: `공지사항 내용을 표시합니다9`,
+  },
+  {
+    id: 'notice-10',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내10',
+    content: `공지사항 내용을 표시합니다10`,
+  },
+  {
+    id: 'notice-11',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내11',
+    content: `공지사항 내용을 표시합니다11`,
+  },
+  {
+    id: 'notice-12',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내12',
+    content: `공지사항 내용을 표시합니다12`,
+  },
+  {
+    id: 'notice-13',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내13',
+    content: `공지사항 내용을 표시합니다13`,
+  },
+  {
+    id: 'notice-14',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내14',
+    content: `공지사항 내용을 표시합니다14`,
+  },
+  {
+    id: 'notice-15',
+    field: '공지',
+    date: '2026-07-25 08:10',
+    title: '개인정보처리방침 변경 안내15',
+    content: `공지사항 내용을 표시합니다15`,
+  },
+])
 
 // 데이터 계산
 // 현재 페이지에 보여줄 데이터만 추출
 const displayedData = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
-  return NOTICE_DATA.slice(start, end)
+  return NOTICE_DATA.value.slice(start, end)
 })
 
 // 닫힘 이벤트
@@ -130,7 +237,7 @@ watch(
 
       if (props.targetId) {
         // 2. 특정 ID로 이동해야 하는 경우 로직 수행
-        const targetIndex = NOTICE_DATA.findIndex((item) => item.id === props.targetId)
+        const targetIndex = NOTICE_DATA.value.findIndex((item) => item.id === props.targetId)
 
         if (targetIndex !== -1) {
           currentPage.value = Math.ceil((targetIndex + 1) / itemsPerPage.value)

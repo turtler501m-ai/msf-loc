@@ -22,7 +22,7 @@
     <MsfRealUserInfo
       ref="realUserInfoRef"
       v-model="formData"
-      v-if="['JP', 'GO'].includes(formData.cstmrTypeCd) && formData.cstmrVisitTypeCd === 'V2'"
+      v-if="['JP', 'GO'].includes(formData.cstmrTypeCd)"
     />
     <MsfDelegateInfo
       ref="delegateInfoRef"
@@ -32,12 +32,13 @@
     <MsfRequiredDoc ref="requiredDocRef" v-model="formData" :authFlags="store.authFlags" />
     <MsfContactInfo ref="contactInfoRef" v-model="formData" />
 
-    <MsfDevicePlanInfo ref="devicePlanInfoRef" v-model="formData" />
+    <MsfDevicePlanInfo ref="devicePlanInfoRef" v-model="formData" :customerData="formData" />
 
     <MsfTermsAgreement
       ref="termsAgreementRef"
       v-model="formData"
       :termsData="filteredTermsDataList"
+      :specTerms="dynamicSpecTerms"
       :isSaved="formData.isSaved"
       @checked="checkRequiredFields"
       required
@@ -196,6 +197,21 @@ const filteredTermsDataList = computed(() => {
 
     return true
   })
+})
+
+const dynamicSpecTerms = computed(() => {
+  const list = [{ code: 'CLAUSE_MOVE_01' }]
+  // 요금제(productData)에 제휴 정보가 있는 경우 CLAUSE_PARTNER_01 추가
+  // jehuPartnerTypeCd, jehuPartnerTypeNm 등 스펙에 맞게 조정 필요
+  if (productData.jehuPartnerTypeCd) {
+    list.push({
+      code: 'CLAUSE_PARTNER_01',
+      specType: '02',
+      specCode: productData.jehuPartnerTypeCd,
+      specName: productData.jehuPartnerTypeNm,
+    })
+  }
+  return list
 })
 
 const emit = defineEmits(['complete'])

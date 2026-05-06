@@ -29,28 +29,28 @@ public class AppController {
 
     private final AppIntroReader appIntroReader;
 
-    @PostMapping("/api/app/intro")
+    @PostMapping("/api/auth/app/intro")
     public CommonResponse<IntroResponse> login(@RequestBody @Validated(OnSelect.class) IntroRequest request) {
         return ResponseUtils.ok(appIntroReader.intro(request));
     }
 
-    @PostMapping("/api/app/login/init")
+    @PostMapping("/api/auth/app/login/init")
     public CommonResponse<AppInitResponse> init(@RequestBody @Validated(OnSelect.class) AppInitRequest request) {
         return ResponseUtils.ok(appIntroReader.initLogin(request));
     }
 
-    @PostMapping("/api/app/model/register")
+    @PostMapping("/api/auth/app/model/register")
     public CommonResponse<Integer> modelRegist(@RequestBody @Validated(OnCreate.class) AppRegistRequest request) {
         request.setUserId(AuthenticationUtils.getUser().getId());
         return ResponseUtils.ok(appIntroReader.registModel(request));
     }
 
-    @PostMapping("/api/app/model/remove")
+    @PostMapping("/api/auth/app/model/remove")
     public CommonResponse<Integer> modelRemove(@RequestBody @Validated(OnDelete.class) AppInitRequest request) {
         return ResponseUtils.ok(appIntroReader.removeModel(request));
     }
 
-    @PostMapping("/api/app/settingbio/modify")
+    @PostMapping("/api/auth/app/settingbio/modify")
     public CommonResponse<Integer> bioModify(@RequestBody @Validated(OnModify.class) AppRegistRequest request) {
         request.setUserId(AuthenticationUtils.getUser().getId());
         return ResponseUtils.ok(appIntroReader.modifyBioSetting(request));

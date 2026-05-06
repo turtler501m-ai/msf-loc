@@ -25,7 +25,7 @@
       :authFlags="store.authFlags"
     />
     <MsfVasInfo ref="vasInfoRef" v-model="formData" />
-    <MsfInsuranceInfo ref="insuranceInfoRef" v-model="formData" />
+    <MsfInsuranceInfo ref="insuranceInfoRef" v-model="formData" :customerData="customerData" />
     <MsfBillingInfo
       ref="billingInfoRef"
       v-model="formData"
@@ -41,6 +41,16 @@ import { ref, watch, onMounted } from 'vue'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import { useMsfStepStore } from '@/stores/msf_step.js'
 import { post } from '@/libs/api/msf.api'
+
+// 하위 컴포넌트 임포트
+import MsfSimInfo from '@/components/form/common/MsfSimInfo.vue'
+import MsfMnpInfo from '@/components/form/common/MsfMnpInfo.vue'
+import MsfNumberReservation from '@/components/form/common/MsfNumberReservation.vue'
+import MsfDeviceSerialNumber from '@/components/form/common/MsfDeviceSerialNumber.vue'
+import MsfVasInfo from '@/components/form/common/MsfVasInfo.vue'
+import MsfInsuranceInfo from '@/components/form/common/MsfInsuranceInfo.vue'
+import MsfBillingInfo from '@/components/form/common/MsfBillingInfo.vue'
+import MsfMemoInfo from '@/components/form/common/MsfMemoInfo.vue'
 
 const props = defineProps({
   prevStepValidate: { type: Function, default: () => true },

@@ -38,6 +38,13 @@ public class RateInfoDto {
 
     private String jehuProdNm;
 
+    
+    private String sprtTp; /* 할인유형 */
+
+    private String plcySctnCd; /* 정책구분코드 01:단말, 02:USIM */
+
+    private String prdtSctnCd; /*제품구분코드  LTE5G, 5G, 3G, LTE*/
+
     // /**요금제그룹코드 */
     // private String rateGrpCd;
     //

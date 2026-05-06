@@ -70,6 +70,7 @@ const router = useRouter()
 const msfUserStore = useMsfUserStore()
 
 const formData = reactive({
+  loginSessionId: msfUserStore.userData.loginSessionId,
   password: '', //비밀번호
   newPassword: '', //비밀번호 변경
   cfmPassword: '', //변경 비밀번호 확인
@@ -87,7 +88,7 @@ onMounted(async () => {
 })
 
 const changePwd = async () => {
-  const result = await post('/api/login/passwd/modify', formData)
+  const result = await post('/api/auth/passwd/modify', formData)
   if (result.code >= '400' || !result.data) {
     showAlert('비밀번호 변경이 실패하였습니다. 다시 시도해 주세요.')
     return false

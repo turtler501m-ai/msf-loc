@@ -19,6 +19,10 @@
     SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_NFL_CHG_TRNS_SEQ')::TEXT, 5, '0'))
   </select>
 
+    <select id="getMsfResNo" resultType="java.lang.String" parameterType="java.lang.Long">
+        SELECT RES_NO FROM MSF_REQUEST_TEMP WHERE REQUEST_KEY = #{requestKey}
+    </select>
+
 
   <select id="selectMsfRequestInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
           resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo">
@@ -306,8 +310,18 @@
         WHERE REQUEST_KEY = #{requestKey}
     </select>
 
-
     <!-- /** MSF_REQUEST_ADDITION 부가서비스 조회 **/ -->
+    <select id="selectMsfRequestAdditionInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
+            resultType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo">
+        SELECT
+            REQUEST_KEY
+            , ADDITION_ID
+            , ADDITION_NM
+            , RANTAL
+            , REQUEST_SVC_CHG_DTL_SEQ
+        FROM MSF_REQUEST_ADDITION_TEMP
+        WHERE REQUEST_KEY = #{requestKey}
+    </select>
 
 
 

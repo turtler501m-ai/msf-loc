@@ -13,7 +13,6 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
   // - API 전송 전 customer/product/agreement 구조로 매핑
   const formData = reactive({
     /* 고객 유형 */
-    cstmrType: '',
     cstmrTypeCd: 'NA', // 고객유형
     visitCustomer: '',
     cstmrVisitTypeCd: '', // 방문고객 유형
@@ -50,7 +49,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     deviceChgTel2: '5358',
     deviceChgTel3: '6069',
     cancelPhoneAuth: '', // 인증번호
-    contractNum: '525550130', // 인증 응답 계약번호
+    contractNum: '', // 인증 응답 계약번호
     lstComActvDate: '', // 개통일자
     formType: 'TERMINATION',
 
@@ -102,8 +101,8 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     /* 연동키/기본코드 */
     agentCd: '',
     managerCd: '',
-    ncn: '525550130',
-    custId: 'TESTCUST001',
+    ncn: '',
+    custId: '',
 
     /* X18 조회 원본 */
     remainChargeLoaded: false,
@@ -189,7 +188,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     const ctn = `${formData.deviceChgTel1 || ''}${formData.deviceChgTel2 || ''}${formData.deviceChgTel3 || ''}`
     console.log('[MyinfoView] 가입정보 조회 요청', { ncn, ctn })
     try {
-      const data = await post('/api/msf/formTermination/myinfo/view', {
+      const data = await post('/api/msf/formServiceChange/changinfo/view', {
         ncn,
         ctn,
         contractNum: ncn,
@@ -197,6 +196,17 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
       }, { silent: true })
       console.log('[MyinfoView] 가입정보 조회 응답', data)
       if (data) {
+        if (data.custId !== undefined) formData.custId = data.custId || formData.custId || ''
+        if (data.ctn !== undefined) {
+          const rawCtn = (data.ctn || '').replace(/\D/g, '')
+          if (rawCtn.length >= 10) {
+            formData.deviceChgTel1 = rawCtn.substring(0, 3)
+            formData.deviceChgTel2 = rawCtn.substring(3, rawCtn.length - 4)
+            formData.deviceChgTel3 = rawCtn.substring(rawCtn.length - 4)
+          }
+        }
+        if (data.ncn !== undefined) formData.ncn = data.ncn || formData.ncn
+        if (data.contractNum !== undefined) formData.contractNum = data.contractNum || formData.contractNum
         if (data.prvRateGrpNm !== undefined) formData.prvRateGrpNm = data.prvRateGrpNm || ''
         if (data.initActivationDate && data.initActivationDate !== '-') {
           formData.initActivationDate = data.initActivationDate
@@ -296,7 +306,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
       managerNm: formData.managerNm,
       agentCd: formData.agentCd,
       agentNm: formData.agentNm,
-      customerType: formData.cstmrTypeCd || formData.cstmrType,
+      customerType: formData.cstmrTypeCd,
       identityCertTypeCd: formData.identityCertTypeCd,
       identityTypeCd: formData.identityTypeCd,
       identityIssuDate: formData.identityIssuDate,

@@ -78,6 +78,10 @@ const model = defineModel('modelValue', { type: Object, required: true })
 const customerModel = defineModel('customerData', { type: Object, required: true })
 const store = useMsfFormNewChgStore()
 
+const reqWantFnNoRef = ref(null)
+const reqWantMnNoRef = ref(null)
+const reqWantRnNoRef = ref(null)
+
 const isModalOpen = ref(false)
 
 const searchParams = computed(() => ({
@@ -147,3 +151,4 @@ const validate = () => {
 
 defineExpose({ validate })
 </script>
+

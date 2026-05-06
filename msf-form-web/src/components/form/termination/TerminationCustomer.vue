@@ -7,7 +7,7 @@
     <MsfIdentityVerify v-model="formData" />
     <!-- // 신분증 확인 -->
     <!-- 가입자 정보 -->
-    <MsfSubscriberInfo v-model="formData" phoneLabel="해지 휴대폰번호" />
+    <MsfSubcriberChgInfo v-model="formData" phoneLabel="해지 휴대폰번호" />
     <!-- // 가입자 정보 -->
     <!-- 법정대리인 정보 / 안내사항 확인 및 동의 -->
     <MsfLegalAgentInfo v-model="formData" />

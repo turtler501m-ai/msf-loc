@@ -6,6 +6,9 @@ import com.ktmmobile.msf.commons.common.pagination.PageCondition;
 
 public record ReceiptPageCondition(
     String searchWord,
+    String startDate,
+    String endDate,
+    String formTypeCd,
 
     @With PageCondition page
 ) {

@@ -71,6 +71,9 @@
     , B.CUSTOMER_ID
     , B.CUSTOMER_TYPE
     , A.PPPO
+    , A.SUB_ADR_ZIP AS BAN_ADR_ZIP
+    , A.SUB_ADR_PRIMARY_LN AS BAN_ADR_PRIMARY_LN
+    , A.SUB_ADR_SECONDARY_LN AS BAN_ADR_SECONDARY_LN
     FROM MSP_JUO_SUB_INFO A, MSP_JUO_CUS_INFO B
     WHERE A.CUSTOMER_ID = B.CUSTOMER_ID
     <if test="svcCntrNo != null and svcCntrNo != ''">
@@ -86,5 +89,3 @@
   </select>
 
 </mapper>
-
-

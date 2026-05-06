@@ -3,19 +3,20 @@ package com.ktmmobile.msf.commons.logincore.application.service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import com.ktmmobile.msf.commons.common.service.port.CacheService;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginActionRequired;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginRequiredAction;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionReady;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorCodeIssue;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionState;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorRequired;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorStatus;
 import com.ktmmobile.msf.commons.logincore.support.exception.LoginException;
 import com.ktmmobile.msf.commons.logincore.support.properties.LoginCoreProperties;
 
@@ -25,7 +26,6 @@ public class LoginSessionService {
 
     private final CacheService<StoredSession> cacheService;
     private final LoginCoreProperties properties;
-    private final VerificationCodeService verificationCodeService;
 
     public LoginTwoFactorRequired createTwoFactorSession(LoginSessionUser principal) {
         String loginSessionId = createLoginSessionId();
@@ -33,35 +33,8 @@ public class LoginSessionService {
     }
 
     public LoginTwoFactorRequired requireTwoFactor(String loginSessionId, LoginSessionUser principal) {
-        create(loginSessionId, principal, "", false);
+        create(loginSessionId, principal, false);
         return toTwoFactorRequired(loginSessionId, principal, null);
-    }
-
-    public LoginTwoFactorCodeIssue issueTwoFactorCode(String loginSessionId) {
-        StoredSession session = get(loginSessionId);
-        if (session.verificationCompleted()) {
-            throw new LoginException("이미 추가 인증이 완료되었습니다.");
-        }
-        String verificationCode = verificationCodeService.createVerificationCode();
-        update(loginSessionId, session, session.principal(), verificationCode, false, null);
-        return new LoginTwoFactorCodeIssue(session.principal(), verificationCode);
-    }
-
-    public LoginTwoFactorRequired updateTwoFactorCodeExpiresAt(String loginSessionId) {
-        StoredSession session = get(loginSessionId);
-        if (session.verificationCompleted()) {
-            throw new LoginException("이미 추가 인증이 완료되었습니다.");
-        }
-        if (!StringUtils.hasText(session.verificationCode())) {
-            throw new LoginException("인증번호 생성 후 만료시간을 갱신해주세요.");
-        }
-        LocalDateTime verificationCodeExpiresAt = expiresAt();
-        update(loginSessionId, session, session.principal(), session.verificationCode(), false, verificationCodeExpiresAt);
-        return toTwoFactorRequired(
-            loginSessionId,
-            session.principal(),
-            verificationCodeExpiresAt
-        );
     }
 
     private LoginSessionUser withoutVerifyTwoFactor(LoginSessionUser principal) {
@@ -79,13 +52,13 @@ public class LoginSessionService {
 
     public LoginActionRequired createActionSession(LoginSessionUser principal, List<LoginRequiredAction> requiredActions) {
         String loginSessionId = createLoginSessionId();
-        create(loginSessionId, principal, "", true);
+        create(loginSessionId, principal, true);
         return toActionRequired(loginSessionId, principal, requiredActions);
     }
 
     public LoginSessionReady createReadySession(LoginSessionUser principal) {
         String loginSessionId = createLoginSessionId();
-        create(loginSessionId, principal, "", true);
+        create(loginSessionId, principal, true);
         return new LoginSessionReady(
             loginSessionId,
             principal.userId(),
@@ -96,32 +69,54 @@ public class LoginSessionService {
         );
     }
 
-    public void verifyTwoFactor(String loginSessionId, String verificationCode) {
+    public void completeTwoFactor(String loginSessionId) {
         StoredSession session = get(loginSessionId);
-        if (session.verificationCompleted()) {
-            throw new LoginException("인증번호가 유효하지 않거나 유효시간이 종료되었습니다.");
+        if (session.twoFactorCompleted()) {
+            throw new LoginException("이미 추가 인증이 완료되었습니다.");
         }
-        if (!StringUtils.hasText(session.verificationCode())) {
-            throw new LoginException("인증번호 발송 후 인증을 진행해주세요.");
+        update(loginSessionId, session, withoutVerifyTwoFactor(session.principal()), true);
+    }
+
+    public Optional<LoginSessionState> findState(String loginSessionId) {
+        StoredSession session = cacheService.getValue(sessionKey(loginSessionId));
+        if (session == null) {
+            return Optional.empty();
         }
-        if (session.verificationCodeExpiresAt() == null || !now().isBefore(session.verificationCodeExpiresAt())) {
-            throw new LoginException("인증번호 유효시간이 종료되었습니다.");
-        }
-        verificationCodeService.verify(session.verificationCode(), verificationCode);
-        update(loginSessionId, session, withoutVerifyTwoFactor(session.principal()), "", true, null);
+        return Optional.of(new LoginSessionState(
+            session.principal(),
+            session.twoFactorCompleted()
+        ));
+    }
+
+    public LoginTwoFactorStatus getTwoFactorStatus(String loginSessionId) {
+        return findState(loginSessionId)
+            .map(state -> new LoginTwoFactorStatus(true, state.twoFactorCompleted()))
+            .orElseGet(LoginTwoFactorStatus::notFound);
     }
 
     public LoginSessionUser getVerifiedPrincipal(String loginSessionId) {
         StoredSession session = get(loginSessionId);
-        if (!session.verificationCompleted()) {
+        if (!session.twoFactorCompleted()) {
             throw new LoginException("추가 인증이 완료되지 않았습니다.");
         }
         return session.principal();
     }
 
+    public LoginSessionUser getPrincipal(String loginSessionId) {
+        return get(loginSessionId).principal();
+    }
+
+    public LoginSessionState getState(String loginSessionId) {
+        StoredSession session = get(loginSessionId);
+        return new LoginSessionState(
+            session.principal(),
+            session.twoFactorCompleted()
+        );
+    }
+
     public LoginSessionUser completeAction(String loginSessionId, String actionCode) {
         StoredSession session = get(loginSessionId);
-        if (!session.verificationCompleted()) {
+        if (!session.twoFactorCompleted()) {
             throw new LoginException("추가 인증이 완료되지 않았습니다.");
         }
         List<LoginRequiredAction> remainingActions = session.principal().requiredActions().stream()
@@ -135,7 +130,7 @@ public class LoginSessionService {
             session.principal().attributes(),
             remainingActions
         );
-        update(loginSessionId, session, principal, "", true, null);
+        update(loginSessionId, session, principal, true);
         return principal;
     }
 
@@ -163,24 +158,20 @@ public class LoginSessionService {
         return session;
     }
 
-    private void create(String loginSessionId, LoginSessionUser principal, String verificationCode, boolean verificationCompleted) {
+    private void create(String loginSessionId, LoginSessionUser principal, boolean twoFactorCompleted) {
         LocalDateTime now = now();
-        save(loginSessionId, new StoredSession(principal, verificationCode, null, verificationCompleted, now, now));
+        save(loginSessionId, new StoredSession(principal, twoFactorCompleted, now, now));
     }
 
     private void update(
         String loginSessionId,
         StoredSession previous,
         LoginSessionUser principal,
-        String verificationCode,
-        boolean verificationCompleted,
-        LocalDateTime verificationCodeExpiresAt
+        boolean twoFactorCompleted
     ) {
         save(loginSessionId, new StoredSession(
             principal,
-            verificationCode,
-            verificationCodeExpiresAt,
-            verificationCompleted,
+            twoFactorCompleted,
             previous.createdAt(),
             now()
         ));
@@ -188,10 +179,6 @@ public class LoginSessionService {
 
     private void save(String loginSessionId, StoredSession session) {
         cacheService.setValue(sessionKey(loginSessionId), session, properties.twoFactor().sessionTimeToLive());
-    }
-
-    private LocalDateTime expiresAt() {
-        return now().plus(properties.twoFactor().challengeTimeToLive()).withNano(0);
     }
 
     private LocalDateTime now() {
@@ -225,7 +212,7 @@ public class LoginSessionService {
 
     public record StoredSession(
         boolean tokenIssuable,
-        Verification verification,
+        boolean twoFactorCompleted,
         LoginSessionUser principal,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
@@ -233,38 +220,17 @@ public class LoginSessionService {
 
         public StoredSession(
             LoginSessionUser principal,
-            String verificationCode,
-            LocalDateTime verificationCodeExpiresAt,
-            boolean verificationCompleted,
+            boolean twoFactorCompleted,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
         ) {
             this(
                 principal.requiredActions().stream().allMatch(LoginRequiredAction::tokenIssuable),
-                new Verification(verificationCode, verificationCodeExpiresAt, verificationCompleted),
+                twoFactorCompleted,
                 principal,
                 createdAt,
                 updatedAt
             );
         }
-
-        public String verificationCode() {
-            return verification.code();
-        }
-
-        public LocalDateTime verificationCodeExpiresAt() {
-            return verification.codeExpiresAt();
-        }
-
-        public boolean verificationCompleted() {
-            return verification.completed();
-        }
-    }
-
-    public record Verification(
-        String code,
-        LocalDateTime codeExpiresAt,
-        boolean completed
-    ) {
     }
 }

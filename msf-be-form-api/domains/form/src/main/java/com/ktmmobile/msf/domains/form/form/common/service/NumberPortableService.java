@@ -1,25 +1,43 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
+import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
+import com.ktmmobile.msf.domains.form.common.constants.Constants;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
+import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
+import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlVO;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.MnpOsstRequest;
+import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
+import com.ktmmobile.msf.domains.form.form.common.dto.MnpOsstRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.MnpOsstResponse;
+import com.ktmmobile.msf.domains.form.form.common.repository.msp.McpRequestReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class NumberPortableService {
 
-    private FormCommService formCommService;
+    private final FormCommService formCommService;
+    private final NewChangeReadMapper newChangeReadMapper;
+    private final McpRequestReadMapper mcpRequestReadMapper;
+    private final IpStatisticService ipstatisticService;
+
     //private IpstatisticService ipstatisticService;
 
     /**
      * 번호이동 사전동의 요청 : NP1
      **/
-    public Map<String, Object> requestNpPreCheck(MnpOsstRequest osstReqDto) {
+    public FormResponse<MnpOsstResponse> requestNpPreCheck(MnpOsstRequest request) {
+        MnpOsstResponse responseDto = new MnpOsstResponse();
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
         //parameter ( MnpOsstRequest )
@@ -40,112 +58,75 @@ public class NumberPortableService {
         //RCP2006	06	외국인등록증
         //RCP2006	07	국내거소신고증
 
-        //신분증 확인여부는 공통으로 인터셉터(?)로 처리? 해야겠지요.
-        //parameter 유효성체크
+        //1. 번호이동 테이블 내에 특정기간 존재여부 확인
+        //   요청한 핸드폰번호(moveMobileNo)로 특정기간(limitDay) 내에 MCP_REQUEST , MCP_REQUEST_MOVE 테이블에 존재여부 확인
+        //   신청기간 내에 없을 경우 개통전 사전체크 (PC0)는 확인하지 않고 번호이동 사전체크 요청을 진행함.
+        //2. 번호이동 사전체크 요청 여부 확인
+        //   요청한 핸드폰번호(moveMobileNo)로 특정기간(limitDay) 내에 MCP_REQUEST_OSST 테이블에 존재여부 확인
+        //   MCP_REQUEST_OSST.MVNO_ORD_NO 확인
+        Map<String, Object> chkMap = this.mnpPreCheckLimit(request.getNpTlphNo());
+        if (!Constants.AJAX_SUCCESS.equals(chkMap.get("RESULT_CODE"))) {
+            //return chkMap;
+            return FormResponse.of(ResponseMessage.VALID_REQ_NP_PRECHECK_SUCCESS, responseDto);
+        }
 
-
-        //1-3. 본인인증 확인
-        // 스마트는 신분증 확인여부 체크????
-        /*NiceResDto sessNiceRes = SessionUtils.getNiceResCookieBean();
-
-        if (sessNiceRes == null) {
-            //이력 정보 저장 처리
-            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-            mcpIpStatisticDto.setPrcsMdlInd("NP1_ERROR");
-            mcpIpStatisticDto.setTrtmRsltSmst(osstReqDto.getNpTlphNo());
-            mcpIpStatisticDto.setPrcsSbst("Exception[sessNiceRes NUll] ");
-            mcpIpStatisticDto.setParameter("NpTlphN[" + osstReqDto.getNpTlphNo() + "],moveCompany[" + osstReqDto.getBchngNpCommCmpnCd() + "],cstmrType[" + osstReqDto.getCustTypeCd() + "]");
-            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-            throw new McpCommonJsonException("0003", NICE_CERT_EXCEPTION);
-        }*/
-
-        // ============ STEP START ============
-        // 이름, 생년월일
-        // 유효성체크 >> 공통으로 요청해보자
-        /*String[] certKey = {"urlType", "name", "birthDate"};
-        String[] certValue = {"chkNpForm", osstReqDto.getCustNm(), EncryptUtil.ace256Enc(osstReqDto.getCustIdntNo())};
-
-        Map<String, String> vldReslt = certService.vdlCertInfo("D", certKey, certValue);
-        if (!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
-            rtnMap.put("RESULT_CODE", "STEP01");
-            rtnMap.put("ERROR_NE_MSG", vldReslt.get("RESULT_DESC"));
-            return rtnMap;
-        }*/
-        // ============ STEP END ============
-
-        // (번이) 동일 번호이동 휴대폰번호로 사전체크 시도 이력 존재시 → 실패처리
-        // >> mnpPreCheckLimit 는 사전체크에서도 있음. 정리가 필요함.
-        // >> 고객포탈 AppformMapper.getPreCheckTryCnt 로 쿼리로 처리하고 있음.
-        // >> 테이블은 MCP_REQUEST_OSST 로 예약번호로 해당 서비스 예를 들어 NP1 이 시간안에 몇건인지?
-        // >> 그럼 예약번호가 계속 동일해야하는데 그건 해당 고객포탈에서 사용자가 자기 계정 로그인해서 한거라... 우린 어떻게 처리하지?
-        /*Map<String, Object> chkMap = appformSvc.mnpPreCheckLimit(osstReqDto.getNpTlphNo());
-        if (!AJAX_SUCCESS.equals(chkMap.get("RESULT_CODE"))) {
-            return chkMap;
-        }*/
-
+        //3. 번호이동 사전동의 요청 (NP1)
         MSimpleOsstXmlVO simpleOsstXmlVO = null;
-
-        //번호이동 사전동의 요청(NP1)
-        /*try {
-            simpleOsstXmlVO = formCommService.sendOsstService(osstReqDto, EVENT_CODE_NP_PRE_CHECK);
+        try {
+            simpleOsstXmlVO = formCommService.sendOsstService(request, Constants.EVENT_CODE_NP_PRE_CHECK);
             if (simpleOsstXmlVO.isSuccess()) {
-                rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+                rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
                 rtnMap.put("GLOBAL_NO", simpleOsstXmlVO.getGlobalNo());
 
-                // ============ STEP START ============
-                // 유효성체크... 여기도 공통으로 처리해야하나.. 이걸 그냥 가져와야하나..
-                *//*certKey = new String[]{"urlType", "mobileNo"};
-                certValue = new String[]{"reqNpForm", osstReqDto.getNpTlphNo()};
-                certService.vdlCertInfo("C", certKey, certValue);*//*
-                // ============ STEP END ============
             } else { //서비스 호출 실패
                 //2.세션 CERT_SEQ 가져오기
-                long crtSeq = SessionUtils.getCertSession();
+                /*long crtSeq = SessionUtils.getCertSession();
                 //이력 정보 저장 처리
                 McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
                 mcpIpStatisticDto.setPrcsMdlInd("NP1_ERROR");
                 //mcpIpStatisticDto.setTrtmRsltSmst(osstReqDto.getNpTlphNo());
                 mcpIpStatisticDto.setTrtmRsltSmst(crtSeq + "");
                 mcpIpStatisticDto.setPrcsSbst("Exception[simpleOsstXmlVO.isNotSuccess] ");
-                mcpIpStatisticDto.setParameter("NpTlphN[" + osstReqDto.getNpTlphNo() + "],moveCompany[" + osstReqDto.getBchngNpCommCmpnCd() + "],cstmrType[" + osstReqDto.getCustTypeCd() + "]");
-                ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+                mcpIpStatisticDto.setParameter("NpTlphN[" + request.getNpTlphNo() + "],moveCompany[" + request.getBchngNpCommCmpnCd() + "],cstmrType[" + request.getCustTypeCd() + "]");
+                ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);*/
 
-                rtnMap.put("RESULT_CODE", "0001");
+                //서비스 호출하면 주석 풀것!!!!
+                /*rtnMap.put("RESULT_CODE", "0001");
                 rtnMap.put("RESULT_XML", simpleOsstXmlVO.getResponseXml());
                 rtnMap.put("ERROR_MSG", simpleOsstXmlVO.getResultCode());
-                rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
+                rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.[1]");*/
             }
         } catch (McpMplatFormException e) {
             //이력 정보 저장 처리
             //2.세션 CERT_SEQ 가져오기
-            long crtSeq = SessionUtils.getCertSession();
+            /*long crtSeq = SessionUtils.getCertSession();
             McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
             mcpIpStatisticDto.setPrcsMdlInd("NP1_ERROR");
             //mcpIpStatisticDto.setTrtmRsltSmst(osstReqDto.getNpTlphNo());
             mcpIpStatisticDto.setTrtmRsltSmst(crtSeq + "");
             mcpIpStatisticDto.setPrcsSbst("Exception[McpMplatFormException] ");
-            mcpIpStatisticDto.setParameter("NpTlphN[" + osstReqDto.getNpTlphNo() + "],moveCompany[" + osstReqDto.getBchngNpCommCmpnCd() + "],cstmrType[" + osstReqDto.getCustTypeCd() + "]");
-            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-
+            mcpIpStatisticDto.setParameter("NpTlphN[" + request.getNpTlphNo() + "],moveCompany[" + request.getBchngNpCommCmpnCd() + "],cstmrType[" + request.getCustTypeCd() + "]");
+            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);*/
 
             rtnMap.put("RESULT_CODE", "9997");
             rtnMap.put("ERROR_MSG", "response massage is null.");
-            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
+            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.[2]");
         } catch (SocketTimeoutException e) {
             //이력 정보 저장 처리
-            long crtSeq = SessionUtils.getCertSession();
+            /*long crtSeq = SessionUtils.getCertSession();
             McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
             mcpIpStatisticDto.setPrcsMdlInd("NP1_ERROR");
             //mcpIpStatisticDto.setTrtmRsltSmst(osstReqDto.getNpTlphNo());
             mcpIpStatisticDto.setTrtmRsltSmst(crtSeq + "");
             mcpIpStatisticDto.setPrcsSbst("Exception[SocketTimeoutException] ");
-            mcpIpStatisticDto.setParameter("NpTlphN[" + osstReqDto.getNpTlphNo() + "],moveCompany[" + osstReqDto.getBchngNpCommCmpnCd() + "],cstmrType[" + osstReqDto.getCustTypeCd() + "]");
-            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+            mcpIpStatisticDto.setParameter("NpTlphN[" + request.getNpTlphNo() + "],moveCompany[" + request.getBchngNpCommCmpnCd() + "],cstmrType[" + request.getCustTypeCd() + "]");
+            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);*/
 
             rtnMap.put("RESULT_CODE", "9999");
             rtnMap.put("ERROR_MSG", "SocketTimeout");
-            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
-            return rtnMap;
+            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.[3]");
+            return FormResponse.of(ResponseMessage.VALID_REQ_NP_PRECHECK_FAIL, responseDto);
+            //return rtnMap;
 
         } catch (SelfServiceException e) {
 
@@ -157,42 +138,47 @@ public class NumberPortableService {
 
             if ("ITL_SST_E1014".equals(resultCode)) {
                 //성공처리
-                rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-
-                // ============ STEP START ============
-                certKey = new String[]{"urlType", "mobileNo"};
-                certValue = new String[]{"reqNpForm", osstReqDto.getNpTlphNo()};
-                certService.vdlCertInfo("C", certKey, certValue);
-                // ============ STEP END ============
-
-                return rtnMap;
+                rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
+                //return rtnMap;
+                return FormResponse.of(ResponseMessage.VALID_REQ_NP_PRECHECK_SUCCESS, responseDto);
             } else {
                 rtnMap.put("RESULT_CODE", "9998");
                 rtnMap.put("ERROR_MSG", e.getMessage());
             }
 
             //session에 저장한 서식지 정보 초기화
-            SessionUtils.saveAppformDto(null);
-            if ("ITL_SST_E1018".equals(resultCode) && message.indexOf("가입제한자") > -1) {
-                resultCode = "ITL_SST_E1018_01";
-            } else if ("ITL_SST_E1018".equals(resultCode) && message.indexOf("미납고객") > -1) {
-                resultCode = "ITL_SST_E1018_02";
-            }
+//            SessionUtils.saveAppformDto(null);
+//            if ("ITL_SST_E1018".equals(resultCode) && message.indexOf("가입제한자") > -1) {
+//                resultCode = "ITL_SST_E1018_01";
+//            } else if ("ITL_SST_E1018".equals(resultCode) && message.indexOf("미납고객") > -1) {
+//                resultCode = "ITL_SST_E1018_02";
+//            }
 
-            rtnMap.put("OSST_RESULT_CODE", resultCode);
-            rtnMap.put("ERROR_NE_MSG", message);
-            return rtnMap;
-        }*/
+            //rtnMap.put("OSST_RESULT_CODE", resultCode);
+            //rtnMap.put("ERROR_NE_MSG", message);
+            //return rtnMap;
 
-        return rtnMap;
+            responseDto.setOsstResultCode(resultCode);
+            return FormResponse.of(ResponseMessage.VALID_REQ_NP_PRECHECK_SUCCESS, responseDto);
+        }
+
+        //@@삭제필요@@ prx 오픈전까지 무조건 정상
+        //rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
+        //rtnMap.put("GLOBAL_NO", simpleOsstXmlVO.getGlobalNo());
+        //return rtnMap;
+
+        responseDto.setGlobalNo("123456789");
+        return FormResponse.of(ResponseMessage.VALID_REQ_NP_PRECHECK_SUCCESS, responseDto);
     }
 
     /**
      * 번호이동 사전동의 결과조회 : NP3
      **/
-    public Map<String, Object> requestNpAgree(MnpOsstRequest osstReqDto) {
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
+    public FormResponse<MnpOsstResponse> requestNpAgree(MnpOsstRequest osstReqDto) {
+        MnpOsstResponse responseDto = new MnpOsstResponse();
+        return FormResponse.of(ResponseMessage.VALID_REQ_NP_AGREE_SUCCESS, responseDto);
 
+        //HashMap<String, Object> rtnMap = new HashMap<String, Object>();
         //1-3. 본인인증 확인
         // >> 스마트는 신분증 확인 체크?
         /*NiceResDto sessNiceRes = SessionUtils.getNiceResCookieBean();
@@ -217,7 +203,6 @@ public class NumberPortableService {
                 rtnMap.put("RSLT_CD", simpleOsstXmlVO.getRsltCd());
                 rtnMap.put("RSLT_MSG", simpleOsstXmlVO.getRsltMsg());
                 rtnMap.put("GLOBAL_NO", simpleOsstXmlVO.getGlobalNo());
-
 
                 if ("LOCAL".equals(serverName)) {
                     rtnMap.put("RSLT_CD", "S");
@@ -285,7 +270,7 @@ public class NumberPortableService {
             return rtnMap;
         }*/
 
-        return rtnMap;
+        //return rtnMap;
     }
 
     /**
@@ -356,5 +341,71 @@ public class NumberPortableService {
         return rtnMap;
     }
 
+
+    /**
+     * 번호이동 사전체크 일 건수 제한
+     **/
+    public Map<String, Object> mnpPreCheckLimit(String moveMobileNo) {
+
+        Map<String, Object> rtnMap = new HashMap<>();
+        Map<String, Object> paramMap = new HashMap<>();
+        List<String> resNoList = new ArrayList<>();
+
+        // 제한시간(분) 조회
+        int limitDay = 0;
+        int limitCnt = 0;
+        String fAlertMsg = "";
+
+        //NmcpCdDtlDto limitDto = NmcpServiceUtils.getCodeNmDto(Constants.CMM_PERIOD_LIMIT, "MnpDayLimit");
+        /*if (limitDto != null) {
+            limitDay = Integer.parseInt(StringUtil.NVL(limitDto.getExpnsnStrVal1(), "0"));
+            limitCnt = Integer.parseInt(StringUtil.NVL(limitDto.getExpnsnStrVal2(), "0"));
+            fAlertMsg = limitDto.getExpnsnStrVal3();
+
+            // 동일 번호이동전화번호 신청서 조회
+            paramMap.put("limitDay", limitDay);
+            paramMap.put("moveMobileNo", moveMobileNo);
+            resNoList = mcpRequestReadMapper.getResNoByMoveMobileNum(paramMap);
+        }*/
+
+        //공통코드 불러와서 처리할 것!!!!!!!!!!!!!!!!!!!!
+        NmcpCdDtlDto limitDto = new NmcpCdDtlDto();
+        limitDay = Integer.parseInt("3");
+        limitCnt = Integer.parseInt("10");
+        fAlertMsg = "번호이동 사전동의~~~ ";
+
+        // 동일 번호이동전화번호 신청서 조회
+        paramMap.put("limitDay", limitDay);
+        paramMap.put("moveMobileNo", moveMobileNo);
+        resNoList = mcpRequestReadMapper.getResNoByMoveMobileNum(paramMap);
+
+        // 특정기간 내 신청건 없음 → 성공처리
+        if (resNoList.isEmpty()) {
+            rtnMap.put("RESULT_CODE", "00000");
+            return rtnMap;
+        }
+
+        // 사전체크 시도 이력 확인
+        paramMap.put("resNoList", resNoList);
+        paramMap.put("prgrStatCd", Constants.EVENT_CODE_PRE_CHECK);
+        int tryCnt = mcpRequestReadMapper.getPreCheckTryCnt(paramMap);
+
+
+        // 실패이력 저장
+//        McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
+//        mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
+//        mcpIpStatisticDto.setTrtmRsltSmst(moveMobileNo);
+//        mcpIpStatisticDto.setPrcsSbst("Exception[PC0_DAY_LIMIT]");
+//        mcpIpStatisticDto.setParameter("MOVE_MOBILE_NUM[" + moveMobileNo + "] TRY_CNT[" + tryCnt + "] LIMIT_CNT[" + limitCnt + "]");
+//        ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+
+//        rtnMap.put("RESULT_CODE", "-9999");
+//        rtnMap.put("ERROR_MSG", "PC0_TIME_LIMIT");
+//        rtnMap.put("ERROR_NE_MSG", fAlertMsg);
+
+        rtnMap.put("RESULT_CODE", "0000");
+
+        return rtnMap;
+    }
 
 }

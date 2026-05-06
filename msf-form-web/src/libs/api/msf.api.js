@@ -1,5 +1,5 @@
 import axios from 'axios'
-// import { useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useMsfUserStore } from '@/stores/msf_user'
 import { showAlert } from '@/libs/utils/comp.utils'
 
@@ -13,7 +13,7 @@ axios.interceptors.request.use(
     const token = msfUserStore.token
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
-    } else {
+    } else if (!useRoute().meta?.params?.skipAuth) {
       /*
        * FIXME: Access Token이 없는 경우, Access Token 재발급 요청 로직 추가 필요
        */
@@ -21,11 +21,13 @@ axios.interceptors.request.use(
       //   msfUserStore.clearUserInfo()
       //   useRouter().push('/login')
       // }
+    } else {
       delete config.headers.Authorization
     }
     return config
   },
   (error) => {
+    console.log('axios.interceptors.request.use.error:', error)
     return Promise.reject(error)
   },
 )

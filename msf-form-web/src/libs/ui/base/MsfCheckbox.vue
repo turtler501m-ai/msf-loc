@@ -78,8 +78,11 @@ const isChecked = computed(() => {
   if (Array.isArray(props.modelValue)) {
     return props.modelValue.includes(props.value)
   }
-  // 부모의 modelValue가 returndata.true 값('Y')과 일치하는지 확인
-  return props.modelValue === props.returndata?.true
+  // returndata가 있으면 해당 값과 비교, 없으면 불리언으로 평가
+  if (props.returndata) {
+    return props.modelValue === props.returndata.true
+  }
+  return !!props.modelValue
 })
 
 // 체크박스 상태값 업데이트 핸들러

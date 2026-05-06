@@ -22,7 +22,7 @@
         )
     </insert>
 
-    <insert id="mergeMcpRequest" parameterType="com.ktmmobile.msf.domains.form.common.dto.McpRequestDto" >
+    <insert id="mergeMcpRequest" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.McpRequestOsstRequest" >
         MERGE INTO MCP_REQUEST@DL_MCP
         USING DUAL
             ON (REQUEST_KEY = #{requestKey})
@@ -89,4 +89,61 @@
             , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
         )
     </insert>
+
+    <update id="updateMcpRequest" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.McpRequestCondition" >
+        UPDATE /*AppformMapper.updateMcpRequest   */
+        MCP_REQUEST@DL_MCP
+        SET
+             RVISN_DTTM = SYSDATE
+            ,SYS_RDATE = SYSDATE  -- 개통요청 시점으로 등록 시간 변경
+            <!--<if test="reqModelName != null and reqModelName != ''">
+                , REQ_MODEL_NAME = #{reqModelName}
+            </if>-->
+            <!--<if test="reqUsimSn != null and reqUsimSn != ''">
+                , REQ_USIM_SN = #{reqUsimSn}
+            </if>-->
+            <!--<if test="reqPayType != null and reqPayType != ''">
+                , REQ_PAY_TYPE = #{reqPayType}
+            </if>-->
+            <!--<if test="reqAddition != null and reqAddition != ''">
+                , REQ_ADDITION = #{reqAddition}
+            </if>-->
+            <if test="reqWantNumber != null and reqWantNumber != ''">
+                , REQ_WANT_NUMBER = #{reqWantNumber}
+            </if>
+            <!--<if test="reqWantNumber2 != null and reqWantNumber2 != ''">
+                , REQ_WANT_NUMBER2 = #{reqWantNumber2}
+            </if>-->
+            <!--<if test="reqWantNumber3 != null and reqWantNumber3 != ''">
+                , REQ_WANT_NUMBER3 = #{reqWantNumber3}
+            </if>-->
+            <!--<if test="insrProdCd != null and insrProdCd != ''">
+                , INSR_PROD_CD = #{insrProdCd}
+            </if>-->
+            <!--<if test="clauseInsrProdFlag != null and clauseInsrProdFlag != ''">
+                , CLAUSE_INSR_PROD_FLAG = #{clauseInsrProdFlag}
+            </if>-->
+            <!--<if test="insrAuthInfo != null and insrAuthInfo != ''">
+                , INSR_AUTH_INFO = #{insrAuthInfo}
+            </if>-->
+            <!--<if test="rwdProdCd != null and rwdProdCd != ''">
+                , RWD_PROD_CD = #{rwdProdCd}
+            </if>-->
+            <!--<if test="clauseRwdFlag != null and clauseRwdFlag != ''">
+                , CLAUSE_RWD_FLAG = #{clauseRwdFlag}
+            </if>-->
+            <!--<if test="rwdAuthInfo != null and rwdAuthInfo != ''">
+                , RWD_AUTH_INFO = #{rwdAuthInfo}
+            </if>-->
+            <!--<if test="scanId != null and scanId != ''">
+                , SCAN_ID = #{scanId}
+            </if>-->
+            <!--<if test="combineSoloType != null and combineSoloType != ''">
+                , COMBINE_SOLO_TYPE = #{combineSoloType}
+            </if>-->
+            <!--<if test="combineSoloFlag != null and combineSoloFlag != ''">
+                , COMBINE_SOLO_FLAG = #{combineSoloFlag}
+            </if>-->
+        WHERE REQUEST_KEY = #{requestKey}
+    </update>
 </mapper>

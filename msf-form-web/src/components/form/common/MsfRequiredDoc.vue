@@ -26,6 +26,36 @@ const isAllUploadedModel = defineModel('isAllUploaded', { type: Boolean, default
 const emit = defineEmits(['change'])
 const isModalOpen = ref(false)
 
+const checkBizNoLength = (b1, b2, b3) => {
+  return String(b1 || '').length === 3 && String(b2 || '').length === 2 && String(b3 || '').length === 5
+}
+
+// 사업자번호가 3-2-5 자리 모두 입력되었는지 여부
+const hasFullBizNo = computed(() => {
+  if (!model.value) return false
+  return (
+    checkBizNoLength(
+      model.value.cstmrJuridicalBizNo1,
+      model.value.cstmrJuridicalBizNo2,
+      model.value.cstmrJuridicalBizNo3,
+    ) ||
+    checkBizNoLength(model.value.tr_bizNo1, model.value.tr_bizNo2, model.value.tr_bizNo3) ||
+    checkBizNoLength(model.value.te_bizNo1, model.value.te_bizNo2, model.value.te_bizNo3) ||
+    (model.value.tr_customer &&
+      checkBizNoLength(
+        model.value.tr_customer.cstmrJuridicalBizNo1,
+        model.value.tr_customer.cstmrJuridicalBizNo2,
+        model.value.tr_customer.cstmrJuridicalBizNo3,
+      )) ||
+    (model.value.te_customer &&
+      checkBizNoLength(
+        model.value.te_customer.cstmrJuridicalBizNo1,
+        model.value.te_customer.cstmrJuridicalBizNo2,
+        model.value.te_customer.cstmrJuridicalBizNo3,
+      ))
+  )
+})
+
 // 현재 조건에 따라 필요한 구비서류 명칭 목록 반환
 const getRequiredDocNames = () => {
   if (!model.value) return []
@@ -37,17 +67,15 @@ const getRequiredDocNames = () => {
   // 2. 미성년자
   if (['NM', 'FM'].includes(cstmrTypeCd)) list.push('가족관계증명서')
 
-  const hasBizNo =
-    (model.value.cstmrJuridicalBizNo1 &&
-      model.value.cstmrJuridicalBizNo2 &&
-      model.value.cstmrJuridicalBizNo3) ||
-    (model.value.tr_bizNo1 && model.value.tr_bizNo2 && model.value.tr_bizNo3) ||
-    (model.value.te_bizNo1 && model.value.te_bizNo2 && model.value.te_bizNo3) ||
-    (model.value.tr_customer?.cstmrJuridicalBizNo1) ||
-    (model.value.te_customer?.cstmrJuridicalBizNo1)
-
   // 3. 사업자
-  if (['PP', 'JP', 'GO'].includes(cstmrTypeCd) || hasBizNo) list.push('사업자등록증')
+  // 내국인('NA')인 경우 사업자등록번호 3-2-5 자리가 모두 입력되야만 구비서류 항목(사업자등록증) 추가
+  if (cstmrTypeCd === 'NA') {
+    if (hasFullBizNo.value) list.push('사업자등록증')
+  } else if (['PP', 'JP', 'GO'].includes(cstmrTypeCd) || hasFullBizNo.value) {
+    // 그 외 사업자 유형은 기존 로직 유지 (항목이 있거나 코드가 맞으면 추가)
+    list.push('사업자등록증')
+  }
+
   // 4. 법인
   if (['JP', 'GO'].includes(cstmrTypeCd)) list.push('법인인감증명서')
 

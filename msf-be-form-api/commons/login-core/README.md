@@ -108,23 +108,32 @@ LoginCoreService.login()
 ```
 
 2FA가 필요한 경우 Access/Refresh Token을 발급하지 않습니다.
-2FA 검증이 성공한 뒤 남은 필수 조치가 없으면 `loginSessionId` 기반 토큰 발급 가능 상태를 반환합니다.
+2FA 인증번호 발급/검증은 별도 API 또는 업무 모듈이 담당하고, `:login-core`는 로그인 세션의 2FA 완료 여부만 관리합니다.
 
 ```text
-LoginCoreService.issueTwoFactorCode(loginSessionId)
--> LoginSessionService.issueTwoFactorCode(loginSessionId)
--> 인증번호 생성 및 login-session 저장
--> LoginTwoFactorCodeIssue 반환
+LoginCoreService.completeTwoFactor(loginSessionId)
+-> LoginSessionService.completeTwoFactor(loginSessionId)
+-> login-session의 twoFactorCompleted=true 갱신
+-> VERIFY_2FA requiredAction 제거
 ```
 
-실제 인증번호 발송은 앱 또는 업무 API의 별도 서비스가 담당합니다.
+SMS 발송처럼 2FA 외부 API가 로그인 세션을 사용해야 하는 경우에는 현재 로그인 진행상태를 조회해 판단합니다.
 
 ```text
-LoginCoreService.verifyTwoFactor()
--> LoginSessionService.verifyTwoFactor()
--> LoginCoreService.resume(loginSessionId)
--> 필수 requiredAction이 남아 있으면 LoginActionRequired 반환
--> 필수 requiredAction이 없으면 LoginSessionReady 반환
+LoginCoreService.getSessionProgress(loginSessionId)
+-> login-session 존재 여부 확인
+-> 없으면 LoginException 발생
+-> 있으면 LoginResult 반환
+
+LoginCoreService.findSessionProgress(loginSessionId)
+-> login-session 존재 여부 확인
+-> 없으면 Optional.empty() 반환
+-> 있으면 Optional<LoginResult> 반환
+
+LoginCoreService.getTwoFactorStatus(loginSessionId)
+-> login-session 존재 여부 확인
+-> 없으면 {sessionExists=false, twoFactorCompleted=false} 반환
+-> 있으면 {sessionExists=true, twoFactorCompleted=현재값} 반환
 ```
 
 Access/Refresh Token 발급은 별도 호출로 처리합니다.
@@ -284,20 +293,16 @@ LoginSessionService
 VerificationCodeService
 ```
 
-인증번호는 `VerificationCodeService`가 생성/검증 규칙을 제공합니다.
-로그인 2FA에서는 인증번호와 인증 완료 여부를 로그인 세션에 함께 저장합니다.
-별도 API나 업무 서비스는 `LoginCoreService.issueTwoFactorCode(loginSessionId)`를 호출해 인증번호를 발급받고, SMS 발송은 해당 서비스에서 처리합니다.
-인증번호 입력 검증은 `LoginCoreService.verifyTwoFactor(loginSessionId, verificationCode)`를 호출해 처리합니다.
-업무 로직에서 법정 대리인 등 휴대폰 인증이 필요하면 같은 `VerificationCodeService`를 호출해 인증번호 발급/검증을 처리할 수 있습니다.
+로그인 2FA 인증번호 발급/검증은 별도 API 또는 업무 모듈이 담당합니다.
+인증번호 발송 전에는 `LoginCoreService.findSessionProgress(loginSessionId)`를 호출하고, 결과가 `LoginTwoFactorRequired`인지 확인합니다.
+세션 존재 여부와 2FA 완료 여부만 필요하면 `LoginCoreService.getTwoFactorStatus(loginSessionId)`를 호출합니다.
+해당 모듈에서 인증이 완료되면 `LoginCoreService.completeTwoFactor(loginSessionId)`를 호출해 로그인 세션의 2FA 완료 여부를 갱신합니다.
 
 ```text
-login-session:{loginSessionId} -> {userId, userName, userType, verificationCode, verificationCompleted, requiredActions}
-verification-code:{purpose}:{verificationId} -> {subject, verificationCode, verified}
-TTL: 3m
+login-session:{loginSessionId} -> {userId, userName, userType, twoFactorCompleted, requiredActions}
 ```
 
 실제 SMS, Email, App Push 발송은 별도 API나 업무 서비스가 담당합니다.
-인증번호는 SMS 발송 등 내부 처리용 결과에만 포함하고, API 응답에는 포함하지 않습니다.
 
 ## User Info Cache
 
@@ -379,14 +384,9 @@ max-count
 `login-core.two-factor`
 
 ```text
-challenge-time-to-live
--> 2FA 인증번호 자체의 유효시간입니다.
--> 발송 시점 기준으로 verificationCodeExpiresAt을 계산합니다.
-
 session-time-to-live
 -> login-session Redis key의 유지 시간입니다.
--> 인증번호 만료 후에도 세션을 잠깐 보존하여 "인증번호 만료"와 "세션 만료"를 구분하기 위한 값입니다.
--> challenge-time-to-live보다 길어야 합니다.
+-> ID/PW 검증 후 2FA 완료 또는 후속 조치 완료까지 로그인 세션을 유지하는 시간입니다.
 
 ```
 

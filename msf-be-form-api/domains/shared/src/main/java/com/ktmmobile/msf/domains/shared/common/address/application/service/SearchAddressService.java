@@ -41,7 +41,7 @@ public class SearchAddressService implements AddressReader {
         }
 
         if (!"0".equals(response.results().common().errorCode())) {
-            throw new SimpleDomainException(response.results().common().errorMessage());
+            throw new SimpleDomainException(response.results().common().errorMessage().replace("SQL 예약어 또는 ", ""));
         }
 
         return SearchAddressResponse.of(Objects.requireNonNull(response.results()));

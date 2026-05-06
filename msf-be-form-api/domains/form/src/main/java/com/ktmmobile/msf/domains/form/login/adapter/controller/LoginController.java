@@ -25,12 +25,12 @@ public class LoginController {
     private final LoginSvcReader loginSvcReader;
     private final LoginSvcWriter loginSvcWriter;
 
-    @PostMapping("/api/login/login")
-    public CommonResponse<LoginResponse> login(@RequestBody @Validated(OnSelect.class) LoginRequest request) {
-        return ResponseUtils.ok(loginSvcReader.login(request));
-    }
+    // @PostMapping("/api/login/login")
+    // public CommonResponse<LoginResponse> login(@RequestBody @Validated(OnSelect.class) LoginRequest request) {
+    //     return ResponseUtils.ok(loginSvcReader.login(request));
+    // }
 
-    @PostMapping("/api/login/passwd/modify")
+    @PostMapping({"/api/auth/passwd/modify","/api/users/passwd/modify"})
     public CommonResponse<Integer> modifyPassword(@RequestBody @Validated(OnModify.class) PassChangeRequest request) {
         return ResponseUtils.ok(loginSvcWriter.modifyPassword(request));
     }

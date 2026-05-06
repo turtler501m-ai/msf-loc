@@ -3,8 +3,8 @@
   <MsfBox margin="0">
     <MsfStack vertical class="ut-ai-center">
       <MsfStack type="field">
-        <MsfInput v-model="formData.searchField" class="ut-w-347" placeholder="검색어 입력" />
-        <MsfButton variant="primary" noMinWidth @click="onClickSearchPaging">검색</MsfButton>
+        <MsfInput v-model="formData.searchWord" class="ut-w-347" placeholder="검색어 입력" />
+        <MsfButton variant="primary" noMinWidth @click="onClickSearch">검색</MsfButton>
       </MsfStack>
     </MsfStack>
   </MsfBox>
@@ -12,53 +12,120 @@
   <MsfDataTable
     ref="pagingRef"
     :columns="colDefsPaging"
-    url="https://dummyjson.com/products/search"
-    :params="paramsPaging"
+    url="/api/tempsave/list"
+    :params="formData"
     show-paging
     :is-search="false"
-    :rows="rows"
     show-single-check
     @selected="onSelected"
-    @movePage="onMovePage"
-    hideParentheses
   >
     <template #buttons>
-      <MsfButton variant="toggle" disabled>수정</MsfButton>
-      <MsfButton variant="toggle" active>수정</MsfButton>
+      <MsfButton variant="toggle" @click="onUpdate">수정</MsfButton>
     </template>
   </MsfDataTable>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { onBeforeMount, ref } from 'vue'
+// import { post } from '@/libs/api/msf.api'
+import { storeToRefs } from 'pinia'
+import { showAlert } from '@/libs/utils/comp.utils'
+// import { showConfirm } from '@/libs/utils/comp.utils'
+import { storeTempSave } from '@/stores/tempsave'
+
+const tempSaveStore = storeTempSave()
+const { formData } = storeToRefs(tempSaveStore)
+
+const colDefsPaging = ref([
+  {
+    field: 'rowNum',
+    headerName: '등록번호',
+    width: 100,
+    cellStyle: { textAlign: 'center' },
+    headerClass: 'ag-center-header',
+  },
+  {
+    field: 'shopCd',
+    headerName: '매장코드',
+    flex: 1,
+    minWidth: 200,
+  },
+  {
+    field: 'shopNm',
+    headerName: '매장명',
+    flex: 1,
+    minWidth: 200,
+  },
+  {
+    field: 'userId',
+    headerName: '사용자ID',
+    flex: 1,
+    minWidth: 150,
+  },
+  {
+    field: 'userNm',
+    headerName: '사용자명',
+    flex: 1,
+    minWidth: 150,
+  },
+  {
+    field: 'macAdr',
+    headerName: 'MAC ID',
+    width: 120,
+    cellStyle: { textAlign: 'center' },
+    headerClass: 'ag-center-header',
+  },
+  {
+    field: 'uuid',
+    headerName: '단말기 고유 ID',
+    width: 120,
+    cellStyle: { textAlign: 'center' },
+    headerClass: 'ag-center-header',
+  },
+  {
+    field: 'cretDt',
+    headerName: '등록일자',
+    width: 150,
+    cellStyle: { textAlign: 'center' },
+    headerClass: 'ag-center-header',
+  },
+])
 
 const pagingRef = ref()
-const onClickSearchPaging = () => {
+const selectedRowPaging = ref([])
+const selectedScriptSeq = ref(null)
+
+const onClickSearch = () => {
   pagingRef.value.search()
 }
 
-const selectedRow = ref()
 const onSelected = (data) => {
-  selectedRow.value = data
+  selectedRowPaging.value = data
+  selectedScriptSeq.value = data?.uuid ?? null
+  console.log('select: ' + selectedScriptSeq.value)
 }
-const colDefsPaging = ref([
-  { headerName: '작성일자', field: 'id', width: 184 },
-  { headerName: '신청서구분', field: 'title', flex: 1 },
-  { headerName: '고객유형', field: 'category', flex: 1 },
-  { headerName: '가입유형', field: 'brand', flex: 1 },
-  { headerName: '신청자', field: 'price', flex: 1 },
-])
-const paramsPaging = ref({})
 
-const onMovePage = (data) => {
-  page.value = data
+const onUpdate = async () => {
+  if (!selectedScriptSeq.value) {
+    showAlert('수정할 항목을 선택해주세요.')
+    return
+  }
+  const param = {
+    uuid: selectedScriptSeq.value,
+  }
+  console.log(param)
+
+  // const result = await post('/api/agencypadmac/get', param)
+  // tempSaveStore.openUpdatePopup(result?.data ?? null, selectedScriptSeq.value)
+
+  if (!tempSaveStore.formDtlData?.uuid) {
+    showAlert('수정할 항목이 존재하지 않습니다.')
+    // tempSaveStore.closeScriptPopup()
+  }
 }
-const page = ref(3)
-const rows = ref(5)
 
-// 퍼블샘플용
-const formData = reactive({
-  searchField: '', //검색어입력 필드
+onBeforeMount(() => {
+  // pushFormTypeCd()
 })
 </script>
 

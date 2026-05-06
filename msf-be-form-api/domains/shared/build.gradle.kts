@@ -9,6 +9,7 @@ dependencies {
     implementation(project(":commons:auditing"))
     implementation(project(":commons:file"))
     implementation(project(":commons:client"))
+    implementation(project(":commons:login-core"))
 
     implementation(project(":domains:policy"))
 }

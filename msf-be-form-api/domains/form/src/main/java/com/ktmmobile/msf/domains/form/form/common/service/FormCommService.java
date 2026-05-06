@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestDto;
+import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
@@ -8,11 +8,19 @@ import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormOsstServerAda
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MPhoneNoListXmlVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlVO;
 import com.ktmmobile.msf.domains.form.common.repository.McpApiClient;
+import com.ktmmobile.msf.domains.form.form.common.dto.McpRequestOsstRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.MnpOsstRequest;
+import com.ktmmobile.msf.domains.form.form.common.repository.msp.McpRequestWriteMapper;
+import com.ktmmobile.msf.domains.form.form.common.repository.smartform.ProductSmartInfoReadMapper;
+import com.ktmmobile.msf.domains.form.form.common.vo.McpRequestCstmrVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.McpRequestVo;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommWriteMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
+import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeWriteMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -30,6 +38,10 @@ public class FormCommService {
     private final FormCommWriteMapper formCommWriteMapper;
     private final NewChangeReadMapper newChangeReadMapper;
     private final McpApiClient mcpApiClient;
+    private final ProductSmartInfoReadMapper productSmartInfoReadMapper;
+    private final McpRequestWriteMapper mcpRequestWriteMapper;
+    private final NewChangeWriteMapper newChangeWriteMapper;
+
 
     //private final CommonCodeReader commonCodeReader;
     //private final CommonCodeGroups commonCodeGroups;
@@ -55,8 +67,14 @@ public class FormCommService {
     /**
      * 사용자조직에 해당하는 대리점 조회
      */
-    public AgentInfoResponse getAgentList(AgentInfoRequest request) {
-        AgentInfoResponse responseDto = formCommReadMapper.selectAgentInfo(request);
+    public AgentInfoResponse getAgentList2(AgentInfoRequest request) {
+        AgentInfoResponse responseDto = formCommReadMapper.selectAgentInfo2(request);
+        return responseDto;
+    }
+
+    //@@삭제필요@@
+    public List<AgentInfoResponse> getAgentList(AgentInfoRequest request) {
+        List<AgentInfoResponse> responseDto = formCommReadMapper.selectAgentInfo(request);
         return responseDto;
     }
 
@@ -85,9 +103,9 @@ public class FormCommService {
     }
 
     /**
-     * MP호출 :: 번호이동 사전동의 결과조회
+     * MP호출 :: 번호이동 사전동의 요청
      */
-    public MSimpleOsstXmlVO sendOsstService(OsstReqDto osstReqDto, String eventCd) throws SelfServiceException, SocketTimeoutException {
+    public MSimpleOsstXmlVO sendOsstService(MnpOsstRequest osstReqDto, String eventCd) throws SelfServiceException, SocketTimeoutException {
         MSimpleOsstXmlVO simpleOsstXmlVO = new MSimpleOsstXmlVO();
         HashMap<String, String> param = new HashMap<String, String>();
 
@@ -222,10 +240,15 @@ public class FormCommService {
         //건수를 받음.
     }
 
-    //MCP_REQUEST_OSST 조회
+    //MCP_REQUEST_OSST 에서 조건에 맞는 건수 확인하기
     //as-is : appformSvc.requestOsstCount(mcpRequestOsstDto);
-    public int getMcpRequestOsstCount(McpRequestOsstDto mcpRequestOsstDto) {
-        return formCommReadMapper.selectOsstCount(mcpRequestOsstDto);
+    public int getMcpRequestOsstCount(McpRequestOsstRequest request) {
+        return formCommReadMapper.selectOsstCount(request);
+    }
+
+    //MCP_REQUEST_OSST 에서 OSST_ORD_NO 조회
+    public String getOsstOrdNo(McpRequestOsstRequest request) {
+        return formCommReadMapper.selectOsstOrdNo(request);
     }
 
     //MCP_REQUEST_OSST INSERT
@@ -234,7 +257,7 @@ public class FormCommService {
     }
 
     //MCP_REQUEST INSERT & UPDATE
-    public boolean mergeMcpRequest(McpRequestDto request) {
+    public boolean mergeMcpRequest(McpRequestOsstRequest request) {
         return formCommWriteMapper.mergeMcpRequest(request);
     }
 
@@ -260,535 +283,277 @@ public class FormCommService {
     }
 
 
-    //MCP_REQUEST 업데이트
-    //as-is : appformSvc.updateMcpRequest(mcpRequestDto)
-    /*public boolean setMcpRequest(McpRequestDto request) {
+    //개통전 사전체크
+    public Map<String, Object> checkOsstPreCheck(NewChangeInfoRequest request) {
+        boolean isValidOsstPreCheck = false; //데이터 유효성체크
+        String resNo = ""; //고객포탈에 데이터 확인 및 저장
+        Map<String, Object> osstPreCheckRtnMap = new HashMap<>(); //개통전 사전체크 진행결과
 
-    }*/
+        //0. 개통전 사전체크 0단계 : 데이터 유효성체크
+        isValidOsstPreCheck = this.checkOsstPreCheckData(request);
+        if (!isValidOsstPreCheck) { //유효하지 않은 신청서 데이터
+            return osstPreCheckRtnMap;
+        }
 
-    //개통사전체크
+        //1. 개통전 사전체크 1단계 : 예약번호로 이벤트코드 PC0 존재여부 확인 후 고객포탈 데이타에 저장하고 예약번호 리턴
+        resNo = this.validPreCheck(request);
+        request.setResNo(resNo);
+        /*if (!StringUtils.isEmpty(resNo)) { //유효하지 않은 예약번호
+            return osstPreCheckRtnMap;
+        }*/
+
+        //2. 개통전 사전체크 2단계
+        osstPreCheckRtnMap = this.reqPreOpenCheck(request);
+
+        return osstPreCheckRtnMap;
+    }
+
+    //개통전 사전체크 0단계 : 데이타 유효성체크
+    public boolean checkOsstPreCheckData(NewChangeInfoRequest request) {
+        boolean result = true;
+        return result;
+        //1. 개통전 사전체크 여부 확인은 MSF_REQUEST_TEMP.RES_NO 값 조회
+        //   없을 경우 MSF_REQUEST_TEMP.RES_NO 값 생성
+        //2. 동일명의 회선 90일 이내에에 개통/개통취소 이력이 10회
+        //   추후 처리
+        //3. 이력정보 저장
+        //   ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+        //4. eSIM 정보 체크
+        //   데이타 설정 , eSIM 정보로 부정사용주장단말 확인
+        //5. 인증 정보 확인??
+        //   미성년자의 나이 등 체크.
+        //6. 유심비 /  가입비 설정
+        //7. 정책에서 할인요금 조회에서 등록
+        //8. 접점코드로 대리점 코드 조회
+    }
+
+    //OSST 테이블 데이터 조회 (PrgrStatCd : 서비스코드가 입력됨)
+    public int getOsstCount(McpRequestOsstRequest request) {
+        int osstCount = 0;
+        if (StringUtils.hasText(request.getPrgrStatCd())) {
+            osstCount = formCommReadMapper.selectOsstCount(request);
+        }
+
+        return osstCount;
+    }
+
+    //개통전 사전체크 1단계 : 고객포탈에 데이타 저장
+    public String validPreCheck(NewChangeInfoRequest request) {
+        String resNo = newChangeReadMapper.getMsfResNo(request.getRequestKey());
+        if (StringUtils.hasText(resNo)) {
+            return resNo;
+        } else {
+            resNo = formCommReadMapper.generateResNo();
+        }
+
+        int osstCount = 0;
+        McpRequestOsstRequest mcpRequestOsstRequest = new McpRequestOsstRequest();
+        mcpRequestOsstRequest.setMvnoOrdNo(resNo);
+        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK);
+        //번호이동 및 신규가입일 경우에 개통전 사전체크 진행여부 확인
+        if (Constants.OPER_TYPE_MOVE_NUM.equals(request.getOperTypeCd())
+                || Constants.OPER_TYPE_NEW.equals(request.getOperTypeCd())) {
+            osstCount = this.getOsstCount(mcpRequestOsstRequest);
+        }
+
+        //개통전 사전체크 진행을 위한 데이타 저장
+        if (osstCount > 0) {
+            return resNo;
+        } else {
+            MsfRequestRecord record = MsfRequestRecord.requestToRecord(request);
+
+            McpRequestVo mcpRequestVo = new McpRequestVo();
+            McpRequestCstmrVo mcpRequestCstmrVo = new McpRequestCstmrVo();
+
+            BeanUtils.copyProperties(record.msfRequestVo(), mcpRequestVo);
+            BeanUtils.copyProperties(record.msfRequestCstmrVo(), mcpRequestCstmrVo);
+            //mcpRequestWriteMapper.insertMcpRequest(mcpRequestVo); //MCP_REQUEST
+            //mcpRequestWriteMapper.insertMcpRequestCstmr(mcpRequestCstmrVo); //MCP_REQUEST_CSTMR
+        }
+
+        return resNo;
+    }
+
+    //개통전 사전체크 2단계 : M플랫폼으로 PC0 호출
     public Map<String, Object> reqPreOpenCheck(NewChangeInfoRequest request) {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
         //String globalNoNp1 = request.getGlobalNoNp1();
         //String globalNoNp2 = request.getGlobalNoNp2();
 
-        //개통사전체크요청여부 확인은
-        // >> 스마트는 고객이 판매자가 로그인해서 처리하므로 세션으로 확인은 불가하므로 세션정보 없는 경우 영역만 참고하여 처리해야함.
-        // 1. 010 신규 유심 셀프개통인 경우, 동일아이피 차단 확인 :: 셀프진행 시 주석해제 후 처리할 것 (조건절도 그때 수정)
-        /*if (OPER_TYPE_NEW.equals(request.getOperTypeCd()) && !"09".equals(request.getUsimKindsCd())) {
-            int nacSelfIp = appformSvc.getNacSelfCount();
-            if (nacSelfIp > 0) {
-                throw new McpCommonJsonException("IP_FAIL", NAC_SELF_IP_EXCEPTION);
-            }
-        }*/
-        // 2. 동일명의 회선 90일 이내에에 개통/개통취소 이력이 10회 :: 고객포탈 공통코드 가져오는 것 확인해서 변경해야 함.
-        /*int limitReqFormCnt = 100;
-        //String limitReqFormCntStr = NmcpServiceUtils.getCodeNm("Constant", "LimitReqFormCnt");
-        Optional<CommonCodeData> formTypeCd2 = commonCodeGroups.get("Constant", "LimitReqFormCnt");
-        String limitReqFormCntStr = formTypeCd2.get().detail().toString();
+        //개통전 사전체크
+        //   as-is : /appform/reqPreOpenCheckAjax.do 에서 appformSvc.saveSimpleAppform(appformReqDto); 를 통해
+        //           고객포탈의 MCP_REQUEST , MCP_REQUEST_CSTMR , MCP_REQUEST_SALEINFO , MCP_REQUEST_MOVE 데이타를 저장
+        //           사전체크 진행 시 prx 에서 mcp-api 로 조회 ( /mPlatform/getXmlMessagePC0 ) 하여 PC0 호출함.
+        //           RES_NO 는 고객포탈 데이타 저장 시 생성하여 가지고 가서 저장해둔다.
+        //   to-be : 개통전 사전체크는 스마트 고객정보 저장 시 진행하도록 한다.
+        //           연동되는 내용은 번호이동 및 희망번호 관련 정보외에는 변경되지 않을 고객정보와 이용약관동의의 동의여부 정도로 보이기 때문.
+        //           [0] 고객단계에서 스마트 저장 시 고객포탈에도 데이타를 저장하고 개통전 사전체크를 진행한다.
+        //           [1] 고객단계에서 개통전 사전체크를 진행한다는 가정하에 번호이동 사전동의 시에는 신청서번호로 예약번호를 조회하도록 한다.
+        //           [2] 조회된 예약번호로 MCP_REQUEST_OSST 테이블에 해당 이벤트코드 존재여부를 확인한다.
 
-        if (limitReqFormCntStr != null && !limitReqFormCntStr.equals("")) {
-            try {
-                limitReqFormCnt = Integer.parseInt(limitReqFormCntStr);
-            } catch (NumberFormatException e) {
-                limitReqFormCnt = 100;
-            }
-        }*/
-
-        //이력이 100 이상이면 체크하지 않음.
-        /*int checkLimitOpenFormCount = -1;
-        if (limitReqFormCnt < 100) {
-            RestTemplate restTemplate = new RestTemplate();
-            try {
-                //mcp-api 연결 ( 스마트로 옮긴 서비스 호출로 처리해야함. )
-                //checkLimitOpenFormCount = restTemplate.postForObject(apiInterfaceServer + "/appform/checkLimitOpenFormCount", appformReqDto, Integer.class);
-            } catch (RestClientException e) {
-                //이력 정보 저장 처리 >> 공통으로 처리예정
-                *//*McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-                mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-                mcpIpStatisticDto.setPrcsSbst("9996[RestClientException] ");
-                ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-                throw new McpCommonJsonException("9996", "API연동 오류 /appform/checkLimitOpenFormCount");*//*
-            } catch (Exception e) {
-                //이력 정보 저장 처리 >> 공통으로 처리예정
-                *//*McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-                mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-                mcpIpStatisticDto.setPrcsSbst("9996[Exception] ");
-                ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-                throw new McpCommonJsonException("9996", "API연동 오류 /appform/checkLimitOpenFormCount");*//*
-            }
-        }*/
-
-        //이력 정보 저장 처리 ( DB 에서 조회한 정보와 공통코드로 정의한 정보 비교하여 로그 저장 )
-        //if (checkLimitOpenFormCount >= limitReqFormCnt) {
-            /*McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-            mcpIpStatisticDto.setPrcsMdlInd("FORM_OPEN_LIMIT");
-            mcpIpStatisticDto.setPrcsSbst("fCnt[" + checkLimitOpenFormCount + "]lCnt[" + limitReqFormCnt + "]");
-            mcpIpStatisticDto.setParameter("COUNT[" + checkLimitOpenFormCount + "]CUSTOMER_SSN[" + appformReqDto.getCstmrNativeRrn() + "]CSTMR_FOREIGNER_RRN[" + appformReqDto.getCstmrForeignerRrn() + "]");
-            mcpIpStatisticDto.setTrtmRsltSmst("CHECK");
-            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-            rtnMap.put("OSST_RESULT_CODE", "-1");
-            rtnMap.put("ERROR_NE_MSG", OVER_LIMIT_OPEN_FORM_EXCEPTION);
-            return rtnMap;*/
-        //}
-
-        //eSIM 정보 확인 및 설정
-        // >> 사전개통동의에서 업로드되는 eSIM 정보까지 불러와서 데이타 세팅을 하는 이유는?
-        // >> 스마트에서는 eSIM 이미지 등록해서 임시저장으로 들어오면 어떻게 해야하지?
-        //fnSetDataOfeSim(appformReqDto);  >> simInfoService.fnSetDataOfeSim(NewChangeInfoRequest)
-
-        //eSIM 정보로 부정사용주장단말 확인
-        /*if (this.checkAbuseImeiList(Arrays.asList(request.getImei1(), request.getImei2()))) {
-            //throw new McpCommonJsonException("9901", ESIM_SELF_ABUSE_IMEI_EXCEPTION);
-        }*/
-
-        //USIM 또는 eSIM 신규셀프개통 휴대폰 인증 정보확인
-        // >> 현재 해당사항은 없어보임.
-        /*if (StringUtil.isEmpty(request.getPrntsContractNo())
-                && Constants.OPER_TYPE_NEW.equals(request.getOperTypeCd())) {
-
-            // sms 인증 DB 조회 >> 스마트는
-            *//*if (StringUtil.isEmpty(request.getReqSeq()) || StringUtil.isEmpty(request.getResSeq())) {
-                throw new McpCommonJsonException("0004", NICE_CERT_EXCEPTION);
-            }
-
-            NiceLogDto niceLogDto = new NiceLogDto();
-            niceLogDto.setReqSeq(appformReqDto.getReqSeq());
-            niceLogDto.setResSeq(appformReqDto.getResSeq());
-            niceLogDto.setLimitMinute(90);  // 90분 이내의 이력 조회
-            smsNiceLogDto = nicelog.getMcpNiceHistWithTime(niceLogDto);
-
-            if (smsNiceLogDto == null) {
-                throw new McpCommonJsonException("0004", NICE_CERT_EXCEPTION);
-            }*//*
-        }*/
-
-        //request.setOnlineAuthInfo("ReqNo:" + sessNiceRes.getReqSeq() + ", ResNo:" + sessNiceRes.getResSeq()); //요것도 조회해오든 여튼 처리해야함.
-        //request.setSelfCstmrCi(sessNiceRes.getConnInfo()); //해당사항 없어보임.
-        //request.setRip(ipstatisticService.getClientIp()); //Client IP 로 설정필요함.
-
-        //셀프개통 시 동일 명의의 경우 90일 이내 이력 확인 시 차단
-        //기존 본인인증시 스크립트에서 체크하나 이후 사전체크 ,개통요청 시 한번 더 체크
-        //AppformReqDto rtnAppformReq = appformSvc.getLimitForm(appformReqDto);
-        // >> MCP-API 호출 : /appform/limitForm >> 이동한 스마트 경로 호출하여 rtnAppformReq 값 받아오기
-        // >> request 가 고객CI 정보임.. 흠...  고객CI정보에 대한 개통  정보 추출 [다회선 제한 기능]
-        /*if (rtnAppformReq != null) {
-            throw new McpCommonJsonException("9902", SELF_LIMIT_EXCEPTION);
-        }*/
-
-        //회원 아이디 설정 >> 고객포탈와 다르게 스마트도 판매자의 아이디?
-        /*UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
-        if (userSessionDto != null) {
-            appformReqDto.setCretId(userSessionDto.getUserId());
-        } else {
-            appformReqDto.setCretId(NON_MEMBER_ID);
-        }*/
-
-        //유심비 /  가입비 설정
-        /*String cntpntShopCd = request.getCntpntShopCd();
-
-        UsimBasDto usimBasDtoParm = new UsimBasDto();
-        usimBasDtoParm.setOrgnId(cntpntShopCd);
-        usimBasDtoParm.setOperType(request.getOperTypeSmall());
-        usimBasDtoParm.setDataType(request.getPrdtSctnCd());
-        usimBasDtoParm.setRateCd(request.getSocCode());
-        //eSIM 처리
-        if ("09".equals(request.getUsimKindsCd())) {
-            //eSIM
-            usimBasDtoParm.setPrdtIndCd("10");
-        } else {
-            usimBasDtoParm.setPrdtIndCd(request.getUsimKindsCd());
-        }*/
-
-        //SIM 관련정보 세팅
-        // >> getSimInfo 요 아이도 확인해야하는데, 개통전사전체크 라서 그런데 유심관련 정보 확인이 많다.
-        /*Map<String, String> simInfoMap = usimService.getSimInfo(usimBasDtoParm);
-
-        int intJoinPrice = Integer.parseInt(simInfoMap.get("JOIN_PRICE"));
-        int intUsimPrice = Integer.parseInt(simInfoMap.get("SIM_PRICE"));
-
-        //eSIM 처리
-        if ("09".equals(request.getUsimKindsCd()) || "11".equals(appformReqDto.getUsimKindsCd())) {
-            //eSIM
-            appformReqDto.setUsimPayMthdCd("3");
-            appformReqDto.setUsimPrice(intUsimPrice);
-        } else {
-            appformReqDto.setUsimPayMthdCd("1");
-            appformReqDto.setUsimPrice(0);
-        }*/
-
-        /** 가입비 납부방법
-         * 1 면제
-         * 2 일시납
-         * 3 3개월분납
-         * 22년... 8월 23일 .. 세희 과장님 하고.. 통화 정리 함..
-         * 고객에서 면제 라고 표현 하고 실제로.. M모바일에서 대납 처리 함....
-         * 셀프개통은... 1[면제로] 처리
-         */
-        /*if ("N".equals(simInfoMap.get("JOIN_IS_PAY"))) {
-            request.setJoinPayMthdCd("1");
-            request.setJoinPrice(0);
-        } else {
-            //가입비가 0원이면 면제 아니면 3개월 분납
-            if (intJoinPrice > 0) {
-                request.setJoinPayMthdCd("3");
-                request.setJoinPrice(intJoinPrice);
-            } else {
-                request.setJoinPayMthdCd("1");
-                request.setJoinPrice(0);
-            }
+        String resNo = request.getResNo();
+        System.out.println("resNo ======================== : " + resNo);
+        //신청서 예약번호가 제대로 넘어오지 않은 경우
+        if (!StringUtils.hasText(resNo)) {
+            return null;
         }
 
-        //유심구매
-        if (REQ_BUY_TYPE_USIM.equals(request.getReqBuyTypeCd()) && !orgnId.equals(cntpntShopId)) {
-            NmcpCdDtlDto nmcpCdOnlineDto = NmcpServiceUtils.getCodeNmDto(GROUP_CODE_USIM_OFF_ONLINE_LIST, request.getCntpntShopId());
-            if (nmcpCdOnlineDto != null && !StringUtils.isBlank(nmcpCdOnlineDto.getExpnsnStrVal1())) {
-                request.setCntpntShopId(nmcpCdOnlineDto.getExpnsnStrVal1());
-                request.setOpenMarketReferer(nmcpCdOnlineDto.getExpnsnStrVal2());
-            }
-        }*/
+        //사전체크 및 고객생성 요청(PC0)
+        MSimpleOsstXmlVO simpleOsstXmlVO = new MSimpleOsstXmlVO();
+        try {
+            if (StringUtils.hasText(resNo)) {
+                simpleOsstXmlVO = this.sendOsstService(resNo, Constants.EVENT_CODE_PRE_CHECK);
 
-        //정책에서 할인요금 조회에서 등록
-        /*if (!StringUtils.isBlank(request.getModelSalePolicyCd())) {
-            MspSaleSubsdMstDto mspSaleSubsdMstDto = new MspSaleSubsdMstDto();
-            mspSaleSubsdMstDto.setForFrontFastYn("Y");
-            mspSaleSubsdMstDto.setSalePlcyCd(request.getModelSalePolicyCd()); //정책코드
-            mspSaleSubsdMstDto.setPrdtId(request.getModelId());  //대표상품 아이디
-            mspSaleSubsdMstDto.setOldYn("N");
-            mspSaleSubsdMstDto.setOrgnId(request.getCntpntShopCd());
-            mspSaleSubsdMstDto.setOperType(request.getOperTypeCd());//가입유형
-            mspSaleSubsdMstDto.setNoArgmYn("Y");
-            mspSaleSubsdMstDto.setAgrmTrm(String.valueOf(request.getEnggMnthCnt()));//입력받은 할부기간을 약정기간
-            mspSaleSubsdMstDto.setRateCd(request.getSocCode());//요금제코드
+                if (simpleOsstXmlVO.isSuccess()) {
+                    //rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
+                    //rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
+                    //rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
 
-            RestTemplate restTemplate2 = new RestTemplate();
-            MspSaleSubsdMstDto[] chargeTemList = restTemplate2.postForObject(apiInterfaceServer + "/msp/mspSaleSubsdMstList", mspSaleSubsdMstDto, MspSaleSubsdMstDto[].class);
-            List<MspSaleSubsdMstDto> chargeList = Arrays.asList(chargeTemList);
-
-            if (chargeList != null && chargeList.size() > 0) {
-                MspSaleSubsdMstDto saleSubsdMst = chargeList.get(0);
-                request.setDcAmt(saleSubsdMst.getDcAmt());  //기본할인금액
-                request.setAddDcAmt(saleSubsdMst.getAddDcAmt());  //추가할인금액
-                request.setSprtTp(saleSubsdMst.getSprtTp());  //지원금유형
-            }
-        }*/
-
-        //2. 정보 설정
-        //접점코드로 대리점 코드 조회
-        /*String agentCode = appformSvc.getAgentCode(request.getCntpntShopCd());
-
-        if (StringUtils.isBlank(agentCode)) {
-            rtnMap.put("RESULT_CODE", "-1");
-            rtnMap.put("ERROR_NE_MSG", "대리점 코드가 존재 하지 않습니다.");
-            return rtnMap;
-        } else {
-            request.setAgentCd(agentCode);
-        }
-        request.setProdType(PhoneConstant.PROD_TYPE_COMMON);
-        request.setManagerCode("M0001");
-        request.setRid("-");
-        request.setViewFlag("Y");
-        request.setRequestStateCode("00");
-
-        if (StringUtils.isBlank(request.getShopCd())) {
-            request.setShopCd(request.getCntpntShopCd());
-        }*/
-
-        //번호이동의 경우
-        /*if (Constants.OPER_TYPE_MOVE_NUM.equals(request.getOperTypeCd())) {
-            //공통코드 expnsnStrVal3 값이 Y 일때 분납지속(LMS미청구) AD2로 저장 또는
-            //기본값은 분납지속(LMS청구)(AD) 저장 처리
-            NmcpCdDtlDto moveCompanyObj = NmcpServiceUtils.getCodeNmDto(Constants.WIRE_SERVICE_CODE, request.getMoveCompany());
-            if (moveCompanyObj != null) {
-                if ("Y".equals(moveCompanyObj.getExpnsnStrVal3())) {
-                    //request.setMoveAllotmentStat(Constants.MOVE_ALLOTMENT_STAT_CODE2);
-                    request.setMoveAllotmentSttusCd(Constants.MOVE_ALLOTMENT_STAT_CODE2);
+                    //개통전 사전체크용 데이터 저장이 완료되었다면 스마트에도 예약번호 업데이트
+                    //request.setResNo(resNo);
+                    //newChangeWriteMapper.updateMsfRequestInfo(request);
                 } else {
-                    //request.setMoveAllotmentStat(Constants.MOVE_ALLOTMENT_STAT_CODE1);
-                    request.setMoveAllotmentSttusCd(Constants.MOVE_ALLOTMENT_STAT_CODE1);
+                    //rtnMap.put("RESULT_CODE", "0001");
+                    //rtnMap.put("RESULT_XML", simpleOsstXmlVO.getResponseXml());
+                    //rtnMap.put("ERROR_MSG", simpleOsstXmlVO.getResultCode());
+                    //rtnMap.put("ERROR_NE_MSG", simpleOsstXmlVO.getResultCode());
                 }
-            }
-        }*/
-
-        /**
-         * ㅇ 이슈사항 : M전산에서 스마트 워치 직접개통(OSST개통) 시 하기와 같은 alert 발생             *
-         * ㅇ 발생 오류코드 : 3107  [DEFKTF] 상품은 [애플워치 단말기에서는 휴대폰결제 비밀번호서비스 부가서비스를 가입할 수 없습니다.]사유로 가입이 불가 합니다.
-         * ㅇ 확인된 원인
-         *  1) PC0(사전체크) 전문의 하기 두 값이 Y로 연동 될 경우 MP에서 '휴대폰결제 비밀번호서비스(MPAYPSSWD)를 자동으로 가입 시킴.
-         *  2) 휴대폰결제 비밀번호서비스(MPAYPSSWD) 부가서비스와 스마트워치는 베타관계로, 부가서비스로 자동 가입으로 인한 개통 실패 발생
-         * ※ 현재 포탈에서 신청서 작성 시 하기 값을 Null값으로 셋팅하고 있으나 M전산에서는 하기 값이 Null일 경우 "Y"로 신청서 생성 중
-         * 셀프 개통 이동전화결제이용동의여부 무조건 N으로 설정
-         */
-        request.setPhonePaymentYn("N");
-
-        /* 직영 평생할인 프로모션 ID 가져오기 */
-        /*String prmtId = appformSvc.getChrgPrmtId(request);
-        if (!StringUtils.isBlank(prmtId)) appformReqDto.setPrmtId(prmtId);*/
-
-        /*String cpntId = SessionUtils.getFathSession().getCpntId();
-        if (StringUtils.isEmpty(cpntId)) {
-            appformReqDto.setCpntId(appformReqDto.getCntpntShopId());
-        } else {
-            appformReqDto.setCpntId(cpntId);
-        }*/
-
-        // (번이) 사전동의 예외 통신사인 경우 NP를 호출하지 않기 때문에 [번호이동전화번호] 값을 가진 본인인증 STEP이 누락됨
-        //        → 사전체크 시도 시 해당 STEP 추가
-        /*String moveMobileNo = request.getMoveMobileFnNo() + request.getMoveMobileMnNo() + request.getMoveMobileRnNo();
-        if (Constants.OPER_TYPE_MOVE_NUM.equals(appformReqDto.getOperType())) {
-            //NmcpCdDtlDto npNscException = NmcpServiceUtils.getCodeNmDto(NP_NSC_EXCEPTION, request.getMpCode());
-            // >> 위 공통코드 값은 확인필요함. 모르겠네.
-            if (npNscException != null) {
-                String[] certKey = new String[]{"urlType", "mobileNo"};
-                String[] certValue = new String[]{"reqNpForm", moveMobileNo};
-                certService.vdlCertInfo("E", certKey, certValue);
-            }
-        }*/
-
-        //사전체크 정보 확인 >> [step별 검증] 셀프개통 사전체크 최종 정보 확인
-        // >> certService.vdlCertInfo 데이타 검증 서비스를 공통으로 관리하는 방안 검토 필요
-        /*Map<String, String> crtResult = appformSvc.crtSaveSimpleAppFormInfo(request);
-        if (!AJAX_SUCCESS.equals(crtResult.get("RESULT_CODE"))) {
-            rtnMap.put("RESULT_CODE", "STEP01");
-            rtnMap.put("ERROR_NE_MSG", crtResult.get("RESULT_DESC"));
-            return rtnMap;
-        }*/
-
-        // (번이) 동일 번호이동 휴대폰번호로 사전체크 시도 이력 존재시 → 실패처리
-        /*if (Constants.OPER_TYPE_MOVE_NUM.equals(request.getOperTypeCd())) {
-            Map<String, Object> chkMap = appformSvc.mnpPreCheckLimit(moveMobileNo);
-            if (!AJAX_SUCCESS.equals(chkMap.get("RESULT_CODE"))) {
-                return chkMap;
-            }
-        }
-
-        //-------------------------- MSF 테이블 저장 START -------------------------------
-        //저장 정보 Session 저장 처리
-        // >> saveSimpleAppform 에서 신청서 일련번호 생성하고 예약번호 생성함.
-        // >> 위에서 설정한 모든 정보로 DB 저장함. 이미 그 전체 저장된 정보가 있을텐데~ 그건 temp 이므로 원천에 저장해야겠네.
-        rtnAppformReqDto = appformSvc.saveSimpleAppform(request);
-        rtnAppformReqDto.setNiceLogDto(smsNiceLogDto);
-        SessionUtils.saveAppformDto(rtnAppformReqDto);
-        */
-        //-------------------------- MSF 테이블 저장 END ----------------------------------
-
-        //기존에 신청한 정보가 있다의 처리는 고객포탈은 세션으로 갖고 있으므로 해당 정보로 처리하지만 스마트는 해당사항 없으므로 PASS
-        // >> 그래서 조건절이 전체 한 Tab 앞으로 감.
-
-        // 사전동의 예외 통신사인 경우 사전동의 방어로직 통과처리
-        /*if (OPER_TYPE_MOVE_NUM.equals(rtnAppformReqDto.getOperType())) {
-            NmcpCdDtlDto npNscException = NmcpServiceUtils.getCodeNmDto(NP_NSC_EXCEPTION, appformReqDto.getMpCode());
-            if (npNscException == null) {
-
-                *//*
-         * 번호 이동
-         * NP1 실행 여부 확인
-         * NP1 MVNO_ORD_NO GlobalId insert 처리
-         *//*
-                if ("".equals(globalNoNp1)) {
-                    //이력 정보 저장 처리
-                    McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-                    mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-                    mcpIpStatisticDto.setPrcsSbst("1001[NP1_NULL_EXCEPTION] ");
-                    ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-
-                    throw new McpCommonJsonException("1001", "번호이동 사전동의 요청(NP1) 정보가 없습니다. ");
-                } else {
-                    McpRequestOsstDto mcpRequestOsst = new McpRequestOsstDto();
-                    mcpRequestOsst.setMvnoOrdNo(rtnAppformReqDto.getResNo());
-                    mcpRequestOsst.setNstepGlobalId(globalNoNp1);
-                    mcpRequestOsst.setPrgrStatCd(EVENT_CODE_NP_PRE_CHECK);
-                    mcpRequestOsst.setRsltCd(OSST_SUCCESS);
-                    //NP1 MVNO_ORD_NO GlobalId insert 처리
-                    appformSvc.insertMcpRequestOsst(mcpRequestOsst);
-                }
-
-                *//*
-         * 번호 이동
-         * NP3 실행 여부 확인
-         * NP4 MVNO_ORD_NO GlobalId insert 처리
-         *//*
-                if ("".equals(globalNoNp3)) {
-                    //이력 정보 저장 처리
-                    McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-                    mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-                    mcpIpStatisticDto.setPrcsSbst("1002[NP3_NULL_EXCEPTION] ");
-                    ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-
-                    throw new McpCommonJsonException("1001", "번호이동 사전동의 요청(NP1) 정보가 없습니다. ");
-                } else {
-                    McpRequestOsstDto mcpRequestOsst = new McpRequestOsstDto();
-                    mcpRequestOsst.setMvnoOrdNo(rtnAppformReqDto.getResNo());
-                    mcpRequestOsst.setNstepGlobalId(globalNoNp3);
-                    mcpRequestOsst.setPrgrStatCd(EVENT_CODE_NP_ARREE);
-                    mcpRequestOsst.setRsltCd(OSST_SUCCESS);
-                    //NP1 MVNO_ORD_NO GlobalId insert 처리
-                    appformSvc.insertMcpRequestOsst(mcpRequestOsst);
-                }
-            }
-        }*/
-
-        //MSimpleOsstXmlVO simpleOsstXmlVO = null;
-        /*
-         * 방어 로직 추가
-         * PC2  0000
-         * EVENT_CODE 사전체크 및 고객생성 결과 확인(PC2) 존재하며
-         */
-        /*McpRequestOsstDto mcpRequestOsstDto = new McpRequestOsstDto();
-        mcpRequestOsstDto.setMvnoOrdNo(rtnAppformReqDto.getResNo());
-        mcpRequestOsstDto.setPrgrStatCd(EVENT_CODE_PC_RESULT);
-        //mcpRequestOsstDto.setRsltCd("0000");
-        int tryCount = appformSvc.requestOsstCount(mcpRequestOsstDto);
-
-        if (tryCount > 0) {
-            //성공 처리
-            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
-            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
-
-            // 010셀프개통대상 해피콜 처리
-            NiceLogDto niceLogRtnDto= rtnAppformReqDto.getNiceLogDto();
-            if(niceLogRtnDto != null){
-                niceLogRtnDto.setRequestKey(rtnAppformReqDto.getRequestKey()+"");
-                nicelog.insertSelfSmsAuth(niceLogRtnDto);
-            }
-
-            return rtnMap;
-        }*/
-
-        //PC0 ITL_SST_E0002
-        /*
-         * 접수받은 MVNO 접수번호 가 있습니다.
-         * 성공 처리
-         */
-        /*tryCount = 0;
-        mcpRequestOsstDto.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK);
-        mcpRequestOsstDto.setRsltCd("ITL_SST_E0002");
-        tryCount = appformSvc.requestOsstCount(mcpRequestOsstDto);
-
-        if (tryCount > 0) {
-            //성공 처리
-            rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
-            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
-
-            // 010셀프개통대상 해피콜 처리
-            NiceLogDto niceLogRtnDto= rtnAppformReqDto.getNiceLogDto();
-            if(niceLogRtnDto != null){
-                niceLogRtnDto.setRequestKey(rtnAppformReqDto.getRequestKey()+"");
-                nicelog.insertSelfSmsAuth(niceLogRtnDto);
-            }
-
-            return rtnMap;
-        }*/
-
-        ////사전체크 및 고객생성 요청(PC0)
-        /*try {
-            Thread.sleep(3000);
-            simpleOsstXmlVO = appformSvc.sendOsstService(rtnAppformReqDto.getResNo(), Constants.EVENT_CODE_PRE_CHECK);
-            if (simpleOsstXmlVO.isSuccess()) {
-                rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-                rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
-                rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
-
-                // 010셀프개통대상 해피콜 처리
-                NiceLogDto niceLogRtnDto = rtnAppformReqDto.getNiceLogDto();
-                if (niceLogRtnDto != null) {
-                    niceLogRtnDto.setRequestKey(rtnAppformReqDto.getRequestKey() + "");
-                    nicelog.insertSelfSmsAuth(niceLogRtnDto);
-                }
-
-            } else {
-                rtnMap.put("RESULT_CODE", "0001");
-                rtnMap.put("RESULT_XML", simpleOsstXmlVO.getResponseXml());
-                rtnMap.put("ERROR_MSG", simpleOsstXmlVO.getResultCode());
-                rtnMap.put("ERROR_NE_MSG", simpleOsstXmlVO.getResultCode());
             }
         } catch (McpMplatFormException e) {
-            rtnMap.put("RESULT_CODE", "9997");
-            rtnMap.put("ERROR_MSG", "response massage is null.");
-            rtnMap.put("OSST_RESULT_CODE", "-1");//이력 정보 저장 처리
-            if ("LOCAL".equals(serverName)) {
-                //테스트 용...
-                rtnMap.put("OSST_RESULT_CODE", "ITL_SST_E1020_03");
-            }
-            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
-            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
-            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
-            mcpIpStatisticDto.setPrcsSbst("Exception[McpMplatFormException] ");
-            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
-            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
-            return rtnMap;
+            //서비스 연동 이력 정보 저장 처리
+//            rtnMap.put("RESULT_CODE", "9997");
+//            rtnMap.put("ERROR_MSG", "response massage is null.");
+//            rtnMap.put("OSST_RESULT_CODE", "-1");//이력 정보 저장 처리
+//            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
+//            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
+//            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
+//            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
+//            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
+//            mcpIpStatisticDto.setPrcsSbst("Exception[McpMplatFormException] ");
+//            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
+//            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+//            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
+//            return rtnMap;
         } catch (SocketTimeoutException e) {
-            rtnMap.put("RESULT_CODE", "9999");
-            rtnMap.put("ERROR_MSG", "SocketTimeout");
-            rtnMap.put("OSST_RESULT_CODE", "-2");
-            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
-
-            //이력 정보 저장 처리
-            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
-            mcpIpStatisticDto.setPrcsSbst("Exception[SocketTimeoutException] ");
-            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
-            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-            return rtnMap;
+            //서비스 연동 이력 정보 저장 처리
+//            rtnMap.put("RESULT_CODE", "9999");
+//            rtnMap.put("ERROR_MSG", "SocketTimeout");
+//            rtnMap.put("OSST_RESULT_CODE", "-2");
+//            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
+//            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
+//            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
+//            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
+//            mcpIpStatisticDto.setPrcsSbst("Exception[SocketTimeoutException] ");
+//            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
+//            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+//            return rtnMap;
         } catch (SelfServiceException e) {
-            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
-            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
-            rtnMap.put("RESULT_CODE", "9998");
-            rtnMap.put("ERROR_MSG", e.getMessage());
+            //서비스 연동 이력 정보 저장 처리
+//            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
+//            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
+//            rtnMap.put("RESULT_CODE", "9998");
+//            rtnMap.put("ERROR_MSG", e.getMessage());
 
             //메세지에 따른 resultCode 변경 처리
-            String resultCode = e.getResultCode();
-            String message = e.getMessageNe();
-            if ("ITL_SST_E1020".equals(resultCode) && message.contains("BF1039")) {
-                resultCode = "ITL_SST_E1020_01";
-            } else if ("ITL_SST_E1020".equals(resultCode) && message.contains("BF2001")) {
-                resultCode = "ITL_SST_E1020_02";
-            } else if ("ITL_SST_E1020".equals(resultCode) && message.contains("BS0000")) {
-                resultCode = "ITL_SST_E1020_03";
-            }
+//            String resultCode = e.getResultCode();
+//            String message = e.getMessageNe();
+//            if ("ITL_SST_E1020".equals(resultCode) && message.contains("BF1039")) {
+//                resultCode = "ITL_SST_E1020_01";
+//            } else if ("ITL_SST_E1020".equals(resultCode) && message.contains("BF2001")) {
+//                resultCode = "ITL_SST_E1020_02";
+//            } else if ("ITL_SST_E1020".equals(resultCode) && message.contains("BS0000")) {
+//                resultCode = "ITL_SST_E1020_03";
+//            }
 
-            rtnMap.put("OSST_RESULT_CODE", resultCode);
-            rtnMap.put("ERROR_NE_MSG", message);
-
-            if ("LOCAL".equals(serverName)) {
-                int searchCnt = 0;
-                searchCnt = SessionUtils.getCntSession();
-                SessionUtils.saveCntSession(++searchCnt);
-
-                rtnMap.put("OSST_RESULT_CODE", "ITL_SST_E1020_03");
-                //강제 성공 처리
-                *//*if (searchCnt > 1) {
-                    rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-                    rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
-                    rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
-                }*//*
-            }
-            return rtnMap;
+//            rtnMap.put("OSST_RESULT_CODE", resultCode);
+//            rtnMap.put("ERROR_NE_MSG", message);
         } catch (Exception e) {
-            rtnMap.put("RESULT_CODE", "-2");
-            rtnMap.put("ERROR_MSG", "Exception");
-            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요..");
+            //서비스 연동 이력 정보 저장 처리
+//            rtnMap.put("RESULT_CODE", "-2");
+//            rtnMap.put("ERROR_MSG", "Exception");
+//            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요..");
+//            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
+//            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
+//            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
+//            mcpIpStatisticDto.setPrcsSbst("Exception[Exception] ");
+//            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
+//            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+//            return rtnMap;
+        }
 
-            //이력 정보 저장 처리
-            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
-            mcpIpStatisticDto.setPrcsSbst("Exception[Exception] ");
-            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
-            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-
-            return rtnMap;
-        }*/
-
+        //성공했을때만 업데이트이나~ 임시로 무조건 저장
+        request.setResNo(resNo);
+        newChangeWriteMapper.updateMsfRequestInfo(request);
 
         return rtnMap;
     }
+
+//            mcpRequestVo.setManagerCode(record.msfRequestVo().getManagerCd());
+//            mcpRequestVo.setAgentCode(record.msfRequestVo().getAgentCd());
+//            mcpRequestVo.setServiceType(record.msfRequestVo().getServiceTypeCd());
+//            mcpRequestVo.setReqBuyType(record.msfRequestVo().getReqBuyTypeCd());
+//            mcpRequestVo.setOperType(record.msfRequestVo().getOperTypeCd());
+//            mcpRequestVo.setCstmrType(record.msfRequestVo().getCstmrTypeCd());
+//            mcpRequestVo.setResCode("");
+//            mcpRequestVo.setResMsg("");
+//            mcpRequestVo.setResNo("");
+//            mcpRequestVo.setClausePriCollectFlag(record.msfRequestVo().getClausePriCollectYn());
+//            mcpRequestVo.setClauseConfidenceFlag(record.msfRequestVo().getClauseConfidenceYn());
+//            mcpRequestVo.setClause5gCoverageFlag(record.msfRequestVo().getClause5gCoverageYn());
+//            mcpRequestVo.setClauseEssCollectFlag(record.msfRequestVo().getClauseEssCollectYn());
+//            mcpRequestVo.setClauseFathFlag(record.msfRequestVo().getClauseFathYn());
+//            mcpRequestVo.setClauseEssCollectFlag(record.msfRequestVo().getClauseEssCollectYn());
+//            mcpRequestVo.setClauseInsrProdFlag(record.msfRequestVo().getClauseInsrProdYn());
+//            mcpRequestVo.setClauseJehuFlag(record.msfRequestVo().getClauseJehuYn());
+//            mcpRequestVo.setClausePartnerOfferFlag(record.msfRequestVo().getClausePartnerOfferYn());
+//            mcpRequestVo.setClausePriCollectFlag(record.msfRequestVo().getClausePriCollectYn());
+//            mcpRequestVo.setClauseFinanceFlag(record.msfRequestVo().getClauseFinanceYn());
+//            mcpRequestVo.setClauseInsuranceFlag(record.msfRequestVo().getClauseInsuranceYn());
+//            mcpRequestVo.setClauseSensiOfferFlag(record.msfRequestVo().getClauseSensiOfferYn());
+//            mcpRequestVo.setClausePriOfferFlag(record.msfRequestVo().getClausePriOfferYn());
+//            mcpRequestVo.setClauseMpps35Flag(record.msfRequestVo().getClauseMpps35Yn());
+//            mcpRequestVo.setClausePriAdFlag(record.msfRequestVo().getClausePriAdYn());
+//            mcpRequestVo.setClausePriTrustFlag(record.msfRequestVo().getClausePriTrustYn());
+//            mcpRequestVo.setClauseRentalModelCp(record.msfRequestVo().getClauseRentalModelCpYn());
+//            mcpRequestVo.setClauseRentalService(record.msfRequestVo().getClauseRentalServiceYn());
+//            mcpRequestVo.setClauseRentalModelCpPr(record.msfRequestVo().getClauseRentalModelCpPrYn());
+//            mcpRequestVo.setOnlineAuthType("");
+//            mcpRequestVo.setOnlineAuthInfo("");
+//            mcpRequestVo.setPstate("");
+//            mcpRequestVo.setRequestStateCode("");
+//            mcpRequestVo.setOpenNo("");
+//            mcpRequestVo.setFile01("");
+//            mcpRequestVo.setFile01Mask("");
+//            mcpRequestVo.setFaxyn("");
+//            mcpRequestVo.setFaxnum("");
+//            mcpRequestVo.setScanId("");
+//            mcpRequestVo.setOnOffType("");
+//            mcpRequestVo.setRip("");
+//            mcpRequestVo.setOpenReqDate("");
+//            mcpRequestVo.setReqWantNumber("");
+//            mcpRequestVo.setReqWantNumber2("");
+//            mcpRequestVo.setReqWantNumber3("");
+//            mcpRequestVo.setReqModelName("");
+//            mcpRequestVo.setReqModelColor("");
+//            mcpRequestVo.setReqPhoneSn("");
+//            mcpRequestVo.setReqUsimSn("");
+//            mcpRequestVo.setReqUsimName("");
+//            mcpRequestVo.setReqPayType("");
+//            mcpRequestVo.setReqAddition("");
+//            mcpRequestVo.setReqAdditionPrice("");
+//            mcpRequestVo.setShopCd("");
+//            mcpRequestVo.setShopNm("");
+//            mcpRequestVo.setContractNum("");
+//            mcpRequestVo.setEtcSpecial("");
+//            mcpRequestVo.setPstateReasonEtc("");
+//            mcpRequestVo.setPhonePayment("");
+//            mcpRequestVo.setCntpntShopId("");
+//            mcpRequestVo.setProdId("");
+//            mcpRequestVo.setSntyColorCd("");
+//            mcpRequestVo.setSntyCapacCd("");
+//            mcpRequestVo.setInsrCd("");
+//@Column(name = "req_buy_type") // DB의 컬럼명을 여기에 적습니다.
+//private String reqBuyTypeCd;
 
 
 }

@@ -1,7 +1,7 @@
 package com.ktmmobile.msf.commons.logincore.domain.dto;
 
-public record LoginTwoFactorCodeIssue(
+public record LoginSessionState(
     LoginSessionUser principal,
-    String verificationCode
+    boolean twoFactorCompleted
 ) {
 }

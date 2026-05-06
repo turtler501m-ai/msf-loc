@@ -23,7 +23,7 @@
                 <MsfInput
                   type="password"
                   variant="underline"
-                  v-model="formData.userPw"
+                  v-model="formData.password"
                   placeholder="비밀번호를 입력하세요."
                   class="ut-w100p"
                 />
@@ -82,23 +82,22 @@ const msfUserStore = useMsfUserStore()
 
 const formData = reactive({
   userId: '', //아이디
-  userPw: '', //비밀번호
+  password: '', //비밀번호
   idSave: false, //아이디 저장 여부
   deviceId: 'Phone-A',
   authType: 'PASSWORD',
-  uuid: '82311994',
-  // uuid: '7878', // molo - 수정 필요
+  uuid: msfUserStore.getDeviceUuid(),
 })
 
 onMounted(async () => {
   // 앱에서 uuid 를 구해서 사용
+  msfUserStore.setDeviceUuid('82311994') // molo - 수정 필요
   const initData = {
-    uuid: '82311994',
-    // uuid: '7878', // molo - 수정 필요
+    uuid: msfUserStore.getDeviceUuid(),
   }
-  post('/api/app/login/init', initData)
+  post('/api/auth/app/login/init', initData)
     .then((data) => {
-      console.log('init data:' + data.data.apvSttusCd)
+      console.log('init data:', data.data.apvSttusCd)
       apvSttusCd.value = data.data.apvSttusCd
       msfUserStore.setDeviceInfo(data.data)
     })
@@ -112,23 +111,26 @@ const onClickLogin = () => {
     showAlert('아이디는 필수 입력 값입니다.')
     return
   }
-  if (!formData.userPw) {
+  if (!formData.password) {
     showAlert('비밀번호는 필수 입력 값입니다.')
     return
   }
-  post('/api/login/login', formData)
-    .then((data) => {
-      console.log(data.code)
-      if (data.code == '0000') {
-        console.log('로그인 성공')
+  post('/api/auth/login', formData)
+    .then(async (data) => {
+      if (data.code === '0000') {
         msfUserStore.setUserData(data.data)
-        if (msfUserStore.userData.pwdChgYn === 'Y') {
-          showAlert('비밀번호 변경이 필요합니다.\n비밀번호 변경 화면으로 이동합니다.', () => {
-            router.push('/passwordChange')
+        const res = await msfUserStore.checkAuthAction()
+        if (res.message) {
+          showAlert(res.message, () => {
+            if (res.url) {
+              router.push(res.url)
+            }
           })
-          return
+        } else {
+          if (res.url) {
+            router.push(res.url)
+          }
         }
-        router.push('/deviceAuth')
       } else {
         showAlert(data.message)
       }
@@ -138,16 +140,14 @@ const onClickLogin = () => {
 
 const onClickModelRemove = () => {
   const postData = {
-    uuid: '82311994',
-    // uuid: '7878', // molo - 수정 필요
+    uuid: msfUserStore.getDeviceUuid(),
   }
   showConfirm('단말의 사용등록을 승인 철회하시겠습니까?', () => {
-    post('/api/app/model/remove', postData)
+    post('/api/auth/app/model/remove', postData)
       .then((data) => {
-        console.log(data.code)
-        if (data.code == '0000') {
-          showAlert('단말기 승인 철회가 완료되었습니다.')
-          window.location.reload()
+        console.log('/remove.result.code:', data.code)
+        if (data.code === '0000') {
+          showAlert('단말기 승인 철회가 완료되었습니다.', () => window.location.reload())
         } else {
           showAlert('단말기 승인 철회가 실패하였습니다.\n 다시 시도해 주세요.')
           // showAlert(data.message)

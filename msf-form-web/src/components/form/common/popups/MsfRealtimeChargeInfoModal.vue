@@ -1,9 +1,10 @@
 <script setup>
 import { post } from '@/libs/api/msf.api'
-import { onMounted, ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   modelValue: Boolean,
+  formData: { type: Object, default: () => ({}) },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close'])
@@ -21,30 +22,66 @@ const colDefs = ref([
   { headerName: '요금항목명', field: 'make', flex: 1 },
   { headerName: '사용금액', field: 'price', width: 212, cellStyle: { textAlign: 'right' } },
 ])
-const chargeInfoDatas = ref([
-  { make: 'Tesla', model: 'Model Y', price: 64950 },
-  { make: 'Ford', model: 'F-Series', price: 33850 },
-  { make: 'Toyota', model: 'Corolla', price: 29600 },
-  { make: 'Tesla', model: 'Model Y', price: 64950 },
-  { make: 'Ford', model: 'F-Series', price: 33850 },
-  { make: 'Toyota', model: 'Corolla', price: 29600 },
-])
+const chargeInfoDatas = ref([])
 const selectedRow = ref()
 const onSelected = (data) => {
   selectedRow.value = data
 }
 
-const realtimeChargeInfoList = async () => {
-  const res = await post('/api/form/real-time-charge/list', {})
-  const { code, data } = res
-  const { amntDto } = data
-  chargeInfoDatas.value = amntDto.map((obj) => ({
-    make: obj?.gubun,
-    price: obj?.payMent,
-  }))
+const getRealtimeChargePayload = () => {
+  const formData = props.formData || {}
+  const ctn =
+    formData.ctn ||
+    `${formData.deviceChgTel1 || ''}${formData.deviceChgTel2 || ''}${formData.deviceChgTel3 || ''}`
+
+  return {
+    ncn: formData.ncn || formData.contractNum || '',
+    ctn,
+    custId: formData.custId || '',
+    cpPwdInsert1: formData.cpPwdInsert1 || '',
+  }
 }
 
-onMounted(realtimeChargeInfoList)
+const realtimeChargeInfoList = async () => {
+  try {
+    const payload = getRealtimeChargePayload()
+    console.log('[서비스변경][실시간요금조회] 요청 시작', payload)
+    const res = await post('/api/form/real-time-charge/list', payload)
+    const data = res?.data || {}
+    const amntDto = Array.isArray(data?.amntDto)
+      ? data.amntDto
+      : data?.amntDto
+        ? [data.amntDto]
+        : []
+
+    console.log('[서비스변경][실시간요금조회] 응답 수신', {
+      code: res?.code,
+      message: res?.message,
+      count: amntDto.length,
+      data,
+    })
+
+    chargeInfoDatas.value = amntDto.map((obj) => ({
+      make: obj?.gubun || '',
+      price: obj?.payMent || '',
+    }))
+  } catch (error) {
+    console.error('[서비스변경][실시간요금조회] 예외 발생', {
+      message: error?.message,
+      response: error?.response?.data,
+    })
+    chargeInfoDatas.value = []
+  }
+}
+
+watch(
+  () => props.modelValue,
+  (isOpen) => {
+    if (isOpen) {
+      realtimeChargeInfoList()
+    }
+  },
+)
 
 // MsfDataTable 안쓰신다면 MsfTableList
 // 테이블 테스트

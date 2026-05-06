@@ -76,13 +76,13 @@
       >
         <MsfChip
           v-model="model.installmentMonth"
-          :data="installmentMonthOptions"
+          :data="refinedInstallmentMonthOptions"
           :disabled="model.isSaved"
           name="inp-installmentMonth"
         />
       </MsfFormGroup>
       <MsfFormGroup
-        v-if="model.productType === 'MM' && model.openTypeCd === '99'"
+        v-if="model.productType === 'MM' && model.openTypeCd === '99' && model.contractPeriod !== '0'"
         label="할인유형"
         required
         tag="div"
@@ -96,7 +96,7 @@
       </MsfFormGroup>
       <MsfFormGroup label="요금제" tag="div" required>
         <MsfSelect
-          v-model="model.planName1"
+          v-model="model.prodCtgId"
           :disabled="model.isSaved"
           :options="planCategoryOptions"
           class="ut-w100p"
@@ -104,7 +104,7 @@
           title="요금제 카테고리"
         />
         <MsfSelect
-          v-model="model.planName2"
+          v-model="model.prodId"
           :disabled="model.isSaved"
           :options="planOptions"
           class="ut-w100p"
@@ -146,6 +146,7 @@ const extractData = (res) => {
 
 const props = defineProps({
   title: { type: String, default: '휴대폰 및 요금제 정보' },
+  customerData: { type: Object, default: () => ({}) },
 })
 const model = defineModel({ type: Object, required: true })
 
@@ -160,6 +161,50 @@ const discountTypeOptions = ref([])
 const allDiscountTypeCodes = ref([]) // 공통코드 F002 전체 목록
 
 const planCategoryOptions = ref([])
+
+// 가입유형 판별
+const isNewJoin = computed(() => {
+  const joinType = props.customerData?.joinType || ''
+  return joinType === 'NEW' || joinType === '01' // 신규가입 코드 (프로젝트 스펙에 따라 01 또는 NEW)
+})
+
+// 가입자 생년월일 변경 시 요금제 목록 재조회 (시니어 요금제 노출 여부 갱신)
+watch(
+  () => props.customerData?.cstmrNativeRrn1 || props.customerData?.userBirthDate,
+  () => {
+    if (model.value.prodCtgId) {
+      fetchPlans(model.value.prodCtgId)
+    }
+  }
+)
+
+// 약정기간에 따른 할부기간 필터링
+const refinedInstallmentMonthOptions = computed(() => {
+  const isNoContract = model.value.contractPeriod === '0'
+
+  if (isNoContract) {
+    // 무약정인 경우
+    if (isNewJoin.value) {
+      // 신규가입: 0개월(일시불) + 전체 리스트
+      return installmentMonthOptions.value
+    } else {
+      // 번호이동/기기변경: 전체 리스트
+      return installmentMonthOptions.value
+    }
+  } else {
+    // 약정인 경우 (12, 24개월 등)
+    const period = model.value.contractPeriod
+    if (isNewJoin.value) {
+      // 신규가입: 0개월(일시불) + 약정기간과 동일한 기간
+      return installmentMonthOptions.value.filter(
+        (opt) => String(opt.value) === '0' || String(opt.value) === String(period),
+      )
+    } else {
+      // 번호이동/기기변경: 약정기간과 동일한 기간만
+      return installmentMonthOptions.value.filter((opt) => String(opt.value) === String(period))
+    }
+  }
+})
 
 // 최종적으로 화면에 뿌려질 칩 데이터 (가공됨)
 const refinedDiscountTypeOptions = computed(() => {
@@ -331,8 +376,8 @@ const fetchPlanCategories = async () => {
       label: item.prodCtgNm || item.ctgNm,
       value: item.prodCtgId || item.ctgCd,
     }))
-  } catch (e) {
-    console.error('Failed to fetch plan categories:', e)
+  } catch (error) {
+    console.error('Failed to fetch plan categories:', error)
   }
 }
 
@@ -344,13 +389,57 @@ const fetchPlans = async (ctgCd) => {
       sprtTp: 'KD',
       plcySctnCd: '01',
       salePlcyCd: 'N2022011018381',
+      prodCtgId: ctgCd, // 카테고리 ID 추가
+      reqBuyTypeCd: model.value.productType || 'MM', // 상품유형(MM/UU) 전달
     })
-    planOptions.value = extractData(res).map((item) => ({
-      label: item.rateNm || item.ctgNm,
-      value: item.rateCd || item.ctgCd || item.prodId,
-    }))
-  } catch (e) {
-    console.error('Failed to fetch plans:', e)
+
+    // 가입자 나이 계산 (만 65세 이상 여부)
+    const getAge = (birthStr) => {
+      if (!birthStr || birthStr.length < 6) return 0
+      const yearPrefix = birthStr.length === 8 ? '' : (Number(birthStr.substring(0, 2)) > 50 ? '19' : '20')
+      const fullBirth = yearPrefix + birthStr
+      const birthDate = new Date(
+        fullBirth.substring(0, 4),
+        Number(fullBirth.substring(4, 6)) - 1,
+        fullBirth.substring(6, 8)
+      )
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const m = today.getMonth() - birthDate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+      return age
+    }
+
+    const userBirth = props.customerData?.cstmrNativeRrn1 || props.customerData?.userBirthDate || ''
+    const userAge = getAge(userBirth)
+    const isSenior = userAge >= 65
+
+    planOptions.value = extractData(res)
+      .filter((item) => {
+        // 1. 상품 유형(MM/UU)에 따른 필터링 (API에서 처리되지 않았을 경우를 대비한 추가 필터)
+        // item.prodSctnCd 등이 상품 유형을 나타낸다고 가정 (프로젝트 스펙에 따라 조정 필요)
+        if (model.value.productType === 'UU' && item.prodSctnCd === 'MM') return false
+        if (model.value.productType === 'MM' && item.prodSctnCd === 'UU') return false
+
+        // 2. 시니어 요금제 제한
+        if ((item.rateNm || '').includes('시니어') && !isSenior) {
+          return false
+        }
+        return true
+      })
+      .sort((a, b) => {
+        // 3. 우선순위 정렬 (dispSeq 또는 유사 필드 기준)
+        return (a.dispSeq || 999) - (b.dispSeq || 999)
+      })
+      .map((item) => ({
+        label: item.rateNm || item.ctgNm,
+        value: item.rateCd || item.ctgCd || item.prodId,
+        raw: item,
+      }))
+  } catch (error) {
+    console.error('Failed to fetch plans:', error)
   }
 }
 
@@ -383,7 +472,35 @@ watch(
   (newVal) => {
     if (newVal) {
       model.value.agentCd = newVal
-      console.log('>>> Selected Agency (agentCd):', newVal)
+    }
+  },
+)
+
+// 요금제 선택 시 prodNm 업데이트
+watch(
+  () => model.value.prodId,
+  (newVal) => {
+    if (newVal) {
+      const selected = planOptions.value.find(opt => opt.value === newVal)
+      if (selected) {
+        model.value.prodNm = selected.label
+      }
+    } else {
+      model.value.prodNm = ''
+    }
+  }
+)
+
+// 약정기간 변경 시 할부기간 자동 동기화
+watch(
+  () => model.value.contractPeriod,
+  (newVal) => {
+    if (newVal && newVal !== '0' && !model.value.isSaved) {
+      // 약정 선택 시 할부기간을 약정기간과 동일하게 세팅 (규칙: 약정기간과 할부기간 일치)
+      const hasMatch = installmentMonthOptions.value.some((opt) => String(opt.value) === String(newVal))
+      if (hasMatch) {
+        model.value.installmentMonth = newVal
+      }
     }
   },
 )
@@ -392,7 +509,6 @@ watch(
 watch(
   () => model.value.deviceModel,
   async (newVal, oldVal) => {
-    // 불러오기 상황(oldVal이 없고 newVal이 있는 경우 등)을 고려하여 초기화 로직 분리
     if (oldVal && newVal !== oldVal && !model.value.isSaved) {
       model.value.capacity = ''
       model.value.color = ''
@@ -427,10 +543,10 @@ watch(
 
 // 요금제 카테고리가 변경될 때 하위 요금제 목록 다시 불러오기
 watch(
-  () => model.value.planName1,
+  () => model.value.prodCtgId,
   (newVal) => {
     if (!model.value.isSaved) {
-      model.value.planName2 = ''
+      model.value.prodId = ''
     }
     fetchPlans(newVal)
   },
@@ -459,7 +575,6 @@ onMounted(async () => {
 
   // 개통유형이 휴대폰(MM)일 때만 단말기 관련 API 호출
   if (model.value.productType === 'MM') {
-    // 임시저장 데이터에서 복원할 값들 백업
     const savedModel = model.value.deviceModel
     const savedCapacity = model.value.capacity
     const savedColor = model.value.color
@@ -468,21 +583,13 @@ onMounted(async () => {
     fetchContractPeriods()
     fetchInstallmentMonths()
 
-    // 순차적 복구 로직
     if (savedModel) {
-      // 1. 단말기 모델 세팅
       model.value.deviceModel = savedModel
-      // 2. 용량 목록 로드 대기
       await fetchCapacities(savedModel)
-      
       if (savedCapacity) {
-        // 3. 용량 코드 세팅
         model.value.capacity = savedCapacity
-        // 4. 색상 목록 로드 대기
         await fetchColors(savedModel, savedCapacity)
-        
         if (savedColor) {
-          // 5. 색상 코드 세팅
           model.value.color = savedColor
         }
       }
@@ -491,53 +598,27 @@ onMounted(async () => {
   }
 
   fetchPlanCategories()
-  fetchPlans(model.value.planName1) // 초기 로드
+  fetchPlans(model.value.prodCtgId) // 초기 로드
 })
 
 const validate = () => {
   const m = model.value
-  console.log('>>> Validating MsfDevicePlanInfo:', m)
 
   if (m.productType === 'MM') {
-    if (!m.openTypeCd) {
-      console.warn('Validation failed: openTypeCd is missing')
-      return false
-    }
+    if (!m.openTypeCd) return false
     if (m.openTypeCd === '99') {
-      if (!m.deviceModel) {
-        console.warn('Validation failed: deviceModel is missing')
-        return false
-      }
-      if (!m.capacity) {
-        console.warn('Validation failed: capacity is missing')
-        return false
-      }
-      if (!m.color) {
-        console.warn('Validation failed: color is missing')
-        return false
-      }
-      if (!m.contractPeriod) {
-        console.warn('Validation failed: contractPeriod is missing')
-        return false
-      }
-      // installmentMonth는 0일 수도 있으므로 명시적으로 체크
-      if (m.installmentMonth === undefined || m.installmentMonth === null || m.installmentMonth === '') {
-        console.warn('Validation failed: installmentMonth is missing')
-        return false
-      }
-      if (!m.discountType) {
-        console.warn('Validation failed: discountType is missing')
-        return false
-      }
+      if (!m.deviceModel || !m.capacity || !m.color || !m.contractPeriod) return false
+      if (m.installmentMonth === undefined || m.installmentMonth === null || m.installmentMonth === '') return false
+      if (!m.discountType) return false
     }
   }
 
-  if (!m.planName1) {
-    console.warn('Validation failed: planName1 is missing')
+  if (!m.prodCtgId) {
+    console.warn('Validation failed: prodCtgId is missing')
     return false
   }
-  if (!m.planName2) {
-    console.warn('Validation failed: planName2 is missing')
+  if (!m.prodId) {
+    console.warn('Validation failed: prodId is missing')
     return false
   }
   if (!m.agency) {

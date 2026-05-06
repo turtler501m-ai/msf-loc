@@ -1,8 +1,11 @@
 package com.ktmmobile.msf.domains.form.form.newchange.dto;
 
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.List;
 
 /**
  * 신규/변경 신청서 select response parameter 정의
@@ -16,6 +19,8 @@ public class NewChangeInfoResponse {
     String tmpStepCd; //임시저장 단계
 
     Long requestKey;
+
+    List<MsfRequestAdditionVo> additionList;
 
     String managerCd;
     String managerNm;

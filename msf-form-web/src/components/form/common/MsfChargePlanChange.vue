@@ -90,5 +90,5 @@ onMounted(() => {
     </MsfFormGroup>
   </MsfStack>
   <!-- // 요금제 변경 -->
-  <MsfRealtimeChargeInfoModal v-model="isRealtimeChargeInfoModalOpen" />
+  <MsfRealtimeChargeInfoModal v-model="isRealtimeChargeInfoModalOpen" :form-data="model" />
 </template>

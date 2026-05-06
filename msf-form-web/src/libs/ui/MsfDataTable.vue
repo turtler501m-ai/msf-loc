@@ -350,6 +350,7 @@ defineExpose({
     --ag-header-font-size: var(--font-size-16);
     --ag-header-text-color: var(--color-gray-900);
     --ag-data-font-size: var(--font-size-16);
+    --ag-cell-font-size: var(--font-size-16);
     --ag-cell-text-color: var(--color-gray-600);
     --ag-row-hover-color: var(--color-gray-25); // row 호버
     // 내부체크박스

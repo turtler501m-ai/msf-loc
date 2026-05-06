@@ -3,50 +3,50 @@
     <!-- 무선데이터차단 서비스 -->
     <MsfWirelessDataBlock
       v-model="formData"
-      v-if="formData.serviceSelect?.includes('serviceSelect1')"
+      v-if="formData.serviceSelect?.includes('R12')"
     />
     <!-- // 무선데이터차단 서비스 -->
     <!-- 부가서비스 신청/변경 -->
-    <MsfValueAdditonalServiceReqChg
+    <MsfServiceChangeAdditon
       v-model="formData"
-      v-if="formData.serviceSelect?.includes('serviceSelect3')"
+      v-if="formData.serviceSelect?.includes('R11')"
     />
     <!-- // 부가서비스 신청/변경 -->
     <!-- 요금제 변경 -->
     <MsfChargePlanChange
       v-model="formData"
-      v-if="formData.serviceSelect?.includes('serviceSelect4')"
+      v-if="formData.serviceSelect?.includes('P11')"
     />
     <!-- // 요금제 변경 -->
     <!-- 번호변경 -->
     <MsfNewJoinTelePhoneNumber
       v-model="formData"
-      v-if="formData.serviceSelect?.includes('serviceSelect5')"
+      v-if="formData.serviceSelect?.includes('O11')"
     />
     <!-- // 번호변경 -->
     <!-- 분실복구/일시정지해제 신청 -->
     <MsfUnpauseRequest
       v-model="formData"
-      v-if="formData.serviceSelect?.includes('serviceSelect6')"
+      v-if="formData.serviceSelect?.includes('O12')"
     />
     <!-- // 분실복구/일시정지해제 신청 -->
     <!-- 단말보험 가입 / 단말보험 가입 약관 동의 -->
     <MsfDeviceInsuranceJoin
       v-model="formData"
-      v-if="formData.serviceSelect?.includes('serviceSelect7')"
+      v-if="formData.serviceSelect?.includes('R14')"
     />
     <!-- // 단말보험 가입 / 단말보험 가입 약관 동의 -->
     <!-- USIM 변경 -->
-    <MsfSimInfo v-model="formData" v-if="formData.serviceSelect?.includes('serviceSelect8')" />
+    <MsfSimInfo v-model="formData" v-if="formData.serviceSelect?.includes('O13')" />
     <!-- // USIM 변경 -->
     <!-- 데이터쉐어링 가입/해지 & 데이터쉐어링 가입/해지 약관 동의 -->
     <MsfDataSharingJoinAndCancel
       v-model="formData"
-      v-if="formData.serviceSelect?.includes('serviceSelect9')"
+      v-if="formData.serviceSelect?.includes('R15')"
     />
     <!-- // 데이터쉐어링 가입/해지 & 데이터쉐어링 가입/해지 약관 동의 -->
     <!-- 아무나 SOLO 결합 & 아무나 SOLO 결합 약관 동의 -->
-    <MsfCombineSolo v-model="formData" v-if="formData.serviceSelect?.includes('serviceSelect10')" />
+    <MsfCombineSolo v-model="formData" v-if="formData.serviceSelect?.includes('R16')" />
     <!-- // 아무나 SOLO 결합 & 아무나 SOLO 결합 약관 동의 -->
     <!-- 메모 -->
     <MsfMemo />

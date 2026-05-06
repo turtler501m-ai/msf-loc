@@ -1,6 +1,7 @@
 <template>
   <!-- 주민등록번호, 외국인등록번호, 법인등록번호 (type으로 지정) -->
   <MsfNumberInput
+    ref="input1"
     v-model="registNo1"
     placeholder="앞 6자리"
     :ariaLabel="`${computedFormProps.label.replace('<br>', '')} 앞 6자리`"
@@ -8,9 +9,11 @@
     :error="error"
     :readonly="readonly"
     :disabled="disabled"
+    @maxlength="input2?.focus()"
   />
   <span class="unit-sep">-</span>
   <MsfNumberInput
+    ref="input2"
     v-model="registNo2"
     :type="inputType"
     placeholder="뒤 7자리"
@@ -23,11 +26,14 @@
 </template>
 
 <script setup>
-import { computed, useAttrs } from 'vue'
+import { computed, useAttrs, ref } from 'vue'
 
 // v-model 선언
 const registNo1 = defineModel('registNo1', { default: '' })
 const registNo2 = defineModel('registNo2', { default: '' })
+
+const input1 = ref(null)
+const input2 = ref(null)
 
 // props 정의
 const props = defineProps({
@@ -48,9 +54,9 @@ const attrs = useAttrs()
 
 // 타입별 설정 정보
 const TYPE_CONFIG = {
-  resident: { label: '주민등록번호', isPassword: false },
-  foreigner: { label: '외국인등록번호', isPassword: false },
-  corporate: { label: '법인등록번호', isPassword: false },
+  resident: { label: '주민등록번호', isPassword: true },
+  foreigner: { label: '외국인등록번호', isPassword: true },
+  corporate: { label: '법인등록번호', isPassword: true },
 }
 
 // MsfFormGroup에 넘길 속성 병합
@@ -61,7 +67,6 @@ const computedFormProps = computed(() => ({
 
 // 뒷자리 마스킹 여부 계산
 const inputType = computed(() => {
-  const isMask = TYPE_CONFIG[props.type]?.isPassword
-  return isMask && !props.readonly ? 'password' : 'text'
+  return TYPE_CONFIG[props.type]?.isPassword ? 'password' : 'text'
 })
 </script>

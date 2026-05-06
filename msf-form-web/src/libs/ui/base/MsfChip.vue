@@ -159,7 +159,7 @@ const getDatasByGroupCode = (groupCode) => {
   if (props.data?.length > 0) return props.data
   if (isEmpty(groupCode)) return []
   getCommonCodeList(groupCode).then((list) => {
-    dataList.value = list.map((item) => ({ value: item.code, label: item.title }))
+    dataList.value = list?.map((item) => ({ value: item.code, label: item.title }))
   })
 }
 

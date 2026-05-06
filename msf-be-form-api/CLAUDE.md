@@ -55,6 +55,20 @@ commons:common
 - DB (local): `localhost:5432/msf` (user: postgres / pw: `application-private.yaml` 참조)
 - DB (DEV): `jdbc:postgresql://211.184.227.24:45432/msf_core` (user: smartform_dev / pw: dev!!12form)
 
+### MCP/MSP DB 접속 정보
+
+```properties
+# MCP DB
+jdbc.url=jdbc:oracle:thin:@10.220.71.231:1521:MCPDEVRN
+jdbc.username=MCP_WAS
+jdbc.password=ktmm0601!!
+
+# MSP DB
+jdbc.url=jdbc:oracle:thin:@10.220.71.231:2521:MSPDEV
+jdbc.username=MSP_WAS
+jdbc.password=ktmm0601!!
+```
+
 ## 도메인 패키지 (domains/form)
 
 루트: `com.ktmmobile.msf.domains.form`

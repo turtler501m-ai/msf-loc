@@ -38,8 +38,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
+import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionAvailableResVO;
@@ -48,15 +49,10 @@ import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfRegSvcService;
 
 @RestController
-@RequestMapping("/api/v1/addition")
 public class MsfRegSvcController {
 
     @Autowired
     private MsfRegSvcService regSvcService;
-
-    // =====================================================
-    // TOBE API
-    // =====================================================
 
     /**
      * 이용중 부가서비스 목록 조회
@@ -71,9 +67,10 @@ public class MsfRegSvcController {
      * @param req ncn(계약번호), ctn(전화번호), custId(고객번호)
      * @return 이용중 부가서비스 목록 (AdditionMyListResVO.list)
      */
-    @PostMapping("/my-list")
-    public ResponseEntity<AdditionMyListResVO> myAddSvcList(@RequestBody AdditionReqDto req) {
-        return ResponseEntity.ok(regSvcService.selectMyAddSvcList(req));
+
+    @PostMapping("/api/form/servicechange/myaddsvclist")
+    public CommonResponse<AdditionMyListResVO> myAddSvcList(@RequestBody AdditionReqDto req) {
+        return ResponseUtils.ok(regSvcService.myAddSvcList(req));
     }
 
     /**
@@ -89,7 +86,7 @@ public class MsfRegSvcController {
      * @param req ncn(계약번호), ctn(전화번호), custId(고객번호)
      * @return 가입가능 부가서비스 목록 (list/listA/listC)
      */
-    @PostMapping("/available-list")
+    @PostMapping("/api/v1/addition/available-list")
     public ResponseEntity<AdditionAvailableResVO> addSvcList(@RequestBody AdditionReqDto req) {
         return ResponseEntity.ok(regSvcService.selectAddSvcInfoDto(req));
     }
@@ -107,7 +104,7 @@ public class MsfRegSvcController {
      * @param req ncn/ctn/custId/soc(SOC코드)/prodHstSeq(상품이력번호, 선택)
      * @return 해지 결과 (success/message)
      */
-    @PostMapping("/cancel")
+    @PostMapping("/api/v1/addition/cancel")
     public ResponseEntity<AdditionApplyResVO> moscRegSvcCanChg(@RequestBody AdditionApplyReqDto req)
             throws SocketTimeoutException {
         return ResponseEntity.ok(regSvcService.moscRegSvcCanChg(req));
@@ -125,7 +122,7 @@ public class MsfRegSvcController {
      * @param req ncn/ctn/custId/soc(SOC코드)/ftrNewParam(부가정보)/flag("Y"=변경)
      * @return 신청 결과 (success/message)
      */
-    @PostMapping("/reg")
+    @PostMapping("/api/v1/addition/reg")
     public ResponseEntity<AdditionApplyResVO> regSvcChg(@RequestBody AdditionApplyReqDto req)
             throws SocketTimeoutException {
         return ResponseEntity.ok(regSvcService.regSvcChg(req));

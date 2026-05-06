@@ -29,7 +29,7 @@
           <div v-if="results.length > 0" class="result-content">
             <MsfTitleArea level="3">
               <template #title>
-                도로명 주소 검색 결과<span class="ut-color-point">({{ totalCount }}건)</span>
+                도로명 주소 검색 결과<span class="ut-color-point">({{ displayTotalCount }}건)</span>
               </template>
             </MsfTitleArea>
             <div v-if="results.length > 0" class="result-content">
@@ -71,7 +71,7 @@
             <!-- 검색결과 없음 -->
             <MsfTitleArea level="3" v-if="isSearchPerformed">
               <template #title>
-                도로명 주소 검색 결과<span class="ut-color-point">({{ totalCount }}건)</span>
+                도로명 주소 검색 결과<span class="ut-color-point">({{ displayTotalCount }}건)</span>
               </template>
             </MsfTitleArea>
             <div class="empty-view" v-if="isSearchPerformed">
@@ -165,9 +165,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { post } from '@/libs/api/msf.api'
-import { showAlert } from '@/libs/utils/comp.utils'
+import { formatCurrency, isEmpty } from '@/libs/utils/string.utils'
 
 const props = defineProps({ modelValue: Boolean })
 const emit = defineEmits(['update:modelValue', 'confirm', 'open', 'close'])
@@ -227,6 +227,8 @@ const results = ref([])
 const selectedAddress = ref(null)
 const detailAddress = ref('')
 
+const displayTotalCount = computed(() => formatCurrency(totalCount.value))
+
 const onOpen = () => resetAll()
 
 const resetAll = () => {
@@ -283,6 +285,15 @@ const onConfirm = () => {
 }
 
 const onClose = () => emit('update:modelValue', false)
+
+watch(
+  () => searchQuery.value,
+  (newVal) => {
+    if (isEmpty(newVal)) {
+      resetAll()
+    }
+  },
+)
 </script>
 
 <style lang="scss" scoped>

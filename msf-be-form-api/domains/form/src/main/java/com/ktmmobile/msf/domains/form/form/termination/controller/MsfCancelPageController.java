@@ -4,18 +4,16 @@ import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationRemainChargeReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationRemainChargeResVO;
 import com.ktmmobile.msf.domains.form.form.termination.service.MsfCancelPageSvc;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,7 +25,7 @@ public class MsfCancelPageController {
      * 해지 신청 화면의 대리점 정보를 서비스 계층에서 조회한다.
      */
     @PostMapping("/api/msf/formTermination/agent/list")
-    public CommonResponse<AgentInfoResponse> getTerminationAgentInfo(@RequestBody @Valid AgentInfoRequest request) {
+    public CommonResponse<List<AgentInfoResponse>> getTerminationAgentInfo(@RequestBody @Valid AgentInfoRequest request) {
         return ResponseUtils.ok(msfCancelPageSvc.getTerminationAgentInfo(request));
     }
     /*public CommonResponse<AgentInfoDto> getTerminationAgentInfo(@RequestBody @Valid AgentInfoRequest request) {
@@ -40,17 +38,6 @@ public class MsfCancelPageController {
     @RequestMapping(value = "/remainCharge/list")
     public TerminationRemainChargeResVO getRemainCharge(@RequestBody TerminationRemainChargeReqDto reqDto) {
         return msfCancelPageSvc.getRemainCharge(reqDto);
-    }
-
-    /**
-     * 해지 화면에서 사용할 가입정보 데이터를 조회한다.
-     */
-    @PostMapping(value = "/api/msf/formTermination/myinfo/view")
-    public Map<String, Object> getMyinfoView(
-            HttpServletRequest request,
-            @RequestBody MyPageSearchDto searchVO
-    ) {
-        return msfCancelPageSvc.getMyinfoView(request, searchVO);
     }
 
     /**

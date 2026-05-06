@@ -11,7 +11,8 @@
             { value: 'N', label: '미가입' },
           ]"
         />
-        <MsfStack type="field" class="ut-w100p" v-if="model.clauseInsuranceYn === 'isInsured1'">
+        <!-- 가입(Y) 선택 시에만 카테고리 및 상품 목록 노출 -->
+        <MsfStack type="field" class="ut-w100p ut-mt-16" v-if="model.clauseInsuranceYn === 'Y'">
           <MsfSelect
             title="추천 카테고리"
             v-model="model.recCat1"
@@ -31,13 +32,15 @@
     </MsfStack>
   </div>
 </template>
+
 <script setup>
-import { defineModel, defineProps, ref, watch, onMounted } from 'vue'
+import { defineModel, defineProps, ref, watch, onMounted, defineExpose } from 'vue'
 import { post } from '@/libs/api/msf.api'
 import { getCommonCodeList } from '@/libs/utils/comn.utils.js'
 
 const props = defineProps({
   title: { type: String, default: '안심 보험' },
+  customerData: { type: Object, default: () => ({}) },
 })
 const model = defineModel({ type: Object, required: true })
 
@@ -67,7 +70,7 @@ const fetchInsurances = async (ctgId) => {
   try {
     const payload = {
       intmInsrRelDTO: {
-        reqBuyType: model.value.productType || 'MM', // MM(단말), UU(유심)
+        reqBuyType: props.customerData?.productType || 'MM', // MM(단말), UU(유심)
         rprsPrdtId: model.value.deviceModel || '', // 단말인 경우 모델 ID
       },
       prodCtgId: ctgId,
@@ -76,8 +79,8 @@ const fetchInsurances = async (ctgId) => {
     const res = await post('/api/form/product/selectInsrProdList', payload)
     const data = res.data || []
     insuranceOptions.value = data.map((item) => ({
-      label: `${item.rateNm || item.prodNm} (${Number(item.baseAmt || 0).toLocaleString()}원)`,
-      value: item.rateCd || item.prodId,
+      label: item.insrProdNm || item.rateNm || item.prodNm,
+      value: item.insrProdCd || item.rateCd || item.prodId,
     }))
   } catch (error) {
     console.error('보험 상품 조회 실패:', error)
@@ -88,7 +91,7 @@ const fetchInsurances = async (ctgId) => {
 watch(
   () => model.value.clauseInsuranceYn,
   (newVal) => {
-    if (newVal === 'isInsured1') {
+    if (newVal === 'Y') {
       fetchInsuranceCategories()
     } else {
       model.value.recCat1 = ''
@@ -113,14 +116,22 @@ watch(
 )
 
 onMounted(async () => {
-  // 휴대폰 안심보험 약관동의 공통코드 조회
+  // 초기 로드 시 가입 상태라면 데이터 조회
+  if (model.value.clauseInsuranceYn === 'Y') {
+    fetchInsuranceCategories()
+    if (model.value.recCat1) {
+      fetchInsurances(model.value.recCat1)
+    }
+  }
+
+  // 약관동의 관련 (로그 확인용)
   getCommonCodeList('ClauseInsur').then((list) => {
     console.log('>>> 휴대폰 안심보험 약관 (ClauseInsur):', list)
   })
 })
 
 const validate = () => {
-  if (model.value.clauseInsuranceYn === 'isInsured1') {
+  if (model.value.clauseInsuranceYn === 'Y') {
     if (!model.value.recCat1 || !model.value.recCat2) return false
   }
   return true

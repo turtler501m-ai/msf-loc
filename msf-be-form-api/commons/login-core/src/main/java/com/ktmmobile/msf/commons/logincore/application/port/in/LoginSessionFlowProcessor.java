@@ -1,26 +1,28 @@
 package com.ktmmobile.msf.commons.logincore.application.port.in;
 
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
+import java.util.Optional;
+
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResult;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTokenPair;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorCodeIssue;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorCodeResult;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorRequired;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorVerifyResult;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorCompletionResult;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorStatus;
 
 public interface LoginSessionFlowProcessor {
 
-    LoginTwoFactorVerifyResult verifyTwoFactor(String loginSessionId, String verificationCode);
-
-    LoginTwoFactorCodeIssue issueTwoFactorCode(String loginSessionId);
-
-    LoginTwoFactorRequired updateTwoFactorCodeExpiresAt(String loginSessionId);
-
-    LoginTwoFactorCodeResult issueAndSendTwoFactorCode(String loginSessionId, LoginTwoFactorCodeSender sender);
+    LoginTwoFactorCompletionResult completeTwoFactor(String loginSessionId);
 
     LoginResult completeAction(String loginSessionId, String actionCode);
 
     LoginResult resume(String loginSessionId);
+
+    LoginResult getSessionProgress(String loginSessionId);
+
+    Optional<LoginResult> findSessionProgress(String loginSessionId);
+
+    LoginTwoFactorStatus getTwoFactorStatus(String loginSessionId);
+
+    LoginSessionUser getSessionUser(String loginSessionId);
 
     LoginResult issue(LoginSessionUser principal);
 

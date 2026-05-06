@@ -2,11 +2,15 @@ package com.ktmmobile.msf.domains.form.login.application.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ktmmobile.msf.commons.common.exception.SimpleDomainException;
+import com.ktmmobile.msf.commons.logincore.application.port.in.LoginSessionFlowProcessor;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
+import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.login.application.dto.LoginRequest;
 import com.ktmmobile.msf.domains.form.login.application.dto.LoginResponse;
 import com.ktmmobile.msf.domains.form.login.application.dto.PassChangeRequest;
@@ -19,6 +23,8 @@ import com.ktmmobile.msf.domains.form.login.application.port.out.LoginRepository
 @Slf4j
 public class LoginSvcService implements LoginSvcReader, LoginSvcWriter {
 
+    private final LoginSessionFlowProcessor loginSessionFlowProcessor;
+    private final PasswordEncoder passwordEncoder;
     private final LoginRepository repository;
 
     @Transactional(noRollbackFor = {SimpleDomainException.class})
@@ -73,10 +79,19 @@ public class LoginSvcService implements LoginSvcReader, LoginSvcWriter {
 
     @Transactional(noRollbackFor = {SimpleDomainException.class})
     public Integer modifyPassword(PassChangeRequest request) {
+        String strUserId = "";
+        if(StringUtil.isBlank(request.getLoginSessionId())) {
+            strUserId = AuthenticationUtils.getUser().getId();
+        } else {
+            LoginSessionUser sessionUser = loginSessionFlowProcessor.getSessionUser(request.getLoginSessionId());
+            strUserId = sessionUser.userId();
+        }
+        log.debug("modifyPassword -- strUserId: {}", strUserId);
         // 사용자 변경이력 생성
-        repository.insertUserHistory(AuthenticationUtils.getUser().getId());
+        repository.insertUserHistory(strUserId);
 
-        request.setUserId(AuthenticationUtils.getUser().getId());
+        request.setUserId(strUserId);
+        request.setNewPassword(passwordEncoder.encode(request.getNewPassword()));
         Integer retInt = repository.modifyPass(request);
         log.debug("modifyPassword retInt:{}", retInt);
         if (retInt != 1) {

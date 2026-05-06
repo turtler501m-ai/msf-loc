@@ -13,7 +13,7 @@ package com.ktmmobile.msf.domains.form.form.servicechange.service;
  *   Controller : ASIS 함수명에서 "Ajax" 접미사만 제거
  *
  * [ASIS → TOBE 함수명 대응]
- *   selectmyAddSvcList  → selectMyAddSvcList  (대소문자 정규화)
+ *   selectmyAddSvcList  → myAddSvcList
  *   selectAddSvcInfoDto → selectAddSvcInfoDto (동일)
  *   moscRegSvcCanChg    → moscRegSvcCanChg    (동일)
  *   regSvcChg           → regSvcChg           (동일)
@@ -57,12 +57,12 @@ public interface MsfRegSvcService {
      *
      * 시그니처 변경:
      *   ASIS: MpAddSvcInfoParamDto selectmyAddSvcList(String ncn, String ctn, String custId)
-     *   TOBE: AdditionMyListResVO   selectMyAddSvcList(AdditionReqDto req)
+     *   TOBE: AdditionMyListResVO   myAddSvcList(AdditionReqDto req)
      *
      * @param req 공통 요청 (ncn, ctn, custId)
      * @return AdditionMyListResVO (이용중 SOC 목록)
      */
-    AdditionMyListResVO selectMyAddSvcList(AdditionReqDto req);
+    AdditionMyListResVO myAddSvcList(AdditionReqDto req);
 
     /**
      * 가입가능 부가서비스 목록 조회
@@ -138,7 +138,7 @@ public interface MsfRegSvcService {
     // MpRegSvcChgVO regSvcChg(String ncn, String ctn, String custId, String soc, String ftrNewParam)
     //         throws SocketTimeoutException;
 
-    // [ASIS] X97 사용, MyPageSearchDto(세션) 의존 → selectMyAddSvcList(AdditionReqDto)로 대체
+    // [ASIS] X97 사용, MyPageSearchDto(세션) 의존 → myAddSvcList(AdditionReqDto)로 대체
     // MpAddSvcInfoParamDto selectmyAddSvcList(String ncn, String ctn, String custId);
     // MpAddSvcInfoParamDto selectmyAddSvcList(String ncn, String ctn, String custId, String lstComActvDate);
 

@@ -1,21 +1,26 @@
 <template>
   <!-- 전화번호 -->
   <MsfNumberInput
+    ref="input1"
     v-model="telNo1"
     placeholder="지역번호"
     :ariaLabel="`${cleanLabel} 지역번호`"
     maxlength="3"
+    @maxlength="input2?.focus()"
   />
   <span class="unit-sep">-</span>
   <MsfNumberInput
+    ref="input2"
     v-model="telNo2"
     id="inp-telNo2"
     placeholder="가운데 3 또는 4자리"
     :ariaLabel="`${cleanLabel} 가운데 3 또는 4자리`"
     maxlength="4"
+    @maxlength="input3?.focus()"
   />
   <span class="unit-sep">-</span>
   <MsfNumberInput
+    ref="input3"
     v-model="telNo3"
     id="inp-telNo3"
     :type="secure ? 'password' : 'text'"
@@ -26,7 +31,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, watch, ref } from 'vue'
 import { validateTel } from '@/libs/utils/string.utils'
 
 // 네이티브 속성(readonly, disabled, maxlength 등)을
@@ -39,6 +44,10 @@ defineOptions({
 const telNo1 = defineModel('telNo1', { default: '' })
 const telNo2 = defineModel('telNo2', { default: '' })
 const telNo3 = defineModel('telNo3', { default: '' })
+
+const input1 = ref(null)
+const input2 = ref(null)
+const input3 = ref(null)
 
 const emit = defineEmits(['verify'])
 

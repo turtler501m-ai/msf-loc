@@ -7,8 +7,9 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ChoiceNumberRequest {
+public class McpRequestCondition {
     private Long requestKey;
-    private String reqWantFnNo;
-    private String resNo;
+    private String reqWantNumber; //희망번호 입력 4자리
+    //private String reqWantNumber2;
+    //private String reqWantNumber3;
 }

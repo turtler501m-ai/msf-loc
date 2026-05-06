@@ -179,4 +179,214 @@
             , #{recommendInfo, jdbcType=VARCHAR}
         )
     </insert>
+
+    <insert id="insertMcpRequest"
+            parameterType="com.ktmmobile.msf.domains.form.form.common.vo.McpRequestVo">
+        INSERT /* AppformMapper.insertMcpRequest 서식지 정보 저장  */
+        INTO MCP_REQUEST@DL_MCP (
+            REQUEST_KEY              &#45;&#45;가입신청_키
+            , MANAGER_CODE             &#45;&#45;매니저_코드
+            , AGENT_CODE               &#45;&#45;대리점_코드
+            , SERVICE_TYPE             &#45;&#45;서비스구분
+            , OPER_TYPE                &#45;&#45;업무구분
+            , CSTMR_TYPE               &#45;&#45;고객구분
+            , RES_CODE                 &#45;&#45;예약등록_코드
+            , RES_MSG                  &#45;&#45;예약등록_메세지
+            , RES_NO                   &#45;&#45;예약등록_예약번호
+            , CLAUSE_PRI_COLLECT_FLAG  &#45;&#45;약관_개인정보_수집_동의
+            , CLAUSE_PRI_OFFER_FLAG    &#45;&#45;약관_개인정보_제공_동의
+            , CLAUSE_ESS_COLLECT_FLAG  &#45;&#45;약관_고유식별정보_수집이용제공_동의
+            , CLAUSE_PRI_TRUST_FLAG    &#45;&#45;약관_개인정보_위탁_동의
+            , CLAUSE_PRI_AD_FLAG       &#45;&#45;개인정보 처리 위탁 및 고객 혜택 제공을 위한 광고 수신 동의
+            , CLAUSE_CONFIDENCE_FLAG   &#45;&#45;약관_신용정보_이용_동의
+            , CLAUSE_JEHU_FLAG         &#45;&#45;제휴_서비스동의
+            , ONLINE_AUTH_TYPE         &#45;&#45;온라인_인증방식
+            , ONLINE_AUTH_INFO         &#45;&#45;온라인_인증정보
+            , PSTATE                   &#45;&#45;신청서_상태
+            , REQUEST_STATE_CODE       &#45;&#45;가입진행_코드
+            , OPEN_NO                  &#45;&#45;개통번호
+            , FILE01                   &#45;&#45;파일01
+            , FILE01_MASK              &#45;&#45;파일01_마스크
+            , FAXYN                    &#45;&#45;팩스사용여부
+            , FAXNUM                   &#45;&#45;팩스번호
+            , SCAN_ID                  &#45;&#45;스캐너아이디
+            , ON_OFF_TYPE              &#45;&#45;온라인오프라인구분
+            , RIP                      &#45;&#45;등록아이피
+            , OPEN_REQ_DATE            &#45;&#45;
+            , SYS_RDATE                &#45;&#45;등록일시
+            , REQ_WANT_NUMBER
+            , REQ_WANT_NUMBER2
+            , REQ_WANT_NUMBER3
+            , REQ_BUY_TYPE
+            , REQ_MODEL_NAME
+            , REQ_MODEL_COLOR
+            , REQ_PHONE_SN
+            , REQ_USIM_SN
+            , REQ_PAY_TYPE
+            , REQ_ADDITION
+            , SHOP_CD
+            , APP_FORM_YN
+            , REQ_IN_DAY               &#45;&#45;가입신청일
+            , CONTRACT_NUM
+            , ETC_SPECIAL              &#45;&#45;기타/특약사항
+            , REQ_USIM_NAME            &#45;&#45;USIM 모델명
+            , PHONE_PAYMENT            &#45;&#45;휴대폰결제 이용여부
+            , REQ_ADDITION_PRICE       &#45;&#45;부가서비스금액
+            , CNTPNT_SHOP_ID           &#45;&#45;채널점아이디_판매점코드
+            , OPEN_MARKET_REFERER
+            , NW_BLCK_AGRM_YN          &#45;&#45;네트워크차단동의여부
+            , APP_BLCK_AGRM_YN         &#45;&#45;어플리케이션차단동의여부
+            , APP_CD                   &#45;&#45;APP구분코드
+            , PROD_ID                  &#45;&#45;상품아이디
+            , BANNER_CD                &#45;&#45;배너코드
+            , CRET_ID                  &#45;&#45;생성자아이디(로그인아이디)
+            , SNTY_COLOR_CD            &#45;&#45;색상코드
+            , SNTY_CAPAC_CD            &#45;&#45;단품용량코드
+            , PROD_TYPE                &#45;&#45; 상품 분류 (일반 :01, 0원 상품 :02)
+            , CLAUSE_RENTAL_SERVICE    &#45;&#45;중고렌탈 프로그램 서비스 이용에 대한 동의서
+            , CLAUSE_RENTAL_MODEL_CP   &#45;&#45;단말배상금 안내사항
+            , CLAUSE_RENTAL_MODEL_CP_PR &#45;&#45;단말배상금(부분파손) 안내사항
+            , CLAUSE_MPPS35_FLAG        &#45;&#45;선불 M PPS 요금제_동의
+            , CLAUSE_FINANCE_FLAG       &#45;&#45;개인(신용)정보 처리 및 보험가입 동의서
+            , PROMOTION_CD              &#45;&#45;프로모션코드
+            , INSR_CD                   &#45;&#45;보험코드
+            , CLAUSE_INSURANCE_FLAG     &#45;&#45; 단체보험동의
+            , APP_FORM_XML_YN           &#45;&#45; 스캔 서버 연동 여부
+            , PROD_NM                   &#45;&#45;상품명(NMCP_PROD_BAS.PROD_NM)
+            , INSR_PROD_CD              &#45;&#45;단말보험코드
+            , CLAUSE_INSR_PROD_FLAG     &#45;&#45;단말보험가입동의
+            , INSR_AUTH_INFO            &#45;&#45;단말보험인증정보
+            , RWD_PROD_CD               &#45;&#45;자급제 보상 서비스 코드
+            , CLAUSE_RWD_FLAG           &#45;&#45;자급제 보상 서비스 동의
+            , RWD_AUTH_INFO             &#45;&#45;자급제 보상 서비스 인증 정보
+            , CLAUSE_5G_COVERAGE_FLAG   &#45;&#45; 5g 커버리지 확인 및 가입 동의
+            , KTM_REFERER               &#45;&#45; 최초유입경 인자값
+            , USIM_KINDS_CD             &#45;&#45; 유심종류(RCP2035)
+            , EID                       &#45;&#45; eSIM EID
+            , IMEI1                     &#45;&#45; eSIM IMEI1
+            , IMEI2                     &#45;&#45; eSIM IMEI2
+            , UPLOAD_PHONE_SRL_NO       &#45;&#45; eSIM OCR 등록 FK
+            , ESIM_PHONE_ID             &#45;&#45; eSIM phone id
+            , PRNTS_CONTRACT_NO         &#45;&#45; 모회선 계약번호
+            , PERSONAL_INFO_COLLECT_AGREE &#45;&#45; 고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의
+            , OTHERS_TRNS_AGREE &#45;&#45; 혜택 제공을 위한 제3자 제공 동의 : M모바일
+            , DIS_PRMT_ID
+            , CLAUSE_PARTNER_OFFER_FLAG
+            , JEHU_PROD_TYPE
+            , OPEN_MARKET_ID
+            , JEHU_PARTNER_TYPE
+            , OTHERS_TRNS_KT_AGREE         &#45;&#45;혜택 제공을 위한 제3자 제공 동의 : KT
+            , OTHERS_AD_RECEIVE_AGREE      &#45;&#45;제3자 제공관련 광고 수신 동의
+            , EVNT_CD_PRMT
+            , FATH_TRG_YN                  &#45;&#45;안면인증 대상여부
+            , CLAUSE_FATH_FLAG             &#45;&#45;안면인증 동의여부
+            , FATH_TRANSAC_ID              &#45;&#45;안면인증 트랜잭션ID
+            , FATH_CMPLT_NTFY_DT           &#45;&#45;안면인증 완료일시
+            , CPNT_ID
+            , COMBINE_SOLO_TYPE            &#45;&#45;아무나SOLO 결합여부
+            , COMBINE_SOLO_FLAG            &#45;&#45;아무나SOLO 결합동의
+        ) VALUES (
+            #{requestKey}
+            , #{managerCode}
+            , #{agentCode}
+            , #{serviceType}
+            , #{operType}
+            , #{cstmrType}
+            , #{resCode}
+            , #{resMsg}
+            , #{resNo}
+            , #{clausePriCollectFlag}
+            , #{clausePriOfferFlag}
+            , #{clauseEssCollectFlag}
+            , #{clausePriTrustFlag}
+            , #{clausePriAdFlag}
+            , #{clauseConfidenceFlag}
+            , #{clauseJehuFlag}
+            , #{onlineAuthType}
+            , #{onlineAuthInfo}
+            , #{pstate}
+            , #{requestStateCode}
+            , #{openNo}
+            , #{file01}
+            , #{file01Mask}
+            , #{faxyn}
+            , #{faxnum}
+            , #{scanId}
+            , #{onOffType}
+            , #{rip}
+            , #{openReqDate}
+            , SYSDATE
+            , #{reqWantNumber}
+            , #{reqWantNumber2}
+            , #{reqWantNumber3}
+            , #{reqBuyType}
+            , #{reqModelName}
+            , #{reqModelColor}
+            , #{reqPhoneSn}
+            , #{reqUsimSn}
+            , #{reqPayType}
+            , #{reqAddition}
+            , #{shopCd}
+            , #{appFormYn}
+            , SYSDATE
+            , #{contractNum}
+            , #{etcSpecial}
+            , #{reqUsimName}
+            , #{phonePayment}
+            , #{reqAdditionPrice}
+            , #{cntpntShopId}
+            , #{openMarketReferer}
+            , #{nwBlckAgrmYn}
+            , #{appBlckAgrmYn}
+            , #{appCd}
+            , #{prodId}
+            , #{bannerCd}
+            , #{cretId}
+            , #{sntyColorCd}
+            , #{sntyCapacCd}
+            , #{prodType}
+            , #{clauseRentalService}
+            , #{clauseRentalModelCp}
+            , #{clauseRentalModelCpPr}
+            , #{clauseMpps35Flag}
+            , #{clauseFinanceFlag}
+            , #{promotionCd}
+            , #{insrCd}
+            , #{clauseInsuranceFlag}
+            , 'N'
+            , #{prodNm}
+            , #{insrProdCd}
+            , #{clauseInsrProdFlag}
+            , #{insrAuthInfo}
+            , #{rwdProdCd}
+            , #{clauseRwdFlag}
+            , #{rwdAuthInfo}
+            , #{clause5gCoverageFlag}
+            , #{ktmReferer}
+            , #{usimKindsCd}
+            , #{eid}
+            , #{imei1}
+            , #{imei2}
+            , #{uploadPhoneSrlNo}
+            , #{esimPhoneId}
+            , #{prntsContractNo}
+            , #{personalInfoCollectAgree}
+            , #{othersTrnsAgree}
+            , #{prmtId}
+            , #{clausePartnerOfferFlag}
+            , #{jehuProdType}
+            , #{openMarketId}
+            , #{jehuPartnerType}
+            , #{othersTrnsKtAgree}
+            , #{othersAdReceiveAgree}
+            , #{evntCdPrmt}
+            , #{fathTrgYn}
+            , #{clauseFathFlag}
+            , #{fathTransacId}
+            , #{fathCmpltNtfyDt}
+            , #{cpntId}
+            , #{combineSoloType}
+            , #{combineSoloFlag}
+        )
+    </insert>
 </mapper>

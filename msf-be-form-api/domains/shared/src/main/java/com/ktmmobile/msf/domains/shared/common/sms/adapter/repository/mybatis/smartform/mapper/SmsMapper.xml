@@ -4,12 +4,6 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.shared.common.sms.adapter.repository.mybatis.smartform.mapper.SmsMapper">
 
-  <select id="selectUserPhone" parameterType="string" resultType="string">
-    select mobile_no
-      from user_id = #{value}
-     where user_sttus_cd = 'A'
-  </select>
-
   <insert id="insertMsfCrtVldDtl" parameterType="com.ktmmobile.msf.domains.shared.common.sms.domain.entity.IdVerifValidationDetail">
     <selectKey keyProperty="crtVldDtlSeq" resultType="long" order="BEFORE">
       <choose>

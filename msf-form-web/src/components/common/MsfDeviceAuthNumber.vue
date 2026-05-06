@@ -34,13 +34,14 @@
 
 <script setup>
 import { computed, onBeforeMount, onBeforeUpdate, ref, shallowRef, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useCountdown } from '@vueuse/core'
 import { showAlert } from '@/libs/utils/comp.utils'
 import { isEmpty } from '@/libs/utils/string.utils'
 import { post } from '@/libs/api/msf.api'
 
 const route = useRoute()
+const router = useRouter()
 
 const props = defineProps({
   loginKey: { type: String, required: true },
@@ -84,12 +85,17 @@ const onClickSendAuthNumber = async () => {
     path: route.path,
     token: loginKey.value,
   })
-  if (result?.code !== '0000') {
+  if (result?.code === '6000') {
+    showAlert(result.message, () => {
+      router.push('/login')
+    })
+    return
+  } else if (result?.code !== '0000') {
     showAlert('[인증번호 발송] 버튼을 클릭하시면,\n인증번호가 등록된 휴대폰으로 발송됩니다.')
     return false
   }
-  sendedKey.value = result.data
-  authNumber.value = ''
+  sendedKey.value = result.data.sendedKey
+  authNumber.value = result.data.authNumber || ''
   status.value = 'sent'
   reset(countTime)
   start()
@@ -107,7 +113,8 @@ const onClickVerifyAuthNumber = async () => {
     return false
   }
   stop()
-  status.value = 'verified'
+  status.value = result.data ? 'verified' : status.value
+  emit('complete', result.data)
 }
 
 watch(
@@ -142,15 +149,6 @@ watch(
   },
   { immediate: true },
 )
-watch(
-  () => status.value,
-  (newVal) => {
-    if (newVal === 'verified') {
-      emit('complete', newVal === 'verified')
-    }
-  },
-)
-
 onBeforeMount(() => {
   if (!isEmpty(props.phone)) {
     status.value = 'ready'

@@ -30,7 +30,6 @@ const props = defineProps({
     default: () => [
       // FIXME: termsData를 통해 받아오는 약관 코드 목록의 구조 변경 및 로직 변경 필요. 현재는 단순히 code만 전달받는 형태로 가정하고 있음. (예시 데이터)
       { code: 'CLAUSE_MOVE_01' },
-      { code: 'CLAUSE_PARTNER_01', specType: '02', specCode: 'MI', specName: '(주)밀리의 서재' },
     ],
   }, // 동적으로 약관 데이터를 받을 prop
 })
@@ -71,14 +70,9 @@ watch(
   () => props.termsData,
   (newTermsData) => {
     if (newTermsData && newTermsData.length > 0) {
-      // 필수 항목이 모두 체크되었는지 확인하여 model.termsAgreed 업데이트
-      const allRequiredChecked = newTermsData.every((term) => {
-        if (isRequiredField(term.required)) {
-          return isCheckedField(term.checked)
-        }
-        return true
-      })
-      model.value.termsAgreed = allRequiredChecked
+      // 모든 항목(필수+선택)이 체크되었는지 확인하여 model.termsAgreed 업데이트
+      const allChecked = newTermsData.every((term) => isCheckedField(term.checked))
+      model.value.termsAgreed = allChecked
       lastCheckedResult.value = newTermsData
     }
   },

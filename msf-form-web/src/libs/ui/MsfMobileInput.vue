@@ -1,5 +1,6 @@
 <template>
   <MsfNumberInput
+    ref="input1"
     v-bind="$attrs"
     v-model="number1"
     maxlength="3"
@@ -7,9 +8,11 @@
     :readonly="readonly || !!number1"
     :disabled="disabled"
     :ariaLabel="`${cleanLabel} 앞자리`"
+    @maxlength="input2?.focus()"
   />
   <span class="unit-sep">-</span>
   <MsfNumberInput
+    ref="input2"
     v-bind="$attrs"
     v-model="number2"
     maxlength="4"
@@ -17,9 +20,11 @@
     :readonly="readonly"
     :disabled="disabled"
     :ariaLabel="`${cleanLabel} 가운데 4자리`"
+    @maxlength="input3?.focus()"
   />
   <span class="unit-sep">-</span>
   <MsfNumberInput
+    ref="input3"
     v-bind="$attrs"
     v-model="number3"
     :type="secure ? 'password' : 'text'"
@@ -32,7 +37,7 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, watch, ref } from 'vue'
 import { validateMobile } from '@/libs/utils/string.utils'
 
 // 네이티브 속성(readonly, disabled, maxlength 등)을
@@ -46,6 +51,10 @@ const number1 = defineModel('number1', { type: [String, Number], default: '010' 
 const number2 = defineModel('number2', { type: [String, Number], default: '' })
 const number3 = defineModel('number3', { type: [String, Number], default: '' })
 
+const input1 = ref(null)
+const input2 = ref(null)
+const input3 = ref(null)
+
 // props 정의
 const props = defineProps({
   secure: { type: Boolean, default: false },
@@ -56,6 +65,14 @@ const props = defineProps({
 
 const emit = defineEmits(['verify'])
 
+const checkStrictLength = () => {
+  return (
+    String(number1.value || '').length === 3 &&
+    String(number2.value || '').length === 4 &&
+    String(number3.value || '').length === 4
+  )
+}
+
 // 모든 종류의 줄바꿈과 <br>, <br/> 태그를 빈 문자열로 교체
 const cleanLabel = computed(() => {
   if (!props.label) return ''
@@ -63,21 +80,11 @@ const cleanLabel = computed(() => {
 })
 
 watch(
-  () => number1.value,
-  (newVal) => {
-    emit('verify', validateMobile(newVal + '-' + number2.value + '-' + number3.value))
-  },
-)
-watch(
-  () => number2.value,
-  (newVal) => {
-    emit('verify', validateMobile(number1.value + '-' + newVal + '-' + number3.value))
-  },
-)
-watch(
-  () => number3.value,
-  (newVal) => {
-    emit('verify', validateMobile(number1.value + '-' + number2.value + '-' + newVal))
+  () => [number1.value, number2.value, number3.value],
+  () => {
+    const isValid = validateMobile(number1.value + '-' + number2.value + '-' + number3.value)
+    const isStrictLength = checkStrictLength()
+    emit('verify', isValid && isStrictLength)
   },
 )
 </script>

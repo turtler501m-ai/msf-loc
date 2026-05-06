@@ -114,6 +114,10 @@ watch(
       <div class="guideInner">
         <div class="guideContent">
           <div class="guideNotice">
+            <p class="ut-weight-bold ut-color-point">
+              - [2026-05-06] 서비스변경 - 상품 : 부가서비스 신청/변경 - 설계수정 반영 (체크박스
+              형태로 변경)
+            </p>
             <p>- [2026-04-27] 기타 - '비밀번호 변경' 추가</p>
             <p>- [2026-04-27] 서비스변경 - 부가서비스 팝업들 추가</p>
             <p>- [2026-04-24] 명의변경 - 고객 - 양도인 신분증 인증 삭제</p>

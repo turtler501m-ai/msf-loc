@@ -42,7 +42,10 @@ const visitTypeRequired = computed(() => props.visitTypeCodes.includes(model.val
 watch(
   () => model.value.cstmrTypeCd,
   (newVal) => {
-    if (!props.visitTypeCodes.includes(newVal)) {
+    if (props.visitTypeCodes.includes(newVal)) {
+      // 법인/공공기관인 경우 직접방문(V1) 기본 선택
+      model.value.cstmrVisitTypeCd = 'V1'
+    } else {
       model.value.cstmrVisitTypeCd = ''
     }
   },

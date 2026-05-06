@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
+import { post } from '@/libs/api/msf.api'
 import { parseUserToken } from '@/libs/utils/auth.utils'
 
 export const useMsfUserStore = defineStore('msfUser', {
   state: () => ({
+    deviceUuid: null,
     token: null,
     userInfo: null,
     deviceInfo: null,
@@ -82,6 +84,40 @@ export const useMsfUserStore = defineStore('msfUser', {
     },
     clearUserData() {
       this.userData = null
+    },
+    async checkAuthAction() {
+      if (this.userData.requiredAction.actionCode === 'PASSWORD_CHANGE') {
+        return {
+          type: 'continue',
+          url: '/passwordChange',
+          message: '비밀번호 변경이 필요합니다.\n비밀번호 변경 화면으로 이동합니다.',
+        }
+      } else if (this.userData.requiredAction.actionCode === 'VERIFY_2FA') {
+        return { type: 'continue', url: '/deviceAuth' }
+      } else if (this.userData.requiredAction.actionCode === 'DEVICE_AUTH') {
+        return { type: 'continue', url: '/deviceRegist' }
+      } else {
+        // TODO: accessToken 발급 로직 추가`
+        const result = await post('/api/auth/login/issue', {
+          loginSessionId: this.userData.loginSessionId,
+        })
+        if (result.code !== '0000') {
+          return { type: 'fail', message: result.message }
+        }
+        this.token = result.data.accessToken
+        this.userInfo = result.data.userInfo
+        this.userData = null
+        return { type: 'complete', url: '/' }
+      }
+    },
+    setDeviceUuid(uuid) {
+      this.deviceUuid = uuid
+    },
+    getDeviceUuid() {
+      return this.deviceUuid
+    },
+    clearDeviceUuid() {
+      this.deviceUuid = null
     },
   },
 })

@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,6 +135,9 @@ public class ProductInfoService {
     //요금제 목록조회
     public List<RateInfoDto> getRateList(ProductInfoRequest request) {
         CategoryRelRequest productCategoryProdRequest = new CategoryRelRequest();
+        if (!StringUtils.hasText(request.getProdCtgTypeCd())) {
+            //
+        }
         productCategoryProdRequest.setProdCtgTypeCd(request.getProdCtgTypeCd());
 
         //1. 선택된 카테고리로 요금제 목록 조회

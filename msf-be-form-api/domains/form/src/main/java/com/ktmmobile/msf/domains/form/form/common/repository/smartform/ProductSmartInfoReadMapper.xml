@@ -90,4 +90,10 @@
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
     </select>
 
+    <!--<select id="selectResNo" parameterType="java.lang.Long" resultType="String">
+            SELECT RES_NO FROM MSF_REQUEST_TEMP WHERE REQUEST_KEY = #{requestKey}
+    </select>-->
+
+
+
 </mapper>

@@ -230,7 +230,7 @@ const getOptionsByGroupCode = (groupCode) => {
   if (props.options?.length > 0) return props.options
   if (isEmpty(groupCode)) return []
   getCommonCodeListWithDetail(groupCode).then((list) => {
-    optionList.value = list.map((item) => ({ value: item.code, label: item.title, ...item }))
+    optionList.value = list?.map((item) => ({ value: item.code, label: item.title, ...item }))
   })
 }
 

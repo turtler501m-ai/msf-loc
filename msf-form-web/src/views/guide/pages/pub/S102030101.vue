@@ -44,7 +44,7 @@
     <!-- // 정보료 상한금액 설정/변경 -->
     <!-- 부가서비스 신청/변경 -->
     <MsfTitleArea title="부가서비스 신청/변경" />
-    <MsfTable>
+    <!-- <MsfTable>
       <template #colgroup>
         <col />
         <col style="width: 120px" />
@@ -97,7 +97,48 @@
           </td>
         </tr>
       </template>
+    </MsfTable> -->
+    <!-- 설계변경__20260506 -->
+    <MsfTable>
+      <template #colgroup>
+        <col style="width: 68px" />
+        <col />
+        <col style="width: 120px" />
+        <col style="width: 112px" />
+      </template>
+      <template #thead>
+        <tr>
+          <th>선택</th>
+          <th>부가서비스명</th>
+          <th>요금</th>
+          <th>설정</th>
+        </tr>
+      </template>
+      <template #tbody>
+        <tr>
+          <td class="ut-text-center">
+            <MsfCheckbox id="inp-check1" v-model="check1" label="무선데이터 차단" hideLabel />
+          </td>
+          <td><label for="inp-check1">무선데이터 차단</label></td>
+          <td class="ut-text-center">무료</td>
+          <td class="ut-text-center"></td>
+        </tr>
+        <tr>
+          <td class="ut-text-center">
+            <MsfCheckbox id="inp-check2" v-model="check2" label="(신)로밍 하루종일 ON" hideLabel />
+          </td>
+          <td><label for="inp-check2">(신)로밍 하루종일 ON</label></td>
+          <td class="ut-text-center">2,200 원/1일</td>
+          <td class="ut-text-center"><MsfButton variant="subtle">설정</MsfButton></td>
+        </tr>
+        <tr>
+          <td colspan="4">
+            <div class="nodata-wrap">선택한 서비스가 없습니다.</div>
+          </td>
+        </tr>
+      </template>
     </MsfTable>
+    <!-- // 설계변경__20260506 -->
     <!-- 합계박스 -->
     <MsfBox>
       <div class="total-box">
@@ -107,7 +148,7 @@
         </dl>
       </div>
       <MsfButtonGroup class="total-btns">
-        <MsfButton variant="subtle">추가/삭제</MsfButton>
+        <MsfButton variant="subtle">부가서비스 추가</MsfButton>
         <MsfButton variant="toggle" disabled>확인</MsfButton>
         <MsfButton variant="toggle" active>확인 완료</MsfButton>
       </MsfButtonGroup>
@@ -530,6 +571,9 @@ const formData = reactive({
   /** 메모 */
   memo: '', //메모
 })
+// 설계변경 체크박스 추가
+const check1 = ref('')
+const check2 = ref('')
 </script>
 
 <style scoped></style>

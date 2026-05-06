@@ -45,10 +45,12 @@
 import { reactive, ref, onMounted } from 'vue'
 import { post } from '@/libs/api/msf.api'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
+import { useMsfUserStore } from '@/stores/msf_user'
 
 const appSettings = ref(null)
 const faceIdDisabled = ref(false)
 const fingerDisabled = ref(false)
+const msfUserStore = useMsfUserStore()
 
 const formData = reactive({
   isFingerLogin: false, //지문 로그인 설정
@@ -58,10 +60,9 @@ const formData = reactive({
 onMounted(async () => {
   // 앱에서 uuid 를 구해서 사용
   const initData = {
-    uuid: '823994',
-    // uuid: '7878 // molo - 수정 필요
+    uuid: msfUserStore.getDeviceUuid(),
   }
-  post('/api/app/login/init', initData)
+  post('/api/auth/app/login/init', initData)
     .then((data) => {
       if (data.code == '0000') {
         appSettings.value = 'V ' + data.data
@@ -91,7 +92,7 @@ onMounted(async () => {
 const onChangeBio = () => {
   const postData = {
     // molo - 수정 필요
-    uuid: '7878',
+    uuid: msfUserStore.getDeviceUuid(),
     bioLoginYn: 'N',
   }
   if (formData.isFaceId) {
@@ -105,7 +106,7 @@ const onChangeBio = () => {
   showConfirm(
     '로그인 설정을 변경하시겠습니까?',
     () => {
-      post('/api/app/settingbio/modify', postData)
+      post('/api/auth/app/settingbio/modify', postData)
         .then((data) => {
           console.log(data.code)
           if (data.code == '0000') {
@@ -144,9 +145,9 @@ const onClickAppVersion = () => {
     os: 'A',
     appOsVer: '11',
     version: '1.1',
-    uuid: '7878',
+    uuid: msfUserStore.getDeviceUuid(),
   }
-  post('/api/app/intro', postData)
+  post('/api/auth/app/intro', postData)
     .then((data) => {
       console.log(data.code)
       if (data.code == '0000') {

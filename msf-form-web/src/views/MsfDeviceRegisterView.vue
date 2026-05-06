@@ -62,7 +62,7 @@ const msfUserStore = useMsfUserStore()
 const formData = reactive({
   userNm: '', //이름
   localIp: '', //아이피
-  uuid: '82311994', //단말 고유 ID  // molo - 수정 필요
+  uuid: msfUserStore.getDeviceUuid(), //단말 고유 ID
   deptName: 'IT전략팀', //부서 // molo - 수정 필요
   osCd: 'A', // molo - 수정 필요
   version: '1.0', // molo - 수정 필요
@@ -87,7 +87,7 @@ const onClickModelRegist = () => {
     return
   }
   showConfirm('단말 사용을 등록하시겠습니까?', () => {
-    post('/api/app/model/register', formData)
+    post('/api/auth/app/model/register', formData)
       .then((data) => {
         console.log(data.code)
         if (data.code == '0000') {

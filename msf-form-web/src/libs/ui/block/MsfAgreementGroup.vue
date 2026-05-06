@@ -177,25 +177,39 @@ watch(
 const isAllChecked = computed({
   get: () => {
     if (!internalTerms.value.length) return false
+    // targetItems: 전체동의 체크박스가 감시할 대상 항목들
+    // props.onlyRequired가 true이면 필수 항목들만 다 체크되었을 때 '전체동의'로 표시함
+    // 하지만 사용자의 명시적 요청(전체 항목 동의)이 있는 경우 모든 항목을 감시해야 함
     const targetItems = props.onlyRequired
       ? internalTerms.value.filter((item) => item.required === 'Y' || item.required === '2')
       : internalTerms.value
-    return targetItems.length > 0 && targetItems.every((item) => item.checked)
+    
+    // 세부 항목 중 하나라도 해제되면 false 반환
+    if (targetItems.length === 0) return false
+    
+    const checkAll = (items) => {
+      return items.every((item) => {
+        if (!item.checked) return false
+        if (item.children?.length) return checkAll(item.children)
+        return true
+      })
+    }
+    
+    return checkAll(targetItems)
   },
   set: (val) => {
-    internalTerms.value.every((item) => {
+    // 전체 동의 체크/해제 시 하위의 모든 항목(선택 포함)을 동일하게 변경
+    internalTerms.value.forEach((item) => {
       item.checked = val
       if (item.children?.length) {
         const deepCheck = (children) => {
-          children.every((c) => {
+          children.forEach((c) => {
             c.checked = val
             if (c.children) deepCheck(c.children)
-            return true
           })
         }
         deepCheck(item.children)
       }
-      return true
     })
   },
 })

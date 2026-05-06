@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ChoiceNumberResponse {
+public class SearchNumberResponse {
     private List<MPhoneNoListXmlVO> mPhoneNoList; //
     private List<MarketInfo> marketList;// 상세 정보 리스트
 

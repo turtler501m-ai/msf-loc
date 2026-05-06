@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 
 const formData = reactive({
   /* SIM정보_상품(휴대폰) */
@@ -68,6 +68,10 @@ const formData = reactive({
   /* 메모 */
   memo: '', //메모
 })
+
+const moveMobileNo1Ref = ref(null)
+const moveMobileNo2Ref = ref(null)
+const moveMobileNo3Ref = ref(null)
 </script>
 
 <template>
@@ -87,15 +91,28 @@ const formData = reactive({
           placeholder="통신사 선택"
         />
         <MsfStack type="field">
-          <MsfNumberInput v-model="formData.moveMobileNo1" placeholder="앞자리" maxlength="3" />
+          <MsfNumberInput
+            ref="moveMobileNo1Ref"
+            v-model="formData.moveMobileNo1"
+            placeholder="앞자리"
+            maxlength="3"
+            @maxlength="moveMobileNo2Ref?.focus()"
+          />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="moveMobileNo2Ref"
             v-model="formData.moveMobileNo2"
             placeholder="가운데 4자리"
             maxlength="4"
+            @maxlength="moveMobileNo3Ref?.focus()"
           />
           <span class="unit-sep">-</span>
-          <MsfNumberInput v-model="formData.moveMobileNo3" placeholder="뒤 4자리" maxlength="4" />
+          <MsfNumberInput
+            ref="moveMobileNo3Ref"
+            v-model="formData.moveMobileNo3"
+            placeholder="뒤 4자리"
+            maxlength="4"
+          />
         </MsfStack>
       </MsfStack>
     </MsfFormGroup>

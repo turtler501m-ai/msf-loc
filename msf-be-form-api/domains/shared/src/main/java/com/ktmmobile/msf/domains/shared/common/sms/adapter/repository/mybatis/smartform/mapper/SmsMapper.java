@@ -9,7 +9,5 @@ import com.ktmmobile.msf.domains.shared.common.sms.domain.entity.IdVerifValidati
 @Mapper
 public interface SmsMapper {
 
-    String selectUserPhone(String userId);
-
     Integer insertMsfCrtVldDtl(IdVerifValidationDetail idVerifValidationDetail);
 }

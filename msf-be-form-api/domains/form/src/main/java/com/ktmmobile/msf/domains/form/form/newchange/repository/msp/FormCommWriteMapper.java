@@ -1,7 +1,8 @@
 package com.ktmmobile.msf.domains.form.form.newchange.repository.msp;
 
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
+import com.ktmmobile.msf.domains.form.form.common.dto.McpRequestCondition;
+import com.ktmmobile.msf.domains.form.form.common.dto.McpRequestOsstRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AbuseImeiHistDto;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -12,9 +13,12 @@ public interface FormCommWriteMapper {
     void insertAbuseImeiHist(AbuseImeiHistDto abuseImeiHistDto);
 
     //MCP_REQUEST INSERT OR UPDATE :: 신규가입 희망번호 조회
-    boolean mergeMcpRequest(McpRequestDto request);
+    boolean mergeMcpRequest(McpRequestOsstRequest request);
 
     //MCP_REQUEST_OSST 저장 :: 신규가입 희망번호 예약
     boolean insertMcpRequestOsst(McpRequestOsstDto request);
+
+    //MCP_REQUEST 저장 :: 신규가입 희망번호 조회
+    boolean updateMcpRequest(McpRequestCondition request);
 
 }

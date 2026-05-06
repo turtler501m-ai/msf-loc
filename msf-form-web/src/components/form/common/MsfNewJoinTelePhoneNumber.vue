@@ -1,7 +1,11 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 
 const formData = defineModel({ type: Object, required: true })
+
+const input1 = ref(null)
+const input2 = ref(null)
+const input3 = ref(null)
 
 // const formData = reactive({
 //   /* SIM정보_상품(휴대폰) */
@@ -78,16 +82,25 @@ const formData = defineModel({ type: Object, required: true })
   <MsfStack vertical type="formgroups">
     <MsfFormGroup label="번호예약" required>
       <MsfStack type="field">
-        <MsfNumberInput v-model="formData.reqWantFnNo" placeholder="앞자리" maxlength="3" />
+        <MsfNumberInput
+          ref="input1"
+          v-model="formData.reqWantFnNo"
+          placeholder="앞자리"
+          maxlength="3"
+          @maxlength="input2?.focus()"
+        />
         <span class="unit-sep">-</span>
         <MsfNumberInput
+          ref="input2"
           v-model="formData.reqWantMnNo"
           id="inp-reserve2"
           placeholder="가운데 4자리"
           maxlength="4"
+          @maxlength="input3?.focus()"
         />
         <span class="unit-sep">-</span>
         <MsfNumberInput
+          ref="input3"
           v-model="formData.reqWantRnNo"
           id="inp-reserve3"
           placeholder="뒤 4자리"

@@ -316,7 +316,7 @@
             (SELECT DTL_CD_NM FROM NMCP_CD_DTL@DL_MCP WHERE CD_GROUP_ID='JehuProdType' AND DTL_CD=RATE_MST.JEHU_PROD_TYPE AND ROWNUM=1) AS JEHU_PROD_NM, -- 요금제 제휴처명
             PLCY.SPRT_TP,
             PLCY.PLCY_SCTN_CD, --정책구분코드 01:단말, 02:USIM
-            PLCY.PRDT_SCTN_CD, --제품구분코   02:3G, 03:LTE
+            PLCY.PRDT_SCTN_CD, --제품구분코드 >> LTE5G, 5G, 3G, LTE
             PLCY.PLCY_TYPE_CD  --CMN0050 정책유형코드 : W 도매
         FROM
             MSP_SALE_ORGN_MST ORGN,
@@ -334,7 +334,6 @@
             <if test="serviceType != null and serviceType != ''">
                 AND RATE_MST.SERVICE_TYPE = #{serviceType} -- 요금제유형
             </if>
-            AND RATE_MST.RATE_CD IN ('PL241F504') -- 요금제코드
             <if test="orgnId != null and orgnId != ''">
                 AND ORGN.ORGN_ID = #{orgnId} /* 조직코드 */
             </if>

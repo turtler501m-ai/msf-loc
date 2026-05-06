@@ -1,20 +1,24 @@
 package com.ktmmobile.msf.domains.form.form.termination.service;
 
-import com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
-import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonBillingInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonDetailInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpMonthPayMentDto;
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.*;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscSpnsrItgInfoInVO;
 import com.ktmmobile.msf.domains.form.common.repository.McpApiClient;
-import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
-import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
-import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.common.repository.McpRequestRepositoryImpl;
 import com.ktmmobile.msf.domains.form.form.common.repository.MsfRequestRepositoryImpl;
@@ -23,31 +27,14 @@ import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCancelVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.FarPricePlanResDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfChangPageSvc;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfFarPricePlanService;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMaskingSvc;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
-import com.ktmmobile.msf.domains.form.form.termination.dto.*;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationRemainChargeReqDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationRemainChargeResVO;
+import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationSettlementDto;
 import com.ktmmobile.msf.domains.form.form.termination.repository.CancelPageRepositoryImpl;
-import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NOT_FULL_MEMBER_EXCEPTION;
 
 
 @Service
@@ -68,7 +55,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     private MsfMplatFormService msfMplatFormService;
 
     /**
-     * requestView 위약금 블록(X54/X16/mspAddInfo) 조회용 마이올레 서비스
+     * 위약금/잔여할부 조회에 필요한 서비스변경 공통 조회 기능을 사용한다.
      */
     @Autowired
     private MsfChangPageSvc msfChangPageSvc;
@@ -79,301 +66,18 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     @Autowired
     private FormCommService formCommService;
 
-    @Autowired
-    private MsfMypageSvc msfMypageSvc;
-
-    @Autowired
-    private MsfFarPricePlanService farPricePlanService;
-
-    @Autowired
-    private MsfMaskingSvc maskingSvc;
-
-    @Autowired
-    private IpStatisticService ipstatisticService;
-
     @Override
-    public AgentInfoResponse getTerminationAgentInfo(AgentInfoRequest request) {
+    public List<AgentInfoResponse> getTerminationAgentInfo(AgentInfoRequest request) {
         logger.info("[해지] 대리점 정보 조회 요청 — shopOrgnId={}", request.getShopOrgnId());
-        AgentInfoResponse result = formCommService.getAgentList(request);
-        logger.info("[해지] 대리점 정보 조회 완료 — shopOrgnId={}, orgnNm={}", request.getShopOrgnId(), result != null ? result.getOrgnNm() : "null");
+        List<AgentInfoResponse> result = formCommService.getAgentList(request);
+        logger.info("[해지] 대리점 정보 조회 완료 - shopOrgnId={}, count={}", request.getShopOrgnId(), result != null ? result.size() : 0);
         return result;
     }
-    /*public AgentInfoDto getTerminationAgentInfo(AgentInfoRequest request) {
-        logger.info("[해지] 대리점 정보 조회 요청 — shopOrgnId={}", request.shopOrgnId());
-        AgentInfoDto result = formCommService.getAgentInfo(request.shopOrgnId());
-        logger.info("[해지] 대리점 정보 조회 완료 — shopOrgnId={}, orgnNm={}", request.shopOrgnId(), result != null ? result.orgnNm() : "null");
-        return result;
-    }*/
 
 
     /**
-     * 가입정보 첫화면 초기 데이터 조회 로직을 해지 화면 서비스에서 직접 제공한다.
-     */
-    @Override
-    public Map<String, Object> getMyinfoView(HttpServletRequest request, MyPageSearchDto searchVO) {
-        logger.info("[해지] getMyinfoView 조회 시작 — ncn={}, ctn={}, custId={}", searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId());
-
-        // [ASIS] UserSessionDto 세션 의존 제거 — MSF TOBE 로그인은 USER_SESSION 세션 키를 사용하지 않음
-        UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = new java.util.ArrayList<>();
-
-        if (userSession != null && !StringUtils.isEmpty(userSession.getUserId())) {
-            logger.info("[해지] 세션 사용자 확인 — userId={}", userSession.getUserId());
-            cntrList = msfMypageSvc.selectCntrList(userSession.getUserId());
-            boolean fullMember = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
-            if (!fullMember) {
-                logger.warn("[해지] 정회원 체크 실패 — userId={}", userSession.getUserId());
-                throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
-            }
-        }
-
-        String userName = userSession != null ? userSession.getName() : StringUtil.NVL(searchVO.getUserName(), "");
-        String ncn = searchVO.getNcn();
-        String custId = searchVO.getCustId();
-        String ctn = searchVO.getCtn();
-        String contractNum = searchVO.getContractNum();
-        String modelName = StringUtil.NVL(searchVO.getModelName(), "-");
-
-        McpFarPriceDto mcpFarPriceDto = null;
-        String prvRateGrpNm = "-";
-        String rateAdsvcLteDesc = "- MB";
-        String rateAdsvcCallDesc = "- 분";
-        String rateAdsvcSmsDesc = "- 건";
-
-        try {
-            logger.info("[해지] 요금제 정보 조회 — contractNum={}", contractNum);
-            mcpFarPriceDto = msfMypageSvc.selectFarPricePlan(contractNum);
-            if (mcpFarPriceDto != null) {
-                prvRateGrpNm = mcpFarPriceDto.getPrvRateGrpNm();
-                logger.info("[해지] 요금제 정보 조회 완료 — prvRateGrpNm={}", prvRateGrpNm);
-
-                FarPricePlanResDto farPricePlanResDto = farPricePlanService.getFarPricePlanWrapper(mcpFarPriceDto);
-                rateAdsvcLteDesc = StringUtil.NVL(farPricePlanResDto.getRateAdsvcLteDesc(), "- MB");
-                rateAdsvcCallDesc = StringUtil.NVL(farPricePlanResDto.getRateAdsvcCallDesc(), "- 분");
-                rateAdsvcSmsDesc = StringUtil.NVL(farPricePlanResDto.getRateAdsvcSmsDesc(), "- 건");
-            }
-        } catch (SelfServiceException e) {
-            logger.info("[getMyinfoView] SelfServiceException: {}", e.getMessage());
-        } catch (Exception e) {
-            logger.info("[getMyinfoView] 요금제 상세 조회 실패: {}", e.getMessage());
-        }
-
-        String addr = "-";
-        String initActivationDate = "-";
-        String homeTel = "";
-        Map<String, Object> combinePayData = new HashMap<>();
-
-        try {
-            logger.info("[해지] perMyktfInfo(X01) 조회 — ncn={}, ctn={}, custId={}", ncn, ctn, custId);
-            MpPerMyktfInfoVO perMyktfInfo = msfMplatFormService.perMyktfInfo(ncn, ctn, custId);
-            if (perMyktfInfo != null) {
-                logger.info("[해지] perMyktfInfo(X01) 조회 결과 — addr={}, initActivationDate={}, email={}, homeTel={}",
-                    perMyktfInfo.getAddr(),
-                    perMyktfInfo.getInitActivationDate(),
-                    perMyktfInfo.getEmail(),
-                    perMyktfInfo.getHomeTel());
-                addr = StringUtil.NVL(perMyktfInfo.getAddr(), "-");
-                initActivationDate = StringUtil.NVL(perMyktfInfo.getInitActivationDate(), "-");
-                homeTel = StringUtil.NVL(perMyktfInfo.getHomeTel(), "");
-            } else {
-                logger.info("[해지] perMyktfInfo(X01) 조회 결과 — null");
-            }
-        } catch (SocketTimeoutException | SelfServiceException e) {
-            logger.warn("[getMyinfoView] perMyktfInfo 조회 실패: {}", e.getMessage());
-        }
-
-        try {
-            logger.info("[해지] 납부방법/명세서 조회 시작 — ncn={}, ctn={}", ncn, ctn);
-            MpFarChangewayInfoVO farChgWayInfo = msfMplatFormService.farChangewayInfo(ncn, ctn, custId);
-            if (farChgWayInfo != null) {
-                logger.info("[해지] farChangewayInfo(X23) 조회 결과 — payMethod={}, billCycleDueDay={}, payTmsCd={}, blBankAcctNo={}, prevCardNo={}, prevExpirDt={}, blAddr={}",
-                        logValue(farChgWayInfo.getPayMethod()),
-                        logValue(farChgWayInfo.getBillCycleDueDay()),
-                        logValue(farChgWayInfo.getPayTmsCd()),
-                        logValue(farChgWayInfo.getBlBankAcctNo()),
-                        logValue(farChgWayInfo.getPrevCardNo()),
-                        logValue(farChgWayInfo.getPrevExpirDt()),
-                        logValue(farChgWayInfo.getBlAddr()));
-            } else {
-                logger.info("[해지] farChangewayInfo(X23) 조회 결과 — null");
-            }
-            MpMoscBilEmailInfoInVO bilEmailInfo = null;
-            if (farChgWayInfo != null) {
-                bilEmailInfo = msfMplatFormService.kosMoscBillInfo(ncn, ctn, custId);
-                if (bilEmailInfo != null) {
-                    logger.info("[해지] kosMoscBillInfo(X49) 조회 결과 — billTypeCd={}, maskedEmail={}, ctn={}",
-                            logValue(bilEmailInfo.getBillTypeCd()),
-                            logValue(bilEmailInfo.getMaskedEmail()),
-                            logValue(bilEmailInfo.getCtn()));
-                } else {
-                    logger.info("[해지] kosMoscBillInfo(X49) 조회 결과 — null");
-                }
-            }
-            combinePayData = combinePayData(farChgWayInfo, bilEmailInfo);
-            logger.info("[해지] combinePayData 결과 — payData={}, billData={}",
-                    logMap(combinePayData.get("payData")),
-                    logMap(combinePayData.get("billData")));
-        } catch (SelfServiceException e) {
-            logger.warn("[getMyinfoView] 납부방법/명세서 조회 실패: {}", e.getMessage());
-            combinePayData = combinePayData(null, null);
-        } catch (Exception e) {
-            logger.warn("[getMyinfoView] 납부방법/명세서 조회 오류", e);
-            combinePayData = combinePayData(null, null);
-        }
-
-        String maskingSession = "";
-        if (userSession != null) {
-            maskingSession = SessionUtils.getMaskingSession() > 0 ? "Y" : "";
-        }
-        if ("Y".equals(maskingSession)) {
-            searchVO.setUserName(userSession.getName());
-
-            MaskingDto maskingDto = new MaskingDto();
-            long maskingRelSeq = SessionUtils.getMaskingSession();
-            maskingDto.setMaskingReleaseSeq(maskingRelSeq);
-            maskingDto.setUnmaskingInfo("이름,휴대폰번호,납부정보");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
-            maskingDto.setAccessUrl(request.getRequestURI());
-            maskingDto.setUserId(userSession.getUserId());
-            maskingDto.setCretId(userSession.getUserId());
-            maskingDto.setAmdId(userSession.getUserId());
-            maskingSvc.insertMaskingReleaseHist(maskingDto);
-        } else {
-            searchVO.setUserName(StringMakerUtil.getName(userName));
-            // [ASIS] addr 뒤 별표 마스킹 — TOBE에서 제외
-            // if (!"-".equals(addr)) { addr += "********"; }
-        }
-
-        String remindBlckYn = "";
-        try {
-            McpUserCntrMngDto selectSocDesc = msfMypageSvc.selectSocDesc(contractNum);
-            if (selectSocDesc != null
-                    && "Y".equals(selectSocDesc.getRemindYn())
-                    && !StringUtils.isEmpty(selectSocDesc.getRemindProdType())) {
-                remindBlckYn = "Y";
-            }
-        } catch (Exception e) {
-            logger.warn("[getMyinfoView] socDesc 조회 실패: {}", e.getMessage());
-        }
-
-        HashMap<String, Object> rtnMap = new HashMap<>();
-        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-        rtnMap.put("cntrList", cntrList);
-        rtnMap.put("searchVO", searchVO);
-        rtnMap.put("modelName", modelName);
-        rtnMap.put("prvRateGrpNm", prvRateGrpNm);
-        rtnMap.put("rateAdsvcLteDesc", rateAdsvcLteDesc);
-        rtnMap.put("rateAdsvcCallDesc", rateAdsvcCallDesc);
-        rtnMap.put("rateAdsvcSmsDesc", rateAdsvcSmsDesc);
-        rtnMap.put("initActivationDate", initActivationDate);
-        rtnMap.put("addr", addr);
-        rtnMap.put("homeTel", homeTel);
-        rtnMap.put("payData", combinePayData.get("payData"));
-        rtnMap.put("billData", combinePayData.get("billData"));
-        rtnMap.put("maskingBtn", "Y");
-        rtnMap.put("maskingSession", maskingSession);
-        rtnMap.put("remindBlckYn", remindBlckYn);
-        logger.info("[해지] getMyinfoView 조회 완료 — ncn={}, ctn={}, prvRateGrpNm={}, remindBlckYn={}", ncn, ctn, prvRateGrpNm, remindBlckYn);
-        return rtnMap;
-    }
-
-    /**
-     * X23 납부방법과 X49 명세서 정보를 화면 응답 구조로 조합한다.
-     */
-    private Map<String, Object> combinePayData(
-            MpFarChangewayInfoVO farChgWayInfo,
-            MpMoscBilEmailInfoInVO bilEmailInfo
-    ) {
-        Map<String, Object> rtnMap = new HashMap<>();
-        Map<String, String> payData = new HashMap<>();
-        Map<String, String> billData = new HashMap<>();
-
-        if (farChgWayInfo == null) {
-            rtnMap.put("payData", null);
-            rtnMap.put("billData", null);
-            return rtnMap;
-        }
-
-        String payMethod = StringUtil.NVL(farChgWayInfo.getPayMethod(), "-");
-        String blAddr = StringUtil.NVL(farChgWayInfo.getBlAddr(), "-");
-        String blBankAcctNo = StringUtil.NVL(farChgWayInfo.getBlBankAcctNo(), "-");
-        String prevCardNo = StringUtil.NVL(farChgWayInfo.getPrevCardNo(), "-");
-        String prevExpirDt = StringUtil.NVL(farChgWayInfo.getPrevExpirDt(), "-");
-        String billCycleDueDay = StringUtil.NVL(farChgWayInfo.getBillCycleDueDay(), "-");
-        String payTmsCd = StringUtil.NVL(farChgWayInfo.getPayTmsCd(), "-");
-
-        boolean giro = "지로".equals(payMethod);
-
-        if ("99".equals(billCycleDueDay)) {
-            billCycleDueDay = "말일";
-        } else if (!"-".equals(billCycleDueDay)) {
-            billCycleDueDay += "일";
-        }
-
-        if ("01".equals(payTmsCd)) {
-            payTmsCd = "1회차(11일경)";
-        } else {
-            payTmsCd = "2회차(20일경)";
-        }
-
-        if (7 < prevExpirDt.length()) {
-            prevExpirDt = prevExpirDt.substring(0, 4) + "-" + prevExpirDt.substring(4, 6) + "-" + prevExpirDt.substring(6, 8);
-        }
-
-        payData.put("payMethod", payMethod);
-        payData.put("blBankAcctNo", blBankAcctNo);
-        payData.put("billCycleDueDay", billCycleDueDay);
-        payData.put("prevCardNo", prevCardNo);
-        payData.put("prevExpirDt", prevExpirDt);
-        payData.put("payTmsCd", payTmsCd);
-
-        if (bilEmailInfo == null) {
-            rtnMap.put("payData", payData);
-            rtnMap.put("billData", null);
-            return rtnMap;
-        }
-
-        String billTypeCd = StringUtil.NVL(bilEmailInfo.getBillTypeCd(), "");
-        String reqType = "-";
-        String reqTypeNm = "";
-        String blaAddr = "-";
-
-        if ("CB".equals(billTypeCd)) {
-            reqType = "이메일 명세서";
-        } else if ("LX".equals(billTypeCd)) {
-            reqType = "우편 명세서";
-        } else if ("MB".equals(billTypeCd)) {
-            reqType = "모바일 명세서(MMS)";
-        }
-
-        if (!giro) {
-            if ("CB".equals(billTypeCd)) {
-                reqTypeNm = "메일주소";
-                blaAddr = StringUtil.NVL(bilEmailInfo.getMaskedEmail(), "-");
-            } else if ("MB".equals(billTypeCd)) {
-                reqTypeNm = "휴대폰 번호";
-                blaAddr = StringUtil.NVL(bilEmailInfo.getCtn(), "-");
-            } else {
-                reqTypeNm = "청구지";
-            }
-        } else {
-            reqTypeNm = "청구지";
-            blaAddr = blAddr;
-        }
-
-        billData.put("reqType", reqType);
-        billData.put("reqTypeNm", reqTypeNm);
-        billData.put("blaAddr", blaAddr);
-        billData.put("billTypeCd", billTypeCd);
-
-        rtnMap.put("payData", payData);
-        rtnMap.put("billData", billData);
-        return rtnMap;
-    }
-
-    /**
-     * Enriches ctn/custId from ncn before calling MP charge APIs.
-     * TEST_SKIP validation behavior is intentionally preserved for screen tests.
+     * 계약번호(ncn)로 회선 정보를 보강한 뒤 X18 잔여요금과 위약금/잔여할부 정보를 조회한다.
+     * 외부 연동 완료 전까지 화면 테스트용 mock 금액 보정은 유지한다.
      */
     @Override
     public TerminationRemainChargeResVO getRemainCharge(TerminationRemainChargeReqDto reqDto) {
@@ -388,14 +92,14 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         reqDto.setCtn(cntrInfo.getCntrMobileNo());
         reqDto.setCustId(cntrInfo.getCustId());
 
-        // AS-IS getRealTimePriceAjax와 동일한 X18 실시간 잔여 요금 조회 흐름이다.
+        // AS-IS getRealTimePriceAjax와 동일한 X18 실시간 잔여요금 조회 흐름이다.
         logger.debug("[getRemainCharge] start: ncn={}, ctn={}, custIdPresent={}",
-                safe(reqDto.getNcn()), maskPhone(reqDto.getCtn()), !isBlank(reqDto.getCustId()));
+            safe(reqDto.getNcn()), maskPhone(reqDto.getCtn()), !isBlank(reqDto.getCustId()));
 
         TerminationRemainChargeResVO resVO = new TerminationRemainChargeResVO();
         try {
             MpFarRealtimePayInfoVO mpVO = msfMplatFormService.farRealtimePayInfo(
-                    reqDto.getNcn(), reqDto.getCtn(), reqDto.getCustId());
+                reqDto.getNcn(), reqDto.getCtn(), reqDto.getCustId());
 
             if (mpVO == null) {
                 resVO.setSuccess(false);
@@ -422,7 +126,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             }
             resVO.setItems(items);
             logger.info("[getRemainCharge] X18 success: ncn={}, itemCount={}, sumAmt={}",
-                    safe(reqDto.getNcn()), items.size(), safe(resVO.getSumAmt()));
+                safe(reqDto.getNcn()), items.size(), safe(resVO.getSumAmt()));
 
             // 화면 응답에 AS-IS requestView의 위약금 블록 결과를 포함한다.
             TerminationSettlementDto settlement = getTerminationSettlement(reqDto);
@@ -455,10 +159,10 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             return;
         }
 
-        // Temporary mock data before external integrations are ready
+        // 외부 연동 완료 전까지 임시 mock 데이터를 반환한다.
         resVO.setSearchDay("20260416");
         resVO.setSearchTime("101500");
-        resVO.setSumAmt("15870"); // usage fee
+        resVO.setSumAmt("15870"); // 사용요금
 
         List<TerminationRemainChargeResVO.FareItem> items = new ArrayList<>();
         TerminationRemainChargeResVO.FareItem usageFare = new TerminationRemainChargeResVO.FareItem();
@@ -474,9 +178,9 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         }
 
         settlement.setPrePayment(false);
-        settlement.setTrmnForecBprmsAmt("42000"); // penalty fee
-        settlement.setRtrnAmtAndChageDcAmt("57870"); // settlement amount
-        settlement.setInstallmentAmt("180000"); // installment amount
+        settlement.setTrmnForecBprmsAmt("42000"); // 위약금
+        settlement.setRtrnAmtAndChageDcAmt("57870"); // 최종 정산요금
+        settlement.setInstallmentAmt("180000"); // 잔여할부금
         settlement.setRemainPay(180000);
         settlement.setRemainMonth(6);
 
@@ -484,25 +188,25 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     }
 
     /**
-     * settlement DTO → 잔여요금 응답 단일 필드 세팅
+     * 위약금/잔여할부 조회 결과를 화면 응답 필드에 맞춰 반영한다.
      */
     private void applySettlementFields(TerminationRemainChargeResVO resVO, TerminationSettlementDto settlement) {
         if (resVO == null || settlement == null) {
             return;
         }
-        resVO.setPenaltyFee(settlement.getTrmnForecBprmsAmt());          // 위약금
-        resVO.setSettlementFee(settlement.getRtrnAmtAndChageDcAmt());    // 정산요금
-        resVO.setRemainPeriod(String.valueOf(settlement.getRemainMonth())); // 상환기간(개월)
-        resVO.setRemainAmount(String.valueOf(settlement.getRemainPay())); // 금액(잔여할부)
+        resVO.setPenaltyFee(settlement.getTrmnForecBprmsAmt()); // 위약금
+        resVO.setSettlementFee(settlement.getRtrnAmtAndChageDcAmt()); // 최종 정산요금
+        resVO.setRemainPeriod(String.valueOf(settlement.getRemainMonth())); // 잔여할부 기간(개월)
+        resVO.setRemainAmount(String.valueOf(settlement.getRemainPay())); // 잔여할부 금액
     }
 
     /**
-     * AS-IS(MyOllehController requestView 위약금 블록) 분리 함수.
-     * SRM18062741675 기준으로 X54/X16/mspAddInfo 흐름
+     * AS-IS MyOllehController requestView의 위약금 블록을 분리한 함수다.
+     * SRM18062741675 기준으로 X54/X16/mspAddInfo 조회 흐름을 유지한다.
      */
     private TerminationSettlementDto getTerminationSettlement(TerminationRemainChargeReqDto reqDto) {
-        // SRM18062741675 / AS-IS(MyOllehController requestView 위약금 블록) 이관
-        // 순서: 선불 여부 -> X54 -> (saleEngtNm 존재 시) X16 + mspAddInfo
+        // SRM18062741675 / AS-IS MyOllehController requestView 위약금 블록 이관
+        // 조회 순서: 선불 여부 확인 -> X54 -> (saleEngtNm 존재 시) X16 + mspAddInfo
         if (reqDto == null) {
             return null;
         }
@@ -512,20 +216,20 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             String ctn = reqDto.getCtn();
             String custId = reqDto.getCustId();
 
-            // 1) 선불 요금제 여부 확인
+            // 1) 선불요금제 사용 여부 확인
             boolean prePayment = isPrePayment(ncn);
             settlement.setPrePayment(prePayment);
             if (prePayment) {
                 return settlement;
             }
 
-            // 2) 스폰서/위약금 조회(X54)
+            // 2) 스폰서 약정 정보 조회(X54)
             MpMoscSpnsrItgInfoInVO moscSpnsrItgInfo = msfMplatFormService.kosMoscSpnsrItgInfo(ncn, ctn, custId);
             if (moscSpnsrItgInfo == null) {
                 return settlement;
             }
 
-            // AS-IS와 동일하게 null 값은 "0"으로 보정
+            // AS-IS와 동일하게 null 값을 "0"으로 보정
             if (StringUtil.isEmpty(moscSpnsrItgInfo.getChageDcAmt())) moscSpnsrItgInfo.setChageDcAmt("0");
             if (StringUtil.isEmpty(moscSpnsrItgInfo.getTrmnForecBprmsAmt())) moscSpnsrItgInfo.setTrmnForecBprmsAmt("0");
             if (StringUtil.isEmpty(moscSpnsrItgInfo.getRtrnAmtAndChageDcAmt()))
@@ -533,7 +237,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             if (StringUtil.isEmpty(moscSpnsrItgInfo.getChageDcAmtSuprtRtrnAmt()))
                 moscSpnsrItgInfo.setChageDcAmtSuprtRtrnAmt("0");
 
-            // X54 응답값을 settlement DTO로 매핑
+            // X54 응답값을 settlement DTO에 매핑
             settlement.setSaleEngtNm(moscSpnsrItgInfo.getSaleEngtNm());
             settlement.setSaleEngtOptnCd(moscSpnsrItgInfo.getSaleEngtOptnCd());
             settlement.setTrmnForecBprmsAmt(moscSpnsrItgInfo.getTrmnForecBprmsAmt());
@@ -546,24 +250,24 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             settlement.setEngtExpirPamDate(moscSpnsrItgInfo.getEngtExpirPamDate());
             settlement.setEngtRmndDate(moscSpnsrItgInfo.getEngtRmndDate());
 
-            // 3) saleEngtNm 존재 시에만 잔여 할부금(X16), 할부원금(mspAddInfo) 조회
-            //TEST_SKIP if (StringUtil.isNotBlank(moscSpnsrItgInfo.getSaleEngtNm())) {
+            // 3) saleEngtNm 존재 시 잔여 할부금(X16), 잔여할부 기간(mspAddInfo) 조회
+            // TEST_SKIP: 외부 연동 완료 전까지 saleEngtNm 조건을 우회한다.
             try {
-                // X16 조회를 위한 최신 청구월 정보 조회(X15)
+                // X16 조회에 필요한 최신 청구정보 조회(X15)
                 logger.debug("[getTerminationSettlement_X15 farMonBillingInfoDto request: ncn={}", safe(ncn));
                 MpFarMonBillingInfoDto billInfo = msfMplatFormService.farMonBillingInfoDto(
-                        ncn, ctn, custId, DateTimeUtil.getFormatString("yyyyMM"));
+                    ncn, ctn, custId, DateTimeUtil.getFormatString("yyyyMM"));
 
                 if (billInfo != null && billInfo.getMonthList() != null && !billInfo.getMonthList().isEmpty()) {
                     MpMonthPayMentDto monthPay = billInfo.getMonthList().get(0);
                     // 요금조회 상세(X16) - 잔여 할부금
                     MpFarMonDetailInfoDto farMonDetailInfoDto = msfMplatFormService.farMonDetailInfoDto(
-                            ncn, ctn, custId,
-                            monthPay.getBillSeqNo(),
-                            monthPay.getBillDueDateList(),
-                            monthPay.getBillMonth(),
-                            monthPay.getBillStartDate(),
-                            monthPay.getBillEndDate());
+                        ncn, ctn, custId,
+                        monthPay.getBillSeqNo(),
+                        monthPay.getBillDueDateList(),
+                        monthPay.getBillMonth(),
+                        monthPay.getBillStartDate(),
+                        monthPay.getBillEndDate());
                     if (farMonDetailInfoDto != null) {
                         if (StringUtil.isEmpty(farMonDetailInfoDto.getInstallmentAmt())) {
                             farMonDetailInfoDto.setInstallmentAmt("0");
@@ -578,15 +282,15 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             }
 
             try {
-                // 할부원금 조회(MSP_JUO_ADD_INFO)
-                // [ASIS] MyOllehController.requestView() — mcp-api REST 직접 호출
+                // 잔여할부 기간 조회(MSP_JUO_ADD_INFO)
+                // [AS-IS] MyOllehController.requestView()에서는 mcp-api REST를 직접 호출했다.
                 //   RestTemplate restTemplate = new RestTemplate();
                 //   mspJuoAddInfoDto = restTemplate.postForObject(apiInterfaceServer + "/mypage/mspAddInfo", searchVO.getNcn(), MspJuoAddInfoDto.class);
-                // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패 시 MspApiDirectRepository(mspSqlSession)로 자동 전환
+                // [TOBE] McpApiClient.post()에서 use-mcp 정책/연결 실패 시 MspApiDirectRepository(mspSqlSession)로 자동 전환한다.
                 logger.debug("[getTerminationSettlement] mspAddInfo request: ncn={}", safe(ncn));
                 MspJuoAddInfoDto mspJuoAddInfoDto = mcpApiClient.post("/mypage/mspAddInfo", ncn, MspJuoAddInfoDto.class);
                 logger.debug("[getTerminationSettlement] mspAddInfo response: ncn={}, hasBody={}",
-                        safe(ncn), mspJuoAddInfoDto != null);
+                    safe(ncn), mspJuoAddInfoDto != null);
                 if (mspJuoAddInfoDto != null) {
                     settlement.setInstOrginAmnt(mspJuoAddInfoDto.getInstOrginAmnt());
                     settlement.setInstMnthCnt(mspJuoAddInfoDto.getInstMnthCnt());
@@ -597,28 +301,27 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             } catch (Exception e) {
                 logger.warn("[getTerminationSettlement] mspAddInfo error: ncn={}", safe(ncn), e);
             }
-            //}
         } catch (Exception e) {
             logger.warn("[getTerminationSettlement] error: ncn={}, ctn={}",
-                    safe(reqDto.getNcn()), safe(reqDto.getCtn()), e);
+                safe(reqDto.getNcn()), safe(reqDto.getCtn()), e);
         }
         return settlement;
     }
 
     /**
-     * 선불 요금제 사용 여부 조회 (AS-IS /mypage/prePayment MCP-API 연계구현 )
+     * 선불요금제 사용 여부를 조회한다.
      *
      * @param contractNum 계약번호
-     * @return 선불 요금제 여부
+     * @return 선불요금제 여부
      */
     private boolean isPrePayment(String contractNum) {
         logger.debug("[isPrePayment] call: contractNum={}", safe(contractNum));
 
-        // [ASIS] MypageController.prePayment() — mcp-api REST 직접 호출 후 MSP DB 조회
-        //   POST /mypage/prePayment  →  mypageMapper.selectPrePayment(contractNum)
+        // [AS-IS] MypageController.prePayment()은 mcp-api REST를 직접 호출해 MSP DB를 조회했다.
+        //   POST /mypage/prePayment -> mypageMapper.selectPrePayment(contractNum)
         //   RestTemplate restTemplate = new RestTemplate();
         //   int cnt = restTemplate.postForObject(apiInterfaceServer + "/mypage/prePayment", contractNum, int.class);
-        // [TOBE] McpApiClient.post() — use-mcp 정책·연결실패(TEST) MspApiDirectRepository(mspSqlSession)로 자동 전환
+        // [TOBE] McpApiClient.post()에서 use-mcp 정책/연결 실패(TEST) 시 MspApiDirectRepository(mspSqlSession)로 자동 전환한다.
         int cnt = mcpApiClient.post("/mypage/prePayment", contractNum, int.class);
 
         logger.debug("[isPrePayment] result: cnt={}", cnt);
@@ -626,7 +329,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     }
 
     /**
-     * 신청 완료 요청의 처리 시간과 결과 로그를 남기고 실제 저장 처리는 apply에 위임한다.
+     * 작성완료 요청 처리 시간과 결과를 로깅하고 실제 저장 처리는 apply에 위임한다.
      */
     @Override
     public TerminationApplyResVO complete(String applicationKey, TerminationApplyReqDto reqDto) {
@@ -640,33 +343,33 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
 
         if (res != null && res.isSuccess()) {
             logger.info("서비스해지 작성완료 결과: applicationKey={}, ncn={}, success={}, applicationNo={}, elapsedMs={}",
-                    safe(applicationKey), ncn, true, res.getApplicationNo(), elapsed);
+                safe(applicationKey), ncn, true, res.getApplicationNo(), elapsed);
         } else {
             String message = res != null ? res.getMessage() : "null response";
             logger.warn("서비스해지 작성완료 실패: applicationKey={}, ncn={}, success={}, message={}, elapsedMs={}",
-                    safe(applicationKey), ncn, false, message, elapsed);
+                safe(applicationKey), ncn, false, message, elapsed);
         }
 
         return res;
     }
 
     /**
-     * 해지 신청 데이터를 smartform(MSF) 테이블에 먼저 저장하고,
-     * 저장된 데이터를 다시 조회해 MCP DB link 테이블로 동기화한다.
+     * 서비스해지 신청 데이터를 smartform(MSF) 테이블에 먼저 저장하고,
+     * 저장된 데이터를 다시 조회해 MCP DB link 테이블로 이관한다.
      */
     @Override
     public TerminationApplyResVO apply(TerminationApplyReqDto reqDto) {
         logger.info("[apply] start: ncn={}, customerType={}, postMethod={}, isActive={}",
-                reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
-                reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getCustomerType()) : "",
-                reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getPostMethod()) : "",
-                reqDto != null && reqDto.getProduct() != null ? safe(reqDto.getProduct().getIsActive()) : "");
+            reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
+            reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getCustomerType()) : "",
+            reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getPostMethod()) : "",
+            reqDto != null && reqDto.getProduct() != null ? safe(reqDto.getProduct().getIsActive()) : "");
 
         String validationMessage = validateApplyRequest(reqDto);
         if (!isBlank(validationMessage)) {
             logger.warn("[apply] validation failed: ncn={}, reason={}",
-                    reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
-                    validationMessage);
+                reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
+                validationMessage);
             return TerminationApplyResVO.fail(validationMessage);
         }
 
@@ -694,30 +397,30 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         }
 
         String cancelMobileNo = joinPhone(
-                reqDto.getCustomer().getCancelPhone1(),
-                reqDto.getCustomer().getCancelPhone2(),
-                reqDto.getCustomer().getCancelPhone3()
+            reqDto.getCustomer().getCancelPhone1(),
+            reqDto.getCustomer().getCancelPhone2(),
+            reqDto.getCustomer().getCancelPhone3()
         );
         String receiveMobileNo = joinPhone(
-                reqDto.getCustomer().getAfterTel1(),
-                reqDto.getCustomer().getAfterTel2(),
-                reqDto.getCustomer().getAfterTel3()
+            reqDto.getCustomer().getAfterTel1(),
+            reqDto.getCustomer().getAfterTel2(),
+            reqDto.getCustomer().getAfterTel3()
         );
 
         if (isBlank(cancelMobileNo)) {
             logger.warn("[apply] fail: cancelMobileNo is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            TerminationApplyResVO.fail("해지 대상 전화번호를 입력해 주세요.");
+            return TerminationApplyResVO.fail("해지 대상 전화번호를 입력해 주세요.");
         }
         if (isBlank(receiveMobileNo)) {
             logger.warn("[apply] fail: receiveMobileNo is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            TerminationApplyResVO.fail("해지 후 연락처를 입력해 주세요.");
+            return TerminationApplyResVO.fail("해지 후 연락처를 입력해 주세요.");
         }
         logger.debug("[apply] contact normalized: ncn={}, cancelMobileNo={}, receiveMobileNo={}",
-                safe(reqDto.getCustomer().getNcn()), maskPhone(cancelMobileNo), maskPhone(receiveMobileNo));
+            safe(reqDto.getCustomer().getNcn()), maskPhone(cancelMobileNo), maskPhone(receiveMobileNo));
 
         if (isLocal()) {
             logger.info("[apply] LOCAL mode shortcut: ncn={}", safe(reqDto.getCustomer().getNcn()));
-            TerminationApplyResVO.ok("LOCAL-CANCEL-" + System.currentTimeMillis());
+            return TerminationApplyResVO.ok("LOCAL-CANCEL-" + System.currentTimeMillis());
         }
 
         try {
@@ -729,16 +432,16 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             logger.debug("[apply] request key generated: requestKey={}, ncn={}", requestKey, safe(reqDto.getCustomer().getNcn()));
 
             MsfRequestCancelVo vo = toMsfRequestCancelVo(
-                    requestKey,
-                    reqDto,
-                    cstmrTypeCd,
-                    receiveWayCd,
-                    cancelMobileNo
+                requestKey,
+                reqDto,
+                cstmrTypeCd,
+                receiveWayCd,
+                cancelMobileNo
             );
 
             logger.debug("[apply] insert payload ready: requestKey={}, ncn={}, customerTypeCd={}, receiveWayCd={}, cancelUseCompanyCd={}, payAmt={}, pnltAmt={}, lastSumAmt={}",
-                    requestKey, safe(vo.getContractNum()), safe(vo.getCstmrTypeCd()), safe(vo.getReceiveWayCd()),
-                    safe(vo.getCancelUseCompanyCd()), vo.getPayAmt(), vo.getPnltAmt(), vo.getLastSumAmt());
+                requestKey, safe(vo.getContractNum()), safe(vo.getCstmrTypeCd()), safe(vo.getReceiveWayCd()),
+                safe(vo.getCancelUseCompanyCd()), vo.getPayAmt(), vo.getPnltAmt(), vo.getLastSumAmt());
 
             int inserted = msfRequestRepository.insertMsfRequestCancel(vo);
             if (inserted <= 0) {
@@ -774,14 +477,14 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     }
 
     /**
-     * 화면 입력 DTO를 서비스해지 신청 저장 VO로 변환한다.
+     * 화면 입력 DTO를 서비스해지 신청 VO로 변환한다.
      */
     private MsfRequestCancelVo toMsfRequestCancelVo(
-            Long requestKey,
-            TerminationApplyReqDto reqDto,
-            String cstmrTypeCd,
-            String receiveWayCd,
-            String cancelMobileNo
+        Long requestKey,
+        TerminationApplyReqDto reqDto,
+        String cstmrTypeCd,
+        String receiveWayCd,
+        String cancelMobileNo
     ) {
         TerminationApplyReqDto.Customer customer = reqDto.getCustomer();
         TerminationApplyReqDto.Product product = reqDto.getProduct();
@@ -834,12 +537,12 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     }
 
     /**
-     * 화면 고객 정보를 신청 고객 저장 VO로 변환한다.
+     * 화면 고객 정보를 신청 고객 VO로 변환한다.
      */
     private MsfRequestCstmrVo toMsfRequestCstmrVo(
-            Long requestKey,
-            TerminationApplyReqDto reqDto,
-            String cstmrTypeCd
+        Long requestKey,
+        TerminationApplyReqDto reqDto,
+        String cstmrTypeCd
     ) {
         TerminationApplyReqDto.Customer customer = reqDto.getCustomer();
 

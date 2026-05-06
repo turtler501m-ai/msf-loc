@@ -126,6 +126,20 @@ java -jar app-boot/build/libs/app-boot-1.0.0.jar
 DB: `localhost:5432/msf` (user: postgres / pw: postgres 또는 `application-private.yaml`에서 설정)
 테이블은 기존 테이블 생성된 것으로 개발. 테이블 레이아웃 수정 시 반드시 확인절차를 거칠 것.
 
+### MCP/MSP DB 접속 정보
+
+```properties
+# MCP DB
+jdbc.url=jdbc:oracle:thin:@10.220.71.231:1521:MCPDEVRN
+jdbc.username=MCP_WAS
+jdbc.password=ktmm0601!!
+
+# MSP DB
+jdbc.url=jdbc:oracle:thin:@10.220.71.231:2521:MSPDEV
+jdbc.username=MSP_WAS
+jdbc.password=ktmm0601!!
+```
+
 ### Frontend
 
 ```bash
@@ -346,4 +360,20 @@ ASIS Mapper SQL 포팅 시 테이블 출처에 따라 처리 방법이 다르다
 예시: `NMCP_CUST_REQUEST_MST` → `MSF_CUST_REQUEST_MST` / `MCP_REQUEST` → `MSF_REQUEST` / `MSP_INTM_INSR_MST` → `MSP_INTM_INSR_MST@DL_MSP`
 
 전체 테이블 매핑 목록: `.doc/reference/테이블매핑_20260319.md` 참조
+
+## MSF-LOC -> MSF-GIT 머지 작업 주의
+
+- `C:\MSF-LOC\workspace` 변경분을 `C:\MSF-GIT\workspace`로 반영할 때 PowerShell `>` 리다이렉션, `Set-Content`, `[IO.File]::WriteAllText()` 기본 인코딩으로 소스 파일을 쓰지 말 것.
+- 이전 머지 중 `git merge-file -p ... > file`/PowerShell 문자열 쓰기로 Java/Vue/JS 파일이 `UTF-16LE`(`FF FE`)로 저장되어 `unmappable character (0xFF) for encoding UTF-8` 컴파일 오류가 발생한 적이 있음.
+- 3-way merge 결과를 파일로 쓸 때는 byte-safe 방식 사용:
+  - `cmd /c "git -C <repo> show HEAD:<path> > <tmpfile>"`처럼 Git blob을 바이트로 추출
+  - `git merge-file <targetTmp> <baseTmp> <locTmp>`처럼 `-p` 리다이렉션 없이 대상 임시 파일을 직접 갱신
+  - 결과는 `Copy-Item`으로 대상 파일에 복사
+- 불가피하게 직접 텍스트를 써야 하면 반드시 UTF-8 no BOM 명시:
+  - `[IO.File]::WriteAllText($path, $text, [Text.UTF8Encoding]::new($false))`
+- 머지 후 반드시 확인:
+  - 변경 파일 첫 2바이트가 `FF FE`/`FE FF`가 아닌지 검사
+  - NUL 패턴(`$bytes[1] -eq 0`) 검사
+  - `rg -n "^(<<<<<<<|=======|>>>>>>>)" ...`로 충돌 마커 검사
+  - 백엔드는 `.\gradlew.bat :domains:form:compileJava` 실행
 

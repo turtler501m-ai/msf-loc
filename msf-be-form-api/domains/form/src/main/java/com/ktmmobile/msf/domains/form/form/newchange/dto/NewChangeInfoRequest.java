@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * 신규/변경 신청서 insert 및 update request parameter 정의
  * 2026.04.
@@ -15,6 +17,8 @@ import lombok.Setter;
 public class NewChangeInfoRequest {
 
     String tmpStepCd; //임시저장 단계
+
+    List<NewChangeAdditionRequest> additionList;
 
     Long requestKey;
     String cretIp;

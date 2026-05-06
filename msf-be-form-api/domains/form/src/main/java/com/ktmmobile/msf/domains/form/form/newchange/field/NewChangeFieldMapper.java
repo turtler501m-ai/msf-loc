@@ -29,6 +29,7 @@ public interface NewChangeFieldMapper {
     @Mapping(target = ".", source = "msfRequestSaleVo")
     @Mapping(target = ".", source = "msfRequestBillReqVo")
     @Mapping(target = ".", source = "msfRequestMoveVo")
+    @Mapping(target = "additionList", source = "msfRequestAdditionVo")
     @Mapping(target = "requestKey", source = "msfRequestVo.requestKey")
     @Mapping(target = "cstmrEmailAdr", source = "msfRequestCstmrVo.cstmrEmailAdr")
     NewChangeInfoResponse toNewChangeInfoResponse(MsfRequestRecord record);
@@ -55,6 +56,7 @@ public interface NewChangeFieldMapper {
     //NewChangeInfoRequest ~> MSF_REQUEST_DVC_CHG_TEMP
     MsfRequestDvcChgVo toMsfRequestDvcChgVo(NewChangeInfoRequest request); //MSF_REQUEST
 
+    //NewChangeInfoRequest ~> MSF_REQUEST_ADDITION_TEMP
     MsfRequestAdditionVo toMsfRequestAdditionVo(NewChangeInfoRequest request);
 
 

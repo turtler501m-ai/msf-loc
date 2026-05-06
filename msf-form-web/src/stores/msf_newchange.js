@@ -19,6 +19,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     cstmrTypeCd: 'NA',
     identityCertTypeCd: 'K',
     identityTypeCd: '',
+    identityTypeNm: '', // 스캔된 신분증 명칭 추가
     identityIssuRegion: 'licenseRegion1',
     identityIssuDate: '', // 신분증 발급일자 추가
     selfIssuNo: '', // 자가발급번호 추가
@@ -68,7 +69,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     repAgree: false,
     realUserName: '',
     userBirthDate: '',
-    userGender: '',
+    userGender: 'userGender1',
     // 법정대리인 상세 (DTO 기반)
     minorAgentNm: '',
     minorAgentRrn: '',
@@ -113,8 +114,9 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     contractPeriod: '',
     installmentMonth: '',
     discountType: '',
-    planName1: '',
-    planName2: '',
+    prodCtgId: '',
+    prodId: '',
+    prodNm: '',
     agency: '',
     termsAgreed: false,
     // 관리 정보 (DTO 기반)
@@ -167,31 +169,14 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     appBlckAgrmYn: 'N', // 청소년유해매체차단동의여부 (필수)
     blckAppDivCd: '', // 청소년유해매체차단APP구분코드 (필수)
     soTrnsAgrmYn: 'N', // 사업이관동의여부
-    clauseJehuJehuYn: 'N', // 제휴서비스동의여부 (선택)
-    clauseRentalModelCpYn: 'N', // 단말배상금안내사항여부 (필수)
-    clauseRentalModelCpPrYn: 'N', // 단말배상금(부분파손)안내사항여부 (필수)
-    clauseRentalServiceYn: 'N', // 중고렌탈프로그램서비스이용에대한동의서여부 (필수)
-    clauseMpps35Mpps35Yn: 'N', // 선불MPPS요금제동의여부 (필수)
-    clauseFinanceFinanceYn: 'N', // 금융제휴약관동의여부 (필수)
-    clause5GCoverageYn: 'N', // 5G커버리지확인및가입동의여부 (필수)
-    personalInfoCollectAgreeYn: 'N', // 고객혜택제공을위한개인정보수집및이용관련동의여부 (선택)
-    othersTrnsAgreeYn: 'N', // 혜택제공을위한제3자제공동의(M모바일)여부 (선택)
-    clauseSensiCollectYn: 'N', // 민감정보수집동의여부 (필수)
-    clauseSensiOfferYn: 'N', // 민감정보제공동의여부 (필수)
-    clausePartnerOfferYn: 'N', // 약관제휴사제공동의여부
-    othersTrnsKtAgreeYn: 'N', // 혜택제공을위한제3자제공동의(KT)여부 (선택)
-    othersAdReceiveAgreeYn: 'N', // 제3자제공관련광고수신동의여부 (선택)
-    ktCounselAgreeYn: 'N', // 인터넷가입상담을위한개인정보제3자제공동의여부 (선택)
-    combineSoloTypeYn: 'N', // 아무나솔로결합신청여부
-    combineSoloSoloYn: 'N', // 아무나솔로결합동의여부
     moveRefundAgreeYn: 'N', // 번호이동정보미환급액요금상계동의여부 (필수)
+    clauseJehuJehuYn: 'N', // 제휴서비스동의여부 (선택)
 
     // API 전달용 특별 YN 필드 추가 (불리언으로 이미 선언되지 않은 것들)
     clauseMoveCode: 'N',
     clauseFathFlag01: 'N',
     clauseFathFlag02: 'N',
     clause5gCoverage: 'N',
-    clauseJehuFlag: 'N',
     clausePartnerOfferFlag: 'N',
     personalLocationAgreeYn: 'N',
     clauseInfo01: 'N',
@@ -206,7 +191,6 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     CLAUSE_REQUIRED_06: false,
     CLAUSE_REQUIRED_07: false,
     CLAUSE_REQUIRED_5G: false,
-    CLAUSE_PARTNER_01: false,
     CLAUSE_PARTNER_02: false,
     CLAUSE_SELECT_03: false,
     CLAUSE_SELECT_01: false,
@@ -275,6 +259,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     recCat2: '',
     // 제휴 정보 추가
     jehuPartnerTypeCd: '',
+    jehuPartnerTypeNm: '',
     jehuProdTypeCd: '',
     // 판매 정책 정보 (DTO 기반)
     modelId: '',
@@ -382,12 +367,59 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     requiredDocs: false,
   })
 
+  // 고객 유형 변경 시 정보 초기화
+  watch(
+    () => customer.value.cstmrTypeCd,
+    () => {
+      // 저장된 경우가 아니면 고객 유형 변경 시 데이터 및 인증 상태 초기화
+      if (!customer.value.isSaved) {
+        // 공통 가입자 정보 초기화
+        customer.value.cstmrNm = ''
+        customer.value.cstmrNativeRrn1 = ''
+        customer.value.cstmrNativeRrn2 = ''
+        customer.value.cstmrForeignerRrn1 = ''
+        customer.value.cstmrForeignerRrn2 = ''
+        customer.value.cstmrJuridicalRrn1 = ''
+        customer.value.cstmrJuridicalRrn2 = ''
+        customer.value.cstmrJuridicalBizNo1 = ''
+        customer.value.cstmrJuridicalBizNo2 = ''
+        customer.value.cstmrJuridicalBizNo3 = ''
+        customer.value.cstmrJuridicalRepNm = ''
+        customer.value.upjnCd = ''
+        customer.value.bcuSbst = ''
+
+        // 법정대리인/실사용자 정보 초기화
+        customer.value.repName = ''
+        customer.value.repRegistrationNo1 = ''
+        customer.value.repRegistrationNo2 = ''
+        customer.value.repForeignerNo1 = ''
+        customer.value.repForeignerNo2 = ''
+        customer.value.minorAgentNm = ''
+        customer.value.minorAgentRelTypeCd = ''
+        customer.value.minorAgentTelFnNo = ''
+        customer.value.minorAgentTelMnNo = ''
+        customer.value.minorAgentTelRnNo = ''
+        customer.value.realUserName = ''
+        customer.value.userBirthDate = ''
+        customer.value.userGender = 'userGender1'
+
+        // 인증 상태 및 플래그 초기화
+        customer.value.isVerified = false
+        Object.keys(authFlags.value).forEach((key) => {
+          authFlags.value[key] = false
+        })
+
+        console.log('>>> 고객 유형 변경으로 인한 데이터 초기화 완료')
+      }
+    },
+  )
+
   // 신분증 인증 방식 변경 시 정보 초기화 (저장되지 않은 경우만)
   watch(
     () => customer.value.identityCertTypeCd,
     () => {
-      // 이미 인증되었거나 저장된 경우, 또는 'S'(스캐너) 타입으로 로드된 경우는 초기화하지 않음
-      if (!customer.value.isSaved && !customer.value.isVerified) {
+      // 저장된 경우가 아니면 인증 방식 변경 시 데이터 초기화
+      if (!customer.value.isSaved) {
         const isMinor = ['NM', 'FM'].includes(customer.value.cstmrTypeCd)
 
         if (isMinor) {
@@ -498,19 +530,24 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       const p = { ...savedData.product }
       // 서버에서 단일 값('01', '02', 'Y', 'N')으로 오는 항목들을 UI용 배열 또는 Boolean으로 변환
       if (p.moveAllotmentSttusCd) {
-        p.moveAllotmentSttusCd = Array.isArray(p.moveAllotmentSttusCd) ? p.moveAllotmentSttusCd : [p.moveAllotmentSttusCd]
+        p.moveAllotmentSttusCd = Array.isArray(p.moveAllotmentSttusCd)
+          ? p.moveAllotmentSttusCd
+          : [p.moveAllotmentSttusCd]
       } else {
         p.moveAllotmentSttusCd = []
       }
 
       if (p.moveRefundAgreeYn) {
-        p.moveRefundAgreeYn = Array.isArray(p.moveRefundAgreeYn) ? p.moveRefundAgreeYn : [p.moveRefundAgreeYn]
+        p.moveRefundAgreeYn = Array.isArray(p.moveRefundAgreeYn)
+          ? p.moveRefundAgreeYn
+          : [p.moveRefundAgreeYn]
       } else {
         p.moveRefundAgreeYn = []
       }
 
       // 이번달 사용요금 (체크박스인 경우 Boolean으로 변환)
-      p.moveThismonthPayTypeCd = p.moveThismonthPayTypeCd === 'Y' || p.moveThismonthPayTypeCd === true
+      p.moveThismonthPayTypeCd =
+        p.moveThismonthPayTypeCd === 'Y' || p.moveThismonthPayTypeCd === true
 
       if (p.clauseInsuranceYn === 'Y' || p.clauseInsuranceYn === 'isInsured1') {
         p.clauseInsuranceYn = 'isInsured1'
@@ -696,8 +733,8 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         contractNum: c.contractNum,
 
         // Product Info (MSF_REQUEST)
-        prodId: p.planName2,
-        prodNm: p.planName2,
+        prodId: c.prodId,
+        prodNm: c.prodNm,
         reqPhoneSn: p.imei,
         reqModelNm: p.deviceModel,
         sntyCapacCd: p.capacity,
@@ -855,8 +892,12 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         moveAuthTypeCd: p.moveAuthTypeCd,
         moveAuthNo: p.moveAuthNo,
         moveThismonthPayTypeCd: toYN(p.moveThismonthPayTypeCd),
-        moveAllotmentSttusCd: Array.isArray(p.moveAllotmentSttusCd) ? p.moveAllotmentSttusCd[0] : p.moveAllotmentSttusCd,
-        moveRefundAgreeYn: Array.isArray(p.moveRefundAgreeYn) ? p.moveRefundAgreeYn[0] : p.moveRefundAgreeYn,
+        moveAllotmentSttusCd: Array.isArray(p.moveAllotmentSttusCd)
+          ? p.moveAllotmentSttusCd[0]
+          : p.moveAllotmentSttusCd,
+        moveRefundAgreeYn: Array.isArray(p.moveRefundAgreeYn)
+          ? p.moveRefundAgreeYn[0]
+          : p.moveRefundAgreeYn,
         reqGuideYn: toYN(p.reqGuideYn),
         reqGuideFnNo: p.reqGuideFnNo,
         reqGuideRnNo: p.reqGuideRnNo,
@@ -951,7 +992,6 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         'nwBlckAgrmYn',
         'appBlckAgrmYn',
         'clause5gCoverage',
-        'clauseJehuFlag',
         'clausePartnerOfferFlag',
         'personalInfoCollectAgreeYn',
         'clausePriAdYn',
@@ -961,7 +1001,6 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         'personalLocationAgreeYn',
         'clauseInfo01',
         'soTrnsAgrmYn',
-        'clauseJehuJehuYn',
         'clauseRentalModelCpYn',
         'clauseRentalModelCpPrYn',
         'clauseRentalServiceYn',
@@ -1106,8 +1145,9 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
 
       // Product mapping
       const p = product.value
-      p.planName1 = data.prodCtgId || data.planName1 || ''
-      p.planName2 = data.prodNm || data.prodId || ''
+      c.prodCtgId = data.prodCtgId || data.planName1 || ''
+      c.prodId = data.prodId || data.planName2 || ''
+      c.prodNm = data.prodNm || ''
       p.deviceModel = data.reqModelNm || data.modelId || ''
       p.capacity = data.sntyCapacCd || ''
       p.color = data.sntyColorCd || ''
@@ -1130,7 +1170,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       p.moveMobileNo3 = data.moveMobileRnNo || ''
       p.moveAuthTypeCd = data.moveAuthTypeCd || ''
       p.moveAuthNo = data.moveAuthNo || ''
-      
+
       // 데이터 타입 보정 (문자열을 배열로 변환하여 UI 선택 상태 복구)
       p.moveThismonthPayTypeCd = data.moveThismonthPayTypeCd === 'Y'
       p.moveAllotmentSttusCd = data.moveAllotmentSttusCd ? [data.moveAllotmentSttusCd] : []

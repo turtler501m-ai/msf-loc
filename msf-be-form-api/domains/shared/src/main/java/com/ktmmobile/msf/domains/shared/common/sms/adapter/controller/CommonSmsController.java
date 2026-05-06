@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.shared.common.sms.application.dto.CommonSmsRequest;
+import com.ktmmobile.msf.domains.shared.common.sms.application.dto.CommonSmsResponse;
 import com.ktmmobile.msf.domains.shared.common.sms.application.port.in.CommonSmsWriter;
 
 @RestController
@@ -26,7 +27,7 @@ public class CommonSmsController {
     }
 
     @PostMapping("/otp/send")
-    public CommonResponse<String> sendOtpSms(@RequestBody @Valid CommonSmsRequest request) {
+    public CommonResponse<CommonSmsResponse> sendOtpSms(@RequestBody @Valid CommonSmsRequest request) {
         return ResponseUtils.ok(commonSmsWriter.sendOtpSms(request));
     }
 

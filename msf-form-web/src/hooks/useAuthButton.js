@@ -1,20 +1,37 @@
 import { ref, watch } from 'vue'
 
-export function useAuthButton(dependenciesCallback, externalAuthFlag) {
+export function useAuthButton(dependenciesCallback, externalAuthFlag, validator) {
   // 'none' (입력 부족) -> 'ready' (입력 완료, 발송/인증 가능) -> 'sent' (발송됨) -> 'verified' (인증완료)
   const status = ref('none')
 
   watch(
     dependenciesCallback,
     (newVals) => {
-      // 모든 의존성 값이 유효한지 체크 (undefined, null, 빈 문자열 방지)
-      const isReady = newVals.every(
-        (val) => val !== undefined && val !== null && String(val).trim().length > 0,
-      )
+      let isReady = false
+      if (validator) {
+        // 커스텀 검증 함수가 제공된 경우 사용
+        isReady = !!validator(newVals)
+      } else {
+        // 모든 의존성 값이 유효한지 체크 (undefined, null, 빈 문자열 방지)
+        isReady = newVals.every(
+          (val) => val !== undefined && val !== null && String(val).trim().length > 0,
+        )
+      }
 
       // 의존성 값이 하나라도 바뀌면 인증 상태 강제 초기화 (재인증 요구)
-      status.value = isReady ? 'ready' : 'none'
-      if (externalAuthFlag) {
+      // 단, 이미 'verified'인 상태에서 값이 바뀐 경우에만 'ready'로 돌림
+      if (status.value === 'verified' && !isReady) {
+        status.value = 'none'
+      } else if (status.value === 'verified' && isReady) {
+        // 이미 인증된 상태에서 값이 바뀌면(예: 번호 수정) 재인증 필요
+        // (단, validator가 여전히 true라면 'ready'로, 아니면 'none'으로)
+        // 실제로는 dependenciesCallback이 바뀌면 무조건 재인증이 필요할 수 있음
+        status.value = 'ready'
+      } else {
+        status.value = isReady ? 'ready' : 'none'
+      }
+
+      if (externalAuthFlag && status.value !== 'verified') {
         externalAuthFlag.value = false
       }
     },

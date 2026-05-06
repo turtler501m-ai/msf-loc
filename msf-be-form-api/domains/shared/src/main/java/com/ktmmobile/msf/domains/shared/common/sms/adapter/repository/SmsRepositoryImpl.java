@@ -16,10 +16,6 @@ public class SmsRepositoryImpl implements SmsRepository {
     private final SmsMapper smsMapper;
     private final MspSmsMapper mspSmsMapper;
 
-    @Override public String getUserPhone(String userId) {
-        return smsMapper.selectUserPhone(userId);
-    }
-
     @Override public Integer registerMsfCrtVldDtl(IdVerifValidationDetail idVerifValidationDetail) {
         return smsMapper.insertMsfCrtVldDtl(idVerifValidationDetail);
     }

@@ -11,6 +11,8 @@ dependencies {
 
     implementation(project(":domains:policy"))
     implementation(project(":domains:commoncode"))
+    implementation(project(":domains:shared"))
+    implementation(project(":commons:login-core"))
 
     //local 구동을 위한 임시 추가
     implementation("org.springframework.boot:spring-boot-starter-data-redis")

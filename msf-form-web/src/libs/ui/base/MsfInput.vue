@@ -164,6 +164,13 @@ const computedAriaLabel = computed(() => {
   // 3. 그 외(연결되지 않은 서브 인풋 등)에는 attrs에 부여한 placeholder를 이름으로 사용하여 대처
   return attrs.placeholder || undefined
 })
+
+// 외부 노출 메서드
+defineExpose({
+  focus: () => {
+    inputRef.value?.focus()
+  },
+})
 </script>
 
 <style lang="scss" scoped>

@@ -1,21 +1,6 @@
 package com.ktmmobile.msf.domains.form.form.newchange.service;
 
-import java.net.SocketTimeoutException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestAdditionDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestCstmrDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestDlvryDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestMoveDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestSaleinfoDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestSelfDlvryDto;
+import com.ktmmobile.msf.domains.form.common.dto.*;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.legacy.etc.dto.GiftPromotionBas;
@@ -24,17 +9,16 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MPhoneNoListXmlVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlSt1VO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlUc0VO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlVO;
-import com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.UsimBasDto;
 import com.ktmmobile.msf.domains.form.form.newchange.dao.AppformDao;
-import com.ktmmobile.msf.domains.form.common.dto.AppformReqDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.FormDtlDTO;
-import com.ktmmobile.msf.domains.form.common.dto.IntmInsrRelDTO;
-import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.McpUploadPhoneInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.OsstFathReqDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.OsstReqDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.OsstUc0ReqDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service("appformSvc")
 public class AppformSvcImpl implements AppformSvc {
@@ -547,10 +531,10 @@ public class AppformSvcImpl implements AppformSvc {
         throw new UnsupportedOperationException("[ASIS] getNacSelfCount");
     }
 
-    @Override
+    /*@Override
     public Map<String, Object> mnpPreCheckLimit(String moveMobileNo) {
         throw new UnsupportedOperationException("[ASIS] mnpPreCheckLimit");
-    }
+    }*/
 
     @Override
     public Map<String, String> checkDupReq(AppformReqDto appformReqDto) {
@@ -3854,7 +3838,6 @@ public class AppformSvcImpl implements AppformSvc {
     //
     //     return true;
     // }
-    
-    
-    
+
+
 }

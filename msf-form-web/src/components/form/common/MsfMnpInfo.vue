@@ -52,6 +52,7 @@
             variant="subtle"
             @click="handlePreAuth"
             v-if="!store.authFlags?.moveAuthTypeCd"
+            :disabled="!isPhoneReady || !model.moveCompanyCd || !model.moveAuthTypeCd || !model.moveAuthNo"
           >번호이동 사전동의</MsfButton>
           <template v-else>
             <MsfButton variant="subtle" @click="handleCheckAgree">사전동의 결과조회</MsfButton>
@@ -104,6 +105,10 @@ const model = defineModel('modelValue', { type: Object, required: true })
 const customerModel = defineModel('customerData', { type: Object, required: true })
 const store = useMsfFormNewChgStore()
 
+const moveMobileNo1Ref = ref(null)
+const moveMobileNo2Ref = ref(null)
+const moveMobileNo3Ref = ref(null)
+
 const isFailModalOpen = ref(false)
 
 const authInputPlaceholder = computed(() => {
@@ -119,7 +124,16 @@ const authInputPlaceholder = computed(() => {
   }
 })
 
+const isPhoneReady = computed(() => {
+  return (
+    String(model.value.moveMobileNo1 || '').length === 3 &&
+    String(model.value.moveMobileNo2 || '').length === 4 &&
+    String(model.value.moveMobileNo3 || '').length === 4
+  )
+})
+
 const handlePreAuth = async () => {
+  if (!isPhoneReady.value) return
   const payload = {
     moveCompanyCd: model.value.moveCompanyCd,
     moveMobileNo: model.value.moveMobileNo1 + model.value.moveMobileNo2 + model.value.moveMobileNo3,

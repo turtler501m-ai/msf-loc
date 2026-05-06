@@ -65,7 +65,7 @@
     PRNTS_MOBILE_NO,
     JEHU_PARTNER_TYPE_CD,
     JEHU_PROD_TYPE_CD,
-    <!--REQ_ADDITION_LIST_NM,-->
+    REQ_ADDITION_LIST_NM,
     REQ_ADDITION_PRICE,
     PHONE_PAYMENT_YN,
     ON_OFF_TYPE_CD,
@@ -171,7 +171,7 @@
     , #{prntsMobileNo}
     , #{jehuPartnerTypeCd}
     , #{jehuProdTypeCd}
-    <!--, #{reqAdditionListNm}-->
+    , #{reqAdditionListNm}
     , #{reqAdditionPrice}
     , #{phonePaymentYn}
     , #{onOffTypeCd}
@@ -768,19 +768,43 @@ WHERE REQUEST_KEY = #{requestKey}
     WHERE REQUEST_KEY = #{requestKey}
 </update>
 
-<!-- 부가서비스 저장 -->
-<insert id="insertAdditionInfoList" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo">
-    <!--INSERT INTO SMARTFORM.MSF_REQUEST_ADDITION_TEMP
-    (REQUEST_KEY
-    , ADDITION_ID
-    , ADDITION_NM
-    , RANTAL)
-    VALUES(
-    #{requestKey}
-    <foreach collection="additionInfoList" item="item" separator=",">
-        (#{item.additionId}, #{item.additionNm}, #{item.rantal})
+<!-- 부가서비스 저장  -->
+<delete id="deleteMsfAdditionTemp" parameterType="java.lang.Long">
+    DELETE FROM MSF_REQUEST_ADDITION_TEMP
+    WHERE REQUEST_KEY = #{requestKey}
+</delete>
+<insert id="insertAdditionInfoListTemp" parameterType="java.util.List">
+    INSERT INTO MSF_REQUEST_ADDITION_TEMP
+    (     REQUEST_KEY
+        , ADDITION_ID
+        , ADDITION_NM
+        , RANTAL
+        , REQUEST_SVC_CHG_DTL_SEQ
+        , CRET_DT
+        , CRET_ID
+        , CRET_IP
+    )
+    VALUES
+    <foreach collection="additionDtoList" item="item" separator=",">
+        (
+            #{item.requestKey}
+            ,#{item.additionId}
+            ,#{item.additionNm}
+            ,#{item.rantal}
+            ,0
+            ,NOW()
+            ,#{item.cretId}
+            ,#{item.cretIp}
+        )
     </foreach>
-    )-->
+
 </insert>
+
+<update id="updateMsfRequestInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest">
+    UPDATE MSF_REQUEST_TEMP
+    SET
+        RES_NO = #{resNo}
+    WHERE REQUEST_KEY = #{requestKey}
+</update>
 
 </mapper>

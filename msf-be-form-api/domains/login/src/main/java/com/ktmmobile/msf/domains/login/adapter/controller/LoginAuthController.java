@@ -12,24 +12,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ktmmobile.msf.commons.logincore.application.dto.LoginSessionIssueRequest;
-import com.ktmmobile.msf.commons.logincore.application.dto.LoginTwoFactorVerifyRequest;
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginAuthenticationFlowProcessor;
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginRefreshTokenCookieManager;
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginSessionFlowProcessor;
-import com.ktmmobile.msf.commons.logincore.application.port.in.LoginTwoFactorCodeSender;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResult;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResultResponse;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTokenPair;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorCodeIssue;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorCodeResult;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorVerifyResult;
 import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.login.application.dto.LoginAuthRequest;
 import com.ktmmobile.msf.domains.login.application.dto.LoginCredential;
 import com.ktmmobile.msf.domains.login.application.dto.LoginPasswordChangeRequest;
-import com.ktmmobile.msf.domains.login.application.dto.LoginTwoFactorCodeSendResponse;
 import com.ktmmobile.msf.domains.login.application.dto.LoginUserInfoResponse;
 import com.ktmmobile.msf.domains.login.application.port.in.LoginPasswordChanger;
 import com.ktmmobile.msf.domains.login.application.port.in.LoginUserInfoReader;
@@ -58,49 +52,20 @@ public class LoginAuthController {
         return tokenResponse(tokenPair);
     }
 
-    // TODO: 테스트용 임시 API입니다. 정식 2FA 인증번호 발송 API가 구현되면 제거하거나 해당 API로 이관합니다.
-    @PostMapping("/login/2fa/code/send")
-    public CommonResponse<LoginTwoFactorCodeSendResponse> sendTwoFactorCode(@RequestBody @Valid LoginSessionIssueRequest request) {
-        LoginTwoFactorCodeResult result = loginSessionFlowProcessor.issueAndSendTwoFactorCode(
-            request.loginSessionId(), new MockLoginTwoFactorCodeSender()
-            //request.loginSessionId(), new RealLoginTwoFactorCodeSender()
-        );
-        return ResponseUtils.ok(LoginTwoFactorCodeSendResponse.from(result));
-    }
-
-    // TODO: :shared 모듈에 위치
-    public static class MockLoginTwoFactorCodeSender implements LoginTwoFactorCodeSender {
-
-        @Override
-        public void send(LoginTwoFactorCodeIssue issue) {
-            // Noop
-        }
-    }
-
-    // TODO: :shared 모듈에 위치
-    public static class RealLoginTwoFactorCodeSender implements LoginTwoFactorCodeSender {
-
-        @Override
-        public void send(LoginTwoFactorCodeIssue issue) {
-            // TODO: 실제 SMS 발송 구현
-        }
-    }
-
-    // TODO: 테스트용 임시 API입니다. 정식 2FA 인증번호 검증 API가 구현되면 제거하거나 해당 API로 이관합니다.
-    @PostMapping("/login/2fa/verify")
-    public CommonResponse<LoginTwoFactorVerifyResult> verifyTwoFactor(@RequestBody @Valid LoginTwoFactorVerifyRequest request) {
-        LoginTwoFactorVerifyResult result = loginSessionFlowProcessor.verifyTwoFactor(request.loginSessionId(), request.verificationCode());
-        return ResponseUtils.ok(result);
-    }
-
-    @PostMapping("/password/modify")
-    public CommonResponse<LoginResultResponse<LoginUserInfoResponse>> modifyPassword(@RequestBody @Valid LoginPasswordChangeRequest request) {
-        LoginResult result = loginPasswordChanger.changePassword(request);
-        if (result == null) {
-            return ResponseUtils.ok((LoginResultResponse<LoginUserInfoResponse>) null);
-        }
+    @PostMapping("/login/session/get")
+    public CommonResponse<LoginResultResponse<LoginUserInfoResponse>> getSessionProgress(@RequestBody @Valid LoginSessionIssueRequest request) {
+        LoginResult result = loginSessionFlowProcessor.getSessionProgress(request.loginSessionId());
         return resultResponse(result);
     }
+
+    // @PostMapping("/password/modify")
+    // public CommonResponse<LoginResultResponse<LoginUserInfoResponse>> modifyPassword(@RequestBody @Valid LoginPasswordChangeRequest request) {
+    //     LoginResult result = loginPasswordChanger.changePassword(request);
+    //     if (result == null) {
+    //         return ResponseUtils.ok((LoginResultResponse<LoginUserInfoResponse>) null);
+    //     }
+    //     return resultResponse(result);
+    // }
 
     @PostMapping("/refresh")
     public ResponseEntity<CommonResponse<LoginResultResponse<LoginUserInfoResponse>>> refresh(HttpServletRequest request) {

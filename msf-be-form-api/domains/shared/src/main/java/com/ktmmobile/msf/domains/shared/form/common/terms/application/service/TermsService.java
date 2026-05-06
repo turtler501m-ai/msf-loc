@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.HtmlUtils;
 
 import com.ktmmobile.msf.domains.shared.form.common.terms.application.dto.TermsCondition;
 import com.ktmmobile.msf.domains.shared.form.common.terms.application.dto.TermsContentRequest;
@@ -65,7 +66,7 @@ public class TermsService implements TermsReader {
                 cont.expnsnStrVal2(),
                 item.termsItemCd())).findFirst().orElse(null);
             if (content != null) {
-                return item.withVersion(content.docVer()).withContent(content.docContent());
+                return item.withVersion(content.docVer()).withContent(HtmlUtils.htmlUnescape(content.docContent()));
             }
             return item;
         }).toList();

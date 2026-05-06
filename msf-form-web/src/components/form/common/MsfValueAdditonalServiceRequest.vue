@@ -16,6 +16,11 @@ watch(
       ...(paid || []).map((id) => ({ prodId: id })),
     ]
     model.value.reqAdditionList = combined
+    console.log('[MsfValueAdditonalServiceRequest] 부가서비스 선택값 변경', {
+      free,
+      paid,
+      combined,
+    })
   },
   { deep: true, immediate: true },
 )
@@ -30,10 +35,13 @@ const fetchVasList = async () => {
       },
     }
 
+    console.log('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 조회 요청', payload)
     const res = await post('/api/form/addition/list', payload)
+    console.log('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 조회 응답', res)
+
     if (res && res.code === '0000' && res.data?.[0]) {
       const result = res.data[0]
-      
+
       // 무료 부가서비스
       const freeList = result.freeAddition || []
       freeVasOptions.value = freeList.map((v) => ({
@@ -50,13 +58,23 @@ const fetchVasList = async () => {
 
       // 무료 부가서비스 목록의 모든 값을 선택 상태로 설정 (항상 전체 선택)
       model.value.reqAdditionListNm = freeVasOptions.value.map((v) => v.value)
+      console.log('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 화면 반영', {
+        freeCount: freeVasOptions.value.length,
+        paidCount: paidVasOptions.value.length,
+        freeOptions: freeVasOptions.value,
+        paidOptions: paidVasOptions.value,
+        selectedFree: model.value.reqAdditionListNm,
+      })
+    } else {
+      console.log('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 응답 데이터 없음', res)
     }
   } catch (error) {
-    console.error('부가서비스 조회 실패:', error)
+    console.error('[MsfValueAdditonalServiceRequest] 가입가능 부가서비스 조회 실패', error)
   }
 }
 
 onMounted(() => {
+  console.log('[MsfValueAdditonalServiceRequest] mounted')
   fetchVasList()
 })
 </script>

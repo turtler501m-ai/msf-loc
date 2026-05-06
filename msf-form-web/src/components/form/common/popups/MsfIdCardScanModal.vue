@@ -12,7 +12,7 @@
       <ul class="doc-list">
         <li>
           <p>
-            신분증 원본
+            {{ props.identityTypeNm || '신분증 원본' }}
             <MsfFlag v-if="docFile" data="완료" color="accent2" size="small" />
           </p>
           <MsfStack type="field">
@@ -47,6 +47,7 @@ import { post } from '@/libs/api/msf.api.js'
 
 const props = defineProps({
   modelValue: Boolean,
+  identityTypeNm: String, // 신분증 명칭 추가
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])

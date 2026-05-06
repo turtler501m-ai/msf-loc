@@ -1,24 +1,24 @@
 package com.ktmmobile.msf.commons.logincore.application.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginFlowProcessor;
-import com.ktmmobile.msf.commons.logincore.application.port.in.LoginTwoFactorCodeSender;
 import com.ktmmobile.msf.commons.logincore.application.port.out.LoginAuthenticator;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginRequiredAction;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResult;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionReady;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionState;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTokenIssued;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTokenPair;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorCodeIssue;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorCodeResult;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorCompletionResult;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorRequired;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorVerifyResult;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorStatus;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginUserInfo;
 import com.ktmmobile.msf.commons.logincore.domain.policy.completion.LoginAuthenticationCredential;
 import com.ktmmobile.msf.commons.logincore.support.exception.LoginException;
@@ -38,45 +38,10 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
         return loginAuthenticator.authenticate(credential);
     }
 
-    @Override
-    public LoginTwoFactorVerifyResult verifyTwoFactor(String loginSessionId, String verificationCode) {
-        log.info("Login 2FA verification requested. loginSessionId={}", mask(loginSessionId));
-        loginSessionService.verifyTwoFactor(loginSessionId, verificationCode);
-        log.info("Login 2FA verification completed. loginSessionId={}", mask(loginSessionId));
-        return new LoginTwoFactorVerifyResult(loginSessionId, true);
-    }
-
-    @Override
-    public LoginTwoFactorCodeIssue issueTwoFactorCode(String loginSessionId) {
-        log.info("Login 2FA verification code issue requested. loginSessionId={}", mask(loginSessionId));
-        LoginTwoFactorCodeIssue issue = loginSessionService.issueTwoFactorCode(loginSessionId);
-        log.info("Login 2FA verification code issued. loginSessionId={}, userId={}", mask(loginSessionId), issue.principal().userId());
-        return issue;
-    }
-
-    @Override
-    public LoginTwoFactorRequired updateTwoFactorCodeExpiresAt(String loginSessionId) {
-        log.info("Login 2FA verification code expiration update requested. loginSessionId={}", mask(loginSessionId));
-        LoginTwoFactorRequired result = loginSessionService.updateTwoFactorCodeExpiresAt(loginSessionId);
-        log.info(
-            "Login 2FA verification code expiration updated. loginSessionId={}, userId={}, expiresAt={}",
-            mask(loginSessionId),
-            result.userId(),
-            result.expiresAt()
-        );
-        return result;
-    }
-
-    @Override
-    public LoginTwoFactorCodeResult issueAndSendTwoFactorCode(String loginSessionId, LoginTwoFactorCodeSender sender) {
-        LoginTwoFactorCodeIssue issue = issueTwoFactorCode(loginSessionId);
-        sender.send(issue);
-        LoginTwoFactorRequired required = updateTwoFactorCodeExpiresAt(loginSessionId);
-        return new LoginTwoFactorCodeResult(
-            loginSessionId,
-            required.expiresAt(),
-            issue.verificationCode()
-        );
+    public LoginTwoFactorCompletionResult completeTwoFactor(String loginSessionId) {
+        loginSessionService.completeTwoFactor(loginSessionId);
+        log.info("Login 2FA completion updated. loginSessionId={}", mask(loginSessionId));
+        return new LoginTwoFactorCompletionResult(loginSessionId, true);
     }
 
     @Override
@@ -98,6 +63,30 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
             resultName(result)
         );
         return result;
+    }
+
+    @Override
+    public LoginResult getSessionProgress(String loginSessionId) {
+        LoginSessionState state = loginSessionService.getState(loginSessionId);
+        return toSessionProgress(loginSessionId, state);
+    }
+
+    @Override
+    public Optional<LoginResult> findSessionProgress(String loginSessionId) {
+        return loginSessionService.findState(loginSessionId)
+            .map(state -> toSessionProgress(loginSessionId, state));
+    }
+
+    @Override
+    public LoginTwoFactorStatus getTwoFactorStatus(String loginSessionId) {
+        return loginSessionService.getTwoFactorStatus(loginSessionId);
+    }
+
+    @Override
+    public LoginSessionUser getSessionUser(String loginSessionId) {
+        LoginSessionUser principal = enrich(loginSessionService.getPrincipal(loginSessionId));
+        loginUserInfoCacheService.save(principal);
+        return principal;
     }
 
     @Override
@@ -149,6 +138,12 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
         loginTokenService.logout(refreshToken);
     }
 
+    private LoginResult toSessionProgress(String loginSessionId, LoginSessionState state) {
+        LoginSessionUser principal = enrich(state.principal());
+        loginUserInfoCacheService.save(principal);
+        return current(loginSessionId, state, principal);
+    }
+
     private LoginResult next(String loginSessionId, LoginSessionUser principal) {
         List<LoginRequiredAction> actionsBeforeTokenIssue = actionsBeforeTokenIssue(principal);
         if (actionsBeforeTokenIssue.isEmpty()) {
@@ -163,6 +158,33 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
         }
         if (actionsBeforeTokenIssue.getFirst().isVerifyTwoFactor()) {
             return loginSessionService.requireTwoFactor(loginSessionId, principal);
+        }
+        return loginSessionService.toActionRequired(loginSessionId, principal, actionsBeforeTokenIssue);
+    }
+
+    private LoginResult current(String loginSessionId, LoginSessionState state, LoginSessionUser principal) {
+        List<LoginRequiredAction> actionsBeforeTokenIssue = actionsBeforeTokenIssue(principal);
+        if (actionsBeforeTokenIssue.isEmpty()) {
+            return new LoginSessionReady(
+                loginSessionId,
+                principal.userId(),
+                principal.userType(),
+                principal.userName(),
+                principal.phoneNumber(),
+                principal.attributes()
+            );
+        }
+        if (!state.twoFactorCompleted() && actionsBeforeTokenIssue.getFirst().isVerifyTwoFactor()) {
+            return new LoginTwoFactorRequired(
+                loginSessionId,
+                null,
+                principal.userId(),
+                principal.userType(),
+                principal.userName(),
+                principal.phoneNumber(),
+                principal.attributes(),
+                actionsBeforeTokenIssue
+            );
         }
         return loginSessionService.toActionRequired(loginSessionId, principal, actionsBeforeTokenIssue);
     }

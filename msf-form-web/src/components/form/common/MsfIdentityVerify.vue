@@ -22,7 +22,7 @@
         </MsfChip>
       </MsfFormGroup>
 
-      <MsfFormGroup label="신분증 스캔" tag="div" required v-if="model.identityCertTypeCd !== 'S'">
+      <MsfFormGroup label="신분증 스캔" tag="div" required>
         <MsfStack type="field">
           <MsfSelect
             v-model="model.identityTypeCd"
@@ -40,28 +40,36 @@
             >스캔하기</MsfButton
           >
         </MsfStack>
-        <MsfStack type="field">
+        <div v-if="model.isScanVerified" class="ut-mt-8 ut-p-12 ut-bg-gray-50 ut-radius-8">
+          <p class="ut-text-primary ut-weight-bold">신분증 스캔 완료</p>
+          <p v-if="model.identityTypeNm" class="ut-mt-4">종류: {{ model.identityTypeNm }}</p>
+          <p v-if="model.identityIssuDate" class="ut-mt-2">발급일자: {{ model.identityIssuDate }}</p>
+        </div>
+        <MsfStack type="field" v-if="model.identityTypeCd">
+          <!-- 모든 신분증 공통: 발급 일자 (오늘 포함 과거일자만 선택 가능하도록 max-date 설정) -->
           <MsfDateInput
             v-model="model.identityIssuDate"
-            :readonly="true"
-            :disabled="model.isScanVerified || model.isSaved"
+            :max-date="new Date()"
+            :disabled="model.isSaved"
           />
-          <MsfSelect
-            title="면허지역"
-            v-model="model.identityIssuRegion"
-            :options="licenseRegionCodes"
-            placeholder="면허지역"
-            class="ut-w-200"
-            :disabled="model.isScanVerified || model.isSaved"
-          />
-          <MsfNumberInput
-            v-model="model.driveLicnsNo"
-            maxlength="15"
-            placeholder="면허번호"
-            class="ut-w-240"
-            :readonly="true"
-            :disabled="model.isScanVerified || model.isSaved"
-          />
+          <!-- 운전면허증(코드 '02' 가정)인 경우에만 노출: 면허지역, 면허번호 -->
+          <template v-if="model.identityTypeCd === '02'">
+            <MsfSelect
+              title="면허지역"
+              v-model="model.identityIssuRegion"
+              :options="licenseRegionCodes"
+              placeholder="면허지역"
+              class="ut-w-200"
+              :disabled="model.isSaved"
+            />
+            <MsfNumberInput
+              v-model="model.driveLicnsNo"
+              maxlength="15"
+              placeholder="면허번호"
+              class="ut-w-240"
+              :disabled="model.isSaved"
+            />
+          </template>
         </MsfStack>
       </MsfFormGroup>
     </MsfStack>
@@ -73,7 +81,11 @@
     <!-- 안면 인증 모달 -->
     <MsfFaceAuthModal v-model="isFaceAuthModalOpen" @confirm="onFaceAuthConfirm" />
     <!-- 신분증 스캔 모달 -->
-    <MsfIdCardScanModal v-model="isIdCardScanModalOpen" @confirm="onIdCardScanConfirm" />
+    <MsfIdCardScanModal
+      v-model="isIdCardScanModalOpen"
+      :identityTypeNm="selectedIdentityTypeNm"
+      @confirm="onIdCardScanConfirm"
+    />
   </div>
 </template>
 <script setup>
@@ -92,10 +104,18 @@ const model = defineModel({ type: Object, required: true })
 
 const licenseRegionCodes = ref([])
 const fathCertIdTypeCodes = ref([])
+const identityTypeCodes = ref([]) // 전체 신분증 코드 목록 추가
 const isIdCardListModalOpen = ref(false)
 const isMobileIdModalOpen = ref(false)
 const isFaceAuthModalOpen = ref(false)
 const isIdCardScanModalOpen = ref(false)
+
+// 현재 선택된 신분증 코드(identityTypeCd)에 해당하는 명칭 반환
+const selectedIdentityTypeNm = computed(() => {
+  if (!model.value.identityTypeCd) return ''
+  const found = identityTypeCodes.value.find(item => item.code === model.value.identityTypeCd)
+  return found ? found.title : ''
+})
 
 const isMinor = computed(() => ['NM', 'FM'].includes(model.value.cstmrTypeCd))
 
@@ -106,16 +126,29 @@ const computedTitle = computed(() => {
   return props.title
 })
 
+// 신분증 종류(주민등록증, 운전면허증 등) 변경 시 스캔 상태 초기화
+watch(
+  () => model.value.identityTypeCd,
+  (newVal, oldVal) => {
+    if (oldVal && newVal !== oldVal && !model.value.isSaved) {
+      model.value.isScanVerified = false
+      model.value.identityTypeNm = ''
+    }
+  },
+)
+
 // 인증 방식 변경 시 상태 초기화
 watch(
   () => model.value.identityCertTypeCd,
   () => {
     if (!model.value.isSaved) {
       model.value.identityTypeCd = ''
+      model.value.identityTypeNm = '' // 스캔된 명칭 초기화
       model.value.isVerified = false
+      model.value.isScanVerified = false // 스캔 상태 초기화
 
       if (isMinor.value) {
-        // 미성년자인 경우: 법정대리인 정보 초기화
+        // 미성년자인 경우: 법정대리인 정보 초기화 (인증 시 비활성화되는 항목들)
         model.value.repName = ''
         model.value.repRegistrationNo1 = ''
         model.value.repRegistrationNo2 = ''
@@ -129,16 +162,27 @@ watch(
         model.value.repRelation = ''
         model.value.repAgree = false
         if (props.authFlags) props.authFlags.repPhone = false
+      } else {
+        // 일반 고객인 경우: 가입자 정보 초기화 (인증 시 비활성화되는 항목들)
+        model.value.cstmrNm = ''
+        model.value.cstmrNativeRrn1 = ''
+        model.value.cstmrNativeRrn2 = ''
+        model.value.cstmrForeignerRrn1 = ''
+        model.value.cstmrForeignerRrn2 = ''
+        // 생년월일/성별이 있는 경우(명의변경 등) 함께 초기화
+        if ('userBirthDate' in model.value) model.value.userBirthDate = ''
+        if ('userGender' in model.value) model.value.userGender = ''
       }
     }
   },
 )
 
 onMounted(async () => {
-  const [licRegion, fathCert, fathPolicy] = await Promise.all([
+  const [licRegion, fathCert, fathPolicy, idTypes] = await Promise.all([
     getCommonCodeList('LIC_REGION'),
     getCommonCodeList('fathCertIdType'),
     getCommonCodeList('fathCertPolicy'),
+    getCommonCodeList('RCP2006'), // 일반 신분증 코드 목록 추가
   ])
   licenseRegionCodes.value = (licRegion || []).map((item) => ({
     ...item,
@@ -146,6 +190,10 @@ onMounted(async () => {
     value: item.code,
   }))
   fathCertIdTypeCodes.value = (fathCert || []).map((item) => item.code)
+  
+  // 모든 신분증 타입을 하나의 목록으로 합쳐서 명칭 조회용으로 사용
+  identityTypeCodes.value = [...(idTypes || []), ...(fathCert || [])]
+  
   console.log('>>> 안면인증 관련 정책 (fathCertPolicy):', fathPolicy)
 })
 
@@ -174,7 +222,13 @@ const onIdCardSelect = (selected) => {
       }
     } else {
       // 일반 고객인 경우 가입자 필드에 저장
-      if (selected.cstmrNm) model.value.cstmrNm = selected.cstmrNm
+      if (selected.cstmrNm) {
+        model.value.cstmrNm = selected.cstmrNm
+        // 법인/공공기관인 경우 대표자명에도 세팅
+        if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
+          model.value.cstmrJuridicalRepNm = selected.cstmrNm
+        }
+      }
       if (['NA', 'NM'].includes(model.value.cstmrTypeCd)) {
         if (selected.rrn1) model.value.cstmrNativeRrn1 = selected.rrn1
         if (selected.rrn2) model.value.cstmrNativeRrn2 = selected.rrn2
@@ -215,6 +269,13 @@ const onIdCardScanConfirm = (data) => {
   console.log('신분증 스캔 파일:', data)
   if (data) {
     model.value.identityIssuDate = data.identityIssuDate
+    // 스캔된 신분증 정보 저장
+    if (data.identityTypeNm) {
+      model.value.identityTypeNm = data.identityTypeNm
+    }
+    if (data.identityTypeCd) {
+      model.value.identityTypeCd = data.identityTypeCd
+    }
   }
   model.value.isScanVerified = true
 }

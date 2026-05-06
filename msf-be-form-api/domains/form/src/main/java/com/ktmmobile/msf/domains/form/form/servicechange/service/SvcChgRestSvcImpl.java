@@ -512,28 +512,21 @@ public class SvcChgRestSvcImpl implements SvcChgRestSvc {
     // 실시간 요금 조회(X18)
     @Override public RealtimePayInfoResponse selectRealTimeCharge(ResumeRequest request) {
 
-        HashMap<String, String> mapData = new HashMap<>();
-        mapData.put("userId", userId);
-        mapData.put("cntrMobileNo", cntrMobileNo);
-
-        // 계약 정보 조회
-        List<McpUserCntrMngDto> cntrList = mcpApiClient.post("/mypage/cntrList", mapData, List.class);
-
-        if (cntrList.isEmpty()) {
-            throw new McpCommonException(NOT_FULL_MEMBER_EXCEPTION);
+        if (request == null || StringUtils.isAnyBlank(request.getNcn(), request.getCtn())) {
+            return new RealtimePayInfoResponse();
         }
-
-        McpUserCntrMngDto mcpUserCntrMngDto = cntrList.getFirst();
-        request.setCtn(mcpUserCntrMngDto.getCntrMobileNo());
-        request.setNcn(mcpUserCntrMngDto.getSvcCntrNo());
-        request.setCustId(mcpUserCntrMngDto.getCustId());
 
         // 3. 실시간 요금 조회 (X18)
         RealtimePayInfoResponse realtimePayInfoResponse = null;
 
         try {
-            HashMap<String, String> params = objectMapper.convertValue(request, HashMap.class);
-            params.put("eventCd", "X18");
+            UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();
+            HashMap<String, String> params = new HashMap<>();
+            params.put("ncn", StringUtil.NVL(request.getNcn(), ""));
+            params.put("ctn", StringUtil.NVL(request.getCtn(), ""));
+            params.put("custId", StringUtil.NVL(request.getCustId(), ""));
+            params.put("userid", userSessionDto == null ? "" : StringUtil.NVL(userSessionDto.getUserId(), ""));
+            params.put("appEventCd", "X18");
             realtimePayInfoResponse = mPlatFormService.commonMplatform(params, "X18", RealtimePayInfoResponse.class);
         } catch (SelfServiceException e) {
             // logger.info("Exception e : {}", e.getMessage());

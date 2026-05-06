@@ -69,11 +69,13 @@ const router = createRouter({
     {
       path: '/deviceAuth',
       name: 'deviceAuth',
+      meta: { skipAuth: true },
       component: MsfDeviceAuthView, // 단말 사용 인증
     },
     {
       path: '/deviceRegist',
       name: 'deviceRegist',
+      meta: { skipAuth: true },
       component: MsfDeviceRegisterView, // 단말 사용 등록
     },
     {
@@ -101,7 +103,7 @@ const router = createRouter({
       component: GuideView, // 퍼블리싱 테스트
     },
     {
-      path: '/form-common-guide',
+      path: '/guide/form-common',
       name: 'FormCommonGuide',
       meta: { skipAuth: true },
       component: FormCommonGuideView, // 퍼블리싱 테스트

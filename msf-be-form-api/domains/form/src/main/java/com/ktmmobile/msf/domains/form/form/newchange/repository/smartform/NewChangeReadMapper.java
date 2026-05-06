@@ -4,6 +4,8 @@ import com.ktmmobile.msf.domains.form.form.common.vo.*;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 @Mapper
 public interface NewChangeReadMapper {
 
@@ -28,6 +30,10 @@ public interface NewChangeReadMapper {
     MsfRequestMoveVo selectMsfRequestMoveInfo(NewChangeRequest condition);
 
     MsfRequestDvcChgVo selectMsfRequestDvcChgInfo(NewChangeRequest condition);
+
+    List<MsfRequestAdditionVo> selectMsfRequestAdditionInfo(NewChangeRequest condition);
+
+    String getMsfResNo(long requestKey);
 
 
 }

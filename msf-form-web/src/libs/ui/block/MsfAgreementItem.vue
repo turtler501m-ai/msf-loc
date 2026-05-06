@@ -150,8 +150,7 @@ const handleUpdateModel = (value) => {
 }
 
 const onClickConfirmBtn = () => {
-  emit('update:modelValue', true)
-  emit('change', true)
+  handleUpdateModel(true)
   showDialog.value = false
 }
 </script>

@@ -1,6 +1,7 @@
 <template>
   <!-- 사업자등록번호  -->
   <MsfNumberInput
+    ref="input1"
     v-model="bizNo1"
     :error="error"
     :readonly="readonly"
@@ -8,9 +9,11 @@
     placeholder="앞 3자리"
     :ariaLabel="`${props.label.replace('<br>', '')} 앞 3자리`"
     maxlength="3"
+    @maxlength="input2?.focus()"
   />
   <span class="unit-sep">-</span>
   <MsfNumberInput
+    ref="input2"
     v-model="bizNo2"
     :error="error"
     :readonly="readonly"
@@ -18,9 +21,11 @@
     placeholder="가운데 2자리"
     :ariaLabel="`${props.label.replace('<br>', '')} 가운데 2자리`"
     maxlength="2"
+    @maxlength="input3?.focus()"
   />
   <span class="unit-sep">-</span>
   <MsfNumberInput
+    ref="input3"
     v-model="bizNo3"
     :error="error"
     :readonly="readonly"
@@ -32,10 +37,16 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+
 // v-model 선언
 const bizNo1 = defineModel('bizNo1')
 const bizNo2 = defineModel('bizNo2')
 const bizNo3 = defineModel('bizNo3')
+
+const input1 = ref(null)
+const input2 = ref(null)
+const input3 = ref(null)
 
 // Props 정의
 const props = defineProps({

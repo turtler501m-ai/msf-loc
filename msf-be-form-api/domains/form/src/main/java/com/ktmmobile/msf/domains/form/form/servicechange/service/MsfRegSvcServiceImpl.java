@@ -1,32 +1,5 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
-/**
- * 부가서비스 서비스 구현체
- *
- * =====================================================
- * [TOBE 변환 이력] 2026-04-03
- * =====================================================
- * ASIS 소스(MsfRegSvcServiceImpl.java)를 직접 변환.
- * 기존 ASIS 메서드는 삭제하지 않고 하단에 주석 처리.
- *
- * [주요 변경 내용]
- *   1. X20 → X97: getAddSvcInfoDto() → getAddSvcInfoParamDto()
- *      (X20은 기본 SOC 목록만 반환, X97은 SOC+이력+상세정보 반환)
- *   2. X21 → Y25: regSvcChg() → regSvcChgY25()
- *      (Y25는 단건이 아닌 multi 처리 지원, TOBE 표준 코드)
- *   3. MyPageSearchDto(세션) → AdditionReqDto/AdditionApplyReqDto(요청 바디)
- *      (Stateless REST 전환, 세션 의존 제거)
- *   4. Map<String,Object> 반환 → VO 반환 (타입 명확화)
- *   5. ASIS 공개 인터페이스 유틸 메서드 → private 내부 메서드로 이동
- *
- * [의존 서비스]
- *   MsfMplatFormService — M플랫폼 X97/X38/Y25 호출
- *   FCommonSvc       — MSP_RATE_MST@DL_MSP 조회 (온라인 해지 가능 여부)
- *   RegSvcDao        — 로밍 코드 목록 조회 (getRoamCdList)
- *   MsfMypageSvc     — DB 부가서비스 관리 목록 조회 (selectRegService)
- * =====================================================
- */
-
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_RATE;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_ONLINE_CAN_CHANGE_ADD;
@@ -109,45 +82,65 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
      *           개통일 기준 onlineCanDay 블로킹 처리 포함
      *           → TOBE에서는 lstComActvDate 없이 기본 onlineCanYn만 적용 (단순화)
      */
+
     @Override
-    public AdditionMyListResVO selectMyAddSvcList(AdditionReqDto req) {
+    public AdditionMyListResVO myAddSvcList(AdditionReqDto req) {
         MpAddSvcInfoParamDto vo = new MpAddSvcInfoParamDto();
+        logger.debug("[myAddSvcList] start: ncn={}, ctn={}, custId={}", req.getNcn(), req.getCtn(), req.getCustId());
         try {
             // [1] X97 — 가입중인 부가서비스 전체 조회
             vo = mPlatFormService.getAddSvcInfoParamDto(req.getNcn(), req.getCtn(), req.getCustId());
+            logger.debug("[myAddSvcList] X97 response: success={}, resultCode={}, svcMsg={}, rawCount={}",
+                    vo.isSuccess(), vo.getResultCode(), vo.getSvcMsg(), vo.getList() == null ? 0 : vo.getList().size());
             if (!vo.isSuccess()) {
+                logger.warn("[myAddSvcList] X97 failed: ncn={}, ctn={}, custId={}, resultCode={}, svcMsg={}",
+                        req.getNcn(), req.getCtn(), req.getCustId(), vo.getResultCode(), vo.getSvcMsg());
                 // M플랫폼 응답 null or 실패 시 공통 예외
                 throw new McpCommonException(COMMON_EXCEPTION);
             }
 
             List<MpSocVO> mSocVoList = vo.getList();
 
-            if (mSocVoList != null) {
-                for (MpSocVO mSocVo : mSocVoList) {
-                    // [3] MSP_RATE_MST@DL_MSP 조회 — 해지 안내 문구 및 온라인 해지 가능 여부 세팅
-                    MspRateMstDto mspRateMstDto = fCommonSvc.getMspRateMst(mSocVo.getSoc());
-                    if (mspRateMstDto != null) {
-                        mSocVo.setCanCmnt(StringUtil.NVL(mspRateMstDto.getCanCmnt(), ""));       // 해지 안내 문구
-                        mSocVo.setOnlineCanYn(StringUtil.NVL(mspRateMstDto.getOnlineCanYn(), "")); // 온라인 해지 가능 여부
-                    }
-                    // 포인트할인(REG_SVC_CD_4) — 정책상 온라인 해지 불가, 강제 "N" 처리
-                    if (Constants.REG_SVC_CD_4.equals(mSocVo.getSoc())) {
-                        mSocVo.setOnlineCanYn("N");
-                    }
-                }
+            // if (mSocVoList != null) {
+            //     for (MpSocVO mSocVo : mSocVoList) {
+            //         // [3] MSP_RATE_MST@DL_MSP 조회 — 해지 안내 문구 및 온라인 해지 가능 여부 세팅
+            //         MspRateMstDto mspRateMstDto = fCommonSvc.getMspRateMst(mSocVo.getSoc());
+            //         if (mspRateMstDto != null) {
+            //             mSocVo.setCanCmnt(StringUtil.NVL(mspRateMstDto.getCanCmnt(), ""));       // 해지 안내 문구
+            //             mSocVo.setOnlineCanYn(StringUtil.NVL(mspRateMstDto.getOnlineCanYn(), "")); // 온라인 해지 가능 여부
+            //         }
+            //         // 포인트할인(REG_SVC_CD_4) — 정책상 온라인 해지 불가, 강제 "N" 처리
+            //         if (Constants.REG_SVC_CD_4.equals(mSocVo.getSoc())) {
+            //             mSocVo.setOnlineCanYn("N");
+            //         }
+            //     }
+            //
+            //     // [2] 더미 SOC "PL249Q800" 제거 — 아무나SOLO 내부 관리 전용, 사용자 노출 금지
+            // }
 
-                // [2] 더미 SOC "PL249Q800" 제거 — 아무나SOLO 내부 관리 전용, 사용자 노출 금지
+            if (mSocVoList != null) {
+                int beforeCount = mSocVoList.size();
                 mSocVoList.removeIf(item -> "PL249Q800".equals(item.getSoc()));
+                logger.debug("[myAddSvcList] filtered list: beforeCount={}, afterCount={}, removedDummyCount={}",
+                        beforeCount, mSocVoList.size(), beforeCount - mSocVoList.size());
+            } else {
+                logger.debug("[myAddSvcList] X97 list is null");
             }
 
         } catch (SocketTimeoutException e) {
+            logger.warn("[myAddSvcList] socket timeout: ncn={}, ctn={}, custId={}",
+                    req.getNcn(), req.getCtn(), req.getCustId());
             throw new McpCommonException(SOCKET_TIMEOUT_EXCEPTION);
         } catch (SelfServiceException e) {
+            logger.warn("[myAddSvcList] self service exception: ncn={}, ctn={}, custId={}, message={}",
+                    req.getNcn(), req.getCtn(), req.getCustId(), e.getMessage());
             throw new McpCommonException(e.getMessage());
         }
 
         AdditionMyListResVO res = new AdditionMyListResVO();
         res.setList(vo.getList());
+        logger.debug("[myAddSvcList] end: ncn={}, ctn={}, custId={}, resultCount={}",
+                req.getNcn(), req.getCtn(), req.getCustId(), res.getList() == null ? 0 : res.getList().size());
         return res;
     }
 
@@ -204,7 +197,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
             // [5] 유료/무료 분류
             // 무료: 기본료=0 이면서 서비스관계유형=C(무료구성), 또는 유형=B(번들)
             if (("0".equals(item.getBaseAmt()) && "C".equals(item.getSvcRelTp()))
-                    || "B".equals(item.getSvcRelTp())) {
+                || "B".equals(item.getSvcRelTp())) {
                 listC.add(item);
             } else {
                 listA.add(item); // 유료
@@ -254,11 +247,11 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
             if (req.getProdHstSeq() != null && !req.getProdHstSeq().isEmpty()) {
                 // prodHstSeq 있음: 특정 이력 건 해지 (로밍 등 동일 SOC 복수 가입 케이스)
                 vo = mPlatFormService.moscRegSvcCanChgSeq(
-                        req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc(), req.getProdHstSeq());
+                    req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc(), req.getProdHstSeq());
             } else {
                 // prodHstSeq 없음: SOC 기준 단순 해지
                 vo = mPlatFormService.moscRegSvcCanChg(
-                        req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc());
+                    req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc());
             }
 
             if (!vo.isSuccess()) {
@@ -316,7 +309,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
 
             // [2] M플랫폼 Y25 — 부가서비스 신청 (X21 대체)
             mPlatFormService.regSvcChgY25(
-                    req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc(), req.getFtrNewParam());
+                req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc(), req.getFtrNewParam());
 
             // [ASIS] 포인트 처리 — 포인트 기능 미이관
             // 포인트할인(REG_SVC_CD_4) 신청 시 포인트 사용 처리 (pointService.editPoint)

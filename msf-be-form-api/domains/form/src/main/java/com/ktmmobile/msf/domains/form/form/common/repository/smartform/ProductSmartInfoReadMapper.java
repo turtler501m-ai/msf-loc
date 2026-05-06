@@ -24,4 +24,7 @@ public interface ProductSmartInfoReadMapper {
     //휴대폰 매장재고 단건 조회 : return >> imei
     String selectPhoneInventory(PhoneSerialRequest condition);
 
+    //RES_NO 확인
+    //String selectResNo(long requestKey);
+
 }

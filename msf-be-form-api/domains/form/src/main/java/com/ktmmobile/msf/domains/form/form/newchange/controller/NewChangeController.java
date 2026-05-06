@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -51,22 +52,25 @@ public class NewChangeController {
 
     //대리점정보 조회 (조건 : 매장코드)
     @PostMapping("/agent/list")
-    public CommonResponse<AgentInfoResponse> getAgentList(@RequestBody @Valid AgentInfoRequest request) {
+    public CommonResponse<List<AgentInfoResponse>> getAgentList(@RequestBody @Valid AgentInfoRequest request) {
         return ResponseUtils.ok(formCommService.getAgentList(request));
+    }
+
+    //@@삭제필요@@
+    @PostMapping("/agent/list2")
+    public CommonResponse<AgentInfoResponse> getAgentList2(@RequestBody @Valid AgentInfoRequest request) {
+        return ResponseUtils.ok(formCommService.getAgentList2(request));
     }
 
     //신청서 진입
     @PostMapping("/newchange/get")
-    public CommonResponse<NewChangeInfoResponse> getNewChangeInfo(@RequestBody @Valid NewChangeRequest condition) {
-        return ResponseUtils.ok(newChangeService.getNewChangeRequestInfo(condition));
+    public CommonResponse<NewChangeInfoResponse> getNewChangeInfo(@RequestBody @Valid NewChangeRequest request) {
+        return ResponseUtils.ok(newChangeService.getNewChangeRequestInfo(request));
     }
 
     //신청서 저장 - 임시저장
     @PostMapping("/newchange/save")
     public CommonResponse<FormResponse<NewChangeResponse>> registerForm(@RequestBody @Valid NewChangeInfoRequest request) {
-        //String rtnRequestKey = "";
-        //rtnRequestKey = newChangeService.saveAppformInfo(request);
-        //return ResponseUtils.ok(rtnRequestKey);
         return ResponseUtils.ok(newChangeService.saveAppformInfo(request));
     }
 
@@ -101,35 +105,35 @@ public class NewChangeController {
     //신규가입 희망번호 조회 (NU1)
     //@RequestMapping(value = "/appform/searchNumberAjax.do")
     @PostMapping(value = "/newchange/searchNumber")
-    public CommonResponse<FormResponse<ChoiceNumberResponse>> getSearchNumber(@RequestBody @Valid ChoiceNumberRequest request) {
+    public CommonResponse<FormResponse<SearchNumberResponse>> getSearchNumber(@RequestBody @Valid SearchNumberRequest request) {
         return ResponseUtils.ok(choiceNumberService.getSearchNumber(request));
     }
 
     //신규가입 희망번호 예약 (NU2)
     //@RequestMapping(value = "/appform/setNumberAjax.do")
     @PostMapping(value = "/newchange/reserveNumber")
-    public CommonResponse<Map<String, Object>> setChoiseNumber(@RequestBody @Valid NewChangeInfoRequest request) {
+    public CommonResponse<FormResponse<SearchNumberResponse>> setChoiseNumber(@RequestBody @Valid SearchNumberRequest request) {
         return ResponseUtils.ok(choiceNumberService.setChoiseNumber(request));
     }
 
     //신규가입 희망번호 취소 (NU2)
     //@RequestMapping(value = "/appform/cancelNumberAjax.do")
     @PostMapping(value = "/newchange/cancelNumber")
-    public CommonResponse<Map<String, Object>> cancelNumber(@RequestBody @Valid NewChangeInfoRequest request) {
+    public CommonResponse<FormResponse<SearchNumberResponse>> cancelNumber(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(choiceNumberService.cancelChoiseNumber(request));
     }
 
     //번호이동 사전동의 (NP1)
     //@RequestMapping(value = "/appform/reqNpPreCheckAjax.do")
     @PostMapping(value = "/newchange/reqNpPreCheck")
-    public CommonResponse<Map<String, Object>> requestNpPreCheck(@RequestBody @Valid MnpOsstRequest request) {
+    public CommonResponse<FormResponse<MnpOsstResponse>> requestNpPreCheck(@RequestBody @Valid MnpOsstRequest request) {
         return ResponseUtils.ok(numberPortableService.requestNpPreCheck(request));
     }
 
     //번호이동 사전동의 결과조회 (NP3)
     //@RequestMapping(value = "/appform/reqNpAgreeAjax.do")
     @PostMapping(value = "/newchange/reqNpAgree")
-    public CommonResponse<Map<String, Object>> requestNpAgree(@RequestBody @Valid MnpOsstRequest request) {
+    public CommonResponse<FormResponse<MnpOsstResponse>> requestNpAgree(@RequestBody @Valid MnpOsstRequest request) {
         return ResponseUtils.ok(numberPortableService.requestNpAgree(request));
     }
 
@@ -144,20 +148,14 @@ public class NewChangeController {
     //개통사전체크 (신규가입/번호이동)
     //parameter :: 계좌점유키값(reqUniqId), globalNoNp1(번호이동사전동의), globalNoNp3(번호이동사전동의결과)
     //appformReqDto 파라미터 검토필요 >> MsfRequestDto 로 변경하고 위 파라미터는 Dto 에 추가하든지 해야할듯함. 추후!!!
+    //@RequestMapping(value = "/appform/reqPreOpenCheckAjax.do")
+    //AS-IS : 다음단계 진행 (isValidateStep2) 시 개통사전체크 진행함.
+    //TO-BE : 고객단계 진행 시 개통사전체크 진행을 한다면 상품단계의 임시저장일 경우에는 무조건 재진행을 해야하는데,
     @PostMapping(value = "/newchange/reqPreOpenCheck")
     public CommonResponse<Map<String, Object>> reqPreOpenCheck(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(formCommService.reqPreOpenCheck(request));
     }
 
-    //2026.04.30
-    //신용카드인증 실패
-    //청구계정아이디조회 실패
-    //계좌인증 실패
-    //USIM 유효성체크 성공/실패
-    //eSIM 유효성체크 성공/실패
-
-    //번호이동 사전동의 :
-    //신규가입 희망번호 :
     //신청서 저장의 유효성체크 정리할 것
     //공시지원금 조회
     //단말 및 요금제 조회 request 정리

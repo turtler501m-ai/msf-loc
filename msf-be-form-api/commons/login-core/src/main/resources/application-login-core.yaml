@@ -25,6 +25,13 @@ login-core:
 
 
 ---
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+
+
+---
 #### STG Profile
 spring:
   config.activate.on-profile: stg

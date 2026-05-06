@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.form.common.repository.msp.McpRequestReadMapper">
+
+    <!--<select id="getResNoCount" parameterType="String" resultType="java.lang.String">
+        SELECT COUNT(1) FROM MCP_REQUEST_OSST@DL_MCP WHERE RES_NO=#{resNo} AND PRGR_STAT_CD=#{prgrStatCd}
+    </select>-->
+
+    <select id="getResNoByMoveMobileNum" parameterType="java.util.HashMap" resultType="java.lang.String">
+        SELECT /*AppformMapper.getResNoByMoveMobileNum*/
+        A.RES_NO
+        FROM MCP_REQUEST@DL_MCP A, MCP_REQUEST_MOVE@DL_MCP B
+        WHERE A.REQUEST_KEY = B.REQUEST_KEY
+            AND A.REQ_IN_DAY <![CDATA[>=]]> trunc(SYSDATE - #{limitDay})
+            AND A.OPER_TYPE = 'MNP3'
+            AND A.ON_OFF_TYPE IN ('5', '7')
+            AND B.MOVE_MOBILE_FN || B.MOVE_MOBILE_MN || B.MOVE_MOBILE_RN = #{moveMobileNo}
+    </select>
+
+    <select id="getPreCheckTryCnt" parameterType="java.util.HashMap" resultType="java.lang.Integer">
+        /*AppformMapper.getPreCheckTryCnt*/
+        SELECT COUNT(MVNO_ORD_NO)
+        FROM MCP_REQUEST_OSST@DL_MCP
+        WHERE PRGR_STAT_CD = #{prgrStatCd}
+            AND REGST_DTTM <![CDATA[>=]]> trunc(SYSDATE - #{limitDay})
+            AND MVNO_ORD_NO IN
+        <foreach item="item" collection="resNoList" open="(" separator="," close=")">
+            LPAD(#{item}, 14, '0')
+        </foreach>
+    </select>
+
+</mapper>

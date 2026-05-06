@@ -1,20 +1,7 @@
 package com.ktmmobile.msf.domains.form.form.newchange.service
 ;
 
-import java.lang.reflect.InvocationTargetException;
-import java.net.SocketTimeoutException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestAdditionDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestCstmrDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestDlvryDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestMoveDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestSaleinfoDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpRequestSelfDlvryDto;
+import com.ktmmobile.msf.domains.form.common.dto.*;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.legacy.etc.dto.GiftPromotionBas;
@@ -23,16 +10,14 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MPhoneNoListXmlVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlSt1VO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlUc0VO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MSimpleOsstXmlVO;
-import com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.UsimBasDto;
-import com.ktmmobile.msf.domains.form.common.dto.AppformReqDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.FormDtlDTO;
-import com.ktmmobile.msf.domains.form.common.dto.IntmInsrRelDTO;
-import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.McpUploadPhoneInfoDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.OsstFathReqDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.OsstReqDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.OsstUc0ReqDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
+
+import java.lang.reflect.InvocationTargetException;
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -61,6 +46,7 @@ public interface AppformSvc {
      * @return
      * @return: Boolean
      * </pre>
+     *
      * @throws InvocationTargetException
      * @throws IllegalAccessException
      */
@@ -72,6 +58,7 @@ public interface AppformSvc {
      * @return
      * @return: Boolean
      * </pre>
+     *
      * @throws InvocationTargetException
      * @throws IllegalAccessException
      */
@@ -84,6 +71,7 @@ public interface AppformSvc {
      * @return
      * @return: Boolean
      * </pre>
+     *
      * @throws InvocationTargetException
      * @throws IllegalAccessException
      */
@@ -95,6 +83,7 @@ public interface AppformSvc {
      * @return
      * @return: Boolean
      * </pre>
+     *
      * @throws InvocationTargetException
      * @throws IllegalAccessException
      */
@@ -474,7 +463,7 @@ public interface AppformSvc {
      * </pre>
      */
     public MSimpleOsstXmlVO sendOsstService(Map<String, String> osstParam, String eventCd)
-        throws SelfServiceException, SocketTimeoutException, McpMplatFormException;
+            throws SelfServiceException, SocketTimeoutException, McpMplatFormException;
 
     /**
      * <pre>
@@ -485,7 +474,7 @@ public interface AppformSvc {
      * </pre>
      */
     public MSimpleOsstXmlVO sendOsstAddBillService(String resNo, String eventCd, String billAcntNo)
-        throws SelfServiceException, SocketTimeoutException, McpMplatFormException;
+            throws SelfServiceException, SocketTimeoutException, McpMplatFormException;
 
     /**
      * <pre>
@@ -568,6 +557,7 @@ public interface AppformSvc {
 
     /**
      * * 설명     : 요금제 설계 시퀀스
+     *
      * @param appFormDesignDto
      * @return
      */
@@ -575,6 +565,7 @@ public interface AppformSvc {
 
     /**
      * * 설명     : 요금제 설계 임시저장
+     *
      * @param appFormDesignDto
      * @return
      */
@@ -583,6 +574,7 @@ public interface AppformSvc {
 
     /**
      * * 설명     : 요금제 설계 판매정보 임시저장
+     *
      * @param appFormDesignDto
      * @return
      */
@@ -590,6 +582,7 @@ public interface AppformSvc {
 
     /**
      * * 설명     : 요금제 설계 자급제 임시저장
+     *
      * @param appFormDesignDto
      * @return
      */
@@ -597,6 +590,7 @@ public interface AppformSvc {
 
     /**
      * * 설명     : 요금제 설계 판매정보 자급제 임시저장
+     *
      * @param appFormDesignDto
      * @return
      */
@@ -744,7 +738,7 @@ public interface AppformSvc {
      * </pre>
      */
     public MSimpleOsstXmlUc0VO sendOsstUc0Service(OsstUc0ReqDto osstUc0ReqDto, String eventCd)
-        throws SelfServiceException, SocketTimeoutException, McpMplatFormException;
+            throws SelfServiceException, SocketTimeoutException, McpMplatFormException;
 
 
     /**
@@ -776,19 +770,29 @@ public interface AppformSvc {
 
     // ====================== START: STEP 검증 관련 메소드 ======================
 
-    /** [step별 검증] 상담사 개통 최종 step 확인 */
+    /**
+     * [step별 검증] 상담사 개통 최종 step 확인
+     */
     boolean crtSaveAppFormStep(AppformReqDto appformReqDto);
 
-    /** [step별 검증] 상담사 개통 최종 정보 확인 */
+    /**
+     * [step별 검증] 상담사 개통 최종 정보 확인
+     */
     Map<String, String> crtSaveAppFormInfo(AppformReqDto appformReqDto);
 
-    /** [step별 검증] 셀프개통 사전체크 최종 정보 확인 */
+    /**
+     * [step별 검증] 셀프개통 사전체크 최종 정보 확인
+     */
     Map<String, String> crtSaveSimpleAppFormInfo(AppformReqDto appformReqDto);
 
-    /** [step별 검증] 셀프개통 최종 step 확인 */
+    /**
+     * [step별 검증] 셀프개통 최종 step 확인
+     */
     boolean crtUpdateSimpleAppFormStep(AppformReqDto appformReqDto);
 
-    /** [step별 검증] 셀프개통 최종 정보 확인 */
+    /**
+     * [step별 검증] 셀프개통 최종 정보 확인
+     */
     Map<String, String> crtUpdateSimpleAppFormInfo(AppformReqDto appformReqDto);
 
     // ====================== END: STEP 검증 관련 메소드 ======================
@@ -829,7 +833,7 @@ public interface AppformSvc {
     MSimpleOsstXmlSt1VO sendOsstSt1Service(String resNo, String eventCd) throws SelfServiceException, SocketTimeoutException, McpMplatFormException;
 
     MSimpleOsstXmlSt1VO sendOsstSt1Service(Map<String, String> osstParam, String eventCd)
-        throws SelfServiceException, SocketTimeoutException, McpMplatFormException;
+            throws SelfServiceException, SocketTimeoutException, McpMplatFormException;
 
     /**
      * <pre>
@@ -861,21 +865,29 @@ public interface AppformSvc {
      */
     public boolean updateDirectPhone(AppformReqDto appformReqDto);
 
-    /** 특정 기간 이내의 010 신규 셀프개통 건 수 */
+    /**
+     * 특정 기간 이내의 010 신규 셀프개통 건 수
+     */
     int getNacSelfCount();
 
     /** 번호이동 사전체크 일 건수 제한 */
-    Map<String, Object> mnpPreCheckLimit(String moveMobileNo);
+    //Map<String, Object> mnpPreCheckLimit(String moveMobileNo);
 
-    /** 중복 신청 체크 */
+    /**
+     * 중복 신청 체크
+     */
     Map<String, String> checkDupReq(AppformReqDto appformReqDto);
 
     public List<MspSalePlcyMstDto> getSalePlcyInfo(AppformReqDto appformReqDto);
 
-    /** Acen 대상 Check */
+    /**
+     * Acen 대상 Check
+     */
     public boolean chkAcenReqCondition(McpRequestDto mcpRequestDto, Map<String, String> etcParam);
 
-    /** Acen 대상으로 INSERT */
+    /**
+     * Acen 대상으로 INSERT
+     */
     public void insertAcenReqTrg(McpRequestDto mcpRequestDto);
 
     void containsGoldNumbers(List<String> reqWantNumbers);

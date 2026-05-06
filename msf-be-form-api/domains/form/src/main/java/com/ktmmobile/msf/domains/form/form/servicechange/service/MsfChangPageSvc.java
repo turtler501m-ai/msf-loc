@@ -1,9 +1,12 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface MsfChangPageSvc {
 
@@ -18,5 +21,7 @@ public interface MsfChangPageSvc {
 
     McpUserCntrMngDto selectCntrListNoLogin(McpUserCntrMngDto userCntrMngDto);
 
-}
+    /** 서비스변경 화면의 가입정보 초기 데이터 조회 */
+    Map<String, Object> getChangInfoView(HttpServletRequest request, MyPageSearchDto searchVO);
 
+}
