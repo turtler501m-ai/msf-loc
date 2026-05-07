@@ -52,6 +52,7 @@ public class LoginTokenService {
             user.userType(),
             user.userName(),
             user.phoneNumber(),
+            user.clientIp(),
             user.attributes(),
             user.requiredActions(),
             accessToken,
@@ -79,6 +80,7 @@ public class LoginTokenService {
             .orElseGet(() -> new LoginSessionUser(
                 userId,
                 userType,
+                null,
                 null,
                 null,
                 java.util.Map.of(),
@@ -126,6 +128,7 @@ public class LoginTokenService {
             userInfo.userType(),
             userInfo.userName(),
             userInfo.phoneNumber(),
+            userInfo.clientIp(),
             userInfo.attributes(),
             List.of()
         );

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginFlowProcessor;
 import com.ktmmobile.msf.commons.logincore.application.port.out.LoginAuthenticator;
+import com.ktmmobile.msf.commons.logincore.application.port.out.LoginUserFinder;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginRequiredAction;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResult;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionReady;
@@ -29,6 +30,7 @@ import com.ktmmobile.msf.commons.logincore.support.exception.LoginException;
 public class LoginCoreService<C extends LoginAuthenticationCredential> implements LoginFlowProcessor<C> {
 
     private final LoginAuthenticator<C> loginAuthenticator;
+    private final LoginUserFinder<C> loginUserFinder;
     private final LoginTokenService loginTokenService;
     private final LoginSessionService loginSessionService;
     private final LoginUserInfoCacheService loginUserInfoCacheService;
@@ -46,7 +48,7 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
 
     @Override
     public LoginResult completeAction(String loginSessionId, String actionCode) {
-        LoginSessionUser principal = enrich(loginSessionService.completeAction(loginSessionId, actionCode));
+        LoginSessionUser principal = reload(loginSessionService.completeAction(loginSessionId, actionCode));
         loginUserInfoCacheService.save(principal);
         return next(loginSessionId, principal);
     }
@@ -153,6 +155,7 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
                 principal.userType(),
                 principal.userName(),
                 principal.phoneNumber(),
+                principal.clientIp(),
                 principal.attributes()
             );
         }
@@ -171,6 +174,7 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
                 principal.userType(),
                 principal.userName(),
                 principal.phoneNumber(),
+                principal.clientIp(),
                 principal.attributes()
             );
         }
@@ -182,6 +186,7 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
                 principal.userType(),
                 principal.userName(),
                 principal.phoneNumber(),
+                principal.clientIp(),
                 principal.attributes(),
                 actionsBeforeTokenIssue
             );
@@ -201,12 +206,19 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
             .orElse(principal);
     }
 
+    private LoginSessionUser reload(LoginSessionUser principal) {
+        return loginUserFinder.findUserInfo(principal)
+            .map(userInfo -> merge(principal, userInfo))
+            .orElseGet(() -> enrich(principal));
+    }
+
     private LoginSessionUser merge(LoginSessionUser principal, LoginUserInfo userInfo) {
         return new LoginSessionUser(
             principal.userId(),
             principal.userType(),
             coalesce(userInfo.userName(), principal.userName()),
             coalesce(userInfo.phoneNumber(), principal.phoneNumber()),
+            coalesce(userInfo.clientIp(), principal.clientIp()),
             mergeAttributes(principal, userInfo),
             principal.requiredActions()
         );

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.MyNameChgReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
@@ -238,7 +239,7 @@ public class MsfMypageController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호,결합회선");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());

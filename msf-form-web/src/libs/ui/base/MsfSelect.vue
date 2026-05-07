@@ -154,6 +154,7 @@ const activeIndex = ref(-1)
 
 const selectedLabel = computed(() => {
   // props.modelValue를 직접 참조
+  if (!Array.isArray(optionList.value)) return props.placeholder
   const option = optionList.value.find((opt) => opt.value === props.modelValue)
   return option ? option.label : props.placeholder
 })

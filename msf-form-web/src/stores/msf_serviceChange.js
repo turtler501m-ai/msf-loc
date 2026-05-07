@@ -100,16 +100,18 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         custId: formData.custId || '',
       }, { silent: true })
       console.log('[서비스변경][MyinfoView] 가입정보 조회 응답', data)
-      if (data) {
-        if (data.prvRateGrpNm !== undefined) formData.prvRateGrpNm = data.prvRateGrpNm || ''
-        if (data.initActivationDate && data.initActivationDate !== '-') {
-          formData.initActivationDate = data.initActivationDate
-          formData.lstComActvDate = data.initActivationDate
+      const formResponse = data?.data
+      const changInfo = formResponse?.resData
+      if (formResponse?.resCode === '0000' && changInfo) {
+        if (changInfo.prvRateGrpNm !== undefined) formData.prvRateGrpNm = changInfo.prvRateGrpNm || ''
+        if (changInfo.initActivationDate && changInfo.initActivationDate !== '-') {
+          formData.initActivationDate = changInfo.initActivationDate
+          formData.lstComActvDate = changInfo.initActivationDate
         }
-        if (data.addr && data.addr !== '-') formData.addr = data.addr
-        if (data.remindBlckYn !== undefined) formData.remindBlckYn = data.remindBlckYn || ''
-        if (data.payData !== undefined) formData.payData = data.payData
-        if (data.billData !== undefined) formData.billData = data.billData
+        if (changInfo.addr && changInfo.addr !== '-') formData.addr = changInfo.addr
+        if (changInfo.remindBlckYn !== undefined) formData.remindBlckYn = changInfo.remindBlckYn || ''
+        if (changInfo.payData !== undefined) formData.payData = changInfo.payData
+        if (changInfo.billData !== undefined) formData.billData = changInfo.billData
 
         // 가입자 연락처 자동 셋팅
         // 휴대폰번호 ← 인증된 변경 휴대폰번호
@@ -133,26 +135,31 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         //}
 
         // 주소 ← selectCntrListNoLogin BAN 주소
-        if (data.zipNo && data.zipNo !== '-') {
-          formData.zipNo = data.zipNo
+        if (changInfo.zipNo && changInfo.zipNo !== '-') {
+          formData.zipNo = changInfo.zipNo
         }
-        if (data.address && data.address !== '-') {
-          formData.address = data.address
-        } else if (data.addr && data.addr !== '-') {
-          formData.address = data.addr
+        if (changInfo.address && changInfo.address !== '-') {
+          formData.address = changInfo.address
+        } else if (changInfo.addr && changInfo.addr !== '-') {
+          formData.address = changInfo.addr
         }
-        if (data.detailAddress && data.detailAddress !== '-') {
-          formData.detailAddress = data.detailAddress
+        if (changInfo.detailAddress && changInfo.detailAddress !== '-') {
+          formData.detailAddress = changInfo.detailAddress
         }
 
         // 이메일 ← email (아이디@도메인 분리)
-        if (data.email && data.email.includes('@')) {
-          const [id, domain] = data.email.split('@')
+        if (changInfo.email && changInfo.email.includes('@')) {
+          const [id, domain] = changInfo.email.split('@')
           formData.emailAddr1 = id || ''
           formData.emailAddr2 = domain || ''
         }
+      } else {
+        console.warn('[서비스변경][MyinfoView] 조회 실패', {
+          resCode: formResponse?.resCode,
+          resMessage: formResponse?.resMessage,
+        })
       }
-      return data
+      return changInfo || null
     } catch (e) {
       console.warn('[서비스변경][MyinfoView] 가입정보 조회 실패 (무시하고 진행)', e?.message)
       return null

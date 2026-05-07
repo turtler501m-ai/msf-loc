@@ -80,7 +80,7 @@ const { remaining, start, stop, reset } = useCountdown(countdown, {
 })
 
 const onClickSendAuthNumber = async () => {
-  const result = await post('/api/shared/common/sms/otp/send', {
+  const result = await post('/api/auth/sms/otp/send', {
     type: 'F-0-OTP',
     path: route.path,
     token: loginKey.value,
@@ -102,7 +102,7 @@ const onClickSendAuthNumber = async () => {
 }
 
 const onClickVerifyAuthNumber = async () => {
-  const result = await post('/api/shared/common/sms/otp/verify', {
+  const result = await post('/api/auth/sms/otp/verify', {
     type: 'F-0-OTP',
     path: route.path,
     value: authNumber.value,

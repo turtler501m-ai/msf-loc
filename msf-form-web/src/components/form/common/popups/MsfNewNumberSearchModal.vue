@@ -59,23 +59,43 @@ const fetchNumbers = async () => {
   try {
     const payload = {
       resNo: '2999999',
-      reqWantFnNo: props.searchParams.reqWantRnNo, // 뒤 4자리로 검색
+      reqWantNumber: props.searchParams.reqWantRnNo || '', // 뒤 4자리 검색
       requestKey: store.applicationKey || '278',
     }
     const res = await post('/api/form/newchange/searchNumber', payload)
     if (res && res.code === '0000') {
-      const list = res.data || []
-      numberOptions.value = list.map((num) => ({
-        value: typeof num === 'object' ? num.tlphNo : num,
-        label: typeof num === 'object' ? num.tlphNo : num,
-        raw: num
-      }))
+      // res.data가 객체이거나 null일 경우를 대비하여 배열로 정규화
+      let list = []
+      if (res.data) {
+        if (Array.isArray(res.data)) {
+          list = res.data
+        } else if (res.data.list && Array.isArray(res.data.list)) {
+          list = res.data.list
+        } else {
+          list = [res.data]
+        }
+      }
+
+      numberOptions.value = list.map((num) => {
+        const phone = num.orignCtn || num.tlphNo || num
+        return {
+          value: phone,
+          label: phone,
+          raw: num,
+        }
+      })
       if (numberOptions.value.length > 0) {
         numberSelect.value = numberOptions.value[0].value
+      } else {
+        numberSelect.value = ''
       }
+    } else {
+      numberOptions.value = []
+      numberSelect.value = ''
     }
   } catch (error) {
     console.error('Search number error:', error)
+    numberOptions.value = []
   } finally {
     loading.value = false
   }

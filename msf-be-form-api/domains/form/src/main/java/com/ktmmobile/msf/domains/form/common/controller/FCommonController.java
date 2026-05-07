@@ -24,12 +24,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
+import com.ktmmobile.msf.domains.form.common.dto.BannAccessTxnDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.dto.NowDlvryReqDto;
 import com.ktmmobile.msf.domains.form.common.dto.PopupDto;
 import com.ktmmobile.msf.domains.form.common.dto.SiteMenuDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.BannAccessTxnDto;
-import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.domains.form.common.exception.McpErropPageException;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
@@ -38,13 +40,11 @@ import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
 import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.CommonHttpClient;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.common.util.ParseHtmlTagUtil;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.FormDtlDTO;
 import com.ktmmobile.msf.domains.form.form.newchange.service.FormDtlSvc;
-import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
 
 import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
@@ -638,7 +638,7 @@ public class FCommonController {
 
             bannAccessTxnDto.setPlatformCd(curmenu.getPlatformCd());
             bannAccessTxnDto.setMenuSeq(curmenu.getMenuSeq());
-            bannAccessTxnDto.setAccessIp(ipStatisticService.getClientIp());
+            bannAccessTxnDto.setAccessIp(RequestUtils.getClientIp());
             bannAccessTxnDto.setUrlSeq(curmenu.getRepUrlSeq());
 
             UserSessionDto userSessionDto = SessionUtils.getUserCookieBean();

@@ -37,6 +37,7 @@
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
+        <MsfButton variant="subtle" @click="emit('pay-opn')">납부주장</MsfButton>
         <MsfButton variant="primary" @click="onClose">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -48,7 +49,7 @@ const props = defineProps({
   modelValue: Boolean,
 })
 
-const emit = defineEmits(['update:modelValue', 'open', 'close'])
+const emit = defineEmits(['update:modelValue', 'open', 'close', 'pay-opn'])
 
 // 닫힘 이벤트
 const onClose = () => {

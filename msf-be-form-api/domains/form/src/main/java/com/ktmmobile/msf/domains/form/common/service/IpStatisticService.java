@@ -1,9 +1,9 @@
-
 package com.ktmmobile.msf.domains.form.common.service;
 
+import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.util.List;
-
+import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +15,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.common.dao.FCommonDao;
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
@@ -23,10 +24,7 @@ import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 
-import java.net.InetAddress;
-import java.util.Map;
-
-import static java.nio.charset.StandardCharsets.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  *
@@ -34,6 +32,7 @@ import static java.nio.charset.StandardCharsets.*;
 
 @Service
 public class IpStatisticService {
+
     private static final Logger logger = LoggerFactory.getLogger(IpStatisticService.class);
     @Autowired
     private FCommonDao fCommonDao;
@@ -46,57 +45,57 @@ public class IpStatisticService {
      * @return:
      * </pre>
      */
-    public void insertIpStat(HttpServletRequest request)  {
-        try{
-            if(StringUtils.endsWith(request.getRequestURI(), "jsp")) {
+    public void insertIpStat(HttpServletRequest request) {
+        try {
+            if (StringUtils.endsWith(request.getRequestURI(), "jsp")) {
                 return;
             }
 
             McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-            mcpIpStatisticDto.setIp(this.getClientIp());
+            mcpIpStatisticDto.setIp(RequestUtils.getClientIp());
             mcpIpStatisticDto.setUrl(request.getRequestURI());
-            if(request.getQueryString()!=null){
+            if (request.getQueryString() != null) {
                 mcpIpStatisticDto.setParameter(URLDecoder.decode(request.getQueryString(), UTF_8));
             }
 
-            UserSessionDto userSession = (UserSessionDto)request.getSession().getAttribute(SessionUtils.USER_SESSION);
-            if(userSession !=null){
+            UserSessionDto userSession = (UserSessionDto) request.getSession().getAttribute(SessionUtils.USER_SESSION);
+            if (userSession != null) {
                 String strUserId = userSession.getUserId();
                 if (strUserId.length() > 20) {
                     strUserId = strUserId.substring(0, 20);
                 }
                 mcpIpStatisticDto.setUserid(strUserId);
-                mcpIpStatisticDto.setLoginDivCd(StringUtil.NVL(userSession.getLoginDivCd(),""));
+                mcpIpStatisticDto.setLoginDivCd(StringUtil.NVL(userSession.getLoginDivCd(), ""));
             }
 
             mcpIpStatisticDto.setPrcsMdlInd(InetAddress.getLocalHost().getHostName());
             mcpIpStatisticDto.setPrcsSbst(getPrcsSbst(request));
             this.insertAccessTrace(mcpIpStatisticDto);
             this.increasePageViewCount();
-        }catch(Exception e){
+        } catch (Exception e) {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
         }
     }
 
     public boolean insertAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        mcpIpStatisticDto.setIp(this.getClientIp());
-        UserSessionDto userSession = (UserSessionDto)request.getSession().getAttribute(SessionUtils.USER_SESSION);
-        if(userSession !=null){
+        mcpIpStatisticDto.setIp(RequestUtils.getClientIp());
+        UserSessionDto userSession = (UserSessionDto) request.getSession().getAttribute(SessionUtils.USER_SESSION);
+        if (userSession != null) {
             mcpIpStatisticDto.setUserid(userSession.getUserId());
         }
         mcpIpStatisticDto.setUrl(request.getRequestURI());
         mcpIpStatisticDto.setPlatformCd(NmcpServiceUtils.getPlatFormCd());
 
         WorkNotiDto workNotiDto = SessionUtils.getCurrentMenuUrl();
-        if(workNotiDto != null) {
+        if (workNotiDto != null) {
             mcpIpStatisticDto.setMenuSeq(workNotiDto.getMenuSeq());
             mcpIpStatisticDto.setUrlSeq(workNotiDto.getUrlSeq());
-//        } else
-//            mcpIpStatisticDto.setMenuSeq("999999999");
-//            mcpIpStatisticDto.setUrlSeq("999999999");
+            //        } else
+            //            mcpIpStatisticDto.setMenuSeq("999999999");
+            //            mcpIpStatisticDto.setUrlSeq("999999999");
         }
-        logger.debug("getMenuSeq:{},getUrlSeq:{}", mcpIpStatisticDto.getMenuSeq(),mcpIpStatisticDto.getUrlSeq());
+        logger.debug("getMenuSeq:{},getUrlSeq:{}", mcpIpStatisticDto.getMenuSeq(), mcpIpStatisticDto.getUrlSeq());
 
         return 0 < fCommonDao.insertIpStat(mcpIpStatisticDto);
     }
@@ -128,24 +127,8 @@ public class IpStatisticService {
         return fCommonDao.selectRateResChgAccessTrace(mcpIpStatisticDto);
     }
 
-    public String getClientIp()  {
-        String clientIp = "";
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
-        if(request.getHeader("X-Forwarded-For") == null) {
-            clientIp = request.getRemoteAddr();
-        } else {
-            clientIp = request.getHeader("X-Forwarded-For");
-            if (clientIp !=null && ! clientIp.equals("") && clientIp.indexOf(",")>-1) {
-                clientIp =  clientIp.split("\\,")[0].trim();
-            }
-        }
-
-        return clientIp;
-    }
-
-
-    public String getReferer()  {
+    public String getReferer() {
         String referer = "";
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         referer = request.getHeader("referer");
@@ -159,15 +142,16 @@ public class IpStatisticService {
 
     public boolean insertAdminAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        mcpIpStatisticDto.setIp(this.getClientIp());
-        UserSessionDto userSession = (UserSessionDto)request.getSession().getAttribute(SessionUtils.USER_SESSION);
-        if(userSession !=null){
+        mcpIpStatisticDto.setIp(RequestUtils.getClientIp());
+        UserSessionDto userSession = (UserSessionDto) request.getSession().getAttribute(SessionUtils.USER_SESSION);
+        if (userSession != null) {
             mcpIpStatisticDto.setUserid(userSession.getUserId());
         }
         mcpIpStatisticDto.setUrl(request.getRequestURI());
 
-        return 0 < fCommonDao.insertIpStatAdmin(mcpIpStatisticDto) ;
+        return 0 < fCommonDao.insertIpStatAdmin(mcpIpStatisticDto);
     }
+
     /**
      * <pre>
      * 설명     : 이력정보 조회
@@ -178,7 +162,7 @@ public class IpStatisticService {
      * </pre>
      */
     public List<McpIpStatisticDto> getAdminAccessTrace(McpIpStatisticDto mcpIpStatisticDto) {
-        return fCommonDao.getAdminAccessTrace(mcpIpStatisticDto) ;
+        return fCommonDao.getAdminAccessTrace(mcpIpStatisticDto);
     }
 
     /**
@@ -191,14 +175,14 @@ public class IpStatisticService {
 
     private static String getPrcsSbst(HttpServletRequest request) {
         String connect = NmcpServiceUtils.getDeviceType();
-        if(!"APP".equals(connect)) {
+        if (!"APP".equals(connect)) {
             String url = request.getServletPath();
-            if(url == null || url.isEmpty()){
+            if (url == null || url.isEmpty()) {
                 connect = "NONE";
-            }else{	//url 이있으면 모바일, pc 분기함
-                if("Y".equals(NmcpServiceUtils.isMobile())){
+            } else {    //url 이있으면 모바일, pc 분기함
+                if ("Y".equals(NmcpServiceUtils.isMobile())) {
                     connect = "MOBILE";
-                }else{
+                } else {
                     connect = "PC";
                 }
             }

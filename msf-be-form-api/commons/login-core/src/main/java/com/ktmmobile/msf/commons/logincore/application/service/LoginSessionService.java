@@ -43,6 +43,7 @@ public class LoginSessionService {
             principal.userType(),
             principal.userName(),
             principal.phoneNumber(),
+            principal.clientIp(),
             principal.attributes(),
             principal.requiredActions().stream()
                 .filter(action -> !action.isVerifyTwoFactor())
@@ -65,6 +66,7 @@ public class LoginSessionService {
             principal.userType(),
             principal.userName(),
             principal.phoneNumber(),
+            principal.clientIp(),
             principal.attributes()
         );
     }
@@ -115,10 +117,10 @@ public class LoginSessionService {
     }
 
     public LoginSessionUser completeAction(String loginSessionId, String actionCode) {
-        StoredSession session = get(loginSessionId);
-        if (!session.twoFactorCompleted()) {
-            throw new LoginException("추가 인증이 완료되지 않았습니다.");
+        if (LoginRequiredAction.VERIFY_TWO_FACTOR_CODE.equals(actionCode)) {
+            throw new LoginException("추가 인증은 추가 인증 완료 메서드로 처리해야 합니다.");
         }
+        StoredSession session = get(loginSessionId);
         List<LoginRequiredAction> remainingActions = session.principal().requiredActions().stream()
             .filter(action -> !action.code().equals(actionCode))
             .toList();
@@ -127,10 +129,11 @@ public class LoginSessionService {
             session.principal().userType(),
             session.principal().userName(),
             session.principal().phoneNumber(),
+            session.principal().clientIp(),
             session.principal().attributes(),
             remainingActions
         );
-        update(loginSessionId, session, principal, true);
+        update(loginSessionId, session, principal, session.twoFactorCompleted());
         return principal;
     }
 
@@ -141,6 +144,7 @@ public class LoginSessionService {
             principal.userType(),
             principal.userName(),
             principal.phoneNumber(),
+            principal.clientIp(),
             principal.attributes(),
             requiredActions
         );
@@ -197,6 +201,7 @@ public class LoginSessionService {
             principal.userType(),
             principal.userName(),
             principal.phoneNumber(),
+            principal.clientIp(),
             principal.attributes(),
             List.of(LoginRequiredAction.verifyTwoFactor())
         );

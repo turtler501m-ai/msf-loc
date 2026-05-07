@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import com.ktmmobile.msf.commons.common.data.type.UserType;
 import com.ktmmobile.msf.commons.logincore.application.port.out.LoginUserFinder;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginUserInfo;
 import com.ktmmobile.msf.commons.logincore.domain.entity.LoginUser;
 import com.ktmmobile.msf.domains.login.adapter.repository.mybatis.smartform.mapper.LoginUserMapper;
@@ -39,7 +40,14 @@ public class LoginUserRepositoryImpl implements LoginUserFinder<LoginCredential>
     @Override
     public Optional<LoginUserInfo> findUserInfo(LoginUser user, LoginCredential credential) {
         return Optional.ofNullable(loginUserMapper.selectFormUserInfoByUserIdAndDeviceUuid(user.userId(), credential.deviceUuid()))
-            .map(row -> toLoginUserInfo(row, isApprovedDevice(row.apvSttusCd())));
+            .map(row -> toLoginUserInfo(row, isApprovedDevice(row.apvSttusCd()), credential.deviceUuid()));
+    }
+
+    @Override
+    public Optional<LoginUserInfo> findUserInfo(LoginSessionUser sessionUser) {
+        String deviceUuid = sessionUser.attributeAsString(LoginUserInfoAttribute.DEVICE_UUID.key());
+        return Optional.ofNullable(loginUserMapper.selectFormUserInfoByUserIdAndDeviceUuid(sessionUser.userId(), deviceUuid))
+            .map(row -> toLoginUserInfo(row, isApprovedDevice(row.apvSttusCd()), deviceUuid));
     }
 
     @Override
@@ -72,19 +80,21 @@ public class LoginUserRepositoryImpl implements LoginUserFinder<LoginCredential>
         );
     }
 
-    private LoginUserInfo toLoginUserInfo(FormLoginUserInfoRow row, boolean deviceAuthCompleted) {
+    private LoginUserInfo toLoginUserInfo(FormLoginUserInfoRow row, boolean deviceAuthCompleted, String deviceUuid) {
         return new LoginUserInfo(
             row.userId(),
             row.userNm(),
             row.mobileNo(),
             UserType.FORM_USER,
-            attributes(row, deviceAuthCompleted)
+            null,
+            attributes(row, deviceAuthCompleted, deviceUuid)
         );
     }
 
-    private Map<String, Object> attributes(FormLoginUserInfoRow row, boolean deviceAuthCompleted) {
+    private Map<String, Object> attributes(FormLoginUserInfoRow row, boolean deviceAuthCompleted, String deviceUuid) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put(LoginUserInfoAttribute.DEVICE_AUTH_COMPLETED.key(), deviceAuthCompleted);
+        putIfNotNull(attributes, LoginUserInfoAttribute.DEVICE_UUID.key(), deviceUuid);
         putIfNotNull(attributes, LoginUserInfoAttribute.AGENT_CODE.key(), row.agentCd());
         putIfNotNull(attributes, LoginUserInfoAttribute.SHOP_CODE.key(), row.shopCd());
         return attributes;

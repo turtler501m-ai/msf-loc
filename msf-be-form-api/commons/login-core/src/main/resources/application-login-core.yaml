@@ -17,7 +17,7 @@ login-core:
     lock-wait-time: 1s
     lock-retry-interval: 100ms
   cookie:
-    refresh-token-name: RefreshToken
+    refresh-token-name: refreshToken
     same-site: Strict
     path: /
     secure: true
@@ -55,5 +55,5 @@ login-core:
     access-time-to-live: 3h
     refresh-time-to-live: 6h
   cookie:
-    same-site: None
+    same-site: Lax
     secure: false

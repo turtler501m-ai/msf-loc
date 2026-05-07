@@ -18,11 +18,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useMsfUserStore } from '@/stores/msf_user'
 
-const router = useRouter()
 const msfUserStore = useMsfUserStore()
 const userInfo = msfUserStore.getUserInfo()
 console.log(msfUserStore.getUserInfo())

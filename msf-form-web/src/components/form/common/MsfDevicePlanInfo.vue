@@ -2,7 +2,12 @@
   <div>
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
-      <MsfFormGroup v-if="model.productType === 'MM'" label="개통 유형" tag="div" required>
+      <MsfFormGroup
+        v-if="model.productType === 'MM' && model.joinType !== 'HDN3'"
+        label="개통 유형"
+        tag="div"
+        required
+      >
         <MsfChip
           v-model="model.openTypeCd"
           :data="openTypeCdCodes"
@@ -56,7 +61,7 @@
         />
       </MsfFormGroup>
       <MsfFormGroup
-        v-if="model.productType === 'MM' && model.openTypeCd === '99'"
+        v-if="model.productType === 'MM' || model.productType === 'UU'"
         label="약정기간"
         required
         tag="div"
@@ -82,7 +87,7 @@
         />
       </MsfFormGroup>
       <MsfFormGroup
-        v-if="model.productType === 'MM' && model.openTypeCd === '99' && model.contractPeriod !== '0'"
+        v-if="model.productType === 'MM' || model.productType === 'UU'"
         label="할인유형"
         required
         tag="div"
@@ -162,6 +167,17 @@ const allDiscountTypeCodes = ref([]) // 공통코드 F002 전체 목록
 
 const planCategoryOptions = ref([])
 
+// 상품 유형이 휴대폰('MM')이고 가입유형이 기기변경('HDN3')인 경우 개통유형 고정
+watch(
+  () => [model.value.productType, model.value.joinType],
+  ([pType, jType]) => {
+    if (pType === 'MM' && jType === 'HDN3') {
+      model.value.openTypeCd = '99' // 휴대폰 개통으로 고정
+    }
+  },
+  { immediate: true }
+)
+
 // 가입유형 판별
 const isNewJoin = computed(() => {
   const joinType = props.customerData?.joinType || ''
@@ -178,35 +194,11 @@ watch(
   }
 )
 
-// 약정기간에 따른 할부기간 필터링
+// 약정기간에 따른 할부기간 필터링 (필터링 없이 전체 노출하되 필요 시 disabled 처리)
 const refinedInstallmentMonthOptions = computed(() => {
-  const isNoContract = model.value.contractPeriod === '0'
-
-  if (isNoContract) {
-    // 무약정인 경우
-    if (isNewJoin.value) {
-      // 신규가입: 0개월(일시불) + 전체 리스트
-      return installmentMonthOptions.value
-    } else {
-      // 번호이동/기기변경: 전체 리스트
-      return installmentMonthOptions.value
-    }
-  } else {
-    // 약정인 경우 (12, 24개월 등)
-    const period = model.value.contractPeriod
-    if (isNewJoin.value) {
-      // 신규가입: 0개월(일시불) + 약정기간과 동일한 기간
-      return installmentMonthOptions.value.filter(
-        (opt) => String(opt.value) === '0' || String(opt.value) === String(period),
-      )
-    } else {
-      // 번호이동/기기변경: 약정기간과 동일한 기간만
-      return installmentMonthOptions.value.filter((opt) => String(opt.value) === String(period))
-    }
-  }
+  return installmentMonthOptions.value
 })
 
-// 최종적으로 화면에 뿌려질 칩 데이터 (가공됨)
 const refinedDiscountTypeOptions = computed(() => {
   if (allDiscountTypeCodes.value.length === 0) return discountTypeOptions.value
 
@@ -305,9 +297,10 @@ const fetchContractPeriods = async () => {
       label: item.agrmTrmLabel || `${item.agrmTrm}개월`,
       value: item.agrmTrm,
     }))
-    // 자동 선택
+    // 자동 선택: 24개월 우선, 없으면 첫 번째 항목
     if (contractPeriodOptions.value.length > 0 && !model.value.contractPeriod) {
-      model.value.contractPeriod = contractPeriodOptions.value[0].value
+      const has24 = contractPeriodOptions.value.find((opt) => String(opt.value) === '24')
+      model.value.contractPeriod = has24 ? has24.value : contractPeriodOptions.value[0].value
     }
   } catch (e) {
     console.error('Failed to fetch contract periods:', e)
@@ -315,18 +308,28 @@ const fetchContractPeriods = async () => {
 }
 
 // 5. 할부기간 조회
-const fetchInstallmentMonths = async () => {
+const fetchInstallmentMonths = async (prodId) => {
+  if (!prodId && model.value.productType === 'MM') {
+    installmentMonthOptions.value = []
+    return
+  }
   try {
     const res = await post('/api/form/phone/monthly/list', {
-      modelSalePolicyCode: 'D2022041306417',
+      prodId: prodId || '',
+      modelSalePolicyCode: 'D2022041306417', // 정책 코드는 유지하거나 필요시 동적 처리
     })
     installmentMonthOptions.value = extractData(res).map((item) => ({
       label: item.modelMonthly ? `${item.modelMonthly}개월` : '일시불(없음)',
       value: item.modelMonthly,
     }))
-    // 자동 선택
-    if (installmentMonthOptions.value.length > 0 && (model.value.installmentMonth === undefined || model.value.installmentMonth === null || model.value.installmentMonth === '')) {
-      model.value.installmentMonth = installmentMonthOptions.value[0].value
+    // 자동 선택: 24개월 우선, 없으면 첫 번째 항목
+    if (installmentMonthOptions.value.length > 0) {
+      const has24 = installmentMonthOptions.value.find((opt) => String(opt.value) === '24')
+      const defaultValue = has24 ? has24.value : installmentMonthOptions.value[0].value
+      
+      if (model.value.installmentMonth === undefined || model.value.installmentMonth === null || model.value.installmentMonth === '') {
+        model.value.installmentMonth = defaultValue
+      }
     }
   } catch (e) {
     console.error('Failed to fetch installment months:', e)
@@ -476,7 +479,7 @@ watch(
   },
 )
 
-// 요금제 선택 시 prodNm 업데이트
+// 요금제 선택 시 prodNm 및 prdtSctnCd 업데이트
 watch(
   () => model.value.prodId,
   (newVal) => {
@@ -484,9 +487,12 @@ watch(
       const selected = planOptions.value.find(opt => opt.value === newVal)
       if (selected) {
         model.value.prodNm = selected.label
+        // 약관 필터링을 위해 prdtSctnCd 저장
+        model.value.prdtSctnCd = selected.raw?.prdtSctnCd || ''
       }
     } else {
       model.value.prodNm = ''
+      model.value.prdtSctnCd = ''
     }
   }
 )
@@ -505,7 +511,7 @@ watch(
   },
 )
 
-// 단말기가 변경될 때 하위 의존성(용량, 할인유형) 다시 불러오기
+// 단말기가 변경될 때 하위 의존성(용량, 할인유형, 할부기간) 다시 불러오기
 watch(
   () => model.value.deviceModel,
   async (newVal, oldVal) => {
@@ -513,15 +519,19 @@ watch(
       model.value.capacity = ''
       model.value.color = ''
       model.value.discountType = ''
+      model.value.installmentMonth = '' // 단말기 변경 시 할부기간도 초기화 후 재조회
     }
 
     if (newVal) {
       await fetchCapacities(newVal)
       fetchDiscountTypes()
+      fetchInstallmentMonths(newVal) // 선택된 단말기 ID로 할부기간 조회
     } else {
       capacityOptions.value = []
       colorOptions.value = []
-      discountTypeOptions.value = []
+      // 단말기가 없어도(유심 단독 등) 할인유형은 필요하므로 비우지 않고 새로 조회
+      fetchDiscountTypes()
+      fetchInstallmentMonths('') // 단말기 없을 때 기본 할부기간 조회
     }
   },
 )
@@ -573,15 +583,14 @@ onMounted(async () => {
     model.value.openTypeCd = '99'
   }
 
-  // 개통유형이 휴대폰(MM)일 때만 단말기 관련 API 호출
+  // 단말기 관련 API 호출 (MM이 아니더라도 약정/할인정보는 필요하므로 호출 범위 조정)
   if (model.value.productType === 'MM') {
     const savedModel = model.value.deviceModel
     const savedCapacity = model.value.capacity
     const savedColor = model.value.color
 
     await fetchDevices()
-    fetchContractPeriods()
-    fetchInstallmentMonths()
+    fetchInstallmentMonths(savedModel) // 저장된 모델이 있으면 해당 ID로, 없으면 빈값으로 조회
 
     if (savedModel) {
       model.value.deviceModel = savedModel
@@ -594,12 +603,66 @@ onMounted(async () => {
         }
       }
     }
-    fetchDiscountTypes()
   }
+
+  // 공통 호출 항목 (MM/UU 공통)
+  fetchContractPeriods()
+  fetchDiscountTypes()
 
   fetchPlanCategories()
   fetchPlans(model.value.prodCtgId) // 초기 로드
 })
+
+// 10. 예상납부금액 조회
+const fetchEstimatedAmount = async () => {
+  // 필수값 체크 (단말기, 요금제, 약정기간, 할인유형 등이 있어야 함)
+  if (!model.value.prodId || !model.value.contractPeriod || !model.value.discountType) return
+
+  const customer = props.customerData || {}
+  const payload = {
+    salePlcyCd: model.value.modelSalePolicyCd || 'D2021123118262', // 임시 기본값
+    prdtId: model.value.deviceModel || 'K7028268', // 임시 기본값
+    rateCd: model.value.prodId,
+    agrmTrm: model.value.contractPeriod,
+    sprtTp: model.value.discountType,
+    operType: customer.joinType || 'MNP3',
+    orgnId: model.value.agency || '1100011741', // 임시 기본값
+    oldYn: 'N',
+  }
+
+  try {
+    const res = await post('/api/form/phone/subsdamt', payload, { silent: true })
+    if (res && res.data) {
+      // 스토어에 결과 저장 (필요 시 가공)
+      store.product.estimatedAmtInfo = {
+        hndsetAmt: Number(res.data.hndsetAmt || 0),
+        subsdAmt: Number(res.data.subsdAmt || 0),
+        instAmt: Number(res.data.instAmt || 0),
+        instCmsn: Number(res.data.instCmsn || 0),
+        baseAmt: Number(res.data.baseAmt || 0),
+        dcAmt: Number(res.data.dcAmt || 0),
+        addDcAmt: Number(res.data.addDcAmt || 0),
+      }
+      console.log('>>> 예상납부금액 조회 결과:', store.product.estimatedAmtInfo)
+    }
+  } catch (error) {
+    console.error('Failed to fetch estimated amount:', error)
+  }
+}
+
+// 정보 변경 시 예상납부금액 재조회
+watch(
+  () => [
+    model.value.deviceModel,
+    model.value.prodId,
+    model.value.contractPeriod,
+    model.value.discountType,
+    model.value.agency,
+  ],
+  () => {
+    fetchEstimatedAmount()
+  },
+)
 
 const validate = () => {
   const m = model.value
@@ -613,10 +676,6 @@ const validate = () => {
     }
   }
 
-  if (!m.prodCtgId) {
-    console.warn('Validation failed: prodCtgId is missing')
-    return false
-  }
   if (!m.prodId) {
     console.warn('Validation failed: prodId is missing')
     return false

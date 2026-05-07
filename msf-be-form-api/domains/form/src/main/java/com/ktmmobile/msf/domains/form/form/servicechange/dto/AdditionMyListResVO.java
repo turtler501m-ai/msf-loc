@@ -2,6 +2,9 @@ package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSocVO;
 import java.util.List;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * 이용중 부가서비스 목록 응답 VO
@@ -16,6 +19,9 @@ import java.util.List;
  *
  * @see MpSocVO 각 SOC의 상세 정보 (soc, socNm, strtDt, endDttm, onlineCanYn, canCmnt 등)
  */
+@Getter
+@Setter
+@NoArgsConstructor
 public class AdditionMyListResVO {
 
     /**
@@ -30,6 +36,4 @@ public class AdditionMyListResVO {
      */
     private List<MpSocVO> list;
 
-    public List<MpSocVO> getList() { return list; }
-    public void setList(List<MpSocVO> list) { this.list = list; }
 }

@@ -3,6 +3,7 @@ package com.ktmmobile.msf.domains.form.common.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.code.ResTermMessage;
+import com.ktmmobile.msf.domains.form.common.code.ResSvcChgMessage;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record FormResponse<T>(
@@ -31,6 +32,18 @@ public record FormResponse<T>(
     }
 
     public static <T> FormResponse<T> of(ResTermMessage message, String resMessage, T data) {
+        return new FormResponse<>(message.getCode(), resMessage, data);
+    }
+
+    public static <T> FormResponse<T> of(ResSvcChgMessage message, T data) {
+        return new FormResponse<>(message.getCode(), message.getMessage(), data);
+    }
+
+    public static <T> FormResponse<T> of(ResSvcChgMessage message) {
+        return new FormResponse<>(message.getCode(), message.getMessage(), null);
+    }
+
+    public static <T> FormResponse<T> of(ResSvcChgMessage message, String resMessage, T data) {
         return new FormResponse<>(message.getCode(), resMessage, data);
     }
 }

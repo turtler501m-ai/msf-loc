@@ -52,6 +52,7 @@ public class DefaultLoginAuthenticationService<C extends LoginAuthenticationCred
         loginUserFinder.recordLoginSuccess(user, credential);
         LoginUserInfo userInfo = loginUserFinder.findUserInfo(user, credential)
             .orElseGet(() -> LoginUserInfo.of(user, credential.userType()));
+        userInfo = withClientIp(userInfo, credential.clientIp());
         LoginCompletionContext<C> requiredActionContext = new LoginCompletionContext<>(user, credential, userInfo);
         List<LoginRequiredAction> requiredActions = loginRequiredActionPolicyComposite.resolve(requiredActionContext);
         LoginSessionUser principal = new LoginSessionUser(
@@ -59,6 +60,7 @@ public class DefaultLoginAuthenticationService<C extends LoginAuthenticationCred
             userInfo.userType(),
             userInfo.userName(),
             userInfo.phoneNumber(),
+            userInfo.clientIp(),
             userInfo.attributes(),
             requiredActions
         );
@@ -81,5 +83,16 @@ public class DefaultLoginAuthenticationService<C extends LoginAuthenticationCred
         return requiredActions.stream()
             .filter(action -> !action.tokenIssuable())
             .toList();
+    }
+
+    private LoginUserInfo withClientIp(LoginUserInfo userInfo, String clientIp) {
+        return new LoginUserInfo(
+            userInfo.userId(),
+            userInfo.userName(),
+            userInfo.phoneNumber(),
+            userInfo.userType(),
+            clientIp,
+            userInfo.attributes()
+        );
     }
 }

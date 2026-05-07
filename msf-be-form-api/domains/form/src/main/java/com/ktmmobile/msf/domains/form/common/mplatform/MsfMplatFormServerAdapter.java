@@ -21,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.CommonXmlNoSelfServiceException;
@@ -203,7 +204,7 @@ public class MsfMplatFormServerAdapter {
         try {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
-            tmpParm.put("ip", ipStatisticService.getClientIp());
+            tmpParm.put("ip", RequestUtils.getClientIp());
             tmpParm.put("url", request.getRequestURI());
             //tmpParm.put("mdlInd", NmcpServiceUtils.getDeviceType());
             tmpParm.put("mdlInd", "ttt");

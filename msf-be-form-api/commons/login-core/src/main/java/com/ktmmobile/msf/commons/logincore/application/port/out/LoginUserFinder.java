@@ -2,6 +2,7 @@ package com.ktmmobile.msf.commons.logincore.application.port.out;
 
 import java.util.Optional;
 
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginUserInfo;
 import com.ktmmobile.msf.commons.logincore.domain.entity.LoginUser;
 import com.ktmmobile.msf.commons.logincore.domain.policy.completion.LoginAuthenticationCredential;
@@ -12,6 +13,10 @@ public interface LoginUserFinder<C extends LoginAuthenticationCredential> {
 
     default Optional<LoginUserInfo> findUserInfo(LoginUser user, C credential) {
         return Optional.of(LoginUserInfo.of(user, credential.userType()));
+    }
+
+    default Optional<LoginUserInfo> findUserInfo(LoginSessionUser sessionUser) {
+        return Optional.empty();
     }
 
     void recordLoginSuccess(LoginUser user, C credential);

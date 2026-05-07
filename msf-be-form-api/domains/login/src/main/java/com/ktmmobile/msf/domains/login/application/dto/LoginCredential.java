@@ -8,7 +8,8 @@ public record LoginCredential(
     String userId,
     String password,
     String deviceUuid,
-    LoginAuthType authType
+    LoginAuthType authType,
+    String clientIp
 ) implements LoginAuthenticationCredential {
 
     @Override

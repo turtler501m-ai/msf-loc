@@ -153,7 +153,11 @@ const isActive = (index) => index === props.currentStep
             background-position: center center;
             // background-size: 100%;
             @include position($t: 0, $l: 0);
-            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.1));
+            // 스텝이동시 태블릿 잔상제거
+            will-change: filter; /* 필터 예고 */
+            backface-visibility: hidden; /* 가속 활성화 */
+            transform: translateZ(0); /* 레이어 강제 생성 */
           }
         }
         // 2. 기본 스타일

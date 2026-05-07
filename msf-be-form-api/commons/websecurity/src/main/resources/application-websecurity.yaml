@@ -21,6 +21,10 @@ spring:
 
   ## Security
   security:
+    authorization:
+      permit-all-urls:
+        - /**
+        #- /api/auth/**
     jwt:
       secret-key: ${SECURITY_JWT_SECRET_KEY}
       issuer: kt-Mmobile-SmartForm

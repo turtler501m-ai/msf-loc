@@ -23,14 +23,16 @@
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useMsfAppStore } from '@/stores/msf_app'
+import { useMsfUserStore } from '@/stores/msf_user'
 
 const route = useRoute()
 const msfAppStore = useMsfAppStore()
+const msfUserStore = useMsfUserStore()
 // 타이틀 클릭 라우터 이동
 const router = useRouter()
 
 onMounted(() => {
-  if (!route.meta.skipAuth && msfAppStore.showFirst) {
+  if (!route.meta.skipAuth && msfAppStore.showFirst && !msfUserStore.token) {
     msfAppStore.setShowFirst(false)
     router.push('/login')
   }

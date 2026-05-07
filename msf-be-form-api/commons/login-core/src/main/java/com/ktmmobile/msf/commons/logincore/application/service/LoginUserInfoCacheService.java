@@ -29,6 +29,7 @@ public class LoginUserInfoCacheService {
             principal.userName(),
             principal.phoneNumber(),
             principal.userType(),
+            principal.clientIp(),
             principal.attributes()
         ));
     }

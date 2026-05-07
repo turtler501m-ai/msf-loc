@@ -22,36 +22,48 @@ public class ProductController {
     private final ProductInfoService productInfoService;
 
     //판매정책조회
+    //MSP_SALE_PLCY_MST PL,
+    //MSP_SALE_ORGN_MST ORG,
+    //MSP_SALE_PRDT_MST PRDT
     @PostMapping("/phone/saleplcy/list")
     public CommonResponse<List<MspSalePlcyMstInfoDto>> getMspSalePlcyMstList(@RequestBody @Valid ProductInfoRequest condition) {
         return ResponseUtils.ok(productInfoService.getMspSalePlcyMstList(condition));
     }
 
     //할인유형
+    //MSP_SALE_PLCY_MST PL,
+    //MSP_SALE_ORGN_MST ORG,
+    //MSP_SALE_PRDT_MST PRDT
     @PostMapping("/phone/saletype/list")
     public CommonResponse<List<MspSalePlcyMstInfoDto>> getSaleTypeList(@RequestBody @Valid ProductInfoRequest condition) {
         return ResponseUtils.ok(productInfoService.getSaleTypeList(condition));
     }
 
     //요금 약정기간조회
+    //MSP_SALE_AGRM_MST
     @PostMapping("/rate/engg/list")
     public CommonResponse<List<MspSaleAgrmMstInfoDto>> getMspSaleAgrmMstList(@RequestBody @Valid ProductInfoRequest condition) {
         return ResponseUtils.ok(productInfoService.getMspSaleAgrmMstList(condition));
     }
 
     //휴대폰 할부기간 조회
+    //ORG_INST_NOM_MST
     @PostMapping("/phone/monthly/list")
     public CommonResponse<List<PhoneInfoDto>> getModelMonthlyList(@RequestBody @Valid ProductInfoRequest condition) {
         return ResponseUtils.ok(productInfoService.getModelMonthlyList(condition));
     }
 
     //휴대폰 색상 조회
+    //CMN_INTM_MDL A
+    //CMN_GRP_CD_MST B
     @PostMapping("/phone/color/list")
     public CommonResponse<List<PhoneInfoDto>> getPrdtColorList(@RequestBody @Valid ProductInfoRequest condition) {
         return ResponseUtils.ok(productInfoService.getPrdtColorList(condition));
     }
 
     //휴대폰 용량 조회
+    //NMCP_SNTY_PROD_BAS@DL_MCP A
+    //NMCP_PROD_ATRIB_VAL_DTL@DL_MCP B
     @PostMapping("/phone/capacity/list")
     public CommonResponse<List<PhoneInfoDto>> getPrdtCapacityList(@RequestBody @Valid ProductInfoRequest condition) {
         return ResponseUtils.ok(productInfoService.getPrdtCapacityList(condition));
@@ -60,6 +72,7 @@ public class ProductController {
     /**
      * 휴대폰 매장 재고 조회 (postgre)
      */
+    //MSF_PROD_STOR_INVENTORY_TXN
     @PostMapping("/phone/inventory/list")
     public CommonResponse<List<CategoryInfoDto>> getPhoneInventoryList(@RequestBody @Valid PhoneSerialRequest condition) {
         return ResponseUtils.ok(productInfoService.getPhoneInventoryList(condition));
@@ -76,18 +89,29 @@ public class ProductController {
     /**
      * 요금제 목록 조회
      */
+    //MSP_SALE_ORGN_MST ORGN,
+    //MSP_SALE_PLCY_MST PLCY,
+    //MSP_SALE_RATE_MST RATE,
+    //MSP_RATE_MST RATE_MST
     @PostMapping("/rate/list")
     public CommonResponse<List<RateInfoDto>> getRateList(@RequestBody @Valid ProductInfoRequest request) {
         return ResponseUtils.ok(productInfoService.getRateList(request));
     }
 
-    //공시지원금 조회 (출고가, 판매가 포함) >> 아직 안함.
+    //공시지원금 조회 (출고가, 판매가 포함)
+    //mcp-api : MspMapper.findMspSaleSubsdMst
+    //MSP_SALE_SUBSD_MST
     @PostMapping("/phone/subsdamt")
-    public CommonResponse<List<PhoneInfoDto>> getMspOfficialNoticeSupport(@RequestBody @Valid ProductInfoRequest condition) {
-        return ResponseUtils.ok(productInfoService.getMspOfficialNoticeSupport(condition));
+    public CommonResponse<MspSaleSubsdMstResponse> getMspSaleSubsdMst(@RequestBody @Valid MspSaleSubsdMstRequest request) {
+        return ResponseUtils.ok(productInfoService.getMspSaleSubsdMst(request));
     }
+    /*public CommonResponse<List<PhoneInfoDto>> getMspOfficialNoticeSupport(@RequestBody @Valid ProductInfoRequest condition) {
+        return ResponseUtils.ok(productInfoService.getMspOfficialNoticeSupport(condition));
+    }*/
 
     //부가서비스 목록 조회 - 신규가입 및 번호이동 // 기기변경은 가입중 부가서비스 조회해서 합치기
+    //MSP_RATE_MST A
+    //MSP_SALE_RATE_MST B
     //고객포탈 : /appform/getMcpAdditionListAjax.do
     @PostMapping("/addition/list")
     public CommonResponse<List<MsfRequestAdditionResponse>> getAdditionList(@RequestBody @Valid MsfRequestAdditionRequest condition) {
@@ -95,10 +119,19 @@ public class ProductController {
     }
 
     //부가서비스 목록 조회 - 기기변경 신청서의 가입중 부가서비스목록 조회
+    //기기변경 가입중 부가서비스 조회 : /mypage/regService
     @PostMapping("/activeaddition/list")
     public CommonResponse<List<MsfRequestAdditionResponse>> getActiveAdditionList(@RequestBody @Valid MspJuoSubInfoRequest condition) {
         return ResponseUtils.ok(productInfoService.getActiveAdditionList(condition));
     }
+
+    //안심보험 목록 ( as-is :: /appform/selectInsrProdListAjax.do )
+    /* appform/selectInsrProdList */
+    @PostMapping("/product/selectInsrProdList")
+    public CommonResponse<List<IntmInsrRelDTO>> getInsrProdList(@RequestBody @Valid InsrProdRequest condition) {
+        return ResponseUtils.ok(productInfoService.getInsrProdList(condition));
+    }
+
 
     //요금제 카테고리 목록 조회
     @PostMapping("/rate/category/list")
@@ -110,12 +143,6 @@ public class ProductController {
     @PostMapping("/rate/categorydetail/list")
     public CommonResponse<List<CategoryInfoDto>> getCategoryDetailList(@RequestBody @Valid CategoryRelRequest condition) {
         return ResponseUtils.ok(productInfoService.getCategoryDetailList(condition));
-    }
-
-    //안심보험 목록 ( as-is :: /appform/selectInsrProdListAjax.do )
-    @PostMapping("/product/selectInsrProdList")
-    public CommonResponse<List<IntmInsrRelDTO>> getInsrProdList(@RequestBody @Valid InsrProdRequest condition) {
-        return ResponseUtils.ok(productInfoService.getInsrProdList(condition));
     }
 
 

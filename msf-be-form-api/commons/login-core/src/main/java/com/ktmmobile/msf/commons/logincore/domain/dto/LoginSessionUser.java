@@ -12,12 +12,13 @@ public record LoginSessionUser(
     UserType userType,
     String userName,
     String phoneNumber,
+    String clientIp,
     Map<String, Object> attributes,
     List<LoginRequiredAction> requiredActions
 ) {
 
     public LoginSessionUser(String userId, String userName, UserType userType, String phoneNumber) {
-        this(userId, userType, userName, phoneNumber, Map.of(), List.of());
+        this(userId, userType, userName, phoneNumber, null, Map.of(), List.of());
     }
 
     public LoginSessionUser(
@@ -27,7 +28,7 @@ public record LoginSessionUser(
         String phoneNumber,
         List<LoginRequiredAction> requiredActions
     ) {
-        this(userId, userType, userName, phoneNumber, Map.of(), requiredActions);
+        this(userId, userType, userName, phoneNumber, null, Map.of(), requiredActions);
     }
 
     public LoginSessionUser {

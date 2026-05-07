@@ -1,15 +1,15 @@
 package com.ktmmobile.msf.domains.mobileapp.app.application.service;
 
-import jakarta.validation.Valid;
-
 import lombok.RequiredArgsConstructor;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ktmmobile.msf.commons.common.exception.SimpleDomainException;
-import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
+import com.ktmmobile.msf.commons.logincore.application.port.in.LoginSessionFlowProcessor;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginRequiredAction;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitRequest;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitResponse;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppRegistRequest;
@@ -27,17 +27,19 @@ public class AppService implements AppIntroReader {
 
     private final AppRepository repository;
     private final AppUsrInfoFieldMapper appUsrInfoFieldMapper;
+    private final LoginSessionFlowProcessor loginSessionFlowProcessor;
 
     @Transactional(readOnly = true)
+    @Override
     public IntroResponse intro(IntroRequest request) {
         // 앱최소버전
         double reqAppOsVer = Double.parseDouble(request.getAppOsVer());
-        if(request.getOs().equals("A")) {
-            if(!(reqAppOsVer > 12.0)) {
+        if (request.getOs().equals("A")) {
+            if (!(reqAppOsVer > 12.0)) {
                 throw new SimpleDomainException("Android 12 이상에 설치가 가능합니다.");
             }
-        } else if(request.getOs().equals("I")) {
-            if(!(reqAppOsVer > 12.0)) {
+        } else if (request.getOs().equals("I")) {
+            if (!(reqAppOsVer > 12.0)) {
                 throw new SimpleDomainException("iOS 15 이상에 설치가 가능합니다.");
             }
         } else {
@@ -45,10 +47,10 @@ public class AppService implements AppIntroReader {
         }
 
         IntroResponse res = repository.getIntro(request);
-        if(res != null) {
+        if (res != null) {
             double reqVer = Double.parseDouble(request.getVersion());
             double resVer = Double.parseDouble(res.getVersion());
-            if(resVer > reqVer) {
+            if (resVer > reqVer) {
                 res.setUpdate("Y");
             } else {
                 res.setUpdate("N");
@@ -61,11 +63,12 @@ public class AppService implements AppIntroReader {
     }
 
     @Transactional(readOnly = true)
+    @Override
     public AppInitResponse initLogin(AppInitRequest request) {
         AppInitResponse result = new AppInitResponse();
-        UsrAppInfoVo vo = repository.getUserApp(request.getUuid());
+        UsrAppInfoVo vo = repository.getUserApp(request.getDeviceUuid());
         log.debug("initLogin vo:{}", vo);
-        if(vo != null && vo.getOsCd() != null) {
+        if (vo != null && vo.getOsCd() != null) {
             result = appUsrInfoFieldMapper.toAppInitResponse(vo);
         } else {
             result.setApvSttusCd("C");
@@ -74,40 +77,43 @@ public class AppService implements AppIntroReader {
     }
 
     @Transactional
+    @Override
     public Integer registModel(AppRegistRequest request) {
-        Integer retInt = 0;
-        UsrAppInfoVo vo = repository.getUserApp(request.getUuid());
-
-        request.setUserId(AuthenticationUtils.getUser().getId());
+        LoginSessionUser sessionUser = loginSessionFlowProcessor.getSessionUser(request.getLoginSessionId());
+        request.setUserId(sessionUser.userId());
         request.setAppNm("스마트서식지");
         request.setApvSttusCd("A");
         request.setAutoLoginYn("Y");
         request.setBioLoginYn("N");
-        if(vo != null) {
-            return repository.modifyBioSetting(request);
-        }
-        return repository.registUserApp(request);
+
+        UsrAppInfoVo vo = repository.getUserApp(request.getDeviceUuid());
+        Integer result = vo != null
+            ? repository.modifyBioSetting(request)
+            : repository.registUserApp(request);
+        loginSessionFlowProcessor.completeAction(request.getLoginSessionId(), LoginRequiredAction.DEVICE_AUTH_CODE);
+        return result;
     }
 
-    @Override public Integer modifyBioSetting(AppRegistRequest request) {
+    @Override
+    public Integer modifyBioSetting(AppRegistRequest request) {
         Integer retInt = 0;
-        UsrAppInfoVo vo = repository.getUserApp(request.getUuid());
+        UsrAppInfoVo vo = repository.getUserApp(request.getDeviceUuid());
         log.debug("removeModel vo:{}", vo);
-        if(vo == null) {
+        if (vo == null) {
             throw new SimpleDomainException("수정에 실패했습니다.");
         }
         return repository.modifyBioSetting(request);
     }
 
     @Transactional
+    @Override
     public Integer removeModel(AppInitRequest request) {
         Integer retInt = 0;
-        UsrAppInfoVo vo = repository.getUserApp(request.getUuid());
+        UsrAppInfoVo vo = repository.getUserApp(request.getDeviceUuid());
         log.debug("removeModel vo:{}", vo);
-        if(vo == null) {
+        if (vo == null) {
             throw new SimpleDomainException("삭제에 실패했습니다.");
         }
         return repository.removeUserApp(request);
     }
-
 }

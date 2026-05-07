@@ -4,12 +4,10 @@ import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.*;
-import com.ktmmobile.msf.domains.form.form.common.service.ChoiceNumberService;
-import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
-import com.ktmmobile.msf.domains.form.form.common.service.NumberPortableService;
-import com.ktmmobile.msf.domains.form.form.common.service.SimInfoService;
+import com.ktmmobile.msf.domains.form.form.common.service.*;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
 import com.ktmmobile.msf.domains.form.form.newchange.service.NewChangeService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,41 +23,24 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NewChangeController {
 
-    private final FormCommService formCommService; //신청서 공통
-    private final ChoiceNumberService choiceNumberService; //신규가입 희망번호 조회/예약/취소
-    private final NumberPortableService numberPortableService; //번호이동 사전동의 서비스
     private final NewChangeService newChangeService; //신규/변경
-    private final SimInfoService simInfoService; //
+    private final ChoiceNumberService choiceNumberService; //신규가입 희망번호 조회/예약/취소
+    private final NumberPortableService numberPortableService; //번호이동 사전동의 요청/결과조회/납부주장
+    private final SimInfoService simInfoService; //휴대폰일련번호 유효성체크, USIM유효성체크, eSIM유효성체크
+    private final PaymentService paymentService; //청구계정아이디조회, 신용카드인증, 계좌인증
+    private final FormCommService formCommService; //신청서 공통
 
-    //generateRequestKey - 추후 생성을 호출하지는 않을 것이므로 삭제해야함.
-    @PostMapping("/generateRequestKey")
-    public CommonResponse<Long> getGenerateRequestKey() {
-        return ResponseUtils.ok(formCommService.generateRequestKey());
+
+    //가입조건조회
+    @PostMapping("/eligibility/check")
+    public CommonResponse<SubscriptionResponse> getEligibilityCheck(@RequestBody @Valid SubscriptionRequest request) {
+        return ResponseUtils.ok(newChangeService.getEligibilityCheck(request));
     }
-
-    //getCustRequestSeq - 추후 생성을 호출하지는 않을 것이므로 삭제해야함.
-    @PostMapping("/getCustRequestSeq")
-    public CommonResponse<Long> getCustRequestSeq() {
-        return ResponseUtils.ok(formCommService.getCustRequestSeq());
-    }
-
-    //generateResNo - 추후 생성을 호출하지는 않을 것이므로 삭제해야함.
-    @PostMapping("/generateResNo")
-    public CommonResponse<String> getGenerateResNo() {
-        return ResponseUtils.ok(formCommService.generateResNo());
-    }
-
 
     //대리점정보 조회 (조건 : 매장코드)
     @PostMapping("/agent/list")
     public CommonResponse<List<AgentInfoResponse>> getAgentList(@RequestBody @Valid AgentInfoRequest request) {
         return ResponseUtils.ok(formCommService.getAgentList(request));
-    }
-
-    //@@삭제필요@@
-    @PostMapping("/agent/list2")
-    public CommonResponse<AgentInfoResponse> getAgentList2(@RequestBody @Valid AgentInfoRequest request) {
-        return ResponseUtils.ok(formCommService.getAgentList2(request));
     }
 
     //신청서 진입
@@ -73,7 +54,6 @@ public class NewChangeController {
     public CommonResponse<FormResponse<NewChangeResponse>> registerForm(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(newChangeService.saveAppformInfo(request));
     }
-
 
     //신청서 확인 - 이미지생성,녹취,서명 또는 기 생성 이미지 확인
     //@PostMapping("/newchange/eform/set")
@@ -89,8 +69,8 @@ public class NewChangeController {
     }
 
     //USIM 정보 유효성체크 - X85
+    //@RequestMapping(value = "/msp/moscIntmMgmtAjax.do")
     @PostMapping("/verifyUsimInfo")
-    //public CommonResponse<MoscInqrUsimUsePsblOutDTO> verifyUsimInfo(@RequestBody @Valid MspJuoSubInfoCondition condition) throws SocketTimeoutException {
     public CommonResponse<FormResponse<Map<String, Object>>> verifyUsimInfo(@RequestBody @Valid MspJuoSubInfoRequest condition) {
         return ResponseUtils.ok(simInfoService.verifyUsimInfo(condition));
     }
@@ -140,12 +120,32 @@ public class NewChangeController {
     //번호이동 납부주장 (NP2)
     //@RequestMapping(value = "/appform/reqPayOpnAjax.do")
     @PostMapping(value = "/newchange/reqPayOpn")
-    public CommonResponse<Map<String, Object>> requestPayOpn(@RequestBody @Valid NewChangeInfoRequest request) {
+    public CommonResponse<FormResponse<MnpOsstResponse>> requestPayOpn(@RequestBody @Valid MnpOsstRequest request) {
         return ResponseUtils.ok(numberPortableService.requestPayOpn(request));
     }
 
+    //청구계정아이디 조회 (고객포탈은 없음?) >> 본인만 가능
+    @PostMapping("/verifyBillInfo")
+    public CommonResponse<FormResponse<MspJuoBanInfoResponse>> verifyBillInfo(@RequestBody @Valid MspJuoBanInfoRequest request) {
+        return ResponseUtils.ok(paymentService.verifyBillInfo(request));
+    }
 
-    //개통사전체크 (신규가입/번호이동)
+    //신용카드인증 (X91)
+    //@RequestMapping(value = "/crdtCardAthnInfoAjax.do")
+    @PostMapping("/crdtCardAthnInfo")
+    public CommonResponse<FormResponse<Map<String, Object>>> crdtCardAthnInfo(@RequestBody @Valid CrdtCardAuthRequest request) {
+        return ResponseUtils.ok(paymentService.crdtCardAthnInfo(request));
+    }
+
+    //계좌번호인증 (NICE)
+    //@RequestMapping(value = "/nice/accountCheckAjax.do")
+    @PostMapping("/accountCheck")
+    public CommonResponse<FormResponse<Map<String, Object>>> accountCheck(@RequestBody @Valid NiceAccountRequest niceAccountRequest, HttpServletRequest request) {
+        return ResponseUtils.ok(paymentService.accountCheck(niceAccountRequest, request));
+    }
+
+
+    //개통전 사전체크 (신규가입/번호이동)
     //parameter :: 계좌점유키값(reqUniqId), globalNoNp1(번호이동사전동의), globalNoNp3(번호이동사전동의결과)
     //appformReqDto 파라미터 검토필요 >> MsfRequestDto 로 변경하고 위 파라미터는 Dto 에 추가하든지 해야할듯함. 추후!!!
     //@RequestMapping(value = "/appform/reqPreOpenCheckAjax.do")
@@ -156,16 +156,19 @@ public class NewChangeController {
         return ResponseUtils.ok(formCommService.reqPreOpenCheck(request));
     }
 
+    //개통전 사전체크 확인 (신규가입/번호이동)
+    //@RequestMapping(value = "/appform/conPreCheckAjax.do")
+    @PostMapping(value = "/newchange/conPreOpenCheck")
+    public CommonResponse<Map<String, Object>> conPreOpenCheck(@RequestBody @Valid NewChangeInfoRequest request) {
+        return null;
+        //return ResponseUtils.ok(formCommService.conPreOpenCheck(request));
+    }
+
+
     //신청서 저장의 유효성체크 정리할 것
     //공시지원금 조회
     //단말 및 요금제 조회 request 정리
 
-    //부가서비스 msf_request_addition 저장 mapstruct
-    //부가서비스 msf_request 저장
-
-    //AuthController
-    // >> KTM 고객인증
-    //    >> query 확인하여 mapper 경로 변경필요.
     //ProductController >> 쿼리확인하여 동일한 쿼리는 mapper 경로변경 필요함.
     // >> 판매정책조회
     //    >> /api/form/phone/saleplcy/list
@@ -197,25 +200,6 @@ public class NewChangeController {
     //    >> /api/form/rate/categorydetail/list
     // >> 단말 매장 재고 조회 >> 추후 필요없는 action으로 삭제필요
     //    >> /api/form/phone/inventory/list
-    //PaymentController
-    // >> 청구계정아이디조회
-    //    >> /api/form/verifyBillInfo
-    // >> 신용카드번호인증 @개발필요@
-    //    >> /api/form/crdtCardAthnInfo
-    //    >> prx
-    // >> 계좌번호인증 @개발예정@
-    //    >> /api/form/accountCheck
-    //    >> NICE
-    //SimController
-    // >> 핸드폰단말일련번호 유효성체크 @개선필요@
-    //    >> /api/form/verifyPhoneSerialNumberInfo
-    //    >> prx
-    // >> USIM 유효성체크 @개선필요@
-    //    >> /api/form/verifyUsimInfo
-    //    >> prx
-    // >> eSIM 유효성체크 @개발필요@
-    //    >> /api/form/verifyEsimInfo
-    //    >> prx
     //NewChangeController
     // >> 신청서 저장
     //    >> /api/form/newchange/save
@@ -225,18 +209,11 @@ public class NewChangeController {
     //    >> /api/form/newchange/eform/set
     // >> 신청서 작성완료
     //    >> /api/form/newchange/complete
-    // >> 신규가입 희망번호 조회,예약,취소
-    //    >> /api/form/newchange/searchNumber
-    //    >> /api/form/newchange/reserveNumber
-    //    >> /api/form/newchange/cancelNumber
-    //    >> prx
-    // >> 번호이동 사전동의 요청, 납부주장, 결과조회
-    //    >> /api/form/newchange/reqNpPreCheck
-    //    >> /api/form/newchange/reqPayOpn
-    //    >> /api/form/newchange/reqNpAgree
-    //    >> prx
     // >> 개통전 사전체크
     //    >> /api/form/newchange/reqPreOpenCheck
     // >> 대리점조회
     //    >> /api/form/agent/list
+    //AuthController
+    // >> KTM 고객인증
+    //    >> query 확인하여 mapper 경로 변경필요.
 }

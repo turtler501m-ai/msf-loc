@@ -1,31 +1,5 @@
 package com.ktmmobile.msf.domains.form.common.service;
 
-import com.ktmmobile.msf.domains.form.common.cache.DbCacheHandler;
-import com.ktmmobile.msf.domains.form.common.commCode.dao.CommCodeDAO;
-import com.ktmmobile.msf.domains.form.common.dao.FCommonDao;
-import com.ktmmobile.msf.domains.form.common.dto.*;
-import com.ktmmobile.msf.domains.form.common.dto.MspCommDatPrvTxnDto;
-import com.ktmmobile.msf.domains.form.common.dto.MspSmsTemplateMstDto;
-import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
-import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
-import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
-import com.ktmmobile.msf.domains.form.common.exception.McpErropPageException;
-import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
-import com.ktmmobile.msf.domains.form.common.mplatform.dto.CdInfoDto;
-import com.ktmmobile.msf.domains.form.common.mplatform.dto.CommCdInfoRes;
-import com.ktmmobile.msf.domains.form.common.mspservice.MspService;
-import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
-import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
-import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
-import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.ParseException;
@@ -37,14 +11,64 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.*;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
+import com.ktmmobile.msf.domains.form.common.cache.DbCacheHandler;
+import com.ktmmobile.msf.domains.form.common.commCode.dao.CommCodeDAO;
+import com.ktmmobile.msf.domains.form.common.dao.FCommonDao;
+import com.ktmmobile.msf.domains.form.common.dto.AcesAlwdDto;
+import com.ktmmobile.msf.domains.form.common.dto.AuthSmsDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerFloatDto;
+import com.ktmmobile.msf.domains.form.common.dto.BannerTextDto;
+import com.ktmmobile.msf.domains.form.common.dto.CdGroupBean;
+import com.ktmmobile.msf.domains.form.common.dto.LoginHistoryDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspCommDatPrvTxnDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.MspSmsTemplateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
+import com.ktmmobile.msf.domains.form.common.dto.PopupDto;
+import com.ktmmobile.msf.domains.form.common.dto.PopupEditorDto;
+import com.ktmmobile.msf.domains.form.common.dto.SiteMenuDto;
+import com.ktmmobile.msf.domains.form.common.dto.UserEventTraceDto;
+import com.ktmmobile.msf.domains.form.common.dto.WorkNotiDto;
+import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
+import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.domains.form.common.exception.McpErropPageException;
+import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.CdInfoDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.dto.CommCdInfoRes;
+import com.ktmmobile.msf.domains.form.common.mspservice.MspService;
+import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
+import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
+import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
+
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_ACESALWD;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_BANNER;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_BANNERAPD;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_BANNERFLOAT;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_BANNERTEXT;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_CODE;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_MENU;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_MENUAUTH;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_POPUP;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_RATE_ADSVC_GDNC_VERSION;
+import static com.ktmmobile.msf.domains.form.common.constants.CacheConstants.CACHE_WORKNOTI;
 import static com.ktmmobile.msf.domains.form.common.constants.Constants.SERVICE_DOWNTIME;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 
 @Service
 public class FCommonSvcImpl implements FCommonSvc {
 
-    private  static final Logger logger = LoggerFactory.getLogger(FCommonSvcImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(FCommonSvcImpl.class);
 
     @Value("${SERVER_NAME}")
     private String serverName;
@@ -56,7 +80,7 @@ public class FCommonSvcImpl implements FCommonSvc {
 
     private SmsSvc smsSvc;
 
-    private DbCacheHandler dbCacheHandler ;
+    private DbCacheHandler dbCacheHandler;
 
 
     private MsfMplatFormService mplatFormService;
@@ -77,7 +101,7 @@ public class FCommonSvcImpl implements FCommonSvc {
         Map<String, List<NmcpCdDtlDto>> codeMap = new HashMap<String, List<NmcpCdDtlDto>>();
         //Map<String, Map<String, String>> codeValueMap = new HashMap<String, Map<String, String>>();
 
-        for(CdGroupBean cdGroupBean : list){
+        for (CdGroupBean cdGroupBean: list) {
             //Map<String, String> code = new HashMap<String, String>();
 
             //for(NmcpCdDtlDto cdBean : cdGroupBean.getListCdBean()){
@@ -87,16 +111,16 @@ public class FCommonSvcImpl implements FCommonSvc {
             codeMap.put(cdGroupBean.getCdGroupId(), cdGroupBean.getListCdBean());
         }
 
-        if(dbCacheHandler.getElement(CACHE_CODE) == null) {
+        if (dbCacheHandler.getElement(CACHE_CODE) == null) {
             dbCacheHandler.put(CACHE_CODE, codeMap);
         } else {
             dbCacheHandler.replace(CACHE_CODE, codeMap);
         }
-//        if(dbCacheHandler.getElement(CACHE_CODE_VALUE) == null) {
-//            dbCacheHandler.put(CACHE_CODE_VALUE, codeValueMap);
-//        } else {
-//            dbCacheHandler.replace(CACHE_CODE_VALUE, codeValueMap);
-//        }
+        //        if(dbCacheHandler.getElement(CACHE_CODE_VALUE) == null) {
+        //            dbCacheHandler.put(CACHE_CODE_VALUE, codeValueMap);
+        //        } else {
+        //            dbCacheHandler.replace(CACHE_CODE_VALUE, codeValueMap);
+        //        }
     }
 
     //캐시-메뉴
@@ -104,7 +128,7 @@ public class FCommonSvcImpl implements FCommonSvc {
     public void getMenuCahe() {
         List<SiteMenuDto> list = fCommonDao.getMenuAllList();
 
-        if(dbCacheHandler.getElement(CACHE_MENU) == null) {
+        if (dbCacheHandler.getElement(CACHE_MENU) == null) {
             dbCacheHandler.put(CACHE_MENU, list);
         } else {
             dbCacheHandler.replace(CACHE_MENU, list);
@@ -116,7 +140,7 @@ public class FCommonSvcImpl implements FCommonSvc {
     public void getMenuAuthCahe() {
         List<SiteMenuDto> list = fCommonDao.getMenuAuthList();
 
-        if(dbCacheHandler.getElement(CACHE_MENUAUTH) == null) {
+        if (dbCacheHandler.getElement(CACHE_MENUAUTH) == null) {
             dbCacheHandler.put(CACHE_MENUAUTH, list);
         } else {
             dbCacheHandler.replace(CACHE_MENUAUTH, list);
@@ -128,7 +152,7 @@ public class FCommonSvcImpl implements FCommonSvc {
     public void getBannerCahe() {
         List<BannerDto> list = fCommonDao.getBannerAllList();
 
-        if(dbCacheHandler.getElement(CACHE_BANNER) == null) {
+        if (dbCacheHandler.getElement(CACHE_BANNER) == null) {
             dbCacheHandler.put(CACHE_BANNER, list);
         } else {
             dbCacheHandler.replace(CACHE_BANNER, list);
@@ -140,7 +164,7 @@ public class FCommonSvcImpl implements FCommonSvc {
     public void getBannerApdCahe() {
         List<BannerDto> list = fCommonDao.getBannerApdList();
 
-        if(dbCacheHandler.getElement(CACHE_BANNERAPD) == null) {
+        if (dbCacheHandler.getElement(CACHE_BANNERAPD) == null) {
             dbCacheHandler.put(CACHE_BANNERAPD, list);
         } else {
             dbCacheHandler.replace(CACHE_BANNERAPD, list);
@@ -152,7 +176,7 @@ public class FCommonSvcImpl implements FCommonSvc {
     public void getPopupCahe() {
         List<PopupDto> list = fCommonDao.getPopupAllList();
 
-        if(dbCacheHandler.getElement(CACHE_POPUP) == null) {
+        if (dbCacheHandler.getElement(CACHE_POPUP) == null) {
             dbCacheHandler.put(CACHE_POPUP, list);
         } else {
             dbCacheHandler.replace(CACHE_POPUP, list);
@@ -164,7 +188,7 @@ public class FCommonSvcImpl implements FCommonSvc {
     public void getMenuUrlNotiCahe() {
         List<WorkNotiDto> list = fCommonDao.getMenuUrlAllList();
 
-        if(dbCacheHandler.getElement(CACHE_WORKNOTI) == null) {
+        if (dbCacheHandler.getElement(CACHE_WORKNOTI) == null) {
             dbCacheHandler.put(CACHE_WORKNOTI, list);
         } else {
             dbCacheHandler.replace(CACHE_WORKNOTI, list);
@@ -176,7 +200,7 @@ public class FCommonSvcImpl implements FCommonSvc {
     public void getAcesAlwdCahe() {
         List<AcesAlwdDto> list = fCommonDao.getAcesAlwdList();
 
-        if(dbCacheHandler.getElement(CACHE_ACESALWD) == null) {
+        if (dbCacheHandler.getElement(CACHE_ACESALWD) == null) {
             dbCacheHandler.put(CACHE_ACESALWD, list);
         } else {
             dbCacheHandler.replace(CACHE_ACESALWD, list);
@@ -188,7 +212,7 @@ public class FCommonSvcImpl implements FCommonSvc {
     public void getBannerTextCahe() {
         List<BannerTextDto> list = fCommonDao.getBannerTextList();
 
-        if(dbCacheHandler.getElement(CACHE_BANNERTEXT) == null) {
+        if (dbCacheHandler.getElement(CACHE_BANNERTEXT) == null) {
             dbCacheHandler.put(CACHE_BANNERTEXT, list);
         } else {
             dbCacheHandler.replace(CACHE_BANNERTEXT, list);
@@ -200,7 +224,7 @@ public class FCommonSvcImpl implements FCommonSvc {
     public void getBannerFloatCahe() {
         List<BannerFloatDto> list = fCommonDao.getBannerFloatList();
 
-        if(dbCacheHandler.getElement(CACHE_BANNERFLOAT) == null) {
+        if (dbCacheHandler.getElement(CACHE_BANNERFLOAT) == null) {
             dbCacheHandler.put(CACHE_BANNERFLOAT, list);
         } else {
             dbCacheHandler.replace(CACHE_BANNERFLOAT, list);
@@ -238,16 +262,16 @@ public class FCommonSvcImpl implements FCommonSvc {
             throw new McpErropPageException(COMMON_EXCEPTION);
         }
 
-        for(int i=0 ; i<6 ; i++) {
-            authSmsNo.append(objRandom.nextInt(10)) ;
+        for (int i = 0; i < 6; i++) {
+            authSmsNo.append(objRandom.nextInt(10));
         }
 
         //SMS 인증번호 발송
         StringBuffer message = new StringBuffer();
         message.append("인증번호는 ").append(authSmsNo).append(" 입니다.");
         try {
-           smsSvc.sendSmsForAuth(authSmsDto.getPhoneNum(),false,message.toString());
-        } catch(Exception e) {
+            smsSvc.sendSmsForAuth(authSmsDto.getPhoneNum(), false, message.toString());
+        } catch (Exception e) {
             return false;
         }
 
@@ -315,19 +339,19 @@ public class FCommonSvcImpl implements FCommonSvc {
     }
 
     /**
-    * @Description : NMCP Login 정보 저장 테이블에 저장한다.
-    * @param loginHistoryDto
-    * @return
-    * @Author : ant
-    * @Create Date : 2016. 3. 28.
-    */
+     * @Description : NMCP Login 정보 저장 테이블에 저장한다.
+     * @param loginHistoryDto
+     * @return
+     * @Author : ant
+     * @Create Date : 2016. 3. 28.
+     */
     @Override
     public int insertLoginHistory(LoginHistoryDto loginHistoryDto) {
         return fCommonDao.insertLoginHistory(loginHistoryDto);
     }
 
     @Override
-    public MspSmsTemplateMstDto getMspSmsTemplateMst(int templateId){
+    public MspSmsTemplateMstDto getMspSmsTemplateMst(int templateId) {
         return fCommonDao.getMspSmsTemplateMst(templateId);
     }
 
@@ -359,12 +383,12 @@ public class FCommonSvcImpl implements FCommonSvc {
         CommCdInfoRes commCdInfoRes = mplatFormService.moscCommCdInfo("NP_COMM_CMPN");
 
         //CD[KIS],CD_DSCR[케이티엠모바일]
-        if (commCdInfoRes.isSuccess() ) {
+        if (commCdInfoRes.isSuccess()) {
             List<CdInfoDto> cdList = commCdInfoRes.getCdList();
 
             // 초기화
             //commCodeDAO.updateMnpCmpnListInit();
-            if (cdList!=null && cdList.size() > 0) {
+            if (cdList != null && cdList.size() > 0) {
                 AtomicInteger atomIndex = new AtomicInteger(0);
 
                 cdList.forEach(cdInfoDto -> {
@@ -378,12 +402,12 @@ public class FCommonSvcImpl implements FCommonSvc {
                             <rfrnVal2>2022-06-20</rfrnVal2></cdList>
                             */
 
-                    logger.info("CD[" + cdInfoDto.getCd() + "],CD_DSCR["+ cdInfoDto.getCdDscr() +"],RFRN_VAL1["+ cdInfoDto.getRfrnVal1() +"]");
+                    logger.info("CD[" + cdInfoDto.getCd() + "],CD_DSCR[" + cdInfoDto.getCdDscr() + "],RFRN_VAL1[" + cdInfoDto.getRfrnVal1() + "]");
                     NmcpCdDtlDto cdDtlDto = new NmcpCdDtlDto();
                     cdDtlDto.setDtlCd(cdInfoDto.getRfrnVal1());
                     cdDtlDto.setDtlCdNm(cdInfoDto.getCdDscr());
                     cdDtlDto.setExpnsnStrVal1(cdInfoDto.getCd());  //cdInfoDto.getCd()
-                    cdDtlDto.setIndcOdrg(atomIndex.getAndIncrement()+ 100);
+                    cdDtlDto.setIndcOdrg(atomIndex.getAndIncrement() + 100);
 
                     //정보 UPDATE OR INSERT
                     commCodeDAO.updateMnpCmpn(cdDtlDto);
@@ -400,9 +424,10 @@ public class FCommonSvcImpl implements FCommonSvc {
         Map<String, Object> reMap = new HashMap<>();
         RestTemplate restTemplate = new RestTemplate();
 
-        List<NmcpCdDtlDto> nmcpCdDtlDtos  = NmcpServiceUtils.getCodeList("SMSRESTRICT");
+        List<NmcpCdDtlDto> nmcpCdDtlDtos = NmcpServiceUtils.getCodeList("SMSRESTRICT");
         int adMin = Integer.parseInt(nmcpCdDtlDtos.stream().filter(dtlCd -> dtlCd.getDtlCd().equals("smsMin")).findFirst().get().getExpnsnStrVal1());
-        int adCount = Integer.parseInt(nmcpCdDtlDtos.stream().filter(dtlCd -> dtlCd.getDtlCd().equals("smsCnt")).findFirst().get().getExpnsnStrVal1());
+        int adCount = Integer.parseInt(nmcpCdDtlDtos.stream().filter(dtlCd -> dtlCd.getDtlCd().equals("smsCnt")).findFirst().get()
+            .getExpnsnStrVal1());
 
         AuthSmsDto valueAuthDto = new AuthSmsDto();
         valueAuthDto.setPhoneNum(authSmsDto.getPhoneNum());
@@ -411,16 +436,16 @@ public class FCommonSvcImpl implements FCommonSvc {
         logger.info("제한 분 : " + String.valueOf(adMin));
 
         //문자 신규모듈 운영서버 체크
-        if("DEV".equals(serverName) || "LOCAL".equals(serverName) || "STG".equals(serverName)){
+        if ("DEV".equals(serverName) || "LOCAL".equals(serverName) || "STG".equals(serverName)) {
             valueAuthDto.setIsReal("N");
-        }else{
+        } else {
             valueAuthDto.setIsReal("Y");
         }
 
         //int stackCount = restTemplate.postForObject(apiServer + "/sms/qStackCnt", valueAuthDto, int.class);
         int stackCount = restTemplate.postForObject(apiServer + "/sms/qStackNewCnt", valueAuthDto, int.class);
         logger.info("제한 수 : " + stackCount);
-        if( adCount <= stackCount) {
+        if (adCount <= stackCount) {
             reMap.put("result", false);
             reMap.put("message", "문자 발송이 이미 완료 되었습니다.<br/>수신된 문자를 확인 부탁 드립니다."); // msg 변경 필요
             return reMap;
@@ -438,8 +463,8 @@ public class FCommonSvcImpl implements FCommonSvc {
             throw new McpErropPageException(COMMON_EXCEPTION);
         }
 
-        for(int i=0 ; i<6 ; i++) {
-            authSmsNo.append(objRandom.nextInt(10)) ;
+        for (int i = 0; i < 6; i++) {
+            authSmsNo.append(objRandom.nextInt(10));
         }
 
         //SMS 인증번호 발송
@@ -447,10 +472,10 @@ public class FCommonSvcImpl implements FCommonSvc {
         message.append("인증번호는 ").append(authSmsNo).append(" 입니다.");
         try {
             //smsSvc.sendSmsForAuth(authSmsDto.getPhoneNum(),false,message.toString());
-            smsSvc.sendSmsForAuth(authSmsDto.getPhoneNum(),false,message.toString(),authSmsDto.getReserved02(),authSmsDto.getReserved03());
-        } catch(Exception e) {
+            smsSvc.sendSmsForAuth(authSmsDto.getPhoneNum(), false, message.toString(), authSmsDto.getReserved02(), authSmsDto.getReserved03());
+        } catch (Exception e) {
             reMap.put("result", false);
-//            return false;
+            //            return false;
         }
 
         authSmsDto.setAuthNum(authSmsNo.toString());
@@ -472,7 +497,7 @@ public class FCommonSvcImpl implements FCommonSvc {
      */
     @Override
     public NmcpCdDtlDto getDtlCodeWithNm(String cdGroupId, String dtlCdNm) {
-        NmcpCdDtlDto paramDto= new NmcpCdDtlDto();
+        NmcpCdDtlDto paramDto = new NmcpCdDtlDto();
         paramDto.setCdGroupId(cdGroupId);
         paramDto.setDtlCdNm(dtlCdNm);
 
@@ -530,7 +555,7 @@ public class FCommonSvcImpl implements FCommonSvc {
         return checkMap;
     }
 
-    private static boolean isServiceDowntime(String strtDttm, String endDttm){
+    private static boolean isServiceDowntime(String strtDttm, String endDttm) {
         boolean isDownTime = false;
 
         if (!DateTimeUtil.isValid(strtDttm, "yyyyMMddHHmmss") || !DateTimeUtil.isValid(endDttm, "yyyyMMddHHmmss")) {
@@ -542,7 +567,7 @@ public class FCommonSvcImpl implements FCommonSvc {
             LocalDateTime strtDate = LocalDateTime.parse(strtDttm, formatter);
             LocalDateTime endDate = LocalDateTime.parse(endDttm, formatter);
             isDownTime = strtDate.isBefore(endDate) && DateTimeUtil.isMiddleDateTime2(strtDttm, endDttm);
-        } catch (ParseException e){
+        } catch (ParseException e) {
             logger.info(e.getMessage());
         }
 
@@ -563,14 +588,14 @@ public class FCommonSvcImpl implements FCommonSvc {
         }
 
         List<NmcpCdDtlDto> jehuProdDtoList = NmcpServiceUtils.getCodeList("JehuProdType");
-        if (jehuProdDtoList == null){
+        if (jehuProdDtoList == null) {
             return new NmcpCdDtlDto();
         }
 
         return jehuProdDtoList.stream()
-                .filter(jehuProdDto -> mspRateMst.getJehuProdType().equals(jehuProdDto.getDtlCd()))
-                .findAny()
-                .orElseGet(NmcpCdDtlDto::new);
+            .filter(jehuProdDto -> mspRateMst.getJehuProdType().equals(jehuProdDto.getDtlCd()))
+            .findAny()
+            .orElseGet(NmcpCdDtlDto::new);
     }
 
     @Override
@@ -580,7 +605,7 @@ public class FCommonSvcImpl implements FCommonSvc {
             return new NmcpCdDtlDto();
         }
 
-        for (NmcpCdDtlDto nmcpCdDtlDto : jehuPartnerDtoList){
+        for (NmcpCdDtlDto nmcpCdDtlDto: jehuPartnerDtoList) {
             if (pCntpntShopId.equals(nmcpCdDtlDto.getDtlCd())) {
                 return nmcpCdDtlDto;
             }
@@ -596,7 +621,7 @@ public class FCommonSvcImpl implements FCommonSvc {
             return new NmcpCdDtlDto();
         }
 
-        for (NmcpCdDtlDto nmcpCdDtlDto : jehuPartnerDtoList){
+        for (NmcpCdDtlDto nmcpCdDtlDto: jehuPartnerDtoList) {
             if (SessionUtils.getCoalitionInflow().equals(nmcpCdDtlDto.getExpnsnStrVal1())) {
                 return nmcpCdDtlDto;
             }
@@ -607,7 +632,7 @@ public class FCommonSvcImpl implements FCommonSvc {
 
     @Override
     public boolean insertUserEventTrace(UserEventTraceDto userEventTraceDto) {
-        userEventTraceDto.setRip(ipstatisticService.getClientIp());
+        userEventTraceDto.setRip(RequestUtils.getClientIp());
         return fCommonDao.insertUserEventTrace(userEventTraceDto);
     }
 
@@ -637,11 +662,10 @@ public class FCommonSvcImpl implements FCommonSvc {
     @Override
     public void getRateAdsvcGdncVersionCache() {
         String version = fCommonDao.getLastedRateAdsvcGdncVersion();
-        if(dbCacheHandler.getElement(CACHE_RATE_ADSVC_GDNC_VERSION) == null) {
+        if (dbCacheHandler.getElement(CACHE_RATE_ADSVC_GDNC_VERSION) == null) {
             dbCacheHandler.put(CACHE_RATE_ADSVC_GDNC_VERSION, version);
         } else {
             dbCacheHandler.replace(CACHE_RATE_ADSVC_GDNC_VERSION, version);
         }
     }
 }
-

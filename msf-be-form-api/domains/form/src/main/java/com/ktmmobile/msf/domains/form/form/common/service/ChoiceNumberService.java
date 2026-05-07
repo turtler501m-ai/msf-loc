@@ -58,7 +58,7 @@ public class ChoiceNumberService {
         String resNo = newChangeReadMapper.getMsfResNo(request.getRequestKey());
         mcpRequestOsstRequest.setMvnoOrdNo(resNo);
         mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK);
-        resNo = "955336";
+        resNo = "955336"; //@@삭제필수@@
 
         //2. 개통전 사전체크 호출 여부 확인
         int osstCount = formCommService.getOsstCount(mcpRequestOsstRequest);
@@ -79,6 +79,7 @@ public class ChoiceNumberService {
         mcpRequestOsstRequest.setMvnoOrdNo(resNo); //개통전 사전체크가 정상적인 경우 위에서 호출해서 처리함.
         mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_SEARCH_NUMBER);
         int tryCount = formCommService.getMcpRequestOsstCount(mcpRequestOsstRequest);
+        searchNumberResponse.setTryCount(tryCount);
         if (tryCount > 24) { //24건보다 많으면 안됨.
             //throw new McpCommonJsonException("0004", OVER_LIMIT_EXCEPTION);
             return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_OVER_LIMIT, searchNumberResponse);

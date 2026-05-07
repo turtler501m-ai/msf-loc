@@ -11,6 +11,7 @@ public record LoginUserInfo(
     String userName,
     String phoneNumber,
     UserType userType,
+    String clientIp,
     Map<String, Object> attributes
 ) {
 
@@ -24,6 +25,7 @@ public record LoginUserInfo(
             user.userName(),
             user.phoneNumber(),
             userType,
+            null,
             Map.of()
         );
     }

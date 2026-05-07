@@ -47,6 +47,7 @@ public class LoginUserInfoService implements LoginUserInfoReader {
             row.userNm(),
             row.mobileNo(),
             UserType.FORM_USER,
+            null,
             attributes(row)
         );
     }

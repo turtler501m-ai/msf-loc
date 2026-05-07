@@ -42,12 +42,12 @@
 </template>
 
 <script setup>
-import { computed, ref, shallowRef, watch, onMounted } from 'vue'
+import { computed, ref, shallowRef, watch, onBeforeMount, onBeforeUpdate, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useCountdown } from '@vueuse/core'
 import { showAlert } from '@/libs/utils/comp.utils'
 import { post } from '@/libs/api/msf.api'
-import { validateMobile } from '@/libs/utils/string.utils'
+import { isEmpty, validateMobile } from '@/libs/utils/string.utils'
 
 const route = useRoute()
 
@@ -67,6 +67,7 @@ const props = defineProps({
 
 const emit = defineEmits(['complete'])
 
+const loginKey = ref(props.loginKey)
 const phone = ref({
   phone1: phone1Model.value || '010',
   phone2: phone2Model.value,
@@ -108,7 +109,7 @@ const { remaining, start, stop, reset } = useCountdown(countdown, {
 
 const onClickSendAuthNumber = async () => {
   const result = await post('/api/shared/common/sms/otp/send', {
-    name: nameModel.value || '홍길동',
+    name: import.meta.env.MODE === 'loc' ? nameModel.value || '홍길동' : nameModel.value,
     phone: phone.value.phone1 + phone.value.phone2 + phone.value.phone3,
     type: props.formType,
     path: route.path,
@@ -116,8 +117,8 @@ const onClickSendAuthNumber = async () => {
   if (result?.code !== '0000') {
     return false
   }
-  sendedKey.value = result.data
-  authNumber.value = ''
+  sendedKey.value = result.data.sendedKey
+  authNumber.value = result.data.authNumber || ''
   status.value = 'sent'
   reset(countTime)
   start()
@@ -134,7 +135,8 @@ const onClickVerifyAuthNumber = async () => {
     return false
   }
   stop()
-  status.value = 'verified'
+  status.value = result.data ? 'verified' : status.value
+  emit('complete', result.data)
 }
 
 const onVerifyPhoneInput = (result) => {
@@ -145,6 +147,14 @@ const onVerifyPhoneInput = (result) => {
     status.value = 'ready'
   }
 }
+
+watch(
+  () => props.loginKey,
+  (newVal) => {
+    loginKey.value = newVal
+  },
+  { immediate: true },
+)
 watch(
   () => phone1Model.value,
   (newVal) => {
@@ -183,14 +193,16 @@ watch(
     deep: true,
   },
 )
-watch(
-  () => status.value,
-  (newVal) => {
-    if (newVal === 'verified') {
-      emit('complete', newVal === 'verified')
-    }
-  },
-)
+onBeforeMount(() => {
+  if (!isEmpty(props.phone)) {
+    status.value = 'ready'
+  }
+})
+onBeforeUpdate(() => {
+  if (status.value === 'none' && !isEmpty(props.phone)) {
+    status.value = 'ready'
+  }
+})
 </script>
 
 <style scoped></style>

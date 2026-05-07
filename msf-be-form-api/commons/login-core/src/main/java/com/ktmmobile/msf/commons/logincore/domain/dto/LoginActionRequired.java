@@ -13,6 +13,7 @@ public record LoginActionRequired(
     UserType userType,
     String userName,
     String phoneNumber,
+    String clientIp,
     Map<String, Object> attributes,
     List<LoginRequiredAction> requiredActions
 ) implements LoginResult {

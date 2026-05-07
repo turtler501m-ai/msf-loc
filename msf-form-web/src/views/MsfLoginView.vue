@@ -83,17 +83,16 @@ const msfUserStore = useMsfUserStore()
 const formData = reactive({
   userId: '', //아이디
   password: '', //비밀번호
-  idSave: false, //아이디 저장 여부
-  deviceId: 'Phone-A',
+  //idSave: false, //아이디 저장 여부
   authType: 'PASSWORD',
-  uuid: msfUserStore.getDeviceUuid(),
+  deviceUuid: msfUserStore.getDeviceUuid(),
 })
 
 onMounted(async () => {
-  // 앱에서 uuid 를 구해서 사용
-  msfUserStore.setDeviceUuid('82311994') // molo - 수정 필요
+  await msfUserStore.initDeviceUuid()
+  formData.deviceUuid = msfUserStore.getDeviceUuid()
   const initData = {
-    uuid: msfUserStore.getDeviceUuid(),
+    deviceUuid: formData.deviceUuid,
   }
   post('/api/auth/app/login/init', initData)
     .then((data) => {

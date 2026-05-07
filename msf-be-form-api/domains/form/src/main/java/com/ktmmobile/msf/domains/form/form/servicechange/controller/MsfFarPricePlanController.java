@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.ResponseSuccessDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
@@ -182,7 +183,7 @@ public class MsfFarPricePlanController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -429,7 +430,7 @@ public class MsfFarPricePlanController {
         // 어떤 요금제일떄 보내는거인지?? 상관이 있는지 없는지 확인 필요
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
-        String ip = request1.getRemoteAddr();
+        String ip = RequestUtils.getClientIp();
 
         if (!StringUtil.isNotNull(contractNum)) {
             rtnMap.put("RESULT_CODE", "E");

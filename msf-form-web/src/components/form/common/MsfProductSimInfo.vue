@@ -34,7 +34,6 @@ const handleSimVerify = async () => {
     const res = await post(url, payload)
     if (res && res.code === '0000') {
       simAuth.verify()
-      alert('SIM 유효성 체크가 완료되었습니다.')
     }
   } catch (error) {
     console.error('Verify SIM info error:', error)

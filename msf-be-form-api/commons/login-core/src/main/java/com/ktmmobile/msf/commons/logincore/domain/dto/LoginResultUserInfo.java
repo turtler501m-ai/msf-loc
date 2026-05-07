@@ -7,6 +7,7 @@ public record LoginResultUserInfo(
     String userId,
     String userName,
     String phoneNumber,
+    String clientIp,
     Map<String, Object> attributes
 ) {
 
@@ -19,6 +20,7 @@ public record LoginResultUserInfo(
             required.userId(),
             required.userName(),
             required.phoneNumber(),
+            required.clientIp(),
             required.attributes()
         );
     }
@@ -28,6 +30,7 @@ public record LoginResultUserInfo(
             ready.userId(),
             ready.userName(),
             ready.phoneNumber(),
+            ready.clientIp(),
             ready.attributes()
         );
     }
@@ -37,6 +40,7 @@ public record LoginResultUserInfo(
             required.userId(),
             required.userName(),
             required.phoneNumber(),
+            required.clientIp(),
             required.attributes()
         );
     }
@@ -46,6 +50,7 @@ public record LoginResultUserInfo(
             tokenPair.userId(),
             tokenPair.userName(),
             tokenPair.phoneNumber(),
+            tokenPair.clientIp(),
             tokenPair.attributes()
         );
     }

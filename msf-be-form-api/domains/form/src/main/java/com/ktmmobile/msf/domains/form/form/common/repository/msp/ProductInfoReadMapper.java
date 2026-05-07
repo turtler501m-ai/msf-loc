@@ -33,7 +33,8 @@ public interface ProductInfoReadMapper {
     List<RateInfoDto> selectRateList(ProductInfoRequest condition);
 
     //공시지원금 조회
-    List<PhoneInfoDto> selectMspOfficialNoticeSupport(ProductInfoRequest condition);
+    MspSaleSubsdMstResponse selectMspSaleSubsdMst(MspSaleSubsdMstRequest condition);
+    //List<PhoneInfoDto> selectMspOfficialNoticeSupport(ProductInfoRequest condition);
     // List<RateInfoDto> listMspOfficialNoticeSupport(CommonSearchCondition condition);
 
     //부가서비스 상세조회

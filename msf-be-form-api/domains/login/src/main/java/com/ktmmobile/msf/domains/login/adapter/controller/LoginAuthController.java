@@ -19,6 +19,7 @@ import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResult;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResultResponse;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTokenPair;
 import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.login.application.dto.LoginAuthRequest;
@@ -41,7 +42,7 @@ public class LoginAuthController {
 
     @PostMapping("/login")
     public CommonResponse<LoginResultResponse<LoginUserInfoResponse>> loginWithIdPw(@RequestBody @Valid LoginAuthRequest request) {
-        LoginResult result = loginAuthenticationFlowProcessor.loginWithIdPw(request.toCredential());
+        LoginResult result = loginAuthenticationFlowProcessor.loginWithIdPw(request.toCredential(RequestUtils.getClientIp()));
         return resultResponse(result);
     }
 

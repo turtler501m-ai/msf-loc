@@ -1,16 +1,12 @@
 package com.ktmmobile.msf.domains.form.form.ownerchange.controller;
 
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.CSTMR_TYPE_NM;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.STEP_INFO_NULL_EXCEPTION;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
+
+import com.ktds.crypto.exception.CryptoException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,21 +17,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestClientException;
-import com.ktds.crypto.exception.CryptoException;
-import com.ktmmobile.msf.domains.form.form.ownerchange.dto.MyNameChgReqDto;
-import com.ktmmobile.msf.domains.form.form.ownerchange.service.MyNameChgService;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
-import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfCustRequestScanService;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMaskingSvc;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
-import com.ktmmobile.msf.domains.form.system.cert.dto.CertDto;
-import com.ktmmobile.msf.domains.form.system.cert.service.CertService;
+
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.dto.ResponseSuccessDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
-import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
@@ -45,6 +33,22 @@ import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
+import com.ktmmobile.msf.domains.form.form.ownerchange.dto.MyNameChgReqDto;
+import com.ktmmobile.msf.domains.form.form.ownerchange.service.MyNameChgService;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfCustRequestScanService;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMaskingSvc;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
+import com.ktmmobile.msf.domains.form.system.cert.dto.CertDto;
+import com.ktmmobile.msf.domains.form.system.cert.service.CertService;
+
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.CSTMR_TYPE_NM;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_FRONT_SESSION_EXCEPTION;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.STEP_CNT_EXCEPTION;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.STEP_INFO_NULL_EXCEPTION;
 //import com.ktmmobile.msf.domains.form.system.faceauth.service.FathService;
 
 @Controller
@@ -73,24 +77,26 @@ public class MyNameChgController {
 
     @Autowired
     private FCommonSvc fCommonSvc;
-    
-//    @Autowired
-//    private FathService fathService;
+
+    //    @Autowired
+    //    private FathService fathService;
 
     /**
      * 설명 : 명의변경 화면
      */
-    @RequestMapping(value = {"/mypage/myNameChg.do", "/m/mypage/myNameChg.do"}  )
-    public String myNameChg(ModelMap model , HttpServletRequest request
-            , @ModelAttribute("searchVO") MyPageSearchDto searchVO){
+    @RequestMapping(value = {"/mypage/myNameChg.do", "/m/mypage/myNameChg.do"})
+    public String myNameChg(
+        ModelMap model, HttpServletRequest request
+        , @ModelAttribute("searchVO") MyPageSearchDto searchVO
+    ) {
         //안면인증 세션 초기화
-//        SessionUtils.initializeFathSession();
+        //        SessionUtils.initializeFathSession();
 
         String jspPageName = "/portal/mypage/myNameChg";
-        String thisPageName ="/mypage/myNameChg.do";
-        if("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
+        String thisPageName = "/mypage/myNameChg.do";
+        if ("A".equals(NmcpServiceUtils.getPlatFormCd()) || "M".equals(NmcpServiceUtils.getPlatFormCd())) {
             jspPageName = "/mobile/mypage/myNameChg";
-            thisPageName ="/m/mypage/myNameChg.do";
+            thisPageName = "/m/mypage/myNameChg.do";
         }
 
         ResponseSuccessDto checkOverlapDto = new ResponseSuccessDto();  //중복요청 체크
@@ -103,17 +109,19 @@ public class MyNameChgController {
         }
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if(userSession==null || StringUtils.isEmpty(userSession.getUserId())) return "redirect:/loginForm.do";
+        if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
+            return "redirect:/loginForm.do";
+        }
         List<McpUserCntrMngDto> cntrList = myNameChgService.selectCntrListNmChg(userSession.getUserId(), null);
         boolean chk = msfMypageSvc.checkUserType(searchVO, cntrList, userSession);
-        if(!chk){
+        if (!chk) {
             ResponseSuccessDto responseSuccessDto = getMessageBox();
             model.addAttribute("responseSuccessDto", responseSuccessDto);
-             return "/common/successRedirect";
+            return "/common/successRedirect";
         }
 
         // 마스킹해제
-        if(SessionUtils.getMaskingSession() > 0 ) {
+        if (SessionUtils.getMaskingSession() > 0) {
             model.addAttribute("maskingSession", "Y");
 
             MaskingDto maskingDto = new MaskingDto();
@@ -121,7 +129,7 @@ public class MyNameChgController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -154,7 +162,7 @@ public class MyNameChgController {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if(userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
+        if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
             throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         myNameChgReqDto.setUserid(userSession.getUserId());
@@ -175,7 +183,7 @@ public class MyNameChgController {
                 rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
             } else {
                 rtnMap.put("RESULT_CODE", "0001");
-                rtnMap.put("ERROR_NE_MSG","시스템에 문제가 발생하였습니다. 다음에 다시 진행 부탁드립니다.");
+                rtnMap.put("ERROR_NE_MSG", "시스템에 문제가 발생하였습니다. 다음에 다시 진행 부탁드립니다.");
             }
 
             try {
@@ -183,35 +191,35 @@ public class MyNameChgController {
                 custRequestScanService.prodSendScan(Long.parseLong(myNameChgReqDto.getCustReqSeq()), myNameChgReqDto.getUserid(), "NC");
 
                 //로그 저장 처리
-                McpIpStatisticDto mcpIpStatisticDto =  new McpIpStatisticDto();
+                McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
                 mcpIpStatisticDto.setPrcsMdlInd("CUST_REQUEST_SCAN");
-                mcpIpStatisticDto.setPrcsSbst("REQUEST_KET[" + myNameChgReqDto.getCustReqSeq() +"]");
+                mcpIpStatisticDto.setPrcsSbst("REQUEST_KET[" + myNameChgReqDto.getCustReqSeq() + "]");
                 mcpIpStatisticDto.setParameter(myNameChgReqDto.getCustReqSeq());
                 mcpIpStatisticDto.setTrtmRsltSmst("SUCCESS");
                 ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
                 rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-            } catch(McpCommonJsonException e) {
+            } catch (McpCommonJsonException e) {
                 rtnMap.put("RESULT_CODE", "FAIL");
                 //로그 저장 처리
-                McpIpStatisticDto mcpIpStatisticDto =  new McpIpStatisticDto();
+                McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
                 mcpIpStatisticDto.setPrcsMdlInd("CUST_REQUEST_SCAN");
-                mcpIpStatisticDto.setPrcsSbst("REQUEST_KET[" +myNameChgReqDto.getCustReqSeq() +"]");
+                mcpIpStatisticDto.setPrcsSbst("REQUEST_KET[" + myNameChgReqDto.getCustReqSeq() + "]");
                 mcpIpStatisticDto.setParameter(myNameChgReqDto.getCustReqSeq());
                 mcpIpStatisticDto.setTrtmRsltSmst("FAIL");
                 ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-            }catch (Exception e) {        //예외 전환 처리
+            } catch (Exception e) {        //예외 전환 처리
                 rtnMap.put("RESULT_CODE", "FAIL");
                 //로그 저장 처리
-                McpIpStatisticDto mcpIpStatisticDto =  new McpIpStatisticDto();
+                McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
                 mcpIpStatisticDto.setPrcsMdlInd("CUST_REQUEST_SCAN");
-                mcpIpStatisticDto.setPrcsSbst("REQUEST_KET[" +myNameChgReqDto.getCustReqSeq() +"]");
+                mcpIpStatisticDto.setPrcsSbst("REQUEST_KET[" + myNameChgReqDto.getCustReqSeq() + "]");
                 mcpIpStatisticDto.setParameter(myNameChgReqDto.getCustReqSeq());
                 mcpIpStatisticDto.setTrtmRsltSmst("FAIL");
                 ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
             }
         } catch (SelfServiceException e) {
             logger.error("Exception e : {}", e.getMessage());
-        }  catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Exception e : {}", e.getMessage());
         }
         return rtnMap;
@@ -228,18 +236,18 @@ public class MyNameChgController {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if(userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
+        if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
             throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         myNameChgReqDto.setUserid(userSession.getUserId());
 
         // ================ STEP START ================
         // 양도인 구분값, 계약번호
-        String[] certKey= {"urlType", "ncType", "contractNum"};
-        String[] certValue= {"chkGrantorForm", "0", myNameChgReqDto.getContractNum()};
+        String[] certKey = {"urlType", "ncType", "contractNum"};
+        String[] certValue = {"chkGrantorForm", "0", myNameChgReqDto.getContractNum()};
 
-        Map<String,String> vldReslt= certService.vdlCertInfo("D", certKey, certValue);
-        if(!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
+        Map<String, String> vldReslt = certService.vdlCertInfo("D", certKey, certValue);
+        if (!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
             throw new McpCommonJsonException("STEP01", vldReslt.get("RESULT_DESC"));
         }
         // ================ STEP END ================
@@ -258,24 +266,23 @@ public class MyNameChgController {
                 rtnMap.put("RESULT_CODE", "0005");
             } else {
                 rtnMap.put("RESULT_CODE", "0001");
-                rtnMap.put("ERROR_NE_MSG","시스템에 문제가 발생하였습니다. 다음에 다시 진행 부탁드립니다.");
+                rtnMap.put("ERROR_NE_MSG", "시스템에 문제가 발생하였습니다. 다음에 다시 진행 부탁드립니다.");
             }
         } catch (RestClientException e) {
             logger.error(e.getMessage());
-        }   catch (SelfServiceException e) {
+        } catch (SelfServiceException e) {
             logger.error("Exception e : {}", e.getMessage());
-        }  catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Exception e : {}", e.getMessage());
         }
         return rtnMap;
     }
 
 
-
-    private ResponseSuccessDto getMessageBox(){
+    private ResponseSuccessDto getMessageBox() {
         ResponseSuccessDto mbox = new ResponseSuccessDto();
         mbox.setRedirectUrl("/mypage/updateForm.do");
-        if("Y".equals(NmcpServiceUtils.isMobile())){
+        if ("Y".equals(NmcpServiceUtils.isMobile())) {
             mbox.setRedirectUrl("/m/mypage/updateForm.do");
         }
         mbox.setSuccessMsg("정회원 인증 후 이용하실 수 있습니다.");
@@ -287,32 +294,34 @@ public class MyNameChgController {
      * */
     private void certAuthChgRequest(MyNameChgReqDto myNameChgReqDto) {
 
-        String[] certKey= null;
-        String[] certValue= null;
-        Map<String,String> vldReslt= null;
-        int certStep= 8;
+        String[] certKey = null;
+        String[] certValue = null;
+        Map<String, String> vldReslt = null;
+        int certStep = 8;
 
         // 1. 화면에서 넘어온 개통관련 정보 비교
-        if(StringUtils.isBlank(myNameChgReqDto.getContractNum())){
+        if (StringUtils.isBlank(myNameChgReqDto.getContractNum())) {
             throw new McpCommonJsonException("AUTH01", STEP_INFO_NULL_EXCEPTION);
         }
 
         List<McpUserCntrMngDto> cntrList = myNameChgService.selectCntrListNmChg(myNameChgReqDto.getUserid(), myNameChgReqDto.getContractNum());
-        if(cntrList == null|| cntrList.size() == 0) throw new McpCommonJsonException("AUTH02", F_BIND_EXCEPTION);
+        if (cntrList == null || cntrList.size() == 0) {
+            throw new McpCommonJsonException("AUTH02", F_BIND_EXCEPTION);
+        }
 
-        McpUserCntrMngDto cntrMngDto= cntrList.get(0);
+        McpUserCntrMngDto cntrMngDto = cntrList.get(0);
         myNameChgReqDto.setMobileNo(cntrMngDto.getUnSvcNo());
-        if(!cntrMngDto.getUnSvcNo().equals(myNameChgReqDto.getMobileNo())
-           || !cntrMngDto.getSoc().equals(myNameChgReqDto.getSoc())
-           || !cntrMngDto.getCstmrType().equals(myNameChgReqDto.getGrCstmrType())
-           || !"I".equals(cntrMngDto.getCustomerType())
-           || (StringUtils.isEmpty(myNameChgReqDto.getGrCstmrType()) && "I".equals(cntrMngDto.getCustomerType()))){
+        if (!cntrMngDto.getUnSvcNo().equals(myNameChgReqDto.getMobileNo())
+            || !cntrMngDto.getSoc().equals(myNameChgReqDto.getSoc())
+            || !cntrMngDto.getCstmrType().equals(myNameChgReqDto.getGrCstmrType())
+            || !"I".equals(cntrMngDto.getCustomerType())
+            || (StringUtils.isEmpty(myNameChgReqDto.getGrCstmrType()) && "I".equals(cntrMngDto.getCustomerType()))) {
             throw new McpCommonJsonException("AUTH02", F_BIND_EXCEPTION);
         }
 
         // 계좌인증 실패로인해 신용카드 인증으로 진행한 경우, 계좌인증 관련 스텝 초기화
-        if("Y".equals(myNameChgReqDto.getReqInfoChgYn()) && !"D".equals(myNameChgReqDto.getReqPayType())){
-            if(0 < certService.getModuTypeStepCnt("account", "1")){
+        if ("Y".equals(myNameChgReqDto.getReqInfoChgYn()) && !"D".equals(myNameChgReqDto.getReqPayType())) {
+            if (0 < certService.getModuTypeStepCnt("account", "1")) {
                 CertDto certDto = new CertDto();
                 certDto.setModuType("account");
                 certDto.setCompType("G");
@@ -336,11 +345,11 @@ public class MyNameChgController {
             name = myNameChgReqDto.getGrMinorAgentName();
             birthDate = myNameChgReqDto.getGrMinorAgentRrn();
         }
-        certKey= new String[]{"urlType", "ncType", "name", "birthDate", "contractNum", "authType", "reqSeq", "resSeq"};
-        certValue= new String[]{"saveGrantorForm", ncType, name, birthDate, contractNum, authType, reqSeq, resSeq};
+        certKey = new String[] {"urlType", "ncType", "name", "birthDate", "contractNum", "authType", "reqSeq", "resSeq"};
+        certValue = new String[] {"saveGrantorForm", ncType, name, birthDate, contractNum, authType, reqSeq, resSeq};
 
-        vldReslt= certService.vdlCertInfo("D", certKey, certValue);
-        if(!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
+        vldReslt = certService.vdlCertInfo("D", certKey, certValue);
+        if (!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
             throw new McpCommonJsonException("STEP01", vldReslt.get("RESULT_DESC"));
         }
 
@@ -359,29 +368,29 @@ public class MyNameChgController {
             name = myNameChgReqDto.getMinorAgentName();
             birthDate = myNameChgReqDto.getMinorAgentRrn();
         }
-        certKey= new String[]{"urlType", "stepEndYn", "ncType", "name", "birthDate", "authType", "reqSeq", "resSeq", "reqAccountNumber", "reqBank"};
-        certValue= new String[]{"saveAssigneeForm", "Y", ncType, name, birthDate, authType, reqSeq, resSeq, reqAccountNumber, reqBank};
+        certKey = new String[] {"urlType", "stepEndYn", "ncType", "name", "birthDate", "authType", "reqSeq", "resSeq", "reqAccountNumber", "reqBank"};
+        certValue = new String[] {"saveAssigneeForm", "Y", ncType, name, birthDate, authType, reqSeq, resSeq, reqAccountNumber, reqBank};
 
-        if("Y".equals(myNameChgReqDto.getReqInfoChgYn())){
-            if("D".equals(myNameChgReqDto.getReqPayType())){
-                certStep+= 2;  // 10개
-            }else{
+        if ("Y".equals(myNameChgReqDto.getReqInfoChgYn())) {
+            if ("D".equals(myNameChgReqDto.getReqPayType())) {
+                certStep += 2;  // 10개
+            } else {
                 // step종료 여부, 양수인 구분값, 이름, 생년월일, 본인인증유형, reqSeq, resSeq
-                certKey= Arrays.copyOfRange(certKey, 0, 8);
+                certKey = Arrays.copyOfRange(certKey, 0, 8);
             }
-        }else{
+        } else {
             // step종료 여부, 양수인 구분값, 이름, 생년월일, 본인인증유형, reqSeq, resSeq
-            certKey= Arrays.copyOfRange(certKey, 0, 8);
+            certKey = Arrays.copyOfRange(certKey, 0, 8);
         }
 
         // 2-2. 양수인 정보 체크 전 최소 스텝 수 체크
-        if(certService.getStepCnt() < certStep){
+        if (certService.getStepCnt() < certStep) {
             throw new McpCommonJsonException("STEP02", STEP_CNT_EXCEPTION);
         }
 
         // 양수인 정보 검증
-        vldReslt= certService.vdlCertInfo("D", certKey, certValue);
-        if(!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
+        vldReslt = certService.vdlCertInfo("D", certKey, certValue);
+        if (!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {
             throw new McpCommonJsonException("STEP03", vldReslt.get("RESULT_DESC"));
         }
 
@@ -398,7 +407,7 @@ public class MyNameChgController {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if(userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
+        if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
             throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
         myNameChgReqDto.setUserid(userSession.getUserId());
@@ -422,9 +431,9 @@ public class MyNameChgController {
             }
         } catch (RestClientException e) {
             logger.error(e.getMessage());
-        }   catch (SelfServiceException e) {
+        } catch (SelfServiceException e) {
             logger.error("Exception e : {}", e.getMessage());
-        }  catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Exception e : {}", e.getMessage());
         }
         return rtnMap;
@@ -440,16 +449,18 @@ public class MyNameChgController {
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        if(userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
+        if (userSession == null || StringUtils.isEmpty(userSession.getUserId())) {
             throw new McpCommonException(NO_FRONT_SESSION_EXCEPTION);
         }
 
-        if(StringUtils.isBlank(myNameChgReqDto.getContractNum())){
+        if (StringUtils.isBlank(myNameChgReqDto.getContractNum())) {
             throw new McpCommonJsonException("9999", F_BIND_EXCEPTION);
         }
 
         List<McpUserCntrMngDto> cntrList = myNameChgService.selectCntrListNmChg(userSession.getUserId(), myNameChgReqDto.getContractNum());
-        if(cntrList == null|| cntrList.size() == 0) throw new McpCommonJsonException("9998", F_BIND_EXCEPTION);
+        if (cntrList == null || cntrList.size() == 0) {
+            throw new McpCommonJsonException("9998", F_BIND_EXCEPTION);
+        }
         String cstmrNativeRrn;
         try {
             cstmrNativeRrn = EncryptUtil.ace256Dec(myNameChgReqDto.getCstmrNativeRrn());
@@ -464,6 +475,6 @@ public class MyNameChgController {
             rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
         }
         return rtnMap;
-        
+
     }
 }

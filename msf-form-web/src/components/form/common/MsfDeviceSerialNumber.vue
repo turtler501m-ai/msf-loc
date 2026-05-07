@@ -31,9 +31,8 @@ const handleDeviceVerify = async () => {
 
   try {
     const res = await post('/api/form/verifyPhoneSerialNumberInfo', payload)
-    if (res && res.code === '0000') {
+    if (res && res.data?.resCode === '0000') {
       imeiAuth.verify()
-      alert('휴대폰 일련번호 유효성 체크가 완료되었습니다.')
     }
   } catch (error) {
     console.error('Verify device serial number error:', error)

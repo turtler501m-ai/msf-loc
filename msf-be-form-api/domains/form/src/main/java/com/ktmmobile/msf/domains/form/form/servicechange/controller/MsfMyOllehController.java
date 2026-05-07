@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.common.dto.AuthSmsDto;
 import com.ktmmobile.msf.domains.form.common.dto.JsonReturnDto;
 import com.ktmmobile.msf.domains.form.common.dto.ResponseSuccessDto;
@@ -57,7 +58,6 @@ import com.ktmmobile.msf.domains.form.common.mspservice.MspService;
 import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 import com.ktmmobile.msf.domains.form.common.dto.MspSaleSubsdMstDto;
 import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
-import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 //import com.ktmmobile.msf.domains.form.common.service.UsimService;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
@@ -142,9 +142,6 @@ public class MsfMyOllehController {
 
     // @Autowired
     // UsimService usimService;
-
-    @Autowired
-    IpStatisticService ipstatisticService;
 
     // @Autowired
     // private AppPushSvc appPushSvc;
@@ -529,7 +526,7 @@ public class MsfMyOllehController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -1560,7 +1557,7 @@ public class MsfMyOllehController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("이름,휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());

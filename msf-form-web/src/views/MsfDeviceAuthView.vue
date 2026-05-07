@@ -69,7 +69,6 @@ const onCompleteDeviceAuthNumber = (result) => {
   if (result) {
     formData.complete = result
     showAlert('인증이 완료되었습니다.', async () => {
-      // TODO: loginAction 호출
       post('/api/auth/login/session/get', formData).then(async (data) => {
         msfUserStore.setUserData(data.data)
         const res = await msfUserStore.checkAuthAction()

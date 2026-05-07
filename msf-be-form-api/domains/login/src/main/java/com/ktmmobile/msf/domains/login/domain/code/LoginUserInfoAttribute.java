@@ -3,6 +3,7 @@ package com.ktmmobile.msf.domains.login.domain.code;
 public enum LoginUserInfoAttribute {
 
     DEVICE_AUTH_COMPLETED("deviceAuthCompleted"),
+    DEVICE_UUID("deviceUuid"),
     AGENT_CODE("agentCode"),
     SHOP_CODE("shopCode");
 

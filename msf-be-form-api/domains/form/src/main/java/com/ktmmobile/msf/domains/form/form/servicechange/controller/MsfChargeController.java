@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MyPageSearchDto;
@@ -43,7 +44,6 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarPriceInfoDetailIt
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarRealtimePayInfoVO.RealFareVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpMonthPayMentDto;
-import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
@@ -66,9 +66,6 @@ public class MsfChargeController {
 
     @Autowired
     private MsfMaskingSvc maskingSvc;
-
-    @Autowired
-    private IpStatisticService ipstatisticService;
 
     /**
      * 월별요금조회
@@ -163,7 +160,7 @@ public class MsfChargeController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -296,7 +293,7 @@ public class MsfChargeController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -565,7 +562,7 @@ public class MsfChargeController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());

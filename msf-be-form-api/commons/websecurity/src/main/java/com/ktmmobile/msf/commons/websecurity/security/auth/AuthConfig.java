@@ -44,6 +44,7 @@ import com.ktmmobile.msf.commons.websecurity.security.auth.converter.JwtMemberAu
 import com.ktmmobile.msf.commons.websecurity.security.auth.handler.DefaultAccessDeniedHandler;
 import com.ktmmobile.msf.commons.websecurity.security.auth.handler.DefaultAuthenticationEntryPoint;
 import com.ktmmobile.msf.commons.websecurity.security.auth.properties.JwtSecurityProperties;
+import com.ktmmobile.msf.commons.websecurity.security.auth.properties.SecurityAuthorizationProperties;
 
 @EnableMethodSecurity
 @EnableWebSecurity
@@ -55,7 +56,8 @@ public class AuthConfig {
         HttpSecurity http,
         AuthenticationEntryPoint authenticationEntryPoint,
         AccessDeniedHandler accessDeniedHandler,
-        JwtMemberAuthenticationConverter jwtMemberAuthenticationConverter
+        JwtMemberAuthenticationConverter jwtMemberAuthenticationConverter,
+        SecurityAuthorizationProperties securityAuthorizationProperties
     ) {
         http.httpBasic(AbstractHttpConfigurer::disable)
             .formLogin(AbstractHttpConfigurer::disable)
@@ -68,7 +70,8 @@ public class AuthConfig {
 
             .authorizeHttpRequests(authorize -> authorize
                 .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
-                .anyRequest().permitAll())
+                .requestMatchers(securityAuthorizationProperties.permitAllUrlPatterns()).permitAll()
+                .anyRequest().authenticated())
 
             .exceptionHandling(configurer -> configurer
                 .authenticationEntryPoint(authenticationEntryPoint)

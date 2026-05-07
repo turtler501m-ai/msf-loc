@@ -268,7 +268,7 @@ const onFaceAuthConfirm = () => {
 const onIdCardScanConfirm = (data) => {
   console.log('신분증 스캔 파일:', data)
   if (data) {
-    model.value.identityIssuDate = data.identityIssuDate
+    model.value.identityIssuDate = data.identityIssuDate || ''
     // 스캔된 신분증 정보 저장
     if (data.identityTypeNm) {
       model.value.identityTypeNm = data.identityTypeNm
@@ -276,6 +276,13 @@ const onIdCardScanConfirm = (data) => {
     if (data.identityTypeCd) {
       model.value.identityTypeCd = data.identityTypeCd
     }
+
+    // K-NOTE 스캔 관련 추가 정보 저장
+    if (data.cstmrNm) model.value.knoteIdentityScanCstmrNm = data.cstmrNm
+    if (data.rrn) model.value.knoteIdentityEssNo = data.rrn
+    if (data.identityTypeCd) model.value.knoteIdentityTypeCd = data.identityTypeCd
+    if (data.scanDt) model.value.knoteIdentityScanDt = data.scanDt
+    if (data.scanId) model.value.knoteScanId = data.scanId
   }
   model.value.isScanVerified = true
 }
@@ -289,6 +296,15 @@ const validate = () => {
 
   // 신분증 스캔이 필수인 경우 체크 (인증예외 S가 아닌 모든 경우)
   if (!model.value.isScanVerified) return false
+
+  // 신분증 발급일자 8자리 체크
+  if (model.value.identityIssuDate) {
+    const pureDate = model.value.identityIssuDate.replace(/[^0-9]/g, '')
+    if (pureDate.length !== 8) return false
+  } else {
+    // 발급일자가 필수라고 가정 (보통 신분증 확인 시 필수임)
+    return false
+  }
 
   return true
 }

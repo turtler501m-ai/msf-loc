@@ -11,6 +11,7 @@ public record LoginSessionReady(
     UserType userType,
     String userName,
     String phoneNumber,
+    String clientIp,
     Map<String, Object> attributes
 ) implements LoginResult {
 

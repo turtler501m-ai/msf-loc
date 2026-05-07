@@ -9,8 +9,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class AppRegistRequest {
+
+    private String loginSessionId;
+
     @NotBlank(groups = {OnCreate.class, OnModify.class}, message = "uuid는 필수 입력 값입니다.")
-    private String uuid;
+    private String deviceUuid;
+
     private String madAdr;
     private String userId;
     private String apvSttusCd;

@@ -15,11 +15,13 @@ public class RateInfoDto {
      * 요금제코드
      */
     private String rateCd;
+    //private String socCode;
 
     /**
      * 요금제명
      */
     private String rateNm;
+    //private String socNm;
 
     /**
      * 서비스유형
@@ -38,7 +40,7 @@ public class RateInfoDto {
 
     private String jehuProdNm;
 
-    
+
     private String sprtTp; /* 할인유형 */
 
     private String plcySctnCd; /* 정책구분코드 01:단말, 02:USIM */

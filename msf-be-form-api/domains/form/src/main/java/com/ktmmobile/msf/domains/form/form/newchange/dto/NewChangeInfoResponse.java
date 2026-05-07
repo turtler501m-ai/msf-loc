@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -42,7 +43,7 @@ public class NewChangeInfoResponse {
     String knoteIdentityScanCstmrNm;
     String knoteIdentityEssNo;
     String knoteIdentityTypeCd;
-    String knoteIdentityScanDt;
+    LocalDateTime knoteIdentityScanDt;
     String knoteScanId;
     String fathTrgYn;
     String fathTrgIdentityCertTypeCd;
@@ -94,8 +95,8 @@ public class NewChangeInfoResponse {
     String phonePaymentYn;
     String onOffTypeCd;
     String soCd;
-    String openReqDt;
-    String reqInDay;
+    LocalDateTime openReqDt;
+    LocalDateTime reqInDay;
     String clausePriCollectYn;
     String clausePriOfferYn;
     String clauseEssCollectYn;

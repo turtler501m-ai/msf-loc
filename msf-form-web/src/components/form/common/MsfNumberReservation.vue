@@ -1,22 +1,23 @@
 <template>
-  <div v-if="customerModel.joinType === 'NAC3'">
+  <div v-if="['NAC3', 'NEW', '01'].includes(customerModel.joinType)">
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="번호예약" required>
         <MsfStack type="field">
-          <MsfNumberInput
+          <MsfInput
             v-model="model.reqWantFnNo"
-            placeholder="앞자리"
+            placeholder="010"
             maxlength="3"
-            :readonly="customerModel.isSaved || !!model.wishNo"
+            class="ut-w-100"
+            disabled
           />
           <span class="unit-sep">-</span>
-          <MsfNumberInput
+          <MsfInput
             v-model="model.reqWantMnNo"
-            id="inp-reserve2"
-            placeholder="가운데 4자리"
+            placeholder="****"
             maxlength="4"
-            :readonly="customerModel.isSaved || !!model.wishNo"
+            class="ut-w-100"
+            disabled
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
@@ -29,7 +30,7 @@
           <MsfButton
             variant="subtle"
             @click="isModalOpen = true"
-            :disabled="(customerModel.isSaved && store.authFlags?.reserveNo) || !!model.wishNo"
+            :disabled="(customerModel.isSaved && store.authFlags?.reserveNo) || !!model.wishNo || String(model.reqWantRnNo || '').length !== 4"
             >번호조회</MsfButton
           >
         </MsfStack>
@@ -92,16 +93,17 @@ const searchParams = computed(() => ({
 
 const onNumberConfirm = async (data) => {
   try {
-    const number = typeof data === 'object' ? data.tlphNo : data
-    const payload = typeof data === 'object' 
-      ? { ...data, requestKey: store.applicationKey || '278', resNo: '2999999' }
-      : { tlphNo: data, requestKey: store.applicationKey || '278', resNo: '2999999' }
-    
+    const payload = {
+      requestKey: store.applicationKey,
+      tlpNo: data.orignCtn || data.tlphNo || data,
+      encdTlphNo: data.sctn || '',
+      tlphNoOwnCmpnCd: data.marketGubun || '',
+    }
+
     const res = await post('/api/form/newchange/reserveNumber', payload)
-    if (res && res.code === '0000') {
-      model.value.wishNo = number
+    if (res && res.data?.resCode === '0000') {
+      model.value.wishNo = payload.tlpNo
       reserveAuthBtn.verify()
-      alert('번호 예약이 완료되었습니다.')
     }
   } catch (error) {
     console.error('Reserve number error:', error)
@@ -113,14 +115,12 @@ const handleCancelNumber = async () => {
 
   try {
     const payload = {
-      resNo: '2999999',
-      requestKey: store.applicationKey || '278',
+      requestKey: store.applicationKey,
     }
     const res = await post('/api/form/newchange/cancelNumber', payload)
-    if (res && res.code === '0000') {
+    if (res && res.data?.resCode === '0000') {
       model.value.wishNo = ''
       reserveAuthBtn.reset()
-      alert('번호 예약이 취소되었습니다.')
     }
   } catch (error) {
     console.error('Cancel number error:', error)
@@ -142,7 +142,7 @@ const reserveAuthBtn = useAuthButton(
 )
 
 const validate = () => {
-  if (customerModel.value.joinType === 'NAC3') {
+  if (['NAC3', 'NEW', '01'].includes(customerModel.value.joinType)) {
     if (!model.value.wishNo) return false
     if (!store.authFlags?.reserveNo) return false
   }

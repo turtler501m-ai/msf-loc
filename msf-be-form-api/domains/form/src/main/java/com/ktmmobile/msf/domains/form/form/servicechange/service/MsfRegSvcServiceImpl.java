@@ -1,40 +1,43 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_EXSIST_RATE;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.NO_ONLINE_CAN_CHANGE_ADD;
-import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import com.ktmmobile.msf.domains.form.form.servicechange.repository.RegSvcDao;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionAvailableResVO;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionMyListResVO;
-import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionReqDto;
+
+import com.ktmmobile.msf.domains.form.common.code.ResSvcChgMessage;
+import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
-import com.ktmmobile.msf.domains.form.common.constants.Constants;
+import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoParamDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscRegSvcCanChgInVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSocVO;
-import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionAvailableResVO;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionMyListResVO;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionReqDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.RegSvcDao;
+
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
+import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
 
 @Service
-public class MsfRegSvcServiceImpl implements MsfRegSvcService {
+public class MsfRegSvcServiceImpl {
 
-    private static Logger logger = LoggerFactory.getLogger(MsfRegSvcService.class);
+    private static Logger logger = LoggerFactory.getLogger(MsfRegSvcServiceImpl.class);
 
     /** M플랫폼 연동 서비스 (X97/X38/Y25 호출) */
     @Autowired
@@ -83,8 +86,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
      *           → TOBE에서는 lstComActvDate 없이 기본 onlineCanYn만 적용 (단순화)
      */
 
-    @Override
-    public AdditionMyListResVO myAddSvcList(AdditionReqDto req) {
+    public FormResponse<AdditionMyListResVO> myAddSvcList(AdditionReqDto req) {
         MpAddSvcInfoParamDto vo = new MpAddSvcInfoParamDto();
         logger.debug("[myAddSvcList] start: ncn={}, ctn={}, custId={}", req.getNcn(), req.getCtn(), req.getCustId());
         try {
@@ -141,7 +143,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
         res.setList(vo.getList());
         logger.debug("[myAddSvcList] end: ncn={}, ctn={}, custId={}, resultCount={}",
                 req.getNcn(), req.getCtn(), req.getCustId(), res.getList() == null ? 0 : res.getList().size());
-        return res;
+        return FormResponse.ok(res);
     }
 
     /**
@@ -159,8 +161,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
      * ASIS 참조: selectAddSvcInfoDto() — X20으로 이용중 SOC 조회 → TOBE에서 X97로 교체
      *           X20은 기본 SOC 목록만 반환, X97은 상세 이력 포함 반환
      */
-    @Override
-    public AdditionAvailableResVO selectAddSvcInfoDto(AdditionReqDto req) {
+    public FormResponse<AdditionAvailableResVO> selectAddSvcInfoDto(AdditionReqDto req) {
         // [1] X97 — 현재 가입중인 SOC 목록 추출 (useYn 매핑용)
         List<String> useSocList = new ArrayList<>();
         try {
@@ -208,7 +209,7 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
         res.setList(list);   // 전체 (일반+로밍)
         res.setListA(listA); // 유료
         res.setListC(listC); // 무료/번들
-        return res;
+        return FormResponse.ok(res);
     }
 
     /**
@@ -227,19 +228,18 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
      * ASIS 참조: moscRegSvcCanChg() / moscRegSvcCanChgSeq() — MyPageSearchDto 세션 의존,
      *           Map<String,Object> 반환 → TOBE에서 AdditionApplyResVO로 교체
      */
-    @Override
-    public AdditionApplyResVO moscRegSvcCanChg(AdditionApplyReqDto req) {
+    public FormResponse<AdditionApplyResVO> moscRegSvcCanChg(AdditionApplyReqDto req) {
         try {
             // [1] MSP_RATE_MST@DL_MSP — 온라인 해지 가능 여부 사전 검증
             MspRateMstDto mspRateMstDto = fCommonSvc.getMspRateMst(req.getSoc());
             if (mspRateMstDto == null) {
                 // 요금제 정보 자체가 없는 경우 — 해지 진행 불가
-                return new AdditionApplyResVO(false, NO_EXSIST_RATE);
+                return FormResponse.of(ResSvcChgMessage.ADDITION_RATE_NOT_FOUND);
             }
             String onlineCanYn = StringUtil.NVL(mspRateMstDto.getOnlineCanYn(), "");
             if (!"Y".equals(onlineCanYn)) {
                 // 온라인 해지 불가 SOC — 고객센터 통해 해지 안내
-                return new AdditionApplyResVO(false, NO_ONLINE_CAN_CHANGE_ADD);
+                return FormResponse.of(ResSvcChgMessage.ADDITION_ONLINE_CANCEL_UNAVAILABLE);
             }
 
             // [2] M플랫폼 X38 — 부가서비스 해지
@@ -262,10 +262,10 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
         } catch (SocketTimeoutException e) {
             throw new McpCommonException(SOCKET_TIMEOUT_EXCEPTION);
         } catch (SelfServiceException e) {
-            return new AdditionApplyResVO(false, e.getMessage());
+            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
         }
 
-        return new AdditionApplyResVO(true);
+        return FormResponse.ok(AdditionApplyResVO.of(req.getSoc()));
     }
 
     /**
@@ -289,13 +289,12 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
      *
      * ASIS 참조: regSvcChg() — X21 사용, 인증 STEP 검증, 포인트 처리 포함
      */
-    @Override
-    public AdditionApplyResVO regSvcChg(AdditionApplyReqDto req) {
+    public FormResponse<AdditionApplyResVO> regSvcChg(AdditionApplyReqDto req) {
         try {
             // [1] 선해지 (flag="Y": 동일 SOC 해지 후 재가입 — 로밍 변경 등)
             if ("Y".equals(req.getFlag())) {
-                AdditionApplyResVO cancelRes = moscRegSvcCanChg(req);
-                if (!cancelRes.isSuccess()) {
+                FormResponse<AdditionApplyResVO> cancelRes = moscRegSvcCanChg(req);
+                if (!ResponseMessage.SUCCESS.getCode().equals(cancelRes.resCode())) {
                     // 선해지 실패 시 신청 중단
                     return cancelRes;
                 }
@@ -321,10 +320,10 @@ public class MsfRegSvcServiceImpl implements MsfRegSvcService {
         } catch (SocketTimeoutException e) {
             throw new McpCommonException(SOCKET_TIMEOUT_EXCEPTION);
         } catch (SelfServiceException e) {
-            return new AdditionApplyResVO(false, e.getMessage());
+            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
         }
 
-        return new AdditionApplyResVO(true);
+        return FormResponse.ok(AdditionApplyResVO.of(req.getSoc()));
     }
 
     // =====================================================

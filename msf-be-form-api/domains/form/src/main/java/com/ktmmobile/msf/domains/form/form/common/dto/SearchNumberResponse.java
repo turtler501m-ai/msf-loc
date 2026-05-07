@@ -15,6 +15,8 @@ public class SearchNumberResponse {
     private List<MPhoneNoListXmlVO> mPhoneNoList; //
     private List<MarketInfo> marketList;// 상세 정보 리스트
 
+    private int tryCount;
+
     /*public void setMPhoneNoList(List<MarketInfo> marketList) {
     }*/
 }

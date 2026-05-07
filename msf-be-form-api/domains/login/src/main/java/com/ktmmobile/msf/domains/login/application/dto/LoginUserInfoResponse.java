@@ -9,6 +9,7 @@ public record LoginUserInfoResponse(
     String userId,
     String userName,
     String phoneNumber,
+    String clientIp,
     boolean deviceAuthCompleted,
     String agentCode,
     String shopCode
@@ -19,6 +20,7 @@ public record LoginUserInfoResponse(
             userInfo.userId(),
             userInfo.userName(),
             userInfo.phoneNumber(),
+            userInfo.clientIp(),
             Boolean.TRUE.equals(LoginAttributes.getBoolean(userInfo.attributes(), LoginUserInfoAttribute.DEVICE_AUTH_COMPLETED.key())),
             LoginAttributes.getString(userInfo.attributes(), LoginUserInfoAttribute.AGENT_CODE.key()),
             LoginAttributes.getString(userInfo.attributes(), LoginUserInfoAttribute.SHOP_CODE.key())
@@ -30,6 +32,7 @@ public record LoginUserInfoResponse(
             userInfo.userId(),
             userInfo.userName(),
             userInfo.phoneNumber(),
+            userInfo.clientIp(),
             Boolean.TRUE.equals(LoginAttributes.getBoolean(userInfo.attributes(), LoginUserInfoAttribute.DEVICE_AUTH_COMPLETED.key())),
             LoginAttributes.getString(userInfo.attributes(), LoginUserInfoAttribute.AGENT_CODE.key()),
             LoginAttributes.getString(userInfo.attributes(), LoginUserInfoAttribute.SHOP_CODE.key())

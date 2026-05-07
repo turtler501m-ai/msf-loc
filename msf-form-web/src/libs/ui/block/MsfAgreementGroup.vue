@@ -183,10 +183,10 @@ const isAllChecked = computed({
     const targetItems = props.onlyRequired
       ? internalTerms.value.filter((item) => item.required === 'Y' || item.required === '2')
       : internalTerms.value
-    
+
     // 세부 항목 중 하나라도 해제되면 false 반환
     if (targetItems.length === 0) return false
-    
+
     const checkAll = (items) => {
       return items.every((item) => {
         if (!item.checked) return false
@@ -194,7 +194,7 @@ const isAllChecked = computed({
         return true
       })
     }
-    
+
     return checkAll(targetItems)
   },
   set: (val) => {
@@ -239,6 +239,12 @@ const onClickAllCheckWrapper = (e) => {
 
   width: 100%;
 
+  // 하단버튼이 있는경우에 상단보더 설정
+  & + :deep([class^='button-group-root']) {
+    border-top: 1px solid var(--color-gray-100);
+    padding-top: rem(16px);
+  }
+
   .all-check-wrapper {
     @include flex($h: space-between, $v: baseline);
     cursor: pointer;
@@ -272,9 +278,8 @@ const onClickAllCheckWrapper = (e) => {
       opacity var(--transition-base);
     overflow: hidden;
     border-top: var(--border-width-base) solid var(--color-gray-100);
-    border-bottom: var(--border-width-base) solid var(--color-gray-100);
     margin-top: rem(24px);
-    padding-block: rem(16px) rem(24px);
+    padding-block: rem(16px) 0;
   }
   .agreement-list-inner {
     min-height: 0;

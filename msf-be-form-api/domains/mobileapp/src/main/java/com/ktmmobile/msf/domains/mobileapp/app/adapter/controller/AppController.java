@@ -1,12 +1,9 @@
 package com.ktmmobile.msf.domains.mobileapp.app.adapter.controller;
 
-import jakarta.validation.Valid;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
@@ -41,7 +38,6 @@ public class AppController {
 
     @PostMapping("/api/auth/app/model/register")
     public CommonResponse<Integer> modelRegist(@RequestBody @Validated(OnCreate.class) AppRegistRequest request) {
-        request.setUserId(AuthenticationUtils.getUser().getId());
         return ResponseUtils.ok(appIntroReader.registModel(request));
     }
 

@@ -1,10 +1,21 @@
 package com.ktmmobile.msf.domains.form.form.newchange.service;
 
-import com.ktmmobile.msf.domains.form.form.newchange.dao.EsimDao;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.AbuseImeiHistDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.EsimDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.McpEsimOmdTraceDto;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.McpUploadPhoneInfoDto;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.AuthSmsDto;
 import com.ktmmobile.msf.domains.form.common.dto.NiceResDto;
@@ -23,22 +34,11 @@ import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.ObjectUtils;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
-
-import jakarta.servlet.http.HttpServletRequest;
-
-import org.springframework.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataAccessException;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.ktmmobile.msf.domains.form.form.newchange.dao.EsimDao;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AbuseImeiHistDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.EsimDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.McpEsimOmdTraceDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.McpUploadPhoneInfoDto;
 
 @Service
 public class EsimSvcImpl implements EsimSvc {
@@ -884,7 +884,7 @@ public class EsimSvcImpl implements EsimSvc {
             mcpEsimOmdTraceDto.setEventCode("Y12");
             mcpEsimOmdTraceDto.setPrcsSbst(returnMsg);
             mcpEsimOmdTraceDto.setRsltCd(returnCode);
-            mcpEsimOmdTraceDto.setAccessIp(ipstatisticService.getClientIp());
+            mcpEsimOmdTraceDto.setAccessIp(RequestUtils.getClientIp());
             mcpEsimOmdTraceDto.setAccessUrl(request.getRequestURI());
             mcpEsimOmdTraceDto.setTrtmRsltSmst(code);
             mcpEsimOmdTraceDto.setEid(eid);
@@ -940,7 +940,7 @@ public class EsimSvcImpl implements EsimSvc {
             mcpEsimOmdTraceDto.setEventCode("Y13");
             mcpEsimOmdTraceDto.setPrcsSbst(returnMsg);
             mcpEsimOmdTraceDto.setRsltCd(returnCode);
-            mcpEsimOmdTraceDto.setAccessIp(ipstatisticService.getClientIp());
+            mcpEsimOmdTraceDto.setAccessIp(RequestUtils.getClientIp());
             mcpEsimOmdTraceDto.setAccessUrl(request.getRequestURI());
             mcpEsimOmdTraceDto.setTrtmRsltSmst(code);
             mcpEsimOmdTraceDto.setEid(eid);
@@ -1007,7 +1007,7 @@ public class EsimSvcImpl implements EsimSvc {
             mcpEsimOmdTraceDto.setEventCode("Y14");
             mcpEsimOmdTraceDto.setPrcsSbst(returnMsg);
             mcpEsimOmdTraceDto.setRsltCd(returnCode);
-            mcpEsimOmdTraceDto.setAccessIp(ipstatisticService.getClientIp());
+            mcpEsimOmdTraceDto.setAccessIp(RequestUtils.getClientIp());
             mcpEsimOmdTraceDto.setAccessUrl(request.getRequestURI());
             mcpEsimOmdTraceDto.setTrtmRsltSmst(code);
             mcpEsimOmdTraceDto.setEid(eid);
@@ -1093,7 +1093,7 @@ public class EsimSvcImpl implements EsimSvc {
             mcpEsimOmdTraceDto.setEventCode("Y15");
             mcpEsimOmdTraceDto.setPrcsSbst(returnMsg);
             mcpEsimOmdTraceDto.setRsltCd(returnCode);
-            mcpEsimOmdTraceDto.setAccessIp(ipstatisticService.getClientIp());
+            mcpEsimOmdTraceDto.setAccessIp(RequestUtils.getClientIp());
             mcpEsimOmdTraceDto.setAccessUrl(request.getRequestURI());
             mcpEsimOmdTraceDto.setTrtmRsltSmst(code);
             mcpEsimOmdTraceDto.setEid(eid);
@@ -1492,7 +1492,7 @@ public class EsimSvcImpl implements EsimSvc {
 
         AbuseImeiHistDto abuseImeiHistDto = new AbuseImeiHistDto();
         abuseImeiHistDto.setImei(imei);
-        abuseImeiHistDto.setAccessIp(ipstatisticService.getClientIp());
+        abuseImeiHistDto.setAccessIp(RequestUtils.getClientIp());
         abuseImeiHistDto.setUserId(userId);
         esimDao.insertAbuseImeiHist(abuseImeiHistDto);
     }

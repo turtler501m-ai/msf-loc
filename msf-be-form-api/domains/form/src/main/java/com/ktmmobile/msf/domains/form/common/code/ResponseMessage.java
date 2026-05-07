@@ -62,7 +62,7 @@ public enum ResponseMessage implements CommonEnum {
     VALID_REQ_NP_PRECHECK_FAIL("1000", "번호이동 사전동의 실패"),
 
     /* 번호이동 납부주장 */
-    VALID_REQ_NP_PAY_OPEN_SUCCESS("0000", "번호이동 사전동의 결과조회 성공"),
+    VALID_REQ_NP_PAY_OPEN_SUCCESS("0000", "번호이동 사전동의 납부주장 성공"),
     VALID_REQ_NP_PAY_OPEN_FAIL("1000", "번호이동 사전동의 결과조회 실패"),
 
     /* 번호이동 사전동의 결과조회 */

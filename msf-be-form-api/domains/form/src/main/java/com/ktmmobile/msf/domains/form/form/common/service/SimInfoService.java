@@ -1,5 +1,19 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
+import java.net.SocketTimeoutException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.dto.JuoSubInfoDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
@@ -21,18 +35,6 @@ import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
 import com.ktmmobile.msf.domains.form.form.common.repository.smartform.MsfWriteMapper;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfUploadPhoneInfoVo;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataAccessException;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import java.net.SocketTimeoutException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -285,7 +287,7 @@ public class SimInfoService {
 
         try {
             String userId = "";
-            String accessIp = ipstatisticService.getClientIp();
+            String accessIp = RequestUtils.getClientIp();
             UserSessionDto userSession = SessionUtils.getUserCookieBean();
             if (userSession != null) {
                 userId = userSession.getUserId();
@@ -608,7 +610,7 @@ public class SimInfoService {
 
                     String intmModelId = StringUtil.NVL(moscBfacChkOmdIntmVO.getIntmModelId(), "");
                     String intmModelNm = StringUtil.NVL(moscBfacChkOmdIntmVO.getIntmModelNm(), "");
-//					String euiccId = StringUtil.NVL(moscBfacChkOmdIntmVO.getEuiccId(),"");
+                    //					String euiccId = StringUtil.NVL(moscBfacChkOmdIntmVO.getEuiccId(),"");
                     String intmSeq = StringUtil.NVL(moscBfacChkOmdIntmVO.getIntmSeq(), "");
                     resDto.setModelId(intmModelId);
                     resDto.setModelNm(intmModelNm);

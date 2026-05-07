@@ -153,10 +153,14 @@ public class ProductInfoService {
     }
 
     //공시지원금 조회
-    public List<PhoneInfoDto> getMspOfficialNoticeSupport(ProductInfoRequest condition) {
+    public MspSaleSubsdMstResponse getMspSaleSubsdMst(MspSaleSubsdMstRequest request) {
+        //request.setOrgnId("1100011741"); //조직코드 >> 세션으로 변경필수!!!!!!!!!!!!!!!!!!!!
+        return productInfoReadMapper.selectMspSaleSubsdMst(request);
+    }
+    /*public List<PhoneInfoDto> getMspOfficialNoticeSupport(ProductInfoRequest condition) {
         List<PhoneInfoDto> data = productInfoReadMapper.selectMspOfficialNoticeSupport(condition);
         return data;
-    }
+    }*/
 
     //휴대폰 매장 재고 조회 (postgre)
     public List<CategoryInfoDto> getPhoneInventoryList(@Valid PhoneSerialRequest condition) {

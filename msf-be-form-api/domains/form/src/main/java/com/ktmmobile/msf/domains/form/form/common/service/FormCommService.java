@@ -1,5 +1,15 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
@@ -14,20 +24,15 @@ import com.ktmmobile.msf.domains.form.form.common.repository.msp.McpRequestWrite
 import com.ktmmobile.msf.domains.form.form.common.repository.smartform.ProductSmartInfoReadMapper;
 import com.ktmmobile.msf.domains.form.form.common.vo.McpRequestCstmrVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.McpRequestVo;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AbuseImeiHistDto;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestRecord;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommWriteMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeWriteMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.net.SocketTimeoutException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -67,12 +72,6 @@ public class FormCommService {
     /**
      * 사용자조직에 해당하는 대리점 조회
      */
-    public AgentInfoResponse getAgentList2(AgentInfoRequest request) {
-        AgentInfoResponse responseDto = formCommReadMapper.selectAgentInfo2(request);
-        return responseDto;
-    }
-
-    //@@삭제필요@@
     public List<AgentInfoResponse> getAgentList(AgentInfoRequest request) {
         List<AgentInfoResponse> responseDto = formCommReadMapper.selectAgentInfo(request);
         return responseDto;
@@ -128,7 +127,7 @@ public class FormCommService {
     public boolean checkAbuseImeiList(List<String> imeis) {
         boolean isAbuse = false;
 
-        for (String imei : imeis) {
+        for (String imei: imeis) {
             if (StringUtils.isEmpty(imei)) {
                 continue;
             }
@@ -149,9 +148,9 @@ public class FormCommService {
     private boolean existsAbuseImei(String imei) {
         boolean exits = false;
         exits = mcpApiClient.post(
-                "/appform/existsAbuseImei",
-                imei.toString(),
-                Boolean.class
+            "/appform/existsAbuseImei",
+            imei.toString(),
+            Boolean.class
         );
         return exits;
     }
@@ -185,9 +184,9 @@ public class FormCommService {
     public int getFailUsims(String iccId) {
         int failUsimCnt = 0;
         failUsimCnt = mcpApiClient.post(
-                "/storeUsim/failUsim",
-                iccId.toString(),
-                int.class
+            "/storeUsim/failUsim",
+            iccId.toString(),
+            int.class
         );
         return failUsimCnt;
 
@@ -200,9 +199,9 @@ public class FormCommService {
     public int setFailUsims(String iccId) {
         int updateFailUsim = 0;
         updateFailUsim = mcpApiClient.post(
-                "/storeUsim/updateFailUsim",
-                iccId.toString(),
-                int.class
+            "/storeUsim/updateFailUsim",
+            iccId.toString(),
+            int.class
         );
         return updateFailUsim;
 
@@ -215,9 +214,9 @@ public class FormCommService {
     public int checkValidUsimNo(String iccId) {
         int vaildUsimCnt = 0;
         vaildUsimCnt = mcpApiClient.post(
-                "/appform/checkValidUsimNo",
-                iccId.toString(),
-                int.class
+            "/appform/checkValidUsimNo",
+            iccId.toString(),
+            int.class
         );
         return vaildUsimCnt;
 
@@ -230,9 +229,9 @@ public class FormCommService {
     public String getUsimOrgnId(String iccId) {
         String orgnId = "";
         orgnId = mcpApiClient.post(
-                "/msp/sellUsimMgmtOrgnId",
-                iccId.toString(),
-                String.class
+            "/msp/sellUsimMgmtOrgnId",
+            iccId.toString(),
+            String.class
         );
         return orgnId;
 
@@ -352,7 +351,7 @@ public class FormCommService {
         mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK);
         //번호이동 및 신규가입일 경우에 개통전 사전체크 진행여부 확인
         if (Constants.OPER_TYPE_MOVE_NUM.equals(request.getOperTypeCd())
-                || Constants.OPER_TYPE_NEW.equals(request.getOperTypeCd())) {
+            || Constants.OPER_TYPE_NEW.equals(request.getOperTypeCd())) {
             osstCount = this.getOsstCount(mcpRequestOsstRequest);
         }
 
@@ -421,64 +420,64 @@ public class FormCommService {
             }
         } catch (McpMplatFormException e) {
             //서비스 연동 이력 정보 저장 처리
-//            rtnMap.put("RESULT_CODE", "9997");
-//            rtnMap.put("ERROR_MSG", "response massage is null.");
-//            rtnMap.put("OSST_RESULT_CODE", "-1");//이력 정보 저장 처리
-//            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
-//            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
-//            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-//            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-//            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
-//            mcpIpStatisticDto.setPrcsSbst("Exception[McpMplatFormException] ");
-//            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
-//            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-//            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
-//            return rtnMap;
+            //            rtnMap.put("RESULT_CODE", "9997");
+            //            rtnMap.put("ERROR_MSG", "response massage is null.");
+            //            rtnMap.put("OSST_RESULT_CODE", "-1");//이력 정보 저장 처리
+            //            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
+            //            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
+            //            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
+            //            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
+            //            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
+            //            mcpIpStatisticDto.setPrcsSbst("Exception[McpMplatFormException] ");
+            //            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
+            //            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+            //            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
+            //            return rtnMap;
         } catch (SocketTimeoutException e) {
             //서비스 연동 이력 정보 저장 처리
-//            rtnMap.put("RESULT_CODE", "9999");
-//            rtnMap.put("ERROR_MSG", "SocketTimeout");
-//            rtnMap.put("OSST_RESULT_CODE", "-2");
-//            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
-//            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-//            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-//            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
-//            mcpIpStatisticDto.setPrcsSbst("Exception[SocketTimeoutException] ");
-//            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
-//            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-//            return rtnMap;
+            //            rtnMap.put("RESULT_CODE", "9999");
+            //            rtnMap.put("ERROR_MSG", "SocketTimeout");
+            //            rtnMap.put("OSST_RESULT_CODE", "-2");
+            //            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요.");
+            //            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
+            //            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
+            //            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
+            //            mcpIpStatisticDto.setPrcsSbst("Exception[SocketTimeoutException] ");
+            //            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
+            //            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+            //            return rtnMap;
         } catch (SelfServiceException e) {
             //서비스 연동 이력 정보 저장 처리
-//            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
-//            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
-//            rtnMap.put("RESULT_CODE", "9998");
-//            rtnMap.put("ERROR_MSG", e.getMessage());
+            //            rtnMap.put("REQUEST_KET", rtnAppformReqDto.getRequestKey());
+            //            rtnMap.put("RES_NO", rtnAppformReqDto.getResNo());
+            //            rtnMap.put("RESULT_CODE", "9998");
+            //            rtnMap.put("ERROR_MSG", e.getMessage());
 
             //메세지에 따른 resultCode 변경 처리
-//            String resultCode = e.getResultCode();
-//            String message = e.getMessageNe();
-//            if ("ITL_SST_E1020".equals(resultCode) && message.contains("BF1039")) {
-//                resultCode = "ITL_SST_E1020_01";
-//            } else if ("ITL_SST_E1020".equals(resultCode) && message.contains("BF2001")) {
-//                resultCode = "ITL_SST_E1020_02";
-//            } else if ("ITL_SST_E1020".equals(resultCode) && message.contains("BS0000")) {
-//                resultCode = "ITL_SST_E1020_03";
-//            }
+            //            String resultCode = e.getResultCode();
+            //            String message = e.getMessageNe();
+            //            if ("ITL_SST_E1020".equals(resultCode) && message.contains("BF1039")) {
+            //                resultCode = "ITL_SST_E1020_01";
+            //            } else if ("ITL_SST_E1020".equals(resultCode) && message.contains("BF2001")) {
+            //                resultCode = "ITL_SST_E1020_02";
+            //            } else if ("ITL_SST_E1020".equals(resultCode) && message.contains("BS0000")) {
+            //                resultCode = "ITL_SST_E1020_03";
+            //            }
 
-//            rtnMap.put("OSST_RESULT_CODE", resultCode);
-//            rtnMap.put("ERROR_NE_MSG", message);
+            //            rtnMap.put("OSST_RESULT_CODE", resultCode);
+            //            rtnMap.put("ERROR_NE_MSG", message);
         } catch (Exception e) {
             //서비스 연동 이력 정보 저장 처리
-//            rtnMap.put("RESULT_CODE", "-2");
-//            rtnMap.put("ERROR_MSG", "Exception");
-//            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요..");
-//            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-//            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-//            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
-//            mcpIpStatisticDto.setPrcsSbst("Exception[Exception] ");
-//            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
-//            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
-//            return rtnMap;
+            //            rtnMap.put("RESULT_CODE", "-2");
+            //            rtnMap.put("ERROR_MSG", "Exception");
+            //            rtnMap.put("ERROR_NE_MSG", "일시적으로 서비스 이용이 불가합니다. 잠시 후 다시 시도 해 주세요..");
+            //            McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
+            //            mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
+            //            mcpIpStatisticDto.setTrtmRsltSmst(rtnAppformReqDto.getResNo());
+            //            mcpIpStatisticDto.setPrcsSbst("Exception[Exception] ");
+            //            mcpIpStatisticDto.setParameter("RES_NO[" + rtnAppformReqDto.getResNo() + "]");
+            //            ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+            //            return rtnMap;
         }
 
         //성공했을때만 업데이트이나~ 임시로 무조건 저장
@@ -488,72 +487,72 @@ public class FormCommService {
         return rtnMap;
     }
 
-//            mcpRequestVo.setManagerCode(record.msfRequestVo().getManagerCd());
-//            mcpRequestVo.setAgentCode(record.msfRequestVo().getAgentCd());
-//            mcpRequestVo.setServiceType(record.msfRequestVo().getServiceTypeCd());
-//            mcpRequestVo.setReqBuyType(record.msfRequestVo().getReqBuyTypeCd());
-//            mcpRequestVo.setOperType(record.msfRequestVo().getOperTypeCd());
-//            mcpRequestVo.setCstmrType(record.msfRequestVo().getCstmrTypeCd());
-//            mcpRequestVo.setResCode("");
-//            mcpRequestVo.setResMsg("");
-//            mcpRequestVo.setResNo("");
-//            mcpRequestVo.setClausePriCollectFlag(record.msfRequestVo().getClausePriCollectYn());
-//            mcpRequestVo.setClauseConfidenceFlag(record.msfRequestVo().getClauseConfidenceYn());
-//            mcpRequestVo.setClause5gCoverageFlag(record.msfRequestVo().getClause5gCoverageYn());
-//            mcpRequestVo.setClauseEssCollectFlag(record.msfRequestVo().getClauseEssCollectYn());
-//            mcpRequestVo.setClauseFathFlag(record.msfRequestVo().getClauseFathYn());
-//            mcpRequestVo.setClauseEssCollectFlag(record.msfRequestVo().getClauseEssCollectYn());
-//            mcpRequestVo.setClauseInsrProdFlag(record.msfRequestVo().getClauseInsrProdYn());
-//            mcpRequestVo.setClauseJehuFlag(record.msfRequestVo().getClauseJehuYn());
-//            mcpRequestVo.setClausePartnerOfferFlag(record.msfRequestVo().getClausePartnerOfferYn());
-//            mcpRequestVo.setClausePriCollectFlag(record.msfRequestVo().getClausePriCollectYn());
-//            mcpRequestVo.setClauseFinanceFlag(record.msfRequestVo().getClauseFinanceYn());
-//            mcpRequestVo.setClauseInsuranceFlag(record.msfRequestVo().getClauseInsuranceYn());
-//            mcpRequestVo.setClauseSensiOfferFlag(record.msfRequestVo().getClauseSensiOfferYn());
-//            mcpRequestVo.setClausePriOfferFlag(record.msfRequestVo().getClausePriOfferYn());
-//            mcpRequestVo.setClauseMpps35Flag(record.msfRequestVo().getClauseMpps35Yn());
-//            mcpRequestVo.setClausePriAdFlag(record.msfRequestVo().getClausePriAdYn());
-//            mcpRequestVo.setClausePriTrustFlag(record.msfRequestVo().getClausePriTrustYn());
-//            mcpRequestVo.setClauseRentalModelCp(record.msfRequestVo().getClauseRentalModelCpYn());
-//            mcpRequestVo.setClauseRentalService(record.msfRequestVo().getClauseRentalServiceYn());
-//            mcpRequestVo.setClauseRentalModelCpPr(record.msfRequestVo().getClauseRentalModelCpPrYn());
-//            mcpRequestVo.setOnlineAuthType("");
-//            mcpRequestVo.setOnlineAuthInfo("");
-//            mcpRequestVo.setPstate("");
-//            mcpRequestVo.setRequestStateCode("");
-//            mcpRequestVo.setOpenNo("");
-//            mcpRequestVo.setFile01("");
-//            mcpRequestVo.setFile01Mask("");
-//            mcpRequestVo.setFaxyn("");
-//            mcpRequestVo.setFaxnum("");
-//            mcpRequestVo.setScanId("");
-//            mcpRequestVo.setOnOffType("");
-//            mcpRequestVo.setRip("");
-//            mcpRequestVo.setOpenReqDate("");
-//            mcpRequestVo.setReqWantNumber("");
-//            mcpRequestVo.setReqWantNumber2("");
-//            mcpRequestVo.setReqWantNumber3("");
-//            mcpRequestVo.setReqModelName("");
-//            mcpRequestVo.setReqModelColor("");
-//            mcpRequestVo.setReqPhoneSn("");
-//            mcpRequestVo.setReqUsimSn("");
-//            mcpRequestVo.setReqUsimName("");
-//            mcpRequestVo.setReqPayType("");
-//            mcpRequestVo.setReqAddition("");
-//            mcpRequestVo.setReqAdditionPrice("");
-//            mcpRequestVo.setShopCd("");
-//            mcpRequestVo.setShopNm("");
-//            mcpRequestVo.setContractNum("");
-//            mcpRequestVo.setEtcSpecial("");
-//            mcpRequestVo.setPstateReasonEtc("");
-//            mcpRequestVo.setPhonePayment("");
-//            mcpRequestVo.setCntpntShopId("");
-//            mcpRequestVo.setProdId("");
-//            mcpRequestVo.setSntyColorCd("");
-//            mcpRequestVo.setSntyCapacCd("");
-//            mcpRequestVo.setInsrCd("");
-//@Column(name = "req_buy_type") // DB의 컬럼명을 여기에 적습니다.
-//private String reqBuyTypeCd;
+    //            mcpRequestVo.setManagerCode(record.msfRequestVo().getManagerCd());
+    //            mcpRequestVo.setAgentCode(record.msfRequestVo().getAgentCd());
+    //            mcpRequestVo.setServiceType(record.msfRequestVo().getServiceTypeCd());
+    //            mcpRequestVo.setReqBuyType(record.msfRequestVo().getReqBuyTypeCd());
+    //            mcpRequestVo.setOperType(record.msfRequestVo().getOperTypeCd());
+    //            mcpRequestVo.setCstmrType(record.msfRequestVo().getCstmrTypeCd());
+    //            mcpRequestVo.setResCode("");
+    //            mcpRequestVo.setResMsg("");
+    //            mcpRequestVo.setResNo("");
+    //            mcpRequestVo.setClausePriCollectFlag(record.msfRequestVo().getClausePriCollectYn());
+    //            mcpRequestVo.setClauseConfidenceFlag(record.msfRequestVo().getClauseConfidenceYn());
+    //            mcpRequestVo.setClause5gCoverageFlag(record.msfRequestVo().getClause5gCoverageYn());
+    //            mcpRequestVo.setClauseEssCollectFlag(record.msfRequestVo().getClauseEssCollectYn());
+    //            mcpRequestVo.setClauseFathFlag(record.msfRequestVo().getClauseFathYn());
+    //            mcpRequestVo.setClauseEssCollectFlag(record.msfRequestVo().getClauseEssCollectYn());
+    //            mcpRequestVo.setClauseInsrProdFlag(record.msfRequestVo().getClauseInsrProdYn());
+    //            mcpRequestVo.setClauseJehuFlag(record.msfRequestVo().getClauseJehuYn());
+    //            mcpRequestVo.setClausePartnerOfferFlag(record.msfRequestVo().getClausePartnerOfferYn());
+    //            mcpRequestVo.setClausePriCollectFlag(record.msfRequestVo().getClausePriCollectYn());
+    //            mcpRequestVo.setClauseFinanceFlag(record.msfRequestVo().getClauseFinanceYn());
+    //            mcpRequestVo.setClauseInsuranceFlag(record.msfRequestVo().getClauseInsuranceYn());
+    //            mcpRequestVo.setClauseSensiOfferFlag(record.msfRequestVo().getClauseSensiOfferYn());
+    //            mcpRequestVo.setClausePriOfferFlag(record.msfRequestVo().getClausePriOfferYn());
+    //            mcpRequestVo.setClauseMpps35Flag(record.msfRequestVo().getClauseMpps35Yn());
+    //            mcpRequestVo.setClausePriAdFlag(record.msfRequestVo().getClausePriAdYn());
+    //            mcpRequestVo.setClausePriTrustFlag(record.msfRequestVo().getClausePriTrustYn());
+    //            mcpRequestVo.setClauseRentalModelCp(record.msfRequestVo().getClauseRentalModelCpYn());
+    //            mcpRequestVo.setClauseRentalService(record.msfRequestVo().getClauseRentalServiceYn());
+    //            mcpRequestVo.setClauseRentalModelCpPr(record.msfRequestVo().getClauseRentalModelCpPrYn());
+    //            mcpRequestVo.setOnlineAuthType("");
+    //            mcpRequestVo.setOnlineAuthInfo("");
+    //            mcpRequestVo.setPstate("");
+    //            mcpRequestVo.setRequestStateCode("");
+    //            mcpRequestVo.setOpenNo("");
+    //            mcpRequestVo.setFile01("");
+    //            mcpRequestVo.setFile01Mask("");
+    //            mcpRequestVo.setFaxyn("");
+    //            mcpRequestVo.setFaxnum("");
+    //            mcpRequestVo.setScanId("");
+    //            mcpRequestVo.setOnOffType("");
+    //            mcpRequestVo.setRip("");
+    //            mcpRequestVo.setOpenReqDate("");
+    //            mcpRequestVo.setReqWantNumber("");
+    //            mcpRequestVo.setReqWantNumber2("");
+    //            mcpRequestVo.setReqWantNumber3("");
+    //            mcpRequestVo.setReqModelName("");
+    //            mcpRequestVo.setReqModelColor("");
+    //            mcpRequestVo.setReqPhoneSn("");
+    //            mcpRequestVo.setReqUsimSn("");
+    //            mcpRequestVo.setReqUsimName("");
+    //            mcpRequestVo.setReqPayType("");
+    //            mcpRequestVo.setReqAddition("");
+    //            mcpRequestVo.setReqAdditionPrice("");
+    //            mcpRequestVo.setShopCd("");
+    //            mcpRequestVo.setShopNm("");
+    //            mcpRequestVo.setContractNum("");
+    //            mcpRequestVo.setEtcSpecial("");
+    //            mcpRequestVo.setPstateReasonEtc("");
+    //            mcpRequestVo.setPhonePayment("");
+    //            mcpRequestVo.setCntpntShopId("");
+    //            mcpRequestVo.setProdId("");
+    //            mcpRequestVo.setSntyColorCd("");
+    //            mcpRequestVo.setSntyCapacCd("");
+    //            mcpRequestVo.setInsrCd("");
+    //@Column(name = "req_buy_type") // DB의 컬럼명을 여기에 적습니다.
+    //private String reqBuyTypeCd;
 
 
 }

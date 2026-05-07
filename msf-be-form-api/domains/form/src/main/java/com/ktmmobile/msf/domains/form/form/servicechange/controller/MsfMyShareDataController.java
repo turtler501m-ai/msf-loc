@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 // [ASIS] import org.springframework.ui.Model — TOBE: @RestController에서 Model 미사용
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,7 +46,6 @@ import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MoscDataSharingResDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.OutDataSharingDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpFarChangewayInfoVO;
-import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.ObjectUtils;
@@ -78,9 +78,6 @@ public class MsfMyShareDataController {
 
 //    @Autowired
 //    private AppformSvc appformSvc;
-
-    @Autowired
-    private IpStatisticService ipstatisticService;
 
 //    @Autowired
 //    private FathService fathService;
@@ -309,7 +306,7 @@ public class MsfMyShareDataController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -649,7 +646,7 @@ public class MsfMyShareDataController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -1453,5 +1450,3 @@ public class MsfMyShareDataController {
     // }
 
 }
-
-

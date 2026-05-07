@@ -162,6 +162,7 @@ const onClickConfirmBtn = () => {
 
   .item-header {
     height: 100%;
+    min-height: var(--agreement-item-btn-size);
     @include flex($v: center, $h: space-between);
     cursor: pointer;
   }

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="customerModel.joinType === 'MNP3'">
+  <div v-if="['MNP3', '02'].includes(customerModel.joinType)">
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="번호이동 할<br/>전화번호" required>
@@ -87,7 +87,7 @@
     </MsfStack>
 
     <!-- 번호이동 사전동의 실패 모달 -->
-    <MsfMnpAuthFailModal v-model="isFailModalOpen" />
+    <MsfMnpAuthFailModal v-model="isFailModalOpen" @pay-opn="handlePayOpn" />
   </div>
 </template>
 <script setup>
@@ -134,35 +134,54 @@ const isPhoneReady = computed(() => {
 
 const handlePreAuth = async () => {
   if (!isPhoneReady.value) return
+
+  const c = customerModel.value
   const payload = {
-    moveCompanyCd: model.value.moveCompanyCd,
-    moveMobileNo: model.value.moveMobileNo1 + model.value.moveMobileNo2 + model.value.moveMobileNo3,
-    moveAuthTypeCd: model.value.moveAuthTypeCd,
-    moveAuthNo: model.value.moveAuthNo,
+    requestKey: store.applicationKey,
+    slsCmpnCd: c.cntpntShopCd || '',
+    npTlphNo: model.value.moveMobileNo1 + model.value.moveMobileNo2 + model.value.moveMobileNo3,
+    bchngNpCommCmpnCd: model.value.moveCompanyCd,
+    custTypeCd: ['JA', 'JP'].includes(c.cstmrTypeCd) ? 'C' : 'I',
+    custIdntNoIndCd: '01',
+    custIdntNo:
+      c.cstmrNativeRrn1 + c.cstmrNativeRrn2 || c.cstmrForeignerRrn1 + c.cstmrForeignerRrn2,
+    custNm: c.cstmrNm,
+    crprNo: c.cstmrJuridicalBizNo1 + c.cstmrJuridicalBizNo2 + c.cstmrJuridicalBizNo3 || '',
+    indvBizrYn: ['PA', 'PP'].includes(c.cstmrTypeCd) ? 'Y' : 'N',
   }
 
   try {
-    const res = await post('/api/form/newchange/reqNpPreCheck', payload)
-    if (res && res.code === '0000') {
-      alert('번호이동 사전동의 요청이 완료되었습니다. 고객님의 휴대폰으로 발송된 문자의 URL을 확인해주세요.')
+    // 번호이동 사전동의 실패 시 전용 팝업을 띄워야 하므로 silent: true 처리
+    const res = await post('/api/form/newchange/reqNpPreCheck', payload, { silent: true })
+    if (res && res.code === '0000' && res.data?.resCode === '0000') {
       if (store.authFlags) store.authFlags.moveAuthTypeCd = true
     } else {
       isFailModalOpen.value = true
     }
   } catch (error) {
     console.error('PreAuth error:', error)
+    isFailModalOpen.value = true
   }
 }
 
 const handleCheckAgree = async () => {
+  const c = customerModel.value
   const payload = {
-    moveMobileNo: model.value.moveMobileNo1 + model.value.moveMobileNo2 + model.value.moveMobileNo3,
+    requestKey: store.applicationKey,
+    slsCmpnCd: c.cntpntShopCd || '',
+    npTlphNo: model.value.moveMobileNo1 + model.value.moveMobileNo2 + model.value.moveMobileNo3,
+    bchngNpCommCmpnCd: model.value.moveCompanyCd,
+    custTypeCd: ['JA', 'JP'].includes(c.cstmrTypeCd) ? 'C' : 'I',
+    custIdntNoIndCd: '01',
+    custIdntNo:
+      c.cstmrNativeRrn1 + c.cstmrNativeRrn2 || c.cstmrForeignerRrn1 + c.cstmrForeignerRrn2,
+    custNm: c.cstmrNm,
+    crprNo: c.cstmrJuridicalBizNo1 + c.cstmrJuridicalBizNo2 + c.cstmrJuridicalBizNo3 || '',
+    indvBizrYn: ['PA', 'PP'].includes(c.cstmrTypeCd) ? 'Y' : 'N',
   }
+
   try {
-    const res = await post('/api/form/newchange/reqNpAgree', payload)
-    if (res && res.code === '0000') {
-      alert('번호이동 사전동의 확인이 완료되었습니다.')
-    }
+    await post('/api/form/newchange/reqNpAgree', payload)
   } catch (error) {
     console.error('Check agree error:', error)
   }
@@ -170,12 +189,12 @@ const handleCheckAgree = async () => {
 
 const handlePayOpn = async () => {
   const payload = {
-    moveMobileNo: model.value.moveMobileNo1 + model.value.moveMobileNo2 + model.value.moveMobileNo3,
+    requestKey: store.applicationKey,
   }
   try {
     const res = await post('/api/form/newchange/reqPayOpn', payload)
     if (res && res.code === '0000') {
-      alert('납부주장 처리가 완료되었습니다.')
+      isFailModalOpen.value = false
     }
   } catch (error) {
     console.error('PayOpn error:', error)
@@ -209,15 +228,22 @@ onMounted(async () => {
 })
 
 const validate = () => {
-  if (customerModel.value.joinType === 'MNP3') {
+  if (['MNP3', '02'].includes(customerModel.value.joinType)) {
     if (!model.value.moveCompanyCd) return false
     if (!model.value.moveMobileNo1 || !model.value.moveMobileNo2 || !model.value.moveMobileNo3)
       return false
+    // 번호이동 인증 필수
     if (!model.value.moveAuthTypeCd || !model.value.moveAuthNo) return false
     if (!store.authFlags?.moveAuthTypeCd) return false
+    
+    // 이번달 사용요금 동의 필수
     if (!model.value.moveThismonthPayTypeCd) return false
-    if (!model.value.moveAllotmentSttusCd) return false
-    if (!model.value.moveRefundAgreeYn) return false
+    
+    // 휴대폰 할부금 선택 필수 (*)
+    if (!model.value.moveAllotmentSttusCd || (Array.isArray(model.value.moveAllotmentSttusCd) && model.value.moveAllotmentSttusCd.length === 0)) return false
+    
+    // 미환급금 요금상계 선택 필수 (*)
+    if (!model.value.moveRefundAgreeYn || (Array.isArray(model.value.moveRefundAgreeYn) && model.value.moveRefundAgreeYn.length === 0)) return false
   }
   return true
 }

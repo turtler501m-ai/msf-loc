@@ -11,7 +11,6 @@ import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.form.common.dto.MnpOsstRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MnpOsstResponse;
 import com.ktmmobile.msf.domains.form.form.common.repository.msp.McpRequestReadMapper;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,20 +35,29 @@ public class NumberPortableService {
     /**
      * 번호이동 사전동의 요청 : NP1
      **/
+    //        npTlphNo: $.trim($("#moveMobile").val())
+    //        ,bchngNpCommCmpnCd: mpCode
+    //        ,slsCmpnCd: $("#cntpntShopId").val()
+    //        ,custIdntNoIndCd: "01"
+    //        ,custIdntNo: custIdntNo
+    //        ,custNm: $.trim($("#cstmrName").val())
+    //        ,custTypeCd: cstmrType
     public FormResponse<MnpOsstResponse> requestNpPreCheck(MnpOsstRequest request) {
         MnpOsstResponse responseDto = new MnpOsstResponse();
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
         //parameter ( MnpOsstRequest )
+        //requestKey            : 신청서 일련번호
         //NpTlphNo              : [암호화] 번호이동 전화번호 >> 01098761234
-        //BchngNpCommCmpnCd     : 변경전번호이동사업자코드 >> SKT
-        //slsCmpnCd             : 판매회사코드
-        //CustTypeCd            : 고객유형코드
-        //indvBizrYn	        : 개인사업자 여부 ( Y / N ) >> 기본값 N
-        //custIdntNoIndCd	    : 고객식별번호구분코드 :: RCP2006 >> 01
-        //custIdntNo	        : [암호화] 고객식별번호 >> 6601011234567
+        //BchngNpCommCmpnCd     : 변경전번호이동사업자코드 ( NP_COMM_CMPN_CD ) >> SKT
+        //CustTypeCd            : 고객유형코드 ( CUST_TYPE_CD )
+        //custIdntNoIndCd	    : 고객식별번호구분코드 ( CUST_IDNT_NO_IND_CD ) :: RCP2006 >> 01
         //crprNo	            : 법인번호
         //custNm	            : [암호화] 고객명 >> 홍길동
+        //custIdntNo	        : [암호화] 고객식별번호 >> 6601011234567
+        //indvBizrYn	        : 개인사업자 여부 ( Y / N ) >> 기본값 N
+        //slsCmpnCd             : 판매회사코드 >> INL :: 고정같음
+
         //RCP2006	01	주민등록증
         //RCP2006	02	운전면허증
         //RCP2006	03	장애인등록증
@@ -174,9 +182,22 @@ public class NumberPortableService {
     /**
      * 번호이동 사전동의 결과조회 : NP3
      **/
+    //        npTlphNo: $.trim($("#moveMobile").val())
+    //        ,bchngNpCommCmpnCd: mpCode
+    //        ,slsCmpnCd: $("#cntpntShopId").val()
+    //        ,custIdntNoIndCd: "01"
+    //        ,custIdntNo: custIdntNo
+    //        ,custNm: $.trim($("#cstmrName").val())
+    //        ,custTypeCd: cstmrType
     public FormResponse<MnpOsstResponse> requestNpAgree(MnpOsstRequest osstReqDto) {
         MnpOsstResponse responseDto = new MnpOsstResponse();
-        return FormResponse.of(ResponseMessage.VALID_REQ_NP_AGREE_SUCCESS, responseDto);
+        if ("01098761234".equals(osstReqDto.getNpTlphNo())) {
+            return FormResponse.of(ResponseMessage.VALID_REQ_NP_AGREE_FAIL, responseDto); //실패
+        }
+
+        return FormResponse.of(ResponseMessage.VALID_REQ_NP_AGREE_SUCCESS, responseDto); //성공
+
+        //번호이동 사전동의 결과조회 리턴값이 S 가 아니면 번호이동 사전동의 실패 화면이 뜬다.
 
         //HashMap<String, Object> rtnMap = new HashMap<String, Object>();
         //1-3. 본인인증 확인
@@ -273,35 +294,15 @@ public class NumberPortableService {
         //return rtnMap;
     }
 
+
     /**
      * 번호이동 사전동의 결과조회 : NP2
      * 고객포탈은 사용하지 않는 것으로 기록되어 있음. reqPayOpnAjax.do URI 를 조회해도 나오진 않음.
      **/
     //public Map<String, Object> reqPayOpn(McpRequestMoveDto requestMoveDto, AppformReqDto appformReqDto) {
-    public Map<String, Object> requestPayOpn(NewChangeInfoRequest request) {
-        HashMap<String, Object> rtnMap = new HashMap<String, Object>();
-
-        /*if ("LOCAL".equals(serverName)) {
-            try {
-                Thread.sleep(15 * 1000);
-                rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-                return rtnMap;
-            } catch (InterruptedException e) {
-                throw new McpCommonException(COMMON_EXCEPTION);
-            }
-
-            // *********************** STG 환경 강제로 성공 처리 시작
-        } else if ("STG".equals(serverName)) {
-            try {
-                Thread.sleep(15 * 1000);
-                rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-                return rtnMap;
-            } catch (InterruptedException e) {
-                throw new McpCommonException(COMMON_EXCEPTION);
-            }
-            // *********************** STG 환경 강제로 성공 처리 끝
-
-        }*/
+    public FormResponse<MnpOsstResponse> requestPayOpn(MnpOsstRequest request) {
+        MnpOsstResponse responseDto = new MnpOsstResponse();
+        return FormResponse.of(ResponseMessage.VALID_REQ_NP_PAY_OPEN_SUCCESS, responseDto);
 
         //Key 받는거 정리해야함. 아래 코드는 스마트에서 추가함.
         //MsfRequestMoveVo msfRequestMoveVo = new MsfRequestMoveVo();
@@ -338,7 +339,7 @@ public class NumberPortableService {
             }
         }*/
 
-        return rtnMap;
+        //return rtnMap;
     }
 
 

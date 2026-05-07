@@ -1,58 +1,25 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.controller;
 
-/**
- * 부가서비스 REST API Controller
- *
- * =====================================================
- * [TOBE 변환 이력] 2026-04-03
- * =====================================================
- * ASIS: @Controller, *.do URL, MyPageSearchDto(세션), Map<String,Object> 반환
- * TOBE: @RestController, /api/v1/addition/*, AdditionReqDto(요청 바디), VO 반환
- *
- * [변환된 API 목록]
- *   POST /api/v1/addition/my-list        ← myAddSvcListAjax.do    (이용중 부가서비스 목록)
- *   POST /api/v1/addition/available-list ← addSvcListAjax.do      (가입가능 부가서비스 목록)
- *   POST /api/v1/addition/cancel         ← moscRegSvcCanChgAjax.do (부가서비스 해지)
- *   POST /api/v1/addition/reg            ← regSvcChgAjax.do       (부가서비스 신청)
- *
- * [제외된 ASIS 엔드포인트]
- *   regServiceView.do   → join-info API 기구현으로 대체 (프론트 진입 불필요)
- *   addSvcViewPop.do    → 프론트 팝업 렌더링으로 대체 (View 반환 불필요)
- *   roaming*.do         → 로밍 부가서비스 TOBE 미이관 (추후 구현)
- *
- * [제거된 의존성]
- *   MsfMypageSvc        — 세션 기반 사용자 타입 체크 → Stateless REST로 불필요
- *   CertService         — 인증 STEP 검증 → 공통 미구현 (31번 §1-3)
- *   MsfMaskingSvc       — 마스킹 해제 로그 → 공통 미구현 (31번 §1-4)
- *   IpStatisticService  — IP 통계 → ASIS 전용
- *   SessionUtils        — Stateless REST 전환으로 세션 미사용
- * =====================================================
- *
- * @see MsfRegSvcService
- * @see com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionReqDto
- * @see com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto
- */
-
 import java.net.SocketTimeoutException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionAvailableResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionMyListResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionReqDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfRegSvcService;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfRegSvcServiceImpl;
 
 @RestController
 public class MsfRegSvcController {
 
     @Autowired
-    private MsfRegSvcService regSvcService;
+    private MsfRegSvcServiceImpl regSvcService;
 
     /**
      * 이용중 부가서비스 목록 조회
@@ -69,7 +36,7 @@ public class MsfRegSvcController {
      */
 
     @PostMapping("/api/form/servicechange/myaddsvclist")
-    public CommonResponse<AdditionMyListResVO> myAddSvcList(@RequestBody AdditionReqDto req) {
+    public CommonResponse<FormResponse<AdditionMyListResVO>> myAddSvcList(@RequestBody AdditionReqDto req) {
         return ResponseUtils.ok(regSvcService.myAddSvcList(req));
     }
 
@@ -87,8 +54,8 @@ public class MsfRegSvcController {
      * @return 가입가능 부가서비스 목록 (list/listA/listC)
      */
     @PostMapping("/api/v1/addition/available-list")
-    public ResponseEntity<AdditionAvailableResVO> addSvcList(@RequestBody AdditionReqDto req) {
-        return ResponseEntity.ok(regSvcService.selectAddSvcInfoDto(req));
+    public CommonResponse<FormResponse<AdditionAvailableResVO>> addSvcList(@RequestBody AdditionReqDto req) {
+        return ResponseUtils.ok(regSvcService.selectAddSvcInfoDto(req));
     }
 
     /**
@@ -105,9 +72,9 @@ public class MsfRegSvcController {
      * @return 해지 결과 (success/message)
      */
     @PostMapping("/api/v1/addition/cancel")
-    public ResponseEntity<AdditionApplyResVO> moscRegSvcCanChg(@RequestBody AdditionApplyReqDto req)
+    public CommonResponse<FormResponse<AdditionApplyResVO>> moscRegSvcCanChg(@RequestBody AdditionApplyReqDto req)
             throws SocketTimeoutException {
-        return ResponseEntity.ok(regSvcService.moscRegSvcCanChg(req));
+        return ResponseUtils.ok(regSvcService.moscRegSvcCanChg(req));
     }
 
     /**
@@ -123,9 +90,9 @@ public class MsfRegSvcController {
      * @return 신청 결과 (success/message)
      */
     @PostMapping("/api/v1/addition/reg")
-    public ResponseEntity<AdditionApplyResVO> regSvcChg(@RequestBody AdditionApplyReqDto req)
+    public CommonResponse<FormResponse<AdditionApplyResVO>> regSvcChg(@RequestBody AdditionApplyReqDto req)
             throws SocketTimeoutException {
-        return ResponseEntity.ok(regSvcService.regSvcChg(req));
+        return ResponseUtils.ok(regSvcService.regSvcChg(req));
     }
 
     // =====================================================

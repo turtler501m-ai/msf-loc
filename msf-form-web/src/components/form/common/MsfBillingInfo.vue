@@ -3,27 +3,19 @@
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="명세서 수신 유형" tag="div" required>
-        <MsfChip
-          v-model="model.cstmrBillSendTypeCd"
-          name="inp-stmtType"
-          groupCode="STRE"
-        />
+        <MsfChip v-model="model.cstmrBillSendTypeCd" name="inp-stmtType" groupCode="STRE" />
       </MsfFormGroup>
       <MsfFormGroup label="요금 납부 방법" tag="div" required>
-        <MsfChip
-          v-model="model.reqPayTypeCd"
-          name="inp-payMtd"
-          groupCode="PAYM"
-        />
-        <template v-if="['01', 'payMtd1', 'AA', 'D'].includes(model.reqPayTypeCd)">
+        <MsfChip v-model="model.reqPayTypeCd" name="inp-payMtd" groupCode="PAYM" />
+        <template v-if="['AA', 'D'].includes(model.reqPayTypeCd)">
           <hr class="ut-line" />
           <MsfStack type="field" class="ut-w100p">
             <MsfChip
-              v-model="model.autoPayerType"
-              name="inp-autoPayerType"
+              v-model="model.othersPaymentYn"
+              name="inp-othersPaymentYn"
               :data="[
-                { value: 'autoPayerType1', label: '본인납부' },
-                { value: 'autoPayerType2', label: '타인납부' },
+                { value: 'N', label: '본인납부' },
+                { value: 'Y', label: '타인납부' },
               ]"
             />
           </MsfStack>
@@ -54,7 +46,7 @@
               >계좌번호 유효성 체크 완료</MsfButton
             >
           </MsfStack>
-          <MsfStack type="field" v-if="model.autoPayerType === 'autoPayerType2'">
+          <MsfStack type="field" v-if="model.othersPaymentYn === 'Y'">
             <MsfInput
               v-model="model.reqAccountNm"
               id="inp-autoPayerName"
@@ -81,15 +73,15 @@
             class="ut-mt-8"
           />
         </template>
-        <template v-if="['02', 'payMtd2', 'C'].includes(model.reqPayTypeCd)">
+        <template v-if="['C'].includes(model.reqPayTypeCd)">
           <hr class="ut-line" />
           <MsfStack type="field" class="ut-w100p">
             <MsfChip
-              v-model="model.cardPayerType"
-              name="inp-cardPayerType"
+              v-model="model.othersPaymentYn"
+              name="inp-othersPaymentYn"
               :data="[
-                { value: 'cardPayerType1', label: '본인납부' },
-                { value: 'cardPayerType2', label: '타인납부' },
+                { value: 'N', label: '본인납부' },
+                { value: 'Y', label: '타인납부' },
               ]"
             />
           </MsfStack>
@@ -159,7 +151,7 @@
               placeholder="YY"
             />
           </MsfStack>
-          <MsfStack type="field" v-if="model.cardPayerType === 'cardPayerType2'">
+          <MsfStack type="field" v-if="model.othersPaymentYn === 'Y'">
             <MsfInput
               v-model="model.reqCardNm"
               id="inp-cardPayerName"
@@ -180,7 +172,7 @@
             />
           </MsfStack>
         </template>
-        <template v-if="['03', 'payMtd3'].includes(model.reqPayTypeCd)">
+        <template v-if="['R', 'VA'].includes(model.reqPayTypeCd)">
           <MsfStack type="field">
             <MsfInput
               v-model="model.combId"
@@ -225,9 +217,13 @@ const props = defineProps({
 const model = defineModel({ type: Object, required: true })
 
 import { watch } from 'vue'
-watch(() => model.value.reqPayTypeCd, (val) => {
-  console.log('>>> [MsfBillingInfo] reqPayTypeCd changed:', val)
-}, { immediate: true })
+watch(
+  () => model.value.reqPayTypeCd,
+  (val) => {
+    console.log('>>> [MsfBillingInfo] reqPayTypeCd changed:', val)
+  },
+  { immediate: true },
+)
 
 const handleAccountVerify = async () => {
   const payload = {
@@ -235,8 +231,12 @@ const handleAccountVerify = async () => {
     svcGbn: '2',
     service: '2',
     svcCls: '1',
-    name: model.value.autoPayerType === 'autoPayerType1' ? props.customerData.cstmrNm : model.value.reqAccountNm,
-    resId: (model.value.autoPayerType === 'autoPayerType1' ? props.customerData.cstmrNativeRrn1 : model.value.reqAccountRrn).substring(0, 6),
+    name:
+      model.value.othersPaymentYn === 'N' ? props.customerData.cstmrNm : model.value.reqAccountNm,
+    resId: (model.value.othersPaymentYn === 'N'
+      ? props.customerData.cstmrNativeRrn1
+      : model.value.reqAccountRrn
+    ).substring(0, 6),
     bankCode: model.value.reqBankCd,
     accountNo: model.value.reqAccountNo,
     inqRsn: '90',
@@ -244,9 +244,8 @@ const handleAccountVerify = async () => {
 
   try {
     const res = await post('/api/form/accountCheck', payload)
-    if (res && res.code === '0000') {
+    if (res && res.data?.resCode === '0000') {
       autoAcctAuth.verify()
-      alert('계좌번호 유효성 체크가 완료되었습니다.')
     }
   } catch (e) {
     console.error(e)
@@ -258,16 +257,19 @@ const handleCardVerify = async () => {
     crdtCardNo: model.value.reqCardNo,
     crdtCardTermYear: model.value.reqCardYy,
     crdtCardTermMonth: model.value.reqCardMm,
-    custNm: model.value.cardPayerType === 'cardPayerType1' ? props.customerData.cstmrNm : model.value.reqCardNm,
-    brthDate: model.value.cardPayerType === 'cardPayerType1' ? props.customerData.cstmrNativeBirth : model.value.reqCardRrn,
+    custNm:
+      model.value.othersPaymentYn === 'N' ? props.customerData.cstmrNm : model.value.reqCardNm,
+    brthDate:
+      model.value.othersPaymentYn === 'N'
+        ? props.customerData.cstmrNativeBirth
+        : model.value.reqCardRrn,
     ncType: '',
   }
 
   try {
     const res = await post('/api/form/crdtCardAthnInfo', payload)
-    if (res && res.code === '0000') {
+    if (res && res.data?.resCode === '0000') {
       cardAuth.verify()
-      alert('신용카드 유효성 체크가 완료되었습니다.')
     }
   } catch (e) {
     console.error(e)
@@ -322,9 +324,8 @@ const handleCombVerify = async () => {
 
   try {
     const res = await post('/api/form/verifyBillInfo', payload)
-    if (res && res.code === '0000') {
+    if (res && res.data?.resCode === '0000') {
       combAuth.verify()
-      alert('청구계정 확인이 완료되었습니다.')
     }
   } catch (error) {
     console.error('Verify bill info error:', error)
@@ -335,29 +336,43 @@ const validate = () => {
   if (!model.value.cstmrBillSendTypeCd) return false
   if (!model.value.reqPayTypeCd) return false
 
-  if (['01', 'payMtd1', 'AA', 'D'].includes(model.value.reqPayTypeCd)) {
-    if (!model.value.autoPayerType || !model.value.reqBankCd || !model.value.reqAccountNo)
+  // 자동이체 (은행)
+  if (['AA', 'D'].includes(model.value.reqPayTypeCd)) {
+    if (!model.value.othersPaymentYn || !model.value.reqBankCd || !model.value.reqAccountNo)
       return false
+    // 계좌 유효성 체크 필수
     if (!props.authFlags?.autoAcct) return false
-    // 타인납부인 경우만 체크
-    if (model.value.autoPayerType === 'autoPayerType2') {
-      if (!model.value.reqAccountNm || !model.value.reqAccountRrn || !model.value.reqAccountRelTypeCd)
+    // 타인납부인 경우 대리인 정보 필수
+    if (model.value.othersPaymentYn === 'Y') {
+      if (
+        !model.value.reqAccountNm ||
+        !model.value.reqAccountRrn ||
+        !model.value.reqAccountRelTypeCd
+      )
         return false
     }
+    // 출금 동의 체크 필수 (노출될 때만)
     if (!model.value.isAutoAgree) return false
-  } else if (['02', 'payMtd2', 'C'].includes(model.value.reqPayTypeCd)) {
-    if (!model.value.cardPayerType || !model.value.reqCardCompanyCd || !model.value.reqCardNo)
+  }
+  // 신용카드
+  else if (['C'].includes(model.value.reqPayTypeCd)) {
+    if (!model.value.othersPaymentYn || !model.value.reqCardCompanyCd || !model.value.reqCardNo)
       return false
-    if (!props.authFlags?.cardNo && !props.authFlags?.reqCardNo) return false
+    // 카드 유효성 체크 필수
+    if (!props.authFlags?.reqCardNo) return false
     if (!model.value.reqCardMm || !model.value.reqCardYy) return false
-    // 타인납부인 경우만 체크
-    if (model.value.cardPayerType === 'cardPayerType2') {
+    // 타인납부인 경우 대리인 정보 필수
+    if (model.value.othersPaymentYn === 'Y') {
       if (!model.value.reqCardNm || !model.value.reqCardRrn || !model.value.cardRelation)
         return false
     }
-  } else if (['03', 'payMtd3'].includes(model.value.reqPayTypeCd)) {
+  }
+  // 지로/기타 통합청구
+  else if (['R', 'VA'].includes(model.value.reqPayTypeCd)) {
     if (!model.value.combId) return false
+    // 청구계정 체크 필수
     if (!props.authFlags?.combId) return false
+    // 통합 청구 동의 필수
     if (!model.value.combAgree) return false
   }
 

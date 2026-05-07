@@ -1,5 +1,10 @@
 <template>
-  <div ref="triggerRef" class="popover-trigger-container" @click="togglePopover">
+  <div
+    ref="triggerRef"
+    class="popover-trigger-container"
+    :class="{ 'is-active': isPopoverOpen }"
+    @click="togglePopover"
+  >
     <slot name="trigger" :disabled="inactiveEvent"></slot>
   </div>
 
@@ -12,50 +17,43 @@
       @exit="closePopover"
     >
       <div
-        :class="['popover-wrapper', { 'has-overlay': props.hasOverlay }]"
-        @click="handleOverlayClick"
+        v-if="props.hasOverlay"
+        class="popover-overlay-guard"
+        @click.stop="handleOutsideClick"
+      ></div>
+      <div
+        ref="popoverRef"
+        class="popover-root"
+        v-bind="$attrs"
+        :style="{
+          width: props.width,
+          maxHeight: props.maxHeight,
+          /* 위치 계산이 완료되기 전까지는 숨겨서 0,0 지점에 잠깐 나타나는 '깜빡임' 방지 */
+          visibility: isPositioned ? 'visible' : 'hidden',
+        }"
+        @click.stop
       >
-        <div
-          ref="popoverRef"
-          class="popover-root"
-          v-bind="$attrs"
-          :style="{
-            width: props.width,
-            maxHeight: props.maxHeight,
-            /* 위치 계산이 완료되기 전까지는 숨겨서 0,0 지점에 잠깐 나타나는 '깜빡임' 방지 */
-            visibility: isPositioned ? 'visible' : 'hidden',
-          }"
-          @click.stop
-        >
-          <div class="popover-header">
-            <div class="header-inner">
-              <div v-if="props.title" class="header">
-                <h2 class="title">{{ props.title }}</h2>
-              </div>
-              <MsfButton
-                v-if="showCloseBtn"
-                variant="ghost"
-                iconOnly="close"
-                class="popover-close-button"
-                @click="closePopover"
-              >
-                닫기
-              </MsfButton>
+        <div class="popover-header">
+          <div class="header-inner">
+            <div v-if="props.title" class="header">
+              <h2 class="title">{{ props.title }}</h2>
             </div>
+            <MsfButton
+              v-if="showCloseBtn"
+              variant="ghost"
+              iconOnly="close"
+              class="popover-close-button"
+              @click="closePopover"
+            >
+              닫기
+            </MsfButton>
           </div>
-          <!-- <div class="popover-content">
-          <MsfCustomScroll class="popover-scrollbar">
-            <div class="popover-inner">
-              <slot></slot>
-            </div>
-          </MsfCustomScroll>
-        </div> -->
-          <MsfCustomScroll class="popover-content popover-scrollbar">
-            <div class="popover-inner">
-              <slot></slot>
-            </div>
-          </MsfCustomScroll>
         </div>
+        <MsfCustomScroll class="popover-content popover-scrollbar">
+          <div class="popover-inner">
+            <slot></slot>
+          </div>
+        </MsfCustomScroll>
       </div>
     </FocusTrap>
   </Teleport>
@@ -64,6 +62,9 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, useTemplateRef } from 'vue'
 import FocusTrap from '@/libs/ui/utility/FocusTrap.vue'
+import { useScrollLock } from '@/hooks/useScrollLock'
+
+const { lock, unlock } = useScrollLock()
 
 const props = defineProps({
   title: String,
@@ -72,12 +73,12 @@ const props = defineProps({
   isOpen: { type: Boolean, default: false }, // 외부에서 제어 가능한 열림 상태
   inactiveEvent: { type: Boolean, default: false }, // 비활성화 여부
   gap: { type: Number, default: 8 }, // 트리거와 팝업 사이의 간격(px)
-  closeLock: { type: Boolean, default: false }, // 스크롤 시 닫기 방지 여부
   portalSelector: { type: [String, Object], default: null }, // 렌더링될 대상 요소
   width: { type: String, default: '460px' }, // 팝업 너비
   maxHeight: { type: String, default: '' }, // 팝업 최대 높이 (내부 스크롤 발생 조건)
+  closeLock: { type: Boolean, default: false }, // 스크롤 시 닫기 방지 여부
   showCloseBtn: { type: Boolean, default: true }, // 우측 상단 X 버튼 표시 여부
-  hasOverlay: { type: Boolean, default: true }, // 배경 차단 레이어 여부 설정
+  hasOverlay: { type: Boolean, default: true }, // 바닥 차단 레이어 여부 설정
   overlayClose: { type: Boolean, default: false }, // 오버레이 클릭 시 닫기 허용 여부
 })
 
@@ -167,7 +168,6 @@ const togglePopover = () => {
   isPopoverOpen.value = !isPopoverOpen.value
   emit('update:isOpen', isPopoverOpen.value)
   // console.log('팝오버 열림')
-  document.querySelector('.step-content-wrap').classList.add('no-scroll') //일단 열림시 스크롤 막음
 }
 
 // 팝업 닫기 및 포커스 복구
@@ -182,13 +182,16 @@ const closePopover = () => {
     focusable?.focus()
   })
   // console.log('팝오버 닫힘')
-  document.querySelector('.step-content-wrap').classList.remove('no-scroll')
 }
 
 // 외부 클릭 감지: 트리거와 팝업 내부가 아니면 닫음
 const handleOutsideClick = (e) => {
   // if (popoverRef.value?.contains(e.target) || triggerRef.value?.contains(e.target)) return
   // closePopover()
+  if (!props.overlayClose) return
+
+  if (popoverRef.value?.contains(e.target) || triggerRef.value?.contains(e.target)) return
+  closePopover()
 }
 
 // 스크롤 감지 핸들러
@@ -214,6 +217,8 @@ watch(
 watch(isPopoverOpen, (open) => {
   if (open) {
     setPopoverPosition()
+    lock() // 열렸을 때 스크롤잠금
+
     isScrollLocked.value = true
     // 열리는 순간 팝업 자체의 렌더링으로 인한 스크롤 오작동 방지
     setTimeout(() => (isScrollLocked.value = false), 150)
@@ -222,6 +227,8 @@ watch(isPopoverOpen, (open) => {
     window.addEventListener('scroll', handleScroll, { passive: true, capture: true })
     window.addEventListener('keydown', handleEscape)
   } else {
+    unlock() // 닫혔을 때 스크롤잠금 해제
+
     window.removeEventListener('scroll', handleScroll, { capture: true })
     window.removeEventListener('keydown', handleEscape)
   }
@@ -231,6 +238,7 @@ watch(isPopoverOpen, (open) => {
 onMounted(() => {
   window.addEventListener('click', handleOutsideClick)
   window.addEventListener('resize', closePopover) // 화면 크기 변하면 좌표가 깨지므로 일단 닫음
+  window.addEventListener('resize', unlock) // 화면 크기 변하면 닫고나서 커스텀스크롤 해제
 })
 
 onUnmounted(() => {
@@ -239,19 +247,16 @@ onUnmounted(() => {
   window.removeEventListener('scroll', handleScroll, { capture: true })
   window.removeEventListener('keydown', handleEscape)
 })
-
-// 오버레이 클릭 핸들러
-const handleOverlayClick = () => {
-  // 오버레이 클릭 시 닫기가 허용된 경우에만 닫음 (닫기 버튼 전용이면 무시)
-  if (props.overlayClose) {
-    closePopover()
-  }
-}
 </script>
 
 <style lang="scss" scoped>
 .popover-trigger-container {
   display: inline-block;
+  position: relative;
+  // 열렸을때 클릭을 위해서 z-index높임
+  &.is-active {
+    z-index: 1002;
+  }
 }
 .popover-root {
   --popover-inner-padding: #{rem(24px)};
@@ -275,7 +280,7 @@ const handleOverlayClick = () => {
   display: flex; // 내부 MsfCustomScrollbar가 높이를 꽉 채우도록 flex 설정
   flex-direction: column;
   // 최대 높이 제한
-  max-height: 70vh;
+  max-height: 62vh;
   overflow: hidden; // 부모의 기본 스크롤은 막고 커스텀만 사용
 
   .popover-header {
@@ -317,19 +322,15 @@ const handleOverlayClick = () => {
   }
 }
 
-/* 배경 차단 및 오버레이 스타일 */
-.popover-wrapper {
+/* 바닥 클릭 차단용 투명 레이어 */
+.popover-overlay-guard {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 1000;
-  pointer-events: auto;
-
-  // hasOverlay가 true일 때만 가림막
-  &.has-overlay {
-    background-color: transparent;
-  }
+  z-index: 999; /* popover-root(1000)보다 바로 아래 */
+  background-color: transparent;
+  cursor: default;
 }
 </style>

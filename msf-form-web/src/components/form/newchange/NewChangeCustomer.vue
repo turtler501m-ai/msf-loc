@@ -18,7 +18,12 @@
       :authFlags="store.authFlags"
       phoneLabel="기기변경<br/>휴대폰번호"
     />
-    <MsfLegalAgentInfo ref="legalAgentInfoRef" v-model="formData" :authFlags="store.authFlags" />
+    <MsfLegalAgentInfo
+      ref="legalAgentInfoRef"
+      v-model="formData"
+      v-if="['NM', 'FM'].includes(formData.cstmrTypeCd)"
+      :authFlags="store.authFlags"
+    />
     <MsfRealUserInfo
       ref="realUserInfoRef"
       v-model="formData"
@@ -51,6 +56,7 @@ import { ref, watch, onMounted, computed } from 'vue'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import { useMsfStepStore } from '@/stores/msf_step'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const store = useMsfFormNewChgStore()
 const stepStore = useMsfStepStore()
@@ -137,20 +143,32 @@ const filteredTermsDataList = computed(() => {
 
     // 2. 미성년자 조건
     if (
-      ['nwBlckAgrmYn', 'appBlckAgrmYn', 'blckAppDivCd'].includes(termId) &&
-      !['NM', 'FM'].includes(formData.cstmrTypeCd)
-    )
-      return false
+      [
+        'CLAUSE_REQUIRED_06',
+        'CLAUSE_REQUIRED_07',
+        'nwBlckAgrmYn',
+        'appBlckAgrmYn',
+        'blckAppDivCd',
+      ].includes(termId) ||
+      ['CLAUSE_REQUIRED_06', 'CLAUSE_REQUIRED_07'].includes(term.dtlCd)
+    ) {
+      if (!['NM', 'FM'].includes(formData.cstmrTypeCd)) return false
+    }
 
     // 3. 안면인증
     if (
-      ['clauseFathFlag01', 'clauseFathFlag02'].includes(termId) &&
+      ['CLAUSE_FATH_01', 'CLAUSE_FATH_02', 'clauseFathFlag01', 'clauseFathFlag02'].includes(
+        termId,
+      ) &&
       formData.identityCertTypeCd !== 'F'
     )
       return false
 
-    // 4. 5G요금제
-    if (termId === 'clause5gCoverage' && !(formData.planName2 || '').includes('5G')) return false
+    // 4. 5G요금제 (prdtSctnCd가 5G이거나 요금제명에 5G가 포함된 경우)
+    if (termId === 'CLAUSE_REQUIRED_5G' || termId === 'clause5gCoverage') {
+      const is5G = formData.prdtSctnCd === '5G' || (formData.planName2 || '').includes('5G')
+      if (!is5G) return false
+    }
 
     // 5. 제휴요금
     if (['clauseJehuFlag', 'clausePartnerOfferFlag'].includes(termId) && !formData.partnerEventCode)
@@ -232,7 +250,7 @@ const termsAgreementRef = ref(null)
 const isComplete = ref(false)
 
 const onClickTestLoad = async () => {
-  const result = await store.loadFromTempJson()
+  const result = await store.apiLoadDraft('310')
   if (result !== false) {
     const stepValue = parseInt(result)
     if (!isNaN(stepValue)) {
@@ -240,9 +258,9 @@ const onClickTestLoad = async () => {
       const index = Math.max(0, stepValue - 1)
       stepStore.setActiveIndex(index)
     }
-    alert(`temp.json 데이터를 불러왔습니다. (Step: ${result})`)
+    showAlert(`임시저장 데이터를 불러왔습니다. (Key: 310, Step: ${result})`)
   } else {
-    alert('temp.json 데이터를 불러오는데 실패했습니다.')
+    showAlert('임시저장 데이터를 불러오는데 실패했습니다.')
   }
 }
 
@@ -253,22 +271,59 @@ const onClickJumpToAgreement = () => {
 
 // 현재 단계(Customer)의 모든 컴포넌트 유효성 검사
 const validate = () => {
+  const check = (name, refObj) => {
+    const component = refObj.value
+    if (!component) {
+      console.log(`[Validation] ${name}: Component not mounted (skipped)`)
+      return undefined
+    }
+    const res = component.validate()
+    console.log(`[Validation] ${name}:`, res)
+    return res
+  }
+
   const validations = [
-    productJoinTypeRef.value?.validate(),
-    customerTypeRef.value?.validate(),
-    identityVerifyRef.value?.validate(),
-    subscriberInfoRef.value?.validate(),
-    legalAgentInfoRef.value?.validate(),
-    realUserInfoRef.value?.validate(),
-    delegateInfoRef.value?.validate(),
-    requiredDocRef.value?.validate(),
-    contactInfoRef.value?.validate(),
-    devicePlanInfoRef.value?.validate(),
-    termsAgreementRef.value?.validate(),
+    check('productJoinType', productJoinTypeRef),
+    check('customerType', customerTypeRef),
+    check('identityVerify', identityVerifyRef),
+    check('subscriberInfo', subscriberInfoRef),
+    check('legalAgentInfo', legalAgentInfoRef),
+    check('realUserInfo', realUserInfoRef),
+    check('delegateInfo', delegateInfoRef),
+    check('requiredDoc', requiredDocRef),
+    check('contactInfo', contactInfoRef),
+    check('devicePlanInfo', devicePlanInfoRef),
+    check('termsAgreement', termsAgreementRef),
   ]
-  // null(비노출 컴포넌트)은 제외하고 모든 결과가 true인지 확인
-  return validations.filter((v) => v !== undefined).every((v) => v === true)
+
+  // undefined(비노출 컴포넌트)는 제외하고 나머지 결과가 모두 true인지 확인
+  const activeValidations = validations.filter((v) => v !== undefined)
+  const result = activeValidations.length > 0 && activeValidations.every((v) => v === true)
+  
+  console.log('[Validation] Total Result:', result)
+  return result
 }
+
+// [보완] 노출되지 않는 약관 데이터 초기화 (가입유형, 고객유형, 요금제 변경 시 대응)
+watch(
+  () => [formData.joinType, formData.cstmrTypeCd, formData.planName2, formData.partnerEventCode],
+  () => {
+    const visibleIds = filteredTermsDataList.value.map((t) => t.id)
+    termsDataList.value.forEach((term) => {
+      if (!visibleIds.includes(term.id)) {
+        if (Object.prototype.hasOwnProperty.call(formData, term.id) && formData[term.id] !== 'N') {
+          formData[term.id] = 'N'
+        }
+        if (
+          Object.prototype.hasOwnProperty.call(formData, term.dtlCd) &&
+          formData[term.dtlCd] !== false
+        ) {
+          formData[term.dtlCd] = false
+        }
+      }
+    })
+  },
+)
 
 const checkRequiredFields = (result) => {
   // result가 있으면 (약관 동의 이벤트 등) formData에 값 반영
@@ -388,7 +443,17 @@ const data = async (code) => {
 }
 
 const save = async () => {
-  return await store.apiSaveDraft(1)
+  console.log('[NewChangeCustomer] save() called')
+  
+  if (!validate()) {
+    console.warn('[NewChangeCustomer] Validation failed in save()')
+    return false
+  }
+
+  console.log('[NewChangeCustomer] Validation passed, calling store.apiSaveDraft(1)')
+  const saveResult = await store.apiSaveDraft(1)
+  console.log('[NewChangeCustomer] store.apiSaveDraft(1) result:', saveResult)
+  return saveResult
 }
 
 defineExpose({ data, save, validate, reset: store.resetAll })

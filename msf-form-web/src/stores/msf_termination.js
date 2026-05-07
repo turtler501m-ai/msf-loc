@@ -195,26 +195,28 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
         custId: formData.custId || '',
       }, { silent: true })
       console.log('[MyinfoView] 가입정보 조회 응답', data)
-      if (data) {
-        if (data.custId !== undefined) formData.custId = data.custId || formData.custId || ''
-        if (data.ctn !== undefined) {
-          const rawCtn = (data.ctn || '').replace(/\D/g, '')
+      const formResponse = data?.data
+      const changInfo = formResponse?.resData
+      if (formResponse?.resCode === '0000' && changInfo) {
+        if (changInfo.custId !== undefined) formData.custId = changInfo.custId || formData.custId || ''
+        if (changInfo.ctn !== undefined) {
+          const rawCtn = (changInfo.ctn || '').replace(/\D/g, '')
           if (rawCtn.length >= 10) {
             formData.deviceChgTel1 = rawCtn.substring(0, 3)
             formData.deviceChgTel2 = rawCtn.substring(3, rawCtn.length - 4)
             formData.deviceChgTel3 = rawCtn.substring(rawCtn.length - 4)
           }
         }
-        if (data.ncn !== undefined) formData.ncn = data.ncn || formData.ncn
-        if (data.contractNum !== undefined) formData.contractNum = data.contractNum || formData.contractNum
-        if (data.prvRateGrpNm !== undefined) formData.prvRateGrpNm = data.prvRateGrpNm || ''
-        if (data.initActivationDate && data.initActivationDate !== '-') {
-          formData.initActivationDate = data.initActivationDate
-          formData.lstComActvDate = data.initActivationDate
+        if (changInfo.ncn !== undefined) formData.ncn = changInfo.ncn || formData.ncn
+        if (changInfo.contractNum !== undefined) formData.contractNum = changInfo.contractNum || formData.contractNum
+        if (changInfo.prvRateGrpNm !== undefined) formData.prvRateGrpNm = changInfo.prvRateGrpNm || ''
+        if (changInfo.initActivationDate && changInfo.initActivationDate !== '-') {
+          formData.initActivationDate = changInfo.initActivationDate
+          formData.lstComActvDate = changInfo.initActivationDate
         }
-        if (data.addr && data.addr !== '-') formData.addr = data.addr
+        if (changInfo.addr && changInfo.addr !== '-') formData.addr = changInfo.addr
         // homeTel 있으면 해지 후 연락처, 없으면 해지 휴대폰번호를 해지 후 연락처로 셋팅
-        const rawTel = (data.homeTel || '').replace(/\D/g, '')
+        const rawTel = (changInfo.homeTel || '').replace(/\D/g, '')
         if (rawTel) {
           formData.afterTel1 = rawTel.substring(0, 3)
           formData.afterTel2 = rawTel.substring(3, rawTel.length - 4)
@@ -224,11 +226,16 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
           formData.afterTel2 = formData.deviceChgTel2 || ''
           formData.afterTel3 = formData.deviceChgTel3 || ''
         }
-        if (data.remindBlckYn !== undefined) formData.remindBlckYn = data.remindBlckYn || ''
-        if (data.payData !== undefined) formData.payData = data.payData
-        if (data.billData !== undefined) formData.billData = data.billData
+        if (changInfo.remindBlckYn !== undefined) formData.remindBlckYn = changInfo.remindBlckYn || ''
+        if (changInfo.payData !== undefined) formData.payData = changInfo.payData
+        if (changInfo.billData !== undefined) formData.billData = changInfo.billData
+      } else {
+        console.warn('[MyinfoView] 조회 실패', {
+          resCode: formResponse?.resCode,
+          resMessage: formResponse?.resMessage,
+        })
       }
-      return data
+      return changInfo || null
     } catch (e) {
       console.warn('[MyinfoView] 가입정보 조회 실패 (무시하고 진행)', e?.message)
       return null

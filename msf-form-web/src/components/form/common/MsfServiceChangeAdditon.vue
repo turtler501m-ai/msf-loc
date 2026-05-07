@@ -107,8 +107,10 @@ const fetchActiveServices = async () => {
       data: res?.data,
     })
 
-    if (res && res.code === '0000' && res.data) {
-      const result = Array.isArray(res.data) ? res.data[0] : res.data
+    const formResponse = Array.isArray(res?.data) ? res.data[0] : res?.data
+    const result = formResponse?.resData
+
+    if (res && res.code === '0000' && formResponse?.resCode === '0000' && result) {
       const normalized = result?.list ? splitActiveServices(result.list) : result
       activeFreeServices.value = (normalized?.freeAddition || []).map(toServiceRow)
       activePaidServices.value = (normalized?.paidAddition || []).map(toServiceRow)
@@ -126,6 +128,8 @@ const fetchActiveServices = async () => {
         reason: 'empty response data',
         code: res?.code,
         message: res?.message,
+        resCode: formResponse?.resCode,
+        resMessage: formResponse?.resMessage,
       })
       activeFreeServices.value = []
       activePaidServices.value = []

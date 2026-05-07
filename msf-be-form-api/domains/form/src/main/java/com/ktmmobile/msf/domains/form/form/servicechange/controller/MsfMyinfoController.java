@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.common.dto.AuthSmsDto;
 import com.ktmmobile.msf.domains.form.common.dto.MoscRemindSmsDto;
 import com.ktmmobile.msf.domains.form.common.dto.NiceLogDto;
@@ -39,7 +40,6 @@ import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpMonthPayMentDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscBilEmailInfoInVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpPerMyktfInfoVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpRemindSmsVO;
-import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.service.NiceLogSvc;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
@@ -99,9 +99,6 @@ public class MsfMyinfoController {
 
     @Autowired
     private MsfMaskingSvc maskingSvc;
-
-    @Autowired
-    IpStatisticService ipstatisticService;
 
     @Autowired
     private MsfMplatFormService mPlatFormService;
@@ -226,7 +223,7 @@ public class MsfMyinfoController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("이름,휴대폰번호,납부정보");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -961,7 +958,7 @@ public class MsfMyinfoController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("이름,휴대폰번호,납부방법,요금명세서");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -1065,7 +1062,7 @@ public class MsfMyinfoController {
         maskingDto.setUserId(userSession.getUserId());
         maskingDto.setAuthType(niceLogRtn.getAuthType());
         maskingDto.setCi(niceLogRtn.getConnInfo());
-        maskingDto.setAccessIp(ipstatisticService.getClientIp());
+        maskingDto.setAccessIp(RequestUtils.getClientIp());
         maskingDto.setCretId(userSession.getUserId());
         maskingDto.setAmdId(userSession.getUserId());
 
@@ -1335,7 +1332,7 @@ public class MsfMyinfoController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("이름");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSessionDto.getUserId());
             maskingDto.setCretId(userSessionDto.getUserId());
@@ -1354,4 +1351,3 @@ public class MsfMyinfoController {
         return rtnMap;
     }
 }
-

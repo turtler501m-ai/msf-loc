@@ -20,11 +20,11 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     identityCertTypeCd: 'K',
     identityTypeCd: '',
     identityTypeNm: '', // 스캔된 신분증 명칭 추가
-    identityIssuRegion: 'licenseRegion1',
+    identityIssuRegion: '',
     identityIssuDate: '', // 신분증 발급일자 추가
     selfIssuNo: '', // 자가발급번호 추가
     driveLicnsNo: '', // 운전면허번호 추가
-    cstmrVisitTypeCd: 'V1',
+    cstmrVisitTypeCd: 'VCU',
     cstmrNm: '',
     cstmrNativeRrn1: '',
     cstmrNativeRrn2: '',
@@ -69,7 +69,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     repAgree: false,
     realUserName: '',
     userBirthDate: '',
-    userGender: 'userGender1',
+    userGender: 'M',
     // 법정대리인 상세 (DTO 기반)
     minorAgentNm: '',
     minorAgentRrn: '',
@@ -107,17 +107,6 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     country: '',
     stayPeriod: '',
     visaType: '',
-    openTypeCd: '99',
-    deviceModel: '',
-    capacity: '',
-    color: '',
-    contractPeriod: '',
-    installmentMonth: '',
-    discountType: '',
-    prodCtgId: '',
-    prodId: '',
-    prodNm: '',
-    agency: '',
     termsAgreed: false,
     // 관리 정보 (DTO 기반)
     managerCd: 'M0001',
@@ -235,21 +224,12 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     osstPayDate: '',
     osstPayTypeCd: '',
     movePenalty: 0,
-    reqWantFnNo: '',
-    reqWantMnNo: '',
+    reqWantFnNo: '010',
+    reqWantMnNo: '****',
     reqWantRnNo: '',
     wishNo: '',
-    reqAdditionListNm: [
-      'freeVas1',
-      'freeVas2',
-      'freeVas3',
-      'freeVas4',
-      'freeVas5',
-      'freeVas6',
-      'freeVas7',
-      'freeVas8',
-    ],
-    addtionId: ['paidVas1'],
+    additionList: [], // 부가서비스 목록 { rateCd, rateNm, baseAmt }
+    addtionId: [],
     reqAdditionPrice: 0, // DTO 기반 추가
     phonePaymentYn: 'N', // DTO 기반 추가
     clauseInsuranceYn: '',
@@ -313,11 +293,25 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     othersPaymentTelFnNo: '',
     othersPaymentTelMnNo: '',
     othersPaymentTelRnNo: '',
+    othersPaymentNm: '',
+    othersPaymentRrn: '',
+    othersPaymentRelTypeCd: '',
     othersPaymentReqNm: '',
+    othersPaymentYn: 'N',
     prntsBillNo: '',
     combId: '',
     combAgree: false,
     memo: '',
+    // 예상납부금액 정보 추가
+    estimatedAmtInfo: {
+      hndsetAmt: 0,
+      subsdAmt: 0,
+      instAmt: 0,
+      instCmsn: 0,
+      baseAmt: 0,
+      dcAmt: 0,
+      addDcAmt: 0,
+    },
   }
 
   const DEFAULT_AGREEMENT = {
@@ -401,7 +395,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         customer.value.minorAgentTelRnNo = ''
         customer.value.realUserName = ''
         customer.value.userBirthDate = ''
-        customer.value.userGender = 'userGender1'
+        customer.value.userGender = 'M'
 
         // 인증 상태 및 플래그 초기화
         customer.value.isVerified = false
@@ -409,7 +403,31 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
           authFlags.value[key] = false
         })
 
-        console.log('>>> 고객 유형 변경으로 인한 데이터 초기화 완료')
+        // 약관 관련 데이터 초기화
+        const termsKeys = [
+          'clausePriCollectYn', 'clausePriOfferYn', 'clauseEssCollectYn', 'clausePriTrustYn',
+          'clausePriAdYn', 'clauseConfidenceConfidenceYn', 'clauseFathFathYn', 'nwBlckAgrmYn',
+          'appBlckAgrmYn', 'soTrnsAgrmYn', 'moveRefundAgreeYn', 'clauseJehuJehuYn',
+          'clauseMoveCode', 'clauseFathFlag01', 'clauseFathFlag02', 'clause5gCoverage',
+          'clausePartnerOfferFlag', 'personalLocationAgreeYn', 'clauseInfo01'
+        ]
+        termsKeys.forEach(key => {
+          if (customer.value[key] !== undefined) customer.value[key] = 'N'
+        })
+        
+        // UI용 불리언 필드 초기화
+        const uiTermsKeys = [
+          'CLAUSE_MOVE_01', 'CLAUSE_REQUIRED_02', 'CLAUSE_REQUIRED_01', 'CLAUSE_REQUIRED_03',
+          'CLAUSE_FATH_01', 'CLAUSE_FATH_02', 'CLAUSE_REQUIRED_06', 'CLAUSE_REQUIRED_07',
+          'CLAUSE_REQUIRED_5G', 'CLAUSE_PARTNER_02', 'CLAUSE_SELECT_03', 'CLAUSE_SELECT_01',
+          'CLAUSE_SELECT_08', 'CLAUSE_SELECT_04', 'CLAUSE_SELECT_06', 'CLAUSE_SELECT_07',
+          'CLAUSE_SELECT_10', 'CLAUSE_INFO_01'
+        ]
+        uiTermsKeys.forEach(key => {
+          if (customer.value[key] !== undefined) customer.value[key] = false
+        })
+
+        console.log('>>> 고객 유형 변경으로 인한 데이터 및 약관 초기화 완료')
       }
     },
   )
@@ -458,7 +476,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
   const apiFetchFormData = async (key = null) => {
     // 실제 API 연동
     const payload = {
-      msfRequestKey: key || '',
+      requestKey: key || '',
       formTypeCd: '1', // 신규/번호이동 신청서
     }
     const res = await post('/api/form/newchange/get', payload)
@@ -506,7 +524,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
 
     // 3) requestkey가 있는 경우 임시저장 데이터(Draft) 복원
     applicationKey.value = savedKey
-    const draft = res.draft
+    const draft = res.draft || res.data?.draft
     if (draft) {
       loadDraft(draft)
       // 서버에서 관리하는 마지막 저장 스텝 반환 (없으면 0)
@@ -523,11 +541,26 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     if (!savedData) return
 
     // 1. 임시저장값(Draft) 세팅: 초기값(기본값 포함) 위에 임시저장 데이터를 덮어씀
-    // (임시저장값 ? 임시저장값 : 초기값) 로직이 spread operator를 통해 자연스럽게 처리됨
-    if (savedData.customer)
-      draftCustomer.value = { ...initialCustomer.value, ...savedData.customer }
-    if (savedData.product) {
-      const p = { ...savedData.product }
+    // 평면 구조로 온 경우와 중첩 구조로 온 경우 모두 대응
+    const cSource = savedData.customer || savedData
+    const pSource = savedData.product || savedData
+    const aSource = savedData.agreement || savedData
+
+    if (cSource) {
+      const c = { ...cSource }
+      // 서버 DTO 필드명 -> UI 상태 필드명 매핑 (Step 1 필드들)
+      c.installmentMonth = c.modelMonthly || c.installmentMonth
+      c.deviceModel = c.modelId || c.deviceModel
+      c.contractPeriod = c.enggMnthCnt || c.contractPeriod
+      c.capacity = c.sntyCapacCd || c.capacity
+      c.color = c.sntyColorCd || c.color
+      c.productType = c.reqBuyTypeCd || c.productType
+      c.joinType = c.operTypeCd || c.joinType
+
+      draftCustomer.value = { ...initialCustomer.value, ...c }
+    }
+    if (pSource) {
+      const p = { ...pSource }
       // 서버에서 단일 값('01', '02', 'Y', 'N')으로 오는 항목들을 UI용 배열 또는 Boolean으로 변환
       if (p.moveAllotmentSttusCd) {
         p.moveAllotmentSttusCd = Array.isArray(p.moveAllotmentSttusCd)
@@ -555,10 +588,10 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       } else {
         p.clauseInsuranceYn = 'isInsured2'
       }
+
       draftProduct.value = { ...initialProduct.value, ...p }
     }
-    if (savedData.agreement)
-      draftAgreement.value = { ...initialAgreement.value, ...savedData.agreement }
+    if (aSource) draftAgreement.value = { ...initialAgreement.value, ...aSource }
 
     // 2. 현재값(Current)을 임시저장값으로 최종 복원
     customer.value = cloneDeep(draftCustomer.value)
@@ -636,15 +669,12 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
   // 5. API 통신: 저장
   // ==========================================
   const apiSaveDraft = async (step) => {
+    console.log(`>>> [apiSaveDraft] Starting for Step: ${step}`)
     try {
-      const c = { ...customer.value }
-      const p = { ...product.value }
-      const a = { ...agreement.value }
-
-      // Step 2 이상인데 키가 없는 경우 (비정상 진입 등)에 대한 방어 로직
-      if (step > 1 && !applicationKey.value) {
-        console.error('>>> [apiSaveDraft] Missing applicationKey for Step:', step)
-      }
+      // 원본 데이터 보호를 위해 깊은 복사 수행
+      const c = cloneDeep(customer.value)
+      const p = cloneDeep(product.value)
+      const a = cloneDeep(agreement.value)
 
       const termsKeys = [
         'clauseMoveCode',
@@ -691,7 +721,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       })
 
       const payload = {
-        requestKey: applicationKey.value,
+        requestKey: applicationKey.value || null,
         tmpStepCd: String(step),
 
         // 공통 정보 (NewChangeInfoRequest 매핑)
@@ -726,7 +756,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         fathMobileMnNo: c.fathMobileMnNo,
         fathMobileRnNo: c.fathMobileRnNo,
         identityTypeCd: c.identityTypeCd,
-        identityIssuDate: c.identityIssuDate,
+        identityIssuDate: (c.identityIssuDate || '').replace(/[^0-9]/g, ''),
         identityIssuRegion: c.identityIssuRegion,
         selfIssuNo: c.selfIssuNo,
         driveLicnsNo: c.driveLicnsNo,
@@ -736,47 +766,70 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         prodId: c.prodId,
         prodNm: c.prodNm,
         reqPhoneSn: p.imei,
-        reqModelNm: p.deviceModel,
-        sntyCapacCd: p.capacity,
-        sntyColorCd: p.color,
-        reqModelColor: p.reqModelColor,
-        shopUsmId: p.shopUsmId,
+        reqModelNm: c.deviceModel,
+        sntyCapacCd: c.capacity,
+        sntyColorCd: c.color,
+        reqModelColor: p.reqModelColor || '',
+        shopUsmId: p.shopUsmId || '',
         usimKindsCd: p.usimKindsCd,
         reqUsimSn: p.reqUsimSn,
-        reqUsimNm: p.reqUsimNm,
+        reqUsimNm: p.reqUsimNm || '',
         eid: p.eid,
         imei1: p.imei1,
         imei2: p.imei2,
-        esimPhoneId: p.esimPhoneId,
-        uploadPhoneSrlNo: p.uploadPhoneSrlNo,
+        esimPhoneId: p.esimPhoneId || '',
+        uploadPhoneSrlNo: p.uploadPhoneSrlNo || null,
         reqWantFnNo: p.reqWantFnNo,
         reqWantMnNo: p.reqWantMnNo,
         reqWantRnNo: p.reqWantRnNo,
-        insrCd: p.insrCd,
-        insrProdCd: p.insrProdCd || p.recCat2,
+        insrCd: p.insrCd || '',
+        insrProdCd: p.insrProdCd || p.recCat2 || '',
         clauseInsuranceYn: toYN(p.clauseInsuranceYn),
-        jehuPartnerTypeCd: p.jehuPartnerTypeCd,
-        jehuProdTypeCd: p.jehuProdTypeCd,
-        reqAdditionListNm: JSON.stringify(p.reqAdditionList || []),
-        reqAdditionPrice: p.reqAdditionPrice,
-        phonePaymentYn: p.phonePaymentYn,
-        onOffTypeCd: p.onOffTypeCd,
-        soCd: p.soCd,
-        openReqDt: p.openReqDt,
-        reqInDay: p.reqInDay,
-        memo: p.memo,
-        etcSpecialSbst: p.etcSpecialSbst,
+        jehuPartnerTypeCd: p.jehuPartnerTypeCd || '',
+        jehuProdTypeCd: p.jehuProdTypeCd || '',
+        // 부가서비스 목록 규격화 (rateCd, rateNm, baseAmt)
+        additionList: (p.additionList || []).map((vas) => ({
+          rateCd: vas.rateCd || vas.prodId,
+          rateNm: vas.rateNm || vas.prodNm,
+          baseAmt: Number(vas.baseAmt || 0),
+        })),
+        reqAdditionListNm: JSON.stringify(p.additionList || []),
+        reqAdditionPrice: Number(p.reqAdditionPrice || 0),
+        phonePaymentYn: p.phonePaymentYn || 'N',
+        onOffTypeCd: p.onOffTypeCd || '3',
+        soCd: p.soCd || '',
+        openReqDt: p.openReqDt || '',
+        reqInDay: p.reqInDay || '',
+        memo: p.memo || '',
+        etcSpecialSbst: p.etcSpecialSbst || '',
 
         // Customer Info (MSF_REQUEST_CSTMR)
         cstmrNm: c.cstmrNm,
         cstmrNativeRrn: c.cstmrNativeRrn1 + c.cstmrNativeRrn2,
-        cstmrNativeBirth: c.cstmrNativeBirth,
-        cstmrNativeGenderCd: c.cstmrNativeGenderCd,
+        cstmrNativeBirth: (
+          c.cstmrNativeBirth ||
+          c.userBirthDate ||
+          (['NA', 'NM'].includes(c.cstmrTypeCd) && c.cstmrNativeRrn1 ? (Number(c.cstmrNativeRrn2?.charAt(0)) > 2 ? '20' : '19') + c.cstmrNativeRrn1 : '') ||
+          ''
+        ).replace(/[^0-9]/g, ''),
+        cstmrNativeGenderCd:
+          c.cstmrNativeGenderCd && c.cstmrNativeGenderCd !== 'userGender1'
+            ? c.cstmrNativeGenderCd
+            : c.userGender && c.userGender !== 'userGender1'
+            ? c.userGender
+            : (['NA', 'NM'].includes(c.cstmrTypeCd) && c.cstmrNativeRrn2 ? (Number(c.cstmrNativeRrn2.charAt(0)) % 2 === 1 ? 'M' : 'F') : ''),
         cstmrPrivateCname: c.cstmrPrivateCname,
-        cstmrPrivateBizNo: c.cstmrPrivateBizNo,
+        cstmrPrivateBizNo:
+          c.cstmrPrivateBizNo ||
+          c.cstmrJuridicalBizNo1 + c.cstmrJuridicalBizNo2 + c.cstmrJuridicalBizNo3 ||
+          '',
         cstmrForeignerRrn: c.cstmrForeignerRrn1 + c.cstmrForeignerRrn2,
-        cstmrForeignerBirth: c.cstmrForeignerBirth,
-        cstmrForeignerGenderCd: c.cstmrForeignerGenderCd,
+        cstmrForeignerBirth:
+          c.cstmrForeignerBirth ||
+          (['FN', 'FM'].includes(c.cstmrTypeCd) && c.cstmrForeignerRrn1 ? (Number(c.cstmrForeignerRrn2?.charAt(0)) > 6 ? '20' : '19') + c.cstmrForeignerRrn1 : ''),
+        cstmrForeignerGenderCd:
+          c.cstmrForeignerGenderCd ||
+          (['FN', 'FM'].includes(c.cstmrTypeCd) && c.cstmrForeignerRrn2 ? (Number(c.cstmrForeignerRrn2.charAt(0)) % 2 === 1 ? 'M' : 'F') : ''),
         cstmrForeignerPn: c.cstmrForeignerPn,
         cstmrForeignerCountryCd: c.cstmrForeignerCountryCd,
         cstmrForeignerNation: c.cstmrForeignerNation,
@@ -803,7 +856,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         cstmrAdrDtl: c.detailAddress,
         cstmrZipcd: c.zipNo,
         cstmrAdrBjd: c.cstmrAdrBjd,
-        cstmrEmailAdr: c.emailAddr1 + '@' + c.emailAddr2,
+        cstmrEmailAdr: c.emailAddr1 && c.emailAddr2 ? c.emailAddr1 + '@' + c.emailAddr2 : '',
         cstmrEmailReceiveYn: toYN(c.cstmrEmailReceiveYn),
         cstmrReceiveTelFnNo: c.cstmrReceiveTelFnNo,
         cstmrReceiveTelNmNo: c.cstmrReceiveTelNmNo,
@@ -811,9 +864,23 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
 
         // Agent Info (MSF_REQUEST_AGENT / REPRESENTATIVE)
         minorAgentNm: c.minorAgentNm,
-        minorAgentRrn: c.minorAgentRrn,
-        minorAgentBirth: c.minorAgentBirth,
-        minorAgentGenderCd: c.minorAgentGenderCd,
+        minorAgentRrn:
+          (c.repRegistrationNo1 || '') + (c.repRegistrationNo2 || '') ||
+          (c.repForeignerNo1 || '') + (c.repForeignerNo2 || '') ||
+          c.minorAgentRrn,
+        minorAgentBirth:
+          c.minorAgentBirth ||
+          (c.repRegistrationNo1 || c.repForeignerNo1
+            ? (Number((c.repRegistrationNo2 || c.repForeignerNo2 || '0').charAt(0)) > 2 ? '20' : '19') +
+              (c.repRegistrationNo1 || c.repForeignerNo1)
+            : ''),
+        minorAgentGenderCd:
+          c.minorAgentGenderCd ||
+          (c.repRegistrationNo2 || c.repForeignerNo2
+            ? Number((c.repRegistrationNo2 || c.repForeignerNo2).charAt(0)) % 2 === 1
+              ? 'M'
+              : 'F'
+            : ''),
         minorAgentRelTypeCd: c.minorAgentRelTypeCd,
         minorAgentTelFnNo: c.minorAgentTelFnNo,
         minorAgentTelMnNo: c.minorAgentTelMnNo,
@@ -830,43 +897,55 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         jrdclAgentTelRnNo: c.jrdclAgentTelRnNo,
 
         // Sale Info (MSF_REQUEST_SALE)
-        modelId: p.deviceModel,
-        modelMonthly: p.installmentMonth,
-        modelInstamt: p.modelInstamt,
-        modelSalePolicyCd: p.modelSalePolicyCd,
-        modelPriceVat: p.modelPriceVat,
-        modelDiscount1: p.modelDiscount1,
-        modelSprt: p.modelSprt,
-        modelPrice: p.modelPrice,
-        modelDiscount3: p.modelDiscount3,
-        realMdlInstamt: p.realMdlInstamt,
-        hndsetSalePrice: p.hndsetSalePrice,
-        sprtTypeCd: p.sprtTypeCd,
-        dcAmt: p.dcAmt,
-        maxApdSprt: p.maxApdSprt,
-        addDcAmt: p.addDcAmt,
-        enggMnthCnt: p.contractPeriod,
+        modelId: c.deviceModel,
+        modelMonthly: c.installmentMonth,
+        modelInstamt: Number(p.modelInstamt || 0),
+        modelSalePolicyCd: p.modelSalePolicyCd || '',
+        modelPriceVat: Number(p.modelPriceVat || 0),
+        modelDiscount1: Number(p.modelDiscount1 || 0),
+        modelSprt: Number(p.modelSprt || 0),
+        modelPrice: Number(p.modelPrice || 0),
+        modelDiscount3: Number(p.modelDiscount3 || 0),
+        realMdlInstamt: Number(p.realMdlInstamt || 0),
+        hndsetSalePrice: Number(p.hndsetSalePrice || 0),
+        sprtTypeCd: p.sprtTypeCd || '',
+        dcAmt: Number(p.dcAmt || 0),
+        maxApdSprt: Number(p.maxApdSprt || 0),
+        addDcAmt: Number(p.addDcAmt || 0),
+        enggMnthCnt: Number(c.contractPeriod || 24),
         recycleYn: toYN(p.recycleYn),
-        usimPriceTypeCd: p.usimPriceTypeCd,
-        usimPrice: p.usimPrice,
-        usimPayMthdCd: p.simPurchaseMethod,
+        usimPriceTypeCd: p.simPurchaseMethod === 'simPurchaseMethod1' ? 'I' : 'B',
+        usimPrice: Number(p.usimPrice || 0),
+        usimPayMthdCd: p.simPurchaseMethod === 'simPurchaseMethod1' ? '1' : '2',
         sesplsYn: toYN(p.sesplsYn),
-        joinPriceTypeCd: p.joinPriceTypeCd,
-        joinPayMthdCd: p.joinPayMthdCd,
-        joinPrice: p.joinPrice,
-        socCode: p.socCode,
-        socNm: p.socNm,
-        socBaseChrgAmt: p.socBaseChrgAmt,
+        joinPriceTypeCd: p.joinPriceTypeCd || '',
+        joinPayMthdCd: p.joinPayMthdCd || '',
+        joinPrice: Number(p.joinPrice || 0),
+        socCode: p.socCode || '',
+        socNm: p.socNm || '',
+        socBaseChrgAmt: Number(p.socBaseChrgAmt || 0),
 
         // Bill Info (MSF_REQUEST_BILL_REQ)
         reqPayTypeCd: p.reqPayTypeCd,
         reqBankCd: p.reqBankCd,
-        reqAccountNm: p.reqAccountNm,
-        reqAccountRrn: p.reqAccountRrn,
+        reqAccountNm:
+          p.othersPaymentYn === 'N' || p.othersPaymentYn === false
+            ? c.cstmrNm
+            : p.reqAccountNm || '',
+        reqAccountRrn:
+          p.othersPaymentYn === 'N' || p.othersPaymentYn === false
+            ? (c.cstmrNativeBirth || c.userBirthDate || '').replace(/[^0-9]/g, '')
+            : (p.reqAccountRrn || '').replace(/[^0-9]/g, ''),
         reqAccountRelTypeCd: p.reqAccountRelTypeCd,
         reqAccountNo: p.reqAccountNo,
-        reqCardNm: p.reqCardNm,
-        reqCardRrn: p.reqCardRrn,
+        reqCardNm:
+          p.othersPaymentYn === 'N' || p.othersPaymentYn === false
+            ? c.cstmrNm
+            : p.reqCardNm || '',
+        reqCardRrn:
+          p.othersPaymentYn === 'N' || p.othersPaymentYn === false
+            ? (c.cstmrNativeBirth || c.userBirthDate || '').replace(/[^0-9]/g, '')
+            : (p.reqCardRrn || '').replace(/[^0-9]/g, ''),
         reqCardCompanyCd: p.reqCardCompanyCd,
         reqCardNo: p.reqCardNo,
         reqCardYy: p.reqCardYy,
@@ -876,9 +955,18 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         othersPaymentTelFnNo: p.othersPaymentTelFnNo,
         othersPaymentTelMnNo: p.othersPaymentTelMnNo,
         othersPaymentTelRnNo: p.othersPaymentTelRnNo,
-        othersPaymentNm: p.othersPaymentNm,
-        othersPaymentRrn: p.othersPaymentRrn,
-        othersPaymentRelTypeCd: p.othersPaymentRelTypeCd,
+        othersPaymentNm:
+          p.othersPaymentYn === 'Y' || p.othersPaymentYn === true
+            ? p.reqAccountNm || p.reqCardNm || p.othersPaymentNm
+            : '',
+        othersPaymentRrn:
+          p.othersPaymentYn === 'Y' || p.othersPaymentYn === true
+            ? (p.reqAccountRrn || p.reqCardRrn || p.othersPaymentRrn || '').replace(/[^0-9]/g, '')
+            : '',
+        othersPaymentRelTypeCd:
+          p.othersPaymentYn === 'Y' || p.othersPaymentYn === true
+            ? p.reqAccountRelTypeCd || p.cardRelation || p.othersPaymentRelTypeCd
+            : '',
         othersPaymentReqNm: p.othersPaymentReqNm,
         prntsBillNo: p.prntsBillNo,
         cstmrBillSendTypeCd: p.cstmrBillSendTypeCd,
@@ -893,11 +981,11 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         moveAuthNo: p.moveAuthNo,
         moveThismonthPayTypeCd: toYN(p.moveThismonthPayTypeCd),
         moveAllotmentSttusCd: Array.isArray(p.moveAllotmentSttusCd)
-          ? p.moveAllotmentSttusCd[0]
-          : p.moveAllotmentSttusCd,
+          ? p.moveAllotmentSttusCd[0] || '01'
+          : p.moveAllotmentSttusCd || '01',
         moveRefundAgreeYn: Array.isArray(p.moveRefundAgreeYn)
-          ? p.moveRefundAgreeYn[0]
-          : p.moveRefundAgreeYn,
+          ? p.moveRefundAgreeYn[0] || 'N'
+          : p.moveRefundAgreeYn || 'N',
         reqGuideYn: toYN(p.reqGuideYn),
         reqGuideFnNo: p.reqGuideFnNo,
         reqGuideRnNo: p.reqGuideRnNo,
@@ -924,7 +1012,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         clauseRentalServiceYn: toYN(c.clauseRentalServiceYn),
         clauseMpps35Yn: toYN(c.clauseMpps35Mpps35Yn),
         clauseFinanceYn: toYN(c.clauseFinanceFinanceYn),
-        clause5gCoverageYn: toYN(c.clause5GCoverageYn),
+        clause5gCoverageYn: toYN(c.clause5gCoverage),
         personalInfoCollectAgreeYn: toYN(c.personalInfoCollectAgreeYn),
         othersTrnsAgreeYn: toYN(c.othersTrnsAgreeYn),
         clauseSensiCollectYn: toYN(c.clauseSensiCollectYn),
@@ -958,117 +1046,237 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       console.log('[임시저장 전송 데이터]:', payload)
 
       const res = await post('/api/form/newchange/save', payload)
+      
+      if (res && res.code === '0000' && res.data?.resCode === '0000') {
+        // 1. 서버에서 새로 발급하거나 확정된 requestKey가 오면 양쪽 스토어(현재/임시) 모두 갱신
+        const newKey = res?.data?.requestKey || res?.requestKey
+        if (newKey) {
+          applicationKey.value = String(newKey)
+          draftApplicationKey.value = String(newKey)
+          console.log('>>> Updated applicationKey (requestKey):', newKey)
+        }
 
-      // 1. 서버에서 새로 발급하거나 확정된 requestkey가 오면 양쪽 스토어(현재/임시) 모두 갱신
-      const newKey = res?.data?.requestkey || res?.requestkey || res?.applicationKey
-      if (newKey) {
-        applicationKey.value = newKey
-        draftApplicationKey.value = newKey
-        console.log('>>> Updated applicationKey (requestkey):', newKey)
+        // 2. 저장이 성공하면 현재 값(Current)을 임시저장 값(Draft)으로 즉시 동기화
+        draftCustomer.value = cloneDeep(customer.value)
+        draftProduct.value = cloneDeep(product.value)
+        draftAgreement.value = cloneDeep(agreement.value)
+        
+        return true
+      } else {
+        console.error('Draft save failed with response:', res)
+        return false
       }
-
-      // 2. 저장이 성공하면 현재 값(Current)을 임시저장 값(Draft)으로 즉시 동기화
-      draftCustomer.value = cloneDeep(customer.value)
-      draftProduct.value = cloneDeep(product.value)
-      draftAgreement.value = cloneDeep(agreement.value)
-
-      return true
     } catch (e) {
-      console.error('Draft save failed', e)
+      console.error('Draft save failed with exception:', e)
       return false
     }
   }
 
   const apiCompleteApplication = async () => {
+    console.log(`>>> [apiCompleteApplication] Starting Final Save`)
     try {
-      const customerData = { ...customer.value }
-      const termsKeys = [
-        'clauseMoveCode',
-        'clauseEssCollectYn',
-        'clausePriCollectYn',
-        'clausePriOfferYn',
-        'clauseFathFlag01',
-        'clauseFathFlag02',
-        'nwBlckAgrmYn',
-        'appBlckAgrmYn',
-        'clause5gCoverage',
-        'clausePartnerOfferFlag',
-        'personalInfoCollectAgreeYn',
-        'clausePriAdYn',
-        'othersAdReceiveAgreeYn',
-        'othersTrnsAgreeYn',
-        'othersTrnsKtAgreeYn',
-        'personalLocationAgreeYn',
-        'clauseInfo01',
-        'soTrnsAgrmYn',
-        'clauseRentalModelCpYn',
-        'clauseRentalModelCpPrYn',
-        'clauseRentalServiceYn',
-        'clauseMpps35Mpps35Yn',
-        'clauseFinanceFinanceYn',
-        'clauseSensiCollectYn',
-        'clauseSensiOfferYn',
-        'clausePartnerOfferYn',
-        'ktCounselAgreeYn',
-        'combineSoloTypeYn',
-        'combineSoloSoloYn',
-        'moveRefundAgreeYn',
-        'blckAppDivCd',
-      ]
-      const toYN_simple = (val) => {
+      const c = cloneDeep(customer.value)
+      const p = cloneDeep(product.value)
+      const a = cloneDeep(agreement.value)
+
+      const toYN = (val) => {
         if (val === true || val === 'Y') return 'Y'
         if (val === false || val === 'N') return 'N'
         return ''
       }
-      termsKeys.forEach((key) => {
-        customerData[key] = toYN_simple(customerData[key])
-      })
-      if (
-        customerData.cstmrTypeCd === 'NA' &&
-        customerData.cstmrJuridicalBizNo1 &&
-        customerData.cstmrJuridicalBizNo2 &&
-        customerData.cstmrJuridicalBizNo3
-      ) {
-        customerData.cstmrTypeCd = 'PP'
+
+      // 1. 페이로드 생성 (apiSaveDraft와 동일한 로직 적용)
+      const payload = {
+        requestKey: applicationKey.value || null,
+        tmpStepCd: '3', // 완료 단계
+
+        // 공통 정보
+        managerCd: c.managerCd,
+        managerNm: c.managerNm,
+        agentCd: c.agentCd,
+        agentNm: c.agentNm,
+        shopCd: c.shopCd,
+        shopNm: c.shopNm,
+        reqBuyTypeCd: c.productType,
+        openTypeCd: c.openTypeCd,
+        operTypeCd: c.joinType,
+        cstmrTypeCd: c.cstmrTypeCd,
+        identityCertTypeCd: c.identityCertTypeCd,
+        identityTypeCd: c.identityTypeCd,
+        identityIssuDate: (c.identityIssuDate || '').replace(/[^0-9]/g, ''),
+        identityIssuRegion: c.identityIssuRegion,
+        selfIssuNo: c.selfIssuNo,
+        driveLicnsNo: c.driveLicnsNo,
+        contractNum: c.contractNum,
+
+        // Product Info
+        prodId: c.prodId,
+        prodNm: c.prodNm,
+        reqPhoneSn: p.imei,
+        reqModelNm: c.deviceModel,
+        sntyCapacCd: c.capacity,
+        sntyColorCd: c.color,
+        usimKindsCd: p.usimKindsCd,
+        reqUsimSn: p.reqUsimSn,
+        eid: p.eid,
+        imei1: p.imei1,
+        imei2: p.imei2,
+        reqWantFnNo: p.reqWantFnNo,
+        reqWantMnNo: p.reqWantMnNo,
+        reqWantRnNo: p.reqWantRnNo,
+        insrProdCd: p.insrProdCd || p.recCat2 || '',
+        clauseInsuranceYn: toYN(p.clauseInsuranceYn),
+        additionList: (p.additionList || []).map((vas) => ({
+          rateCd: vas.rateCd || vas.prodId,
+          rateNm: vas.rateNm || vas.prodNm,
+          baseAmt: Number(vas.baseAmt || 0),
+        })),
+        reqAdditionPrice: Number(p.reqAdditionPrice || 0),
+        phonePaymentYn: p.phonePaymentYn || 'N',
+        memo: p.memo || '',
+
+        // Customer Info
+        cstmrNm: c.cstmrNm,
+        cstmrNativeRrn: (c.cstmrNativeRrn1 || '') + (c.cstmrNativeRrn2 || ''),
+        cstmrNativeBirth: (
+          c.cstmrNativeBirth ||
+          c.userBirthDate ||
+          (['NA', 'NM'].includes(c.cstmrTypeCd) && c.cstmrNativeRrn1 ? (Number(c.cstmrNativeRrn2?.charAt(0)) > 2 ? '20' : '19') + c.cstmrNativeRrn1 : '') ||
+          ''
+        ).replace(/[^0-9]/g, ''),
+        cstmrNativeGenderCd:
+          c.cstmrNativeGenderCd && c.cstmrNativeGenderCd !== 'userGender1'
+            ? c.cstmrNativeGenderCd
+            : c.userGender && c.userGender !== 'userGender1'
+            ? c.userGender
+            : (['NA', 'NM'].includes(c.cstmrTypeCd) && c.cstmrNativeRrn2 ? (Number(c.cstmrNativeRrn2.charAt(0)) % 2 === 1 ? 'M' : 'F') : ''),
+        cstmrMobileFnNo: c.mobileNo1,
+        cstmrMobileMnNo: c.mobileNo2,
+        cstmrMobileRnNo: c.mobileNo3,
+        cstmrAdr: c.address,
+        cstmrAdrDtl: c.detailAddress,
+        cstmrZipcd: c.zipNo,
+        cstmrEmailAdr: c.emailAddr1 && c.emailAddr2 ? c.emailAddr1 + '@' + c.emailAddr2 : '',
+
+        // Agent Info
+        minorAgentNm: c.minorAgentNm,
+        minorAgentRrn:
+          (c.repRegistrationNo1 || '') + (c.repRegistrationNo2 || '') ||
+          (c.repForeignerNo1 || '') + (c.repForeignerNo2 || '') ||
+          c.minorAgentRrn,
+        
+        // Sale Info
+        modelId: c.deviceModel,
+        modelMonthly: c.installmentMonth,
+        enggMnthCnt: Number(c.contractPeriod || 24),
+        sprtTypeCd: p.discountType || '',
+        usimPriceTypeCd: p.simPurchaseMethod === 'simPurchaseMethod1' ? 'I' : 'B',
+
+        // Bill Info
+        reqPayTypeCd: p.reqPayTypeCd,
+        reqBankCd: p.reqBankCd,
+        reqAccountNm:
+          p.othersPaymentYn === 'N' || p.othersPaymentYn === false
+            ? c.cstmrNm
+            : p.reqAccountNm || '',
+        reqAccountRrn:
+          p.othersPaymentYn === 'N' || p.othersPaymentYn === false
+            ? (c.cstmrNativeBirth || c.userBirthDate || '').replace(/[^0-9]/g, '')
+            : (p.reqAccountRrn || '').replace(/[^0-9]/g, ''),
+        reqAccountNo: p.reqAccountNo,
+        reqCardNm:
+          p.othersPaymentYn === 'N' || p.othersPaymentYn === false
+            ? c.cstmrNm
+            : p.reqCardNm || '',
+        reqCardRrn:
+          p.othersPaymentYn === 'N' || p.othersPaymentYn === false
+            ? (c.cstmrNativeBirth || c.userBirthDate || '').replace(/[^0-9]/g, '')
+            : (p.reqCardRrn || '').replace(/[^0-9]/g, ''),
+        reqCardCompanyCd: p.reqCardCompanyCd,
+        reqCardNo: p.reqCardNo,
+        cstmrBillSendTypeCd: p.cstmrBillSendTypeCd,
+        isAutoAgree: toYN(p.isAutoAgree),
+
+        // Move Info
+        moveCompanyCd: p.moveCompanyCd,
+        moveMobileFnNo: p.moveMobileNo1,
+        moveMobileMnNo: p.moveMobileNo2,
+        moveMobileRnNo: p.moveMobileNo3,
+        moveAuthTypeCd: p.moveAuthTypeCd,
+        moveAuthNo: p.moveAuthNo,
+        moveThismonthPayTypeCd: toYN(p.moveThismonthPayTypeCd),
+        moveAllotmentSttusCd: Array.isArray(p.moveAllotmentSttusCd)
+          ? p.moveAllotmentSttusCd[0] || '01'
+          : p.moveAllotmentSttusCd || '01',
+        moveRefundAgreeYn: Array.isArray(p.moveRefundAgreeYn)
+          ? p.moveRefundAgreeYn[0] || 'N'
+          : p.moveRefundAgreeYn || 'N',
+
+        // Clauses
+        clausePriCollectYn: toYN(c.clausePriCollectYn),
+        clausePriOfferYn: toYN(c.clausePriOfferYn),
+        clauseEssCollectYn: toYN(c.clauseEssCollectYn),
+        clausePriTrustYn: toYN(c.clausePriTrustYn),
+        clausePriAdYn: toYN(c.clausePriAdYn),
+        clauseConfidenceYn: toYN(c.clauseConfidenceConfidenceYn),
+        clauseFathYn: toYN(c.clauseFathFathYn),
+        nwBlckAgrmYn: toYN(c.nwBlckAgrmYn),
+        appBlckAgrmYn: toYN(c.appBlckAgrmYn),
+        soTrnsAgrmYn: toYN(c.soTrnsAgrmYn),
+        clauseJehuYn: toYN(c.clauseJehuJehuYn),
+
+        // Agreement / Status
+        agreeCheck1: toYN(a.agreeCheck1),
+        agreeCheck2: toYN(a.agreeCheck2),
+        agreeCheck3: toYN(a.agreeCheck3),
+        recYn: toYN(a.recYn),
+        fileNm: a.recFileNm,
+        filePathNm: a.recFilePathNm,
+        proSttusCd: '01', // 작성완료 상태
+        sbscProCd: '01',
       }
 
-      // 현재값(Current) 기준으로 완료
-      const payload = {
-        customer: customerData,
-        product: product.value,
-        agreement: agreement.value,
+      console.log('[작성완료 전송 데이터]:', payload)
+
+      const res = await post('/api/form/newchange/complete', payload)
+      if (res && res.code === '0000') {
+        return true
+      } else {
+        console.error('Final completion failed:', res)
+        return false
       }
-      await post(`/api/msf/formNewChg/${applicationKey.value}/complete`, payload).then().catch()
-      return true
     } catch (e) {
-      console.error('Completion failed', e)
+      console.error('Completion failed with exception:', e)
       return false
     }
   }
 
-  const loadFromTempJson = async () => {
+  const apiLoadDraft = async (key = '310') => {
     try {
-      const response = await fetch('/temp.json')
-      const data = await response.json()
-      if (!data) return
+      const res = await apiFetchFormData(key)
+      const data = res.draft || res.data?.draft || res
+      if (!data) return false
 
       // requestKey 세팅
-      applicationKey.value = data.requestKey || ''
+      applicationKey.value = String(key)
 
-      // Customer mapping
+      // Customer mapping (평면 구조를 UI 스토어 구조로 변환)
       const c = customer.value
       c.productType = data.reqBuyTypeCd || 'MM'
       c.joinType = data.operTypeCd || 'MNP3'
       c.cstmrTypeCd = data.cstmrTypeCd || 'NA'
       c.identityCertTypeCd = data.identityCertTypeCd || 'K'
       c.identityTypeCd = data.identityTypeCd || ''
-      c.identityIssuRegion = data.identityIssuRegion || 'licenseRegion1'
+      c.identityIssuRegion = data.identityIssuRegion || ''
+      c.identityIssuDate = data.identityIssuDate || ''
 
       if (data.identityCertTypeCd === 'S') {
         c.isVerified = true // 인증예외/스캐너인 경우 인증된 상태로 간주
         c.cstmrNm = data.cstmrNm
-        c.cstmrNativeRrn1 = data.cstmrNativeRrn.substring(0, 6)
-        c.cstmrNativeRrn2 = data.cstmrNativeRrn.substring(6)
+        if (data.cstmrNativeRrn && data.cstmrNativeRrn.length >= 13) {
+          c.cstmrNativeRrn1 = data.cstmrNativeRrn.substring(0, 6)
+          c.cstmrNativeRrn2 = data.cstmrNativeRrn.substring(6)
+        }
         authFlags.value.identityCertTypeCd = true
       }
 
@@ -1096,10 +1304,10 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       // Agent mapping
       if (data.cstmrTypeCd == 'NM' || data.cstmrTypeCd == 'FM') {
         c.minorAgentNm = data.minorAgentNm || ''
-        c.repForeignerNo1 = data.repForeignerNo1 || ''
-        c.repForeignerNo2 = data.repForeignerNo2 || ''
-        c.repRegistrationNo1 = data.repRegistrationNo1 || ''
-        c.repRegistrationNo2 = data.repRegistrationNo2 || ''
+        if (data.minorAgentRrn && data.minorAgentRrn.length >= 13) {
+          c.repRegistrationNo1 = data.minorAgentRrn.substring(0, 6)
+          c.repRegistrationNo2 = data.minorAgentRrn.substring(6)
+        }
         c.minorAgentRelTypeCd = data.minorAgentRelTypeCd || ''
         c.minorAgentTelFnNo = data.minorAgentTelFnNo || ''
         c.minorAgentTelMnNo = data.minorAgentTelMnNo || ''
@@ -1126,32 +1334,15 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       c.blckAppDivCd = data.blckAppDivCd || ''
       c.soTrnsAgrmYn = toBool(data.soTrnsAgrmYn)
       c.clauseJehuJehuYn = toBool(data.clauseJehuYn)
-      c.clauseRentalModelCpYn = toBool(data.clauseRentalModelCpYn)
-      c.clauseRentalModelCpPrYn = toBool(data.clauseRentalModelCpPrYn)
-      c.clauseRentalServiceYn = toBool(data.clauseRentalServiceYn)
-      c.clauseMpps35Mpps35Yn = toBool(data.clauseMpps35Yn)
-      c.clauseFinanceFinanceYn = toBool(data.clauseFinanceYn)
-      c.clause5GCoverageYn = toBool(data.clause5gCoverageYn)
-      c.personalInfoCollectAgreeYn = toBool(data.personalInfoCollectAgreeYn)
-      c.othersTrnsAgreeYn = toBool(data.othersTrnsAgreeYn)
-      c.clauseSensiCollectYn = toBool(data.clauseSensiCollectYn)
-      c.clauseSensiOfferYn = toBool(data.clauseSensiOfferYn)
-      c.clausePartnerOfferYn = toBool(data.clausePartnerOfferYn)
-      c.othersTrnsKtAgreeYn = toBool(data.othersTrnsKtAgreeYn)
-      c.othersAdReceiveAgreeYn = toBool(data.othersAdReceiveAgreeYn)
-      c.ktCounselAgreeYn = toBool(data.ktCounselAgreeYn)
-      c.combineSoloTypeYn = toBool(data.combineSoloTypeYn)
-      c.combineSoloSoloYn = toBool(data.combineSoloYn)
+      c.clause5gCoverage = toBool(data.clause5gCoverageYn)
 
       // Product mapping
       const p = product.value
-      c.prodCtgId = data.prodCtgId || data.planName1 || ''
-      c.prodId = data.prodId || data.planName2 || ''
+      c.prodId = data.prodId || ''
       c.prodNm = data.prodNm || ''
       p.deviceModel = data.reqModelNm || data.modelId || ''
       p.capacity = data.sntyCapacCd || ''
       p.color = data.sntyColorCd || ''
-      p.discountType = data.sprtTp || data.discountType || ''
       p.imei = data.reqPhoneSn || ''
       p.usimKindsCd = data.usimKindsCd || ''
       p.reqUsimSn = data.reqUsimSn || ''
@@ -1161,8 +1352,10 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       p.reqWantFnNo = data.reqWantFnNo || ''
       p.reqWantMnNo = data.reqWantMnNo || ''
       p.reqWantRnNo = data.reqWantRnNo || ''
-      p.contractPeriod = data.enggMnthCnt || ''
-      p.simPurchaseMethod = data.usimPayMthdCd || ''
+      c.contractPeriod = data.enggMnthCnt || ''
+      p.installmentMonth = data.modelMonthly || ''
+      p.discountType = data.sprtTypeCd || ''
+      p.simPurchaseMethod = data.usimPriceTypeCd === 'I' ? 'simPurchaseMethod1' : 'simPurchaseMethod2'
 
       p.moveCompanyCd = data.moveCompanyCd || ''
       p.moveMobileNo1 = data.moveMobileFnNo || '010'
@@ -1171,7 +1364,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       p.moveAuthTypeCd = data.moveAuthTypeCd || ''
       p.moveAuthNo = data.moveAuthNo || ''
 
-      // 데이터 타입 보정 (문자열을 배열로 변환하여 UI 선택 상태 복구)
+      // 데이터 타입 보정
       p.moveThismonthPayTypeCd = data.moveThismonthPayTypeCd === 'Y'
       p.moveAllotmentSttusCd = data.moveAllotmentSttusCd ? [data.moveAllotmentSttusCd] : []
       p.moveRefundAgreeYn = data.moveRefundAgreeYn ? [data.moveRefundAgreeYn] : []
@@ -1190,27 +1383,34 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       p.reqCardMm = data.reqCardMm || ''
       p.cstmrBillSendTypeCd = data.cstmrBillSendTypeCd || ''
 
-      p.recCat2 = data.insrProdCd || ''
+      p.insrProdCd = data.insrProdCd || ''
       p.clauseInsuranceYn = data.clauseInsuranceYn === 'Y' ? 'isInsured1' : 'isInsured2'
 
       p.memo = data.memo || ''
 
-      if (data.reqAdditionListNm) {
-        try {
-          p.reqAdditionList = JSON.parse(data.reqAdditionListNm)
-        } catch (e) {
-          p.reqAdditionList = []
-        }
-      }
-
       // Agreement mapping
       agreement.value.recYn = data.recYn || 'N'
 
-      console.log('>>> Loaded from temp.json:', data)
+      // 3. 단계에 따른 상태값 복원
+      const step = parseInt(data.tmpStepCd || 1)
+      if (step >= 1) {
+        customer.value.isSaved = true
+        customer.value.isVerified = true
+        // 인증 플래그들도 데이터가 있으면 true로 간주
+        if (customer.value.identityCertTypeCd) authFlags.value.identityCertTypeCd = true
+        if (customer.value.deviceChgTel2) authFlags.value.deviceChgTel = true
+      }
+      if (step >= 2) {
+        if (product.value.moveAuthNo) authFlags.value.moveAuthTypeCd = true
+        if (product.value.reqBankCd && product.value.reqAccountNo) authFlags.value.autoAcct = true
+        if (product.value.reqCardCompanyCd && product.value.reqCardNo) authFlags.value.reqCardNo = true
+      }
+
+      console.log(`>>> Loaded from API (Key: ${key}):`, data)
       return data.tmpStepCd || 1
     } catch (e) {
-      console.error('Failed to load temp.json', e)
-      return 1
+      console.error(`Failed to load from API (Key: ${key})`, e)
+      return false
     }
   }
 
@@ -1243,7 +1443,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     resetStep,
     resetAll,
     copyApplication,
-    loadFromTempJson,
+    apiLoadDraft,
 
     validateCustomer,
     validateProduct,

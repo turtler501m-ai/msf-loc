@@ -27,6 +27,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.client.RestClientException;
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.CustRequestDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
@@ -35,7 +36,6 @@ import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfCustRequestS
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfCustRequestService;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMaskingSvc;
 import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfMypageSvc;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfRegSvcService;
 import com.ktmmobile.msf.domains.form.system.cert.service.CertService;
 import com.ktmmobile.msf.domains.form.common.dto.McpIpStatisticDto;
 import com.ktmmobile.msf.domains.form.common.dto.NiceResDto;
@@ -82,9 +82,6 @@ public class MsfCustRequestController {
 
     @Autowired
     private CertService certService;
-
-    @Autowired
-    private MsfRegSvcService regSvcService;
 
     @Autowired
     private MsfMaskingSvc maskingSvc;
@@ -135,7 +132,7 @@ public class MsfCustRequestController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -210,7 +207,7 @@ public class MsfCustRequestController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -272,7 +269,7 @@ public class MsfCustRequestController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -424,7 +421,7 @@ public class MsfCustRequestController {
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("휴대폰번호");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(RequestUtils.getClientIp());
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -900,4 +897,3 @@ public class MsfCustRequestController {
         return setDto;
     }
 }
-

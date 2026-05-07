@@ -2,7 +2,6 @@
   Step이 있는 경우 화면의 레이아웃
 -->
 <template>
-  <MsfButton variant="text" @click="onClickTempCompleteBtn">접수 완료</MsfButton>
   <div v-if="!isComplete" class="step-wrapper-layout">
     <!-- 왼쪽 스텝 표현 -->
     <MsfStepIndicator :currentStep="currentStepIndex" />
@@ -14,7 +13,9 @@
         }
       "
       class="main-layout-scroll"
+      :use-lock="isLayoutLocked"
     >
+      <MsfButton variant="text" @click="onClickTempCompleteBtn">접수 완료</MsfButton>
       <div class="step-content-wrap">
         <section class="msf-step-content">
           <!-- 타이틀 -->
@@ -93,7 +94,7 @@ import { getFormComponent, showAlert, showConfirm } from '@/libs/utils/comp.util
 import { useMsfMenuStore } from '@/stores/msf_menu'
 import { useMsfStepStore } from '@/stores/msf_step'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
-import { mainScrollRef } from '@/hooks/useGlobalScroll'
+import { mainScrollRef, isLayoutLocked } from '@/hooks/useGlobalScroll'
 
 const route = useRoute()
 const menuStore = useMsfMenuStore()

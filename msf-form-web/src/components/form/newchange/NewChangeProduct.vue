@@ -164,21 +164,11 @@ const save = async () => {
     return false
   }
 
-  // 개통전 사전체크 수행
-  try {
-    const checkRes = await post('/api/form/newchange/reqPreOpenCheck', {
-      customer: store.customer,
-      product: store.product,
-    })
-    if (checkRes.code !== '0000') {
-      return false
-    }
-  } catch (error) {
-    console.error('Pre-open check error:', error)
-    return false
-  }
-
-  return await store.apiSaveDraft(2)
+  // 개통전 사전체크 제외하고 바로 임시저장 수행
+  console.log('[NewChangeProduct] Saving draft (Step 2)...')
+  const saveResult = await store.apiSaveDraft(2)
+  console.log('[NewChangeProduct] apiSaveDraft(2) result:', saveResult)
+  return saveResult
 }
 
 defineExpose({ save, validate, reset: store.resetAll })

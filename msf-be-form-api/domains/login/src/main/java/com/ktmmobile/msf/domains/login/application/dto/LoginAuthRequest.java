@@ -7,12 +7,12 @@ import com.ktmmobile.msf.commons.logincore.domain.code.LoginAuthType;
 public record LoginAuthRequest(
     @NotBlank String userId,
     String password,
-    String deviceUuid,
+    @NotBlank String deviceUuid,
     String authType
 ) {
 
-    public LoginCredential toCredential() {
+    public LoginCredential toCredential(String clientIp) {
         LoginAuthType resolvedAuthType = LoginAuthType.valueOfNullable(authType);
-        return new LoginCredential(userId, password, deviceUuid, resolvedAuthType);
+        return new LoginCredential(userId, password, deviceUuid, resolvedAuthType, clientIp);
     }
 }

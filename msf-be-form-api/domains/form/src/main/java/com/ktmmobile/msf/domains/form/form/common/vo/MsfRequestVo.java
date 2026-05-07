@@ -1,5 +1,7 @@
 package com.ktmmobile.msf.domains.form.form.common.vo;
 
+import java.time.LocalDateTime;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -31,7 +33,7 @@ public class MsfRequestVo {
     String knoteIdentityScanCstmrNm;
     String knoteIdentityEssNo;
     String knoteIdentityTypeCd;
-    String knoteIdentityScanDt;
+    LocalDateTime knoteIdentityScanDt;
     String knoteScanId;
     String fathTrgYn;
     String fathTrgIdentityCertTypeCd;
@@ -83,8 +85,8 @@ public class MsfRequestVo {
     String phonePaymentYn;
     String onOffTypeCd;
     String soCd;
-    String openReqDt;
-    String reqInDay;
+    LocalDateTime openReqDt;
+    LocalDateTime reqInDay;
     String clausePriCollectYn;
     String clausePriOfferYn;
     String clauseEssCollectYn;

@@ -14,9 +14,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
+import com.ktmmobile.msf.domains.form.common.code.ResSvcChgMessage;
 import com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
 import com.ktmmobile.msf.domains.form.common.exception.SelfServiceException;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
@@ -27,6 +30,7 @@ import com.ktmmobile.msf.domains.form.common.service.IpStatisticService;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.ChangInfoViewResDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.FarPricePlanResDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MaskingDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
@@ -38,7 +42,6 @@ import com.ktmmobile.msf.domains.shared.common.address.application.port.in.Addre
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import static com.ktmmobile.msf.domains.form.common.constants.Constants.AJAX_SUCCESS;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
 
 @Service
@@ -177,13 +180,30 @@ public class MsfChangPageSvcImpl implements MsfChangPageSvc {
     }
 
     @Override
-    public Map<String, Object> getChangInfoView(HttpServletRequest request, MyPageSearchDto searchVO) {
+    public FormResponse<ChangInfoViewResDto> getChangInfoView(HttpServletRequest request, MyPageSearchDto searchVO) {
+        if (searchVO == null) {
+            return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID);
+        }
+
         logger.info("[서비스변경] getChangInfoView 조회 시작 — ncn={}, ctn={}, custId={}", searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId());
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
         List<McpUserCntrMngDto> cntrList = new java.util.ArrayList<>();
 
-        McpUserCntrMngDto cntrInfo = resolveContractInfo(searchVO);
+        if (StringUtils.isBlank(StringUtil.NVL(searchVO.getNcn(), searchVO.getContractNum()))) {
+            return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID);
+        }
+
+        McpUserCntrMngDto cntrInfo;
+        try {
+            cntrInfo = resolveContractInfo(searchVO);
+        } catch (McpCommonException e) {
+            logger.warn("[MsfChangPage][getChangInfoView] contract info not found: {}", e.getMessage());
+            return FormResponse.of(ResSvcChgMessage.CHANGE_CONTRACT_NOT_FOUND);
+        } catch (Exception e) {
+            logger.warn("[MsfChangPage][getChangInfoView] contract info lookup error", e);
+            return FormResponse.of(ResSvcChgMessage.CHANGE_INFO_ERROR);
+        }
         cntrList.add(cntrInfo);
 
         String userName = StringUtil.NVL(cntrInfo.getUserName(), StringUtil.NVL(searchVO.getUserName(), ""));
@@ -268,11 +288,12 @@ public class MsfChangPageSvcImpl implements MsfChangPageSvc {
         if ("Y".equals(maskingSession)) {
             searchVO.setUserName(userSession.getName());
 
+            String clientIp = RequestUtils.getClientIp();
             MaskingDto maskingDto = new MaskingDto();
             long maskingRelSeq = SessionUtils.getMaskingSession();
             maskingDto.setMaskingReleaseSeq(maskingRelSeq);
             maskingDto.setUnmaskingInfo("이름,휴대폰번호,납부정보");
-            maskingDto.setAccessIp(ipstatisticService.getClientIp());
+            maskingDto.setAccessIp(clientIp);
             maskingDto.setAccessUrl(request.getRequestURI());
             maskingDto.setUserId(userSession.getUserId());
             maskingDto.setCretId(userSession.getUserId());
@@ -298,36 +319,35 @@ public class MsfChangPageSvcImpl implements MsfChangPageSvc {
             logger.warn("[서비스변경][getChangInfoView] socDesc 조회 실패: {}", e.getMessage());
         }
 
-        HashMap<String, Object> rtnMap = new HashMap<>();
-        rtnMap.put("RESULT_CODE", AJAX_SUCCESS);
-        rtnMap.put("cntrList", cntrList);
-        rtnMap.put("searchVO", searchVO);
-        rtnMap.put("ncn", ncn);
-        rtnMap.put("contractNum", contractNum);
-        rtnMap.put("ctn", ctn);
-        rtnMap.put("custId", custId);
-        rtnMap.put("modelName", modelName);
-        rtnMap.put("prvRateGrpNm", prvRateGrpNm);
-        rtnMap.put("rateAdsvcLteDesc", rateAdsvcLteDesc);
-        rtnMap.put("rateAdsvcCallDesc", rateAdsvcCallDesc);
-        rtnMap.put("rateAdsvcSmsDesc", rateAdsvcSmsDesc);
-        rtnMap.put("initActivationDate", initActivationDate);
-        rtnMap.put("zipNo", zipNo);
-        rtnMap.put("address", address);
-        rtnMap.put("detailAddress", detailAddress);
-        rtnMap.put("addr", addr);
-        rtnMap.put("homeTel", homeTel);
-        rtnMap.put("email", email);
-        rtnMap.put("payData", combinePayData.get("payData"));
-        rtnMap.put("billData", combinePayData.get("billData"));
-        rtnMap.put("maskingBtn", "Y");
-        rtnMap.put("maskingSession", maskingSession);
-        rtnMap.put("remindBlckYn", remindBlckYn);
+        ChangInfoViewResDto response = new ChangInfoViewResDto();
+        response.setCntrList(cntrList);
+        response.setSearchVO(searchVO);
+        response.setNcn(ncn);
+        response.setContractNum(contractNum);
+        response.setCtn(ctn);
+        response.setCustId(custId);
+        response.setModelName(modelName);
+        response.setPrvRateGrpNm(prvRateGrpNm);
+        response.setRateAdsvcLteDesc(rateAdsvcLteDesc);
+        response.setRateAdsvcCallDesc(rateAdsvcCallDesc);
+        response.setRateAdsvcSmsDesc(rateAdsvcSmsDesc);
+        response.setInitActivationDate(initActivationDate);
+        response.setZipNo(zipNo);
+        response.setAddress(address);
+        response.setDetailAddress(detailAddress);
+        response.setAddr(addr);
+        response.setHomeTel(homeTel);
+        response.setEmail(email);
+        response.setPayData(getStringMap(combinePayData, "payData"));
+        response.setBillData(getStringMap(combinePayData, "billData"));
+        response.setMaskingBtn("Y");
+        response.setMaskingSession(maskingSession);
+        response.setRemindBlckYn(remindBlckYn);
         logger.info("[서비스변경] getChangInfoView 화면 셋팅값 — prvRateGrpNm={}, initActivationDate={}, zipNo={}, address={}, detailAddress={}, addr={}, homeTel={}, email={}, remindBlckYn={}, payData={}, billData={}, maskingSession={}",
                 prvRateGrpNm, initActivationDate, zipNo, address, detailAddress, addr, homeTel, email, remindBlckYn,
                 combinePayData.get("payData") != null, combinePayData.get("billData") != null, maskingSession);
         logger.info("[서비스변경] getChangInfoView 조회 완료 — ncn={}, ctn={}, prvRateGrpNm={}, remindBlckYn={}", ncn, ctn, prvRateGrpNm, remindBlckYn);
-        return rtnMap;
+        return FormResponse.ok(response);
     }
 
     private McpUserCntrMngDto resolveContractInfo(MyPageSearchDto searchVO) {
@@ -442,6 +462,15 @@ public class MsfChangPageSvcImpl implements MsfChangPageSvc {
         rtnMap.put("payData", payData);
         rtnMap.put("billData", billData);
         return rtnMap;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, String> getStringMap(Map<String, Object> source, String key) {
+        Object value = source.get(key);
+        if (value instanceof Map<?, ?>) {
+            return (Map<String, String>) value;
+        }
+        return null;
     }
 
     private static int getAge(String idNum) {

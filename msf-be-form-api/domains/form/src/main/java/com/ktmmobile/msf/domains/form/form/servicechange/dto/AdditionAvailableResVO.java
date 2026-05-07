@@ -2,6 +2,9 @@ package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
 import java.util.List;
 import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * 가입가능 부가서비스 목록 응답 VO
@@ -18,6 +21,9 @@ import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
  * @see McpRegServiceDto 각 부가서비스 항목
  *      (rateCd/SOC코드, rateNm/명칭, baseAmt/기본료, svcRelTp/관계유형, useYn/이용여부)
  */
+@Getter
+@Setter
+@NoArgsConstructor
 public class AdditionAvailableResVO {
 
     /**
@@ -42,12 +48,4 @@ public class AdditionAvailableResVO {
      */
     private List<McpRegServiceDto> listC;
 
-    public List<McpRegServiceDto> getList() { return list; }
-    public void setList(List<McpRegServiceDto> list) { this.list = list; }
-
-    public List<McpRegServiceDto> getListA() { return listA; }
-    public void setListA(List<McpRegServiceDto> listA) { this.listA = listA; }
-
-    public List<McpRegServiceDto> getListC() { return listC; }
-    public void setListC(List<McpRegServiceDto> listC) { this.listC = listC; }
 }

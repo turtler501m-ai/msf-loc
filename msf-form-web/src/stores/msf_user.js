@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { post } from '@/libs/api/msf.api'
+import { post, refreshToken } from '@/libs/api/msf.api'
 import { parseUserToken } from '@/libs/utils/auth.utils'
 
 export const useMsfUserStore = defineStore('msfUser', {
@@ -16,8 +16,6 @@ export const useMsfUserStore = defineStore('msfUser', {
      * @return {boolean}
      */
     isAuthenticated() {
-      // FIXME: 임시로 자동 로그인 설정 (로직 제거 필요)
-      this.loadUserInfo()
       return !!this.userInfo && !!this.token
     },
   },
@@ -29,9 +27,6 @@ export const useMsfUserStore = defineStore('msfUser', {
     getUserInfo() {
       if (this.userInfo) {
         return this.userInfo
-      }
-      if (!this.token) {
-        this.loadUserInfo()
       }
       const tokenInfo = parseUserToken(this.token)
       if (tokenInfo) {
@@ -49,16 +44,19 @@ export const useMsfUserStore = defineStore('msfUser', {
     setUserTokenInfo(data) {
       this.userInfo = data?.userInfo
       this.token = data?.accessToken
+      this.userData = null
     },
     /**
      * 사용자 정보 조회
      */
-    loadUserInfo() {
-      // FIXME: 실제 로그인 API 연동 시, userInfo는 API 응답에서 받아온 정보로 설정되어야 합니다.
-      this.token =
-        'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJWMDAwMDAwNTgxIiwiaWQiOiJWMDAwMDAwNTgxIiwibmFtZSI6IuyCvO2MkF_rtInri7TrqqjrsJTsnbzsoJAiLCJvcmdhbml6YXRpb24iOnsiY29kZSI6IlZLSTAxODQiLCJuYW1lIjoi7IK87ISx7KCE7J6Q7YyQ66ekX03rqqjrsJTsnbwifSwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE1MTg4MzEwMjJ9.TuWZNIiK2ukg9e9OCYn9_Y_mejuwNxY97VXjd5wC-rzUqUA8nt5Sd1ukQFlI8RZchrXsaejIjz6HVIlI7Qk_fQ'
-      const { id, name, organization } = parseUserToken(this.token)
-      this.userInfo = { id, name, organization }
+    async loadUserInfo() {
+      const response = await refreshToken()
+      if (response.code !== '0000') {
+        window.location.href = '/login'
+      } else {
+        // 성공적으로 새 토큰 발급
+        this.setUserTokenInfo(response.data)
+      }
     },
     /**
      * 사용자 정보 초기화 (로그아웃 등)
@@ -85,19 +83,38 @@ export const useMsfUserStore = defineStore('msfUser', {
     clearUserData() {
       this.userData = null
     },
+
+    // 사용자 세션 조회
+    async getLoginSessionStatus() {
+      return post('/api/auth/login/session/get', {
+        loginSessionId: this.userData?.loginSessionId,
+      }).then(async (data) => {
+        if (data.code !== '0000' || !data.data) {
+          return { type: 'fail', message: data.message || '로그인 세션 조회에 실패했습니다.' }
+        }
+        this.userData = data.data
+        return await this.checkAuthAction()
+      })
+    },
+
     async checkAuthAction() {
-      if (this.userData.requiredAction.actionCode === 'PASSWORD_CHANGE') {
+      if (!this.userData?.loginSessionId) {
+        return { type: 'fail', message: '로그인 세션 정보가 없습니다.' }
+      }
+
+      const requiredActionCode = this.userData?.requiredAction?.actionCode
+
+      if (requiredActionCode === 'PASSWORD_CHANGE') {
         return {
-          type: 'continue',
+          type: this.userData.requiredAction.actionCode,
           url: '/passwordChange',
           message: '비밀번호 변경이 필요합니다.\n비밀번호 변경 화면으로 이동합니다.',
         }
       } else if (this.userData.requiredAction.actionCode === 'VERIFY_2FA') {
-        return { type: 'continue', url: '/deviceAuth' }
+        return { type: this.userData.requiredAction.actionCode, url: '/deviceAuth' }
       } else if (this.userData.requiredAction.actionCode === 'DEVICE_AUTH') {
-        return { type: 'continue', url: '/deviceRegist' }
+        return { type: this.userData.requiredAction.actionCode, url: '/deviceRegist' }
       } else {
-        // TODO: accessToken 발급 로직 추가`
         const result = await post('/api/auth/login/issue', {
           loginSessionId: this.userData.loginSessionId,
         })
@@ -110,12 +127,36 @@ export const useMsfUserStore = defineStore('msfUser', {
         return { type: 'complete', url: '/' }
       }
     },
-    setDeviceUuid(uuid) {
-      this.deviceUuid = uuid
+
+    async initDeviceUuid() {
+      const uuid = await this.resolveDeviceUuid()
+      this.setDeviceUuid(uuid)
+      return uuid
     },
+
+    async resolveDeviceUuid() {
+      const allowUuidOverride = import.meta.env.VITE_MSF_ALLOW_DEVICE_UUID_OVERRIDE === 'true'
+      const storageUuid = allowUuidOverride ? localStorage.getItem('MSF_DEVICE_UUID')?.trim() : null
+      if (storageUuid) return storageUuid
+
+      const appBridge = window.MSF_APP
+      if (!appBridge) return null
+
+      const uuid =
+        typeof appBridge.getDeviceUuid === 'function'
+          ? await appBridge.getDeviceUuid()
+          : appBridge.deviceUuid
+      return typeof uuid === 'string' ? uuid.trim() : uuid
+    },
+
+    setDeviceUuid(uuid) {
+      this.deviceUuid = uuid || null
+    },
+
     getDeviceUuid() {
       return this.deviceUuid
     },
+
     clearDeviceUuid() {
       this.deviceUuid = null
     },
