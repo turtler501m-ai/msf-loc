@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
+import com.ktmmobile.msf.domains.form.common.code.ResTermMessage;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonBillingInfoDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpFarMonDetailInfoDto;
@@ -80,14 +83,11 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
      * 외부 연동 완료 전까지 화면 테스트용 mock 금액 보정은 유지한다.
      */
     @Override
-    public TerminationRemainChargeResVO getRemainCharge(TerminationRemainChargeReqDto reqDto) {
+    public FormResponse<TerminationRemainChargeResVO> getRemainCharge(TerminationRemainChargeReqDto reqDto) {
         logger.debug("[getRemainCharge] selectCntrListNoLogin: ncn={}", safe(reqDto.getNcn()));
         McpUserCntrMngDto cntrInfo = msfChangPageSvc.selectCntrListNoLogin(reqDto.getNcn());
         if (cntrInfo == null) {
-            TerminationRemainChargeResVO errVO = new TerminationRemainChargeResVO();
-            errVO.setSuccess(false);
-            errVO.setMessage("계약 정보를 찾을 수 없습니다.");
-            return errVO;
+            return FormResponse.of(ResTermMessage.REMAIN_CONTRACT_NOT_FOUND);
         }
         reqDto.setCtn(cntrInfo.getCntrMobileNo());
         reqDto.setCustId(cntrInfo.getCustId());
@@ -102,12 +102,9 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
                 reqDto.getNcn(), reqDto.getCtn(), reqDto.getCustId());
 
             if (mpVO == null) {
-                resVO.setSuccess(false);
-                resVO.setMessage("잔여요금 조회 중 오류가 발생했습니다.");
-                return resVO;
+                return FormResponse.of(ResTermMessage.REMAIN_API_EMPTY);
             }
 
-            resVO.setSuccess(true);
             resVO.setSearchDay(mpVO.getSearchDay());
             resVO.setSearchTime(mpVO.getSearchTime());
             resVO.setSumAmt(mpVO.getSumAmt());
@@ -135,22 +132,17 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             applyMockAmountData(resVO);
         } catch (com.ktmmobile.msf.domains.form.common.exception.SelfServiceException e) {
             logger.info("X18 ERROR: ncn={}, ctn={}", reqDto.getNcn(), reqDto.getCtn(), e);
-            resVO.setSuccess(true);
             applyMockAmountData(resVO);
-            resVO.setMessage("잔여요금 조회 중 오류가 발생했습니다.");
+            return FormResponse.of(ResTermMessage.REMAIN_SELF_SERVICE_ERROR, resVO);
         } catch (java.net.SocketTimeoutException e) {
             logger.info("X18 ERROR (Timeout): ncn={}, ctn={}", reqDto.getNcn(), reqDto.getCtn(), e);
-            resVO.setSuccess(false);
-            resVO.setMessage("잔여요금 조회 중 오류가 발생했습니다.");
+            return FormResponse.of(ResTermMessage.REMAIN_TIMEOUT);
         } catch (Exception e) {
             logger.error("X18 잔여요금 조회 오류: ncn={}, ctn={}", reqDto.getNcn(), reqDto.getCtn(), e);
-            resVO.setSuccess(false);
-            resVO.setMessage("잔여요금 조회 중 오류가 발생했습니다.");
+            return FormResponse.of(ResTermMessage.REMAIN_ERROR);
         }
         applyMockAmountData(resVO);
-        resVO.setSuccess(true);
-        resVO.setMessage("서비스 해지 금액 연동 전으로 mock 데이터를 반환합니다.");
-        return resVO;
+        return FormResponse.ok(resVO);
     }
 
     // TEST_SKIP: 외부 금액 연동 완료 전까지 화면 테스트용 금액을 강제로 내려준다.
@@ -332,22 +324,23 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
      * 작성완료 요청 처리 시간과 결과를 로깅하고 실제 저장 처리는 apply에 위임한다.
      */
     @Override
-    public TerminationApplyResVO complete(String applicationKey, TerminationApplyReqDto reqDto) {
+    public FormResponse<TerminationApplyResVO> complete(String applicationKey, TerminationApplyReqDto reqDto) {
         long startedAt = System.currentTimeMillis();
         String ncn = reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "";
 
         logger.info("서비스해지 작성완료 요청: applicationKey={}, ncn={}", safe(applicationKey), ncn);
 
-        TerminationApplyResVO res = apply(reqDto);
+        FormResponse<TerminationApplyResVO> res = apply(reqDto);
         long elapsed = System.currentTimeMillis() - startedAt;
 
-        if (res != null && res.isSuccess()) {
+        if (res != null && ResponseMessage.SUCCESS.getCode().equals(res.resCode())) {
             logger.info("서비스해지 작성완료 결과: applicationKey={}, ncn={}, success={}, applicationNo={}, elapsedMs={}",
-                safe(applicationKey), ncn, true, res.getApplicationNo(), elapsed);
+                safe(applicationKey), ncn, true, res.resData() != null ? res.resData().getApplicationNo() : "", elapsed);
         } else {
-            String message = res != null ? res.getMessage() : "null response";
-            logger.warn("서비스해지 작성완료 실패: applicationKey={}, ncn={}, success={}, message={}, elapsedMs={}",
-                safe(applicationKey), ncn, false, message, elapsed);
+            String resCode = res != null ? res.resCode() : "";
+            String resMessage = res != null ? res.resMessage() : "null response";
+            logger.warn("서비스해지 작성완료 실패: applicationKey={}, ncn={}, success={}, resCode={}, resMessage={}, elapsedMs={}",
+                safe(applicationKey), ncn, false, resCode, resMessage, elapsed);
         }
 
         return res;
@@ -358,19 +351,20 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
      * 저장된 데이터를 다시 조회해 MCP DB link 테이블로 이관한다.
      */
     @Override
-    public TerminationApplyResVO apply(TerminationApplyReqDto reqDto) {
+    public FormResponse<TerminationApplyResVO> apply(TerminationApplyReqDto reqDto) {
         logger.info("[apply] start: ncn={}, customerType={}, postMethod={}, isActive={}",
             reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
             reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getCustomerType()) : "",
             reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getPostMethod()) : "",
             reqDto != null && reqDto.getProduct() != null ? safe(reqDto.getProduct().getIsActive()) : "");
 
-        String validationMessage = validateApplyRequest(reqDto);
-        if (!isBlank(validationMessage)) {
-            logger.warn("[apply] validation failed: ncn={}, reason={}",
+        ValidationResult validationResult = validateApplyRequest(reqDto);
+        if (validationResult != null) {
+            logger.warn("[apply] validation failed: ncn={}, resCode={}, reason={}",
                 reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
-                validationMessage);
-            return TerminationApplyResVO.fail(validationMessage);
+                validationResult.resCode(),
+                validationResult.resMessage());
+            return FormResponse.of(validationResult.responseMessage(), validationResult.resMessage(), null);
         }
 
         String managerCd = safe(reqDto.getCustomer().getManagerCd());
@@ -379,21 +373,21 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         String agentNm = safe(reqDto.getCustomer().getAgentNm());
         if (isBlank(agentCd)) {
             logger.error("[apply] fail: agentCd is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return TerminationApplyResVO.fail("agentCd is required");
+            return FormResponse.of(ResTermMessage.APPLY_AGENT_REQUIRED);
         }
         if (isBlank(managerCd)) {
             logger.error("[apply] fail: managerCd is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return TerminationApplyResVO.fail("managerCd is required");
+            return FormResponse.of(ResTermMessage.APPLY_MANAGER_REQUIRED);
         }
         String cstmrTypeCd = normalizeCustomerType(reqDto.getCustomer().getCustomerType());
         if (isBlank(cstmrTypeCd)) {
             logger.error("[apply] fail: customerType is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return TerminationApplyResVO.fail("customerType is required");
+            return FormResponse.of(ResTermMessage.APPLY_CUSTOMER_TYPE_REQUIRED);
         }
         String receiveWayCd = normalizeReceiveWay(reqDto.getCustomer().getPostMethod());
         if (isBlank(receiveWayCd)) {
             logger.error("[apply] fail: postMethod is invalid, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return TerminationApplyResVO.fail("postMethod is required");
+            return FormResponse.of(ResTermMessage.APPLY_POST_METHOD_REQUIRED);
         }
 
         String cancelMobileNo = joinPhone(
@@ -409,25 +403,25 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
 
         if (isBlank(cancelMobileNo)) {
             logger.warn("[apply] fail: cancelMobileNo is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return TerminationApplyResVO.fail("해지 대상 전화번호를 입력해 주세요.");
+            return FormResponse.of(ResTermMessage.APPLY_CANCEL_PHONE_REQUIRED);
         }
         if (isBlank(receiveMobileNo)) {
             logger.warn("[apply] fail: receiveMobileNo is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return TerminationApplyResVO.fail("해지 후 연락처를 입력해 주세요.");
+            return FormResponse.of(ResTermMessage.APPLY_RECEIVE_PHONE_REQUIRED);
         }
         logger.debug("[apply] contact normalized: ncn={}, cancelMobileNo={}, receiveMobileNo={}",
             safe(reqDto.getCustomer().getNcn()), maskPhone(cancelMobileNo), maskPhone(receiveMobileNo));
 
         if (isLocal()) {
             logger.info("[apply] LOCAL mode shortcut: ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return TerminationApplyResVO.ok("LOCAL-CANCEL-" + System.currentTimeMillis());
+            return FormResponse.ok(TerminationApplyResVO.ok("LOCAL-CANCEL-" + System.currentTimeMillis()));
         }
 
         try {
             Long requestKey = cancelPageRepository.nextRequestKey();
             if (requestKey == null) {
                 logger.error("[apply] request key generation failed: ncn={}", safe(reqDto.getCustomer().getNcn()));
-                return TerminationApplyResVO.fail("요청 번호 발급에 실패했습니다.");
+                return FormResponse.of(ResTermMessage.APPLY_REQUEST_KEY_FAILED);
             }
             logger.debug("[apply] request key generated: requestKey={}, ncn={}", requestKey, safe(reqDto.getCustomer().getNcn()));
 
@@ -446,7 +440,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             int inserted = msfRequestRepository.insertMsfRequestCancel(vo);
             if (inserted <= 0) {
                 logger.error("[apply] insert failed: requestKey={}, ncn={}, inserted={}", requestKey, safe(vo.getContractNum()), inserted);
-                return TerminationApplyResVO.fail("서비스해지 요청 저장에 실패했습니다.");
+                return FormResponse.of(ResTermMessage.APPLY_MSF_SAVE_FAILED);
             }
 
             MsfRequestCstmrVo cstmrVo = toMsfRequestCstmrVo(requestKey, reqDto, cstmrTypeCd);
@@ -459,20 +453,20 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             int mcpCstmrInserted = mcpRequestRepository.insertMcpRequestCstmr(requestKey);
             if (mcpCstmrInserted <= 0) {
                 logger.error("[apply] insert MCP request cstmr failed: requestKey={}", requestKey);
-                return TerminationApplyResVO.fail("M포탈 고객정보 저장에 실패했습니다.");
+                return FormResponse.of(ResTermMessage.APPLY_MCP_CUSTOMER_SAVE_FAILED);
             }
 
             int mcpInserted = mcpRequestRepository.insertMcpCancelRequest(requestKey);
             if (mcpInserted <= 0) {
                 logger.error("[apply] insert MCP cancel request failed: requestKey={}", requestKey);
-                return TerminationApplyResVO.fail("M포탈 데이터 저장에 실패했습니다.");
+                return FormResponse.of(ResTermMessage.APPLY_MCP_SAVE_FAILED);
             }
 
             logger.info("[apply] success: requestKey={}, ncn={}", requestKey, safe(vo.getContractNum()));
-            return TerminationApplyResVO.ok(String.valueOf(requestKey));
+            return FormResponse.ok(TerminationApplyResVO.ok(String.valueOf(requestKey)));
         } catch (Exception e) {
             logger.error("[apply] exception: ncn={}", reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "", e);
-            return TerminationApplyResVO.fail("서비스해지 요청 처리 중 오류가 발생했습니다.");
+            return FormResponse.of(ResTermMessage.APPLY_ERROR);
         }
     }
 
@@ -568,26 +562,27 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         return cstmrVo;
     }
 
-    private String validateApplyRequest(TerminationApplyReqDto reqDto) {
+    private ValidationResult validateApplyRequest(TerminationApplyReqDto reqDto) {
         if (reqDto == null) {
             logger.debug("[validateApplyRequest] reqDto is null");
-            return "요청 정보가 없습니다.";
+            return ValidationResult.error(ResTermMessage.APPLY_REQUEST_INVALID, "요청 정보가 없습니다.");
         }
         String customerStepError = validateCustomerStep(reqDto.getCustomer());
         if (!isBlank(customerStepError)) {
             logger.debug("[validateApplyRequest] customer step invalid: {}", customerStepError);
-            return customerStepError;
+            return ValidationResult.error(ResTermMessage.APPLY_CUSTOMER_INVALID, customerStepError);
         }
         String productStepError = validateProductStep(reqDto.getProduct());
         if (!isBlank(productStepError)) {
             logger.debug("[validateApplyRequest] product step invalid: {}", productStepError);
-            return productStepError;
+            return ValidationResult.error(ResTermMessage.APPLY_PRODUCT_INVALID, productStepError);
         }
         String agreementStepError = validateAgreementStep(reqDto.getAgreement());
         if (!isBlank(agreementStepError)) {
             logger.debug("[validateApplyRequest] agreement step invalid: {}", agreementStepError);
+            return ValidationResult.error(ResTermMessage.APPLY_AGREEMENT_INVALID, agreementStepError);
         }
-        return agreementStepError;
+        return null;
     }
 
     private String validateCustomerStep(TerminationApplyReqDto.Customer customer) {
@@ -711,6 +706,16 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             return null;
         } catch (NumberFormatException e) {
             return message;
+        }
+    }
+
+    private record ValidationResult(ResTermMessage responseMessage, String resMessage) {
+        private String resCode() {
+            return responseMessage.getCode();
+        }
+
+        private static ValidationResult error(ResTermMessage responseMessage, String resMessage) {
+            return new ValidationResult(responseMessage, resMessage);
         }
     }
 

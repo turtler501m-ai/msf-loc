@@ -2,6 +2,7 @@ package com.ktmmobile.msf.domains.form.form.termination.controller;
 
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
@@ -36,18 +37,18 @@ public class MsfCancelPageController {
      * 해지 전 잔여 요금과 위약금 정보를 서비스 계층에서 조회한다.
      */
     @RequestMapping(value = "/remainCharge/list")
-    public TerminationRemainChargeResVO getRemainCharge(@RequestBody TerminationRemainChargeReqDto reqDto) {
-        return msfCancelPageSvc.getRemainCharge(reqDto);
+    public CommonResponse<FormResponse<TerminationRemainChargeResVO>> getRemainCharge(@RequestBody TerminationRemainChargeReqDto reqDto) {
+        return ResponseUtils.ok(msfCancelPageSvc.getRemainCharge(reqDto));
     }
 
     /**
      * 해지 신청서 작성을 완료하고 신청 데이터를 서비스 계층에서 생성한다.
      */
     @PostMapping(value = "/api/msf/formTermination/{applicationKey}/complete")
-    public TerminationApplyResVO complete(
+    public CommonResponse<FormResponse<TerminationApplyResVO>> complete(
             @PathVariable("applicationKey") String applicationKey,
             @RequestBody TerminationApplyReqDto reqDto
     ) {
-        return msfCancelPageSvc.complete(applicationKey, reqDto);
+        return ResponseUtils.ok(msfCancelPageSvc.complete(applicationKey, reqDto));
     }
 }

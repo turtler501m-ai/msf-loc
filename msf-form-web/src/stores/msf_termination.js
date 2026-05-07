@@ -243,17 +243,22 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
       // ctn·custId는 백엔드에서 세션 계약 목록으로 조회, ncn만 전송
       const data = await post('/remainCharge/list', { ncn })
       console.log('[X18] 잔여요금 조회 응답', data)
-      if (data?.success) {
-        formData.usageFee = data.sumAmt || ''
-        formData.remainChargeItems = data.items || []
+      const formResponse = data?.data
+      const remainCharge = formResponse?.resData || {}
+      if (formResponse?.resCode === '0000') {
+        formData.usageFee = remainCharge.sumAmt || ''
+        formData.remainChargeItems = remainCharge.items || []
         formData.remainChargeLoaded = true
-        formData.penaltyFee = data.penaltyFee || ''
-        formData.finalAmount = data.settlementFee || ''
-        formData.remainPeriod = data.remainPeriod || ''
-        formData.remainAmount = data.remainAmount
-        formData.lstComActvDate = data.lstComActvDate || data.initActivationDate || formData.lstComActvDate
+        formData.penaltyFee = remainCharge.penaltyFee || ''
+        formData.finalAmount = remainCharge.settlementFee || ''
+        formData.remainPeriod = remainCharge.remainPeriod || ''
+        formData.remainAmount = remainCharge.remainAmount
+        formData.lstComActvDate = remainCharge.lstComActvDate || remainCharge.initActivationDate || formData.lstComActvDate
       } else {
-        console.warn('[X18] 조회 실패 - success=false', data?.message)
+        console.warn('[X18] 조회 실패', {
+          resCode: formResponse?.resCode,
+          resMessage: formResponse?.resMessage,
+        })
       }
       return data
     } catch (e) {
@@ -358,16 +363,17 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
       })
       const data = await post(`/api/msf/formTermination/${applicationKey.value}/complete`, payload)
       console.debug('[apiCompleteApplication] response', data)
-      if (data?.success) {
+      const formResponse = data?.data
+      if (formResponse?.resCode === '0000') {
         completeErrorMessage.value = ''
-        console.info('[apiCompleteApplication] success', { applicationNo: data?.applicationNo })
+        console.info('[apiCompleteApplication] success', { applicationNo: formResponse?.resData?.applicationNo })
         return true
       }
-      completeErrorMessage.value = data?.message || DEFAULT_ERROR_MESSAGE
+      completeErrorMessage.value = formResponse?.resMessage || DEFAULT_ERROR_MESSAGE
       console.warn('[apiCompleteApplication] failed response', data)
       return false
     } catch (e) {
-      completeErrorMessage.value = e?.response?.data?.message || DEFAULT_ERROR_MESSAGE
+      completeErrorMessage.value = e?.response?.data?.data?.resMessage || DEFAULT_ERROR_MESSAGE
       console.error('[apiCompleteApplication] exception', {
         message: e?.message,
         status: e?.response?.status,

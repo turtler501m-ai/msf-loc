@@ -296,6 +296,18 @@ function mapRow(row) {
   }
 }
 
+function unwrapCommonResponse(response) {
+  return response?.data ?? response
+}
+
+function unwrapFormResponse(response) {
+  return unwrapCommonResponse(response)
+}
+
+function isFormOk(formResponse) {
+  return formResponse?.resCode === '0000'
+}
+
 async function fetchList() {
   const payload = {
     procCd: searchForm.procCd || null,
@@ -309,8 +321,9 @@ async function fetchList() {
   console.log('[신청서관리][목록조회] 요청 시작', summarizeSearchForm())
   try {
     const res = await msfPost('/api/msf/admin/cancel/list', payload)
-    console.log('[신청서관리][목록조회] 응답 수신', summarizeListResponse(res))
-    if (!Array.isArray(res?.data)) {
+    const listResponse = unwrapCommonResponse(res)
+    console.log('[신청서관리][목록조회] 응답 수신', summarizeListResponse(listResponse))
+    if (!Array.isArray(listResponse?.data)) {
       tableData.value = []
       totalCount.value = 0
       console.warn('[신청서관리][목록조회] 응답 실패', {
@@ -320,8 +333,8 @@ async function fetchList() {
       alertStore.openAlert(res?.message || '조회에 실패했습니다.')
       return
     }
-    tableData.value = res.data.map(mapRow)
-    totalCount.value = Number(res?.meta?.page?.totalCount || 0)
+    tableData.value = listResponse.data.map(mapRow)
+    totalCount.value = Number(listResponse?.meta?.page?.totalCount || 0)
     selectedRow.value = null
     console.log('[신청서관리][목록조회] 화면 데이터 반영 결과', {
       rowCount: tableData.value.length,
@@ -368,8 +381,9 @@ async function fetchDetail(requestKey) {
   const payload = { requestKey }
   console.log('[신청서관리][상세조회] 요청 시작', payload)
   const res = await msfPost('/api/msf/admin/cancel/get', payload)
-  console.log('[신청서관리][상세조회] 응답 수신', res)
-  return mapRow(res || {})
+  const detailResponse = unwrapCommonResponse(res)
+  console.log('[신청서관리][상세조회] 응답 수신', detailResponse)
+  return mapRow(detailResponse || {})
 }
 
 async function openDetail(row = selectedRow.value) {
@@ -420,10 +434,11 @@ async function onClickReceiptComplete() {
   console.log('[신청서관리][접수완료] 요청 시작', { requestKey })
   try {
     const statusRes = await msfPost('/api/msf/admin/cancel/status/check', { requestKey })
-    console.log('[신청서관리][접수완료][상태확인] 응답 수신', statusRes)
-    if (!statusRes?.success) {
-      console.warn('[신청서관리][접수완료][상태확인] 응답 실패', statusRes)
-      alertStore.openAlert(statusRes?.message || '접수완료 처리 가능 상태가 아닙니다.')
+    const statusForm = unwrapFormResponse(statusRes)
+    console.log('[신청서관리][접수완료][상태확인] 응답 수신', statusForm)
+    if (!isFormOk(statusForm)) {
+      console.warn('[신청서관리][접수완료][상태확인] 응답 실패', statusForm)
+      alertStore.openAlert(statusForm?.resMessage || '접수완료 처리 가능 상태가 아닙니다.')
       return
     }
 
@@ -437,11 +452,12 @@ async function onClickReceiptComplete() {
       memo: payload.memo,
     })
     const res = await msfPost('/api/msf/admin/cancel/complete', payload)
-    console.log('[신청서관리][접수완료][처리] 응답 수신', res)
+    const completeForm = unwrapFormResponse(res)
+    console.log('[신청서관리][접수완료][처리] 응답 수신', completeForm)
 
-    if (!res?.success) {
-      console.warn('[신청서관리][접수완료][처리] 응답 실패', res)
-      alertStore.openAlert(res?.message || '접수완료 처리에 실패했습니다.')
+    if (!isFormOk(completeForm)) {
+      console.warn('[신청서관리][접수완료][처리] 응답 실패', completeForm)
+      alertStore.openAlert(completeForm?.resMessage || '접수완료 처리에 실패했습니다.')
       return
     }
 
@@ -476,10 +492,11 @@ async function onClickRevert() {
     try {
       console.log('[신청서관리][완료취소] 요청 시작', { requestKey })
       const res = await msfPost('/api/msf/admin/cancel/revert', { requestKey })
-      console.log('[신청서관리][완료취소] 응답 수신', res)
-      if (!res?.success) {
-        console.warn('[신청서관리][완료취소] 응답 실패', res)
-        alertStore.openAlert(res?.message || '완료취소 처리에 실패했습니다.')
+      const revertForm = unwrapFormResponse(res)
+      console.log('[신청서관리][완료취소] 응답 수신', revertForm)
+      if (!isFormOk(revertForm)) {
+        console.warn('[신청서관리][완료취소] 응답 실패', revertForm)
+        alertStore.openAlert(revertForm?.resMessage || '완료취소 처리에 실패했습니다.')
         return
       }
       console.log('[신청서관리][완료취소] 화면 데이터 반영 결과', {
@@ -511,13 +528,14 @@ async function onClickCancelCheck() {
   console.log('[신청서관리][해지확인] 요청 시작', { requestKey })
   try {
     const res = await msfPost('/api/msf/admin/cancel/status/check', { requestKey })
-    console.log('[신청서관리][해지확인] 응답 수신', res)
-    if (res?.success) {
+    const statusForm = unwrapFormResponse(res)
+    console.log('[신청서관리][해지확인] 응답 수신', statusForm)
+    if (isFormOk(statusForm)) {
       alertStore.openAlert('해지확인: 정상')
       return
     }
-    console.warn('[신청서관리][해지확인] 응답 실패', res)
-    alertStore.openAlert(res?.message || '해지확인에 실패했습니다.')
+    console.warn('[신청서관리][해지확인] 응답 실패', statusForm)
+    alertStore.openAlert(statusForm?.resMessage || '해지확인에 실패했습니다.')
   } catch (e) {
     console.error('[신청서관리][해지확인] 예외 발생', {
       requestKey,

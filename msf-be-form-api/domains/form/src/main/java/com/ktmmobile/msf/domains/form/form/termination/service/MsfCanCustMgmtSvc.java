@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.domains.form.form.termination.service;
 
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.DetailDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ListReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ListResDto;
@@ -15,13 +16,13 @@ public interface MsfCanCustMgmtSvc {
     DetailDto get(ProcessReqDto req);
 
     /** 처리 가능 여부를 확인한다. */
-    ProcessResVO statusCheck(ProcessReqDto req);
+    FormResponse<ProcessResVO> statusCheck(ProcessReqDto req);
 
     /** 처리완료 요청을 검증한 뒤 EP0 처리로 위임한다. */
-    ProcessResVO complete(ProcessReqDto req);
+    FormResponse<ProcessResVO> complete(ProcessReqDto req);
 
     /** 완료취소 요청을 검증한 뒤 상태 되돌림 처리로 위임한다. */
-    ProcessResVO revert(ProcessReqDto req);
+    FormResponse<ProcessResVO> revert(ProcessReqDto req);
 
     /** 신청서 목록 조회 (신규/변경·서비스변경·명의변경·서비스해지 통합) */
     ListResDto selectAppFormList(ListReqDto req);
@@ -34,8 +35,8 @@ public interface MsfCanCustMgmtSvc {
      * ASIS: updateCanCsl(PROC_CD만 DB 갱신) + BATCH00233(실해지)
      * TOBE: EP0 실시간 호출 → 성공 시 PROC_CD='CP' 한번에 처리
      */
-    ProcessResVO processComplete(ProcessReqDto req);
+    FormResponse<ProcessResVO> processComplete(ProcessReqDto req);
 
     /** 완료취소 — PROC_CD를 'RC'(접수)로 되돌림 */
-    ProcessResVO processRevert(Long requestKey);
+    FormResponse<ProcessResVO> processRevert(Long requestKey);
 }

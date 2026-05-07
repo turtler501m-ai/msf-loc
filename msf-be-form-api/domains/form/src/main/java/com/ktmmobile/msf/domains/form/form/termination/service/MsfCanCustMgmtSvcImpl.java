@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ktmmobile.msf.domains.form.common.code.ResTermMessage;
 import com.ktmmobile.msf.domains.form.common.dto.UserSessionDto;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormOsstWebServerAdapter;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpOsstCanPrcVO;
 import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
@@ -52,29 +54,29 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
     }
 
     @Override
-    public ProcessResVO statusCheck(ProcessReqDto req) {
+    public FormResponse<ProcessResVO> statusCheck(ProcessReqDto req) {
         logger.info("[admin/cancel/status/check] requestKey={}", req.getRequestKey());
         if (req.getRequestKey() == null) {
-            return ProcessResVO.fail("신청번호(requestKey)가 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_KEY_REQUIRED);
         }
 
         DetailDto detail = selectCanCustDetail(req.getRequestKey());
         if (detail == null) {
-            return ProcessResVO.fail("해지신청 건을 찾을 수 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_NOT_FOUND);
         }
         if ("CP".equals(detail.getProcCd())) {
-            return ProcessResVO.fail("이미 처리완료된 건입니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_ALREADY_COMPLETED);
         }
-        return ProcessResVO.ok(null);
+        return FormResponse.ok(null);
     }
 
     @Override
-    public ProcessResVO complete(ProcessReqDto req) {
+    public FormResponse<ProcessResVO> complete(ProcessReqDto req) {
         logger.info("[admin/cancel/complete] requestKey={}, itgOderWhyCd={}, aftmnIncInCd={}, apyRelTypeCd={}, custTchMediCd={}",
             req.getRequestKey(), req.getItgOderWhyCd(), req.getAftmnIncInCd(),
             req.getApyRelTypeCd(), req.getCustTchMediCd());
 
-        ProcessResVO validationError = validateCompleteRequest(req);
+        FormResponse<ProcessResVO> validationError = validateCompleteRequest(req);
         if (validationError != null) {
             return validationError;
         }
@@ -82,10 +84,10 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
     }
 
     @Override
-    public ProcessResVO revert(ProcessReqDto req) {
+    public FormResponse<ProcessResVO> revert(ProcessReqDto req) {
         logger.info("[admin/cancel/revert] requestKey={}", req.getRequestKey());
         if (req.getRequestKey() == null) {
-            return ProcessResVO.fail("신청번호(requestKey)가 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_KEY_REQUIRED);
         }
         return processRevert(req.getRequestKey());
     }
@@ -122,21 +124,21 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
         return response;
     }
 
-    private ProcessResVO validateCompleteRequest(ProcessReqDto req) {
+    private FormResponse<ProcessResVO> validateCompleteRequest(ProcessReqDto req) {
         if (req.getRequestKey() == null) {
-            return ProcessResVO.fail("신청번호(requestKey)가 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_KEY_REQUIRED);
         }
         if (StringUtils.isBlank(req.getItgOderWhyCd())) {
-            return ProcessResVO.fail("해지사유코드(itgOderWhyCd)가 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_CANCEL_REASON_REQUIRED);
         }
         if (StringUtils.isBlank(req.getAftmnIncInCd())) {
-            return ProcessResVO.fail("해지후성향코드(aftmnIncInCd)가 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_AFTER_INCLINATION_REQUIRED);
         }
         if (StringUtils.isBlank(req.getApyRelTypeCd())) {
-            return ProcessResVO.fail("고객접촉매체코드(apyRelTypeCd)가 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_REL_TYPE_REQUIRED);
         }
         if (StringUtils.isBlank(req.getCustTchMediCd())) {
-            return ProcessResVO.fail("신청관계유형코드(custTchMediCd)가 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_TOUCH_MEDIA_REQUIRED);
         }
         return null;
     }
@@ -148,24 +150,24 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
 
     @Override
     @Transactional
-    public ProcessResVO processComplete(ProcessReqDto req) {
+    public FormResponse<ProcessResVO> processComplete(ProcessReqDto req) {
         Long requestKey = req.getRequestKey();
         logger.info("[processComplete] start: requestKey={}", requestKey);
 
         String currentProcCd = canCustMgmtRepository.selectProcCd(requestKey);
         if (currentProcCd == null) {
             logger.warn("[processComplete] not found: requestKey={}", requestKey);
-            return ProcessResVO.fail("요청 건을 찾을 수 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_NOT_FOUND);
         }
         if ("CP".equals(currentProcCd)) {
             logger.warn("[processComplete] already completed: requestKey={}", requestKey);
-            return ProcessResVO.fail("이미 처리완료된 건입니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_ALREADY_COMPLETED);
         }
 
         DetailDto detail = canCustMgmtRepository.selectCanCustDetail(requestKey);
         if (detail == null) {
             logger.error("[processComplete] detail not found: requestKey={}", requestKey);
-            return ProcessResVO.fail("요청 상세 정보를 찾을 수 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_DETAIL_NOT_FOUND);
         }
 
         String ncn = detail.getContractNum();
@@ -195,12 +197,16 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
             );
         } catch (Exception e) {
             logger.error("[processComplete] EP0 exception: requestKey={}", requestKey, e);
-            return ProcessResVO.fail("EP0 처리 중 오류가 발생했습니다: " + e.getMessage());
+            return FormResponse.of(
+                ResTermMessage.ADMIN_EP0_ERROR,
+                ResTermMessage.ADMIN_EP0_ERROR.getMessage() + ": " + e.getMessage(),
+                null
+            );
         }
 
         if (ep0Vo == null) {
             logger.error("[processComplete] EP0 null response: requestKey={}", requestKey);
-            return ProcessResVO.fail("EP0 응답이 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_EP0_EMPTY);
         }
 
         logger.info(
@@ -217,8 +223,10 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
                 ep0Vo.getRslt(),
                 ep0Vo.getRsltMsg()
             );
-            return ProcessResVO.fail(
-                "EP0 처리 실패: " + StringUtils.defaultIfBlank(ep0Vo.getRsltMsg(), "EP0 오류")
+            return FormResponse.of(
+                ResTermMessage.ADMIN_EP0_FAILED,
+                ResTermMessage.ADMIN_EP0_FAILED.getMessage() + ": " + StringUtils.defaultIfBlank(ep0Vo.getRsltMsg(), "EP0 오류"),
+                null
             );
         }
 
@@ -230,24 +238,24 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
         int updated = canCustMgmtRepository.updateCanCustProcCd(req);
         if (updated <= 0) {
             logger.error("[processComplete] DB update failed: requestKey={}, updated={}", requestKey, updated);
-            return ProcessResVO.fail("처리완료 저장에 실패했습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_COMPLETE_SAVE_FAILED);
         }
 
         logger.info("[processComplete] success: requestKey={}, osstOrdNo={}", requestKey, ep0Vo.getOsstOrdNo());
-        return ProcessResVO.ok(ep0Vo.getOsstOrdNo());
+        return FormResponse.ok(ProcessResVO.complete(ep0Vo.getOsstOrdNo()));
     }
 
     @Override
     @Transactional
-    public ProcessResVO processRevert(Long requestKey) {
+    public FormResponse<ProcessResVO> processRevert(Long requestKey) {
         logger.info("[processRevert] start: requestKey={}", requestKey);
 
         String currentProcCd = canCustMgmtRepository.selectProcCd(requestKey);
         if (currentProcCd == null) {
-            return ProcessResVO.fail("요청 건을 찾을 수 없습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_NOT_FOUND);
         }
         if (!"CP".equals(currentProcCd)) {
-            return ProcessResVO.fail("처리완료 상태인 건만 완료취소할 수 있습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_COMPLETE_ONLY_REVERT);
         }
 
         ProcessReqDto revertReq = new ProcessReqDto();
@@ -256,15 +264,11 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
 
         int updated = canCustMgmtRepository.updateCanCustProcCd(revertReq);
         if (updated <= 0) {
-            return ProcessResVO.fail("완료취소 저장에 실패했습니다.");
+            return FormResponse.of(ResTermMessage.ADMIN_REVERT_SAVE_FAILED);
         }
 
-        ProcessResVO res = new ProcessResVO();
-        res.setSuccess(true);
-        res.setMessage("");
-        res.setProcCd("RC");
         logger.info("[processRevert] success: requestKey={}", requestKey);
-        return res;
+        return FormResponse.ok(ProcessResVO.revert());
     }
 
     private HashMap<String, String> buildEp0Param(
