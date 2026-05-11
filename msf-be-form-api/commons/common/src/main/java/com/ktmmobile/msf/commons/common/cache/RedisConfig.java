@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.commons.common.cache;
 
+import java.time.Duration;
 import java.util.List;
 
 import io.lettuce.core.ReadFrom;
@@ -38,27 +39,17 @@ public class RedisConfig {
 
     private final DataRedisProperties redisProperties;
 
-    @Bean(REDIS_VALUE_SERIALIZER)
-    public RedisSerializer<Object> redisValueSerializer(ObjectMapper objectMapper) {
-        return GenericJacksonJsonRedisSerializer.builder(objectMapper::rebuild)
-            .enableDefaultTyping(redisPolymorphicTypeValidator())
-            .enableSpringCacheNullValueSupport()
-            .customize(builder -> builder.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
-            .build();
-    }
-
-    private PolymorphicTypeValidator redisPolymorphicTypeValidator() {
-        return BasicPolymorphicTypeValidator.builder()
-            .allowIfSubType(Object.class)
-            .build();
-    }
-
+    @Primary
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
+        return createConnectionFactory(redisProperties.getTimeout());
+    }
+
+    public RedisConnectionFactory createConnectionFactory(Duration commandTimeout) {
         if (hasMasterReplicaNodes()) {
-            return masterReplicaConnectionFactory();
+            return masterReplicaConnectionFactory(commandTimeout);
         }
-        return standaloneConnectionFactory();
+        return standaloneConnectionFactory(commandTimeout);
     }
 
     private boolean hasMasterReplicaNodes() {
@@ -67,8 +58,8 @@ public class RedisConfig {
             && redisProperties.getMasterreplica().getNodes().stream().anyMatch(StringUtils::hasText);
     }
 
-    private RedisConnectionFactory standaloneConnectionFactory() {
-        log.info(">>> Redis 구성: Standalone Mode");
+    private RedisConnectionFactory standaloneConnectionFactory(Duration commandTimeout) {
+        log.info(">>> Redis 구성: Standalone Mode, commandTimeout={}", commandTimeout);
 
         RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration(redisProperties.getHost(), redisProperties.getPort());
         applyAuthentication(serverConfig);
@@ -76,12 +67,12 @@ public class RedisConfig {
 
         return new LettuceConnectionFactory(serverConfig,
             LettuceClientConfiguration.builder()
-                .commandTimeout(redisProperties.getTimeout())
+                .commandTimeout(commandTimeout)
                 .build());
     }
 
-    private RedisConnectionFactory masterReplicaConnectionFactory() {
-        log.info(">>> Redis 구성: Master/Replica Mode");
+    private RedisConnectionFactory masterReplicaConnectionFactory(Duration commandTimeout) {
+        log.info(">>> Redis 구성: Master/Replica Mode, commandTimeout={}", commandTimeout);
 
         List<RedisNode> nodes = redisProperties.getMasterreplica().getNodes().stream()
             .filter(StringUtils::hasText)
@@ -97,7 +88,7 @@ public class RedisConfig {
 
         LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
             .readFrom(ReadFrom.REPLICA_PREFERRED)
-            .commandTimeout(redisProperties.getTimeout())
+            .commandTimeout(commandTimeout)
             .build();
         return new LettuceConnectionFactory(serverConfig, clientConfig);
     }
@@ -129,6 +120,13 @@ public class RedisConfig {
         RedisConnectionFactory redisConnectionFactory,
         @Qualifier(REDIS_VALUE_SERIALIZER) RedisSerializer<Object> redisValueSerializer
     ) {
+        return createRedisTemplate(redisConnectionFactory, redisValueSerializer);
+    }
+
+    public RedisTemplate<String, Object> createRedisTemplate(
+        RedisConnectionFactory redisConnectionFactory,
+        RedisSerializer<Object> redisValueSerializer
+    ) {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
         redisTemplate.setKeySerializer(new StringRedisSerializer());
@@ -137,5 +135,20 @@ public class RedisConfig {
         redisTemplate.setHashValueSerializer(redisValueSerializer);
 
         return redisTemplate;
+    }
+
+    @Bean(REDIS_VALUE_SERIALIZER)
+    public RedisSerializer<Object> redisValueSerializer(ObjectMapper objectMapper) {
+        return GenericJacksonJsonRedisSerializer.builder(objectMapper::rebuild)
+            .enableDefaultTyping(redisPolymorphicTypeValidator())
+            .enableSpringCacheNullValueSupport()
+            .customize(builder -> builder.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false))
+            .build();
+    }
+
+    private PolymorphicTypeValidator redisPolymorphicTypeValidator() {
+        return BasicPolymorphicTypeValidator.builder()
+            .allowIfSubType(Object.class)
+            .build();
     }
 }

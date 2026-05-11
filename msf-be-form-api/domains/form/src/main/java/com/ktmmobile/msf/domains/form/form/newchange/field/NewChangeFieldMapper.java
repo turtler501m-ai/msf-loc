@@ -1,13 +1,24 @@
 package com.ktmmobile.msf.domains.form.form.newchange.field;
 
-import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
-import com.ktmmobile.msf.domains.form.form.common.vo.*;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestRecord;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoResponse;
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+
+import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDvcChgVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestRecord;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeAdditionRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoResponse;
 
 /**
  * 신규/변경 신청서
@@ -29,6 +40,7 @@ public interface NewChangeFieldMapper {
     @Mapping(target = ".", source = "msfRequestSaleVo")
     @Mapping(target = ".", source = "msfRequestBillReqVo")
     @Mapping(target = ".", source = "msfRequestMoveVo")
+    @Mapping(target = ".", source = "msfRequestDvcChgVo")
     @Mapping(target = "additionList", source = "msfRequestAdditionVo")
     @Mapping(target = "requestKey", source = "msfRequestVo.requestKey")
     @Mapping(target = "cstmrEmailAdr", source = "msfRequestCstmrVo.cstmrEmailAdr")
@@ -57,7 +69,8 @@ public interface NewChangeFieldMapper {
     MsfRequestDvcChgVo toMsfRequestDvcChgVo(NewChangeInfoRequest request); //MSF_REQUEST
 
     //NewChangeInfoRequest ~> MSF_REQUEST_ADDITION_TEMP
-    MsfRequestAdditionVo toMsfRequestAdditionVo(NewChangeInfoRequest request);
+    //MsfRequestAdditionVo toMsfRequestAdditionVo(NewChangeInfoRequest request);
+    List<MsfRequestAdditionVo> toMsfRequestAdditionVo(List<NewChangeAdditionRequest> additionList);
 
 
     //MsfRequestOsstVo toMsfRequestOsstVo(NewChangeInfoRequest request); //MSF_REQUEST

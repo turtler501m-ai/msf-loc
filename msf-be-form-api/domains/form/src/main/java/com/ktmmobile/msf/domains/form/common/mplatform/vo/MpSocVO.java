@@ -36,6 +36,9 @@ public class MpSocVO {
     private String alwFlg; //무제한 미제공 국가 및 비 제휴가 망 자동 사용여부
 
 
+    /** 설정버튼 표시 여부 — paramSbst 가 있으면 'Y', 없으면 'N' */
+    private String settingYn;
+
     /** 해지 가능 여부 */
     private String onlineCanYn;
 
@@ -103,6 +106,12 @@ public class MpSocVO {
 
     }
 
+    public String getSettingYn() {
+        return settingYn;
+    }
+    public void setSettingYn(String settingYn) {
+        this.settingYn = settingYn;
+    }
     public String getOnlineCanYn() {
         return onlineCanYn;
     }
@@ -274,9 +283,10 @@ public class MpSocVO {
                 + effectiveDate + ", effectiveEndDate=" + effectiveEndDate + ", socRateVatValue=" + socRateVatValue
                 + ", soc=" + soc + ", memo=" + memo + ", socRateVat=" + socRateVat + ", vatYn=" + vatYn
                 + ", updateFlag=" + updateFlag + ", prodHstSeq=" + prodHstSeq + ", paramSbst=" + paramSbst
-                + ", shareSubCtnList=" + shareSubCtnList + ", strtDt=" + strtDt + ", endDt=" + endDt + ", endDttm="
-                + endDttm + ", shareSubContidList=" + shareSubContidList + ", shareMainContid=" + shareMainContid
-                + ", shareMainProdHstSeq=" + shareMainProdHstSeq + ", prdcSrlNo=" + prdcSrlNo + ", alwFlg=" + alwFlg
+                + ", settingYn=" + settingYn + ", shareSubCtnList=" + shareSubCtnList + ", strtDt=" + strtDt
+                + ", endDt=" + endDt + ", endDttm=" + endDttm + ", shareSubContidList=" + shareSubContidList
+                + ", shareMainContid=" + shareMainContid + ", shareMainProdHstSeq=" + shareMainProdHstSeq
+                + ", prdcSrlNo=" + prdcSrlNo + ", alwFlg=" + alwFlg
                 + ", onlineCanYn=" + onlineCanYn + ", canCmnt=" + canCmnt + "]";
     }
 }

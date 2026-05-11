@@ -1,11 +1,11 @@
 package com.ktmmobile.msf.domains.form.form.newchange.dto;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 신규/변경 신청서 insert 및 update request parameter 정의
@@ -42,7 +42,7 @@ public class NewChangeInfoRequest {
     String cntpntShopNm;
     String reqBuyTypeCd;
     String openTypeCd;
-    String serviceTypeCd;
+    String serviceTypeCd = "PO";
     String operTypeCd;
     String cstmrTypeCd;
     String identityCertTypeCd;
@@ -99,7 +99,7 @@ public class NewChangeInfoRequest {
     String reqAdditionListNm;
     Long reqAdditionPrice;
     String phonePaymentYn;
-    String onOffTypeCd;
+    String onOffTypeCd = "0"; //고정값 처리가 맞는지~
     String soCd;
     LocalDateTime openReqDt;
     LocalDateTime reqInDay;
@@ -282,6 +282,12 @@ public class NewChangeInfoRequest {
     String osstPayDate;
     String osstPayTypeCd;
     Long movePenalty;
+
+    //MSF_REQUEST_DVC_CHG
+    String dvcChgTypeCd;
+    String dvcChgRsnCd;
+    String dvcChgRsnDtlCd;
+    String instamtPayMthdCd;
 
     //MSF_REQUEST_DOC
     String fileTypeCd;

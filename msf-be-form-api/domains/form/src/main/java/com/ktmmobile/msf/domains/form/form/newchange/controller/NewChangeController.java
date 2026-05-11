@@ -1,22 +1,46 @@
 package com.ktmmobile.msf.domains.form.form.newchange.controller;
 
-import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
-import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
-import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
-import com.ktmmobile.msf.domains.form.form.common.dto.*;
-import com.ktmmobile.msf.domains.form.form.common.service.*;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.*;
-import com.ktmmobile.msf.domains.form.form.newchange.service.NewChangeService;
+import java.util.List;
+import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
+import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
+import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
+import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
+import com.ktmmobile.msf.domains.form.form.common.dto.CrdtCardAuthRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.EsimRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.EsimResponse;
+import com.ktmmobile.msf.domains.form.form.common.dto.MnpOsstRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.MnpOsstResponse;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoResponse;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.NiceAccountRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.SearchNumberRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.SearchNumberResponse;
+import com.ktmmobile.msf.domains.form.form.common.service.ChoiceNumberService;
+import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
+import com.ktmmobile.msf.domains.form.form.common.service.NumberPortableService;
+import com.ktmmobile.msf.domains.form.form.common.service.PaymentService;
+import com.ktmmobile.msf.domains.form.form.common.service.SimInfoService;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeDefaultResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.service.NewChangeService;
 
 @RestController
 @RequestMapping("/api/form")
@@ -49,17 +73,30 @@ public class NewChangeController {
         return ResponseUtils.ok(newChangeService.getNewChangeRequestInfo(request));
     }
 
+    //신청서 초기값 조회
+    @PostMapping("/newchange/getDefault")
+    public CommonResponse<NewChangeDefaultResponse> getNewChangeDefaultInfo(@RequestBody @Valid NewChangeRequest request) {
+        return ResponseUtils.ok(newChangeService.getNewChangeDefaultInfo(request));
+    }
+
     //신청서 저장 - 임시저장
     @PostMapping("/newchange/save")
-    public CommonResponse<FormResponse<NewChangeResponse>> registerForm(@RequestBody @Valid NewChangeInfoRequest request) {
+    public CommonResponse<FormResponse<NewChangeResponse>> registeForm(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(newChangeService.saveAppformInfo(request));
     }
 
     //신청서 확인 - 이미지생성,녹취,서명 또는 기 생성 이미지 확인
-    //@PostMapping("/newchange/eform/set")
+    //이때 데이타를 다시 다 보내서 저장하고 진행해야해.. 사전체크도 여기서~~~
+    @PostMapping("/newchange/eform/set")
+    public CommonResponse<FormResponse<NewChangeInfoResponse>> eformNewChangeSet(@RequestBody @Valid NewChangeInfoRequest request) {
+        return ResponseUtils.ok(newChangeService.eformNewChangeSet(request));
+    }
 
     //신청서 작성완료
-    //@PostMapping("/newchange/complete")
+    @PostMapping("/newchange/complete")
+    public CommonResponse<FormResponse<NewChangeResponse>> completeForm(@RequestBody @Valid NewChangeRequest request) {
+        return ResponseUtils.ok(newChangeService.completeAppformInfo(request));
+    }
 
 
     //휴대폰 일련번호 유효성체크 - Y13
@@ -84,6 +121,10 @@ public class NewChangeController {
 
     //신규가입 희망번호 조회 (NU1)
     //@RequestMapping(value = "/appform/searchNumberAjax.do")
+    /*@PostMapping(value = "/newchange/searchNumber")
+    public CommonResponse<FormResponse<SearchNumberResponse>> getSearchNumber(@RequestBody @Valid SearchNumberRequest request) {
+        return ResponseUtils.ok(choiceNumberService.getSearchNumber(request));
+    }*/
     @PostMapping(value = "/newchange/searchNumber")
     public CommonResponse<FormResponse<SearchNumberResponse>> getSearchNumber(@RequestBody @Valid SearchNumberRequest request) {
         return ResponseUtils.ok(choiceNumberService.getSearchNumber(request));
@@ -140,7 +181,10 @@ public class NewChangeController {
     //계좌번호인증 (NICE)
     //@RequestMapping(value = "/nice/accountCheckAjax.do")
     @PostMapping("/accountCheck")
-    public CommonResponse<FormResponse<Map<String, Object>>> accountCheck(@RequestBody @Valid NiceAccountRequest niceAccountRequest, HttpServletRequest request) {
+    public CommonResponse<FormResponse<Map<String, Object>>> accountCheck(
+        @RequestBody @Valid NiceAccountRequest niceAccountRequest,
+        HttpServletRequest request
+    ) {
         return ResponseUtils.ok(paymentService.accountCheck(niceAccountRequest, request));
     }
 

@@ -32,6 +32,15 @@ const componentConfig = {
   disabled: false,
   readonly: false,
   error: false,
+  displayMask: {
+    default: false,
+    description:
+      '입력값은 그대로 두고, 화면상에서 글자를 가림 (중간수정방지, 복사금지, 단방향 입력 보장, type="text")',
+  },
+  displayMaskChar: {
+    default: '●',
+    description: 'displayMask가 true일 때 화면에 표시할 문자',
+  },
 }
 
 // 2. 초기값 정의
@@ -41,5 +50,7 @@ const componentState = {
   disabled: false,
   readonly: false,
   error: false,
+  displayMask: false,
+  displayMaskChar: '●',
 }
 </script>

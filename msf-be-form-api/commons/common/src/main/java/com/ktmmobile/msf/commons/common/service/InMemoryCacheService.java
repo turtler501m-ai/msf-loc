@@ -64,6 +64,28 @@ public class InMemoryCacheService<T> implements CacheService<T> {
     }
 
     @Override
+    public void setValue(String key, String hashKey, T value) {
+        getOrCreateHash(key, null).put(hashKey, value);
+    }
+
+    @Override
+    public void setValue(String key, String hashKey, T value, Duration timeout) {
+        getOrCreateHash(key, timeout).put(hashKey, value);
+    }
+
+    @Override
+    public void replaceValues(String key, Map<String, T> values) {
+        valueStore.remove(key);
+        hashStore.put(key, Entry.value(new ConcurrentHashMap<>(values)));
+    }
+
+    @Override
+    public void replaceValues(String key, Map<String, T> values, Duration timeout) {
+        valueStore.remove(key);
+        hashStore.put(key, Entry.value(new ConcurrentHashMap<>(values), timeout));
+    }
+
+    @Override
     public T getValue(String key) {
         Entry<T> entry = valueStore.get(key);
         if (entry == null || entry.isExpired()) {
@@ -77,6 +99,12 @@ public class InMemoryCacheService<T> implements CacheService<T> {
     public T getValue(String key, String hashKey) {
         Map<String, T> values = getHash(key);
         return values == null ? null : values.get(hashKey);
+    }
+
+    @Override
+    public Map<String, T> getEntries(String key) {
+        Map<String, T> values = getHash(key);
+        return values == null ? Map.of() : Map.copyOf(values);
     }
 
     @Override
@@ -264,6 +292,20 @@ public class InMemoryCacheService<T> implements CacheService<T> {
 
     private Map<String, T> getHash(String key) {
         return getHashByRealKey(key);
+    }
+
+    private Map<String, T> getOrCreateHash(String key, Duration timeout) {
+        purgeIfExpired(key);
+        Entry<Map<String, T>> entry = hashStore.get(key);
+        if (entry != null) {
+            return entry.value();
+        }
+
+        Entry<Map<String, T>> createdEntry = timeout == null
+            ? Entry.value(new ConcurrentHashMap<>())
+            : Entry.value(new ConcurrentHashMap<>(), timeout);
+        Entry<Map<String, T>> existingEntry = hashStore.putIfAbsent(key, createdEntry);
+        return existingEntry == null ? createdEntry.value() : existingEntry.value();
     }
 
     private Map<String, T> getHashByRealKey(String realKey) {

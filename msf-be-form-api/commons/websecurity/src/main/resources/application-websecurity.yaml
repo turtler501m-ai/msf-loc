@@ -18,16 +18,23 @@ server:
 
 ## Spring
 spring:
-
   ## Security
   security:
     authorization:
       permit-all-urls:
-        - /**
-        #- /api/auth/**
+        - /api/n/**
+        - /actuator/prometheus
+      token-ignore-urls:
+        - /api/n/**
     jwt:
       secret-key: ${SECURITY_JWT_SECRET_KEY}
       issuer: kt-Mmobile-SmartForm
+
+  ## Request Log
+  request-log:
+    exclude-url-patterns:
+      - /favicon.ico
+      - /actuator/**
 
   ## Servlet Multipart Handling
   servlet:
@@ -45,12 +52,14 @@ spring:
 ## Logging
 logging:
   pattern:
-    correlation: "[%X{traceId}-%X{spanId}][%X{memberId}] "
+    correlation: "[%X{traceId}-%X{spanId}][%X{clientId}] "
 
 
 
 ## Actuator
 management:
+  server:
+    port: ${server.port}
   endpoints:
     web:
       exposure:
@@ -64,6 +73,15 @@ management:
         http.server.requests: true
       percentiles:
         http.server.requests: 0.9, 0.95, 0.99
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:${OTEL_EXPORTER_OTLP_ENDPOINT:}}
+  otlp:
+    metrics:
+      export:
+        enabled: false
 
 
 
@@ -88,7 +106,7 @@ spring:
 ## Response Handling
 response-handling:
   exception:
-    className: true
+    className: false
     message: true
 
 
@@ -101,7 +119,7 @@ spring:
 ## Response Handling
 response-handling:
   exception:
-    className: true
+    className: false
     message: true
 
 
@@ -119,10 +137,17 @@ spring:
 ## Response Handling
 response-handling:
   exception:
-    className: true
+    className: false
     message: true
+
+## Logging
+logging:
+  pattern:
+    correlation: "[%X{clientId}] "
 
 ## Actuator
 management:
-  server:
-    port: ${server.port}
+  tracing:
+    export:
+      otlp:
+        enabled: false

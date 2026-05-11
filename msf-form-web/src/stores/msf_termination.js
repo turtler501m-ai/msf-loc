@@ -163,16 +163,19 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
 
     try {
       const authResult = await post('/api/form/ktmmember/auth', { subscriberNo, customerLinkName })
-      const contractNum =
-        authResult?.data?.contractNum || authResult?.data?.contract_num || authResult?.data?.ncn
+      const authData = authResult?.data?.resData || authResult?.data || {}
+      const contractNum = authData.contractNum || authData.contract_num || authData.ncn
       const lstComActvDate =
-        authResult?.data?.lstComActvDate ||
-        authResult?.data?.lst_com_actv_date ||
-        authResult?.data?.initActivationDate ||
+        authData.lstComActvDate ||
+        authData.lst_com_actv_date ||
+        authData.initActivationDate ||
         ''
       if (authResult?.code === '0000' && contractNum) {
         setTerminationContract(contractNum, 'auth-api')
+        formData.custId = authData.customerId || authData.customer_id || formData.custId || ''
         formData.lstComActvDate = lstComActvDate
+        if (authData.customerLinkName) formData.cstmrNm = authData.customerLinkName
+        if (authData.gender) formData.userGender = authData.gender
         return formData.ncn
       }
       return ''

@@ -1,9 +1,8 @@
 package com.ktmmobile.msf.domains.login.application.dto;
 
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginUserInfo;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginOrganization;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResultUserInfo;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginAttributes;
-import com.ktmmobile.msf.domains.login.domain.code.LoginUserInfoAttribute;
+import com.ktmmobile.msf.commons.logincore.domain.dto.LoginUserInfo;
 
 public record LoginUserInfoResponse(
     String userId,
@@ -11,8 +10,7 @@ public record LoginUserInfoResponse(
     String phoneNumber,
     String clientIp,
     boolean deviceAuthCompleted,
-    String agentCode,
-    String shopCode
+    Organization organization
 ) {
 
     public static LoginUserInfoResponse from(LoginUserInfo userInfo) {
@@ -21,9 +19,8 @@ public record LoginUserInfoResponse(
             userInfo.userName(),
             userInfo.phoneNumber(),
             userInfo.clientIp(),
-            Boolean.TRUE.equals(LoginAttributes.getBoolean(userInfo.attributes(), LoginUserInfoAttribute.DEVICE_AUTH_COMPLETED.key())),
-            LoginAttributes.getString(userInfo.attributes(), LoginUserInfoAttribute.AGENT_CODE.key()),
-            LoginAttributes.getString(userInfo.attributes(), LoginUserInfoAttribute.SHOP_CODE.key())
+            Boolean.TRUE.equals(userInfo.attributeAsBoolean("deviceAuthCompleted")),
+            Organization.from(userInfo.organization())
         );
     }
 
@@ -33,9 +30,25 @@ public record LoginUserInfoResponse(
             userInfo.userName(),
             userInfo.phoneNumber(),
             userInfo.clientIp(),
-            Boolean.TRUE.equals(LoginAttributes.getBoolean(userInfo.attributes(), LoginUserInfoAttribute.DEVICE_AUTH_COMPLETED.key())),
-            LoginAttributes.getString(userInfo.attributes(), LoginUserInfoAttribute.AGENT_CODE.key()),
-            LoginAttributes.getString(userInfo.attributes(), LoginUserInfoAttribute.SHOP_CODE.key())
+            Boolean.TRUE.equals(userInfo.attributeAsBoolean("deviceAuthCompleted")),
+            Organization.from(userInfo.organization())
         );
+    }
+
+    public record Organization(
+        String agentCode,
+        String agentName,
+        String shopCode,
+        String shopName
+    ) {
+
+        public static Organization from(LoginOrganization organization) {
+            return new Organization(
+                organization.agentCode(),
+                organization.agentName(),
+                organization.shopCode(),
+                organization.shopName()
+            );
+        }
     }
 }

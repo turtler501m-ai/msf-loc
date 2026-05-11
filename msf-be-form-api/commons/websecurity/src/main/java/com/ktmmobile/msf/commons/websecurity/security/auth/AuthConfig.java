@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import jakarta.servlet.DispatcherType;
+import jakarta.servlet.http.HttpServletRequest;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.context.annotation.Bean;
@@ -31,9 +32,12 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.cors.CorsConfiguration;
@@ -80,8 +84,33 @@ public class AuthConfig {
             .oauth2ResourceServer(configurer -> configurer
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)
+                .bearerTokenResolver(bearerTokenResolver(securityAuthorizationProperties.tokenIgnoreUrlPatterns()))
                 .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtMemberAuthenticationConverter)));
         return http.build();
+    }
+
+    private BearerTokenResolver bearerTokenResolver(String[] tokenIgnoreUrlPatterns) {
+        DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
+        AntPathMatcher pathMatcher = new AntPathMatcher();
+        return request -> {
+            String requestPath = requestPath(request);
+            for (String pattern: tokenIgnoreUrlPatterns) {
+                if (pathMatcher.match(pattern, requestPath)) {
+                    return null;
+                }
+            }
+            return delegate.resolve(request);
+        };
+    }
+
+    private String requestPath(HttpServletRequest request) {
+        String requestUri = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        if (StringUtils.hasText(contextPath) && requestUri.startsWith(contextPath)) {
+            String path = requestUri.substring(contextPath.length());
+            return StringUtils.hasText(path) ? path : "/";
+        }
+        return requestUri;
     }
 
     private CorsConfigurationSource corsConfigurationSource() {

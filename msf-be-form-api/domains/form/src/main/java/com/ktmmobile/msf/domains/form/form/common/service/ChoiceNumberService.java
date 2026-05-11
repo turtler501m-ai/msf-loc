@@ -1,5 +1,12 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
+import java.net.SocketTimeoutException;
+import java.util.HashMap;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
 import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
@@ -14,12 +21,6 @@ import com.ktmmobile.msf.domains.form.form.common.dto.SearchNumberResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommWriteMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.net.SocketTimeoutException;
-import java.util.HashMap;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +46,7 @@ public class ChoiceNumberService {
      * MCP_REQUEST_OSST 는 호출전 REQUEST INSERT, 호출후 RESPONSE INSERT
      **/
     //public Map<String, Object> searchNumber(McpRequestDto mcpRequestDto) {
+    //public FormResponse<SearchNumberResponse> getSearchNumber(SearchNumberRequest request) {
     public FormResponse<SearchNumberResponse> getSearchNumber(SearchNumberRequest request) {
         //Parameter 정보 : requestKey, reqWantNumber
 
@@ -55,16 +57,22 @@ public class ChoiceNumberService {
         //1. 개통전 사전체크 진행여부 확인을 위해 신청서번호(request_key) 로 예약번호 (res_no) 값을 조회한다.
         //    개통전 사전체크가 완료되면 MCP_REQUEST_OSST 테이블에도 저장하고 스마트 MSF_REQUEST_TEMP 테이블에는 스마트 프로세스에서 업데이트 처리하기 때문이다.
         //    스마트에서 조회된 RES_NO 값으로 MCP_REQUEST_OSST 테이블에서 개통전 사전체크(PC0) 로 저장 여부를 조회한다.
-        String resNo = newChangeReadMapper.getMsfResNo(request.getRequestKey());
-        mcpRequestOsstRequest.setMvnoOrdNo(resNo);
-        mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK);
-        resNo = "955336"; //@@삭제필수@@
+        String resNo = "955336"; //@@삭제필수@@
+        /*String resNo = newChangeReadMapper.getMsfResNo(request.getRequestKey());
+        if (resNo == null) {
+            return FormResponse.of(ResponseMessage.NO_DATA); //개통전 사전체크를 진행해야 함. 흠.......
+        } else {
+            mcpRequestOsstRequest.setMvnoOrdNo(resNo);
+            mcpRequestOsstRequest.setPrgrStatCd(Constants.EVENT_CODE_PRE_CHECK);
+        }*/
+
+        //골드번호 여부 체크@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
         //2. 개통전 사전체크 호출 여부 확인
         int osstCount = formCommService.getOsstCount(mcpRequestOsstRequest);
         osstCount = 1; //@@삭제필요@@ : prx 호출 전이므로 강제처리
         if (osstCount == 0) {
-            return null; //개통전 사전체크를 진행해야 함. 흠.......
+            return FormResponse.of(ResponseMessage.NO_DATA); //개통전 사전체크를 진행해야 함. 흠.......
         }
         //3. OSST_ORD_NO 조회 >> NU1 호출 시 MCP-API 에서 호출해서 가져가서 필요없는 항목
         /*mcpRequestOsstRequest = new McpRequestOsstRequest();
@@ -139,21 +147,21 @@ public class ChoiceNumberService {
         rtnMap.put("RESULT_CODE", Constants.AJAX_SUCCESS);
 
         List<MarketInfo> marketList = List.of(
-                new MarketInfo("KTF", "01025679878", "010-2567-9878", "kGBQFD/q0YBTCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01097839878", "010-9783-9878", "H9tDkJ36z9JTCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01027069878", "010-2706-9878", "seZbgXBQKS9TCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01029149878", "010-2914-9878", "i6LgwCy3xeVTCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01029699878", "010-2969-9878", "DAjv7I6wyc5TCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01033949878", "010-3394-9878", "+W1l/smHQ4hTCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01042099878", "010-4209-9878", "3JG5FtGdDQFTCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01042679878", "010-4267-9878", "QwV/WGoneHRTCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01042699878", "010-4269-9878", "MVO48rc6Qm5TCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01043759878", "010-4375-9878", "VAhJwziDq71TCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01051479878", "010-5147-9878", "/AJOp4tu75ZTCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01065039878", "010-6503-9878", "PXO0EzqBeB9TCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01066819878", "010-6681-9878", "dIXUuSLYre9TCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01074669878", "010-7466-9878", "Bpu2TFJP0SpTCuaJvb6rgw=="),
-                new MarketInfo("KTF", "01026139878", "010-2613-9878", "jcps9Xo34jFTCuaJvb6rgw==")
+            new MarketInfo("KTF", "01025679878", "010-2567-9878", "kGBQFD/q0YBTCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01097839878", "010-9783-9878", "H9tDkJ36z9JTCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01027069878", "010-2706-9878", "seZbgXBQKS9TCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01029149878", "010-2914-9878", "i6LgwCy3xeVTCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01029699878", "010-2969-9878", "DAjv7I6wyc5TCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01033949878", "010-3394-9878", "+W1l/smHQ4hTCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01042099878", "010-4209-9878", "3JG5FtGdDQFTCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01042679878", "010-4267-9878", "QwV/WGoneHRTCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01042699878", "010-4269-9878", "MVO48rc6Qm5TCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01043759878", "010-4375-9878", "VAhJwziDq71TCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01051479878", "010-5147-9878", "/AJOp4tu75ZTCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01065039878", "010-6503-9878", "PXO0EzqBeB9TCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01066819878", "010-6681-9878", "dIXUuSLYre9TCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01074669878", "010-7466-9878", "Bpu2TFJP0SpTCuaJvb6rgw=="),
+            new MarketInfo("KTF", "01026139878", "010-2613-9878", "jcps9Xo34jFTCuaJvb6rgw==")
         );
 
         //rtnMap.put("RESULT_OBJ_LIST", marketList);

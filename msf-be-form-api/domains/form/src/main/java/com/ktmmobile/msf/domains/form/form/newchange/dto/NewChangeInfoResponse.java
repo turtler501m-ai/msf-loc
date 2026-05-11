@@ -1,12 +1,13 @@
 package com.ktmmobile.msf.domains.form.form.newchange.dto;
 
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
 
 /**
  * 신규/변경 신청서 select response parameter 정의
@@ -17,6 +18,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class NewChangeInfoResponse {
+
     String tmpStepCd; //임시저장 단계
 
     Long requestKey;
@@ -277,8 +279,18 @@ public class NewChangeInfoResponse {
     String osstPayTypeCd;
     Long movePenalty;
 
+    //MSF_REQUEST_DVC_CHG
+    String dvcChgTypeCd;
+    String dvcChgRsnCd;
+    String dvcChgRsnDtlCd;
+    String instamtPayMthdCd;
+
+    //
+
     //MSF_REQUEST_DOC
-    String fileTypeCd;
-    String filePathNm;
+    //String fileTypeCd;
+    //String filePathNm;
     //String fileNm;
+
+    
 }

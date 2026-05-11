@@ -1,10 +1,14 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 @JacksonXmlRootElement(localName = "outDto")
+@Getter
+@Setter
+@NoArgsConstructor
 public class ChargePlanChangeReservationResponse {
 
     private String prdcCd; // 상품코드

@@ -11,13 +11,24 @@ import com.ktmmobile.msf.commons.common.data.type.UserType;
 @RequiredArgsConstructor
 public class FormUser implements MsfUser, Serializable {
 
-    private final String id;
-    private final String name;
     private final UserType userType;
-    private final String agentCode;
-    private final String shopCode;
+    private final String userId;
+    private final String userName;
+    private final UserOrganization organization;
 
-    public FormUser(String id, String name, UserType userType) {
-        this(id, name, userType, null, null);
+    public String getAgentCode() {
+        return organization.agentCode();
+    }
+
+    public String getAgentName() {
+        return organization.agentName();
+    }
+
+    public String getShopCode() {
+        return organization.shopCode();
+    }
+
+    public String getShopName() {
+        return organization.shopName();
     }
 }

@@ -97,9 +97,8 @@ const validate = () => {
   return validations.every((v) => v === true)
 }
 
-const checkRequiredFields = () => {
+const getPendingItems = () => {
   const pending = []
-
   const check = (refObj, label) => {
     if (refObj.value && typeof refObj.value.validate === 'function') {
       if (!refObj.value.validate()) {
@@ -110,8 +109,9 @@ const checkRequiredFields = () => {
     return true
   }
 
-  // 각 섹션별 유효성 검사 및 누락 항목 수집
-  check(simInfoRef, '유심 정보')
+  const simTypeLabel =
+    formData.value && formData.value.hasSim === 'hasSim3' ? 'eSIM 정보' : '유심 정보'
+  check(simInfoRef, simTypeLabel)
   check(mnpInfoRef, '번호이동 정보')
   check(numberReservationRef, '희망번호 정보')
   check(deviceSerialNumberRef, '단말기 일련번호')
@@ -120,6 +120,11 @@ const checkRequiredFields = () => {
   check(billingInfoRef, '납부 정보')
   check(memoInfoRef, '메모 정보')
 
+  return pending
+}
+
+const checkRequiredFields = () => {
+  const pending = getPendingItems()
   const isReady = pending.length === 0
 
   if (!isReady) {
@@ -171,7 +176,7 @@ const save = async () => {
   return saveResult
 }
 
-defineExpose({ save, validate, reset: store.resetAll })
+defineExpose({ save, validate, getPendingItems, reset: store.resetAll })
 </script>
 
 <style lang="scss" scoped>

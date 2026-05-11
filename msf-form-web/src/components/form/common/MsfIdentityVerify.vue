@@ -126,29 +126,25 @@ const computedTitle = computed(() => {
   return props.title
 })
 
-// 신분증 종류(주민등록증, 운전면허증 등) 변경 시 스캔 상태 초기화
+// 신분증 종류(주민등록증, 운전면허증 등) 변경 시 인증 상태만 초기화 (스캔 정보는 유지)
 watch(
   () => model.value.identityTypeCd,
   (newVal, oldVal) => {
     if (oldVal && newVal !== oldVal && !model.value.isSaved) {
-      model.value.isScanVerified = false
-      model.value.identityTypeNm = ''
+      model.value.isVerified = false
     }
   },
 )
 
-// 인증 방식 변경 시 상태 초기화
+// 인증 방식 변경 시 인증 관련 상태만 초기화 (스캔 정보와 간섭 배제)
 watch(
   () => model.value.identityCertTypeCd,
   () => {
     if (!model.value.isSaved) {
-      model.value.identityTypeCd = ''
-      model.value.identityTypeNm = '' // 스캔된 명칭 초기화
       model.value.isVerified = false
-      model.value.isScanVerified = false // 스캔 상태 초기화
 
       if (isMinor.value) {
-        // 미성년자인 경우: 법정대리인 정보 초기화 (인증 시 비활성화되는 항목들)
+        // 미성년자인 경우: 법정대리인 정보 초기화
         model.value.repName = ''
         model.value.repRegistrationNo1 = ''
         model.value.repRegistrationNo2 = ''
@@ -163,13 +159,12 @@ watch(
         model.value.repAgree = false
         if (props.authFlags) props.authFlags.repPhone = false
       } else {
-        // 일반 고객인 경우: 가입자 정보 초기화 (인증 시 비활성화되는 항목들)
+        // 일반 고객인 경우: 가입자 정보 초기화
         model.value.cstmrNm = ''
         model.value.cstmrNativeRrn1 = ''
         model.value.cstmrNativeRrn2 = ''
         model.value.cstmrForeignerRrn1 = ''
         model.value.cstmrForeignerRrn2 = ''
-        // 생년월일/성별이 있는 경우(명의변경 등) 함께 초기화
         if ('userBirthDate' in model.value) model.value.userBirthDate = ''
         if ('userGender' in model.value) model.value.userGender = ''
       }

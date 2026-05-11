@@ -28,12 +28,6 @@ export const useMsfUserStore = defineStore('msfUser', {
       if (this.userInfo) {
         return this.userInfo
       }
-      const tokenInfo = parseUserToken(this.token)
-      if (tokenInfo) {
-        const { id, name, organization } = tokenInfo
-        this.userInfo = { id, name, organization }
-        return this.userInfo
-      }
       return null
     },
     /**
@@ -86,7 +80,7 @@ export const useMsfUserStore = defineStore('msfUser', {
 
     // 사용자 세션 조회
     async getLoginSessionStatus() {
-      return post('/api/auth/login/session/get', {
+      return post('/api/n/auth/login/session/get', {
         loginSessionId: this.userData?.loginSessionId,
       }).then(async (data) => {
         if (data.code !== '0000' || !data.data) {
@@ -115,7 +109,7 @@ export const useMsfUserStore = defineStore('msfUser', {
       } else if (this.userData.requiredAction.actionCode === 'DEVICE_AUTH') {
         return { type: this.userData.requiredAction.actionCode, url: '/deviceRegist' }
       } else {
-        const result = await post('/api/auth/login/issue', {
+        const result = await post('/api/n/auth/login/issue', {
           loginSessionId: this.userData.loginSessionId,
         })
         if (result.code !== '0000') {

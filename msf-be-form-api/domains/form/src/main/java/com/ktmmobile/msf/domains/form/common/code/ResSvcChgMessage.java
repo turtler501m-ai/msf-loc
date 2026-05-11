@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ResSvcChgMessage {
+    SUCCESS("0000", null),
+
     CHANGE_REQUEST_INVALID("2101", "서비스변경 조회 요청 정보가 없습니다."),
     CHANGE_CONTRACT_NOT_FOUND("2102", "계약 정보를 찾을 수 없습니다."),
     CHANGE_INFO_ERROR("2103", "서비스변경 조회 중 오류가 발생했습니다."),

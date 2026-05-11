@@ -18,27 +18,21 @@ import com.ktmmobile.msf.commons.logincore.application.port.in.LoginSessionFlowP
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResult;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResultResponse;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTokenPair;
-import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
-import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.login.application.dto.LoginAuthRequest;
 import com.ktmmobile.msf.domains.login.application.dto.LoginCredential;
-import com.ktmmobile.msf.domains.login.application.dto.LoginPasswordChangeRequest;
 import com.ktmmobile.msf.domains.login.application.dto.LoginUserInfoResponse;
-import com.ktmmobile.msf.domains.login.application.port.in.LoginPasswordChanger;
-import com.ktmmobile.msf.domains.login.application.port.in.LoginUserInfoReader;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping({"/api/auth"})
+@RequestMapping({"/api/n/auth"})
 public class LoginAuthController {
 
     private final LoginAuthenticationFlowProcessor<LoginCredential> loginAuthenticationFlowProcessor;
     private final LoginSessionFlowProcessor loginSessionFlowProcessor;
     private final LoginRefreshTokenCookieManager refreshTokenCookieService;
-    private final LoginUserInfoReader loginUserInfoReader;
-    private final LoginPasswordChanger loginPasswordChanger;
 
     @PostMapping("/login")
     public CommonResponse<LoginResultResponse<LoginUserInfoResponse>> loginWithIdPw(@RequestBody @Valid LoginAuthRequest request) {
@@ -72,22 +66,6 @@ public class LoginAuthController {
     public ResponseEntity<CommonResponse<LoginResultResponse<LoginUserInfoResponse>>> refresh(HttpServletRequest request) {
         LoginTokenPair tokenPair = loginSessionFlowProcessor.refresh(refreshTokenCookieService.getRefreshToken(request.getCookies()));
         return tokenResponse(tokenPair);
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<CommonResponse<Void>> logout(HttpServletRequest request) {
-        String refreshToken = refreshTokenCookieService.findRefreshToken(request.getCookies());
-        if (refreshToken != null) {
-            loginSessionFlowProcessor.logout(refreshToken);
-        }
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, refreshTokenCookieService.deleteRefreshTokenCookie().toString())
-            .body(ResponseUtils.ok());
-    }
-
-    @PostMapping({"/user/get"})
-    public CommonResponse<LoginUserInfoResponse> getUserInfo() {
-        return ResponseUtils.ok(loginUserInfoReader.getUserInfo(AuthenticationUtils.getUser()));
     }
 
     private CommonResponse<LoginResultResponse<LoginUserInfoResponse>> resultResponse(LoginResult result) {

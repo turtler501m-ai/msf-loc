@@ -8,26 +8,48 @@
           v-model="model.repName"
           placeholder="이름"
           class="ut-w-300"
-          :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+          :readonly="model.isSaved || (model.identityCertTypeCd !== 'S' && !model.isTrCustomer)"
         />
       </MsfFormGroup>
-      <MsfFormGroup label="주민등록번호/<br/>외국인등록번호" required>
+      <MsfFormGroup label="주민등록번호/<br/>외국인등록번호" required v-if="!model.isTrCustomer">
         <MsfStack type="field">
           <MsfNumberInput
+            ref="combinedNo1Ref"
             id="inp-combinedNo1"
             v-model="combinedNo1"
             placeholder="앞 6자리"
             maxlength="6"
             :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+            @maxlength="combinedNo2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="combinedNo2Ref"
             v-model="combinedNo2"
             id="inp-combinedNo2"
             type="password"
             placeholder="뒤 7자리"
             maxlength="7"
             :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+          />
+        </MsfStack>
+      </MsfFormGroup>
+      <MsfFormGroup v-if="model.isTrCustomer" label="생년월일" required>
+        <MsfStack type="field">
+          <MsfBirthdayInput
+            v-model="model.minorUserBirthDate"
+            length="8"
+            class="ut-w-300"
+            placeholder="8자리(YYYYMMDD)"
+          />
+          <MsfRadioGroup
+            :name="`${name}-user-gender`"
+            v-model="model.minorUserGender"
+            :options="[
+              { value: 'M', label: '남' },
+              { value: 'F', label: '여' },
+            ]"
+            class="ut-ml-16"
           />
         </MsfStack>
       </MsfFormGroup>
@@ -72,8 +94,11 @@ import { getTermsAgreementItem } from '@/libs/utils/comn.utils'
 const props = defineProps({
   title: { type: String, default: '법정대리인 정보' },
   agreementTitle: { type: String, default: '법정대리인 안내사항 확인 및 동의' },
+  name: { type: String, default: 'basic' },
 })
 const model = defineModel({ type: Object, required: true })
+const combinedNo1Ref = ref(null)
+const combinedNo2Ref = ref(null)
 const store = useMsfFormNewChgStore()
 const termsItem = ref(null)
 
@@ -144,11 +169,21 @@ const onComplete = (result) => {
 }
 
 const validate = () => {
-  if (!model.value.repName) return false
-  if (!combinedNo1.value || !combinedNo2.value) return false
-  if (!model.value.minorAgentRelTypeCd) return false
-  if (!store.authFlags?.repPhone) return false
-  if (!model.value.repAgree) return false
+  if (['NM', 'FM'].includes(model.value.cstmrTypeCd)) {
+    if (model.value.isTrCustomer) {
+      if (!model.value.repName) return false
+      if (!model.value.minorAgentRelTypeCd) return false
+      if (!model.value.minorUserBirthDate) return false
+      if (!store.authFlags?.repPhone) return false
+      if (!model.value.repAgree) return false
+    } else {
+      if (!model.value.repName) return false
+      if (!combinedNo1.value || !combinedNo2.value) return false
+      if (!model.value.minorAgentRelTypeCd) return false
+      if (!store.authFlags?.repPhone) return false
+      if (!model.value.repAgree) return false
+    }
+  }
   return true
 }
 

@@ -1,5 +1,16 @@
 <template>
-  <div :class="rootClasses" v-bind="rootAttrs">
+  <div :class="rootClasses" v-bind="rootAttrs" @click="props.displayMask && inputRef?.focus()">
+    <!-- displayMask 설정 시 레이어 -->
+    <div v-if="props.displayMask" class="visual-layer" aria-hidden="true">
+      <div class="visual-wrapper" :class="[`is-align-${props.align}`]">
+        <template v-if="value">
+          <span v-for="i in String(value).length" :key="i" class="dot">
+            {{ props.displayMaskChar }}
+          </span>
+        </template>
+        <span v-if="isFocus" class="custom-cursor"></span>
+      </div>
+    </div>
     <input
       ref="inputRef"
       :style="{ textAlign: props.align }"
@@ -12,6 +23,13 @@
       @input="onInput"
       @focus="onFocus"
       @blur="onBlur"
+      :class="{ 'is-display-masked-input': props.displayMask }"
+      @keydown="handleKeyDown"
+      @select="handleSelect"
+      @mousedown="handleMaskUI"
+      @copy="handleSecurity"
+      @cut="handleSecurity"
+      @paste="handleSecurity"
     />
     <div class="action-slot" v-if="showClearBtn || $slots.rightSlot">
       <button
@@ -55,6 +73,10 @@ const props = defineProps({
   error: Boolean, // 에러
   inline: Boolean, // 인라인 스타일 여부
   ariaLabel: { type: String, default: undefined }, //접근성 aria-label설정필요시 사용
+  /** 입력값은 그대로 두고, 화면상에서 글자를 가림 (중간수정방지, 복사금지, 단방향 입력 보장, type="text") */
+  displayMask: { type: Boolean, default: false },
+  /** displayMask가 true일 때 화면에 표시할 문자 (기본 '●') */
+  displayMaskChar: { type: String, default: '●' },
 })
 
 // 부모가 사용할 이벤트선언
@@ -98,6 +120,7 @@ const rootClasses = computed(() => [
     'is-error': props.error,
     'is-inline': props.inline,
     'is-focus': isFocus.value,
+    'has-display-mask': props.displayMask,
   },
 ])
 
@@ -107,6 +130,8 @@ const onInput = (event) => {
 
   emit('update:modelValue', newValue)
   emit('input', event)
+
+  if (props.displayMask) moveCursorToEnd()
 }
 
 // 입력값 초기화
@@ -132,6 +157,7 @@ const isFocus = ref(false)
 // 포커스 이벤트
 const onFocus = (e) => {
   isFocus.value = true
+  if (props.displayMask) moveCursorToEnd() //displayMask
   emit('focus', e)
 }
 
@@ -142,6 +168,51 @@ const onBlur = (e) => {
     isFocus.value = false
   }, 100)
   emit('blur', e)
+}
+
+// 키보드 제어
+const handleKeyDown = (e) => {
+  if (props.displayMask) {
+    const forbidden = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']
+    const isSelectAll = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a'
+    if (forbidden.includes(e.key) || isSelectAll) e.preventDefault()
+  }
+}
+// 텍스트 선택 제어
+const handleSelect = (e) => {
+  if (props.displayMask) {
+    // 전체 선택이 일어날 때 강제로 커서를 끝으로 이동시켜 선택을 해제함
+    const len = String(value.value).length
+    e.target.setSelectionRange(len, len)
+  }
+}
+
+// 내부에서 막아도 외부 이벤트 핸들러는 뒤이어 정상 호출됨
+// 마우스 및 UI 제어
+const handleMaskUI = (e) => {
+  if (!props.displayMask) return
+  if (e.type === 'mousedown') {
+    e.preventDefault()
+    inputRef.value?.focus()
+  }
+  moveCursorToEnd()
+}
+// 보안 제어 (copy, cut, paste 통합)
+const handleSecurity = (e) => {
+  if (props.displayMask) {
+    e.preventDefault()
+  }
+}
+
+// displayMask: 커서를 항상 마지막으로 고정
+const moveCursorToEnd = () => {
+  if (!props.displayMask) return
+  nextTick(() => {
+    if (inputRef.value) {
+      const len = String(value.value).length
+      inputRef.value.setSelectionRange(len, len)
+    }
+  })
 }
 
 watch(
@@ -226,6 +297,70 @@ defineExpose({
   position: relative;
   @include flex($v: center) {
     gap: var(--spacing-x4);
+  }
+}
+// props: displayMask 설정시 스타일
+.input-root.has-display-mask {
+  .input-inner {
+    color: transparent !important;
+    caret-color: transparent !important;
+    /* 드래그 및 텍스트 선택 차단 */
+    user-select: none;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
+  }
+  .visual-layer {
+    user-select: none;
+    -webkit-user-select: none;
+
+    position: absolute;
+    inset: 0 var(--spacing-x2);
+    @include flex($v: center);
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    .visual-wrapper {
+      @include flex($v: center) {
+        gap: rem(2px);
+      }
+      width: 100%;
+      min-width: max-content;
+      line-height: var(--line-height-fit);
+      // 텍스트가 길어질 때 왼쪽으로 밀어내는 정렬
+      &[style*='justify-content: flex-start'] {
+        justify-content: flex-end;
+        margin-left: auto;
+      }
+      &[style*='justify-content: center'] {
+        justify-content: center;
+      }
+      &[style*='justify-content: flex-end'] {
+        justify-content: flex-end;
+      }
+      .dot {
+        font-size: var(--font-size-16);
+        color: var(--color-gray-900);
+        flex-shrink: 0;
+      }
+      .placeholder-layer {
+        color: #ccc;
+        white-space: nowrap;
+      }
+      .custom-cursor {
+        flex-shrink: 0;
+        width: rem(1px);
+        height: rem(16px);
+        background-color: var(--color-accent-caret);
+        animation: blink 1.1s step-start infinite;
+      }
+    }
+  }
+}
+// 커서 blink 효과
+@keyframes blink {
+  50% {
+    opacity: 0;
   }
 }
 </style>

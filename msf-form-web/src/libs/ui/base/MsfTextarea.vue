@@ -156,7 +156,7 @@ onUnmounted(() => {
     font-family: inherit;
     font-size: var(--font-size-16);
     font-weight: var(--font-weight-medium);
-    color: var(--color-text-main);
+    color: var(--color-gray-900);
     resize: none;
     &::placeholder {
       color: var(--color-gray-450);

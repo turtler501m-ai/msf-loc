@@ -344,6 +344,8 @@ const rootClasses = computed(() => [
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      color: var(--color-gray-900);
+      font-weight: var(--font-weight-medium);
       &.is-placeholder {
         color: var(--color-gray-900);
       }

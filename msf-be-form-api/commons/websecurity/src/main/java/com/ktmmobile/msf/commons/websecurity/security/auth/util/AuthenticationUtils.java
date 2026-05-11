@@ -25,11 +25,19 @@ public class AuthenticationUtils {
     }
 
     public static String getAgentCode() {
-        return getFormUser().getAgentCode();
+        return getUser().getOrganization().agentCode();
+    }
+
+    public static String getAgentName() {
+        return getUser().getOrganization().agentName();
     }
 
     public static String getShopCode() {
-        return getFormUser().getShopCode();
+        return getUser().getOrganization().shopCode();
+    }
+
+    public static String getShopName() {
+        return getUser().getOrganization().shopName();
     }
 
     public static AdminUser getAdminUser() {

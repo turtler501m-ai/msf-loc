@@ -14,6 +14,7 @@ public record LoginTokenPair(
     String userName,
     String phoneNumber,
     String clientIp,
+    LoginOrganization organization,
     Map<String, Object> attributes,
     List<LoginRequiredAction> requiredActions,
     String accessToken,
@@ -22,7 +23,30 @@ public record LoginTokenPair(
     Instant refreshTokenExpiresAt
 ) {
 
+    public LoginTokenPair(
+        String userId,
+        UserType userType,
+        String userName,
+        String phoneNumber,
+        String clientIp,
+        String agentCode,
+        String agentName,
+        String shopCode,
+        String shopName,
+        Map<String, Object> attributes,
+        List<LoginRequiredAction> requiredActions,
+        String accessToken,
+        String refreshToken,
+        Instant accessTokenExpiresAt,
+        Instant refreshTokenExpiresAt
+    ) {
+        this(userId, userType, userName, phoneNumber, clientIp,
+            new LoginOrganization(agentCode, agentName, shopCode, shopName), attributes, requiredActions,
+            accessToken, refreshToken, accessTokenExpiresAt, refreshTokenExpiresAt);
+    }
+
     public LoginTokenPair {
+        organization = organization == null ? LoginOrganization.empty() : organization;
         attributes = attributes == null ? new LinkedHashMap<>() : new LinkedHashMap<>(attributes);
         requiredActions = requiredActions == null ? new ArrayList<>() : new ArrayList<>(requiredActions);
     }

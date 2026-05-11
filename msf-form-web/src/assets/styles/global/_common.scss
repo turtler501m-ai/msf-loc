@@ -154,8 +154,16 @@
           flex-shrink: 0;
           flex-grow: 0;
           .input-root {
-            min-width: rem(300px);
+            min-width: rem(200px);
           }
+          .send-btn {
+            & > img {
+              filter: brightness(0) invert(1);
+              width: rem(24px);
+              height: rem(24px);
+            }
+          }
+
           // 좁은 기기에서 100%
           @include mobile() {
             flex: 1;
@@ -818,5 +826,11 @@
         }
       }
     }
+  }
+}
+// 주소검색 아이콘 크기 설정
+.empty-icon {
+  & i {
+    font-size: rem(32px);
   }
 }

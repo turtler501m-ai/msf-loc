@@ -1,5 +1,8 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serializable;
 
@@ -8,6 +11,9 @@ import java.io.Serializable;
  * @author bsj
  *
  */
+@Getter
+@Setter
+@NoArgsConstructor
 public class MyShareDataReqDto implements Serializable  {
 
 	private static final long serialVersionUID = 987580018599047263L;
@@ -24,84 +30,5 @@ public class MyShareDataReqDto implements Serializable  {
 	private String name; // 성명
 	private String contractNum; // 계약번호
 	private String selfShareYn; //셀프개통 사전체크 Y , 쉐어링 가입 N
-	public String getCustId() {
-		return custId;
-	}
-	public void setCustId(String custId) {
-		this.custId = custId;
-	}
-	public String getNcn() {
-		return ncn;
-	}
-	public void setNcn(String ncn) {
-		this.ncn = ncn;
-	}
-	public String getCtn() {
-		return ctn;
-	}
-	public void setCtn(String ctn) {
-		this.ctn = ctn;
-	}
-	public String getClntIp() {
-		return clntIp;
-	}
-	public void setClntIp(String clntIp) {
-		this.clntIp = clntIp;
-	}
-	public String getClntUsrId() {
-		return clntUsrId;
-	}
-	public void setClntUsrId(String clntUsrId) {
-		this.clntUsrId = clntUsrId;
-	}
-	public String getOpmdSvcNo() {
-		return opmdSvcNo;
-	}
-	public void setOpmdSvcNo(String opmdSvcNo) {
-		this.opmdSvcNo = opmdSvcNo;
-	}
-	public String getOpmdWorkDivCd() {
-		return opmdWorkDivCd;
-	}
-	public void setOpmdWorkDivCd(String opmdWorkDivCd) {
-		this.opmdWorkDivCd = opmdWorkDivCd;
-	}
-	public String getCrprCtn() {
-		return crprCtn;
-	}
-	public void setCrprCtn(String crprCtn) {
-		this.crprCtn = crprCtn;
-	}
-	public String getBirthday() {
-		return birthday;
-	}
-	public void setBirthday(String birthday) {
-		this.birthday = birthday;
-	}
-	public String getIccId() {
-		return iccId;
-	}
-	public void setIccId(String iccId) {
-		this.iccId = iccId;
-	}
-	public String getSelfShareYn() {
-		return selfShareYn;
-	}
-	public void setSelfShareYn(String selfShareYn) {
-		this.selfShareYn = selfShareYn;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
 
-	public String getContractNum() {
-		return contractNum;
-	}
-
-	public void setContractNum(String contractNum) {
-		this.contractNum = contractNum;
-	}
 }

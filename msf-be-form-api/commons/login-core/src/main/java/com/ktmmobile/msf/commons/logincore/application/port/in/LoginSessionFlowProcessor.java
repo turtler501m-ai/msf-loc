@@ -2,6 +2,7 @@ package com.ktmmobile.msf.commons.logincore.application.port.in;
 
 import java.util.Optional;
 
+import com.ktmmobile.msf.commons.common.data.type.UserType;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResult;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTokenPair;
@@ -30,5 +31,7 @@ public interface LoginSessionFlowProcessor {
 
     LoginTokenPair refresh(String refreshToken);
 
-    void logout(String refreshToken);
+    void logout(UserType userType, String userId);
+
+    void revokeAuthentication(UserType userType, String userId);
 }

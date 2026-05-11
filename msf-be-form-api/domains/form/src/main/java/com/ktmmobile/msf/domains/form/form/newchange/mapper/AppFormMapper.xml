@@ -372,11 +372,11 @@
         FROM DUAL
     </select>-->
 
-    <!--<select id="generateResNo" resultType="java.lang.String">
+    <select id="generateResNo" resultType="java.lang.String">
         SELECT
             SQ_RCP_RES_NO_01.NEXTVAL
         FROM DUAL
-    </select>-->
+    </select>
 
     <!--<insert id="insertMcpRequest" parameterType="com.ktmmobile.mcp.common.dto.db.McpRequestDto" >
         INSERT /*AppformMapper.insertMcpRequest 서식지 정보 저장  */

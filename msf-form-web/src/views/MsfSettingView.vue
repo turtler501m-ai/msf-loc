@@ -62,7 +62,7 @@ onMounted(async () => {
   const initData = {
     uuid: msfUserStore.getDeviceUuid(),
   }
-  post('/api/auth/app/login/init', initData)
+  post('/api/n/app/login/init', initData)
     .then((data) => {
       if (data.code == '0000') {
         appSettings.value = 'V ' + data.data
@@ -106,7 +106,7 @@ const onChangeBio = () => {
   showConfirm(
     '로그인 설정을 변경하시겠습니까?',
     () => {
-      post('/api/auth/app/settingbio/modify', postData)
+      post('/api/n/app/settingbio/modify', postData)
         .then((data) => {
           console.log(data.code)
           if (data.code == '0000') {
@@ -147,7 +147,7 @@ const onClickAppVersion = () => {
     version: '1.1',
     uuid: msfUserStore.getDeviceUuid(),
   }
-  post('/api/auth/app/intro', postData)
+  post('/api/n/app/intro', postData)
     .then((data) => {
       console.log(data.code)
       if (data.code == '0000') {

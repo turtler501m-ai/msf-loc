@@ -5,11 +5,21 @@
       <div class="side-wrap">
         <div class="user-info">
           <router-link to="/setting">
-            <p class="name"><span class="avatar"></span>{{ userInfo?.name }}</p>
+            <p class="name"><span class="avatar"></span>{{ msfUserStore.userInfo?.userName }}</p>
           </router-link>
           <ul class="infos">
-            <li>{{ userInfo?.organization?.code }}</li>
-            <li>{{ userInfo?.organization?.name }}</li>
+            <li>
+              {{
+                msfUserStore.userInfo?.organization?.shopCode ||
+                msfUserStore.userInfo?.organization?.agentCode
+              }}
+            </li>
+            <li>
+              {{
+                msfUserStore.userInfo?.organization?.shopName ||
+                msfUserStore.userInfo?.organization?.agentName
+              }}
+            </li>
           </ul>
         </div>
       </div>
@@ -18,11 +28,17 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
 import { useMsfUserStore } from '@/stores/msf_user'
 
 const msfUserStore = useMsfUserStore()
-const userInfo = msfUserStore.getUserInfo()
-console.log(msfUserStore.getUserInfo())
+
+onMounted(async () => {
+  const userInfo = msfUserStore.getUserInfo()
+  if (!userInfo) {
+    msfUserStore.loadUserInfo()
+  }
+})
 </script>
 
 <style lang="scss" scoped>

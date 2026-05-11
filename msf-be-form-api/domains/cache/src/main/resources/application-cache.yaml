@@ -1,0 +1,29 @@
+#### Common Profile
+
+
+
+---
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local

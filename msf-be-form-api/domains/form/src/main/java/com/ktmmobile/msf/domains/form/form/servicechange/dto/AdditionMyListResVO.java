@@ -1,11 +1,11 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
-import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSocVO;
-import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSocVO;
+import java.util.List;
 /**
  * 이용중 부가서비스 목록 응답 VO
  *

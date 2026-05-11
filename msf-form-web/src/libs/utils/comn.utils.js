@@ -47,7 +47,7 @@ export const getCommonCodeListWithUseAll = async (groupIds, includeDetail = fals
  */
 export const getCommonCodeList = async (groupIds, includeDetail = false, includeAll = false) => {
   const isArray = Array.isArray(groupIds)
-  const res = await post('/api/common-codes/list', {
+  const res = await post('/api/n/common-codes/list', {
     groupIds: isArray ? groupIds : [groupIds],
     includeAll,
     includeDetail,
@@ -81,5 +81,5 @@ export const getFormTypeCode = (routePath) => {
   if (routePath.includes('/form/servicechange')) return '2'
   if (routePath.includes('/form/ownerchange')) return '3'
   if (routePath.includes('/form/termination')) return '4'
-  return ''
+  return '0'
 }

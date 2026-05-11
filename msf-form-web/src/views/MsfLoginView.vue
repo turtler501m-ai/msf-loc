@@ -94,7 +94,7 @@ onMounted(async () => {
   const initData = {
     deviceUuid: formData.deviceUuid,
   }
-  post('/api/auth/app/login/init', initData)
+  post('/api/n/app/login/init', initData)
     .then((data) => {
       console.log('init data:', data.data.apvSttusCd)
       apvSttusCd.value = data.data.apvSttusCd
@@ -114,7 +114,7 @@ const onClickLogin = () => {
     showAlert('비밀번호는 필수 입력 값입니다.')
     return
   }
-  post('/api/auth/login', formData)
+  post('/api/n/auth/login', formData)
     .then(async (data) => {
       if (data.code === '0000') {
         msfUserStore.setUserData(data.data)
@@ -131,7 +131,7 @@ const onClickLogin = () => {
           }
         }
       } else {
-        showAlert(data.message)
+        // showAlert(data.message)
       }
     })
     .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
@@ -142,7 +142,7 @@ const onClickModelRemove = () => {
     uuid: msfUserStore.getDeviceUuid(),
   }
   showConfirm('단말의 사용등록을 승인 철회하시겠습니까?', () => {
-    post('/api/auth/app/model/remove', postData)
+    post('/api/n/app/model/remove', postData)
       .then((data) => {
         console.log('/remove.result.code:', data.code)
         if (data.code === '0000') {

@@ -43,6 +43,7 @@ import { post } from '@/libs/api/msf.api.js'
 
 const props = defineProps({
   modelValue: Boolean,
+  readonly: Boolean,
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])

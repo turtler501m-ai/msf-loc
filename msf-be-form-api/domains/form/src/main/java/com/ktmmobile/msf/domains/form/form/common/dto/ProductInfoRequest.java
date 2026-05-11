@@ -1,24 +1,27 @@
 package com.ktmmobile.msf.domains.form.form.common.dto;
 
-import com.ktmmobile.msf.domains.form.common.code.ReqBuyType;
+import java.util.List;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
+import com.ktmmobile.msf.domains.form.common.code.ReqBuyType;
 
 @Getter
 @Setter
 @NoArgsConstructor
 public class ProductInfoRequest {
 
+    private ReqBuyType plcySctnCd;//REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
+    private ReqBuyType reqBuyTypeCd = ReqBuyType.MOBILE; //REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
+
     private String prdtIndCd;
     private String rprsPrdtId;
     private String modelSalePolicyCode;
-    private String salePlcyCd;
+    //private String salePlcyCd;
     private String salePlcyNm;
     private String prdtSctnCd;
-    private ReqBuyType plcySctnCd;//REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
     private String sprtTp;
     private String orgnId;
     private String searchCategoryId;
@@ -42,12 +45,13 @@ public class ProductInfoRequest {
     private String prdtId;
     private String rateCd;
     private String rateType; //CMN0047 >> 01 : 단말요금제 / 02 : USIM요금제
-    private ReqBuyType reqBuyTypeCd; //REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
 
     private String payClCd; //PAY_CL_CD : 후불(PO)
     private String serviceType; //SERVICE_TYPE : 구분 (P: 요금제)
 
+    private String salePlcyCd = ""; //판매정책 단건
     private List<MspSalePlcyMstInfoDto> listMspSaleDto; //정책코드 목록
+
     private List<CategoryInfoDto> listRateDto; //요금제 목록
     private List<CategoryInfoDto> listPhoneDto; //단말 목록
 

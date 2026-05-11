@@ -23,7 +23,11 @@ public class RequestUtils {
     }
 
     public static String getClientIp() {
-        String ipAddress = getRequest().getRemoteAddr();
+        return getClientIp(getRequest());
+    }
+
+    public static String getClientIp(HttpServletRequest request) {
+        String ipAddress = request.getRemoteAddr();
         if (LOCALHOST_IPV6.equals(ipAddress)) {
             return LOCALHOST_IPV4;
         }

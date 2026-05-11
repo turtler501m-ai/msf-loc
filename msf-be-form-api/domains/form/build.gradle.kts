@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":commons:file"))
 
     implementation(project(":domains:policy"))
-    implementation(project(":domains:commoncode"))
+    implementation(project(":domains:cache"))
     implementation(project(":domains:shared"))
     implementation(project(":commons:login-core"))
 

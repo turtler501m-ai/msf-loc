@@ -15,4 +15,5 @@ public class AdditionApplyReqDto {
     private String ftrNewParam; // 부가정보
     private String prodHstSeq; // 상품이력번호
     private String flag; // "Y": 선해지 후 신청
+    private String svcTgtCd; // 서비스변경 타입 코드 (R11/R12 등)
 }

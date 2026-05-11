@@ -68,25 +68,25 @@ onMounted(() => {
 const onCompleteDeviceAuthNumber = (result) => {
   if (result) {
     formData.complete = result
-    showAlert('인증이 완료되었습니다.', async () => {
-      post('/api/auth/login/session/get', formData).then(async (data) => {
-        msfUserStore.setUserData(data.data)
-        const res = await msfUserStore.checkAuthAction()
-        if (res.message) {
-          showAlert(res.message, () => {
-            if (res.url) {
-              router.push(res.url)
-            }
-          })
-        } else {
+    // showAlert('인증이 완료되었습니다.', async () => {
+    post('/api/n/auth/login/session/get', formData).then(async (data) => {
+      msfUserStore.setUserData(data.data)
+      const res = await msfUserStore.checkAuthAction()
+      if (res.message) {
+        showAlert(res.message, () => {
           if (res.url) {
             router.push(res.url)
           }
+        })
+      } else {
+        if (res.url) {
+          router.push(res.url)
         }
-      })
+      }
     })
+    // })
   } else {
-    showAlert('인증에 실패하였습니다. 인증번호를 다시 확인해주세요.')
+    showAlert('인증번호가 일치하지 않습니다.')
   }
 }
 

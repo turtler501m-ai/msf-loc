@@ -69,6 +69,12 @@ public class FormCommService {
         return newChangeReadMapper.getSmartCustRequestSeq(); //스마트에서 오픈전까지만 임시로 사용
     }
 
+    //SQ_REQUEST_STATE_SEQ 생성 ( MSF_REQUEST_STATE.SQ_REQUEST_STATE_SEQ )
+    public long generateRequestStateSeq() {
+        //return formCommMapper.generateRequestStateSeq();
+        return newChangeReadMapper.generateSmartRequestStateSeq(); //스마트에서 오픈전까지만 임시로 사용
+    }
+
     /**
      * 사용자조직에 해당하는 대리점 조회
      */

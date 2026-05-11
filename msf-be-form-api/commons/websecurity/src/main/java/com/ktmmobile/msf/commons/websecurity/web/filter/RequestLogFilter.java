@@ -19,9 +19,13 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.ktmmobile.msf.commons.websecurity.security.auth.util.IdRoleMdcUtils;
+import com.ktmmobile.msf.commons.common.data.entity.user.MsfUser;
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
+import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.FilterExceptionResponseUtils;
 
 /**
@@ -29,7 +33,6 @@ import com.ktmmobile.msf.commons.websecurity.web.util.response.FilterExceptionRe
  * {@code ServerHttpObservationFilter}보다 나중 순서로 지정해야 함.
  * @see org.springframework.web.filter.ServerHttpObservationFilter
  * @see org.springframework.boot.actuate.autoconfigure.observation.web.servlet.WebMvcObservationAutoConfiguration
- * @see IdRoleMdcUtils
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -37,16 +40,15 @@ import com.ktmmobile.msf.commons.websecurity.web.util.response.FilterExceptionRe
 @Component
 public class RequestLogFilter extends OncePerRequestFilter {
 
-    private static final List<String> EXCLUDED_URL_PATTERNS = List.of(
-        "/favicon.ico"
-    );
+    private static final String MDC_CLIENT_ID = "clientId";
     private static final List<String> LOGGING_HEADER_NAMES = List.of(
         // HttpHeaders.ACCEPT,
         // HttpHeaders.USER_AGENT
     );
 
     private final AuthenticationEntryPoint authenticationEntryPoint;
-
+    private final RequestLogProperties requestLogProperties;
+    private final PathMatcher pathMatcher = new AntPathMatcher();
 
     @Override
     protected void doFilterInternal(
@@ -56,7 +58,7 @@ public class RequestLogFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         long startTime = System.currentTimeMillis();
         try {
-            putIdRoleToMdc(request);
+            putClientIdToMdc(request);
             logRequestBasicInfo(request);
             logRequestHeaderInfo(request);
 
@@ -66,24 +68,36 @@ public class RequestLogFilter extends OncePerRequestFilter {
         } catch (Exception e) {
             FilterExceptionResponseUtils.handle(response, e);
         } finally {
-            putIdRoleToMdc(request);
+            putClientIdToMdc(request);
             long endTime = System.currentTimeMillis();
             long responseTime = endTime - startTime;
             logResponseBasicInfo(request, response, responseTime);
-            clearIdRoleFromMdc();
+            clearMdc();
         }
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String requestUri = request.getRequestURI();
-        AntPathMatcher matcher = new AntPathMatcher();
-        return EXCLUDED_URL_PATTERNS.stream()
-            .anyMatch(p -> matcher.match(p, requestUri));
+        return requestLogProperties.excludeUrlPatterns().stream()
+            .filter(StringUtils::hasText)
+            .anyMatch(pattern -> pathMatcher.match(pattern, requestUri));
     }
 
-    private static void putIdRoleToMdc(HttpServletRequest request) {
-        IdRoleMdcUtils.putIdRoleToMdc(request);
+    private static void putClientIdToMdc(HttpServletRequest request) {
+        MDC.put(MDC_CLIENT_ID, resolveClientId(request));
+    }
+
+    private static String resolveClientId(HttpServletRequest request) {
+        try {
+            MsfUser user = AuthenticationUtils.getUser();
+            if (user != null && StringUtils.hasText(user.getUserId())) {
+                return user.getUserId();
+            }
+        } catch (RuntimeException _) {
+            // 사용자 인증이 되지 않은 경우, Client IP로 Fallback
+        }
+        return RequestUtils.getClientIp(request);
     }
 
     private static void logRequestBasicInfo(HttpServletRequest request) {
@@ -111,7 +125,7 @@ public class RequestLogFilter extends OncePerRequestFilter {
         log.info("[{}][{}] Response {}ms ({})", method, requestUri, responseTime, httpStatus);
     }
 
-    private static void clearIdRoleFromMdc() {
+    private static void clearMdc() {
         MDC.clear();
     }
 }

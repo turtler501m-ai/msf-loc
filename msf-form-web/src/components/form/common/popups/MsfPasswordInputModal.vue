@@ -23,12 +23,15 @@
       </MsfButtonGroup>
     </template>
   </MsfDialog>
+
+  <MsfAppViewerModal v-model="isModalOpen" />
 </template>
 
 <script setup>
 import { ref } from 'vue'
 
 const passwordValue = ref()
+const isModalOpen = ref(false)
 
 const props = defineProps({
   modelValue: Boolean,
@@ -46,7 +49,10 @@ const onClose = () => {
 
 const onConfirm = () => {
   emit('confirm', passwordValue.value)
+  passwordValue.value = ''
   onClose()
+  isModalOpen.value = true
+
 }
 </script>
 

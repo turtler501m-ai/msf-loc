@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.cache.agency.adapter.repository.mybatis.msp.mapper.MspAgencyMapper">
+
+  <select id="selectActiveAgencies" resultType="com.ktmmobile.msf.domains.cache.agency.domain.entity.Agency">
+    SELECT
+      KT_ORG_ID AS ktOrganizationId,
+      ORGN_ID AS organizationId,
+      ORGN_NM AS organizationName,
+      TYPE_CD AS typeCode,
+      ORGN_LVL_CD AS levelCode,
+      HGHR_ORGN_CD AS higherOrganizationCode
+    FROM ORG_ORGN_INFO_MST
+    WHERE ORGN_STAT_CD = '4'
+    --ORDER BY NVL(RVISN_DTTM, REG_DTTM) DESC, REG_DTTM DESC
+  </select>
+
+</mapper>

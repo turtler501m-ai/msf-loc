@@ -1,7 +1,14 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class RateAdsvcGdncBasDTO implements Serializable{
 
     private static final long serialVersionUID = 1L;
@@ -89,192 +96,30 @@ public class RateAdsvcGdncBasDTO implements Serializable{
     /** 카테고리  갯수 */
     private String ctgCnt;
         
-	public int getRateAdsvcGdncSeq() {
-		return rateAdsvcGdncSeq;
-	}
-	public void setRateAdsvcGdncSeq(int rateAdsvcGdncSeq) {
-		this.rateAdsvcGdncSeq = rateAdsvcGdncSeq;
-	}
 	
-	public String getRateAdsvcDivCd() {
-		return rateAdsvcDivCd;
-	}
-	public void setRateAdsvcDivCd(String rateAdsvcDivCd) {
-		this.rateAdsvcDivCd = rateAdsvcDivCd;
-	}
 	
-	public String getRateDivCd() {
-		return rateDivCd;
-	}
-	public void setRateDivCd(String rateDivCd) {
-		this.rateDivCd = rateDivCd;
-	}
 	
-	public String getRateAdsvcDivNm() {
-		return rateAdsvcDivNm;
-	}
-	public void setRateAdsvcDivNm(String rateAdsvcDivNm) {
-		this.rateAdsvcDivNm = rateAdsvcDivNm;
-	}
 	
-	public String getRateAdsvcNm() {
-		return rateAdsvcNm;
-	}
-	public void setRateAdsvcNm(String rateAdsvcNm) {
-		this.rateAdsvcNm = rateAdsvcNm;
-	}
 		
-	public String getRateAdsvcApdNm() {
-		return rateAdsvcApdNm;
-	}
-	public void setRateAdsvcApdNm(String rateAdsvcApdNm) {
-		this.rateAdsvcApdNm = rateAdsvcApdNm;
-	}
 	
-	public String getRateAdsvcBasDesc() {
-		return rateAdsvcBasDesc;
-	}
-	public void setRateAdsvcBasDesc(String rateAdsvcBasDesc) {
-		this.rateAdsvcBasDesc = rateAdsvcBasDesc;
-	}
 	
-	public String getRateAdsvcImgNm() {
-		return rateAdsvcImgNm;
-	}
-	public void setRateAdsvcImgNm(String rateAdsvcImgNm) {
-		this.rateAdsvcImgNm = rateAdsvcImgNm;
-	}
 	
-	public String getMmBasAmtDesc() {
-		return mmBasAmtDesc;
-	}
-	public void setMmBasAmtDesc(String mmBasAmtDesc) {
-		this.mmBasAmtDesc = mmBasAmtDesc;
-	}
 	
-	public String getMmBasAmtVatDesc() {
-		return mmBasAmtVatDesc;
-	}
-	public void setMmBasAmtVatDesc(String mmBasAmtVatDesc) {
-		this.mmBasAmtVatDesc = mmBasAmtVatDesc;
-	}
 	
-	public String getPromotionAmtDesc() {
-		return promotionAmtDesc;
-	}
-	public void setPromotionAmtDesc(String promotionAmtDesc) {
-		this.promotionAmtDesc = promotionAmtDesc;
-	}
 	
-	public String getPromotionAmtVatDesc() {
-		return promotionAmtVatDesc;
-	}
-	public void setPromotionAmtVatDesc(String promotionAmtVatDesc) {
-		this.promotionAmtVatDesc = promotionAmtVatDesc;
-	}
 	
-	public String getContractAmtVatDesc() {
-		return contractAmtVatDesc;
-	}
-	public void setContractAmtVatDesc(String contractAmtVatDesc) {
-		this.contractAmtVatDesc = contractAmtVatDesc;
-	}
-	public String getRateDiscntAmtVatDesc() {
-		return rateDiscntAmtVatDesc;
-	}
-	public void setRateDiscntAmtVatDesc(String rateDiscntAmtVatDesc) {
-		this.rateDiscntAmtVatDesc = rateDiscntAmtVatDesc;
-	}
-	public String getSeniorDiscntAmtVatDesc() {
-		return seniorDiscntAmtVatDesc;
-	}
-	public void setSeniorDiscntAmtVatDesc(String seniorDiscntAmtVatDesc) {
-		this.seniorDiscntAmtVatDesc = seniorDiscntAmtVatDesc;
-	}
 	
-	public String getGdncFileNm() {
-		return gdncFileNm;
-	}
-	public void setGdncFileNm(String gdncFileNm) {
-		this.gdncFileNm = gdncFileNm;
-	}
 	
-	public String getUseYn() {
-		return useYn;
-	}
-	public void setUseYn(String useYn) {
-		this.useYn = useYn;
-	}
 	
-	public String getPstngStartDate() {
-		return pstngStartDate;
-	}
-	public void setPstngStartDate(String pstngStartDate) {
-		this.pstngStartDate = pstngStartDate;
-	}
 	
-	public String getPstngEndDate() {
-		return pstngEndDate;
-	}
-	public void setPstngEndDate(String pstngEndDate) {
-		this.pstngEndDate = pstngEndDate;
-	}
 	
-	public String getCretIp() {
-		return cretIp;
-	}
-	public void setCretIp(String cretIp) {
-		this.cretIp = cretIp;
-	}
 	
-	public String getCretDt() {
-		return cretDt;
-	}
-	public void setCretDt(String cretDt) {
-		this.cretDt = cretDt;
-	}
 	
-	public String getCretId() {
-		return cretId;
-	}
-	public void setCretId(String cretId) {
-		this.cretId = cretId;
-	}
 	
-	public String getAmdIp() {
-		return amdIp;
-	}
-	public void setAmdIp(String amdIp) {
-		this.amdIp = amdIp;
-	}
 	
-	public String getAmdDt() {
-		return amdDt;
-	}
-	public void setAmdDt(String amdDt) {
-		this.amdDt = amdDt;
-	}
 	
-	public String getAmdId() {
-		return amdId;
-	}
-	public void setAmdId(String amdId) {
-		this.amdId = amdId;
-	}
 	
-	public String getModIu() {
-		return modIu;
-	}
-	public void setModIu(String modIu) {
-		this.modIu = modIu;
-	}
 	
-	public int getRownum() {
-		return rownum;
-	}
-	public void setRownum(int rownum) {
-		this.rownum = rownum;
-	}
 	
 	public int getPageNo() {
 		return pageNo;
@@ -283,66 +128,12 @@ public class RateAdsvcGdncBasDTO implements Serializable{
 		this.pageNo = pageNo;
 	}
 	
-	public int getPagingStartNo() {
-		return pagingStartNo;
-	}
-	public void setPagingStartNo(int pagingStartNo) {
-		this.pagingStartNo = pagingStartNo;
-	}
 	
-	public int getPagingEndNo() {
-		return pagingEndNo;
-	}
-	public void setPagingEndNo(int pagingEndNo) {
-		this.pagingEndNo = pagingEndNo;
-	}
 	
-	public String getDupYn() {
-		return dupYn;
-	}
-	public void setDupYn(String dupYn) {
-		this.dupYn = dupYn;
-	}
 	
-	public String getCtgCnt() {
-		return ctgCnt;
-	}
-	public void setCtgCnt(String ctgCnt) {
-		this.ctgCnt = ctgCnt;
-	}
 	
-	public int getPagingSize() {
-		return pagingSize;
-	}
-	public void setPagingSize(int pagingSize) {
-		this.pagingSize = pagingSize;
-	}
 	
-	public String getSearchRrateAdsvcDivCd() {
-		return searchRrateAdsvcDivCd;
-	}
-	public void setSearchRrateAdsvcDivCd(String searchRrateAdsvcDivCd) {
-		this.searchRrateAdsvcDivCd = searchRrateAdsvcDivCd;
-	}
 	
-	public String getSearchRateAdsvcCtgCd1() {
-		return searchRateAdsvcCtgCd1;
-	}
-	public void setSearchRateAdsvcCtgCd1(String searchRateAdsvcCtgCd1) {
-		this.searchRateAdsvcCtgCd1 = searchRateAdsvcCtgCd1;
-	}
 	
-	public String getSearchRateAdsvcCtgCd2() {
-		return searchRateAdsvcCtgCd2;
-	}
-	public void setSearchRateAdsvcCtgCd2(String searchRateAdsvcCtgCd2) {
-		this.searchRateAdsvcCtgCd2 = searchRateAdsvcCtgCd2;
-	}
 	
-	public String getSearchInput() {
-		return searchInput;
-	}
-	public void setSearchInput(String searchInput) {
-		this.searchInput = searchInput;
-	}
 }

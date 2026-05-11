@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.commons.common.pagination.Page;
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.PagedDataResponse;
 import com.ktmmobile.msf.domains.form.extra.tempsave.application.dto.TempSavePageCondition;
 import com.ktmmobile.msf.domains.form.extra.tempsave.application.dto.TempSavePageListResponse;
@@ -22,8 +23,9 @@ public class TempSavePageService implements TempSavePageReader, TempSavePageWrit
     private final TempSavePageRepository tempSavePageRepository;
     private final TempSavePageFieldMapper tempSavePageFieldMapper;
 
-    @Override public PagedDataResponse<TempSavePageListResponse> getTempSaveList(TempSavePageCondition condition) {
-        log.debug("condition:{}", condition);
+    @Override
+    public PagedDataResponse<TempSavePageListResponse> getTempSaveList(TempSavePageCondition condition) {
+        log.debug("condition:{}, userId:{}", condition, AuthenticationUtils.getUser().getUserId());
         Page<TempSaveVo> page = tempSavePageRepository.selectTempSaveList(condition);
         return PagedDataResponse.of(page, tempSavePageFieldMapper::toTempSavePageListResponse);
     }

@@ -14,18 +14,23 @@
           />
           <MsfStack type="field">
             <MsfNumberInput
+              ref="moveMobileNo1Ref"
               v-model="model.moveMobileNo1"
               placeholder="앞자리"
               maxlength="3"
+              @maxlength="moveMobileNo2Ref?.focus()"
             />
             <span class="unit-sep">-</span>
             <MsfNumberInput
+              ref="moveMobileNo2Ref"
               v-model="model.moveMobileNo2"
               placeholder="가운데 4자리"
               maxlength="4"
+              @maxlength="moveMobileNo3Ref?.focus()"
             />
             <span class="unit-sep">-</span>
             <MsfNumberInput
+              ref="moveMobileNo3Ref"
               v-model="model.moveMobileNo3"
               placeholder="뒤 4자리"
               maxlength="4"
@@ -51,10 +56,13 @@
           <MsfButton
             variant="subtle"
             @click="handlePreAuth"
-            v-if="!store.authFlags?.moveAuthTypeCd"
+            v-if="!isRequested && !store.authFlags?.moveAuthTypeCd"
             :disabled="!isPhoneReady || !model.moveCompanyCd || !model.moveAuthTypeCd || !model.moveAuthNo"
           >번호이동 사전동의</MsfButton>
-          <template v-else>
+          <template v-else-if="store.authFlags?.moveAuthTypeCd">
+             <MsfButton variant="subtle" disabled>사전동의 완료</MsfButton>
+          </template>
+          <template v-else-if="isRequested">
             <MsfButton variant="subtle" @click="handleCheckAgree">사전동의 결과조회</MsfButton>
             <MsfButton variant="subtle" @click="handlePayOpn">납부주장</MsfButton>
           </template>
@@ -91,14 +99,13 @@
   </div>
 </template>
 <script setup>
-import { ref, defineModel, defineProps, computed, onMounted } from 'vue'
-import { useAuthButton } from '@/hooks/useAuthButton'
+import { ref, defineModel, defineProps, computed, onMounted, watch } from 'vue'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import MsfMnpAuthFailModal from './popups/MsfMnpAuthFailModal.vue'
 import { post } from '@/libs/api/msf.api'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 
-const props = defineProps({
+defineProps({
   title: { type: String, default: '번호이동 할 전화번호' },
 })
 const model = defineModel('modelValue', { type: Object, required: true })
@@ -110,6 +117,7 @@ const moveMobileNo2Ref = ref(null)
 const moveMobileNo3Ref = ref(null)
 
 const isFailModalOpen = ref(false)
+const isRequested = ref(false)
 
 const authInputPlaceholder = computed(() => {
   switch (model.value?.moveAuthTypeCd) {
@@ -154,7 +162,9 @@ const handlePreAuth = async () => {
     // 번호이동 사전동의 실패 시 전용 팝업을 띄워야 하므로 silent: true 처리
     const res = await post('/api/form/newchange/reqNpPreCheck', payload, { silent: true })
     if (res && res.code === '0000' && res.data?.resCode === '0000') {
-      if (store.authFlags) store.authFlags.moveAuthTypeCd = true
+      // 요청 성공 시 '결과조회' 버튼들이 나오도록 상태 변경
+      isRequested.value = true
+      alert('번호이동 사전동의 요청이 완료되었습니다. 문자 수신 후 동의를 완료해 주세요.')
     } else {
       isFailModalOpen.value = true
     }
@@ -181,12 +191,26 @@ const handleCheckAgree = async () => {
   }
 
   try {
-    await post('/api/form/newchange/reqNpAgree', payload)
+    const res = await post('/api/form/newchange/reqNpAgree', payload, { silent: true })
+    // resCode가 '0000'이면 번호이동 사전동의 최종 완료 처리
+    if (res && res.code === '0000' && res.data?.resCode === '0000') {
+      if (store.authFlags) store.authFlags.moveAuthTypeCd = true
+      alert('번호이동 사전동의가 완료되었습니다.')
+    } else {
+      // 결과조회에서도 실패(아직 동의 안함 등) 시 실패 팝업 노출
+      isFailModalOpen.value = true
+    }
   } catch (error) {
     console.error('Check agree error:', error)
+    isFailModalOpen.value = true
   }
 }
 
+/**
+ * 납부주장 (Payment Claim) 처리
+ * 이전 통신사 미납 등으로 인해 사전동의가 안될 때, 
+ * 고객이 이미 납부했음을 주장하여 번호이동을 강제로 진행할 수 있게 요청하는 절차
+ */
 const handlePayOpn = async () => {
   const payload = {
     requestKey: store.applicationKey,
@@ -201,23 +225,24 @@ const handlePayOpn = async () => {
   }
 }
 
-const transferAuthBtn = useAuthButton(
+// 데이터 변경 시 인증 상태 초기화
+watch(
   () => [
-    model.value?.transferAuth,
-    model.value?.transferAuthNum,
-    model.value?.transferBankNum,
-    model.value?.transferCardNum,
+    model.value.moveCompanyCd,
+    model.value.moveMobileNo1,
+    model.value.moveMobileNo2,
+    model.value.moveMobileNo3,
+    model.value.moveAuthTypeCd,
+    model.value.moveAuthNo,
   ],
-  {
-    get value() {
-      return store.authFlags?.transferAuth || false
-    },
-    set value(v) {
-      if (store.authFlags) {
-        store.authFlags.moveAuthTypeCd = v
-      }
-    },
+  () => {
+    // 값이 하나라도 바뀌면 사전동의 요청 상태와 완료 상태 모두 초기화
+    isRequested.value = false
+    if (store.authFlags) {
+      store.authFlags.moveAuthTypeCd = false
+    }
   },
+  { deep: true },
 )
 
 onMounted(async () => {

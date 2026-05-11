@@ -138,6 +138,7 @@ const onDatePickerSelect = (selectedDate /*, maskRef*/) => {
     --dp-input-side-padding: #{rem(16px)};
     --dp-input-side-icon-size: #{rem(24px)}; // 캘린더 디테일 사이즈
     --dp-cell-size: #{rem(40px)};
+    --dp-text-color: var(--color-gray-900);
   }
   :deep(.dp__input_wrap) {
     min-width: rem(300px);

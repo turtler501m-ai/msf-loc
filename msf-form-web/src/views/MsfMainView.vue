@@ -19,24 +19,6 @@
   <!-- 팝업목록: 개발시 새로운 파일명으로 생성하여 사용 -->
 </template>
 
-<script setup>
-import { onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useMsfAppStore } from '@/stores/msf_app'
-import { useMsfUserStore } from '@/stores/msf_user'
-
-const route = useRoute()
-const msfAppStore = useMsfAppStore()
-const msfUserStore = useMsfUserStore()
-// 타이틀 클릭 라우터 이동
-const router = useRouter()
-
-onMounted(() => {
-  if (!route.meta.skipAuth && msfAppStore.showFirst && !msfUserStore.token) {
-    msfAppStore.setShowFirst(false)
-    router.push('/login')
-  }
-})
-</script>
+<script setup></script>
 
 <style lang="scss" scoped></style>

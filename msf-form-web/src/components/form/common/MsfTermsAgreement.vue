@@ -2,10 +2,10 @@
   <div>
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
-      <MsfFormGroup label="고객 안내 사항" tag="div" required>
+      <MsfFormGroup label="" tag="div" required>
         <!-- 동적으로 약관 목록을 렌더링 -->
         <MsfAgreementGroup
-          policy="CLAUSE_FORM_01"
+          :policy="props.policy"
           ref="agreementRef"
           :specTerms="props.specTerms"
           v-model="model.termsAgreed"
@@ -25,6 +25,7 @@ const props = defineProps({
   title: { type: String, default: '약관 동의' },
   description: { type: String, default: '' },
   required: { type: Boolean, default: false },
+  policy: { type: String, default: 'CLAUSE_FORM_01' },
   specTerms: {
     type: Array,
     default: () => [
@@ -97,5 +98,15 @@ const validate = () => {
   return isValid
 }
 
-defineExpose({ validate })
+const setAllChecked = () => {
+  if (!props.specTerms?.length) return
+  const allChecked = props.specTerms.map((term) => ({
+    code: term.code || term.value,
+    required: term.required,
+    checked: true,
+  }))
+  handleChecked(allChecked)
+}
+
+defineExpose({ validate, setAllChecked })
 </script>

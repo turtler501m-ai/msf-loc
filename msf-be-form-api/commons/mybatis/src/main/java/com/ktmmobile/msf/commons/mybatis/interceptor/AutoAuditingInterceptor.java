@@ -155,21 +155,65 @@ public class AutoAuditingInterceptor implements Interceptor {
             String auditCols = "cret_dt, cret_id, cret_ip, amd_dt, amd_id, amd_ip";
             String auditVals = String.format("NOW(), '%s', '%s', NOW(), '%s', '%s'", modifier, ip, modifier, ip);
 
-            // Case 1: INSERT INTO ... (cols) VALUES (vals)
+            // Case 1: INSERT INTO ... (cols) VALUES (vals), (vals) ...
             Pattern valuesPattern = Pattern.compile("\\)\\s*VALUES\\s*\\(", Pattern.CASE_INSENSITIVE);
             Matcher valuesMatcher = valuesPattern.matcher(sql);
             if (valuesMatcher.find()) {
                 int insertColsEnd = valuesMatcher.start();
-                int valuesStart = valuesMatcher.end();
+                int valuesPartStart = valuesMatcher.end();
 
-                String beforeValues = sql.substring(0, insertColsEnd);
-                String afterValues = sql.substring(valuesStart);
+                StringBuilder sb = new StringBuilder();
+                sb.append(sql, 0, insertColsEnd).append(", ").append(auditCols).append(") VALUES (");
 
-                int lastParenIdx = afterValues.lastIndexOf(")");
-                if (lastParenIdx != -1) {
-                    return beforeValues + ", " + auditCols + ") VALUES (" + afterValues.substring(0,
-                        lastParenIdx) + ", " + auditVals + afterValues.substring(lastParenIdx);
+                String valuesContent = sql.substring(valuesPartStart);
+                int depth = 1; // 첫 번째 '(' 내부
+                for (int i = 0; i < valuesContent.length(); i++) {
+                    char c = valuesContent.charAt(i);
+                    if (c == '(') {
+                        depth++;
+                        sb.append(c);
+                    } else if (c == ')') {
+                        depth--;
+                        if (depth == 0) {
+                            // 하나의 행(row)이 끝남
+                            sb.append(", ").append(auditVals).append(")");
+
+                            // 다음 행이 있는지 확인 (multi-row insert)
+                            int nextRowStart = -1;
+                            for (int j = i + 1; j < valuesContent.length(); j++) {
+                                char nc = valuesContent.charAt(j);
+                                if (nc == ',') {
+                                    // 콤마 발견, 다음 '(' 찾기
+                                    for (int k = j + 1; k < valuesContent.length(); k++) {
+                                        char nnc = valuesContent.charAt(k);
+                                        if (nnc == '(') {
+                                            sb.append(", (");
+                                            i = k;
+                                            depth = 1;
+                                            nextRowStart = k;
+                                            break;
+                                        } else if (!Character.isWhitespace(nnc)) {
+                                            break;
+                                        }
+                                    }
+                                    if (nextRowStart != -1) break;
+                                } else if (!Character.isWhitespace(nc)) {
+                                    break;
+                                }
+                            }
+                            if (nextRowStart == -1) {
+                                // 더 이상 행이 없음, 나머지 부분(공백, 세미콜론 등) 추가
+                                sb.append(valuesContent.substring(i + 1));
+                                break;
+                            }
+                        } else {
+                            sb.append(c);
+                        }
+                    } else {
+                        sb.append(c);
+                    }
                 }
+                return sb.toString();
             }
 
             // Case 2: INSERT INTO ... (cols) SELECT ...

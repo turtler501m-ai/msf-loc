@@ -15,21 +15,6 @@ watchEffect(() => {
   <!-- 휴대폰 및 요금제 정보 -->
   <MsfTitleArea title="휴대폰 및 요금제 정보" />
   <MsfStack vertical type="formgroups">
-    <MsfFormGroup
-      v-if="!(formData.productType === 'MM' && formData.joinType === 'HDN3')"
-      label="개통 유형"
-      tag="div"
-      required
-    >
-      <MsfChip
-        v-model="formData.openTypeCd"
-        name="inp-openTypeCd"
-        :data="[
-          { value: 'openingType1', label: '휴대폰' },
-          { value: 'openingType2', label: 'eSIM' },
-        ]"
-      />
-    </MsfFormGroup>
     <MsfFormGroup label="휴대폰" tag="div" required>
       <MsfSelect
         title="휴대폰"

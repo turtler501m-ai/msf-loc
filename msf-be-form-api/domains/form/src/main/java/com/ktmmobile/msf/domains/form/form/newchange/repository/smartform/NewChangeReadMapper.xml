@@ -11,7 +11,7 @@
 
   <select id="generateSmartRequestKey" resultType="java.lang.Long">
     SELECT NEXTVAL('SQ_REQUEST_KEY')
-<!--    SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_REQUEST_KEY')::TEXT, 5, '0'))-->
+    <!--    SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_REQUEST_KEY')::TEXT, 5, '0'))-->
   </select>
 
   <select id="getSmartCustRequestSeq" resultType="java.lang.Long">
@@ -19,9 +19,14 @@
     SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_NFL_CHG_TRNS_SEQ')::TEXT, 5, '0'))
   </select>
 
-    <select id="getMsfResNo" resultType="java.lang.String" parameterType="java.lang.Long">
-        SELECT RES_NO FROM MSF_REQUEST_TEMP WHERE REQUEST_KEY = #{requestKey}
-    </select>
+  <select id="getMsfResNo" resultType="java.lang.String" parameterType="java.lang.Long">
+      SELECT RES_NO FROM MSF_REQUEST_TEMP WHERE REQUEST_KEY = #{requestKey}
+  </select>
+
+  <select id="generateSmartRequestStateSeq" resultType="java.lang.Long">
+    SELECT NEXTVAL('SQ_REQUEST_STATE_SEQ')
+    <!--SELECT ( TO_CHAR(NOW(), 'YYYYMMDD') || LPAD(NEXTVAL('SQ_REQUEST_STATE_SEQ')::TEXT, 5, '0'))-->
+  </select>
 
 
   <select id="selectMsfRequestInfo" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
@@ -34,7 +39,6 @@
           , A.SERVICE_TYPE_CD
           , A.OPER_TYPE_CD
           , A.CSTMR_TYPE_CD
-          , A.TMP_STEP_CD
           , A.IDENTITY_CERT_TYPE_CD
           , A.KNOTE_IDENTITY_SCAN_CSTMR_NM
           , A.KNOTE_IDENTITY_ESS_NO
@@ -137,7 +141,17 @@
           , A.FILE_MASK_NM
           , A.FAX_YN
           , A.FAX_NO
-        FROM MSF_REQUEST_TEMP A
+          <if test='"Y".equals(tempYn)'>
+          , A.TMP_STEP_CD
+          </if>
+          <choose>
+            <when test='"Y".equals(tempYn)'>
+              FROM MSF_REQUEST_TEMP A
+            </when>
+            <otherwise>
+              FROM MSF_REQUEST A
+            </otherwise>
+          </choose>
         WHERE A.REQUEST_KEY = #{requestKey}
   </select>
 
@@ -323,7 +337,15 @@
         WHERE REQUEST_KEY = #{requestKey}
     </select>
 
-
+    <select id="checkFormUser" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
+            resultType="java.lang.Integer">
+      SELECT COUNT(*)
+      FROM MSF_REQUEST_TEMP
+      WHERE REQUEST_KEY = #{requestKey}
+        AND MANAGER_CD = #{managerCd}
+        AND AGENT_CD = #{agentCd}
+        AND SHOP_CD = #{shopCd}
+    </select>
 
 
 </mapper>

@@ -3,16 +3,29 @@
     <h2 class="ut-blind">하단 메뉴</h2>
     <ul class="bottom-list">
       <MsfBottomNavItem v-for="menu in menuStore.menus" :key="menu.id" :item="menu" />
-      <li><MsfButton iconOnly="logout" class="logout-btn">로그아웃</MsfButton></li>
+      <li>
+        <MsfButton iconOnly="logout" class="logout-btn" @click="onClickLogout">로그아웃</MsfButton>
+      </li>
     </ul>
   </aside>
 </template>
 
 <script setup>
-import { MsfBottomNavItem } from '@/components/layouts'
+import { useRouter } from 'vue-router'
+import { useMsfUserStore } from '@/stores/msf_user'
 import { useMsfMenuStore } from '@/stores/msf_menu' // 메뉴
+import { post } from '@/libs/api/msf.api'
 
+const router = useRouter()
+const userStore = useMsfUserStore()
 const menuStore = useMsfMenuStore()
+
+const onClickLogout = () => {
+  post('/api/auth/logout').then(() => {
+    userStore.clearUserInfo()
+    router.push('/login')
+  })
+}
 </script>
 
 <style lang="scss" scoped>

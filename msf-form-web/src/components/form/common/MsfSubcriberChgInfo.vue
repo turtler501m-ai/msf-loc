@@ -214,9 +214,10 @@ const handleDeviceChgVerify = async () => {
       data: res?.data,
     })
 
-    const contractNum = res?.data?.contractNum || res?.data?.contract_num || res?.data?.ncn
+    const authData = res?.data?.resData || res?.data || {}
+    const contractNum = authData.contractNum || authData.contract_num || authData.ncn
     const lstComActvDate =
-        res?.data?.lstComActvDate || res?.data?.lst_com_actv_date || res?.data?.initActivationDate || ''
+        authData.lstComActvDate || authData.lst_com_actv_date || authData.initActivationDate || ''
 
     if (res?.code !== '0000' || !contractNum) {
       console.warn(`${getLogPrefix('휴대폰인증')} 진행 중단`, {
@@ -229,7 +230,11 @@ const handleDeviceChgVerify = async () => {
     }
 
     model.value.contractNum = contractNum
+    model.value.ncn = contractNum
+    model.value.custId = authData.customerId || authData.customer_id || model.value.custId || ''
     model.value.lstComActvDate = lstComActvDate
+    if (authData.customerLinkName) model.value.cstmrNm = authData.customerLinkName
+    if (authData.gender) model.value.userGender = authData.gender
 
     let myinfoResult = null
     if (isTerminationForm.value) {

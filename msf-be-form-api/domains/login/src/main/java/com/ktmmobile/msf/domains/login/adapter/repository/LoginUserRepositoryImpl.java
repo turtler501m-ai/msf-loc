@@ -13,6 +13,8 @@ import com.ktmmobile.msf.commons.logincore.application.port.out.LoginUserFinder;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginUserInfo;
 import com.ktmmobile.msf.commons.logincore.domain.entity.LoginUser;
+import com.ktmmobile.msf.domains.cache.agency.application.port.in.AgencyCacheReader;
+import com.ktmmobile.msf.domains.cache.agency.domain.dto.AgencyCache;
 import com.ktmmobile.msf.domains.login.adapter.repository.mybatis.smartform.mapper.LoginUserMapper;
 import com.ktmmobile.msf.domains.login.adapter.repository.mybatis.smartform.mapper.row.FormLoginUserInfoRow;
 import com.ktmmobile.msf.domains.login.adapter.repository.mybatis.smartform.mapper.row.FormLoginUserRow;
@@ -26,6 +28,7 @@ import com.ktmmobile.msf.domains.login.domain.code.UserStatusCode;
 public class LoginUserRepositoryImpl implements LoginUserFinder<LoginCredential> {
 
     private final LoginUserMapper loginUserMapper;
+    private final AgencyCacheReader agencyCacheReader;
 
     @Override
     public Optional<LoginUser> findByCredential(LoginCredential credential) {
@@ -87,17 +90,32 @@ public class LoginUserRepositoryImpl implements LoginUserFinder<LoginCredential>
             row.mobileNo(),
             UserType.FORM_USER,
             null,
-            attributes(row, deviceAuthCompleted, deviceUuid)
+            valueOrEmpty(row.agentCd()),
+            organizationName(row.agentCd()),
+            valueOrEmpty(row.shopCd()),
+            organizationName(row.shopCd()),
+            attributes(deviceAuthCompleted, deviceUuid)
         );
     }
 
-    private Map<String, Object> attributes(FormLoginUserInfoRow row, boolean deviceAuthCompleted, String deviceUuid) {
+    private Map<String, Object> attributes(boolean deviceAuthCompleted, String deviceUuid) {
         Map<String, Object> attributes = new LinkedHashMap<>();
         attributes.put(LoginUserInfoAttribute.DEVICE_AUTH_COMPLETED.key(), deviceAuthCompleted);
         putIfNotNull(attributes, LoginUserInfoAttribute.DEVICE_UUID.key(), deviceUuid);
-        putIfNotNull(attributes, LoginUserInfoAttribute.AGENT_CODE.key(), row.agentCd());
-        putIfNotNull(attributes, LoginUserInfoAttribute.SHOP_CODE.key(), row.shopCd());
         return attributes;
+    }
+
+    private String organizationName(String organizationId) {
+        if (organizationId == null || organizationId.isBlank()) {
+            return "";
+        }
+        return agencyCacheReader.getAgency(organizationId)
+            .map(AgencyCache::organizationName)
+            .orElse("");
+    }
+
+    private String valueOrEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private void putIfNotNull(Map<String, Object> attributes, String key, Object value) {

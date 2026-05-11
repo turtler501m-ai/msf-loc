@@ -16,6 +16,16 @@ public class NewChangeRequest {
 
     //boolean isSaved; //고객스텝 저장 완료 여부
     //boolean isVerified; //인증 완료 여부
-    private String msfRequestKey;
-    private Long requestKey;
+    String msfRequestKey;
+
+    //@NotBlank
+    Long requestKey;
+
+    String tempYn; //임시저장 테이블을 검색할지 원천 테이블을 검색할지 구분
+    String reqBuyTypeCd; //휴대폰인 경우 MM, USIM 인 경우 UU
+
+    String managerCd; //로그인 사용자
+    String agentCd; //대리점코드
+    String shopCd; //판매점코드
+
 }

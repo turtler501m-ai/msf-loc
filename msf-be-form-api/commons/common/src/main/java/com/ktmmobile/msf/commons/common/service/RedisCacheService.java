@@ -5,9 +5,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,6 +30,8 @@ import com.ktmmobile.msf.commons.common.utils.cache.CacheUtils;
 public class RedisCacheService<T> implements CacheService<T> {
 
     private static final int REDIS_SCAN_COUNT = 100;
+    private static final int REDIS_HASH_WRITE_BATCH_SIZE = 500;
+
     private static final RedisScript<Long> DELETE_IF_VALUE_EQUALS_SCRIPT = new DefaultRedisScript<>(
         """
             if redis.call('get', KEYS[1]) == ARGV[1] then
@@ -79,14 +83,53 @@ public class RedisCacheService<T> implements CacheService<T> {
 
     @Override
     public void setValues(String key, Map<String, T> values) {
-        redisTemplate.opsForHash().putAll(getRealKey(key), values);
+        putAllInBatches(getRealKey(key), values);
     }
 
     @Override
     public void setValues(String key, Map<String, T> values, Duration timeout) {
         String realKey = getRealKey(key);
-        redisTemplate.opsForHash().putAll(realKey, values);
+        putAllInBatches(realKey, values);
         expire(realKey, timeout);
+    }
+
+    @Override
+    public void setValue(String key, String hashKey, T value) {
+        redisTemplate.opsForHash().put(getRealKey(key), hashKey, value);
+    }
+
+    @Override
+    public void setValue(String key, String hashKey, T value, Duration timeout) {
+        String realKey = getRealKey(key);
+        redisTemplate.opsForHash().put(realKey, hashKey, value);
+        expire(realKey, timeout);
+    }
+
+    @Override
+    public void replaceValues(String key, Map<String, T> values) {
+        replaceValues(key, values, null);
+    }
+
+    @Override
+    public void replaceValues(String key, Map<String, T> values, Duration timeout) {
+        String realKey = getRealKey(key);
+        if (values.isEmpty()) {
+            redisTemplate.delete(realKey);
+            return;
+        }
+
+        String temporaryKey = realKey + ":tmp:replace:" + UUID.randomUUID();
+        try {
+            redisTemplate.delete(temporaryKey);
+            putAllInBatches(temporaryKey, values);
+            if (timeout != null) {
+                expire(temporaryKey, timeout);
+            }
+            redisTemplate.rename(temporaryKey, realKey);
+        } catch (RuntimeException ex) {
+            redisTemplate.delete(temporaryKey);
+            throw ex;
+        }
     }
 
     @Override
@@ -98,6 +141,12 @@ public class RedisCacheService<T> implements CacheService<T> {
     public T getValue(String key, String hashKey) {
         HashOperations<String, String, T> operations = redisTemplate.opsForHash();
         return operations.get(getRealKey(key), hashKey);
+    }
+
+    @Override
+    public Map<String, T> getEntries(String key) {
+        HashOperations<String, String, T> operations = redisTemplate.opsForHash();
+        return operations.entries(getRealKey(key));
     }
 
     @Override
@@ -226,6 +275,29 @@ public class RedisCacheService<T> implements CacheService<T> {
             }
         }
         return keys;
+    }
+
+    private void putAllInBatches(String realKey, Map<String, T> values) {
+        putAllInBatches(redisTemplate, realKey, values);
+    }
+
+    private void putAllInBatches(RedisTemplate<String, T> redisTemplate, String realKey, Map<String, T> values) {
+        if (values.isEmpty()) {
+            return;
+        }
+
+        Map<String, T> batch = LinkedHashMap.newLinkedHashMap(REDIS_HASH_WRITE_BATCH_SIZE);
+        for (Map.Entry<String, T> entry: values.entrySet()) {
+            batch.put(entry.getKey(), entry.getValue());
+            if (batch.size() >= REDIS_HASH_WRITE_BATCH_SIZE) {
+                redisTemplate.opsForHash().putAll(realKey, batch);
+                batch.clear();
+            }
+        }
+
+        if (!batch.isEmpty()) {
+            redisTemplate.opsForHash().putAll(realKey, batch);
+        }
     }
 
     private long incrementByRealKey(String realKey, long delta) {

@@ -45,13 +45,27 @@ const paidVasOptions = ref([])
 
 // 통합 저장용 배열 생성 로직
 watch(
-  () => [model.value.reqAdditionListNm, model.value.addtionId],
-  ([free, paid]) => {
+  () => [model.value.reqAdditionListNm, model.value.addtionId, freeVasOptions.value, paidVasOptions.value],
+  ([free, paid, freeOpts, paidOpts]) => {
     const combined = [
-      ...(free || []).map((id) => ({ prodId: id })),
-      ...(paid || []).map((id) => ({ prodId: id })),
+      ...(free || []).map((id) => {
+        const opt = freeOpts.find((o) => o.value === id)
+        return {
+          additionId: id,
+          additionNm: opt ? opt.additionNm : '',
+          rantal: opt ? Number(opt.rantal || 0) : 0,
+        }
+      }),
+      ...(paid || []).map((id) => {
+        const opt = paidOpts.find((o) => o.value === id)
+        return {
+          additionId: id,
+          additionNm: opt ? opt.additionNm : '',
+          rantal: opt ? Number(opt.rantal || 0) : 0,
+        }
+      }),
     ]
-    model.value.reqAdditionList = combined
+    model.value.additionList = combined
   },
   { deep: true, immediate: true },
 )
@@ -75,6 +89,8 @@ const fetchVasList = async () => {
       freeVasOptions.value = freeList.map((v) => ({
         label: v.rateNm,
         value: v.rateCd,
+        additionNm: v.rateNm,
+        rantal: v.baseAmt,
       }))
 
       // 유료 부가서비스
@@ -82,6 +98,8 @@ const fetchVasList = async () => {
       paidVasOptions.value = paidList.map((v) => ({
         label: `${v.rateNm} (${Number(v.baseAmt || 0).toLocaleString()}원)`,
         value: v.rateCd,
+        additionNm: v.rateNm,
+        rantal: v.baseAmt,
       }))
 
       // 무료 부가서비스 목록의 모든 값을 선택 상태로 설정 (항상 전체 선택)

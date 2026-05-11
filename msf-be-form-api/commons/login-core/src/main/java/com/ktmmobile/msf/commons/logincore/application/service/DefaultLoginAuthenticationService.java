@@ -61,6 +61,10 @@ public class DefaultLoginAuthenticationService<C extends LoginAuthenticationCred
             userInfo.userName(),
             userInfo.phoneNumber(),
             userInfo.clientIp(),
+            userInfo.agentCode(),
+            userInfo.agentName(),
+            userInfo.shopCode(),
+            userInfo.shopName(),
             userInfo.attributes(),
             requiredActions
         );
@@ -92,6 +96,10 @@ public class DefaultLoginAuthenticationService<C extends LoginAuthenticationCred
             userInfo.phoneNumber(),
             userInfo.userType(),
             clientIp,
+            userInfo.agentCode(),
+            userInfo.agentName(),
+            userInfo.shopCode(),
+            userInfo.shopName(),
             userInfo.attributes()
         );
     }

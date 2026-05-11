@@ -1,0 +1,58 @@
+package com.ktmmobile.msf.domains.cache.commoncode.application.dto;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import com.ktmmobile.msf.commons.common.data.type.UseYn;
+import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeData;
+
+public record CommonCodeResponse(
+    String groupId,
+    String code,
+    String title,
+    UseYn useYn,
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    DetailResponse detail
+) {
+
+    public static CommonCodeResponse toResponse(CommonCodeData commonCode, boolean includeDetail) {
+        return new CommonCodeResponse(
+            commonCode.groupId(),
+            commonCode.code(),
+            commonCode.title(),
+            commonCode.useYn(),
+            includeDetail ? DetailResponse.toResponse(commonCode.detail()) : null
+        );
+    }
+
+    public record DetailResponse(
+        String abbrName,
+        String description,
+        String etcValue1,
+        String etcValue2,
+        String etcValue3,
+        String startDate,
+        String endDate
+    ) {
+
+        static DetailResponse toResponse(CommonCodeData.Detail detail) {
+            if (detail == null) {
+                return empty();
+            }
+
+            return new DetailResponse(
+                detail.abbrName(),
+                detail.description(),
+                detail.etcValue1(),
+                detail.etcValue2(),
+                detail.etcValue3(),
+                detail.startDate(),
+                detail.endDate()
+            );
+        }
+
+        private static DetailResponse empty() {
+            return new DetailResponse(null, null, null, null, null, null, null);
+        }
+    }
+}

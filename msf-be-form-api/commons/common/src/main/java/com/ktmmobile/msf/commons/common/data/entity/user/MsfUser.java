@@ -8,9 +8,11 @@ import com.ktmmobile.msf.commons.common.data.type.UserType;
  */
 public interface MsfUser {
 
-    String getId();
-
-    String getName();
-
     UserType getUserType();
+
+    String getUserId();
+
+    String getUserName();
+
+    UserOrganization getOrganization();
 }

@@ -109,26 +109,10 @@ defineExpose({ validate })
   <MsfTitleArea title="납부 정보" />
   <MsfStack vertical type="formgroups">
     <MsfFormGroup label="명세서 수신 유형" tag="div" required>
-      <MsfChip
-        v-model="formData.cstmrBillSendTypeCd"
-        name="inp-stmtType"
-        :data="[
-          { value: 'stmtType1', label: '모바일 명세서' },
-          { value: 'stmtType2', label: '이메일 명세서' },
-          { value: 'stmtType3', label: '우편 명세서' },
-        ]"
-      />
+      <MsfChip v-model="formData.cstmrBillSendTypeCd" name="inp-stmtType" groupCode="STRE" />
     </MsfFormGroup>
     <MsfFormGroup label="요금 납부 방법" tag="div" required>
-      <MsfChip
-        v-model="formData.reqPayTypeCd"
-        name="inp-payMtd"
-        :data="[
-          { value: 'payMtd1', label: '자동이체' },
-          { value: 'payMtd2', label: '신용카드' },
-          { value: 'payMtd3', label: '통합청구' },
-        ]"
-      />
+      <MsfChip v-model="formData.reqPayTypeCd" name="inp-payMtd" groupCode="PAYM" />
       <!-- 자동이체 -->
       <template v-if="formData.reqPayTypeCd === 'payMtd1'">
         <hr class="ut-line" />

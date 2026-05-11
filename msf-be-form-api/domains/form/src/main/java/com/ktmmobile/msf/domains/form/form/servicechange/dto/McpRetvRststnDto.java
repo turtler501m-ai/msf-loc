@@ -1,7 +1,14 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class McpRetvRststnDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -11,37 +18,5 @@ public class McpRetvRststnDto implements Serializable {
     private int tmscnt;//접속제한횟수
     private String code;//서비스코드
     private String amdDt;//수정일자
-
-    public String getSvcCntrNo() {
-        return svcCntrNo;
-    }
-    public void setSvcCntrNo(String svcCntrNo) {
-        this.svcCntrNo = svcCntrNo;
-    }
-    public String getConnDate() {
-        return connDate;
-    }
-    public void setConnDate(String connDate) {
-        this.connDate = connDate;
-    }
-    public int getTmscnt() {
-        return tmscnt;
-    }
-    public void setTmscnt(int tmscnt) {
-        this.tmscnt = tmscnt;
-    }
-    public String getCode() {
-        return code;
-    }
-    public void setCode(String code) {
-        this.code = code;
-    }
-    public String getAmdDt() {
-        return amdDt;
-    }
-    public void setAmdDt(String amdDt) {
-        this.amdDt = amdDt;
-    }
-
 
 }

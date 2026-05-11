@@ -3,12 +3,14 @@ package com.ktmmobile.msf.domains.form.common.dto;
 import java.io.Serializable;
 
 import com.ktds.crypto.exception.CryptoException;
+import lombok.Data;
 
 import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
 import com.ktmmobile.msf.domains.form.common.util.MaskingUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 
+@Data
 public class McpUserCntrMngDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -83,6 +85,8 @@ public class McpUserCntrMngDto implements Serializable {
 
     private String age;   // 나이
     private String birth; // 생년월일(앞6자리)
+
+    private String fstEsimYn; // 최초 ESim 여부
 
 
     public String getUnIntmSrlNo() {
@@ -595,9 +599,11 @@ public class McpUserCntrMngDto implements Serializable {
     }
 
     public String getAge() { return age; }
+
     public void setAge(String age) { this.age = age; }
 
     public String getBirth() { return birth; }
+
     public void setBirth(String birth) { this.birth = birth; }
 
 

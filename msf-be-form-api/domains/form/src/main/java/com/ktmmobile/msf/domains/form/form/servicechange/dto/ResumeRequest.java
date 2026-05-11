@@ -1,10 +1,13 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import jakarta.validation.constraints.NotNull;
-
-import lombok.Data;
-
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 public class ResumeRequest {
 
     @NotNull

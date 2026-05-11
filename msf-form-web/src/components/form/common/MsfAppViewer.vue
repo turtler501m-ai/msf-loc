@@ -9,14 +9,13 @@
       <MsfButton variant="subtle" @click="onClikViewBtn">신청서 열람</MsfButton>
     </MsfBox>
 
-    <!-- 신청서 열람 모달 -->
-    <MsfAppViewerModal v-model="isModalOpen" />
+    <!-- 비밀번호 확인 모달 -->
+    <MsfPasswordInputModal v-model="isModalOpen" />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import MsfAppViewerModal from './popups/MsfAppViewerModal.vue'
 
 const props = defineProps({
   formKey: { type: String, required: true },

@@ -15,4 +15,5 @@ public class OwnerChangeJoinInfoResponse {
     private String custId;
     private String ncn;
     private String userId;
+    private String fstEsimYn;
 }

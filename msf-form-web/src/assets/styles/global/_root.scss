@@ -4,8 +4,13 @@
 @use '@/assets/styles/abstracts/icons' as *;
 @use '@/assets/styles/abstracts/mixins' as *;
 
-/* Root */
+/* Portal 영역 (모달, 팝오버 등을 띄우는 공간 App.vue) */
+#portal-root {
+  position: relative;
+  z-index: 1000;
+}
 
+/* Root */
 :root {
   @include generate-cssVars($tokens);
   // icons.scss에서 사용할 아이콘 변수에 담기

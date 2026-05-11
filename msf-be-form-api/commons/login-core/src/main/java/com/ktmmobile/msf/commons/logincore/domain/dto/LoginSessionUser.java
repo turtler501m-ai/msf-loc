@@ -13,12 +13,13 @@ public record LoginSessionUser(
     String userName,
     String phoneNumber,
     String clientIp,
+    LoginOrganization organization,
     Map<String, Object> attributes,
     List<LoginRequiredAction> requiredActions
 ) {
 
     public LoginSessionUser(String userId, String userName, UserType userType, String phoneNumber) {
-        this(userId, userType, userName, phoneNumber, null, Map.of(), List.of());
+        this(userId, userType, userName, phoneNumber, null, LoginOrganization.empty(), Map.of(), List.of());
     }
 
     public LoginSessionUser(
@@ -28,12 +29,57 @@ public record LoginSessionUser(
         String phoneNumber,
         List<LoginRequiredAction> requiredActions
     ) {
-        this(userId, userType, userName, phoneNumber, null, Map.of(), requiredActions);
+        this(userId, userType, userName, phoneNumber, null, LoginOrganization.empty(), Map.of(), requiredActions);
+    }
+
+    public LoginSessionUser(
+        String userId,
+        UserType userType,
+        String userName,
+        String phoneNumber,
+        String clientIp,
+        Map<String, Object> attributes,
+        List<LoginRequiredAction> requiredActions
+    ) {
+        this(userId, userType, userName, phoneNumber, clientIp, LoginOrganization.empty(), attributes, requiredActions);
+    }
+
+    public LoginSessionUser(
+        String userId,
+        UserType userType,
+        String userName,
+        String phoneNumber,
+        String clientIp,
+        String agentCode,
+        String agentName,
+        String shopCode,
+        String shopName,
+        Map<String, Object> attributes,
+        List<LoginRequiredAction> requiredActions
+    ) {
+        this(userId, userType, userName, phoneNumber, clientIp, new LoginOrganization(agentCode, agentName, shopCode, shopName), attributes, requiredActions);
     }
 
     public LoginSessionUser {
+        organization = organization == null ? LoginOrganization.empty() : organization;
         attributes = attributes == null ? new LinkedHashMap<>() : new LinkedHashMap<>(attributes);
         requiredActions = requiredActions == null ? new ArrayList<>() : new ArrayList<>(requiredActions);
+    }
+
+    public String agentCode() {
+        return organization.agentCode();
+    }
+
+    public String agentName() {
+        return organization.agentName();
+    }
+
+    public String shopCode() {
+        return organization.shopCode();
+    }
+
+    public String shopName() {
+        return organization.shopName();
     }
 
     public String attributeAsString(String name) {

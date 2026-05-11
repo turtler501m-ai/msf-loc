@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.ktmmobile.msf.commons.common.data.type.UserType;
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginFlowProcessor;
 import com.ktmmobile.msf.commons.logincore.application.port.out.LoginAuthenticator;
 import com.ktmmobile.msf.commons.logincore.application.port.out.LoginUserFinder;
@@ -136,8 +137,13 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
     }
 
     @Override
-    public void logout(String refreshToken) {
-        loginTokenService.logout(refreshToken);
+    public void logout(UserType userType, String userId) {
+        loginTokenService.logout(userType, userId);
+    }
+
+    @Override
+    public void revokeAuthentication(UserType userType, String userId) {
+        loginTokenService.revokeAuthentication(userType, userId);
     }
 
     private LoginResult toSessionProgress(String loginSessionId, LoginSessionState state) {
@@ -156,6 +162,10 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
                 principal.userName(),
                 principal.phoneNumber(),
                 principal.clientIp(),
+                principal.agentCode(),
+                principal.agentName(),
+                principal.shopCode(),
+                principal.shopName(),
                 principal.attributes()
             );
         }
@@ -175,6 +185,10 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
                 principal.userName(),
                 principal.phoneNumber(),
                 principal.clientIp(),
+                principal.agentCode(),
+                principal.agentName(),
+                principal.shopCode(),
+                principal.shopName(),
                 principal.attributes()
             );
         }
@@ -187,6 +201,10 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
                 principal.userName(),
                 principal.phoneNumber(),
                 principal.clientIp(),
+                principal.agentCode(),
+                principal.agentName(),
+                principal.shopCode(),
+                principal.shopName(),
                 principal.attributes(),
                 actionsBeforeTokenIssue
             );
@@ -219,6 +237,10 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
             coalesce(userInfo.userName(), principal.userName()),
             coalesce(userInfo.phoneNumber(), principal.phoneNumber()),
             coalesce(userInfo.clientIp(), principal.clientIp()),
+            coalesce(userInfo.agentCode(), principal.agentCode()),
+            coalesce(userInfo.agentName(), principal.agentName()),
+            coalesce(userInfo.shopCode(), principal.shopCode()),
+            coalesce(userInfo.shopName(), principal.shopName()),
             mergeAttributes(principal, userInfo),
             principal.requiredActions()
         );

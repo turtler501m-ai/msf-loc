@@ -31,14 +31,14 @@ public class LoginSvcService implements LoginSvcReader, LoginSvcWriter {
     public LoginResponse login(LoginRequest request) {
         log.debug(request.getAuthType());
         LoginResponse loginResponse = null;
-        if(request.getAuthType().equals("BIOPASS")) {
-            if(request.getUuid() == null) {
+        if (request.getAuthType().equals("BIOPASS")) {
+            if (request.getUuid() == null) {
                 throw new SimpleDomainException("uuid는 필수 입력 값입니다.");
             }
             loginResponse = repository.getUserAppInfo(request);
         } else {
             LoginResponse loginChk = repository.getUserAppInfo(request);
-            if(loginChk != null && !loginChk.getUserId().equals(request.getUuid())) {
+            if (loginChk != null && !loginChk.getUserId().equals(request.getUuid())) {
                 throw new SimpleDomainException("아이디에 등록된 단말기가 아닙니다.");
             }
             loginResponse = repository.getUserInfo(request);
@@ -51,7 +51,7 @@ public class LoginSvcService implements LoginSvcReader, LoginSvcWriter {
             if (!loginResponse.getUserSttusCd().equals("A")) {
                 throw new SimpleDomainException("로그인에 실패했습니다.\n [관리자에게 문의하세요..]");
             }
-            if(request.getAuthType().equals("PASSWORD")) {
+            if (request.getAuthType().equals("PASSWORD")) {
                 String failMsg = "비밀번호를 다시 확인해 주세요.";
                 if (!loginResponse.getPwd().equals(request.getUserPw())) {
                     if (loginResponse.getLoginChkCnt() >= 3) {
@@ -60,14 +60,14 @@ public class LoginSvcService implements LoginSvcReader, LoginSvcWriter {
                         repository.insertUserHistory(request.getUserId());
                         failMsg = "3회 실패시 계정이 잠금처리되어 사용이 불가합니다.";
                     } else {
-                        failMsg = "비밀번호를 다시 확인해 주세요. ["+ loginResponse.getLoginChkCnt() + "회]";
+                        failMsg = "비밀번호를 다시 확인해 주세요. [" + loginResponse.getLoginChkCnt() + "회]";
                     }
                     repository.updateLoginFail(request);
                     log.debug("Login request: {}", request.getFailCnt());
                     throw new SimpleDomainException(failMsg);
                 }
                 Integer retInt = repository.updateLoginSucc(request);
-            } else if(request.getAuthType().equals("BIOPASS")) {
+            } else if (request.getAuthType().equals("BIOPASS")) {
                 Integer retBioInt = repository.updateBioLoginSucc(request);
             }
             // 암호 삭제
@@ -80,8 +80,8 @@ public class LoginSvcService implements LoginSvcReader, LoginSvcWriter {
     @Transactional(noRollbackFor = {SimpleDomainException.class})
     public Integer modifyPassword(PassChangeRequest request) {
         String strUserId = "";
-        if(StringUtil.isBlank(request.getLoginSessionId())) {
-            strUserId = AuthenticationUtils.getUser().getId();
+        if (StringUtil.isBlank(request.getLoginSessionId())) {
+            strUserId = AuthenticationUtils.getUser().getUserId();
         } else {
             LoginSessionUser sessionUser = loginSessionFlowProcessor.getSessionUser(request.getLoginSessionId());
             strUserId = sessionUser.userId();

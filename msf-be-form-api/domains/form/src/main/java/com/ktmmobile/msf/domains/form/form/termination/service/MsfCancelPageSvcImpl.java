@@ -31,7 +31,7 @@ import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfChangPageSvc;
+import com.ktmmobile.msf.domains.form.form.servicechange.service.MsfSvcChgPageServiceImpl;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationRemainChargeReqDto;
@@ -61,7 +61,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
      * 위약금/잔여할부 조회에 필요한 서비스변경 공통 조회 기능을 사용한다.
      */
     @Autowired
-    private MsfChangPageSvc msfChangPageSvc;
+    private MsfSvcChgPageServiceImpl msfSvcChgPageService;
 
     @Autowired
     private McpApiClient mcpApiClient;
@@ -85,7 +85,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     @Override
     public FormResponse<TerminationRemainChargeResVO> getRemainCharge(TerminationRemainChargeReqDto reqDto) {
         logger.debug("[getRemainCharge] selectCntrListNoLogin: ncn={}", safe(reqDto.getNcn()));
-        McpUserCntrMngDto cntrInfo = msfChangPageSvc.selectCntrListNoLogin(reqDto.getNcn());
+        McpUserCntrMngDto cntrInfo = msfSvcChgPageService.selectCntrListNoLogin(reqDto.getNcn());
         if (cntrInfo == null) {
             return FormResponse.of(ResTermMessage.REMAIN_CONTRACT_NOT_FOUND);
         }

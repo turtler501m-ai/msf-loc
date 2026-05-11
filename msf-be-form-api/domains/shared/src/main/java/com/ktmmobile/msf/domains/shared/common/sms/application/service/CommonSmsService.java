@@ -44,7 +44,6 @@ public class CommonSmsService implements CommonSmsWriter {
 
     /**
      * 일반 SMS 발송
-     * FIXME: MCP API SMS 발송 요청 개발 필요
      *
      * <pre>
      * - type:
@@ -57,10 +56,14 @@ public class CommonSmsService implements CommonSmsWriter {
      *     . F-2-CMP: 스마트서식지 서비스변경 접수완료 신청서 URL 전송
      *     . F-3-CMP: 스마트서식지 명의변경 접수완료 신청서 URL 전송
      *     . F-4-CMP: 스마트서식지 서비스해지 접수완료 신청서 URL 전송
-     *     . F-1-DLN: 스마트서식지 신규/변경 APP 다운로드 URL 전송
-     *     . F-2-DLN: 스마트서식지 서비스변경 APP 다운로드 URL 전송
-     *     . F-3-DLN: 스마트서식지 명의변경 APP 다운로드 URL 전송
-     *     . F-4-DLN: 스마트서식지 서비스해지 APP 다운로드 URL 전송
+     *     . F-1-ADN: 스마트서식지 신규/변경 GooglePlay APP 다운로드 URL 전송
+     *     . F-2-ADN: 스마트서식지 서비스변경 GooglePlay APP 다운로드 URL 전송
+     *     . F-3-ADN: 스마트서식지 명의변경 GooglePlay APP 다운로드 URL 전송
+     *     . F-4-ADN: 스마트서식지 서비스해지 GooglePlay APP 다운로드 URL 전송
+     *     . F-1-IDN: 스마트서식지 신규/변경 AppStore APP 다운로드 URL 전송
+     *     . F-2-IDN: 스마트서식지 서비스변경 AppStore APP 다운로드 URL 전송
+     *     . F-3-IDN: 스마트서식지 명의변경 AppStore APP 다운로드 URL 전송
+     *     . F-4-IDN: 스마트서식지 서비스해지 AppStore APP 다운로드 URL 전송
      *     . A-0-ESY: 관리자 간편신청서 URL 발송 (대리점관리자)
      * </pre>
      *
@@ -74,22 +77,21 @@ public class CommonSmsService implements CommonSmsWriter {
             !StringUtils.hasText(request.path()) ||
             !StringUtils.hasText(request.phone())
         ) {
-            throw new InvalidValueException("잘못된 접근입니다.");
+            throw new InvalidValueException("잘못된 접근입니다." + (EnvironmentUtils.isProduction() ? "" : ": " + request.path()));
         }
 
         String userId = "nonMember";
         String url = "";
-        if (CommonSmsType.F_1_FTH.equals(request.type())) {
+        if (CommonSmsType.F_1_FTH.equals(request.type())) { // 안면인증 URL 전송
             url = "https://";
         }
-        saveMspSmsData(request.phone(), request.type().getMessage(request.value(), request.name(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yy년 MM월 dd일 HH시mm분")), url), request.type().getCode(), userId);
+        saveMspSmsData(request.phone(), request.type().getType(), request.type().getTitle(), request.type().getMessage(request.value(), request.name(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yy년 MM월 dd일 HH시mm분")), url), request.type().getCode(), userId);
 
         return true;
     }
 
     /**
      * 인증번호 SMS 발송
-     * FIXME: MCP API SMS 발송 요청 및 로그 데이터 저장 로직 개발 필요
      *
      * <pre>
      * - type:
@@ -114,16 +116,16 @@ public class CommonSmsService implements CommonSmsWriter {
         if (
             !StringUtils.hasText(request.path())
         ) {
-            throw new SimpleDomainException("잘못된 접근입니다.: " + request.path());
+            throw new SimpleDomainException("잘못된 접근입니다." + (EnvironmentUtils.isProduction() ? "" : ": " + request.path()));
         }
 
         // 스마트서식지 신규/변경, 서비스변경, 명의변경, 서비스해지에서 사용하는 발송 요청인 경우에
         // 휴대폰번호가 반드시 필요
         if (request.type().getCode().matches("^F-[1234]-.*") && (!StringUtils.hasText(request.phone()) || !StringUtils.hasText(request.name()))) {
-            throw new SimpleDomainException("잘못된 접근입니다.: " + request.type().getCode());
+            throw new SimpleDomainException("잘못된 접근입니다." + (EnvironmentUtils.isProduction() ? "" : ": " + request.type().getCode()));
         }
         if (CommonSmsType.F_0_OTP.equals(request.type()) && !StringUtils.hasText(request.token())) {
-            throw new SimpleDomainException("잘못된 접근입니다.: " + request.type().getCode());
+            throw new SimpleDomainException("잘못된 접근입니다." + (EnvironmentUtils.isProduction() ? "" : ": " + request.type().getCode()));
         }
         if (CommonSmsType.F_0_OTP.equals(request.type())) {
             LoginTwoFactorStatus status = loginSessionFlowProcessor.getTwoFactorStatus(request.token());
@@ -155,7 +157,7 @@ public class CommonSmsService implements CommonSmsWriter {
 
             authNumber = randomAuthNumber.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new SimpleDomainException("서비스 처리중 오류가 발생 하였습니다.");
+            throw new SimpleDomainException("서비스 처리중 오류가 발생 하였습니다.", e);
         }
 
         IdVerifValidationDetail idVerifValidationDetail = IdVerifValidationDetail.builder()
@@ -175,7 +177,7 @@ public class CommonSmsService implements CommonSmsWriter {
 
         smsRepository.registerMsfCrtVldDtl(idVerifValidationDetail);
 
-        saveMspSmsData(phoneNumber, request.type().getMessage(authNumber), request.type().getCode(), userId);
+        saveMspSmsData(phoneNumber, request.type().getType(), request.type().getTitle(), request.type().getMessage(authNumber), request.type().getCode(), userId);
 
         String savedKey = request.type().getCode() + ":" + UUID.randomUUID();
 
@@ -198,7 +200,6 @@ public class CommonSmsService implements CommonSmsWriter {
 
     /**
      * 입력된 인증번호 검증
-     * FIXME: 인증번호 검증 및 로그 데이터 저장 로직 개발 필요
      *
      * @param request
      * @return
@@ -210,13 +211,13 @@ public class CommonSmsService implements CommonSmsWriter {
             !StringUtils.hasText(request.token()) ||
             !StringUtils.hasText(request.value())
         ) {
-            throw new SimpleDomainException("잘못된 접근입니다.");
+            throw new SimpleDomainException("잘못된 접근입니다." + (EnvironmentUtils.isProduction() ? "" : ": " + request.path()));
         }
 
         // 1. token을 통한 Redis 데이터 조회
         SmsSendedOtpData sendedData = cacheService.getValue(request.token());
         if (sendedData == null) {
-            throw new SimpleDomainException("잘못된 접근입니다.");
+            throw new SimpleDomainException("인증번호 유효시간이 종료되었습니다.\n[인증번호 재발송] 버튼을 클릭하시면,\n인증번호가 재발송 됩니다.");
         }
 
         // 2. 인증 번호 추출 및 value 값 비교
@@ -254,12 +255,14 @@ public class CommonSmsService implements CommonSmsWriter {
      * SMS 발송 데이터 DB 저장
      *
      * @param rcptData 휴대폰번호
+     * @param smsType SMS 문자 형식, 1: SMS, 2: LMS
+     * @param title SMS 문자 제목: smsType이 2 (LMS) 일 경우에만 적용됨)
      * @param message 발송메세지
      * @param reserved02 발송형식
      * @param reserved03 사용자ID
      * @return
      */
-    private void saveMspSmsData(String rcptData, String message, String reserved02, String reserved03) {
+    private void saveMspSmsData(String rcptData, Integer smsType, String title, String message, String reserved02, String reserved03) {
          /*
          * 테이블:
          *   - AM2X_SUBMIT
@@ -283,7 +286,8 @@ public class CommonSmsService implements CommonSmsWriter {
          *   RESERVED03: [사용자ID]
          */
         MspSmsData data = MspSmsData.builder()
-            .msgType(1)
+            .msgType(smsType)
+            .subject(smsType == 2 ? title : null)
             .message(message)
             .callbackNum("18995000")
             .rcptData(rcptData)

@@ -1,9 +1,20 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
-import com.ktmmobile.msf.domains.commoncode.application.dto.CommonCodesRequest;
-import com.ktmmobile.msf.domains.commoncode.application.port.in.CommonCodeReader;
-import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeData;
-import com.ktmmobile.msf.domains.commoncode.domain.dto.CommonCodeGroups;
+import java.net.SocketTimeoutException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+
+import com.ktmmobile.msf.domains.cache.commoncode.application.dto.CommonCodesRequest;
+import com.ktmmobile.msf.domains.cache.commoncode.application.port.in.CommonCodeReader;
+import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeData;
+import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeGroups;
 import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.NiceLogDto;
@@ -22,16 +33,6 @@ import com.ktmmobile.msf.domains.form.form.common.dto.NiceAccountRequest;
 import com.ktmmobile.msf.domains.form.form.common.repository.msp.AuthInfoReadMapper;
 import com.ktmmobile.msf.domains.form.system.cert.dto.CertDto;
 import com.ktmmobile.msf.domains.form.system.cert.service.CertService;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-
-import java.net.SocketTimeoutException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 요금납부방법 인증 서비스
@@ -124,7 +125,7 @@ public class PaymentService {
                     CommonCodeGroups commonCodeCrdGroups = commonCodeReader.getCommonCodes(crdRequest); //M전산,고객포탈,스마트에서 CRD 그룹코드를 모두 조회
                     List<CommonCodeData> crdtCardList = commonCodeCrdGroups.get("CRD"); //실제 CRD 그룹코드를 조회
                     if (crdtCardList != null) {
-                        for (CommonCodeData crdtCardInfo : crdtCardList) {
+                        for (CommonCodeData crdtCardInfo: crdtCardList) {
                             if (crdtCardInfo.detail().etcValue1().equals(crdtCardKindCd)) {
                                 crdtCardKindNm = crdtCardInfo.code(); // 이상하다... 정말 이상하다..
                                 break;
@@ -254,7 +255,9 @@ public class PaymentService {
             if ("Y".equals(resultMap.get("isAuthStep"))) {
 
                 String ncType = "";
-                if (request.getParameter("ncType") != null) ncType = request.getParameter("ncType");
+                if (request.getParameter("ncType") != null) {
+                    ncType = request.getParameter("ncType");
+                }
 
                 // account인증 이력 존재여부 확인
                 if (0 < certService.getModuTypeStepCnt("account", ncType)) {
@@ -278,8 +281,8 @@ public class PaymentService {
                     certService.vdlCertInfo("C", certKey, certValue);
 
                     // 인증종류, 대리인구분, 이름
-                    certKey = new String[]{"urlType", "moduType", "ncType", "name"};
-                    certValue = new String[]{"compAccount", "account", ncType, niceResDto.getName()};
+                    certKey = new String[] {"urlType", "moduType", "ncType", "name"};
+                    certValue = new String[] {"compAccount", "account", ncType, niceResDto.getName()};
 
                     Map<String, String> vldReslt = certService.vdlCertInfo("D", certKey, certValue);
                     if (!Constants.AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) {

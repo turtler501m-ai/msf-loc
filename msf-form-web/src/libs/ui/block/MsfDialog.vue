@@ -1,7 +1,16 @@
+<script>
+// 전역 변수: 현재 열려있는 모든 모달의 z-index 목록 관리
+let UI_MODAL_Z_INDEX_STACK = []
+</script>
 <template>
   <Teleport :to="props.portalTarget">
     <Transition name="fade">
-      <div v-if="props.keepAlive || props.isOpen" v-show="props.isOpen" class="overlay">
+      <div
+        v-if="props.keepAlive || props.isOpen"
+        v-show="props.isOpen"
+        class="overlay"
+        :style="{ zIndex: currentZIndex }"
+      >
         <FocusTrap :isActive="props.isOpen">
           <div
             ref="containerRef"
@@ -82,7 +91,7 @@ const props = defineProps({
   mode: String,
   showClose: Boolean,
   flush: Boolean,
-  portalTarget: { type: String, default: 'body' },
+  portalTarget: { type: String, default: '#portal-root' },
   size: {
     type: String,
     default: 'large',
@@ -100,6 +109,23 @@ const emit = defineEmits(['close', 'open'])
 
 const titleId = `modal-label--${useId()}`
 
+// z-index 관련
+const BASE_Z_INDEX = 10 // 현재 인스턴스의 z-index
+const currentZIndex = ref(BASE_Z_INDEX) //초기값에 사용
+document.documentElement.style.setProperty('--base-z-index', BASE_Z_INDEX) // CSS 변수설정
+
+// z-index 할당: 현재 모달 중 가장 높은 번호에 +1 하여 등록
+const assignZIndex = () => {
+  const maxZ =
+    UI_MODAL_Z_INDEX_STACK.length > 0 ? Math.max(...UI_MODAL_Z_INDEX_STACK) : BASE_Z_INDEX
+  currentZIndex.value = maxZ + 1
+  UI_MODAL_Z_INDEX_STACK.push(currentZIndex.value)
+}
+// z-index 해제: 전역 명단에서 현재 모달의 번호를 삭제
+const releaseZIndex = () => {
+  UI_MODAL_Z_INDEX_STACK = UI_MODAL_Z_INDEX_STACK.filter((z) => z !== currentZIndex.value)
+}
+
 const { lock, unlock } = useScrollLock()
 const vh = ref(0)
 
@@ -114,6 +140,8 @@ watch(
   () => props.isOpen,
   async (newVal, oldVal) => {
     if (newVal) {
+      assignZIndex() // 열릴 때 현재 최댓값 + 1 부여
+
       // 열릴 때: 현재 포커스된 요소를 저장
       lastFocusedElement.value = document.activeElement
       lock() // 3. 잠금 요청 (카운트 증가)
@@ -131,6 +159,8 @@ watch(
 
       emit('open') // 모달이 열릴 때 부모에게 알림
     } else if (oldVal) {
+      releaseZIndex() // 닫힐 때 내 번호 반납
+
       // 이전에 열려있다가 닫히는 경우만 실행
       unlock() // 4. 해제 요청 (카운트 차감)
       window.removeEventListener('resize', updateVh)
@@ -158,7 +188,7 @@ onUnmounted(() => {
 
 <style lang="scss" scoped>
 .overlay {
-  @include position($p: fixed, $t: 0, $l: 0, $i: 1000);
+  @include position($p: fixed, $t: 0, $l: 0, $i: var(--base-z-index, 10));
   width: 100%;
   height: calc(var(--layout-vh, 1vh) * 100);
   @include flex($h: center, $v: center);

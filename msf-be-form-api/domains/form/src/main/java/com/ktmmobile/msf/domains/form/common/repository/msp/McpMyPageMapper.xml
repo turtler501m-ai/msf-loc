@@ -217,6 +217,7 @@
     , A.CNTR_MOBILE_NO AS unSvcNo
     , B.USER_SSN AS unUserSSn
     , C.CSTMR_TYPE
+    , C.FST_ESIM_YN
     , (SELECT CUSTOMER_TYPE FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS CUSTOMER_TYPE
     , (SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS userName
     , B.OPEN_AGNT_CD
@@ -235,6 +236,7 @@
     , MSP_REQUEST_DTL C
     , MSP_JUO_BAN_INFO D
     WHERE UPPER(B.SUB_LINK_NAME) = UPPER(#{userNm})
+    <!--WHERE UPPER(B.SUB_LINK_NAME) = '강다영'-->
     AND A.SVC_CNTR_NO = B.CONTRACT_NUM
     AND A.SVC_CNTR_NO = C.CONTRACT_NUM(+)
     AND B.BAN = D.BAN(+)
@@ -247,6 +249,7 @@
     </if>
     <if test="@org.springframework.util.StringUtils@hasText(ctn)">
       AND A.CNTR_MOBILE_NO = #{ctn}
+      <!--AND A.CNTR_MOBILE_NO = '01027086669'-->
     </if>
     ORDER BY A.REP_NO ASC
   </select>

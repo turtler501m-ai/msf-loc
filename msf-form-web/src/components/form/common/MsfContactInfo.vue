@@ -6,10 +6,11 @@
         <MsfStack type="field">
           <MsfNumberInput
             ref="mobileNo1Ref"
-            id="inp-mobileNo1"
             v-model="model.mobileNo1"
+            id="inp-mobileNo1"
             placeholder="앞자리"
             maxlength="3"
+            :readonly="model.isSaved"
             @maxlength="mobileNo2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
@@ -35,13 +36,14 @@
       </MsfFormGroup>
       <MsfFormGroup label="전화번호">
         <MsfStack type="field">
-          <MsfSelect
-            title="지역번호"
+          <MsfNumberInput
+            ref="telNo1Ref"
             v-model="model.telNo1"
-            groupCode="TEL"
-            placeholder="선택"
-            class="ut-w-200"
-            :disabled="model.isSaved"
+            id="inp-telNo1"
+            placeholder="앞 3자리"
+            maxlength="3"
+            :readonly="model.isSaved"
+            @maxlength="telNo2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
@@ -152,6 +154,7 @@ const rangeDatePickerValue = ref({ start: '', end: '' })
 const mobileNo1Ref = ref(null)
 const mobileNo2Ref = ref(null)
 const mobileNo3Ref = ref(null)
+const telNo1Ref = ref(null)
 const telNo2Ref = ref(null)
 const telNo3Ref = ref(null)
 

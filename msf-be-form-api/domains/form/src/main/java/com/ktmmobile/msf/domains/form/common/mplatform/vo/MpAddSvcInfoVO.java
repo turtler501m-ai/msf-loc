@@ -6,12 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.jdom.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 
 public class MpAddSvcInfoVO extends CommonXmlVO{
+
+    private static final Logger logger = LoggerFactory.getLogger(MpAddSvcInfoVO.class);
 //	private final static String ITEM = "addSvcInfo";
     private List<ItemVO> list;
     private int freeCnt = 0;
@@ -46,7 +50,14 @@ public class MpAddSvcInfoVO extends CommonXmlVO{
                 notfreeCnt++;
 
                 //과세 비과세 확인
-                NmcpCdDtlDto socFreeTax = NmcpServiceUtils.getCodeNmDto(GROUP_CODE_SOC_FREE_TAX_LIST,vo.getSoc());
+                // TODO: NmcpServiceUtils.getBean() ContextLoaderListener 구 방식 → Spring Boot DI 방식으로 교체 후 try/catch 제거
+                NmcpCdDtlDto socFreeTax = null;
+                try {
+                    socFreeTax = NmcpServiceUtils.getCodeNmDto(GROUP_CODE_SOC_FREE_TAX_LIST, vo.getSoc());
+                } catch (Exception e) {
+                    logger.warn("[MpAddSvcInfoVO][parse] SOC={} 비과세여부 캐시 조회 실패 — 과세로 처리함. cause={}({})",
+                            vo.getSoc(), e.getClass().getSimpleName(), e.getMessage());
+                }
                 if (socFreeTax !=null) {
                     //비과세
                     vo.setSocRateVatValue(String.valueOf(vatVal));

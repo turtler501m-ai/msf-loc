@@ -1,10 +1,13 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
-
-import lombok.Data;
-
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 public class RateAdsvcCtgBasDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -21,7 +24,6 @@ public class RateAdsvcCtgBasDTO implements Serializable {
     private String rateAdsvcItemImgNm;
 
     private String rateAdsvcBnfitItemCd;
-
 
     /**
      * 요금제부가서비스카테고리명
@@ -92,7 +94,6 @@ public class RateAdsvcCtgBasDTO implements Serializable {
      * 요금제부가서비스혜택항목:데이터
      */
     private String bnfitData;
-
 
     /**
      * 요금제부가서비스혜택항목:데이터 숫자
@@ -260,19 +261,15 @@ public class RateAdsvcCtgBasDTO implements Serializable {
      */
     private String btnYn;
 
-
     /**
      * XML - DATA 제공량
      */
     private int xmlDataCnt;
 
-
     /**
      * XML - xmlQosCnt 제공량
      */
     private int xmlQosCnt;
-
-
 
     /** XML - CALL 제공량 */
     private int xmlCallCnt;
@@ -918,5 +915,4 @@ public class RateAdsvcCtgBasDTO implements Serializable {
 //    }
 
 }
-
 

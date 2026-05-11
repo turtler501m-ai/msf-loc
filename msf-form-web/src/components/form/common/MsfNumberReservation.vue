@@ -25,7 +25,7 @@
             id="inp-reserve3"
             placeholder="뒤 4자리"
             maxlength="4"
-            :readonly="customerModel.isSaved || !!model.wishNo"
+            :readonly="!!model.wishNo"
           />
           <MsfButton
             variant="subtle"

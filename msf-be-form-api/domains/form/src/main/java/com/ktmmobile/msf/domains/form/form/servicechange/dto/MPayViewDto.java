@@ -1,7 +1,14 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class MPayViewDto implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -27,119 +34,4 @@ public class MPayViewDto implements Serializable {
     private String ptnrSvcId; 	 // 파트너 서비스 아이디
     private String ptnrSvcNm; 	 // 파트너 서비스명
  
-    public String getSvcCntrNo() {
-		return svcCntrNo;
-	}
-	public void setSvcCntrNo(String svcCntrNo) {
-		this.svcCntrNo = svcCntrNo;
-	}
-	public String getmPayPeriod() {
-		return mPayPeriod;
-	}
-	public void setmPayPeriod(String mPayPeriod) {
-		this.mPayPeriod = mPayPeriod;
-	}
-	public String getSettlDealNo() {
-		return settlDealNo;
-	}
-	public void setSettlDealNo(String settlDealNo) {
-		this.settlDealNo = settlDealNo;
-	}
-	public String getSettleNo() {
-		return settleNo;
-	}
-	public void setSettleNo(String settleNo) {
-		this.settleNo = settleNo;
-	}
-	public String getPayStatus() {
-		return payStatus;
-	}
-	public void setPayStatus(String payStatus) {
-		this.payStatus = payStatus;
-	}
-	public String getSettlDt() {
-		return settlDt;
-	}
-	public void setSettlDt(String settlDt) {
-		this.settlDt = settlDt;
-	}
-	public String getSettlDtFmt() {
-		return settlDtFmt;
-	}
-	public void setSettlDtFmt(String settlDtFmt) {
-		this.settlDtFmt = settlDtFmt;
-	}
-	public String getSettlNm() {
-		return settlNm;
-	}
-	public void setSettlNm(String settlNm) {
-		this.settlNm = settlNm;
-	}
-	public String getAmt() {
-		return amt;
-	}
-	public void setAmt(String amt) {
-		this.amt = amt;
-	}
-	public String getTmonLmtAmt() {
-		return tmonLmtAmt;
-	}
-	public void setTmonLmtAmt(String tmonLmtAmt) {
-		this.tmonLmtAmt = tmonLmtAmt;
-	}
-	public String getRmndLmtAmt() {
-		return rmndLmtAmt;
-	}
-	public void setRmndLmtAmt(String rmndLmtAmt) {
-		this.rmndLmtAmt = rmndLmtAmt;
-	}
-	public String getPtnrPgId() {
-		return ptnrPgId;
-	}
-	public void setPtnrPgId(String ptnrPgId) {
-		this.ptnrPgId = ptnrPgId;
-	}
-	public String getPtnrPgNm() {
-		return ptnrPgNm;
-	}
-	public void setPtnrPgNm(String ptnrPgNm) {
-		this.ptnrPgNm = ptnrPgNm;
-	}
-	public String getPtnrCpId() {
-		return ptnrCpId;
-	}
-	public void setPtnrCpId(String ptnrCpId) {
-		this.ptnrCpId = ptnrCpId;
-	}
-	public String getPtnrCpNm() {
-		return ptnrCpNm;
-	}
-	public void setPtnrCpNm(String ptnrCpNm) {
-		this.ptnrCpNm = ptnrCpNm;
-	}
-	public String getPtnrSvcId() {
-		return ptnrSvcId;
-	}
-	public void setPtnrSvcId(String ptnrSvcId) {
-		this.ptnrSvcId = ptnrSvcId;
-	}
-	public String getPtnrSvcNm() {
-		return ptnrSvcNm;
-	}
-	public void setPtnrSvcNm(String ptnrSvcNm) {
-		this.ptnrSvcNm = ptnrSvcNm;
-	}
-	public String getPayStatusNm() {
-		return payStatusNm;
-	}
-	public void setPayStatusNm(String payStatusNm) {
-		this.payStatusNm = payStatusNm;
-	}
-	public String getPayStatusCd() {
-		return payStatusCd;
-	}
-	public void setPayStatusCd(String payStatusCd) {
-		this.payStatusCd = payStatusCd;
-	}
-
 }

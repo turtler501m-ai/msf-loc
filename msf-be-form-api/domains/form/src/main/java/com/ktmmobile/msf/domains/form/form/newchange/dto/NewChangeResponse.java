@@ -8,5 +8,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class NewChangeResponse {
+
     private Long requestKey;
+
+    private String formType; //신청서 유형
+    private String cstmrNm; //고객명
+    private String cstmrMobileNo; //고객연락처
+
 }

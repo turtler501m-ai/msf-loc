@@ -40,7 +40,7 @@ const handleDeviceVerify = async () => {
 }
 
 const validate = () => {
-  if (customerModel.value.product === 'MM') {
+  if (customerModel.value.productType === 'MM') {
     if (!model.value.imei) return false
   }
   return true
@@ -50,7 +50,7 @@ defineExpose({ validate })
 </script>
 
 <template>
-  <div v-if="customerModel.product === 'MM'">
+  <div v-if="customerModel.productType === 'MM'">
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="휴대폰 일련번호" required>

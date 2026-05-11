@@ -95,12 +95,12 @@ const onClickModelRegist = () => {
     return
   }
   showConfirm('단말 사용을 등록하시겠습니까?', () => {
-    post('/api/auth/app/model/register', formData)
+    post('/api/n/app/model/register', formData)
       .then(async (data) => {
         console.log(data.code)
         if (data.code == '0000') {
           showAlert('단말 사용 등록이 완료되었습니다.', () => {
-            post('/api/auth/login/session/get', formData).then(async (data) => {
+            post('/api/n/auth/login/session/get', formData).then(async (data) => {
               msfUserStore.setUserData(data.data)
               const res = await msfUserStore.checkAuthAction()
               if (res.message) {

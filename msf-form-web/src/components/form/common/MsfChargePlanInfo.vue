@@ -53,8 +53,11 @@ const fetchCurrentPlan = async () => {
       userId,
     })
     planOptions.value = [{ value: res?.data?.prodId, label: res?.data?.prodNm }]
+    model.value.planNm = res?.data?.prodNm
     model.value.planName2 = res?.data?.prodId
     model.value.orgProdId = res?.data?.prodId
+    model.value.orgProdNm = res?.data?.prodNm
+    model.value.planAmt = res?.data?.famtTarifAmt
   } catch (e) {
     console.error('Failed to fetch plans:', e)
   }
@@ -100,6 +103,21 @@ watch(
       model.value.planName2 = ''
     }
     fetchPlans(newVal)
+  },
+)
+
+watch(
+  () => model.value.planSelectType,
+  (newVal) => {
+    if (newVal == 'CURRENT') {
+      model.value.planName1 = ''
+      model.value.planName2 = model.value.orgProdId
+      model.value.planNm = model.value.orgProdNm
+      planOptions.value = [{ value: model.value.orgProdId, label: model.value.orgProdNm }]
+    } else {
+      model.value.planName1 = ''
+      model.value.planName2 = ''
+    }
   },
 )
 

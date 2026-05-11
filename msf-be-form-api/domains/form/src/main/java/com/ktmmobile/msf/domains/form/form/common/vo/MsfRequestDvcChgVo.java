@@ -11,7 +11,7 @@ public class MsfRequestDvcChgVo {
 
     Long requestKey;
     String cretIp;
-    String regDt;
+    String cretDt;
     String cretId;
     String amdIp;
     String amdDt;

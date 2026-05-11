@@ -1,10 +1,14 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 @JacksonXmlRootElement(localName = "commHeader")
+@Getter
+@Setter
+@NoArgsConstructor
 public class ChargePlanChangeReservationCancelResponse {
 
     private String responseType; // 결과값

@@ -18,13 +18,16 @@
       >
         <MsfStack type="field">
           <MsfNumberInput
+            ref="cstmrNativeRrn1Ref"
             v-model="model.cstmrNativeRrn1"
             placeholder="앞 6자리"
             maxlength="6"
             :readonly="model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')"
+            @maxlength="cstmrNativeRrn2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="cstmrNativeRrn2Ref"
             v-model="model.cstmrNativeRrn2"
             id="inp-residentNo2"
             type="password"
@@ -35,7 +38,11 @@
         </MsfStack>
       </MsfFormGroup>
 
-      <MsfFormGroup v-if="model.isTrCustomer" label="생년월일" required>
+      <MsfFormGroup
+        v-if="model.isTrCustomer && !['JP', 'GO'].includes(model.cstmrTypeCd)"
+        label="생년월일"
+        required
+      >
         <MsfStack type="field">
           <MsfBirthdayInput
             v-model="model.userBirthDate"
@@ -55,16 +62,23 @@
         </MsfStack>
       </MsfFormGroup>
 
-      <MsfFormGroup v-if="['FN', 'FM'].includes(model.cstmrTypeCd)" label="외국인등록번호" required>
+      <MsfFormGroup
+        v-if="['FN', 'FM'].includes(model.cstmrTypeCd) && !model.isTrCustomer"
+        label="외국인등록번호"
+        required
+      >
         <MsfStack type="field">
           <MsfNumberInput
+            ref="cstmrForeignerRrn1Ref"
             v-model="model.cstmrForeignerRrn1"
             placeholder="앞 6자리"
             maxlength="6"
             :readonly="model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')"
+            @maxlength="cstmrForeignerRrn2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="cstmrForeignerRrn2Ref"
             v-model="model.cstmrForeignerRrn2"
             id="inp-foreignerNo2"
             type="password"
@@ -78,13 +92,16 @@
       <MsfFormGroup v-if="['JP', 'GO'].includes(model.cstmrTypeCd)" label="법인등록번호" required>
         <MsfStack type="field">
           <MsfNumberInput
+            ref="cstmrJuridicalRrn1Ref"
             v-model="model.cstmrJuridicalRrn1"
             placeholder="앞 6자리"
             maxlength="6"
             :readonly="model.isSaved"
+            @maxlength="cstmrJuridicalRrn2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="cstmrJuridicalRrn2Ref"
             v-model="model.cstmrJuridicalRrn2"
             id="inp-corpRegNo2"
             placeholder="뒤 7자리"
@@ -95,27 +112,33 @@
       </MsfFormGroup>
 
       <MsfFormGroup
-        v-if="['NA', 'JP', 'GO'].includes(model.cstmrTypeCd) && model.formType !== 'OWN'"
+        v-if="['NA', 'JP', 'GO', 'FN', 'FM'].includes(model.cstmrTypeCd) &&
+        (!model.isTrCustomer || ['JP', 'GO', 'FN', 'FM'].includes(model.cstmrTypeCd))"
         label="사업자등록번호"
-        :required="['JP', 'GO'].includes(model.cstmrTypeCd)"
+        :required="false"
       >
         <MsfStack type="field">
           <MsfNumberInput
+            ref="bizNo1Ref"
             v-model="model.cstmrJuridicalBizNo1"
             placeholder="앞 3자리"
             maxlength="3"
             :readonly="model.isSaved"
+            @maxlength="bizNo2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="bizNo2Ref"
             v-model="model.cstmrJuridicalBizNo2"
             id="inp-bizNo2"
             placeholder="가운데 2자리"
             maxlength="2"
             :readonly="model.isSaved"
+            @maxlength="bizNo3Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="bizNo3Ref"
             v-model="model.cstmrJuridicalBizNo3"
             id="inp-bizNo3"
             placeholder="뒤 5자리"
@@ -134,7 +157,11 @@
         />
       </MsfFormGroup>
 
-      <MsfFormGroup v-if="['JP', 'GO'].includes(model.cstmrTypeCd)" label="업종/업태" required>
+      <MsfFormGroup
+        v-if="['JP', 'GO'].includes(model.cstmrTypeCd) && !model.isTrCustomer"
+        label="업종/업태"
+        required
+      >
         <MsfStack type="field" class="ut-w100p">
           <MsfSelect
             title="업종 선택"
@@ -164,22 +191,29 @@
         required
       >
         <MsfStack type="field">
-          <MsfNumberInput v-model="model.deviceChgTel1" placeholder="앞자리" maxlength="3" />
+          <MsfNumberInput
+            ref="deviceChgTel1Ref"
+            v-model="model.deviceChgTel1"
+            placeholder="앞자리"
+            maxlength="3"
+            @maxlength="deviceChgTel2Ref?.focus()"
+          />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="deviceChgTel2Ref"
             v-model="model.deviceChgTel2"
             id="inp-deviceChgTel2"
             placeholder="가운데 4자리"
             maxlength="4"
-            :readonly="model.isSaved"
+            @maxlength="deviceChgTel3Ref?.focus()"
           />
           <span class="unit-sep">-</span>
           <MsfNumberInput
+            ref="deviceChgTel3Ref"
             v-model="model.deviceChgTel3"
             id="inp-deviceChgTel3"
             placeholder="뒤 4자리"
             maxlength="4"
-            :readonly="model.isSaved"
           />
           <MsfButton variant="toggle" v-if="deviceChgAuth.status.value === 'none'" disabled
             >인증</MsfButton
@@ -201,7 +235,7 @@
 </template>
 
 <script setup>
-import { computed, defineExpose, defineModel, defineProps } from 'vue'
+import { computed, ref } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
@@ -217,6 +251,21 @@ const props = defineProps({
 })
 
 const model = defineModel({ type: Object, required: true })
+
+const bizNo1Ref = ref(null)
+const bizNo2Ref = ref(null)
+const bizNo3Ref = ref(null)
+const deviceChgTel1Ref = ref(null)
+const deviceChgTel2Ref = ref(null)
+const deviceChgTel3Ref = ref(null)
+
+const cstmrNativeRrn1Ref = ref(null)
+const cstmrNativeRrn2Ref = ref(null)
+const cstmrForeignerRrn1Ref = ref(null)
+const cstmrForeignerRrn2Ref = ref(null)
+const cstmrJuridicalRrn1Ref = ref(null)
+const cstmrJuridicalRrn2Ref = ref(null)
+
 const store = useMsfFormNewChgStore()
 const terminationStore = useMsfFormTerminationStore()
 const isTerminationForm = computed(() => model.value?.formType === 'TERMINATION')
@@ -291,10 +340,17 @@ const handleDeviceChgVerify = async () => {
     console.log('[Auth] response raw', res)
     const contractNum = res?.data?.contractNum || res?.data?.contract_num || res?.data?.ncn
     const lstComActvDate =
-      res?.data?.lstComActvDate || res?.data?.lst_com_actv_date || res?.data?.initActivationDate || ''
+      res?.data?.lstComActvDate ||
+      res?.data?.lst_com_actv_date ||
+      res?.data?.initActivationDate ||
+      ''
 
     if (res?.code !== '0000' || !contractNum) {
-      console.warn('[Auth] failed response', { code: res?.code, message: res?.message, contractNum })
+      console.warn('[Auth] failed response', {
+        code: res?.code,
+        message: res?.message,
+        contractNum,
+      })
       return
     }
 
@@ -342,11 +398,6 @@ const validate = () => {
 
   if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
     if (!model.value.cstmrJuridicalRrn1 || !model.value.cstmrJuridicalRrn2) return false
-    if (
-      !model.value.cstmrJuridicalBizNo1 ||
-      !model.value.cstmrJuridicalBizNo2 ||
-      !model.value.cstmrJuridicalBizNo3
-    ) return false
     if (!model.value.cstmrJuridicalRepNm) return false
     if (!model.value.upjnCd || !model.value.bcuSbst) return false
   }

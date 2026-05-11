@@ -74,11 +74,11 @@ public class MsfRequestRepositoryImpl {
     }
 
     public int insertMsfRequestNameChg(MsfRequestNameChgVo vo) {
-        return msfRequestWriteMapper.insertMsfRequestNameChg(vo.getTrCustomerInfo());
+        return msfRequestWriteMapper.insertMsfRequestNameChg(vo);
     }
 
     public int insertMsfRequestNameTrns(MsfRequestNameChgVo vo) {
-        return msfRequestWriteMapper.insertMsfRequestNameTrns(vo.getTeCustomerInfo());
+        return msfRequestWriteMapper.insertMsfRequestNameTrns(vo);
     }
 
     public int insertMsfRequestRec(MsfRequestRecVo vo) {

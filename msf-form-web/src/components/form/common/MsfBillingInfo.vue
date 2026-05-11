@@ -7,26 +7,30 @@
       </MsfFormGroup>
       <MsfFormGroup label="요금 납부 방법" tag="div" required>
         <MsfChip v-model="model.reqPayTypeCd" name="inp-payMtd" groupCode="PAYM" />
-        <template v-if="['AA', 'D'].includes(model.reqPayTypeCd)">
-          <hr class="ut-line" />
-          <MsfStack type="field" class="ut-w100p">
-            <MsfChip
-              v-model="model.othersPaymentYn"
-              name="inp-othersPaymentYn"
-              :data="[
-                { value: 'N', label: '본인납부' },
-                { value: 'Y', label: '타인납부' },
-              ]"
-            />
-          </MsfStack>
+      </MsfFormGroup>
+
+      <template v-if="['AA', 'D'].includes(model.reqPayTypeCd)">
+        <MsfFormGroup label="납부자 구분" tag="div" required>
+          <MsfChip
+            v-model="model.othersPaymentYn"
+            name="inp-othersPaymentYn"
+            :data="[
+              { value: 'N', label: '본인납부' },
+              { value: 'Y', label: '타인납부' },
+            ]"
+          />
+        </MsfFormGroup>
+        <MsfFormGroup label="은행" required>
+          <MsfSelect
+            title="은행 선택"
+            v-model="model.reqBankCd"
+            groupCode="BNK"
+            placeholder="은행 선택"
+            class="ut-w-300"
+          />
+        </MsfFormGroup>
+        <MsfFormGroup label="계좌번호" required>
           <MsfStack type="field">
-            <MsfSelect
-              title="은행 선택"
-              v-model="model.reqBankCd"
-              groupCode="BNK"
-              placeholder="은행 선택"
-              class="ut-w-300"
-            />
             <MsfNumberInput
               v-model="model.reqAccountNo"
               id="inp-autoAcctNo"
@@ -46,53 +50,64 @@
               >계좌번호 유효성 체크 완료</MsfButton
             >
           </MsfStack>
-          <MsfStack type="field" v-if="model.othersPaymentYn === 'Y'">
+        </MsfFormGroup>
+        <template v-if="model.othersPaymentYn === 'Y'">
+          <MsfFormGroup label="납부 고객명" required>
             <MsfInput
               v-model="model.reqAccountNm"
               id="inp-autoPayerName"
               placeholder="납부 고객명"
               class="ut-w-300"
             />
+          </MsfFormGroup>
+          <MsfFormGroup label="생년월일" required>
             <MsfBirthdayInput
               v-model="model.reqAccountRrn"
               id="inp-autoPayerBirth"
               length="8"
               class="ut-w-200"
             />
+          </MsfFormGroup>
+          <MsfFormGroup label="관계" required>
             <MsfSelect
               title="관계"
               v-model="model.reqAccountRelTypeCd"
               groupCode="AGR"
               placeholder="관계"
             />
-          </MsfStack>
+          </MsfFormGroup>
+        </template>
+        <MsfFormGroup label="출금 동의" required>
           <MsfCheckbox
             v-model="model.isAutoAgree"
             label="본인(예금주 또는 가입고객)은 납부해야 할 요금에 대해 위 계좌(카드)에서 지정된 출금(결제)일에 인출(결제)되는 것에 동의합니다."
             :invalid="!model.isAutoAgree"
-            class="ut-mt-8"
           />
-        </template>
-        <template v-if="['C'].includes(model.reqPayTypeCd)">
-          <hr class="ut-line" />
-          <MsfStack type="field" class="ut-w100p">
-            <MsfChip
-              v-model="model.othersPaymentYn"
-              name="inp-othersPaymentYn"
-              :data="[
-                { value: 'N', label: '본인납부' },
-                { value: 'Y', label: '타인납부' },
-              ]"
-            />
-          </MsfStack>
+        </MsfFormGroup>
+      </template>
+
+      <template v-if="['C'].includes(model.reqPayTypeCd)">
+        <MsfFormGroup label="납부자 구분" tag="div" required>
+          <MsfChip
+            v-model="model.othersPaymentYn"
+            name="inp-othersPaymentYn"
+            :data="[
+              { value: 'N', label: '본인납부' },
+              { value: 'Y', label: '타인납부' },
+            ]"
+          />
+        </MsfFormGroup>
+        <MsfFormGroup label="카드사" required>
+          <MsfSelect
+            title="카드사 선택"
+            v-model="model.reqCardCompanyCd"
+            groupCode="CRD"
+            placeholder="카드사 선택"
+            class="ut-w-300"
+          />
+        </MsfFormGroup>
+        <MsfFormGroup label="카드번호" required>
           <MsfStack type="field">
-            <MsfSelect
-              title="카드사 선택"
-              v-model="model.reqCardCompanyCd"
-              groupCode="CRD"
-              placeholder="카드사 선택"
-              class="ut-w-300"
-            />
             <MsfNumberInput
               v-model="model.reqCardNo"
               id="inp-cardNo"
@@ -112,6 +127,8 @@
               >신용카드 유효성 체크 완료</MsfButton
             >
           </MsfStack>
+        </MsfFormGroup>
+        <MsfFormGroup label="유효기간" required>
           <MsfStack type="field">
             <MsfSelect
               title="유효기간(MM) 선택"
@@ -151,28 +168,37 @@
               placeholder="YY"
             />
           </MsfStack>
-          <MsfStack type="field" v-if="model.othersPaymentYn === 'Y'">
+        </MsfFormGroup>
+        <template v-if="model.othersPaymentYn === 'Y'">
+          <MsfFormGroup label="납부 고객명" required>
             <MsfInput
               v-model="model.reqCardNm"
               id="inp-cardPayerName"
               placeholder="납부 고객명"
               class="ut-w-300"
             />
+          </MsfFormGroup>
+          <MsfFormGroup label="생년월일" required>
             <MsfBirthdayInput
               v-model="model.reqCardRrn"
               id="inp-cardPayerBirth"
               length="8"
               class="ut-w-200"
             />
+          </MsfFormGroup>
+          <MsfFormGroup label="관계" required>
             <MsfSelect
               title="관계"
               v-model="model.cardRelation"
               groupCode="AGR"
               placeholder="관계"
             />
-          </MsfStack>
+          </MsfFormGroup>
         </template>
-        <template v-if="['R', 'VA'].includes(model.reqPayTypeCd)">
+      </template>
+
+      <template v-if="['R', 'VA'].includes(model.reqPayTypeCd)">
+        <MsfFormGroup label="청구계정ID" required>
           <MsfStack type="field">
             <MsfInput
               v-model="model.combId"
@@ -193,14 +219,15 @@
               >청구계정 체크 완료</MsfButton
             >
           </MsfStack>
+        </MsfFormGroup>
+        <MsfFormGroup label="통합 청구 동의" required>
           <MsfCheckbox
             v-model="model.combAgree"
             label="본인은 신청한 회선과 통합하여 요금이 청구되는 것에 동의합니다."
             :invalid="!model.combAgree"
-            class="ut-mt-8"
           />
-        </template>
-      </MsfFormGroup>
+        </MsfFormGroup>
+      </template>
     </MsfStack>
   </div>
 </template>
@@ -236,7 +263,7 @@ const handleAccountVerify = async () => {
     resId: (model.value.othersPaymentYn === 'N'
       ? props.customerData.cstmrNativeRrn1
       : model.value.reqAccountRrn
-    ).substring(0, 6),
+    )?.substring(0, 6),
     bankCode: model.value.reqBankCd,
     accountNo: model.value.reqAccountNo,
     inqRsn: '90',

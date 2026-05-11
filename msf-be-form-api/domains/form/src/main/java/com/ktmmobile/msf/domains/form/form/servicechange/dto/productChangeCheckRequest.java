@@ -1,10 +1,13 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.List;
-
-import lombok.Data;
-
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 public class productChangeCheckRequest {
 
     private String ncn; // 서비스계약번호
@@ -15,8 +18,9 @@ public class productChangeCheckRequest {
     // 프로모션ID -> prx에서 prmtId로 /msp/mspDisAddList에 조회하여 넘어온 값으로 세팅해주고, param을 단 건으로 사용하고 있어
     // prdcList를 list로 넘겨도 되는지 확인 불가 param은 HashMap<String, String>으로 사용중임
     private String prmtId;
-
-    @Data
+    @Getter
+    @Setter
+    @NoArgsConstructor
     public static class ProductInfo {
 
         private String prdcCd; // 상품코드 (front에 rateCd)

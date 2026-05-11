@@ -38,7 +38,7 @@
     delete
     from msf_usr_app_info
     where 1=1
-    and uuid = #{uuid}
+    and uuid = #{deviceUuid}
   </delete>
 
   <delete id="removeUserApp-molo">
@@ -68,7 +68,7 @@
       , auto_login_yn = #{autoLoginYn}
     </if>
     where 1=1
-    and uuid = #{uuid}
+    and uuid = #{deviceUuid}
   </update>
 
 </mapper>

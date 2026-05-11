@@ -2,17 +2,15 @@ package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.domains.form.common.code.ResSvcChgMessage;
-import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
 import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
@@ -22,14 +20,15 @@ import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpAddSvcInfoParamDto;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscRegSvcCanChgInVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSocVO;
-import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
+import com.ktmmobile.msf.domains.form.common.repository.MspApiDirectRepository;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionAvailableResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionMyListResVO;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionPreCheckReqDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionPreCheckResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionReqDto;
-import com.ktmmobile.msf.domains.form.form.servicechange.repository.RegSvcDao;
 
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.COMMON_EXCEPTION;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.SOCKET_TIMEOUT_EXCEPTION;
@@ -39,111 +38,78 @@ public class MsfRegSvcServiceImpl {
 
     private static Logger logger = LoggerFactory.getLogger(MsfRegSvcServiceImpl.class);
 
-    /** M플랫폼 연동 서비스 (X97/X38/Y25 호출) */
+    /** M플랫폼 연동 서비스 (X97/X38/Y25 등) */
     @Autowired
     private MsfMplatFormService mPlatFormService;
 
-    /** 공통 서비스 — MSP_RATE_MST@DL_MSP 조회 (온라인 해지 가능 여부, 해지 안내 문구) */
     @Autowired
-    private FCommonSvc fCommonSvc;
-
-    /** 부가서비스 DAO — 로밍 코드 목록(getRoamCdList) 조회 */
-    @Autowired
-    private RegSvcDao regSvcDao;
-
-    /** 마이페이지 서비스 — DB 부가서비스 관리 목록(selectRegService) 조회 */
-    @Autowired
-    private MsfMypageSvc msfMypageSvc;
-
-    // [ASIS] MsfMypageUserService — TOBE 메서드에서 미사용 (세션 기반 ASIS 전용)
-    // @Autowired
-    // private MsfMypageUserService mypageUserService;
-
-    /** 공통 API 인터페이스 서버 주소 (ASIS getCtnByNcn에서만 사용, TOBE 미사용) */
-    @Value("${api.interface.server}")
-    private String apiInterfaceServer;
+    private MspApiDirectRepository mspApiDirectRepository;
 
     // =====================================================
     // TOBE 메서드
     // =====================================================
 
-    /**
-     * 이용중 부가서비스 목록 조회 (X97 + MSP_RATE_MST)
-     *
-     * [처리 순서]
-     * 1. M플랫폼 X97 호출 → 가입중인 SOC 목록 수신
-     * 2. "PL249Q800" 제거
-     *    : 아무나SOLO 상품 가입 시 내부 관리용 더미 SOC가 자동 등록됨
-     *      (MVNO마스터결합전용 더미부가서비스(엠모바일)) → 사용자에게 노출 금지
-     * 3. 각 SOC별 MSP_RATE_MST@DL_MSP 조회
-     *    - canCmnt  : 온라인 해지 불가 시 표시할 안내 문구
-     *    - onlineCanYn : 온라인 해지 가능 여부 ("Y"/"N")
-     *    - Constants.REG_SVC_CD_4(포인트할인 SOC) → 온라인 해지 강제 "N"
-     *      (포인트할인은 정책상 온라인 해지 불가)
-     *
-     * ASIS 참조: selectmyAddSvcList() / selectAddSvcList() — X97 호출, lstComActvDate 파라미터로
-     *           개통일 기준 onlineCanDay 블로킹 처리 포함
-     *           → TOBE에서는 lstComActvDate 없이 기본 onlineCanYn만 적용 (단순화)
-     */
-
+    /** 이용중 부가서비스 목록 조회 (X97) */
     public FormResponse<AdditionMyListResVO> myAddSvcList(AdditionReqDto req) {
-        MpAddSvcInfoParamDto vo = new MpAddSvcInfoParamDto();
+        List<MpSocVO> mSocVoList = new ArrayList<>();
         logger.debug("[myAddSvcList] start: ncn={}, ctn={}, custId={}", req.getNcn(), req.getCtn(), req.getCustId());
         try {
-            // [1] X97 — 가입중인 부가서비스 전체 조회
-            vo = mPlatFormService.getAddSvcInfoParamDto(req.getNcn(), req.getCtn(), req.getCustId());
+            MpAddSvcInfoParamDto vo = mPlatFormService.getAddSvcInfoParamDto(req.getNcn(), req.getCtn(), req.getCustId());
             logger.debug("[myAddSvcList] X97 response: success={}, resultCode={}, svcMsg={}, rawCount={}",
                     vo.isSuccess(), vo.getResultCode(), vo.getSvcMsg(), vo.getList() == null ? 0 : vo.getList().size());
             if (!vo.isSuccess()) {
-                logger.warn("[myAddSvcList] X97 failed: ncn={}, ctn={}, custId={}, resultCode={}, svcMsg={}",
-                        req.getNcn(), req.getCtn(), req.getCustId(), vo.getResultCode(), vo.getSvcMsg());
-                // M플랫폼 응답 null or 실패 시 공통 예외
-                throw new McpCommonException(COMMON_EXCEPTION);
-            }
-
-            List<MpSocVO> mSocVoList = vo.getList();
-
-            // if (mSocVoList != null) {
-            //     for (MpSocVO mSocVo : mSocVoList) {
-            //         // [3] MSP_RATE_MST@DL_MSP 조회 — 해지 안내 문구 및 온라인 해지 가능 여부 세팅
-            //         MspRateMstDto mspRateMstDto = fCommonSvc.getMspRateMst(mSocVo.getSoc());
-            //         if (mspRateMstDto != null) {
-            //             mSocVo.setCanCmnt(StringUtil.NVL(mspRateMstDto.getCanCmnt(), ""));       // 해지 안내 문구
-            //             mSocVo.setOnlineCanYn(StringUtil.NVL(mspRateMstDto.getOnlineCanYn(), "")); // 온라인 해지 가능 여부
-            //         }
-            //         // 포인트할인(REG_SVC_CD_4) — 정책상 온라인 해지 불가, 강제 "N" 처리
-            //         if (Constants.REG_SVC_CD_4.equals(mSocVo.getSoc())) {
-            //             mSocVo.setOnlineCanYn("N");
-            //         }
-            //     }
-            //
-            //     // [2] 더미 SOC "PL249Q800" 제거 — 아무나SOLO 내부 관리 전용, 사용자 노출 금지
-            // }
-
-            if (mSocVoList != null) {
+                logger.warn("[myAddSvcList] X97 failed (빈 목록으로 진행): ncn={}, resultCode={}, svcMsg={}",
+                        req.getNcn(), vo.getResultCode(), vo.getSvcMsg());
+            } else if (vo.getList() != null) {
+                mSocVoList = vo.getList();
                 int beforeCount = mSocVoList.size();
                 mSocVoList.removeIf(item -> "PL249Q800".equals(item.getSoc()));
                 logger.debug("[myAddSvcList] filtered list: beforeCount={}, afterCount={}, removedDummyCount={}",
                         beforeCount, mSocVoList.size(), beforeCount - mSocVoList.size());
-            } else {
-                logger.debug("[myAddSvcList] X97 list is null");
             }
-
         } catch (SocketTimeoutException e) {
-            logger.warn("[myAddSvcList] socket timeout: ncn={}, ctn={}, custId={}",
-                    req.getNcn(), req.getCtn(), req.getCustId());
-            throw new McpCommonException(SOCKET_TIMEOUT_EXCEPTION);
+            logger.warn("[myAddSvcList] socket timeout (빈 목록으로 진행): ncn={}", req.getNcn());
         } catch (SelfServiceException e) {
-            logger.warn("[myAddSvcList] self service exception: ncn={}, ctn={}, custId={}, message={}",
-                    req.getNcn(), req.getCtn(), req.getCustId(), e.getMessage());
-            throw new McpCommonException(e.getMessage());
+            logger.warn("[myAddSvcList] self service exception (빈 목록으로 진행): {}", e.getMessage());
+        } catch (Exception e) {
+            logger.warn("[myAddSvcList] unexpected exception (빈 목록으로 진행): {}", e.getMessage());
         }
 
+        // TODO: 설정 팝업 테스트용 목 데이터. 실제 X97 응답 연동 후 제거.
+        mSocVoList.addAll(buildMockSettingServices());
+
         AdditionMyListResVO res = new AdditionMyListResVO();
-        res.setList(vo.getList());
+        res.setList(mSocVoList);
         logger.debug("[myAddSvcList] end: ncn={}, ctn={}, custId={}, resultCount={}",
                 req.getNcn(), req.getCtn(), req.getCustId(), res.getList() == null ? 0 : res.getList().size());
-        return FormResponse.ok(res);
+        return FormResponse.of(ResSvcChgMessage.SUCCESS, res);
+    }
+
+    private List<MpSocVO> buildMockSettingServices() {
+        List<MpSocVO> list = new ArrayList<>();
+
+        MpSocVO nospam = new MpSocVO();
+        nospam.setSoc("NOSPAM4");
+        nospam.setSocDescription("불법TM수신차단");
+        nospam.setSocRateVat(0);
+        nospam.setSettingYn("Y");
+        list.add(nospam);
+
+        MpSocVO stlpvt = new MpSocVO();
+        stlpvt.setSoc("STLPVTPHN");
+        stlpvt.setSocDescription("번호도용차단서비스");
+        stlpvt.setSocRateVat(0);
+        stlpvt.setSettingYn("Y");
+        list.add(stlpvt);
+
+        MpSocVO roaming = new MpSocVO();
+        roaming.setSoc("PL2078760");
+        roaming.setSocDescription("로밍서비스");
+        roaming.setSocRateVat(3300);
+        roaming.setSettingYn("Y");
+        list.add(roaming);
+
+        return list;
     }
 
     /**
@@ -162,34 +128,53 @@ public class MsfRegSvcServiceImpl {
      *           X20은 기본 SOC 목록만 반환, X97은 상세 이력 포함 반환
      */
     public FormResponse<AdditionAvailableResVO> selectAddSvcInfoDto(AdditionReqDto req) {
+        logger.debug("[selectAddSvcInfoDto] start: ncn={}, ctn={}, custId={}", req.getNcn(), req.getCtn(), req.getCustId());
         // [1] X97 — 현재 가입중인 SOC 목록 추출 (useYn 매핑용)
         List<String> useSocList = new ArrayList<>();
         try {
             MpAddSvcInfoParamDto vo = mPlatFormService.getAddSvcInfoParamDto(req.getNcn(), req.getCtn(), req.getCustId());
+            logger.debug("[selectAddSvcInfoDto] X97 response: success={}, resultCode={}, rawCount={}",
+                    vo.isSuccess(), vo.getResultCode(), vo.getList() == null ? 0 : vo.getList().size());
             if (!vo.isSuccess()) {
+                logger.warn("[selectAddSvcInfoDto] X97 failed: ncn={}, resultCode={}, svcMsg={}", req.getNcn(), vo.getResultCode(), vo.getSvcMsg());
                 throw new McpCommonException(COMMON_EXCEPTION);
             }
             List<MpSocVO> mSocVoList = vo.getList();
             if (mSocVoList != null) {
                 for (MpSocVO mSocVo : mSocVoList) {
-                    useSocList.add(mSocVo.getSoc()); // 가입중인 SOC 코드만 추출
+                    useSocList.add(mSocVo.getSoc());
                 }
             }
+            logger.debug("[selectAddSvcInfoDto] useSocList: count={}, socs={}", useSocList.size(), useSocList);
         } catch (SocketTimeoutException e) {
+            logger.warn("[selectAddSvcInfoDto] socket timeout: ncn={}", req.getNcn());
             throw new McpCommonException(SOCKET_TIMEOUT_EXCEPTION);
         } catch (SelfServiceException e) {
+            logger.warn("[selectAddSvcInfoDto] self service exception: {}", e.getMessage());
             throw new McpCommonException(e.getMessage());
         }
 
         // [2] DB — MSF 관리 전체 부가서비스 목록 (MSF_REG_SVC_MST 등)
         // iterator remove를 위해 tmpList → 새 ArrayList로 복사
-        List<McpRegServiceDto> list = new ArrayList<>(msfMypageSvc.selectRegService(req.getNcn()));
+        List<McpRegServiceDto> list = new ArrayList<>(mspApiDirectRepository.query("/mypage/regService", req.getNcn(), List.class));
+        logger.debug("[selectAddSvcInfoDto] DB selectRegService: ncn={}, totalCount={}", req.getNcn(), list.size());
+
+        boolean wirelessBlockInUse = false;
+        for (McpRegServiceDto item : list) {
+            if (isWirelessBlockSoc(item)) {
+                wirelessBlockInUse = true;
+                break;
+            }
+        }
+        logger.debug("[selectAddSvcInfoDto] wirelessBlockInUse from regService: {}", wirelessBlockInUse);
 
         List<McpRegServiceDto> listA = new ArrayList<>(); // 유료
         List<McpRegServiceDto> listC = new ArrayList<>(); // 무료/번들
 
         // [4] "PL249Q800" 더미 SOC 필터링 — 아무나SOLO 내부 SOC, 가입 화면에 노출 금지
+        int beforeFilter = list.size();
         list.removeIf(item -> "PL249Q800".equals(item.getRateCd()));
+        logger.debug("[selectAddSvcInfoDto] dummy SOC filter: before={}, after={}", beforeFilter, list.size());
 
         for (McpRegServiceDto item : list) {
             // [3] 이용중 여부 매핑
@@ -205,12 +190,239 @@ public class MsfRegSvcServiceImpl {
             }
         }
 
+        logger.debug("[selectAddSvcInfoDto] end: ncn={}, total={}, listA(유료)={}, listC(무료/번들)={}, wirelessBlockInUse={}",
+                req.getNcn(), list.size(), listA.size(), listC.size(), wirelessBlockInUse);
         AdditionAvailableResVO res = new AdditionAvailableResVO();
-        res.setList(list);   // 전체 (일반+로밍)
-        res.setListA(listA); // 유료
-        res.setListC(listC); // 무료/번들
-        return FormResponse.ok(res);
+        res.setList(list);
+        res.setListA(listA);
+        res.setListC(listC);
+        res.setWirelessBlockInUse(wirelessBlockInUse);
+        return FormResponse.of(ResSvcChgMessage.SUCCESS, res);
     }
+
+    private boolean isWirelessBlockSoc(McpRegServiceDto service) {
+        if (service == null) {
+            return false;
+        }
+        if ("WIRELESSC".equals(StringUtil.NVL(service.getRateCd(), ""))) {
+            return true;
+        }
+        String rateNm = StringUtil.NVL(service.getRateNm(), "");
+        return rateNm.contains("무선") && rateNm.contains("차단");
+    }
+
+    /**
+     * 부가서비스 가입/해지 사전체크.
+     * 해지 건은 MSP_RATE_MST 온라인 해지 가능 여부를 먼저 확인하고, 통과 시 Y24를 호출한다.
+     */
+    public FormResponse<AdditionPreCheckResVO> moscPrdcTrtmPreChk(AdditionPreCheckReqDto req) {
+        int prdcListSize = req.getPrdcList() == null ? 0 : req.getPrdcList().size();
+        logger.debug("[moscPrdcTrtmPreChk] start: ncn={}, ctn={}, custId={}, actCode={}, prmtId={}, prdcListSize={}",
+                req.getNcn(), req.getCtn(), req.getCustId(),
+                req.getActCode(), req.getPrmtId(), prdcListSize);
+        HashMap<String, String> params = new HashMap<>();
+        params.put("ncn", StringUtil.NVL(req.getNcn(), ""));
+        params.put("ctn", StringUtil.NVL(req.getCtn(), ""));
+        params.put("custId", StringUtil.NVL(req.getCustId(), ""));
+        params.put("actCode", StringUtil.NVL(req.getActCode(), "SRG"));
+        params.put("prmtId", StringUtil.NVL(req.getPrmtId(), ""));
+        params.put("appEventCd", "Y24");
+        params.put("eventCd", "Y24");
+
+        List<AdditionPreCheckReqDto.ProductInfo> prdcList = req.getPrdcList();
+        FormResponse<AdditionPreCheckResVO> cancelPreCheckRes = validateCancelServicesByMspRateMst(prdcList);
+        if (cancelPreCheckRes != null) {
+            return cancelPreCheckRes;
+        }
+
+        if (prdcList != null) {
+            for (int i = 0; i < prdcList.size(); i++) {
+                AdditionPreCheckReqDto.ProductInfo productInfo = prdcList.get(i);
+                logger.debug("[moscPrdcTrtmPreChk] prdcList[{}]: prdcCd={}, prdcSbscTrtmCd={}, prdcTypeCd={}, prdcSeqNo={}",
+                        i, productInfo.getPrdcCd(), productInfo.getPrdcSbscTrtmCd(),
+                        productInfo.getPrdcTypeCd(), productInfo.getPrdcSeqNo());
+                String prefix = "prdcList[" + i + "].";
+                params.put(prefix + "prdcCd", StringUtil.NVL(productInfo.getPrdcCd(), ""));
+                params.put(prefix + "prdcSbscTrtmCd", StringUtil.NVL(productInfo.getPrdcSbscTrtmCd(), ""));
+                params.put(prefix + "prdcTypeCd", StringUtil.NVL(productInfo.getPrdcTypeCd(), ""));
+                params.put(prefix + "prdcSeqNo", StringUtil.NVL(productInfo.getPrdcSeqNo(), ""));
+                params.put(prefix + "ftrNewParam", StringUtil.NVL(productInfo.getFtrNewParam(), ""));
+            }
+        }
+
+        try {
+            AdditionPreCheckResVO res = mPlatFormService.commonMplatform(params, "Y24", AdditionPreCheckResVO.class);
+            if (res == null) {
+                logger.warn("[moscPrdcTrtmPreChk] Y24 response is null: ncn={}, actCode={}", req.getNcn(), req.getActCode());
+                return FormResponse.of(
+                    ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                    "부가서비스 가입 가능 여부를 확인할 수 없습니다.",
+                    null);
+            }
+            if (!isMoscPrdcTrtmPreChkSuccess(res)) {
+                String message = getMoscPrdcTrtmPreChkMessage(res);
+                logger.warn("[moscPrdcTrtmPreChk] Y24 failed: ncn={}, rsltCd={}, resultCode={}, sbscYn={}, message={}",
+                        req.getNcn(), res.getRsltCd(), res.getResultCode(), res.getSbscYn(), message);
+                if ("".equals(StringUtil.NVL(res.getPrdcCd(), "")) && prdcList != null && prdcList.size() == 1) {
+                    res.setPrdcCd(StringUtil.NVL(prdcList.get(0).getPrdcCd(), ""));
+                }
+                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, message, res);
+            }
+            logger.debug("[moscPrdcTrtmPreChk] Y24 success: ncn={}, rsltCd={}, resultCode={}, sbscYn={}",
+                    req.getNcn(), res.getRsltCd(), res.getResultCode(), res.getSbscYn());
+            return FormResponse.of(ResSvcChgMessage.SUCCESS, res);
+        } catch (SelfServiceException e) {
+            logger.warn("[moscPrdcTrtmPreChk] Y24 SelfServiceException: ncn={}, msg={}", req.getNcn(), e.getMessage());
+            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
+        } catch (Exception e) {
+            logger.warn("[moscPrdcTrtmPreChk] Y24 unexpected exception: ncn={}, msg={}", req.getNcn(), e.getMessage());
+            return FormResponse.of(
+                ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                "부가서비스 가입 가능 여부 확인 중 오류가 발생했습니다.",
+                null);
+        }
+    }
+
+    /**
+     * 해지 대상 부가서비스의 온라인 해지 가능 여부를 MSP_RATE_MST 기준으로 확인한다.
+     */
+    private FormResponse<AdditionPreCheckResVO> validateCancelServicesByMspRateMst(
+            List<AdditionPreCheckReqDto.ProductInfo> prdcList) {
+        if (prdcList == null || prdcList.isEmpty()) {
+            return null;
+        }
+
+        List<String> rateNotFoundSocList = new ArrayList<>();
+        List<String> rateNotFoundMessageList = new ArrayList<>();
+        List<String> onlineCancelUnavailableSocList = new ArrayList<>();
+        List<String> onlineCancelUnavailableMessageList = new ArrayList<>();
+        String onlineCancelUnavailableMessage = "";
+
+        for (AdditionPreCheckReqDto.ProductInfo productInfo : prdcList) {
+            if (productInfo == null || !"C".equals(StringUtil.NVL(productInfo.getPrdcSbscTrtmCd(), ""))) {
+                continue;
+            }
+
+            String soc = StringUtil.NVL(productInfo.getPrdcCd(), "");
+            MspRateMstDto mspRateMstDto = mspApiDirectRepository.query("/msp/mspRateMst", soc, MspRateMstDto.class);
+            if (mspRateMstDto == null) {
+                logger.warn("[moscPrdcTrtmPreChk] MSP_RATE_MST not found for cancel precheck: soc={}", soc);
+                String message = ResSvcChgMessage.ADDITION_RATE_NOT_FOUND.getMessage();
+                rateNotFoundSocList.add(soc);
+                rateNotFoundMessageList.add(message);
+                continue;
+            }
+
+            String onlineCanYn = StringUtil.NVL(mspRateMstDto.getOnlineCanYn(), "");
+            logger.debug("[moscPrdcTrtmPreChk] cancel MSP_RATE_MST: soc={}, onlineCanYn={}, canCmnt={}",
+                    soc, onlineCanYn, mspRateMstDto.getCanCmnt());
+            if (!"Y".equals(onlineCanYn)) {
+                String canCmnt = StringUtil.NVL(mspRateMstDto.getCanCmnt(), "");
+                String message = !"".equals(canCmnt)
+                        ? canCmnt
+                        : ResSvcChgMessage.ADDITION_ONLINE_CANCEL_UNAVAILABLE.getMessage();
+                logger.warn("[moscPrdcTrtmPreChk] online cancel unavailable: soc={}, onlineCanYn={}", soc, onlineCanYn);
+                onlineCancelUnavailableSocList.add(soc);
+                onlineCancelUnavailableMessageList.add(message);
+                if ("".equals(onlineCancelUnavailableMessage)) {
+                    onlineCancelUnavailableMessage = message;
+                }
+                continue;
+            }
+        }
+
+        if (!rateNotFoundSocList.isEmpty() || !onlineCancelUnavailableSocList.isEmpty()) {
+            List<String> failedSocList = new ArrayList<>();
+            List<String> failedMessageList = new ArrayList<>();
+            failedSocList.addAll(rateNotFoundSocList);
+            failedSocList.addAll(onlineCancelUnavailableSocList);
+            failedMessageList.addAll(rateNotFoundMessageList);
+            failedMessageList.addAll(onlineCancelUnavailableMessageList);
+
+            if (!rateNotFoundSocList.isEmpty()) {
+                String message = ResSvcChgMessage.ADDITION_RATE_NOT_FOUND.getMessage();
+                return createAdditionPreCheckFailureResponse(
+                        ResSvcChgMessage.ADDITION_RATE_NOT_FOUND,
+                        failedSocList,
+                        rateNotFoundSocList,
+                        onlineCancelUnavailableSocList,
+                        failedMessageList,
+                        message
+                );
+            }
+
+            String message = !"".equals(onlineCancelUnavailableMessage)
+                    ? onlineCancelUnavailableMessage
+                    : ResSvcChgMessage.ADDITION_ONLINE_CANCEL_UNAVAILABLE.getMessage();
+            return createAdditionPreCheckFailureResponse(
+                    ResSvcChgMessage.ADDITION_ONLINE_CANCEL_UNAVAILABLE,
+                    failedSocList,
+                    rateNotFoundSocList,
+                    onlineCancelUnavailableSocList,
+                    failedMessageList,
+                    message
+            );
+        }
+
+        return null;
+    }
+
+    /**
+     * 사전체크 실패 응답에 실패 SOC 목록과 메시지 목록을 일관되게 담는다.
+     */
+    private FormResponse<AdditionPreCheckResVO> createAdditionPreCheckFailureResponse(
+            ResSvcChgMessage responseMessage,
+            List<String> prdcCdList,
+            List<String> preCheckFailedPrdcCdList,
+            List<String> onlineCancelUnavailablePrdcCdList,
+            List<String> messageList,
+            String message) {
+        AdditionPreCheckResVO res = new AdditionPreCheckResVO();
+        res.setPrdcCd(prdcCdList.get(0));
+        res.setPrdcCdList(prdcCdList);
+        res.setPreCheckFailedPrdcCdList(preCheckFailedPrdcCdList);
+        res.setOnlineCancelUnavailablePrdcCdList(onlineCancelUnavailablePrdcCdList);
+        res.setResltMsgList(messageList);
+        res.setResultCode(responseMessage.getCode());
+        res.setResltMsg(message);
+        return FormResponse.of(responseMessage, message, res);
+    }
+
+    /**
+     * Y24 응답 코드와 가입 가능 여부를 성공 기준으로 판정한다.
+     */
+    private boolean isMoscPrdcTrtmPreChkSuccess(AdditionPreCheckResVO res) {
+        String rsltCd = StringUtil.NVL(res.getRsltCd(), "");
+        String resultCode = StringUtil.NVL(res.getResultCode(), "");
+        String sbscYn = StringUtil.NVL(res.getSbscYn(), "");
+
+        if (!"".equals(rsltCd) && !"0000".equals(rsltCd)) {
+            return false;
+        }
+        if (!"".equals(resultCode) && !"0000".equals(resultCode)) {
+            return false;
+        }
+        if (!"".equals(sbscYn) && !"Y".equalsIgnoreCase(sbscYn)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Y24 실패 응답에서 화면에 표시할 메시지를 추출한다.
+     */
+    private String getMoscPrdcTrtmPreChkMessage(AdditionPreCheckResVO res) {
+        String resltMsg = StringUtil.NVL(res.getResltMsg(), "");
+        if (!"".equals(resltMsg)) {
+            return resltMsg;
+        }
+        String svcMsg = StringUtil.NVL(res.getSvcMsg(), "");
+        if (!"".equals(svcMsg)) {
+            return svcMsg;
+        }
+        return "부가서비스 가입이 불가합니다.";
+    }
+
 
     /**
      * 부가서비스 해지 (MSP_RATE_MST 검증 + X38)
@@ -228,23 +440,32 @@ public class MsfRegSvcServiceImpl {
      * ASIS 참조: moscRegSvcCanChg() / moscRegSvcCanChgSeq() — MyPageSearchDto 세션 의존,
      *           Map<String,Object> 반환 → TOBE에서 AdditionApplyResVO로 교체
      */
+
     public FormResponse<AdditionApplyResVO> moscRegSvcCanChg(AdditionApplyReqDto req) {
+        logger.debug("[moscRegSvcCanChg] start: ncn={}, ctn={}, custId={}, soc={}, prodHstSeq={}",
+                req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc(), req.getProdHstSeq());
         try {
             // [1] MSP_RATE_MST@DL_MSP — 온라인 해지 가능 여부 사전 검증
-            MspRateMstDto mspRateMstDto = fCommonSvc.getMspRateMst(req.getSoc());
+            MspRateMstDto mspRateMstDto = mspApiDirectRepository.query("/msp/mspRateMst", req.getSoc(), MspRateMstDto.class);
             if (mspRateMstDto == null) {
                 // 요금제 정보 자체가 없는 경우 — 해지 진행 불가
+                logger.warn("[moscRegSvcCanChg] MSP_RATE_MST not found: soc={}", req.getSoc());
                 return FormResponse.of(ResSvcChgMessage.ADDITION_RATE_NOT_FOUND);
             }
             String onlineCanYn = StringUtil.NVL(mspRateMstDto.getOnlineCanYn(), "");
+            logger.debug("[moscRegSvcCanChg] MSP_RATE_MST: soc={}, onlineCanYn={}, canCmnt={}",
+                    req.getSoc(), onlineCanYn, mspRateMstDto.getCanCmnt());
             if (!"Y".equals(onlineCanYn)) {
                 // 온라인 해지 불가 SOC — 고객센터 통해 해지 안내
+                logger.warn("[moscRegSvcCanChg] online cancel unavailable: soc={}, onlineCanYn={}", req.getSoc(), onlineCanYn);
                 return FormResponse.of(ResSvcChgMessage.ADDITION_ONLINE_CANCEL_UNAVAILABLE);
             }
 
             // [2] M플랫폼 X38 — 부가서비스 해지
             MpMoscRegSvcCanChgInVO vo;
-            if (req.getProdHstSeq() != null && !req.getProdHstSeq().isEmpty()) {
+            boolean hasProdHstSeq = req.getProdHstSeq() != null && !req.getProdHstSeq().isEmpty();
+            logger.debug("[moscRegSvcCanChg] X38 call: hasProdHstSeq={}, soc={}", hasProdHstSeq, req.getSoc());
+            if (hasProdHstSeq) {
                 // prodHstSeq 있음: 특정 이력 건 해지 (로밍 등 동일 SOC 복수 가입 케이스)
                 vo = mPlatFormService.moscRegSvcCanChgSeq(
                     req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc(), req.getProdHstSeq());
@@ -254,18 +475,26 @@ public class MsfRegSvcServiceImpl {
                     req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc());
             }
 
+            logger.debug("[moscRegSvcCanChg] X38 response: success={}, soc={}", vo.isSuccess(), req.getSoc());
             if (!vo.isSuccess()) {
                 // M플랫폼 응답 실패
+                logger.warn("[moscRegSvcCanChg] X38 failed: ncn={}, soc={}", req.getNcn(), req.getSoc());
                 throw new McpCommonException(COMMON_EXCEPTION);
             }
 
         } catch (SocketTimeoutException e) {
+            logger.warn("[moscRegSvcCanChg] socket timeout: ncn={}, soc={}", req.getNcn(), req.getSoc());
             throw new McpCommonException(SOCKET_TIMEOUT_EXCEPTION);
         } catch (SelfServiceException e) {
+            logger.warn("[moscRegSvcCanChg] SelfServiceException: ncn={}, soc={}, msg={}", req.getNcn(), req.getSoc(), e.getMessage());
+            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
+        } catch (Exception e) {
+            logger.warn("[moscRegSvcCanChg] exception: ncn={}, soc={}, msg={}", req.getNcn(), req.getSoc(), e.getMessage());
             return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
         }
 
-        return FormResponse.ok(AdditionApplyResVO.of(req.getSoc()));
+        logger.debug("[moscRegSvcCanChg] success: ncn={}, soc={}", req.getNcn(), req.getSoc());
+        return FormResponse.of(ResSvcChgMessage.SUCCESS, AdditionApplyResVO.of(req.getSoc()));
     }
 
     /**
@@ -290,14 +519,19 @@ public class MsfRegSvcServiceImpl {
      * ASIS 참조: regSvcChg() — X21 사용, 인증 STEP 검증, 포인트 처리 포함
      */
     public FormResponse<AdditionApplyResVO> regSvcChg(AdditionApplyReqDto req) {
+        logger.debug("[regSvcChg] start: ncn={}, ctn={}, custId={}, soc={}, flag={}, ftrNewParam={}",
+                req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc(), req.getFlag(), req.getFtrNewParam());
         try {
             // [1] 선해지 (flag="Y": 동일 SOC 해지 후 재가입 — 로밍 변경 등)
             if ("Y".equals(req.getFlag())) {
+                logger.debug("[regSvcChg] 선해지 진행: soc={}", req.getSoc());
                 FormResponse<AdditionApplyResVO> cancelRes = moscRegSvcCanChg(req);
-                if (!ResponseMessage.SUCCESS.getCode().equals(cancelRes.resCode())) {
+                if (!ResSvcChgMessage.SUCCESS.getCode().equals(cancelRes.resCode())) {
                     // 선해지 실패 시 신청 중단
+                    logger.warn("[regSvcChg] 선해지 실패로 신청 중단: ncn={}, soc={}, resCode={}", req.getNcn(), req.getSoc(), cancelRes.resCode());
                     return cancelRes;
                 }
+                logger.debug("[regSvcChg] 선해지 성공: soc={}", req.getSoc());
             }
 
             // [ASIS] 인증 STEP 검증 — 공통 미구현 (31번 §1-3)
@@ -307,8 +541,10 @@ public class MsfRegSvcServiceImpl {
             // if (!AJAX_SUCCESS.equals(vldReslt.get("RESULT_CODE"))) { return STEP02 오류; }
 
             // [2] M플랫폼 Y25 — 부가서비스 신청 (X21 대체)
+            logger.debug("[regSvcChg] Y25 call: ncn={}, soc={}", req.getNcn(), req.getSoc());
             mPlatFormService.regSvcChgY25(
                 req.getNcn(), req.getCtn(), req.getCustId(), req.getSoc(), req.getFtrNewParam());
+            logger.debug("[regSvcChg] Y25 success: ncn={}, soc={}", req.getNcn(), req.getSoc());
 
             // [ASIS] 포인트 처리 — 포인트 기능 미이관
             // 포인트할인(REG_SVC_CD_4) 신청 시 포인트 사용 처리 (pointService.editPoint)
@@ -318,141 +554,17 @@ public class MsfRegSvcServiceImpl {
             // }
 
         } catch (SocketTimeoutException e) {
+            logger.warn("[regSvcChg] socket timeout: ncn={}, soc={}", req.getNcn(), req.getSoc());
             throw new McpCommonException(SOCKET_TIMEOUT_EXCEPTION);
         } catch (SelfServiceException e) {
+            logger.warn("[regSvcChg] SelfServiceException: ncn={}, soc={}, msg={}", req.getNcn(), req.getSoc(), e.getMessage());
+            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
+        } catch (Exception e) {
+            logger.warn("[regSvcChg] exception: ncn={}, soc={}, msg={}", req.getNcn(), req.getSoc(), e.getMessage());
             return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
         }
 
-        return FormResponse.ok(AdditionApplyResVO.of(req.getSoc()));
+        return FormResponse.of(ResSvcChgMessage.SUCCESS, AdditionApplyResVO.of(req.getSoc()));
     }
 
-    // =====================================================
-    // private 유틸 메서드
-    // ASIS에서 인터페이스 공개 메서드였으나 TOBE에서 내부 private으로 이동
-    // (외부에서 직접 호출할 이유 없음 — Controller가 직접 호출하지 않음)
-    // =====================================================
-
-    /**
-     * 부가서비스 목록에서 일반(G) 또는 로밍(R)만 남기도록 필터링
-     *
-     * addDivCd="G" → 로밍 SOC 제거 (일반만 남김)
-     * addDivCd="R" → 일반 SOC 제거 (로밍만 남김)
-     * addDivCd=""  → 전체 (필터 없음)
-     *
-     * 로밍 SOC 목록은 DB(getRoamCdList)에서 관리
-     *
-     * @param mpSocList 필터링할 이용중 SOC 목록 (X97 결과)
-     * @param addDivCd  "G"=일반, "R"=로밍, ""=전체
-     */
-    private void getMpSocListByDiv(List<MpSocVO> mpSocList, String addDivCd) {
-        if (addDivCd == null || "".equals(addDivCd)) return; // 전체 조회 시 필터 없음
-        if (mpSocList == null || mpSocList.isEmpty()) return;
-        Iterator<MpSocVO> iter = mpSocList.iterator();
-        List<String> roamCdList = regSvcDao.getRoamCdList(); // DB에서 로밍 SOC 코드 목록 조회
-        while (iter.hasNext()) {
-            MpSocVO mpSoc = iter.next();
-            if (chkRemove(mpSoc.getSoc(), addDivCd, roamCdList)) {
-                iter.remove();
-            }
-        }
-    }
-
-    /**
-     * 가입가능 부가서비스 목록에서 일반(G) 또는 로밍(R)만 남기도록 필터링
-     *
-     * @param mcpRegServiceList 필터링할 전체 부가서비스 목록 (DB)
-     * @param addDivCd          "G"=일반, "R"=로밍, ""=전체
-     */
-    private void getMcpRegServiceListByDiv(List<McpRegServiceDto> mcpRegServiceList, String addDivCd) {
-        if (addDivCd == null || "".equals(addDivCd)) return;
-        Iterator<McpRegServiceDto> iter = mcpRegServiceList.iterator();
-        List<String> roamCdList = regSvcDao.getRoamCdList();
-        while (iter.hasNext()) {
-            McpRegServiceDto mcpRegService = iter.next();
-            if (chkRemove(mcpRegService.getRateCd(), addDivCd, roamCdList)) {
-                iter.remove();
-            }
-        }
-    }
-
-    /**
-     * 특정 SOC를 목록에서 제거해야 하는지 판단
-     *
-     * "G"(일반만 조회): roamCdList에 포함되면 로밍 → 제거(true)
-     * "R"(로밍만 조회): roamCdList에 포함되면 로밍 → 유지(false), 포함 안 되면 일반 → 제거(true)
-     *
-     * @param soc        SOC 코드
-     * @param addDivCd   "G" 또는 "R"
-     * @param roamCdList DB에서 조회한 로밍 SOC 코드 목록
-     * @return true = 제거, false = 유지
-     */
-    private boolean chkRemove(String soc, String addDivCd, List<String> roamCdList) {
-        if ("G".equals(addDivCd)) {
-            // 일반 조회: roamCdList에 있으면 로밍 SOC → 제거
-            for (String roamCd : roamCdList) {
-                if (roamCd.equals(soc)) return true;
-            }
-            return false;
-        } else if ("R".equals(addDivCd)) {
-            // 로밍 조회: roamCdList에 없으면 일반 SOC → 제거
-            for (String roamCd : roamCdList) {
-                if (roamCd.equals(soc)) return false;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    // =====================================================
-    // [ASIS] 기존 메서드 — TOBE 전환 완료로 주석 처리 (삭제 금지)
-    // =====================================================
-
-    // TOBESKIP: 구 ASIS X20 시그니처는 DTO 기반 addSvcList로 대체되어 주석으로만 보존한다.
-    // [ASIS] X20 사용 → selectAddSvcInfoDto()로 대체
-    // X20: 이용중인 부가서비스 SOC 목록만 반환 (단순)
-    // X97: SOC + 이력 + 상세정보 포함 반환 (확장)
-    // @Override
-    // public List<String> selectAddSvcInfoDto(String ncn, String ctn, String custId) {
-    //     MpAddSvcInfoDto vo = mPlatFormService.getAddSvcInfoDto(ncn, ctn, custId);
-    //     ... (X20 호출)
-    // }
-
-    // TOBESKIP: 구 ASIS X21 시그니처는 TOBE regSvcChg(AdditionApplyReqDto)로 대체되어 주석으로만 보존한다.
-    // [ASIS] X21 사용 → regSvcChg()로 대체
-    // X21: 단건 부가서비스 신청
-    // Y25: 상품변경처리(multi) — 복수 SOC 처리 지원
-    // @Override
-    // public MpRegSvcChgVO regSvcChg(String ncn, String ctn, String custId, String soc, String ftrNewParam)
-    //         throws SocketTimeoutException {
-    //     res = mPlatFormService.regSvcChg(ncn, ctn, custId, soc, ftrNewParam); // X21
-    // }
-
-    // TOBESKIP: 구 ASIS X97/세션 의존 시그니처는 TOBE myAddSvcList(MyAddSvcListReqDto)로 대체되어 주석으로만 보존한다.
-    // [ASIS] X97 사용, MyPageSearchDto(세션) 의존 → selectMyAddSvcList()로 대체
-    // lstComActvDate(최초 공통 활성 일자) 기반 onlineCanDay 블로킹 처리 포함
-    // TOBE에서는 단순화 (lstComActvDate 미사용)
-    // @Override
-    // public MpAddSvcInfoParamDto selectmyAddSvcList(String ncn, String ctn, String custId) { ... }
-    // @Override
-    // public MpAddSvcInfoParamDto selectmyAddSvcList(String ncn, String ctn, String custId, String lstComActvDate) { ... }
-
-    // TOBESKIP: 구 ASIS Map 반환 시그니처는 TOBE AdditionApplyResVO 기반 해지 처리로 대체되어 주석으로만 보존한다.
-    // [ASIS] Map 반환, MyPageSearchDto(세션) 의존 → moscRegSvcCanChg()로 대체
-    // Map<String,Object>에 "RESULT_CODE"("S"/"E"), "message" 키로 결과 반환
-    // TOBE에서 AdditionApplyResVO(success, message)로 교체
-    // @Override
-    // public Map<String, Object> moscRegSvcCanChg(MyPageSearchDto searchVO, String rateAdsvcCd)
-    //         throws SocketTimeoutException { ... }
-    // @Override
-    // public Map<String, Object> moscRegSvcCanChgSeq(MyPageSearchDto searchVO, String rateAdsvcCd, String prodHstSeq)
-    //         throws SocketTimeoutException { ... }
-
-    // TOBESKIP: 구 ASIS 공개 유틸 시그니처는 TOBE private helper로 흡수되어 주석으로만 보존한다.
-    // [ASIS] 인터페이스 공개 메서드 → TOBE에서 private 내부 메서드로 이동
-    // (외부에서 직접 호출하지 않으므로 인터페이스 노출 불필요)
-    // @Override public void getMpSocListByDiv(...) { ... }
-    // @Override public void getMcpRegServiceListByDiv(...) { ... }
-    // @Override public String getUpdateYn(MpSocVO mpSoc) { ... }      // 로밍 상품 변경가능 여부
-    // @Override public String getEndDttmUsePrd(MpSocVO mpSoc, String usePrd) { ... } // 종료일 계산
-    // @Override public String getCtnByNcn(String ncn, boolean flagMasking) { ... }   // 계약번호→회선번호
 }

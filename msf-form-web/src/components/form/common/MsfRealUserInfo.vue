@@ -19,11 +19,11 @@
             :readonly="model.isSaved"
           />
           <MsfRadioGroup
-            name="user-gender"
+            :name="`${name}-user-gender`"
             v-model="model.userGender"
             :options="[
-              { value: 'userGender1', label: '남' },
-              { value: 'userGender2', label: '여' },
+              { value: 'M', label: '남' },
+              { value: 'F', label: '여' },
             ]"
             class="ut-ml-16"
             :disabled="model.isSaved"
@@ -38,6 +38,7 @@ import { defineModel, defineProps } from 'vue'
 
 const props = defineProps({
   title: { type: String, default: '고객(실사용자) 정보' },
+  name: { type: String, default: 'basic' },
 })
 const model = defineModel({ type: Object, required: true })
 

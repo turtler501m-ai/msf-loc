@@ -1,11 +1,20 @@
 package com.ktmmobile.msf.domains.form.form.newchange.repository.smartform;
 
-import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
-import com.ktmmobile.msf.domains.form.form.common.vo.*;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 
-import java.util.List;
+import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDvcChgVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 
 @AutoAuditing
 @Mapper
@@ -48,6 +57,25 @@ public interface NewChangeWriteMapper {
 
     //UPDATE RES_NO
     void updateMsfRequestInfo(NewChangeInfoRequest request);
+
+    //insert ~ select
+    void insertMsfRequest(Long requestKey);
+
+    void insertMsfRequestCstmr(Long requestKey);
+
+    void insertMsfRequestAgent(Long requestKey);
+
+    void insertMsfRequestSale(Long requestKey);
+
+    void insertMsfRequestBillReq(Long requestKey);
+
+    void insertMsfRequestMove(Long requestKey);
+
+    void insertMsfRequestDvcChg(Long requestKey);
+
+    void insertMsfRequestAddition(Long requestKey);
+
+    void insertMsfRequestState(MsfRequestStateVo msfRequestStateVo);
 
     //void updateMsfRequestTemp(NewChangeInfoRequest request);
     //void updateMsfRequestAgentTemp(NewChangeInfoRequest request);

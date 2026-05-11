@@ -3,6 +3,10 @@ import { reactive, ref } from 'vue'
 import { post } from '@/libs/api/msf.api'
 
 export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
+  const DEFAULT_COMPLETE_ERROR_MESSAGE = '서비스 처리 중 오류가 발생했습니다.'
+  const applicationKey = ref('TEMP_' + Math.random().toString(36).substring(7))
+  const completeErrorMessage = ref('')
+
   // Step 1: Customer Info
   const formData = reactive({
     /** 고객유형 */
@@ -72,16 +76,53 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
     serviceChecked: false, //서비스 체크 완료 여부
     serviceSelectCompleteYn: 'N', //서비스 선택 완료 여부
     serviceSelectCompleted: false, //서비스 선택 완료 여부
+    additionList: [], // 부가서비스 선택 목록
+    additionCancelList: [], // 부가서비스 해지 목록
+    additionConfirmCompleted: false, // 부가서비스 작성 완료 여부
+    blockService: null, // 무선데이터차단 선택
     agency: '', //대리점
+    managerCd: '',
+    managerNm: '',
+    agentCd: '',
+    agentNm: '',
+    cpntId: '',
+    cpntNm: '',
+    cntpntShopCd: '',
+    cntpntShopNm: '',
     /** 서비스 변경 선택_type02__디자인미확정 */
     addonService: '', //요금제/부가 서비스
     combinedService: '', //결합서비스
     loseLock: '', //일시/분실정지
     joinInfoChange: '', //가입정보 변경
-    /* 요금제 변경 관련 */
+    wirelessBlockConfirmCompleted: false, // 무선데이터차단 확인 완료 여부
+    /* P11: 요금제변경 */
     planName1: '',
     planName2: '',
     changeDate: '',
+    /* O11: 번호변경 */
+    reqWantFnNo: '',
+    reqWantMnNo: '',
+    reqWantRnNo: '',
+    wishNo: '',
+    /* O12: 분실복구/일시정지해제 */
+    unLockPw: '',
+    /* R14: 단말보험 */
+    clauseInsuranceYn: '',
+    recCat1: '',
+    recCat2: '',
+    /* O13: SIM정보 */
+    hasSim: '',
+    usimKindsCd: '',
+    reqUsimSn: '',
+    eid: '',
+    imei1: '',
+    imei2: '',
+    /* R15: 데이터쉐어링 */
+    shareUseState: '',
+    sharePhoneNum: '',
+    shareUsimNum: '',
+    /* R16: 결합Solo */
+    soloData: '',
   })
 
   const authFlags = ref({
@@ -166,9 +207,238 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
     }
   }
 
+  const getPhoneNo = () =>
+    `${formData.deviceChgTel1 || ''}${formData.deviceChgTel2 || ''}${formData.deviceChgTel3 || ''}`
+
+  const getCommonAdditionPayload = () => ({
+    ncn: formData.ncn || formData.contractNum || '',
+    ctn: getPhoneNo(),
+    custId: formData.custId || '',
+  })
+
+  const getServiceCode = (svc = {}) =>
+    String(svc.rateCd || svc.soc || svc.prodId || svc.addSvcCd || '')
+
+  const getServiceName = (svc = {}) =>
+    svc.rateNm || svc.socDescription || svc.prodNm || svc.addSvcNm || svc.serviceName || getServiceCode(svc)
+
+  const getProductSeqNo = (svc = {}) =>
+    String(svc.prodHstSeq || svc.prdcSeqNo || svc.prodSeqNo || svc.productSeqNo || svc.svcSeqNo || '')
+
+  const getFtrNewParam = (svc = {}) => {
+    if (svc.ftrNewParam) return String(svc.ftrNewParam)
+
+    const settingData = svc.addSvcSettingData || {}
+    const entries = Object.entries(settingData).filter(([, value]) => value !== undefined && value !== null)
+    if (entries.length === 0) return ''
+
+    return entries.map(([key, value]) => `${key}=${value}`).join('|')
+  }
+
+  const getUniqueServices = (services = []) => {
+    const seen = new Set()
+    return services.filter((svc) => {
+      const key = `${getServiceCode(svc)}|${getProductSeqNo(svc)}|${svc.action || ''}`
+      if (!getServiceCode(svc) || seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }
+
+  const getSelectedServiceTypes = () => (Array.isArray(formData.serviceSelect) ? formData.serviceSelect : [])
+
+  const getWirelessBlockAddServices = () => {
+    if (formData.blockService !== 'blockService2') return []
+    return [{ soc: 'WIRELESSC', ftrNewParam: '', flag: '', svcTgtCd: 'R12' }]
+  }
+
+  const getWirelessBlockCancelServices = () => {
+    if (formData.blockService !== 'blockService1') return []
+    return [{ soc: 'WIRELESSC', prodHstSeq: '', svcTgtCd: 'R12' }]
+  }
+
+  // ServiceChangeProduct.vue의 CONFIRM_REQUIRED_MAP과 동일하게 유지
+  const CONFIRM_REQUIRED_MAP = {
+    R11: 'additionConfirmCompleted',
+    R12: 'wirelessBlockConfirmCompleted',
+  }
+
+  const hasPendingCompletion = () => {
+    const selectedTypes = getSelectedServiceTypes()
+    for (const [type, field] of Object.entries(CONFIRM_REQUIRED_MAP)) {
+      if (selectedTypes.includes(type) && formData[field] !== true) return false
+    }
+    // R12(무선데이터차단)는 blockService 선택 여부도 추가 검증
+    if (selectedTypes.includes('R12') && !formData.blockService) return false
+    return true
+  }
+
+  const isFormResponseSuccess = (res) => {
+    const formResponse = res?.data
+    return res?.code === '0000' && (!formResponse?.resCode || formResponse.resCode === '0000')
+  }
+
+  const getResponseMessage = (res) =>
+    res?.data?.resMessage || res?.message || DEFAULT_COMPLETE_ERROR_MESSAGE
+
+  const apiCompleteAdditionApplication = async () => {
+    completeErrorMessage.value = ''
+
+    const commonPayload = getCommonAdditionPayload()
+    const selectedTypes = getSelectedServiceTypes()
+    const addServices = getUniqueServices(
+      (formData.additionList || []).filter((svc) => (svc.action || 'ADD') === 'ADD'),
+    )
+    const cancelServices = getUniqueServices(formData.additionCancelList || [])
+    const wirelessAddServices = getUniqueServices(getWirelessBlockAddServices())
+    const wirelessCancelServices = getUniqueServices(getWirelessBlockCancelServices())
+    const finalAddServices = getUniqueServices([...addServices, ...wirelessAddServices])
+    const finalCancelServices = getUniqueServices([...cancelServices, ...wirelessCancelServices])
+
+    console.log('[서비스변경][작성완료] 부가서비스 처리 시작', {
+      ...commonPayload,
+      selectedTypes,
+      addCount: finalAddServices.length,
+      cancelCount: finalCancelServices.length,
+      addServices: finalAddServices.map((svc) => ({ soc: getServiceCode(svc), name: getServiceName(svc) })),
+      cancelServices: finalCancelServices.map((svc) => ({
+        soc: getServiceCode(svc),
+        name: getServiceName(svc),
+        prodHstSeq: getProductSeqNo(svc),
+      })),
+    })
+
+    if (!hasPendingCompletion()) {
+      completeErrorMessage.value = '작성이 완료되지 않았습니다. 확인 상태를 다시 확인해 주세요.'
+      console.warn('[서비스변경][작성완료] 부가서비스 처리 중단', {
+        reason: 'confirm incomplete',
+        additionConfirmCompleted: formData.additionConfirmCompleted,
+        wirelessBlockConfirmCompleted: formData.wirelessBlockConfirmCompleted,
+        selectedTypes,
+      })
+      return false
+    }
+
+    if (!commonPayload.ncn || !commonPayload.ctn) {
+      completeErrorMessage.value = '계약번호 또는 휴대폰번호가 없어 처리를 진행할 수 없습니다.'
+      console.warn('[서비스변경][작성완료] 부가서비스 처리 중단', {
+        reason: 'missing common payload',
+        ...commonPayload,
+      })
+      return false
+    }
+
+    try {
+      const payload = {
+        ...commonPayload,
+        serviceSelect: selectedTypes,
+        cstmrTypeCd: formData.cstmrTypeCd || 'NA',
+        managerCd: formData.managerCd || '',
+        managerNm: formData.managerNm || '',
+        agentCd: formData.agentCd || '',
+        agentNm: formData.agentNm || '',
+        cpntId: formData.cpntId || '',
+        cpntNm: formData.cpntNm || '',
+        cntpntShopCd: formData.cntpntShopCd || '',
+        cntpntShopNm: formData.cntpntShopNm || '',
+        additionCancelList: finalCancelServices.map((svc) => ({
+          soc: getServiceCode(svc),
+          prodHstSeq: getProductSeqNo(svc),
+          svcTgtCd: svc.svcTgtCd || 'R11',
+        })),
+        additionList: finalAddServices.map((svc) => ({
+          soc: getServiceCode(svc),
+          ftrNewParam: getFtrNewParam(svc),
+          flag: svc.flag || '',
+          svcTgtCd: svc.svcTgtCd || 'R11',
+        })),
+        // P11: 요금제변경
+        ...(selectedTypes.includes('P11') ? {
+          planChange: {
+            planCategoryCd: formData.planName1 || '',
+            planCd: formData.planName2 || '',
+            changeTypeCd: formData.changeDate || '',
+          },
+        } : {}),
+        // O11: 번호변경
+        ...(selectedTypes.includes('O11') ? {
+          numberChange: {
+            reqWantFnNo: formData.reqWantFnNo || '',
+            reqWantMnNo: formData.reqWantMnNo || '',
+            reqWantRnNo: formData.reqWantRnNo || '',
+            wishNo: formData.wishNo || '',
+          },
+        } : {}),
+        // O12: 분실복구/일시정지해제
+        ...(selectedTypes.includes('O12') ? {
+          unpause: {
+            unLockPw: formData.unLockPw || '',
+          },
+        } : {}),
+        // R14: 단말보험
+        ...(selectedTypes.includes('R14') ? {
+          insurance: {
+            clauseInsuranceYn: formData.clauseInsuranceYn || '',
+            catCd: formData.recCat1 || '',
+            insrProdCd: formData.recCat2 || '',
+          },
+        } : {}),
+        // O13: SIM정보
+        ...(selectedTypes.includes('O13') ? {
+          simInfo: {
+            hasSim: formData.hasSim || '',
+            usimKindsCd: formData.usimKindsCd || '',
+            reqUsimSn: formData.reqUsimSn || '',
+            eid: formData.eid || '',
+            imei1: formData.imei1 || '',
+            imei2: formData.imei2 || '',
+          },
+        } : {}),
+        // R15: 데이터쉐어링
+        ...(selectedTypes.includes('R15') ? {
+          dataSharing: {
+            shareUseState: formData.shareUseState || '',
+            sharePhoneNum: formData.sharePhoneNum || '',
+            shareUsimNum: formData.shareUsimNum || '',
+          },
+        } : {}),
+        // R16: 결합Solo
+        ...(selectedTypes.includes('R16') ? {
+          combineSolo: {
+            soloData: formData.soloData || '',
+          },
+        } : {}),
+      }
+      console.log('[서비스변경][작성완료] complete 요청', {
+        applicationKey: applicationKey.value,
+        ...payload,
+      })
+      const res = await post(`/api/msf/formServiceChange/${applicationKey.value}/complete`, payload)
+      console.log('[서비스변경][작성완료] complete 응답', res)
+
+      if (!isFormResponseSuccess(res)) {
+        completeErrorMessage.value = getResponseMessage(res)
+        return false
+      }
+
+      console.log('[서비스변경][작성완료] complete 처리 완료')
+      return true
+    } catch (e) {
+      completeErrorMessage.value = e?.response?.data?.data?.resMessage || e?.message || DEFAULT_COMPLETE_ERROR_MESSAGE
+      console.error('[서비스변경][작성완료] 부가서비스 처리 예외', e)
+      return false
+    }
+  }
+
+  const getCompleteErrorMessage = () => completeErrorMessage.value || DEFAULT_COMPLETE_ERROR_MESSAGE
+
   return {
+    applicationKey,
     formData,
     authFlags,
+    completeErrorMessage,
     apiGetMyinfoView,
+    apiCompleteAdditionApplication,
+    getCompleteErrorMessage,
   }
 })

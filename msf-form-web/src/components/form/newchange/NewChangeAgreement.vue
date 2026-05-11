@@ -74,6 +74,17 @@ const validate = () => {
   return isAgreeChecked && isRecCompleted
 }
 
+const getPendingItems = () => {
+  const pending = []
+  if (!(store.agreement.agreeCheck1 && store.agreement.agreeCheck2 && store.agreement.agreeCheck3)) {
+    pending.push('고객 안내 사항 동의')
+  }
+  if (store.agreement.recYn !== 'Y') {
+    pending.push('신청서 확인 및 녹취/서명')
+  }
+  return pending
+}
+
 const checkRequiredFields = () => {
   const isReady = validate()
   emit('complete', isReady)
@@ -150,7 +161,7 @@ const save = async () => {
   return await store.apiCompleteApplication()
 }
 
-defineExpose({ save, validate, reset: store.resetAll })
+defineExpose({ save, validate, getPendingItems, reset: store.resetAll })
 </script>
 
 <style lang="scss" scoped>

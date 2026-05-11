@@ -12,8 +12,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { differenceInCalendarDays, differenceInMonths, format, isToday, toDate } from 'date-fns'
+import { onBeforeMount, ref, watch } from 'vue'
+import { differenceInCalendarDays, differenceInMonths, isToday, toDate } from 'date-fns'
+import { formatDate } from '@/libs/utils/date.utils'
 
 const startDate = defineModel('from', { default: '' })
 const endDate = defineModel('to', { default: '' })
@@ -37,10 +38,20 @@ const quickButtons = ref([
   { code: '1-0', value: '1-0', label: '한달', days: 0, months: 1 },
 ])
 
-// Date 객체를 'YYYY-MM-DD' 포맷으로 변환하는 헬퍼 함수
-const formatDate = (date) => {
-  return format(date, 'yyyy-MM-dd')
+const setQuickActive = (start, end) => {
+  if (!start || !end) {
+    quickActive.value = ''
+  } else {
+    const calc = calcMonthsAndDays(formatDate(start), formatDate(end))
+    quickActive.value =
+      quickButtons.value.find((v) => v.months === calc.months && v.days === calc.days)?.code || ''
+  }
 }
+
+// Date 객체를 'YYYY-MM-DD' 포맷으로 변환하는 헬퍼 함수
+// const formatDate = (date) => {
+//   return format(date, 'yyyy-MM-dd')
+// }
 
 // 버튼 클릭 시 기간 설정 로직
 const setRange = (val) => {
@@ -77,25 +88,13 @@ const calcMonthsAndDays = (from, to) => {
 watch(
   () => startDate.value,
   (newVal) => {
-    if (!newVal) {
-      quickActive.value = ''
-    } else {
-      const calc = calcMonthsAndDays(newVal, endDate.value)
-      quickActive.value =
-        quickButtons.value.find((v) => v.months === calc.months && v.days === calc.days)?.code || ''
-    }
+    setQuickActive(newVal, endDate.value)
   },
 )
 watch(
   () => endDate.value,
   (newVal) => {
-    if (!newVal) {
-      quickActive.value = ''
-    } else {
-      const calc = calcMonthsAndDays(startDate.value, newVal)
-      quickActive.value =
-        quickButtons.value.find((v) => v.months === calc.months && v.days === calc.days)?.code || ''
-    }
+    setQuickActive(startDate.value, newVal)
   },
 )
 watch(
@@ -109,6 +108,21 @@ watch(
     }
   },
 )
+onBeforeMount(() => {
+  let sameStartDate = false,
+    sameEndDate = false
+  if (startDate.value) {
+    sameStartDate = startDate.value.indexOf('-') > 0
+    startDate.value = formatDate(startDate.value)
+  }
+  if (endDate.value) {
+    sameEndDate = endDate.value.indexOf('-') > 0
+    endDate.value = formatDate(endDate.value)
+  }
+  if (sameStartDate && sameEndDate) {
+    setQuickActive(startDate.value, endDate.value)
+  }
+})
 </script>
 
 <style lang="scss" scoped>

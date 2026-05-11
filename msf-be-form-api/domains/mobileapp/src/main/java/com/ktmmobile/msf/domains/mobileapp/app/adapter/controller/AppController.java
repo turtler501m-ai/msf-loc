@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
@@ -21,34 +22,35 @@ import com.ktmmobile.msf.domains.mobileapp.app.application.dto.OnSelect;
 import com.ktmmobile.msf.domains.mobileapp.app.application.port.in.AppIntroReader;
 
 @RestController
+@RequestMapping("/api/n/app")
 @RequiredArgsConstructor
 public class AppController {
 
     private final AppIntroReader appIntroReader;
 
-    @PostMapping("/api/auth/app/intro")
+    @PostMapping("/intro")
     public CommonResponse<IntroResponse> login(@RequestBody @Validated(OnSelect.class) IntroRequest request) {
         return ResponseUtils.ok(appIntroReader.intro(request));
     }
 
-    @PostMapping("/api/auth/app/login/init")
+    @PostMapping("/login/init")
     public CommonResponse<AppInitResponse> init(@RequestBody @Validated(OnSelect.class) AppInitRequest request) {
         return ResponseUtils.ok(appIntroReader.initLogin(request));
     }
 
-    @PostMapping("/api/auth/app/model/register")
+    @PostMapping("/model/register")
     public CommonResponse<Integer> modelRegist(@RequestBody @Validated(OnCreate.class) AppRegistRequest request) {
         return ResponseUtils.ok(appIntroReader.registModel(request));
     }
 
-    @PostMapping("/api/auth/app/model/remove")
+    @PostMapping("/model/remove")
     public CommonResponse<Integer> modelRemove(@RequestBody @Validated(OnDelete.class) AppInitRequest request) {
         return ResponseUtils.ok(appIntroReader.removeModel(request));
     }
 
-    @PostMapping("/api/auth/app/settingbio/modify")
+    @PostMapping("/settingbio/modify")
     public CommonResponse<Integer> bioModify(@RequestBody @Validated(OnModify.class) AppRegistRequest request) {
-        request.setUserId(AuthenticationUtils.getUser().getId());
+        request.setUserId(AuthenticationUtils.getUser().getUserId());
         return ResponseUtils.ok(appIntroReader.modifyBioSetting(request));
     }
 

@@ -1,5 +1,7 @@
 package com.ktmmobile.msf.domains.form.form.ownerchange.controller;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,7 +31,7 @@ public class OwnerChangeController {
 
     // 명의변경 작성완료 데이터 저장 (사전체크만?)
     @PostMapping("/owner-change/form/save")
-    public CommonResponse<OwnerChangeSaveResponse> ownerChangeFormSave(@RequestBody MsfRequestNameChgVo request) {
+    public CommonResponse<OwnerChangeSaveResponse> ownerChangeFormSave(@RequestBody @Valid MsfRequestNameChgVo request) {
         return ResponseUtils.ok(ownerChgRestSvc.ownerChangeFormSave(request));
     }
 }

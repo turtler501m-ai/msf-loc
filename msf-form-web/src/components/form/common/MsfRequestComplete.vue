@@ -4,7 +4,7 @@
     <div class="completed-msg">
       <img src="@/assets/images/completedIcon.svg" alt="완료" />
       <p class="user-name">
-        <em class="ut-color-accent"> {{ maskingName(data.name) }} </em>님
+        <em class="ut-color-accent"> {{ userInfo?.userName }} </em>님
       </p>
       <div class="info-txt">
         <strong> 작성하신 신청서가 작성 완료되었습니다.</strong>
@@ -41,8 +41,23 @@
               placeholder="휴대폰번호 ‘-’ 없이 입력"
               class="ut-flex-1"
             />
-            <MsfButton variant="subtle" :disabled="invalid" @click="onClickSendKTMessage">
-              발송
+            <MsfButton
+              variant="subtle"
+              label="ios 발송"
+              class="send-btn"
+              :disabled="invalid"
+              @click="() => onClickSendKTMessage('I')"
+            >
+              <img src="@/assets/images/appIpad.svg" alt="ios 아이콘" />발송
+            </MsfButton>
+            <MsfButton
+              variant="subtle"
+              label="안드로이드 발송"
+              class="send-btn"
+              :disabled="invalid"
+              @click="() => onClickSendKTMessage('A')"
+            >
+              <img src="@/assets/images/appAndroid.svg" alt="Android 아이콘" />발송
             </MsfButton>
           </MsfStack>
         </div>
@@ -54,12 +69,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useMsfUserStore } from '@/stores/msf_user'
 import { post } from '@/libs/api/msf.api'
 import { getFormTypeCode } from '@/libs/utils/comn.utils'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
-import { maskingName, validateMobile, isEmpty } from '@/libs/utils/string.utils'
+import { validateMobile, isEmpty } from '@/libs/utils/string.utils'
 
 const route = useRoute()
+const userStore = useMsfUserStore()
 
 const props = defineProps({
   formType: { type: String, required: true },
@@ -67,7 +84,7 @@ const props = defineProps({
 })
 
 const smsType = ref('')
-
+const userInfo = ref(userStore.getUserInfo())
 const data = ref(props.formData)
 const phoneNumber = ref('')
 
@@ -76,7 +93,7 @@ const invalid = computed(() => {
   return !validateMobile(phoneNumber.value)
 })
 
-const onClickSendKTMessage = async () => {
+const onClickSendKTMessage = async (type) => {
   if (isEmpty(phoneNumber.value)) {
     showAlert('휴대폰번호를 입력해 주세요.')
     return false
@@ -87,7 +104,7 @@ const onClickSendKTMessage = async () => {
   }
 
   const formTypeCd = getFormTypeCode(route.path)
-  smsType.value = `F-${formTypeCd}-DLN`
+  smsType.value = `F-${formTypeCd}-${type}DN`
 
   showConfirm('SMS를 발송하시겠습니까?', async () => {
     const result = await post('/api/shared/common/sms/send', {

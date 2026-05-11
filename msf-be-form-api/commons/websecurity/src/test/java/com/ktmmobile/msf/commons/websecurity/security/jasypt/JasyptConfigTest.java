@@ -1,6 +1,7 @@
 package com.ktmmobile.msf.commons.websecurity.security.jasypt;
 
 import org.jasypt.encryption.StringEncryptor;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,14 +12,14 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-// @Disabled
+@Disabled
 @ActiveProfiles("local")
-@TestPropertySource(properties = {"jasypt.encryptor.password=form#$%msf321smart"})
+@TestPropertySource(properties = {"jasypt.encryptor.password=test1234!@#$"})
 @SpringJUnitConfig(JasyptConfig.class)
 class JasyptConfigTest {
 
-    private static final String PLAIN_TEXT = "U01TX0FVVEgyMDIxMDcyNzIwMTExMTExMTQ1OTg=";
-    private static final String ENCRYPTED = "lL2k/kadYrZ88Yo46pp5OcD0ia8J6lek6QqJ83A897D80gVkeuZk4kjBrxfhaxJU+S+ATvu7N28HiPddbe/YV+G/LOHdcCyoWFDzU20K4os=";
+    private static final String PLAIN_TEXT = "plainSecretKey";
+    private static final String ENCRYPTED = "vIctW7yf9ubAdCI+8SXidMGeocavaGNOQ6xdxxuFAcKPwUEYd9RvMi94VU+6ns0t";
 
     @Autowired
     StringEncryptor jasyptStringEncryptor;

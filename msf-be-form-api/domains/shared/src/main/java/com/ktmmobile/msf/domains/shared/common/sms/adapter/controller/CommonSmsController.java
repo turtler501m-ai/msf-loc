@@ -15,7 +15,7 @@ import com.ktmmobile.msf.domains.shared.common.sms.application.dto.CommonSmsResp
 import com.ktmmobile.msf.domains.shared.common.sms.application.port.in.CommonSmsWriter;
 
 @RestController
-@RequestMapping({"/api/shared/common/sms", "/api/auth/sms"})
+@RequestMapping({"/api/shared/common/sms", "/api/n/auth/sms"})
 @RequiredArgsConstructor
 public class CommonSmsController {
 

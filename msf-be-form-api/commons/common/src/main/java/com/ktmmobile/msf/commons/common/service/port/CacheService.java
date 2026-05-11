@@ -21,9 +21,19 @@ public interface CacheService<T> {
 
     void setValues(String key, Map<String, T> values, Duration timeout);
 
+    void setValue(String key, String hashKey, T value);
+
+    void setValue(String key, String hashKey, T value, Duration timeout);
+
+    void replaceValues(String key, Map<String, T> values);
+
+    void replaceValues(String key, Map<String, T> values, Duration timeout);
+
     T getValue(String key);
 
     T getValue(String key, String hashKey);
+
+    Map<String, T> getEntries(String key);
 
     List<T> getValues(String pattern);
 

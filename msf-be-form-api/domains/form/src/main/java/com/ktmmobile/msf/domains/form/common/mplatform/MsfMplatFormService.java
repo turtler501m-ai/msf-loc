@@ -4511,6 +4511,14 @@ public class MsfMplatFormService {
                 responseXml.append("            <socDescription>로밍 하루종일ON 투게더(서브)</socDescription>");
                 responseXml.append("            <socRateValue>5,000 WON</socRateValue>");
                 responseXml.append("        </svcList>");
+                responseXml.append("		<svcList>");
+                responseXml.append("			<effectiveDate>20230101000000</effectiveDate>");
+                responseXml.append("			<paramSbst>NOTI_NO1=01012345678|NOTI_NO2=|</paramSbst>");
+                responseXml.append("			<prodHstSeq>300000000000001</prodHstSeq>");
+                responseXml.append("			<soc>RCC1</soc>");
+                responseXml.append("			<socDescription>통화가능알리미</socDescription>");
+                responseXml.append("			<socRateValue>500 WON</socRateValue>");
+                responseXml.append("		</svcList>");
                 responseXml.append("	</outDto>");
                 responseXml.append("</return>");
                 break;
@@ -4646,6 +4654,9 @@ public class MsfMplatFormService {
                 responseXml.append("					<rsltYn>N</rsltYn>");
                 responseXml.append("				</outDto>");
                 responseXml.append("			</return>");
+                break;
+            case "Y24": // 부가서비스 가입가능여부 사전체크 — 성공 목
+                responseXml.append("<return><outDto><rsltCd>0000</rsltCd><sbscYn>Y</sbscYn><globalNo>LOCAL_MOCK_Y24</globalNo></outDto></return>");
                 break;
             case "X89": //요금상품예약변경조회(X89)
                 responseXml.append(

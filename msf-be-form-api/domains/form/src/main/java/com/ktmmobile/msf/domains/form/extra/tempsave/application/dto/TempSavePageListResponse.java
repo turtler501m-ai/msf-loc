@@ -1,9 +1,13 @@
 package com.ktmmobile.msf.domains.form.extra.tempsave.application.dto;
 
-import lombok.Builder;
-
-@Builder
 public record TempSavePageListResponse(
-    String rowNum
+    String rowNum,
+    String requestKey,
+    String cretDt,
+    String openTypeNm,
+    String serviceTypeNm,
+    String cstmrTypeNm,
+    String modifyYn,
+    String cstmrNm
 ) {
 }

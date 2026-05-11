@@ -2,7 +2,7 @@
 import { post } from '@/libs/api/msf.api'
 import { showAlert } from '@/libs/utils/comp.utils'
 import { getCommonCodeListWithDetail } from '@/libs/utils/comn.utils'
-import { computed, defineModel, nextTick, onMounted, ref } from 'vue'
+import { computed, defineModel, nextTick, onMounted, ref, watch } from 'vue'
 
 const model = defineModel({ type: Object, required: true })
 
@@ -27,6 +27,20 @@ const serviceCheckButtonLabel = computed(() => {
   if (isServiceCheckCompleted.value) return '서비스 체크완료'
   return '서비스 체크'
 })
+
+const applyAgencyMeta = (agencyValue) => {
+  const selected = agencyOptions.value.find((v) => v.value === agencyValue)
+  if (!selected) return
+
+  model.value.managerCd = selected.ktOrgId || selected.value
+  model.value.managerNm = selected.label
+  model.value.agentCd = selected.orgnId || selected.value
+  model.value.agentNm = selected.label
+  model.value.cpntId = selected.ktOrgId || selected.orgnId || selected.value
+  model.value.cpntNm = selected.label
+  model.value.cntpntShopCd = selected.orgnId || selected.value
+  model.value.cntpntShopNm = selected.label
+}
 
 const normalizeYn = (value) => String(value || '').toUpperCase()
 const getMinutesOfDay = (date) => date.getHours() * 60 + date.getMinutes()
@@ -180,20 +194,33 @@ const fetchAgencies = async () => {
 
     agencyOptions.value = list.map((item) => ({
       label: item.orgnNm || item.cntpntNm || '대리점명 없음',
-      value: item.ktOrgId || item.shopOrgnId || '',
+      value: item.ktOrgId || item.shopOrgnId || item.orgnId || '',
+      ktOrgId: item.ktOrgId || '',
+      orgnId: item.orgnId || item.shopOrgnId || '',
     }))
 
     // 결과가 1개뿐이거나, 현재 선택된 값이 없으면 첫 번째 항목 자동 선택
     if (agencyOptions.value.length > 0) {
       if (!model.value.agency || agencyOptions.value.length === 1) {
-        model.value.agency = agencyOptions.value[0].value
-        model.value.agentCd = agencyOptions.value[0].value
+        const first = agencyOptions.value[0]
+        model.value.agency = first.value
+        applyAgencyMeta(first.value)
+      } else {
+        applyAgencyMeta(model.value.agency)
       }
     }
   } catch (error) {
     console.error('Failed to fetch agencies:', error)
   }
 }
+
+watch(
+  () => model.value?.agency,
+  (agencyValue) => {
+    if (!agencyValue) return
+    applyAgencyMeta(agencyValue)
+  },
+)
 
 async function update(value) {
   if (isServiceCheckCompleted.value) return

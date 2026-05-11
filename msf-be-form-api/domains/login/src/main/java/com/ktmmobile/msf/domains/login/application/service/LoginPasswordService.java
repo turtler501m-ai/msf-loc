@@ -31,7 +31,7 @@ public class LoginPasswordService implements LoginPasswordChanger {
     @Override
     public LoginResult changePassword(LoginPasswordChangeRequest request) {
         if (!StringUtils.hasText(request.loginSessionId())) {
-            updatePassword(AuthenticationUtils.getUser().getId(), request.password());
+            updatePassword(AuthenticationUtils.getUser().getUserId(), request.password());
             return null;
         }
 

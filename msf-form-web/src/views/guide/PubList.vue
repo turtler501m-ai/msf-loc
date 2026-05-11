@@ -114,6 +114,9 @@ watch(
       <div class="guideInner">
         <div class="guideContent">
           <div class="guideNotice">
+            <p class="ut-color-point">
+              - [2026-05-07] 서비스해지 - 동의 : '고객 안내 사항' 문구 수정
+            </p>
             <p class="ut-weight-bold ut-color-point">
               - [2026-05-06] 서비스변경 - 상품 : 부가서비스 신청/변경 - 설계수정 반영 (체크박스
               형태로 변경)

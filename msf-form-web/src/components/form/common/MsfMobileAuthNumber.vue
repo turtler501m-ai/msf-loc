@@ -115,8 +115,10 @@ const onClickSendAuthNumber = async () => {
     path: route.path,
   })
   if (result?.code !== '0000') {
+    showAlert('[인증번호 발송] 버튼을 클릭하시면,\n인증번호가 등록된 휴대폰으로 발송됩니다.')
     return false
   }
+  showAlert('인증번호가 발송되었습니다.')
   sendedKey.value = result.data.sendedKey
   authNumber.value = result.data.authNumber || ''
   status.value = 'sent'
@@ -132,6 +134,11 @@ const onClickVerifyAuthNumber = async () => {
     token: sendedKey.value,
   })
   if (result?.code !== '0000') {
+    showAlert(result?.message)
+    return false
+  }
+  if (!result?.data) {
+    showAlert('인증번호가 일치하지 않습니다.')
     return false
   }
   stop()

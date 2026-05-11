@@ -1,9 +1,21 @@
 package com.ktmmobile.msf.domains.form.form.common.repository.msp;
 
-import com.ktmmobile.msf.domains.form.form.common.dto.*;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 
-import java.util.List;
+import com.ktmmobile.msf.domains.form.form.common.dto.MsfRequestAdditionRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspAdditionDto;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleAgrmMstInfoDto;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspSalePlcyMstInfoDto;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstResponse;
+import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto;
+import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoResponse;
+import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimResponse;
+import com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest;
+import com.ktmmobile.msf.domains.form.form.common.dto.RateInfoDto;
 
 @Mapper
 public interface ProductInfoReadMapper {
@@ -27,15 +39,17 @@ public interface ProductInfoReadMapper {
     List<PhoneInfoDto> selectPrdtCapacityList(ProductInfoRequest condition);
 
     //휴대폰 목록 조회
-    List<PhoneInfoDto> selectPhoneList(ProductInfoRequest condition);
+    List<PhoneInfoResponse> selectPhoneList(ProductInfoRequest condition);
 
     //요금제 목록 조회
     List<RateInfoDto> selectRateList(ProductInfoRequest condition);
 
-    //공시지원금 조회
+    //가격정보조회 (단말, 요금, 지원금)
     MspSaleSubsdMstResponse selectMspSaleSubsdMst(MspSaleSubsdMstRequest condition);
-    //List<PhoneInfoDto> selectMspOfficialNoticeSupport(ProductInfoRequest condition);
-    // List<RateInfoDto> listMspOfficialNoticeSupport(CommonSearchCondition condition);
+
+    //가격정보조회 (가입비, 유심)
+    PriceJoinUsimResponse selectJoinUsimPrice(PriceJoinUsimRequest condition);
+
 
     //부가서비스 상세조회
     List<MspAdditionDto> selectMsfAdditionList(MsfRequestAdditionRequest condition);

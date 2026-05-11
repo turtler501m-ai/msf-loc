@@ -2,6 +2,7 @@ package com.ktmmobile.msf.domains.form.form.common.repository.smartform;
 
 import org.apache.ibatis.annotations.Mapper;
 
+import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo;
@@ -21,9 +22,11 @@ import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgDtlVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo;
 
+@AutoAuditing
 @Mapper
 public interface MsfRequestWriteMapper {
 
+    @AutoAuditing(value = false)
     int insertMsfRequestCancel(MsfRequestCancelVo vo);
 
     int insertMsfRequestCstmr(MsfRequestCstmrVo vo);
@@ -46,9 +49,9 @@ public interface MsfRequestWriteMapper {
 
     int insertMsfRequestMst(MsfRequestMstVo vo);
 
-    int insertMsfRequestNameChg(MsfRequestNameChgVo.TrCustomerInfo vo);
+    int insertMsfRequestNameChg(MsfRequestNameChgVo vo);
 
-    int insertMsfRequestNameTrns(MsfRequestNameChgVo.TeCustomerInfo vo);
+    int insertMsfRequestNameTrns(MsfRequestNameChgVo vo);
 
     int insertMsfRequestRec(MsfRequestRecVo vo);
 
@@ -56,8 +59,10 @@ public interface MsfRequestWriteMapper {
 
     int insertMsfRequestState(MsfRequestStateVo vo);
 
+    @AutoAuditing(value = true)
     int insertMsfRequestSvcChgDtl(MsfRequestSvcChgDtlVo vo);
 
+    @AutoAuditing(value = true)
     int insertMsfRequestSvcChg(MsfRequestSvcChgVo vo);
 
     int insertMsfRequest(MsfRequestVo vo);

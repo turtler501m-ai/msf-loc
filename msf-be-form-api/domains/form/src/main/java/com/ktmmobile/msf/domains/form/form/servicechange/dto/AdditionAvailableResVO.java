@@ -1,11 +1,11 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
-import java.util.List;
-import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
 /**
  * 가입가능 부가서비스 목록 응답 VO
  *
@@ -47,5 +47,12 @@ public class AdditionAvailableResVO {
      * - svcRelTp="B": 번들 서비스 (요금제에 포함)
      */
     private List<McpRegServiceDto> listC;
+
+    private String sbscYn;
+
+    private String resltMsg;
+
+    /** 무선데이터차단 서비스 현재 이용 여부 (SOC=DATABLOCK 또는 설명에 "무선"+"차단" 포함) */
+    private boolean wirelessBlockInUse;
 
 }

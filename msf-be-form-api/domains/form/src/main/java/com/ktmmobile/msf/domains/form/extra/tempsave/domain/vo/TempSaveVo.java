@@ -6,5 +6,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class TempSaveVo {
+
     private String rowNum;
+    private String requestKey;
+    private String cretDt;
+    private String openTypeNm;
+    private String serviceTypeNm;
+    private String cstmrTypeNm;
+    private String modifyYn;
+    private String cstmrNm;
 }

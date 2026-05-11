@@ -1,0 +1,49 @@
+#### Common Profile
+cache-core:
+  key-prefix: "cache-core:"
+  load-timeout: 10s
+  auto-load:
+    enabled: true
+    exclude: []
+  stampede:
+    lock-ttl: 5s
+    wait-timeout: 2s
+    retry-interval: 100ms
+  load-lock:
+    enabled: true
+    lock-at-most-for: 1m
+    lock-at-least-for: 0s
+    wait-timeout: 10s
+    retry-interval: 200ms
+  redis-write-lock:
+    enabled: true
+    lock-at-most-for: 1m
+    lock-at-least-for: 0s
+
+
+
+---
+#### PRD Profile
+spring:
+  config.activate.on-profile: prd
+
+
+
+---
+#### STG Profile
+spring:
+  config.activate.on-profile: stg
+
+
+
+---
+#### DEV Profile
+spring:
+  config.activate.on-profile: dev
+
+
+
+---
+#### LOCAL Profile
+spring:
+  config.activate.on-profile: local

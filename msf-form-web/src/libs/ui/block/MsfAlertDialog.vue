@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useScrollLock } from '@/hooks/useScrollLock'
 
 const props = defineProps({
+  id: [String, Number],
   title: String,
   message: [String, Object],
   onConfirm: Function,
@@ -15,6 +16,7 @@ const props = defineProps({
     type: Object,
     default: () => ({ confirm: '확인', cancel: '취소' }),
   },
+  isLast: Boolean, // 현재 이 알럿이 가장 위에 있는지 여부
 })
 
 const { lock, unlock } = useScrollLock()
@@ -44,7 +46,9 @@ const handleConfirm = () => handleClose(props.onConfirm)
 const handleCancel = () => handleClose(props.onCancel)
 
 // 2. isOpen 상태 감시 (열릴 때만 실행)
-onMounted(() => {
+onMounted(async () => {
+  // nextTick을 기다려서 브라우저가 포커스 정리를 마친 후의 요소를 저장
+  await nextTick()
   // 열리기 직전의 포커스 요소(부모 버튼)를 저장
   returnElement.value = document.activeElement
 
@@ -69,9 +73,9 @@ onUnmounted(() => {
 
 <template>
   <Teleport to="body">
-    <Transition name="fade">
+    <Transition name="fade" appear>
       <div v-if="isOpen" class="alert-overlay">
-        <FocusTrap :isActive="isOpen" :autoFocus="true" :restoreFocus="false">
+        <FocusTrap :isActive="isOpen && props.isLast" :autoFocus="true" :restoreFocus="false">
           <div class="alert-root" role="alertdialog" aria-modal="true">
             <div class="alert-message">
               <h2 v-if="props.title" class="msg-title" v-html="props.title"></h2>
@@ -162,7 +166,7 @@ onUnmounted(() => {
 /* 페이드 애니메이션 (Vue Transition) */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.1s ease;
 }
 .fade-enter-from,
 .fade-leave-to {

@@ -1,8 +1,15 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.Date;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class McpReqCombineDto {
 
     private String reqSeq;
@@ -33,7 +40,6 @@ public class McpReqCombineDto {
     private String sysDt;
     private Date regDt;
 
-
     public String getmCustBirth() {
         return mCustBirth;
     }
@@ -45,21 +51,6 @@ public class McpReqCombineDto {
     }
     public void setmSexCd(String mSexCd) {
         this.mSexCd = mSexCd;
-    }
-    public String getCombBirth() {
-        return combBirth;
-    }
-    public void setCombBirth(String combBirth) {
-        this.combBirth = combBirth;
-    }
-    public String getReqSeq() {
-        return reqSeq;
-    }
-    public void setReqSeq(String reqSeq) {
-        this.reqSeq = reqSeq;
-    }
-    public String getCombTypeCd() {
-        return combTypeCd;
     }
 
     public String getCombTypeNm() {
@@ -76,14 +67,9 @@ public class McpReqCombineDto {
 
     }
 
-
-    public void setCombTypeCd(String combTypeCd) {
-        this.combTypeCd = combTypeCd;
-    }
     public String getmCtn() {
         return mCtn;
     }
-
 
     public String getmCtnMaker() {
         if (mCtn == null) {
@@ -92,12 +78,6 @@ public class McpReqCombineDto {
 
         return StringMakerUtil.getPhoneNum(mCtn);
     }
-
-
-
-
-
-
 
     public void setmCtn(String mCtn) {
         this.mCtn = mCtn;
@@ -138,10 +118,6 @@ public class McpReqCombineDto {
     public void setmRateAdsvcNm(String mRateAdsvcNm) {
         this.mRateAdsvcNm = mRateAdsvcNm;
     }
-    public String getCombSvcNo() {
-        return combSvcNo;
-    }
-
 
     public String getCombSvcNoMaker() {
         if (combSvcNo == null) {
@@ -154,71 +130,6 @@ public class McpReqCombineDto {
             return StringMakerUtil.getPhoneNum(combSvcNo);
         }
 
-    }
-
-
-    public void setCombSvcNo(String combSvcNo) {
-        this.combSvcNo = combSvcNo;
-    }
-
-
-
-
-
-
-    public String getCombSvcCntrNo() {
-        return combSvcCntrNo;
-    }
-    public void setCombSvcCntrNo(String combSvcCntrNo) {
-        this.combSvcCntrNo = combSvcCntrNo;
-    }
-    public String getCombCustNm() {
-        return combCustNm;
-    }
-    public void setCombCustNm(String combCustNm) {
-        this.combCustNm = combCustNm;
-    }
-    public String getCombSexCd() {
-        return combSexCd;
-    }
-    public void setCombSexCd(String combSexCd) {
-        this.combSexCd = combSexCd;
-    }
-    public String getCombSocCd() {
-        return combSocCd;
-    }
-    public void setCombSocCd(String combSocCd) {
-        this.combSocCd = combSocCd;
-    }
-    public String getCombSocNm() {
-        return combSocNm;
-    }
-    public void setCombSocNm(String combSocNm) {
-        this.combSocNm = combSocNm;
-    }
-    public String getCombRateAdsvcCd() {
-        return combRateAdsvcCd;
-    }
-    public void setCombRateAdsvcCd(String combRateAdsvcCd) {
-        this.combRateAdsvcCd = combRateAdsvcCd;
-    }
-    public String getCombRateAdsvcNm() {
-        return combRateAdsvcNm;
-    }
-    public void setCombRateAdsvcNm(String combRateAdsvcNm) {
-        this.combRateAdsvcNm = combRateAdsvcNm;
-    }
-    public String getCombTgtTypeCd() {
-        return combTgtTypeCd;
-    }
-    public void setCombTgtTypeCd(String combTgtTypeCd) {
-        this.combTgtTypeCd = combTgtTypeCd;
-    }
-    public String getRsltCd() {
-        return rsltCd;
-    }
-    public void setRsltCd(String rsltCd) {
-        this.rsltCd = rsltCd;
     }
 
     public String getRsltNm() {
@@ -239,27 +150,5 @@ public class McpReqCombineDto {
             return rsltCd;
         }
     }
-
-
-    public String getRsltMemo() {
-        return rsltMemo;
-    }
-    public void setRsltMemo(String rsltMemo) {
-        this.rsltMemo = rsltMemo;
-    }
-    public String getSysDt() {
-        return sysDt;
-    }
-    public void setSysDt(String sysDt) {
-        this.sysDt = sysDt;
-    }
-    public Date getRegDt() {
-        return regDt;
-    }
-    public void setRegDt(Date regDt) {
-        this.regDt = regDt;
-    }
-
-
 
 }

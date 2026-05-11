@@ -34,3 +34,15 @@ export const parseUserToken = (token) => {
     return null
   }
 }
+
+export const isTokenExpired = (token) => {
+  if (!token) {
+    return true
+  }
+  const info = parseUserToken(token)
+  const currentTime = Date.now() / 1000
+  if (info.exp < currentTime) {
+    return true
+  }
+  return false
+}

@@ -39,7 +39,7 @@ public class CacheConfig implements CachingConfigurer {
     }
 
     @Bean
-    @DependsOn({"cacheUtilsInitializer", "environmentUtilsInitializer"})
+    @DependsOn("environmentUtilsInitializer")
     @ConditionalOnProperty(prefix = "spring.data.redis", name = "enabled", havingValue = "true", matchIfMissing = true)
     public CacheManager redisCacheManager(
         RedisConnectionFactory redisConnectionFactory,

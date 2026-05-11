@@ -1,9 +1,10 @@
 <script setup>
-import { ref, defineModel, defineProps, onMounted } from 'vue'
+import { ref, defineModel, defineProps, onMounted, computed } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { post } from '@/libs/api/msf.api'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import MsfEsimScanModal from './popups/MsfEsimScanModal.vue'
+import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 
 const props = defineProps({
   customerData: { type: Object, default: () => ({}) },
@@ -11,9 +12,22 @@ const props = defineProps({
 })
 
 const formData = defineModel({ type: Object, required: true })
+const store = useMsfFormNewChgStore()
 const isEsimScanModalOpen = ref(false)
 
+const simPossessionOptions = computed(() => {
+  const isDeviceChange = formData.value.joinType === 'HDN3'
+  return [
+    { value: 'hasSim1', label: isDeviceChange ? '현재USIM으로 사용' : 'USIM 보유' },
+    { value: 'hasSim2', label: 'USIM 구매' },
+    { value: 'hasSim3', label: 'eSIM' },
+  ]
+})
+
 onMounted(async () => {
+  if (formData.value.productType === 'UU') {
+    formData.value.hasSim = 'hasSim2'
+  }
   // 약관(유심구매) 공통코드 조회
   getCommonCodeList('TERMSELF').then((list) => {
     console.log('>>> 약관(유심구매) (TERMSELF):', list)
@@ -22,11 +36,11 @@ onMounted(async () => {
 
 const simAuth = useAuthButton(() => [formData.value?.reqUsimSn], {
   get value() {
-    return props.authFlags?.reqUsimSn || false
+    return store.authFlags?.reqUsimSn || false
   },
   set value(v) {
-    if (props.authFlags) {
-      props.authFlags.reqUsimSn = v
+    if (store.authFlags) {
+      store.authFlags.reqUsimSn = v
     }
   },
 })
@@ -78,8 +92,8 @@ const onEsimScanConfirm = async (data) => {
       const res = await post('/api/form/verifyEsimInfo', payload)
       if (res && res.data?.resCode === '0000') {
         // 2. 정상일 때만 등록 완료 처리 및 수정 불가 상태로 전환
-        if (props.authFlags) {
-          props.authFlags.esimImei = true
+        if (store.authFlags) {
+          store.authFlags.esimImei = true
         }
       }
     } catch (error) {
@@ -93,8 +107,8 @@ const validate = () => {
 
   // 1. eSIM인 경우 (hasSim3)
   if (formData.value.hasSim === 'hasSim3') {
-    // 모델명, EID, IMEI1 등 정보 입력 여부 및 인증 완료 여부 확인
-    if (!formData.value.prodNm || !formData.value.eid || !formData.value.imei1) return false
+    // EID, IMEI1, IMEI2 정보 입력 여부 확인 (모델명은 스캔 실패 시 없을 수 있으므로 선택적으로 제외 가능성 고려)
+    if (!formData.value.eid || !formData.value.imei1 || !formData.value.imei2) return false
     // eSIM은 이미지 등록(인증)이 필수
     if (!props.authFlags?.esimImei) return false
   } else {
@@ -118,15 +132,16 @@ defineExpose({ validate })
   <!-- SIM정보_상품(휴대폰) -->
   <MsfTitleArea title="SIM정보_상품(휴대폰)" />
   <MsfStack vertical type="formgroups">
-    <MsfFormGroup label="SIM 보유" tag="div" required>
+    <MsfFormGroup
+      v-if="formData.productType !== 'UU'"
+      label="SIM 보유"
+      tag="div"
+      required
+    >
       <MsfChip
         v-model="formData.hasSim"
         name="inp-hasSim"
-        :data="[
-          { value: 'hasSim1', label: 'USIM 보유' },
-          { value: 'hasSim2', label: 'USIM 구매' },
-          { value: 'hasSim3', label: 'eSIM' },
-        ]"
+        :data="simPossessionOptions"
       />
     </MsfFormGroup>
     <MsfFormGroup label="USIM 선택" tag="div" required v-if="formData.hasSim !== 'hasSim3'">

@@ -1,7 +1,14 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.dto;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class RateDtlInfo implements Serializable {
 
     private static final long serialVersionUID = -6412942200249049815L;
@@ -16,19 +23,4 @@ public class RateDtlInfo implements Serializable {
     //        RateAdsvcGdncDtlXML, RateGdncPropertyDtlDTO, RateGiftPrmtListDTO,
     //        RateGdncEffPriceDtlDTO — 미이관 요금제 안내 상세 DTO 의존 클래스 미생성으로 주석 처리
 
-    public String getRateAdsvcCd() {
-        return rateAdsvcCd;
-    }
-
-    public void setRateAdsvcCd(String rateAdsvcCd) {
-        this.rateAdsvcCd = rateAdsvcCd;
-    }
-
-    public String getRateAdsvcNm() {
-        return rateAdsvcNm;
-    }
-
-    public void setRateAdsvcNm(String rateAdsvcNm) {
-        this.rateAdsvcNm = rateAdsvcNm;
-    }
 }

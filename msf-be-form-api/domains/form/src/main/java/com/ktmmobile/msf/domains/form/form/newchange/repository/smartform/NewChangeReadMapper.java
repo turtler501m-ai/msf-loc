@@ -1,10 +1,18 @@
 package com.ktmmobile.msf.domains.form.form.newchange.repository.smartform;
 
-import com.ktmmobile.msf.domains.form.form.common.vo.*;
-import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 
-import java.util.List;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDvcChgVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMoveVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest;
 
 @Mapper
 public interface NewChangeReadMapper {
@@ -15,25 +23,27 @@ public interface NewChangeReadMapper {
 
     long getSmartCustRequestSeq();
 
+    long generateSmartRequestStateSeq();
+
     //NewChangeInfoDto selectNewChangeInfo(NewChangeInfoCondition request);
 
-    MsfRequestVo selectMsfRequestInfo(NewChangeRequest condition);
+    MsfRequestVo selectMsfRequestInfo(NewChangeRequest request);
 
-    MsfRequestCstmrVo selectMsfRequestCstmrInfo(NewChangeRequest condition);
+    MsfRequestCstmrVo selectMsfRequestCstmrInfo(NewChangeRequest request);
 
-    MsfRequestAgentVo selectMsfRequestAgentInfo(NewChangeRequest condition);
+    MsfRequestAgentVo selectMsfRequestAgentInfo(NewChangeRequest request);
 
-    MsfRequestSaleVo selectMsfRequestSaleInfo(NewChangeRequest condition);
+    MsfRequestSaleVo selectMsfRequestSaleInfo(NewChangeRequest request);
 
-    MsfRequestBillReqVo selectMsfRequestBillReqInfo(NewChangeRequest condition);
+    MsfRequestBillReqVo selectMsfRequestBillReqInfo(NewChangeRequest request);
 
-    MsfRequestMoveVo selectMsfRequestMoveInfo(NewChangeRequest condition);
+    MsfRequestMoveVo selectMsfRequestMoveInfo(NewChangeRequest request);
 
-    MsfRequestDvcChgVo selectMsfRequestDvcChgInfo(NewChangeRequest condition);
+    MsfRequestDvcChgVo selectMsfRequestDvcChgInfo(NewChangeRequest request);
 
-    List<MsfRequestAdditionVo> selectMsfRequestAdditionInfo(NewChangeRequest condition);
+    List<MsfRequestAdditionVo> selectMsfRequestAdditionInfo(NewChangeRequest request);
 
     String getMsfResNo(long requestKey);
 
-
+    Integer checkFormUser(NewChangeRequest request);
 }

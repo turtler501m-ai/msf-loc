@@ -5,11 +5,12 @@
 <mapper namespace="com.ktmmobile.msf.domains.form.extra.receipt.adapter.repository.mybatis.smartform.mapper.ReceiptPageMapper">
 
   <sql id="deviceCondition">
-    <!--<if test='startDate != null and startDate != ""'>-->
-    <!--  <![CDATA[-->
-    <!--      and a.cret_dt >= #{startDate}::timestamp-->
-    <!--  ]]>-->
-    <!--</if>-->
+    <if test='searchWord != null and searchWord != ""'>
+      and 1=1
+      <!--<![CDATA[-->
+      <!--    and a.cret_dt >= #{startDate}::timestamp-->
+      <!--]]>-->
+    </if>
   </sql>
 
   <select id="countReceiptList" resultType="java.lang.Integer">

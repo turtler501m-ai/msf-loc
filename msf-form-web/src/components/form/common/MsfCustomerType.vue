@@ -11,7 +11,12 @@
           :data="[]"
         />
       </MsfFormGroup>
-      <MsfFormGroup v-if="visitTypeRequired" label="방문 유형" tag="div" required>
+      <MsfFormGroup
+        v-if="visitTypeRequired && !model.isTrCustomer"
+        label="방문 유형"
+        tag="div"
+        required
+      >
         <MsfChip
           v-model="model.cstmrVisitTypeCd"
           :name="`${name}-inp-visitType`"

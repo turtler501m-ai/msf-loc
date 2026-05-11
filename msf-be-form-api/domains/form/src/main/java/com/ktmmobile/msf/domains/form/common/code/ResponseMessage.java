@@ -1,10 +1,11 @@
 package com.ktmmobile.msf.domains.form.common.code;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnum;
-import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnumConstant;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+
+import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnum;
+import com.ktmmobile.msf.commons.common.commonenum.core.CommonEnumConstant;
 
 @Getter
 @RequiredArgsConstructor
@@ -14,6 +15,10 @@ public enum ResponseMessage implements CommonEnum {
     F_BIND_EXCEPTION("2222", "비정상적인 접근입니다."),
     DB_EXCEPTION("3333", "DB 처리중 오류가 발생 하였습니다."),
     NO_DATA("4444", "요청하신 정보가 존재하지 않습니다."),
+
+    /** KT M모바일 고객인증 **/
+    VALID_KTM_MOBILE_MEMBER_SUCCESS("0000", "휴대폰번호 인증이 완료되었습니다."),
+    VALID_KTM_MOBILE_MEMBER_FAIL("1000", "고객 정보와 휴대폰번호가 일치하지 않습니다.\n휴대폰번호를 다시 확인해 주세요."),
 
     /* 계좌번호 인증 */
     VALID_ACCOUNT_SUCCESS("0000", "계좌번호 인증이 완료되었습니다."),
