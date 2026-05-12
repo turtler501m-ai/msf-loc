@@ -134,7 +134,19 @@ export const useMsfUserStore = defineStore('msfUser', {
       if (storageUuid) return storageUuid
 
       const appBridge = window.MSF_APP
-      if (!appBridge) return null
+      if (!appBridge) {
+        if (!import.meta.env.DEV) return null
+
+        const devStorageUuid = localStorage.getItem('MSF_DEVICE_UUID')?.trim()
+        if (devStorageUuid) return devStorageUuid
+
+        const devUuid =
+          typeof globalThis.crypto?.randomUUID === 'function'
+            ? globalThis.crypto.randomUUID()
+            : `local-${Date.now()}-${Math.random().toString(16).slice(2)}`
+        localStorage.setItem('MSF_DEVICE_UUID', devUuid)
+        return devUuid
+      }
 
       const uuid =
         typeof appBridge.getDeviceUuid === 'function'

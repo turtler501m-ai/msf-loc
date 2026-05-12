@@ -96,8 +96,13 @@ onMounted(async () => {
   }
   post('/api/n/app/login/init', initData)
     .then((data) => {
-      console.log('init data:', data.data.apvSttusCd)
-      apvSttusCd.value = data.data.apvSttusCd
+      if (data.code !== '0000' || !data.data) {
+        apvSttusCd.value = 'C'
+        msfUserStore.clearDeviceInfo()
+        return
+      }
+      console.log('init data:', data.data?.apvSttusCd)
+      apvSttusCd.value = data.data?.apvSttusCd || 'C'
       msfUserStore.setDeviceInfo(data.data)
     })
     .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
@@ -139,7 +144,7 @@ const onClickLogin = () => {
 
 const onClickModelRemove = () => {
   const postData = {
-    uuid: msfUserStore.getDeviceUuid(),
+    deviceUuid: msfUserStore.getDeviceUuid(),
   }
   showConfirm('단말의 사용등록을 승인 철회하시겠습니까?', () => {
     post('/api/n/app/model/remove', postData)
