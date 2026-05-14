@@ -15,6 +15,7 @@ import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSaleVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest;
 
 @AutoAuditing
 @Mapper
@@ -76,6 +77,26 @@ public interface NewChangeWriteMapper {
     void insertMsfRequestAddition(Long requestKey);
 
     void insertMsfRequestState(MsfRequestStateVo msfRequestStateVo);
+
+
+    //copy : insert ~ select
+    void insertCopyMsfRequest(NewChangeRequest request);
+
+    void insertCopyMsfRequestCstmr(NewChangeRequest request);
+
+    void insertCopyMsfRequestAgent(NewChangeRequest request);
+
+    void insertCopyMsfRequestSale(NewChangeRequest request);
+
+    void insertCopyMsfRequestBillReq(NewChangeRequest request);
+
+    void insertCopyMsfRequestMove(NewChangeRequest request);
+
+    void insertCopyMsfRequestDvcChg(NewChangeRequest request);
+
+    void insertCopyMsfRequestAddition(NewChangeRequest request);
+
+    //void insertCopyMsfRequestState(MsfRequestStateVo msfRequestStateVo);
 
     //void updateMsfRequestTemp(NewChangeInfoRequest request);
     //void updateMsfRequestAgentTemp(NewChangeInfoRequest request);

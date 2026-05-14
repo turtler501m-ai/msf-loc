@@ -16,6 +16,7 @@
                   variant="underline"
                   v-model="formData.userId"
                   placeholder="아이디를 입력하세요."
+                  :maxlength="20"
                   class="ut-w100p"
                 />
               </MsfFormGroup>
@@ -25,13 +26,13 @@
                   variant="underline"
                   v-model="formData.password"
                   placeholder="비밀번호를 입력하세요."
+                  :maxlength="20"
                   class="ut-w100p"
                 />
                 <MsfCheckbox v-model="formData.idSave" label="아이디 저장" blockPadding />
               </MsfFormGroup>
               <MsfButtonGroup gap="3">
                 <MsfButton variant="primary" block @click="onClickLogin">로그인</MsfButton>
-                <MsfButton variant="primary" block @click="goMain">메인으로 이동</MsfButton>
                 <MsfButton
                   variant="secondary"
                   prefixIcon="touchId"
@@ -96,16 +97,16 @@ onMounted(async () => {
   }
   post('/api/n/app/login/init', initData)
     .then((data) => {
-      if (data.code !== '0000' || !data.data) {
-        apvSttusCd.value = 'C'
-        msfUserStore.clearDeviceInfo()
-        return
-      }
-      console.log('init data:', data.data?.apvSttusCd)
-      apvSttusCd.value = data.data?.apvSttusCd || 'C'
+      console.log('init data:', data.data.apvSttusCd)
+      apvSttusCd.value = data.data.apvSttusCd
       msfUserStore.setDeviceInfo(data.data)
     })
     .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
+  const savedUserId = localStorage.getItem('saveUserId')
+  if (savedUserId) {
+    formData.idSave = true
+    formData.userId = savedUserId
+  }
 })
 
 const onClickLogin = () => {
@@ -123,6 +124,12 @@ const onClickLogin = () => {
     .then(async (data) => {
       if (data.code === '0000') {
         msfUserStore.setUserData(data.data)
+        if (formData.idSave) {
+          localStorage.setItem('saveUserId', formData.userId)
+        } else {
+          localStorage.removeItem('saveUserId')
+        }
+        localStorage.setItem('saveUserId', formData.userId)
         const res = await msfUserStore.checkAuthAction()
         if (res.message) {
           showAlert(res.message, () => {
@@ -159,10 +166,6 @@ const onClickModelRemove = () => {
       })
       .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
   })
-}
-
-const goMain = () => {
-  router.push('/')
 }
 </script>
 

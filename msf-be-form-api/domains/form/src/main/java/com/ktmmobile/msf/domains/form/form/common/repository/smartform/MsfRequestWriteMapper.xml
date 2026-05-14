@@ -7,12 +7,6 @@
             parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCancelVo">
         INSERT INTO MSF_REQUEST_CANCEL (
             REQUEST_KEY,
-            CRET_IP,
-            CRET_DT,
-            CRET_ID,
-            AMD_IP,
-            AMD_DT,
-            AMD_ID,
             MANAGER_CD,
             MANAGER_NM,
             AGENT_CD,
@@ -62,12 +56,6 @@
             FILE_MASK_NM
         ) VALUES (
             #{requestKey},
-            #{cretIp},
-            NOW(),
-            #{cretId},
-            #{amdIp},
-            NOW(),
-            #{amdId},
             #{managerCd},
             #{managerNm},
             #{agentCd},
@@ -357,22 +345,12 @@
         INSERT INTO MSF_REQUEST_CLAUSE (
             REQUEST_KEY,
             CD_GROUP_ID,
-            CRET_IP,
-            CRET_DT,
-            CRET_ID,
-            AMD_IP,
-            AMD_DT,
-            AMD_ID,
+            CD_GROUP_ID2,
             VERSION
         ) VALUES (
             #{requestKey},
             #{cdGroupId},
-            #{cretIp},
-            NOW(),
-            #{cretId},
-            #{amdIp},
-            NOW(),
-            #{amdId},
+            #{cdGroupId2},
             #{version}
         )
     </insert>

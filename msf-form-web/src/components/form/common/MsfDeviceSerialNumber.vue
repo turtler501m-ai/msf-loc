@@ -5,10 +5,10 @@ import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import { post } from '@/libs/api/msf.api'
 
 const props = defineProps({
-  title: { type: String, default: '단말기 일련번호' },
+  title: { type: String, default: '휴대폰 정보' },
+  customerData: { type: Object, default: () => ({}) },
 })
-const model = defineModel('modelValue', { type: Object, required: true })
-const customerModel = defineModel('customerData', { type: Object, required: true })
+const model = defineModel({ type: Object, required: true })
 const store = useMsfFormNewChgStore()
 
 const imeiAuth = useAuthButton(() => [model.value?.imei], {
@@ -40,7 +40,7 @@ const handleDeviceVerify = async () => {
 }
 
 const validate = () => {
-  if (customerModel.value.productType === 'MM') {
+  if (props.customerData?.productType === 'MM') {
     if (!model.value.imei) return false
   }
   return true
@@ -50,12 +50,17 @@ defineExpose({ validate })
 </script>
 
 <template>
-  <div v-if="customerModel.productType === 'MM'">
+  <div v-if="customerData?.productType === 'MM'">
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
       <MsfFormGroup label="휴대폰 일련번호" required>
         <MsfStack type="field">
-          <MsfInput v-model="model.imei" placeholder="휴대폰 일련번호 입력" class="ut-w-300" />
+          <MsfInput
+            v-model="model.imei"
+            placeholder="휴대폰 일련번호 입력"
+            maxlength="20"
+            class="ut-w-300"
+          />
           <MsfButton variant="subtle">스캔하기</MsfButton>
           <MsfButton variant="toggle" v-if="imeiAuth.status.value === 'none'" disabled
             >일련번호 유효성 체크</MsfButton

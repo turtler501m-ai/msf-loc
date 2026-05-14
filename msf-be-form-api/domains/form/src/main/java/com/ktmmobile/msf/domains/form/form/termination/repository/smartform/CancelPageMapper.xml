@@ -6,5 +6,37 @@
         SELECT nextval('SQ_REQUEST_KEY')
     </select>
 
+    <select id="countInProgressApplicationByMobileNo" resultType="int">
+        SELECT COUNT(*)
+        FROM (
+            SELECT RC.REQUEST_KEY
+            FROM MSF_REQUEST_CANCEL RC
+            WHERE REGEXP_REPLACE(COALESCE(RC.CANCEL_MOBILE_NO, ''), '[^0-9]', '', 'g') = #{mobileNo}
+              AND RC.PROC_CD IN ('RC', 'RQ')
+              /* 확인_ASIS AND (PROC_CD IS NULL OR PROC_CD != 'BK') */
+            UNION ALL
+            SELECT NC.REQUEST_KEY
+            FROM MSF_REQUEST_NAME_CHG NC
+            INNER JOIN MSF_REQUEST_NAME_TRNS NT
+                ON NT.REQUEST_KEY = NC.REQUEST_KEY
+            WHERE REGEXP_REPLACE(COALESCE(NT.TRNS_MOBILE_NO, ''), '[^0-9]', '', 'g') = #{mobileNo}
+              AND NC.PROC_CD IN ('RQ')
+            UNION ALL
+            SELECT R.REQUEST_KEY
+            FROM MSF_REQUEST R
+            INNER JOIN MSF_REQUEST_DVC_CHG D
+                ON D.REQUEST_KEY = R.REQUEST_KEY
+            LEFT JOIN MSF_REQUEST_CSTMR C
+                ON C.REQUEST_KEY = R.REQUEST_KEY
+            WHERE R.OPER_TYPE_CD IN ('HCN3', 'HDN3')
+              AND COALESCE(R.SBSC_PRO_CD, '') != '21'
+              AND COALESCE(R.PRO_STTUS_CD, '') NOT IN ('10', '20', '30', '40')
+              AND (
+                  REGEXP_REPLACE(COALESCE(R.OPEN_NO, ''), '[^0-9]', '', 'g') = #{mobileNo}
+                  OR COALESCE(C.CSTMR_MOBILE_FN_NO, '') || COALESCE(C.CSTMR_MOBILE_MN_NO, '') || COALESCE(C.CSTMR_MOBILE_RN_NO, '') = #{mobileNo}
+              )
+        ) T
+    </select>
+
     <!-- [ASIS] insertRequestCancel(TerminationApplyReqDto) — MsfRequestWriteMapper.insertMsfRequestCancel 으로 이관 -->
 </mapper>

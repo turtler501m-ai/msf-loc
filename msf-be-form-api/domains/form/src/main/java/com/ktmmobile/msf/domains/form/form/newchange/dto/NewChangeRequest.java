@@ -16,7 +16,10 @@ public class NewChangeRequest {
 
     //boolean isSaved; //고객스텝 저장 완료 여부
     //boolean isVerified; //인증 완료 여부
-    String msfRequestKey;
+    //String msfRequestKey; //쓰는데가 있나......
+
+    Long newRequestKey; //신청서 복사하기에서 사용함.
+    String tmpStepCd; //신청서 복사하기에서 임시저장 step 값
 
     //@NotBlank
     Long requestKey;

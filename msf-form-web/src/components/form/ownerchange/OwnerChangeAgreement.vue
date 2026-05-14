@@ -90,7 +90,7 @@
 import { showAlert } from '@/libs/utils/comp.utils'
 import { useMsfFormOwnChgStore } from '@/stores/msf_ownerChange'
 import { storeToRefs } from 'pinia'
-import { ref, watch, reactive, onMounted } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 
 // 필수 항목 입력 완료여부 리턴
 const emit = defineEmits(['complete'])
@@ -193,7 +193,13 @@ const save = async () => {
   return result
 }
 
-defineExpose({ save })
+const reset = async () => {
+  store.resetAgreement()
+  await nextTick()
+  checkRequiredFields()
+}
+
+defineExpose({ save, reset })
 </script>
 
 <style scoped></style>

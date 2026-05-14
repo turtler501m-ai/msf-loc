@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 import { post } from '@/libs/api/msf.api'
+const cloneDeep = (obj) => JSON.parse(JSON.stringify(obj))
 
 const DEFAULT_ERROR_MESSAGE = '신청서 등록이 실패하였습니다. 다시 시도해 주세요.'
 
@@ -18,14 +19,21 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     cstmrVisitTypeCd: '', // 방문고객 유형
 
     /* 신분증 확인 */
-    identityCertTypeCd: '', // 신분증 인증유형
+    identityCertTypeCd: 'K', // 신분증 인증유형
     identityIssuDate: '', // 발급일자
     driveLicnsNo: '', // 운전면허번호
     selfIssuNo: '', // 자필서명/자체발급번호
-    identityTypeCd: '', // 신분증 타입
+    identityTypeCd: '01', // 신분증 타입
+    identityTypeNm: '', // 스캔된 신분증 명칭
     identityIssuRegion: '', // 발급지역
     isVerified: false, // 본인확인 완료 여부
+    isScanVerified: false, // 신분증 스캔 완료 여부
     isSaved: false, // 임시저장 여부
+    knoteIdentityScanCstmrNm: '', // K-NOTE 신분증 고객명
+    knoteIdentityEssNo: '', // K-NOTE 신분증 식별번호
+    knoteIdentityTypeCd: '', // K-NOTE 신분증 유형코드
+    knoteIdentityScanDt: '', // K-NOTE 신분증 스캔일시
+    knoteScanId: '', // K-NOTE 신분증 스캔번호
 
     /* 가입자 정보 */
     cstmrNm: '전용식', // 이름
@@ -55,8 +63,11 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
 
     /* 법정대리인 정보 */
     repName: '',
+    repBirthDate: '',
     repRegistrationNo1: '',
     repRegistrationNo2: '',
+    repForeignerNo1: '',
+    repForeignerNo2: '',
     repRelation: '',
     repPhone1: '',
     repPhone2: '',
@@ -77,7 +88,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     afterTel1: '',
     afterTel2: '',
     afterTel3: '',
-    postMethod: 'postMethod2', // 해지 후 연락 수단
+    postMethod: 'E', // 해지 후 연락 수단
 
     /* 가입유형/매장 정보 */
     agencyName: '',
@@ -89,7 +100,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     cntpntShopNm: '',
 
     /* 해지 정산 */
-    isActive: '', // 사용여부
+    cancelUseCompanyCd: '', // 해지 후 사용 통신사 코드
     usageFee: '', // 사용요금
     penaltyFee: '', // 위약금
     finalAmount: '', // 최종 정산요금
@@ -120,6 +131,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     agreeCheck1: false,
     agreeCheck2: false,
     agreeCheck3: false,
+    clauseAgreements: [],
   })
 
   // 인증 버튼 완료 여부 플래그
@@ -191,6 +203,20 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     const ctn = `${formData.deviceChgTel1 || ''}${formData.deviceChgTel2 || ''}${formData.deviceChgTel3 || ''}`
     console.log('[MyinfoView] 가입정보 조회 요청', { ncn, ctn })
     try {
+      const progressCheck = await post(
+        '/api/msf/formTermination/inprogress/get',
+        { mobileNo: ctn },
+      )
+      const progressResponse = progressCheck?.data
+      if (progressResponse?.resCode !== '0000') {
+        console.warn('[해지][가입정보조회] 진행 중단', {
+          reason: 'in-progress application',
+          resCode: progressResponse?.resCode,
+          resMessage: progressResponse?.resMessage,
+        })
+        return null
+      }
+
       const data = await post('/api/msf/formServiceChange/changinfo/view', {
         ncn,
         ctn,
@@ -212,6 +238,61 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
         }
         if (changInfo.ncn !== undefined) formData.ncn = changInfo.ncn || formData.ncn
         if (changInfo.contractNum !== undefined) formData.contractNum = changInfo.contractNum || formData.contractNum
+        if (changInfo.cstmrNm !== undefined || changInfo.customerName !== undefined) {
+          formData.cstmrNm = changInfo.cstmrNm || changInfo.customerName || formData.cstmrNm
+        }
+        const juridicalRrn =
+          changInfo.cstmrJuridicalRrn ||
+          changInfo.juridicalRrn ||
+          changInfo.corpRegNo ||
+          changInfo.corporateRegNo ||
+          ''
+        if (juridicalRrn) {
+          const rawJuridicalRrn = String(juridicalRrn).replace(/\D/g, '')
+          formData.cstmrJuridicalRrn1 = rawJuridicalRrn.substring(0, 6)
+          formData.cstmrJuridicalRrn2 = rawJuridicalRrn.substring(6, 13)
+        }
+        if (changInfo.cstmrJuridicalRrn1 !== undefined) {
+          formData.cstmrJuridicalRrn1 = changInfo.cstmrJuridicalRrn1 || formData.cstmrJuridicalRrn1
+        }
+        if (changInfo.cstmrJuridicalRrn2 !== undefined) {
+          formData.cstmrJuridicalRrn2 = changInfo.cstmrJuridicalRrn2 || formData.cstmrJuridicalRrn2
+        }
+        const bizNo =
+          changInfo.cstmrJuridicalBizNo ||
+          changInfo.bizNo ||
+          changInfo.businessNo ||
+          changInfo.brNo ||
+          ''
+        if (bizNo) {
+          const rawBizNo = String(bizNo).replace(/\D/g, '')
+          formData.cstmrJuridicalBizNo1 = rawBizNo.substring(0, 3)
+          formData.cstmrJuridicalBizNo2 = rawBizNo.substring(3, 5)
+          formData.cstmrJuridicalBizNo3 = rawBizNo.substring(5, 10)
+        }
+        if (changInfo.cstmrJuridicalBizNo1 !== undefined) {
+          formData.cstmrJuridicalBizNo1 =
+            changInfo.cstmrJuridicalBizNo1 || formData.cstmrJuridicalBizNo1
+        }
+        if (changInfo.cstmrJuridicalBizNo2 !== undefined) {
+          formData.cstmrJuridicalBizNo2 =
+            changInfo.cstmrJuridicalBizNo2 || formData.cstmrJuridicalBizNo2
+        }
+        if (changInfo.cstmrJuridicalBizNo3 !== undefined) {
+          formData.cstmrJuridicalBizNo3 =
+            changInfo.cstmrJuridicalBizNo3 || formData.cstmrJuridicalBizNo3
+        }
+        if (
+          changInfo.cstmrJuridicalRepNm !== undefined ||
+          changInfo.representativeName !== undefined ||
+          changInfo.repName !== undefined
+        ) {
+          formData.cstmrJuridicalRepNm =
+            changInfo.cstmrJuridicalRepNm ||
+            changInfo.representativeName ||
+            changInfo.repName ||
+            formData.cstmrJuridicalRepNm
+        }
         if (changInfo.prvRateGrpNm !== undefined) formData.prvRateGrpNm = changInfo.prvRateGrpNm || ''
         if (changInfo.initActivationDate && changInfo.initActivationDate !== '-') {
           formData.initActivationDate = changInfo.initActivationDate
@@ -251,11 +332,14 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     console.log('[X18] 잔여요금 조회 요청', { ncn })
     try {
       // ctn·custId는 백엔드에서 세션 계약 목록으로 조회, ncn만 전송
-      const data = await post('/remainCharge/list', { ncn })
+      const data = await post('/remainCharge/list', { ncn }, { silent: true })
       console.log('[X18] 잔여요금 조회 응답', data)
-      const formResponse = data?.data
+      const responseBody = data?.data || {}
+      const formResponse = responseBody?.data?.resCode ? responseBody.data : responseBody
+      const resCode = formResponse?.resCode || responseBody?.resCode || responseBody?.code || ''
+      const resMessage = formResponse?.resMessage || responseBody?.resMessage || responseBody?.message || ''
       const remainCharge = formResponse?.resData || {}
-      if (formResponse?.resCode === '0000') {
+      if (resCode === '0000') {
         formData.usageFee = remainCharge.sumAmt || ''
         formData.remainChargeItems = remainCharge.items || []
         formData.remainChargeLoaded = true
@@ -266,8 +350,8 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
         formData.lstComActvDate = remainCharge.lstComActvDate || remainCharge.initActivationDate || formData.lstComActvDate
       } else {
         console.warn('[X18] 조회 실패', {
-          resCode: formResponse?.resCode,
-          resMessage: formResponse?.resMessage,
+          resCode,
+          resMessage,
         })
       }
       return data
@@ -279,43 +363,94 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
   }
 
   // 단계별 초기화
-  const resetStep = (step) => {
-    if (step === 1) {
-      applicationKey.value = ''
-      return
-    }
+  const STEP_RESET_FIELDS = {
+    0: [
+      'cstmrTypeCd', 'visitCustomer', 'cstmrVisitTypeCd', 'identityCertTypeCd', 'identityIssuDate',
+      'driveLicnsNo', 'selfIssuNo', 'identityTypeCd', 'identityTypeNm', 'identityIssuRegion',
+      'isVerified', 'isScanVerified', 'isSaved', 'knoteIdentityScanCstmrNm', 'knoteIdentityEssNo',
+      'knoteIdentityTypeCd', 'knoteIdentityScanDt', 'knoteScanId',
+      'cstmrNm', 'userBirthDate', 'userGender', 'cstmrNativeRrn1', 'cstmrNativeRrn2',
+      'cstmrForeignerRrn1', 'cstmrForeignerRrn2', 'cstmrJuridicalRrn1', 'cstmrJuridicalRrn2',
+      'cstmrJuridicalBizNo1', 'cstmrJuridicalBizNo2', 'cstmrJuridicalBizNo3', 'cstmrJuridicalRepNm',
+      'upjnCd', 'bcuSbst', 'deviceChgTel1', 'deviceChgTel2', 'deviceChgTel3', 'cancelPhoneAuth',
+      'contractNum', 'lstComActvDate', 'repName', 'repBirthDate', 'repRegistrationNo1',
+      'repRegistrationNo2', 'repForeignerNo1', 'repForeignerNo2',
+      'repRelation', 'repPhone1', 'repPhone2', 'repPhone3', 'repPhoneAuth', 'repAgree',
+      'minorAgentNm', 'agentBirthDate', 'agentGender', 'minorAgentRelTypeCd', 'minorAgentTelFnNo',
+      'minorAgentTelMnNo', 'minorAgentTelRnNo', 'afterTel1', 'afterTel2', 'afterTel3', 'postMethod',
+      'agencyName', 'managerNm', 'agentNm', 'cpntId', 'cpntNm', 'cntpntShopCd', 'cntpntShopNm',
+      'agentCd', 'managerCd', 'ncn', 'custId', 'prvRateGrpNm', 'initActivationDate', 'addr',
+      'remindBlckYn', 'payData', 'billData',
+    ],
+    1: [
+      'cancelUseCompanyCd', 'usageFee', 'penaltyFee', 'finalAmount',
+      'remainPeriod', 'remainAmount', 'remainChargeLoaded', 'remainChargeItems', 'memo',
+    ],
+    2: ['agreeCheck1', 'agreeCheck2', 'agreeCheck3', 'clauseAgreements'],
+  }
 
-    if (step === 2) {
-      formData.usageFee = ''
-      formData.penaltyFee = ''
-      formData.finalAmount = ''
-      formData.remainPeriod = ''
-      formData.remainAmount = ''
-      formData.remainChargeLoaded = false
-      formData.remainChargeItems = []
-      formData.memo = ''
+  const EMPTY_BY_FIELD = {
+    identityCertTypeCd: 'K',
+    identityTypeCd: '01',
+    deviceChgTel1: '010',
+    remainChargeLoaded: false,
+    remainChargeItems: [],
+    payData: null,
+    billData: null,
+    isVerified: false,
+    isScanVerified: false,
+    isSaved: false,
+    repAgree: false,
+    agreeCheck1: false,
+    agreeCheck2: false,
+    agreeCheck3: false,
+    clauseAgreements: [],
+  }
+
+  const buildStepEmptyValues = (fields) =>
+    fields.reduce((acc, field) => {
+      if (Object.prototype.hasOwnProperty.call(EMPTY_BY_FIELD, field)) {
+        acc[field] = cloneDeep(EMPTY_BY_FIELD[field])
+      } else {
+        acc[field] = ''
+      }
+      return acc
+    }, {})
+
+  const STEP_EMPTY_VALUES = {
+    0: buildStepEmptyValues(STEP_RESET_FIELDS[0]),
+    1: buildStepEmptyValues(STEP_RESET_FIELDS[1]),
+    2: buildStepEmptyValues(STEP_RESET_FIELDS[2]),
+  }
+
+  const resetStep = (step) => {
+    const emptyValues = STEP_EMPTY_VALUES[step]
+    if (!emptyValues) return
+    Object.assign(formData, cloneDeep(emptyValues))
+
+    if (step === 0) {
       authFlags.value.cancelPhone = false
       authFlags.value.repPhone = false
-      return
-    }
-
-    if (step === 3) {
-      formData.agreeCheck1 = false
-      formData.agreeCheck2 = false
-      formData.agreeCheck3 = false
+      completeErrorMessage.value = ''
+      sessionStorage.removeItem('terminationContractNum')
     }
   }
 
-  const normalizeReceiveWayCd = (value) => {
-    const normalized = (value || '').trim()
-    if (normalized === 'postMethod1' || normalized.toUpperCase() === 'P' || normalized.toLowerCase() === 'mail') return 'P'
-    if (normalized === 'postMethod2' || normalized.toUpperCase() === 'E' || normalized.toLowerCase() === 'email') return 'E'
-    return ''
+  const resetAll = () => {
+    resetStep(0)
+    resetStep(1)
+    resetStep(2)
+    completeErrorMessage.value = ''
+    applicationKey.value = 'TEMP_' + Math.random().toString(36).substring(7)
+    sessionStorage.removeItem('terminationContractNum')
   }
 
   // 백엔드 요청 스키마(customer/product/agreement) 매핑
   const buildCompletePayload = () => ({
-    receiveWayCd: normalizeReceiveWayCd(formData.postMethod),
+    cstmrTypeCd: formData.cstmrTypeCd,
+    receiveWayCd: formData.postMethod,
+    cancelMobileNo: `${formData.deviceChgTel1 || ''}${formData.deviceChgTel2 || ''}${formData.deviceChgTel3 || ''}`,
+    receiveMobileNo: `${formData.afterTel1 || ''}${formData.afterTel2 || ''}${formData.afterTel3 || ''}`,
     customer: {
       managerCd: formData.managerCd,
       managerNm: formData.managerNm,
@@ -324,12 +459,46 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
       customerType: formData.cstmrTypeCd,
       identityCertTypeCd: formData.identityCertTypeCd,
       identityTypeCd: formData.identityTypeCd,
+      identityTypeNm: formData.identityTypeNm,
       identityIssuDate: formData.identityIssuDate,
       identityIssuRegion: formData.identityIssuRegion,
       driveLicnsNo: formData.driveLicnsNo,
       selfIssuNo: formData.selfIssuNo,
+      knoteIdentityScanCstmrNm: formData.knoteIdentityScanCstmrNm,
+      knoteIdentityEssNo: formData.knoteIdentityEssNo,
+      knoteIdentityTypeCd: formData.knoteIdentityTypeCd,
+      knoteIdentityScanDt: formData.knoteIdentityScanDt,
+      knoteScanId: formData.knoteScanId,
       userName: formData.cstmrNm,
       userBirthDate: formData.userBirthDate,
+      userGender: formData.userGender,
+      cstmrNativeRrn1: formData.cstmrNativeRrn1,
+      cstmrNativeRrn2: formData.cstmrNativeRrn2,
+      cstmrForeignerRrn1: formData.cstmrForeignerRrn1,
+      cstmrForeignerRrn2: formData.cstmrForeignerRrn2,
+      cstmrJuridicalRrn1: formData.cstmrJuridicalRrn1,
+      cstmrJuridicalRrn2: formData.cstmrJuridicalRrn2,
+      cstmrJuridicalBizNo1: formData.cstmrJuridicalBizNo1,
+      cstmrJuridicalBizNo2: formData.cstmrJuridicalBizNo2,
+      cstmrJuridicalBizNo3: formData.cstmrJuridicalBizNo3,
+      cstmrJuridicalRepNm: formData.cstmrJuridicalRepNm,
+      upjnCd: formData.upjnCd,
+      bcuSbst: formData.bcuSbst,
+      repName: formData.repName,
+      repBirthDate: formData.repBirthDate,
+      repRegistrationNo1: formData.repRegistrationNo1,
+      repRegistrationNo2: formData.repRegistrationNo2,
+      repForeignerNo1: formData.repForeignerNo1,
+      repForeignerNo2: formData.repForeignerNo2,
+      repAgree: !!formData.repAgree,
+      minorAgentNm: formData.minorAgentNm,
+      agentBirthDate: formData.agentBirthDate,
+      agentGender: formData.agentGender,
+      minorAgentRelTypeCd: formData.minorAgentRelTypeCd,
+      minorAgentTelFnNo: formData.minorAgentTelFnNo,
+      minorAgentTelMnNo: formData.minorAgentTelMnNo,
+      minorAgentTelRnNo: formData.minorAgentTelRnNo,
+      cstmrVisitTypeCd: formData.cstmrVisitTypeCd,
       cancelPhone1: formData.deviceChgTel1,
       cancelPhone2: formData.deviceChgTel2,
       cancelPhone3: formData.deviceChgTel3,
@@ -346,7 +515,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
       custId: formData.custId,
     },
     product: {
-      isActive: formData.isActive,
+      cancelUseCompanyCd: formData.cancelUseCompanyCd,
       usageFee: formData.usageFee,
       penaltyFee: formData.penaltyFee,
       finalAmount: formData.finalAmount,
@@ -358,6 +527,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
       agreeCheck1: !!formData.agreeCheck1,
       agreeCheck2: !!formData.agreeCheck2,
       agreeCheck3: !!formData.agreeCheck3,
+      clauses: Array.isArray(formData.clauseAgreements) ? formData.clauseAgreements : [],
     },
   })
 
@@ -369,9 +539,13 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
         applicationKey: applicationKey.value,
         ncn: payload?.customer?.ncn,
         customerType: payload?.customer?.customerType,
-        isActive: payload?.product?.isActive,
+        cancelUseCompanyCd: payload?.product?.cancelUseCompanyCd,
       })
-      const data = await post(`/api/msf/formTermination/${applicationKey.value}/complete`, payload)
+      const data = await post(
+        `/api/msf/formTermination/${applicationKey.value}/complete`,
+        payload,
+        { silentSuccess: true },
+      )
       console.debug('[apiCompleteApplication] response', data)
       const formResponse = data?.data
       if (formResponse?.resCode === '0000') {
@@ -404,6 +578,7 @@ export const useMsfFormTerminationStore = defineStore('msf_form_termination', ()
     setTerminationContract,
     ensureTerminationNcn,
     resetStep,
+    resetAll,
     apiGetMyinfoView,
     apiGetRemainCharge,
     apiCompleteApplication,

@@ -16,10 +16,10 @@ import com.ktmmobile.msf.commons.websecurity.security.auth.port.ActiveTokenCheck
 @Service
 public class LoginTokenStore implements ActiveTokenChecker {
 
-    private final CacheService<String> cacheService;
+    private final CacheService<String> tokenCacheService;
 
     public void saveTokenJti(TokenType tokenType, UserType userType, String userId, String jti, Duration timeToLive) {
-        cacheService.setValue(tokenKey(tokenType, userType, userId), jti, timeToLive);
+        tokenCacheService.setValue(tokenKey(tokenType, userType, userId), jti, timeToLive);
     }
 
     @Override
@@ -27,15 +27,15 @@ public class LoginTokenStore implements ActiveTokenChecker {
         if (!valid(userType, userId, jti)) {
             return false;
         }
-        return Objects.equals(cacheService.getValue(tokenKey(tokenType, userType, userId)), jti);
+        return Objects.equals(tokenCacheService.getValue(tokenKey(tokenType, userType, userId)), jti);
     }
 
     public void deleteTokens(UserType userType, String userId) {
         if (userType == null || !userType.isValid() || !StringUtils.hasText(userId)) {
             return;
         }
-        cacheService.delete(tokenKey(TokenType.ACCESS, userType, userId));
-        cacheService.delete(tokenKey(TokenType.REFRESH, userType, userId));
+        tokenCacheService.delete(tokenKey(TokenType.ACCESS, userType, userId));
+        tokenCacheService.delete(tokenKey(TokenType.REFRESH, userType, userId));
     }
 
     private boolean valid(UserType userType, String userId, String jti) {

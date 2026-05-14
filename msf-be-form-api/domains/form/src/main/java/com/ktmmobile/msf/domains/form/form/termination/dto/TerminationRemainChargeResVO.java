@@ -15,9 +15,6 @@ public class TerminationRemainChargeResVO {
     private String sumAmt;      // 당월요금계
     private List<FareItem> items;
 
-    /** requestView 위약금 블록 데이터 (X54/X16/mspAddInfo) */
-    private String initActivationDate; // 개통일자(lst_com_actv_date)
-    private String lstComActvDate;     // 최초개통일자(lst_com_actv_date)
     private TerminationSettlementDto settlement;
 
     private String penaltyFee;     // 위약금 (trmnForecBprmsAmt)
@@ -31,5 +28,5 @@ public class TerminationRemainChargeResVO {
     public static class FareItem {
         private String gubun;    // 요금 항목명
         private String payment;  // 요금 금액
-}
+    }
 }

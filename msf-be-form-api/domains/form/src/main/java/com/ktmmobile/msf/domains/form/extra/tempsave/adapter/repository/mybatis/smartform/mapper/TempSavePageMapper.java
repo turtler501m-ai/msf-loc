@@ -5,12 +5,12 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.ktmmobile.msf.domains.form.extra.tempsave.application.dto.TempSavePageCondition;
-import com.ktmmobile.msf.domains.form.extra.tempsave.domain.vo.TempSaveVo;
+import com.ktmmobile.msf.domains.form.extra.tempsave.domain.entity.TempSavePage;
 
 @Mapper
 public interface TempSavePageMapper {
 
-    int countTempSaveList(TempSavePageCondition condition);
+    int count(TempSavePageCondition condition);
 
-    List<TempSaveVo> selectTempSaveList(TempSavePageCondition condition);
+    List<TempSavePage> selectList(TempSavePageCondition condition);
 }

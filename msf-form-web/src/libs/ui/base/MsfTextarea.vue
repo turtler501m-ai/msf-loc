@@ -145,6 +145,7 @@ onUnmounted(() => {
   }
   &:focus-within {
     border-color: var(--color-primary-base);
+    box-shadow: inset 0 0 0 1px var(--color-foreground);
   }
   .textarea-inner {
     width: 100%;

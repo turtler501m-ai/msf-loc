@@ -1,5 +1,17 @@
 <script setup>
+import { nextTick, ref } from 'vue'
+
 const formData = defineModel({ type: Object, required: true })
+
+const afterTel1Ref = ref(null)
+const afterTel2Ref = ref(null)
+const afterTel3Ref = ref(null)
+
+const focusPostMethod = () => {
+  nextTick(() => {
+    document.querySelector('input[name="inp-postMethod"]')?.focus()
+  })
+}
 </script>
 <template>
   <MsfTitleArea title="해지 후 연락처" />
@@ -30,6 +42,7 @@ const formData = defineModel({ type: Object, required: true })
           id="inp-afterTel3"
           placeholder="뒤 4자리"
           maxlength="4"
+          @maxlength="focusPostMethod"
         />
       </MsfStack>
     </MsfFormGroup>
@@ -38,8 +51,8 @@ const formData = defineModel({ type: Object, required: true })
         v-model="formData.postMethod"
         name="inp-postMethod"
         :data="[
-          { value: 'postMethod1', label: '우편' },
-          { value: 'postMethod2', label: '이메일' },
+          { value: 'P', label: '우편' },
+          { value: 'E', label: '이메일' },
         ]"
       />
     </MsfFormGroup>

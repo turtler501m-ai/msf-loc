@@ -43,10 +43,7 @@
           <MsfSelect
             title="면허지역"
             v-model="model.identityIssuRegion"
-            :options="[
-              { label: '면허지역1', value: 'licenseRegion1' },
-              { label: '면허지역2', value: 'licenseRegion2' },
-            ]"
+            groupCode="driverLicenseAgency"
             placeholder="면허지역"
             class="ut-w-200"
           />

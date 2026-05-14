@@ -12,6 +12,20 @@ const onClickRemainCharge = async () => {
   await terminationStore.apiGetRemainCharge()
   isLoadingCharge.value = false
 }
+
+const formatSettlementAmount = (value) => {
+  if (value === undefined || value === null || value === '') return ''
+
+  const normalized = String(value)
+    .trim()
+    .replace(/,/g, '')
+    .replace(/[^\d.-]/g, '')
+
+  if (!normalized || normalized === '-' || normalized === '.' || normalized === '-.') return ''
+
+  const number = Number(normalized)
+  return Number.isFinite(number) ? number.toLocaleString() : ''
+}
 </script>
 <template>
   <MsfTitleArea title="해지 정산">
@@ -26,10 +40,10 @@ const onClickRemainCharge = async () => {
         <MsfStack type="field">
           <MsfInput
             id="inp-usageFee"
-            v-model="formData.usageFee"
-            placeholder="금액을 입력하세요."
+            :model-value="formatSettlementAmount(formData.usageFee)"
             align="right"
             :clearable="false"
+            disabled
             class="ut-w-300"
           />
           <span class="unit-sep">원</span>
@@ -39,10 +53,10 @@ const onClickRemainCharge = async () => {
         <MsfStack type="field">
           <MsfInput
             id="inp-penaltyFee"
-            v-model="formData.penaltyFee"
-            placeholder="금액을 입력하세요."
+            :model-value="formatSettlementAmount(formData.penaltyFee)"
             align="right"
             :clearable="false"
+            disabled
             class="ut-w-300"
           />
           <span class="unit-sep">원</span>
@@ -52,10 +66,10 @@ const onClickRemainCharge = async () => {
         <MsfStack type="field">
           <MsfInput
             id="inp-finalAmount"
-            v-model="formData.finalAmount"
-            placeholder="금액을 입력하세요."
+            :model-value="formatSettlementAmount(formData.finalAmount)"
             align="right"
             :clearable="false"
+            disabled
             class="ut-w-300"
           />
           <span class="unit-sep">원</span>
@@ -67,21 +81,21 @@ const onClickRemainCharge = async () => {
       >
         <MsfStack type="field">
           <MsfInput
-            v-model="formData.remainPeriod"
-            placeholder="분할상환 기간을 입력하세요."
+            :model-value="formatSettlementAmount(formData.remainPeriod)"
             ariaLabel="잔여분할상환 분할상환 기간을 입력하세요."
             align="right"
             :clearable="false"
+            disabled
             class="ut-w-300"
           />
           <span class="unit-sep">개월</span>
           <MsfInput
-            v-model="formData.remainAmount"
+            :model-value="formatSettlementAmount(formData.remainAmount)"
             id="inp-remainAmount"
-            placeholder="금액을 입력하세요."
             ariaLabel="잔여분할상환 금액을 입력하세요."
             align="right"
             :clearable="false"
+            disabled
             class="ut-w-300 ut-ml-8"
           />
           <span class="unit-sep">원</span>

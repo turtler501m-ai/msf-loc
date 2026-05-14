@@ -24,6 +24,8 @@ public interface MsfCanCustMgmtSvc {
     /** 완료취소 요청을 검증한 뒤 상태 되돌림 처리로 위임한다. */
     FormResponse<ProcessResVO> revert(ProcessReqDto req);
 
+    FormResponse<ProcessResVO> reject(ProcessReqDto req);
+
     /** 신청서 목록 조회 (신규/변경·서비스변경·명의변경·서비스해지 통합) */
     ListResDto selectAppFormList(ListReqDto req);
 
@@ -35,8 +37,10 @@ public interface MsfCanCustMgmtSvc {
      * ASIS: updateCanCsl(PROC_CD만 DB 갱신) + BATCH00233(실해지)
      * TOBE: EP0 실시간 호출 → 성공 시 PROC_CD='CP' 한번에 처리
      */
-    FormResponse<ProcessResVO> processComplete(ProcessReqDto req);
+    FormResponse<ProcessResVO> processCancelComplete(ProcessReqDto req);
 
     /** 완료취소 — PROC_CD를 'RC'(접수)로 되돌림 */
-    FormResponse<ProcessResVO> processRevert(Long requestKey);
+    FormResponse<ProcessResVO> processCancelRevert(Long requestKey);
+
+    FormResponse<ProcessResVO> processCancelReject(ProcessReqDto req);
 }

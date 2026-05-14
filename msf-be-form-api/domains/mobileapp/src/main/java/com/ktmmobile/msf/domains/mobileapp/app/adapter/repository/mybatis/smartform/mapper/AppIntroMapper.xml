@@ -32,20 +32,14 @@
 		from msf_usr_app_info
 		where 1=1
 		and uuid = #{uuid}
+    order by amd_dt desc
   </select>
 
   <delete id="removeUserApp">
-    delete
-    from msf_usr_app_info
-    where 1=1
-    and uuid = #{deviceUuid}
-  </delete>
-
-  <delete id="removeUserApp-molo">
     update msf_usr_app_info
     set apv_sttus_cd = 'C'
     where 1=1
-		and uuid = #{uuid}
+		and uuid = #{deviceUuid}
   </delete>
 
   <insert id="registUserApp">
@@ -69,6 +63,7 @@
     </if>
     where 1=1
     and uuid = #{deviceUuid}
+    and user_id = #{userId}
   </update>
 
 </mapper>

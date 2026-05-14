@@ -74,9 +74,19 @@ export const getExtraComponent = (pathes) => {
  * @param {string} message 표시할 메세지 (필수)
  * @param {Function} onConfirm 확인 버튼 클릭 콜백함수
  * @param {string} subMessage 하위에 표시할 메세지
+ * @return string 표시된 알림창 document Id
  */
 export const showAlert = (message, onConfirm, subMessage) => {
-  useMsfAlertStore().openAlert(message, onConfirm, subMessage)
+  return useMsfAlertStore().openAlert(message, onConfirm, subMessage)
+}
+
+/**
+ * 알림창 (Alert) 닫기
+ *
+ * @param {string} id 닫을 알림창 document Id
+ */
+export const hideAlert = (id) => {
+  useMsfAlertStore().removeAlert(id)
 }
 
 /**
@@ -86,7 +96,8 @@ export const showAlert = (message, onConfirm, subMessage) => {
  * @param {Function} onConfirm 확인 버튼 클릭 콜백함수
  * @param {string} subMessage 하위에 표시할 메세지
  * @param {Function} onCancel 취소 버튼 클릭 콜백함수
+ * @return string 표시된 확인창 document Id
  */
 export const showConfirm = (message, onConfirm, subMessage, onCancel) => {
-  useMsfAlertStore().openConfirm(message, onConfirm, subMessage, onCancel)
+  return useMsfAlertStore().openConfirm(message, onConfirm, subMessage, onCancel)
 }

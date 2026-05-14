@@ -22,6 +22,8 @@ public interface MsfCancelPageSvc {
      */
     FormResponse<TerminationRemainChargeResVO> getRemainCharge(TerminationRemainChargeReqDto reqDto);
 
+    FormResponse<Void> checkInProgressApplication(String mobileNo);
+
     /**
      * 작성완료 처리 시간을 로깅하고 실제 신청 처리는 apply에 위임한다.
      */
@@ -31,4 +33,9 @@ public interface MsfCancelPageSvc {
      * 서비스해지 신청 데이터를 MSF 저장소에 먼저 저장하고 MCP DB link 테이블로 이관한다.
      */
     FormResponse<TerminationApplyResVO> apply(TerminationApplyReqDto reqDto);
+
+    /**
+     * 저장된 MSF 신청 데이터를 MCP 테이블로 이관한다.
+     */
+    FormResponse<Void> transferToMcp(Long requestKey);
 }

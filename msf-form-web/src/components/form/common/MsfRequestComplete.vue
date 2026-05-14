@@ -4,7 +4,7 @@
     <div class="completed-msg">
       <img src="@/assets/images/completedIcon.svg" alt="완료" />
       <p class="user-name">
-        <em class="ut-color-accent"> {{ userInfo?.userName }} </em>님
+        <em class="ut-color-accent"> {{ data.name }} </em>님
       </p>
       <div class="info-txt">
         <strong> 작성하신 신청서가 작성 완료되었습니다.</strong>
@@ -13,7 +13,12 @@
     </div>
     <div class="box-layout">
       <MsfAppViewer class="box-item" :form-key="data.formKey" :form-type="props.formType" />
-      <MsfAppSender class="box-item" :phone="data.phone" :form-key="data.formKey" />
+      <MsfAppSender
+        class="box-item"
+        :phone="data.phone"
+        :name="data.name"
+        :form-key="data.formKey"
+      />
     </div>
     <MsfTextList
       :items="[
@@ -36,9 +41,12 @@
         </div>
         <div class="sec right">
           <MsfStack type="field" nowrap>
-            <MsfInput
+            <MsfNumberInput
               v-model="phoneNumber"
+              id="inp-sendPhoneForApp"
+              maxlength="11"
               placeholder="휴대폰번호 ‘-’ 없이 입력"
+              ariaLabel="휴대폰번호 ‘-’ 없이 입력"
               class="ut-flex-1"
             />
             <MsfButton
@@ -69,14 +77,12 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useMsfUserStore } from '@/stores/msf_user'
 import { post } from '@/libs/api/msf.api'
 import { getFormTypeCode } from '@/libs/utils/comn.utils'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
 import { validateMobile, isEmpty } from '@/libs/utils/string.utils'
 
 const route = useRoute()
-const userStore = useMsfUserStore()
 
 const props = defineProps({
   formType: { type: String, required: true },
@@ -84,7 +90,6 @@ const props = defineProps({
 })
 
 const smsType = ref('')
-const userInfo = ref(userStore.getUserInfo())
 const data = ref(props.formData)
 const phoneNumber = ref('')
 

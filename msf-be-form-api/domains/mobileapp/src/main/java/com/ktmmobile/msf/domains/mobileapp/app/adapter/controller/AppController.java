@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitRequest;
@@ -50,7 +49,6 @@ public class AppController {
 
     @PostMapping("/settingbio/modify")
     public CommonResponse<Integer> bioModify(@RequestBody @Validated(OnModify.class) AppRegistRequest request) {
-        request.setUserId(AuthenticationUtils.getUser().getUserId());
         return ResponseUtils.ok(appIntroReader.modifyBioSetting(request));
     }
 

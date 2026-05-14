@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ResTermMessage {
+    SUCCESS("0000", null),
+
     REMAIN_CONTRACT_NOT_FOUND("3101", "계약 정보를 찾을 수 없습니다."),
     REMAIN_API_EMPTY("3102", "잔여요금 조회 응답이 없습니다."),
     REMAIN_SELF_SERVICE_ERROR("3103", "잔여요금 조회 중 오류가 발생했습니다."),
@@ -22,6 +24,7 @@ public enum ResTermMessage {
     APPLY_POST_METHOD_REQUIRED("4204", "postMethod is required"),
     APPLY_CANCEL_PHONE_REQUIRED("4205", "해지 대상 전화번호를 입력해 주세요."),
     APPLY_RECEIVE_PHONE_REQUIRED("4206", "해지 후 연락처를 입력해 주세요."),
+    APPLY_IN_PROGRESS_EXISTS("4207", "현재 진행중인 신청서가 있어 신청할 수 없습니다."),
     APPLY_REQUEST_KEY_FAILED("4301", "요청 번호 발급에 실패했습니다."),
     APPLY_MSF_SAVE_FAILED("4302", "서비스해지 요청 저장에 실패했습니다."),
     APPLY_MCP_CUSTOMER_SAVE_FAILED("4303", "M포탈 고객정보 저장에 실패했습니다."),
@@ -36,12 +39,17 @@ public enum ResTermMessage {
     ADMIN_REL_TYPE_REQUIRED("5203", "고객접촉매체코드(apyRelTypeCd)가 없습니다."),
     ADMIN_TOUCH_MEDIA_REQUIRED("5204", "신청관계유형코드(custTchMediCd)가 없습니다."),
     ADMIN_DETAIL_NOT_FOUND("5301", "요청 상세 정보를 찾을 수 없습니다."),
+    ADMIN_PROCESS_NOT_SUPPORTED("5302", "해당 신청 유형은 아직 처리 기능을 지원하지 않습니다."),
+    ADMIN_CANCEL_REQUIRED_FIELD_MISSING("5303", "해지 처리에 필요한 신청 정보가 부족합니다."),
+    ADMIN_CANCEL_COMPLETE_STATUS_INVALID("5304", "해지 완료 처리는 접수 또는 처리요청 상태에서만 가능합니다."),
     ADMIN_EP0_ERROR("5401", "EP0 처리 중 오류가 발생했습니다."),
     ADMIN_EP0_EMPTY("5402", "EP0 응답이 없습니다."),
     ADMIN_EP0_FAILED("5403", "EP0 처리 실패"),
     ADMIN_COMPLETE_SAVE_FAILED("5501", "처리완료 저장에 실패했습니다."),
     ADMIN_COMPLETE_ONLY_REVERT("5601", "처리완료 상태인 건만 완료취소할 수 있습니다."),
-    ADMIN_REVERT_SAVE_FAILED("5602", "완료취소 저장에 실패했습니다.");
+    ADMIN_REVERT_SAVE_FAILED("5602", "완료취소 저장에 실패했습니다."),
+    ADMIN_REJECT_STATUS_INVALID("5701", "접수 또는 처리요청 상태인 건만 반려할 수 있습니다."),
+    ADMIN_REJECT_SAVE_FAILED("5702", "반려 저장에 실패했습니다.");
 
     private final String code;
     private final String message;

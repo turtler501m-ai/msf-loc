@@ -21,8 +21,7 @@
     hideParentheses
   >
     <template #buttons>
-      <MsfButton variant="toggle" disabled>수정</MsfButton>
-      <MsfButton variant="toggle" active>수정</MsfButton>
+      <MsfButton variant="toggle" active>신청서 작성</MsfButton>
     </template>
   </MsfDataTable>
 </template>

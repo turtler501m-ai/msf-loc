@@ -1,7 +1,5 @@
 package com.ktmmobile.msf.commons.logincore.application.service;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
@@ -12,8 +10,6 @@ import com.ktmmobile.msf.commons.common.data.entity.user.FormUser;
 import com.ktmmobile.msf.commons.common.data.entity.user.MsfUser;
 import com.ktmmobile.msf.commons.common.data.entity.user.UserOrganization;
 import com.ktmmobile.msf.commons.common.data.type.UserType;
-import com.ktmmobile.msf.commons.logincore.application.port.out.LoginUserFinder;
-import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginUserInfo;
 import com.ktmmobile.msf.commons.websecurity.security.auth.port.AuthenticatedUserFinder;
 
@@ -21,29 +17,12 @@ import com.ktmmobile.msf.commons.websecurity.security.auth.port.AuthenticatedUse
 @Component
 public class LoginAuthenticatedUserFinder implements AuthenticatedUserFinder {
 
-    private final LoginUserInfoCacheService loginUserInfoCacheService;
-    private final LoginUserFinder<?> loginUserFinder;
+    private final LoginUserInfoResolver loginUserInfoResolver;
 
     @Override
     public Optional<MsfUser> findUser(UserType userType, String userId) {
-        return loginUserInfoCacheService.get(userType, userId)
-            .or(() -> loadAndCache(userType, userId))
+        return loginUserInfoResolver.resolve(userType, userId)
             .flatMap(this::toUser);
-    }
-
-    private Optional<LoginUserInfo> loadAndCache(UserType userType, String userId) {
-        LoginSessionUser sessionUser = new LoginSessionUser(
-            userId,
-            userType,
-            null,
-            null,
-            null,
-            Map.of(),
-            List.of()
-        );
-        Optional<LoginUserInfo> userInfo = loginUserFinder.findUserInfo(sessionUser);
-        userInfo.ifPresent(loginUserInfoCacheService::save);
-        return userInfo;
     }
 
     private Optional<MsfUser> toUser(LoginUserInfo userInfo) {

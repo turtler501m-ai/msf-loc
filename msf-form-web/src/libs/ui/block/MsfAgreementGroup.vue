@@ -30,6 +30,7 @@
             :key="item.code || idx"
             v-model="item.checked"
             v-bind="item"
+            :spec-terms="props.specTerms?.find((v) => v.code === item.code)"
             :only-required="onlyRequired"
           />
         </div>
@@ -72,12 +73,6 @@ const isAllExpanded = ref(false)
 const internalTerms = ref([])
 
 const hasSpecTerms = (item) => {
-  console.log(
-    'hasSpecTerms:',
-    item.code,
-    ':',
-    props.specTerms?.some((t) => t.code === item?.code),
-  )
   return props.specTerms?.some((t) => t.code === item?.code)
 }
 
@@ -87,7 +82,7 @@ const loadTermsData = async () => {
     groupCode: props.policy,
     specTermsList: props.specTerms,
   })
-  const codes = result.data?.codes?.filter((v) => !v.commonStatus || hasSpecTerms(v)) || []
+  const codes = result.data?.filter((v) => !v.commonStatus || hasSpecTerms(v)) || []
 
   const tree = []
   for (const item of codes) {
@@ -115,6 +110,7 @@ const loadTermsData = async () => {
 
 onMounted(loadTermsData)
 watch(() => props.policy, loadTermsData)
+watch(() => props.specTerms, loadTermsData, { deep: true })
 
 const generateResult = (data) => {
   const result = []

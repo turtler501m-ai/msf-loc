@@ -6,6 +6,13 @@
       :customerData="customerData"
       :authFlags="store.authFlags"
     />
+    <MsfDeviceSerialNumber
+      v-if="customerData.productType === 'MM'"
+      ref="deviceSerialNumberRef"
+      v-model="formData"
+      :customerData="customerData"
+      :authFlags="store.authFlags"
+    />
     <MsfMnpInfo
       ref="mnpInfoRef"
       v-model="formData"
@@ -14,12 +21,6 @@
     />
     <MsfNumberReservation
       ref="numberReservationRef"
-      v-model="formData"
-      :customerData="customerData"
-      :authFlags="store.authFlags"
-    />
-    <MsfDeviceSerialNumber
-      ref="deviceSerialNumberRef"
       v-model="formData"
       :customerData="customerData"
       :authFlags="store.authFlags"

@@ -22,7 +22,7 @@
 
 <script setup>
 import { useMsfFormOwnChgStore } from '@/stores/msf_ownerChange'
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 import MsfMemo from '../common/MsfMemo.vue'
 import { storeToRefs } from 'pinia'
 import MsfBillingInfo from '../common/MsfBillingInfo.vue'
@@ -96,12 +96,18 @@ const save = async () => {
   return validate()
 }
 
+const reset = async () => {
+  store.resetProduct()
+  await nextTick()
+  checkRequiredFields()
+}
+
 onMounted(() => {
   checkRequiredFields()
   store.validateProduct = validate
 })
 
-defineExpose({ save, validate })
+defineExpose({ save, validate, reset })
 </script>
 
 <style scoped></style>

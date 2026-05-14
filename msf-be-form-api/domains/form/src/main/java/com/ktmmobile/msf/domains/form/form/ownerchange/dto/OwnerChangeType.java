@@ -10,7 +10,7 @@ public enum OwnerChangeType {
     NOT_VALID_NUMBER("01", "유효하지 않은 전화번호"),
     DIFF_CUST_NO("02", "고객번호가 다름"),
     DIFF_BIZ_NO("03", "판매 사업자 코드가 다름"),
-    EMPTY("09", "조회 결과가 없음"),
+    EMPTY("09", "고객 정보와 휴대폰번호가 일치하지 않습니다.\n 휴대폰번호를 다시 확인해 주세요."),
     REAL_USE_DAY_ERROR("10", "실사용기간 90일 이전"),
     STATUS_STOP("11", "정지 회선인 경우"),
     NON_PAY("12", "미납 회선인 경우"),

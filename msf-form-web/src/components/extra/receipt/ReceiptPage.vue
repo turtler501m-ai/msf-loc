@@ -3,10 +3,10 @@
   <MsfBox margin="0">
     <MsfStack vertical>
       <MsfStack type="field" class="ut-w100p">
-        <MsfDateRange v-model:from="formData.startDate" v-model:to="formData.endDate" class="" />
+        <MsfDateRange v-model:from="formData.startDt" v-model:to="formData.endDt" class="" />
         <MsfSelect
           title="신청서 구분"
-          v-model="formData.formTypeCd"
+          v-model="formData.formTypeOne"
           :options="formTypeCd"
           class="ut-flex-1"
         />
@@ -24,12 +24,13 @@
   </MsfBox>
   <!-- 그리드 테이블 -->
   <MsfDataTable
+    v-if="isLoaded"
     ref="pagingRef"
     :columns="colDefsPaging"
     url="/api/receiptpage/list"
     :params="formData"
     show-paging
-    :is-search="false"
+    :is-search="true"
     show-single-check
     @selected="onSelected"
   >
@@ -58,65 +59,76 @@ const formTypeCd = ref([])
 
 const colDefsPaging = ref([
   {
-    field: 'rowNum',
-    headerName: '등록번호',
-    width: 100,
-    cellStyle: { textAlign: 'center' },
-    headerClass: 'ag-center-header',
+    field: 'requestKey',
+    hide: true,
+    suppressColumnsToolPanel: true,
+  },
+  {
+    field: 'modifyYn',
+    hide: true,
+    suppressColumnsToolPanel: true,
+  },
+  {
+    field: 'cretDt',
+    headerName: '작성일자',
+    width: 250,
+    type: 'datetime',
+    cellStyle: {
+      textAlign: 'center',
+    },
   },
   {
     field: 'formTypeCd',
     headerName: '신청서 구분',
+    width: 250,
+    cellStyle: {
+      textAlign: 'center',
+    },
+    cellRenderer: (params) => {
+      return renderFormType(params)
+    },
+  },
+  {
+    field: 'cstmrTypeCd',
+    headerName: '고객 유형',
     flex: 1,
-    minWidth: 200,
+    cellStyle: {
+      textAlign: 'center',
+    },
+    cellRenderer: (params) => {
+      return params.data.cstmrTypeCd?.title
+    },
   },
   {
-    field: 'shopCd',
-    headerName: '매장코드',
+    field: 'cstmrNm',
+    headerName: '고객명',
     flex: 1,
-    minWidth: 200,
+    cellStyle: {
+      textAlign: 'center',
+    },
   },
   {
-    field: 'shopNm',
-    headerName: '매장명',
+    field: 'procCd',
+    headerName: '진행 상태',
     flex: 1,
-    minWidth: 200,
+    cellStyle: {
+      textAlign: 'center',
+    },
+    cellRenderer: (params) => {
+      return params.data.procCd?.title
+    },
   },
   {
-    field: 'userId',
-    headerName: '사용자ID',
-    flex: 1,
-    minWidth: 150,
-  },
-  {
-    field: 'userNm',
-    headerName: '사용자명',
-    flex: 1,
-    minWidth: 150,
-  },
-  {
-    field: 'macAdr',
-    headerName: 'MAC ID',
-    width: 120,
-    cellStyle: { textAlign: 'center' },
-    headerClass: 'ag-center-header',
-  },
-  {
-    field: 'uuid',
-    headerName: '단말기 고유 ID',
-    width: 120,
-    cellStyle: { textAlign: 'center' },
-    headerClass: 'ag-center-header',
-  },
-  {
-    field: 'cretDt',
-    headerName: '등록일자',
-    width: 150,
-    cellStyle: { textAlign: 'center' },
-    headerClass: 'ag-center-header',
+    field: 'cretNm',
+    headerName: '신청자',
+    width: 130,
+    cellStyle: {
+      textAlign: 'center',
+    },
   },
 ])
 
+const isLoaded = ref(false)
 const pagingRef = ref()
 const selectedRowPaging = ref([])
 const selectedScriptSeq = ref(null)
@@ -150,17 +162,30 @@ const onUpdate = async () => {
   }
 }
 
+const renderFormType = (params) => {
+  if (params.data.formTypeCd?.code === '1') {
+    const formTypeCd = params.data.formTypeCd?.title
+    const reqBuyTypeCd = params.data.reqBuyTypeCd?.title
+    const operTypeCd = params.data.operTypeCd?.title
+
+    return formTypeCd + '(' + reqBuyTypeCd + '/' + operTypeCd + ')'
+  } else {
+    return params.data.formTypeCd?.title
+  }
+}
+
 const pushFormTypeCd = async () => {
   const res = await getCommonCodeList('FORM_TYPE_CD')
   formTypeCd.value = [
+    { value: '0', label: '전체' },
     ...res.map((item) => ({ value: item.code, label: item.title })),
-    { value: '0', label: '공통' },
   ]
 }
 
 onBeforeMount(() => {
-  setRange({ months: 0, days: 7 })
   pushFormTypeCd()
+  setRange({ months: 0, days: 7 })
+  isLoaded.value = true
 })
 
 const setRange = (val) => {
@@ -174,8 +199,8 @@ const setRange = (val) => {
     start.setDate(start.getDate() - val.days)
   }
 
-  formData.value.startDate = formatDate(start)
-  formData.value.endDate = formatDate(end)
+  formData.value.startDt = formatDate(start)
+  formData.value.endDt = formatDate(end)
 }
 </script>
 

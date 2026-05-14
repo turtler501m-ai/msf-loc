@@ -47,7 +47,7 @@ export const getCommonCodeListWithUseAll = async (groupIds, includeDetail = fals
  */
 export const getCommonCodeList = async (groupIds, includeDetail = false, includeAll = false) => {
   const isArray = Array.isArray(groupIds)
-  const res = await post('/api/n/common-codes/list', {
+  const res = await post('/api/shared/common/common-codes/list', {
     groupIds: isArray ? groupIds : [groupIds],
     includeAll,
     includeDetail,

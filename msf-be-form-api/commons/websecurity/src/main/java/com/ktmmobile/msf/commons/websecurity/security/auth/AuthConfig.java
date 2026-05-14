@@ -34,6 +34,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -49,6 +50,7 @@ import com.ktmmobile.msf.commons.websecurity.security.auth.handler.DefaultAccess
 import com.ktmmobile.msf.commons.websecurity.security.auth.handler.DefaultAuthenticationEntryPoint;
 import com.ktmmobile.msf.commons.websecurity.security.auth.properties.JwtSecurityProperties;
 import com.ktmmobile.msf.commons.websecurity.security.auth.properties.SecurityAuthorizationProperties;
+import com.ktmmobile.msf.commons.websecurity.web.filter.ClientIdMdcFilter;
 
 @EnableMethodSecurity
 @EnableWebSecurity
@@ -85,7 +87,9 @@ public class AuthConfig {
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)
                 .bearerTokenResolver(bearerTokenResolver(securityAuthorizationProperties.tokenIgnoreUrlPatterns()))
-                .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtMemberAuthenticationConverter)));
+                .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtMemberAuthenticationConverter)))
+
+            .addFilterAfter(new ClientIdMdcFilter(), BearerTokenAuthenticationFilter.class);
         return http.build();
     }
 

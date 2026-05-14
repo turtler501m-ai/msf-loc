@@ -3,11 +3,15 @@
     v-bind="$attrs"
     :is-open="modelValue"
     title="신분증 목록 조회"
-    @open="emit('open')"
+    @open="onOpen"
     @close="onClose"
   >
     <!-- 팝업 내용 -->
+    <div v-if="loading" class="ut-flex ut-justify-center ut-py-20">
+      <MsfLoadingComp />
+    </div>
     <MsfDataTable
+      v-else
       :columns="colDefs"
       :datas="datas"
       :total="datas.length"
@@ -29,12 +33,18 @@
 
 <script setup>
 import { ref } from 'vue'
+import { post } from '@/libs/api/msf.api'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({
   modelValue: Boolean,
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
+
+const datas = ref([])
+const selectedRow = ref()
+const loading = ref(false)
 
 // 닫힘 이벤트
 const onClose = () => {
@@ -44,70 +54,82 @@ const onClose = () => {
   }
 }
 
-const onConfirm = () => {
-  emit('confirm', selectedRow.value)
-  onClose()
+/**
+ * 1. 신분증 목록 조회 (K-NOTE)
+ */
+const fetchIdList = async () => {
+  loading.value = true
+  try {
+    const res = await post('/api/form/knote/getIdList', {})
+    if (res && res.code === '0000') {
+      // res.data.resData.list 구조에 맞게 수정
+      datas.value = res.data?.resData?.list || []
+    } else {
+      datas.value = []
+    }
+  } catch (error) {
+    console.error('Failed to fetch K-NOTE ID list:', error)
+    datas.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
-// 테이블 샘플
+/**
+ * 2. 신분증 상태 체크 및 확인 처리
+ */
+const onConfirm = async () => {
+  if (!selectedRow.value) {
+    showAlert('선택된 신분증이 없습니다.')
+    return
+  }
+
+  const frmpapId = selectedRow.value.frmpapId || selectedRow.value.id
+
+  try {
+    const res = await post('/api/form/knote/checkIdStatus', { frmpapId })
+
+    // 특정 ID인 경우 비정상 처리 (사용자 요청 조건)
+    if (frmpapId === '0x62E50320B59E11EE8A320080C74455C601') {
+      showAlert('선택하신 신분증 정보가 비정상입니다. 다시 확인해 주세요.')
+      return
+    }
+
+    if (res && res.code === '0000') {
+      // API 응답의 resData를 포함하여 부모에게 전달
+      emit('confirm', {
+        ...selectedRow.value,
+        ...res.data?.resData
+      })
+      onClose()
+    } else {
+      showAlert(res.message || '신분증 상태 확인에 실패했습니다.')
+    }
+  } catch (error) {
+    console.error('Check ID status error:', error)
+  }
+}
+
+// 팝업 열릴 때 목록 조회
+const onOpen = () => {
+  emit('open')
+  fetchIdList()
+}
+
+// 테이블 정의 (JSON 필드에 맞게 수정: wapplRegDate, custNm, custIdntNoIndCd, custIdntNo)
 const colDefs = ref([
-  { field: 'scanDate', headerName: '스캔일시', width: 120, cellStyle: { textAlign: 'center' } },
-  { field: 'cstmrNm', headerName: '이름', width: 100, cellStyle: { textAlign: 'center' } },
-  { field: 'identityTypeNm', headerName: '신분증 유형', width: 120, cellStyle: { textAlign: 'center' } },
-  { field: 'rrn1', headerName: '생년월일', flex: 1, cellStyle: { textAlign: 'center' } },
+  { field: 'wapplRegDate', headerName: '스캔일시', width: 120, cellStyle: { textAlign: 'center' } },
+  { field: 'custNm', headerName: '이름', width: 100, cellStyle: { textAlign: 'center' } },
+  {
+    field: 'custIdntNoIndCd',
+    headerName: '신분증 유형',
+    width: 120,
+    cellStyle: { textAlign: 'center' },
+    valueFormatter: (params) => params.value === '1' ? '주민등록증' : (params.value === '5' ? '운전면허증' : params.value)
+  },
+  { field: 'custIdntNo', headerName: '생년월일', flex: 1, cellStyle: { textAlign: 'center' } },
 ])
 
-const datas = ref([
-  {
-    scanDate: '2024-04-20 14:20',
-    cstmrNm: '홍길동',
-    identityTypeNm: '주민등록증',
-    identityTypeCd: 'ID1',
-    rrn1: '900101',
-    rrn2: '1234567',
-  },
-  {
-    scanDate: '2024-04-21 10:15',
-    cstmrNm: '이순신',
-    identityTypeNm: '운전면허증',
-    identityTypeCd: 'DL1',
-    rrn1: '850505',
-    rrn2: '2345678',
-  },
-  {
-    scanDate: '2024-04-22 09:30',
-    cstmrNm: '강감찬',
-    identityTypeNm: '주민등록증',
-    identityTypeCd: 'ID1',
-    rrn1: '701212',
-    rrn2: '1111111',
-  },
-  {
-    scanDate: '2024-04-22 16:45',
-    cstmrNm: '유관순',
-    identityTypeNm: '여권',
-    identityTypeCd: 'PP1',
-    rrn1: '050301',
-    rrn2: '4444444',
-  },
-  {
-    scanDate: '2024-04-23 11:00',
-    cstmrNm: '세종대왕',
-    identityTypeNm: '외국인등록증',
-    identityTypeCd: 'FR1',
-    rrn1: '950815',
-    rrn2: '5555555',
-  },
-  {
-    scanDate: '2024-04-23 13:20',
-    cstmrNm: '장영실',
-    identityTypeNm: '운전면허증',
-    identityTypeCd: 'DL1',
-    rrn1: '881010',
-    rrn2: '1234567',
-  },
-])
-const selectedRow = ref()
 const onSelected = (data) => {
   selectedRow.value = data
 }

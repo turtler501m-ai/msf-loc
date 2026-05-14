@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CacheMetadataKeyGenerator {
 
-    private static final String METADATA_KEY_SUFFIX = ":metadata";
+    private static final String METADATA_KEY_SUFFIX = "-metadata";
 
     /**
      * 캐시 메타데이터 키 생성

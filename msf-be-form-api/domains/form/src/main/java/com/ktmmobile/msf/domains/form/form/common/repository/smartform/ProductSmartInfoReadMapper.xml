@@ -7,15 +7,26 @@
     <select id="selectProductCategoryList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.CategoryMstRequest"
           resultType="com.ktmmobile.msf.domains.form.form.common.dto.CategoryInfoDto">
         /* 요금제/부가서비스/안심보험 등의 카테고리 조회 */
-        SELECT CTG_CD, CTG_NM
+        SELECT A.CTG_CD, A.CTG_NM
         FROM MSF_RATE_ADSVC_CTG_BAS A
+        , (
+        SELECT CTG_CD, COUNT(*) AS PROD_ID_COUNT
+        FROM MSF_RATE_ADSVC_CTG_PROD_REL
+        WHERE USE_YN='Y'
+        AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+        AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+        GROUP BY CTG_CD
+        ) B
         WHERE 1=1
-            <if test="prodCtgTypeCd != null">
-                AND A.RATE_ADSVC_DIV_CD = #{prodCtgTypeCd}
-            </if>
-            AND A.USE_YN = 'Y'
-            AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
-            AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+        <!--<if test="prodCtgTypeCd != null">-->
+        AND A.RATE_ADSVC_DIV_CD = #{prodCtgTypeCd}
+        <!--</if>-->
+        AND A.CTG_CD = B.CTG_CD
+        AND B.PROD_ID_COUNT > 0
+        AND A.RATE_ADSVC_DIV_CD = 'P'
+        AND A.USE_YN = 'Y'
+        AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+        AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
         ORDER BY A.SORT_ODRG
     </select>
 
@@ -48,6 +59,7 @@
                                     AND USE_YN = 'Y'
                                     AND TO_CHAR(NOW(),'yyyymmddhh24miss') BETWEEN PSTNG_START_DATE AND PSTNG_END_DATE )
             </if>
+      <!--ORDER BY CTG_CD, SORT_ODRG-->
     </select>
 
     <select id="selectPhoneInventoryList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest"
@@ -57,9 +69,7 @@
         FROM MSF_PROD_STOR_INVENTORY_TXN
         WHERE 1=1
             AND USE_YN = 'Y'
-            <if test="orgnId != null and orgnId != ''">
-                AND STOR_CD = #{orgnId}
-            </if>
+            AND STOR_CD = #{orgnId}
             <if test="prodId != null and prodId != ''">
                 AND PROD_ID = #{prodId}
                 <!--AND PROD_ID = #{phoneModelId}-->

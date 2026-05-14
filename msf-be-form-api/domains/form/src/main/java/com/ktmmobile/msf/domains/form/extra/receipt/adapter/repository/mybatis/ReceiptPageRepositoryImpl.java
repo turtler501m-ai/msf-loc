@@ -9,18 +9,18 @@ import com.ktmmobile.msf.commons.common.pagination.Page;
 import com.ktmmobile.msf.domains.form.extra.receipt.adapter.repository.mybatis.smartform.mapper.ReceiptPageMapper;
 import com.ktmmobile.msf.domains.form.extra.receipt.application.dto.ReceiptPageCondition;
 import com.ktmmobile.msf.domains.form.extra.receipt.application.port.out.ReceiptPageRepository;
-import com.ktmmobile.msf.domains.form.extra.receipt.domain.vo.ReceiptVo;
-import com.ktmmobile.msf.domains.form.extra.tempsave.domain.vo.TempSaveVo;
+import com.ktmmobile.msf.domains.form.extra.receipt.domain.entity.ReceiptPage;
 
-@Repository
 @RequiredArgsConstructor
+@Repository
 public class ReceiptPageRepositoryImpl implements ReceiptPageRepository {
 
     private final ReceiptPageMapper receiptPageMapper;
 
-    @Override public Page<ReceiptVo> selectReceiptList(ReceiptPageCondition condition) {
-        int totalCount = receiptPageMapper.countReceiptList(condition);
-        List<ReceiptVo> data = receiptPageMapper.selectReceiptList(condition);
+    @Override
+    public Page<ReceiptPage> selectList(ReceiptPageCondition condition) {
+        int totalCount = receiptPageMapper.count(condition);
+        List<ReceiptPage> data = receiptPageMapper.selectList(condition);
         return Page.of(data, condition.page(), totalCount);
     }
 }

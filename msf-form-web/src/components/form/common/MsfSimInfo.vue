@@ -14,36 +14,62 @@ const props = defineProps({
 const formData = defineModel({ type: Object, required: true })
 const store = useMsfFormNewChgStore()
 const isEsimScanModalOpen = ref(false)
-
 const simPossessionOptions = computed(() => {
-  const isDeviceChange = formData.value.joinType === 'HDN3'
-  return [
-    { value: 'hasSim1', label: isDeviceChange ? '현재USIM으로 사용' : 'USIM 보유' },
-    { value: 'hasSim2', label: 'USIM 구매' },
-    { value: 'hasSim3', label: 'eSIM' },
-  ]
+  const isDeviceChange = props.customerData?.joinType === 'HDN3'
+  const options = []
+
+  if (isDeviceChange) {
+    // 기기변경인 경우
+    options.push({ value: 'hasSim1', label: '현재USIM으로 사용' })
+  } else {
+    // 신규/번호이동인 경우
+    options.push({ value: 'hasSim1', label: 'USIM 보유' })
+  }
+  options.push({ value: 'hasSim2', label: 'USIM 구매' })
+
+  // 상품이 휴대폰(MM)일 때만 eSIM 옵션 노출
+  if (props.customerData?.productType === 'MM') {
+    options.push({ value: 'hasSim3', label: 'eSIM' })
+  }
+  return options
 })
 
 onMounted(async () => {
-  if (formData.value.productType === 'UU') {
+  // 기기변경(HDN3)인 경우 디폴트 '현재USIM으로 사용' (hasSim1)
+  // 번호이동/신규가입인 경우 디폴트 'USIM 보유' (hasSim1)
+  if (!formData.value.hasSim) {
+    formData.value.hasSim = 'hasSim1'
+  }
+
+  if (props.customerData?.productType === 'UU') {
     formData.value.hasSim = 'hasSim2'
   }
+
+  // USIM 구매 방식 디폴트: 다음달 요금에 합산 (MOPY: 2)
+  if (!formData.value.simPurchaseMethod) {
+    formData.value.simPurchaseMethod = '2'
+  }
+
   // 약관(유심구매) 공통코드 조회
   getCommonCodeList('TERMSELF').then((list) => {
     console.log('>>> 약관(유심구매) (TERMSELF):', list)
   })
 })
 
-const simAuth = useAuthButton(() => [formData.value?.reqUsimSn], {
-  get value() {
-    return store.authFlags?.reqUsimSn || false
+const simAuth = useAuthButton(
+  () => [formData.value?.reqUsimSn],
+  {
+    get value() {
+      return store.authFlags?.reqUsimSn || false
+    },
+    set value(v) {
+      if (store.authFlags) {
+        store.authFlags.reqUsimSn = v
+      }
+    },
   },
-  set value(v) {
-    if (store.authFlags) {
-      store.authFlags.reqUsimSn = v
-    }
-  },
-})
+  ([sn]) => sn && sn.length === 19,
+)
 
 const handleSimVerify = async () => {
   const isEsim = formData.value.hasSim === 'hasSim3'
@@ -113,7 +139,7 @@ const validate = () => {
     if (!props.authFlags?.esimImei) return false
   } else {
     // 2. USIM 보유(hasSim1) 또는 USIM 구매(hasSim2)인 경우
-    if (!formData.value.usimKindsCd) return false
+    if (!formData.value.usimKindsCd && formData.value.hasSim === 'hasSim2') return false
     if (!formData.value.reqUsimSn) return false
     // 유심은 유효성 체크가 완료되어야 함
     if (!props.authFlags?.reqUsimSn) return false
@@ -129,23 +155,14 @@ defineExpose({ validate })
 </script>
 
 <template>
-  <!-- SIM정보_상품(휴대폰) -->
-  <MsfTitleArea title="SIM정보_상품(휴대폰)" />
+  <!-- SIM정보 -->
+  <MsfTitleArea title="SIM정보" />
   <MsfStack vertical type="formgroups">
-    <MsfFormGroup
-      v-if="formData.productType !== 'UU'"
-      label="SIM 보유"
-      tag="div"
-      required
-    >
-      <MsfChip
-        v-model="formData.hasSim"
-        name="inp-hasSim"
-        :data="simPossessionOptions"
-      />
+    <MsfFormGroup v-if="customerData?.productType !== 'UU'" label="SIM 보유" tag="div" required>
+      <MsfChip v-model="formData.hasSim" name="inp-hasSim" :data="simPossessionOptions" />
     </MsfFormGroup>
-    <MsfFormGroup label="USIM 선택" tag="div" required v-if="formData.hasSim !== 'hasSim3'">
-      <MsfChip v-model="formData.usimKindsCd" name="inp-simType" groupCode="RCP2035" />
+    <MsfFormGroup label="USIM 선택" tag="div" required v-if="formData.hasSim === 'hasSim2'">
+      <MsfChip v-model="formData.usimKindsCd" name="inp-simType" groupCode="usimProdInfo" />
     </MsfFormGroup>
     <MsfFormGroup label="USIM 번호" required v-if="formData.hasSim !== 'hasSim3'">
       <MsfStack type="field">
@@ -172,14 +189,7 @@ defineExpose({ validate })
       </MsfStack>
     </MsfFormGroup>
     <MsfFormGroup label="USIM 구매 방식" tag="div" required v-if="formData.hasSim === 'hasSim2'">
-      <MsfChip
-        v-model="formData.simPurchaseMethod"
-        name="inp-simPurchaseMethod"
-        :data="[
-          { value: 'simPurchaseMethod1', label: '즉시납부' },
-          { value: 'simPurchaseMethod2', label: '다음달 요금에 합산' },
-        ]"
-      />
+      <MsfChip v-model="formData.simPurchaseMethod" name="inp-simPurchaseMethod" groupCode="MOPY" />
     </MsfFormGroup>
     <MsfFormGroup label="휴대폰 정보" required v-if="formData.hasSim === 'hasSim3'">
       <MsfInput v-model="formData.prodNm" placeholder="휴대폰 모델명" class="ut-w-300" disabled />
@@ -218,7 +228,7 @@ defineExpose({ validate })
     :readonly="authFlags?.esimImei"
     @confirm="onEsimScanConfirm"
   />
-  <!-- // SIM정보_상품(휴대폰) -->
+  <!-- // SIM정보 -->
 </template>
 
 <style scoped lang="scss"></style>

@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginRefreshTokenCookieManager;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTokenPair;
-import com.ktmmobile.msf.commons.logincore.support.exception.LoginException;
+import com.ktmmobile.msf.commons.logincore.support.exception.RefreshTokenNotExistsException;
 import com.ktmmobile.msf.commons.logincore.support.properties.LoginCoreProperties;
 
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class LoginRefreshTokenCookieService implements LoginRefreshTokenCookieMa
     public String getRefreshToken(Cookie[] cookies) {
         String refreshToken = findRefreshToken(cookies);
         if (refreshToken == null) {
-            throw new LoginException("RefreshToken이 없습니다.");
+            throw new RefreshTokenNotExistsException("RefreshToken이 없습니다.");
         }
         return refreshToken;
     }

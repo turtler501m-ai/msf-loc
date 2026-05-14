@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia'
 
 const createFormData = () => ({
+  formTypeOne: '0',
+  startDt: '',
+  endDt: '',
   searchWord: '',
-  startDate: '',
-  endDate: '',
-  formTypeCd: '',
 })
 
 const createFormDtlData = () => ({})

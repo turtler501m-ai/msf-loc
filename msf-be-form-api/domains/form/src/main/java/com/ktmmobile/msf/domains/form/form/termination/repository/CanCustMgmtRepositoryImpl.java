@@ -6,7 +6,8 @@ import org.springframework.stereotype.Repository;
 
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.DetailDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ListReqDto;
-import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessReqDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessStatusDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessUpdateDto;
 import com.ktmmobile.msf.domains.form.form.termination.repository.smartform.CanCustMgmtMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -29,11 +30,19 @@ public class CanCustMgmtRepositoryImpl {
         return canCustMgmtMapper.selectCanCustDetail(requestKey);
     }
 
+    public DetailDto selectApplicationDetail(Long requestKey) {
+        return canCustMgmtMapper.selectApplicationDetail(requestKey);
+    }
+
+    public ProcessStatusDto selectApplicationStatus(Long requestKey) {
+        return canCustMgmtMapper.selectApplicationStatus(requestKey);
+    }
+
     public String selectProcCd(Long requestKey) {
         return canCustMgmtMapper.selectProcCd(requestKey);
     }
 
-    public int updateCanCustProcCd(ProcessReqDto req) {
+    public int updateCanCustProcCd(ProcessUpdateDto req) {
         return canCustMgmtMapper.updateCanCustProcCd(req);
     }
 }

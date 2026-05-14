@@ -205,12 +205,46 @@
         </if>
     </select>
 
+    <!-- 통합 신청서 공통 상세 조회: 처리 분기와 임시 관리자 화면 표시용 -->
+    <select id="selectApplicationDetail"
+            parameterType="java.lang.Long"
+            resultType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$DetailDto">
+        SELECT
+            T.REQUEST_KEY,
+            TO_CHAR(T.CRET_DT, 'YYYY-MM-DD HH24:MI:SS') AS CRET_DT,
+            T.FORM_TYPE_CD,
+            T.OPER_TYPE_CD,
+            T.PROC_CD,
+            T.CSTMR_NM,
+            T.CSTMR_BIRTH,
+            T.CSTMR_TYPE_CD,
+            T.IDENTITY_CERT_TYPE_CD,
+            T.AGENT_CD,
+            T.AGENT_NM,
+            T.SHOP_CD,
+            T.SHOP_NM,
+            T.MANAGER_NM,
+            T.REGST_ID,
+            T.AMD_ID,
+            T.MEMO,
+            T.CONTRACT_NUM,
+            T.CANCEL_MOBILE_NO,
+            T.RES_CD,
+            T.RES_MSG,
+            T.RES_NO
+        FROM (
+            <include refid="appFormUnion"/>
+        ) T
+        WHERE T.REQUEST_KEY = #{requestKey}
+    </select>
+
     <!-- 관리자 해지신청 상세 조회 -->
     <select id="selectCanCustDetail"
             parameterType="java.lang.Long"
             resultType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$DetailDto">
         SELECT
             RC.REQUEST_KEY,
+            '4' AS FORM_TYPE_CD,
             RC.CONTRACT_NUM,
             RC.CANCEL_MOBILE_NO,
             NULLIF(
@@ -243,10 +277,10 @@
                 ELSE COALESCE(RC.CSTMR_TYPE_CD, '-')
             END AS CSTMR_TYPE_LABEL,
             CASE
-                WHEN RC.IDENTITY_CERT_TYPE_CD IN ('KNOTE', 'K-NOTE', 'KNOTE_ID', 'KN') THEN 'K-NOTE인증'
-                WHEN RC.IDENTITY_CERT_TYPE_CD IN ('FATH', 'FACE', 'FACE_AUTH') THEN '안면인증'
-                WHEN RC.IDENTITY_CERT_TYPE_CD IN ('MOBILE', 'PASS', 'NICE', 'SMS') THEN '모바일인증'
-                WHEN RC.IDENTITY_CERT_TYPE_CD IN ('E', 'EXCEPTION') THEN '인증 예외'
+                WHEN RC.IDENTITY_CERT_TYPE_CD = 'K' THEN 'K-NOTE신분증인증'
+                WHEN RC.IDENTITY_CERT_TYPE_CD = 'M' THEN '모바일신분증'
+                WHEN RC.IDENTITY_CERT_TYPE_CD = 'F' THEN '안면인증'
+                WHEN RC.IDENTITY_CERT_TYPE_CD = 'S' THEN '인증예외'
                 ELSE COALESCE(RC.IDENTITY_CERT_TYPE_CD, '-')
             END AS AUTH_LABEL,
             RC.PROC_CD,
@@ -277,6 +311,19 @@
 
     <!-- 처리 가능 여부 확인 — PROC_CD 조회 -->
     <!-- ASIS: getCustStatus → PROC_CD='CP' 이면 이미 처리완료 -->
+    <select id="selectApplicationStatus"
+            parameterType="java.lang.Long"
+            resultType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ProcessStatusDto">
+        SELECT
+            T.REQUEST_KEY,
+            T.FORM_TYPE_CD,
+            T.PROC_CD
+        FROM (
+            <include refid="appFormUnion"/>
+        ) T
+        WHERE T.REQUEST_KEY = #{requestKey}
+    </select>
+
     <select id="selectProcCd"
             parameterType="java.lang.Long"
             resultType="java.lang.String">
@@ -287,16 +334,14 @@
 
     <!-- PROC_CD 변경 UPDATE — 접수완료(CP)/완료취소(RC) 공통 사용 -->
     <update id="updateCanCustProcCd"
-            parameterType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ProcessReqDto">
+            parameterType="com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto$ProcessUpdateDto">
         UPDATE MSF_REQUEST_CANCEL
         SET
             PROC_CD = #{procCd},
             RES_CD  = #{resCd},
             RES_MSG = #{resMsg},
             RES_NO  = #{resNo},
-            MEMO    = #{memo},
-            AMD_ID  = #{amdId},
-            AMD_DT  = NOW()
+            MEMO    = #{memo}
         WHERE REQUEST_KEY = #{requestKey}
           AND PROC_CD != #{procCd}
     </update>

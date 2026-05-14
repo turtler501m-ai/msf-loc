@@ -114,9 +114,9 @@ const saveKeyMap = {
 }
 
 const termsDataList = computed(() => {
-  const baseList =
+  let baseList =
     rawTermsList.value.length > 0
-      ? rawTermsList.value
+      ? [...rawTermsList.value]
       : [
           {
             code: 'CLAUSE_MOVE_01',
@@ -143,6 +143,17 @@ const termsDataList = computed(() => {
           { code: 'CLAUSE_INFO_01', title: '기타 안내 사항 확인', required: true },
         ]
 
+  // 미성년자 필수 약관이 목록에 없으면 수동 추가
+  const mandatoryMinorTerms = [
+    { code: 'CLAUSE_REQUIRED_06', title: '네트워크 차단 동의', required: true },
+    { code: 'CLAUSE_REQUIRED_07', title: '앱 차단 동의', required: true },
+  ]
+  mandatoryMinorTerms.forEach((mandatory) => {
+    if (!baseList.some((item) => item.code === mandatory.code)) {
+      baseList.push(mandatory)
+    }
+  })
+
   return baseList.map((item) => {
     const key = saveKeyMap[item.code] || item.code
     return { ...item, id: key }
@@ -154,7 +165,7 @@ const filteredTermsDataList = computed(() => {
     const termId = term.id
     if (termId === 'clauseMoveCode' && formData.joinType !== 'MNP3') return false
     const isMinor = ['NM', 'FM'].includes(formData.cstmrTypeCd)
-    if (['clauseFathFlag01', 'clauseFathFlag02'].includes(termId) && !isMinor) return false
+    if (['clauseFathFlag01', 'clauseFathFlag02', 'nwBlckAgrmYn', 'appBlckAgrmYn'].includes(termId) && !isMinor) return false
     if (termId === 'clauseJehuFlag' && !productData.jehuPartnerTypeCd) return false
     if (termId === 'clausePartnerOfferYn' && !formData.partnerEventCode) return false
     if (
@@ -168,7 +179,18 @@ const filteredTermsDataList = computed(() => {
 })
 
 const dynamicSpecTerms = computed(() => {
-  const list = [{ code: 'CLAUSE_MOVE_01' }]
+  const list = []
+
+  // 번호이동(MNP3)인 경우에만 번호이동 관련 약관 추가
+  if (formData.joinType === 'MNP3') {
+    list.push({ code: 'CLAUSE_MOVE_01' })
+  }
+
+  // 요금제 구분값이 '5G'인 경우에만 5G 관련 약관 추가
+  if (formData.prdtSctnCd === '5G') {
+    list.push({ code: 'CLAUSE_REQUIRED_5G' })
+  }
+
   if (productData.jehuPartnerTypeCd) {
     list.push({
       code: 'CLAUSE_PARTNER_01',
@@ -177,6 +199,13 @@ const dynamicSpecTerms = computed(() => {
       specName: productData.jehuPartnerTypeNm,
     })
   }
+
+  const isMinor = ['NM', 'FM'].includes(formData.cstmrTypeCd)
+  if (isMinor) {
+    list.push({ code: 'CLAUSE_REQUIRED_06' })
+    list.push({ code: 'CLAUSE_REQUIRED_07' })
+  }
+
   return list
 })
 

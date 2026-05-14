@@ -36,11 +36,10 @@ public class LogUtils {
 
     public static void logException(Logger log, CommonException e, String message) {
         switch (e.getLogLevel()) {
-            case WARNING -> log.warn(message, e);
+            case ERROR -> log.error(message, e);
+            case WARN -> log.warn(message, e);
             case INFO -> log.info(message, e);
             case DEBUG -> log.debug(message, e);
-            case TRACE -> log.trace(message, e);
-            default -> log.error(message, e);
         }
     }
 }

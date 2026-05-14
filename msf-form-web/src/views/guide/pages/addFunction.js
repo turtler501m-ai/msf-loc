@@ -34,8 +34,8 @@ export const addFunction = {
       PATH: '/extra/simplerequest/SimpleRequestPage',
       상태: 'completed',
       완료일: '2026-04-17',
-      최종수정일: '',
-      비고: '',
+      최종수정일: '2026-05-14',
+      비고: '"신청서작성" 버튼 추가',
     },
     {
       ID: 'S105040101',

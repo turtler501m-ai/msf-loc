@@ -8,6 +8,8 @@ export function useAuthButton(dependenciesCallback, externalAuthFlag, validator)
     dependenciesCallback,
     (newVals) => {
       let isReady = false
+      console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+      console.log(newVals)
       if (validator) {
         // 커스텀 검증 함수가 제공된 경우 사용
         isReady = !!validator(newVals)

@@ -64,23 +64,13 @@ const fetchNumbers = async () => {
     }
     const res = await post('/api/form/newchange/searchNumber', payload)
     if (res && res.code === '0000') {
-      // res.data가 객체이거나 null일 경우를 대비하여 배열로 정규화
-      let list = []
-      if (res.data) {
-        if (Array.isArray(res.data)) {
-          list = res.data
-        } else if (res.data.list && Array.isArray(res.data.list)) {
-          list = res.data.list
-        } else {
-          list = [res.data]
-        }
-      }
+      const resData = res.data?.resData || {}
+      const list = resData.marketList || []
 
       numberOptions.value = list.map((num) => {
-        const phone = num.orignCtn || num.tlphNo || num
         return {
-          value: phone,
-          label: phone,
+          value: num.orignCtn,
+          label: num.ctn || num.orignCtn,
           raw: num,
         }
       })

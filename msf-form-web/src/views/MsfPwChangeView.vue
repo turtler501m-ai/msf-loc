@@ -18,6 +18,7 @@
                   v-model="formData.password"
                   class="ut-w100p"
                   placeholder="현재 비밀번호 입력"
+                  :maxlength="20"
                 />
               </MsfFormGroup>
               <MsfFormGroup label="<em class='login-label'>비밀번호 변경</em>" vertical>
@@ -27,6 +28,7 @@
                   v-model="formData.newPassword"
                   class="ut-w100p"
                   placeholder="변경 비밀번호 입력"
+                  :maxlength="20"
                 />
               </MsfFormGroup>
               <MsfFormGroup label="<em class='login-label'>비밀번호 확인</em>" vertical>
@@ -36,6 +38,7 @@
                   v-model="formData.cfmPassword"
                   class="ut-w100p"
                   placeholder="변경 비밀번호 확인"
+                  :maxlength="20"
                 />
               </MsfFormGroup>
               <MsfButton variant="primary" block @click="onClickModelRegist"
@@ -60,7 +63,7 @@ import { post } from '@/libs/api/msf.api'
 import { useRouter } from 'vue-router'
 import { useMsfUserStore } from '@/stores/msf_user'
 import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
-import { isEmpty } from '@/libs/utils/string.utils'
+import { isEmpty, validatePassword } from '@/libs/utils/string.utils'
 
 const oldPwdError = ref(false)
 const newPwdError = ref(false)
@@ -108,15 +111,20 @@ const onClickModelRegist = () => {
   newPwdError.value = isEmpty(formData.newPassword)
   cfmPasswordError.value = isEmpty(formData.cfmPassword)
   if (oldPwdError.value) {
-    showAlert('현재 비밀번호는 필수 입력 값입니다.')
+    showAlert('현재 비밀번호를 입력해 주세요.')
     return false
   }
   if (newPwdError.value) {
-    showAlert('변경 비밀번호는 필수 입력 값입니다.')
+    showAlert('변경 비밀번호를 입력해 주세요.')
+    return false
+  }
+  if (!validatePassword(formData.newPassword)) {
+    newPwdError.value = true
+    showAlert('비밀번호는 영문, 숫자, 특수문자(!@#$%^*+=-)를 포함한 10~15자로 입력해 주세요.')
     return false
   }
   if (cfmPasswordError.value) {
-    showAlert('변경 비밀번호 확인은 필수 입력 값입니다.')
+    showAlert('변경 비밀번호 확인을 입력해 주세요.')
     return false
   }
   // 현재 비밀번호, 변경 비밀번호 불일치 여부 체크

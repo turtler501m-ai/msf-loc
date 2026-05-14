@@ -46,7 +46,7 @@ public class CacheConfig implements CachingConfigurer {
         @Qualifier(RedisConfig.REDIS_VALUE_SERIALIZER) RedisSerializer<Object> redisValueSerializer
     ) {
         String prefixCacheName = CacheUtils.getCachePrefix();
-        log.info(">>> CacheManager 구성: Prefix={}", prefixCacheName);
+        log.debug("CacheManager 구성: Prefix={}", prefixCacheName);
 
         RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration
             .defaultCacheConfig()

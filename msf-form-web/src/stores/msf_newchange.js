@@ -196,7 +196,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     usimKindsCd: '',
     reqUsimSn: '',
     reqUsimNm: '', // DTO 기반 추가
-    simPurchaseMethod: '',
+    simPurchaseMethod: '2',
     prodNm: '',
     eid: '',
     imei1: '',
@@ -306,11 +306,14 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     estimatedAmtInfo: {
       hndsetAmt: 0,
       subsdAmt: 0,
+      agncySubsdAmt: 0,
       instAmt: 0,
       instCmsn: 0,
       baseAmt: 0,
       dcAmt: 0,
       addDcAmt: 0,
+      joinFee: 0,
+      usimFee: 0,
     },
   }
 
@@ -1018,9 +1021,9 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         addDcAmt: Number(p.addDcAmt || 0),
         enggMnthCnt: Number(c.contractPeriod || 24),
         recycleYn: toYN(p.recycleYn),
-        usimPriceTypeCd: p.simPurchaseMethod === 'simPurchaseMethod1' ? 'I' : 'B',
+        usimPriceTypeCd: p.simPurchaseMethod === '1' ? 'I' : 'B',
         usimPrice: Number(p.usimPrice || 0),
-        usimPayMthdCd: p.simPurchaseMethod === 'simPurchaseMethod1' ? '1' : '2',
+        usimPayMthdCd: p.simPurchaseMethod === '1' ? '1' : '2',
         sesplsYn: toYN(p.sesplsYn),
         joinPriceTypeCd: p.joinPriceTypeCd || '',
         joinPayMthdCd: p.joinPayMthdCd || '',
@@ -1277,7 +1280,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         modelMonthly: c.installmentMonth,
         enggMnthCnt: Number(c.contractPeriod || 24),
         sprtTypeCd: p.discountType || '',
-        usimPriceTypeCd: p.simPurchaseMethod === 'simPurchaseMethod1' ? 'I' : 'B',
+        usimPriceTypeCd: p.simPurchaseMethod === '1' ? 'I' : 'B',
 
         // Bill Info
         reqPayTypeCd: p.reqPayTypeCd,
@@ -1461,7 +1464,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       p.installmentMonth = data.modelMonthly || ''
       p.discountType = data.sprtTypeCd || ''
       p.simPurchaseMethod =
-        data.usimPriceTypeCd === 'I' ? 'simPurchaseMethod1' : 'simPurchaseMethod2'
+        data.usimPriceTypeCd === 'I' ? '1' : '2'
 
       p.moveCompanyCd = data.moveCompanyCd || ''
       p.moveMobileNo1 = data.moveMobileFnNo || '010'

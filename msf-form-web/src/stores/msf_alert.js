@@ -24,6 +24,7 @@ export const useMsfAlertStore = defineStore('msfAlert', {
         message: subMessage,
         onConfirm: onConfirm,
       })
+      return id
     },
     openConfirm(message, confirmFunc, subMessage, cancelFunc) {
       const id = `msf-alert-${alertCounter++}` // 고유 ID 생성
@@ -35,6 +36,7 @@ export const useMsfAlertStore = defineStore('msfAlert', {
         showCancel: true,
         onCancel: cancelFunc,
       })
+      return id
     },
   },
 })

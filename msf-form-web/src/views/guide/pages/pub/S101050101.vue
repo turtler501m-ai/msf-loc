@@ -39,11 +39,15 @@
               placeholder="휴대폰번호 ‘-’ 없이 입력"
               class="ut-flex-1"
             />
-            <MsfButton variant="subtle" label="ios 발송" class="send-btn">
-              <img src="@/assets/images/appIpad.svg" alt="ios 아이콘" />발송</MsfButton
+            <MsfButton variant="subtle" label="ios 발송" class="send-btn" prefixIcon="ios"
+              >발송</MsfButton
             >
-            <MsfButton variant="subtle" label="안드로이드 발송" class="send-btn">
-              <img src="@/assets/images/appAndroid.svg" alt="Android 아이콘" />발송</MsfButton
+            <MsfButton
+              variant="subtle"
+              label="안드로이드 발송"
+              class="send-btn"
+              prefixIcon="android"
+              >발송</MsfButton
             >
           </MsfStack>
         </div>

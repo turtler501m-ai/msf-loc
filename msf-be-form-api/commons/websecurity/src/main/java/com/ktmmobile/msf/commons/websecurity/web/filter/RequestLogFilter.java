@@ -40,7 +40,8 @@ import com.ktmmobile.msf.commons.websecurity.web.util.response.FilterExceptionRe
 @Component
 public class RequestLogFilter extends OncePerRequestFilter {
 
-    private static final String MDC_CLIENT_ID = "clientId";
+    static final String MDC_CLIENT_ID = "clientId";
+    static final String CLIENT_ID_REQUEST_ATTRIBUTE = RequestLogFilter.class.getName() + ".clientId";
     private static final List<String> LOGGING_HEADER_NAMES = List.of(
         // HttpHeaders.ACCEPT,
         // HttpHeaders.USER_AGENT
@@ -84,11 +85,29 @@ public class RequestLogFilter extends OncePerRequestFilter {
             .anyMatch(pattern -> pathMatcher.match(pattern, requestUri));
     }
 
-    private static void putClientIdToMdc(HttpServletRequest request) {
-        MDC.put(MDC_CLIENT_ID, resolveClientId(request));
+    static void putClientIdToMdc(HttpServletRequest request) {
+        putClientIdToMdc(request, resolveClientId(request));
     }
 
-    private static String resolveClientId(HttpServletRequest request) {
+    static void putClientIdToMdc(HttpServletRequest request, String clientId) {
+        String resolvedClientId = StringUtils.hasText(clientId) ? clientId : RequestUtils.getClientIp(request);
+        request.setAttribute(CLIENT_ID_REQUEST_ATTRIBUTE, resolvedClientId);
+        MDC.put(MDC_CLIENT_ID, resolvedClientId);
+    }
+
+    static String resolveClientId(HttpServletRequest request) {
+        String authenticatedClientId = resolveAuthenticatedClientId();
+        if (StringUtils.hasText(authenticatedClientId)) {
+            return authenticatedClientId;
+        }
+        Object clientId = request.getAttribute(CLIENT_ID_REQUEST_ATTRIBUTE);
+        if (clientId instanceof String value && StringUtils.hasText(value)) {
+            return value;
+        }
+        return RequestUtils.getClientIp(request);
+    }
+
+    static String resolveAuthenticatedClientId() {
         try {
             MsfUser user = AuthenticationUtils.getUser();
             if (user != null && StringUtils.hasText(user.getUserId())) {
@@ -97,7 +116,7 @@ public class RequestLogFilter extends OncePerRequestFilter {
         } catch (RuntimeException _) {
             // 사용자 인증이 되지 않은 경우, Client IP로 Fallback
         }
-        return RequestUtils.getClientIp(request);
+        return null;
     }
 
     private static void logRequestBasicInfo(HttpServletRequest request) {

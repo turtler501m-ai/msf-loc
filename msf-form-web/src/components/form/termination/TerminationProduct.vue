@@ -38,7 +38,7 @@ const { formData } = storeToRefs(terminationStore)
 
 const isComplete = computed(() => {
   return (
-    !!formData.value.isActive &&
+    !!formData.value.cancelUseCompanyCd &&
     !!formData.value.usageFee &&
     !!formData.value.penaltyFee &&
     !!formData.value.finalAmount
@@ -78,8 +78,8 @@ const focusField = (target) => {
 
 const validateWithAlert = () => {
   const f = formData.value
-  if (!f.isActive) {
-    showAlert('사용여부를 선택해 주세요.', () => focusField('input[name="inp-isActive"]'))
+  if (!f.cancelUseCompanyCd) {
+    showAlert('해지 후 사용 통신사를 선택해 주세요.', () => focusField('input[name="inp-cancelUseCompanyCd"]'))
     return false
   }
   if (!f.usageFee) {
@@ -103,7 +103,12 @@ const save = async () => {
   return true
 }
 
-defineExpose({ save, validateWithAlert })
+const reset = async () => {
+  terminationStore.resetStep(1)
+  emit('complete', isCompleteEffective.value)
+}
+
+defineExpose({ save, validateWithAlert, reset })
 </script>
 
 <style scoped></style>

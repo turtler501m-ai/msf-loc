@@ -26,10 +26,8 @@ import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
-import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimRequest;
-import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest;
-import com.ktmmobile.msf.domains.form.form.common.dto.RateInfoDto;
+import com.ktmmobile.msf.domains.form.form.common.dto.RateInfoResponse;
 import com.ktmmobile.msf.domains.form.form.common.service.ProductInfoService;
 
 @RestController
@@ -112,28 +110,21 @@ public class ProductController {
     //MSP_SALE_RATE_MST RATE,
     //MSP_RATE_MST RATE_MST
     @PostMapping("/rate/list")
-    public CommonResponse<List<RateInfoDto>> getRateList(@RequestBody @Valid ProductInfoRequest request) {
+    public CommonResponse<List<RateInfoResponse>> getRateList(@RequestBody @Valid ProductInfoRequest request) {
         return ResponseUtils.ok(productInfoService.getRateList(request));
     }
 
-
-    //가격정보조회 (단말,요금,지원금) - 출고가, 기본요금, 공시지원금 등
-    //mcp-api : MspMapper.findMspSaleSubsdMst
-    //MSP_SALE_SUBSD_MST
-    @PostMapping("/phone/subsdamt")
-    public CommonResponse<MspSaleSubsdMstResponse> getMspSaleSubsdMst(@RequestBody @Valid MspSaleSubsdMstRequest request) {
-        return ResponseUtils.ok(productInfoService.getMspSaleSubsdMst(request));
-    }
-    /*public CommonResponse<List<PhoneInfoDto>> getMspOfficialNoticeSupport(@RequestBody @Valid ProductInfoRequest condition) {
-        return ResponseUtils.ok(productInfoService.getMspOfficialNoticeSupport(condition));
+    /*@PostMapping("/phone/test")
+    public CommonResponse<String> totalAmt(@RequestBody MspSaleSubsdMstRequest request) {
+        return ResponseUtils.ok(productInfoService.getTotalInstCmsn(request));
     }*/
 
-    //가입비, 유심비용 등 조회
-    //mcp-api : StoreUsimMapper.selectJoinUsimPriceNew , StoreUsimMapper.selectUsimDcamt
-    //MCP : /usim/selectUsimBasJoinPriceAjax.do , /storeUsim/usimDcamt
-    @PostMapping("/usim/getJoinUsimPrice")
-    public CommonResponse<PriceJoinUsimResponse> getJoinUsimPrice(@RequestBody @Valid PriceJoinUsimRequest request) {
-        return ResponseUtils.ok(productInfoService.getJoinUsimPrice(request));
+    /**
+     * 가격정보 조회 (단말, 요금, 지원금 ) 등등등
+     */
+    @PostMapping("/phone/getMspSalePriceInfo")
+    public CommonResponse<MspSaleSubsdMstResponse> getMspSalePriceInfo(@RequestBody @Valid MspSaleSubsdMstRequest request) {
+        return ResponseUtils.ok(productInfoService.getMspSalePriceInfo(request));
     }
 
     //부가서비스 목록 조회 - 신규가입 및 번호이동 // 기기변경은 가입중 부가서비스 조회해서 합치기
@@ -172,5 +163,25 @@ public class ProductController {
         return ResponseUtils.ok(productInfoService.getCategoryDetailList(request));
     }
 
+
+    //여기서부터 ~~ 삭제할꺼에요~~~~~~ @@@@@@@@@@@@@@@@@@@
+    //가격정보조회 (단말,요금,지원금) - 출고가, 기본요금, 공시지원금 등
+    //mcp-api : MspMapper.findMspSaleSubsdMst
+    //MSP_SALE_SUBSD_MST
+    /*@PostMapping("/phone/subsdamt")
+    public CommonResponse<MspSaleSubsdMstResponse> getMspSaleSubsdMst(@RequestBody @Valid MspSaleSubsdMstRequest request) {
+        return ResponseUtils.ok(productInfoService.getMspSaleSubsdMst(request));
+    }*/
+    /*public CommonResponse<List<PhoneInfoDto>> getMspOfficialNoticeSupport(@RequestBody @Valid ProductInfoRequest condition) {
+        return ResponseUtils.ok(productInfoService.getMspOfficialNoticeSupport(condition));
+    }*/
+    //가입비, 유심비용 등 조회
+    //mcp-api : StoreUsimMapper.selectJoinUsimPriceNew , StoreUsimMapper.selectUsimDcamt
+    //MCP : /usim/selectUsimBasJoinPriceAjax.do , /storeUsim/usimDcamt
+    /*@PostMapping("/usim/getJoinUsimPrice")
+    public CommonResponse<PriceJoinUsimResponse> getUsimBasJoinPrice(@RequestBody @Valid PriceJoinUsimRequest request) {
+        return ResponseUtils.ok(productInfoService.getUsimBasJoinPrice(request));
+    }*/
+    //여기서부터 ~~ 삭제할꺼에요~~~~~~ @@@@@@@@@@@@@@@@@@@
 
 }

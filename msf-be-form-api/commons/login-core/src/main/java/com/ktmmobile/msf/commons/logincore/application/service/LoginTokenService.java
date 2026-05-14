@@ -38,6 +38,7 @@ public class LoginTokenService {
     private final JwtSecurityProperties jwtSecurityProperties;
     private final LoginTokenStore tokenStore;
     private final LoginUserInfoCacheService loginUserInfoCacheService;
+    private final LoginUserInfoResolver loginUserInfoResolver;
     private final LoginJwtTokenValidator loginJwtTokenValidator;
 
     public LoginTokenPair issue(LoginSessionUser user) {
@@ -80,21 +81,9 @@ public class LoginTokenService {
             throw new LoginException("RefreshToken이 유효하지 않습니다.");
         }
 
-        LoginSessionUser user = loginUserInfoCacheService.get(claims.userType(), claims.userId())
+        LoginSessionUser user = loginUserInfoResolver.resolve(claims.userType(), claims.userId())
             .map(this::toSessionUser)
-            .orElseGet(() -> new LoginSessionUser(
-                claims.userId(),
-                claims.userType(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                java.util.Map.of(),
-                List.of()
-            ));
+            .orElseThrow(() -> new LoginException("사용자 인증 정보를 조회할 수 없습니다."));
         return issue(user);
     }
 

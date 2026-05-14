@@ -8,10 +8,17 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
-import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
+import com.ktmmobile.msf.commons.common.datasource.msp.MspDataSourceConfig;
+import com.ktmmobile.msf.domains.cache.commoncode.application.dto.CommonCodesRequest;
+import com.ktmmobile.msf.domains.cache.commoncode.application.port.in.CommonCodeReader;
+import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeData;
 import com.ktmmobile.msf.domains.form.common.code.ResTermMessage;
+import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
@@ -26,8 +33,11 @@ import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.common.repository.McpRequestRepositoryImpl;
 import com.ktmmobile.msf.domains.form.form.common.repository.MsfRequestRepositoryImpl;
 import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCancelVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestClauseVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMstVo;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
@@ -68,6 +78,16 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
 
     @Autowired
     private FormCommService formCommService;
+
+    @Autowired
+    private CommonCodeReader commonCodeReader;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    @Qualifier(MspDataSourceConfig.MSP_TX_MANAGER)
+    private PlatformTransactionManager mspTransactionManager;
 
     @Override
     public List<AgentInfoResponse> getTerminationAgentInfo(AgentInfoRequest request) {
@@ -142,7 +162,28 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             return FormResponse.of(ResTermMessage.REMAIN_ERROR);
         }
         applyMockAmountData(resVO);
-        return FormResponse.ok(resVO);
+        return FormResponse.of(ResTermMessage.SUCCESS, resVO);
+    }
+
+    @Override
+    public FormResponse<Void> checkInProgressApplication(String requestMobileNo) {
+        String mobileNo = normalizeDigits(requestMobileNo);
+        logger.debug("[checkInProgressApplication] start: mobileNo={}", maskPhone(mobileNo));
+
+        if (isBlank(mobileNo)) {
+            logger.warn("[checkInProgressApplication] fail: mobileNo is blank");
+            return FormResponse.of(ResTermMessage.APPLY_CANCEL_PHONE_REQUIRED);
+        }
+        if (!isValidPhoneNumber(mobileNo)) {
+            logger.warn("[checkInProgressApplication] fail: invalid mobileNo={}", maskPhone(mobileNo));
+            return FormResponse.of(ResTermMessage.APPLY_CANCEL_PHONE_REQUIRED);
+        }
+        if (cancelPageRepository.existsInProgressApplicationByMobileNo(mobileNo)) {
+            logger.warn("[checkInProgressApplication] fail: in-progress application exists, mobileNo={}", maskPhone(mobileNo));
+            //현재 진행중인 신청서가 있어 신청할 수 없습니다.
+            return FormResponse.of(ResTermMessage.APPLY_IN_PROGRESS_EXISTS);
+        }
+        return FormResponse.of(ResTermMessage.SUCCESS);
     }
 
     // TEST_SKIP: 외부 금액 연동 완료 전까지 화면 테스트용 금액을 강제로 내려준다.
@@ -322,7 +363,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
 
     /**
      * 작성완료 요청 처리 시간과 결과를 로깅하고 실제 저장 처리는 apply에 위임한다.
-     */
+    */
     @Override
     public FormResponse<TerminationApplyResVO> complete(String applicationKey, TerminationApplyReqDto reqDto) {
         long startedAt = System.currentTimeMillis();
@@ -352,11 +393,11 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
      */
     @Override
     public FormResponse<TerminationApplyResVO> apply(TerminationApplyReqDto reqDto) {
-        logger.info("[apply] start: ncn={}, customerType={}, postMethod={}, isActive={}",
+        logger.info("[apply] start: ncn={}, customerType={}, postMethod={}, cancelUseCompanyCd={}",
             reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
             reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getCustomerType()) : "",
             reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getPostMethod()) : "",
-            reqDto != null && reqDto.getProduct() != null ? safe(reqDto.getProduct().getIsActive()) : "");
+            reqDto != null && reqDto.getProduct() != null ? safe(reqDto.getProduct().getCancelUseCompanyCd()) : "");
 
         ValidationResult validationResult = validateApplyRequest(reqDto);
         if (validationResult != null) {
@@ -367,107 +408,174 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             return FormResponse.of(validationResult.responseMessage(), validationResult.resMessage(), null);
         }
 
-        String managerCd = safe(reqDto.getCustomer().getManagerCd());
-        String managerNm = safe(reqDto.getCustomer().getManagerNm());
-        String agentCd = safe(reqDto.getCustomer().getAgentCd());
-        String agentNm = safe(reqDto.getCustomer().getAgentNm());
-        if (isBlank(agentCd)) {
-            logger.error("[apply] fail: agentCd is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return FormResponse.of(ResTermMessage.APPLY_AGENT_REQUIRED);
-        }
-        if (isBlank(managerCd)) {
-            logger.error("[apply] fail: managerCd is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return FormResponse.of(ResTermMessage.APPLY_MANAGER_REQUIRED);
-        }
-        String cstmrTypeCd = normalizeCustomerType(reqDto.getCustomer().getCustomerType());
-        if (isBlank(cstmrTypeCd)) {
-            logger.error("[apply] fail: customerType is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return FormResponse.of(ResTermMessage.APPLY_CUSTOMER_TYPE_REQUIRED);
-        }
-        String receiveWayCd = normalizeReceiveWay(reqDto.getCustomer().getPostMethod());
-        if (isBlank(receiveWayCd)) {
-            logger.error("[apply] fail: postMethod is invalid, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return FormResponse.of(ResTermMessage.APPLY_POST_METHOD_REQUIRED);
-        }
-
-        String cancelMobileNo = joinPhone(
-            reqDto.getCustomer().getCancelPhone1(),
-            reqDto.getCustomer().getCancelPhone2(),
-            reqDto.getCustomer().getCancelPhone3()
-        );
-        String receiveMobileNo = joinPhone(
-            reqDto.getCustomer().getAfterTel1(),
-            reqDto.getCustomer().getAfterTel2(),
-            reqDto.getCustomer().getAfterTel3()
-        );
-
-        if (isBlank(cancelMobileNo)) {
-            logger.warn("[apply] fail: cancelMobileNo is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return FormResponse.of(ResTermMessage.APPLY_CANCEL_PHONE_REQUIRED);
-        }
-        if (isBlank(receiveMobileNo)) {
-            logger.warn("[apply] fail: receiveMobileNo is blank, ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return FormResponse.of(ResTermMessage.APPLY_RECEIVE_PHONE_REQUIRED);
-        }
-        logger.debug("[apply] contact normalized: ncn={}, cancelMobileNo={}, receiveMobileNo={}",
-            safe(reqDto.getCustomer().getNcn()), maskPhone(cancelMobileNo), maskPhone(receiveMobileNo));
-
-        if (isLocal()) {
-            logger.info("[apply] LOCAL mode shortcut: ncn={}", safe(reqDto.getCustomer().getNcn()));
-            return FormResponse.ok(TerminationApplyResVO.ok("LOCAL-CANCEL-" + System.currentTimeMillis()));
-        }
-
         try {
-            Long requestKey = cancelPageRepository.nextRequestKey();
-            if (requestKey == null) {
-                logger.error("[apply] request key generation failed: ncn={}", safe(reqDto.getCustomer().getNcn()));
-                return FormResponse.of(ResTermMessage.APPLY_REQUEST_KEY_FAILED);
+            // 화면 입력값을 저장 컨텍스트로 정규화한다.
+            prepareSaveRequest(reqDto);
+
+            // MSF 저장은 smartform 트랜잭션에서만 처리한다.
+            Long requestKey = transactionTemplate.execute(status -> saveMsfApplication(reqDto));
+
+            // MCP 이관은 MSF 커밋 이후 별도 MSP 트랜잭션으로 처리한다.
+            FormResponse<Void> transferResponse = transferToMcp(requestKey);
+            if (!ResTermMessage.SUCCESS.getCode().equals(transferResponse.resCode())) {
+                return new FormResponse<>(transferResponse.resCode(), transferResponse.resMessage(), null);
             }
-            logger.debug("[apply] request key generated: requestKey={}, ncn={}", requestKey, safe(reqDto.getCustomer().getNcn()));
-
-            MsfRequestCancelVo vo = toMsfRequestCancelVo(
-                requestKey,
-                reqDto,
-                cstmrTypeCd,
-                receiveWayCd,
-                cancelMobileNo
-            );
-
-            logger.debug("[apply] insert payload ready: requestKey={}, ncn={}, customerTypeCd={}, receiveWayCd={}, cancelUseCompanyCd={}, payAmt={}, pnltAmt={}, lastSumAmt={}",
-                requestKey, safe(vo.getContractNum()), safe(vo.getCstmrTypeCd()), safe(vo.getReceiveWayCd()),
-                safe(vo.getCancelUseCompanyCd()), vo.getPayAmt(), vo.getPnltAmt(), vo.getLastSumAmt());
-
-            int inserted = msfRequestRepository.insertMsfRequestCancel(vo);
-            if (inserted <= 0) {
-                logger.error("[apply] insert failed: requestKey={}, ncn={}, inserted={}", requestKey, safe(vo.getContractNum()), inserted);
-                return FormResponse.of(ResTermMessage.APPLY_MSF_SAVE_FAILED);
-            }
-
-            MsfRequestCstmrVo cstmrVo = toMsfRequestCstmrVo(requestKey, reqDto, cstmrTypeCd);
-
-            int cstmrInserted = msfRequestRepository.insertMsfRequestCstmr(cstmrVo);
-            if (cstmrInserted <= 0) {
-                logger.error("[apply] insert cstmr failed: requestKey={}", requestKey);
-            }
-
-            int mcpCstmrInserted = mcpRequestRepository.insertMcpRequestCstmr(requestKey);
-            if (mcpCstmrInserted <= 0) {
-                logger.error("[apply] insert MCP request cstmr failed: requestKey={}", requestKey);
-                return FormResponse.of(ResTermMessage.APPLY_MCP_CUSTOMER_SAVE_FAILED);
-            }
-
-            int mcpInserted = mcpRequestRepository.insertMcpCancelRequest(requestKey);
-            if (mcpInserted <= 0) {
-                logger.error("[apply] insert MCP cancel request failed: requestKey={}", requestKey);
-                return FormResponse.of(ResTermMessage.APPLY_MCP_SAVE_FAILED);
-            }
-
-            logger.info("[apply] success: requestKey={}, ncn={}", requestKey, safe(vo.getContractNum()));
-            return FormResponse.ok(TerminationApplyResVO.ok(String.valueOf(requestKey)));
+            return FormResponse.of(ResTermMessage.SUCCESS, TerminationApplyResVO.ok(String.valueOf(requestKey)));
+        } catch (ApplyFailureException e) {
+            return FormResponse.of(e.responseMessage);
         } catch (Exception e) {
             logger.error("[apply] exception: ncn={}", reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "", e);
             return FormResponse.of(ResTermMessage.APPLY_ERROR);
         }
+    }
+
+    private void prepareSaveRequest(TerminationApplyReqDto reqDto) {
+        TerminationApplyReqDto.Customer customer = reqDto.getCustomer();
+        String ncn = safe(customer.getNcn());
+
+        requireText(customer.getAgentCd(), ResTermMessage.APPLY_AGENT_REQUIRED, "agentCd", ncn);
+        requireText(customer.getManagerCd(), ResTermMessage.APPLY_MANAGER_REQUIRED, "managerCd", ncn);
+        String cstmrTypeCd = requireText(reqDto.getCstmrTypeCd(), ResTermMessage.APPLY_CUSTOMER_TYPE_REQUIRED, "cstmrTypeCd", ncn);
+        String receiveWayCd = requireText(reqDto.getReceiveWayCd(), ResTermMessage.APPLY_POST_METHOD_REQUIRED, "receiveWayCd", ncn);
+        String cancelMobileNo = normalizeDigits(reqDto.getCancelMobileNo());
+        String receiveMobileNo = normalizeDigits(reqDto.getReceiveMobileNo());
+        requireText(cancelMobileNo, ResTermMessage.APPLY_CANCEL_PHONE_REQUIRED, "cancelMobileNo", ncn);
+        requireText(receiveMobileNo, ResTermMessage.APPLY_RECEIVE_PHONE_REQUIRED, "receiveMobileNo", ncn);
+
+        logger.debug("[apply] contact normalized: ncn={}, cancelMobileNo={}, receiveMobileNo={}",
+            ncn, maskPhone(cancelMobileNo), maskPhone(receiveMobileNo));
+
+        if (cancelPageRepository.existsInProgressApplicationByMobileNo(cancelMobileNo)) {
+            logger.warn("[apply] fail: in-progress application exists, ncn={}, cancelMobileNo={}", ncn, maskPhone(cancelMobileNo));
+            //TEST_SKIP 현재 진행중인 신청서가 있어 신청할 수 없습니다.
+            //TEST_SKIP throw new ApplyFailureException(ResTermMessage.APPLY_IN_PROGRESS_EXISTS);
+        }
+
+        reqDto.setCstmrTypeCd(cstmrTypeCd);
+        reqDto.setReceiveWayCd(receiveWayCd);
+        reqDto.setCancelMobileNo(cancelMobileNo);
+        reqDto.setReceiveMobileNo(receiveMobileNo);
+    }
+
+    private Long saveMsfApplication(TerminationApplyReqDto reqDto) {
+        // MSF 원장 테이블 저장만 담당한다.
+        String cstmrTypeCd = reqDto.getCstmrTypeCd();
+        String cancelMobileNo = reqDto.getCancelMobileNo();
+        String receiveMobileNo = reqDto.getReceiveMobileNo();
+
+        Long requestKey = cancelPageRepository.nextRequestKey();
+        if (requestKey == null) {
+            logger.error("[apply] request key generation failed: ncn={}", safe(reqDto.getCustomer().getNcn()));
+            throw new ApplyFailureException(ResTermMessage.APPLY_REQUEST_KEY_FAILED);
+        }
+        logger.debug("[apply] request key generated: requestKey={}, ncn={}", requestKey, safe(reqDto.getCustomer().getNcn()));
+
+        MsfRequestCancelVo vo = toMsfRequestCancelVo(requestKey, reqDto, cstmrTypeCd, reqDto.getReceiveWayCd(), cancelMobileNo);
+        logCancelSavePayload(requestKey, vo);
+
+        insertMsfCancel(vo);
+        insertMsfCustomer(toMsfRequestCstmrVo(requestKey, reqDto));
+        insertMsfAgentIfPresent(toMsfRequestAgentVo(requestKey, reqDto, cstmrTypeCd));
+        insertMsfMaster(toMsfRequestMstVo(requestKey, reqDto, cancelMobileNo, receiveMobileNo, cstmrTypeCd));
+        insertMsfClauses(requestKey, toMsfRequestClauseVos(requestKey, reqDto));
+
+        logger.info("[apply] success: requestKey={}, ncn={}", requestKey, safe(vo.getContractNum()));
+        return requestKey;
+    }
+
+    private void logCancelSavePayload(Long requestKey, MsfRequestCancelVo vo) {
+        logger.debug("[apply] insert payload ready: requestKey={}, ncn={}, customerTypeCd={}, receiveWayCd={}, cancelUseCompanyCd={}, payAmt={}, pnltAmt={}, lastSumAmt={}",
+            requestKey, safe(vo.getContractNum()), safe(vo.getCstmrTypeCd()), safe(vo.getReceiveWayCd()),
+            safe(vo.getCancelUseCompanyCd()), vo.getPayAmt(), vo.getPnltAmt(), vo.getLastSumAmt());
+    }
+
+    private void insertMsfCancel(MsfRequestCancelVo vo) {
+        requireInserted(
+            msfRequestRepository.insertMsfRequestCancel(vo),
+            ResTermMessage.APPLY_MSF_SAVE_FAILED,
+            "insert cancel",
+            vo.getRequestKey()
+        );
+    }
+
+    private void insertMsfCustomer(MsfRequestCstmrVo vo) {
+        requireInserted(
+            msfRequestRepository.insertMsfRequestCstmr(vo),
+            ResTermMessage.APPLY_MSF_SAVE_FAILED,
+            "insert customer",
+            vo.getRequestKey()
+        );
+    }
+
+    private void insertMsfAgentIfPresent(MsfRequestAgentVo vo) {
+        if (!hasAgentData(vo)) {
+            return;
+        }
+        requireInserted(
+            msfRequestRepository.insertMsfRequestAgent(vo),
+            ResTermMessage.APPLY_MSF_SAVE_FAILED,
+            "insert agent",
+            vo.getRequestKey()
+        );
+    }
+
+    private void insertMsfMaster(MsfRequestMstVo vo) {
+        requireInserted(
+            msfRequestRepository.insertMsfRequestMst(vo),
+            ResTermMessage.APPLY_MSF_SAVE_FAILED,
+            "insert request mst",
+            vo.getRequestKey()
+        );
+    }
+
+    private void insertMsfClauses(Long requestKey, List<MsfRequestClauseVo> clauseVos) {
+        for (MsfRequestClauseVo clauseVo : clauseVos) {
+            requireInserted(
+                msfRequestRepository.insertMsfRequestClause(clauseVo),
+                ResTermMessage.APPLY_MSF_SAVE_FAILED,
+                "insert clause:" + safe(clauseVo.getCdGroupId()),
+                requestKey
+            );
+        }
+    }
+
+    /**
+     * MCP 이관은 MSF 저장 트랜잭션과 분리해서 단독 실행 가능하게 둔다.
+     */
+    @Override
+    public FormResponse<Void> transferToMcp(Long requestKey) {
+        if (requestKey == null) {
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_KEY_REQUIRED);
+        }
+        try {
+            // requestKey 기준으로 MCP 이관만 재실행할 수 있다.
+            new TransactionTemplate(mspTransactionManager).execute(status -> {
+                transferToMcpInTransaction(requestKey);
+                return null;
+            });
+            return FormResponse.of(ResTermMessage.SUCCESS);
+        } catch (ApplyFailureException e) {
+            return FormResponse.of(e.responseMessage);
+        } catch (Exception e) {
+            logger.error("[transferToMcp] exception: requestKey={}", requestKey, e);
+            return FormResponse.of(ResTermMessage.APPLY_MCP_SAVE_FAILED);
+        }
+    }
+
+    private void transferToMcpInTransaction(Long requestKey) {
+        requireInserted(
+            mcpRequestRepository.insertMcpRequestCstmr(requestKey),
+            ResTermMessage.APPLY_MCP_CUSTOMER_SAVE_FAILED,
+            "transfer customer to MCP",
+            requestKey
+        );
+
+        requireInserted(
+            mcpRequestRepository.insertMcpCancelRequest(requestKey),
+            ResTermMessage.APPLY_MCP_SAVE_FAILED,
+            "transfer cancel to MCP",
+            requestKey
+        );
     }
 
     /**
@@ -504,10 +612,16 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         vo.setCntpntShopNm(safe(customer.getCntpntShopNm()));
         vo.setOperTypeCd("CC");
         vo.setCstmrTypeCd(cstmrTypeCd);
+        vo.setIdentityCertTypeCd(customer.getIdentityCertTypeCd());
+        vo.setIdentityTypeCd(safe(customer.getIdentityTypeCd()));
+        vo.setIdentityIssuDate(normalizeDigits(customer.getIdentityIssuDate()));
+        vo.setIdentityIssuRegion(customer.getIdentityIssuRegion());
+        vo.setSelfIssuNo(customer.getSelfIssuNo());
+        vo.setDriveLicnsNo(customer.getDriveLicnsNo());
         vo.setCancelMobileNo(cancelMobileNo);
         vo.setContractNum(customer.getNcn());
         vo.setReceiveWayCd(receiveWayCd);
-        vo.setCancelUseCompanyCd(normalizeUseType(product.getIsActive()));
+        vo.setCancelUseCompanyCd(safe(product.getCancelUseCompanyCd()));
         vo.setPayAmt(parseLong(product.getUsageFee()));
         vo.setPnltAmt(parseLong(product.getPenaltyFee()));
         vo.setLastSumAmt(parseLong(product.getFinalAmount()));
@@ -523,10 +637,6 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         vo.setAppFormXmlYn("N");
         vo.setRegstId("MSF_FORM");
         vo.setProcCd("RC");
-        vo.setCretId("MSF_FORM");
-        vo.setAmdId("MSF_FORM");
-        vo.setCretIp("127.0.0.1");
-        vo.setAmdIp("127.0.0.1");
         return vo;
     }
 
@@ -535,8 +645,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
      */
     private MsfRequestCstmrVo toMsfRequestCstmrVo(
         Long requestKey,
-        TerminationApplyReqDto reqDto,
-        String cstmrTypeCd
+        TerminationApplyReqDto reqDto
     ) {
         TerminationApplyReqDto.Customer customer = reqDto.getCustomer();
 
@@ -544,22 +653,149 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         initializeRequestCstmrDefaults(cstmrVo);
         cstmrVo.setRequestKey(requestKey);
         cstmrVo.setCstmrNm(safe(customer.getUserName()));
-
-        if ("NA".equals(cstmrTypeCd) || "MI".equals(cstmrTypeCd)) {
-            cstmrVo.setCstmrNativeBirth(safe(customer.getUserBirthDate()));
-        } else if ("FO".equals(cstmrTypeCd) || "FM".equals(cstmrTypeCd)) {
-            cstmrVo.setCstmrForeignerBirth(safe(customer.getUserBirthDate()));
-        } else if ("CO".equals(cstmrTypeCd) || "PB".equals(cstmrTypeCd)) {
-            cstmrVo.setCstmrJuridicalBirth(safe(customer.getUserBirthDate()));
-        }
-
+        cstmrVo.setCstmrNativeRrn(firstNonBlank(customer.getCstmrNativeRrn(), joinParts(customer.getCstmrNativeRrn1(), customer.getCstmrNativeRrn2())));
+        cstmrVo.setCstmrNativeBirth(safe(customer.getUserBirthDate()));
+        cstmrVo.setCstmrNativeGenderCd(safe(customer.getUserGender()));
+        cstmrVo.setCstmrPrivateCname(safe(customer.getCstmrPrivateCname()));
+        cstmrVo.setCstmrPrivateBizNo(firstNonBlank(customer.getCstmrPrivateBizNo(), joinParts(
+            customer.getCstmrPrivateBizNo1(),
+            customer.getCstmrPrivateBizNo2(),
+            customer.getCstmrPrivateBizNo3()
+        )));
+        cstmrVo.setCstmrForeignerRrn(firstNonBlank(customer.getCstmrForeignerRrn(), joinParts(customer.getCstmrForeignerRrn1(), customer.getCstmrForeignerRrn2())));
+        cstmrVo.setCstmrForeignerBirth(safe(customer.getUserBirthDate()));
+        cstmrVo.setCstmrForeignerGenderCd(safe(customer.getUserGender()));
+        cstmrVo.setCstmrForeignerPn(safe(customer.getCstmrForeignerPn()));
+        cstmrVo.setCstmrForeignerCountryCd(safe(customer.getCstmrForeignerCountryCd()));
+        cstmrVo.setCstmrForeignerNation(safe(customer.getCstmrForeignerNation()));
+        cstmrVo.setCstmrForeignerVisaNo(safe(customer.getCstmrForeignerVisaNo()));
+        cstmrVo.setCstmrForeignerVdateStartDate(safe(customer.getCstmrForeignerVdateStartDate()));
+        cstmrVo.setCstmrForeignerVdateEndDate(safe(customer.getCstmrForeignerVdateEndDate()));
+        cstmrVo.setCstmrJuridicalCname(safe(customer.getUserName()));
+        cstmrVo.setCstmrJuridicalRrn(firstNonBlank(customer.getCstmrJuridicalRrn(), joinParts(customer.getCstmrJuridicalRrn1(), customer.getCstmrJuridicalRrn2())));
+        cstmrVo.setCstmrJuridicalBizNo(firstNonBlank(customer.getCstmrJuridicalBizNo(), joinParts(
+            customer.getCstmrJuridicalBizNo1(),
+            customer.getCstmrJuridicalBizNo2(),
+            customer.getCstmrJuridicalBizNo3()
+        )));
+        cstmrVo.setCstmrJuridicalRepNm(safe(customer.getCstmrJuridicalRepNm()));
+        cstmrVo.setUpjnCd(safe(customer.getUpjnCd()));
+        cstmrVo.setBcuSbst(safe(customer.getBcuSbst()));
+        cstmrVo.setCstmrJuridicalUserNm(safe(customer.getCstmrJuridicalUserNm()));
+        cstmrVo.setCstmrJuridicalBirth(safe(customer.getCstmrJuridicalBirth()));
+        cstmrVo.setCstmrVisitTypeCd(safe(customer.getCstmrVisitTypeCd()));
+        cstmrVo.setCstmrTelFnNo(safe(customer.getCstmrTelFnNo()));
+        cstmrVo.setCstmrTelMnNo(safe(customer.getCstmrTelMnNo()));
+        cstmrVo.setCstmrTelRnNo(safe(customer.getCstmrTelRnNo()));
         cstmrVo.setCstmrMobileFnNo(safe(customer.getCancelPhone1()));
         cstmrVo.setCstmrMobileMnNo(safe(customer.getCancelPhone2()));
         cstmrVo.setCstmrMobileRnNo(safe(customer.getCancelPhone3()));
+        cstmrVo.setCstmrZipcd(safe(customer.getCstmrZipcd()));
+        cstmrVo.setCstmrAdr(safe(customer.getCstmrAdr()));
+        cstmrVo.setCstmrAdrDtl(safe(customer.getCstmrAdrDtl()));
+        cstmrVo.setCstmrAdrBjd(safe(customer.getCstmrAdrBjd()));
+        cstmrVo.setCstmrEmailAdr(safe(customer.getCstmrEmailAdr()));
+        cstmrVo.setCstmrEmailReceiveYn(firstNonBlank(customer.getCstmrEmailReceiveYn(), "N"));
         cstmrVo.setCstmrReceiveTelFnNo(safe(customer.getAfterTel1()));
         cstmrVo.setCstmrReceiveTelNmNo(safe(customer.getAfterTel2()));
         cstmrVo.setCstmrReceiveTelRnNo(safe(customer.getAfterTel3()));
         return cstmrVo;
+    }
+
+    private MsfRequestAgentVo toMsfRequestAgentVo(
+        Long requestKey,
+        TerminationApplyReqDto reqDto,
+        String cstmrTypeCd
+    ) {
+        TerminationApplyReqDto.Customer customer = reqDto.getCustomer();
+        MsfRequestAgentVo agentVo = new MsfRequestAgentVo();
+        agentVo.setRequestKey(requestKey);
+        agentVo.setMinorAgentSelfInqryAgrmYn("N");
+
+        if (isMinorCustomerType(cstmrTypeCd)) {
+            agentVo.setMinorAgentNm(firstNonBlank(customer.getRepName(), customer.getMinorAgentNm()));
+            agentVo.setMinorAgentRrn(joinParts(customer.getRepRegistrationNo1(), customer.getRepRegistrationNo2()));
+            agentVo.setMinorAgentBirth(safe(customer.getRepBirthDate()));
+            agentVo.setMinorAgentGenderCd(safe(customer.getAgentGender()));
+            agentVo.setMinorAgentRelTypeCd(safe(customer.getMinorAgentRelTypeCd()));
+            agentVo.setMinorAgentTelFnNo(safe(customer.getMinorAgentTelFnNo()));
+            agentVo.setMinorAgentTelMnNo(safe(customer.getMinorAgentTelMnNo()));
+            agentVo.setMinorAgentTelRnNo(safe(customer.getMinorAgentTelRnNo()));
+            agentVo.setMinorAgentAgrmYn(toYn(customer.isRepAgree()));
+        }
+
+        if ("V2".equals(safe(customer.getCstmrVisitTypeCd()))) {
+            agentVo.setMinorAgentAgrmYn("N");
+            agentVo.setJrdclAgentNm(safe(customer.getMinorAgentNm()));
+            agentVo.setJrdclAgentRelTypeCd(safe(customer.getMinorAgentRelTypeCd()));
+            agentVo.setJrdclAgentTelFnNo(safe(customer.getMinorAgentTelFnNo()));
+            agentVo.setJrdclAgentTelMnNo(safe(customer.getMinorAgentTelMnNo()));
+            agentVo.setJrdclAgentTelRnNo(safe(customer.getMinorAgentTelRnNo()));
+        }
+
+        return agentVo;
+    }
+
+    private MsfRequestMstVo toMsfRequestMstVo(
+        Long requestKey,
+        TerminationApplyReqDto reqDto,
+        String cancelMobileNo,
+        String receiveMobileNo,
+        String cstmrTypeCd
+    ) {
+        TerminationApplyReqDto.Customer customer = reqDto.getCustomer();
+        MsfRequestMstVo mstVo = new MsfRequestMstVo();
+        mstVo.setRequestKey(requestKey);
+        mstVo.setCretIp("127.0.0.1");
+        mstVo.setCretId("MSF_FORM");
+        mstVo.setReqTypeCd("CC");
+        mstVo.setUserId(firstNonBlank(customer.getManagerCd(), "MSF_FORM"));
+        mstVo.setCstmrNm(safe(customer.getUserName()));
+        mstVo.setMobileNo(cancelMobileNo);
+        mstVo.setContractNum(safe(customer.getNcn()));
+        mstVo.setCstmrTypeCd(cstmrTypeCd);
+        mstVo.setOnlineAuthTypeCd(safe(customer.getIdentityCertTypeCd()));
+        mstVo.setOnlineAuthInfo("MSF:" + requestKey);
+        mstVo.setEtcMobileNo(receiveMobileNo);
+        return mstVo;
+    }
+
+    private List<MsfRequestClauseVo> toMsfRequestClauseVos(Long requestKey, TerminationApplyReqDto reqDto) {
+        List<MsfRequestClauseVo> clauseVos = new ArrayList<>();
+        TerminationApplyReqDto.Agreement agreement = reqDto.getAgreement();
+        if (agreement == null || agreement.getClauses() == null) {
+            return clauseVos;
+        }
+
+        for (TerminationApplyReqDto.Clause clause : agreement.getClauses()) {
+            if (clause == null || isBlank(clause.getCode()) || !isChecked(clause.getChecked())) {
+                continue;
+            }
+            MsfRequestClauseVo clauseVo = new MsfRequestClauseVo();
+            clauseVo.setRequestKey(requestKey);
+            clauseVo.setCdGroupId(resolveClauseGroupId(clause));
+            clauseVo.setCdGroupId2(resolveClauseGroupId2(clause));
+            clauseVo.setVersion(safe(clause.getVersion()));
+            clauseVos.add(clauseVo);
+        }
+        return clauseVos;
+    }
+
+    private static String resolveClauseGroupId(TerminationApplyReqDto.Clause clause) {
+        return firstNonBlank(clause.getTermsGroupCd(), clause.getCdGroupId(), "CLAUSE_FORM_04");
+    }
+
+    private static String resolveClauseGroupId2(TerminationApplyReqDto.Clause clause) {
+        String termsItemCd = firstNonBlank(clause.getTermsItemCd(), clause.getCdGroupId2());
+        if (!isBlank(termsItemCd)) {
+            return termsItemCd;
+        }
+        return switch (safe(clause.getCode())) {
+            case "CLAUSE_INFO_09" -> "09";
+            case "CLAUSE_CNTR_DEL_01" -> "cntrDelFlag";
+            case "CLAUSE_INFO_08" -> "08";
+            default -> safe(clause.getCode());
+        };
     }
 
     private ValidationResult validateApplyRequest(TerminationApplyReqDto reqDto) {
@@ -592,9 +828,18 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         if (isBlank(customer.getCustomerType())) {
             return "고객 유형을 선택해 주세요.";
         }
-        String normalizedCustomerType = normalizeCustomerType(customer.getCustomerType());
-        if (!isAllowedValue(normalizedCustomerType, "NA", "MI", "FO", "FM", "CO", "PB")) {
+        if (!isCommonCodeValue("CSTMR_TYPE_CD", customer.getCustomerType())) {
             return "고객 유형이 올바르지 않습니다.";
+        }
+        if (!isCommonCodeValue("IDENTITY_CERT_TYPE_CD", customer.getIdentityCertTypeCd())) {
+            return "신분증 인증유형이 올바르지 않습니다.";
+        }
+        if (!isIdentityTypeCodeValue(customer.getIdentityCertTypeCd(), customer.getIdentityTypeCd())) {
+            return "신분증 유형이 올바르지 않습니다.";
+        }
+        String identityIssuDate = normalizeDigits(customer.getIdentityIssuDate());
+        if (!isBlank(identityIssuDate) && !is8DigitDate(identityIssuDate)) {
+            return "신분증 발급일자 형식이 올바르지 않습니다.";
         }
         if (isBlank(customer.getUserName())) {
             return "고객명을 입력해 주세요.";
@@ -631,7 +876,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         if (isBlank(customer.getPostMethod())) {
             return "수령 방법을 선택해 주세요.";
         }
-        if (normalizeReceiveWay(customer.getPostMethod()) == null) {
+        if (!isAllowedValue(customer.getPostMethod(), "P", "E")) {
             return "수령 방법이 올바르지 않습니다.";
         }
         return null;
@@ -641,11 +886,11 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         if (product == null) {
             return "상품 정보가 없습니다.";
         }
-        if (isBlank(product.getIsActive())) {
-            return "해지 후 사용 여부를 선택해 주세요.";
+        if (isBlank(product.getCancelUseCompanyCd())) {
+            return "해지 후 사용 통신사를 선택해 주세요.";
         }
-        if (normalizeUseType(product.getIsActive()) == null) {
-            return "해지 후 사용 여부가 올바르지 않습니다.";
+        if (!isAllowedValue(product.getCancelUseCompanyCd(), "KTM", "KT", "SKT", "LGT", "ETC")) {
+            return "해지 후 사용 통신사가 올바르지 않습니다.";
         }
 
         String amountError = validateNonNegativeNumber(product.getUsageFee(), "사용 요금을 확인해 주세요.");
@@ -660,22 +905,23 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         if (!isBlank(amountError)) {
             return amountError;
         }
-        amountError = validateNonNegativeNumber(product.getRemainAmount(), "잔여 할부 금액을 확인해 주세요.");
-        if (!isBlank(amountError)) {
-            return amountError;
-        }
-
         String remainPeriod = normalizeNumber(product.getRemainPeriod());
-        if (isBlank(remainPeriod)) {
-            return "잔여 할부 개월 수를 확인해 주세요.";
-        }
-        try {
-            int value = Integer.parseInt(remainPeriod);
-            if (value < 0) {
+        if (!isBlank(remainPeriod)) {
+            try {
+                int value = Integer.parseInt(remainPeriod);
+                if (value < 0) {
+                    return "잔여 할부 개월 수를 확인해 주세요.";
+                }
+            } catch (NumberFormatException e) {
                 return "잔여 할부 개월 수를 확인해 주세요.";
             }
-        } catch (NumberFormatException e) {
-            return "잔여 할부 개월 수를 확인해 주세요.";
+        }
+
+        if (!isBlank(normalizeNumber(product.getRemainAmount()))) {
+            amountError = validateNonNegativeNumber(product.getRemainAmount(), "잔여 할부 금액을 확인해 주세요.");
+            if (!isBlank(amountError)) {
+                return amountError;
+            }
         }
         return null;
     }
@@ -719,12 +965,87 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         }
     }
 
-    private boolean isLocal() {
-        return mcpApiClient.isLocal();
+    private boolean isCommonCodeValue(String groupId, String value) {
+        String code = safe(value);
+        if (isBlank(code)) {
+            return false;
+        }
+        List<CommonCodeData> codes = commonCodeReader.getCommonCodes(CommonCodesRequest.of(groupId)).get(groupId);
+        if (codes == null || codes.isEmpty()) {
+            logger.warn("[commonCode] code group is empty: groupId={}, value={}", groupId, code);
+            return false;
+        }
+        return codes.stream().anyMatch(commonCode -> code.equals(commonCode.code()));
+    }
+
+    private boolean isIdentityTypeCodeValue(String identityCertTypeCd, String identityTypeCd) {
+        String groupId = "F".equals(safe(identityCertTypeCd)) ? "fathCertIdType" : "RCP2006";
+        return isCommonCodeValue(groupId, identityTypeCd);
+    }
+
+    private static String requireText(String value, ResTermMessage responseMessage, String fieldName, String ncn) {
+        if (isBlank(value)) {
+            logger.error("[apply] fail: {} is blank, ncn={}", fieldName, safe(ncn));
+            throw new ApplyFailureException(responseMessage);
+        }
+        return safe(value);
+    }
+
+    private static void requireInserted(int inserted, ResTermMessage responseMessage, String stepName, Long requestKey) {
+        if (inserted <= 0) {
+            logger.error("[apply] {} failed: requestKey={}, inserted={}", stepName, requestKey, inserted);
+            throw new ApplyFailureException(responseMessage);
+        }
+    }
+
+    private static boolean hasAgentData(MsfRequestAgentVo agentVo) {
+        return agentVo != null && (
+            !isBlank(agentVo.getMinorAgentNm())
+                || !isBlank(agentVo.getMinorAgentRrn())
+                || !isBlank(agentVo.getMinorAgentBirth())
+                || !isBlank(agentVo.getMinorAgentTelFnNo())
+                || !isBlank(agentVo.getJrdclAgentNm())
+                || !isBlank(agentVo.getJrdclAgentTelFnNo())
+        );
+    }
+
+    private static boolean isMinorCustomerType(String cstmrTypeCd) {
+        return "NM".equals(cstmrTypeCd) || "FM".equals(cstmrTypeCd);
+    }
+
+    private static String firstNonBlank(String... values) {
+        if (values == null) {
+            return "";
+        }
+        for (String value : values) {
+            if (!isBlank(value)) {
+                return value;
+            }
+        }
+        return "";
     }
 
     private static boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
+    }
+
+    private static String joinParts(String... values) {
+        if (values == null) {
+            return "";
+        }
+        StringBuilder builder = new StringBuilder();
+        for (String value : values) {
+            builder.append(normalizeDigits(value));
+        }
+        return builder.toString();
+    }
+
+    private static boolean isChecked(Object value) {
+        if (value instanceof Boolean checked) {
+            return checked;
+        }
+        String normalized = safe(value == null ? null : String.valueOf(value));
+        return "Y".equalsIgnoreCase(normalized) || "true".equalsIgnoreCase(normalized) || "1".equals(normalized);
     }
 
     private static String joinPhone(String p1, String p2, String p3) {
@@ -764,6 +1085,10 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         return normalized.matches("^\\d{9}$");
     }
 
+    private static String normalizeDigits(String value) {
+        return safe(value).replaceAll("[^0-9]", "");
+    }
+
     private static String normalizeNumber(String value) {
         return safe(value).replaceAll("[^0-9-]", "");
     }
@@ -790,39 +1115,6 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
 
     private static String safe(String value) {
         return value == null ? "" : value;
-    }
-
-    private static String normalizeReceiveWay(String postMethod) {
-        if ("postMethod1".equals(postMethod) || "mail".equalsIgnoreCase(safe(postMethod))) {
-            return "P";
-        }
-        if ("postMethod2".equals(postMethod) || "email".equalsIgnoreCase(safe(postMethod))) {
-            return "E";
-        }
-        return null;
-    }
-
-    private static String normalizeUseType(String isActive) {
-        return switch (safe(isActive)) {
-            case "MM" -> "KTM";
-            case "KT" -> "KT";
-            case "SK" -> "SKT";
-            case "LG" -> "LGT";
-            case "ETC" -> "ETC";
-            default -> isActive;
-        };
-    }
-
-    private static String normalizeCustomerType(String customerType) {
-        return switch (safe(customerType)) {
-            case "customerType1" -> "NA";
-            case "customerType2" -> "MI";
-            case "customerType3" -> "FO";
-            case "customerType4" -> "FM";
-            case "customerType5" -> "CO";
-            case "customerType6" -> "PB";
-            default -> customerType;
-        };
     }
 
     private static String resolveAgentCd(TerminationApplyReqDto.Customer customer) {
@@ -904,5 +1196,14 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
             return null;
         }
         return Integer.parseInt(normalized);
+    }
+
+    private static class ApplyFailureException extends RuntimeException {
+        private final ResTermMessage responseMessage;
+
+        private ApplyFailureException(ResTermMessage responseMessage) {
+            super(responseMessage.getMessage());
+            this.responseMessage = responseMessage;
+        }
     }
 }

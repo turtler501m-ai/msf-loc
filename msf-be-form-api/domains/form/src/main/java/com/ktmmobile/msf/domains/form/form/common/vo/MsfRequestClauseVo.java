@@ -11,6 +11,7 @@ public class MsfRequestClauseVo {
 
     Long requestKey;
     String cdGroupId;
+    String cdGroupId2;
     String cretIp;
     String cretDt;
     String cretId;

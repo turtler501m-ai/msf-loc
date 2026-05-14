@@ -16,6 +16,13 @@ public class CancelPageRepositoryImpl {
         return cancelPageMapper.nextRequestKey();
     }
 
+    public boolean existsInProgressApplicationByMobileNo(String mobileNo) {
+        if (mobileNo == null || mobileNo.isBlank()) {
+            return false;
+        }
+        return cancelPageMapper.countInProgressApplicationByMobileNo(mobileNo) > 0;
+    }
+
     public int selectPrePayment(String contractNum) {
         Integer count = mspCancelPageMapper.selectPrePayment(contractNum);
         return count == null ? 0 : count;

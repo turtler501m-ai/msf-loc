@@ -51,7 +51,8 @@ public enum ResponseMessage implements CommonEnum {
 
     /* 신규가입 희망번호 조회 */
     VALID_SEARCH_NUMBER_SUCCESS("0000", "희망번호 조회 성공"),
-    VALID_SEARCH_NUMBER_FAIL("1000", "희망번호 조회 실패"),
+    VALID_SEARCH_NUMBER_NOT_CORRECT("0000", "희망번호 입력 값 4자리를 입력해 주세요."),
+    VALID_SEARCH_NUMBER_FAIL("1000", "희망번호에 해당하는 신규 번호가 없습니다.\n다른 번호로 다시 조회해 주세요."),
     VALID_SEARCH_NUMBER_OVER_LIMIT("1001", "개통희망번호 조회 20회 초과하셨습니다.\n신청서를 처음부터 다시 작성해 주십시요."),
 
     /* 신규가입 희망번호 예약 */
@@ -63,8 +64,8 @@ public enum ResponseMessage implements CommonEnum {
     VALID_CANCEL_NUMBER_FAIL("1000", "희망번호 취소 실패"),
 
     /* 번호이동 사전동의 */
-    VALID_REQ_NP_PRECHECK_SUCCESS("0000", "번호이동 사전동의 성공"),
-    VALID_REQ_NP_PRECHECK_FAIL("1000", "번호이동 사전동의 실패"),
+    VALID_REQ_NP_PRECHECK_SUCCESS("0000", "번호이동 사전동의 요청 성공"),
+    VALID_REQ_NP_PRECHECK_FAIL("1000", "번호이동 사전동의 요청 실패"),
 
     /* 번호이동 납부주장 */
     VALID_REQ_NP_PAY_OPEN_SUCCESS("0000", "번호이동 사전동의 납부주장 성공"),
@@ -77,6 +78,9 @@ public enum ResponseMessage implements CommonEnum {
     /* 안심보험 목록 조회 */
     VALID_SELECT_INSR_SUCCESS("0000", "안심보험 조회 성공"),
     VALID_SELECT_INSR_FAIL("1000", "안심보험 조회 실패"),
+
+    /* 신청서 저장 요청 데이타 유효성체크 */
+    VALID_INPUT_NOT_CORRECT("3000", "입력 정보 자릿수를 확인해 주세요."),
 
     @Deprecated
     UNDEFINED(CommonEnumConstant.UNDEFINED_CODE, "Invalid ResponseMessage");

@@ -55,7 +55,6 @@ public class ProductInfoRequest {
     private List<CategoryInfoDto> listRateDto; //요금제 목록
     private List<CategoryInfoDto> listPhoneDto; //단말 목록
 
-
     private String prodCtgTypeCd; //상품카테고리 구분 코드 ( 요금: P , 부가서비스: R , 안심보험: I)
     //private String prodCtgId; //상품카테고리의 아이디
 

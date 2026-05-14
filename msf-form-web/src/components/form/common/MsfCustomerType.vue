@@ -6,9 +6,7 @@
         <MsfChip
           v-model="model.cstmrTypeCd"
           :name="`${name}-inp-customerType`"
-          groupCode="CSTMR_TYPE_CD"
-          :disabled="model.isVerified || model.isSaved"
-          :data="[]"
+          :data="customerTypeData"
         />
       </MsfFormGroup>
       <MsfFormGroup
@@ -20,11 +18,7 @@
         <MsfChip
           v-model="model.cstmrVisitTypeCd"
           :name="`${name}-inp-visitType`"
-          :disabled="model.isVerified || model.isSaved"
-          :data="[
-            { value: 'V1', label: '직접방문' },
-            { value: 'V2', label: '대리인' },
-          ]"
+          :data="visitTypeData"
         />
       </MsfFormGroup>
     </MsfStack>
@@ -32,15 +26,42 @@
 </template>
 
 <script setup>
-import { computed, defineModel, defineProps, watch, defineExpose } from 'vue'
+import { computed, defineModel, defineProps, watch, defineExpose, ref, onMounted } from 'vue'
+import { getCommonCodeList } from '@/libs/utils/comn.utils'
 
 const props = defineProps({
   title: { type: String, default: '고객 유형' },
   name: { type: String, default: 'base' },
   visitTypeCodes: { type: Array, default: () => ['JP', 'GO'] },
+  allowedCodes: { type: Array, default: () => [] },
 })
 
 const model = defineModel({ type: Object, required: true })
+
+const rawCustomerTypes = ref([])
+
+const test = async () => {
+  const list = await getCommonCodeList('CSTMR_TYPE_CD')
+  rawCustomerTypes.value = list?.map((item) => ({ value: item.code, label: item.title })) || []
+}
+
+const isAuthLocked = computed(() => model.value?.isVerified || model.value?.isSaved)
+
+const customerTypeData = computed(() =>
+  rawCustomerTypes.value.map((item) => ({
+    ...item,
+    disabled:
+      isAuthLocked.value ||
+      (props.allowedCodes.length > 0 ? !props.allowedCodes.includes(item.value) : false),
+  })),
+)
+
+const visitTypeData = computed(() =>
+  [
+    { value: 'V1', label: '직접방문' },
+    { value: 'V2', label: '대리인' },
+  ].map((item) => ({ ...item, disabled: isAuthLocked.value })),
+)
 
 const visitTypeRequired = computed(() => props.visitTypeCodes.includes(model.value.cstmrTypeCd))
 
@@ -55,6 +76,10 @@ watch(
     }
   },
 )
+
+onMounted(() => {
+  test()
+})
 
 const validate = () => {
   if (!model.value.cstmrTypeCd) return false

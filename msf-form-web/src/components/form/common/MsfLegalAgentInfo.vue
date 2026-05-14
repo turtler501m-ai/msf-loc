@@ -11,7 +11,11 @@
           :readonly="model.isSaved || (model.identityCertTypeCd !== 'S' && !model.isTrCustomer)"
         />
       </MsfFormGroup>
-      <MsfFormGroup label="주민등록번호/<br/>외국인등록번호" required v-if="!model.isTrCustomer">
+      <MsfFormGroup
+        label="주민등록번호/<br/>외국인등록번호"
+        required
+        v-if="!useBirthDate && !model.isTrCustomer"
+      >
         <MsfStack type="field">
           <MsfNumberInput
             ref="combinedNo1Ref"
@@ -33,6 +37,16 @@
             :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
           />
         </MsfStack>
+      </MsfFormGroup>
+      <MsfFormGroup v-if="useBirthDate && !model.isTrCustomer" label="생년월일" required>
+        <MsfBirthdayInput
+          id="inp-repBirthDate"
+          v-model="model.repBirthDate"
+          length="8"
+          class="ut-w-300"
+          placeholder="8자리(YYYYMMDD)"
+          :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+        />
       </MsfFormGroup>
       <MsfFormGroup v-if="model.isTrCustomer" label="생년월일" required>
         <MsfStack type="field">
@@ -95,6 +109,7 @@ const props = defineProps({
   title: { type: String, default: '법정대리인 정보' },
   agreementTitle: { type: String, default: '법정대리인 안내사항 확인 및 동의' },
   name: { type: String, default: 'basic' },
+  useBirthDate: { type: Boolean, default: false },
 })
 const model = defineModel({ type: Object, required: true })
 const combinedNo1Ref = ref(null)
@@ -178,7 +193,11 @@ const validate = () => {
       if (!model.value.repAgree) return false
     } else {
       if (!model.value.repName) return false
-      if (!combinedNo1.value || !combinedNo2.value) return false
+      if (props.useBirthDate) {
+        if (!model.value.repBirthDate) return false
+      } else if (!combinedNo1.value || !combinedNo2.value) {
+        return false
+      }
       if (!model.value.minorAgentRelTypeCd) return false
       if (!store.authFlags?.repPhone) return false
       if (!model.value.repAgree) return false

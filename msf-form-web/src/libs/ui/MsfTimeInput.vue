@@ -4,6 +4,7 @@
       v-bind="$attrs"
       :model-value="parsedTime"
       :model-type="props.showSeconds ? 'HH:mm:ss' : 'HH:mm'"
+      teleport="body"
       class="msf-time-input-value"
       :formats="{ input: props.showSeconds ? 'HH:mm:ss' : 'HH:mm' }"
       :text-input="{ format: props.showSeconds ? 'HHmmss' : 'HHmm' }"

@@ -48,9 +48,8 @@ public class LoginUserRepositoryImpl implements LoginUserFinder<LoginCredential>
 
     @Override
     public Optional<LoginUserInfo> findUserInfo(LoginSessionUser sessionUser) {
-        String deviceUuid = sessionUser.attributeAsString(LoginUserInfoAttribute.DEVICE_UUID.key());
-        return Optional.ofNullable(loginUserMapper.selectFormUserInfoByUserIdAndDeviceUuid(sessionUser.userId(), deviceUuid))
-            .map(row -> toLoginUserInfo(row, isApprovedDevice(row.apvSttusCd()), deviceUuid));
+        return Optional.ofNullable(loginUserMapper.selectFormUserInfoByUserId(sessionUser.userId()))
+            .map(row -> toLoginUserInfo(row, isApprovedDevice(row.apvSttusCd()), null));
     }
 
     @Override

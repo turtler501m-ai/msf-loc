@@ -29,6 +29,7 @@ import com.ktmmobile.msf.domains.form.common.dto.OrderDto;
 import com.ktmmobile.msf.domains.form.common.dto.PhoneProdBasDto;
 import com.ktmmobile.msf.domains.form.common.dto.RwdOrderDto;
 import com.ktmmobile.msf.domains.form.common.dto.UsimMspRateDto;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MplatFormFMC0InfoResponse;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.MspJuoAddInfoDto;
 
@@ -130,6 +131,12 @@ public class MspApiDirectRepository {
             // [MSP/MCP] mPlatformMapper.selectCheckMpCallCount -- @RequestMapping("/mPlatform/checkMpCallCount") -- SELECT(MCP) -- ITO API 사용
             case "/mPlatform/checkMpCallCount":
                 return (T) selectCheckMpCallCount((Map<String, String>) request);
+            // [MSP/MCP] mPlatformMapper.getXmlMessageMC0 -- @RequestMapping("/mPlatform/getXmlMessageMC0") -- SELECT(MCP) -- ITO API 사용
+            case "/mPlatform/getXmlMessageMC0":
+                return (T) getXmlMessageMC0((Map<String, String>) request);
+            // [MSP/MCP] mPlatformMapper.getXmlMessageMcnMP0 -- @RequestMapping("/mPlatform/getXmlMessageMcnMP0") -- SELECT(MCP) -- ITO API 사용
+            case "/mPlatform/getXmlMessageMcnMP0":
+                return (T) getXmlMessageMcnMP0((Map<String, String>) request);
             // [MSP/MCP] mspMapper.listRateByOrgnInfos -- @RequestMapping("/msp/rateByOrgnInfos") -- SELECT(MSP) -- ITO API 사용
             case "/msp/rateByOrgnInfos":
                 return (T) selectRateByOrgnInfos((MspSalePlcyMstDto) request);
@@ -563,6 +570,28 @@ public class MspApiDirectRepository {
         Integer result = mspSession.selectOne("McpMplatformMapper.selectCheckMpCallCount", paramMap);
         logger.debug("[MspApiDirectRepository] selectCheckMpCallCount: result={}", result);
         return result != null ? result : 0;
+    }
+
+    /** FMC0 명의변경 사전체크 호출 INPUT 정보 조회 -/mPlatform/getXmlMessageMC0 */
+    private MplatFormFMC0InfoResponse getXmlMessageMC0(Map<String, String> paramMap) {
+        logger.debug("[MspApiDirectRepository] getXmlMessageMC0: paramMap={}", paramMap);
+        MplatFormFMC0InfoResponse result = null;
+        String cstmrTypeCd = paramMap.get("cstmrTypeCd");
+        if ("NM".equals(cstmrTypeCd) || "FM".equals(cstmrTypeCd)) {
+            result = mspSession.selectOne("McpMplatformMapper.getXmlMessageMC0Nm", paramMap);
+        } else {
+            result = mspSession.selectOne("McpMplatformMapper.getXmlMessageMC0", paramMap);
+        }
+        logger.debug("[MspApiDirectRepository] getXmlMessageMC0: result={}", result);
+        return result;
+    }
+
+    /** FMP0 명의변경 호출 INPUT 정보 조회 -/mPlatform/getXmlMessageMcnMP0 */
+    private MplatFormFMC0InfoResponse getXmlMessageMcnMP0(Map<String, String> paramMap) {
+        logger.debug("[MspApiDirectRepository] getXmlMessageMC0: paramMap={}", paramMap);
+        MplatFormFMC0InfoResponse result = mspSession.selectOne("McpMplatformMapper.getXmlMessageMcnMP0", paramMap);
+        logger.debug("[MspApiDirectRepository] getXmlMessageMC0: result={}", result);
+        return result;
     }
 
 

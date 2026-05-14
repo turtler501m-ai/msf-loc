@@ -10,7 +10,7 @@ public class CacheUtils {
 
     public static String getCachePrefix() {
         if (EnvironmentUtils.isLocal()) {
-            return EnvironmentUtils.getLocalProfileCode() + ":";
+            return "0-" + EnvironmentUtils.getLocalProfileCode() + ":";
         }
         return "";
     }

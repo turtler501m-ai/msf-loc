@@ -40,27 +40,16 @@
       </MsfFormGroup>
       <MsfFormGroup label="번호이동 인증" tag="div" required>
         <MsfStack type="field">
-          <MsfChip
-            v-model="model.moveAuthTypeCd"
-            name="inp-transferAuth"
-            groupCode="PTC"
-            :data="[]"
-          />
-        </MsfStack>
-        <MsfStack type="field" v-if="model.moveAuthTypeCd">
-          <MsfInput
-            v-model="model.moveAuthNo"
-            :placeholder="authInputPlaceholder"
-            class="ut-w-300"
-          />
           <MsfButton
             variant="subtle"
             @click="handlePreAuth"
             v-if="!isRequested && !store.authFlags?.moveAuthTypeCd"
-            :disabled="!isPhoneReady || !model.moveCompanyCd || !model.moveAuthTypeCd || !model.moveAuthNo"
-          >번호이동 사전동의</MsfButton>
+            :disabled="!isPhoneReady || !model.moveCompanyCd"
+          >
+            번호이동 사전동의
+          </MsfButton>
           <template v-else-if="store.authFlags?.moveAuthTypeCd">
-             <MsfButton variant="subtle" disabled>사전동의 완료</MsfButton>
+            <MsfButton variant="subtle" disabled>사전동의 완료</MsfButton>
           </template>
           <template v-else-if="isRequested">
             <MsfButton variant="subtle" @click="handleCheckAgree">사전동의 결과조회</MsfButton>
@@ -84,13 +73,7 @@
         />
       </MsfFormGroup>
       <MsfFormGroup label="미환급금<br/>요금상계(후불)" tag="div" required>
-        <MsfCheckboxGroup
-          v-model="model.moveRefundAgreeYn"
-          :options="[
-            { value: 'Y', label: '동의' },
-            { value: 'N', label: '미동의' },
-          ]"
-        />
+        <MsfCheckboxGroup v-model="model.moveRefundAgreeYn" groupCode="MRA" />
       </MsfFormGroup>
     </MsfStack>
 
@@ -104,6 +87,7 @@ import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import MsfMnpAuthFailModal from './popups/MsfMnpAuthFailModal.vue'
 import { post } from '@/libs/api/msf.api'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 defineProps({
   title: { type: String, default: '번호이동 할 전화번호' },
@@ -118,19 +102,6 @@ const moveMobileNo3Ref = ref(null)
 
 const isFailModalOpen = ref(false)
 const isRequested = ref(false)
-
-const authInputPlaceholder = computed(() => {
-  switch (model.value?.moveAuthTypeCd) {
-    case 'transferAuth1':
-      return '휴대폰 일련번호 뒤 4자리'
-    case 'transferAuth2':
-      return '계좌번호 뒤 4자리'
-    case 'transferAuth3':
-      return '신용카드 뒤 4자리'
-    default:
-      return '번호이동 인증 정보 입력'
-  }
-})
 
 const isPhoneReady = computed(() => {
   return (
@@ -164,7 +135,6 @@ const handlePreAuth = async () => {
     if (res && res.code === '0000' && res.data?.resCode === '0000') {
       // 요청 성공 시 '결과조회' 버튼들이 나오도록 상태 변경
       isRequested.value = true
-      alert('번호이동 사전동의 요청이 완료되었습니다. 문자 수신 후 동의를 완료해 주세요.')
     } else {
       isFailModalOpen.value = true
     }
@@ -195,7 +165,6 @@ const handleCheckAgree = async () => {
     // resCode가 '0000'이면 번호이동 사전동의 최종 완료 처리
     if (res && res.code === '0000' && res.data?.resCode === '0000') {
       if (store.authFlags) store.authFlags.moveAuthTypeCd = true
-      alert('번호이동 사전동의가 완료되었습니다.')
     } else {
       // 결과조회에서도 실패(아직 동의 안함 등) 시 실패 팝업 노출
       isFailModalOpen.value = true
@@ -208,7 +177,7 @@ const handleCheckAgree = async () => {
 
 /**
  * 납부주장 (Payment Claim) 처리
- * 이전 통신사 미납 등으로 인해 사전동의가 안될 때, 
+ * 이전 통신사 미납 등으로 인해 사전동의가 안될 때,
  * 고객이 이미 납부했음을 주장하여 번호이동을 강제로 진행할 수 있게 요청하는 절차
  */
 const handlePayOpn = async () => {
@@ -232,8 +201,6 @@ watch(
     model.value.moveMobileNo1,
     model.value.moveMobileNo2,
     model.value.moveMobileNo3,
-    model.value.moveAuthTypeCd,
-    model.value.moveAuthNo,
   ],
   () => {
     // 값이 하나라도 바뀌면 사전동의 요청 상태와 완료 상태 모두 초기화
@@ -257,18 +224,27 @@ const validate = () => {
     if (!model.value.moveCompanyCd) return false
     if (!model.value.moveMobileNo1 || !model.value.moveMobileNo2 || !model.value.moveMobileNo3)
       return false
-    // 번호이동 인증 필수
-    if (!model.value.moveAuthTypeCd || !model.value.moveAuthNo) return false
+
+    // 번호이동 인증(사전동의) 필수
     if (!store.authFlags?.moveAuthTypeCd) return false
-    
+
     // 이번달 사용요금 동의 필수
     if (!model.value.moveThismonthPayTypeCd) return false
-    
+
     // 휴대폰 할부금 선택 필수 (*)
-    if (!model.value.moveAllotmentSttusCd || (Array.isArray(model.value.moveAllotmentSttusCd) && model.value.moveAllotmentSttusCd.length === 0)) return false
-    
+    if (
+      !model.value.moveAllotmentSttusCd ||
+      (Array.isArray(model.value.moveAllotmentSttusCd) &&
+        model.value.moveAllotmentSttusCd.length === 0)
+    )
+      return false
+
     // 미환급금 요금상계 선택 필수 (*)
-    if (!model.value.moveRefundAgreeYn || (Array.isArray(model.value.moveRefundAgreeYn) && model.value.moveRefundAgreeYn.length === 0)) return false
+    if (
+      !model.value.moveRefundAgreeYn ||
+      (Array.isArray(model.value.moveRefundAgreeYn) && model.value.moveRefundAgreeYn.length === 0)
+    )
+      return false
   }
   return true
 }

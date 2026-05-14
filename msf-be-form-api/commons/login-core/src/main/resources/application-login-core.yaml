@@ -9,7 +9,7 @@ login-core:
     challenge-time-to-live: 3m
   token:
     access-time-to-live: 10m
-    refresh-time-to-live: 2h
+    refresh-time-to-live: 1h
   user-info-cache:
     time-to-live: 10m
     stale-time-to-live: 10m

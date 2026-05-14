@@ -48,7 +48,7 @@ watchEffect(() => {
         class="ut-w-300"
       />
     </MsfFormGroup>
-    <MsfFormGroup label="약정기간" tag="div" required>
+    <MsfFormGroup label="약정기간" tag="div" required v-if="formData.productType !== 'UU'">
       <MsfChip
         v-model="formData.contractPeriod"
         name="inp-contractPeriod"

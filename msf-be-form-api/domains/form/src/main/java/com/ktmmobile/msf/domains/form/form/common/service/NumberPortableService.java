@@ -1,5 +1,14 @@
 package com.ktmmobile.msf.domains.form.form.common.service;
 
+import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
 import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.NmcpCdDtlDto;
@@ -12,14 +21,6 @@ import com.ktmmobile.msf.domains.form.form.common.dto.MnpOsstRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MnpOsstResponse;
 import com.ktmmobile.msf.domains.form.form.common.repository.msp.McpRequestReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +66,9 @@ public class NumberPortableService {
         //RCP2006	05	여권(외국인)
         //RCP2006	06	외국인등록증
         //RCP2006	07	국내거소신고증
+
+        //0. 입력 데이타 검증
+
 
         //1. 번호이동 테이블 내에 특정기간 존재여부 확인
         //   요청한 핸드폰번호(moveMobileNo)로 특정기간(limitDay) 내에 MCP_REQUEST , MCP_REQUEST_MOVE 테이블에 존재여부 확인
@@ -155,12 +159,12 @@ public class NumberPortableService {
             }
 
             //session에 저장한 서식지 정보 초기화
-//            SessionUtils.saveAppformDto(null);
-//            if ("ITL_SST_E1018".equals(resultCode) && message.indexOf("가입제한자") > -1) {
-//                resultCode = "ITL_SST_E1018_01";
-//            } else if ("ITL_SST_E1018".equals(resultCode) && message.indexOf("미납고객") > -1) {
-//                resultCode = "ITL_SST_E1018_02";
-//            }
+            //            SessionUtils.saveAppformDto(null);
+            //            if ("ITL_SST_E1018".equals(resultCode) && message.indexOf("가입제한자") > -1) {
+            //                resultCode = "ITL_SST_E1018_01";
+            //            } else if ("ITL_SST_E1018".equals(resultCode) && message.indexOf("미납고객") > -1) {
+            //                resultCode = "ITL_SST_E1018_02";
+            //            }
 
             //rtnMap.put("OSST_RESULT_CODE", resultCode);
             //rtnMap.put("ERROR_NE_MSG", message);
@@ -393,16 +397,16 @@ public class NumberPortableService {
 
 
         // 실패이력 저장
-//        McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
-//        mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
-//        mcpIpStatisticDto.setTrtmRsltSmst(moveMobileNo);
-//        mcpIpStatisticDto.setPrcsSbst("Exception[PC0_DAY_LIMIT]");
-//        mcpIpStatisticDto.setParameter("MOVE_MOBILE_NUM[" + moveMobileNo + "] TRY_CNT[" + tryCnt + "] LIMIT_CNT[" + limitCnt + "]");
-//        ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
+        //        McpIpStatisticDto mcpIpStatisticDto = new McpIpStatisticDto();
+        //        mcpIpStatisticDto.setPrcsMdlInd("PC0_ERROR");
+        //        mcpIpStatisticDto.setTrtmRsltSmst(moveMobileNo);
+        //        mcpIpStatisticDto.setPrcsSbst("Exception[PC0_DAY_LIMIT]");
+        //        mcpIpStatisticDto.setParameter("MOVE_MOBILE_NUM[" + moveMobileNo + "] TRY_CNT[" + tryCnt + "] LIMIT_CNT[" + limitCnt + "]");
+        //        ipstatisticService.insertAdminAccessTrace(mcpIpStatisticDto);
 
-//        rtnMap.put("RESULT_CODE", "-9999");
-//        rtnMap.put("ERROR_MSG", "PC0_TIME_LIMIT");
-//        rtnMap.put("ERROR_NE_MSG", fAlertMsg);
+        //        rtnMap.put("RESULT_CODE", "-9999");
+        //        rtnMap.put("ERROR_MSG", "PC0_TIME_LIMIT");
+        //        rtnMap.put("ERROR_NE_MSG", fAlertMsg);
 
         rtnMap.put("RESULT_CODE", "0000");
 

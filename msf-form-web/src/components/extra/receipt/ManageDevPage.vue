@@ -63,9 +63,14 @@
   <MsfDialog :is-open="detailOpen" title="상세보기" @close="closeDetail">
     <template #default>
       <MsfButtonGroup class="popup-top-buttons">
-        <MsfButton variant="subtle" @click="onClickCancelCheck">해지확인</MsfButton>
-        <MsfButton variant="subtle" @click="onClickReceiptComplete">접수완료</MsfButton>
-        <MsfButton variant="subtle" @click="onClickRevert">완료취소</MsfButton>
+        <MsfButton variant="subtle" :disabled="!isCancelProcessTarget" @click="onClickCancelCheck">
+          상태확인
+        </MsfButton>
+        <MsfButton variant="subtle" :disabled="!canCompleteCancel" @click="onClickReceiptComplete">
+          해지완료
+        </MsfButton>
+        <MsfButton variant="subtle" :disabled="!canRejectCancel" @click="onClickReject">반려처리</MsfButton>
+        <MsfButton variant="subtle" :disabled="!canRevertCancel" @click="onClickRevert">완료취소</MsfButton>
         <MsfButton variant="subtle" @click="closeDetail">닫기</MsfButton>
       </MsfButtonGroup>
 
@@ -96,7 +101,12 @@
         </MsfStack>
         <MsfStack type="field">
           <span class="field-label">메모</span>
-          <MsfInput :model-value="detail.memo" readonly class="ut-flex-1" />
+          <MsfInput
+            v-model="detail.memo"
+            :readonly="!canEditMemo"
+            placeholder="처리 메모를 입력하세요."
+            class="ut-flex-1"
+          />
         </MsfStack>
       </MsfStack>
     </template>
@@ -154,19 +164,37 @@ const searchGbnOptions = [
 const searchForm = reactive({
   startDt: '',
   endDt: '',
-  applyTypeCd: '',
+  applyTypeCd: FORM_TYPE_CANCEL,
   searchGbn: '',
   searchName: '',
   procCd: '',
 })
 
+const tableData = ref([])
+const totalCount = ref(0)
+const page = ref(1)
+const rows = ref(10)
+const selectedRow = ref(null)
+const detailOpen = ref(false)
+const detail = ref({})
+const lastClick = ref({ key: null, at: 0 })
+
 const procCdOptions = computed(() =>
   searchForm.applyTypeCd === FORM_TYPE_CANCEL ? CANCEL_PROC_OPTIONS : baseProcCdOptions.value,
 )
 
+const isCancelProcessTarget = computed(() => String(detail.value?.formTypeCd || '') === FORM_TYPE_CANCEL)
+const canCompleteCancel = computed(() => isCancelProcessTarget.value && ['RC', 'RQ'].includes(detail.value?.procCd))
+const canRejectCancel = computed(() => isCancelProcessTarget.value && ['RC', 'RQ'].includes(detail.value?.procCd))
+const canRevertCancel = computed(() => isCancelProcessTarget.value && detail.value?.procCd === 'CP')
+const canEditMemo = computed(() => canCompleteCancel.value || canRejectCancel.value)
+
 watch(
   () => searchForm.applyTypeCd,
-  () => { searchForm.procCd = '' },
+  () => {
+    searchForm.applyTypeCd = FORM_TYPE_CANCEL
+    searchForm.procCd = ''
+  },
 )
 
 const isDateDisabled = computed(() => !!searchForm.searchGbn)
@@ -180,14 +208,6 @@ function onSearchGbnChange() {
   }
 }
 
-const tableData = ref([])
-const totalCount = ref(0)
-const page = ref(1)
-const rows = ref(10)
-const selectedRow = ref(null)
-const detailOpen = ref(false)
-const detail = ref({})
-const lastClick = ref({ key: null, at: 0 })
 const COMPLETE_DEFAULT_CODES = {
   itgOderWhyCd: '01',
   aftmnIncInCd: '01',
@@ -199,7 +219,7 @@ const COMPLETE_DEFAULT_CODES = {
 function summarizeSearchForm() {
   return {
     procCd: searchForm.procCd || null,
-    formTypeCd: searchForm.applyTypeCd || null,
+    formTypeCd: FORM_TYPE_CANCEL,
     searchGbn: searchForm.searchGbn || null,
     hasSearchName: !!searchForm.searchName,
     startDt: searchForm.startDt || null,
@@ -292,7 +312,7 @@ function mapRow(row) {
     storeCd: row.shopCd || '-',
     storeNm: row.shopNm || '-',
     applicantNm: buildApplicantNm(row),
-    memo: row.memo || '-',
+    memo: row.memo || '',
   }
 }
 
@@ -311,7 +331,7 @@ function isFormOk(formResponse) {
 async function fetchList() {
   const payload = {
     procCd: searchForm.procCd || null,
-    formTypeCd: searchForm.applyTypeCd || null,
+    formTypeCd: FORM_TYPE_CANCEL,
     searchGbn: searchForm.searchGbn || null,
     searchName: searchForm.searchName || null,
     startDt: searchForm.startDt || null,
@@ -320,7 +340,7 @@ async function fetchList() {
   }
   console.log('[신청서관리][목록조회] 요청 시작', summarizeSearchForm())
   try {
-    const res = await msfPost('/api/msf/admin/cancel/list', payload)
+    const res = await msfPost('/api/msf/admin/application/list', payload)
     const listResponse = unwrapCommonResponse(res)
     console.log('[신청서관리][목록조회] 응답 수신', summarizeListResponse(listResponse))
     if (!Array.isArray(listResponse?.data)) {
@@ -380,7 +400,7 @@ function onSelected(row) {
 async function fetchDetail(requestKey) {
   const payload = { requestKey }
   console.log('[신청서관리][상세조회] 요청 시작', payload)
-  const res = await msfPost('/api/msf/admin/cancel/get', payload)
+  const res = await msfPost('/api/msf/admin/application/get', payload)
   const detailResponse = unwrapCommonResponse(res)
   console.log('[신청서관리][상세조회] 응답 수신', detailResponse)
   return mapRow(detailResponse || {})
@@ -427,18 +447,18 @@ function closeDetail() {
 async function onClickReceiptComplete() {
   const requestKey = normalizeRequestKey(detail.value?.requestKey ?? detail.value?.applyNo)
   if (!requestKey) {
-    console.warn('[신청서관리][접수완료] 진행 중단', { reason: 'requestKey missing' })
+    console.warn('[신청서관리][해지완료] 진행 중단', { reason: 'requestKey missing' })
     alertStore.openAlert('선택된 행이 없습니다.')
     return
   }
-  console.log('[신청서관리][접수완료] 요청 시작', { requestKey })
+  console.log('[신청서관리][해지완료] 요청 시작', { requestKey })
   try {
-    const statusRes = await msfPost('/api/msf/admin/cancel/status/check', { requestKey })
+    const statusRes = await msfPost('/api/msf/admin/application/status/check', { requestKey })
     const statusForm = unwrapFormResponse(statusRes)
-    console.log('[신청서관리][접수완료][상태확인] 응답 수신', statusForm)
+    console.log('[신청서관리][해지완료][상태확인] 응답 수신', statusForm)
     if (!isFormOk(statusForm)) {
-      console.warn('[신청서관리][접수완료][상태확인] 응답 실패', statusForm)
-      alertStore.openAlert(statusForm?.resMessage || '접수완료 처리 가능 상태가 아닙니다.')
+      console.warn('[신청서관리][해지완료][상태확인] 응답 실패', statusForm)
+      alertStore.openAlert(statusForm?.resMessage || '해지완료 처리 가능 상태가 아닙니다.')
       return
     }
 
@@ -447,37 +467,80 @@ async function onClickReceiptComplete() {
       ...COMPLETE_DEFAULT_CODES,
       memo: detail.value?.memo || '',
     }
-    console.log('[신청서관리][접수완료][처리] 요청 시작', {
+    console.log('[신청서관리][해지완료][처리] 요청 시작', {
       requestKey: payload.requestKey,
       memo: payload.memo,
     })
-    const res = await msfPost('/api/msf/admin/cancel/complete', payload)
+    const res = await msfPost('/api/msf/admin/application/complete', payload)
     const completeForm = unwrapFormResponse(res)
-    console.log('[신청서관리][접수완료][처리] 응답 수신', completeForm)
+    console.log('[신청서관리][해지완료][처리] 응답 수신', completeForm)
 
     if (!isFormOk(completeForm)) {
-      console.warn('[신청서관리][접수완료][처리] 응답 실패', completeForm)
-      alertStore.openAlert(completeForm?.resMessage || '접수완료 처리에 실패했습니다.')
+      console.warn('[신청서관리][해지완료][처리] 응답 실패', completeForm)
+      alertStore.openAlert(completeForm?.resMessage || '해지완료 처리에 실패했습니다.')
       return
     }
 
-    console.log('[신청서관리][접수완료] 화면 데이터 반영 결과', {
+    console.log('[신청서관리][해지완료] 화면 데이터 반영 결과', {
       requestKey,
       detailOpen: false,
       refreshList: true,
     })
-    alertStore.openAlert('접수완료 처리되었습니다.', () => {
+    alertStore.openAlert('해지완료 처리되었습니다.', () => {
       detailOpen.value = false
       fetchList()
     })
   } catch (e) {
-    console.error('[신청서관리][접수완료] 예외 발생', {
+    console.error('[신청서관리][해지완료] 예외 발생', {
       requestKey,
       message: e?.message,
       response: e?.response?.data,
     })
-    alertStore.openAlert('접수완료 처리에 실패했습니다.')
+    alertStore.openAlert('해지완료 처리에 실패했습니다.')
   }
+}
+
+async function onClickReject() {
+  const requestKey = normalizeRequestKey(detail.value?.requestKey ?? detail.value?.applyNo)
+  if (!requestKey) {
+    console.warn('[신청서관리][반려처리] 진행 중단', { reason: 'requestKey missing' })
+    alertStore.openAlert('선택된 행이 없습니다.')
+    return
+  }
+  console.log('[신청서관리][반려처리] 확인 팝업 열기', { requestKey })
+  alertStore.openConfirm('반려 처리하시겠습니까?', async () => {
+    try {
+      const payload = {
+        requestKey,
+        memo: detail.value?.memo || '',
+      }
+      console.log('[신청서관리][반려처리] 요청 시작', payload)
+      const res = await msfPost('/api/msf/admin/application/reject', payload)
+      const rejectForm = unwrapFormResponse(res)
+      console.log('[신청서관리][반려처리] 응답 수신', rejectForm)
+      if (!isFormOk(rejectForm)) {
+        console.warn('[신청서관리][반려처리] 응답 실패', rejectForm)
+        alertStore.openAlert(rejectForm?.resMessage || '반려 처리에 실패했습니다.')
+        return
+      }
+      console.log('[신청서관리][반려처리] 화면 데이터 반영 결과', {
+        requestKey,
+        detailOpen: false,
+        refreshList: true,
+      })
+      alertStore.openAlert('반려 처리되었습니다.', () => {
+        detailOpen.value = false
+        fetchList()
+      })
+    } catch (e) {
+      console.error('[신청서관리][반려처리] 예외 발생', {
+        requestKey,
+        message: e?.message,
+        response: e?.response?.data,
+      })
+      alertStore.openAlert('반려 처리에 실패했습니다.')
+    }
+  })
 }
 
 async function onClickRevert() {
@@ -491,7 +554,7 @@ async function onClickRevert() {
   alertStore.openConfirm('완료취소 처리하시겠습니까?', async () => {
     try {
       console.log('[신청서관리][완료취소] 요청 시작', { requestKey })
-      const res = await msfPost('/api/msf/admin/cancel/revert', { requestKey })
+      const res = await msfPost('/api/msf/admin/application/revert', { requestKey })
       const revertForm = unwrapFormResponse(res)
       console.log('[신청서관리][완료취소] 응답 수신', revertForm)
       if (!isFormOk(revertForm)) {
@@ -522,27 +585,27 @@ async function onClickRevert() {
 async function onClickCancelCheck() {
   const requestKey = normalizeRequestKey(detail.value?.requestKey ?? detail.value?.applyNo)
   if (!requestKey) {
-    console.warn('[신청서관리][해지확인] 진행 중단', { reason: 'requestKey missing' })
+    console.warn('[신청서관리][상태확인] 진행 중단', { reason: 'requestKey missing' })
     return
   }
-  console.log('[신청서관리][해지확인] 요청 시작', { requestKey })
+  console.log('[신청서관리][상태확인] 요청 시작', { requestKey })
   try {
-    const res = await msfPost('/api/msf/admin/cancel/status/check', { requestKey })
+    const res = await msfPost('/api/msf/admin/application/status/check', { requestKey })
     const statusForm = unwrapFormResponse(res)
-    console.log('[신청서관리][해지확인] 응답 수신', statusForm)
+    console.log('[신청서관리][상태확인] 응답 수신', statusForm)
     if (isFormOk(statusForm)) {
-      alertStore.openAlert('해지확인: 정상')
+      alertStore.openAlert('상태확인: 정상')
       return
     }
-    console.warn('[신청서관리][해지확인] 응답 실패', statusForm)
-    alertStore.openAlert(statusForm?.resMessage || '해지확인에 실패했습니다.')
+    console.warn('[신청서관리][상태확인] 응답 실패', statusForm)
+    alertStore.openAlert(statusForm?.resMessage || '상태확인에 실패했습니다.')
   } catch (e) {
-    console.error('[신청서관리][해지확인] 예외 발생', {
+    console.error('[신청서관리][상태확인] 예외 발생', {
       requestKey,
       message: e?.message,
       response: e?.response?.data,
     })
-    alertStore.openAlert('해지확인에 실패했습니다.')
+    alertStore.openAlert('상태확인에 실패했습니다.')
   }
 }
 </script>

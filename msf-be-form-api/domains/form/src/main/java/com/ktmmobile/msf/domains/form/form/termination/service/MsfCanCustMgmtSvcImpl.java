@@ -24,10 +24,14 @@ import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.PageMe
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.PageReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessResVO;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessStatusDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessUpdateDto;
 import com.ktmmobile.msf.domains.form.form.termination.repository.CanCustMgmtRepositoryImpl;
 
 @Service
 public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
+
+    private static final String FORM_TYPE_CANCEL = "4";
 
     private static final Logger logger = LoggerFactory.getLogger(MsfCanCustMgmtSvcImpl.class);
 
@@ -46,50 +50,100 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
 
     @Override
     public DetailDto get(ProcessReqDto req) {
-        logger.info("[admin/cancel/get] requestKey={}", req.getRequestKey());
+        logger.info("[admin/application/get] requestKey={}", req.getRequestKey());
         if (req.getRequestKey() == null) {
             return null;
         }
-        return selectCanCustDetail(req.getRequestKey());
+        ProcessStatusDto status = canCustMgmtRepository.selectApplicationStatus(req.getRequestKey());
+        if (status == null) {
+            return null;
+        }
+        if (isCancelForm(status)) {
+            return selectCanCustDetail(req.getRequestKey());
+        }
+        return canCustMgmtRepository.selectApplicationDetail(req.getRequestKey());
     }
 
     @Override
     public FormResponse<ProcessResVO> statusCheck(ProcessReqDto req) {
+        long startedAt = System.currentTimeMillis();
         logger.info("[admin/cancel/status/check] requestKey={}", req.getRequestKey());
+
+        FormResponse<ProcessResVO> res;
         if (req.getRequestKey() == null) {
-            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_KEY_REQUIRED);
+            res = FormResponse.of(ResTermMessage.ADMIN_REQUEST_KEY_REQUIRED);
+        } else {
+            ProcessStatusDto status = canCustMgmtRepository.selectApplicationStatus(req.getRequestKey());
+            if (status == null) {
+                res = FormResponse.of(ResTermMessage.ADMIN_REQUEST_NOT_FOUND);
+            } else if (!isCancelForm(status)) {
+                res = FormResponse.of(ResTermMessage.ADMIN_PROCESS_NOT_SUPPORTED);
+            } else if ("CP".equals(status.getProcCd())) {
+                res = FormResponse.of(ResTermMessage.ADMIN_ALREADY_COMPLETED);
+            } else if (!isCancelableCompleteStatus(status.getProcCd())) {
+                res = FormResponse.of(ResTermMessage.ADMIN_CANCEL_COMPLETE_STATUS_INVALID);
+            } else {
+                res = FormResponse.of(ResTermMessage.SUCCESS);
+            }
         }
 
-        DetailDto detail = selectCanCustDetail(req.getRequestKey());
-        if (detail == null) {
-            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_NOT_FOUND);
-        }
-        if ("CP".equals(detail.getProcCd())) {
-            return FormResponse.of(ResTermMessage.ADMIN_ALREADY_COMPLETED);
-        }
-        return FormResponse.ok(null);
+        logAdminResponse("[admin/cancel/status/check]", req.getRequestKey(), res, startedAt);
+        return res;
     }
 
     @Override
     public FormResponse<ProcessResVO> complete(ProcessReqDto req) {
+        long startedAt = System.currentTimeMillis();
         logger.info("[admin/cancel/complete] requestKey={}, itgOderWhyCd={}, aftmnIncInCd={}, apyRelTypeCd={}, custTchMediCd={}",
             req.getRequestKey(), req.getItgOderWhyCd(), req.getAftmnIncInCd(),
             req.getApyRelTypeCd(), req.getCustTchMediCd());
 
-        FormResponse<ProcessResVO> validationError = validateCompleteRequest(req);
-        if (validationError != null) {
-            return validationError;
+        FormResponse<ProcessResVO> res = validateCancelProcessTarget(req);
+        if (res == null) {
+            FormResponse<ProcessResVO> validationError = validateCompleteRequest(req);
+            res = validationError != null ? validationError : processCancelComplete(req);
         }
-        return processComplete(req);
+        long elapsed = System.currentTimeMillis() - startedAt;
+
+        if (res != null && ResTermMessage.SUCCESS.getCode().equals(res.resCode())) {
+            logger.info("[admin/cancel/complete] result: requestKey={}, success={}, osstOrdNo={}, elapsedMs={}",
+                req.getRequestKey(), true, res.resData() != null ? res.resData().getOsstOrdNo() : "", elapsed);
+        } else {
+            String resCode = res != null ? res.resCode() : "";
+            String resMessage = res != null ? res.resMessage() : "null response";
+            logger.warn("[admin/cancel/complete] failed: requestKey={}, success={}, resCode={}, resMessage={}, elapsedMs={}",
+                req.getRequestKey(), false, resCode, resMessage, elapsed);
+        }
+
+        return res;
     }
 
     @Override
     public FormResponse<ProcessResVO> revert(ProcessReqDto req) {
+        long startedAt = System.currentTimeMillis();
         logger.info("[admin/cancel/revert] requestKey={}", req.getRequestKey());
-        if (req.getRequestKey() == null) {
-            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_KEY_REQUIRED);
+
+        FormResponse<ProcessResVO> res = validateCancelProcessTarget(req);
+        if (res == null) {
+            res = processCancelRevert(req.getRequestKey());
         }
-        return processRevert(req.getRequestKey());
+
+        logAdminResponse("[admin/cancel/revert]", req.getRequestKey(), res, startedAt);
+        return res;
+    }
+
+    @Override
+    public FormResponse<ProcessResVO> reject(ProcessReqDto req) {
+        long startedAt = System.currentTimeMillis();
+        logger.info("[admin/cancel/reject] requestKey={}", req.getRequestKey());
+
+        FormResponse<ProcessResVO> res = validateCancelProcessTarget(req);
+        if (res == null) {
+            res = processCancelReject(req);
+        }
+
+        logAdminResponse("[admin/cancel/reject]", req.getRequestKey(), res, startedAt);
+        return res;
     }
 
     @Override
@@ -150,23 +204,27 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
 
     @Override
     @Transactional
-    public FormResponse<ProcessResVO> processComplete(ProcessReqDto req) {
+    public FormResponse<ProcessResVO> processCancelComplete(ProcessReqDto req) {
         Long requestKey = req.getRequestKey();
-        logger.info("[processComplete] start: requestKey={}", requestKey);
+        logger.info("[processCancelComplete] start: requestKey={}", requestKey);
 
         String currentProcCd = canCustMgmtRepository.selectProcCd(requestKey);
         if (currentProcCd == null) {
-            logger.warn("[processComplete] not found: requestKey={}", requestKey);
+            logger.warn("[processCancelComplete] not found: requestKey={}", requestKey);
             return FormResponse.of(ResTermMessage.ADMIN_REQUEST_NOT_FOUND);
         }
         if ("CP".equals(currentProcCd)) {
-            logger.warn("[processComplete] already completed: requestKey={}", requestKey);
+            logger.warn("[processCancelComplete] already completed: requestKey={}", requestKey);
             return FormResponse.of(ResTermMessage.ADMIN_ALREADY_COMPLETED);
+        }
+        if (!isCancelableCompleteStatus(currentProcCd)) {
+            logger.warn("[processCancelComplete] invalid procCd: requestKey={}, procCd={}", requestKey, currentProcCd);
+            return FormResponse.of(ResTermMessage.ADMIN_CANCEL_COMPLETE_STATUS_INVALID);
         }
 
         DetailDto detail = canCustMgmtRepository.selectCanCustDetail(requestKey);
         if (detail == null) {
-            logger.error("[processComplete] detail not found: requestKey={}", requestKey);
+            logger.error("[processCancelComplete] detail not found: requestKey={}", requestKey);
             return FormResponse.of(ResTermMessage.ADMIN_DETAIL_NOT_FOUND);
         }
 
@@ -176,7 +234,12 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
         String custId = "";
         String smsRcvYn = StringUtils.defaultIfBlank(req.getSmsRcvYn(), "Y");
 
-        logger.info("[processComplete] EP0 call: requestKey={}, ncn={}, ctn={}", requestKey, ncn, ctn);
+        FormResponse<ProcessResVO> requiredValueError = validateCancelRequiredValues(detail);
+        if (requiredValueError != null) {
+            return requiredValueError;
+        }
+
+        logger.info("[processCancelComplete] EP0 call: requestKey={}, ncn={}, ctn={}", requestKey, ncn, ctn);
 
         MpOsstCanPrcVO ep0Vo;
         try {
@@ -196,7 +259,7 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
                 ep0Vo
             );
         } catch (Exception e) {
-            logger.error("[processComplete] EP0 exception: requestKey={}", requestKey, e);
+            logger.error("[processCancelComplete] EP0 exception: requestKey={}", requestKey, e);
             return FormResponse.of(
                 ResTermMessage.ADMIN_EP0_ERROR,
                 ResTermMessage.ADMIN_EP0_ERROR.getMessage() + ": " + e.getMessage(),
@@ -205,12 +268,12 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
         }
 
         if (ep0Vo == null) {
-            logger.error("[processComplete] EP0 null response: requestKey={}", requestKey);
+            logger.error("[processCancelComplete] EP0 null response: requestKey={}", requestKey);
             return FormResponse.of(ResTermMessage.ADMIN_EP0_EMPTY);
         }
 
         logger.info(
-            "[processComplete] EP0 response: requestKey={}, rslt={}, osstOrdNo={}",
+            "[processCancelComplete] EP0 response: requestKey={}, rslt={}, osstOrdNo={}",
             requestKey,
             ep0Vo.getRslt(),
             ep0Vo.getOsstOrdNo()
@@ -218,7 +281,7 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
 
         if (!"S".equals(ep0Vo.getRslt())) {
             logger.warn(
-                "[processComplete] EP0 failed: requestKey={}, rslt={}, rsltMsg={}",
+                "[processCancelComplete] EP0 failed: requestKey={}, rslt={}, rsltMsg={}",
                 requestKey,
                 ep0Vo.getRslt(),
                 ep0Vo.getRsltMsg()
@@ -230,25 +293,28 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
             );
         }
 
-        req.setProcCd("CP");
-        req.setResCd(ep0Vo.getRslt());
-        req.setResMsg(ep0Vo.getRsltMsg());
-        req.setResNo(ep0Vo.getOsstOrdNo());
+        ProcessUpdateDto updateReq = new ProcessUpdateDto();
+        updateReq.setRequestKey(requestKey);
+        updateReq.setProcCd("CP");
+        updateReq.setMemo(req.getMemo());
+        updateReq.setResCd(ep0Vo.getRslt());
+        updateReq.setResMsg(ep0Vo.getRsltMsg());
+        updateReq.setResNo(ep0Vo.getOsstOrdNo());
 
-        int updated = canCustMgmtRepository.updateCanCustProcCd(req);
+        int updated = canCustMgmtRepository.updateCanCustProcCd(updateReq);
         if (updated <= 0) {
-            logger.error("[processComplete] DB update failed: requestKey={}, updated={}", requestKey, updated);
+            logger.error("[processCancelComplete] DB update failed: requestKey={}, updated={}", requestKey, updated);
             return FormResponse.of(ResTermMessage.ADMIN_COMPLETE_SAVE_FAILED);
         }
 
-        logger.info("[processComplete] success: requestKey={}, osstOrdNo={}", requestKey, ep0Vo.getOsstOrdNo());
-        return FormResponse.ok(ProcessResVO.complete(ep0Vo.getOsstOrdNo()));
+        logger.info("[processCancelComplete] success: requestKey={}, osstOrdNo={}", requestKey, ep0Vo.getOsstOrdNo());
+        return FormResponse.of(ResTermMessage.SUCCESS, ProcessResVO.complete(ep0Vo.getOsstOrdNo()));
     }
 
     @Override
     @Transactional
-    public FormResponse<ProcessResVO> processRevert(Long requestKey) {
-        logger.info("[processRevert] start: requestKey={}", requestKey);
+    public FormResponse<ProcessResVO> processCancelRevert(Long requestKey) {
+        logger.info("[processCancelRevert] start: requestKey={}", requestKey);
 
         String currentProcCd = canCustMgmtRepository.selectProcCd(requestKey);
         if (currentProcCd == null) {
@@ -258,7 +324,7 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
             return FormResponse.of(ResTermMessage.ADMIN_COMPLETE_ONLY_REVERT);
         }
 
-        ProcessReqDto revertReq = new ProcessReqDto();
+        ProcessUpdateDto revertReq = new ProcessUpdateDto();
         revertReq.setRequestKey(requestKey);
         revertReq.setProcCd("RC");
 
@@ -267,8 +333,93 @@ public class MsfCanCustMgmtSvcImpl implements MsfCanCustMgmtSvc {
             return FormResponse.of(ResTermMessage.ADMIN_REVERT_SAVE_FAILED);
         }
 
-        logger.info("[processRevert] success: requestKey={}", requestKey);
-        return FormResponse.ok(ProcessResVO.revert());
+        logger.info("[processCancelRevert] success: requestKey={}", requestKey);
+        return FormResponse.of(ResTermMessage.SUCCESS, ProcessResVO.revert());
+    }
+
+    @Override
+    @Transactional
+    public FormResponse<ProcessResVO> processCancelReject(ProcessReqDto req) {
+        Long requestKey = req.getRequestKey();
+        logger.info("[processCancelReject] start: requestKey={}", requestKey);
+
+        String currentProcCd = canCustMgmtRepository.selectProcCd(requestKey);
+        if (currentProcCd == null) {
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_NOT_FOUND);
+        }
+        if (!isCancelableCompleteStatus(currentProcCd)) {
+            return FormResponse.of(ResTermMessage.ADMIN_REJECT_STATUS_INVALID);
+        }
+
+        ProcessUpdateDto rejectReq = new ProcessUpdateDto();
+        rejectReq.setRequestKey(requestKey);
+        rejectReq.setProcCd("BK");
+        rejectReq.setMemo(req.getMemo());
+
+        int updated = canCustMgmtRepository.updateCanCustProcCd(rejectReq);
+        if (updated <= 0) {
+            return FormResponse.of(ResTermMessage.ADMIN_REJECT_SAVE_FAILED);
+        }
+
+        logger.info("[processCancelReject] success: requestKey={}", requestKey);
+        return FormResponse.of(ResTermMessage.SUCCESS, ProcessResVO.reject());
+    }
+
+    private FormResponse<ProcessResVO> validateCancelProcessTarget(ProcessReqDto req) {
+        if (req.getRequestKey() == null) {
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_KEY_REQUIRED);
+        }
+
+        ProcessStatusDto status = canCustMgmtRepository.selectApplicationStatus(req.getRequestKey());
+        if (status == null) {
+            return FormResponse.of(ResTermMessage.ADMIN_REQUEST_NOT_FOUND);
+        }
+        if (!isCancelForm(status)) {
+            logger.warn("[admin/application/process] unsupported formTypeCd: requestKey={}, formTypeCd={}, procCd={}",
+                req.getRequestKey(), status.getFormTypeCd(), status.getProcCd());
+            return FormResponse.of(ResTermMessage.ADMIN_PROCESS_NOT_SUPPORTED);
+        }
+        return null;
+    }
+
+    private FormResponse<ProcessResVO> validateCancelRequiredValues(DetailDto detail) {
+        if (StringUtils.isBlank(detail.getContractNum())
+            || StringUtils.isBlank(detail.getCancelMobileNo())
+            || StringUtils.isBlank(detail.getReceiveMobileNo())) {
+            logger.warn("[processCancelComplete] required cancel fields missing: requestKey={}, ncnBlank={}, ctnBlank={}, cntplcNoBlank={}",
+                detail.getRequestKey(),
+                StringUtils.isBlank(detail.getContractNum()),
+                StringUtils.isBlank(detail.getCancelMobileNo()),
+                StringUtils.isBlank(detail.getReceiveMobileNo()));
+            return FormResponse.of(ResTermMessage.ADMIN_CANCEL_REQUIRED_FIELD_MISSING);
+        }
+        return null;
+    }
+
+    private boolean isCancelForm(ProcessStatusDto status) {
+        return status != null && FORM_TYPE_CANCEL.equals(status.getFormTypeCd());
+    }
+
+    private boolean isCancelableCompleteStatus(String procCd) {
+        return "RC".equals(procCd) || "RQ".equals(procCd);
+    }
+
+    private void logAdminResponse(String action, Long requestKey, FormResponse<ProcessResVO> res, long startedAt) {
+        long elapsed = System.currentTimeMillis() - startedAt;
+        if (res != null && ResTermMessage.SUCCESS.getCode().equals(res.resCode())) {
+            logger.info("{} result: requestKey={}, success={}, procCd={}, osstOrdNo={}, elapsedMs={}",
+                action,
+                requestKey,
+                true,
+                res.resData() != null ? res.resData().getProcCd() : "",
+                res.resData() != null ? res.resData().getOsstOrdNo() : "",
+                elapsed);
+        } else {
+            String resCode = res != null ? res.resCode() : "";
+            String resMessage = res != null ? res.resMessage() : "null response";
+            logger.warn("{} failed: requestKey={}, success={}, resCode={}, resMessage={}, elapsedMs={}",
+                action, requestKey, false, resCode, resMessage, elapsed);
+        }
     }
 
     private HashMap<String, String> buildEp0Param(

@@ -191,7 +191,7 @@ const gridOptions = reactive({
   // 데이터 없는경우 디자인 설정
   overlayNoRowsTemplate: `
   <div class="ag-overlay-no-rows-wrapper">
-    <div class="nodata-wrap">검색 결과가 없습니다.</div>
+    <div class="nodata-wrap">조회 결과가 없습니다.</div>
   </div>
   `,
 })

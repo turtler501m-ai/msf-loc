@@ -64,7 +64,7 @@ onMounted(async () => {
   }
   post('/api/n/app/login/init', initData)
     .then((data) => {
-      if (data.code == '0000' && data.data) {
+      if (data.code == '0000') {
         appSettings.value = 'V ' + data.data
         console.log('init data:' + data.data.apvSttusCd)
         console.log('bioLoginYn:' + data.data.bioLoginYn)
@@ -145,7 +145,7 @@ const onClickAppVersion = () => {
     os: 'A',
     appOsVer: '11',
     version: '1.1',
-    deviceUuid: msfUserStore.getDeviceUuid(),
+    uuid: msfUserStore.getDeviceUuid(),
   }
   post('/api/n/app/intro', postData)
     .then((data) => {

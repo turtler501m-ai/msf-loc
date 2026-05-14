@@ -22,12 +22,16 @@ spring:
         base-url: ${internal-service.services.batch.base-url}
         connect-timeout: 1s
         read-timeout: 2s
-      eformsign:
-        base-url: ${internal-service.services.eformsign.base-url}
-        connect-timeout: 2s
-        read-timeout: 3s
       koi-ocr:
         base-url: ${internal-service.services.koi-ocr.base-url}
+        connect-timeout: 2s
+        read-timeout: 3s
+      koi-idcard:
+        base-url: ${internal-service.services.koi-idcard.base-url}
+        connect-timeout: 2s
+        read-timeout: 3s
+      eformsign:
+        base-url: ${internal-service.services.eformsign.base-url}
         connect-timeout: 2s
         read-timeout: 3s
 
@@ -91,13 +95,17 @@ http-client:
 internal-service:
   services:
     form-api: ## FORM-API
-      base-url: http://smartform-app:8080
+      base-url: http://msf-form-api_app:8080
     admin-api: ## ADMIN-API
-      base-url: http://smartform-app:8180
+      base-url: http://msf-admin-api_app:8080
     batch: ## BATCH
-      base-url: http://smartform-app:8280
+      base-url: http://msf-batch_app:8080
+    koi-ocr: ## KOI OCR
+      base-url: http://koi-ocr.solution:8080
+    koi-idcard: ## KOI IDCARD
+      base-url: http://koi-idcard.solution:8080
     eformsign: ## eFormSign
-      base-url: http://eformsign-app:8080
+      base-url: http://eformsign.solution:8080
       properties:
         member-id: ${EFORMSIGN_MEMBER_ID}
         api-key: ${EFORMSIGN_API_KEY}

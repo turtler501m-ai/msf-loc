@@ -17,31 +17,31 @@
             <li>
               <dl>
                 <dt>단말기 출고가</dt>
-                <dd>{{ formatCurrency(deviceTotalCost) }} 원</dd>
+                <dd>{{ formatCurrency(amtInfo.hndsetAmt) }} 원</dd>
               </dl>
             </li>
             <li>
               <dl>
-                <dt>공통지원금</dt>
-                <dd class="ut-color-accent">- {{ formatCurrency(commonDiscount) }} 원</dd>
+                <dt>공시지원금</dt>
+                <dd class="ut-color-accent">- {{ formatCurrency(amtInfo.subsdAmt) }} 원</dd>
               </dl>
             </li>
             <li>
               <dl>
-                <dt>추가지원금</dt>
-                <dd class="ut-color-accent">- {{ formatCurrency(extraDiscount) }} 원</dd>
+                <dt>대리점보조금</dt>
+                <dd class="ut-color-accent">- {{ formatCurrency(amtInfo.agncySubsdAmt) }} 원</dd>
               </dl>
             </li>
             <li>
               <dl>
                 <dt>할부원금</dt>
-                <dd>{{ formatCurrency(installmentPrincipal) }} 원</dd>
+                <dd>{{ formatCurrency(amtInfo.instAmt) }} 원</dd>
               </dl>
             </li>
-            <li>
+            <li v-if="amtInfo.instCmsn > 0">
               <dl>
                 <dt>총할부수수료</dt>
-                <dd>{{ formatCurrency(installmentFee) }} 원</dd>
+                <dd>{{ formatCurrency(amtInfo.instCmsn) }} 원</dd>
               </dl>
             </li>
           </ul>
@@ -55,13 +55,15 @@
             <li>
               <dl>
                 <dt>기본요금</dt>
-                <dd>{{ formatCurrency(planBaseCost) }} 원</dd>
+                <dd>{{ formatCurrency(amtInfo.baseAmt) }} 원</dd>
               </dl>
             </li>
             <li>
               <dl>
                 <dt>프로모션 할인</dt>
-                <dd class="ut-color-accent">- {{ formatCurrency(planDiscount) }} 원</dd>
+                <dd class="ut-color-accent">
+                  - {{ formatCurrency(amtInfo.dcAmt + amtInfo.addDcAmt) }} 원
+                </dd>
               </dl>
             </li>
           </ul>
@@ -69,37 +71,19 @@
         <div class="cost-item">
           <dl class="cost-title">
             <dt>기타요금</dt>
-            <dd>{{ formatCurrency(etcTotalCost) }} 원</dd>
+            <dd>{{ formatCurrency(amtInfo.joinFee + amtInfo.usimFee) }} 원</dd>
           </dl>
           <ul class="cost-infos">
-            <li>
+            <li v-if="amtInfo.joinFee > 0">
               <dl>
                 <dt>가입비(3개월 분납)</dt>
-                <dd class="ut-color-accent ut-text-strike">7,200 원(무료)</dd>
+                <dd>{{ formatCurrency(Math.floor(amtInfo.joinFee / 3)) }} 원</dd>
               </dl>
             </li>
-            <li>
+            <li v-if="amtInfo.usimFee > 0">
               <dl>
-                <dt>USIM(최초 1회)</dt>
-                <dd>8,800 원</dd>
-              </dl>
-            </li>
-            <li>
-              <dl>
-                <dt>가입비(3개월 분납)</dt>
-                <dd class="ut-color-accent">0 원</dd>
-              </dl>
-            </li>
-            <li>
-              <dl>
-                <dt>eSIM(1회)</dt>
-                <dd>0 원</dd>
-              </dl>
-            </li>
-            <li>
-              <dl>
-                <dt>번호 이동 수수료</dt>
-                <dd>800 원</dd>
+                <dt>USIM/eSIM(최초 1회)</dt>
+                <dd>{{ formatCurrency(amtInfo.usimFee) }} 원</dd>
               </dl>
             </li>
           </ul>
@@ -112,7 +96,10 @@
           <dt>월 납부금액(부가세 포함)</dt>
           <dd class="ut-color-point">{{ formatCurrency(totalMonthlyCost) }} 원</dd>
         </dl>
-        <span class="cost-desc">5G / {{ getJoinTypeName(joinType) }} / {{ planName }}</span>
+        <span class="cost-desc"
+          >{{ store.customer.prdtSctnCd }} / {{ getJoinTypeName(store.customer.joinType) }} /
+          {{ store.customer.prodNm }}</span
+        >
       </div>
       <!-- // cost-total -->
     </div>
@@ -138,24 +125,17 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
+import { post } from '@/libs/api/msf.api'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({
   isOpen: { type: Boolean, default: false },
-  planName: { type: String, default: '' },
-  joinType: { type: String, default: 'MNP3' },
-  deviceTotalCost: { type: Number, default: 0 },
-  commonDiscount: { type: Number, default: 0 },
-  extraDiscount: { type: Number, default: 0 },
-  installmentPrincipal: { type: Number, default: 0 },
-  installmentFee: { type: Number, default: 0 },
-  deviceMonthlyCost: { type: Number, default: 0 },
-  planBaseCost: { type: Number, default: 0 },
-  planDiscount: { type: Number, default: 0 },
-  planMonthlyCost: { type: Number, default: 0 },
-  etcTotalCost: { type: Number, default: 0 },
 })
 
 const emit = defineEmits(['update:isOpen', 'triggerClick', 'close'])
+const store = useMsfFormNewChgStore()
+const amtInfo = computed(() => store.product.estimatedAmtInfo)
 
 // 가입유형 이름 매핑
 const getJoinTypeName = (type) => {
@@ -163,6 +143,7 @@ const getJoinTypeName = (type) => {
     MNP3: '번호이동',
     NAC3: '신규가입',
     HDN3: '기기변경',
+    HCN3: '기기변경(HCN3)',
   }
   return map[type] || '번호이동'
 }
@@ -173,9 +154,21 @@ const formatCurrency = (value) => {
   return value.toLocaleString('ko-KR')
 }
 
+// 월 단말 요금 (할부원금 + 할부수수료) / 할부기간 (간단 계산용)
+const deviceMonthlyCost = computed(() => {
+  const months = Number(store.customer.installmentMonth) || 24
+  if (months === 0) return 0
+  return Math.floor((amtInfo.value.instAmt + amtInfo.value.instCmsn) / months)
+})
+
+// 월 통신 요금 (기본료 - 할인)
+const planMonthlyCost = computed(() => {
+  return amtInfo.value.baseAmt - (amtInfo.value.dcAmt + amtInfo.value.addDcAmt)
+})
+
 // 총 월 납부금액 계산
 const totalMonthlyCost = computed(() => {
-  return props.deviceMonthlyCost + props.planMonthlyCost
+  return deviceMonthlyCost.value + planMonthlyCost.value
 })
 
 //  닫기 이벤트
@@ -186,10 +179,107 @@ const onClose = (value) => {
   }
 }
 
+/**
+ * 상세 가격 정보 및 예상 금액 조회
+ */
+const fetchPriceInfo = async () => {
+  const m = store.customer
+  const p = store.product
+
+  const payload = {
+    reqBuyTypeCd: m.productType || 'MM',
+    operTypeCd: m.joinType || 'MNP3',
+    rateCd: m.prodId,
+    dataType: m.prdtSctnCd || 'LTE',
+  }
+
+  // 휴대폰 전용 필드 추가
+  if (m.productType === 'MM') {
+    payload.prdtId = m.deviceModel
+    payload.modelMonthly = m.installmentMonth
+    payload.agrmTrm = m.contractPeriod
+    payload.salePlcyCd = m.modelSalePolicyCd
+    payload.sprtTp = m.discountType
+  }
+
+  try {
+    // 통합 판매 가격 정보 조회 (오류 확인을 위해 silent 제거)
+    const res = await post('/api/form/phone/getMspSalePriceInfo', payload)
+
+    const result = {
+      ...p.estimatedAmtInfo,
+      hndsetAmt: 0,
+      subsdAmt: 0,
+      agncySubsdAmt: 0,
+      instAmt: 0,
+      instCmsn: 0,
+      baseAmt: 0,
+      dcAmt: 0,
+      addDcAmt: 0,
+      joinFee: 0,
+      usimFee: 0,
+    }
+
+    if (res?.data) {
+      const d = res.data.resData || res.data
+      result.hndsetAmt = Number(d.MODEL_PRICE || 0)
+      result.subsdAmt = Number(d.MODEL_SPRT || 0)
+      result.agncySubsdAmt = Number(d.MODEL_DISCOUNT3 || 0)
+
+      // 일시납일 경우 할부원금 0원 처리
+      const isUpfront = String(m.installmentMonth) === '0'
+      result.instAmt = isUpfront ? 0 : Number(d.REAL_MDL_INSTAMT || 0)
+
+      result.instCmsn = Number(d.instCmsn || 0)
+      result.baseAmt = Number(d.SOC_BASE_CHRG_AMT || 0)
+      result.dcAmt = Number(d.DC_AMT || 0)
+      result.addDcAmt = Number(d.ADD_DC_AMT || 0)
+      result.joinFee = Number(d.JOIN_PRICE || 0)
+      result.usimFee = Number(d.USIM_PRICE || 0)
+    }
+
+    store.product.estimatedAmtInfo = result
+    console.log('>>> 예상 납부금액 조회 완료:', store.product.estimatedAmtInfo)
+    return true
+  } catch (error) {
+    console.error('Failed to fetch price info:', error)
+    return false
+  }
+}
+
 // 트리거 버튼 클릭
-const handlePrevPayCost = () => {
-  emit('triggerClick')
-  onClose(false)
+const handlePrevPayCost = async () => {
+  const m = store.customer
+
+  // 필수값 체크 및 안내
+  if (m.productType === 'MM') {
+    if (!m.deviceModel) {
+      showAlert('휴대폰을 먼저 선택해 주세요.')
+      return
+    }
+    if (!m.prodId) {
+      showAlert('요금제를 먼저 선택해 주세요.')
+      return
+    }
+    if (
+      m.installmentMonth === undefined ||
+      m.installmentMonth === null ||
+      m.installmentMonth === ''
+    ) {
+      showAlert('할부기간을 선택해 주세요.')
+      return
+    }
+  } else if (m.productType === 'UU') {
+    if (!m.prodId) {
+      showAlert('요금제를 먼저 선택해 주세요.')
+      return
+    }
+  }
+
+  const success = await fetchPriceInfo() // 데이터 먼저 조회
+  if (success) {
+    emit('triggerClick')
+  }
 }
 </script>
 

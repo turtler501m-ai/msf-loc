@@ -10,12 +10,13 @@
   </MsfBox>
   <!-- 그리드 테이블 -->
   <MsfDataTable
+    v-if="isLoaded"
     ref="pagingRef"
     :columns="colDefsPaging"
     url="/api/tempsave/list"
     :params="formData"
     show-paging
-    :is-search="false"
+    :is-search="true"
     show-single-check
     @selected="onSelected"
   >
@@ -36,44 +37,68 @@ import { storeTempSave } from '@/stores/tempsave'
 const tempSaveStore = storeTempSave()
 const { formData } = storeToRefs(tempSaveStore)
 
+// 데이터 테이블 + 페이징처리
 const colDefsPaging = ref([
+  {
+    field: 'requestKey',
+    hide: true,
+    suppressColumnsToolPanel: true,
+  },
+  {
+    field: 'modifyYn',
+    hide: true,
+    suppressColumnsToolPanel: true,
+  },
   {
     field: 'cretDt',
     headerName: '작성일자',
-    width: 150,
-    cellStyle: { textAlign: 'center' },
-    headerClass: 'ag-center-header',
+    width: 250,
+    type: 'datetime',
+    cellStyle: {
+      textAlign: 'center',
+    },
   },
   {
-    field: 'serviceTypeNm',
+    field: 'formTypeCd',
     headerName: '신청서 구분',
-    width: 100,
-    cellStyle: { textAlign: 'center' },
-    headerClass: 'ag-center-header',
+    width: 250,
+    cellStyle: {
+      textAlign: 'center',
+    },
+    cellRenderer: (params) => {
+      return renderFormType(params)
+    },
   },
   {
-    field: 'cstmrTypeNm',
+    field: 'cstmrTypeCd',
     headerName: '고객 유형',
-    width: 100,
-    cellStyle: { textAlign: 'center' },
-    headerClass: 'ag-center-header',
-  },
-  {
-    field: 'openTypeNm',
-    headerName: '가입 유형',
-    width: 100,
-    cellStyle: { textAlign: 'center' },
-    headerClass: 'ag-center-header',
+    flex: 1,
+    cellStyle: {
+      textAlign: 'center',
+    },
+    cellRenderer: (params) => {
+      return params.data.cstmrTypeCd?.title
+    },
   },
   {
     field: 'cstmrNm',
+    headerName: '고객명',
+    flex: 1,
+    cellStyle: {
+      textAlign: 'center',
+    },
+  },
+  {
+    field: 'cretNm',
     headerName: '신청자',
-    width: 100,
-    cellStyle: { textAlign: 'center' },
-    headerClass: 'ag-center-header',
+    width: 200,
+    cellStyle: {
+      textAlign: 'center',
+    },
   },
 ])
 
+const isLoaded = ref(false)
 const pagingRef = ref()
 const selectedRowPaging = ref([])
 const selectedScriptSeq = ref(null)
@@ -107,8 +132,20 @@ const onUpdate = async () => {
   }
 }
 
+const renderFormType = (params) => {
+  if (params.data.formTypeCd?.code === '1') {
+    const formTypeCd = params.data.formTypeCd?.title
+    const reqBuyTypeCd = params.data.reqBuyTypeCd?.title
+    const operTypeCd = params.data.operTypeCd?.title
+
+    return formTypeCd + '(' + reqBuyTypeCd + '/' + operTypeCd + ')'
+  } else {
+    return params.data.formTypeCd?.title
+  }
+}
+
 onBeforeMount(() => {
-  // pushFormTypeCd()
+  isLoaded.value = true
 })
 </script>
 

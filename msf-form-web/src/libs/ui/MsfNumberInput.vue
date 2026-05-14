@@ -7,7 +7,6 @@
     :placeholder="props.placeholder"
     class="msf-number-input-value"
     @input="onInput"
-    @blur="onBlur"
   />
 </template>
 
@@ -43,16 +42,9 @@ const onInput = (e) => {
 
   // 4. maxlength에 도달하면 이벤트를 발생시킵니다.
   const maxlength = e.target.getAttribute('maxlength')
-  if (maxlength && sanitizedValue.length >= parseInt(maxlength, 10)) {
+  console.log('maxlength:', maxlength)
+  if (maxlength && e.target.value.length >= parseInt(maxlength, 10)) {
     emit('maxlength')
-  }
-}
-
-const onBlur = (e) => {
-  const sanitizedValue = e.target.value.replace(/[^0-9]/g, '')
-  if (e.target.value !== sanitizedValue) {
-    e.target.value = sanitizedValue
-    emit('update:modelValue', sanitizedValue)
   }
 }
 

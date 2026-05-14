@@ -4,7 +4,7 @@
     <MsfCustomerType v-model="formData" />
     <!-- // 고객 유형 -->
     <!-- 가입자 정보 -->
-    <MsfSubcriberChgInfo v-model="formData" phoneLabel="변경 휴대폰번호" />
+    <MsfSubscriberChgInfo v-model="formData" phoneLabel="변경 휴대폰번호" />
     <!-- // 가입자 정보 -->
     <!-- 법정대리인 정보 / 법정대리인 안내사항 확인 및 동의 -->
     <MsfLegalAgentInfo v-model="formData" />

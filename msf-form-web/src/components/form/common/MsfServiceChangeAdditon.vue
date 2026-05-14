@@ -163,7 +163,7 @@ const currentSettingService = computed(() =>
 // 설정 팝업에 전달할 기존 설정값 (서비스 정보 + 저장된 설정 데이터 병합)
 const currentSettingData = computed(() => ({
   ...currentSettingService.value,
-  ...(currentSettingService.value.addSvcSettingData || {}),
+  ...currentSettingService.value.addSvcSettingData,
 }))
 
 // 설정 팝업 확인 시 설정값 저장 및 서비스 선택 처리

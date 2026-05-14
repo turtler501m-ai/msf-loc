@@ -21,15 +21,14 @@ public final class Constants {
     public static final String AJAX_SUCCESS = "00000";
 
 
-
     /** 쿠팡 접점  */
-    public static final String CONTPNT_SHOP_ID_COUPANG =  "1100028432" ;
+    public static final String CONTPNT_SHOP_ID_COUPANG = "1100028432";
 
     /**  M모바일(M쇼핑)(V000016007)으로 shop */
-    public static final String CONTPNT_SHOP_ID_MSHOP =  "1100011741" ;
+    public static final String CONTPNT_SHOP_ID_MSHOP = "1100011741";
 
     /**  M모바일(자급제)/V000019481  */
-    public static final String CONTPNT_SELF_PHONE =  "V000019481" ;
+    public static final String CONTPNT_SELF_PHONE = "V000019481";
 
 
     //개통 간소화 관련 OSST
@@ -71,7 +70,6 @@ public final class Constants {
     public static final String EVENT_CODE_PC_RESULT = "PC2";
 
 
-
     /** EVENT_CODE 유심셀프변경(UC0) */
     public static final String EVENT_CODE_USIM_SELF_CHG = "UC0";
     /** EVENT_CODE 유심변경결과(UC2) */
@@ -107,7 +105,7 @@ public final class Constants {
     /** HDN3 : 우수기변 */
     public static final String OPER_TYPE_EXCHANGE = "HDN3";
 
-    public static Map<String,String> OPER_TYPE_NAME_MAP ;
+    public static Map<String, String> OPER_TYPE_NAME_MAP;
 
 
     /** 고객구분
@@ -121,7 +119,7 @@ public final class Constants {
     /** FN:외국인 */
     public static final String CSTMR_TYPE_FN = "FN";
 
-    public static Map<String,String> CSTMR_TYPE_NAME_MAP ;
+    public static Map<String, String> CSTMR_TYPE_NAME_MAP;
 
     /** 구매유형
      * 단말 구매:MM
@@ -130,7 +128,6 @@ public final class Constants {
     public static final String REQ_BUY_TYPE_PHONE = "MM";
     /** UU :USIM(유심)단독 구매 */
     public static final String REQ_BUY_TYPE_USIM = "UU";
-
 
 
     /**
@@ -221,15 +218,13 @@ public final class Constants {
     public static final String GROUP_CODE_RATE_PROPERTY_COUPON = "02";
 
 
-
-    public static final String  DTL_CD_OBJ_BASE = "BASE";
-    public static final String  DTL_CD_OBJ_5G = "5G";
-    public static final String  DTL_CD_OBJ_3G = "3G";
-    public static final String  DTL_CD_USIM_NFC = "NFC";
+    public static final String DTL_CD_OBJ_BASE = "BASE";
+    public static final String DTL_CD_OBJ_5G = "5G";
+    public static final String DTL_CD_OBJ_3G = "3G";
+    public static final String DTL_CD_USIM_NFC = "NFC";
 
     /** 팝업타이틀 공통 코드화  */
-    public static final String	POP_TITLE_CODE = "PopupTitle";
-
+    public static final String POP_TITLE_CODE = "PopupTitle";
 
 
     /** 제휴이벤트  분류코드  :제휴 : J */
@@ -252,38 +247,38 @@ public final class Constants {
     public static final String SEND_SMS_MNG_GROP_CODE = "SendSmsMngGropCode";
 
     /**셀프 개통 그룹 코드   */
-    public static final String SIMPLE_OPEN_EXCEPTION_GROP_CODE = "SIMPLEOPENEXCEPTION" ;
+    public static final String SIMPLE_OPEN_EXCEPTION_GROP_CODE = "SIMPLEOPENEXCEPTION";
 
     /**셀프 개통 가능 플랫폼 코드 */
-    public static final String SIMPLE_OPEN_PLATFORM_CODE = "simpleOpenPlatform" ;
+    public static final String SIMPLE_OPEN_PLATFORM_CODE = "simpleOpenPlatform";
 
     /**셀프개통 플랫폼 제한 예외 IP */
-    public static final String SIMPLE_OPEN_LIMIT_EXCEPTION_IP = "simpleOpenLimitExceptionIp" ;
+    public static final String SIMPLE_OPEN_LIMIT_EXCEPTION_IP = "simpleOpenLimitExceptionIp";
 
     /**유심코드 공통코드  */
-    public static final String USIM_PROD_ID_GROP_CODE = "usimProdInfo" ;
+    public static final String USIM_PROD_ID_GROP_CODE = "usimProdInfo";
 
     /**유심코드상세 공통코드  */
-    public static final String USIM_PROD_DTL_ID_GROP_CODE = "usimProdDetailInfo" ;
+    public static final String USIM_PROD_DTL_ID_GROP_CODE = "usimProdDetailInfo";
 
     /**셀프 배송요청 진행상태 공통코드[dStateCode] 01 접수대기, 02 배송중 , 03 배송완료 , 04 개통완료  */
-    public static final String USIM_PROD_STATE_CODE = "dStateCode" ;
+    public static final String USIM_PROD_STATE_CODE = "dStateCode";
 
     /**택배사 목록  */
-    public static final String DLVRY_TB_CODE = "PERCEL" ;
+    public static final String DLVRY_TB_CODE = "PERCEL";
 
     /*위탁서식지 담당자 문자 발송 접점코드*/
     public static final String SEND_SMS_CNTPNT_AGENT_CODE = "SendSmsCntpntAgentCode";
 
     /**Data 함께쓰기 자회선 요금제 대상  공통코드[ShareRateChildList] */
-    public static final String SHARE_RATE_CHILD_LIST = "ShareRateChildList" ;
+    public static final String SHARE_RATE_CHILD_LIST = "ShareRateChildList";
 
     /**Data 함께쓰기 모회선 요금제 대상  공통코드[ShareRateParentList] */
-    public static final String SHARE_RATE_PARENT_LIST = "ShareRateParentList" ;
+    public static final String SHARE_RATE_PARENT_LIST = "ShareRateParentList";
 
-    public static final String DLVRLY_ENEXCEPTION_DATE = "DLVRLYENEXCEPTIONDATE" ;
+    public static final String DLVRLY_ENEXCEPTION_DATE = "DLVRLYENEXCEPTIONDATE";
 
-    public static final String DLVRLY_VIEW_YN = "DLVRLYVIEWYN" ;
+    public static final String DLVRLY_VIEW_YN = "DLVRLYVIEWYN";
 
     /** 01 : 정회원 코드 */
     public static final String DIVISION_CODE_LEGALLY_MEMBER = "01";
@@ -296,37 +291,37 @@ public final class Constants {
      * - 페이코 : PY
      * - 네이버페이 : NP
      * - 토스페이: TS
-    **/
+     **/
     public static final String RMNY_CHID_OBJ_LIST = "rmnyChIdObjList";
 
 
 
     /*
-    * 01 개인정보 수집.이용 동의   clausePriCollectFlag
-    * 02 개인정보의 제공 동의   clausePriOfferFlag
-    * 03 고유식별정보의 수집·이용·제공 동의  clauseEssCollectFlag
-    * 04 개인정보의 처리 업무 위탁 동의  clausePriTrustFlag
-    * 05 정보/광고 전송을 위한 개인정보 이용, 취급위탁 및 정보/광고 수신동의서    clausePriAdFlag
-    * 06 제휴 서비스를 위한 동의
-    * 07 신용정보 조회·이용·제공에 대한 동의서  clauseConfidenceFlag
-    * 08 청소년 유해정보 네트워크차단 동의
-    * 09 청소년 유해정보차단 APP 설치 동의
-    * 10 서비스 이용약관
-    * 11 선불서비스 안내사항
-    * 12 후불서비스 안내사항
-    * 13 핸드폰 할부매매 약정안내
-    * 14 미성년고객 이용안내
-    * 15 청소년 보호를 위한 이용약관 [12장 청소년 보호 등]
-    * 16    (고지)서비스 이용약관  xxxxx  10
-    * 17    (고지)선불서비스 안내사항  xxxx 11
-    * 18    (고지)후불서비스 안내사항   XXXXX 12
-    * 19    (고지)핸드폰 할부매매 약정안내  XXXX 13
-    * 20    (고지)미성년고객 이용안내  XXX 14
-    * 21    (고지)청소년 보호를 위한 이용약관 [12장 청소년 보호 등]   xxxx 15
-    * 22    (고지) 청소년 모바일 유해 차단 의무화 시행
-    * 23    청소년 유해정보 네트워크차단 동의
-    * 24    청소년 유해정보차단 APP 설치 동의
-    */
+     * 01 개인정보 수집.이용 동의   clausePriCollectFlag
+     * 02 개인정보의 제공 동의   clausePriOfferFlag
+     * 03 고유식별정보의 수집·이용·제공 동의  clauseEssCollectFlag
+     * 04 개인정보의 처리 업무 위탁 동의  clausePriTrustFlag
+     * 05 정보/광고 전송을 위한 개인정보 이용, 취급위탁 및 정보/광고 수신동의서    clausePriAdFlag
+     * 06 제휴 서비스를 위한 동의
+     * 07 신용정보 조회·이용·제공에 대한 동의서  clauseConfidenceFlag
+     * 08 청소년 유해정보 네트워크차단 동의
+     * 09 청소년 유해정보차단 APP 설치 동의
+     * 10 서비스 이용약관
+     * 11 선불서비스 안내사항
+     * 12 후불서비스 안내사항
+     * 13 핸드폰 할부매매 약정안내
+     * 14 미성년고객 이용안내
+     * 15 청소년 보호를 위한 이용약관 [12장 청소년 보호 등]
+     * 16    (고지)서비스 이용약관  xxxxx  10
+     * 17    (고지)선불서비스 안내사항  xxxx 11
+     * 18    (고지)후불서비스 안내사항   XXXXX 12
+     * 19    (고지)핸드폰 할부매매 약정안내  XXXX 13
+     * 20    (고지)미성년고객 이용안내  XXX 14
+     * 21    (고지)청소년 보호를 위한 이용약관 [12장 청소년 보호 등]   xxxx 15
+     * 22    (고지) 청소년 모바일 유해 차단 의무화 시행
+     * 23    청소년 유해정보 네트워크차단 동의
+     * 24    청소년 유해정보차단 APP 설치 동의
+     */
     /** 개인정보 수집.이용 동의   clausePriCollectFlag  */
     public static final String CLAUSE_PRI_COLLECT_CODE = "01";
 
@@ -395,7 +390,6 @@ public final class Constants {
     public static final String CLAUSE_SIMPLE_FLAG = "clauseSimpleOpen";
 
 
-
     /** DB 휴대폰 안심 서비스동의 */
     public static final String CLAUSE_INSR_PROD_FLAG = "clauseInsrProdFlag";
 
@@ -433,7 +427,6 @@ public final class Constants {
     public static final String CLAUSE_MINOR_AGENT = "clauseMinorAgent";
 
 
-
     /** 16  (고지)서비스 이용약관 */
     public static final String NOTICE_CODE_16 = "01";
     /** 17  (고지)선불서비스 안내사항 */
@@ -461,71 +454,68 @@ public final class Constants {
     public static final String NOTICE_CODE_24 = "07";
 
     /** 비회원 기본 아이디 값... */
-    public static final String NON_MEMBER_ID = "" ;
-
+    public static final String NON_MEMBER_ID = "";
 
 
     /** 가입비  기본값 ... */
-    public static final String USIM_PRICE_TYPE_BASE = "B" ;
+    public static final String USIM_PRICE_TYPE_BASE = "B";
 
     /** 유심비 기본값... */
-    public static final String JOIN_PRICE_TYPE_BASE = "I" ;
+    public static final String JOIN_PRICE_TYPE_BASE = "I";
 
     /** AGENT CODE 기본값... AA00364 */
-    public static final String AGENT_DEFALUT_CODE = "AA00364" ;
+    public static final String AGENT_DEFALUT_CODE = "AA00364";
 
     /** AGENT CODE O원 렌탈... */
-    public static final String AGENT_RENTAL_CODE = "AA00364" ;
+    public static final String AGENT_RENTAL_CODE = "AA00364";
 
     /**  O원 렌탈 접점코드 R123456789... */
-    public static final String CNTPNT_SHOP_ID_RENTAL = "1100026442" ;
+    public static final String CNTPNT_SHOP_ID_RENTAL = "1100026442";
 
     /** 직영 온라인 AGENT_CODE*/
-    public static final String NEW_AGENT_DEFALUT_CODE = "VKI0011" ;
+    public static final String NEW_AGENT_DEFALUT_CODE = "VKI0011";
 
 
     //############################# NICI 관련 ##############################################
-    public static Map<String,String> NICE_ERROR_CODE_MAP ;
+    public static Map<String, String> NICE_ERROR_CODE_MAP;
 
     /**
      * NICE로부터 부여받은 사이트 코드1
      */
-    public static final String NICE_SITE_CODE ="G6280";
-
+    public static final String NICE_SITE_CODE = "G6280";
 
 
     /**
      * Nice 본이확인 서비스 테스트 모듈
      */
-    public static final String NICE_TEST_SITE_CODE ="BQ743";
+    public static final String NICE_TEST_SITE_CODE = "BQ743";
 
     /**
      * 성공시 이동될 URL
      */
-    public static final String NICE_SUCC_RETURN_URL ="/nice/popNiceSucc.do";
+    public static final String NICE_SUCC_RETURN_URL = "/nice/popNiceSucc.do";
 
     /**
      * 실패시 이동될 URL
      */
-    public static final String NICE_FAILL_RETURN_URL ="/nice/popNiceFail.do";
+    public static final String NICE_FAILL_RETURN_URL = "/nice/popNiceFail.do";
 
 
     /**
      * NICE로부터 부여받은 사이트 코드
      */
-    public static final String NICE_IPIN_SITE_CODE ="K406";
+    public static final String NICE_IPIN_SITE_CODE = "K406";
 
-        /**
+    /**
      * IPIN 성공시 이동될 URL
      */
-    public static final String NICE_SUCC_IPIN_RETURN_URL ="/nice/popNiceIpinSucc.do";
+    public static final String NICE_SUCC_IPIN_RETURN_URL = "/nice/popNiceIpinSucc.do";
 
 
     /**
      * 한국신용정보에서 고객사에 부여한 구분 id
      */
     public static String NICE_UID = "Nktisc";
-
 
 
     /** 전화상담 구매 예정지역 1차코드 */
@@ -541,11 +531,7 @@ public final class Constants {
     public static final String TEL_AGE_GUBUN_CD = "TELGUBUN";
 
 
-
-
-
-
-  //############################# 외부 서식지 관련 ##############################################
+    //############################# 외부 서식지 관련 ##############################################
     /** 외부서식지 구분
      * market : 오픈마켓
      * pps : 선불온라인
@@ -559,8 +545,6 @@ public final class Constants {
     public static final String SITE_REFERER_HOMESHOP = "homeshop";
     /** 외부서식지 구분 : 프리파아 */
     public static final String SITE_REFERER_PREPIA = "prepia";
-
-
 
 
     //##################공통코드########################################
@@ -589,25 +573,25 @@ public final class Constants {
     public static final int SMS_GIFT_PROMOTION_TEMPLATE_ID = 207;
 
     /** 온라인신청서를 통해 바로배송유심을 신청시 , 바로배송 결제 후 연동결과 실패시, 결제 취소 안내 209 */
-    public static final int SMS_APP_NOW_DELIVERY_FAIL_TEMPLATE_ID = 209 ;
+    public static final int SMS_APP_NOW_DELIVERY_FAIL_TEMPLATE_ID = 209;
 
     /** 온라인신청서를 통해 바로배송유심을 신청시, 유심번호등록 안내 문자 210 */
-    public static final int SMS_APP_NOW_DELIVERY_TEMPLATE_ID = 210 ;
+    public static final int SMS_APP_NOW_DELIVERY_TEMPLATE_ID = 210;
 
     /** 요금제 변경 실패고객 문자안내 211 */
-    public static final int SMS_PRICE_CHANGE_FAIL_TEMPLATE_ID = 211 ;
+    public static final int SMS_PRICE_CHANGE_FAIL_TEMPLATE_ID = 211;
 
     /** 즉시 간편결제 후 문자 안내  SamplePay C: 신용카드, D: 실시간 계좌이체, P: 간편결제 */
-    public static final int SAMPLE_PAY_TEMPLATE_ID = 227 ;
+    public static final int SAMPLE_PAY_TEMPLATE_ID = 227;
 
     /** 결합서비스 인증 안내*/
-    public static final int COMBINE_AUTS_TEMPLATE_ID = 251 ;
+    public static final int COMBINE_AUTS_TEMPLATE_ID = 251;
 
     /** 마케팅 동의 고지*/
-    public static final int MKRT_AGR_TEMPLATE_ID = 16 ;
+    public static final int MKRT_AGR_TEMPLATE_ID = 16;
 
     /** 서류등록 온라인 URL 인증번호 안내 */
-    public static final int SMS_TEMPLATE_SEND_URL_OTP = 394 ;
+    public static final int SMS_TEMPLATE_SEND_URL_OTP = 394;
 
     /** 자급제 보상 서비스 신청 접수 완료 문자 */
     // public static final int SMS_RWD_APPLY_SUCCESS_TEMPLATE_ID = 254 ;
@@ -620,11 +604,12 @@ public final class Constants {
     public static final String CNTPNT_SHOPID_PHONE_DIRECT = "1100034010";
 
     /** M SHOP 셀프개통에서 해피콜 개통 호출 REFERER */
-    public static final String OPEN_MARKET_REFERER_M_SIMPLE = "mSimple"   ;//.equals(appformReqDto.getOpenMarketReferer())) {  //M SHOP 셀프개통에서 해피콜 개통 호출 ";
+    public static final String OPEN_MARKET_REFERER_M_SIMPLE = "mSimple";//.equals(appformReqDto.getOpenMarketReferer())) {  //M SHOP 셀프개통에서 해피콜 개통 호출 ";
 
 
     /**  가입비 , USIM 밑줄 처리*/
-    public static ArrayList<String> MNG_CNTPNT_STRIKE ;
+    public static ArrayList<String> MNG_CNTPNT_STRIKE;
+
     static {
         MNG_CNTPNT_STRIKE = new ArrayList<String>();
         MNG_CNTPNT_STRIKE.add("1100011741"); //모바일(직영온라인)- 1100011741
@@ -633,118 +618,118 @@ public final class Constants {
     }
 
     static {
-        OPER_TYPE_NAME_MAP  = new HashMap<String, String>();
-        OPER_TYPE_NAME_MAP.put(OPER_TYPE_NEW,"신규개통");
-        OPER_TYPE_NAME_MAP.put(OPER_TYPE_MOVE_NUM,"번호이동");
-        OPER_TYPE_NAME_MAP.put(OPER_TYPE_CHANGE,"기기변경");
-        OPER_TYPE_NAME_MAP.put(OPER_TYPE_EXCHANGE,"기기변경");
+        OPER_TYPE_NAME_MAP = new HashMap<String, String>();
+        OPER_TYPE_NAME_MAP.put(OPER_TYPE_NEW, "신규개통");
+        OPER_TYPE_NAME_MAP.put(OPER_TYPE_MOVE_NUM, "번호이동");
+        OPER_TYPE_NAME_MAP.put(OPER_TYPE_CHANGE, "기기변경");
+        OPER_TYPE_NAME_MAP.put(OPER_TYPE_EXCHANGE, "기기변경");
     }
 
     static {
-        CSTMR_TYPE_NAME_MAP  = new HashMap<String, String>();
-        CSTMR_TYPE_NAME_MAP.put(CSTMR_TYPE_NA,"내국인");
-        CSTMR_TYPE_NAME_MAP.put(CSTMR_TYPE_NM,"내국인(미성년자)");
-        CSTMR_TYPE_NAME_MAP.put(CSTMR_TYPE_FN,"외국인");
+        CSTMR_TYPE_NAME_MAP = new HashMap<String, String>();
+        CSTMR_TYPE_NAME_MAP.put(CSTMR_TYPE_NA, "내국인");
+        CSTMR_TYPE_NAME_MAP.put(CSTMR_TYPE_NM, "내국인(미성년자)");
+        CSTMR_TYPE_NAME_MAP.put(CSTMR_TYPE_FN, "외국인");
     }
 
     static {
         NICE_ERROR_CODE_MAP = new HashMap<String, String>();
-        NICE_ERROR_CODE_MAP.put("0001","주민/사업자번호 틀림");
-        NICE_ERROR_CODE_MAP.put("0002","카드사 전화요망");
-        NICE_ERROR_CODE_MAP.put("0019","승인");
-        NICE_ERROR_CODE_MAP.put("0120","인터넷 인증오류");
-        NICE_ERROR_CODE_MAP.put("0157","사용개시 등록요망(1588-4500)");
-        NICE_ERROR_CODE_MAP.put("0189","은행시스템 작업중");
-        NICE_ERROR_CODE_MAP.put("0194","거래은행 전화요망");
-        NICE_ERROR_CODE_MAP.put("01C3","탈퇴카드 사용불가");
-        NICE_ERROR_CODE_MAP.put("01C5","비밀번호 미등록");
-        NICE_ERROR_CODE_MAP.put("01C6","일시불 거래안됨");
-        NICE_ERROR_CODE_MAP.put("01C7","거래제한 사용안됨");
-        NICE_ERROR_CODE_MAP.put("01I9","카드사 전화요망");
-        NICE_ERROR_CODE_MAP.put("01K2","카드발급 상태이상");
-        NICE_ERROR_CODE_MAP.put("01K3","주민/사업자번호 틀림");
-        NICE_ERROR_CODE_MAP.put("01K8","카드사 전화요망");
-        NICE_ERROR_CODE_MAP.put("0249","인증오류 횟수초과");
-        NICE_ERROR_CODE_MAP.put("0264","일시불거래 제한 회원요청");
-        NICE_ERROR_CODE_MAP.put("0271","신규발급카드 사용요망");
-        NICE_ERROR_CODE_MAP.put("02VA","이용불가 제휴카드");
-        NICE_ERROR_CODE_MAP.put("0414","카드번호 오류");
-        NICE_ERROR_CODE_MAP.put("0441","분실/도난 카드");
-        NICE_ERROR_CODE_MAP.put("0455","비밀번호 틀림");
-        NICE_ERROR_CODE_MAP.put("0457","해당카드 거래불가");
-        NICE_ERROR_CODE_MAP.put("0475","비밀번호오류 초과");
-        NICE_ERROR_CODE_MAP.put("04A4","주민번호 오류");
-        NICE_ERROR_CODE_MAP.put("04A5","주민비밀번호 오류");
-        NICE_ERROR_CODE_MAP.put("04A6","인증불가 가맹점");
-        NICE_ERROR_CODE_MAP.put("0618","회원정보 오류");
-        NICE_ERROR_CODE_MAP.put("0810","가맹점번호 부적당");
-        NICE_ERROR_CODE_MAP.put("0916","기프트카드 서비스불가");
-        NICE_ERROR_CODE_MAP.put("0973","비밀번호 횟수초과");
-        NICE_ERROR_CODE_MAP.put("1280","허가된거래 아님");
-        NICE_ERROR_CODE_MAP.put("12C4","미교부 카드");
-        NICE_ERROR_CODE_MAP.put("3001","실명/주민번호 틀림");
-        NICE_ERROR_CODE_MAP.put("3002","실명/주민번호 틀림");
-        NICE_ERROR_CODE_MAP.put("3003","실명/주민번호 틀림");
-        NICE_ERROR_CODE_MAP.put("3064","비밀번호 등록요망");
-        NICE_ERROR_CODE_MAP.put("3064","비밀번호 오류초과");
-        NICE_ERROR_CODE_MAP.put("3064","유효기간 만료");
-        NICE_ERROR_CODE_MAP.put("4111","시스템 오류");
-        NICE_ERROR_CODE_MAP.put("4873","서비스시간 종료");
-        NICE_ERROR_CODE_MAP.put("4949","1분후 재조회 요망");
-        NICE_ERROR_CODE_MAP.put("7002","카드사 연락요망");
-        NICE_ERROR_CODE_MAP.put("7004","도난/분실");
-        NICE_ERROR_CODE_MAP.put("7005","거래정지");
-        NICE_ERROR_CODE_MAP.put("7083","카드번호오류");
-        NICE_ERROR_CODE_MAP.put("7091","유효기간 입력오류");
-        NICE_ERROR_CODE_MAP.put("7452","거래정지 카드");
-        NICE_ERROR_CODE_MAP.put("7575","미등록 가맹점");
-        NICE_ERROR_CODE_MAP.put("7576","CVC/CVV 검증오류");
-        NICE_ERROR_CODE_MAP.put("7577","MS훼손카드");
-        NICE_ERROR_CODE_MAP.put("8037","카드번호오류");
-        NICE_ERROR_CODE_MAP.put("8310","비밀번호오류");
-        NICE_ERROR_CODE_MAP.put("8311","주민등록번호상이");
-        NICE_ERROR_CODE_MAP.put("8312","사업자번호상이");
-        NICE_ERROR_CODE_MAP.put("8314","유효기간만료");
-        NICE_ERROR_CODE_MAP.put("8323","거래정지카드");
-        NICE_ERROR_CODE_MAP.put("8324","거래정지카드");
-        NICE_ERROR_CODE_MAP.put("8326","사용한도초과");
-        NICE_ERROR_CODE_MAP.put("8330","주민비밀번호틀림");
-        NICE_ERROR_CODE_MAP.put("8350","도난/분실");
-        NICE_ERROR_CODE_MAP.put("8373","카드사로문의요망");
-        NICE_ERROR_CODE_MAP.put("8381","외환카드전산오류");
-        NICE_ERROR_CODE_MAP.put("8384","CALL1566-6900");
-        NICE_ERROR_CODE_MAP.put("8392","CALL1588-8300");
-        NICE_ERROR_CODE_MAP.put("8397","비밀번호등록요망");
-        NICE_ERROR_CODE_MAP.put("8398","사용제한가맹점");
-        NICE_ERROR_CODE_MAP.put("8399","카드수령등록요망");
-        NICE_ERROR_CODE_MAP.put("8410","서비스미적용회원");
-        NICE_ERROR_CODE_MAP.put("8418","선불카드는 인증이 제한됩니다.");
-        NICE_ERROR_CODE_MAP.put("8418","조회불가카드");
-        NICE_ERROR_CODE_MAP.put("8418","현대카드는 인증이 제한됩니다.");
-        NICE_ERROR_CODE_MAP.put("8423","인증대상카드아님");
-        NICE_ERROR_CODE_MAP.put("8521","거래불가카드");
-        NICE_ERROR_CODE_MAP.put("8532","시스템장애");
-        NICE_ERROR_CODE_MAP.put("8833","신카드사용요망");
-        NICE_ERROR_CODE_MAP.put("9000","체크카드는 인증이 제한됩니다.");
-        NICE_ERROR_CODE_MAP.put("9001","신한카드는 인증이 제한됩니다.");
-        NICE_ERROR_CODE_MAP.put("1707","액세스가 허용되지 않습니다.");
+        NICE_ERROR_CODE_MAP.put("0001", "주민/사업자번호 틀림");
+        NICE_ERROR_CODE_MAP.put("0002", "카드사 전화요망");
+        NICE_ERROR_CODE_MAP.put("0019", "승인");
+        NICE_ERROR_CODE_MAP.put("0120", "인터넷 인증오류");
+        NICE_ERROR_CODE_MAP.put("0157", "사용개시 등록요망(1588-4500)");
+        NICE_ERROR_CODE_MAP.put("0189", "은행시스템 작업중");
+        NICE_ERROR_CODE_MAP.put("0194", "거래은행 전화요망");
+        NICE_ERROR_CODE_MAP.put("01C3", "탈퇴카드 사용불가");
+        NICE_ERROR_CODE_MAP.put("01C5", "비밀번호 미등록");
+        NICE_ERROR_CODE_MAP.put("01C6", "일시불 거래안됨");
+        NICE_ERROR_CODE_MAP.put("01C7", "거래제한 사용안됨");
+        NICE_ERROR_CODE_MAP.put("01I9", "카드사 전화요망");
+        NICE_ERROR_CODE_MAP.put("01K2", "카드발급 상태이상");
+        NICE_ERROR_CODE_MAP.put("01K3", "주민/사업자번호 틀림");
+        NICE_ERROR_CODE_MAP.put("01K8", "카드사 전화요망");
+        NICE_ERROR_CODE_MAP.put("0249", "인증오류 횟수초과");
+        NICE_ERROR_CODE_MAP.put("0264", "일시불거래 제한 회원요청");
+        NICE_ERROR_CODE_MAP.put("0271", "신규발급카드 사용요망");
+        NICE_ERROR_CODE_MAP.put("02VA", "이용불가 제휴카드");
+        NICE_ERROR_CODE_MAP.put("0414", "카드번호 오류");
+        NICE_ERROR_CODE_MAP.put("0441", "분실/도난 카드");
+        NICE_ERROR_CODE_MAP.put("0455", "비밀번호 틀림");
+        NICE_ERROR_CODE_MAP.put("0457", "해당카드 거래불가");
+        NICE_ERROR_CODE_MAP.put("0475", "비밀번호오류 초과");
+        NICE_ERROR_CODE_MAP.put("04A4", "주민번호 오류");
+        NICE_ERROR_CODE_MAP.put("04A5", "주민비밀번호 오류");
+        NICE_ERROR_CODE_MAP.put("04A6", "인증불가 가맹점");
+        NICE_ERROR_CODE_MAP.put("0618", "회원정보 오류");
+        NICE_ERROR_CODE_MAP.put("0810", "가맹점번호 부적당");
+        NICE_ERROR_CODE_MAP.put("0916", "기프트카드 서비스불가");
+        NICE_ERROR_CODE_MAP.put("0973", "비밀번호 횟수초과");
+        NICE_ERROR_CODE_MAP.put("1280", "허가된거래 아님");
+        NICE_ERROR_CODE_MAP.put("12C4", "미교부 카드");
+        NICE_ERROR_CODE_MAP.put("3001", "실명/주민번호 틀림");
+        NICE_ERROR_CODE_MAP.put("3002", "실명/주민번호 틀림");
+        NICE_ERROR_CODE_MAP.put("3003", "실명/주민번호 틀림");
+        NICE_ERROR_CODE_MAP.put("3064", "비밀번호 등록요망");
+        NICE_ERROR_CODE_MAP.put("3064", "비밀번호 오류초과");
+        NICE_ERROR_CODE_MAP.put("3064", "유효기간 만료");
+        NICE_ERROR_CODE_MAP.put("4111", "시스템 오류");
+        NICE_ERROR_CODE_MAP.put("4873", "서비스시간 종료");
+        NICE_ERROR_CODE_MAP.put("4949", "1분후 재조회 요망");
+        NICE_ERROR_CODE_MAP.put("7002", "카드사 연락요망");
+        NICE_ERROR_CODE_MAP.put("7004", "도난/분실");
+        NICE_ERROR_CODE_MAP.put("7005", "거래정지");
+        NICE_ERROR_CODE_MAP.put("7083", "카드번호오류");
+        NICE_ERROR_CODE_MAP.put("7091", "유효기간 입력오류");
+        NICE_ERROR_CODE_MAP.put("7452", "거래정지 카드");
+        NICE_ERROR_CODE_MAP.put("7575", "미등록 가맹점");
+        NICE_ERROR_CODE_MAP.put("7576", "CVC/CVV 검증오류");
+        NICE_ERROR_CODE_MAP.put("7577", "MS훼손카드");
+        NICE_ERROR_CODE_MAP.put("8037", "카드번호오류");
+        NICE_ERROR_CODE_MAP.put("8310", "비밀번호오류");
+        NICE_ERROR_CODE_MAP.put("8311", "주민등록번호상이");
+        NICE_ERROR_CODE_MAP.put("8312", "사업자번호상이");
+        NICE_ERROR_CODE_MAP.put("8314", "유효기간만료");
+        NICE_ERROR_CODE_MAP.put("8323", "거래정지카드");
+        NICE_ERROR_CODE_MAP.put("8324", "거래정지카드");
+        NICE_ERROR_CODE_MAP.put("8326", "사용한도초과");
+        NICE_ERROR_CODE_MAP.put("8330", "주민비밀번호틀림");
+        NICE_ERROR_CODE_MAP.put("8350", "도난/분실");
+        NICE_ERROR_CODE_MAP.put("8373", "카드사로문의요망");
+        NICE_ERROR_CODE_MAP.put("8381", "외환카드전산오류");
+        NICE_ERROR_CODE_MAP.put("8384", "CALL1566-6900");
+        NICE_ERROR_CODE_MAP.put("8392", "CALL1588-8300");
+        NICE_ERROR_CODE_MAP.put("8397", "비밀번호등록요망");
+        NICE_ERROR_CODE_MAP.put("8398", "사용제한가맹점");
+        NICE_ERROR_CODE_MAP.put("8399", "카드수령등록요망");
+        NICE_ERROR_CODE_MAP.put("8410", "서비스미적용회원");
+        NICE_ERROR_CODE_MAP.put("8418", "선불카드는 인증이 제한됩니다.");
+        NICE_ERROR_CODE_MAP.put("8418", "조회불가카드");
+        NICE_ERROR_CODE_MAP.put("8418", "현대카드는 인증이 제한됩니다.");
+        NICE_ERROR_CODE_MAP.put("8423", "인증대상카드아님");
+        NICE_ERROR_CODE_MAP.put("8521", "거래불가카드");
+        NICE_ERROR_CODE_MAP.put("8532", "시스템장애");
+        NICE_ERROR_CODE_MAP.put("8833", "신카드사용요망");
+        NICE_ERROR_CODE_MAP.put("9000", "체크카드는 인증이 제한됩니다.");
+        NICE_ERROR_CODE_MAP.put("9001", "신한카드는 인증이 제한됩니다.");
+        NICE_ERROR_CODE_MAP.put("1707", "액세스가 허용되지 않습니다.");
     }
 
 
     /** 금융 제휴 요금제 변경 상태 코드 - 요청*/
-    public static final String  MCPRATE_CHG_HIST_CREATEYN_REQ = "";
+    public static final String MCPRATE_CHG_HIST_CREATEYN_REQ = "";
 
     /** 금융 제휴 요금제 변경 상태 코드 - 타임아웃*/
-    public static final String  MCPRATE_CHG_HIST_CREATEYN_TIMEOUT = "T";
+    public static final String MCPRATE_CHG_HIST_CREATEYN_TIMEOUT = "T";
 
     /** 금융 제휴 요금제 변경 상태 코드 - 응답 성공*/
-    public static final String  MCPRATE_CHG_HIST_CREATEYN_SUCESS = "S";
+    public static final String MCPRATE_CHG_HIST_CREATEYN_SUCESS = "S";
 
     /** 금융 제휴 요금제 변경 상태 코드 - 응답 에러*/
-    public static final String  MCPRATE_CHG_HIST_CREATEYN_FAIL = "F";
+    public static final String MCPRATE_CHG_HIST_CREATEYN_FAIL = "F";
 
     /** 금융 제휴 요금제 변경 상태 코드 - 합본 성공(요금제 정상 변경 완료)*/
-    public static final String  MCPRATE_CHG_HIST_CREATEYN_FINAL = "Y";
+    public static final String MCPRATE_CHG_HIST_CREATEYN_FINAL = "Y";
 
     /** 사용량 조회 2시간 제한 횟수 */
     public static final int CALL_USETIME_SVC_LIMIT = 20;
@@ -766,19 +751,19 @@ public final class Constants {
 
 
     /** PAYINFO - 요청*/
-    public static final String  PAY_INFO_CREATEYN_REQ = "";
+    public static final String PAY_INFO_CREATEYN_REQ = "";
 
     /** PAYINFO - 타임아웃*/
-    public static final String  PAY_INFO_CREATEYN_TIMEOUT = "T";
+    public static final String PAY_INFO_CREATEYN_TIMEOUT = "T";
 
     /** PAYINFO - 응답 성공*/
-    public static final String  PAY_INFO_CREATEYN_SUCESS = "S";
+    public static final String PAY_INFO_CREATEYN_SUCESS = "S";
 
     /** PAYINFO - 이미지 생성 완료*/
-    public static final String  PAY_INFO_CREATEYN_IMG = "Y";
+    public static final String PAY_INFO_CREATEYN_IMG = "Y";
 
     /** PAYINFO - 응답 에러*/
-    public static final String  PAY_INFO_CREATEYN_FAIL = "F";
+    public static final String PAY_INFO_CREATEYN_FAIL = "F";
 
 
     /** 제휴이벤트  분류코드  */
@@ -843,7 +828,7 @@ public final class Constants {
     public static final int BOARD_CTG_711_INFO = 70;
 
     /** 오프라인 유심 - 씨스페이스 */
-    public static final String  DIRECT_USIM_CSPACE = "cspace";
+    public static final String DIRECT_USIM_CSPACE = "cspace";
 
     /** 오프라인 유심 - 미니스톱 */
     public static final String DIRECT_USIM_MINSTOP = "ministop";
@@ -864,7 +849,8 @@ public final class Constants {
     public static final String DIRECT_USIM_EMART24 = "emart24";
 
     /**  오프라인 유심 URL 구분 리스트 */
-    public static ArrayList<String> DIRECT_USIM_URL_GUBUN_LIST ;
+    public static ArrayList<String> DIRECT_USIM_URL_GUBUN_LIST;
+
     static {
         DIRECT_USIM_URL_GUBUN_LIST = new ArrayList<String>();
         DIRECT_USIM_URL_GUBUN_LIST.add(DIRECT_USIM_CSPACE);
@@ -877,9 +863,10 @@ public final class Constants {
     }
 
     /**  오프라인 유심 판매점별 매인 롤링 배너 코드*/
-    public static Map<String,String> DIRECT_USIM_MAIN_BANNER_CD ;
+    public static Map<String, String> DIRECT_USIM_MAIN_BANNER_CD;
+
     static {
-        DIRECT_USIM_MAIN_BANNER_CD  = new HashMap<String, String>();
+        DIRECT_USIM_MAIN_BANNER_CD = new HashMap<String, String>();
         DIRECT_USIM_MAIN_BANNER_CD.put(DIRECT_USIM_CSPACE, "38");
         DIRECT_USIM_MAIN_BANNER_CD.put(DIRECT_USIM_MINSTOP, "39");
         DIRECT_USIM_MAIN_BANNER_CD.put(DIRECT_USIM_GS25, "56");
@@ -890,9 +877,10 @@ public final class Constants {
     }
 
     /**  오프라인 유심 판매점별 FAQ코드*/
-    public static Map<String,String> DIRECT_USIM_FAQ_CTG_CD ;
+    public static Map<String, String> DIRECT_USIM_FAQ_CTG_CD;
+
     static {
-        DIRECT_USIM_FAQ_CTG_CD  = new HashMap<String, String>();
+        DIRECT_USIM_FAQ_CTG_CD = new HashMap<String, String>();
         DIRECT_USIM_FAQ_CTG_CD.put(DIRECT_USIM_CSPACE, GROUP_CODE_DIRECTFAQB_CTG);
         DIRECT_USIM_FAQ_CTG_CD.put(DIRECT_USIM_MINSTOP, GROUP_CODE_MINISTOP_CTG);
         DIRECT_USIM_FAQ_CTG_CD.put(DIRECT_USIM_GS25, GROUP_CODE_GS25_CTG);
@@ -903,9 +891,10 @@ public final class Constants {
     }
 
     /**  모바일 오프라인 유심 판매점별 매인 롤링 배너 코드*/
-    public static Map<String,String> DIRECT_USIM_MOBILE_MAIN_BANNER_CD ;
+    public static Map<String, String> DIRECT_USIM_MOBILE_MAIN_BANNER_CD;
+
     static {
-        DIRECT_USIM_MOBILE_MAIN_BANNER_CD  = new HashMap<String, String>();
+        DIRECT_USIM_MOBILE_MAIN_BANNER_CD = new HashMap<String, String>();
         DIRECT_USIM_MOBILE_MAIN_BANNER_CD.put(DIRECT_USIM_CSPACE, "40");
         DIRECT_USIM_MOBILE_MAIN_BANNER_CD.put(DIRECT_USIM_MINSTOP, "41");
         DIRECT_USIM_MOBILE_MAIN_BANNER_CD.put(DIRECT_USIM_GS25, "57");
@@ -916,9 +905,10 @@ public final class Constants {
     }
 
     /** MSTORE 가입 가능 여부 코드  */
-    public static Map<String,String> MSTORE_JOIN_LIMIT_CD ;
+    public static Map<String, String> MSTORE_JOIN_LIMIT_CD;
+
     static {
-        MSTORE_JOIN_LIMIT_CD  = new HashMap<String, String>();
+        MSTORE_JOIN_LIMIT_CD = new HashMap<String, String>();
         MSTORE_JOIN_LIMIT_CD.put("REGULAR", "REGULAR");
         MSTORE_JOIN_LIMIT_CD.put("ASSOCIATE", "ASSOCIATE");
         MSTORE_JOIN_LIMIT_CD.put("NON", "NON");
@@ -969,9 +959,9 @@ public final class Constants {
     public static final String CEO_PRODUCT_STATUS = "CeoProStatus";
 
     /** 번호이동정보_휴대폰_할부금상태  분납지속(LMS청구) */
-    public static final String MOVE_ALLOTMENT_STAT_CODE1 ="AD"  ;//
+    public static final String MOVE_ALLOTMENT_STAT_CODE1 = "AD";//
     /** 번호이동정보_휴대폰_할부금상태  분납지속(LMS미청구)  */
-    public static final String MOVE_ALLOTMENT_STAT_CODE2 ="AD2"  ;//
+    public static final String MOVE_ALLOTMENT_STAT_CODE2 = "AD2";//
 
     /** 당첨후기 */
     public static final String REVIEW_EVENT_CD = "ReviewEventInfo";
@@ -1025,7 +1015,6 @@ public final class Constants {
     public static final String POINT_RSN_CD_U61 = "U61";
     public static final String POINT_RSN_CD_U62 = "U62";
     public static final String POINT_RSN_CD_U99 = "U99";
-
 
 
     /** 게시판 카테고리 코드 */
@@ -1101,7 +1090,7 @@ public final class Constants {
     public static final String REG_SVC_CD_5 = "PL2079777";
 
     /** 요금제 변경 불가능한 SOC_CODE LIST */
-    public static final String  GROUP_CODE_EXCEPTION_LIST_SOC_CODE = "ExceptionListSocCode";
+    public static final String GROUP_CODE_EXCEPTION_LIST_SOC_CODE = "ExceptionListSocCode";
 
     /** 색상 코드 */
     public static final String COLOR_CODE = "GD0008";
@@ -1236,6 +1225,9 @@ public final class Constants {
     /** EVENT_CODE 유심무상교체 접수 가능 여부조회 (T01) */
     public static final String EVENT_CODE_REPLACE_USIM_PRE_CHK = "T01";
 
+    /** EVENT_CODE 서식지 명의변경 사전 체크 (FMC0) **/
+    public static final String EVENT_CODE_NAME_CHG_PRE_CHK = "FMC0";
+
     /** 신규 셀프개통 완료 후 개통한 회선 안내문자 */
     public static final int SMS_COMPLETE_TEMPLATE_ID = 433;
 
@@ -1247,7 +1239,8 @@ public final class Constants {
     public static final String EVENT_CODE_FATH_URL_RETV = "FS9";
     public static final String EVENT_CODE_FATH_SKIP = "FT1";
 
-    public static Map<String,String> FATH_RETV_CD_VAL;
+    public static Map<String, String> FATH_RETV_CD_VAL;
+
     static {
         FATH_RETV_CD_VAL = new HashMap<>();
         FATH_RETV_CD_VAL.put("01", "REGID");
@@ -1258,7 +1251,8 @@ public final class Constants {
         FATH_RETV_CD_VAL.put("06", "FORGN");
     }
 
-    public static Map<String,String> FATH_SBSC_DIV_CD;
+    public static Map<String, String> FATH_SBSC_DIV_CD;
+
     static {
         FATH_SBSC_DIV_CD = new HashMap<>();
         FATH_SBSC_DIV_CD.put("NAC3", "1");

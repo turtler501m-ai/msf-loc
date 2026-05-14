@@ -12,12 +12,11 @@ import tools.jackson.databind.ObjectMapper;
 
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonJsonException;
+import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormOsstWebService;
 import com.ktmmobile.msf.domains.form.common.mplatform.MsfMplatFormService;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MplatFormFMC0InfoRequest;
 import com.ktmmobile.msf.domains.form.common.repository.McpApiClient;
 import com.ktmmobile.msf.domains.form.form.common.repository.MsfRequestRepositoryImpl;
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo;
-import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestNameChgVo;
 import com.ktmmobile.msf.domains.form.form.newchange.dao.AppformDao;
 import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeJoinInfoResponse;
@@ -29,6 +28,7 @@ import com.ktmmobile.msf.domains.form.form.ownerchange.dto.OwnerChangeWireUseTim
 import com.ktmmobile.msf.domains.form.form.ownerchange.field.OwnerChangeFieldMapper;
 import com.ktmmobile.msf.domains.form.form.termination.repository.CancelPageRepositoryImpl;
 
+import static com.ktmmobile.msf.domains.form.common.constants.Constants.EVENT_CODE_NAME_CHG_PRE_CHK;
 import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgConstant.F_BIND_EXCEPTION;
 
 @Service
@@ -36,11 +36,13 @@ import static com.ktmmobile.msf.domains.form.common.exception.msg.ExceptionMsgCo
 public class OwnerChgRestSvcImpl implements OwnerChgRestSvc {
 
     private final MsfMplatFormService msfMplatFormService;
+    private final MsfMplatFormOsstWebService msfMplatFormOsstWebService;
     private final MsfRequestRepositoryImpl msfRequestRepository;
     private final CancelPageRepositoryImpl cancelPageRepository;
     private final ObjectMapper objectMapper;
     private final McpApiClient mcpApiClient;
     private final AppformDao appformDao;
+    private final OwnerChangeFieldMapper ownerChangeFieldMapper;
 
     @Override
     public OwnerChangeValidationResponse ownerChangeValidation(OwnerChangeValidationRequest request) {
@@ -136,9 +138,9 @@ public class OwnerChgRestSvcImpl implements OwnerChgRestSvc {
 
         // 양도인 회선 존재 확인
         List<McpUserCntrMngDto> cntrList = mcpApiClient.post("/mypage/cntrListNmChg", params, List.class);
-        if (cntrList == null || cntrList.size() == 0) {
-            throw new McpCommonJsonException("AUTH02", F_BIND_EXCEPTION);
-        }
+        // if (cntrList == null || cntrList.size() == 0) {
+        //     throw new McpCommonJsonException("AUTH02", F_BIND_EXCEPTION);
+        // }
 
         McpUserCntrMngDto cntrMngDto = cntrList.get(0);
         // myNameChgReqDto.setMobileNo(cntrMngDto.getUnSvcNo());
@@ -174,29 +176,28 @@ public class OwnerChgRestSvcImpl implements OwnerChgRestSvc {
         // myNameChgReqDto.setSocNm(teCustomerInfo.getSocNm());
 
         long requestKey = cancelPageRepository.nextRequestKey();
+        //
+        // /*** msf 데이터 저장  ***/
+        //
+        // // 명의변경신청정보 저장
+        // request.setRequestKey(requestKey);
+        // msfRequestRepository.insertMsfRequestNameChg(request);
+        // // 명의변경양도인정보 저장
+        // msfRequestRepository.insertMsfRequestNameTrns(request);
+        //
+        // // 가입신청정보 저장
+        // MsfRequestCstmrVo msfRequestCstmrVo = ownerChangeFieldMapper.toMsfRequestCstmrVo(request);
+        // msfRequestRepository.insertMsfRequestCstmr(msfRequestCstmrVo);
+        // // 가입신청대리인정보 저장(미성년자인 경우)
+        // MsfRequestAgentVo msfRequestAgentVo = ownerChangeFieldMapper.toMsfRequestAgentVo(request);
+        // msfRequestRepository.insertMsfRequestAgent(msfRequestAgentVo);
+        // // 가입신청청구신청정보 저장
+        // MsfRequestBillReqVo msfRequestBillReqVo = ownerChangeFieldMapper.toMsfRequestBillReqVo(request);
+        // msfRequestRepository.insertMsfRequestBillReq(msfRequestBillReqVo);
 
-        /*** msf 데이터 저장  ***/
+        /*** msf 데이터 저장 종료  ***/
 
-        // 명의변경신청정보 저장
-        request.setRequestKey(requestKey);
-        msfRequestRepository.insertMsfRequestNameChg(request);
-        // 명의변경양도인정보 저장
-        msfRequestRepository.insertMsfRequestNameTrns(request);
-
-        // 가입신청정보 저장
-        MsfRequestCstmrVo msfRequestCstmrVo = OwnerChangeFieldMapper.INSTANCE.toMsfRequestCstmrVo(request);
-        msfRequestRepository.insertMsfRequestCstmr(msfRequestCstmrVo);
-        // 가입신청대리인정보 저장
-        MsfRequestAgentVo msfRequestAgentVo = OwnerChangeFieldMapper.INSTANCE.toMsfRequestAgentVo(request);
-        msfRequestRepository.insertMsfRequestAgent(msfRequestAgentVo);
-        // 가입신청청구신청정보 저장
-        MsfRequestBillReqVo msfRequestBillReqVo = OwnerChangeFieldMapper.INSTANCE.toMsfRequestBillReqVo(request);
-        msfRequestRepository.insertMsfRequestBillReq(msfRequestBillReqVo);
-
-        /*** msf 데이터 저장  ***/
-
-
-        /************************/
+        /*** mcp 데이터 저장 ***/
 
         // logger.error("## 명의변경 신청 myNameChgReqDto : " + myNameChgReqDto);
 
@@ -245,6 +246,28 @@ public class OwnerChgRestSvcImpl implements OwnerChgRestSvc {
         // result = "SUCCESS";
         //
         // return result;
+
+        /*** mcp 데이터 저장 종료 ***/
+
+
+        /*** FMC0 호출 ***/
+        MplatFormFMC0InfoRequest mplatFormFMC0InfoRequest = ownerChangeFieldMapper.toMplatFormFMC0InfoRequest(request);
+        // OsstMcnChgPrecheckResponse OsstMcnChgPrecheckResponse = null;
+        HashMap<String, Object> OsstMcnChgPrecheckResponse = null;
+        params.put("mcnResNo", "1140002316");
+
+        // MplatFormFMC0InfoResponse mplatFormFMC0InfoResponse = mcpApiClient.post("/mPlatform/getXmlMessageMC0",
+        //     params,
+        //     MplatFormFMC0InfoResponse.class);
+        try {
+            OsstMcnChgPrecheckResponse = msfMplatFormService.mplatformFMC0CallJson(mplatFormFMC0InfoRequest, EVENT_CODE_NAME_CHG_PRE_CHK);
+        } catch (Exception e) {
+
+        }
+
+        /*** FMC0 호출 종료 ***/
+
+        /************************/
 
         /************************/
 

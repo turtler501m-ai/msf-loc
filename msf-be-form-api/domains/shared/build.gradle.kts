@@ -12,4 +12,5 @@ dependencies {
     implementation(project(":commons:login-core"))
 
     implementation(project(":domains:policy"))
+    implementation(project(":domains:cache"))
 }

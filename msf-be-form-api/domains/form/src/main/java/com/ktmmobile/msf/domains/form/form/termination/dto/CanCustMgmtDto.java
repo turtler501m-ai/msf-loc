@@ -22,28 +22,30 @@ public class CanCustMgmtDto {
         private String startDt;      // 접수일자 시작 (YYYYMMDD)
         private String endDt;        // 접수일자 종료 (YYYYMMDD)
         private PageReqDto page;     // 페이징 (pageNum/rowSize)
-}
+    }
+
     @Getter
     @Setter
     @NoArgsConstructor
     public static class PageReqDto {
         private Integer pageNum;
         private Integer rowSize;
-}
+    }
+
     @Getter
     @Setter
     @NoArgsConstructor
     public static class ListResDto {
         private List<DetailDto> data;
         private MetaDto meta;
-}
+    }
+
     @Getter
     @Setter
     @NoArgsConstructor
     public static class MetaDto {
         private PageMetaDto page;
-
-}
+    }
 
     @Getter
     @Setter
@@ -52,7 +54,8 @@ public class CanCustMgmtDto {
         private int pageNum;
         private int rowSize;
         private int totalCount;
-}
+    }
+
     @Getter
     @Setter
     @NoArgsConstructor
@@ -85,7 +88,8 @@ public class CanCustMgmtDto {
         private String resCd;
         private String resMsg;
         private String resNo;
-}
+    }
+
     @Getter
     @Setter
     @NoArgsConstructor
@@ -98,11 +102,29 @@ public class CanCustMgmtDto {
         private String custTchMediCd;
         private String smsRcvYn;
         private String memo;
-        private String amdId;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public static class ProcessStatusDto {
+        private Long requestKey;
+        private String formTypeCd;
+        private String procCd;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    public static class ProcessUpdateDto {
+        private Long requestKey;
+        private String procCd;
+        private String memo;
         private String resCd;
         private String resMsg;
         private String resNo;
-}
+    }
+
     @Getter
     @Setter
     @NoArgsConstructor
@@ -122,5 +144,11 @@ public class CanCustMgmtDto {
             vo.procCd = "RC";
             return vo;
         }
-}
+
+        public static ProcessResVO reject() {
+            ProcessResVO vo = new ProcessResVO();
+            vo.procCd = "BK";
+            return vo;
+        }
+    }
 }

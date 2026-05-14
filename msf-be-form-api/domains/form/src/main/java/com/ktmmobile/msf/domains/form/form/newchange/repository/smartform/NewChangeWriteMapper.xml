@@ -7,9 +7,12 @@
   <insert id="insertMsfRequestTemp" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo">
     INSERT INTO MSF_REQUEST_TEMP
     (
-      <include refid="msfRequestColumns"/> , TMP_STEP_CD
+        REQUEST_KEY
+      , TMP_STEP_CD
+      <include refid="msfRequestColumns"/>
     )
     VALUES(#{requestKey}
+    , #{tmpStepCd}
     , #{managerCd}
     , #{managerNm}
     , #{agentCd}
@@ -78,7 +81,7 @@
     , #{jehuPartnerTypeCd}
     , #{jehuProdTypeCd}
     , #{reqAdditionListNm}
-    , #{reqAdditionPrice}
+    , COALESCE(#{reqAdditionPrice},0)
     , #{phonePaymentYn}
     , #{onOffTypeCd}
     , #{soCd}
@@ -129,7 +132,6 @@
     , #{fileMaskNm}
     , #{faxYn}
     , #{faxNo}
-    , #{tmpStepCd}
     )
   </insert>
 
@@ -713,98 +715,218 @@ WHERE REQUEST_KEY = #{requestKey}
     WHERE REQUEST_KEY = #{requestKey}
 </update>
 
-  <insert id="insertMsfRequest" parameterType="java.lang.Long">
-    INSERT INTO MSF_REQUEST
-    (
-      <include refid="msfRequestColumns"/>
-    )
-    SELECT
-      <include refid="msfRequestColumns"/>
-    FROM MSF_REQUEST_TEMP
-    WHERE REQUEST_KEY = #{requestKey}
-  </insert>
-  <insert id="insertMsfRequestCstmr" parameterType="java.lang.Long">
-    INSERT INTO MSF_REQUEST_CSTMR
-    (
+<insert id="insertMsfRequest" parameterType="java.lang.Long">
+  INSERT INTO MSF_REQUEST
+  (
+    REQUEST_KEY
+    <include refid="msfRequestColumns"/>
+  )
+  SELECT
+    REQUEST_KEY
+    <include refid="msfRequestColumns"/>
+  FROM MSF_REQUEST_TEMP
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertMsfRequestCstmr" parameterType="java.lang.Long">
+  INSERT INTO MSF_REQUEST_CSTMR
+  (
+    REQUEST_KEY
     <include refid="msfRequestCstmrColumns"/>
-    )
-    SELECT
+  )
+  SELECT
+    REQUEST_KEY
     <include refid="msfRequestCstmrColumns"/>
-    FROM MSF_REQUEST_CSTMR_TEMP
-    WHERE REQUEST_KEY = #{requestKey}
-  </insert>
-  <insert id="insertMsfRequestAgent" parameterType="java.lang.Long">
-    INSERT INTO MSF_REQUEST_AGENT
-    (
+  FROM MSF_REQUEST_CSTMR_TEMP
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertMsfRequestAgent" parameterType="java.lang.Long">
+  INSERT INTO MSF_REQUEST_AGENT
+  (
+    REQUEST_KEY
     <include refid="msfRequestAgentColumns"/>
-    )
-    SELECT
+  )
+  SELECT
+    REQUEST_KEY
     <include refid="msfRequestAgentColumns"/>
-    FROM MSF_REQUEST_AGENT_TEMP
-    WHERE REQUEST_KEY = #{requestKey}
-  </insert>
-  <insert id="insertMsfRequestSale" parameterType="java.lang.Long">
-    INSERT INTO MSF_REQUEST_SALE
-    (
+  FROM MSF_REQUEST_AGENT_TEMP
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertMsfRequestSale" parameterType="java.lang.Long">
+  INSERT INTO MSF_REQUEST_SALE
+  (
+    REQUEST_KEY
     <include refid="msfRequestSaleColumns"/>
-    )
-    SELECT
+  )
+  SELECT
+    REQUEST_KEY
     <include refid="msfRequestSaleColumns"/>
-    FROM MSF_REQUEST_SALE_TEMP
-    WHERE REQUEST_KEY = #{requestKey}
-  </insert>
-  <insert id="insertMsfRequestBillReq" parameterType="java.lang.Long">
-    INSERT INTO MSF_REQUEST_BILL_REQ
-    (
+  FROM MSF_REQUEST_SALE_TEMP
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertMsfRequestBillReq" parameterType="java.lang.Long">
+  INSERT INTO MSF_REQUEST_BILL_REQ
+  (
+    REQUEST_KEY
     <include refid="msfRequestBillReqColumns"/>
-    )
-    SELECT
+  )
+  SELECT
+    REQUEST_KEY
     <include refid="msfRequestBillReqColumns"/>
-    FROM MSF_REQUEST_BILL_REQ_TEMP
-    WHERE REQUEST_KEY = #{requestKey}
-  </insert>
-  <insert id="insertMsfRequestMove" parameterType="java.lang.Long">
-    INSERT INTO MSF_REQUEST_MOVE
-    (
+  FROM MSF_REQUEST_BILL_REQ_TEMP
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertMsfRequestMove" parameterType="java.lang.Long">
+  INSERT INTO MSF_REQUEST_MOVE
+  (
+    REQUEST_KEY
     <include refid="msfRequestMoveColumns"/>
-    )
-    SELECT
+  )
+  SELECT
+    REQUEST_KEY
     <include refid="msfRequestMoveColumns"/>
-    FROM MSF_REQUEST_MOVE_TEMP
-    WHERE REQUEST_KEY = #{requestKey}
-  </insert>
-  <insert id="insertMsfRequestDvcChg" parameterType="java.lang.Long">
-    INSERT INTO MSF_REQUEST_DVC_CHG
-    (
+  FROM MSF_REQUEST_MOVE_TEMP
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertMsfRequestDvcChg" parameterType="java.lang.Long">
+  INSERT INTO MSF_REQUEST_DVC_CHG
+  (
+    REQUEST_KEY
     <include refid="msfRequestDvcChgColumns"/>
-    )
-    SELECT
+  )
+  SELECT
+    REQUEST_KEY
     <include refid="msfRequestDvcChgColumns"/>
-    FROM MSF_REQUEST_DVC_CHG_TEMP
-    WHERE REQUEST_KEY = #{requestKey}
-  </insert>
-  <insert id="insertMsfRequestAddition" parameterType="java.lang.Long">
-    INSERT INTO MSF_REQUEST_ADDITION
-    (
+  FROM MSF_REQUEST_DVC_CHG_TEMP
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertMsfRequestAddition" parameterType="java.lang.Long">
+  INSERT INTO MSF_REQUEST_ADDITION
+  (
+    REQUEST_KEY
     <include refid="msfRequestAdditionColumns"/>
-    )
-    SELECT
+  )
+  SELECT
+    REQUEST_KEY
     <include refid="msfRequestAdditionColumns"/>
-    FROM MSF_REQUEST_ADDITION_TEMP
-    WHERE REQUEST_KEY = #{requestKey}
-  </insert>
-  <insert id="insertMsfRequestState" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo">
+  FROM MSF_REQUEST_ADDITION_TEMP
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertMsfRequestState" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo">
+  INSERT INTO MSF_REQUEST_STATE
+  ( REQUEST_STATE_KEY, REQUEST_KEY, RES_NO, SBSC_PRO_CD, OPEN_NO, MEMO, VIEW_YN )
+  VALUES(#{requestStateKey}, #{requestKey}, #{resNo}, #{sbscProCd}, #{openNo}, #{memo}, COALESCE(#{viewYn},'N'))
+</insert>
+
+
+<insert id="insertCopyMsfRequest" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest">
+  INSERT INTO MSF_REQUEST_TEMP
+  (
+      REQUEST_KEY
+    , TMP_STEP_CD
+    <include refid="msfRequestColumns"/>
+  )
+  SELECT
+      #{newRequestKey}
+    , #{tmpStepCd}
+    <include refid="msfRequestColumns"/>
+  FROM MSF_REQUEST
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertCopyMsfRequestCstmr" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest">
+  INSERT INTO MSF_REQUEST_CSTMR_TEMP
+  (
+    REQUEST_KEY
+    <include refid="msfRequestCstmrColumns"/>
+  )
+  SELECT
+    #{newRequestKey}
+    <include refid="msfRequestCstmrColumns"/>
+  FROM MSF_REQUEST_CSTMR
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertCopyMsfRequestAgent" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest">
+  INSERT INTO MSF_REQUEST_AGENT_TEMP
+  (
+    REQUEST_KEY
+    <include refid="msfRequestAgentColumns"/>
+  )
+  SELECT
+    #{newRequestKey}
+    <include refid="msfRequestAgentColumns"/>
+  FROM MSF_REQUEST_AGENT
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertCopyMsfRequestSale" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest">
+  INSERT INTO MSF_REQUEST_SALE_TEMP
+  (
+    REQUEST_KEY
+    <include refid="msfRequestSaleColumns"/>
+  )
+  SELECT
+    #{newRequestKey}
+    <include refid="msfRequestSaleColumns"/>
+  FROM MSF_REQUEST_SALE
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertCopyMsfRequestBillReq" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest">
+  INSERT INTO MSF_REQUEST_BILL_REQ_TEMP
+  (
+    REQUEST_KEY
+    <include refid="msfRequestBillReqColumns"/>
+  )
+  SELECT
+    #{newRequestKey}
+    <include refid="msfRequestBillReqColumns"/>
+  FROM MSF_REQUEST_BILL_REQ
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertCopyMsfRequestMove" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest">
+  INSERT INTO MSF_REQUEST_MOVE_TEMP
+  (
+    REQUEST_KEY
+    <include refid="msfRequestMoveColumns"/>
+  )
+  SELECT
+    #{newRequestKey}
+    <include refid="msfRequestMoveColumns"/>
+  FROM MSF_REQUEST_MOVE
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertCopyMsfRequestDvcChg" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest">
+  INSERT INTO MSF_REQUEST_DVC_CHG_TEMP
+  (
+    REQUEST_KEY
+    <include refid="msfRequestDvcChgColumns"/>
+  )
+  SELECT
+    #{newRequestKey}
+    <include refid="msfRequestDvcChgColumns"/>
+  FROM MSF_REQUEST_DVC_CHG
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+<insert id="insertCopyMsfRequestAddition" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest">
+  INSERT INTO MSF_REQUEST_ADDITION_TEMP
+  (
+    REQUEST_KEY
+    <include refid="msfRequestAdditionColumns"/>
+  )
+  SELECT
+    #{newRequestKey}
+    <include refid="msfRequestAdditionColumns"/>
+  FROM MSF_REQUEST_ADDITION
+  WHERE REQUEST_KEY = #{requestKey}
+</insert>
+  <!--<insert id="insertCopyMsfRequestState" parameterType="com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo">
     INSERT INTO MSF_REQUEST_STATE
     ( REQUEST_STATE_KEY, REQUEST_KEY, RES_NO, SBSC_PRO_CD, OPEN_NO, MEMO, VIEW_YN )
     VALUES(#{requestStateKey}, #{requestKey}, #{resNo}, #{sbscProCd}, #{openNo}, #{memo}, COALESCE(#{viewYn},'N'))
-  </insert>
+  </insert>-->
 
 
   <!--<sql id="newChangeCommon">
     CRET_IP, CRET_DT, CRET_ID, AMD_IP, AMD_DT, AMD_ID
   </sql>-->
   <sql id="msfRequestColumns">
-    REQUEST_KEY
     , MANAGER_CD, MANAGER_NM, AGENT_CD, AGENT_NM, SHOP_CD, SHOP_NM, REAL_SHOP_NM, CPNT_ID, CPNT_NM, CNTPNT_SHOP_CD, CNTPNT_SHOP_NM
     , REQ_BUY_TYPE_CD, OPEN_TYPE_CD, SERVICE_TYPE_CD, OPER_TYPE_CD
     , CSTMR_TYPE_CD, IDENTITY_CERT_TYPE_CD, KNOTE_IDENTITY_SCAN_CSTMR_NM, KNOTE_IDENTITY_ESS_NO, KNOTE_IDENTITY_TYPE_CD, KNOTE_IDENTITY_SCAN_DT, KNOTE_SCAN_ID
@@ -824,7 +946,6 @@ WHERE REQUEST_KEY = #{requestKey}
     , APP_FORM_YN, APP_FORM_XML_YN, FILE_NM, FILE_MASK_NM, FAX_YN, FAX_NO
   </sql>
   <sql id="msfRequestCstmrColumns">
-    REQUEST_KEY
     , CSTMR_NM, CSTMR_NATIVE_RRN, CSTMR_NATIVE_BIRTH, CSTMR_NATIVE_GENDER_CD, CSTMR_PRIVATE_CNAME, CSTMR_PRIVATE_BIZ_NO
     , CSTMR_FOREIGNER_RRN, CSTMR_FOREIGNER_BIRTH, CSTMR_FOREIGNER_GENDER_CD, CSTMR_FOREIGNER_PN, CSTMR_FOREIGNER_COUNTRY_CD
     , CSTMR_FOREIGNER_NATION, CSTMR_FOREIGNER_VISA_NO, CSTMR_FOREIGNER_VDATE_START_DATE, CSTMR_FOREIGNER_VDATE_END_DATE
@@ -834,20 +955,17 @@ WHERE REQUEST_KEY = #{requestKey}
     , CSTMR_EMAIL_ADR, CSTMR_EMAIL_RECEIVE_YN, CSTMR_RECEIVE_TEL_FN_NO, CSTMR_RECEIVE_TEL_NM_NO, CSTMR_RECEIVE_TEL_RN_NO
   </sql>
   <sql id="msfRequestAgentColumns">
-    REQUEST_KEY
     , MINOR_AGENT_NM, MINOR_AGENT_RRN, MINOR_AGENT_BIRTH, MINOR_AGENT_GENDER_CD, MINOR_AGENT_REL_TYPE_CD, MINOR_AGENT_TEL_FN_NO
     , MINOR_AGENT_TEL_MN_NO, MINOR_AGENT_TEL_RN_NO, MINOR_AGENT_AGRM_YN, MINOR_AGENT_SELF_INQRY_AGRM_YN, MINOR_AGENT_SELF_CERT_TYPE_CD
     , MINOR_AGENT_CI_INFO, JRDCL_AGENT_NM, JRDCL_AGENT_RRN, JRDCL_AGENT_REL_TYPE_CD, JRDCL_AGENT_TEL_FN_NO, JRDCL_AGENT_TEL_MN_NO, JRDCL_AGENT_TEL_RN_NO
   </sql>
   <sql id="msfRequestSaleColumns">
-    REQUEST_KEY
     , MODEL_ID, MODEL_MONTHLY, MODEL_INSTAMT, MODEL_SALE_POLICY_CD, MODEL_PRICE_VAT, MODEL_DISCOUNT1, MODEL_SPRT, MODEL_PRICE
     , MODEL_DISCOUNT3, REAL_MDL_INSTAMT, HNDSET_SALE_PRICE, SPRT_TYPE_CD, DC_AMT, MAX_APD_SPRT, ADD_DC_AMT, ENGG_MNTH_CNT, RECYCLE_YN
     , USIM_PRICE_TYPE_CD, USIM_PRICE, USIM_PAY_MTHD_CD, SESPLS_YN, JOIN_PRICE_TYPE_CD, JOIN_PAY_MTHD_CD, JOIN_PRICE
     , SOC_CODE, SOC_NM, SOC_BASE_CHRG_AMT
   </sql>
   <sql id="msfRequestBillReqColumns">
-    REQUEST_KEY
     , REQ_PAY_TYPE_CD, REQ_BANK_CD, REQ_ACCOUNT_NM, REQ_ACCOUNT_RRN, REQ_ACCOUNT_REL_TYPE_CD, REQ_ACCOUNT_NO, REQ_CARD_NM, REQ_CARD_RRN
     , REQ_CARD_COMPANY_CD, REQ_CARD_NO, REQ_CARD_YY, REQ_CARD_MM, REQ_WIRE_TYPE_CD
     , OTHERS_PAYMENT_YN, OTHERS_PAYMENT_TEL_FN_NO, OTHERS_PAYMENT_TEL_MN_NO, OTHERS_PAYMENT_TEL_RN_NO, OTHERS_PAYMENT_NM
@@ -855,16 +973,14 @@ WHERE REQUEST_KEY = #{requestKey}
     , CSTMR_BILL_SEND_TYPE_CD, CSTMR_EMAIL_ADR
   </sql>
   <sql id="msfRequestMoveColumns">
-    REQUEST_KEY
     , MOVE_COMPANY_CD, MOVE_MOBILE_FN_NO, MOVE_MOBILE_MN_NO, MOVE_MOBILE_RN_NO, MOVE_AUTH_TYPE_CD, MOVE_AUTH_NO, MOVE_THISMONTH_PAY_TYPE_CD
     , MOVE_ALLOTMENT_STTUS_CD, MOVE_REFUND_AGREE_YN, REQ_GUIDE_YN, REQ_GUIDE_FN_NO, REQ_GUIDE_RN_NO, REQ_GUIDE_MN_NO, OSST_PAY_DATE
     , OSST_PAY_TYPE_CD, MOVE_PENALTY
   </sql>
   <sql id="msfRequestDvcChgColumns">
-    REQUEST_KEY, DVC_CHG_TYPE_CD, DVC_CHG_RSN_CD, DVC_CHG_RSN_DTL_CD, INSTAMT_PAY_MTHD_CD
+    , DVC_CHG_TYPE_CD, DVC_CHG_RSN_CD, DVC_CHG_RSN_DTL_CD, INSTAMT_PAY_MTHD_CD
   </sql>
   <sql id="msfRequestAdditionColumns">
-    REQUEST_KEY
     , REQUEST_SVC_CHG_DTL_SEQ, SVC_CHG_TYPE_CD
     , ADDITION_KEY, ADDITION_ID, ADDITION_NM, RANTAL
     , ADDTION_INFO, PROC_YN

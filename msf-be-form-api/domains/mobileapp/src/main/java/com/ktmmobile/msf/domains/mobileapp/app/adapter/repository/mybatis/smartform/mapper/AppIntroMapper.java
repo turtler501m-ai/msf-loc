@@ -1,5 +1,7 @@
 package com.ktmmobile.msf.domains.mobileapp.app.adapter.repository.mybatis.smartform.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 
 import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
@@ -15,7 +17,7 @@ public interface AppIntroMapper {
 
     IntroResponse selectIntro(IntroRequest request);
 
-    UsrAppInfoVo selectUserApp(String uuid);
+    List<UsrAppInfoVo> selectUserApp(String uuid);
 
     Integer removeUserApp(AppInitRequest request);
 

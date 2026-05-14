@@ -19,7 +19,6 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
       tr_idCard: '', //신분증
       identityTypeCd: '', //신분증 스캔
       identityTypeNm: '',
-      isScanVerified: false,
       isSaved: false,
       identityIssuDate: '', //발급일자
       driveLicnsNo: '', //면허번호
@@ -32,7 +31,7 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
       cstmrJuridicalRepNm: '', //대표자명
       upjnCd: '', //업종
       bcuSbst: '', //업태
-      deviceChgTel1: '', //휴대폰 처음3자리
+      deviceChgTel1: '010', //휴대폰 처음3자리
       deviceChgTel2: '', //휴대폰 가운데4자리
       deviceChgTel3: '', //휴대폰 마지막4자리
       /* 법정대리인 정보 */
@@ -63,6 +62,7 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
       serviceType: 'TR_CUSTOMER',
       userId: '',
       isVerified: false,
+      isScanVerified: false,
       fstEsimYn: null,
     },
     /********** 양수고객 (te) **********/
@@ -77,7 +77,7 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
       cstmrForeignerRrn2: '', //외국인 주민번호2
       upjnCd: '', //업종
       bcuSbst: '', //업태
-      deviceChgTel1: '', //휴대폰 처음3자리
+      deviceChgTel1: '010', //휴대폰 처음3자리
       deviceChgTel2: '', //휴대폰 가운데4자리
       deviceChgTel3: '', //휴대폰 마지막4자리
       /** 고객(양수고객)신분증 확인 */
@@ -130,6 +130,8 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
       serviceType: 'TE_CUSTOMER',
       userId: '',
       isVerified: false,
+      isScanVerified: false,
+      isSaved: false,
     },
     realUserInfo: {
       // 실사용자 & 대리인
@@ -489,6 +491,42 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
     /* MSF_REQUEST_AGENT */
   })
 
+  watch(
+    () => formData.value.tr_customer.cstmrTypeCd,
+    (newVal, oldVal) => {
+      if (newVal === oldVal) return
+
+      handleTrCustomerTypeChange(newVal)
+    },
+  )
+
+  watch(
+    () => formData.value.te_customer.cstmrTypeCd,
+    (newVal, oldVal) => {
+      if (newVal === oldVal) return
+
+      handleTeCustomerTypeChange(newVal)
+    },
+  )
+
+  const handleTrCustomerTypeChange = (typeCd) => {
+    resetTrCustomer()
+
+    formData.value.tr_customer.cstmrTypeCd = typeCd
+
+    const minorCd = ['NM', 'FM']
+
+    if (minorCd.includes(typeCd)) {
+      formData.value.te_customer.cstmrTypeCd = typeCd
+    }
+  }
+
+  const handleTeCustomerTypeChange = (typeCd) => {
+    resetTeCustomer()
+
+    formData.value.te_customer.cstmrTypeCd = typeCd
+  }
+
   // 각 인증 버튼들의 최종 완료 여부를 관리하는 플래그 (UI 제어용)
   const authFlags = ref({
     identityCertTypeCd: false,
@@ -567,6 +605,220 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
     }
   }
 
+  const resetTrCustomer = () => {
+    const currentType = formData.value.tr_customer.cstmrTypeCd
+
+    Object.assign(formData.value.tr_customer, {
+      cstmrTypeCd: currentType,
+      identityCertTypeCd: '',
+      tr_idCard: '',
+      identityTypeCd: '',
+      identityTypeNm: '',
+      isSaved: false,
+      identityIssuDate: '',
+      driveLicnsNo: '',
+      identityIssuRegion: '',
+      cstmrJuridicalRrn1: '',
+      cstmrJuridicalRrn2: '',
+      cstmrJuridicalBizNo1: '',
+      cstmrJuridicalBizNo2: '',
+      cstmrJuridicalBizNo3: '',
+      cstmrJuridicalRepNm: '',
+      upjnCd: '',
+      bcuSbst: '',
+      deviceChgTel1: '010',
+      deviceChgTel2: '',
+      deviceChgTel3: '',
+      repName: '',
+      minorAgentNm: '',
+      minorAgentRelTypeCd: '',
+      minorAgentTelFnNo: '',
+      minorAgentTelMnNo: '',
+      minorAgentTelRnNo: '',
+      repRegistrationNo1: '',
+      repRegistrationNo2: '',
+      repForeignerNo1: '',
+      repForeignerNo2: '',
+      minorUserBirthDate: '',
+      minorUserGender: 'M',
+      repAgree: false,
+      cstmrNm: '',
+      cstmrNativeRrn1: '',
+      cstmrNativeRrn2: '',
+      cstmrForeignerRrn1: '',
+      cstmrForeignerRrn2: '',
+      userBirthDate: '',
+      userGender: 'M',
+      userId: '',
+      isVerified: false,
+      isScanVerified: false,
+      fstEsimYn: null,
+    })
+  }
+
+  const resetTeCustomer = () => {
+    Object.assign(formData.value.te_customer, {
+      cstmrTypeCd: 'NA',
+      cstmrNm: '',
+      cstmrNativeRrn1: '',
+      cstmrNativeRrn2: '',
+      cstmrForeignerRrn1: '',
+      cstmrForeignerRrn2: '',
+      upjnCd: '',
+      bcuSbst: '',
+      deviceChgTel1: '010',
+      deviceChgTel2: '',
+      deviceChgTel3: '',
+      identityCertTypeCd: '',
+      tr_idCard: '',
+      identityTypeCd: '',
+      identityIssuDate: '',
+      identityIssuRegion: '',
+      driveLicnsNo: '',
+      cstmrJuridicalRrn1: '',
+      cstmrJuridicalRrn2: '',
+      cstmrJuridicalBizNo1: '',
+      cstmrJuridicalBizNo2: '',
+      cstmrJuridicalBizNo3: '',
+      cstmrJuridicalRepNm: '',
+      cstmrVisitTypeCd: '',
+      repName: '',
+      minorAgentNm: '',
+      minorAgentRelTypeCd: '',
+      minorAgentTelFnNo: '',
+      minorAgentTelMnNo: '',
+      minorAgentTelRnNo: '',
+      repRegistrationNo1: '',
+      repRegistrationNo2: '',
+      repForeignerNo1: '',
+      repForeignerNo2: '',
+      minorUserBirthDate: '',
+      minorUserGender: 'M',
+      repAgree: false,
+      mobileNo1: '010',
+      mobileNo2: '',
+      mobileNo3: '',
+      telNo1: '',
+      telNo2: '',
+      telNo3: '',
+      emailAddr1: '',
+      emailAddr2: '',
+      zip: '',
+      address: '',
+      detailAddress: '',
+      country: '',
+      te_stayPeriod: '',
+      visaType: '',
+      userId: '',
+      isVerified: false,
+      isScanVerified: false,
+      isSaved: false,
+    })
+  }
+
+  const resetCustomer = () => {
+    resetTrCustomer()
+    resetTeCustomer()
+
+    Object.assign(formData.value.realUserInfo, {
+      realUserName: '',
+      userBirthDate: '',
+      userGender: 'M',
+      minorAgentNm: '',
+      agentGender: '',
+      agentBirthDate: '',
+      minorAgentRelTypeCd: '',
+      minorAgentTelFnNo: '',
+      minorAgentTelMnNo: '',
+      minorAgentTelRnNo: '',
+    })
+
+    Object.assign(formData.value.planInfo, {
+      planName1: '',
+      planName2: '',
+      planName3: '',
+      planAmt: '',
+      planNm: '',
+      agency: '',
+      planSelectType: 'CURRENT',
+      userId: '',
+      ncn: '',
+      ctn: '',
+      custId: '',
+      orgProdId: '',
+      orgPordNm: '',
+      ktOrgId: '',
+    })
+
+    formData.value.termsAgreed = false
+    formData.value.othersTrnsAgreeYn = 'N'
+    formData.value.othersTrnsKtAgreeYn = 'N'
+    formData.value.othersAdReceiveAgreeYn = 'N'
+
+    authFlags.value.identityCertTypeCd = false
+    authFlags.value.deviceChgTel = false
+    authFlags.value.repPhone = false
+    authFlags.value.requiredDocs = false
+  }
+
+  const resetProduct = () => {
+    Object.assign(formData.value.usimInfo, {
+      hasSim: '',
+      usimKindsCd: '',
+      reqUsimSn: '',
+      simPurchaseMethod: '',
+      prodNm: '',
+      eid: '',
+      imei1: '',
+      imei2: '',
+      modelNm: '',
+    })
+
+    Object.assign(formData.value.productPayment, {
+      cstmrBillSendTypeCd: '',
+      reqPayTypeCd: '',
+      autoPayerType: '',
+      reqBankCd: '',
+      reqAccountNo: '',
+      reqAccountNm: '',
+      reqAccountRrn: '',
+      reqAccountRelTypeCd: '',
+      isAutoAgree: false,
+      cardPayerType: '',
+      reqCardCompanyCd: '',
+      reqCardNo: '',
+      reqCardMm: '',
+      reqCardYy: '',
+      reqCardNm: '',
+      reqCardRrn: '',
+      cardRelation: '',
+      othersPaymentYn: 'N',
+      combId: '',
+      combAgree: false,
+    })
+
+    formData.value.memo = ''
+
+    authFlags.value.reqUsimSn = false
+    authFlags.value.imei = false
+    authFlags.value.esimImei = false
+    authFlags.value.autoAcct = false
+    authFlags.value.reqCardNo = false
+    authFlags.value.combId = false
+  }
+
+  const resetAgreement = () => {
+    formData.value.agreeCheck1 = false
+    formData.value.agreeCheck2 = false
+    formData.value.agreeCheck3 = false
+    formData.value.agreeCheck4 = false
+    formData.value.agreeCheck5 = false
+    formData.value.agreeCheck6 = false
+    formData.value.recYn = ''
+    formData.value.recFileNm = ''
+    formData.value.recFilePathNm = ''
+  }
+
   const validateCustomer = ref(() => true)
   const validateProduct = ref(() => true)
   const validateAgreement = ref(() => true)
@@ -602,5 +854,8 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
     validateCustomer,
     validateProduct,
     validateAgreement,
+    resetCustomer,
+    resetProduct,
+    resetAgreement,
   }
 })

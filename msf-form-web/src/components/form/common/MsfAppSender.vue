@@ -25,11 +25,13 @@ const route = useRoute()
 const props = defineProps({
   formKey: { type: String, required: true },
   phone: { type: String, required: true },
+  name: { type: String, required: true },
 })
 
 const smsType = ref('')
 
 const phoneNumber = ref(props.phone)
+const customerName = ref(props.name)
 
 const invalid = computed(() => {
   if (isEmpty(phoneNumber.value)) return true
@@ -41,7 +43,7 @@ const onClickSendForm = async () => {
     showAlert('휴대폰번호를 입력해 주세요.')
     return false
   }
-  if (!invalid.value) {
+  if (invalid.value) {
     showAlert('휴대폰번호는 11자리 숫자로 입력해 주세요.')
     return false
   }
@@ -54,6 +56,7 @@ const onClickSendForm = async () => {
       type: smsType.value,
       path: route.path,
       phone: phoneNumber.value,
+      name: customerName.value,
     })
     if (result?.code !== '0000') {
       showAlert('신청서 발송이 실패하였습니다.\n다시 시도해 주세요.')

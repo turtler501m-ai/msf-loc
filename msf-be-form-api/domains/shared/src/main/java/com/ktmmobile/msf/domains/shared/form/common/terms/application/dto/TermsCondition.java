@@ -4,7 +4,11 @@ import java.util.List;
 import jakarta.validation.constraints.NotBlank;
 
 public record TermsCondition(
-    String groupCode,
+    @NotBlank String groupCode,
+    String code,
+    String contentGroup,
+    String contentCode,
+    String version,
     List<SpecTerms> specTermsList
 ) {
 

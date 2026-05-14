@@ -1,44 +1,176 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.form.extra.receipt.adapter.repository.mybatis.smartform.mapper.ReceiptPageMapper">
 
-  <sql id="deviceCondition">
-    <if test='searchWord != null and searchWord != ""'>
-      and 1=1
-      <!--<![CDATA[-->
-      <!--    and a.cret_dt >= #{startDate}::timestamp-->
-      <!--]]>-->
-    </if>
+  <resultMap id="FormRequestResultMap" type="com.ktmmobile.msf.domains.form.extra.receipt.domain.entity.ReceiptPage">
+    <id property="requestKey" column="request_key" />
+    <result property="cretDt" column="cret_dt" />
+    <result property="formTypeCd" column="form_type_cd" />
+    <result property="reqBuyTypeCd" column="req_buy_type_cd" />
+    <result property="operTypeCd" column="oper_type_cd" />
+    <result property="procCd" column="proc_cd" />
+    <result property="cstmrNm" column="cstmr_nm" />
+    <result property="cstmrNativeBirth" column="cstmr_native_birth" />
+    <result property="cstmrTypeCd" column="cstmr_type_cd" />
+    <result property="identityCertTypeCd" column="identity_cert_type_cd" />
+    <result property="agentCd" column="agent_cd" />
+    <result property="agentNm" column="agent_nm" />
+    <result property="shopCd" column="shop_cd" />
+    <result property="shopNm" column="shop_nm" />
+    <result property="cretId" column="cret_id" />
+  </resultMap>
+
+  <select id="count" resultType="int">
+    SELECT COUNT(*) FROM (
+    <include refid="unionQuery" />
+    ) T
+  </select>
+
+  <select id="selectList" resultMap="FormRequestResultMap">
+    <choose>
+      <when test="formTypeCd != null and formTypeCd.size() > 0">
+        SELECT * FROM (
+        <include refid="unionQuery" />
+        ) T
+        ORDER BY T.cret_dt DESC
+        LIMIT #{page.rowSize} OFFSET #{page.offset}
+      </when>
+      <otherwise>
+        SELECT NULL AS request_key WHERE 1=2
+      </otherwise>
+    </choose>
+  </select>
+
+  <sql id="unionQuery">
+    <trim prefixOverrides="UNION ALL">
+      <if test="formTypeCd == null or formTypeCd.size() == 0">
+        SELECT NULL WHERE 1=2
+      </if>
+      <if test="formTypeCd != null and formTypeCd.contains(&quot;1&quot;)">
+        UNION ALL
+        SELECT
+          MR.request_key,
+          MR.cret_dt,
+          '1' AS form_type_cd,
+          MR.req_buy_type_cd AS req_buy_type_cd,
+          MR.oper_type_cd AS oper_type_cd,
+          MR.proc_cd,
+          MRC.cstmr_nm,
+          MRC.cstmr_native_birth,
+          MR.cstmr_type_cd,
+          MR.identity_cert_type_cd AS identity_cert_type_cd,
+          MR.agent_cd,
+          MR.agent_nm,
+          MR.shop_cd,
+          MR.shop_nm,
+          MR.cret_id
+        FROM MSF_REQUEST MR
+        LEFT JOIN MSF_REQUEST_CSTMR MRC ON MR.request_key = MRC.request_key
+        <where>
+          <include refid="formRequestWhere" />
+        </where>
+      </if>
+
+      <if test="formTypeCd != null and formTypeCd.contains(&quot;2&quot;)">
+        UNION ALL
+        SELECT
+          MR.request_key,
+          MR.cret_dt,
+          '2' AS form_type_cd,
+          NULL AS req_buy_type_cd,
+          NULL AS oper_type_cd,
+          MR.proc_cd,
+          MRC.cstmr_nm,
+          MRC.cstmr_native_birth,
+          MR.cstmr_type_cd,
+          NULL AS identity_cert_type_cd,
+          MR.agent_cd,
+          MR.agent_nm,
+          MR.shop_cd,
+          MR.shop_nm,
+          MR.cret_id
+        FROM MSF_REQUEST_SVC_CHG MR
+        LEFT JOIN MSF_REQUEST_CSTMR MRC ON MR.request_key = MRC.request_key
+        <where>
+          <include refid="formRequestWhere" />
+        </where>
+      </if>
+
+      <if test="formTypeCd != null and formTypeCd.contains(&quot;3&quot;)">
+        UNION ALL
+        SELECT
+          MR.request_key,
+          MR.cret_dt,
+          '3' AS form_type_cd,
+          NULL AS req_buy_type_cd,
+          NULL AS oper_type_cd,
+          MR.proc_cd,
+          MRC.cstmr_nm,
+          MRC.cstmr_native_birth,
+          MR.cstmr_type_cd,
+          NULL AS identity_cert_type_cd,
+          MR.agent_cd,
+          MR.agent_nm,
+          MR.shop_cd,
+          MR.shop_nm,
+          MR.cret_id
+        FROM MSF_REQUEST_NAME_CHG MR
+        LEFT JOIN MSF_REQUEST_CSTMR MRC ON MR.request_key = MRC.request_key
+        <where>
+          <include refid="formRequestWhere" />
+        </where>
+      </if>
+
+      <if test="formTypeCd != null and formTypeCd.contains(&quot;4&quot;)">
+        UNION ALL
+        SELECT
+          MR.request_key,
+          MR.cret_dt,
+          '4' AS form_type_cd,
+          NULL AS req_buy_type_cd,
+          NULL AS oper_type_cd,
+          MR.proc_cd,
+          MRC.cstmr_nm,
+          MRC.cstmr_native_birth,
+          MR.cstmr_type_cd,
+          NULL AS identity_cert_type_cd,
+          MR.agent_cd,
+          MR.agent_nm,
+          MR.shop_cd,
+          MR.shop_nm,
+          MR.cret_id
+        FROM MSF_REQUEST_CANCEL MR
+        LEFT JOIN MSF_REQUEST_CSTMR MRC ON MR.request_key = MRC.request_key
+        <where>
+          <include refid="formRequestWhere" />
+        </where>
+      </if>
+    </trim>
   </sql>
 
-  <select id="countReceiptList" resultType="java.lang.Integer">
-    select count(1)
-    from msf_usr_app_info a
-    left join msf_user_info b on a.user_id = b.user_id
-    where 1=1
-  </select>
-
-  <select id="selectReceiptList" resultType="com.ktmmobile.msf.domains.form.extra.receipt.domain.vo.ReceiptVo">
-    select ROW_NUMBER() OVER (ORDER BY a.cret_dt DESC) AS row_num
-    , b.agent_cd
-    , b.agent_cd as agentNm
-    , b.shop_cd
-    , b.shop_cd as shopNm
-    , b.user_id
-    , b.user_sttus_cd
-    , b.user_nm
-    , a.mac_adr
-    , a.uuid
-    , a.cret_dt
-    from msf_usr_app_info a
-    left join msf_user_info b on a.user_id = b.user_id
-    where 1=1
-    order by a.cret_dt desc
-    <if test='page.pageEnabled'>
-      LIMIT #{page.rowSize} OFFSET #{page.offset}
-    </if>
-  </select>
-
+  <sql id="formRequestWhere">
+    <if test="startDt != null">AND MR.cret_dt <![CDATA[>=]]> #{startDt}</if>
+    <if test="endDt != null">AND MR.cret_dt <![CDATA[<]]> (#{endDt} + INTERVAL '1 day')</if>
+    <if test="requestKey != null and requestKey > 0"> AND MR.request_key = #{requestKey} </if>
+    <if test="@org.springframework.util.StringUtils@hasText(cstmrNm)"> AND MRC.cstmr_nm LIKE CONCAT(#{cstmrNm}, '%') </if>
+    <if test="@org.springframework.util.StringUtils@hasText(cstmrNativeBirth)"> AND MRC.cstmr_native_birth LIKE CONCAT(#{cstmrNativeBirth}, '%') </if>
+    <if test="@org.springframework.util.StringUtils@hasText(shopCd)"> AND MR.shop_cd = #{shopCd} </if>
+    <if test="@org.springframework.util.StringUtils@hasText(shopNm)"> AND MR.shop_nm LIKE CONCAT(#{shopNm}, '%') </if>
+    <if test="@org.springframework.util.StringUtils@hasText(authAgentCd)"> AND MR.agent_cd = #{authAgentCd} </if>
+    <if test="@org.springframework.util.StringUtils@hasText(authShopCd)"> AND MR.shop_cd = #{authShopCd} </if>
+    <if test="@org.springframework.util.StringUtils@hasText(authCretId)"> AND MR.cret_id = #{authCretId} </if>
+    <choose>
+      <when test="procCd != null and procCd.size() == 0">
+        AND 1 = 0
+      </when>
+      <when test="procCd != null and procCd.size() == 3">
+      </when>
+      <when test="procCd != null and procCd.size() > 0">
+        AND MR.proc_cd IN
+        <foreach collection="procCd" item="item" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+      </when>
+    </choose>
+  </sql>
 </mapper>

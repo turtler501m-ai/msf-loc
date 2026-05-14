@@ -69,7 +69,7 @@ export const validateMobile = (str, checkNull = true) => {
     return checkNull ? false : true
   }
 
-  return /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/.test(str)
+  return /^01([0|1|6|7|8|9])-?([0-9]{4})-?([0-9]{4})$/.test(str)
 }
 
 /**
@@ -92,4 +92,20 @@ export const validateTel = (str, checkNull = true, inMain = false) => {
     /^(01[016789]|02|0[3-9][0-9])-?([0-9]{3,4})-?([0-9]{4})$/.test(str) ||
     (inMain && /^(1[5468][0-9]{2})-?([0-9]{4})$/.test(str))
   )
+}
+
+/**
+ * 비밀번호 정합성 체크
+ * - 10~15자 이상일 정합성 체크
+ * - 영문, 숫자, 특수문자 3가지가 모두 포함된 10~15자 이상일 경우 true 반환, 그렇지 않으면 false 반환
+ *
+ * @param {string} str 체크할 비밀번호
+ * @returns
+ */
+export const validatePassword = (str) => {
+  if (isNull(str)) {
+    return false
+  }
+  const passwordPattern = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^*+=-])[a-zA-Z\d!@#$%^*+=-]{10,15}$/
+  return passwordPattern.test(str)
 }

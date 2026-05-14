@@ -24,7 +24,7 @@ public class CommonException extends RuntimeException {
         this.code = code;
     }
 
-    public System.Logger.Level getLogLevel() {
-        return System.Logger.Level.ERROR;
+    public ExceptionLogLevel getLogLevel() {
+        return ExceptionLogLevel.ERROR;
     }
 }

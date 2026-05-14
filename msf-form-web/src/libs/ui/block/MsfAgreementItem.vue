@@ -21,7 +21,7 @@
       </div>
       <div class="actions">
         <MsfButton
-          v-if="content"
+          v-if="version"
           class="detail-btn"
           @click.stop="showDialog = true"
           iconOnly="agreeArrowRight"
@@ -39,25 +39,17 @@
         </MsfButton>
       </div>
     </div>
-    <MsfDialog :is-open="showDialog" :title="name" show-close @close="showDialog = false">
-      <div class="terms-content">
-        <template v-if="Array.isArray(content)">
-          <ul class="text-list">
-            <li v-for="(text, i) in content" :key="i" v-html="text"></li>
-          </ul>
-        </template>
-        <template v-else>
-          <div class="plain-text" v-html="content"></div>
-        </template>
-      </div>
-      <template #footer>
-        <MsfButtonGroup align="center">
-          <MsfButton variant="primary" class="confirm-btn" @click="onClickConfirmBtn()">
-            동의 후 닫기
-          </MsfButton>
-        </MsfButtonGroup>
-      </template>
-    </MsfDialog>
+    <MsfAgreementDetail
+      v-model="showDialog"
+      :groupCode="groupCode"
+      :code="code"
+      :id1="termsGroupCd"
+      :id2="termsItemCd"
+      :version="version"
+      :title="name"
+      :spec-terms="specTerms"
+      @confirm="onConfirmDetail"
+    />
 
     <transition name="expand">
       <div v-show="isExpanded && children?.length > 0" class="child-group-container">
@@ -83,10 +75,14 @@ defineOptions({ name: 'AgreementItem' })
 
 const props = defineProps({
   modelValue: Boolean, // 체크박스 선택 여부
+  groupCode: String,
   code: String,
   name: String, // 약관 제목 텍스트
+  termsGroupCd: String,
+  termsItemCd: String,
+  specTerms: Object,
   required: String, // 필수 동의 여부 (true: 필수 / false: 선택)
-  content: [String, Array], // 상세보기 팝업 내용 (문자열 또는 배열)
+  version: [String, Array], // 약과내용 버전 (문자열 또는 배열)
   children: Array, // 하위 약관 항목 리스트
   onlyRequired: {
     // 필수 항목만 체크 시 부모 체크 여부 결정
@@ -149,9 +145,8 @@ const handleUpdateModel = (value) => {
   }
 }
 
-const onClickConfirmBtn = () => {
-  handleUpdateModel(true)
-  showDialog.value = false
+const onConfirmDetail = (result) => {
+  handleUpdateModel(result)
 }
 </script>
 

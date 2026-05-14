@@ -21,6 +21,8 @@ public class NewChangeInfoRequest {
 
     List<NewChangeAdditionRequest> additionList;
 
+    Long newRequestKey;
+
     Long requestKey;
     String cretIp;
     String cretDt;

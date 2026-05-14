@@ -1,7 +1,8 @@
 package com.ktmmobile.msf.domains.mobileapp.app.application.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import com.ktmmobile.msf.commons.common.exception.SimpleDomainException;
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginSessionFlowProcessor;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginRequiredAction;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitRequest;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppInitResponse;
 import com.ktmmobile.msf.domains.mobileapp.app.application.dto.AppRegistRequest;
@@ -66,7 +68,11 @@ public class AppService implements AppIntroReader {
     @Override
     public AppInitResponse initLogin(AppInitRequest request) {
         AppInitResponse result = new AppInitResponse();
-        UsrAppInfoVo vo = repository.getUserApp(request.getDeviceUuid());
+        List<UsrAppInfoVo> voList = repository.getUserApp(request.getDeviceUuid());
+        UsrAppInfoVo vo = null;
+        if (!voList.isEmpty()) {
+            vo = voList.get(0);
+        }
         log.debug("initLogin vo:{}", vo);
         if (vo != null && vo.getOsCd() != null) {
             result = appUsrInfoFieldMapper.toAppInitResponse(vo);
@@ -80,40 +86,63 @@ public class AppService implements AppIntroReader {
     @Override
     public Integer registModel(AppRegistRequest request) {
         LoginSessionUser sessionUser = loginSessionFlowProcessor.getSessionUser(request.getLoginSessionId());
-        request.setUserId(sessionUser.userId());
+        String sesUserId = sessionUser.userId();
+        request.setUserId(sesUserId);
         request.setAppNm("스마트서식지");
-        request.setApvSttusCd("A");
-        request.setAutoLoginYn("Y");
-        request.setBioLoginYn("N");
 
-        UsrAppInfoVo vo = repository.getUserApp(request.getDeviceUuid());
-        Integer result = vo != null
-            ? repository.modifyBioSetting(request)
-            : repository.registUserApp(request);
+        Integer result = 0;
+        List<UsrAppInfoVo> voList = repository.getUserApp(request.getDeviceUuid());
+        if (voList == null) {
+            result = repository.registUserApp(request);
+        } else {
+            for (UsrAppInfoVo vo: voList) {
+                if (vo.getUserId().equals(sesUserId)) {
+                    request.setApvSttusCd("A");
+                    //request.setAutoLoginYn("Y");
+                    request.setBioLoginYn("N");
+                } else {
+                    request.setApvSttusCd("C");
+                    //request.setAutoLoginYn("N");
+                    request.setBioLoginYn("N");
+                }
+                result = repository.modifyBioSetting(request);
+            }
+        }
         loginSessionFlowProcessor.completeAction(request.getLoginSessionId(), LoginRequiredAction.DEVICE_AUTH_CODE);
         return result;
     }
 
     @Override
     public Integer modifyBioSetting(AppRegistRequest request) {
-        Integer retInt = 0;
-        UsrAppInfoVo vo = repository.getUserApp(request.getDeviceUuid());
-        log.debug("removeModel vo:{}", vo);
-        if (vo == null) {
+        Integer result = 0;
+        List<UsrAppInfoVo> voList = repository.getUserApp(request.getDeviceUuid());
+
+        String authUserId = AuthenticationUtils.getUser().getUserId();
+        if (voList == null) {
             throw new SimpleDomainException("수정에 실패했습니다.");
+        } else {
+            for (UsrAppInfoVo vo: voList) {
+                if (vo.getUserId().equals(authUserId)) {
+                    log.debug("modifyBioSetting vo:{}", vo);
+                    result = repository.modifyBioSetting(request);
+                }
+            }
         }
-        return repository.modifyBioSetting(request);
+        return result;
     }
 
     @Transactional
     @Override
     public Integer removeModel(AppInitRequest request) {
-        Integer retInt = 0;
-        UsrAppInfoVo vo = repository.getUserApp(request.getDeviceUuid());
-        log.debug("removeModel vo:{}", vo);
-        if (vo == null) {
+        List<UsrAppInfoVo> voList = repository.getUserApp(request.getDeviceUuid());
+        if (voList == null) {
             throw new SimpleDomainException("삭제에 실패했습니다.");
         }
-        return repository.removeUserApp(request);
+        Integer result = repository.removeUserApp(request);
+        // 삭제 필요..
+        //if (result != null && result > 0 && StringUtils.hasText(vo.getUserId())) {
+        //    loginSessionFlowProcessor.revokeAuthentication(UserType.FORM_USER, vo.getUserId());
+        //}
+        return result;
     }
 }

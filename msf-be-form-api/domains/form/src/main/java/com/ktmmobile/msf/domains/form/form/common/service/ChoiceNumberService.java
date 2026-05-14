@@ -44,11 +44,23 @@ public class ChoiceNumberService {
      * 세션에 연동정보 저장은 못 찾겠네.. 흠..
      * MCP_REQUEST_OSST 테이블의 MVNO_ORD_NO 값은 여러개 가능. 즉 GROUP BY 가능
      * MCP_REQUEST_OSST 는 호출전 REQUEST INSERT, 호출후 RESPONSE INSERT
+     * 고객포탈은 희망번호 저장 : MCP_REQUEST.REQ_WANT_NUMBER >> 스마트에서 직접 PRX 호출한다면 MSF_REQUEST 테이블에 저장하려면 컬럼 추가 필요.
      **/
     //public Map<String, Object> searchNumber(McpRequestDto mcpRequestDto) {
     //public FormResponse<SearchNumberResponse> getSearchNumber(SearchNumberRequest request) {
     public FormResponse<SearchNumberResponse> getSearchNumber(SearchNumberRequest request) {
         //Parameter 정보 : requestKey, reqWantNumber
+
+        //0. 입력 데이타 검증
+        String reqWantNumber = request.getReqWantNumber();
+        if (reqWantNumber.length() != 4) {
+            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_NOT_CORRECT); //희망번호 입력값 4자리 검증
+        }
+
+        //@@추후 삭제필요!!@!!!!
+        if ("9999".equals(request.getReqWantNumber())) {
+            return FormResponse.of(ResponseMessage.VALID_SEARCH_NUMBER_FAIL); //희망번호 조회 실패?를 여기에?? 일단~~
+        }
 
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
         SearchNumberResponse searchNumberResponse = new SearchNumberResponse(); //Return DTO 설정

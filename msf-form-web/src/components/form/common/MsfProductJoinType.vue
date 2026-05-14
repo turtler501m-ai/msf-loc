@@ -6,16 +6,13 @@
         <MsfChip
           v-model="model.productType"
           name="inp-product"
-          groupCode="REQ_BUY_TYPE_CD"
-          :disabled="model.isVerified || model.isSaved"
-          :data="[]"
+          :data="productTypeData"
         />
       </MsfFormGroup>
       <MsfFormGroup label="가입유형" tag="div" required>
         <MsfChip
           v-model="model.joinType"
           name="inp-joinType"
-          :disabled="model.isVerified || model.isSaved"
           :data="filteredJoinTypeCodes"
         />
       </MsfFormGroup>
@@ -33,25 +30,40 @@ const props = defineProps({
 const model = defineModel({ type: Object, required: true })
 
 const joinTypeCodes = ref([])
+const rawProductTypeCodes = ref([])
+
+const isAuthLocked = computed(() => model.value?.isVerified || model.value?.isSaved)
+
+const productTypeData = computed(() =>
+  rawProductTypeCodes.value.map((item) => ({ ...item, disabled: isAuthLocked.value })),
+)
 
 onMounted(async () => {
-  const list = await getCommonCodeList('OPER_TYPE_CD')
-  joinTypeCodes.value = (list || []).map((item) => ({
+  const [operList, productList] = await Promise.all([
+    getCommonCodeList('OPER_TYPE_CD'),
+    getCommonCodeList('REQ_BUY_TYPE_CD'),
+  ])
+  joinTypeCodes.value = (operList || []).map((item) => ({
     ...item,
     label: item.title,
     value: item.code,
+  }))
+  rawProductTypeCodes.value = (productList || []).map((item) => ({
+    value: item.code,
+    label: item.title,
   }))
   if (model.value && !model.value.joinType) {
     model.value.joinType = 'MNP3'
   }
 })
 
-// USIM 상품 선택 시 기기변경(HDN3) 옵션 제외
+// USIM 상품 선택 시 기기변경(HDN3) 옵션 제외, 인증 완료 시 전체 비활성화
 const filteredJoinTypeCodes = computed(() => {
-  if (model.value.productType === 'UU') {
-    return joinTypeCodes.value.filter((code) => code.value !== 'HDN3')
-  }
-  return joinTypeCodes.value
+  const base =
+    model.value.productType === 'UU'
+      ? joinTypeCodes.value.filter((code) => code.value !== 'HDN3')
+      : joinTypeCodes.value
+  return base.map((item) => ({ ...item, disabled: isAuthLocked.value }))
 })
 
 // 상품 변경 시 가입유형 기본값으로 초기화

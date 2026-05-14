@@ -109,6 +109,7 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpTelTotalUseTimeMobil
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpTelTotalUseTimeVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpUsimPukVO;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpVoidTypeVO;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MplatFormFMC0InfoRequest;
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.PaymentInfoVO;
 import com.ktmmobile.msf.domains.form.common.service.FCommonSvc;
 import com.ktmmobile.msf.domains.form.common.util.DateTimeUtil;
@@ -529,12 +530,14 @@ public class MsfMplatFormService {
     public <T> T commonMplatform(HashMap<String, String> param, String eventCd, Class<T> clazz)
         throws SelfServiceException, IOException {
 
-        if ("LOCAL".equals(serverLocation)) {
-            return getVo2(eventCd, clazz);
-            //mplatFormServerAdapter.callService(param, vo);
-        } else {
-            return mplatFormServerAdapter.callService2(param, clazz);
-        }
+        return getVo2(eventCd, clazz);
+
+        // if ("LOCAL".equals(serverLocation)) {
+        //     return getVo2(eventCd, clazz);
+        //     //mplatFormServerAdapter.callService(param, vo);
+        // } else {
+        //     return mplatFormServerAdapter.callService2(param, clazz);
+        // }
     }
 
     /**
@@ -3406,6 +3409,17 @@ public class MsfMplatFormService {
             mplatFormServerAdapter.callService(param, vo);
         }
         return vo;
+    }
+
+    public HashMap<String, Object> mplatformFMC0CallJson(MplatFormFMC0InfoRequest request, String eventCd) {
+        request.setAppEventCd(eventCd);
+        HashMap<String, Object> resultMap = mplatFormServerAdapter.mplatformCallJson(request);
+        if (!"0000".equals(resultMap.get("code"))) {
+            return resultMap;
+        }
+        resultMap.put("code", resultMap.get("rsltCd"));
+        resultMap.put("msg", resultMap.get("rsltMsg"));
+        return resultMap;
     }
 
     /*

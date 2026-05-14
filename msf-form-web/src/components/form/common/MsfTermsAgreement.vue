@@ -33,6 +33,7 @@ const props = defineProps({
       { code: 'CLAUSE_MOVE_01' },
     ],
   }, // 동적으로 약관 데이터를 받을 prop
+  termsData: { type: Array, default: () => [] },
 })
 
 const model = defineModel({ type: Object, required: true })
@@ -108,5 +109,10 @@ const setAllChecked = () => {
   handleChecked(allChecked)
 }
 
-defineExpose({ validate, setAllChecked })
+const reset = () => {
+  lastCheckedResult.value = []
+  model.value.termsAgreed = false
+}
+
+defineExpose({ validate, setAllChecked, reset })
 </script>

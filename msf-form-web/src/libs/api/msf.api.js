@@ -44,6 +44,12 @@ api.interceptors.request.use(
     }
 
     const msfUserStore = useMsfUserStore()
+    if (config.url.endsWith('/logout')) {
+      if (msfUserStore.token) {
+        config.headers.Authorization = `Bearer ${msfUserStore.token}`
+      }
+      return config
+    }
     // 토큰이 없거나, 이미 만료된 상태라면 갱신 로직 진입
     if (isTokenExpired(msfUserStore.token)) {
       // 이미 다른 API가 갱신을 진행 중이라면 대기열에 탑승

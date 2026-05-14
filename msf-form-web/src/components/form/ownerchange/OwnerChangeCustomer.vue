@@ -39,6 +39,7 @@
     <MsfLegalAgentInfo
       v-model="formData.tr_customer"
       :name="'minor-tr'"
+      agreementTitle="고객(양도고객) 법정대리인 안내사항 확인 및 동의"
       title="고객(양도고객) 법정대리인 정보"
       ref="trLegalAgentInfoRef"
       :authFlags="store.authFlags"
@@ -51,6 +52,7 @@
       :name="'te'"
       ref="teCustomerTypeRef"
       :authFlags="store.authFlags"
+      :allowedCodes="teAllowedCodes"
     />
     <!-- // 고객(양수고객) 유형 -->
     <!-- 고객(양수고객) 신분증 확인 -->
@@ -145,7 +147,7 @@ import { showAlert } from '@/libs/utils/comp.utils'
 import { useMsfFormOwnChgStore } from '@/stores/msf_ownerChange'
 import { storeToRefs } from 'pinia'
 import { onMounted } from 'vue'
-import { ref, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 
 // 필수 항목 입력 완료여부 리턴
 const emit = defineEmits(['complete'])
@@ -171,22 +173,19 @@ const contactInfoRef = ref(null)
 const devicePlanInfoRef = ref(null)
 const termsAgreementRef = ref(null)
 
+const MINOR_CODES = ['NM', 'FM']
+
+// 양도고객이 미성년자인 경우 양수고객도 미성년자 유형만 선택 가능
+const teAllowedCodes = computed(() => {
+  return MINOR_CODES.includes(formData.value.tr_customer.cstmrTypeCd) ? MINOR_CODES : []
+})
+
 // 값이 변할 때마다 상위 컴포넌트에게 필수 입력 결과를 알려준다.
 watch(
   () => isComplete.value,
   (newVal) => {
     isComplete.value = newVal
     emit('complete', newVal ? true : false)
-  },
-)
-
-watch(
-  () => formData.value.tr_customer.cstmrTypeCd,
-  (newVal) => {
-    const minorCd = ['NM', 'FM']
-    if (minorCd.includes(newVal)) {
-      formData.value.te_customer.cstmrTypeCd = newVal
-    }
   },
 )
 
@@ -340,6 +339,13 @@ watch(
   { deep: true },
 )
 
+const reset = async () => {
+  store.resetCustomer()
+  await nextTick()
+  termsAgreementRef.value?.reset?.()
+  validate()
+}
+
 const data = async (code /* 임시저장 코드 */) => {
   // 임시저장 정보 조회
   if (code) {
@@ -380,7 +386,7 @@ const validate = () => {
   return isReady
 }
 
-defineExpose({ data, save, validate })
+defineExpose({ data, save, validate, reset })
 </script>
 
 <style scoped></style>

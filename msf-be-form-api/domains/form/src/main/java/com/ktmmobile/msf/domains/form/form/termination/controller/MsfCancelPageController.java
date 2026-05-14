@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -42,6 +43,14 @@ public class MsfCancelPageController {
     }
 
     /**
+     * 해지 휴대폰번호 기준으로 진행중인 신청서 존재 여부를 확인한다.
+     */
+    @PostMapping(value = "/api/msf/formTermination/inprogress/get")
+    public CommonResponse<FormResponse<Void>> checkInProgressApplication(@RequestBody Map<String, String> req) {
+        return ResponseUtils.ok(msfCancelPageSvc.checkInProgressApplication(req != null ? req.get("mobileNo") : null));
+    }
+
+    /**
      * 해지 신청서 작성을 완료하고 신청 데이터를 서비스 계층에서 생성한다.
      */
     @PostMapping(value = "/api/msf/formTermination/{applicationKey}/complete")
@@ -50,5 +59,13 @@ public class MsfCancelPageController {
             @RequestBody TerminationApplyReqDto reqDto
     ) {
         return ResponseUtils.ok(msfCancelPageSvc.complete(applicationKey, reqDto));
+    }
+
+    /**
+     * 저장된 MSF 신청 데이터를 MCP 테이블로 다시 이관한다.
+     */
+    @PostMapping(value = "/api/msf/formTermination/{requestKey}/mcp-transfer")
+    public CommonResponse<FormResponse<Void>> transferToMcp(@PathVariable("requestKey") Long requestKey) {
+        return ResponseUtils.ok(msfCancelPageSvc.transferToMcp(requestKey));
     }
 }

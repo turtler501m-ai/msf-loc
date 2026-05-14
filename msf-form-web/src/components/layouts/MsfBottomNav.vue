@@ -15,15 +15,18 @@ import { useRouter } from 'vue-router'
 import { useMsfUserStore } from '@/stores/msf_user'
 import { useMsfMenuStore } from '@/stores/msf_menu' // 메뉴
 import { post } from '@/libs/api/msf.api'
+import { showConfirm } from '@/libs/utils/comp.utils'
 
 const router = useRouter()
 const userStore = useMsfUserStore()
 const menuStore = useMsfMenuStore()
 
 const onClickLogout = () => {
-  post('/api/auth/logout').then(() => {
-    userStore.clearUserInfo()
-    router.push('/login')
+  showConfirm('로그아웃 하시겠습니까?', () => {
+    post('/api/auth/logout').then(() => {
+      userStore.clearUserInfo()
+      router.push('/login')
+    })
   })
 }
 </script>

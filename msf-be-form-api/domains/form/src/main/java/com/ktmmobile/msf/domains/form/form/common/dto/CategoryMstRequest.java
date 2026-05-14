@@ -1,11 +1,12 @@
 package com.ktmmobile.msf.domains.form.form.common.dto;
 
-import com.ktmmobile.msf.domains.form.common.code.CategoryType;
+import java.util.List;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
+import com.ktmmobile.msf.domains.form.common.code.CategoryType;
 
 @Getter
 @Setter
@@ -13,10 +14,13 @@ import java.util.List;
 public class CategoryMstRequest {
 
     private CategoryType prodCtgTypeCd; //카테고리 구분코드 (P , R, I)
+    private List<String> prodCtgId;
+
+    private String rateAdsvcDivCd; //카테고리 구분코드 (P , R, I) >> prodCtgTypeCd 에서 변경하자
+    private List<String> ctgCd; // >> prodCtgId 에서 변경하자~
+
 
     //private String prodCtgId;
-
-    private List<String> prodCtgId;
 
     //private List<String> prodCtgId;
     //private List<String> prodCtgIdList;

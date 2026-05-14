@@ -15,7 +15,7 @@ import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest;
-import com.ktmmobile.msf.domains.form.form.common.dto.RateInfoDto;
+import com.ktmmobile.msf.domains.form.form.common.dto.RateInfoResponse;
 
 @Mapper
 public interface ProductInfoReadMapper {
@@ -42,10 +42,16 @@ public interface ProductInfoReadMapper {
     List<PhoneInfoResponse> selectPhoneList(ProductInfoRequest condition);
 
     //요금제 목록 조회
-    List<RateInfoDto> selectRateList(ProductInfoRequest condition);
+    List<RateInfoResponse> selectRateList(ProductInfoRequest condition);
 
-    //가격정보조회 (단말, 요금, 지원금)
+    //유심 요금제 목록 조회
+    List<RateInfoResponse> selectUsimRateList(ProductInfoRequest condition);
+
+    //가격정보조회 (약정 있는 경우, 단말, 요금, 지원금)
     MspSaleSubsdMstResponse selectMspSaleSubsdMst(MspSaleSubsdMstRequest condition);
+
+    //가격정보 (약정 없는 경우 : 무약정의 할인율)
+    MspSaleSubsdMstResponse selectUsimDcamt(MspSaleSubsdMstRequest condition);
 
     //가격정보조회 (가입비, 유심)
     PriceJoinUsimResponse selectJoinUsimPrice(PriceJoinUsimRequest condition);

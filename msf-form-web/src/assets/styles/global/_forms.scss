@@ -2,7 +2,7 @@
 
 /** input field 기본 스타일 (input-root 클래스로 한번 감싼후 input 사용) **/
 .input-root {
-  &:focus-within {
+  &:not(.is-readonly):focus-within {
     border-color: var(--color-primary);
     box-shadow: inset 0 0 0 1px var(--color-foreground);
   }

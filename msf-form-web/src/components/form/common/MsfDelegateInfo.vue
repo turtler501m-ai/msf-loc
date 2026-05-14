@@ -24,8 +24,8 @@
             name="agent-gender"
             v-model="model.agentGender"
             :options="[
-              { value: 'agentGender1', label: '남' },
-              { value: 'agentGender2', label: '여' },
+              { value: 'M', label: '남' },
+              { value: 'F', label: '여' },
             ]"
             class="ut-ml-16"
           />
@@ -37,8 +37,8 @@
           title="신청인과의 관계"
           v-model="model.minorAgentRelTypeCd"
           :options="[
-            { label: '관계1', value: 'agentRelation1' },
-            { label: '관계2', value: 'agentRelation2' },
+            { label: '관계1', value: '01' },
+            { label: '관계2', value: '02' },
           ]"
           placeholder="선택"
           class="ut-w-300"
@@ -77,7 +77,7 @@
   </div>
 </template>
 <script setup>
-import { defineModel, defineProps, ref } from 'vue'
+import { defineModel, defineProps, ref, onMounted } from 'vue'
 
 const props = defineProps({
   title: { type: String, default: '대리인 위임정보' },
@@ -88,11 +88,19 @@ const input1 = ref(null)
 const input2 = ref(null)
 const input3 = ref(null)
 
+onMounted(() => {
+  if (!model.value.agentGender) model.value.agentGender = 'M'
+})
+
 const validate = () => {
   if (!model.value.minorAgentNm) return false
   if (!model.value.agentBirthDate || !model.value.agentGender) return false
   if (!model.value.minorAgentRelTypeCd) return false
-  if (!model.value.minorAgentTelFnNo || !model.value.minorAgentTelMnNo || !model.value.minorAgentTelRnNo)
+  if (
+    !model.value.minorAgentTelFnNo ||
+    !model.value.minorAgentTelMnNo ||
+    !model.value.minorAgentTelRnNo
+  )
     return false
   return true
 }

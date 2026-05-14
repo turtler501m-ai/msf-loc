@@ -26,7 +26,6 @@ import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo;
 @Mapper
 public interface MsfRequestWriteMapper {
 
-    @AutoAuditing(value = false)
     int insertMsfRequestCancel(MsfRequestCancelVo vo);
 
     int insertMsfRequestCstmr(MsfRequestCstmrVo vo);
@@ -47,6 +46,7 @@ public interface MsfRequestWriteMapper {
 
     int insertMsfRequestMove(MsfRequestMoveVo vo);
 
+    @AutoAuditing(value = false)
     int insertMsfRequestMst(MsfRequestMstVo vo);
 
     int insertMsfRequestNameChg(MsfRequestNameChgVo vo);

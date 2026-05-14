@@ -7,7 +7,10 @@
           v-model="model.cstmrNm"
           placeholder="이름"
           class="ut-w-300"
-          :readonly="(model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')) && !isEditable"
+          :readonly="
+            (model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')) && !isEditable
+          "
+          maxlength="15"
         />
       </MsfFormGroup>
 
@@ -112,10 +115,13 @@
       </MsfFormGroup>
 
       <MsfFormGroup
-        v-if="['NA', 'JP', 'GO', 'FN', 'FM'].includes(model.cstmrTypeCd) &&
-        (!model.isTrCustomer || ['JP', 'GO', 'FN', 'FM'].includes(model.cstmrTypeCd))"
+        v-if="
+          ['NA', 'JP', 'GO', 'FN', 'FM'].includes(model.cstmrTypeCd) &&
+          (!model.isTrCustomer || ['JP', 'GO'].includes(model.cstmrTypeCd))
+        "
         label="사업자등록번호"
         :required="false"
+        helpText="※ 개인사업자인 경우만 입력"
       >
         <MsfStack type="field">
           <MsfNumberInput
@@ -152,6 +158,7 @@
         <MsfInput
           v-model="model.cstmrJuridicalRepNm"
           placeholder="대표자명 입력"
+          maxlength="15"
           class="ut-w-300"
           :readonly="model.isSaved"
         />
@@ -196,6 +203,7 @@
             v-model="model.deviceChgTel1"
             placeholder="앞자리"
             maxlength="3"
+            :readonly="true"
             @maxlength="deviceChgTel2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
@@ -293,6 +301,19 @@ const updateAuthFlag = (v) => {
   if (store.authFlags) store.authFlags.deviceChgTel = v
 }
 
+const validatePhoneNumber = () => {
+  const expectedLengths = [3, 4, 4]
+  const actualValues = [
+    model.value?.deviceChgTel1,
+    model.value?.deviceChgTel2,
+    model.value?.deviceChgTel3,
+  ]
+
+  return actualValues.every(
+    (val, index) => val.length === expectedLengths[index] && /^\d+$/.test(val),
+  )
+}
+
 const deviceChgAuth = useAuthButton(
   () => [model.value?.deviceChgTel1, model.value?.deviceChgTel2, model.value?.deviceChgTel3],
   {
@@ -303,6 +324,7 @@ const deviceChgAuth = useAuthButton(
       updateAuthFlag(v)
     },
   },
+  validatePhoneNumber,
 )
 
 const preHandleDeviceChgVerify = async () => {

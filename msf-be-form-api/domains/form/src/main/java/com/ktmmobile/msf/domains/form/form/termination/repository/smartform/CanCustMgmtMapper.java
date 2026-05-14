@@ -4,9 +4,11 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 
+import com.ktmmobile.msf.commons.mybatis.annotation.AutoAuditing;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.DetailDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ListReqDto;
-import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessReqDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessStatusDto;
+import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessUpdateDto;
 
 @Mapper
 public interface CanCustMgmtMapper {
@@ -17,7 +19,12 @@ public interface CanCustMgmtMapper {
 
     DetailDto selectCanCustDetail(Long requestKey);
 
+    DetailDto selectApplicationDetail(Long requestKey);
+
+    ProcessStatusDto selectApplicationStatus(Long requestKey);
+
     String selectProcCd(Long requestKey);
 
-    int updateCanCustProcCd(ProcessReqDto req);
+    @AutoAuditing
+    int updateCanCustProcCd(ProcessUpdateDto req);
 }

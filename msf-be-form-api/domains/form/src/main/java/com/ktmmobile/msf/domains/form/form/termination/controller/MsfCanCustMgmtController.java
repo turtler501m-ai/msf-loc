@@ -1,5 +1,11 @@
 package com.ktmmobile.msf.domains.form.form.termination.controller;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
@@ -9,11 +15,6 @@ import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ListRe
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessResVO;
 import com.ktmmobile.msf.domains.form.form.termination.service.MsfCanCustMgmtSvc;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 관리자 해지상담 처리 컨트롤러.
@@ -54,5 +55,10 @@ public class MsfCanCustMgmtController {
     @PostMapping("/revert")
     public CommonResponse<FormResponse<ProcessResVO>> revert(@RequestBody ProcessReqDto req) {
         return ResponseUtils.ok(msfCanCustMgmtSvc.revert(req));
+    }
+
+    @PostMapping("/reject")
+    public CommonResponse<FormResponse<ProcessResVO>> reject(@RequestBody ProcessReqDto req) {
+        return ResponseUtils.ok(msfCanCustMgmtSvc.reject(req));
     }
 }

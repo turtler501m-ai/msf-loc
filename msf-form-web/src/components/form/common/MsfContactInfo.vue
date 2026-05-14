@@ -107,10 +107,7 @@
         <MsfSelect
           title="국가"
           v-model="model.country"
-          :options="[
-            { label: '국가1', value: 'nation1' },
-            { label: '국가2', value: 'nation2' },
-          ]"
+          groupCode="NATIONLIST"
           placeholder="국가"
           class="ut-w-300"
           :disabled="model.isSaved"

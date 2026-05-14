@@ -3,7 +3,8 @@
   <div>
     <MsfTitleArea title="신청서 확인" />
     <p class="ut-text-desc">
-      신청서 확인을 눌러서, 신청서 작성 내용을 확인하신 후 가입자(대리인) 서명을 등록해주세요.
+      신청서 확인을 눌러서, 신청서 작성 내용을 확인하신 후 판매자 서명, 가입자(대리인) 서명을 등록해
+      주세요.
     </p>
     <MsfBox variant="outline">
       <div class="inner-info-wrap">
@@ -22,7 +23,7 @@
         </div>
       </div>
       <MsfButtonGroup align="center" margin="2">
-        <MsfButton variant="subtle" @click="isModalOpen = true">신청서 확인</MsfButton>
+        <MsfButton variant="subtle" :disabled="disabled" @click="isModalOpen = true">신청서 확인</MsfButton>
       </MsfButtonGroup>
     </MsfBox>
 
@@ -38,16 +39,15 @@ import MsfAppConfirmModal from './popups/MsfAppConfirmModal.vue'
 const emit = defineEmits(['confirm', 'edit'])
 
 const props = defineProps({
-  // 타이틀 문구 설정시 사용
   title: {
     type: String,
     default: '서명 후,<br/>작성한 내용이 변경된 경우',
   },
-  // 설명문구 설정시 사용
   description: {
     type: String,
     default: '서명정보를 변경하여 작성하여 주시기 바랍니다.',
   },
+  disabled: { type: Boolean, default: false },
 })
 
 const isModalOpen = ref(false)

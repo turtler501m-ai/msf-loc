@@ -7,8 +7,12 @@ internal-service:
       base-url: http://localhost:8180
     batch: ## BATCH
       base-url: http://localhost:8280
+    koi-ocr: ## KOI OCR
+      base-url: http://koi-ocr.none
+    koi-idcard: ## KOI IDCARD
+      base-url: http://koi-idcard.none
     eformsign: ## eFormSign
-      base-url: http://eformsign-none
+      base-url: http://eformsign.none
       properties:
         member-id: temp-local-member-id
         api-key: temp-local-api-key

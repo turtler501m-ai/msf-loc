@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.cache.terms.adapter.repository.mybatis.smartform.mapper.TermsCacheMapper">
+
+  <resultMap id="termsType" type="com.ktmmobile.msf.domains.cache.terms.domain.entity.TermsType">
+    <id property="cdGroupId" column="cd_group_id" />
+    <result property="cdGroupNm" column="cd_group_nm" />
+    <result property="cdGroupDesc" column="cd_group_desc" />
+    <result property="cdGroupCd" column="cd_group_cd" />
+    <result property="expnsnStrVal1" column="expnsn_str_val1" />
+    <result property="expnsnStrVal2" column="expnsn_str_val2" />
+    <result property="expnsnStrVal3" column="expnsn_str_val3" />
+    <result property="useYn" column="use_yn" />
+    <result property="pstngStartDate" column="pstng_start_date" />
+    <result property="pstngEndDate" column="pstng_end_date" />
+    <collection property="infos" javaType="list" ofType="com.ktmmobile.msf.domains.cache.terms.domain.entity.TermsInfo">
+      <id property="dtlCd" column="dtl_cd" />
+      <result property="dtlCdNm" column="dtl_cd_nm" />
+      <result property="dtlCdAbbrNm" column="dtl_cd_abbr_nm" />
+      <result property="dtlCdDesc" column="dtl_cd_desc" />
+      <result property="upGrpCd" column="up_grp_cd" />
+      <result property="sortOdrg" column="sort_odrg" />
+      <result property="expnsnStrVal1" column="dtl_expnsn_str_val1" />
+      <result property="expnsnStrVal2" column="dtl_expnsn_str_val2" />
+      <result property="expnsnStrVal3" column="dtl_expnsn_str_val3" />
+      <result property="filePathNm" column="file_path_nm" />
+      <result property="useYn" column="dtl_use_yn" />
+      <result property="pstngStartDate" column="dtl_pstng_start_date" />
+      <result property="pstngEndDate" column="dtl_pstng_end_date" />
+    </collection>
+  </resultMap>
+
+  <select id="selectListTermsType" resultMap="termsType">
+    select grp.cd_group_id
+         , grp.cd_group_nm
+         , grp.cd_group_desc
+         , grp.cd_group_cd
+         , grp.expnsn_str_val1
+         , grp.expnsn_str_val2
+         , grp.expnsn_str_val3
+         , grp.use_yn
+         , grp.pstng_start_date
+         , grp.pstng_end_date
+         , dtl.dtl_cd
+         , dtl.dtl_cd_nm
+         , dtl.dtl_cd_abbr_nm
+         , dtl.dtl_cd_desc
+         , dtl.up_grp_cd
+         , dtl.sort_odrg
+         , dtl.expnsn_str_val1 as dtl_expnsn_str_val1
+         , dtl.expnsn_str_val2 as dtl_expnsn_str_val2
+         , dtl.expnsn_str_val3 as dtl_expnsn_str_val3
+         , dtl.file_path_nm
+         , dtl.use_yn as dtl_use_yn
+         , dtl.pstng_start_date as dtl_pstng_start_date
+         , dtl.pstng_end_date as dtl_pstng_end_date
+      from msf_cd_group_bas grp
+         , msf_cd_dtl dtl
+     where grp.cd_group_id = dtl.cd_group_id
+       and grp.cd_group_id in (
+    <foreach collection="list" item="item" index="index" separator=",">
+                               #{item}
+    </foreach>
+                              )
+     order by grp.cd_group_id, dtl.sort_odrg, dtl.dtl_cd
+  </select>
+</mapper>

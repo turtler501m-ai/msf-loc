@@ -2,13 +2,11 @@
   <div>
     <MsfTitleArea :title="computedTitle" />
     <MsfStack vertical type="formgroups">
-      <MsfFormGroup label="신분증" tag="div" required v-if="model.serviceType !== 'TR_CUSTOMER'">
+      <MsfFormGroup label="신분증" tag="div" required v-if="showIdentityCertType && model.serviceType !== 'TR_CUSTOMER'">
         <MsfChip
           v-model="model.identityCertTypeCd"
           name="inp-idCardCertType"
-          groupCode="IDENTITY_CERT_TYPE_CD"
-          :disabled="model.isVerified || model.isSaved"
-          :data="[]"
+          :data="identityCertTypeData"
         >
           <template #endSlot>
             <MsfButton
@@ -26,16 +24,16 @@
         <MsfStack type="field">
           <MsfSelect
             v-model="model.identityTypeCd"
-            :groupCode="model.identityCertTypeCd === 'F' ? 'fathCertIdType' : 'RCP2006'"
+            groupCode="RCP2006"
             placeholder="신분증 선택"
             title="신분증 선택"
             :selectPop="true"
-            :disabled="model.isScanVerified || model.isSaved"
+            :disabled="!showIdentityCertType && model.isVerified"
             class="ut-w-300"
           />
           <MsfButton
             variant="subtle"
-            :disabled="model.isScanVerified || model.isSaved || !model.identityTypeCd"
+            :disabled="!model.identityTypeCd || (!showIdentityCertType && model.isVerified)"
             @click="isIdCardScanModalOpen = true"
             >스캔하기</MsfButton
           >
@@ -43,14 +41,16 @@
         <div v-if="model.isScanVerified" class="ut-mt-8 ut-p-12 ut-bg-gray-50 ut-radius-8">
           <p class="ut-text-primary ut-weight-bold">신분증 스캔 완료</p>
           <p v-if="model.identityTypeNm" class="ut-mt-4">종류: {{ model.identityTypeNm }}</p>
-          <p v-if="model.identityIssuDate" class="ut-mt-2">발급일자: {{ model.identityIssuDate }}</p>
+          <p v-if="model.identityIssuDate" class="ut-mt-2">
+            발급일자: {{ model.identityIssuDate }}
+          </p>
         </div>
         <MsfStack type="field" v-if="model.identityTypeCd">
           <!-- 모든 신분증 공통: 발급 일자 (오늘 포함 과거일자만 선택 가능하도록 max-date 설정) -->
           <MsfDateInput
             v-model="model.identityIssuDate"
             :max-date="new Date()"
-            :disabled="model.isSaved"
+            :disabled="!showIdentityCertType && model.isVerified"
           />
           <!-- 운전면허증(코드 '02' 가정)인 경우에만 노출: 면허지역, 면허번호 -->
           <template v-if="model.identityTypeCd === '02'">
@@ -59,15 +59,15 @@
               v-model="model.identityIssuRegion"
               :options="licenseRegionCodes"
               placeholder="면허지역"
+              :disabled="!showIdentityCertType && model.isVerified"
               class="ut-w-200"
-              :disabled="model.isSaved"
             />
             <MsfNumberInput
               v-model="model.driveLicnsNo"
               maxlength="15"
               placeholder="면허번호"
+              :readonly="!showIdentityCertType && model.isVerified"
               class="ut-w-240"
-              :disabled="model.isSaved"
             />
           </template>
         </MsfStack>
@@ -99,12 +99,22 @@ import MsfIdCardScanModal from './popups/MsfIdCardScanModal.vue'
 const props = defineProps({
   title: { type: String, default: '신분증 확인' },
   authFlags: { type: Object, default: () => ({}) },
+  // true: 신분증 인증유형(K-NOTE/모바일/안면/예외) 선택 영역 노출.
+  // false: 해지처럼 인증유형 선택 UI 없이 신분증 스캔만 받는 화면에서 사용한다.
+  //        인증유형 기본값은 각 화면 store에서 관리한다.
+  showIdentityCertType: { type: Boolean, default: true },
 })
 const model = defineModel({ type: Object, required: true })
+const emit = defineEmits(['scanConfirm'])
 
 const licenseRegionCodes = ref([])
 const fathCertIdTypeCodes = ref([])
 const identityTypeCodes = ref([]) // 전체 신분증 코드 목록 추가
+const rawIdentityCertTypeCodes = ref([])
+
+const identityCertTypeData = computed(() =>
+  rawIdentityCertTypeCodes.value.map((item) => ({ ...item, disabled: !!model.value?.isVerified })),
+)
 const isIdCardListModalOpen = ref(false)
 const isMobileIdModalOpen = ref(false)
 const isFaceAuthModalOpen = ref(false)
@@ -113,7 +123,7 @@ const isIdCardScanModalOpen = ref(false)
 // 현재 선택된 신분증 코드(identityTypeCd)에 해당하는 명칭 반환
 const selectedIdentityTypeNm = computed(() => {
   if (!model.value.identityTypeCd) return ''
-  const found = identityTypeCodes.value.find(item => item.code === model.value.identityTypeCd)
+  const found = identityTypeCodes.value.find((item) => item.code === model.value.identityTypeCd)
   return found ? found.title : ''
 })
 
@@ -130,7 +140,7 @@ const computedTitle = computed(() => {
 watch(
   () => model.value.identityTypeCd,
   (newVal, oldVal) => {
-    if (oldVal && newVal !== oldVal && !model.value.isSaved) {
+    if (oldVal && newVal !== oldVal) {
       model.value.isVerified = false
     }
   },
@@ -140,44 +150,48 @@ watch(
 watch(
   () => model.value.identityCertTypeCd,
   () => {
-    if (!model.value.isSaved) {
-      model.value.isVerified = false
+    // 인증유형 UI가 없는 화면(현재 해지)은 신분증 스캔이 주 흐름이다.
+    // 이 화면에서 identityCertTypeCd가 store 초기값/서버값으로 보정되더라도
+    // 고객명, 생년월일, 법정대리인 정보를 지우면 안 되므로 초기화 로직을 타지 않는다.
+    if (!props.showIdentityCertType) return
 
-      if (isMinor.value) {
-        // 미성년자인 경우: 법정대리인 정보 초기화
-        model.value.repName = ''
-        model.value.repRegistrationNo1 = ''
-        model.value.repRegistrationNo2 = ''
-        model.value.repForeignerNo1 = ''
-        model.value.repForeignerNo2 = ''
-        model.value.minorAgentNm = ''
-        model.value.minorAgentRelTypeCd = ''
-        model.value.minorAgentTelFnNo = ''
-        model.value.minorAgentTelMnNo = ''
-        model.value.minorAgentTelRnNo = ''
-        model.value.repRelation = ''
-        model.value.repAgree = false
-        if (props.authFlags) props.authFlags.repPhone = false
-      } else {
-        // 일반 고객인 경우: 가입자 정보 초기화
-        model.value.cstmrNm = ''
-        model.value.cstmrNativeRrn1 = ''
-        model.value.cstmrNativeRrn2 = ''
-        model.value.cstmrForeignerRrn1 = ''
-        model.value.cstmrForeignerRrn2 = ''
-        if ('userBirthDate' in model.value) model.value.userBirthDate = ''
-        if ('userGender' in model.value) model.value.userGender = ''
-      }
+    model.value.isVerified = false
+
+    if (isMinor.value) {
+      // 미성년자인 경우: 법정대리인 정보 초기화
+      model.value.repName = ''
+      model.value.repRegistrationNo1 = ''
+      model.value.repRegistrationNo2 = ''
+      model.value.repForeignerNo1 = ''
+      model.value.repForeignerNo2 = ''
+      model.value.minorAgentNm = ''
+      model.value.minorAgentRelTypeCd = ''
+      model.value.minorAgentTelFnNo = ''
+      model.value.minorAgentTelMnNo = ''
+      model.value.minorAgentTelRnNo = ''
+      model.value.repRelation = ''
+      model.value.repAgree = false
+      if (props.authFlags) props.authFlags.repPhone = false
+    } else {
+      // 일반 고객인 경우: 가입자 정보 초기화
+      model.value.cstmrNm = ''
+      model.value.cstmrNativeRrn1 = ''
+      model.value.cstmrNativeRrn2 = ''
+      model.value.cstmrForeignerRrn1 = ''
+      model.value.cstmrForeignerRrn2 = ''
+      if ('userBirthDate' in model.value) model.value.userBirthDate = ''
+      if ('userGender' in model.value) model.value.userGender = ''
     }
   },
 )
 
 onMounted(async () => {
-  const [licRegion, fathCert, fathPolicy, idTypes] = await Promise.all([
-    getCommonCodeList('LIC_REGION'),
+  const [licRegion, fathCert, fathPolicy, idTypes, certTypes] = await Promise.all([
+    getCommonCodeList('driverLicenseAgency'),
     getCommonCodeList('fathCertIdType'),
     getCommonCodeList('fathCertPolicy'),
     getCommonCodeList('RCP2006'), // 일반 신분증 코드 목록 추가
+    getCommonCodeList('IDENTITY_CERT_TYPE_CD'),
   ])
   licenseRegionCodes.value = (licRegion || []).map((item) => ({
     ...item,
@@ -185,10 +199,15 @@ onMounted(async () => {
     value: item.code,
   }))
   fathCertIdTypeCodes.value = (fathCert || []).map((item) => item.code)
-  
+
   // 모든 신분증 타입을 하나의 목록으로 합쳐서 명칭 조회용으로 사용
   identityTypeCodes.value = [...(idTypes || []), ...(fathCert || [])]
-  
+
+  rawIdentityCertTypeCodes.value = (certTypes || []).map((item) => ({
+    value: item.code,
+    label: item.title,
+  }))
+
   console.log('>>> 안면인증 관련 정책 (fathCertPolicy):', fathPolicy)
 })
 
@@ -203,51 +222,68 @@ const handleAuthClick = () => {
 }
 
 const onIdCardSelect = (selected) => {
-  console.log('선택된 신분증 목록:', selected)
+  console.log('선택된 신분증 목록 및 상세정보:', selected)
   if (selected) {
+    const {
+      custNm,
+      realCustIdntNo,
+      realIssuDate,
+      knoteIdentityTypeCd,
+      knoteIdentityScanCstmrNm,
+      knoteIdentityEssNo,
+      knoteIdentityScanDt,
+      knoteScanId,
+    } = selected
+
+    // 주민번호 분리 (앞 6자리, 뒤 7자리)
+    const rrn1 = realCustIdntNo?.substring(0, 6) || ''
+    const rrn2 = realCustIdntNo?.substring(6) || ''
+
     if (isMinor.value) {
       // 미성년자인 경우 법정대리인 필드에 저장
-      if (selected.cstmrNm) model.value.repName = selected.cstmrNm
+      if (custNm) model.value.repName = custNm
       if (model.value.cstmrTypeCd === 'NM') {
-        if (selected.rrn1) model.value.repRegistrationNo1 = selected.rrn1
-        if (selected.rrn2) model.value.repRegistrationNo2 = selected.rrn2
+        model.value.repRegistrationNo1 = rrn1
+        model.value.repRegistrationNo2 = rrn2
       } else if (model.value.cstmrTypeCd === 'FM') {
-        if (selected.rrn1) model.value.repForeignerNo1 = selected.rrn1
-        if (selected.rrn2) model.value.repForeignerNo2 = selected.rrn2
+        model.value.repForeignerNo1 = rrn1
+        model.value.repForeignerNo2 = rrn2
       }
     } else {
       // 일반 고객인 경우 가입자 필드에 저장
-      if (selected.cstmrNm) {
-        model.value.cstmrNm = selected.cstmrNm
+      if (custNm) {
+        model.value.cstmrNm = custNm
         // 법인/공공기관인 경우 대표자명에도 세팅
         if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
-          model.value.cstmrJuridicalRepNm = selected.cstmrNm
+          model.value.cstmrJuridicalRepNm = custNm
         }
       }
       if (['NA', 'NM'].includes(model.value.cstmrTypeCd)) {
-        if (selected.rrn1) model.value.cstmrNativeRrn1 = selected.rrn1
-        if (selected.rrn2) model.value.cstmrNativeRrn2 = selected.rrn2
+        model.value.cstmrNativeRrn1 = rrn1
+        model.value.cstmrNativeRrn2 = rrn2
       } else if (['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
-        if (selected.rrn1) model.value.cstmrForeignerRrn1 = selected.rrn1
-        if (selected.rrn2) model.value.cstmrForeignerRrn2 = selected.rrn2
+        model.value.cstmrForeignerRrn1 = rrn1
+        model.value.cstmrForeignerRrn2 = rrn2
       }
     }
 
-    // 신분증 유형 세팅
-    if (selected.identityTypeCd) {
-      model.value.identityTypeCd = selected.identityTypeCd
+    // 신분증 정보 세팅
+    if (realIssuDate) model.value.identityIssuDate = realIssuDate
+    // knoteIdentityTypeCd: 1(주민), 5(면허) -> 01, 02 매핑
+    if (knoteIdentityTypeCd) {
+      model.value.identityTypeCd = knoteIdentityTypeCd === '1' ? '01' : '02'
     }
+
+    // K-NOTE 스캔 관련 추가 정보 저장
+    if (knoteIdentityScanCstmrNm) model.value.knoteIdentityScanCstmrNm = knoteIdentityScanCstmrNm
+    if (knoteIdentityEssNo) model.value.knoteIdentityEssNo = knoteIdentityEssNo
+    if (knoteIdentityTypeCd) model.value.knoteIdentityTypeCd = knoteIdentityTypeCd
+    if (knoteIdentityScanDt) model.value.knoteIdentityScanDt = knoteIdentityScanDt
+    if (knoteScanId) model.value.knoteScanId = knoteScanId
   }
 
-  // 선택된 신분증 유형이 안면인증 대상(fathCertIdType)에 포함되는지 확인
-  const needsFaceAuth = fathCertIdTypeCodes.value.includes(model.value.identityTypeCd)
-
-  if (needsFaceAuth) {
-    console.log('K-NOTE 인증 후 안면인증 추가 진행 필요')
-    isFaceAuthModalOpen.value = true
-  } else {
-    model.value.isVerified = true
-  }
+  // 인증 완료 처리 (안면인증 바로 넘어가는 로직 제거)
+  model.value.isVerified = true
 }
 
 const onMobileIdConfirm = () => {
@@ -260,10 +296,22 @@ const onFaceAuthConfirm = () => {
   model.value.isVerified = true
 }
 
+// 실제 스캔 API와 테스트 샘플에서 내려오는 식별번호 필드명이 달라 K-NOTE 저장용으로 흡수한다.
+const resolveScanRrn = (data) =>
+  data.rrn ||
+  data.essNo ||
+  data.identityEssNo ||
+  data.knoteIdentityEssNo ||
+  `${data.rrn1 || ''}${data.rrn2 || ''}`
+
 const onIdCardScanConfirm = (data) => {
   console.log('신분증 스캔 파일:', data)
   if (data) {
-    model.value.identityIssuDate = data.identityIssuDate || ''
+    // 스캔 응답에 발급일자가 포함된 경우만 갱신한다.
+    // 미포함 응답 때문에 사용자가 이미 입력한 발급일자를 빈 값으로 덮어쓰지 않기 위함이다.
+    if ('identityIssuDate' in data) {
+      model.value.identityIssuDate = data.identityIssuDate || ''
+    }
     // 스캔된 신분증 정보 저장
     if (data.identityTypeNm) {
       model.value.identityTypeNm = data.identityTypeNm
@@ -274,10 +322,14 @@ const onIdCardScanConfirm = (data) => {
 
     // K-NOTE 스캔 관련 추가 정보 저장
     if (data.cstmrNm) model.value.knoteIdentityScanCstmrNm = data.cstmrNm
-    if (data.rrn) model.value.knoteIdentityEssNo = data.rrn
+    const scanRrn = resolveScanRrn(data)
+    if (scanRrn) model.value.knoteIdentityEssNo = scanRrn
     if (data.identityTypeCd) model.value.knoteIdentityTypeCd = data.identityTypeCd
     if (data.scanDt) model.value.knoteIdentityScanDt = data.scanDt
     if (data.scanId) model.value.knoteScanId = data.scanId
+
+    // 화면별 추가 매핑이 필요한 경우 부모 컴포넌트에서 처리하도록 원본 스캔 데이터를 전달한다.
+    emit('scanConfirm', data)
   }
   model.value.isScanVerified = true
 }
@@ -286,7 +338,9 @@ const validate = () => {
   // 인증예외(S)인 경우 무조건 통과
   if (model.value.identityCertTypeCd === 'S') return true
 
-  const needsAuth = !model.value.isTrCustomer
+  // 신분증 인증유형 선택 UI가 있는 화면만 K-NOTE/모바일/안면 본인인증 완료 여부를 검사한다.
+  // 해지는 인증유형 UI를 숨기고 신분증 스캔을 받는 구조이므로 isVerified를 요구하지 않는다.
+  const needsAuth = props.showIdentityCertType && !model.value.isTrCustomer
   if (needsAuth && !model.value.isVerified) return false
 
   // 신분증 스캔이 필수인 경우 체크 (인증예외 S가 아닌 모든 경우)

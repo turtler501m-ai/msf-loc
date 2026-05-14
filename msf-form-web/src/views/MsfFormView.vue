@@ -94,6 +94,7 @@ import { getFormComponent, showAlert, showConfirm } from '@/libs/utils/comp.util
 import { useMsfMenuStore } from '@/stores/msf_menu'
 import { useMsfStepStore } from '@/stores/msf_step'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
+import { useMsfFormTerminationStore } from '@/stores/msf_termination.js'
 import { mainScrollRef, isLayoutLocked } from '@/hooks/useGlobalScroll'
 
 const route = useRoute()
@@ -103,12 +104,16 @@ const stepStore = useMsfStepStore()
 const domain = ref(route.params?.domain)
 const tempCode = ref()
 
+const getCurrentFormStore = () => {
+  if (route.params?.domain === 'newchange') return useMsfFormNewChgStore()
+  if (route.params?.domain === 'termination') return useMsfFormTerminationStore()
+  return null
+}
+
 // 도메인에 따른 스토어 인스턴스 반환 및 초기화 유틸
 const resetCurrentStore = () => {
   console.log(`[MsfFormView] Resetting form and step stores`)
-  if (route.params?.domain === 'newchange') {
-    useMsfFormNewChgStore().resetAll()
-  }
+  getCurrentFormStore()?.resetAll?.()
 
   // 스텝 스토어도 초기화 (현재 도메인 기준으로 초기 상태 세팅)
   if (route.params?.domain) {
@@ -162,7 +167,9 @@ const isLastStep = computed(
   () => allSteps.value.length > 0 && currentStepIndex.value === allSteps.value.length - 1,
 )
 const showPrevPayCostBtn = computed(() => route.params?.domain === 'newchange')
-const showClearBtn = computed(() => route.params?.domain === 'newchange')
+const showClearBtn = computed(() =>
+  ['newchange', 'termination','ownerchange'].includes(route.params?.domain || ''),
+)
 
 const isStepComplete = computed(() => {
   // 도메인이 newchange일 때만 특수한 계층적 유효성 검사 적용
@@ -239,15 +246,42 @@ const onClickPrevPayCostBtn = () => {
 }
 
 const onClickClearBtn = async () => {
-  showConfirm('모두 초기화됩니다. 계속할까요?', async () => {
-    if (stepRefs.value[currentStepIndex.value]?.reset) {
-      await stepRefs.value[currentStepIndex.value].reset()
-    } else if (stepRefs.value[0]?.reset) {
-      await stepRefs.value[0].reset()
-    }
+  if (route.params?.domain === 'newchange') {
+    showConfirm('모두 초기화됩니다. 계속할까요?', async () => {
+      if (stepRefs.value[currentStepIndex.value]?.reset) {
+        await stepRefs.value[currentStepIndex.value].reset()
+      } else if (stepRefs.value[0]?.reset) {
+        await stepRefs.value[0].reset()
+      }
+      initAllSteps()
+    })
+    return
+  }
 
-    initAllSteps()
-  })
+  if (route.params?.domain === 'termination') {
+    const target = ['고객', '상품', '모두'][currentStepIndex.value] || '모두'
+    showConfirm(`${target} 영역이 초기화됩니다. 계속할까요?`, async () => {
+      const stepRef = stepRefs.value[currentStepIndex.value]
+      if (currentStepIndex.value === 1) {
+        const store = getCurrentFormStore()
+        if (stepRef?.reset) {
+          await stepRef.reset()
+        } else {
+          store?.resetStep?.(1)
+        }
+        stepStore.setActiveIndex(0)
+        currentStepIndex.value = 0
+        isCurrentStepComp.value = [false]
+        return
+      }
+      if (currentStepIndex.value >= 2) {
+        getCurrentFormStore()?.resetAll?.()
+        initAllSteps()
+        return
+      }
+      stepRef?.reset ? await stepRef.reset() : getCurrentFormStore()?.resetStep?.(currentStepIndex.value)
+    })
+  }
 }
 
 const onClickNextBtn = async () => {
