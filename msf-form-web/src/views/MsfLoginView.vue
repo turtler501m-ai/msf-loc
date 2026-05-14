@@ -90,16 +90,20 @@ const formData = reactive({
 })
 
 onMounted(async () => {
-  await msfUserStore.initDeviceUuid()
-  formData.deviceUuid = msfUserStore.getDeviceUuid()
+  formData.deviceUuid = await msfUserStore.initDeviceUuid()
   const initData = {
     deviceUuid: formData.deviceUuid,
   }
   post('/api/n/app/login/init', initData)
     .then((data) => {
-      console.log('init data:', data.data.apvSttusCd)
-      apvSttusCd.value = data.data.apvSttusCd
-      msfUserStore.setDeviceInfo(data.data)
+      if (data.code === '0000' && data.data) {
+        console.log('init data:', data.data.apvSttusCd)
+        apvSttusCd.value = data.data.apvSttusCd
+        msfUserStore.setDeviceInfo(data.data)
+      } else {
+        apvSttusCd.value = null
+        msfUserStore.clearDeviceInfo()
+      }
     })
     .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
   const savedUserId = localStorage.getItem('saveUserId')
@@ -152,6 +156,10 @@ const onClickLogin = () => {
 const onClickModelRemove = () => {
   const postData = {
     deviceUuid: msfUserStore.getDeviceUuid(),
+  }
+  if (!postData.deviceUuid) {
+    showAlert('단말 고유 ID를 확인할 수 없습니다.')
+    return
   }
   showConfirm('단말의 사용등록을 승인 철회하시겠습니까?', () => {
     post('/api/n/app/model/remove', postData)

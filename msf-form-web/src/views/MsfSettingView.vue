@@ -59,12 +59,13 @@ const formData = reactive({
 
 onMounted(async () => {
   // 앱에서 uuid 를 구해서 사용
+  const deviceUuid = await msfUserStore.initDeviceUuid()
   const initData = {
-    deviceUuid: msfUserStore.getDeviceUuid(),
+    deviceUuid,
   }
   post('/api/n/app/login/init', initData)
     .then((data) => {
-      if (data.code == '0000') {
+      if (data.code == '0000' && data.data) {
         appSettings.value = 'V ' + data.data
         console.log('init data:' + data.data.apvSttusCd)
         console.log('bioLoginYn:' + data.data.bioLoginYn)
@@ -94,6 +95,10 @@ const onChangeBio = () => {
     // molo - 수정 필요
     deviceUuid: msfUserStore.getDeviceUuid(),
     bioLoginYn: 'N',
+  }
+  if (!postData.deviceUuid) {
+    showAlert('단말 고유 ID를 확인할 수 없습니다.')
+    return
   }
   if (formData.isFaceId) {
     postData.bioLoginYn = 'F'
