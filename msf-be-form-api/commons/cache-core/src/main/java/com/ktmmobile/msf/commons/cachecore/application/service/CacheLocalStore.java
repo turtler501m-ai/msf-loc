@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.commons.cachecore.application.service;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +46,36 @@ public class CacheLocalStore {
             return Optional.ofNullable(hashStore.getOrDefault(cacheLoader.cacheName(), Map.of()).get(key));
         }
         return Optional.ofNullable(valueStore.get(cacheKeyGenerator.generate(cacheLoader.cacheName(), key)));
+    }
+
+    /**
+     * 로컬 캐시 값 다건 조회
+     * <p>
+     * 캐시 로딩 직후 Redis Lazy 쓰기가 끝나기 전에도 조회 응답이 가능하도록 사용한다.
+     *
+     * @param cacheLoader 캐시 로더
+     * @param keys 캐시 키 목록
+     * @return 로컬 캐시 값
+     */
+    public Map<String, Object> getAll(CacheLoader<?> cacheLoader, Collection<String> keys) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        if (cacheLoader.storeType() == CacheStoreType.HASH) {
+            Map<String, Object> hashValues = hashStore.getOrDefault(cacheLoader.cacheName(), Map.of());
+            for (String key: keys) {
+                if (hashValues.containsKey(key)) {
+                    values.put(key, hashValues.get(key));
+                }
+            }
+            return values;
+        }
+
+        for (String key: keys) {
+            Object value = valueStore.get(cacheKeyGenerator.generate(cacheLoader.cacheName(), key));
+            if (value != null) {
+                values.put(key, value);
+            }
+        }
+        return values;
     }
 
     /**

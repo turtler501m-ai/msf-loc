@@ -25,6 +25,10 @@ const selectedCity = ref('')
 // 1. 컨트롤러에 나타날 옵션 정의
 const componentConfig = {
   name: undefined,
+  title: {
+    default: '선택',
+    description: 'dialog로 띄울때 타이틀 지정 필요시사용',
+  },
   options: {
     default: '[]',
     description: '체크박스 옵션 배열입니다.',
@@ -42,11 +46,17 @@ const componentConfig = {
   disabled: false,
   readonly: false,
   error: false,
+  allChecked: {
+    default: undefined,
+    description:
+      'allChecked가 true이면 placeholder를 참조하여 첫번째 옵션리스트에 "placeholder + 전체" 텍스트를 붙인다.',
+  },
 }
 
 // 2. 초기값 정의
 const componentState = {
   name: undefined,
+  title: undefined,
   options: [
     { label: '선택1', value: 'select1' },
     { label: '선택2', value: 'select2' },
@@ -62,5 +72,6 @@ const componentState = {
   disabled: false,
   readonly: false,
   error: false,
+  allChecked: false,
 }
 </script>

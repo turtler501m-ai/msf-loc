@@ -30,7 +30,7 @@
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
-        <MsfButton @click="onClose">취소</MsfButton>
+        <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
         <MsfButton variant="primary" @click="onConfirm" :disabled="!docFile">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -96,31 +96,4 @@ const onConfirm = () => {
 }
 </script>
 
-<style lang="scss" scoped>
-.doc-list-wrap {
-  width: 100%;
-  margin-top: rem(16px);
-  border-top: var(--border-width-base) solid var(--color-gray-150);
-  border-bottom: var(--border-width-base) solid var(--color-gray-75);
-  .doc-list {
-    & > li {
-      padding-block: rem(16px);
-      padding-inline: rem(24px);
-      @include flex($v: center, $h: space-between) {
-        gap: rem(16px);
-      }
-      border-top: var(--border-width-base) solid var(--color-gray-75);
-      & > p:first-child {
-        flex: 1;
-        @include flex($v: center, $w: wrap) {
-          gap: rem(4px);
-        }
-      }
-      & > :last-child {
-        flex-shrink: 0;
-        flex-grow: 0;
-      }
-    }
-  }
-}
-</style>
+<style lang="scss" scoped></style>

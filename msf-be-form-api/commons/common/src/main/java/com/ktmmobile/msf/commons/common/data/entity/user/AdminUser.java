@@ -31,4 +31,8 @@ public class AdminUser implements MsfUser, Serializable {
     public String getShopName() {
         return organization.shopName();
     }
+
+    public String getOrganizationLevelCode() {
+        return organization.levelCode();
+    }
 }

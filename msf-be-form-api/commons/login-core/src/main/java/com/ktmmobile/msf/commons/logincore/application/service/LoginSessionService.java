@@ -44,10 +44,7 @@ public class LoginSessionService {
             principal.userName(),
             principal.phoneNumber(),
             principal.clientIp(),
-            principal.agentCode(),
-            principal.agentName(),
-            principal.shopCode(),
-            principal.shopName(),
+            principal.organization(),
             principal.attributes(),
             principal.requiredActions().stream()
                 .filter(action -> !action.isVerifyTwoFactor())
@@ -71,10 +68,7 @@ public class LoginSessionService {
             principal.userName(),
             principal.phoneNumber(),
             principal.clientIp(),
-            principal.agentCode(),
-            principal.agentName(),
-            principal.shopCode(),
-            principal.shopName(),
+            principal.organization(),
             principal.attributes()
         );
     }
@@ -138,10 +132,7 @@ public class LoginSessionService {
             session.principal().userName(),
             session.principal().phoneNumber(),
             session.principal().clientIp(),
-            session.principal().agentCode(),
-            session.principal().agentName(),
-            session.principal().shopCode(),
-            session.principal().shopName(),
+            session.principal().organization(),
             session.principal().attributes(),
             remainingActions
         );
@@ -157,10 +148,7 @@ public class LoginSessionService {
             principal.userName(),
             principal.phoneNumber(),
             principal.clientIp(),
-            principal.agentCode(),
-            principal.agentName(),
-            principal.shopCode(),
-            principal.shopName(),
+            principal.organization(),
             principal.attributes(),
             requiredActions
         );
@@ -218,10 +206,7 @@ public class LoginSessionService {
             principal.userName(),
             principal.phoneNumber(),
             principal.clientIp(),
-            principal.agentCode(),
-            principal.agentName(),
-            principal.shopCode(),
-            principal.shopName(),
+            principal.organization(),
             principal.attributes(),
             List.of(LoginRequiredAction.verifyTwoFactor())
         );

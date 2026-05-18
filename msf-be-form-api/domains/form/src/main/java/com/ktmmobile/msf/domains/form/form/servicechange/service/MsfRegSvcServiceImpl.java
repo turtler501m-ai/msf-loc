@@ -1,9 +1,14 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
 import java.net.SocketTimeoutException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.domains.form.common.code.ResSvcChgMessage;
 import com.ktmmobile.msf.domains.form.common.dto.McpRegServiceDto;
+import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
 import com.ktmmobile.msf.domains.form.common.dto.MspRateMstDto;
 import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
 import com.ktmmobile.msf.domains.form.common.exception.McpCommonException;
@@ -22,6 +28,7 @@ import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpMoscRegSvcCanChgInVO
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MpSocVO;
 import com.ktmmobile.msf.domains.form.common.repository.MspApiDirectRepository;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
+import com.ktmmobile.msf.domains.form.form.servicechange.repository.SvcChgPageRepositoryImpl;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionAvailableResVO;
@@ -44,6 +51,9 @@ public class MsfRegSvcServiceImpl {
 
     @Autowired
     private MspApiDirectRepository mspApiDirectRepository;
+
+    @Autowired
+    private SvcChgPageRepositoryImpl svcChgPageRepository;
 
     // =====================================================
     // TOBE 메서드
@@ -76,7 +86,10 @@ public class MsfRegSvcServiceImpl {
         }
 
         // TODO: 설정 팝업 테스트용 목 데이터. 실제 X97 응답 연동 후 제거.
-        mSocVoList.addAll(buildMockSettingServices());
+        Set<String> existingSocs = mSocVoList.stream().map(MpSocVO::getSoc).collect(Collectors.toSet());
+        buildMockSettingServices().stream()
+                .filter(m -> !existingSocs.contains(m.getSoc()))
+                .forEach(mSocVoList::add);
 
         AdditionMyListResVO res = new AdditionMyListResVO();
         res.setList(mSocVoList);
@@ -85,31 +98,41 @@ public class MsfRegSvcServiceImpl {
         return FormResponse.of(ResSvcChgMessage.SUCCESS, res);
     }
 
+    // TODO: 설정 팝업 테스트용 목 데이터. 실제 X97 응답 연동 후 제거.
     private List<MpSocVO> buildMockSettingServices() {
         List<MpSocVO> list = new ArrayList<>();
-
-        MpSocVO nospam = new MpSocVO();
-        nospam.setSoc("NOSPAM4");
-        nospam.setSocDescription("불법TM수신차단");
-        nospam.setSocRateVat(0);
-        nospam.setSettingYn("Y");
-        list.add(nospam);
-
-        MpSocVO stlpvt = new MpSocVO();
-        stlpvt.setSoc("STLPVTPHN");
-        stlpvt.setSocDescription("번호도용차단서비스");
-        stlpvt.setSocRateVat(0);
-        stlpvt.setSettingYn("Y");
-        list.add(stlpvt);
-
-        MpSocVO roaming = new MpSocVO();
-        roaming.setSoc("PL2078760");
-        roaming.setSocDescription("로밍서비스");
-        roaming.setSocRateVat(3300);
-        roaming.setSettingYn("Y");
-        list.add(roaming);
-
+        list.add(mockSoc("NOSPAM4",   "불법TM수신차단 50개",       0,    "Y"));
+        list.add(mockSoc("NOSPAM2",   "특정번호수신차단 100개",     0,    "Y"));
+        list.add(mockSoc("NOSPAM3",   "정보제공사업자번호차단",     0,    "Y"));
+        list.add(mockSoc("STLPVTPHN", "번호도용차단서비스",         0,    "Y"));
+        list.add(mockSoc("DATAROM01", "로밍데이터(시작일)",         3300, "Y"));
+        list.add(mockSoc("DYDTROM05", "로밍데이터(기간설정)",       3300, "Y"));
+        list.add(mockSoc("PL2079771", "로밍 하루종일ON 플러스",     13000, "Y",
+                "STRT_DT=20230729000000|END_DT=20230729235959|PRDC_SRL_NO=1|"));
+        list.add(mockSoc("PL2079778", "로밍 하루종일ON 투게더(서브)", 5000, "Y",
+                "STRT_DT=20230818000000|END_DT=20230818235959|SHARE_MAIN_CONTID=626506218|SHARE_MAIN_PROD_HST_SEQ=300001091066712|PRDC_SRL_NO=1|"));
+        list.add(mockSoc("DATAROMSM", "로밍알림전화번호",           0,    "Y"));
+        list.add(mockSoc("SENOINFR1", "무료통화수신번호",           0,    "Y"));
+        //list.add(mockSoc("FCARVLSMS", "차량관제알림수신번호",       2200, "Y"));
+        list.add(mockSoc("PL253A854", "군인요금제(복무기간)",       0,    "Y"));
         return list;
+    }
+
+    private MpSocVO mockSoc(String soc, String desc, int rateVat, String settingYn) {
+        MpSocVO vo = new MpSocVO();
+        vo.setSoc(soc);
+        vo.setSocDescription(desc);
+        vo.setSocRateVat(rateVat);
+        vo.setSettingYn(settingYn);
+        vo.setOnlineCanYn("Y");
+        return vo;
+    }
+
+    private MpSocVO mockSoc(String soc, String desc, int rateVat, String settingYn, String paramSbst) {
+        MpSocVO vo = mockSoc(soc, desc, rateVat, settingYn);
+        vo.setParamSbst(paramSbst);
+        vo.parseParamSbst();
+        return vo;
     }
 
     /**
@@ -156,7 +179,8 @@ public class MsfRegSvcServiceImpl {
 
         // [2] DB — MSF 관리 전체 부가서비스 목록 (MSF_REG_SVC_MST 등)
         // iterator remove를 위해 tmpList → 새 ArrayList로 복사
-        List<McpRegServiceDto> list = new ArrayList<>(mspApiDirectRepository.query("/mypage/regService", req.getNcn(), List.class));
+        Object regServiceResult = mspApiDirectRepository.query("/mypage/regService", req.getNcn(), Object.class);
+        List<McpRegServiceDto> list = toMcpRegServiceList(regServiceResult);
         logger.debug("[selectAddSvcInfoDto] DB selectRegService: ncn={}, totalCount={}", req.getNcn(), list.size());
 
         boolean wirelessBlockInUse = false;
@@ -209,6 +233,29 @@ public class MsfRegSvcServiceImpl {
         }
         String rateNm = StringUtil.NVL(service.getRateNm(), "");
         return rateNm.contains("무선") && rateNm.contains("차단");
+    }
+
+    private List<McpRegServiceDto> toMcpRegServiceList(Object value) {
+        List<McpRegServiceDto> result = new ArrayList<>();
+        if (value == null) {
+            return result;
+        }
+        if (value instanceof List<?> items) {
+            for (Object item : items) {
+                if (item instanceof McpRegServiceDto dto) {
+                    result.add(dto);
+                } else if (item != null) {
+                    logger.warn("[selectAddSvcInfoDto] unexpected regService item type: {}", item.getClass().getName());
+                }
+            }
+            return result;
+        }
+        if (value instanceof McpRegServiceDto dto) {
+            result.add(dto);
+            return result;
+        }
+        logger.warn("[selectAddSvcInfoDto] unexpected regService result type: {}", value.getClass().getName());
+        return result;
     }
 
     /**
@@ -316,18 +363,20 @@ public class MsfRegSvcServiceImpl {
             String onlineCanYn = StringUtil.NVL(mspRateMstDto.getOnlineCanYn(), "");
             logger.debug("[moscPrdcTrtmPreChk] cancel MSP_RATE_MST: soc={}, onlineCanYn={}, canCmnt={}",
                     soc, onlineCanYn, mspRateMstDto.getCanCmnt());
+
+            //20260515 확인 온라인 해지가능여부 체크여부(일단SKIP) EX) NOSPAM4:불법 TM 수신차단 등
             if (!"Y".equals(onlineCanYn)) {
                 String canCmnt = StringUtil.NVL(mspRateMstDto.getCanCmnt(), "");
                 String message = !"".equals(canCmnt)
                         ? canCmnt
                         : ResSvcChgMessage.ADDITION_ONLINE_CANCEL_UNAVAILABLE.getMessage();
-                logger.warn("[moscPrdcTrtmPreChk] online cancel unavailable: soc={}, onlineCanYn={}", soc, onlineCanYn);
-                onlineCancelUnavailableSocList.add(soc);
-                onlineCancelUnavailableMessageList.add(message);
-                if ("".equals(onlineCancelUnavailableMessage)) {
-                    onlineCancelUnavailableMessage = message;
-                }
-                continue;
+                logger.warn("[moscPrdcTrtmPreChk] 확인 온라인 해지가능여부 체크여부: soc={}, onlineCanYn={}", soc, onlineCanYn);
+                //TEST_SKIP onlineCancelUnavailableSocList.add(soc);
+                //TEST_SKIP onlineCancelUnavailableMessageList.add(message);
+                //TEST_SKIP if ("".equals(onlineCancelUnavailableMessage)) {
+                //TEST_SKIP     onlineCancelUnavailableMessage = message;
+                //TEST_SKIP }
+                //TEST_SKIP continue;
             }
         }
 
@@ -455,10 +504,12 @@ public class MsfRegSvcServiceImpl {
             String onlineCanYn = StringUtil.NVL(mspRateMstDto.getOnlineCanYn(), "");
             logger.debug("[moscRegSvcCanChg] MSP_RATE_MST: soc={}, onlineCanYn={}, canCmnt={}",
                     req.getSoc(), onlineCanYn, mspRateMstDto.getCanCmnt());
+
+            //20260515 확인 온라인 해지가능여부 체크여부(일단SKIP) EX) NOSPAM4:불법 TM 수신차단 등
             if (!"Y".equals(onlineCanYn)) {
                 // 온라인 해지 불가 SOC — 고객센터 통해 해지 안내
-                logger.warn("[moscRegSvcCanChg] online cancel unavailable: soc={}, onlineCanYn={}", req.getSoc(), onlineCanYn);
-                return FormResponse.of(ResSvcChgMessage.ADDITION_ONLINE_CANCEL_UNAVAILABLE);
+                logger.warn("[moscRegSvcCanChg] 확인필요 온라인 해지가능여부 체크여부: soc={}, onlineCanYn={}", req.getSoc(), onlineCanYn);
+                //TEST_SKIP return FormResponse.of(ResSvcChgMessage.ADDITION_ONLINE_CANCEL_UNAVAILABLE);
             }
 
             // [2] M플랫폼 X38 — 부가서비스 해지
@@ -565,6 +616,160 @@ public class MsfRegSvcServiceImpl {
         }
 
         return FormResponse.of(ResSvcChgMessage.SUCCESS, AdditionApplyResVO.of(req.getSoc()));
+    }
+
+    /**
+     * 로밍 서브상품 신청 시 대표상품 일련번호 조회.
+     *
+     * [처리 순서]
+     * 1. 대표 전화번호(mtPhone)로 cntrListNoLogin → 대표 ncn/custId 취득, subStatus=="A" 확인
+     * 2. X97 호출 → 대표회선 이용중 부가서비스 목록 조회
+     * 3. 목록 순회하며 조건 만족하는 대표상품 검색:
+     *    ① soc == mtCd (대표상품코드 일치)
+     *    ② shareSubContidList에 신청자 계약번호(subNcn) 포함
+     *    ③ 서브 신청기간 ⊆ 대표상품 기간
+     *    ④ PL2079777(로밍 하루종일ON 투게더 대표)이면 추가 검증
+     * 4. prodHstSeq 반환
+     *
+     * ASIS 참조: RateAdsvcGdncServiceImpl.getMtProdHstSeq()
+     */
+    public FormResponse<AdditionApplyResVO> getMtProdHstSeq(AdditionApplyReqDto req) {
+        String mtPhone = StringUtil.NVL(req.getMtPhone(), "");
+        String mtCd    = StringUtil.NVL(req.getMtCd(), "");
+        String strtDt  = StringUtil.NVL(req.getStrtDt(), "");
+        String endDt   = StringUtil.NVL(req.getEndDt(), "");
+        String subNcn  = StringUtil.NVL(req.getNcn(), "");
+
+        logger.debug("[getMtProdHstSeq] start: mtPhone={}, mtCd={}, strtDt={}, endDt={}, subNcn={}", mtPhone, mtCd, strtDt, endDt, subNcn);
+
+        if (mtPhone.isEmpty()) {
+            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                "입력한 번호로 정보를 조회할 수 없습니다. 대표자의 가입 정보 확인 후 다시 시도하시기 바랍니다.", null);
+        }
+
+        try {
+            // [1] cntrListNoLogin — 대표 전화번호로 계약정보 조회
+            McpUserCntrMngDto userCntrMngDto = new McpUserCntrMngDto();
+            userCntrMngDto.setCntrMobileNo(mtPhone);
+            McpUserCntrMngDto userDto = svcChgPageRepository.selectCntrListNoLogin(userCntrMngDto);
+
+            if (userDto == null || !"A".equals(userDto.getSubStatus())) {
+                logger.warn("[getMtProdHstSeq] 대표회선 활성 확인 실패: mtPhone={}, subStatus={}", mtPhone, userDto == null ? "null" : userDto.getSubStatus());
+                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                    "입력한 번호로 정보를 조회할 수 없습니다. 대표자의 가입 정보 확인 후 다시 시도하시기 바랍니다.", null);
+            }
+
+            String mtNcn    = StringUtil.NVL(userDto.getSvcCntrNo(), "");
+            String mtCustId = StringUtil.NVL(userDto.getCustId(), "");
+            if (mtNcn.isEmpty() || mtCustId.isEmpty()) {
+                logger.warn("[getMtProdHstSeq] 대표회선 계약번호/고객번호 없음: mtPhone={}", mtPhone);
+                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                    "입력한 번호로 정보를 조회할 수 없습니다. 대표자의 가입 정보 확인 후 다시 시도하시기 바랍니다.", null);
+            }
+
+            // [2] X97 — 대표회선 이용중 부가서비스 조회
+            MpAddSvcInfoParamDto x97Res = mPlatFormService.getAddSvcInfoParamDto(mtNcn, mtPhone, mtCustId);
+            if (!x97Res.isSuccess() || x97Res.getList() == null) {
+                logger.warn("[getMtProdHstSeq] X97 조회 실패: mtNcn={}, resultCode={}", mtNcn, x97Res.getResultCode());
+                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                    "입력한 번호로 정보를 조회할 수 없습니다. 대표자의 가입 정보 확인 후 다시 시도하시기 바랍니다.", null);
+            }
+
+            // [3] 대표상품 검색
+            DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyyMMdd");
+            DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+            LocalDate subStrtDate = LocalDate.parse(strtDt, dateFmt);
+            LocalDate subEndDate  = LocalDate.parse(endDt, dateFmt);
+
+            String mtProdHstSeq = "";
+            for (MpSocVO mpSoc : x97Res.getList()) {
+                if (!mtProdHstSeq.isEmpty()) break;
+
+                // ① 대표상품코드 일치
+                if (!mtCd.equals(mpSoc.getSoc())) continue;
+
+                // ② 대표상품의 shareSubContidList에 신청자 계약번호 포함 확인
+                List<String> shareSubContidList = mpSoc.getShareSubContidList();
+                if (shareSubContidList == null || shareSubContidList.isEmpty()) continue;
+                if (shareSubContidList.stream().noneMatch(subNcn::equals)) continue;
+
+                // ③ 서브 신청기간 ⊆ 대표상품 기간
+                String mpStrtDt  = StringUtil.NVL(mpSoc.getStrtDt(), "");
+                String mpEndDttm = StringUtil.NVL(mpSoc.getEndDttm(), "");
+                if (mpStrtDt.isEmpty() || mpEndDttm.isEmpty()) {
+                    logger.warn("[getMtProdHstSeq] 대표상품 기간정보 없음, skip: soc={}, prodHstSeq={}", mpSoc.getSoc(), mpSoc.getProdHstSeq());
+                    continue;
+                }
+                LocalDate mtStrtDate = LocalDate.parse(mpStrtDt.substring(0, 8), dateFmt);
+                LocalDate mtEndDate  = LocalDate.parse(mpEndDttm.substring(0, 8), dateFmt);
+                if (subStrtDate.isBefore(mtStrtDate) || subEndDate.isAfter(mtEndDate)) continue;
+
+                // ④ PL2079777(로밍 하루종일ON 투게더 대표) 추가 검증
+                if ("PL2079777".equals(mtCd)) {
+                    String mpEndDt = StringUtil.NVL(mpSoc.getEndDt(), "");
+                    if (!mpEndDt.isEmpty()) {
+                        // 시작일은 대표상품 종료일보다 이전이어야 함
+                        if (!subStrtDate.isBefore(mtEndDate)) {
+                            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                                "시작일자는 대표상품의 종료일보다 이전이어야 합니다.", null);
+                        }
+                        // 현재 시간이 대표상품 시작시간보다 이후이면 불가
+                        if (subStrtDate.isEqual(mtStrtDate) && mpStrtDt.length() >= 14) {
+                            LocalDateTime nowDt   = LocalDateTime.now();
+                            LocalDateTime mtStart = LocalDateTime.parse(mpStrtDt, timeFmt);
+                            if (nowDt.isAfter(mtStart)) {
+                                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                                    "현재시간이 대표상품의 시작시간보다 작아야 합니다.", null);
+                            }
+                        }
+                        // 종료일 추가 검증 (235959=당일 동일 가능, 그 외=시작일 이후여야 함)
+                        if (mpEndDt.length() == 14) {
+                            LocalDate mtEndDateReal = LocalDate.parse(mpEndDt.substring(0, 8), dateFmt);
+                            if ("235959".equals(mpEndDt.substring(8))) {
+                                if (subEndDate.isAfter(mtEndDateReal)) {
+                                    return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                                        "종료일자는 대표상품의 종료일보다 작거나 같아야 합니다.", null);
+                                }
+                            } else {
+                                if (!subEndDate.isAfter(subStrtDate)) {
+                                    return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                                        "종료일자는 시작일자 이후여야 합니다.", null);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                mtProdHstSeq = StringUtil.NVL(mpSoc.getProdHstSeq(), "");
+            }
+
+            if (mtProdHstSeq.isEmpty()) {
+                String availableSocs = x97Res.getList().stream()
+                    .map(mpSoc -> StringUtil.NVL(mpSoc.getSoc(), ""))
+                    .collect(Collectors.joining(","));
+                logger.warn("[getMtProdHstSeq] 대표상품 일련번호 조회 실패: mtNcn={}, mtCd={}, subNcn={}", mtNcn, mtCd, subNcn);
+                logger.warn("[getMtProdHstSeq] representative product not found: mtNcn={}, mtPhone={}, mtCd={}, subNcn={}, availableSocs={}",
+                    mtNcn, mtPhone, mtCd, subNcn, availableSocs);
+                return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                    "입력한 번호로 정보를 조회할 수 없습니다. 대표자의 가입 정보 확인 후 다시 시도하시기 바랍니다.", null);
+            }
+
+            logger.debug("[getMtProdHstSeq] success: mtNcn={}, mtCd={}, mtProdHstSeq={}", mtNcn, mtCd, mtProdHstSeq);
+            AdditionApplyResVO resVO = new AdditionApplyResVO();
+            resVO.setMtProdHstSeq(mtProdHstSeq);
+            resVO.setMtNcn(mtNcn);
+            return FormResponse.of(ResSvcChgMessage.SUCCESS, resVO);
+
+        } catch (SocketTimeoutException e) {
+            logger.warn("[getMtProdHstSeq] socket timeout: mtPhone={}", mtPhone);
+            throw new McpCommonException(SOCKET_TIMEOUT_EXCEPTION);
+        } catch (SelfServiceException e) {
+            logger.warn("[getMtProdHstSeq] SelfServiceException: mtPhone={}, msg={}", mtPhone, e.getMessage());
+            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
+        } catch (Exception e) {
+            logger.warn("[getMtProdHstSeq] exception: mtPhone={}, msg={}", mtPhone, e.getMessage());
+            return FormResponse.of(ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR, e.getMessage(), null);
+        }
     }
 
 }

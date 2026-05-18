@@ -82,6 +82,10 @@ public record LoginSessionUser(
         return organization.shopName();
     }
 
+    public String levelCode() {
+        return organization.levelCode();
+    }
+
     public String attributeAsString(String name) {
         Object value = attributes.get(name);
         return value == null ? null : String.valueOf(value);

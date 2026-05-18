@@ -80,8 +80,9 @@ public class NewChangeCheckService {
     //가입조건조회
     public SubscriptionResponse getEligibilityCheck(SubscriptionRequest request) {
         SubscriptionResponse subscriptionResponse = new SubscriptionResponse();
+        CstmrType cstmrTypeCd = request.getCstmrTypeCd();
 
-        //1년이내 이내 사용회선 조회
+        //1년이내 사용회선 조회
         int actYearCnt = this.getActYearCnt(request);
         //subscriptionResponse.setYearActCnt(actYearCnt);
         //1년이내 해지
@@ -97,49 +98,92 @@ public class NewChangeCheckService {
         int actTotalCnt = this.getActTotalCnt(request);
         //subscriptionResponse.setTotActCnt(actTotalCnt);
 
-        //가입제한
+        //가입제한 (5월 세째주 KTM모바일에서 조건 전달해주기로 함)
         String subscriptionRestrictionsYn = "Y";
+        String subscriptionRestrictionsResultMessage = "가능";
         //가입한도
-        String subscriptionLimitYn = "Y";
+        String subscriptionLimitYn = "";
+        String subscriptionLimitResultMessage = "";
         //미납
-        String unPaidYn = "Y";
+        String unPaidYn = "";
+        String unPaidResultMessage = "";
         //상습해지이력
         String historyOfCancellationYn = "Y";
-        //할부할인
+        String historyOfCancellationResultMessage = "가능";
+        //할부할인 (5월 세째주 KTM모바일에서 조건 전달해주기로 함)
         String installmentDiscountYn = "Y";
+        String installmentDiscountResultMessage = "가능";
 
-        if ("9901013456789".equals(request.getCustomerSsn())) {
-            subscriptionRestrictionsYn = "N";
-            subscriptionLimitYn = "N";
-            unPaidYn = "N";
-            historyOfCancellationYn = "N";
-            installmentDiscountYn = "N";
+        //테스트 데이터~~~ @삭제해야해요!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if ("9806145678901".equals(request.getCustomerSsn())) {
+            cstmrTypeCd = CstmrType.FOREIGN_ADULT;
+            actYearCnt = 2; //1년이내 사용회선 조회
+            cancelYearCnt = 1; //1년이내 해지
+            actThisMonthCnt = 1; //당월개통회선
+            unpaidCnt = 1; //미납조회
+            actTotalCnt = 2; //전체 개통 회선
         }
 
-        //고객유형별 처리 : NA , NM , FN , FM , JP , GO
-        CstmrType cstmrTypeCd = request.getCstmrTypeCd();
+
+        //가입한도 >> 고객유형별 처리 : NA , NM , FN , FM , JP , GO
         switch (cstmrTypeCd) {
             case CstmrType.NATIVE_ADULT:
-                break;
             case CstmrType.NATIVE_MINOR:
+            case CstmrType.JURIDICAL_PERSON:
+            case CstmrType.GOVERNMENT_ORGANIZATION:
+                if (actThisMonthCnt >= 2 || actTotalCnt >= 3) {
+                    subscriptionLimitYn = "N"; //가입한도
+                    subscriptionLimitResultMessage = "불가능(2회선 사용중)"; //가입제한 메세지
+                } else {
+                    subscriptionLimitYn = "Y"; //가입한도
+                    subscriptionLimitResultMessage = "가능(2회선 중 " + actTotalCnt + " 회선 사용중)"; //가입제한 메세지
+                }
                 break;
             case CstmrType.FOREIGN_ADULT:
-                break;
             case CstmrType.FOREIGN_MINOR:
-                break;
-            case CstmrType.JURIDICAL_PERSON:
-                break;
-            case CstmrType.GOVERNMENT_ORGANIZATION:
+                if (actThisMonthCnt >= 1 || actTotalCnt >= 2) {
+                    subscriptionLimitYn = "N"; //가입한도
+                    subscriptionLimitResultMessage = "불가능(3회선 사용중)"; //가입제한 메세지
+                } else {
+                    subscriptionLimitYn = "Y"; //가입한도
+                    subscriptionLimitResultMessage = "가능(3회선 중 " + actTotalCnt + " 회선 사용중)"; //가입제한 메세지
+                }
                 break;
             default:
                 break;
         }
 
+        //미납 >> 고객유형별 처리 : NA , NM , FN , FM , JP , GO
+        if (unpaidCnt > 0) {
+            unPaidYn = "N";
+            unPaidResultMessage = "불가능(동일 고객 미납 보유)";
+        } else {
+            unPaidYn = "Y";
+            unPaidResultMessage = "가능";
+        }
+
+        //상습해지이력 (상단에 기본값 설정함)
+        if (actYearCnt == 3 && cancelYearCnt >= 1) {
+            historyOfCancellationYn = "N";
+            historyOfCancellationResultMessage = "3회선 사용 중 1회선 해지 후 1년 이내 가입 시 가입 불가능";
+            //외국인은 2회선 한도라서 표시를 따로 해야하지 않을까? 또는 가입가능회선 중 1회선 해지 후 1년 이내 가입 시 가입 불가능
+        } else if (actYearCnt == 2 && cancelYearCnt >= 1 && actTotalCnt == 1) {
+            historyOfCancellationResultMessage = "가능";
+        } else if (cancelYearCnt >= 1 && actTotalCnt >= 1) {
+            historyOfCancellationYn = "N";
+            historyOfCancellationResultMessage = "가입불가";
+        }
+
         subscriptionResponse.setSubscriptionRestrictionsYn(subscriptionRestrictionsYn);
-        subscriptionResponse.setSubscriptionLimitYn(subscriptionLimitYn);
-        subscriptionResponse.setUnPaidYn(unPaidYn);
-        subscriptionResponse.setHistoryOfCancellationYn(historyOfCancellationYn);
+        subscriptionResponse.setSubscriptionRestrictionsResultMessage(subscriptionRestrictionsResultMessage);
+        subscriptionResponse.setSubscriptionLimitYn(subscriptionLimitYn); //가입한도 조회 결과
+        subscriptionResponse.setSubscriptionLimitResultMessage(subscriptionLimitResultMessage); //가입한도 조회 결과 메세지
+        subscriptionResponse.setUnPaidYn(unPaidYn); //미납 조회 결과
+        subscriptionResponse.setUnPaidResultMessage(unPaidResultMessage); //미납 조회 결과
+        subscriptionResponse.setHistoryOfCancellationYn(historyOfCancellationYn); //상습해지이력 조회 결과
+        subscriptionResponse.setHistoryOfCancellationResultMessage(historyOfCancellationResultMessage); //상습해지이력 조회 결과 메세지
         subscriptionResponse.setInstallmentDiscountYn(installmentDiscountYn);
+        subscriptionResponse.setInstallmentDiscountResultMessage(installmentDiscountResultMessage);
 
         return subscriptionResponse;
     }

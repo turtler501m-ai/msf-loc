@@ -53,6 +53,7 @@
     <template #footer>
       <MsfButtonGroup>
         <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
+        <MsfButton v-if="props.settingData?.addSvcSettingCompleted" variant="tertiary" @click="onReset">초기화</MsfButton>
         <MsfButton variant="primary" @click="onConfirm">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -60,15 +61,31 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({
   modelValue: Boolean,
+  settingData: {
+    type: Object,
+    default: () => ({}),
+  },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
 
 const agreeCheck = ref(false)
+const isFormReset = ref(false)
+
+watch(
+  () => props.modelValue,
+  (isOpen) => {
+    if (isOpen) {
+      agreeCheck.value = props.settingData?.agreed === true
+      isFormReset.value = false
+    }
+  },
+)
 
 const onClose = () => {
   if (props.modelValue) {
@@ -77,8 +94,23 @@ const onClose = () => {
   }
 }
 
+const onReset = () => {
+  isFormReset.value = true
+  agreeCheck.value = false
+}
+
 const onConfirm = () => {
-  emit('confirm', { agreeCheck: agreeCheck.value })
+  if (isFormReset.value) {
+    emit('confirm', { isReset: true })
+    onClose()
+    return
+  }
+  if (!agreeCheck.value) {
+    showAlert('고객정보를 KISA에 제공하는 것에 동의하셔야 서비스를 이용하실 수 있습니다.')
+    return
+  }
+
+  emit('confirm', { ftrNewParam: '', agreed: true })
   onClose()
 }
 </script>

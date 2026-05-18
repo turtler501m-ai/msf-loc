@@ -11,6 +11,7 @@
             placeholder="앞자리"
             maxlength="3"
             :readonly="model.isSaved"
+            :disabled="true"
             @maxlength="mobileNo2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
@@ -130,6 +131,7 @@
           v-model="model.visaType"
           placeholder="비자 입력"
           class="ut-w-300"
+          maxlength="16"
           :readonly="model.isSaved"
         />
       </MsfFormGroup>
@@ -140,7 +142,7 @@
   </div>
 </template>
 <script setup>
-import { defineModel, defineProps, ref } from 'vue'
+import { defineModel, defineProps, ref, watch } from 'vue'
 
 const props = defineProps({
   title: { type: String, default: '가입자 연락처' },
@@ -164,6 +166,17 @@ const onConfirmAddressSearchPop = (result) => {
   model.value.address = result.address
   model.value.detailAddress = result.detailAddress
 }
+
+watch(
+  () => model.value?.mobileNo1,
+  () => {
+    // 가입자 연락처 휴대폰번호 앞자리는 010으로 고정한다.
+    if (model.value.mobileNo1 !== '010') {
+      model.value.mobileNo1 = '010'
+    }
+  },
+  { immediate: true },
+)
 
 const validate = () => {
   if (!model.value.mobileNo1 || !model.value.mobileNo2 || !model.value.mobileNo3) return false

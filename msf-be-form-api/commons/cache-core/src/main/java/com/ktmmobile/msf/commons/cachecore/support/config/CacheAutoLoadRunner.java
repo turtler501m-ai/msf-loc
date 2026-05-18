@@ -25,9 +25,7 @@ public class CacheAutoLoadRunner implements SmartInitializingSingleton {
     private final CacheRegistry cacheRegistry;
     private final CacheLoadService cacheLoadService;
 
-    /**
-     * 전체 싱글톤 초기화 이후 캐시 자동 적재
-     */
+    /** 전체 싱글톤 초기화 이후 캐시 자동 적재 */
     @Override
     public void afterSingletonsInstantiated() {
         if (!cacheProperties.autoLoad().isEnabled()) {

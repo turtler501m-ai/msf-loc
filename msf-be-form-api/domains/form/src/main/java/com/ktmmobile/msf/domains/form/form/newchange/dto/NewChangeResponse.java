@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 신규/변경 작성완료 신청서 Response? - 필요없나??
+ */
 @Getter
 @Setter
 @NoArgsConstructor

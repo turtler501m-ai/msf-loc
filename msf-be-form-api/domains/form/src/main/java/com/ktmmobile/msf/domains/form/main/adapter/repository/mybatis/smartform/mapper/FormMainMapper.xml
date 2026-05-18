@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ktmmobile.msf.domains.form.main.adapter.repository.mybatis.smartform.mapper.FormMainMapper">
+
+  <!-- FIXME: 실제 조회 쿼리로 변경 필요 -->
+  <select id="selectCountFormStatus" resultType="com.ktmmobile.msf.domains.form.main.domain.entity.ChartCount">
+    select a.*
+      from (
+    select '1' as code, '신청중' as name, 100 as count
+    union all
+    select '2' as code, '접수완료' as name, 50 as count
+    union all
+    select '3' as code, '이미지전송완료' as name, 30 as count
+           ) a
+     order by a.code
+  </select>
+  <!-- FIXME: 실제 조회 쿼리로 변경 필요 -->
+  <select id="selectCountFormService" resultType="com.ktmmobile.msf.domains.form.main.domain.entity.ChartCount">
+    select a.code, b.dtl_cd_nm as name, a.count
+      from (
+    select '1' as code, 100 as count
+    union all
+    select '2' as code, 75 as count
+    union all
+    select '3' as code, 50 as count
+    union all
+    select '4' as code, 25 as count
+           ) a
+         , msf_cd_dtl b
+     where a.code = b.dtl_cd
+       and b.cd_group_id = 'FORM_TYPE_CD'
+     order by a.code
+  </select>
+
+  <sql id="whereListNotice">
+     where board_ctg_cd = 'NOTI'
+       and view_yn = 'Y'
+       and to_char(current_timestamp, 'YYYYMMDDHH24MISS') between start_date and end_date
+    <if test="@org.springframework.util.StringUtils@hasText(category)">
+       and sbst_ctg_cd = #{category}
+    </if>
+    <if test="@org.springframework.util.StringUtils@hasText(startDate)">
+       and board_write_dt <![CDATA[>=]]> to_date(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+    </if>
+    <if test="@org.springframework.util.StringUtils@hasText(endDate)">
+       and board_write_dt <![CDATA[<=]]> to_date(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+    </if>
+    <if test="@org.springframework.util.StringUtils@hasText(value)">
+       and (
+               board_title ilike concat('%', #{value}, '%')
+            or board_contents_sbst ilike concat('%', #{value}, '%')
+           )
+    </if>
+  </sql>
+
+  <select id="selectCountNotice" resultType="int">
+    select count(board_seq)
+      from msf_board_bas
+    <include refid="whereListNotice" />
+  </select>
+
+  <select id="selectListNotice" resultType="com.ktmmobile.msf.domains.form.main.domain.entity.Board">
+    select board_seq
+         , board_ctg_cd
+         , sbst_ctg_cd
+         , sbst_sub_ctg_cd
+         , board_title
+         , view_yn
+         , noti_yn
+         , board_contents_sbst
+         , board_writer_id
+         , board_writer_nm
+         , board_write_dt
+         , img_nm
+         , board_att_yn
+         , board_hit_cnt
+         , start_date
+         , end_date
+      from msf_board_bas
+    <include refid="whereListNotice" />
+     order by board_write_dt desc, board_seq desc
+     limit #{page.rowSize} offset #{page.offset}
+  </select>
+
+  <update id="updateAddNoticeHits" parameterType="com.ktmmobile.msf.domains.form.main.application.dto.NoticeHitsRequest">
+    update msf_board_bas
+       set board_hit_cnt = coalesce(board_hit_cnt, 0) + 1
+     where board_seq <foreach collection="ids" item="item" index="index" open="in (" separator="," close=")">#{item}</foreach>
+  </update>
+
+  <sql id="whereListQna">
+     where del_yn != 'Y'
+       and view_yn = 'Y'
+       and (
+               cret_view_yn = 'Y'
+            or (cret_view_yn != 'Y' and qna_writer_id = #{loginId})
+           )
+    <if test="@org.springframework.util.StringUtils@hasText(category)">
+       and qna_ctg_cd = #{category}
+    </if>
+    <if test="@org.springframework.util.StringUtils@hasText(startDate)">
+       and write_dt <![CDATA[>=]]> to_date(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+    </if>
+    <if test="@org.springframework.util.StringUtils@hasText(endDate)">
+       and write_dt <![CDATA[<=]]> to_date(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+    </if>
+    <if test="@org.springframework.util.StringUtils@hasText(value)">
+       and (
+               qna_title ilike concat('%', #{value}, '%')
+            or qna_content_sbst ilike concat('%', #{value}, '%')
+           )
+    </if>
+  </sql>
+
+  <select id="selectCountQna" resultType="int">
+    select count(qna_seq)
+      from msf_qna_board_bas
+    <include refid="whereListQna" />
+  </select>
+
+  <select id="selectListQna" resultType="com.ktmmobile.msf.domains.form.main.domain.entity.Qna">
+    select qna_seq
+         , qna_ctg_cd
+         , qna_sub_ctg_cd
+         , qna_title
+         , qna_writer_id
+         , qna_nm
+         , write_dt
+         , qna_content_sbst
+         , ans_title
+         , ans_content_sbst
+         , cret_view_yn
+         , ans_sttus_cd
+         , ans_id
+         , ans_nm
+         , ans_org_id
+         , ans_org_nm
+         , ans_dt
+         , board_hit_cnt
+      from msf_qna_board_bas
+    <include refid="whereListQna" />
+     order by write_dt desc, qna_seq desc
+     limit #{page.rowSize} offset #{page.offset}
+  </select>
+
+  <update id="updateAddQnaHits" parameterType="com.ktmmobile.msf.domains.form.main.application.dto.QnaHitsRequest">
+    update msf_qna_board_bas
+       set board_hit_cnt = coalesce(board_hit_cnt, 0) + 1
+     where qna_seq <foreach collection="ids" item="item" index="index" open="in (" separator="," close=")">#{item}</foreach>
+  </update>
+</mapper>

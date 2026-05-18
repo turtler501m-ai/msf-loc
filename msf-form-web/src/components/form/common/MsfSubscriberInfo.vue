@@ -7,9 +7,7 @@
           v-model="model.cstmrNm"
           placeholder="이름"
           class="ut-w-300"
-          :readonly="
-            (model.isSaved || (!isMinor && model.identityCertTypeCd !== 'S')) && !isEditable
-          "
+          :readonly="cstmrNmReadOnlyCompute"
           maxlength="15"
         />
       </MsfFormGroup>
@@ -116,12 +114,12 @@
 
       <MsfFormGroup
         v-if="
-          ['NA', 'JP', 'GO', 'FN', 'FM'].includes(model.cstmrTypeCd) &&
+          ['NA', 'JP', 'GO', 'FN'].includes(model.cstmrTypeCd) &&
           (!model.isTrCustomer || ['JP', 'GO'].includes(model.cstmrTypeCd))
         "
         label="사업자등록번호"
         :required="false"
-        helpText="※ 개인사업자인 경우만 입력"
+        :helpText="biznohelpText"
       >
         <MsfStack type="field">
           <MsfNumberInput
@@ -160,7 +158,7 @@
           placeholder="대표자명 입력"
           maxlength="15"
           class="ut-w-300"
-          :readonly="model.isSaved"
+          :readonly="reqNmReadOnlyCompute"
         />
       </MsfFormGroup>
 
@@ -183,6 +181,7 @@
             placeholder="업태 입력"
             class="ut-flex-1"
             :readonly="model.isSaved"
+            maxlength="30"
           />
         </MsfStack>
       </MsfFormGroup>
@@ -278,8 +277,38 @@ const store = useMsfFormNewChgStore()
 const terminationStore = useMsfFormTerminationStore()
 const isTerminationForm = computed(() => model.value?.formType === 'TERMINATION')
 const formTypeArr = ['TERMINATION', 'OWN', 'SVC']
+const biznohelpText = computed(() =>
+  ['NA', 'FN'].includes(model.value.cstmrTypeCd) ? '※ 개인사업자인 경우만 입력' : '',
+)
 
 const isMinor = computed(() => ['NM', 'FM'].includes(model.value.cstmrTypeCd))
+const cstmrNmReadOnlyCompute = computed(() => {
+  // 1. 최우선 순위: 이미 저장된 단계라면 무조건 수정 불가 (Readonly)
+  if (model.value.isSaved) return true
+
+  // 2. 수정 가능한 조건들을 정의 (하나라도 해당하면 false 반환)
+  const canEdit =
+    model.value.isTrCustomer || // 양도 고객이거나
+    (model.value.isTeCustomer && ['JP', 'GO'].includes(model.value.cstmrTypeCd)) || // 양수 고객 중 법인/공공이거나
+    isMinor.value ||
+    model.value.identityCertTypeCd === 'S' // 미성년자는 수정 가능 / 성인이면 인증 예외인 경우
+
+  // 3. 수정 가능하면 false, 아니면 true
+  return !canEdit
+})
+const reqNmReadOnlyCompute = computed(() => {
+  // 1. 최우선 순위: 이미 저장된 단계라면 무조건 수정 불가 (Readonly)
+  if (model.value.isSaved) return true
+  // 2. 수정 가능한 조건들을 정의 (하나라도 해당하면 false 반환)
+  const canEdit =
+    // 양수 고객 중 법인/공공일 때 / 인증 예외인 경우
+    model.value.isTeCustomer &&
+    ['JP', 'GO'].includes(model.value.cstmrTypeCd) &&
+    model.value.identityCertTypeCd === 'S'
+
+  // 3. 수정 가능하면 false, 아니면 true
+  return !canEdit
+})
 
 const computedTitle = computed(() => {
   if (props.title === '가입자 정보' && isMinor.value) {

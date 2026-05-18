@@ -21,6 +21,8 @@ import com.ktmmobile.msf.commons.common.utils.env.EnvironmentUtils;
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginSessionFlowProcessor;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorStatus;
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
+import com.ktmmobile.msf.commons.logincore.support.context.LoginSessionContext;
 import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
 import com.ktmmobile.msf.domains.shared.common.sms.application.dto.CommonSmsRequest;
 import com.ktmmobile.msf.domains.shared.common.sms.application.dto.CommonSmsResponse;
@@ -75,17 +77,23 @@ public class CommonSmsService implements CommonSmsWriter {
     public Boolean sendSms(CommonSmsRequest request) {
         if (
             !StringUtils.hasText(request.path()) ||
-            !StringUtils.hasText(request.phone())
+                !StringUtils.hasText(request.phone())
         ) {
             throw new InvalidValueException("잘못된 접근입니다." + (EnvironmentUtils.isProduction() ? "" : ": " + request.path()));
         }
 
-        String userId = "nonMember";
+        String userId = AuthenticationUtils.getUser().getUserId();
         String url = "";
         if (CommonSmsType.F_1_FTH.equals(request.type())) { // 안면인증 URL 전송
             url = "https://";
         }
-        saveMspSmsData(request.phone(), request.type().getType(), request.type().getTitle(), request.type().getMessage(request.value(), request.name(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yy년 MM월 dd일 HH시mm분")), url), request.type().getCode(), userId);
+        saveMspSmsData(request.phone(),
+            request.type().getType(),
+            request.type().getTitle(),
+            request.type()
+                .getMessage(request.value(), request.name(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yy년 MM월 dd일 HH시mm분")), url),
+            request.type().getCode(),
+            userId);
 
         return true;
     }
@@ -111,6 +119,7 @@ public class CommonSmsService implements CommonSmsWriter {
      * @return
      */
     @Override
+    @LoginSessionContext
     @Transactional
     public CommonSmsResponse sendOtpSms(CommonSmsRequest request) {
         if (
@@ -135,7 +144,7 @@ public class CommonSmsService implements CommonSmsWriter {
         }
 
         String phoneNumber = request.phone();
-        String userId = "nonMember";
+        String userId;
         String userName = request.name();
         if (!StringUtils.hasText(phoneNumber)) {
             // 로그인 사용자 토큰을 통한 사용자 정보 중 휴대폰번호 추출
@@ -143,6 +152,8 @@ public class CommonSmsService implements CommonSmsWriter {
             userId = user.userId();
             userName = user.userName();
             phoneNumber = user.phoneNumber();
+        } else {
+            userId = AuthenticationUtils.getUser().getUserId();
         }
         phoneNumber = phoneNumber.replace("[^0-9]", "");
 
@@ -177,7 +188,12 @@ public class CommonSmsService implements CommonSmsWriter {
 
         smsRepository.registerMsfCrtVldDtl(idVerifValidationDetail);
 
-        saveMspSmsData(phoneNumber, request.type().getType(), request.type().getTitle(), request.type().getMessage(authNumber), request.type().getCode(), userId);
+        saveMspSmsData(phoneNumber,
+            request.type().getType(),
+            request.type().getTitle(),
+            request.type().getMessage(authNumber),
+            request.type().getCode(),
+            userId);
 
         String savedKey = request.type().getCode() + ":" + UUID.randomUUID();
 
@@ -205,11 +221,12 @@ public class CommonSmsService implements CommonSmsWriter {
      * @return
      */
     @Override
+    @LoginSessionContext
     @Transactional
     public Boolean verifyOtpSms(CommonSmsRequest request) {
         if (
             !StringUtils.hasText(request.token()) ||
-            !StringUtils.hasText(request.value())
+                !StringUtils.hasText(request.value())
         ) {
             throw new SimpleDomainException("잘못된 접근입니다." + (EnvironmentUtils.isProduction() ? "" : ": " + request.path()));
         }
@@ -263,7 +280,7 @@ public class CommonSmsService implements CommonSmsWriter {
      * @return
      */
     private void saveMspSmsData(String rcptData, Integer smsType, String title, String message, String reserved02, String reserved03) {
-         /*
+        /*
          * 테이블:
          *   - AM2X_SUBMIT
          * SMS 발송 데이터

@@ -1228,6 +1228,9 @@ public final class Constants {
     /** EVENT_CODE 서식지 명의변경 사전 체크 (FMC0) **/
     public static final String EVENT_CODE_NAME_CHG_PRE_CHK = "FMC0";
 
+    /** EVENT_CODE 서식지 명의변경 사전 체크 (FMP0) **/
+    public static final String EVENT_CODE_NAME_CHG_PROCESS = "FMP0";
+
     /** 신규 셀프개통 완료 후 개통한 회선 안내문자 */
     public static final int SMS_COMPLETE_TEMPLATE_ID = 433;
 

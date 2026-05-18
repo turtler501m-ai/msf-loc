@@ -6,23 +6,36 @@ import MsfVasManageModal from './popups/MsfVasManageModal.vue'
 import IllegalTmBlockModal from './popups/MsfIllegalTmBlockModal.vue'
 import NumberSpoofingBlockModal from './popups/MsfNumberSpoofingBlockModal.vue'
 import RoamingStartDateModal from './popups/MsfRoamingStartDateModal.vue'
+import MsfInfoProviderBlockModal from './popups/MsfInfoProviderBlockModal.vue'
+import MsfNotifyPhoneModal from './popups/MsfNotifyPhoneModal.vue'
+import MsfFreeCallNumberModal from './popups/MsfFreeCallNumberModal.vue'
+import MsfAlertNumbersModal from './popups/MsfAlertNumbersModal.vue'
+import MsfMilitaryTimePlanModal from './popups/MsfMilitaryTimePlanModal.vue'
+import MsfRoamingShareMainModal from './popups/MsfRoamingShareMainModal.vue'
+import MsfRoamingShareSubModal from './popups/MsfRoamingShareSubModal.vue'
 
 // ─── 로그 접두사 ──────────────────────────────────────────────────────────────
-const getLogPrefix = (task) => `[서비스변경][부가서비스신청변경][${task}]`
+const getLogPrefix = (task) => `[변경][부가 신청변경][${task}]`
+
 
 // ─── 상태 (State) ─────────────────────────────────────────────────────────────
 const model = defineModel({ type: Object, required: true })
 
 // 부가서비스 추가/삭제 팝업 표시 여부
 const isVasModalOpen = ref(false)
-// 설정 팝업 종류: illegalTm | numberSpoofing | roaming
+// 설정 팝업 종류: illegalTm | blockNumber100 | infoProviderBlock | numberSpoofing | roamingDate8 | roamingDateRange | roamingShareMain1 | roamingShareMain2 | notifyPhone | alertNumbers | freeCallNumber | militaryTimePlan
 const settingModalType = ref('')
 // 현재 설정 중인 서비스 rateCd
 const settingServiceId = ref('')
+// 설정 팝업 open/close 상태
+const showSettingModal = ref(false)
 
 // X97 조회 결과 무료/유료 부가서비스 원본 (팝업 전달용)
 const queriedFreeServices = ref([])
 const queriedPaidServices = ref([])
+// /api/form/addition/list 조회 결과 전체 부가서비스 (팝업에 전달, 이용중 항목은 팝업에서 필터링)
+const allFreeVasServices = ref([])
+const allPaidVasServices = ref([])
 // 화면 표시용 이용중 무료/유료 서비스
 const activeFreeServices = ref([])
 const activePaidServices = ref([])
@@ -90,17 +103,98 @@ const summarizeService = (svc = {}) => ({
 
 // ─── 설정 팝업 관련 ───────────────────────────────────────────────────────────
 
-// 서비스 코드/명칭으로 설정 팝업 종류 결정
-// MspAdditionDto에 settingYn 미포함 시 toServiceRow에서 이 함수로 자동 감지
-const getSettingModalType = (svc = {}) => {
-  const code = getServiceKey(svc).toUpperCase()
-  const name = getServiceName(svc)
-
-  if (code === 'NOSPAM4' || name.includes('불법TM')) return 'illegalTm'
-  if (code === 'STLPVTPHN' || name.includes('번호도용')) return 'numberSpoofing'
-  if (code === 'PL2078760' || name.includes('로밍')) return 'roaming'
-  return ''
+// SETTING_MODAL_MAP: 상품코드 → 팝업 타입 매핑
+const SETTING_MODAL_MAP = {
+  // 불법TM 차단
+  NOSPAM4: 'illegalTm',          // MsfIllegalTmBlockModal (maxCount=50)
+  NOSPAM2: 'blockNumber100',     // MsfIllegalTmBlockModal (maxCount=100, minLength=3)
+  // 정보제공차단
+  NOSPAM3: 'infoProviderBlock',  // MsfInfoProviderBlockModal
+  // 번호 도용 차단
+  STLPVTPHN: 'numberSpoofing',  // MsfNumberSpoofingBlockModal
+  // 로밍 시작일만 (8자리)
+  DATAROM01: 'roamingDate8', DATAROM03: 'roamingDate8',
+  LTEDTROM5: 'roamingDate8', ITGSAFE3G: 'roamingDate8',
+  // 로밍 기간설정 (시작일시+종료일)
+  DYDTROM05: 'roamingDateRange',
+  PL2078760: 'roamingDateRange', PL2079771: 'roamingDateRange', PL2079772: 'roamingDateRange',
+  // 함께쓰는 로밍 대표
+  PL199N109: 'roamingShareMain1', PL199N120: 'roamingShareMain1',
+  PL199N122: 'roamingShareMain1', PL199N126: 'roamingShareMain1',
+  PL199N129: 'roamingShareMain1', PL199N132: 'roamingShareMain1',
+  // 함께쓰는 로밍 서브
+  PL199N117: 'roamingShareSub1', PL199N121: 'roamingShareSub1',
+  PL199N123: 'roamingShareSub1', PL199N127: 'roamingShareSub1',
+  PL199N130: 'roamingShareSub1', PL199N133: 'roamingShareSub1',
+  // 하루종일 로밍 베이직 투게더 대표/서브
+  PL2079777: 'roamingShareMain2', PL2079778: 'roamingShareSub2',
+  // 통보/알림번호
+  DATAROMSM: 'notifyPhone',     // MsfNotifyPhoneModal
+  FCARVLSMS: 'alertNumbers',    // MsfAlertNumbersModal
+  SENOINFR1: 'freeCallNumber',  // MsfFreeCallNumberModal
+  PL253A854: 'militaryTimePlan',// MsfMilitaryTimePlanModal
+  // autoDefault (팝업 없이 자동처리)
+  ITCRBS: 'autoDefault', RNGTOUPR3: 'autoDefault',
+  SKCOREPAC: 'autoDefault', XRINGMON: 'autoDefault', XRINGWEEK: 'autoDefault',
 }
+
+const SETTING_MODAL_NAME_MAP = {
+  illegalTm: '불법TM수신차단',
+  blockNumber100: '특정번호 수신차단서비스',
+  infoProviderBlock: '정보제공사업자번호차단서비스',
+  numberSpoofing: '번호도용 차단 서비스',
+  roamingDate8: '로밍 시작일 설정',
+  roamingDateRange: '로밍 기간 설정',
+  roamingShareMain1: '함께쓰는 로밍 대표 설정',
+  roamingShareSub1: '함께쓰는 로밍 서브 설정',
+  roamingShareMain2: '하루종일 로밍 베이직 투게더(대표)',
+  roamingShareSub2: '하루종일 로밍 베이직 투게더(서브)',
+  notifyPhone: '데이터로밍요금알림',
+  alertNumbers: '로밍 해외도착알리미',
+  freeCallNumber: '망내 1회선 무료통화',
+  militaryTimePlan: 'My time plan_MVNO 전용',
+  autoDefault: '자동 설정',
+}
+
+const SETTING_MODAL_SCREEN_ID_MAP = {
+  illegalTm: 'S102030102',
+  numberSpoofing: 'S102030103',
+  roamingDateRange: 'S102030104',
+  roamingDate8: 'S102030106',
+  roamingShareMain1: 'S102030107',
+  roamingShareSub1: 'S102030108',
+  roamingShareMain2: 'S102030109',
+  roamingShareSub2: 'S102030110',
+  blockNumber100: 'S102030111',
+  infoProviderBlock: 'S102030112',
+  notifyPhone: 'S102030113',
+  alertNumbers: 'S102030114',
+  militaryTimePlan: 'S102030115',
+  freeCallNumber: 'S102030116',
+}
+
+const SETTING_MODAL_COMPONENT_MAP = {
+  illegalTm: 'MsfIllegalTmBlockModal.vue',
+  blockNumber100: 'MsfIllegalTmBlockModal.vue',
+  infoProviderBlock: 'MsfInfoProviderBlockModal.vue',
+  numberSpoofing: 'MsfNumberSpoofingBlockModal.vue',
+  roamingDate8: 'MsfRoamingStartDateModal.vue',
+  roamingDateRange: 'MsfRoamingStartDateModal.vue',
+  roamingShareMain1: 'MsfRoamingShareMainModal.vue',
+  roamingShareSub1: 'MsfRoamingShareSubModal.vue',
+  roamingShareMain2: 'MsfRoamingShareMainModal.vue',
+  roamingShareSub2: 'MsfRoamingShareSubModal.vue',
+  notifyPhone: 'MsfNotifyPhoneModal.vue',
+  alertNumbers: 'MsfAlertNumbersModal.vue',
+  freeCallNumber: 'MsfFreeCallNumberModal.vue',
+  militaryTimePlan: 'MsfMilitaryTimePlanModal.vue',
+}
+
+// 서비스 코드로 설정 팝업 종류 결정
+const getSettingModalType = (svc = {}) => SETTING_MODAL_MAP[getServiceKey(svc).toUpperCase()] ?? null
+const getSettingPopupName = (svc = {}) => SETTING_MODAL_NAME_MAP[getSettingModalType(svc)] || ''
+const getSettingPopupId = (svc = {}) => SETTING_MODAL_COMPONENT_MAP[getSettingModalType(svc)] || ''
+const getSettingScreenId = (svc = {}) => SETTING_MODAL_SCREEN_ID_MAP[getSettingModalType(svc)] || ''
 
 // 설정이 필요한 서비스인지 여부 (settingYn=Y AND 알려진 모달 타입 존재)
 const needsAdditionalInfo = (svc = {}) => svc.settingYn === 'Y' && !!getSettingModalType(svc)
@@ -109,22 +203,44 @@ const needsAdditionalInfo = (svc = {}) => svc.settingYn === 'Y' && !!getSettingM
 const isJoinDisabled = (svc = {}) =>
   isAddedService(svc) && needsAdditionalInfo(svc) && svc.addSvcSettingCompleted !== true
 
+// 기존 이용중 서비스에서 설정 변경 가능한 타입
+const EXISTING_SERVICE_SETTABLE = new Set([
+  'illegalTm', 'blockNumber100', 'infoProviderBlock',
+  'numberSpoofing',
+  'roamingDate8', 'roamingDateRange',
+  'roamingShareMain1', 'roamingShareMain2',
+  'roamingShareSub1', 'roamingShareSub2',
+  'notifyPhone', 'alertNumbers', 'freeCallNumber',
+  'militaryTimePlan',
+])
+
 // 설정 버튼 비활성화 조건:
 // - 알려진 모달 타입 없음 → 항상 비활성
-// - 기존 이용중 서비스 → illegalTm(불법TM)만 설정 가능, 나머지 비활성
+// - autoDefault 타입 → 팝업 없이 자동처리하므로 비활성
+// - 기존 이용중 서비스가 체크 해제되어 해지 대상이면 비활성
+// - 기존 이용중 서비스 → 설정 가능한 타입만 활성
 const isSettingButtonDisabled = (svc = {}) => {
   const modalType = getSettingModalType(svc)
-  if (!modalType) return true
+  if (!modalType || modalType === 'autoDefault') return true
   if (isExistingService(svc)) {
-    return modalType !== 'illegalTm'
+    if (!selectedServiceIds.value.includes(svc.rateCd)) return true
+    return !EXISTING_SERVICE_SETTABLE.has(modalType)
   }
   return false
 }
 
 const openSettingModal = (svc = {}) => {
+  const modalType = getSettingModalType(svc)
+  const popupName = getSettingPopupName(svc)
+  const popupId = getSettingPopupId(svc)
+  const screenId = getSettingScreenId(svc)
+
   console.log(`${getLogPrefix('부가서비스설정')} 요청 시작`, {
     service: summarizeService(toServiceRow(svc)),
-    modalType: getSettingModalType(svc),
+    modalType,
+    popupId,
+    screenId,
+    popupName,
     isExistingService: isExistingService(svc),
   })
 
@@ -132,16 +248,23 @@ const openSettingModal = (svc = {}) => {
     console.warn(`${getLogPrefix('부가서비스설정')} 진행 중단`, {
       reason: 'setting disabled',
       service: summarizeService(toServiceRow(svc)),
-      modalType: getSettingModalType(svc),
+      modalType,
+      popupId,
+      screenId,
+      popupName,
     })
     return
   }
 
-  settingModalType.value = getSettingModalType(svc)
+  settingModalType.value = modalType
   settingServiceId.value = getServiceKey(svc)
+  showSettingModal.value = true
 
   console.log(`${getLogPrefix('부가서비스설정')} 화면 데이터 반영 결과`, {
     settingModalType: settingModalType.value,
+    popupId,
+    screenId,
+    popupName,
     settingServiceId: settingServiceId.value,
   })
 }
@@ -151,6 +274,7 @@ const closeSettingModal = () => {
     settingModalType: settingModalType.value,
     settingServiceId: settingServiceId.value,
   })
+  showSettingModal.value = false
   settingModalType.value = ''
   settingServiceId.value = ''
 }
@@ -166,6 +290,27 @@ const currentSettingData = computed(() => ({
   ...currentSettingService.value.addSvcSettingData,
 }))
 
+// autoDefault 상품 자동 처리: 팝업 없이 설정완료 처리
+const handleAutoDefault = (svc = {}) => {
+  const code = getServiceKey(svc).toUpperCase()
+  let ftrNewParam = ''
+
+  // autoDefault 상품별 기본값 설정
+  if (code === 'ITCRBS') {
+    ftrNewParam = 'ON' // 국제전화 수신차단 ON 고정
+  } else if (['RNGTOUPR3', 'SKCOREPAC', 'XRINGMON', 'XRINGWEEK'].includes(code)) {
+    ftrNewParam = 'GENRE=*' // 오토링/핵심팩 기본값 (장르 = 추천)
+  }
+
+  svc.addSvcSettingCompleted = true
+  svc.addSvcSettingData = { ftrNewParam }
+
+  console.log(`${getLogPrefix('부가서비스자동처리')} autoDefault 처리 완료`, {
+    rateCd: code,
+    ftrNewParam,
+  })
+}
+
 // 설정 팝업 확인 시 설정값 저장 및 서비스 선택 처리
 const applySettingData = (settingData = {}) => {
   console.log(`${getLogPrefix('부가서비스설정저장')} 요청 시작`, {
@@ -177,6 +322,14 @@ const applySettingData = (settingData = {}) => {
   const target = allActiveServices.value.find((svc) => svc.rateCd === settingServiceId.value)
 
   if (target) {
+    if (settingData?.isReset) {
+      target.addSvcSettingCompleted = false
+      target.addSvcSettingData = {}
+      isServiceConfirmCompleted.value = false
+      syncAdditionModel()
+      closeSettingModal()
+      return
+    }
     target.addSvcSettingCompleted = true
     target.addSvcSettingData = settingData
     // 당일 개통 서비스가 아니면 자동 선택 처리
@@ -194,7 +347,9 @@ const applySettingData = (settingData = {}) => {
 
   console.log(`${getLogPrefix('부가서비스설정저장')} 화면 데이터 반영 결과`, {
     target: target ? summarizeService(target) : null,
-    selectedServiceIds: selectedServiceIds.value,
+    isExistingService: target ? isExistingService(target) : false,
+    settingChangedCount: selectedSettingChangedServices.value.length,
+    settingChangedServices: selectedSettingChangedServices.value.map(summarizeService),
     selectedTotalAmount: selectedTotalAmount.value,
     settingCompleted: target?.addSvcSettingCompleted === true,
   })
@@ -223,6 +378,46 @@ const toServiceRow = (svc = {}, index = 0) => {
     settingYn: svc.settingYn || (getSettingModalType(svc) ? 'Y' : 'N'),
   }
 }
+
+const getPersistedAdditionRecords = () =>
+  Array.isArray(model.value.additionList) ? model.value.additionList : []
+
+const getPersistedSettingRecordMap = () =>
+  new Map(
+    getPersistedAdditionRecords()
+      .filter((svc) => svc.rateCd && (
+        svc.addSvcSettingCompleted ||
+        (svc.addSvcSettingData != null && Object.keys(svc.addSvcSettingData).length > 0) ||
+        svc.ftrNewParam
+      ))
+      .map((svc) => [svc.rateCd, svc]),
+  )
+
+const mergePersistedSettingData = (svc = {}, persistedSettingMap = getPersistedSettingRecordMap()) => {
+  const persisted = persistedSettingMap.get(svc.rateCd)
+  if (!persisted) return svc
+
+  const persistedSettingData =
+    persisted.addSvcSettingData || (persisted.ftrNewParam ? { ftrNewParam: persisted.ftrNewParam } : {})
+
+  return {
+    ...svc,
+    ftrNewParam: persisted.ftrNewParam || svc.ftrNewParam,
+    addSvcSettingCompleted:
+      persisted.addSvcSettingCompleted === true ||
+      (persisted.addSvcSettingData != null && Object.keys(persisted.addSvcSettingData).length > 0) ||
+      !!persisted.ftrNewParam,
+    addSvcSettingData: {
+      ...(svc.addSvcSettingData || {}),
+      ...persistedSettingData,
+    },
+  }
+}
+
+const getRestoredAddedServices = (activeIds = new Set(), persistedSettingMap = getPersistedSettingRecordMap()) =>
+  getPersistedAdditionRecords()
+    .filter((svc) => (svc.action || 'ADD') === 'ADD' && svc.rateCd && !activeIds.has(svc.rateCd))
+    .map((svc, index) => mergePersistedSettingData(toServiceRow(svc, index), persistedSettingMap))
 
 // myaddsvclist 응답 list를 baseAmt 기준으로 무료/유료로 분리
 const splitActiveServices = (list = []) => {
@@ -281,6 +476,17 @@ const selectedJoinServices = computed(() =>
   selectedServices.value.filter((svc) => isAddedService(svc) && !isJoinDisabled(svc)),
 )
 
+// 기존 이용중 서비스 중 설정 변경됨 + 선택 유지 → 선해지 후 재신청 대상
+const selectedSettingChangedServices = computed(() =>
+  allActiveServices.value.filter(
+    (svc) =>
+      isExistingService(svc) &&
+      isSettingChanged(svc) &&
+      !isCancelDisabled(svc) &&
+      selectedServiceIds.value.includes(svc.rateCd),
+  ),
+)
+
 // ─── 서비스 상태 판단 함수 ────────────────────────────────────────────────────
 
 // 신규 추가 + 선택됨 + 설정 완료 → "추가" 뱃지
@@ -307,11 +513,14 @@ const isPreCheckFailed = (svc = {}) => preCheckFailedServiceIds.value.includes(s
 const isPreCheckPassed = (svc = {}) => preCheckPassedServiceIds.value.includes(svc.rateCd)
 
 const isSettingChanged = (svc = {}) =>
-  svc.addSvcSettingCompleted === true && !!svc.addSvcSettingData
+  svc.addSvcSettingCompleted === true &&
+  svc.addSvcSettingData != null &&
+  Object.keys(svc.addSvcSettingData).length > 0
 
-// 기존 서비스는 "변경", 신규 추가 서비스는 "설정완료" 뱃지
+// 기존 서비스는 "변경", 신규 추가 서비스는 "설정완료" 뱃지 (해지 선택 시 숨김)
 const getSettingChangeLabel = (svc = {}) => {
   if (!isSettingChanged(svc)) return ''
+  if (isCancelSelected(svc)) return ''
   return isExistingService(svc) ? '변경' : '설정완료'
 }
 
@@ -326,23 +535,45 @@ const getServiceRowClass = (svc = {}) => ({
 })
 
 const syncAdditionModel = () => {
-  const toAdditionRecord = (svc = {}, action = '') => ({
+  const toAdditionRecord = (svc = {}, action = '', overrides = {}) => ({
     ...summarizeService(svc),
     prodHstSeq: getProductSeqNo(svc),
     ftrNewParam: getFtrNewParam(svc),
     addSvcSettingCompleted: svc.addSvcSettingCompleted === true,
     addSvcSettingData: svc.addSvcSettingData || {},
     action,
+    ...overrides,
   })
 
   const joinServices = selectedJoinServices.value.map((svc) => toAdditionRecord(svc, 'ADD'))
   const cancelServices = allActiveServices.value
     .filter(isCancelSelected)
     .map((svc) => toAdditionRecord(svc, 'CANCEL'))
+  // 기존 서비스 설정 변경: 신청 payload에 flag='Y'를 세팅해 백엔드 regSvcChg에서 선해지 후 재신청 처리한다.
+  const settingChangedAddList = selectedSettingChangedServices.value.map((svc) =>
+    toAdditionRecord(svc, 'ADD', { flag: 'Y' }),
+  )
 
-  model.value.additionList = [...joinServices, ...cancelServices]
+  // additionList: 신규가입(ADD) + 설정변경(ADD, flag='Y' → 백엔드 선해지+재신청)
+  // additionCancelList: 단순해지(CANCEL)만 — 설정변경은 flag='Y' 선해지로 처리
+  model.value.additionList = [...joinServices, ...settingChangedAddList]
   model.value.additionCancelList = cancelServices
   model.value.additionConfirmCompleted = isServiceConfirmCompleted.value
+
+  const summarizeAddRecord = (svc) => ({
+    rateCd: svc.rateCd,
+    rateNm: svc.rateNm,
+    action: svc.action,
+    flag: svc.flag || '',
+    ftrNewParam: svc.ftrNewParam || '',
+    prodHstSeq: svc.prodHstSeq || '',
+  })
+  console.log(`${getLogPrefix('모델동기화')} additionList 구성`, {
+    joinCount: joinServices.length,
+    settingChangedCount: settingChangedAddList.length,
+    cancelCount: cancelServices.length,
+  })
+  console.table(model.value.additionList.map(summarizeAddRecord))
 }
 
 // addedServices 중 설정 미완료 서비스 존재 여부
@@ -369,11 +600,11 @@ const getProductSeqNo = (svc = {}) =>
   String(svc.prdcSeqNo || svc.prodHstSeq || svc.prodSeqNo || svc.productSeqNo || svc.svcSeqNo || '')
 
 // 설정 데이터를 M플랫폼 ftrNewParam 형식으로 변환
+// 각 모달에서 직접 ftrNewParam을 emit하므로 폴백 로직 제거
 const getFtrNewParam = (svc = {}) => {
   const settingData = svc.addSvcSettingData || {}
   if (svc.ftrNewParam) return String(svc.ftrNewParam)
   if (settingData.ftrNewParam) return String(settingData.ftrNewParam)
-  if (Object.keys(settingData).length > 0) return JSON.stringify(settingData)
   return ''
 }
 
@@ -738,7 +969,13 @@ const applyPreCheckFailure = (failure, { preCheckServices = [], cancelServices =
 
 // 이용중 서비스 조회 후 초기 선택 동기화
 // 해지불가(당일 개통) 및 설정 미완료 서비스는 자동 제외
+// autoDefault는 자동처리되므로 설정완료 상태 → 선택에 포함
 const syncSelectedServices = () => {
+  // autoDefault 상품 초기화 시 자동 처리
+  allActiveServices.value
+    .filter((svc) => getSettingModalType(svc) === 'autoDefault' && !svc.addSvcSettingCompleted)
+    .forEach((svc) => handleAutoDefault(svc))
+
   const serviceIds = allActiveServices.value
     .filter((svc) => !isCancelDisabled(svc) && !isJoinDisabled(svc))
     .map((svc, index) => getServiceKey(svc, index))
@@ -776,6 +1013,10 @@ const onVasConfirm = ({ freeServices = [], paidServices = [] }) => {
     newServices: newServices.map(summarizeService),
   })
 
+  // autoDefault 상품 자동 처리
+  const autoDefaultServices = newServices.filter((svc) => getSettingModalType(svc) === 'autoDefault')
+  autoDefaultServices.forEach((svc) => handleAutoDefault(svc))
+
   newServices.forEach((svc) => addedServices.value.push(svc))
   onlineCancelUnavailableServiceIds.value = onlineCancelUnavailableServiceIds.value.filter((id) =>
     allActiveServices.value.some((svc) => svc.rateCd === id),
@@ -785,6 +1026,7 @@ const onVasConfirm = ({ freeServices = [], paidServices = [] }) => {
   )
 
   // 설정 미완료 서비스는 선택 목록에 추가하지 않음 (확인 버튼 비활성화 유지)
+  // autoDefault는 자동처리되므로 설정완료 상태 → 선택 목록에 추가
   const addedIds = newServices.filter((svc) => !isJoinDisabled(svc)).map((svc) => svc.rateCd)
   selectedServiceIds.value = Array.from(new Set([...selectedServiceIds.value, ...addedIds]))
   isServiceConfirmCompleted.value = false
@@ -792,6 +1034,7 @@ const onVasConfirm = ({ freeServices = [], paidServices = [] }) => {
 
   console.log(`${getLogPrefix('부가서비스추가')} 화면 데이터 반영 결과`, {
     addedCount: newServices.length,
+    autoDefaultCount: autoDefaultServices.length,
     pendingSettingCount: newServices.filter((svc) => isJoinDisabled(svc)).length,
     addedServices: newServices.map(summarizeService),
     selectedServiceIds: selectedServiceIds.value,
@@ -801,10 +1044,93 @@ const onVasConfirm = ({ freeServices = [], paidServices = [] }) => {
 
 // ─── 확인 버튼 핸들러 ─────────────────────────────────────────────────────────
 
+/**
+ * 부가서비스 사전체크 실행
+ * - joinServices    : 신규 가입 대상 (prdcSbscTrtmCd: A)
+ * - cancelServices  : 해지 대상     (prdcSbscTrtmCd: C)
+ * - settingChangedServices : 설정 변경 대상 (선해지 C + 재신청 A)
+ * @returns {Promise<boolean>} true = 통과, false = 실패/오류
+ */
+const runAdditionPreCheck = async ({ joinServices = [], cancelServices = [], settingChangedServices = [] } = {}) => {
+  const preCheckServices = [
+    ...joinServices.map((svc) => ({ ...svc, prdcSbscTrtmCd: 'A' })),
+    ...cancelServices.map((svc) => ({ ...svc, prdcSbscTrtmCd: 'C' })),
+    // 설정 변경: 선해지(C) + 재신청(A) — 6102(온라인해지불가) 사전 감지 포함
+    ...settingChangedServices.map((svc) => ({ ...svc, prdcSbscTrtmCd: 'C' })),
+    ...settingChangedServices.map((svc) => ({ ...svc, prdcSbscTrtmCd: 'A' })),
+  ]
+  const requestSeq = ++preCheckRequestSeq
+
+  try {
+    isPreChecking.value = true
+    const payload = createMoscPrdcTrtmPreChkPayload(preCheckServices)
+    console.log(`${getLogPrefix('부가서비스체크')} 사전체크 요청`, payload)
+    const res = await postAdditionPreCheck(payload)
+    console.log(`${getLogPrefix('부가서비스체크')} 사전체크 응답`, {
+      code: res?.code,
+      message: res?.message,
+      data: res?.data,
+    })
+
+    if (requestSeq !== preCheckRequestSeq) {
+      console.warn(`${getLogPrefix('부가서비스체크')} 이전 응답 무시`, { requestSeq, preCheckRequestSeq })
+      return false
+    }
+
+    const failure = createPreCheckFailure(res)
+    if (failure) {
+      applyPreCheckFailure(failure, {
+        preCheckServices,
+        cancelServices: [...cancelServices, ...settingChangedServices],
+      })
+      return false
+    }
+
+    setPreCheckResultState({
+      scopeServices: preCheckServices,
+      preCheckPassedServices: preCheckServices,
+    })
+    return true
+  } catch (error) {
+    if (requestSeq !== preCheckRequestSeq) {
+      console.warn(`${getLogPrefix('부가서비스체크')} 이전 예외 무시`, { requestSeq, preCheckRequestSeq })
+      return false
+    }
+    console.error(`${getLogPrefix('부가서비스체크')} 예외 발생`, {
+      message: error?.message,
+      response: error?.response?.data,
+    })
+    showAlert(
+      error?.response?.data?.message ||
+        error?.response?.data?.data?.resMessage ||
+        '부가서비스 가입 가능 여부 확인 중 오류가 발생했습니다.',
+    )
+    return false
+  } finally {
+    if (requestSeq === preCheckRequestSeq) {
+      isPreChecking.value = false
+    }
+  }
+}
+
+const buildSaveConfirmSubMessage = (joinServices = [], cancelServices = [], settingChangedServices = []) => {
+  const lines = []
+  if (joinServices.length > 0) {
+    lines.push(`추가 ${joinServices.length}건: ${joinServices.map((s) => escapeHtml(s.rateNm)).join(', ')}`)
+  }
+  if (cancelServices.length > 0) {
+    lines.push(`해지 ${cancelServices.length}건: ${cancelServices.map((s) => escapeHtml(s.rateNm)).join(', ')}`)
+  }
+  if (settingChangedServices.length > 0) {
+    lines.push(`설정변경 ${settingChangedServices.length}건: ${settingChangedServices.map((s) => escapeHtml(s.rateNm)).join(', ')}`)
+  }
+  return lines.map((l) => `- ${l}`).join('<br>')
+}
+
 // [확인] 버튼 처리 흐름:
 // 1. 이미 확인완료 상태 → 토글 off (잠금 해제)
-// 2. 가입/해지 변경사항 있음 → 사전체크
-// 3. 변경사항 없음 → 확인 다이얼로그 → 사용자 확인 후 완료
+// 2. 변경사항 없음 → 확인 다이얼로그 → 사용자 확인 후 완료
+// 3. 변경사항 있음 → runAdditionPreCheck → 통과 시 저장 목록 확인 다이얼로그 → 확인완료
 const completeSelectedServices = async () => {
   if (isServiceConfirmCompleted.value) {
     isServiceConfirmCompleted.value = false
@@ -818,6 +1144,7 @@ const completeSelectedServices = async () => {
     selectedServiceIds: selectedServiceIds.value,
     selectedJoinServices: selectedJoinServices.value.map(summarizeService),
     selectedCancelServices: cancelServices.map(summarizeService),
+    selectedSettingChangedServices: selectedSettingChangedServices.value.map(summarizeService),
     hasIncompleteSettingService: hasIncompleteSettingService.value,
   })
 
@@ -830,21 +1157,14 @@ const completeSelectedServices = async () => {
     return
   }
 
-  // 변경사항이 없을 때만 확인 다이얼로그를 표시한다.
-  if (selectedJoinServices.value.length === 0 && cancelServices.length === 0) {
+  if (selectedJoinServices.value.length === 0 && cancelServices.length === 0 && selectedSettingChangedServices.value.length === 0) {
     const confirmMsg = '변경 사항이 없습니다. 계속 진행하시겠습니까?'
-
-    console.log(`${getLogPrefix('부가서비스체크')} 확인 다이얼로그 표시`, {
-      confirmMsg,
-      cancelCount: cancelServices.length,
-    })
-
+    console.log(`${getLogPrefix('부가서비스체크')} 확인 다이얼로그 표시`, { confirmMsg })
     showConfirm(confirmMsg, () => {
       isServiceConfirmCompleted.value = true
       syncAdditionModel()
       console.log(`${getLogPrefix('부가서비스체크')} 화면 데이터 반영 결과`, {
         reason: 'user confirmed (no changes)',
-        cancelCount: cancelServices.length,
         isServiceConfirmCompleted: isServiceConfirmCompleted.value,
         selectedServiceIds: selectedServiceIds.value,
       })
@@ -852,69 +1172,74 @@ const completeSelectedServices = async () => {
     return
   }
 
-  // 가입/해지 변경사항은 사전체크 성공 시 알림 없이 확인완료 상태만 반영한다.
-  const preCheckServices = [
-    ...selectedJoinServices.value.map((svc) => ({ ...svc, prdcSbscTrtmCd: 'A' })),
-    ...cancelServices.map((svc) => ({ ...svc, prdcSbscTrtmCd: 'C' })),
-  ]
-  const requestSeq = ++preCheckRequestSeq
+  const passed = await runAdditionPreCheck({
+    joinServices: selectedJoinServices.value,
+    cancelServices,
+    settingChangedServices: selectedSettingChangedServices.value,
+  })
+  if (!passed) return
 
-  try {
-    isPreChecking.value = true
-    const payload = createMoscPrdcTrtmPreChkPayload(preCheckServices)
-    console.log(`${getLogPrefix('부가서비스체크')} 부가서비스 사전체크 요청`, payload)
-    const res = await postAdditionPreCheck(payload)
-    console.log(`${getLogPrefix('부가서비스체크')} 부가서비스 사전체크 응답`, {
-      code: res?.code,
-      message: res?.message,
-      data: res?.data,
-    })
-    if (requestSeq !== preCheckRequestSeq) {
-      console.warn(`${getLogPrefix('부가서비스체크')} 이전 응답 무시`, { requestSeq, preCheckRequestSeq })
-      return
-    }
-    const failure = createPreCheckFailure(res)
-
-    if (failure) {
-      applyPreCheckFailure(failure, { preCheckServices, cancelServices })
-      return
-    }
-
-    setPreCheckResultState({
-      scopeServices: preCheckServices,
-      preCheckPassedServices: preCheckServices,
-    })
+  const subMsg = buildSaveConfirmSubMessage(
+    selectedJoinServices.value,
+    cancelServices,
+    selectedSettingChangedServices.value,
+  )
+  showConfirm('다음 항목을 처리합니다. 확인하시겠습니까?', () => {
     isServiceConfirmCompleted.value = true
     syncAdditionModel()
     console.log(`${getLogPrefix('부가서비스체크')} 화면 데이터 반영 결과`, {
       isServiceConfirmCompleted: isServiceConfirmCompleted.value,
       joinCount: selectedJoinServices.value.length,
       cancelCount: cancelServices.length,
+      settingChangedCount: selectedSettingChangedServices.value.length,
       selectedServiceIds: selectedServiceIds.value,
       selectedTotalAmount: selectedTotalAmount.value,
     })
-  } catch (error) {
-    if (requestSeq !== preCheckRequestSeq) {
-      console.warn(`${getLogPrefix('부가서비스체크')} 이전 예외 무시`, { requestSeq, preCheckRequestSeq })
-      return
-    }
-    console.error(`${getLogPrefix('부가서비스체크')} 예외 발생`, {
-      message: error?.message,
-      response: error?.response?.data,
-    })
-    showAlert(
-      error?.response?.data?.message ||
-        error?.response?.data?.data?.resMessage ||
-        '부가서비스 가입 가능 여부 확인 중 오류가 발생했습니다.',
-    )
-  } finally {
-    if (requestSeq === preCheckRequestSeq) {
-      isPreChecking.value = false
-    }
-  }
+  }, subMsg)
 }
 
 // ─── API 호출 ─────────────────────────────────────────────────────────────────
+
+// 전체 부가서비스 카탈로그 조회 (POST /api/form/addition/list) — 팝업에 전달할 선택 가능 목록
+const fetchAllVasList = async () => {
+  const baseUrl = `${import.meta.env.VITE_MSF_API_URL || ''}`.replace(/\/$/, '')
+  const userStore = useMsfUserStore()
+  const headers = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  }
+  if (userStore.token) {
+    headers.Authorization = `Bearer ${userStore.token}`
+  }
+  try {
+    const response = await fetch(`${baseUrl}/api/form/addition/list`, {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({
+        operTypeCd: '',
+        prodCtgTypeCd: 'R',
+        categoryMstRequest: { prodCtgId: ['RFREESVC', 'RRATESVC'] },
+      }),
+    })
+    const res = await response.json().catch(() => null)
+    if (res && res.code === '0000' && res.data?.[0]) {
+      const result = res.data[0]
+      allFreeVasServices.value = result.freeAddition || []
+      allPaidVasServices.value = result.paidAddition || []
+    }
+  } catch (error) {
+    console.error(`${getLogPrefix('전체부가서비스조회')} 예외 발생`, { message: error?.message })
+  }
+}
+
+// 부가서비스 추가 버튼 클릭: 전체 카탈로그 조회 후 팝업 오픈
+const openVasModal = async () => {
+  if (isListDisabled.value) return
+  await fetchAllVasList()
+  if (isListDisabled.value) return
+  isVasModalOpen.value = true
+}
 
 // M플랫폼 X97 경유 이용중 부가서비스 목록 조회 (POST /api/form/servicechange/myaddsvclist)
 // ncn 또는 전화번호 미충족 시 목록 초기화 후 종료
@@ -959,23 +1284,31 @@ const fetchActiveServices = async () => {
 
     const formResponse = Array.isArray(res?.data) ? res.data[0] : res?.data
     const result = formResponse?.resData
+    const persistedSettingMap = getPersistedSettingRecordMap()
 
     if (res && res.code === '0000' && formResponse?.resCode === '0000' && result) {
       const normalized = result?.list ? splitActiveServices(result.list) : result
-      queriedFreeServices.value = (normalized?.freeAddition || []).map(toServiceRow)
-      queriedPaidServices.value = (normalized?.paidAddition || []).map(toServiceRow)
+      queriedFreeServices.value = (normalized?.freeAddition || [])
+        .map(toServiceRow)
+        .map((svc) => mergePersistedSettingData(svc, persistedSettingMap))
+      queriedPaidServices.value = (normalized?.paidAddition || [])
+        .map(toServiceRow)
+        .map((svc) => mergePersistedSettingData(svc, persistedSettingMap))
       activeFreeServices.value = [...queriedFreeServices.value]
       activePaidServices.value = [...queriedPaidServices.value]
-      addedServices.value = []
+      const activeIds = new Set([...activeFreeServices.value, ...activePaidServices.value].map((svc) => svc.rateCd))
+      addedServices.value = getRestoredAddedServices(activeIds, persistedSettingMap)
       clearPreCheckResultState()
       syncSelectedServices()
       console.log(`${getLogPrefix('이용중부가서비스조회')} 화면 데이터 반영 결과`, {
         freeCount: activeFreeServices.value.length,
         paidCount: activePaidServices.value.length,
+        restoredAddedCount: addedServices.value.length,
         selectedServiceIds: selectedServiceIds.value,
         selectedTotalAmount: selectedTotalAmount.value,
         freeServices: activeFreeServices.value.map(summarizeService),
         paidServices: activePaidServices.value.map(summarizeService),
+        restoredAddedServices: addedServices.value.map(summarizeService),
       })
     } else {
       console.warn(`${getLogPrefix('이용중부가서비스조회')} 진행 중단`, {
@@ -1025,7 +1358,7 @@ watch(
     model.value.custId,
   ],
   (newValue, oldValue) => {
-    console.log(`${getLogPrefix('가입자정보변경')} 감지`, { oldValue, newValue })
+    console.log(`${getLogPrefix('가입자정보변경')} 감지`, { oldValue: [...(oldValue || [])], newValue: [...(newValue || [])] })
     fetchActiveServices()
   },
 )
@@ -1057,8 +1390,8 @@ watch(
     }
 
     console.log(`${getLogPrefix('선택변경')} 화면 데이터 반영 결과`, {
-      oldValue,
-      newValue,
+      changedServiceIds: getChangedServiceIds(newValue, oldValue).join(', '),
+      selectedCount: (newValue || []).length,
       selectedTotalAmount: selectedTotalAmount.value,
     })
     syncAdditionModel()
@@ -1067,10 +1400,12 @@ watch(
 
 // 확인완료 상태 변경 시 model에 동기화 → 부모(ServiceChangeProduct)가 다음 버튼 활성화에 사용
 watch(isServiceConfirmCompleted, (val) => {
+  if (val) isVasModalOpen.value = false
   model.value.additionConfirmCompleted = val
   syncAdditionModel()
   console.log(`${getLogPrefix('확인완료변경')} model 동기화`, { additionConfirmCompleted: val })
 })
+
 
 onMounted(() => {
   console.log(`${getLogPrefix('초기화')} mounted`)
@@ -1146,7 +1481,7 @@ onMounted(() => {
           <td class="ut-text-center">
             <MsfButton
               variant="subtle"
-              v-if="svc.settingYn === 'Y'"
+              v-if="svc.settingYn === 'Y' && getSettingModalType(svc) && getSettingModalType(svc) !== 'autoDefault'"
               :disabled="isListDisabled || isSettingButtonDisabled(svc)"
               @click="openSettingModal(svc)"
             >
@@ -1174,7 +1509,7 @@ onMounted(() => {
       </dl>
     </div>
     <MsfButtonGroup class="total-btns">
-      <MsfButton variant="subtle" @click="isVasModalOpen = true">부가서비스 추가</MsfButton>
+      <MsfButton variant="subtle" :disabled="isListDisabled" @click="openVasModal">부가서비스 추가</MsfButton>
       <MsfButton
         variant="toggle"
         :active="isServiceConfirmCompleted"
@@ -1190,27 +1525,152 @@ onMounted(() => {
 
   <MsfVasManageModal
     v-model="isVasModalOpen"
-    :free-services="queriedFreeServices"
-    :paid-services="queriedPaidServices"
+    :free-services="allFreeVasServices"
+    :paid-services="allPaidVasServices"
     :active-free-ids="activeFreeIds"
     :active-paid-ids="activePaidIds"
+    :phone-number="`${model.deviceChgTel1 || ''}${model.deviceChgTel2 || ''}${model.deviceChgTel3 || ''}`"
+    :ncn="model.ncn || model.contractNum || ''"
     @confirm="onVasConfirm"
   />
+  <!-- NOSPAM4: 불법TM 수신차단 -->
   <IllegalTmBlockModal
-    :model-value="settingModalType === 'illegalTm'"
+    :model-value="showSettingModal && settingModalType === 'illegalTm'"
+    :max-count="50"
+    :min-length="0"
     :setting-data="currentSettingData"
     @update:model-value="closeSettingModal"
     @close="closeSettingModal"
     @confirm="applySettingData"
   />
-  <NumberSpoofingBlockModal
-    :model-value="settingModalType === 'numberSpoofing'"
+  <!-- NOSPAM2: 특정번호 수신차단 (NOSPAM4와 동일 컴포넌트, 다른 props) -->
+  <IllegalTmBlockModal
+    v-if="settingModalType === 'blockNumber100'"
+    :model-value="showSettingModal"
+    title="특정번호 수신차단서비스"
+    :max-count="100"
+    :min-length="3"
+    :setting-data="currentSettingData"
     @update:model-value="closeSettingModal"
     @close="closeSettingModal"
     @confirm="applySettingData"
   />
+  <!-- NOSPAM3: 정보제공사업자번호차단 -->
+  <MsfInfoProviderBlockModal
+    v-if="settingModalType === 'infoProviderBlock'"
+    :model-value="showSettingModal"
+    :setting-data="currentSettingData"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- STLPVTPHN: 번호도용 차단 -->
+  <NumberSpoofingBlockModal
+    :model-value="showSettingModal && settingModalType === 'numberSpoofing'"
+    :setting-data="currentSettingData"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- 로밍 시작일 (8자리) -->
   <RoamingStartDateModal
-    :model-value="settingModalType === 'roaming'"
+    v-if="settingModalType === 'roamingDate8'"
+    :model-value="showSettingModal"
+    variant="date8"
+    :setting-data="currentSettingData"
+    :service-name="currentSettingService.rateNm"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- 로밍 기간설정 (시작일시+종료일) -->
+  <RoamingStartDateModal
+    v-if="settingModalType === 'roamingDateRange'"
+    :model-value="showSettingModal"
+    variant="dateTimeRange"
+    :setting-data="currentSettingData"
+    :service-name="currentSettingService.rateNm"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- 함께쓰는 로밍 대표 -->
+  <MsfRoamingShareMainModal
+    v-if="settingModalType === 'roamingShareMain1'"
+    :model-value="showSettingModal"
+    variant="main1"
+    :setting-data="currentSettingData"
+    :main-phone-number="getPhoneNo()"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- 하루종일 로밍 베이직 투게더 대표 -->
+  <MsfRoamingShareMainModal
+    v-if="settingModalType === 'roamingShareMain2'"
+    :model-value="showSettingModal"
+    variant="main2"
+    :setting-data="currentSettingData"
+    :main-phone-number="getPhoneNo()"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- 함께쓰는 로밍 서브 -->
+  <MsfRoamingShareSubModal
+    v-if="settingModalType === 'roamingShareSub1'"
+    :model-value="showSettingModal"
+    variant="sub1"
+    :service-name="currentSettingService.rateNm"
+    :setting-data="currentSettingData"
+    :ncn="model.ncn || model.contractNum || ''"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- 하루종일 로밍 베이직 투게더 서브 -->
+  <MsfRoamingShareSubModal
+    v-if="settingModalType === 'roamingShareSub2'"
+    :model-value="showSettingModal"
+    variant="sub2"
+    :setting-data="currentSettingData"
+    :ncn="model.ncn || model.contractNum || ''"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- DATAROMSM: 데이터로밍요금알림 -->
+  <MsfNotifyPhoneModal
+    v-if="settingModalType === 'notifyPhone'"
+    :model-value="showSettingModal"
+    :setting-data="currentSettingData"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- FCARVLSMS: 로밍 해외도착알리미 -->
+  <MsfAlertNumbersModal
+    v-if="settingModalType === 'alertNumbers'"
+    :model-value="showSettingModal"
+    :setting-data="currentSettingData"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- SENOINFR1: 망내 1회선 무료통화 -->
+  <MsfFreeCallNumberModal
+    v-if="settingModalType === 'freeCallNumber'"
+    :model-value="showSettingModal"
+    :setting-data="currentSettingData"
+    @update:model-value="closeSettingModal"
+    @close="closeSettingModal"
+    @confirm="applySettingData"
+  />
+  <!-- PL253A854: My time plan_MVNO 전용 -->
+  <MsfMilitaryTimePlanModal
+    v-if="settingModalType === 'militaryTimePlan'"
+    :model-value="showSettingModal"
+    :setting-data="currentSettingData"
     @update:model-value="closeSettingModal"
     @close="closeSettingModal"
     @confirm="applySettingData"

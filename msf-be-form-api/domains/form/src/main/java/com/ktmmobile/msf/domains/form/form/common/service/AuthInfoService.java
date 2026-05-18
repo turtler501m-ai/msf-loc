@@ -27,7 +27,7 @@ import com.ktmmobile.msf.domains.form.form.newchange.dto.KnoteScanInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.KnoteScanInfoResponse;
 
 /**
- * KTM모바일 고객인증 -> 어디로 가야하지....
+ * KTM모바일 고객인증, 신분증 목록 조회
  **/
 @Service
 @RequiredArgsConstructor

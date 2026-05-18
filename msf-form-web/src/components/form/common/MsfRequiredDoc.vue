@@ -27,7 +27,9 @@ const emit = defineEmits(['change'])
 const isModalOpen = ref(false)
 
 const checkBizNoLength = (b1, b2, b3) => {
-  return String(b1 || '').length === 3 && String(b2 || '').length === 2 && String(b3 || '').length === 5
+  return (
+    String(b1 || '').length === 3 && String(b2 || '').length === 2 && String(b3 || '').length === 5
+  )
 }
 
 // 사업자번호가 3-2-5 자리 모두 입력되었는지 여부
@@ -96,6 +98,11 @@ const getRequiredDocNames = () => {
     if (!list.includes('가족관계증명서')) list.push('가족관계증명서')
   }
 
+  // 명의변경 양수고객은 내국인인 경우에도 구비서류 필요
+  if (model.value.isTeCustomer && ['NA', 'FN'].includes(cstmrTypeCd)) {
+    list.push('가족관계증명서')
+  }
+
   return [...new Set(list)] // 중복 제거
 }
 
@@ -121,7 +128,9 @@ const onConfirm = ({ completedDocs, isAllUploaded }) => {
 // 외부(부모)에서 호출할 수 있는 유효성 검사 함수
 const validate = () => {
   if (hasRequiredDocs.value) {
-    return props.authFlags ? props.authFlags.requiredDocs === true : isAllUploadedModel.value === true
+    return props.authFlags
+      ? props.authFlags.requiredDocs === true
+      : isAllUploadedModel.value === true
   }
   return true
 }

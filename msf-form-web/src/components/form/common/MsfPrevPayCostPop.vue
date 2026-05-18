@@ -77,7 +77,7 @@
             <li v-if="amtInfo.joinFee > 0">
               <dl>
                 <dt>가입비(3개월 분납)</dt>
-                <dd>{{ formatCurrency(Math.floor(amtInfo.joinFee / 3)) }} 원</dd>
+                <dd>{{ formatCurrency(Math.floor(amtInfo.joinFee)) }} 원</dd>
               </dl>
             </li>
             <li v-if="amtInfo.usimFee > 0">
@@ -135,7 +135,18 @@ const props = defineProps({
 
 const emit = defineEmits(['update:isOpen', 'triggerClick', 'close'])
 const store = useMsfFormNewChgStore()
-const amtInfo = computed(() => store.product.estimatedAmtInfo)
+const amtInfo = computed(() => store.product.estimatedAmtInfo || {
+  hndsetAmt: 0,
+  subsdAmt: 0,
+  agncySubsdAmt: 0,
+  instAmt: 0,
+  instCmsn: 0,
+  baseAmt: 0,
+  dcAmt: 0,
+  addDcAmt: 0,
+  joinFee: 0,
+  usimFee: 0,
+})
 
 // 가입유형 이름 매핑
 const getJoinTypeName = (type) => {
@@ -200,6 +211,17 @@ const fetchPriceInfo = async () => {
     payload.agrmTrm = m.contractPeriod
     payload.salePlcyCd = m.modelSalePolicyCd
     payload.sprtTp = m.discountType
+
+    // 유심 종류 (usimKindsCd) 동적 설정
+    let usimCd = '08' // 기본값
+    if (p.hasSim === 'hasSim1') {
+      usimCd = '06' // 유심보유
+    } else if (p.hasSim === 'hasSim2') {
+      usimCd = (m.prdtSctnCd === '5G') ? '07' : '02' // 유심구매 (5G: 07, LTE: 02)
+    } else if (p.hasSim === 'hasSim3') {
+      usimCd = '09' // eSIM
+    }
+    payload.usimKindsCd = usimCd
   }
 
   try {
@@ -222,20 +244,26 @@ const fetchPriceInfo = async () => {
 
     if (res?.data) {
       const d = res.data.resData || res.data
-      result.hndsetAmt = Number(d.MODEL_PRICE || 0)
-      result.subsdAmt = Number(d.MODEL_SPRT || 0)
-      result.agncySubsdAmt = Number(d.MODEL_DISCOUNT3 || 0)
+      // API 실제 응답 키와 명세 키 혼합 지원 (실제 응답 키 우선)
+      result.hndsetAmt = Number(d.hndstAmt || d.MODEL_PRICE || 0)
+      result.subsdAmt = Number(d.subsdAmt || d.MODEL_SPRT || 0)
+      result.agncySubsdAmt = Number(d.agncySubsdAmt || d.MODEL_DISCOUNT3 || 0)
 
       // 일시납일 경우 할부원금 0원 처리
       const isUpfront = String(m.installmentMonth) === '0'
-      result.instAmt = isUpfront ? 0 : Number(d.REAL_MDL_INSTAMT || 0)
+      result.instAmt = isUpfront ? 0 : Number(d.instAmt || d.REAL_MDL_INSTAMT || 0)
 
-      result.instCmsn = Number(d.instCmsn || 0)
-      result.baseAmt = Number(d.SOC_BASE_CHRG_AMT || 0)
-      result.dcAmt = Number(d.DC_AMT || 0)
-      result.addDcAmt = Number(d.ADD_DC_AMT || 0)
-      result.joinFee = Number(d.JOIN_PRICE || 0)
-      result.usimFee = Number(d.USIM_PRICE || 0)
+      // 총할부수수료가 API에서 totalInstCmsn으로 내려온다면 해당 값 매핑
+      result.instCmsn = Number(d.totalInstCmsn || d.instCmsn || 0)
+      result.baseAmt = Number(d.baseAmt || d.SOC_BASE_CHRG_AMT || 0)
+      result.dcAmt = Number(d.dcAmt || d.DC_AMT || 0)
+      result.addDcAmt = Number(d.addDcAmt || d.ADD_DC_AMT || 0)
+      
+      const isJoinPaid = d.joinIsPay ? d.joinIsPay === 'Y' : true
+      result.joinFee = isJoinPaid ? Number(d.joinPrice || d.JOIN_PRICE || 0) : 0
+
+      const isSimPaid = (d.simIsPay || d.nfcSimIsPay) ? (d.simIsPay === 'Y' || d.nfcSimIsPay === 'Y') : true
+      result.usimFee = isSimPaid ? Number(d.simPrice || d.usimPrice || d.USIM_PRICE || 0) : 0
     }
 
     store.product.estimatedAmtInfo = result

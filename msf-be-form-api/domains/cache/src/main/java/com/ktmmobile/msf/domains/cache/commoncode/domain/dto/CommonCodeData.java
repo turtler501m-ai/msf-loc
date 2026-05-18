@@ -42,9 +42,16 @@ public record CommonCodeData(
     public record Detail(
         String abbrName,
         String description,
+        String upperGroupCode,
+        String filePathName,
+        String imageName,
+        int sortOrder,
         String etcValue1,
         String etcValue2,
         String etcValue3,
+        String etcValue4,
+        String etcValue5,
+        String etcValue6,
         String startDate,
         String endDate
     ) {
@@ -57,9 +64,16 @@ public record CommonCodeData(
             return new Detail(
                 detail.getAbbrName(),
                 detail.getDescription(),
+                detail.getUpperGroupCode(),
+                detail.getFilePathName(),
+                detail.getImageName(),
+                detail.getSortOrder(),
                 detail.getEtcValue1(),
                 detail.getEtcValue2(),
                 detail.getEtcValue3(),
+                detail.getEtcValue4(),
+                detail.getEtcValue5(),
+                detail.getEtcValue6(),
                 detail.getStartDate(),
                 detail.getEndDate()
             );

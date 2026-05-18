@@ -59,10 +59,7 @@ public class LoginTokenService {
             user.userName(),
             user.phoneNumber(),
             user.clientIp(),
-            user.agentCode(),
-            user.agentName(),
-            user.shopCode(),
-            user.shopName(),
+            user.organization(),
             user.attributes(),
             user.requiredActions(),
             accessToken,
@@ -134,10 +131,7 @@ public class LoginTokenService {
             userInfo.userName(),
             userInfo.phoneNumber(),
             userInfo.clientIp(),
-            userInfo.agentCode(),
-            userInfo.agentName(),
-            userInfo.shopCode(),
-            userInfo.shopName(),
+            userInfo.organization(),
             userInfo.attributes(),
             List.of()
         );

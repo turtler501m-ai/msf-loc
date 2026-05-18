@@ -8,11 +8,11 @@
             v-model="model.cstmrNm"
             placeholder="이름"
             class="ut-w-300"
-            :readonly="isNameReadonly"
+            :readonly="isReadonly"
         />
       </MsfFormGroup>
 
-      <MsfFormGroup v-if="!isTerminationCorporate" label="생년월일" required>
+      <MsfFormGroup v-if="!isCorporate" label="생년월일" required>
         <MsfStack type="field">
           <MsfNumberInput
               id="inp-userBirthDate"
@@ -36,7 +36,7 @@
         </MsfStack>
       </MsfFormGroup>
 
-      <template v-if="isTerminationCorporate">
+      <template v-if="isCorporate">
         <MsfFormGroup label="법인등록번호" required>
           <MsfStack type="field">
             <MsfNumberInput
@@ -60,39 +60,6 @@
           </MsfStack>
         </MsfFormGroup>
 
-        <MsfFormGroup label="사업자등록번호">
-          <MsfStack type="field">
-            <MsfNumberInput
-                id="inp-cstmrJuridicalBizNo1"
-                ref="bizNo1Ref"
-                v-model="model.cstmrJuridicalBizNo1"
-                placeholder="앞 3자리"
-                maxlength="3"
-                :readonly="isReadonly"
-                @maxlength="bizNo2Ref?.focus()"
-            />
-            <span class="unit-sep">-</span>
-            <MsfNumberInput
-                id="inp-cstmrJuridicalBizNo2"
-                ref="bizNo2Ref"
-                v-model="model.cstmrJuridicalBizNo2"
-                placeholder="가운데 2자리"
-                maxlength="2"
-                :readonly="isReadonly"
-                @maxlength="bizNo3Ref?.focus()"
-            />
-            <span class="unit-sep">-</span>
-            <MsfNumberInput
-                id="inp-cstmrJuridicalBizNo3"
-                ref="bizNo3Ref"
-                v-model="model.cstmrJuridicalBizNo3"
-                placeholder="뒤 5자리"
-                maxlength="5"
-                :readonly="isReadonly"
-            />
-          </MsfStack>
-        </MsfFormGroup>
-
         <MsfFormGroup label="대표자명" required>
         <MsfInput
           id="inp-cstmrJuridicalRepNm"
@@ -106,6 +73,39 @@
 
       </template>
 
+      <MsfFormGroup v-if="showsBusinessRegistrationNo" label="사업자등록번호">
+        <MsfStack type="field">
+          <MsfNumberInput
+              id="inp-cstmrJuridicalBizNo1"
+              ref="bizNo1Ref"
+              v-model="model.cstmrJuridicalBizNo1"
+              placeholder="앞 3자리"
+              maxlength="3"
+              :readonly="isReadonly"
+              @maxlength="bizNo2Ref?.focus()"
+          />
+          <span class="unit-sep">-</span>
+          <MsfNumberInput
+              id="inp-cstmrJuridicalBizNo2"
+              ref="bizNo2Ref"
+              v-model="model.cstmrJuridicalBizNo2"
+              placeholder="가운데 2자리"
+              maxlength="2"
+              :readonly="isReadonly"
+              @maxlength="bizNo3Ref?.focus()"
+          />
+          <span class="unit-sep">-</span>
+          <MsfNumberInput
+              id="inp-cstmrJuridicalBizNo3"
+              ref="bizNo3Ref"
+              v-model="model.cstmrJuridicalBizNo3"
+              placeholder="뒤 5자리"
+              maxlength="5"
+              :readonly="isReadonly"
+          />
+        </MsfStack>
+      </MsfFormGroup>
+
       <MsfFormGroup :label="phoneLabel" required>
         <MsfStack type="field">
           <MsfNumberInput
@@ -115,7 +115,7 @@
               placeholder="앞자리"
               maxlength="3"
               :readonly="isReadonly"
-              :disabled="isTerminationPhonePrefixDisabled"
+              :disabled="true"
               @maxlength="deviceChgTel2Ref?.focus()"
           />
           <span class="unit-sep">-</span>
@@ -176,10 +176,11 @@ import { computed, ref, watch } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 import { useMsfFormSvcChgStore } from '@/stores/msf_serviceChange'
-import { useMsfUserStore } from '@/stores/msf_user'
 import { post } from '@/libs/api/msf.api'
 import { showAlert } from '@/libs/utils/comp.utils'
 
+// 서비스변경/서비스해지 전용 가입자 정보 컴포넌트.
+// 다른 가입/명의변경 화면의 가입자 정보는 MsfSubscriberInfo.vue를 사용한다.
 const props = defineProps({
   title: { type: String, default: '가입자 정보' },
   phoneLabel: { type: String, default: '휴대폰번호' },
@@ -189,7 +190,6 @@ const props = defineProps({
 const model = defineModel({ type: Object, required: true })
 const terminationStore = useMsfFormTerminationStore()
 const serviceChangeStore = useMsfFormSvcChgStore()
-const userStore = useMsfUserStore()
 
 const deviceChgTel1Ref = ref(null)
 const deviceChgTel2Ref = ref(null)
@@ -220,7 +220,11 @@ const focusAuthButton = () => {
 const isTerminationForm = computed(() => model.value?.formType === 'TERMINATION')
 const isServiceChangeForm = computed(() => model.value?.formType === 'SERVICECHANGE')
 const isCorporate = computed(() => ['JP', 'GO'].includes(model.value?.cstmrTypeCd))
-const isTerminationCorporate = computed(() => isTerminationForm.value && isCorporate.value)
+const showsBusinessRegistrationNo = computed(
+  () =>
+    isCorporate.value ||
+    (isServiceChangeForm.value && ['NA', 'FN'].includes(model.value?.cstmrTypeCd)),
+)
 const isMinor = computed(() => ['NM', 'FM'].includes(model.value?.cstmrTypeCd))
 
 const computedTitle = computed(() => {
@@ -230,7 +234,7 @@ const computedTitle = computed(() => {
   return props.title
 })
 
-const getLogPrefix = (task) => `${isTerminationForm.value ? '[해지]' : '[서비스변경]'}[${task}]`
+const getLogPrefix = (task) => `${isTerminationForm.value ? '[해지]' : '[변경]'}[${task}]`
 
 const resolveAuthFlag = () => {
   const result = isTerminationForm.value
@@ -274,7 +278,7 @@ const updateAuthFlag = (value) => {
 const deviceChgAuth = useAuthButton(
     () => [
       model.value?.cstmrNm,
-      ...(isTerminationCorporate.value
+      ...(isCorporate.value
         ? [model.value?.cstmrJuridicalRrn1, model.value?.cstmrJuridicalRrn2]
         : [model.value?.userBirthDate]),
       model.value?.deviceChgTel1,
@@ -293,40 +297,13 @@ const deviceChgAuth = useAuthButton(
 
 const isVerified = computed(() => deviceChgAuth.status.value === 'verified')
 const isReadonly = computed(() => model.value?.isSaved || isVerified.value)
-const isNameReadonly = computed(() => isReadonly.value)
-const isTerminationPhonePrefixDisabled = computed(() => isTerminationForm.value)
 
-const postWithoutSuccessAlert = async (url, params) => {
-  try {
-    const response = await fetch(`${import.meta.env.VITE_MSF_API_URL}${url}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(userStore.token ? { Authorization: `Bearer ${userStore.token}` } : {}),
-      },
-      body: JSON.stringify(params),
-    })
-    const data = await response.json()
-    if (data.code !== '0000') {
-      showAlert(data.message || '시스템 오류가 발생했습니다.')
-      return data
-    }
-    if (data.data?.resCode && data.data.resCode !== '0000') {
-      showAlert(data.data.resMessage || '업무 처리 중 오류가 발생했습니다.')
-    }
-    return data
-  } catch (error) {
-    showAlert(error?.message || '시스템 오류가 발생했습니다.')
-    return { code: '9999', message: error?.message }
-  }
-}
 
 watch(
-    isTerminationForm,
-    (isTermination) => {
-      if (isTermination && model.value.deviceChgTel1 !== '010') {
+    () => model.value?.deviceChgTel1,
+    () => {
+      // 이 컴포넌트는 서비스변경/해지 전용이므로 휴대폰 앞자리는 010으로 고정한다.
+      if (model.value.deviceChgTel1 !== '010') {
         model.value.deviceChgTel1 = '010'
       }
     },
@@ -351,9 +328,7 @@ const handleDeviceChgVerify = async () => {
       subscriberNo: phoneNo,
       customerLinkName,
     }
-    const res = isTerminationForm.value
-      ? await postWithoutSuccessAlert('/api/form/ktmmember/auth', authPayload)
-      : await post('/api/form/ktmmember/auth', authPayload, { silentSuccess: true })
+    const res = await post('/api/form/ktmmember/auth', authPayload, { silentSuccess: true })
     console.log(`${getLogPrefix('휴대폰인증')} 응답 수신`, {
       code: res?.code,
       message: res?.message,
@@ -380,7 +355,7 @@ const handleDeviceChgVerify = async () => {
     model.value.custId = authData.customerId || authData.customer_id || model.value.custId || ''
     model.value.lstComActvDate = lstComActvDate
     if (authData.customerLinkName) model.value.cstmrNm = authData.customerLinkName
-    if (isTerminationCorporate.value) {
+    if (isCorporate.value) {
       const representativeName =
         authData.representativeName ||
         authData.repName ||
@@ -460,7 +435,7 @@ const validate = () => {
     console.warn(`${getLogPrefix('가입자정보검증')} 진행 중단`, { reason: 'cstmrNm' })
     return false
   }
-  if (isTerminationCorporate.value) {
+  if (isCorporate.value) {
     if (!model.value.cstmrJuridicalRrn1 || !model.value.cstmrJuridicalRrn2) {
       console.warn(`${getLogPrefix('가입자정보검증')} 진행 중단`, {
         reason: 'cstmrJuridicalRrn',

@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 휴대폰 일련번호 유효성체크 Request
+ */
 @Getter
 @Setter
 @NoArgsConstructor

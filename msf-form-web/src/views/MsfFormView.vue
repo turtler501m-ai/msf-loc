@@ -29,11 +29,7 @@
             <component
               :is="s.component"
               :isActive="i <= currentStepIndex"
-              :ref="
-                (el) => {
-                  if (el) stepRefs[i] = el
-                }
-              "
+              :ref="(el) => setStepRef(el, i)"
               @complete="(r) => onComplete(r, i)"
             />
           </div>
@@ -151,6 +147,11 @@ const allSteps = ref([])
 
 // [추가] 자식 컴포넌트 접근용 배열 및 취합용 데이터 객체
 const stepRefs = ref([])
+const setStepRef = (el, i) => {
+  if (el) {
+    stepRefs.value[i] = el
+  }
+}
 
 const isComplete = ref(false)
 const formType = ref('') // 신청서 유형 (신규, 번호이동, 기변 등)
@@ -168,7 +169,7 @@ const isLastStep = computed(
 )
 const showPrevPayCostBtn = computed(() => route.params?.domain === 'newchange')
 const showClearBtn = computed(() =>
-  ['newchange', 'termination','ownerchange'].includes(route.params?.domain || ''),
+  ['newchange', 'termination', 'ownerchange'].includes(route.params?.domain || ''),
 )
 
 const isStepComplete = computed(() => {
@@ -205,30 +206,36 @@ const initAllSteps = async () => {
 }
 
 const initRouterParams = async () => {
-  /*
-      router 전달 방식: history state 사용
-      router.push({
-        path: '/form/newchange',
-        state: {
-          requestkey: 'xxxxxx',
-        }
-      })
-   */
+  await nextTick()
+
   const historyState = window.history.state
+  console.log('>>> [MsfFormView] initRouterParams - historyState:', historyState)
+
   if (historyState) {
-    // requestkey를 우선적으로 확인하고, 하위 호환을 위해 code도 확인합니다.
-    tempCode.value = historyState.requestkey || historyState.code
+    tempCode.value = historyState.requestKey || historyState.requestkey || historyState.code
   }
 
-  // 첫 번째 스텝 컴포넌트의 data(initForm)를 호출하여 스토어 초기화 (tempCode가 없으면 기본값으로 초기화됨)
+  // 첫 번째 스텝 컴포넌트가 준비될 때까지 최대 10번(1초) 시도하며 대기
+  let retryCount = 0
+  while (!stepRefs.value[0]?.data && retryCount < 10) {
+    console.log(`>>> [MsfFormView] Waiting for first step ref... (attempt ${retryCount + 1})`)
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    await nextTick()
+    retryCount++
+  }
+
   if (stepRefs.value[0]?.data) {
+    console.log('>>> [MsfFormView] Initializing first step with key:', tempCode.value)
     const result = await stepRefs.value[0].data(tempCode.value)
 
     if (result && result !== '0') {
       const index = Math.max(0, parseInt(result) - 1)
       currentStepIndex.value = index
       isCurrentStepComp.value = allSteps.value.map((_, i) => i <= index) || []
+      stepStore.setActiveIndex(index) // 스텝 인디케이터 동기화
     }
+  } else {
+    console.warn('>>> [MsfFormView] First step data() method still not ready after retries')
   }
 }
 
@@ -279,7 +286,9 @@ const onClickClearBtn = async () => {
         initAllSteps()
         return
       }
-      stepRef?.reset ? await stepRef.reset() : getCurrentFormStore()?.resetStep?.(currentStepIndex.value)
+      stepRef?.reset
+        ? await stepRef.reset()
+        : getCurrentFormStore()?.resetStep?.(currentStepIndex.value)
     })
   }
 }

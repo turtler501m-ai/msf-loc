@@ -3,6 +3,9 @@ package com.ktmmobile.msf.domains.form.form.common.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * 단말조회 Response
+ */
 @Getter
 @NoArgsConstructor
 public class PhoneInfoResponse {

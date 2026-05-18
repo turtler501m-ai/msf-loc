@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 부가서비스
+ */
 @Getter
 @Setter
 @NoArgsConstructor

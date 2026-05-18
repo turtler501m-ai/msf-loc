@@ -2,6 +2,11 @@ package com.ktmmobile.msf.commons.cachecore.application.service;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,6 +24,7 @@ import com.ktmmobile.msf.commons.cachecore.support.util.CacheKeyGenerator;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheLoadTimeFormatter;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheMetadataKeyGenerator;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheStoreKeyGenerator;
+import com.ktmmobile.msf.commons.cachecore.support.store.CacheStoreReader;
 import com.ktmmobile.msf.commons.common.service.port.CacheService;
 
 /**
@@ -37,6 +43,7 @@ class DefaultCacheReader implements CacheReader {
     private final CacheLoadTimeFormatter cacheLoadTimeFormatter;
     private final CacheMetadataKeyGenerator cacheMetadataKeyGenerator;
     private final CacheStoreKeyGenerator cacheStoreKeyGenerator;
+    private final CacheStoreReader cacheStoreReader;
 
     /**
      * 캐시 값 Optional 조회
@@ -58,6 +65,36 @@ class DefaultCacheReader implements CacheReader {
                 .map(valueType::cast);
         } catch (RuntimeException ex) {
             throw CacheException.wrap("Cache read failed. cacheName=" + cacheName + ", key=" + key, ex);
+        }
+    }
+
+    /**
+     * 캐시 값 다건 조회
+     * <p>
+     * Redis 반영 전 로컬 캐시에 남아있는 값을 먼저 확인한 뒤,
+     * 저장소에서 누락된 키만 batch 조회한다.
+     *
+     * @param cacheName 캐시 이름
+     * @param keys 캐시 키 목록
+     * @param valueType 값 타입
+     * @return 캐시 값
+     */
+    @Override
+    public <V> Map<String, V> getAll(String cacheName, Collection<String> keys, Class<V> valueType) {
+        try {
+            if (keys == null || keys.isEmpty()) {
+                return Map.of();
+            }
+
+            CacheLoader<?> cacheLoader = cacheRegistry.getRequired(cacheName);
+            List<String> orderedKeys = keys.stream()
+                .distinct()
+                .toList();
+            Map<String, Object> values = getCachedValuesOrLoadOnSerializationFailure(cacheLoader, orderedKeys);
+            loadMissingValues(cacheLoader, orderedKeys, values);
+            return castValues(orderedKeys, values, valueType);
+        } catch (RuntimeException ex) {
+            throw CacheException.wrap("Cache read failed. cacheName=" + cacheName + ", keys=" + keys, ex);
         }
     }
 
@@ -191,6 +228,23 @@ class DefaultCacheReader implements CacheReader {
         }
     }
 
+    private Map<String, Object> getCachedValuesOrLoadOnSerializationFailure(
+        CacheLoader<?> cacheLoader,
+        List<String> keys
+    ) {
+        try {
+            return getCachedValues(cacheLoader, keys);
+        } catch (RuntimeException ex) {
+            if (cacheLoader.missPolicy() == CacheMissPolicy.NONE) {
+                throw ex;
+            }
+
+            log.warn("Cache values read failed. Try cache miss recovery. cacheName={}, keys={}",
+                cacheLoader.cacheName(), keys, ex);
+            return loadValuesOneByOne(cacheLoader, keys);
+        }
+    }
+
     private Object getCachedValue(CacheLoader<?> cacheLoader, String key) {
         Optional<Object> localValue = cacheLocalStore.get(cacheLoader, key);
         if (localValue.isPresent()) {
@@ -201,6 +255,117 @@ class DefaultCacheReader implements CacheReader {
         }
         return cacheService.getValue(cacheStoreKeyGenerator.generate(
             cacheKeyGenerator.generate(cacheLoader.cacheName(), key)));
+    }
+
+    /** 로컬 캐시를 우선 사용하고, 로컬에 없는 키만 실제 저장소에서 조회한다. */
+    private Map<String, Object> getCachedValues(CacheLoader<?> cacheLoader, List<String> keys) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        Map<String, Object> localValues = cacheLocalStore.getAll(cacheLoader, keys);
+        List<String> missingKeys = new ArrayList<>();
+
+        for (String key: keys) {
+            if (localValues.containsKey(key)) {
+                values.put(key, localValues.get(key));
+                continue;
+            }
+            missingKeys.add(key);
+        }
+
+        if (missingKeys.isEmpty()) {
+            return values;
+        }
+
+        Map<String, Object> storeValues = getStoreValues(cacheLoader, missingKeys);
+        for (String key: missingKeys) {
+            if (storeValues.containsKey(key)) {
+                values.put(key, storeValues.get(key));
+            }
+        }
+        return values;
+    }
+
+    private Map<String, Object> getStoreValues(CacheLoader<?> cacheLoader, List<String> keys) {
+        if (cacheLoader.storeType() == CacheStoreType.HASH) {
+            return cacheStoreReader.getHashValues(cacheLoader.cacheName(), keys);
+        }
+        return getValueStoreValues(cacheLoader, keys);
+    }
+
+    /** VALUE 저장 방식은 저장소 레벨 batch 조회가 없으므로 키별로 조회한다. */
+    private Map<String, Object> getValueStoreValues(CacheLoader<?> cacheLoader, List<String> keys) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        for (String key: keys) {
+            Object value = cacheService.getValue(cacheStoreKeyGenerator.generate(
+                cacheKeyGenerator.generate(cacheLoader.cacheName(), key)));
+            if (value != null) {
+                values.put(key, value);
+            }
+        }
+        return values;
+    }
+
+    /** 다건 조회에서 누락된 키는 캐시 로더의 미스 정책에 따라 처리한다. */
+    private void loadMissingValues(CacheLoader<?> cacheLoader, List<String> keys, Map<String, Object> values) {
+        List<String> missingKeys = keys.stream()
+            .filter(key -> !values.containsKey(key))
+            .toList();
+        if (missingKeys.isEmpty() || cacheLoader.missPolicy() == CacheMissPolicy.NONE) {
+            return;
+        }
+
+        switch (cacheLoader.missPolicy()) {
+            case LOAD_ONE -> loadOneMissingValues(cacheLoader, missingKeys, values);
+            case RELOAD_ALL -> reloadAllMissingValues(cacheLoader, missingKeys, values);
+            case LOAD_ONE_THEN_RELOAD_ALL -> loadOneThenReloadAllMissingValues(cacheLoader, missingKeys, values);
+            case NONE -> {
+            }
+        }
+    }
+
+    private void loadOneMissingValues(CacheLoader<?> cacheLoader, List<String> keys, Map<String, Object> values) {
+        for (String key: keys) {
+            Object value = cacheLoadService.load(cacheLoader.cacheName(), key).orElse(null);
+            if (value != null) {
+                values.put(key, value);
+            }
+        }
+    }
+
+    private void reloadAllMissingValues(CacheLoader<?> cacheLoader, List<String> keys, Map<String, Object> values) {
+        cacheLoadService.load(cacheLoader.cacheName());
+        values.putAll(getCachedValues(cacheLoader, keys));
+    }
+
+    /** 단건 적재 후에도 누락된 키가 있으면 한 번만 전체 재적재한다. */
+    private void loadOneThenReloadAllMissingValues(
+        CacheLoader<?> cacheLoader,
+        List<String> keys,
+        Map<String, Object> values
+    ) {
+        loadOneMissingValues(cacheLoader, keys, values);
+        List<String> missingKeys = keys.stream()
+            .filter(key -> !values.containsKey(key))
+            .toList();
+        if (!missingKeys.isEmpty()) {
+            reloadAllMissingValues(cacheLoader, missingKeys, values);
+        }
+    }
+
+    private Map<String, Object> loadValuesOneByOne(CacheLoader<?> cacheLoader, List<String> keys) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        loadMissingValues(cacheLoader, keys, values);
+        return values;
+    }
+
+    /** 응답 순서는 호출자가 요청한 키 순서를 따른다. */
+    private <V> Map<String, V> castValues(List<String> keys, Map<String, Object> values, Class<V> valueType) {
+        Map<String, V> castedValues = new LinkedHashMap<>();
+        for (String key: keys) {
+            if (values.containsKey(key)) {
+                castedValues.put(key, valueType.cast(values.get(key)));
+            }
+        }
+        return Collections.unmodifiableMap(castedValues);
     }
 
     private Optional<LocalDateTime> toLoadTime(String cacheName, Object value) {

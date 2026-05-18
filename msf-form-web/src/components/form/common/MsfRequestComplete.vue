@@ -53,19 +53,21 @@
               variant="subtle"
               label="ios 발송"
               class="send-btn"
+              prefixIcon="ios"
               :disabled="invalid"
               @click="() => onClickSendKTMessage('I')"
             >
-              <img src="@/assets/images/appIpad.svg" alt="ios 아이콘" />발송
+              발송
             </MsfButton>
             <MsfButton
               variant="subtle"
               label="안드로이드 발송"
               class="send-btn"
+              prefixIcon="android"
               :disabled="invalid"
               @click="() => onClickSendKTMessage('A')"
             >
-              <img src="@/assets/images/appAndroid.svg" alt="Android 아이콘" />발송
+              발송
             </MsfButton>
           </MsfStack>
         </div>

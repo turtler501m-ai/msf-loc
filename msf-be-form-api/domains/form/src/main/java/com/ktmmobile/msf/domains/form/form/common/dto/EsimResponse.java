@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * eSIM 유효성체크 Response
+ */
 @Getter
 @Setter
 @NoArgsConstructor

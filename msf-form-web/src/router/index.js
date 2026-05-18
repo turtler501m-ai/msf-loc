@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 // import { isAuthenticated } from '@/libs/utils/auth.utils'
+import { showConfirm } from '@/libs/utils/comp.utils'
 
 // 레이아웃
 import MsfBaseLayout from '@/layouts/MsfBaseLayout.vue'
@@ -7,6 +8,8 @@ import MsfBaseLayout from '@/layouts/MsfBaseLayout.vue'
 import MsfMainView from '@/views/MsfMainView.vue'
 // 404 View
 import MsfNotFoundView from '@/views/MsfNotFoundView.vue'
+// APP 다운로드 안내
+import MsfAppDownloadView from '@/views/MsfAppDownloadView.vue'
 // 로그인
 import MsfLoginView from '@/views/MsfLoginView.vue'
 // 단말 사용 인증
@@ -59,6 +62,12 @@ const router = createRouter({
           props: true,
         },
       ],
+    },
+    {
+      path: '/download',
+      name: 'download',
+      meta: { skipAuth: true },
+      component: MsfAppDownloadView, // 단말 사용 인증
     },
     {
       path: '/login',
@@ -129,13 +138,32 @@ const router = createRouter({
   ],
 })
 
-// router.beforeEach((to, from, next) => {
-//   if (!isAuthenticated() && to.path !== '/login') {
-//     next('/login')
-//   } else {
-//     next()
-//   }
-// })
+router.beforeEach((to, from, next) => {
+  console.log('from:', from, 'to:', to)
+  if (from.path === '/form/newchange') {
+    showConfirm(
+      '신청서 작성 중에 화면 이탈시 입력하신 내용은 ‘임시저장’ 메뉴에서 확인 후 이어서 작성하실수 있습니다.\n(입력 정보는 7일간 보관됩니다.)\n화면을 이동하시겠습니까?',
+      () => {
+        next()
+      },
+    )
+    return
+  }
+  if (from.path.startsWith('/form/')) {
+    showConfirm(
+      '신청서 작성 중에 화면 이탈시 입력 내용은 재사용이 불가합니다.\n화면을 이동하시겠습니까?',
+      () => {
+        next()
+      },
+    )
+    return
+  }
+  //   if (!isAuthenticated() && to.path !== '/login') {
+  //     next('/login')
+  //   } else {
+  next()
+  //   }
+})
 
 // router.afterEach((to) => {
 //   const title = to.meta.title || 'MSF'

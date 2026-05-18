@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.domains.shared.form.common.ocr.domain.code;
+package com.ktmmobile.msf.domains.koiocr.domain.code;
 
 public enum OcrDocumentType {
     RESIDENT_REGISTRATION_CARD("00100", "주민등록증"),

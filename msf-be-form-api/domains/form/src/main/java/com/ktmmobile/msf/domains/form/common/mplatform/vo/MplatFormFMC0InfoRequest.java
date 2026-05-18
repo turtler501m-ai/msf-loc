@@ -1,10 +1,12 @@
 package com.ktmmobile.msf.domains.form.common.mplatform.vo;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.dto.MpBaseRequest;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class MplatFormFMC0InfoRequest extends MpBaseRequest {
 
     private BaseInfo baseInfo;

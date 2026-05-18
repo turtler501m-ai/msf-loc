@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 가격정보조회 (단말, 요금, 지원금, 가입비, 유심비 등) Response
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,17 +28,19 @@ public class MspSaleSubsdMstResponse {
     String dcAmt; //기본할인금액
     String addDcAmt; //추가할인금액
 
-    //String oldYn; //중고여부
-    //String orgnId; //조직id
-
-    String joinPrice; //가입비
-    String usimPrice; //유심가격
-
     String totalInstCmsn; //총할부수수료
 
+    //String oldYn; //중고여부
+    //String orgnId; //조직코드
     //String regstId; //등록자id
     //String regstDttm; //등록일시
     //String rvisnId; //수정자id
     //String rvisnDttm; //수정일시
 
+    //String usimKindsCd; //유심종류
+    String joinPrice; //가입비
+    String joinIsPay; //가입비 납부여부 ( Y:납부, N:면제 )
+    String simPrice; //유심가격
+    String simIsPay; //일반유심비용 납부여부 ( Y:납부, N:면제 )
+    String nfcSimIsPay; //NFC유심비용 납부여부 ( Y:납부, N:면제 )
 }

@@ -3,6 +3,9 @@ package com.ktmmobile.msf.domains.form.form.common.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * 요금조회
+ */
 @Getter
 @NoArgsConstructor
 public class RateInfoResponse {

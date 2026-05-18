@@ -2,9 +2,7 @@
   <div class="page-step-panel">
     <div class="ut-flex ut-gap-10 ut-v-center ut-mb-10" style="justify-content: flex-end">
       <span style="font-size: 12px; color: #999">[테스트용]</span>
-      <MsfButton variant="secondary" size="small" @click="onClickTestLoad"
-        >임시저장 불러오기</MsfButton
-      >
+      <MsfButton variant="secondary" size="small" @click="onClickTestLoad">복사 불러오기</MsfButton>
     </div>
     <!-- 고객(양도고객) 유형 -->
     <MsfCustomerType
@@ -85,13 +83,13 @@
     <MsfRealUserInfo
       v-model="formData.realUserInfo"
       name="real"
-      v-if="formData.te_customer?.cstmrVisitTypeCd === 'V2'"
+      v-if="['JP', 'GO'].includes(formData.te_customer?.cstmrTypeCd)"
       ref="realUserInfoRef"
     />
     <!-- // 고객(실사용자) 정보 -->
     <!-- 대리인 위임 정보 -->
     <MsfDelegateInfo
-      v-model="formData"
+      v-model="formData.realUserInfo"
       v-if="formData.te_customer?.cstmrVisitTypeCd === 'V2'"
       ref="delegateInfoRef"
     />
@@ -111,7 +109,11 @@
     />
     <!-- // 고객(양수고객) 연락처 -->
     <!-- 요금제 정보 -->
-    <MsfChargePlanInfo v-model="formData.planInfo" ref="devicePlanInfoRef" />
+    <MsfChargePlanInfo
+      v-model="formData.planInfo"
+      :customerData="formData.te_customer"
+      ref="devicePlanInfoRef"
+    />
     <!-- // 요금제 정보 -->
     <!-- 약관 동의  -->
     <MsfTermsAgreement
@@ -145,6 +147,7 @@ import { post } from '@/libs/api/msf.api'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import { showAlert } from '@/libs/utils/comp.utils'
 import { useMsfFormOwnChgStore } from '@/stores/msf_ownerChange'
+import { useMsfStepStore } from '@/stores/msf_step'
 import { storeToRefs } from 'pinia'
 import { onMounted } from 'vue'
 import { ref, computed, watch, nextTick } from 'vue'
@@ -156,6 +159,7 @@ const store = useMsfFormOwnChgStore()
 const { formData, trCustomerTitle, teCustomerTitle } = storeToRefs(store)
 const isComplete = ref(false)
 const termList = ref([])
+const stepStore = useMsfStepStore()
 
 // 컴포넌트 Refs
 const trCustomerTypeRef = ref(null)
@@ -242,22 +246,24 @@ const onClickTestLoad = async () => {
   formData.value.memo = '테스트 메모'
 
   // ===== Step 3: 최종 동의 및 녹취 =====
-  formData.value.agreeCheck1 = true
-  formData.value.agreeCheck2 = true
-  formData.value.agreeCheck3 = true
-  formData.value.agreeCheck4 = true
-  formData.value.agreeCheck5 = true
-  formData.value.agreeCheck6 = true
-  formData.value.recYn = 'Y'
+  // formData.value.agreeCheck1 = true
+  // formData.value.agreeCheck2 = true
+  // formData.value.agreeCheck3 = true
+  // formData.value.agreeCheck4 = true
+  // formData.value.agreeCheck5 = true
+  // formData.value.agreeCheck6 = true
+  // formData.value.recYn = 'Y'
 
   // ===== authFlags 설정 =====
-  store.authFlags.deviceChgTel = true
-  store.authFlags.autoAcct = true
-  store.authFlags.requiredDocs = true
+  // store.authFlags.deviceChgTel = true
+  // store.authFlags.autoAcct = true
+  // store.authFlags.requiredDocs = true
+
+  stepStore.setActiveIndex(2)
 
   // ===== 약관 전부 동의 (DOM 업데이트 후 실행) =====
-  await nextTick()
-  termsAgreementRef.value?.setAllChecked()
+  // await nextTick()
+  // termsAgreementRef.value?.setAllChecked()
 }
 
 onMounted(async () => {
@@ -291,10 +297,10 @@ const trCustomerDeviceChgVerify = async (paramObj) => {
 
     if (res.data.resultCd === '00') {
       const { data } = res
-      const { ncn, ctn, custId, userId, fstEsimYn } = data.response
-      store.updateTrCustomer({ ncn, ctn, custId, userId })
+      const { ncn, ctn, custId, fstEsimYn } = data.response
+      store.updateTrCustomer({ ncn, ctn, custId })
       store.updateUsimInfo({ hasSim: fstEsimYn !== 'Y' ? 'hasSim1' : 'hasSim3' })
-      store.updatePlanInfo({ ctn, ncn, custId, userId })
+      store.updatePlanInfo({ ctn, ncn, custId })
       return true
     } else {
       showAlert(res.data.message)

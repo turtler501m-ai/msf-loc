@@ -19,16 +19,19 @@ import com.ktmmobile.msf.domains.form.form.common.dto.InsrProdRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MsfRequestAdditionRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MsfRequestAdditionResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest;
-import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleAgrmMstInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspSalePlcyMstInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstResponse;
-import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.RateInfoResponse;
-import com.ktmmobile.msf.domains.form.form.common.service.ProductInfoService;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelCapacityResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelColorResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelMonthlyResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneSaleAgrmResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneSaleTypeResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.service.ProductInfoService;
 
 @RestController
 @RequestMapping("/api/form")
@@ -51,21 +54,21 @@ public class ProductController {
     //MSP_SALE_ORGN_MST ORG,
     //MSP_SALE_PRDT_MST PRDT
     @PostMapping("/phone/saletype/list")
-    public CommonResponse<List<MspSalePlcyMstInfoDto>> getSaleTypeList(@RequestBody @Valid ProductInfoRequest request) {
+    public CommonResponse<List<PhoneSaleTypeResponse>> getSaleTypeList(@RequestBody @Valid ProductInfoRequest request) {
         return ResponseUtils.ok(productInfoService.getSaleTypeList(request));
     }
 
     //요금 약정기간조회
     //MSP_SALE_AGRM_MST
     @PostMapping("/rate/engg/list")
-    public CommonResponse<List<MspSaleAgrmMstInfoDto>> getMspSaleAgrmMstList(@RequestBody @Valid ProductInfoRequest request) {
+    public CommonResponse<List<PhoneSaleAgrmResponse>> getMspSaleAgrmMstList(@RequestBody @Valid ProductInfoRequest request) {
         return ResponseUtils.ok(productInfoService.getMspSaleAgrmMstList(request));
     }
 
     //휴대폰 할부기간 조회
     //ORG_INST_NOM_MST
     @PostMapping("/phone/monthly/list")
-    public CommonResponse<List<PhoneInfoDto>> getModelMonthlyList(@RequestBody @Valid ProductInfoRequest request) {
+    public CommonResponse<List<PhoneModelMonthlyResponse>> getModelMonthlyList(@RequestBody @Valid ProductInfoRequest request) {
         return ResponseUtils.ok(productInfoService.getModelMonthlyList(request));
     }
 
@@ -73,7 +76,7 @@ public class ProductController {
     //CMN_INTM_MDL A
     //CMN_GRP_CD_MST B
     @PostMapping("/phone/color/list")
-    public CommonResponse<List<PhoneInfoDto>> getPrdtColorList(@RequestBody @Valid ProductInfoRequest request) {
+    public CommonResponse<List<PhoneModelColorResponse>> getPrdtColorList(@RequestBody @Valid ProductInfoRequest request) {
         return ResponseUtils.ok(productInfoService.getPrdtColorList(request));
     }
 
@@ -81,7 +84,7 @@ public class ProductController {
     //NMCP_SNTY_PROD_BAS@DL_MCP A
     //NMCP_PROD_ATRIB_VAL_DTL@DL_MCP B
     @PostMapping("/phone/capacity/list")
-    public CommonResponse<List<PhoneInfoDto>> getPrdtCapacityList(@RequestBody @Valid ProductInfoRequest request) {
+    public CommonResponse<List<PhoneModelCapacityResponse>> getPrdtCapacityList(@RequestBody @Valid ProductInfoRequest request) {
         return ResponseUtils.ok(productInfoService.getPrdtCapacityList(request));
     }
 
@@ -114,15 +117,11 @@ public class ProductController {
         return ResponseUtils.ok(productInfoService.getRateList(request));
     }
 
-    /*@PostMapping("/phone/test")
-    public CommonResponse<String> totalAmt(@RequestBody MspSaleSubsdMstRequest request) {
-        return ResponseUtils.ok(productInfoService.getTotalInstCmsn(request));
-    }*/
-
     /**
      * 가격정보 조회 (단말, 요금, 지원금 ) 등등등
      */
     @PostMapping("/phone/getMspSalePriceInfo")
+    //@PostMapping("/phone/mspsaleprice/get")
     public CommonResponse<MspSaleSubsdMstResponse> getMspSalePriceInfo(@RequestBody @Valid MspSaleSubsdMstRequest request) {
         return ResponseUtils.ok(productInfoService.getMspSalePriceInfo(request));
     }
@@ -146,10 +145,10 @@ public class ProductController {
     //안심보험 목록 ( as-is :: /appform/selectInsrProdListAjax.do )
     /* appform/selectInsrProdList */
     @PostMapping("/product/selectInsrProdList")
+    //@PostMapping("/product/insr/list")
     public CommonResponse<List<IntmInsrRelDTO>> getInsrProdList(@RequestBody @Valid InsrProdRequest request) {
         return ResponseUtils.ok(productInfoService.getInsrProdList(request));
     }
-
 
     //요금제 카테고리 목록 조회
     @PostMapping("/rate/category/list")
@@ -159,6 +158,7 @@ public class ProductController {
 
     //요금제/부가서비스/안심보험 카테고리 상세 조회 >> 개발완료 후 삭제예정
     @PostMapping("/rate/categorydetail/list")
+    //@PostMapping("/rate/category/detail/list")
     public CommonResponse<List<CategoryInfoDto>> getCategoryDetailList(@RequestBody @Valid CategoryRelRequest request) {
         return ResponseUtils.ok(productInfoService.getCategoryDetailList(request));
     }

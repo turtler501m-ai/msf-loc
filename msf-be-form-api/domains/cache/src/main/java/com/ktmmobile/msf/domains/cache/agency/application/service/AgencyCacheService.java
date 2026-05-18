@@ -15,6 +15,9 @@ import com.ktmmobile.msf.domains.cache.agency.application.port.in.AgencyCacheRea
 import com.ktmmobile.msf.domains.cache.agency.domain.dto.AgencyCache;
 import com.ktmmobile.msf.domains.cache.agency.domain.entity.Agency;
 
+/**
+ * 외부 도메인에 대리점 조직 캐시 조회 기능을 제공한다.
+ */
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service

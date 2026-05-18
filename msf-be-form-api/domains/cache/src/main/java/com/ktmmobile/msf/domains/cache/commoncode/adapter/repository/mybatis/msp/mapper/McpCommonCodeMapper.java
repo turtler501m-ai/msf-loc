@@ -9,5 +9,7 @@ import com.ktmmobile.msf.domains.cache.commoncode.domain.entity.CommonCode;
 @Mapper
 public interface McpCommonCodeMapper {
 
-    List<CommonCode> selectList();
+    List<CommonCode> selectCodeList();
+
+    List<CommonCode> selectDetailList();
 }

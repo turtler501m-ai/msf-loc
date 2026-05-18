@@ -45,5 +45,5 @@ public interface NewChangeReadMapper {
 
     String getMsfResNo(long requestKey);
 
-    Integer checkFormUser(NewChangeRequest request);
+    Integer checkNewChangeFormUser(NewChangeRequest request);
 }

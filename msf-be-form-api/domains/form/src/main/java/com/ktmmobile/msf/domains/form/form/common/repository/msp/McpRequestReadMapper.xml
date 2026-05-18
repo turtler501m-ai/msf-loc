@@ -31,4 +31,10 @@
         </foreach>
     </select>
 
+  <select id="generateResNo">
+    SELECT
+      SQ_RCP_RES_NO_01.NEXTVAL@DL_MCP
+    FROM DUAL
+  </select>
+
 </mapper>

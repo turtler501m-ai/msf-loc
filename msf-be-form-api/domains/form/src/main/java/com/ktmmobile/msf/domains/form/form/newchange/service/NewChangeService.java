@@ -18,13 +18,14 @@ import com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.RateInfoResponse;
 import com.ktmmobile.msf.domains.form.form.common.repository.msp.McpRequestWriteMapper;
 import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
-import com.ktmmobile.msf.domains.form.form.common.service.ProductInfoService;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestDvcChgVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestStateVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestVo;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.MsfRequestRecord;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeAdditionRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeDefaultResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeEformResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest;
@@ -186,28 +187,22 @@ public class NewChangeService {
     public NewChangeInfoResponse getNewChangeRequestInfo(NewChangeRequest request) {
         MsfRequestRecord msfRequestRecord = this.getNewChangeInfo(request);
         return NewChangeFieldMapper.INSTANCE.toNewChangeInfoResponse(msfRequestRecord);
-
-        /*if (request.getRequestKey() == null) {
-            NewChangeDefaultResponse newChangeDefaultResponse = this.getNewChangeDefaultInfo(request);
-            return newChangeDefaultResponse;
-        } else {
-            MsfRequestRecord msfRequestRecord = this.getNewChangeInfo(request);
-            return NewChangeFieldMapper.INSTANCE.toNewChangeInfoResponse(msfRequestRecord);
-        }*/
     }
 
     //eForm 생성을 위한 유효성 검증 및 데이터 저장 그리고 데이터 조회하여 전달
-    public FormResponse<NewChangeInfoResponse> eformNewChangeSet(NewChangeInfoRequest request) {
+    public FormResponse<NewChangeEformResponse> eformNewChangeSet(NewChangeInfoRequest request) {
+        NewChangeEformResponse eformResponse = new NewChangeEformResponse();
         NewChangeInfoResponse response = new NewChangeInfoResponse();
+        
         //0. 신청서 번호 확인
         if (request.getRequestKey() == null || request.getRequestKey() <= 0) {
-            return FormResponse.of(ResponseMessage.F_BIND_EXCEPTION, response);
+            return FormResponse.of(ResponseMessage.F_BIND_EXCEPTION, eformResponse);
         }
 
         //1. 신청서 데이타 유효성검증
         //  this.checkNewChangeInfoData
 
-        //2. 신청서 저장 (tmp_stat_cd : 3)
+        //2. 신청서 저장 (tmp_stat_cd : 3) 확인
         //  this.saveAppformInfo(request);
 
         //3. 신청서 데이타 조회
@@ -215,9 +210,12 @@ public class NewChangeService {
         newChangeRequest.setRequestKey(request.getRequestKey());
         response = this.setNewChangeEformData(newChangeRequest);
 
-        return FormResponse.of(ResponseMessage.SUCCESS, response);
+        //return FormResponse.of(ResponseMessage.SUCCESS, response);
+
         //MsfRequestRecord msfRequestRecord = this.getNewChangeInfo(request);
         //return NewChangeFieldMapper.INSTANCE.toNewChangeInfoResponse(msfRequestRecord);
+
+        return FormResponse.of(ResponseMessage.SUCCESS, eformResponse);
     }
 
     //eForm 생성을 위한 데이타 조회
@@ -231,35 +229,60 @@ public class NewChangeService {
         return response;
     }
 
-    //신청서 작성자 유효성 검증
-    public boolean checkFormUser(long requestKey) {
-        NewChangeRequest newChangeRequest = new NewChangeRequest();
-        boolean isValid = false;
 
+    //신청서 작성자, 신청서 임시저장 상태 유효성 검증
+    public boolean checkNewChangeInfo(NewChangeInfoRequest request) {
+        NewChangeRequest newChangeRequest = new NewChangeRequest();
+        boolean isValid = true;
+
+        //임시저장 진입일 경우 신청서의 아이디와 세션의 아이디 일치 여부 확인
         //세션정보의 사용자, 대리점, 판매점조직 코드비교하여 정상여부 판단
-        newChangeRequest.setRequestKey(requestKey);
-        newChangeRequest.setManagerCd(AuthenticationUtils.getUser().getUserId());
-        newChangeRequest.setAgentCd(AuthenticationUtils.getAgentCode());
-        newChangeRequest.setShopCd(AuthenticationUtils.getShopCode());
-        Integer newChangeFormCnt = newChangeReadMapper.checkFormUser(newChangeRequest);
-        if (newChangeFormCnt > 0) {
-            isValid = true;
+        Long requestKey = request.getRequestKey();
+        if (requestKey != null) {
+            newChangeRequest.setRequestKey(request.getRequestKey());
+            newChangeRequest.setManagerCd(AuthenticationUtils.getUser().getUserId());
+            newChangeRequest.setAgentCd(AuthenticationUtils.getAgentCode());
+            newChangeRequest.setShopCd(AuthenticationUtils.getShopCode());
+            newChangeRequest.setTmpStepCd("");
+            Integer newChangeFormCnt = newChangeReadMapper.checkNewChangeFormUser(newChangeRequest);
+            if (newChangeFormCnt == 0) {
+                isValid = false;
+            }
         }
+
+        //신청서 상태 확인
+        String tmpStepCd = request.getTmpStepCd();
+        if (!StringUtils.hasText(tmpStepCd)) {
+            isValid = false;
+        } else {
+            int tmpStepCdInt = Integer.parseInt(tmpStepCd);
+            if (tmpStepCdInt < 1 || tmpStepCdInt > 4) {
+                isValid = false;
+            } else {
+                if (tmpStepCdInt > 1) {
+                    tmpStepCd = Integer.toString(tmpStepCdInt - 1);
+                    newChangeRequest.setTmpStepCd(tmpStepCd);
+                    Integer newChangeFormCnt = newChangeReadMapper.checkNewChangeFormUser(newChangeRequest);
+                    if (newChangeFormCnt == 0) {
+                        isValid = false;
+                    }
+                }
+            }
+        }
+
         return isValid;
     }
 
-
-    //신청서 저장
+    /**
+     * 신청서 임시저장
+     */
     @Transactional
-    public FormResponse<NewChangeResponse> saveAppformInfo(NewChangeInfoRequest request) {
+    public FormResponse<NewChangeResponse> saveNewChangeFormInfo(NewChangeInfoRequest request) {
 
-        //@@@@@@@@@@@@@@@@@@@@임시저장, 신청서확인, 작성완료에 모두 공통으로 사용할 method 만들어서 공통으로 처리할 것
         boolean isValid = true;
-        //임시저장 진입일 경우 신청서의 아이디와 세션의 아이디 일치 여부 확인
-        if (request.getRequestKey() != null) {
-            isValid = this.checkFormUser(request.getRequestKey());
-        }
-        //유효하지 않을 경우 처리
+
+        //0. 신청서의 로그인작성자 및 임시저장 상태 비교
+        isValid = this.checkNewChangeInfo(request);
         if (!isValid) {
             return FormResponse.of(ResponseMessage.NO_DATA);
         }
@@ -270,8 +293,6 @@ public class NewChangeService {
             return FormResponse.of(ResponseMessage.VALID_INPUT_NOT_CORRECT);
         }
 
-
-        //기기변경사유 - 변환처리
 
         //신청서 유효성체크 start
         //단말/요금제로 예상금액 재계산~~~ 데이터저장
@@ -306,6 +327,17 @@ public class NewChangeService {
         Map<String, Object> osstRtnMap = formCommService.checkOsstPreCheck(request);
         //==== 개통전 사전체크 END =====//
 
+        //가입신청 기변사유정보 DATA SET --- START ---
+        //고객포탈은 일관되게 insert 쿼리에 하드코딩되어있어서 아래와 같이 동일한 값이 들어감.
+        //select dvc_chg_type from MCP_REQUEST_DVC_CHG WHERE dvc_chg_type IS NOT NULL GROUP BY dvc_chg_type; --10
+        //select dvc_chg_rsn_cd from MCP_REQUEST_DVC_CHG WHERE dvc_chg_rsn_cd IS NOT NULL GROUP BY dvc_chg_rsn_cd; --10
+        //select dvc_chg_rsn_dtl_cd from MCP_REQUEST_DVC_CHG WHERE dvc_chg_rsn_dtl_cd IS NOT NULL GROUP BY dvc_chg_rsn_dtl_cd; --03
+        MsfRequestDvcChgVo msfRequestDvcChgVo = new MsfRequestDvcChgVo();
+        msfRequestDvcChgVo.setDvcChgTypeCd("10"); //기변유형코드
+        msfRequestDvcChgVo.setDvcChgRsnCd("10"); //기변사유코드
+        msfRequestDvcChgVo.setDvcChgRsnDtlCd("03"); //기변상세사유코드
+        //INSTAMT_PAY_MTHD_CD :: 2026.03.22 기능 삭제
+        //가입신청 기변사유정보 DATA SET --- END ---
 
         //부가서비스 request & delete : 저장 전 처리
         //@@ 추후 따로 빼자
@@ -350,12 +382,15 @@ public class NewChangeService {
             newChangeWriteMapper.insertMsfRequestCstmrTemp(record.msfRequestCstmrVo()); //MSF_REQUEST_CSTMR
             newChangeWriteMapper.insertMsfRequestSaleTemp(record.msfRequestSaleVo()); //MSF_REQUEST_SALE
             newChangeWriteMapper.insertMsfRequestBillReqTemp(record.msfRequestBillReqVo()); //MSF_REQUEST_BILL_REQ
-            newChangeWriteMapper.insertMsfRequestMoveTemp(record.msfRequestMoveVo()); //MSF_REQUEST_MOVE
-            newChangeWriteMapper.insertMsfRequestDvcChgTemp(record.msfRequestDvcChgVo()); //MSF_REQUEST_DVC_CHG
-
+            if ("MNP3".equals(request.getOperTypeCd())) { //번호이동 정보
+                newChangeWriteMapper.insertMsfRequestMoveTemp(record.msfRequestMoveVo()); //MSF_REQUEST_MOVE
+            }
+            if ("HDN3".equals(request.getOperTypeCd())) { //기기변경 사유
+                newChangeWriteMapper.insertMsfRequestDvcChgTemp(record.msfRequestDvcChgVo()); //MSF_REQUEST_DVC_CHG
+            }
             //부가서비스
             if (msfAdditionList != null && !msfAdditionList.isEmpty() && msfAdditionList.size() > 0) {
-                newChangeWriteMapper.insertAdditionInfoListTemp(additionDtoList); //MSF_REQUEST_ADDITION
+                newChangeWriteMapper.insertMsfAdditionInfoListTemp(additionDtoList); //MSF_REQUEST_ADDITION
             }
         } else {
             MsfRequestRecord record = MsfRequestRecord.requestToRecord(request);
@@ -375,7 +410,7 @@ public class NewChangeService {
             newChangeWriteMapper.updateMsfRequestMoveTemp(record.msfRequestMoveVo()); //MSF_REQUEST_MOVE
             newChangeWriteMapper.updateMsfRequestDvcChgTemp(record.msfRequestDvcChgVo()); //MSF_REQUEST_DVC_CHG
             if (msfAdditionList != null && !msfAdditionList.isEmpty() && msfAdditionList.size() > 0) {
-                newChangeWriteMapper.insertAdditionInfoListTemp(additionDtoList); //MSF_REQUEST_ADDITION
+                newChangeWriteMapper.insertMsfAdditionInfoListTemp(additionDtoList); //MSF_REQUEST_ADDITION
             }
 
         }
@@ -387,7 +422,11 @@ public class NewChangeService {
         return FormResponse.of(ResponseMessage.SUCCESS, response);
     }
 
-    //접수완료에서 복사하기
+    /**
+     * 신청서 복사하기 ( to _temp 테이블로 )
+     * @param request
+     * @return
+     */
     @Transactional
     public FormResponse<NewChangeResponse> copyForm(NewChangeRequest request) {
         NewChangeResponse response = new NewChangeResponse();
@@ -514,7 +553,9 @@ public class NewChangeService {
         return FormResponse.of(ResponseMessage.SUCCESS, response);
     }
 
-    //작성완료
+    /**
+     * 작성완료 ( from _temp 테이블 )
+     */
     @Transactional
     public FormResponse<NewChangeResponse> completeAppformInfo(NewChangeRequest request) {
         NewChangeResponse response = new NewChangeResponse();

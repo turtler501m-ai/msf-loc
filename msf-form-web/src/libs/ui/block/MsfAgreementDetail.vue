@@ -7,13 +7,13 @@
     @close="emit('update:modelValue', false)"
   >
     <div class="terms-content">
-      <template v-if="Array.isArray(content)">
+      <template v-if="Array.isArray(displayContent)">
         <ul class="text-list">
-          <li v-for="(text, i) in content" :key="i" v-html="text"></li>
+          <li v-for="(text, i) in displayContent" :key="i" v-html="text"></li>
         </ul>
       </template>
       <template v-else>
-        <div class="plain-text" v-html="content"></div>
+        <div class="plain-text" v-html="displayContent"></div>
       </template>
     </div>
     <template #footer>
@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { post } from '@/libs/api/msf.api'
 
 const props = defineProps({
@@ -39,14 +39,17 @@ const props = defineProps({
   id2: String,
   version: [String, Array],
   specTerms: Object,
+  content: [String, Array],
 })
 const emit = defineEmits(['update:modelValue', 'confirm'])
 
 const showDialog = ref(false)
-const content = ref('')
+const fetchedContent = ref('')
+
+const displayContent = computed(() => props.content || fetchedContent.value)
 
 const openDialog = () => {
-  if (showDialog.value && props.id1 && props.id2) {
+  if (showDialog.value && props.id1 && props.id2 && !props.content) {
     post('/api/shared/form/common/terms/content', {
       groupCode: props.groupCode,
       code: props.code,
@@ -68,7 +71,7 @@ const openDialog = () => {
         if (res.code !== '0000') {
           return false
         }
-        content.value = res.data.content
+        fetchedContent.value = res.data.content
       })
       .catch((err) => {
         console.log('err:', err)

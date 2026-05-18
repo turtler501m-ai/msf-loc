@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.commons.cachecore.support.store;
 
+import java.util.Collection;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,20 @@ public class CacheServiceStoreReader implements CacheStoreReader {
     @Override
     public Map<String, Object> getHashEntries(String key) {
         return cacheService.getEntries(cacheStoreKeyGenerator.generate(key));
+    }
+
+    /**
+     * Hash 캐시 항목 다건 조회
+     * <p>
+     * Hash 다건 조회는 공통 CacheService 계약으로 위임한다.
+     *
+     * @param key 캐시 키
+     * @param hashKeys Hash 키 목록
+     * @return Hash 캐시 항목
+     */
+    @Override
+    public Map<String, Object> getHashValues(String key, Collection<String> hashKeys) {
+        return cacheService.getHashValues(cacheStoreKeyGenerator.generate(key), hashKeys);
     }
 
     /**

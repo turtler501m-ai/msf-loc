@@ -37,7 +37,7 @@ public interface NewChangeWriteMapper {
     void insertMsfRequestDvcChgTemp(MsfRequestDvcChgVo msfRequestMoveVo);
 
     @AutoAuditing(value = false)
-    void insertAdditionInfoListTemp(List<MsfRequestAdditionVo> additionDtoList);
+    void insertMsfAdditionInfoListTemp(List<MsfRequestAdditionVo> additionDtoList);
 
     void deleteMsfAdditionTemp(long requestKey);
 
@@ -97,7 +97,6 @@ public interface NewChangeWriteMapper {
     void insertCopyMsfRequestAddition(NewChangeRequest request);
 
     //void insertCopyMsfRequestState(MsfRequestStateVo msfRequestStateVo);
-
     //void updateMsfRequestTemp(NewChangeInfoRequest request);
     //void updateMsfRequestAgentTemp(NewChangeInfoRequest request);
     //void updateMsfRequestCstmrTemp(NewChangeInfoRequest request);

@@ -6,16 +6,19 @@ import org.apache.ibatis.annotations.Mapper;
 
 import com.ktmmobile.msf.domains.form.form.common.dto.MsfRequestAdditionRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspAdditionDto;
-import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleAgrmMstInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspSalePlcyMstInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstResponse;
-import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.RateInfoResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelCapacityResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelColorResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelMonthlyResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneSaleAgrmResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneSaleTypeResponse;
 
 @Mapper
 public interface ProductInfoReadMapper {
@@ -24,19 +27,19 @@ public interface ProductInfoReadMapper {
     List<MspSalePlcyMstInfoDto> selectMspSalePlcyMstList(ProductInfoRequest condition);
 
     //할인유형조회
-    List<MspSalePlcyMstInfoDto> selectSaleTypeList(ProductInfoRequest condition);
+    List<PhoneSaleTypeResponse> selectSaleTypeList(ProductInfoRequest condition);
 
     //요금 약정기간조회
-    List<MspSaleAgrmMstInfoDto> selectMspSaleAgrmMstList(ProductInfoRequest condition);
+    List<PhoneSaleAgrmResponse> selectMspSaleAgrmMstList(ProductInfoRequest condition);
 
     //휴대폰 할부기간조회
-    List<PhoneInfoDto> selectModelMonthlyList(ProductInfoRequest condition);
+    List<PhoneModelMonthlyResponse> selectModelMonthlyList(ProductInfoRequest condition);
 
     //휴대폰 색상목록조회
-    List<PhoneInfoDto> selectPrdtColorList(ProductInfoRequest condition);
+    List<PhoneModelColorResponse> selectPrdtColorList(ProductInfoRequest condition);
 
     //휴대폰 용량목록조회
-    List<PhoneInfoDto> selectPrdtCapacityList(ProductInfoRequest condition);
+    List<PhoneModelCapacityResponse> selectPrdtCapacityList(ProductInfoRequest condition);
 
     //휴대폰 목록 조회
     List<PhoneInfoResponse> selectPhoneList(ProductInfoRequest condition);

@@ -1,4 +1,4 @@
-import { format } from 'date-fns'
+import { differenceInCalendarDays, format } from 'date-fns'
 import { isEmpty } from './string.utils'
 
 /**
@@ -13,8 +13,6 @@ export const validateDateInput = (value, length = 6) => {
   const y = Number(length) === 8 ? 4 : 2,
     m = y + 2,
     d = m + 2
-
-  console.log('y:', y, 'm:', m, 'd:', d, 'v.length:', v.length)
 
   if (v.length <= y) {
     return true
@@ -219,6 +217,21 @@ export const formatDatetime = (date, dateSeperator = '-', timeSeperator = ':') =
 }
 
 /**
+ * 날짜 객체를 LocalDateTime 문자열로 변환 (ISO 8601: yyyy-MM-ddTHH:mm:ss)
+ * - 변환 실패 시, null 반환
+ *
+ * @param {Date | string} date 날짜 객체
+ * @returns {string | null}
+ */
+export const formatLocalDateTime = (date) => {
+  const dt = toDatetime(date)
+  if (!dt) {
+    return null
+  }
+  return format(dt, "yyyy-MM-dd'T'HH:mm:ss")
+}
+
+/**
  * 날짜 객체를 시간 문자열로 변환
  * - 변환 실패 시, null 반환
  *
@@ -233,4 +246,30 @@ export const formatTime = (time, showSeconds = true, seperator = ':') => {
     return null
   }
   return format(tm, 'HH' + seperator + 'mm' + (showSeconds ? seperator + `ss` : ''))
+}
+
+/**
+ * 기준 날짜와 비교 날짜의 차이 비교
+ * - 변환 실패 시, null 반환
+ * - 기준 날짜가 비교 날짜보다 이전일 경우, 음수 반환
+ *
+ * @param {Date | string} source 기준 날짜
+ * @param {Date | string} target 비교 날짜
+ * @return {number} 일수 차이 값
+ */
+export const diffDays = (source, target) => {
+  if (!source || !target) {
+    return null
+  }
+  const s = toDate(source)
+  const t = toDate(target)
+  if (!s || !t) {
+    return null
+  }
+
+  if (s < t) {
+    const d = differenceInCalendarDays(t, s)
+    return d * -1
+  }
+  return differenceInCalendarDays(s, t)
 }

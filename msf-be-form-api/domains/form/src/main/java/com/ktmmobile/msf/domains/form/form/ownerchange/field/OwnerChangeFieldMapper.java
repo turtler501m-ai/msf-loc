@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import com.ktmmobile.msf.domains.form.common.mplatform.vo.MplatFormFMC0InfoRequest;
+import com.ktmmobile.msf.domains.form.common.mplatform.vo.MplatFormFMP0InfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestBillReqVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
@@ -45,4 +46,8 @@ public interface OwnerChangeFieldMapper {
     @Mapping(target = "prdcInfo", source = ".")
     @Mapping(target = "inFrmpapDto", source = ".")
     MplatFormFMC0InfoRequest toMplatFormFMC0InfoRequest(MsfRequestNameChgVo request);
+
+    @Mapping(target = "baseInfo", source = ".")
+    @Mapping(target = "inFrmpapDto", source = ".")
+    MplatFormFMP0InfoRequest toMplatFormFMP0InfoRequest(MsfRequestNameChgVo request);
 }

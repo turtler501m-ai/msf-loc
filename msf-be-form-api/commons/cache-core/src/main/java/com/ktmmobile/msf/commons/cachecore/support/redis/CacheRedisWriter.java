@@ -27,9 +27,7 @@ public class CacheRedisWriter implements CacheStoreWriter {
     private final RedisTemplate<String, Object> redisTemplate;
     private final CacheStoreKeyGenerator cacheStoreKeyGenerator;
 
-    /**
-     * Redis 캐시 쓰기 구현체 생성
-     */
+    /** Redis 캐시 쓰기 구현체 생성 */
     public CacheRedisWriter(
         @Qualifier(CacheCoreRedisConfig.CACHE_LOAD_REDIS_TEMPLATE) RedisTemplate<String, Object> redisTemplate,
         CacheStoreKeyGenerator cacheStoreKeyGenerator
@@ -38,9 +36,7 @@ public class CacheRedisWriter implements CacheStoreWriter {
         this.cacheStoreKeyGenerator = cacheStoreKeyGenerator;
     }
 
-    /**
-     * Redis Value 캐시 저장
-     */
+    /** Redis Value 캐시 저장 */
     @Override
     public void setValue(String key, Object value, Duration timeout) {
         String realKey = getRealKey(key);
@@ -51,9 +47,7 @@ public class CacheRedisWriter implements CacheStoreWriter {
         redisTemplate.opsForValue().set(realKey, value, timeout);
     }
 
-    /**
-     * Redis Hash 캐시 항목 저장
-     */
+    /** Redis Hash 캐시 항목 저장 */
     @Override
     public void setHashValue(String key, String hashKey, Object value, Duration timeout) {
         String realKey = getRealKey(key);
@@ -63,9 +57,7 @@ public class CacheRedisWriter implements CacheStoreWriter {
         }
     }
 
-    /**
-     * Redis Hash 캐시 전체 항목 교체
-     */
+    /** Redis Hash 캐시 전체 항목 교체 */
     @Override
     public void replaceHashValues(String key, Map<String, Object> values, Duration timeout) {
         String realKey = getRealKey(key);

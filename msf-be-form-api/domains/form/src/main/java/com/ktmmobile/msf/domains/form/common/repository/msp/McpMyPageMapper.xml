@@ -92,34 +92,31 @@
   <!-- /mypage/cntrList - API 설명 (SELECT : MCP_USER_CNTR_MNG, MSP_JUO_SUB_INFO) -->
   <select id="selectCntrList" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
     SELECT /* /mypage/cntrList : McpMypageMapper.selectCntrList : 자급제 보상서비스 주문 */
-    A.USERID
-    , A.CNTR_MOBILE_NO
-    , A.SYS_RDATE
-    , B.SVC_CNTR_NO
-    , B.CONTRACT_NUM
-    , A.REP_NO
-    , B.CUSTOMER_ID AS CUST_ID
-    , B.MODEL_NAME
-    , B.MODEL_ID
-    , B.SUB_STATUS
-    , A.CNTR_MOBILE_NO AS unSvcNo
-    , B.USER_SSN AS unUserSSn
-    , (SELECT CUSTOMER_TYPE FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS CSTMR_TYPE
-    , (SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS userName
-    , B.OPEN_AGNT_CD
-    , B.LST_COM_ACTV_DATE
-    , B.PPPO
-    FROM MCP_USER_CNTR_MNG@DL_MCP A, MSP_JUO_SUB_INFO B
-    WHERE UPPER(A.USERID) = UPPER(#{userId})
-    AND A.SVC_CNTR_NO = B.CONTRACT_NUM
+      B.SVC_CNTR_NO
+      , B.CONTRACT_NUM
+      , B.SUBSCRIBER_NO
+      , B.CUSTOMER_ID AS CUST_ID
+      , B.MODEL_NAME
+      , B.MODEL_ID
+      , B.SUB_STATUS
+      , B.USER_SSN AS unUserSSn
+      , (SELECT CUSTOMER_TYPE FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS CSTMR_TYPE
+      , (SELECT CUSTOMER_LINK_NAME FROM MSP_JUO_CUS_INFO WHERE CUSTOMER_ID = B.CUSTOMER_ID AND ROWNUM = 1) AS userName
+      , B.OPEN_AGNT_CD
+      , B.LST_COM_ACTV_DATE
+      , B.PPPO
+    FROM MSP_JUO_SUB_INFO B
+    WHERE 1=1
+    <if test="@org.springframework.util.StringUtils@hasText(ncn)">
+      AND B.CONTRACT_NUM = #{ncn}
+    </if>
     <if test="@org.springframework.util.StringUtils@hasText(cntrMobileNo)">
-      AND A.CNTR_MOBILE_NO = #{cntrMobileNo}
+      AND B.SUBSCRIBER_NO = #{cntrMobileNo}
     </if>
     <if test="@org.springframework.util.StringUtils@hasText(customerId)">
-      AND A.CUSTOMER_ID = #{customerId}
+      AND B.CUSTOMER_ID = #{customerId}
     </if>
     AND B.SUB_STATUS <![CDATA[<>]]> 'C'
-    ORDER BY A.REP_NO ASC
   </select>
 
 
@@ -204,17 +201,13 @@
   <!-- /mypage/cntrListNmChg - 현재요금제정보 가져오기 (명의변경)  (SELECT : MCP_USER_CNTR_MNG, MSP_JUO_SUB_INFO, MSP_REQUEST_DTL, MSP_JUO_BAN_INFO) -->
   <select id="selectCntrListNmChg" parameterType="java.util.HashMap" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
     SELECT /* /mypage/cntrListNmChg : McpMypageMapper.selectCntrListNmChg 현재요금제정보 가져오기 (명의변경) */
-    A.USERID
-    , A.CNTR_MOBILE_NO
-    , A.SYS_RDATE
-    , B.SVC_CNTR_NO
+    B.SVC_CNTR_NO
     , B.CONTRACT_NUM
-    , A.REP_NO
     , B.CUSTOMER_ID AS CUST_ID
     , B.MODEL_NAME
     , B.MODEL_ID
     , B.SUB_STATUS
-    , A.CNTR_MOBILE_NO AS unSvcNo
+    , B.SUBSCRIBER_NO
     , B.USER_SSN AS unUserSSn
     , C.CSTMR_TYPE
     , C.FST_ESIM_YN
@@ -231,27 +224,23 @@
     , D.BAN_ADR_ZIP
     , D.BAN_ADR_PRIMARY_LN
     , D.BAN_ADR_SECONDARY_LN
-    FROM MCP_USER_CNTR_MNG@DL_MCP A
-    , MSP_JUO_SUB_INFO B
+    FROM MSP_JUO_SUB_INFO B
     , MSP_REQUEST_DTL C
     , MSP_JUO_BAN_INFO D
-    WHERE UPPER(B.SUB_LINK_NAME) = UPPER(#{userNm})
-    <!--WHERE UPPER(B.SUB_LINK_NAME) = '강다영'-->
-    AND A.SVC_CNTR_NO = B.CONTRACT_NUM
-    AND A.SVC_CNTR_NO = C.CONTRACT_NUM(+)
+    WHERE  B.CONTRACT_NUM = C.CONTRACT_NUM(+)
     AND B.BAN = D.BAN(+)
     AND B.SUB_STATUS <![CDATA[<>]]> 'C'
+    AND UPPER(B.SUB_LINK_NAME) = UPPER(#{userNm})
     <if test="customerId != null and customerId != ''">
-      AND A.CUSTOMER_ID = #{customerId}
+      AND B.CUSTOMER_ID = #{customerId}
     </if>
     <if test="contractNum != null and contractNum != ''">
       AND B.CONTRACT_NUM = #{contractNum}
     </if>
     <if test="@org.springframework.util.StringUtils@hasText(ctn)">
-      AND A.CNTR_MOBILE_NO = #{ctn}
-      <!--AND A.CNTR_MOBILE_NO = '01027086669'-->
+      AND B.SUBSCRIBER_NO = #{ctn}
     </if>
-    ORDER BY A.REP_NO ASC
+    ORDER BY B.LST_DEV_CHG_DATE DESC
   </select>
 
 

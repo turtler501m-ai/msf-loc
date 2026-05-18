@@ -4,10 +4,11 @@
     <MsfCustomerType v-model="formData" />
     <!-- // 고객 유형 -->
     <!-- 가입자 정보 -->
+    <!-- 서비스변경/해지 전용 가입자정보 컴포넌트 -->
     <MsfSubscriberChgInfo v-model="formData" phoneLabel="변경 휴대폰번호" />
     <!-- // 가입자 정보 -->
     <!-- 법정대리인 정보 / 법정대리인 안내사항 확인 및 동의 -->
-    <MsfLegalAgentInfo v-model="formData" />
+    <MsfLegalAgentInfo v-model="formData" :use-birth-date="true" />
     <!-- // 법정대리인 정보 / 법정대리인 안내사항 확인 및 동의 -->
     <!-- 대리인 위임 정보 -->
     <MsfDelegateInfo v-model="formData" v-if="formData.cstmrVisitTypeCd === 'V2'" />
@@ -38,16 +39,13 @@
 import { useMsfFormSvcChgStore } from '@/stores/msf_serviceChange'
 import { showAlert } from '@/libs/utils/comp.utils'
 import { storeToRefs } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 
-// 필수 항목 입력 완료여부 리턴
 const emit = defineEmits(['complete'])
 
 const store = useMsfFormSvcChgStore()
 const { formData } = storeToRefs(store)
-
-const isComplete = ref('')
-const isServiceSelectionChecked = computed(() => formData.value.serviceCheckYn === 'Y')
+const isComplete = ref(formData.value.serviceCheckYn === 'Y' ? 'true' : '')
 
 const focusField = (target) => {
   setTimeout(() => {
@@ -74,9 +72,6 @@ const getMissingPhoneTarget = (prefix) => {
   return `inp-${prefix}3`
 }
 
-const hasLegalAgentRegistrationNo = (f) =>
-  !!((f.repRegistrationNo1 || f.repForeignerNo1) && (f.repRegistrationNo2 || f.repForeignerNo2))
-
 const getMissingAgentPhoneTarget = (f) => {
   if (!f.minorAgentTelFnNo) return 'inp-agentPhone1'
   if (!f.minorAgentTelMnNo) return 'inp-agentPhone2'
@@ -98,11 +93,20 @@ const validateWithAlert = () => {
     showAlert('이름을 입력해 주세요.', () => focusField('inp-cstmrNm'))
     return false
   }
-  if (!f.userBirthDate) {
+  if (['JP', 'GO'].includes(f.cstmrTypeCd)) {
+    if (!f.cstmrJuridicalRrn1 || !f.cstmrJuridicalRrn2) {
+      showAlert('법인등록번호를 입력해 주세요.', () => focusField('inp-cstmrJuridicalRrn1'))
+      return false
+    }
+    if (!f.cstmrJuridicalRepNm) {
+      showAlert('대표자명을 확인해 주세요.', () => focusField('inp-cstmrJuridicalRepNm'))
+      return false
+    }
+  } else if (!f.userBirthDate) {
     showAlert('생년월일을 입력해 주세요.', () => focusField('inp-userBirthDate'))
     return false
   }
-  if (!f.userGender) {
+  if (!['JP', 'GO'].includes(f.cstmrTypeCd) && !f.userGender) {
     showAlert('성별을 선택해 주세요.', () => focusField('input[name="base-user-gender"]'))
     return false
   }
@@ -119,8 +123,8 @@ const validateWithAlert = () => {
       showAlert('법정대리인 이름을 입력해 주세요.', () => focusField('inp-repName'))
       return false
     }
-    if (!hasLegalAgentRegistrationNo(f)) {
-      showAlert('법정대리인 주민등록번호/외국인등록번호를 입력해 주세요.', () => focusField('inp-combinedNo1'))
+    if (!f.repBirthDate) {
+      showAlert('법정대리인 생년월일을 입력해 주세요.', () => focusField('inp-repBirthDate'))
       return false
     }
     if (!f.minorAgentRelTypeCd) {
@@ -186,23 +190,21 @@ const validateWithAlert = () => {
   return true
 }
 
-// const { codeList: rawTermsList } = useCommonCode('CLAUSE_MINOR_AGENT')
-
-// 값이 변할 때마다 상위 컴포넌트에게 필수 입력 결과를 알려준다.
-watch(
-  () => isComplete.value,
-  (newVal) => {
-    isComplete.value = newVal
-    emit('complete', newVal === 'true' || isServiceSelectionChecked.value)
-  },
-)
-
 watch(
   () => formData.value.serviceCheckYn,
   (newVal) => {
-    emit('complete', newVal === 'Y' || isComplete.value === 'true')
+    const completed = newVal === 'Y'
+    isComplete.value = completed ? 'true' : ''
+    emit('complete', completed)
   },
   { immediate: true },
+)
+
+watch(
+  () => isComplete.value,
+  (newVal) => {
+    emit('complete', newVal === 'true')
+  },
 )
 
 const data = async (code /* 임시저장 코드 */) => {
@@ -223,7 +225,6 @@ const save = async () => {
   }
 
   formData.value.serviceSelectCompleteYn = 'Y'
-  formData.value.serviceSelectCompleted = true
   emit('complete', true)
 
   console.log('[서비스변경][서비스선택] 선택 완료', {

@@ -3,7 +3,6 @@ plugins {
 }
 
 val myBatisVersion = findProperty("mybatis.spring-boot-starter.version") as String
-val aopVersion = findProperty("aop.spring.boot.starter.version") as String
 
 dependencies {
     implementation(project(":commons:common"))

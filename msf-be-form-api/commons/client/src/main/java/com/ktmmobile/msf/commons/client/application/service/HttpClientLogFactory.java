@@ -31,6 +31,8 @@ import com.ktmmobile.msf.commons.client.support.properties.HttpClientLoggingProp
 public class HttpClientLogFactory {
 
     private static final Pattern SIZE_RULE_PATTERN = Pattern.compile("^(.+)\\[(\\d+)(?::(\\d+))?]$");
+    private static final Pattern CONTENT_DISPOSITION_NAME_PATTERN = Pattern.compile("name=\"([^\"]+)\"");
+    private static final Pattern CONTENT_DISPOSITION_FILENAME_PATTERN = Pattern.compile("filename=\"([^\"]*)\"");
 
     private final ObjectMapper objectMapper;
     private final List<HeaderLogRule> loggingHeaderRules;
@@ -192,6 +194,10 @@ public class HttpClientLogFactory {
             return maskFormUrlEncodedBody(bodyText, charset);
         }
 
+        if (contentType != null && contentType.isCompatibleWith(MediaType.MULTIPART_FORM_DATA)) {
+            return maskMultipartFormDataBody(bodyText, contentType);
+        }
+
         return bodyText;
     }
 
@@ -221,6 +227,22 @@ public class HttpClientLogFactory {
 
         return formFields.stream()
             .map(formField -> formField.key() + "=" + nullSafe(maskFormFieldValue(formField.key(), formField.value())))
+            .collect(java.util.stream.Collectors.joining("&"));
+    }
+
+    private String maskMultipartFormDataBody(String bodyText, MediaType contentType) {
+        String boundary = contentType.getParameter("boundary");
+        if (boundary == null || boundary.isBlank()) {
+            return "<multipart/form-data omitted>";
+        }
+
+        List<MultipartPart> multipartParts = parseMultipartParts(bodyText, boundary);
+        if (multipartParts.isEmpty()) {
+            return "<multipart/form-data omitted>";
+        }
+
+        return multipartParts.stream()
+            .map(this::formatMultipartPart)
             .collect(java.util.stream.Collectors.joining("&"));
     }
 
@@ -272,6 +294,123 @@ public class HttpClientLogFactory {
         }
 
         return value;
+    }
+
+    private List<MultipartPart> parseMultipartParts(String bodyText, String boundary) {
+        List<MultipartPart> multipartParts = new ArrayList<>();
+        String delimiter = "--" + boundary;
+        String[] rawParts = bodyText.split(Pattern.quote(delimiter));
+        for (String rawPart : rawParts) {
+            if (rawPart == null || rawPart.isBlank()) {
+                continue;
+            }
+
+            String trimmedPart = trimMultipartPart(rawPart);
+            if (trimmedPart.equals("--") || trimmedPart.isBlank()) {
+                continue;
+            }
+
+            int separatorIndex = trimmedPart.indexOf("\r\n\r\n");
+            int separatorLength = 4;
+            if (separatorIndex < 0) {
+                separatorIndex = trimmedPart.indexOf("\n\n");
+                separatorLength = 2;
+            }
+            if (separatorIndex < 0) {
+                continue;
+            }
+
+            String headerText = trimmedPart.substring(0, separatorIndex);
+            String bodyPart = trimmedPart.substring(separatorIndex + separatorLength);
+            HttpHeaders partHeaders = parsePartHeaders(headerText);
+            String fieldName = extractPartName(partHeaders);
+            boolean binaryPart = isBinaryMultipartPart(partHeaders);
+
+            multipartParts.add(new MultipartPart(
+                fieldName == null || fieldName.isBlank() ? "part" : fieldName,
+                trimTrailingLineBreaks(bodyPart),
+                binaryPart
+            ));
+        }
+        return multipartParts;
+    }
+
+    private String formatMultipartPart(MultipartPart multipartPart) {
+        if (multipartPart.binary()) {
+            return multipartPart.name() + "=<multipart binary omitted>";
+        }
+
+        return multipartPart.name() + "=" + nullSafe(maskFormFieldValue(multipartPart.name(), multipartPart.value()));
+    }
+
+    private HttpHeaders parsePartHeaders(String headerText) {
+        HttpHeaders headers = new HttpHeaders();
+        for (String headerLine : headerText.split("\\r?\\n")) {
+            int separatorIndex = headerLine.indexOf(':');
+            if (separatorIndex < 0) {
+                continue;
+            }
+
+            String headerName = headerLine.substring(0, separatorIndex).trim();
+            String headerValue = headerLine.substring(separatorIndex + 1).trim();
+            headers.add(headerName, headerValue);
+        }
+        return headers;
+    }
+
+    private String extractPartName(HttpHeaders partHeaders) {
+        String contentDisposition = partHeaders.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+        if (contentDisposition == null) {
+            return null;
+        }
+
+        Matcher matcher = CONTENT_DISPOSITION_NAME_PATTERN.matcher(contentDisposition);
+        return matcher.find() ? matcher.group(1) : null;
+    }
+
+    private boolean isBinaryMultipartPart(HttpHeaders partHeaders) {
+        String contentDisposition = partHeaders.getFirst(HttpHeaders.CONTENT_DISPOSITION);
+        if (contentDisposition != null) {
+            Matcher filenameMatcher = CONTENT_DISPOSITION_FILENAME_PATTERN.matcher(contentDisposition);
+            if (filenameMatcher.find()) {
+                return true;
+            }
+        }
+
+        MediaType partContentType = partHeaders.getContentType();
+        if (partContentType == null) {
+            return false;
+        }
+
+        String type = partContentType.getType();
+        if ("text".equalsIgnoreCase(type)) {
+            return false;
+        }
+
+        return !partContentType.isCompatibleWith(MediaType.APPLICATION_JSON)
+            && !partContentType.isCompatibleWith(MediaType.APPLICATION_FORM_URLENCODED)
+            && !partContentType.isCompatibleWith(MediaType.APPLICATION_XML);
+    }
+
+    private String trimMultipartPart(String rawPart) {
+        String part = rawPart;
+        if (part.startsWith("\r\n")) {
+            part = part.substring(2);
+        } else if (part.startsWith("\n")) {
+            part = part.substring(1);
+        }
+        return part;
+    }
+
+    private String trimTrailingLineBreaks(String value) {
+        String trimmed = value;
+        while (trimmed.endsWith("\r\n")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 2);
+        }
+        while (trimmed.endsWith("\n")) {
+            trimmed = trimmed.substring(0, trimmed.length() - 1);
+        }
+        return trimmed;
     }
 
     private boolean shouldMaskBodyField(String fieldName) {
@@ -381,6 +520,13 @@ public class HttpClientLogFactory {
     private record FormField(
         String key,
         String value
+    ) {
+    }
+
+    private record MultipartPart(
+        String name,
+        String value,
+        boolean binary
     ) {
     }
 

@@ -544,7 +544,7 @@ public class MsfTempSvcChgRestSvcImpl implements MsfTempSvcChgRestSvc {
     // 가입중인 요금제 조회(Y02)
     @Override public ChargePlanResponse selectActiveChargePlan(ChargePlanRequest request) {
         HashMap<String, String> mapData = new HashMap<>();
-        mapData.put("userId", request.getUserId());
+        mapData.put("ncn", request.getNcn());
         mapData.put("cntrMobileNo", request.getCtn());
 
         // 계약 정보 조회
@@ -556,7 +556,7 @@ public class MsfTempSvcChgRestSvcImpl implements MsfTempSvcChgRestSvc {
 
         McpUserCntrMngDto mcpUserCntrMngDto = cntrList.getFirst();
         request.setCtn(mcpUserCntrMngDto.getCntrMobileNo());
-        request.setNcn(mcpUserCntrMngDto.getSvcCntrNo());
+        request.setNcn(mcpUserCntrMngDto.getContractNum());
         request.setCustId(mcpUserCntrMngDto.getCustId());
 
         ChargePlanResponse chargePlanResponse = null;

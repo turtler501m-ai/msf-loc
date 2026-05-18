@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.ktmmobile.msf.commons.common.context.LoginContextHolder;
 import com.ktmmobile.msf.commons.common.data.type.UserType;
 import com.ktmmobile.msf.commons.logincore.application.port.in.LoginFlowProcessor;
 import com.ktmmobile.msf.commons.logincore.application.port.out.LoginAuthenticator;
@@ -23,6 +24,7 @@ import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorRequired;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginTwoFactorStatus;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginUserInfo;
 import com.ktmmobile.msf.commons.logincore.domain.policy.completion.LoginAuthenticationCredential;
+import com.ktmmobile.msf.commons.logincore.support.context.LoginSessionContext;
 import com.ktmmobile.msf.commons.logincore.support.exception.LoginException;
 
 @Slf4j
@@ -41,12 +43,15 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
         return loginAuthenticator.authenticate(credential);
     }
 
+    @LoginSessionContext
+    @Override
     public LoginTwoFactorCompletionResult completeTwoFactor(String loginSessionId) {
         loginSessionService.completeTwoFactor(loginSessionId);
         log.info("Login 2FA completion updated. loginSessionId={}", mask(loginSessionId));
         return new LoginTwoFactorCompletionResult(loginSessionId, true);
     }
 
+    @LoginSessionContext
     @Override
     public LoginResult completeAction(String loginSessionId, String actionCode) {
         LoginSessionUser principal = reload(loginSessionService.completeAction(loginSessionId, actionCode));
@@ -54,6 +59,7 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
         return next(loginSessionId, principal);
     }
 
+    @LoginSessionContext
     @Override
     public LoginResult resume(String loginSessionId) {
         LoginSessionUser principal = enrich(loginSessionService.getVerifiedPrincipal(loginSessionId));
@@ -94,16 +100,19 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
 
     @Override
     public LoginResult issue(LoginSessionUser principal) {
-        LoginTokenPair tokenPair = loginTokenService.issue(principal);
-        log.info(
-            "Login token issued. userId={}, accessTokenExpiresAt={}, refreshTokenExpiresAt={}",
-            principal.userId(),
-            tokenPair.accessTokenExpiresAt(),
-            tokenPair.refreshTokenExpiresAt()
-        );
-        return new LoginTokenIssued(tokenPair);
+        return LoginContextHolder.withUserId(principal.userId(), () -> {
+            LoginTokenPair tokenPair = loginTokenService.issue(principal);
+            log.info(
+                "Login token issued. userId={}, accessTokenExpiresAt={}, refreshTokenExpiresAt={}",
+                principal.userId(),
+                tokenPair.accessTokenExpiresAt(),
+                tokenPair.refreshTokenExpiresAt()
+            );
+            return new LoginTokenIssued(tokenPair);
+        });
     }
 
+    @LoginSessionContext
     @Override
     public LoginTokenPair issue(String loginSessionId) {
         log.info("Login token issue requested. loginSessionId={}", mask(loginSessionId));
@@ -162,10 +171,7 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
                 principal.userName(),
                 principal.phoneNumber(),
                 principal.clientIp(),
-                principal.agentCode(),
-                principal.agentName(),
-                principal.shopCode(),
-                principal.shopName(),
+                principal.organization(),
                 principal.attributes()
             );
         }
@@ -185,10 +191,7 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
                 principal.userName(),
                 principal.phoneNumber(),
                 principal.clientIp(),
-                principal.agentCode(),
-                principal.agentName(),
-                principal.shopCode(),
-                principal.shopName(),
+                principal.organization(),
                 principal.attributes()
             );
         }
@@ -201,10 +204,7 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
                 principal.userName(),
                 principal.phoneNumber(),
                 principal.clientIp(),
-                principal.agentCode(),
-                principal.agentName(),
-                principal.shopCode(),
-                principal.shopName(),
+                principal.organization(),
                 principal.attributes(),
                 actionsBeforeTokenIssue
             );
@@ -237,10 +237,7 @@ public class LoginCoreService<C extends LoginAuthenticationCredential> implement
             coalesce(userInfo.userName(), principal.userName()),
             coalesce(userInfo.phoneNumber(), principal.phoneNumber()),
             coalesce(userInfo.clientIp(), principal.clientIp()),
-            coalesce(userInfo.agentCode(), principal.agentCode()),
-            coalesce(userInfo.agentName(), principal.agentName()),
-            coalesce(userInfo.shopCode(), principal.shopCode()),
-            coalesce(userInfo.shopName(), principal.shopName()),
+            userInfo.organization(),
             mergeAttributes(principal, userInfo),
             principal.requiredActions()
         );

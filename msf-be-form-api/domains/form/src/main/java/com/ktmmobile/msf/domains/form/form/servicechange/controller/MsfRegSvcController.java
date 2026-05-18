@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
+import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionAvailableResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionMyListResVO;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionPreCheckReqDto;
@@ -73,6 +75,24 @@ public class MsfRegSvcController {
     @PostMapping("/api/form/servicechange/moscPrdcTrtmPreChk")
     public CommonResponse<FormResponse<AdditionPreCheckResVO>> moscPrdcTrtmPreChk(@RequestBody AdditionPreCheckReqDto req) {
         return ResponseUtils.ok(regSvcService.moscPrdcTrtmPreChk(req));
+    }
+
+    /**
+     * 로밍 서브상품 신청 시 대표상품 일련번호 조회
+     *
+     * 대표 전화번호(mtPhone)로 cntrListNoLogin을 통해 계약정보를 취득하고,
+     * X97로 대표회선의 이용중 부가서비스 목록을 조회하여 대표상품의 prodHstSeq를 반환.
+     * 서브상품 신청 시 ftrNewParam에 포함할 mtProdHstSeq를 확인하는 용도.
+     *
+     * ASIS: RateAdsvcGdncServiceImpl.getMtProdHstSeq()
+     * TOBE: POST /api/form/servicechange/roaming/mainProdHstSeq
+     *
+     * @param req ncn(신청자 계약번호)/mtPhone/mtCd/strtDt/endDt
+     * @return mtProdHstSeq(대표상품 일련번호), mtNcn(대표 계약번호)
+     */
+    @PostMapping("/api/form/servicechange/roaming/mainProdHstSeq")
+    public CommonResponse<FormResponse<AdditionApplyResVO>> getRoamingMainProdHstSeq(@RequestBody AdditionApplyReqDto req) {
+        return ResponseUtils.ok(regSvcService.getMtProdHstSeq(req));
     }
 
 }

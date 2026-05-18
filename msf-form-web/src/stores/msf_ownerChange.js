@@ -139,7 +139,7 @@ export const useMsfFormOwnChgStore = defineStore('msf_form_own_chg', () => {
       userBirthDate: '', //생년월일
       userGender: 'M', //성별
       minorAgentNm: '', //위임받은 고객이름
-      agentGender: '', //성별
+      agentGender: 'M', //성별
       agentBirthDate: '', //대리인 생년월일
       minorAgentRelTypeCd: '', //신청인과의 관계
       minorAgentTelFnNo: '', //연락처 앞자리

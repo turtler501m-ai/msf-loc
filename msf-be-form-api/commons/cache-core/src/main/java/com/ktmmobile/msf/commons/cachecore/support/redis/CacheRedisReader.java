@@ -1,5 +1,6 @@
 package com.ktmmobile.msf.commons.cachecore.support.redis;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.ktmmobile.msf.commons.cachecore.support.config.CacheCoreRedisConfig;
 import com.ktmmobile.msf.commons.cachecore.support.store.CacheStoreReader;
 import com.ktmmobile.msf.commons.cachecore.support.util.CacheStoreKeyGenerator;
+import com.ktmmobile.msf.commons.common.service.port.CacheService;
 import com.ktmmobile.msf.commons.common.utils.cache.CacheUtils;
 
 /**
@@ -22,47 +24,46 @@ public class CacheRedisReader implements CacheStoreReader {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final CacheStoreKeyGenerator cacheStoreKeyGenerator;
+    private final CacheService<Object> cacheService;
 
-    /**
-     * Redis 캐시 조회 구현체 생성
-     */
+    /** Redis 캐시 조회 구현체 생성 */
     public CacheRedisReader(
         @Qualifier(CacheCoreRedisConfig.CACHE_LOAD_REDIS_TEMPLATE) RedisTemplate<String, Object> redisTemplate,
-        CacheStoreKeyGenerator cacheStoreKeyGenerator
+        CacheStoreKeyGenerator cacheStoreKeyGenerator,
+        CacheService<Object> cacheService
     ) {
         this.redisTemplate = redisTemplate;
         this.cacheStoreKeyGenerator = cacheStoreKeyGenerator;
+        this.cacheService = cacheService;
     }
 
-    /**
-     * Redis Hash 캐시 전체 항목 조회
-     */
+    /** Redis Hash 캐시 전체 항목 조회 */
     @Override
     public Map<String, Object> getHashEntries(String key) {
         HashOperations<String, String, Object> operations = redisTemplate.opsForHash();
         return operations.entries(getRealKey(key));
     }
 
-    /**
-     * Redis Hash 캐시 항목 수 조회
-     */
+    /** Hash 다건 조회는 공통 CacheService 계약으로 위임한다. */
+    @Override
+    public Map<String, Object> getHashValues(String key, Collection<String> hashKeys) {
+        return cacheService.getHashValues(cacheStoreKeyGenerator.generate(key), hashKeys);
+    }
+
+    /** Redis Hash 캐시 항목 수 조회 */
     @Override
     public long getHashSize(String key) {
         Long size = redisTemplate.opsForHash().size(getRealKey(key));
         return size == null ? 0L : size;
     }
 
-    /**
-     * Redis Hash 캐시 키 존재 여부 확인
-     */
+    /** Redis Hash 캐시 키 존재 여부 확인 */
     @Override
     public boolean hasHashKey(String key, String hashKey) {
         return redisTemplate.opsForHash().hasKey(getRealKey(key), hashKey);
     }
 
-    /**
-     * Redis Value 캐시 키 존재 여부 확인
-     */
+    /** Redis Value 캐시 키 존재 여부 확인 */
     @Override
     public boolean hasValueKey(String key) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(getRealKey(key)));

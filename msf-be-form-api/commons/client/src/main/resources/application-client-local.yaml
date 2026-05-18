@@ -7,12 +7,15 @@ internal-service:
       base-url: http://localhost:8180
     batch: ## BATCH
       base-url: http://localhost:8280
-    koi-ocr: ## KOI OCR
-      base-url: http://koi-ocr.none
-    koi-idcard: ## KOI IDCARD
-      base-url: http://koi-idcard.none
+    koi-ocr: ## KOI OCR 인식
+      base-url: https://d-smartform.ktmmobile.com/_ocr
+      #base-url: https://d-msf-ocr.ktmmobile.com
+    koi-idcard: ## KOI 모바일 신분증 인증
+      base-url: https://d-smartform-idcard.ktmmobile.com
+      #base-url: https://d-msf-idcard.ktmmobile.com
     eformsign: ## eFormSign
-      base-url: http://eformsign.none
+      base-url: http://d-smartform-eform.ktmmobile.com
+      #base-url: http://d-msf-eform.ktmmobile.com
       properties:
         member-id: temp-local-member-id
         api-key: temp-local-api-key
@@ -22,15 +25,9 @@ internal-service:
 
 ## 외부 서비스
 external-service:
-  services: ## 연동 불가
-    m-platform: ## M-Platform
-      base-url: https://m-platform-none
-    msp-prx: ## MSP PRX
-      base-url: https://msp-prx-none
-    msp-api: ## MSP API
-      base-url: https://msp-api-none
-    msp-ext-api: ## MSP EXT-API
-      base-url: https://msp-ext-none
+  services:
+    prx: ## PRX
+      base-url: https://d-smartform.ktmmobile.com/_prx
     juso: ## 주소 검색
       base-url: https://business.juso.go.kr
       properties:

@@ -9,7 +9,8 @@ import jakarta.validation.constraints.NotEmpty;
 public record CommonCodesRequest(
     @NotEmpty List<@NotBlank String> groupIds,
     Boolean includeAll,
-    Boolean includeDetail
+    Boolean includeDetail,
+    Boolean validDate
 ) {
 
     public boolean shouldIncludeAll() {
@@ -20,8 +21,21 @@ public record CommonCodesRequest(
         return Boolean.TRUE.equals(includeDetail);
     }
 
+    public boolean shouldCheckValidDate() {
+        return !Boolean.FALSE.equals(validDate);
+    }
+
+    public static CommonCodesRequest of(
+        List<String> groupIds,
+        Boolean includeAll,
+        Boolean includeDetail,
+        Boolean validDate
+    ) {
+        return new CommonCodesRequest(validateGroupIds(groupIds), includeAll, includeDetail, validDate);
+    }
+
     public static CommonCodesRequest of(List<String> groupIds, Boolean includeAll, Boolean includeDetail) {
-        return new CommonCodesRequest(validateGroupIds(groupIds), includeAll, includeDetail);
+        return of(groupIds, includeAll, includeDetail, true);
     }
 
     public static CommonCodesRequest of(List<String> groupIds) {
@@ -33,7 +47,7 @@ public record CommonCodesRequest(
     }
 
     public static CommonCodesRequest withIncludeAll(List<String> groupIds) {
-        return of(groupIds, true, false);
+        return of(groupIds, true, false, false);
     }
 
     public static CommonCodesRequest withIncludeAll(String... groupIds) {
@@ -49,11 +63,27 @@ public record CommonCodesRequest(
     }
 
     public static CommonCodesRequest withFull(List<String> groupIds) {
-        return of(groupIds, true, true);
+        return of(groupIds, true, true, false);
     }
 
     public static CommonCodesRequest withFull(String... groupIds) {
         return withFull(List.of(groupIds));
+    }
+
+    public static CommonCodesRequest withUsedOnly(List<String> groupIds) {
+        return of(groupIds, false, false, false);
+    }
+
+    public static CommonCodesRequest withUsedOnly(String... groupIds) {
+        return withUsedOnly(List.of(groupIds));
+    }
+
+    public static CommonCodesRequest withUsedOnlyAndDetail(List<String> groupIds) {
+        return of(groupIds, false, true, false);
+    }
+
+    public static CommonCodesRequest withUsedOnlyAndDetail(String... groupIds) {
+        return withUsedOnlyAndDetail(List.of(groupIds));
     }
 
     private static List<String> validateGroupIds(List<String> groupIds) {

@@ -108,6 +108,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     stayPeriod: '',
     visaType: '',
     termsAgreed: false,
+    formType: 'NEWCHANGE', // 폼 유형 추가
     // 관리 정보 (DTO 기반)
     managerCd: 'M0001',
     managerNm: '',
@@ -152,21 +153,21 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     clauseEssCollectYn: 'N', // 약관고유식별정보수집이용제공동의여부 (필수)
     clausePriTrustYn: 'N', // 약관개인정보위탁동의여부 (필수)
     clausePriAdYn: 'N', // 약관개인정보광고전송동의여부 (선택)
-    clauseConfidenceConfidenceYn: 'N', // 약관신용정보이용동의여부 (필수)
-    clauseFathFathYn: 'N', // 안면인증동의여부 (필수)
+    clauseConfidenceYn: 'N', // 약관신용정보이용동의여부 (필수)
+    clauseFathYn: 'N', // 안면인증동의여부 (필수)
     nwBlckAgrmYn: 'N', // 네트워크차단동의여부 (필수)
     appBlckAgrmYn: 'N', // 청소년유해매체차단동의여부 (필수)
     blckAppDivCd: '', // 청소년유해매체차단APP구분코드 (필수)
     soTrnsAgrmYn: 'N', // 사업이관동의여부
     moveRefundAgreeYn: 'N', // 번호이동정보미환급액요금상계동의여부 (필수)
-    clauseJehuJehuYn: 'N', // 제휴서비스동의여부 (선택)
+    clauseJehuYn: 'N', // 제휴서비스동의여부 (선택)
 
-    // API 전달용 특별 YN 필드 추가 (불리언으로 이미 선언되지 않은 것들)
+    // API 전달용 특별 YN 필드 추가
     clauseMoveCode: 'N',
     clauseFathFlag01: 'N',
     clauseFathFlag02: 'N',
-    clause5gCoverage: 'N',
-    clausePartnerOfferFlag: 'N',
+    clause5gCoverageYn: 'N',
+    clausePartnerOfferYn: 'N',
     personalLocationAgreeYn: 'N',
     clauseInfo01: 'N',
 
@@ -772,19 +773,23 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
 
       const termsKeys = [
         'clauseMoveCode',
-        'clauseEssCollectYn',
         'clausePriCollectYn',
         'clausePriOfferYn',
+        'clauseEssCollectYn',
+        'clausePriTrustYn',
+        'clausePriAdYn',
+        'clauseConfidenceYn',
+        'clauseFathYn',
         'nwBlckAgrmYn',
         'appBlckAgrmYn',
         'soTrnsAgrmYn',
-        'clauseJehuJehuYn',
+        'clauseJehuYn',
         'clauseRentalModelCpYn',
         'clauseRentalModelCpPrYn',
         'clauseRentalServiceYn',
         'clauseMpps35Mpps35Yn',
         'clauseFinanceFinanceYn',
-        'clause5GCoverageYn',
+        'clause5gCoverageYn',
         'personalInfoCollectAgreeYn',
         'othersTrnsAgreeYn',
         'clauseSensiCollectYn',
@@ -794,7 +799,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         'othersAdReceiveAgreeYn',
         'ktCounselAgreeYn',
         'combineSoloTypeYn',
-        'combineSoloSoloYn',
+        'combineSoloYn',
         'moveRefundAgreeYn',
         'isAutoAgree',
         'combAgree',
@@ -855,6 +860,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         selfIssuNo: c.selfIssuNo,
         driveLicnsNo: c.driveLicnsNo,
         contractNum: c.contractNum,
+        formType: c.formType || 'NEWCHANGE',
 
         // Product Info (MSF_REQUEST)
         prodId: c.prodId,
@@ -898,13 +904,18 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         etcSpecialSbst: p.etcSpecialSbst || '',
 
         // Customer Info (MSF_REQUEST_CSTMR)
-        cstmrNm: c.cstmrNm,
-        cstmrNativeRrn: c.cstmrNativeRrn1 + c.cstmrNativeRrn2,
+        cstmrNm: (c.cstmrNm || c.userName || c.realUserName || '').trim(),
+        userName: (c.userName || c.cstmrNm || c.realUserName || '').trim(),
+        cstmrNativeRrn:
+          (c.cstmrNativeRrn1 || '') + (c.cstmrNativeRrn2 || '') ||
+          (c.cstmrForeignerRrn1 || '') + (c.cstmrForeignerRrn2 || '') ||
+          (c.cstmrJuridicalRrn1 || '') + (c.cstmrJuridicalRrn2 || '') ||
+          '',
         cstmrNativeBirth: (
           c.cstmrNativeBirth ||
           c.userBirthDate ||
           (['NA', 'NM'].includes(c.cstmrTypeCd) && c.cstmrNativeRrn1
-            ? (Number(c.cstmrNativeRrn2?.charAt(0)) > 2 ? '20' : '19') + c.cstmrNativeRrn1
+            ? (Number(c.cstmrNativeRrn2?.charAt(0) || '0') > 2 ? '20' : '19') + c.cstmrNativeRrn1
             : '') ||
           ''
         ).replace(/[^0-9]/g, ''),
@@ -921,13 +932,15 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         cstmrPrivateCname: c.cstmrPrivateCname,
         cstmrPrivateBizNo:
           c.cstmrPrivateBizNo ||
-          c.cstmrJuridicalBizNo1 + c.cstmrJuridicalBizNo2 + c.cstmrJuridicalBizNo3 ||
+          (c.cstmrJuridicalBizNo1 || '') +
+            (c.cstmrJuridicalBizNo2 || '') +
+            (c.cstmrJuridicalBizNo3 || '') ||
           '',
-        cstmrForeignerRrn: c.cstmrForeignerRrn1 + c.cstmrForeignerRrn2,
+        cstmrForeignerRrn: (c.cstmrForeignerRrn1 || '') + (c.cstmrForeignerRrn2 || ''),
         cstmrForeignerBirth:
           c.cstmrForeignerBirth ||
           (['FN', 'FM'].includes(c.cstmrTypeCd) && c.cstmrForeignerRrn1
-            ? (Number(c.cstmrForeignerRrn2?.charAt(0)) > 6 ? '20' : '19') + c.cstmrForeignerRrn1
+            ? (Number(c.cstmrForeignerRrn2?.charAt(0) || '0') > 6 ? '20' : '19') + c.cstmrForeignerRrn1
             : ''),
         cstmrForeignerGenderCd:
           c.cstmrForeignerGenderCd ||
@@ -943,9 +956,11 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         cstmrForeignerVdateStartDate: c.cstmrForeignerVdateStartDate,
         cstmrForeignerVdateEndDate: c.cstmrForeignerVdateEndDate,
         cstmrJuridicalCname: c.cstmrJuridicalCname,
-        cstmrJuridicalRrn: c.cstmrJuridicalRrn1 + c.cstmrJuridicalRrn2,
+        cstmrJuridicalRrn: (c.cstmrJuridicalRrn1 || '') + (c.cstmrJuridicalRrn2 || ''),
         cstmrJuridicalBizNo:
-          c.cstmrJuridicalBizNo1 + c.cstmrJuridicalBizNo2 + c.cstmrJuridicalBizNo3,
+          (c.cstmrJuridicalBizNo1 || '') +
+          (c.cstmrJuridicalBizNo2 || '') +
+          (c.cstmrJuridicalBizNo3 || ''),
         cstmrJuridicalRepNm: c.cstmrJuridicalRepNm,
         upjnCd: c.upjnCd,
         bcuSbst: c.bcuSbst,
@@ -955,15 +970,20 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         cstmrMobileFnNo: c.mobileNo1,
         cstmrMobileMnNo: c.mobileNo2,
         cstmrMobileRnNo: c.mobileNo3,
+        cstmrMobileNo: (c.mobileNo1 || '') + (c.mobileNo2 || '') + (c.mobileNo3 || ''),
         cstmrTelFnNo: c.telNo1,
         cstmrTelMnNo: c.telNo2,
         cstmrTelRnNo: c.telNo3,
+        cstmrTelNo: (c.telNo1 || '') + (c.telNo2 || '') + (c.telNo3 || ''),
         cstmrAdr: c.address,
         cstmrAdrDtl: c.detailAddress,
         cstmrZipcd: c.zipNo,
         cstmrAdrBjd: c.cstmrAdrBjd,
         cstmrEmailAdr: c.emailAddr1 && c.emailAddr2 ? c.emailAddr1 + '@' + c.emailAddr2 : '',
         cstmrEmailReceiveYn: toYN(c.cstmrEmailReceiveYn),
+        country: c.country,
+        stayPeriod: c.stayPeriod,
+        visaType: c.visaType,
         cstmrReceiveTelFnNo: c.cstmrReceiveTelFnNo,
         cstmrReceiveTelNmNo: c.cstmrReceiveTelNmNo,
         cstmrReceiveTelRnNo: c.cstmrReceiveTelRnNo,
@@ -1105,19 +1125,19 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         clauseEssCollectYn: toYN(c.clauseEssCollectYn),
         clausePriTrustYn: toYN(c.clausePriTrustYn),
         clausePriAdYn: toYN(c.clausePriAdYn),
-        clauseConfidenceYn: toYN(c.clauseConfidenceConfidenceYn),
-        clauseFathYn: toYN(c.clauseFathFathYn),
+        clauseConfidenceYn: toYN(c.clauseConfidenceYn),
+        clauseFathYn: toYN(c.clauseFathYn),
         nwBlckAgrmYn: toYN(c.nwBlckAgrmYn),
         appBlckAgrmYn: toYN(c.appBlckAgrmYn),
         blckAppDivCd: c.blckAppDivCd,
         soTrnsAgrmYn: toYN(c.soTrnsAgrmYn),
-        clauseJehuYn: toYN(c.clauseJehuJehuYn),
+        clauseJehuYn: toYN(c.clauseJehuYn),
         clauseRentalModelCpYn: toYN(c.clauseRentalModelCpYn),
         clauseRentalModelCpPrYn: toYN(c.clauseRentalModelCpPrYn),
         clauseRentalServiceYn: toYN(c.clauseRentalServiceYn),
         clauseMpps35Yn: toYN(c.clauseMpps35Mpps35Yn),
         clauseFinanceYn: toYN(c.clauseFinanceFinanceYn),
-        clause5gCoverageYn: toYN(c.clause5gCoverage),
+        clause5gCoverageYn: toYN(c.clause5gCoverageYn),
         personalInfoCollectAgreeYn: toYN(c.personalInfoCollectAgreeYn),
         othersTrnsAgreeYn: toYN(c.othersTrnsAgreeYn),
         clauseSensiCollectYn: toYN(c.clauseSensiCollectYn),
@@ -1127,7 +1147,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         othersAdReceiveAgreeYn: toYN(c.othersAdReceiveAgreeYn),
         ktCounselAgreeYn: toYN(c.ktCounselAgreeYn),
         combineSoloTypeYn: toYN(c.combineSoloTypeYn),
-        combineSoloYn: toYN(c.combineSoloSoloYn),
+        combineSoloYn: toYN(c.combineSoloYn),
 
         // Agreement / Status
         agreeCheck1: toYN(a.agreeCheck1),
@@ -1148,7 +1168,13 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
 
       if (res && res.code === '0000') {
         // 1. 서버에서 발급된 requestKey 저장 (다음 단계 update를 위해 필수)
-        const newKey = res?.data?.requestKey || res?.requestKey || res?.data?.requestkey || res?.requestkey
+        const newKey =
+          res?.data?.resData?.requestKey ||
+          res?.data?.resData?.requestkey ||
+          res?.data?.requestKey ||
+          res?.requestKey ||
+          res?.data?.requestkey ||
+          res?.requestkey
         if (newKey) {
           applicationKey.value = String(newKey)
           draftApplicationKey.value = String(newKey)
@@ -1189,6 +1215,48 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         return ''
       }
 
+      const termsKeys = [
+        'clauseMoveCode',
+        'clausePriCollectYn',
+        'clausePriOfferYn',
+        'clauseEssCollectYn',
+        'clausePriTrustYn',
+        'clausePriAdYn',
+        'clauseConfidenceYn',
+        'clauseFathYn',
+        'nwBlckAgrmYn',
+        'appBlckAgrmYn',
+        'soTrnsAgrmYn',
+        'clauseJehuYn',
+        'clauseRentalModelCpYn',
+        'clauseRentalModelCpPrYn',
+        'clauseRentalServiceYn',
+        'clauseMpps35Mpps35Yn',
+        'clauseFinanceFinanceYn',
+        'clause5gCoverageYn',
+        'personalInfoCollectAgreeYn',
+        'othersTrnsAgreeYn',
+        'clauseSensiCollectYn',
+        'clauseSensiOfferYn',
+        'clausePartnerOfferYn',
+        'othersTrnsKtAgreeYn',
+        'othersAdReceiveAgreeYn',
+        'ktCounselAgreeYn',
+        'combineSoloTypeYn',
+        'combineSoloYn',
+        'moveRefundAgreeYn',
+        'isAutoAgree',
+        'combAgree',
+        'moveThismonthPayTypeCd',
+      ]
+
+      // 약관 및 체크박스 YN 변환 수행
+      termsKeys.forEach((key) => {
+        if (Object.prototype.hasOwnProperty.call(c, key)) c[key] = toYN(c[key])
+        if (Object.prototype.hasOwnProperty.call(p, key)) p[key] = toYN(p[key])
+        if (Object.prototype.hasOwnProperty.call(a, key)) a[key] = toYN(a[key])
+      })
+
       // 1. 페이로드 생성 (apiSaveDraft와 동일한 로직 적용)
       const payload = {
         requestKey: applicationKey.value || null,
@@ -1212,6 +1280,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         selfIssuNo: c.selfIssuNo,
         driveLicnsNo: c.driveLicnsNo,
         contractNum: c.contractNum,
+        formType: c.formType || 'NEWCHANGE',
 
         // Product Info
         prodId: c.prodId,
@@ -1240,13 +1309,18 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
         memo: p.memo || '',
 
         // Customer Info
-        cstmrNm: c.cstmrNm,
-        cstmrNativeRrn: (c.cstmrNativeRrn1 || '') + (c.cstmrNativeRrn2 || ''),
+        cstmrNm: (c.cstmrNm || c.userName || c.realUserName || '').trim(),
+        userName: (c.userName || c.cstmrNm || c.realUserName || '').trim(),
+        cstmrNativeRrn:
+          (c.cstmrNativeRrn1 || '') + (c.cstmrNativeRrn2 || '') ||
+          (c.cstmrForeignerRrn1 || '') + (c.cstmrForeignerRrn2 || '') ||
+          (c.cstmrJuridicalRrn1 || '') + (c.cstmrJuridicalRrn2 || '') ||
+          '',
         cstmrNativeBirth: (
           c.cstmrNativeBirth ||
           c.userBirthDate ||
           (['NA', 'NM'].includes(c.cstmrTypeCd) && c.cstmrNativeRrn1
-            ? (Number(c.cstmrNativeRrn2?.charAt(0)) > 2 ? '20' : '19') + c.cstmrNativeRrn1
+            ? (Number(c.cstmrNativeRrn2?.charAt(0) || '0') > 2 ? '20' : '19') + c.cstmrNativeRrn1
             : '') ||
           ''
         ).replace(/[^0-9]/g, ''),
@@ -1260,13 +1334,61 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
                   ? 'M'
                   : 'F'
                 : '',
+        cstmrPrivateCname: c.cstmrPrivateCname,
+        cstmrPrivateBizNo:
+          c.cstmrPrivateBizNo ||
+          (c.cstmrJuridicalBizNo1 || '') +
+            (c.cstmrJuridicalBizNo2 || '') +
+            (c.cstmrJuridicalBizNo3 || '') ||
+          '',
+        cstmrForeignerRrn: (c.cstmrForeignerRrn1 || '') + (c.cstmrForeignerRrn2 || ''),
+        cstmrForeignerBirth:
+          c.cstmrForeignerBirth ||
+          (['FN', 'FM'].includes(c.cstmrTypeCd) && c.cstmrForeignerRrn1
+            ? (Number(c.cstmrForeignerRrn2?.charAt(0) || '0') > 6 ? '20' : '19') + c.cstmrForeignerRrn1
+            : ''),
+        cstmrForeignerGenderCd:
+          c.cstmrForeignerGenderCd ||
+          (['FN', 'FM'].includes(c.cstmrTypeCd) && c.cstmrForeignerRrn2
+            ? Number(c.cstmrForeignerRrn2.charAt(0)) % 2 === 1
+              ? 'M'
+              : 'F'
+            : ''),
+        cstmrForeignerPn: c.cstmrForeignerPn,
+        cstmrForeignerCountryCd: c.cstmrForeignerCountryCd,
+        cstmrForeignerNation: c.cstmrForeignerNation,
+        cstmrForeignerVisaNo: c.cstmrForeignerVisaNo,
+        cstmrForeignerVdateStartDate: c.cstmrForeignerVdateStartDate,
+        cstmrForeignerVdateEndDate: c.cstmrForeignerVdateEndDate,
+        cstmrJuridicalCname: c.cstmrJuridicalCname,
+        cstmrJuridicalRrn: (c.cstmrJuridicalRrn1 || '') + (c.cstmrJuridicalRrn2 || ''),
+        cstmrJuridicalBizNo:
+          (c.cstmrJuridicalBizNo1 || '') +
+          (c.cstmrJuridicalBizNo2 || '') +
+          (c.cstmrJuridicalBizNo3 || ''),
+        cstmrJuridicalRepNm: c.cstmrJuridicalRepNm,
+        upjnCd: c.upjnCd,
+        bcuSbst: c.bcuSbst,
+        cstmrJuridicalUserNm: c.cstmrJuridicalUserNm,
+        cstmrJuridicalBirth: c.cstmrJuridicalBirth,
+        cstmrVisitTypeCd: c.cstmrVisitTypeCd,
         cstmrMobileFnNo: c.mobileNo1,
         cstmrMobileMnNo: c.mobileNo2,
         cstmrMobileRnNo: c.mobileNo3,
+        cstmrMobileNo: (c.mobileNo1 || '') + (c.mobileNo2 || '') + (c.mobileNo3 || ''),
+        cstmrTelFnNo: c.telNo1,
+        cstmrTelMnNo: c.telNo2,
+        cstmrTelRnNo: c.telNo3,
+        cstmrTelNo: (c.telNo1 || '') + (c.telNo2 || '') + (c.telNo3 || ''),
         cstmrAdr: c.address,
         cstmrAdrDtl: c.detailAddress,
         cstmrZipcd: c.zipNo,
+        cstmrAdrBjd: c.cstmrAdrBjd,
         cstmrEmailAdr: c.emailAddr1 && c.emailAddr2 ? c.emailAddr1 + '@' + c.emailAddr2 : '',
+        cstmrEmailReceiveYn: toYN(c.cstmrEmailReceiveYn),
+        country: c.country,
+        stayPeriod: c.stayPeriod,
+        visaType: c.visaType,
 
         // Agent Info
         minorAgentNm: c.minorAgentNm,
@@ -1348,6 +1470,18 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
 
       const res = await post('/api/form/newchange/complete', payload)
       if (res && res.code === '0000') {
+        // 성공 시 requestKey 업데이트 (필요 시)
+        const newKey =
+          res?.data?.resData?.requestKey ||
+          res?.data?.resData?.requestkey ||
+          res?.data?.requestKey ||
+          res?.requestKey ||
+          res?.data?.requestkey ||
+          res?.requestkey
+        if (newKey) {
+          applicationKey.value = String(newKey)
+          draftApplicationKey.value = String(newKey)
+        }
         return true
       } else {
         console.error('Final completion failed:', res)
@@ -1435,14 +1569,15 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
       c.clauseEssCollectYn = toBool(data.clauseEssCollectYn)
       c.clausePriTrustYn = toBool(data.clausePriTrustYn)
       c.clausePriAdYn = toBool(data.clausePriAdYn)
-      c.clauseConfidenceConfidenceYn = toBool(data.clauseConfidenceYn)
-      c.clauseFathFathYn = toBool(data.clauseFathYn)
+      c.clauseConfidenceYn = toBool(data.clauseConfidenceYn)
+      c.clauseFathYn = toBool(data.clauseFathYn)
       c.nwBlckAgrmYn = toBool(data.nwBlckAgrmYn)
       c.appBlckAgrmYn = toBool(data.appBlckAgrmYn)
       c.blckAppDivCd = data.blckAppDivCd || ''
       c.soTrnsAgrmYn = toBool(data.soTrnsAgrmYn)
-      c.clauseJehuJehuYn = toBool(data.clauseJehuYn)
-      c.clause5gCoverage = toBool(data.clause5gCoverageYn)
+      c.clauseJehuYn = toBool(data.clauseJehuYn)
+      c.clause5gCoverageYn = toBool(data.clause5gCoverageYn)
+      c.combineSoloYn = toBool(data.combineSoloYn)
 
       // Product mapping
       const p = product.value

@@ -28,12 +28,12 @@
 
 <script setup>
 import { onBeforeMount, ref } from 'vue'
-// import { post } from '@/libs/api/msf.api'
+import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { showAlert } from '@/libs/utils/comp.utils'
-// import { showConfirm } from '@/libs/utils/comp.utils'
 import { storeTempSave } from '@/stores/tempsave'
 
+const router = useRouter()
 const tempSaveStore = storeTempSave()
 const { formData } = storeToRefs(tempSaveStore)
 
@@ -109,7 +109,7 @@ const onClickSearch = () => {
 
 const onSelected = (data) => {
   selectedRowPaging.value = data
-  selectedScriptSeq.value = data?.uuid ?? null
+  selectedScriptSeq.value = data?.requestKey ?? null
   console.log('select: ' + selectedScriptSeq.value)
 }
 
@@ -118,18 +118,18 @@ const onUpdate = async () => {
     showAlert('수정할 항목을 선택해주세요.')
     return
   }
-  const param = {
-    uuid: selectedScriptSeq.value,
-  }
-  console.log(param)
 
-  // const result = await post('/api/agencypadmac/get', param)
-  // tempSaveStore.openUpdatePopup(result?.data ?? null, selectedScriptSeq.value)
+  // 선택된 행의 데이터 확인
+  const selectedRow = selectedRowPaging.value
+  if (!selectedRow) return
 
-  if (!tempSaveStore.formDtlData?.uuid) {
-    showAlert('수정할 항목이 존재하지 않습니다.')
-    // tempSaveStore.closeScriptPopup()
-  }
+  await router.push({
+    name: 'form',
+    params: { domain: 'newchange' },
+    state: {
+      requestKey: selectedScriptSeq.value,
+    },
+  })
 }
 
 const renderFormType = (params) => {

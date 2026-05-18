@@ -76,33 +76,6 @@
         </where>
       </if>
 
-      <if test="formTypeCd != null and formTypeCd.contains(&quot;3&quot;)">
-        UNION ALL
-        SELECT
-          MR.request_key,
-          MR.cret_dt,
-          '3' AS form_type_cd,
-          NULL AS req_buy_type_cd,
-          NULL AS oper_type_cd,
-          MR.proc_cd,
-          MRC.cstmr_nm,
-          MRC.cstmr_native_birth,
-          MR.cstmr_type_cd,
-          NULL AS identity_cert_type_cd,
-          MR.agent_cd,
-          MR.agent_nm,
-          MR.shop_cd,
-          MR.shop_nm,
-          MR.cret_id,
-          (select user_nm from msf_user_info where user_id = MR.cret_id) as cret_nm,
-          COALESCE(b.request_key::text, 'N') AS modify_yn
-        FROM MSF_REQUEST_NAME_CHG_TEMP MR
-        LEFT JOIN MSF_REQUEST_CSTMR MRC ON MR.request_key = MRC.request_key
-        LEFT JOIN MSF_REQUEST_NAME_CHG b ON MR.request_key = b.request_key
-        <where>
-          <include refid="formRequestWhere" />
-        </where>
-      </if>
     </trim>
   </sql>
 

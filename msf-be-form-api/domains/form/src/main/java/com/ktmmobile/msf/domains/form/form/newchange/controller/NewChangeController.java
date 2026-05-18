@@ -25,12 +25,8 @@ import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoBanInfoResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspJuoSubInfoRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.NiceAccountRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
-import com.ktmmobile.msf.domains.form.form.common.dto.SearchNumberRequest;
-import com.ktmmobile.msf.domains.form.form.common.dto.SearchNumberResponse;
 import com.ktmmobile.msf.domains.form.form.common.service.AuthInfoService;
-import com.ktmmobile.msf.domains.form.form.common.service.ChoiceNumberService;
 import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
-import com.ktmmobile.msf.domains.form.form.common.service.NumberPortableService;
 import com.ktmmobile.msf.domains.form.form.common.service.PaymentService;
 import com.ktmmobile.msf.domains.form.form.common.service.SimInfoService;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoRequest;
@@ -38,14 +34,19 @@ import com.ktmmobile.msf.domains.form.form.newchange.dto.AgentInfoResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.KnoteScanInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.KnoteScanInfoResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeDefaultResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeEformResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeInfoResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.SearchNumberRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.SearchNumberResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.service.ChoiceNumberService;
 import com.ktmmobile.msf.domains.form.form.newchange.service.NewChangeCheckService;
 import com.ktmmobile.msf.domains.form.form.newchange.service.NewChangeService;
+import com.ktmmobile.msf.domains.form.form.newchange.service.NumberPortableService;
 
 @RestController
 @RequestMapping("/api/form")
@@ -70,7 +71,7 @@ public class NewChangeController {
 
     //대리점정보 조회 (조건 : 매장코드)
     @PostMapping("/agent/list")
-    public CommonResponse<List<AgentInfoResponse>> getAgentList(@RequestBody @Valid AgentInfoRequest request) {
+    public CommonResponse<List<AgentInfoResponse>> getAgentList(@RequestBody AgentInfoRequest request) {
         return ResponseUtils.ok(formCommService.getAgentList(request));
     }
 
@@ -89,13 +90,18 @@ public class NewChangeController {
     //신청서 저장 - 임시저장
     @PostMapping("/newchange/save")
     public CommonResponse<FormResponse<NewChangeResponse>> registeForm(@RequestBody @Valid NewChangeInfoRequest request) {
-        return ResponseUtils.ok(newChangeService.saveAppformInfo(request));
+        return ResponseUtils.ok(newChangeService.saveNewChangeFormInfo(request));
     }
 
+    /**
+     * eForm 생성을 위한 데이타 SET
+     * >> "신청서확인" 버튼 클릭해서 임시저장 후 결과값에 따라 eForm action 을 프론트에서 호출
+     * >> 프론트에서 호출하면 직접호출할 수도 있을텐데 그에 대한 방어로직 필요함.
+     */
     //신청서 확인 - 이미지생성,녹취,서명 또는 기 생성 이미지 확인
     //이때 데이타를 다시 다 보내서 저장하고 진행해야해.. 사전체크도 여기서~~~
     @PostMapping("/newchange/eform/set")
-    public CommonResponse<FormResponse<NewChangeInfoResponse>> eformNewChangeSet(@RequestBody @Valid NewChangeInfoRequest request) {
+    public CommonResponse<FormResponse<NewChangeEformResponse>> eformNewChangeSet(@RequestBody @Valid NewChangeInfoRequest request) {
         return ResponseUtils.ok(newChangeService.eformNewChangeSet(request));
     }
 

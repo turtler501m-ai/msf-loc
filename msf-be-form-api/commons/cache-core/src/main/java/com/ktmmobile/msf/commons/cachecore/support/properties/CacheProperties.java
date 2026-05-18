@@ -85,9 +85,7 @@ public record CacheProperties(
         Set<String> exclude
     ) {
 
-        /**
-         * 기본 자동 적재 설정 생성
-         */
+        /** 기본 자동 적재 설정 생성 */
         static AutoLoad defaults() {
             return new AutoLoad(true, Set.of());
         }
@@ -138,9 +136,7 @@ public record CacheProperties(
         private static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofSeconds(2);
         private static final Duration DEFAULT_RETRY_INTERVAL = Duration.ofMillis(100);
 
-        /**
-         * 기본 스탬피드 방지 설정 생성
-         */
+        /** 기본 스탬피드 방지 설정 생성 */
         static Stampede defaults() {
             return new Stampede(DEFAULT_LOCK_TTL, DEFAULT_WAIT_TIMEOUT, DEFAULT_RETRY_INTERVAL);
         }
@@ -190,9 +186,7 @@ public record CacheProperties(
         private static final Duration DEFAULT_WAIT_TIMEOUT = Duration.ofSeconds(10);
         private static final Duration DEFAULT_RETRY_INTERVAL = Duration.ofMillis(200);
 
-        /**
-         * 기본 캐시 적재 락 설정 생성
-         */
+        /** 기본 캐시 적재 락 설정 생성 */
         static LoadLock defaults() {
             return new LoadLock(
                 true,
@@ -262,9 +256,7 @@ public record CacheProperties(
         private static final Duration DEFAULT_LOCK_AT_MOST_FOR = Duration.ofMinutes(1);
         private static final Duration DEFAULT_LOCK_AT_LEAST_FOR = Duration.ZERO;
 
-        /**
-         * 기본 Redis 쓰기 락 설정 생성
-         */
+        /** 기본 Redis 쓰기 락 설정 생성 */
         static RedisWriteLock defaults() {
             return new RedisWriteLock(true, DEFAULT_LOCK_AT_MOST_FOR, DEFAULT_LOCK_AT_LEAST_FOR);
         }

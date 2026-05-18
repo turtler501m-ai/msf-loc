@@ -6,7 +6,12 @@
         <MsfChip v-model="model.cstmrBillSendTypeCd" name="inp-stmtType" groupCode="STRE" />
       </MsfFormGroup>
       <MsfFormGroup label="요금 납부 방법" tag="div" required>
-        <MsfChip v-model="model.reqPayTypeCd" name="inp-payMtd" groupCode="PAYM" />
+        <MsfChip 
+          v-model="model.reqPayTypeCd" 
+          name="inp-payMtd" 
+          groupCode="PAYM" 
+          :data="paymentMethodOptions"
+        />
       </MsfFormGroup>
 
       <template v-if="['AA', 'D'].includes(model.reqPayTypeCd)">
@@ -77,7 +82,7 @@
             />
           </MsfFormGroup>
         </template>
-        <MsfFormGroup label="출금 동의" required>
+        <MsfFormGroup label="출금 동의" required v-if="model.othersPaymentYn === 'Y'">
           <MsfCheckbox
             v-model="model.isAutoAgree"
             label="본인(예금주 또는 가입고객)은 납부해야 할 요금에 대해 위 계좌(카드)에서 지정된 출금(결제)일에 인출(결제)되는 것에 동의합니다."
@@ -133,38 +138,13 @@
             <MsfSelect
               title="유효기간(MM) 선택"
               v-model="model.reqCardMm"
-              :options="[
-                { label: '01', value: '01' },
-                { label: '02', value: '02' },
-                { label: '03', value: '03' },
-                { label: '04', value: '04' },
-                { label: '05', value: '05' },
-                { label: '06', value: '06' },
-                { label: '07', value: '07' },
-                { label: '08', value: '08' },
-                { label: '09', value: '09' },
-                { label: '10', value: '10' },
-                { label: '11', value: '11' },
-                { label: '12', value: '12' },
-              ]"
+              :options="cardMonthOptions"
               placeholder="MM"
             />
             <MsfSelect
               title="유효기간(YY) 선택"
               v-model="model.reqCardYy"
-              :options="[
-                { label: '2024', value: '24' },
-                { label: '2025', value: '25' },
-                { label: '2026', value: '26' },
-                { label: '2027', value: '27' },
-                { label: '2028', value: '28' },
-                { label: '2029', value: '29' },
-                { label: '2030', value: '30' },
-                { label: '2031', value: '31' },
-                { label: '2032', value: '32' },
-                { label: '2033', value: '33' },
-                { label: '2034', value: '34' },
-              ]"
+              :options="cardYearOptions"
               placeholder="YY"
             />
           </MsfStack>
@@ -195,6 +175,13 @@
             />
           </MsfFormGroup>
         </template>
+        <MsfFormGroup label="출금 동의" required v-if="model.othersPaymentYn === 'Y'">
+          <MsfCheckbox
+            v-model="model.isAutoAgree"
+            label="본인(예금주 또는 가입고객)은 납부해야 할 요금에 대해 위 계좌(카드)에서 지정된 출금(결제)일에 인출(결제)되는 것에 동의합니다."
+            :invalid="!model.isAutoAgree"
+          />
+        </MsfFormGroup>
       </template>
 
       <template v-if="['R', 'VA'].includes(model.reqPayTypeCd)">
@@ -232,9 +219,10 @@
   </div>
 </template>
 <script setup>
-import { defineModel, defineProps, computed } from 'vue'
+import { defineModel, defineProps, computed, onMounted, ref, watch } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { post } from '@/libs/api/msf.api'
+import { getCommonCodeList } from '@/libs/utils/comn.utils.js'
 
 const props = defineProps({
   title: { type: String, default: '납부 정보' },
@@ -243,14 +231,59 @@ const props = defineProps({
 })
 const model = defineModel({ type: Object, required: true })
 
-import { watch } from 'vue'
+const paymentMethodOptions = ref([])
+
+const currentYear = new Date().getFullYear() % 100
+const currentMonth = new Date().getMonth() + 1
+
+const cardYearOptions = computed(() => {
+  const years = []
+  for (let i = 0; i < 15; i++) {
+    const year = currentYear + i
+    years.push({ label: String(2000 + year), value: String(year) })
+  }
+  return years
+})
+
+const cardMonthOptions = computed(() => {
+  const months = []
+  const startMonth =
+    String(model.value.reqCardYy) === String(currentYear) ? currentMonth : 1
+  for (let i = startMonth; i <= 12; i++) {
+    const m = String(i).padStart(2, '0')
+    months.push({ label: m, value: m })
+  }
+  return months
+})
+
+// 유효기간 자동 초기화
 watch(
-  () => model.value.reqPayTypeCd,
-  (val) => {
-    console.log('>>> [MsfBillingInfo] reqPayTypeCd changed:', val)
-  },
-  { immediate: true },
+  () => model.value.reqCardYy,
+  (newYy) => {
+    if (String(newYy) === String(currentYear) && Number(model.value.reqCardMm) < currentMonth) {
+      model.value.reqCardMm = String(currentMonth).padStart(2, '0')
+    }
+  }
 )
+
+onMounted(async () => {
+  const codes = await getCommonCodeList('PAYM')
+  const baseOptions = (codes || []).map(item => ({ label: item.title, value: item.code }))
+  
+  const updateOptions = () => {
+    const isUpfront = String(model.value.installmentMonth) === '0'
+    if (isUpfront) {
+      paymentMethodOptions.value = baseOptions.filter(opt => opt.value === 'C')
+      if (model.value.reqPayTypeCd !== 'C') {
+        model.value.reqPayTypeCd = 'C'
+      }
+    } else {
+      paymentMethodOptions.value = baseOptions
+    }
+  }
+
+  watch(() => model.value.installmentMonth, updateOptions, { immediate: true })
+})
 
 const handleAccountVerify = async () => {
   const payload = {
@@ -369,7 +402,7 @@ const validate = () => {
       return false
     // 계좌 유효성 체크 필수
     if (!props.authFlags?.autoAcct) return false
-    // 타인납부인 경우 대리인 정보 필수
+    // 타인납부인 경우 대리인 정보 및 출금 동의 필수
     if (model.value.othersPaymentYn === 'Y') {
       if (
         !model.value.reqAccountNm ||
@@ -377,9 +410,8 @@ const validate = () => {
         !model.value.reqAccountRelTypeCd
       )
         return false
+      if (!model.value.isAutoAgree) return false
     }
-    // 출금 동의 체크 필수 (노출될 때만)
-    if (!model.value.isAutoAgree) return false
   }
   // 신용카드
   else if (['C'].includes(model.value.reqPayTypeCd)) {
@@ -392,6 +424,8 @@ const validate = () => {
     if (model.value.othersPaymentYn === 'Y') {
       if (!model.value.reqCardNm || !model.value.reqCardRrn || !model.value.cardRelation)
         return false
+      // 출금 동의 체크 필수
+      if (!model.value.isAutoAgree) return false
     }
   }
   // 지로/기타 통합청구

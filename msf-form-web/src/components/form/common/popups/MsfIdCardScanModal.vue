@@ -1,10 +1,10 @@
 <template>
   <MsfDialog
-    v-bind="$attrs"
-    :is-open="modelValue"
-    title="신분증 스캔"
-    @open="onOpen"
-    @close="onClose"
+      v-bind="$attrs"
+      :is-open="modelValue"
+      title="신분증 스캔"
+      @open="onOpen"
+      @close="onClose"
   >
     <!-- 팝업 내용 -->
     <p class="ut-text-caution ut-weight-medium">촬영 버튼을 선택하신 후, 신분증을 촬영해주세요.</p>
@@ -17,11 +17,11 @@
           </p>
           <MsfStack type="field">
             <img
-              v-if="previewUrl"
-              :src="previewUrl"
-              alt="미리보기"
-              class="preview-img"
-              @click="openCamera"
+                v-if="previewUrl"
+                :src="previewUrl"
+                alt="미리보기"
+                class="preview-img"
+                @click="openCamera"
             />
             <MsfButton variant="subtle" @click="openCamera">
               {{ docFile ? '재촬영' : '촬영하기' }}
@@ -37,33 +37,33 @@
       <ul class="sample-list">
         <li v-for="sample in scanSamples" :key="sample.scanId">
           <div
-            class="sample-row"
-            :class="{ active: selectedSample?.scanId === sample.scanId }"
-            @click="selectSample(sample)"
+              class="sample-row"
+              :class="{ active: selectedSample?.scanId === sample.scanId }"
+              @click="selectSample(sample)"
           >
             <span class="sample-type">{{ sample.identityTypeNm }}</span>
             <MsfInput
-              v-model="sample.cstmrNm"
-              placeholder="이름"
-              class="sample-name"
-              @click.stop
-              @focus="selectSample(sample)"
+                v-model="sample.cstmrNm"
+                placeholder="이름"
+                class="sample-name"
+                @click.stop
+                @focus="selectSample(sample)"
             />
             <MsfNumberInput
-              v-model="sample.rrn1"
-              placeholder="생년월일"
-              maxlength="8"
-              class="sample-birth"
-              @click.stop
-              @focus="selectSample(sample)"
+                v-model="sample.rrn1"
+                placeholder="생년월일"
+                maxlength="8"
+                class="sample-birth"
+                @click.stop
+                @focus="selectSample(sample)"
             />
             <MsfNumberInput
-              v-model="sample.telNo"
-              placeholder="휴대폰번호"
-              maxlength="11"
-              class="sample-tel"
-              @click.stop
-              @focus="selectSample(sample)"
+                v-model="sample.telNo"
+                placeholder="휴대폰번호"
+                maxlength="11"
+                class="sample-tel"
+                @click.stop
+                @focus="selectSample(sample)"
             />
             <span class="sample-date">{{ sample.scanDate }}</span>
           </div>

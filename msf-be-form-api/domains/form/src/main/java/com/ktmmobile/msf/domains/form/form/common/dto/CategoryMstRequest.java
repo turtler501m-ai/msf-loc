@@ -19,7 +19,7 @@ public class CategoryMstRequest {
     private String rateAdsvcDivCd; //카테고리 구분코드 (P , R, I) >> prodCtgTypeCd 에서 변경하자
     private List<String> ctgCd; // >> prodCtgId 에서 변경하자~
 
-
+    
     //private String prodCtgId;
 
     //private List<String> prodCtgId;

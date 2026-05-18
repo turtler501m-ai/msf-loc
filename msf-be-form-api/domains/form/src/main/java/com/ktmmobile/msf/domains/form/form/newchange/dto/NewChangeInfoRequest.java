@@ -9,9 +9,7 @@ import lombok.Setter;
 
 /**
  * 신규/변경 신청서 insert 및 update request parameter 정의
- * 2026.04.
  */
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -263,6 +261,7 @@ public class NewChangeInfoRequest {
     String othersPaymentRrn;
     String othersPaymentRelTypeCd;
     String othersPaymentReqNm;
+    String othersPaymentAgrYn;
     String prntsBillNo;
     String cstmrBillSendTypeCd;
     //String cstmrEmailAdr;

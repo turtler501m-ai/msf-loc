@@ -85,10 +85,10 @@ const onConfirm = async () => {
   }
 
   const frmpapId = selectedRow.value.frmpapId || selectedRow.value.id
-
+  
   try {
     const res = await post('/api/form/knote/checkIdStatus', { frmpapId })
-
+    
     // 특정 ID인 경우 비정상 처리 (사용자 요청 조건)
     if (frmpapId === '0x62E50320B59E11EE8A320080C74455C601') {
       showAlert('선택하신 신분증 정보가 비정상입니다. 다시 확인해 주세요.')
@@ -120,10 +120,10 @@ const onOpen = () => {
 const colDefs = ref([
   { field: 'wapplRegDate', headerName: '스캔일시', width: 120, cellStyle: { textAlign: 'center' } },
   { field: 'custNm', headerName: '이름', width: 100, cellStyle: { textAlign: 'center' } },
-  {
-    field: 'custIdntNoIndCd',
-    headerName: '신분증 유형',
-    width: 120,
+  { 
+    field: 'custIdntNoIndCd', 
+    headerName: '신분증 유형', 
+    width: 120, 
     cellStyle: { textAlign: 'center' },
     valueFormatter: (params) => params.value === '1' ? '주민등록증' : (params.value === '5' ? '운전면허증' : params.value)
   },

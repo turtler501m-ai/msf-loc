@@ -25,15 +25,18 @@
     <Transition v-if="!selectPop" :name="isDropUp ? 'slide-up' : 'slide-down'">
       <ul v-if="isOpen" class="select-options" role="listbox">
         <li
-          v-for="(option, index) in options"
-          :key="option.value"
+          v-for="(option, index) in displayOptions"
+          :key="option.value || 'guide-key'"
           role="option"
           :tabindex="option.disabled ? -1 : 0"
-          :aria-selected="option.value === props.modelValue"
+          :aria-selected="
+            option.value === props.modelValue || (option.isGuide && !props.modelValue)
+          "
           :class="[
             'select-option',
             {
-              'is-selected': option.value === props.modelValue,
+              'is-selected':
+                option.value === props.modelValue || (option.isGuide && !props.modelValue),
               'is-disabled': option.disabled,
               'is-active': activeIndex === index,
             },
@@ -59,7 +62,7 @@
     >
       <ul class="pop-list" role="listbox">
         <li
-          v-for="(option, index) in optionList"
+          v-for="(option, index) in displayOptions"
           :key="option.value"
           role="option"
           :tabindex="option.disabled ? -1 : 0"
@@ -135,6 +138,7 @@ const props = defineProps({
   inline: Boolean, // 인라인 스타일 여부
   groupCode: { type: String, default: '' }, // 공통코드 그룹코드
   isFull: { type: Boolean, default: false }, // 전체 라인 스타일 여부
+  allChecked: { type: [Boolean, String], default: false }, // allChecked의 값이 있으면 옵션의 첫번째 전체 항목으로 노출함
 })
 
 // 부모에게 전달할 이벤트
@@ -152,10 +156,41 @@ const selectRef = ref(null)
 const triggerRef = ref(null)
 const activeIndex = ref(-1)
 
+// allChecked 시 '전체' 항목 값 정의(또는 null, 'all' 등 프로젝트 규칙에 맞춰 설정)
+const ALL_VALUE = ''
+
+// 텍스트 끝에 '전체'가 없으면 추가하는 헬퍼
+const formatAllText = (text) => {
+  if (!text) return '전체'
+  return text.endsWith('전체') ? text : `${text} 전체`
+}
+
+const displayOptions = computed(() => {
+  const options = [...optionList.value]
+
+  if (props.allChecked) {
+    // 헬퍼를 사용하여 어떤 값이 오든 '전체' 텍스트를 보장합니다.
+    const guideLabel =
+      typeof props.allChecked === 'string'
+        ? formatAllText(props.allChecked)
+        : formatAllText(props.placeholder)
+
+    options.unshift({
+      label: guideLabel,
+      value: ALL_VALUE,
+      isGuide: true,
+    })
+  }
+  return options
+})
+
 const selectedLabel = computed(() => {
-  // props.modelValue를 직접 참조
-  if (!Array.isArray(optionList.value)) return props.placeholder
-  const option = optionList.value.find((opt) => opt.value === props.modelValue)
+  // displayOptions를 참조하여 '전체' 가이드 항목까지 포함해서 검색합니다.
+  if (!Array.isArray(displayOptions.value)) return props.placeholder
+
+  const option = displayOptions.value.find((opt) => opt.value === props.modelValue)
+
+  // 값이 ALL_VALUE('')일 때 '전체' 라벨을 정상적으로 반환하거나, 없으면 placeholder를 반환합니다.
   return option ? option.label : props.placeholder
 })
 
@@ -193,20 +228,27 @@ const handleSelect = (option) => {
 const onKeyDown = (e) => {
   if (props.disabled) return
 
+  // 기준 리스트를 displayOptions로 변경
+  const targetList = displayOptions.value
+  const maxIdx = targetList.length - 1
+
   switch (e.key) {
     case 'ArrowDown':
       e.preventDefault()
       if (!isOpen.value) isOpen.value = true
-      activeIndex.value = Math.min(activeIndex.value + 1, optionList.value.length - 1)
+      activeIndex.value = Math.min(activeIndex.value + 1, maxIdx)
       break
     case 'ArrowUp':
       e.preventDefault()
       activeIndex.value = Math.max(activeIndex.value - 1, 0)
       break
     case 'Enter':
-      if (isOpen.value && activeIndex.value !== -1) return
+      if (isOpen.value && activeIndex.value !== -1) {
+        handleSelect(targetList[activeIndex.value]) // 현재 활성화된 옵션 선택
+      } else {
+        isOpen.value = !isOpen.value
+      }
       e.preventDefault()
-      isOpen.value = !isOpen.value
       break
     case 'Escape':
       isOpen.value = false
@@ -261,6 +303,9 @@ onBeforeMount(() => {
 })
 
 onMounted(() => {
+  if (props.allChecked && !props.modelValue) {
+    emit('update:modelValue', ALL_VALUE)
+  }
   document.addEventListener('click', handleClickOutside)
   window.addEventListener('scroll', calculateDirection, true)
   window.addEventListener('resize', calculateDirection)

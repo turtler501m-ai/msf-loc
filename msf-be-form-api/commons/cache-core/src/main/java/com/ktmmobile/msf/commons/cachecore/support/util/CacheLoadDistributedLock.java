@@ -27,9 +27,7 @@ public class CacheLoadDistributedLock {
     private final ObjectProvider<LockProvider> lockProvider;
     private final CacheProperties cacheProperties;
 
-    /**
-     * 캐시 적재용 분산 락 처리기 생성
-     */
+    /** 캐시 적재용 분산 락 처리기 생성 */
     public CacheLoadDistributedLock(
         @Qualifier(CacheCoreRedisConfig.CACHE_LOAD_LOCK_PROVIDER) ObjectProvider<LockProvider> lockProvider,
         CacheProperties cacheProperties
@@ -38,9 +36,7 @@ public class CacheLoadDistributedLock {
         this.cacheProperties = cacheProperties;
     }
 
-    /**
-     * 분산 락 획득 후 작업 실행
-     */
+    /** 분산 락 획득 후 작업 실행 */
     public <T> Optional<T> execute(String cacheName, Supplier<T> task) {
         if (!cacheProperties.loadLock().isEnabled()) {
             return Optional.of(task.get());

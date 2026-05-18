@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 스마트에서 관리하는 부가서비스 조회 Request
+ */
 @Getter
 @Setter
 @NoArgsConstructor

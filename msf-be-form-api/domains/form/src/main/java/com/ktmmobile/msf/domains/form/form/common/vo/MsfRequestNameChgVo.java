@@ -13,6 +13,11 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MsfRequestNameChgVo {
 
+    private String ncn;
+    private String ctn;
+    private String custId;
+    private String userId;
+
     // 양도인 정보
     private Long requestKey; // 가입신청키
     private Long nflChgTrnsSeq; // 명의변경신청일련번호

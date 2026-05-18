@@ -22,6 +22,7 @@ import {
   SearchBoxGuide,
   ClassGuide,
   FileButtonGuide,
+  NodataGuide,
 } from './components'
 
 const route = useRoute()
@@ -47,6 +48,7 @@ const guideTabs = {
   alert: { name: 'Alert', component: markRaw(AlertGuide) },
   dialog: { name: 'Dialog', component: markRaw(DialogGuide) },
   class: { name: 'Class', component: markRaw(ClassGuide) },
+  nodata: { name: 'Nodata', component: markRaw(NodataGuide) },
 }
 
 // 3. 현재 선택된 탭 관리

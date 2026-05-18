@@ -12,6 +12,7 @@
       @scan-confirm="onIdentityScanConfirm"
     />
     <!-- 가입자 정보 -->
+    <!-- 서비스변경/해지 전용 가입자정보 컴포넌트 -->
     <MsfSubscriberChgInfo v-model="formData" phoneLabel="해지 휴대폰번호" />
     <!-- 법정대리인 정보 / 안내사항 확인 및 동의 -->
     <MsfLegalAgentInfo v-model="formData" :use-birth-date="true" />
@@ -51,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useMsfFormTerminationStore } from '@/stores/msf_termination'
 import { storeToRefs } from 'pinia'
 import { showAlert } from '@/libs/utils/comp.utils'
@@ -63,7 +64,6 @@ const { formData } = storeToRefs(terminationStore)
 
 const agreementRef = ref(null)
 const isAgreed = ref(false)
-
 const isCompleteOverride = ref('')
 
 const isRequiredAgreement = (value) => value === true || value === 'Y' || value === '2'
@@ -224,6 +224,12 @@ const validate = () => {
   return true
 }
 
+const isCompleteEffective = computed(() => {
+  if (isCompleteOverride.value === 'true') return true
+  if (isCompleteOverride.value === 'false') return false
+  return validate()
+})
+
 // 저장 전 필수항목 검사 (alert 포함)
 const validateWithAlert = () => {
   const f = formData.value
@@ -282,15 +288,7 @@ const validateWithAlert = () => {
 }
 
 const checkRequiredFields = () => {
-  if (isCompleteOverride.value === 'true') {
-    emit('complete', true)
-    return true
-  }
-  if (isCompleteOverride.value === 'false') {
-    emit('complete', false)
-    return false
-  }
-  const result = validate()
+  const result = isCompleteEffective.value
   emit('complete', result)
   return result
 }
@@ -314,16 +312,12 @@ const data = async (code /* 임시저장 코드 */) => {
 }
 
 const save = async () => {
+  if (isCompleteOverride.value === 'false') return false
   const stepForm = formData.value
   console.log('[해지][고객정보저장] 요청 시작', {
-    isCompleteOverride: isCompleteOverride.value,
     ncn: stepForm?.ncn,
     contractNum: stepForm?.contractNum,
   })
-  if (isCompleteOverride.value === 'false') {
-    console.warn('[해지][고객정보저장] 진행 중단', { reason: 'override false' })
-    return false
-  }
   if (!validateWithAlert()) {
     console.warn('[해지][고객정보저장] 진행 중단', { reason: 'validate failed' })
     return false

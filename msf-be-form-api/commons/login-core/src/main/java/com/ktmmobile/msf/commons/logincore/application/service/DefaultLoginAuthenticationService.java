@@ -7,6 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.ktmmobile.msf.commons.common.context.LoginContextHolder;
 import com.ktmmobile.msf.commons.logincore.application.port.out.LoginAuthenticator;
 import com.ktmmobile.msf.commons.logincore.application.port.out.LoginUserFinder;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginSessionUser;
@@ -49,6 +50,10 @@ public class DefaultLoginAuthenticationService<C extends LoginAuthenticationCred
             throw new LoginException("아이디 또는 비밀번호가 불일치합니다.");
         }
 
+        return LoginContextHolder.withUserId(user.userId(), () -> completeAuthentication(user, credential));
+    }
+
+    private LoginResult completeAuthentication(LoginUser user, C credential) {
         loginUserFinder.recordLoginSuccess(user, credential);
         LoginUserInfo userInfo = loginUserFinder.findUserInfo(user, credential)
             .orElseGet(() -> LoginUserInfo.of(user, credential.userType()));
@@ -61,10 +66,7 @@ public class DefaultLoginAuthenticationService<C extends LoginAuthenticationCred
             userInfo.userName(),
             userInfo.phoneNumber(),
             userInfo.clientIp(),
-            userInfo.agentCode(),
-            userInfo.agentName(),
-            userInfo.shopCode(),
-            userInfo.shopName(),
+            userInfo.organization(),
             userInfo.attributes(),
             requiredActions
         );
@@ -96,10 +98,7 @@ public class DefaultLoginAuthenticationService<C extends LoginAuthenticationCred
             userInfo.phoneNumber(),
             userInfo.userType(),
             clientIp,
-            userInfo.agentCode(),
-            userInfo.agentName(),
-            userInfo.shopCode(),
-            userInfo.shopName(),
+            userInfo.organization(),
             userInfo.attributes()
         );
     }

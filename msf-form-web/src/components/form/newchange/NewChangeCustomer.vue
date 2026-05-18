@@ -1,14 +1,5 @@
 <template>
   <div class="page-step-panel">
-    <div class="ut-flex ut-gap-10 ut-v-center ut-mb-10" style="justify-content: flex-end">
-      <span style="font-size: 12px; color: #999">[테스트용]</span>
-      <MsfButton variant="secondary" size="small" @click="onClickTestLoad"
-        >임시저장 불러오기</MsfButton
-      >
-      <MsfButton variant="secondary" size="small" @click="onClickJumpToAgreement"
-        >동의스탭까지 강제이동</MsfButton
-      >
-    </div>
     <MsfProductJoinType ref="productJoinTypeRef" v-model="formData" :authFlags="store.authFlags" />
     <MsfCustomerType ref="customerTypeRef" v-model="formData" :authFlags="store.authFlags" />
     <MsfIdentityVerify ref="identityVerifyRef" v-model="formData" :authFlags="store.authFlags" />
@@ -66,6 +57,7 @@
 
 <script setup>
 import { ref, watch, onMounted, computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 import { useMsfStepStore } from '@/stores/msf_step'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
@@ -87,8 +79,7 @@ watch(
   { immediate: true },
 )
 
-const formData = store.customer
-const productData = store.product
+const { customer: formData, product: productData } = storeToRefs(store)
 const rawTermsList = ref([])
 
 const saveKeyMap = {
@@ -100,9 +91,9 @@ const saveKeyMap = {
   CLAUSE_FATH_02: 'clauseFathFlag02',
   CLAUSE_REQUIRED_06: 'nwBlckAgrmYn',
   CLAUSE_REQUIRED_07: 'appBlckAgrmYn',
-  CLAUSE_REQUIRED_5G: 'clause5gCoverage',
-  CLAUSE_PARTNER_01: 'clauseJehuFlag',
-  CLAUSE_PARTNER_02: 'clausePartnerOfferFlag',
+  CLAUSE_REQUIRED_5G: 'clause5gCoverageYn',
+  CLAUSE_PARTNER_01: 'clauseJehuYn',
+  CLAUSE_PARTNER_02: 'clausePartnerOfferYn',
   CLAUSE_SELECT_03: 'personalInfoCollectAgreeYn',
   CLAUSE_SELECT_01: 'clausePriAdYn',
   CLAUSE_SELECT_08: 'othersAdReceiveAgreeYn',
@@ -163,17 +154,17 @@ const termsDataList = computed(() => {
 const filteredTermsDataList = computed(() => {
   return termsDataList.value.filter((term) => {
     const termId = term.id
-    if (termId === 'clauseMoveCode' && formData.joinType !== 'MNP3') return false
-    const isMinor = ['NM', 'FM'].includes(formData.cstmrTypeCd)
+    if (termId === 'clauseMoveCode' && formData.value.joinType !== 'MNP3') return false
+    const isMinor = ['NM', 'FM'].includes(formData.value.cstmrTypeCd)
     if (['clauseFathFlag01', 'clauseFathFlag02', 'nwBlckAgrmYn', 'appBlckAgrmYn'].includes(termId) && !isMinor) return false
-    if (termId === 'clauseJehuFlag' && !productData.jehuPartnerTypeCd) return false
-    if (termId === 'clausePartnerOfferYn' && !formData.partnerEventCode) return false
+    if (termId === 'clauseJehuYn' && !productData.value.jehuPartnerTypeCd) return false
+    if (termId === 'clausePartnerOfferYn' && !formData.value.partnerEventCode) return false
     if (
-      ['combineSoloTypeYn', 'combineSoloSoloYn'].includes(termId) &&
-      !(productData.addonService || []).includes('SOLO_COMB')
+      ['combineSoloTypeYn', 'combineSoloYn'].includes(termId) &&
+      !(productData.value.addonService || []).includes('SOLO_COMB')
     )
       return false
-    if (termId === 'moveRefundAgreeYn' && formData.joinType !== 'MNP3') return false
+    if (termId === 'moveRefundAgreeYn' && formData.value.joinType !== 'MNP3') return false
     return true
   })
 })
@@ -182,25 +173,25 @@ const dynamicSpecTerms = computed(() => {
   const list = []
 
   // 번호이동(MNP3)인 경우에만 번호이동 관련 약관 추가
-  if (formData.joinType === 'MNP3') {
+  if (formData.value.joinType === 'MNP3') {
     list.push({ code: 'CLAUSE_MOVE_01' })
   }
 
   // 요금제 구분값이 '5G'인 경우에만 5G 관련 약관 추가
-  if (formData.prdtSctnCd === '5G') {
+  if (formData.value.prdtSctnCd === '5G') {
     list.push({ code: 'CLAUSE_REQUIRED_5G' })
   }
 
-  if (productData.jehuPartnerTypeCd) {
+  if (productData.value.jehuPartnerTypeCd) {
     list.push({
       code: 'CLAUSE_PARTNER_01',
       specType: '02',
-      specCode: productData.jehuPartnerTypeCd,
-      specName: productData.jehuPartnerTypeNm,
+      specCode: productData.value.jehuPartnerTypeCd,
+      specName: productData.value.jehuPartnerTypeNm,
     })
   }
 
-  const isMinor = ['NM', 'FM'].includes(formData.cstmrTypeCd)
+  const isMinor = ['NM', 'FM'].includes(formData.value.cstmrTypeCd)
   if (isMinor) {
     list.push({ code: 'CLAUSE_REQUIRED_06' })
     list.push({ code: 'CLAUSE_REQUIRED_07' })
@@ -227,27 +218,31 @@ const isComplete = ref(false)
 
 const eligibilityStatus = ref('none')
 const eligibilityResult = ref({
-  totalLineCnt: 3,
-  possibleLineCnt: 0,
-  joinLimitYn: 'N',
-  unpaidYn: 'N',
-  frequentTermYn: 'N',
-  installmentLimitYn: 'N',
+  historyOfCancellationResultMessage: '',
+  historyOfCancellationYn: 'Y',
+  installmentDiscountResultMessage: '',
+  installmentDiscountYn: 'Y',
+  subscriptionLimitResultMessage: '',
+  subscriptionLimitYn: 'Y',
+  subscriptionRestrictionsResultMessage: '',
+  subscriptionRestrictionsYn: 'Y',
+  unPaidResultMessage: '',
+  unPaidYn: 'Y',
 })
 const isEligible = computed(() => {
   const r = eligibilityResult.value
   return (
-    r.possibleLineCnt > 0 &&
-    r.joinLimitYn === 'N' &&
-    r.unpaidYn === 'N' &&
-    r.frequentTermYn === 'N' &&
-    r.installmentLimitYn === 'N'
+    r.subscriptionRestrictionsYn === 'Y' &&
+    r.subscriptionLimitYn === 'Y' &&
+    r.unPaidYn === 'Y' &&
+    r.historyOfCancellationYn === 'Y' &&
+    r.installmentDiscountYn === 'Y'
   )
 })
 
 const onClickCheckEligibility = async () => {
-  const n1 = formData.cstmrNativeRrn1 || formData.cstmrForeignerRrn1 || formData.cstmrJuridicalRrn1 || ''
-  const n2 = formData.cstmrNativeRrn2 || formData.cstmrForeignerRrn2 || formData.cstmrJuridicalRrn2 || ''
+  const n1 = formData.value.cstmrNativeRrn1 || formData.value.cstmrForeignerRrn1 || formData.value.cstmrJuridicalRrn1 || ''
+  const n2 = formData.value.cstmrNativeRrn2 || formData.value.cstmrForeignerRrn2 || formData.value.cstmrJuridicalRrn2 || ''
   const ssn = n1 + n2
 
   if (!ssn || ssn.length < 10) {
@@ -258,31 +253,15 @@ const onClickCheckEligibility = async () => {
   eligibilityStatus.value = 'checking'
   try {
     const res = await post('/api/form/eligibility/check', {
-      cstmrTypeCd: formData.cstmrTypeCd,
+      cstmrTypeCd: formData.value.cstmrTypeCd,
       customerSsn: ssn,
     })
 
-    if (res && res.code === '0000') {
-      if (ssn === '9901013456789') {
-        eligibilityResult.value = {
-          totalLineCnt: 3,
-          possibleLineCnt: 0,
-          joinLimitYn: 'Y',
-          unpaidYn: 'Y',
-          frequentTermYn: 'Y',
-          installmentLimitYn: 'Y',
-        }
-      } else {
-        eligibilityResult.value = {
-          totalLineCnt: 3,
-          possibleLineCnt: 2,
-          joinLimitYn: 'N',
-          unpaidYn: 'N',
-          frequentTermYn: 'N',
-          installmentLimitYn: 'N',
-        }
-      }
+    if (res && res.code === '0000' && res.data) {
+      eligibilityResult.value = res.data
       eligibilityStatus.value = 'checked'
+    } else {
+      throw new Error('Invalid response')
     }
   } catch (e) {
     console.error('Eligibility check failed:', e)
@@ -349,7 +328,19 @@ const getPendingItems = () => {
   return pending
 }
 
-const checkRequiredFields = () => {
+const checkRequiredFields = (result) => {
+  // 약관 동의 결과가 배열로 전달된 경우, 스토어 필드들에 반영
+  if (result && Array.isArray(result)) {
+    result.forEach((item) => {
+      // 1. item.id가 있으면 우선 사용 (termsDataList에서 mapping된 값)
+      // 2. item.code가 있으면 saveKeyMap을 통해 mapping 시도
+      const storeKey = item.id || saveKeyMap[item.code] || item.code
+      if (Object.prototype.hasOwnProperty.call(formData.value, storeKey)) {
+        formData.value[storeKey] = item.checked ? 'Y' : 'N'
+      }
+    })
+  }
+
   const pending = getPendingItems()
   const isReady = pending.length === 0
   isComplete.value = isReady
@@ -367,7 +358,7 @@ const checkRequiredFieldsDebounced = () => {
 }
 
 watch(
-  () => [formData, productData, store.authFlags, eligibilityStatus.value, eligibilityResult.value],
+  () => [formData.value, productData.value, store.authFlags, eligibilityStatus.value, eligibilityResult.value],
   () => {
     checkRequiredFieldsDebounced()
   },
@@ -396,20 +387,6 @@ const data = async (code) => {
 const save = async () => {
   if (!validate()) return false
   return await store.apiSaveDraft(1)
-}
-
-const onClickTestLoad = async () => {
-  const result = await store.apiLoadDraft('310')
-  if (result !== false) {
-    const stepValue = parseInt(result)
-    if (!isNaN(stepValue)) {
-      stepStore.setActiveIndex(Math.max(0, stepValue - 1))
-    }
-  }
-}
-
-const onClickJumpToAgreement = () => {
-  stepStore.setActiveIndex(2)
 }
 
 defineExpose({ data, save, validate, getPendingItems, reset: store.resetAll })

@@ -1,6 +1,8 @@
 package com.ktmmobile.msf.commons.cachecore.application.port.in;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 import com.ktmmobile.msf.commons.cachecore.application.dto.CacheMetadata;
@@ -19,6 +21,19 @@ public interface CacheReader {
      * @return 캐시 값
      */
     <V> Optional<V> get(String cacheName, String key, Class<V> valueType);
+
+    /**
+     * 캐시 값 다건 조회
+     * <p>
+     * HASH 저장 방식은 저장소의 다건 조회 기능을 사용하고,
+     * VALUE 저장 방식은 키별 조회로 대체한다.
+     *
+     * @param cacheName 캐시 이름
+     * @param keys 캐시 키 목록
+     * @param valueType 값 타입
+     * @return 캐시 값
+     */
+    <V> Map<String, V> getAll(String cacheName, Collection<String> keys, Class<V> valueType);
 
     /**
      * 캐시 값 필수 조회

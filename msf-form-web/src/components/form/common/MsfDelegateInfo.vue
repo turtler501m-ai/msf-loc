@@ -9,6 +9,7 @@
           placeholder="이름"
           class="ut-w-300"
           :readonly="model.isSaved"
+          maxlength="15"
         />
       </MsfFormGroup>
       <MsfFormGroup label="생년월일" required>

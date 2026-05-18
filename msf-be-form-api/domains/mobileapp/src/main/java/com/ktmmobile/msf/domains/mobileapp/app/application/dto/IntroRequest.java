@@ -6,11 +6,13 @@ import lombok.Data;
 
 @Data
 public class IntroRequest {
+
     @NotBlank(groups = {OnSelect.class}, message = "OS는 필수 값입니다.")
     private String os;
     @NotBlank(groups = {OnSelect.class}, message = "앱OS버전은 필수 값입니다.")
     private String appOsVer;
     @NotBlank(groups = {OnSelect.class}, message = "Version은 필수 값입니다.")
     private String version;
+    @NotBlank(groups = {OnCreate.class}, message = "uuid는 필수 입력 값입니다.")
     private String uuid;
 }

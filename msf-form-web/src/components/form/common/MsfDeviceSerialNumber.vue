@@ -24,9 +24,8 @@ const imeiAuth = useAuthButton(() => [model.value?.imei], {
 
 const handleDeviceVerify = async () => {
   const payload = {
-    orgnId: 'V000001105',
     prodSn: model.value.imei,
-    prodId: '4994', // DTO 스펙에 맞춤
+    prodId: props.customerData.deviceModel || '', 
   }
 
   try {

@@ -97,6 +97,11 @@
       required="Y"
       :popTitle="agreementTitle"
       :content="termsItem?.content"
+      :groupCode="termsItem?.groupCode"
+      :code="termsItem?.code"
+      :termsGroupCd="termsItem?.termsGroupCd"
+      :termsItemCd="termsItem?.termsItemCd"
+      :version="termsItem?.version"
       :disabled="model.isSaved"
     />
   </div>
@@ -104,7 +109,7 @@
 <script setup>
 import { ref, defineModel, defineProps, computed, onBeforeMount, watch } from 'vue'
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
-import { getTermsAgreementItem } from '@/libs/utils/comn.utils'
+import { post } from '@/libs/api/msf.api'
 const props = defineProps({
   title: { type: String, default: '법정대리인 정보' },
   agreementTitle: { type: String, default: '법정대리인 안내사항 확인 및 동의' },
@@ -209,11 +214,19 @@ const validate = () => {
 defineExpose({ validate })
 
 onBeforeMount(async () => {
-  const data = await getTermsAgreementItem('CLAUSE_MINOR_AGENT')
-  if (!data || data.length === 0) {
-    termsItem.value = null
-    return
+  try {
+    const res = await post('/api/shared/form/common/terms/list', {
+      groupCode: 'CLAUSE_MINOR_AGENT',
+    })
+    // 응답 데이터 구조에 맞춰 유연하게 처리
+    const list = res.data || []
+    const codes = Array.isArray(list) ? list : (list.codes || [])
+    
+    if (codes.length > 0) {
+      termsItem.value = codes[0]
+    }
+  } catch (e) {
+    console.error('Failed to fetch legal agent terms:', e)
   }
-  termsItem.value = data[0]
 })
 </script>

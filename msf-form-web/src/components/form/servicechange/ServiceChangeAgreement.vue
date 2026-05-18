@@ -29,12 +29,12 @@ const emit = defineEmits(['complete'])
 const store = useMsfFormSvcChgStore()
 const { formData } = storeToRefs(store)
 
-const isComplete = ref(formData.value.additionConfirmCompleted ? 'true' : '')
+const isComplete = ref(formData.value.appConfirmCompleted ? 'true' : '')
 
 const setComplete = (value) => {
   const completed = value === true
   isComplete.value = completed ? 'true' : ''
-  formData.value.additionConfirmCompleted = completed
+  formData.value.appConfirmCompleted = completed
   emit('complete', completed)
 }
 
@@ -42,38 +42,38 @@ watch(
   () => isComplete.value,
   (newVal) => {
     const completed = newVal === true || newVal === 'true'
-    formData.value.additionConfirmCompleted = completed
+    formData.value.appConfirmCompleted = completed
     emit('complete', completed)
   },
   { immediate: true },
 )
 
 const onConfirmApp = () => {
-  console.log('[서비스변경][신청서확인] 완료')
+  console.log('[변경][신청서확인] 완료')
   setComplete(true)
 }
 
 const onEditApp = () => {
-  console.log('[서비스변경][신청서확인] 수정 요청')
+  console.log('[변경][신청서확인] 수정 요청')
   setComplete(false)
 }
 
 const save = async () => {
-  console.log('[서비스변경][신청서확인] 작성완료 처리 시작', {
-    additionConfirmCompleted: formData.value.additionConfirmCompleted,
+  console.log('[변경][신청서확인] 작성완료 처리 시작', {
+    appConfirmCompleted: formData.value.appConfirmCompleted,
     additionList: formData.value.additionList,
     additionCancelList: formData.value.additionCancelList,
   })
 
-  if (formData.value.additionConfirmCompleted !== true) {
-    console.warn('[서비스변경][신청서확인] 작성완료 처리 중단', {
-      reason: 'addition confirm incomplete',
+  if (formData.value.appConfirmCompleted !== true) {
+    console.warn('[변경][신청서확인] 작성완료 처리 중단', {
+      reason: 'app confirm incomplete',
     })
     return false
   }
 
   const result = await store.apiCompleteAdditionApplication()
-  console.log('[서비스변경][신청서확인] 작성완료 처리 결과', { result })
+  console.log('[변경][신청서확인] 작성완료 처리 결과', { result })
   return result
 }
 

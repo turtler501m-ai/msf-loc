@@ -164,7 +164,7 @@ const searchGbnOptions = [
 const searchForm = reactive({
   startDt: '',
   endDt: '',
-  applyTypeCd: FORM_TYPE_CANCEL,
+  applyTypeCd: '',
   searchGbn: '',
   searchName: '',
   procCd: '',
@@ -192,7 +192,6 @@ const canEditMemo = computed(() => canCompleteCancel.value || canRejectCancel.va
 watch(
   () => searchForm.applyTypeCd,
   () => {
-    searchForm.applyTypeCd = FORM_TYPE_CANCEL
     searchForm.procCd = ''
   },
 )
@@ -219,7 +218,7 @@ const COMPLETE_DEFAULT_CODES = {
 function summarizeSearchForm() {
   return {
     procCd: searchForm.procCd || null,
-    formTypeCd: FORM_TYPE_CANCEL,
+    formTypeCd: searchForm.applyTypeCd || null,
     searchGbn: searchForm.searchGbn || null,
     hasSearchName: !!searchForm.searchName,
     startDt: searchForm.startDt || null,
@@ -266,9 +265,9 @@ const colDefs = ref([
   { headerName: '신청서 구분', field: 'applyTypeLabel', width: 240 },
   { headerName: '처리상태', field: 'procCdLabel', width: 150 },
   { headerName: '고객명', field: 'cstmrNm', width: 100 },
-  { headerName: '생년월일', field: 'birthDt', width: 100 },
+  { headerName: '생년월일', field: 'birthDt', width: 120 },
   { headerName: '고객 유형', field: 'cstmrTypeLabel', width: 140 },
-  { headerName: '인증', field: 'authLabel', width: 110 },
+  { headerName: '인증', field: 'authLabel', width: 170 },
   { headerName: '대리점코드', field: 'agencyCd', width: 150 },
   { headerName: '대리점명', field: 'agencyNm', width: 200 },
   { headerName: '매장코드', field: 'storeCd', width: 150 },
@@ -331,7 +330,7 @@ function isFormOk(formResponse) {
 async function fetchList() {
   const payload = {
     procCd: searchForm.procCd || null,
-    formTypeCd: FORM_TYPE_CANCEL,
+    formTypeCd: searchForm.applyTypeCd || null,
     searchGbn: searchForm.searchGbn || null,
     searchName: searchForm.searchName || null,
     startDt: searchForm.startDt || null,

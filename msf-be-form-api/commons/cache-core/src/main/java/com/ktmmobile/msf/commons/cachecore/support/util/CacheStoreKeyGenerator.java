@@ -12,16 +12,12 @@ public class CacheStoreKeyGenerator {
 
     private final CacheProperties cacheProperties;
 
-    /**
-     * 실제 캐시 저장소 키 생성기 생성
-     */
+    /** 실제 캐시 저장소 키 생성기 생성 */
     public CacheStoreKeyGenerator(CacheProperties cacheProperties) {
         this.cacheProperties = cacheProperties;
     }
 
-    /**
-     * 캐시 저장소 키 생성
-     */
+    /** 캐시 저장소 키 생성 */
     public String generate(String key) {
         String keyPrefix = cacheProperties.keyPrefix();
         if (key.startsWith(keyPrefix)) {

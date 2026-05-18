@@ -12,7 +12,7 @@
         <slot name="header-left"></slot>
         <span class="total-count" v-if="!props.hideCount"
           ><slot name="count-prepend"></slot> <span v-if="!props.hideParentheses">(</span>총
-          <em>{{ totalNo }}</em
+          <em>{{ formatCurrency(totalNo) }}</em
           >건<span v-if="!props.hideParentheses">)</span> <slot name="count-append"></slot>
         </span>
       </div>
@@ -369,10 +369,11 @@ defineExpose({
   // 상단 정보 영역
   .total-count {
     font-size: var(--font-size-16);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-foreground);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-gray-600);
     & > em {
       color: var(--color-accent-base);
+      font-weight: var(--font-weight-medium);
     }
   }
   // 체크박스 스타일

@@ -10,9 +10,7 @@ public class CacheMetadataKeyGenerator {
 
     private static final String METADATA_KEY_SUFFIX = "-metadata";
 
-    /**
-     * 캐시 메타데이터 키 생성
-     */
+    /** 캐시 메타데이터 키 생성 */
     public String generate(String cacheName) {
         return cacheName + METADATA_KEY_SUFFIX;
     }

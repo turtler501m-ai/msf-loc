@@ -11,23 +11,21 @@
     <MsfBox margin="0" bgColor="gray2">
       <MsfStack vertical>
         <MsfStack type="field" class="ut-w100p">
-          <MsfInput v-model="formData.searchField" class="ut-w-347" placeholder="검색어 입력" />
+          <MsfInput v-model="searchData.value" class="ut-w-347" placeholder="검색어 입력" />
           <MsfSelect
             title="유형"
-            v-model="formData.type"
-            :options="[
-              { label: '유형1', value: 'type1' },
-              { label: '유형2', value: 'type2' },
-            ]"
+            v-model="searchData.category"
+            group-code="QNA_CTG_CD"
             placeholder="유형"
             class="ut-flex-1"
+            all-checked
           />
-          <MsfButton variant="primary" noMinWidth>검색</MsfButton>
+          <MsfButton variant="primary" noMinWidth @click="searchQna(1)">검색</MsfButton>
         </MsfStack>
         <MsfStack type="field" class="ut-w-347">
           <MsfDateRange
-            v-model:from="rangeDatePickerValue.start"
-            v-model:to="rangeDatePickerValue.end"
+            v-model:from="searchData.startDate"
+            v-model:to="searchData.endDate"
             class="ut-w100p"
           />
         </MsfStack>
@@ -35,47 +33,55 @@
     </MsfBox>
     <!-- // 검색영역 -->
     <MsfStack type="field" class="ut-w100p ut-jc-between ut-mt-24">
-      <div class="list-total-count">총 <em>1,200</em>건</div>
-      <MsfButton variant="subtle">등록</MsfButton>
+      <div class="list-total-count">
+        총
+        <em> {{ formatCurrency(totalCount) }} </em>건
+      </div>
+      <MsfButton variant="subtle" @click="onClickRegistPopup">등록</MsfButton>
     </MsfStack>
     <!-- 아코디언 -->
-    <MsfAccordion v-model="openedItems" :data="displayedData" multiple variant="board">
+    <div v-if="!list || list.length === 0" class="nodata-wrap noIcon">데이터가 없습니다.</div>
+    <MsfAccordion v-else v-model="openedItems" :data="list" multiple variant="board">
       <template #label="{ item }">
         <div :id="`notice-item-${item.id}`" class="custom-label">
           <span class="text">{{ item.title }}</span>
-          <span v-if="item.isNew" class="flag-new">
+          <!--
+          <span v-if="diffDays(Date.now(), item.writeDate) <= 3" class="flag-new">
             <MsfFlag data="NEW" color="accent2" size="small" />
           </span>
-          <span v-if="item.status === 'complete'" class="flag-done">
+          -->
+          <span v-if="item.answer?.status?.code === 'E'" class="flag-done">
             <MsfFlag data="답변완료" color="accent2" size="small" />
           </span>
-          <span v-if="item.status === 'pending'" class="flag-done">
+          <span v-if="item.answer?.status?.code === 'R'" class="flag-done">
             <MsfFlag data="답변대기" size="small" variant="outlined" />
           </span>
-          <span v-if="item.status === 'progress'" class="flag-done">
+          <span v-if="item.answer?.status?.code === 'C'" class="flag-done">
             <MsfFlag data="진행중" size="small" variant="outlined" />
           </span>
         </div>
         <div class="etc-info">
-          <span class="info-field" v-if="item.field">{{ item.field }}</span>
-          <span class="info-at" v-if="item.date">{{ item.date }}</span>
+          <span class="info-field" v-if="item.category?.code">{{ item.category?.title }}</span>
+          <span class="info-at" v-if="item.writeDate">{{
+            formatDatetimeMinutes(item.writeDate)
+          }}</span>
         </div>
       </template>
       <template #content="{ item }">
-        <div class="board-content" v-if="item.content">
+        <div class="board-content" v-if="item.contents">
           <!-- 질문영역 -->
           <div class="board-question">
             <em class="qna-mark">Q.</em>
             <div class="qna-cont">
               <h4 class="board-title" v-if="item.title">{{ item.title }}</h4>
-              <div class="board-content">{{ item.content }}</div>
+              <div class="board-content">{{ item.contents }}</div>
             </div>
           </div>
           <!-- 답변영역 -->
           <div class="board-answer">
             <em class="qna-mark">A.</em>
             <div class="qna-cont">
-              {{ item.answers[0].content }}
+              {{ item.answer?.contents }}
             </div>
           </div>
         </div>
@@ -83,8 +89,9 @@
     </MsfAccordion>
     <!-- 페이징 -->
     <MsfPagination
+      v-if="list && list.length > 0 && totalCount > itemsPerPage"
       v-model:page="currentPage"
-      :total="QNA_DATA.length"
+      :total="totalCount"
       :items-per-page="itemsPerPage"
       :page-size="5"
       @change="onPageChange"
@@ -93,275 +100,97 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, computed, nextTick } from 'vue'
+import { ref, reactive, watch, nextTick } from 'vue'
+import { addMonths } from 'date-fns'
+import { useMsfMainStore } from '@/stores/msf_main'
+import { post } from '@/libs/api/msf.api'
+import { formatDate, formatDatetimeMinutes } from '@/libs/utils/date.utils'
+import { formatCurrency } from '@/libs/utils/string.utils'
+
+const mainStore = useMsfMainStore()
 
 const props = defineProps({
   modelValue: Boolean,
-  targetId: String, // 부모에서 넘겨주는 id 값
+  search: Object,
+  targetId: [String, Number], // 부모에서 넘겨주는 id 값
+  data: Array,
+  total: [String, Number],
+  currentPage: { type: Number, default: 1 },
+  itemsPerPage: { type: Number, default: 10 },
 })
 
-const emit = defineEmits(['update:modelValue', 'open', 'close'])
+const emit = defineEmits(['update:modelValue', 'open', 'regist', 'close'])
 
-// 메인 QNA 샘플데이터
-const QNA_DATA = ref([
-  {
-    id: 'qna-01',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.1',
-    content: `공지사항 내용을 표시합니다1`,
-    status: 'complete', //답변완료
-    answers: [
-      {
-        id: 'answer-01',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
+// 퍼블샘플용
+const searchData = reactive(
+  props.search || {
+    category: '',
+    value: '', //검색어입력 필드
+    startDate: formatDate(addMonths(new Date(), -1)),
+    endDate: formatDate(new Date()),
   },
-  {
-    id: 'qna-02',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.2',
-    content: `공지사항 내용을 표시합니다2`,
-    status: 'pending', //답변대기
-    answers: [
-      {
-        id: 'answer-02',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-03',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.3',
-    content: `공지사항 내용을 표시합니다3`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-03',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-04',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.4',
-    content: `공지사항 내용을 표시합니다4`,
-    status: 'complete', //진행중
-    answers: [
-      {
-        id: 'answer-04',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-05',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.5',
-    content: `공지사항 내용을 표시합니다5`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-05',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-06',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.6',
-    content: `공지사항 내용을 표시합니다6`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-06',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-07',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.7',
-    content: `공지사항 내용을 표시합니다7`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-07',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-08',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.8',
-    content: `공지사항 내용을 표시합니다8`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-08',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-09',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.9',
-    content: `공지사항 내용을 표시합니다9`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-09',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-10',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.10',
-    content: `공지사항 내용을 표시합니다10`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-10',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-11',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.11',
-    content: `공지사항 내용을 표시합니다11`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-11',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-12',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.12',
-    content: `공지사항 내용을 표시합니다12`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-12',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-13',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.13',
-    content: `공지사항 내용을 표시합니다13`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-13',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-14',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.14',
-    content: `공지사항 내용을 표시합니다14`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-14',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-  {
-    id: 'qna-15',
-    field: '공지',
-    date: '2026-07-25 08:10',
-    title: 'QNA 타이틀 입니다.15',
-    content: `공지사항 내용을 표시합니다15`,
-    status: 'progress', //진행중
-    answers: [
-      {
-        id: 'answer-15',
-        content:
-          '최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다. 최근 발생한 개인정보 유출 피해와 관련하여, 원하시는 kt M모바일 고객님들께 무료로 교체를 지원하기로 하였습니다. 고객님의 불편함이 없도록 교체 시작일자와 다양한 교체 방법을 아래와 같이 알려드립니다.',
-      },
-    ],
-  },
-])
+)
 
 // 상태 관리
 const openedItems = ref([]) // 아코디언 열림 상태
-const currentPage = ref(1) // 현재 페이지
-const itemsPerPage = ref(10) // 한 페이지당 보여줄 개수
+const currentPage = ref(props.currentPage) // 현재 페이지
+const itemsPerPage = ref(props.itemsPerPage) // 한 페이지당 보여줄 개수
 
 // 데이터 계산
 // 현재 페이지에 보여줄 데이터만 추출
-const displayedData = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value
-  const end = start + itemsPerPage.value
-  return QNA_DATA.value.slice(start, end)
-})
+const totalCount = ref(props.total || 0)
+const list = ref(props.data || [])
+
+const searchQna = async (page) => {
+  openedItems.value = []
+  currentPage.value = page
+  const response = await post('/api/main/qna/list', {
+    page: {
+      pageNum: currentPage.value,
+      rowSize: itemsPerPage.value,
+    },
+    ...searchData,
+  })
+  if (response.code !== '0000') {
+    return false
+  }
+  totalCount.value = response.meta?.page?.totalCount || 0
+  list.value = response.data || []
+}
+
+const addHitCountQna = async (ids) => {
+  const response = await post('/api/main/qna/hits/add', {
+    ids: ids,
+  })
+  if (response.code !== '0000') {
+    return false
+  }
+  return true
+}
 
 // 닫힘 이벤트
 const onClose = () => {
   if (props.modelValue) {
+    totalCount.value = 0
+    list.value = []
+    searchData.category = ''
+    searchData.value = ''
+    searchData.startDate = formatDate(addMonths(new Date(), -1))
+    searchData.endDate = formatDate(new Date())
     emit('update:modelValue', false)
     emit('close')
   }
 }
 
-// 퍼블샘플용
-const formData = reactive({
-  searchField: '', //검색어입력 필드
-  gubun: '', //신청서 구분
-})
-const rangeDatePickerValue = ref({ start: '', end: '' }) //기간
-
 // 페이지 변경 시 아코디언 닫기 (선택 사항)
-const onPageChange = () => {
+const onPageChange = (page) => {
   openedItems.value = []
+  searchQna(page)
+}
+
+const onClickRegistPopup = () => {
+  emit('regist')
+  onClose()
 }
 
 // 팝업이 열릴 때 targetId 처리
@@ -369,15 +198,23 @@ watch(
   () => props.modelValue,
   async (isOpen) => {
     if (isOpen) {
+      console.log('props.data:', props.data)
+      if (props.data?.length > 0) {
+        currentPage.value = 1
+        totalCount.value = props.total
+        list.value = props.data
+      } else {
+        await searchQna(1)
+      }
       // 1. 팝업이 열릴 때 열림 상태를 초기화
       openedItems.value = []
 
       // 검색 폼 등 다른 상태도 초기화하고 싶다면
-      // formData.searchField = ''
+      // searchData.value = ''
 
       if (props.targetId) {
         // 2. 특정 ID로 이동해야 하는 경우 로직 수행
-        const targetIndex = QNA_DATA.value.findIndex((item) => item.id === props.targetId)
+        const targetIndex = list.value.findIndex((item) => item.id === props.targetId)
 
         if (targetIndex !== -1) {
           currentPage.value = Math.ceil((targetIndex + 1) / itemsPerPage.value)
@@ -398,12 +235,24 @@ watch(
             }, 100)
           }
         }
-      } else {
-        // targetId가 없을 경우 기본적으로 1페이지를 보여주도록 설정 가능
-        currentPage.value = 1
       }
     }
   },
+)
+watch(
+  () => openedItems.value,
+  async (newVal, oldVal) => {
+    const oVal = newVal.filter((v) => !oldVal.includes(v))
+    const nVal = oVal.filter((v) => !mainStore.hittedQnas.includes(v))
+    if (!nVal || nVal.length === 0) {
+      return
+    }
+    const result = await addHitCountQna(nVal)
+    if (result) {
+      mainStore.addHittedQnas(nVal)
+    }
+  },
+  { immediate: true, deep: true },
 )
 </script>
 

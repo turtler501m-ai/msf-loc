@@ -61,8 +61,8 @@
     <!-- 하단 고정 -->
     <template #footer>
       <MsfButtonGroup>
-        <MsfButton variant="secondary">취소</MsfButton>
-        <MsfButton variant="primary">등록</MsfButton>
+        <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
+        <MsfButton variant="primary" @click="onClickOk">등록</MsfButton>
       </MsfButtonGroup>
     </template>
   </MsfDialog>
@@ -81,7 +81,7 @@ const emit = defineEmits(['update:modelValue', 'open', 'close'])
 const onClose = () => {
   if (props.modelValue) {
     emit('update:modelValue', false)
-    emit('close')
+    emit('close', false)
   }
 }
 
@@ -92,6 +92,11 @@ const formData = reactive({
   content: '', //문의내용
   openStatus: 'openStatus1', //공개여부
 })
+
+const onClickOk = () => {
+  emit('update:modelValue', false)
+  emit('close', true)
+}
 </script>
 
 <style lang="scss" scoped></style>

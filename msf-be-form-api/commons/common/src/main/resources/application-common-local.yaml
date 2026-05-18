@@ -58,8 +58,10 @@ management:
 
 ## Logging
 logging:
+  include-application-name: false
   pattern:
-    correlation: "[%X{clientId}] "
+    dateformat: yyyy-MM-dd HH:mm:ss.SSS
+    correlation: ""
   level:
     com.ktmmobile.msf: debug
     jdbc:

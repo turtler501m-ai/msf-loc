@@ -2,13 +2,13 @@
   <MsfDialog
     v-bind="$attrs"
     :is-open="modelValue"
-    title="불법TM수신차단"
+    :title="title"
     @open="emit('open')"
     @close="onClose"
   >
     <MsfTitleArea level="2" noline>
       <template #title>
-        <span>수신차단 번호 입력(<span class="ut-color-point">{{ phoneRows.length }}</span>/50)</span>
+        <span>수신차단 번호 입력(<span class="ut-color-point">{{ phoneRows.length }}</span>/{{ maxCount }})</span>
       </template>
       <template #actions>
         <MsfButton variant="subtle" @click="addPhoneRow">
@@ -58,7 +58,7 @@
     <MsfBox>
       <MsfTextList
         :items="[
-          '수신차단 번호는 최대 50개까지 설정 가능하며, 등록한 번호로 수신되는 음성통화, 문자메시지, 음성사서함 모두 차단합니다.',
+          `수신차단 번호는 최대 ${maxCount}개까지 설정 가능하며, 등록한 번호로 수신되는 음성통화, 문자메시지, 음성사서함 모두 차단합니다.`,
           '각 자리별 입력된 번호를 포함하는 번호는 모두 차단합니다.(자리별 부분 차단 가능)',
         ]"
         level="2"
@@ -67,6 +67,7 @@
     <template #footer>
       <MsfButtonGroup>
         <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
+        <MsfButton v-if="props.settingData?.addSvcSettingCompleted" variant="tertiary" @click="onReset">초기화</MsfButton>
         <MsfButton variant="primary" @click="onConfirm">확인</MsfButton>
       </MsfButtonGroup>
     </template>
@@ -76,13 +77,17 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { showAlert } from '@/libs/utils/comp.utils'
+import { normalizePhone } from '@/libs/utils/string.utils'
 
 const props = defineProps({
   modelValue: Boolean,
+  title: { type: String, default: '불법TM수신차단' },
   settingData: {
     type: Object,
     default: () => ({}),
   },
+  maxCount: { type: Number, default: 50 },
+  minLength: { type: Number, default: 9 },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
@@ -94,18 +99,9 @@ const createPhoneRow = () => ({
   number3: '',
 })
 
-const createTestPhoneRows = () => [
-  {
-    ...createPhoneRow(),
-    number1: '010',
-    number2: '3333',
-    number3: '1234',
-  },
-]
+const phoneRows = ref([createPhoneRow()])
 
-const phoneRows = ref(createTestPhoneRows())
-
-const normalizeDigits = (value) => String(value || '').replace(/\D/g, '')
+const normalizeDigits = normalizePhone
 
 const getBlockNumberType = (value) => {
   if (value.startsWith('*') && value.endsWith('*')) return 'middle'
@@ -147,7 +143,7 @@ const createRowsFromBlockNumbers = (blockNumbers = []) => {
 
   if (hasValue) rows.push(currentRow)
 
-  return rows.length > 0 ? rows : createTestPhoneRows()
+  return rows.length > 0 ? rows : [createPhoneRow()]
 }
 
 const getBlockNumbersFromParamSbst = (paramSbst = '') =>
@@ -226,15 +222,28 @@ const getPhoneRowValidationMessage = () => {
     return '앞자리, 중간자리, 뒷자리 중 하나 이상 입력해 주세요.'
   }
 
-  if (filledRows.length > 50) {
-    return '번호 입력 항목은 최대 50개까지 설정 가능합니다.'
+  if (filledRows.length > props.maxCount) {
+    return `번호 입력 항목은 최대 ${props.maxCount}개까지 설정 가능합니다.`
+  }
+
+  // minLength 검증: 입력된 각 필드의 자리수 확인
+  if (props.minLength > 0) {
+    for (const row of filledRows) {
+      const { frontNumber, middleNumber, rearNumber } = row
+      const fields = [frontNumber, middleNumber, rearNumber].filter(Boolean)
+      for (const field of fields) {
+        if (field.length < props.minLength) {
+          return `${props.minLength}자리 이상 입력해 주세요.`
+        }
+      }
+    }
   }
 
   return ''
 }
 
 const createBlckNoParams = (blockNumbers = []) =>
-  Array.from({ length: 50 }).reduce((params, _, index) => {
+  Array.from({ length: props.maxCount }).reduce((params, _, index) => {
     params[`BLCK_NO${index + 1}`] = blockNumbers[index] || ''
     return params
   }, {})
@@ -245,8 +254,8 @@ const createParamSbst = (blckNoParams = {}) =>
     .join('|')
 
 const addPhoneRow = () => {
-  if (phoneRows.value.length >= 50) {
-    showAlert('번호 입력 항목은 최대 50개까지 추가 가능합니다.')
+  if (phoneRows.value.length >= props.maxCount) {
+    showAlert(`번호 입력 항목은 최대 ${props.maxCount}개까지 추가 가능합니다.`)
     return
   }
 
@@ -267,7 +276,19 @@ const onClose = () => {
   }
 }
 
+const isFormReset = ref(false)
+
+const onReset = () => {
+  isFormReset.value = true
+  phoneRows.value = [createPhoneRow()]
+}
+
 const onConfirm = () => {
+  if (isFormReset.value) {
+    emit('confirm', { isReset: true })
+    onClose()
+    return
+  }
   const validationMessage = getPhoneRowValidationMessage()
 
   if (validationMessage) {
@@ -278,8 +299,8 @@ const onConfirm = () => {
   const filledRows = getFilledPhoneRows()
   const blockNumbers = createBlockNumbers(filledRows)
 
-  if (blockNumbers.length > 50) {
-    showAlert('차단번호는 최대 50개까지 설정 가능합니다.')
+  if (blockNumbers.length > props.maxCount) {
+    showAlert(`차단번호는 최대 ${props.maxCount}개까지 설정 가능합니다.`)
     return
   }
 
@@ -302,8 +323,12 @@ const onConfirm = () => {
 watch(
   () => props.modelValue,
   (isOpen) => {
-    if (isOpen) resetPhoneRows()
+    if (isOpen) {
+      isFormReset.value = false
+      resetPhoneRows()
+    }
   },
+  { immediate: true },
 )
 </script>
 

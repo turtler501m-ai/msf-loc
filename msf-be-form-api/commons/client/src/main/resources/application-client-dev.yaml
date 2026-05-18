@@ -1,13 +1,7 @@
 ## 외부 서비스
 external-service:
   services:
-    m-platform: ## M-Platform
-      base-url: https://m-platform-dev  # TODO: 수정
-    msp-prx: ## MSP PRX
-      base-url: https://msp-prx-dev  # TODO: 수정
-    msp-api: ## MSP API
-      base-url: https://msp-api-dev  # TODO: 수정
-    msp-ext-api: ## MSP EXT-API
-      base-url: https://msp-ext-dev  # TODO: 수정
+    prx: ## PRX
+      base-url: https://dmcpprxstg.ktmmobile.com:27006  # STG 환경 연동 (PRX는 DEV 환경 없음)
     juso: ## 주소 검색
       base-url: https://business.juso.go.kr

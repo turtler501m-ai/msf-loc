@@ -6,6 +6,9 @@ import lombok.Setter;
 
 import com.ktmmobile.msf.domains.form.common.code.CstmrType;
 
+/**
+ * 가입조건조회 Request
+ */
 @Getter
 @Setter
 @NoArgsConstructor

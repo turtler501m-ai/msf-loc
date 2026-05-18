@@ -24,9 +24,7 @@ public class CacheLoadStampedeGuard {
     private final CacheProperties cacheProperties;
     private final ConcurrentMap<String, ReentrantLock> locks = new ConcurrentHashMap<>();
 
-    /**
-     * 캐시 전체 적재 중복 실행 방지
-     */
+    /** 캐시 전체 적재 중복 실행 방지 */
     public CacheLoadResult execute(String cacheName, Supplier<Boolean> loaded, Supplier<CacheLoadResult> loader) {
         ReentrantLock lock = getLock(cacheName);
         if (tryLock(lock)) {
@@ -37,9 +35,7 @@ public class CacheLoadStampedeGuard {
         return CacheLoadResult.skipped(cacheName, "Cache load already in progress.");
     }
 
-    /**
-     * 캐시 단일 값 적재 중복 실행 방지
-     */
+    /** 캐시 단일 값 적재 중복 실행 방지 */
     public <V> Optional<V> executeValue(String key, Supplier<Boolean> loaded, Supplier<Optional<V>> loader) {
         ReentrantLock lock = getLock(key);
         if (tryLock(lock)) {

@@ -77,7 +77,8 @@ const docState = ref({
 // 조건에 따른 노출 서류 목록 계산
 const docList = computed(() => {
   const list = []
-  const { cstmrTypeCd, cstmrVisitTypeCd, minorAgentNm, productType, joinType } = props.formData
+  const { cstmrTypeCd, cstmrVisitTypeCd, minorAgentNm, productType, joinType, isTeCustomer } =
+    props.formData
 
   // 1. 외국인 및 외국인 미성년자: 외국인등록증/거소신고증
   if (['FN', 'FM'].includes(cstmrTypeCd)) {
@@ -125,6 +126,11 @@ const docList = computed(() => {
 
   // 상품(productType)이나 가입유형(joinType)에 따른 특수 로직이 필요한 경우 여기에 추가
   // 예: 번호이동(MNP3)이면서 특정 상품일 때 등...
+
+  // 명의변경 양수고객은 내국인인 경우에도 구비서류 필요
+  if (isTeCustomer && ['NA', 'FN'].includes(cstmrTypeCd)) {
+    list.push({ id: 'family', ...docState.value.family })
+  }
 
   return list
 })

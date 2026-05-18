@@ -62,8 +62,13 @@ public class MpAddSvcInfoParamDto extends CommonXmlVO {
 	                try {
 	                    socFreeTax = NmcpServiceUtils.getCodeNmDto(GROUP_CODE_SOC_FREE_TAX_LIST, vo.getSoc());
 	                } catch (Exception e) {
-	                    logger.warn("[MpAddSvcInfoParamDto][parse] SOC={} 비과세여부 캐시 조회 실패 — 과세로 처리함. cause={}({})",
-	                            vo.getSoc(), e.getClass().getSimpleName(), e.getMessage());
+	                    if (e instanceof NullPointerException && String.valueOf(e.getMessage()).contains("applicationContext")) {
+	                        logger.debug("[MpAddSvcInfoParamDto][parse] SOC={} tax cache is unavailable. Treat as taxable. cause={}({})",
+	                                vo.getSoc(), e.getClass().getSimpleName(), e.getMessage());
+	                    } else {
+	                        logger.warn("[MpAddSvcInfoParamDto][parse] SOC={} tax cache lookup failed. Treat as taxable. cause={}({})",
+	                                vo.getSoc(), e.getClass().getSimpleName(), e.getMessage());
+	                    }
 	                }
 	                if (socFreeTax !=null) {
 	                    //비과세

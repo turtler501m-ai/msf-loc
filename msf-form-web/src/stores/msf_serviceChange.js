@@ -79,6 +79,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
     additionList: [], // 부가서비스 선택 목록
     additionCancelList: [], // 부가서비스 해지 목록
     additionConfirmCompleted: false, // 부가서비스 작성 완료 여부
+    appConfirmCompleted: false, // 신청서 확인 완료 여부
     blockService: null, // 무선데이터차단 선택
     agency: '', //대리점
     managerCd: '',
@@ -132,7 +133,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
   const apiGetMyinfoView = async () => {
     const ncn = formData.ncn || formData.contractNum
     const ctn = `${formData.deviceChgTel1 || ''}${formData.deviceChgTel2 || ''}${formData.deviceChgTel3 || ''}`
-    console.log('[서비스변경][MyinfoView] 가입정보 조회 요청', { ncn, ctn })
+    console.log('[변경][MyinfoView] 가입정보 조회 요청', { ncn, ctn })
     try {
       const data = await post('/api/msf/formServiceChange/changinfo/view', {
         ncn,
@@ -140,7 +141,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         contractNum: ncn,
         custId: formData.custId || '',
       }, { silent: true })
-      console.log('[서비스변경][MyinfoView] 가입정보 조회 응답', data)
+      console.log('[변경][MyinfoView] 가입정보 조회 응답', data)
       const formResponse = data?.data
       const changInfo = formResponse?.resData
       if (formResponse?.resCode === '0000' && changInfo) {
@@ -154,26 +155,36 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         if (changInfo.payData !== undefined) formData.payData = changInfo.payData
         if (changInfo.billData !== undefined) formData.billData = changInfo.billData
 
+        const bizNo =
+          changInfo.cstmrJuridicalBizNo ||
+          changInfo.bizNo ||
+          changInfo.businessNo ||
+          changInfo.brNo ||
+          ''
+        if (bizNo) {
+          const rawBizNo = String(bizNo).replace(/\D/g, '')
+          formData.cstmrJuridicalBizNo1 = rawBizNo.substring(0, 3)
+          formData.cstmrJuridicalBizNo2 = rawBizNo.substring(3, 5)
+          formData.cstmrJuridicalBizNo3 = rawBizNo.substring(5, 10)
+        }
+        if (changInfo.cstmrJuridicalBizNo1 !== undefined) {
+          formData.cstmrJuridicalBizNo1 =
+            changInfo.cstmrJuridicalBizNo1 || formData.cstmrJuridicalBizNo1
+        }
+        if (changInfo.cstmrJuridicalBizNo2 !== undefined) {
+          formData.cstmrJuridicalBizNo2 =
+            changInfo.cstmrJuridicalBizNo2 || formData.cstmrJuridicalBizNo2
+        }
+        if (changInfo.cstmrJuridicalBizNo3 !== undefined) {
+          formData.cstmrJuridicalBizNo3 =
+            changInfo.cstmrJuridicalBizNo3 || formData.cstmrJuridicalBizNo3
+        }
+
         // 가입자 연락처 자동 셋팅
         // 휴대폰번호 ← 인증된 변경 휴대폰번호
         formData.mobileNo1 = formData.deviceChgTel1 || ''
         formData.mobileNo2 = formData.deviceChgTel2 || ''
         formData.mobileNo3 = formData.deviceChgTel3 || ''
-
-        // 전화번호 ← homeTel (02-XXXX-XXXX 또는 0XX-XXXX-XXXX 형식 파싱)
-        // 20260506 일단주석
-        //const rawTel = (data.homeTel || '').replace(/\D/g, '')
-        //if (rawTel.length >= 9) {
-        //  if (rawTel.startsWith('02')) {
-        //    formData.telNo1 = '02'
-        //    formData.telNo2 = rawTel.slice(2, rawTel.length - 4)
-        //    formData.telNo3 = rawTel.slice(-4)
-        //  } else if (rawTel.length >= 10) {
-        //    formData.telNo1 = rawTel.slice(0, 3)
-        //    formData.telNo2 = rawTel.slice(3, rawTel.length - 4)
-        //    formData.telNo3 = rawTel.slice(-4)
-        //  }
-        //}
 
         // 주소 ← selectCntrListNoLogin BAN 주소
         if (changInfo.zipNo && changInfo.zipNo !== '-') {
@@ -195,14 +206,14 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
           formData.emailAddr2 = domain || ''
         }
       } else {
-        console.warn('[서비스변경][MyinfoView] 조회 실패', {
+        console.warn('[변경][MyinfoView] 조회 실패', {
           resCode: formResponse?.resCode,
           resMessage: formResponse?.resMessage,
         })
       }
       return changInfo || null
     } catch (e) {
-      console.warn('[서비스변경][MyinfoView] 가입정보 조회 실패 (무시하고 진행)', e?.message)
+      console.warn('[변경][MyinfoView] 가입정보 조회 실패 (무시하고 진행)', e?.message)
       return null
     }
   }
@@ -247,14 +258,19 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
 
   const getSelectedServiceTypes = () => (Array.isArray(formData.serviceSelect) ? formData.serviceSelect : [])
 
+  const getServiceTargetCd = (svcTypeCd) => {
+    const target = (formData.serviceList || []).find((item) => item.value === svcTypeCd)
+    return target?.svcTgtCd || svcTypeCd
+  }
+
   const getWirelessBlockAddServices = () => {
     if (formData.blockService !== 'blockService2') return []
-    return [{ soc: 'WIRELESSC', ftrNewParam: '', flag: '', svcTgtCd: 'R12' }]
+    return [{ soc: 'WIRELESSC', ftrNewParam: '', flag: '', svcTgtCd: getServiceTargetCd('R12') }]
   }
 
   const getWirelessBlockCancelServices = () => {
     if (formData.blockService !== 'blockService1') return []
-    return [{ soc: 'WIRELESSC', prodHstSeq: '', svcTgtCd: 'R12' }]
+    return [{ soc: 'WIRELESSC', prodHstSeq: '', svcTgtCd: getServiceTargetCd('R12') }]
   }
 
   // ServiceChangeProduct.vue의 CONFIRM_REQUIRED_MAP과 동일하게 유지
@@ -263,7 +279,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
     R12: 'wirelessBlockConfirmCompleted',
   }
 
-  const hasPendingCompletion = () => {
+  const isReadyToComplete = () => {
     const selectedTypes = getSelectedServiceTypes()
     for (const [type, field] of Object.entries(CONFIRM_REQUIRED_MAP)) {
       if (selectedTypes.includes(type) && formData[field] !== true) return false
@@ -295,7 +311,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
     const finalAddServices = getUniqueServices([...addServices, ...wirelessAddServices])
     const finalCancelServices = getUniqueServices([...cancelServices, ...wirelessCancelServices])
 
-    console.log('[서비스변경][작성완료] 부가서비스 처리 시작', {
+    console.log('[변경][작성완료] 부가서비스 처리 시작', {
       ...commonPayload,
       selectedTypes,
       addCount: finalAddServices.length,
@@ -308,9 +324,9 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
       })),
     })
 
-    if (!hasPendingCompletion()) {
+    if (!isReadyToComplete()) {
       completeErrorMessage.value = '작성이 완료되지 않았습니다. 확인 상태를 다시 확인해 주세요.'
-      console.warn('[서비스변경][작성완료] 부가서비스 처리 중단', {
+      console.warn('[변경][작성완료] 부가서비스 처리 중단', {
         reason: 'confirm incomplete',
         additionConfirmCompleted: formData.additionConfirmCompleted,
         wirelessBlockConfirmCompleted: formData.wirelessBlockConfirmCompleted,
@@ -321,7 +337,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
 
     if (!commonPayload.ncn || !commonPayload.ctn) {
       completeErrorMessage.value = '계약번호 또는 휴대폰번호가 없어 처리를 진행할 수 없습니다.'
-      console.warn('[서비스변경][작성완료] 부가서비스 처리 중단', {
+      console.warn('[변경][작성완료] 부가서비스 처리 중단', {
         reason: 'missing common payload',
         ...commonPayload,
       })
@@ -333,6 +349,44 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         ...commonPayload,
         serviceSelect: selectedTypes,
         cstmrTypeCd: formData.cstmrTypeCd || 'NA',
+        additionConfirmCompleted: formData.additionConfirmCompleted === true,
+        cstmrNm: formData.cstmrNm || '',
+        userBirthDate: formData.userBirthDate || '',
+        userGender: formData.userGender || '',
+        cstmrJuridicalRrn1: formData.cstmrJuridicalRrn1 || '',
+        cstmrJuridicalRrn2: formData.cstmrJuridicalRrn2 || '',
+        cstmrJuridicalBizNo1: formData.cstmrJuridicalBizNo1 || '',
+        cstmrJuridicalBizNo2: formData.cstmrJuridicalBizNo2 || '',
+        cstmrJuridicalBizNo3: formData.cstmrJuridicalBizNo3 || '',
+        cstmrJuridicalRepNm: formData.cstmrJuridicalRepNm || '',
+        cstmrVisitTypeCd: formData.cstmrVisitTypeCd || '',
+        telNo1: formData.telNo1 || '',
+        telNo2: formData.telNo2 || '',
+        telNo3: formData.telNo3 || '',
+        mobileNo1: formData.mobileNo1 || '',
+        mobileNo2: formData.mobileNo2 || '',
+        mobileNo3: formData.mobileNo3 || '',
+        emailAddr1: formData.emailAddr1 || '',
+        emailAddr2: formData.emailAddr2 || '',
+        zipNo: formData.zipNo || '',
+        address: formData.address || '',
+        detailAddress: formData.detailAddress || '',
+        repName: formData.repName || '',
+        repBirthDate: formData.repBirthDate || '',
+        repGender: formData.repGender || '',
+        repRegistrationNo1: formData.repRegistrationNo1 || '',
+        repRegistrationNo2: formData.repRegistrationNo2 || '',
+        repForeignerNo1: formData.repForeignerNo1 || '',
+        repForeignerNo2: formData.repForeignerNo2 || '',
+        repAgree: formData.repAgree === true,
+        minorAgentNm: formData.minorAgentNm || '',
+        agentBirthDate: formData.agentBirthDate || '',
+        agentGender: formData.agentGender || '',
+        minorAgentRelTypeCd: formData.minorAgentRelTypeCd || '',
+        minorAgentTelFnNo: formData.minorAgentTelFnNo || '',
+        minorAgentTelMnNo: formData.minorAgentTelMnNo || '',
+        minorAgentTelRnNo: formData.minorAgentTelRnNo || '',
+        clauses: Array.isArray(formData.clauses) ? formData.clauses : [],
         managerCd: formData.managerCd || '',
         managerNm: formData.managerNm || '',
         agentCd: formData.agentCd || '',
@@ -344,17 +398,18 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         additionCancelList: finalCancelServices.map((svc) => ({
           soc: getServiceCode(svc),
           prodHstSeq: getProductSeqNo(svc),
-          svcTgtCd: svc.svcTgtCd || 'R11',
+          svcTgtCd: svc.svcTgtCd || getServiceTargetCd('R11'),
         })),
         additionList: finalAddServices.map((svc) => ({
           soc: getServiceCode(svc),
           ftrNewParam: getFtrNewParam(svc),
           flag: svc.flag || '',
-          svcTgtCd: svc.svcTgtCd || 'R11',
+          svcTgtCd: svc.svcTgtCd || getServiceTargetCd('R11'),
         })),
         // P11: 요금제변경
         ...(selectedTypes.includes('P11') ? {
           planChange: {
+            svcTgtCd: getServiceTargetCd('P11'),
             planCategoryCd: formData.planName1 || '',
             planCd: formData.planName2 || '',
             changeTypeCd: formData.changeDate || '',
@@ -363,6 +418,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         // O11: 번호변경
         ...(selectedTypes.includes('O11') ? {
           numberChange: {
+            svcTgtCd: getServiceTargetCd('O11'),
             reqWantFnNo: formData.reqWantFnNo || '',
             reqWantMnNo: formData.reqWantMnNo || '',
             reqWantRnNo: formData.reqWantRnNo || '',
@@ -372,12 +428,14 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         // O12: 분실복구/일시정지해제
         ...(selectedTypes.includes('O12') ? {
           unpause: {
+            svcTgtCd: getServiceTargetCd('O12'),
             unLockPw: formData.unLockPw || '',
           },
         } : {}),
         // R14: 단말보험
         ...(selectedTypes.includes('R14') ? {
           insurance: {
+            svcTgtCd: getServiceTargetCd('R14'),
             clauseInsuranceYn: formData.clauseInsuranceYn || '',
             catCd: formData.recCat1 || '',
             insrProdCd: formData.recCat2 || '',
@@ -386,6 +444,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         // O13: SIM정보
         ...(selectedTypes.includes('O13') ? {
           simInfo: {
+            svcTgtCd: getServiceTargetCd('O13'),
             hasSim: formData.hasSim || '',
             usimKindsCd: formData.usimKindsCd || '',
             reqUsimSn: formData.reqUsimSn || '',
@@ -397,6 +456,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         // R15: 데이터쉐어링
         ...(selectedTypes.includes('R15') ? {
           dataSharing: {
+            svcTgtCd: getServiceTargetCd('R15'),
             shareUseState: formData.shareUseState || '',
             sharePhoneNum: formData.sharePhoneNum || '',
             shareUsimNum: formData.shareUsimNum || '',
@@ -405,27 +465,28 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         // R16: 결합Solo
         ...(selectedTypes.includes('R16') ? {
           combineSolo: {
+            svcTgtCd: getServiceTargetCd('R16'),
             soloData: formData.soloData || '',
           },
         } : {}),
       }
-      console.log('[서비스변경][작성완료] complete 요청', {
+      console.log('[변경][작성완료] complete 요청', {
         applicationKey: applicationKey.value,
         ...payload,
       })
       const res = await post(`/api/msf/formServiceChange/${applicationKey.value}/complete`, payload)
-      console.log('[서비스변경][작성완료] complete 응답', res)
+      console.log('[변경][작성완료] complete 응답', res)
 
       if (!isFormResponseSuccess(res)) {
         completeErrorMessage.value = getResponseMessage(res)
         return false
       }
 
-      console.log('[서비스변경][작성완료] complete 처리 완료')
+      console.log('[변경][작성완료] complete 처리 완료')
       return true
     } catch (e) {
       completeErrorMessage.value = e?.response?.data?.data?.resMessage || e?.message || DEFAULT_COMPLETE_ERROR_MESSAGE
-      console.error('[서비스변경][작성완료] 부가서비스 처리 예외', e)
+      console.error('[변경][작성완료] 부가서비스 처리 예외', e)
       return false
     }
   }

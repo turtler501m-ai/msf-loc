@@ -5,10 +5,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * 신규/변경 신청서 select request parameter 정의
- * 2026.04.
+ * 신규/변경 작성신청서 select request parameter 정의
  */
-
 @Getter
 @Setter
 @NoArgsConstructor

@@ -38,7 +38,7 @@ public class TempSavePageService implements TempSavePageReader {
             "CSTMR_TYPE_CD"), true, false);
         CommonCodeGroups commonCodeGroups = commonCodeReader.getCommonCodes(request);
         // 작성자 기준
-        List<String> formTypelist = List.of("1", "3");  // 서비스변경,해지는 임시저장 없음
+        List<String> formTypelist = List.of("1");  // 신규/변경 신청서
         log.debug("formType:{}, cretId:{}", formTypelist.toString(), AuthenticationUtils.getUser().getUserId());
         TempSavePageCondition reCondition = condition.toBuilder()
             .formTypeCd(formTypelist)

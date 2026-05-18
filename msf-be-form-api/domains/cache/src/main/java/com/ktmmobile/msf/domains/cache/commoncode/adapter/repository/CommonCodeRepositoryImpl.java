@@ -21,12 +21,21 @@ public class CommonCodeRepositoryImpl implements CommonCodeRepository {
     private final SmartFormCommonCodeMapper smartFormCommonCodeMapper;
 
     @Override
-    public List<CommonCode> findAllCommonCodes() {
+    public List<CommonCode> findMspCommonCodes() {
+        return mspCommonCodeMapper.selectList();
+    }
+
+    @Override
+    public List<CommonCode> findMcpCommonCodes() {
         return Stream.of(
-                mspCommonCodeMapper.selectList().stream(),
-                mcpCommonCodeMapper.selectList().stream(),
-                smartFormCommonCodeMapper.selectList().stream())
+                mcpCommonCodeMapper.selectCodeList().stream(),
+                mcpCommonCodeMapper.selectDetailList().stream())
             .flatMap(stream -> stream)
             .toList();
+    }
+
+    @Override
+    public List<CommonCode> findSmartFormCommonCodes() {
+        return smartFormCommonCodeMapper.selectList();
     }
 }

@@ -30,10 +30,7 @@ public class LoginUserInfoCacheService {
             principal.phoneNumber(),
             principal.userType(),
             principal.clientIp(),
-            principal.agentCode(),
-            principal.agentName(),
-            principal.shopCode(),
-            principal.shopName(),
+            principal.organization(),
             principal.attributes()
         ));
     }

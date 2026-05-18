@@ -76,6 +76,7 @@ const mapServiceTargetCode = (item) => {
   return {
     value: item.code,
     label: item.title,
+    svcTgtCd: item.code,
     concurrentChangeYn,
     separateReportImageYn,
     disabledReason,
@@ -88,6 +89,7 @@ const summarizeServiceList = (serviceList = model.value.serviceList) =>
   serviceList.map((item) => ({
     value: item.value,
     label: item.label,
+    svcTgtCd: item.svcTgtCd,
     concurrentChangeYn: item.concurrentChangeYn,
     separateReportImageYn: item.separateReportImageYn,
     disabledReason: item.disabledReason || '',
@@ -111,12 +113,20 @@ const syncAllCheck = (selectedValues = model.value.serviceSelect) => {
 }
 
 const setServiceListDisabled = (selectedValues = model.value.serviceSelect) => {
+  const selected = Array.isArray(selectedValues) ? selectedValues : []
   const serviceList = model.value.serviceList || []
+  const selectedItems = serviceList.filter((item) => selected.includes(item.value))
+  const hasNotConcurrentSelected = selectedItems.some((item) => item.notConcurrentChange)
+  const hasAnySelected = selected.length > 0
 
-  model.value.serviceList = serviceList.map((item) => ({
-    ...item,
-    disabled: false,
-  }))
+  model.value.serviceList = serviceList.map((item) => {
+    if (selected.includes(item.value)) return { ...item, disabled: false }
+    const disabled =
+      item.businessTimeDisabled ||
+      hasNotConcurrentSelected ||
+      (hasAnySelected && item.notConcurrentChange)
+    return { ...item, disabled }
+  })
 }
 
 const getSelectedServiceValidationMessage = (selectedValues = []) => {
@@ -137,20 +147,20 @@ const getSelectedServiceValidationMessage = (selectedValues = []) => {
 }
 
 const fetchServiceTargetCodes = async () => {
-  console.log('[서비스변경][서비스선택][공통코드조회] 요청 시작', {
+  console.log('[변경][서비스선택][공통코드조회] 요청 시작', {
     groupCode: SERVICE_TARGET_GROUP_CODE,
   })
 
   try {
     const list = await getCommonCodeListWithDetail(SERVICE_TARGET_GROUP_CODE)
-    console.log('[서비스변경][서비스선택][공통코드조회] 응답 수신', {
+    console.log('[변경][서비스선택][공통코드조회] 응답 수신', {
       groupCode: SERVICE_TARGET_GROUP_CODE,
       count: Array.isArray(list) ? list.length : 0,
       list,
     })
 
     if (!Array.isArray(list)) {
-      console.warn('[서비스변경][서비스선택][공통코드조회] 진행 중단', {
+      console.warn('[변경][서비스선택][공통코드조회] 진행 중단', {
         reason: 'invalid response',
         groupCode: SERVICE_TARGET_GROUP_CODE,
       })
@@ -170,13 +180,13 @@ const fetchServiceTargetCodes = async () => {
     syncAllCheck(model.value.serviceSelect)
     lastValidServiceSelect.value = [...model.value.serviceSelect]
 
-    console.log('[서비스변경][서비스선택][공통코드조회] 화면 데이터 반영 결과', {
+    console.log('[변경][서비스선택][공통코드조회] 화면 데이터 반영 결과', {
       selected: model.value.serviceSelect,
       allCheck: model.value.allCheck,
       serviceList: summarizeServiceList(),
     })
   } catch (error) {
-    console.error('[서비스변경][서비스선택][공통코드조회] 예외 발생', {
+    console.error('[변경][서비스선택][공통코드조회] 예외 발생', {
       message: error?.message,
       response: error?.response?.data,
     })
@@ -211,6 +221,7 @@ const fetchAgencies = async () => {
     }
   } catch (error) {
     console.error('Failed to fetch agencies:', error)
+    showAlert('대리점 목록을 불러오지 못했습니다. 다시 시도해 주세요.')
   }
 }
 
@@ -229,7 +240,7 @@ async function update(value) {
   const selected = Array.isArray(value) ? value : []
   const validationMessage = getSelectedServiceValidationMessage(selected)
 
-  console.log('[서비스변경][서비스선택] 선택 변경', {
+  console.log('[변경][서비스선택] 선택 변경', {
     selected,
     validationMessage,
     before: summarizeServiceList(),
@@ -239,7 +250,7 @@ async function update(value) {
     model.value.serviceSelect = previousSelected
     syncAllCheck(previousSelected)
     serviceChipKey.value += 1
-    console.warn('[서비스변경][서비스선택] 진행 중단', {
+    console.warn('[변경][서비스선택] 진행 중단', {
       reason: 'validation failed',
       selected,
       restored: previousSelected,
@@ -258,7 +269,7 @@ async function update(value) {
   setServiceListDisabled(selected)
   syncAllCheck(selected)
   lastValidServiceSelect.value = [...selected]
-  console.log('[서비스변경][서비스선택] 화면 데이터 반영 결과', {
+  console.log('[변경][서비스선택] 화면 데이터 반영 결과', {
     selected: model.value.serviceSelect,
     allCheck: model.value.allCheck,
     serviceList: summarizeServiceList(),
@@ -272,7 +283,7 @@ async function updateAllCheck(event) {
   const selected = checked ? getConcurrentServiceValues() : []
   const validationMessage = getSelectedServiceValidationMessage(selected)
 
-  console.log('[서비스변경][서비스선택][전체선택] 선택 변경', {
+  console.log('[변경][서비스선택][전체선택] 선택 변경', {
     checked,
     excluded: checked
       ? (model.value.serviceList || [])
@@ -293,7 +304,7 @@ async function updateAllCheck(event) {
     model.value.serviceSelect = [...lastValidServiceSelect.value]
     syncAllCheck(lastValidServiceSelect.value)
     serviceChipKey.value += 1
-    console.warn('[서비스변경][서비스선택][전체선택] 진행 중단', {
+    console.warn('[변경][서비스선택][전체선택] 진행 중단', {
       reason: 'validation failed',
       selected,
       restored: lastValidServiceSelect.value,
@@ -313,7 +324,7 @@ async function updateAllCheck(event) {
   setServiceListDisabled(selected)
   lastValidServiceSelect.value = [...selected]
 
-  console.log('[서비스변경][서비스선택][전체선택] 화면 데이터 반영 결과', {
+  console.log('[변경][서비스선택][전체선택] 화면 데이터 반영 결과', {
     selected: model.value.serviceSelect,
     allCheck: model.value.allCheck,
     serviceList: summarizeServiceList(),
@@ -324,7 +335,7 @@ const checkServiceSelection = async () => {
   const selected = Array.isArray(model.value.serviceSelect) ? model.value.serviceSelect : []
 
   if (isServiceCheckCompleted.value && !isServiceSelectCompleted.value) {
-    console.log('[서비스변경][서비스체크] 체크 완료 해제', {
+    console.log('[변경][서비스체크] 체크 완료 해제', {
       selected,
       allCheck: model.value.allCheck,
       serviceCheckYn: model.value.serviceCheckYn,
@@ -338,14 +349,14 @@ const checkServiceSelection = async () => {
     return
   }
 
-  console.log('[서비스변경][서비스체크] 요청 시작', {
+  console.log('[변경][서비스체크] 요청 시작', {
     selected,
     allCheck: model.value.allCheck,
     serviceCheckYn: model.value.serviceCheckYn,
   })
 
   if (selected.length === 0) {
-    console.warn('[서비스변경][서비스체크] 진행 중단', {
+    console.warn('[변경][서비스체크] 진행 중단', {
       reason: 'service not selected',
     })
     showAlert('서비스를 선택해 주세요.')
@@ -354,7 +365,7 @@ const checkServiceSelection = async () => {
 
   const validationMessage = getSelectedServiceValidationMessage(selected)
   if (validationMessage) {
-    console.warn('[서비스변경][서비스체크] 진행 중단', {
+    console.warn('[변경][서비스체크] 진행 중단', {
       reason: 'validation failed',
       selected,
       message: validationMessage,
@@ -368,7 +379,7 @@ const checkServiceSelection = async () => {
   serviceChipKey.value += 1
   await nextTick()
 
-  console.log('[서비스변경][서비스체크] 화면 데이터 반영 결과', {
+  console.log('[변경][서비스체크] 화면 데이터 반영 결과', {
     selected: model.value.serviceSelect,
     allCheck: model.value.allCheck,
     serviceCheckYn: model.value.serviceCheckYn,

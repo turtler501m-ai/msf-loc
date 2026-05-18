@@ -30,7 +30,8 @@ public class LoginAuthenticatedUserFinder implements AuthenticatedUserFinder {
             userInfo.organization().agentCode(),
             userInfo.organization().agentName(),
             userInfo.organization().shopCode(),
-            userInfo.organization().shopName()
+            userInfo.organization().shopName(),
+            userInfo.organization().levelCode()
         );
         if (userInfo.userType().isFormUser()) {
             return Optional.of(new FormUser(userInfo.userType(), userInfo.userId(), userInfo.userName(), organization));

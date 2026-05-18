@@ -58,7 +58,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 const props = defineProps({
   visibleCount: { type: Number, default: 3.2 }, // 한 화면에 보일 아이템 개수 (소수점 가능)
   slidesPerGroup: { type: Number, default: 1 }, // 한 번에 이동할 아이템 개수
-  gap: { type: Number, default: 20 }, // 아이템 사이 간격 (px)
+  gap: { type: Number, default: 40 }, // 아이템 사이 간격 (px)
   showIndicator: { type: Boolean, default: false }, // 하단 도트 표시 여부
   breakpoints: { type: Object, default: () => ({}) }, // 반응형 설정 (화면 너비별 옵션)
 })
@@ -94,6 +94,10 @@ const isAtEnd = computed(() => currentIndex.value >= totalItems.value - currentV
 // 레이아웃 및 반응형 처리
 const updateLayout = () => {
   if (!slider.value) return
+
+  // 만약 너비가 아직 0이라면 계산을 진행하지 않음
+  if (slider.value.offsetWidth === 0) return
+
   const width = window.innerWidth
 
   // 1. Breakpoints 적용: 현재 화면 너비에 맞는 설정 찾기
@@ -246,18 +250,37 @@ const handleFocusIn = (e) => {
   }
 }
 
+// 슬라이더 크기 변화(초기 너비 0px 감지 및 대응) 관찰자
+let resizeObserver = null
+
 onMounted(() => {
   // DOM이 완전히 그려진 후 너비 계산
   nextTick(() => {
+    // 초기 실행
     updateLayout()
+
     window.addEventListener('resize', updateLayout)
-    // 탭 포커스 감지 리스너 (Capture 모드로 자식의 포커스 감지)
-    slider.value?.addEventListener('focusin', handleFocusIn, { capture: true })
+
+    // 슬라이더 자체의 크기 변화를 실시간 감지
+    if (slider.value) {
+      resizeObserver = new ResizeObserver(() => {
+        // 0이었다가 크기가 생기거나, 내부 카드가 바뀔 때마다 레이아웃 재계산
+        updateLayout()
+      })
+      resizeObserver.observe(slider.value)
+
+      // 탭 포커스 감지 리스너 (Capture 모드로 자식의 포커스 감지)
+      slider.value.addEventListener('focusin', handleFocusIn, { capture: true })
+    }
   })
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateLayout)
+  // 컴포넌트 해제 시 resizeObserver도 함께 해제
+  if (resizeObserver) {
+    resizeObserver.disconnect()
+  }
 })
 </script>
 
@@ -305,9 +328,15 @@ onUnmounted(() => {
   -webkit-user-select: none;
   /* 모바일에서 이미지 길게 눌렀을 때 저장 팝업 뜨는 것 방지 (슬라이더 방해 요소) */
   -webkit-touch-callout: none;
+
+  // 자식 요소들이 찌그러지지 않도록 방어
+  :deep(> *) {
+    flex-shrink: 0;
+  }
 }
 .nav-btn {
   padding: 0;
+  min-width: rem(24px) !important;
   width: rem(24px);
   height: rem(24px);
   flex-shrink: 0;
@@ -316,6 +345,7 @@ onUnmounted(() => {
   &:disabled {
     background-color: transparent !important;
     border: none !important;
+    opacity: 0.5;
   }
 }
 .slider-indicator {

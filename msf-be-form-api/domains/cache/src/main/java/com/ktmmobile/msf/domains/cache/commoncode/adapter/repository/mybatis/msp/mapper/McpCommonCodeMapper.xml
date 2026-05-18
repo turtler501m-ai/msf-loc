@@ -4,7 +4,27 @@
     "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ktmmobile.msf.domains.cache.commoncode.adapter.repository.mybatis.msp.mapper.McpCommonCodeMapper">
 
-  <select id="selectList" resultType="com.ktmmobile.msf.domains.cache.commoncode.domain.entity.CommonCode">
+  <select id="selectCodeList" resultType="com.ktmmobile.msf.domains.cache.commoncode.domain.entity.CommonCode">
+    SELECT
+      code_sys AS groupId,
+      code AS code,
+      code_name AS title,
+      use_yn AS useYn,
+      ord AS "detail.sortOrder",
+      "DESC" AS "detail.description",
+      etc1 AS "detail.etcValue1",
+      etc2 AS "detail.etcValue2",
+      etc3 AS "detail.etcValue3"
+    FROM MCP_CODE@DL_MCP mcp_code
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM NMCP_CD_DTL@DL_MCP nmcp_cd_dtl
+      WHERE nmcp_cd_dtl.cd_group_id = mcp_code.code_sys
+    )
+    ORDER BY code_sys, ord, code
+  </select>
+
+  <select id="selectDetailList" resultType="com.ktmmobile.msf.domains.cache.commoncode.domain.entity.CommonCode">
     SELECT
       cd_group_id AS groupId,
       dtl_cd AS code,
@@ -12,6 +32,8 @@
       use_yn AS useYn,
       dtl_cd_abbr_nm AS "detail.abbrName",
       dtl_cd_desc AS "detail.description",
+      up_grp_cd AS "detail.upperGroupCode",
+      img_nm AS "detail.imageName",
       indc_odrg AS "detail.sortOrder",
       expnsn_str_val1 AS "detail.etcValue1",
       expnsn_str_val2 AS "detail.etcValue2",

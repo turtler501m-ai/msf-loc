@@ -35,8 +35,8 @@
     @selected="onSelected"
   >
     <template #buttons>
-      <MsfButton variant="subtle" active>열람하기</MsfButton>
-      <MsfButton variant="toggle" disabled>복사하기</MsfButton>
+      <!-- <MsfButton variant="subtle" active>열람하기</MsfButton>
+      <MsfButton variant="toggle" disabled>복사하기</MsfButton> -->
       <MsfButton variant="toggle" active @click="onUpdate">복사하기</MsfButton>
     </template>
   </MsfDataTable>
@@ -44,7 +44,7 @@
 
 <script setup>
 import { onBeforeMount, ref } from 'vue'
-// import { post } from '@/libs/api/msf.api'
+import { post } from '@/libs/api/msf.api'
 import { storeToRefs } from 'pinia'
 import { showAlert } from '@/libs/utils/comp.utils'
 // import { showConfirm } from '@/libs/utils/comp.utils'
@@ -132,6 +132,7 @@ const isLoaded = ref(false)
 const pagingRef = ref()
 const selectedRowPaging = ref([])
 const selectedScriptSeq = ref(null)
+const selectedFormType = ref(null)
 
 const onClickSearch = () => {
   pagingRef.value.search()
@@ -139,26 +140,30 @@ const onClickSearch = () => {
 
 const onSelected = (data) => {
   selectedRowPaging.value = data
-  selectedScriptSeq.value = data?.uuid ?? null
-  console.log('select: ' + selectedScriptSeq.value)
+  selectedFormType.value = data.formTypeCd?.code
+  selectedScriptSeq.value = data?.requestKey ?? null
+  console.log('select: ' + selectedFormType.value)
 }
 
 const onUpdate = async () => {
   if (!selectedScriptSeq.value) {
-    showAlert('수정할 항목을 선택해주세요.')
+    showAlert('복사할 항목을 선택해주세요.')
+    return
+  }
+  if (selectedFormType.value === '2' || selectedFormType.value === '4') {
+    showAlert('복사할 수 없는 신청서입니다.')
     return
   }
   const param = {
-    uuid: selectedScriptSeq.value,
+    requestKey: selectedScriptSeq.value,
   }
-  console.log(param)
-
-  // const result = await post('/api/agencypadmac/get', param)
-  // receiptPageStore.openUpdatePopup(result?.data ?? null, selectedScriptSeq.value)
-
-  if (!receiptPageStore.formDtlData?.uuid) {
-    showAlert('수정할 항목이 존재하지 않습니다.')
-    // receiptPageStore.closeScriptPopup()
+  if (selectedFormType.value === '1') {
+    const res = await post('/api/form/newchange/copyform', param)
+    if (res && res.code === '0000') {
+      showAlert('복사한 requestKey: ' + res.data?.resData?.requestKey)
+    }
+  } else if (selectedFormType.value === '3') {
+    showAlert('선택한 requestKey: ' + selectedScriptSeq.value)
   }
 }
 

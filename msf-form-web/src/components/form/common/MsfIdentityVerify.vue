@@ -37,6 +37,12 @@
             @click="isIdCardScanModalOpen = true"
             >스캔하기</MsfButton
           >
+          <MsfButton
+              variant="subtle"
+              :disabled="!model.identityTypeCd || (!showIdentityCertType && model.isVerified)"
+              @click="isIdCardScanModal2Open = true"
+          >스캔하기</MsfButton
+          >
         </MsfStack>
         <div v-if="model.isScanVerified" class="ut-mt-8 ut-p-12 ut-bg-gray-50 ut-radius-8">
           <p class="ut-text-primary ut-weight-bold">신분증 스캔 완료</p>
@@ -83,18 +89,27 @@
     <!-- 신분증 스캔 모달 -->
     <MsfIdCardScanModal
       v-model="isIdCardScanModalOpen"
+      :identityTypeCd="model.identityTypeCd"
       :identityTypeNm="selectedIdentityTypeNm"
       @confirm="onIdCardScanConfirm"
     />
-  </div>
+    <!-- 신분증 스캔 모달 이게 ㄹㅇ -->
+    <MsfIdCardScanModal2
+        v-model="isIdCardScanModal2Open"
+        :identityTypeCd="model.identityTypeCd"
+        :identityTypeNm="selectedIdentityTypeNm"
+        @confirm="onIdCardScanConfirm"
+    /></div>
 </template>
 <script setup>
 import { ref, defineModel, defineProps, onMounted, watch, computed } from 'vue'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
+import { formatLocalDateTime } from '@/libs/utils/date.utils'
 import MsfIdCardListModal from './popups/MsfIdCardListModal.vue'
 import MsfMobileIdModal from './popups/MsfMobileIdModal.vue'
 import MsfFaceAuthModal from './popups/MsfFaceAuthModal.vue'
 import MsfIdCardScanModal from './popups/MsfIdCardScanModal.vue'
+import MsfIdCardScanModal2 from '@/components/form/common/popups/MsfIdCardScanModal2.vue';
 
 const props = defineProps({
   title: { type: String, default: '신분증 확인' },
@@ -119,6 +134,7 @@ const isIdCardListModalOpen = ref(false)
 const isMobileIdModalOpen = ref(false)
 const isFaceAuthModalOpen = ref(false)
 const isIdCardScanModalOpen = ref(false)
+const isIdCardScanModal2Open = ref(false)
 
 // 현재 선택된 신분증 코드(identityTypeCd)에 해당하는 명칭 반환
 const selectedIdentityTypeNm = computed(() => {
@@ -135,16 +151,6 @@ const computedTitle = computed(() => {
   }
   return props.title
 })
-
-// 신분증 종류(주민등록증, 운전면허증 등) 변경 시 인증 상태만 초기화 (스캔 정보는 유지)
-watch(
-  () => model.value.identityTypeCd,
-  (newVal, oldVal) => {
-    if (oldVal && newVal !== oldVal) {
-      model.value.isVerified = false
-    }
-  },
-)
 
 // 인증 방식 변경 시 인증 관련 상태만 초기화 (스캔 정보와 간섭 배제)
 watch(
@@ -278,7 +284,9 @@ const onIdCardSelect = (selected) => {
     if (knoteIdentityScanCstmrNm) model.value.knoteIdentityScanCstmrNm = knoteIdentityScanCstmrNm
     if (knoteIdentityEssNo) model.value.knoteIdentityEssNo = knoteIdentityEssNo
     if (knoteIdentityTypeCd) model.value.knoteIdentityTypeCd = knoteIdentityTypeCd
-    if (knoteIdentityScanDt) model.value.knoteIdentityScanDt = knoteIdentityScanDt
+    if (knoteIdentityScanDt) {
+      model.value.knoteIdentityScanDt = formatLocalDateTime(knoteIdentityScanDt)
+    }
     if (knoteScanId) model.value.knoteScanId = knoteScanId
   }
 
@@ -325,7 +333,9 @@ const onIdCardScanConfirm = (data) => {
     const scanRrn = resolveScanRrn(data)
     if (scanRrn) model.value.knoteIdentityEssNo = scanRrn
     if (data.identityTypeCd) model.value.knoteIdentityTypeCd = data.identityTypeCd
-    if (data.scanDt) model.value.knoteIdentityScanDt = data.scanDt
+    if (data.scanDt) {
+      model.value.knoteIdentityScanDt = formatLocalDateTime(data.scanDt)
+    }
     if (data.scanId) model.value.knoteScanId = data.scanId
 
     // 화면별 추가 매핑이 필요한 경우 부모 컴포넌트에서 처리하도록 원본 스캔 데이터를 전달한다.

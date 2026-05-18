@@ -6,5 +6,9 @@ import com.ktmmobile.msf.domains.cache.commoncode.domain.entity.CommonCode;
 
 public interface CommonCodeRepository {
 
-    List<CommonCode> findAllCommonCodes();
+    List<CommonCode> findMspCommonCodes();
+
+    List<CommonCode> findMcpCommonCodes();
+
+    List<CommonCode> findSmartFormCommonCodes();
 }

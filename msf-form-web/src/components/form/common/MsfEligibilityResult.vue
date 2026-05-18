@@ -4,50 +4,50 @@
       <MsfIcon name="titleInfo" />
       <span
         >가입조건 조회 결과 개통 진행이
-        <em class="ut-color-accent">가능({{ result.totalLineCnt }}회선 중 {{ result.possibleLineCnt }}회선 추가 가능)</em> 합니다.</span
+        <em class="ut-color-accent">{{ result.subscriptionLimitResultMessage }}</em> 합니다.</span
       >
     </p>
     <p class="result-title" v-else>
       <MsfIcon name="titleInfo" />
       <span
         >가입조건 조회 결과 개통 진행이
-        <em class="ut-color-point">불가능({{ result.totalLineCnt }}회선 중 {{ result.possibleLineCnt }}회선 추가 가능)</em> 합니다.</span
+        <em class="ut-color-point">{{ result.subscriptionLimitResultMessage || '불가능' }}</em> 합니다.</span
       >
     </p>
     <ul class="result-list">
       <li>
         <span class="result-txt">가입제한</span>
         <MsfFlag
-          :data="result.joinLimitYn === 'N' ? '가능' : '불가능'"
-          :color="result.joinLimitYn === 'N' ? 'accent' : 'gray'"
+          :data="result.subscriptionRestrictionsYn === 'Y' ? '가능' : '불가능'"
+          :color="result.subscriptionRestrictionsYn === 'Y' ? 'accent' : 'gray'"
         />
       </li>
       <li>
         <span class="result-txt">가입한도</span>
         <MsfFlag
-          :data="result.possibleLineCnt > 0 ? '가능' : '불가능'"
-          :color="result.possibleLineCnt > 0 ? 'accent' : 'gray'"
+          :data="result.subscriptionLimitYn === 'Y' ? '가능' : '불가능'"
+          :color="result.subscriptionLimitYn === 'Y' ? 'accent' : 'gray'"
         />
       </li>
       <li>
         <span class="result-txt">미납</span>
         <MsfFlag
-          :data="result.unpaidYn === 'N' ? '가능' : '불가능'"
-          :color="result.unpaidYn === 'N' ? 'accent' : 'gray'"
+          :data="result.unPaidYn === 'Y' ? '가능' : '불가능'"
+          :color="result.unPaidYn === 'Y' ? 'accent' : 'gray'"
         />
       </li>
       <li>
         <span class="result-txt">상습해지이력</span>
         <MsfFlag
-          :data="result.frequentTermYn === 'N' ? '가능' : '불가능'"
-          :color="result.frequentTermYn === 'N' ? 'accent' : 'gray'"
+          :data="result.historyOfCancellationYn === 'Y' ? '가능' : '불가능'"
+          :color="result.historyOfCancellationYn === 'Y' ? 'accent' : 'gray'"
         />
       </li>
       <li>
         <span class="result-txt">할부할인</span>
         <MsfFlag
-          :data="result.installmentLimitYn === 'N' ? '가능' : '불가능'"
-          :color="result.installmentLimitYn === 'N' ? 'accent' : 'gray'"
+          :data="result.installmentDiscountYn === 'Y' ? '가능' : '불가능'"
+          :color="result.installmentDiscountYn === 'Y' ? 'accent' : 'gray'"
         />
       </li>
     </ul>
@@ -62,12 +62,16 @@ const props = defineProps({
   result: {
     type: Object,
     default: () => ({
-      totalLineCnt: 3,
-      possibleLineCnt: 0,
-      joinLimitYn: 'N',
-      unpaidYn: 'N',
-      frequentTermYn: 'N',
-      installmentLimitYn: 'N',
+      historyOfCancellationResultMessage: '',
+      historyOfCancellationYn: 'Y',
+      installmentDiscountResultMessage: '',
+      installmentDiscountYn: 'Y',
+      subscriptionLimitResultMessage: '',
+      subscriptionLimitYn: 'Y',
+      subscriptionRestrictionsResultMessage: '',
+      subscriptionRestrictionsYn: 'Y',
+      unPaidResultMessage: '',
+      unPaidYn: 'Y',
     }),
   },
 })
@@ -75,11 +79,11 @@ const props = defineProps({
 const isEligible = computed(() => {
   const r = props.result
   return (
-    r.possibleLineCnt > 0 &&
-    r.joinLimitYn === 'N' &&
-    r.unpaidYn === 'N' &&
-    r.frequentTermYn === 'N' &&
-    r.installmentLimitYn === 'N'
+    r.subscriptionRestrictionsYn === 'Y' &&
+    r.subscriptionLimitYn === 'Y' &&
+    r.unPaidYn === 'Y' &&
+    r.historyOfCancellationYn === 'Y' &&
+    r.installmentDiscountYn === 'Y'
   )
 })
 </script>

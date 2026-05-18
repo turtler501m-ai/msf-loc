@@ -1,12 +1,11 @@
 package com.ktmmobile.msf.domains.form.form.servicechange.service;
 
 import java.net.SocketTimeoutException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -15,10 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.ktmmobile.msf.commons.websecurity.web.util.RequestUtils;
-import com.ktmmobile.msf.domains.cache.commoncode.application.port.out.CommonCodeRepository;
-import com.ktmmobile.msf.domains.cache.commoncode.domain.entity.CommonCode;
 import com.ktmmobile.msf.domains.form.common.code.ResSvcChgMessage;
 import com.ktmmobile.msf.domains.form.common.dto.McpFarPriceDto;
 import com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto;
@@ -38,7 +36,10 @@ import com.ktmmobile.msf.domains.form.common.util.SessionUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringMakerUtil;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 import com.ktmmobile.msf.domains.form.form.common.repository.MsfRequestRepositoryImpl;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAgentVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestClauseVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestCstmrVo;
+import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestMstVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgDtlVo;
 import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestSvcChgVo;
 import com.ktmmobile.msf.domains.form.form.servicechange.dto.AdditionApplyReqDto;
@@ -91,7 +92,7 @@ public class MsfSvcChgPageServiceImpl {
     private MsfRequestRepositoryImpl msfRequestRepository;
 
     @Autowired
-    private CommonCodeRepository commonCodeRepository;
+    private TransactionTemplate transactionTemplate;
 
     public MspJuoAddInfoDto selectMspAddInfo(String svcCntrNo) {
         logger.debug("[MsfChangPage][selectMspAddInfo] start: ncn={}, queryId={}",
@@ -207,7 +208,7 @@ public class MsfSvcChgPageServiceImpl {
         logger.info("[서비스변경] getChangInfoView 조회 시작 — ncn={}, ctn={}, custId={}", searchVO.getNcn(), searchVO.getCtn(), searchVO.getCustId());
 
         UserSessionDto userSession = SessionUtils.getUserCookieBean();
-        List<McpUserCntrMngDto> cntrList = new java.util.ArrayList<>();
+        List<McpUserCntrMngDto> cntrList = new ArrayList<>();
 
         if (StringUtils.isBlank(StringUtil.NVL(searchVO.getNcn(), searchVO.getContractNum()))) {
             return FormResponse.of(ResSvcChgMessage.CHANGE_REQUEST_INVALID);
@@ -493,25 +494,15 @@ public class MsfSvcChgPageServiceImpl {
     }
 
     private static int getAge(String idNum) {
-        String today = "";
-        String birthday = "";
-        int myAge = 0;
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd", Locale.KOREA);
-        today = formatter.format(new Date());
-        if (idNum != null && idNum.trim().length() == 13) {
-            if (idNum.charAt(6) == '1' || idNum.charAt(6) == '2' || idNum.charAt(6) == '5' || idNum.charAt(6) == '6') {
-                birthday = "19" + idNum.substring(0, 6);
-            } else if (idNum.charAt(6) == '*') {
-                return -1;
-            } else {
-                birthday = "20" + idNum.substring(0, 6);
-            }
-        } else {
-            return 0;
-        }
-        myAge = Integer.parseInt(today.substring(0, 4)) - Integer.parseInt(birthday.substring(0, 4));
-        if (Integer.parseInt(today.substring(4)) < Integer.parseInt(birthday.substring(4))) myAge = myAge - 1;
-        return myAge;
+        if (idNum == null || idNum.trim().length() != 13) return 0;
+        char g = idNum.charAt(6);
+        if (g == '*') return -1;
+        String century = (g == '1' || g == '2' || g == '5' || g == '6') ? "19" : "20";
+        String today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+        String birthday = century + idNum.substring(0, 6);
+        int age = Integer.parseInt(today.substring(0, 4)) - Integer.parseInt(birthday.substring(0, 4));
+        if (Integer.parseInt(today.substring(4)) < Integer.parseInt(birthday.substring(4))) age--;
+        return age;
     }
 
 
@@ -607,9 +598,22 @@ public class MsfSvcChgPageServiceImpl {
         logger.info("[serviceChangeComplete] mplatform success: applicationKey={}, ncn={}, serviceSelect={}, addCount={}, cancelCount={}, elapsedMs={}",
             applicationKey, ncn, serviceSelect, addList.size(), cancelList.size(), elapsed);
 
-        if (!saveSvcChgRequest(applicationKey, ncn, req, cancelList, addList)) {
+        try {
+            Long requestKey = transactionTemplate.execute(status ->
+                saveSvcChgRequest(applicationKey, ncn, req, cancelList, addList));
+            logger.info("[serviceChangeComplete] DB transaction committed: requestKey={}, applicationKey={}, ncn={}",
+                requestKey, applicationKey, ncn);
+        } catch (ServiceChangeSaveFailureException e) {
             logger.warn("[serviceChangeComplete] DB save failed after mplatform success: applicationKey={}, ncn={}",
-                applicationKey, ncn);
+                applicationKey, ncn, e);
+            return FormResponse.of(
+                ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
+                "서비스변경 작성완료 저장 중 오류가 발생했습니다.",
+                null
+            );
+        } catch (Exception e) {
+            logger.error("[serviceChangeComplete] DB save unexpected error after mplatform success: applicationKey={}, ncn={}",
+                applicationKey, ncn, e);
             return FormResponse.of(
                 ResSvcChgMessage.ADDITION_SELF_SERVICE_ERROR,
                 "서비스변경 작성완료 저장 중 오류가 발생했습니다.",
@@ -625,7 +629,7 @@ public class MsfSvcChgPageServiceImpl {
 
     /**
      * 서비스변경 완료처리 후 MSF 테이블에 신청 기록 저장
-     * M플랫폼 처리 완료 후 호출 — DB 저장 실패 시 로그만 남기고 진행
+     * M플랫폼 처리 완료 후 호출 — MSF 저장 구간은 smartform 트랜잭션으로 묶는다.
      *
      * [저장 테이블]
      * 1. MSF_REQUEST_SVC_CHG       — 서비스변경 신청 마스터 (SQ_REQUEST_KEY 채번)
@@ -720,114 +724,182 @@ public class MsfSvcChgPageServiceImpl {
         return false;
     }
 
-    private boolean saveSvcChgRequest(
+    private Long saveSvcChgRequest(
         String applicationKey, String ncn,
         ServiceChangeCompleteReqDto req,
         List<AdditionApplyReqDto> cancelList,
         List<AdditionApplyReqDto> addList) {
-        try {
-            Long requestKey = svcChgPageRepositoryImpl.nextRequestKey();
-            List<String> serviceSelect = req.getServiceSelect() != null ? req.getServiceSelect() : new ArrayList<>();
+        Long requestKey = svcChgPageRepositoryImpl.nextRequestKey();
+        if (requestKey == null) {
+            throw new ServiceChangeSaveFailureException("request key generation failed");
+        }
+        List<String> serviceSelect = req.getServiceSelect() != null ? req.getServiceSelect() : new ArrayList<>();
 
-            MsfRequestSvcChgVo svcChgVo = buildSvcChgVo(requestKey, req);
-            msfRequestRepository.insertMsfRequestSvcChg(svcChgVo);
+        MsfRequestSvcChgVo svcChgVo = buildSvcChgVo(requestKey, req);
+        requireInserted(msfRequestRepository.insertMsfRequestSvcChg(svcChgVo), "insert service change", requestKey);
 
-            MsfRequestCstmrVo cstmrVo = buildSvcChgCstmrVo(requestKey, req);
-            msfRequestRepository.insertMsfRequestCstmr(cstmrVo);
+        MsfRequestCstmrVo cstmrVo = buildSvcChgCstmrVo(requestKey, req);
+        requireInserted(msfRequestRepository.insertMsfRequestCstmr(cstmrVo), "insert customer", requestKey);
 
-            // R11/R12: SOC 해지 DTL 저장
-            for (AdditionApplyReqDto cancelReq : cancelList) {
-                Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
+        MsfRequestAgentVo agentVo = buildSvcChgAgentVo(requestKey, req);
+        if (hasAgentData(agentVo)) {
+            requireInserted(msfRequestRepository.insertMsfRequestAgent(agentVo), "insert agent", requestKey);
+        }
+
+        requireInserted(msfRequestRepository.insertMsfRequestMst(buildSvcChgMstVo(requestKey, req)), "insert request mst", requestKey);
+
+        for (MsfRequestClauseVo clauseVo : buildSvcChgClauseVos(requestKey, req)) {
+            requireInserted(
+                msfRequestRepository.insertMsfRequestClause(clauseVo),
+                "insert clause:" + safe(clauseVo.getCdGroupId()),
+                requestKey
+            );
+        }
+
+        saveSocDtlList(requestKey, cancelList, addList);
+        saveServiceTypeDtlList(requestKey, serviceSelect, req);
+
+        logger.info("[serviceChangeComplete] DB saved: requestKey={}, ncn={}, applicationKey={}, serviceSelect={}",
+            requestKey, ncn, applicationKey, serviceSelect);
+        return requestKey;
+    }
+
+    /** R11/R12: SOC 해지·신청 DTL 일괄 저장 */
+    private void saveSocDtlList(Long requestKey, List<AdditionApplyReqDto> cancelList, List<AdditionApplyReqDto> addList) {
+        for (AdditionApplyReqDto cancelReq : cancelList) {
+            logger.info("[serviceChangeComplete] SOC cancel dtl: requestKey={}, svcTgtCd={}, soc={}, prodHstSeq={}",
+                requestKey, cancelReq.getSvcTgtCd(), cancelReq.getSoc(), StringUtil.NVL(cancelReq.getProdHstSeq(), "-"));
+            Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+            requireInserted(
                 msfRequestRepository.insertMsfRequestSvcChgDtl(
-                    buildSocDtlVo(dtlSeq, requestKey, cancelReq.getSvcTgtCd(), cancelReq.getSoc(), "C", cancelReq.getFtrNewParam()));
-            }
-            // R11/R12: SOC 신청 DTL 저장
-            for (AdditionApplyReqDto addReq : addList) {
-                Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
+                    buildSocDtlVo(dtlSeq, requestKey, cancelReq.getSvcTgtCd(), cancelReq.getSoc(), "C", cancelReq.getFtrNewParam())),
+                "insert cancel dtl", requestKey);
+        }
+        for (AdditionApplyReqDto addReq : addList) {
+            logger.info("[serviceChangeComplete] SOC add dtl: requestKey={}, svcTgtCd={}, soc={}, flag={}, hasFtrNewParam={}",
+                requestKey, addReq.getSvcTgtCd(), addReq.getSoc(),
+                StringUtil.NVL(addReq.getFlag(), "N"),
+                StringUtil.NVL(addReq.getFtrNewParam(), "").isEmpty() ? "N" : "Y");
+            Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+            requireInserted(
                 msfRequestRepository.insertMsfRequestSvcChgDtl(
-                    buildSocDtlVo(dtlSeq, requestKey, addReq.getSvcTgtCd(), addReq.getSoc(), "R", addReq.getFtrNewParam()));
-            }
+                    buildSocDtlVo(dtlSeq, requestKey, addReq.getSvcTgtCd(), addReq.getSoc(), "R", addReq.getFtrNewParam())),
+                "insert add dtl", requestKey);
+        }
+    }
 
-            // P11(요금제변경) DTL 저장
-            if (serviceSelect.contains("P11") && req.getPlanChange() != null) {
-                Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
-                MsfRequestSvcChgDtlVo dtlVo = buildBaseDtlVo(dtlSeq, requestKey, "P11", "R");
-                dtlVo.setSocCd(StringUtil.NVL(req.getPlanChange().getPlanCd(), ""));
-                dtlVo.setAddtionInfo(StringUtil.NVL(req.getPlanChange().getChangeTypeCd(), ""));
-                msfRequestRepository.insertMsfRequestSvcChgDtl(dtlVo);
-            }
+    /** 서비스 타입별 DTL 저장 (P11/O11/O12/R14/O13/R15/R16) */
+    private void saveServiceTypeDtlList(Long requestKey, List<String> serviceSelect, ServiceChangeCompleteReqDto req) {
+        if (serviceSelect.contains("P11") && req.getPlanChange() != null) {
+            savePlanChangeDtl(requestKey, req.getPlanChange());
+        }
+        if (serviceSelect.contains("O11") && req.getNumberChange() != null) {
+            saveNumberChangeDtl(requestKey, req.getNumberChange());
+        }
+        if (serviceSelect.contains("O12") && req.getUnpause() != null) {
+            saveUnpauseDtl(requestKey, req.getUnpause());
+        }
+        if (serviceSelect.contains("R14") && req.getInsurance() != null) {
+            saveInsuranceDtl(requestKey, req.getInsurance());
+        }
+        if (serviceSelect.contains("O13") && req.getSimInfo() != null) {
+            saveSimInfoDtl(requestKey, req.getSimInfo());
+        }
+        if (serviceSelect.contains("R15") && req.getDataSharing() != null) {
+            saveDataSharingDtl(requestKey, req.getDataSharing());
+        }
+        if (serviceSelect.contains("R16") && req.getCombineSolo() != null) {
+            saveCombineSoloDtl(requestKey, req.getCombineSolo());
+        }
+    }
 
-            // O11(번호변경) DTL 저장
-            if (serviceSelect.contains("O11") && req.getNumberChange() != null) {
-                Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
-                MsfRequestSvcChgDtlVo dtlVo = buildBaseDtlVo(dtlSeq, requestKey, "O11", "R");
-                dtlVo.setAddtionInfo(StringUtil.NVL(req.getNumberChange().getWishNo(), ""));
-                msfRequestRepository.insertMsfRequestSvcChgDtl(dtlVo);
-            }
+    private void savePlanChangeDtl(Long requestKey, ServiceChangeCompleteReqDto.PlanChange p) {
+        Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        vo.setSocCd(StringUtil.NVL(p.getPlanCd(), ""));
+        vo.setAddtionInfo(StringUtil.NVL(p.getChangeTypeCd(), ""));
+        insertSvcChgDtl(vo, "insert plan dtl");
+    }
 
-            // O12(분실복구/일시정지해제) DTL 저장
-            if (serviceSelect.contains("O12") && req.getUnpause() != null) {
-                Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
-                MsfRequestSvcChgDtlVo dtlVo = buildBaseDtlVo(dtlSeq, requestKey, "O12", "R");
-                dtlVo.setAddtionInfo(StringUtil.NVL(req.getUnpause().getUnLockPw(), ""));
-                msfRequestRepository.insertMsfRequestSvcChgDtl(dtlVo);
-            }
+    private void saveNumberChangeDtl(Long requestKey, ServiceChangeCompleteReqDto.NumberChange p) {
+        Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        vo.setAddtionInfo(StringUtil.NVL(p.getWishNo(), ""));
+        insertSvcChgDtl(vo, "insert number dtl");
+    }
 
-            // R14(단말보험) DTL 저장
-            if (serviceSelect.contains("R14") && req.getInsurance() != null) {
-                Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
-                MsfRequestSvcChgDtlVo dtlVo = buildBaseDtlVo(dtlSeq, requestKey, "R14", "R");
-                dtlVo.setClauseInsuranceYn(StringUtil.NVL(req.getInsurance().getClauseInsuranceYn(), "N"));
-                dtlVo.setInsrCd(StringUtil.NVL(req.getInsurance().getInsrProdCd(), ""));
-                dtlVo.setAddtionInfo(StringUtil.NVL(req.getInsurance().getCatCd(), ""));
-                msfRequestRepository.insertMsfRequestSvcChgDtl(dtlVo);
-            }
+    private void saveUnpauseDtl(Long requestKey, ServiceChangeCompleteReqDto.Unpause p) {
+        Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        vo.setAddtionInfo(StringUtil.NVL(p.getUnLockPw(), ""));
+        insertSvcChgDtl(vo, "insert unpause dtl");
+    }
 
-            // O13(SIM정보) DTL 저장
-            if (serviceSelect.contains("O13") && req.getSimInfo() != null) {
-                Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
-                MsfRequestSvcChgDtlVo dtlVo = buildBaseDtlVo(dtlSeq, requestKey, "O13", "R");
-                dtlVo.setUsimBuyTypeCd(StringUtil.NVL(req.getSimInfo().getHasSim(), ""));
-                dtlVo.setReqUsimSn(StringUtil.NVL(req.getSimInfo().getReqUsimSn(), ""));
-                dtlVo.setEid(StringUtil.NVL(req.getSimInfo().getEid(), ""));
-                dtlVo.setImei1(StringUtil.NVL(req.getSimInfo().getImei1(), ""));
-                dtlVo.setImei2(StringUtil.NVL(req.getSimInfo().getImei2(), ""));
-                msfRequestRepository.insertMsfRequestSvcChgDtl(dtlVo);
-            }
+    private void saveInsuranceDtl(Long requestKey, ServiceChangeCompleteReqDto.Insurance p) {
+        Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        vo.setClauseInsuranceYn(StringUtil.NVL(p.getClauseInsuranceYn(), "N"));
+        vo.setInsrCd(StringUtil.NVL(p.getInsrProdCd(), ""));
+        vo.setAddtionInfo(StringUtil.NVL(p.getCatCd(), ""));
+        insertSvcChgDtl(vo, "insert insurance dtl");
+    }
 
-            // R15(데이터쉐어링) DTL 저장
-            if (serviceSelect.contains("R15") && req.getDataSharing() != null) {
-                Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
-                String procTypeCd = "shareUseState2".equals(req.getDataSharing().getShareUseState()) ? "C" : "R";
-                MsfRequestSvcChgDtlVo dtlVo = buildBaseDtlVo(dtlSeq, requestKey, "R15", procTypeCd);
-                dtlVo.setAddtionInfo(StringUtil.NVL(req.getDataSharing().getSharePhoneNum(), ""));
-                msfRequestRepository.insertMsfRequestSvcChgDtl(dtlVo);
-            }
+    private void saveSimInfoDtl(Long requestKey, ServiceChangeCompleteReqDto.SimInfo p) {
+        Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        vo.setUsimBuyTypeCd(StringUtil.NVL(p.getHasSim(), ""));
+        vo.setReqUsimSn(StringUtil.NVL(p.getReqUsimSn(), ""));
+        vo.setEid(StringUtil.NVL(p.getEid(), ""));
+        vo.setImei1(StringUtil.NVL(p.getImei1(), ""));
+        vo.setImei2(StringUtil.NVL(p.getImei2(), ""));
+        insertSvcChgDtl(vo, "insert sim dtl");
+    }
 
-            // R16(결합Solo) DTL 저장
-            if (serviceSelect.contains("R16") && req.getCombineSolo() != null) {
-                Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
-                MsfRequestSvcChgDtlVo dtlVo = buildBaseDtlVo(dtlSeq, requestKey, "R16", "R");
-                dtlVo.setCombineSoloYn("Y");
-                dtlVo.setAddtionInfo(StringUtil.NVL(req.getCombineSolo().getSoloData(), ""));
-                msfRequestRepository.insertMsfRequestSvcChgDtl(dtlVo);
-            }
+    private void saveDataSharingDtl(Long requestKey, ServiceChangeCompleteReqDto.DataSharing p) {
+        Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+        String procTypeCd = "shareUseState2".equals(p.getShareUseState()) ? "C" : "R";
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), procTypeCd);
+        vo.setAddtionInfo(StringUtil.NVL(p.getSharePhoneNum(), ""));
+        insertSvcChgDtl(vo, "insert data sharing dtl");
+    }
 
-            logger.info("[serviceChangeComplete] DB saved: requestKey={}, ncn={}, applicationKey={}, serviceSelect={}",
-                requestKey, ncn, applicationKey, serviceSelect);
-            return true;
-        } catch (Exception e) {
-            logger.error("[serviceChangeComplete] DB save failed (mplatform already processed): applicationKey={}, ncn={}", applicationKey, ncn, e);
-            return false;
+    private void saveCombineSoloDtl(Long requestKey, ServiceChangeCompleteReqDto.CombineSolo p) {
+        Long dtlSeq = nextSvcChgDtlSeq(requestKey);
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, p.getSvcTgtCd(), "R");
+        vo.setCombineSoloYn("Y");
+        vo.setAddtionInfo(StringUtil.NVL(p.getSoloData(), ""));
+        insertSvcChgDtl(vo, "insert combine solo dtl");
+    }
+
+    private Long nextSvcChgDtlSeq(Long requestKey) {
+        Long dtlSeq = svcChgPageRepositoryImpl.nextSvcChgDtlSeq();
+        if (dtlSeq == null) {
+            throw new ServiceChangeSaveFailureException("svc chg dtl sequence generation failed: requestKey=" + requestKey);
+        }
+        return dtlSeq;
+    }
+
+    private void insertSvcChgDtl(MsfRequestSvcChgDtlVo dtlVo, String stepName) {
+        requireInserted(
+            msfRequestRepository.insertMsfRequestSvcChgDtl(dtlVo),
+            stepName,
+            dtlVo.getRequestKey()
+        );
+    }
+
+    private void requireInserted(int inserted, String stepName, Long requestKey) {
+        if (inserted <= 0) {
+            throw new ServiceChangeSaveFailureException(stepName + " failed: requestKey=" + requestKey + ", inserted=" + inserted);
         }
     }
 
     private MsfRequestSvcChgVo buildSvcChgVo(Long requestKey, ServiceChangeCompleteReqDto req) {
         MsfRequestSvcChgVo vo = new MsfRequestSvcChgVo();
+        String clientIp = RequestUtils.getClientIp();
         vo.setRequestKey(requestKey);
-        vo.setCretIp("127.0.0.1");
+        vo.setCretIp(clientIp);
         vo.setCretId("MSF_FORM");
-        vo.setAmdIp("127.0.0.1");
+        vo.setAmdIp(clientIp);
         vo.setAmdId("MSF_FORM");
         vo.setManagerCd(StringUtil.NVL(req.getManagerCd(), ""));
         vo.setManagerNm(StringUtil.NVL(req.getManagerNm(), ""));
@@ -851,7 +923,7 @@ public class MsfSvcChgPageServiceImpl {
     private MsfRequestCstmrVo buildSvcChgCstmrVo(Long requestKey, ServiceChangeCompleteReqDto req) {
         MsfRequestCstmrVo vo = new MsfRequestCstmrVo();
         vo.setRequestKey(requestKey);
-        vo.setCstmrNm("");
+        vo.setCstmrNm(safe(req.getCstmrNm()));
         vo.setCstmrNativeRrn("");
         vo.setCstmrNativeBirth("");
         vo.setCstmrNativeGenderCd("");
@@ -874,45 +946,229 @@ public class MsfSvcChgPageServiceImpl {
         vo.setBcuSbst("");
         vo.setCstmrJuridicalUserNm("");
         vo.setCstmrJuridicalBirth("");
-        vo.setCstmrVisitTypeCd("");
-        vo.setCstmrTelFnNo("");
-        vo.setCstmrTelMnNo("");
-        vo.setCstmrTelRnNo("");
-        // ctn → mobileFnNo 전체 저장 (분리 불필요)
-        String ctn = StringUtil.NVL(req.getCtn(), "").replaceAll("\\D", "");
-        String ctnFn = "";
-        String ctnMn = "";
-        String ctnRn = "";
-        if (ctn.length() >= 10) {
-            ctnFn = ctn.substring(0, 3);
-            ctnMn = ctn.substring(3, ctn.length() - 4);
-            ctnRn = ctn.substring(ctn.length() - 4);
+        vo.setCstmrVisitTypeCd(safe(req.getCstmrVisitTypeCd()));
+        vo.setCstmrTelFnNo(safe(req.getTelNo1()));
+        vo.setCstmrTelMnNo(safe(req.getTelNo2()));
+        vo.setCstmrTelRnNo(safe(req.getTelNo3()));
+        String cstmrTypeCd = safe(req.getCstmrTypeCd());
+        String bizNo = joinParts(req.getCstmrJuridicalBizNo1(), req.getCstmrJuridicalBizNo2(), req.getCstmrJuridicalBizNo3());
+        if ("JP".equals(cstmrTypeCd) || "GO".equals(cstmrTypeCd)) {
+            vo.setCstmrJuridicalCname(safe(req.getCstmrNm()));
+            vo.setCstmrJuridicalRrn(joinParts(req.getCstmrJuridicalRrn1(), req.getCstmrJuridicalRrn2()));
+            vo.setCstmrJuridicalBizNo(bizNo);
+            vo.setCstmrJuridicalRepNm(safe(req.getCstmrJuridicalRepNm()));
+            vo.setCstmrVisitTypeCd(safe(req.getCstmrVisitTypeCd()));
+        } else if ("FN".equals(cstmrTypeCd) || "FM".equals(cstmrTypeCd)) {
+            vo.setCstmrForeignerBirth(safe(req.getUserBirthDate()));
+            vo.setCstmrForeignerGenderCd(safe(req.getUserGender()));
+            vo.setCstmrPrivateBizNo(bizNo);
+            if (!bizNo.isBlank()) {
+                vo.setCstmrPrivateCname(safe(req.getCstmrNm()));
+            }
+        } else {
+            vo.setCstmrNativeBirth(safe(req.getUserBirthDate()));
+            vo.setCstmrNativeGenderCd(safe(req.getUserGender()));
+            vo.setCstmrPrivateBizNo(bizNo);
+            if (!bizNo.isBlank()) {
+                vo.setCstmrPrivateCname(safe(req.getCstmrNm()));
+            }
         }
-        vo.setCstmrMobileFnNo(ctnFn);
-        vo.setCstmrMobileMnNo(ctnMn);
-        vo.setCstmrMobileRnNo(ctnRn);
-        vo.setCstmrZipcd("");
-        vo.setCstmrAdr("");
-        vo.setCstmrAdrDtl("");
+
+        String mobileFnNo = safe(req.getMobileNo1());
+        String mobileMnNo = safe(req.getMobileNo2());
+        String mobileRnNo = safe(req.getMobileNo3());
+        // Fallback to CTN when contact mobile parts are not populated.
+        String ctn = StringUtil.NVL(req.getCtn(), "").replaceAll("\\D", "");
+        if ((isBlank(mobileFnNo) || isBlank(mobileMnNo) || isBlank(mobileRnNo)) && ctn.length() >= 10) {
+            mobileFnNo = ctn.substring(0, 3);
+            mobileMnNo = ctn.substring(3, ctn.length() - 4);
+            mobileRnNo = ctn.substring(ctn.length() - 4);
+        }
+        vo.setCstmrMobileFnNo(mobileFnNo);
+        vo.setCstmrMobileMnNo(mobileMnNo);
+        vo.setCstmrMobileRnNo(mobileRnNo);
+        vo.setCstmrZipcd(safe(req.getZipNo()));
+        vo.setCstmrAdr(safe(req.getAddress()));
+        vo.setCstmrAdrDtl(safe(req.getDetailAddress()));
         vo.setCstmrAdrBjd("");
-        vo.setCstmrEmailAdr("");
+        vo.setCstmrEmailAdr(buildEmail(req.getEmailAddr1(), req.getEmailAddr2()));
         vo.setCstmrEmailReceiveYn("N");
-        vo.setCstmrReceiveTelFnNo("");
-        vo.setCstmrReceiveTelNmNo("");
-        vo.setCstmrReceiveTelRnNo("");
+        vo.setCstmrReceiveTelFnNo(mobileFnNo);
+        vo.setCstmrReceiveTelNmNo(mobileMnNo);
+        vo.setCstmrReceiveTelRnNo(mobileRnNo);
         return vo;
+    }
+
+    private MsfRequestAgentVo buildSvcChgAgentVo(Long requestKey, ServiceChangeCompleteReqDto req) {
+        MsfRequestAgentVo agentVo = new MsfRequestAgentVo();
+        agentVo.setRequestKey(requestKey);
+        agentVo.setMinorAgentSelfInqryAgrmYn("N");
+
+        if (isMinorCustomerType(req.getCstmrTypeCd())) {
+            agentVo.setMinorAgentNm(firstNonBlank(req.getRepName(), req.getMinorAgentNm()));
+            agentVo.setMinorAgentRrn(firstNonBlank(
+                joinParts(req.getRepRegistrationNo1(), req.getRepRegistrationNo2()),
+                joinParts(req.getRepForeignerNo1(), req.getRepForeignerNo2())
+            ));
+            agentVo.setMinorAgentBirth(safe(req.getRepBirthDate()));
+            agentVo.setMinorAgentGenderCd(safe(req.getRepGender()));
+            agentVo.setMinorAgentRelTypeCd(safe(req.getMinorAgentRelTypeCd()));
+            agentVo.setMinorAgentTelFnNo(safe(req.getMinorAgentTelFnNo()));
+            agentVo.setMinorAgentTelMnNo(safe(req.getMinorAgentTelMnNo()));
+            agentVo.setMinorAgentTelRnNo(safe(req.getMinorAgentTelRnNo()));
+            agentVo.setMinorAgentAgrmYn(isChecked(req.getRepAgree()) ? "Y" : "N");
+        }
+
+        if ("V2".equals(safe(req.getCstmrVisitTypeCd()))) {
+            agentVo.setJrdclAgentNm(firstNonBlank(req.getMinorAgentNm(), req.getRepName()));
+            agentVo.setJrdclAgentRrn(joinParts(req.getRepRegistrationNo1(), req.getRepRegistrationNo2()));
+            agentVo.setJrdclAgentRelTypeCd(safe(req.getMinorAgentRelTypeCd()));
+            agentVo.setJrdclAgentTelFnNo(safe(req.getMinorAgentTelFnNo()));
+            agentVo.setJrdclAgentTelMnNo(safe(req.getMinorAgentTelMnNo()));
+            agentVo.setJrdclAgentTelRnNo(safe(req.getMinorAgentTelRnNo()));
+        }
+
+        return agentVo;
+    }
+
+    private MsfRequestMstVo buildSvcChgMstVo(Long requestKey, ServiceChangeCompleteReqDto req) {
+        String mobileNo = firstNonBlank(
+            joinParts(req.getMobileNo1(), req.getMobileNo2(), req.getMobileNo3()),
+            safe(req.getCtn()).replaceAll("\\D", "")
+        );
+
+        MsfRequestMstVo mstVo = new MsfRequestMstVo();
+        mstVo.setRequestKey(requestKey);
+        mstVo.setCretIp(RequestUtils.getClientIp());
+        mstVo.setCretId("MSF_FORM");
+        mstVo.setReqTypeCd("SC");
+        mstVo.setUserId(firstNonBlank(req.getManagerCd(), "MSF_FORM"));
+        mstVo.setCstmrNm(safe(req.getCstmrNm()));
+        mstVo.setMobileNo(mobileNo);
+        mstVo.setCstmrNativeRrn("");
+        mstVo.setContractNum(safe(req.getNcn()));
+        mstVo.setCstmrTypeCd(firstNonBlank(req.getCstmrTypeCd(), "NA"));
+        mstVo.setOnlineAuthTypeCd("");
+        mstVo.setOnlineAuthInfo("MSF:" + requestKey);
+        mstVo.setEtcMobileNo(mobileNo);
+        return mstVo;
+    }
+
+    private List<MsfRequestClauseVo> buildSvcChgClauseVos(Long requestKey, ServiceChangeCompleteReqDto req) {
+        List<MsfRequestClauseVo> clauseVos = new ArrayList<>();
+        if (req.getClauses() != null) {
+            for (ServiceChangeCompleteReqDto.Clause clause : req.getClauses()) {
+                if (clause == null || isBlank(clause.getCode()) || !isChecked(clause.getChecked())) {
+                    continue;
+                }
+                clauseVos.add(buildSvcChgClauseVo(requestKey, resolveClauseGroupId(clause), resolveClauseGroupId2(clause), clause.getVersion()));
+            }
+        }
+
+        return clauseVos;
+    }
+
+    private MsfRequestClauseVo buildSvcChgClauseVo(Long requestKey, String cdGroupId, String cdGroupId2, String version) {
+        MsfRequestClauseVo clauseVo = new MsfRequestClauseVo();
+        clauseVo.setRequestKey(requestKey);
+        clauseVo.setCdGroupId(cdGroupId);
+        clauseVo.setCdGroupId2(cdGroupId2);
+        clauseVo.setVersion(safe(version));
+        return clauseVo;
+    }
+
+    private static String resolveClauseGroupId(ServiceChangeCompleteReqDto.Clause clause) {
+        return firstNonBlank(clause.getTermsGroupCd(), clause.getCdGroupId(), "CLAUSE_FORM_01");
+    }
+
+    private static String resolveClauseGroupId2(ServiceChangeCompleteReqDto.Clause clause) {
+        String termsItemCd = firstNonBlank(clause.getTermsItemCd(), clause.getCdGroupId2());
+        if (!isBlank(termsItemCd)) {
+            return termsItemCd;
+        }
+        return "CLAUSE_INFO_01".equals(safe(clause.getCode())) ? "01" : safe(clause.getCode());
+    }
+
+    private static boolean isMinorCustomerType(String cstmrTypeCd) {
+        return "NM".equals(safe(cstmrTypeCd)) || "FM".equals(safe(cstmrTypeCd));
+    }
+
+    private static boolean hasAgentData(MsfRequestAgentVo agentVo) {
+        return agentVo != null
+            && (
+                !isBlank(agentVo.getMinorAgentNm())
+                    || !isBlank(agentVo.getMinorAgentRrn())
+                    || !isBlank(agentVo.getMinorAgentBirth())
+                    || !isBlank(agentVo.getMinorAgentTelFnNo())
+                    || !isBlank(agentVo.getJrdclAgentNm())
+                    || !isBlank(agentVo.getJrdclAgentTelFnNo())
+            );
+    }
+
+    private static String firstNonBlank(String... values) {
+        if (values == null) {
+            return "";
+        }
+        for (String value : values) {
+            if (!isBlank(value)) {
+                return value;
+            }
+        }
+        return "";
+    }
+
+    private static boolean isChecked(Object value) {
+        if (value instanceof Boolean checked) {
+            return checked;
+        }
+        String normalized = safe(value == null ? null : String.valueOf(value));
+        return "Y".equalsIgnoreCase(normalized) || "true".equalsIgnoreCase(normalized) || "1".equals(normalized);
+    }
+
+    private static String safe(String value) {
+        return StringUtil.NVL(value, "");
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private static String joinParts(String... values) {
+        StringBuilder builder = new StringBuilder();
+        boolean hasValue = false;
+        for (String value : values) {
+            String safeValue = safe(value);
+            if (!safeValue.isBlank()) {
+                hasValue = true;
+            }
+            builder.append(safeValue);
+        }
+        return hasValue ? builder.toString() : "";
+    }
+
+    private static String buildEmail(String emailId, String emailDomain) {
+        String id = safe(emailId);
+        String domain = safe(emailDomain);
+        if (id.isBlank()) {
+            return "";
+        }
+        if (domain.isBlank()) {
+            return id;
+        }
+        return id + "@" + domain;
     }
 
     /** 서비스 타입 기반 DTL 기본 구조 생성 */
     private MsfRequestSvcChgDtlVo buildBaseDtlVo(Long dtlSeq, Long requestKey, String svcType, String procTypeCd) {
         MsfRequestSvcChgDtlVo vo = new MsfRequestSvcChgDtlVo();
+        String clientIp = RequestUtils.getClientIp();
         vo.setRequestSvcChgDtlSeq(dtlSeq);
         vo.setRequestKey(requestKey);
-        vo.setCretIp("127.0.0.1");
+        vo.setCretIp(clientIp);
         vo.setCretId("MSF_FORM");
-        vo.setAmdIp("127.0.0.1");
+        vo.setAmdIp(clientIp);
         vo.setAmdId("MSF_FORM");
-        vo.setSvcTgtCd(resolveSvcTgtCd(svcType));
+        vo.setSvcTgtCd(StringUtil.NVL(svcType, ""));
         vo.setProcTypeCd(StringUtil.NVL(procTypeCd, ""));
         vo.setAppFormYn("N");
         vo.setAppFormXmlYn("N");
@@ -921,30 +1177,19 @@ public class MsfSvcChgPageServiceImpl {
 
     /** SOC 기반 DTL (R11 부가서비스 / R12 무선데이터차단) */
     private MsfRequestSvcChgDtlVo buildSocDtlVo(Long dtlSeq, Long requestKey, String svcTgtCd, String soc, String procTypeCd, String addtionInfo) {
-        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, StringUtil.NVL(svcTgtCd, "R11"), procTypeCd);
+        MsfRequestSvcChgDtlVo vo = buildBaseDtlVo(dtlSeq, requestKey, StringUtil.NVL(svcTgtCd, ""), procTypeCd);
         vo.setSocCd(StringUtil.NVL(soc, ""));
         vo.setAddtionInfo(StringUtil.NVL(addtionInfo, ""));
         return vo;
     }
 
-    /** SVC_TGT_CD 공통코드에서 svcType 코드의 sort_order를 조회하여 svcTgtCd로 반환 */
-    private String resolveSvcTgtCd(String svcType) {
-        String code = StringUtil.NVL(svcType, "R11");
-        try {
-            return commonCodeRepository.findAllCommonCodes().stream()
-                .filter(c -> "SVC_TGT_CD".equals(c.getGroupId()))
-                .filter(c -> code.equals(c.getCode()))
-                .filter(CommonCode::isUsed)
-                .map(CommonCode::getDetail)
-                .filter(detail -> detail != null)
-                .map(detail -> String.valueOf(detail.getSortOrder()))
-                .findFirst()
-                .orElse(code);
-        } catch (Exception e) {
-            logger.warn("[서비스변경][작성완료] SVC_TGT_CD sort_order 조회 실패, 코드 사용: svcType={}, {}", code, e.getMessage());
-            return code;
+    private static class ServiceChangeSaveFailureException extends RuntimeException {
+        private ServiceChangeSaveFailureException(String message) {
+            super(message);
         }
     }
+
+
 
 
 }

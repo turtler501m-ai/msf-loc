@@ -130,26 +130,23 @@ export const useMsfUserStore = defineStore('msfUser', {
 
     async resolveDeviceUuid() {
       const allowUuidOverride = import.meta.env.VITE_MSF_ALLOW_DEVICE_UUID_OVERRIDE === 'true'
-      const storageKey = 'MSF_DEVICE_UUID'
-      const storageUuid = localStorage.getItem(storageKey)?.trim()
-      if (allowUuidOverride && storageUuid) return storageUuid
+      if (allowUuidOverride) {
+        let storageUuid = localStorage.getItem('MSF_DEVICE_UUID')?.trim()
+        if (!storageUuid) {
+          storageUuid = crypto.randomUUID()
+          localStorage.setItem('MSF_DEVICE_UUID', storageUuid)
+        }
+        return storageUuid
+      }
 
       const appBridge = window.MSF_APP
-      if (!appBridge) {
-        const generatedUuid =
-          storageUuid ||
-          globalThis.crypto?.randomUUID?.() ||
-          `web-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
-        localStorage.setItem(storageKey, generatedUuid)
-        return generatedUuid
-      }
+      if (!appBridge) return null
 
       const uuid =
         typeof appBridge.getDeviceUuid === 'function'
           ? await appBridge.getDeviceUuid()
           : appBridge.deviceUuid
-      const resolvedUuid = typeof uuid === 'string' ? uuid.trim() : uuid
-      return resolvedUuid || storageUuid || null
+      return typeof uuid === 'string' ? uuid.trim() : uuid
     },
 
     setDeviceUuid(uuid) {

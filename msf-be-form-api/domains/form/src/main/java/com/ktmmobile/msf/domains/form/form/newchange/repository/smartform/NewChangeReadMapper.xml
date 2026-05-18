@@ -337,7 +337,7 @@
         WHERE REQUEST_KEY = #{requestKey}
     </select>
 
-    <select id="checkFormUser" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
+    <select id="checkNewChangeFormUser" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.NewChangeRequest"
             resultType="java.lang.Integer">
       SELECT COUNT(*)
       FROM MSF_REQUEST_TEMP
@@ -345,6 +345,9 @@
         AND MANAGER_CD = #{managerCd}
         AND AGENT_CD = #{agentCd}
         AND SHOP_CD = #{shopCd}
+        <if test='tmpStepCd.toString() != "" and tmpStepCd!=null'>
+          AND TMP_STEP_CD = #{tmpStepCd}
+        </if>
     </select>
 
 

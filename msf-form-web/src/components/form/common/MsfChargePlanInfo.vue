@@ -6,7 +6,24 @@ const model = defineModel({ type: Object, required: true })
 const agencyOptions = ref([])
 const planCategoryOptions = ref([])
 const planOptions = ref([])
-const isEditable = computed(() => (model.value.planSelectType === 'CURRENT' ? false : true))
+
+/**
+ * API 응답에서 데이터(리스트) 추출
+ */
+const extractData = (res) => {
+  if (!res) return []
+  if (Array.isArray(res)) return res
+  if (res.data) {
+    if (Array.isArray(res.data)) return res.data
+    return [res.data]
+  }
+  return []
+}
+
+const props = defineProps({
+  title: { type: String, default: '휴대폰 및 요금제 정보' },
+  customerData: { type: Object, default: () => ({}) },
+})
 
 // 요금제 카테고리 조회
 const fetchPlanCategories = async () => {
@@ -28,15 +45,62 @@ const fetchPlanCategories = async () => {
 const fetchPlans = async (ctgCd) => {
   try {
     const res = await post('/api/form/rate/list', {
-      orgnId: '1100033726',
-      sprtTp: 'KD',
-      plcySctnCd: '01',
-      salePlcyCd: 'N2022011018381',
+      sprtTp: model.value.discountType || '',
+      prodCtgId: ctgCd, // 카테고리 ID 추가
+      reqBuyTypeCd: model.value.productType || 'MM', // 상품유형(MM/UU) 전달
+      salePlcyCd: model.value.modelSalePolicyCd || '', // 단말기 판매정책 코드
     })
     planOptions.value = res?.data?.map((item) => ({
       label: item.rateNm || item.ctgNm,
       value: item.rateCd || item.ctgCd || item.prodId,
     }))
+
+    // 가입자 나이 계산 (만 65세 이상 여부)
+    const getAge = (birthStr) => {
+      if (!birthStr || birthStr.length < 6) return 0
+      const yearPrefix =
+        birthStr.length === 8 ? '' : Number(birthStr.substring(0, 2)) > 50 ? '19' : '20'
+      const fullBirth = yearPrefix + birthStr
+      const birthDate = new Date(
+        fullBirth.substring(0, 4),
+        Number(fullBirth.substring(4, 6)) - 1,
+        fullBirth.substring(6, 8),
+      )
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const m = today.getMonth() - birthDate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--
+      }
+      return age
+    }
+
+    const userBirth = props.customerData?.cstmrNativeRrn1 || props.customerData?.userBirthDate || ''
+    const userAge = getAge(userBirth)
+    const isSenior = userAge >= 65
+
+    planOptions.value = extractData(res)
+      .filter((item) => {
+        // 1. 상품 유형(MM/UU)에 따른 필터링 (API에서 처리되지 않았을 경우를 대비한 추가 필터)
+        // item.prodSctnCd 등이 상품 유형을 나타낸다고 가정 (프로젝트 스펙에 따라 조정 필요)
+        if (model.value.productType === 'UU' && item.prodSctnCd === 'MM') return false
+        if (model.value.productType === 'MM' && item.prodSctnCd === 'UU') return false
+
+        // 2. 시니어 요금제 제한
+        if ((item.rateNm || '').includes('시니어') && !isSenior) {
+          return false
+        }
+        return true
+      })
+      .sort((a, b) => {
+        // 3. 우선순위 정렬 (dispSeq 또는 유사 필드 기준)
+        return (a.dispSeq || 999) - (b.dispSeq || 999)
+      })
+      .map((item) => ({
+        label: item.rateNm || item.ctgNm,
+        value: item.rateCd || item.ctgCd || item.prodId,
+        raw: item,
+      }))
   } catch (e) {
     console.error('Failed to fetch plans:', e)
   }
@@ -45,12 +109,11 @@ const fetchPlans = async (ctgCd) => {
 // 현재 사용중인 요금제 조회
 const fetchCurrentPlan = async () => {
   try {
-    const { ctn, ncn, custId, userId } = model.value
+    const { ctn, ncn, custId } = model.value
     const res = await post('/api/form/active-charge-plan/get', {
       ctn,
       ncn,
       custId,
-      userId,
     })
     planOptions.value = [{ value: res?.data?.prodId, label: res?.data?.prodNm }]
     model.value.planNm = res?.data?.prodNm
@@ -122,8 +185,8 @@ watch(
 )
 
 watch(
-  () => model.value.userId,
-  (newVal) => {
+  () => model.value.ncn,
+  () => {
     fetchCurrentPlan()
   },
 )
@@ -151,14 +214,14 @@ onMounted(() => {
         :options="planCategoryOptions"
         class="ut-w100p"
         placeholder="추천 요금제"
-        :disabled="!isEditable"
+        v-if="model.planSelectType !== 'CURRENT'"
       />
       <MsfSelect
         title="요금제"
         v-model="model.planName2"
         :options="planOptions"
         class="ut-w100p"
-        :disabled="!isEditable"
+        v-if="model.planSelectType !== 'CURRENT'"
       />
     </MsfFormGroup>
     <MsfFormGroup label="대리점" tag="div" required>

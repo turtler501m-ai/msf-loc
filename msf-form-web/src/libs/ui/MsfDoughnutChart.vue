@@ -1,6 +1,11 @@
 <template>
   <div class="msf-doughnut-chart">
-    <Doughnut :data="chartData" :options="chartOptions" class="ut-w-full" />
+    <Doughnut
+      :data="chartData"
+      :options="chartOptions"
+      :plugins="[emptyDoughnut]"
+      class="ut-w-full"
+    />
     <!-- 중앙 건수 -->
     <div class="chart-center-text">
       <strong class="total-value">{{ totalCount }}</strong>
@@ -25,7 +30,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Chart as ChartJS, registerables } from 'chart.js'
 import { Doughnut } from 'vue-chartjs'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
@@ -41,6 +46,38 @@ const props = defineProps({
   valueKey: {
     type: String,
     required: true,
+  },
+})
+
+// 플러그인 정의
+const emptyDoughnut = ref({
+  id: 'emptyDoughnut',
+  afterDraw(chart, args, options) {
+    const { datasets } = chart.data
+    const { color } = options // 고정값 대신 계산식을 쓰므로 color만 가져옴
+    // 데이터가 0이거나 모두 0인지 확인
+    const hasData = datasets.some((ds) => ds.data.some((v) => v > 0))
+
+    if (!hasData) {
+      const {
+        chartArea: { top, bottom, left, right },
+        ctx,
+      } = chart
+      const centerX = (left + right) / 2
+      const centerY = (top + bottom) / 2
+      const r = Math.min(right - left, bottom - top) / 2
+
+      // 데이터 있을때 70% cutout과 동일한 디자인 맞춤
+      const thickness = r * 0.3
+
+      ctx.beginPath()
+      ctx.lineWidth = thickness // 선 두께
+      ctx.strokeStyle = color || '#D5D8DD' // 색상
+
+      // 반지름 위치 보정: 두께의 절반만큼 안으로 밀어넣어야 바깥선이 일치함
+      ctx.arc(centerX, centerY, r - thickness / 2, 0, 2 * Math.PI)
+      ctx.stroke()
+    }
   },
 })
 
@@ -92,10 +129,17 @@ const chartOptions = ref({
           return true
         },
       },
-      display: true,
+      display: (context) => {
+        // 데이터가 아예 없을 때는 라벨을 아예 그리지 않음
+        const dataset = context.chart.data.datasets[0]
+        return dataset.data.some((v) => v > 0)
+      },
     },
     legend: {
       display: false, //커스텀 범례사용 하기위해 비활성화
+    },
+    emptyDoughnut: {
+      color: '#D5D8DD', // 빈 데이터일 때 색상
     },
   },
 })
@@ -116,6 +160,22 @@ const chartData = ref({
     },
   ],
 })
+
+watch(
+  () => props.data,
+  (newVal) => {
+    chartData.value = {
+      labels: newVal.map((v) => v[props.nameKey]) || [],
+      datasets: [
+        {
+          data: newVal.map((v) => v[props.valueKey]) || [],
+          backgroundColor: ['#00A39B', '#8DCDCB', '#CCE7E8', '#E0EEEF'], //디자이너가 지정한 컬러
+        },
+      ],
+    }
+  },
+  { immediate: true, deep: true },
+)
 
 // 총합계 계산
 const totalCount = computed(() => {

@@ -11,7 +11,6 @@ import com.ktmmobile.msf.domains.form.form.common.vo.MsfRequestAdditionVo;
 
 /**
  * 신규/변경 신청서 select response parameter 정의
- * 2026.04.
  */
 
 @Getter
@@ -292,5 +291,5 @@ public class NewChangeInfoResponse {
     //String filePathNm;
     //String fileNm;
 
-    
+
 }

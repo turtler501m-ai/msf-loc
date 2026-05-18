@@ -206,7 +206,7 @@
 // 노데이터 스타일
 .nodata-wrap {
   width: 100%;
-  height: rem(180px);
+  min-height: rem(180px);
   text-align: center;
   font-size: var(--font-size-16);
   font-weight: var(--font-weight-medium);
@@ -214,6 +214,7 @@
   @include flex($d: column, $h: center) {
     gap: rem(8px);
   }
+  // 아이콘 영역
   &::before {
     content: '';
     @include flex($display: inline-flex, $h: center);
@@ -222,6 +223,21 @@
     background-image: url('@/assets/images/noDataIcon.svg');
     background-position: center center;
     margin: 0 auto;
+  }
+  // 아이콘 없이 사용
+  &.noIcon {
+    min-height: rem(64px);
+    height: auto;
+    padding-block: rem(20px);
+    &::before {
+      display: none;
+    }
+  }
+  // 높이자동
+  &.autoHeight {
+    min-height: auto;
+    height: auto;
+    padding-block: rem(20px);
   }
 }
 
@@ -731,8 +747,10 @@
       @include flex() {
         gap: rem(4px);
       }
+      overflow: hidden;
       .notice-tit {
         @include ellipsis(1);
+        white-space: nowrap;
       }
     }
     .notice-date {
@@ -832,5 +850,46 @@
 .empty-icon {
   & i {
     font-size: rem(32px);
+  }
+}
+
+// doc-list-wrap 공통 스타일
+.doc-list-wrap {
+  width: 100%;
+  margin-top: rem(16px);
+  border-top: var(--border-width-base) solid var(--color-gray-150);
+  border-bottom: var(--border-width-base) solid var(--color-gray-75);
+  .doc-list {
+    & > li:first-child {
+      border-top: none !important;
+    }
+    & > li {
+      padding-block: rem(16px);
+      padding-inline: rem(24px);
+      @include flex($v: center, $h: space-between) {
+        gap: rem(16px);
+      }
+      border-top: var(--border-width-base) solid var(--color-gray-75);
+      & > p:first-child {
+        flex: 1;
+        @include flex($v: center, $w: wrap) {
+          gap: rem(4px);
+        }
+      }
+      & > :last-child {
+        flex-shrink: 0;
+        flex-grow: 0;
+      }
+    }
+  }
+}
+
+// ocr-container 공통 스타일
+.ocr-container {
+  width: 100%;
+  height: rem(445px);
+  .ocr-frame {
+    width: 100%;
+    height: 100%;
   }
 }

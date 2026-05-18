@@ -94,17 +94,17 @@ const toUrl = computed(() => {
   position: relative;
 }
 // .router-link-active 대신 .router-link-exact-active 또는 스크립트에서 계산한 .is-active-root 클래스를 활용
-.depth-0.is-active-root > .menu-row {
-  &:before {
-    content: '';
-    width: 100%;
-    height: rem(2px);
-    background-color: var(--color-accent1-base);
-    position: absolute;
-    bottom: 0;
-    left: 0;
-  }
-}
+// .depth-0.is-active-root > .menu-row {
+//   &:before {
+//     content: '';
+//     width: 100%;
+//     height: rem(2px);
+//     background-color: var(--color-accent1-base);
+//     position: absolute;
+//     bottom: 0;
+//     left: 0;
+//   }
+// }
 .depth-0 > .menu-row .menu-text,
 .depth-0 > .menu-row .menu-link {
   font-size: var(--font-size-15);

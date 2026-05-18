@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * 신규/변경 최초 진입에 대한 기본값 설정 Response
+ */
 @Getter
 @Setter
 @NoArgsConstructor

@@ -23,9 +23,7 @@ public class CacheRegistry implements InitializingBean {
     private final List<CacheLoader<?>> cacheLoaders;
     private final Map<String, CacheLoader<?>> cacheLoadersByName = new LinkedHashMap<>();
 
-    /**
-     * CacheLoader 목록 정렬 및 등록
-     */
+    /** CacheLoader 목록 정렬 및 등록 */
     @Override
     public void afterPropertiesSet() {
         List<CacheLoader<?>> sortedLoaders = cacheLoaders.stream()

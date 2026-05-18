@@ -2,15 +2,9 @@
   <div>
     <MsfTitleArea :title="title" />
     <MsfStack vertical type="formgroups">
-      <MsfFormGroup
-        v-if="model.productType === 'MM'"
-        label="휴대폰"
-        required
-        tag="div"
-      >
+      <MsfFormGroup v-if="model.productType === 'MM'" label="휴대폰" required tag="div">
         <MsfSelect
           v-model="model.deviceModel"
-          :disabled="model.isSaved"
           :options="deviceOptions"
           class="ut-w-300"
           placeholder="휴대폰 선택"
@@ -26,7 +20,6 @@
       >
         <MsfSelect
           v-model="model.capacity"
-          :disabled="model.isSaved"
           :options="capacityOptions"
           class="ut-w-300"
           placeholder="용량 선택"
@@ -42,7 +35,6 @@
       >
         <MsfSelect
           v-model="model.color"
-          :disabled="model.isSaved"
           :options="colorOptions"
           class="ut-w-300"
           placeholder="색상 선택"
@@ -51,7 +43,7 @@
         />
       </MsfFormGroup>
       <MsfFormGroup
-        v-if="(model.productType === 'MM' && model.deviceModel) || model.productType === 'UU'"
+        v-if="model.productType === 'MM' && model.deviceModel"
         label="약정기간"
         required
         tag="div"
@@ -59,7 +51,6 @@
         <MsfChip
           v-model="model.contractPeriod"
           :data="contractPeriodOptions"
-          :disabled="model.isSaved"
           name="inp-contractPeriod"
         />
       </MsfFormGroup>
@@ -72,7 +63,6 @@
         <MsfChip
           v-model="model.installmentMonth"
           :data="refinedInstallmentMonthOptions"
-          :disabled="model.isSaved"
           name="inp-installmentMonth"
         />
       </MsfFormGroup>
@@ -85,7 +75,6 @@
         <MsfChip
           v-model="model.discountType"
           :data="refinedDiscountTypeOptions"
-          :disabled="model.isSaved"
           name="inp-discountType"
           @click="onClickDiscountTypeChip"
         />
@@ -93,7 +82,6 @@
       <MsfFormGroup label="요금제" tag="div" required>
         <MsfSelect
           v-model="model.prodCtgId"
-          :disabled="model.isSaved"
           :options="planCategoryOptions"
           class="ut-w100p"
           placeholder="요금제 카테고리"
@@ -101,8 +89,8 @@
         />
         <MsfSelect
           v-model="model.prodId"
-          :disabled="model.isSaved"
           :options="planOptions"
+          :key="`plan-select-${model.prodCtgId}`"
           class="ut-w100p"
           placeholder="요금제 선택"
           title="요금제 상세"
@@ -111,7 +99,6 @@
       <MsfFormGroup label="대리점" tag="div" required>
         <MsfSelect
           v-model="model.agency"
-          :disabled="model.isSaved"
           :options="agencyOptions"
           class="ut-w-300"
           placeholder="대리점 선택"
@@ -126,7 +113,6 @@
 import { computed, defineModel, defineProps, onBeforeMount, onMounted, ref, watch } from 'vue'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import { post } from '@/libs/api/msf.api'
-import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 
 /**
  * API 응답에서 데이터(리스트) 추출
@@ -146,10 +132,8 @@ const props = defineProps({
   customerData: { type: Object, default: () => ({}) },
 })
 const model = defineModel({ type: Object, required: true })
-const store = useMsfFormNewChgStore()
 
 // 옵션 상태 관리
-const openTypeCdCodes = ref([])
 const deviceOptions = ref([])
 const capacityOptions = ref([])
 const colorOptions = ref([])
@@ -174,43 +158,28 @@ watch(
     if (model.value.prodCtgId) {
       fetchPlans(model.value.prodCtgId)
     }
-  }
+  },
 )
 
 // 약정기간에 따른 할부기간 필터링
 const refinedInstallmentMonthOptions = computed(() => {
-  const isNew = props.customerData?.joinType === 'NAC3'
   const isNoContract = String(model.value.contractPeriod) === '0'
   const baseOptions = installmentMonthOptions.value
 
-  // '0(없음/일시불)' 옵션 확보
-  const noneOption = baseOptions.find((opt) => String(opt.value) === '0') || {
-    label: '일시불(없음)',
-    value: '0',
-  }
+  // '0(없음/일시불)' 옵션 강제 확보
+  const noneOption = { label: '일시불(0개월)', value: '0' }
   const otherOptions = baseOptions.filter((opt) => String(opt.value) !== '0')
 
   if (isNoContract) {
-    // 무약정 시: 할부기간 리스트 전체 노출
-    if (isNew) {
-      // 신규가입은 '0' 포함
-      return baseOptions.some((opt) => String(opt.value) === '0')
-        ? baseOptions
-        : [noneOption, ...baseOptions]
-    }
-    // 번호이동/기기변경은 할부 리스트만 (일시불 제외할지 여부는 비즈니스에 따라 다르나 요청에 따라 리스트 유지)
-    return otherOptions
+    // 무약정 시: '0' 포함 전체 노출
+    return [noneOption, ...otherOptions]
   } else {
-    // 약정 선택 시: 약정기간과 동일한 할부기간만 노출
+    // 약정 선택 시: 약정기간과 동일한 할부기간만 노출 + '0' 필수 포함
     const matchedOption = otherOptions.find(
       (opt) => String(opt.value) === String(model.value.contractPeriod),
     )
     const result = matchedOption ? [matchedOption] : []
-
-    if (isNew) {
-      return [noneOption, ...result]
-    }
-    return result
+    return [noneOption, ...result]
   }
 })
 
@@ -234,37 +203,8 @@ const planOptions = ref([])
 const agencyOptions = ref([])
 
 const syncInitialOptions = () => {
-  const m = model.value
-
-  if (m.deviceModel && deviceOptions.value.length === 0) {
-    deviceOptions.value = [
-      {
-        label: m.deviceModelNm || '기본 단말기',
-        value: m.deviceModel,
-        rprsPrdtId: m.deviceModel,
-      },
-    ]
-  }
-
-  if (m.capacity && capacityOptions.value.length === 0) {
-    // 용량 명칭이 있으면 사용, 없으면 코드 뒤에 G 붙여서 임시 표시
-    capacityOptions.value = [{ label: m.capacityNm || `${m.capacity}G`, value: m.capacity }]
-  }
-
-  if (m.color && colorOptions.value.length === 0) {
-    // 색상 명칭(WE 등)이 있으면 사용
-    colorOptions.value = [{ label: m.colorNm || '기본 색상', value: m.color }]
-  }
-
-  if (m.discountType && discountTypeOptions.value.length === 0) {
-    discountTypeOptions.value = [
-      { label: m.discountTypeNm || '기본 할인유형', value: m.discountType },
-    ]
-  }
-
-  if (m.prodId && planOptions.value.length === 0) {
-    planOptions.value = [{ label: m.prodNm || '기본 요금제', value: m.prodId }]
-  }
+  // 사용자의 요청에 따라 '기본 요금제', '기본 단말기' 등의 임시 옵션 생성을 중단합니다.
+  // 실제 API에서 조회된 목록만 노출되도록 보장합니다.
 }
 
 // 모델 데이터 변경 감시하여 초기 옵션 동기화 (async 초기화 대응)
@@ -273,7 +213,7 @@ watch(
   () => {
     syncInitialOptions()
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 // --- 시퀀스 로직 실행 (순차 처리) ---
@@ -296,22 +236,27 @@ const executeLoadingSequence = async () => {
     const selected = deviceOptions.value.find((opt) => opt.value === deviceModel)
     const rprsPrdtId = selected?.rprsPrdtId || deviceModel
 
+    // 예상 금액 조회를 위해 modelId 값도 스토어에 보관해둡니다.
+    if (selected?.modelId) {
+      model.value.modelId = selected.modelId
+    }
+
+    // 단말기 목록에 이미 판매정책코드가 있다면 우선 적용하여 빈 값 조회를 방지합니다.
+    if (selected?.salePlcyCd) {
+      model.value.modelSalePolicyCd = selected.salePlcyCd
+    }
+
     // 2. 판매정책 조회 (판매정책코드를 먼저 받아와야 다음 단계 가능)
     await fetchSalePolicy(rprsPrdtId)
 
-    // 3. 용량, 할인유형, 할부기간, 약정기간 조회 (판매정책코드 의존)
-    // 이 항목들은 서로 독립적이므로 병렬 실행 가능하나, 요금제 조회 전에는 모두 완료되어야 함
+    // 3. 단말기 관련 옵션들을 병렬로 조회
     await Promise.all([
       fetchCapacities(deviceModel),
+      fetchColors(deviceModel, model.value.capacity),
       fetchDiscountTypes(),
       fetchInstallmentMonths(deviceModel),
       fetchContractPeriods(),
     ])
-
-    // 4. 색상 조회 (용량 선택값에 의존)
-    if (model.value.capacity) {
-      await fetchColors(deviceModel, model.value.capacity)
-    }
   } else {
     // USIM 단독 등의 경우에도 약정기간/할인유형 정보는 필요함
     await Promise.all([fetchContractPeriods(), fetchDiscountTypes()])
@@ -319,9 +264,7 @@ const executeLoadingSequence = async () => {
 
   // 5. 요금제 정보 조회
   await fetchPlanCategories()
-  if (model.value.prodCtgId) {
-    await fetchPlans(model.value.prodCtgId)
-  }
+  await fetchPlans(model.value.prodCtgId)
 }
 
 // --- 클릭 시 재조회 핸들러 ---
@@ -352,7 +295,6 @@ const fetchDevices = async () => {
       prodCtgId: '',
       makrCd: '',
       shandType: '',
-      orgnId: '1100014062', // 매장재고조회를 위한 대리점 코드 임시값
       reqBuyTypeCd: model.value.productType || 'MM',
     })
     const list = extractData(res)
@@ -378,12 +320,21 @@ const fetchCapacities = async (prodId) => {
     return []
   }
   try {
-    const res = await post('/api/form/phone/capacity/list', { prodId })
+    const selectedDevice = deviceOptions.value.find((opt) => opt.value === prodId)
+    const targetProdId = selectedDevice?.prodId || prodId
+
+    const res = await post('/api/form/phone/capacity/list', { prodId: targetProdId })
     const list = extractData(res).map((item) => ({
       label: item.modelCapacityNm || item.ctgNm || '용량정보 없음',
       value: item.modelCapacityCd || item.ctgCd || item.prdtId,
     }))
     capacityOptions.value = list
+
+    // 자동 선택: 값이 없으면 첫 번째 항목 자동 선택
+    if (capacityOptions.value.length > 0 && !model.value.capacity) {
+      model.value.capacity = capacityOptions.value[0].value
+    }
+
     return list
   } catch (e) {
     console.error('Failed to fetch capacities:', e)
@@ -392,7 +343,7 @@ const fetchCapacities = async (prodId) => {
 }
 
 // 3. 색상 목록 조회
-const fetchColors = async (prodId, capacityCd) => {
+const fetchColors = async (prodId) => {
   if (!prodId) {
     colorOptions.value = []
     return []
@@ -402,14 +353,19 @@ const fetchColors = async (prodId, capacityCd) => {
     const rprsPrdtId = selectedDevice?.rprsPrdtId || prodId
 
     const res = await post('/api/form/phone/color/list', {
-      rprsPrdtId,
-      modelCapacityCd: capacityCd,
+      rprsPrdtId: rprsPrdtId,
     })
     const list = extractData(res).map((item) => ({
       label: item.modelColorNm || item.ctgNm || '색상정보 없음',
       value: item.modelColorCd || item.ctgCd || item.prdtId,
     }))
     colorOptions.value = list
+
+    // 자동 선택: 값이 없으면 첫 번째 항목 자동 선택
+    if (colorOptions.value.length > 0 && !model.value.color) {
+      model.value.color = colorOptions.value[0].value
+    }
+
     return list
   } catch (e) {
     console.error('Failed to fetch colors:', e)
@@ -420,9 +376,19 @@ const fetchColors = async (prodId, capacityCd) => {
 // 4. 약정기간 조회
 const fetchContractPeriods = async () => {
   try {
-    const res = await post('/api/form/rate/engg/list', {
+    const payload = {
       salePlcyCd: model.value.modelSalePolicyCd || '',
-    })
+    }
+
+    // 단말기를 선택한 경우 단말기 ID(prdtId)도 함께 전달합니다.
+    if (model.value.productType === 'MM' && model.value.deviceModel) {
+      const selectedDevice = deviceOptions.value.find(
+        (opt) => opt.value === model.value.deviceModel,
+      )
+      payload.prdtId = selectedDevice?.rprsPrdtId || model.value.deviceModel
+    }
+
+    const res = await post('/api/form/rate/engg/list', payload)
     const list = extractData(res).map((item) => ({
       label: item.agrmTrmLabel || `${item.agrmTrm}개월`,
       value: String(item.agrmTrm),
@@ -483,9 +449,6 @@ const fetchSalePolicy = async (rprsPrdtId) => {
     const res = await post('/api/form/phone/saleplcy/list', {
       plcyTypeCd: 'N', // 고정값: 위탁온라인(N)
       reqBuyTypeCd: 'MM', // 고정값: 단말(01)
-      prdtSctnCd: '',
-      sprtTp: '',
-      orgnId: '1100014062',
       prdtId: rprsPrdtId,
     })
     const data = extractData(res)
@@ -543,10 +506,13 @@ const fetchPlanCategories = async () => {
 
 // 8. 요금제 목록 조회 (카테고리 선택 시)
 const fetchPlans = async (ctgCd) => {
+  // 조회 시작 전 목록 및 선택값 명시적 초기화
+  planOptions.value = []
+  
   try {
     const res = await post('/api/form/rate/list', {
       sprtTp: model.value.discountType || '',
-      prodCtgId: ctgCd, // 카테고리 ID 추가
+      prodCtgId: ctgCd || '', // 카테고리 ID 추가 (선택사항)
       reqBuyTypeCd: model.value.productType || 'MM', // 상품유형(MM/UU) 전달
       salePlcyCd: model.value.modelSalePolicyCd || '', // 단말기 판매정책 코드
     })
@@ -554,12 +520,13 @@ const fetchPlans = async (ctgCd) => {
     // 가입자 나이 계산 (만 65세 이상 여부)
     const getAge = (birthStr) => {
       if (!birthStr || birthStr.length < 6) return 0
-      const yearPrefix = birthStr.length === 8 ? '' : (Number(birthStr.substring(0, 2)) > 50 ? '19' : '20')
+      const yearPrefix =
+        birthStr.length === 8 ? '' : Number(birthStr.substring(0, 2)) > 50 ? '19' : '20'
       const fullBirth = yearPrefix + birthStr
       const birthDate = new Date(
         fullBirth.substring(0, 4),
         Number(fullBirth.substring(4, 6)) - 1,
-        fullBirth.substring(6, 8)
+        fullBirth.substring(6, 8),
       )
       const today = new Date()
       let age = today.getFullYear() - birthDate.getFullYear()
@@ -574,10 +541,9 @@ const fetchPlans = async (ctgCd) => {
     const userAge = getAge(userBirth)
     const isSenior = userAge >= 65
 
-    planOptions.value = extractData(res)
+    const list = extractData(res)
       .filter((item) => {
         // 1. 상품 유형(MM/UU)에 따른 필터링 (API에서 처리되지 않았을 경우를 대비한 추가 필터)
-        // item.prodSctnCd 등이 상품 유형을 나타낸다고 가정 (프로젝트 스펙에 따라 조정 필요)
         if (model.value.productType === 'UU' && item.prodSctnCd === 'MM') return false
         if (model.value.productType === 'MM' && item.prodSctnCd === 'UU') return false
 
@@ -596,15 +562,32 @@ const fetchPlans = async (ctgCd) => {
         value: item.rateCd || item.ctgCd || item.prodId,
         raw: item,
       }))
+
+    planOptions.value = list
+
+    // 요금제 결과가 없거나, 현재 선택된 요금제가 목록에 없으면 초기화
+    if (list.length === 0) {
+      model.value.prodId = ''
+      model.value.prodNm = ''
+    } else if (model.value.prodId) {
+      const isExist = list.some((opt) => opt.value === model.value.prodId)
+      if (!isExist) {
+        model.value.prodId = ''
+        model.value.prodNm = ''
+      }
+    }
   } catch (error) {
     console.error('Failed to fetch plans:', error)
+    planOptions.value = []
+    model.value.prodId = ''
+    model.value.prodNm = ''
   }
 }
 
 // 9. 대리점 목록 조회
 const fetchAgencies = async () => {
   try {
-    const res = await post('/api/form/agent/list', { shopOrgnId: 'V000001083' })
+    const res = await post('/api/form/agent/list', {})
     const list = extractData(res)
 
     agencyOptions.value = list.map((item) => ({
@@ -639,7 +622,7 @@ watch(
   () => model.value.prodId,
   (newVal) => {
     if (newVal) {
-      const selected = planOptions.value.find(opt => opt.value === newVal)
+      const selected = planOptions.value.find((opt) => opt.value === newVal)
       if (selected) {
         model.value.prodNm = selected.label
         // 약관 필터링을 위해 prdtSctnCd 저장
@@ -649,7 +632,7 @@ watch(
       model.value.prodNm = ''
       model.value.prdtSctnCd = ''
     }
-  }
+  },
 )
 
 // 약정기간 변경 시 할부기간 자동 동기화 및 할인유형 제어
@@ -675,21 +658,33 @@ watch(
   },
 )
 
+// 상품유형(휴대폰/USIM)이 변경될 때 단말기 선택 초기화
+watch(
+  () => model.value.productType,
+  (newVal, oldVal) => {
+    if (oldVal !== undefined && newVal !== oldVal && !model.value.isSaved) {
+      model.value.deviceModel = ''
+    }
+  },
+)
+
 // 단말기가 변경될 때 전체 하위 데이터 시퀀스 실행
 watch(
   () => model.value.deviceModel,
   async (newVal, oldVal) => {
-    // 사용자가 직접 변경한 경우에만 하위 값 초기화
-    if (oldVal && newVal !== oldVal && !model.value.isSaved) {
-      model.value.capacity = ''
-      model.value.color = ''
-      model.value.discountType = ''
-      model.value.installmentMonth = ''
-      model.value.prodId = ''
-    }
+    // 사용자가 변경했거나 최초 선택 시 실행 (isSaved가 아닐 때)
+    if (newVal !== oldVal && !model.value.isSaved) {
+      if (oldVal !== undefined) {
+        model.value.capacity = ''
+        model.value.color = ''
+        model.value.discountType = ''
+        model.value.installmentMonth = ''
+        model.value.prodId = ''
+      }
 
-    // 순차적 로드 시퀀스 실행
-    await executeLoadingSequence()
+      // 순차적 로드 시퀀스 실행
+      await executeLoadingSequence()
+    }
   },
 )
 
@@ -697,13 +692,12 @@ watch(
 watch(
   () => model.value.capacity,
   async (newVal, oldVal) => {
-    if (oldVal && newVal !== oldVal && !model.value.isSaved) {
-      model.value.color = ''
-    }
-    if (newVal && model.value.deviceModel) {
-      await fetchColors(model.value.deviceModel, newVal)
-    } else {
-      colorOptions.value = []
+    if (oldVal !== undefined && newVal !== oldVal && !model.value.isSaved) {
+      if (newVal && model.value.deviceModel) {
+        await fetchColors(model.value.deviceModel, newVal)
+      } else {
+        colorOptions.value = []
+      }
     }
   },
 )
@@ -711,8 +705,13 @@ watch(
 // 요금제 카테고리 또는 할인유형이 변경될 때 하위 요금제 목록 다시 불러오기
 watch(
   () => [model.value.prodCtgId, model.value.discountType],
-  async ([newCtgId]) => {
-    if (newCtgId) {
+  async ([newCtgId], [oldCtgId]) => {
+    if (!model.value.isSaved) {
+      // 카테고리가 변경된 경우 선택된 요금제 정보 즉시 초기화
+      if (newCtgId !== oldCtgId) {
+        model.value.prodId = ''
+        model.value.prodNm = ''
+      }
       await fetchPlans(newCtgId)
     }
   },
@@ -744,10 +743,14 @@ const validate = () => {
 
   if (m.productType === 'MM') {
     if (!m.deviceModel || !m.capacity || !m.color || !m.contractPeriod) return false
-    if (m.installmentMonth === undefined || m.installmentMonth === null || m.installmentMonth === '') return false
+    if (
+      m.installmentMonth === undefined ||
+      m.installmentMonth === null ||
+      m.installmentMonth === ''
+    )
+      return false
     if (!m.discountType) return false
   }
-
 
   if (!m.agency) {
     console.warn('Validation failed: agency is missing')

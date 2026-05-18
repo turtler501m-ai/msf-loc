@@ -35,26 +35,12 @@
 // import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterView } from 'vue-router'
 import { useMsfAlertStore } from '@/stores/msf_alert'
-// import { hideAlert, showAlert } from '@/libs/utils/comp.utils'
-import { ref } from 'vue'
-const deviceType = ref('pc') // 'pc' 또는 'mobile'을 저장하는 반응형 상태 변수
+import { showAlert } from '@/libs/utils/comp.utils'
+import { onBeforeMount } from 'vue'
+
 const { alerts, removeAlert } = useMsfAlertStore()
-
-import { useMsfAppStore } from '@/stores/msf_app'
-const appStore = useMsfAppStore()
-
-const detectDeviceType = () => {
-  if (window.ktMmobile) {
-    deviceType.value = 'Android'
-  } else if (window.webkit) {
-    deviceType.value = 'IOS'
-  } else {
-    deviceType.value = 'PC'
-  }
-  appStore.deviceType = deviceType.value // 앱 스토어에 디바이스 타입 설정
-  console.log('deviceType: ' + deviceType.value)
-}
-detectDeviceType()
+import { post } from '@/libs/api/msf.api'
+import { appDeviceType, getDeviceInfo } from '@/libs/utils/device.utils'
 
 // // 화면 보안 처리 여부를 결정하는 반응형 상태
 // const isSecureHidden = ref(false)
@@ -128,6 +114,21 @@ detectDeviceType()
 //     document.removeEventListener('visibilitychange', handleVisibilityChange)
 //   }
 // })
+
+onBeforeMount(async () => {
+  await appDeviceType() // 디바이스 유형 감지 및 localStorage에 저장
+  await getDeviceInfo() // 디바이스 정보 수집 (콘솔에 출력)
+  const param = {
+    os: localStorage.getItem('deviceType'), // 운영체제 정보
+    appOsVer: localStorage.getItem('appOsVersion'), // 앱 운영체제 버전 정보 (예시)
+    version: localStorage.getItem('appVersion'), // 앱 버전 정보
+    uuid: localStorage.getItem('MSF_DEVICE_UUID'),
+  }
+  if (localStorage.getItem('deviceType') !== 'PC') {
+    const result = await post('/api/n/app/intro', param)
+    showAlert(result.message)
+  }
+})
 </script>
 
 <style scoped></style>

@@ -26,9 +26,7 @@ public class CacheRedisWriteLock {
     private final ObjectProvider<LockProvider> lockProvider;
     private final CacheProperties cacheProperties;
 
-    /**
-     * Redis 캐시 쓰기 락 처리기 생성
-     */
+    /** Redis 캐시 쓰기 락 처리기 생성 */
     public CacheRedisWriteLock(
         @Qualifier(CacheCoreRedisConfig.CACHE_LOAD_LOCK_PROVIDER) ObjectProvider<LockProvider> lockProvider,
         CacheProperties cacheProperties
@@ -37,9 +35,7 @@ public class CacheRedisWriteLock {
         this.cacheProperties = cacheProperties;
     }
 
-    /**
-     * Redis 쓰기 락 획득 후 작업 실행
-     */
+    /** Redis 쓰기 락 획득 후 작업 실행 */
     public boolean execute(String cacheName, Runnable task) {
         if (!cacheProperties.redisWriteLock().isEnabled()) {
             task.run();

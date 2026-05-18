@@ -205,6 +205,17 @@ export const post = async (url, params, config = {}) => {
     })
 }
 
+export const postRaw = async (url, params, config = {}) => {
+  return await api.post(url, params, {
+    validateStatus: (status) => status >= 200 && status < 400,
+    headers:
+      params instanceof FormData
+        ? { 'Content-Type': undefined }
+        : { 'Content-Type': 'application/json' },
+    ...config,
+  })
+}
+
 export const refreshToken = async () => {
   return await auth
     .post('/api/n/auth/refresh')

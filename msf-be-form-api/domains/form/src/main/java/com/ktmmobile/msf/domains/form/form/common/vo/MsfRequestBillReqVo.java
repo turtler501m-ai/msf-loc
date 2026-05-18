@@ -31,6 +31,7 @@ public class MsfRequestBillReqVo {
     String othersPaymentRrn;
     String othersPaymentRelTypeCd;
     String othersPaymentReqNm;
+    String othersPaymentAgrYn;
     String prntsBillNo;
     String cstmrBillSendTypeCd;
     String cstmrEmailAdr;

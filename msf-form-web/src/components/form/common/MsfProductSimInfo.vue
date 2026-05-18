@@ -3,6 +3,7 @@ import { ref, defineModel, defineProps } from 'vue'
 import { useAuthButton } from '@/hooks/useAuthButton'
 import { post } from '@/libs/api/msf.api'
 import MsfEsimScanModal from './popups/MsfEsimScanModal.vue'
+import MsfEsimScan2Modal from '@/components/form/common/popups/MsfEsimScan2Modal.vue';
 import { useMsfFormNewChgStore } from '@/stores/msf_newchange.js'
 
 defineProps({
@@ -13,6 +14,7 @@ defineProps({
 const formData = defineModel({ type: Object, required: true })
 const store = useMsfFormNewChgStore()
 const isEsimScanModalOpen = ref(false)
+const isEsimScanModal2Open = ref(false)
 
 const simAuth = useAuthButton(() => [formData.value?.reqUsimSn], {
   get value() {
@@ -198,6 +200,9 @@ defineExpose({ validate })
         <MsfButton variant="toggle" v-if="!store.authFlags?.imei" @click="isEsimScanModalOpen = true"
           >이미지 등록</MsfButton
         >
+        <MsfButton variant="toggle" v-if="!store.authFlags?.imei" @click="isEsimScanModal2Open = true"
+          >이미지 등록2</MsfButton
+        >
         <MsfButton variant="toggle" v-else active @click="store.authFlags.imei = false"
           >이미지 등록 완료</MsfButton
         >
@@ -206,6 +211,7 @@ defineExpose({ validate })
   </template>
 
   <MsfEsimScanModal v-model="isEsimScanModalOpen" @confirm="onEsimScanConfirm" />
+  <MsfEsimScan2Modal v-model="isEsimScanModal2Open" @confirm="onEsimScanConfirm" />
   <!-- // SIM정보_상품(휴대폰) -->
 </template>
 

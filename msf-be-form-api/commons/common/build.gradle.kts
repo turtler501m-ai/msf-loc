@@ -2,13 +2,12 @@ plugins {
     id("spring-library-conventions")
 }
 
-val aopVersion = findProperty("aop.spring.boot.starter.version") as String
 val reflectionsVersion = findProperty("reflections.version") as String
 val log4jdbcVersion = findProperty("log4jdbc.version") as String
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-json")
-    implementation("org.springframework.boot:spring-boot-starter-aop:${aopVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-aspectj")
 
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     runtimeOnly("org.postgresql:postgresql")

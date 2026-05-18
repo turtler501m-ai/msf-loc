@@ -9,6 +9,9 @@ import lombok.Setter;
  * 2026.05.
  */
 
+/**
+ * KNOTE 신분증 스캔 목록 조회 Response
+ */
 @Getter
 @Setter
 @NoArgsConstructor

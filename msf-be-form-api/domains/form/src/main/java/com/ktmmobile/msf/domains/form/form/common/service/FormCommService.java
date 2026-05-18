@@ -10,6 +10,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.domains.form.common.constants.Constants;
 import com.ktmmobile.msf.domains.form.common.dto.McpRequestOsstDto;
 import com.ktmmobile.msf.domains.form.common.exception.McpMplatFormException;
@@ -34,6 +35,9 @@ import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommWrit
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeWriteMapper;
 
+/**
+ * 신청서 일련번호 생성 등
+ */
 @Service
 @RequiredArgsConstructor
 public class FormCommService {
@@ -79,6 +83,7 @@ public class FormCommService {
      * 사용자조직에 해당하는 대리점 조회
      */
     public List<AgentInfoResponse> getAgentList(AgentInfoRequest request) {
+        request.setShopOrgnId(AuthenticationUtils.getShopCode());
         List<AgentInfoResponse> responseDto = formCommReadMapper.selectAgentInfo(request);
         return responseDto;
     }

@@ -95,6 +95,24 @@ export const validateTel = (str, checkNull = true, inMain = false) => {
 }
 
 /**
+ * 전화번호에서 숫자만 추출
+ * - "010-1234-5678" → "01012345678"
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+export const normalizePhone = (value) => String(value || '').replace(/\D/g, '')
+
+/**
+ * 휴대폰번호 유효성 체크 (01X 10~11자리, 하이픈 포함 raw 입력도 허용)
+ * - "010-1234-5678" → true, "01012345678" → true
+ *
+ * @param {string} value
+ * @returns {boolean}
+ */
+export const isValidMobileNumber = (value) => /^01\d{8,9}$/.test(normalizePhone(value))
+
+/**
  * 비밀번호 정합성 체크
  * - 10~15자 이상일 정합성 체크
  * - 영문, 숫자, 특수문자 3가지가 모두 포함된 10~15자 이상일 경우 true 반환, 그렇지 않으면 false 반환

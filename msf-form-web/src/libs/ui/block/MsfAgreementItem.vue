@@ -5,12 +5,12 @@
         <MsfCheckbox
           :variant="props.type"
           :model-value="modelValue"
-          :label="name"
+          :label="name || label || title"
           @update:model-value="handleUpdateModel"
         >
           <template #label-prepend>
             <em
-              v-if="required === 'Y' || required === '2'"
+              v-if="required === 'Y' || required === '2' || required === true"
               class="required-mark"
               aria-label="필수 항목"
               >[필수]</em
@@ -21,7 +21,7 @@
       </div>
       <div class="actions">
         <MsfButton
-          v-if="version"
+          v-if="version || content || (termsGroupCd && termsItemCd)"
           class="detail-btn"
           @click.stop="showDialog = true"
           iconOnly="agreeArrowRight"
@@ -46,7 +46,8 @@
       :id1="termsGroupCd"
       :id2="termsItemCd"
       :version="version"
-      :title="name"
+      :title="popTitle || name || label || title"
+      :content="content"
       :spec-terms="specTerms"
       @confirm="onConfirmDetail"
     />
@@ -78,10 +79,14 @@ const props = defineProps({
   groupCode: String,
   code: String,
   name: String, // 약관 제목 텍스트
+  label: String, // name 대신 사용할 수 있는 라벨
+  title: String, // name/label 대신 사용할 수 있는 제목
+  popTitle: String, // 팝업 제목 (name 대신 사용 가능)
+  content: [String, Array], // 직접 전달할 약관 내용
   termsGroupCd: String,
   termsItemCd: String,
   specTerms: Object,
-  required: String, // 필수 동의 여부 (true: 필수 / false: 선택)
+  required: [String, Boolean], // 필수 동의 여부 (true: 필수 / false: 선택)
   version: [String, Array], // 약과내용 버전 (문자열 또는 배열)
   children: Array, // 하위 약관 항목 리스트
   onlyRequired: {
@@ -105,6 +110,8 @@ const showDialog = ref(false)
 const handleToggle = () => {
   if (props.children?.length) {
     isExpanded.value = !isExpanded.value
+  } else if (props.version || props.content || (props.termsGroupCd && props.termsItemCd)) {
+    showDialog.value = true
   }
 }
 
