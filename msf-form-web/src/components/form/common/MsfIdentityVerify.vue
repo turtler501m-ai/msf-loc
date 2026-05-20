@@ -2,7 +2,12 @@
   <div>
     <MsfTitleArea :title="computedTitle" />
     <MsfStack vertical type="formgroups">
-      <MsfFormGroup label="신분증" tag="div" required v-if="showIdentityCertType && model.serviceType !== 'TR_CUSTOMER'">
+      <MsfFormGroup
+        label="신분증"
+        tag="div"
+        required
+        v-if="showIdentityCertType && model.serviceType !== 'TR_CUSTOMER'"
+      >
         <MsfChip
           v-model="model.identityCertTypeCd"
           name="inp-idCardCertType"
@@ -38,10 +43,10 @@
             >스캔하기</MsfButton
           >
           <MsfButton
-              variant="subtle"
-              :disabled="!model.identityTypeCd || (!showIdentityCertType && model.isVerified)"
-              @click="isIdCardScanModal2Open = true"
-          >스캔하기</MsfButton
+            variant="subtle"
+            :disabled="!model.identityTypeCd || (!showIdentityCertType && model.isVerified)"
+            @click="isIdCardScanModal2Open = true"
+            >스캔하기</MsfButton
           >
         </MsfStack>
         <div v-if="model.isScanVerified" class="ut-mt-8 ut-p-12 ut-bg-gray-50 ut-radius-8">
@@ -81,11 +86,23 @@
     </MsfStack>
 
     <!-- 신분증 목록 조회 모달 -->
-    <MsfIdCardListModal v-model="isIdCardListModalOpen" @confirm="onIdCardSelect" />
+    <MsfIdCardListModal
+      v-model="isIdCardListModalOpen"
+      :agentCd="model.agentCd"
+      @confirm="onIdCardSelect"
+    />
     <!-- 모바일 신분증 인증 모달 -->
     <MsfMobileIdModal v-model="isMobileIdModalOpen" @confirm="onMobileIdConfirm" />
     <!-- 안면 인증 모달 -->
-    <MsfFaceAuthModal v-model="isFaceAuthModalOpen" @confirm="onFaceAuthConfirm" />
+    <MsfFaceAuthModal
+      v-model="isFaceAuthModalOpen"
+      :join-type="model.value?.productType"
+      :customer-type="model.value?.cstmrTypeCd"
+      :biz-number="model.value?.cstmrJuridicalBizNo1"
+      :minor-agent-name="model.value?.minorAgentNm"
+      :minor-agent-birth="model.value?.minorAgentBirth"
+      @close="onCloseFaceAuth"
+    />
     <!-- 신분증 스캔 모달 -->
     <MsfIdCardScanModal
       v-model="isIdCardScanModalOpen"
@@ -95,21 +112,23 @@
     />
     <!-- 신분증 스캔 모달 이게 ㄹㅇ -->
     <MsfIdCardScanModal2
-        v-model="isIdCardScanModal2Open"
-        :identityTypeCd="model.identityTypeCd"
-        :identityTypeNm="selectedIdentityTypeNm"
-        @confirm="onIdCardScanConfirm"
-    /></div>
+      v-model="isIdCardScanModal2Open"
+      :identityTypeCd="model.identityTypeCd"
+      :identityTypeNm="selectedIdentityTypeNm"
+      @confirm="onIdCardScanConfirm"
+    />
+  </div>
 </template>
 <script setup>
 import { ref, defineModel, defineProps, onMounted, watch, computed } from 'vue'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import { formatLocalDateTime } from '@/libs/utils/date.utils'
+import { showAlert } from '@/libs/utils/comp.utils'
 import MsfIdCardListModal from './popups/MsfIdCardListModal.vue'
 import MsfMobileIdModal from './popups/MsfMobileIdModal.vue'
 import MsfFaceAuthModal from './popups/MsfFaceAuthModal.vue'
 import MsfIdCardScanModal from './popups/MsfIdCardScanModal.vue'
-import MsfIdCardScanModal2 from '@/components/form/common/popups/MsfIdCardScanModal2.vue';
+import MsfIdCardScanModal2 from '@/components/form/common/popups/MsfIdCardScanModal2.vue'
 
 const props = defineProps({
   title: { type: String, default: '신분증 확인' },
@@ -180,7 +199,10 @@ watch(
       if (props.authFlags) props.authFlags.repPhone = false
     } else {
       // 일반 고객인 경우: 가입자 정보 초기화
-      model.value.cstmrNm = ''
+      // 법인/공공기관인 경우 이름(상호명)은 유지한다.
+      if (!['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
+        model.value.cstmrNm = ''
+      }
       model.value.cstmrNativeRrn1 = ''
       model.value.cstmrNativeRrn2 = ''
       model.value.cstmrForeignerRrn1 = ''
@@ -219,6 +241,10 @@ onMounted(async () => {
 
 const handleAuthClick = () => {
   if (model.value.identityCertTypeCd === 'K') {
+    if (!model.value.agentCd && !model.value.agency) {
+      showAlert('대리점을 먼저 선택해 주세요.')
+      return
+    }
     isIdCardListModalOpen.value = true
   } else if (model.value.identityCertTypeCd === 'M') {
     isMobileIdModalOpen.value = true
@@ -258,10 +284,11 @@ const onIdCardSelect = (selected) => {
     } else {
       // 일반 고객인 경우 가입자 필드에 저장
       if (custNm) {
-        model.value.cstmrNm = custNm
-        // 법인/공공기관인 경우 대표자명에도 세팅
+        // 법인/공공기관인 경우 대표자명에 세팅 (이름은 직접 입력)
         if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
           model.value.cstmrJuridicalRepNm = custNm
+        } else {
+          model.value.cstmrNm = custNm
         }
       }
       if (['NA', 'NM'].includes(model.value.cstmrTypeCd)) {
@@ -299,7 +326,7 @@ const onMobileIdConfirm = () => {
   model.value.isVerified = true
 }
 
-const onFaceAuthConfirm = () => {
+const onCloseFaceAuth = (result) => {
   console.log('안면 인증 완료')
   model.value.isVerified = true
 }
@@ -329,9 +356,32 @@ const onIdCardScanConfirm = (data) => {
     }
 
     // K-NOTE 스캔 관련 추가 정보 저장
-    if (data.cstmrNm) model.value.knoteIdentityScanCstmrNm = data.cstmrNm
+    if (data.cstmrNm) {
+      model.value.knoteIdentityScanCstmrNm = data.cstmrNm
+      // 법인/공공기관인 경우 스캔된 성명을 대표자명에 매핑
+      if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
+        model.value.cstmrJuridicalRepNm = data.cstmrNm
+      } else {
+        // 일반 개인인 경우 가입자 성명에 매핑 (필요시)
+        // model.value.cstmrNm = data.cstmrNm
+      }
+    }
     const scanRrn = resolveScanRrn(data)
-    if (scanRrn) model.value.knoteIdentityEssNo = scanRrn
+    if (scanRrn) {
+      model.value.knoteIdentityEssNo = scanRrn
+
+      // 주민번호/외국인번호 분리 및 매핑
+      const rrn1 = scanRrn.substring(0, 6)
+      const rrn2 = scanRrn.substring(6)
+
+      if (['NA', 'NM'].includes(model.value.cstmrTypeCd)) {
+        model.value.cstmrNativeRrn1 = rrn1
+        model.value.cstmrNativeRrn2 = rrn2
+      } else if (['FN', 'FM'].includes(model.value.cstmrTypeCd)) {
+        model.value.cstmrForeignerRrn1 = rrn1
+        model.value.cstmrForeignerRrn2 = rrn2
+      }
+    }
     if (data.identityTypeCd) model.value.knoteIdentityTypeCd = data.identityTypeCd
     if (data.scanDt) {
       model.value.knoteIdentityScanDt = formatLocalDateTime(data.scanDt)

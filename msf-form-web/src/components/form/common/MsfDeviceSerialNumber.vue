@@ -25,15 +25,15 @@ const imeiAuth = useAuthButton(() => [model.value?.imei], {
 const handleDeviceVerify = async () => {
   const payload = {
     prodSn: model.value.imei,
-    prodId: props.customerData.deviceModel || '', 
+    modelId: props.customerData.modelId || props.customerData.deviceModel || '',
+    agentCd: props.customerData.agentCd || '',
   }
 
   try {
-    const res = await post('/api/form/verifyPhoneSerialNumberInfo', payload)
-    if (res && res.data?.resCode === '0000') {
+    const res = await post('/api/form/phoneinfo/verify', payload)
+    if (res && (res.code === '0000' || res.data?.resCode === '0000')) {
       imeiAuth.verify()
-    }
-  } catch (error) {
+    }  } catch (error) {
     console.error('Verify device serial number error:', error)
   }
 }

@@ -97,10 +97,9 @@ onMounted(async () => {
   }
   post('/api/n/app/login/init', initData)
     .then((data) => {
-      if (data?.code === '0000') {
-        apvSttusCd.value = data.data.apvSttusCd
-        msfUserStore.setDeviceInfo(data.data)
-      }
+      console.log('init data:', data.data.apvSttusCd)
+      apvSttusCd.value = data.data.apvSttusCd
+      msfUserStore.setDeviceInfo(data.data)
     })
     .catch((err) => console.error('데이터를 가져오는 중 오류 발생:', err))
   const savedUserId = localStorage.getItem('saveUserId')

@@ -14,6 +14,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.ktmmobile.msf.commons.common.datasource.msp.MspDataSourceConfig;
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.domains.cache.commoncode.application.dto.CommonCodesRequest;
 import com.ktmmobile.msf.domains.cache.commoncode.application.port.in.CommonCodeReader;
 import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeData;
@@ -51,7 +52,7 @@ import com.ktmmobile.msf.domains.form.form.termination.repository.CancelPageRepo
 
 
 @Service
-public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
+public class MsfCancelPageSvcImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(MsfCancelPageSvcImpl.class);
 
@@ -89,7 +90,6 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     @Qualifier(MspDataSourceConfig.MSP_TX_MANAGER)
     private PlatformTransactionManager mspTransactionManager;
 
-    @Override
     public List<AgentInfoResponse> getTerminationAgentInfo(AgentInfoRequest request) {
         logger.info("[해지] 대리점 정보 조회 요청 — shopOrgnId={}", request.getShopOrgnId());
         List<AgentInfoResponse> result = formCommService.getAgentList(request);
@@ -102,7 +102,6 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
      * 계약번호(ncn)로 회선 정보를 보강한 뒤 X18 잔여요금과 위약금/잔여할부 정보를 조회한다.
      * 외부 연동 완료 전까지 화면 테스트용 mock 금액 보정은 유지한다.
      */
-    @Override
     public FormResponse<TerminationRemainChargeResVO> getRemainCharge(TerminationRemainChargeReqDto reqDto) {
         logger.debug("[getRemainCharge] selectCntrListNoLogin: ncn={}", safe(reqDto.getNcn()));
         McpUserCntrMngDto cntrInfo = msfSvcChgPageService.selectCntrListNoLogin(reqDto.getNcn());
@@ -165,7 +164,6 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         return FormResponse.of(ResTermMessage.SUCCESS, resVO);
     }
 
-    @Override
     public FormResponse<Void> checkInProgressApplication(String requestMobileNo) {
         String mobileNo = normalizeDigits(requestMobileNo);
         logger.debug("[checkInProgressApplication] start: mobileNo={}", maskPhone(mobileNo));
@@ -364,7 +362,6 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     /**
      * 작성완료 요청 처리 시간과 결과를 로깅하고 실제 저장 처리는 apply에 위임한다.
     */
-    @Override
     public FormResponse<TerminationApplyResVO> complete(String applicationKey, TerminationApplyReqDto reqDto) {
         long startedAt = System.currentTimeMillis();
         String ncn = reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "";
@@ -391,7 +388,6 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
      * 서비스해지 신청 데이터를 smartform(MSF) 테이블에 먼저 저장하고,
      * 저장된 데이터를 다시 조회해 MCP DB link 테이블로 이관한다.
      */
-    @Override
     public FormResponse<TerminationApplyResVO> apply(TerminationApplyReqDto reqDto) {
         logger.info("[apply] start: ncn={}, customerType={}, postMethod={}, cancelUseCompanyCd={}",
             reqDto != null && reqDto.getCustomer() != null ? safe(reqDto.getCustomer().getNcn()) : "",
@@ -433,6 +429,7 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         TerminationApplyReqDto.Customer customer = reqDto.getCustomer();
         String ncn = safe(customer.getNcn());
 
+        applyWriterInfo(customer);
         requireText(customer.getAgentCd(), ResTermMessage.APPLY_AGENT_REQUIRED, "agentCd", ncn);
         requireText(customer.getManagerCd(), ResTermMessage.APPLY_MANAGER_REQUIRED, "managerCd", ncn);
         String cstmrTypeCd = requireText(reqDto.getCstmrTypeCd(), ResTermMessage.APPLY_CUSTOMER_TYPE_REQUIRED, "cstmrTypeCd", ncn);
@@ -542,7 +539,6 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
     /**
      * MCP 이관은 MSF 저장 트랜잭션과 분리해서 단독 실행 가능하게 둔다.
      */
-    @Override
     public FormResponse<Void> transferToMcp(Long requestKey) {
         if (requestKey == null) {
             return FormResponse.of(ResTermMessage.ADMIN_REQUEST_KEY_REQUIRED);
@@ -1117,24 +1113,20 @@ public class MsfCancelPageSvcImpl implements MsfCancelPageSvc {
         return value == null ? "" : value;
     }
 
-    private static String resolveAgentCd(TerminationApplyReqDto.Customer customer) {
+    private static void applyWriterInfo(TerminationApplyReqDto.Customer customer) {
         if (customer == null) {
-            return "";
+            return;
         }
-        if (!isBlank(customer.getAgentCd())) {
-            return customer.getAgentCd();
-        }
-        return safe(customer.getAgencyName());
-    }
 
-    private static String resolveManagerCd(TerminationApplyReqDto.Customer customer) {
-        if (customer == null) {
-            return "";
+        String agentCd = customer.getAgentCd();
+        if (isBlank(agentCd)) {
+            agentCd = AuthenticationUtils.getAgentCode();
         }
-        if (!isBlank(customer.getManagerCd())) {
-            return customer.getManagerCd();
-        }
-        return resolveAgentCd(customer);
+
+        customer.setManagerCd(AuthenticationUtils.getUser().getUserId());
+        customer.setManagerNm(AuthenticationUtils.getUser().getUserName());
+        customer.setAgentCd(agentCd);
+        customer.setAgentNm(AuthenticationUtils.getAgentName());
     }
 
     private static void initializeRequestCstmrDefaults(MsfRequestCstmrVo cstmrVo) {

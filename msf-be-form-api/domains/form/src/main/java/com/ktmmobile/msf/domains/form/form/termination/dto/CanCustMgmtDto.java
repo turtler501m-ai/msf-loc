@@ -6,9 +6,6 @@ import lombok.Setter;
 
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
 public class CanCustMgmtDto {
 
     @Getter
@@ -95,7 +92,6 @@ public class CanCustMgmtDto {
     @NoArgsConstructor
     public static class ProcessReqDto {
         private Long requestKey;
-        private String procCd;
         private String itgOderWhyCd;
         private String aftmnIncInCd;
         private String apyRelTypeCd;

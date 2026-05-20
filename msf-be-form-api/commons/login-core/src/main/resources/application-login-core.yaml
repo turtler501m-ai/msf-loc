@@ -11,8 +11,8 @@ login-core:
     access-time-to-live: 10m
     refresh-time-to-live: 1h
   user-info-cache:
-    time-to-live: 10m
-    stale-time-to-live: 10m
+    time-to-live: 1d
+    stale-time-to-live: 1h
     lock-time-to-live: 3s
     lock-wait-time: 1s
     lock-retry-interval: 100ms

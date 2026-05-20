@@ -8,6 +8,7 @@ import com.ktmmobile.msf.domains.form.main.application.dto.NoticeCondition;
 import com.ktmmobile.msf.domains.form.main.application.dto.NoticeHitsRequest;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaCondition;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaHitsRequest;
+import com.ktmmobile.msf.domains.form.main.application.dto.QnaRequest;
 import com.ktmmobile.msf.domains.form.main.domain.entity.Board;
 import com.ktmmobile.msf.domains.form.main.domain.entity.Qna;
 
@@ -24,4 +25,6 @@ public interface FormMainRepository {
     Page<Qna> getListQna(QnaCondition condition);
 
     Integer addQnaHits(QnaHitsRequest request);
+
+    Integer registQna(QnaRequest request);
 }

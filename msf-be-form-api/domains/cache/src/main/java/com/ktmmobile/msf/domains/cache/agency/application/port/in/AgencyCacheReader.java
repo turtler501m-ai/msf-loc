@@ -1,6 +1,6 @@
 package com.ktmmobile.msf.domains.cache.agency.application.port.in;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,6 +14,11 @@ public interface AgencyCacheReader {
     /** 조직ID 기준 단건 조회 */
     Optional<AgencyCache> getAgency(String organizationId);
 
+    /** 조직ID 기준 단건 조회 (없으면 빈 객체 반환) */
+    default AgencyCache getAgencyOrEmpty(String organizationId) {
+        return getAgency(organizationId).orElse(AgencyCache.empty());
+    }
+
     /** 조직ID 기준 다건 조회 */
-    Map<String, AgencyCache> getAgencies(List<String> organizationIds);
+    Map<String, AgencyCache> getAgencies(Collection<String> organizationIds);
 }

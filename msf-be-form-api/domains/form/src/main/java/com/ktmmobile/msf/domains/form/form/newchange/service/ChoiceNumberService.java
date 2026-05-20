@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
@@ -23,6 +24,7 @@ import com.ktmmobile.msf.domains.form.form.newchange.dto.SearchNumberResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommWriteMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChoiceNumberService {
@@ -50,6 +52,8 @@ public class ChoiceNumberService {
     //public Map<String, Object> searchNumber(McpRequestDto mcpRequestDto) {
     //public FormResponse<SearchNumberResponse> getSearchNumber(SearchNumberRequest request) {
     public FormResponse<SearchNumberResponse> getSearchNumber(SearchNumberRequest request) {
+        log.debug("★ 신규가입 희망번호 조회 ★ reqWantNumber: {}", request.getReqWantNumber());
+
         //Parameter 정보 : requestKey, reqWantNumber
 
         //0. 입력 데이타 검증
@@ -193,6 +197,9 @@ public class ChoiceNumberService {
      **/
     //public Map<String, Object> setNumber(McpRequestOsstDto request) {
     public FormResponse<SearchNumberResponse> setChoiseNumber(SearchNumberRequest request) {
+        //log.debug("★ 신규가입 희망번호 예약 ★ tlphNo: {}, custNo: {}, custTypeCd: {}", request.getTlpNo(), request.getCustNo(), request.getCustTypeCd());
+        log.debug("★ 신규가입 희망번호 예약 ★ tlphNo: {}", request.getTlpNo());
+
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
         SearchNumberResponse searchNumberResponse = new SearchNumberResponse(); //Return DTO 설정
         McpRequestOsstRequest mcpRequestOsstRequest = new McpRequestOsstRequest();
@@ -286,6 +293,7 @@ public class ChoiceNumberService {
      */
     //public Map<String, Object> cancelNumberAjax(AppformReqDto appformReqDto) {
     public FormResponse<SearchNumberResponse> cancelChoiseNumber(NewChangeInfoRequest request) {
+        //log.debug("★ 신규가입 희망번호 취소 ★ tlphNo: {}", request.getTlpNo());
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
         SearchNumberResponse searchNumberResponse = new SearchNumberResponse(); //Return DTO 설정
         McpRequestOsstRequest mcpRequestOsstRequest = new McpRequestOsstRequest();

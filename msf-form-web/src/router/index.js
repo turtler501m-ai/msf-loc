@@ -54,13 +54,6 @@ const router = createRouter({
           name: 'setting',
           component: MsfSettingView, // 설정
         },
-        // 퍼블리싱 화면보기용
-        {
-          path: '/pub/:screenId',
-          name: 'PubPage',
-          component: PubPage,
-          props: true,
-        },
       ],
     },
     {
@@ -92,7 +85,25 @@ const router = createRouter({
       name: 'passwordChange',
       component: MsfPwChangeView, // 비밀번호 변경
     },
-    // ===== 퍼블리싱용 라우팅(실제화면에서 사용안함) ===== //
+    {
+      path: '/404',
+      name: 'not-found-explicit',
+      meta: { skipAuth: true },
+      component: MsfNotFoundView, // 404 컴포넌트
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      meta: { skipAuth: true },
+      component: MsfNotFoundView, // 404 컴포넌트
+    },
+    // ===== 퍼블리싱, 화면확인용 라우팅(실제화면에서 사용안함) ===== //
+    {
+      path: '/pub/:screenId',
+      name: 'PubPage',
+      component: PubPage, // 퍼블리싱 화면보기용
+      props: true,
+    },
     {
       path: '/guide',
       name: 'Guide',
@@ -123,18 +134,7 @@ const router = createRouter({
       meta: { skipAuth: true },
       component: FormGuideView, // 퍼블리싱 반복 폼 정리
     },
-    {
-      path: '/404',
-      name: 'not-found-explicit',
-      meta: { skipAuth: true },
-      component: MsfNotFoundView, // 404 컴포넌트
-    },
-    {
-      path: '/:pathMatch(.*)*',
-      name: 'not-found',
-      meta: { skipAuth: true },
-      component: MsfNotFoundView, // 404 컴포넌트
-    },
+    // ================================================== //
   ],
 })
 
@@ -158,11 +158,7 @@ router.beforeEach((to, from, next) => {
     )
     return
   }
-  //   if (!isAuthenticated() && to.path !== '/login') {
-  //     next('/login')
-  //   } else {
   next()
-  //   }
 })
 
 // router.afterEach((to) => {

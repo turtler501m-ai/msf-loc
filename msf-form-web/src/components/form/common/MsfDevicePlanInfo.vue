@@ -96,15 +96,6 @@
           title="요금제 상세"
         />
       </MsfFormGroup>
-      <MsfFormGroup label="대리점" tag="div" required>
-        <MsfSelect
-          v-model="model.agency"
-          :options="agencyOptions"
-          class="ut-w-300"
-          placeholder="대리점 선택"
-          title="대리점 선택"
-        />
-      </MsfFormGroup>
     </MsfStack>
   </div>
 </template>
@@ -113,6 +104,7 @@
 import { computed, defineModel, defineProps, onBeforeMount, onMounted, ref, watch } from 'vue'
 import { getCommonCodeList } from '@/libs/utils/comn.utils'
 import { post } from '@/libs/api/msf.api'
+import { useMsfUserStore } from '@/stores/msf_user'
 
 /**
  * API 응답에서 데이터(리스트) 추출
@@ -130,8 +122,29 @@ const extractData = (res) => {
 const props = defineProps({
   title: { type: String, default: '휴대폰 및 요금제 정보' },
   customerData: { type: Object, default: () => ({}) },
+  productData: { type: Object, default: () => ({}) },
 })
 const model = defineModel({ type: Object, required: true })
+const userStore = useMsfUserStore()
+
+const getAgentCd = () => {
+  const userInfo = userStore.getUserInfo()
+  return (
+    props.customerData?.agentCd ||
+    model.value?.agentCd ||
+    props.customerData?.agency ||
+    model.value?.agency ||
+    userInfo?.organization?.agentCode ||
+    userInfo?.agentCd ||
+    userInfo?.agentCode ||
+    ''
+  )
+}
+
+const withAgentCd = (payload = {}) => ({
+  ...payload,
+  agentCd: getAgentCd(),
+})
 
 // 옵션 상태 관리
 const deviceOptions = ref([])
@@ -200,7 +213,6 @@ const refinedDiscountTypeOptions = computed(() => {
   })
 })
 const planOptions = ref([])
-const agencyOptions = ref([])
 
 const syncInitialOptions = () => {
   // 사용자의 요청에 따라 '기본 요금제', '기본 단말기' 등의 임시 옵션 생성을 중단합니다.
@@ -291,12 +303,12 @@ const onClickDiscountTypeChip = async () => {
 // 1. 단말기 목록 조회
 const fetchDevices = async () => {
   try {
-    const res = await post('/api/form/phone/list', {
+    const res = await post('/api/form/phone/list', withAgentCd({
       prodCtgId: '',
       makrCd: '',
       shandType: '',
       reqBuyTypeCd: model.value.productType || 'MM',
-    })
+    }))
     const list = extractData(res)
     deviceOptions.value = list.map((item) => ({
       label: item.prdtNm || item.prodNm || item.rprsPrdtNm || '이름없음',
@@ -446,11 +458,11 @@ const fetchInstallmentMonths = async (prodId) => {
 // 6. 판매정책 조회
 const fetchSalePolicy = async (rprsPrdtId) => {
   try {
-    const res = await post('/api/form/phone/saleplcy/list', {
+    const res = await post('/api/form/phone/saleplcy/list', withAgentCd({
       plcyTypeCd: 'N', // 고정값: 위탁온라인(N)
       reqBuyTypeCd: 'MM', // 고정값: 단말(01)
       prdtId: rprsPrdtId,
-    })
+    }))
     const data = extractData(res)
     if (data && data.length > 0) {
       model.value.modelSalePolicyCd = data[0].salePlcyCd || data[0].salePlcyCode || ''
@@ -466,11 +478,11 @@ const fetchDiscountTypes = async () => {
   const rprsPrdtId = selectedDevice?.rprsPrdtId || model.value.deviceModel
 
   try {
-    const res = await post('/api/form/phone/saletype/list', {
+    const res = await post('/api/form/phone/saletype/list', withAgentCd({
       plcySctnCd: model.value.productType || 'MM', // 휴대폰: MM, USIM: UU
       prdtId: rprsPrdtId,
       salePlcyCd: model.value.modelSalePolicyCd || '',
-    })
+    }))
     const availableList = extractData(res).map((item) => ({
       label: item.sprtNm || '할인유형',
       value: item.sprtTp,
@@ -508,14 +520,14 @@ const fetchPlanCategories = async () => {
 const fetchPlans = async (ctgCd) => {
   // 조회 시작 전 목록 및 선택값 명시적 초기화
   planOptions.value = []
-  
+
   try {
-    const res = await post('/api/form/rate/list', {
+    const res = await post('/api/form/rate/list', withAgentCd({
       sprtTp: model.value.discountType || '',
       prodCtgId: ctgCd || '', // 카테고리 ID 추가 (선택사항)
       reqBuyTypeCd: model.value.productType || 'MM', // 상품유형(MM/UU) 전달
       salePlcyCd: model.value.modelSalePolicyCd || '', // 단말기 판매정책 코드
-    })
+    }))
 
     // 가입자 나이 계산 (만 65세 이상 여부)
     const getAge = (birthStr) => {
@@ -584,39 +596,6 @@ const fetchPlans = async (ctgCd) => {
   }
 }
 
-// 9. 대리점 목록 조회
-const fetchAgencies = async () => {
-  try {
-    const res = await post('/api/form/agent/list', {})
-    const list = extractData(res)
-
-    agencyOptions.value = list.map((item) => ({
-      label: item.orgnNm || item.cntpntNm || '대리점명 없음',
-      value: item.ktOrgId || item.shopOrgnId || '',
-    }))
-
-    // 결과가 1개뿐이거나, 현재 선택된 값이 없으면 첫 번째 항목 자동 선택
-    if (agencyOptions.value.length > 0) {
-      if (!model.value.agency || agencyOptions.value.length === 1) {
-        model.value.agency = agencyOptions.value[0].value
-        model.value.agentCd = agencyOptions.value[0].value
-      }
-    }
-  } catch (error) {
-    console.error('Failed to fetch agencies:', error)
-  }
-}
-
-// 대리점 선택 시 agentCd 업데이트
-watch(
-  () => model.value.agency,
-  (newVal) => {
-    if (newVal) {
-      model.value.agentCd = newVal
-    }
-  },
-)
-
 // 요금제 선택 시 prodNm 및 prdtSctnCd 업데이트
 watch(
   () => model.value.prodId,
@@ -627,10 +606,23 @@ watch(
         model.value.prodNm = selected.label
         // 약관 필터링을 위해 prdtSctnCd 저장
         model.value.prdtSctnCd = selected.raw?.prdtSctnCd || ''
+
+        // 제휴 정보 업데이트
+        if (props.productData) {
+          props.productData.jehuPartnerTypeCd = selected.raw?.jehuProdType || ''
+          props.productData.jehuPartnerTypeNm = selected.raw?.jehuProdNm || ''
+          props.productData.jehuProdTypeCd = selected.raw?.jehuProdType || ''
+        }
       }
     } else {
       model.value.prodNm = ''
       model.value.prdtSctnCd = ''
+      // 제휴 정보 초기화
+      if (props.productData) {
+        props.productData.jehuPartnerTypeCd = ''
+        props.productData.jehuPartnerTypeNm = ''
+        props.productData.jehuProdTypeCd = ''
+      }
     }
   },
 )
@@ -718,8 +710,6 @@ watch(
 )
 
 onMounted(async () => {
-  fetchAgencies() // 대리점 조회
-
   // 공통코드 조회: 할인유형 전체 목록
   const discountCodes = await getCommonCodeList('F002')
   allDiscountTypeCodes.value = (discountCodes || []).map((item) => ({
@@ -750,11 +740,6 @@ const validate = () => {
     )
       return false
     if (!m.discountType) return false
-  }
-
-  if (!m.agency) {
-    console.warn('Validation failed: agency is missing')
-    return false
   }
 
   return true

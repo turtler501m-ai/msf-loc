@@ -20,6 +20,7 @@
         <if test="salePlcyCd != null and salePlcyCd != ''">
             AND RA.SALE_PLCY_CD = #{salePlcyCd}
         </if>
+        GROUP BY RA.AGRM_TRM
         ORDER BY RA.AGRM_TRM
     </select>
 
@@ -31,7 +32,7 @@
             INST_NOM AS MODEL_MONTHLY
         FROM ORG_INST_NOM_MST
         WHERE 1=1
-        <if test="modelSalePolicyCode != null and modelSalePolicyCode != ''">
+        <if test="salePlcyCd != null and salePlcyCd != ''">
             AND SALE_PLCY_CD = #{salePlcyCd}
         </if>
         GROUP BY INST_NOM
@@ -79,7 +80,7 @@
             AND TO_CHAR(SYSDATE,'yyyymmddhh24miss') BETWEEN PL.SALE_STRT_DTTM AND PL.SALE_END_DTTM --판매기간 (필수)
             AND PL.PLCY_TYPE_CD = #{plcyTypeCd} -- 온라인:O , 오프라인:M , 직영온라인 : D
             AND PL.PLCY_SCTN_CD = #{reqBuyTypeCd.rateType} -- 01:단말,02:유심
-            AND ORG.ORGN_ID = #{orgnId} -- 조직코드
+            AND ORG.ORGN_ID = #{agentCd} -- 대리점코드
             <if test="prdtSctnCd != null and prdtSctnCd != ''">
                 AND PL.PRDT_SCTN_CD = #{prdtSctnCd} -- LTE,3G
             </if>
@@ -122,7 +123,7 @@
               &lt;!&ndash;AND PL.PLCY_SCTN_CD = #{reqBuyTypeCd} &#45;&#45; 01:단말,02:유심&ndash;&gt;
             </if>-->
 
-            AND ORG.ORGN_ID = #{orgnId} -- 조직코드
+            AND ORG.ORGN_ID = #{agentCd} -- 조직코드
             <!--<if test="orgnId != null and orgnId != ''">
               AND ORG.ORGN_ID = #{orgnId} &#45;&#45; 조직코드
             </if>-->
@@ -368,7 +369,7 @@
             AND PLCY.CNFM_YN = 'Y'
             AND PLCY.PLCY_TYPE_CD = #{plcyTypeCd} <!--위탁온라인 (N) : W / R / D / A / S / N-->
             AND RATE_MST.PAY_CL_CD = #{payClCd} <!--후불 (PO) : PP / PO-->
-            AND ORGN.ORGN_ID = #{orgnId} /* 조직코드 */
+            AND ORGN.ORGN_ID = #{agentCd} /* 대리점코드 :: 조직코드 */
             AND RATE_MST.SERVICE_TYPE = #{serviceType} <!--요금제유형 (P:요금 / R:부가)-->
             AND PLCY.PLCY_SCTN_CD = #{reqBuyTypeCd.rateType} <!--정책유형코드 : 01 / 02-->
             AND RATE_MST.RATE_TYPE = #{reqBuyTypeCd.rateType} <!--요금제유형 : 01(휴대폰), 02(유심)-->
@@ -479,12 +480,21 @@
           resultType="com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstResponse">
     <!--USIM 상품 약정없는 할인율 조회 :: 무약정 -->
     /* StoreUsimMapper.selectUsimDcamt */
-    SELECT DC_AMT
+    SELECT BASE_AMT, DC_AMT
+    FROM MSP_RATE_MST A, MSP_RATE_SPEC B
+    WHERE A.RATE_CD = B.RATE_CD
+      AND A.RATE_CD = #{rateCd}
+      AND B.AGRM_TRM ='0'
+      AND A.APPL_END_DT = '99991231'
+      AND B.APPL_END_DTTM = '99991231235959'
+      AND ROWNUM =1
+    ORDER BY B.APPL_STRT_DTTM DESC
+    <!--SELECT DC_AMT
     FROM MSP_RATE_SPEC F
     WHERE RATE_CD =#{rateCd}
       AND AGRM_TRM ='0'
       AND ROWNUM =1
-    ORDER BY APPL_STRT_DTTM DESC
+    ORDER BY APPL_STRT_DTTM DESC-->
   </select>
 
   <select id="selectMspSaleSubsdMst" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstRequest"
@@ -516,13 +526,14 @@
     FROM MSP_SALE_SUBSD_MST
     WHERE 1=1
       AND SALE_PLCY_CD  = #{salePlcyCd}
-      AND PRDT_ID = #{prdtId}  		--상품ID
+      <!--AND PRDT_ID = #{prdtId}  		&#45;&#45;상품ID-->
+      AND PRDT_ID = #{modelId}  		--상품ID
       AND RATE_CD = #{rateCd} 		--요금제코드
       AND AGRM_TRM = #{agrmTrm} 		--약정기간
       AND OPER_TYPE = #{operTypeCd} --가입유형 (NAC3 , MNP3 , HDN3)
       AND SPRT_TP =#{sprtTp} 			--할인유형 (단말 KD , 요금 PM)
       AND OLD_YN  = #{oldYn}  		--중고여부
-      AND ORGN_ID = #{orgnId} 		--조직코드
+      AND ORGN_ID = #{agentCd} 		--조직코드
   </select>
 
   <!--<select id="selectMspOfficialNoticeSupport"

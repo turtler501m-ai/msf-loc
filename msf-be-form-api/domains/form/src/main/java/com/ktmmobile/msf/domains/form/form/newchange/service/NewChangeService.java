@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -35,6 +36,7 @@ import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommRead
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeWriteMapper;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NewChangeService {
@@ -81,6 +83,7 @@ public class NewChangeService {
             //할인유형 : 단말할인
             //휴대폰 / USIM 선택에 따라 ~~~~~ 요금제 조회... 단말/..........
 
+            String agentCd = AuthenticationUtils.getAgentCode();
             String prodId = "3208"; //상품아이디
             String prodNm = "갤럭시 A21S"; //상품명
             String modelId = "K7025076"; //단말 모델아이디
@@ -162,6 +165,7 @@ public class NewChangeService {
                 }
             }*/
 
+            response.setAgentCd(agentCd);
             response.setProdId(prodId);
             //response.setProdNm(prodNm);
             response.setProdNm(prodNm);
@@ -193,7 +197,7 @@ public class NewChangeService {
     public FormResponse<NewChangeEformResponse> eformNewChangeSet(NewChangeInfoRequest request) {
         NewChangeEformResponse eformResponse = new NewChangeEformResponse();
         NewChangeInfoResponse response = new NewChangeInfoResponse();
-        
+
         //0. 신청서 번호 확인
         if (request.getRequestKey() == null || request.getRequestKey() <= 0) {
             return FormResponse.of(ResponseMessage.F_BIND_EXCEPTION, eformResponse);
@@ -229,6 +233,18 @@ public class NewChangeService {
         return response;
     }
 
+    //
+    public int getNewChangeFormCnt(NewChangeInfoRequest request) {
+        NewChangeRequest newChangeRequest = new NewChangeRequest();
+        newChangeRequest.setRequestKey(request.getRequestKey());
+        newChangeRequest.setManagerCd(AuthenticationUtils.getUser().getUserId());
+        newChangeRequest.setAgentCd(AuthenticationUtils.getAgentCode());
+        newChangeRequest.setShopCd(AuthenticationUtils.getShopCode());
+        newChangeRequest.setPreCheck(request.getPreCheck()); //신청서번호 존재여부만 체크하기 위한 변수
+        newChangeRequest.setTmpStepCd("");
+        int newChangeFormCnt = newChangeReadMapper.checkNewChangeFormUser(newChangeRequest);
+        return newChangeFormCnt;
+    }
 
     //신청서 작성자, 신청서 임시저장 상태 유효성 검증
     public boolean checkNewChangeInfo(NewChangeInfoRequest request) {
@@ -239,12 +255,7 @@ public class NewChangeService {
         //세션정보의 사용자, 대리점, 판매점조직 코드비교하여 정상여부 판단
         Long requestKey = request.getRequestKey();
         if (requestKey != null) {
-            newChangeRequest.setRequestKey(request.getRequestKey());
-            newChangeRequest.setManagerCd(AuthenticationUtils.getUser().getUserId());
-            newChangeRequest.setAgentCd(AuthenticationUtils.getAgentCode());
-            newChangeRequest.setShopCd(AuthenticationUtils.getShopCode());
-            newChangeRequest.setTmpStepCd("");
-            Integer newChangeFormCnt = newChangeReadMapper.checkNewChangeFormUser(newChangeRequest);
+            int newChangeFormCnt = this.getNewChangeFormCnt(request);
             if (newChangeFormCnt == 0) {
                 isValid = false;
             }
@@ -278,10 +289,17 @@ public class NewChangeService {
      */
     @Transactional
     public FormResponse<NewChangeResponse> saveNewChangeFormInfo(NewChangeInfoRequest request) {
-
+        //유효여부
         boolean isValid = true;
 
+        //대리점코드
+        String agentCd = request.getAgentCd();
+        if (agentCd == null || agentCd.equals("")) {
+            agentCd = AuthenticationUtils.getAgentCode();
+        }
+
         //0. 신청서의 로그인작성자 및 임시저장 상태 비교
+        request.setPreCheck("");
         isValid = this.checkNewChangeInfo(request);
         if (!isValid) {
             return FormResponse.of(ResponseMessage.NO_DATA);
@@ -293,6 +311,20 @@ public class NewChangeService {
             return FormResponse.of(ResponseMessage.VALID_INPUT_NOT_CORRECT);
         }
 
+        //0. 신청서번호 존재여부 체크
+        boolean isFirst = false;
+        int newChangeFormCnt = 0;
+        if (request.getRequestKey() == null) {
+            isFirst = true;
+            request.setRequestKey(formCommService.generateRequestKey()); //신청서번호 생성
+        } else {
+            //구비서류, 안면인증에 request_key 를 기 생성하여 처리하므로 request_key 를 보내는데 신청서에 데이타가 없는 경우 isnert 처리를 위함.
+            request.setPreCheck("Y");
+            newChangeFormCnt = this.getNewChangeFormCnt(request);
+            if (newChangeFormCnt == 0) {
+                isFirst = true;
+            }
+        }
 
         //신청서 유효성체크 start
         //단말/요금제로 예상금액 재계산~~~ 데이터저장
@@ -302,7 +334,7 @@ public class NewChangeService {
         //로그인 정보로 세션에서 조회
         String managerCd = AuthenticationUtils.getUser().getUserId();
         String managerNm = AuthenticationUtils.getUser().getUserName();
-        String agentCd = AuthenticationUtils.getAgentCode();
+        //String agentCd = AuthenticationUtils.getAgentCode();
         String agentNm = AuthenticationUtils.getAgentName();
         String shopCd = AuthenticationUtils.getShopCode();
         String shopNm = AuthenticationUtils.getShopName();
@@ -314,18 +346,12 @@ public class NewChangeService {
         request.setShopCd(shopCd); //판매점코드
         request.setShopNm(shopNm); //판매점명
 
-
         //==== 개통전 사전체크 START =====//
-        boolean isFirst = false;
-        if (request.getRequestKey() == null) {
-            isFirst = true;
-            //신청서번호 생성
-            request.setRequestKey(formCommService.generateRequestKey());
-        }
         //스마트 request 에서 고객포탈 request 로 컬럼 변경되는 것들 변환처리
         //AS-IS : @RequestMapping(value = "/appform/reqPreOpenCheckAjax.do")
         Map<String, Object> osstRtnMap = formCommService.checkOsstPreCheck(request);
         //==== 개통전 사전체크 END =====//
+
 
         //가입신청 기변사유정보 DATA SET --- START ---
         //고객포탈은 일관되게 insert 쿼리에 하드코딩되어있어서 아래와 같이 동일한 값이 들어감.
@@ -372,7 +398,6 @@ public class NewChangeService {
         }
         newChangeWriteMapper.deleteMsfAdditionTemp(request.getRequestKey());
 
-        //if (request.getRequestKey() == null) {
         if (isFirst) {
             MsfRequestRecord record = MsfRequestRecord.requestToRecord(request);
 
@@ -424,8 +449,6 @@ public class NewChangeService {
 
     /**
      * 신청서 복사하기 ( to _temp 테이블로 )
-     * @param request
-     * @return
      */
     @Transactional
     public FormResponse<NewChangeResponse> copyForm(NewChangeRequest request) {

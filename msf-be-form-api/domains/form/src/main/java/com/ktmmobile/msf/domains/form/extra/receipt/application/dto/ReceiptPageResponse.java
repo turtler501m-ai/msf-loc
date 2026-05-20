@@ -2,6 +2,8 @@ package com.ktmmobile.msf.domains.form.extra.receipt.application.dto;
 
 import java.time.LocalDateTime;
 
+import com.ktmmobile.msf.commons.masking.domain.code.MaskingType;
+import com.ktmmobile.msf.commons.masking.support.annotation.Masked;
 import com.ktmmobile.msf.domains.cache.commoncode.application.dto.SimpleCommonCode;
 import com.ktmmobile.msf.domains.cache.commoncode.domain.dto.CommonCodeGroups;
 import com.ktmmobile.msf.domains.form.extra.receipt.domain.entity.ReceiptPage;
@@ -13,6 +15,7 @@ public record ReceiptPageResponse(
     SimpleCommonCode reqBuyTypeCd,
     SimpleCommonCode operTypeCd,
     SimpleCommonCode procCd,
+    @Masked(type = MaskingType.NAME)
     String cstmrNm,
     String cstmrNativeBirth,
     SimpleCommonCode cstmrTypeCd,
@@ -21,7 +24,9 @@ public record ReceiptPageResponse(
     String agentNm,
     String shopCd,
     String shopNm,
-    String cretId
+    String cretId,
+    @Masked(type = MaskingType.NAME)
+    String cretNm
 ) {
 
     public static ReceiptPageResponse of(
@@ -43,8 +48,8 @@ public record ReceiptPageResponse(
             entity.getAgentNm(),
             entity.getShopCd(),
             entity.getShopNm(),
-            entity.getCretId()
-
+            entity.getCretId(),
+            entity.getCretNm()
         );
     }
 

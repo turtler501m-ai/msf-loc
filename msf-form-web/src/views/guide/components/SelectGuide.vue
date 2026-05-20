@@ -38,6 +38,11 @@ const componentConfig = {
     description:
       '공통코드 그룹코드 설정 시 해당 그룹코드로 공통코드 목록이 조회되어 옵션으로 사용됩니다. options props와 groupCode props를 함께 사용할 경우 options가 우선적으로 적용됩니다.',
   },
+  disabledItems: {
+    default: '[]',
+    description:
+      '비활성화할 옵션의 value 배열입니다. groupCode로 옵션이 설정되어 있을 때, 조회된 옵션들 중 value가 disabledItems 배열에 포함된 경우 해당 옵션이 비활성화됩니다.',
+  },
   isFull: {
     default: false,
     description: 'true로 설정 시, 옵션 선택 시 value가 아닌 선택된 데이터 객체가 반환됩니다.',
@@ -67,6 +72,7 @@ const componentState = {
     { label: '선택7', value: 'select7', disabled: true },
   ],
   groupCode: '',
+  disabledItems: [],
   isFull: false,
   placeholder: '유형',
   disabled: false,

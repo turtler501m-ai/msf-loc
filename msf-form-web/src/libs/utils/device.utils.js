@@ -18,12 +18,7 @@ export const getDeviceInfo = async () => {
   } else if (deviceType === 'I') {
     window.webkitURL.messageHandlers.getDeviceInfo.postMessage(data)
   } else {
-    console.log('Unknown device type -- PC')
-    // appDeviceInfo({
-    //   appOsVersion: '12.1',
-    //   appVersion: '1.0.0',
-    //   uuid: 'UUID-82311994',
-    // })
+    console.log('getDeviceInfo -- PC')
   }
 }
 
@@ -33,4 +28,18 @@ export const appDeviceInfo = (data) => {
   localStorage.setItem('appOsVersion', data.appOsVersion)
   localStorage.setItem('appVersion', data.appVersion)
   localStorage.setItem('MSF_DEVICE_UUID', data.uuid)
+}
+
+export const exportBrowser = async (exporturl) => {
+  const deviceType = localStorage.getItem('deviceType')
+  const data = {
+    url: exporturl,
+  }
+  if (deviceType === 'A') {
+    window.ktMmobile.exportBrowser(data)
+  } else if (deviceType === 'I') {
+    window.webkitURL.messageHandlers.exportBrowser.postMessage(data)
+  } else {
+    console.log('exportBrowser -- PC')
+  }
 }

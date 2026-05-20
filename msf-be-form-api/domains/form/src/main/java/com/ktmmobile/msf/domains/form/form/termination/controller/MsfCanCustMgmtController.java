@@ -14,7 +14,7 @@ import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ListRe
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ListResDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.CanCustMgmtDto.ProcessResVO;
-import com.ktmmobile.msf.domains.form.form.termination.service.MsfCanCustMgmtSvc;
+import com.ktmmobile.msf.domains.form.form.termination.service.MsfCanCustMgmtSvcImpl;
 
 /**
  * 관리자 해지상담 처리 컨트롤러.
@@ -25,7 +25,7 @@ import com.ktmmobile.msf.domains.form.form.termination.service.MsfCanCustMgmtSvc
 @RequestMapping({"/api/msf/admin/cancel", "/api/msf/admin/application"})
 public class MsfCanCustMgmtController {
 
-    private final MsfCanCustMgmtSvc msfCanCustMgmtSvc;
+    private final MsfCanCustMgmtSvcImpl msfCanCustMgmtSvc;
 
     /** 신청서 목록을 조회한다. */
     @PostMapping("/list")

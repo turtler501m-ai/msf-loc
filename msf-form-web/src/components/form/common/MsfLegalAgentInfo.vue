@@ -8,7 +8,8 @@
           v-model="model.repName"
           placeholder="이름"
           class="ut-w-300"
-          :readonly="model.isSaved || (model.identityCertTypeCd !== 'S' && !model.isTrCustomer)"
+          :maxlength="repNameMaxlength"
+          :readonly="isRepBasicReadonly"
         />
       </MsfFormGroup>
       <MsfFormGroup
@@ -45,7 +46,7 @@
           length="8"
           class="ut-w-300"
           placeholder="8자리(YYYYMMDD)"
-          :readonly="model.isSaved || model.identityCertTypeCd !== 'S'"
+          :readonly="isRepBasicReadonly"
         />
       </MsfFormGroup>
       <MsfFormGroup v-if="model.isTrCustomer" label="생년월일" required>
@@ -115,12 +116,20 @@ const props = defineProps({
   agreementTitle: { type: String, default: '법정대리인 안내사항 확인 및 동의' },
   name: { type: String, default: 'basic' },
   useBirthDate: { type: Boolean, default: false },
+  editableBasicFields: { type: Boolean, default: false },
+  repNameMaxlength: { type: [Number, String], default: 15 },
 })
 const model = defineModel({ type: Object, required: true })
 const combinedNo1Ref = ref(null)
 const combinedNo2Ref = ref(null)
 const store = useMsfFormNewChgStore()
 const termsItem = ref(null)
+
+const isRepBasicReadonly = computed(
+  () =>
+    model.value.isSaved ||
+    (!props.editableBasicFields && model.value.identityCertTypeCd !== 'S' && !model.value.isTrCustomer),
+)
 
 // repName과 minorAgentNm 동기화 (기존 로직 및 서버 페이로드 호환성 유지)
 watch(

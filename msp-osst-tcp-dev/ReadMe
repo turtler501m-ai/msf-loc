@@ -1,0 +1,7 @@
+-- jar 만들기
+1. 프로젝트 선택 후 export 선택하여 java > Runnable JAR File 선택
+2. Library handling 옵션에서 "Package required libraries into generated JAR" 선택
+3. Finish 버튼 클릭하여 완료
+
+-- 백그라운드 실행
+java -jar ktmmTcpServer &

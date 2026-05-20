@@ -19,6 +19,7 @@ import com.ktmmobile.msf.domains.form.main.application.dto.NoticeHitsRequest;
 import com.ktmmobile.msf.domains.form.main.application.dto.NoticeResponse;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaCondition;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaHitsRequest;
+import com.ktmmobile.msf.domains.form.main.application.dto.QnaRequest;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaResponse;
 import com.ktmmobile.msf.domains.form.main.application.port.in.FormMainReader;
 import com.ktmmobile.msf.domains.form.main.application.port.out.FormMainRepository;
@@ -73,5 +74,12 @@ public class FormMainService implements FormMainReader {
             return true;
         }
         return formMainRepository.addQnaHits(request) > 0;
+    }
+
+    @Override
+    @Transactional
+    public Boolean registQna(QnaRequest request) {
+        formMainRepository.registQna(request);
+        return true;
     }
 }

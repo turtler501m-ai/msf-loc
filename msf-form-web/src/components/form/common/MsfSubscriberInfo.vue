@@ -8,7 +8,7 @@
           placeholder="이름"
           class="ut-w-300"
           :readonly="cstmrNmReadOnlyCompute"
-          maxlength="15"
+          maxlength="30"
         />
       </MsfFormGroup>
 
@@ -286,27 +286,38 @@ const cstmrNmReadOnlyCompute = computed(() => {
   // 1. 최우선 순위: 이미 저장된 단계라면 무조건 수정 불가 (Readonly)
   if (model.value.isSaved) return true
 
-  // 2. 수정 가능한 조건들을 정의 (하나라도 해당하면 false 반환)
+  // 2. 법인/공공기관인 경우 무조건 이름(상호명/신청자명) 입력 가능
+  if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
+    return false
+  }
+
+  // 3. 수정 가능한 조건들을 정의 (하나라도 해당하면 false 반환)
   const canEdit =
     model.value.isTrCustomer || // 양도 고객이거나
-    (model.value.isTeCustomer && ['JP', 'GO'].includes(model.value.cstmrTypeCd)) || // 양수 고객 중 법인/공공이거나
     isMinor.value ||
     model.value.identityCertTypeCd === 'S' // 미성년자는 수정 가능 / 성인이면 인증 예외인 경우
 
-  // 3. 수정 가능하면 false, 아니면 true
+  // 4. 수정 가능하면 false, 아니면 true
   return !canEdit
 })
+
 const reqNmReadOnlyCompute = computed(() => {
   // 1. 최우선 순위: 이미 저장된 단계라면 무조건 수정 불가 (Readonly)
   if (model.value.isSaved) return true
-  // 2. 수정 가능한 조건들을 정의 (하나라도 해당하면 false 반환)
+
+  // 2. 법인/공공기관인 경우 대표자명은 수정 불가 (스캔 정보로 세팅됨)
+  if (['JP', 'GO'].includes(model.value.cstmrTypeCd)) {
+    return true
+  }
+
+  // 3. 수정 가능한 조건들을 정의 (하나라도 해당하면 false 반환)
   const canEdit =
     // 양수 고객 중 법인/공공일 때 / 인증 예외인 경우
     model.value.isTeCustomer &&
     ['JP', 'GO'].includes(model.value.cstmrTypeCd) &&
     model.value.identityCertTypeCd === 'S'
 
-  // 3. 수정 가능하면 false, 아니면 true
+  // 4. 수정 가능하면 false, 아니면 true
   return !canEdit
 })
 

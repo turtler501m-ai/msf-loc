@@ -36,6 +36,7 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
     lstComActvDate: '',     // 개통일자(동기화용)
     addr: '',               // 주소
     remindBlckYn: '',       // 해지 제한 여부
+    subStatus: '',          // 회선 상태(A: 사용중, S: 정지)
     payData: null,          // 납부방법
     billData: null,         // 명세서
     /* 법정대리인 정보 */
@@ -152,6 +153,9 @@ export const useMsfFormSvcChgStore = defineStore('msf_form_svc_chg', () => {
         }
         if (changInfo.addr && changInfo.addr !== '-') formData.addr = changInfo.addr
         if (changInfo.remindBlckYn !== undefined) formData.remindBlckYn = changInfo.remindBlckYn || ''
+        if (changInfo.subStatus !== undefined || changInfo.status !== undefined) {
+          formData.subStatus = changInfo.subStatus || changInfo.status || ''
+        }
         if (changInfo.payData !== undefined) formData.payData = changInfo.payData
         if (changInfo.billData !== undefined) formData.billData = changInfo.billData
 

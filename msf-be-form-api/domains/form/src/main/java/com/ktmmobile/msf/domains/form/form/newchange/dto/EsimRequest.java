@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.domains.form.form.common.dto;
+package com.ktmmobile.msf.domains.form.form.newchange.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
@@ -21,6 +21,10 @@ public class EsimRequest {
     @NotBlank
     private String imei2;
 
-    private String phoneModelId;
+    private String modelId; //K코드 (단말코드)
+
+    private String phoneModelId; //삭제예정
     private int uploadPhoneSrlNo;
+
+    private String agentCd; //선택한 대리점코드
 }

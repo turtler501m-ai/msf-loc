@@ -41,7 +41,6 @@ import com.ktmmobile.msf.domains.form.form.common.dto.MspSalePlcyMstInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.MspSaleSubsdMstResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.PhoneInfoResponse;
-import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.PriceJoinUsimResponse;
 import com.ktmmobile.msf.domains.form.form.common.dto.ProductInfoRequest;
@@ -54,6 +53,7 @@ import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelColorResponse
 import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneModelMonthlyResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneSaleAgrmResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.PhoneSaleTypeResponse;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.ProductInventoryRequest;
 
 @Slf4j
 @Service
@@ -69,6 +69,11 @@ public class ProductInfoService {
 
     //판매정책조회 (PRDT_ID 값 k코드가 있으면 판매정책 하나가 조회됨)
     public List<MspSalePlcyMstInfoDto> getMspSalePlcyMstList(ProductInfoRequest request) {
+        String agentCd = request.getAgentCd(); //대리점코드
+        if (agentCd == null || agentCd.equals("")) {
+            agentCd = AuthenticationUtils.getAgentCode(); //대리점코드
+        }
+
         List<MspSalePlcyMstInfoDto> mspSalePlcyInfo = null;
         List<MspSalePlcyMstInfoDto> distinctList = null;
         request.setPlcyTypeCd("N"); //위탁온라인(N) >> 고정 ~ 상수처리필요함.
@@ -79,6 +84,7 @@ public class ProductInfoService {
         if (!request.getReqBuyTypeCd().isValid()) {
             return null;
         }
+        request.setAgentCd(agentCd); //대리점코드 매핑
 
         mspSalePlcyInfo = productInfoReadMapper.selectMspSalePlcyMstList(request);
         distinctList = new ArrayList<>(
@@ -101,8 +107,14 @@ public class ProductInfoService {
 
     //할인유형조회
     public List<PhoneSaleTypeResponse> getSaleTypeList(ProductInfoRequest request) {
+
+        String agentCd = request.getAgentCd();
+        if (agentCd == null || agentCd.equals("")) {
+            agentCd = AuthenticationUtils.getAgentCode(); //대리점코드
+        }
+        request.setAgentCd(agentCd); //대리점코드
         request.setPlcyTypeCd("N"); //정책유형코드 : N @@확인필요사항@@
-        request.setOrgnId(AuthenticationUtils.getAgentCode()); //조직코드는 세션의 대리점코드로 매핑
+        //request.setOrgnId(AuthenticationUtils.getAgentCode()); //조직코드는 세션의 대리점코드로 매핑
 
         List<PhoneSaleTypeResponse> salePlcyInfo = productInfoReadMapper.selectSaleTypeList(request);
         return salePlcyInfo;
@@ -163,12 +175,16 @@ public class ProductInfoService {
 
     //휴대폰 목록조회
     public List<PhoneInfoResponse> getPhoneList(ProductInfoRequest request) {
+        String agentCd = request.getAgentCd(); //선택한 대리점코드
+        if (agentCd == null || agentCd.equals("")) {
+            agentCd = AuthenticationUtils.getAgentCode(); //대리점코드
+        }
 
         //1. 조직코드로 단말재고 확인
-        PhoneSerialRequest phoneSerialRequest = new PhoneSerialRequest();
-        phoneSerialRequest.setOrgnId(AuthenticationUtils.getAgentCode()); //로그인 세션의 대리점코드로 조회
-        //phoneSerialRequest.setOrgnId(AuthenticationUtils.getShopCode()); //로그인 세션의 판매점코드로 조회
-        List<CategoryInfoDto> categoryInfoDto = this.getPhoneInventoryList(phoneSerialRequest);
+        ProductInventoryRequest productInventoryRequest = new ProductInventoryRequest();
+        productInventoryRequest.setAgentCd(agentCd); //대리점코드
+        productInventoryRequest.setStorCd(AuthenticationUtils.getShopCode()); //로그인 세션의 판매점코드로 조회
+        List<CategoryInfoDto> categoryInfoDto = this.getPhoneInventoryList(productInventoryRequest);
         request.setListPhoneDto(categoryInfoDto);
         //K7038209
 
@@ -248,7 +264,12 @@ public class ProductInfoService {
 
         //2. 선택된 카테고리에 맞는 요금제를 조건절로 추가하여 M전산에서 요금제 목록 조회
         List<RateInfoResponse> data = null;
-        request.setOrgnId(AuthenticationUtils.getAgentCode()); //대리점코드
+        String agentCd = request.getAgentCd();
+        if (agentCd == null || agentCd.equals("")) {
+            agentCd = AuthenticationUtils.getAgentCode(); //대리점코드
+        }
+        request.setAgentCd(agentCd); //대리점코드
+        request.setOrgnId(agentCd); //대리점코드
         request.setPayClCd("PO"); //후불-고정 >> 상수처리@@ 필요!!!
         request.setPlcyTypeCd("N"); //위탁온라인
         request.setServiceType("P"); //요금제구분 (P:요금제, R:부가서비스)
@@ -269,7 +290,9 @@ public class ProductInfoService {
         return data;
     }
 
-    //가격정보조회
+    /**
+     * 예상납부금액 조회를 위한 가격정보 조회
+     */
     public MspSaleSubsdMstResponse getMspSalePriceInfo(MspSaleSubsdMstRequest request) {
         //최종결과
         MspSaleSubsdMstResponse response = new MspSaleSubsdMstResponse();
@@ -277,17 +300,22 @@ public class ProductInfoService {
         //CategoryType reqBuyTypeCd = ""; //상품유형
         //parameter
         String oldYn = "N"; //중고여부
-        String orgnId = AuthenticationUtils.getAgentCode(); //대리점코드
         String salePlcyCd = request.getSalePlcyCd(); //판매정책코드
         String agrmTrm = request.getAgrmTrm(); //요금약정기간
         String socCd = request.getRateCd(); //요금제 코드
+
+        //String agentCd = AuthenticationUtils.getAgentCode(); //대리점코드
+        String agentCd = request.getAgentCd();
+        if (agentCd == null || agentCd.equals("")) {
+            agentCd = AuthenticationUtils.getAgentCode(); //대리점코드
+        }
 
         if (!StringUtils.hasText(agrmTrm)) {
             agrmTrm = "0";
         }
 
         //DATA SET
-        request.setOrgnId(orgnId); //조직코드
+        request.setAgentCd(agentCd); //조직코드
         request.setOldYn(oldYn); //중고여부
 
         if (!StringUtils.hasText(request.getReqBuyTypeCd())) { //상품 : 휴대폰, USIM
@@ -320,7 +348,8 @@ public class ProductInfoService {
                 usimDcamtResponse = this.getUsimDcamt(request);
             }
             if (usimDcamtResponse != null) {
-                response.setDcAmt(usimDcamtResponse.getDcAmt()); //요금할인
+                response.setDcAmt(usimDcamtResponse.getDcAmt()); //요금 할인
+                response.setBaseAmt(usimDcamtResponse.getBaseAmt()); //요금 기본요금
             }
         }
 
@@ -344,14 +373,17 @@ public class ProductInfoService {
         response.setTotalInstCmsn(totalInstCmsn);
 
         //4. 가입비, 유심비 등 조회
+        String usimKindsCd = request.getUsimKindsCd();
         PriceJoinUsimRequest priceJoinUsimRequest = new PriceJoinUsimRequest();
         PriceJoinUsimResponse priceJoinUsimResponse = new PriceJoinUsimResponse();
-        priceJoinUsimRequest.setOrgnId(orgnId); //조직코드
+        priceJoinUsimRequest.setOrgnId(agentCd); //조직코드
         priceJoinUsimRequest.setReqBuyTypeCd(request.getReqBuyTypeCd()); //상품유형
         priceJoinUsimRequest.setOperTypeCd(request.getOperTypeCd()); //가입유형 : NAC3 / MNP3 / HDN3 / HCN3
         priceJoinUsimRequest.setDataType(request.getDataType()); //요금제 조회에서 리턴된 데이터유형 LTE / 5G 등
-        priceJoinUsimRequest.setUsimKindsCd(request.getUsimKindsCd()); //유심종류 : 유심 해당없음(06) , LTE일반유심(02) , 5G일반유심(08) , NFC유심(08) , eSIM(09)
-        priceJoinUsimResponse = this.getUsimBasJoinPrice(priceJoinUsimRequest);
+        priceJoinUsimRequest.setUsimKindsCd(usimKindsCd); //유심종류 : 유심 해당없음(06) , LTE일반유심(02) , 5G일반유심(08) , NFC유심(08) , eSIM(09)
+        if (StringUtils.hasText(usimKindsCd)) {
+            priceJoinUsimResponse = this.getUsimBasJoinPrice(priceJoinUsimRequest);
+        }
         if (priceJoinUsimResponse != null) {
             response.setJoinPrice(priceJoinUsimResponse.getJoinPrice()); //가입비
             response.setJoinIsPay(priceJoinUsimResponse.getJoinIsPay()); //가입비 납부여부 ( Y:납부, N:면제 )
@@ -523,17 +555,31 @@ public class ProductInfoService {
 
 
     //휴대폰 매장 재고 조회 (postgre)
-    public List<CategoryInfoDto> getPhoneInventoryList(@Valid PhoneSerialRequest request) {
-        //request.setOrgnId(AuthenticationUtils.getAgentCode()); //대리점코드
-        request.setOrgnId(AuthenticationUtils.getShopCode()); //판매점코드
+    public List<CategoryInfoDto> getPhoneInventoryList(@Valid ProductInventoryRequest request) {
+        String agentCd = request.getAgentCd();
+        if (agentCd == null || agentCd.equals("")) {
+            agentCd = AuthenticationUtils.getAgentCode(); //대리점코드
+        }
+        request.setAgentCd(agentCd); //대리점코드
+        request.setStorCd(AuthenticationUtils.getShopCode()); //로그인세션의 매장코드
+
         List<CategoryInfoDto> data = productSmartInfoReadMapper.selectPhoneInventoryList(request);
         return data;
     }
 
-    //휴대폰 매장 재고 조회 (postgre) >> 휴대폰 일련번호 유효성체크에서 일단 사용예정
-    public String getPhoneInventory(PhoneSerialRequest condition) {
-        String imei = productSmartInfoReadMapper.selectPhoneInventory(condition);
+    //매장 재고 조회 (postgre) >> 휴대폰 일련번호 유효성체크에서 일단 사용예정
+    public String getPhoneInventory(ProductInventoryRequest request) {
+        String imei = productSmartInfoReadMapper.selectPhoneInventory(request);
         return imei;
+    }
+
+    public boolean getPhoneInventoryCount(ProductInventoryRequest request) {
+        boolean rtnValue = false;
+        int rtnCnt = productSmartInfoReadMapper.selectPhoneInventoryCount(request);
+        if (rtnCnt > 0) {
+            rtnValue = true;
+        }
+        return rtnValue;
     }
 
     //요금제,부가서비스,안심보험 카테고리 목록 조회 (postgre)

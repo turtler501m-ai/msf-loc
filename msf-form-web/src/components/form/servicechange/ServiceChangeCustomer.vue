@@ -1,20 +1,24 @@
 <template>
   <div class="page-step-panel">
     <!-- 고객 유형 -->
-    <MsfCustomerType v-model="formData" />
+    <MsfCustomerType v-model="formData" @change-customer-type="resetAfterCustomerTypeChange" />
     <!-- // 고객 유형 -->
     <!-- 가입자 정보 -->
     <!-- 서비스변경/해지 전용 가입자정보 컴포넌트 -->
     <MsfSubscriberChgInfo v-model="formData" phoneLabel="변경 휴대폰번호" />
     <!-- // 가입자 정보 -->
     <!-- 법정대리인 정보 / 법정대리인 안내사항 확인 및 동의 -->
-    <MsfLegalAgentInfo v-model="formData" :use-birth-date="true" />
+    <MsfLegalAgentInfo v-model="formData" :use-birth-date="true" editable-basic-fields />
     <!-- // 법정대리인 정보 / 법정대리인 안내사항 확인 및 동의 -->
     <!-- 대리인 위임 정보 -->
     <MsfDelegateInfo v-model="formData" v-if="formData.cstmrVisitTypeCd === 'V2'" />
     <!-- // 대리인 위임 정보 -->
     <!-- 가입자 연락처 -->
-    <MsfContactInfo v-model="formData" />
+    <MsfContactInfo
+      v-model="formData"
+      :email-id-maxlength="100"
+      :email-domain-maxlength="100"
+    />
     <!-- // 가입자 연락처 -->
     <!-- 서비스 변경 선택 -->
     <MsfServiceChangeSelection v-model="formData" />
@@ -46,6 +50,101 @@ const emit = defineEmits(['complete'])
 const store = useMsfFormSvcChgStore()
 const { formData } = storeToRefs(store)
 const isComplete = ref(formData.value.serviceCheckYn === 'Y' ? 'true' : '')
+
+const resetAfterCustomerTypeChange = () => {
+  Object.assign(formData.value, {
+    cstmrNm: '',
+    userBirthDate: '',
+    userGender: 'M',
+    cstmrJuridicalRrn1: '',
+    cstmrJuridicalRrn2: '',
+    cstmrJuridicalBizNo1: '',
+    cstmrJuridicalBizNo2: '',
+    cstmrJuridicalBizNo3: '',
+    cstmrJuridicalRepNm: '',
+    deviceChgTel1: '010',
+    deviceChgTel2: '',
+    deviceChgTel3: '',
+    contractNum: '',
+    ncn: '',
+    custId: '',
+    prvRateGrpNm: '',
+    initActivationDate: '',
+    lstComActvDate: '',
+    addr: '',
+    remindBlckYn: '',
+    subStatus: '',
+    payData: null,
+    billData: null,
+    repName: '',
+    repBirthDate: '',
+    repGender: '',
+    repRelation: '',
+    repPhone1: '',
+    repPhone2: '',
+    repPhone3: '',
+    repPhoneAuth: '',
+    repAgree: false,
+    minorAgentNm: '',
+    agentBirthDate: '',
+    agentGender: '',
+    minorAgentRelTypeCd: '',
+    minorAgentTelFnNo: '',
+    minorAgentTelMnNo: '',
+    minorAgentTelRnNo: '',
+    mobileNo1: '010',
+    mobileNo2: '',
+    mobileNo3: '',
+    telNo1: '',
+    telNo2: '',
+    telNo3: '',
+    emailAddr1: '',
+    emailAddr2: '',
+    zipNo: '',
+    address: '',
+    detailAddress: '',
+    allCheck: '',
+    serviceSelect: [],
+    serviceCheckYn: 'N',
+    serviceChecked: false,
+    serviceSelectCompleteYn: 'N',
+    serviceSelectCompleted: false,
+    additionList: [],
+    additionCancelList: [],
+    additionConfirmCompleted: false,
+    appConfirmCompleted: false,
+    blockService: null,
+    addonService: '',
+    combinedService: '',
+    loseLock: '',
+    joinInfoChange: '',
+    wirelessBlockConfirmCompleted: false,
+    planName1: '',
+    planName2: '',
+    changeDate: '',
+    reqWantFnNo: '',
+    reqWantMnNo: '',
+    reqWantRnNo: '',
+    wishNo: '',
+    unLockPw: '',
+    clauseInsuranceYn: '',
+    recCat1: '',
+    recCat2: '',
+    hasSim: '',
+    usimKindsCd: '',
+    reqUsimSn: '',
+    eid: '',
+    imei1: '',
+    imei2: '',
+    shareUseState: '',
+    sharePhoneNum: '',
+    shareUsimNum: '',
+    soloData: '',
+  })
+  store.authFlags.deviceChgTel = false
+  isComplete.value = ''
+  emit('complete', false)
+}
 
 const focusField = (target) => {
   setTimeout(() => {

@@ -28,7 +28,12 @@
     <MsfRequiredDoc ref="requiredDocRef" v-model="formData" :authFlags="store.authFlags" />
     <MsfContactInfo ref="contactInfoRef" v-model="formData" />
 
-    <MsfDevicePlanInfo ref="devicePlanInfoRef" v-model="formData" :customerData="formData" />
+    <MsfDevicePlanInfo
+      ref="devicePlanInfoRef"
+      v-model="formData"
+      :productData="productData"
+      :customerData="formData"
+    />
 
     <MsfTermsAgreement
       ref="termsAgreementRef"
@@ -51,7 +56,10 @@
     </MsfButtonGroup>
 
     <!-- 가입조건 조회 결과 컴포넌트 -->
-    <MsfEligibilityResult :status="eligibilityStatus" :result="eligibilityResult" />
+    <div v-if="loadingEligibility" class="ut-flex ut-justify-center ut-py-20">
+      <MsfLoadingComp />
+    </div>
+    <MsfEligibilityResult v-else :status="eligibilityStatus" :result="eligibilityResult" />
   </div>
 </template>
 
@@ -134,12 +142,14 @@ const termsDataList = computed(() => {
           { code: 'CLAUSE_INFO_01', title: '기타 안내 사항 확인', required: true },
         ]
 
-  // 미성년자 필수 약관이 목록에 없으면 수동 추가
-  const mandatoryMinorTerms = [
+  // 필수 약관이 목록에 없으면 수동 추가 (미성년자/제휴 등)
+  const mandatoryAdditions = [
     { code: 'CLAUSE_REQUIRED_06', title: '네트워크 차단 동의', required: true },
     { code: 'CLAUSE_REQUIRED_07', title: '앱 차단 동의', required: true },
+    { code: 'CLAUSE_PARTNER_01', title: '제휴 서비스 이용 약관 동의', required: true },
+    { code: 'CLAUSE_PARTNER_02', title: '제휴사 정보 제공 동의', required: true },
   ]
-  mandatoryMinorTerms.forEach((mandatory) => {
+  mandatoryAdditions.forEach((mandatory) => {
     if (!baseList.some((item) => item.code === mandatory.code)) {
       baseList.push(mandatory)
     }
@@ -215,6 +225,7 @@ const devicePlanInfoRef = ref(null)
 const termsAgreementRef = ref(null)
 
 const isComplete = ref(false)
+const loadingEligibility = ref(false)
 
 const eligibilityStatus = ref('none')
 const eligibilityResult = ref({
@@ -251,6 +262,7 @@ const onClickCheckEligibility = async () => {
   }
 
   eligibilityStatus.value = 'checking'
+  loadingEligibility.value = true
   try {
     const res = await post('/api/form/eligibility/check', {
       cstmrTypeCd: formData.value.cstmrTypeCd,
@@ -267,6 +279,8 @@ const onClickCheckEligibility = async () => {
     console.error('Eligibility check failed:', e)
     showAlert('가입조건 조회 중 오류가 발생했습니다.')
     eligibilityStatus.value = 'none'
+  } finally {
+    loadingEligibility.value = false
   }
 }
 

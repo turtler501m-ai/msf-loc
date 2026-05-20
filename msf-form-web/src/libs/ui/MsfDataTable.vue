@@ -4,7 +4,7 @@
     :class="{
       'is-hideHeader': props.hideHeader,
       'is-hideCount': props.hideCount,
-      'is-setMaxHeight': !props.showPaging,
+      'is-setMaxHeight': !isShowPaging,
     }"
   >
     <div v-if="!props.hideHeader" class="msf-grid-header">
@@ -32,10 +32,10 @@
         :class="{ 'is-single-check': props.showSingleCheck }"
         @grid-ready="onGridReady"
         @selection-changed="onSelectionChanged"
-        :domLayout="props.showPaging ? 'autoHeight' : 'normal'"
+        :domLayout="isShowPaging ? 'autoHeight' : 'normal'"
       />
       <MsfPagination
-        v-if="showPaging"
+        v-if="isShowPaging"
         v-model:page="pageNo"
         v-model:total="totalNo"
         v-model:items-per-page="rowsNo"
@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, watch, reactive } from 'vue'
+import { computed, ref, watch, reactive } from 'vue'
 import { themeAlpine } from 'ag-grid-community'
 import { AG_GRID_LOCALE_KR } from './ag-grid.locale.kr'
 import { AgGridVue } from 'ag-grid-vue3'
@@ -143,6 +143,7 @@ const rowDatas = ref(props.datas)
 const pageNo = ref(props.page)
 const totalNo = ref(props.total)
 const rowsNo = ref(props.rows)
+const isShowPaging = computed(() => props.showPaging && totalNo.value > rowsNo.value)
 
 // 테마 스타일 커스텀
 const myTheme = themeAlpine.withParams({

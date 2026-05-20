@@ -18,13 +18,9 @@
           <td>
             <MsfSelect
               title="선택"
-              v-model="formData.field"
-              :options="[
-                { label: '전체', value: '' },
-                { label: '유형1', value: 'field2' },
-                { label: '유형2', value: 'field3' },
-              ]"
-              placeholder="전체"
+              v-model="formData.category"
+              group-code="QNA_CTG_CD"
+              placeholder="유형"
               class="ut-w-140"
             />
           </td>
@@ -38,7 +34,7 @@
         <tr>
           <th><label for="inp-content" class="label-txt required">문의내용</label></th>
           <td>
-            <MsfTextarea id="inp-content" v-model="formData.content" placeholder="문의내용 입력" />
+            <MsfTextarea id="inp-content" v-model="formData.contents" placeholder="문의내용 입력" />
           </td>
         </tr>
         <tr>
@@ -46,10 +42,10 @@
           <td>
             <MsfSelect
               title="선택"
-              v-model="formData.openStatus"
+              v-model="formData.publicStatus"
               :options="[
-                { label: '공개여부1', value: 'openStatus1' },
-                { label: '공개여부2', value: 'openStatus2' },
+                { label: '공개', value: 'Y' },
+                { label: '비공개', value: 'N' },
               ]"
               placeholder="공개여부"
               class="ut-w-140"
@@ -62,7 +58,7 @@
     <template #footer>
       <MsfButtonGroup>
         <MsfButton variant="secondary" @click="onClose">취소</MsfButton>
-        <MsfButton variant="primary" @click="onClickOk">등록</MsfButton>
+        <MsfButton variant="primary" @click="onClickRegist">등록</MsfButton>
       </MsfButtonGroup>
     </template>
   </MsfDialog>
@@ -70,6 +66,9 @@
 
 <script setup>
 import { reactive } from 'vue'
+import { post } from '@/libs/api/msf.api'
+import { showAlert, showConfirm } from '@/libs/utils/comp.utils'
+import { isEmpty } from '@/libs/utils/string.utils'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -87,15 +86,39 @@ const onClose = () => {
 
 // 퍼블샘플용
 const formData = reactive({
-  field: '', //유형
+  category: '', //유형
   title: '', //제목
-  content: '', //문의내용
-  openStatus: 'openStatus1', //공개여부
+  contents: '', //문의내용
+  publicStatus: 'N', //공개여부
 })
 
-const onClickOk = () => {
-  emit('update:modelValue', false)
-  emit('close', true)
+const onClickRegist = () => {
+  if (isEmpty(formData.category)) {
+    showAlert('유형을 선택하세요.')
+    return false
+  }
+  if (isEmpty(formData.title)) {
+    showAlert('제목을 입력하세요.')
+    return false
+  }
+  if (isEmpty(formData.contents)) {
+    showAlert('문의내용을 입력하세요.')
+    return false
+  }
+  if (isEmpty(formData.publicStatus)) {
+    showAlert('공개여부를 선택하세요.')
+    return false
+  }
+  showConfirm('Q&A를 등록하시겠습니까?', async () => {
+    const result = await post('/api/main/qna/regist', formData)
+    if (result.code !== '0000') {
+      return false
+    }
+    showAlert('Q&A 등록이 완료되었습니다.', () => {
+      emit('update:modelValue', false)
+      emit('close', true)
+    })
+  })
 }
 </script>
 

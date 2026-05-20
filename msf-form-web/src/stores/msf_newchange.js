@@ -112,7 +112,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
     // 관리 정보 (DTO 기반)
     managerCd: 'M0001',
     managerNm: '',
-    agentCd: 'VKI0012',
+    agentCd: '',
     agentNm: '',
     shopCd: '',
     shopNm: '',
@@ -527,7 +527,7 @@ export const useMsfFormNewChgStore = defineStore('msf_form_new_chg', () => {
   // 3.1.1. 신규변경 최초 진입 시 초기값 조회
   const apiGetDefault = async () => {
     try {
-      const res = await post('/api/form/newchange/getDefault', {})
+      const res = await post('/api/form/newchange/getdefault', {})
       if (res && res.code === '0000' && res.data) {
         const data = res.data
 

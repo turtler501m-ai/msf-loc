@@ -49,6 +49,7 @@ const fetchPlans = async (ctgCd) => {
       prodCtgId: ctgCd, // 카테고리 ID 추가
       reqBuyTypeCd: model.value.productType || 'MM', // 상품유형(MM/UU) 전달
       salePlcyCd: model.value.modelSalePolicyCd || '', // 단말기 판매정책 코드
+      agentCd: props.customerData?.agentCd || '',
     })
     planOptions.value = res?.data?.map((item) => ({
       label: item.rateNm || item.ctgNm,

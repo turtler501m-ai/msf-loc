@@ -10,13 +10,19 @@ const agencyOptions = ref([])
 const lastValidServiceSelect = ref([])
 const serviceChipKey = ref(0)
 const SERVICE_TARGET_GROUP_CODE = 'SVC_TGT_CD'
+const PLAN_CHANGE_CODE = 'P11'
 const NUMBER_CHANGE_CODE = 'O11'
+const UNPAUSE_CODE = 'O12'
 const DATA_SHARING_CODE = 'R15'
+const EXCLUSIVE_SERVICE_CODES = [PLAN_CHANGE_CODE, NUMBER_CHANGE_CODE, UNPAUSE_CODE]
+const SUSPENDED_ONLY_MESSAGE =
+  '일시정지 상태인 휴대폰번호는 분실복구/일시정지해제 신청만 가능합니다.'
 
 const isServiceSelectCompleted = computed(() => model.value.serviceSelectCompleteYn === 'Y')
 const isServiceCheckCompleted = computed(
   () => model.value.serviceCheckYn === 'Y' || isServiceSelectCompleted.value,
 )
+const isSuspendedLine = computed(() => String(model.value.subStatus || '').toUpperCase() === 'S')
 const isServiceCheckButtonDisabled = computed(
   () =>
     isServiceSelectCompleted.value ||
@@ -57,12 +63,12 @@ const getBusinessTimeRestriction = (code, now = new Date()) => {
       return '번호변경은 평일에만 선택 가능합니다.'
     }
     if (!isInTimeRange(now, 10 * 60, 20 * 60)) {
-      return '번호변경은 평일 오전10시~오후8시만 선택 가능합니다.'
+      return '번호변경은 평일 오전10시~오후8시까지 선택 가능합니다.'
     }
   }
 
   if (code === DATA_SHARING_CODE && !isInTimeRange(now, 8 * 60, 21 * 60 + 50)) {
-    return '데이터쉐어링은 오전8시~오후9시50분만 선택 가능합니다.'
+    return '데이터쉐어링 : 오전 08시~오후9:50까지 가능 (해당 시간대 이외 선택 불가)'
   }
 
   return ''
@@ -96,9 +102,12 @@ const summarizeServiceList = (serviceList = model.value.serviceList) =>
     disabled: item.disabled || false,
   }))
 
+const isExclusiveService = (value) => EXCLUSIVE_SERVICE_CODES.includes(value)
+
 const getConcurrentServiceValues = () =>
   (model.value.serviceList || [])
     .filter((item) => !item.notConcurrentChange)
+    .filter((item) => !isSuspendedLine.value || item.value === UNPAUSE_CODE)
     .map((item) => item.value)
 
 const isAllServiceSelected = (selectedValues = model.value.serviceSelect) => {
@@ -115,18 +124,34 @@ const syncAllCheck = (selectedValues = model.value.serviceSelect) => {
 const setServiceListDisabled = (selectedValues = model.value.serviceSelect) => {
   const selected = Array.isArray(selectedValues) ? selectedValues : []
   const serviceList = model.value.serviceList || []
-  const selectedItems = serviceList.filter((item) => selected.includes(item.value))
-  const hasNotConcurrentSelected = selectedItems.some((item) => item.notConcurrentChange)
-  const hasAnySelected = selected.length > 0
+  const hasExclusiveSelected = selected.some(isExclusiveService)
 
   model.value.serviceList = serviceList.map((item) => {
+    if (isSuspendedLine.value && item.value !== UNPAUSE_CODE) return { ...item, disabled: true }
     if (selected.includes(item.value)) return { ...item, disabled: false }
-    const disabled =
-      item.businessTimeDisabled ||
-      hasNotConcurrentSelected ||
-      (hasAnySelected && item.notConcurrentChange)
+    const disabled = item.businessTimeDisabled || (hasExclusiveSelected && isExclusiveService(item.value))
     return { ...item, disabled }
   })
+}
+
+const normalizeSuspendedServiceSelection = () => {
+  if (!isSuspendedLine.value) return
+
+  const selected = Array.isArray(model.value.serviceSelect) ? model.value.serviceSelect : []
+  const normalizedSelected = selected.filter((value) => value === UNPAUSE_CODE)
+
+  if (normalizedSelected.length !== selected.length) {
+    model.value.serviceSelect = normalizedSelected
+    model.value.serviceCheckYn = 'N'
+    model.value.serviceChecked = false
+    model.value.serviceSelectCompleteYn = 'N'
+    model.value.serviceSelectCompleted = false
+    serviceChipKey.value += 1
+  }
+
+  setServiceListDisabled(normalizedSelected)
+  syncAllCheck(normalizedSelected)
+  lastValidServiceSelect.value = [...normalizedSelected]
 }
 
 const getSelectedServiceValidationMessage = (selectedValues = []) => {
@@ -135,11 +160,15 @@ const getSelectedServiceValidationMessage = (selectedValues = []) => {
   const selectedItems = serviceList.filter((item) => selected.includes(item.value))
   const timeRestrictedItem = selectedItems.find((item) => item.disabledReason)
 
+  if (isSuspendedLine.value && selected.some((value) => value !== UNPAUSE_CODE)) {
+    return SUSPENDED_ONLY_MESSAGE
+  }
+
   if (timeRestrictedItem) {
     return timeRestrictedItem.disabledReason
   }
 
-  if (selectedItems.some((item) => item.notConcurrentChange) && selectedItems.length > 1) {
+  if (selected.filter(isExclusiveService).length > 1) {
     return '요금제 변경, 번호변경, 분실복구/일시정지해제 신청은 동시 변경할 수 없습니다.'
   }
 
@@ -173,7 +202,7 @@ const fetchServiceTargetCodes = async () => {
     const availableValues = serviceList.map((item) => item.value)
 
     model.value.serviceSelect = (model.value.serviceSelect || []).filter((value) =>
-      availableValues.includes(value),
+      availableValues.includes(value) && (!isSuspendedLine.value || value === UNPAUSE_CODE),
     )
     model.value.serviceList = serviceList
     setServiceListDisabled(model.value.serviceSelect)
@@ -200,7 +229,7 @@ const fetchAgencies = async () => {
   try {
     const res = await post('/api/form/agent/list', { shopOrgnId: 'V000001083' })
     const data = res.data || res
-    const list = Array.isArray(data) ? data : (data && typeof data === 'object' ? [data] : [])
+    const list = Array.isArray(data) ? data : data && typeof data === 'object' ? [data] : []
 
     agencyOptions.value = list.map((item) => ({
       label: item.orgnNm || item.cntpntNm || '대리점명 없음',
@@ -230,6 +259,13 @@ watch(
   (agencyValue) => {
     if (!agencyValue) return
     applyAgencyMeta(agencyValue)
+  },
+)
+
+watch(
+  () => model.value?.subStatus,
+  () => {
+    normalizeSuspendedServiceSelection()
   },
 )
 
@@ -388,7 +424,6 @@ const checkServiceSelection = async () => {
 
 onMounted(() => {
   fetchServiceTargetCodes()
-  fetchAgencies() // 대리점 조회
 })
 </script>
 <template>
@@ -401,7 +436,7 @@ onMounted(() => {
           v-model="model.allCheck"
           label="전체 선택"
           :returndata="{ true: 'Y', false: 'N' }"
-          :disabled="isServiceCheckCompleted"
+          :disabled="isServiceCheckCompleted || isSuspendedLine"
           @change="updateAllCheck"
         />
         <MsfChip
@@ -420,7 +455,9 @@ onMounted(() => {
               <li>요금제 변경, 번호변경, 분실복구/일시정지해제 신청</li>
             </MsfTextList>
           </li>
-          <li>번호변경 : 평일 오전10시~오후8시만 가능 (해당 시간대 이외 및 주말/공휴일 선택 불가)</li>
+          <li>
+            번호변경 : 평일 오전10시~오후8시까지 가능 (해당 시간대 이외 및 주말/공휴일 선택 불가)
+          </li>
           <li>데이터쉐어링 : 오전 08시~오후9:50까지 가능 (해당 시간대 이외 선택 불가)</li>
         </MsfTextList>
       </MsfStack>
@@ -434,16 +471,6 @@ onMounted(() => {
           {{ serviceCheckButtonLabel }}
         </MsfButton>
       </MsfButtonGroup>
-    </MsfFormGroup>
-    <MsfFormGroup label="대리점" tag="div" required>
-      <MsfSelect
-        id="inp-agency"
-        title="대리점 선택"
-        v-model="model.agency"
-        :options="agencyOptions"
-        class="ut-w-300"
-        placeholder="대리점 선택"
-      />
     </MsfFormGroup>
   </MsfStack>
   <!-- // 서비스 변경 선택 -->

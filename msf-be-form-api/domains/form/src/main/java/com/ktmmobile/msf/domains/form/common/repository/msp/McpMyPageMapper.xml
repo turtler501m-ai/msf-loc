@@ -278,10 +278,8 @@
 
   <!-- /mypage/socDesc - API 설명 (SELECT : MSP_JUO_ADD_INFO, MCP_USER_CNTR_MNG, MSP_JUO_FEATURE_INFO, MSP_RATE_MST, MSP_JUO_SUB_INFO) -->
   <select id="selectSocDesc" parameterType="java.lang.String" resultType="com.ktmmobile.msf.domains.form.common.dto.McpUserCntrMngDto">
-    SELECT /* /mypage/socDesc : McpMypageMapper.selectSocDesc */
-    AA.USERID
-    , AA.CNTR_MOBILE_NO
-    , AA.SVC_CNTR_NO
+   SELECT /* /mypage/socDesc : McpMypageMapper.selectSocDesc */
+      AA.SVC_CNTR_NO /* 20260519 USER_ID 삭제 */
     , AA.SOC
     , AA.ENGG_MNTH_CNT
     , AA.RATE_NM
@@ -289,7 +287,6 @@
     , AA.RMK
     , AA.MODEL_NAME
     , AA.DOBYYYYMMDD
-    <!--, AA.USER_SSN-->
     , AA.INTM_SRL_NO
     , AA.INTM_SRL_NO AS UN_INTM_SRL_NO
     , AA.MODEL_ID
@@ -302,7 +299,7 @@
     FROM
     (
     SELECT
-    A.USERID, A.CNTR_MOBILE_NO, D.SVC_CNTR_NO, D.CONTRACT_NUM
+      D.SVC_CNTR_NO, D.CONTRACT_NUM
     , B.SOC
     , NVL((SELECT ENGG_MNTH_CNT
     FROM (SELECT ENGG_MNTH_CNT , ROW_NUMBER() OVER (ORDER BY EVNT_TRTM_DT DESC) AS RNUM
@@ -315,7 +312,6 @@
     , C.RATE_NM, C.BASE_AMT, C.RMK, C.REMIND_YN, C.REMIND_PROD_TYPE
     , D.MODEL_NAME
     , D.DOBYYYYMMDD
-    <!--   , D.USER_SSN -->
     , D.INTM_SRL_NO
     , D.MODEL_ID
     , '' AS POINT_ID
@@ -324,13 +320,11 @@
     , D.USER_SSN
     , D.CUSTOMER_ID
     FROM
-    MCP_USER_CNTR_MNG@DL_MCP A
-    , MSP_JUO_FEATURE_INFO B
+      MSP_JUO_FEATURE_INFO B
     , MSP_RATE_MST C
     , MSP_JUO_SUB_INFO D
     WHERE 1=1
     AND B.CONTRACT_NUM = #{svcCntrNo}
-    AND B.CONTRACT_NUM = A.SVC_CNTR_NO(+)
     AND B.SERVICE_TYPE = 'P'
     AND B.EXPIRATION_DATE > TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')
     AND B.SOC = C.RATE_CD

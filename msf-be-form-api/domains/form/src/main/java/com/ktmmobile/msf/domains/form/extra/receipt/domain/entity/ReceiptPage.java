@@ -28,4 +28,5 @@ public class ReceiptPage {
     private String shopCd;
     private String shopNm;
     private String cretId;
+    private String cretNm;
 }

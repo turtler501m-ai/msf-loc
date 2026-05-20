@@ -12,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class NewChangeDefaultResponse {
 
+    String agentCd;
     String prodId;
     String prodNm;
     String reqModelNm;

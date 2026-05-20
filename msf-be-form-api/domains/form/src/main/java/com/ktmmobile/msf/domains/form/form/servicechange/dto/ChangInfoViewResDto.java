@@ -35,4 +35,5 @@ public class ChangInfoViewResDto {
     private String maskingBtn;
     private String maskingSession;
     private String remindBlckYn;
+    private String subStatus;
 }

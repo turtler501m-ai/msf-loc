@@ -62,47 +62,57 @@
       <!--ORDER BY CTG_CD, SORT_ODRG-->
     </select>
 
-    <select id="selectPhoneInventoryList" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest"
+    <select id="selectPhoneInventoryList" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.ProductInventoryRequest"
             resultType="com.ktmmobile.msf.domains.form.form.common.dto.CategoryInfoDto">
         /* 휴대폰 매장 재고 조회 */
         SELECT PROD_ID
         FROM MSF_PROD_STOR_INVENTORY_TXN
         WHERE 1=1
             AND USE_YN = 'Y'
-            AND STOR_CD = #{orgnId}
+            AND STOR_CD = #{storCd}
+            AND AGENT_CD = #{agentCd}
             <if test="prodId != null and prodId != ''">
-                AND PROD_ID = #{prodId}
-                <!--AND PROD_ID = #{phoneModelId}-->
+              AND PROD_ID = #{prodId}
             </if>
             AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
         GROUP BY PROD_ID
     </select>
 
-    <select id="selectPhoneInventory" parameterType="com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest"
-            resultType="String">
-        /* 휴대폰 일련번호 조회 시 매장재고조회 */
-        SELECT IMEI
+    <select id="selectPhoneInventory" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.ProductInventoryRequest"
+            resultType="java.lang.String">
+        /* 매장재고 조회 (휴대폰) IMEI */
+        SELECT
+           IMEI
         FROM MSF_PROD_STOR_INVENTORY_TXN
         WHERE 1=1
             AND USE_YN = 'Y'
             AND IMEI IS NOT NULL
-            <if test="orgnId != null and orgnId != ''">
-                AND STOR_CD = #{orgnId}
-            </if>
+            AND STOR_CD = #{storCd}
+            AND AGENT_CD = #{agentCd}
+            AND PROD_ID = #{prodId}
             <if test="prodSn != null and prodSn != ''">
-                AND PROD_SN = #{prodSn}
-            </if>
-            <if test="prodId != null and prodId != ''">
-                AND PROD_ID = #{prodId}
+              AND PROD_SN = #{prodSn}
             </if>
             AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
             AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+        LIMIT 1
     </select>
 
-    <!--<select id="selectResNo" parameterType="java.lang.Long" resultType="String">
-            SELECT RES_NO FROM MSF_REQUEST_TEMP WHERE REQUEST_KEY = #{requestKey}
-    </select>-->
+    <select id="selectPhoneInventoryCount" parameterType="com.ktmmobile.msf.domains.form.form.newchange.dto.ProductInventoryRequest"
+            resultType="java.lang.Integer">
+      /* 매장재고 Count (유심) Count */
+      SELECT count(*)
+      FROM MSF_PROD_STOR_INVENTORY_TXN
+      WHERE 1=1
+      AND USE_YN = 'Y'
+      AND STOR_CD = #{storCd}
+      AND AGENT_CD = #{agentCd}
+      AND PROD_SN = #{prodSn}
+      AND PSTNG_START_DATE <![CDATA[<]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+      AND PSTNG_END_DATE <![CDATA[>=]]> TO_CHAR(NOW(), 'YYYYMMDDHH24MISS')
+    </select>
+
 
 
 

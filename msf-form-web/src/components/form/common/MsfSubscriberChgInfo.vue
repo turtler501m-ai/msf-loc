@@ -8,6 +8,7 @@
             v-model="model.cstmrNm"
             placeholder="이름"
             class="ut-w-300"
+            maxlength="15"
             :readonly="isReadonly"
         />
       </MsfFormGroup>
@@ -275,6 +276,22 @@ const updateAuthFlag = (value) => {
   })
 }
 
+const hasValue = (value) => value !== undefined && value !== null && String(value).trim().length > 0
+const hasExactLength = (value, length) => String(value || '').trim().length === length
+
+const validateDeviceChgAuthReady = (values) => {
+  const [cstmrNm, ...rest] = values
+  const [deviceChgTel1, deviceChgTel2, deviceChgTel3] = rest.slice(-3)
+  const requiredCustomerValues = [cstmrNm, ...rest.slice(0, -3)]
+
+  return (
+    requiredCustomerValues.every(hasValue) &&
+    hasExactLength(deviceChgTel1, 3) &&
+    hasExactLength(deviceChgTel2, 4) &&
+    hasExactLength(deviceChgTel3, 4)
+  )
+}
+
 const deviceChgAuth = useAuthButton(
     () => [
       model.value?.cstmrNm,
@@ -293,6 +310,7 @@ const deviceChgAuth = useAuthButton(
         updateAuthFlag(value)
       },
     },
+    validateDeviceChgAuthReady,
 )
 
 const isVerified = computed(() => deviceChgAuth.status.value === 'verified')
@@ -311,6 +329,15 @@ watch(
 )
 
 const handleDeviceChgVerify = async () => {
+  if (
+    !hasExactLength(model.value.deviceChgTel1, 3) ||
+    !hasExactLength(model.value.deviceChgTel2, 4) ||
+    !hasExactLength(model.value.deviceChgTel3, 4)
+  ) {
+    showAlert('휴대폰번호를 모두 입력해 주세요.')
+    return
+  }
+
   const phoneNo = `${model.value.deviceChgTel1}${model.value.deviceChgTel2}${model.value.deviceChgTel3}`
   const customerLinkName = (model.value.cstmrNm || '').trim()
 
@@ -458,7 +485,11 @@ const validate = () => {
     console.warn(`${getLogPrefix('가입자정보검증')} 진행 중단`, { reason: 'userGender' })
     return false
   }
-  if (!model.value.deviceChgTel1 || !model.value.deviceChgTel2 || !model.value.deviceChgTel3) {
+  if (
+    !hasExactLength(model.value.deviceChgTel1, 3) ||
+    !hasExactLength(model.value.deviceChgTel2, 4) ||
+    !hasExactLength(model.value.deviceChgTel3, 4)
+  ) {
     console.warn(`${getLogPrefix('가입자정보검증')} 진행 중단`, {
       reason: 'deviceChgTel',
       deviceChgTel1: model.value.deviceChgTel1,

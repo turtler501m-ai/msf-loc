@@ -286,9 +286,11 @@ const onClickClearBtn = async () => {
         initAllSteps()
         return
       }
-      stepRef?.reset
-        ? await stepRef.reset()
-        : getCurrentFormStore()?.resetStep?.(currentStepIndex.value)
+      if (stepRef?.reset) {
+        await stepRef.reset()
+      } else {
+        getCurrentFormStore()?.resetStep?.(currentStepIndex.value)
+      }
     })
   }
 }
@@ -395,7 +397,7 @@ watch(
   },
 )
 
-watch(currentStepIndex, async (newIndex) => {
+watch(currentStepIndex, async () => {
   // 페이지 이동(도메인 변경)에 의한 인덱스 변화라면 스크롤 로직 실행 안 함
   if (isRouteChange.value) {
     isRouteChange.value = false // 플래그 초기화 후 종료

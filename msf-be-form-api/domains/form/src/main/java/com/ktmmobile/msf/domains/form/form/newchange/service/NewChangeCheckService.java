@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -13,6 +14,7 @@ import com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionRequest;
 import com.ktmmobile.msf.domains.form.form.newchange.dto.SubscriptionResponse;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.msp.FormCommReadMapper;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NewChangeCheckService {
@@ -76,11 +78,17 @@ public class NewChangeCheckService {
             && value.getBytes(StandardCharsets.UTF_8).length != exactLength;
     }
 
-
-    //가입조건조회
+    /**
+     * 가입조건조회
+     */
     public SubscriptionResponse getEligibilityCheck(SubscriptionRequest request) {
         SubscriptionResponse subscriptionResponse = new SubscriptionResponse();
         CstmrType cstmrTypeCd = request.getCstmrTypeCd();
+
+        log.debug("-------------------------------------------------------------------");
+        log.debug("CstmrTypeCd: {}", request.getCstmrTypeCd());
+        log.debug("cstmr: {}", request.getCustomerSsn());
+        log.debug("-------------------------------------------------------------------");
 
         //1년이내 사용회선 조회
         int actYearCnt = this.getActYearCnt(request);

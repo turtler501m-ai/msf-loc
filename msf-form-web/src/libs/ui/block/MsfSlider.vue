@@ -250,8 +250,9 @@ const handleFocusIn = (e) => {
   }
 }
 
-// 슬라이더 크기 변화(초기 너비 0px 감지 및 대응) 관찰자
+// 슬라이더 크기 변화 및 자식 노드 감시 관찰자
 let resizeObserver = null
+let mutationObserver = null
 
 onMounted(() => {
   // DOM이 완전히 그려진 후 너비 계산
@@ -261,15 +262,40 @@ onMounted(() => {
 
     window.addEventListener('resize', updateLayout)
 
-    // 슬라이더 자체의 크기 변화를 실시간 감지
     if (slider.value) {
+      // 1. 컨테이너 크기 변화 감지
       resizeObserver = new ResizeObserver(() => {
         // 0이었다가 크기가 생기거나, 내부 카드가 바뀔 때마다 레이아웃 재계산
         updateLayout()
       })
       resizeObserver.observe(slider.value)
 
-      // 탭 포커스 감지 리스너 (Capture 모드로 자식의 포커스 감지)
+      // 2. 슬롯 내부 자식 카드 개수 변화 감지
+      const track = slider.value.querySelector('.slider-track')
+      if (track) {
+        mutationObserver = new MutationObserver(() => {
+          // 무한 루프 차단: 레이아웃을 수정하기 전에 잠시 감시를 멈춤
+          mutationObserver.disconnect()
+
+          nextTick(() => {
+            // 카드가 완전히 추가되고 비동기 처리가 끝난 시점에 레이아웃 계산
+            updateLayout()
+
+            // 만약 새 글 등록 후 현재 슬라이드 위치가 범위를 벗어나면 첫 페이지로 복귀
+            if (currentIndex.value > totalItems.value - currentVisibleCount.value) {
+              currentIndex.value = 0
+            }
+
+            // 레이아웃 주입(수정)이 끝난 후, 다시 감시
+            if (track && mutationObserver) {
+              mutationObserver.observe(track, { childList: true })
+            }
+          })
+        })
+        // 최초 감시 시작
+        mutationObserver.observe(track, { childList: true })
+      }
+      // 탭 포커스 감지 리스너
       slider.value.addEventListener('focusin', handleFocusIn, { capture: true })
     }
   })
@@ -277,10 +303,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateLayout)
-  // 컴포넌트 해제 시 resizeObserver도 함께 해제
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-  }
+
+  // 컴포넌트 해제 시 관찰자 해제
+  if (resizeObserver) resizeObserver.disconnect()
+  if (mutationObserver) mutationObserver.disconnect()
 })
 </script>
 

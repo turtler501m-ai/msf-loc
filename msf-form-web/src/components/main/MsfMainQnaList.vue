@@ -121,6 +121,7 @@ const getIconUrl = (status) => {
 const activeQnaId = ref('')
 
 const searchQna = async () => {
+  // list.value = []
   const data = await post('/api/main/qna/list', {
     page: {
       pageNum: currentPage.value,

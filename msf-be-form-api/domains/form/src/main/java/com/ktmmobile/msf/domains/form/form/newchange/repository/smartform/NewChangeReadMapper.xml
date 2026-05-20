@@ -342,11 +342,13 @@
       SELECT COUNT(*)
       FROM MSF_REQUEST_TEMP
       WHERE REQUEST_KEY = #{requestKey}
+        <if test='preCheck.toString() == "" or preCheck == null'>
         AND MANAGER_CD = #{managerCd}
         AND AGENT_CD = #{agentCd}
         AND SHOP_CD = #{shopCd}
         <if test='tmpStepCd.toString() != "" and tmpStepCd!=null'>
           AND TMP_STEP_CD = #{tmpStepCd}
+        </if>
         </if>
     </select>
 

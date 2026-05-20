@@ -27,6 +27,7 @@ const props = defineProps({
   title: { type: String, default: '가입유형 선택' },
   authFlags: { type: Object, default: () => ({}) },
 })
+const emit = defineEmits(['change-product-type', 'change-join-type'])
 const model = defineModel({ type: Object, required: true })
 
 const joinTypeCodes = ref([])
@@ -72,7 +73,17 @@ watch(
   (newVal, oldVal) => {
     // 마운트 시 최초 세팅은 무시하고 실제로 값을 변경했을 때만 동작
     if (oldVal !== undefined && oldVal !== newVal) {
+      emit('change-product-type', { newVal, oldVal })
       model.value.joinType = 'MNP3' // 기본값 번호이동으로 리셋
+    }
+  },
+)
+
+watch(
+  () => model.value.joinType,
+  (newVal, oldVal) => {
+    if (oldVal !== undefined && oldVal !== newVal) {
+      emit('change-join-type', { newVal, oldVal })
     }
   },
 )

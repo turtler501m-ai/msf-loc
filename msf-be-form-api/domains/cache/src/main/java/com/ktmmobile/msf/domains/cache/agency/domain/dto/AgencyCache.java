@@ -12,6 +12,8 @@ public record AgencyCache(
     String higherOrganizationCode  // 상위조직코드
 ) {
 
+    private static final AgencyCache EMPTY = new AgencyCache("", "", "", "", "", "");
+
     public static AgencyCache from(Agency agency) {
         return new AgencyCache(
             agency.getKtOrganizationId(),
@@ -21,6 +23,10 @@ public record AgencyCache(
             agency.getLevelCode(),
             agency.getHigherOrganizationCode()
         );
+    }
+
+    public static AgencyCache empty() {
+        return EMPTY;
     }
 
     public boolean isAgency() {

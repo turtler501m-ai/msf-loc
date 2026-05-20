@@ -20,9 +20,7 @@ public class TempSavePageRepositoryImpl implements TempSavePageRepository {
     @Override
     public Page<TempSavePage> selectList(TempSavePageCondition condition) {
         int totalCount = formRequestMapper.count(condition);
-
         List<TempSavePage> data = formRequestMapper.selectList(condition);
-
         return Page.of(data, condition.page(), totalCount);
     }
 }

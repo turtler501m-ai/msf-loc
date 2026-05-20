@@ -62,7 +62,7 @@ const fetchNumbers = async () => {
       reqWantNumber: props.searchParams.reqWantRnNo || '', // 뒤 4자리 검색
       requestKey: store.applicationKey || '278',
     }
-    const res = await post('/api/form/newchange/searchNumber', payload)
+    const res = await post('/api/form/hopenumber/get', payload)
     if (res && res.code === '0000') {
       const resData = res.data?.resData || {}
       const list = resData.marketList || []

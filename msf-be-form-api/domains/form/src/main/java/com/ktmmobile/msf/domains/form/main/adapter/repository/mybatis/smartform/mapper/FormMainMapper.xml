@@ -42,10 +42,10 @@
        and sbst_ctg_cd = #{category}
     </if>
     <if test="@org.springframework.util.StringUtils@hasText(startDate)">
-       and board_write_dt <![CDATA[>=]]> to_date(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+       and board_write_dt <![CDATA[>=]]> to_timestamp(#{startDate} || ' 00:00:00.000', 'YYYY-MM-DD HH24:MI:SS.MS')
     </if>
     <if test="@org.springframework.util.StringUtils@hasText(endDate)">
-       and board_write_dt <![CDATA[<=]]> to_date(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+       and board_write_dt <![CDATA[<=]]> to_timestamp(#{endDate} || ' 23:59:59.999', 'YYYY-MM-DD HH24:MI:SS.MS')
     </if>
     <if test="@org.springframework.util.StringUtils@hasText(value)">
        and (
@@ -101,10 +101,10 @@
        and qna_ctg_cd = #{category}
     </if>
     <if test="@org.springframework.util.StringUtils@hasText(startDate)">
-       and write_dt <![CDATA[>=]]> to_date(#{startDate} || ' 00:00:00', 'YYYY-MM-DD HH24:MI:SS')
+       and write_dt <![CDATA[>=]]> to_timestamp(#{startDate} || ' 00:00:00.000', 'YYYY-MM-DD HH24:MI:SS.MS')
     </if>
     <if test="@org.springframework.util.StringUtils@hasText(endDate)">
-       and write_dt <![CDATA[<=]]> to_date(#{endDate} || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS')
+       and write_dt <![CDATA[<=]]> to_timestamp(#{endDate} || ' 23:59:59.999', 'YYYY-MM-DD HH24:MI:SS.MS')
     </if>
     <if test="@org.springframework.util.StringUtils@hasText(value)">
        and (
@@ -150,4 +150,37 @@
        set board_hit_cnt = coalesce(board_hit_cnt, 0) + 1
      where qna_seq <foreach collection="ids" item="item" index="index" open="in (" separator="," close=")">#{item}</foreach>
   </update>
+
+  <insert id="insertQna" parameterType="com.ktmmobile.msf.domains.form.main.domain.entity.Qna">
+    <selectKey keyProperty="qnaSeq" resultType="long" order="BEFORE">
+      select nextval('sq_qna_board_seq'::regclass)
+    </selectKey>
+    insert into msf_qna_board_bas (
+      qna_seq,
+      qna_ctg_cd,
+      qna_title,
+      qna_writer_id,
+      qna_nm,
+      write_dt,
+      qna_content_sbst,
+      cret_view_yn,
+      ans_sttus_cd,
+      del_yn,
+      view_yn,
+      board_hit_cnt
+    ) values (
+      #{qnaSeq},
+      #{qnaCtgCd},
+      #{qnaTitle},
+      #{qnaWriterId},
+      #{qnaNm},
+      current_timestamp,
+      #{qnaContentSbst},
+      #{cretViewYn},
+      'R',
+      'N',
+      'Y',
+      0
+    )
+  </insert>
 </mapper>

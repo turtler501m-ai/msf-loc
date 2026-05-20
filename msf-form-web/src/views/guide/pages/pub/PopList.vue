@@ -1,5 +1,41 @@
 <template>
   <div class="pub-popup-wrap">
+    <!-- 약관 테스트용 팝업목록 (실제 약관은 MsfAgreementDetail 에 그려짐) -->
+    <p class="pub-popup-info">※ MsfAgreementDetail 약관 샘플 목록 (kt m mobile 소스코드 가져옴)</p>
+    <div class="pub-popup-list">
+      <div class="popup-list-items">
+        <MsfButtonGroup align="left">
+          <MsfButton @click="openPolicy('policy01')"
+            >번호이동 시 이전 통신사의 잔여요금 및 환급금 납부방법 동의</MsfButton
+          >
+          <MsfButton @click="openPolicy('policy02')">고유식별정보 수집·이용 동의</MsfButton>
+          <MsfButton @click="openPolicy('policy03')">개인정보/신용정보 수집·이용 동의</MsfButton>
+          <MsfButton @click="openPolicy('policy04')">개인정보 제3자 제공 동의</MsfButton>
+          <MsfButton @click="openPolicy('policy05')"
+            >민감정보(생체인식정보) 수집 및 이용 동의</MsfButton
+          >
+          <MsfButton @click="openPolicy('policy06')"
+            >민감정보(생체인식정보) 조회 및 이용 / 3자 제공에 대한 동의</MsfButton
+          >
+          <MsfButton @click="openPolicy('policy07')">서비스 이용약관</MsfButton>
+          <MsfButton @click="openPolicy('policy08')"
+            >개인정보 제3자제공 동의((주)밀리의 서재 요금제 가입고객 필수 동의)</MsfButton
+          >
+          <MsfButton @click="openPolicy('policy09')"
+            >고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의</MsfButton
+          >
+          <MsfButton @click="openPolicy('policy10')"
+            >고객 혜택 제공을 위한 개인정보 수집 및 이용 관련 동의</MsfButton
+          >
+          <MsfButton @click="openPolicy('policy11')">혜택 제공을 위한 제3자 제공 동의</MsfButton>
+          <MsfButton @click="openPolicy('policy12')">제3자 제공관련 광고 수신 동의</MsfButton>
+          <MsfButton @click="openPolicy('policy13')">개인위치정보 제3자 제공 동의</MsfButton>
+          <MsfButton @click="openPolicy('policy14')">청소년 유해정보차단 APP 설치 동의</MsfButton>
+          <MsfButton @click="openPolicy('policy15')">청소년 유해정보 네트워크차단 동의</MsfButton>
+        </MsfButtonGroup>
+      </div>
+    </div>
+    <!-- 화면에서 사용하는 팝업목록 -->
     <p class="pub-popup-info">※ 각 버튼명 ID값을 파일명으로 찾으시면 됩니다.</p>
     <div class="pub-popup-list">
       <!-- 팝업 목록 -->
@@ -96,6 +132,7 @@
   <S102030108 v-model="S102030108Open" />
   <S102030109 v-model="S102030109Open" />
   <S102030110 v-model="S102030110Open" />
+  <PolicySample v-model="policyPopOpen" :policy="currentPolicy" />
 </template>
 
 <script setup>
@@ -159,11 +196,22 @@ const S102030107Open = ref(false)
 const S102030108Open = ref(false)
 const S102030109Open = ref(false)
 const S102030110Open = ref(false)
+
+// 약관 샘플 팝업 관련
+import PolicySample from '@/views/guide/pages/pub/PolicySample.vue'
+const policyPopOpen = ref(false)
+const currentPolicy = ref('')
+// 약관 샘플 팝업 열기
+const openPolicy = (id) => {
+  currentPolicy.value = id // 'policy01' 등을 저장
+  policyPopOpen.value = true
+}
 </script>
 
 <style lang="scss" scoped>
 .pub-popup-wrap {
   position: relative;
+  padding-bottom: 80px;
 }
 .pub-popup-info {
   font-size: 20px;
@@ -181,6 +229,9 @@ const S102030110Open = ref(false)
       font-size: 18px;
       font-weight: bold;
     }
+  }
+  & + .pub-popup-info {
+    margin-top: 60px;
   }
 }
 </style>

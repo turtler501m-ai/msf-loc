@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":commons:mybatis"))
     implementation(project(":commons:websecurity"))
     implementation(project(":commons:login-core"))
+    implementation(project(":commons:masking"))
 
     implementation(project(":domains:policy"))
     implementation(project(":domains:cache"))

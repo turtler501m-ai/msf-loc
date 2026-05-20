@@ -21,7 +21,7 @@
     @selected="onSelected"
   >
     <template #buttons>
-      <MsfButton variant="toggle" @click="onUpdate">수정</MsfButton>
+      <MsfButton variant="toggle" @click="onUpdate" :readonlyMsg="alertUpdateMsg">수정</MsfButton>
     </template>
   </MsfDataTable>
 </template>
@@ -32,10 +32,6 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { showAlert } from '@/libs/utils/comp.utils'
 import { storeTempSave } from '@/stores/tempsave'
-
-const router = useRouter()
-const tempSaveStore = storeTempSave()
-const { formData } = storeToRefs(tempSaveStore)
 
 // 데이터 테이블 + 페이징처리
 const colDefsPaging = ref([
@@ -98,10 +94,14 @@ const colDefsPaging = ref([
   },
 ])
 
+const router = useRouter()
+const tempSaveStore = storeTempSave()
+const { formData } = storeToRefs(tempSaveStore)
 const isLoaded = ref(false)
 const pagingRef = ref()
 const selectedRowPaging = ref([])
 const selectedScriptSeq = ref(null)
+const alertUpdateMsg = ref('수정할 항목을 선택해주세요.')
 
 const onClickSearch = () => {
   pagingRef.value.search()
@@ -110,7 +110,11 @@ const onClickSearch = () => {
 const onSelected = (data) => {
   selectedRowPaging.value = data
   selectedScriptSeq.value = data?.requestKey ?? null
-  console.log('select: ' + selectedScriptSeq.value)
+  if (selectedScriptSeq.value) {
+    alertUpdateMsg.value = ''
+  } else {
+    alertUpdateMsg.value = '수정할 항목을 선택해주세요.'
+  }
 }
 
 const onUpdate = async () => {
@@ -118,7 +122,6 @@ const onUpdate = async () => {
     showAlert('수정할 항목을 선택해주세요.')
     return
   }
-
   // 선택된 행의 데이터 확인
   const selectedRow = selectedRowPaging.value
   if (!selectedRow) return

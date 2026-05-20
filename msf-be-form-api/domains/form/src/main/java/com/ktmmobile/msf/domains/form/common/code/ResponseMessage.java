@@ -40,6 +40,7 @@ public enum ResponseMessage implements CommonEnum {
 
     /* USIM 유효성 체크 */
     VALID_USIM_SUCCESS("0000", "사용 가능한 USIM 번호 입니다."),
+    VALID_USIM_NO_DATA("0001", "재고가 없습니다."),
     VALID_USIM_FAIL("1000", "유효하지 않은 USIM 번호 입니다.\n사용 불가한 USIM 입니다.\n새 USIM을 구매하여 재 시도 바랍니다."),
 
     /* ESIM 유효성 체크 */

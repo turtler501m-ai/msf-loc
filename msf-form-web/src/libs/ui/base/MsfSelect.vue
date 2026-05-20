@@ -139,6 +139,7 @@ const props = defineProps({
   groupCode: { type: String, default: '' }, // 공통코드 그룹코드
   isFull: { type: Boolean, default: false }, // 전체 라인 스타일 여부
   allChecked: { type: [Boolean, String], default: false }, // allChecked의 값이 있으면 옵션의 첫번째 전체 항목으로 노출함
+  disabledItems: { type: Array, default: () => [] }, // 비활성화할 옵션의 value 배열
 })
 
 // 부모에게 전달할 이벤트
@@ -273,7 +274,12 @@ const getOptionsByGroupCode = (groupCode) => {
   if (props.options?.length > 0) return props.options
   if (isEmpty(groupCode)) return []
   getCommonCodeListWithDetail(groupCode).then((list) => {
-    optionList.value = list?.map((item) => ({ value: item.code, label: item.title, ...item }))
+    optionList.value = list?.map((item) => ({
+      value: item.code,
+      label: item.title,
+      ...item,
+      disabled: props.disabledItems ? props.disabledItems.includes(item.code) : false,
+    }))
   })
 }
 

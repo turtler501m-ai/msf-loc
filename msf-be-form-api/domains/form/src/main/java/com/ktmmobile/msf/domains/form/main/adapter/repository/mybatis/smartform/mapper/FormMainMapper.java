@@ -32,4 +32,6 @@ public interface FormMainMapper {
     List<Qna> selectListQna(QnaCondition condition);
 
     Integer updateAddQnaHits(QnaHitsRequest request);
+
+    Integer insertQna(Qna qna);
 }

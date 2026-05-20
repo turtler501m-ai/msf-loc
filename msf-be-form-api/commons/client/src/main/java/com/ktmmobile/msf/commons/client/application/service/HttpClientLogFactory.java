@@ -1,10 +1,10 @@
 package com.ktmmobile.msf.commons.client.application.service;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -23,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.util.StringUtils;
 
 import com.ktmmobile.msf.commons.client.domain.dto.HttpClientLog;
 import com.ktmmobile.msf.commons.client.support.properties.HttpClientLoggingProperties;
@@ -30,7 +31,7 @@ import com.ktmmobile.msf.commons.client.support.properties.HttpClientLoggingProp
 
 public class HttpClientLogFactory {
 
-    private static final Pattern SIZE_RULE_PATTERN = Pattern.compile("^(.+)\\[(\\d+)(?::(\\d+))?]$");
+    private static final Pattern SIZE_RULE_PATTERN = Pattern.compile("^(.+)\\[(\\d*)(?::(\\d*))?]$");
     private static final Pattern CONTENT_DISPOSITION_NAME_PATTERN = Pattern.compile("name=\"([^\"]+)\"");
     private static final Pattern CONTENT_DISPOSITION_FILENAME_PATTERN = Pattern.compile("filename=\"([^\"]*)\"");
 
@@ -52,7 +53,7 @@ public class HttpClientLogFactory {
         this.bodyMaskedIncludes = toNormalizedMatchSet(loggingProperties.bodyMaskedFields().mergedInclude());
         this.bodyMaskedExcludes = toNormalizedMatchSet(loggingProperties.bodyMaskedFields().mergedExclude());
         this.bodyTruncatedIncludes = toBodyTruncateRules(loggingProperties.bodyTruncatedFields().mergedInclude(),
-            loggingProperties.bodyTruncatedSize());
+            loggingProperties.bodyTruncatedFields().defaultTruncatedSize());
         this.bodyTruncatedExcludes = toNormalizedMatchSet(loggingProperties.bodyTruncatedFields().mergedExclude());
     }
 
@@ -300,7 +301,7 @@ public class HttpClientLogFactory {
         List<MultipartPart> multipartParts = new ArrayList<>();
         String delimiter = "--" + boundary;
         String[] rawParts = bodyText.split(Pattern.quote(delimiter));
-        for (String rawPart : rawParts) {
+        for (String rawPart: rawParts) {
             if (rawPart == null || rawPart.isBlank()) {
                 continue;
             }
@@ -345,7 +346,7 @@ public class HttpClientLogFactory {
 
     private HttpHeaders parsePartHeaders(String headerText) {
         HttpHeaders headers = new HttpHeaders();
-        for (String headerLine : headerText.split("\\r?\\n")) {
+        for (String headerLine: headerText.split("\\r?\\n")) {
             int separatorIndex = headerLine.indexOf(':');
             if (separatorIndex < 0) {
                 continue;
@@ -484,7 +485,7 @@ public class HttpClientLogFactory {
 
         int prefixLength = bodyTruncateRule.prefixLength();
         int suffixLength = bodyTruncateRule.suffixLength();
-        if (prefixLength <= 0 || suffixLength <= 0 || value.length() <= prefixLength + suffixLength) {
+        if ((prefixLength <= 0 && suffixLength <= 0) || value.length() <= prefixLength + suffixLength) {
             return value;
         }
 
@@ -496,7 +497,7 @@ public class HttpClientLogFactory {
     private List<FormField> parseFormUrlEncodedBody(String bodyText, Charset charset) {
         List<FormField> formFields = new ArrayList<>();
         String[] pairs = bodyText.split("&");
-        for (String pair : pairs) {
+        for (String pair: pairs) {
             if (pair == null || pair.isEmpty()) {
                 continue;
             }
@@ -543,7 +544,8 @@ public class HttpClientLogFactory {
 
         private static HeaderLogRule parse(String expression) {
             if (expression == null || expression.isBlank()) {
-                throw new IllegalArgumentException("http-client.logging.header-names.include 값은 '헤더명', '헤더명[글자수]' 또는 '헤더명[앞글자수:뒤글자수]' 형식이어야 합니다.");
+                throw new IllegalArgumentException(
+                    "http-client.logging.header-names.include 값은 '헤더명', '헤더명[글자수]', '헤더명[앞글자수:뒤글자수]', '헤더명[앞글자수:]' 또는 '헤더명[:뒤글자수]' 형식이어야 합니다.");
             }
 
             String trimmedExpression = expression.trim();
@@ -551,12 +553,14 @@ public class HttpClientLogFactory {
             if (matcher.matches()) {
                 try {
                     String headerName = matcher.group(1).trim();
-                    int prefixLength = Integer.parseInt(matcher.group(2));
-                    int suffixLength = matcher.group(3) == null ? prefixLength : Integer.parseInt(matcher.group(3));
+                    int prefixLength = parseRuleSize(matcher.group(2));
+                    int suffixLength = matcher.group(3) == null
+                        ? prefixLength
+                        : parseRuleSize(matcher.group(3));
                     return new HeaderLogRule(headerName.toLowerCase(), false, prefixLength, suffixLength);
                 } catch (NumberFormatException exception) {
                     throw new IllegalArgumentException(
-                        "http-client.logging.header-names.include 값은 '헤더명[숫자]' 또는 '헤더명[숫자:숫자]' 형식이어야 합니다. value=" + expression,
+                        "http-client.logging.header-names.include 값은 '헤더명[숫자]', '헤더명[숫자:숫자]', '헤더명[숫자:]' 또는 '헤더명[:숫자]' 형식이어야 합니다. value=" + expression,
                         exception
                     );
                 }
@@ -564,7 +568,7 @@ public class HttpClientLogFactory {
 
             if (trimmedExpression.contains("[") || trimmedExpression.contains("]")) {
                 throw new IllegalArgumentException(
-                    "http-client.logging.header-names.include 값은 '헤더명', '헤더명[글자수]' 또는 '헤더명[앞글자수:뒤글자수]' 형식이어야 합니다. value=" + expression
+                    "http-client.logging.header-names.include 값은 '헤더명', '헤더명[글자수]', '헤더명[앞글자수:뒤글자수]', '헤더명[앞글자수:]' 또는 '헤더명[:뒤글자수]' 형식이어야 합니다. value=" + expression
                 );
             }
 
@@ -581,7 +585,7 @@ public class HttpClientLogFactory {
         private static BodyTruncateRule parse(String expression, int defaultSize) {
             if (expression == null || expression.isBlank()) {
                 throw new IllegalArgumentException(
-                    "http-client.logging.body-truncated-fields.include 값은 '필드명', '필드명[글자수]' 또는 '필드명[앞글자수:뒤글자수]' 형식이어야 합니다."
+                    "http-client.logging.body-truncated-fields.include 값은 '필드명', '필드명[글자수]', '필드명[앞글자수:뒤글자수]', '필드명[앞글자수:]' 또는 '필드명[:뒤글자수]' 형식이어야 합니다."
                 );
             }
 
@@ -590,12 +594,14 @@ public class HttpClientLogFactory {
             if (matcher.matches()) {
                 try {
                     String fieldName = matcher.group(1).trim();
-                    int prefixLength = Integer.parseInt(matcher.group(2));
-                    int suffixLength = matcher.group(3) == null ? prefixLength : Integer.parseInt(matcher.group(3));
+                    int prefixLength = parseRuleSize(matcher.group(2));
+                    int suffixLength = matcher.group(3) == null
+                        ? prefixLength
+                        : parseRuleSize(matcher.group(3));
                     return new BodyTruncateRule(fieldName.toLowerCase(), prefixLength, suffixLength);
                 } catch (NumberFormatException exception) {
                     throw new IllegalArgumentException(
-                        "http-client.logging.body-truncated-fields.include 값은 '필드명[숫자]' 또는 '필드명[숫자:숫자]' 형식이어야 합니다. value=" + expression,
+                        "http-client.logging.body-truncated-fields.include 값은 '필드명[숫자]', '필드명[숫자:숫자]', '필드명[숫자:]' 또는 '필드명[:숫자]' 형식이어야 합니다. value=" + expression,
                         exception
                     );
                 }
@@ -603,11 +609,15 @@ public class HttpClientLogFactory {
 
             if (trimmedExpression.contains("[") || trimmedExpression.contains("]")) {
                 throw new IllegalArgumentException(
-                    "http-client.logging.body-truncated-fields.include 값은 '필드명', '필드명[글자수]' 또는 '필드명[앞글자수:뒤글자수]' 형식이어야 합니다. value=" + expression
+                    "http-client.logging.body-truncated-fields.include 값은 '필드명', '필드명[글자수]', '필드명[앞글자수:뒤글자수]', '필드명[앞글자수:]' 또는 '필드명[:뒤글자수]' 형식이어야 합니다. value=" + expression
                 );
             }
 
             return new BodyTruncateRule(trimmedExpression.toLowerCase(), defaultSize, defaultSize);
         }
+    }
+
+    private static int parseRuleSize(String value) {
+        return StringUtils.hasText(value) ? Integer.parseInt(value) : 0;
     }
 }

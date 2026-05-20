@@ -19,4 +19,15 @@ public class MnpOsstRequest {
     private String custNm; // 고객명	60	M	법인인 경우 법인명
     private String crprNo; //법인번호
     private String indvBizrYn; // 개인사업자 여부	1	M	개인사업자인 경우 Y, defult N
+    private String fornBrthDate; //외국인생년월일
+
+    //번호이동 납부주장요청
+    private String osstOrdNo;
+    //private String slsCmpnCd;  //위와 중복
+    //private String npTlphNo;  //위와 중복
+    private String payAsertDt;
+    private String payAsertAmt;
+    private String payMethCd;
+
+
 }

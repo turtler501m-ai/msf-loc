@@ -7,6 +7,7 @@ import com.ktmmobile.msf.domains.form.main.application.dto.NoticeHitsRequest;
 import com.ktmmobile.msf.domains.form.main.application.dto.NoticeResponse;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaCondition;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaHitsRequest;
+import com.ktmmobile.msf.domains.form.main.application.dto.QnaRequest;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaResponse;
 
 public interface FormMainReader {
@@ -20,4 +21,6 @@ public interface FormMainReader {
     PagedDataResponse<QnaResponse> getListQna(QnaCondition condition);
 
     Boolean addQnaHits(QnaHitsRequest request);
+
+    Boolean registQna(QnaRequest request);
 }

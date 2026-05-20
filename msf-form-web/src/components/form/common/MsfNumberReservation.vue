@@ -30,7 +30,11 @@
           <MsfButton
             variant="subtle"
             @click="isModalOpen = true"
-            :disabled="(customerModel.isSaved && store.authFlags?.reserveNo) || !!model.wishNo || String(model.reqWantRnNo || '').length !== 4"
+            :disabled="
+              (customerModel.isSaved && store.authFlags?.reserveNo) ||
+              !!model.wishNo ||
+              String(model.reqWantRnNo || '').length !== 4
+            "
             >번호조회</MsfButton
           >
         </MsfStack>
@@ -100,7 +104,7 @@ const onNumberConfirm = async (data) => {
       tlphNoOwnCmpnCd: data.marketGubun || '',
     }
 
-    const res = await post('/api/form/newchange/reserveNumber', payload)
+    const res = await post('/api/form/hopenumber/reserve', payload)
     if (res && res.data?.resCode === '0000') {
       model.value.wishNo = payload.tlpNo
       reserveAuthBtn.verify()
@@ -117,7 +121,7 @@ const handleCancelNumber = async () => {
     const payload = {
       requestKey: store.applicationKey,
     }
-    const res = await post('/api/form/newchange/cancelNumber', payload)
+    const res = await post('/api/form/hopenumber/cancel', payload)
     if (res && res.data?.resCode === '0000') {
       model.value.wishNo = ''
       reserveAuthBtn.reset()
@@ -151,4 +155,3 @@ const validate = () => {
 
 defineExpose({ validate })
 </script>
-

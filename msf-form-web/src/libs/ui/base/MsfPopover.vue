@@ -255,7 +255,7 @@ onUnmounted(() => {
   position: relative;
   // 열렸을때 클릭을 위해서 z-index높임
   &.is-active {
-    z-index: 1002;
+    z-index: 1000;
   }
 }
 .popover-root {

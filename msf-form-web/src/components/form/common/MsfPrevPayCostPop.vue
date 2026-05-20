@@ -135,18 +135,21 @@ const props = defineProps({
 
 const emit = defineEmits(['update:isOpen', 'triggerClick', 'close'])
 const store = useMsfFormNewChgStore()
-const amtInfo = computed(() => store.product.estimatedAmtInfo || {
-  hndsetAmt: 0,
-  subsdAmt: 0,
-  agncySubsdAmt: 0,
-  instAmt: 0,
-  instCmsn: 0,
-  baseAmt: 0,
-  dcAmt: 0,
-  addDcAmt: 0,
-  joinFee: 0,
-  usimFee: 0,
-})
+const amtInfo = computed(
+  () =>
+    store.product.estimatedAmtInfo || {
+      hndsetAmt: 0,
+      subsdAmt: 0,
+      agncySubsdAmt: 0,
+      instAmt: 0,
+      instCmsn: 0,
+      baseAmt: 0,
+      dcAmt: 0,
+      addDcAmt: 0,
+      joinFee: 0,
+      usimFee: 0,
+    },
+)
 
 // 가입유형 이름 매핑
 const getJoinTypeName = (type) => {
@@ -202,11 +205,12 @@ const fetchPriceInfo = async () => {
     operTypeCd: m.joinType || 'MNP3',
     rateCd: m.prodId,
     dataType: m.prdtSctnCd || 'LTE',
+    agentCd: m.agentCd || '',
   }
 
   // 휴대폰 전용 필드 추가
   if (m.productType === 'MM') {
-    payload.prdtId = m.deviceModel
+    payload.modelId = m.modelId
     payload.modelMonthly = m.installmentMonth
     payload.agrmTrm = m.contractPeriod
     payload.salePlcyCd = m.modelSalePolicyCd
@@ -217,7 +221,7 @@ const fetchPriceInfo = async () => {
     if (p.hasSim === 'hasSim1') {
       usimCd = '06' // 유심보유
     } else if (p.hasSim === 'hasSim2') {
-      usimCd = (m.prdtSctnCd === '5G') ? '07' : '02' // 유심구매 (5G: 07, LTE: 02)
+      usimCd = m.prdtSctnCd === '5G' ? '07' : '02' // 유심구매 (5G: 07, LTE: 02)
     } else if (p.hasSim === 'hasSim3') {
       usimCd = '09' // eSIM
     }
@@ -226,7 +230,7 @@ const fetchPriceInfo = async () => {
 
   try {
     // 통합 판매 가격 정보 조회 (오류 확인을 위해 silent 제거)
-    const res = await post('/api/form/phone/getMspSalePriceInfo', payload)
+    const res = await post('/api/form/phone/mspsaleprice/get', payload)
 
     const result = {
       ...p.estimatedAmtInfo,
@@ -258,11 +262,12 @@ const fetchPriceInfo = async () => {
       result.baseAmt = Number(d.baseAmt || d.SOC_BASE_CHRG_AMT || 0)
       result.dcAmt = Number(d.dcAmt || d.DC_AMT || 0)
       result.addDcAmt = Number(d.addDcAmt || d.ADD_DC_AMT || 0)
-      
+
       const isJoinPaid = d.joinIsPay ? d.joinIsPay === 'Y' : true
       result.joinFee = isJoinPaid ? Number(d.joinPrice || d.JOIN_PRICE || 0) : 0
 
-      const isSimPaid = (d.simIsPay || d.nfcSimIsPay) ? (d.simIsPay === 'Y' || d.nfcSimIsPay === 'Y') : true
+      const isSimPaid =
+        d.simIsPay || d.nfcSimIsPay ? d.simIsPay === 'Y' || d.nfcSimIsPay === 'Y' : true
       result.usimFee = isSimPaid ? Number(d.simPrice || d.usimPrice || d.USIM_PRICE || 0) : 0
     }
 

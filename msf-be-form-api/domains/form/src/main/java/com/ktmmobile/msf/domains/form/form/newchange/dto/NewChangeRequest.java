@@ -18,6 +18,7 @@ public class NewChangeRequest {
 
     Long newRequestKey; //신청서 복사하기에서 사용함.
     String tmpStepCd; //신청서 복사하기에서 임시저장 step 값
+    String preCheck; //신청서번호 존재여부 확인을 위한 변수 (구비서류, 안면인식 등에 request_key 미리 생성이슈)
 
     //@NotBlank
     Long requestKey;

@@ -13,6 +13,9 @@ import lombok.Setter;
 public class KnoteScanInfoRequest {
 
     //서식지 목록조회
+    String agentCd; //대리점코드 (조회를 위한 parameter)
+
+    //서식지 목록조회
     String mngmAgncId; //개통요청 대리점코드 (Must)
     String cntpntCd; //개통요청 접점코드 (Optional)
     String retvStrtDt; //조회시작일시 (Must)

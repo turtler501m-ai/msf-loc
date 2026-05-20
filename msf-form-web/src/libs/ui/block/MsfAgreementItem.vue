@@ -60,6 +60,7 @@
             :key="idx"
             v-model="child.checked"
             v-bind="child"
+            :spec-terms="child.code ? props.specTerms?.find?.(v => v.code === child.code) || props.specTerms : props.specTerms"
             :only-required="onlyRequired"
             @change="(checked) => emit('change', checked)"
           />

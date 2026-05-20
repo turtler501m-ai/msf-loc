@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -29,6 +30,8 @@ import com.ktmmobile.msf.domains.form.form.newchange.dto.KnoteScanInfoResponse;
 /**
  * KTM모바일 고객인증, 신분증 목록 조회
  **/
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthInfoService {
@@ -38,6 +41,11 @@ public class AuthInfoService {
 
     //KTM모바일 고객인증
     public FormResponse<MspJuoSubInfoResponse> getJuoSubInfo(MspJuoSubInfoRequest request) {
+        log.debug("★ KTM모바일 고객인증 ★ customerLinkName: {}, customerSsn: {}, subscriberNo: {}",
+            request.getCustomerLinkName(),
+            request.getCustomerSsn(),
+            request.getSubscriberNo());
+
         //MspJuoSubInfoResponse data = authInfoReadMapper.selectKtmCustomer(condition);
         //return data;
 
@@ -50,7 +58,14 @@ public class AuthInfoService {
 
 
     //Knote 신분증 목록 조회 (서식지 목록조회 FS0)
-    public FormResponse<MSimpleOsstXmlFs0VO> getIdList() {
+    public FormResponse<MSimpleOsstXmlFs0VO> getIdList(KnoteScanInfoRequest knoteScanInfoRequest) {
+        log.debug("★ Knote 신분증 목록 조회 ★ mngmAgncId: {}", knoteScanInfoRequest.getAgentCd());
+
+        String storCd = AuthenticationUtils.getShopCode();
+        String agentCd = knoteScanInfoRequest.getAgentCd();
+        if (agentCd == null || agentCd.equals("")) {
+            agentCd = AuthenticationUtils.getAgentCode(); //대리점코드
+        }
 
         KnoteScanInfoRequest request = new KnoteScanInfoRequest();
         String requestScanDate = "";
@@ -58,13 +73,21 @@ public class AuthInfoService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         requestScanDate = today.format(formatter);
 
-        request.setMngmAgncId(AuthenticationUtils.getAgentCode()); //개통요청 대리점코드
-        request.setCntpntCd(AuthenticationUtils.getShopCode()); //개통요청 접점코드 : Optional
+        //request.setMngmAgncId(AuthenticationUtils.getAgentCode()); //개통요청 대리점코드
+        request.setMngmAgncId(agentCd); //개통요청 대리점코드
+        request.setCntpntCd(storCd); //개통요청 접점코드 : Optional
         request.setRetvStrtDt(requestScanDate); //조회시작일시
         request.setRetvEndDt(requestScanDate); //조회종료일시
         request.setSvcApyTrtStatCd("1"); //처리상태조회 1:접수, 2:진행, 3:완료, 4:취소
         //request.setRetvSeq("0"); //Optional :: 미 입력 시 0
         //request.setSvcApyTrtStatCd("40"); //Optional :: 미 입력시 40
+
+        log.debug("★ Knote 신분증 목록 조회 (prx) ★ mngmAgncId: {}, cntpntCd: {}, retvStrtDt: {}, retvEndDt: {}, svcApyTrtStatCd: {}",
+            request.getMngmAgncId(),
+            request.getCntpntCd(),
+            request.getRetvStrtDt(),
+            request.getRetvEndDt(),
+            request.getSvcApyTrtStatCd());
 
         //prx 오픈 시~ 주석해제 후 진행예정
         /*MSimpleOsstXmlFs0VO data = null;
@@ -79,14 +102,14 @@ public class AuthInfoService {
 
         List<KnoteScanInfoFs0Vo> list = Stream.of(
             new String[][] {
-                {"9001011", "초긍정", "20260514103045", "0x62E50320B59E11EE8A320080C74455C600", "1"},
-                {"8507152", "이부정", "20260514103045", "0x62E50320B59E11EE8A320080C74455C601", "1"},
-                {"9203081", "최영희", "20260514103045", "0x62E50320B59E11EE8A320080C74455C602", "1"},
-                {"7809125", "Tom", "20260514103045", "0x62E50320B59E11EE8A320080C74455C603", "5"},
-                {"0101013", "선우지은", "20260514103045", "0x62E50320B59E11EE8A320080C74455C604", "1"},
-                {"9505051", "현우성", "20260514103045", "0x62E50320B59E11EE8A320080C74455C605", "1"},
-                {"8808082", "신지민", "20260514103045", "0x62E50320B59E11EE8A320080C74455C606", "1"},
-                {"9303036", "Jenny", "20260514103045", "0x62E50320B59E11EE8A320080C74455C607", "5"},
+                {"8611111", "황순철", "20260519103045", "0x62E50320B59E11EE8A320080C74455C601", "1"},
+                {"8608302", "김세희", "20260519103045", "0x62E50320B59E11EE8A320080C74455C602", "1"},
+                {"1406303", "박준서", "20260519103045", "0x62E50320B59E11EE8A320080C74455C603", "1"},
+                {"8403235", "JIANG YONG", "20260519103045", "0x62E50320B59E11EE8A320080C74455C604", "5"},
+                {"9907065", "ORIPOV SHOKHBOZBEK SHUKHRATZHON UGLI", "20260519103045", "0x62E50320B59E11EE8A320080C74455C605", "5"},
+                {"0311167", "LE QUOC KHANH", "20260519103045", "0x62E50320B59E11EE8A320080C74455C606", "5"},
+                {"5504151", "김광한", "20260519103045", "0x62E50320B59E11EE8A320080C74455C607", "1"},
+                {"9907065", "ORIPOV SHOKHBOZBEK SHUKHRATZHON UGLI", "20260519103045", "0x62E50320B59E11EE8A320080C74455C608", "5"}
             }
         ).map(v -> {
             KnoteScanInfoFs0Vo tmpData = new KnoteScanInfoFs0Vo();
@@ -106,13 +129,38 @@ public class AuthInfoService {
     }
 
     //Knote 신분증 상태 조회 (서식지 상태조회 FS1)
-    public FormResponse<KnoteScanInfoResponse> checkIdStatus(KnoteScanInfoRequest request) {
-        if (!StringUtils.hasText(request.getFrmpapId())) {
+    public FormResponse<KnoteScanInfoResponse> checkIdStatus(KnoteScanInfoRequest knoteScanInfoRequest) {
+
+        log.debug("★ Knote 신분증 상태 조회 ★ mngmAgncId: {}, cntpntCd: {}, frmpapId: {}",
+            knoteScanInfoRequest.getAgentCd(),
+            knoteScanInfoRequest.getCntpntCd(),
+            knoteScanInfoRequest.getFrmpapId());
+
+        //선택한 신분증이 없음.
+        String frmpapId = knoteScanInfoRequest.getFrmpapId();
+        if (!StringUtils.hasText(frmpapId)) {
             return FormResponse.of(ResponseMessage.NO_DATA);
         }
-        request.setMngmAgncId(AuthenticationUtils.getAgentCode()); //개통요청 대리점코드
-        request.setCntpntCd(AuthenticationUtils.getShopCode()); //개통요청 접점코드
+
+        String storCd = AuthenticationUtils.getShopCode(); //로그인세션의 매장코드
+        String agentCd = knoteScanInfoRequest.getAgentCd();
+        if (agentCd == null || agentCd.equals("")) {
+            agentCd = AuthenticationUtils.getAgentCode(); //대리점코드
+        }
+
+        KnoteScanInfoRequest request = new KnoteScanInfoRequest();
+        request.setMngmAgncId(agentCd); //대리점코드
+        request.setCntpntCd(storCd); //판매점코드
+        request.setFrmpapId(frmpapId);
+
+        //request.setMngmAgncId(AuthenticationUtils.getAgentCode()); //개통요청 대리점코드
+        //request.setCntpntCd(AuthenticationUtils.getShopCode()); //개통요청 접점코드
         //frmpapId : 서식지 아이디는 선택정보
+
+        log.debug("★ Knote 신분증 상태 조회 (prx) ★ mngmAgncId: {}, cntpntCd: {}, frmpapId: {}",
+            request.getMngmAgncId(),
+            request.getCntpntCd(),
+            request.getFrmpapId());
 
         KnoteScanInfoResponse data = new KnoteScanInfoResponse();
         //MSimpleOsstXmlFs1VO simpleOsstXmlFs1VO = new MSimpleOsstXmlFs1VO();
@@ -123,58 +171,65 @@ public class AuthInfoService {
         }*/
 
         //-------------------- 삭제필요!!!!!!!!!!!!!!!!! PRX 연동시작하면~~~~~~~~~~~~~~~~~~~~~
-        if ("0x62E50320B59E11EE8A320080C74455C601".equals(request.getFrmpapId())) { //Error 처리
+        if ("0x62E50320B59E11EE8A320080C74455C600".equals(request.getFrmpapId())) { //Error 처리
             return FormResponse.of(ResponseMessage.NO_DATA);
-        } else if ("0x62E50320B59E11EE8A320080C74455C600".equals(request.getFrmpapId())) {
-            data.setKnoteIdentityScanCstmrNm("초긍정"); // CustNm
-            data.setKnoteIdentityEssNo("9001011234567"); // RealCustIdntNo
-            data.setCustNm("초긍정"); //고객명 서식지 신청고객명
-            data.setRealCustIdntNo("9001011234567"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
-            data.setKnoteIdentityScanDt("20260514103054"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
+        } else if ("0x62E50320B59E11EE8A320080C74455C601".equals(request.getFrmpapId())) {
+            data.setKnoteIdentityScanCstmrNm("황순철"); // CustNm
+            data.setKnoteIdentityEssNo("8611111162611"); // RealCustIdntNo
+            data.setCustNm("황순철"); //고객명 서식지 신청고객명
+            data.setRealCustIdntNo("8611111162611"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
+            data.setKnoteIdentityScanDt("20260519103014"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
             data.setCustIdntNoIndCd("1");
         } else if ("0x62E50320B59E11EE8A320080C74455C602".equals(request.getFrmpapId())) {
-            data.setKnoteIdentityScanCstmrNm("최영희"); // CustNm
-            data.setKnoteIdentityEssNo("9203081234567"); // RealCustIdntNo
-            data.setCustNm("최영희"); //고객명 서식지 신청고객명
-            data.setRealCustIdntNo("9203081234567"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
-            data.setKnoteIdentityScanDt("20260514103054"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
+            data.setKnoteIdentityScanCstmrNm("김세희"); // CustNm
+            data.setKnoteIdentityEssNo("8608302008591"); // RealCustIdntNo
+            data.setCustNm("김세희"); //고객명 서식지 신청고객명
+            data.setRealCustIdntNo("8608302008591"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
+            data.setKnoteIdentityScanDt("20260519103024"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
             data.setCustIdntNoIndCd("1");
         } else if ("0x62E50320B59E11EE8A320080C74455C603".equals(request.getFrmpapId())) {
-            data.setKnoteIdentityScanCstmrNm("Tom"); // CustNm
-            data.setKnoteIdentityEssNo("7809125234567"); // RealCustIdntNo
-            data.setCustNm("Tom"); //고객명 서식지 신청고객명
-            data.setRealCustIdntNo("7809125234567"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
-            data.setKnoteIdentityScanDt("20260514103054"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
-            data.setCustIdntNoIndCd("5");
+            data.setKnoteIdentityScanCstmrNm("박준서"); // CustNm
+            data.setKnoteIdentityEssNo("1406303919114"); // RealCustIdntNo
+            data.setCustNm("박준서"); //고객명 서식지 신청고객명
+            data.setRealCustIdntNo("1406303919114"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
+            data.setKnoteIdentityScanDt("20260519103034"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
+            data.setCustIdntNoIndCd("1");
         } else if ("0x62E50320B59E11EE8A320080C74455C604".equals(request.getFrmpapId())) {
-            data.setKnoteIdentityScanCstmrNm("선우지은"); // CustNm
-            data.setKnoteIdentityEssNo("0101013234567"); // RealCustIdntNo
-            data.setCustNm("선우지은"); //고객명 서식지 신청고객명
-            data.setRealCustIdntNo("0101013234567"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
-            data.setKnoteIdentityScanDt("20260514103054"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
-            data.setCustIdntNoIndCd("1");
-        } else if ("0x62E50320B59E11EE8A320080C74455C605".equals(request.getFrmpapId())) {
-            data.setKnoteIdentityScanCstmrNm("현우성"); // CustNm
-            data.setKnoteIdentityEssNo("9505051234567"); // RealCustIdntNo
-            data.setCustNm("현우성"); //고객명 서식지 신청고객명
-            data.setRealCustIdntNo("9505051234567"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
-            data.setKnoteIdentityScanDt("20260514103054"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
-            data.setCustIdntNoIndCd("1");
-        } else if ("0x62E50320B59E11EE8A320080C74455C606".equals(request.getFrmpapId())) {
-            data.setKnoteIdentityScanCstmrNm("신지민"); // CustNm
-            data.setKnoteIdentityEssNo("8808082234567"); // RealCustIdntNo
-            data.setCustNm("신지민"); //고객명 서식지 신청고객명
-            data.setRealCustIdntNo("8808082234567"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
-            data.setKnoteIdentityScanDt("20260514103054"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
-            data.setCustIdntNoIndCd("1");
-        } else if ("0x62E50320B59E11EE8A320080C74455C607".equals(request.getFrmpapId())) {
-            data.setKnoteIdentityScanCstmrNm("Jenny"); // CustNm
-            data.setKnoteIdentityEssNo("9303036234567"); // RealCustIdntNo
-            data.setCustNm("Jenny"); //고객명 서식지 신청고객명
-            data.setRealCustIdntNo("9303036234567"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
-            data.setKnoteIdentityScanDt("20260514103054"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
+            data.setKnoteIdentityScanCstmrNm("JIANG YONG"); // CustNm
+            data.setKnoteIdentityEssNo("8403235780596"); // RealCustIdntNo
+            data.setCustNm("JIANG YONG"); //고객명 서식지 신청고객명
+            data.setRealCustIdntNo("8403235780596"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
+            data.setKnoteIdentityScanDt("20260519103051"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
             data.setCustIdntNoIndCd("5");
-            data.setKnoteScanId("");
+        } else if ("0x62E50320B59E11EE8A320080C74455C605".equals(request.getFrmpapId())) {
+            data.setKnoteIdentityScanCstmrNm("ORIPOV SHOKHBOZBEK SHUKHRATZHON UGLI"); // CustNm
+            data.setKnoteIdentityEssNo("9907065700013"); // RealCustIdntNo
+            data.setCustNm("ORIPOV SHOKHBOZBEK SHUKHRATZHON UGLI"); //고객명 서식지 신청고객명
+            data.setRealCustIdntNo("9907065700013"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
+            data.setKnoteIdentityScanDt("20260519103052"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
+            data.setCustIdntNoIndCd("5");
+        } else if ("0x62E50320B59E11EE8A320080C74455C606".equals(request.getFrmpapId())) {
+            data.setKnoteIdentityScanCstmrNm("LE QUOC KHANH"); // CustNm
+            data.setKnoteIdentityEssNo("0311167860011"); // RealCustIdntNo
+            data.setCustNm("LE QUOC KHANH"); //고객명 서식지 신청고객명
+            data.setRealCustIdntNo("0311167860011"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
+            data.setKnoteIdentityScanDt("20260519103053"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
+            data.setCustIdntNoIndCd("5");
+            //data.setKnoteScanId("");
+        } else if ("0x62E50320B59E11EE8A320080C74455C607".equals(request.getFrmpapId())) {
+            data.setKnoteIdentityScanCstmrNm("김광한"); // CustNm
+            data.setKnoteIdentityEssNo("5504151222320"); // RealCustIdntNo
+            data.setCustNm("김광한"); //고객명 서식지 신청고객명
+            data.setRealCustIdntNo("5504151222320"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
+            data.setKnoteIdentityScanDt("20260519113053"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
+            data.setCustIdntNoIndCd("1");
+        } else if ("0x62E50320B59E11EE8A320080C74455C608".equals(request.getFrmpapId())) {
+            data.setKnoteIdentityScanCstmrNm("ORIPOV SHOKHBOZBEK SHUKHRATZHON UGLI"); // CustNm
+            data.setKnoteIdentityEssNo("9907065700013"); // RealCustIdntNo
+            data.setCustNm("ORIPOV SHOKHBOZBEK SHUKHRATZHON UGLI"); //고객명 서식지 신청고객명
+            data.setRealCustIdntNo("9907065700013"); //실명인증 식별번호 >> 명의자 식별번호는 암호화되어 넘어오므로 꼭 복호화해서 넘겨야함?
+            data.setKnoteIdentityScanDt("20260519123053"); //서식지 등록일시 : wapplRegDate >> yyyyMMddHHmmss
+            data.setCustIdntNoIndCd("5");
         } else {
             return FormResponse.of(ResponseMessage.NO_DATA);
         }

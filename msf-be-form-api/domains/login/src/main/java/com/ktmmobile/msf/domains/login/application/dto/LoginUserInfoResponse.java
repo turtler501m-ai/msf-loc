@@ -3,11 +3,13 @@ package com.ktmmobile.msf.domains.login.application.dto;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginOrganization;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginResultUserInfo;
 import com.ktmmobile.msf.commons.logincore.domain.dto.LoginUserInfo;
+import com.ktmmobile.msf.commons.masking.domain.code.MaskingType;
+import com.ktmmobile.msf.commons.masking.support.annotation.Masked;
 
 public record LoginUserInfoResponse(
     String userId,
-    String userName,
-    String phoneNumber,
+    @Masked(type = MaskingType.NAME) String userName,
+    @Masked(type = MaskingType.MOBILE_PHONE) String phoneNumber,
     String clientIp,
     boolean deviceAuthCompleted,
     Organization organization

@@ -34,6 +34,7 @@ const fetchPlans = async (ctgCd) => {
       sprtTp: 'KD',
       plcySctnCd: '01',
       salePlcyCd: 'N2022011018381',
+      agentCd: model.value.agentCd || '',
     })
     planOptions.value = res?.data?.map((item) => ({
       label: item.rateNm || item.ctgNm,

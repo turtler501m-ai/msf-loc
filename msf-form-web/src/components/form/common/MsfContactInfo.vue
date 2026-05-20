@@ -73,6 +73,8 @@
             v-model:emailId="model.emailAddr1"
             v-model:emailDomain="model.emailAddr2"
             :readonly="model.isSaved"
+            :email-id-maxlength="emailIdMaxlength"
+            :email-domain-maxlength="emailDomainMaxlength"
           />
         </MsfStack>
       </MsfFormGroup>
@@ -145,6 +147,8 @@
 import { defineModel, defineProps, ref, watch } from 'vue'
 
 const props = defineProps({
+  emailIdMaxlength: { type: [Number, String], default: 13 },
+  emailDomainMaxlength: { type: [Number, String], default: 20 },
   title: { type: String, default: '가입자 연락처' },
 })
 const model = defineModel({ type: Object, required: true })

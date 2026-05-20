@@ -4,6 +4,8 @@
     <MsfCustomerType
       v-model="formData"
       :visitTypeCodes="['JP', 'GO']"
+      disable-agency-when-auth-locked
+      @change-customer-type="resetAfterCustomerTypeChange"
     />
     <!-- 신분증 확인 -->
     <MsfIdentityVerify
@@ -68,6 +70,23 @@ const isCompleteOverride = ref('')
 
 const isRequiredAgreement = (value) => value === true || value === 'Y' || value === '2'
 const isCheckedAgreement = (value) => value === true || value === 'Y'
+
+const resetAfterCustomerTypeChange = ({ newVal }) => {
+  const preserved = {
+    cstmrTypeCd: newVal,
+    agency: formData.value.agency,
+    agentCd: formData.value.agentCd,
+    managerCd: formData.value.managerCd,
+  }
+  terminationStore.resetStep(0)
+  terminationStore.resetStep(1)
+  terminationStore.resetStep(2)
+  Object.assign(formData.value, preserved)
+  isAgreed.value = false
+  isCompleteOverride.value = ''
+  agreementRef.value?.reset?.()
+  checkRequiredFields()
+}
 
 const focusField = (target) => {
   setTimeout(() => {

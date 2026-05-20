@@ -4,11 +4,13 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.jdom.Element;
 
 import com.ktmmobile.msf.domains.form.common.util.XmlParse;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 public class OsstMcnChgPrecheckResponse extends CommonXmlVO {
 
     private String osstOrdNo; // OSST 오더 번호

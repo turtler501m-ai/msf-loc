@@ -6,10 +6,10 @@
         <MsfChip v-model="model.cstmrBillSendTypeCd" name="inp-stmtType" groupCode="STRE" />
       </MsfFormGroup>
       <MsfFormGroup label="요금 납부 방법" tag="div" required>
-        <MsfChip 
-          v-model="model.reqPayTypeCd" 
-          name="inp-payMtd" 
-          groupCode="PAYM" 
+        <MsfChip
+          v-model="model.reqPayTypeCd"
+          name="inp-payMtd"
+          groupCode="PAYM"
           :data="paymentMethodOptions"
         />
       </MsfFormGroup>
@@ -247,8 +247,7 @@ const cardYearOptions = computed(() => {
 
 const cardMonthOptions = computed(() => {
   const months = []
-  const startMonth =
-    String(model.value.reqCardYy) === String(currentYear) ? currentMonth : 1
+  const startMonth = String(model.value.reqCardYy) === String(currentYear) ? currentMonth : 1
   for (let i = startMonth; i <= 12; i++) {
     const m = String(i).padStart(2, '0')
     months.push({ label: m, value: m })
@@ -263,17 +262,17 @@ watch(
     if (String(newYy) === String(currentYear) && Number(model.value.reqCardMm) < currentMonth) {
       model.value.reqCardMm = String(currentMonth).padStart(2, '0')
     }
-  }
+  },
 )
 
 onMounted(async () => {
   const codes = await getCommonCodeList('PAYM')
-  const baseOptions = (codes || []).map(item => ({ label: item.title, value: item.code }))
-  
+  const baseOptions = (codes || []).map((item) => ({ label: item.title, value: item.code }))
+
   const updateOptions = () => {
     const isUpfront = String(model.value.installmentMonth) === '0'
     if (isUpfront) {
-      paymentMethodOptions.value = baseOptions.filter(opt => opt.value === 'C')
+      paymentMethodOptions.value = baseOptions.filter((opt) => opt.value === 'C')
       if (model.value.reqPayTypeCd !== 'C') {
         model.value.reqPayTypeCd = 'C'
       }
@@ -303,7 +302,7 @@ const handleAccountVerify = async () => {
   }
 
   try {
-    const res = await post('/api/form/accountCheck', payload)
+    const res = await post('/api/form/payment/account/verify', payload)
     if (res && res.data?.resCode === '0000') {
       autoAcctAuth.verify()
     }
@@ -327,7 +326,7 @@ const handleCardVerify = async () => {
   }
 
   try {
-    const res = await post('/api/form/crdtCardAthnInfo', payload)
+    const res = await post('/api/form/payment/credit/verify', payload)
     if (res && res.data?.resCode === '0000') {
       cardAuth.verify()
     }
@@ -383,7 +382,7 @@ const handleCombVerify = async () => {
   }
 
   try {
-    const res = await post('/api/form/verifyBillInfo', payload)
+    const res = await post('/api/form/payment/bill/verify', payload)
     if (res && res.data?.resCode === '0000') {
       combAuth.verify()
     }
@@ -442,3 +441,4 @@ const validate = () => {
 
 defineExpose({ validate })
 </script>
+ipt>

@@ -1,5 +1,16 @@
 package com.ktmmobile.msf.domains.form.form.termination.controller;
 
+import java.util.List;
+import java.util.Map;
+import jakarta.validation.Valid;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.ktmmobile.msf.commons.websecurity.web.dto.response.CommonResponse;
 import com.ktmmobile.msf.commons.websecurity.web.util.response.ResponseUtils;
 import com.ktmmobile.msf.domains.form.common.dto.response.FormResponse;
@@ -9,19 +20,13 @@ import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyReqDt
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationApplyResVO;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationRemainChargeReqDto;
 import com.ktmmobile.msf.domains.form.form.termination.dto.TerminationRemainChargeResVO;
-import com.ktmmobile.msf.domains.form.form.termination.service.MsfCancelPageSvc;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
+import com.ktmmobile.msf.domains.form.form.termination.service.MsfCancelPageSvcImpl;
 
 @RestController
 @RequiredArgsConstructor
 public class MsfCancelPageController {
 
-    private final MsfCancelPageSvc msfCancelPageSvc;
+    private final MsfCancelPageSvcImpl msfCancelPageSvc;
 
     /**
      * 해지 신청 화면의 대리점 정보를 서비스 계층에서 조회한다.

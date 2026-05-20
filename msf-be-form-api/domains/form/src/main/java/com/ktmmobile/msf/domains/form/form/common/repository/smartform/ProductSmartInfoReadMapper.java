@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import com.ktmmobile.msf.domains.form.form.common.dto.CategoryInfoDto;
 import com.ktmmobile.msf.domains.form.form.common.dto.CategoryMstRequest;
 import com.ktmmobile.msf.domains.form.form.common.dto.CategoryRelRequest;
-import com.ktmmobile.msf.domains.form.form.common.dto.PhoneSerialRequest;
+import com.ktmmobile.msf.domains.form.form.newchange.dto.ProductInventoryRequest;
 
 @Mapper
 public interface ProductSmartInfoReadMapper {
@@ -20,10 +20,14 @@ public interface ProductSmartInfoReadMapper {
 
     //휴대폰 매장 재고 조회 : return >> prod_id 목록
     //List<PhoneInfoDto> selectPhoneInventoryList(ProductSearchCondition condition);
-    List<CategoryInfoDto> selectPhoneInventoryList(PhoneSerialRequest request);
+    List<CategoryInfoDto> selectPhoneInventoryList(ProductInventoryRequest request);
 
     //휴대폰 매장재고 단건 조회 : return >> imei
-    String selectPhoneInventory(PhoneSerialRequest request);
+    String selectPhoneInventory(ProductInventoryRequest request);
+
+    //유심 매장재고 조회
+    int selectPhoneInventoryCount(ProductInventoryRequest request);
+
 
     //RES_NO 확인
     //String selectResNo(long requestKey);

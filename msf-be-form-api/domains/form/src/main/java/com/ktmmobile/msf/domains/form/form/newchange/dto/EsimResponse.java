@@ -1,4 +1,4 @@
-package com.ktmmobile.msf.domains.form.form.common.dto;
+package com.ktmmobile.msf.domains.form.form.newchange.dto;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

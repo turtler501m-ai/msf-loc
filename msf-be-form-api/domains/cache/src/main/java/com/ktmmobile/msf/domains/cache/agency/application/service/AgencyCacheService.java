@@ -1,8 +1,8 @@
 package com.ktmmobile.msf.domains.cache.agency.application.service;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,7 +32,7 @@ public class AgencyCacheService implements AgencyCacheReader {
     }
 
     @Override
-    public Map<String, AgencyCache> getAgencies(List<String> organizationIds) {
+    public Map<String, AgencyCache> getAgencies(Collection<String> organizationIds) {
         if (organizationIds == null || organizationIds.isEmpty()) {
             return Map.of();
         }

@@ -75,16 +75,19 @@ const simAuth = useAuthButton(
 
 const handleSimVerify = async () => {
   const isEsim = formData.value.hasSim === 'hasSim3'
-  const url = isEsim ? '/api/form/verifyEsimInfo' : '/api/form/verifyUsimInfo'
+  const url = isEsim ? '/api/form/esiminfo/verify' : '/api/form/usiminfo/verify'
 
   const payload = isEsim
     ? {
         eid: formData.value.eid,
         imei1: formData.value.imei1,
         imei2: formData.value.imei2,
+        modelId: formData.value.modelId || formData.value.deviceModel || '',
+        agentCd: props.customerData?.agentCd || '',
       }
     : {
         iccId: formData.value.reqUsimSn,
+        agentCd: props.customerData?.agentCd || '',
       }
 
   try {
@@ -114,10 +117,12 @@ const onEsimScanConfirm = async (data) => {
       eid: formData.value.eid,
       imei1: formData.value.imei1,
       imei2: formData.value.imei2,
+      modelId: formData.value.modelId || formData.value.deviceModel || '',
+      agentCd: props.customerData?.agentCd || '',
     }
 
     try {
-      const res = await post('/api/form/verifyEsimInfo', payload)
+      const res = await post('/api/form/esiminfo/verify', payload)
       if (res && res.data?.resCode === '0000') {
         // 2. 정상일 때만 등록 완료 처리 및 수정 불가 상태로 전환
         if (store.authFlags) {

@@ -1,10 +1,12 @@
 package com.ktmmobile.msf.domains.form.common.mspservice.dto;
 
-import java.sql.Date;
-import java.io.Serializable;
-
 import com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.io.Serializable;
+import java.sql.Date;
 
 /**
  * @Class Name : MspSaleOrgnMstDto
@@ -14,83 +16,17 @@ import com.ktmmobile.msf.domains.form.common.dto.MspSalePlcyMstDto;
  * @author : ant
  * @Create Date : 2016. 1. 12.
  */
+@Getter
+@Setter
+@NoArgsConstructor
 public class MspSaleOrgnMstDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** 판매정책정보 */
-    private MspSalePlcyMstDto mspSalePlcyMstDto;
-
-    /** 판매정책코드 */
-    private String salePlcyCd;
-
-    /** 조직id */
-    private String orgnId;
-
-    /** 등록자id */
-    private String regstId;
-
-    /** 등록일시 */
-    private Date regstDttm;
-
-    /** 수정자id */
-    private String rvisnId;
-
-    /** 수정일시  */
-    private Date rvisnDttm;
-
-    public MspSalePlcyMstDto getMspSalePlcyMstDto() {
-        return mspSalePlcyMstDto;
-    }
-
-    public void setMspSalePlcyMstDto(MspSalePlcyMstDto mspSalePlcyMstDto) {
-        this.mspSalePlcyMstDto = mspSalePlcyMstDto;
-    }
-
-    public String getSalePlcyCd() {
-        return salePlcyCd;
-    }
-
-    public void setSalePlcyCd(String salePlcyCd) {
-        this.salePlcyCd = salePlcyCd;
-    }
-
-    public String getOrgnId() {
-        return orgnId;
-    }
-
-    public void setOrgnId(String orgnId) {
-        this.orgnId = orgnId;
-    }
-
-    public String getRegstId() {
-        return regstId;
-    }
-
-    public void setRegstId(String regstId) {
-        this.regstId = regstId;
-    }
-
-    public Date getRegstDttm() {
-        return regstDttm;
-    }
-
-    public void setRegstDttm(Date regstDttm) {
-        this.regstDttm = regstDttm;
-    }
-
-    public String getRvisnId() {
-        return rvisnId;
-    }
-
-    public void setRvisnId(String rvisnId) {
-        this.rvisnId = rvisnId;
-    }
-
-    public Date getRvisnDttm() {
-        return rvisnDttm;
-    }
-
-    public void setRvisnDttm(Date rvisnDttm) {
-        this.rvisnDttm = rvisnDttm;
-    }
+    private MspSalePlcyMstDto mspSalePlcyMstDto; // 판매정책정보
+    private String salePlcyCd; // 판매정책코드
+    private String orgnId; // 조직id
+    private String regstId; // 등록자id
+    private Date regstDttm; // 등록일시
+    private String rvisnId; // 수정자id
+    private Date rvisnDttm; // 수정일시
 }

@@ -507,6 +507,7 @@
       }
       .help-txt {
         font-size: var(--font-size-14);
+        line-height: var(--line-height-fit);
         color: var(--color-gray-600);
       }
       .help-number {
@@ -517,13 +518,11 @@
     }
   }
   .copyright {
-    position: absolute;
-    bottom: rem(40px);
-    left: 50%;
-    transform: translateX(-50%);
+    margin-top: rem(16px);
     font-size: var(--font-size-12);
     font-weight: var(--font-weight-medium);
     color: var(--color-gray-450);
+    text-align: center;
   }
 }
 

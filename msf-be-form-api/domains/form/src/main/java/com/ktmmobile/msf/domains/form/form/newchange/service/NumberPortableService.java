@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.ktmmobile.msf.domains.form.common.code.ResponseMessage;
@@ -23,6 +24,7 @@ import com.ktmmobile.msf.domains.form.form.common.repository.msp.McpRequestReadM
 import com.ktmmobile.msf.domains.form.form.common.service.FormCommService;
 import com.ktmmobile.msf.domains.form.form.newchange.repository.smartform.NewChangeReadMapper;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NumberPortableService {
@@ -45,6 +47,19 @@ public class NumberPortableService {
     //        ,custNm: $.trim($("#cstmrName").val())
     //        ,custTypeCd: cstmrType
     public FormResponse<MnpOsstResponse> requestNpPreCheck(MnpOsstRequest request) {
+        log.debug(
+            "★ 번호이동 사전동의 요청 ★ npTlphNo: {}, bchngNpCommCmpnCd: {}, slsCmpnCd: {}, custTypeCd: {}, indvBizrYn: {}, custIdntNoIndCd: {}, custIdntNo: {}, crprNo: {}, custNm: {}, fornBrthDate: {}",
+            request.getNpTlphNo(),
+            request.getBchngNpCommCmpnCd(),
+            request.getSlsCmpnCd(),
+            request.getCustTypeCd(),
+            request.getIndvBizrYn(),
+            request.getCustIdntNoIndCd(),
+            request.getCustIdntNo(),
+            request.getCrprNo(),
+            request.getCustNm(),
+            request.getFornBrthDate());
+
         MnpOsstResponse responseDto = new MnpOsstResponse();
         HashMap<String, Object> rtnMap = new HashMap<String, Object>();
 
@@ -195,6 +210,8 @@ public class NumberPortableService {
     //        ,custNm: $.trim($("#cstmrName").val())
     //        ,custTypeCd: cstmrType
     public FormResponse<MnpOsstResponse> requestNpAgree(MnpOsstRequest osstReqDto) {
+        log.debug("★ 번호이동 사전동의 결과조회 ★ npTlphNo: {}, bchngNpCommCmpnCd: {}", osstReqDto.getNpTlphNo(), osstReqDto.getBchngNpCommCmpnCd());
+
         MnpOsstResponse responseDto = new MnpOsstResponse();
         if ("01098761234".equals(osstReqDto.getNpTlphNo())) {
             return FormResponse.of(ResponseMessage.VALID_REQ_NP_AGREE_FAIL, responseDto); //실패
@@ -301,11 +318,18 @@ public class NumberPortableService {
 
 
     /**
-     * 번호이동 사전동의 결과조회 : NP2
+     * 번호이동 납부주장 요청 : NP2
      * 고객포탈은 사용하지 않는 것으로 기록되어 있음. reqPayOpnAjax.do URI 를 조회해도 나오진 않음.
      **/
     //public Map<String, Object> reqPayOpn(McpRequestMoveDto requestMoveDto, AppformReqDto appformReqDto) {
     public FormResponse<MnpOsstResponse> requestPayOpn(MnpOsstRequest request) {
+        log.debug("★ 번호이동 납부주장 요청 ★ osstOrdNo: {}, slsCmpnCd: {}, npTlphNo: {}, payAsertDt: {}, payAsertAmt: {}, payMethCd: {}",
+            request.getOsstOrdNo(),
+            request.getSlsCmpnCd(),
+            request.getNpTlphNo(),
+            request.getPayAsertAmt(),
+            request.getPayMethCd());
+
         MnpOsstResponse responseDto = new MnpOsstResponse();
         return FormResponse.of(ResponseMessage.VALID_REQ_NP_PAY_OPEN_SUCCESS, responseDto);
 

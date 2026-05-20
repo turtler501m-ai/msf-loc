@@ -17,6 +17,7 @@ import com.ktmmobile.msf.domains.form.main.application.dto.NoticeHitsRequest;
 import com.ktmmobile.msf.domains.form.main.application.dto.NoticeResponse;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaCondition;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaHitsRequest;
+import com.ktmmobile.msf.domains.form.main.application.dto.QnaRequest;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaResponse;
 import com.ktmmobile.msf.domains.form.main.application.port.in.FormMainReader;
 
@@ -50,5 +51,10 @@ public class FormMainController {
     @PostMapping("/qna/hits/add")
     public CommonResponse<Boolean> qnaHitsAdd(@RequestBody @Valid QnaHitsRequest request) {
         return ResponseUtils.ok(formMainReader.addQnaHits(request));
+    }
+
+    @PostMapping("/qna/regist")
+    public CommonResponse<Boolean> qnaRegist(@RequestBody @Valid QnaRequest request) {
+        return ResponseUtils.ok(formMainReader.registQna(request));
     }
 }

@@ -131,7 +131,7 @@ const handlePreAuth = async () => {
 
   try {
     // 번호이동 사전동의 실패 시 전용 팝업을 띄워야 하므로 silent: true 처리
-    const res = await post('/api/form/newchange/reqNpPreCheck', payload, { silent: true })
+    const res = await post('/api/form/portnumber/precheck/request', payload, { silent: true })
     if (res && res.code === '0000' && res.data?.resCode === '0000') {
       // 요청 성공 시 '결과조회' 버튼들이 나오도록 상태 변경
       isRequested.value = true
@@ -161,7 +161,7 @@ const handleCheckAgree = async () => {
   }
 
   try {
-    const res = await post('/api/form/newchange/reqNpAgree', payload, { silent: true })
+    const res = await post('/api/form/portnumber/precheck/result', payload, { silent: true })
     // resCode가 '0000'이면 번호이동 사전동의 최종 완료 처리
     if (res && res.code === '0000' && res.data?.resCode === '0000') {
       if (store.authFlags) store.authFlags.moveAuthTypeCd = true
@@ -185,7 +185,7 @@ const handlePayOpn = async () => {
     requestKey: store.applicationKey,
   }
   try {
-    const res = await post('/api/form/newchange/reqPayOpn', payload)
+    const res = await post('/api/form/portnumber/payon', payload)
     if (res && res.code === '0000') {
       isFailModalOpen.value = false
     }

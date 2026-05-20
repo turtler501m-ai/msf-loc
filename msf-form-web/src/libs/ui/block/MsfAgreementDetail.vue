@@ -61,9 +61,9 @@ const openDialog = () => {
       specTermsList: [
         {
           code: props.code,
-          specType: props.specTerms?.type,
-          specCode: props.specTerms?.code,
-          specName: props.specTerms?.name,
+          specType: props.specTerms?.specType,
+          specCode: props.specTerms?.specCode,
+          specName: props.specTerms?.specName,
         },
       ],
     })

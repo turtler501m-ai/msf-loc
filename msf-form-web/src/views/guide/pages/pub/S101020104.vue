@@ -8,22 +8,37 @@
   >
     <!-- 팝업 내용 -->
     <MsfBox margin="0">
-      <MsfFormGroup
-        label="휴대폰번호"
-        required
-        helpText="※ 입력하신 휴대폰번호로 안면인증 URL이 발송됩니다."
-        tag="div"
-      >
-        <MsfStack type="field">
-          <MsfMobileInput
-            v-model:number1="userPhone.p1"
-            v-model:number2="userPhone.p2"
-            v-model:number3="userPhone.p3"
+      <MsfStack vertical type="formgroups">
+        <MsfFormGroup label="신분증" required tag="div">
+          <MsfSelect
+            title="신분증 선택"
+            v-model="idSelection"
+            :options="[
+              { label: '신분증 1', value: 'idSelection1' },
+              { label: '신분증 2', value: 'idSelection2' },
+            ]"
+            placeholder="선택해주세요."
+            class="ut-w-300"
           />
-        </MsfStack>
-      </MsfFormGroup>
+        </MsfFormGroup>
+        <MsfFormGroup
+          label="휴대폰번호"
+          required
+          helpText="※ 입력하신 휴대폰번호로 안면인증 URL이 발송됩니다."
+          tag="div"
+        >
+          <MsfStack type="field">
+            <MsfMobileInput
+              v-model:number1="userPhone.p1"
+              v-model:number2="userPhone.p2"
+              v-model:number3="userPhone.p3"
+            />
+          </MsfStack>
+        </MsfFormGroup>
+      </MsfStack>
     </MsfBox>
     <MsfButtonGroup align="center" margin="1">
+      <MsfButton>안면인증 URL 열기</MsfButton>
       <MsfButton>안면인증 URL 받기</MsfButton>
       <MsfButton @click="isPopinPopOpen = true">안면인증 QR 생성</MsfButton>
     </MsfButtonGroup>
@@ -71,6 +86,8 @@ const userPhone = reactive({
   p2: '',
   p3: '',
 })
+const idSelection = ref('') // 신분증 선택_추가_20260519
+
 const props = defineProps({
   modelValue: Boolean,
 })

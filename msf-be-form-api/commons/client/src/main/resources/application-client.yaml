@@ -46,8 +46,8 @@ spring:
         base-url: ${external-service.services.msp-ext-api.base-url}
       juso:
         base-url: ${external-service.services.juso.base-url}
-        connect-timeout: 30s
-        read-timeout: 30s
+        connect-timeout: 2s
+        read-timeout: 3s
 
 
 
@@ -81,12 +81,14 @@ http-client:
     ## 바디(JSON, form-urlencoded, form-data) 필드 축약
     ## 필드명 뒤에 [size] 또는 [start:end] 지정 가능 (생략 시 기본값 사용)
     body-truncated-fields:
+      default-truncated-size: 50 # 기본값 == [50:50]
       include:
         - html
         - message[100]
+        - photoImage[10:] # KOI-OCR 신분증 인증 응답 Base64 이미지
+        - cropImage[10:]  # KOI-OCR 신분증 인증 응답 Base64 이미지
+        - maskImage[10:]  # KOI-OCR 신분증 인증 응답 Base64 이미지
       exclude: []
-    body-truncated-size: 50 # 기본값 == [50:50]
-
 
 
 

@@ -38,6 +38,7 @@ import { showAlert } from '@/libs/utils/comp.utils'
 
 const props = defineProps({
   modelValue: Boolean,
+  agentCd: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:modelValue', 'open', 'close', 'confirm'])
@@ -60,7 +61,7 @@ const onClose = () => {
 const fetchIdList = async () => {
   loading.value = true
   try {
-    const res = await post('/api/form/knote/getIdList', {})
+    const res = await post('/api/form/knote/scaninfo/list', { agentCd: props.agentCd })
     if (res && res.code === '0000') {
       // res.data.resData.list 구조에 맞게 수정
       datas.value = res.data?.resData?.list || []
@@ -85,21 +86,17 @@ const onConfirm = async () => {
   }
 
   const frmpapId = selectedRow.value.frmpapId || selectedRow.value.id
-  
-  try {
-    const res = await post('/api/form/knote/checkIdStatus', { frmpapId })
-    
-    // 특정 ID인 경우 비정상 처리 (사용자 요청 조건)
-    if (frmpapId === '0x62E50320B59E11EE8A320080C74455C601') {
-      showAlert('선택하신 신분증 정보가 비정상입니다. 다시 확인해 주세요.')
-      return
-    }
 
-    if (res && res.code === '0000') {
+  try {
+    const res = await post('/api/form/knote/scaninfo/check', {
+      frmpapId,
+      agentCd: props.agentCd || '',
+    })
+    if (res && res?.data?.resCode === '0000') {
       // API 응답의 resData를 포함하여 부모에게 전달
       emit('confirm', {
         ...selectedRow.value,
-        ...res.data?.resData
+        ...res.data?.resData,
       })
       onClose()
     } else {
@@ -118,16 +115,17 @@ const onOpen = () => {
 
 // 테이블 정의 (JSON 필드에 맞게 수정: wapplRegDate, custNm, custIdntNoIndCd, custIdntNo)
 const colDefs = ref([
-  { field: 'wapplRegDate', headerName: '스캔일시', width: 120, cellStyle: { textAlign: 'center' } },
-  { field: 'custNm', headerName: '이름', width: 100, cellStyle: { textAlign: 'center' } },
-  { 
-    field: 'custIdntNoIndCd', 
-    headerName: '신분증 유형', 
-    width: 120, 
+  { field: 'wapplRegDate', headerName: '스캔일시', width: 240, cellStyle: { textAlign: 'center' } },
+  { field: 'custNm', headerName: '이름', flex: 1, cellStyle: { textAlign: 'left' } },
+  {
+    field: 'custIdntNoIndCd',
+    headerName: '신분증 유형',
+    width: 120,
     cellStyle: { textAlign: 'center' },
-    valueFormatter: (params) => params.value === '1' ? '주민등록증' : (params.value === '5' ? '운전면허증' : params.value)
+    valueFormatter: (params) =>
+      params.value === '1' ? '주민등록증' : params.value === '5' ? '운전면허증' : params.value,
   },
-  { field: 'custIdntNo', headerName: '생년월일', flex: 1, cellStyle: { textAlign: 'center' } },
+  { field: 'custIdntNo', headerName: '생년월일', width: 100, cellStyle: { textAlign: 'center' } },
 ])
 
 const onSelected = (data) => {

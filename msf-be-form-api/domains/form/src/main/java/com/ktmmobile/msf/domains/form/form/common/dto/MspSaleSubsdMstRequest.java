@@ -14,12 +14,15 @@ public class MspSaleSubsdMstRequest {
 
     //단말/요금/지원금 조회 Request
     private String oldYn = "N"; //중고여부 >> 고정값
-    private String orgnId; //조직코드 : 1100011741 >> 세션정보
+    private String agentCd = ""; //대리점코드
+    //private String orgnId; //조직코드 : 1100011741 >> 세션정보
     private String reqBuyTypeCd; //상품유형 : 휴대폰(MM) / USIM(UU) >> 없을 경우 MM 으로 고정
     private String operTypeCd; //가입유형 (MNP3, NAC3, HDN3)
     private String salePlcyCd; //판매정책코드
     private String sprtTp; //할인유형 (단말 KD, 요금 PM)
-    private String prdtId; //상품아이디 : K7028268
+
+    //private String prdtId; //쓰지말자~
+    private String modelId; //상품아이디 : K7028268
     private String rateCd; //요금제코드 : Pl198G409
     private String agrmTrm; //요금 약정기간
     private String prdtSctnCd; //데이타유형(판매정책 테이블정보) : 3G / LTE / 5G / LTE5G

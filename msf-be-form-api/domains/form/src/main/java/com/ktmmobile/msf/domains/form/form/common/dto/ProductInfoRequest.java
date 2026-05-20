@@ -16,6 +16,8 @@ public class ProductInfoRequest {
     private ReqBuyType plcySctnCd;//REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
     private ReqBuyType reqBuyTypeCd = ReqBuyType.MOBILE; //REQ_BUY_TYPE_CD >> MM : 휴대폰, UU : 유심
 
+    private String agentCd; //선택한 대리점코드
+
     private String prdtIndCd;
     private String rprsPrdtId;
     private String modelSalePolicyCode;

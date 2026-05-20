@@ -363,6 +363,7 @@ public class MsfSvcChgPageServiceImpl {
         response.setMaskingBtn("Y");
         response.setMaskingSession(maskingSession);
         response.setRemindBlckYn(remindBlckYn);
+        response.setSubStatus(StringUtil.NVL(cntrInfo.getSubStatus(), searchVO.getSubStatus()));
         logger.info("[서비스변경] getChangInfoView 화면 셋팅값 — prvRateGrpNm={}, initActivationDate={}, zipNo={}, address={}, detailAddress={}, addr={}, homeTel={}, email={}, remindBlckYn={}, payData={}, billData={}, maskingSession={}",
                 prvRateGrpNm, initActivationDate, zipNo, address, detailAddress, addr, homeTel, email, remindBlckYn,
                 combinePayData.get("payData") != null, combinePayData.get("billData") != null, maskingSession);

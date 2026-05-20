@@ -6,12 +6,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.ktmmobile.msf.commons.common.pagination.Page;
+import com.ktmmobile.msf.commons.websecurity.security.auth.util.AuthenticationUtils;
 import com.ktmmobile.msf.domains.form.main.adapter.repository.mybatis.smartform.mapper.FormMainMapper;
 import com.ktmmobile.msf.domains.form.main.application.dto.ChartCountResponse;
 import com.ktmmobile.msf.domains.form.main.application.dto.NoticeCondition;
 import com.ktmmobile.msf.domains.form.main.application.dto.NoticeHitsRequest;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaCondition;
 import com.ktmmobile.msf.domains.form.main.application.dto.QnaHitsRequest;
+import com.ktmmobile.msf.domains.form.main.application.dto.QnaRequest;
 import com.ktmmobile.msf.domains.form.main.application.port.out.FormMainRepository;
 import com.ktmmobile.msf.domains.form.main.domain.entity.ChartCount;
 import com.ktmmobile.msf.domains.form.main.domain.entity.Board;
@@ -57,5 +59,17 @@ public class FormMainRepositoryImpl implements FormMainRepository {
 
     @Override public Integer addQnaHits(QnaHitsRequest request) {
         return formMainMapper.updateAddQnaHits(request);
+    }
+
+    @Override public Integer registQna(QnaRequest request) {
+        Qna qna = Qna.builder()
+            .qnaCtgCd(request.category())
+            .qnaTitle(request.title())
+            .qnaContentSbst(request.contents())
+            .cretViewYn(request.publicStatus().getCode())
+            .qnaWriterId(AuthenticationUtils.getUser().getUserId())
+            .qnaNm(AuthenticationUtils.getUser().getUserName())
+            .build();
+        return formMainMapper.insertQna(qna);
     }
 }

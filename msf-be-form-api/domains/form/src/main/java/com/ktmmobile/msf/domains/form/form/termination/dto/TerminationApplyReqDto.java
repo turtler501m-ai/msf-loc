@@ -76,7 +76,6 @@ public class TerminationApplyReqDto {
         private String repRegistrationNo2;
         private boolean repAgree;
         private String minorAgentNm;
-        private String agentBirthDate;
         private String agentGender;
         private String minorAgentRelTypeCd;
         private String minorAgentTelFnNo;
@@ -106,7 +105,6 @@ public class TerminationApplyReqDto {
         private String cntpntShopCd;
         private String cntpntShopNm;
         private String ncn;
-        private String custId;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -144,7 +142,6 @@ public class TerminationApplyReqDto {
         private String termsItemCd;
         private String cdGroupId;
         private String cdGroupId2;
-        private String required;
         private Object checked;
         private String version;
     }

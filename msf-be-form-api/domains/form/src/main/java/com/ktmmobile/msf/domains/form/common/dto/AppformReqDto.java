@@ -23,6 +23,11 @@ import com.ktmmobile.msf.domains.form.common.util.EncryptUtil;
 import com.ktmmobile.msf.domains.form.common.util.NmcpServiceUtils;
 import com.ktmmobile.msf.domains.form.common.util.StringUtil;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class AppformReqDto implements Serializable {
 
     @Deprecated

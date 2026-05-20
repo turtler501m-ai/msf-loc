@@ -7,7 +7,7 @@
     :disabled="disabled"
     placeholder="이메일 아이디"
     :ariaLabel="`${props.label.replace('<br>', '')} 아이디`"
-    maxlength="13"
+    :maxlength="emailIdMaxlength"
   />
   <span>@</span>
   <MsfInput
@@ -18,7 +18,7 @@
     placeholder="이메일 도메인"
     :ariaLabel="`${props.label.replace('<br>', '')} 도메인`"
     class="ut-w-300"
-    maxlength="20"
+    :maxlength="emailDomainMaxlength"
   />
 </template>
 
@@ -33,5 +33,7 @@ const props = defineProps({
   error: { type: Boolean, default: false },
   readonly: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
+  emailIdMaxlength: { type: [Number, String], default: 13 },
+  emailDomainMaxlength: { type: [Number, String], default: 20 },
 })
 </script>

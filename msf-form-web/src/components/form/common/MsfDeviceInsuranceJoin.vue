@@ -41,7 +41,7 @@ const fetchInsurances = async (ctgId) => {
       prodCtgId: ctgId,
     }
 
-    const res = await post('/api/form/product/selectInsrProdList', payload)
+    const res = await post('/api/form/product/insr/list', payload)
     const data = res.data || []
     insuranceOptions.value = data.map((item) => ({
       label: item.insrProdNm || item.rateNm || item.prodNm,
